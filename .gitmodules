@@ -1,0 +1,3 @@
+[submodule "deps/concordium-grpc-api"]
+	path = deps/concordium-grpc-api
+	url = git@github.com:Concordium/concordium-grpc-api.git

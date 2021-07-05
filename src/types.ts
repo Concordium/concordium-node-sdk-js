@@ -1,3 +1,24 @@
+export interface BlockInfo {
+    blockParent: string;
+    blockHash: string;
+    blockStateHash: string;
+    blockLastFinalized: string;
+
+    blockHeight: bigint;
+    blockBaker: bigint;
+    blockSlot: bigint;
+
+    blockArriveTime: Date;
+    blockReceiveTime: Date;
+    blockSlotTime: Date;
+
+    finalized: boolean;
+
+    transactionCount: bigint;
+    transactionsSize: bigint;
+    transactionEnergyCost: bigint;
+}
+
 export interface ConsensusStatus {
     bestBlock: string;
     genesisBlock: string;

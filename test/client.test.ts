@@ -1,14 +1,7 @@
 import { credentials, Metadata } from "@grpc/grpc-js";
 import ConcordiumNodeClient from "../src/client";
-import { ConsensusStatus } from "../src/types";
-
-/**
- * Checks if the input string is a valid hexadecimal string.
- * @param str the string to check for hexadecimal
- */
-function isHex(str: string): boolean {
-    return /^[A-F0-9]+$/i.test(str);
-}
+import { BlockInfo, ConsensusStatus } from "../src/types";
+import { isHex } from "../src/util";
 
 const metadata = new Metadata();
 metadata.add("authentication", "rpcadmin");
@@ -19,6 +12,57 @@ const client = new ConcordiumNodeClient(
     metadata,
     15000
 );
+
+test("invalid block hash fails", async () => {
+    const invalidBlockHash = "P{L}GDA";
+    await expect(client.getBlockInfo(invalidBlockHash)).rejects.toEqual(
+        new Error("The input was not a valid hash: " + invalidBlockHash)
+    );
+});
+
+test("unknown block hash returns undefined", async () => {
+    const blockHash =
+        "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
+    const blockInfo: BlockInfo = await client.getBlockInfo(blockHash);
+    return expect(blockInfo).toBeNull();
+});
+
+test("retrieves block info", async () => {
+    const blockHash =
+        "7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749";
+    const blockInfo: BlockInfo = await client.getBlockInfo(blockHash);
+
+    return Promise.all([
+        expect(blockInfo.transactionsSize).toEqual(0n),
+        expect(blockInfo.blockParent).toEqual(
+            "2633deb76d59bb4d3d78cdfaa3ab1920bb88332ae98bd2d7d52adfd8e553996f"
+        ),
+        expect(blockInfo.blockHash).toEqual(
+            "7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749"
+        ),
+        expect(blockInfo.finalized).toBeTruthy(),
+        expect(blockInfo.blockStateHash).toEqual(
+            "b40762eb4abb9701ee133c465f934075d377c0d09bfe209409e80bbb51af1771"
+        ),
+        expect(blockInfo.blockArriveTime).toEqual(
+            new Date("2021-07-05T09:16:46.000Z")
+        ),
+        expect(blockInfo.blockReceiveTime).toEqual(
+            new Date("2021-07-05T09:16:46.000Z")
+        ),
+        expect(blockInfo.transactionCount).toEqual(0n),
+        expect(blockInfo.transactionEnergyCost).toEqual(0n),
+        expect(blockInfo.blockSlot).toEqual(1915967n),
+        expect(blockInfo.blockLastFinalized).toEqual(
+            "2633deb76d59bb4d3d78cdfaa3ab1920bb88332ae98bd2d7d52adfd8e553996f"
+        ),
+        expect(blockInfo.blockSlotTime).toEqual(
+            new Date("2021-05-13T01:03:11.750Z")
+        ),
+        expect(blockInfo.blockHeight).toEqual(22737n),
+        expect(blockInfo.blockBaker).toEqual(3n),
+    ]);
+});
 
 test("negative block height throws an error", async () => {
     const blockHeight = -431n;
@@ -46,7 +90,7 @@ test("retrieves blocks at block height", async () => {
     return Promise.all([
         expect(blocksAtHeight.length).toEqual(1),
         expect(blocksAtHeight[0]).toEqual(
-            "0860312949e218cec331fd99043bd056eeb7683a698421e74a2ace2b3410af8a"
+            "072a02694ec6539d022e616eeb9f05bacea60e1d7278d34457daeca5e6380b61"
         ),
     ]);
 });

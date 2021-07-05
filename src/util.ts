@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { JsonResponse } from "./grpc/concordium_p2p_rpc_pb";
 
 /**
@@ -9,7 +10,7 @@ import { JsonResponse } from "./grpc/concordium_p2p_rpc_pb";
  * @param keys the keys where the number has to be quoted
  * @returns the same JSON string where the numbers at the supplied keys are quoted
  */
-export function intToString(jsonStruct: string, keys: string[]): string {
+function intToString(jsonStruct: string, keys: string[]): string {
     const result = jsonStruct;
     for (const key of keys) {
         result.replace(
@@ -18,6 +19,19 @@ export function intToString(jsonStruct: string, keys: string[]): string {
         );
     }
     return result;
+}
+
+/**
+ * A transformer that converts all the values provided as keys to
+ * string values.
+ * @param json the json to transform
+ * @param bigIntPropertyKeys the keys in the json that must be converted to strings
+ * @returns the transformed json where numbers have been replaced with strings
+ */
+export function intToStringTransformer(
+    bigIntPropertyKeys: string[]
+): (json: string) => string {
+    return (json: string) => intToString(json, bigIntPropertyKeys);
 }
 
 /**
@@ -41,4 +55,43 @@ export function unwrapJsonResponse<T>(
     }
 
     return JSON.parse(jsonString, reviver);
+}
+
+/**
+ * Builds a JSON.parse() reviver function used to parse dates and big integers.
+ * @param datePropertyKeys the JSON keys that must be parsed as dates
+ * @param bigIntPropertyKeys the JSON keys that must be parsed as big integers
+ * @returns a reviver function that handles dates and big integers
+ */
+export function buildJsonResponseReviver<T>(
+    datePropertyKeys: (keyof T)[],
+    bigIntPropertyKeys: (keyof T)[]
+): (key: string, value: any) => any {
+    return function reviver(key: string, value: any) {
+        if (datePropertyKeys.includes(key as keyof T)) {
+            // Note that we reduce the time precision from nano to milliseconds when doing this conversion.
+            return new Date(value);
+        } else if (bigIntPropertyKeys.includes(key as keyof T)) {
+            return BigInt(value);
+        }
+        return value;
+    };
+}
+
+/**
+ * Checks if the input string is a valid hexadecimal string.
+ * @param str the string to check for hexadecimal
+ */
+export function isHex(str: string): boolean {
+    return /^[A-F0-9]+$/i.test(str);
+}
+
+/**
+ * Checks whether the input string looks to be a valid hash,
+ * i.e. it has length 64 and consists of hexadecimal characters.
+ * @param hash the string to check
+ * @returns false if the string cannot be a valid hash, otherwise true
+ */
+export function isValidHash(hash: string): boolean {
+    return hash.length === 64 && isHex(hash);
 }

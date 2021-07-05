@@ -1,8 +1,13 @@
 import { ChannelCredentials, Metadata, ServiceError } from "@grpc/grpc-js";
 import { P2PClient } from "./grpc/concordium_p2p_rpc_grpc_pb";
-import { BlockHeight, Empty } from "./grpc/concordium_p2p_rpc_pb";
-import { ConsensusStatus } from "./types";
-import { intToString, unwrapJsonResponse } from "./util";
+import { BlockHash, BlockHeight, Empty } from "./grpc/concordium_p2p_rpc_pb";
+import { BlockInfo, ConsensusStatus } from "./types";
+import {
+    buildJsonResponseReviver,
+    intToStringTransformer,
+    isValidHash,
+    unwrapJsonResponse,
+} from "./util";
 
 interface GrpcClient extends P2PClient {
     waitForReady?(date: Date, cb: (error: ServiceError) => void): void;
@@ -66,6 +71,44 @@ export default class ConcordiumNodeClient {
     }
 
     /**
+     * Retrieves information about a specific block.
+     * @param blockHash the block to get information about
+     * @returns the block information for the given block, or null if the block does not exist
+     */
+    async getBlockInfo(blockHash: string): Promise<BlockInfo | null> {
+        if (!isValidHash(blockHash)) {
+            throw new Error("The input was not a valid hash: " + blockHash);
+        }
+
+        const blockHashObject = new BlockHash();
+        blockHashObject.setBlockHash(blockHash);
+        const response = await this.sendRequest(
+            this.client.getBlockInfo,
+            blockHashObject
+        );
+
+        const datePropertyKeys: (keyof BlockInfo)[] = [
+            "blockArriveTime",
+            "blockReceiveTime",
+            "blockSlotTime",
+        ];
+        const bigIntPropertyKeys: (keyof BlockInfo)[] = [
+            "blockHeight",
+            "blockBaker",
+            "blockSlot",
+            "transactionEnergyCost",
+            "transactionCount",
+            "transactionsSize",
+        ];
+
+        return unwrapJsonResponse<BlockInfo>(
+            response,
+            buildJsonResponseReviver(datePropertyKeys, bigIntPropertyKeys),
+            intToStringTransformer(bigIntPropertyKeys)
+        );
+    }
+
+    /**
      * Retrieves the blocks are the given height.
      * @param height the block height as a positive integer
      * @returns a string array containing the blocks at the given height, i.e. ['blockHash1', 'blockHash2', ...]
@@ -109,30 +152,10 @@ export default class ConcordiumNodeClient {
             "bestBlockHeight",
         ];
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        function reviver(key: string, value: any) {
-            if (datePropertyKeys.includes(key as keyof ConsensusStatus)) {
-                // Note that we reduce the time precision from nano to milliseconds when doing this conversion.
-                return new Date(value);
-            } else if (
-                bigIntPropertyKeys.includes(key as keyof ConsensusStatus)
-            ) {
-                return BigInt(value);
-            }
-            return value;
-        }
-
-        function transformer(json: string) {
-            return intToString(
-                json,
-                bigIntPropertyKeys.map((key) => key as string)
-            );
-        }
-
         return unwrapJsonResponse<ConsensusStatus>(
             response,
-            reviver,
-            transformer
+            buildJsonResponseReviver(datePropertyKeys, bigIntPropertyKeys),
+            intToStringTransformer(bigIntPropertyKeys)
         );
     }
 

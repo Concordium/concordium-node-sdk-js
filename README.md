@@ -30,6 +30,38 @@ const client = new ConcordiumNodeClient(
 );
 ```
 
+## getTransactionStatus
+Retrieves status information about a transaction.
+```js
+const transactionHash = "f1f5f966e36b95d5474e6b85b85c273c81bac347c38621a0d8fefe68b69a430f";
+const transactionStatus: TransactionStatus = await client.getTransactionStatus(transactionHash);
+const isFinalized = transactionStatus.status === TransactionStatusEnum.Finalized;
+...
+```
+Note that there will be no outcomes for a transaction that has only been received:
+```js
+if (transactionStatus.status === TransactionStatusEnum.Received) {
+    const outcomes = Object.values(transactionStatus.outcomes);
+    // outcomes.length === 0.
+}
+```
+If the transaction has been finalized, then there is exactly one outcome:
+```js
+if (transactionStatus.status === TransactionStatusEnum.Finalized) {
+    const outcomes = Object.values(transactionStatus.outcomes);
+    // outcomes.length === 1.
+}
+```
+A transaction was successful if it is finalized and it has a successful outcome:
+```js
+if (transactionStatus.status === TransactionStatusEnum.Finalized &&) {
+    const event = Object.values(response.outcomes)[0];
+    if (event.result.outcome === "success") {
+        // transaction was successful.
+    }
+}
+```
+
 ## getBlockInfo
 Retrieves information about a specific block.
 ```js

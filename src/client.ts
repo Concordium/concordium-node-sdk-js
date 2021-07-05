@@ -1,7 +1,17 @@
 import { ChannelCredentials, Metadata, ServiceError } from "@grpc/grpc-js";
 import { P2PClient } from "./grpc/concordium_p2p_rpc_grpc_pb";
-import { BlockHash, BlockHeight, Empty } from "./grpc/concordium_p2p_rpc_pb";
-import { BlockInfo, ConsensusStatus } from "./types";
+import {
+    BlockHash,
+    BlockHeight,
+    Empty,
+    TransactionHash,
+} from "./grpc/concordium_p2p_rpc_pb";
+import {
+    BlockInfo,
+    ConsensusStatus,
+    TransactionStatus,
+    TransactionSummary,
+} from "./types";
 import {
     buildJsonResponseReviver,
     intToStringTransformer,
@@ -68,6 +78,39 @@ export default class ConcordiumNodeClient {
         this.timeout = timeout;
         this.metadata = metadata;
         this.client = new P2PClient(`${address}:${port}`, credentials, options);
+    }
+
+    /**
+     * Retrieves a status for the given transaction.
+     * @param transactionHash the transaction to get a status for
+     * @returns the transaction status for the given transaction, or null if the transaction does not exist
+     */
+    async getTransactionStatus(
+        transactionHash: string
+    ): Promise<TransactionStatus | null> {
+        if (!isValidHash(transactionHash)) {
+            throw new Error(
+                "The input was not a valid hash: " + transactionHash
+            );
+        }
+
+        const bigIntPropertyKeys: (keyof TransactionSummary)[] = [
+            "cost",
+            "energyCost",
+            "index",
+        ];
+
+        const transactionHashObject = new TransactionHash();
+        transactionHashObject.setTransactionHash(transactionHash);
+        const response = await this.sendRequest(
+            this.client.getTransactionStatus,
+            transactionHashObject
+        );
+        return unwrapJsonResponse<TransactionStatus>(
+            response,
+            buildJsonResponseReviver([], bigIntPropertyKeys),
+            intToStringTransformer(bigIntPropertyKeys)
+        );
     }
 
     /**

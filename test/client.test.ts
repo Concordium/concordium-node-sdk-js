@@ -1,6 +1,11 @@
 import { credentials, Metadata } from "@grpc/grpc-js";
 import ConcordiumNodeClient from "../src/client";
-import { BlockInfo, ConsensusStatus } from "../src/types";
+import {
+    BlockInfo,
+    ConsensusStatus,
+    TransactionStatus,
+    TransactionSummary,
+} from "../src/types";
 import { isHex } from "../src/util";
 
 const metadata = new Metadata();
@@ -13,6 +18,47 @@ const client = new ConcordiumNodeClient(
     15000
 );
 
+test("transaction status for invalid hash fails", async () => {
+    const invalidTransactionHash = "P{L}GDA";
+    await expect(
+        client.getTransactionStatus(invalidTransactionHash)
+    ).rejects.toEqual(
+        new Error("The input was not a valid hash: " + invalidTransactionHash)
+    );
+});
+
+test("transaction status for unknown transaction hash returns null", async () => {
+    const transactionHash =
+        "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
+    const transactionStatus: TransactionStatus =
+        await client.getTransactionStatus(transactionHash);
+    return expect(transactionStatus).toBeNull();
+});
+
+test("retrieves transaction status", async () => {
+    const transactionHash =
+        "f1f5f966e36b95d5474e6b85b85c273c81bac347c38621a0d8fefe68b69a430f";
+    const transactionStatus: TransactionStatus =
+        await client.getTransactionStatus(transactionHash);
+    const outcome: TransactionSummary = Object.values(
+        transactionStatus.outcomes
+    )[0];
+
+    return Promise.all([
+        expect(transactionStatus.status).toEqual("finalized"),
+        expect(outcome.hash).toEqual(
+            "f1f5f966e36b95d5474e6b85b85c273c81bac347c38621a0d8fefe68b69a430f"
+        ),
+        expect(outcome.sender).toEqual(
+            "3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt"
+        ),
+        expect(outcome.cost).toEqual(5010n),
+        expect(outcome.energyCost).toEqual(501n),
+        expect(outcome.type.type).toEqual("accountTransaction"),
+        expect(outcome.index).toEqual(0n),
+    ]);
+});
+
 test("invalid block hash fails", async () => {
     const invalidBlockHash = "P{L}GDA";
     await expect(client.getBlockInfo(invalidBlockHash)).rejects.toEqual(
@@ -20,7 +66,7 @@ test("invalid block hash fails", async () => {
     );
 });
 
-test("unknown block hash returns undefined", async () => {
+test("unknown block hash returns null", async () => {
     const blockHash =
         "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
     const blockInfo: BlockInfo = await client.getBlockInfo(blockHash);

@@ -45,9 +45,13 @@ export function unwrapJsonResponse<T>(
     serializedResponse: Uint8Array,
     reviver?: (this: unknown, key: string, value: unknown) => unknown,
     transformer?: (json: string) => string
-): T {
+): T | undefined {
     const jsonString =
         JsonResponse.deserializeBinary(serializedResponse).getValue();
+
+    if (jsonString === "null") {
+        return undefined;
+    }
 
     if (transformer) {
         const transformedJson = transformer(jsonString);

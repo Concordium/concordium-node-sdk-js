@@ -1,6 +1,7 @@
 import { ChannelCredentials, Metadata, ServiceError } from "@grpc/grpc-js";
 import { P2PClient } from "./grpc/concordium_p2p_rpc_grpc_pb";
 import {
+    AccountAddress,
     BlockHash,
     BlockHeight,
     Empty,
@@ -9,6 +10,7 @@ import {
 import {
     BlockInfo,
     ConsensusStatus,
+    NextAccountNonce,
     TransactionStatus,
     TransactionSummary,
 } from "./types";
@@ -81,13 +83,38 @@ export default class ConcordiumNodeClient {
     }
 
     /**
+     * Retrieves the next account nonce for the given account.
+     * @param accountAddress base58 account address to get the next account nonce for
+     * @returns the next account nonce, and a boolean indicating if the nonce is reliable
+     */
+    async getNextAccountNonce(
+        accountAddress: string
+    ): Promise<NextAccountNonce | undefined> {
+        const accountAddressObject = new AccountAddress();
+        accountAddressObject.setAccountAddress(accountAddress);
+
+        const response = await this.sendRequest(
+            this.client.getNextAccountNonce,
+            accountAddressObject
+        );
+
+        const bigIntPropertyKeys: (keyof NextAccountNonce)[] = ["nonce"];
+
+        return unwrapJsonResponse<NextAccountNonce>(
+            response,
+            buildJsonResponseReviver([], bigIntPropertyKeys),
+            intToStringTransformer(bigIntPropertyKeys)
+        );
+    }
+
+    /**
      * Retrieves a status for the given transaction.
      * @param transactionHash the transaction to get a status for
      * @returns the transaction status for the given transaction, or null if the transaction does not exist
      */
     async getTransactionStatus(
         transactionHash: string
-    ): Promise<TransactionStatus | null> {
+    ): Promise<TransactionStatus | undefined> {
         if (!isValidHash(transactionHash)) {
             throw new Error(
                 "The input was not a valid hash: " + transactionHash
@@ -118,7 +145,7 @@ export default class ConcordiumNodeClient {
      * @param blockHash the block to get information about
      * @returns the block information for the given block, or null if the block does not exist
      */
-    async getBlockInfo(blockHash: string): Promise<BlockInfo | null> {
+    async getBlockInfo(blockHash: string): Promise<BlockInfo | undefined> {
         if (!isValidHash(blockHash)) {
             throw new Error("The input was not a valid hash: " + blockHash);
         }

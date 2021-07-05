@@ -30,6 +30,21 @@ const client = new ConcordiumNodeClient(
 );
 ```
 
+## getNextAccountNonce
+Retrieves the next account nonce, i.e. the nonce that must be set in the account transaction
+header for the next transaction submitted by that account. Along with the nonce there is a boolean
+that indicates whether all transactions are finalized. If this is true, then the nonce is reliable, 
+if not then the next nonce might be off.
+```js
+const accountAddress = "3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt";
+const nextAccountNonce: NextAccountNonce = await client.getNextAccountNonce(accountAddress);
+const nonce: bigint = nextAccountNonce.nonce;
+const allFinal: boolean = nextAccountNonce.allFinal;
+if (allFinal) {
+    // nonce is reliable
+}
+```
+
 ## getTransactionStatus
 Retrieves status information about a transaction.
 ```js

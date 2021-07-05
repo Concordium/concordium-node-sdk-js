@@ -95,3 +95,8 @@ export interface ConsensusStatus {
     blockLastArrivedTime?: Date;
     lastFinalizedTime?: Date;
 }
+
+export interface NextAccountNonce {
+    nonce: bigint;
+    allFinal: boolean;
+}

@@ -3,6 +3,7 @@ import ConcordiumNodeClient from "../src/client";
 import {
     BlockInfo,
     ConsensusStatus,
+    NextAccountNonce,
     TransactionStatus,
     TransactionSummary,
 } from "../src/types";
@@ -18,6 +19,23 @@ const client = new ConcordiumNodeClient(
     15000
 );
 
+test("next account nonce for unknown address returns undefined", async () => {
+    const accountAddress = "3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwGGYt";
+    const nextAccountNonce = await client.getNextAccountNonce(accountAddress);
+    return expect(nextAccountNonce).toBeUndefined();
+});
+
+test("retrieves the next account nonce", async () => {
+    const accountAddress = "3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt";
+    const nextAccountNonce: NextAccountNonce = await client.getNextAccountNonce(
+        accountAddress
+    );
+    return Promise.all([
+        expect(nextAccountNonce.nonce).toEqual(6n),
+        expect(nextAccountNonce.allFinal).toBeTruthy(),
+    ]);
+});
+
 test("transaction status for invalid hash fails", async () => {
     const invalidTransactionHash = "P{L}GDA";
     await expect(
@@ -27,12 +45,12 @@ test("transaction status for invalid hash fails", async () => {
     );
 });
 
-test("transaction status for unknown transaction hash returns null", async () => {
+test("transaction status for unknown transaction hash returns undefined", async () => {
     const transactionHash =
         "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
     const transactionStatus: TransactionStatus =
         await client.getTransactionStatus(transactionHash);
-    return expect(transactionStatus).toBeNull();
+    return expect(transactionStatus).toBeUndefined();
 });
 
 test("retrieves transaction status", async () => {
@@ -66,11 +84,11 @@ test("invalid block hash fails", async () => {
     );
 });
 
-test("unknown block hash returns null", async () => {
+test("unknown block hash returns undefined", async () => {
     const blockHash =
         "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
     const blockInfo: BlockInfo = await client.getBlockInfo(blockHash);
-    return expect(blockInfo).toBeNull();
+    return expect(blockInfo).toBeUndefined();
 });
 
 test("retrieves block info", async () => {

@@ -1,3 +1,8 @@
 {
-    "include": ["src/**/*", "test/**/*"]
+    "include": ["src/**/*", "test/**/*"],
+    "compilerOptions": {
+        "lib": ["ES2020"],
+        "module": "commonjs",
+        "target": "ES2020"
+    }
 }

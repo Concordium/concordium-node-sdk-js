@@ -592,8 +592,8 @@ export namespace GetTransactionStatusInBlockRequest {
 }
 
 export class BlockHeight extends jspb.Message { 
-    getBlockHeight(): number;
-    setBlockHeight(value: number): BlockHeight;
+    getBlockHeight(): string;
+    setBlockHeight(value: string): BlockHeight;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): BlockHeight.AsObject;
@@ -607,6 +607,6 @@ export class BlockHeight extends jspb.Message {
 
 export namespace BlockHeight {
     export type AsObject = {
-        blockHeight: number,
+        blockHeight: string,
     }
 }

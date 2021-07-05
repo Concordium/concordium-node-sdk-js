@@ -4606,7 +4606,7 @@ proto.concordium.BlockHeight.prototype.toObject = function(opt_includeInstance) 
  */
 proto.concordium.BlockHeight.toObject = function(includeInstance, msg) {
   var f, obj = {
-    blockHeight: jspb.Message.getFieldWithDefault(msg, 1, 0)
+    blockHeight: jspb.Message.getFieldWithDefault(msg, 1, "0")
   };
 
   if (includeInstance) {
@@ -4644,7 +4644,7 @@ proto.concordium.BlockHeight.deserializeBinaryFromReader = function(msg, reader)
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = /** @type {number} */ (reader.readUint64());
+      var value = /** @type {string} */ (reader.readUint64String());
       msg.setBlockHeight(value);
       break;
     default:
@@ -4677,8 +4677,8 @@ proto.concordium.BlockHeight.prototype.serializeBinary = function() {
 proto.concordium.BlockHeight.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
   f = message.getBlockHeight();
-  if (f !== 0) {
-    writer.writeUint64(
+  if (parseInt(f, 10) !== 0) {
+    writer.writeUint64String(
       1,
       f
     );
@@ -4688,19 +4688,19 @@ proto.concordium.BlockHeight.serializeBinaryToWriter = function(message, writer)
 
 /**
  * optional uint64 block_height = 1;
- * @return {number}
+ * @return {string}
  */
 proto.concordium.BlockHeight.prototype.getBlockHeight = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, "0"));
 };
 
 
 /**
- * @param {number} value
+ * @param {string} value
  * @return {!proto.concordium.BlockHeight} returns this
  */
 proto.concordium.BlockHeight.prototype.setBlockHeight = function(value) {
-  return jspb.Message.setProto3IntField(this, 1, value);
+  return jspb.Message.setProto3StringIntField(this, 1, value);
 };
 
 

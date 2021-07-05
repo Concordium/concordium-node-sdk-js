@@ -34,6 +34,11 @@ export function unwrapJsonResponse<T>(
 ): T {
     const jsonString =
         JsonResponse.deserializeBinary(serializedResponse).getValue();
-    const transformedJson = transformer(jsonString);
-    return JSON.parse(transformedJson, reviver);
+
+    if (transformer) {
+        const transformedJson = transformer(jsonString);
+        return JSON.parse(transformedJson, reviver);
+    }
+
+    return JSON.parse(jsonString, reviver);
 }

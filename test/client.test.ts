@@ -20,6 +20,37 @@ const client = new ConcordiumNodeClient(
     15000
 );
 
+test("negative block height throws an error", async () => {
+    const blockHeight = -431n;
+    await expect(client.getBlocksAtHeight(blockHeight)).rejects.toEqual(
+        new Error(
+            "The block height has to be a positive integer, but it was: " +
+                blockHeight
+        )
+    );
+});
+
+test("no blocks returned for height not yet reached", async () => {
+    const blockHeight = 18446744073709551615n;
+    const blocksAtHeight: string[] = await client.getBlocksAtHeight(
+        blockHeight
+    );
+    return expect(blocksAtHeight.length).toEqual(0);
+});
+
+test("retrieves blocks at block height", async () => {
+    const blockHeight = 314n;
+    const blocksAtHeight: string[] = await client.getBlocksAtHeight(
+        blockHeight
+    );
+    return Promise.all([
+        expect(blocksAtHeight.length).toEqual(1),
+        expect(blocksAtHeight[0]).toEqual(
+            "0860312949e218cec331fd99043bd056eeb7683a698421e74a2ace2b3410af8a"
+        ),
+    ]);
+});
+
 test("retrieves the consensus status from the node with correct types", async () => {
     const consensusStatus: ConsensusStatus = await client.getConsensusStatus();
     return Promise.all([

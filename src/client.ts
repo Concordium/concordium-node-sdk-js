@@ -1,6 +1,6 @@
 import { ChannelCredentials, Metadata, ServiceError } from "@grpc/grpc-js";
 import { P2PClient } from "./grpc/concordium_p2p_rpc_grpc_pb";
-import { Empty } from "./grpc/concordium_p2p_rpc_pb";
+import { BlockHeight, Empty } from "./grpc/concordium_p2p_rpc_pb";
 import { ConsensusStatus } from "./types";
 import { intToString, unwrapJsonResponse } from "./util";
 
@@ -63,6 +63,27 @@ export default class ConcordiumNodeClient {
         this.timeout = timeout;
         this.metadata = metadata;
         this.client = new P2PClient(`${address}:${port}`, credentials, options);
+    }
+
+    /**
+     * Retrieves the blocks are the given height.
+     * @param height the block height as a positive integer
+     * @returns a string array containing the blocks at the given height, i.e. ['blockHash1', 'blockHash2', ...]
+     */
+    async getBlocksAtHeight(height: bigint): Promise<string[]> {
+        if (height <= 0n) {
+            throw new Error(
+                "The block height has to be a positive integer, but it was: " +
+                    height
+            );
+        }
+        const blockHeight = new BlockHeight();
+        blockHeight.setBlockHeight(height.toString());
+        const response = await this.sendRequest(
+            this.client.getBlocksAtHeight,
+            blockHeight
+        );
+        return unwrapJsonResponse<string[]>(response);
     }
 
     /**

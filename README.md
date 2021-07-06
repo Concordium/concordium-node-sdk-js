@@ -30,6 +30,21 @@ const client = new ConcordiumNodeClient(
 );
 ```
 
+## getAccountInfo
+Retrieves information about an account. If no account exists with the provided address, then the node
+will check if any credential with that credential identifier exists and will return information
+about the credential instead. If neither an account or credential matches the address at the provided
+block, then undefined will be returned.
+```js
+    const accountAddress = "3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU";
+    const blockHash = "6b01f2043d5621192480f4223644ef659dd5cda1e54a78fc64ad642587c73def";
+    const accountInfo: AccountInfo = await client.getAccountInfo(accountAddress, blockHash);
+    const amount: bigint = accountInfo.accountAmount;
+
+    // Nationality for the account creator, if the information has been revealed.
+    const nationality: string = accountInfo.accountCredentials[0].value.contents.policy.revealedAttributes["nationality"];
+```
+
 ## getNextAccountNonce
 Retrieves the next account nonce, i.e. the nonce that must be set in the account transaction
 header for the next transaction submitted by that account. Along with the nonce there is a boolean

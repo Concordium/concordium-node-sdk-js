@@ -1,5 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { JsonResponse } from "./grpc/concordium_p2p_rpc_pb";
+import {
+    AccountCredential,
+    InitialAccountCredential,
+    NormalAccountCredential,
+} from "./types";
 
 /**
  * Replaces a number in a JSON string with the same number as a
@@ -98,4 +103,22 @@ export function isHex(str: string): boolean {
  */
 export function isValidHash(hash: string): boolean {
     return hash.length === 64 && isHex(hash);
+}
+
+/**
+ * Type guard for determining if an account credential is a normal account credential.
+ */
+export function instanceOfNormalAccountCredential(
+    object: AccountCredential
+): object is NormalAccountCredential {
+    return object.type === "normal";
+}
+
+/**
+ * Type guard for determining if an account credential is an initial account credential.
+ */
+export function instanceOfInitialAccountCredential(
+    object: AccountCredential
+): object is InitialAccountCredential {
+    return object.type === "initial";
 }

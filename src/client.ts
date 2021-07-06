@@ -5,12 +5,17 @@ import {
     BlockHash,
     BlockHeight,
     Empty,
+    GetAddressInfoRequest,
     TransactionHash,
 } from "./grpc/concordium_p2p_rpc_pb";
 import {
+    AccountEncryptedAmount,
+    AccountInfo,
+    AccountReleaseSchedule,
     BlockInfo,
     ConsensusStatus,
     NextAccountNonce,
+    ReleaseSchedule,
     TransactionStatus,
     TransactionSummary,
 } from "./types";
@@ -83,7 +88,54 @@ export default class ConcordiumNodeClient {
     }
 
     /**
-     * Retrieves the next account nonce for the given account.
+     * Retrieves the account info for the given account. If the provided block
+     * hash is in a block prior to the finalization of the account, then the account
+     * information will not be available. If there is no account with the provided address,
+     * then the node will check if there exists any credential with that address and
+     * return information for that credential.
+     * @param accountAddress base58 account address to get the account info for
+     * @param blockHash the block hash to get the account info at
+     * @returns the account info for the provided account address, undefined is the account does not exist
+     */
+    async getAccountInfo(
+        accountAddress: string,
+        blockHash: string
+    ): Promise<AccountInfo> {
+        if (!isValidHash(blockHash)) {
+            throw new Error("The input was not a valid hash: " + blockHash);
+        }
+
+        const getAddressInfoRequest = new GetAddressInfoRequest();
+        getAddressInfoRequest.setAddress(accountAddress);
+        getAddressInfoRequest.setBlockHash(blockHash);
+
+        const response = await this.sendRequest(
+            this.client.getAccountInfo,
+            getAddressInfoRequest
+        );
+        const bigIntPropertyKeys: (
+            | keyof AccountInfo
+            | keyof AccountEncryptedAmount
+            | keyof AccountReleaseSchedule
+            | keyof ReleaseSchedule
+        )[] = [
+            "accountAmount",
+            "accountNonce",
+            "accountIndex",
+            "startIndex",
+            "total",
+            "amount",
+        ];
+        return unwrapJsonResponse<AccountInfo>(
+            response,
+            buildJsonResponseReviver([], bigIntPropertyKeys),
+            intToStringTransformer(bigIntPropertyKeys)
+        );
+    }
+
+    /**
+     * Retrieves the next account nonce for the given account. The account nonce is
+     * used in all account transactions as part of their header.
      * @param accountAddress base58 account address to get the next account nonce for
      * @returns the next account nonce, and a boolean indicating if the nonce is reliable
      */

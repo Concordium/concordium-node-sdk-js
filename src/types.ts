@@ -1,4 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+export interface Versioned<T> {
+    v: number;
+    value: T;
+}
+
+export enum AttributesKeys {
+    firstName,
+    lastName,
+    sex,
+    dob,
+    countryOfResidence,
+    nationality,
+    idDocType,
+    idDocNo,
+    idDocIssuer,
+    idDocIssuedAt,
+    idDocExpiresAt,
+    nationalIdNo,
+    taxIdNo,
+}
+export type Attributes = {
+    [P in keyof typeof AttributesKeys]: string;
+};
+export type AttributeKey = keyof Attributes;
+
 enum TransactionStatusEnum {
     Received = "received",
     Finalized = "finalized",
@@ -99,4 +124,99 @@ export interface ConsensusStatus {
 export interface NextAccountNonce {
     nonce: bigint;
     allFinal: boolean;
+}
+
+export interface ReleaseSchedule {
+    timestamp: Date;
+    amount: bigint;
+    transactions: any;
+}
+
+export interface AccountReleaseSchedule {
+    total: bigint;
+    schedule: ReleaseSchedule[];
+}
+
+export interface AccountEncryptedAmount {
+    selfAmount: string;
+    startIndex: bigint;
+    incomingAmounts: string[];
+    numAggregated: number;
+}
+
+export interface VerifyKey {
+    schemeId: string;
+    verifyKey: string;
+}
+
+export interface CredentialPublicKeys {
+    keys: Record<number, VerifyKey>;
+    threshold: number;
+}
+
+export interface ChainArData {
+    encIdCredPubShare: string;
+}
+
+export interface Policy {
+    validTo: string; // "YYYYMM"
+    createdAt: string; // "YYYYMM"
+    revealedAttributes: Record<AttributeKey, string>;
+}
+
+interface SharedCredentialDeploymentValues {
+    ipIdentity: number;
+    credentialPublicKeys: CredentialPublicKeys;
+    policy: Policy;
+}
+
+export interface CredentialDeploymentValues
+    extends SharedCredentialDeploymentValues {
+    credId: string;
+    revocationThreshold: number;
+    arData: Record<string, ChainArData>;
+    commitments: CredentialDeploymentCommitments;
+}
+
+export interface InitialCredentialDeploymentValues
+    extends SharedCredentialDeploymentValues {
+    regId: string;
+}
+
+export interface AccountCredential {
+    type: "normal" | "initial";
+}
+
+interface CredentialDeploymentCommitments {
+    cmmPrf: string;
+    cmmCredCounter: string;
+    cmmIdCredSecSharingCoeff: string[];
+    cmmAttributes: Record<AttributeKey, string>;
+    cmmMaxAccounts: string;
+}
+
+export interface NormalAccountCredential extends AccountCredential {
+    contents: CredentialDeploymentValues;
+}
+
+export interface InitialAccountCredential extends AccountCredential {
+    contents: InitialCredentialDeploymentValues;
+}
+
+export interface AccountInfo {
+    accountNonce: bigint;
+    accountAmount: bigint;
+    accountIndex: bigint;
+
+    accountThreshold: number;
+
+    accountEncryptionKey: string;
+    accountEncryptedAmount: AccountEncryptedAmount;
+
+    accountReleaseSchedule: AccountReleaseSchedule;
+
+    accountCredentials: Record<
+        number,
+        Versioned<InitialAccountCredential | NormalAccountCredential>
+    >;
 }

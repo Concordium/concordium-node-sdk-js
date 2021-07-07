@@ -6,12 +6,16 @@ import {
     BlockHeight,
     Empty,
     GetAddressInfoRequest,
+    SendTransactionRequest,
     TransactionHash,
 } from "./grpc/concordium_p2p_rpc_pb";
+import { serializeAccountTransactionForSubmission } from "./serialization";
 import {
     AccountEncryptedAmount,
     AccountInfo,
     AccountReleaseSchedule,
+    AccountTransaction,
+    AccountTransactionSignature,
     BlockInfo,
     ConsensusStatus,
     NextAccountNonce,
@@ -23,6 +27,7 @@ import {
     buildJsonResponseReviver,
     intToStringTransformer,
     isValidHash,
+    unwrapBoolResponse,
     unwrapJsonResponse,
 } from "./util";
 
@@ -85,6 +90,38 @@ export default class ConcordiumNodeClient {
         this.timeout = timeout;
         this.metadata = metadata;
         this.client = new P2PClient(`${address}:${port}`, credentials, options);
+    }
+
+    /**
+     * Serializes and sends an account transaction to the node to be
+     * put in a block on the chain.
+     *
+     * Note that a transaction can still fail even if it was accepted by the node.
+     * To keep track of the transaction use getTransactionStatus.
+     * @param accountTransaction the transaction to send to the node
+     * @param signatures the signatures on the signing digest of the transaction
+     * @returns true if the transaction was accepted, otherwise false
+     */
+    async sendAccountTransaction(
+        accountTransaction: AccountTransaction,
+        signatures: AccountTransactionSignature
+    ): Promise<boolean> {
+        const serializedAccountTransaction: Buffer = Buffer.from(
+            serializeAccountTransactionForSubmission(
+                accountTransaction,
+                signatures
+            )
+        );
+
+        const sendTransactionRequest = new SendTransactionRequest();
+        sendTransactionRequest.setNetworkId(100);
+        sendTransactionRequest.setPayload(serializedAccountTransaction);
+
+        const response = await this.sendRequest(
+            this.client.sendTransaction,
+            sendTransactionRequest
+        );
+        return unwrapBoolResponse(response);
     }
 
     /**

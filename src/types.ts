@@ -24,7 +24,7 @@ export type Attributes = {
 };
 export type AttributeKey = keyof Attributes;
 
-enum TransactionStatusEnum {
+export enum TransactionStatusEnum {
     Received = "received",
     Finalized = "finalized",
     Committed = "committed",
@@ -220,3 +220,66 @@ export interface AccountInfo {
         Versioned<InitialAccountCredential | NormalAccountCredential>
     >;
 }
+
+export enum BlockItemKind {
+    AccountTransactionKind = 0,
+    CredentialDeploymentKind = 1,
+    UpdateInstructionKind = 2,
+}
+
+/**
+ * The different types of account transactions. The number value
+ * is important as it is part of the serialization of a particular
+ * transaction.
+ */
+export enum AccountTransactionType {
+    DeployModule = 0,
+    InitializeSmartContractInstance = 1,
+    UpdateSmartContractInstance = 2,
+    SimpleTransfer = 3,
+    AddBaker = 4,
+    RemoveBaker = 5,
+    UpdateBakerStake = 6,
+    UpdateBakerRestakeEarnings = 7,
+    UpdateBakerKeys = 8,
+    UpdateCredentialKeys = 13,
+    EncryptedTransfer = 16,
+    TransferToEncrypted = 17,
+    TransferToPublic = 18,
+    TransferWithSchedule = 19,
+    UpdateCredentials = 20,
+    RegisterData = 21,
+}
+
+export interface AccountTransactionHeader {
+    /** base58 account address that is source of this transaction */
+    sender: string;
+
+    /**
+     * the nonce for the transaction, usually acquired by
+     * getting the next account nonce from the node
+     */
+    nonce: bigint;
+
+    /** expiration of the transaction in seconds since epoch */
+    expiry: bigint;
+}
+
+export interface SimpleTransfer {
+    /** µGTU amount to transfer */
+    amount: bigint;
+
+    /** the recipient of the transfer, base58 account address */
+    toAddress: string;
+}
+
+export type AccountTransactionPayload = SimpleTransfer;
+
+export interface AccountTransaction {
+    type: AccountTransactionType;
+    header: AccountTransactionHeader;
+    payload: AccountTransactionPayload;
+}
+
+export type CredentialSignature = Record<number, string>;
+export type AccountTransactionSignature = Record<number, CredentialSignature>;

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { JsonResponse } from "./grpc/concordium_p2p_rpc_pb";
+import { BoolResponse, JsonResponse } from "./grpc/concordium_p2p_rpc_pb";
 import {
     AccountCredential,
     InitialAccountCredential,
@@ -37,6 +37,13 @@ export function intToStringTransformer(
     bigIntPropertyKeys: string[]
 ): (json: string) => string {
     return (json: string) => intToString(json, bigIntPropertyKeys);
+}
+
+/**
+ * Unwraps a serialized bool response to the corresponding boolean/
+ */
+export function unwrapBoolResponse(serializedResponse: Uint8Array): boolean {
+    return BoolResponse.deserializeBinary(serializedResponse).getValue();
 }
 
 /**

@@ -30,19 +30,71 @@ const client = new ConcordiumNodeClient(
 );
 ```
 
+## Send a simple transfer
+The following examples demonstrates how a simple transfer can be created and sent.
+```js
+import * as ed from "noble-ed25519";
+
+// Create the transaction
+const header: AccountTransactionHeader = {
+    expiry: 1625653490n,    // seconds since epoch
+    nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
+    sender: "4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M",
+};
+const simpleTransfer: SimpleTransfer = {
+    amount: 100n,
+    toAddress: "4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf",
+};
+const simpleTransferAccountTransaction: AccountTransaction = {
+    header: header,
+    payload: simpleTransfer,
+    type: AccountTransactionType.SimpleTransfer,
+};
+
+// Sign the transaction, the following is just an example, and any method for signing
+// with the key can be employed.
+const signingKey = "ce432f6bba0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c";
+const hashToSign = getAccountTransactionSignDigest(simpleTransferAccountTransaction, sha256);
+const signature = Buffer.from(await ed.sign(hashToSign, signingKey)).toString("hex");
+
+// The signatures used to sign the transaction must be provided in a structured way,
+// so that each signature can be mapped to the credential that signed the transaction.
+// In this example we assume the key used was from the credential with index 0, and it
+// was the key with index 0.
+const signatures: AccountTransactionSignature = {
+    0: {
+        0: signature
+    }
+};
+
+// Send the transaction to the node.
+const success = await client.sendAccountTransaction(simpleTransferAccountTransaction, signatures);
+if (success) {
+    // The node accepted the transaction. This does not ensure that the transaction
+    // will end up in a block, only that the format of the submitted transaction was valid.
+} else {
+    // The node rejected the transaction. 
+}
+
+// Check the status of the transaction. Should be checked with an appropriate interval,
+// as it will take some time for the transaction to be processed.
+const transactionHash = getAccountTransactionHash(simpleTransferAccountTransaction, signatures, sha256);
+const transactionStatus = await client.getTransactionStatus(transactionHash);
+```
+
 ## getAccountInfo
 Retrieves information about an account. If no account exists with the provided address, then the node
 will check if any credential with that credential identifier exists and will return information
 about the credential instead. If neither an account or credential matches the address at the provided
 block, then undefined will be returned.
 ```js
-    const accountAddress = "3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU";
-    const blockHash = "6b01f2043d5621192480f4223644ef659dd5cda1e54a78fc64ad642587c73def";
-    const accountInfo: AccountInfo = await client.getAccountInfo(accountAddress, blockHash);
-    const amount: bigint = accountInfo.accountAmount;
+const accountAddress = "3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU";
+const blockHash = "6b01f2043d5621192480f4223644ef659dd5cda1e54a78fc64ad642587c73def";
+const accountInfo: AccountInfo = await client.getAccountInfo(accountAddress, blockHash);
+const amount: bigint = accountInfo.accountAmount;
 
-    // Nationality for the account creator, if the information has been revealed.
-    const nationality: string = accountInfo.accountCredentials[0].value.contents.policy.revealedAttributes["nationality"];
+// Nationality for the account creator, if the information has been revealed.
+const nationality: string = accountInfo.accountCredentials[0].value.contents.policy.revealedAttributes["nationality"];
 ```
 
 ## getNextAccountNonce
@@ -84,7 +136,7 @@ if (transactionStatus.status === TransactionStatusEnum.Finalized) {
 ```
 A transaction was successful if it is finalized and it has a successful outcome:
 ```js
-if (transactionStatus.status === TransactionStatusEnum.Finalized &&) {
+if (transactionStatus.status === TransactionStatusEnum.Finalized) {
     const event = Object.values(response.outcomes)[0];
     if (event.result.outcome === "success") {
         // transaction was successful.

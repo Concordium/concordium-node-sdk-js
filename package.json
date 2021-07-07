@@ -1,8 +1,7 @@
 {
     "name": "@concordium/node-sdk",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Helpers for interacting with the Concordium node",
-    "main": "index.js",
     "repository": {
         "type": "git",
         "url": "https://github.com/Concordium/concordium-node-sdk-js"
@@ -12,6 +11,9 @@
         "email": "support@concordium.software",
         "url": "https://concordium.com"
     },
+    "main": "lib/client.js",
+    "module": "lib-es/client.js",
+    "types": "lib/client.d.ts",
     "license": "Apache-2.0",
     "private": false,
     "engines": {

@@ -3,7 +3,7 @@
 
 /* tslint:disable */
 /* eslint-disable */
-
+// @ts-ignore
 import * as grpc from "grpc";
 import * as concordium_p2p_rpc_pb from "./concordium_p2p_rpc_pb";
 import * as google_protobuf_wrappers_pb from "google-protobuf/google/protobuf/wrappers_pb";

@@ -3,3 +3,6 @@ node_modules
 
 # Eslint cache
 .eslintcache
+
+# Compiled files
+lib

@@ -94,9 +94,9 @@ export interface ConsensusStatus {
     bestBlockHeight: bigint;
     lastFinalizedBlockHeight: bigint;
 
-    finalizationCount: number;
-    blocksVerifiedCount: number;
-    blocksReceivedCount: number;
+    finalizationCount: bigint;
+    blocksVerifiedCount: bigint;
+    blocksReceivedCount: bigint;
 
     blockArriveLatencyEMA: number;
     blockArriveLatencyEMSD: number;

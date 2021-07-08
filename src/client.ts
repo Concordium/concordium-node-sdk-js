@@ -310,6 +310,9 @@ export default class ConcordiumNodeClient {
             "slotDuration",
             "bestBlockHeight",
             "lastFinalizedBlockHeight",
+            "finalizationCount",
+            "blocksVerifiedCount",
+            "blocksReceivedCount",
         ];
 
         return unwrapJsonResponse<ConsensusStatus>(

@@ -369,13 +369,13 @@ test("retrieves the consensus status from the node with correct types", async ()
         expect(isHex(consensusStatus.genesisBlock)).toBeTruthy(),
         expect(isHex(consensusStatus.lastFinalizedBlock)).toBeTruthy(),
         expect(
-            Number.isInteger(consensusStatus.finalizationCount)
+            typeof consensusStatus.finalizationCount === "bigint"
         ).toBeTruthy(),
         expect(
-            Number.isInteger(consensusStatus.blocksVerifiedCount)
+            typeof consensusStatus.blocksVerifiedCount === "bigint"
         ).toBeTruthy(),
         expect(
-            Number.isInteger(consensusStatus.blocksReceivedCount)
+            typeof consensusStatus.blocksReceivedCount === "bigint"
         ).toBeTruthy(),
         expect(consensusStatus.blockLastArrivedTime).toBeInstanceOf(Date),
         expect(consensusStatus.blockLastReceivedTime).toBeInstanceOf(Date),

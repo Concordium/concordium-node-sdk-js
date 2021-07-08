@@ -92,6 +92,7 @@ export interface ConsensusStatus {
     epochDuration: bigint;
     slotDuration: bigint;
     bestBlockHeight: bigint;
+    lastFinalizedBlockHeight: bigint;
 
     finalizationCount: number;
     blocksVerifiedCount: number;

@@ -309,6 +309,7 @@ export default class ConcordiumNodeClient {
             "epochDuration",
             "slotDuration",
             "bestBlockHeight",
+            "lastFinalizedBlockHeight",
         ];
 
         return unwrapJsonResponse<ConsensusStatus>(

@@ -415,5 +415,8 @@ test("retrieves the consensus status from the node with correct types", async ()
         expect(
             typeof consensusStatus.bestBlockHeight === "bigint"
         ).toBeTruthy(),
+        expect(
+            typeof consensusStatus.lastFinalizedBlockHeight === "bigint"
+        ).toBeTruthy(),
     ]);
 });

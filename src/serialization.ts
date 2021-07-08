@@ -19,7 +19,7 @@ import { calculateEnergyCost } from './energyCost';
 import { countSignatures } from './util';
 
 function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
-    return Buffer.from(Buffer.of(type));
+    return Buffer.from(Uint8Array.of(type));
 }
 
 /**

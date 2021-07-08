@@ -1,14 +1,6 @@
 import { credentials, Metadata } from '@grpc/grpc-js';
 import ConcordiumNodeClient from '../src/client';
-import {
-    AccountInfo,
-    BlockInfo,
-    ConsensusStatus,
-    NextAccountNonce,
-    NormalAccountCredential,
-    TransactionStatus,
-    TransactionSummary,
-} from '../src/types';
+import { ConsensusStatus, NormalAccountCredential } from '../src/types';
 import { instanceOfNormalAccountCredential, isHex } from '../src/util';
 
 const metadata = new Metadata();
@@ -36,10 +28,7 @@ test('account info for unknown block hash is undefined', async () => {
     const blockHash =
         'fd4915edca67b4e8f6521641a638a3abdbdd7934e4f2a9a52d8673861e2ebdd2';
 
-    const accountInfo: AccountInfo = await client.getAccountInfo(
-        accountAddress,
-        blockHash
-    );
+    const accountInfo = await client.getAccountInfo(accountAddress, blockHash);
     return expect(accountInfo).toBeUndefined();
 });
 
@@ -48,10 +37,7 @@ test('account info for unknown account address is undefined', async () => {
     const blockHash =
         '6b01f2043d5621192480f4223644ef659dd5cda1e54a78fc64ad642587c73def';
 
-    const accountInfo: AccountInfo = await client.getAccountInfo(
-        accountAddress,
-        blockHash
-    );
+    const accountInfo = await client.getAccountInfo(accountAddress, blockHash);
     return expect(accountInfo).toBeUndefined();
 });
 
@@ -60,12 +46,14 @@ test('retrieves the account info', async () => {
     const blockHash =
         '6b01f2043d5621192480f4223644ef659dd5cda1e54a78fc64ad642587c73def';
 
-    const accountInfo: AccountInfo = await client.getAccountInfo(
-        accountAddress,
-        blockHash
-    );
+    const accountInfo = await client.getAccountInfo(accountAddress, blockHash);
 
-    let normalAccountCredentialExpects = [];
+    if (!accountInfo) {
+        throw new Error('Test failed to find account info');
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let normalAccountCredentialExpects: any[] = [];
     if (
         instanceOfNormalAccountCredential(
             accountInfo.accountCredentials[0].value
@@ -230,9 +218,12 @@ test('next account nonce for unknown address returns undefined', async () => {
 
 test('retrieves the next account nonce', async () => {
     const accountAddress = '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt';
-    const nextAccountNonce: NextAccountNonce = await client.getNextAccountNonce(
-        accountAddress
-    );
+    const nextAccountNonce = await client.getNextAccountNonce(accountAddress);
+    if (!nextAccountNonce) {
+        throw new Error(
+            'Test could not find next account nonce that was expected to be available.'
+        );
+    }
     return Promise.all([
         expect(nextAccountNonce.nonce).toEqual(6n),
         expect(nextAccountNonce.allFinal).toBeTruthy(),
@@ -251,19 +242,24 @@ test('transaction status for invalid hash fails', async () => {
 test('transaction status for unknown transaction hash returns undefined', async () => {
     const transactionHash =
         '7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749';
-    const transactionStatus: TransactionStatus =
-        await client.getTransactionStatus(transactionHash);
+    const transactionStatus = await client.getTransactionStatus(
+        transactionHash
+    );
     return expect(transactionStatus).toBeUndefined();
 });
 
 test('retrieves transaction status', async () => {
     const transactionHash =
         'f1f5f966e36b95d5474e6b85b85c273c81bac347c38621a0d8fefe68b69a430f';
-    const transactionStatus: TransactionStatus =
-        await client.getTransactionStatus(transactionHash);
-    const outcome: TransactionSummary = Object.values(
-        transactionStatus.outcomes
-    )[0];
+    const transactionStatus = await client.getTransactionStatus(
+        transactionHash
+    );
+
+    if (transactionStatus === undefined || !transactionStatus.outcomes) {
+        throw new Error('Test failed to find transaction status!');
+    }
+
+    const outcome = Object.values(transactionStatus.outcomes)[0];
 
     return Promise.all([
         expect(transactionStatus.status).toEqual('finalized'),
@@ -290,14 +286,18 @@ test('invalid block hash fails', async () => {
 test('unknown block hash returns undefined', async () => {
     const blockHash =
         '7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749';
-    const blockInfo: BlockInfo = await client.getBlockInfo(blockHash);
+    const blockInfo = await client.getBlockInfo(blockHash);
     return expect(blockInfo).toBeUndefined();
 });
 
 test('retrieves block info', async () => {
     const blockHash =
         '7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749';
-    const blockInfo: BlockInfo = await client.getBlockInfo(blockHash);
+    const blockInfo = await client.getBlockInfo(blockHash);
+
+    if (!blockInfo) {
+        throw new Error('Test was unable to get block info');
+    }
 
     return Promise.all([
         expect(blockInfo.transactionsSize).toEqual(0n),
@@ -343,9 +343,7 @@ test('negative block height throws an error', async () => {
 
 test('no blocks returned for height not yet reached', async () => {
     const blockHeight = 18446744073709551615n;
-    const blocksAtHeight: string[] = await client.getBlocksAtHeight(
-        blockHeight
-    );
+    const blocksAtHeight = await client.getBlocksAtHeight(blockHeight);
     return expect(blocksAtHeight.length).toEqual(0);
 });
 

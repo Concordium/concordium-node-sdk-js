@@ -20,12 +20,17 @@ test('send transaction signed with wrong private key is accepted', async () => {
         toAddress: '4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf',
     };
 
-    const { nonce } = await client.getNextAccountNonce(senderAccountAddress);
+    const nextAccountNonce = await client.getNextAccountNonce(
+        senderAccountAddress
+    );
+    if (!nextAccountNonce) {
+        throw new Error('Nonce not found!');
+    }
     const header: AccountTransactionHeader = {
         expiry: BigInt(
             Math.floor(new Date(Date.now() + 3600000).getTime() / 1000)
         ),
-        nonce: nonce,
+        nonce: nextAccountNonce.nonce,
         sender: senderAccountAddress,
     };
 
@@ -64,10 +69,16 @@ test('send transaction signed with expiry too far into the future is rejected', 
         toAddress: '4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf',
     };
 
-    const { nonce } = await client.getNextAccountNonce(senderAccountAddress);
+    const nextAccountNonce = await client.getNextAccountNonce(
+        senderAccountAddress
+    );
+    if (!nextAccountNonce) {
+        throw new Error('Nonce not found!');
+    }
+
     const header: AccountTransactionHeader = {
         expiry: 2225279747n,
-        nonce: nonce,
+        nonce: nextAccountNonce.nonce,
         sender: senderAccountAddress,
     };
 

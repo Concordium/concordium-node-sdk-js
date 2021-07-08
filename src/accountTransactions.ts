@@ -26,17 +26,23 @@ export class SimpleTransferHandler implements AccountTransactionHandler {
     }
 }
 
-export function getAccountTransactionHandlerMap(): Map<
-    AccountTransactionType,
-    AccountTransactionHandler
-> {
-    const payloadSerializerMap = new Map<
+export function getAccountTransactionHandler(
+    type: AccountTransactionType
+): AccountTransactionHandler {
+    const accountTransactionHandlerMap = new Map<
         AccountTransactionType,
         AccountTransactionHandler
     >();
-    payloadSerializerMap.set(
+    accountTransactionHandlerMap.set(
         AccountTransactionType.SimpleTransfer,
         new SimpleTransferHandler()
     );
-    return payloadSerializerMap;
+
+    const handler = accountTransactionHandlerMap.get(type);
+    if (!handler) {
+        throw new Error(
+            'The handler map is missing the provided type: ' + type
+        );
+    }
+    return handler;
 }

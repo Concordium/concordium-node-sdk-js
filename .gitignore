@@ -10,3 +10,6 @@ lib
 # Manual testing files
 testing.ts
 testing.js
+
+# Package lock
+package-lock.json

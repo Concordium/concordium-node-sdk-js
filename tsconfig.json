@@ -2,6 +2,7 @@
     "include": ["src/**/*"],
     "exclude": ["node_modules"],
     "compilerOptions": {
+        "strict": true,
         "lib": ["ES2020"],
         "module": "commonjs",
         "declaration": true,

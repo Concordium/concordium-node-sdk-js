@@ -1,6 +1,6 @@
 import bs58check from 'bs58check';
 import { Buffer } from 'buffer/';
-import { getAccountTransactionHandlerMap } from './accountTransactions';
+import { getAccountTransactionHandler } from './accountTransactions';
 import {
     encodeUint8,
     encodeWord32,
@@ -99,7 +99,7 @@ export function serializeAccountTransaction(
         accountTransaction.type
     );
 
-    const accountTransactionHandler = getAccountTransactionHandlerMap().get(
+    const accountTransactionHandler = getAccountTransactionHandler(
         accountTransaction.type
     );
     const serializedPayload = accountTransactionHandler.serialize(
@@ -163,7 +163,7 @@ export function getAccountTransactionSignDigest(
     sha256: (serialization: Buffer[]) => Buffer,
     signatureCount = 1n
 ): Buffer {
-    const accountTransactionHandler = getAccountTransactionHandlerMap().get(
+    const accountTransactionHandler = getAccountTransactionHandler(
         accountTransaction.type
     );
     const serializedPayload = accountTransactionHandler.serialize(

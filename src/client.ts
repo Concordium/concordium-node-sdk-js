@@ -137,7 +137,7 @@ export default class ConcordiumNodeClient {
     async getAccountInfo(
         accountAddress: string,
         blockHash: string
-    ): Promise<AccountInfo> {
+    ): Promise<AccountInfo | undefined> {
         if (!isValidHash(blockHash)) {
             throw new Error('The input was not a valid hash: ' + blockHash);
         }
@@ -285,7 +285,12 @@ export default class ConcordiumNodeClient {
             this.client.getBlocksAtHeight,
             blockHeight
         );
-        return unwrapJsonResponse<string[]>(response);
+
+        const blocksAtHeight = unwrapJsonResponse<string[]>(response);
+        if (!blocksAtHeight) {
+            return [];
+        }
+        return blocksAtHeight;
     }
 
     /**
@@ -315,11 +320,19 @@ export default class ConcordiumNodeClient {
             'blocksReceivedCount',
         ];
 
-        return unwrapJsonResponse<ConsensusStatus>(
+        const consensusStatus = unwrapJsonResponse<ConsensusStatus>(
             response,
             buildJsonResponseReviver(datePropertyKeys, bigIntPropertyKeys),
             intToStringTransformer(bigIntPropertyKeys)
         );
+
+        if (!consensusStatus) {
+            throw new Error(
+                'Nothing was returned when trying to get the consensus status.'
+            );
+        }
+
+        return consensusStatus;
     }
 
     sendRequest<T, Response extends Serializable>(

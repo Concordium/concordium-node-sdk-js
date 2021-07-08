@@ -30,7 +30,7 @@ export enum TransactionStatusEnum {
     Committed = "committed",
 }
 
-interface EventResult {
+export interface EventResult {
     outcome: string;
     // TODO Resolve the types completely.
     events: any;
@@ -187,7 +187,7 @@ export interface AccountCredential {
     type: "normal" | "initial";
 }
 
-interface CredentialDeploymentCommitments {
+export interface CredentialDeploymentCommitments {
     cmmPrf: string;
     cmmCredCounter: string;
     cmmIdCredSecSharingCoeff: string[];

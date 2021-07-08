@@ -14,7 +14,7 @@ The current node setup only allows for insecure connections, which can be set up
 The access is controlled by the credentials and the metadata.
 ```js
 import { credentials, Metadata } from "@grpc/grpc-js";
-import ConcordiumNodeClient from "@concordium/node-sdk";
+import { ConcordiumNodeClient } from "@concordium/node-sdk";
 
 const metadata = new Metadata();
 metadata.add("authentication", "rpcadmin");

@@ -6,3 +6,7 @@ node_modules
 
 # Compiled files
 lib
+
+# Manual testing files
+testing.ts
+testing.js

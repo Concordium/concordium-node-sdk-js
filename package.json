@@ -1,6 +1,6 @@
 {
     "name": "@concordium/node-sdk",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "description": "Helpers for interacting with the Concordium node",
     "repository": {
         "type": "git",
@@ -48,6 +48,7 @@
         "build": "tsc && cp -r ./src/grpc/ ./lib/grpc/"
     },
     "dependencies": {
+        "@concordium/node-sdk": "^0.1.4",
         "@grpc/grpc-js": "^1.3.4",
         "bs58check": "^2.1.2",
         "buffer": "^6.0.3",

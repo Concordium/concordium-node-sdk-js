@@ -14,17 +14,16 @@ The current node setup only allows for insecure connections, which can be set up
 The access is controlled by the credentials and the metadata.
 ```js
 import { credentials, Metadata } from "@grpc/grpc-js";
-import ConcordiumNodeClient from "@concordium/concordium-node-sdk-js";
+import ConcordiumNodeClient from "@concordium/node-sdk";
 
 const metadata = new Metadata();
 metadata.add("authentication", "rpcadmin");
 
-const credentials = credentials.createInsecure();
-
+const insecureCredentials = credentials.createInsecure();
 const client = new ConcordiumNodeClient(
     "127.0.0.1",    // ip address
     10000,          // port
-    credentials,
+    insecureCredentials,
     metadata,
     15000           // timeout in ms
 );
@@ -176,7 +175,7 @@ files from the `.proto` file. Do this by running:
 ```
 yarn generate
 ```
-This will overwrite the existing files in `src/grpc`. Remember to check that existing functionality still
+This will overwrite the existing files in `src/grpc/`. Remember to check that existing functionality still
 works after performing an update.
 
 # Test

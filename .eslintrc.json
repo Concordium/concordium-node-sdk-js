@@ -1,7 +1,7 @@
 {
     "env": {
         "browser": true,
-        "es2021": true
+        "es2020": true
     },
     "extends": [
         "plugin:prettier/recommended",
@@ -11,8 +11,7 @@
     "parserOptions": {
         "ecmaVersion": 2020,
         "sourceType": "module",
-        "project": "./tsconfig.eslint.json",
-        "tsconfigRootDir": "."
+        "project": "./tsconfig.eslint.json"
     },
     "plugins": [
         "@typescript-eslint"

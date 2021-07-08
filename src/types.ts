@@ -25,9 +25,9 @@ export type Attributes = {
 export type AttributeKey = keyof Attributes;
 
 export enum TransactionStatusEnum {
-    Received = "received",
-    Finalized = "finalized",
-    Committed = "committed",
+    Received = 'received',
+    Finalized = 'finalized',
+    Committed = 'committed',
 }
 
 export interface EventResult {
@@ -38,9 +38,9 @@ export interface EventResult {
 
 interface TransactionSummaryType {
     type:
-        | "accountTransaction"
-        | "credentialDeploymentTransaction"
-        | "updateTransaction";
+        | 'accountTransaction'
+        | 'credentialDeploymentTransaction'
+        | 'updateTransaction';
     // TODO: Figure out if contents is always just a string.
     contents: string;
 }
@@ -185,7 +185,7 @@ export interface InitialCredentialDeploymentValues
 }
 
 export interface AccountCredential {
-    type: "normal" | "initial";
+    type: 'normal' | 'initial';
 }
 
 export interface CredentialDeploymentCommitments {

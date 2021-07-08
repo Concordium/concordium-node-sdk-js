@@ -1,5 +1,5 @@
-import { ChannelCredentials, Metadata, ServiceError } from "@grpc/grpc-js";
-import { P2PClient } from "./grpc/concordium_p2p_rpc_grpc_pb";
+import { ChannelCredentials, Metadata, ServiceError } from '@grpc/grpc-js';
+import { P2PClient } from './grpc/concordium_p2p_rpc_grpc_pb';
 import {
     AccountAddress,
     BlockHash,
@@ -8,8 +8,8 @@ import {
     GetAddressInfoRequest,
     SendTransactionRequest,
     TransactionHash,
-} from "./grpc/concordium_p2p_rpc_pb";
-import { serializeAccountTransactionForSubmission } from "./serialization";
+} from './grpc/concordium_p2p_rpc_pb';
+import { serializeAccountTransactionForSubmission } from './serialization';
 import {
     AccountEncryptedAmount,
     AccountInfo,
@@ -22,14 +22,14 @@ import {
     ReleaseSchedule,
     TransactionStatus,
     TransactionSummary,
-} from "./types";
+} from './types';
 import {
     buildJsonResponseReviver,
     intToStringTransformer,
     isValidHash,
     unwrapBoolResponse,
     unwrapJsonResponse,
-} from "./util";
+} from './util';
 
 interface GrpcClient extends P2PClient {
     waitForReady?(date: Date, cb: (error: ServiceError) => void): void;
@@ -81,7 +81,7 @@ export default class ConcordiumNodeClient {
     ) {
         if (timeout < 0 || !Number.isSafeInteger(timeout)) {
             throw new Error(
-                "The timeout must be a positive integer, but was: " + timeout
+                'The timeout must be a positive integer, but was: ' + timeout
             );
         }
 
@@ -139,7 +139,7 @@ export default class ConcordiumNodeClient {
         blockHash: string
     ): Promise<AccountInfo> {
         if (!isValidHash(blockHash)) {
-            throw new Error("The input was not a valid hash: " + blockHash);
+            throw new Error('The input was not a valid hash: ' + blockHash);
         }
 
         const getAddressInfoRequest = new GetAddressInfoRequest();
@@ -156,12 +156,12 @@ export default class ConcordiumNodeClient {
             | keyof AccountReleaseSchedule
             | keyof ReleaseSchedule
         )[] = [
-            "accountAmount",
-            "accountNonce",
-            "accountIndex",
-            "startIndex",
-            "total",
-            "amount",
+            'accountAmount',
+            'accountNonce',
+            'accountIndex',
+            'startIndex',
+            'total',
+            'amount',
         ];
         return unwrapJsonResponse<AccountInfo>(
             response,
@@ -187,7 +187,7 @@ export default class ConcordiumNodeClient {
             accountAddressObject
         );
 
-        const bigIntPropertyKeys: (keyof NextAccountNonce)[] = ["nonce"];
+        const bigIntPropertyKeys: (keyof NextAccountNonce)[] = ['nonce'];
 
         return unwrapJsonResponse<NextAccountNonce>(
             response,
@@ -206,14 +206,14 @@ export default class ConcordiumNodeClient {
     ): Promise<TransactionStatus | undefined> {
         if (!isValidHash(transactionHash)) {
             throw new Error(
-                "The input was not a valid hash: " + transactionHash
+                'The input was not a valid hash: ' + transactionHash
             );
         }
 
         const bigIntPropertyKeys: (keyof TransactionSummary)[] = [
-            "cost",
-            "energyCost",
-            "index",
+            'cost',
+            'energyCost',
+            'index',
         ];
 
         const transactionHashObject = new TransactionHash();
@@ -236,7 +236,7 @@ export default class ConcordiumNodeClient {
      */
     async getBlockInfo(blockHash: string): Promise<BlockInfo | undefined> {
         if (!isValidHash(blockHash)) {
-            throw new Error("The input was not a valid hash: " + blockHash);
+            throw new Error('The input was not a valid hash: ' + blockHash);
         }
 
         const blockHashObject = new BlockHash();
@@ -247,17 +247,17 @@ export default class ConcordiumNodeClient {
         );
 
         const datePropertyKeys: (keyof BlockInfo)[] = [
-            "blockArriveTime",
-            "blockReceiveTime",
-            "blockSlotTime",
+            'blockArriveTime',
+            'blockReceiveTime',
+            'blockSlotTime',
         ];
         const bigIntPropertyKeys: (keyof BlockInfo)[] = [
-            "blockHeight",
-            "blockBaker",
-            "blockSlot",
-            "transactionEnergyCost",
-            "transactionCount",
-            "transactionsSize",
+            'blockHeight',
+            'blockBaker',
+            'blockSlot',
+            'transactionEnergyCost',
+            'transactionCount',
+            'transactionsSize',
         ];
 
         return unwrapJsonResponse<BlockInfo>(
@@ -275,7 +275,7 @@ export default class ConcordiumNodeClient {
     async getBlocksAtHeight(height: bigint): Promise<string[]> {
         if (height <= 0n) {
             throw new Error(
-                "The block height has to be a positive integer, but it was: " +
+                'The block height has to be a positive integer, but it was: ' +
                     height
             );
         }
@@ -300,19 +300,19 @@ export default class ConcordiumNodeClient {
         );
 
         const datePropertyKeys: (keyof ConsensusStatus)[] = [
-            "blockLastReceivedTime",
-            "blockLastArrivedTime",
-            "genesisTime",
-            "lastFinalizedTime",
+            'blockLastReceivedTime',
+            'blockLastArrivedTime',
+            'genesisTime',
+            'lastFinalizedTime',
         ];
         const bigIntPropertyKeys: (keyof ConsensusStatus)[] = [
-            "epochDuration",
-            "slotDuration",
-            "bestBlockHeight",
-            "lastFinalizedBlockHeight",
-            "finalizationCount",
-            "blocksVerifiedCount",
-            "blocksReceivedCount",
+            'epochDuration',
+            'slotDuration',
+            'bestBlockHeight',
+            'lastFinalizedBlockHeight',
+            'finalizationCount',
+            'blocksVerifiedCount',
+            'blocksReceivedCount',
         ];
 
         return unwrapJsonResponse<ConsensusStatus>(
@@ -330,7 +330,7 @@ export default class ConcordiumNodeClient {
         return new Promise<Uint8Array>((resolve, reject) => {
             if (this.client.waitForReady === undefined) {
                 reject(
-                    new Error("The client is missing the waitForReady function")
+                    new Error('The client is missing the waitForReady function')
                 );
             } else {
                 this.client.waitForReady(deadline, (error) => {

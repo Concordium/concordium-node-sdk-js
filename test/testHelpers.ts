@@ -1,5 +1,5 @@
-import { credentials, Metadata } from "@grpc/grpc-js/";
-import ConcordiumNodeClient from "../src/client";
+import { credentials, Metadata } from '@grpc/grpc-js/';
+import ConcordiumNodeClient from '../src/client';
 
 /**
  * Creates a client to communicate with a local concordium-node
@@ -7,9 +7,9 @@ import ConcordiumNodeClient from "../src/client";
  */
 export default function getNodeClient(): ConcordiumNodeClient {
     const metadata = new Metadata();
-    metadata.add("authentication", "rpcadmin");
+    metadata.add('authentication', 'rpcadmin');
     return new ConcordiumNodeClient(
-        "127.0.0.1",
+        '127.0.0.1',
         10000,
         credentials.createInsecure(),
         metadata,

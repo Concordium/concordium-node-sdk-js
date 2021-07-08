@@ -38,6 +38,10 @@
         "ts-jest": "^27.0.3",
         "typescript": "^4.3.5"
     },
+    "prettier": {
+        "singleQuote": true,
+        "tabWidth": 4
+    },
     "scripts": {
         "generate-js": "yarn run grpc_tools_node_protoc --js_out=import_style=commonjs,binary:src/grpc --grpc_out=grpc_js:src/grpc --plugin=protoc-gen-grpc=./node_modules/.bin/grpc_tools_node_protoc_plugin -I ./deps/concordium-grpc-api deps/concordium-grpc-api/*.proto",
         "generate-ts": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=src/grpc -I ./deps/concordium-grpc-api deps/concordium-grpc-api/*.proto",

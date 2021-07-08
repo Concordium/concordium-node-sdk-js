@@ -1,11 +1,11 @@
-import bs58check from "bs58check";
-import { Buffer } from "buffer/";
-import { encodeWord64 } from "./serializationHelpers";
+import bs58check from 'bs58check';
+import { Buffer } from 'buffer/';
+import { encodeWord64 } from './serializationHelpers';
 import {
     AccountTransactionPayload,
     AccountTransactionType,
     SimpleTransfer,
-} from "./types";
+} from './types';
 
 interface AccountTransactionHandler {
     serialize: (payload: AccountTransactionPayload) => Buffer;

@@ -1,12 +1,12 @@
-import bs58check from "bs58check";
-import { Buffer } from "buffer/";
-import { getAccountTransactionHandlerMap } from "./accountTransactions";
+import bs58check from 'bs58check';
+import { Buffer } from 'buffer/';
+import { getAccountTransactionHandlerMap } from './accountTransactions';
 import {
     encodeUint8,
     encodeWord32,
     encodeWord64,
     serializeMap,
-} from "./serializationHelpers";
+} from './serializationHelpers';
 import {
     AccountTransactionHeader,
     AccountTransactionType,
@@ -14,8 +14,8 @@ import {
     BlockItemKind,
     AccountTransactionSignature,
     CredentialSignature,
-} from "./types";
-import { calculateEnergyCost } from "./energyCost";
+} from './types';
+import { calculateEnergyCost } from './energyCost';
 
 function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
     return Buffer.from(Buffer.of(type));
@@ -57,11 +57,11 @@ export function serializeAccountTransactionSignature(
     signatures: AccountTransactionSignature
 ): Buffer {
     if (Object.keys(signatures).length === 0) {
-        throw new Error("No signatures were provided");
+        throw new Error('No signatures were provided');
     }
 
     const putSignature = (signature: string) => {
-        const signatureBytes = Buffer.from(signature, "hex");
+        const signatureBytes = Buffer.from(signature, 'hex');
         const length = Buffer.alloc(2);
         length.writeUInt16BE(signatureBytes.length, 0);
         return Buffer.concat([length, signatureBytes]);
@@ -145,7 +145,7 @@ export function getAccountTransactionHash(
         accountTransaction,
         signatures
     );
-    return sha256([serializedAccountTransaction]).toString("hex");
+    return sha256([serializedAccountTransaction]).toString('hex');
 }
 
 /**

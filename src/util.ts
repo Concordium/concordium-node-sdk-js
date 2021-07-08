@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { BoolResponse, JsonResponse } from "./grpc/concordium_p2p_rpc_pb";
+import { BoolResponse, JsonResponse } from './grpc/concordium_p2p_rpc_pb';
 import {
     AccountCredential,
     InitialAccountCredential,
     NormalAccountCredential,
-} from "./types";
+} from './types';
 
 /**
  * Replaces a number in a JSON string with the same number as a
@@ -19,7 +19,7 @@ function intToString(jsonStruct: string, keys: string[]): string {
     const result = jsonStruct;
     for (const key of keys) {
         result.replace(
-            new RegExp(`"${key}":\\s*([0-9]+)`, "g"),
+            new RegExp(`"${key}":\\s*([0-9]+)`, 'g'),
             `"${key}":"$1"`
         );
     }
@@ -61,7 +61,7 @@ export function unwrapJsonResponse<T>(
     const jsonString =
         JsonResponse.deserializeBinary(serializedResponse).getValue();
 
-    if (jsonString === "null") {
+    if (jsonString === 'null') {
         return undefined;
     }
 
@@ -118,7 +118,7 @@ export function isValidHash(hash: string): boolean {
 export function instanceOfNormalAccountCredential(
     object: AccountCredential
 ): object is NormalAccountCredential {
-    return object.type === "normal";
+    return object.type === 'normal';
 }
 
 /**
@@ -127,5 +127,5 @@ export function instanceOfNormalAccountCredential(
 export function instanceOfInitialAccountCredential(
     object: AccountCredential
 ): object is InitialAccountCredential {
-    return object.type === "initial";
+    return object.type === 'initial';
 }

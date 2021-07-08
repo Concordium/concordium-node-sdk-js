@@ -1,4 +1,4 @@
-import { Buffer } from "buffer/";
+import { Buffer } from 'buffer/';
 
 export function serializeMap<K extends string | number | symbol, T>(
     map: Record<K, T>,
@@ -23,7 +23,7 @@ export function serializeMap<K extends string | number | symbol, T>(
 export function encodeWord64(value: bigint): Buffer {
     if (value > 9223372036854775807n || value < 0n) {
         throw new Error(
-            "The input has to be a 64 bit unsigned integer but it was: " + value
+            'The input has to be a 64 bit unsigned integer but it was: ' + value
         );
     }
     const arr = new ArrayBuffer(8);
@@ -40,7 +40,7 @@ export function encodeWord64(value: bigint): Buffer {
 export function encodeWord32(value: number): Buffer {
     if (value > 4294967295 || value < 0) {
         throw new Error(
-            "The input has to be a 32 bit unsigned integer but it was: " + value
+            'The input has to be a 32 bit unsigned integer but it was: ' + value
         );
     }
     const arr = new ArrayBuffer(4);

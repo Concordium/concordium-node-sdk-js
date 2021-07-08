@@ -1,10 +1,11 @@
 import ConcordiumNodeClient from "./client";
-import * as types from "./types";
 import {
     getAccountTransactionHash,
     getAccountTransactionSignDigest,
 } from "./serialization";
+import { sha256 } from "./hash";
 
 export { ConcordiumNodeClient };
-export { types };
+export * from "./types";
 export { getAccountTransactionHash, getAccountTransactionSignDigest };
+export { sha256 };

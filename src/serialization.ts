@@ -16,6 +16,7 @@ import {
     CredentialSignature,
 } from './types';
 import { calculateEnergyCost } from './energyCost';
+import { countSignatures } from './util';
 
 function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
     return Buffer.from(Buffer.of(type));
@@ -105,12 +106,11 @@ export function serializeAccountTransaction(
         accountTransaction.payload
     );
 
-    // TODO Improve how the energy cost is calculated / provided.
     const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(
         accountTransaction.payload
     );
     const energyCost = calculateEnergyCost(
-        1n,
+        countSignatures(signatures),
         BigInt(serializedPayload.length + 1),
         baseEnergyCost
     );
@@ -170,7 +170,6 @@ export function getAccountTransactionSignDigest(
         accountTransaction.payload
     );
 
-    // TODO Improve how the energy cost is calculated / provided.
     const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(
         accountTransaction.payload
     );

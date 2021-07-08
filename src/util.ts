@@ -2,6 +2,7 @@
 import { BoolResponse, JsonResponse } from './grpc/concordium_p2p_rpc_pb';
 import {
     AccountCredential,
+    AccountTransactionSignature,
     InitialAccountCredential,
     NormalAccountCredential,
 } from './types';
@@ -128,4 +129,20 @@ export function instanceOfInitialAccountCredential(
     object: AccountCredential
 ): object is InitialAccountCredential {
     return object.type === 'initial';
+}
+
+/**
+ * Counts the total number of signatures.
+ * @param accountSignatures the signature structure to count
+ */
+export function countSignatures(
+    accountSignatures: AccountTransactionSignature
+): bigint {
+    let totalSignatureCount = 0n;
+    const values = Object.values(accountSignatures);
+    for (const credentialSignature of values) {
+        const signatureCount = BigInt(Object.keys(credentialSignature).length);
+        totalSignatureCount += signatureCount;
+    }
+    return totalSignatureCount;
 }

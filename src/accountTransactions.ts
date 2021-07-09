@@ -18,7 +18,7 @@ export class SimpleTransferHandler implements AccountTransactionHandler {
 
     serialize(transfer: SimpleTransfer): Buffer {
         const serializedToAddress = transfer.toAddress.decodedAddress;
-        const serializedAmount = encodeWord64(transfer.amount);
+        const serializedAmount = encodeWord64(transfer.amount.microGtuAmount);
         return Buffer.concat([serializedToAddress, serializedAmount]);
     }
 }

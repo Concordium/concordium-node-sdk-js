@@ -9,4 +9,6 @@ export { ConcordiumNodeClient };
 export * from './types';
 export { getAccountTransactionHash, getAccountTransactionSignDigest };
 export { sha256 };
-export { AccountAddress } from './accountAddress';
+export { AccountAddress } from './types/accountAddress';
+export { GtuAmount } from './types/gtuAmount';
+export { TransactionExpiry } from './types/transactionExpiry';

@@ -1,4 +1,5 @@
-import { AccountAddress } from '../src/accountAddress';
+import { AccountAddress } from '../src/types/accountAddress';
+import { GtuAmount } from '../src/types/gtuAmount';
 import {
     serializeAccountTransactionForSubmission,
     serializeAccountTransactionSignature,
@@ -10,17 +11,18 @@ import {
     AccountTransactionType,
     SimpleTransfer,
 } from '../src/types';
+import { TransactionExpiry } from '../src/types/transactionExpiry';
 
 test('fail account transaction serialization if no signatures', () => {
     const simpleTransfer: SimpleTransfer = {
-        amount: 5100000n,
+        amount: new GtuAmount(5100000n),
         toAddress: new AccountAddress(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
     };
 
     const header: AccountTransactionHeader = {
-        expiry: new Date(1625573830),
+        expiry: new TransactionExpiry(new Date(Date.now() + 1200000)),
         nonce: 0n,
         sender: new AccountAddress(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'

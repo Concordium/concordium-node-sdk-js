@@ -15,7 +15,7 @@ import {
     CredentialSignature,
 } from './types';
 import { calculateEnergyCost } from './energyCost';
-import { countSignatures, secondsSinceEpoch } from './util';
+import { countSignatures } from './util';
 import { sha256 } from './hash';
 
 function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
@@ -40,8 +40,7 @@ function serializeAccountTransactionHeader(
     const serializedNonce = encodeWord64(header.nonce);
     const serializedEnergyAmount = encodeWord64(energyAmount);
     const serializedPayloadSize = encodeWord32(payloadSize);
-    const expiry = secondsSinceEpoch(header.expiry);
-    const serializedExpiry = encodeWord64(expiry);
+    const serializedExpiry = encodeWord64(header.expiry.expiryEpochSeconds);
     return Buffer.concat([
         serializedSender,
         serializedNonce,

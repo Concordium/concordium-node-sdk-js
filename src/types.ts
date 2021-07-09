@@ -1,4 +1,6 @@
-import { AccountAddress } from './accountAddress';
+import { AccountAddress } from './types/accountAddress';
+import { GtuAmount } from './types/gtuAmount';
+import { TransactionExpiry } from './types/transactionExpiry';
 
 /**
  * A reward fraction with a resolution of 1/100000, i.e. the
@@ -448,12 +450,12 @@ export interface AccountTransactionHeader {
     nonce: bigint;
 
     /** expiration of the transaction */
-    expiry: Date;
+    expiry: TransactionExpiry;
 }
 
 export interface SimpleTransfer {
     /** µGTU amount to transfer */
-    amount: bigint;
+    amount: GtuAmount;
 
     /** the recipient of the transfer*/
     toAddress: AccountAddress;

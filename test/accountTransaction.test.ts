@@ -7,7 +7,6 @@ import {
 } from '../src/types';
 import * as ed from 'noble-ed25519';
 import { getAccountTransactionSignDigest } from '../src/serialization';
-import { sha256 } from '../src/hash';
 import getNodeClient from './testHelpers';
 
 const client = getNodeClient();
@@ -44,8 +43,7 @@ test('send transaction signed with wrong private key is accepted', async () => {
         'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
 
     const hashToSign = getAccountTransactionSignDigest(
-        simpleTransferAccountTransaction,
-        sha256
+        simpleTransferAccountTransaction
     );
     const signature = Buffer.from(
         await ed.sign(hashToSign, wrongPrivateKey)
@@ -92,8 +90,7 @@ test('send transaction signed with expiry too far into the future is rejected', 
         'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
 
     const hashToSign = getAccountTransactionSignDigest(
-        simpleTransferAccountTransaction,
-        sha256
+        simpleTransferAccountTransaction
     );
     const signature = Buffer.from(
         await ed.sign(hashToSign, wrongPrivateKey)

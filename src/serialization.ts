@@ -17,6 +17,7 @@ import {
 } from './types';
 import { calculateEnergyCost } from './energyCost';
 import { countSignatures } from './util';
+import { sha256 } from './hash';
 
 function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
     return Buffer.from(Uint8Array.of(type));
@@ -138,8 +139,7 @@ export function serializeAccountTransaction(
  */
 export function getAccountTransactionHash(
     accountTransaction: AccountTransaction,
-    signatures: AccountTransactionSignature,
-    sha256: (serialization: Buffer[]) => Buffer
+    signatures: AccountTransactionSignature
 ): string {
     const serializedAccountTransaction = serializeAccountTransaction(
         accountTransaction,
@@ -160,7 +160,6 @@ export function getAccountTransactionHash(
  */
 export function getAccountTransactionSignDigest(
     accountTransaction: AccountTransaction,
-    sha256: (serialization: Buffer[]) => Buffer,
     signatureCount = 1n
 ): Buffer {
     const accountTransactionHandler = getAccountTransactionHandler(

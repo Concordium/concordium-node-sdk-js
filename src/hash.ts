@@ -1,8 +1,8 @@
 import { Buffer } from 'buffer/';
-import * as crypto from 'crypto';
+import * as hash from 'hash.js';
 
 export function sha256(data: (Buffer | Uint8Array)[]): Buffer {
-    const hash = crypto.createHash('sha256');
-    data.forEach((input) => hash.update(input));
-    return Buffer.from(hash.digest());
+    const sha256Hash = hash.sha256();
+    data.forEach((input) => sha256Hash.update(input));
+    return Buffer.from(sha256Hash.digest('hex'), 'hex');
 }

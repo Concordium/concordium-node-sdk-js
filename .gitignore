@@ -1,0 +1,18 @@
+# Dependency directory
+node_modules
+
+# Eslint cache
+.eslintcache
+
+# Compiled files
+lib
+
+# Auto generate files from the gRPC proto file
+grpc
+
+# Manual testing files
+testing.ts
+testing.js
+
+# Package lock
+package-lock.json

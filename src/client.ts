@@ -20,6 +20,7 @@ import {
     BlockSummary,
     ChainParameters,
     ConsensusStatus,
+    ContractAddress,
     ExchangeRate,
     FinalizationData,
     KeysWithThreshold,
@@ -255,6 +256,7 @@ export default class ConcordiumNodeClient {
             | keyof UpdateQueue
             | keyof KeysWithThreshold
             | keyof TransferredEvent
+            | keyof ContractAddress
         )[] = [
             'bakerId',
             'weight',
@@ -270,6 +272,8 @@ export default class ConcordiumNodeClient {
             'denominator',
             'nextSequenceNumber',
             'amount',
+            'index',
+            'subindex',
         ];
 
         return unwrapJsonResponse<BlockSummary>(

@@ -49,7 +49,6 @@ export interface TransactionEvent {
     tag:
         | 'ModuleDeployed'
         | 'ContractInitialized'
-        | 'Updated'
         | 'AccountCreated'
         | 'CredentialDeployed'
         | 'BakerAdded'
@@ -69,6 +68,21 @@ export interface TransactionEvent {
         | 'DataRegistered';
 }
 
+export interface ContractAddress {
+    index: bigint;
+    subindex: bigint;
+}
+
+export interface UpdatedEvent {
+    tag: 'Updated';
+    address: ContractAddress;
+    instigator: AddressAccount;
+    amount: bigint;
+    message: string;
+    receiveName: string;
+    events: [string];
+}
+
 export interface TransferredEvent {
     tag: 'Transferred';
     amount: bigint;
@@ -79,7 +93,7 @@ export interface TransferredEvent {
 export interface EventResult {
     outcome: string;
     // TODO Resolve the types completely.
-    events: (TransactionEvent | TransferredEvent)[];
+    events: (TransactionEvent | TransferredEvent | UpdatedEvent)[];
 }
 
 interface TransactionSummaryType {

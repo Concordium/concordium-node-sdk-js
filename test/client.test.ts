@@ -13,6 +13,52 @@ const client = new ConcordiumNodeClient(
     15000
 );
 
+test('updated event is parsed correctly', async () => {
+    const blockHash =
+        '7838e431c1495a05a8c3d74f16cf31ae84ebfee3e0acc0fe2362cf597d9b0e91';
+    const blockSummary = await client.getBlockSummary(blockHash);
+
+    if (!blockSummary) {
+        throw new Error(
+            'The block summary should exist for the provided block.'
+        );
+    }
+
+    if (
+        blockSummary.transactionSummaries[0].result.events[0].tag === 'Updated'
+    ) {
+        expect(
+            blockSummary.transactionSummaries[0].result.events[0].amount
+        ).toBe(2000000n);
+        expect(
+            blockSummary.transactionSummaries[0].result.events[0].instigator
+                .address
+        ).toBe('4XXTkvZHRg8S62TQcoqZLbZbAEDKYrdH5zLERpsEbtrnJoM7TG');
+        expect(
+            blockSummary.transactionSummaries[0].result.events[0].instigator
+                .type
+        ).toBe('AddressAccount');
+        expect(
+            blockSummary.transactionSummaries[0].result.events[0].address.index
+        ).toBe(8n);
+        expect(
+            blockSummary.transactionSummaries[0].result.events[0].address
+                .subindex
+        ).toBe(0n);
+        expect(
+            blockSummary.transactionSummaries[0].result.events[0].receiveName
+        ).toBe('XO.join_player_one');
+        expect(
+            blockSummary.transactionSummaries[0].result.events[0].events
+        ).toEqual([]);
+        expect(
+            blockSummary.transactionSummaries[0].result.events[0].message
+        ).toBe('');
+    } else {
+        throw new Error('The summary should be for an Updated event');
+    }
+});
+
 test('transferred event is parsed correctly', async () => {
     const blockHash =
         '4b39a13d326f422c76f12e20958a90a4af60a2b7e098b2a59d21d402fff44bfc';
@@ -44,7 +90,7 @@ test('transferred event is parsed correctly', async () => {
             blockSummary.transactionSummaries[0].result.events[0].from.type
         ).toBe('AddressAccount');
     } else {
-        throw new Error('The summary should be for a transferred event');
+        throw new Error('The summary should be for a Transferred event');
     }
 });
 

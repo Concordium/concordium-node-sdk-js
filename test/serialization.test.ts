@@ -17,7 +17,7 @@ test('fail account transaction serialization if no signatures', () => {
     };
 
     const header: AccountTransactionHeader = {
-        expiry: 1625573830n,
+        expiry: new Date(1625573830),
         nonce: 0n,
         sender: '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt',
     };

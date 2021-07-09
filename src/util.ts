@@ -123,3 +123,10 @@ export function countSignatures(
     }
     return totalSignatureCount;
 }
+
+/**
+ * Convert a Date to seconds since epoch.
+ */
+export function secondsSinceEpoch(date: Date): bigint {
+    return BigInt(Math.floor(date.getTime() / 1000));
+}

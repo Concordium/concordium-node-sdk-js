@@ -260,8 +260,8 @@ export interface AccountTransactionHeader {
      */
     nonce: bigint;
 
-    /** expiration of the transaction in seconds since epoch */
-    expiry: bigint;
+    /** expiration of the transaction */
+    expiry: Date;
 }
 
 export interface SimpleTransfer {

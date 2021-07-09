@@ -1,3 +1,5 @@
+import { AccountAddress } from './accountAddress';
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export interface Versioned<T> {
     v: number;
@@ -251,8 +253,8 @@ export enum AccountTransactionType {
 }
 
 export interface AccountTransactionHeader {
-    /** base58 account address that is source of this transaction */
-    sender: string;
+    /** account address that is source of this transaction */
+    sender: AccountAddress;
 
     /**
      * the nonce for the transaction, usually acquired by
@@ -268,8 +270,8 @@ export interface SimpleTransfer {
     /** µGTU amount to transfer */
     amount: bigint;
 
-    /** the recipient of the transfer, base58 account address */
-    toAddress: string;
+    /** the recipient of the transfer*/
+    toAddress: AccountAddress;
 }
 
 export type AccountTransactionPayload = SimpleTransfer;

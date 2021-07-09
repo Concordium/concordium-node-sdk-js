@@ -8,6 +8,7 @@ import {
 import * as ed from 'noble-ed25519';
 import { getAccountTransactionSignDigest } from '../src/serialization';
 import getNodeClient from './testHelpers';
+import { AccountAddress } from '../src/accountAddress';
 
 const client = getNodeClient();
 const senderAccountAddress =
@@ -16,7 +17,9 @@ const senderAccountAddress =
 test('send transaction signed with wrong private key is accepted', async () => {
     const simpleTransfer: SimpleTransfer = {
         amount: 100n,
-        toAddress: '4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf',
+        toAddress: new AccountAddress(
+            '4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf'
+        ),
     };
 
     const nextAccountNonce = await client.getNextAccountNonce(
@@ -28,7 +31,7 @@ test('send transaction signed with wrong private key is accepted', async () => {
     const header: AccountTransactionHeader = {
         expiry: new Date(Date.now() + 3600000),
         nonce: nextAccountNonce.nonce,
-        sender: senderAccountAddress,
+        sender: new AccountAddress(senderAccountAddress),
     };
 
     const simpleTransferAccountTransaction: AccountTransaction = {
@@ -62,7 +65,9 @@ test('send transaction signed with wrong private key is accepted', async () => {
 test('send transaction signed with expiry too far into the future is rejected', async () => {
     const simpleTransfer: SimpleTransfer = {
         amount: 100n,
-        toAddress: '4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf',
+        toAddress: new AccountAddress(
+            '4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf'
+        ),
     };
 
     const nextAccountNonce = await client.getNextAccountNonce(
@@ -75,7 +80,7 @@ test('send transaction signed with expiry too far into the future is rejected', 
     const header: AccountTransactionHeader = {
         expiry: new Date(2225279747),
         nonce: nextAccountNonce.nonce,
-        sender: senderAccountAddress,
+        sender: new AccountAddress(senderAccountAddress),
     };
 
     const simpleTransferAccountTransaction: AccountTransaction = {

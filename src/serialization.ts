@@ -1,4 +1,3 @@
-import bs58check from 'bs58check';
 import { Buffer } from 'buffer/';
 import { getAccountTransactionHandler } from './accountTransactions';
 import {
@@ -37,7 +36,7 @@ function serializeAccountTransactionHeader(
     payloadSize: number,
     energyAmount: bigint
 ) {
-    const serializedSender = bs58check.decode(header.sender).slice(1);
+    const serializedSender = header.sender.decodedAddress;
     const serializedNonce = encodeWord64(header.nonce);
     const serializedEnergyAmount = encodeWord64(energyAmount);
     const serializedPayloadSize = encodeWord32(payloadSize);

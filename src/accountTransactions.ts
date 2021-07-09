@@ -1,4 +1,3 @@
-import bs58check from 'bs58check';
 import { Buffer } from 'buffer/';
 import { encodeWord64 } from './serializationHelpers';
 import {
@@ -18,9 +17,7 @@ export class SimpleTransferHandler implements AccountTransactionHandler {
     }
 
     serialize(transfer: SimpleTransfer): Buffer {
-        const serializedToAddress = bs58check
-            .decode(transfer.toAddress)
-            .slice(1);
+        const serializedToAddress = transfer.toAddress.decodedAddress;
         const serializedAmount = encodeWord64(transfer.amount);
         return Buffer.concat([serializedToAddress, serializedAmount]);
     }

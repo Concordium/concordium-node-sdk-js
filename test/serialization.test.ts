@@ -1,3 +1,4 @@
+import { AccountAddress } from '../src/accountAddress';
 import {
     serializeAccountTransactionForSubmission,
     serializeAccountTransactionSignature,
@@ -13,13 +14,17 @@ import {
 test('fail account transaction serialization if no signatures', () => {
     const simpleTransfer: SimpleTransfer = {
         amount: 5100000n,
-        toAddress: '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt',
+        toAddress: new AccountAddress(
+            '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
+        ),
     };
 
     const header: AccountTransactionHeader = {
         expiry: new Date(1625573830),
         nonce: 0n,
-        sender: '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt',
+        sender: new AccountAddress(
+            '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
+        ),
     };
 
     const simpleTransferAccountTransaction: AccountTransaction = {

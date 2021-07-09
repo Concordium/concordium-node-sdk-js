@@ -1,5 +1,6 @@
 import { ChannelCredentials, Metadata, ServiceError } from '@grpc/grpc-js';
 import { P2PClient } from '../grpc/concordium_p2p_rpc_grpc_pb';
+import { AccountAddress as Address } from './types/accountAddress';
 import {
     AccountAddress,
     BlockHash,
@@ -130,7 +131,7 @@ export default class ConcordiumNodeClient {
      * @returns the account info for the provided account address, undefined is the account does not exist
      */
     async getAccountInfo(
-        accountAddress: string,
+        accountAddress: Address,
         blockHash: string
     ): Promise<AccountInfo | undefined> {
         if (!isValidHash(blockHash)) {
@@ -138,7 +139,7 @@ export default class ConcordiumNodeClient {
         }
 
         const getAddressInfoRequest = new GetAddressInfoRequest();
-        getAddressInfoRequest.setAddress(accountAddress);
+        getAddressInfoRequest.setAddress(accountAddress.address);
         getAddressInfoRequest.setBlockHash(blockHash);
 
         const response = await this.sendRequest(
@@ -172,10 +173,10 @@ export default class ConcordiumNodeClient {
      * @returns the next account nonce, and a boolean indicating if the nonce is reliable
      */
     async getNextAccountNonce(
-        accountAddress: string
+        accountAddress: Address
     ): Promise<NextAccountNonce | undefined> {
         const accountAddressObject = new AccountAddress();
-        accountAddressObject.setAccountAddress(accountAddress);
+        accountAddressObject.setAccountAddress(accountAddress.address);
 
         const response = await this.sendRequest(
             this.client.getNextAccountNonce,

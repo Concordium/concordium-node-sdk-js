@@ -7,9 +7,9 @@ export class GtuAmount {
     microGtuAmount: bigint;
 
     constructor(microGtuAmount: bigint) {
-        if (microGtuAmount < 1n) {
+        if (microGtuAmount < 0n) {
             throw new Error(
-                'A micro GTU amount must be a positive integer but was: ' +
+                'A micro GTU amount must be a non-negative integer but was: ' +
                     microGtuAmount
             );
         } else if (microGtuAmount > 18446744073709551615n) {

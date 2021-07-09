@@ -25,7 +25,7 @@ test('send transaction signed with wrong private key is accepted', async () => {
     };
 
     const nextAccountNonce = await client.getNextAccountNonce(
-        senderAccountAddress
+        new AccountAddress(senderAccountAddress)
     );
     if (!nextAccountNonce) {
         throw new Error('Nonce not found!');

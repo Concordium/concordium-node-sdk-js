@@ -1,6 +1,7 @@
 import { credentials, Metadata } from '@grpc/grpc-js';
 import ConcordiumNodeClient from '../src/client';
 import { ConsensusStatus, NormalAccountCredential } from '../src/types';
+import { AccountAddress } from '../src/types/accountAddress';
 import { isHex } from '../src/util';
 
 const metadata = new Metadata();
@@ -274,7 +275,9 @@ test('block summary for unknown block is undefined', async () => {
 });
 
 test('account info for invalid hash throws error', async () => {
-    const accountAddress = '3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU';
+    const accountAddress = new AccountAddress(
+        '3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU'
+    );
     const invalidBlockHash = 'P{L}GDA';
     await expect(
         client.getAccountInfo(accountAddress, invalidBlockHash)
@@ -284,7 +287,9 @@ test('account info for invalid hash throws error', async () => {
 });
 
 test('account info for unknown block hash is undefined', async () => {
-    const accountAddress = '3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU';
+    const accountAddress = new AccountAddress(
+        '33aAwqhbFU1teSpLtan34zTox7gYBmjUSRiZKEv4tKd2wkEbhw'
+    );
     const blockHash =
         'fd4915edca67b4e8f6521641a638a3abdbdd7934e4f2a9a52d8673861e2ebdd2';
 
@@ -293,7 +298,9 @@ test('account info for unknown block hash is undefined', async () => {
 });
 
 test('account info for unknown account address is undefined', async () => {
-    const accountAddress = '3sACwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU';
+    const accountAddress = new AccountAddress(
+        '33aAwqhbFU1teSpLtan34zTox7gYBmjUSRiZKEv4tKd2wkEbhw'
+    );
     const blockHash =
         '6b01f2043d5621192480f4223644ef659dd5cda1e54a78fc64ad642587c73def';
 
@@ -302,7 +309,9 @@ test('account info for unknown account address is undefined', async () => {
 });
 
 test('retrieves the account info', async () => {
-    const accountAddress = '3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU';
+    const accountAddress = new AccountAddress(
+        '3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU'
+    );
     const blockHash =
         '6b01f2043d5621192480f4223644ef659dd5cda1e54a78fc64ad642587c73def';
 
@@ -466,14 +475,10 @@ test('retrieves the account info', async () => {
     ]);
 });
 
-test('next account nonce for unknown address returns undefined', async () => {
-    const accountAddress = '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwGGYt';
-    const nextAccountNonce = await client.getNextAccountNonce(accountAddress);
-    return expect(nextAccountNonce).toBeUndefined();
-});
-
 test('retrieves the next account nonce', async () => {
-    const accountAddress = '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt';
+    const accountAddress = new AccountAddress(
+        '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
+    );
     const nextAccountNonce = await client.getNextAccountNonce(accountAddress);
     if (!nextAccountNonce) {
         throw new Error(

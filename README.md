@@ -36,13 +36,13 @@ import * as ed from "noble-ed25519";
 
 // Create the transaction
 const header: AccountTransactionHeader = {
-    expiry: 1625653490n,    // seconds since epoch
+    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
     nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
-    sender: "4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M",
+    sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
 };
 const simpleTransfer: SimpleTransfer = {
-    amount: 100n,
-    toAddress: "4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf",
+    amount: new GtuAmount(100n),
+    toAddress: new AccountAddress("4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf"),
 };
 const simpleTransferAccountTransaction: AccountTransaction = {
     header: header,

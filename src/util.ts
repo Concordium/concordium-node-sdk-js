@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { BoolResponse, JsonResponse } from './grpc/concordium_p2p_rpc_pb';
+import { BoolResponse, JsonResponse } from '../grpc/concordium_p2p_rpc_pb';
 import { AccountTransactionSignature } from './types';
 
 /**

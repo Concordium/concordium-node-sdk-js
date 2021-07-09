@@ -169,9 +169,15 @@ const bestBlock = consensusStatus.bestBlock;
 
 # Build
 
+## Building for a release
+To build the project run
+```
+yarn build
+```
+
 ## Updating the gRPC files
-If the external dependency concordium-grpc-api has been updated, then it is required to regenerate the
-files from the `.proto` file. Do this by running:
+If the external dependency concordium-grpc-api has been updated (or this is your first time building the project), 
+then it is required to regenerate the files from the `.proto` file. Do this by running:
 ```
 yarn generate
 ```

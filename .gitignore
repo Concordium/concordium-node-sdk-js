@@ -7,6 +7,9 @@ node_modules
 # Compiled files
 lib
 
+# Auto generate files from the gRPC proto file
+grpc
+
 # Manual testing files
 testing.ts
 testing.js

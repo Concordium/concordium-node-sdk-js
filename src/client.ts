@@ -1,5 +1,5 @@
 import { ChannelCredentials, Metadata, ServiceError } from '@grpc/grpc-js';
-import { P2PClient } from './grpc/concordium_p2p_rpc_grpc_pb';
+import { P2PClient } from '../grpc/concordium_p2p_rpc_grpc_pb';
 import {
     AccountAddress,
     BlockHash,
@@ -8,7 +8,7 @@ import {
     GetAddressInfoRequest,
     SendTransactionRequest,
     TransactionHash,
-} from './grpc/concordium_p2p_rpc_pb';
+} from '../grpc/concordium_p2p_rpc_pb';
 import { serializeAccountTransactionForSubmission } from './serialization';
 import {
     AccountEncryptedAmount,
@@ -31,20 +31,6 @@ import {
     unwrapJsonResponse,
 } from './util';
 
-interface GrpcClient extends P2PClient {
-    waitForReady?(date: Date, cb: (error: ServiceError) => void): void;
-}
-
-type Command<T, Response> = (
-    input: T,
-    metadata: Metadata,
-    callback: (error: ServiceError, response: Response) => void
-) => Promise<Response>;
-
-interface Serializable {
-    serializeBinary(): Uint8Array;
-}
-
 /**
  * A concordium-node specific gRPC client wrapper.
  *
@@ -53,7 +39,7 @@ interface Serializable {
  * const client = new ConcordiumNodeClient('127.0.0.1', 10000, credentials, metadata, 15000);
  */
 export default class ConcordiumNodeClient {
-    client: GrpcClient;
+    client: P2PClient;
 
     metadata: Metadata;
 
@@ -335,34 +321,27 @@ export default class ConcordiumNodeClient {
         return consensusStatus;
     }
 
-    sendRequest<T, Response extends Serializable>(
-        command: Command<T, Response>,
-        input: T
-    ): Promise<Uint8Array> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+    sendRequest<T>(command: any, input: T): Promise<Uint8Array> {
         const deadline = new Date(Date.now() + this.timeout);
         return new Promise<Uint8Array>((resolve, reject) => {
-            if (this.client.waitForReady === undefined) {
-                reject(
-                    new Error('The client is missing the waitForReady function')
-                );
-            } else {
-                this.client.waitForReady(deadline, (error) => {
-                    if (error) {
-                        return reject(error);
-                    }
+            this.client.waitForReady(deadline, (error) => {
+                if (error) {
+                    return reject(error);
+                }
 
-                    return command.bind(this.client)(
-                        input,
-                        this.metadata,
-                        (err, response) => {
-                            if (err) {
-                                return reject(err);
-                            }
-                            return resolve(response.serializeBinary());
+                return command.bind(this.client)(
+                    input,
+                    this.metadata,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (err: ServiceError | null, response: any) => {
+                        if (err) {
+                            return reject(err);
                         }
-                    );
-                });
-            }
+                        return resolve(response.serializeBinary());
+                    }
+                );
+            });
         });
     }
 }

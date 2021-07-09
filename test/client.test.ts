@@ -1,7 +1,7 @@
 import { credentials, Metadata } from '@grpc/grpc-js';
 import ConcordiumNodeClient from '../src/client';
 import { ConsensusStatus, NormalAccountCredential } from '../src/types';
-import { instanceOfNormalAccountCredential, isHex } from '../src/util';
+import { isHex } from '../src/util';
 
 const metadata = new Metadata();
 metadata.add('authentication', 'rpcadmin');
@@ -54,11 +54,7 @@ test('retrieves the account info', async () => {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let normalAccountCredentialExpects: any[] = [];
-    if (
-        instanceOfNormalAccountCredential(
-            accountInfo.accountCredentials[0].value
-        )
-    ) {
+    if (accountInfo.accountCredentials[0].value.type === 'normal') {
         const normalAccountCredential: NormalAccountCredential =
             accountInfo.accountCredentials[0].value;
         normalAccountCredentialExpects = [

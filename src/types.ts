@@ -184,10 +184,6 @@ export interface InitialCredentialDeploymentValues
     regId: string;
 }
 
-export interface AccountCredential {
-    type: 'normal' | 'initial';
-}
-
 export interface CredentialDeploymentCommitments {
     cmmPrf: string;
     cmmCredCounter: string;
@@ -196,11 +192,13 @@ export interface CredentialDeploymentCommitments {
     cmmMaxAccounts: string;
 }
 
-export interface NormalAccountCredential extends AccountCredential {
+export interface NormalAccountCredential {
+    type: 'normal';
     contents: CredentialDeploymentValues;
 }
 
-export interface InitialAccountCredential extends AccountCredential {
+export interface InitialAccountCredential {
+    type: 'initial';
     contents: InitialCredentialDeploymentValues;
 }
 

@@ -17,11 +17,18 @@ import {
     AccountTransaction,
     AccountTransactionSignature,
     BlockInfo,
+    BlockSummary,
+    ChainParameters,
     ConsensusStatus,
+    ExchangeRate,
+    FinalizationData,
+    KeysWithThreshold,
     NextAccountNonce,
+    PartyInfo,
     ReleaseSchedule,
     TransactionStatus,
     TransactionSummary,
+    UpdateQueue,
 } from './types';
 import {
     buildJsonResponseReviver,
@@ -212,6 +219,59 @@ export default class ConcordiumNodeClient {
             response,
             buildJsonResponseReviver([], bigIntPropertyKeys),
             intToStringTransformer(bigIntPropertyKeys)
+        );
+    }
+
+    /**
+     * Retrieves the block summary for a specific block. This contains information
+     * about finalization, update sequence numbers (their nonce), update queues,
+     * updateable chain parameters and transaction summaries for any transaction
+     * in the block.
+     * @param blockHash the block to get the summary for
+     * @returns the block summary for the given block, or undefined if the block does not exist
+     */
+    async getBlockSummary(
+        blockHash: string
+    ): Promise<BlockSummary | undefined> {
+        if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+
+        const blockHashObject = new BlockHash();
+        blockHashObject.setBlockHash(blockHash);
+
+        const response = await this.sendRequest(
+            this.client.getBlockSummary,
+            blockHashObject
+        );
+
+        const bigIntPropertyKeys: (
+            | keyof PartyInfo
+            | keyof FinalizationData
+            | keyof TransactionSummary
+            | keyof ChainParameters
+            | keyof ExchangeRate
+            | keyof UpdateQueue
+            | keyof KeysWithThreshold
+        )[] = [
+            'bakerId',
+            'weight',
+            'finalizationIndex',
+            'finalizationDelay',
+            'cost',
+            'energyCost',
+            'index',
+            'bakerCooldownEpochs',
+            'minimumThresholdForBaking',
+            'foundationAccountIndex',
+            'numerator',
+            'denominator',
+            'nextSequenceNumber',
+        ];
+
+        return unwrapJsonResponse<BlockSummary>(
+            response,
+            buildJsonResponseReviver([], bigIntPropertyKeys)
         );
     }
 

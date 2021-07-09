@@ -1,5 +1,13 @@
 import { AccountAddress } from './accountAddress';
 
+/**
+ * A reward fraction with a resolution of 1/100000, i.e. the
+ * denominator is implicitly 100000, and the interface therefore
+ * only contains the numerator value which can be in the interval
+ * [1, 100000].
+ */
+export type RewardFraction = number;
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export interface Versioned<T> {
     v: number;
@@ -63,6 +71,133 @@ export interface TransactionSummary {
 export interface TransactionStatus {
     status: TransactionStatusEnum;
     outcomes?: Record<string, TransactionSummary>;
+}
+
+export interface PartyInfo {
+    bakerId: bigint;
+    weight: bigint;
+    signed: boolean;
+}
+
+export interface FinalizationData {
+    finalizationIndex: bigint;
+    finalizationDelay: bigint;
+    finalizationBlockPointer: string;
+    finalizers: PartyInfo[];
+}
+
+export interface ExchangeRate {
+    numerator: bigint;
+    denominator: bigint;
+}
+
+export interface TransactionFeeDistribution {
+    baker: RewardFraction;
+    gasAccount: RewardFraction;
+}
+
+export interface MintDistribution {
+    mintPerSlot: number;
+    bakingReward: RewardFraction;
+    finalizationReward: RewardFraction;
+}
+
+export interface GasRewards {
+    baker: RewardFraction;
+    finalizationProof: RewardFraction;
+    accountCreation: RewardFraction;
+    chainUpdate: RewardFraction;
+}
+
+export interface RewardParameters {
+    transactionFeeDistribution: TransactionFeeDistribution;
+    mintDistribution: MintDistribution;
+    gASRewards: GasRewards;
+}
+
+export interface ChainParameters {
+    electionDifficulty: number;
+    euroPerEnergy: ExchangeRate;
+    microGTUPerEuro: ExchangeRate;
+    accountCreationLimit: number;
+    bakerCooldownEpochs: bigint;
+    minimumThresholdForBaking: bigint;
+    rewardParameters: RewardParameters;
+    foundationAccountIndex: bigint;
+}
+
+export interface Authorization {
+    threshold: number;
+    authorizedKeys: number[];
+}
+
+export interface Authorizations {
+    emergency: Authorization;
+    microGTUPerEuro: Authorization;
+    euroPerEnergy: Authorization;
+    transactionFeeDistribution: Authorization;
+    foundationAccount: Authorization;
+    mintDistribution: Authorization;
+    protocol: Authorization;
+    paramGASRewards: Authorization;
+    bakerStakeThreshold: Authorization;
+    electionDifficulty: Authorization;
+    addAnonymityRevoker: Authorization;
+    addIdentityProvider: Authorization;
+    keys: VerifyKey[];
+}
+
+export interface KeysWithThreshold {
+    keys: VerifyKey[];
+    threshold: number;
+}
+
+export interface Keys {
+    rootKeys: KeysWithThreshold;
+    level1Keys: KeysWithThreshold;
+    level2Keys: Authorizations;
+}
+
+export interface UpdateQueueQueue {
+    effectiveTime: Date;
+    // TODO Update the type of update to a generic update transaction when
+    // update types have been added.
+    // Information about the actual update.
+    update: unknown;
+}
+
+export interface UpdateQueue {
+    nextSequenceNumber: bigint;
+    queue: UpdateQueueQueue;
+}
+
+interface UpdateQueues {
+    microGTUPerEuro: UpdateQueue;
+    euroPerEnergy: UpdateQueue;
+    transactionFeeDistribution: UpdateQueue;
+    foundationAccount: UpdateQueue;
+    electionDifficulty: UpdateQueue;
+    mintDistribution: UpdateQueue;
+    protocol: UpdateQueue;
+    gasRewards: UpdateQueue;
+    bakerStakeThreshold: UpdateQueue;
+    addAnonymityRevoker: UpdateQueue;
+    addIdentityProvider: UpdateQueue;
+    rootKeys: UpdateQueue;
+    level1Keys: UpdateQueue;
+    level2Keys: UpdateQueue;
+}
+
+export interface Updates {
+    chainParameters: ChainParameters;
+    keys: Keys;
+    updateQueues: UpdateQueues;
+}
+
+export interface BlockSummary {
+    finalizationData: FinalizationData;
+    transactionSummaries: TransactionSummary[];
+    updates: Updates;
 }
 
 export interface BlockInfo {

@@ -13,6 +13,185 @@ const client = new ConcordiumNodeClient(
     15000
 );
 
+test('block summary for valid block hash retrieves block summary', async () => {
+    const blockHash =
+        '4b39a13d326f422c76f12e20958a90a4af60a2b7e098b2a59d21d402fff44bfc';
+    const blockSummary = await client.getBlockSummary(blockHash);
+    if (!blockSummary) {
+        throw new Error('The block could not be found by the test');
+    }
+    return Promise.all([
+        expect(blockSummary.finalizationData.finalizationIndex).toBe(15436n),
+        expect(blockSummary.finalizationData.finalizationDelay).toBe(0n),
+        expect(blockSummary.finalizationData.finalizationBlockPointer).toBe(
+            'ccc4e8781fe07ec25e9fadb5e2e1d57fc7654327bc911783a17921a70f44ab42'
+        ),
+        expect(blockSummary.finalizationData.finalizers.length).toBe(10),
+        expect(blockSummary.finalizationData.finalizers[0].bakerId).toBe(0n),
+        expect(blockSummary.finalizationData.finalizers[0].signed).toBe(true),
+        expect(blockSummary.finalizationData.finalizers[0].weight).toBe(
+            700946588805952n
+        ),
+
+        expect(blockSummary.transactionSummaries[0].cost).toBe(6010n),
+        expect(blockSummary.transactionSummaries[0].energyCost).toBe(601n),
+        expect(blockSummary.transactionSummaries[0].hash).toBe(
+            'e2df806768b6f6a52f8654a12be2e6c832fedabe1d1a27eb278dc4e5f9d8631f'
+        ),
+        expect(blockSummary.transactionSummaries[0].sender).toBe(
+            '4KDqzVUMCP2oc7qmMqu4wVsqYCCyju1g3apqy2xakGaEGJKtyr'
+        ),
+        expect(blockSummary.transactionSummaries[0].index).toBe(0n),
+
+        expect(
+            blockSummary.updates.chainParameters.rewardParameters
+                .transactionFeeDistribution.baker
+        ).toBe(0.45),
+        expect(
+            blockSummary.updates.chainParameters.rewardParameters
+                .transactionFeeDistribution.gasAccount
+        ).toBe(0.45),
+        expect(
+            blockSummary.updates.chainParameters.rewardParameters
+                .mintDistribution.bakingReward
+        ).toBe(0.6),
+        expect(
+            blockSummary.updates.chainParameters.rewardParameters
+                .mintDistribution.finalizationReward
+        ).toBe(0.3),
+        expect(
+            blockSummary.updates.chainParameters.rewardParameters
+                .mintDistribution.mintPerSlot
+        ).toBe(7.555665e-10),
+        expect(
+            blockSummary.updates.chainParameters.rewardParameters.gASRewards
+                .chainUpdate
+        ).toBe(0.005),
+        expect(
+            blockSummary.updates.chainParameters.rewardParameters.gASRewards
+                .accountCreation
+        ).toBe(0.02),
+        expect(
+            blockSummary.updates.chainParameters.rewardParameters.gASRewards
+                .baker
+        ).toBe(0.25),
+        expect(
+            blockSummary.updates.chainParameters.rewardParameters.gASRewards
+                .finalizationProof
+        ).toBe(0.005),
+
+        expect(
+            blockSummary.updates.chainParameters.minimumThresholdForBaking
+        ).toBe(15000000000n),
+        expect(
+            blockSummary.updates.chainParameters.microGTUPerEuro.numerator
+        ).toBe(500000n),
+        expect(
+            blockSummary.updates.chainParameters.microGTUPerEuro.denominator
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.chainParameters.euroPerEnergy.numerator
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.chainParameters.euroPerEnergy.denominator
+        ).toBe(50000n),
+
+        expect(
+            blockSummary.updates.chainParameters.foundationAccountIndex
+        ).toBe(10n),
+        expect(blockSummary.updates.chainParameters.bakerCooldownEpochs).toBe(
+            166n
+        ),
+        expect(blockSummary.updates.chainParameters.accountCreationLimit).toBe(
+            10
+        ),
+        expect(blockSummary.updates.chainParameters.electionDifficulty).toBe(
+            0.025
+        ),
+
+        expect(
+            blockSummary.updates.updateQueues.addAnonymityRevoker
+                .nextSequenceNumber
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.updateQueues.addIdentityProvider
+                .nextSequenceNumber
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.updateQueues.bakerStakeThreshold
+                .nextSequenceNumber
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.updateQueues.electionDifficulty
+                .nextSequenceNumber
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.updateQueues.euroPerEnergy.nextSequenceNumber
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.updateQueues.foundationAccount
+                .nextSequenceNumber
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.updateQueues.gasRewards.nextSequenceNumber
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.updateQueues.level1Keys.nextSequenceNumber
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.updateQueues.level2Keys.nextSequenceNumber
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.updateQueues.microGTUPerEuro.nextSequenceNumber
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.updateQueues.mintDistribution
+                .nextSequenceNumber
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.updateQueues.protocol.nextSequenceNumber
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.updateQueues.rootKeys.nextSequenceNumber
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.updateQueues.transactionFeeDistribution
+                .nextSequenceNumber
+        ).toBe(1n),
+
+        expect(blockSummary.updates.keys.rootKeys.threshold).toBe(5),
+        expect(blockSummary.updates.keys.rootKeys.keys[0].verifyKey).toBe(
+            '2c3c756d25998fda4781bdc491896eb9be626955826f457248d5c1aacf4e8d72'
+        ),
+        expect(blockSummary.updates.keys.level1Keys.threshold).toBe(7),
+        expect(blockSummary.updates.keys.level1Keys.keys[0].verifyKey).toBe(
+            '221936c1197cd6ec5da314896af0bc384bd8ec54f543609ee5089fda5d9ee16b'
+        ),
+        expect(
+            blockSummary.updates.keys.level2Keys.addAnonymityRevoker.threshold
+        ).toBe(7),
+        expect(
+            blockSummary.updates.keys.level2Keys.addAnonymityRevoker
+                .authorizedKeys[0]
+        ).toBe(0),
+    ]);
+});
+
+test('block summary for invalid block hash throws error', async () => {
+    const invalidBlockHash =
+        'fd4915edca67b4e8f6521641a638a3abdbdd7934e42a9a52d8673861e2ebdd2';
+    await expect(client.getBlockSummary(invalidBlockHash)).rejects.toEqual(
+        new Error('The input was not a valid hash: ' + invalidBlockHash)
+    );
+});
+
+test('block summary for unknown block is undefined', async () => {
+    const unknownBlockHash =
+        'fd4915edca67b4e8f6521641a638a3abdbdd7934e4f2a9a52d8673861e2ebdd2';
+    const blockSummary = await client.getBlockSummary(unknownBlockHash);
+    return expect(blockSummary).toBeUndefined();
+});
+
 test('account info for invalid hash throws error', async () => {
     const accountAddress = '3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU';
     const invalidBlockHash = 'P{L}GDA';

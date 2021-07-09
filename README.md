@@ -143,6 +143,17 @@ if (transactionStatus.status === TransactionStatusEnum.Finalized) {
 }
 ```
 
+## getBlockSummary
+Retrives a summary for a specific block. The summary contains information about finalization, the
+current chain parameters, a list of the governance keys, information about any queued chain parameter
+updates and a summary of any transactions within the block.
+```js
+const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749";
+const blockSummary: BlockSummary = await client.getBlockSummary(blockHash);
+const numberOfFinalizers = blockSummary.finalizationData.finalizers.length;
+...
+```
+
 ## getBlockInfo
 Retrieves information about a specific block.
 ```js

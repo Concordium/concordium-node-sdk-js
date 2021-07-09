@@ -28,6 +28,7 @@ import {
     ReleaseSchedule,
     TransactionStatus,
     TransactionSummary,
+    TransferredEvent,
     UpdateQueue,
 } from './types';
 import {
@@ -253,6 +254,7 @@ export default class ConcordiumNodeClient {
             | keyof ExchangeRate
             | keyof UpdateQueue
             | keyof KeysWithThreshold
+            | keyof TransferredEvent
         )[] = [
             'bakerId',
             'weight',
@@ -267,6 +269,7 @@ export default class ConcordiumNodeClient {
             'numerator',
             'denominator',
             'nextSequenceNumber',
+            'amount',
         ];
 
         return unwrapJsonResponse<BlockSummary>(

@@ -40,10 +40,46 @@ export enum TransactionStatusEnum {
     Committed = 'committed',
 }
 
+export interface AddressAccount {
+    type: 'AddressAccount';
+    address: string;
+}
+
+export interface TransactionEvent {
+    tag:
+        | 'ModuleDeployed'
+        | 'ContractInitialized'
+        | 'Updated'
+        | 'AccountCreated'
+        | 'CredentialDeployed'
+        | 'BakerAdded'
+        | 'BakerRemoved'
+        | 'BakerStakeIncreased'
+        | 'BakerStakeDecreased'
+        | 'BakerSetRestakeEarnings'
+        | 'BakerKeysUpdated'
+        | 'CredentialKeysUpdated'
+        | 'NewEncryptedAmount'
+        | 'EncryptedAmountsRemoved'
+        | 'AmountAddedByDecryption'
+        | 'EncryptedSelfAmountAdded'
+        | 'UpdateEnqueued'
+        | 'TransferredWithSchedule'
+        | 'CredentialsUpdated'
+        | 'DataRegistered';
+}
+
+export interface TransferredEvent {
+    tag: 'Transferred';
+    amount: bigint;
+    to: AddressAccount;
+    from: AddressAccount;
+}
+
 export interface EventResult {
     outcome: string;
     // TODO Resolve the types completely.
-    events: any;
+    events: (TransactionEvent | TransferredEvent)[];
 }
 
 interface TransactionSummaryType {

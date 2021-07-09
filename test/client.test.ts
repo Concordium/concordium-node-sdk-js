@@ -13,6 +13,41 @@ const client = new ConcordiumNodeClient(
     15000
 );
 
+test('transferred event is parsed correctly', async () => {
+    const blockHash =
+        '4b39a13d326f422c76f12e20958a90a4af60a2b7e098b2a59d21d402fff44bfc';
+    const blockSummary = await client.getBlockSummary(blockHash);
+
+    if (!blockSummary) {
+        throw new Error(
+            'The block summary should exist for the provided block.'
+        );
+    }
+
+    if (
+        blockSummary.transactionSummaries[0].result.events[0].tag ===
+        'Transferred'
+    ) {
+        expect(
+            blockSummary.transactionSummaries[0].result.events[0].amount
+        ).toBe(2000000000n);
+        expect(
+            blockSummary.transactionSummaries[0].result.events[0].to.address
+        ).toBe('4KDqzVUMCP2oc7qmMqu4wVsqYCCyju1g3apqy2xakGaEGJKtyr');
+        expect(
+            blockSummary.transactionSummaries[0].result.events[0].to.type
+        ).toBe('AddressAccount');
+        expect(
+            blockSummary.transactionSummaries[0].result.events[0].from.address
+        ).toBe('4KDqzVUMCP2oc7qmMqu4wVsqYCCyju1g3apqy2xakGaEGJKtyr');
+        expect(
+            blockSummary.transactionSummaries[0].result.events[0].from.type
+        ).toBe('AddressAccount');
+    } else {
+        throw new Error('The summary should be for a transferred event');
+    }
+});
+
 test('block summary for valid block hash retrieves block summary', async () => {
     const blockHash =
         '4b39a13d326f422c76f12e20958a90a4af60a2b7e098b2a59d21d402fff44bfc';

@@ -92,10 +92,69 @@ export interface TransferredEvent {
     from: AddressAccount;
 }
 
+/**
+ * An enum containing all the possible reject reasons that can be
+ * received from a node as a response to a transaction submission.
+ *
+ * This should be kept in sync with the list of reject reasons
+ * found here: https://github.com/Concordium/concordium-base/blob/main/haskell-src/Concordium/Types/Execution.hs
+ */
+export enum RejectReasonTag {
+    ModuleNotWF = 'ModuleNotWF',
+    ModuleHashAlreadyExists = 'ModuleHashAlreadyExists',
+    InvalidAccountReference = 'InvalidAccountReference',
+    InvalidInitMethod = 'InvalidInitMethod',
+    InvalidReceiveMethod = 'InvalidReceiveMethod',
+    InvalidModuleReference = 'InvalidModuleReference',
+    InvalidContractAddress = 'InvalidContractAddress',
+    RuntimeFailure = 'RuntimeFailure',
+    AmountTooLarge = 'AmountTooLarge',
+    SerializationFailure = 'SerializationFailure',
+    OutOfEnergy = 'OutOfEnergy',
+    RejectedInit = 'RejectedInit',
+    RejectedReceive = 'RejectedReceive',
+    NonExistentRewardAccount = 'NonExistentRewardAccount',
+    InvalidProof = 'InvalidProof',
+    AlreadyABaker = 'AlreadyABaker',
+    NotABaker = 'NotABaker',
+    InsufficientBalanceForBakerStake = 'InsufficientBalanceForBakerStake',
+    StakeUnderMinimumThresholdForBaking = 'StakeUnderMinimumThresholdForBaking',
+    BakerInCooldown = 'BakerInCooldown',
+    DuplicateAggregationKey = 'DuplicateAggregationKey',
+    NonExistentCredentialID = 'NonExistentCredentialID',
+    KeyIndexAlreadyInUse = 'KeyIndexAlreadyInUse',
+    InvalidAccountThreshold = 'InvalidAccountThreshold',
+    InvalidCredentialKeySignThreshold = 'InvalidCredentialKeySignThreshold',
+    InvalidEncryptedAmountTransferProof = 'InvalidEncryptedAmountTransferProof',
+    InvalidTransferToPublicProof = 'InvalidTransferToPublicProof',
+    EncryptedAmountSelfTransfer = 'EncryptedAmountSelfTransfer',
+    InvalidIndexOnEncryptedTransfer = 'InvalidIndexOnEncryptedTransfer',
+    ZeroScheduledAmount = 'ZeroScheduledAmount',
+    NonIncreasingSchedule = 'NonIncreasingSchedule',
+    FirstScheduledReleaseExpired = 'FirstScheduledReleaseExpired',
+    ScheduledSelfTransfer = 'ScheduledSelfTransfer',
+    InvalidCredentials = 'InvalidCredentials',
+    DuplicateCredIDs = 'DuplicateCredIDs',
+    NonExistentCredIDs = 'NonExistentCredIDs',
+    RemoveFirstCredential = 'RemoveFirstCredential',
+    CredentialHolderDidNotSign = 'CredentialHolderDidNotSign',
+    NotAllowedMultipleCredentials = 'NotAllowedMultipleCredentials',
+    NotAllowedToReceiveEncrypted = 'NotAllowedToReceiveEncrypted',
+    NotAllowedToHandleEncrypted = 'NotAllowedToHandleEncrypted',
+}
+
+export interface RejectReason {
+    tag: RejectReasonTag;
+    // TODO: Figure out the type of contents.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    contents: any;
+}
+
 export interface EventResult {
     outcome: string;
     // TODO Resolve the types completely.
     events: (TransactionEvent | TransferredEvent | UpdatedEvent)[];
+    rejectReason?: RejectReason;
 }
 
 interface TransactionSummaryType {
@@ -391,6 +450,27 @@ export interface InitialAccountCredential {
     contents: InitialCredentialDeploymentValues;
 }
 
+export type BakerPendingChange =
+    | {
+        change: 'ReduceStake';
+        newStake: bigint;
+        epoch: number;
+    }
+    | {
+        change: 'RemoveBaker';
+        epoch: number;
+    };
+
+export interface AccountBakerDetails {
+    restakeEarnings: boolean;
+    bakerId: number;
+    bakerAggregationVerifyKey: string;
+    bakerElectionVerifyKey: string;
+    bakerSignatureVerifyKey: string;
+    stakedAmount: bigint;
+    pendingChange?: BakerPendingChange;
+}
+
 export interface AccountInfo {
     accountNonce: bigint;
     accountAmount: bigint;
@@ -406,7 +486,9 @@ export interface AccountInfo {
     accountCredentials: Record<
         number,
         Versioned<InitialAccountCredential | NormalAccountCredential>
-    >;
+        >;
+
+    accountBaker?: AccountBakerDetails;
 }
 
 export enum BlockItemKind {

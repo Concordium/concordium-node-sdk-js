@@ -32,6 +32,7 @@ import {
     TransactionSummary,
     TransferredEvent,
     UpdateQueue,
+    AccountBakerDetails,
 } from './types';
 import {
     buildJsonResponseReviver,
@@ -151,6 +152,7 @@ export default class ConcordiumNodeClient {
             | keyof AccountEncryptedAmount
             | keyof AccountReleaseSchedule
             | keyof ReleaseSchedule
+                | keyof AccountBakerDetails
         )[] = [
             'accountAmount',
             'accountNonce',
@@ -158,6 +160,7 @@ export default class ConcordiumNodeClient {
             'startIndex',
             'total',
             'amount',
+            'stakedAmount',
         ];
         return unwrapJsonResponse<AccountInfo>(
             response,

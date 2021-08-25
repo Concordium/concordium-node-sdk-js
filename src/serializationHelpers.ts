@@ -50,10 +50,37 @@ export function encodeWord32(value: number): Buffer {
 }
 
 /**
+ * Encodes a 16 bit unsigned integer to a Buffer using big endian.
+ * @param value a 16 bit integer
+ * @returns big endian serialization of the input
+ */
+export function encodeWord16(value: number): Buffer {
+    if (value > 65535 || value < 0) {
+        throw new Error(
+            'The input has to be a 16 bit unsigned integer but it was: ' + value
+        );
+    }
+    const arr = new ArrayBuffer(2);
+    const view = new DataView(arr);
+    view.setUint16(0, value, false);
+    return Buffer.from(new Uint8Array(arr));
+}
+/**
  * Encodes a 8 bit unsigned integer to a Buffer using big endian.
  * @param value a 8 bit integer
  * @returns big endian serialization of the input
  */
 export function encodeUint8(value: number): Buffer {
     return Buffer.from(Buffer.of(value));
+}
+
+/**
+ * Encodes a memo.
+ * @param memo a HEX string containing the bytes of the memo.
+ * @returns CBOR encoded serialization of the input.
+ */
+export function encodeMemo(memo: string): Buffer {
+    const encoded = Buffer.from(memo, 'hex')
+    const length = encodeWord16(encoded.length);
+    return Buffer.concat([length, encoded]);
 }

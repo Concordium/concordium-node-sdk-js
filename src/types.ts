@@ -437,7 +437,11 @@ export enum AccountTransactionType {
     TransferWithSchedule = 19,
     UpdateCredentials = 20,
     RegisterData = 21,
+    SimpleTransferWithMemo = 22,
+    EncryptedTransferWithMemo = 23,
+    TransferWithScheduleWithMemo = 24,
 }
+
 
 export interface AccountTransactionHeader {
     /** account address that is source of this transaction */
@@ -453,15 +457,21 @@ export interface AccountTransactionHeader {
     expiry: TransactionExpiry;
 }
 
-export interface SimpleTransfer {
+export interface SimpleTransferPayload {
     /** µGTU amount to transfer */
     amount: GtuAmount;
 
-    /** the recipient of the transfer*/
+    /** the recipient of the transfer */
     toAddress: AccountAddress;
 }
 
-export type AccountTransactionPayload = SimpleTransfer;
+export interface SimpleTransferWithMemoPayload extends SimpleTransferPayload {
+    /** The provided memo of the transaction,
+       * expected to be a HEX string representing the bytes of the memo */
+    memo: string;
+}
+
+export type AccountTransactionPayload = SimpleTransferPayload | SimpleTransferWithMemoPayload;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

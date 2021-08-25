@@ -6,6 +6,7 @@ import {
     SimpleTransfer,
     SimpleTransferWithMemo,
     TransferWithSchedule,
+    TransferToEncrypted,
 } from './types';
 
 interface AccountTransactionHandler {
@@ -86,6 +87,19 @@ export class TransferWithScheduleHandler implements AccountTransactionHandler {
     }
 }
 
+export class TransferToEncryptedHandler implements AccountTransactionHandler {
+    getBaseEnergyCost(): bigint {
+        return 600n;
+    }
+
+    serialize(transfer: AccountTransactionPayload): Buffer {
+        // Find a nice way to handle payload type to avoid this typecast.
+        return encodeWord64(
+            (transfer as TransferToEncrypted).amount.microGtuAmount
+        );
+    }
+}
+
 export function getAccountTransactionHandler(
     type: AccountTransactionType
 ): AccountTransactionHandler {
@@ -106,6 +120,11 @@ export function getAccountTransactionHandler(
     accountTransactionHandlerMap.set(
         AccountTransactionType.TransferWithSchedule,
         new TransferWithScheduleHandler()
+    );
+
+    accountTransactionHandlerMap.set(
+        AccountTransactionType.TransferToEncrypted,
+        new TransferToEncryptedHandler()
     );
 
     const handler = accountTransactionHandlerMap.get(type);

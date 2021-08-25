@@ -546,6 +546,11 @@ export interface SimpleTransfer {
     toAddress: AccountAddress;
 }
 
+export interface SimpleTransferWithMemo extends SimpleTransfer {
+    // The provided memo of the transaction
+    memo: string;
+}
+
 export interface SchedulePoint {
     timestamp: Date;
     amount: GtuAmount;
@@ -560,9 +565,9 @@ export interface TransferWithSchedule {
     toAddress: AccountAddress;
 }
 
-export interface SimpleTransferWithMemo extends SimpleTransfer {
-    // The provided memo of the transaction
-    memo: string;
+export interface TransferToEncrypted {
+    /** µGTU amount to transfer to the shielded balance */
+    amount: GtuAmount;
 }
 
 export type AccountTransactionPayload =

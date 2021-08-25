@@ -519,7 +519,11 @@ export enum AccountTransactionType {
     TransferWithSchedule = 19,
     UpdateCredentials = 20,
     RegisterData = 21,
+    SimpleTransferWithMemo = 22,
+    EncryptedTransferWithMemo = 23,
+    TransferWithScheduleWithMemo = 24,
 }
+
 
 export interface AccountTransactionHeader {
     /** account address that is source of this transaction */
@@ -543,7 +547,12 @@ export interface SimpleTransfer {
     toAddress: AccountAddress;
 }
 
-export type AccountTransactionPayload = SimpleTransfer;
+export interface SimpleTransferWithMemo extends SimpleTransfer {
+    // The provided memo of the transaction
+    memo: string;
+}
+
+export type AccountTransactionPayload = SimpleTransfer | SimpleTransferWithMemo;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

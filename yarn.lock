@@ -1137,6 +1137,13 @@ caniuse-lite@^1.0.30001219:
   resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001243.tgz"
   integrity sha512-vNxw9mkTBtkmLFnJRv/2rhs1yufpDfCkBZexG3Y0xdOH2Z/eE/85E4Dl5j1YUN34nZVsSp6vVRFQRrez9wJMRA==
 
+cbor@^8.0.0:
+  version "8.0.0"
+  resolved "https://registry.yarnpkg.com/cbor/-/cbor-8.0.0.tgz#51657d26a99a6a1866f8c3258e948576eb17d709"
+  integrity sha512-nMmaLWbj7+bC6MsApKRIig8h+yjgNLhPLXaCelq5+C7mpWsHgIcseZSdvgexSY5uE1Q3m2uPvIDZwSdxdo7qig==
+  dependencies:
+    nofilter "^3.0.2"
+
 chalk@^2.0.0:
   version "2.4.2"
   resolved "https://registry.npmjs.org/chalk/-/chalk-2.4.2.tgz"
@@ -3005,6 +3012,11 @@ node-releases@^1.1.71:
   version "1.1.73"
   resolved "https://registry.npmjs.org/node-releases/-/node-releases-1.1.73.tgz"
   integrity sha512-uW7fodD6pyW2FZNZnp/Z3hvWKeEW1Y8R1+1CnErE8cXFXzl5blBOoVB41CvMer6P6Q0S5FXDwcHgFd1Wj0U9zg==
+
+nofilter@^3.0.2:
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/nofilter/-/nofilter-3.0.3.tgz#3ff3b142efdccb403434ccae4a0c2c835cb9b522"
+  integrity sha512-TN/MCrQmXQk5DyUJ8TGUq1Il8rv4fTsjddLmMopV006QP8DMkglmGgYfQKD5620vXLRXfr8iGI6ZZ4/ZWld2cQ==
 
 nopt@^5.0.0:
   version "5.0.0"

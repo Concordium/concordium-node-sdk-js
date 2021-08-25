@@ -1,4 +1,5 @@
 import { Buffer } from 'buffer/';
+import { encode as cborEncode } from 'cbor';
 
 export function serializeMap<K extends string | number | symbol, T>(
     map: Record<K, T>,
@@ -56,4 +57,13 @@ export function encodeWord32(value: number): Buffer {
  */
 export function encodeUint8(value: number): Buffer {
     return Buffer.from(Buffer.of(value));
+}
+
+/**
+ * Encodes a string to a Buffer using CBOR encoding.
+ * @param memo a string
+ * @returns CBOR encoded serialization of the input
+ */
+export function encodeMemo(memo: string): Buffer {
+    return Buffer.from(cborEncode(memo));
 }

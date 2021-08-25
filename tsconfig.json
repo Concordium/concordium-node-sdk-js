@@ -3,7 +3,7 @@
     "exclude": ["node_modules", "grpc/**/*"],
     "compilerOptions": {
         "strict": true,
-        "lib": ["ES2020"],
+        "lib": ["ES2020", "dom"],
         "module": "commonjs",
         "declaration": true,
         "target": "ES2020",

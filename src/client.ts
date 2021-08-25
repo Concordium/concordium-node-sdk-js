@@ -152,7 +152,7 @@ export default class ConcordiumNodeClient {
             | keyof AccountEncryptedAmount
             | keyof AccountReleaseSchedule
             | keyof ReleaseSchedule
-                | keyof AccountBakerDetails
+            | keyof AccountBakerDetails
         )[] = [
             'accountAmount',
             'accountNonce',

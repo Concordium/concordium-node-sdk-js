@@ -452,14 +452,14 @@ export interface InitialAccountCredential {
 
 export type BakerPendingChange =
     | {
-        change: 'ReduceStake';
-        newStake: bigint;
-        epoch: number;
-    }
+          change: 'ReduceStake';
+          newStake: bigint;
+          epoch: number;
+      }
     | {
-        change: 'RemoveBaker';
-        epoch: number;
-    };
+          change: 'RemoveBaker';
+          epoch: number;
+      };
 
 export interface AccountBakerDetails {
     restakeEarnings: boolean;
@@ -486,7 +486,7 @@ export interface AccountInfo {
     accountCredentials: Record<
         number,
         Versioned<InitialAccountCredential | NormalAccountCredential>
-        >;
+    >;
 
     accountBaker?: AccountBakerDetails;
 }
@@ -524,7 +524,6 @@ export enum AccountTransactionType {
     TransferWithScheduleWithMemo = 24,
 }
 
-
 export interface AccountTransactionHeader {
     /** account address that is source of this transaction */
     sender: AccountAddress;
@@ -547,12 +546,29 @@ export interface SimpleTransfer {
     toAddress: AccountAddress;
 }
 
+export interface SchedulePoint {
+    timestamp: Date;
+    amount: GtuAmount;
+}
+export type Schedule = SchedulePoint[];
+
+export interface TransferWithSchedule {
+    /** Schedule */
+    schedule: Schedule;
+
+    /** the recipient of the transfer*/
+    toAddress: AccountAddress;
+}
+
 export interface SimpleTransferWithMemo extends SimpleTransfer {
     // The provided memo of the transaction
     memo: string;
 }
 
-export type AccountTransactionPayload = SimpleTransfer | SimpleTransferWithMemo;
+export type AccountTransactionPayload =
+    | SimpleTransfer
+    | SimpleTransferWithMemo
+    | TransferWithSchedule;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

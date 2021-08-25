@@ -71,7 +71,7 @@ test('send simple transfer with memo signed with wrong private key is accepted',
         toAddress: new AccountAddress(
             '4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf'
         ),
-        memo: 'test'
+        memo: 'test',
     };
 
     const nextAccountNonce = await client.getNextAccountNonce(

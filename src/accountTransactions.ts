@@ -7,6 +7,7 @@ import {
     SimpleTransferWithMemo,
     TransferWithSchedule,
     TransferToEncrypted,
+    TransferToPublic,
 } from './types';
 
 interface AccountTransactionHandler {
@@ -20,10 +21,11 @@ export class SimpleTransferHandler implements AccountTransactionHandler {
     }
 
     serialize(transfer: AccountTransactionPayload): Buffer {
-        const serializedToAddress = transfer.toAddress.decodedAddress;
+        const simpleTransfer = transfer as SimpleTransfer;
+        const serializedToAddress = simpleTransfer.toAddress.decodedAddress;
         // Find a nice way to handle payload type to avoid this typecast.
         const serializedAmount = encodeWord64(
-            (transfer as SimpleTransfer).amount.microGtuAmount
+            simpleTransfer.amount.microGtuAmount
         );
         return Buffer.concat([serializedToAddress, serializedAmount]);
     }
@@ -100,6 +102,33 @@ export class TransferToEncryptedHandler implements AccountTransactionHandler {
     }
 }
 
+export class TransferToPublicHandler implements AccountTransactionHandler {
+    getBaseEnergyCost(): bigint {
+        return 14850n;
+    }
+
+    serialize(transfer: AccountTransactionPayload): Buffer {
+        // Find a nice way to handle payload type to avoid this typecast.
+        const transferToPublic = transfer as TransferToPublic;
+        const serializedRemainingEncryptedAmount = Buffer.from(
+            transferToPublic.remainingEncryptedAmount,
+            'hex'
+        );
+        const serializedAmount = encodeWord64(
+            transferToPublic.amount.microGtuAmount
+        );
+        const serializedIndex = encodeWord64(transferToPublic.index);
+        const serializedProof = Buffer.from(transferToPublic.proof, 'hex');
+
+        return Buffer.concat([
+            serializedRemainingEncryptedAmount,
+            serializedAmount,
+            serializedIndex,
+            serializedProof,
+        ]);
+    }
+}
+
 export function getAccountTransactionHandler(
     type: AccountTransactionType
 ): AccountTransactionHandler {
@@ -125,6 +154,11 @@ export function getAccountTransactionHandler(
     accountTransactionHandlerMap.set(
         AccountTransactionType.TransferToEncrypted,
         new TransferToEncryptedHandler()
+    );
+
+    accountTransactionHandlerMap.set(
+        AccountTransactionType.TransferToPublic,
+        new TransferToPublicHandler()
     );
 
     const handler = accountTransactionHandlerMap.get(type);

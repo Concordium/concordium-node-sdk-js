@@ -387,9 +387,9 @@ export interface AccountReleaseSchedule {
 }
 
 export interface AccountEncryptedAmount {
-    selfAmount: string;
+    selfAmount: EncryptedAmount;
     startIndex: bigint;
-    incomingAmounts: string[];
+    incomingAmounts: EncryptedAmount[];
     numAggregated: number;
 }
 
@@ -570,10 +570,25 @@ export interface TransferToEncrypted {
     amount: GtuAmount;
 }
 
+type EncryptedAmount = string;
+
+export interface TransferToPublic {
+    /** µGTU amount to transfer to public balance */
+    amount: GtuAmount;
+    /** encrypted µGTU amount remaining in shielded balance */
+    remainingEncryptedAmount: EncryptedAmount;
+
+    index: bigint;
+    /** Proof string for the transaction */
+    proof: string;
+}
+
 export type AccountTransactionPayload =
     | SimpleTransfer
     | SimpleTransferWithMemo
-    | TransferWithSchedule;
+    | TransferWithSchedule
+    | TransferToEncrypted
+    | TransferToPublic;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

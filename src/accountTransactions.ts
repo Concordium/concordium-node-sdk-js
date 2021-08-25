@@ -8,6 +8,7 @@ import {
     TransferWithSchedule,
     TransferToEncrypted,
     TransferToPublic,
+    EncryptedTransfer,
 } from './types';
 
 interface AccountTransactionHandler {
@@ -129,6 +130,36 @@ export class TransferToPublicHandler implements AccountTransactionHandler {
     }
 }
 
+export class EncryptedTransferHandler implements AccountTransactionHandler {
+    getBaseEnergyCost(): bigint {
+        return 27000n;
+    }
+
+    serialize(transfer: AccountTransactionPayload): Buffer {
+        // Find a nice way to handle payload type to avoid this typecast.
+        const encryptedTransfer = transfer as EncryptedTransfer;
+        const serializedToAddress = encryptedTransfer.toAddress.decodedAddress;
+        const serializedRemainingEncryptedAmount = Buffer.from(
+            encryptedTransfer.remainingEncryptedAmount,
+            'hex'
+        );
+        const serializedTransferAmount = Buffer.from(
+            encryptedTransfer.transferAmount,
+            'hex'
+        );
+        const serializedIndex = encodeWord64(encryptedTransfer.index);
+        const serializedProof = Buffer.from(encryptedTransfer.proof, 'hex');
+
+        return Buffer.concat([
+            serializedToAddress,
+            serializedRemainingEncryptedAmount,
+            serializedTransferAmount,
+            serializedIndex,
+            serializedProof,
+        ]);
+    }
+}
+
 export function getAccountTransactionHandler(
     type: AccountTransactionType
 ): AccountTransactionHandler {
@@ -159,6 +190,11 @@ export function getAccountTransactionHandler(
     accountTransactionHandlerMap.set(
         AccountTransactionType.TransferToPublic,
         new TransferToPublicHandler()
+    );
+
+    accountTransactionHandlerMap.set(
+        AccountTransactionType.EncryptedTransfer,
+        new EncryptedTransferHandler()
     );
 
     const handler = accountTransactionHandlerMap.get(type);

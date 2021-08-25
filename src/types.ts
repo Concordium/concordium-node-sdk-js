@@ -583,12 +583,26 @@ export interface TransferToPublic {
     proof: string;
 }
 
+export interface EncryptedTransfer {
+    /** the recipient of the transfer*/
+    toAddress: AccountAddress;
+    /** encrypted µGTU amount to transfer */
+    transferAmount: EncryptedAmount;
+    /** encrypted µGTU amount remaining in shielded balance */
+    remainingEncryptedAmount: EncryptedAmount;
+
+    index: bigint;
+    /** Proof string for the transaction */
+    proof: string;
+}
+
 export type AccountTransactionPayload =
     | SimpleTransfer
     | SimpleTransferWithMemo
     | TransferWithSchedule
     | TransferToEncrypted
-    | TransferToPublic;
+    | TransferToPublic
+    | EncryptedTransfer;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

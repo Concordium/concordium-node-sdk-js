@@ -60,10 +60,28 @@ export function encodeUint8(value: number): Buffer {
 }
 
 /**
+ * Encodes a boolean in a Buffer.
+ * @param value a boolean
+ * @returns serialization of the input
+ */
+export function encodeBoolean(value: boolean): Buffer {
+    return Buffer.from(Buffer.of(value ? 1 : 0));
+}
+
+/**
  * Encodes a string to a Buffer using CBOR encoding.
  * @param memo a string
  * @returns CBOR encoded serialization of the input
  */
 export function encodeMemo(memo: string): Buffer {
     return Buffer.from(cborEncode(memo));
+}
+
+/**
+ * Encodes a hex string to a Buffer.
+ * @param memo a string
+ * @returns serialization of the input
+ */
+export function encodeHexString(value: string): Buffer {
+    return Buffer.from(value, 'hex');
 }

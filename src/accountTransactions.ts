@@ -1,5 +1,6 @@
 import { Buffer } from 'buffer/';
-import { encodeWord64, encodeMemo, encodeUint8 } from './serializationHelpers';
+import { serializeBakerKeyProofs, serializeBakerVerifyKeys } from './serialization';
+import { encodeWord64, encodeMemo, encodeUint8, encodeBoolean } from './serializationHelpers';
 import {
     AccountTransactionPayload,
     AccountTransactionType,
@@ -11,6 +12,10 @@ import {
     EncryptedTransfer,
     TransferWithScheduleWithMemo,
     EncryptedTransferWithMemo,
+    AddBaker,
+    UpdateBakerKeys,
+    UpdateBakerStake,
+    UpdateBakerRestakeEarnings
 } from './types';
 
 interface AccountTransactionHandler {
@@ -169,6 +174,62 @@ export class EncryptedTransferWithMemoHandler extends EncryptedTransferHandler {
     }
 }
 
+export class AddBakerHandler implements AccountTransactionHandler {
+    getBaseEnergyCost(): bigint {
+        return 4050n;
+    }
+    serialize(transfer: AccountTransactionPayload): Buffer {
+        const addBaker = transfer as AddBaker;
+        return Buffer.concat([
+            serializeBakerVerifyKeys(addBaker),
+            serializeBakerKeyProofs(addBaker),
+            encodeWord64(addBaker.bakingStake.microGtuAmount),
+            encodeBoolean(addBaker.restakeEarnings),
+        ]);
+
+    }
+}
+
+export class UpdateBakerKeysHandler implements AccountTransactionHandler {
+    getBaseEnergyCost(): bigint {
+        return 4050n;
+    }
+    serialize(transfer: AccountTransactionPayload): Buffer {
+        const updateBakerKeys = transfer as UpdateBakerKeys;
+        return Buffer.concat([
+            serializeBakerVerifyKeys(updateBakerKeys),
+            serializeBakerKeyProofs(updateBakerKeys),
+        ]);
+    }
+}
+
+export class RemoveBakerHandler implements AccountTransactionHandler {
+    getBaseEnergyCost(): bigint {
+        return 300n;
+    }
+    serialize(): Buffer {
+        return Buffer.alloc(0);
+    }
+}
+
+export class UpdateBakerStakeHandler implements AccountTransactionHandler {
+    getBaseEnergyCost(): bigint {
+        return 300n;
+    }
+    serialize(transfer: AccountTransactionPayload): Buffer {
+        return encodeWord64((transfer as UpdateBakerStake).stake.microGtuAmount);
+    }
+}
+
+export class UpdateBakerRestakeEarningsHandler implements AccountTransactionHandler {
+    getBaseEnergyCost(): bigint {
+        return 300n;
+    }
+    serialize(transfer: AccountTransactionPayload): Buffer {
+        return encodeBoolean((transfer as UpdateBakerRestakeEarnings).restakeEarnings);
+    }
+}
+
 export function getAccountTransactionHandler(
     type: AccountTransactionType
 ): AccountTransactionHandler {
@@ -204,6 +265,31 @@ export function getAccountTransactionHandler(
     accountTransactionHandlerMap.set(
         AccountTransactionType.EncryptedTransfer,
         new EncryptedTransferHandler()
+    );
+
+    accountTransactionHandlerMap.set(
+        AccountTransactionType.AddBaker,
+        new AddBakerHandler()
+    );
+
+    accountTransactionHandlerMap.set(
+        AccountTransactionType.UpdateBakerKeys,
+        new UpdateBakerKeysHandler()
+    );
+
+    accountTransactionHandlerMap.set(
+        AccountTransactionType.RemoveBaker,
+        new RemoveBakerHandler()
+    );
+
+    accountTransactionHandlerMap.set(
+        AccountTransactionType.UpdateBakerStake,
+        new UpdateBakerStakeHandler()
+    );
+
+    accountTransactionHandlerMap.set(
+        AccountTransactionType.AddBaker,
+        new UpdateBakerRestakeEarningsHandler()
     );
 
     const handler = accountTransactionHandlerMap.get(type);

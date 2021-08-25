@@ -565,8 +565,9 @@ export interface TransferToEncrypted {
     amount: GtuAmount;
 }
 
+type Hex = string;
 // TODO: Do we need a class for this? (or some other way to show it is expected to be a HEX string)
-type EncryptedAmount = string;
+type EncryptedAmount = Hex;
 
 export interface TransferToPublic {
     /** µGTU amount to transfer to public balance */
@@ -576,7 +577,7 @@ export interface TransferToPublic {
 
     index: bigint;
     /** Proof string for the transaction */
-    proof: string;
+    proof: Hex;
 }
 
 export interface EncryptedTransfer {
@@ -589,7 +590,7 @@ export interface EncryptedTransfer {
 
     index: bigint;
     /** Proof string for the transaction */
-    proof: string;
+    proof: Hex;
 }
 
 // TODO: Should we add a memo class?
@@ -602,6 +603,37 @@ export type SimpleTransferWithMemo = WithMemo<SimpleTransfer>;
 export type EncryptedTransferWithMemo = WithMemo<EncryptedTransfer>;
 export type TransferWithScheduleWithMemo = WithMemo<TransferWithSchedule>;
 
+
+export type BakerVerifyKeys = {
+    electionVerifyKey: Hex;
+    signatureVerifyKey: Hex;
+    aggregationVerifyKey: Hex;
+};
+
+export type BakerKeyProofs = {
+    proofElection: Hex;
+    proofSignature: Hex;
+    proofAggregation: Hex;
+};
+
+export type AddBaker = BakerVerifyKeys &
+    BakerKeyProofs & {
+        bakingStake: GtuAmount;
+        restakeEarnings: boolean;
+    };
+
+export type UpdateBakerKeys = BakerVerifyKeys & BakerKeyProofs;
+
+export type RemoveBaker = {};
+
+export type UpdateBakerStake = {
+    stake: GtuAmount;
+};
+
+export type UpdateBakerRestakeEarnings = {
+    restakeEarnings: boolean;
+};
+
 export type AccountTransactionPayload =
     | SimpleTransfer
     | SimpleTransferWithMemo
@@ -611,7 +643,12 @@ export type AccountTransactionPayload =
     | EncryptedTransfer
     | SimpleTransferWithMemo
     | EncryptedTransferWithMemo
-    | TransferWithScheduleWithMemo;
+    | TransferWithScheduleWithMemo
+    | AddBaker
+    | RemoveBaker
+    | UpdateBakerKeys
+    | UpdateBakerStake
+    | UpdateBakerRestakeEarnings;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

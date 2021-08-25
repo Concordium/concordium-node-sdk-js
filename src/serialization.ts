@@ -5,6 +5,7 @@ import {
     encodeWord32,
     encodeWord64,
     serializeMap,
+    encodeHexString
 } from './serializationHelpers';
 import {
     AccountTransactionHeader,
@@ -13,6 +14,8 @@ import {
     BlockItemKind,
     AccountTransactionSignature,
     CredentialSignature,
+    BakerVerifyKeys,
+    BakerKeyProofs,
 } from './types';
 import { calculateEnergyCost } from './energyCost';
 import { countSignatures } from './util';
@@ -208,3 +211,20 @@ export function serializeAccountTransactionForSubmission(
     const serializedVersion = encodeUint8(0);
     return Buffer.concat([serializedVersion, serializedAccountTransaction]);
 }
+
+export function serializeBakerVerifyKeys(payload: BakerVerifyKeys) {
+    return Buffer.concat([
+        encodeHexString(payload.electionVerifyKey),
+        encodeHexString(payload.signatureVerifyKey),
+        encodeHexString(payload.aggregationVerifyKey),
+    ]);
+}
+
+export function serializeBakerKeyProofs(payload: BakerKeyProofs) {
+    return Buffer.concat([
+        encodeHexString(payload.proofSignature),
+        encodeHexString(payload.proofElection),
+        encodeHexString(payload.proofAggregation),
+    ]);
+}
+

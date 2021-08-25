@@ -10,7 +10,7 @@ import {
     TransferToPublic,
     EncryptedTransfer,
     TransferWithScheduleWithMemo,
-    EncryptedTransferWithMemo
+    EncryptedTransferWithMemo,
 } from './types';
 
 interface AccountTransactionHandler {
@@ -34,13 +34,13 @@ export class SimpleTransferHandler implements AccountTransactionHandler {
     }
 }
 
-export class SimpleTransferWithMemoHandler
-    extends SimpleTransferHandler
-{
+export class SimpleTransferWithMemoHandler extends SimpleTransferHandler {
     serialize(transfer: AccountTransactionPayload): Buffer {
         const regularPayload = super.serialize(transfer);
-        const serializedMemo = encodeMemo((transfer as SimpleTransferWithMemo).memo);
-        return Buffer.concat([regularPayload, serializedMemo])
+        const serializedMemo = encodeMemo(
+            (transfer as SimpleTransferWithMemo).memo
+        );
+        return Buffer.concat([regularPayload, serializedMemo]);
     }
 }
 
@@ -82,8 +82,10 @@ export class TransferWithScheduleHandler implements AccountTransactionHandler {
 export class TransferWithScheduleWithMemoHandler extends TransferWithScheduleHandler {
     serialize(transfer: AccountTransactionPayload): Buffer {
         const regularPayload = super.serialize(transfer);
-        const serializedMemo = encodeMemo((transfer as TransferWithScheduleWithMemo).memo);
-        return Buffer.concat([regularPayload, serializedMemo])
+        const serializedMemo = encodeMemo(
+            (transfer as TransferWithScheduleWithMemo).memo
+        );
+        return Buffer.concat([regularPayload, serializedMemo]);
     }
 }
 
@@ -160,8 +162,10 @@ export class EncryptedTransferHandler implements AccountTransactionHandler {
 export class EncryptedTransferWithMemoHandler extends EncryptedTransferHandler {
     serialize(transfer: AccountTransactionPayload): Buffer {
         const regularPayload = super.serialize(transfer);
-        const serializedMemo = encodeMemo((transfer as EncryptedTransferWithMemo).memo);
-        return Buffer.concat([regularPayload, serializedMemo])
+        const serializedMemo = encodeMemo(
+            (transfer as EncryptedTransferWithMemo).memo
+        );
+        return Buffer.concat([regularPayload, serializedMemo]);
     }
 }
 

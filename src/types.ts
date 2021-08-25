@@ -565,6 +565,7 @@ export interface TransferToEncrypted {
     amount: GtuAmount;
 }
 
+// TODO: Do we need a class for this? (or some other way to show it is expected to be a HEX string)
 type EncryptedAmount = string;
 
 export interface TransferToPublic {
@@ -591,10 +592,11 @@ export interface EncryptedTransfer {
     proof: string;
 }
 
+// TODO: Should we add a memo class?
 type WithMemo<T> = T & {
     // The provided memo of the transaction
     memo: string;
-}
+};
 
 export type SimpleTransferWithMemo = WithMemo<SimpleTransfer>;
 export type EncryptedTransferWithMemo = WithMemo<EncryptedTransfer>;
@@ -606,7 +608,10 @@ export type AccountTransactionPayload =
     | TransferWithSchedule
     | TransferToEncrypted
     | TransferToPublic
-    | EncryptedTransfer;
+    | EncryptedTransfer
+    | SimpleTransferWithMemo
+    | EncryptedTransferWithMemo
+    | TransferWithScheduleWithMemo;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

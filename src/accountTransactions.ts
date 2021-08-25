@@ -9,6 +9,8 @@ import {
     TransferToEncrypted,
     TransferToPublic,
     EncryptedTransfer,
+    TransferWithScheduleWithMemo,
+    EncryptedTransferWithMemo
 } from './types';
 
 interface AccountTransactionHandler {
@@ -33,25 +35,12 @@ export class SimpleTransferHandler implements AccountTransactionHandler {
 }
 
 export class SimpleTransferWithMemoHandler
-    implements AccountTransactionHandler
+    extends SimpleTransferHandler
 {
-    getBaseEnergyCost(): bigint {
-        return 300n;
-    }
-
     serialize(transfer: AccountTransactionPayload): Buffer {
-        // Find a nice way to handle payload type to avoid this typecast.
-        const memoTransfer = transfer as SimpleTransferWithMemo;
-        const serializedToAddress = memoTransfer.toAddress.decodedAddress;
-        const serializedAmount = encodeWord64(
-            memoTransfer.amount.microGtuAmount
-        );
-        const serializedMemo = encodeMemo(memoTransfer.memo);
-        return Buffer.concat([
-            serializedToAddress,
-            serializedAmount,
-            serializedMemo,
-        ]);
+        const regularPayload = super.serialize(transfer);
+        const serializedMemo = encodeMemo((transfer as SimpleTransferWithMemo).memo);
+        return Buffer.concat([regularPayload, serializedMemo])
     }
 }
 
@@ -87,6 +76,14 @@ export class TransferWithScheduleHandler implements AccountTransactionHandler {
             serializedScheduleLength,
             ...serializedSchedule,
         ]);
+    }
+}
+
+export class TransferWithScheduleWithMemoHandler extends TransferWithScheduleHandler {
+    serialize(transfer: AccountTransactionPayload): Buffer {
+        const regularPayload = super.serialize(transfer);
+        const serializedMemo = encodeMemo((transfer as TransferWithScheduleWithMemo).memo);
+        return Buffer.concat([regularPayload, serializedMemo])
     }
 }
 
@@ -157,6 +154,14 @@ export class EncryptedTransferHandler implements AccountTransactionHandler {
             serializedIndex,
             serializedProof,
         ]);
+    }
+}
+
+export class EncryptedTransferWithMemoHandler extends EncryptedTransferHandler {
+    serialize(transfer: AccountTransactionPayload): Buffer {
+        const regularPayload = super.serialize(transfer);
+        const serializedMemo = encodeMemo((transfer as EncryptedTransferWithMemo).memo);
+        return Buffer.concat([regularPayload, serializedMemo])
     }
 }
 

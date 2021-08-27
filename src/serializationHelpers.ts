@@ -1,5 +1,6 @@
 import { Buffer } from 'buffer/';
 import { encode as cborEncode } from 'cbor';
+import { VerifyKey } from './types';
 
 export function serializeMap<K extends string | number | symbol, T>(
     map: Record<K, T>,
@@ -12,6 +13,18 @@ export function serializeMap<K extends string | number | symbol, T>(
     keys.forEach((key: K) => {
         buffers.push(encodeKey(key));
         buffers.push(encodeValue(map[key]));
+    });
+    return Buffer.concat(buffers);
+}
+
+export function serializeList<T>(
+    list: T[],
+    encodeSize: (size: number) => Buffer,
+    encodeElement: (t: T) => Buffer
+): Buffer {
+    const buffers = [encodeSize(list.length)];
+    list.forEach((member: T) => {
+        buffers.push(encodeElement(member));
     });
     return Buffer.concat(buffers);
 }
@@ -51,6 +64,24 @@ export function encodeWord32(value: number): Buffer {
 }
 
 /**
+ * Encodes a 16 bit unsigned integer to a Buffer using big endian.
+ * @param value a 16 bit integer
+ * @returns big endian serialization of the input
+ */
+export function encodeWord16(value: number): Buffer {
+    if (value > 65535 || value < 0) {
+        throw new Error(
+            'The input has to be a 32 bit unsigned integer but it was: ' + value
+        );
+    }
+    const arr = new ArrayBuffer(2);
+    const view = new DataView(arr);
+    view.setUint16(0, value, false);
+    return Buffer.from(new Uint8Array(arr));
+}
+
+
+/**
  * Encodes a 8 bit unsigned integer to a Buffer using big endian.
  * @param value a 8 bit integer
  * @returns big endian serialization of the input
@@ -79,9 +110,38 @@ export function encodeMemo(memo: string): Buffer {
 
 /**
  * Encodes a hex string to a Buffer.
- * @param memo a string
+ * @param value a string containing a hex-encoded value
  * @returns serialization of the input
  */
 export function encodeHexString(value: string): Buffer {
     return Buffer.from(value, 'hex');
+}
+
+/**
+ * Serializes a YearMonth string ("YYYYMM") to a Buffer.
+ * @param yearMonth a string with YYYYMM format
+ * @returns serialization of the input
+ */
+export function serializeYearMonth(yearMonth: string): Buffer {
+    const year = parseInt(yearMonth.substring(0, 4), 10);
+    const month = parseInt(yearMonth.substring(4, 6), 10);
+
+    if (month < 0 || month > 12) {
+        throw new Error('YearMonth string contains invalid month');
+    }
+
+    return Buffer.concat([encodeWord16(year), encodeUint8(month)]);
+}
+
+/**
+ * Serializes a VerifyKey object to a Buffer.
+ * @param key a VerifyKey object
+ * @returns serialization of the input
+ */
+export function serializeVerifyKey(key: VerifyKey): Buffer {
+    // Currently the only accepted scheme is Ed25519.
+    if (key.schemeId !== 'Ed25519') {
+        throw new Error(`Unknown key type: ${key.schemeId}`);
+    }
+    return Buffer.concat([encodeUint8(0), encodeHexString(key.verifyKey)]);
 }

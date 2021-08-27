@@ -5,7 +5,10 @@ import {
     encodeWord32,
     encodeWord64,
     serializeMap,
-    encodeHexString
+    encodeHexString,
+    encodeWord16,
+    serializeYearMonth,
+    serializeVerifyKey
 } from './serializationHelpers';
 import {
     AccountTransactionHeader,
@@ -16,6 +19,10 @@ import {
     CredentialSignature,
     BakerVerifyKeys,
     BakerKeyProofs,
+    AddedCredential,
+    CredentialDeploymentValues,
+    AttributesKeys,
+    AttributeKey,
 } from './types';
 import { calculateEnergyCost } from './energyCost';
 import { countSignatures } from './util';
@@ -226,5 +233,79 @@ export function serializeBakerKeyProofs(payload: BakerKeyProofs) {
         encodeHexString(payload.proofElection),
         encodeHexString(payload.proofAggregation),
     ]);
+}
+
+/**
+ * Serializes a CredentialDeploymentValues object to a Buffer.
+ * @param credential a CredentialDeploymentValues object
+ * @returns serialization of the input
+ */
+function serializeCredentialDeploymentValues(
+    credential: CredentialDeploymentValues
+) {
+    const buffers = [];
+    buffers.push(
+        serializeMap(
+            credential.credentialPublicKeys.keys,
+            encodeUint8,
+            encodeUint8,
+            serializeVerifyKey
+        )
+    );
+    buffers.push(
+        Buffer.from(Uint8Array.of(credential.credentialPublicKeys.threshold))
+    );
+    buffers.push(Buffer.from(credential.credId, 'hex'));
+    buffers.push(encodeWord32(credential.ipIdentity));
+    buffers.push(encodeUint8(credential.revocationThreshold));
+    buffers.push(
+        serializeMap(
+            credential.arData,
+            encodeWord16,
+            (key) => encodeWord32(parseInt(key, 10)),
+            (arData) => Buffer.from(arData.encIdCredPubShare, 'hex')
+        )
+    );
+    buffers.push(serializeYearMonth(credential.policy.validTo));
+    buffers.push(serializeYearMonth(credential.policy.createdAt));
+    const revealedAttributes = Object.entries(
+        credential.policy.revealedAttributes
+    );
+    const attributesLength = Buffer.alloc(2);
+    attributesLength.writeUInt16BE(revealedAttributes.length, 0);
+    buffers.push(attributesLength);
+
+    const revealedAttributeTags: [
+        number,
+        string
+    ][] = revealedAttributes.map(([tagName, value]) => [
+        AttributesKeys[tagName as AttributeKey],
+        value,
+    ]);
+    revealedAttributeTags
+        .sort((a, b) => a[0] - b[0])
+        .forEach(([tag, value]) => {
+            const serializedAttributeValue = Buffer.from(value, 'utf-8');
+            const data = Buffer.alloc(2);
+            data.writeUInt8(tag, 0);
+            data.writeUInt8(serializedAttributeValue.length, 1);
+            buffers.push(data);
+            buffers.push(serializedAttributeValue);
+        });
+    return Buffer.concat(buffers);
+}
+/**
+ * Serializes a AddedCredential object to a Buffer.
+ * @param credential a AddedCredential object
+ * @returns serialization of the input
+ */
+export function serializeAddedCredential(addedCredential: AddedCredential): Buffer {
+    const proofs = encodeHexString(addedCredential.proofs);
+    return Buffer.concat([
+            encodeUint8(addedCredential.index),
+            serializeCredentialDeploymentValues(addedCredential.value),
+            encodeWord32(proofs.length),
+            proofs
+        ]);
 }
 

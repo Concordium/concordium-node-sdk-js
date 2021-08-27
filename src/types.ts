@@ -424,7 +424,6 @@ export interface CredentialDeploymentValues
     credId: string;
     revocationThreshold: number;
     arData: Record<string, ChainArData>;
-    commitments: CredentialDeploymentCommitments;
 }
 
 export interface InitialCredentialDeploymentValues
@@ -442,7 +441,9 @@ export interface CredentialDeploymentCommitments {
 
 export interface NormalAccountCredential {
     type: 'normal';
-    contents: CredentialDeploymentValues;
+    contents: CredentialDeploymentValues & {
+        commitments: CredentialDeploymentCommitments;
+    };
 }
 
 export interface InitialAccountCredential {
@@ -634,6 +635,18 @@ export type UpdateBakerRestakeEarnings = {
     restakeEarnings: boolean;
 };
 
+export interface AddedCredential {
+    index: number;
+    value: CredentialDeploymentValues;
+    proofs: string;
+}
+
+export interface UpdateCredentials {
+    addedCredentials: AddedCredential[];
+    removedCredIds: Hex[];
+    threshold: number;
+};
+
 export type AccountTransactionPayload =
     | SimpleTransfer
     | SimpleTransferWithMemo
@@ -648,7 +661,9 @@ export type AccountTransactionPayload =
     | RemoveBaker
     | UpdateBakerKeys
     | UpdateBakerStake
-    | UpdateBakerRestakeEarnings;
+    | UpdateBakerRestakeEarnings
+    | UpdateCredentials
+    ;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

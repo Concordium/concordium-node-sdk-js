@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer/';
-import { serializeBakerKeyProofs, serializeBakerVerifyKeys } from './serialization';
-import { encodeWord64, encodeMemo, encodeUint8, encodeBoolean } from './serializationHelpers';
+import { serializeBakerKeyProofs, serializeBakerVerifyKeys, serializeAddedCredential } from './serialization';
+import { encodeWord64, encodeMemo, encodeUint8, encodeBoolean, serializeMap, serializeList, encodeHexString } from './serializationHelpers';
 import {
     AccountTransactionPayload,
     AccountTransactionType,
@@ -15,7 +15,8 @@ import {
     AddBaker,
     UpdateBakerKeys,
     UpdateBakerStake,
-    UpdateBakerRestakeEarnings
+    UpdateBakerRestakeEarnings,
+    UpdateCredentials
 } from './types';
 
 interface AccountTransactionHandler {
@@ -230,6 +231,40 @@ export class UpdateBakerRestakeEarningsHandler implements AccountTransactionHand
     }
 }
 
+export class UpdateCredentialsHandler implements AccountTransactionHandler {
+    getBaseEnergyCost(transfer?: AccountTransactionPayload): bigint {
+        if (!transfer) {
+            throw new Error(
+                'payload is required to determine the base energy cost of an update credentials transaction'
+            );
+        }
+        const updateCredentials = (transfer as UpdateCredentials);
+        const addedCredentialsCost = updateCredentials.addedCredentials.reduce((acc, credInfo) => acc + (54000n + 100n * BigInt(Object.entries(credInfo.value.credentialPublicKeys.keys).length)), 0n);
+        return 500n + (500n * BigInt(updateCredentials.removedCredIds.length)) + addedCredentialsCost;
+    }
+    serialize(transfer: AccountTransactionPayload): Buffer {
+        const updateCredentials = (transfer as UpdateCredentials);
+        const serializedNewCredentials = serializeList(
+            updateCredentials.addedCredentials,
+            encodeUint8,
+            serializeAddedCredential,
+        );
+
+        const serializedRemovedCredentials = serializeList(
+            updateCredentials.removedCredIds,
+            encodeUint8,
+            encodeHexString
+        );
+
+        return Buffer.concat([
+            serializedNewCredentials,
+            serializedRemovedCredentials,
+            encodeUint8(updateCredentials.threshold),
+        ]);
+        return encodeBoolean((transfer as UpdateBakerRestakeEarnings).restakeEarnings);
+    }
+}
+
 export function getAccountTransactionHandler(
     type: AccountTransactionType
 ): AccountTransactionHandler {
@@ -290,6 +325,11 @@ export function getAccountTransactionHandler(
     accountTransactionHandlerMap.set(
         AccountTransactionType.AddBaker,
         new UpdateBakerRestakeEarningsHandler()
+    );
+
+    accountTransactionHandlerMap.set(
+        AccountTransactionType.UpdateCredentials,
+        new UpdateCredentialsHandler()
     );
 
     const handler = accountTransactionHandlerMap.get(type);

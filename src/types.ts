@@ -150,12 +150,18 @@ export interface RejectReason {
     contents: any;
 }
 
-export interface EventResult {
-    outcome: string;
+interface SuccessfulEventResult {
+    outcome: 'success';
     // TODO Resolve the types completely.
     events: (TransactionEvent | TransferredEvent | UpdatedEvent)[];
-    rejectReason?: RejectReason;
 }
+
+interface RejectedEventResult {
+    outcome: 'reject';
+    rejectReason: RejectReason;
+}
+
+export type EventResult = SuccessfulEventResult | RejectedEventResult;
 
 interface TransactionSummaryType {
     type:
@@ -452,14 +458,14 @@ export interface InitialAccountCredential {
 
 export type BakerPendingChange =
     | {
-        change: 'ReduceStake';
-        newStake: bigint;
-        epoch: number;
-    }
+          change: 'ReduceStake';
+          newStake: bigint;
+          epoch: number;
+      }
     | {
-        change: 'RemoveBaker';
-        epoch: number;
-    };
+          change: 'RemoveBaker';
+          epoch: number;
+      };
 
 export interface AccountBakerDetails {
     restakeEarnings: boolean;
@@ -486,7 +492,7 @@ export interface AccountInfo {
     accountCredentials: Record<
         number,
         Versioned<InitialAccountCredential | NormalAccountCredential>
-        >;
+    >;
 
     accountBaker?: AccountBakerDetails;
 }

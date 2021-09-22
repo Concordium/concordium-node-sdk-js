@@ -37,7 +37,7 @@ const header: AccountTransactionHeader = {
     nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
     sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
 };
-const simpleTransfer: SimpleTransfer = {
+const simpleTransfer: SimpleTransferPayload = {
     amount: new GtuAmount(100n),
     toAddress: new AccountAddress("4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf"),
 };
@@ -56,7 +56,7 @@ const header: AccountTransactionHeader = {
     nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
     sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
 };
-const simpleTransferWithMemo: SimpleTransferWithMemo = {
+const simpleTransferWithMemo: SimpleTransferWithMemoPayload = {
     amount: new GtuAmount(100n),
     toAddress: new AccountAddress("4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf"),
     memo: Buffer.from("6B68656C6C6F20776F726C64","hex");

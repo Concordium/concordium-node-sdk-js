@@ -29,12 +29,9 @@ const client = new ConcordiumNodeClient(
 );
 ```
 
-## Send a simple transfer
-The following examples demonstrates how a simple transfer can be created and sent.
+## Create a simple transfer
+The following example demonstrates how a simple transfer can be created.
 ```js
-import * as ed from "noble-ed25519";
-
-// Create the transaction
 const header: AccountTransactionHeader = {
     expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
     nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
@@ -49,11 +46,42 @@ const simpleTransferAccountTransaction: AccountTransaction = {
     payload: simpleTransfer,
     type: AccountTransactionType.SimpleTransfer,
 };
+```
+
+## Create a simple transfer with a memo
+The following example demonstrates how a simple transfer with a memo can be created.
+```js
+const header: AccountTransactionHeader = {
+    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+    nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
+    sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
+};
+const simpleTransferWithMemo: SimpleTransferWithMemo = {
+    amount: new GtuAmount(100n),
+    toAddress: new AccountAddress("4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf"),
+    memo: "6B68656C6C6F20776F726C64"
+};
+const simpleTransferWithMemoAccountTransaction: AccountTransaction = {
+    header: header,
+    payload: simpleTransferWithMemo,
+    type: AccountTransactionType.SimpleTransferWithMemo,
+};
+```
+
+## Send Account Transaction
+The following example demonstrates how to send any account transaction.
+See previous sections how to create one.
+```js
+import * as ed from "noble-ed25519";
+
+let accountTransaction: AccountTransaction;
+// Create the transaction
+// ...
 
 // Sign the transaction, the following is just an example, and any method for signing
 // with the key can be employed.
 const signingKey = "ce432f6bba0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c";
-const hashToSign = getAccountTransactionSignDigest(simpleTransferAccountTransaction, sha256);
+const hashToSign = getAccountTransactionSignDigest(accountTransaction, sha256);
 const signature = Buffer.from(await ed.sign(hashToSign, signingKey)).toString("hex");
 
 // The signatures used to sign the transaction must be provided in a structured way,
@@ -67,7 +95,7 @@ const signatures: AccountTransactionSignature = {
 };
 
 // Send the transaction to the node.
-const success = await client.sendAccountTransaction(simpleTransferAccountTransaction, signatures);
+const success = await client.sendAccountTransaction(accountTransaction, signatures);
 if (success) {
     // The node accepted the transaction. This does not ensure that the transaction
     // will end up in a block, only that the format of the submitted transaction was valid.
@@ -77,9 +105,10 @@ if (success) {
 
 // Check the status of the transaction. Should be checked with an appropriate interval,
 // as it will take some time for the transaction to be processed.
-const transactionHash = getAccountTransactionHash(simpleTransferAccountTransaction, signatures, sha256);
+const transactionHash = getAccountTransactionHash(accountTransaction, signatures, sha256);
 const transactionStatus = await client.getTransactionStatus(transactionHash);
 ```
+
 
 ## getAccountInfo
 Retrieves information about an account. If no account exists with the provided address, then the node

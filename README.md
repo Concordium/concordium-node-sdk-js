@@ -68,6 +68,28 @@ const simpleTransferWithMemoAccountTransaction: AccountTransaction = {
 };
 ```
 
+## Create a transfer with a schedule
+The following example demonstrates how a simple transfer with a schedule can be created.
+```js
+const header: AccountTransactionHeader = {
+    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+    nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
+    sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
+};
+const schedule: Schedule = [{timestamp: new Date(Date.now() + 36000000), amount: new GtuAmount(50n)}, {timestamp: new Date(Date.now() + 36500000), amount: new GtuAmount(25n)}]
+
+const scheduledTransfer: TransferWithSchedulePayload = {
+    toAddress: new AccountAddress("4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf"),
+    schedule: schedule,
+};
+const ScheduledTransferAccountTransaction: AccountTransaction = {
+    header: header,
+    payload: scheduledTransfer,
+    type: AccountTransactionType.ScheduledTransfer,
+};
+```
+
+
 ## Send Account Transaction
 The following example demonstrates how to send any account transaction.
 See previous sections for how to create an account transaction.

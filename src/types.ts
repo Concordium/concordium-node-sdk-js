@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer/';
 import { AccountAddress } from './types/accountAddress';
 import { GtuAmount } from './types/gtuAmount';
 import { TransactionExpiry } from './types/transactionExpiry';
@@ -495,9 +496,8 @@ export interface EncryptedTransferPayload {
 }
 
 type WithMemo<T> = T & {
-    /** The provided memo of the transaction,
-     * expected to be a HEX string representing the bytes of the memo */
-    memo: string;
+    /** The bytes representation of the memo of the transaction  */
+    memo: Buffer;
 };
 
 export type SimpleTransferWithMemoPayload = WithMemo<SimpleTransferPayload>;

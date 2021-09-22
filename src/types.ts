@@ -439,7 +439,7 @@ export enum AccountTransactionType {
     RegisterData = 21,
     SimpleTransferWithMemo = 22,
     EncryptedTransferWithMemo = 23,
-    TransferWithScheduleWithMemo = 24,
+    TransferWithScheduleAndMemo = 24,
 }
 
 
@@ -465,13 +465,30 @@ export interface SimpleTransferPayload {
     toAddress: AccountAddress;
 }
 
-export interface SimpleTransferWithMemoPayload extends SimpleTransferPayload {
-    /** The provided memo of the transaction,
-       * expected to be a HEX string representing the bytes of the memo */
-    memo: string;
+export interface SchedulePoint {
+    timestamp: Date;
+    amount: GtuAmount;
+}
+export type Schedule = SchedulePoint[];
+
+export interface TransferWithSchedulePayload {
+    /** Schedule */
+    schedule: Schedule;
+
+    /** the recipient of the transfer*/
+    toAddress: AccountAddress;
 }
 
-export type AccountTransactionPayload = SimpleTransferPayload | SimpleTransferWithMemoPayload;
+type WithMemo<T> = T & {
+    /** The provided memo of the transaction,
+     * expected to be a HEX string representing the bytes of the memo */
+    memo: string;
+};
+
+export type SimpleTransferWithMemoPayload = WithMemo<SimpleTransferPayload>;
+export type TransferWithScheduleWithMemoPayload = WithMemo<TransferWithSchedulePayload>;
+
+export type AccountTransactionPayload = SimpleTransferPayload | SimpleTransferWithMemoPayload | TransferWithSchedulePayload | TransferWithScheduleWithMemoPayload ;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

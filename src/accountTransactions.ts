@@ -24,18 +24,11 @@ export class SimpleTransferHandler implements AccountTransactionHandler<SimpleTr
     }
 }
 
-export class SimpleTransferWithMemoHandler implements AccountTransactionHandler<SimpleTransferWithMemoPayload> {
-    getBaseEnergyCost(): bigint {
-        return 300n;
-    }
-
+export class SimpleTransferWithMemoHandler extends SimpleTransferHandler implements AccountTransactionHandler<SimpleTransferWithMemoPayload> {
     serialize(transfer: SimpleTransferWithMemoPayload): Buffer {
-        const serializedToAddress = transfer.toAddress.decodedAddress;
-        const serializedAmount = encodeWord64(transfer.amount.microGtuAmount);
-        const serializedMemo = encodeMemo(
-            (transfer as SimpleTransferWithMemoPayload).memo
-        );
-        return Buffer.concat([serializedToAddress, serializedAmount, serializedMemo]);
+        const regularPayload = super.serialize(transfer);
+        const serializedMemo = encodeMemo(transfer.memo);
+        return Buffer.concat([regularPayload, serializedMemo]);
     }
 }
 

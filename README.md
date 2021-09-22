@@ -59,7 +59,7 @@ const header: AccountTransactionHeader = {
 const simpleTransferWithMemo: SimpleTransferWithMemo = {
     amount: new GtuAmount(100n),
     toAddress: new AccountAddress("4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf"),
-    memo: "6B68656C6C6F20776F726C64"
+    memo: Buffer.from("6B68656C6C6F20776F726C64","hex");
 };
 const simpleTransferWithMemoAccountTransaction: AccountTransaction = {
     header: header,
@@ -70,7 +70,7 @@ const simpleTransferWithMemoAccountTransaction: AccountTransaction = {
 
 ## Send Account Transaction
 The following example demonstrates how to send any account transaction.
-See previous sections how to create one.
+See previous sections for how to create an account transaction.
 ```js
 import * as ed from "noble-ed25519";
 

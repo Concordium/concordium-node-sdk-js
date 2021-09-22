@@ -38,7 +38,7 @@ export function encodeWord64(value: bigint): Buffer {
  * @returns big endian serialization of the input
  */
 export function encodeWord32(value: number): Buffer {
-    if (value > 4294967295 || value < 0) {
+    if (value > 4294967295 || value < 0 || !Number.isInteger(value)) {
         throw new Error(
             'The input has to be a 32 bit unsigned integer but it was: ' + value
         );
@@ -55,7 +55,7 @@ export function encodeWord32(value: number): Buffer {
  * @returns big endian serialization of the input
  */
 export function encodeWord16(value: number): Buffer {
-    if (value > 65535 || value < 0) {
+    if (value > 65535 || value < 0  || !Number.isInteger(value)) {
         throw new Error(
             'The input has to be a 16 bit unsigned integer but it was: ' + value
         );
@@ -70,17 +70,21 @@ export function encodeWord16(value: number): Buffer {
  * @param value a 8 bit integer
  * @returns big endian serialization of the input
  */
-export function encodeUint8(value: number): Buffer {
+export function encodeWord8(value: number): Buffer {
+    if (value > 255 || value < 0  || !Number.isInteger(value)) {
+        throw new Error(
+            'The input has to be a 16 bit unsigned integer but it was: ' + value
+        );
+    }
     return Buffer.from(Buffer.of(value));
 }
 
 /**
  * Encodes a memo.
- * @param memo a HEX string containing the bytes of the memo.
- * @returns CBOR encoded serialization of the input.
+ * @param memo the bytes of the memo.
+ * @returns Buffer containing the length of the memo bytes and the memo bytes.
  */
-export function encodeMemo(memo: string): Buffer {
-    const encoded = Buffer.from(memo, 'hex')
-    const length = encodeWord16(encoded.length);
-    return Buffer.concat([length, encoded]);
+export function encodeMemo(memo: Buffer): Buffer {
+    const length = encodeWord16(memo.length);
+    return Buffer.concat([length, memo]);
 }

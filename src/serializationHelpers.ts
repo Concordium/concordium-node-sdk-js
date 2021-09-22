@@ -80,7 +80,7 @@ export function encodeUint8(value: number): Buffer {
  * @returns CBOR encoded serialization of the input.
  */
 export function encodeMemo(memo: string): Buffer {
-    const encoded = Buffer.from(memo, 'hex')
+    const encoded = Buffer.from(memo, 'hex');
     const length = encodeWord16(encoded.length);
     return Buffer.concat([length, encoded]);
 }

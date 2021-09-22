@@ -3,18 +3,24 @@ import { encodeWord64, encodeMemo, encodeUint8 } from './serializationHelpers';
 import {
     AccountTransactionPayload,
     AccountTransactionType,
+    EncryptedTransferPayload,
+    EncryptedTransferWithMemoPayload,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
     TransferWithSchedulePayload,
-    TransferWithScheduleWithMemoPayload
+    TransferWithScheduleWithMemoPayload,
 } from './types';
 
-interface AccountTransactionHandler<PayloadType extends AccountTransactionPayload = AccountTransactionPayload> {
+interface AccountTransactionHandler<
+    PayloadType extends AccountTransactionPayload = AccountTransactionPayload
+> {
     serialize: (payload: PayloadType) => Buffer;
     getBaseEnergyCost: (payload?: PayloadType) => bigint;
 }
 
-export class SimpleTransferHandler implements AccountTransactionHandler<SimpleTransferWithMemoPayload> {
+export class SimpleTransferHandler
+    implements AccountTransactionHandler<SimpleTransferWithMemoPayload>
+{
     getBaseEnergyCost(): bigint {
         return 300n;
     }
@@ -26,17 +32,20 @@ export class SimpleTransferHandler implements AccountTransactionHandler<SimpleTr
     }
 }
 
-export class SimpleTransferWithMemoHandler extends SimpleTransferHandler implements AccountTransactionHandler<SimpleTransferWithMemoPayload> {
+export class SimpleTransferWithMemoHandler
+    extends SimpleTransferHandler
+    implements AccountTransactionHandler<SimpleTransferWithMemoPayload>
+{
     serialize(transfer: SimpleTransferWithMemoPayload): Buffer {
         const regularPayload = super.serialize(transfer);
-        const serializedMemo = encodeMemo(
-            transfer.memo
-        );
+        const serializedMemo = encodeMemo(transfer.memo);
         return Buffer.concat([regularPayload, serializedMemo]);
     }
 }
 
-export class TransferWithScheduleHandler implements AccountTransactionHandler<TransferWithSchedulePayload> {
+export class TransferWithScheduleHandler
+    implements AccountTransactionHandler<TransferWithSchedulePayload>
+{
     getBaseEnergyCost(transfer?: TransferWithSchedulePayload): bigint {
         if (!transfer) {
             // TODO: should it fail, or assume that length = 1 or 255;
@@ -44,9 +53,7 @@ export class TransferWithScheduleHandler implements AccountTransactionHandler<Tr
                 'payload is required to determine the base energy cost of transfer with schedule'
             );
         }
-        return (
-            BigInt(transfer.schedule.length) * 364n
-        );
+        return BigInt(transfer.schedule.length) * 364n;
     }
 
     serialize(scheduledTransfer: TransferWithSchedulePayload): Buffer {
@@ -69,24 +76,81 @@ export class TransferWithScheduleHandler implements AccountTransactionHandler<Tr
     }
 }
 
-export class TransferWithScheduleAndMemoHandler extends TransferWithScheduleHandler implements AccountTransactionHandler<TransferWithScheduleWithMemoPayload> {
+export class TransferWithScheduleAndMemoHandler
+    extends TransferWithScheduleHandler
+    implements AccountTransactionHandler<TransferWithScheduleWithMemoPayload>
+{
     serialize(transfer: TransferWithScheduleWithMemoPayload): Buffer {
         const regularPayload = super.serialize(transfer);
-        const serializedMemo = encodeMemo(
-            transfer.memo
-        );
+        const serializedMemo = encodeMemo(transfer.memo);
         return Buffer.concat([regularPayload, serializedMemo]);
     }
 }
 
-export function getAccountTransactionHandler(type: AccountTransactionType.SimpleTransfer): SimpleTransferHandler;
-export function getAccountTransactionHandler(type: AccountTransactionType.SimpleTransferWithMemo): SimpleTransferWithMemoHandler;
-export function getAccountTransactionHandler(type: AccountTransactionType.TransferWithSchedule): TransferWithScheduleHandler;
-export function getAccountTransactionHandler(type: AccountTransactionType.TransferWithScheduleAndMemo): TransferWithScheduleAndMemoHandler;
-export function getAccountTransactionHandler(type: AccountTransactionType): AccountTransactionHandler;
+export class EncryptedTransferHandler
+    implements AccountTransactionHandler<EncryptedTransferPayload>
+{
+    getBaseEnergyCost(): bigint {
+        return 27000n;
+    }
+
+    serialize(encryptedTransfer: EncryptedTransferPayload): Buffer {
+        const serializedToAddress = encryptedTransfer.toAddress.decodedAddress;
+        const serializedRemainingEncryptedAmount = Buffer.from(
+            encryptedTransfer.remainingEncryptedAmount,
+            'hex'
+        );
+        const serializedTransferAmount = Buffer.from(
+            encryptedTransfer.transferAmount,
+            'hex'
+        );
+        const serializedIndex = encodeWord64(encryptedTransfer.index);
+        const serializedProof = Buffer.from(encryptedTransfer.proof, 'hex');
+
+        return Buffer.concat([
+            serializedToAddress,
+            serializedRemainingEncryptedAmount,
+            serializedTransferAmount,
+            serializedIndex,
+            serializedProof,
+        ]);
+    }
+}
+
+export class EncryptedTransferWithMemoHandler
+    extends EncryptedTransferHandler
+    implements AccountTransactionHandler<EncryptedTransferWithMemoPayload>
+{
+    serialize(transfer: EncryptedTransferWithMemoPayload): Buffer {
+        const regularPayload = super.serialize(transfer);
+        const serializedMemo = encodeMemo(transfer.memo);
+        return Buffer.concat([regularPayload, serializedMemo]);
+    }
+}
+
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.SimpleTransfer
+): SimpleTransferHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.SimpleTransferWithMemo
+): SimpleTransferWithMemoHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.TransferWithSchedule
+): TransferWithScheduleHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.TransferWithScheduleAndMemo
+): TransferWithScheduleAndMemoHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.EncryptedTransfer
+): EncryptedTransferHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.EncryptedTransferWithMemo
+): EncryptedTransferWithMemoHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
-) {
+): AccountTransactionHandler;
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export function getAccountTransactionHandler(type: AccountTransactionType) {
     switch (type) {
         case AccountTransactionType.SimpleTransfer:
             return new SimpleTransferHandler();
@@ -96,6 +160,10 @@ export function getAccountTransactionHandler(
             return new TransferWithScheduleHandler();
         case AccountTransactionType.TransferWithScheduleAndMemo:
             return new TransferWithScheduleAndMemoHandler();
+        case AccountTransactionType.EncryptedTransfer:
+            return new EncryptedTransferHandler();
+        case AccountTransactionType.EncryptedTransferWithMemo:
+            return new EncryptedTransferWithMemoHandler();
         default:
             throw new Error(
                 'The handler map is missing the provided type: ' + type

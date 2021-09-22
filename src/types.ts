@@ -442,7 +442,6 @@ export enum AccountTransactionType {
     TransferWithScheduleAndMemo = 24,
 }
 
-
 export interface AccountTransactionHeader {
     /** account address that is source of this transaction */
     sender: AccountAddress;
@@ -479,6 +478,22 @@ export interface TransferWithSchedulePayload {
     toAddress: AccountAddress;
 }
 
+// TODO: Do we need a class for this? (or some other way to show it is expected to be a HEX string)
+type EncryptedAmount = string;
+
+export interface EncryptedTransferPayload {
+    /** the recipient of the transfer*/
+    toAddress: AccountAddress;
+    /** encrypted µGTU amount to transfer */
+    transferAmount: EncryptedAmount;
+    /** encrypted µGTU amount remaining in shielded balance */
+    remainingEncryptedAmount: EncryptedAmount;
+
+    index: bigint;
+    /** Proof string for the transaction */
+    proof: string;
+}
+
 type WithMemo<T> = T & {
     /** The provided memo of the transaction,
      * expected to be a HEX string representing the bytes of the memo */
@@ -486,9 +501,18 @@ type WithMemo<T> = T & {
 };
 
 export type SimpleTransferWithMemoPayload = WithMemo<SimpleTransferPayload>;
-export type TransferWithScheduleWithMemoPayload = WithMemo<TransferWithSchedulePayload>;
+export type EncryptedTransferWithMemoPayload =
+    WithMemo<EncryptedTransferPayload>;
+export type TransferWithScheduleWithMemoPayload =
+    WithMemo<TransferWithSchedulePayload>;
 
-export type AccountTransactionPayload = SimpleTransferPayload | SimpleTransferWithMemoPayload | TransferWithSchedulePayload | TransferWithScheduleWithMemoPayload ;
+export type AccountTransactionPayload =
+    | SimpleTransferPayload
+    | SimpleTransferWithMemoPayload
+    | TransferWithSchedulePayload
+    | TransferWithScheduleWithMemoPayload
+    | EncryptedTransferPayload
+    | EncryptedTransferWithMemoPayload;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

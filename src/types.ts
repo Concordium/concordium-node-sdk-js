@@ -1,5 +1,7 @@
+import { Buffer } from 'buffer/';
 import { AccountAddress } from './types/accountAddress';
 import { GtuAmount } from './types/gtuAmount';
+import { Memo } from './types/Memo';
 import { TransactionExpiry } from './types/transactionExpiry';
 
 /**
@@ -437,6 +439,9 @@ export enum AccountTransactionType {
     TransferWithSchedule = 19,
     UpdateCredentials = 20,
     RegisterData = 21,
+    SimpleTransferWithMemo = 22,
+    EncryptedTransferWithMemo = 23,
+    TransferWithScheduleWithMemo = 24,
 }
 
 export interface AccountTransactionHeader {
@@ -453,15 +458,22 @@ export interface AccountTransactionHeader {
     expiry: TransactionExpiry;
 }
 
-export interface SimpleTransfer {
+export interface SimpleTransferPayload {
     /** µGTU amount to transfer */
     amount: GtuAmount;
 
-    /** the recipient of the transfer*/
+    /** the recipient of the transfer */
     toAddress: AccountAddress;
 }
 
-export type AccountTransactionPayload = SimpleTransfer;
+export interface SimpleTransferWithMemoPayload extends SimpleTransferPayload {
+    /** The bytes representation of the memo of the transaction  */
+    memo: Memo;
+}
+
+export type AccountTransactionPayload =
+    | SimpleTransferPayload
+    | SimpleTransferWithMemoPayload;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

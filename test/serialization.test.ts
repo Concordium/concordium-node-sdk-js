@@ -9,12 +9,12 @@ import {
     AccountTransactionHeader,
     AccountTransactionSignature,
     AccountTransactionType,
-    SimpleTransfer,
+    SimpleTransferPayload,
 } from '../src/types';
 import { TransactionExpiry } from '../src/types/transactionExpiry';
 
 test('fail account transaction serialization if no signatures', () => {
-    const simpleTransfer: SimpleTransfer = {
+    const simpleTransferPayload: SimpleTransferPayload = {
         amount: new GtuAmount(5100000n),
         toAddress: new AccountAddress(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
@@ -31,7 +31,7 @@ test('fail account transaction serialization if no signatures', () => {
 
     const simpleTransferAccountTransaction: AccountTransaction = {
         header: header,
-        payload: simpleTransfer,
+        payload: simpleTransferPayload,
         type: AccountTransactionType.SimpleTransfer,
     };
 

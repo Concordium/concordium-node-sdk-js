@@ -1,7 +1,8 @@
 import { Buffer } from 'buffer/';
 import { getAccountTransactionHandler } from './accountTransactions';
 import {
-    encodeUint8,
+    encodeWord8FromString,
+    encodeWord8,
     encodeWord32,
     encodeWord64,
     serializeMap,
@@ -68,11 +69,11 @@ export function serializeAccountTransactionSignature(
         return Buffer.concat([length, signatureBytes]);
     };
     const putCredentialSignatures = (credSig: CredentialSignature) =>
-        serializeMap(credSig, encodeUint8, encodeUint8, putSignature);
+        serializeMap(credSig, encodeWord8, encodeWord8FromString, putSignature);
     return serializeMap(
         signatures,
-        encodeUint8,
-        encodeUint8,
+        encodeWord8,
+        encodeWord8FromString,
         putCredentialSignatures
     );
 }
@@ -89,7 +90,7 @@ export function serializeAccountTransaction(
     accountTransaction: AccountTransaction,
     signatures: AccountTransactionSignature
 ): Buffer {
-    const serializedBlockItemKind = encodeUint8(
+    const serializedBlockItemKind = encodeWord8(
         BlockItemKind.AccountTransactionKind
     );
     const serializedAccountTransactionSignatures =
@@ -205,6 +206,6 @@ export function serializeAccountTransactionForSubmission(
         signatures
     );
 
-    const serializedVersion = encodeUint8(0);
+    const serializedVersion = encodeWord8(0);
     return Buffer.concat([serializedVersion, serializedAccountTransaction]);
 }

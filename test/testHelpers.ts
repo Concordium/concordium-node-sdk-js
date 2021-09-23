@@ -5,7 +5,7 @@ import ConcordiumNodeClient from '../src/client';
  * Creates a client to communicate with a local concordium-node
  * used for automatic tests.
  */
-export default function getNodeClient(): ConcordiumNodeClient {
+export function getNodeClient(): ConcordiumNodeClient {
     const metadata = new Metadata();
     metadata.add('authentication', 'rpcadmin');
     return new ConcordiumNodeClient(
@@ -15,4 +15,8 @@ export default function getNodeClient(): ConcordiumNodeClient {
         metadata,
         15000
     );
+}
+
+export function isValidDate(date: Date): boolean {
+    return date instanceof Date && !isNaN(date.getTime());
 }

@@ -3,14 +3,14 @@ import { Buffer } from 'buffer/';
 export function serializeMap<K extends string | number | symbol, T>(
     map: Record<K, T>,
     encodeSize: (size: number) => Buffer,
-    encodeKey: (k: K) => Buffer,
+    encodeKey: (k: string) => Buffer,
     encodeValue: (t: T) => Buffer
 ): Buffer {
-    const keys = Object.keys(map) as K[];
+    const keys = Object.keys(map);
     const buffers = [encodeSize(keys.length)];
-    keys.forEach((key: K) => {
+    keys.forEach((key) => {
         buffers.push(encodeKey(key));
-        buffers.push(encodeValue(map[key]));
+        buffers.push(encodeValue(map[key as K]));
     });
     return Buffer.concat(buffers);
 }
@@ -55,7 +55,7 @@ export function encodeWord32(value: number): Buffer {
  * @returns big endian serialization of the input
  */
 export function encodeWord16(value: number): Buffer {
-    if (value > 65535 || value < 0  || !Number.isInteger(value)) {
+    if (value > 65535 || value < 0 || !Number.isInteger(value)) {
         throw new Error(
             'The input has to be a 16 bit unsigned integer but it was: ' + value
         );
@@ -71,12 +71,16 @@ export function encodeWord16(value: number): Buffer {
  * @returns big endian serialization of the input
  */
 export function encodeWord8(value: number): Buffer {
-    if (value > 255 || value < 0  || !Number.isInteger(value)) {
+    if (value > 255 || value < 0 || !Number.isInteger(value)) {
         throw new Error(
             'The input has to be a 16 bit unsigned integer but it was: ' + value
         );
     }
     return Buffer.from(Buffer.of(value));
+}
+
+export function encodeWord8FromString(value: string): Buffer {
+    return encodeWord8(Number(value));
 }
 
 /**

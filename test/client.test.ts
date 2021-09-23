@@ -1,18 +1,9 @@
-import { credentials, Metadata } from '@grpc/grpc-js';
-import ConcordiumNodeClient from '../src/client';
 import { ConsensusStatus, NormalAccountCredential } from '../src/types';
 import { AccountAddress } from '../src/types/accountAddress';
 import { isHex } from '../src/util';
+import { isValidDate, getNodeClient } from './testHelpers';
 
-const metadata = new Metadata();
-metadata.add('authentication', 'rpcadmin');
-const client = new ConcordiumNodeClient(
-    '127.0.0.1',
-    10000,
-    credentials.createInsecure(),
-    metadata,
-    15000
-);
+const client = getNodeClient();
 
 test('updated event is parsed correctly', async () => {
     const blockHash =
@@ -572,12 +563,9 @@ test('retrieves block info', async () => {
         expect(blockInfo.blockStateHash).toEqual(
             'b40762eb4abb9701ee133c465f934075d377c0d09bfe209409e80bbb51af1771'
         ),
-        expect(blockInfo.blockArriveTime).toEqual(
-            new Date('2021-07-05T09:16:46.000Z')
-        ),
-        expect(blockInfo.blockReceiveTime).toEqual(
-            new Date('2021-07-05T09:16:46.000Z')
-        ),
+        expect(isValidDate(blockInfo.blockArriveTime)).toBeTruthy(),
+        expect(isValidDate(blockInfo.blockReceiveTime)).toBeTruthy(),
+
         expect(blockInfo.transactionCount).toEqual(0n),
         expect(blockInfo.transactionEnergyCost).toEqual(0n),
         expect(blockInfo.blockSlot).toEqual(1915967n),

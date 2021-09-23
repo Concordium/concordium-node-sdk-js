@@ -443,7 +443,6 @@ export enum AccountTransactionType {
     TransferWithScheduleWithMemo = 24,
 }
 
-
 export interface AccountTransactionHeader {
     /** account address that is source of this transaction */
     sender: AccountAddress;
@@ -471,7 +470,9 @@ export interface SimpleTransferWithMemoPayload extends SimpleTransferPayload {
     memo: Buffer;
 }
 
-export type AccountTransactionPayload = SimpleTransferPayload | SimpleTransferWithMemoPayload;
+export type AccountTransactionPayload =
+    | SimpleTransferPayload
+    | SimpleTransferWithMemoPayload;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

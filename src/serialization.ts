@@ -1,6 +1,7 @@
 import { Buffer } from 'buffer/';
 import { getAccountTransactionHandler } from './accountTransactions';
 import {
+    encodeWord8FromString,
     encodeWord8,
     encodeWord32,
     encodeWord64,
@@ -68,11 +69,11 @@ export function serializeAccountTransactionSignature(
         return Buffer.concat([length, signatureBytes]);
     };
     const putCredentialSignatures = (credSig: CredentialSignature) =>
-        serializeMap(credSig, encodeWord8, encodeWord8, putSignature);
+        serializeMap(credSig, encodeWord8, encodeWord8FromString, putSignature);
     return serializeMap(
         signatures,
         encodeWord8,
-        encodeWord8,
+        encodeWord8FromString,
         putCredentialSignatures
     );
 }

@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer/';
 import {
     AccountTransaction,
     AccountTransactionHeader,
@@ -8,7 +9,7 @@ import {
 } from '../src/types';
 import * as ed from 'noble-ed25519';
 import { getAccountTransactionSignDigest } from '../src/serialization';
-import getNodeClient from './testHelpers';
+import { getNodeClient } from './testHelpers';
 import { AccountAddress } from '../src/types/accountAddress';
 import { GtuAmount } from '../src/types/gtuAmount';
 import { TransactionExpiry } from '../src/types/transactionExpiry';
@@ -71,7 +72,7 @@ test('send simple transfer with memo signed with wrong private key is accepted',
         toAddress: new AccountAddress(
             '4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf'
         ),
-        memo: 'test'
+        memo: Buffer.from('6B68656C6C6F20776F726C64', 'hex'),
     };
 
     const nextAccountNonce = await client.getNextAccountNonce(
@@ -89,7 +90,7 @@ test('send simple transfer with memo signed with wrong private key is accepted',
     const simpleTransferAccountTransaction: AccountTransaction = {
         header: header,
         payload: payload,
-        type: AccountTransactionType.SimpleTransfer,
+        type: AccountTransactionType.SimpleTransferWithMemo,
     };
 
     const wrongPrivateKey =

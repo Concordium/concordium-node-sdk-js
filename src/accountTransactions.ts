@@ -4,15 +4,19 @@ import {
     AccountTransactionPayload,
     AccountTransactionType,
     SimpleTransferPayload,
-    SimpleTransferWithMemoPayload
+    SimpleTransferWithMemoPayload,
 } from './types';
 
-interface AccountTransactionHandler<PayloadType extends AccountTransactionPayload = AccountTransactionPayload> {
+interface AccountTransactionHandler<
+    PayloadType extends AccountTransactionPayload = AccountTransactionPayload
+> {
     serialize: (payload: PayloadType) => Buffer;
     getBaseEnergyCost: (payload?: PayloadType) => bigint;
 }
 
-export class SimpleTransferHandler implements AccountTransactionHandler<SimpleTransferWithMemoPayload> {
+export class SimpleTransferHandler
+    implements AccountTransactionHandler<SimpleTransferWithMemoPayload>
+{
     getBaseEnergyCost(): bigint {
         return 300n;
     }
@@ -24,7 +28,10 @@ export class SimpleTransferHandler implements AccountTransactionHandler<SimpleTr
     }
 }
 
-export class SimpleTransferWithMemoHandler extends SimpleTransferHandler implements AccountTransactionHandler<SimpleTransferWithMemoPayload> {
+export class SimpleTransferWithMemoHandler
+    extends SimpleTransferHandler
+    implements AccountTransactionHandler<SimpleTransferWithMemoPayload>
+{
     serialize(transfer: SimpleTransferWithMemoPayload): Buffer {
         const regularPayload = super.serialize(transfer);
         const serializedMemo = encodeMemo(transfer.memo);
@@ -32,12 +39,17 @@ export class SimpleTransferWithMemoHandler extends SimpleTransferHandler impleme
     }
 }
 
-export function getAccountTransactionHandler(type: AccountTransactionType.SimpleTransfer): SimpleTransferHandler;
-export function getAccountTransactionHandler(type: AccountTransactionType.SimpleTransferWithMemo): SimpleTransferWithMemoHandler;
-export function getAccountTransactionHandler(type: AccountTransactionType): AccountTransactionHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.SimpleTransfer
+): SimpleTransferHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.SimpleTransferWithMemo
+): SimpleTransferWithMemoHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
-) {
+): AccountTransactionHandler;
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export function getAccountTransactionHandler(type: AccountTransactionType) {
     switch (type) {
         case AccountTransactionType.SimpleTransfer:
             return new SimpleTransferHandler();
@@ -49,4 +61,3 @@ export function getAccountTransactionHandler(
             );
     }
 }
-

@@ -59,7 +59,7 @@ const header: AccountTransactionHeader = {
 const simpleTransferWithMemo: SimpleTransferWithMemoPayload = {
     amount: new GtuAmount(100n),
     toAddress: new AccountAddress("4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf"),
-    memo: Buffer.from("6B68656C6C6F20776F726C64","hex");
+    memo: new Memo(Buffer.from('6B68656C6C6F20776F726C64', 'hex')),
 };
 const simpleTransferWithMemoAccountTransaction: AccountTransaction = {
     header: header,

@@ -13,6 +13,7 @@ import { getNodeClient } from './testHelpers';
 import { AccountAddress } from '../src/types/accountAddress';
 import { GtuAmount } from '../src/types/gtuAmount';
 import { TransactionExpiry } from '../src/types/transactionExpiry';
+import { Memo } from '../src/types/Memo';
 
 const client = getNodeClient();
 const senderAccountAddress =
@@ -72,7 +73,7 @@ test('send simple transfer with memo signed with wrong private key is accepted',
         toAddress: new AccountAddress(
             '4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf'
         ),
-        memo: Buffer.from('6B68656C6C6F20776F726C64', 'hex'),
+        memo: new Memo(Buffer.from('6B68656C6C6F20776F726C64', 'hex')),
     };
 
     const nextAccountNonce = await client.getNextAccountNonce(

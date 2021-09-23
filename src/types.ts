@@ -1,6 +1,7 @@
 import { Buffer } from 'buffer/';
 import { AccountAddress } from './types/accountAddress';
 import { GtuAmount } from './types/gtuAmount';
+import { Memo } from './types/Memo';
 import { TransactionExpiry } from './types/transactionExpiry';
 
 /**
@@ -467,7 +468,7 @@ export interface SimpleTransferPayload {
 
 export interface SimpleTransferWithMemoPayload extends SimpleTransferPayload {
     /** The bytes representation of the memo of the transaction  */
-    memo: Buffer;
+    memo: Memo;
 }
 
 export type AccountTransactionPayload =

@@ -33,9 +33,10 @@ export class SimpleTransferWithMemoHandler
     implements AccountTransactionHandler<SimpleTransferWithMemoPayload>
 {
     serialize(transfer: SimpleTransferWithMemoPayload): Buffer {
-        const regularPayload = super.serialize(transfer);
+        const serializedToAddress = transfer.toAddress.decodedAddress;
         const serializedMemo = encodeMemo(transfer.memo);
-        return Buffer.concat([regularPayload, serializedMemo]);
+        const serializedAmount = encodeWord64(transfer.amount.microGtuAmount);
+        return Buffer.concat([serializedToAddress, serializedMemo, serializedAmount]);
     }
 }
 

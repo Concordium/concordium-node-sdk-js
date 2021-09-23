@@ -1,4 +1,5 @@
 import { Buffer } from 'buffer/';
+import { Memo } from './types/Memo';
 
 export function serializeMap<K extends string | number | symbol, T>(
     map: Record<K, T>,
@@ -85,10 +86,10 @@ export function encodeWord8FromString(value: string): Buffer {
 
 /**
  * Encodes a memo.
- * @param memo the bytes of the memo.
+ * @param memo Memo containing the memo bytes.
  * @returns Buffer containing the length of the memo bytes and the memo bytes.
  */
-export function encodeMemo(memo: Buffer): Buffer {
-    const length = encodeWord16(memo.length);
-    return Buffer.concat([length, memo]);
+export function encodeMemo(memo: Memo): Buffer {
+    const length = encodeWord16(memo.memo.length);
+    return Buffer.concat([length, memo.memo]);
 }

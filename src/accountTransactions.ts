@@ -45,7 +45,8 @@ export function getAccountTransactionHandler(
             return new SimpleTransferWithMemoHandler();
         default:
             throw new Error(
-                'The handler map is missing the provided type: ' + type
+                'The provided type does not have a handler: ' + type
             );
     }
 }
+

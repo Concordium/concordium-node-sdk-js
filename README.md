@@ -70,7 +70,7 @@ const simpleTransferWithMemoAccountTransaction: AccountTransaction = {
 
 ## Send Account Transaction
 The following example demonstrates how to send any account transaction.
-See previous sections for how to create an account transaction.
+See the previous sections for how to create an account transaction.
 ```js
 import * as ed from "noble-ed25519";
 

@@ -215,6 +215,14 @@ To build the project run
 yarn build
 ```
 
+## Publishing a release
+Before publishing a new release it is essential that it has been built first. So make sure that 
+you have just built the up-to-date code you want to publish. To publish the release run
+```
+yarn publish
+```
+and step through the steps precented to you.
+
 ## Updating the gRPC files
 If the external dependency concordium-grpc-api has been updated (or this is your first time building the project), 
 then it is required to regenerate the files from the `.proto` file. Do this by running:

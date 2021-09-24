@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer/';
 import { AccountAddress } from './types/accountAddress';
 import { GtuAmount } from './types/gtuAmount';
 import { Memo } from './types/Memo';
@@ -94,32 +93,71 @@ export interface TransferredEvent {
     from: AddressAccount;
 }
 
+export interface MemoEvent {
+    tag: 'TransferMemo';
+    memo: string;
+}
+
 export interface EventResult {
     outcome: string;
     // TODO Resolve the types completely.
-    events: (TransactionEvent | TransferredEvent | UpdatedEvent)[];
+    events: (TransactionEvent | TransferredEvent | UpdatedEvent | MemoEvent)[];
 }
 
-interface TransactionSummaryType {
+interface BaseTransactionSummaryType {
     type:
         | 'accountTransaction'
         | 'credentialDeploymentTransaction'
         | 'updateTransaction';
-    // TODO: Figure out if contents is always just a string.
+}
+
+export interface TransferWithMemoSummaryType
+    extends BaseTransactionSummaryType {
+    contents: 'transferWithMemo';
+}
+
+export interface GenericTransactionSummaryType
+    extends BaseTransactionSummaryType {
     contents: string;
 }
 
-export interface TransactionSummary {
+export interface BaseTransactionSummary {
     sender?: string;
     hash: string;
 
     cost: bigint;
     energyCost: bigint;
     index: bigint;
+}
 
-    type: TransactionSummaryType;
-
+interface GenericTransactionSummary extends BaseTransactionSummary {
+    type: GenericTransactionSummaryType;
     result: EventResult;
+}
+
+interface TransferWithMemoEventResult {
+    outcome: string;
+    events: [TransferredEvent, MemoEvent];
+}
+
+export interface TransferWithMemoTransactionSummary
+    extends BaseTransactionSummary {
+    type: TransferWithMemoSummaryType;
+    result: TransferWithMemoEventResult;
+}
+
+export type TransactionSummary =
+    | GenericTransactionSummary
+    | TransferWithMemoTransactionSummary;
+
+export function instanceOfTransferWithMemoTransactionSummary(
+    object: TransactionSummary
+): object is TransferWithMemoTransactionSummary {
+    return (
+        object.type !== undefined &&
+        object.type.contents !== undefined &&
+        object.type.contents === 'transferWithMemo'
+    );
 }
 
 export interface TransactionStatus {

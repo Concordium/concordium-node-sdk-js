@@ -154,9 +154,7 @@ export function instanceOfTransferWithMemoTransactionSummary(
     object: TransactionSummary
 ): object is TransferWithMemoTransactionSummary {
     return (
-        object.type !== undefined &&
-        object.type.contents !== undefined &&
-        object.type.contents === 'transferWithMemo'
+        object.type !== undefined && object.type.contents === 'transferWithMemo'
     );
 }
 

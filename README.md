@@ -215,14 +215,15 @@ const blockHash = "b49bb1c06c697b7d6539c987082c5a0dc6d86d91208874517ab17da752472
 const blockSummary = await client.getBlockSummary(blockHash);
 const transactionSummaries = blockSummary.transactionSummaries;
 
-for (let transactionSummary of transactionSummaries) {
+for (const transactionSummary of transactionSummaries) {
     if (instanceOfTransferWithMemoTransactionSummary(transactionSummary)) {
         const [transferredEvent, memoEvent] = transactionSummary.result.events;
 
         const toAddress = transferredEvent.to.address;
+        const amount = transferredEvent.amount;
         const memo = memoEvent.memo;
 
-        // Apply business logic to toAddress and memo...
+        // Apply business logic to toAddress, amount and memo...
     }
 }
 ```

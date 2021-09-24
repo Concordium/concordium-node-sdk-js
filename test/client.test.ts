@@ -2,6 +2,7 @@ import {
     ConsensusStatus,
     instanceOfTransferWithMemoTransactionSummary,
     NormalAccountCredential,
+    TransferredWithScheduleEvent,
 } from '../src/types';
 import { AccountAddress } from '../src/types/accountAddress';
 import { isHex } from '../src/util';
@@ -269,7 +270,7 @@ test('block summary for unknown block is undefined', async () => {
     return expect(blockSummary).toBeUndefined();
 });
 
-test('find and parse memo transactions from block summary', async () => {
+test('block summary with memo transactions', async () => {
     const blockHash =
         'b49bb1c06c697b7d6539c987082c5a0dc6d86d91208874517ab17da752472edf';
     const blockSummary = await client.getBlockSummary(blockHash);
@@ -297,7 +298,24 @@ test('find and parse memo transactions from block summary', async () => {
         }
     }
 
-    fail();
+    throw new Error('A memo transaction was not found in the block');
+});
+
+test('block summary with a scheduled transfer', async () => {
+    const blockHash =
+        'd0d330b424095386b253c8ccd007b366f3d5ec4fa8630c77838d8982c73b4b70';
+    const blockSummary = await client.getBlockSummary(blockHash);
+    if (!blockSummary) {
+        throw new Error('Block not found');
+    }
+
+    const event: TransferredWithScheduleEvent = blockSummary
+        .transactionSummaries[0].result
+        .events[0] as TransferredWithScheduleEvent;
+    expect(event.amount[0].timestamp).toEqual(
+        new Date('2021-08-04T12:00:00.000Z')
+    );
+    expect(event.amount[0].amount).toEqual(10000000n);
 });
 
 test('account info for invalid hash throws error', async () => {
@@ -332,6 +350,28 @@ test('account info for unknown account address is undefined', async () => {
 
     const accountInfo = await client.getAccountInfo(accountAddress, blockHash);
     return expect(accountInfo).toBeUndefined();
+});
+
+test('account info with a release schedule', async () => {
+    const accountAddress = new AccountAddress(
+        '3V1LSu3AZ6o45xcjqRr3PzviUQUfK2tXq2oFnaHgDbY8Ledu2Z'
+    );
+    const blockHash =
+        'cc6081868b96aa6acffeb152ef8feb7d4ef145c56d8e80def934fab443559eff';
+
+    const accountInfo = await client.getAccountInfo(accountAddress, blockHash);
+
+    if (!accountInfo) {
+        throw new Error('Test failed to find account info');
+    }
+
+    for (const schedule of accountInfo.accountReleaseSchedule.schedule) {
+        expect(schedule.transactions[0]).toEqual(
+            '937a107c92ba702e3522618563457fa9f6a1b9c2ee7e037ede8cb9dc069518f0'
+        );
+        expect(schedule.amount).toEqual(200000n);
+        expect(isValidDate(schedule.timestamp)).toBeTruthy();
+    }
 });
 
 test('retrieves the account info', async () => {

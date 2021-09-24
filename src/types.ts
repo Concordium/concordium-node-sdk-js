@@ -93,6 +93,13 @@ export interface TransferredEvent {
     from: AddressAccount;
 }
 
+export interface TransferredWithScheduleEvent {
+    tag: 'TransferredWithSchedule';
+    to: AddressAccount;
+    from: AddressAccount;
+    amount: ReleaseSchedule[];
+}
+
 export interface MemoEvent {
     tag: 'TransferMemo';
     memo: string;
@@ -101,7 +108,13 @@ export interface MemoEvent {
 export interface EventResult {
     outcome: string;
     // TODO Resolve the types completely.
-    events: (TransactionEvent | TransferredEvent | UpdatedEvent | MemoEvent)[];
+    events: (
+        | TransactionEvent
+        | TransferredEvent
+        | UpdatedEvent
+        | MemoEvent
+        | TransferredWithScheduleEvent
+    )[];
 }
 
 interface BaseTransactionSummaryType {
@@ -357,12 +370,15 @@ export interface NextAccountNonce {
 export interface ReleaseSchedule {
     timestamp: Date;
     amount: bigint;
-    transactions: any;
+}
+
+export interface ReleaseScheduleWithTransactions extends ReleaseSchedule {
+    transactions: string[];
 }
 
 export interface AccountReleaseSchedule {
     total: bigint;
-    schedule: ReleaseSchedule[];
+    schedule: ReleaseScheduleWithTransactions[];
 }
 
 export interface AccountEncryptedAmount {

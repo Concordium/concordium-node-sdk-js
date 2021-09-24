@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { ReleaseSchedule } from '.';
 import { BoolResponse, JsonResponse } from '../grpc/concordium_p2p_rpc_pb';
 import { AccountTransactionSignature } from './types';
 
@@ -87,9 +88,13 @@ export function buildJsonResponseReviver<T>(
             // Handle the special case where amount is a scheduled amount,
             // which has an array structure.
             if (key === 'amount' && Array.isArray(value)) {
-                const result = [];
+                const result: ReleaseSchedule[] = [];
                 for (const entry of value) {
-                    result.push([BigInt(entry[0]), BigInt(entry[1])]);
+                    const schedule: ReleaseSchedule = {
+                        timestamp: new Date(entry[0]),
+                        amount: BigInt(entry[1]),
+                    };
+                    result.push(schedule);
                 }
                 return result;
             }

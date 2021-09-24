@@ -146,6 +146,7 @@ export default class ConcordiumNodeClient {
             this.client.getAccountInfo,
             getAddressInfoRequest
         );
+        const datePropertyKeys: (keyof ReleaseSchedule)[] = ['timestamp'];
         const bigIntPropertyKeys: (
             | keyof AccountInfo
             | keyof AccountEncryptedAmount
@@ -161,7 +162,7 @@ export default class ConcordiumNodeClient {
         ];
         return unwrapJsonResponse<AccountInfo>(
             response,
-            buildJsonResponseReviver([], bigIntPropertyKeys),
+            buildJsonResponseReviver(datePropertyKeys, bigIntPropertyKeys),
             intToStringTransformer(bigIntPropertyKeys)
         );
     }

@@ -10,7 +10,7 @@ export class Memo {
     constructor(memo: Buffer) {
         if (memo.length > 256) {
             throw new Error(
-                'A transaction memo\'s size cannot exceed 256 bytes'
+                "A transaction memo's size cannot exceed 256 bytes"
             );
         }
         this.memo = memo;

@@ -1,4 +1,8 @@
-import { ConsensusStatus, NormalAccountCredential } from '../src/types';
+import {
+    ConsensusStatus,
+    instanceOfTransferWithMemoTransactionSummary,
+    NormalAccountCredential,
+} from '../src/types';
 import { AccountAddress } from '../src/types/accountAddress';
 import { isHex } from '../src/util';
 import { isValidDate, getNodeClient } from './testHelpers';
@@ -263,6 +267,37 @@ test('block summary for unknown block is undefined', async () => {
         'fd4915edca67b4e8f6521641a638a3abdbdd7934e4f2a9a52d8673861e2ebdd2';
     const blockSummary = await client.getBlockSummary(unknownBlockHash);
     return expect(blockSummary).toBeUndefined();
+});
+
+test('find and parse memo transactions from block summary', async () => {
+    const blockHash =
+        'b49bb1c06c697b7d6539c987082c5a0dc6d86d91208874517ab17da752472edf';
+    const blockSummary = await client.getBlockSummary(blockHash);
+    if (!blockSummary) {
+        throw new Error('Block not found');
+    }
+    const transactionSummaries = blockSummary.transactionSummaries;
+
+    for (const transactionSummary of transactionSummaries) {
+        if (instanceOfTransferWithMemoTransactionSummary(transactionSummary)) {
+            const [transferredEvent, memoEvent] =
+                transactionSummary.result.events;
+
+            const toAddress = transferredEvent.to.address;
+            const amount = transferredEvent.amount;
+            const memo = memoEvent.memo;
+
+            return Promise.all([
+                expect(toAddress).toBe(
+                    '4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf'
+                ),
+                expect(amount).toEqual(100n),
+                expect(memo).toBe('546869732069732061206d656d6f2e'),
+            ]);
+        }
+    }
+
+    fail();
 });
 
 test('account info for invalid hash throws error', async () => {

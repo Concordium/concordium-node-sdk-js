@@ -36,7 +36,11 @@ export class SimpleTransferWithMemoHandler
         const serializedToAddress = transfer.toAddress.decodedAddress;
         const serializedMemo = encodeMemo(transfer.memo);
         const serializedAmount = encodeWord64(transfer.amount.microGtuAmount);
-        return Buffer.concat([serializedToAddress, serializedMemo, serializedAmount]);
+        return Buffer.concat([
+            serializedToAddress,
+            serializedMemo,
+            serializedAmount,
+        ]);
     }
 }
 

@@ -112,7 +112,7 @@ export interface MemoEvent {
  * This should be kept in sync with the list of reject reasons
  * found here: https://github.com/Concordium/concordium-base/blob/main/haskell-src/Concordium/Types/Execution.hs
  */
- export enum RejectReasonTag {
+export enum RejectReasonTag {
     ModuleNotWF = 'ModuleNotWF',
     ModuleHashAlreadyExists = 'ModuleHashAlreadyExists',
     InvalidAccountReference = 'InvalidAccountReference',

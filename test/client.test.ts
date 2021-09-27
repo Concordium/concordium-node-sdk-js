@@ -21,6 +21,10 @@ test('updated event is parsed correctly', async () => {
         );
     }
 
+    if (blockSummary.transactionSummaries[0].result.outcome !== 'success') {
+        throw new Error('Unexpected outcome');
+    }
+
     if (
         blockSummary.transactionSummaries[0].result.events[0].tag === 'Updated'
     ) {
@@ -65,6 +69,10 @@ test('transferred event is parsed correctly', async () => {
         throw new Error(
             'The block summary should exist for the provided block.'
         );
+    }
+
+    if (blockSummary.transactionSummaries[0].result.outcome !== 'success') {
+        throw new Error('Unexpected outcome');
     }
 
     if (
@@ -307,6 +315,10 @@ test('block summary with a scheduled transfer', async () => {
     const blockSummary = await client.getBlockSummary(blockHash);
     if (!blockSummary) {
         throw new Error('Block not found');
+    }
+
+    if (blockSummary.transactionSummaries[0].result.outcome !== 'success') {
+        throw new Error('Unexpected outcome');
     }
 
     const event: TransferredWithScheduleEvent = blockSummary

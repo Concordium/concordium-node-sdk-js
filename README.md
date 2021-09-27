@@ -210,20 +210,22 @@ const bestBlock = consensusStatus.bestBlock;
 ## Check block for transfers with memo
 The following example demonstrates how to check and parse a block 
 for transfers with a memo.
-```
+```js
 const blockHash = "b49bb1c06c697b7d6539c987082c5a0dc6d86d91208874517ab17da752472edf";
 const blockSummary = await client.getBlockSummary(blockHash);
 const transactionSummaries = blockSummary.transactionSummaries;
 
 for (const transactionSummary of transactionSummaries) {
-    if (instanceOfTransferWithMemoTransactionSummary(transactionSummary)) {
-        const [transferredEvent, memoEvent] = transactionSummary.result.events;
+    if (transactionSummary.result.outcome === 'success') {
+        if (instanceOfTransferWithMemoTransactionSummary(transactionSummary)) {
+            const [transferredEvent, memoEvent] = transactionSummary.result.events;
 
-        const toAddress = transferredEvent.to.address;
-        const amount = transferredEvent.amount;
-        const memo = memoEvent.memo;
+            const toAddress = transferredEvent.to.address;
+            const amount = transferredEvent.amount;
+            const memo = memoEvent.memo;
 
-        // Apply business logic to toAddress, amount and memo...
+            // Apply business logic to toAddress, amount and memo...
+        }
     }
 }
 ```

@@ -98,7 +98,7 @@ export function buildJsonResponseReviver<T>(
                 }
                 return result;
             }
-            return BigInt(value);
+            return value === null ? value : BigInt(value);
         }
         return value;
     };

@@ -105,9 +105,70 @@ export interface MemoEvent {
     memo: string;
 }
 
-export interface EventResult {
-    outcome: string;
-    // TODO Resolve the types completely.
+/**
+ * An enum containing all the possible reject reasons that can be
+ * received from a node as a response to a transaction submission.
+ *
+ * This should be kept in sync with the list of reject reasons
+ * found here: https://github.com/Concordium/concordium-base/blob/main/haskell-src/Concordium/Types/Execution.hs
+ */
+ export enum RejectReasonTag {
+    ModuleNotWF = 'ModuleNotWF',
+    ModuleHashAlreadyExists = 'ModuleHashAlreadyExists',
+    InvalidAccountReference = 'InvalidAccountReference',
+    InvalidInitMethod = 'InvalidInitMethod',
+    InvalidReceiveMethod = 'InvalidReceiveMethod',
+    InvalidModuleReference = 'InvalidModuleReference',
+    InvalidContractAddress = 'InvalidContractAddress',
+    RuntimeFailure = 'RuntimeFailure',
+    AmountTooLarge = 'AmountTooLarge',
+    SerializationFailure = 'SerializationFailure',
+    OutOfEnergy = 'OutOfEnergy',
+    RejectedInit = 'RejectedInit',
+    RejectedReceive = 'RejectedReceive',
+    NonExistentRewardAccount = 'NonExistentRewardAccount',
+    InvalidProof = 'InvalidProof',
+    AlreadyABaker = 'AlreadyABaker',
+    NotABaker = 'NotABaker',
+    InsufficientBalanceForBakerStake = 'InsufficientBalanceForBakerStake',
+    StakeUnderMinimumThresholdForBaking = 'StakeUnderMinimumThresholdForBaking',
+    BakerInCooldown = 'BakerInCooldown',
+    DuplicateAggregationKey = 'DuplicateAggregationKey',
+    NonExistentCredentialID = 'NonExistentCredentialID',
+    KeyIndexAlreadyInUse = 'KeyIndexAlreadyInUse',
+    InvalidAccountThreshold = 'InvalidAccountThreshold',
+    InvalidCredentialKeySignThreshold = 'InvalidCredentialKeySignThreshold',
+    InvalidEncryptedAmountTransferProof = 'InvalidEncryptedAmountTransferProof',
+    InvalidTransferToPublicProof = 'InvalidTransferToPublicProof',
+    EncryptedAmountSelfTransfer = 'EncryptedAmountSelfTransfer',
+    InvalidIndexOnEncryptedTransfer = 'InvalidIndexOnEncryptedTransfer',
+    ZeroScheduledAmount = 'ZeroScheduledAmount',
+    NonIncreasingSchedule = 'NonIncreasingSchedule',
+    FirstScheduledReleaseExpired = 'FirstScheduledReleaseExpired',
+    ScheduledSelfTransfer = 'ScheduledSelfTransfer',
+    InvalidCredentials = 'InvalidCredentials',
+    DuplicateCredIDs = 'DuplicateCredIDs',
+    NonExistentCredIDs = 'NonExistentCredIDs',
+    RemoveFirstCredential = 'RemoveFirstCredential',
+    CredentialHolderDidNotSign = 'CredentialHolderDidNotSign',
+    NotAllowedMultipleCredentials = 'NotAllowedMultipleCredentials',
+    NotAllowedToReceiveEncrypted = 'NotAllowedToReceiveEncrypted',
+    NotAllowedToHandleEncrypted = 'NotAllowedToHandleEncrypted',
+}
+
+export interface RejectReason {
+    tag: RejectReasonTag;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    contents: any;
+}
+
+interface RejectedEventResult {
+    outcome: 'reject';
+    rejectReason: RejectReason;
+}
+
+interface SuccessfulEventResult {
+    outcome: 'success';
     events: (
         | TransactionEvent
         | TransferredEvent
@@ -116,6 +177,11 @@ export interface EventResult {
         | TransferredWithScheduleEvent
     )[];
 }
+
+export type EventResult =
+    | SuccessfulEventResult
+    | TransferWithMemoEventResult
+    | RejectedEventResult;
 
 interface BaseTransactionSummaryType {
     type:
@@ -149,7 +215,7 @@ interface GenericTransactionSummary extends BaseTransactionSummary {
 }
 
 interface TransferWithMemoEventResult {
-    outcome: string;
+    outcome: 'success';
     events: [TransferredEvent, MemoEvent];
 }
 

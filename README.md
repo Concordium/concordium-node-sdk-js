@@ -116,7 +116,7 @@ will check if any credential with that credential identifier exists and will ret
 about the credential instead. If neither an account or credential matches the address at the provided
 block, then undefined will be returned.
 ```js
-const accountAddress = "3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU";
+const accountAddress = new AccountAddress("3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU");
 const blockHash = "6b01f2043d5621192480f4223644ef659dd5cda1e54a78fc64ad642587c73def";
 const accountInfo: AccountInfo = await client.getAccountInfo(accountAddress, blockHash);
 const amount: bigint = accountInfo.accountAmount;
@@ -131,7 +131,7 @@ header for the next transaction submitted by that account. Along with the nonce 
 that indicates whether all transactions are finalized. If this is true, then the nonce is reliable, 
 if not then the next nonce might be off.
 ```js
-const accountAddress = "3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt";
+const accountAddress = new AccountAddress("3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt");
 const nextAccountNonce: NextAccountNonce = await client.getNextAccountNonce(accountAddress);
 const nonce: bigint = nextAccountNonce.nonce;
 const allFinal: boolean = nextAccountNonce.allFinal;

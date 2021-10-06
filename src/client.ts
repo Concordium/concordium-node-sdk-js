@@ -365,6 +365,7 @@ export default class ConcordiumNodeClient {
             'blockLastReceivedTime',
             'blockLastArrivedTime',
             'genesisTime',
+            'currentEraGenesisTime',
             'lastFinalizedTime',
         ];
         const bigIntPropertyKeys: (keyof ConsensusStatus)[] = [

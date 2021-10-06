@@ -341,6 +341,7 @@ export interface BlockInfo {
 export interface ConsensusStatus {
     bestBlock: string;
     genesisBlock: string;
+    currentEraGenesisBlock: string;
     lastFinalizedBlock: string;
 
     epochDuration: bigint;
@@ -371,9 +372,12 @@ export interface ConsensusStatus {
     finalizationPeriodEMSD?: number;
 
     genesisTime: Date;
+    currentEraGenesisTime: Date;
     blockLastReceivedTime?: Date;
     blockLastArrivedTime?: Date;
     lastFinalizedTime?: Date;
+
+    protocolVersion: number;
 }
 
 export interface NextAccountNonce {

@@ -81,7 +81,7 @@ let accountTransaction: AccountTransaction;
 // Sign the transaction, the following is just an example, and any method for signing
 // with the key can be employed.
 const signingKey = "ce432f6bba0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c";
-const hashToSign = getAccountTransactionSignDigest(accountTransaction, sha256);
+const hashToSign = getAccountTransactionSignDigest(accountTransaction);
 const signature = Buffer.from(await ed.sign(hashToSign, signingKey)).toString("hex");
 
 // The signatures used to sign the transaction must be provided in a structured way,
@@ -105,7 +105,7 @@ if (success) {
 
 // Check the status of the transaction. Should be checked with an appropriate interval,
 // as it will take some time for the transaction to be processed.
-const transactionHash = getAccountTransactionHash(accountTransaction, signatures, sha256);
+const transactionHash = getAccountTransactionHash(accountTransaction, signatures);
 const transactionStatus = await client.getTransactionStatus(transactionHash);
 ```
 

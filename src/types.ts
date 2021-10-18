@@ -1,5 +1,6 @@
 import { AccountAddress } from './types/accountAddress';
 import { GtuAmount } from './types/gtuAmount';
+import { Memo } from './types/Memo';
 import { TransactionExpiry } from './types/transactionExpiry';
 
 /**
@@ -92,6 +93,18 @@ export interface TransferredEvent {
     from: AddressAccount;
 }
 
+export interface TransferredWithScheduleEvent {
+    tag: 'TransferredWithSchedule';
+    to: AddressAccount;
+    from: AddressAccount;
+    amount: ReleaseSchedule[];
+}
+
+export interface MemoEvent {
+    tag: 'TransferMemo';
+    memo: string;
+}
+
 /**
  * An enum containing all the possible reject reasons that can be
  * received from a node as a response to a transaction submission.
@@ -145,15 +158,8 @@ export enum RejectReasonTag {
 
 export interface RejectReason {
     tag: RejectReasonTag;
-    // TODO: Figure out the type of contents.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     contents: any;
-}
-
-interface SuccessfulEventResult {
-    outcome: 'success';
-    // TODO Resolve the types completely.
-    events: (TransactionEvent | TransferredEvent | UpdatedEvent)[];
 }
 
 interface RejectedEventResult {
@@ -161,28 +167,74 @@ interface RejectedEventResult {
     rejectReason: RejectReason;
 }
 
-export type EventResult = SuccessfulEventResult | RejectedEventResult;
+interface SuccessfulEventResult {
+    outcome: 'success';
+    events: (
+        | TransactionEvent
+        | TransferredEvent
+        | UpdatedEvent
+        | MemoEvent
+        | TransferredWithScheduleEvent
+    )[];
+}
 
-interface TransactionSummaryType {
+export type EventResult =
+    | SuccessfulEventResult
+    | TransferWithMemoEventResult
+    | RejectedEventResult;
+
+interface BaseTransactionSummaryType {
     type:
         | 'accountTransaction'
         | 'credentialDeploymentTransaction'
         | 'updateTransaction';
-    // TODO: Figure out if contents is always just a string.
+}
+
+export interface TransferWithMemoSummaryType
+    extends BaseTransactionSummaryType {
+    contents: 'transferWithMemo';
+}
+
+export interface GenericTransactionSummaryType
+    extends BaseTransactionSummaryType {
     contents: string;
 }
 
-export interface TransactionSummary {
+export interface BaseTransactionSummary {
     sender?: string;
     hash: string;
 
     cost: bigint;
     energyCost: bigint;
     index: bigint;
+}
 
-    type: TransactionSummaryType;
-
+interface GenericTransactionSummary extends BaseTransactionSummary {
+    type: GenericTransactionSummaryType;
     result: EventResult;
+}
+
+interface TransferWithMemoEventResult {
+    outcome: 'success';
+    events: [TransferredEvent, MemoEvent];
+}
+
+export interface TransferWithMemoTransactionSummary
+    extends BaseTransactionSummary {
+    type: TransferWithMemoSummaryType;
+    result: TransferWithMemoEventResult;
+}
+
+export type TransactionSummary =
+    | GenericTransactionSummary
+    | TransferWithMemoTransactionSummary;
+
+export function instanceOfTransferWithMemoTransactionSummary(
+    object: TransactionSummary
+): object is TransferWithMemoTransactionSummary {
+    return (
+        object.type !== undefined && object.type.contents === 'transferWithMemo'
+    );
 }
 
 export interface TransactionStatus {
@@ -388,12 +440,15 @@ export interface NextAccountNonce {
 export interface ReleaseSchedule {
     timestamp: Date;
     amount: bigint;
-    transactions: any;
+}
+
+export interface ReleaseScheduleWithTransactions extends ReleaseSchedule {
+    transactions: string[];
 }
 
 export interface AccountReleaseSchedule {
     total: bigint;
-    schedule: ReleaseSchedule[];
+    schedule: ReleaseScheduleWithTransactions[];
 }
 
 export interface AccountEncryptedAmount {
@@ -529,6 +584,9 @@ export enum AccountTransactionType {
     TransferWithSchedule = 19,
     UpdateCredentials = 20,
     RegisterData = 21,
+    SimpleTransferWithMemo = 22,
+    EncryptedTransferWithMemo = 23,
+    TransferWithScheduleWithMemo = 24,
 }
 
 export interface AccountTransactionHeader {
@@ -545,15 +603,22 @@ export interface AccountTransactionHeader {
     expiry: TransactionExpiry;
 }
 
-export interface SimpleTransfer {
+export interface SimpleTransferPayload {
     /** µGTU amount to transfer */
     amount: GtuAmount;
 
-    /** the recipient of the transfer*/
+    /** the recipient of the transfer */
     toAddress: AccountAddress;
 }
 
-export type AccountTransactionPayload = SimpleTransfer;
+export interface SimpleTransferWithMemoPayload extends SimpleTransferPayload {
+    /** The bytes representation of the memo of the transaction  */
+    memo: Memo;
+}
+
+export type AccountTransactionPayload =
+    | SimpleTransferPayload
+    | SimpleTransferWithMemoPayload;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

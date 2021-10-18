@@ -1,7 +1,8 @@
 import { Buffer } from 'buffer/';
 import { getAccountTransactionHandler } from './accountTransactions';
 import {
-    encodeUint8,
+    encodeWord8FromString,
+    encodeWord8,
     encodeWord32,
     encodeWord64,
     serializeMap,
@@ -68,11 +69,11 @@ export function serializeAccountTransactionSignature(
         return Buffer.concat([length, signatureBytes]);
     };
     const putCredentialSignatures = (credSig: CredentialSignature) =>
-        serializeMap(credSig, encodeUint8, encodeUint8, putSignature);
+        serializeMap(credSig, encodeWord8, encodeWord8FromString, putSignature);
     return serializeMap(
         signatures,
-        encodeUint8,
-        encodeUint8,
+        encodeWord8,
+        encodeWord8FromString,
         putCredentialSignatures
     );
 }
@@ -89,7 +90,7 @@ export function serializeAccountTransaction(
     accountTransaction: AccountTransaction,
     signatures: AccountTransactionSignature
 ): Buffer {
-    const serializedBlockItemKind = encodeUint8(
+    const serializedBlockItemKind = encodeWord8(
         BlockItemKind.AccountTransactionKind
     );
     const serializedAccountTransactionSignatures =
@@ -133,7 +134,6 @@ export function serializeAccountTransaction(
  * Gets the transaction hash that is used to look up the status of a transaction.
  * @param accountTransaction the transaction to hash
  * @param signatures the signatures that will also be part of the hash
- * @param sha256 the sha256 hashing function
  * @returns the sha256 hash of the serialized block item kind, signatures, header, type and payload
  */
 export function getAccountTransactionHash(
@@ -149,11 +149,7 @@ export function getAccountTransactionHash(
 
 /**
  * Returns the digest of the transaction that has to be signed.
- * The hashing function is provided to keep the implementation clean of
- * node specific imports, so that it can be used from a renderer
- * thread in Electron.
  * @param accountTransaction the transaction to hash
- * @param sha256 the sha256 hashing function
  * @param signatureCount number of expected signatures
  * @returns the sha256 hash on the serialized header, type and payload
  */
@@ -205,6 +201,6 @@ export function serializeAccountTransactionForSubmission(
         signatures
     );
 
-    const serializedVersion = encodeUint8(0);
+    const serializedVersion = encodeWord8(0);
     return Buffer.concat([serializedVersion, serializedAccountTransaction]);
 }

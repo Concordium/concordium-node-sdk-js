@@ -29,18 +29,15 @@ const client = new ConcordiumNodeClient(
 );
 ```
 
-## Send a simple transfer
-The following examples demonstrates how a simple transfer can be created and sent.
+## Create a simple transfer
+The following example demonstrates how a simple transfer can be created.
 ```js
-import * as ed from "noble-ed25519";
-
-// Create the transaction
 const header: AccountTransactionHeader = {
     expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
     nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
     sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
 };
-const simpleTransfer: SimpleTransfer = {
+const simpleTransfer: SimpleTransferPayload = {
     amount: new GtuAmount(100n),
     toAddress: new AccountAddress("4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf"),
 };
@@ -49,11 +46,42 @@ const simpleTransferAccountTransaction: AccountTransaction = {
     payload: simpleTransfer,
     type: AccountTransactionType.SimpleTransfer,
 };
+```
+
+## Create a simple transfer with a memo
+The following example demonstrates how a simple transfer with a memo can be created.
+```js
+const header: AccountTransactionHeader = {
+    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+    nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
+    sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
+};
+const simpleTransferWithMemo: SimpleTransferWithMemoPayload = {
+    amount: new GtuAmount(100n),
+    toAddress: new AccountAddress("4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf"),
+    memo: new Memo(Buffer.from('6B68656C6C6F20776F726C64', 'hex')),
+};
+const simpleTransferWithMemoAccountTransaction: AccountTransaction = {
+    header: header,
+    payload: simpleTransferWithMemo,
+    type: AccountTransactionType.SimpleTransferWithMemo,
+};
+```
+
+## Send Account Transaction
+The following example demonstrates how to send any account transaction.
+See the previous sections for how to create an account transaction.
+```js
+import * as ed from "noble-ed25519";
+
+let accountTransaction: AccountTransaction;
+// Create the transaction
+// ...
 
 // Sign the transaction, the following is just an example, and any method for signing
 // with the key can be employed.
 const signingKey = "ce432f6bba0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c";
-const hashToSign = getAccountTransactionSignDigest(simpleTransferAccountTransaction, sha256);
+const hashToSign = getAccountTransactionSignDigest(accountTransaction);
 const signature = Buffer.from(await ed.sign(hashToSign, signingKey)).toString("hex");
 
 // The signatures used to sign the transaction must be provided in a structured way,
@@ -67,7 +95,7 @@ const signatures: AccountTransactionSignature = {
 };
 
 // Send the transaction to the node.
-const success = await client.sendAccountTransaction(simpleTransferAccountTransaction, signatures);
+const success = await client.sendAccountTransaction(accountTransaction, signatures);
 if (success) {
     // The node accepted the transaction. This does not ensure that the transaction
     // will end up in a block, only that the format of the submitted transaction was valid.
@@ -77,9 +105,10 @@ if (success) {
 
 // Check the status of the transaction. Should be checked with an appropriate interval,
 // as it will take some time for the transaction to be processed.
-const transactionHash = getAccountTransactionHash(simpleTransferAccountTransaction, signatures, sha256);
+const transactionHash = getAccountTransactionHash(accountTransaction, signatures);
 const transactionStatus = await client.getTransactionStatus(transactionHash);
 ```
+
 
 ## getAccountInfo
 Retrieves information about an account. If no account exists with the provided address, then the node
@@ -87,7 +116,7 @@ will check if any credential with that credential identifier exists and will ret
 about the credential instead. If neither an account or credential matches the address at the provided
 block, then undefined will be returned.
 ```js
-const accountAddress = "3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU";
+const accountAddress = new AccountAddress("3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU");
 const blockHash = "6b01f2043d5621192480f4223644ef659dd5cda1e54a78fc64ad642587c73def";
 const accountInfo: AccountInfo = await client.getAccountInfo(accountAddress, blockHash);
 const amount: bigint = accountInfo.accountAmount;
@@ -102,7 +131,7 @@ header for the next transaction submitted by that account. Along with the nonce 
 that indicates whether all transactions are finalized. If this is true, then the nonce is reliable, 
 if not then the next nonce might be off.
 ```js
-const accountAddress = "3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt";
+const accountAddress = new AccountAddress("3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt");
 const nextAccountNonce: NextAccountNonce = await client.getNextAccountNonce(accountAddress);
 const nonce: bigint = nextAccountNonce.nonce;
 const allFinal: boolean = nextAccountNonce.allFinal;
@@ -178,6 +207,29 @@ const bestBlock = consensusStatus.bestBlock;
 ...
 ```
 
+## Check block for transfers with memo
+The following example demonstrates how to check and parse a block 
+for transfers with a memo.
+```js
+const blockHash = "b49bb1c06c697b7d6539c987082c5a0dc6d86d91208874517ab17da752472edf";
+const blockSummary = await client.getBlockSummary(blockHash);
+const transactionSummaries = blockSummary.transactionSummaries;
+
+for (const transactionSummary of transactionSummaries) {
+    if (transactionSummary.result.outcome === 'success') {
+        if (instanceOfTransferWithMemoTransactionSummary(transactionSummary)) {
+            const [transferredEvent, memoEvent] = transactionSummary.result.events;
+
+            const toAddress = transferredEvent.to.address;
+            const amount = transferredEvent.amount;
+            const memo = memoEvent.memo;
+
+            // Apply business logic to toAddress, amount and memo...
+        }
+    }
+}
+```
+
 # Build
 
 ## Building for a release
@@ -185,6 +237,14 @@ To build the project run
 ```
 yarn build
 ```
+
+## Publishing a release
+Before publishing a new release it is essential that it has been built first. So make sure that 
+you have just built the up-to-date code you want to publish. To publish the release run
+```
+yarn publish
+```
+and step through the steps precented to you.
 
 ## Updating the gRPC files
 If the external dependency concordium-grpc-api has been updated (or this is your first time building the project), 

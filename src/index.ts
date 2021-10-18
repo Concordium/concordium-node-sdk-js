@@ -12,3 +12,4 @@ export { sha256 };
 export { AccountAddress } from './types/accountAddress';
 export { GtuAmount } from './types/gtuAmount';
 export { TransactionExpiry } from './types/transactionExpiry';
+export { Memo } from './types/Memo';

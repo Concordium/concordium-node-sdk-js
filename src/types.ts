@@ -429,7 +429,9 @@ export interface ConsensusStatus {
     blockLastArrivedTime?: Date;
     lastFinalizedTime?: Date;
 
-    protocolVersion: number;
+    genesisIndex: number;
+
+    protocolVersion: bigint;
 }
 
 export interface NextAccountNonce {
@@ -515,20 +517,24 @@ export interface InitialAccountCredential {
     contents: InitialCredentialDeploymentValues;
 }
 
+export interface BakerReduceStakePendingChange {
+    change: 'ReduceStake';
+    newStake: bigint;
+    epoch: bigint;
+}
+
+export interface BakerRemovalPendingChange {
+    change: 'RemoveBaker';
+    epoch: bigint;
+}
+
 export type BakerPendingChange =
-    | {
-          change: 'ReduceStake';
-          newStake: bigint;
-          epoch: number;
-      }
-    | {
-          change: 'RemoveBaker';
-          epoch: number;
-      };
+    | BakerReduceStakePendingChange
+    | BakerRemovalPendingChange;
 
 export interface AccountBakerDetails {
     restakeEarnings: boolean;
-    bakerId: number;
+    bakerId: bigint;
     bakerAggregationVerifyKey: string;
     bakerElectionVerifyKey: string;
     bakerSignatureVerifyKey: string;

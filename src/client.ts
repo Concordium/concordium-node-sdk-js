@@ -32,6 +32,9 @@ import {
     TransactionSummary,
     TransferredEvent,
     UpdateQueue,
+    AccountBakerDetails,
+    BakerReduceStakePendingChange,
+    BakerRemovalPendingChange,
 } from './types';
 import {
     buildJsonResponseReviver,
@@ -152,6 +155,9 @@ export default class ConcordiumNodeClient {
             | keyof AccountEncryptedAmount
             | keyof AccountReleaseSchedule
             | keyof ReleaseSchedule
+            | keyof AccountBakerDetails
+            | keyof BakerReduceStakePendingChange
+            | keyof BakerRemovalPendingChange
         )[] = [
             'accountAmount',
             'accountNonce',
@@ -159,6 +165,10 @@ export default class ConcordiumNodeClient {
             'startIndex',
             'total',
             'amount',
+            'stakedAmount',
+            'bakerId',
+            'newStake',
+            'epoch',
         ];
         return unwrapJsonResponse<AccountInfo>(
             response,
@@ -363,6 +373,7 @@ export default class ConcordiumNodeClient {
             'blockLastReceivedTime',
             'blockLastArrivedTime',
             'genesisTime',
+            'currentEraGenesisTime',
             'lastFinalizedTime',
         ];
         const bigIntPropertyKeys: (keyof ConsensusStatus)[] = [
@@ -373,6 +384,7 @@ export default class ConcordiumNodeClient {
             'finalizationCount',
             'blocksVerifiedCount',
             'blocksReceivedCount',
+            'protocolVersion',
         ];
 
         const consensusStatus = unwrapJsonResponse<ConsensusStatus>(

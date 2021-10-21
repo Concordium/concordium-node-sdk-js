@@ -8,6 +8,7 @@ import { AccountAddress } from '../src/types/accountAddress';
 import { isHex } from '../src/util';
 import { isValidDate, getNodeClient } from './testHelpers';
 import { bulletProofGenerators } from './resources/bulletproofgenerators';
+import { ipVerifyKey1, ipVerifyKey2 } from './resources/ipVerifyKeys';
 import { PeerElement } from '../grpc/concordium_p2p_rpc_pb';
 
 const client = getNodeClient();
@@ -808,5 +809,53 @@ test('peer list can be retrieved', async () => {
                 PeerElement.CatchupStatus.CATCHINGUP,
             ].includes(peer.getCatchupStatus())
         ),
+    ]);
+});
+
+test('identity providers are undefined at an unknown block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749';
+    const identityProviders = await client.getIdentityProviders(blockHash);
+    return expect(identityProviders).toBeUndefined();
+});
+
+test('identity providers are retrieved at the given block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749';
+    const identityProviders = await client.getIdentityProviders(blockHash);
+
+    if (!identityProviders) {
+        throw new Error('Test was unable to get identity providers');
+    }
+
+    const concordiumTestIp = identityProviders[0];
+    const notabeneTestIp = identityProviders[1];
+
+    return Promise.all([
+        expect(concordiumTestIp.ipIdentity).toEqual(0),
+        expect(concordiumTestIp.ipDescription.name).toEqual(
+            'Concordium testnet IP'
+        ),
+        expect(concordiumTestIp.ipDescription.url).toEqual(''),
+        expect(concordiumTestIp.ipDescription.description).toEqual(
+            'Concordium testnet identity provider'
+        ),
+        expect(concordiumTestIp.ipCdiVerifyKey).toEqual(
+            '2e1cff3988174c379432c1fad7ccfc385c897c4477c06617262cec7193226eca'
+        ),
+        expect(concordiumTestIp.ipVerifyKey).toEqual(ipVerifyKey1),
+
+        expect(notabeneTestIp.ipIdentity).toEqual(1),
+        expect(notabeneTestIp.ipDescription.name).toEqual('Notabene (Staging)'),
+        expect(notabeneTestIp.ipDescription.url).toEqual(
+            'https://notabene.studio'
+        ),
+        expect(notabeneTestIp.ipDescription.description).toEqual(
+            'Notabene Identity Issuer (Staging Service)'
+        ),
+        expect(notabeneTestIp.ipCdiVerifyKey).toEqual(
+            '4810d66439a25d9b345cf5c7ac11f9e512548c278542d9b24dc73541626d6197'
+        ),
+        expect(notabeneTestIp.ipVerifyKey).toEqual(ipVerifyKey2),
     ]);
 });

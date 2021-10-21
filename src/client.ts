@@ -27,6 +27,7 @@ import {
     CryptographicParameters,
     ExchangeRate,
     FinalizationData,
+    IpInfo,
     KeysWithThreshold,
     NextAccountNonce,
     PartyInfo,
@@ -434,6 +435,23 @@ export default class ConcordiumNodeClient {
             peersRequest
         );
         return PeerListResponse.deserializeBinary(response);
+    }
+
+    /**
+     * Retrieves the list of identity providers at the provided blockhash.
+     * @param blockHash the block to get the identity providers at
+     * @returns the list of identity providers at the given block
+     */
+    async getIdentityProviders(
+        blockHash: string
+    ): Promise<IpInfo[] | undefined> {
+        const blockHashObject = new BlockHash();
+        blockHashObject.setBlockHash(blockHash);
+        const response = await this.sendRequest(
+            this.client.getIdentityProviders,
+            blockHashObject
+        );
+        return unwrapJsonResponse<IpInfo[]>(response);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

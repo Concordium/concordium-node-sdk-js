@@ -535,6 +535,19 @@ export interface AccountInfo {
     >;
 }
 
+export interface Description {
+    name: string;
+    url: string;
+    description: string;
+}
+
+export interface IpInfo {
+    ipIdentity: number;
+    ipDescription: Description;
+    ipVerifyKey: string;
+    ipCdiVerifyKey: string;
+}
+
 export enum BlockItemKind {
     AccountTransactionKind = 0,
     CredentialDeploymentKind = 1,

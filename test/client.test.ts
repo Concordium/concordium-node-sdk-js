@@ -7,6 +7,7 @@ import {
 import { AccountAddress } from '../src/types/accountAddress';
 import { isHex } from '../src/util';
 import { isValidDate, getNodeClient } from './testHelpers';
+import { bulletProofGenerators } from './resources/bulletproofgenerators';
 
 const client = getNodeClient();
 
@@ -753,4 +754,38 @@ test('retrieves the consensus status from the node with correct types', async ()
             typeof consensusStatus.lastFinalizedBlockHeight === 'bigint'
         ).toBeTruthy(),
     ]);
+});
+
+test('cryptographic parameters are retrieved at the given block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749';
+    const cryptographicParameters = await client.getCryptographicParameters(
+        blockHash
+    );
+
+    if (!cryptographicParameters) {
+        throw new Error('Test was unable to get cryptographic parameters');
+    }
+
+    return Promise.all([
+        expect(cryptographicParameters.value.genesisString).toEqual(
+            'Concordium Testnet Version 5'
+        ),
+        expect(cryptographicParameters.value.onChainCommitmentKey).toEqual(
+            'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a8d45e64b6f917c540eee16c970c3d4b7f3caf48a7746284878e2ace21c82ea44bf84609834625be1f309988ac523fac'
+        ),
+        expect(cryptographicParameters.value.bulletproofGenerators).toEqual(
+            bulletProofGenerators
+        ),
+    ]);
+});
+
+test('cryptographic parameters are undefined at unknown block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749';
+    const cryptographicParameters = await client.getCryptographicParameters(
+        blockHash
+    );
+
+    return expect(cryptographicParameters).toBeUndefined();
 });

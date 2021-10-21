@@ -22,6 +22,7 @@ import {
     ChainParameters,
     ConsensusStatus,
     ContractAddress,
+    CryptographicParameters,
     ExchangeRate,
     FinalizationData,
     KeysWithThreshold,
@@ -32,6 +33,7 @@ import {
     TransactionSummary,
     TransferredEvent,
     UpdateQueue,
+    Versioned,
 } from './types';
 import {
     buildJsonResponseReviver,
@@ -388,6 +390,31 @@ export default class ConcordiumNodeClient {
         }
 
         return consensusStatus;
+    }
+
+    /**
+     * Retrieves the global cryptographic parameters on the blockchain at
+     * the provided block.
+     * @param blockHash the block to get the cryptographic parameters at
+     * @returns the global cryptographic parameters at the given block, or undefined it the block does not exist.
+     */
+    async getCryptographicParameters(
+        blockHash: string
+    ): Promise<Versioned<CryptographicParameters> | undefined> {
+        if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+
+        const blockHashObject = new BlockHash();
+        blockHashObject.setBlockHash(blockHash);
+        const response = await this.sendRequest(
+            this.client.getCryptographicParameters,
+            blockHashObject
+        );
+
+        return unwrapJsonResponse<
+            Versioned<CryptographicParameters> | undefined
+        >(response);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

@@ -428,6 +428,12 @@ export interface ConsensusStatus {
     lastFinalizedTime?: Date;
 }
 
+export interface CryptographicParameters {
+    onChainCommitmentKey: string;
+    bulletproofGenerators: string;
+    genesisString: string;
+}
+
 export interface NextAccountNonce {
     nonce: bigint;
     allFinal: boolean;

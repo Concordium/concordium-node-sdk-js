@@ -19,6 +19,7 @@ import {
     AccountReleaseSchedule,
     AccountTransaction,
     AccountTransactionSignature,
+    ArInfo,
     BlockInfo,
     BlockSummary,
     ChainParameters,
@@ -452,6 +453,23 @@ export default class ConcordiumNodeClient {
             blockHashObject
         );
         return unwrapJsonResponse<IpInfo[]>(response);
+    }
+
+    /**
+     * Retrieves the list of anonymity revokers at the provided blockhash.
+     * @param blockHash the block to get the anonymity revokers at
+     * @returns the list of anonymity revokers at the given block
+     */
+    async getAnonymityRevokers(
+        blockHash: string
+    ): Promise<ArInfo[] | undefined> {
+        const blockHashObject = new BlockHash();
+        blockHashObject.setBlockHash(blockHash);
+        const response = await this.sendRequest(
+            this.client.getAnonymityRevokers,
+            blockHashObject
+        );
+        return unwrapJsonResponse<ArInfo[]>(response);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

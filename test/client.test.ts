@@ -859,3 +859,56 @@ test('identity providers are retrieved at the given block', async () => {
         expect(notabeneTestIp.ipVerifyKey).toEqual(ipVerifyKey2),
     ]);
 });
+
+test('anonymity revokers are undefined at an unknown block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749';
+    const anonymityRevokers = await client.getAnonymityRevokers(blockHash);
+    return expect(anonymityRevokers).toBeUndefined();
+});
+
+test('anonymity revokers are retrieved at the given block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749';
+    const anonymityRevokers = await client.getAnonymityRevokers(blockHash);
+
+    if (!anonymityRevokers) {
+        throw new Error('Test could not find anonymity revokers');
+    }
+
+    const ar1 = anonymityRevokers[0];
+    const ar2 = anonymityRevokers[1];
+    const ar3 = anonymityRevokers[2];
+
+    return Promise.all([
+        expect(ar1.arIdentity).toEqual(1),
+        expect(ar1.arDescription.name).toEqual('Testnet AR 1'),
+        expect(ar1.arDescription.url).toEqual(''),
+        expect(ar1.arDescription.description).toEqual(
+            'Testnet anonymity revoker 1'
+        ),
+        expect(ar1.arPublicKey).toEqual(
+            'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c58ed5281b5d117cb74068a5deef28f027c9055dd424b07043568ac040a4e51f3307f268a77eaebc36bd4bf7cdbbe238b8'
+        ),
+
+        expect(ar2.arIdentity).toEqual(2),
+        expect(ar2.arDescription.name).toEqual('Testnet AR 2'),
+        expect(ar2.arDescription.url).toEqual(''),
+        expect(ar2.arDescription.description).toEqual(
+            'Testnet anonymity revoker 2'
+        ),
+        expect(ar2.arPublicKey).toEqual(
+            'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5aefb2334688a2ecc95e7c49e9ccbc7218b5c9e151ac22462d064f564ffa56bb8b3685fcdc8d7d8cb43f43d608e7e8515'
+        ),
+
+        expect(ar3.arIdentity).toEqual(3),
+        expect(ar3.arDescription.name).toEqual('Testnet AR 3'),
+        expect(ar3.arDescription.url).toEqual(''),
+        expect(ar3.arDescription.description).toEqual(
+            'Testnet anonymity revoker 3'
+        ),
+        expect(ar3.arPublicKey).toEqual(
+            'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a791a28a6d3e7ca0857c0f996f94e65da78b8d9b5de5e32164e291e553ed103bf14d6fab1f21749d59664e34813afe77'
+        ),
+    ]);
+});

@@ -548,6 +548,12 @@ export interface IpInfo {
     ipCdiVerifyKey: string;
 }
 
+export interface ArInfo {
+    arIdentity: number;
+    arDescription: Description;
+    arPublicKey: string;
+}
+
 export enum BlockItemKind {
     AccountTransactionKind = 0,
     CredentialDeploymentKind = 1,

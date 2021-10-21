@@ -1,4 +1,5 @@
 import {
+    BakerReduceStakePendingChange,
     ConsensusStatus,
     instanceOfTransferWithMemoTransactionSummary,
     NormalAccountCredential,
@@ -389,6 +390,128 @@ test('account info with a release schedule', async () => {
     }
 });
 
+test('account info with baker details, and with no pending change', async () => {
+    const accountAddress = new AccountAddress(
+        '4KTnZ9WKrmoP546aQ6w7KC3DtbiykRbY4thixK3y7BSSC87zpN'
+    );
+    const blockHash =
+        '2c3de8a501cd810e35980e2ba783e84ab59f1927ec4d75ad224d23f142ba1e4c';
+
+    const accountInfo = await client.getAccountInfo(accountAddress, blockHash);
+
+    if (!accountInfo) {
+        throw new Error('Test failed to find account info');
+    }
+
+    const bakerDetails = accountInfo.accountBaker;
+
+    if (!bakerDetails) {
+        throw new Error('Account info doesnt contain baker details');
+    }
+
+    expect(bakerDetails.bakerId).toEqual(743n);
+    expect(bakerDetails.stakedAmount).toEqual(15000000000n);
+    expect(bakerDetails.restakeEarnings).toEqual(true);
+    expect(bakerDetails.bakerElectionVerifyKey).toEqual(
+        'f5be66dfeb83d962a0c386f65a2811a4cea4ab90dbbced3a6f52ff5c1942beee'
+    );
+    expect(bakerDetails.bakerSignatureVerifyKey).toEqual(
+        'b7c33d2693a297a16e177368ade84f5edbba9567361a46c92ad4cf0176783440'
+    );
+    expect(bakerDetails.bakerAggregationVerifyKey).toEqual(
+        '8e0e236fdd71b2653e1c22c65ddaee7d867c31d69b0b173626b0caf291522c3e829c39b6d8d6cfcfd18ddaf90fa67ae9026114b7640842824eb495f9e51c2ee4ef5a93f84fa1c8fd2b3105333bbae31576f77137fd53e5d709ee5da00446e6a9'
+    );
+
+    expect(bakerDetails.pendingChange).toBeUndefined();
+});
+
+test('account info with baker details, and with a pending baker removal', async () => {
+    const accountAddress = new AccountAddress(
+        '4KTnZ9WKrmoP546aQ6w7KC3DtbiykRbY4thixK3y7BSSC87zpN'
+    );
+    const blockHash =
+        '57d69d8d53f406ddbd6aa31fa1e33231eebf4afb600de3ce698987983811a1c2';
+
+    const accountInfo = await client.getAccountInfo(accountAddress, blockHash);
+
+    if (!accountInfo) {
+        throw new Error('Test failed to find account info');
+    }
+
+    const bakerDetails = accountInfo.accountBaker;
+
+    if (!bakerDetails) {
+        throw new Error('Account info doesnt contain baker details');
+    }
+
+    expect(bakerDetails.bakerId).toEqual(743n);
+    expect(bakerDetails.stakedAmount).toEqual(15000000000n);
+    expect(bakerDetails.restakeEarnings).toEqual(true);
+    expect(bakerDetails.bakerElectionVerifyKey).toEqual(
+        'f5be66dfeb83d962a0c386f65a2811a4cea4ab90dbbced3a6f52ff5c1942beee'
+    );
+    expect(bakerDetails.bakerSignatureVerifyKey).toEqual(
+        'b7c33d2693a297a16e177368ade84f5edbba9567361a46c92ad4cf0176783440'
+    );
+    expect(bakerDetails.bakerAggregationVerifyKey).toEqual(
+        '8e0e236fdd71b2653e1c22c65ddaee7d867c31d69b0b173626b0caf291522c3e829c39b6d8d6cfcfd18ddaf90fa67ae9026114b7640842824eb495f9e51c2ee4ef5a93f84fa1c8fd2b3105333bbae31576f77137fd53e5d709ee5da00446e6a9'
+    );
+
+    const pendingChange = bakerDetails.pendingChange;
+
+    if (!pendingChange) {
+        throw new Error('Baker details doesnt contain pending change');
+    }
+
+    expect(pendingChange.change).toEqual('RemoveBaker');
+    expect(pendingChange.epoch).toEqual(334n);
+});
+
+test('account info with baker details, and with a pending stake reduction', async () => {
+    const accountAddress = new AccountAddress(
+        '3V1LSu3AZ6o45xcjqRr3PzviUQUfK2tXq2oFnaHgDbY8Ledu2Z'
+    );
+    const blockHash =
+        'ea36dbed9348de67fc977ee9e637d208b6d1808490a6698327504f5d1ec7315c';
+
+    const accountInfo = await client.getAccountInfo(accountAddress, blockHash);
+
+    if (!accountInfo) {
+        throw new Error('Test failed to find account info');
+    }
+
+    const bakerDetails = accountInfo.accountBaker;
+
+    if (!bakerDetails) {
+        throw new Error('Account info doesnt contain baker details');
+    }
+
+    expect(bakerDetails.bakerId).toEqual(731n);
+    expect(bakerDetails.stakedAmount).toEqual(14500000000n);
+    expect(bakerDetails.restakeEarnings).toEqual(true);
+    expect(bakerDetails.bakerElectionVerifyKey).toEqual(
+        'f0b48a386b01784f95d0e82911932b8ffbea2ceec9654a58dcc226bfe813a668'
+    );
+    expect(bakerDetails.bakerSignatureVerifyKey).toEqual(
+        'f31632d93b3e7085b9060216175ead4496a1e9f477325aa8817dc8c0d533cfd0'
+    );
+    expect(bakerDetails.bakerAggregationVerifyKey).toEqual(
+        '803255d7c861d1a9ec8d810eeac40d11cae9e588e613de008786f3d143a6c573f99b5014bf9590064583a67d5b3283870163c7655f1dd61d0313d9283dc98513c221013f2f8109c392c7d2a9cd70950dd18ad477652d294f6ae2a499f3243793'
+    );
+
+    const pendingChange = bakerDetails.pendingChange;
+
+    if (!pendingChange) {
+        throw new Error('Baker details doesnt contain pending change');
+    }
+
+    expect(pendingChange.change).toEqual('ReduceStake');
+    expect((pendingChange as BakerReduceStakePendingChange).newStake).toEqual(
+        14000000000n
+    );
+    expect(pendingChange.epoch).toEqual(838n);
+});
+
 test('retrieves the account info', async () => {
     const accountAddress = new AccountAddress(
         '3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU'
@@ -718,6 +841,7 @@ test('retrieves the consensus status from the node with correct types', async ()
         expect(consensusStatus.blockLastReceivedTime).toBeInstanceOf(Date),
         expect(consensusStatus.genesisTime).toBeInstanceOf(Date),
         expect(consensusStatus.lastFinalizedTime).toBeInstanceOf(Date),
+        expect(consensusStatus.currentEraGenesisTime).toBeInstanceOf(Date),
 
         expect(
             Number.isNaN(consensusStatus.blockArriveLatencyEMSD)
@@ -746,6 +870,7 @@ test('retrieves the consensus status from the node with correct types', async ()
         expect(
             Number.isNaN(consensusStatus.finalizationPeriodEMSD)
         ).toBeFalsy(),
+        expect(Number.isNaN(consensusStatus.genesisIndex)).toBeFalsy(),
 
         expect(typeof consensusStatus.epochDuration === 'bigint').toBeTruthy(),
         expect(typeof consensusStatus.slotDuration === 'bigint').toBeTruthy(),
@@ -754,6 +879,9 @@ test('retrieves the consensus status from the node with correct types', async ()
         ).toBeTruthy(),
         expect(
             typeof consensusStatus.lastFinalizedBlockHeight === 'bigint'
+        ).toBeTruthy(),
+        expect(
+            typeof consensusStatus.protocolVersion === 'bigint'
         ).toBeTruthy(),
     ]);
 });

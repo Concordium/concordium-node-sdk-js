@@ -14,12 +14,15 @@ import {
 } from '../grpc/concordium_p2p_rpc_pb';
 import { serializeAccountTransactionForSubmission } from './serialization';
 import {
+    AccountBakerDetails,
     AccountEncryptedAmount,
     AccountInfo,
     AccountReleaseSchedule,
     AccountTransaction,
     AccountTransactionSignature,
     ArInfo,
+    BakerReduceStakePendingChange,
+    BakerRemovalPendingChange,
     BlockInfo,
     BlockSummary,
     ChainParameters,
@@ -158,14 +161,21 @@ export default class ConcordiumNodeClient {
             | keyof AccountEncryptedAmount
             | keyof AccountReleaseSchedule
             | keyof ReleaseSchedule
+            | keyof AccountBakerDetails
+            | keyof BakerReduceStakePendingChange
+            | keyof BakerRemovalPendingChange
         )[] = [
-            'accountAmount',
-            'accountNonce',
-            'accountIndex',
-            'startIndex',
-            'total',
-            'amount',
-        ];
+                'accountAmount',
+                'accountNonce',
+                'accountIndex',
+                'startIndex',
+                'total',
+                'amount',
+                'stakedAmount',
+                'bakerId',
+                'newStake',
+                'epoch',
+            ];
         return unwrapJsonResponse<AccountInfo>(
             response,
             buildJsonResponseReviver(datePropertyKeys, bigIntPropertyKeys),
@@ -266,23 +276,23 @@ export default class ConcordiumNodeClient {
             | keyof TransferredEvent
             | keyof ContractAddress
         )[] = [
-            'bakerId',
-            'weight',
-            'finalizationIndex',
-            'finalizationDelay',
-            'cost',
-            'energyCost',
-            'index',
-            'bakerCooldownEpochs',
-            'minimumThresholdForBaking',
-            'foundationAccountIndex',
-            'numerator',
-            'denominator',
-            'nextSequenceNumber',
-            'amount',
-            'index',
-            'subindex',
-        ];
+                'bakerId',
+                'weight',
+                'finalizationIndex',
+                'finalizationDelay',
+                'cost',
+                'energyCost',
+                'index',
+                'bakerCooldownEpochs',
+                'minimumThresholdForBaking',
+                'foundationAccountIndex',
+                'numerator',
+                'denominator',
+                'nextSequenceNumber',
+                'amount',
+                'index',
+                'subindex',
+            ];
 
         return unwrapJsonResponse<BlockSummary>(
             response,
@@ -337,7 +347,7 @@ export default class ConcordiumNodeClient {
         if (height <= 0n) {
             throw new Error(
                 'The block height has to be a positive integer, but it was: ' +
-                    height
+                height
             );
         }
         const blockHeight = new BlockHeight();
@@ -369,6 +379,7 @@ export default class ConcordiumNodeClient {
             'blockLastReceivedTime',
             'blockLastArrivedTime',
             'genesisTime',
+            'currentEraGenesisTime',
             'lastFinalizedTime',
         ];
         const bigIntPropertyKeys: (keyof ConsensusStatus)[] = [
@@ -379,6 +390,7 @@ export default class ConcordiumNodeClient {
             'finalizationCount',
             'blocksVerifiedCount',
             'blocksReceivedCount',
+            'protocolVersion',
         ];
 
         const consensusStatus = unwrapJsonResponse<ConsensusStatus>(

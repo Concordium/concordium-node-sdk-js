@@ -393,6 +393,7 @@ export interface BlockInfo {
 export interface ConsensusStatus {
     bestBlock: string;
     genesisBlock: string;
+    currentEraGenesisBlock: string;
     lastFinalizedBlock: string;
 
     epochDuration: bigint;
@@ -423,9 +424,14 @@ export interface ConsensusStatus {
     finalizationPeriodEMSD?: number;
 
     genesisTime: Date;
+    currentEraGenesisTime: Date;
     blockLastReceivedTime?: Date;
     blockLastArrivedTime?: Date;
     lastFinalizedTime?: Date;
+
+    genesisIndex: number;
+
+    protocolVersion: bigint;
 }
 
 export interface CryptographicParameters {
@@ -517,6 +523,31 @@ export interface InitialAccountCredential {
     contents: InitialCredentialDeploymentValues;
 }
 
+export interface BakerReduceStakePendingChange {
+    change: 'ReduceStake';
+    newStake: bigint;
+    epoch: bigint;
+}
+
+export interface BakerRemovalPendingChange {
+    change: 'RemoveBaker';
+    epoch: bigint;
+}
+
+export type BakerPendingChange =
+    | BakerReduceStakePendingChange
+    | BakerRemovalPendingChange;
+
+export interface AccountBakerDetails {
+    restakeEarnings: boolean;
+    bakerId: bigint;
+    bakerAggregationVerifyKey: string;
+    bakerElectionVerifyKey: string;
+    bakerSignatureVerifyKey: string;
+    stakedAmount: bigint;
+    pendingChange?: BakerPendingChange;
+}
+
 export interface AccountInfo {
     accountNonce: bigint;
     accountAmount: bigint;
@@ -533,6 +564,8 @@ export interface AccountInfo {
         number,
         Versioned<InitialAccountCredential | NormalAccountCredential>
     >;
+
+    accountBaker?: AccountBakerDetails;
 }
 
 export interface Description {

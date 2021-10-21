@@ -1,4 +1,5 @@
 import {
+    BakerReduceStakePendingChange,
     ConsensusStatus,
     instanceOfTransferWithMemoTransactionSummary,
     NormalAccountCredential,
@@ -386,6 +387,51 @@ test('account info with a release schedule', async () => {
     }
 });
 
+test('account info with a baker details', async () => {
+    const accountAddress = new AccountAddress(
+        '3V1LSu3AZ6o45xcjqRr3PzviUQUfK2tXq2oFnaHgDbY8Ledu2Z'
+    );
+    const blockHash =
+        'ea36dbed9348de67fc977ee9e637d208b6d1808490a6698327504f5d1ec7315c';
+
+    const accountInfo = await client.getAccountInfo(accountAddress, blockHash);
+
+    if (!accountInfo) {
+        throw new Error('Test failed to find account info');
+    }
+
+    const bakerDetails = accountInfo.accountBaker;
+
+    if (!bakerDetails) {
+        throw new Error('Account info doesnt contain baker details');
+    }
+
+    expect(bakerDetails.bakerId).toEqual(731n);
+    expect(bakerDetails.stakedAmount).toEqual(14500000000n);
+    expect(bakerDetails.restakeEarnings).toEqual(true);
+    expect(bakerDetails.bakerElectionVerifyKey).toEqual(
+        'f0b48a386b01784f95d0e82911932b8ffbea2ceec9654a58dcc226bfe813a668'
+    );
+    expect(bakerDetails.bakerSignatureVerifyKey).toEqual(
+        'f31632d93b3e7085b9060216175ead4496a1e9f477325aa8817dc8c0d533cfd0'
+    );
+    expect(bakerDetails.bakerAggregationVerifyKey).toEqual(
+        '803255d7c861d1a9ec8d810eeac40d11cae9e588e613de008786f3d143a6c573f99b5014bf9590064583a67d5b3283870163c7655f1dd61d0313d9283dc98513c221013f2f8109c392c7d2a9cd70950dd18ad477652d294f6ae2a499f3243793'
+    );
+
+    const pendingChange = bakerDetails.pendingChange;
+
+    if (!pendingChange) {
+        throw new Error('Baker details doesnt contain pending change');
+    }
+
+    expect(pendingChange.change).toEqual('ReduceStake');
+    expect((pendingChange as BakerReduceStakePendingChange).newStake).toEqual(
+        14000000000n
+    );
+    expect(pendingChange.epoch).toEqual(838n);
+});
+
 test('retrieves the account info', async () => {
     const accountAddress = new AccountAddress(
         '3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU'
@@ -715,6 +761,7 @@ test('retrieves the consensus status from the node with correct types', async ()
         expect(consensusStatus.blockLastReceivedTime).toBeInstanceOf(Date),
         expect(consensusStatus.genesisTime).toBeInstanceOf(Date),
         expect(consensusStatus.lastFinalizedTime).toBeInstanceOf(Date),
+        expect(consensusStatus.currentEraGenesisTime).toBeInstanceOf(Date),
 
         expect(
             Number.isNaN(consensusStatus.blockArriveLatencyEMSD)
@@ -743,6 +790,7 @@ test('retrieves the consensus status from the node with correct types', async ()
         expect(
             Number.isNaN(consensusStatus.finalizationPeriodEMSD)
         ).toBeFalsy(),
+        expect(Number.isNaN(consensusStatus.genesisIndex)).toBeFalsy(),
 
         expect(typeof consensusStatus.epochDuration === 'bigint').toBeTruthy(),
         expect(typeof consensusStatus.slotDuration === 'bigint').toBeTruthy(),
@@ -751,6 +799,9 @@ test('retrieves the consensus status from the node with correct types', async ()
         ).toBeTruthy(),
         expect(
             typeof consensusStatus.lastFinalizedBlockHeight === 'bigint'
+        ).toBeTruthy(),
+        expect(
+            typeof consensusStatus.protocolVersion === 'bigint'
         ).toBeTruthy(),
     ]);
 });

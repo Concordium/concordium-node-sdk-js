@@ -434,6 +434,12 @@ export interface ConsensusStatus {
     protocolVersion: bigint;
 }
 
+export interface CryptographicParameters {
+    onChainCommitmentKey: string;
+    bulletproofGenerators: string;
+    genesisString: string;
+}
+
 export interface NextAccountNonce {
     nonce: bigint;
     allFinal: boolean;
@@ -560,6 +566,25 @@ export interface AccountInfo {
     >;
 
     accountBaker?: AccountBakerDetails;
+}
+
+export interface Description {
+    name: string;
+    url: string;
+    description: string;
+}
+
+export interface IpInfo {
+    ipIdentity: number;
+    ipDescription: Description;
+    ipVerifyKey: string;
+    ipCdiVerifyKey: string;
+}
+
+export interface ArInfo {
+    arIdentity: number;
+    arDescription: Description;
+    arPublicKey: string;
 }
 
 export enum BlockItemKind {

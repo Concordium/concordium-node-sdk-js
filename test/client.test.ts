@@ -8,6 +8,9 @@ import {
 import { AccountAddress } from '../src/types/accountAddress';
 import { isHex } from '../src/util';
 import { isValidDate, getNodeClient } from './testHelpers';
+import { bulletProofGenerators } from './resources/bulletproofgenerators';
+import { ipVerifyKey1, ipVerifyKey2 } from './resources/ipVerifyKeys';
+import { PeerElement } from '../grpc/concordium_p2p_rpc_pb';
 
 const client = getNodeClient();
 
@@ -880,5 +883,160 @@ test('retrieves the consensus status from the node with correct types', async ()
         expect(
             typeof consensusStatus.protocolVersion === 'bigint'
         ).toBeTruthy(),
+    ]);
+});
+
+test('cryptographic parameters are retrieved at the given block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749';
+    const cryptographicParameters = await client.getCryptographicParameters(
+        blockHash
+    );
+
+    if (!cryptographicParameters) {
+        throw new Error('Test was unable to get cryptographic parameters');
+    }
+
+    return Promise.all([
+        expect(cryptographicParameters.value.genesisString).toEqual(
+            'Concordium Testnet Version 5'
+        ),
+        expect(cryptographicParameters.value.onChainCommitmentKey).toEqual(
+            'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a8d45e64b6f917c540eee16c970c3d4b7f3caf48a7746284878e2ace21c82ea44bf84609834625be1f309988ac523fac'
+        ),
+        expect(cryptographicParameters.value.bulletproofGenerators).toEqual(
+            bulletProofGenerators
+        ),
+    ]);
+});
+
+test('cryptographic parameters are undefined at unknown block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749';
+    const cryptographicParameters = await client.getCryptographicParameters(
+        blockHash
+    );
+
+    return expect(cryptographicParameters).toBeUndefined();
+});
+
+test('peer list can be retrieved', async () => {
+    const peerList = await client.getPeerList(false);
+    const peersList = peerList.getPeersList();
+    const peer = peersList[0];
+
+    return Promise.all([
+        expect(typeof peer.getIp === 'string'),
+        expect(typeof peer.getPort === 'number'),
+        expect(typeof peer.getNodeId === 'string'),
+        expect(typeof peer.getJsPbMessageId === 'string'),
+        expect(
+            [
+                PeerElement.CatchupStatus.UPTODATE,
+                PeerElement.CatchupStatus.PENDING,
+                PeerElement.CatchupStatus.CATCHINGUP,
+            ].includes(peer.getCatchupStatus())
+        ),
+    ]);
+});
+
+test('identity providers are undefined at an unknown block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749';
+    const identityProviders = await client.getIdentityProviders(blockHash);
+    return expect(identityProviders).toBeUndefined();
+});
+
+test('identity providers are retrieved at the given block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749';
+    const identityProviders = await client.getIdentityProviders(blockHash);
+
+    if (!identityProviders) {
+        throw new Error('Test was unable to get identity providers');
+    }
+
+    const concordiumTestIp = identityProviders[0];
+    const notabeneTestIp = identityProviders[1];
+
+    return Promise.all([
+        expect(concordiumTestIp.ipIdentity).toEqual(0),
+        expect(concordiumTestIp.ipDescription.name).toEqual(
+            'Concordium testnet IP'
+        ),
+        expect(concordiumTestIp.ipDescription.url).toEqual(''),
+        expect(concordiumTestIp.ipDescription.description).toEqual(
+            'Concordium testnet identity provider'
+        ),
+        expect(concordiumTestIp.ipCdiVerifyKey).toEqual(
+            '2e1cff3988174c379432c1fad7ccfc385c897c4477c06617262cec7193226eca'
+        ),
+        expect(concordiumTestIp.ipVerifyKey).toEqual(ipVerifyKey1),
+
+        expect(notabeneTestIp.ipIdentity).toEqual(1),
+        expect(notabeneTestIp.ipDescription.name).toEqual('Notabene (Staging)'),
+        expect(notabeneTestIp.ipDescription.url).toEqual(
+            'https://notabene.studio'
+        ),
+        expect(notabeneTestIp.ipDescription.description).toEqual(
+            'Notabene Identity Issuer (Staging Service)'
+        ),
+        expect(notabeneTestIp.ipCdiVerifyKey).toEqual(
+            '4810d66439a25d9b345cf5c7ac11f9e512548c278542d9b24dc73541626d6197'
+        ),
+        expect(notabeneTestIp.ipVerifyKey).toEqual(ipVerifyKey2),
+    ]);
+});
+
+test('anonymity revokers are undefined at an unknown block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749';
+    const anonymityRevokers = await client.getAnonymityRevokers(blockHash);
+    return expect(anonymityRevokers).toBeUndefined();
+});
+
+test('anonymity revokers are retrieved at the given block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749';
+    const anonymityRevokers = await client.getAnonymityRevokers(blockHash);
+
+    if (!anonymityRevokers) {
+        throw new Error('Test could not find anonymity revokers');
+    }
+
+    const ar1 = anonymityRevokers[0];
+    const ar2 = anonymityRevokers[1];
+    const ar3 = anonymityRevokers[2];
+
+    return Promise.all([
+        expect(ar1.arIdentity).toEqual(1),
+        expect(ar1.arDescription.name).toEqual('Testnet AR 1'),
+        expect(ar1.arDescription.url).toEqual(''),
+        expect(ar1.arDescription.description).toEqual(
+            'Testnet anonymity revoker 1'
+        ),
+        expect(ar1.arPublicKey).toEqual(
+            'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c58ed5281b5d117cb74068a5deef28f027c9055dd424b07043568ac040a4e51f3307f268a77eaebc36bd4bf7cdbbe238b8'
+        ),
+
+        expect(ar2.arIdentity).toEqual(2),
+        expect(ar2.arDescription.name).toEqual('Testnet AR 2'),
+        expect(ar2.arDescription.url).toEqual(''),
+        expect(ar2.arDescription.description).toEqual(
+            'Testnet anonymity revoker 2'
+        ),
+        expect(ar2.arPublicKey).toEqual(
+            'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5aefb2334688a2ecc95e7c49e9ccbc7218b5c9e151ac22462d064f564ffa56bb8b3685fcdc8d7d8cb43f43d608e7e8515'
+        ),
+
+        expect(ar3.arIdentity).toEqual(3),
+        expect(ar3.arDescription.name).toEqual('Testnet AR 3'),
+        expect(ar3.arDescription.url).toEqual(''),
+        expect(ar3.arDescription.description).toEqual(
+            'Testnet anonymity revoker 3'
+        ),
+        expect(ar3.arPublicKey).toEqual(
+            'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a791a28a6d3e7ca0857c0f996f94e65da78b8d9b5de5e32164e291e553ed103bf14d6fab1f21749d59664e34813afe77'
+        ),
     ]);
 });

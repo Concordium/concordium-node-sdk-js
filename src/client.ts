@@ -7,23 +7,31 @@ import {
     BlockHeight,
     Empty,
     GetAddressInfoRequest,
+    PeerListResponse,
+    PeersRequest,
     SendTransactionRequest,
     TransactionHash,
 } from '../grpc/concordium_p2p_rpc_pb';
 import { serializeAccountTransactionForSubmission } from './serialization';
 import {
+    AccountBakerDetails,
     AccountEncryptedAmount,
     AccountInfo,
     AccountReleaseSchedule,
     AccountTransaction,
     AccountTransactionSignature,
+    ArInfo,
+    BakerReduceStakePendingChange,
+    BakerRemovalPendingChange,
     BlockInfo,
     BlockSummary,
     ChainParameters,
     ConsensusStatus,
     ContractAddress,
+    CryptographicParameters,
     ExchangeRate,
     FinalizationData,
+    IpInfo,
     KeysWithThreshold,
     NextAccountNonce,
     PartyInfo,
@@ -32,9 +40,7 @@ import {
     TransactionSummary,
     TransferredEvent,
     UpdateQueue,
-    AccountBakerDetails,
-    BakerReduceStakePendingChange,
-    BakerRemovalPendingChange,
+    Versioned,
 } from './types';
 import {
     buildJsonResponseReviver,
@@ -400,6 +406,82 @@ export default class ConcordiumNodeClient {
         }
 
         return consensusStatus;
+    }
+
+    /**
+     * Retrieves the global cryptographic parameters on the blockchain at
+     * the provided block.
+     * @param blockHash the block to get the cryptographic parameters at
+     * @returns the global cryptographic parameters at the given block, or undefined it the block does not exist.
+     */
+    async getCryptographicParameters(
+        blockHash: string
+    ): Promise<Versioned<CryptographicParameters> | undefined> {
+        if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+
+        const blockHashObject = new BlockHash();
+        blockHashObject.setBlockHash(blockHash);
+        const response = await this.sendRequest(
+            this.client.getCryptographicParameters,
+            blockHashObject
+        );
+
+        return unwrapJsonResponse<
+            Versioned<CryptographicParameters> | undefined
+        >(response);
+    }
+
+    /**
+     * Retrieves a list of the node's peers and connection information related to them.
+     * @param includeBootstrappers whether or not any bootstrapper nodes should be included in the list
+     * @returns a list of the node's peers and connection information related to them
+     */
+    async getPeerList(
+        includeBootstrappers: boolean
+    ): Promise<PeerListResponse> {
+        const peersRequest = new PeersRequest();
+        peersRequest.setIncludeBootstrappers(includeBootstrappers);
+        const response = await this.sendRequest(
+            this.client.peerList,
+            peersRequest
+        );
+        return PeerListResponse.deserializeBinary(response);
+    }
+
+    /**
+     * Retrieves the list of identity providers at the provided blockhash.
+     * @param blockHash the block to get the identity providers at
+     * @returns the list of identity providers at the given block
+     */
+    async getIdentityProviders(
+        blockHash: string
+    ): Promise<IpInfo[] | undefined> {
+        const blockHashObject = new BlockHash();
+        blockHashObject.setBlockHash(blockHash);
+        const response = await this.sendRequest(
+            this.client.getIdentityProviders,
+            blockHashObject
+        );
+        return unwrapJsonResponse<IpInfo[]>(response);
+    }
+
+    /**
+     * Retrieves the list of anonymity revokers at the provided blockhash.
+     * @param blockHash the block to get the anonymity revokers at
+     * @returns the list of anonymity revokers at the given block
+     */
+    async getAnonymityRevokers(
+        blockHash: string
+    ): Promise<ArInfo[] | undefined> {
+        const blockHashObject = new BlockHash();
+        blockHashObject.setBlockHash(blockHash);
+        const response = await this.sendRequest(
+            this.client.getAnonymityRevokers,
+            blockHashObject
+        );
+        return unwrapJsonResponse<ArInfo[]>(response);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

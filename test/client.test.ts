@@ -387,7 +387,84 @@ test('account info with a release schedule', async () => {
     }
 });
 
-test('account info with a baker details', async () => {
+test('account info with baker details, and with no pending change', async () => {
+    const accountAddress = new AccountAddress(
+        '4KTnZ9WKrmoP546aQ6w7KC3DtbiykRbY4thixK3y7BSSC87zpN'
+    );
+    const blockHash =
+        '2c3de8a501cd810e35980e2ba783e84ab59f1927ec4d75ad224d23f142ba1e4c';
+
+    const accountInfo = await client.getAccountInfo(accountAddress, blockHash);
+
+    if (!accountInfo) {
+        throw new Error('Test failed to find account info');
+    }
+
+    const bakerDetails = accountInfo.accountBaker;
+
+    if (!bakerDetails) {
+        throw new Error('Account info doesnt contain baker details');
+    }
+
+    expect(bakerDetails.bakerId).toEqual(743n);
+    expect(bakerDetails.stakedAmount).toEqual(15000000000n);
+    expect(bakerDetails.restakeEarnings).toEqual(true);
+    expect(bakerDetails.bakerElectionVerifyKey).toEqual(
+        'f5be66dfeb83d962a0c386f65a2811a4cea4ab90dbbced3a6f52ff5c1942beee'
+    );
+    expect(bakerDetails.bakerSignatureVerifyKey).toEqual(
+        'b7c33d2693a297a16e177368ade84f5edbba9567361a46c92ad4cf0176783440'
+    );
+    expect(bakerDetails.bakerAggregationVerifyKey).toEqual(
+        '8e0e236fdd71b2653e1c22c65ddaee7d867c31d69b0b173626b0caf291522c3e829c39b6d8d6cfcfd18ddaf90fa67ae9026114b7640842824eb495f9e51c2ee4ef5a93f84fa1c8fd2b3105333bbae31576f77137fd53e5d709ee5da00446e6a9'
+    );
+
+    expect(bakerDetails.pendingChange).toBeUndefined();
+});
+
+test('account info with baker details, and with a pending baker removal', async () => {
+    const accountAddress = new AccountAddress(
+        '4KTnZ9WKrmoP546aQ6w7KC3DtbiykRbY4thixK3y7BSSC87zpN'
+    );
+    const blockHash =
+        '57d69d8d53f406ddbd6aa31fa1e33231eebf4afb600de3ce698987983811a1c2';
+
+    const accountInfo = await client.getAccountInfo(accountAddress, blockHash);
+
+    if (!accountInfo) {
+        throw new Error('Test failed to find account info');
+    }
+
+    const bakerDetails = accountInfo.accountBaker;
+
+    if (!bakerDetails) {
+        throw new Error('Account info doesnt contain baker details');
+    }
+
+    expect(bakerDetails.bakerId).toEqual(743n);
+    expect(bakerDetails.stakedAmount).toEqual(15000000000n);
+    expect(bakerDetails.restakeEarnings).toEqual(true);
+    expect(bakerDetails.bakerElectionVerifyKey).toEqual(
+        'f5be66dfeb83d962a0c386f65a2811a4cea4ab90dbbced3a6f52ff5c1942beee'
+    );
+    expect(bakerDetails.bakerSignatureVerifyKey).toEqual(
+        'b7c33d2693a297a16e177368ade84f5edbba9567361a46c92ad4cf0176783440'
+    );
+    expect(bakerDetails.bakerAggregationVerifyKey).toEqual(
+        '8e0e236fdd71b2653e1c22c65ddaee7d867c31d69b0b173626b0caf291522c3e829c39b6d8d6cfcfd18ddaf90fa67ae9026114b7640842824eb495f9e51c2ee4ef5a93f84fa1c8fd2b3105333bbae31576f77137fd53e5d709ee5da00446e6a9'
+    );
+
+    const pendingChange = bakerDetails.pendingChange;
+
+    if (!pendingChange) {
+        throw new Error('Baker details doesnt contain pending change');
+    }
+
+    expect(pendingChange.change).toEqual('RemoveBaker');
+    expect(pendingChange.epoch).toEqual(334n);
+});
+
+test('account info with baker details, and with a pending stake reduction', async () => {
     const accountAddress = new AccountAddress(
         '3V1LSu3AZ6o45xcjqRr3PzviUQUfK2tXq2oFnaHgDbY8Ledu2Z'
     );

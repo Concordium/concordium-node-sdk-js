@@ -7,6 +7,8 @@ import {
     BlockHeight,
     Empty,
     GetAddressInfoRequest,
+    PeerListResponse,
+    PeersRequest,
     SendTransactionRequest,
     TransactionHash,
 } from '../grpc/concordium_p2p_rpc_pb';
@@ -415,6 +417,23 @@ export default class ConcordiumNodeClient {
         return unwrapJsonResponse<
             Versioned<CryptographicParameters> | undefined
         >(response);
+    }
+
+    /**
+     * Retrieves a list of the node's peers and connection information related to them.
+     * @param includeBootstrappers whether or not any bootstrapper nodes should be included in the list
+     * @returns a list of the node's peers and connection information related to them
+     */
+    async getPeerList(
+        includeBootstrappers: boolean
+    ): Promise<PeerListResponse> {
+        const peersRequest = new PeersRequest();
+        peersRequest.setIncludeBootstrappers(includeBootstrappers);
+        const response = await this.sendRequest(
+            this.client.peerList,
+            peersRequest
+        );
+        return PeerListResponse.deserializeBinary(response);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

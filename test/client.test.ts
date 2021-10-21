@@ -8,6 +8,7 @@ import { AccountAddress } from '../src/types/accountAddress';
 import { isHex } from '../src/util';
 import { isValidDate, getNodeClient } from './testHelpers';
 import { bulletProofGenerators } from './resources/bulletproofgenerators';
+import { PeerElement } from '../grpc/concordium_p2p_rpc_pb';
 
 const client = getNodeClient();
 
@@ -788,4 +789,24 @@ test('cryptographic parameters are undefined at unknown block', async () => {
     );
 
     return expect(cryptographicParameters).toBeUndefined();
+});
+
+test('peer list can be retrieved', async () => {
+    const peerList = await client.getPeerList(false);
+    const peersList = peerList.getPeersList();
+    const peer = peersList[0];
+
+    return Promise.all([
+        expect(typeof peer.getIp === 'string'),
+        expect(typeof peer.getPort === 'number'),
+        expect(typeof peer.getNodeId === 'string'),
+        expect(typeof peer.getJsPbMessageId === 'string'),
+        expect(
+            [
+                PeerElement.CatchupStatus.UPTODATE,
+                PeerElement.CatchupStatus.PENDING,
+                PeerElement.CatchupStatus.CATCHINGUP,
+            ].includes(peer.getCatchupStatus())
+        ),
+    ]);
 });

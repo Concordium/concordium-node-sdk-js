@@ -207,6 +207,41 @@ const bestBlock = consensusStatus.bestBlock;
 ...
 ```
 
+## getCryptographicParameters
+Retrieves the global cryptographic parameters for the blockchain at a specific block.
+These are a required input for e.g. creating credentials.
+```js
+const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749"
+const cryptographicParameters = await client.getCryptographicParameters(blockHash);
+...
+```
+
+## getIdentityProviders
+Retrieves the list of identity providers at a specific block.
+```js
+const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
+const identityProviders = await client.getIdentityProviders(blockHash);
+...
+```
+
+## getAnonymityRevokers
+Retrieves the list of anonymity revokers at a specific block.
+```js
+const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
+const identityProviders = await client.getAnonymityRevokers(blockHash);
+...
+```
+
+## getPeerList
+Retrieves the list of peers that the node is connected to, including some
+connection information about them. A boolean parameter determines if this 
+should include bootstrapper nodes or not.
+```js
+const peerListResponse = await client.getPeerList(false);
+const peersList = peerListResponse.getPeersList();
+...
+```
+
 ## Check block for transfers with memo
 The following example demonstrates how to check and parse a block 
 for transfers with a memo.

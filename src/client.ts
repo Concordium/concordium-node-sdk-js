@@ -165,17 +165,17 @@ export default class ConcordiumNodeClient {
             | keyof BakerReduceStakePendingChange
             | keyof BakerRemovalPendingChange
         )[] = [
-                'accountAmount',
-                'accountNonce',
-                'accountIndex',
-                'startIndex',
-                'total',
-                'amount',
-                'stakedAmount',
-                'bakerId',
-                'newStake',
-                'epoch',
-            ];
+            'accountAmount',
+            'accountNonce',
+            'accountIndex',
+            'startIndex',
+            'total',
+            'amount',
+            'stakedAmount',
+            'bakerId',
+            'newStake',
+            'epoch',
+        ];
         return unwrapJsonResponse<AccountInfo>(
             response,
             buildJsonResponseReviver(datePropertyKeys, bigIntPropertyKeys),
@@ -276,23 +276,23 @@ export default class ConcordiumNodeClient {
             | keyof TransferredEvent
             | keyof ContractAddress
         )[] = [
-                'bakerId',
-                'weight',
-                'finalizationIndex',
-                'finalizationDelay',
-                'cost',
-                'energyCost',
-                'index',
-                'bakerCooldownEpochs',
-                'minimumThresholdForBaking',
-                'foundationAccountIndex',
-                'numerator',
-                'denominator',
-                'nextSequenceNumber',
-                'amount',
-                'index',
-                'subindex',
-            ];
+            'bakerId',
+            'weight',
+            'finalizationIndex',
+            'finalizationDelay',
+            'cost',
+            'energyCost',
+            'index',
+            'bakerCooldownEpochs',
+            'minimumThresholdForBaking',
+            'foundationAccountIndex',
+            'numerator',
+            'denominator',
+            'nextSequenceNumber',
+            'amount',
+            'index',
+            'subindex',
+        ];
 
         return unwrapJsonResponse<BlockSummary>(
             response,
@@ -347,7 +347,7 @@ export default class ConcordiumNodeClient {
         if (height <= 0n) {
             throw new Error(
                 'The block height has to be a positive integer, but it was: ' +
-                height
+                    height
             );
         }
         const blockHeight = new BlockHeight();

@@ -49,6 +49,7 @@ import {
     unwrapBoolResponse,
     unwrapJsonResponse,
 } from './util';
+import { InstanceInfo, Instances } from '.';
 
 /**
  * A concordium-node specific gRPC client wrapper.
@@ -482,6 +483,79 @@ export default class ConcordiumNodeClient {
             blockHashObject
         );
         return unwrapJsonResponse<ArInfo[]>(response);
+    }
+
+    /**
+     *
+     * @param accountAddress
+     * @returns
+     */
+    async GetAccountNonFinalizedTransactions(
+        accountAddress: Address
+    ): Promise<any | undefined> {
+        const accountAddressObject = new AccountAddress();
+        accountAddressObject.setAccountAddress(accountAddress.address);
+
+        const response = await this.sendRequest(
+            this.client.getAccountNonFinalizedTransactions,
+            accountAddressObject
+        );
+
+        const txsDetails = unwrapJsonResponse<string[]>(response);
+        if (!txsDetails) {
+            return [];
+        }
+        return txsDetails;
+    }
+
+    /**
+     * Retrieves the addresses of all smart contract instances.
+     * @param blockHash the block hash to get the smart contact instances at
+     * @returns a JSON list of contract addresses on the chain, i.e. [{"subindex":0,"index":0},{"subindex":0,"index":1}, ....]
+     */
+    async GetInstances(blockHash: string): Promise<Instances[] | undefined> {
+        if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+        const blockHashObject = new BlockHash();
+        blockHashObject.setBlockHash(blockHash);
+
+        const response = await this.sendRequest(
+            this.client.getInstances,
+            blockHashObject
+        );
+
+        return unwrapJsonResponse<Instances[]>(response);
+    }
+
+    /**
+     * Retrieve information about a given smart contract instance.
+     * @param blockHash the block hash to get the smart contact instances at
+     * @param address A null-terminated JSON-encoded value
+     * @returns A JSON object with information about the contract instance
+     */
+    async GetInstanceInfo(
+        blockHash: string,
+        address: Instances
+    ): Promise<InstanceInfo | undefined> {
+        if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+        const getAddressInfoRequest = new GetAddressInfoRequest();
+        getAddressInfoRequest.setAddress(JSON.stringify(address));
+        getAddressInfoRequest.setBlockHash(blockHash);
+
+        const response = await this.sendRequest(
+            this.client.getInstanceInfo,
+            getAddressInfoRequest
+        );
+
+        const bigIntPropertyKeys: (keyof InstanceInfo)[] = ['model', 'amount'];
+        return unwrapJsonResponse<InstanceInfo>(
+            response,
+            buildJsonResponseReviver([], bigIntPropertyKeys),
+            intToStringTransformer(bigIntPropertyKeys)
+        );
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

@@ -265,6 +265,231 @@ for (const transactionSummary of transactionSummaries) {
 }
 ```
 
+## Create a deploy module
+The following example demostrates how to create a deploy module.
+```js
+const header: AccountTransactionHeader = {
+    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+    nonce: nextAccountNonce.nonce,
+    sender: new AccountAddress(senderAccountAddress),
+};
+```
+The following code is to get the wasm file buffer which is one of the parameter
+for deploy module
+```js
+const wasmFileBuffer = getByteArray(wasmFilePath) as Buffer;
+```
+
+The following code is how to create the payload for deploy module
+```js
+const deployModule: DeployModulePayload = {
+    tag: ModuleTransactionType.DeployModule,
+    content: wasmFileBuffer,
+    length: wasmFileBuffer.length,
+    version: 0,
+} as DeployModulePayload;
+
+const deployModuleTransaction: AccountTransaction = {
+    header: header,
+    payload: deployModule as AccountTransactionPayload,
+    type: AccountTransactionType.DeployModule,
+};
+```
+
+## Deploy module
+The following example demostrates how to deploy a smart contract module. 
+See the previous section for how to create deploy module
+
+```js
+import * as ed from "noble-ed25519";
+
+let deployModuleTransaction: AccountTransaction;
+// Create the transaction
+// ...
+
+// Sign the transaction, the following is just an example, and any method for signing
+// with the key can be employed.
+const signingKey = '621de9198d274b56eace2f86eb134bfc414f5c566022f281335be0b2d45189845';
+const hashToSign = getAccountTransactionSignDigest(deployModuleTransaction);
+
+const signature = Buffer.from(
+        await ed.sign(hashToSign, signingKey)
+    ).toString('hex');
+
+// The signatures used to sign the transaction must be provided in a structured way,
+// so that each signature can be mapped to the credential that signed the transaction.
+// In this example we assume the key used was from the credential with index 0, and it
+// was the key with index 0.
+const signatures: AccountTransactionSignature = {
+    0: {
+        0: signature,
+    },
+};
+
+// Send the deploy module transaction to the node.
+const result = await client.sendAccountTransaction(
+        deployModuleTransaction,
+        signatures
+    );
+
+const transactionHash = await client.GetAccountNonFinalizedTransactions(
+        new AccountAddress(senderAccountAddress)
+    );
+    
+const transactionStatus = await client.getTransactionStatus(transactionHash);   
+```
+
+## Create Init contract module
+The following example demostrates how to create a init contract module.
+```js
+const header: AccountTransactionHeader = {
+    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+    nonce: nextAccountNonce.nonce,
+    sender: new AccountAddress(senderAccountAddress),
+};
+```
+The following code is how to create the payload for init contract module
+
+Name of init function including "init_" prefix and parameter for the init function.
+```js
+const initName = 'init_DCBBank'; 
+const params: ParamtersValue<any>[] = [];
+```
+
+```js
+const initModule: InitContractPayload = {
+    amount: new GtuAmount(0n),
+    moduleRef: new ModuleReference('a225a5aeb0a5cf9bbc59209e15df030e8cc2c17b8dba08c4bf59f80edaedd8b1'), //init module refernce which obtained after deploy smart contract
+    initName: initName,
+    parameter: params
+} as InitContractPayload;
+
+const initModuleTransaction: AccountTransaction = {
+    header: header,
+    payload: initModule,
+    type: AccountTransactionType.InitializeSmartContractInstance,
+};
+```
+
+## Init Contract module(parameterless smart contract)
+The following example demostrates how to initialize a smart contract module. 
+See the previous section for how to create init contract module
+
+```js
+import * as ed from "noble-ed25519";
+
+let initModuleTransaction: AccountTransaction;
+// Create the transaction
+// ...
+
+// Sign the transaction, the following is just an example, and any method for signing
+// with the key can be employed.
+const signingKey = '621de9198d274b56eace2f86eb134bfc414f5c566022f281335be0b2d45189845';
+const hashToSign = getAccountTransactionSignDigest(initModuleTransaction);
+
+const signature = Buffer.from(
+        await ed.sign(hashToSign, signingKey)
+    ).toString('hex');
+
+// The signatures used to sign the transaction must be provided in a structured way,
+// so that each signature can be mapped to the credential that signed the transaction.
+// In this example we assume the key used was from the credential with index 0, and it
+// was the key with index 0.
+const signatures: AccountTransactionSignature = {
+    0: {
+        0: signature,
+    },
+};
+
+// Send the init contract module transaction to the node.
+const result = await client.sendAccountTransaction(
+        initModuleTransaction,
+        signatures
+    );
+
+const transactionHash = await client.GetAccountNonFinalizedTransactions(
+        new AccountAddress(senderAccountAddress)
+    );
+    
+const transactionStatus = await client.getTransactionStatus(transactionHash);   
+```
+
+## Create update contract 
+The following example demostrates how to create a update contract.
+```js
+const header: AccountTransactionHeader = {
+    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+    nonce: nextAccountNonce.nonce,
+    sender: new AccountAddress(senderAccountAddress),
+};
+```
+The following code is how to create the payload for update contract
+
+Name of receive function including <contractName>. prefix. and parameter for the init function.Contract Address of contract instance consisting of an index and a subi
+```js
+const receiveName = 'DCBBank.insertAmount';
+const params: ParamtersValue<any>[] = [];
+```
+
+```js
+const updateModule: UpdateContractPayload =
+{
+    tag: ModuleTransactionType.Update,
+    amount: new GtuAmount(1000n),
+    contractAddress: { index: BigInt(83), subindex: BigInt(0) } as ContractAddress,
+    receiveName: receiveName,
+    parameter: []
+} as UpdateContractPayload;
+
+const updateContractTransaction: AccountTransaction = {
+    header: header,
+    payload: updateModule,
+    type: AccountTransactionType.UpdateSmartContractInstance,
+};
+```
+## Update Contract
+The following example demostrates how to update a smart contract. 
+See the previous section for how to create update contract
+
+```js
+import * as ed from "noble-ed25519";
+
+let initModuleTransaction: AccountTransaction;
+// Create the transaction
+// ...
+
+// Sign the transaction, the following is just an example, and any method for signing
+// with the key can be employed.
+const signingKey = '621de9198d274b56eace2f86eb134bfc414f5c566022f281335be0b2d45189845';
+const hashToSign = getAccountTransactionSignDigest(initModuleTransaction);
+
+const signature = Buffer.from(
+        await ed.sign(hashToSign, signingKey)
+    ).toString('hex');
+
+// The signatures used to sign the transaction must be provided in a structured way,
+// so that each signature can be mapped to the credential that signed the transaction.
+// In this example we assume the key used was from the credential with index 0, and it
+// was the key with index 0.
+const signatures: AccountTransactionSignature = {
+    0: {
+        0: signature,
+    },
+};
+
+// Send the update contract transaction to the node.
+const result = await client.sendAccountTransaction(
+        updateContractTransaction,
+        signatures
+);
+
+const transactionHash = await client.GetAccountNonFinalizedTransactions(
+        new AccountAddress(senderAccountAddress)
+);
+    
+const transactionStatus = await client.getTransactionStatus(transactionHash);   
+```
+
 # Build
 
 ## Building for a release

@@ -2,6 +2,8 @@ import { AccountAddress } from './types/accountAddress';
 import { GtuAmount } from './types/gtuAmount';
 import { Memo } from './types/Memo';
 import { TransactionExpiry } from './types/transactionExpiry';
+import { Buffer } from 'buffer/';
+import { ModuleReference } from './types/moduleReference';
 
 /**
  * A reward fraction with a resolution of 1/100000, i.e. the
@@ -620,6 +622,74 @@ export enum AccountTransactionType {
     TransferWithScheduleWithMemo = 24,
 }
 
+export enum ModuleTransactionType {
+    DeployModule = 0,
+    InitContract = 1,
+    Update = 2,
+}
+
+export interface BasicPayload {
+    /**
+     * Relevant tag values:
+     *       0 for DeployModule,
+     *       1 for InitContract,
+     *       2 for Update
+     */
+    tag: ModuleTransactionType;
+}
+
+export interface ModuleTransaction extends BasicPayload {
+    content:
+        | DeployModulePayload
+        | InitContractPayload
+        | UpdateContractPayload
+        | any;
+}
+
+export interface DeployModulePayload extends BasicPayload {
+    /** Version of the wasm module */
+    version: number;
+
+    /** Length of the wasm module */
+    length: number;
+
+    /** Wasm module to be deployed */
+    content: Buffer;
+}
+
+export interface InitContractPayload extends BasicPayload {
+    /** µGTU amount to transfer */
+    amount: GtuAmount;
+
+    /** Hash of the module on chain */
+    moduleRef: ModuleReference;
+
+    /** Name of init function including */
+    initName: string;
+
+    /** Parameters for the init function */
+    parameter: ParamtersValue<any>[];
+}
+
+export interface UpdateContractPayload extends BasicPayload {
+    /** µGTU amount to transfer */
+    amount: GtuAmount;
+
+    /** Address of contract instance consisting of an index and a subindex */
+    contractAddress: ContractAddress;
+
+    /** Name of receive function including <contractName>. prefix */
+    receiveName: string;
+
+    /** Parameters for the init function */
+    parameter: ParamtersValue<any>[];
+}
+
+export interface ParamtersValue<T> {
+    type: Type;
+    value: T;
+}
+
 export interface AccountTransactionHeader {
     /** account address that is source of this transaction */
     sender: AccountAddress;
@@ -649,12 +719,59 @@ export interface SimpleTransferWithMemoPayload extends SimpleTransferPayload {
 
 export type AccountTransactionPayload =
     | SimpleTransferPayload
-    | SimpleTransferWithMemoPayload;
+    | SimpleTransferWithMemoPayload
+    | DeployModulePayload
+    | InitContractPayload
+    | UpdateContractPayload;
 
 export interface AccountTransaction {
     type: AccountTransactionType;
     header: AccountTransactionHeader;
     payload: AccountTransactionPayload;
+}
+
+export enum Type {
+    Unit = 'Unit',
+    Bool = 'Bool',
+    U8 = 'U8',
+    u16 = 'U16',
+    U32 = 'U32',
+    U64 = 'U64',
+    U128 = 'U128',
+    I8 = 'I8',
+    I16 = 'I16',
+    I32 = 'I32',
+    I64 = 'I64',
+    I128 = 'I128',
+    Amount = 'Amount',
+    AccountAddress = 'AccountAddress',
+    ContractAddress = 'ContractAddress',
+    Timestamp = 'Timestamp',
+    Duration = 'Duration',
+    Pair = 'Pair',
+    List = 'List',
+    Set = 'Set',
+    Map = 'Map',
+    Array = 'Array',
+    Struct = 'Struct',
+    Enum = 'Enum(List (String, Fields))',
+    String = 'String(SizeLength)',
+    ContractName = 'ContractName(SizeLength)',
+    ReceiveName = 'ReceiveName(SizeLength)',
+}
+
+export interface Instances {
+    subindex: number;
+    index: number;
+}
+
+export interface InstanceInfo {
+    amount: bigint;
+    sourceModule: string;
+    owner: string;
+    methods: string[];
+    name: string;
+    model: bigint;
 }
 
 export type CredentialSignature = Record<number, string>;

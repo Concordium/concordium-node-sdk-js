@@ -172,13 +172,14 @@ export function getAccountTransactionSignDigest(
         BigInt(serializedPayload.length + 1),
         baseEnergyCost
     );
+    const serializedHeader = serializeAccountTransactionHeader(
+        accountTransaction.header,
+        serializedPayload.length + 1,
+        energyCost
+    );
 
     return sha256([
-        serializeAccountTransactionHeader(
-            accountTransaction.header,
-            serializedPayload.length + 1,
-            energyCost
-        ),
+        serializedHeader,
         serializeAccountTransactionType(accountTransaction.type),
         serializedPayload,
     ]);

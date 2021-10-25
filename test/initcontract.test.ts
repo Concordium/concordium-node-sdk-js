@@ -18,6 +18,7 @@ const client = getNodeClient();
 const senderAccountAddress =
     '3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5';
 
+// test case for init contract
 test('init contract', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
         new AccountAddress(senderAccountAddress)

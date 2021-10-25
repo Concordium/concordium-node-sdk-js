@@ -1,7 +1,7 @@
 import { getNodeClient } from './testHelpers';
 const client = getNodeClient();
 
-//test getInstanceInfo
+// test getInstanceInfo
 test('retrieve information about a given smart contract instance', async () => {
     const blockHash =
         '6b01f2043d5621192480f4223644ef659dd5cda1e54a78fc64ad642587c73def';

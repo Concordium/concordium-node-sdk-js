@@ -30,6 +30,7 @@ function getByteArray(filePath: string): Buffer {
 
 const wasmFilePath =
     '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/ind-bank/target/concordium/wasm32-unknown-unknown/release/d_bank.wasm';
+// test case for deploy contract
 test('deploy contract', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
         new AccountAddress(senderAccountAddress)

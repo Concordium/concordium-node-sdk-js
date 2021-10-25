@@ -51,7 +51,7 @@
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
-        "build": "tsc && cp -r ./grpc/ ./lib/grpc/"
+        "build": "tsc && cp -r ./grpc/ ./lib/ && cp -r ./pkg/ ./lib/"
     },
     "dependencies": {
         "@grpc/grpc-js": "^1.3.4",

@@ -6,6 +6,7 @@ node_modules
 
 # Compiled files
 lib
+target
 
 # Auto generate files from the gRPC proto file
 grpc

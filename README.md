@@ -109,6 +109,13 @@ const transactionHash = getAccountTransactionHash(accountTransaction, signatures
 const transactionStatus = await client.getTransactionStatus(transactionHash);
 ```
 
+## Create a new account
+The following example demonstrates how to create a new account on an existing
+identity. 
+
+```js
+
+```
 
 ## getAccountInfo
 Retrieves information about an account. If no account exists with the provided address, then the node

@@ -97,6 +97,17 @@ export default class ConcordiumNodeClient {
         this.client = new P2PClient(`${address}:${port}`, credentials, options);
     }
 
+    async sendTransaction(serializedBlob: Buffer) {
+        const sendTransactionRequest = new SendTransactionRequest();
+        sendTransactionRequest.setNetworkId(100);
+        sendTransactionRequest.setPayload(Uint8Array.from(serializedBlob));
+        const response = await this.sendRequest(
+            this.client.sendTransaction,
+            sendTransactionRequest
+        );
+        return unwrapBoolResponse(response);
+    }
+
     /**
      * Serializes and sends an account transaction to the node to be
      * put in a block on the chain.

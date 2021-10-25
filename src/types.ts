@@ -659,3 +659,33 @@ export interface AccountTransaction {
 
 export type CredentialSignature = Record<number, string>;
 export type AccountTransactionSignature = Record<number, CredentialSignature>;
+
+export interface IdOwnershipProofs {
+    challenge: string;
+    commitments: string;
+    credCounterLessThanMaxAccounts: string;
+    proofIdCredPub: Record<string, string>;
+    proofIpSig: string;
+    proofRegId: string;
+    sig: string;
+}
+
+export interface UnsignedCredentialDeploymentInformation
+    extends CredentialDeploymentValues {
+    proofs: IdOwnershipProofs;
+}
+
+type AttributesRandomness = Record<AttributeKey, string>;
+
+export interface CommitmentsRandomness {
+    idCredSecRand: string;
+    prfRand: string;
+    credCounterRand: string;
+    maxAccountsRand: string;
+    attributesRand: AttributesRandomness;
+}
+
+export interface WithRandomness<Info> {
+    cdi: Info;
+    randomness: CommitmentsRandomness;
+}

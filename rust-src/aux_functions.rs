@@ -1,7 +1,4 @@
-use crate::{
-    helpers::*,
-    types::*,
-};
+use crate::{helpers::*, types::*};
 use wasm_bindgen::prelude::*;
 #[wasm_bindgen]
 extern "C" {
@@ -10,27 +7,19 @@ extern "C" {
     #[wasm_bindgen(js_namespace = console)]
     fn log(s: &str);
 }
-use crypto_common::{types::{KeyIndex, TransactionTime}, *};
+use crypto_common::{types::TransactionTime, *};
 use dodis_yampolskiy_prf as prf;
-use hex::FromHex;
 use pairing::bls12_381::{Bls12, G1};
 use serde_json::{from_str, Value as SerdeValue};
-use std::{collections::BTreeMap};
+use std::collections::BTreeMap;
 type ExampleCurve = G1;
-use ed25519_dalek as ed25519;
 use sha2::{Digest, Sha256};
 
-use anyhow::{Result, bail};
-use id::{
-    account_holder::{create_unsigned_credential},
-    types::*,
-    constants::AttributeKind,
-};
+use anyhow::{bail, Result};
+use id::{account_holder::create_unsigned_credential, constants::AttributeKind, types::*};
 use pedersen_scheme::Value;
 
-pub fn generate_unsigned_credential_aux(
-    input: &str
-) -> Result<String> {
+pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
     let v: SerdeValue = from_str(input)?;
     let ip_info: IpInfo<Bls12> = try_get(&v, "ipInfo")?;
 
@@ -67,7 +56,7 @@ pub fn generate_unsigned_credential_aux(
 
     let id_use_data = IdObjectUseData {
         aci,
-        randomness: randomness_wrapped.randomness
+        randomness: randomness_wrapped.randomness,
     };
 
     let mut policy_vec = std::collections::BTreeMap::new();
@@ -92,7 +81,7 @@ pub fn generate_unsigned_credential_aux(
 
     let address: Option<AccountAddress> = match try_get(&v, "address") {
         Ok(x) => Some(x),
-        Err(_) => None
+        Err(_) => None,
     };
 
     let (cdi, rand) = create_unsigned_credential(
@@ -102,7 +91,7 @@ pub fn generate_unsigned_credential_aux(
         cred_num,
         policy,
         cred_key_info,
-        address.as_ref()
+        address.as_ref(),
     )?;
 
     let response = json!({"cdi": cdi, "randomness": rand});
@@ -111,7 +100,7 @@ pub fn generate_unsigned_credential_aux(
 }
 
 pub fn get_credential_deployment_details_aux(
-    signature: &str,
+    signatures: Vec<String>,
     unsigned_info: &str,
     expiry: u64,
 ) -> Result<String> {
@@ -119,17 +108,12 @@ pub fn get_credential_deployment_details_aux(
     let v: SerdeValue = from_str(unsigned_info)?;
     let values: CredentialDeploymentValues<ExampleCurve, AttributeKind> = from_str(unsigned_info)?;
     let proofs: IdOwnershipProofs<Bls12, ExampleCurve> = try_get(&v, "proofs")?;
-    let unsigned_credential_info = UnsignedCredentialDeploymentInfo::<Bls12, ExampleCurve, AttributeKind>{
-        values, proofs
-    };
+    let unsigned_credential_info =
+        UnsignedCredentialDeploymentInfo::<Bls12, ExampleCurve, AttributeKind> { values, proofs };
 
-    let signature_bytes = <[u8; 64]>::from_hex(signature).expect("Decoding failed");
-
-    let mut signatures = BTreeMap::new();
-    signatures.insert(KeyIndex(0), ed25519::Signature::new(signature_bytes).into());
-
+    let signature_map = build_signature_map(&signatures);
     let proof_acc_sk = AccountOwnershipProof {
-        sigs: signatures,
+        sigs: signature_map,
     };
 
     let cdp = CredDeploymentProofs {
@@ -146,11 +130,11 @@ pub fn get_credential_deployment_details_aux(
 
     let address = AccountAddress::new(&cdi.values.cred_id);
 
-    let acc_cred = AccountCredential::Normal{cdi};
+    let acc_cred = AccountCredential::Normal { cdi };
 
     let credential_message = AccountCredentialMessage {
         credential: acc_cred,
-        message_expiry: TransactionTime{ seconds: expiry }
+        message_expiry: TransactionTime { seconds: expiry },
     };
 
     let block_item = BlockItem::Deployment(credential_message);
@@ -161,15 +145,15 @@ pub fn get_credential_deployment_details_aux(
     };
 
     let hex = {
-        let versioned =  Versioned::new(VERSION_0, block_item);
+        let versioned = Versioned::new(VERSION_0, block_item);
         let versioned_as_bytes = &to_bytes(&versioned);
         hex::encode(versioned_as_bytes)
     };
 
     let response = json!({
         "credInfo": cdi_json,
-        "hex": hex,
-        "hash": hash,
+        "serializedTransaction": hex,
+        "transactionHash": hash,
         "address": address
     });
 

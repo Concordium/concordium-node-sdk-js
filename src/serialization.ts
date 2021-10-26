@@ -3,21 +3,30 @@ import { getAccountTransactionHandler } from './accountTransactions';
 import {
     encodeWord8FromString,
     encodeWord8,
+    encodeWord16,
     encodeWord32,
     encodeWord64,
     serializeMap,
+    serializeVerifyKey,
+    serializeYearMonth,
 } from './serializationHelpers';
 import {
     AccountTransactionHeader,
     AccountTransactionType,
     AccountTransaction,
+    AttributesKeys,
     BlockItemKind,
     AccountTransactionSignature,
     CredentialSignature,
+    CredentialDeploymentValues,
+    IdOwnershipProofs,
+    CredentialDeploymentTransaction,
+    CredentialDeploymentInformation,
 } from './types';
 import { calculateEnergyCost } from './energyCost';
 import { countSignatures } from './util';
 import { sha256 } from './hash';
+import * as wasm from '../pkg/desktop_wallet';
 
 function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
     return Buffer.from(Uint8Array.of(type));
@@ -203,4 +212,167 @@ export function serializeAccountTransactionForSubmission(
 
     const serializedVersion = encodeWord8(0);
     return Buffer.concat([serializedVersion, serializedAccountTransaction]);
+}
+
+/**
+ * Serializes the credential deployment values as expected by the node. This constitutes
+ * a part of the serialization of a credential deployment.
+ * @param credential the credential deployment values to serialize
+ * @returns the serialization of CredentialDeploymentValues
+ */
+function serializeCredentialDeploymentValues(
+    credential: CredentialDeploymentValues
+) {
+    const buffers = [];
+    buffers.push(
+        serializeMap(
+            credential.credentialPublicKeys.keys,
+            encodeWord8,
+            encodeWord8FromString,
+            serializeVerifyKey
+        )
+    );
+
+    buffers.push(encodeWord8(credential.credentialPublicKeys.threshold));
+    buffers.push(Buffer.from(credential.credId, 'hex'));
+    buffers.push(encodeWord32(credential.ipIdentity));
+    buffers.push(encodeWord8(credential.revocationThreshold));
+    buffers.push(
+        serializeMap(
+            credential.arData,
+            encodeWord16,
+            (key) => encodeWord32(parseInt(key, 10)),
+            (arData) => Buffer.from(arData.encIdCredPubShare, 'hex')
+        )
+    );
+    buffers.push(serializeYearMonth(credential.policy.validTo));
+    buffers.push(serializeYearMonth(credential.policy.createdAt));
+    const revealedAttributes = Object.entries(
+        credential.policy.revealedAttributes
+    );
+    buffers.push(encodeWord16(revealedAttributes.length));
+
+    const revealedAttributeTags: [number, string][] = revealedAttributes.map(
+        ([tagName, value]) => [
+            AttributesKeys[tagName as keyof typeof AttributesKeys],
+            value,
+        ]
+    );
+    revealedAttributeTags
+        .sort((a, b) => a[0] - b[0])
+        .forEach(([tag, value]) => {
+            const serializedAttributeValue = Buffer.from(value, 'utf-8');
+            const serializedTag = encodeWord8(tag);
+            const serializedAttributeValueLength = encodeWord8(
+                serializedAttributeValue.length
+            );
+            buffers.push(
+                Buffer.concat([serializedTag, serializedAttributeValueLength])
+            );
+            buffers.push(serializedAttributeValue);
+        });
+
+    return Buffer.concat(buffers);
+}
+
+/**
+ * Serializes the IdOwnershipProofs as expected by the node. This constitutes
+ * a part of the serialization of a credential deployment.
+ * @param proofs the proofs the serialize
+ * @returns the serialization of IdOwnershipProofs
+ */
+function serializeIdOwnershipProofs(proofs: IdOwnershipProofs) {
+    const proofIdCredPub = encodeWord32(
+        Object.entries(proofs.proofIdCredPub).length
+    );
+    const idCredPubProofs = Buffer.concat(
+        Object.entries(proofs.proofIdCredPub)
+            .sort(
+                ([indexA], [indexB]) =>
+                    parseInt(indexA, 10) - parseInt(indexB, 10)
+            )
+            .map(([index, value]) => {
+                const serializedIndex = encodeWord32(parseInt(index, 10));
+                const serializedValue = Buffer.from(value, 'hex');
+                return Buffer.concat([serializedIndex, serializedValue]);
+            })
+    );
+
+    return Buffer.concat([
+        Buffer.from(proofs.sig, 'hex'),
+        Buffer.from(proofs.commitments, 'hex'),
+        Buffer.from(proofs.challenge, 'hex'),
+        proofIdCredPub,
+        idCredPubProofs,
+        Buffer.from(proofs.proofIpSig, 'hex'),
+        Buffer.from(proofs.proofRegId, 'hex'),
+        Buffer.from(proofs.credCounterLessThanMaxAccounts, 'hex'),
+    ]);
+}
+
+/**
+ * Returns the digest of the credential deployment transaction that has to be signed.
+ * @param credentialDeploymentTransaction the credential deployment transaction
+ * @returns the sha256 of the serialization of the serializedunsigned credential deployment information
+ */
+export function getCredentialDeploymentSignDigest(
+    credentialDeploymentTransaction: CredentialDeploymentTransaction
+): Buffer {
+    const serializedCredentialValues = serializeCredentialDeploymentValues(
+        credentialDeploymentTransaction.cdi
+    );
+    const serializedIdOwnershipProofs = serializeIdOwnershipProofs(
+        credentialDeploymentTransaction.cdi.proofs
+    );
+    const newAccountByte = encodeWord8(0);
+    return sha256([
+        serializedCredentialValues,
+        serializedIdOwnershipProofs,
+        newAccountByte,
+        encodeWord64(credentialDeploymentTransaction.expiry.expiryEpochSeconds),
+    ]);
+}
+
+/**
+ * Gets the transaction hash that is used to look up the status of a credential
+ * deployment transaction.
+ * @param credentialDeploymentTransaction the transaction to hash
+ * @param signatures the signatures that will also be part of the hash
+ * @returns the sha256 hash of the serialized block item kind, signatures, and credential deployment transaction
+ */
+export function getCredentialDeploymentTransactionHash(
+    credentialDeploymentTransaction: CredentialDeploymentTransaction,
+    signatures: string[]
+): string {
+    const credentialDeploymentInfo: CredentialDeploymentInformation =
+        JSON.parse(
+            wasm.getDeploymentDetails(
+                signatures,
+                JSON.stringify(credentialDeploymentTransaction.cdi),
+                credentialDeploymentTransaction.expiry.expiryEpochSeconds
+            )
+        );
+    return credentialDeploymentInfo.transactionHash;
+}
+
+/**
+ * Serializes a credential deployment transaction of a new account, so that it is ready for being
+ * submitted to the node.
+ * @param credentialDeploymentTransaction the credenetial deployment transaction
+ * @param signatures the signatures on the hash of unsigned credential deployment information
+ * @returns the serialization of the credential deployment transaction ready for being submitted to a node
+ */
+export function serializeCredentialDeploymentTransactionForSubmission(
+    credentialDeploymentTransaction: CredentialDeploymentTransaction,
+    signatures: string[]
+): Buffer {
+    const credentialDeploymentInfo: CredentialDeploymentInformation =
+        JSON.parse(
+            wasm.getDeploymentDetails(
+                signatures,
+                JSON.stringify(credentialDeploymentTransaction.cdi),
+                credentialDeploymentTransaction.expiry.expiryEpochSeconds
+            )
+        );
+    return Buffer.from(credentialDeploymentInfo.serializedTransaction, 'hex');
 }

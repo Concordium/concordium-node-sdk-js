@@ -1,9 +1,6 @@
-
 // TODO This should probably not be in the package, but be put somewhere else.
 // It has nothing to do with the interaction with the node.?
-
-import { ArInfo, IpInfo } from ".";
-import { Versioned } from "./types";
+import { ArInfo, IpInfo, Versioned } from './types';
 
 interface CredentialHolderInformation {
     idCredSecret: string;
@@ -25,9 +22,10 @@ export interface IdentityProvider {
 }
 
 export interface Identity {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     accounts: any[];
 
-    // TODO This should be somewhere in the desktop wallet.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     identityObject: any;
     identityProvider: IdentityProvider;
 

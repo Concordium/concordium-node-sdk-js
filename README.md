@@ -111,10 +111,76 @@ const transactionStatus = await client.getTransactionStatus(transactionHash);
 
 ## Create a new account
 The following example demonstrates how to create a new account on an existing
-identity. 
+identity. The `credentialIndex` should be the next unused credential index for that identity, and keeping track of that index is done off-chain. Note that index `0` is used by the initial account that was created together with the identity.
 
 ```js
+const lastFinalizedBlockHash = (await client.getConsensusStatus()).lastFinalizedBlock;
+const cryptographicParameters = await client.getCryptographicParameters(lastFinalizedBlockHash);
+if (!cryptographicParameters) {
+    throw new Error('Cryptographic parameters were not found on a block that has been finalized.');
+}
 
+// The identity object, received from e.g. a wallet export.
+const identity: Identity = ...
+
+// Require just one key on the credential to sign. This can be any number 
+// up to the number of public keys added to the credential.
+const threshold: number = 1;
+const credentialIndex: number = 1;
+
+// In this example the credential on the account will have two keys. Note that
+// the credential information has to be signed (in order) by corresponding 
+// private keys.
+const publicKeys: VerifyKey[] = [
+    {
+        schemeId: "Ed25519",
+        verifyKey: "8f25fa85d6d634caf7f1f255a29a851e77dcae1efb83c2749e07d70a0152d71d"
+    },
+    {
+        schemeId: "Ed25519",
+        verifyKey: "e58a4a76a4d0dab355ea591cd7ee703e5d77dffeecc2c6da8b61842942f1c631"
+    }
+];
+
+const expiry = new TransactionExpiry(new Date(Date.now() + 3600000));
+const credentialDeploymentTransaction: CredentialDeploymentTransaction =
+    createCredentialDeploymentTransaction(
+        identity,
+        cryptographicParameters.value,
+        threshold,
+        publicKeys,
+        credentialIndex,
+        expiry
+    );
+const hashToSign: Buffer = getCredentialDeploymentSignDigest(
+    credentialDeploymentTransaction
+);
+
+// The next step is to sign the credential information with each private key that matches
+// one of the public keys in the credential information.
+const signingKey1 = "81d1bf761dc4b3bcc70576f6a3135caa322b78f93edba5ed932df9bdaf1ea161";
+const signingKey2 = "add4f6a14cc178879161fc4c802da2b0b4362da9c57c11022a3e52f9fce52eab";
+
+const signature1 = Buffer.from(await ed.sign(hashToSign, signingKey1)).toString('hex');
+const signature2 = Buffer.from(await ed.sign(hashToSign, signingKey2)).toString('hex');
+const signatures: string[] = [signature1, signature2];
+
+// Send the transaction to the node
+const success = await client.sendCredentialDeploymentTransaction(
+    credentialDeploymentTransaction,
+    signatures
+);
+if (success) {
+    // The node accepted the transaction. This does not ensure that the transaction
+    // will end up in a block, only that the format of the submitted transaction was valid.
+} else {
+    // The node rejected the transaction.
+}
+
+// Check the status of the transaction. Should be checked with an appropriate interval,
+// as it will take some time for the transaction to be processed.
+const transactionHash = getCredentialDeploymentTransactionHash(credentialDeploymentTransaction, signatures);
+const transactionStatus = await client.getTransactionStatus(transactionHash);
 ```
 
 ## getAccountInfo

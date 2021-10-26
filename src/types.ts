@@ -660,6 +660,12 @@ export interface AccountTransaction {
 export type CredentialSignature = Record<number, string>;
 export type AccountTransactionSignature = Record<number, CredentialSignature>;
 
+export interface CredentialDeploymentTransaction {
+    expiry: TransactionExpiry;
+    cdi: UnsignedCredentialDeploymentInformation;
+    randomness: CommitmentsRandomness;
+}
+
 export interface IdOwnershipProofs {
     challenge: string;
     commitments: string;
@@ -688,4 +694,11 @@ export interface CommitmentsRandomness {
 export interface WithRandomness<Info> {
     cdi: Info;
     randomness: CommitmentsRandomness;
+}
+
+export interface CredentialDeploymentInformation {
+    credInfo: string;
+    serializedTransaction: string;
+    transactionHash: string;
+    address: AccountAddress;
 }

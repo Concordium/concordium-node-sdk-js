@@ -1,13 +1,10 @@
-use ps_sig::SigRetrievalRandomness;
-use crypto_common::{*};
+use crypto_common::*;
 use curve_arithmetic::{Curve, Pairing};
 use id::types::*;
+use ps_sig::SigRetrievalRandomness;
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
-#[serde(bound(
-    serialize = "P: Pairing",
-    deserialize = "P: Pairing"
-))]
+#[serde(bound(serialize = "P: Pairing", deserialize = "P: Pairing"))]
 pub struct RandomnessWrapper<P: Pairing> {
     #[serde(
         rename = "randomness",
@@ -20,18 +17,16 @@ pub struct RandomnessWrapper<P: Pairing> {
 #[derive(SerdeSerialize, SerdeDeserialize)]
 #[serde(untagged)]
 pub enum BlockItem<
-        P: Pairing,
+    P: Pairing,
     C: Curve<Scalar = P::ScalarField>,
     AttributeType: Attribute<C::Scalar>,
-    > {
-    Deployment (AccountCredentialMessage<P, C, AttributeType>)
+> {
+    Deployment(AccountCredentialMessage<P, C, AttributeType>),
 }
 
-impl<
-        P: Pairing,
-    C: Curve<Scalar = P::ScalarField>,
-    AttributeType: Attribute<C::Scalar>,
-    > Serial for BlockItem<P, C, AttributeType> {
+impl<P: Pairing, C: Curve<Scalar = P::ScalarField>, AttributeType: Attribute<C::Scalar>> Serial
+    for BlockItem<P, C, AttributeType>
+{
     fn serial<B: Buffer>(&self, out: &mut B) {
         match self {
             BlockItem::Deployment(deployment) => {

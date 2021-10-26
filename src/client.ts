@@ -12,7 +12,10 @@ import {
     SendTransactionRequest,
     TransactionHash,
 } from '../grpc/concordium_p2p_rpc_pb';
-import { serializeAccountTransactionForSubmission } from './serialization';
+import {
+    serializeAccountTransactionForSubmission,
+    serializeCredentialDeploymentTransactionForSubmission,
+} from './serialization';
 import {
     AccountBakerDetails,
     AccountEncryptedAmount,
@@ -28,6 +31,7 @@ import {
     ChainParameters,
     ConsensusStatus,
     ContractAddress,
+    CredentialDeploymentTransaction,
     CryptographicParameters,
     ExchangeRate,
     FinalizationData,
@@ -97,10 +101,33 @@ export default class ConcordiumNodeClient {
         this.client = new P2PClient(`${address}:${port}`, credentials, options);
     }
 
-    async sendTransaction(serializedBlob: Buffer) {
+    /**
+     * Sends a credential deployment transaction, for creating a new account,
+     * to the node to be put in a block on the chain.
+     *
+     * Note that a transaction can still fail even if it was accepted by the node.
+     * To keep track of the transaction use getTransactionStatus.
+     * @param credentialDeploymentTransaction the credential deployment transaction to send to the node
+     * @param signatures the signatures on the hash of the serialized unsigned credential deployment information, in order
+     * @returns true if the transaction was accepted, otherwise false
+     */
+    async sendCredentialDeploymentTransaction(
+        credentialDeploymentTransaction: CredentialDeploymentTransaction,
+        signatures: string[]
+    ): Promise<boolean> {
+        const serializedCredentialDeploymentTransaction: Buffer = Buffer.from(
+            serializeCredentialDeploymentTransactionForSubmission(
+                credentialDeploymentTransaction,
+                signatures
+            )
+        );
+
         const sendTransactionRequest = new SendTransactionRequest();
         sendTransactionRequest.setNetworkId(100);
-        sendTransactionRequest.setPayload(Uint8Array.from(serializedBlob));
+        sendTransactionRequest.setPayload(
+            serializedCredentialDeploymentTransaction
+        );
+
         const response = await this.sendRequest(
             this.client.sendTransaction,
             sendTransactionRequest
@@ -223,7 +250,7 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieves a status for the given transaction.
      * @param transactionHash the transaction to get a status for
-     * @returns the transaction status for the given transaction, or null if the transaction does not exist
+     * @returns the transaction status for the given transaction, or undefined if the transaction does not exist
      */
     async getTransactionStatus(
         transactionHash: string
@@ -314,7 +341,7 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieves information about a specific block.
      * @param blockHash the block to get information about
-     * @returns the block information for the given block, or null if the block does not exist
+     * @returns the block information for the given block, or undefined if the block does not exist
      */
     async getBlockInfo(blockHash: string): Promise<BlockInfo | undefined> {
         if (!isValidHash(blockHash)) {

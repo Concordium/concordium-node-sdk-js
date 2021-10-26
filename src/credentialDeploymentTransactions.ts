@@ -1,102 +1,87 @@
-import { encodeWord16, encodeWord32, encodeWord64, encodeWord8, encodeWord8FromString, serializeMap, serializeVerifyKey, serializeYearMonth } from "./serializationHelpers";
-import { Buffer } from 'buffer/';
-import { AttributesKeys, CredentialDeploymentValues, IdOwnershipProofs, UnsignedCredentialDeploymentInformation } from "./types";
-import { TransactionExpiry } from ".";
+import {
+    CredentialDeploymentTransaction,
+    CryptographicParameters,
+    UnsignedCredentialDeploymentInformation,
+    VerifyKey,
+    WithRandomness,
+} from './types';
+import { Identity } from './mobileTypes';
+import * as wasm from '../pkg/desktop_wallet';
+import { TransactionExpiry } from '.';
 
-function serializeCredentialDeploymentValues(credential: CredentialDeploymentValues) {
-    const buffers = [];
-    buffers.push(
-        serializeMap(
-            credential.credentialPublicKeys.keys,
-            encodeWord8,
-            encodeWord8FromString,
-            serializeVerifyKey
-        )
-    );
-
-    buffers.push(encodeWord8(credential.credentialPublicKeys.threshold));
-    buffers.push(Buffer.from(credential.credId, 'hex'));
-    buffers.push(encodeWord32(credential.ipIdentity));
-    buffers.push(encodeWord8(credential.revocationThreshold));
-    buffers.push(
-        serializeMap(
-            credential.arData,
-            encodeWord16,
-            (key) => encodeWord32(parseInt(key, 10)),
-            (arData) => Buffer.from(arData.encIdCredPubShare, 'hex')
-        )
-    );
-    buffers.push(serializeYearMonth(credential.policy.validTo));
-    buffers.push(serializeYearMonth(credential.policy.createdAt));
-    const revealedAttributes = Object.entries(
-        credential.policy.revealedAttributes
-    );
-    buffers.push(encodeWord16(revealedAttributes.length));
-
-    const revealedAttributeTags: [
-        number,
-        string
-    ][] = revealedAttributes.map(([tagName, value]) => [
-        AttributesKeys[tagName as keyof typeof AttributesKeys],
-        value,
-    ]);
-    revealedAttributeTags
-        .sort((a, b) => a[0] - b[0])
-        .forEach(([tag, value]) => {
-            const serializedAttributeValue = Buffer.from(value, 'utf-8');
-            const serializedTag = encodeWord8(tag);
-            const serializedAttributeValueLength = encodeWord8(serializedAttributeValue.length);
-            buffers.push(Buffer.concat([serializedTag, serializedAttributeValueLength]));
-            buffers.push(serializedAttributeValue);
-        });
-
-    return Buffer.concat(buffers);
-}
+// TODO Add option to reveal attributes.
 
 /**
- * Serializes the IdOwnershipProofs as expected by the node. This constitutes
- * a part of the serialization of a credential deployment.
- * @param proofs the proofs the serialize
- * @returns the serialization of IdOwnershipProofs
+ * Generates the unsigned credential information that has to be signed when
+ * deploying a credential. The randomness for the commitments that are part
+ * of the transaction is also outputted, and it should be stored if the
+ * commitments should be opened at a later point, i.e. if an attribute should
+ * be revealed at a later point.
+ * @param identity the identity to create a credential for
+ * @param cryptographicParameters the global cryptographic parameters from the chain
+ * @param threshold the signature threshold for the credential, has to be less than number of public keys
+ * @param publicKeys the public keys for the account
+ * @param credentialIndex the index of the credential to create, has to be in sequence and unused
+ * @returns the unsigned credential deployment information (for signing), and the randomness used
  */
-function serializeIdOwnershipProofs(proofs: IdOwnershipProofs) {
-    const proofIdCredPub = encodeWord32(Object.entries(proofs.proofIdCredPub).length);
-    const idCredPubProofs = Buffer.concat(
-        Object.entries(proofs.proofIdCredPub)
-            .sort(
-                ([indexA], [indexB]) =>
-                    parseInt(indexA, 10) - parseInt(indexB, 10)
-            )
-            .map(([index, value]) => {
-                // TODO I think I want to rewrite this with the encode methods instead.
-                const proof = Buffer.alloc(4 + 96);
-                proof.writeUInt32BE(parseInt(index, 10), 0);
-                proof.write(value, 4, 100, 'hex');
-                return proof;
-            })
-    );
+function createUnsignedCredentialInfo(
+    identity: Identity,
+    cryptographicParameters: CryptographicParameters,
+    threshold: number,
+    publicKeys: VerifyKey[],
+    credentialIndex: number
+): WithRandomness<UnsignedCredentialDeploymentInformation> {
+    if (publicKeys.length > 255) {
+        throw new Error(
+            'The number of keys is greater than what the transaction supports: ' +
+                publicKeys.length
+        );
+    }
 
-    return Buffer.concat([
-        Buffer.from(proofs.sig, 'hex'),
-        Buffer.from(proofs.commitments, 'hex'),
-        Buffer.from(proofs.challenge, 'hex'),
-        proofIdCredPub,
-        idCredPubProofs,
-        Buffer.from(proofs.proofIpSig, 'hex'),
-        Buffer.from(proofs.proofRegId, 'hex'),
-        Buffer.from(proofs.credCounterLessThanMaxAccounts, 'hex'),
-    ]);
+    const identityProvider = identity.identityProvider;
+    const credentialInput: Record<string, unknown> = {
+        ipInfo: identityProvider.ipInfo,
+        arsInfos: identityProvider.arsInfos,
+        global: cryptographicParameters,
+        identityObject: identity.identityObject,
+        randomness: {
+            randomness: identity.privateIdObjectData.randomness,
+        },
+        publicKeys,
+        credentialNumber: credentialIndex,
+        threshold,
+        prfKey: identity.privateIdObjectData.aci.prfKey,
+        idCredSec:
+            identity.privateIdObjectData.aci.credentialHolderInformation
+                .idCredSecret,
+        revealedAttributes: [],
+    };
+
+    const unsignedCredentialDeploymentInfoString =
+        wasm.generateUnsignedCredential(JSON.stringify(credentialInput));
+    const result: WithRandomness<UnsignedCredentialDeploymentInformation> =
+        JSON.parse(unsignedCredentialDeploymentInfoString);
+    return result;
 }
 
-/**
- * Serializes unsigned credential deployment information. This serialization is used to be
- * hashed and signed as part of a credential deployment transaction.
- * @param unsignedCredentialDeploymentInformation the credential information to sign
- * @returns the serialization of the unsigned credential deployment information
- */
-export function serializeCredentialDeploymentInformation(unsignedCredentialDeploymentInformation: UnsignedCredentialDeploymentInformation, expiry: TransactionExpiry) {
-    const serializedCredentialValues = serializeCredentialDeploymentValues(unsignedCredentialDeploymentInformation);
-    const serializedIdOwnershipProofs = serializeIdOwnershipProofs(unsignedCredentialDeploymentInformation.proofs);
-    const newAccountByte = encodeWord8(0);
-    return Buffer.concat([serializedCredentialValues, serializedIdOwnershipProofs, newAccountByte, encodeWord64(expiry.expiryEpochSeconds)]);
+export function createCredentialDeploymentTransaction(
+    identity: Identity,
+    cryptographicParameters: CryptographicParameters,
+    threshold: number,
+    publicKeys: VerifyKey[],
+    credentialIndex: number,
+    expiry: TransactionExpiry
+): CredentialDeploymentTransaction {
+    const unsignedCredentialInfo = createUnsignedCredentialInfo(
+        identity,
+        cryptographicParameters,
+        threshold,
+        publicKeys,
+        credentialIndex
+    );
+    return {
+        cdi: unsignedCredentialInfo.cdi,
+        randomness: unsignedCredentialInfo.randomness,
+        expiry: expiry,
+    };
 }

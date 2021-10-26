@@ -123,7 +123,7 @@ export function serializeVerifyKey(key: VerifyKey): Buffer {
  * @param yearMonth year and month formatted as "YYYYMM"
  * @returns the serialization of the year and month string
  */
-export function serializeYearMonth(yearMonth: string) {
+export function serializeYearMonth(yearMonth: string): Buffer {
     const year = parseInt(yearMonth.substring(0, 4), 10);
     const month = parseInt(yearMonth.substring(4, 6), 10);
     const serializedYear = encodeWord16(year);

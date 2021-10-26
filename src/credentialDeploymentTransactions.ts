@@ -2,11 +2,11 @@ import {
     AttributeKey,
     CredentialDeploymentTransaction,
     CryptographicParameters,
+    IdentityInput,
     UnsignedCredentialDeploymentInformation,
     VerifyKey,
     WithRandomness,
 } from './types';
-import { Identity } from './mobileTypes';
 import * as wasm from '../pkg/desktop_wallet';
 import { TransactionExpiry } from './types/transactionExpiry';
 
@@ -25,7 +25,7 @@ import { TransactionExpiry } from './types/transactionExpiry';
  * @returns the unsigned credential deployment information (for signing), and the randomness used
  */
 function createUnsignedCredentialInfo(
-    identity: Identity,
+    identity: IdentityInput,
     cryptographicParameters: CryptographicParameters,
     threshold: number,
     publicKeys: VerifyKey[],
@@ -46,15 +46,13 @@ function createUnsignedCredentialInfo(
         global: cryptographicParameters,
         identityObject: identity.identityObject,
         randomness: {
-            randomness: identity.privateIdObjectData.randomness,
+            randomness: identity.randomness,
         },
         publicKeys,
         credentialNumber: credentialIndex,
         threshold,
-        prfKey: identity.privateIdObjectData.aci.prfKey,
-        idCredSec:
-            identity.privateIdObjectData.aci.credentialHolderInformation
-                .idCredSecret,
+        prfKey: identity.prfKey,
+        idCredSec: identity.idCredSecret,
         revealedAttributes: revealedAttributes,
     };
 
@@ -78,7 +76,7 @@ function createUnsignedCredentialInfo(
  * @returns a credential deployment transaction
  */
 export function createCredentialDeploymentTransaction(
-    identity: Identity,
+    identity: IdentityInput,
     cryptographicParameters: CryptographicParameters,
     threshold: number,
     publicKeys: VerifyKey[],

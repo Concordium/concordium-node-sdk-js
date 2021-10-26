@@ -702,3 +702,16 @@ export interface CredentialDeploymentInformation {
     transactionHash: string;
     address: AccountAddress;
 }
+
+export interface IdentityProvider {
+    arsInfos: Record<number, ArInfo>;
+    ipInfo: IpInfo;
+}
+
+export interface IdentityInput {
+    identityProvider: IdentityProvider;
+    identityObject: any;
+    prfKey: string;
+    idCredSecret: string;
+    randomness: string;
+}

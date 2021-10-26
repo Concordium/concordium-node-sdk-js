@@ -1,11 +1,12 @@
 import { getNodeClient } from './testHelpers';
-import { decryptMobileWalletExport, EncryptedData } from '../src/crypto';
+import { decryptMobileWalletExport, EncryptedData } from '../src/wallet/crypto';
 import * as fs from 'fs';
-import { MobileWalletExport } from '../src/mobileTypes';
+import { MobileWalletExport } from '../src/wallet/types';
 import {
     VerifyKey,
     CredentialDeploymentTransaction,
     AttributeKey,
+    IdentityInput,
 } from '../src/types';
 import { createCredentialDeploymentTransaction } from '../src/credentialDeploymentTransactions';
 import { TransactionExpiry } from '../src/types/transactionExpiry';
@@ -25,6 +26,16 @@ test('credential deployment for new account is accepted', async () => {
         mobileWalletExport,
         '123123'
     );
+    const identity = decrypted.value.identities[0];
+    const identityInput: IdentityInput = {
+        identityProvider: identity.identityProvider,
+        identityObject: identity.identityObject,
+        idCredSecret:
+            identity.privateIdObjectData.aci.credentialHolderInformation
+                .idCredSecret,
+        prfKey: identity.privateIdObjectData.aci.prfKey,
+        randomness: identity.privateIdObjectData.randomness,
+    };
 
     const lastFinalizedBlockHash = (await client.getConsensusStatus())
         .lastFinalizedBlock;
@@ -54,13 +65,13 @@ test('credential deployment for new account is accepted', async () => {
     // the transaction will not succeed, but it should still be received by the node.
     const credentialIndex = 0;
 
-    // The attributes to reveal on the chain
+    // The attributes to reveal on the chain. Ensure they are in the identity(?)
     const revealedAttributes: AttributeKey[] = ['firstName', 'nationality'];
 
     const expiry = new TransactionExpiry(new Date(Date.now() + 3600000));
     const credentialDeploymentTransaction: CredentialDeploymentTransaction =
         createCredentialDeploymentTransaction(
-            decrypted.value.identities[0],
+            identityInput,
             cryptographicParameters.value,
             threshold,
             publicKeys,

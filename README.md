@@ -120,8 +120,9 @@ if (!cryptographicParameters) {
     throw new Error('Cryptographic parameters were not found on a block that has been finalized.');
 }
 
-// The identity object, received from e.g. a wallet export.
-const identity: Identity = ...
+// The parts of the identity required to create a new account, parsed from 
+// e.g. a wallet export.
+const identityInput: IdentityInput = ...
 
 // Require just one key on the credential to sign. This can be any number 
 // up to the number of public keys added to the credential.
@@ -148,7 +149,7 @@ const revealedAttributes: AttributeKey[] = ['firstName', 'nationality'];
 const expiry = new TransactionExpiry(new Date(Date.now() + 3600000));
 const credentialDeploymentTransaction: CredentialDeploymentTransaction =
     createCredentialDeploymentTransaction(
-        decrypted.value.identities[0],
+        identityInput,
         cryptographicParameters.value,
         threshold,
         publicKeys,

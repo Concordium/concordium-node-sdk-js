@@ -1,6 +1,4 @@
-// TODO This should probably not be in the package, but be put somewhere else.
-// It has nothing to do with the interaction with the node.?
-import { ArInfo, IpInfo, Versioned } from './types';
+import { ArInfo, IpInfo, Versioned } from '../types';
 
 interface CredentialHolderInformation {
     idCredSecret: string;

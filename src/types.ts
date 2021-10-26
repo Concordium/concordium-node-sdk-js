@@ -628,17 +628,7 @@ export enum ModuleTransactionType {
     Update = 2,
 }
 
-export interface BasicPayload {
-    /**
-     * Relevant tag values:
-     *       0 for DeployModule,
-     *       1 for InitContract,
-     *       2 for Update
-     */
-    tag: ModuleTransactionType;
-}
-
-export interface ModuleTransaction extends BasicPayload {
+export interface ModuleTransaction {
     content:
         | DeployModulePayload
         | InitContractPayload
@@ -646,18 +636,15 @@ export interface ModuleTransaction extends BasicPayload {
         | any;
 }
 
-export interface DeployModulePayload extends BasicPayload {
+export interface DeployModulePayload {
     /** Version of the wasm module */
     version: number;
-
-    /** Length of the wasm module */
-    length: number;
 
     /** Wasm module to be deployed */
     content: Buffer;
 }
 
-export interface InitContractPayload extends BasicPayload {
+export interface InitContractPayload {
     /** µGTU amount to transfer */
     amount: GtuAmount;
 
@@ -668,10 +655,13 @@ export interface InitContractPayload extends BasicPayload {
     initName: string;
 
     /** Parameters for the init function */
-    parameter: ParamtersValue<any>[];
+    parameter: Buffer;
+
+    /** Base Energy cost for sending transaction*/
+    baseEnergyCost: bigint;
 }
 
-export interface UpdateContractPayload extends BasicPayload {
+export interface UpdateContractPayload {
     /** µGTU amount to transfer */
     amount: GtuAmount;
 
@@ -681,13 +671,11 @@ export interface UpdateContractPayload extends BasicPayload {
     /** Name of receive function including <contractName>. prefix */
     receiveName: string;
 
-    /** Parameters for the init function */
-    parameter: ParamtersValue<any>[];
-}
+    /** Parameters for the update function */
+    parameter: Buffer;
 
-export interface ParamtersValue<T> {
-    type: Type;
-    value: T;
+    /** Base Energy cost for sending transaction*/
+    baseEnergyCost: bigint;
 }
 
 export interface AccountTransactionHeader {
@@ -760,18 +748,13 @@ export enum Type {
     ReceiveName = 'ReceiveName(SizeLength)',
 }
 
-export interface Instances {
-    subindex: number;
-    index: number;
-}
-
 export interface InstanceInfo {
-    amount: bigint;
-    sourceModule: string;
-    owner: string;
+    amount: GtuAmount;
+    sourceModule: ModuleReference;
+    owner: AccountAddress;
     methods: string[];
     name: string;
-    model: bigint;
+    model: Buffer[];
 }
 
 export type CredentialSignature = Record<number, string>;

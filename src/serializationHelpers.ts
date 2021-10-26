@@ -95,25 +95,23 @@ export function encodeMemo(memo: Memo): Buffer {
 }
 
 /**
- * Encode a wasmfile
- * @param wasmBuffer containing the byte array.
- * @param wasmBufferLength length of the wasm buffer
- * @returns Buffer containing the lengtH of the wasmfile and wasmfile bytes.
+ * Packing a buffer along the with offset of 32 bit length 
+ * @param buffer containing the buffer.
+ * @returns Buffer containing the length of the buffer of 32 bit and buffer.
  */
-export function encodeWasmfile(
-    wasmBuffer: Buffer,
-    wasmfileLength: number
+export function packBufferWithWord32Offset(
+    buffer: Buffer
 ): Buffer {
-    const length = encodeWord16(wasmfileLength);
-    return Buffer.concat([length, wasmBuffer]);
+    const length = encodeWord32(buffer.length);
+    return Buffer.concat([length, buffer]);
 }
 
 /**
- * Encode a string
- * @param buffer containing the byte array
- * @returns Buffer containing the length of the string and string length
+ * Packing a buffer along the with offset of 16 bit length 
+ * @param buffer containing the buffer
+ * @returns Buffer containing the length of the buffer of 16 bit and buffer.
  */
-export function encodeString(buffer: Buffer): Buffer {
+export function packBufferWithWord16Offset(buffer: Buffer): Buffer {
     const length = encodeWord16(buffer.length);
     return Buffer.concat([length, buffer]);
 }

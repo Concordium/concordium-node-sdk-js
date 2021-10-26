@@ -3,10 +3,8 @@ import {
     encodeWord64,
     encodeMemo,
     encodeWord32,
-    encodeWord16,
-    encodeWord8,
-    encodeWasmfile,
-    encodeString,
+    packBufferWithWord32Offset,
+    packBufferWithWord16Offset,
 } from './serializationHelpers';
 import {
     AccountTransactionType,
@@ -14,12 +12,14 @@ import {
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
     DeployModulePayload,
-    ParamtersValue,
     UpdateContractPayload,
+    AccountTransactionPayload,
 } from './types';
 
-interface AccountTransactionHandler<PayloadType> {
-    serialize: (payload: PayloadType) => Buffer;
+interface AccountTransactionHandler<
+    PayloadType extends AccountTransactionPayload = AccountTransactionPayload
+> {
+    serialize: (payload: PayloadType | undefined | any) => Buffer;
     getBaseEnergyCost: (payload: PayloadType) => bigint;
 }
 
@@ -62,34 +62,28 @@ export class DeployModuleHandler
     }
 
     serialize(transfer: DeployModulePayload): Buffer {
-        const serializedMemo = encodeWasmfile(
-            transfer.content,
-            transfer.length
+        const serializedWasm = packBufferWithWord32Offset(
+            transfer.content
         );
         const serializedVersion = encodeWord32(transfer.version);
-        const serializedTag = encodeWord16(transfer.tag);
-        return Buffer.concat([
-            serializedTag,
-            serializedVersion,
-            serializedMemo,
-        ]);
+        return Buffer.concat([serializedVersion, serializedWasm]);
     }
 }
 
 export class InitContractHandler
     implements AccountTransactionHandler<InitContractPayload>
 {
-    getBaseEnergyCost(payload: InitContractPayload | undefined): bigint {
-        return 300000n;
+    getBaseEnergyCost(payload: InitContractPayload): bigint {
+        return payload.baseEnergyCost;
     }
 
     serialize(payload: InitContractPayload): Buffer {
         const serializedAmount = encodeWord64(payload.amount.microGtuAmount);
         const initNameBuffer = Buffer.from(payload.initName);
-        const serializedInitName = encodeString(initNameBuffer);
+        const serializedInitName = packBufferWithWord16Offset(initNameBuffer);
         const serializedModuleRef = payload.moduleRef.decodedModuleRef;
-        const serializeParamters = serializeParameter(payload.parameter);
-        const serializedParamters = encodeString(serializeParamters);
+        const serializeParamters = Buffer.from(payload.parameter);
+        const serializedParamters = packBufferWithWord16Offset(serializeParamters);
         return Buffer.concat([
             serializedAmount,
             serializedModuleRef,
@@ -102,8 +96,8 @@ export class InitContractHandler
 export class UpdateContractHandler
     implements AccountTransactionHandler<UpdateContractPayload>
 {
-    getBaseEnergyCost(payload: UpdateContractPayload | undefined): bigint {
-        return 30000n;
+    getBaseEnergyCost(payload: UpdateContractPayload): bigint {
+        return payload.baseEnergyCost;
     }
 
     serialize(payload: UpdateContractPayload): Buffer {
@@ -116,10 +110,10 @@ export class UpdateContractHandler
             serializeIndex,
             serializeSubindex,
         ]);
-        const serializeParamters = serializeParameter(payload.parameter);
+        const serializeParamters = Buffer.from(payload.parameter);
         const receiveNameBuffer = Buffer.from(payload.receiveName);
-        const serializedReceiveName = encodeString(receiveNameBuffer);
-        const serializedParamters = encodeString(serializeParamters);
+        const serializedReceiveName = packBufferWithWord16Offset(receiveNameBuffer);
+        const serializedParamters = packBufferWithWord16Offset(serializeParamters);
         return Buffer.concat([
             serializedAmount,
             serializedContractAddress,
@@ -129,49 +123,26 @@ export class UpdateContractHandler
     }
 }
 
-export function serializeParameter(parameter: ParamtersValue<any>[]): Buffer {
-    const finalSerializedParameters: Buffer[] = [];
-    parameter.forEach((element) => {
-        if (typeof element.value === 'string') {
-            finalSerializedParameters.push(Buffer.from(element.value));
-        } else if (typeof element.value === 'number') {
-            if (
-                element.value > 255 ||
-                element.value < 0 ||
-                !Number.isInteger(element.value)
-            ) {
-                finalSerializedParameters.push(encodeWord8(element.value));
-            } else if (
-                element.value > 65535 ||
-                element.value < 0 ||
-                !Number.isInteger(element.value)
-            ) {
-                finalSerializedParameters.push(encodeWord16(element.value));
-            } else if (
-                element.value > 4294967295 ||
-                element.value < 0 ||
-                !Number.isInteger(element.value)
-            ) {
-                finalSerializedParameters.push(encodeWord32(element.value));
-            } else if (
-                element.value > 9223372036854775807n ||
-                element.value < 0n ||
-                !Number.isInteger(element.value)
-            ) {
-                finalSerializedParameters.push(
-                    encodeWord64(BigInt(element.value))
-                );
-            }
-        } else {
-            finalSerializedParameters.push(Buffer.from(element.value));
-        }
-    });
-    return Buffer.concat(finalSerializedParameters);
-}
-
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.SimpleTransfer
+): SimpleTransferHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.SimpleTransferWithMemo
+): SimpleTransferWithMemoHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
-): AccountTransactionHandler<any> {
+): AccountTransactionHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.DeployModule
+): DeployModuleHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.InitializeSmartContractInstance
+): InitContractHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.UpdateSmartContractInstance
+): UpdateContractHandler;
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export function getAccountTransactionHandler(type: AccountTransactionType) {
     switch (type) {
         case AccountTransactionType.SimpleTransfer:
             return new SimpleTransferHandler();

@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer/';
-import { encodeWord8 } from '../serializationHelpers';
+
 /**
  * Representation of a module reference, which enforces that it:
  * - Hash length exactly 64
@@ -19,19 +19,10 @@ export class ModuleReference {
             );
         }
         try {
-            this.decodedModuleRef = Buffer.concat(this.hexToBytes(moduleRef));
+            this.decodedModuleRef = Buffer.from(moduleRef, 'hex');
             this.moduleRef = moduleRef;
         } catch (error) {
             throw error;
         }
-    }
-
-    private hexToBytes(hex: string): Buffer[] {
-        const bytes: Buffer[] = [];
-        for (let c = 0; c < hex.length; c += 2) {
-            bytes.push(encodeWord8(parseInt(hex.substr(c, 2), 16)));
-        }
-
-        return bytes;
     }
 }

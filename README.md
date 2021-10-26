@@ -266,7 +266,7 @@ for (const transactionSummary of transactionSummaries) {
 ```
 
 ## Create a deploy module
-The following example demostrates how to create a deploy module.
+The following example demonstrates how to create a deploy module.
 ```js
 const header: AccountTransactionHeader = {
     expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
@@ -297,14 +297,14 @@ const deployModuleTransaction: AccountTransaction = {
 ```
 
 ## Deploy module
-The following example demostrates how to deploy a smart contract module. 
-See the previous section for how to create deploy module
+The following example demonstrates how to deploy a smart contract module. 
+See the previous section for how to create a deploy module transaction
 
 ```js
 import * as ed from "noble-ed25519";
 
 let deployModuleTransaction: AccountTransaction;
-// Create the transaction
+// Create the deploy module transaction
 // ...
 
 // Sign the transaction, the following is just an example, and any method for signing
@@ -332,15 +332,13 @@ const result = await client.sendAccountTransaction(
         signatures
     );
 
-const transactionHash = await client.GetAccountNonFinalizedTransactions(
-        new AccountAddress(senderAccountAddress)
-    );
-    
+// Get the transaction hash and status of the transaction once deploy transaction is sent
+const txHash = await getAccountTransactionHash(deployModuleTransaction, signatures);
 const transactionStatus = await client.getTransactionStatus(transactionHash);   
 ```
 
 ## Create Init contract module
-The following example demostrates how to create a init contract module.
+The following example demonstrates how to create a init contract transaction.
 ```js
 const header: AccountTransactionHeader = {
     expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
@@ -348,18 +346,18 @@ const header: AccountTransactionHeader = {
     sender: new AccountAddress(senderAccountAddress),
 };
 ```
-The following code is how to create the payload for init contract module
+The following code is how to create the payload for init contract 
 
-Name of init function including "init_" prefix and parameter for the init function.
+Name of init function including "init_" prefix(for suppose the contract with name as "INDBank" then the init name should be as "init_INDBank") and parameter for the init function.
 ```js
-const initName = 'init_DCBBank'; 
+const initName = 'init_INDBank'; 
 const params: ParamtersValue<any>[] = [];
 ```
 
 ```js
 const initModule: InitContractPayload = {
     amount: new GtuAmount(0n),
-    moduleRef: new ModuleReference('a225a5aeb0a5cf9bbc59209e15df030e8cc2c17b8dba08c4bf59f80edaedd8b1'), //init module refernce which obtained after deploy smart contract
+    moduleRef: new ModuleReference('a225a5aeb0a5cf9bbc59209e15df030e8cc2c17b8dba08c4bf59f80edaedd8b1'), //module refernce which obtained after deploy smart contract
     initName: initName,
     parameter: params
 } as InitContractPayload;
@@ -371,21 +369,21 @@ const initModuleTransaction: AccountTransaction = {
 };
 ```
 
-## Init Contract module(parameterless smart contract)
-The following example demostrates how to initialize a smart contract module. 
-See the previous section for how to create init contract module
+## Init Contract (parameterless smart contract)
+The following example demonstrates how to initialize a smart contract module. 
+See the previous section for how to create init contract transaction
 
 ```js
 import * as ed from "noble-ed25519";
 
-let initModuleTransaction: AccountTransaction;
-// Create the transaction
+let initContractTransaction: AccountTransaction;
+// Create init contract transaction
 // ...
 
 // Sign the transaction, the following is just an example, and any method for signing
 // with the key can be employed.
 const signingKey = '621de9198d274b56eace2f86eb134bfc414f5c566022f281335be0b2d45189845';
-const hashToSign = getAccountTransactionSignDigest(initModuleTransaction);
+const hashToSign = getAccountTransactionSignDigest(initContractTransaction);
 
 const signature = Buffer.from(
         await ed.sign(hashToSign, signingKey)
@@ -401,21 +399,19 @@ const signatures: AccountTransactionSignature = {
     },
 };
 
-// Send the init contract module transaction to the node.
+// Send the init contract transaction to the node.
 const result = await client.sendAccountTransaction(
-        initModuleTransaction,
+        initContractTransaction,
         signatures
     );
 
-const transactionHash = await client.GetAccountNonFinalizedTransactions(
-        new AccountAddress(senderAccountAddress)
-    );
-    
-const transactionStatus = await client.getTransactionStatus(transactionHash);   
+// Get the transaction hash once init contract transaction is sent
+const txHash = await getAccountTransactionHash(initContractTransaction, signatures);
+const transactionStatus = await client.getTransactionStatus(transactionHash);    
 ```
 
 ## Create update contract 
-The following example demostrates how to create a update contract.
+The following example demonstrates how to create a update contract.
 ```js
 const header: AccountTransactionHeader = {
     expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
@@ -425,20 +421,23 @@ const header: AccountTransactionHeader = {
 ```
 The following code is how to create the payload for update contract
 
-Name of receive function including <contractName>. prefix. and parameter for the init function.Contract Address of contract instance consisting of an index and a subi
+Name of receive function including "<contractName>." prefix(for suppose the contract with name as "INDBank" and one of the receive function name as "insertAmount" then the name of receive function should be as "INDBank.insertAmount") and parameter for the init function. Contract Address of contract instance consisting of an index and a subindex.
 ```js
 const receiveName = 'DCBBank.insertAmount';
 const params: ParamtersValue<any>[] = [];
+const contractAddress = { index: BigInt(83), subindex: BigInt(0) } as ContractAddress;
+//The amount of energy to execute the transaction
+const baseEnergy = 30000n;
 ```
 
 ```js
-const updateModule: UpdateContractPayload =
+const updateContractTransaction: UpdateContractPayload =
 {
-    tag: ModuleTransactionType.Update,
     amount: new GtuAmount(1000n),
-    contractAddress: { index: BigInt(83), subindex: BigInt(0) } as ContractAddress,
+    contractAddress: contractAddress,
     receiveName: receiveName,
-    parameter: []
+    parameter: [],
+    baseEnergyCost: baseEnergy, 
 } as UpdateContractPayload;
 
 const updateContractTransaction: AccountTransaction = {
@@ -447,21 +446,21 @@ const updateContractTransaction: AccountTransaction = {
     type: AccountTransactionType.UpdateSmartContractInstance,
 };
 ```
-## Update Contract
-The following example demostrates how to update a smart contract. 
-See the previous section for how to create update contract
+## Update Contract(parameterless smart contract)
+The following example demonstrates how to update a smart contract. 
+See the previous section for how to create update contract transaction
 
 ```js
 import * as ed from "noble-ed25519";
 
-let initModuleTransaction: AccountTransaction;
-// Create the transaction
+let updateContractTransaction: AccountTransaction;
+// Create update contract transaction
 // ...
 
 // Sign the transaction, the following is just an example, and any method for signing
 // with the key can be employed.
 const signingKey = '621de9198d274b56eace2f86eb134bfc414f5c566022f281335be0b2d45189845';
-const hashToSign = getAccountTransactionSignDigest(initModuleTransaction);
+const hashToSign = getAccountTransactionSignDigest(updateContractTransaction);
 
 const signature = Buffer.from(
         await ed.sign(hashToSign, signingKey)
@@ -483,11 +482,9 @@ const result = await client.sendAccountTransaction(
         signatures
 );
 
-const transactionHash = await client.GetAccountNonFinalizedTransactions(
-        new AccountAddress(senderAccountAddress)
-);
-    
-const transactionStatus = await client.getTransactionStatus(transactionHash);   
+// Get the transaction hash and status of the transaction once update contract transaction is sent
+const txHash = await getAccountTransactionHash(updateContractTransaction, signatures);
+const transactionStatus = await client.getTransactionStatus(transactionHash);  
 ```
 
 # Build

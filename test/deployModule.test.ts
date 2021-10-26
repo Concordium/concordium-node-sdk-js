@@ -3,7 +3,6 @@ import {
     AccountTransactionHeader,
     AccountTransactionSignature,
     AccountTransactionType,
-    ModuleTransactionType,
     DeployModulePayload,
     AccountTransactionPayload,
 } from '../src/types';
@@ -16,8 +15,9 @@ import * as fs from 'fs';
 import { Buffer } from 'buffer/';
 const client = getNodeClient();
 const senderAccountAddress =
-    '3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5';
-
+    '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
+const wrongPrivateKey =
+    'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
 /**
  *
  * @param filePath for the wasm file moudule
@@ -27,11 +27,10 @@ function getByteArray(filePath: string): Buffer {
     const data = fs.readFileSync(filePath);
     return Buffer.from(data);
 }
-
-const wasmFilePath =
-    '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/ind-bank/target/concordium/wasm32-unknown-unknown/release/d_bank.wasm';
+// provide path for smart contract wasm file
+const wasmFilePath = 'test/ind_bank.wasm';
 // test case for deploy contract
-test('deploy contract', async () => {
+test('deploy contract with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
         new AccountAddress(senderAccountAddress)
     );
@@ -47,25 +46,19 @@ test('deploy contract', async () => {
     const wasmFileBuffer = getByteArray(wasmFilePath) as Buffer;
 
     const deployModule: DeployModulePayload = {
-        tag: ModuleTransactionType.DeployModule,
         content: wasmFileBuffer,
-        length: wasmFileBuffer.length,
         version: 0,
     } as DeployModulePayload;
 
-    const simpleTransferAccountTransaction: AccountTransaction = {
+    const deployModuleTransaction: AccountTransaction = {
         header: header,
         payload: deployModule as AccountTransactionPayload,
         type: AccountTransactionType.DeployModule,
     };
 
-    const signingKey =
-        '631de9a98d274b56ea4e2f86eb134bfc414f4c366022f281335be0b2d45a8928';
-    const hashToSign = getAccountTransactionSignDigest(
-        simpleTransferAccountTransaction
-    );
+    const hashToSign = getAccountTransactionSignDigest(deployModuleTransaction);
     const signature = Buffer.from(
-        await ed.sign(hashToSign, signingKey)
+        await ed.sign(hashToSign, wrongPrivateKey)
     ).toString('hex');
     const signatures: AccountTransactionSignature = {
         0: {
@@ -74,13 +67,8 @@ test('deploy contract', async () => {
     };
 
     const result = await client.sendAccountTransaction(
-        simpleTransferAccountTransaction,
+        deployModuleTransaction,
         signatures
     );
-
-    const txs = await client.GetAccountNonFinalizedTransactions(
-        new AccountAddress(senderAccountAddress)
-    );
-    console.log(txs);
     expect(result).toBeTruthy();
 }, 300000);

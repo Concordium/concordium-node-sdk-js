@@ -10,7 +10,7 @@ export function getNodeClient(): ConcordiumNodeClient {
     metadata.add('authentication', 'rpcadmin');
     return new ConcordiumNodeClient(
         '127.0.0.1',
-        10001,
+        10000,
         credentials.createInsecure(),
         metadata,
         15000

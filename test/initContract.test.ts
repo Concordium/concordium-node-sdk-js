@@ -4,7 +4,6 @@ import {
     AccountTransactionSignature,
     AccountTransactionType,
     InitContractPayload,
-    ParamtersValue,
 } from '../src/types';
 import * as ed from 'noble-ed25519';
 import { getAccountTransactionSignDigest } from '../src/serialization';
@@ -16,10 +15,11 @@ import { Buffer } from 'buffer/';
 import { ModuleReference } from '../src/types/moduleReference';
 const client = getNodeClient();
 const senderAccountAddress =
-    '3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5';
-
+    '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
+const wrongPrivateKey =
+    'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
 // test case for init contract
-test('init contract', async () => {
+test('init contract with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
         new AccountAddress(senderAccountAddress)
     );
@@ -33,7 +33,9 @@ test('init contract', async () => {
     };
 
     const initName = 'init_INDBank';
-    const params: ParamtersValue<any>[] = [];
+    const params = Buffer.from([]);
+    const baseEnergy = 300000n;
+
     const initModule: InitContractPayload = {
         amount: new GtuAmount(0n),
         moduleRef: new ModuleReference(
@@ -41,18 +43,18 @@ test('init contract', async () => {
         ),
         initName: initName,
         parameter: params,
+        baseEnergyCost: baseEnergy,
     } as InitContractPayload;
-    const initModuleTransaction: AccountTransaction = {
+
+    const initContractTransaction: AccountTransaction = {
         header: header,
         payload: initModule,
         type: AccountTransactionType.InitializeSmartContractInstance,
     };
 
-    const signingKey =
-        '631de9a98d274b56ea4e2f86eb134bfc414f4c366022f281335be0b2d45a8928';
-    const hashToSign = getAccountTransactionSignDigest(initModuleTransaction);
+    const hashToSign = getAccountTransactionSignDigest(initContractTransaction);
     const signature = Buffer.from(
-        await ed.sign(hashToSign, signingKey)
+        await ed.sign(hashToSign, wrongPrivateKey)
     ).toString('hex');
     const signatures: AccountTransactionSignature = {
         0: {
@@ -61,13 +63,9 @@ test('init contract', async () => {
     };
 
     const result = await client.sendAccountTransaction(
-        initModuleTransaction,
+        initContractTransaction,
         signatures
     );
 
-    const txs = await client.GetAccountNonFinalizedTransactions(
-        new AccountAddress(senderAccountAddress)
-    );
-    console.log(txs);
     expect(result).toBeTruthy();
 }, 300000);

@@ -1,25 +1,63 @@
+import { AccountAddress, ContractAddress } from '../src';
+import { ModuleReference } from '../src/types/moduleReference';
 import { getNodeClient } from './testHelpers';
 const client = getNodeClient();
 
 // test getInstanceInfo
 test('retrieve information about a given smart contract instance', async () => {
     const blockHash =
-        '6b01f2043d5621192480f4223644ef659dd5cda1e54a78fc64ad642587c73def';
-    const contractAddress = { subindex: 0, index: 5 };
-    const accountInfo = await client.GetInstanceInfo(
+        '1729985f62c4070a8aed010fd0e5a76f6850bcc394eaf70bad517d93434f8822';
+    const contractAddress: ContractAddress = {
+        subindex: BigInt(0),
+        index: BigInt(87),
+    };
+    const instanceInfo = await client.GetInstanceInfo(
         blockHash,
         contractAddress
     );
-    console.log(accountInfo);
-    return;
+    if (!instanceInfo) {
+        throw new Error(
+            'The instance info should exist for the provided block hash.'
+        );
+    }
+    return Promise.all([
+        expect(instanceInfo).not.toBe(null),
+        expect(instanceInfo.amount).toBe('5000'),
+        expect(instanceInfo.methods).toStrictEqual([
+            'INDBank.balanceOf',
+            'INDBank.insertAmount',
+            'INDBank.smashAmount',
+        ]),
+        expect(instanceInfo.model).toBe('00'),
+        expect(instanceInfo.name).toBe('init_INDBank'),
+        expect(instanceInfo.owner).toBe(
+            new AccountAddress('3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5')
+                .address
+        ),
+        expect(instanceInfo.sourceModule).toBe(
+            new ModuleReference(
+                'e51d9f9329f103faa18b1c99335281204df9e3eec23d7138f69ddd17fd63e9d0'
+            ).moduleRef
+        )
+    ]);
 });
 
 // test getInstances
-test('retrieve the addresses of all smart contract instances', async () => {
+test('retrieve all the smart contract instances at given block hash', async () => {
     const blockHash =
-        'b3866a64e2b2e845c766e12aa0ee48a40c3a04c420a2727f675e4e1558b50a1c';
+        '1729985f62c4070a8aed010fd0e5a76f6850bcc394eaf70bad517d93434f8822';
 
-    const accountInfo = await client.GetInstances(blockHash);
-    console.log(accountInfo);
-    return;
+    const instances = await client.GetInstances(blockHash);
+    if (!instances) {
+        throw new Error(
+            'The instance info should exist for the provided block hash.'
+        );
+    }
+    return Promise.all([
+        expect(instances).not.toBe(null),
+        expect(instances[0].index).toBe(0n),
+        expect(instances[0].subindex).toBe(0n),
+        expect(instances[1].index).toBe(1n),
+        expect(instances[0].subindex).toBe(0n),
+    ])
 });

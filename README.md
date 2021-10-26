@@ -266,7 +266,7 @@ for (const transactionSummary of transactionSummaries) {
 ```
 
 ## Create a deploy module
-The following example demonstrates how to create a deploy module.
+The following example demonstrates how to create a 'deploy module' transaction.
 ```js
 const header: AccountTransactionHeader = {
     expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),

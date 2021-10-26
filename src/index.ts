@@ -13,4 +13,6 @@ export { AccountAddress } from './types/accountAddress';
 export { GtuAmount } from './types/gtuAmount';
 export { TransactionExpiry } from './types/transactionExpiry';
 export { Memo } from './types/Memo';
-export { decryptMobileWalletExport } from './wallet/crypto';
+export { decryptMobileWalletExport, EncryptedData } from './wallet/crypto';
+export { MobileWalletExport } from './wallet/types';
+export { createCredentialDeploymentTransaction } from './credentialDeploymentTransactions';

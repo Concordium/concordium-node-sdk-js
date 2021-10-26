@@ -1,4 +1,5 @@
 import {
+    AttributeKey,
     CredentialDeploymentTransaction,
     CryptographicParameters,
     UnsignedCredentialDeploymentInformation,
@@ -7,9 +8,7 @@ import {
 } from './types';
 import { Identity } from './mobileTypes';
 import * as wasm from '../pkg/desktop_wallet';
-import { TransactionExpiry } from '.';
-
-// TODO Add option to reveal attributes.
+import { TransactionExpiry } from './types/transactionExpiry';
 
 /**
  * Generates the unsigned credential information that has to be signed when
@@ -22,6 +21,7 @@ import { TransactionExpiry } from '.';
  * @param threshold the signature threshold for the credential, has to be less than number of public keys
  * @param publicKeys the public keys for the account
  * @param credentialIndex the index of the credential to create, has to be in sequence and unused
+ * @param revealedAttributes the attributes about the account holder that should be revealed on chain
  * @returns the unsigned credential deployment information (for signing), and the randomness used
  */
 function createUnsignedCredentialInfo(
@@ -29,7 +29,8 @@ function createUnsignedCredentialInfo(
     cryptographicParameters: CryptographicParameters,
     threshold: number,
     publicKeys: VerifyKey[],
-    credentialIndex: number
+    credentialIndex: number,
+    revealedAttributes: AttributeKey[]
 ): WithRandomness<UnsignedCredentialDeploymentInformation> {
     if (publicKeys.length > 255) {
         throw new Error(
@@ -54,7 +55,7 @@ function createUnsignedCredentialInfo(
         idCredSec:
             identity.privateIdObjectData.aci.credentialHolderInformation
                 .idCredSecret,
-        revealedAttributes: [],
+        revealedAttributes: revealedAttributes,
     };
 
     const unsignedCredentialDeploymentInfoString =
@@ -72,6 +73,7 @@ function createUnsignedCredentialInfo(
  * @param threshold the signature threshold for the credential, has to be less than number of public keys
  * @param publicKeys the public keys for the account
  * @param credentialIndex the index of the credential to create, has to be in sequence and unused
+ * @param revealedAttributes the attributes about the account holder that should be revealed on chain
  * @param expiry the expiry of the transaction
  * @returns a credential deployment transaction
  */
@@ -81,6 +83,7 @@ export function createCredentialDeploymentTransaction(
     threshold: number,
     publicKeys: VerifyKey[],
     credentialIndex: number,
+    revealedAttributes: AttributeKey[],
     expiry: TransactionExpiry
 ): CredentialDeploymentTransaction {
     const unsignedCredentialInfo = createUnsignedCredentialInfo(
@@ -88,7 +91,8 @@ export function createCredentialDeploymentTransaction(
         cryptographicParameters,
         threshold,
         publicKeys,
-        credentialIndex
+        credentialIndex,
+        revealedAttributes
     );
     return {
         cdi: unsignedCredentialInfo.cdi,

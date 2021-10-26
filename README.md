@@ -134,22 +134,26 @@ const credentialIndex: number = 1;
 const publicKeys: VerifyKey[] = [
     {
         schemeId: "Ed25519",
-        verifyKey: "8f25fa85d6d634caf7f1f255a29a851e77dcae1efb83c2749e07d70a0152d71d"
+        verifyKey: "c8cd7623c5a9316d8e2fccb51e1deee615bdb5d324fb4a6d33801848fb5e459e"
     },
     {
         schemeId: "Ed25519",
-        verifyKey: "e58a4a76a4d0dab355ea591cd7ee703e5d77dffeecc2c6da8b61842942f1c631"
+        verifyKey: "b6baf645540d0ea6ae5ff0b87dff324340ae1120a5c430ffee60d5f370b2ab75"
     }
 ];
+
+// The attributes to reveal about the account holder on chain. This can be empty
+const revealedAttributes: AttributeKey[] = ['firstName', 'nationality'];
 
 const expiry = new TransactionExpiry(new Date(Date.now() + 3600000));
 const credentialDeploymentTransaction: CredentialDeploymentTransaction =
     createCredentialDeploymentTransaction(
-        identity,
+        decrypted.value.identities[0],
         cryptographicParameters.value,
         threshold,
         publicKeys,
         credentialIndex,
+        revealedAttributes,
         expiry
     );
 const hashToSign: Buffer = getCredentialDeploymentSignDigest(
@@ -158,8 +162,8 @@ const hashToSign: Buffer = getCredentialDeploymentSignDigest(
 
 // The next step is to sign the credential information with each private key that matches
 // one of the public keys in the credential information.
-const signingKey1 = "81d1bf761dc4b3bcc70576f6a3135caa322b78f93edba5ed932df9bdaf1ea161";
-const signingKey2 = "add4f6a14cc178879161fc4c802da2b0b4362da9c57c11022a3e52f9fce52eab";
+const signingKey1 = "1053de23867e0f92a48814aabff834e2ca0b518497abaef71cad4e1be506334a";
+const signingKey2 = "fcd0e499f5dc7a989a37f8c89536e9af956170d7f502411855052ff75cfc3646";
 
 const signature1 = Buffer.from(await ed.sign(hashToSign, signingKey1)).toString('hex');
 const signature2 = Buffer.from(await ed.sign(hashToSign, signingKey2)).toString('hex');
@@ -345,6 +349,7 @@ To build the project run
 ```
 yarn build
 ```
+Note that you must have [wasm-pack](https://rustwasm.github.io/wasm-pack/) installed to build the project.
 
 ## Publishing a release
 Before publishing a new release it is essential that it has been built first. So make sure that 

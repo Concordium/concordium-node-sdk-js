@@ -3,25 +3,6 @@
 version = 3
 
 [[package]]
-name = "aggregate_sig"
-version = "0.1.0"
-dependencies = [
- "crypto_common",
- "crypto_common_derive",
- "curve_arithmetic",
- "ff",
- "ffi_helpers",
- "generic-array 0.14.4",
- "id",
- "pairing",
- "rand",
- "random_oracle",
- "rayon",
- "serde",
- "sha2 0.9.8",
-]
-
-[[package]]
 name = "anyhow"
 version = "1.0.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -231,16 +212,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "crypto-mac"
-version = "0.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1d1a86f49236c215f271d40892d5fc950490551400b02ef360692c29815c714"
-dependencies = [
- "generic-array 0.14.4",
- "subtle",
-]
-
-[[package]]
 name = "crypto_common"
 version = "0.1.0"
 dependencies = [
@@ -414,28 +385,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "encrypted_transfers"
-version = "0.1.0"
-dependencies = [
- "bulletproofs",
- "crypto_common",
- "crypto_common_derive",
- "curve_arithmetic",
- "elgamal",
- "ff",
- "ffi_helpers",
- "id",
- "itertools",
- "libc",
- "pairing",
- "pedersen_scheme",
- "rand",
- "random_oracle",
- "serde",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "fake-simd"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -532,26 +481,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
-name = "hkdf"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01706d578d5c281058480e673ae4086a9f4710d8df1ad80a5b03e39ece5f886b"
-dependencies = [
- "digest 0.9.0",
- "hmac",
-]
-
-[[package]]
-name = "hmac"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a2a2320eb7ec0ebe8da8f744d7812d9fc4cb4d09344ac01898dbcb6a20ae69b"
-dependencies = [
- "crypto-mac",
- "digest 0.9.0",
-]
-
-[[package]]
 name = "id"
 version = "0.1.0"
 dependencies = [
@@ -618,17 +547,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "67c21572b4949434e4fc1e1978b99c5f77064153c59d998bf13ecd96fb5ecba7"
 
 [[package]]
-name = "keygen_bls"
-version = "0.1.0"
-dependencies = [
- "curve_arithmetic",
- "ff",
- "hkdf",
- "pairing",
- "sha2 0.9.8",
-]
-
-[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -662,28 +580,21 @@ dependencies = [
 name = "node_sdk_helpers"
 version = "0.1.0"
 dependencies = [
- "aggregate_sig",
  "anyhow",
  "console_error_panic_hook",
  "crypto_common",
  "curve_arithmetic",
  "dodis_yampolskiy_prf",
  "ed25519-dalek",
- "eddsa_ed25519",
  "either",
- "elgamal",
- "encrypted_transfers",
  "ff",
- "ffi_helpers",
  "hex",
  "id",
- "keygen_bls",
  "libc",
  "pairing",
  "pedersen_scheme",
  "ps_sig",
  "rand",
- "random_oracle",
  "serde",
  "serde_json",
  "sha2 0.9.8",

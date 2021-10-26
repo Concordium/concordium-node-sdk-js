@@ -313,7 +313,7 @@ function serializeIdOwnershipProofs(proofs: IdOwnershipProofs) {
 /**
  * Returns the digest of the credential deployment transaction that has to be signed.
  * @param credentialDeploymentTransaction the credential deployment transaction
- * @returns the sha256 of the serialization of the serializedunsigned credential deployment information
+ * @returns the sha256 of the serialization of the serialized unsigned credential deployment information
  */
 export function getCredentialDeploymentSignDigest(
     credentialDeploymentTransaction: CredentialDeploymentTransaction

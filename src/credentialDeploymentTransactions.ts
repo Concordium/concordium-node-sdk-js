@@ -64,6 +64,17 @@ function createUnsignedCredentialInfo(
     return result;
 }
 
+/**
+ * Create a credential deployment transaction, which is the transaction used
+ * when deploying a new account.
+ * @param identity the identity to create a credential for
+ * @param cryptographicParameters the global cryptographic parameters from the chain
+ * @param threshold the signature threshold for the credential, has to be less than number of public keys
+ * @param publicKeys the public keys for the account
+ * @param credentialIndex the index of the credential to create, has to be in sequence and unused
+ * @param expiry the expiry of the transaction
+ * @returns a credential deployment transaction
+ */
 export function createCredentialDeploymentTransaction(
     identity: Identity,
     cryptographicParameters: CryptographicParameters,

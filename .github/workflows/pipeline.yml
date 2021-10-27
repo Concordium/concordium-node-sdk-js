@@ -3,7 +3,7 @@ name: Build and lint
 on:
     # Triggers the workflow on push or pull request events but only for the main branch
     push:
-        branches: [main, add-build-pipeline]
+        branches: [main]
     pull_request:
         branches: [main]
 

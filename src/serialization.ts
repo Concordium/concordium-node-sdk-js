@@ -26,7 +26,7 @@ import {
 import { calculateEnergyCost } from './energyCost';
 import { countSignatures } from './util';
 import { sha256 } from './hash';
-import * as wasm from '../pkg/desktop_wallet';
+import * as wasm from '../pkg/node_sdk_helpers';
 
 function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
     return Buffer.from(Uint8Array.of(type));

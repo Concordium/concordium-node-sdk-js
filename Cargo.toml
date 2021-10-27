@@ -50,6 +50,6 @@ path = "deps/concordium-base/rust-src/ps_sig"
 version = "0"
 
 [lib]
-name = "desktop_wallet"
+name = "node_sdk_helpers"
 crate-type = ["cdylib"]
 path = "rust-src/lib.rs"

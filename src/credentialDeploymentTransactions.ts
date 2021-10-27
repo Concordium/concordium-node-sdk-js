@@ -7,7 +7,7 @@ import {
     VerifyKey,
     WithRandomness,
 } from './types';
-import * as wasm from '../pkg/desktop_wallet';
+import * as wasm from '../pkg/node_sdk_helpers';
 import { TransactionExpiry } from './types/transactionExpiry';
 
 /**

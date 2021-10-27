@@ -487,6 +487,9 @@ const txHash = await getAccountTransactionHash(updateContractTransaction, signat
 const transactionStatus = await client.getTransactionStatus(transactionHash);  
 ```
 
+## Create init contract with parameters
+The following example demonstrates how to init contract with parameters.
+
 # Build
 
 ## Building for a release

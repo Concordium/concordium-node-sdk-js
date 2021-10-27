@@ -10,10 +10,21 @@ extern "C" {
 use crypto_common::{types::TransactionTime, *};
 use dodis_yampolskiy_prf as prf;
 use pairing::bls12_381::{Bls12, G1};
-use serde_json::{from_str, Value as SerdeValue};
+use serde_json::{from_str, to_string, Value as SerdeValue};
 use std::collections::BTreeMap;
 type ExampleCurve = G1;
+use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use sha2::{Digest, Sha256};
+
+#[derive(SerdeSerialize, SerdeDeserialize)]
+pub struct CredId {
+    #[serde(
+        rename = "credId",
+        serialize_with = "base16_encode",
+        deserialize_with = "base16_decode"
+    )]
+    pub cred_id: ExampleCurve,
+}
 
 use anyhow::{bail, Result};
 use id::{account_holder::create_unsigned_credential, constants::AttributeKind, types::*};
@@ -99,6 +110,13 @@ pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
     Ok(response.to_string())
 }
 
+pub fn get_account_address_aux(cred_id_str: &str) -> Result<String> {
+    let values: CredId = from_str(cred_id_str)?;
+    let address = AccountAddress::new(&values.cred_id);
+    let address_as_string = to_string(&address).unwrap();
+    Ok(address_as_string)
+}
+
 pub fn get_credential_deployment_details_aux(
     signatures: Vec<String>,
     unsigned_info: &str,
@@ -128,8 +146,6 @@ pub fn get_credential_deployment_details_aux(
 
     let cdi_json = json!(cdi);
 
-    let address = AccountAddress::new(&cdi.values.cred_id);
-
     let acc_cred = AccountCredential::Normal { cdi };
 
     let credential_message = AccountCredentialMessage {
@@ -154,7 +170,6 @@ pub fn get_credential_deployment_details_aux(
         "credInfo": cdi_json,
         "serializedTransaction": hex,
         "transactionHash": hash,
-        "address": address
     });
 
     Ok(response.to_string())

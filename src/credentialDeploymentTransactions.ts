@@ -98,3 +98,14 @@ export function createCredentialDeploymentTransaction(
         expiry: expiry,
     };
 }
+
+/**
+ * Derives the account address from a credential id. This is the address of the
+ * account that will be created by the credential deployment transaction containing
+ * this credential id.
+ * @param credId the credential id from a credential deployment transaction
+ * @returns the account address, as a base58 encoded string
+ */
+export function getAccountAddress(credId: string): string {
+    return wasm.getAccountAddress(JSON.stringify({ credId }));
+}

@@ -170,6 +170,10 @@ const signature1 = Buffer.from(await ed.sign(hashToSign, signingKey1)).toString(
 const signature2 = Buffer.from(await ed.sign(hashToSign, signingKey2)).toString('hex');
 const signatures: string[] = [signature1, signature2];
 
+// The address that the account created by the transaction will get can 
+// be derived ahead of time. It is a base58 encoded string.
+const accountAddress: string = getAccountAddress(credentialDeploymentTransaction.cdi.credId);
+
 // Send the transaction to the node
 const success = await client.sendCredentialDeploymentTransaction(
     credentialDeploymentTransaction,

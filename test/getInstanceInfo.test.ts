@@ -31,14 +31,15 @@ test('retrieve information about a given smart contract instance', async () => {
         expect(instanceInfo.model).toBe('00'),
         expect(instanceInfo.name).toBe('init_INDBank'),
         expect(instanceInfo.owner).toBe(
-            new AccountAddress('3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5')
-                .address
+            new AccountAddress(
+                '3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5'
+            ).address
         ),
         expect(instanceInfo.sourceModule).toBe(
             new ModuleReference(
                 'e51d9f9329f103faa18b1c99335281204df9e3eec23d7138f69ddd17fd63e9d0'
             ).moduleRef
-        )
+        ),
     ]);
 });
 
@@ -59,5 +60,5 @@ test('retrieve all the smart contract instances at given block hash', async () =
         expect(instances[0].subindex).toBe(0n),
         expect(instances[1].index).toBe(1n),
         expect(instances[0].subindex).toBe(0n),
-    ])
+    ]);
 });

@@ -62,9 +62,7 @@ export class DeployModuleHandler
     }
 
     serialize(transfer: DeployModulePayload): Buffer {
-        const serializedWasm = packBufferWithWord32Offset(
-            transfer.content
-        );
+        const serializedWasm = packBufferWithWord32Offset(transfer.content);
         const serializedVersion = encodeWord32(transfer.version);
         return Buffer.concat([serializedVersion, serializedWasm]);
     }
@@ -82,8 +80,9 @@ export class InitContractHandler
         const initNameBuffer = Buffer.from(payload.initName);
         const serializedInitName = packBufferWithWord16Offset(initNameBuffer);
         const serializedModuleRef = payload.moduleRef.decodedModuleRef;
-        const serializeParamters = Buffer.from(payload.parameter);
-        const serializedParamters = packBufferWithWord16Offset(serializeParamters);
+        const serializeParamters = payload.parameter;
+        const serializedParamters =
+            packBufferWithWord16Offset(serializeParamters);
         return Buffer.concat([
             serializedAmount,
             serializedModuleRef,
@@ -112,8 +111,10 @@ export class UpdateContractHandler
         ]);
         const serializeParamters = Buffer.from(payload.parameter);
         const receiveNameBuffer = Buffer.from(payload.receiveName);
-        const serializedReceiveName = packBufferWithWord16Offset(receiveNameBuffer);
-        const serializedParamters = packBufferWithWord16Offset(serializeParamters);
+        const serializedReceiveName =
+            packBufferWithWord16Offset(receiveNameBuffer);
+        const serializedParamters =
+            packBufferWithWord16Offset(serializeParamters);
         return Buffer.concat([
             serializedAmount,
             serializedContractAddress,

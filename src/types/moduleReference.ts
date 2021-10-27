@@ -19,7 +19,7 @@ export class ModuleReference {
             );
         }
         try {
-            this.decodedModuleRef = Buffer.from(moduleRef, "hex");
+            this.decodedModuleRef = Buffer.from(moduleRef, 'hex');
             this.moduleRef = moduleRef;
         } catch (error) {
             throw error;

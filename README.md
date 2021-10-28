@@ -68,6 +68,111 @@ const simpleTransferWithMemoAccountTransaction: AccountTransaction = {
 };
 ```
 
+## Create a credential for an existing account
+The following example demonstrates how to create a credential for an existing account. This
+credential can then be deployed onto the account by the account owner with an update
+credentials transaction. See [Create an update credentials transaction](#Create-an-update-credentials-transaction) for how to
+create this transaction payload using the output of the example below.
+```js
+const lastFinalizedBlockHash = (await client.getConsensusStatus()).lastFinalizedBlock;
+const cryptographicParameters = await client.getCryptographicParameters(lastFinalizedBlockHash);
+if (!cryptographicParameters) {
+    throw new Error('Cryptographic parameters were not found on a block that has been finalized.');
+}
+
+// The parts of the identity required to create a new credential, parsed from 
+// e.g. a wallet export.
+const identityInput: IdentityInput = ...
+
+// Require just one key on the credential to sign. This can be any number 
+// up to the number of public keys added to the credential.
+const threshold: number = 1;
+const credentialIndex: number = 1;
+
+// In this example the credential will have one signing key, but there
+// could be multiple. The signatures on the credential must be supplied
+// in the same order as the keys are here.
+const publicKeys: VerifyKey[] = [
+    {
+        schemeId: "Ed25519",
+        verifyKey: "c8cd7623c5a9316d8e2fccb51e1deee615bdb5d324fb4a6d33801848fb5e459e"
+    }
+];
+
+// The attributes to reveal about the account holder on chain. In the case of an
+// empty array no attributes are revealed.
+const revealedAttributes: AttributeKey[] = [];
+
+// The next step creates an unsigned credential for an existing account.
+// Note that unsignedCredentialForExistingAccount also contains the randomness used, 
+// which should be saved to later be able to reveal attributes, or prove properties about them.
+const existingAccountAddress = new AccountAddress("3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU");
+const unsignedCredentialForExistingAccount = createUnsignedCredentialForExistingAccount(
+    identityInput,
+    cryptographicParameters.value,
+    threshold,
+    publicKeys,
+    credentialIndex,
+    revealedAttributes,
+    existingAccountAddress
+);
+
+// Sign the credential information.
+const credentialDigestToSign = getCredentialForExistingAccountSignDigest(unsignedCredentialForExistingAccount.unsignedCdi, accountAddress);
+const credentialSigningKey = 'acab9ec5dfecfe5a6e13283f7ca79a6f6f5c685f036cd044557969e4dbe9d781';
+const credentialSignature = Buffer.from(await ed.sign(credentialDigestToSign, credentialSigningKey)).toString('hex');
+
+// Combine the credential and the signatures so that the object is ready
+// to be submitted as part of an update credentials transaction. This is the
+// object that must be provided to the account owner, who can then use it to
+// deploy it to their account.
+const signedCredentialForExistingAccount = buildSignedCredentialForExistingAccount(unsignedCredentialForExistingAccount.unsignedCdi, [credentialSignature]);
+```
+
+## Create an update credentials transaction
+The following demonstrates how to construct an update credentials transaction, which is
+used to deploy additional credentials to an account, remove existing credentials on the account 
+or to update the credential threshold on the account. Note that the initial credential with
+index 0 cannot be removed.
+```js
+// The signed credential that is to be deployed on the account. Received from the
+// credential holder.
+const signedCredentialForExistingAccount = ...
+
+
+// The credentials that are deployed have to be indexed. Index 0 is used up
+// by the initial credential on an account. The indices that have already been
+// used can be found in the AccountInfo.
+const accountAddress = new AccountAddress("3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU");
+const accountInfo = await client.getAccountInfo(accountAddress, lastFinalizedBlockHash);
+const nextAvailableIndex = Math.max(...Object.keys(accountInfo.accountCredentials).map((key) => Number(key))) + 1;
+
+// The current number of credentials on the account is required, as it is used to calculate
+// the correct energy cost.
+const currentNumberOfCredentials = BigInt(Object.keys(accountInfo.accountCredentials).length);
+
+const addedCredential: AddedCredential = {
+    value: signedCredentialForExistingAccount,
+    index: nextAvailableIndex
+};
+
+// List the credential id (credId) of any credentials that should be removed from the account.
+// The existing credentials (and their credId) can be found in the AccountInfo.
+const credentialsToRemove = ["b0f11a9dcdd0758c8eec717956455deed73a0db59995da2cb20d73ee974eb39aec2c79970c640126827a8fbb84217424"];
+
+// Update the credential threshold to 2, so that transactions require signatures from both
+// of the credentials. If left at e.g. 1, then both credentials can create transactions
+// by themselves.
+const threshold = 2;
+
+const updateCredentialsPayload: UpdateCredentialsPayload = {
+    addedCredentials: [addCredential],
+    currentNumberOfCredentials: currentNumberOfCredentials,
+    threshold: threshold,
+    removedCredentialIds: credentialsToRemove,
+};
+```
+
 ## Send Account Transaction
 The following example demonstrates how to send any account transaction.
 See the previous sections for how to create an account transaction.

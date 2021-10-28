@@ -42,6 +42,8 @@ import {
     UpdateQueue,
     Versioned,
     InstanceInfo,
+    InstanceInfoSerialize,
+    createInstanceInfo,
 } from './types';
 import {
     buildJsonResponseReviver,
@@ -50,7 +52,6 @@ import {
     unwrapBoolResponse,
     unwrapJsonResponse,
 } from './util';
-
 /**
  * A concordium-node specific gRPC client wrapper.
  *
@@ -486,29 +487,6 @@ export default class ConcordiumNodeClient {
     }
 
     /**
-     *
-     * @param accountAddress
-     * @returns
-     */
-    async GetAccountNonFinalizedTransactions(
-        accountAddress: Address
-    ): Promise<any | undefined> {
-        const accountAddressObject = new AccountAddress();
-        accountAddressObject.setAccountAddress(accountAddress.address);
-
-        const response = await this.sendRequest(
-            this.client.getAccountNonFinalizedTransactions,
-            accountAddressObject
-        );
-
-        const txsDetails = unwrapJsonResponse<string[]>(response);
-        if (!txsDetails) {
-            return [];
-        }
-        return txsDetails;
-    }
-
-    /**
      * Retrieves the addresses of all smart contract instances.
      * @param blockHash the block hash to get the smart contact instances at
      * @returns a JSON list of contract addresses on the chain, i.e. [{"subindex":0,"index":0},{"subindex":0,"index":1}, ....]
@@ -562,7 +540,9 @@ export default class ConcordiumNodeClient {
             getAddressInfoRequest
         );
 
-        return unwrapJsonResponse<InstanceInfo>(response);
+        const result = unwrapJsonResponse<InstanceInfoSerialize>(response);
+        const instanceInfo = createInstanceInfo(result);
+        return instanceInfo;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

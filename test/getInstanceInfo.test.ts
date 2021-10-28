@@ -1,4 +1,4 @@
-import { AccountAddress, ContractAddress } from '../src';
+import { AccountAddress, ContractAddress, GtuAmount } from '../src';
 import { ModuleReference } from '../src/types/moduleReference';
 import { getNodeClient } from './testHelpers';
 const client = getNodeClient();
@@ -22,20 +22,24 @@ test('retrieve information about a given smart contract instance', async () => {
     }
     return Promise.all([
         expect(instanceInfo).not.toBe(null),
-        expect(instanceInfo.amount).toBe('5000'),
+        expect(instanceInfo.amount.microGtuAmount).toBe(
+            new GtuAmount(5000n).microGtuAmount
+        ),
         expect(instanceInfo.methods).toStrictEqual([
             'INDBank.balanceOf',
             'INDBank.insertAmount',
             'INDBank.smashAmount',
         ]),
-        expect(instanceInfo.model).toBe('00'),
+        expect(instanceInfo.model.toString()).toBe(
+            Buffer.from('00', 'binary').toString()
+        ),
         expect(instanceInfo.name).toBe('init_INDBank'),
-        expect(instanceInfo.owner).toBe(
+        expect(instanceInfo.owner.address).toBe(
             new AccountAddress(
                 '3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5'
             ).address
         ),
-        expect(instanceInfo.sourceModule).toBe(
+        expect(instanceInfo.sourceModule.moduleRef).toBe(
             new ModuleReference(
                 'e51d9f9329f103faa18b1c99335281204df9e3eec23d7138f69ddd17fd63e9d0'
             ).moduleRef

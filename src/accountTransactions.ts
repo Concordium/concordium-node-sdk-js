@@ -19,7 +19,7 @@ import {
 interface AccountTransactionHandler<
     PayloadType extends AccountTransactionPayload = AccountTransactionPayload
 > {
-    serialize: (payload: PayloadType | undefined | any) => Buffer;
+    serialize: (payload: PayloadType) => Buffer;
     getBaseEnergyCost: (payload: PayloadType) => bigint;
 }
 
@@ -56,7 +56,7 @@ export class SimpleTransferWithMemoHandler
 export class DeployModuleHandler
     implements AccountTransactionHandler<DeployModulePayload>
 {
-    getBaseEnergyCost(payload: DeployModulePayload | undefined | any): bigint {
+    getBaseEnergyCost(payload: DeployModulePayload): bigint {
         const cost: number = Math.round((payload.content.length + 1) / 10);
         return BigInt(cost);
     }
@@ -80,14 +80,14 @@ export class InitContractHandler
         const initNameBuffer = Buffer.from(payload.initName);
         const serializedInitName = packBufferWithWord16Offset(initNameBuffer);
         const serializedModuleRef = payload.moduleRef.decodedModuleRef;
-        const serializeParamters = payload.parameter;
-        const serializedParamters =
-            packBufferWithWord16Offset(serializeParamters);
+        const serializedParameters = packBufferWithWord16Offset(
+            Buffer.from(payload.parameter)
+        );
         return Buffer.concat([
             serializedAmount,
             serializedModuleRef,
             serializedInitName,
-            serializedParamters,
+            serializedParameters,
         ]);
     }
 }
@@ -109,12 +109,12 @@ export class UpdateContractHandler
             serializeIndex,
             serializeSubindex,
         ]);
-        const serializeParamters = Buffer.from(payload.parameter);
         const receiveNameBuffer = Buffer.from(payload.receiveName);
         const serializedReceiveName =
             packBufferWithWord16Offset(receiveNameBuffer);
-        const serializedParamters =
-            packBufferWithWord16Offset(serializeParamters);
+        const serializedParamters = packBufferWithWord16Offset(
+            Buffer.from(payload.parameter)
+        );
         return Buffer.concat([
             serializedAmount,
             serializedContractAddress,

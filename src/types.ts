@@ -647,9 +647,34 @@ export interface SimpleTransferWithMemoPayload extends SimpleTransferPayload {
     memo: Memo;
 }
 
+export interface IndexedCredential {
+    /** the index of the credential, has to fit in 1 byte */
+    index: number;
+
+    /** the credential signed by the credential owner */
+    value: CredentialDeploymentInfo;
+}
+export interface UpdateCredentialsPayload {
+    /** the credentials to be added to the account */
+    addedCredentials: IndexedCredential[];
+
+    /** the ids of the credentials to be removed */
+    removedCredentialIds: string[];
+
+    /** the credential threshold required to sign transactions */
+    threshold: number;
+
+    /**
+     * the current number of credentials on the account. This
+     * is required to be able to calculate the energy cost.
+     */
+    currentNumberOfCredentials: bigint;
+}
+
 export type AccountTransactionPayload =
     | SimpleTransferPayload
-    | SimpleTransferWithMemoPayload;
+    | SimpleTransferWithMemoPayload
+    | UpdateCredentialsPayload;
 
 export interface AccountTransaction {
     type: AccountTransactionType;
@@ -701,6 +726,10 @@ export interface CredentialDeploymentInformation {
     serializedTransaction: string;
     transactionHash: string;
     address: AccountAddress;
+}
+
+export interface CredentialDeploymentInfo extends CredentialDeploymentValues {
+    proofs: string;
 }
 
 export interface IdentityProvider {

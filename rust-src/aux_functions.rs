@@ -109,11 +109,10 @@ pub fn get_account_address_aux(cred_id_str: &str) -> Result<String> {
     Ok(address_as_string)
 }
 
-pub fn get_credential_deployment_details_aux(
+fn get_credential_deployment_info(
     signatures: Vec<String>,
     unsigned_info: &str,
-    expiry: u64,
-) -> Result<String> {
+) -> Result<CredentialDeploymentInfo<Bls12, ExampleCurve, AttributeKind>> {
     let v: SerdeValue = from_str(unsigned_info)?;
     let values: CredentialDeploymentValues<ExampleCurve, AttributeKind> = from_str(unsigned_info)?;
     let proofs: IdOwnershipProofs<Bls12, ExampleCurve> = try_get(&v, "proofs")?;
@@ -134,6 +133,16 @@ pub fn get_credential_deployment_details_aux(
         values: unsigned_credential_info.values,
         proofs: cdp,
     };
+
+    Ok(cdi)
+}
+
+pub fn get_credential_deployment_details_aux(
+    signatures: Vec<String>,
+    unsigned_info: &str,
+    expiry: u64,
+) -> Result<String> {
+    let cdi = get_credential_deployment_info(signatures, unsigned_info)?;
 
     let cdi_json = json!(cdi);
 
@@ -164,4 +173,13 @@ pub fn get_credential_deployment_details_aux(
     });
 
     Ok(response.to_string())
+}
+
+pub fn get_credential_deployment_info_aux(
+    signatures: Vec<String>,
+    unsigned_info: &str,
+) -> Result<String> {
+    let cdi = get_credential_deployment_info(signatures, unsigned_info)?;
+    let cdi_json = json!(cdi);
+    Ok(cdi_json.to_string())
 }

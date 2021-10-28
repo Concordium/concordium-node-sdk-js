@@ -22,9 +22,12 @@ import {
     IdOwnershipProofs,
     CredentialDeploymentTransaction,
     CredentialDeploymentInformation,
+    UnsignedCredentialDeploymentInformation,
+    CredentialDeploymentInfo,
 } from './types';
 import { calculateEnergyCost } from './energyCost';
 import { countSignatures } from './util';
+import { AccountAddress } from './types/accountAddress';
 import { sha256 } from './hash';
 import * as wasm from '../pkg/node_sdk_helpers';
 
@@ -307,6 +310,51 @@ function serializeIdOwnershipProofs(proofs: IdOwnershipProofs) {
         Buffer.from(proofs.proofIpSig, 'hex'),
         Buffer.from(proofs.proofRegId, 'hex'),
         Buffer.from(proofs.credCounterLessThanMaxAccounts, 'hex'),
+    ]);
+}
+
+/**
+ * Serializes a signed credential used as part of an update credentials account
+ * transaction.
+ * @param credential the already signed credential deployment information
+ * @returns the serialization of the signed credential
+ */
+export function serializeCredentialDeploymentInfo(
+    credential: CredentialDeploymentInfo
+): Buffer {
+    const serializedCredentialDeploymentValues =
+        serializeCredentialDeploymentValues(credential);
+    const serializedProofs = Buffer.from(credential.proofs, 'hex');
+    const serializedProofsLength = encodeWord32(serializedProofs.length);
+    return Buffer.concat([
+        serializedCredentialDeploymentValues,
+        serializedProofsLength,
+        serializedProofs,
+    ]);
+}
+
+/**
+ * Returns the digest to be signed for a credential that has been generated for
+ * deployment to an existing account.
+ * @param unsignedCredentialDeploymentInfo the credential information to be deployed to an existing account
+ * @returns the sha256 of the serialization of the unsigned credential
+ */
+export function getCredentialForExistingAccountSignDigest(
+    unsignedCredentialDeploymentInfo: UnsignedCredentialDeploymentInformation,
+    address: AccountAddress
+): Buffer {
+    const serializedCredentialValues = serializeCredentialDeploymentValues(
+        unsignedCredentialDeploymentInfo
+    );
+    const serializedIdOwnershipProofs = serializeIdOwnershipProofs(
+        unsignedCredentialDeploymentInfo.proofs
+    );
+    const existingAccountByte = encodeWord8(1);
+    return sha256([
+        serializedCredentialValues,
+        serializedIdOwnershipProofs,
+        existingAccountByte,
+        address.decodedAddress,
     ]);
 }
 

@@ -29,3 +29,15 @@ pub fn get_credential_deployment_details_ext(
         Err(e) => format!("Unable to get credential deployment details due to: {}", e),
     }
 }
+
+#[wasm_bindgen(js_name = getDeploymentInfo)]
+pub fn get_credential_deployment_info_ext(
+    signatures: &JsValue,
+    unsigned_info: &str,
+) -> String {
+    let signatures_vec: Vec<String> = signatures.into_serde().unwrap();
+    match get_credential_deployment_info_aux(signatures_vec, unsigned_info) {
+        Ok(s) => s,
+        Err(e) => format!("unable to get credential due to: {}", e),
+    }
+}

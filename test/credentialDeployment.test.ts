@@ -7,18 +7,33 @@ import {
     CredentialDeploymentTransaction,
     AttributeKey,
     IdentityInput,
+    UpdateCredentialsPayload,
+    AccountTransactionHeader,
+    AccountTransaction,
+    AccountTransactionType,
+    AccountTransactionSignature,
+    IndexedCredential,
 } from '../src/types';
-import { createCredentialDeploymentTransaction } from '../src/credentialDeploymentTransactions';
+import {
+    buildSignedCredentialForExistingAccount,
+    createCredentialDeploymentTransaction,
+    createUnsignedCredentialForExistingAccount,
+} from '../src/credentialDeploymentTransactions';
 import { TransactionExpiry } from '../src/types/transactionExpiry';
 import * as ed from 'noble-ed25519';
-import { getCredentialDeploymentSignDigest } from '../src/serialization';
+import {
+    getAccountTransactionSignDigest,
+    getCredentialDeploymentSignDigest,
+    getCredentialForExistingAccountSignDigest,
+} from '../src/serialization';
 import { Buffer } from 'buffer/';
+import { AccountAddress } from '../src/types/accountAddress';
 
 const client = getNodeClient();
 
-test('credential deployment for new account is accepted', async () => {
+function getIdentityInput(): IdentityInput {
     const rawData = fs.readFileSync(
-        './test/resources/mobileWalletExport.json',
+        './test/resources/mobileWalletExportTemp.json',
         'utf8'
     );
     const mobileWalletExport: EncryptedData = JSON.parse(rawData);
@@ -36,6 +51,11 @@ test('credential deployment for new account is accepted', async () => {
         prfKey: identity.privateIdObjectData.aci.prfKey,
         randomness: identity.privateIdObjectData.randomness,
     };
+    return identityInput;
+}
+
+test('update credential is accepted', async () => {
+    const identityInput: IdentityInput = getIdentityInput();
 
     const lastFinalizedBlockHash = (await client.getConsensusStatus())
         .lastFinalizedBlock;
@@ -50,12 +70,115 @@ test('credential deployment for new account is accepted', async () => {
         {
             schemeId: 'Ed25519',
             verifyKey:
-                'c8cd7623c5a9316d8e2fccb51e1deee615bdb5d324fb4a6d33801848fb5e459e',
+                '2e22e43bf92970eb408929014d7cd744277b9e767f60de7d7ab985ad38d98841',
         },
+    ];
+
+    const threshold = 1;
+    const credentialIndex = 1;
+
+    // The attributes to reveal on the chain.
+    const revealedAttributes: AttributeKey[] = ['firstName', 'nationality'];
+
+    const senderAccountAddress =
+        '4mqk9WnmunRAtT8dadH2Xt5ZapnxSnoDD22DRe436qwL8tdbam';
+    const address = new AccountAddress(senderAccountAddress);
+
+    const credentialToDeploy = createUnsignedCredentialForExistingAccount(
+        identityInput,
+        cryptographicParameters.value,
+        threshold,
+        publicKeys,
+        credentialIndex,
+        revealedAttributes,
+        address
+    );
+
+    const credentialDigestToSign = getCredentialForExistingAccountSignDigest(
+        credentialToDeploy.unsignedCdi,
+        address
+    );
+    const credentialSigningKey =
+        '6563f93a822c7d9b8a106558438c1e981bdf9921f2f0bec3efbf96307f4180ad';
+    const credentialSignature = Buffer.from(
+        await ed.sign(credentialDigestToSign, credentialSigningKey)
+    ).toString('hex');
+
+    const signedCredentialToDeploy = buildSignedCredentialForExistingAccount(
+        credentialToDeploy.unsignedCdi,
+        [credentialSignature]
+    );
+
+    const addCredential: IndexedCredential = {
+        value: signedCredentialToDeploy,
+        index: 1,
+    };
+
+    const updateCredentialsPayload: UpdateCredentialsPayload = {
+        addedCredentials: [addCredential],
+        currentNumberOfCredentials: BigInt(2),
+        threshold: 1,
+        removedCredentialIds: [
+            'ad88734c858172e24cf2d16954da7d17af1b24de8e6b7631aef991556d05065f11ce994108f8f90c8efff9fdd55f1baa',
+        ],
+    };
+
+    const nextAccountNonce = await client.getNextAccountNonce(address);
+    if (!nextAccountNonce) {
+        throw new Error('Nonce not found');
+    }
+
+    const header: AccountTransactionHeader = {
+        expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+        nonce: nextAccountNonce.nonce,
+        sender: address,
+    };
+
+    const updateCredentialsAccountTransaction: AccountTransaction = {
+        header: header,
+        payload: updateCredentialsPayload,
+        type: AccountTransactionType.UpdateCredentials,
+    };
+
+    const privateKey =
+        '294c1c845783069852b44696d822c4e9b69c1e2936bd8a4031f9af9864b335f2';
+
+    const hashToSign = getAccountTransactionSignDigest(
+        updateCredentialsAccountTransaction
+    );
+    const signature = Buffer.from(
+        await ed.sign(hashToSign, privateKey)
+    ).toString('hex');
+    const signatures: AccountTransactionSignature = {
+        0: {
+            0: signature,
+        },
+    };
+
+    const result = await client.sendAccountTransaction(
+        updateCredentialsAccountTransaction,
+        signatures
+    );
+    expect(result).toBeTruthy();
+});
+
+test('credential deployment for new account is accepted', async () => {
+    const identityInput: IdentityInput = getIdentityInput();
+
+    const lastFinalizedBlockHash = (await client.getConsensusStatus())
+        .lastFinalizedBlock;
+    const cryptographicParameters = await client.getCryptographicParameters(
+        lastFinalizedBlockHash
+    );
+    if (!cryptographicParameters) {
+        throw new Error('Missing global');
+    }
+
+    const publicKeys: VerifyKey[] = [
         {
             schemeId: 'Ed25519',
             verifyKey:
-                'b6baf645540d0ea6ae5ff0b87dff324340ae1120a5c430ffee60d5f370b2ab75',
+                '93d93f7a46bf62a57cccb9f4da32ef51643138a55b3c59e03375cd0ce2c4624a',
         },
     ];
 
@@ -63,9 +186,9 @@ test('credential deployment for new account is accepted', async () => {
 
     // Intentionally use a credential index that has already been used. This means that
     // the transaction will not succeed, but it should still be received by the node.
-    const credentialIndex = 0;
+    const credentialIndex = 9;
 
-    // The attributes to reveal on the chain. Ensure they are in the identity(?)
+    // The attributes to reveal on the chain.
     const revealedAttributes: AttributeKey[] = ['firstName', 'nationality'];
 
     const expiry = new TransactionExpiry(new Date(Date.now() + 3600000));
@@ -85,17 +208,12 @@ test('credential deployment for new account is accepted', async () => {
 
     // Sign the thing now.
     const signingKey1 =
-        '1053de23867e0f92a48814aabff834e2ca0b518497abaef71cad4e1be506334a';
-    const signingKey2 =
-        'fcd0e499f5dc7a989a37f8c89536e9af956170d7f502411855052ff75cfc3646';
+        '294c1c815782068852b44696d822c4e9b69c1e2936bd8a4031f9af9864b335f1';
 
     const signature1 = Buffer.from(
         await ed.sign(hashToSign, signingKey1)
     ).toString('hex');
-    const signature2 = Buffer.from(
-        await ed.sign(hashToSign, signingKey2)
-    ).toString('hex');
-    const signatures: string[] = [signature1, signature2];
+    const signatures: string[] = [signature1];
 
     // Send the transaction to the node
     const success = await client.sendCredentialDeploymentTransaction(

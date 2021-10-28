@@ -33,5 +33,5 @@ interface Identities {
 }
 
 export interface MobileWalletExport extends Versioned<Identities> {
-    type: string;
+    type: 'concordium-mobile-wallet-data';
 }

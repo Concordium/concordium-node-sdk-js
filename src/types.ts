@@ -662,7 +662,7 @@ export type AccountTransactionSignature = Record<number, CredentialSignature>;
 
 export interface CredentialDeploymentTransaction {
     expiry: TransactionExpiry;
-    cdi: UnsignedCredentialDeploymentInformation;
+    unsignedCdi: UnsignedCredentialDeploymentInformation;
     randomness: CommitmentsRandomness;
 }
 
@@ -691,8 +691,8 @@ export interface CommitmentsRandomness {
     attributesRand: AttributesRandomness;
 }
 
-export interface WithRandomness<Info> {
-    cdi: Info;
+export interface UnsignedCdiWithRandomness {
+    unsignedCdi: UnsignedCredentialDeploymentInformation;
     randomness: CommitmentsRandomness;
 }
 

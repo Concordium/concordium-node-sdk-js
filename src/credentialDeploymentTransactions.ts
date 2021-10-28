@@ -3,9 +3,8 @@ import {
     CredentialDeploymentTransaction,
     CryptographicParameters,
     IdentityInput,
-    UnsignedCredentialDeploymentInformation,
+    UnsignedCdiWithRandomness,
     VerifyKey,
-    WithRandomness,
 } from './types';
 import * as wasm from '../pkg/node_sdk_helpers';
 import { TransactionExpiry } from './types/transactionExpiry';
@@ -31,7 +30,7 @@ function createUnsignedCredentialInfo(
     publicKeys: VerifyKey[],
     credentialIndex: number,
     revealedAttributes: AttributeKey[]
-): WithRandomness<UnsignedCredentialDeploymentInformation> {
+): UnsignedCdiWithRandomness {
     if (publicKeys.length > 255) {
         throw new Error(
             'The number of keys is greater than what the transaction supports: ' +
@@ -58,8 +57,9 @@ function createUnsignedCredentialInfo(
 
     const unsignedCredentialDeploymentInfoString =
         wasm.generateUnsignedCredential(JSON.stringify(credentialInput));
-    const result: WithRandomness<UnsignedCredentialDeploymentInformation> =
-        JSON.parse(unsignedCredentialDeploymentInfoString);
+    const result: UnsignedCdiWithRandomness = JSON.parse(
+        unsignedCredentialDeploymentInfoString
+    );
     return result;
 }
 
@@ -93,7 +93,7 @@ export function createCredentialDeploymentTransaction(
         revealedAttributes
     );
     return {
-        cdi: unsignedCredentialInfo.cdi,
+        unsignedCdi: unsignedCredentialInfo.unsignedCdi,
         randomness: unsignedCredentialInfo.randomness,
         expiry: expiry,
     };

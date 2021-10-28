@@ -313,16 +313,16 @@ function serializeIdOwnershipProofs(proofs: IdOwnershipProofs) {
 /**
  * Returns the digest of the credential deployment transaction that has to be signed.
  * @param credentialDeploymentTransaction the credential deployment transaction
- * @returns the sha256 of the serialization of the serialized unsigned credential deployment information
+ * @returns the sha256 of the serialized unsigned credential deployment information
  */
 export function getCredentialDeploymentSignDigest(
     credentialDeploymentTransaction: CredentialDeploymentTransaction
 ): Buffer {
     const serializedCredentialValues = serializeCredentialDeploymentValues(
-        credentialDeploymentTransaction.cdi
+        credentialDeploymentTransaction.unsignedCdi
     );
     const serializedIdOwnershipProofs = serializeIdOwnershipProofs(
-        credentialDeploymentTransaction.cdi.proofs
+        credentialDeploymentTransaction.unsignedCdi.proofs
     );
     const newAccountByte = encodeWord8(0);
     return sha256([
@@ -348,7 +348,7 @@ export function getCredentialDeploymentTransactionHash(
         JSON.parse(
             wasm.getDeploymentDetails(
                 signatures,
-                JSON.stringify(credentialDeploymentTransaction.cdi),
+                JSON.stringify(credentialDeploymentTransaction.unsignedCdi),
                 credentialDeploymentTransaction.expiry.expiryEpochSeconds
             )
         );
@@ -370,7 +370,7 @@ export function serializeCredentialDeploymentTransactionForSubmission(
         JSON.parse(
             wasm.getDeploymentDetails(
                 signatures,
-                JSON.stringify(credentialDeploymentTransaction.cdi),
+                JSON.stringify(credentialDeploymentTransaction.unsignedCdi),
                 credentialDeploymentTransaction.expiry.expiryEpochSeconds
             )
         );

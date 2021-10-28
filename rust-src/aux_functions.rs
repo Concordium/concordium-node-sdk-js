@@ -1,12 +1,4 @@
 use crate::{helpers::*, types::*};
-use wasm_bindgen::prelude::*;
-#[wasm_bindgen]
-extern "C" {
-    // Use `js_namespace` here to bind `console.log(..)` instead of just
-    // `log(..)`
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
-}
 use crypto_common::{types::TransactionTime, *};
 use dodis_yampolskiy_prf as prf;
 use pairing::bls12_381::{Bls12, G1};
@@ -95,7 +87,7 @@ pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
         Err(_) => None,
     };
 
-    let (cdi, rand) = create_unsigned_credential(
+    let (unsigned_cdi, rand) = create_unsigned_credential(
         context,
         &id_object,
         &id_use_data,
@@ -105,7 +97,7 @@ pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
         address.as_ref(),
     )?;
 
-    let response = json!({"cdi": cdi, "randomness": rand});
+    let response = json!({"unsignedCdi": unsigned_cdi, "randomness": rand});
 
     Ok(response.to_string())
 }
@@ -122,7 +114,6 @@ pub fn get_credential_deployment_details_aux(
     unsigned_info: &str,
     expiry: u64,
 ) -> Result<String> {
-    console_error_panic_hook::set_once();
     let v: SerdeValue = from_str(unsigned_info)?;
     let values: CredentialDeploymentValues<ExampleCurve, AttributeKind> = from_str(unsigned_info)?;
     let proofs: IdOwnershipProofs<Bls12, ExampleCurve> = try_get(&v, "proofs")?;

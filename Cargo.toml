@@ -23,7 +23,6 @@ ff = "0.5"
 either = "1.6"
 sha2 = "0.9"
 rand = "=0.7"
-console_error_panic_hook = "0.1.6"
 
 [dependencies.id]
 path = "deps/concordium-base/rust-src/id"

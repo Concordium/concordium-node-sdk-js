@@ -1,4 +1,4 @@
-import { ArInfo, IpInfo, Versioned } from '../types';
+import { IdentityProvider, Versioned } from '../types';
 
 interface CredentialHolderInformation {
     idCredSecret: string;
@@ -12,11 +12,6 @@ interface AccountCredentialInformation {
 interface PrivateIdObjectData {
     aci: AccountCredentialInformation;
     randomness: string;
-}
-
-export interface IdentityProvider {
-    arsInfos: Record<number, ArInfo>;
-    ipInfo: IpInfo;
 }
 
 export interface Identity {

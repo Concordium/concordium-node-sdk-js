@@ -265,29 +265,38 @@ for (const transactionSummary of transactionSummaries) {
 }
 ```
 
-## Create a deploy module
-The following example demonstrates how to create a 'deploy module' transaction.
+## Deploy module
+The following example demonstrates how to deploy a smart contract module.
 ```js
-const header: AccountTransactionHeader = {
-    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
-    nonce: nextAccountNonce.nonce,
-    sender: new AccountAddress(senderAccountAddress),
-};
-```
-The following code is to get the wasm file buffer which is one of the parameter
-for deploy module
-```js
+/**
+ *
+ * @param filePath for the wasm file moudule
+ * @returns Buffer of the wasm file
+ */
+function getByteArray(filePath: string): Buffer {
+    const data = fs.readFileSync(filePath);
+    return Buffer.from(data);
+}
+//To get the buffer of the wasm file from the previous method
 const wasmFileBuffer = getByteArray(wasmFilePath) as Buffer;
-```
 
-The following code is how to create the payload for deploy module
-```js
 const deployModule: DeployModulePayload = {
     tag: ModuleTransactionType.DeployModule,
     content: wasmFileBuffer,
     length: wasmFileBuffer.length,
     version: 0,
 } as DeployModulePayload;
+
+let deployModuleTransaction: AccountTransaction;
+```
+
+Now the following explain how to send deploy module transaction along with header, type which is 0 for DeployModule and deployModule created in the previous step.
+```js
+const header: AccountTransactionHeader = {
+    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+    nonce: nextAccountNonce.nonce,
+    sender: new AccountAddress(senderAccountAddress),
+};
 
 const deployModuleTransaction: AccountTransaction = {
     header: header,
@@ -296,16 +305,8 @@ const deployModuleTransaction: AccountTransaction = {
 };
 ```
 
-## Deploy module
-The following example demonstrates how to deploy a smart contract module. 
-See the previous section for how to create a deploy module transaction
-
 ```js
 import * as ed from "noble-ed25519";
-
-let deployModuleTransaction: AccountTransaction;
-// Create the deploy module transaction
-// ...
 
 // Sign the transaction, the following is just an example, and any method for signing
 // with the key can be employed.
@@ -337,30 +338,26 @@ const txHash = await getAccountTransactionHash(deployModuleTransaction, signatur
 const transactionStatus = await client.getTransactionStatus(transactionHash);   
 ```
 
-## Create Init contract module
-The following example demonstrates how to create a init contract transaction.
-```js
-const header: AccountTransactionHeader = {
-    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
-    nonce: nextAccountNonce.nonce,
-    sender: new AccountAddress(senderAccountAddress),
-};
-```
-The following code is how to create the payload for init contract 
-
-Name of init function including "init_" prefix(for suppose the contract with name as "INDBank" then the init name should be as "init_INDBank") and parameter for the init function.
+## Init Contract (parameterless smart contract)
+The following example demonstrates how to initialize a smart contract module. 
+Name of init function including "init_" prefix(for suppose the contract with name as "INDBank" 
+then the init name should be as "init_INDBank") and parameter for the init function as empty Buffer 
+since we are initializing the contract without any parameters.
 ```js
 const initName = 'init_INDBank'; 
-const params: ParamtersValue<any>[] = [];
+const params = [];
 ```
 
+Create init contract transaction
 ```js
 const initModule: InitContractPayload = {
-    amount: new GtuAmount(0n),
+    amount: new GtuAmount(0n), //Amount to send to contract if the smart contract is payable then send some GTU Amount else 0n
     moduleRef: new ModuleReference('a225a5aeb0a5cf9bbc59209e15df030e8cc2c17b8dba08c4bf59f80edaedd8b1'), //module refernce which obtained after deploy smart contract
     initName: initName,
     parameter: params
 } as InitContractPayload;
+
+let initContractTransaction: AccountTransaction;
 
 const initModuleTransaction: AccountTransaction = {
     header: header,
@@ -369,16 +366,8 @@ const initModuleTransaction: AccountTransaction = {
 };
 ```
 
-## Init Contract (parameterless smart contract)
-The following example demonstrates how to initialize a smart contract module. 
-See the previous section for how to create init contract transaction
-
 ```js
 import * as ed from "noble-ed25519";
-
-let initContractTransaction: AccountTransaction;
-// Create init contract transaction
-// ...
 
 // Sign the transaction, the following is just an example, and any method for signing
 // with the key can be employed.
@@ -410,27 +399,21 @@ const txHash = await getAccountTransactionHash(initContractTransaction, signatur
 const transactionStatus = await client.getTransactionStatus(transactionHash);    
 ```
 
-## Create update contract 
-The following example demonstrates how to create a update contract.
-```js
-const header: AccountTransactionHeader = {
-    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
-    nonce: nextAccountNonce.nonce,
-    sender: new AccountAddress(senderAccountAddress),
-};
-```
-The following code is how to create the payload for update contract
+## Update Contract(parameterless smart contract)
+The following example demonstrates how to update a smart contract. 
 
-Name of receive function including "<contractName>." prefix(for suppose the contract with name as "INDBank" and one of the receive function name as "insertAmount" then the name of receive function should be as "INDBank.insertAmount") and parameter for the init function. Contract Address of contract instance consisting of an index and a subindex.
+The following code is how to create the payload for update contract
+Name of receive function including "<contractName>." as a prefix(for suppose the contract with name as "INDBank" and one of the receive function name as "insertAmount" then the name of receive function should be as "INDBank.insertAmount") and parameter for the receive function as empty Buffer since we are receive function of the contract without any parameters. Contract Address of contract instance consisting of an index and a subindex.
 ```js
 const receiveName = 'DCBBank.insertAmount';
-const params: ParamtersValue<any>[] = [];
+const params = [];
 const contractAddress = { index: BigInt(83), subindex: BigInt(0) } as ContractAddress;
 //The amount of energy to execute the transaction
 const baseEnergy = 30000n;
 ```
-
+Create update contract transaction
 ```js
+let updateContractTransaction: AccountTransaction;
 const updateContractTransaction: UpdateContractPayload =
 {
     amount: new GtuAmount(1000n),
@@ -446,16 +429,9 @@ const updateContractTransaction: AccountTransaction = {
     type: AccountTransactionType.UpdateSmartContractInstance,
 };
 ```
-## Update Contract(parameterless smart contract)
-The following example demonstrates how to update a smart contract. 
-See the previous section for how to create update contract transaction
 
 ```js
 import * as ed from "noble-ed25519";
-
-let updateContractTransaction: AccountTransaction;
-// Create update contract transaction
-// ...
 
 // Sign the transaction, the following is just an example, and any method for signing
 // with the key can be employed.

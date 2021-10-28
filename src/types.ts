@@ -754,8 +754,34 @@ export interface InstanceInfo {
     owner: AccountAddress;
     methods: string[];
     name: string;
-    model: Buffer[];
+    model: Buffer;
 }
 
 export type CredentialSignature = Record<number, string>;
 export type AccountTransactionSignature = Record<number, CredentialSignature>;
+
+export interface InstanceInfoSerialize {
+    amount: string;
+    sourceModule: string;
+    owner: string;
+    methods: string[];
+    name: string;
+    model: string;
+}
+
+export function createInstanceInfo(
+    instanceInfo: InstanceInfoSerialize | undefined
+): InstanceInfo | undefined {
+    if (instanceInfo === undefined) {
+        return undefined;
+    }
+
+    return {
+        amount: new GtuAmount(BigInt(instanceInfo.amount)),
+        sourceModule: new ModuleReference(instanceInfo.sourceModule),
+        owner: new AccountAddress(instanceInfo.owner),
+        methods: instanceInfo.methods,
+        name: instanceInfo.name,
+        model: Buffer.from(instanceInfo.model, 'binary'),
+    } as InstanceInfo;
+}

@@ -109,6 +109,88 @@ const transactionHash = getAccountTransactionHash(accountTransaction, signatures
 const transactionStatus = await client.getTransactionStatus(transactionHash);
 ```
 
+## Create a new account
+The following example demonstrates how to create a new account on an existing
+identity. The `credentialIndex` should be the next unused credential index for that identity, and keeping track of that index is done off-chain. Note that index `0` is used by the initial account that was created together with the identity.
+
+```js
+const lastFinalizedBlockHash = (await client.getConsensusStatus()).lastFinalizedBlock;
+const cryptographicParameters = await client.getCryptographicParameters(lastFinalizedBlockHash);
+if (!cryptographicParameters) {
+    throw new Error('Cryptographic parameters were not found on a block that has been finalized.');
+}
+
+// The parts of the identity required to create a new account, parsed from 
+// e.g. a wallet export.
+const identityInput: IdentityInput = ...
+
+// Require just one key on the credential to sign. This can be any number 
+// up to the number of public keys added to the credential.
+const threshold: number = 1;
+const credentialIndex: number = 1;
+
+// In this example the credential on the account will have two keys. Note that
+// the credential information has to be signed (in order) by corresponding 
+// private keys.
+const publicKeys: VerifyKey[] = [
+    {
+        schemeId: "Ed25519",
+        verifyKey: "c8cd7623c5a9316d8e2fccb51e1deee615bdb5d324fb4a6d33801848fb5e459e"
+    },
+    {
+        schemeId: "Ed25519",
+        verifyKey: "b6baf645540d0ea6ae5ff0b87dff324340ae1120a5c430ffee60d5f370b2ab75"
+    }
+];
+
+// The attributes to reveal about the account holder on chain. This can be empty
+const revealedAttributes: AttributeKey[] = ['firstName', 'nationality'];
+
+const expiry = new TransactionExpiry(new Date(Date.now() + 3600000));
+const credentialDeploymentTransaction: CredentialDeploymentTransaction =
+    createCredentialDeploymentTransaction(
+        identityInput,
+        cryptographicParameters.value,
+        threshold,
+        publicKeys,
+        credentialIndex,
+        revealedAttributes,
+        expiry
+    );
+const hashToSign: Buffer = getCredentialDeploymentSignDigest(
+    credentialDeploymentTransaction
+);
+
+// The next step is to sign the credential information with each private key that matches
+// one of the public keys in the credential information.
+const signingKey1 = "1053de23867e0f92a48814aabff834e2ca0b518497abaef71cad4e1be506334a";
+const signingKey2 = "fcd0e499f5dc7a989a37f8c89536e9af956170d7f502411855052ff75cfc3646";
+
+const signature1 = Buffer.from(await ed.sign(hashToSign, signingKey1)).toString('hex');
+const signature2 = Buffer.from(await ed.sign(hashToSign, signingKey2)).toString('hex');
+const signatures: string[] = [signature1, signature2];
+
+// The address that the account created by the transaction will get can 
+// be derived ahead of time. It is a base58 encoded string.
+const accountAddress: string = getAccountAddress(credentialDeploymentTransaction.cdi.credId);
+
+// Send the transaction to the node
+const success = await client.sendCredentialDeploymentTransaction(
+    credentialDeploymentTransaction,
+    signatures
+);
+if (success) {
+    // The node accepted the transaction. This does not ensure that the transaction
+    // will end up in a block, only that the format of the submitted transaction was valid.
+} else {
+    // The node rejected the transaction.
+}
+
+// Check the status of the transaction. Should be checked with an appropriate interval,
+// as it will take some time for the transaction to be processed.
+const transactionHash = getCredentialDeploymentTransactionHash(credentialDeploymentTransaction, signatures);
+const transactionStatus = await client.getTransactionStatus(transactionHash);
+```
 
 ## getAccountInfo
 Retrieves information about an account. If no account exists with the provided address, then the node
@@ -272,6 +354,7 @@ To build the project run
 ```
 yarn build
 ```
+Note that you must have [wasm-pack](https://rustwasm.github.io/wasm-pack/) installed to build the project.
 
 ## Publishing a release
 Before publishing a new release it is essential that it has been built first. So make sure that 

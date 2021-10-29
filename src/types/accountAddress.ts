@@ -1,4 +1,4 @@
-import bs58check from 'bs58check';
+import * as bs58check from 'bs58check';
 import { Buffer } from 'buffer/';
 
 /**

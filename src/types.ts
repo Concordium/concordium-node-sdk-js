@@ -760,6 +760,7 @@ export interface InstanceInfo {
 export type CredentialSignature = Record<number, string>;
 export type AccountTransactionSignature = Record<number, CredentialSignature>;
 
+
 export interface InstanceInfoSerialize {
     amount: string;
     sourceModule: string;
@@ -784,4 +785,60 @@ export function createInstanceInfo(
         name: instanceInfo.name,
         model: Buffer.from(instanceInfo.model, 'binary'),
     } as InstanceInfo;
+}
+
+export interface CredentialDeploymentTransaction {
+    expiry: TransactionExpiry;
+    unsignedCdi: UnsignedCredentialDeploymentInformation;
+    randomness: CommitmentsRandomness;
+}
+
+export interface IdOwnershipProofs {
+    challenge: string;
+    commitments: string;
+    credCounterLessThanMaxAccounts: string;
+    proofIdCredPub: Record<string, string>;
+    proofIpSig: string;
+    proofRegId: string;
+    sig: string;
+}
+
+export interface UnsignedCredentialDeploymentInformation
+    extends CredentialDeploymentValues {
+    proofs: IdOwnershipProofs;
+}
+
+type AttributesRandomness = Record<AttributeKey, string>;
+
+export interface CommitmentsRandomness {
+    idCredSecRand: string;
+    prfRand: string;
+    credCounterRand: string;
+    maxAccountsRand: string;
+    attributesRand: AttributesRandomness;
+}
+
+export interface UnsignedCdiWithRandomness {
+    unsignedCdi: UnsignedCredentialDeploymentInformation;
+    randomness: CommitmentsRandomness;
+}
+
+export interface CredentialDeploymentInformation {
+    credInfo: string;
+    serializedTransaction: string;
+    transactionHash: string;
+    address: AccountAddress;
+}
+
+export interface IdentityProvider {
+    arsInfos: Record<number, ArInfo>;
+    ipInfo: IpInfo;
+}
+
+export interface IdentityInput {
+    identityProvider: IdentityProvider;
+    identityObject: any;
+    prfKey: string;
+    idCredSecret: string;
+    randomness: string;
 }

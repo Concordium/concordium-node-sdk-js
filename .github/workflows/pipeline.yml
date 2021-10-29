@@ -29,6 +29,14 @@ jobs:
             - name: Build gRPC
               run: yarn generate
 
+            - name: Install rust
+              run: rustup default 1.53
+
+            - name: Get wasm-pack
+              uses: jetli/wasm-pack-action@v0.3.0
+              with:
+                  version: 'latest'
+
             - name: Build
               run: yarn build
 

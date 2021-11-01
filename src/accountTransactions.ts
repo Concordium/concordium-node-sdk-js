@@ -6,19 +6,25 @@ import {
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
 } from './types';
+import { calculateEnergyCost } from './energyCost';
 
 interface AccountTransactionHandler<
     PayloadType extends AccountTransactionPayload = AccountTransactionPayload
 > {
     serialize: (payload: PayloadType) => Buffer;
-    getBaseEnergyCost: (payload?: PayloadType) => bigint;
+    getEnergyCost: (payload: PayloadType, signatureCount: bigint) => bigint;
 }
 
 export class SimpleTransferHandler
-    implements AccountTransactionHandler<SimpleTransferWithMemoPayload>
+    implements AccountTransactionHandler<SimpleTransferPayload>
 {
-    getBaseEnergyCost(): bigint {
-        return 300n;
+    getEnergyCost(payload: SimpleTransferPayload, signatureCount: bigint): bigint {
+        const baseEnergyCost = 300n;
+        return calculateEnergyCost(
+            signatureCount,
+            BigInt(this.serialize(payload).length + 1), // + 1 for the signatureKind
+            baseEnergyCost
+        );
     }
 
     serialize(transfer: SimpleTransferPayload): Buffer {

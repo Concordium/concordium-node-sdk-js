@@ -23,7 +23,6 @@ import {
     CredentialDeploymentTransaction,
     CredentialDeploymentInformation,
 } from './types';
-import { calculateEnergyCost } from './energyCost';
 import { countSignatures } from './util';
 import { sha256 } from './hash';
 import * as wasm from '../pkg/node_sdk_helpers';
@@ -116,14 +115,8 @@ export function serializeAccountTransaction(
         accountTransaction.payload
     );
 
-    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(
-        accountTransaction.payload
-    );
-    const energyCost = calculateEnergyCost(
-        countSignatures(signatures),
-        BigInt(serializedPayload.length + 1),
-        baseEnergyCost
-    );
+    const energyCost = accountTransactionHandler.getEnergyCost(accountTransaction.payload, countSignatures(signatures));
+
     const serializedHeader = serializeAccountTransactionHeader(
         accountTransaction.header,
         serializedPayload.length + 1,
@@ -172,16 +165,7 @@ export function getAccountTransactionSignDigest(
     const serializedPayload = accountTransactionHandler.serialize(
         accountTransaction.payload
     );
-
-    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(
-        accountTransaction.payload
-    );
-    const energyCost = calculateEnergyCost(
-        signatureCount,
-        BigInt(serializedPayload.length + 1),
-        baseEnergyCost
-    );
-
+    const energyCost = accountTransactionHandler.getEnergyCost(accountTransaction.payload, signatureCount);
     return sha256([
         serializeAccountTransactionHeader(
             accountTransaction.header,

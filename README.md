@@ -72,7 +72,7 @@ const simpleTransferWithMemoAccountTransaction: AccountTransaction = {
 The following example demonstrates how to create a credential for an existing account. This
 credential can then be deployed onto the account by the account owner with an update
 credentials transaction. See [Create an update credentials transaction](#Create-an-update-credentials-transaction) for how to
-create this transaction payload using the output of the example below.
+create this transaction payload using the output from the example below.
 ```js
 const lastFinalizedBlockHash = (await client.getConsensusStatus()).lastFinalizedBlock;
 const cryptographicParameters = await client.getCryptographicParameters(lastFinalizedBlockHash);
@@ -126,7 +126,7 @@ const credentialSignature = Buffer.from(await ed.sign(credentialDigestToSign, cr
 // to be submitted as part of an update credentials transaction. This is the
 // object that must be provided to the account owner, who can then use it to
 // deploy it to their account.
-const signedCredentialForExistingAccount = buildSignedCredentialForExistingAccount(unsignedCredentialForExistingAccount.unsignedCdi, [credentialSignature]);
+const signedCredentialForExistingAccount: CredentialDeploymentInfo = buildSignedCredentialForExistingAccount(unsignedCredentialForExistingAccount.unsignedCdi, [credentialSignature]);
 ```
 
 ## Create an update credentials transaction
@@ -137,8 +137,7 @@ index 0 cannot be removed.
 ```js
 // The signed credential that is to be deployed on the account. Received from the
 // credential holder.
-const signedCredentialForExistingAccount = ...
-
+const signedCredentialForExistingAccount: CredentialDeploymentInfo = ...
 
 // The credentials that are deployed have to be indexed. Index 0 is used up
 // by the initial credential on an account. The indices that have already been
@@ -151,7 +150,7 @@ const nextAvailableIndex = Math.max(...Object.keys(accountInfo.accountCredential
 // the correct energy cost.
 const currentNumberOfCredentials = BigInt(Object.keys(accountInfo.accountCredentials).length);
 
-const addedCredential: AddedCredential = {
+const newCredential: IndexedCredential = {
     value: signedCredentialForExistingAccount,
     index: nextAvailableIndex
 };
@@ -166,10 +165,10 @@ const credentialsToRemove = ["b0f11a9dcdd0758c8eec717956455deed73a0db59995da2cb2
 const threshold = 2;
 
 const updateCredentialsPayload: UpdateCredentialsPayload = {
-    addedCredentials: [addCredential],
-    currentNumberOfCredentials: currentNumberOfCredentials,
+    newCredentials: [newCredential],
+    removeCredentialIds: credentialsToRemove,
     threshold: threshold,
-    removedCredentialIds: credentialsToRemove,
+    currentNumberOfCredentials: currentNumberOfCredentials,
 };
 ```
 

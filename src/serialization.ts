@@ -21,7 +21,6 @@ import {
     CredentialDeploymentValues,
     IdOwnershipProofs,
     CredentialDeploymentTransaction,
-    CredentialDeploymentInformation,
     UnsignedCredentialDeploymentInformation,
     CredentialDeploymentInfo,
 } from './types';
@@ -381,6 +380,12 @@ export function getCredentialDeploymentSignDigest(
     ]);
 }
 
+interface DeploymentDetailsResult {
+    credInfo: string;
+    serializedTransaction: string;
+    transactionHash: string;
+}
+
 /**
  * Gets the transaction hash that is used to look up the status of a credential
  * deployment transaction.
@@ -392,14 +397,13 @@ export function getCredentialDeploymentTransactionHash(
     credentialDeploymentTransaction: CredentialDeploymentTransaction,
     signatures: string[]
 ): string {
-    const credentialDeploymentInfo: CredentialDeploymentInformation =
-        JSON.parse(
-            wasm.getDeploymentDetails(
-                signatures,
-                JSON.stringify(credentialDeploymentTransaction.unsignedCdi),
-                credentialDeploymentTransaction.expiry.expiryEpochSeconds
-            )
-        );
+    const credentialDeploymentInfo: DeploymentDetailsResult = JSON.parse(
+        wasm.getDeploymentDetails(
+            signatures,
+            JSON.stringify(credentialDeploymentTransaction.unsignedCdi),
+            credentialDeploymentTransaction.expiry.expiryEpochSeconds
+        )
+    );
     return credentialDeploymentInfo.transactionHash;
 }
 
@@ -414,13 +418,12 @@ export function serializeCredentialDeploymentTransactionForSubmission(
     credentialDeploymentTransaction: CredentialDeploymentTransaction,
     signatures: string[]
 ): Buffer {
-    const credentialDeploymentInfo: CredentialDeploymentInformation =
-        JSON.parse(
-            wasm.getDeploymentDetails(
-                signatures,
-                JSON.stringify(credentialDeploymentTransaction.unsignedCdi),
-                credentialDeploymentTransaction.expiry.expiryEpochSeconds
-            )
-        );
+    const credentialDeploymentInfo: DeploymentDetailsResult = JSON.parse(
+        wasm.getDeploymentDetails(
+            signatures,
+            JSON.stringify(credentialDeploymentTransaction.unsignedCdi),
+            credentialDeploymentTransaction.expiry.expiryEpochSeconds
+        )
+    );
     return Buffer.from(credentialDeploymentInfo.serializedTransaction, 'hex');
 }

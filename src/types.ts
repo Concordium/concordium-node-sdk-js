@@ -647,21 +647,22 @@ export interface SimpleTransferWithMemoPayload extends SimpleTransferPayload {
     memo: Memo;
 }
 
-export interface IndexedCredential {
+export interface IndexedCredentialDeploymentInfo {
     /** the index of the credential, has to fit in 1 byte */
     index: number;
 
     /** the credential signed by the credential owner */
-    value: CredentialDeploymentInfo;
+    cdi: CredentialDeploymentInfo;
 }
+
 export interface UpdateCredentialsPayload {
     /** the credentials to be added to the account */
-    addedCredentials: IndexedCredential[];
+    newCredentials: IndexedCredentialDeploymentInfo[];
 
     /** the ids of the credentials to be removed */
-    removedCredentialIds: string[];
+    removeCredentialIds: string[];
 
-    /** the credential threshold required to sign transactions */
+    /** the new credential threshold required to sign transactions */
     threshold: number;
 
     /**
@@ -719,13 +720,6 @@ export interface CommitmentsRandomness {
 export interface UnsignedCdiWithRandomness {
     unsignedCdi: UnsignedCredentialDeploymentInformation;
     randomness: CommitmentsRandomness;
-}
-
-export interface CredentialDeploymentInformation {
-    credInfo: string;
-    serializedTransaction: string;
-    transactionHash: string;
-    address: AccountAddress;
 }
 
 export interface CredentialDeploymentInfo extends CredentialDeploymentValues {

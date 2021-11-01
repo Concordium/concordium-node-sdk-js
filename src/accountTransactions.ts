@@ -55,11 +55,10 @@ export class UpdateCredentialsHandler
     implements AccountTransactionHandler<UpdateCredentialsPayload>
 {
     getBaseEnergyCost(updateCredentials: UpdateCredentialsPayload): bigint {
-        const newCredentialsCost = updateCredentials.addedCredentials
+        const newCredentialsCost = updateCredentials.newCredentials
             .map((credential) => {
                 const numberOfKeys = BigInt(
-                    Object.keys(credential.value.credentialPublicKeys.keys)
-                        .length
+                    Object.keys(credential.cdi.credentialPublicKeys.keys).length
                 );
                 return 54000n + 100n * numberOfKeys;
             })
@@ -73,17 +72,17 @@ export class UpdateCredentialsHandler
 
     serialize(updateCredentials: UpdateCredentialsPayload): Buffer {
         const serializedAddedCredentials = serializeList(
-            updateCredentials.addedCredentials,
+            updateCredentials.newCredentials,
             encodeWord8,
-            ({ index, value }) =>
+            ({ index, cdi }) =>
                 Buffer.concat([
                     encodeWord8(index),
-                    serializeCredentialDeploymentInfo(value),
+                    serializeCredentialDeploymentInfo(cdi),
                 ])
         );
 
         const serializedRemovedCredIds = serializeList(
-            updateCredentials.removedCredentialIds,
+            updateCredentials.removeCredentialIds,
             encodeWord8,
             (credId: string) => Buffer.from(credId, 'hex')
         );

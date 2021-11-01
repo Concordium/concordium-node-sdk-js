@@ -9,14 +9,6 @@ pub fn generate_unsigned_credential_ext(input: &str) -> String {
     }
 }
 
-#[wasm_bindgen(js_name = getAccountAddress)]
-pub fn get_account_address_ext(cred_id_str: &str) -> String {
-    match get_account_address_aux(cred_id_str) {
-        Ok(s) => s,
-        Err(e) => format!("Unable to get account address due to: {}", e),
-    }
-}
-
 #[wasm_bindgen(js_name = getDeploymentDetails)]
 pub fn get_credential_deployment_details_ext(
     signatures: &JsValue,

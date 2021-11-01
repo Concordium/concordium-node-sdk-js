@@ -11,6 +11,8 @@ import {
 import * as wasm from '../pkg/node_sdk_helpers';
 import { TransactionExpiry } from './types/transactionExpiry';
 import { AccountAddress } from './types/accountAddress';
+import { sha256 } from './hash';
+import * as bs58check from 'bs58check';
 
 /**
  * Generates the unsigned credential information that has to be signed when
@@ -165,8 +167,13 @@ export function buildSignedCredentialForExistingAccount(
  * account that will be created by the credential deployment transaction containing
  * this credential id.
  * @param credId the credential id from a credential deployment transaction
- * @returns the account address, as a base58 encoded string
+ * @returns the account address
  */
-export function getAccountAddress(credId: string): string {
-    return wasm.getAccountAddress(JSON.stringify({ credId }));
+export function getAccountAddress(credId: string): AccountAddress {
+    const hashedCredId = sha256([Buffer.from(credId, 'hex')]);
+    const prefixedWithVersion = Buffer.concat([Buffer.of(1), hashedCredId]);
+    const accountAddress = new AccountAddress(
+        bs58check.encode(prefixedWithVersion)
+    );
+    return accountAddress;
 }

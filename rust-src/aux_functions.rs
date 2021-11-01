@@ -2,7 +2,7 @@ use crate::{helpers::*, types::*};
 use crypto_common::{types::TransactionTime, *};
 use dodis_yampolskiy_prf as prf;
 use pairing::bls12_381::{Bls12, G1};
-use serde_json::{from_str, to_string, Value as SerdeValue};
+use serde_json::{from_str, Value as SerdeValue};
 use std::collections::BTreeMap;
 type ExampleCurve = G1;
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
@@ -100,13 +100,6 @@ pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
     let response = json!({"unsignedCdi": unsigned_cdi, "randomness": rand});
 
     Ok(response.to_string())
-}
-
-pub fn get_account_address_aux(cred_id_str: &str) -> Result<String> {
-    let values: CredId = from_str(cred_id_str)?;
-    let address = AccountAddress::new(&values.cred_id);
-    let address_as_string = to_string(&address).unwrap();
-    Ok(address_as_string)
 }
 
 fn get_credential_deployment_info(

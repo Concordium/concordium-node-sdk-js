@@ -150,7 +150,7 @@ const nextAvailableIndex = Math.max(...Object.keys(accountInfo.accountCredential
 // the correct energy cost.
 const currentNumberOfCredentials = BigInt(Object.keys(accountInfo.accountCredentials).length);
 
-const newCredential: IndexedCredential = {
+const newCredential: IndexedCredentialDeploymentInfo = {
     value: signedCredentialForExistingAccount,
     index: nextAvailableIndex
 };

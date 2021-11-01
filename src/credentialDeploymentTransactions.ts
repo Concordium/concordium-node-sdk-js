@@ -111,15 +111,15 @@ export function createCredentialDeploymentTransaction(
 }
 
 /**
- * Create a credential for an existing account. The output of this function can then
- * be used by the owner of the account that the credential was generated for, to
- * deploy the credential on that account
- * @param identity
- * @param cryptographicParameters
- * @param threshold
- * @param publicKeys
- * @param credentialIndex
- * @param revealedAttributes
+ * Create an unsigned credential for an existing account. This credential has to be signed by
+ * the creator before it can be deployed on the existing account.
+ * @param identity the identity to create a credential for
+ * @param cryptographicParameters the global cryptographic parameters from the chain
+ * @param threshold the signature threshold for the credential, has to be less than number of public keys
+ * @param publicKeys the public keys for the credential
+ * @param credentialIndex the index of the credential to create, has to be in sequence and unused
+ * @param revealedAttributes the attributes about the account holder that should be revealed on chain
+ * @param address the account address to associated the credential with
  */
 export function createUnsignedCredentialForExistingAccount(
     identity: IdentityInput,

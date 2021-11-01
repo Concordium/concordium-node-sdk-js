@@ -18,7 +18,10 @@ interface AccountTransactionHandler<
 export class SimpleTransferHandler
     implements AccountTransactionHandler<SimpleTransferPayload>
 {
-    getEnergyCost(payload: SimpleTransferPayload, signatureCount: bigint): bigint {
+    getEnergyCost(
+        payload: SimpleTransferPayload,
+        signatureCount: bigint
+    ): bigint {
         const baseEnergyCost = 300n;
         return calculateEnergyCost(
             signatureCount,

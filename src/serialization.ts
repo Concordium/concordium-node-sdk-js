@@ -115,7 +115,10 @@ export function serializeAccountTransaction(
         accountTransaction.payload
     );
 
-    const energyCost = accountTransactionHandler.getEnergyCost(accountTransaction.payload, countSignatures(signatures));
+    const energyCost = accountTransactionHandler.getEnergyCost(
+        accountTransaction.payload,
+        countSignatures(signatures)
+    );
 
     const serializedHeader = serializeAccountTransactionHeader(
         accountTransaction.header,
@@ -165,7 +168,10 @@ export function getAccountTransactionSignDigest(
     const serializedPayload = accountTransactionHandler.serialize(
         accountTransaction.payload
     );
-    const energyCost = accountTransactionHandler.getEnergyCost(accountTransaction.payload, signatureCount);
+    const energyCost = accountTransactionHandler.getEnergyCost(
+        accountTransaction.payload,
+        signatureCount
+    );
     return sha256([
         serializeAccountTransactionHeader(
             accountTransaction.header,

@@ -488,7 +488,6 @@ The following code is how to create the payload for update contract
 Name of receive function including "<contractName>." as a prefix(for suppose the contract with name as "INDBank" and one of the receive function name as "insertAmount" then the name of receive function should be as "INDBank.insertAmount") and parameter for the receive function as empty Buffer since we are receive function of the contract without any parameters. Contract Address of contract instance consisting of an index and a subindex.
 ```js
 const receiveName = 'DCBBank.insertAmount';
-const params = [];
 const contractAddress = { index: BigInt(83), subindex: BigInt(0) } as ContractAddress;
 //The amount of energy to execute the transaction
 const baseEnergy = 30000n;

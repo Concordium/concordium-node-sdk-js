@@ -22,27 +22,25 @@ test('retrieve information about a given smart contract instance', async () => {
     }
     return Promise.all([
         expect(instanceInfo).not.toBe(null),
-        expect(instanceInfo.amount.microGtuAmount).toBe(
-            new GtuAmount(5000n).microGtuAmount
-        ),
+        expect(instanceInfo.amount).toStrictEqual(new GtuAmount(5000n)),
         expect(instanceInfo.methods).toStrictEqual([
             'INDBank.balanceOf',
             'INDBank.insertAmount',
             'INDBank.smashAmount',
         ]),
-        expect(instanceInfo.model.toString()).toBe(
-            Buffer.from('00', 'binary').toString()
+        expect(Buffer.from('00', 'binary').equals(instanceInfo.model)).toBe(
+            true
         ),
         expect(instanceInfo.name).toBe('init_INDBank'),
-        expect(instanceInfo.owner.address).toBe(
+        expect(instanceInfo.owner).toStrictEqual(
             new AccountAddress(
                 '3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5'
-            ).address
+            )
         ),
-        expect(instanceInfo.sourceModule.moduleRef).toBe(
+        expect(instanceInfo.sourceModule).toStrictEqual(
             new ModuleReference(
                 'e51d9f9329f103faa18b1c99335281204df9e3eec23d7138f69ddd17fd63e9d0'
-            ).moduleRef
+            )
         ),
     ]);
 });

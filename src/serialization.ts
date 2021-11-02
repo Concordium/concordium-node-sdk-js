@@ -88,6 +88,46 @@ export function serializeAccountTransactionSignature(
 }
 
 /**
+ * Returns the serialization of the transaction's header, type and payload.
+ * @param accountTransaction the transaction to serialize
+ * @param signatureCount number of expected signatures
+ * @returns Buffer containing the serialized header, type and payload
+ */
+function serializeAccountTransactionBase(
+    accountTransaction: AccountTransaction,
+    signatureCount = 1n
+): Buffer {
+    const accountTransactionHandler = getAccountTransactionHandler(
+        accountTransaction.type
+    );
+    const serializedPayload = accountTransactionHandler.serialize(
+        accountTransaction.payload
+    );
+
+    let energyCost = accountTransaction.header.energyAmount;
+    if (!energyCost) {
+        const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(
+            accountTransaction.payload
+        );
+        energyCost = calculateEnergyCost(
+            signatureCount,
+            BigInt(serializedPayload.length + 1),
+            baseEnergyCost
+        );
+    }
+
+    return Buffer.concat([
+        serializeAccountTransactionHeader(
+            accountTransaction.header,
+            serializedPayload.length + 1,
+            energyCost
+        ),
+        serializeAccountTransactionType(accountTransaction.type),
+        serializedPayload,
+    ]);
+}
+
+/**
  * Serializes a transaction and its signatures. This serialization when sha256 hashed
  * is considered as the transaction hash, and is used to look up the status of a
  * submitted transaction.
@@ -105,37 +145,12 @@ export function serializeAccountTransaction(
     const serializedAccountTransactionSignatures =
         serializeAccountTransactionSignature(signatures);
 
-    const serializedType = serializeAccountTransactionType(
-        accountTransaction.type
-    );
-
-    const accountTransactionHandler = getAccountTransactionHandler(
-        accountTransaction.type
-    );
-    const serializedPayload = accountTransactionHandler.serialize(
-        accountTransaction.payload
-    );
-
-    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(
-        accountTransaction.payload
-    );
-    const energyCost = calculateEnergyCost(
-        countSignatures(signatures),
-        BigInt(serializedPayload.length + 1),
-        baseEnergyCost
-    );
-    const serializedHeader = serializeAccountTransactionHeader(
-        accountTransaction.header,
-        serializedPayload.length + 1,
-        energyCost
-    );
+    const serializedTransactionBase = serializeAccountTransactionBase(accountTransaction, countSignatures(signatures));
 
     return Buffer.concat([
         serializedBlockItemKind,
         serializedAccountTransactionSignatures,
-        serializedHeader,
-        serializedType,
-        serializedPayload,
+        serializedTransactionBase,
     ]);
 }
 
@@ -166,31 +181,9 @@ export function getAccountTransactionSignDigest(
     accountTransaction: AccountTransaction,
     signatureCount = 1n
 ): Buffer {
-    const accountTransactionHandler = getAccountTransactionHandler(
-        accountTransaction.type
-    );
-    const serializedPayload = accountTransactionHandler.serialize(
-        accountTransaction.payload
-    );
+    const serializedTransactionBase = serializeAccountTransactionBase(accountTransaction, signatureCount);
 
-    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(
-        accountTransaction.payload
-    );
-    const energyCost = calculateEnergyCost(
-        signatureCount,
-        BigInt(serializedPayload.length + 1),
-        baseEnergyCost
-    );
-
-    return sha256([
-        serializeAccountTransactionHeader(
-            accountTransaction.header,
-            serializedPayload.length + 1,
-            energyCost
-        ),
-        serializeAccountTransactionType(accountTransaction.type),
-        serializedPayload,
-    ]);
+    return sha256([serializedTransactionBase]);
 }
 
 /**

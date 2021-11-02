@@ -632,6 +632,14 @@ export interface AccountTransactionHeader {
 
     /** expiration of the transaction */
     expiry: TransactionExpiry;
+
+    /**
+     * The maximum allowed energy to be spent on the transaction.
+     * This is allowed to be unspecified for transactions,
+     * whose energy cost can be determined from the payload.
+     * If it is insufficient, the transaction will fail.
+     */
+    energyAmount?: bigint;
 }
 
 export interface SimpleTransferPayload {

@@ -449,8 +449,12 @@ const transactionStatus = await client.getTransactionStatus(transactionHash);
 ## Update Contract(parameterless smart contract)
 The following example demonstrates how to update a smart contract. 
 
-The following code is how to create the payload for update contract
-Name of receive function including "<contractName>." as a prefix(for suppose the contract with name as "INDBank" and one of the receive function name as "insertAmount" then the name of receive function should be as "INDBank.insertAmount") and parameter for the receive function as empty Buffer since we are receive function of the contract without any parameters. Contract Address of contract instance consisting of an index and a subindex.
+To update a smart contract we create a 'updateContractTransaction'.
+To do this we need to specify the name of the receive function, which should contain the contract name as a prefix ( So if the contract has the name "INDBank" and the receive function has the name "insertAmount" then the receiveName should be "INDBank.insertAmount").
+
+We also need to supply the contract address of the contract instance. This consists of an index and a subindex.
+
+In this example, the contract does not take any parameters, so we can leave the parameters as an empty list.  
 ```js
 const receiveName = 'DCBBank.insertAmount';
 const contractAddress = { index: BigInt(83), subindex: BigInt(0) } as ContractAddress;

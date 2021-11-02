@@ -112,14 +112,14 @@ export class UpdateContractHandler
         const receiveNameBuffer = Buffer.from(payload.receiveName);
         const serializedReceiveName =
             packBufferWithWord16Offset(receiveNameBuffer);
-        const serializedParamters = packBufferWithWord16Offset(
+        const serializedParameters = packBufferWithWord16Offset(
             Buffer.from(payload.parameter)
         );
         return Buffer.concat([
             serializedAmount,
             serializedContractAddress,
             serializedReceiveName,
-            serializedParamters,
+            serializedParameters,
         ]);
     }
 }

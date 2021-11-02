@@ -370,10 +370,7 @@ const deployModule: DeployModulePayload = {
 } as DeployModulePayload;
 
 let deployModuleTransaction: AccountTransaction;
-```
-
-Now the following explain how to send deploy module transaction along with header, type which is 0 for DeployModule and deployModule created in the previous step.
-```js
+ 
 const header: AccountTransactionHeader = {
     expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
     nonce: nextAccountNonce.nonce,

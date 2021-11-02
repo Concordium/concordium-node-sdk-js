@@ -95,7 +95,6 @@ export function encodeMemo(memo: Memo): Buffer {
     return Buffer.concat([length, memo.memo]);
 }
 
-
 /**
  * Packing a buffer along the with offset of 32 bit length
  * @param buffer containing the buffer.

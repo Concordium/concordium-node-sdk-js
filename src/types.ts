@@ -760,7 +760,6 @@ export interface InstanceInfo {
 export type CredentialSignature = Record<number, string>;
 export type AccountTransactionSignature = Record<number, CredentialSignature>;
 
-
 export interface InstanceInfoSerialize {
     amount: string;
     sourceModule: string;

@@ -667,7 +667,8 @@ export interface UpdateCredentialsPayload {
 
     /**
      * the current number of credentials on the account. This
-     * is required to be able to calculate the energy cost.
+     * is required to be able to calculate the energy cost, but
+     * is not part of the actual transaction.
      */
     currentNumberOfCredentials: bigint;
 }

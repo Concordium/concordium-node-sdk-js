@@ -87,6 +87,10 @@ const identityInput: IdentityInput = ...
 // Require just one key on the credential to sign. This can be any number 
 // up to the number of public keys added to the credential.
 const threshold: number = 1;
+
+// The index of the credential that will be created. This index is per identity
+// and has to be in sequence, and not already used. Note that index 0 is used
+// by the initial credential that was created with the identity.
 const credentialIndex: number = 1;
 
 // In this example the credential will have one signing key, but there
@@ -118,7 +122,7 @@ const unsignedCredentialForExistingAccount = createUnsignedCredentialForExisting
 );
 
 // Sign the credential information.
-const credentialDigestToSign = getCredentialForExistingAccountSignDigest(unsignedCredentialForExistingAccount.unsignedCdi, accountAddress);
+const credentialDigestToSign = getCredentialForExistingAccountSignDigest(unsignedCredentialForExistingAccount.unsignedCdi, existingAccountAddress);
 const credentialSigningKey = 'acab9ec5dfecfe5a6e13283f7ca79a6f6f5c685f036cd044557969e4dbe9d781';
 const credentialSignature = Buffer.from(await ed.sign(credentialDigestToSign, credentialSigningKey)).toString('hex');
 
@@ -151,7 +155,7 @@ const nextAvailableIndex = Math.max(...Object.keys(accountInfo.accountCredential
 const currentNumberOfCredentials = BigInt(Object.keys(accountInfo.accountCredentials).length);
 
 const newCredential: IndexedCredentialDeploymentInfo = {
-    value: signedCredentialForExistingAccount,
+    cdi: signedCredentialForExistingAccount,
     index: nextAvailableIndex
 };
 
@@ -231,6 +235,10 @@ const identityInput: IdentityInput = ...
 // Require just one key on the credential to sign. This can be any number 
 // up to the number of public keys added to the credential.
 const threshold: number = 1;
+
+// The index of the credential that will be created. This index is per identity
+// and has to be in sequence, and not already used. Note that index 0 is used
+// by the initial credential that was created with the identity.
 const credentialIndex: number = 1;
 
 // In this example the credential on the account will have two keys. Note that

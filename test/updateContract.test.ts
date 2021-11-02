@@ -46,7 +46,7 @@ test('update contract with the wrong private key', async () => {
         contractAddress: contractAddress,
         receiveName: receiveName,
         parameter: params,
-        baseEnergyCost: baseEnergy,
+        maxContractExecutionEnergy: baseEnergy,
     } as UpdateContractPayload;
 
     const updateContractTransaction: AccountTransaction = {

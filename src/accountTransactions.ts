@@ -6,6 +6,8 @@ import {
     encodeWord32,
     packBufferWithWord32Offset,
     packBufferWithWord16Offset,
+    serializeList,
+    encodeWord8,
 } from './serializationHelpers';
 import {
     AccountTransactionType,
@@ -122,7 +124,6 @@ export class UpdateContractHandler
             serializedContractAddress,
             serializedReceiveName,
             serializedParameters,
-
         ]);
     }
 }

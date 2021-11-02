@@ -43,7 +43,7 @@ test('init contract with the wrong private key', async () => {
         ),
         initName: initName,
         parameter: params,
-        baseEnergyCost: baseEnergy,
+        maxContractExecutionEnergy: baseEnergy,
     } as InitContractPayload;
 
     const initContractTransaction: AccountTransaction = {

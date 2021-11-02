@@ -505,6 +505,8 @@ In this example, the contract does not take any parameters, so we can leave para
 ```js
 const initName = 'init_INDBank'; 
 const params = [];
+//The amount of energy that can be used for contract execution.
+const baseEnergy = 300000n;
 ```
 
 Create init contract transaction
@@ -513,7 +515,8 @@ const initModule: InitContractPayload = {
     amount: new GtuAmount(0n), // Amount to send to the contract. If the smart contract is not payable, set the amount to 0.
     moduleRef: new ModuleReference('a225a5aeb0a5cf9bbc59209e15df030e8cc2c17b8dba08c4bf59f80edaedd8b1'), // Module reference, which can be obtained after deploying a module
     initName: initName,
-    parameter: params
+    parameter: params,
+    maxContractExecutionEnergy: baseEnergy
 } as InitContractPayload;
 
 let initContractTransaction: AccountTransaction;
@@ -570,7 +573,7 @@ In this example, the contract does not take any parameters, so we can leave the 
 ```js
 const receiveName = 'DCBBank.insertAmount';
 const contractAddress = { index: BigInt(83), subindex: BigInt(0) } as ContractAddress;
-//The amount of energy to execute the transaction
+//The amount of energy that can be used for contract execution.
 const baseEnergy = 30000n;
 ```
 Create update contract transaction
@@ -582,7 +585,7 @@ const updateContractTransaction: UpdateContractPayload =
     contractAddress: contractAddress,
     receiveName: receiveName,
     parameter: [],
-    baseEnergyCost: baseEnergy, 
+    maxContractExecutionEnergy: baseEnergy
 } as UpdateContractPayload;
 
 const updateContractTransaction: AccountTransaction = {

@@ -145,7 +145,10 @@ export function serializeAccountTransaction(
     const serializedAccountTransactionSignatures =
         serializeAccountTransactionSignature(signatures);
 
-    const serializedTransactionBase = serializeAccountTransactionBase(accountTransaction, countSignatures(signatures));
+    const serializedTransactionBase = serializeAccountTransactionBase(
+        accountTransaction,
+        countSignatures(signatures)
+    );
 
     return Buffer.concat([
         serializedBlockItemKind,
@@ -181,7 +184,10 @@ export function getAccountTransactionSignDigest(
     accountTransaction: AccountTransaction,
     signatureCount = 1n
 ): Buffer {
-    const serializedTransactionBase = serializeAccountTransactionBase(accountTransaction, signatureCount);
+    const serializedTransactionBase = serializeAccountTransactionBase(
+        accountTransaction,
+        signatureCount
+    );
 
     return sha256([serializedTransactionBase]);
 }

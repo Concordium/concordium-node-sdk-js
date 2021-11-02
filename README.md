@@ -384,38 +384,7 @@ const deployModuleTransaction: AccountTransaction = {
 };
 ```
 
-```js
-import * as ed from "noble-ed25519";
-
-// Sign the transaction, the following is just an example, and any method for signing
-// with the key can be employed.
-const signingKey = '621de9198d274b56eace2f86eb134bfc414f5c566022f281335be0b2d45189845';
-const hashToSign = getAccountTransactionSignDigest(deployModuleTransaction);
-
-const signature = Buffer.from(
-        await ed.sign(hashToSign, signingKey)
-    ).toString('hex');
-
-// The signatures used to sign the transaction must be provided in a structured way,
-// so that each signature can be mapped to the credential that signed the transaction.
-// In this example we assume the key used was from the credential with index 0, and it
-// was the key with index 0.
-const signatures: AccountTransactionSignature = {
-    0: {
-        0: signature,
-    },
-};
-
-// Send the deploy module transaction to the node.
-const result = await client.sendAccountTransaction(
-        deployModuleTransaction,
-        signatures
-    );
-
-// Get the transaction hash and status of the transaction once deploy transaction is sent
-const txHash = await getAccountTransactionHash(deployModuleTransaction, signatures);
-const transactionStatus = await client.getTransactionStatus(transactionHash);   
-```
+Finally, to actually deploy the module to the chain, send the constructed `deployModuleTransaction` to the chain using `sendAccountTransaction`. (Refer to the _Send Account Transaction_ section for how to do this)
 
 ## Init Contract (parameterless smart contract)
 The following example demonstrates how to initialize a smart contract from a module, which has already been deployed. 

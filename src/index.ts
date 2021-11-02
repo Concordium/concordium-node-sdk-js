@@ -4,6 +4,7 @@ import {
     getAccountTransactionSignDigest,
     getCredentialDeploymentSignDigest,
     getCredentialDeploymentTransactionHash,
+    getCredentialForExistingAccountSignDigest,
 } from './serialization';
 import { sha256 } from './hash';
 
@@ -14,6 +15,7 @@ export {
     getAccountTransactionSignDigest,
     getCredentialDeploymentSignDigest,
     getCredentialDeploymentTransactionHash,
+    getCredentialForExistingAccountSignDigest,
 };
 export { sha256 };
 export { AccountAddress } from './types/accountAddress';
@@ -25,5 +27,7 @@ export { decryptMobileWalletExport, EncryptedData } from './wallet/crypto';
 export { MobileWalletExport } from './wallet/types';
 export {
     createCredentialDeploymentTransaction,
+    createUnsignedCredentialForExistingAccount,
     getAccountAddress,
+    buildSignedCredentialForExistingAccount,
 } from './credentialDeploymentTransactions';

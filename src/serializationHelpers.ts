@@ -17,6 +17,18 @@ export function serializeMap<K extends string | number | symbol, T>(
     return Buffer.concat(buffers);
 }
 
+export function serializeList<T>(
+    list: T[],
+    putSize: (size: number) => Buffer,
+    putMember: (t: T) => Buffer
+): Buffer {
+    const buffers = [putSize(list.length)];
+    list.forEach((member: T) => {
+        buffers.push(putMember(member));
+    });
+    return Buffer.concat(buffers);
+}
+
 /**
  * Encodes a 64 bit unsigned integer to a Buffer using big endian.
  * @param value a 64 bit integer

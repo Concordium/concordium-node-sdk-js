@@ -21,10 +21,12 @@ import {
     CredentialDeploymentValues,
     IdOwnershipProofs,
     CredentialDeploymentTransaction,
-    CredentialDeploymentInformation,
+    UnsignedCredentialDeploymentInformation,
+    CredentialDeploymentInfo,
 } from './types';
 import { calculateEnergyCost } from './energyCost';
 import { countSignatures } from './util';
+import { AccountAddress } from './types/accountAddress';
 import { sha256 } from './hash';
 import * as wasm from '../pkg/node_sdk_helpers';
 
@@ -312,6 +314,51 @@ function serializeIdOwnershipProofs(proofs: IdOwnershipProofs) {
 }
 
 /**
+ * Serializes a signed credential used as part of an update credentials account
+ * transaction.
+ * @param credential the already signed credential deployment information
+ * @returns the serialization of the signed credential
+ */
+export function serializeCredentialDeploymentInfo(
+    credential: CredentialDeploymentInfo
+): Buffer {
+    const serializedCredentialDeploymentValues =
+        serializeCredentialDeploymentValues(credential);
+    const serializedProofs = Buffer.from(credential.proofs, 'hex');
+    const serializedProofsLength = encodeWord32(serializedProofs.length);
+    return Buffer.concat([
+        serializedCredentialDeploymentValues,
+        serializedProofsLength,
+        serializedProofs,
+    ]);
+}
+
+/**
+ * Returns the digest to be signed for a credential that has been generated for
+ * deployment to an existing account.
+ * @param unsignedCredentialDeploymentInfo the credential information to be deployed to an existing account
+ * @returns the sha256 of the serialization of the unsigned credential
+ */
+export function getCredentialForExistingAccountSignDigest(
+    unsignedCredentialDeploymentInfo: UnsignedCredentialDeploymentInformation,
+    address: AccountAddress
+): Buffer {
+    const serializedCredentialValues = serializeCredentialDeploymentValues(
+        unsignedCredentialDeploymentInfo
+    );
+    const serializedIdOwnershipProofs = serializeIdOwnershipProofs(
+        unsignedCredentialDeploymentInfo.proofs
+    );
+    const existingAccountByte = encodeWord8(1);
+    return sha256([
+        serializedCredentialValues,
+        serializedIdOwnershipProofs,
+        existingAccountByte,
+        address.decodedAddress,
+    ]);
+}
+
+/**
  * Returns the digest of the credential deployment transaction that has to be signed.
  * @param credentialDeploymentTransaction the credential deployment transaction
  * @returns the sha256 of the serialized unsigned credential deployment information
@@ -334,6 +381,12 @@ export function getCredentialDeploymentSignDigest(
     ]);
 }
 
+interface DeploymentDetailsResult {
+    credInfo: string;
+    serializedTransaction: string;
+    transactionHash: string;
+}
+
 /**
  * Gets the transaction hash that is used to look up the status of a credential
  * deployment transaction.
@@ -345,14 +398,13 @@ export function getCredentialDeploymentTransactionHash(
     credentialDeploymentTransaction: CredentialDeploymentTransaction,
     signatures: string[]
 ): string {
-    const credentialDeploymentInfo: CredentialDeploymentInformation =
-        JSON.parse(
-            wasm.getDeploymentDetails(
-                signatures,
-                JSON.stringify(credentialDeploymentTransaction.unsignedCdi),
-                credentialDeploymentTransaction.expiry.expiryEpochSeconds
-            )
-        );
+    const credentialDeploymentInfo: DeploymentDetailsResult = JSON.parse(
+        wasm.getDeploymentDetails(
+            signatures,
+            JSON.stringify(credentialDeploymentTransaction.unsignedCdi),
+            credentialDeploymentTransaction.expiry.expiryEpochSeconds
+        )
+    );
     return credentialDeploymentInfo.transactionHash;
 }
 
@@ -367,13 +419,12 @@ export function serializeCredentialDeploymentTransactionForSubmission(
     credentialDeploymentTransaction: CredentialDeploymentTransaction,
     signatures: string[]
 ): Buffer {
-    const credentialDeploymentInfo: CredentialDeploymentInformation =
-        JSON.parse(
-            wasm.getDeploymentDetails(
-                signatures,
-                JSON.stringify(credentialDeploymentTransaction.unsignedCdi),
-                credentialDeploymentTransaction.expiry.expiryEpochSeconds
-            )
-        );
+    const credentialDeploymentInfo: DeploymentDetailsResult = JSON.parse(
+        wasm.getDeploymentDetails(
+            signatures,
+            JSON.stringify(credentialDeploymentTransaction.unsignedCdi),
+            credentialDeploymentTransaction.expiry.expiryEpochSeconds
+        )
+    );
     return Buffer.from(credentialDeploymentInfo.serializedTransaction, 'hex');
 }

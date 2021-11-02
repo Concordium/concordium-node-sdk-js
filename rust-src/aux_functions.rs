@@ -2,7 +2,7 @@ use crate::{helpers::*, types::*};
 use crypto_common::{types::TransactionTime, *};
 use dodis_yampolskiy_prf as prf;
 use pairing::bls12_381::{Bls12, G1};
-use serde_json::{from_str, to_string, Value as SerdeValue};
+use serde_json::{from_str, Value as SerdeValue};
 use std::collections::BTreeMap;
 type ExampleCurve = G1;
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
@@ -102,18 +102,10 @@ pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
     Ok(response.to_string())
 }
 
-pub fn get_account_address_aux(cred_id_str: &str) -> Result<String> {
-    let values: CredId = from_str(cred_id_str)?;
-    let address = AccountAddress::new(&values.cred_id);
-    let address_as_string = to_string(&address).unwrap();
-    Ok(address_as_string)
-}
-
-pub fn get_credential_deployment_details_aux(
+fn get_credential_deployment_info(
     signatures: Vec<String>,
     unsigned_info: &str,
-    expiry: u64,
-) -> Result<String> {
+) -> Result<CredentialDeploymentInfo<Bls12, ExampleCurve, AttributeKind>> {
     let v: SerdeValue = from_str(unsigned_info)?;
     let values: CredentialDeploymentValues<ExampleCurve, AttributeKind> = from_str(unsigned_info)?;
     let proofs: IdOwnershipProofs<Bls12, ExampleCurve> = try_get(&v, "proofs")?;
@@ -134,6 +126,16 @@ pub fn get_credential_deployment_details_aux(
         values: unsigned_credential_info.values,
         proofs: cdp,
     };
+
+    Ok(cdi)
+}
+
+pub fn get_credential_deployment_details_aux(
+    signatures: Vec<String>,
+    unsigned_info: &str,
+    expiry: u64,
+) -> Result<String> {
+    let cdi = get_credential_deployment_info(signatures, unsigned_info)?;
 
     let cdi_json = json!(cdi);
 
@@ -164,4 +166,13 @@ pub fn get_credential_deployment_details_aux(
     });
 
     Ok(response.to_string())
+}
+
+pub fn get_credential_deployment_info_aux(
+    signatures: Vec<String>,
+    unsigned_info: &str,
+) -> Result<String> {
+    let cdi = get_credential_deployment_info(signatures, unsigned_info)?;
+    let cdi_json = json!(cdi);
+    Ok(cdi_json.to_string())
 }

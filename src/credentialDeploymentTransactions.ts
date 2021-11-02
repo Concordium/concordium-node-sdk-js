@@ -1,13 +1,18 @@
 import {
     AttributeKey,
     CredentialDeploymentTransaction,
+    CredentialDeploymentInfo,
     CryptographicParameters,
     IdentityInput,
     UnsignedCdiWithRandomness,
+    UnsignedCredentialDeploymentInformation,
     VerifyKey,
 } from './types';
 import * as wasm from '../pkg/node_sdk_helpers';
 import { TransactionExpiry } from './types/transactionExpiry';
+import { AccountAddress } from './types/accountAddress';
+import { sha256 } from './hash';
+import * as bs58check from 'bs58check';
 
 /**
  * Generates the unsigned credential information that has to be signed when
@@ -21,6 +26,7 @@ import { TransactionExpiry } from './types/transactionExpiry';
  * @param publicKeys the public keys for the account
  * @param credentialIndex the index of the credential to create, has to be in sequence and unused
  * @param revealedAttributes the attributes about the account holder that should be revealed on chain
+ * @param address the account address, if the credential is to be deployed to an existing account
  * @returns the unsigned credential deployment information (for signing), and the randomness used
  */
 function createUnsignedCredentialInfo(
@@ -29,7 +35,8 @@ function createUnsignedCredentialInfo(
     threshold: number,
     publicKeys: VerifyKey[],
     credentialIndex: number,
-    revealedAttributes: AttributeKey[]
+    revealedAttributes: AttributeKey[],
+    address?: AccountAddress
 ): UnsignedCdiWithRandomness {
     if (publicKeys.length > 255) {
         throw new Error(
@@ -54,6 +61,10 @@ function createUnsignedCredentialInfo(
         idCredSec: identity.idCredSecret,
         revealedAttributes: revealedAttributes,
     };
+
+    if (address) {
+        credentialInput.address = address.address;
+    }
 
     const unsignedCredentialDeploymentInfoString =
         wasm.generateUnsignedCredential(JSON.stringify(credentialInput));
@@ -100,12 +111,69 @@ export function createCredentialDeploymentTransaction(
 }
 
 /**
+ * Create an unsigned credential for an existing account. This credential has to be signed by
+ * the creator before it can be deployed on the existing account.
+ * @param identity the identity to create a credential for
+ * @param cryptographicParameters the global cryptographic parameters from the chain
+ * @param threshold the signature threshold for the credential, has to be less than number of public keys
+ * @param publicKeys the public keys for the credential
+ * @param credentialIndex the index of the credential to create, has to be in sequence and unused
+ * @param revealedAttributes the attributes about the account holder that should be revealed on chain
+ * @param address the account address to associated the credential with
+ */
+export function createUnsignedCredentialForExistingAccount(
+    identity: IdentityInput,
+    cryptographicParameters: CryptographicParameters,
+    threshold: number,
+    publicKeys: VerifyKey[],
+    credentialIndex: number,
+    revealedAttributes: AttributeKey[],
+    address: AccountAddress
+): UnsignedCdiWithRandomness {
+    return createUnsignedCredentialInfo(
+        identity,
+        cryptographicParameters,
+        threshold,
+        publicKeys,
+        credentialIndex,
+        revealedAttributes,
+        address
+    );
+}
+
+/**
+ * Combines the unsigned credential information and the signatures to the signed credential
+ * deployment information. This is the information that the account owner needs to be able
+ * to deploy the credential to their account.
+ * @param unsignedCredentialInfo the unsigned credential information
+ * @param signatures the signatures on the unsigned credential information
+ * @returns signed credential deployment information, used in an update credentials transaction to deploy it
+ */
+export function buildSignedCredentialForExistingAccount(
+    unsignedCredentialInfo: UnsignedCredentialDeploymentInformation,
+    signatures: string[]
+): CredentialDeploymentInfo {
+    const signedCredential: CredentialDeploymentInfo = JSON.parse(
+        wasm.getDeploymentInfo(
+            signatures,
+            JSON.stringify(unsignedCredentialInfo)
+        )
+    );
+    return signedCredential;
+}
+
+/**
  * Derives the account address from a credential id. This is the address of the
  * account that will be created by the credential deployment transaction containing
  * this credential id.
  * @param credId the credential id from a credential deployment transaction
- * @returns the account address, as a base58 encoded string
+ * @returns the account address
  */
-export function getAccountAddress(credId: string): string {
-    return wasm.getAccountAddress(JSON.stringify({ credId }));
+export function getAccountAddress(credId: string): AccountAddress {
+    const hashedCredId = sha256([Buffer.from(credId, 'hex')]);
+    const prefixedWithVersion = Buffer.concat([Buffer.of(1), hashedCredId]);
+    const accountAddress = new AccountAddress(
+        bs58check.encode(prefixedWithVersion)
+    );
+    return accountAddress;
 }

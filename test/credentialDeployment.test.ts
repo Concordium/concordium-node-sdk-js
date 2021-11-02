@@ -1,7 +1,4 @@
-import { getNodeClient } from './testHelpers';
-import { decryptMobileWalletExport, EncryptedData } from '../src/wallet/crypto';
-import * as fs from 'fs';
-import { MobileWalletExport } from '../src/wallet/types';
+import { getIdentityInput, getNodeClient } from './testHelpers';
 import {
     VerifyKey,
     CredentialDeploymentTransaction,
@@ -17,25 +14,7 @@ import { Buffer } from 'buffer/';
 const client = getNodeClient();
 
 test('credential deployment for new account is accepted', async () => {
-    const rawData = fs.readFileSync(
-        './test/resources/mobileWalletExport.json',
-        'utf8'
-    );
-    const mobileWalletExport: EncryptedData = JSON.parse(rawData);
-    const decrypted: MobileWalletExport = decryptMobileWalletExport(
-        mobileWalletExport,
-        '123123'
-    );
-    const identity = decrypted.value.identities[0];
-    const identityInput: IdentityInput = {
-        identityProvider: identity.identityProvider,
-        identityObject: identity.identityObject,
-        idCredSecret:
-            identity.privateIdObjectData.aci.credentialHolderInformation
-                .idCredSecret,
-        prfKey: identity.privateIdObjectData.aci.prfKey,
-        randomness: identity.privateIdObjectData.randomness,
-    };
+    const identityInput: IdentityInput = getIdentityInput();
 
     const lastFinalizedBlockHash = (await client.getConsensusStatus())
         .lastFinalizedBlock;
@@ -65,7 +44,7 @@ test('credential deployment for new account is accepted', async () => {
     // the transaction will not succeed, but it should still be received by the node.
     const credentialIndex = 0;
 
-    // The attributes to reveal on the chain. Ensure they are in the identity(?)
+    // The attributes to reveal on the chain.
     const revealedAttributes: AttributeKey[] = ['firstName', 'nationality'];
 
     const expiry = new TransactionExpiry(new Date(Date.now() + 3600000));
@@ -83,7 +62,6 @@ test('credential deployment for new account is accepted', async () => {
         credentialDeploymentTransaction
     );
 
-    // Sign the thing now.
     const signingKey1 =
         '1053de23867e0f92a48814aabff834e2ca0b518497abaef71cad4e1be506334a';
     const signingKey2 =

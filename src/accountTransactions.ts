@@ -1,17 +1,24 @@
 import { Buffer } from 'buffer/';
-import { encodeWord64, encodeMemo } from './serializationHelpers';
+import { serializeCredentialDeploymentInfo } from './serialization';
+import {
+    encodeWord64,
+    encodeMemo,
+    encodeWord8,
+    serializeList,
+} from './serializationHelpers';
 import {
     AccountTransactionPayload,
     AccountTransactionType,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
+    UpdateCredentialsPayload,
 } from './types';
 
 interface AccountTransactionHandler<
     PayloadType extends AccountTransactionPayload = AccountTransactionPayload
 > {
     serialize: (payload: PayloadType) => Buffer;
-    getBaseEnergyCost: (payload?: PayloadType) => bigint;
+    getBaseEnergyCost: (payload: PayloadType) => bigint;
 }
 
 export class SimpleTransferHandler
@@ -44,12 +51,59 @@ export class SimpleTransferWithMemoHandler
     }
 }
 
+export class UpdateCredentialsHandler
+    implements AccountTransactionHandler<UpdateCredentialsPayload>
+{
+    getBaseEnergyCost(updateCredentials: UpdateCredentialsPayload): bigint {
+        const newCredentialsCost = updateCredentials.newCredentials
+            .map((credential) => {
+                const numberOfKeys = BigInt(
+                    Object.keys(credential.cdi.credentialPublicKeys.keys).length
+                );
+                return 54000n + 100n * numberOfKeys;
+            })
+            .reduce((prev, curr) => prev + curr, BigInt(0));
+
+        const currentCredentialsCost =
+            500n * updateCredentials.currentNumberOfCredentials;
+
+        return 500n + currentCredentialsCost + newCredentialsCost;
+    }
+
+    serialize(updateCredentials: UpdateCredentialsPayload): Buffer {
+        const serializedAddedCredentials = serializeList(
+            updateCredentials.newCredentials,
+            encodeWord8,
+            ({ index, cdi }) =>
+                Buffer.concat([
+                    encodeWord8(index),
+                    serializeCredentialDeploymentInfo(cdi),
+                ])
+        );
+
+        const serializedRemovedCredIds = serializeList(
+            updateCredentials.removeCredentialIds,
+            encodeWord8,
+            (credId: string) => Buffer.from(credId, 'hex')
+        );
+        const serializedThreshold = encodeWord8(updateCredentials.threshold);
+        return Buffer.concat([
+            serializedAddedCredentials,
+            serializedRemovedCredIds,
+            serializedThreshold,
+        ]);
+    }
+}
+
 export function getAccountTransactionHandler(
     type: AccountTransactionType.SimpleTransfer
 ): SimpleTransferHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType.SimpleTransferWithMemo
 ): SimpleTransferWithMemoHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.UpdateCredentials
+): UpdateCredentialsHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
 ): AccountTransactionHandler;
@@ -60,6 +114,8 @@ export function getAccountTransactionHandler(type: AccountTransactionType) {
             return new SimpleTransferHandler();
         case AccountTransactionType.SimpleTransferWithMemo:
             return new SimpleTransferWithMemoHandler();
+        case AccountTransactionType.UpdateCredentials:
+            return new UpdateCredentialsHandler();
         default:
             throw new Error(
                 'The provided type does not have a handler: ' + type

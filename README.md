@@ -421,10 +421,9 @@ const transactionStatus = await client.getTransactionStatus(transactionHash);
 ```
 
 ## Init Contract (parameterless smart contract)
-The following example demonstrates how to initialize a smart contract module. 
-Name of init function including "init_" prefix(for suppose the contract with name as "INDBank" 
-then the init name should be as "init_INDBank") and parameter for the init function as empty Buffer 
-since we are initializing the contract without any parameters.
+The following example demonstrates how to initialize a smart contract from a module, which has already been deployed. 
+The name of the contract should be specified, and should include "init_" prefix (So if the contract should be named 'INDBank', then the initName should be "init_INDBank".
+In this example, the contract does not take any parameters, so we can leave params as an empty list.  
 ```js
 const initName = 'init_INDBank'; 
 const params = [];

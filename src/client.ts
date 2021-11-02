@@ -46,7 +46,7 @@ import {
     UpdateQueue,
     Versioned,
     InstanceInfo,
-    InstanceInfoSerialize,
+    InstanceInfoSerialized,
     createInstanceInfo,
 } from './types';
 import {
@@ -578,7 +578,7 @@ export default class ConcordiumNodeClient {
             getAddressInfoRequest
         );
 
-        const result = unwrapJsonResponse<InstanceInfoSerialize>(response);
+        const result = unwrapJsonResponse<InstanceInfoSerialized>(response);
         const instanceInfo = createInstanceInfo(result);
         return instanceInfo;
     }

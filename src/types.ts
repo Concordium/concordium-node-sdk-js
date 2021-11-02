@@ -657,8 +657,9 @@ export interface InitContractPayload {
     /** Parameters for the init function */
     parameter: Buffer;
 
-    /** Base Energy cost for sending transaction*/
-    baseEnergyCost: bigint;
+    /** The amount of energy that can be used for contract execution.
+    The base energy amount for transaction verification will be added to this cost.*/
+    maxContractExecutionEnergy: bigint;
 }
 
 export interface UpdateContractPayload {
@@ -674,8 +675,9 @@ export interface UpdateContractPayload {
     /** Parameters for the update function */
     parameter: Buffer;
 
-    /** Base Energy cost for sending transaction*/
-    baseEnergyCost: bigint;
+    /** The amount of energy that can be used for contract execution.
+    The base energy amount for transaction verification will be added to this cost.*/
+    maxContractExecutionEnergy: bigint;
 }
 
 export interface AccountTransactionHeader {
@@ -760,7 +762,7 @@ export interface InstanceInfo {
 export type CredentialSignature = Record<number, string>;
 export type AccountTransactionSignature = Record<number, CredentialSignature>;
 
-export interface InstanceInfoSerialize {
+export interface InstanceInfoSerialized {
     amount: string;
     sourceModule: string;
     owner: string;
@@ -770,7 +772,7 @@ export interface InstanceInfoSerialize {
 }
 
 export function createInstanceInfo(
-    instanceInfo: InstanceInfoSerialize | undefined
+    instanceInfo: InstanceInfoSerialized | undefined
 ): InstanceInfo | undefined {
     if (instanceInfo === undefined) {
         return undefined;

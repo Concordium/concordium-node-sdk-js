@@ -72,7 +72,7 @@ export class InitContractHandler
     implements AccountTransactionHandler<InitContractPayload>
 {
     getBaseEnergyCost(payload: InitContractPayload): bigint {
-        return payload.baseEnergyCost;
+        return payload.maxContractExecutionEnergy;
     }
 
     serialize(payload: InitContractPayload): Buffer {
@@ -96,7 +96,7 @@ export class UpdateContractHandler
     implements AccountTransactionHandler<UpdateContractPayload>
 {
     getBaseEnergyCost(payload: UpdateContractPayload): bigint {
-        return payload.baseEnergyCost;
+        return payload.maxContractExecutionEnergy;
     }
 
     serialize(payload: UpdateContractPayload): Buffer {

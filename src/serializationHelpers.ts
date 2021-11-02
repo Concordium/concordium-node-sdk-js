@@ -117,7 +117,7 @@ export function packBufferWithWord16Offset(buffer: Buffer): Buffer {
 
 /**
  * Convert string to byte array
- * @param string
+ * @param utf-8 string
  * @returns Buffer
  */
 export function encodeStringToByteArray(str: string): Buffer {

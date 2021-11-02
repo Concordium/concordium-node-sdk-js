@@ -96,9 +96,9 @@ export function encodeMemo(memo: Memo): Buffer {
 }
 
 /**
- * Packing a buffer along the with offset of 32 bit length
- * @param buffer containing the buffer.
- * @returns Buffer containing the length of the buffer of 32 bit and buffer.
+ * Packing a buffer along with its length in 32 bits
+ * @param buffer
+ * @returns Buffer containing the 32 bit length of buffer and buffer.
  */
 export function packBufferWithWord32Offset(buffer: Buffer): Buffer {
     const length = encodeWord32(buffer.length);

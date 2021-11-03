@@ -528,7 +528,7 @@ const initContractTransaction: AccountTransaction = {
 };
 ```
 
-Finally, to actually deploy the module to the chain, send the constructed `initContractTransaction` to the chain using `sendAccountTransaction`. (Refer to the _Send Account Transaction_ section for how to do this)
+Finally, to actually initialize the contract on the chain, send the constructed `initContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
 
 ## Update Contract(parameterless smart contract)
 The following example demonstrates how to update a smart contract. 

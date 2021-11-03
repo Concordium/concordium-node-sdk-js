@@ -496,7 +496,7 @@ const deployModuleTransaction: AccountTransaction = {
 };
 ```
 
-Finally, to actually deploy the module to the chain, send the constructed `deployModuleTransaction` to the chain using `sendAccountTransaction`. (Refer to the _Send Account Transaction_ section for how to do this)
+Finally, to actually deploy the module to the chain, send the constructed `deployModuleTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
 
 ## Init Contract (parameterless smart contract)
 The following example demonstrates how to initialize a smart contract from a module, which has already been deployed. 

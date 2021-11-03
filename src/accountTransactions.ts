@@ -30,7 +30,7 @@ interface AccountTransactionHandler<
 export class SimpleTransferHandler
     implements AccountTransactionHandler<SimpleTransferPayload>
 {
-    getBaseEnergyCost(payload: SimpleTransferPayload): bigint {
+    getBaseEnergyCost(): bigint {
         return 300n;
     }
 

@@ -527,9 +527,9 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieves the addresses of all smart contract instances.
      * @param blockHash the block hash to get the smart contact instances at
-     * @returns a JSON list of contract addresses on the chain, i.e. [{"subindex":0,"index":0},{"subindex":0,"index":1}, ....]
+     * @returns a list of contract addresses on the chain, i.e. [{"subindex":0,"index":0},{"subindex":0,"index":1}, ....]
      */
-    async GetInstances(
+    async getInstances(
         blockHash: string
     ): Promise<ContractAddress[] | undefined> {
         if (!isValidHash(blockHash)) {
@@ -557,10 +557,10 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieve information about a given smart contract instance.
      * @param blockHash the block hash to get the smart contact instances at
-     * @param address A null-terminated JSON-encoded value
+     * @param address the address of the smart contract
      * @returns A JSON object with information about the contract instance
      */
-    async GetInstanceInfo(
+    async getInstanceInfo(
         blockHash: string,
         address: ContractAddress
     ): Promise<InstanceInfo | undefined> {

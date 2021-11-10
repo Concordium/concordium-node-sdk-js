@@ -112,7 +112,7 @@ export function encodeMemo(memo: Memo): Buffer {
  * @param buffer
  * @returns Buffer containing the 32 bit length of buffer and buffer.
  */
-export function packBufferWithWord32Offset(buffer: Buffer): Buffer {
+export function packBufferWithWord32Length(buffer: Buffer): Buffer {
     const length = encodeWord32(buffer.length);
     return Buffer.concat([length, buffer]);
 }
@@ -122,7 +122,7 @@ export function packBufferWithWord32Offset(buffer: Buffer): Buffer {
  * @param buffer containing the buffer
  * @returns Buffer containing the length of the buffer of 16 bit and buffer.
  */
-export function packBufferWithWord16Offset(buffer: Buffer): Buffer {
+export function packBufferWithWord16Length(buffer: Buffer): Buffer {
     const length = encodeWord16(buffer.length);
     return Buffer.concat([length, buffer]);
 }

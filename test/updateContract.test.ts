@@ -38,16 +38,16 @@ test('update contract with the wrong private key', async () => {
     const contractAddress = {
         index: BigInt(87),
         subindex: BigInt(0),
-    } as ContractAddress;
-    const baseEnergy = 30000n;
+    };
+    const maxContractExecutionEnergy = 30000n;
 
     const updateModule: UpdateContractPayload = {
         amount: new GtuAmount(1000n),
         contractAddress: contractAddress,
         receiveName: receiveName,
         parameter: params,
-        maxContractExecutionEnergy: baseEnergy,
-    } as UpdateContractPayload;
+        maxContractExecutionEnergy: maxContractExecutionEnergy,
+    };
 
     const updateContractTransaction: AccountTransaction = {
         header: header,

@@ -475,14 +475,10 @@ function getByteArray(filePath: string): Buffer {
 const wasmFileBuffer = getByteArray(wasmFilePath) as Buffer;
 
 const deployModule: DeployModulePayload = {
-    tag: ModuleTransactionType.DeployModule,
-    content: wasmFileBuffer,
-    length: wasmFileBuffer.length,
-    version: 0,
-} as DeployModulePayload;
+        content: wasmFileBuffer,
+        version: 0,
+};
 
-let deployModuleTransaction: AccountTransaction;
- 
 const header: AccountTransactionHeader = {
     expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
     nonce: nextAccountNonce.nonce,
@@ -504,9 +500,9 @@ The name of the contract should be specified, and should include "init_" prefix 
 In this example, the contract does not take any parameters, so we can leave params as an empty list.  
 ```js
 const initName = 'init_INDBank'; 
-const params = [];
+const params = Buffer.from([]);
 //The amount of energy that can be used for contract execution.
-const baseEnergy = 300000n;
+const maxContractExecutionEnergy = 300000n;
 ```
 
 Create init contract transaction
@@ -516,10 +512,8 @@ const initModule: InitContractPayload = {
     moduleRef: new ModuleReference('a225a5aeb0a5cf9bbc59209e15df030e8cc2c17b8dba08c4bf59f80edaedd8b1'), // Module reference, which can be obtained after deploying a module
     initName: initName,
     parameter: params,
-    maxContractExecutionEnergy: baseEnergy
-} as InitContractPayload;
-
-let initContractTransaction: AccountTransaction;
+    maxContractExecutionEnergy: maxContractExecutionEnergy
+};
 
 const initContractTransaction: AccountTransaction = {
     header: header,
@@ -540,22 +534,22 @@ We also need to supply the contract address of the contract instance. This consi
 
 In this example, the contract does not take any parameters, so we can leave the parameters as an empty list.  
 ```js
-const receiveName = 'DCBBank.insertAmount';
+const receiveName = 'INDBank.insertAmount';
+const params = Buffer.from([]);
 const contractAddress = { index: BigInt(83), subindex: BigInt(0) } as ContractAddress;
 //The amount of energy that can be used for contract execution.
-const baseEnergy = 30000n;
+const maxContractExecutionEnergy = 30000n;
 ```
 Create update contract transaction
 ```js
-let updateContractTransaction: AccountTransaction;
 const updateContractTransaction: UpdateContractPayload =
 {
     amount: new GtuAmount(1000n),
     contractAddress: contractAddress,
     receiveName: receiveName,
-    parameter: [],
-    maxContractExecutionEnergy: baseEnergy
-} as UpdateContractPayload;
+    parameter: params,
+    maxContractExecutionEnergy: maxContractExecutionEnergy
+};
 
 const updateContractTransaction: AccountTransaction = {
     header: header,

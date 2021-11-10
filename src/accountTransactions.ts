@@ -4,8 +4,8 @@ import {
     encodeWord64,
     encodeMemo,
     encodeWord32,
-    packBufferWithWord32Offset,
-    packBufferWithWord16Offset,
+    packBufferWithWord32Length,
+    packBufferWithWord16Length,
     serializeList,
     encodeWord8,
 } from './serializationHelpers';
@@ -66,7 +66,7 @@ export class DeployModuleHandler
     }
 
     serialize(transfer: DeployModulePayload): Buffer {
-        const serializedWasm = packBufferWithWord32Offset(transfer.content);
+        const serializedWasm = packBufferWithWord32Length(transfer.content);
         const serializedVersion = encodeWord32(transfer.version);
         return Buffer.concat([serializedVersion, serializedWasm]);
     }
@@ -82,9 +82,9 @@ export class InitContractHandler
     serialize(payload: InitContractPayload): Buffer {
         const serializedAmount = encodeWord64(payload.amount.microGtuAmount);
         const initNameBuffer = Buffer.from(payload.initName);
-        const serializedInitName = packBufferWithWord16Offset(initNameBuffer);
+        const serializedInitName = packBufferWithWord16Length(initNameBuffer);
         const serializedModuleRef = payload.moduleRef.decodedModuleRef;
-        const serializedParameters = packBufferWithWord16Offset(
+        const serializedParameters = packBufferWithWord16Length(
             Buffer.from(payload.parameter)
         );
         return Buffer.concat([
@@ -115,8 +115,8 @@ export class UpdateContractHandler
         ]);
         const receiveNameBuffer = Buffer.from(payload.receiveName);
         const serializedReceiveName =
-            packBufferWithWord16Offset(receiveNameBuffer);
-        const serializedParameters = packBufferWithWord16Offset(
+            packBufferWithWord16Length(receiveNameBuffer);
+        const serializedParameters = packBufferWithWord16Length(
             Buffer.from(payload.parameter)
         );
         return Buffer.concat([

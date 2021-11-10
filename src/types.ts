@@ -622,20 +622,6 @@ export enum AccountTransactionType {
     TransferWithScheduleWithMemo = 24,
 }
 
-export enum ModuleTransactionType {
-    DeployModule = 0,
-    InitContract = 1,
-    Update = 2,
-}
-
-export interface ModuleTransaction {
-    content:
-        | DeployModulePayload
-        | InitContractPayload
-        | UpdateContractPayload
-        | any;
-}
-
 export interface DeployModulePayload {
     /** Version of the wasm module */
     version: number;

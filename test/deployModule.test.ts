@@ -48,11 +48,11 @@ test('deploy contract with the wrong private key', async () => {
     const deployModule: DeployModulePayload = {
         content: wasmFileBuffer,
         version: 0,
-    } as DeployModulePayload;
+    };
 
     const deployModuleTransaction: AccountTransaction = {
         header: header,
-        payload: deployModule as AccountTransactionPayload,
+        payload: deployModule,
         type: AccountTransactionType.DeployModule,
     };
 

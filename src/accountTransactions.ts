@@ -8,6 +8,7 @@ import {
     packBufferWithWord16Length,
     serializeList,
     encodeWord8,
+    serializeParameter,
 } from './serializationHelpers';
 import {
     AccountTransactionType,
@@ -87,8 +88,9 @@ export class InitContractHandler
         );
         const serializedInitName = packBufferWithWord16Length(initNameBuffer);
         const serializedModuleRef = payload.moduleRef.decodedModuleRef;
+        const parameterBuffer = serializeParameter(payload.parameter);
         const serializedParameters = packBufferWithWord16Length(
-            Buffer.from(payload.parameter)
+            Buffer.from(parameterBuffer)
         );
         return Buffer.concat([
             serializedAmount,
@@ -119,8 +121,9 @@ export class UpdateContractHandler
         const receiveNameBuffer = Buffer.from(payload.receiveName, 'utf8');
         const serializedReceiveName =
             packBufferWithWord16Length(receiveNameBuffer);
+        const parameterBuffer = serializeParameter(payload.parameter);
         const serializedParameters = packBufferWithWord16Length(
-            Buffer.from(payload.parameter)
+            Buffer.from(parameterBuffer)
         );
         return Buffer.concat([
             serializedAmount,

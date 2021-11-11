@@ -641,7 +641,7 @@ export interface InitContractPayload {
     contractName: string;
 
     /** Parameters for the init function */
-    parameter: Buffer;
+    parameter: ParameterValue<any>;
 
     /** The amount of energy that can be used for contract execution.
     The base energy amount for transaction verification will be added to this cost.*/
@@ -659,7 +659,7 @@ export interface UpdateContractPayload {
     receiveName: string;
 
     /** Parameters for the update function */
-    parameter: Buffer;
+    parameter: ParameterValue<any>;
 
     /** The amount of energy that can be used for contract execution.
     The base energy amount for transaction verification will be added to this cost.*/
@@ -733,11 +733,11 @@ export interface AccountTransaction {
     payload: AccountTransactionPayload;
 }
 
-export enum Type {
+export enum ParameterType {
     Unit = 'Unit',
     Bool = 'Bool',
     U8 = 'U8',
-    u16 = 'U16',
+    U16 = 'U16',
     U32 = 'U32',
     U64 = 'U64',
     U128 = 'U128',
@@ -761,6 +761,7 @@ export enum Type {
     String = 'String(SizeLength)',
     ContractName = 'ContractName(SizeLength)',
     ReceiveName = 'ReceiveName(SizeLength)',
+    NoParameters = 'NoParameters(SizeLength)',
 }
 
 export interface InstanceInfo {
@@ -836,3 +837,11 @@ export interface IdentityInput {
     idCredSecret: string;
     randomness: string;
 }
+
+export interface ParameterValue<T> {
+    type: ParameterType;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    value: T;
+}
+
+export type StructParameter = Array<ParameterValue<any>>;

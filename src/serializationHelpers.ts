@@ -1,5 +1,6 @@
 import { Buffer } from 'buffer/';
 import { VerifyKey } from '.';
+import { ParameterType, ParameterValue, StructParameter } from './types';
 import { Memo } from './types/Memo';
 
 export function serializeMap<K extends string | number | symbol, T>(
@@ -30,6 +31,71 @@ export function serializeList<T>(
 }
 
 /**
+ * Encodes a 128 bit signed integer to a Buffer using big endian.
+ * @param value a 128 bit integer
+ * @returns big endian serialization of the input
+ */
+export function encodeWordI128(value: bigint): Buffer {
+    if (value > -18446744073709551616n || value < 18446744073709551615n) {
+        throw new Error(
+            'The input has to be a 128 bit signed integer but it was: ' + value
+        );
+    }
+    const arr = new ArrayBuffer(8);
+    const view = new DataView(arr);
+    view.setBigUint64(0, value, false);
+    return Buffer.from(new Uint8Array(arr));
+}
+
+/**
+ * Encodes a 128 bit unsigned integer to a Buffer using big endian.
+ * @param value a 128 bit integer
+ * @returns big endian serialization of the input
+ */
+export function encodeWord128(value: bigint): Buffer {
+    if (value > 170141183460469231731687303715884105728n || value < 0n) {
+        throw new Error(
+            'The input has to be a 128 bit unsigned integer but it was: ' +
+                value
+        );
+    }
+    const arr = new ArrayBuffer(8);
+    const view = new DataView(arr);
+    view.setBigUint64(0, value, false);
+    return Buffer.from(new Uint8Array(arr));
+}
+
+/**
+ * Encodes a 64 bit signed integer to a Buffer using big endian.
+ * @param value a 64 bit integer
+ * @returns big endian serialization of the input
+ */
+export function encodeWordI64(value: bigint): Buffer {
+    if (value > -4294967296n || value < 4294967295n) {
+        throw new Error(
+            'The input has to be a 64 bit signed integer but it was: ' + value
+        );
+    }
+    const arr = new ArrayBuffer(8);
+    const view = new DataView(arr);
+    view.setBigInt64(0, value, false);
+    return Buffer.from(new Uint8Array(arr));
+}
+
+/**
+ * Encodes a 64 bit signed integer to a Buffer using big endian.
+ * @param value a 64 bit integer
+ * @returns big endian serialization of the input
+ */
+export function encodeBool(value: boolean): Buffer {
+    const result = value === true ? 1 : 0;
+    const arr = new ArrayBuffer(2);
+    const view = new DataView(arr);
+    view.setInt8(0, result);
+    return Buffer.from(new Int8Array(arr));
+}
+
+/**
  * Encodes a 64 bit unsigned integer to a Buffer using big endian.
  * @param value a 64 bit integer
  * @returns big endian serialization of the input
@@ -44,6 +110,23 @@ export function encodeWord64(value: bigint): Buffer {
     const view = new DataView(arr);
     view.setBigUint64(0, value, false);
     return Buffer.from(new Uint8Array(arr));
+}
+
+/**
+ * Encodes a 32 bit signed integer to a Buffer using big endian.
+ * @param value a 32 bit integer
+ * @returns big endian serialization of the input
+ */
+export function encodeWordI32(value: number): Buffer {
+    if (value > -2147483648 || value < 2147483647 || !Number.isInteger(value)) {
+        throw new Error(
+            'The input has to be a 32 bit signed integer but it was: ' + value
+        );
+    }
+    const arr = new ArrayBuffer(4);
+    const view = new DataView(arr);
+    view.setInt32(0, value, false);
+    return Buffer.from(new Int8Array(arr));
 }
 
 /**
@@ -64,6 +147,23 @@ export function encodeWord32(value: number): Buffer {
 }
 
 /**
+ * Encodes a 16 bit signed integer to a Buffer using big endian.
+ * @param value a 16 bit integer
+ * @returns big endian serialization of the input
+ */
+export function encodeWordI16(value: number): Buffer {
+    if (value > -32768 || value < 32767 || !Number.isInteger(value)) {
+        throw new Error(
+            'The input has to be a 16 bit signed integer but it was: ' + value
+        );
+    }
+    const arr = new ArrayBuffer(2);
+    const view = new DataView(arr);
+    view.setInt16(0, value, false);
+    return Buffer.from(new Int8Array(arr));
+}
+
+/**
  * Encodes a 16 bit unsigned integer to a Buffer using big endian.
  * @param value a 16 bit integer
  * @returns big endian serialization of the input
@@ -79,6 +179,7 @@ export function encodeWord16(value: number): Buffer {
     view.setUint16(0, value, false);
     return Buffer.from(new Uint8Array(arr));
 }
+
 /**
  * Encodes a 8 bit unsigned integer to a Buffer using big endian.
  * @param value a 8 bit integer
@@ -173,3 +274,111 @@ export function serializeYearMonth(yearMonth: string): Buffer {
     const serializedMonth = encodeWord8(month);
     return Buffer.concat([serializedYear, serializedMonth]);
 }
+
+/**
+ *
+ * @param parameter is array of parameters provided by the user
+ * @returns Buffer of parameters
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function serializeParameter(parameter: ParameterValue<any>): Buffer {
+    switch (parameter.type) {
+        case ParameterType.U8:
+            return encodeWord8(parameter.value);
+        case ParameterType.I8:
+            return encodeWord8(parameter.value);
+        case ParameterType.U16:
+            return encodeWord16(parameter.value);
+        case ParameterType.I16:
+            return encodeWordI16(parameter.value);
+        case ParameterType.U32:
+            return encodeWord32(parameter.value);
+        case ParameterType.I32:
+            return encodeWordI32(parameter.value);
+        case ParameterType.U64:
+            return encodeWord64(parameter.value);
+        case ParameterType.I64:
+            return encodeWordI64(parameter.value);
+        case ParameterType.U128:
+            return encodeWord128(parameter.value);
+        case ParameterType.I128:
+            return encodeWordI128(parameter.value);
+        case ParameterType.String:
+            return Buffer.from(parameter.value);
+        case ParameterType.Bool:
+            return encodeBool(parameter.value);
+        case ParameterType.Struct:
+            const bufferArray: Buffer[] = [];
+            (parameter.value as StructParameter).forEach((element) => {
+                const parameterBuffer = serializeParameter(element);
+                bufferArray.push(packBufferWithWord16Length(parameterBuffer));
+            });
+            return Buffer.concat(bufferArray);
+        case ParameterType.Array:
+            const bufferArray2: Buffer[] = [];
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (parameter.value as Array<ParameterValue<any>>).forEach(
+                (element) => {
+                    const parameterBuffer = serializeParameter(element);
+                    bufferArray2.push(parameterBuffer);
+                }
+            );
+            return Buffer.concat(bufferArray2);
+        default:
+            return Buffer.from(parameter.value);
+    }
+}
+
+/**
+ *
+ * @param parameter is array of parameters provided by the user
+ * @returns Buffer of parameters
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function serializeComplexTypeParameter(
+    parameter: StructParameter
+): Buffer {
+    switch (parameter[0].type) {
+        case ParameterType.Struct:
+            const bufferArray: Buffer[] = [];
+            (parameter[0].value as StructParameter).forEach((element) => {
+                const parameterBuffer = serializeParameter(element);
+                bufferArray.push(packBufferWithWord16Length(parameterBuffer));
+            });
+            return Buffer.concat(bufferArray);
+        case ParameterType.Array:
+            const bufferArray2: Buffer[] = [];
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (parameter[0].value as Array<ParameterValue<any>>).forEach(
+                (element) => {
+                    const parameterBuffer = serializeParameter(element);
+                    bufferArray2.push(parameterBuffer);
+                }
+            );
+            return Buffer.concat(bufferArray2);
+        default:
+            return Buffer.from(parameter[0].value);
+    }
+}
+
+// /**
+//  * Convert the parameters given by the user
+//  * @param type type of the parameters
+//  * @param value value of the parameters
+//  * @returns Buffer
+//  */
+// export function encodeParameters(type: ParameterType, value: any): Buffer {
+//     switch (type) {
+//         case ParameterType.U8: return encodeWord8(value);
+//         case ParameterType.U16: return encodeWord16(value);
+//         case ParameterType.U32: return encodeWord32(value);
+//         case ParameterType.U64: return encodeWord64(value);
+//         case ParameterType.U128: return encodeWord128(value);
+//         case ParameterType.String: return Buffer.from(value);
+//         default:
+//             throw new Error(
+//                 'The provided type does not have a handler: ' + type
+//             );
+//     }
+
+// }

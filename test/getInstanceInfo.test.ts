@@ -6,10 +6,10 @@ const client = getNodeClient();
 // test getInstanceInfo
 test('retrieve information about a given smart contract instance', async () => {
     const blockHash =
-        '1729985f62c4070a8aed010fd0e5a76f6850bcc394eaf70bad517d93434f8822';
+        '31b7a1fe3f8a03acb52b50d95e129ece0ad41151248be801bf6aa5054a68e63b';
     const contractAddress: ContractAddress = {
         subindex: BigInt(0),
-        index: BigInt(87),
+        index: BigInt(104),
     };
     const instanceInfo = await client.getInstanceInfo(
         blockHash,

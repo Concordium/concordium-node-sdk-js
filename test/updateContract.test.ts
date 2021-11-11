@@ -5,6 +5,8 @@ import {
     AccountTransactionType,
     UpdateContractPayload,
     ContractAddress,
+    ParameterValue,
+    ParameterType,
 } from '../src/types';
 import * as ed from 'noble-ed25519';
 import { getAccountTransactionSignDigest } from '../src/serialization';
@@ -34,7 +36,11 @@ test('update contract with the wrong private key', async () => {
     };
 
     const receiveName = 'INDBank.insertAmount';
-    const params = Buffer.from([]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const params: ParameterValue<any> = {
+        type: ParameterType.NoParameters,
+        value: [],
+    };
     const contractAddress: ContractAddress = {
         index: BigInt(87),
         subindex: BigInt(0),

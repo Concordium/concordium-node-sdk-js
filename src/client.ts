@@ -12,7 +12,10 @@ import {
     SendTransactionRequest,
     TransactionHash,
 } from '../grpc/concordium_p2p_rpc_pb';
-import { serializeAccountTransactionForSubmission } from './serialization';
+import {
+    serializeAccountTransactionForSubmission,
+    serializeCredentialDeploymentTransactionForSubmission,
+} from './serialization';
 import {
     AccountBakerDetails,
     AccountEncryptedAmount,
@@ -28,6 +31,7 @@ import {
     ChainParameters,
     ConsensusStatus,
     ContractAddress,
+    CredentialDeploymentTransaction,
     CryptographicParameters,
     ExchangeRate,
     FinalizationData,
@@ -42,8 +46,7 @@ import {
     UpdateQueue,
     Versioned,
     InstanceInfo,
-    InstanceInfoSerialize,
-    createInstanceInfo,
+    InstanceInfoSerialized,
 } from './types';
 import {
     buildJsonResponseReviver,
@@ -52,6 +55,9 @@ import {
     unwrapBoolResponse,
     unwrapJsonResponse,
 } from './util';
+import { GtuAmount } from './types/gtuAmount';
+import { ModuleReference } from './types/moduleReference';
+import { Buffer as BufferFormater } from 'buffer/';
 /**
  * A concordium-node specific gRPC client wrapper.
  *
@@ -97,6 +103,40 @@ export default class ConcordiumNodeClient {
         this.timeout = timeout;
         this.metadata = metadata;
         this.client = new P2PClient(`${address}:${port}`, credentials, options);
+    }
+
+    /**
+     * Sends a credential deployment transaction, for creating a new account,
+     * to the node to be put in a block on the chain.
+     *
+     * Note that a transaction can still fail even if it was accepted by the node.
+     * To keep track of the transaction use getTransactionStatus.
+     * @param credentialDeploymentTransaction the credential deployment transaction to send to the node
+     * @param signatures the signatures on the hash of the serialized unsigned credential deployment information, in order
+     * @returns true if the transaction was accepted, otherwise false
+     */
+    async sendCredentialDeploymentTransaction(
+        credentialDeploymentTransaction: CredentialDeploymentTransaction,
+        signatures: string[]
+    ): Promise<boolean> {
+        const serializedCredentialDeploymentTransaction: Buffer = Buffer.from(
+            serializeCredentialDeploymentTransactionForSubmission(
+                credentialDeploymentTransaction,
+                signatures
+            )
+        );
+
+        const sendTransactionRequest = new SendTransactionRequest();
+        sendTransactionRequest.setNetworkId(100);
+        sendTransactionRequest.setPayload(
+            serializedCredentialDeploymentTransaction
+        );
+
+        const response = await this.sendRequest(
+            this.client.sendTransaction,
+            sendTransactionRequest
+        );
+        return unwrapBoolResponse(response);
     }
 
     /**
@@ -214,7 +254,7 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieves a status for the given transaction.
      * @param transactionHash the transaction to get a status for
-     * @returns the transaction status for the given transaction, or null if the transaction does not exist
+     * @returns the transaction status for the given transaction, or undefined if the transaction does not exist
      */
     async getTransactionStatus(
         transactionHash: string
@@ -305,7 +345,7 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieves information about a specific block.
      * @param blockHash the block to get information about
-     * @returns the block information for the given block, or null if the block does not exist
+     * @returns the block information for the given block, or undefined if the block does not exist
      */
     async getBlockInfo(blockHash: string): Promise<BlockInfo | undefined> {
         if (!isValidHash(blockHash)) {
@@ -489,9 +529,9 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieves the addresses of all smart contract instances.
      * @param blockHash the block hash to get the smart contact instances at
-     * @returns a JSON list of contract addresses on the chain, i.e. [{"subindex":0,"index":0},{"subindex":0,"index":1}, ....]
+     * @returns a list of contract addresses on the chain, i.e. [{"subindex":0,"index":0},{"subindex":0,"index":1}, ....]
      */
-    async GetInstances(
+    async getInstances(
         blockHash: string
     ): Promise<ContractAddress[] | undefined> {
         if (!isValidHash(blockHash)) {
@@ -519,10 +559,10 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieve information about a given smart contract instance.
      * @param blockHash the block hash to get the smart contact instances at
-     * @param address A null-terminated JSON-encoded value
+     * @param address the address of the smart contract
      * @returns A JSON object with information about the contract instance
      */
-    async GetInstanceInfo(
+    async getInstanceInfo(
         blockHash: string,
         address: ContractAddress
     ): Promise<InstanceInfo | undefined> {
@@ -540,8 +580,8 @@ export default class ConcordiumNodeClient {
             getAddressInfoRequest
         );
 
-        const result = unwrapJsonResponse<InstanceInfoSerialize>(response);
-        const instanceInfo = createInstanceInfo(result);
+        const result = unwrapJsonResponse<InstanceInfoSerialized>(response);
+        const instanceInfo = await this.createInstanceInfo(result);
         return instanceInfo;
     }
 
@@ -567,5 +607,22 @@ export default class ConcordiumNodeClient {
                 );
             });
         });
+    }
+
+    createInstanceInfo(
+        instanceInfo: InstanceInfoSerialized | undefined
+    ): InstanceInfo | undefined {
+        if (instanceInfo === undefined) {
+            return undefined;
+        }
+
+        return {
+            amount: new GtuAmount(BigInt(instanceInfo.amount)),
+            sourceModule: new ModuleReference(instanceInfo.sourceModule),
+            owner: new Address(instanceInfo.owner),
+            methods: instanceInfo.methods,
+            name: instanceInfo.name,
+            model: BufferFormater.from(instanceInfo.model, 'binary'),
+        };
     }
 }

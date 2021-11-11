@@ -1,10 +1,13 @@
 import { Buffer } from 'buffer/';
+import { serializeCredentialDeploymentInfo } from './serialization';
 import {
     encodeWord64,
     encodeMemo,
     encodeWord32,
-    packBufferWithWord32Offset,
-    packBufferWithWord16Offset,
+    packBufferWithWord32Length,
+    packBufferWithWord16Length,
+    serializeList,
+    encodeWord8,
 } from './serializationHelpers';
 import {
     AccountTransactionType,
@@ -14,6 +17,7 @@ import {
     DeployModulePayload,
     UpdateContractPayload,
     AccountTransactionPayload,
+    UpdateCredentialsPayload,
 } from './types';
 
 interface AccountTransactionHandler<
@@ -26,7 +30,7 @@ interface AccountTransactionHandler<
 export class SimpleTransferHandler
     implements AccountTransactionHandler<SimpleTransferPayload>
 {
-    getBaseEnergyCost(payload: SimpleTransferPayload): bigint {
+    getBaseEnergyCost(): bigint {
         return 300n;
     }
 
@@ -62,7 +66,7 @@ export class DeployModuleHandler
     }
 
     serialize(transfer: DeployModulePayload): Buffer {
-        const serializedWasm = packBufferWithWord32Offset(transfer.content);
+        const serializedWasm = packBufferWithWord32Length(transfer.content);
         const serializedVersion = encodeWord32(transfer.version);
         return Buffer.concat([serializedVersion, serializedWasm]);
     }
@@ -72,15 +76,18 @@ export class InitContractHandler
     implements AccountTransactionHandler<InitContractPayload>
 {
     getBaseEnergyCost(payload: InitContractPayload): bigint {
-        return payload.baseEnergyCost;
+        return payload.maxContractExecutionEnergy;
     }
 
     serialize(payload: InitContractPayload): Buffer {
         const serializedAmount = encodeWord64(payload.amount.microGtuAmount);
-        const initNameBuffer = Buffer.from(payload.initName);
-        const serializedInitName = packBufferWithWord16Offset(initNameBuffer);
+        const initNameBuffer = Buffer.from(
+            'init_' + payload.contractName,
+            'utf8'
+        );
+        const serializedInitName = packBufferWithWord16Length(initNameBuffer);
         const serializedModuleRef = payload.moduleRef.decodedModuleRef;
-        const serializedParameters = packBufferWithWord16Offset(
+        const serializedParameters = packBufferWithWord16Length(
             Buffer.from(payload.parameter)
         );
         return Buffer.concat([
@@ -96,7 +103,7 @@ export class UpdateContractHandler
     implements AccountTransactionHandler<UpdateContractPayload>
 {
     getBaseEnergyCost(payload: UpdateContractPayload): bigint {
-        return payload.baseEnergyCost;
+        return payload.maxContractExecutionEnergy;
     }
 
     serialize(payload: UpdateContractPayload): Buffer {
@@ -109,17 +116,61 @@ export class UpdateContractHandler
             serializeIndex,
             serializeSubindex,
         ]);
-        const receiveNameBuffer = Buffer.from(payload.receiveName);
+        const receiveNameBuffer = Buffer.from(payload.receiveName, 'utf8');
         const serializedReceiveName =
-            packBufferWithWord16Offset(receiveNameBuffer);
-        const serializedParamters = packBufferWithWord16Offset(
+            packBufferWithWord16Length(receiveNameBuffer);
+        const serializedParameters = packBufferWithWord16Length(
             Buffer.from(payload.parameter)
         );
         return Buffer.concat([
             serializedAmount,
             serializedContractAddress,
             serializedReceiveName,
-            serializedParamters,
+            serializedParameters,
+        ]);
+    }
+}
+
+export class UpdateCredentialsHandler
+    implements AccountTransactionHandler<UpdateCredentialsPayload>
+{
+    getBaseEnergyCost(updateCredentials: UpdateCredentialsPayload): bigint {
+        const newCredentialsCost = updateCredentials.newCredentials
+            .map((credential) => {
+                const numberOfKeys = BigInt(
+                    Object.keys(credential.cdi.credentialPublicKeys.keys).length
+                );
+                return 54000n + 100n * numberOfKeys;
+            })
+            .reduce((prev, curr) => prev + curr, BigInt(0));
+
+        const currentCredentialsCost =
+            500n * updateCredentials.currentNumberOfCredentials;
+
+        return 500n + currentCredentialsCost + newCredentialsCost;
+    }
+
+    serialize(updateCredentials: UpdateCredentialsPayload): Buffer {
+        const serializedAddedCredentials = serializeList(
+            updateCredentials.newCredentials,
+            encodeWord8,
+            ({ index, cdi }) =>
+                Buffer.concat([
+                    encodeWord8(index),
+                    serializeCredentialDeploymentInfo(cdi),
+                ])
+        );
+
+        const serializedRemovedCredIds = serializeList(
+            updateCredentials.removeCredentialIds,
+            encodeWord8,
+            (credId: string) => Buffer.from(credId, 'hex')
+        );
+        const serializedThreshold = encodeWord8(updateCredentials.threshold);
+        return Buffer.concat([
+            serializedAddedCredentials,
+            serializedRemovedCredIds,
+            serializedThreshold,
         ]);
     }
 }
@@ -130,6 +181,9 @@ export function getAccountTransactionHandler(
 export function getAccountTransactionHandler(
     type: AccountTransactionType.SimpleTransferWithMemo
 ): SimpleTransferWithMemoHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.UpdateCredentials
+): UpdateCredentialsHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
 ): AccountTransactionHandler;
@@ -155,6 +209,8 @@ export function getAccountTransactionHandler(type: AccountTransactionType) {
             return new InitContractHandler();
         case AccountTransactionType.UpdateSmartContractInstance:
             return new UpdateContractHandler();
+        case AccountTransactionType.UpdateCredentials:
+            return new UpdateCredentialsHandler();
         default:
             throw new Error(
                 'The provided type does not have a handler: ' + type

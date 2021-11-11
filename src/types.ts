@@ -622,20 +622,6 @@ export enum AccountTransactionType {
     TransferWithScheduleWithMemo = 24,
 }
 
-export enum ModuleTransactionType {
-    DeployModule = 0,
-    InitContract = 1,
-    Update = 2,
-}
-
-export interface ModuleTransaction {
-    content:
-        | DeployModulePayload
-        | InitContractPayload
-        | UpdateContractPayload
-        | any;
-}
-
 export interface DeployModulePayload {
     /** Version of the wasm module */
     version: number;
@@ -651,14 +637,15 @@ export interface InitContractPayload {
     /** Hash of the module on chain */
     moduleRef: ModuleReference;
 
-    /** Name of init function including */
-    initName: string;
+    /** Name of the contract */
+    contractName: string;
 
     /** Parameters for the init function */
     parameter: Buffer;
 
-    /** Base Energy cost for sending transaction*/
-    baseEnergyCost: bigint;
+    /** The amount of energy that can be used for contract execution.
+    The base energy amount for transaction verification will be added to this cost.*/
+    maxContractExecutionEnergy: bigint;
 }
 
 export interface UpdateContractPayload {
@@ -674,8 +661,9 @@ export interface UpdateContractPayload {
     /** Parameters for the update function */
     parameter: Buffer;
 
-    /** Base Energy cost for sending transaction*/
-    baseEnergyCost: bigint;
+    /** The amount of energy that can be used for contract execution.
+    The base energy amount for transaction verification will be added to this cost.*/
+    maxContractExecutionEnergy: bigint;
 }
 
 export interface AccountTransactionHeader {
@@ -705,12 +693,39 @@ export interface SimpleTransferWithMemoPayload extends SimpleTransferPayload {
     memo: Memo;
 }
 
+export interface IndexedCredentialDeploymentInfo {
+    /** the index of the credential, has to fit in 1 byte */
+    index: number;
+
+    /** the credential signed by the credential owner */
+    cdi: CredentialDeploymentInfo;
+}
+
+export interface UpdateCredentialsPayload {
+    /** the credentials to be added to the account */
+    newCredentials: IndexedCredentialDeploymentInfo[];
+
+    /** the ids of the credentials to be removed */
+    removeCredentialIds: string[];
+
+    /** the new credential threshold required to sign transactions */
+    threshold: number;
+
+    /**
+     * the current number of credentials on the account. This
+     * is required to be able to calculate the energy cost, but
+     * is not part of the actual transaction.
+     */
+    currentNumberOfCredentials: bigint;
+}
+
 export type AccountTransactionPayload =
     | SimpleTransferPayload
     | SimpleTransferWithMemoPayload
     | DeployModulePayload
     | InitContractPayload
-    | UpdateContractPayload;
+    | UpdateContractPayload
+    | UpdateCredentialsPayload;
 
 export interface AccountTransaction {
     type: AccountTransactionType;
@@ -760,7 +775,7 @@ export interface InstanceInfo {
 export type CredentialSignature = Record<number, string>;
 export type AccountTransactionSignature = Record<number, CredentialSignature>;
 
-export interface InstanceInfoSerialize {
+export interface InstanceInfoSerialized {
     amount: string;
     sourceModule: string;
     owner: string;
@@ -769,19 +784,55 @@ export interface InstanceInfoSerialize {
     model: string;
 }
 
-export function createInstanceInfo(
-    instanceInfo: InstanceInfoSerialize | undefined
-): InstanceInfo | undefined {
-    if (instanceInfo === undefined) {
-        return undefined;
-    }
+export interface CredentialDeploymentTransaction {
+    expiry: TransactionExpiry;
+    unsignedCdi: UnsignedCredentialDeploymentInformation;
+    randomness: CommitmentsRandomness;
+}
 
-    return {
-        amount: new GtuAmount(BigInt(instanceInfo.amount)),
-        sourceModule: new ModuleReference(instanceInfo.sourceModule),
-        owner: new AccountAddress(instanceInfo.owner),
-        methods: instanceInfo.methods,
-        name: instanceInfo.name,
-        model: Buffer.from(instanceInfo.model, 'binary'),
-    } as InstanceInfo;
+export interface IdOwnershipProofs {
+    challenge: string;
+    commitments: string;
+    credCounterLessThanMaxAccounts: string;
+    proofIdCredPub: Record<string, string>;
+    proofIpSig: string;
+    proofRegId: string;
+    sig: string;
+}
+
+export interface UnsignedCredentialDeploymentInformation
+    extends CredentialDeploymentValues {
+    proofs: IdOwnershipProofs;
+}
+
+type AttributesRandomness = Record<AttributeKey, string>;
+
+export interface CommitmentsRandomness {
+    idCredSecRand: string;
+    prfRand: string;
+    credCounterRand: string;
+    maxAccountsRand: string;
+    attributesRand: AttributesRandomness;
+}
+
+export interface UnsignedCdiWithRandomness {
+    unsignedCdi: UnsignedCredentialDeploymentInformation;
+    randomness: CommitmentsRandomness;
+}
+
+export interface CredentialDeploymentInfo extends CredentialDeploymentValues {
+    proofs: string;
+}
+
+export interface IdentityProvider {
+    arsInfos: Record<number, ArInfo>;
+    ipInfo: IpInfo;
+}
+
+export interface IdentityInput {
+    identityProvider: IdentityProvider;
+    identityObject: any;
+    prfKey: string;
+    idCredSecret: string;
+    randomness: string;
 }

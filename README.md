@@ -68,6 +68,114 @@ const simpleTransferWithMemoAccountTransaction: AccountTransaction = {
 };
 ```
 
+## Create a credential for an existing account
+The following example demonstrates how to create a credential for an existing account. This
+credential can then be deployed onto the account by the account owner with an update
+credentials transaction. See [Create an update credentials transaction](#Create-an-update-credentials-transaction) for how to
+create this transaction payload using the output from the example below.
+```js
+const lastFinalizedBlockHash = (await client.getConsensusStatus()).lastFinalizedBlock;
+const cryptographicParameters = await client.getCryptographicParameters(lastFinalizedBlockHash);
+if (!cryptographicParameters) {
+    throw new Error('Cryptographic parameters were not found on a block that has been finalized.');
+}
+
+// The parts of the identity required to create a new credential, parsed from 
+// e.g. a wallet export.
+const identityInput: IdentityInput = ...
+
+// Require just one key on the credential to sign. This can be any number 
+// up to the number of public keys added to the credential.
+const threshold: number = 1;
+
+// The index of the credential that will be created. This index is per identity
+// and has to be in sequence, and not already used. Note that index 0 is used
+// by the initial credential that was created with the identity.
+const credentialIndex: number = 1;
+
+// In this example the credential will have one signing key, but there
+// could be multiple. The signatures on the credential must be supplied
+// in the same order as the keys are here.
+const publicKeys: VerifyKey[] = [
+    {
+        schemeId: "Ed25519",
+        verifyKey: "c8cd7623c5a9316d8e2fccb51e1deee615bdb5d324fb4a6d33801848fb5e459e"
+    }
+];
+
+// The attributes to reveal about the account holder on chain. In the case of an
+// empty array no attributes are revealed.
+const revealedAttributes: AttributeKey[] = [];
+
+// The next step creates an unsigned credential for an existing account.
+// Note that unsignedCredentialForExistingAccount also contains the randomness used, 
+// which should be saved to later be able to reveal attributes, or prove properties about them.
+const existingAccountAddress = new AccountAddress("3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU");
+const unsignedCredentialForExistingAccount = createUnsignedCredentialForExistingAccount(
+    identityInput,
+    cryptographicParameters.value,
+    threshold,
+    publicKeys,
+    credentialIndex,
+    revealedAttributes,
+    existingAccountAddress
+);
+
+// Sign the credential information.
+const credentialDigestToSign = getCredentialForExistingAccountSignDigest(unsignedCredentialForExistingAccount.unsignedCdi, existingAccountAddress);
+const credentialSigningKey = 'acab9ec5dfecfe5a6e13283f7ca79a6f6f5c685f036cd044557969e4dbe9d781';
+const credentialSignature = Buffer.from(await ed.sign(credentialDigestToSign, credentialSigningKey)).toString('hex');
+
+// Combine the credential and the signatures so that the object is ready
+// to be submitted as part of an update credentials transaction. This is the
+// object that must be provided to the account owner, who can then use it to
+// deploy it to their account.
+const signedCredentialForExistingAccount: CredentialDeploymentInfo = buildSignedCredentialForExistingAccount(unsignedCredentialForExistingAccount.unsignedCdi, [credentialSignature]);
+```
+
+## Create an update credentials transaction
+The following demonstrates how to construct an update credentials transaction, which is
+used to deploy additional credentials to an account, remove existing credentials on the account 
+or to update the credential threshold on the account. Note that the initial credential with
+index 0 cannot be removed.
+```js
+// The signed credential that is to be deployed on the account. Received from the
+// credential holder.
+const signedCredentialForExistingAccount: CredentialDeploymentInfo = ...
+
+// The credentials that are deployed have to be indexed. Index 0 is used up
+// by the initial credential on an account. The indices that have already been
+// used can be found in the AccountInfo.
+const accountAddress = new AccountAddress("3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU");
+const accountInfo = await client.getAccountInfo(accountAddress, lastFinalizedBlockHash);
+const nextAvailableIndex = Math.max(...Object.keys(accountInfo.accountCredentials).map((key) => Number(key))) + 1;
+
+// The current number of credentials on the account is required, as it is used to calculate
+// the correct energy cost.
+const currentNumberOfCredentials = BigInt(Object.keys(accountInfo.accountCredentials).length);
+
+const newCredential: IndexedCredentialDeploymentInfo = {
+    cdi: signedCredentialForExistingAccount,
+    index: nextAvailableIndex
+};
+
+// List the credential id (credId) of any credentials that should be removed from the account.
+// The existing credentials (and their credId) can be found in the AccountInfo.
+const credentialsToRemove = ["b0f11a9dcdd0758c8eec717956455deed73a0db59995da2cb20d73ee974eb39aec2c79970c640126827a8fbb84217424"];
+
+// Update the credential threshold to 2, so that transactions require signatures from both
+// of the credentials. If left at e.g. 1, then both credentials can create transactions
+// by themselves.
+const threshold = 2;
+
+const updateCredentialsPayload: UpdateCredentialsPayload = {
+    newCredentials: [newCredential],
+    removeCredentialIds: credentialsToRemove,
+    threshold: threshold,
+    currentNumberOfCredentials: currentNumberOfCredentials,
+};
+```
+
 ## Send Account Transaction
 The following example demonstrates how to send any account transaction.
 See the previous sections for how to create an account transaction.
@@ -109,6 +217,92 @@ const transactionHash = getAccountTransactionHash(accountTransaction, signatures
 const transactionStatus = await client.getTransactionStatus(transactionHash);
 ```
 
+## Create a new account
+The following example demonstrates how to create a new account on an existing
+identity. The `credentialIndex` should be the next unused credential index for that identity, and keeping track of that index is done off-chain. Note that index `0` is used by the initial account that was created together with the identity.
+
+```js
+const lastFinalizedBlockHash = (await client.getConsensusStatus()).lastFinalizedBlock;
+const cryptographicParameters = await client.getCryptographicParameters(lastFinalizedBlockHash);
+if (!cryptographicParameters) {
+    throw new Error('Cryptographic parameters were not found on a block that has been finalized.');
+}
+
+// The parts of the identity required to create a new account, parsed from 
+// e.g. a wallet export.
+const identityInput: IdentityInput = ...
+
+// Require just one key on the credential to sign. This can be any number 
+// up to the number of public keys added to the credential.
+const threshold: number = 1;
+
+// The index of the credential that will be created. This index is per identity
+// and has to be in sequence, and not already used. Note that index 0 is used
+// by the initial credential that was created with the identity.
+const credentialIndex: number = 1;
+
+// In this example the credential on the account will have two keys. Note that
+// the credential information has to be signed (in order) by corresponding 
+// private keys.
+const publicKeys: VerifyKey[] = [
+    {
+        schemeId: "Ed25519",
+        verifyKey: "c8cd7623c5a9316d8e2fccb51e1deee615bdb5d324fb4a6d33801848fb5e459e"
+    },
+    {
+        schemeId: "Ed25519",
+        verifyKey: "b6baf645540d0ea6ae5ff0b87dff324340ae1120a5c430ffee60d5f370b2ab75"
+    }
+];
+
+// The attributes to reveal about the account holder on chain. This can be empty
+const revealedAttributes: AttributeKey[] = ['firstName', 'nationality'];
+
+const expiry = new TransactionExpiry(new Date(Date.now() + 3600000));
+const credentialDeploymentTransaction: CredentialDeploymentTransaction =
+    createCredentialDeploymentTransaction(
+        identityInput,
+        cryptographicParameters.value,
+        threshold,
+        publicKeys,
+        credentialIndex,
+        revealedAttributes,
+        expiry
+    );
+const hashToSign: Buffer = getCredentialDeploymentSignDigest(
+    credentialDeploymentTransaction
+);
+
+// The next step is to sign the credential information with each private key that matches
+// one of the public keys in the credential information.
+const signingKey1 = "1053de23867e0f92a48814aabff834e2ca0b518497abaef71cad4e1be506334a";
+const signingKey2 = "fcd0e499f5dc7a989a37f8c89536e9af956170d7f502411855052ff75cfc3646";
+
+const signature1 = Buffer.from(await ed.sign(hashToSign, signingKey1)).toString('hex');
+const signature2 = Buffer.from(await ed.sign(hashToSign, signingKey2)).toString('hex');
+const signatures: string[] = [signature1, signature2];
+
+// The address that the account created by the transaction will get can 
+// be derived ahead of time.
+const accountAddress: AccountAddress = getAccountAddress(credentialDeploymentTransaction.cdi.credId);
+
+// Send the transaction to the node
+const success = await client.sendCredentialDeploymentTransaction(
+    credentialDeploymentTransaction,
+    signatures
+);
+if (success) {
+    // The node accepted the transaction. This does not ensure that the transaction
+    // will end up in a block, only that the format of the submitted transaction was valid.
+} else {
+    // The node rejected the transaction.
+}
+
+// Check the status of the transaction. Should be checked with an appropriate interval,
+// as it will take some time for the transaction to be processed.
+const transactionHash = getCredentialDeploymentTransactionHash(credentialDeploymentTransaction, signatures);
+const transactionStatus = await client.getTransactionStatus(transactionHash);
+```
 
 ## getAccountInfo
 Retrieves information about an account. If no account exists with the provided address, then the node
@@ -281,17 +475,10 @@ function getByteArray(filePath: string): Buffer {
 const wasmFileBuffer = getByteArray(wasmFilePath) as Buffer;
 
 const deployModule: DeployModulePayload = {
-    tag: ModuleTransactionType.DeployModule,
-    content: wasmFileBuffer,
-    length: wasmFileBuffer.length,
-    version: 0,
-} as DeployModulePayload;
+        content: wasmFileBuffer,
+        version: 0,
+};
 
-let deployModuleTransaction: AccountTransaction;
-```
-
-Now the following explain how to send deploy module transaction along with header, type which is 0 for DeployModule and deployModule created in the previous step.
-```js
 const header: AccountTransactionHeader = {
     expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
     nonce: nextAccountNonce.nonce,
@@ -305,123 +492,64 @@ const deployModuleTransaction: AccountTransaction = {
 };
 ```
 
-```js
-import * as ed from "noble-ed25519";
-
-// Sign the transaction, the following is just an example, and any method for signing
-// with the key can be employed.
-const signingKey = '621de9198d274b56eace2f86eb134bfc414f5c566022f281335be0b2d45189845';
-const hashToSign = getAccountTransactionSignDigest(deployModuleTransaction);
-
-const signature = Buffer.from(
-        await ed.sign(hashToSign, signingKey)
-    ).toString('hex');
-
-// The signatures used to sign the transaction must be provided in a structured way,
-// so that each signature can be mapped to the credential that signed the transaction.
-// In this example we assume the key used was from the credential with index 0, and it
-// was the key with index 0.
-const signatures: AccountTransactionSignature = {
-    0: {
-        0: signature,
-    },
-};
-
-// Send the deploy module transaction to the node.
-const result = await client.sendAccountTransaction(
-        deployModuleTransaction,
-        signatures
-    );
-
-// Get the transaction hash and status of the transaction once deploy transaction is sent
-const txHash = await getAccountTransactionHash(deployModuleTransaction, signatures);
-const transactionStatus = await client.getTransactionStatus(transactionHash);   
-```
+Finally, to actually deploy the module to the chain, send the constructed `deployModuleTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
 
 ## Init Contract (parameterless smart contract)
-The following example demonstrates how to initialize a smart contract module. 
-Name of init function including "init_" prefix(for suppose the contract with name as "INDBank" 
-then the init name should be as "init_INDBank") and parameter for the init function as empty Buffer 
-since we are initializing the contract without any parameters.
+The following example demonstrates how to initialize a smart contract from a module, which has already been deployed. 
+The name of the contract "INDBank".
+In this example, the contract does not take any parameters, so we can leave params as an empty Buffer.  
 ```js
-const initName = 'init_INDBank'; 
-const params = [];
+const contractName = 'INDBank'; 
+const params = Buffer.from([]);
+//The amount of energy that can be used for contract execution.
+const maxContractExecutionEnergy = 300000n;
 ```
 
 Create init contract transaction
 ```js
 const initModule: InitContractPayload = {
-    amount: new GtuAmount(0n), //Amount to send to contract if the smart contract is payable then send some GTU Amount else 0n
-    moduleRef: new ModuleReference('a225a5aeb0a5cf9bbc59209e15df030e8cc2c17b8dba08c4bf59f80edaedd8b1'), //module refernce which obtained after deploy smart contract
-    initName: initName,
-    parameter: params
-} as InitContractPayload;
+    amount: new GtuAmount(0n), // Amount to send to the contract. If the smart contract is not payable, set the amount to 0.
+    moduleRef: new ModuleReference('a225a5aeb0a5cf9bbc59209e15df030e8cc2c17b8dba08c4bf59f80edaedd8b1'), // Module reference, which can be obtained after deploying a module
+    contractName: contractName,
+    parameter: params,
+    maxContractExecutionEnergy: maxContractExecutionEnergy
+};
 
-let initContractTransaction: AccountTransaction;
-
-const initModuleTransaction: AccountTransaction = {
+const initContractTransaction: AccountTransaction = {
     header: header,
     payload: initModule,
     type: AccountTransactionType.InitializeSmartContractInstance,
 };
 ```
 
-```js
-import * as ed from "noble-ed25519";
-
-// Sign the transaction, the following is just an example, and any method for signing
-// with the key can be employed.
-const signingKey = '621de9198d274b56eace2f86eb134bfc414f5c566022f281335be0b2d45189845';
-const hashToSign = getAccountTransactionSignDigest(initContractTransaction);
-
-const signature = Buffer.from(
-        await ed.sign(hashToSign, signingKey)
-    ).toString('hex');
-
-// The signatures used to sign the transaction must be provided in a structured way,
-// so that each signature can be mapped to the credential that signed the transaction.
-// In this example we assume the key used was from the credential with index 0, and it
-// was the key with index 0.
-const signatures: AccountTransactionSignature = {
-    0: {
-        0: signature,
-    },
-};
-
-// Send the init contract transaction to the node.
-const result = await client.sendAccountTransaction(
-        initContractTransaction,
-        signatures
-    );
-
-// Get the transaction hash once init contract transaction is sent
-const txHash = await getAccountTransactionHash(initContractTransaction, signatures);
-const transactionStatus = await client.getTransactionStatus(transactionHash);    
-```
+Finally, to actually initialize the contract on the chain, send the constructed `initContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
 
 ## Update Contract(parameterless smart contract)
 The following example demonstrates how to update a smart contract. 
 
-The following code is how to create the payload for update contract
-Name of receive function including "<contractName>." as a prefix(for suppose the contract with name as "INDBank" and one of the receive function name as "insertAmount" then the name of receive function should be as "INDBank.insertAmount") and parameter for the receive function as empty Buffer since we are receive function of the contract without any parameters. Contract Address of contract instance consisting of an index and a subindex.
+To update a smart contract we create a 'updateContractTransaction'.
+To do this we need to specify the name of the receive function, which should contain the contract name as a prefix ( So if the contract has the name "INDBank" and the receive function has the name "insertAmount" then the receiveName should be "INDBank.insertAmount").
+
+We also need to supply the contract address of the contract instance. This consists of an index and a subindex.
+
+In this example, the contract does not take any parameters, so we can leave the parameters as an empty list.  
 ```js
-const receiveName = 'DCBBank.insertAmount';
-const params = [];
+const receiveName = 'INDBank.insertAmount';
+const params = Buffer.from([]);
 const contractAddress = { index: BigInt(83), subindex: BigInt(0) } as ContractAddress;
-//The amount of energy to execute the transaction
-const baseEnergy = 30000n;
+//The amount of energy that can be used for contract execution.
+const maxContractExecutionEnergy = 30000n;
 ```
 Create update contract transaction
 ```js
-let updateContractTransaction: AccountTransaction;
 const updateContractTransaction: UpdateContractPayload =
 {
     amount: new GtuAmount(1000n),
     contractAddress: contractAddress,
     receiveName: receiveName,
-    parameter: [],
-    baseEnergyCost: baseEnergy, 
-} as UpdateContractPayload;
+    parameter: params,
+    maxContractExecutionEnergy: maxContractExecutionEnergy
+};
 
 const updateContractTransaction: AccountTransaction = {
     header: header,
@@ -430,38 +558,7 @@ const updateContractTransaction: AccountTransaction = {
 };
 ```
 
-```js
-import * as ed from "noble-ed25519";
-
-// Sign the transaction, the following is just an example, and any method for signing
-// with the key can be employed.
-const signingKey = '621de9198d274b56eace2f86eb134bfc414f5c566022f281335be0b2d45189845';
-const hashToSign = getAccountTransactionSignDigest(updateContractTransaction);
-
-const signature = Buffer.from(
-        await ed.sign(hashToSign, signingKey)
-    ).toString('hex');
-
-// The signatures used to sign the transaction must be provided in a structured way,
-// so that each signature can be mapped to the credential that signed the transaction.
-// In this example we assume the key used was from the credential with index 0, and it
-// was the key with index 0.
-const signatures: AccountTransactionSignature = {
-    0: {
-        0: signature,
-    },
-};
-
-// Send the update contract transaction to the node.
-const result = await client.sendAccountTransaction(
-        updateContractTransaction,
-        signatures
-);
-
-// Get the transaction hash and status of the transaction once update contract transaction is sent
-const txHash = await getAccountTransactionHash(updateContractTransaction, signatures);
-const transactionStatus = await client.getTransactionStatus(transactionHash);  
-```
+Finally, to actually update the contract on the chain, send the constructed `updateContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
 
 ## Create init contract with parameters
 The following example demonstrates how to init contract with parameters.
@@ -473,6 +570,7 @@ To build the project run
 ```
 yarn build
 ```
+Note that you must have [wasm-pack](https://rustwasm.github.io/wasm-pack/) installed to build the project.
 
 ## Publishing a release
 Before publishing a new release it is essential that it has been built first. So make sure that 

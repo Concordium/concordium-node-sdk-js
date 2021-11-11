@@ -32,19 +32,19 @@ test('init contract with the wrong private key', async () => {
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const initName = 'init_INDBank';
+    const contractName = 'INDBank';
     const params = Buffer.from([]);
-    const baseEnergy = 300000n;
+    const maxContractExecutionEnergy = 300000n;
 
     const initModule: InitContractPayload = {
         amount: new GtuAmount(0n),
         moduleRef: new ModuleReference(
             'e51d9f9329f103faa18b1c99335281204df9e3eec23d7138f69ddd17fd63e9d0'
         ),
-        initName: initName,
+        contractName: contractName,
         parameter: params,
-        baseEnergyCost: baseEnergy,
-    } as InitContractPayload;
+        maxContractExecutionEnergy: maxContractExecutionEnergy,
+    };
 
     const initContractTransaction: AccountTransaction = {
         header: header,

@@ -11,7 +11,7 @@ test('retrieve information about a given smart contract instance', async () => {
         subindex: BigInt(0),
         index: BigInt(87),
     };
-    const instanceInfo = await client.GetInstanceInfo(
+    const instanceInfo = await client.getInstanceInfo(
         blockHash,
         contractAddress
     );
@@ -22,27 +22,25 @@ test('retrieve information about a given smart contract instance', async () => {
     }
     return Promise.all([
         expect(instanceInfo).not.toBe(null),
-        expect(instanceInfo.amount.microGtuAmount).toBe(
-            new GtuAmount(5000n).microGtuAmount
-        ),
+        expect(instanceInfo.amount).toStrictEqual(new GtuAmount(5000n)),
         expect(instanceInfo.methods).toStrictEqual([
             'INDBank.balanceOf',
             'INDBank.insertAmount',
             'INDBank.smashAmount',
         ]),
-        expect(instanceInfo.model.toString()).toBe(
-            Buffer.from('00', 'binary').toString()
+        expect(Buffer.from('00', 'binary').equals(instanceInfo.model)).toBe(
+            true
         ),
         expect(instanceInfo.name).toBe('init_INDBank'),
-        expect(instanceInfo.owner.address).toBe(
+        expect(instanceInfo.owner).toStrictEqual(
             new AccountAddress(
                 '3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5'
-            ).address
+            )
         ),
-        expect(instanceInfo.sourceModule.moduleRef).toBe(
+        expect(instanceInfo.sourceModule).toStrictEqual(
             new ModuleReference(
                 'e51d9f9329f103faa18b1c99335281204df9e3eec23d7138f69ddd17fd63e9d0'
-            ).moduleRef
+            )
         ),
     ]);
 });
@@ -52,7 +50,7 @@ test('retrieve all the smart contract instances at given block hash', async () =
     const blockHash =
         '1729985f62c4070a8aed010fd0e5a76f6850bcc394eaf70bad517d93434f8822';
 
-    const instances = await client.GetInstances(blockHash);
+    const instances = await client.getInstances(blockHash);
     if (!instances) {
         throw new Error(
             'The instance info should exist for the provided block hash.'

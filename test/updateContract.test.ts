@@ -35,7 +35,7 @@ test('update contract with the wrong private key', async () => {
 
     const receiveName = 'INDBank.insertAmount';
     const params = Buffer.from([]);
-    const contractAddress = {
+    const contractAddress: ContractAddress = {
         index: BigInt(87),
         subindex: BigInt(0),
     };

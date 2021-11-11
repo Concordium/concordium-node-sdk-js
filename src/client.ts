@@ -47,7 +47,6 @@ import {
     Versioned,
     InstanceInfo,
     InstanceInfoSerialized,
-    createInstanceInfo,
 } from './types';
 import {
     buildJsonResponseReviver,
@@ -56,6 +55,9 @@ import {
     unwrapBoolResponse,
     unwrapJsonResponse,
 } from './util';
+import { GtuAmount } from './types/gtuAmount';
+import { ModuleReference } from './types/moduleReference';
+import { Buffer as BufferFormater } from 'buffer/';
 /**
  * A concordium-node specific gRPC client wrapper.
  *
@@ -579,7 +581,7 @@ export default class ConcordiumNodeClient {
         );
 
         const result = unwrapJsonResponse<InstanceInfoSerialized>(response);
-        const instanceInfo = createInstanceInfo(result);
+        const instanceInfo = await this.createInstanceInfo(result);
         return instanceInfo;
     }
 
@@ -605,5 +607,22 @@ export default class ConcordiumNodeClient {
                 );
             });
         });
+    }
+
+    createInstanceInfo(
+        instanceInfo: InstanceInfoSerialized | undefined
+    ): InstanceInfo | undefined {
+        if (instanceInfo === undefined) {
+            return undefined;
+        }
+
+        return {
+            amount: new GtuAmount(BigInt(instanceInfo.amount)),
+            sourceModule: new ModuleReference(instanceInfo.sourceModule),
+            owner: new Address(instanceInfo.owner),
+            methods: instanceInfo.methods,
+            name: instanceInfo.name,
+            model: BufferFormater.from(instanceInfo.model, 'binary'),
+        };
     }
 }

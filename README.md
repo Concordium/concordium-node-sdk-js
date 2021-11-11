@@ -496,10 +496,10 @@ Finally, to actually deploy the module to the chain, send the constructed `deplo
 
 ## Init Contract (parameterless smart contract)
 The following example demonstrates how to initialize a smart contract from a module, which has already been deployed. 
-The name of the contract should be specified, and should include "init_" prefix (So if the contract should be named 'INDBank', then the initName should be "init_INDBank".
-In this example, the contract does not take any parameters, so we can leave params as an empty list.  
+The name of the contract "INDBank".
+In this example, the contract does not take any parameters, so we can leave params as an empty Buffer.  
 ```js
-const initName = 'init_INDBank'; 
+const contractName = 'INDBank'; 
 const params = Buffer.from([]);
 //The amount of energy that can be used for contract execution.
 const maxContractExecutionEnergy = 300000n;
@@ -510,7 +510,7 @@ Create init contract transaction
 const initModule: InitContractPayload = {
     amount: new GtuAmount(0n), // Amount to send to the contract. If the smart contract is not payable, set the amount to 0.
     moduleRef: new ModuleReference('a225a5aeb0a5cf9bbc59209e15df030e8cc2c17b8dba08c4bf59f80edaedd8b1'), // Module reference, which can be obtained after deploying a module
-    initName: initName,
+    contractName: contractName,
     parameter: params,
     maxContractExecutionEnergy: maxContractExecutionEnergy
 };

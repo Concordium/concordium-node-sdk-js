@@ -637,8 +637,8 @@ export interface InitContractPayload {
     /** Hash of the module on chain */
     moduleRef: ModuleReference;
 
-    /** Name of init function including */
-    initName: string;
+    /** Name of the contract */
+    contractName: string;
 
     /** Parameters for the init function */
     parameter: Buffer;
@@ -782,23 +782,6 @@ export interface InstanceInfoSerialized {
     methods: string[];
     name: string;
     model: string;
-}
-
-export function createInstanceInfo(
-    instanceInfo: InstanceInfoSerialized | undefined
-): InstanceInfo | undefined {
-    if (instanceInfo === undefined) {
-        return undefined;
-    }
-
-    return {
-        amount: new GtuAmount(BigInt(instanceInfo.amount)),
-        sourceModule: new ModuleReference(instanceInfo.sourceModule),
-        owner: new AccountAddress(instanceInfo.owner),
-        methods: instanceInfo.methods,
-        name: instanceInfo.name,
-        model: Buffer.from(instanceInfo.model, 'binary'),
-    } as InstanceInfo;
 }
 
 export interface CredentialDeploymentTransaction {

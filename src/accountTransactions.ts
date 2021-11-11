@@ -81,7 +81,10 @@ export class InitContractHandler
 
     serialize(payload: InitContractPayload): Buffer {
         const serializedAmount = encodeWord64(payload.amount.microGtuAmount);
-        const initNameBuffer = Buffer.from(payload.initName);
+        const initNameBuffer = Buffer.from(
+            'init_' + payload.contractName,
+            'utf8'
+        );
         const serializedInitName = packBufferWithWord16Length(initNameBuffer);
         const serializedModuleRef = payload.moduleRef.decodedModuleRef;
         const serializedParameters = packBufferWithWord16Length(
@@ -113,7 +116,7 @@ export class UpdateContractHandler
             serializeIndex,
             serializeSubindex,
         ]);
-        const receiveNameBuffer = Buffer.from(payload.receiveName);
+        const receiveNameBuffer = Buffer.from(payload.receiveName, 'utf8');
         const serializedReceiveName =
             packBufferWithWord16Length(receiveNameBuffer);
         const serializedParameters = packBufferWithWord16Length(

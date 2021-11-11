@@ -11,7 +11,7 @@ test('retrieve information about a given smart contract instance', async () => {
         subindex: BigInt(0),
         index: BigInt(87),
     };
-    const instanceInfo = await client.GetInstanceInfo(
+    const instanceInfo = await client.getInstanceInfo(
         blockHash,
         contractAddress
     );
@@ -50,7 +50,7 @@ test('retrieve all the smart contract instances at given block hash', async () =
     const blockHash =
         '1729985f62c4070a8aed010fd0e5a76f6850bcc394eaf70bad517d93434f8822';
 
-    const instances = await client.GetInstances(blockHash);
+    const instances = await client.getInstances(blockHash);
     if (!instances) {
         throw new Error(
             'The instance info should exist for the provided block hash.'

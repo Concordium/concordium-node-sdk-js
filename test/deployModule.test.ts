@@ -74,9 +74,4 @@ test('deploy contract with the wrong private key', async () => {
     );
     expect(result).toBeTruthy();
 
-    const txHash = await getAccountTransactionHash(
-        deployModuleTransaction,
-        signatures
-    );
-    console.log(txHash);
 }, 300000);

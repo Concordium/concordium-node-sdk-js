@@ -1,30 +1,38 @@
-import { Buffer } from 'buffer/';
 import { isHex } from '../util';
 
 /**
- * Representation of an credential registration id, which enforces that it:
+ * Representation of a credential registration id, which enforces that it:
  * - Is a valid Hex string
- * - Has length exactly 96 (Because 48 bytes)
- * - Checks the first bit is 1. (Which indicates that the value represents a compressed BLS12-381 curve point)
+ * - Has length exactly 96, because a credId is 48 bytes.
+ * - Checks the first bit is 1, which indicates that the value represents a compressed BLS12-381 curve point.
  */
 export class CredentialRegistrationId {
     credId: string;
 
     constructor(credId: string) {
-        if (address.length !== 96) {
+        if (credId.length !== 96) {
             throw new Error(
                 'The provided credId ' +
-                    credID +
+                    credId +
                     ' is invalid as its length was not 96'
             );
         }
         if (!isHex(credId)) {
             throw new Error(
                 'The provided credId ' +
-                    credID +
+                    credId +
                     ' does not represent a hexidecimal value'
             );
         }
+        // Check that the first bit is 1
+        if ((parseInt(credId.substring(0, 2), 16) & 0b10000000) === 0) {
+            throw new Error(
+                'The provided credId ' +
+                    credId +
+                    'does not represent a compressed BLS12-381 point'
+            );
+        }
+
         this.credId = credId;
     }
 }

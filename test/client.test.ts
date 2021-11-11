@@ -11,6 +11,7 @@ import { isValidDate, getNodeClient } from './testHelpers';
 import { bulletProofGenerators } from './resources/bulletproofgenerators';
 import { ipVerifyKey1, ipVerifyKey2 } from './resources/ipVerifyKeys';
 import { PeerElement } from '../grpc/concordium_p2p_rpc_pb';
+import { CredentialRegistrationId } from '../src/types/CredentialRegistrationId';
 
 const client = getNodeClient();
 
@@ -677,6 +678,29 @@ test('retrieves the account info', async () => {
 
         normalAccountCredentialExpects,
     ]);
+});
+
+test('retrieves the same account info for credential of account as account address', async () => {
+    const accountAddress = new AccountAddress(
+        '3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU'
+    );
+    const credId = new CredentialRegistrationId(
+        'a8e810a15eeefcdd425126d6faed3a45fdf211392180d0fb3dc7e9e3382cb0dc6ce8e0d8bc46cfb6cfbb4ea5d8771966'
+    );
+
+    const blockHash =
+        '6b01f2043d5621192480f4223644ef659dd5cda1e54a78fc64ad642587c73def';
+
+    const accountInfo = await client.getAccountInfo(accountAddress, blockHash);
+    const accountInfoCredential = await client.getAccountInfo(
+        credId,
+        blockHash
+    );
+
+    if (!accountInfo || !accountInfoCredential) {
+        throw new Error('Test failed to find account info');
+    }
+    expect(accountInfo).toStrictEqual(accountInfoCredential);
 });
 
 test('retrieves the next account nonce', async () => {

@@ -1,6 +1,6 @@
 import { ChannelCredentials, Metadata, ServiceError } from '@grpc/grpc-js';
 import { P2PClient } from '../grpc/concordium_p2p_rpc_grpc_pb';
-import { AccountAddress as Address } from './types/accountAddress';i
+import { AccountAddress as Address } from './types/accountAddress';
 import { CredentialRegistrationId } from './types/CredentialRegistrationId';
 import {
     AccountAddress,
@@ -194,7 +194,6 @@ export default class ConcordiumNodeClient {
             getAddressInfoRequest.setAddress(accountAddress.credId);
         }
         getAddressInfoRequest.setBlockHash(blockHash);
-
 
         const response = await this.sendRequest(
             this.client.getAccountInfo,

@@ -37,21 +37,21 @@ test('init contract with the wrong private key', async () => {
 
     const contractName = 'UserDetails';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const inputParams: ParameterValue<any> = {
+    const inputParams: ParameterValue<StructParameter> = {
         type: ParameterType.Struct,
         value: [
             {
                 type: ParameterType.String,
                 value: 'Concordium',
-            },
+            } as ParameterValue<string>,
             {
                 type: ParameterType.String,
                 value: 'Zug',
-            },
+            } as ParameterValue<string>,
             {
                 type: ParameterType.U8,
                 value: 51,
-            },
+            } as ParameterValue<number>,
         ] as StructParameter,
     };
     const baseEnergy = 300000n;

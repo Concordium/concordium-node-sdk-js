@@ -37,9 +37,9 @@ test('update contract with the wrong private key', async () => {
 
     const receiveName = 'INDBank.insertAmount';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const params: ParameterValue<any> = {
+    const params: ParameterValue<undefined> = {
         type: ParameterType.NoParameters,
-        value: [],
+        value: undefined,
     };
     const contractAddress: ContractAddress = {
         index: BigInt(87),

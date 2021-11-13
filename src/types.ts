@@ -52,25 +52,25 @@ export interface AddressAccount {
 
 export interface TransactionEvent {
     tag:
-        | 'ModuleDeployed'
-        | 'ContractInitialized'
-        | 'AccountCreated'
-        | 'CredentialDeployed'
-        | 'BakerAdded'
-        | 'BakerRemoved'
-        | 'BakerStakeIncreased'
-        | 'BakerStakeDecreased'
-        | 'BakerSetRestakeEarnings'
-        | 'BakerKeysUpdated'
-        | 'CredentialKeysUpdated'
-        | 'NewEncryptedAmount'
-        | 'EncryptedAmountsRemoved'
-        | 'AmountAddedByDecryption'
-        | 'EncryptedSelfAmountAdded'
-        | 'UpdateEnqueued'
-        | 'TransferredWithSchedule'
-        | 'CredentialsUpdated'
-        | 'DataRegistered';
+    | 'ModuleDeployed'
+    | 'ContractInitialized'
+    | 'AccountCreated'
+    | 'CredentialDeployed'
+    | 'BakerAdded'
+    | 'BakerRemoved'
+    | 'BakerStakeIncreased'
+    | 'BakerStakeDecreased'
+    | 'BakerSetRestakeEarnings'
+    | 'BakerKeysUpdated'
+    | 'CredentialKeysUpdated'
+    | 'NewEncryptedAmount'
+    | 'EncryptedAmountsRemoved'
+    | 'AmountAddedByDecryption'
+    | 'EncryptedSelfAmountAdded'
+    | 'UpdateEnqueued'
+    | 'TransferredWithSchedule'
+    | 'CredentialsUpdated'
+    | 'DataRegistered';
 }
 
 export interface ContractAddress {
@@ -187,9 +187,9 @@ export type EventResult =
 
 interface BaseTransactionSummaryType {
     type:
-        | 'accountTransaction'
-        | 'credentialDeploymentTransaction'
-        | 'updateTransaction';
+    | 'accountTransaction'
+    | 'credentialDeploymentTransaction'
+    | 'updateTransaction';
 }
 
 export interface TransferWithMemoSummaryType
@@ -641,7 +641,7 @@ export interface InitContractPayload {
     contractName: string;
 
     /** Parameters for the init function */
-    parameter: ParameterValue<any>;
+    parameter: SMParameter<SMTypes>;
 
     /** The amount of energy that can be used for contract execution.
     The base energy amount for transaction verification will be added to this cost.*/
@@ -659,7 +659,7 @@ export interface UpdateContractPayload {
     receiveName: string;
 
     /** Parameters for the update function */
-    parameter: ParameterValue<any>;
+    parameter: SMParameter<SMTypes>;
 
     /** The amount of energy that can be used for contract execution.
     The base energy amount for transaction verification will be added to this cost.*/
@@ -838,10 +838,15 @@ export interface IdentityInput {
     randomness: string;
 }
 
-export interface ParameterValue<T> {
+export interface SMParameter<T extends SMTypes> {
     type: ParameterType;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: T;
 }
 
-export type StructParameter = Array<ParameterValue<any>>;
+export type SMStruct = Array<SMParameter<SMTypes>>;
+
+export type SMArray<T extends SMTypes> = {type: ParameterType, value: Array<T>};
+
+export type SMPrimitiveTypes = number | string | boolean | bigint | undefined;
+
+export type SMTypes = SMPrimitiveTypes | SMParameter<SMTypes> | SMStruct | SMArray<SMPrimitiveTypes | SMStruct> | undefined;

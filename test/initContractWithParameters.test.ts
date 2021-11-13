@@ -3,6 +3,7 @@ import {
     AccountTransactionHeader,
     AccountTransactionSignature,
     AccountTransactionType,
+    ArrayParameter,
     InitContractPayload,
     ParameterType,
     ParameterValue,
@@ -36,22 +37,12 @@ test('init contract with the wrong private key', async () => {
 
     const contractName = 'INDBankU83';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const inputParams: ParameterValue<any> = {
+    const inputParams: ParameterValue<ArrayParameter<number>> = {
         type: ParameterType.Array,
-        value: [
-            {
-                type: ParameterType.U8,
-                value: 10,
-            },
-            {
-                type: ParameterType.U8,
-                value: 10,
-            },
-            {
-                type: ParameterType.U8,
-                value: 15,
-            },
-        ],
+        value: {
+            type: ParameterType.U8,
+            value: [10, 10, 15]
+        }
     };
     const baseEnergy = 300000n;
 

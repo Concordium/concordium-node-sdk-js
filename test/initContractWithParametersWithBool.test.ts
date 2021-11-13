@@ -36,7 +36,7 @@ test('init contract with the wrong private key', async () => {
 
     const contractName = 'INDBankBool1';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const inputParams: ParameterValue<any> = {
+    const inputParams: ParameterValue<boolean> = {
         type: ParameterType.Bool,
         value: true,
     };

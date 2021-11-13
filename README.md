@@ -565,23 +565,13 @@ The name of the contract as "INDBankU83".
 In this example, the contract take parameters as array of integers of type u8.  
 ```js
 const contractName = 'INDBankU83'; 
-const inputParams: ParameterValue<any> =
+const inputParams: SMParameter<SMArray<number>> =
     {
         type: ParameterType.Array,
-        value: [
-            {
-                type: ParameterType.U8,
-                value: 26,
-            },
-            {
-                type: ParameterType.U8,
-                value: 27,
-            },
-            {
-                type: ParameterType.U8,
-                value: 51,
-            },
-        ],
+        value: {
+            type: ParameterType.U8,
+            value: [10, 10, 15]
+        }
     };
 //The amount of energy that can be used for contract execution.
 const baseEnergy = 300000n;
@@ -612,13 +602,13 @@ The name of the contract as "INDBankStruct1".
 In this example, the contract take parameters as struct of types integer(u8) and string.  
 ```js
 const contractName = 'INDBankStruct1'; 
-const inputParams: ParameterValue<any> =
+const inputParams: SMParameter<SMSMStruct> =
     {
         type: ParameterType.Struct,
         value: [
             {
                 type: ParameterType.String,
-                value: 'Omkar',
+                value: 'strval',
             },
             {
                 type: ParameterType.U8,

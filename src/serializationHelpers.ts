@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer/';
 import { VerifyKey } from '.';
-import { ParameterType, ParameterValue, StructParameter } from './types';
+import { ParameterType, SMParameter, SMStruct, SMArray, SMTypes, SMPrimitiveTypes } from './types';
 import { Memo } from './types/Memo';
 
 export function serializeMap<K extends string | number | symbol, T>(
@@ -56,7 +56,7 @@ export function encodeWord128(value: bigint): Buffer {
     if (value > 170141183460469231731687303715884105728n || value < 0n) {
         throw new Error(
             'The input has to be a 128 bit unsigned integer but it was: ' +
-                value
+            value
         );
     }
     const arr = new ArrayBuffer(8);
@@ -280,105 +280,50 @@ export function serializeYearMonth(yearMonth: string): Buffer {
  * @param parameter is array of parameters provided by the user
  * @returns Buffer of parameters
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function serializeParameter(parameter: ParameterValue<any>): Buffer {
+export function serializeParameter(parameter: SMParameter<SMTypes>): Buffer {
     switch (parameter.type) {
         case ParameterType.U8:
-            return encodeWord8(parameter.value);
+            return encodeWord8((parameter as SMParameter<number>).value);
         case ParameterType.I8:
-            return encodeWord8(parameter.value);
+            return encodeWord8((parameter as SMParameter<number>).value);
         case ParameterType.U16:
-            return encodeWord16(parameter.value);
+            return encodeWord16((parameter as SMParameter<number>).value);
         case ParameterType.I16:
-            return encodeWordI16(parameter.value);
+            return encodeWordI16((parameter as SMParameter<number>).value);
         case ParameterType.U32:
-            return encodeWord32(parameter.value);
+            return encodeWord32((parameter as SMParameter<number>).value);
         case ParameterType.I32:
-            return encodeWordI32(parameter.value);
+            return encodeWordI32((parameter as SMParameter<number>).value);
         case ParameterType.U64:
-            return encodeWord64(parameter.value);
+            return encodeWord64((parameter as SMParameter<bigint>).value);
         case ParameterType.I64:
-            return encodeWordI64(parameter.value);
+            return encodeWordI64((parameter as SMParameter<bigint>).value);
         case ParameterType.U128:
-            return encodeWord128(parameter.value);
+            return encodeWord128((parameter as SMParameter<bigint>).value);
         case ParameterType.I128:
-            return encodeWordI128(parameter.value);
+            return encodeWordI128((parameter as SMParameter<bigint>).value);
         case ParameterType.String:
-            return Buffer.from(parameter.value);
+            return Buffer.from((parameter as SMParameter<string>).value);
         case ParameterType.Bool:
-            return encodeBool(parameter.value);
+            return encodeBool((parameter as SMParameter<boolean>).value);
         case ParameterType.Struct:
             const bufferArray: Buffer[] = [];
-            (parameter.value as StructParameter).forEach((element) => {
+            (parameter.value as SMStruct).forEach((element) => {
                 const parameterBuffer = serializeParameter(element);
                 bufferArray.push(packBufferWithWord16Length(parameterBuffer));
             });
             return Buffer.concat(bufferArray);
         case ParameterType.Array:
             const bufferArray2: Buffer[] = [];
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (parameter.value as Array<ParameterValue<any>>).forEach(
+            const arrayType = (parameter.value as SMArray<SMPrimitiveTypes | SMStruct>).type;
+            (parameter.value as SMArray<SMPrimitiveTypes | SMStruct>).value.forEach(
                 (element) => {
-                    const parameterBuffer = serializeParameter(element);
+                    const parameterBuffer = serializeParameter({ type: arrayType, value: element });
                     bufferArray2.push(parameterBuffer);
                 }
             );
             return Buffer.concat(bufferArray2);
         default:
-            return Buffer.from(parameter.value);
+            return Buffer.from([]);
     }
 }
-
-/**
- *
- * @param parameter is array of parameters provided by the user
- * @returns Buffer of parameters
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function serializeComplexTypeParameter(
-    parameter: StructParameter
-): Buffer {
-    switch (parameter[0].type) {
-        case ParameterType.Struct:
-            const bufferArray: Buffer[] = [];
-            (parameter[0].value as StructParameter).forEach((element) => {
-                const parameterBuffer = serializeParameter(element);
-                bufferArray.push(packBufferWithWord16Length(parameterBuffer));
-            });
-            return Buffer.concat(bufferArray);
-        case ParameterType.Array:
-            const bufferArray2: Buffer[] = [];
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (parameter[0].value as Array<ParameterValue<any>>).forEach(
-                (element) => {
-                    const parameterBuffer = serializeParameter(element);
-                    bufferArray2.push(parameterBuffer);
-                }
-            );
-            return Buffer.concat(bufferArray2);
-        default:
-            return Buffer.from(parameter[0].value);
-    }
-}
-
-// /**
-//  * Convert the parameters given by the user
-//  * @param type type of the parameters
-//  * @param value value of the parameters
-//  * @returns Buffer
-//  */
-// export function encodeParameters(type: ParameterType, value: any): Buffer {
-//     switch (type) {
-//         case ParameterType.U8: return encodeWord8(value);
-//         case ParameterType.U16: return encodeWord16(value);
-//         case ParameterType.U32: return encodeWord32(value);
-//         case ParameterType.U64: return encodeWord64(value);
-//         case ParameterType.U128: return encodeWord128(value);
-//         case ParameterType.String: return Buffer.from(value);
-//         default:
-//             throw new Error(
-//                 'The provided type does not have a handler: ' + type
-//             );
-//     }
-
-// }

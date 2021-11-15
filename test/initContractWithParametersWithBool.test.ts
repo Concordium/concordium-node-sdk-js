@@ -5,7 +5,7 @@ import {
     AccountTransactionType,
     InitContractPayload,
     ParameterType,
-    ParameterValue,
+    SMParameter,
 } from '../src/types';
 import * as ed from 'noble-ed25519';
 import { getAccountTransactionSignDigest } from '../src/serialization';
@@ -36,7 +36,7 @@ test('init contract with the wrong private key', async () => {
 
     const contractName = 'INDBankBool1';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const inputParams: ParameterValue<boolean> = {
+    const inputParams: SMParameter<boolean> = {
         type: ParameterType.Bool,
         value: true,
     };

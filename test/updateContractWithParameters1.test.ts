@@ -6,7 +6,7 @@ import {
     UpdateContractPayload,
     ContractAddress,
     ParameterType,
-    ParameterValue,
+    SMParameter,
 } from '../src/types';
 import * as ed from 'noble-ed25519';
 import { getAccountTransactionSignDigest } from '../src/serialization';
@@ -37,7 +37,7 @@ test('update contract with the wrong private key', async () => {
 
     const receiveName = 'INDBankU83.insertAmount1';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const inputParams: ParameterValue<number> = {
+    const inputParams: SMParameter<number> = {
         type: ParameterType.U8,
         value: 20,
     };

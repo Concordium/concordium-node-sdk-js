@@ -5,7 +5,7 @@ import {
     AccountTransactionType,
     UpdateContractPayload,
     ContractAddress,
-    ParameterValue,
+    SMParameter,
     ParameterType,
 } from '../src/types';
 import * as ed from 'noble-ed25519';
@@ -37,7 +37,7 @@ test('update contract with the wrong private key', async () => {
 
     const receiveName = 'INDBank.insertAmount';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const params: ParameterValue<undefined> = {
+    const params: SMParameter<undefined> = {
         type: ParameterType.NoParameters,
         value: undefined,
     };

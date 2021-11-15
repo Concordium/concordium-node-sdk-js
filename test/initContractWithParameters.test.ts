@@ -3,13 +3,13 @@ import {
     AccountTransactionHeader,
     AccountTransactionSignature,
     AccountTransactionType,
-    ArrayParameter,
+    SMArray,
     InitContractPayload,
     ParameterType,
-    ParameterValue,
+    SMParameter,
 } from '../src/types';
 import * as ed from 'noble-ed25519';
-import { getAccountTransactionSignDigest } from '../src/serialization';
+import { getAccountTransactionHash, getAccountTransactionSignDigest } from '../src/serialization';
 import { getNodeClient } from './testHelpers';
 import { AccountAddress } from '../src/types/accountAddress';
 import { GtuAmount } from '../src/types/gtuAmount';
@@ -18,9 +18,9 @@ import { Buffer } from 'buffer/';
 import { ModuleReference } from '../src/types/moduleReference';
 const client = getNodeClient();
 const senderAccountAddress =
-    '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
+    '3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5';
 const wrongPrivateKey =
-    'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
+    '681de9a98d274b56eace2f86eb134bfc414f5c366022f281335be0b2d45a8988';
 // test case for init contract
 test('init contract with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
@@ -37,12 +37,12 @@ test('init contract with the wrong private key', async () => {
 
     const contractName = 'INDBankU83';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const inputParams: ParameterValue<ArrayParameter<number>> = {
+    const inputParams: SMParameter<SMArray<number>> = {
         type: ParameterType.Array,
         value: {
             type: ParameterType.U8,
-            value: [10, 10, 15]
-        }
+            value: [10, 10, 15],
+        },
     };
     const baseEnergy = 300000n;
 
@@ -74,9 +74,13 @@ test('init contract with the wrong private key', async () => {
 
     const result = await client.sendAccountTransaction(
         initContractTransaction,
-
         signatures
     );
 
+    const txHash = await getAccountTransactionHash(
+        initContractTransaction,
+        signatures
+    );
+    console.log(txHash);
     expect(result).toBeTruthy();
 }, 300000);

@@ -5,8 +5,8 @@ import {
     AccountTransactionType,
     InitContractPayload,
     ParameterType,
-    ParameterValue,
-    StructParameter,
+    SMParameter,
+    SMStruct,
 } from '../src/types';
 import * as ed from 'noble-ed25519';
 import { getAccountTransactionSignDigest } from '../src/serialization';
@@ -37,22 +37,22 @@ test('init contract with the wrong private key', async () => {
 
     const contractName = 'INDBankStruct1';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const inputParams: ParameterValue<StructParameter> = {
+    const inputParams: SMParameter<SMStruct> = {
         type: ParameterType.Array,
         value: [
             {
                 type: ParameterType.U8,
                 value: 26,
-            } as ParameterValue<number>,
+            } as SMParameter<number>,
             {
                 type: ParameterType.U8,
                 value: 27,
-            } as ParameterValue<number>,
+            } as SMParameter<number>,
             {
                 type: ParameterType.U8,
                 value: 51,
-            } as ParameterValue<number>,
-        ] as StructParameter,
+            } as SMParameter<number>,
+        ],
     };
     const baseEnergy = 300000n;
 

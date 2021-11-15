@@ -1,6 +1,13 @@
 import { Buffer } from 'buffer/';
 import { VerifyKey } from '.';
-import { ParameterType, SMParameter, SMStruct, SMArray, SMTypes, SMPrimitiveTypes } from './types';
+import {
+    ParameterType,
+    SMParameter,
+    SMStruct,
+    SMArray,
+    SMTypes,
+    SMPrimitiveTypes,
+} from './types';
 import { Memo } from './types/Memo';
 
 export function serializeMap<K extends string | number | symbol, T>(
@@ -56,7 +63,7 @@ export function encodeWord128(value: bigint): Buffer {
     if (value > 170141183460469231731687303715884105728n || value < 0n) {
         throw new Error(
             'The input has to be a 128 bit unsigned integer but it was: ' +
-            value
+                value
         );
     }
     const arr = new ArrayBuffer(8);
@@ -315,13 +322,18 @@ export function serializeParameter(parameter: SMParameter<SMTypes>): Buffer {
             return Buffer.concat(bufferArray);
         case ParameterType.Array:
             const bufferArray2: Buffer[] = [];
-            const arrayType = (parameter.value as SMArray<SMPrimitiveTypes | SMStruct>).type;
-            (parameter.value as SMArray<SMPrimitiveTypes | SMStruct>).value.forEach(
-                (element) => {
-                    const parameterBuffer = serializeParameter({ type: arrayType, value: element });
-                    bufferArray2.push(parameterBuffer);
-                }
-            );
+            const arrayType = (
+                parameter.value as SMArray<SMPrimitiveTypes | SMStruct>
+            ).type;
+            (
+                parameter.value as SMArray<SMPrimitiveTypes | SMStruct>
+            ).value.forEach((element) => {
+                const parameterBuffer = serializeParameter({
+                    type: arrayType,
+                    value: element,
+                });
+                bufferArray2.push(parameterBuffer);
+            });
             return Buffer.concat(bufferArray2);
         default:
             return Buffer.from([]);

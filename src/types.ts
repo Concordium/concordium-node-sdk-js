@@ -52,25 +52,25 @@ export interface AddressAccount {
 
 export interface TransactionEvent {
     tag:
-    | 'ModuleDeployed'
-    | 'ContractInitialized'
-    | 'AccountCreated'
-    | 'CredentialDeployed'
-    | 'BakerAdded'
-    | 'BakerRemoved'
-    | 'BakerStakeIncreased'
-    | 'BakerStakeDecreased'
-    | 'BakerSetRestakeEarnings'
-    | 'BakerKeysUpdated'
-    | 'CredentialKeysUpdated'
-    | 'NewEncryptedAmount'
-    | 'EncryptedAmountsRemoved'
-    | 'AmountAddedByDecryption'
-    | 'EncryptedSelfAmountAdded'
-    | 'UpdateEnqueued'
-    | 'TransferredWithSchedule'
-    | 'CredentialsUpdated'
-    | 'DataRegistered';
+        | 'ModuleDeployed'
+        | 'ContractInitialized'
+        | 'AccountCreated'
+        | 'CredentialDeployed'
+        | 'BakerAdded'
+        | 'BakerRemoved'
+        | 'BakerStakeIncreased'
+        | 'BakerStakeDecreased'
+        | 'BakerSetRestakeEarnings'
+        | 'BakerKeysUpdated'
+        | 'CredentialKeysUpdated'
+        | 'NewEncryptedAmount'
+        | 'EncryptedAmountsRemoved'
+        | 'AmountAddedByDecryption'
+        | 'EncryptedSelfAmountAdded'
+        | 'UpdateEnqueued'
+        | 'TransferredWithSchedule'
+        | 'CredentialsUpdated'
+        | 'DataRegistered';
 }
 
 export interface ContractAddress {
@@ -187,9 +187,9 @@ export type EventResult =
 
 interface BaseTransactionSummaryType {
     type:
-    | 'accountTransaction'
-    | 'credentialDeploymentTransaction'
-    | 'updateTransaction';
+        | 'accountTransaction'
+        | 'credentialDeploymentTransaction'
+        | 'updateTransaction';
 }
 
 export interface TransferWithMemoSummaryType
@@ -845,8 +845,16 @@ export interface SMParameter<T extends SMTypes> {
 
 export type SMStruct = Array<SMParameter<SMTypes>>;
 
-export type SMArray<T extends SMTypes> = {type: ParameterType, value: Array<T>};
+export type SMArray<T extends SMTypes> = {
+    type: ParameterType;
+    value: Array<T>;
+};
 
 export type SMPrimitiveTypes = number | string | boolean | bigint | undefined;
 
-export type SMTypes = SMPrimitiveTypes | SMParameter<SMTypes> | SMStruct | SMArray<SMPrimitiveTypes | SMStruct> | undefined;
+export type SMTypes =
+    | SMPrimitiveTypes
+    | SMParameter<SMTypes>
+    | SMStruct
+    | SMArray<SMPrimitiveTypes | SMStruct>
+    | undefined;

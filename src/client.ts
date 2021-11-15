@@ -617,21 +617,4 @@ export default class ConcordiumNodeClient {
             });
         });
     }
-
-    createInstanceInfo(
-        instanceInfo: InstanceInfoSerialized | undefined
-    ): InstanceInfo | undefined {
-        if (instanceInfo === undefined) {
-            return undefined;
-        }
-
-        return {
-            amount: new GtuAmount(BigInt(instanceInfo.amount)),
-            sourceModule: new ModuleReference(instanceInfo.sourceModule),
-            owner: new Address(instanceInfo.owner),
-            methods: instanceInfo.methods,
-            name: instanceInfo.name,
-            model: BufferFormater.from(instanceInfo.model, 'binary'),
-        };
-    }
 }

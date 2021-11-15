@@ -305,9 +305,10 @@ const transactionStatus = await client.getTransactionStatus(transactionHash);
 ```
 
 ## getAccountInfo
-Retrieves information about an account. If no account exists with the provided address, then the node
-will check if any credential with that credential identifier exists and will return information
-about the credential instead. If neither an account or credential matches the address at the provided
+Retrieves information about an account. The function must be provided an account address or a credential registration id. 
+If a credential registration id is provided, then the node returns the information of the account, 
+which the corresponding credential is (or was) deployed to.
+If there is no account that matches the address or credential id at the provided
 block, then undefined will be returned.
 ```js
 const accountAddress = new AccountAddress("3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU");

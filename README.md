@@ -542,7 +542,7 @@ const maxContractExecutionEnergy = 30000n;
 ```
 Create update contract transaction
 ```js
-const updateContractTransaction: UpdateContractPayload =
+const updateModule: UpdateContractPayload =
 {
     amount: new GtuAmount(1000n),
     contractAddress: contractAddress,

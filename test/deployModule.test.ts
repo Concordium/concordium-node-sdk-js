@@ -6,10 +6,7 @@ import {
     DeployModulePayload,
 } from '../src/types';
 import * as ed from 'noble-ed25519';
-import {
-    getAccountTransactionHash,
-    getAccountTransactionSignDigest,
-} from '../src/serialization';
+import { getAccountTransactionSignDigest } from '../src/serialization';
 import { getNodeClient } from './testHelpers';
 import { AccountAddress } from '../src/types/accountAddress';
 import { TransactionExpiry } from '../src/types/transactionExpiry';
@@ -73,5 +70,4 @@ test('deploy contract with the wrong private key', async () => {
         signatures
     );
     expect(result).toBeTruthy();
-
 }, 300000);

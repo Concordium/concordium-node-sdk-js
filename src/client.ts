@@ -581,8 +581,17 @@ export default class ConcordiumNodeClient {
         );
 
         const result = unwrapJsonResponse<InstanceInfoSerialized>(response);
-        const instanceInfo = await this.createInstanceInfo(result);
-        return instanceInfo;
+        if (result !== undefined) {
+            const instanceInfo: InstanceInfo = {
+                amount: new GtuAmount(BigInt(result.amount)),
+                sourceModule: new ModuleReference(result.sourceModule),
+                owner: new Address(result.owner),
+                methods: result.methods,
+                name: result.name,
+                model: BufferFormater.from(result.model, 'binary'),
+            };
+            return instanceInfo;
+        }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

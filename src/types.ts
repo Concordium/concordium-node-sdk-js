@@ -761,7 +761,7 @@ export enum ParameterType {
     String = 'String(SizeLength)',
     ContractName = 'ContractName(SizeLength)',
     ReceiveName = 'ReceiveName(SizeLength)',
-    NoParameters = 'NoParameters(SizeLength)',
+    NoParameters = 'NoParameters',
 }
 
 export interface InstanceInfo {

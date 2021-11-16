@@ -90,9 +90,9 @@ export function encodeWordI64(value: bigint): Buffer {
 }
 
 /**
- * Encodes a 64 bit signed integer to a Buffer using big endian.
- * @param value a 64 bit integer
- * @returns big endian serialization of the input
+ * Encodes a boolean to a Buffer using big endian.
+ * @param value a boolean value
+ * @returns boolean serialization of the input
  */
 export function encodeBool(value: boolean): Buffer {
     const result = value === true ? 1 : 0;
@@ -343,18 +343,18 @@ export function serializeParameter(parameter: SMParameter<SMTypes>): Buffer {
         case ParameterType.String:
             return Buffer.from((parameter as SMParameter<string>).value);
         case ParameterType.Struct:
-            const bufferArray: Buffer[] = [];
+            const bufferStruct: Buffer[] = [];
             (parameter.value as SMStruct).forEach((element) => {
                 const parameterBuffer = serializeParameter(element);
-                if(isFixedType(element.type)) {
-                    bufferArray.push(parameterBuffer);
+                if (isFixedType(element.type)) {
+                    bufferStruct.push(parameterBuffer);
                 } else {
-                    bufferArray.push(packBufferWithWord64Length(parameterBuffer));
+                    bufferStruct.push(packBufferWithWord32Length(parameterBuffer));
                 }
             });
-            return Buffer.concat(bufferArray);
+            return Buffer.concat(bufferStruct);
         case ParameterType.Array:
-            const bufferArray2: Buffer[] = [];
+            const bufferArray: Buffer[] = [];
             const arrayType = (
                 parameter.value as SMArray<SMPrimitiveTypes | SMStruct>
             ).type;
@@ -365,13 +365,13 @@ export function serializeParameter(parameter: SMParameter<SMTypes>): Buffer {
                     type: arrayType,
                     value: element,
                 });
-                if(isFixedType(arrayType)) {
-                    bufferArray2.push(parameterBuffer);
+                if (isFixedType(arrayType)) {
+                    bufferArray.push(parameterBuffer);
                 } else {
-                    bufferArray.push(packBufferWithWord64Length(parameterBuffer));
+                    bufferArray.push(packBufferWithWord32Length(parameterBuffer));
                 }
             });
-            return Buffer.concat(bufferArray2);
+            return Buffer.concat(bufferArray);
         default:
             return Buffer.from([]);
     }

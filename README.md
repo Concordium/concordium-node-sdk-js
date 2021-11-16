@@ -510,7 +510,7 @@ Create init contract transaction
 ```js
 const initModule: InitContractPayload = {
     amount: new GtuAmount(0n), // Amount to send to the contract. If the smart contract is not payable, set the amount to 0.
-    moduleRef: new ModuleReference('a225a5aeb0a5cf9bbc59209e15df030e8cc2c17b8dba08c4bf59f80edaedd8b1'), // Module reference, which can be obtained after deploying a module
+    moduleRef: new ModuleReference('a225a5aeb0a5cf9bbc59209e15df030e8cc2c17b8dba08c4bf59f80edaedd8b1'), // Module reference
     contractName: contractName,
     parameter: params,
     maxContractExecutionEnergy: maxContractExecutionEnergy

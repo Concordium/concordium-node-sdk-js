@@ -594,7 +594,7 @@ export default class ConcordiumNodeClient {
                 owner: new Address(result.owner),
                 methods: result.methods,
                 name: result.name,
-                model: BufferFormater.from(result.model, 'binary'),
+                model: BufferFormater.from(result.model, 'hex'),
             };
             return instanceInfo;
         }

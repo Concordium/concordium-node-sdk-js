@@ -28,9 +28,7 @@ test('retrieve information about a given smart contract instance', async () => {
             'INDBank.insertAmount',
             'INDBank.smashAmount',
         ]),
-        expect(Buffer.from('00', 'binary').equals(instanceInfo.model)).toBe(
-            true
-        ),
+        expect(Buffer.from('00', 'hex').equals(instanceInfo.model)).toBe(true),
         expect(instanceInfo.name).toBe('init_INDBank'),
         expect(instanceInfo.owner).toStrictEqual(
             new AccountAddress(

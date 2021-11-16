@@ -3,14 +3,20 @@ import { serializeCredentialDeploymentInfo } from './serialization';
 import {
     encodeWord64,
     encodeMemo,
-    encodeWord8,
+    encodeWord32,
+    packBufferWithWord32Length,
+    packBufferWithWord16Length,
     serializeList,
+    encodeWord8,
 } from './serializationHelpers';
 import {
-    AccountTransactionPayload,
     AccountTransactionType,
+    InitContractPayload,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
+    DeployModulePayload,
+    UpdateContractPayload,
+    AccountTransactionPayload,
     UpdateCredentialsPayload,
 } from './types';
 
@@ -22,7 +28,7 @@ interface AccountTransactionHandler<
 }
 
 export class SimpleTransferHandler
-    implements AccountTransactionHandler<SimpleTransferWithMemoPayload>
+    implements AccountTransactionHandler<SimpleTransferPayload>
 {
     getBaseEnergyCost(): bigint {
         return 300n;
@@ -47,6 +53,80 @@ export class SimpleTransferWithMemoHandler
             serializedToAddress,
             serializedMemo,
             serializedAmount,
+        ]);
+    }
+}
+
+export class DeployModuleHandler
+    implements AccountTransactionHandler<DeployModulePayload>
+{
+    getBaseEnergyCost(payload: DeployModulePayload): bigint {
+        const cost: number = Math.round(payload.content.length / 10);
+        return BigInt(cost);
+    }
+
+    serialize(transfer: DeployModulePayload): Buffer {
+        const serializedWasm = packBufferWithWord32Length(transfer.content);
+        const serializedVersion = encodeWord32(transfer.version);
+        return Buffer.concat([serializedVersion, serializedWasm]);
+    }
+}
+
+export class InitContractHandler
+    implements AccountTransactionHandler<InitContractPayload>
+{
+    getBaseEnergyCost(payload: InitContractPayload): bigint {
+        return payload.maxContractExecutionEnergy;
+    }
+
+    serialize(payload: InitContractPayload): Buffer {
+        const serializedAmount = encodeWord64(payload.amount.microGtuAmount);
+        const initNameBuffer = Buffer.from(
+            'init_' + payload.contractName,
+            'utf8'
+        );
+        const serializedInitName = packBufferWithWord16Length(initNameBuffer);
+        const serializedModuleRef = payload.moduleRef.decodedModuleRef;
+        const serializedParameters = packBufferWithWord16Length(
+            Buffer.from(payload.parameter)
+        );
+        return Buffer.concat([
+            serializedAmount,
+            serializedModuleRef,
+            serializedInitName,
+            serializedParameters,
+        ]);
+    }
+}
+
+export class UpdateContractHandler
+    implements AccountTransactionHandler<UpdateContractPayload>
+{
+    getBaseEnergyCost(payload: UpdateContractPayload): bigint {
+        return payload.maxContractExecutionEnergy;
+    }
+
+    serialize(payload: UpdateContractPayload): Buffer {
+        const serializedAmount = encodeWord64(payload.amount.microGtuAmount);
+        const serializeIndex = encodeWord64(payload.contractAddress.index);
+        const serializeSubindex = encodeWord64(
+            payload.contractAddress.subindex
+        );
+        const serializedContractAddress = Buffer.concat([
+            serializeIndex,
+            serializeSubindex,
+        ]);
+        const receiveNameBuffer = Buffer.from(payload.receiveName, 'utf8');
+        const serializedReceiveName =
+            packBufferWithWord16Length(receiveNameBuffer);
+        const serializedParameters = packBufferWithWord16Length(
+            Buffer.from(payload.parameter)
+        );
+        return Buffer.concat([
+            serializedAmount,
+            serializedContractAddress,
+            serializedReceiveName,
+            serializedParameters,
         ]);
     }
 }
@@ -107,6 +187,15 @@ export function getAccountTransactionHandler(
 export function getAccountTransactionHandler(
     type: AccountTransactionType
 ): AccountTransactionHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.DeployModule
+): DeployModuleHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.InitializeSmartContractInstance
+): InitContractHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.UpdateSmartContractInstance
+): UpdateContractHandler;
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function getAccountTransactionHandler(type: AccountTransactionType) {
     switch (type) {
@@ -114,6 +203,12 @@ export function getAccountTransactionHandler(type: AccountTransactionType) {
             return new SimpleTransferHandler();
         case AccountTransactionType.SimpleTransferWithMemo:
             return new SimpleTransferWithMemoHandler();
+        case AccountTransactionType.DeployModule:
+            return new DeployModuleHandler();
+        case AccountTransactionType.InitializeSmartContractInstance:
+            return new InitContractHandler();
+        case AccountTransactionType.UpdateSmartContractInstance:
+            return new UpdateContractHandler();
         case AccountTransactionType.UpdateCredentials:
             return new UpdateCredentialsHandler();
         default:

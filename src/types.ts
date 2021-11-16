@@ -2,6 +2,8 @@ import { AccountAddress } from './types/accountAddress';
 import { GtuAmount } from './types/gtuAmount';
 import { Memo } from './types/Memo';
 import { TransactionExpiry } from './types/transactionExpiry';
+import { Buffer } from 'buffer/';
+import { ModuleReference } from './types/moduleReference';
 
 /**
  * A reward fraction with a resolution of 1/100000, i.e. the
@@ -620,6 +622,50 @@ export enum AccountTransactionType {
     TransferWithScheduleWithMemo = 24,
 }
 
+export interface DeployModulePayload {
+    /** Version of the wasm module which is 0 currently the only one supported */
+    version: number;
+
+    /** Wasm module to be deployed */
+    content: Buffer;
+}
+
+export interface InitContractPayload {
+    /** µGTU amount to transfer */
+    amount: GtuAmount;
+
+    /** Hash of the module on chain */
+    moduleRef: ModuleReference;
+
+    /** Name of the contract */
+    contractName: string;
+
+    /** Parameters for the init function */
+    parameter: Buffer;
+
+    /** The amount of energy that can be used for contract execution.
+    The base energy amount for transaction verification will be added to this cost.*/
+    maxContractExecutionEnergy: bigint;
+}
+
+export interface UpdateContractPayload {
+    /** µGTU amount to transfer */
+    amount: GtuAmount;
+
+    /** Address of contract instance consisting of an index and a subindex */
+    contractAddress: ContractAddress;
+
+    /** Name of receive function including <contractName>. prefix */
+    receiveName: string;
+
+    /** Parameters for the update function */
+    parameter: Buffer;
+
+    /** The amount of energy that can be used for contract execution.
+    The base energy amount for transaction verification will be added to this cost.*/
+    maxContractExecutionEnergy: bigint;
+}
+
 export interface AccountTransactionHeader {
     /** account address that is source of this transaction */
     sender: AccountAddress;
@@ -676,6 +722,9 @@ export interface UpdateCredentialsPayload {
 export type AccountTransactionPayload =
     | SimpleTransferPayload
     | SimpleTransferWithMemoPayload
+    | DeployModulePayload
+    | InitContractPayload
+    | UpdateContractPayload
     | UpdateCredentialsPayload;
 
 export interface AccountTransaction {
@@ -684,8 +733,56 @@ export interface AccountTransaction {
     payload: AccountTransactionPayload;
 }
 
+export enum Type {
+    Unit = 'Unit',
+    Bool = 'Bool',
+    U8 = 'U8',
+    u16 = 'U16',
+    U32 = 'U32',
+    U64 = 'U64',
+    U128 = 'U128',
+    I8 = 'I8',
+    I16 = 'I16',
+    I32 = 'I32',
+    I64 = 'I64',
+    I128 = 'I128',
+    Amount = 'Amount',
+    AccountAddress = 'AccountAddress',
+    ContractAddress = 'ContractAddress',
+    Timestamp = 'Timestamp',
+    Duration = 'Duration',
+    Pair = 'Pair',
+    List = 'List',
+    Set = 'Set',
+    Map = 'Map',
+    Array = 'Array',
+    Struct = 'Struct',
+    Enum = 'Enum(List (String, Fields))',
+    String = 'String(SizeLength)',
+    ContractName = 'ContractName(SizeLength)',
+    ReceiveName = 'ReceiveName(SizeLength)',
+}
+
+export interface InstanceInfo {
+    amount: GtuAmount;
+    sourceModule: ModuleReference;
+    owner: AccountAddress;
+    methods: string[];
+    name: string;
+    model: Buffer;
+}
+
 export type CredentialSignature = Record<number, string>;
 export type AccountTransactionSignature = Record<number, CredentialSignature>;
+
+export interface InstanceInfoSerialized {
+    amount: string;
+    sourceModule: string;
+    owner: string;
+    methods: string[];
+    name: string;
+    model: string;
+}
 
 export interface CredentialDeploymentTransaction {
     expiry: TransactionExpiry;

@@ -93,21 +93,38 @@ test('getAlias: changing counter makes getAlias return different aliases', () =>
     expect(isAlias(otherAlias, alias)).toBeTruthy();
 });
 
-test('getAlias: counter = 0 returns address', () => {
+test('getAlias: last 3 bytes of alias matches counter', () => {
     const address = new AccountAddress(
         '4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf'
     );
-    const alsoAddress = getAlias(address, 0);
+    const alias = getAlias(address, 0xaaaaaa);
+    expect(alias.decodedAddress.slice(29,32).toString('hex')).toBe('aaaaaa');
+    const otherAlias = getAlias(address, 0x152637);
+    expect(otherAlias.decodedAddress.slice(29,32).toString('hex')).toBe('152637');
+});
+
+test('getAlias: using counter = "last 3 bytes of address" returns the address', () => {
+    const address = new AccountAddress(
+        '4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf'
+    );
+    const alsoAddress = getAlias(address, 0xecb198);
     expect(alsoAddress.address).toBe(address.address);
 });
 
-test('getAlias: using counter = "last 3 bytes of address" returns a alias', () => {
+test('getAlias: accepts counter = 0', () => {
     const address = new AccountAddress(
         '4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf'
     );
-    const aliasFromCanonicalAdressBytes = getAlias(address, 0xecb198);
-    expect(aliasFromCanonicalAdressBytes.address).not.toBe(address.address);
-    expect(isAlias(address, aliasFromCanonicalAdressBytes)).toBeTruthy();
+    const alias = getAlias(address, 0);
+    expect(isAlias(address, alias)).toBeTruthy();
+
+});
+
+test('getAlias: does not accept counter = -1', () => {
+    const address = new AccountAddress(
+        '4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf'
+    );
+    expect(() => getAlias(address, -1)).toThrowError();
 });
 
 test('getAlias: accepts counter === 2^24 - 1', () => {

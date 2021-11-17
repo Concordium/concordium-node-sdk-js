@@ -7,15 +7,15 @@ import {
     ParameterType,
     SMParameter,
     SMStruct,
-} from '../src/types';
+} from '../../src/types';
 import * as ed from 'noble-ed25519';
-import { getAccountTransactionSignDigest } from '../src/serialization';
-import { getNodeClient } from './testHelpers';
-import { AccountAddress } from '../src/types/accountAddress';
-import { GtuAmount } from '../src/types/gtuAmount';
-import { TransactionExpiry } from '../src/types/transactionExpiry';
+import { getAccountTransactionSignDigest } from '../../src/serialization';
+import { getNodeClient } from '../testHelpers';
+import { AccountAddress } from '../../src/types/accountAddress';
+import { GtuAmount } from '../../src/types/gtuAmount';
+import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
-import { ModuleReference } from '../src/types/moduleReference';
+import { ModuleReference } from '../../src/types/moduleReference';
 const client = getNodeClient();
 const senderAccountAddress =
     '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
@@ -35,27 +35,31 @@ test('init contract with the wrong private key', async () => {
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const contractName = 'INDBankStruct';
+    const contractName = 'INDBankStruct1';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const inputParams: SMParameter<SMStruct> = {
-        type: ParameterType.Struct,
+        type: ParameterType.Array,
         value: [
             {
                 type: ParameterType.U8,
-                value: 50,
+                value: 26,
+            } as SMParameter<number>,
+            {
+                type: ParameterType.U8,
+                value: 27,
             } as SMParameter<number>,
             {
                 type: ParameterType.U8,
                 value: 51,
             } as SMParameter<number>,
-        ] as SMStruct,
+        ],
     };
     const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {
         amount: new GtuAmount(0n),
         moduleRef: new ModuleReference(
-            '2981fc5db0144ed7824c7f591c7d0dac95b0431bc009c1dd2d42013fc0532931'
+            '684f75962a199809997581a7405c04f4603c51c20deb080bc0be795d09dcead4'
         ),
         contractName: contractName,
         parameter: inputParams,
@@ -80,6 +84,7 @@ test('init contract with the wrong private key', async () => {
 
     const result = await client.sendAccountTransaction(
         initContractTransaction,
+
         signatures
     );
 

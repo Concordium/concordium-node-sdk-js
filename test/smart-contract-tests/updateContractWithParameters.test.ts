@@ -7,13 +7,13 @@ import {
     ContractAddress,
     ParameterType,
     SMParameter,
-} from '../src/types';
+} from '../../src/types';
 import * as ed from 'noble-ed25519';
-import { getAccountTransactionSignDigest } from '../src/serialization';
-import { getNodeClient } from './testHelpers';
-import { AccountAddress } from '../src/types/accountAddress';
-import { GtuAmount } from '../src/types/gtuAmount';
-import { TransactionExpiry } from '../src/types/transactionExpiry';
+import { getAccountTransactionSignDigest } from '../../src/serialization';
+import { getNodeClient } from '../testHelpers';
+import { AccountAddress } from '../../src/types/accountAddress';
+import { GtuAmount } from '../../src/types/gtuAmount';
+import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
 
 const client = getNodeClient();
@@ -35,14 +35,15 @@ test('update contract with the wrong private key', async () => {
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const receiveName = 'INDBankU83.insertAmount4';
+    const receiveName = 'INDBankBool1.insertAmount';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const inputParams: SMParameter<number> = {
-        type: ParameterType.I8,
-        value: -20,
+        type: ParameterType.U8,
+        value: 20,
     };
+
     const contractAddress = {
-        index: BigInt(108),
+        index: BigInt(116),
         subindex: BigInt(0),
     } as ContractAddress;
     const baseEnergy = 30000n;

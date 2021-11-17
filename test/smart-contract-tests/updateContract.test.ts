@@ -5,15 +5,15 @@ import {
     AccountTransactionType,
     UpdateContractPayload,
     ContractAddress,
-    ParameterType,
     SMParameter,
-} from '../src/types';
+    ParameterType,
+} from '../../src/types';
 import * as ed from 'noble-ed25519';
-import { getAccountTransactionSignDigest } from '../src/serialization';
-import { getNodeClient } from './testHelpers';
-import { AccountAddress } from '../src/types/accountAddress';
-import { GtuAmount } from '../src/types/gtuAmount';
-import { TransactionExpiry } from '../src/types/transactionExpiry';
+import { getAccountTransactionSignDigest } from '../../src/serialization';
+import { getNodeClient } from '../testHelpers';
+import { AccountAddress } from '../../src/types/accountAddress';
+import { GtuAmount } from '../../src/types/gtuAmount';
+import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
 
 const client = getNodeClient();
@@ -35,26 +35,25 @@ test('update contract with the wrong private key', async () => {
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const receiveName = 'INDBankBool1.insertAmount';
+    const receiveName = 'INDBank.insertAmount';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const inputParams: SMParameter<number> = {
-        type: ParameterType.U8,
-        value: 20,
+    const params: SMParameter<undefined> = {
+        type: ParameterType.NoParameters,
+        value: undefined,
     };
-
-    const contractAddress = {
-        index: BigInt(116),
+    const contractAddress: ContractAddress = {
+        index: BigInt(87),
         subindex: BigInt(0),
-    } as ContractAddress;
-    const baseEnergy = 30000n;
+    };
+    const maxContractExecutionEnergy = 30000n;
 
     const updateModule: UpdateContractPayload = {
         amount: new GtuAmount(1000n),
         contractAddress: contractAddress,
         receiveName: receiveName,
-        parameter: inputParams,
-        maxContractExecutionEnergy: baseEnergy,
-    } as UpdateContractPayload;
+        parameter: params,
+        maxContractExecutionEnergy: maxContractExecutionEnergy,
+    };
 
     const updateContractTransaction: AccountTransaction = {
         header: header,

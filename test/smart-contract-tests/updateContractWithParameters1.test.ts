@@ -7,13 +7,13 @@ import {
     ContractAddress,
     ParameterType,
     SMParameter,
-} from '../src/types';
+} from '../../src/types';
 import * as ed from 'noble-ed25519';
-import { getAccountTransactionSignDigest } from '../src/serialization';
-import { getNodeClient } from './testHelpers';
-import { AccountAddress } from '../src/types/accountAddress';
-import { GtuAmount } from '../src/types/gtuAmount';
-import { TransactionExpiry } from '../src/types/transactionExpiry';
+import { getAccountTransactionSignDigest } from '../../src/serialization';
+import { getNodeClient } from '../testHelpers';
+import { AccountAddress } from '../../src/types/accountAddress';
+import { GtuAmount } from '../../src/types/gtuAmount';
+import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
 
 const client = getNodeClient();
@@ -37,9 +37,9 @@ test('update contract with the wrong private key', async () => {
 
     const receiveName = 'INDBankU83.insertAmount1';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const inputParams: SMParameter<bigint> = {
-        type: ParameterType.U64,
-        value: BigInt(20000000),
+    const inputParams: SMParameter<number> = {
+        type: ParameterType.U8,
+        value: 20,
     };
     const contractAddress = {
         index: BigInt(108),

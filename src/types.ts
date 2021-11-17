@@ -857,4 +857,5 @@ export type SMTypes =
     | SMParameter<SMTypes>
     | SMStruct
     | SMArray<SMPrimitiveTypes | SMStruct>
+    | AccountAddress
     | undefined;

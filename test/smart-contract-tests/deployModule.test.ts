@@ -4,12 +4,12 @@ import {
     AccountTransactionSignature,
     AccountTransactionType,
     DeployModulePayload,
-} from '../src/types';
+} from '../../src/types';
 import * as ed from 'noble-ed25519';
-import { getAccountTransactionSignDigest } from '../src/serialization';
-import { getNodeClient } from './testHelpers';
-import { AccountAddress } from '../src/types/accountAddress';
-import { TransactionExpiry } from '../src/types/transactionExpiry';
+import { getAccountTransactionSignDigest } from '../../src/serialization';
+import { getNodeClient } from '../testHelpers';
+import { AccountAddress } from '../../src/types/accountAddress';
+import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import * as fs from 'fs';
 import { Buffer } from 'buffer/';
 const client = getNodeClient();
@@ -27,7 +27,7 @@ function getByteArray(filePath: string): Buffer {
     return Buffer.from(data);
 }
 // provide path for smart contract wasm file
-const wasmFilePath = 'test/ind_bank.wasm';
+const wasmFilePath = 'test/smart-contract-tests/ind_bank.wasm';
 // test case for deploy contract
 test('deploy contract with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(

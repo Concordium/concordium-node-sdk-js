@@ -9,6 +9,7 @@ import {
     SMPrimitiveTypes,
 } from './types';
 import { Memo } from './types/Memo';
+import { AccountAddress } from './types/accountAddress';
 
 export function serializeMap<K extends string | number | symbol, T>(
     map: Record<K, T>,
@@ -346,11 +347,11 @@ export function serializeParameter(parameter: SMParameter<SMTypes>): Buffer {
             const bufferStruct: Buffer[] = [];
             (parameter.value as SMStruct).forEach((element) => {
                 const parameterBuffer = serializeParameter(element);
-                if (isFixedType(element.type)) {
-                    bufferStruct.push(parameterBuffer);
-                } else {
+                // if (isFixedType(element.type)) {
+                //     bufferStruct.push(parameterBuffer);
+                // } else {
                     bufferStruct.push(packBufferWithWord32Length(parameterBuffer));
-                }
+                //}
             });
             return Buffer.concat(bufferStruct);
         case ParameterType.Array:
@@ -365,13 +366,15 @@ export function serializeParameter(parameter: SMParameter<SMTypes>): Buffer {
                     type: arrayType,
                     value: element,
                 });
-                if (isFixedType(arrayType)) {
-                    bufferArray.push(parameterBuffer);
-                } else {
+                // if (isFixedType(arrayType)) {
+                //     bufferArray.push(parameterBuffer);
+                // } else {
                     bufferArray.push(packBufferWithWord32Length(parameterBuffer));
-                }
+                //}
             });
             return Buffer.concat(bufferArray);
+        case ParameterType.AccountAddress:
+            return (parameter as SMParameter<AccountAddress>).value.decodedAddress;
         default:
             return Buffer.from([]);
     }

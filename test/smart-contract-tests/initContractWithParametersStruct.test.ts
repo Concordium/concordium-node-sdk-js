@@ -7,20 +7,20 @@ import {
     ParameterType,
     SMParameter,
     SMStruct,
-} from '../src/types';
+} from '../../src/types';
 import * as ed from 'noble-ed25519';
-import { getAccountTransactionHash, getAccountTransactionSignDigest } from '../src/serialization';
-import { getNodeClient } from './testHelpers';
-import { AccountAddress } from '../src/types/accountAddress';
-import { GtuAmount } from '../src/types/gtuAmount';
-import { TransactionExpiry } from '../src/types/transactionExpiry';
+import { getAccountTransactionSignDigest } from '../../src/serialization';
+import { getNodeClient } from '../testHelpers';
+import { AccountAddress } from '../../src/types/accountAddress';
+import { GtuAmount } from '../../src/types/gtuAmount';
+import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
-import { ModuleReference } from '../src/types/moduleReference';
+import { ModuleReference } from '../../src/types/moduleReference';
 const client = getNodeClient();
 const senderAccountAddress =
-    '3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5';
+    '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
 const wrongPrivateKey =
-    '681de9a98d274b56eace2f86eb134bfc414f5c366022f281335be0b2d45a8988';
+    'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
 // test case for init contract
 test('init contract with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
@@ -35,23 +35,19 @@ test('init contract with the wrong private key', async () => {
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const contractName = 'UserDetails';
+    const contractName = 'INDBankStruct';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const inputParams: SMParameter<SMStruct> = {
         type: ParameterType.Struct,
         value: [
             {
                 type: ParameterType.U8,
-                value: 51,
+                value: 50,
             } as SMParameter<number>,
             {
-                type: ParameterType.String,
-                value: 'Concordium',
-            } as SMParameter<string>,
-            {
-                type: ParameterType.String,
-                value: 'Zug',
-            } as SMParameter<string>,
+                type: ParameterType.U8,
+                value: 51,
+            } as SMParameter<number>,
         ] as SMStruct,
     };
     const baseEnergy = 300000n;
@@ -59,7 +55,7 @@ test('init contract with the wrong private key', async () => {
     const initModule: InitContractPayload = {
         amount: new GtuAmount(0n),
         moduleRef: new ModuleReference(
-            '8e4222c5e7d7a2f950aac1f8073b35d43a8ee11108e52534470a70c57aa6f780'
+            '2981fc5db0144ed7824c7f591c7d0dac95b0431bc009c1dd2d42013fc0532931'
         ),
         contractName: contractName,
         parameter: inputParams,
@@ -86,10 +82,6 @@ test('init contract with the wrong private key', async () => {
         initContractTransaction,
         signatures
     );
-    const txHash = await getAccountTransactionHash(
-        initContractTransaction,
-        signatures
-    );
-    console.log(txHash);
+
     expect(result).toBeTruthy();
 }, 300000);

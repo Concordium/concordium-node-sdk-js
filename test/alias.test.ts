@@ -5,41 +5,75 @@ import { Buffer } from 'buffer/';
 
 test('isAlias is reflexive', () => {
     const address = new AccountAddress(
-        bs58check.encode(Buffer.from('01e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ec000002', 'hex'))
+        bs58check.encode(
+            Buffer.from(
+                '01e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ec000002',
+                'hex'
+            )
+        )
     );
     expect(isAlias(address, address)).toBeTruthy();
 });
 
 test('isAlias: Addresses with first 29 bytes in common are aliases', () => {
     const address = new AccountAddress(
-        bs58check.encode(Buffer.from('01e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ec000002', 'hex'))
+        bs58check.encode(
+            Buffer.from(
+                '01e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ec000002',
+                'hex'
+            )
+        )
     );
     const alias = new AccountAddress(
-        bs58check.encode(Buffer.from('01e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ececb467', 'hex'))
+        bs58check.encode(
+            Buffer.from(
+                '01e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ececb467',
+                'hex'
+            )
+        )
     );
     expect(isAlias(address, alias)).toBeTruthy();
 });
 
 test('isAlias: Addresses with differences in the 5th byte are not aliases', () => {
     const address = new AccountAddress(
-        bs58check.encode(Buffer.from('01e718721412249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ec000002', 'hex'))
+        bs58check.encode(
+            Buffer.from(
+                '01e718721412249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ec000002',
+                'hex'
+            )
+        )
     );
     const alias = new AccountAddress(
-        bs58check.encode(Buffer.from('01e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ec000002', 'hex'))
+        bs58check.encode(
+            Buffer.from(
+                '01e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ec000002',
+                'hex'
+            )
+        )
     );
     expect(isAlias(address, alias)).toBeFalsy();
 });
 
 test('isAlias: Addresses with differences in the 29th byte are not aliases', () => {
     const address = new AccountAddress(
-        bs58check.encode(Buffer.from('01e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ececb467', 'hex'))
+        bs58check.encode(
+            Buffer.from(
+                '01e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ececb467',
+                'hex'
+            )
+        )
     );
     const alias = new AccountAddress(
-        bs58check.encode(Buffer.from('01e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83e1ecb467', 'hex'))
+        bs58check.encode(
+            Buffer.from(
+                '01e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83e1ecb467',
+                'hex'
+            )
+        )
     );
     expect(isAlias(address, alias)).toBeFalsy();
 });
-
 
 test('getAlias: getAlias returns an alias', () => {
     const address = new AccountAddress(

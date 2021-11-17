@@ -1,5 +1,6 @@
-import { AccountAddress } from './types/accountAddress';
 import * as bs58check from 'bs58check';
+import { Buffer } from 'buffer/';
+import { AccountAddress } from './types/accountAddress';
 
 const addressByteLength = 32;
 const aliasBytesLength = 3;
@@ -30,9 +31,9 @@ export function isAlias(
 
 /**
  * Given an AccountAddress and a counter, returns an alias for the address.
- * @param address accountAddress, for which the function should an alias for
+ * @param address the account address for which the function should get an alias for
  * @param counter number s.t. 0 <= counter < 2^24, decides which alias is returned.
- * If a different counter is given, then the function will throw an exception
+ * If a counter outside this scope is given, then the function will throw an exception
  * @returns an AccountAddress, which is an alias to the given address
  */
 export function getAlias(
@@ -40,7 +41,7 @@ export function getAlias(
     counter: number
 ): AccountAddress {
     if (counter < 0 || counter > maxCount) {
-        throw new Error('counter exceed maximum number of aliases');
+        throw new Error(`An invalid counter value was given: ${counter}. The value has to satisfy that 0 <= counter < 2^24`);
     }
     const commonBytes = address.decodedAddress.slice(0, commonBytesLength);
     const aliasBytes = Buffer.alloc(aliasBytesLength);

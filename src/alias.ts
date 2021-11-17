@@ -41,7 +41,9 @@ export function getAlias(
     counter: number
 ): AccountAddress {
     if (counter < 0 || counter > maxCount) {
-        throw new Error(`An invalid counter value was given: ${counter}. The value has to satisfy that 0 <= counter < 2^24`);
+        throw new Error(
+            `An invalid counter value was given: ${counter}. The value has to satisfy that 0 <= counter < 2^24`
+        );
     }
     const commonBytes = address.decodedAddress.slice(0, commonBytesLength);
     const aliasBytes = Buffer.alloc(aliasBytesLength);

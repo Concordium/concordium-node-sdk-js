@@ -100,17 +100,11 @@ test('getAlias: last 3 bytes of alias matches counter', () => {
     let alias = getAlias(address, 0xaaaaaa);
     expect(alias.decodedAddress.slice(29, 32).toString('hex')).toBe('aaaaaa');
     alias = getAlias(address, 0x152637);
-    expect(alias.decodedAddress.slice(29, 32).toString('hex')).toBe(
-        '152637'
-    );
+    expect(alias.decodedAddress.slice(29, 32).toString('hex')).toBe('152637');
     alias = getAlias(address, 0x000000);
-    expect(alias.decodedAddress.slice(29, 32).toString('hex')).toBe(
-        '000000'
-    );
+    expect(alias.decodedAddress.slice(29, 32).toString('hex')).toBe('000000');
     alias = getAlias(address, 0xffffff);
-    expect(alias.decodedAddress.slice(29, 32).toString('hex')).toBe(
-        'ffffff'
-    );
+    expect(alias.decodedAddress.slice(29, 32).toString('hex')).toBe('ffffff');
 });
 
 test('getAlias: using counter = "last 3 bytes of address" returns the address', () => {

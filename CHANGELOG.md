@@ -1,10 +1,12 @@
 # Changelog
 
-## 0.4.0
+## 0.4.0 2021-11-17
 
 ### Added
 
+- Support for getting account info for a credential registration id.
 - Support for the update credentials account transaction.
+- Support for deploy module, initiate contract and update contract (without parameters).
 
 ## 0.3.0 2021-10-28
 

@@ -304,6 +304,29 @@ const transactionHash = getCredentialDeploymentTransactionHash(credentialDeploym
 const transactionStatus = await client.getTransactionStatus(transactionHash);
 ```
 
+## Generate account alias
+The following shows how to generate an account alias. The alias is an alternative address, which is connected to the same account.
+The getAlias function takes a counter (0 <= counter < 2^24) to determine which alias to return.
+```
+const accountAddress = new AccountAddress("3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU");
+const aliasCount = 1;
+
+const alias: AccountAddress = getAlias(accountAddress, aliasCount);
+```
+
+## Check for account alias
+The following shows how to check if two addresses are aliases.
+```
+const accountAddress = new AccountAddress("3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU");
+const anotherAccountAddress = new AccountAddress("3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGJhiz8WxC5b");
+
+if (isAlias(accountAddress, anotherAccountAddress)) {
+    ... // the addresses are aliases
+} else {
+    ... // the addresses are not aliases
+}
+```
+
 ## getAccountInfo
 Retrieves information about an account. The function must be provided an account address or a credential registration id. 
 If a credential registration id is provided, then the node returns the information of the account, 

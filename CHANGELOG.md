@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0
+
+### Added
+
+- Functions to generate account aliases, and check if addresses are aliases.
+
 ## 0.4.0 2021-11-17
 
 ### Added

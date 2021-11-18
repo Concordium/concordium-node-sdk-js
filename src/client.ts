@@ -46,6 +46,8 @@ import {
     TransferredEvent,
     UpdateQueue,
     Versioned,
+    InstanceInfo,
+    InstanceInfoSerialized,
 } from './types';
 import {
     buildJsonResponseReviver,
@@ -54,7 +56,9 @@ import {
     unwrapBoolResponse,
     unwrapJsonResponse,
 } from './util';
-
+import { GtuAmount } from './types/gtuAmount';
+import { ModuleReference } from './types/moduleReference';
+import { Buffer as BufferFormater } from 'buffer/';
 /**
  * A concordium-node specific gRPC client wrapper.
  *
@@ -526,6 +530,74 @@ export default class ConcordiumNodeClient {
             blockHashObject
         );
         return unwrapJsonResponse<ArInfo[]>(response);
+    }
+
+    /**
+     * Retrieves the addresses of all smart contract instances.
+     * @param blockHash the block hash to get the smart contact instances at
+     * @returns a list of contract addresses on the chain, i.e. [{"subindex":0,"index":0},{"subindex":0,"index":1}, ....]
+     */
+    async getInstances(
+        blockHash: string
+    ): Promise<ContractAddress[] | undefined> {
+        if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+        const blockHashObject = new BlockHash();
+        blockHashObject.setBlockHash(blockHash);
+
+        const response = await this.sendRequest(
+            this.client.getInstances,
+            blockHashObject
+        );
+        const bigIntPropertyKeys: (keyof ContractAddress)[] = [
+            'index',
+            'subindex',
+        ];
+
+        return unwrapJsonResponse<ContractAddress[]>(
+            response,
+            buildJsonResponseReviver([], bigIntPropertyKeys),
+            intToStringTransformer(bigIntPropertyKeys)
+        );
+    }
+
+    /**
+     * Retrieve information about a given smart contract instance.
+     * @param blockHash the block hash to get the smart contact instances at
+     * @param address the address of the smart contract
+     * @returns A JSON object with information about the contract instance
+     */
+    async getInstanceInfo(
+        blockHash: string,
+        address: ContractAddress
+    ): Promise<InstanceInfo | undefined> {
+        if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+        const getAddressInfoRequest = new GetAddressInfoRequest();
+        getAddressInfoRequest.setAddress(
+            `{"subindex":${address.subindex},"index":${address.index}}`
+        );
+        getAddressInfoRequest.setBlockHash(blockHash);
+
+        const response = await this.sendRequest(
+            this.client.getInstanceInfo,
+            getAddressInfoRequest
+        );
+
+        const result = unwrapJsonResponse<InstanceInfoSerialized>(response);
+        if (result !== undefined) {
+            const instanceInfo: InstanceInfo = {
+                amount: new GtuAmount(BigInt(result.amount)),
+                sourceModule: new ModuleReference(result.sourceModule),
+                owner: new Address(result.owner),
+                methods: result.methods,
+                name: result.name,
+                model: BufferFormater.from(result.model, 'hex'),
+            };
+            return instanceInfo;
+        }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

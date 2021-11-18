@@ -107,6 +107,37 @@ export function encodeMemo(memo: Memo): Buffer {
     return Buffer.concat([length, memo.memo]);
 }
 
+/**
+ * Packing a buffer along with its length in 32 bits
+ * @param buffer
+ * @returns Buffer containing the 32 bit length of buffer and buffer.
+ */
+export function packBufferWithWord32Length(buffer: Buffer): Buffer {
+    const length = encodeWord32(buffer.length);
+    return Buffer.concat([length, buffer]);
+}
+
+/**
+ * Packing a buffer along the with offset of 16 bit length
+ * @param buffer containing the buffer
+ * @returns Buffer containing the length of the buffer of 16 bit and buffer.
+ */
+export function packBufferWithWord16Length(buffer: Buffer): Buffer {
+    const length = encodeWord16(buffer.length);
+    return Buffer.concat([length, buffer]);
+}
+
+/**
+ * Convert string to byte array
+ * @param utf-8 string
+ * @returns Buffer
+ */
+export function encodeStringToByteArray(str: string): Buffer {
+    const buffer = new Buffer(str, 'utf8');
+    const length = encodeWord16(buffer.length);
+    return Buffer.concat([length, buffer]);
+}
+
 enum SchemeId {
     Ed25519 = 0,
 }

@@ -460,6 +460,107 @@ for (const transactionSummary of transactionSummaries) {
 }
 ```
 
+## Deploy module
+The following example demonstrates how to deploy a smart contract module.
+```js
+/**
+ *
+ * @param filePath for the wasm file moudule
+ * @returns Buffer of the wasm file
+ */
+function getByteArray(filePath: string): Buffer {
+    const data = fs.readFileSync(filePath);
+    return Buffer.from(data);
+}
+//To get the buffer of the wasm file from the previous method
+const wasmFileBuffer = getByteArray(wasmFilePath) as Buffer;
+
+const deployModule: DeployModulePayload = {
+        content: wasmFileBuffer,
+        version: 0,
+};
+
+const header: AccountTransactionHeader = {
+    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+    nonce: nextAccountNonce.nonce,
+    sender: new AccountAddress(senderAccountAddress),
+};
+
+const deployModuleTransaction: AccountTransaction = {
+    header: header,
+    payload: deployModule as AccountTransactionPayload,
+    type: AccountTransactionType.DeployModule,
+};
+```
+
+Finally, to actually deploy the module to the chain, send the constructed `deployModuleTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
+
+## Init Contract (parameterless smart contract)
+The following example demonstrates how to initialize a smart contract from a module, which has already been deployed. 
+The name of the contract "INDBank".
+In this example, the contract does not take any parameters, so we can leave params as an empty Buffer.  
+```js
+const contractName = 'INDBank'; 
+const params = Buffer.from([]);
+//The amount of energy that can be used for contract execution.
+const maxContractExecutionEnergy = 300000n;
+```
+
+Create init contract transaction
+```js
+const initModule: InitContractPayload = {
+    amount: new GtuAmount(0n), // Amount to send to the contract. If the smart contract is not payable, set the amount to 0.
+    moduleRef: new ModuleReference('a225a5aeb0a5cf9bbc59209e15df030e8cc2c17b8dba08c4bf59f80edaedd8b1'), // Module reference
+    contractName: contractName,
+    parameter: params,
+    maxContractExecutionEnergy: maxContractExecutionEnergy
+};
+
+const initContractTransaction: AccountTransaction = {
+    header: header,
+    payload: initModule,
+    type: AccountTransactionType.InitializeSmartContractInstance,
+};
+```
+
+Finally, to actually initialize the contract on the chain, send the constructed `initContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
+
+## Update Contract(parameterless smart contract)
+The following example demonstrates how to update a smart contract. 
+
+To update a smart contract we create a 'updateContractTransaction'.
+To do this we need to specify the name of the receive function, which should contain the contract name as a prefix ( So if the contract has the name "INDBank" and the receive function has the name "insertAmount" then the receiveName should be "INDBank.insertAmount").
+
+We also need to supply the contract address of the contract instance. This consists of an index and a subindex.
+
+In this example, the contract does not take any parameters, so we can leave the parameters as an empty list.  
+```js
+const receiveName = 'INDBank.insertAmount';
+const params = Buffer.from([]);
+const contractAddress = { index: BigInt(83), subindex: BigInt(0) } as ContractAddress;
+//The amount of energy that can be used for contract execution.
+const maxContractExecutionEnergy = 30000n;
+```
+Create update contract transaction
+```js
+const updateModule: UpdateContractPayload =
+{
+    amount: new GtuAmount(1000n),
+    contractAddress: contractAddress,
+    receiveName: receiveName,
+    parameter: params,
+    maxContractExecutionEnergy: maxContractExecutionEnergy
+};
+
+const updateContractTransaction: AccountTransaction = {
+    header: header,
+    payload: updateModule,
+    type: AccountTransactionType.UpdateSmartContractInstance,
+};
+```
+
+Finally, to actually update the contract on the chain, send the constructed `updateContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
+
 # Build
 
 ## Building for a release

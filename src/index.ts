@@ -32,3 +32,4 @@ export {
     getAccountAddress,
     buildSignedCredentialForExistingAccount,
 } from './credentialDeploymentTransactions';
+export { isAlias, getAlias } from './alias';

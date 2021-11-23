@@ -3,12 +3,9 @@ import {
     AccountTransactionHeader,
     AccountTransactionSignature,
     AccountTransactionType,
-    ContractAddress,
     InitContractPayload,
     ParameterType,
-    SMArray,
     SMParameter,
-    SMStruct,
 } from '../../src/types';
 import * as ed from 'noble-ed25519';
 import { getAccountTransactionSignDigest } from '../../src/serialization';

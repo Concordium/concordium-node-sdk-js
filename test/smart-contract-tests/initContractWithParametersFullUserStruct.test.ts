@@ -61,8 +61,8 @@ test('init contract with the wrong private key', async () => {
                 value: {
                     type: ParameterType.U8,
                     value: [20, 30, 45],
-                }
-            }
+                },
+            },
         ] as SMStruct,
     };
     const baseEnergy = 300000n;

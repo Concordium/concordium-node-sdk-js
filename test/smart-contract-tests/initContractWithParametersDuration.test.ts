@@ -3,22 +3,18 @@ import {
     AccountTransactionHeader,
     AccountTransactionSignature,
     AccountTransactionType,
-    ContractAddress,
     InitContractPayload,
     ParameterType,
-    SMArray,
     SMParameter,
-    SMStruct,
 } from '../../src/types';
 import * as ed from 'noble-ed25519';
-import {getAccountTransactionSignDigest } from '../../src/serialization';
+import { getAccountTransactionSignDigest } from '../../src/serialization';
 import { getNodeClient } from '../testHelpers';
 import { AccountAddress } from '../../src/types/accountAddress';
 import { GtuAmount } from '../../src/types/gtuAmount';
 import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
 import { ModuleReference } from '../../src/types/moduleReference';
-import { Timestamp } from '@grpc/grpc-js/build/src/generated/google/protobuf/Timestamp';
 const client = getNodeClient();
 const senderAccountAddress =
     '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';

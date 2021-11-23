@@ -9,7 +9,10 @@ import {
     SMParameter,
 } from '../../src/types';
 import * as ed from 'noble-ed25519';
-import { getAccountTransactionHash, getAccountTransactionSignDigest } from '../../src/serialization';
+import {
+    getAccountTransactionHash,
+    getAccountTransactionSignDigest,
+} from '../../src/serialization';
 import { getNodeClient } from '../testHelpers';
 import { AccountAddress } from '../../src/types/accountAddress';
 import { GtuAmount } from '../../src/types/gtuAmount';

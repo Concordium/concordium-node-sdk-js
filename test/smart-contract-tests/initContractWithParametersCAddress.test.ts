@@ -6,9 +6,7 @@ import {
     ContractAddress,
     InitContractPayload,
     ParameterType,
-    SMArray,
     SMParameter,
-    SMStruct,
 } from '../../src/types';
 import * as ed from 'noble-ed25519';
 import { getAccountTransactionSignDigest } from '../../src/serialization';
@@ -38,7 +36,10 @@ test('init contract with the wrong private key', async () => {
     };
 
     const contractName = 'CAddress';
-    const contractAddress = { index: BigInt(83), subindex: BigInt(0) } as ContractAddress;
+    const contractAddress = {
+        index: BigInt(83),
+        subindex: BigInt(0),
+    } as ContractAddress;
 
     const inputParams: SMParameter<ContractAddress> = {
         type: ParameterType.ContractAddress,

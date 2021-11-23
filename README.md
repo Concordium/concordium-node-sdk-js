@@ -305,9 +305,10 @@ const transactionStatus = await client.getTransactionStatus(transactionHash);
 ```
 
 ## getAccountInfo
-Retrieves information about an account. If no account exists with the provided address, then the node
-will check if any credential with that credential identifier exists and will return information
-about the credential instead. If neither an account or credential matches the address at the provided
+Retrieves information about an account. The function must be provided an account address or a credential registration id. 
+If a credential registration id is provided, then the node returns the information of the account, 
+which the corresponding credential is (or was) deployed to.
+If there is no account that matches the address or credential id at the provided
 block, then undefined will be returned.
 ```js
 const accountAddress = new AccountAddress("3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU");
@@ -512,7 +513,7 @@ Create init contract transaction
 ```js
 const initModule: InitContractPayload = {
     amount: new GtuAmount(0n), // Amount to send to the contract. If the smart contract is not payable, set the amount to 0.
-    moduleRef: new ModuleReference('a225a5aeb0a5cf9bbc59209e15df030e8cc2c17b8dba08c4bf59f80edaedd8b1'), // Module reference, which can be obtained after deploying a module
+    moduleRef: new ModuleReference('a225a5aeb0a5cf9bbc59209e15df030e8cc2c17b8dba08c4bf59f80edaedd8b1'), // Module reference
     contractName: contractName,
     parameter: params,
     maxContractExecutionEnergy: maxContractExecutionEnergy
@@ -545,7 +546,7 @@ const maxContractExecutionEnergy = 30000n;
 ```
 Create update contract transaction
 ```js
-const updateContractTransaction: UpdateContractPayload =
+const updateModule: UpdateContractPayload =
 {
     amount: new GtuAmount(1000n),
     contractAddress: contractAddress,

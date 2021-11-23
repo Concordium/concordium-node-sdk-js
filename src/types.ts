@@ -624,7 +624,7 @@ export enum AccountTransactionType {
 }
 
 export interface DeployModulePayload {
-    /** Version of the wasm module */
+    /** Version of the wasm module which is 0 currently the only one supported */
     version: number;
 
     /** Wasm module to be deployed */

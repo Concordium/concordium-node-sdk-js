@@ -1,6 +1,7 @@
 import { ChannelCredentials, Metadata, ServiceError } from '@grpc/grpc-js';
 import { P2PClient } from '../grpc/concordium_p2p_rpc_grpc_pb';
 import { AccountAddress as Address } from './types/accountAddress';
+import { CredentialRegistrationId } from './types/CredentialRegistrationId';
 import {
     AccountAddress,
     BlockHash,
@@ -174,15 +175,16 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieves the account info for the given account. If the provided block
      * hash is in a block prior to the finalization of the account, then the account
-     * information will not be available. If there is no account with the provided address,
-     * then the node will check if there exists any credential with that address and
-     * return information for that credential.
-     * @param accountAddress base58 account address to get the account info for
+     * information will not be available.
+     * A credential registration id can also be provided, instead of an address. In this case
+     * the node will return the account info of the account, which the corresponding credential
+     * is (or was) deployed to.
+     * @param accountAddress base58 account address (or a credential registration id) to get the account info for
      * @param blockHash the block hash to get the account info at
      * @returns the account info for the provided account address, undefined is the account does not exist
      */
     async getAccountInfo(
-        accountAddress: Address,
+        accountAddress: Address | CredentialRegistrationId,
         blockHash: string
     ): Promise<AccountInfo | undefined> {
         if (!isValidHash(blockHash)) {
@@ -190,7 +192,11 @@ export default class ConcordiumNodeClient {
         }
 
         const getAddressInfoRequest = new GetAddressInfoRequest();
-        getAddressInfoRequest.setAddress(accountAddress.address);
+        if (accountAddress instanceof Address) {
+            getAddressInfoRequest.setAddress(accountAddress.address);
+        } else {
+            getAddressInfoRequest.setAddress(accountAddress.credId);
+        }
         getAddressInfoRequest.setBlockHash(blockHash);
 
         const response = await this.sendRequest(
@@ -581,8 +587,17 @@ export default class ConcordiumNodeClient {
         );
 
         const result = unwrapJsonResponse<InstanceInfoSerialized>(response);
-        const instanceInfo = await this.createInstanceInfo(result);
-        return instanceInfo;
+        if (result !== undefined) {
+            const instanceInfo: InstanceInfo = {
+                amount: new GtuAmount(BigInt(result.amount)),
+                sourceModule: new ModuleReference(result.sourceModule),
+                owner: new Address(result.owner),
+                methods: result.methods,
+                name: result.name,
+                model: BufferFormater.from(result.model, 'hex'),
+            };
+            return instanceInfo;
+        }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -607,22 +622,5 @@ export default class ConcordiumNodeClient {
                 );
             });
         });
-    }
-
-    createInstanceInfo(
-        instanceInfo: InstanceInfoSerialized | undefined
-    ): InstanceInfo | undefined {
-        if (instanceInfo === undefined) {
-            return undefined;
-        }
-
-        return {
-            amount: new GtuAmount(BigInt(instanceInfo.amount)),
-            sourceModule: new ModuleReference(instanceInfo.sourceModule),
-            owner: new Address(instanceInfo.owner),
-            methods: instanceInfo.methods,
-            name: instanceInfo.name,
-            model: BufferFormater.from(instanceInfo.model, 'binary'),
-        };
     }
 }

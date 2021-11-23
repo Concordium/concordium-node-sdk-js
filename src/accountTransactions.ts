@@ -62,7 +62,7 @@ export class DeployModuleHandler
     implements AccountTransactionHandler<DeployModulePayload>
 {
     getBaseEnergyCost(payload: DeployModulePayload): bigint {
-        const cost: number = Math.round((payload.content.length + 1) / 10);
+        const cost: number = Math.round(payload.content.length / 10);
         return BigInt(cost);
     }
 

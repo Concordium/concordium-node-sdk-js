@@ -497,10 +497,13 @@ Finally, to actually deploy the module to the chain, send the constructed `deplo
 ## Init Contract (parameterless smart contract)
 The following example demonstrates how to initialize a smart contract from a module, which has already been deployed. 
 The name of the contract "INDBank".
-In this example, the contract does not take any parameters, so we can leave params as an empty Buffer.  
+In this example, the contract does not take any parameters, so we can leave parameters as undefined.  
 ```js
 const contractName = 'INDBank'; 
-const params = Buffer.from([]);
+const params: SMParameter<undefined> = {
+        type: ParameterType.NoParameters,
+        value: undefined,
+    };
 //The amount of energy that can be used for contract execution.
 const maxContractExecutionEnergy = 300000n;
 ```
@@ -524,126 +527,11 @@ const initContractTransaction: AccountTransaction = {
 
 Finally, to actually initialize the contract on the chain, send the constructed `initContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
 
-## Init Contract (parameters smart contract) - Example 1
-The following example demonstrates how to initialize a smart contract from a module, which has already been deployed. 
-The name of the contract should be specified, and should include "init_" prefix (So if the contract should be named 'INDBankU8', then the initName should be "init_INDBankU8".
-In this example, the contract take one parameters which is of type u8.  
-```js
-const initName = 'init_INDBankU8'; 
-const inputParams: ParamtersValue<any> = 
-        {
-            type: ParameterType.U8,
-            value: 5,
-        };
-//The amount of energy that can be used for contract execution.
-const baseEnergy = 300000n;
-```
-
-Create init contract transaction
-```js
-const initModule: InitContractPayload = {
-    amount: new GtuAmount(0n), // Amount to send to the contract. If the smart contract is not payable, set the amount to 0.
-    moduleRef: new ModuleReference('d883ce0619ff08711dea54f48acda749db62ace27d8dcc5eddc3796d5ebb5688'), // Module reference, which can be obtained after deploying a module
-    initName: initName,
-    parameter: inputParams,
-    maxContractExecutionEnergy: baseEnergy
-};
-
-const initContractTransaction: AccountTransaction = {
-    header: header,
-    payload: initModule,
-    type: AccountTransactionType.InitializeSmartContractInstance,
-};
-```
-
-Finally, to actually deploy the module to the chain, send the constructed `initContractTransaction` to the chain using `sendAccountTransaction`. (Refer to the _Send Account Transaction_ section for how to do this)
-
-
-## Init Contract (parameters smart contract) - Example 2
-The following example demonstrates how to initialize a smart contract from a module, which has already been deployed. 
-The name of the contract as "INDBankU83".
-In this example, the contract take parameters as array of integers of type u8.  
-```js
-const contractName = 'INDBankU83'; 
-const inputParams: SMParameter<SMArray<number>> =
-    {
-        type: ParameterType.Array,
-        value: {
-            type: ParameterType.U8,
-            value: [10, 10, 15]
-        }
-    };
-//The amount of energy that can be used for contract execution.
-const baseEnergy = 300000n;
-```
-
-Create init contract transaction
-```js
-const initModule: InitContractPayload = {
-    amount: new GtuAmount(0n), // Amount to send to the contract. If the smart contract is not payable, set the amount to 0.
-    moduleRef: new ModuleReference('d883ce0619ff08711dea54f48acda749db62ace27d8dcc5eddc3796d5ebb5688'), // Module reference, which can be obtained after deploying a module
-    contractName: contractName,
-    parameter: inputParams,
-    maxContractExecutionEnergy: baseEnergy
-};
-
-const initContractTransaction: AccountTransaction = {
-    header: header,
-    payload: initModule,
-    type: AccountTransactionType.InitializeSmartContractInstance,
-};
-```
-
-Finally, to actually deploy the module to the chain, send the constructed `initContractTransaction` to the chain using `sendAccountTransaction`. (Refer to the _Send Account Transaction_ section for how to do this)
-
-## Init Contract (parameters smart contract) - Example 3
-The following example demonstrates how to initialize a smart contract from a module, which has already been deployed. 
-The name of the contract as "INDBankStruct1".
-In this example, the contract take parameters as struct of types integer(u8) and string.  
-```js
-const contractName = 'INDBankStruct1'; 
-const inputParams: SMParameter<SMSMStruct> =
-    {
-        type: ParameterType.Struct,
-        value: [
-            {
-                type: ParameterType.String,
-                value: 'strval',
-            },
-            {
-                type: ParameterType.U8,
-                value: 27,
-            },
-        ]
-    };
-//The amount of energy that can be used for contract execution.
-const baseEnergy = 300000n;
-```
-
-Create init contract transaction
-```js
-const initModule: InitContractPayload = {
-    amount: new GtuAmount(0n), // Amount to send to the contract. If the smart contract is not payable, set the amount to 0.
-    moduleRef: new ModuleReference('d883ce0619ff08711dea54f48acda749db62ace27d8dcc5eddc3796d5ebb5688'), // Module reference, which can be obtained after deploying a module
-    contractName: contractName,
-    parameter: inputParams,
-    maxContractExecutionEnergy: baseEnergy
-};
-
-const initContractTransaction: AccountTransaction = {
-    header: header,
-    payload: initModule,
-    type: AccountTransactionType.InitializeSmartContractInstance,
-};
-```
-
-Finally, to actually deploy the module to the chain, send the constructed `initContractTransaction` to the chain using `sendAccountTransaction`. (Refer to the _Send Account Transaction_ section for how to do this)
-
 ## Update Contract(parameterless smart contract)
 The following example demonstrates how to update a smart contract. 
 
 To update a smart contract we create a 'updateContractTransaction'.
-To do this we need to specify the name of the receive function, which should contain the contract name as a prefix ( So if the contract has the name "INDBank" and the receive function has the name "insertAmount" then the receiveName should be "INDBank.insertAmount").
+To do this we need to specify the name of the receive function, which should contain the contract name as a prefix (So if the contract has the name "INDBank" and the receive function has the name "insertAmount" then the receiveName should be "INDBank.insertAmount").
 
 We also need to supply the contract address of the contract instance. This consists of an index and a subindex.
 
@@ -675,48 +563,42 @@ const updateContractTransaction: AccountTransaction = {
 
 Finally, to actually update the contract on the chain, send the constructed `updateContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
 
-## Update Contract(parameters smart contract)
-The following example demonstrates how to update a smart contract. 
-
-To update a smart contract we create a 'updateContractTransaction'.
-To do this we need to specify the name of the receive function, which should contain the contract name as a prefix ( So if the contract has the name "INDBankU83" and the receive function has the name "insertAmount" then the receiveName should be "INDBankU83.insertAmount").
-
-We also need to supply the contract address of the contract instance. This consists of an index and a subindex.
-
-In this example, the contract take parameter of type u8.  
-
+## Smartcontract with parameters
+In the previous section we have seen init and update contract without parameters. Here in this section we will describe how to init and update contract with parameters.
+Let us consider the following example with parameters for a smart contract which accepts u8 as input.
+So the user provides type as ParameterType.U8 and value as any u8 value
 ```js
-const receiveName = 'INDBankU83.insertAmount';
-const contractAddress = { index: BigInt(83), subindex: BigInt(0) } as ContractAddress;
-const inputParams: ParamtersValue<any> = 
-        {
-            type: ParameterType.U8,
-            value: '20',
-        };
-//The amount of energy that can be used for contract execution.
-const baseEnergy = 30000n;
+const inputParams: SMParameter<number> = {
+        type: ParameterType.U8,
+        value: 20,
+    };
 ```
-Create update contract transaction
-```js
-let updateContractTransaction: AccountTransaction;
-const updateContractTransaction: UpdateContractPayload =
-{
-    amount: new GtuAmount(1000n),
-    contractAddress: contractAddress,
-    receiveName: receiveName,
-    parameter: [],
-    maxContractExecutionEnergy: baseEnergy
-} as UpdateContractPayload;
+Based on the smart contract inputs below is the table for the primitive types and other complex types.
+<!-- TABLE_GENERATE_START -->
 
-const updateContractTransaction: AccountTransaction = {
-    header: header,
-    payload: updateModule,
-    type: AccountTransactionType.UpdateSmartContractInstance,
-};
-```
+| Parameter Type  |   Value Type    |                                                                               Example                                                                               |
+| :-------------: | :-------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------: |
+|      Bool       |     boolean     |                                          const smparam: SMParameter<boolean> = { type: ParameterType.Bool, value: true };                                           |
+|       U8        |     number      |                                             const smparam: SMParameter<number> = { type: ParameterType.U8, value: 124 }                                             |
+|       U16       |     number      |                                            const smparam: SMParameter<number> = { type: ParameterType.U16, value: 760 }                                             |
+|       U32       |     number      |                                            const smparam: SMParameter<number> = { type: ParameterType.U32, value: 3288 }                                            |
+|       U64       |     bigint      |                                          const smparam: SMParameter<bigint> = { type: ParameterType.U64, value: 9507124 }                                           |
+|      U128       |     bigint      |                                          const smparam: SMParameter<bigint> = { type: ParameterType.U128, value: 9507124 }                                          |
+|       I8        |     number      |                                             const smparam: SMParameter<bigint> = { type: ParameterType.I8, value: -20 }                                             |
+|       I16       |     number      |                                            const smparam: SMParameter<bigint> = { type: ParameterType.I16, value: 3519 }                                            |
+|       I32       |     number      |                                           const smparam: SMParameter<bigint> = { type: ParameterType.I32, value: 43251 }                                            |
+|       I64       |     bigint      |                                           const smparam: SMParameter<bigint> = { type: ParameterType.I64, value: -19204 }                                           |
+|      I128       |     bigint      |                                          const smparam: SMParameter<bigint> = { type: ParameterType.I128, value: -416678 }                                          |
+|     Amount      |    GTUAmount    |                                const smparam: SMParameter<GtuAmount> = { type: ParameterType.Amount, value: new GtuAmount(1000n) };                                 |
+| AccountAddress  |     Address     | const smparam: SMParameter<AccountAddress> = { type: ParameterType.AccountAddress, value: new AccountAddress('3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5'); |
+| ContractAddress | ContractAddress |               const smparam: SMParameter<ContractAddress> = { type: ParameterType.ContractAddress, value: { index: BigInt(83), subindex: BigInt(0) };               |
+|    Timestamp    |     bigint      |                                 const smparam: SMParameter<bigint> = { type: ParameterType.Timestamp, value: BigInt(1637216868) };                                  |
+|    Duration     |     bigint      |                                  const smparam: SMParameter<bigint> = { type: ParameterType.Duration, value: BigInt(1637216868) };                                  |
+|     String      |     string      |                                      const smparam: SMParameter<string> = { type: ParameterType.String, value: 'Concordium' };                                      |
+|     Array      |     Array      |                                      const smparam: SMParameter<string> = { type: ParameterType.Array, value: [{ type: ParameterType.U8, value: 26 } as SMParameter<number>, { type: ParameterType.U8, value: 27, } as SMParameter<number>, { type: ParameterType.U8, value: 51, } as SMParameter<number> ] };                                      |
+|     Structure      |     struct     |                                     const inputParams: SMParameter<SMStruct> = { type: ParameterType.Struct, value: [ { type: ParameterType.U8, value: 51, } as SMParameter<number>, { type: ParameterType.String, value: 'Concordium', } as SMParameter<string>, { type: ParameterType.String, value: 'Zug', } as SMParameter<string>, ] as SMStruct, };                                      |
 
-Finally, to actually deploy the module to the chain, send the constructed `updateContractTransaction` to the chain using `sendAccountTransaction`. (Refer to the _Send Account Transaction_ section for how to do this)
-
+<!-- TABLE_GENERATE_END -->
 # Build
 
 ## Building for a release

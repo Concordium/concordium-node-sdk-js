@@ -4,6 +4,7 @@ import { Memo } from './types/Memo';
 import { TransactionExpiry } from './types/transactionExpiry';
 import { Buffer } from 'buffer/';
 import { ModuleReference } from './types/moduleReference';
+import { Timestamp } from '@grpc/grpc-js/build/src/generated/google/protobuf/Timestamp';
 
 /**
  * A reward fraction with a resolution of 1/100000, i.e. the
@@ -858,4 +859,7 @@ export type SMTypes =
     | SMStruct
     | SMArray<SMPrimitiveTypes | SMStruct>
     | AccountAddress
+    | GtuAmount
+    | ContractAddress
+    | Timestamp
     | undefined;

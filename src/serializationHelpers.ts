@@ -7,9 +7,11 @@ import {
     SMArray,
     SMTypes,
     SMPrimitiveTypes,
+    ContractAddress,
 } from './types';
 import { Memo } from './types/Memo';
 import { AccountAddress } from './types/accountAddress';
+import { GtuAmount } from '../src/types/gtuAmount';
 
 export function serializeMap<K extends string | number | symbol, T>(
     map: Record<K, T>,
@@ -138,11 +140,11 @@ export function encodeWordI32(value: number): Buffer {
 }
 
 /**
- * Encodes a 32 bit unsigned integer to a Buffer using big endian.
+ * Encodes a 32 bit unsigned integer to a Buffer using little endian.
  * @param value a 32 bit integer
  * @returns big endian serialization of the input
  */
-export function encodeWord32(value: number): Buffer {
+export function encodeWord32(value: number, useLittleEndian: boolean = false): Buffer {
     if (value > 4294967295 || value < 0 || !Number.isInteger(value)) {
         throw new Error(
             'The input has to be a 32 bit unsigned integer but it was: ' + value
@@ -150,7 +152,7 @@ export function encodeWord32(value: number): Buffer {
     }
     const arr = new ArrayBuffer(4);
     const view = new DataView(arr);
-    view.setUint32(0, value, false);
+    view.setUint32(0, value, useLittleEndian);
     return Buffer.from(new Uint8Array(arr));
 }
 
@@ -231,8 +233,8 @@ export function packBufferWithWord64Length(buffer: Buffer): Buffer {
  * @param buffer
  * @returns Buffer containing the 32 bit length of buffer and buffer.
  */
-export function packBufferWithWord32Length(buffer: Buffer): Buffer {
-    const length = encodeWord32(buffer.length);
+export function packBufferWithWord32Length(buffer: Buffer, useLittleEndian: boolean = false): Buffer {
+    const length = encodeWord32(buffer.length, useLittleEndian);
     return Buffer.concat([length, buffer]);
 }
 
@@ -309,7 +311,8 @@ function isFixedType(type: ParameterType): boolean {
         type == ParameterType.I64 ||
         type == ParameterType.U128 ||
         type == ParameterType.I128 ||
-        type == ParameterType.Bool;
+        type == ParameterType.Bool ||
+        type == ParameterType.Array;
 }
 
 /**
@@ -342,16 +345,34 @@ export function serializeParameter(parameter: SMParameter<SMTypes>): Buffer {
         case ParameterType.Bool:
             return encodeBool((parameter as SMParameter<boolean>).value);
         case ParameterType.String:
-            return Buffer.from((parameter as SMParameter<string>).value);
+            const stringParameter = (parameter as SMParameter<string>).value;
+            const bufferValue = Buffer.from(stringParameter);
+            return (bufferValue);
+        case ParameterType.AccountAddress:
+            return (parameter as SMParameter<AccountAddress>).value.decodedAddress;
+        case ParameterType.Amount:
+            return encodeWord64((parameter as SMParameter<GtuAmount>).value.microGtuAmount);
+        case ParameterType.Timestamp:
+            return encodeWord128((parameter as SMParameter<bigint>).value);
+        case ParameterType.Duration:
+            return encodeWord128((parameter as SMParameter<bigint>).value);
+        case ParameterType.ContractAddress:
+            const serializeIndex = encodeWord64((parameter as SMParameter<ContractAddress>).value.index);
+            const serializeSubIndex = encodeWord64((parameter as SMParameter<ContractAddress>).value.subindex);
+            return Buffer.concat([
+                serializeIndex,
+                serializeSubIndex,
+            ]);
         case ParameterType.Struct:
             const bufferStruct: Buffer[] = [];
             (parameter.value as SMStruct).forEach((element) => {
                 const parameterBuffer = serializeParameter(element);
-                // if (isFixedType(element.type)) {
-                //     bufferStruct.push(parameterBuffer);
-                // } else {
-                    bufferStruct.push(packBufferWithWord32Length(parameterBuffer));
-                //}
+                if (isFixedType(element.type)) {
+                    if (element.type === ParameterType.Array)
+                    bufferStruct.push(parameterBuffer);
+                } else {
+                    bufferStruct.push(packBufferWithWord32Length(parameterBuffer, true));
+                }
             });
             return Buffer.concat(bufferStruct);
         case ParameterType.Array:
@@ -366,15 +387,14 @@ export function serializeParameter(parameter: SMParameter<SMTypes>): Buffer {
                     type: arrayType,
                     value: element,
                 });
-                // if (isFixedType(arrayType)) {
-                //     bufferArray.push(parameterBuffer);
-                // } else {
-                    bufferArray.push(packBufferWithWord32Length(parameterBuffer));
-                //}
+
+                if (isFixedType(arrayType)) {
+                    bufferArray.push(parameterBuffer);
+                } else {
+                    bufferArray.push(packBufferWithWord32Length(parameterBuffer, true));
+                }
             });
             return Buffer.concat(bufferArray);
-        case ParameterType.AccountAddress:
-            return (parameter as SMParameter<AccountAddress>).value.decodedAddress;
         default:
             return Buffer.from([]);
     }

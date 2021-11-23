@@ -377,7 +377,6 @@ export function serializeParameter(parameter: SMParameter<SMTypes>): Buffer {
             (parameter.value as SMStruct).forEach((element) => {
                 const parameterBuffer = serializeParameter(element);
                 if (isFixedType(element.type)) {
-                    if (element.type === ParameterType.Array)
                         bufferStruct.push(parameterBuffer);
                 } else {
                     bufferStruct.push(

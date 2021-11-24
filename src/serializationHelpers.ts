@@ -81,7 +81,7 @@ export function encodeWord128(value: bigint): Buffer {
  * @returns big endian serialization of the input
  */
 export function encodeWordI64(value: bigint): Buffer {
-    if (value > -4294967296n || value < 4294967295n) {
+    if (value > 4294967295n || value < -4294967296n) {
         throw new Error(
             'The input has to be a 64 bit signed integer but it was: ' + value
         );
@@ -188,6 +188,21 @@ export function encodeWord16(value: number): Buffer {
     const view = new DataView(arr);
     view.setUint16(0, value, false);
     return Buffer.from(new Uint8Array(arr));
+}
+
+/**
+ * Encodes a 8 bit signed integer to a Buffer using big endian.
+ * @param value a 8 bit integer
+ * @returns big endian serialization of the input
+ */
+export function encodeWordI8(value: number): Buffer {
+    if (value > 127 || value < -128 || !Number.isInteger(value)) {
+        throw new Error(
+            'The input has to be a 8 bit signed integer but it was: ' + value
+        );
+    }
+
+    return Buffer.from(Buffer.of(value));
 }
 
 /**
@@ -316,7 +331,13 @@ function isFixedType(type: ParameterType): boolean {
         type == ParameterType.U128 ||
         type == ParameterType.I128 ||
         type == ParameterType.Bool ||
-        type == ParameterType.Array
+        type == ParameterType.AccountAddress ||
+        type == ParameterType.ContractAddress ||
+        type == ParameterType.Amount ||
+        type == ParameterType.Timestamp ||
+        type == ParameterType.Duration ||
+        type == ParameterType.Array ||
+        type == ParameterType.Struct
     );
 }
 
@@ -330,7 +351,7 @@ export function serializeParameter(parameter: SMParameter<SMTypes>): Buffer {
         case ParameterType.U8:
             return encodeWord8((parameter as SMParameter<number>).value);
         case ParameterType.I8:
-            return encodeWord8((parameter as SMParameter<number>).value);
+            return encodeWordI8((parameter as SMParameter<number>).value);
         case ParameterType.U16:
             return encodeWord16((parameter as SMParameter<number>).value);
         case ParameterType.I16:

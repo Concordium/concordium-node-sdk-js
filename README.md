@@ -614,7 +614,7 @@ Based on the smart contract inputs below is the table for the primitive types an
 |       I64       |     bigint      |                                           const smparam: SMParameter<bigint> = { type: ParameterType.I64, value: -19204 }                                           |
 |      I128       |     bigint      |                                          const smparam: SMParameter<bigint> = { type: ParameterType.I128, value: -416678 }                                          |
 |     Amount      |    GTUAmount    |                                const smparam: SMParameter<GtuAmount> = { type: ParameterType.Amount, value: new GtuAmount(1000n) };                                 |
-| AccountAddress  |     Address     | const smparam: SMParameter<AccountAddress> = { type: ParameterType.AccountAddress, value: new AccountAddress('3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5'); |
+| AccountAddress  |     Address     | const smparam: SMParameter<AccountAddress> = { type: ParameterType.AccountAddress, value: new AccountAddress('41C2Xu8vD4V2w3QuHRXRNrvSWCWFMXYdNw1wr8SeGbojRUmJzb'); |
 | ContractAddress | ContractAddress |               const smparam: SMParameter<ContractAddress> = { type: ParameterType.ContractAddress, value: { index: BigInt(83), subindex: BigInt(0) };               |
 |    Timestamp    |     bigint      |                                 const smparam: SMParameter<bigint> = { type: ParameterType.Timestamp, value: BigInt(1637216868) };                                  |
 |    Duration     |     bigint      |                                  const smparam: SMParameter<bigint> = { type: ParameterType.Duration, value: BigInt(1637216868) };                                  |

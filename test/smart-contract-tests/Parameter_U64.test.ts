@@ -3,29 +3,26 @@ import {
     AccountTransactionHeader,
     AccountTransactionSignature,
     AccountTransactionType,
-    SMArray,
-    InitContractPayload,
+    UpdateContractPayload,
+    ContractAddress,
     ParameterType,
     SMParameter,
 } from '../../src/types';
 import * as ed from 'noble-ed25519';
-import {
-    getAccountTransactionHash,
-    getAccountTransactionSignDigest,
-} from '../../src/serialization';
+import { getAccountTransactionSignDigest } from '../../src/serialization';
 import { getNodeClient } from '../testHelpers';
 import { AccountAddress } from '../../src/types/accountAddress';
 import { GtuAmount } from '../../src/types/gtuAmount';
 import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
-import { ModuleReference } from '../../src/types/moduleReference';
+
 const client = getNodeClient();
 const senderAccountAddress =
-    '3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5';
+    '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
 const wrongPrivateKey =
-    '681de9a98d274b56eace2f86eb134bfc414f5c366022f281335be0b2d45a8988';
-// test case for init contract
-test('init contract with the wrong private key', async () => {
+    'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
+//test case for update contract
+test('Parameter of U64 with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
         new AccountAddress(senderAccountAddress)
     );
@@ -38,34 +35,35 @@ test('init contract with the wrong private key', async () => {
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const contractName = 'INDBankU83';
+    const receiveName = 'INDBankU83.insertAmount1';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const inputParams: SMParameter<SMArray<number>> = {
-        type: ParameterType.Array,
-        value: {
-            type: ParameterType.U8,
-            value: [10, 10, 15],
-        },
+    const inputParams: SMParameter<bigint> = {
+        type: ParameterType.U64,
+        value: BigInt(20000000),
     };
-    const baseEnergy = 300000n;
+    const contractAddress = {
+        index: BigInt(108),
+        subindex: BigInt(0),
+    } as ContractAddress;
+    const baseEnergy = 30000n;
 
-    const initModule: InitContractPayload = {
-        amount: new GtuAmount(0n),
-        moduleRef: new ModuleReference(
-            'd883ce0619ff08711dea54f48acda749db62ace27d8dcc5eddc3796d5ebb5688'
-        ),
-        contractName: contractName,
+    const updateModule: UpdateContractPayload = {
+        amount: new GtuAmount(1000n),
+        contractAddress: contractAddress,
+        receiveName: receiveName,
         parameter: inputParams,
         maxContractExecutionEnergy: baseEnergy,
-    };
+    } as UpdateContractPayload;
 
-    const initContractTransaction: AccountTransaction = {
+    const updateContractTransaction: AccountTransaction = {
         header: header,
-        payload: initModule,
-        type: AccountTransactionType.InitializeSmartContractInstance,
+        payload: updateModule,
+        type: AccountTransactionType.UpdateSmartContractInstance,
     };
 
-    const hashToSign = getAccountTransactionSignDigest(initContractTransaction);
+    const hashToSign = getAccountTransactionSignDigest(
+        updateContractTransaction
+    );
     const signature = Buffer.from(
         await ed.sign(hashToSign, wrongPrivateKey)
     ).toString('hex');
@@ -76,14 +74,9 @@ test('init contract with the wrong private key', async () => {
     };
 
     const result = await client.sendAccountTransaction(
-        initContractTransaction,
+        updateContractTransaction,
         signatures
     );
 
-    const txHash = await getAccountTransactionHash(
-        initContractTransaction,
-        signatures
-    );
-    console.log(txHash);
     expect(result).toBeTruthy();
 }, 300000);

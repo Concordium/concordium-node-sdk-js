@@ -21,7 +21,7 @@ const senderAccountAddress =
 const wrongPrivateKey =
     'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
 // test case for init contract
-test('init contract with the wrong private key', async () => {
+test('Parameter of Bool with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
         new AccountAddress(senderAccountAddress)
     );
@@ -34,17 +34,18 @@ test('init contract with the wrong private key', async () => {
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const contractName = 'UserAmount';
-    const inputParams: SMParameter<GtuAmount> = {
-        type: ParameterType.Amount,
-        value: new GtuAmount(1000n),
+    const contractName = 'INDBankBool1';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const inputParams: SMParameter<boolean> = {
+        type: ParameterType.Bool,
+        value: true,
     };
     const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {
         amount: new GtuAmount(0n),
         moduleRef: new ModuleReference(
-            'd9f631fb4ec6fc344560c24be436b86cb6da8293b5a1c9e7bda54a1f713337e1'
+            '3e553405f26906eb1f9f334bb648bd7112a6bdf18943b616c9b3110ce3c0b372'
         ),
         contractName: contractName,
         parameter: inputParams,
@@ -71,5 +72,6 @@ test('init contract with the wrong private key', async () => {
         initContractTransaction,
         signatures
     );
+
     expect(result).toBeTruthy();
 }, 300000);

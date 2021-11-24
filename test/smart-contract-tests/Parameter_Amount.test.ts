@@ -6,7 +6,6 @@ import {
     InitContractPayload,
     ParameterType,
     SMParameter,
-    SMStruct,
 } from '../../src/types';
 import * as ed from 'noble-ed25519';
 import { getAccountTransactionSignDigest } from '../../src/serialization';
@@ -22,7 +21,7 @@ const senderAccountAddress =
 const wrongPrivateKey =
     'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
 // test case for init contract
-test('init contract with the wrong private key', async () => {
+test('Parameter of Amount with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
         new AccountAddress(senderAccountAddress)
     );
@@ -35,31 +34,17 @@ test('init contract with the wrong private key', async () => {
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const contractName = 'INDBankStruct1';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const inputParams: SMParameter<SMStruct> = {
-        type: ParameterType.Array,
-        value: [
-            {
-                type: ParameterType.U8,
-                value: 26,
-            } as SMParameter<number>,
-            {
-                type: ParameterType.U8,
-                value: 27,
-            } as SMParameter<number>,
-            {
-                type: ParameterType.U8,
-                value: 51,
-            } as SMParameter<number>,
-        ],
+    const contractName = 'UserAmount';
+    const inputParams: SMParameter<GtuAmount> = {
+        type: ParameterType.Amount,
+        value: new GtuAmount(1000n),
     };
     const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {
         amount: new GtuAmount(0n),
         moduleRef: new ModuleReference(
-            '684f75962a199809997581a7405c04f4603c51c20deb080bc0be795d09dcead4'
+            'd9f631fb4ec6fc344560c24be436b86cb6da8293b5a1c9e7bda54a1f713337e1'
         ),
         contractName: contractName,
         parameter: inputParams,
@@ -84,7 +69,6 @@ test('init contract with the wrong private key', async () => {
 
     const result = await client.sendAccountTransaction(
         initContractTransaction,
-
         signatures
     );
 

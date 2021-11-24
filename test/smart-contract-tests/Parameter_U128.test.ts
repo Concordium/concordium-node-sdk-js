@@ -22,7 +22,7 @@ const senderAccountAddress =
 const wrongPrivateKey =
     'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
 //test case for update contract
-test('update contract with the wrong private key', async () => {
+test('Parameter of U128 with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
         new AccountAddress(senderAccountAddress)
     );
@@ -35,11 +35,11 @@ test('update contract with the wrong private key', async () => {
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const receiveName = 'INDBankU83.insertAmount4';
+    const receiveName = 'INDBankU83.insertAmount1';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const inputParams: SMParameter<number> = {
-        type: ParameterType.I8,
-        value: -20,
+    const inputParams: SMParameter<bigint> = {
+        type: ParameterType.U128,
+        value: BigInt(-75234020),
     };
     const contractAddress = {
         index: BigInt(108),

@@ -22,7 +22,7 @@ const senderAccountAddress =
 const wrongPrivateKey =
     'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
 // test case for init contract
-test('init contract with the wrong private key', async () => {
+test('Parameter of Struct parameter (Complex) the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
         new AccountAddress(senderAccountAddress)
     );
@@ -35,19 +35,33 @@ test('init contract with the wrong private key', async () => {
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const contractName = 'INDBankStruct';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const contractName = 'UserMixed';
     const inputParams: SMParameter<SMStruct> = {
         type: ParameterType.Struct,
         value: [
             {
                 type: ParameterType.U8,
-                value: 50,
-            } as SMParameter<number>,
-            {
-                type: ParameterType.U8,
                 value: 51,
             } as SMParameter<number>,
+            {
+                type: ParameterType.String,
+                value: 'Concordium',
+            } as SMParameter<string>,
+            {
+                type: ParameterType.String,
+                value: 'Zug',
+            } as SMParameter<string>,
+            {
+                type: ParameterType.String,
+                value: 'Denmark',
+            } as SMParameter<string>,
+            {
+                type: ParameterType.Array,
+                value: {
+                    type: ParameterType.U8,
+                    value: [20, 30, 45],
+                },
+            },
         ] as SMStruct,
     };
     const baseEnergy = 300000n;
@@ -55,7 +69,7 @@ test('init contract with the wrong private key', async () => {
     const initModule: InitContractPayload = {
         amount: new GtuAmount(0n),
         moduleRef: new ModuleReference(
-            '2981fc5db0144ed7824c7f591c7d0dac95b0431bc009c1dd2d42013fc0532931'
+            'a68ff8d897ee06efb2782839c7bc530134bb6b32e9a96c081e027d20ddc5004d'
         ),
         contractName: contractName,
         parameter: inputParams,
@@ -82,6 +96,5 @@ test('init contract with the wrong private key', async () => {
         initContractTransaction,
         signatures
     );
-
     expect(result).toBeTruthy();
 }, 300000);

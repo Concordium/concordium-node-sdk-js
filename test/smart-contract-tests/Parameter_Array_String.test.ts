@@ -3,6 +3,7 @@ import {
     AccountTransactionHeader,
     AccountTransactionSignature,
     AccountTransactionType,
+    SMArray,
     InitContractPayload,
     ParameterType,
     SMParameter,
@@ -21,7 +22,7 @@ const senderAccountAddress =
 const wrongPrivateKey =
     'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
 // test case for init contract
-test('init contract with the wrong private key', async () => {
+test('Parameter of Array of string with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
         new AccountAddress(senderAccountAddress)
     );
@@ -34,23 +35,26 @@ test('init contract with the wrong private key', async () => {
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const contractName = 'INDBankBool1';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const inputParams: SMParameter<boolean> = {
-        type: ParameterType.Bool,
-        value: true,
+    const contractName = 'INDBankStringArray';
+
+    const inputParams: SMParameter<SMArray<string>> = {
+        type: ParameterType.Array,
+        value: {
+            type: ParameterType.String,
+            value: ['Concordium', 'Zug', 'CCD'],
+        },
     };
     const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {
         amount: new GtuAmount(0n),
         moduleRef: new ModuleReference(
-            '3e553405f26906eb1f9f334bb648bd7112a6bdf18943b616c9b3110ce3c0b372'
+            'edff6bce3cc9117d88db66d55f43695a0ee337e6803b48fb1bfa7ef76ec98447'
         ),
         contractName: contractName,
         parameter: inputParams,
         maxContractExecutionEnergy: baseEnergy,
-    } as InitContractPayload;
+    };
 
     const initContractTransaction: AccountTransaction = {
         header: header,

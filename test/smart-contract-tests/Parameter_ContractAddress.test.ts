@@ -3,6 +3,7 @@ import {
     AccountTransactionHeader,
     AccountTransactionSignature,
     AccountTransactionType,
+    ContractAddress,
     InitContractPayload,
     ParameterType,
     SMParameter,
@@ -21,7 +22,7 @@ const senderAccountAddress =
 const wrongPrivateKey =
     'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
 // test case for init contract
-test('init contract with the wrong private key', async () => {
+test('Parameter of ContractAddress with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
         new AccountAddress(senderAccountAddress)
     );
@@ -34,18 +35,22 @@ test('init contract with the wrong private key', async () => {
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const contractName = 'ContractForTime';
+    const contractName = 'CAddress';
+    const contractAddress = {
+        index: BigInt(83),
+        subindex: BigInt(0),
+    } as ContractAddress;
 
-    const inputParams: SMParameter<bigint> = {
-        type: ParameterType.Timestamp,
-        value: BigInt(1637216868),
+    const inputParams: SMParameter<ContractAddress> = {
+        type: ParameterType.ContractAddress,
+        value: contractAddress,
     };
     const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {
         amount: new GtuAmount(0n),
         moduleRef: new ModuleReference(
-            '8d86af90f478a313529410c60df0d4f243fabb8061e5537f62344fe44203cb12'
+            '0af9ddc70785266cdcf78802dcdf42b11ecda22042a2340754aa1f5e7e95659c'
         ),
         contractName: contractName,
         parameter: inputParams,
@@ -70,7 +75,6 @@ test('init contract with the wrong private key', async () => {
 
     const result = await client.sendAccountTransaction(
         initContractTransaction,
-
         signatures
     );
 

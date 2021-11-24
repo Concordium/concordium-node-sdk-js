@@ -377,7 +377,7 @@ export function serializeParameter(parameter: SMParameter<SMTypes>): Buffer {
             (parameter.value as SMStruct).forEach((element) => {
                 const parameterBuffer = serializeParameter(element);
                 if (isFixedType(element.type)) {
-                        bufferStruct.push(parameterBuffer);
+                    bufferStruct.push(parameterBuffer);
                 } else {
                     bufferStruct.push(
                         packBufferWithWord32Length(parameterBuffer, true)

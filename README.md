@@ -82,10 +82,10 @@ const scheduledTransfer: TransferWithSchedulePayload = {
     toAddress: new AccountAddress("4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf"),
     schedule: schedule,
 };
-const ScheduledTransferAccountTransaction: AccountTransaction = {
+const scheduledTransferAccountTransaction: AccountTransaction = {
     header: header,
     payload: scheduledTransfer,
-    type: AccountTransactionType.ScheduledTransfer,
+    type: AccountTransactionType.TransferWithSchedulex,
 };
 ```
 

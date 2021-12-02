@@ -7,8 +7,10 @@ import {
     AttributeKey,
     IdentityInput,
     IndexedCredentialDeploymentInfo,
+    Schedule,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
+    TransferWithSchedulePayload,
     UpdateCredentialsPayload,
     VerifyKey,
 } from '../src/types';
@@ -233,6 +235,68 @@ test('update credential is accepted', async () => {
 
     const result = await client.sendAccountTransaction(
         updateCredentialsAccountTransaction,
+        signatures
+    );
+    expect(result).toBeTruthy();
+});
+
+test('send transfer with schedule signed with wrong private key is accepted', async () => {
+    const senderAccountAddress =
+        '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
+
+    const nextAccountNonce = await client.getNextAccountNonce(
+        new AccountAddress(senderAccountAddress)
+    );
+    if (!nextAccountNonce) {
+        throw new Error('Nonce not found!');
+    }
+    const header: AccountTransactionHeader = {
+        expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+        nonce: nextAccountNonce.nonce,
+        sender: new AccountAddress(senderAccountAddress),
+    };
+
+    const schedule: Schedule = [
+        {
+            timestamp: new Date(Date.now() + 36000000),
+            amount: new GtuAmount(50n),
+        },
+        {
+            timestamp: new Date(Date.now() + 36500000),
+            amount: new GtuAmount(25n),
+        },
+    ];
+
+    const scheduledTransfer: TransferWithSchedulePayload = {
+        toAddress: new AccountAddress(
+            '4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf'
+        ),
+        schedule: schedule,
+    };
+
+    const scheduledTransferAccountTransaction: AccountTransaction = {
+        header: header,
+        payload: scheduledTransfer,
+        type: AccountTransactionType.TransferWithSchedule,
+    };
+
+    const wrongPrivateKey =
+        'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
+
+    const hashToSign = getAccountTransactionSignDigest(
+        scheduledTransferAccountTransaction
+    );
+    const signature = Buffer.from(
+        await ed.sign(hashToSign, wrongPrivateKey)
+    ).toString('hex');
+    const signatures: AccountTransactionSignature = {
+        0: {
+            0: signature,
+        },
+    };
+
+    const result = await client.sendAccountTransaction(
+        scheduledTransferAccountTransaction,
         signatures
     );
     expect(result).toBeTruthy();

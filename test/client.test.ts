@@ -1,18 +1,19 @@
-import { credentials, Metadata } from '@grpc/grpc-js';
-import ConcordiumNodeClient from '../src/client';
-import { ConsensusStatus, NormalAccountCredential } from '../src/types';
+import {
+    BakerReduceStakePendingChange,
+    ConsensusStatus,
+    instanceOfTransferWithMemoTransactionSummary,
+    NormalAccountCredential,
+    TransferredWithScheduleEvent,
+} from '../src/types';
 import { AccountAddress } from '../src/types/accountAddress';
 import { isHex } from '../src/util';
+import { isValidDate, getNodeClient } from './testHelpers';
+import { bulletProofGenerators } from './resources/bulletproofgenerators';
+import { ipVerifyKey1, ipVerifyKey2 } from './resources/ipVerifyKeys';
+import { PeerElement } from '../grpc/concordium_p2p_rpc_pb';
+import { CredentialRegistrationId } from '../src/types/CredentialRegistrationId';
 
-const metadata = new Metadata();
-metadata.add('authentication', 'rpcadmin');
-const client = new ConcordiumNodeClient(
-    '127.0.0.1',
-    10000,
-    credentials.createInsecure(),
-    metadata,
-    15000
-);
+const client = getNodeClient();
 
 test('updated event is parsed correctly', async () => {
     const blockHash =
@@ -23,6 +24,10 @@ test('updated event is parsed correctly', async () => {
         throw new Error(
             'The block summary should exist for the provided block.'
         );
+    }
+
+    if (blockSummary.transactionSummaries[0].result.outcome !== 'success') {
+        throw new Error('Unexpected outcome');
     }
 
     if (
@@ -69,6 +74,10 @@ test('transferred event is parsed correctly', async () => {
         throw new Error(
             'The block summary should exist for the provided block.'
         );
+    }
+
+    if (blockSummary.transactionSummaries[0].result.outcome !== 'success') {
+        throw new Error('Unexpected outcome');
     }
 
     if (
@@ -274,6 +283,58 @@ test('block summary for unknown block is undefined', async () => {
     return expect(blockSummary).toBeUndefined();
 });
 
+test('block summary with memo transactions', async () => {
+    const blockHash =
+        'b49bb1c06c697b7d6539c987082c5a0dc6d86d91208874517ab17da752472edf';
+    const blockSummary = await client.getBlockSummary(blockHash);
+    if (!blockSummary) {
+        throw new Error('Block not found');
+    }
+    const transactionSummaries = blockSummary.transactionSummaries;
+
+    for (const transactionSummary of transactionSummaries) {
+        if (instanceOfTransferWithMemoTransactionSummary(transactionSummary)) {
+            const [transferredEvent, memoEvent] =
+                transactionSummary.result.events;
+
+            const toAddress = transferredEvent.to.address;
+            const amount = transferredEvent.amount;
+            const memo = memoEvent.memo;
+
+            return Promise.all([
+                expect(toAddress).toBe(
+                    '4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf'
+                ),
+                expect(amount).toEqual(100n),
+                expect(memo).toBe('546869732069732061206d656d6f2e'),
+            ]);
+        }
+    }
+
+    throw new Error('A memo transaction was not found in the block');
+});
+
+test('block summary with a scheduled transfer', async () => {
+    const blockHash =
+        'd0d330b424095386b253c8ccd007b366f3d5ec4fa8630c77838d8982c73b4b70';
+    const blockSummary = await client.getBlockSummary(blockHash);
+    if (!blockSummary) {
+        throw new Error('Block not found');
+    }
+
+    if (blockSummary.transactionSummaries[0].result.outcome !== 'success') {
+        throw new Error('Unexpected outcome');
+    }
+
+    const event: TransferredWithScheduleEvent = blockSummary
+        .transactionSummaries[0].result
+        .events[0] as TransferredWithScheduleEvent;
+    expect(event.amount[0].timestamp).toEqual(
+        new Date('2021-08-04T12:00:00.000Z')
+    );
+    expect(event.amount[0].amount).toEqual(10000000n);
+});
+
 test('account info for invalid hash throws error', async () => {
     const accountAddress = new AccountAddress(
         '3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU'
@@ -306,6 +367,150 @@ test('account info for unknown account address is undefined', async () => {
 
     const accountInfo = await client.getAccountInfo(accountAddress, blockHash);
     return expect(accountInfo).toBeUndefined();
+});
+
+test('account info with a release schedule', async () => {
+    const accountAddress = new AccountAddress(
+        '3V1LSu3AZ6o45xcjqRr3PzviUQUfK2tXq2oFnaHgDbY8Ledu2Z'
+    );
+    const blockHash =
+        'cc6081868b96aa6acffeb152ef8feb7d4ef145c56d8e80def934fab443559eff';
+
+    const accountInfo = await client.getAccountInfo(accountAddress, blockHash);
+
+    if (!accountInfo) {
+        throw new Error('Test failed to find account info');
+    }
+
+    for (const schedule of accountInfo.accountReleaseSchedule.schedule) {
+        expect(schedule.transactions[0]).toEqual(
+            '937a107c92ba702e3522618563457fa9f6a1b9c2ee7e037ede8cb9dc069518f0'
+        );
+        expect(schedule.amount).toEqual(200000n);
+        expect(isValidDate(schedule.timestamp)).toBeTruthy();
+    }
+});
+
+test('account info with baker details, and with no pending change', async () => {
+    const accountAddress = new AccountAddress(
+        '4KTnZ9WKrmoP546aQ6w7KC3DtbiykRbY4thixK3y7BSSC87zpN'
+    );
+    const blockHash =
+        '2c3de8a501cd810e35980e2ba783e84ab59f1927ec4d75ad224d23f142ba1e4c';
+
+    const accountInfo = await client.getAccountInfo(accountAddress, blockHash);
+
+    if (!accountInfo) {
+        throw new Error('Test failed to find account info');
+    }
+
+    const bakerDetails = accountInfo.accountBaker;
+
+    if (!bakerDetails) {
+        throw new Error('Account info doesnt contain baker details');
+    }
+
+    expect(bakerDetails.bakerId).toEqual(743n);
+    expect(bakerDetails.stakedAmount).toEqual(15000000000n);
+    expect(bakerDetails.restakeEarnings).toEqual(true);
+    expect(bakerDetails.bakerElectionVerifyKey).toEqual(
+        'f5be66dfeb83d962a0c386f65a2811a4cea4ab90dbbced3a6f52ff5c1942beee'
+    );
+    expect(bakerDetails.bakerSignatureVerifyKey).toEqual(
+        'b7c33d2693a297a16e177368ade84f5edbba9567361a46c92ad4cf0176783440'
+    );
+    expect(bakerDetails.bakerAggregationVerifyKey).toEqual(
+        '8e0e236fdd71b2653e1c22c65ddaee7d867c31d69b0b173626b0caf291522c3e829c39b6d8d6cfcfd18ddaf90fa67ae9026114b7640842824eb495f9e51c2ee4ef5a93f84fa1c8fd2b3105333bbae31576f77137fd53e5d709ee5da00446e6a9'
+    );
+
+    expect(bakerDetails.pendingChange).toBeUndefined();
+});
+
+test('account info with baker details, and with a pending baker removal', async () => {
+    const accountAddress = new AccountAddress(
+        '4KTnZ9WKrmoP546aQ6w7KC3DtbiykRbY4thixK3y7BSSC87zpN'
+    );
+    const blockHash =
+        '57d69d8d53f406ddbd6aa31fa1e33231eebf4afb600de3ce698987983811a1c2';
+
+    const accountInfo = await client.getAccountInfo(accountAddress, blockHash);
+
+    if (!accountInfo) {
+        throw new Error('Test failed to find account info');
+    }
+
+    const bakerDetails = accountInfo.accountBaker;
+
+    if (!bakerDetails) {
+        throw new Error('Account info doesnt contain baker details');
+    }
+
+    expect(bakerDetails.bakerId).toEqual(743n);
+    expect(bakerDetails.stakedAmount).toEqual(15000000000n);
+    expect(bakerDetails.restakeEarnings).toEqual(true);
+    expect(bakerDetails.bakerElectionVerifyKey).toEqual(
+        'f5be66dfeb83d962a0c386f65a2811a4cea4ab90dbbced3a6f52ff5c1942beee'
+    );
+    expect(bakerDetails.bakerSignatureVerifyKey).toEqual(
+        'b7c33d2693a297a16e177368ade84f5edbba9567361a46c92ad4cf0176783440'
+    );
+    expect(bakerDetails.bakerAggregationVerifyKey).toEqual(
+        '8e0e236fdd71b2653e1c22c65ddaee7d867c31d69b0b173626b0caf291522c3e829c39b6d8d6cfcfd18ddaf90fa67ae9026114b7640842824eb495f9e51c2ee4ef5a93f84fa1c8fd2b3105333bbae31576f77137fd53e5d709ee5da00446e6a9'
+    );
+
+    const pendingChange = bakerDetails.pendingChange;
+
+    if (!pendingChange) {
+        throw new Error('Baker details doesnt contain pending change');
+    }
+
+    expect(pendingChange.change).toEqual('RemoveBaker');
+    expect(pendingChange.epoch).toEqual(334n);
+});
+
+test('account info with baker details, and with a pending stake reduction', async () => {
+    const accountAddress = new AccountAddress(
+        '3V1LSu3AZ6o45xcjqRr3PzviUQUfK2tXq2oFnaHgDbY8Ledu2Z'
+    );
+    const blockHash =
+        'ea36dbed9348de67fc977ee9e637d208b6d1808490a6698327504f5d1ec7315c';
+
+    const accountInfo = await client.getAccountInfo(accountAddress, blockHash);
+
+    if (!accountInfo) {
+        throw new Error('Test failed to find account info');
+    }
+
+    const bakerDetails = accountInfo.accountBaker;
+
+    if (!bakerDetails) {
+        throw new Error('Account info doesnt contain baker details');
+    }
+
+    expect(bakerDetails.bakerId).toEqual(731n);
+    expect(bakerDetails.stakedAmount).toEqual(14500000000n);
+    expect(bakerDetails.restakeEarnings).toEqual(true);
+    expect(bakerDetails.bakerElectionVerifyKey).toEqual(
+        'f0b48a386b01784f95d0e82911932b8ffbea2ceec9654a58dcc226bfe813a668'
+    );
+    expect(bakerDetails.bakerSignatureVerifyKey).toEqual(
+        'f31632d93b3e7085b9060216175ead4496a1e9f477325aa8817dc8c0d533cfd0'
+    );
+    expect(bakerDetails.bakerAggregationVerifyKey).toEqual(
+        '803255d7c861d1a9ec8d810eeac40d11cae9e588e613de008786f3d143a6c573f99b5014bf9590064583a67d5b3283870163c7655f1dd61d0313d9283dc98513c221013f2f8109c392c7d2a9cd70950dd18ad477652d294f6ae2a499f3243793'
+    );
+
+    const pendingChange = bakerDetails.pendingChange;
+
+    if (!pendingChange) {
+        throw new Error('Baker details doesnt contain pending change');
+    }
+
+    expect(pendingChange.change).toEqual('ReduceStake');
+    expect((pendingChange as BakerReduceStakePendingChange).newStake).toEqual(
+        14000000000n
+    );
+    expect(pendingChange.epoch).toEqual(838n);
 });
 
 test('retrieves the account info', async () => {
@@ -475,6 +680,29 @@ test('retrieves the account info', async () => {
     ]);
 });
 
+test('retrieves the same account info for credential of account as account address', async () => {
+    const accountAddress = new AccountAddress(
+        '3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU'
+    );
+    const credId = new CredentialRegistrationId(
+        'a8e810a15eeefcdd425126d6faed3a45fdf211392180d0fb3dc7e9e3382cb0dc6ce8e0d8bc46cfb6cfbb4ea5d8771966'
+    );
+
+    const blockHash =
+        '6b01f2043d5621192480f4223644ef659dd5cda1e54a78fc64ad642587c73def';
+
+    const accountInfo = await client.getAccountInfo(accountAddress, blockHash);
+    const accountInfoCredential = await client.getAccountInfo(
+        credId,
+        blockHash
+    );
+
+    if (!accountInfo || !accountInfoCredential) {
+        throw new Error('Test failed to find account info');
+    }
+    expect(accountInfo).toStrictEqual(accountInfoCredential);
+});
+
 test('retrieves the next account nonce', async () => {
     const accountAddress = new AccountAddress(
         '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
@@ -572,12 +800,9 @@ test('retrieves block info', async () => {
         expect(blockInfo.blockStateHash).toEqual(
             'b40762eb4abb9701ee133c465f934075d377c0d09bfe209409e80bbb51af1771'
         ),
-        expect(blockInfo.blockArriveTime).toEqual(
-            new Date('2021-07-05T09:16:46.000Z')
-        ),
-        expect(blockInfo.blockReceiveTime).toEqual(
-            new Date('2021-07-05T09:16:46.000Z')
-        ),
+        expect(isValidDate(blockInfo.blockArriveTime)).toBeTruthy(),
+        expect(isValidDate(blockInfo.blockReceiveTime)).toBeTruthy(),
+
         expect(blockInfo.transactionCount).toEqual(0n),
         expect(blockInfo.transactionEnergyCost).toEqual(0n),
         expect(blockInfo.blockSlot).toEqual(1915967n),
@@ -640,6 +865,7 @@ test('retrieves the consensus status from the node with correct types', async ()
         expect(consensusStatus.blockLastReceivedTime).toBeInstanceOf(Date),
         expect(consensusStatus.genesisTime).toBeInstanceOf(Date),
         expect(consensusStatus.lastFinalizedTime).toBeInstanceOf(Date),
+        expect(consensusStatus.currentEraGenesisTime).toBeInstanceOf(Date),
 
         expect(
             Number.isNaN(consensusStatus.blockArriveLatencyEMSD)
@@ -668,6 +894,7 @@ test('retrieves the consensus status from the node with correct types', async ()
         expect(
             Number.isNaN(consensusStatus.finalizationPeriodEMSD)
         ).toBeFalsy(),
+        expect(Number.isNaN(consensusStatus.genesisIndex)).toBeFalsy(),
 
         expect(typeof consensusStatus.epochDuration === 'bigint').toBeTruthy(),
         expect(typeof consensusStatus.slotDuration === 'bigint').toBeTruthy(),
@@ -677,5 +904,163 @@ test('retrieves the consensus status from the node with correct types', async ()
         expect(
             typeof consensusStatus.lastFinalizedBlockHeight === 'bigint'
         ).toBeTruthy(),
+        expect(
+            typeof consensusStatus.protocolVersion === 'bigint'
+        ).toBeTruthy(),
+    ]);
+});
+
+test('cryptographic parameters are retrieved at the given block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749';
+    const cryptographicParameters = await client.getCryptographicParameters(
+        blockHash
+    );
+
+    if (!cryptographicParameters) {
+        throw new Error('Test was unable to get cryptographic parameters');
+    }
+
+    return Promise.all([
+        expect(cryptographicParameters.value.genesisString).toEqual(
+            'Concordium Testnet Version 5'
+        ),
+        expect(cryptographicParameters.value.onChainCommitmentKey).toEqual(
+            'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a8d45e64b6f917c540eee16c970c3d4b7f3caf48a7746284878e2ace21c82ea44bf84609834625be1f309988ac523fac'
+        ),
+        expect(cryptographicParameters.value.bulletproofGenerators).toEqual(
+            bulletProofGenerators
+        ),
+    ]);
+});
+
+test('cryptographic parameters are undefined at unknown block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749';
+    const cryptographicParameters = await client.getCryptographicParameters(
+        blockHash
+    );
+
+    return expect(cryptographicParameters).toBeUndefined();
+});
+
+test('peer list can be retrieved', async () => {
+    const peerList = await client.getPeerList(false);
+    const peersList = peerList.getPeersList();
+    const peer = peersList[0];
+
+    return Promise.all([
+        expect(typeof peer.getIp === 'string'),
+        expect(typeof peer.getPort === 'number'),
+        expect(typeof peer.getNodeId === 'string'),
+        expect(typeof peer.getJsPbMessageId === 'string'),
+        expect(
+            [
+                PeerElement.CatchupStatus.UPTODATE,
+                PeerElement.CatchupStatus.PENDING,
+                PeerElement.CatchupStatus.CATCHINGUP,
+            ].includes(peer.getCatchupStatus())
+        ),
+    ]);
+});
+
+test('identity providers are undefined at an unknown block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749';
+    const identityProviders = await client.getIdentityProviders(blockHash);
+    return expect(identityProviders).toBeUndefined();
+});
+
+test('identity providers are retrieved at the given block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749';
+    const identityProviders = await client.getIdentityProviders(blockHash);
+
+    if (!identityProviders) {
+        throw new Error('Test was unable to get identity providers');
+    }
+
+    const concordiumTestIp = identityProviders[0];
+    const notabeneTestIp = identityProviders[1];
+
+    return Promise.all([
+        expect(concordiumTestIp.ipIdentity).toEqual(0),
+        expect(concordiumTestIp.ipDescription.name).toEqual(
+            'Concordium testnet IP'
+        ),
+        expect(concordiumTestIp.ipDescription.url).toEqual(''),
+        expect(concordiumTestIp.ipDescription.description).toEqual(
+            'Concordium testnet identity provider'
+        ),
+        expect(concordiumTestIp.ipCdiVerifyKey).toEqual(
+            '2e1cff3988174c379432c1fad7ccfc385c897c4477c06617262cec7193226eca'
+        ),
+        expect(concordiumTestIp.ipVerifyKey).toEqual(ipVerifyKey1),
+
+        expect(notabeneTestIp.ipIdentity).toEqual(1),
+        expect(notabeneTestIp.ipDescription.name).toEqual('Notabene (Staging)'),
+        expect(notabeneTestIp.ipDescription.url).toEqual(
+            'https://notabene.studio'
+        ),
+        expect(notabeneTestIp.ipDescription.description).toEqual(
+            'Notabene Identity Issuer (Staging Service)'
+        ),
+        expect(notabeneTestIp.ipCdiVerifyKey).toEqual(
+            '4810d66439a25d9b345cf5c7ac11f9e512548c278542d9b24dc73541626d6197'
+        ),
+        expect(notabeneTestIp.ipVerifyKey).toEqual(ipVerifyKey2),
+    ]);
+});
+
+test('anonymity revokers are undefined at an unknown block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749';
+    const anonymityRevokers = await client.getAnonymityRevokers(blockHash);
+    return expect(anonymityRevokers).toBeUndefined();
+});
+
+test('anonymity revokers are retrieved at the given block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749';
+    const anonymityRevokers = await client.getAnonymityRevokers(blockHash);
+
+    if (!anonymityRevokers) {
+        throw new Error('Test could not find anonymity revokers');
+    }
+
+    const ar1 = anonymityRevokers[0];
+    const ar2 = anonymityRevokers[1];
+    const ar3 = anonymityRevokers[2];
+
+    return Promise.all([
+        expect(ar1.arIdentity).toEqual(1),
+        expect(ar1.arDescription.name).toEqual('Testnet AR 1'),
+        expect(ar1.arDescription.url).toEqual(''),
+        expect(ar1.arDescription.description).toEqual(
+            'Testnet anonymity revoker 1'
+        ),
+        expect(ar1.arPublicKey).toEqual(
+            'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c58ed5281b5d117cb74068a5deef28f027c9055dd424b07043568ac040a4e51f3307f268a77eaebc36bd4bf7cdbbe238b8'
+        ),
+
+        expect(ar2.arIdentity).toEqual(2),
+        expect(ar2.arDescription.name).toEqual('Testnet AR 2'),
+        expect(ar2.arDescription.url).toEqual(''),
+        expect(ar2.arDescription.description).toEqual(
+            'Testnet anonymity revoker 2'
+        ),
+        expect(ar2.arPublicKey).toEqual(
+            'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5aefb2334688a2ecc95e7c49e9ccbc7218b5c9e151ac22462d064f564ffa56bb8b3685fcdc8d7d8cb43f43d608e7e8515'
+        ),
+
+        expect(ar3.arIdentity).toEqual(3),
+        expect(ar3.arDescription.name).toEqual('Testnet AR 3'),
+        expect(ar3.arDescription.url).toEqual(''),
+        expect(ar3.arDescription.description).toEqual(
+            'Testnet anonymity revoker 3'
+        ),
+        expect(ar3.arPublicKey).toEqual(
+            'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a791a28a6d3e7ca0857c0f996f94e65da78b8d9b5de5e32164e291e553ed103bf14d6fab1f21749d59664e34813afe77'
+        ),
     ]);
 });

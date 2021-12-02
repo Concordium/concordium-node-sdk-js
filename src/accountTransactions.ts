@@ -1,25 +1,41 @@
 import { Buffer } from 'buffer/';
-import { encodeWord64, encodeMemo, encodeUint8 } from './serializationHelpers';
 import {
-    AccountTransactionPayload,
+    serializeCredentialDeploymentInfo,
+    serializeEncryptedData,
+} from './serialization';
+import {
+    encodeWord64,
+    encodeMemo,
+    encodeWord32,
+    packBufferWithWord32Length,
+    packBufferWithWord16Length,
+    serializeList,
+    encodeWord8,
+} from './serializationHelpers';
+import {
     AccountTransactionType,
-    EncryptedTransferPayload,
-    EncryptedTransferWithMemoPayload,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
+    EncryptedTransferPayload,
+    EncryptedTransferWithMemoPayload,
     TransferWithSchedulePayload,
-    TransferWithScheduleWithMemoPayload,
+    TransferWithScheduleAndMemoPayload,
+    InitContractPayload,
+    DeployModulePayload,
+    UpdateContractPayload,
+    AccountTransactionPayload,
+    UpdateCredentialsPayload,
 } from './types';
 
 interface AccountTransactionHandler<
     PayloadType extends AccountTransactionPayload = AccountTransactionPayload
 > {
     serialize: (payload: PayloadType) => Buffer;
-    getBaseEnergyCost: (payload?: PayloadType) => bigint;
+    getBaseEnergyCost: (payload: PayloadType) => bigint;
 }
 
 export class SimpleTransferHandler
-    implements AccountTransactionHandler<SimpleTransferWithMemoPayload>
+    implements AccountTransactionHandler<SimpleTransferPayload>
 {
     getBaseEnergyCost(): bigint {
         return 300n;
@@ -37,9 +53,88 @@ export class SimpleTransferWithMemoHandler
     implements AccountTransactionHandler<SimpleTransferWithMemoPayload>
 {
     serialize(transfer: SimpleTransferWithMemoPayload): Buffer {
-        const regularPayload = super.serialize(transfer);
+        const serializedToAddress = transfer.toAddress.decodedAddress;
         const serializedMemo = encodeMemo(transfer.memo);
-        return Buffer.concat([regularPayload, serializedMemo]);
+        const serializedAmount = encodeWord64(transfer.amount.microGtuAmount);
+        return Buffer.concat([
+            serializedToAddress,
+            serializedMemo,
+            serializedAmount,
+        ]);
+    }
+}
+
+export class DeployModuleHandler
+    implements AccountTransactionHandler<DeployModulePayload>
+{
+    getBaseEnergyCost(payload: DeployModulePayload): bigint {
+        const cost: number = Math.round(payload.content.length / 10);
+        return BigInt(cost);
+    }
+
+    serialize(transfer: DeployModulePayload): Buffer {
+        const serializedWasm = packBufferWithWord32Length(transfer.content);
+        const serializedVersion = encodeWord32(transfer.version);
+        return Buffer.concat([serializedVersion, serializedWasm]);
+    }
+}
+
+export class InitContractHandler
+    implements AccountTransactionHandler<InitContractPayload>
+{
+    getBaseEnergyCost(payload: InitContractPayload): bigint {
+        return payload.maxContractExecutionEnergy;
+    }
+
+    serialize(payload: InitContractPayload): Buffer {
+        const serializedAmount = encodeWord64(payload.amount.microGtuAmount);
+        const initNameBuffer = Buffer.from(
+            'init_' + payload.contractName,
+            'utf8'
+        );
+        const serializedInitName = packBufferWithWord16Length(initNameBuffer);
+        const serializedModuleRef = payload.moduleRef.decodedModuleRef;
+        const serializedParameters = packBufferWithWord16Length(
+            Buffer.from(payload.parameter)
+        );
+        return Buffer.concat([
+            serializedAmount,
+            serializedModuleRef,
+            serializedInitName,
+            serializedParameters,
+        ]);
+    }
+}
+
+export class UpdateContractHandler
+    implements AccountTransactionHandler<UpdateContractPayload>
+{
+    getBaseEnergyCost(payload: UpdateContractPayload): bigint {
+        return payload.maxContractExecutionEnergy;
+    }
+
+    serialize(payload: UpdateContractPayload): Buffer {
+        const serializedAmount = encodeWord64(payload.amount.microGtuAmount);
+        const serializeIndex = encodeWord64(payload.contractAddress.index);
+        const serializeSubindex = encodeWord64(
+            payload.contractAddress.subindex
+        );
+        const serializedContractAddress = Buffer.concat([
+            serializeIndex,
+            serializeSubindex,
+        ]);
+        const receiveNameBuffer = Buffer.from(payload.receiveName, 'utf8');
+        const serializedReceiveName =
+            packBufferWithWord16Length(receiveNameBuffer);
+        const serializedParameters = packBufferWithWord16Length(
+            Buffer.from(payload.parameter)
+        );
+        return Buffer.concat([
+            serializedAmount,
+            serializedContractAddress,
+            serializedReceiveName,
+            serializedParameters,
+        ]);
     }
 }
 
@@ -58,7 +153,7 @@ export class TransferWithScheduleHandler
 
     serialize(scheduledTransfer: TransferWithSchedulePayload): Buffer {
         const serializedToAddress = scheduledTransfer.toAddress.decodedAddress;
-        const serializedScheduleLength = encodeUint8(
+        const serializedScheduleLength = encodeWord8(
             scheduledTransfer.schedule.length
         );
         const serializedSchedule = scheduledTransfer.schedule.map(
@@ -78,12 +173,27 @@ export class TransferWithScheduleHandler
 
 export class TransferWithScheduleAndMemoHandler
     extends TransferWithScheduleHandler
-    implements AccountTransactionHandler<TransferWithScheduleWithMemoPayload>
+    implements AccountTransactionHandler<TransferWithScheduleAndMemoPayload>
 {
-    serialize(transfer: TransferWithScheduleWithMemoPayload): Buffer {
-        const regularPayload = super.serialize(transfer);
-        const serializedMemo = encodeMemo(transfer.memo);
-        return Buffer.concat([regularPayload, serializedMemo]);
+    serialize(scheduledTransfer: TransferWithScheduleAndMemoPayload): Buffer {
+        const serializedMemo = encodeMemo(scheduledTransfer.memo);
+        const serializedToAddress = scheduledTransfer.toAddress.decodedAddress;
+        const serializedScheduleLength = encodeWord8(
+            scheduledTransfer.schedule.length
+        );
+        const serializedSchedule = scheduledTransfer.schedule.map(
+            ({ amount, timestamp }) =>
+                Buffer.concat([
+                    encodeWord64(BigInt(timestamp.getTime())),
+                    encodeWord64(amount.microGtuAmount),
+                ])
+        );
+        return Buffer.concat([
+            serializedToAddress,
+            serializedMemo,
+            serializedScheduleLength,
+            ...serializedSchedule,
+        ]);
     }
 }
 
@@ -96,24 +206,10 @@ export class EncryptedTransferHandler
 
     serialize(encryptedTransfer: EncryptedTransferPayload): Buffer {
         const serializedToAddress = encryptedTransfer.toAddress.decodedAddress;
-        const serializedRemainingEncryptedAmount = Buffer.from(
-            encryptedTransfer.remainingEncryptedAmount,
-            'hex'
-        );
-        const serializedTransferAmount = Buffer.from(
-            encryptedTransfer.transferAmount,
-            'hex'
-        );
-        const serializedIndex = encodeWord64(encryptedTransfer.index);
-        const serializedProof = Buffer.from(encryptedTransfer.proof, 'hex');
+        const serializedEncryptedData =
+            serializeEncryptedData(encryptedTransfer);
 
-        return Buffer.concat([
-            serializedToAddress,
-            serializedRemainingEncryptedAmount,
-            serializedTransferAmount,
-            serializedIndex,
-            serializedProof,
-        ]);
+        return Buffer.concat([serializedToAddress, serializedEncryptedData]);
     }
 }
 
@@ -121,10 +217,61 @@ export class EncryptedTransferWithMemoHandler
     extends EncryptedTransferHandler
     implements AccountTransactionHandler<EncryptedTransferWithMemoPayload>
 {
-    serialize(transfer: EncryptedTransferWithMemoPayload): Buffer {
-        const regularPayload = super.serialize(transfer);
-        const serializedMemo = encodeMemo(transfer.memo);
-        return Buffer.concat([regularPayload, serializedMemo]);
+    serialize(encryptedTransfer: EncryptedTransferWithMemoPayload): Buffer {
+        const serializedToAddress = encryptedTransfer.toAddress.decodedAddress;
+        const serializedMemo = encodeMemo(encryptedTransfer.memo);
+        const serializedEncryptedData =
+            serializeEncryptedData(encryptedTransfer);
+
+        return Buffer.concat([
+            serializedToAddress,
+            serializedMemo,
+            serializedEncryptedData,
+        ]);
+    }
+}
+
+export class UpdateCredentialsHandler
+    implements AccountTransactionHandler<UpdateCredentialsPayload>
+{
+    getBaseEnergyCost(updateCredentials: UpdateCredentialsPayload): bigint {
+        const newCredentialsCost = updateCredentials.newCredentials
+            .map((credential) => {
+                const numberOfKeys = BigInt(
+                    Object.keys(credential.cdi.credentialPublicKeys.keys).length
+                );
+                return 54000n + 100n * numberOfKeys;
+            })
+            .reduce((prev, curr) => prev + curr, BigInt(0));
+
+        const currentCredentialsCost =
+            500n * updateCredentials.currentNumberOfCredentials;
+
+        return 500n + currentCredentialsCost + newCredentialsCost;
+    }
+
+    serialize(updateCredentials: UpdateCredentialsPayload): Buffer {
+        const serializedAddedCredentials = serializeList(
+            updateCredentials.newCredentials,
+            encodeWord8,
+            ({ index, cdi }) =>
+                Buffer.concat([
+                    encodeWord8(index),
+                    serializeCredentialDeploymentInfo(cdi),
+                ])
+        );
+
+        const serializedRemovedCredIds = serializeList(
+            updateCredentials.removeCredentialIds,
+            encodeWord8,
+            (credId: string) => Buffer.from(credId, 'hex')
+        );
+        const serializedThreshold = encodeWord8(updateCredentials.threshold);
+        return Buffer.concat([
+            serializedAddedCredentials,
+            serializedRemovedCredIds,
+            serializedThreshold,
+        ]);
     }
 }
 
@@ -149,6 +296,22 @@ export function getAccountTransactionHandler(
 export function getAccountTransactionHandler(
     type: AccountTransactionType
 ): AccountTransactionHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.UpdateCredentials
+): UpdateCredentialsHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType
+): AccountTransactionHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.DeployModule
+): DeployModuleHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.InitializeSmartContractInstance
+): InitContractHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.UpdateSmartContractInstance
+): UpdateContractHandler;
+
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function getAccountTransactionHandler(type: AccountTransactionType) {
     switch (type) {
@@ -164,9 +327,17 @@ export function getAccountTransactionHandler(type: AccountTransactionType) {
             return new EncryptedTransferHandler();
         case AccountTransactionType.EncryptedTransferWithMemo:
             return new EncryptedTransferWithMemoHandler();
+        case AccountTransactionType.DeployModule:
+            return new DeployModuleHandler();
+        case AccountTransactionType.InitializeSmartContractInstance:
+            return new InitContractHandler();
+        case AccountTransactionType.UpdateSmartContractInstance:
+            return new UpdateContractHandler();
+        case AccountTransactionType.UpdateCredentials:
+            return new UpdateCredentialsHandler();
         default:
             throw new Error(
-                'The handler map is missing the provided type: ' + type
+                'The provided type does not have a handler: ' + type
             );
     }
 }

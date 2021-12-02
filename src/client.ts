@@ -1,29 +1,42 @@
 import { ChannelCredentials, Metadata, ServiceError } from '@grpc/grpc-js';
 import { P2PClient } from '../grpc/concordium_p2p_rpc_grpc_pb';
 import { AccountAddress as Address } from './types/accountAddress';
+import { CredentialRegistrationId } from './types/CredentialRegistrationId';
 import {
     AccountAddress,
     BlockHash,
     BlockHeight,
     Empty,
     GetAddressInfoRequest,
+    PeerListResponse,
+    PeersRequest,
     SendTransactionRequest,
     TransactionHash,
 } from '../grpc/concordium_p2p_rpc_pb';
-import { serializeAccountTransactionForSubmission } from './serialization';
 import {
+    serializeAccountTransactionForSubmission,
+    serializeCredentialDeploymentTransactionForSubmission,
+} from './serialization';
+import {
+    AccountBakerDetails,
     AccountEncryptedAmount,
     AccountInfo,
     AccountReleaseSchedule,
     AccountTransaction,
     AccountTransactionSignature,
+    ArInfo,
+    BakerReduceStakePendingChange,
+    BakerRemovalPendingChange,
     BlockInfo,
     BlockSummary,
     ChainParameters,
     ConsensusStatus,
     ContractAddress,
+    CredentialDeploymentTransaction,
+    CryptographicParameters,
     ExchangeRate,
     FinalizationData,
+    IpInfo,
     KeysWithThreshold,
     NextAccountNonce,
     PartyInfo,
@@ -32,6 +45,9 @@ import {
     TransactionSummary,
     TransferredEvent,
     UpdateQueue,
+    Versioned,
+    InstanceInfo,
+    InstanceInfoSerialized,
 } from './types';
 import {
     buildJsonResponseReviver,
@@ -40,7 +56,9 @@ import {
     unwrapBoolResponse,
     unwrapJsonResponse,
 } from './util';
-
+import { GtuAmount } from './types/gtuAmount';
+import { ModuleReference } from './types/moduleReference';
+import { Buffer as BufferFormater } from 'buffer/';
 /**
  * A concordium-node specific gRPC client wrapper.
  *
@@ -89,6 +107,40 @@ export default class ConcordiumNodeClient {
     }
 
     /**
+     * Sends a credential deployment transaction, for creating a new account,
+     * to the node to be put in a block on the chain.
+     *
+     * Note that a transaction can still fail even if it was accepted by the node.
+     * To keep track of the transaction use getTransactionStatus.
+     * @param credentialDeploymentTransaction the credential deployment transaction to send to the node
+     * @param signatures the signatures on the hash of the serialized unsigned credential deployment information, in order
+     * @returns true if the transaction was accepted, otherwise false
+     */
+    async sendCredentialDeploymentTransaction(
+        credentialDeploymentTransaction: CredentialDeploymentTransaction,
+        signatures: string[]
+    ): Promise<boolean> {
+        const serializedCredentialDeploymentTransaction: Buffer = Buffer.from(
+            serializeCredentialDeploymentTransactionForSubmission(
+                credentialDeploymentTransaction,
+                signatures
+            )
+        );
+
+        const sendTransactionRequest = new SendTransactionRequest();
+        sendTransactionRequest.setNetworkId(100);
+        sendTransactionRequest.setPayload(
+            serializedCredentialDeploymentTransaction
+        );
+
+        const response = await this.sendRequest(
+            this.client.sendTransaction,
+            sendTransactionRequest
+        );
+        return unwrapBoolResponse(response);
+    }
+
+    /**
      * Serializes and sends an account transaction to the node to be
      * put in a block on the chain.
      *
@@ -123,15 +175,16 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieves the account info for the given account. If the provided block
      * hash is in a block prior to the finalization of the account, then the account
-     * information will not be available. If there is no account with the provided address,
-     * then the node will check if there exists any credential with that address and
-     * return information for that credential.
-     * @param accountAddress base58 account address to get the account info for
+     * information will not be available.
+     * A credential registration id can also be provided, instead of an address. In this case
+     * the node will return the account info of the account, which the corresponding credential
+     * is (or was) deployed to.
+     * @param accountAddress base58 account address (or a credential registration id) to get the account info for
      * @param blockHash the block hash to get the account info at
      * @returns the account info for the provided account address, undefined is the account does not exist
      */
     async getAccountInfo(
-        accountAddress: Address,
+        accountAddress: Address | CredentialRegistrationId,
         blockHash: string
     ): Promise<AccountInfo | undefined> {
         if (!isValidHash(blockHash)) {
@@ -139,18 +192,26 @@ export default class ConcordiumNodeClient {
         }
 
         const getAddressInfoRequest = new GetAddressInfoRequest();
-        getAddressInfoRequest.setAddress(accountAddress.address);
+        if (accountAddress instanceof Address) {
+            getAddressInfoRequest.setAddress(accountAddress.address);
+        } else {
+            getAddressInfoRequest.setAddress(accountAddress.credId);
+        }
         getAddressInfoRequest.setBlockHash(blockHash);
 
         const response = await this.sendRequest(
             this.client.getAccountInfo,
             getAddressInfoRequest
         );
+        const datePropertyKeys: (keyof ReleaseSchedule)[] = ['timestamp'];
         const bigIntPropertyKeys: (
             | keyof AccountInfo
             | keyof AccountEncryptedAmount
             | keyof AccountReleaseSchedule
             | keyof ReleaseSchedule
+            | keyof AccountBakerDetails
+            | keyof BakerReduceStakePendingChange
+            | keyof BakerRemovalPendingChange
         )[] = [
             'accountAmount',
             'accountNonce',
@@ -158,10 +219,14 @@ export default class ConcordiumNodeClient {
             'startIndex',
             'total',
             'amount',
+            'stakedAmount',
+            'bakerId',
+            'newStake',
+            'epoch',
         ];
         return unwrapJsonResponse<AccountInfo>(
             response,
-            buildJsonResponseReviver([], bigIntPropertyKeys),
+            buildJsonResponseReviver(datePropertyKeys, bigIntPropertyKeys),
             intToStringTransformer(bigIntPropertyKeys)
         );
     }
@@ -195,7 +260,7 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieves a status for the given transaction.
      * @param transactionHash the transaction to get a status for
-     * @returns the transaction status for the given transaction, or null if the transaction does not exist
+     * @returns the transaction status for the given transaction, or undefined if the transaction does not exist
      */
     async getTransactionStatus(
         transactionHash: string
@@ -286,7 +351,7 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieves information about a specific block.
      * @param blockHash the block to get information about
-     * @returns the block information for the given block, or null if the block does not exist
+     * @returns the block information for the given block, or undefined if the block does not exist
      */
     async getBlockInfo(blockHash: string): Promise<BlockInfo | undefined> {
         if (!isValidHash(blockHash)) {
@@ -362,6 +427,7 @@ export default class ConcordiumNodeClient {
             'blockLastReceivedTime',
             'blockLastArrivedTime',
             'genesisTime',
+            'currentEraGenesisTime',
             'lastFinalizedTime',
         ];
         const bigIntPropertyKeys: (keyof ConsensusStatus)[] = [
@@ -372,6 +438,7 @@ export default class ConcordiumNodeClient {
             'finalizationCount',
             'blocksVerifiedCount',
             'blocksReceivedCount',
+            'protocolVersion',
         ];
 
         const consensusStatus = unwrapJsonResponse<ConsensusStatus>(
@@ -387,6 +454,150 @@ export default class ConcordiumNodeClient {
         }
 
         return consensusStatus;
+    }
+
+    /**
+     * Retrieves the global cryptographic parameters on the blockchain at
+     * the provided block.
+     * @param blockHash the block to get the cryptographic parameters at
+     * @returns the global cryptographic parameters at the given block, or undefined it the block does not exist.
+     */
+    async getCryptographicParameters(
+        blockHash: string
+    ): Promise<Versioned<CryptographicParameters> | undefined> {
+        if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+
+        const blockHashObject = new BlockHash();
+        blockHashObject.setBlockHash(blockHash);
+        const response = await this.sendRequest(
+            this.client.getCryptographicParameters,
+            blockHashObject
+        );
+
+        return unwrapJsonResponse<
+            Versioned<CryptographicParameters> | undefined
+        >(response);
+    }
+
+    /**
+     * Retrieves a list of the node's peers and connection information related to them.
+     * @param includeBootstrappers whether or not any bootstrapper nodes should be included in the list
+     * @returns a list of the node's peers and connection information related to them
+     */
+    async getPeerList(
+        includeBootstrappers: boolean
+    ): Promise<PeerListResponse> {
+        const peersRequest = new PeersRequest();
+        peersRequest.setIncludeBootstrappers(includeBootstrappers);
+        const response = await this.sendRequest(
+            this.client.peerList,
+            peersRequest
+        );
+        return PeerListResponse.deserializeBinary(response);
+    }
+
+    /**
+     * Retrieves the list of identity providers at the provided blockhash.
+     * @param blockHash the block to get the identity providers at
+     * @returns the list of identity providers at the given block
+     */
+    async getIdentityProviders(
+        blockHash: string
+    ): Promise<IpInfo[] | undefined> {
+        const blockHashObject = new BlockHash();
+        blockHashObject.setBlockHash(blockHash);
+        const response = await this.sendRequest(
+            this.client.getIdentityProviders,
+            blockHashObject
+        );
+        return unwrapJsonResponse<IpInfo[]>(response);
+    }
+
+    /**
+     * Retrieves the list of anonymity revokers at the provided blockhash.
+     * @param blockHash the block to get the anonymity revokers at
+     * @returns the list of anonymity revokers at the given block
+     */
+    async getAnonymityRevokers(
+        blockHash: string
+    ): Promise<ArInfo[] | undefined> {
+        const blockHashObject = new BlockHash();
+        blockHashObject.setBlockHash(blockHash);
+        const response = await this.sendRequest(
+            this.client.getAnonymityRevokers,
+            blockHashObject
+        );
+        return unwrapJsonResponse<ArInfo[]>(response);
+    }
+
+    /**
+     * Retrieves the addresses of all smart contract instances.
+     * @param blockHash the block hash to get the smart contact instances at
+     * @returns a list of contract addresses on the chain, i.e. [{"subindex":0,"index":0},{"subindex":0,"index":1}, ....]
+     */
+    async getInstances(
+        blockHash: string
+    ): Promise<ContractAddress[] | undefined> {
+        if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+        const blockHashObject = new BlockHash();
+        blockHashObject.setBlockHash(blockHash);
+
+        const response = await this.sendRequest(
+            this.client.getInstances,
+            blockHashObject
+        );
+        const bigIntPropertyKeys: (keyof ContractAddress)[] = [
+            'index',
+            'subindex',
+        ];
+
+        return unwrapJsonResponse<ContractAddress[]>(
+            response,
+            buildJsonResponseReviver([], bigIntPropertyKeys),
+            intToStringTransformer(bigIntPropertyKeys)
+        );
+    }
+
+    /**
+     * Retrieve information about a given smart contract instance.
+     * @param blockHash the block hash to get the smart contact instances at
+     * @param address the address of the smart contract
+     * @returns A JSON object with information about the contract instance
+     */
+    async getInstanceInfo(
+        blockHash: string,
+        address: ContractAddress
+    ): Promise<InstanceInfo | undefined> {
+        if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+        const getAddressInfoRequest = new GetAddressInfoRequest();
+        getAddressInfoRequest.setAddress(
+            `{"subindex":${address.subindex},"index":${address.index}}`
+        );
+        getAddressInfoRequest.setBlockHash(blockHash);
+
+        const response = await this.sendRequest(
+            this.client.getInstanceInfo,
+            getAddressInfoRequest
+        );
+
+        const result = unwrapJsonResponse<InstanceInfoSerialized>(response);
+        if (result !== undefined) {
+            const instanceInfo: InstanceInfo = {
+                amount: new GtuAmount(BigInt(result.amount)),
+                sourceModule: new ModuleReference(result.sourceModule),
+                owner: new Address(result.owner),
+                methods: result.methods,
+                name: result.name,
+                model: BufferFormater.from(result.model, 'hex'),
+            };
+            return instanceInfo;
+        }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

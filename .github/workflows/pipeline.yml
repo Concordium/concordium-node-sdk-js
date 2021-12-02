@@ -1,0 +1,58 @@
+name: Build and lint
+
+on:
+    # Triggers the workflow on push or pull request events but only for the main branch
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+    # Allows us to run the workflow manually from the Actions tab
+    workflow_dispatch:
+
+jobs:
+    build:
+        runs-on: ubuntu-20.04
+
+        steps:
+            - uses: actions/checkout@v2
+              with:
+                  submodules: "recursive"
+
+            - uses: actions/setup-node@v2
+              with:
+                  node-version: "14.16.0"
+
+            - name: Get dependencies
+              run: yarn
+
+            - name: Build gRPC
+              run: yarn generate
+
+            - name: Install rust
+              run: rustup default 1.53
+
+            - name: Get wasm-pack
+              uses: jetli/wasm-pack-action@v0.3.0
+              with:
+                  version: 'latest'
+
+            - name: Build
+              run: yarn build
+
+    lint:
+        runs-on: ubuntu-20.04
+
+        steps:
+            - uses: actions/checkout@v2
+              with:
+                  submodules: "recursive"
+            - uses: actions/setup-node@v2
+              with:
+                  node-version: "14.16.0"
+
+            - name: Get dependencies
+              run: yarn
+
+            - name: Lint
+              run: yarn lint

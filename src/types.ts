@@ -1,7 +1,9 @@
-import { Buffer } from 'buffer/';
 import { AccountAddress } from './types/accountAddress';
 import { GtuAmount } from './types/gtuAmount';
+import { Memo } from './types/Memo';
 import { TransactionExpiry } from './types/transactionExpiry';
+import { Buffer } from 'buffer/';
+import { ModuleReference } from './types/moduleReference';
 
 /**
  * A reward fraction with a resolution of 1/100000, i.e. the
@@ -93,32 +95,148 @@ export interface TransferredEvent {
     from: AddressAccount;
 }
 
-export interface EventResult {
-    outcome: string;
-    // TODO Resolve the types completely.
-    events: (TransactionEvent | TransferredEvent | UpdatedEvent)[];
+export interface TransferredWithScheduleEvent {
+    tag: 'TransferredWithSchedule';
+    to: AddressAccount;
+    from: AddressAccount;
+    amount: ReleaseSchedule[];
 }
 
-interface TransactionSummaryType {
+export interface MemoEvent {
+    tag: 'TransferMemo';
+    memo: string;
+}
+
+/**
+ * An enum containing all the possible reject reasons that can be
+ * received from a node as a response to a transaction submission.
+ *
+ * This should be kept in sync with the list of reject reasons
+ * found here: https://github.com/Concordium/concordium-base/blob/main/haskell-src/Concordium/Types/Execution.hs
+ */
+export enum RejectReasonTag {
+    ModuleNotWF = 'ModuleNotWF',
+    ModuleHashAlreadyExists = 'ModuleHashAlreadyExists',
+    InvalidAccountReference = 'InvalidAccountReference',
+    InvalidInitMethod = 'InvalidInitMethod',
+    InvalidReceiveMethod = 'InvalidReceiveMethod',
+    InvalidModuleReference = 'InvalidModuleReference',
+    InvalidContractAddress = 'InvalidContractAddress',
+    RuntimeFailure = 'RuntimeFailure',
+    AmountTooLarge = 'AmountTooLarge',
+    SerializationFailure = 'SerializationFailure',
+    OutOfEnergy = 'OutOfEnergy',
+    RejectedInit = 'RejectedInit',
+    RejectedReceive = 'RejectedReceive',
+    NonExistentRewardAccount = 'NonExistentRewardAccount',
+    InvalidProof = 'InvalidProof',
+    AlreadyABaker = 'AlreadyABaker',
+    NotABaker = 'NotABaker',
+    InsufficientBalanceForBakerStake = 'InsufficientBalanceForBakerStake',
+    StakeUnderMinimumThresholdForBaking = 'StakeUnderMinimumThresholdForBaking',
+    BakerInCooldown = 'BakerInCooldown',
+    DuplicateAggregationKey = 'DuplicateAggregationKey',
+    NonExistentCredentialID = 'NonExistentCredentialID',
+    KeyIndexAlreadyInUse = 'KeyIndexAlreadyInUse',
+    InvalidAccountThreshold = 'InvalidAccountThreshold',
+    InvalidCredentialKeySignThreshold = 'InvalidCredentialKeySignThreshold',
+    InvalidEncryptedAmountTransferProof = 'InvalidEncryptedAmountTransferProof',
+    InvalidTransferToPublicProof = 'InvalidTransferToPublicProof',
+    EncryptedAmountSelfTransfer = 'EncryptedAmountSelfTransfer',
+    InvalidIndexOnEncryptedTransfer = 'InvalidIndexOnEncryptedTransfer',
+    ZeroScheduledAmount = 'ZeroScheduledAmount',
+    NonIncreasingSchedule = 'NonIncreasingSchedule',
+    FirstScheduledReleaseExpired = 'FirstScheduledReleaseExpired',
+    ScheduledSelfTransfer = 'ScheduledSelfTransfer',
+    InvalidCredentials = 'InvalidCredentials',
+    DuplicateCredIDs = 'DuplicateCredIDs',
+    NonExistentCredIDs = 'NonExistentCredIDs',
+    RemoveFirstCredential = 'RemoveFirstCredential',
+    CredentialHolderDidNotSign = 'CredentialHolderDidNotSign',
+    NotAllowedMultipleCredentials = 'NotAllowedMultipleCredentials',
+    NotAllowedToReceiveEncrypted = 'NotAllowedToReceiveEncrypted',
+    NotAllowedToHandleEncrypted = 'NotAllowedToHandleEncrypted',
+}
+
+export interface RejectReason {
+    tag: RejectReasonTag;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    contents: any;
+}
+
+interface RejectedEventResult {
+    outcome: 'reject';
+    rejectReason: RejectReason;
+}
+
+interface SuccessfulEventResult {
+    outcome: 'success';
+    events: (
+        | TransactionEvent
+        | TransferredEvent
+        | UpdatedEvent
+        | MemoEvent
+        | TransferredWithScheduleEvent
+    )[];
+}
+
+export type EventResult =
+    | SuccessfulEventResult
+    | TransferWithMemoEventResult
+    | RejectedEventResult;
+
+interface BaseTransactionSummaryType {
     type:
         | 'accountTransaction'
         | 'credentialDeploymentTransaction'
         | 'updateTransaction';
-    // TODO: Figure out if contents is always just a string.
+}
+
+export interface TransferWithMemoSummaryType
+    extends BaseTransactionSummaryType {
+    contents: 'transferWithMemo';
+}
+
+export interface GenericTransactionSummaryType
+    extends BaseTransactionSummaryType {
     contents: string;
 }
 
-export interface TransactionSummary {
+export interface BaseTransactionSummary {
     sender?: string;
     hash: string;
 
     cost: bigint;
     energyCost: bigint;
     index: bigint;
+}
 
-    type: TransactionSummaryType;
-
+interface GenericTransactionSummary extends BaseTransactionSummary {
+    type: GenericTransactionSummaryType;
     result: EventResult;
+}
+
+interface TransferWithMemoEventResult {
+    outcome: 'success';
+    events: [TransferredEvent, MemoEvent];
+}
+
+export interface TransferWithMemoTransactionSummary
+    extends BaseTransactionSummary {
+    type: TransferWithMemoSummaryType;
+    result: TransferWithMemoEventResult;
+}
+
+export type TransactionSummary =
+    | GenericTransactionSummary
+    | TransferWithMemoTransactionSummary;
+
+export function instanceOfTransferWithMemoTransactionSummary(
+    object: TransactionSummary
+): object is TransferWithMemoTransactionSummary {
+    return (
+        object.type !== undefined && object.type.contents === 'transferWithMemo'
+    );
 }
 
 export interface TransactionStatus {
@@ -277,6 +395,7 @@ export interface BlockInfo {
 export interface ConsensusStatus {
     bestBlock: string;
     genesisBlock: string;
+    currentEraGenesisBlock: string;
     lastFinalizedBlock: string;
 
     epochDuration: bigint;
@@ -307,9 +426,20 @@ export interface ConsensusStatus {
     finalizationPeriodEMSD?: number;
 
     genesisTime: Date;
+    currentEraGenesisTime: Date;
     blockLastReceivedTime?: Date;
     blockLastArrivedTime?: Date;
     lastFinalizedTime?: Date;
+
+    genesisIndex: number;
+
+    protocolVersion: bigint;
+}
+
+export interface CryptographicParameters {
+    onChainCommitmentKey: string;
+    bulletproofGenerators: string;
+    genesisString: string;
 }
 
 export interface NextAccountNonce {
@@ -320,12 +450,15 @@ export interface NextAccountNonce {
 export interface ReleaseSchedule {
     timestamp: Date;
     amount: bigint;
-    transactions: any;
+}
+
+export interface ReleaseScheduleWithTransactions extends ReleaseSchedule {
+    transactions: string[];
 }
 
 export interface AccountReleaseSchedule {
     total: bigint;
-    schedule: ReleaseSchedule[];
+    schedule: ReleaseScheduleWithTransactions[];
 }
 
 export interface AccountEncryptedAmount {
@@ -392,6 +525,31 @@ export interface InitialAccountCredential {
     contents: InitialCredentialDeploymentValues;
 }
 
+export interface BakerReduceStakePendingChange {
+    change: 'ReduceStake';
+    newStake: bigint;
+    epoch: bigint;
+}
+
+export interface BakerRemovalPendingChange {
+    change: 'RemoveBaker';
+    epoch: bigint;
+}
+
+export type BakerPendingChange =
+    | BakerReduceStakePendingChange
+    | BakerRemovalPendingChange;
+
+export interface AccountBakerDetails {
+    restakeEarnings: boolean;
+    bakerId: bigint;
+    bakerAggregationVerifyKey: string;
+    bakerElectionVerifyKey: string;
+    bakerSignatureVerifyKey: string;
+    stakedAmount: bigint;
+    pendingChange?: BakerPendingChange;
+}
+
 export interface AccountInfo {
     accountNonce: bigint;
     accountAmount: bigint;
@@ -408,6 +566,27 @@ export interface AccountInfo {
         number,
         Versioned<InitialAccountCredential | NormalAccountCredential>
     >;
+
+    accountBaker?: AccountBakerDetails;
+}
+
+export interface Description {
+    name: string;
+    url: string;
+    description: string;
+}
+
+export interface IpInfo {
+    ipIdentity: number;
+    ipDescription: Description;
+    ipVerifyKey: string;
+    ipCdiVerifyKey: string;
+}
+
+export interface ArInfo {
+    arIdentity: number;
+    arDescription: Description;
+    arPublicKey: string;
 }
 
 export enum BlockItemKind {
@@ -441,6 +620,50 @@ export enum AccountTransactionType {
     SimpleTransferWithMemo = 22,
     EncryptedTransferWithMemo = 23,
     TransferWithScheduleAndMemo = 24,
+}
+
+export interface DeployModulePayload {
+    /** Version of the wasm module which is 0 currently the only one supported */
+    version: number;
+
+    /** Wasm module to be deployed */
+    content: Buffer;
+}
+
+export interface InitContractPayload {
+    /** µGTU amount to transfer */
+    amount: GtuAmount;
+
+    /** Hash of the module on chain */
+    moduleRef: ModuleReference;
+
+    /** Name of the contract */
+    contractName: string;
+
+    /** Parameters for the init function */
+    parameter: Buffer;
+
+    /** The amount of energy that can be used for contract execution.
+    The base energy amount for transaction verification will be added to this cost.*/
+    maxContractExecutionEnergy: bigint;
+}
+
+export interface UpdateContractPayload {
+    /** µGTU amount to transfer */
+    amount: GtuAmount;
+
+    /** Address of contract instance consisting of an index and a subindex */
+    contractAddress: ContractAddress;
+
+    /** Name of receive function including <contractName>. prefix */
+    receiveName: string;
+
+    /** Parameters for the update function */
+    parameter: Buffer;
+
+    /** The amount of energy that can be used for contract execution.
+    The base energy amount for transaction verification will be added to this cost.*/
+    maxContractExecutionEnergy: bigint;
 }
 
 export interface AccountTransactionHeader {
@@ -497,20 +720,50 @@ export interface EncryptedTransferPayload {
 
 type WithMemo<T> = T & {
     /** The bytes representation of the memo of the transaction  */
-    memo: Buffer;
+    memo: Memo;
 };
 
 export type SimpleTransferWithMemoPayload = WithMemo<SimpleTransferPayload>;
 export type EncryptedTransferWithMemoPayload =
     WithMemo<EncryptedTransferPayload>;
-export type TransferWithScheduleWithMemoPayload =
+export type TransferWithScheduleAndMemoPayload =
     WithMemo<TransferWithSchedulePayload>;
+
+export interface IndexedCredentialDeploymentInfo {
+    /** the index of the credential, has to fit in 1 byte */
+    index: number;
+
+    /** the credential signed by the credential owner */
+    cdi: CredentialDeploymentInfo;
+}
+
+export interface UpdateCredentialsPayload {
+    /** the credentials to be added to the account */
+    newCredentials: IndexedCredentialDeploymentInfo[];
+
+    /** the ids of the credentials to be removed */
+    removeCredentialIds: string[];
+
+    /** the new credential threshold required to sign transactions */
+    threshold: number;
+
+    /**
+     * the current number of credentials on the account. This
+     * is required to be able to calculate the energy cost, but
+     * is not part of the actual transaction.
+     */
+    currentNumberOfCredentials: bigint;
+}
 
 export type AccountTransactionPayload =
     | SimpleTransferPayload
     | SimpleTransferWithMemoPayload
+    | DeployModulePayload
+    | InitContractPayload
+    | UpdateContractPayload
+    | UpdateCredentialsPayload
     | TransferWithSchedulePayload
-    | TransferWithScheduleWithMemoPayload
+    | TransferWithScheduleAndMemoPayload
     | EncryptedTransferPayload
     | EncryptedTransferWithMemoPayload;
 
@@ -520,5 +773,106 @@ export interface AccountTransaction {
     payload: AccountTransactionPayload;
 }
 
+export enum Type {
+    Unit = 'Unit',
+    Bool = 'Bool',
+    U8 = 'U8',
+    u16 = 'U16',
+    U32 = 'U32',
+    U64 = 'U64',
+    U128 = 'U128',
+    I8 = 'I8',
+    I16 = 'I16',
+    I32 = 'I32',
+    I64 = 'I64',
+    I128 = 'I128',
+    Amount = 'Amount',
+    AccountAddress = 'AccountAddress',
+    ContractAddress = 'ContractAddress',
+    Timestamp = 'Timestamp',
+    Duration = 'Duration',
+    Pair = 'Pair',
+    List = 'List',
+    Set = 'Set',
+    Map = 'Map',
+    Array = 'Array',
+    Struct = 'Struct',
+    Enum = 'Enum(List (String, Fields))',
+    String = 'String(SizeLength)',
+    ContractName = 'ContractName(SizeLength)',
+    ReceiveName = 'ReceiveName(SizeLength)',
+}
+
+export interface InstanceInfo {
+    amount: GtuAmount;
+    sourceModule: ModuleReference;
+    owner: AccountAddress;
+    methods: string[];
+    name: string;
+    model: Buffer;
+}
+
 export type CredentialSignature = Record<number, string>;
 export type AccountTransactionSignature = Record<number, CredentialSignature>;
+
+export interface InstanceInfoSerialized {
+    amount: string;
+    sourceModule: string;
+    owner: string;
+    methods: string[];
+    name: string;
+    model: string;
+}
+
+export interface CredentialDeploymentTransaction {
+    expiry: TransactionExpiry;
+    unsignedCdi: UnsignedCredentialDeploymentInformation;
+    randomness: CommitmentsRandomness;
+}
+
+export interface IdOwnershipProofs {
+    challenge: string;
+    commitments: string;
+    credCounterLessThanMaxAccounts: string;
+    proofIdCredPub: Record<string, string>;
+    proofIpSig: string;
+    proofRegId: string;
+    sig: string;
+}
+
+export interface UnsignedCredentialDeploymentInformation
+    extends CredentialDeploymentValues {
+    proofs: IdOwnershipProofs;
+}
+
+type AttributesRandomness = Record<AttributeKey, string>;
+
+export interface CommitmentsRandomness {
+    idCredSecRand: string;
+    prfRand: string;
+    credCounterRand: string;
+    maxAccountsRand: string;
+    attributesRand: AttributesRandomness;
+}
+
+export interface UnsignedCdiWithRandomness {
+    unsignedCdi: UnsignedCredentialDeploymentInformation;
+    randomness: CommitmentsRandomness;
+}
+
+export interface CredentialDeploymentInfo extends CredentialDeploymentValues {
+    proofs: string;
+}
+
+export interface IdentityProvider {
+    arsInfos: Record<number, ArInfo>;
+    ipInfo: IpInfo;
+}
+
+export interface IdentityInput {
+    identityProvider: IdentityProvider;
+    identityObject: any;
+    prfKey: string;
+    idCredSecret: string;
+    randomness: string;
+}

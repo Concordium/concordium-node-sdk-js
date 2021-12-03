@@ -28,7 +28,7 @@ import {
     buildSignedCredentialForExistingAccount,
     createUnsignedCredentialForExistingAccount,
 } from '../src/credentialDeploymentTransactions';
-import { createShieldedTransferPayload } from '../src';
+import { createEncryptedTransferPayload } from '../src';
 
 const client = getNodeClient();
 
@@ -297,7 +297,7 @@ test('send shielded transfer signed with wrong private key is accepted', async (
     const decryptionKey =
         'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c54f10b8b7388dbeefe1e98ac22e6041c2fb92e1562a59e04a03fa0ebc0a889e72';
 
-    const payload = await createShieldedTransferPayload(
+    const payload = await createEncryptedTransferPayload(
         sender,
         receiver,
         new GtuAmount(50n),

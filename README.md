@@ -103,7 +103,7 @@ const header: AccountTransactionHeader = {
 
 const senderDecryptionKey = 'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8d2552ea10d25a03adc69d61a332a023971919db27a12e1fc94c5bf10b8b7388dbeefe1e98ac22e6041c2fb92e1562a59e04a03fa0ebc0a889e72
 
-const payload = await createShieldedTransferPayload(
+const payload = await createEncryptedTransferPayload(
     sender,
     receiver,
     new GtuAmount(100n),

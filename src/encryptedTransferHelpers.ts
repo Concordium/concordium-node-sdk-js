@@ -4,7 +4,7 @@ import { GtuAmount } from './types/gtuAmount';
 import ConcordiumNodeClient from './client';
 import * as wasm from '../pkg/node_sdk_helpers';
 
-export async function createShieldedTransferPayload(
+export async function createEncryptedTransferPayload(
     sender: AccountAddress,
     receiver: AccountAddress,
     amount: GtuAmount,

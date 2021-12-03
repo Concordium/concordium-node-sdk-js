@@ -69,14 +69,15 @@ const simpleTransferWithMemoAccountTransaction: AccountTransaction = {
 ```
 
 ## Create a transfer with a schedule
-The following example demonstrates how a simple transfer with a schedule can be created.
+The following example demonstrates how a transfer with a schedule can be created.
+In this example, the resulting schedule will be 50 microCCD in 10 hours, and 25 microCCD in 11 hours.
 ```js
 const header: AccountTransactionHeader = {
     expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
     nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
     sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
 };
-const schedule: Schedule = [{timestamp: new Date(Date.now() + 36000000), amount: new GtuAmount(50n)}, {timestamp: new Date(Date.now() + 36500000), amount: new GtuAmount(25n)}]
+const schedule: Schedule = [{timestamp: new Date(Date.now() + 36000000), amount: new GtuAmount(50n)}, {timestamp: new Date(Date.now() + 39600000), amount: new GtuAmount(25n)}]
 
 const scheduledTransfer: TransferWithSchedulePayload = {
     toAddress: new AccountAddress("4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf"),
@@ -85,7 +86,35 @@ const scheduledTransfer: TransferWithSchedulePayload = {
 const scheduledTransferAccountTransaction: AccountTransaction = {
     header: header,
     payload: scheduledTransfer,
-    type: AccountTransactionType.TransferWithSchedulex,
+    type: AccountTransactionType.TransferWithSchedule,
+};
+```
+
+## Create a shielded transfer
+The following example demonstrates how a shielded transfer can be created.
+```js
+const sender = new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M");
+const receiver = new AccountAddress("4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf");
+const header: AccountTransactionHeader = {
+    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+    nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
+    sender: sender,
+};
+
+const senderDecryptionKey = 'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8d2552ea10d25a03adc69d61a332a023971919db27a12e1fc94c5bf10b8b7388dbeefe1e98ac22e6041c2fb92e1562a59e04a03fa0ebc0a889e72
+
+const payload = await createShieldedTransferPayload(
+    sender,
+    receiver,
+    new GtuAmount(100n),
+    senderDecryptionKey,
+    client // a ConcordiumNodeClient
+);
+
+const shieldedTransferAccountTransaction: AccountTransaction = {
+    header: header,
+    payload: payload,
+    type: AccountTransactionType.EncryptedTransfer,
 };
 ```
 

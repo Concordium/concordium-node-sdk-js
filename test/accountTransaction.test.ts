@@ -293,14 +293,15 @@ test('send shielded transfer signed with wrong private key is accepted', async (
     const receiver = new AccountAddress(
         '4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf'
     );
-    const encryptionKey =
+    // This is the actual decryptionKey of the sender. Otherwise creating the encryptedTransferData would never terminate.
+    const decryptionKey =
         'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c54f10b8b7388dbeefe1e98ac22e6041c2fb92e1562a59e04a03fa0ebc0a889e72';
 
     const payload = await createShieldedTransferPayload(
         sender,
         receiver,
         new GtuAmount(50n),
-        encryptionKey,
+        decryptionKey,
         client
     );
 

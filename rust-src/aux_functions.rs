@@ -192,7 +192,7 @@ pub fn create_encrypted_transfer_aux(
 
     let receiver_pk = try_get(&v, "receiverPublicKey")?;
 
-    let secret_key: elgamal::SecretKey<ExampleCurve> = try_get(&v, "senderEncryptionKey")?;
+    let secret_key: elgamal::SecretKey<ExampleCurve> = try_get(&v, "senderDecryptionKey")?;
 
     let incoming_amounts: Vec<EncryptedAmount<ExampleCurve>> = try_get(&v, "incomingAmounts")?;
     let self_amount: EncryptedAmount<ExampleCurve> = try_get(&v, "encryptedSelfAmount")?;

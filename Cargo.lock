@@ -599,7 +599,6 @@ dependencies = [
  "ed25519-dalek",
  "elgamal",
  "encrypted_transfers",
- "ff",
  "hex",
  "id",
  "pairing",

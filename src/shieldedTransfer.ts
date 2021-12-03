@@ -8,7 +8,7 @@ export async function createShieldedTransferPayload(
     sender: AccountAddress,
     receiver: AccountAddress,
     amount: GtuAmount,
-    senderEncryptionKey: string,
+    senderDecryptionKey: string,
     client: ConcordiumNodeClient
 ): Promise<EncryptedTransferPayload> {
     const blockhash = (await client.getConsensusStatus()).lastFinalizedBlock;
@@ -40,7 +40,7 @@ export async function createShieldedTransferPayload(
             accountEncryptedAmount.startIndex +
             BigInt(accountEncryptedAmount.incomingAmounts.length)
         ).toString(),
-        senderEncryptionKey,
+        senderDecryptionKey,
     };
 
     const encryptedDataRaw = wasm.createEncryptedTransferData(

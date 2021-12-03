@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Support for scheduled and shielded transfers.
+- Function to build shielded transfer payload.
+
 ## 0.5.1 2021-11-19
 
 ### Added

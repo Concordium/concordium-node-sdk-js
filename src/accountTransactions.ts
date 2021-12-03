@@ -23,7 +23,7 @@ import {
 
 interface AccountTransactionHandler<
     PayloadType extends AccountTransactionPayload = AccountTransactionPayload
-> {
+    > {
     serialize: (payload: PayloadType) => Buffer;
     getBaseEnergyCost: (payload: PayloadType) => bigint;
 }
@@ -90,7 +90,7 @@ export class InitContractHandler
         const serializedModuleRef = payload.moduleRef.decodedModuleRef;
         const parameterBuffer = serializeParameter(payload.parameter);
         const serializedParameters = packBufferWithWord16Length(
-            Buffer.from(parameterBuffer)
+            parameterBuffer
         );
         return Buffer.concat([
             serializedAmount,

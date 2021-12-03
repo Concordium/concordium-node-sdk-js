@@ -36,7 +36,6 @@ test('Parameter of U64 with the wrong private key', async () => {
     };
 
     const receiveName = 'INDBankU83.insertAmount1';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const inputParams: SMParameter<bigint> = {
         type: ParameterType.U64,
         value: BigInt(20000000),

@@ -35,7 +35,6 @@ test('Parameter of Bool with the wrong private key', async () => {
     };
 
     const contractName = 'INDBankBool1';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const inputParams: SMParameter<boolean> = {
         type: ParameterType.Bool,
         value: true,

@@ -36,7 +36,6 @@ test('Parameter of Struct (U8, string, string variables) with the wrong private 
     };
 
     const contractName = 'UserDetails';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const inputParams: SMParameter<SMStruct> = {
         type: ParameterType.Struct,
         value: [

@@ -36,7 +36,6 @@ test('Parameter of U8 with the wrong private key', async () => {
     };
 
     const receiveName = 'INDBankBool1.insertAmount';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const inputParams: SMParameter<number> = {
         type: ParameterType.U8,
         value: 20,

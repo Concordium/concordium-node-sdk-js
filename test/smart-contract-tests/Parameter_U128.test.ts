@@ -35,14 +35,13 @@ test('Parameter of U128 with the wrong private key', async () => {
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const receiveName = 'INDBankU83.insertAmount1';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const receiveName = 'NewBank.insertAmount';
     const inputParams: SMParameter<bigint> = {
         type: ParameterType.U128,
-        value: BigInt(-75234020),
+        value: BigInt(75234020),
     };
     const contractAddress = {
-        index: BigInt(108),
+        index: BigInt(362),
         subindex: BigInt(0),
     } as ContractAddress;
     const baseEnergy = 30000n;
@@ -77,6 +76,6 @@ test('Parameter of U128 with the wrong private key', async () => {
         updateContractTransaction,
         signatures
     );
-
+    
     expect(result).toBeTruthy();
 }, 300000);

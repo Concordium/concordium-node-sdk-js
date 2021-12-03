@@ -36,7 +36,6 @@ test('Parameter of I8 with the wrong private key', async () => {
     };
 
     const receiveName = 'INDBankU83.insertAmount4';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const inputParams: SMParameter<number> = {
         type: ParameterType.I8,
         value: -20,

@@ -35,7 +35,6 @@ test('init contract with the wrong private key', async () => {
     };
 
     const contractName = 'INDBank';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const params: SMParameter<undefined> = {
         type: ParameterType.NoParameters,
         value: undefined,

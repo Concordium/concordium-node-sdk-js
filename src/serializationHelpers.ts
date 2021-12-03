@@ -12,7 +12,7 @@ import {
 import { Memo } from './types/Memo';
 import { AccountAddress } from './types/accountAddress';
 import { GtuAmount } from '../src/types/gtuAmount';
-
+const MAX_UINT_64 = 2n ** 64n - 1n; // 2^64 - 1
 export function serializeMap<K extends string | number | symbol, T>(
     map: Record<K, T>,
     encodeSize: (size: number) => Buffer,
@@ -45,15 +45,18 @@ export function serializeList<T>(
  * @param value a 128 bit integer
  * @returns big endian serialization of the input
  */
-export function encodeWordI128(value: bigint): Buffer {
+export function encodeInt128(value: bigint): Buffer {
     if (value > -18446744073709551616n || value < 18446744073709551615n) {
         throw new Error(
             'The input has to be a 128 bit signed integer but it was: ' + value
         );
     }
-    const arr = new ArrayBuffer(8);
+    const arr = new ArrayBuffer(32);
     const view = new DataView(arr);
-    view.setBigUint64(0, value, false);
+    const byteOffset = 4;
+    const res = splitUInt128toUInt64(value);
+    view.setBigInt64(byteOffset, res.left);
+    view.setBigInt64(byteOffset + 8, res.right);
     return Buffer.from(new Uint8Array(arr));
 }
 
@@ -66,12 +69,15 @@ export function encodeWord128(value: bigint): Buffer {
     if (value > 170141183460469231731687303715884105728n || value < 0n) {
         throw new Error(
             'The input has to be a 128 bit unsigned integer but it was: ' +
-                value
+            value
         );
     }
-    const arr = new ArrayBuffer(8);
+    const arr = new ArrayBuffer(32);
     const view = new DataView(arr);
-    view.setBigUint64(0, value, false);
+    const byteOffset = 4;
+    const res = splitUInt128toUInt64(value);
+    view.setBigUint64(byteOffset, res.left);
+    view.setBigUint64(byteOffset + 8, res.right);
     return Buffer.from(new Uint8Array(arr));
 }
 
@@ -80,7 +86,7 @@ export function encodeWord128(value: bigint): Buffer {
  * @param value a 64 bit integer
  * @returns big endian serialization of the input
  */
-export function encodeWordI64(value: bigint): Buffer {
+export function encodeInt64(value: bigint): Buffer {
     if (value > 4294967295n || value < -4294967296n) {
         throw new Error(
             'The input has to be a 64 bit signed integer but it was: ' + value
@@ -99,7 +105,7 @@ export function encodeWordI64(value: bigint): Buffer {
  */
 export function encodeBool(value: boolean): Buffer {
     const result = value === true ? 1 : 0;
-    const arr = new ArrayBuffer(2);
+    const arr = new ArrayBuffer(1);
     const view = new DataView(arr);
     view.setInt8(0, result);
     return Buffer.from(new Int8Array(arr));
@@ -127,7 +133,7 @@ export function encodeWord64(value: bigint): Buffer {
  * @param value a 32 bit integer
  * @returns big endian serialization of the input
  */
-export function encodeWordI32(value: number): Buffer {
+export function encodeInt32(value: number): Buffer {
     if (value > -2147483648 || value < 2147483647 || !Number.isInteger(value)) {
         throw new Error(
             'The input has to be a 32 bit signed integer but it was: ' + value
@@ -142,6 +148,7 @@ export function encodeWordI32(value: number): Buffer {
 /**
  * Encodes a 32 bit unsigned integer to a Buffer using little endian.
  * @param value a 32 bit integer
+ * @useLittleEndian a boolean value false to use big endian else little endian.
  * @returns big endian serialization of the input
  */
 export function encodeWord32(value: number, useLittleEndian = false): Buffer {
@@ -161,7 +168,7 @@ export function encodeWord32(value: number, useLittleEndian = false): Buffer {
  * @param value a 16 bit integer
  * @returns big endian serialization of the input
  */
-export function encodeWordI16(value: number): Buffer {
+export function encodeInt16(value: number): Buffer {
     if (value > -32768 || value < 32767 || !Number.isInteger(value)) {
         throw new Error(
             'The input has to be a 16 bit signed integer but it was: ' + value
@@ -195,7 +202,7 @@ export function encodeWord16(value: number): Buffer {
  * @param value a 8 bit integer
  * @returns big endian serialization of the input
  */
-export function encodeWordI8(value: number): Buffer {
+export function encodeInt8(value: number): Buffer {
     if (value > 127 || value < -128 || !Number.isInteger(value)) {
         throw new Error(
             'The input has to be a 8 bit signed integer but it was: ' + value
@@ -246,6 +253,7 @@ export function packBufferWithWord64Length(buffer: Buffer): Buffer {
 /**
  * Packing a buffer along with its length in 32 bits
  * @param buffer
+ * @useLittleEndian a boolean value false to use big endian else little endian.
  * @returns Buffer containing the 32 bit length of buffer and buffer.
  */
 export function packBufferWithWord32Length(
@@ -314,7 +322,21 @@ export function serializeYearMonth(yearMonth: string): Buffer {
 }
 
 /**
- *Check weather the type is fixed length
+ * @param bigint bigint value that need to be splitted
+ * @returns two bigint values
+ */
+function splitUInt128toUInt64(bigint: bigint): {
+    left: bigint;
+    right: bigint;
+} {
+    return {
+        left: (bigint & (MAX_UINT_64 << 64n)) >> 64n,
+        right: bigint & MAX_UINT_64,
+    };
+}
+
+/**
+ *Check whether the type is fixed length
  * @param {ParameterType} type type of parameter
  * @returns {boolean} return true if the type is fixed length
  */
@@ -342,7 +364,6 @@ function isFixedType(type: ParameterType): boolean {
 }
 
 /**
- *
  * @param parameter is array of parameters provided by the user
  * @returns Buffer of parameters
  */
@@ -351,23 +372,23 @@ export function serializeParameter(parameter: SMParameter<SMTypes>): Buffer {
         case ParameterType.U8:
             return encodeWord8((parameter as SMParameter<number>).value);
         case ParameterType.I8:
-            return encodeWordI8((parameter as SMParameter<number>).value);
+            return encodeInt8((parameter as SMParameter<number>).value);
         case ParameterType.U16:
             return encodeWord16((parameter as SMParameter<number>).value);
         case ParameterType.I16:
-            return encodeWordI16((parameter as SMParameter<number>).value);
+            return encodeInt16((parameter as SMParameter<number>).value);
         case ParameterType.U32:
             return encodeWord32((parameter as SMParameter<number>).value);
         case ParameterType.I32:
-            return encodeWordI32((parameter as SMParameter<number>).value);
+            return encodeInt32((parameter as SMParameter<number>).value);
         case ParameterType.U64:
             return encodeWord64((parameter as SMParameter<bigint>).value);
         case ParameterType.I64:
-            return encodeWordI64((parameter as SMParameter<bigint>).value);
+            return encodeInt64((parameter as SMParameter<bigint>).value);
         case ParameterType.U128:
             return encodeWord128((parameter as SMParameter<bigint>).value);
         case ParameterType.I128:
-            return encodeWordI128((parameter as SMParameter<bigint>).value);
+            return encodeInt128((parameter as SMParameter<bigint>).value);
         case ParameterType.Bool:
             return encodeBool((parameter as SMParameter<boolean>).value);
         case ParameterType.String:
@@ -428,6 +449,15 @@ export function serializeParameter(parameter: SMParameter<SMTypes>): Buffer {
                 }
             });
             return Buffer.concat(bufferArray);
+        case ParameterType.Pair:
+        case ParameterType.List:
+        case ParameterType.Set:
+        case ParameterType.Map:
+        case ParameterType.Enum:
+        case ParameterType.ContractName:
+        case ParameterType.ReceiveName:
+        case ParameterType.Unit:
+            throw new Error("This type is not supported currently.");
         default:
             return Buffer.from([]);
     }

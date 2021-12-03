@@ -33,3 +33,13 @@ pub fn get_credential_deployment_info_ext(
         Err(e) => format!("unable to get credential due to: {}", e),
     }
 }
+
+#[wasm_bindgen(js_name = createEncryptedTransferData)]
+pub fn create_encrypted_transfer_ext(
+    input: &str
+) -> String {
+    match create_encrypted_transfer_aux(input) {
+        Ok(s) => s,
+        Err(e) => format!("unable to create encrypted transfer due to: {}", e),
+    }
+}

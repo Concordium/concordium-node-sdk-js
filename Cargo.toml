@@ -19,6 +19,8 @@ anyhow = "1.0"
 ed25519-dalek = {version = "=1.0.0", features = ["serde"] }
 hex = "0.4"
 sha2 = "0.9"
+rand = "=0.7"
+ff = "0.5"
 
 [dependencies.id]
 path = "deps/concordium-base/rust-src/id"
@@ -42,6 +44,14 @@ version = "0"
 
 [dependencies.ps_sig]
 path = "deps/concordium-base/rust-src/ps_sig"
+version = "0"
+
+[dependencies.encrypted_transfers]
+path = "deps/concordium-base/rust-src/encrypted_transfers"
+version = "0"
+
+[dependencies.elgamal]
+path = "deps/concordium-base/rust-src/elgamal"
 version = "0"
 
 [lib]

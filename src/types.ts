@@ -711,7 +711,7 @@ export interface EncryptedTransferPayload {
     /** encrypted µGTU amount to transfer */
     transferAmount: EncryptedAmount;
     /** encrypted µGTU amount remaining in shielded balance */
-    remainingEncryptedAmount: EncryptedAmount;
+    remainingAmount: EncryptedAmount;
 
     index: bigint;
     /** Proof string for the transaction */

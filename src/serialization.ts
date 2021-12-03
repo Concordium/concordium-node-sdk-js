@@ -438,8 +438,8 @@ export function serializeCredentialDeploymentTransactionForSubmission(
 export function serializeEncryptedData(
     encryptedTransfer: EncryptedTransferPayload
 ): Buffer {
-    const serializedRemainingEncryptedAmount = Buffer.from(
-        encryptedTransfer.remainingEncryptedAmount,
+    const serializedRemainingAmount = Buffer.from(
+        encryptedTransfer.remainingAmount,
         'hex'
     );
     const serializedTransferAmount = Buffer.from(
@@ -450,7 +450,7 @@ export function serializeEncryptedData(
     const serializedProof = Buffer.from(encryptedTransfer.proof, 'hex');
 
     return Buffer.concat([
-        serializedRemainingEncryptedAmount,
+        serializedRemainingAmount,
         serializedTransferAmount,
         serializedIndex,
         serializedProof,

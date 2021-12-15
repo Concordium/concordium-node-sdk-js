@@ -311,6 +311,8 @@ When creating a new identity, the user will choose an identity provider, create 
 
 To create accounts/credentials on that identity, this SDK expects an "IdentityInput" object, which contains the identity object, the id-use-data, and the identity provider's information.
 
+### Construct from user-cli output:
+
 Below is an example of how to construct the identityInput, with a plantext id-use-data.json from the [user-cli guide](https://github.com/Concordium/concordium-base/blob/main/rust-bins/docs/user-cli.md#generate-a-request-for-the-identity-object), and an id-object file.
 
 ```js
@@ -341,7 +343,9 @@ const identityInput: IdentityInput = {
 };
 ```
 
-Next is an example of how to construct the identityInput for the  _i_-th identity from a mobile wallet export:
+### Construct from mobile wallet export:
+
+The following is an example of how to construct the identityInput for the _i_-th identity from a mobile wallet export:
 
 ```js
 // We assume the export is available as a local file:
@@ -363,6 +367,7 @@ const identityInput: IdentityInput = {
     randomness: identity.privateIdObjectData.randomness,
 };
 ```
+
 
 ## Generate account alias
 The following shows how to generate an account alias. The alias is an alternative address, which is connected to the same account.

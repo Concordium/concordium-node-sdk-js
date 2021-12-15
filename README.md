@@ -67,6 +67,23 @@ const simpleTransferWithMemoAccountTransaction: AccountTransaction = {
     type: AccountTransactionType.SimpleTransferWithMemo,
 };
 ```
+## Create a Register data transaction
+The following example demonstrates how a register data transaction can be created.
+```js
+const header: AccountTransactionHeader = {
+    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+    nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
+    sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
+};
+const data: RegisterDataPayload = {
+    data: new Memo(Buffer.from('6B68656C6C6F20776F726C64', 'hex')), // Add the bytes you wish to register as a Memo
+};
+return {
+    header,
+    payload: data,
+    type: AccountTransactionType.RegisterData,
+};
+```
 
 ## Create a credential for an existing account
 The following example demonstrates how to create a credential for an existing account. This

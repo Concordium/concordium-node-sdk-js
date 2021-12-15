@@ -693,6 +693,11 @@ export interface SimpleTransferWithMemoPayload extends SimpleTransferPayload {
     memo: Memo;
 }
 
+export interface RegisterDataPayload {
+    /** The bytes representation of the data of the transaction  */
+    data: Memo;
+}
+
 export interface IndexedCredentialDeploymentInfo {
     /** the index of the credential, has to fit in 1 byte */
     index: number;
@@ -722,6 +727,7 @@ export interface UpdateCredentialsPayload {
 export type AccountTransactionPayload =
     | SimpleTransferPayload
     | SimpleTransferWithMemoPayload
+    | RegisterDataPayload
     | DeployModulePayload
     | InitContractPayload
     | UpdateContractPayload

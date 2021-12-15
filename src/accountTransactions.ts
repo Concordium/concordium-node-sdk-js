@@ -18,6 +18,7 @@ import {
     UpdateContractPayload,
     AccountTransactionPayload,
     UpdateCredentialsPayload,
+    RegisterDataPayload,
 } from './types';
 
 interface AccountTransactionHandler<
@@ -175,6 +176,18 @@ export class UpdateCredentialsHandler
     }
 }
 
+export class RegisterDataHandler
+    implements AccountTransactionHandler<RegisterDataPayload>
+{
+    getBaseEnergyCost(): bigint {
+        return 300n;
+    }
+
+    serialize(transfer: RegisterDataPayload): Buffer {
+        return encodeMemo(transfer.data);
+    }
+}
+
 export function getAccountTransactionHandler(
     type: AccountTransactionType.SimpleTransfer
 ): SimpleTransferHandler;
@@ -196,6 +209,10 @@ export function getAccountTransactionHandler(
 export function getAccountTransactionHandler(
     type: AccountTransactionType.UpdateSmartContractInstance
 ): UpdateContractHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.RegisterData
+): RegisterDataHandler;
+
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function getAccountTransactionHandler(type: AccountTransactionType) {
     switch (type) {
@@ -211,6 +228,8 @@ export function getAccountTransactionHandler(type: AccountTransactionType) {
             return new UpdateContractHandler();
         case AccountTransactionType.UpdateCredentials:
             return new UpdateCredentialsHandler();
+        case AccountTransactionType.RegisterData:
+            return new RegisterDataHandler();
         default:
             throw new Error(
                 'The provided type does not have a handler: ' + type

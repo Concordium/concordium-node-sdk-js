@@ -7,6 +7,7 @@ import {
     AttributeKey,
     IdentityInput,
     IndexedCredentialDeploymentInfo,
+    RegisterDataPayload,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
     UpdateCredentialsPayload,
@@ -233,6 +234,51 @@ test('update credential is accepted', async () => {
 
     const result = await client.sendAccountTransaction(
         updateCredentialsAccountTransaction,
+        signatures
+    );
+    expect(result).toBeTruthy();
+});
+
+test('send registerData signed with wrong private key is accepted', async () => {
+    const senderAccountAddress =
+        '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
+    const payload: RegisterDataPayload = {
+        data: new Memo(Buffer.from('6B68656C6C6F20776F726C64', 'hex')),
+    };
+
+    const nextAccountNonce = await client.getNextAccountNonce(
+        new AccountAddress(senderAccountAddress)
+    );
+    if (!nextAccountNonce) {
+        throw new Error('Nonce not found!');
+    }
+    const header: AccountTransactionHeader = {
+        expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+        nonce: nextAccountNonce.nonce,
+        sender: new AccountAddress(senderAccountAddress),
+    };
+
+    const registerDataTransaction: AccountTransaction = {
+        header: header,
+        payload: payload,
+        type: AccountTransactionType.RegisterData,
+    };
+
+    const wrongPrivateKey =
+        'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
+
+    const hashToSign = getAccountTransactionSignDigest(registerDataTransaction);
+    const signature = Buffer.from(
+        await ed.sign(hashToSign, wrongPrivateKey)
+    ).toString('hex');
+    const signatures: AccountTransactionSignature = {
+        0: {
+            0: signature,
+        },
+    };
+
+    const result = await client.sendAccountTransaction(
+        registerDataTransaction,
         signatures
     );
     expect(result).toBeTruthy();

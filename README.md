@@ -317,7 +317,7 @@ Below is an example of how to construct the identityInput, with a plantext id-us
 
 ```js
 // First we load the files. We assume here that they are available as local files.
-const rawUseData = fs.readFileSync(
+const rawIdUseData = fs.readFileSync(
     'path/to/id-use-data',
     'utf8'
 );

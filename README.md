@@ -59,7 +59,7 @@ const header: AccountTransactionHeader = {
 const simpleTransferWithMemo: SimpleTransferWithMemoPayload = {
     amount: new GtuAmount(100n),
     toAddress: new AccountAddress("4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf"),
-    memo: new Memo(Buffer.from('6B68656C6C6F20776F726C64', 'hex')),
+    memo: new DataBlob(Buffer.from('6B68656C6C6F20776F726C64', 'hex')),
 };
 const simpleTransferWithMemoAccountTransaction: AccountTransaction = {
     header: header,
@@ -76,7 +76,7 @@ const header: AccountTransactionHeader = {
     sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
 };
 const data: RegisterDataPayload = {
-    data: new Memo(Buffer.from('6B68656C6C6F20776F726C64', 'hex')), // Add the bytes you wish to register as a Memo
+    data: new DataBlob(Buffer.from('6B68656C6C6F20776F726C64', 'hex')) // Add the bytes you wish to register as a DataBlob
 };
 return {
     header,

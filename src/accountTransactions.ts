@@ -2,7 +2,7 @@ import { Buffer } from 'buffer/';
 import { serializeCredentialDeploymentInfo } from './serialization';
 import {
     encodeWord64,
-    encodeMemo,
+    encodeDataBlob,
     encodeWord32,
     packBufferWithWord32Length,
     packBufferWithWord16Length,
@@ -48,7 +48,7 @@ export class SimpleTransferWithMemoHandler
 {
     serialize(transfer: SimpleTransferWithMemoPayload): Buffer {
         const serializedToAddress = transfer.toAddress.decodedAddress;
-        const serializedMemo = encodeMemo(transfer.memo);
+        const serializedMemo = encodeDataBlob(transfer.memo);
         const serializedAmount = encodeWord64(transfer.amount.microGtuAmount);
         return Buffer.concat([
             serializedToAddress,
@@ -184,7 +184,7 @@ export class RegisterDataHandler
     }
 
     serialize(transfer: RegisterDataPayload): Buffer {
-        return encodeMemo(transfer.data);
+        return encodeDataBlob(transfer.data);
     }
 }
 

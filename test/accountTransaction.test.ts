@@ -22,7 +22,7 @@ import { getIdentityInput, getNodeClient } from './testHelpers';
 import { AccountAddress } from '../src/types/accountAddress';
 import { GtuAmount } from '../src/types/gtuAmount';
 import { TransactionExpiry } from '../src/types/transactionExpiry';
-import { Memo } from '../src/types/Memo';
+import { DataBlob } from '../src/types/DataBlob';
 import {
     buildSignedCredentialForExistingAccount,
     createUnsignedCredentialForExistingAccount,
@@ -88,7 +88,7 @@ test('send simple transfer with memo signed with wrong private key is accepted',
         toAddress: new AccountAddress(
             '4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf'
         ),
-        memo: new Memo(Buffer.from('6B68656C6C6F20776F726C64', 'hex')),
+        memo: new DataBlob(Buffer.from('6B68656C6C6F20776F726C64', 'hex')),
     };
 
     const nextAccountNonce = await client.getNextAccountNonce(
@@ -243,7 +243,7 @@ test('send registerData signed with wrong private key is accepted', async () => 
     const senderAccountAddress =
         '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
     const payload: RegisterDataPayload = {
-        data: new Memo(Buffer.from('6B68656C6C6F20776F726C64', 'hex')),
+        data: new DataBlob(Buffer.from('6B68656C6C6F20776F726C64', 'hex')),
     };
 
     const nextAccountNonce = await client.getNextAccountNonce(

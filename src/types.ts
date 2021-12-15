@@ -1,6 +1,6 @@
 import { AccountAddress } from './types/accountAddress';
 import { GtuAmount } from './types/gtuAmount';
-import { Memo } from './types/Memo';
+import { DataBlob } from './types/DataBlob';
 import { TransactionExpiry } from './types/transactionExpiry';
 import { Buffer } from 'buffer/';
 import { ModuleReference } from './types/moduleReference';
@@ -689,13 +689,13 @@ export interface SimpleTransferPayload {
 }
 
 export interface SimpleTransferWithMemoPayload extends SimpleTransferPayload {
-    /** The bytes representation of the memo of the transaction  */
-    memo: Memo;
+    /** The byte representation of the memo of the transaction  */
+    memo: DataBlob;
 }
 
 export interface RegisterDataPayload {
-    /** The bytes representation of the data of the transaction  */
-    data: Memo;
+    /** The byte representation of the data to be registered  */
+    data: DataBlob;
 }
 
 export interface IndexedCredentialDeploymentInfo {

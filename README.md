@@ -305,24 +305,24 @@ const transactionHash = getCredentialDeploymentTransactionHash(credentialDeploym
 const transactionStatus = await client.getTransactionStatus(transactionHash);
 ```
 
-## Construct identityInput for creating credentials
+## Construct IdentityInput for creating credentials
 
-When creating a new identity, the user will choose an identity provider, create an id-use-data object, which contains the private data to use the identity, and obtain an identity object from the identity provider.
+When creating a new identity the user will choose an identity provider, create an id-use-data object, which contains the private data to use for the identity, and obtain an identity object from the identity provider.
 
 To create accounts/credentials on that identity, this SDK expects an "IdentityInput" object, which contains the identity object, the id-use-data, and the identity provider's information.
 
 ### Construct from user-cli output:
 
-Below is an example of how to construct the identityInput, with a plantext id-use-data.json from the [user-cli guide](https://github.com/Concordium/concordium-base/blob/main/rust-bins/docs/user-cli.md#generate-a-request-for-the-identity-object), and an id-object file.
+Below is an example of how to construct the identityInput, with a plaintext id-use-data.json from the [user-cli guide](https://github.com/Concordium/concordium-base/blob/main/rust-bins/docs/user-cli.md#generate-a-request-for-the-identity-object), and an id-object file.
 
 ```js
 // First we load the files. We assume here that they are available as local files.
 const rawIdUseData = fs.readFileSync(
-    'path/to/id-use-data',
+    'path/to/id-use-data.json',
     'utf8'
 );
 const rawIdObject = fs.readFileSync(
-    'path/to/id-object',
+    'path/to/id-object.json',
     'utf8'
 );
 
@@ -350,7 +350,7 @@ The following is an example of how to construct the identityInput for the _i_-th
 ```js
 // We assume the export is available as a local file:
 const rawData = fs.readFileSync(
-    'path/to/mobile-wallet-export',
+    'path/to/export.concordiumwallet',
     'utf8'
 );
 const mobileWalletExport: EncryptedData = JSON.parse(rawData);

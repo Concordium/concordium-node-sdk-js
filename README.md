@@ -59,12 +59,29 @@ const header: AccountTransactionHeader = {
 const simpleTransferWithMemo: SimpleTransferWithMemoPayload = {
     amount: new GtuAmount(100n),
     toAddress: new AccountAddress("4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf"),
-    memo: new Memo(Buffer.from('6B68656C6C6F20776F726C64', 'hex')),
+    memo: new DataBlob(Buffer.from('6B68656C6C6F20776F726C64', 'hex')),
 };
 const simpleTransferWithMemoAccountTransaction: AccountTransaction = {
     header: header,
     payload: simpleTransferWithMemo,
     type: AccountTransactionType.SimpleTransferWithMemo,
+};
+```
+## Create a Register data transaction
+The following example demonstrates how a register data transaction can be created.
+```js
+const header: AccountTransactionHeader = {
+    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+    nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
+    sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
+};
+const registerData: RegisterDataPayload = {
+    data: new DataBlob(Buffer.from('6B68656C6C6F20776F726C64', 'hex')) // Add the bytes you wish to register as a DataBlob
+};
+const registerDataAccountTransaction: AccountTransaction = {
+    header: header,
+    payload: registerData,
+    type: AccountTransactionType.RegisterData,
 };
 ```
 

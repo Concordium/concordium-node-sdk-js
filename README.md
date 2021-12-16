@@ -75,12 +75,12 @@ const header: AccountTransactionHeader = {
     nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
     sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
 };
-const data: RegisterDataPayload = {
+const registerData: RegisterDataPayload = {
     data: new DataBlob(Buffer.from('6B68656C6C6F20776F726C64', 'hex')) // Add the bytes you wish to register as a DataBlob
 };
-return {
-    header,
-    payload: data,
+const registerDataAccountTransaction: AccountTransaction = {
+    header: header,
+    payload: registerData,
     type: AccountTransactionType.RegisterData,
 };
 ```

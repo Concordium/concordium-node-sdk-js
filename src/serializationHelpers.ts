@@ -99,7 +99,7 @@ export function encodeWord8FromString(value: string): Buffer {
 
 /**
  * Encodes a Datablob.
- * @param memo Datablob containing data bytes.
+ * @param data Datablob containing data bytes.
  * @returns Buffer containing the length of the data and the data bytes.
  */
 export function encodeDataBlob(blob: DataBlob): Buffer {

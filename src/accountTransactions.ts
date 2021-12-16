@@ -66,9 +66,9 @@ export class DeployModuleHandler
         return BigInt(cost);
     }
 
-    serialize(transfer: DeployModulePayload): Buffer {
-        const serializedWasm = packBufferWithWord32Length(transfer.content);
-        const serializedVersion = encodeWord32(transfer.version);
+    serialize(payload: DeployModulePayload): Buffer {
+        const serializedWasm = packBufferWithWord32Length(payload.content);
+        const serializedVersion = encodeWord32(payload.version);
         return Buffer.concat([serializedVersion, serializedWasm]);
     }
 }
@@ -183,8 +183,8 @@ export class RegisterDataHandler
         return 300n;
     }
 
-    serialize(transfer: RegisterDataPayload): Buffer {
-        return encodeDataBlob(transfer.data);
+    serialize(payload: RegisterDataPayload): Buffer {
+        return encodeDataBlob(payload.data);
     }
 }
 

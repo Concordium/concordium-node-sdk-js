@@ -22,7 +22,7 @@ export { CredentialRegistrationId } from './types/CredentialRegistrationId';
 export { AccountAddress } from './types/accountAddress';
 export { GtuAmount } from './types/gtuAmount';
 export { TransactionExpiry } from './types/transactionExpiry';
-export { Memo } from './types/Memo';
+export { DataBlob } from './types/DataBlob';
 export { ModuleReference } from './types/moduleReference';
 export { decryptMobileWalletExport, EncryptedData } from './wallet/crypto';
 export { MobileWalletExport } from './wallet/types';

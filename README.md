@@ -59,12 +59,29 @@ const header: AccountTransactionHeader = {
 const simpleTransferWithMemo: SimpleTransferWithMemoPayload = {
     amount: new GtuAmount(100n),
     toAddress: new AccountAddress("4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf"),
-    memo: new Memo(Buffer.from('6B68656C6C6F20776F726C64', 'hex')),
+    memo: new DataBlob(Buffer.from('6B68656C6C6F20776F726C64', 'hex')),
 };
 const simpleTransferWithMemoAccountTransaction: AccountTransaction = {
     header: header,
     payload: simpleTransferWithMemo,
     type: AccountTransactionType.SimpleTransferWithMemo,
+};
+```
+## Create a Register data transaction
+The following example demonstrates how a register data transaction can be created.
+```js
+const header: AccountTransactionHeader = {
+    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+    nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
+    sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
+};
+const registerData: RegisterDataPayload = {
+    data: new DataBlob(Buffer.from('6B68656C6C6F20776F726C64', 'hex')) // Add the bytes you wish to register as a DataBlob
+};
+const registerDataAccountTransaction: AccountTransaction = {
+    header: header,
+    payload: registerData,
+    type: AccountTransactionType.RegisterData,
 };
 ```
 
@@ -123,6 +140,7 @@ The following example demonstrates how to create a credential for an existing ac
 credential can then be deployed onto the account by the account owner with an update
 credentials transaction. See [Create an update credentials transaction](#Create-an-update-credentials-transaction) for how to
 create this transaction payload using the output from the example below.
+See [Construct IdentityInput](#Construct-identityInput-for-creating-credentials) for how to construct an IdentityInput.
 ```js
 const lastFinalizedBlockHash = (await client.getConsensusStatus()).lastFinalizedBlock;
 const cryptographicParameters = await client.getCryptographicParameters(lastFinalizedBlockHash);
@@ -269,7 +287,7 @@ const transactionStatus = await client.getTransactionStatus(transactionHash);
 ## Create a new account
 The following example demonstrates how to create a new account on an existing
 identity. The `credentialIndex` should be the next unused credential index for that identity, and keeping track of that index is done off-chain. Note that index `0` is used by the initial account that was created together with the identity.
-
+See [Construct IdentityInput](#Construct-identityInput-for-creating-credentials) for how to construct an IdentityInput.
 ```js
 const lastFinalizedBlockHash = (await client.getConsensusStatus()).lastFinalizedBlock;
 const cryptographicParameters = await client.getCryptographicParameters(lastFinalizedBlockHash);
@@ -352,6 +370,70 @@ if (success) {
 const transactionHash = getCredentialDeploymentTransactionHash(credentialDeploymentTransaction, signatures);
 const transactionStatus = await client.getTransactionStatus(transactionHash);
 ```
+
+## Construct IdentityInput for creating credentials
+
+When creating a new identity the user will choose an identity provider, create an id-use-data object, which contains the private data to use for the identity, and obtain an identity object from the identity provider.
+
+To create accounts/credentials on that identity, this SDK expects an "IdentityInput" object, which contains the identity object, the id-use-data, and the identity provider's information.
+
+### Construct from user-cli output:
+
+Below is an example of how to construct the identityInput, with a plaintext id-use-data.json from the [user-cli guide](https://github.com/Concordium/concordium-base/blob/main/rust-bins/docs/user-cli.md#generate-a-request-for-the-identity-object), and an id-object file.
+
+```js
+// First we load the files. We assume here that they are available as local files.
+const rawIdUseData = fs.readFileSync(
+    'path/to/id-use-data.json',
+    'utf8'
+);
+const rawIdObject = fs.readFileSync(
+    'path/to/id-object.json',
+    'utf8'
+);
+
+// Then we parse them. We assume here that they are both version 0.
+const idUseData = JSON.parse(rawIdUseData).value;
+const identityObject = JSON.parse(rawIdObject).value;
+
+// Finally we construct the IdentityInput:
+const identityInput: IdentityInput = {
+    identityObject,
+    identityProvider: {
+        ipInfo: idUseData.ipInfo,
+        arsInfos: idUseData.ars,
+    },
+    idCredSecret: idUseData.idUseData.aci.credentialHolderInformation.idCredSecret,
+    prfKey: idUseData.idUseData.aci.prfKey,
+    randomness: idUseData.idUseData.randomness,
+};
+```
+
+### Construct from mobile wallet export:
+
+The following is an example of how to construct the identityInput for the _i_-th identity from a mobile wallet export:
+
+```js
+// We assume the export is available as a local file:
+const rawData = fs.readFileSync(
+    'path/to/export.concordiumwallet',
+    'utf8'
+);
+const mobileWalletExport: EncryptedData = JSON.parse(rawData);
+const decrypted: MobileWalletExport = decryptMobileWalletExport(
+    mobileWalletExport,
+    password
+);
+const identity = decrypted.value.identities[i];
+const identityInput: IdentityInput = {
+    identityObject: identity.identityObject,
+    identityProvider: identity.identityProvider,
+    idCredSecret: identity.privateIdObjectData.aci.credentialHolderInformation.idCredSecret,
+    prfKey: identity.privateIdObjectData.aci.prfKey,
+    randomness: identity.privateIdObjectData.randomness,
+};
+```
+
 
 ## Generate account alias
 The following shows how to generate an account alias. The alias is an alternative address, which is connected to the same account.

@@ -1,6 +1,6 @@
 import { AccountAddress } from './types/accountAddress';
 import { GtuAmount } from './types/gtuAmount';
-import { Memo } from './types/Memo';
+import { DataBlob } from './types/DataBlob';
 import { TransactionExpiry } from './types/transactionExpiry';
 import { Buffer } from 'buffer/';
 import { ModuleReference } from './types/moduleReference';
@@ -720,7 +720,7 @@ export interface EncryptedTransferPayload {
 
 type WithMemo<T> = T & {
     /** The bytes representation of the memo of the transaction  */
-    memo: Memo;
+    memo: DataBlob;
 };
 
 export type SimpleTransferWithMemoPayload = WithMemo<SimpleTransferPayload>;
@@ -728,6 +728,11 @@ export type EncryptedTransferWithMemoPayload =
     WithMemo<EncryptedTransferPayload>;
 export type TransferWithScheduleAndMemoPayload =
     WithMemo<TransferWithSchedulePayload>;
+
+export interface RegisterDataPayload {
+    /** The byte representation of the data to be registered  */
+    data: DataBlob;
+}
 
 export interface IndexedCredentialDeploymentInfo {
     /** the index of the credential, has to fit in 1 byte */
@@ -758,6 +763,7 @@ export interface UpdateCredentialsPayload {
 export type AccountTransactionPayload =
     | SimpleTransferPayload
     | SimpleTransferWithMemoPayload
+    | RegisterDataPayload
     | DeployModulePayload
     | InitContractPayload
     | UpdateContractPayload

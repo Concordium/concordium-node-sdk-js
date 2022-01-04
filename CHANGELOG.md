@@ -6,6 +6,7 @@
 
 - Support for scheduled and shielded transfers.
 - Function to build shielded transfer payload.
+- Support for register data transaction.
 
 ## 0.5.1 2021-11-19
 

@@ -2,7 +2,7 @@ import { Buffer } from 'buffer/';
 import { serializeCredentialDeploymentInfo } from './serialization';
 import {
     encodeWord64,
-    encodeMemo,
+    encodeDataBlob,
     encodeWord32,
     packBufferWithWord32Length,
     packBufferWithWord16Length,
@@ -18,6 +18,7 @@ import {
     UpdateContractPayload,
     AccountTransactionPayload,
     UpdateCredentialsPayload,
+    RegisterDataPayload,
 } from './types';
 
 interface AccountTransactionHandler<
@@ -47,7 +48,7 @@ export class SimpleTransferWithMemoHandler
 {
     serialize(transfer: SimpleTransferWithMemoPayload): Buffer {
         const serializedToAddress = transfer.toAddress.decodedAddress;
-        const serializedMemo = encodeMemo(transfer.memo);
+        const serializedMemo = encodeDataBlob(transfer.memo);
         const serializedAmount = encodeWord64(transfer.amount.microGtuAmount);
         return Buffer.concat([
             serializedToAddress,
@@ -65,9 +66,9 @@ export class DeployModuleHandler
         return BigInt(cost);
     }
 
-    serialize(transfer: DeployModulePayload): Buffer {
-        const serializedWasm = packBufferWithWord32Length(transfer.content);
-        const serializedVersion = encodeWord32(transfer.version);
+    serialize(payload: DeployModulePayload): Buffer {
+        const serializedWasm = packBufferWithWord32Length(payload.content);
+        const serializedVersion = encodeWord32(payload.version);
         return Buffer.concat([serializedVersion, serializedWasm]);
     }
 }
@@ -176,6 +177,18 @@ export class UpdateCredentialsHandler
     }
 }
 
+export class RegisterDataHandler
+    implements AccountTransactionHandler<RegisterDataPayload>
+{
+    getBaseEnergyCost(): bigint {
+        return 300n;
+    }
+
+    serialize(payload: RegisterDataPayload): Buffer {
+        return encodeDataBlob(payload.data);
+    }
+}
+
 export function getAccountTransactionHandler(
     type: AccountTransactionType.SimpleTransfer
 ): SimpleTransferHandler;
@@ -197,6 +210,10 @@ export function getAccountTransactionHandler(
 export function getAccountTransactionHandler(
     type: AccountTransactionType.UpdateSmartContractInstance
 ): UpdateContractHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.RegisterData
+): RegisterDataHandler;
+
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function getAccountTransactionHandler(type: AccountTransactionType) {
     switch (type) {
@@ -212,6 +229,8 @@ export function getAccountTransactionHandler(type: AccountTransactionType) {
             return new UpdateContractHandler();
         case AccountTransactionType.UpdateCredentials:
             return new UpdateCredentialsHandler();
+        case AccountTransactionType.RegisterData:
+            return new RegisterDataHandler();
         default:
             throw new Error(
                 'The provided type does not have a handler: ' + type

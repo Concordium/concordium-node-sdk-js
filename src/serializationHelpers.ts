@@ -15,6 +15,8 @@ import {
 } from './deserializeSchema';
 import { deserialModuleFromBuffer } from './passSchema';
 const MAX_UINT_64 = 2n ** 64n - 1n; // 2^64 - 1
+import { DataBlob } from './types/DataBlob';
+
 export function serializeMap<K extends string | number | symbol, T>(
     map: Record<K, T>,
     encodeSize: (size: number) => Buffer,
@@ -233,13 +235,13 @@ export function encodeWord8FromString(value: string): Buffer {
 }
 
 /**
- * Encodes a memo.
- * @param memo Memo containing the memo bytes.
- * @returns Buffer containing the length of the memo bytes and the memo bytes.
+ * Encodes a Datablob.
+ * @param data Datablob containing data bytes.
+ * @returns Buffer containing the length of the data and the data bytes.
  */
-export function encodeMemo(memo: Memo): Buffer {
-    const length = encodeWord16(memo.memo.length);
-    return Buffer.concat([length, memo.memo]);
+export function encodeDataBlob(blob: DataBlob): Buffer {
+    const length = encodeWord16(blob.data.length);
+    return Buffer.concat([length, blob.data]);
 }
 
 /**

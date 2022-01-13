@@ -22,14 +22,13 @@ test('retrieve information about a given smart contract instance', async () => {
     }
     return Promise.all([
         expect(instanceInfo).not.toBe(null),
-        expect(instanceInfo.amount).toStrictEqual(new GtuAmount(5000n)),
+        expect(instanceInfo.amount).toStrictEqual(new GtuAmount(0n)),
         expect(instanceInfo.methods).toStrictEqual([
-            'INDBank.balanceOf',
-            'INDBank.insertAmount',
-            'INDBank.smashAmount',
+            'INDBankU81.insertAmount',
+            'INDBankU81.smashAmount',
         ]),
-        expect(Buffer.from('00', 'hex').equals(instanceInfo.model)).toBe(true),
-        expect(instanceInfo.name).toBe('init_INDBank'),
+        expect(Buffer.from('00', 'hex').equals(instanceInfo.model)).toBe(false),
+        expect(instanceInfo.name).toBe('init_INDBankU81'),
         expect(instanceInfo.owner).toStrictEqual(
             new AccountAddress(
                 '3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5'
@@ -37,7 +36,7 @@ test('retrieve information about a given smart contract instance', async () => {
         ),
         expect(instanceInfo.sourceModule).toStrictEqual(
             new ModuleReference(
-                'e51d9f9329f103faa18b1c99335281204df9e3eec23d7138f69ddd17fd63e9d0'
+                'fdea1e0404bc2f41cbe8d537abf6597e1a2872ef3d9f829729379cf89641ac76'
             )
         ),
     ]);

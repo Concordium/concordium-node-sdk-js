@@ -4,8 +4,6 @@ import {
     AccountTransactionSignature,
     AccountTransactionType,
     InitContractPayload,
-    ParameterType,
-    SMParameter,
 } from '../../src/types';
 import * as ed from 'noble-ed25519';
 import { getAccountTransactionSignDigest } from '../../src/serialization';
@@ -15,6 +13,8 @@ import { GtuAmount } from '../../src/types/gtuAmount';
 import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
 import { ModuleReference } from '../../src/types/moduleReference';
+import { serializeInitContractParameters } from '../../src/serializationHelpers';
+import { getModuleBuffer } from '../../src/wasmBuild';
 const client = getNodeClient();
 const senderAccountAddress =
     '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
@@ -34,17 +34,23 @@ test('Parameter of U8 with the wrong private key', async () => {
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const contractName = 'INDBankU8';
-    const inputParams: SMParameter<number> = {
-        type: ParameterType.U8,
-        value: 10,
-    };
+    const userJson = [25, 30, 40];
+    const contractName = 'INDBankU83';
+
+    const modulefileBuffer = getModuleBuffer(
+        '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part6/schema.bin'
+    );
+    const inputParams = serializeInitContractParameters(
+        contractName,
+        userJson,
+        modulefileBuffer
+    );
     const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {
         amount: new GtuAmount(0n),
         moduleRef: new ModuleReference(
-            '9a2d475192bd1c2d7a1d6e196e5471cf13c48fe08c71b3c4b3263e2e66da3991'
+            'd883ce0619ff08711dea54f48acda749db62ace27d8dcc5eddc3796d5ebb5688'
         ),
         contractName: contractName,
         parameter: inputParams,

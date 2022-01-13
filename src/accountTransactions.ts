@@ -8,7 +8,6 @@ import {
     packBufferWithWord16Length,
     serializeList,
     encodeWord8,
-    serializeParameter,
 } from './serializationHelpers';
 import {
     AccountTransactionType,
@@ -23,7 +22,7 @@ import {
 
 interface AccountTransactionHandler<
     PayloadType extends AccountTransactionPayload = AccountTransactionPayload
-    > {
+> {
     serialize: (payload: PayloadType) => Buffer;
     getBaseEnergyCost: (payload: PayloadType) => bigint;
 }
@@ -88,10 +87,9 @@ export class InitContractHandler
         );
         const serializedInitName = packBufferWithWord16Length(initNameBuffer);
         const serializedModuleRef = payload.moduleRef.decodedModuleRef;
-        const parameterBuffer = serializeParameter(payload.parameter);
-        const serializedParameters = packBufferWithWord16Length(
-            parameterBuffer
-        );
+        const parameterBuffer = payload.parameter;
+        const serializedParameters =
+            packBufferWithWord16Length(parameterBuffer);
         return Buffer.concat([
             serializedAmount,
             serializedModuleRef,
@@ -121,7 +119,7 @@ export class UpdateContractHandler
         const receiveNameBuffer = Buffer.from(payload.receiveName, 'utf8');
         const serializedReceiveName =
             packBufferWithWord16Length(receiveNameBuffer);
-        const parameterBuffer = serializeParameter(payload.parameter);
+        const parameterBuffer = payload.parameter;
         const serializedParameters = packBufferWithWord16Length(
             Buffer.from(parameterBuffer)
         );

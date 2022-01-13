@@ -4,9 +4,6 @@ import {
     AccountTransactionSignature,
     AccountTransactionType,
     InitContractPayload,
-    ParameterType,
-    SMParameter,
-    SMStruct,
 } from '../../src/types';
 import * as ed from 'noble-ed25519';
 import { getAccountTransactionSignDigest } from '../../src/serialization';
@@ -16,6 +13,8 @@ import { GtuAmount } from '../../src/types/gtuAmount';
 import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
 import { ModuleReference } from '../../src/types/moduleReference';
+import { serializeInitContractParameters } from '../../src/serializationHelpers';
+import { getModuleBuffer } from '../../src/wasmBuild';
 const client = getNodeClient();
 const senderAccountAddress =
     '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
@@ -36,23 +35,20 @@ test('Parameter of Struct (U8, string, string variables) with the wrong private 
     };
 
     const contractName = 'UserDetails';
-    const inputParams: SMParameter<SMStruct> = {
-        type: ParameterType.Struct,
-        value: [
-            {
-                type: ParameterType.U8,
-                value: 51,
-            } as SMParameter<number>,
-            {
-                type: ParameterType.String,
-                value: 'Concordium',
-            } as SMParameter<string>,
-            {
-                type: ParameterType.String,
-                value: 'Zug',
-            } as SMParameter<string>,
-        ] as SMStruct,
+    const modulefileBuffer = getModuleBuffer(
+        '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part11/schema1.bin'
+    );
+    const userJson = {
+        age: 51,
+        name: 'Concordium',
+        city: 'Zug',
     };
+    const inputParams = serializeInitContractParameters(
+        contractName,
+        JSON.stringify(userJson),
+        modulefileBuffer
+    );
+
     const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {
@@ -85,5 +81,6 @@ test('Parameter of Struct (U8, string, string variables) with the wrong private 
         initContractTransaction,
         signatures
     );
+
     expect(result).toBeTruthy();
 }, 300000);

@@ -1,12 +1,10 @@
 import {
     BakerReduceStakePendingChange,
-    ConsensusStatus,
     instanceOfTransferWithMemoTransactionSummary,
     NormalAccountCredential,
     TransferredWithScheduleEvent,
 } from '../src/types';
 import { AccountAddress } from '../src/types/accountAddress';
-import { isHex } from '../src/util';
 import { isValidDate, getNodeClient } from './testHelpers';
 import { bulletProofGenerators } from './resources/bulletproofgenerators';
 import { ipVerifyKey1, ipVerifyKey2 } from './resources/ipVerifyKeys';

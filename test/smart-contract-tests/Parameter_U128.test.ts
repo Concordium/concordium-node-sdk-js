@@ -5,8 +5,6 @@ import {
     AccountTransactionType,
     UpdateContractPayload,
     ContractAddress,
-    ParameterType,
-    SMParameter,
 } from '../../src/types';
 import * as ed from 'noble-ed25519';
 import { getAccountTransactionSignDigest } from '../../src/serialization';
@@ -15,6 +13,8 @@ import { AccountAddress } from '../../src/types/accountAddress';
 import { GtuAmount } from '../../src/types/gtuAmount';
 import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
+import { getModuleBuffer } from '../../src/wasmBuild';
+import { serializeUpdateContractParameters } from '../../src/serializationHelpers';
 
 const client = getNodeClient();
 const senderAccountAddress =
@@ -35,15 +35,24 @@ test('Parameter of U128 with the wrong private key', async () => {
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const receiveName = 'NewBank.insertAmount';
-    const inputParams: SMParameter<bigint> = {
-        type: ParameterType.U128,
-        value: BigInt(75234020),
-    };
+    const contractName = 'NewBank';
+    const receiveFunctionName = 'insertAmount';
+    const receiveName = contractName + '.' + receiveFunctionName;
+    const userJson = 75234020;
     const contractAddress = {
         index: BigInt(362),
         subindex: BigInt(0),
     } as ContractAddress;
+
+    const modulefileBuffer = getModuleBuffer(
+        '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part6/schema.bin'
+    );
+    const inputParams = serializeUpdateContractParameters(
+        contractName,
+        receiveFunctionName,
+        userJson,
+        modulefileBuffer
+    );
     const baseEnergy = 30000n;
 
     const updateModule: UpdateContractPayload = {
@@ -76,6 +85,6 @@ test('Parameter of U128 with the wrong private key', async () => {
         updateContractTransaction,
         signatures
     );
-    
+
     expect(result).toBeTruthy();
 }, 300000);

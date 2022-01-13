@@ -3,10 +3,7 @@ import {
     AccountTransactionHeader,
     AccountTransactionSignature,
     AccountTransactionType,
-    ContractAddress,
     InitContractPayload,
-    ParameterType,
-    SMParameter,
 } from '../../src/types';
 import * as ed from 'noble-ed25519';
 import { getAccountTransactionSignDigest } from '../../src/serialization';
@@ -16,6 +13,8 @@ import { GtuAmount } from '../../src/types/gtuAmount';
 import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
 import { ModuleReference } from '../../src/types/moduleReference';
+import { getModuleBuffer } from '../../src/wasmBuild';
+import { serializeInitContractParameters } from '../../src/serializationHelpers';
 const client = getNodeClient();
 const senderAccountAddress =
     '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
@@ -39,12 +38,18 @@ test('Parameter of ContractAddress with the wrong private key', async () => {
     const contractAddress = {
         index: BigInt(83),
         subindex: BigInt(0),
-    } as ContractAddress;
-
-    const inputParams: SMParameter<ContractAddress> = {
-        type: ParameterType.ContractAddress,
-        value: contractAddress,
     };
+
+    const userJson = contractAddress;
+
+    const modulefileBuffer = getModuleBuffer(
+        '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part16/schema.bin'
+    );
+    const inputParams = serializeInitContractParameters(
+        contractName,
+        userJson,
+        modulefileBuffer
+    );
     const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {
@@ -77,6 +82,5 @@ test('Parameter of ContractAddress with the wrong private key', async () => {
         initContractTransaction,
         signatures
     );
-
     expect(result).toBeTruthy();
 }, 300000);

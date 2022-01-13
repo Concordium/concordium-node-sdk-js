@@ -6,7 +6,7 @@ import {
     DeployModulePayload,
 } from '../../src/types';
 import * as ed from 'noble-ed25519';
-import { getAccountTransactionHash, getAccountTransactionSignDigest } from '../../src/serialization';
+import { getAccountTransactionSignDigest } from '../../src/serialization';
 import { getNodeClient } from '../testHelpers';
 import { AccountAddress } from '../../src/types/accountAddress';
 import { TransactionExpiry } from '../../src/types/transactionExpiry';
@@ -14,9 +14,9 @@ import * as fs from 'fs';
 import { Buffer } from 'buffer/';
 const client = getNodeClient();
 const senderAccountAddress =
-    '3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5';
+    '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
 const wrongPrivateKey =
-    '681de9a98d274b56eace2f86eb134bfc414f5c366022f281335be0b2d45a8988';
+    'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
 /**
  *
  * @param filePath for the wasm file moudule
@@ -27,7 +27,8 @@ function getByteArray(filePath: string): Buffer {
     return Buffer.from(data);
 }
 // provide path for smart contract wasm file
-const wasmFilePath = '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part26/target/concordium/wasm32-unknown-unknown/release/newbank.wasm';
+const wasmFilePath =
+    '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part30/target/concordium/wasm32-unknown-unknown/release/samplecontract1.wasm';
 // test case for deploy contract
 test('deploy contract with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
@@ -69,11 +70,6 @@ test('deploy contract with the wrong private key', async () => {
         deployModuleTransaction,
         signatures
     );
-    const txHash = await getAccountTransactionHash(
-        deployModuleTransaction,
-        signatures
-    );
-    console.log(txHash);
+
     expect(result).toBeTruthy();
-    
 }, 300000);

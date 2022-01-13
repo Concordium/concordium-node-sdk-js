@@ -4,8 +4,6 @@ import {
     AccountTransactionSignature,
     AccountTransactionType,
     InitContractPayload,
-    ParameterType,
-    SMParameter,
 } from '../../src/types';
 import * as ed from 'noble-ed25519';
 import { getAccountTransactionSignDigest } from '../../src/serialization';
@@ -35,10 +33,7 @@ test('init contract with the wrong private key', async () => {
     };
 
     const contractName = 'INDBank';
-    const params: SMParameter<undefined> = {
-        type: ParameterType.NoParameters,
-        value: undefined,
-    };
+    const params = Buffer.from([]);
     const maxContractExecutionEnergy = 300000n;
 
     const initModule: InitContractPayload = {

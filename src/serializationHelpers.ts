@@ -1,17 +1,19 @@
 import { Buffer } from 'buffer/';
 import { VerifyKey } from '.';
-import {
-    ParameterType,
-    SMParameter,
-    SMStruct,
-    SMArray,
-    SMTypes,
-    SMPrimitiveTypes,
-    ContractAddress,
-} from './types';
+import { ParameterType, ContractAddress } from './types';
 import { Memo } from './types/Memo';
 import { AccountAddress } from './types/accountAddress';
 import { GtuAmount } from '../src/types/gtuAmount';
+import {
+    ArrayType,
+    FieldsTag,
+    Module,
+    Type,
+    StructType,
+    NamedFields,
+    UnNamedFields,
+} from './deserializeSchema';
+import { deserialModuleFromBuffer } from './passSchema';
 const MAX_UINT_64 = 2n ** 64n - 1n; // 2^64 - 1
 export function serializeMap<K extends string | number | symbol, T>(
     map: Record<K, T>,
@@ -69,7 +71,7 @@ export function encodeWord128(value: bigint): Buffer {
     if (value > 170141183460469231731687303715884105728n || value < 0n) {
         throw new Error(
             'The input has to be a 128 bit unsigned integer but it was: ' +
-            value
+                value
         );
     }
     const arr = new ArrayBuffer(32);
@@ -336,119 +338,125 @@ function splitUInt128toUInt64(bigint: bigint): {
 }
 
 /**
- *Check whether the type is fixed length
- * @param {ParameterType} type type of parameter
- * @returns {boolean} return true if the type is fixed length
+ *
+ * @param contractName name of the contract to init contract parameters
+ * @param userJson  user json object
+ * @param modulefileBuffer buffer of embedded schema file
+ * @param schemeModule schemeModule obtained from get Module Source
+ * @returns
  */
-function isFixedType(type: ParameterType): boolean {
-    return (
-        type == ParameterType.U8 ||
-        type == ParameterType.I8 ||
-        type == ParameterType.U16 ||
-        type == ParameterType.I16 ||
-        type == ParameterType.U32 ||
-        type == ParameterType.I32 ||
-        type == ParameterType.U64 ||
-        type == ParameterType.I64 ||
-        type == ParameterType.U128 ||
-        type == ParameterType.I128 ||
-        type == ParameterType.Bool ||
-        type == ParameterType.AccountAddress ||
-        type == ParameterType.ContractAddress ||
-        type == ParameterType.Amount ||
-        type == ParameterType.Timestamp ||
-        type == ParameterType.Duration ||
-        type == ParameterType.Array ||
-        type == ParameterType.Struct
-    );
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function serializeInitContractParameters(
+    contractName: string,
+    userJson: any,
+    modulefileBuffer?: globalThis.Buffer,
+    schemeModule?: Module
+): Buffer {
+    const getSchemaModule =
+        modulefileBuffer !== undefined
+            ? deserialModuleFromBuffer(modulefileBuffer)
+            : schemeModule;
+    console.log(getSchemaModule);
+    if (getSchemaModule !== undefined) {
+        const getInitType = getSchemaModule[contractName].init;
+        return serializeParameters(getInitType, userJson);
+    } else {
+        return Buffer.from([]);
+    }
 }
 
 /**
- * @param parameter is array of parameters provided by the user
+ *
+ * @param contractName  name of contract to update contract parameters
+ * @param receiveFunctionName name of function name to update contract parameters
+ * @param userJson user json object
+ * @param modulefileBuffer buffer of embedded schema file
+ * @param schemeModule schemeModule obtained from get Module Source
+ * @returns buffer of update contract parameters
+ */
+export function serializeUpdateContractParameters(
+    contractName: string,
+    receiveFunctionName: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    userJson: any,
+    modulefileBuffer?: globalThis.Buffer,
+    schemeModule?: Module
+): Buffer {
+    const getSchemaModule =
+        modulefileBuffer !== undefined
+            ? deserialModuleFromBuffer(modulefileBuffer)
+            : schemeModule;
+    if (getSchemaModule !== undefined) {
+        const getReceiveType =
+            getSchemaModule[contractName].receive[receiveFunctionName];
+        return serializeParameters(getReceiveType, userJson);
+    } else {
+        return Buffer.from([]);
+    }
+}
+
+/**
+ * Serailize the parameters
+ * @param paramSchema type of the init or update contract
+ * @param userInput user input
  * @returns Buffer of parameters
  */
-export function serializeParameter(parameter: SMParameter<SMTypes>): Buffer {
-    switch (parameter.type) {
+export function serializeParameters(
+    paramSchema: Type | null,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    userInput: any
+): Buffer {
+    const typeTag: ParameterType = paramSchema?.typeTag ?? ParameterType.Unit;
+    switch (typeTag) {
         case ParameterType.U8:
-            return encodeWord8((parameter as SMParameter<number>).value);
-        case ParameterType.I8:
-            return encodeInt8((parameter as SMParameter<number>).value);
+            return encodeWord8(userInput as number);
         case ParameterType.U16:
-            return encodeWord16((parameter as SMParameter<number>).value);
-        case ParameterType.I16:
-            return encodeInt16((parameter as SMParameter<number>).value);
+            return encodeWord16(userInput as number);
         case ParameterType.U32:
-            return encodeWord32((parameter as SMParameter<number>).value);
-        case ParameterType.I32:
-            return encodeInt32((parameter as SMParameter<number>).value);
+            return encodeWord32(userInput as number);
         case ParameterType.U64:
-            return encodeWord64((parameter as SMParameter<bigint>).value);
-        case ParameterType.I64:
-            return encodeInt64((parameter as SMParameter<bigint>).value);
+            return encodeWord64(BigInt(userInput));
         case ParameterType.U128:
-            return encodeWord128((parameter as SMParameter<bigint>).value);
+            return encodeWord128(BigInt(userInput));
+        case ParameterType.I8:
+            return encodeInt8(userInput as number);
+        case ParameterType.I16:
+            return encodeInt16(userInput as number);
+        case ParameterType.I32:
+            return encodeInt32(userInput as number);
+        case ParameterType.I64:
+            return encodeInt64(BigInt(userInput));
         case ParameterType.I128:
-            return encodeInt128((parameter as SMParameter<bigint>).value);
+            return encodeInt128(BigInt(userInput));
         case ParameterType.Bool:
-            return encodeBool((parameter as SMParameter<boolean>).value);
+            return encodeBool(userInput as boolean);
         case ParameterType.String:
-            const stringParameter = (parameter as SMParameter<string>).value;
-            const bufferValue = Buffer.from(stringParameter);
-            return bufferValue;
-        case ParameterType.AccountAddress:
-            return (parameter as SMParameter<AccountAddress>).value
-                .decodedAddress;
-        case ParameterType.Amount:
-            return encodeWord64(
-                (parameter as SMParameter<GtuAmount>).value.microGtuAmount
+            return packBufferWithWord32Length(
+                Buffer.from(userInput as string),
+                true
             );
+        case ParameterType.Array:
+            return serializeArray(paramSchema as ArrayType, userInput);
+        case ParameterType.Struct:
+            return serializeStruct(paramSchema as StructType, userInput);
+        case ParameterType.AccountAddress:
+            return (userInput as AccountAddress).decodedAddress;
+        case ParameterType.Amount:
+            console.log(userInput);
+            const GTUAmount = new GtuAmount(BigInt(userInput));
+            return encodeWord64(GTUAmount.microGtuAmount);
         case ParameterType.Timestamp:
-            return encodeWord128((parameter as SMParameter<bigint>).value);
+            return encodeWord128(BigInt(userInput));
         case ParameterType.Duration:
-            return encodeWord128((parameter as SMParameter<bigint>).value);
+            return encodeWord128(BigInt(userInput));
         case ParameterType.ContractAddress:
             const serializeIndex = encodeWord64(
-                (parameter as SMParameter<ContractAddress>).value.index
+                (userInput as ContractAddress).index
             );
             const serializeSubIndex = encodeWord64(
-                (parameter as SMParameter<ContractAddress>).value.subindex
+                (userInput as ContractAddress).subindex
             );
             return Buffer.concat([serializeIndex, serializeSubIndex]);
-        case ParameterType.Struct:
-            const bufferStruct: Buffer[] = [];
-            (parameter.value as SMStruct).forEach((element) => {
-                const parameterBuffer = serializeParameter(element);
-                if (isFixedType(element.type)) {
-                    bufferStruct.push(parameterBuffer);
-                } else {
-                    bufferStruct.push(
-                        packBufferWithWord32Length(parameterBuffer, true)
-                    );
-                }
-            });
-            return Buffer.concat(bufferStruct);
-        case ParameterType.Array:
-            const bufferArray: Buffer[] = [];
-            const arrayType = (
-                parameter.value as SMArray<SMPrimitiveTypes | SMStruct>
-            ).type;
-            (
-                parameter.value as SMArray<SMPrimitiveTypes | SMStruct>
-            ).value.forEach((element) => {
-                const parameterBuffer = serializeParameter({
-                    type: arrayType,
-                    value: element,
-                });
-
-                if (isFixedType(arrayType)) {
-                    bufferArray.push(parameterBuffer);
-                } else {
-                    bufferArray.push(
-                        packBufferWithWord32Length(parameterBuffer, true)
-                    );
-                }
-            });
-            return Buffer.concat(bufferArray);
         case ParameterType.Pair:
         case ParameterType.List:
         case ParameterType.Set:
@@ -457,8 +465,61 @@ export function serializeParameter(parameter: SMParameter<SMTypes>): Buffer {
         case ParameterType.ContractName:
         case ParameterType.ReceiveName:
         case ParameterType.Unit:
-            throw new Error("This type is not supported currently.");
         default:
-            return Buffer.from([]);
+            throw new Error('This type is not supported currently.');
+    }
+}
+
+/**
+ * Serialize array of parameters to Buffer
+ * @param size array size
+ * @param arrayType type of array
+ * @param userArrayValues user input json
+ * @returns serialize array of parameters to Buffer
+ */
+export function serializeArray(
+    arraySchema: ArrayType,
+    userArrayValues: any
+): Buffer {
+    const bufferArray: Buffer[] = [];
+    if (arraySchema.size === userArrayValues.length) {
+        for (let i = 0; i < arraySchema.size; i++) {
+            const userValue = userArrayValues[i];
+            bufferArray.push(serializeParameters(arraySchema.of, userValue));
+        }
+    } else {
+        throw new Error('Array size and user input array not matched');
+    }
+
+    return Buffer.concat(bufferArray);
+}
+
+export function serializeStruct(
+    structSchema: StructType,
+    structData: any
+): Buffer {
+    const bufferStruct: Buffer[] = [];
+    const userStructData = JSON.parse(structData);
+    switch (structSchema.fields.fieldsTag) {
+        case FieldsTag.Named:
+            const structNamed = structSchema.fields as NamedFields;
+            for (let i = 0; i < structNamed.contents.length; i++) {
+                const fieldInfo = structNamed.contents[i];
+                const userJsonProperty = fieldInfo[0];
+                const userValue = userStructData[userJsonProperty];
+                bufferStruct.push(serializeParameters(fieldInfo[1], userValue));
+            }
+            return Buffer.concat(bufferStruct);
+        case FieldsTag.Unnamed:
+            const structUnnames = structSchema.fields as UnNamedFields;
+            for (let i = 0; i < structUnnames.contents.length; i++) {
+                const fieldInfo = structUnnames.contents[i];
+                const userValue = structData[i];
+                bufferStruct.push(serializeParameters(fieldInfo, userValue));
+            }
+            return Buffer.concat(bufferStruct);
+        case FieldsTag.None:
+        default:
+            return Buffer.from(bufferStruct);
     }
 }

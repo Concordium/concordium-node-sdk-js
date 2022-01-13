@@ -4,9 +4,6 @@ import {
     AccountTransactionSignature,
     AccountTransactionType,
     InitContractPayload,
-    ParameterType,
-    SMParameter,
-    SMStruct,
 } from '../../src/types';
 import * as ed from 'noble-ed25519';
 import { getAccountTransactionSignDigest } from '../../src/serialization';
@@ -14,8 +11,9 @@ import { getNodeClient } from '../testHelpers';
 import { AccountAddress } from '../../src/types/accountAddress';
 import { GtuAmount } from '../../src/types/gtuAmount';
 import { TransactionExpiry } from '../../src/types/transactionExpiry';
-import { Buffer } from 'buffer/';
 import { ModuleReference } from '../../src/types/moduleReference';
+import { getModuleBuffer } from '../../src/wasmBuild';
+import { serializeInitContractParameters } from '../../src/serializationHelpers';
 const client = getNodeClient();
 const senderAccountAddress =
     '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
@@ -35,41 +33,30 @@ test('Parameter of Struct parameter (Complex) the wrong private key', async () =
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const contractName = 'UserMixed';
-    const inputParams: SMParameter<SMStruct> = {
-        type: ParameterType.Struct,
-        value: [
-            {
-                type: ParameterType.U8,
-                value: 51,
-            } as SMParameter<number>,
-            {
-                type: ParameterType.String,
-                value: 'Concordium',
-            } as SMParameter<string>,
-            {
-                type: ParameterType.String,
-                value: 'Zug',
-            } as SMParameter<string>,
-            {
-                type: ParameterType.String,
-                value: 'Denmark',
-            } as SMParameter<string>,
-            {
-                type: ParameterType.Array,
-                value: {
-                    type: ParameterType.U8,
-                    value: [20, 30, 45],
-                },
-            },
-        ] as SMStruct,
+    const contractName = 'SampleContract1';
+    const userJson = {
+        age: 27,
+        name: 'Concordium',
+        city: 'Zug',
+        country: 'Concordium',
+        nicknames: ['CCD', 'Concordium', 'GTU', 'NA'],
     };
+
+    const modulefileBuffer = getModuleBuffer(
+        '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part30/schema.bin'
+    );
+    const inputParams = serializeInitContractParameters(
+        contractName,
+        JSON.stringify(userJson),
+        modulefileBuffer
+    );
+
     const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {
         amount: new GtuAmount(0n),
         moduleRef: new ModuleReference(
-            'a68ff8d897ee06efb2782839c7bc530134bb6b32e9a96c081e027d20ddc5004d'
+            'dbd04be8563ab052d789a7eb7d72a9bf8bb605ad109a7adbe6d1b51340ac98d6'
         ),
         contractName: contractName,
         parameter: inputParams,
@@ -96,5 +83,6 @@ test('Parameter of Struct parameter (Complex) the wrong private key', async () =
         initContractTransaction,
         signatures
     );
+
     expect(result).toBeTruthy();
 }, 300000);

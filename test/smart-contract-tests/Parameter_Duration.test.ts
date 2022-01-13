@@ -4,8 +4,6 @@ import {
     AccountTransactionSignature,
     AccountTransactionType,
     InitContractPayload,
-    ParameterType,
-    SMParameter,
 } from '../../src/types';
 import * as ed from 'noble-ed25519';
 import { getAccountTransactionSignDigest } from '../../src/serialization';
@@ -15,6 +13,8 @@ import { GtuAmount } from '../../src/types/gtuAmount';
 import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
 import { ModuleReference } from '../../src/types/moduleReference';
+import { getModuleBuffer } from '../../src/wasmBuild';
+import { serializeInitContractParameters } from '../../src/serializationHelpers';
 const client = getNodeClient();
 const senderAccountAddress =
     '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
@@ -36,10 +36,15 @@ test('Parameter of Duration with the wrong private key', async () => {
 
     const contractName = 'ContractForDuration';
 
-    const inputParams: SMParameter<bigint> = {
-        type: ParameterType.Duration,
-        value: BigInt(1637216868),
-    };
+    const userJson = 1637216868;
+    const modulefileBuffer = getModuleBuffer(
+        '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part18/schema.bin'
+    );
+    const inputParams = serializeInitContractParameters(
+        contractName,
+        userJson,
+        modulefileBuffer
+    );
     const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {

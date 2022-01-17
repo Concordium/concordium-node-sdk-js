@@ -35,7 +35,7 @@ test('Parameter of AccountAddress with the wrong private key', async () => {
     };
 
     const contractName = 'UserAddress';
-    const userJson = '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
+    const userInput = '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
 
     const baseEnergy = 300000n;
     const modulefileBuffer = getModuleBuffer(
@@ -43,7 +43,7 @@ test('Parameter of AccountAddress with the wrong private key', async () => {
     );
     const inputParams = serializeInitContractParameters(
         contractName,
-        JSON.stringify(userJson),
+        userInput,
         modulefileBuffer
     );
     const initModule: InitContractPayload = {

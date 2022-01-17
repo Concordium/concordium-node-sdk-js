@@ -38,7 +38,7 @@ test('Parameter of U128 with the wrong private key', async () => {
     const contractName = 'NewBank';
     const receiveFunctionName = 'insertAmount';
     const receiveName = contractName + '.' + receiveFunctionName;
-    const userJson = 75234020;
+    const userInput = 75234020;
     const contractAddress = {
         index: BigInt(362),
         subindex: BigInt(0),
@@ -50,7 +50,7 @@ test('Parameter of U128 with the wrong private key', async () => {
     const inputParams = serializeUpdateContractParameters(
         contractName,
         receiveFunctionName,
-        userJson,
+        userInput,
         modulefileBuffer
     );
     const baseEnergy = 30000n;

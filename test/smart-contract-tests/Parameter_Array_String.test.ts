@@ -36,16 +36,16 @@ test('Parameter of Array of string with the wrong private key', async () => {
 
     const contractName = 'INDBankStringArray';
 
-    const userJson = ['Concordium', 'Zug', 'CCD'];
+    const userInput = ['Concordium', 'Zug', 'CCD'];
 
     const baseEnergy = 300000n;
 
     const modulefileBuffer = getModuleBuffer(
-        '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part6/schema.bin'
+        '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part21/schema.bin'
     );
     const inputParams = serializeInitContractParameters(
         contractName,
-        userJson,
+        userInput,
         modulefileBuffer
     );
 

@@ -35,7 +35,7 @@ test('Parameter of Struct (3 varaibles) with the wrong private key', async () =>
     };
 
     const contractName = 'MarkSheet';
-    const userJson = {
+    const userInput = {
         maths: 25,
         chemistry: 23,
         physics: 23,
@@ -46,7 +46,7 @@ test('Parameter of Struct (3 varaibles) with the wrong private key', async () =>
     );
     const inputParams = serializeInitContractParameters(
         contractName,
-        JSON.stringify(userJson),
+        userInput,
         modulefileBuffer
     );
     const baseEnergy = 300000n;

@@ -34,15 +34,15 @@ test('Parameter of U8 with the wrong private key', async () => {
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const userJson = [25, 30, 40];
-    const contractName = 'INDBankU83';
+    const userInput = 25;
+    const contractName = 'SimpleU8';
 
     const modulefileBuffer = getModuleBuffer(
-        '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part6/schema.bin'
+        '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part31/schema.bin'
     );
     const inputParams = serializeInitContractParameters(
         contractName,
-        userJson,
+        userInput,
         modulefileBuffer
     );
     const baseEnergy = 300000n;
@@ -50,7 +50,7 @@ test('Parameter of U8 with the wrong private key', async () => {
     const initModule: InitContractPayload = {
         amount: new GtuAmount(0n),
         moduleRef: new ModuleReference(
-            'd883ce0619ff08711dea54f48acda749db62ace27d8dcc5eddc3796d5ebb5688'
+            '6cabee5b2d9d5013216eef3e5745288dcade77a4b1cd0d7a8951262476d564a0'
         ),
         contractName: contractName,
         parameter: inputParams,

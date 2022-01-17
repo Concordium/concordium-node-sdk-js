@@ -35,14 +35,14 @@ test('Parameter of Array of U8 with the wrong private key', async () => {
     };
 
     const contractName = 'INDBankU83';
-    const userJson = [26, 27, 51];
+    const userInput = [26, 27, 51];
 
     const scheme = getModuleBuffer(
         '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part6/schema.bin'
     );
     const inputParams = serializeInitContractParameters(
         contractName,
-        userJson,
+        userInput,
         scheme
     );
     const baseEnergy = 300000n;

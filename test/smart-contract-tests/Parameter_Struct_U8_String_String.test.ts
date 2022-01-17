@@ -38,14 +38,14 @@ test('Parameter of Struct (U8, string, string variables) with the wrong private 
     const modulefileBuffer = getModuleBuffer(
         '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part11/schema1.bin'
     );
-    const userJson = {
+    const userInput = {
         age: 51,
         name: 'Concordium',
         city: 'Zug',
     };
     const inputParams = serializeInitContractParameters(
         contractName,
-        JSON.stringify(userJson),
+        userInput,
         modulefileBuffer
     );
 

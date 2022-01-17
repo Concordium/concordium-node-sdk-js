@@ -34,7 +34,7 @@ test('Parameter of Struct parameter (Complex) the wrong private key', async () =
     };
 
     const contractName = 'SampleContract1';
-    const userJson = {
+    const userInput = {
         age: 27,
         name: 'Concordium',
         city: 'Zug',
@@ -47,7 +47,7 @@ test('Parameter of Struct parameter (Complex) the wrong private key', async () =
     );
     const inputParams = serializeInitContractParameters(
         contractName,
-        JSON.stringify(userJson),
+        userInput,
         modulefileBuffer
     );
 

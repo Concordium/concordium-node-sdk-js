@@ -36,13 +36,13 @@ test('Parameter of Timestamp with the wrong private key', async () => {
 
     const contractName = 'ContractForTime';
 
-    const userJson = 1637216868;
+    const userInput = 1637216868;
     const modulefileBuffer = getModuleBuffer(
         '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part17/schema.bin'
     );
     const inputParams = serializeInitContractParameters(
         contractName,
-        userJson,
+        userInput,
         modulefileBuffer
     );
     const baseEnergy = 300000n;

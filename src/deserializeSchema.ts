@@ -109,22 +109,34 @@ export type Type =
           sizeLength: SizeLength.U32;
       };
 
+/**
+ * Array type.
+ */
 export type ArrayType = {
     typeTag: ParameterType.Array;
     size: number;
     of: Type;
 };
 
+/**
+ * Struct type.
+ */
 export type StructType = {
     typeTag: ParameterType.Struct;
     fields: Fields;
 };
 
+/**
+ * Enum type.
+ */
 export type EnumType = {
     typeTag: ParameterType.Enum;
     variants: [string, Fields][];
 };
 
+/**
+ * Map type.
+ */
 export type MapType = {
     typeTag: ParameterType.Map;
     sizeLength: SizeLength;
@@ -132,17 +144,24 @@ export type MapType = {
     ofValues: Type;
 };
 
+/**
+ * List type.
+ */
 export type ListType = {
     typeTag: ParameterType.List | ParameterType.Set;
     sizeLength: SizeLength;
     of: Type;
 };
 
+/**
+ * Pair type.
+ */
 export type PairType = {
     typeTag: ParameterType.Pair;
     ofLeft: Type;
     ofRight: Type;
 };
+
 /**
  * Reads {@link Type} from the given {@link Readable}.
  *
@@ -253,12 +272,17 @@ export type Fields =
     | {
           fieldsTag: FieldsTag.None;
       };
-
+/**
+ * Name fields if the type is Struct/enum
+ */
 export type NamedFields = {
     fieldsTag: FieldsTag.Named;
     contents: [string, Type][];
 };
 
+/**
+ * UnName fields if the type is Struct/enum
+ */
 export type UnNamedFields = {
     fieldsTag: FieldsTag.Unnamed;
     contents: Type[];

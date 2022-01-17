@@ -1,17 +1,18 @@
 import { Buffer } from 'buffer/';
 import { VerifyKey } from '.';
 import { ParameterType, ContractAddress } from './types';
-import { Memo } from './types/Memo';
 import { AccountAddress } from './types/accountAddress';
 import { GtuAmount } from '../src/types/gtuAmount';
 import {
     ArrayType,
     FieldsTag,
-    Module,
     Type,
     StructType,
     NamedFields,
     UnNamedFields,
+    ListType,
+    PairType,
+    MapType,
 } from './deserializeSchema';
 import { deserialModuleFromBuffer } from './passSchema';
 const MAX_UINT_64 = 2n ** 64n - 1n; // 2^64 - 1
@@ -342,26 +343,20 @@ function splitUInt128toUInt64(bigint: bigint): {
 /**
  *
  * @param contractName name of the contract to init contract parameters
- * @param userJson  user json object
+ * @param userInput  user input
  * @param modulefileBuffer buffer of embedded schema file
- * @param schemeModule schemeModule obtained from get Module Source
  * @returns
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function serializeInitContractParameters(
     contractName: string,
-    userJson: any,
-    modulefileBuffer?: globalThis.Buffer,
-    schemeModule?: Module
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+    userInput: any,
+    modulefileBuffer?: globalThis.Buffer
 ): Buffer {
-    const getSchemaModule =
-        modulefileBuffer !== undefined
-            ? deserialModuleFromBuffer(modulefileBuffer)
-            : schemeModule;
-    console.log(getSchemaModule);
+    const getSchemaModule = deserialModuleFromBuffer(modulefileBuffer);
     if (getSchemaModule !== undefined) {
         const getInitType = getSchemaModule[contractName].init;
-        return serializeParameters(getInitType, userJson);
+        return serializeParameters(getInitType, userInput);
     } else {
         return Buffer.from([]);
     }
@@ -371,27 +366,22 @@ export function serializeInitContractParameters(
  *
  * @param contractName  name of contract to update contract parameters
  * @param receiveFunctionName name of function name to update contract parameters
- * @param userJson user json object
+ * @param userInput user input
  * @param modulefileBuffer buffer of embedded schema file
- * @param schemeModule schemeModule obtained from get Module Source
  * @returns buffer of update contract parameters
  */
 export function serializeUpdateContractParameters(
     contractName: string,
     receiveFunctionName: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    userJson: any,
-    modulefileBuffer?: globalThis.Buffer,
-    schemeModule?: Module
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+    userInput: any,
+    modulefileBuffer?: globalThis.Buffer
 ): Buffer {
-    const getSchemaModule =
-        modulefileBuffer !== undefined
-            ? deserialModuleFromBuffer(modulefileBuffer)
-            : schemeModule;
+    const getSchemaModule = deserialModuleFromBuffer(modulefileBuffer);
     if (getSchemaModule !== undefined) {
         const getReceiveType =
             getSchemaModule[contractName].receive[receiveFunctionName];
-        return serializeParameters(getReceiveType, userJson);
+        return serializeParameters(getReceiveType, userInput);
     } else {
         return Buffer.from([]);
     }
@@ -405,7 +395,7 @@ export function serializeUpdateContractParameters(
  */
 export function serializeParameters(
     paramSchema: Type | null,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     userInput: any
 ): Buffer {
     const typeTag: ParameterType = paramSchema?.typeTag ?? ParameterType.Unit;
@@ -444,7 +434,6 @@ export function serializeParameters(
         case ParameterType.AccountAddress:
             return (userInput as AccountAddress).decodedAddress;
         case ParameterType.Amount:
-            console.log(userInput);
             const GTUAmount = new GtuAmount(BigInt(userInput));
             return encodeWord64(GTUAmount.microGtuAmount);
         case ParameterType.Timestamp:
@@ -459,14 +448,19 @@ export function serializeParameters(
                 (userInput as ContractAddress).subindex
             );
             return Buffer.concat([serializeIndex, serializeSubIndex]);
-        case ParameterType.Pair:
+        case ParameterType.Unit:
+            return Buffer.from([]);
         case ParameterType.List:
         case ParameterType.Set:
-        case ParameterType.Map:
-        case ParameterType.Enum:
+            return serializeListOrSet(paramSchema as ListType, userInput);
         case ParameterType.ContractName:
         case ParameterType.ReceiveName:
-        case ParameterType.Unit:
+            return Buffer.from(userInput as string);
+        case ParameterType.Pair:
+            return serializePairType(paramSchema as PairType, userInput);
+        case ParameterType.Map:
+            return serializeMapType(paramSchema as MapType, userInput);
+        case ParameterType.Enum:
         default:
             throw new Error('This type is not supported currently.');
     }
@@ -476,11 +470,12 @@ export function serializeParameters(
  * Serialize array of parameters to Buffer
  * @param size array size
  * @param arrayType type of array
- * @param userArrayValues user input json
+ * @param userArrayValues user input
  * @returns serialize array of parameters to Buffer
  */
 export function serializeArray(
     arraySchema: ArrayType,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     userArrayValues: any
 ): Buffer {
     const bufferArray: Buffer[] = [];
@@ -492,31 +487,37 @@ export function serializeArray(
     } else {
         throw new Error('Array size and user input array not matched');
     }
-
     return Buffer.concat(bufferArray);
 }
 
+/**
+ * Serialize struct of parameters to Buffer
+ * @param structType type of struct
+ * @param structData user input
+ * @returns serialize struct of parameters to Buffer
+ */
 export function serializeStruct(
-    structSchema: StructType,
+    structType: StructType,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     structData: any
 ): Buffer {
     const bufferStruct: Buffer[] = [];
-    const userStructData = JSON.parse(structData);
-    switch (structSchema.fields.fieldsTag) {
+    switch (structType.fields.fieldsTag) {
         case FieldsTag.Named:
-            const structNamed = structSchema.fields as NamedFields;
+            const structNamed = structType.fields as NamedFields;
             for (let i = 0; i < structNamed.contents.length; i++) {
                 const fieldInfo = structNamed.contents[i];
                 const userJsonProperty = fieldInfo[0];
-                const userValue = userStructData[userJsonProperty];
+                const userValue = structData[userJsonProperty];
                 bufferStruct.push(serializeParameters(fieldInfo[1], userValue));
             }
             return Buffer.concat(bufferStruct);
         case FieldsTag.Unnamed:
-            const structUnnames = structSchema.fields as UnNamedFields;
+            const structUnnames = structType.fields as UnNamedFields;
+            const keys = Object.keys(structData);
             for (let i = 0; i < structUnnames.contents.length; i++) {
                 const fieldInfo = structUnnames.contents[i];
-                const userValue = structData[i];
+                const userValue = structData[keys[i]];
                 bufferStruct.push(serializeParameters(fieldInfo, userValue));
             }
             return Buffer.concat(bufferStruct);
@@ -524,4 +525,73 @@ export function serializeStruct(
         default:
             return Buffer.from(bufferStruct);
     }
+}
+
+/**
+ * Serialize the list type parameters to Buffer
+ * @param listType type of list
+ * @param listData user input
+ * @returns serialize list parameters to Buffer
+ */
+export function serializeListOrSet(
+    listType: ListType,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+    listData: any
+): Buffer {
+    const bufferArray: Buffer[] = [];
+    for (let i = 0; i < listData.length; i++) {
+        const userValue = listData[i];
+        bufferArray.push(serializeParameters(listType.of, userValue));
+    }
+    const listLengthBuffer = encodeWord16(listData.length);
+    bufferArray.push(listLengthBuffer);
+    return Buffer.concat(bufferArray);
+}
+
+/**
+ * Serialize the pair type parameters to Buffer
+ * @param pairType type of list parameters
+ * @param pairData user input
+ * @returns serialize pair parameters to Buffer
+ */
+export function serializePairType(
+    pairType: PairType,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+    pairData: any
+): Buffer {
+    const bufferArray: Buffer[] = [];
+    const keys = Object.keys(pairData);
+    const leftValue = pairData[keys[0]];
+    const rightValue = pairData[keys[1]];
+    bufferArray.push(serializeParameters(pairType.ofLeft, leftValue));
+    bufferArray.push(serializeParameters(pairType.ofRight, rightValue));
+    return Buffer.concat(bufferArray);
+}
+
+/**
+ * Serialize the map type parameters to Buffer
+ * @param mapType type of map parameters
+ * @param mapData user input
+ * @returns serialize map parameters to Buffer
+ */
+export function serializeMapType(
+    mapType: MapType,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+    mapData: any
+): Buffer {
+    const bufferArray: Buffer[] = [];
+    if (mapType.sizeLength === mapData.length) {
+        for (let i = 0; i < mapType.sizeLength; i++) {
+            const itemValue = mapData[i];
+            const keys = Object.keys(itemValue);
+            const leftValue = itemValue[keys[0]];
+            const rightValue = itemValue[keys[1]];
+            bufferArray.push(serializeParameters(mapType.ofKeys, leftValue));
+            bufferArray.push(serializeParameters(mapType.ofValues, rightValue));
+        }
+    } else {
+        throw new Error('Map size and user input map not matched');
+    }
+
+    return Buffer.concat(bufferArray);
 }

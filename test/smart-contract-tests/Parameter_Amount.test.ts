@@ -35,13 +35,13 @@ test('Parameter of Amount with the wrong private key', async () => {
     };
 
     const contractName = 'UserAmount';
-    const userJson = 1000;
+    const userInput = 1000;
     const modulefileBuffer = getModuleBuffer(
         '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part15/schema.bin'
     );
     const inputParams = serializeInitContractParameters(
         contractName,
-        userJson,
+        userInput,
         modulefileBuffer
     );
     const baseEnergy = 300000n;

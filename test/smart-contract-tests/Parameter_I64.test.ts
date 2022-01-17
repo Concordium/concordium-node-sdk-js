@@ -38,7 +38,7 @@ test('Parameter of I64 with the wrong private key', async () => {
     const contractName = 'INDBankU83';
     const receiveFunctionName = 'insertAmount7';
     const receiveName = contractName + '.' + receiveFunctionName;
-    const userJson = -2000000;
+    const userInput = -2000000;
     const contractAddress = {
         index: BigInt(108),
         subindex: BigInt(0),
@@ -51,7 +51,7 @@ test('Parameter of I64 with the wrong private key', async () => {
     const inputParams = serializeUpdateContractParameters(
         contractName,
         receiveFunctionName,
-        userJson,
+        userInput,
         modulefileBuffer
     );
     const updateModule: UpdateContractPayload = {

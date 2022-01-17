@@ -27,8 +27,7 @@ function getByteArray(filePath: string): Buffer {
     return Buffer.from(data);
 }
 // provide path for smart contract wasm file
-const wasmFilePath =
-    '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part30/target/concordium/wasm32-unknown-unknown/release/samplecontract1.wasm';
+const wasmFilePath = 'test/ind_bank.wasm';
 // test case for deploy contract
 test('deploy contract with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(

@@ -35,14 +35,14 @@ test('Parameter of Bool with the wrong private key', async () => {
     };
 
     const contractName = 'INDBankBool1';
-    const userJson = true;
+    const userInput = true;
 
     const modulefileBuffer = getModuleBuffer(
         '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part8/schema.bin'
     );
     const inputParams = serializeInitContractParameters(
         contractName,
-        JSON.stringify(userJson),
+        JSON.stringify(userInput),
         modulefileBuffer
     );
     const baseEnergy = 300000n;

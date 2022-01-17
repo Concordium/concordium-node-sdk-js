@@ -671,40 +671,99 @@ Finally, to actually update the contract on the chain, send the constructed `upd
 
 ## Smartcontract with parameters
 In the previous section we have seen init and update contract without parameters. Here in this section we will describe how to init and update contract with parameters.
-Let us consider the following example with parameters for a smart contract which accepts u8 as input.
-So the user provides type as ParameterType.U8 and value as any u8 value
+Let us consider the following example with init contract parameters for a smart contract which accepts u8 as input.
+Users can provide input based on the types which are specified is the contract while the writing the smart contracts.
+For example if the contract accept string, array of three u8 integer values, struct as input then user can provide input as shown below 
 ```js
-const inputParams: SMParameter<number> = {
-        type: ParameterType.U8,
-        value: 20,
-    };
+const userInput = "Concordium"; // user input as string
+const userInput = [24, 25, 60]; // user input as array of three u8 integer values
+const userInput = {
+        age: 51,
+        name: 'Concordium',
+        city: 'Zug',
+    };   // user input as struct
 ```
-Based on the smart contract inputs below is the table for the primitive types and other complex types.
-<!-- TABLE_GENERATE_START -->
+Let init a contract with u8 so user provides u8 value as input like 25 and contract name to init the contract
+```js
+const userInput = 25;
+const contractName = 'SimpleU8';
+```
 
-| Parameter Type  |   Value Type    |                                                                               Example                                                                               |
-| :-------------: | :-------------: | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------: |
-|      Bool       |     boolean     |                                          const smparam: SMParameter<boolean> = { type: ParameterType.Bool, value: true };                                           |
-|       U8        |     number      |                                             const smparam: SMParameter<number> = { type: ParameterType.U8, value: 124 }                                             |
-|       U16       |     number      |                                            const smparam: SMParameter<number> = { type: ParameterType.U16, value: 760 }                                             |
-|       U32       |     number      |                                            const smparam: SMParameter<number> = { type: ParameterType.U32, value: 3288 }                                            |
-|       U64       |     bigint      |                                          const smparam: SMParameter<bigint> = { type: ParameterType.U64, value: 9507124 }                                           |
-|      U128       |     bigint      |                                          const smparam: SMParameter<bigint> = { type: ParameterType.U128, value: 9507124 }                                          |
-|       I8        |     number      |                                             const smparam: SMParameter<bigint> = { type: ParameterType.I8, value: -20 }                                             |
-|       I16       |     number      |                                            const smparam: SMParameter<bigint> = { type: ParameterType.I16, value: 3519 }                                            |
-|       I32       |     number      |                                           const smparam: SMParameter<bigint> = { type: ParameterType.I32, value: 43251 }                                            |
-|       I64       |     bigint      |                                           const smparam: SMParameter<bigint> = { type: ParameterType.I64, value: -19204 }                                           |
-|      I128       |     bigint      |                                          const smparam: SMParameter<bigint> = { type: ParameterType.I128, value: -416678 }                                          |
-|     Amount      |    GTUAmount    |                                const smparam: SMParameter<GtuAmount> = { type: ParameterType.Amount, value: new GtuAmount(1000n) };                                 |
-| AccountAddress  |     Address     | const smparam: SMParameter<AccountAddress> = { type: ParameterType.AccountAddress, value: new AccountAddress('41C2Xu8vD4V2w3QuHRXRNrvSWCWFMXYdNw1wr8SeGbojRUmJzb'); |
-| ContractAddress | ContractAddress |               const smparam: SMParameter<ContractAddress> = { type: ParameterType.ContractAddress, value: { index: BigInt(83), subindex: BigInt(0) };               |
-|    Timestamp    |     bigint      |                                 const smparam: SMParameter<bigint> = { type: ParameterType.Timestamp, value: BigInt(1637216868) };                                  |
-|    Duration     |     bigint      |                                  const smparam: SMParameter<bigint> = { type: ParameterType.Duration, value: BigInt(1637216868) };                                  |
-|     String      |     string      |                                      const smparam: SMParameter<string> = { type: ParameterType.String, value: 'Concordium' };                                      |
-|     Array      |     Array      |                                      const smparam: SMParameter<string> = { type: ParameterType.Array, value: [{ type: ParameterType.U8, value: 26 } as SMParameter<number>, { type: ParameterType.U8, value: 27, } as SMParameter<number>, { type: ParameterType.U8, value: 51, } as SMParameter<number> ] };                                      |
-|     Structure      |     struct     |                                     const inputParams: SMParameter<SMStruct> = { type: ParameterType.Struct, value: [ { type: ParameterType.U8, value: 51, } as SMParameter<number>, { type: ParameterType.String, value: 'Concordium', } as SMParameter<string>, { type: ParameterType.String, value: 'Zug', } as SMParameter<string>, ] as SMStruct, };                                      |
+Then the user need to provide schema file which has the contract schema embedded the below converts the input schema file to buffer format
+```js
+const modulefileBuffer = getModuleBuffer(
+    '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part31/schema.bin'
+);
+```
+Then after obtaining file buffer the following code will be used to obtain the buffer of the parameters using the parameters like contract name, user input and module buffer obtained in the previous step
+```js
+const inputParams = serializeInitContractParameters(
+    contractName,
+    userInput,
+    modulefileBuffer
+);
+```
+Then we will construct the init payload with parameters obtained 
+```js
+const initModule: InitContractPayload = {
+        amount: new GtuAmount(0n),
+        moduleRef: new ModuleReference(
+            '6cabee5b2d9d5013216eef3e5745288dcade77a4b1cd0d7a8951262476d564a0'
+        ),
+        contractName: contractName,
+        parameter: inputParams,
+        maxContractExecutionEnergy: baseEnergy,
+    };
+const initContractTransaction: AccountTransaction = {
+    header: header,
+    payload: initModule,
+    type: AccountTransactionType.InitializeSmartContractInstance,
+};
+```
 
-<!-- TABLE_GENERATE_END -->
+Finally, to actually initialize the contract on the chain, send the constructed `initContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
+
+Let us consider the following example with update contract parameters for a smart contract which accepts i64 as input.
+So the user provides i64 value as input like -2000000, receive function name and contract name to update the contract
+```js
+const userInput = -2000000;
+const contractName = 'INDBankU83';
+const receiveFunctionName = 'insertAmount7';
+const receiveName = contractName + '.' + receiveFunctionName;
+```
+
+Then the user need to provide schema file which has the contract schema embedded the below converts the input schema file to buffer format
+```js
+const modulefileBuffer = getModuleBuffer(
+        '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part6/schema.bin'
+);
+```
+Then after obtaining file buffer the following code will be used to obtain the buffer of the parameters which need send the parameters like contract name, receive function name, user input and module buffer obtained in the previous step
+```js
+const inputParams = serializeUpdateContractParameters(
+        contractName,
+        receiveFunctionName,
+        userInput,
+        modulefileBuffer
+);
+```
+Then we will construct the update payload with parameters obtained 
+```js
+const updateModule: UpdateContractPayload = {
+        amount: new GtuAmount(1000n),
+        contractAddress: contractAddress,
+        receiveName: receiveName,
+        parameter: inputParams,
+        maxContractExecutionEnergy: baseEnergy,
+} as UpdateContractPayload;
+const updateContractTransaction: AccountTransaction = {
+        header: header,
+        payload: updateModule,
+        type: AccountTransactionType.UpdateSmartContractInstance,
+};
+```
+
+Finally, to actually update the contract on the chain, send the constructed `updateContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
 # Build
 
 ## Building for a release

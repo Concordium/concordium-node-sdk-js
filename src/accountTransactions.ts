@@ -26,6 +26,7 @@ import {
     AccountTransactionPayload,
     UpdateCredentialsPayload,
     RegisterDataPayload,
+    TransferToPublicPayload,
 } from './types';
 
 interface AccountTransactionHandler<
@@ -231,6 +232,33 @@ export class EncryptedTransferWithMemoHandler
     }
 }
 
+export class TransferToPublicHandler
+    implements AccountTransactionHandler<TransferToPublicPayload>
+{
+    getBaseEnergyCost(): bigint {
+        return 14850n;
+    }
+
+    serialize(transferToPublic: TransferToPublicPayload): Buffer {
+        const serializedRemainingAmount = Buffer.from(
+            transferToPublic.remainingAmount,
+            'hex'
+        );
+        const serializedAmount = encodeWord64(
+            transferToPublic.transferAmount.microGtuAmount
+        );
+        const serializedIndex = encodeWord64(transferToPublic.index);
+        const serializedProof = Buffer.from(transferToPublic.proof, 'hex');
+
+        return Buffer.concat([
+            serializedRemainingAmount,
+            serializedAmount,
+            serializedIndex,
+            serializedProof,
+        ]);
+    }
+}
+
 export class UpdateCredentialsHandler
     implements AccountTransactionHandler<UpdateCredentialsPayload>
 {
@@ -323,6 +351,9 @@ export function getAccountTransactionHandler(
 export function getAccountTransactionHandler(
     type: AccountTransactionType.RegisterData
 ): RegisterDataHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.TransferToPublic
+): TransferToPublicHandler;
 
 export function getAccountTransactionHandler(
     type: AccountTransactionType
@@ -353,6 +384,8 @@ export function getAccountTransactionHandler(type: AccountTransactionType) {
             return new UpdateCredentialsHandler();
         case AccountTransactionType.RegisterData:
             return new RegisterDataHandler();
+        case AccountTransactionType.TransferToPublic:
+            return new TransferToPublicHandler();
         default:
             throw new Error(
                 'The provided type does not have a handler: ' + type

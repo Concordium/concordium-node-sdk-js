@@ -715,6 +715,17 @@ export interface EncryptedTransferPayload {
     proof: string;
 }
 
+export interface TransferToPublicPayload {
+    /** µGTU amount to transfer to public balance */
+    transferAmount: GtuAmount;
+    /** encrypted µGTU amount remaining in shielded balance */
+    remainingAmount: string;
+
+    index: bigint;
+    /** Proof string for the transaction */
+    proof: string;
+}
+
 type WithMemo<T> = T & {
     /** The bytes representation of the memo of the transaction  */
     memo: DataBlob;
@@ -768,7 +779,8 @@ export type AccountTransactionPayload =
     | TransferWithSchedulePayload
     | TransferWithScheduleAndMemoPayload
     | EncryptedTransferPayload
-    | EncryptedTransferWithMemoPayload;
+    | EncryptedTransferWithMemoPayload
+    | TransferToPublicPayload;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

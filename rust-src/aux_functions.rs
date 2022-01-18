@@ -237,3 +237,56 @@ pub fn create_encrypted_transfer_aux(
     let response = json!(payload);
     Ok(response.to_string())
 }
+
+pub fn create_transfer_to_public_aux(
+    input: &str
+) -> Result<String> {
+    let v: SerdeValue = from_str(input)?;
+
+    let global_context: GlobalContext<ExampleCurve> = try_get(&v, "global")?;
+
+    let secret_key: elgamal::SecretKey<ExampleCurve> = try_get(&v, "senderDecryptionKey")?;
+
+    let incoming_amounts: Vec<EncryptedAmount<ExampleCurve>> = try_get(&v, "incomingAmounts")?;
+    let self_amount: EncryptedAmount<ExampleCurve> = try_get(&v, "encryptedSelfAmount")?;
+    let index: u64 = try_get::<String>(&v, "aggIndex")?.parse::<u64>()?;
+    let agg_index = EncryptedAmountAggIndex{ index };
+
+    let input_amount = incoming_amounts.iter().fold(self_amount, |acc, amount| encrypted_transfers::aggregate(&acc,amount));
+    let m = 1 << 16;
+    let table = BabyStepGiantStep::new(global_context.encryption_in_exponent_generator(), m);
+
+    let decrypted_amount =
+        encrypted_transfers::decrypt_amount::<ExampleCurve>(
+        &table,
+        &secret_key,
+        &input_amount,
+    );
+
+    let agg_decrypted_amount = AggregatedDecryptedAmount {
+        agg_encrypted_amount: input_amount,
+        agg_amount: decrypted_amount,
+        agg_index
+    };
+
+    let to_transfer: Amount = try_get(&v, "amount")?;
+
+    let mut csprng = thread_rng();
+
+    let payload =encrypted_transfers::make_sec_to_pub_transfer_data(
+        &global_context,
+        &secret_key,
+        &agg_decrypted_amount,
+        to_transfer,
+        &mut csprng,
+    );
+
+    let payload = match payload {
+        Some(payload) => payload,
+        None => bail!("Could not produce payload."),
+    };
+
+    let response = json!(payload);
+    Ok(response.to_string())
+}
+

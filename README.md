@@ -135,6 +135,32 @@ const shieldedTransferAccountTransaction: AccountTransaction = {
 };
 ```
 
+## Create a transfer to public
+The following example demonstrates how a transfer to public (unshield) can be created.
+```js
+const sender = new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M");
+const header: AccountTransactionHeader = {
+    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+    nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
+    sender: sender,
+};
+
+const senderDecryptionKey = 'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8d2552ea10d25a03adc69d61a332a023971919db27a12e1fc94c5bf10b8b7388dbeefe1e98ac22e6041c2fb92e1562a59e04a03fa0ebc0a889e72
+
+const payload = await createTransferToPublicPayload(
+    sender,
+    new GtuAmount(100n),
+    senderDecryptionKey,
+    client // a ConcordiumNodeClient
+);
+
+const transferToPublicAccountTransaction: AccountTransaction = {
+    header: header,
+    payload: payload,
+    type: AccountTransactionType.TransferToPublic,
+};
+```
+
 ## Create a credential for an existing account
 The following example demonstrates how to create a credential for an existing account. This
 credential can then be deployed onto the account by the account owner with an update

@@ -29,7 +29,10 @@ import {
     buildSignedCredentialForExistingAccount,
     createUnsignedCredentialForExistingAccount,
 } from '../src/credentialDeploymentTransactions';
-import { createEncryptedTransferPayload } from '../src';
+import {
+    createEncryptedTransferPayload,
+    createTransferToPublicPayload,
+} from '../src';
 
 const client = getNodeClient();
 
@@ -313,6 +316,47 @@ test('send shielded transfer signed with wrong private key is accepted', async (
         header,
         payload,
         type: AccountTransactionType.EncryptedTransfer,
+    };
+
+    const wrongPrivateKey =
+        'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
+
+    const hashToSign = getAccountTransactionSignDigest(transaction);
+    const signature = Buffer.from(
+        await ed.sign(hashToSign, wrongPrivateKey)
+    ).toString('hex');
+    const signatures: AccountTransactionSignature = {
+        0: {
+            0: signature,
+        },
+    };
+
+    const result = await client.sendAccountTransaction(transaction, signatures);
+    expect(result).toBeTruthy();
+});
+
+test('sending transfer to public signed with wrong private key is accepted', async () => {
+    const sender = new AccountAddress(
+        '4EdBeGmpnQZWxaiig7FGEhWwmJurYmYsPWXo6owMDxA7ZtJMMH'
+    );
+
+    // This is the actual decryptionKey of the sender. Otherwise creating the payload would never terminate.
+    const decryptionKey =
+        'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c54f10b8b7388dbeefe1e98ac22e6041c2fb92e1562a59e04a03fa0ebc0a889e72';
+
+    const payload = await createTransferToPublicPayload(
+        sender,
+        new GtuAmount(50n),
+        decryptionKey,
+        client
+    );
+
+    const header = await getAccountHeader(sender);
+
+    const transaction: AccountTransaction = {
+        header,
+        payload,
+        type: AccountTransactionType.TransferToPublic,
     };
 
     const wrongPrivateKey =

@@ -4,6 +4,7 @@
 
 ### Added
 
+- Support for transfer to public transation. (Including a function to build the payload)
 - Support for scheduled and shielded transfers.
 - Function to build shielded transfer payload.
 - Support for register data transaction.

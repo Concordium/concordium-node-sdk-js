@@ -32,6 +32,7 @@ import {
 import {
     createEncryptedTransferPayload,
     createTransferToPublicPayload,
+    TransferToEncryptedPayload,
 } from '../src';
 
 const client = getNodeClient();
@@ -316,6 +317,41 @@ test('send shielded transfer signed with wrong private key is accepted', async (
         header,
         payload,
         type: AccountTransactionType.EncryptedTransfer,
+    };
+
+    const wrongPrivateKey =
+        'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
+
+    const hashToSign = getAccountTransactionSignDigest(transaction);
+    const signature = Buffer.from(
+        await ed.sign(hashToSign, wrongPrivateKey)
+    ).toString('hex');
+    const signatures: AccountTransactionSignature = {
+        0: {
+            0: signature,
+        },
+    };
+
+    const result = await client.sendAccountTransaction(transaction, signatures);
+    expect(result).toBeTruthy();
+});
+
+test('sending transfer to shielded signed with wrong private key is accepted', async () => {
+    const senderAccountAddress =
+        '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
+
+    const header = await getAccountHeader(
+        new AccountAddress(senderAccountAddress)
+    );
+
+    const payload: TransferToEncryptedPayload = {
+        amount: new GtuAmount(100n),
+    };
+
+    const transaction: AccountTransaction = {
+        header: header,
+        payload: payload,
+        type: AccountTransactionType.TransferToEncrypted,
     };
 
     const wrongPrivateKey =

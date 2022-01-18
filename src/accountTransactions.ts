@@ -27,6 +27,7 @@ import {
     UpdateCredentialsPayload,
     RegisterDataPayload,
     TransferToPublicPayload,
+    TransferToEncryptedPayload,
 } from './types';
 
 interface AccountTransactionHandler<
@@ -259,6 +260,18 @@ export class TransferToPublicHandler
     }
 }
 
+export class TransferToEncryptedHandler
+    implements AccountTransactionHandler<TransferToEncryptedPayload>
+{
+    getBaseEnergyCost(): bigint {
+        return 600n;
+    }
+
+    serialize(transfer: TransferToEncryptedPayload): Buffer {
+        return encodeWord64(transfer.amount.microGtuAmount);
+    }
+}
+
 export class UpdateCredentialsHandler
     implements AccountTransactionHandler<UpdateCredentialsPayload>
 {
@@ -354,6 +367,9 @@ export function getAccountTransactionHandler(
 export function getAccountTransactionHandler(
     type: AccountTransactionType.TransferToPublic
 ): TransferToPublicHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.TransferToEncrypted
+): TransferToEncryptedHandler;
 
 export function getAccountTransactionHandler(
     type: AccountTransactionType
@@ -386,6 +402,8 @@ export function getAccountTransactionHandler(type: AccountTransactionType) {
             return new RegisterDataHandler();
         case AccountTransactionType.TransferToPublic:
             return new TransferToPublicHandler();
+        case AccountTransactionType.TransferToEncrypted:
+            return new TransferToEncryptedHandler();
         default:
             throw new Error(
                 'The provided type does not have a handler: ' + type

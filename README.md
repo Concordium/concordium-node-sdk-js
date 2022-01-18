@@ -161,6 +161,25 @@ const transferToPublicAccountTransaction: AccountTransaction = {
 };
 ```
 
+## Create a transfer to shielded
+The following example demonstrates how a transfer to shielded (shield) can be created.
+```js
+const header: AccountTransactionHeader = {
+    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+    nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
+    sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
+};
+const payload: TransferToEncryptedPayload = {
+    amount: new GtuAmount(100n),
+};
+const transferToEncryptedAccountTransaction: AccountTransaction = {
+    header: header,
+    payload: payload,
+    type: AccountTransactionType.TransferToEncrypted,
+};
+```
+
+
 ## Create a credential for an existing account
 The following example demonstrates how to create a credential for an existing account. This
 credential can then be deployed onto the account by the account owner with an update

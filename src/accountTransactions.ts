@@ -144,7 +144,6 @@ export class TransferWithScheduleHandler
 {
     getBaseEnergyCost(transfer?: TransferWithSchedulePayload): bigint {
         if (!transfer) {
-            // TODO: should it fail, or assume that length = 1 or 255;
             throw new Error(
                 'payload is required to determine the base energy cost of transfer with schedule'
             );

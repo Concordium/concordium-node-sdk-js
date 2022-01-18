@@ -702,16 +702,13 @@ export interface TransferWithSchedulePayload {
     toAddress: AccountAddress;
 }
 
-// TODO: Do we need a class for this? (or some other way to show it is expected to be a HEX string)
-type EncryptedAmount = string;
-
 export interface EncryptedTransferPayload {
     /** the recipient of the transfer*/
     toAddress: AccountAddress;
     /** encrypted µGTU amount to transfer */
-    transferAmount: EncryptedAmount;
+    transferAmount: string;
     /** encrypted µGTU amount remaining in shielded balance */
-    remainingAmount: EncryptedAmount;
+    remainingAmount: string;
 
     index: bigint;
     /** Proof string for the transaction */

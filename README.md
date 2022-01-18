@@ -683,6 +683,23 @@ const userInput = {
         city: 'Zug',
     };   // user input as struct
 ```
+For example if the contract accepts List, Set, Map as input then user can provide inputs as shown below
+```js
+//List is ordered collection of same data type which allows duplicate values.
+const userInput = [45, 60, 60, 80]; // user input as list of u8 
+//Set is unordered collection of same data type which does not allow duplicate values.
+const userInput = [80, 20, 78, 10]; // user input as set of u8 
+//Pair is a Tuple of values with left and right properties where left as property name and right as property value.
+const userInput = { left:'name', right:'Concordium'}; // user input as pair where the user need to provide left type as string and right type as string value
+//Map is a collection of key and value pairs where key is property name and value is property value and all key value pair should be of same data type. For suppose key as string and value as string then all other remaining key value should be of similar.
+const userInput = [{ key:'name', value:'Concordium' }, { key:'country', value: 'Denmark'}, { key:'city', value:'Zug'}]; // user input as map where the user need to provide array of key value 
+```
+For example if the contract accepts Enum as input then the user can provide input as shown below
+```js
+enum Animals { Cat = 1, Dog = 2, Human = 4 } // user need to provide enum 
+const userInput = Animals.Cat; // user input as enum
+```
+
 Let init a contract with u8 so user provides u8 value as input like 25 and contract name to init the contract
 ```js
 const userInput = 25;

@@ -13,6 +13,7 @@ import {
     ListType,
     PairType,
     MapType,
+    EnumType,
 } from './deserializeSchema';
 import { deserialModuleFromBuffer } from './passSchema';
 const MAX_UINT_64 = 2n ** 64n - 1n; // 2^64 - 1
@@ -74,7 +75,7 @@ export function encodeWord128(value: bigint): Buffer {
     if (value > 170141183460469231731687303715884105728n || value < 0n) {
         throw new Error(
             'The input has to be a 128 bit unsigned integer but it was: ' +
-                value
+            value
         );
     }
     const arr = new ArrayBuffer(32);
@@ -461,6 +462,7 @@ export function serializeParameters(
         case ParameterType.Map:
             return serializeMapType(paramSchema as MapType, userInput);
         case ParameterType.Enum:
+            return serializeEnumType(paramSchema as EnumType, userInput);
         default:
             throw new Error('This type is not supported currently.');
     }
@@ -593,5 +595,21 @@ export function serializeMapType(
         throw new Error('Map size and user input map not matched');
     }
 
+    return Buffer.concat(bufferArray);
+}
+
+/**
+ * Serialize the enum type parameters to Buffer
+ * @param enumType type of enum parameters
+ * @param enumData user input
+ * @returns serialize enum parameters to Buffer
+ */
+export function serializeEnumType(
+    enumType: EnumType,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+    enumData: any)
+    : Buffer {
+    const bufferArray: Buffer[] = [];
+    bufferArray.push(encodeWord8(enumData as number));
     return Buffer.concat(bufferArray);
 }

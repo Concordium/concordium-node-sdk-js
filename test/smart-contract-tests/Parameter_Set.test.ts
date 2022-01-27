@@ -13,15 +13,15 @@ import { GtuAmount } from '../../src/types/gtuAmount';
 import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
 import { ModuleReference } from '../../src/types/moduleReference';
-import { getModuleBuffer } from '../../src/deserializeSchema';
 import { serializeInitContractParameters } from '../../src/serialization';
+import { getModuleBuffer } from '../../src/deserializeSchema';
 const client = getNodeClient();
 const senderAccountAddress =
     '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
 const wrongPrivateKey =
     'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
 // test case for init contract
-test('Parameter of Array of string with the wrong private key', async () => {
+test('Parameter of AccountAddress with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
         new AccountAddress(senderAccountAddress)
     );
@@ -34,30 +34,29 @@ test('Parameter of Array of string with the wrong private key', async () => {
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const contractName = 'INDBankStringArray';
-
-    const userInput = ['Concordium', 'Zug', 'CCD'];
-
-    const baseEnergy = 300000n;
+    const userInput = [800000, 200000, 78000, 100000];
+    const contractName = 'ListContract';
 
     const modulefileBuffer = getModuleBuffer(
-        'test/resources/schemaFiles/schema21.bin'
+        'test/resources/schemaFiles/schema34.bin'
     );
+    console.log([userInput]);
     const inputParams = serializeInitContractParameters(
         contractName,
         userInput,
         modulefileBuffer
     );
+    const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {
         amount: new GtuAmount(0n),
         moduleRef: new ModuleReference(
-            'edff6bce3cc9117d88db66d55f43695a0ee337e6803b48fb1bfa7ef76ec98447'
+            '1ad412d228edc8d870f0bc505e5bf0e4ccb144217b1a7f1317dc140c5fae23c0'
         ),
         contractName: contractName,
         parameter: inputParams,
         maxContractExecutionEnergy: baseEnergy,
-    };
+    } as InitContractPayload;
 
     const initContractTransaction: AccountTransaction = {
         header: header,

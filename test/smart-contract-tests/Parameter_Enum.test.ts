@@ -13,15 +13,15 @@ import { GtuAmount } from '../../src/types/gtuAmount';
 import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
 import { ModuleReference } from '../../src/types/moduleReference';
-import { getModuleBuffer } from '../../src/deserializeSchema';
 import { serializeInitContractParameters } from '../../src/serialization';
+import { getModuleBuffer } from '../../src/deserializeSchema';
 const client = getNodeClient();
 const senderAccountAddress =
     '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
 const wrongPrivateKey =
     'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
 // test case for init contract
-test('Parameter of Array of string with the wrong private key', async () => {
+test('Parameter of AccountAddress with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
         new AccountAddress(senderAccountAddress)
     );
@@ -34,30 +34,36 @@ test('Parameter of Array of string with the wrong private key', async () => {
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const contractName = 'INDBankStringArray';
+    enum DCBBankState {
+        /// Alive and well, allows for GTU to be inserted.
+        Intact = 1,
+        /// The dcb bank has been emptied, preventing further GTU to be inserted.
+        Smashed,
+    }
 
-    const userInput = ['Concordium', 'Zug', 'CCD'];
-
-    const baseEnergy = 300000n;
+    const userInput = DCBBankState[DCBBankState.Intact];
+    const contractName = 'SimpleEnum';
 
     const modulefileBuffer = getModuleBuffer(
-        'test/resources/schemaFiles/schema21.bin'
+        'test/resources/schemaFiles/schema32.bin'
     );
+    console.log([userInput]);
     const inputParams = serializeInitContractParameters(
         contractName,
         userInput,
         modulefileBuffer
     );
+    const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {
         amount: new GtuAmount(0n),
         moduleRef: new ModuleReference(
-            'edff6bce3cc9117d88db66d55f43695a0ee337e6803b48fb1bfa7ef76ec98447'
+            '3a0f94e60949c0be213613550104e12efdb33b47c7fcb9dbb1b51a496b1e30ad'
         ),
         contractName: contractName,
         parameter: inputParams,
         maxContractExecutionEnergy: baseEnergy,
-    };
+    } as InitContractPayload;
 
     const initContractTransaction: AccountTransaction = {
         header: header,

@@ -606,10 +606,7 @@ The name of the contract "INDBank".
 In this example, the contract does not take any parameters, so we can leave parameters as undefined.  
 ```js
 const contractName = 'INDBank'; 
-const params: SMParameter<undefined> = {
-        type: ParameterType.NoParameters,
-        value: undefined,
-    };
+const params = Buffer.from([]);
 //The amount of energy that can be used for contract execution.
 const maxContractExecutionEnergy = 300000n;
 ```
@@ -681,8 +678,14 @@ const userInput = {
         age: 51,
         name: 'Concordium',
         city: 'Zug',
-    };   // user input as struct
+    };   // user input as struct which are Named fields
+const userInput = [
+        0,
+        50,
+        120
+]; // user input as struct which are unNamed fields
 ```
+
 For example if the contract accepts List, Set, Map as input then user can provide inputs as shown below
 ```js
 //List is ordered collection of same data type which allows duplicate values.
@@ -697,7 +700,7 @@ const userInput = [{ key:'name', value:'Concordium' }, { key:'country', value: '
 For example if the contract accepts Enum as input then the user can provide input as shown below
 ```js
 enum Animals { Cat = 1, Dog = 2, Human = 4 } // user need to provide enum 
-const userInput = Animals.Cat; // user input as enum
+const userInput = Animals[Animals.Cat]; // user input as enum 
 ```
 
 Let init a contract with u8 so user provides u8 value as input like 25 and contract name to init the contract
@@ -709,7 +712,7 @@ const contractName = 'SimpleU8';
 Then the user need to provide schema file which has the contract schema embedded the below converts the input schema file to buffer format
 ```js
 const modulefileBuffer = getModuleBuffer(
-    '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part31/schema.bin'
+    'SCHEMA-PATH'
 );
 ```
 Then after obtaining file buffer the following code will be used to obtain the buffer of the parameters using the parameters like contract name, user input and module buffer obtained in the previous step
@@ -752,7 +755,7 @@ const receiveName = contractName + '.' + receiveFunctionName;
 Then the user need to provide schema file which has the contract schema embedded the below converts the input schema file to buffer format
 ```js
 const modulefileBuffer = getModuleBuffer(
-        '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part6/schema.bin'
+    'SCHEMA-PATH'
 );
 ```
 Then after obtaining file buffer the following code will be used to obtain the buffer of the parameters which need send the parameters like contract name, receive function name, user input and module buffer obtained in the previous step

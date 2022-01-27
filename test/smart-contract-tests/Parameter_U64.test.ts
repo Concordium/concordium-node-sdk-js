@@ -13,8 +13,8 @@ import { AccountAddress } from '../../src/types/accountAddress';
 import { GtuAmount } from '../../src/types/gtuAmount';
 import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
-import { getModuleBuffer } from '../../src/wasmBuild';
-import { serializeUpdateContractParameters } from '../../src/serializationHelpers';
+import { getModuleBuffer } from '../../src/deserializeSchema';
+import { serializeUpdateContractParameters } from '../../src/serialization';
 
 const client = getNodeClient();
 const senderAccountAddress =
@@ -45,7 +45,7 @@ test('Parameter of U64 with the wrong private key', async () => {
     } as ContractAddress;
 
     const modulefileBuffer = getModuleBuffer(
-        '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part6/schema.bin'
+        'test/resources/schemaFiles/schema6.bin'
     );
     const inputParams = serializeUpdateContractParameters(
         contractName,

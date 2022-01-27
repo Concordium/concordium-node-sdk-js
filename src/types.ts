@@ -869,34 +869,3 @@ export interface IdentityInput {
     idCredSecret: string;
     randomness: string;
 }
-
-export interface SMParameter<T extends SMTypes> {
-    type: ParameterType;
-    value: T;
-}
-
-export type SMStruct = Array<SMParameter<SMTypes>>;
-
-export type SMArray<T extends SMTypes> = {
-    type: ParameterType;
-    value: Array<T>;
-};
-
-export type SMPrimitiveTypes = number | string | boolean | bigint | undefined;
-
-export type SMTypes =
-    | SMPrimitiveTypes
-    | SMParameter<SMTypes>
-    | SMStruct
-    | SMArray<SMPrimitiveTypes | SMStruct>
-    | AccountAddress
-    | GtuAmount
-    | ContractAddress
-    | undefined;
-
-export interface SchemaJsonType {
-    name: string;
-    state: string;
-    init: any;
-    receive: any;
-}

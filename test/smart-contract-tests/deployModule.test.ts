@@ -14,9 +14,9 @@ import * as fs from 'fs';
 import { Buffer } from 'buffer/';
 const client = getNodeClient();
 const senderAccountAddress =
-    '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
+    '3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5';
 const wrongPrivateKey =
-    'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
+    '681de9a98d274b56eace2f86eb134bfc414f5c366022f281335be0b2d45a8988';
 /**
  *
  * @param filePath for the wasm file moudule
@@ -27,7 +27,8 @@ function getByteArray(filePath: string): Buffer {
     return Buffer.from(data);
 }
 // provide path for smart contract wasm file
-const wasmFilePath = 'test/ind_bank.wasm';
+const wasmFilePath =
+    '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part34/target/concordium/wasm32-unknown-unknown/release/listcontract.wasm';
 // test case for deploy contract
 test('deploy contract with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(

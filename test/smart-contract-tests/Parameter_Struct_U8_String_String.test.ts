@@ -13,8 +13,8 @@ import { GtuAmount } from '../../src/types/gtuAmount';
 import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
 import { ModuleReference } from '../../src/types/moduleReference';
-import { serializeInitContractParameters } from '../../src/serializationHelpers';
-import { getModuleBuffer } from '../../src/wasmBuild';
+import { serializeInitContractParameters } from '../../src/serialization';
+import { getModuleBuffer } from '../../src/deserializeSchema';
 const client = getNodeClient();
 const senderAccountAddress =
     '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
@@ -36,7 +36,7 @@ test('Parameter of Struct (U8, string, string variables) with the wrong private 
 
     const contractName = 'UserDetails';
     const modulefileBuffer = getModuleBuffer(
-        '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part11/schema1.bin'
+        'test/resources/schemaFiles/schema11.bin'
     );
     const userInput = {
         age: 51,

@@ -13,8 +13,8 @@ import { GtuAmount } from '../../src/types/gtuAmount';
 import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
 import { ModuleReference } from '../../src/types/moduleReference';
-import { getModuleBuffer } from '../../src/wasmBuild';
-import { serializeInitContractParameters } from '../../src/serializationHelpers';
+import { getModuleBuffer } from '../../src/deserializeSchema';
+import { serializeInitContractParameters } from '../../src/serialization';
 const client = getNodeClient();
 const senderAccountAddress =
     '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
@@ -37,7 +37,7 @@ test('Parameter of Amount with the wrong private key', async () => {
     const contractName = 'UserAmount';
     const userInput = 1000;
     const modulefileBuffer = getModuleBuffer(
-        '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part15/schema.bin'
+        'test/resources/schemaFiles/schema15.bin'
     );
     const inputParams = serializeInitContractParameters(
         contractName,

@@ -6,15 +6,17 @@ import {
     InitContractPayload,
 } from '../../src/types';
 import * as ed from 'noble-ed25519';
-import { getAccountTransactionSignDigest } from '../../src/serialization';
+import {
+    getAccountTransactionSignDigest,
+    serializeInitContractParameters,
+} from '../../src/serialization';
 import { getNodeClient } from '../testHelpers';
 import { AccountAddress } from '../../src/types/accountAddress';
 import { GtuAmount } from '../../src/types/gtuAmount';
 import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
 import { ModuleReference } from '../../src/types/moduleReference';
-import { serializeInitContractParameters } from '../../src/serializationHelpers';
-import { getModuleBuffer } from '../../src/wasmBuild';
+import { getModuleBuffer } from '../../src/deserializeSchema';
 const client = getNodeClient();
 const senderAccountAddress =
     '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
@@ -37,9 +39,7 @@ test('Parameter of Array of U8 with the wrong private key', async () => {
     const contractName = 'INDBankU83';
     const userInput = [26, 27, 51];
 
-    const scheme = getModuleBuffer(
-        '/home/omkarsunku/concordium-rust-smart-contracts/examples/piggy-bank/part6/schema.bin'
-    );
+    const scheme = getModuleBuffer('test/resources/schemaFiles/schema6.bin');
     const inputParams = serializeInitContractParameters(
         contractName,
         userInput,

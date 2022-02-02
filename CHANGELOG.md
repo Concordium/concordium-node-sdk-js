@@ -4,6 +4,7 @@
 
 ### Added
 
+- Function to deserialize contract state.
 - Support for register data transaction.
 
 ## 0.5.1 2021-11-19

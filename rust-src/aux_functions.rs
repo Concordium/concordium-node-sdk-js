@@ -7,6 +7,12 @@ use std::collections::BTreeMap;
 type ExampleCurve = G1;
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use sha2::{Digest, Sha256};
+use concordium_contracts_common::{from_bytes, Cursor, schema::{Module}};
+use hex;
+
+use anyhow::{bail, Result, anyhow};
+use id::{account_holder::create_unsigned_credential, constants::AttributeKind, types::*};
+use pedersen_scheme::Value;
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
 pub struct CredId {
@@ -17,10 +23,6 @@ pub struct CredId {
     )]
     pub cred_id: ExampleCurve,
 }
-
-use anyhow::{bail, Result};
-use id::{account_holder::create_unsigned_credential, constants::AttributeKind, types::*};
-use pedersen_scheme::Value;
 
 pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
     let v: SerdeValue = from_str(input)?;
@@ -176,3 +178,19 @@ pub fn get_credential_deployment_info_aux(
     let cdi_json = json!(cdi);
     Ok(cdi_json.to_string())
 }
+
+pub fn deserialize_state_aux(
+    contract_name: &str,
+    state_bytes: String,
+    schema: String,
+) -> Result<String> {
+    let module: Module = match from_bytes(&hex::decode(schema)?) {
+        Ok(o) => o,
+        Err(e) => return Err(anyhow!("unable to parse schema: {:#?}", e))
+    };
+    let mut cursor = Cursor::new(hex::decode(state_bytes)?);
+    let contract = module.contracts.get(contract_name).ok_or(anyhow!("Unable to get contract"))?;
+    let state = contract.state.as_ref().ok_or(anyhow!("No state in schema"))?;
+    Ok(state.to_json(&mut cursor).expect("Unable to parse state to json").to_string())
+}
+

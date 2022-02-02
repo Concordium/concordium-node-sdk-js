@@ -374,13 +374,13 @@ export function serializeParameters(
                 throw new Error('Unsigned integer required');
             }
         case ParameterType.U64:
-            if (typeof userInput === 'number') {
+            if (typeof BigInt(userInput) === 'bigint') {
                 return encodeWord64(BigInt(userInput));
             } else {
                 throw new Error('Unsigned integer required');
             }
         case ParameterType.U128:
-            if (typeof userInput === 'number') {
+            if (typeof BigInt(userInput) === 'bigint') {
                 return encodeWord128(BigInt(userInput));
             } else {
                 throw new Error('Unsigned integer required');
@@ -404,13 +404,13 @@ export function serializeParameters(
                 throw new Error('Signed integer required');
             }
         case ParameterType.I64:
-            if (typeof userInput === 'number') {
+            if (typeof BigInt(userInput) === 'bigint') {
                 return encodeInt64(BigInt(userInput));
             } else {
                 throw new Error('Signed integer required');
             }
         case ParameterType.I128:
-            if (typeof userInput === 'number') {
+            if (typeof BigInt(userInput) === 'bigint') {
                 return encodeInt128(BigInt(userInput));
             } else {
                 throw new Error('Signed integer required');

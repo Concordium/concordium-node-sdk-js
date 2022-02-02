@@ -37,7 +37,7 @@ test('Parameter of AccountAddress with the wrong private key', async () => {
     const userInput = {
         RequestTransfer: [0, 50],
     };
-    const contractName = 'ComplexEnum';
+    const contractName = 'ComplexEnum2';
 
     const modulefileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema33.bin'
@@ -52,7 +52,7 @@ test('Parameter of AccountAddress with the wrong private key', async () => {
     const initModule: InitContractPayload = {
         amount: new GtuAmount(0n),
         moduleRef: new ModuleReference(
-            '0b2ab485c38c3d2b004cf7d7dd20107a35a5ca3687b4bde23365587fd4262e0d'
+            '4782598aac67f1b8afbcd64c6b4a676e08b434e68c2f0b70828849e493e9f2ce'
         ),
         contractName: contractName,
         parameter: inputParams,

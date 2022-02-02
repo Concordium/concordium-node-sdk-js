@@ -653,10 +653,10 @@ export function serializeEnumType(
         if (variantField.fieldsTag === FieldsTag.None) {
             if (enumData === variantString) {
                 if (enumFields.length <= 256) {
-                    bufferEnum.push(encodeWord8(i + 1));
+                    bufferEnum.push(encodeWord8(i));
                     return Buffer.concat(bufferEnum);
                 } else if (enumFields.length <= 256 * 256) {
-                    bufferEnum.push(encodeWord16(i + 1));
+                    bufferEnum.push(encodeWord16(i));
                     return Buffer.concat(bufferEnum);
                 } else {
                     throw new Error(
@@ -668,13 +668,13 @@ export function serializeEnumType(
             if (Object.keys(enumData)[0] === variantString) {
                 const enumDataValue = enumData[Object.keys(enumData)[0]];
                 if (enumFields.length <= 256) {
-                    bufferEnum.push(encodeWord8(i + 1));
+                    bufferEnum.push(encodeWord8(i));
                     bufferEnum.push(
                         serializeSchemaFields(variantField, enumDataValue)
                     );
                     return Buffer.concat(bufferEnum);
                 } else if (enumFields.length <= 256 * 256) {
-                    bufferEnum.push(encodeWord16(i + 1));
+                    bufferEnum.push(encodeWord16(i));
                     bufferEnum.push(
                         serializeSchemaFields(variantField, enumDataValue)
                     );
@@ -721,6 +721,7 @@ export function serializeSchemaFields(
             }
         case FieldsTag.Unnamed:
             const unNamedFields = fields as UnNamedFields;
+
             if (userData.length === unNamedFields.contents.length) {
                 for (let i = 0; i < unNamedFields.contents.length; i++) {
                     const fieldInfo = unNamedFields.contents[i];

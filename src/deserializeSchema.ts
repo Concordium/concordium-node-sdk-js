@@ -104,14 +104,15 @@ export type Type =
     | ArrayType
     | StructType
     | EnumType
-    | {
-          typeTag:
-              | ParameterType.String
-              | ParameterType.ContractName
-              | ParameterType.ReceiveName;
-          sizeLength: SizeLength.U32;
-      };
+    | StringType;
 
+export type StringType = {
+    typeTag:
+        | ParameterType.String
+        | ParameterType.ContractName
+        | ParameterType.ReceiveName;
+    sizeLength: SizeLength;
+};
 /**
  * Array type.
  */

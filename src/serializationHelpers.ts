@@ -16,6 +16,7 @@ import {
     EnumType,
     SizeLength,
     Fields,
+    StringType,
 } from './deserializeSchema';
 const MAX_UINT_64 = 2n ** 64n - 1n; // 2^64 - 1
 import { DataBlob } from './types/DataBlob';
@@ -121,9 +122,10 @@ export function encodeBool(value: boolean): Buffer {
 /**
  * Encodes a 64 bit unsigned integer to a Buffer using big endian.
  * @param value a 64 bit integer
+ * @useLittleEndian a boolean value false to use big endian else little endian.
  * @returns big endian serialization of the input
  */
-export function encodeWord64(value: bigint): Buffer {
+export function encodeWord64(value: bigint, useLittleEndian = false): Buffer {
     if (value > 9223372036854775807n || value < 0n) {
         throw new Error(
             'The input has to be a 64 bit unsigned integer but it was: ' + value
@@ -131,7 +133,7 @@ export function encodeWord64(value: bigint): Buffer {
     }
     const arr = new ArrayBuffer(8);
     const view = new DataView(arr);
-    view.setBigUint64(0, value, false);
+    view.setBigUint64(0, value, useLittleEndian);
     return Buffer.from(new Uint8Array(arr));
 }
 
@@ -153,7 +155,7 @@ export function encodeInt32(value: number): Buffer {
 }
 
 /**
- * Encodes a 32 bit unsigned integer to a Buffer using little endian.
+ * Encodes a 32 bit unsigned integer to a Buffer.
  * @param value a 32 bit integer
  * @useLittleEndian a boolean value false to use big endian else little endian.
  * @returns big endian serialization of the input
@@ -171,7 +173,7 @@ export function encodeWord32(value: number, useLittleEndian = false): Buffer {
 }
 
 /**
- * Encodes a 16 bit signed integer to a Buffer using big endian.
+ * Encodes a 16 bit signed integer to a Buffer.
  * @param value a 16 bit integer
  * @returns big endian serialization of the input
  */
@@ -245,16 +247,6 @@ export function encodeWord8FromString(value: string): Buffer {
 export function encodeDataBlob(blob: DataBlob): Buffer {
     const length = encodeWord16(blob.data.length);
     return Buffer.concat([length, blob.data]);
-}
-
-/**
- * Packing a buffer along with its length in 64 bits
- * @param buffer
- * @returns Buffer containing the 64 bit length of buffer and buffer.
- */
-export function packBufferWithWord64Length(buffer: Buffer): Buffer {
-    const length = encodeWord64(BigInt(buffer.length));
-    return Buffer.concat([length, buffer]);
 }
 
 /**
@@ -369,13 +361,13 @@ export function serializeParameters(
             }
         case ParameterType.U32:
             if (typeof userInput === 'number') {
-                return encodeWord32(userInput as number);
+                return encodeWord32(userInput as number, true);
             } else {
                 throw new Error('Unsigned integer required');
             }
         case ParameterType.U64:
             if (typeof BigInt(userInput) === 'bigint') {
-                return encodeWord64(BigInt(userInput));
+                return encodeWord64(BigInt(userInput), true);
             } else {
                 throw new Error('Unsigned integer required');
             }
@@ -423,10 +415,17 @@ export function serializeParameters(
             }
         case ParameterType.String:
             if (typeof userInput === 'string') {
-                return packBufferWithWord32Length(
-                    Buffer.from(userInput as string),
-                    true
+                const pSchema: StringType = paramSchema as StringType;
+                const bufferString: Buffer[] = [];
+                const length = userInput.length;
+                const stringLengthBuffer = serializeLength(
+                    length,
+                    pSchema.sizeLength
                 );
+                bufferString.push(stringLengthBuffer);
+                const stringBuffer = Buffer.from(userInput);
+                bufferString.push(stringBuffer);
+                return Buffer.concat(bufferString);
             } else {
                 throw new Error('String required');
             }
@@ -435,10 +434,11 @@ export function serializeParameters(
         case ParameterType.Struct:
             return serializeStruct(paramSchema as StructType, userInput);
         case ParameterType.AccountAddress:
-            return (userInput as AccountAddress).decodedAddress;
+            const accountAddress = new AccountAddress(userInput);
+            return accountAddress.decodedAddress;
         case ParameterType.Amount:
             const GTUAmount = new GtuAmount(BigInt(userInput));
-            return encodeWord64(GTUAmount.microGtuAmount);
+            return encodeWord64(GTUAmount.microGtuAmount, true);
         case ParameterType.Timestamp:
             if (typeof userInput === 'number') {
                 return encodeWord128(BigInt(userInput));
@@ -457,10 +457,12 @@ export function serializeParameters(
                 typeof (userInput as ContractAddress).subindex === 'number'
             ) {
                 const serializeIndex = encodeWord64(
-                    (userInput as ContractAddress).index
+                    (userInput as ContractAddress).index,
+                    true
                 );
                 const serializeSubIndex = encodeWord64(
-                    (userInput as ContractAddress).subindex
+                    (userInput as ContractAddress).subindex,
+                    true
                 );
                 return Buffer.concat([serializeIndex, serializeSubIndex]);
             } else {
@@ -474,7 +476,17 @@ export function serializeParameters(
         case ParameterType.ContractName:
         case ParameterType.ReceiveName:
             if (typeof userInput === 'string') {
-                return Buffer.from(userInput as string);
+                const pSchema: StringType = paramSchema as StringType;
+                const bufferString: Buffer[] = [];
+                const length = userInput.length;
+                const stringLengthBuffer = serializeLength(
+                    length,
+                    pSchema.sizeLength
+                );
+                bufferString.push(stringLengthBuffer);
+                const stringBuffer = Buffer.from(userInput);
+                bufferString.push(stringBuffer);
+                return Buffer.concat(bufferString);
             } else {
                 throw new Error('Signed integer required');
             }
@@ -508,7 +520,8 @@ export function serializeArray(
     if (userArrayValues && arraySchema.size === userArrayValues.length) {
         for (let i = 0; i < arraySchema.size; i++) {
             const userValue = userArrayValues[i];
-            bufferArray.push(serializeParameters(arraySchema.of, userValue));
+            const stringBuffer = serializeParameters(arraySchema.of, userValue);
+            bufferArray.push(stringBuffer);
         }
     } else {
         throw new Error('Array size and user input array not matched');
@@ -553,7 +566,8 @@ export function serializeListOrSet(
     bufferArray.push(listLengthBuffer);
     for (let i = 0; i < listData.length; i++) {
         const userValue = listData[i];
-        bufferArray.push(serializeParameters(listType.of, userValue));
+        const buffer = serializeParameters(listType.of, userValue);
+        bufferArray.push(buffer);
     }
     return Buffer.concat(bufferArray);
 }
@@ -757,9 +771,9 @@ export function serializeLength(
         case SizeLength.U16:
             return encodeWord16(length);
         case SizeLength.U32:
-            return encodeWord32(length);
+            return encodeWord32(length, true);
         case SizeLength.U64:
-            return encodeWord64(BigInt(length));
+            return encodeWord64(BigInt(length), true);
         default:
             return Buffer.from([]);
     }

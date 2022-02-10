@@ -5,7 +5,7 @@ import * as fs from 'fs';
 
 const client = getNodeClient();
 
-test('Deserialize state (two-step-transfer)', async () => {
+test('Deserialize state with schema from file (two-step-transfer)', async () => {
     const blockHash =
         'fad0981b0424c6e1af746a39667628861481ac225f90decd233980311c2e19cb';
     const contractAddress = { index: BigInt(1646), subindex: BigInt(0) };

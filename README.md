@@ -671,8 +671,8 @@ The following example demonstrates how to deserialize a contract's state:
 
 ```js
 const contractName = "my-contract-name"
-const schema = Buffer.from(schema-source); // Load schema from module or file
-const rawContractState = Buffer.from(state-source); // Could be getinstanceInfo(...).model
+const schema = Buffer.from(schemaSource); // Load schema from file
+const rawContractState = Buffer.from(stateSource); // Could be getinstanceInfo(...).model
 const state = deserializeContractState(contractName, schema, rawContractState);
 ```
 

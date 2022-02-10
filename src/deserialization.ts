@@ -21,6 +21,6 @@ export function deserializeContractState(
     } catch (e) {
         throw new Error(
             'unable to deserialize state, due to: ' + serializedState
-        ); // In this case the state is the error message from the rust module
+        ); // In this case serializedState is the error message from the rust module
     }
 }

@@ -1,9 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 2022-02-02
 
 ### Added
 
+- Function to deserialize contract state.
 - Support for register data transaction.
 
 ## 0.5.1 2021-11-19

@@ -39,3 +39,4 @@ export {
     buildSignedCredentialForExistingAccount,
 } from './credentialDeploymentTransactions';
 export { isAlias, getAlias } from './alias';
+export { deserializeContractState } from './deserialization';

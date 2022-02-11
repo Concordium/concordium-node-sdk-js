@@ -788,6 +788,17 @@ const updateContractTransaction: AccountTransaction = {
 ```
 
 Finally, to actually update the contract on the chain, send the constructed `updateContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
+
+## Deserialize contract state
+The following example demonstrates how to deserialize a contract's state:
+
+```js
+const contractName = "my-contract-name"
+const schema = Buffer.from(schemaSource); // Load schema from file
+const rawContractState = Buffer.from(stateSource); // Could be getinstanceInfo(...).model
+const state = deserializeContractState(contractName, schema, rawContractState);
+```
+
 # Build
 
 ## Building for a release

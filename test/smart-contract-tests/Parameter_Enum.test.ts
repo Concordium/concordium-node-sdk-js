@@ -41,13 +41,12 @@ test('Parameter of AccountAddress with the wrong private key', async () => {
         Smashed,
     }
 
-    const userInput = DCBBankState[DCBBankState.Intact];
+    const userInput = { Intact: [DCBBankState[DCBBankState.Intact]] };
     const contractName = 'SimpleEnum';
 
     const modulefileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema32.bin'
     );
-    console.log([userInput]);
     const inputParams = serializeInitContractParameters(
         contractName,
         userInput,

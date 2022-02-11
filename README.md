@@ -692,15 +692,19 @@ For example if the contract accepts List, Set, Map as input then user can provid
 const userInput = [45, 60, 60, 80]; // user input as list of u8 
 //Set is unordered collection of same data type which does not allow duplicate values.
 const userInput = [80, 20, 78, 10]; // user input as set of u8 
-//Pair is a Tuple of values with left and right properties where left as property name and right as property value.
-const userInput = { left:'name', right:'Concordium'}; // user input as pair where the user need to provide left type as string and right type as string value
-//Map is a collection of key and value pairs where key is property name and value is property value and all key value pair should be of same data type. For suppose key as string and value as string then all other remaining key value should be of similar.
-const userInput = [{ key:'name', value:'Concordium' }, { key:'country', value: 'Denmark'}, { key:'city', value:'Zug'}]; // user input as map where the user need to provide array of key value 
+//Pair is a JSON array with two items.Below is the example of Pair(U8, ContractAddress)
+const userInput = [200, { "index": 0, "subindex": 0}]; // user input as pair where the user need to provide left type as u8 and right type as contract address value
+//Map is a collection of key and value pairs where key is property name and value is property value and all key value pair should be of same data type. For suppose key as string and value as string then all other remaining key value should be of similar.Below is example of Map(AccountAddress, U64)
+const userInput = [
+  ["2wkBET2rRgE8pahuaczxKbmv7ciehqsne57F9gtzf1PVdr2VP3", 0],
+  ["2xBimKCq2tcciegw9NsFXgScCQAsK7vhqKQ2yJPyJ5vPsWLGi5", 15000000]
+  ["2xdGJBNoe716cifxi8jYjm7JHBd5vPyd2ZgpnutwwATJ5vDsiw", 12400]
+]; // user input as map where the user need to provide array of key value 
 ```
 For example if the contract accepts Enum as input then the user can provide input as shown below
 ```js
 enum Animals { Cat = 1, Dog = 2, Human = 4 } // user need to provide enum 
-const userInput = Animals[Animals.Cat]; // user input as enum 
+const userInput = { "Cat": Animals[Animals.Cat]}; // user input as enum 
 ```
 
 Let init a contract with u8 so user provides u8 value as input like 25 and contract name to init the contract

@@ -54,7 +54,10 @@ export function serializeList<T>(
  * @returns big endian serialization of the input
  */
 export function encodeInt128(value: bigint): Buffer {
-    if (value > -18446744073709551616n || value < 18446744073709551615n) {
+    if (
+        value < -170141183460469231731687303715884105728n ||
+        value > 170141183460469231731687303715884105727n
+    ) {
         throw new Error(
             'The input has to be a 128 bit signed integer but it was: ' + value
         );
@@ -73,8 +76,8 @@ export function encodeInt128(value: bigint): Buffer {
  * @param value a 128 bit integer
  * @returns big endian serialization of the input
  */
-export function encodeWord128(value: bigint): Buffer {
-    if (value > 170141183460469231731687303715884105728n || value < 0n) {
+export function encodeWord128(value: bigint, useLittleEndian = false): Buffer {
+    if (value > 340282366920938463463374607431768211455n || value < 0n) {
         throw new Error(
             'The input has to be a 128 bit unsigned integer but it was: ' +
                 value
@@ -84,8 +87,8 @@ export function encodeWord128(value: bigint): Buffer {
     const view = new DataView(arr);
     const byteOffset = 4;
     const res = splitUInt128toUInt64(value);
-    view.setBigUint64(byteOffset, res.left);
-    view.setBigUint64(byteOffset + 8, res.right);
+    view.setBigUint64(byteOffset, res.left, useLittleEndian);
+    view.setBigUint64(byteOffset + 8, res.right, useLittleEndian);
     return Buffer.from(new Uint8Array(arr));
 }
 
@@ -95,7 +98,7 @@ export function encodeWord128(value: bigint): Buffer {
  * @returns big endian serialization of the input
  */
 export function encodeInt64(value: bigint): Buffer {
-    if (value > 4294967295n || value < -4294967296n) {
+    if (value > 9223372036854775807n || value < -9223372036854775808n) {
         throw new Error(
             'The input has to be a 64 bit signed integer but it was: ' + value
         );
@@ -126,7 +129,7 @@ export function encodeBool(value: boolean): Buffer {
  * @returns big endian serialization of the input
  */
 export function encodeWord64(value: bigint, useLittleEndian = false): Buffer {
-    if (value > 9223372036854775807n || value < 0n) {
+    if (value > 18446744073709551615n || value < 0n) {
         throw new Error(
             'The input has to be a 64 bit unsigned integer but it was: ' + value
         );
@@ -143,7 +146,7 @@ export function encodeWord64(value: bigint, useLittleEndian = false): Buffer {
  * @returns big endian serialization of the input
  */
 export function encodeInt32(value: number): Buffer {
-    if (value > -2147483648 || value < 2147483647 || !Number.isInteger(value)) {
+    if (value < -2147483648 || value > 2147483647 || !Number.isInteger(value)) {
         throw new Error(
             'The input has to be a 32 bit signed integer but it was: ' + value
         );
@@ -178,7 +181,7 @@ export function encodeWord32(value: number, useLittleEndian = false): Buffer {
  * @returns big endian serialization of the input
  */
 export function encodeInt16(value: number): Buffer {
-    if (value > -32768 || value < 32767 || !Number.isInteger(value)) {
+    if (value < -32768 || value > 32767 || !Number.isInteger(value)) {
         throw new Error(
             'The input has to be a 16 bit signed integer but it was: ' + value
         );
@@ -194,7 +197,7 @@ export function encodeInt16(value: number): Buffer {
  * @param value a 16 bit integer
  * @returns big endian serialization of the input
  */
-export function encodeWord16(value: number): Buffer {
+export function encodeWord16(value: number, useLittleEndian = false): Buffer {
     if (value > 65535 || value < 0 || !Number.isInteger(value)) {
         throw new Error(
             'The input has to be a 16 bit unsigned integer but it was: ' + value
@@ -202,7 +205,7 @@ export function encodeWord16(value: number): Buffer {
     }
     const arr = new ArrayBuffer(2);
     const view = new DataView(arr);
-    view.setUint16(0, value, false);
+    view.setUint16(0, value, useLittleEndian);
     return Buffer.from(new Uint8Array(arr));
 }
 
@@ -355,7 +358,7 @@ export function serializeParameters(
             }
         case ParameterType.U16:
             if (typeof userInput === 'number') {
-                return encodeWord16(userInput as number);
+                return encodeWord16(userInput as number, true);
             } else {
                 throw new Error('Unsigned integer required');
             }
@@ -373,7 +376,7 @@ export function serializeParameters(
             }
         case ParameterType.U128:
             if (typeof BigInt(userInput) === 'bigint') {
-                return encodeWord128(BigInt(userInput));
+                return encodeWord128(BigInt(userInput), true);
             } else {
                 throw new Error('Unsigned integer required');
             }
@@ -440,21 +443,25 @@ export function serializeParameters(
             const GTUAmount = new GtuAmount(BigInt(userInput));
             return encodeWord64(GTUAmount.microGtuAmount, true);
         case ParameterType.Timestamp:
-            if (typeof userInput === 'number') {
-                return encodeWord128(BigInt(userInput));
+            if (typeof userInput === 'string') {
+                const timestamp = Date.parse(userInput);
+                return encodeWord128(BigInt(timestamp), true);
             } else {
-                throw new Error('Timestamp required in bigint format');
+                throw new Error('Timestamp required in string format');
             }
         case ParameterType.Duration:
-            if (typeof userInput === 'number') {
-                return encodeWord128(BigInt(userInput));
+            if (typeof userInput === 'string') {
+                const duration = getSeconds(userInput);
+                return encodeWord128(BigInt(duration), true);
             } else {
-                throw new Error('Duration required in bigint format');
+                throw new Error('Duration required in string format');
             }
         case ParameterType.ContractAddress:
             if (
-                typeof (userInput as ContractAddress).index === 'number' &&
-                typeof (userInput as ContractAddress).subindex === 'number'
+                typeof BigInt((userInput as ContractAddress).index) ===
+                    'bigint' &&
+                typeof BigInt((userInput as ContractAddress).subindex) ===
+                    'bigint'
             ) {
                 const serializeIndex = encodeWord64(
                     (userInput as ContractAddress).index,
@@ -474,21 +481,49 @@ export function serializeParameters(
         case ParameterType.Set:
             return serializeListOrSet(paramSchema as ListType, userInput);
         case ParameterType.ContractName:
-        case ParameterType.ReceiveName:
-            if (typeof userInput === 'string') {
+            if (userInput.hasOwnProperty('contract')) {
                 const pSchema: StringType = paramSchema as StringType;
                 const bufferString: Buffer[] = [];
-                const length = userInput.length;
+                const contractName = 'init_' + userInput.contract;
+                const length = contractName.length;
                 const stringLengthBuffer = serializeLength(
                     length,
                     pSchema.sizeLength
                 );
                 bufferString.push(stringLengthBuffer);
-                const stringBuffer = Buffer.from(userInput);
+                const stringBuffer = Buffer.from(contractName);
                 bufferString.push(stringBuffer);
                 return Buffer.concat(bufferString);
             } else {
-                throw new Error('Signed integer required');
+                throw new Error(
+                    "Missing field 'contract' of type JSON String."
+                );
+            }
+        case ParameterType.ReceiveName:
+            if (userInput.hasOwnProperty('contract')) {
+                if (userInput.hasOwnProperty('func')) {
+                    const pSchema: StringType = paramSchema as StringType;
+                    const bufferString: Buffer[] = [];
+                    const receiveName =
+                        userInput.contract + '.' + userInput.func;
+                    const length = receiveName.length;
+                    const stringLengthBuffer = serializeLength(
+                        length,
+                        pSchema.sizeLength
+                    );
+                    bufferString.push(stringLengthBuffer);
+                    const stringBuffer = Buffer.from(receiveName);
+                    bufferString.push(stringBuffer);
+                    return Buffer.concat(bufferString);
+                } else {
+                    throw new Error(
+                        "Missing field 'func' of type JSON String."
+                    );
+                }
+            } else {
+                throw new Error(
+                    "Missing field 'contract' of type JSON String."
+                );
             }
         case ParameterType.Pair:
             return serializePairType(paramSchema as PairType, userInput);
@@ -560,16 +595,16 @@ export function serializeListOrSet(
     if (!listData) {
         throw new Error('Invalid input for type list or set');
     }
-    const bufferArray: Buffer[] = [];
+    const bufferList: Buffer[] = [];
     const length = listData.length;
     const listLengthBuffer = serializeLength(length, listType.sizeLength);
-    bufferArray.push(listLengthBuffer);
+    bufferList.push(listLengthBuffer);
     for (let i = 0; i < listData.length; i++) {
         const userValue = listData[i];
         const buffer = serializeParameters(listType.of, userValue);
-        bufferArray.push(buffer);
+        bufferList.push(buffer);
     }
-    return Buffer.concat(bufferArray);
+    return Buffer.concat(bufferList);
 }
 
 /**
@@ -586,14 +621,13 @@ export function serializePairType(
     if (!pairData) {
         throw new Error('Invalid input for type pair');
     }
-    const bufferArray: Buffer[] = [];
-    const keys = Object.keys(pairData);
-    if (keys.length === 2) {
-        const leftValue = pairData[keys[0]];
-        const rightValue = pairData[keys[1]];
-        bufferArray.push(serializeParameters(pairType.ofLeft, leftValue));
-        bufferArray.push(serializeParameters(pairType.ofRight, rightValue));
-        return Buffer.concat(bufferArray);
+    const bufferPair: Buffer[] = [];
+    if (pairData.length === 2) {
+        const leftValue = pairData[0];
+        const rightValue = pairData[1];
+        bufferPair.push(serializeParameters(pairType.ofLeft, leftValue));
+        bufferPair.push(serializeParameters(pairType.ofRight, rightValue));
+        return Buffer.concat(bufferPair);
     } else {
         throw new Error('Only pairs of two are supported');
     }
@@ -613,32 +647,23 @@ export function serializeMapType(
     if (!mapData) {
         throw new Error('Invalid input for type map');
     }
-    const bufferArray: Buffer[] = [];
+    const bufferMap: Buffer[] = [];
     const length = mapData.length;
-    const pairLengthBuffer = serializeLength(length, mapType.sizeLength);
-    bufferArray.push(pairLengthBuffer);
-    if (mapType.sizeLength === mapData.length) {
-        for (let i = 0; i < mapType.sizeLength; i++) {
-            const itemValue = mapData[i];
-            const keys = Object.keys(itemValue);
-            if (keys.length === 2) {
-                const leftValue = itemValue[keys[0]];
-                const rightValue = itemValue[keys[1]];
-                bufferArray.push(
-                    serializeParameters(mapType.ofKeys, leftValue)
-                );
-                bufferArray.push(
-                    serializeParameters(mapType.ofValues, rightValue)
-                );
-            } else {
-                throw new Error('Expected key-value pair');
-            }
+    const mapLengthBuffer = serializeLength(length, mapType.sizeLength);
+    bufferMap.push(mapLengthBuffer);
+    for (let i = 0; i < length; i++) {
+        const itemValue = mapData[i];
+        if (itemValue.length === 2) {
+            const leftValue = itemValue[0];
+            const rightValue = itemValue[1];
+            bufferMap.push(serializeParameters(mapType.ofKeys, leftValue));
+            bufferMap.push(serializeParameters(mapType.ofValues, rightValue));
+        } else {
+            throw new Error('Expected key-value pair');
         }
-    } else {
-        throw new Error('Map size and user input map not matched');
     }
 
-    return Buffer.concat(bufferArray);
+    return Buffer.concat(bufferMap);
 }
 
 /**
@@ -661,45 +686,57 @@ export function serializeEnumType(
     let variantString: string;
     let variantField: Fields;
     for (let i = 0; i < enumFields.length; i++) {
+        const enumDataVariant = Object.keys(enumData)[0];
+        const enumDataValue = enumData[enumDataVariant];
         const variant = enumFields[i];
         variantString = variant[0];
         variantField = variant[1];
-        if (variantField.fieldsTag === FieldsTag.None) {
-            if (enumData === variantString) {
-                if (enumFields.length <= 256) {
-                    bufferEnum.push(encodeWord8(i));
-                    return Buffer.concat(bufferEnum);
-                } else if (enumFields.length <= 256 * 256) {
-                    bufferEnum.push(encodeWord16(i));
-                    return Buffer.concat(bufferEnum);
-                } else {
-                    throw new Error(
-                        'Enums with more than 65536 variants are not supported.'
-                    );
-                }
+        if (enumDataVariant === variantString) {
+            if (enumFields.length <= 256) {
+                bufferEnum.push(encodeWord8(i));
+            } else if (enumFields.length <= 256 * 256) {
+                bufferEnum.push(encodeWord16(i));
+            } else {
+                throw new Error(
+                    'Enums with more than 65536 variants are not supported.'
+                );
             }
-        } else {
-            if (Object.keys(enumData)[0] === variantString) {
-                const enumDataValue = enumData[Object.keys(enumData)[0]];
-                if (enumFields.length <= 256) {
-                    bufferEnum.push(encodeWord8(i));
-                    bufferEnum.push(
-                        serializeSchemaFields(variantField, enumDataValue)
-                    );
-                    return Buffer.concat(bufferEnum);
-                } else if (enumFields.length <= 256 * 256) {
-                    bufferEnum.push(encodeWord16(i));
-                    bufferEnum.push(
-                        serializeSchemaFields(variantField, enumDataValue)
-                    );
-                    return Buffer.concat(bufferEnum);
-                } else {
-                    throw new Error(
-                        'Enums with more than 65536 variants are not supported.'
-                    );
-                }
-            }
+            bufferEnum.push(serializeSchemaFields(variantField, enumDataValue));
+            return Buffer.concat(bufferEnum);
         }
+        // if (variantField.fieldsTag === FieldsTag.None) {
+        //     const enumDataVariant = Object.keys(enumData)[0];
+        //     if (enumDataVariant === variantString) {
+        //         if (enumFields.length <= 256) {
+        //             bufferEnum.push(encodeWord8(i));
+        //             return Buffer.concat(bufferEnum);
+        //         } else if (enumFields.length <= 256 * 256) {
+        //             bufferEnum.push(encodeWord16(i));
+        //             return Buffer.concat(bufferEnum);
+        //         } else {
+        //             throw new Error(
+        //                 'Enums with more than 65536 variants are not supported.'
+        //             );
+        //         }
+        //     }
+        // } else {
+        //     if (Object.keys(enumData)[0] === variantString) {
+        //         const enumDataValue = enumData[Object.keys(enumData)[0]];
+        //         if (enumFields.length <= 256) {
+        //             bufferEnum.push(encodeWord8(i));
+        //         } else if (enumFields.length <= 256 * 256) {
+        //             bufferEnum.push(encodeWord16(i));
+        //         } else {
+        //             throw new Error(
+        //                 'Enums with more than 65536 variants are not supported.'
+        //             );
+        //         }
+        //         bufferEnum.push(
+        //             serializeSchemaFields(variantField, enumDataValue)
+        //         );
+        //         return Buffer.concat(bufferEnum);
+        //     }
+        // }
     }
     throw new Error('Invalid enum input');
 }
@@ -715,7 +752,7 @@ export function serializeSchemaFields(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     userData: any
 ): Buffer {
-    const buffer: Buffer[] = [];
+    const bufferStruct: Buffer[] = [];
     const keys = Object.keys(userData);
     switch (fields.fieldsTag) {
         case FieldsTag.Named:
@@ -725,9 +762,11 @@ export function serializeSchemaFields(
                     const fieldInfo = namedFields.contents[i];
                     const userJsonProperty = fieldInfo[0];
                     const userValue = userData[userJsonProperty];
-                    buffer.push(serializeParameters(fieldInfo[1], userValue));
+                    bufferStruct.push(
+                        serializeParameters(fieldInfo[1], userValue)
+                    );
                 }
-                return Buffer.concat(buffer);
+                return Buffer.concat(bufferStruct);
             } else {
                 throw new Error(
                     `Expected ${namedFields.contents.length} named fields`
@@ -735,14 +774,15 @@ export function serializeSchemaFields(
             }
         case FieldsTag.Unnamed:
             const unNamedFields = fields as UnNamedFields;
-
             if (userData.length === unNamedFields.contents.length) {
                 for (let i = 0; i < unNamedFields.contents.length; i++) {
                     const fieldInfo = unNamedFields.contents[i];
                     const userValue = userData[i];
-                    buffer.push(serializeParameters(fieldInfo, userValue));
+                    bufferStruct.push(
+                        serializeParameters(fieldInfo, userValue)
+                    );
                 }
-                return Buffer.concat(buffer);
+                return Buffer.concat(bufferStruct);
             } else {
                 throw new Error(
                     `Expected ${unNamedFields.contents.length} unnamed fields`
@@ -750,7 +790,7 @@ export function serializeSchemaFields(
             }
         case FieldsTag.None:
         default:
-            return Buffer.from(buffer);
+            return Buffer.from(bufferStruct);
     }
 }
 
@@ -777,4 +817,35 @@ export function serializeLength(
         default:
             return Buffer.from([]);
     }
+}
+
+/**
+ *
+ * @param value Duration string
+ * @returns seconds value for the given duration
+ */
+export function getSeconds(value: string): number {
+    let seconds = 0;
+    const days = value.match(/(\d+)\s*d/);
+    const hours = value.match(/(\d+)\s*h/);
+    const minutes = value.match(/(\d+)\s*m /);
+    const sec = value.match(/(\d+)\s*s/);
+    const millisec = value.match(/(\d+)\s*ms/);
+    if (days) {
+        seconds += parseInt(days[1]) * 86400;
+    }
+    if (hours) {
+        seconds += parseInt(hours[1]) * 3600;
+    }
+    if (minutes) {
+        seconds += parseInt(minutes[1]) * 60;
+    }
+    if (sec) {
+        seconds += parseInt(sec[1]);
+    }
+    if (millisec) {
+        const ms = parseInt(millisec[1]) / 1000;
+        seconds += ms;
+    }
+    return Math.round(seconds);
 }

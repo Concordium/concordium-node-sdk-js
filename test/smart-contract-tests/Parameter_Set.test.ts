@@ -40,7 +40,6 @@ test('Parameter of AccountAddress with the wrong private key', async () => {
     const modulefileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema34.bin'
     );
-    console.log([userInput]);
     const inputParams = serializeInitContractParameters(
         contractName,
         userInput,

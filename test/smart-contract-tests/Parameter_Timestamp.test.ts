@@ -36,7 +36,7 @@ test('Parameter of Timestamp with the wrong private key', async () => {
 
     const contractName = 'ContractForTime';
 
-    const userInput = "2020-12-11T11:38:37Z";
+    const userInput = '2020-12-11T11:38:37Z';
     const modulefileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema17.bin'
     );

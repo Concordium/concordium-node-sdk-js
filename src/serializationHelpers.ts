@@ -440,8 +440,12 @@ export function serializeParameters(
             const accountAddress = new AccountAddress(userInput);
             return accountAddress.decodedAddress;
         case ParameterType.Amount:
-            const GTUAmount = new GtuAmount(BigInt(userInput));
-            return encodeWord64(GTUAmount.microGtuAmount, true);
+            if (typeof userInput === 'string') {
+                const GTUAmount = new GtuAmount(BigInt(userInput));
+                return encodeWord64(GTUAmount.microGtuAmount, true);
+            } else {
+                throw new Error('Amount required in string format');
+            }
         case ParameterType.Timestamp:
             if (typeof userInput === 'string') {
                 const timestamp = Date.parse(userInput);
@@ -464,11 +468,11 @@ export function serializeParameters(
                     'bigint'
             ) {
                 const serializeIndex = encodeWord64(
-                    (userInput as ContractAddress).index,
+                    BigInt((userInput as ContractAddress).index),
                     true
                 );
                 const serializeSubIndex = encodeWord64(
-                    (userInput as ContractAddress).subindex,
+                    BigInt((userInput as ContractAddress).subindex),
                     true
                 );
                 return Buffer.concat([serializeIndex, serializeSubIndex]);

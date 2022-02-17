@@ -35,7 +35,7 @@ test('Parameter of Amount with the wrong private key', async () => {
     };
 
     const contractName = 'UserAmount';
-    const userInput = 1000;
+    const userInput = '1000';
     const modulefileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema15.bin'
     );

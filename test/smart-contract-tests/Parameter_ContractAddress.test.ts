@@ -35,10 +35,7 @@ test('Parameter of ContractAddress with the wrong private key', async () => {
     };
 
     const contractName = 'CAddress';
-    const contractAddress = {
-        index: BigInt(83),
-        subindex: BigInt(0),
-    };
+    const contractAddress = { index: 10, subindex: 10 };
 
     const userInput = contractAddress;
 

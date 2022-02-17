@@ -36,7 +36,7 @@ test('Parameter of Duration with the wrong private key', async () => {
 
     const contractName = 'ContractForDuration';
 
-    const userInput = 1637216868;
+    const userInput = "10d 1h 42s 1h";
     const modulefileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema18.bin'
     );

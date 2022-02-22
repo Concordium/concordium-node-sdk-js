@@ -282,7 +282,7 @@ export interface TransactionFeeDistribution {
     gasAccount: RewardFraction;
 }
 
-interface MintDistributionBase {
+interface MintDistributionCommon {
     bakingReward: RewardFraction;
     finalizationReward: RewardFraction;
 }
@@ -291,7 +291,7 @@ interface MintDistributionV0 {
     mintPerSlot: number;
 }
 
-type MintDistributionV1 = MintDistributionBase;
+type MintDistributionV1 = MintDistributionCommon;
 
 export type MintDistribution = MintDistributionV0 | MintDistributionV1;
 
@@ -302,16 +302,16 @@ export interface GasRewards {
     chainUpdate: RewardFraction;
 }
 
-interface RewardParametersBase {
+interface RewardParametersCommon {
     transactionFeeDistribution: TransactionFeeDistribution;
     gASRewards: GasRewards;
 }
 
-interface RewardParametersV0 extends RewardParametersBase {
+interface RewardParametersV0 extends RewardParametersCommon {
     mintDistribution: MintDistributionV0;
 }
 
-interface RewardParametersV1 extends RewardParametersBase {
+interface RewardParametersV1 extends RewardParametersCommon {
     mintDistribution: MintDistributionV1;
 }
 
@@ -347,7 +347,7 @@ interface TimeParametersV1 {
     mintPerPayday: number;
 }
 
-interface ChainParametersBase {
+interface ChainParametersCommon {
     electionDifficulty: number;
     euroPerEnergy: ExchangeRate;
     microGTUPerEuro: ExchangeRate;
@@ -356,14 +356,14 @@ interface ChainParametersBase {
 }
 
 interface ChainParametersV0
-    extends ChainParametersBase,
+    extends ChainParametersCommon,
         CooldownParametersV0,
         PoolParametersV0 {
     rewardParameters: RewardParametersV0;
 }
 
 interface ChainParametersV1
-    extends ChainParametersBase,
+    extends ChainParametersCommon,
         CooldownParametersV1,
         PoolParametersV1,
         TimeParametersV1 {
@@ -377,7 +377,7 @@ export interface Authorization {
     authorizedKeys: number[];
 }
 
-export interface Authorizations {
+interface AuthorizationsCommon {
     emergency: Authorization;
     microGTUPerEuro: Authorization;
     euroPerEnergy: Authorization;
@@ -393,16 +393,34 @@ export interface Authorizations {
     keys: VerifyKey[];
 }
 
+type AuthorizationsV0 = AuthorizationsCommon;
+
+interface AuthorizationsV1 extends AuthorizationsCommon {
+    cooldownParameters: Authorization;
+    timeParameters: Authorization;
+}
+
+export type Authorizations = AuthorizationsV0 | AuthorizationsV1;
+
 export interface KeysWithThreshold {
     keys: VerifyKey[];
     threshold: number;
 }
 
-export interface Keys {
+interface KeysCommon {
     rootKeys: KeysWithThreshold;
     level1Keys: KeysWithThreshold;
-    level2Keys: Authorizations;
 }
+
+interface KeysV0 extends KeysCommon {
+    level2Keys: AuthorizationsV0;
+}
+
+interface KeysV1 extends KeysCommon {
+    level2Keys: AuthorizationsV1;
+}
+
+export type Keys = KeysV0 | KeysV1;
 
 export interface UpdateQueueQueue {
     effectiveTime: Date;
@@ -417,7 +435,7 @@ export interface UpdateQueue {
     queue: UpdateQueueQueue;
 }
 
-interface UpdateQueues {
+interface UpdateQueuesCommon {
     microGTUPerEuro: UpdateQueue;
     euroPerEnergy: UpdateQueue;
     transactionFeeDistribution: UpdateQueue;
@@ -434,33 +452,52 @@ interface UpdateQueues {
     level2Keys: UpdateQueue;
 }
 
-interface UpdatesBase {
-    keys: Keys;
-    updateQueues: UpdateQueues;
+type UpdateQueuesV0 = UpdateQueuesCommon;
+
+interface UpdateQueuesV1 extends UpdateQueuesCommon {
+    cooldownParameters: UpdateQueue;
+    timeParameters: UpdateQueue;
 }
 
-interface UpdatesV0 extends UpdatesBase {
+export type UpdateQueues = UpdateQueuesV0 | UpdateQueuesV1;
+
+interface ProtocolUpdate {
+    message: string;
+    specificationUrl: string;
+    specificationHash: string;
+    specificationAuxiliaryData: string;
+}
+
+interface UpdatesCommon {
+    protocolUpdate: ProtocolUpdate | undefined;
+}
+
+interface UpdatesV0 extends UpdatesCommon {
     chainParameters: ChainParametersV0;
+    updateQueues: UpdateQueuesV0;
+    keys: KeysV0;
 }
 
-interface UpdatesV1 extends UpdatesBase {
+interface UpdatesV1 extends UpdatesCommon {
     chainParameters: ChainParametersV1;
+    updateQueues: UpdateQueuesV1;
+    keys: KeysV1;
 }
 
 export type Updates = UpdatesV0 | UpdatesV1;
 
-interface BlockSummaryBase {
+interface BlockSummaryCommon {
     finalizationData: FinalizationData;
     transactionSummaries: TransactionSummary[];
 }
 
-interface BlockSummaryV0 extends BlockSummaryBase {
+interface BlockSummaryV0 extends BlockSummaryCommon {
     updates: UpdatesV0;
 }
 
-interface BlockSummaryV1 extends BlockSummaryBase {
+interface BlockSummaryV1 extends BlockSummaryCommon {
     updates: UpdatesV1;
-    protocolVersion: bigint;
+    protocolVersion: bigint; // Protocol version 4 and onwards
 }
 
 export type BlockSummary = BlockSummaryV0 | BlockSummaryV1;

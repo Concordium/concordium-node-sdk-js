@@ -257,21 +257,43 @@ export interface FinalizationData {
     finalizers: PartyInfo[];
 }
 
-export interface ExchangeRate {
+export interface Ratio {
     numerator: bigint;
     denominator: bigint;
 }
+
+export type ExchangeRate = Ratio;
+
+export interface InclusiveRange<N extends number> {
+    min: N;
+    max: N;
+}
+
+/**
+ * Used as index of a reward period, or as a number of reward periods.
+ * A reward period spans a number of epochs, as defined in chain parameters as "rewardPeriodLength"
+ */
+export type RewardPeriod = bigint;
+/** Index of an epoch, or number of epochs. */
+export type Epoch = bigint;
 
 export interface TransactionFeeDistribution {
     baker: RewardFraction;
     gasAccount: RewardFraction;
 }
 
-export interface MintDistribution {
-    mintPerSlot: number;
+interface MintDistributionBase {
     bakingReward: RewardFraction;
     finalizationReward: RewardFraction;
 }
+
+interface MintDistributionV0 {
+    mintPerSlot: number;
+}
+
+type MintDistributionV1 = MintDistributionBase;
+
+export type MintDistribution = MintDistributionV0 | MintDistributionV1;
 
 export interface GasRewards {
     baker: RewardFraction;
@@ -280,22 +302,75 @@ export interface GasRewards {
     chainUpdate: RewardFraction;
 }
 
-export interface RewardParameters {
+interface RewardParametersBase {
     transactionFeeDistribution: TransactionFeeDistribution;
-    mintDistribution: MintDistribution;
     gASRewards: GasRewards;
 }
 
-export interface ChainParameters {
+interface RewardParametersV0 extends RewardParametersBase {
+    mintDistribution: MintDistributionV0;
+}
+
+interface RewardParametersV1 extends RewardParametersBase {
+    mintDistribution: MintDistributionV1;
+}
+
+export type RewardParameters = RewardParametersV0 | RewardParametersV1;
+
+interface CooldownParametersV0 {
+    bakerCooldownEpochs: Epoch;
+}
+
+interface CooldownParametersV1 {
+    poolOwnerCooldown: RewardPeriod;
+    delegatorCooldown: RewardPeriod;
+}
+
+interface PoolParametersV0 {
+    minimumThresholdForBaking: bigint;
+}
+
+interface PoolParametersV1 {
+    finalizationCommissionLPool: RewardFraction;
+    bakingCommissionLPool: RewardFraction;
+    transactionCommissionLPool: RewardFraction;
+    finalizationCommissionRange: InclusiveRange<RewardFraction>;
+    bakingCommissionRange: InclusiveRange<RewardFraction>;
+    transactionCommissionRange: InclusiveRange<RewardFraction>;
+    minimumEquityCapital: bigint;
+    capitalBound: RewardFraction;
+    leverageBound: Ratio;
+}
+
+interface TimeParametersV1 {
+    rewardPeriodLength: Epoch;
+    mintPerPayday: number;
+}
+
+interface ChainParametersBase {
     electionDifficulty: number;
     euroPerEnergy: ExchangeRate;
     microGTUPerEuro: ExchangeRate;
     accountCreationLimit: number;
-    bakerCooldownEpochs: bigint;
-    minimumThresholdForBaking: bigint;
-    rewardParameters: RewardParameters;
     foundationAccountIndex: bigint;
 }
+
+interface ChainParametersV0
+    extends ChainParametersBase,
+        CooldownParametersV0,
+        PoolParametersV0 {
+    rewardParameters: RewardParametersV0;
+}
+
+interface ChainParametersV1
+    extends ChainParametersBase,
+        CooldownParametersV1,
+        PoolParametersV1,
+        TimeParametersV1 {
+    rewardParameters: RewardParametersV1;
+}
+
+export type ChainParameters = ChainParametersV0 | ChainParametersV1;
 
 export interface Authorization {
     threshold: number;
@@ -359,17 +434,36 @@ interface UpdateQueues {
     level2Keys: UpdateQueue;
 }
 
-export interface Updates {
-    chainParameters: ChainParameters;
+interface UpdatesBase {
     keys: Keys;
     updateQueues: UpdateQueues;
 }
 
-export interface BlockSummary {
+interface UpdatesV0 extends UpdatesBase {
+    chainParameters: ChainParametersV0;
+}
+
+interface UpdatesV1 extends UpdatesBase {
+    chainParameters: ChainParametersV1;
+}
+
+export type Updates = UpdatesV0 | UpdatesV1;
+
+interface BlockSummaryBase {
     finalizationData: FinalizationData;
     transactionSummaries: TransactionSummary[];
-    updates: Updates;
 }
+
+interface BlockSummaryV0 extends BlockSummaryBase {
+    updates: UpdatesV0;
+}
+
+interface BlockSummaryV1 extends BlockSummaryBase {
+    updates: UpdatesV1;
+    protocolVersion: bigint;
+}
+
+export type BlockSummary = BlockSummaryV0 | BlockSummaryV1;
 
 export interface BlockInfo {
     blockParent: string;

@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer/';
 import { VerifyKey } from '.';
-import { ParameterType, ContractAddress } from './types';
+import { ParameterType } from './types';
 import { AccountAddress } from './types/accountAddress';
 import { GtuAmount } from '../src/types/gtuAmount';
 import {
@@ -51,9 +51,10 @@ export function serializeList<T>(
 /**
  * Encodes a 128 bit signed integer to a Buffer using big endian.
  * @param value a 128 bit integer
+ * @useLittleEndian a boolean value false to use big endian else little endian.
  * @returns big endian serialization of the input
  */
-export function encodeInt128(value: bigint): Buffer {
+export function encodeInt128(value: bigint, useLittleEndian = false): Buffer {
     if (
         value < -170141183460469231731687303715884105728n ||
         value > 170141183460469231731687303715884105727n
@@ -62,18 +63,19 @@ export function encodeInt128(value: bigint): Buffer {
             'The input has to be a 128 bit signed integer but it was: ' + value
         );
     }
-    const arr = new ArrayBuffer(32);
+    const arr = new ArrayBuffer(16);
     const view = new DataView(arr);
-    const byteOffset = 4;
+    const byteOffset = 0;
     const res = splitUInt128toUInt64(value);
-    view.setBigInt64(byteOffset, res.left);
-    view.setBigInt64(byteOffset + 8, res.right);
+    view.setBigInt64(byteOffset, res.left, useLittleEndian);
+    view.setBigInt64(byteOffset + 8, res.right, useLittleEndian);
     return Buffer.from(new Uint8Array(arr));
 }
 
 /**
  * Encodes a 128 bit unsigned integer to a Buffer using big endian.
  * @param value a 128 bit integer
+ * @useLittleEndian a boolean value false to use big endian else little endian.
  * @returns big endian serialization of the input
  */
 export function encodeWord128(value: bigint, useLittleEndian = false): Buffer {
@@ -83,9 +85,9 @@ export function encodeWord128(value: bigint, useLittleEndian = false): Buffer {
                 value
         );
     }
-    const arr = new ArrayBuffer(32);
+    const arr = new ArrayBuffer(16);
     const view = new DataView(arr);
-    const byteOffset = 4;
+    const byteOffset = 0;
     const res = splitUInt128toUInt64(value);
     view.setBigUint64(byteOffset, res.left, useLittleEndian);
     view.setBigUint64(byteOffset + 8, res.right, useLittleEndian);
@@ -95,9 +97,10 @@ export function encodeWord128(value: bigint, useLittleEndian = false): Buffer {
 /**
  * Encodes a 64 bit signed integer to a Buffer using big endian.
  * @param value a 64 bit integer
+ * @useLittleEndian a boolean value false to use big endian else little endian.
  * @returns big endian serialization of the input
  */
-export function encodeInt64(value: bigint): Buffer {
+export function encodeInt64(value: bigint, useLittleEndian = false): Buffer {
     if (value > 9223372036854775807n || value < -9223372036854775808n) {
         throw new Error(
             'The input has to be a 64 bit signed integer but it was: ' + value
@@ -105,7 +108,7 @@ export function encodeInt64(value: bigint): Buffer {
     }
     const arr = new ArrayBuffer(8);
     const view = new DataView(arr);
-    view.setBigInt64(0, value, false);
+    view.setBigInt64(0, value, useLittleEndian);
     return Buffer.from(new Uint8Array(arr));
 }
 
@@ -143,9 +146,10 @@ export function encodeWord64(value: bigint, useLittleEndian = false): Buffer {
 /**
  * Encodes a 32 bit signed integer to a Buffer using big endian.
  * @param value a 32 bit integer
+ * @useLittleEndian a boolean value false to use big endian else little endian.
  * @returns big endian serialization of the input
  */
-export function encodeInt32(value: number): Buffer {
+export function encodeInt32(value: number, useLittleEndian = false): Buffer {
     if (value < -2147483648 || value > 2147483647 || !Number.isInteger(value)) {
         throw new Error(
             'The input has to be a 32 bit signed integer but it was: ' + value
@@ -153,7 +157,7 @@ export function encodeInt32(value: number): Buffer {
     }
     const arr = new ArrayBuffer(4);
     const view = new DataView(arr);
-    view.setInt32(0, value, false);
+    view.setInt32(0, value, useLittleEndian);
     return Buffer.from(new Int8Array(arr));
 }
 
@@ -178,9 +182,10 @@ export function encodeWord32(value: number, useLittleEndian = false): Buffer {
 /**
  * Encodes a 16 bit signed integer to a Buffer.
  * @param value a 16 bit integer
+ * @useLittleEndian a boolean value false to use big endian else little endian.
  * @returns big endian serialization of the input
  */
-export function encodeInt16(value: number): Buffer {
+export function encodeInt16(value: number, useLittleEndian = false): Buffer {
     if (value < -32768 || value > 32767 || !Number.isInteger(value)) {
         throw new Error(
             'The input has to be a 16 bit signed integer but it was: ' + value
@@ -188,7 +193,7 @@ export function encodeInt16(value: number): Buffer {
     }
     const arr = new ArrayBuffer(2);
     const view = new DataView(arr);
-    view.setInt16(0, value, false);
+    view.setInt16(0, value, useLittleEndian);
     return Buffer.from(new Int8Array(arr));
 }
 
@@ -325,15 +330,15 @@ export function serializeYearMonth(yearMonth: string): Buffer {
 
 /**
  * @param bigint bigint value that need to be splitted
- * @returns two bigint values
+ * @returns two bigint values left and right
  */
 function splitUInt128toUInt64(bigint: bigint): {
     left: bigint;
     right: bigint;
 } {
     return {
-        left: (bigint & (MAX_UINT_64 << 64n)) >> 64n,
-        right: bigint & MAX_UINT_64,
+        right: (bigint & (MAX_UINT_64 << 64n)) >> 64n,
+        left: bigint & MAX_UINT_64,
     };
 }
 
@@ -388,25 +393,25 @@ export function serializeParameters(
             }
         case ParameterType.I16:
             if (typeof userInput === 'number') {
-                return encodeInt16(userInput as number);
+                return encodeInt16(userInput as number, true);
             } else {
                 throw new Error('Signed integer required');
             }
         case ParameterType.I32:
             if (typeof userInput === 'number') {
-                return encodeInt32(userInput as number);
+                return encodeInt32(userInput as number, true);
             } else {
                 throw new Error('Signed integer required');
             }
         case ParameterType.I64:
             if (typeof BigInt(userInput) === 'bigint') {
-                return encodeInt64(BigInt(userInput));
+                return encodeInt64(BigInt(userInput), true);
             } else {
                 throw new Error('Signed integer required');
             }
         case ParameterType.I128:
             if (typeof BigInt(userInput) === 'bigint') {
-                return encodeInt128(BigInt(userInput));
+                return encodeInt128(BigInt(userInput), true);
             } else {
                 throw new Error('Signed integer required');
             }
@@ -433,7 +438,8 @@ export function serializeParameters(
                 throw new Error('String required');
             }
         case ParameterType.Array:
-            return serializeArray(paramSchema as ArrayType, userInput);
+            const buffer = serializeArray(paramSchema as ArrayType, userInput);
+            return buffer;
         case ParameterType.Struct:
             return serializeStruct(paramSchema as StructType, userInput);
         case ParameterType.AccountAddress:
@@ -449,32 +455,35 @@ export function serializeParameters(
         case ParameterType.Timestamp:
             if (typeof userInput === 'string') {
                 const timestamp = Date.parse(userInput);
-                return encodeWord128(BigInt(timestamp), true);
+                return encodeWord64(BigInt(timestamp), true);
             } else {
                 throw new Error('Timestamp required in string format');
             }
         case ParameterType.Duration:
             if (typeof userInput === 'string') {
-                const duration = getSeconds(userInput);
-                return encodeWord128(BigInt(duration), true);
+                const duration = getMilliSeconds(userInput);
+                return encodeWord64(BigInt(duration), true);
             } else {
                 throw new Error('Duration required in string format');
             }
         case ParameterType.ContractAddress:
             if (
-                typeof BigInt((userInput as ContractAddress).index) ===
-                    'bigint' &&
-                typeof BigInt((userInput as ContractAddress).subindex) ===
-                    'bigint'
+                typeof BigInt(userInput.index) === 'bigint' ||
+                typeof BigInt(userInput.subindex) === 'bigint'
             ) {
                 const serializeIndex = encodeWord64(
-                    BigInt((userInput as ContractAddress).index),
+                    BigInt(userInput.index),
                     true
                 );
-                const serializeSubIndex = encodeWord64(
-                    BigInt((userInput as ContractAddress).subindex),
-                    true
-                );
+                let serializeSubIndex = Buffer.from([]);
+                if (userInput.subindex != undefined) {
+                    serializeSubIndex = encodeWord64(
+                        BigInt(userInput.subindex),
+                        true
+                    );
+                } else {
+                    serializeSubIndex = encodeWord64(BigInt(0), true);
+                }
                 return Buffer.concat([serializeIndex, serializeSubIndex]);
             } else {
                 throw new Error('Invaild contract address format');
@@ -708,39 +717,6 @@ export function serializeEnumType(
             bufferEnum.push(serializeSchemaFields(variantField, enumDataValue));
             return Buffer.concat(bufferEnum);
         }
-        // if (variantField.fieldsTag === FieldsTag.None) {
-        //     const enumDataVariant = Object.keys(enumData)[0];
-        //     if (enumDataVariant === variantString) {
-        //         if (enumFields.length <= 256) {
-        //             bufferEnum.push(encodeWord8(i));
-        //             return Buffer.concat(bufferEnum);
-        //         } else if (enumFields.length <= 256 * 256) {
-        //             bufferEnum.push(encodeWord16(i));
-        //             return Buffer.concat(bufferEnum);
-        //         } else {
-        //             throw new Error(
-        //                 'Enums with more than 65536 variants are not supported.'
-        //             );
-        //         }
-        //     }
-        // } else {
-        //     if (Object.keys(enumData)[0] === variantString) {
-        //         const enumDataValue = enumData[Object.keys(enumData)[0]];
-        //         if (enumFields.length <= 256) {
-        //             bufferEnum.push(encodeWord8(i));
-        //         } else if (enumFields.length <= 256 * 256) {
-        //             bufferEnum.push(encodeWord16(i));
-        //         } else {
-        //             throw new Error(
-        //                 'Enums with more than 65536 variants are not supported.'
-        //             );
-        //         }
-        //         bufferEnum.push(
-        //             serializeSchemaFields(variantField, enumDataValue)
-        //         );
-        //         return Buffer.concat(bufferEnum);
-        //     }
-        // }
     }
     throw new Error('Invalid enum input');
 }
@@ -748,7 +724,7 @@ export function serializeEnumType(
 /**
  *
  * @param fields Field type of the schema
- * @param userData  user data
+ * @param userData user data
  * @returns
  */
 export function serializeSchemaFields(
@@ -813,7 +789,7 @@ export function serializeLength(
         case SizeLength.U8:
             return encodeWord8(length);
         case SizeLength.U16:
-            return encodeWord16(length);
+            return encodeWord16(length, true);
         case SizeLength.U32:
             return encodeWord32(length, true);
         case SizeLength.U64:
@@ -826,30 +802,107 @@ export function serializeLength(
 /**
  *
  * @param value Duration string
- * @returns seconds value for the given duration
+ * @returns milliseconds value for the given duration
+ */
+export function getMilliSeconds(value: string): number {
+    let seconds = 0;
+    const days = getDays(value);
+    const hours = getHours(value);
+    const minutes = getMinutes(value);
+    const sec = getSeconds(value);
+    const millisec = getMSeconds(value);
+    let ms = 0;
+    if (days) {
+        seconds += days * 86400;
+    }
+    if (hours) {
+        seconds += hours * 3600;
+    }
+    if (minutes) {
+        seconds += minutes * 60;
+    }
+    if (sec) {
+        seconds += sec;
+    }
+    if (millisec) {
+        ms = millisec;
+    }
+    seconds *= 1000;
+    seconds = seconds + ms;
+    return Math.round(seconds);
+}
+
+/**
+ *
+ * @param value  Duration string
+ * @returns sum of hours in the given string
+ */
+export function getHours(value: string): number {
+    let hours = 0;
+    const y = new RegExp(/(\d+)\s*h/g);
+    let z;
+    while (null != (z = y.exec(value))) {
+        hours += parseInt(z[1]);
+    }
+    return hours;
+}
+
+/**
+ *
+ * @param value  Duration string
+ * @returns sum of days in the given string
+ */
+export function getDays(value: string): number {
+    let days = 0;
+    const y = new RegExp(/(\d+)\s*d/g);
+    let z;
+    while (null != (z = y.exec(value))) {
+        days += parseInt(z[1]);
+    }
+    return days;
+}
+
+/**
+ *
+ *  @param value  Duration string
+ * @returns sum of minutes in the given string
+ */
+export function getMinutes(value: string): number {
+    let minutes = 0;
+    const y = new RegExp(/(\d+)\s*m/g);
+    let z;
+    while (null != (z = y.exec(value))) {
+        minutes += parseInt(z[1]);
+    }
+    return minutes;
+}
+
+/**
+ *
+ *  @param value  Duration string
+ * @returns sum of seconds in the given string
  */
 export function getSeconds(value: string): number {
     let seconds = 0;
-    const days = value.match(/(\d+)\s*d/);
-    const hours = value.match(/(\d+)\s*h/);
-    const minutes = value.match(/(\d+)\s*m /);
-    const sec = value.match(/(\d+)\s*s/);
-    const millisec = value.match(/(\d+)\s*ms/);
-    if (days) {
-        seconds += parseInt(days[1]) * 86400;
+    const y = new RegExp(/(\d+)\s*s/g);
+    let z;
+    while (null != (z = y.exec(value))) {
+        seconds += parseInt(z[1]);
     }
-    if (hours) {
-        seconds += parseInt(hours[1]) * 3600;
+    return seconds;
+}
+
+/**
+ *
+ *  @param value  Duration string
+ * @returns sum of milliseconds in the given string
+ */
+export function getMSeconds(value: string): number {
+    let mseconds = 0;
+    const y = new RegExp(/(\d+)\s*ms/g);
+    let z;
+    while (null != (z = y.exec(value))) {
+        mseconds += parseInt(z[1]);
     }
-    if (minutes) {
-        seconds += parseInt(minutes[1]) * 60;
-    }
-    if (sec) {
-        seconds += parseInt(sec[1]);
-    }
-    if (millisec) {
-        const ms = parseInt(millisec[1]) / 1000;
-        seconds += ms;
-    }
-    return Math.round(seconds);
+    return mseconds;
 }

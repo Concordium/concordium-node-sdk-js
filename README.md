@@ -705,6 +705,7 @@ For example if the contract accepts Enum as input then the user can provide inpu
 ```js
 enum Animals { Cat = 1, Dog = 2, Human = 4 } // user need to provide enum 
 const userInput = { "Cat": Animals[Animals.Cat]}; // user input as enum 
+For more information, see the documentation 'https://developer.concordium.software/en/mainnet/smart-contracts/references/schema-json.html#json-for-schema-type'
 ```
 
 Let init a contract with u8 so user provides u8 value as input like 25 and contract name to init the contract

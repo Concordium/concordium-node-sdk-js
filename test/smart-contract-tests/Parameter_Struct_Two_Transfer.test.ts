@@ -44,7 +44,7 @@ test('Parameter of Struct (U8, string, string variables) with the wrong private 
             '3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5',
         ],
         transfer_agreement_threshold: 2,
-        transfer_request_ttl: 1643888516,
+        transfer_request_ttl: '10d 1h 42s 1h',
     };
     const inputParams = serializeInitContractParameters(
         contractName,

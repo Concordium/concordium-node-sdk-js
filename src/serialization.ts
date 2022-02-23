@@ -442,14 +442,16 @@ export function serializeInitContractParameters(
     contractName: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     userInput: any,
-    modulefileBuffer?: globalThis.Buffer
+    modulefileBuffer: Buffer
 ): Buffer {
     const getSchemaModule = deserialModuleFromBuffer(modulefileBuffer);
     if (getSchemaModule !== undefined) {
         const getInitType = getSchemaModule[contractName].init;
         return serializeParameters(getInitType, userInput);
     } else {
-        return Buffer.from([]);
+        throw new Error(
+            'Schema module not found. Please provide a valid schema file.'
+        );
     }
 }
 
@@ -466,7 +468,7 @@ export function serializeUpdateContractParameters(
     receiveFunctionName: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     userInput: any,
-    modulefileBuffer?: globalThis.Buffer
+    modulefileBuffer: Buffer
 ): Buffer {
     const getSchemaModule = deserialModuleFromBuffer(modulefileBuffer);
     if (getSchemaModule !== undefined) {

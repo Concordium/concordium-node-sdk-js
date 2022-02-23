@@ -603,34 +603,15 @@ Finally, to actually deploy the module to the chain, send the constructed `deplo
 ## Init Contract (parameterless smart contract)
 The following example demonstrates how to initialize a smart contract from a module, which has already been deployed. 
 The name of the contract "INDBank".
-In this example, the contract does not take any parameters, so we can leave parameters as undefined.  
+In this example, the contract does not take any parameters, so we can leave parameters as an empty buffer.
 ```js
 const contractName = 'INDBank'; 
 const params = Buffer.from([]);
-//The amount of energy that can be used for contract execution.
-const maxContractExecutionEnergy = 300000n;
-```
-
-Create init contract transaction
-```js
-const initModule: InitContractPayload = {
-    amount: new GtuAmount(0n), // Amount to send to the contract. If the smart contract is not payable, set the amount to 0.
-    moduleRef: new ModuleReference('a225a5aeb0a5cf9bbc59209e15df030e8cc2c17b8dba08c4bf59f80edaedd8b1'), // Module reference
-    contractName: contractName,
-    parameter: params,
-    maxContractExecutionEnergy: maxContractExecutionEnergy
-};
-
-const initContractTransaction: AccountTransaction = {
-    header: header,
-    payload: initModule,
-    type: AccountTransactionType.InitializeSmartContractInstance,
-};
-```
+	@@ -630,15 +630,15 @@ const initContractTransaction: AccountTransaction = {
 
 Finally, to actually initialize the contract on the chain, send the constructed `initContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
 
-## Update Contract(parameterless smart contract)
+## Update Contract (parameterless smart contract)
 The following example demonstrates how to update a smart contract. 
 
 To update a smart contract we create a 'updateContractTransaction'.
@@ -638,129 +619,96 @@ To do this we need to specify the name of the receive function, which should con
 
 We also need to supply the contract address of the contract instance. This consists of an index and a subindex.
 
-In this example, the contract does not take any parameters, so we can leave the parameters as an empty list.  
+In this example, the contract does not take any parameters, so we can leave the parameters as an empty buffer.
 ```js
 const receiveName = 'INDBank.insertAmount';
 const params = Buffer.from([]);
-const contractAddress = { index: BigInt(83), subindex: BigInt(0) } as ContractAddress;
-//The amount of energy that can be used for contract execution.
-const maxContractExecutionEnergy = 30000n;
-```
-Create update contract transaction
-```js
-const updateModule: UpdateContractPayload =
-{
-    amount: new GtuAmount(1000n),
-    contractAddress: contractAddress,
-    receiveName: receiveName,
-    parameter: params,
-    maxContractExecutionEnergy: maxContractExecutionEnergy
-};
-
-const updateContractTransaction: AccountTransaction = {
-    header: header,
-    payload: updateModule,
-    type: AccountTransactionType.UpdateSmartContractInstance,
-};
-```
+	@@ -666,69 +666,64 @@ const updateContractTransaction: AccountTransaction = {
 
 Finally, to actually update the contract on the chain, send the constructed `updateContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
 
-## Smartcontract with parameters
-In the previous section we have seen init and update contract without parameters. Here in this section we will describe how to init and update contract with parameters.
-Let us consider the following example with init contract parameters for a smart contract which accepts u8 as input.
-Users can provide input based on the types which are specified is the contract while the writing the smart contracts.
-For example if the contract accept string, array of three u8 integer values, struct as input then user can provide input as shown below 
+## Smart contract with parameters
+In the previous sections we have seen how to initialize and update contracts without parameters. In this section we will describe how to initialize and update contracts with parameters.
+The user should provide the input in the JSON format specified in [our documentation](https://developer.concordium.software/en/mainnet/smart-contracts/references/schema-json.html).
+
+Let us consider the following example where the contract's initialization parameters are the following structure:
+```rust
+#[derive(SchemaType, Serialize)]
+struct MyStruct {
+    age: u16,
+    name: String,
+    city: String,
+}
+```
+An example of a valid input would be:
 ```js
-const userInput = "Concordium"; // user input as string
-const userInput = [24, 25, 60]; // user input as array of three u8 integer values
 const userInput = {
         age: 51,
         name: 'Concordium',
         city: 'Zug',
-    };   // user input as struct which are Named fields
-const userInput = [
-        0,
-        50,
-        120
-]; // user input as struct which are unNamed fields
+    };
 ```
-
-For example if the contract accepts List, Set, Map as input then user can provide inputs as shown below
+An other example could be if the parameter is the following "SomeEnum":
+```rust
+#[derive(SchemaType, Serialize)]
+enum AnotherEnum {
+    D,
+}
+#[derive(SchemaType, Serialize)]
+enum SomeEnum {
+    B(AnotherEnum),
+}
+```
+When the following would be a valid input:
 ```js
-//List is ordered collection of same data type which allows duplicate values.
-const userInput = [45, 60, 60, 80]; // user input as list of u8 
-//Set is unordered collection of same data type which does not allow duplicate values.
-const userInput = [80, 20, 78, 10]; // user input as set of u8 
-//Pair is a JSON array with two items.Below is the example of Pair(U8, ContractAddress)
-const userInput = [200, { "index": 0, "subindex": 0}]; // user input as pair where the user need to provide left type as u8 and right type as contract address value
-//Map is a collection of key and value pairs where key is property name and value is property value and all key value pair should be of same data type. For suppose key as string and value as string then all other remaining key value should be of similar.Below is example of Map(AccountAddress, U64)
-const userInput = [
-  ["2wkBET2rRgE8pahuaczxKbmv7ciehqsne57F9gtzf1PVdr2VP3", 0],
-  ["2xBimKCq2tcciegw9NsFXgScCQAsK7vhqKQ2yJPyJ5vPsWLGi5", 15000000]
-  ["2xdGJBNoe716cifxi8jYjm7JHBd5vPyd2ZgpnutwwATJ5vDsiw", 12400]
-]; // user input as map where the user need to provide array of key value 
+const userInput = {
+    B: [
+      {
+        D: []
+      }
+    ]
+  };
 ```
-For example if the contract accepts Enum as input then the user can provide input as shown below
-```js
-enum Animals { Cat = 1, Dog = 2, Human = 4 } // user need to provide enum 
-const userInput = { "Cat": Animals[Animals.Cat]}; // user input as enum 
-For more information, see the documentation 'https://developer.concordium.software/en/mainnet/smart-contracts/references/schema-json.html#json-for-schema-type'
-```
-
-Let init a contract with u8 so user provides u8 value as input like 25 and contract name to init the contract
-```js
-const userInput = 25;
-const contractName = 'SimpleU8';
-```
-
-Then the user need to provide schema file which has the contract schema embedded the below converts the input schema file to buffer format
+Then the user need to provide the schema for the module. Here we use getModuleBuffer to load the schema file:
 ```js
 const modulefileBuffer = getModuleBuffer(
-    'SCHEMA-PATH'
+    'SCHEMA-FILE-PATH'
 );
 ```
-Then after obtaining file buffer the following code will be used to obtain the buffer of the parameters using the parameters like contract name, user input and module buffer obtained in the previous step
+Then the parameters can be serialized into bytes:
 ```js
 const inputParams = serializeInitContractParameters(
-    contractName,
+    "my-contract-name",
     userInput,
     modulefileBuffer
 );
 ```
-Then we will construct the init payload with parameters obtained 
+Then the payload and transaction can be constructed, in the same way as the parameterless example:
 ```js
 const initModule: InitContractPayload = {
         amount: new GtuAmount(0n),
-        moduleRef: new ModuleReference(
-            '6cabee5b2d9d5013216eef3e5745288dcade77a4b1cd0d7a8951262476d564a0'
-        ),
-        contractName: contractName,
-        parameter: inputParams,
-        maxContractExecutionEnergy: baseEnergy,
-    };
-const initContractTransaction: AccountTransaction = {
-    header: header,
-    payload: initModule,
-    type: AccountTransactionType.InitializeSmartContractInstance,
-};
-```
+	@@ -748,22 +743,21 @@ const initContractTransaction: AccountTransaction = {
 
 Finally, to actually initialize the contract on the chain, send the constructed `initContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
 
-Let us consider the following example with update contract parameters for a smart contract which accepts i64 as input.
-So the user provides i64 value as input like -2000000, receive function name and contract name to update the contract
+To update a contract with parameters, consider the example where the input is an i64 value, like -2000000.
 ```js
 const userInput = -2000000;
-const contractName = 'INDBankU83';
-const receiveFunctionName = 'insertAmount7';
+const contractName = "my-contract-name";
+const receiveFunctionName = "my-receive-function-name";
 const receiveName = contractName + '.' + receiveFunctionName;
 ```
 
-Then the user need to provide schema file which has the contract schema embedded the below converts the input schema file to buffer format
+Then the user need to provide the schema. Here we use getModuleBuffer to load the schema file:
 ```js
 const modulefileBuffer = getModuleBuffer(
     'SCHEMA-PATH'
+);
+```
+Then the parameters can be serialized into bytes:
+```js
+const inputParams = serializeUpdateContractParameters(
+        contractName,
 );
 ```
 Then after obtaining file buffer the following code will be used to obtain the buffer of the parameters which need send the parameters like contract name, receive function name, user input and module buffer obtained in the previous step

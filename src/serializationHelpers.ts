@@ -75,7 +75,7 @@ export function encodeInt128(value: bigint, useLittleEndian = false): Buffer {
 /**
  * Encodes a 128 bit unsigned integer to a Buffer using big endian.
  * @param value a 128 bit integer
- * @useLittleEndian a boolean value false to use big endian else little endian.
+ * @param useLittleEndian a boolean value, if not given, the value is serialized in big endian.
  * @returns big endian serialization of the input
  */
 export function encodeWord128(value: bigint, useLittleEndian = false): Buffer {
@@ -97,7 +97,7 @@ export function encodeWord128(value: bigint, useLittleEndian = false): Buffer {
 /**
  * Encodes a 64 bit signed integer to a Buffer using big endian.
  * @param value a 64 bit integer
- * @useLittleEndian a boolean value false to use big endian else little endian.
+ * @param useLittleEndian a boolean value, if not given, the value is serialized in big endian.
  * @returns big endian serialization of the input
  */
 export function encodeInt64(value: bigint, useLittleEndian = false): Buffer {
@@ -128,7 +128,7 @@ export function encodeBool(value: boolean): Buffer {
 /**
  * Encodes a 64 bit unsigned integer to a Buffer using big endian.
  * @param value a 64 bit integer
- * @useLittleEndian a boolean value false to use big endian else little endian.
+ * @param useLittleEndian a boolean value, if not given, the value is serialized in big endian.
  * @returns big endian serialization of the input
  */
 export function encodeWord64(value: bigint, useLittleEndian = false): Buffer {
@@ -146,7 +146,7 @@ export function encodeWord64(value: bigint, useLittleEndian = false): Buffer {
 /**
  * Encodes a 32 bit signed integer to a Buffer using big endian.
  * @param value a 32 bit integer
- * @useLittleEndian a boolean value false to use big endian else little endian.
+ * @param useLittleEndian a boolean value, if not given, the value is serialized in big endian.
  * @returns big endian serialization of the input
  */
 export function encodeInt32(value: number, useLittleEndian = false): Buffer {
@@ -164,7 +164,7 @@ export function encodeInt32(value: number, useLittleEndian = false): Buffer {
 /**
  * Encodes a 32 bit unsigned integer to a Buffer.
  * @param value a 32 bit integer
- * @useLittleEndian a boolean value false to use big endian else little endian.
+ * @param useLittleEndian a boolean value, if not given, the value is serialized in big endian.
  * @returns big endian serialization of the input
  */
 export function encodeWord32(value: number, useLittleEndian = false): Buffer {
@@ -182,7 +182,7 @@ export function encodeWord32(value: number, useLittleEndian = false): Buffer {
 /**
  * Encodes a 16 bit signed integer to a Buffer.
  * @param value a 16 bit integer
- * @useLittleEndian a boolean value false to use big endian else little endian.
+ * @param useLittleEndian a boolean value, if not given, the value is serialized in big endian.
  * @returns big endian serialization of the input
  */
 export function encodeInt16(value: number, useLittleEndian = false): Buffer {
@@ -200,6 +200,7 @@ export function encodeInt16(value: number, useLittleEndian = false): Buffer {
 /**
  * Encodes a 16 bit unsigned integer to a Buffer using big endian.
  * @param value a 16 bit integer
+ * @param useLittleEndian a boolean value, if not given, the value is serialized in big endian.
  * @returns big endian serialization of the input
  */
 export function encodeWord16(value: number, useLittleEndian = false): Buffer {
@@ -260,7 +261,7 @@ export function encodeDataBlob(blob: DataBlob): Buffer {
 /**
  * Packing a buffer along with its length in 32 bits
  * @param buffer
- * @useLittleEndian a boolean value false to use big endian else little endian.
+ * @param useLittleEndian a boolean value, if not given, the value is serialized in big endian.
  * @returns Buffer containing the 32 bit length of buffer and buffer.
  */
 export function packBufferWithWord32Length(
@@ -329,8 +330,10 @@ export function serializeYearMonth(yearMonth: string): Buffer {
 }
 
 /**
- * @param bigint bigint value that need to be splitted
- * @returns two bigint values left and right
+ * @param bigint 128 bit bigint value that need to be splitted
+ * @returns two 64 bit bigint values left and right
+ * where left is first part of given 128 bigint value
+ * where right is second part of given 128 bigint value
  */
 function splitUInt128toUInt64(bigint: bigint): {
     left: bigint;
@@ -383,7 +386,7 @@ export function serializeParameters(
             if (typeof BigInt(userInput) === 'bigint') {
                 return encodeWord128(BigInt(userInput), true);
             } else {
-                throw new Error('Unsigned integer required');
+                throw new Error('String integer required');
             }
         case ParameterType.I8:
             if (typeof userInput === 'number') {
@@ -413,13 +416,13 @@ export function serializeParameters(
             if (typeof BigInt(userInput) === 'bigint') {
                 return encodeInt128(BigInt(userInput), true);
             } else {
-                throw new Error('Signed integer required');
+                throw new Error('String integer required');
             }
         case ParameterType.Bool:
             if (typeof userInput === 'boolean') {
                 return encodeBool(userInput as boolean);
             } else {
-                throw new Error('Signed integer required');
+                throw new Error('Boolean required');
             }
         case ParameterType.String:
             if (typeof userInput === 'string') {
@@ -435,7 +438,7 @@ export function serializeParameters(
                 bufferString.push(stringBuffer);
                 return Buffer.concat(bufferString);
             } else {
-                throw new Error('String required');
+                throw new Error('String value required');
             }
         case ParameterType.Array:
             const buffer = serializeArray(paramSchema as ArrayType, userInput);
@@ -455,7 +458,11 @@ export function serializeParameters(
         case ParameterType.Timestamp:
             if (typeof userInput === 'string') {
                 const timestamp = Date.parse(userInput);
-                return encodeWord64(BigInt(timestamp), true);
+                if (timestamp == null || isNaN(timestamp)) {
+                    return encodeWord64(BigInt(timestamp), true);
+                } else {
+                    throw new Error('Invalid timestamp format');
+                }
             } else {
                 throw new Error('Timestamp required in string format');
             }
@@ -804,105 +811,40 @@ export function serializeLength(
  * @param value Duration string
  * @returns milliseconds value for the given duration
  */
-export function getMilliSeconds(value: string): number {
-    let seconds = 0;
-    const days = getDays(value);
-    const hours = getHours(value);
-    const minutes = getMinutes(value);
-    const sec = getSeconds(value);
-    const millisec = getMSeconds(value);
-    let ms = 0;
+function getMilliSeconds(value: string): number {
+    let milliSeconds = 0;
+    const days = getDuration(value, new RegExp(/(\d+)\s*d/g));
+    const hours = getDuration(value, new RegExp(/(\d+)\s*h/g));
+    const minutes = getDuration(value, new RegExp(/(\d+)\s*m/g));
+    const sec = getDuration(value, new RegExp(/(\d+)\s*s/g));
+    const millisec = getDuration(value, new RegExp(/(\d+)\s*ms/g));
     if (days) {
-        seconds += days * 86400;
+        milliSeconds += days * 86400 * 1000;
     }
     if (hours) {
-        seconds += hours * 3600;
+        milliSeconds += hours * 3600 * 1000;
     }
     if (minutes) {
-        seconds += minutes * 60;
+        milliSeconds += minutes * 60 * 1000;
     }
     if (sec) {
-        seconds += sec;
+        milliSeconds += sec * 1000;
     }
-    if (millisec) {
-        ms = millisec;
-    }
-    seconds *= 1000;
-    seconds = seconds + ms;
-    return Math.round(seconds);
+    milliSeconds = milliSeconds + millisec;
+    return Math.round(milliSeconds);
 }
 
 /**
  *
- * @param value  Duration string
- * @returns sum of hours in the given string
+ * @param value Duration string
+ * @param regex regex pattern
+ * @returns sum of units based on regex in the given string
  */
-export function getHours(value: string): number {
+function getDuration(value: string, regex: RegExp): number {
     let hours = 0;
-    const y = new RegExp(/(\d+)\s*h/g);
     let z;
-    while (null != (z = y.exec(value))) {
+    while (null != (z = regex.exec(value))) {
         hours += parseInt(z[1]);
     }
     return hours;
-}
-
-/**
- *
- * @param value  Duration string
- * @returns sum of days in the given string
- */
-export function getDays(value: string): number {
-    let days = 0;
-    const y = new RegExp(/(\d+)\s*d/g);
-    let z;
-    while (null != (z = y.exec(value))) {
-        days += parseInt(z[1]);
-    }
-    return days;
-}
-
-/**
- *
- *  @param value  Duration string
- * @returns sum of minutes in the given string
- */
-export function getMinutes(value: string): number {
-    let minutes = 0;
-    const y = new RegExp(/(\d+)\s*m/g);
-    let z;
-    while (null != (z = y.exec(value))) {
-        minutes += parseInt(z[1]);
-    }
-    return minutes;
-}
-
-/**
- *
- *  @param value  Duration string
- * @returns sum of seconds in the given string
- */
-export function getSeconds(value: string): number {
-    let seconds = 0;
-    const y = new RegExp(/(\d+)\s*s/g);
-    let z;
-    while (null != (z = y.exec(value))) {
-        seconds += parseInt(z[1]);
-    }
-    return seconds;
-}
-
-/**
- *
- *  @param value  Duration string
- * @returns sum of milliseconds in the given string
- */
-export function getMSeconds(value: string): number {
-    let mseconds = 0;
-    const y = new RegExp(/(\d+)\s*ms/g);
-    let z;
-    while (null != (z = y.exec(value))) {
-        mseconds += parseInt(z[1]);
-    }
-    return mseconds;
 }

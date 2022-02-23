@@ -3,7 +3,7 @@ import { TextDecoder } from 'util';
 import { ParameterType } from './types';
 import { PassThrough } from 'stream';
 import * as fs from 'fs';
-
+import { Buffer } from 'buffer/';
 /**
  * Function that reags an output of specified type from {@link Readable}.
  *
@@ -470,7 +470,7 @@ export function deserialUint32(source: Readable): number {
  * @param buffer wasm file buffer
  * @returns deserialized module of wasm file
  */
-export function deserialModuleFromBuffer(buffer: Buffer | undefined): Module {
+export function deserialModuleFromBuffer(buffer: Buffer): Module {
     const bufferStream = new PassThrough();
     bufferStream.end(buffer);
     return deserialModule(bufferStream);
@@ -482,5 +482,5 @@ export function deserialModuleFromBuffer(buffer: Buffer | undefined): Module {
  * @returns Buffer of the wasm file contents
  */
 export function getModuleBuffer(filePath: string): Buffer {
-    return fs.readFileSync(filePath);
+    return Buffer.from(fs.readFileSync(filePath));
 }

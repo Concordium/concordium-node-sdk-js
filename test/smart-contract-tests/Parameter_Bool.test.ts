@@ -42,7 +42,7 @@ test('Parameter of Bool with the wrong private key', async () => {
     );
     const inputParams = serializeInitContractParameters(
         contractName,
-        JSON.stringify(userInput),
+        userInput,
         modulefileBuffer
     );
     const baseEnergy = 300000n;

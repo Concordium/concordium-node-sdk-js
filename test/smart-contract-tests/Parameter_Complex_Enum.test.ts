@@ -21,7 +21,7 @@ const senderAccountAddress =
 const wrongPrivateKey =
     'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
 // test case for init contract
-test('Parameter of AccountAddress with the wrong private key', async () => {
+test('Parameter of Enum with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
         new AccountAddress(senderAccountAddress)
     );
@@ -35,7 +35,7 @@ test('Parameter of AccountAddress with the wrong private key', async () => {
     };
 
     const userInput = {
-        RequestTransfer: [0, 50],
+        RequestTransfer: [0, '50'],
     };
     const contractName = 'ComplexEnum2';
 

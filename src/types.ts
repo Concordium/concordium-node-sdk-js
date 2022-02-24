@@ -677,6 +677,7 @@ export enum OpenStatus {
     ClosedForAll = 2,
 }
 
+export type BakerId = bigint;
 export interface CommissionRates {
     transactionCommission: RewardFraction;
     bakingCommission: RewardFraction;

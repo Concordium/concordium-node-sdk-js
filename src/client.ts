@@ -48,9 +48,11 @@ import {
     Versioned,
     InstanceInfo,
     InstanceInfoSerialized,
+    BakerId,
 } from './types';
 import {
     buildJsonResponseReviver,
+    intListToStringList,
     intToStringTransformer,
     isValidHash,
     unwrapBoolResponse,
@@ -59,6 +61,7 @@ import {
 import { GtuAmount } from './types/gtuAmount';
 import { ModuleReference } from './types/moduleReference';
 import { Buffer as BufferFormater } from 'buffer/';
+
 /**
  * A concordium-node specific gRPC client wrapper.
  *
@@ -598,6 +601,27 @@ export default class ConcordiumNodeClient {
             };
             return instanceInfo;
         }
+    }
+
+    /**
+     * Retrieve list of bakers on the network.
+     * @param blockHash the block hash to get the smart contact instances at
+     * @returns A JSON list of baker IDs
+     */
+    async getBakerList(blockHash: string): Promise<BakerId[] | undefined> {
+        if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+        const response = await this.sendRequest(
+            this.client.getBakerList,
+            blockHash
+        );
+
+        return unwrapJsonResponse<BakerId[]>(
+            response,
+            (_, v) => BigInt(v as string),
+            intListToStringList
+        );
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

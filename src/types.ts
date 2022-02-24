@@ -656,29 +656,74 @@ export interface InitialAccountCredential {
     contents: InitialCredentialDeploymentValues;
 }
 
-export interface BakerReduceStakePendingChange {
+export interface ReduceStakePendingChange {
     change: 'ReduceStake';
     newStake: bigint;
     epoch: bigint;
 }
 
-export interface BakerRemovalPendingChange {
+export interface RemovalPendingChange {
     change: 'RemoveBaker';
     epoch: bigint;
 }
 
-export type BakerPendingChange =
-    | BakerReduceStakePendingChange
-    | BakerRemovalPendingChange;
+export type StakePendingChange =
+    | ReduceStakePendingChange
+    | RemovalPendingChange;
+
+export enum OpenStatus {
+    OpenForAll = 0,
+    ClosedForNew = 1,
+    ClosedForAll = 2,
+}
+
+export interface CommissionRates {
+    transactionCommission: RewardFraction;
+    bakingCommission: RewardFraction;
+    finalizationCommission: RewardFraction;
+}
+
+export type BakerId = bigint;
+export enum DelegationTargetType {
+    LPool = 'L-Pool',
+    Baker = 'Baker',
+}
+
+export interface DelegationTargetLPool {
+    delegationType: DelegationTargetType.LPool;
+}
+
+export interface DelegationTargetBaker {
+    delegationType: DelegationTargetType.Baker;
+    bakerId: BakerId;
+}
+
+export type DelegationTarget = DelegationTargetLPool | DelegationTargetBaker;
+
+export interface BakerPoolInfo {
+    openStatus: OpenStatus;
+    metadataUrl: string;
+    commissionRates: CommissionRates;
+}
 
 export interface AccountBakerDetails {
     restakeEarnings: boolean;
-    bakerId: bigint;
+    bakerId: BakerId;
     bakerAggregationVerifyKey: string;
     bakerElectionVerifyKey: string;
     bakerSignatureVerifyKey: string;
     stakedAmount: bigint;
-    pendingChange?: BakerPendingChange;
+    pendingChange?: StakePendingChange;
+
+    /** Protocol version 4 and later. */
+    bakerPoolInfo?: BakerPoolInfo;
+}
+
+export interface AccountDelegationDetails {
+    restakeEarnings: boolean;
+    stakedAmount: bigint;
+    delegationTarget: DelegationTarget;
+    pendingChange?: StakePendingChange;
 }
 
 export interface AccountInfo {
@@ -698,7 +743,10 @@ export interface AccountInfo {
         Versioned<InitialAccountCredential | NormalAccountCredential>
     >;
 
+    // Only one of either accountBaker or accountDelegation can be active at any time.
     accountBaker?: AccountBakerDetails;
+    /** Protocol version 4 and later. */
+    accountDelegation?: AccountDelegationDetails;
 }
 
 export interface Description {

@@ -25,8 +25,8 @@ import {
     AccountTransaction,
     AccountTransactionSignature,
     ArInfo,
-    BakerReduceStakePendingChange,
-    BakerRemovalPendingChange,
+    ReduceStakePendingChange,
+    RemovalPendingChange,
     BlockInfo,
     BlockSummary,
     ChainParameters,
@@ -210,8 +210,8 @@ export default class ConcordiumNodeClient {
             | keyof AccountReleaseSchedule
             | keyof ReleaseSchedule
             | keyof AccountBakerDetails
-            | keyof BakerReduceStakePendingChange
-            | keyof BakerRemovalPendingChange
+            | keyof ReduceStakePendingChange
+            | keyof RemovalPendingChange
         )[] = [
             'accountAmount',
             'accountNonce',

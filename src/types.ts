@@ -287,11 +287,11 @@ interface MintDistributionCommon {
     finalizationReward: RewardFraction;
 }
 
-interface MintDistributionV0 {
+export interface MintDistributionV0 extends MintDistributionCommon {
     mintPerSlot: number;
 }
 
-type MintDistributionV1 = MintDistributionCommon;
+export type MintDistributionV1 = MintDistributionCommon;
 
 export type MintDistribution = MintDistributionV0 | MintDistributionV1;
 
@@ -307,30 +307,36 @@ interface RewardParametersCommon {
     gASRewards: GasRewards;
 }
 
-interface RewardParametersV0 extends RewardParametersCommon {
+/**
+ * Used from protocol version 1-3
+ */
+export interface RewardParametersV0 extends RewardParametersCommon {
     mintDistribution: MintDistributionV0;
 }
 
-interface RewardParametersV1 extends RewardParametersCommon {
+/**
+ * Used from protocol version 4
+ */
+export interface RewardParametersV1 extends RewardParametersCommon {
     mintDistribution: MintDistributionV1;
 }
 
 export type RewardParameters = RewardParametersV0 | RewardParametersV1;
 
-interface CooldownParametersV0 {
+export interface CooldownParametersV0 {
     bakerCooldownEpochs: Epoch;
 }
 
-interface CooldownParametersV1 {
+export interface CooldownParametersV1 {
     poolOwnerCooldown: RewardPeriod;
     delegatorCooldown: RewardPeriod;
 }
 
-interface PoolParametersV0 {
+export interface PoolParametersV0 {
     minimumThresholdForBaking: bigint;
 }
 
-interface PoolParametersV1 {
+export interface PoolParametersV1 {
     finalizationCommissionLPool: RewardFraction;
     bakingCommissionLPool: RewardFraction;
     transactionCommissionLPool: RewardFraction;
@@ -342,7 +348,7 @@ interface PoolParametersV1 {
     leverageBound: Ratio;
 }
 
-interface TimeParametersV1 {
+export interface TimeParametersV1 {
     rewardPeriodLength: Epoch;
     mintPerPayday: number;
 }
@@ -355,14 +361,20 @@ interface ChainParametersCommon {
     foundationAccountIndex: bigint;
 }
 
-interface ChainParametersV0
+/**
+ * Used from protocol version 1-3
+ */
+export interface ChainParametersV0
     extends ChainParametersCommon,
         CooldownParametersV0,
         PoolParametersV0 {
     rewardParameters: RewardParametersV0;
 }
 
-interface ChainParametersV1
+/**
+ * Used from protocol version 4
+ */
+export interface ChainParametersV1
     extends ChainParametersCommon,
         CooldownParametersV1,
         PoolParametersV1,
@@ -393,9 +405,15 @@ interface AuthorizationsCommon {
     keys: VerifyKey[];
 }
 
-type AuthorizationsV0 = AuthorizationsCommon;
+/**
+ * Used from protocol version 1-3
+ */
+export type AuthorizationsV0 = AuthorizationsCommon;
 
-interface AuthorizationsV1 extends AuthorizationsCommon {
+/**
+ * Used from protocol version 4
+ */
+export interface AuthorizationsV1 extends AuthorizationsCommon {
     cooldownParameters: Authorization;
     timeParameters: Authorization;
 }
@@ -412,11 +430,17 @@ interface KeysCommon {
     level1Keys: KeysWithThreshold;
 }
 
-interface KeysV0 extends KeysCommon {
+/**
+ * Used from protocol version 1-3
+ */
+export interface KeysV0 extends KeysCommon {
     level2Keys: AuthorizationsV0;
 }
 
-interface KeysV1 extends KeysCommon {
+/**
+ * Used from protocol version 4
+ */
+export interface KeysV1 extends KeysCommon {
     level2Keys: AuthorizationsV1;
 }
 
@@ -426,7 +450,7 @@ export interface UpdateQueueQueue {
     effectiveTime: Date;
     // TODO Update the type of update to a generic update transaction when
     // update types have been added.
-    // Information about the actual update.
+    /** Information about the actual update. */
     update: unknown;
 }
 
@@ -452,9 +476,15 @@ interface UpdateQueuesCommon {
     level2Keys: UpdateQueue;
 }
 
-type UpdateQueuesV0 = UpdateQueuesCommon;
+/**
+ * Used from protocol version 1-3
+ */
+export type UpdateQueuesV0 = UpdateQueuesCommon;
 
-interface UpdateQueuesV1 extends UpdateQueuesCommon {
+/**
+ * Used from protocol version 4
+ */
+export interface UpdateQueuesV1 extends UpdateQueuesCommon {
     cooldownParameters: UpdateQueue;
     timeParameters: UpdateQueue;
 }
@@ -472,13 +502,19 @@ interface UpdatesCommon {
     protocolUpdate: ProtocolUpdate | undefined;
 }
 
-interface UpdatesV0 extends UpdatesCommon {
+/**
+ * Used from protocol version 1-3
+ */
+export interface UpdatesV0 extends UpdatesCommon {
     chainParameters: ChainParametersV0;
     updateQueues: UpdateQueuesV0;
     keys: KeysV0;
 }
 
-interface UpdatesV1 extends UpdatesCommon {
+/**
+ * Used from protocol version 4
+ */
+export interface UpdatesV1 extends UpdatesCommon {
     chainParameters: ChainParametersV1;
     updateQueues: UpdateQueuesV1;
     keys: KeysV1;
@@ -491,13 +527,19 @@ interface BlockSummaryCommon {
     transactionSummaries: TransactionSummary[];
 }
 
-interface BlockSummaryV0 extends BlockSummaryCommon {
+/**
+ * Used from protocol version 1-3
+ */
+export interface BlockSummaryV0 extends BlockSummaryCommon {
     updates: UpdatesV0;
 }
 
-interface BlockSummaryV1 extends BlockSummaryCommon {
+/**
+ * Used from protocol version 4
+ */
+export interface BlockSummaryV1 extends BlockSummaryCommon {
     updates: UpdatesV1;
-    protocolVersion: bigint; // Protocol version 4 and onwards
+    protocolVersion: bigint;
 }
 
 export type BlockSummary = BlockSummaryV0 | BlockSummaryV1;
@@ -684,7 +726,6 @@ export interface CommissionRates {
     finalizationCommission: RewardFraction;
 }
 
-export type BakerId = bigint;
 export enum DelegationTargetType {
     LPool = 'L-Pool',
     Baker = 'Baker',

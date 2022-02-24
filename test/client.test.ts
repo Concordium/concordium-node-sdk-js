@@ -1,5 +1,5 @@
 import {
-    BakerReduceStakePendingChange,
+    ReduceStakePendingChange,
     ConsensusStatus,
     instanceOfTransferWithMemoTransactionSummary,
     NormalAccountCredential,
@@ -12,6 +12,7 @@ import { bulletProofGenerators } from './resources/bulletproofgenerators';
 import { ipVerifyKey1, ipVerifyKey2 } from './resources/ipVerifyKeys';
 import { PeerElement } from '../grpc/concordium_p2p_rpc_pb';
 import { CredentialRegistrationId } from '../src/types/CredentialRegistrationId';
+import { isBlockSummaryV1 } from '../src/blockSummaryHelpers';
 
 const client = getNodeClient();
 
@@ -111,6 +112,21 @@ test('block summary for valid block hash retrieves block summary', async () => {
     if (!blockSummary) {
         throw new Error('The block could not be found by the test');
     }
+
+    // Pre delegation protocol version (protocol version 4)
+    if (!isBlockSummaryV1(blockSummary)) {
+        expect(
+            blockSummary.updates.chainParameters.rewardParameters
+                .mintDistribution.mintPerSlot
+        ).toBe(7.555665e-10);
+        expect(
+            blockSummary.updates.chainParameters.minimumThresholdForBaking
+        ).toBe(15000000000n);
+        expect(blockSummary.updates.chainParameters.bakerCooldownEpochs).toBe(
+            166n
+        );
+    }
+
     return Promise.all([
         expect(blockSummary.finalizationData.finalizationIndex).toBe(15436n),
         expect(blockSummary.finalizationData.finalizationDelay).toBe(0n),
@@ -151,10 +167,6 @@ test('block summary for valid block hash retrieves block summary', async () => {
                 .mintDistribution.finalizationReward
         ).toBe(0.3),
         expect(
-            blockSummary.updates.chainParameters.rewardParameters
-                .mintDistribution.mintPerSlot
-        ).toBe(7.555665e-10),
-        expect(
             blockSummary.updates.chainParameters.rewardParameters.gASRewards
                 .chainUpdate
         ).toBe(0.005),
@@ -170,10 +182,6 @@ test('block summary for valid block hash retrieves block summary', async () => {
             blockSummary.updates.chainParameters.rewardParameters.gASRewards
                 .finalizationProof
         ).toBe(0.005),
-
-        expect(
-            blockSummary.updates.chainParameters.minimumThresholdForBaking
-        ).toBe(15000000000n),
         expect(
             blockSummary.updates.chainParameters.microGTUPerEuro.numerator
         ).toBe(500000n),
@@ -190,9 +198,6 @@ test('block summary for valid block hash retrieves block summary', async () => {
         expect(
             blockSummary.updates.chainParameters.foundationAccountIndex
         ).toBe(10n),
-        expect(blockSummary.updates.chainParameters.bakerCooldownEpochs).toBe(
-            166n
-        ),
         expect(blockSummary.updates.chainParameters.accountCreationLimit).toBe(
             10
         ),
@@ -507,7 +512,7 @@ test('account info with baker details, and with a pending stake reduction', asyn
     }
 
     expect(pendingChange.change).toEqual('ReduceStake');
-    expect((pendingChange as BakerReduceStakePendingChange).newStake).toEqual(
+    expect((pendingChange as ReduceStakePendingChange).newStake).toEqual(
         14000000000n
     );
     expect(pendingChange.epoch).toEqual(838n);

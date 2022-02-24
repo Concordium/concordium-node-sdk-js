@@ -29,7 +29,6 @@ import {
     RemovalPendingChange,
     BlockInfo,
     BlockSummary,
-    ChainParameters,
     ConsensusStatus,
     ContractAddress,
     CredentialDeploymentTransaction,
@@ -49,6 +48,8 @@ import {
     InstanceInfo,
     InstanceInfoSerialized,
     BakerId,
+    ChainParametersV0,
+    ChainParametersV1,
 } from './types';
 import {
     buildJsonResponseReviver,
@@ -320,7 +321,7 @@ export default class ConcordiumNodeClient {
             | keyof PartyInfo
             | keyof FinalizationData
             | keyof TransactionSummary
-            | keyof ChainParameters
+            | keyof (ChainParametersV0 & ChainParametersV1)
             | keyof ExchangeRate
             | keyof UpdateQueue
             | keyof KeysWithThreshold

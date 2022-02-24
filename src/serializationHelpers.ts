@@ -459,9 +459,9 @@ export function serializeParameters(
             if (typeof userInput === 'string') {
                 const timestamp = Date.parse(userInput);
                 if (timestamp == null || isNaN(timestamp)) {
-                    return encodeWord64(BigInt(timestamp), true);
-                } else {
                     throw new Error('Invalid timestamp format');
+                } else {
+                    return encodeWord64(BigInt(timestamp), true);
                 }
             } else {
                 throw new Error('Timestamp required in string format');

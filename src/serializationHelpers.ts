@@ -330,7 +330,7 @@ export function serializeYearMonth(yearMonth: string): Buffer {
 }
 
 /**
- * @param bigint 128 bit bigint value that need to be splitted
+ * @param bigint 128 bit bigint value that needs to be split
  * @returns two 64 bit bigint values left and right
  * where left is first part of given 128 bigint value
  * where right is second part of given 128 bigint value

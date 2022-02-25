@@ -343,7 +343,7 @@ export interface PoolParametersV1 {
     finalizationCommissionRange: InclusiveRange<RewardFraction>;
     bakingCommissionRange: InclusiveRange<RewardFraction>;
     transactionCommissionRange: InclusiveRange<RewardFraction>;
-    minimumEquityCapital: bigint;
+    minimumEquityCapital: Amount;
     capitalBound: RewardFraction;
     leverageBound: Ratio;
 }

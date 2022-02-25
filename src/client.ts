@@ -613,10 +613,11 @@ export default class ConcordiumNodeClient {
         if (!isValidHash(blockHash)) {
             throw new Error('The input was not a valid hash: ' + blockHash);
         }
-        const response = await this.sendRequest(
-            this.client.getBakerList,
-            blockHash
-        );
+
+        const bh = new BlockHash();
+        bh.setBlockHash(blockHash);
+
+        const response = await this.sendRequest(this.client.getBakerList, bh);
 
         return unwrapJsonResponse<BakerId[]>(
             response,

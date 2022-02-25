@@ -285,9 +285,9 @@ export type NamedFields = {
 };
 
 /**
- * UnName fields if the type is Struct/enum
+ * Unnamed fields if the type is Struct/enum
  */
-export type UnNamedFields = {
+export type UnnamedFields = {
     fieldsTag: FieldsTag.Unnamed;
     contents: Type[];
 };

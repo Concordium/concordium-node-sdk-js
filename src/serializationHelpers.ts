@@ -800,7 +800,7 @@ export function serializeLength(
         case SizeLength.U64:
             return encodeWord64(BigInt(length), true);
         default:
-            return Buffer.from([]);
+            throw new Error('Unknown SizeLength provided');
     }
 }
 

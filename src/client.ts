@@ -57,6 +57,8 @@ import {
     LPoolStatusDetails,
     KeysMatching,
     BakerPoolPendingChangeReduceBakerCapitalDetails,
+    LPoolStatus,
+    BakerPoolStatus,
 } from './types';
 import {
     buildJsonResponseReviver,
@@ -634,9 +636,25 @@ export default class ConcordiumNodeClient {
     }
 
     /**
-     * Gets the status of either a baker, if a baker ID is supplied, or the L-Pool if left undefined.
-     * @param blockHash the block hash to get the smart contact instances at
-     * @param [bakerId] the ID of the baker to get the status for. If left undefined, the status of the L-Pool is returned.
+     * Gets the status the L-pool.
+     * @param blockHash the block hash the status at
+     * @returns The status of the L-pool.
+     */
+    async getPoolStatus(blockHash: string): Promise<LPoolStatus | undefined>;
+    /**
+     * Gets the status a baker.
+     * @param blockHash the block hash the status at
+     * @param bakerId the ID of the baker to get the status for.
+     * @returns The status of the corresponding baker pool.
+     */
+    async getPoolStatus(
+        blockHash: string,
+        bakerId: BakerId
+    ): Promise<BakerPoolStatus | undefined>;
+    /**
+     * Gets the status of either a baker, if a baker ID is supplied, or the L-pool if left undefined.
+     * @param blockHash the block hash the status at
+     * @param [bakerId] the ID of the baker to get the status for. If left undefined, the status of the L-pool is returned.
      * @returns The status of the corresponding pool.
      */
     async getPoolStatus(

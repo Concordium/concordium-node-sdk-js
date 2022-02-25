@@ -6,6 +6,13 @@ import { Buffer } from 'buffer/';
 import { ModuleReference } from './types/moduleReference';
 
 /**
+ * Returns a union of all keys of type T with values matching type V.
+ */
+export type KeysMatching<T, V> = {
+    [K in keyof T]-?: T[K] extends V ? K : never;
+}[keyof T];
+
+/**
  * A reward fraction with a resolution of 1/100000, i.e. the
  * denominator is implicitly 100000, and the interface therefore
  * only contains the numerator value which can be in the interval
@@ -719,12 +726,115 @@ export enum OpenStatus {
     ClosedForAll = 2,
 }
 
+export type Hex = string;
+export type Amount = bigint;
 export type BakerId = bigint;
+
+export interface BakerPoolInfo {
+    openStatus: OpenStatus;
+    metadataUrl: string;
+    commissionRates: CommissionRates;
+}
+
 export interface CommissionRates {
     transactionCommission: RewardFraction;
     bakingCommission: RewardFraction;
     finalizationCommission: RewardFraction;
 }
+
+export interface CurrentPaydayBakerPoolStatus {
+    blocksBaked: bigint;
+    finalizationLive: boolean;
+    transactionFeesEarned: Amount;
+    effectiveStake: Amount;
+    lotteryPower: number;
+    bakerEquityCapital: Amount;
+    delegatedCapital: Amount;
+}
+
+export enum BakerPoolPendingChangeType {
+    ReduceBakerCapital = 'ReduceBakerCapital',
+    RemovePool = 'RemovePool',
+    NoChange = 'NoChange',
+}
+
+interface BakerPoolPendingChangeWrapper<
+    T extends keyof typeof BakerPoolPendingChangeType,
+    S
+> {
+    pendingChangeType: T;
+    pendingChangeDetails: S;
+}
+
+export interface BakerPoolPendingChangeReduceBakerCapitalDetails {
+    bakerEquityCapital: Amount;
+    effectiveTime: Date;
+}
+
+export type BakerPoolPendingChangeReduceBakerCapital =
+    BakerPoolPendingChangeWrapper<
+        BakerPoolPendingChangeType.ReduceBakerCapital,
+        BakerPoolPendingChangeReduceBakerCapitalDetails
+    >;
+
+export interface BakerPoolPendingChangeRemovePoolDetails {
+    effectiveTime: Date;
+}
+
+export type BakerPoolPendingChangeRemovePool = BakerPoolPendingChangeWrapper<
+    BakerPoolPendingChangeType.RemovePool,
+    BakerPoolPendingChangeRemovePoolDetails
+>;
+
+export type BakerPoolPendingChangeNoChange = BakerPoolPendingChangeWrapper<
+    BakerPoolPendingChangeType.NoChange,
+    undefined
+>;
+
+export type BakerPoolPendingChange =
+    | BakerPoolPendingChangeReduceBakerCapital
+    | BakerPoolPendingChangeRemovePool
+    | BakerPoolPendingChangeNoChange;
+
+export enum PoolStatusType {
+    BakerPool = 'BakerPool',
+    LPool = 'LPool',
+}
+
+interface PoolStatusWrapper<T extends keyof typeof PoolStatusType, S> {
+    poolType: T;
+    poolStatus: S;
+}
+
+export interface BakerPoolStatusDetails {
+    bakerId: BakerId;
+    bakerAddress: Hex;
+    bakerEquityCapital: Amount;
+    delegatedCapital: Amount;
+    delegatedCapitalCap: Amount;
+    poolInfo: BakerPoolInfo;
+    bakerStakePendingChange: BakerPoolPendingChange;
+    currentPaydayStatus?: CurrentPaydayBakerPoolStatus;
+}
+
+export type BakerPoolStatus = PoolStatusWrapper<
+    PoolStatusType.BakerPool,
+    BakerPoolStatusDetails
+>;
+
+export interface LPoolStatusDetails {
+    delegatedCapital: Amount;
+    commissionRates: CommissionRates;
+    currentPaydayTransactionFeesEarned: Amount;
+    currentPaydayDelegatedCapital: Amount;
+}
+
+export type LPoolStatus = PoolStatusWrapper<
+    PoolStatusType.LPool,
+    LPoolStatusDetails
+>;
+
+export type PoolStatus = BakerPoolStatus | LPoolStatus;
 
 export enum DelegationTargetType {
     LPool = 'L-Pool',
@@ -741,12 +851,6 @@ export interface DelegationTargetBaker {
 }
 
 export type DelegationTarget = DelegationTargetLPool | DelegationTargetBaker;
-
-export interface BakerPoolInfo {
-    openStatus: OpenStatus;
-    metadataUrl: string;
-    commissionRates: CommissionRates;
-}
 
 export interface AccountBakerDetails {
     restakeEarnings: boolean;

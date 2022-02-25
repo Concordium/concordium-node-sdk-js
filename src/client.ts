@@ -8,6 +8,7 @@ import {
     BlockHeight,
     Empty,
     GetAddressInfoRequest,
+    GetPoolStatusRequest,
     PeerListResponse,
     PeersRequest,
     SendTransactionRequest,
@@ -50,6 +51,12 @@ import {
     BakerId,
     ChainParametersV0,
     ChainParametersV1,
+    PoolStatus,
+    BakerPoolStatusDetails,
+    CurrentPaydayBakerPoolStatus,
+    LPoolStatusDetails,
+    KeysMatching,
+    BakerPoolPendingChangeReduceBakerCapitalDetails,
 } from './types';
 import {
     buildJsonResponseReviver,
@@ -623,6 +630,61 @@ export default class ConcordiumNodeClient {
             response,
             (_, v) => BigInt(v as string),
             intListToStringList
+        );
+    }
+
+    /**
+     * Gets the status of either a baker, if a baker ID is supplied, or the L-Pool if left undefined.
+     * @param blockHash the block hash to get the smart contact instances at
+     * @param [bakerId] the ID of the baker to get the status for. If left undefined, the status of the L-Pool is returned.
+     * @returns The status of the corresponding pool.
+     */
+    async getPoolStatus(
+        blockHash: string,
+        bakerId?: BakerId
+    ): Promise<PoolStatus | undefined> {
+        if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+
+        const req = new GetPoolStatusRequest();
+        req.setBlockHash(blockHash);
+        req.setLPool(bakerId === undefined);
+
+        if (bakerId !== undefined) {
+            req.setBakerId(bakerId.toString());
+        }
+
+        type DateKey = KeysMatching<
+            BakerPoolPendingChangeReduceBakerCapitalDetails,
+            Date
+        >;
+        type BigIntKey = KeysMatching<
+            BakerPoolStatusDetails &
+                LPoolStatusDetails &
+                CurrentPaydayBakerPoolStatus,
+            bigint
+        >;
+
+        const dates: DateKey[] = ['effectiveTime'];
+        const bigInts: BigIntKey[] = [
+            'bakerId',
+            'bakerEquityCapital',
+            'delegatedCapital',
+            'delegatedCapitalCap',
+            'currentPaydayTransactionFeesEarned',
+            'currentPaydayDelegatedCapital',
+            'blocksBaked',
+            'transactionFeesEarned',
+            'effectiveStake',
+        ];
+
+        const response = await this.sendRequest(this.client.getPoolStatus, req);
+
+        return unwrapJsonResponse<PoolStatus>(
+            response,
+            buildJsonResponseReviver(dates, bigInts),
+            intToStringTransformer(bigInts)
         );
     }
 

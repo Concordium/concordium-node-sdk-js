@@ -433,7 +433,7 @@ export function serializeCredentialDeploymentTransactionForSubmission(
 
 /**
  *
- * @param contractName name of the contract to init contract parameters
+ * @param contractName name of the contract that the init contract transaction will initialize
  * @param userInput  user input
  * @param modulefileBuffer buffer of embedded schema file
  * @returns

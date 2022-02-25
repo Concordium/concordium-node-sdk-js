@@ -705,7 +705,7 @@ const userInput = {
     ]
   };
 ```
-Then the user need to provide the schema for the module. Here we use getModuleBuffer to load the schema file:
+Then the user needs to provide the schema for the module. Here we use getModuleBuffer to load the schema file:
 ```js
 const modulefileBuffer = getModuleBuffer(
     'SCHEMA-FILE-PATH'

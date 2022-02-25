@@ -294,8 +294,13 @@ interface MintDistributionCommon {
     finalizationReward: RewardFraction;
 }
 
+export interface MintRate {
+    mantissa: number;
+    exponent: number;
+}
+
 export interface MintDistributionV0 extends MintDistributionCommon {
-    mintPerSlot: number;
+    mintPerSlot: MintRate;
 }
 
 export type MintDistributionV1 = MintDistributionCommon;
@@ -340,7 +345,7 @@ export interface CooldownParametersV1 {
 }
 
 export interface PoolParametersV0 {
-    minimumThresholdForBaking: bigint;
+    minimumThresholdForBaking: Amount;
 }
 
 export interface PoolParametersV1 {
@@ -712,7 +717,7 @@ export interface ReduceStakePendingChange {
 }
 
 export interface RemovalPendingChange {
-    change: 'RemoveBaker';
+    change: 'RemoveStake';
     epoch: bigint;
 }
 

@@ -74,7 +74,7 @@ export function encodeInt128LE(value: bigint): Buffer {
 /**
  * Encodes a 128 bit unsigned integer to a Buffer using big endian.
  * @param value a 128 bit integer
- * @returns big endian serialization of the input
+ * @returns little endian serialization of the input
  */
 export function encodeWord128LE(value: bigint): Buffer {
     if (value > 340282366920938463463374607431768211455n || value < 0n) {

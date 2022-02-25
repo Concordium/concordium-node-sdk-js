@@ -695,7 +695,7 @@ enum SomeEnum {
     B(AnotherEnum),
 }
 ```
-When the following would be a valid input:
+Then the following would be a valid input:
 ```js
 const userInput = {
     B: [

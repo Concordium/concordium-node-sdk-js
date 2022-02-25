@@ -277,7 +277,7 @@ export type Fields =
           fieldsTag: FieldsTag.None;
       };
 /**
- * Name fields if the type is Struct/enum
+ * Named fields if the type is Struct/enum
  */
 export type NamedFields = {
     fieldsTag: FieldsTag.Named;

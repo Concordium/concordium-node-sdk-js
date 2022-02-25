@@ -51,7 +51,7 @@ export function serializeList<T>(
 /**
  * Encodes a 128 bit signed integer to a Buffer using big endian.
  * @param value a 128 bit integer
- * @returns big endian serialization of the input
+ * @returns little endian serialization of the input
  */
 export function encodeInt128LE(value: bigint): Buffer {
     if (

@@ -96,7 +96,7 @@ export function encodeWord128LE(value: bigint): Buffer {
  * Encodes a 64 bit signed integer to a Buffer using big endian.
  * @param value a 64 bit integer
  * @param useLittleEndian a boolean value, if not given, the value is serialized in big endian.
- * @returns big endian serialization of the input
+ * @returns serialization of the input
  */
 export function encodeInt64(value: bigint, useLittleEndian = false): Buffer {
     if (value > 9223372036854775807n || value < -9223372036854775808n) {

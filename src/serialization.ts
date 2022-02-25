@@ -486,6 +486,8 @@ export function serializeUpdateContractParameters(
             );
         }
     } else {
-        return Buffer.from([]);
+        throw new Error(
+            'Schema module not found. Please provide a valid schema file.'
+        );
     }
 }

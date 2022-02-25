@@ -38,11 +38,12 @@ test('Parameter of data types with the wrong private key', async () => {
     const userInput = {
         s_account_address: '4tBQDCUdDQZWeDAxJP3kvnW3oLqeq9SHYYTcqwr9AtgiPHRdgF',
         s_enum: {
-            B: [
-                {
-                    X: [],
+            C: {
+                c1: {
+                    index: 10,
                 },
-            ],
+                c2: '2',
+            },
         },
         s_receive_name: {
             func: 'hello',
@@ -63,14 +64,14 @@ test('Parameter of data types with the wrong private key', async () => {
                 index: 0,
             },
         ],
-        s_i128: '1235123123123123',
+        s_i128: '-17014118346046923173168730371588410508',
         s_set: [
             {
-                a: '42424242',
+                a: '17014118346046923173168730371588410',
                 b: 3,
             },
             {
-                a: '42424242',
+                a: '-170141183460469231731687303715884105',
                 b: 1,
             },
         ],
@@ -84,8 +85,8 @@ test('Parameter of data types with the wrong private key', async () => {
         },
         s_bool: true,
         s_timestamp: '2021-12-01T00:00:00Z',
-        s_u128: '123123123123',
-        s_duration: '3h 4m 2h 9s',
+        s_u128: '340282366920938463463374607431768211450',
+        s_duration: '10m 10ms',
         s_i16: 12,
         s_array: [
             [['2021-12-01T00:00:00Z', '2021-12-01T00:00:00Z'], '3m'],

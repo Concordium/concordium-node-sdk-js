@@ -607,7 +607,24 @@ In this example, the contract does not take any parameters, so we can leave para
 ```js
 const contractName = 'INDBank'; 
 const params = Buffer.from([]);
-	@@ -630,15 +630,15 @@ const initContractTransaction: AccountTransaction = {
+//The amount of energy that can be used for contract execution.
+const maxContractExecutionEnergy = 300000n;
+```
+Create init contract transaction
+```js
+const initModule: InitContractPayload = {
+    amount: new GtuAmount(0n), // Amount to send to the contract. If the smart contract is not payable, set the amount to 0.
+    moduleRef: new ModuleReference('a225a5aeb0a5cf9bbc59209e15df030e8cc2c17b8dba08c4bf59f80edaedd8b1'), // Module reference
+    contractName: contractName,
+    parameter: params,
+    maxContractExecutionEnergy: maxContractExecutionEnergy
+};
+const initContractTransaction: AccountTransaction = {
+    header: header,
+    payload: initModule,
+    type: AccountTransactionType.InitializeSmartContractInstance,
+};
+```
 
 Finally, to actually initialize the contract on the chain, send the constructed `initContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
 
@@ -623,7 +640,26 @@ In this example, the contract does not take any parameters, so we can leave the 
 ```js
 const receiveName = 'INDBank.insertAmount';
 const params = Buffer.from([]);
-	@@ -666,69 +666,64 @@ const updateContractTransaction: AccountTransaction = {
+const contractAddress = { index: BigInt(83), subindex: BigInt(0) } as ContractAddress;
+//The amount of energy that can be used for contract execution.
+const maxContractExecutionEnergy = 30000n;
+```
+Create update contract transaction
+```js
+const updateModule: UpdateContractPayload =
+{
+    amount: new GtuAmount(1000n),
+    contractAddress: contractAddress,
+    receiveName: receiveName,
+    parameter: params,
+    maxContractExecutionEnergy: maxContractExecutionEnergy
+};
+const updateContractTransaction: AccountTransaction = {
+    header: header,
+    payload: updateModule,
+    type: AccountTransactionType.UpdateSmartContractInstance,
+};
+```
 
 Finally, to actually update the contract on the chain, send the constructed `updateContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
 
@@ -687,7 +723,19 @@ Then the payload and transaction can be constructed, in the same way as the para
 ```js
 const initModule: InitContractPayload = {
         amount: new GtuAmount(0n),
-	@@ -748,22 +743,21 @@ const initContractTransaction: AccountTransaction = {
+        moduleRef: new ModuleReference(
+            '6cabee5b2d9d5013216eef3e5745288dcade77a4b1cd0d7a8951262476d564a0'
+        ),
+        contractName: contractName,
+        parameter: inputParams,
+        maxContractExecutionEnergy: baseEnergy,
+    };
+const initContractTransaction: AccountTransaction = {
+    header: header,
+    payload: initModule,
+    type: AccountTransactionType.InitializeSmartContractInstance,
+};
+```
 
 Finally, to actually initialize the contract on the chain, send the constructed `initContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
 
@@ -706,12 +754,6 @@ const modulefileBuffer = getModuleBuffer(
 );
 ```
 Then the parameters can be serialized into bytes:
-```js
-const inputParams = serializeUpdateContractParameters(
-        contractName,
-);
-```
-Then after obtaining file buffer the following code will be used to obtain the buffer of the parameters which need send the parameters like contract name, receive function name, user input and module buffer obtained in the previous step
 ```js
 const inputParams = serializeUpdateContractParameters(
         contractName,
@@ -735,7 +777,6 @@ const updateContractTransaction: AccountTransaction = {
         type: AccountTransactionType.UpdateSmartContractInstance,
 };
 ```
-
 Finally, to actually update the contract on the chain, send the constructed `updateContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
 
 ## Deserialize contract state

@@ -51,10 +51,9 @@ export function serializeList<T>(
 /**
  * Encodes a 128 bit signed integer to a Buffer using big endian.
  * @param value a 128 bit integer
- * @param useLittleEndian a boolean value, if not given, the value is serialized in big endian.
  * @returns big endian serialization of the input
  */
-export function encodeInt128(value: bigint, useLittleEndian = false): Buffer {
+export function encodeInt128LE(value: bigint): Buffer {
     if (
         value < -170141183460469231731687303715884105728n ||
         value > 170141183460469231731687303715884105727n
@@ -66,19 +65,18 @@ export function encodeInt128(value: bigint, useLittleEndian = false): Buffer {
     const arr = new ArrayBuffer(16);
     const view = new DataView(arr);
     const byteOffset = 0;
-    const res = splitUInt128toUInt64(value);
-    view.setBigInt64(byteOffset, res.left, useLittleEndian);
-    view.setBigInt64(byteOffset + 8, res.right, useLittleEndian);
+    const res = splitUInt128toUInt64LE(value);
+    view.setBigInt64(byteOffset, res.left, true);
+    view.setBigInt64(byteOffset + 8, res.right, true);
     return Buffer.from(new Uint8Array(arr));
 }
 
 /**
  * Encodes a 128 bit unsigned integer to a Buffer using big endian.
  * @param value a 128 bit integer
- * @param useLittleEndian a boolean value, if not given, the value is serialized in big endian.
  * @returns big endian serialization of the input
  */
-export function encodeWord128(value: bigint, useLittleEndian = false): Buffer {
+export function encodeWord128LE(value: bigint): Buffer {
     if (value > 340282366920938463463374607431768211455n || value < 0n) {
         throw new Error(
             'The input has to be a 128 bit unsigned integer but it was: ' +
@@ -88,9 +86,9 @@ export function encodeWord128(value: bigint, useLittleEndian = false): Buffer {
     const arr = new ArrayBuffer(16);
     const view = new DataView(arr);
     const byteOffset = 0;
-    const res = splitUInt128toUInt64(value);
-    view.setBigUint64(byteOffset, res.left, useLittleEndian);
-    view.setBigUint64(byteOffset + 8, res.right, useLittleEndian);
+    const res = splitUInt128toUInt64LE(value);
+    view.setBigUint64(byteOffset, res.left, true);
+    view.setBigUint64(byteOffset + 8, res.right, true);
     return Buffer.from(new Uint8Array(arr));
 }
 
@@ -330,12 +328,12 @@ export function serializeYearMonth(yearMonth: string): Buffer {
 }
 
 /**
- * @param bigint 128 bit bigint value that need to be splitted
+ * @param bigint 128 bit bigint value that needs to be split
  * @returns two 64 bit bigint values left and right
- * where left is first part of given 128 bigint value
- * where right is second part of given 128 bigint value
+ * where left is most signficant bits
+ * where right is least signficant bits
  */
-function splitUInt128toUInt64(bigint: bigint): {
+function splitUInt128toUInt64LE(bigint: bigint): {
     left: bigint;
     right: bigint;
 } {
@@ -384,7 +382,7 @@ export function serializeParameters(
             }
         case ParameterType.U128:
             if (typeof BigInt(userInput) === 'bigint') {
-                return encodeWord128(BigInt(userInput), true);
+                return encodeWord128LE(BigInt(userInput));
             } else {
                 throw new Error('String integer required');
             }
@@ -414,7 +412,7 @@ export function serializeParameters(
             }
         case ParameterType.I128:
             if (typeof BigInt(userInput) === 'bigint') {
-                return encodeInt128(BigInt(userInput), true);
+                return encodeInt128LE(BigInt(userInput));
             } else {
                 throw new Error('String integer required');
             }
@@ -815,7 +813,7 @@ function getMilliSeconds(value: string): number {
     let milliSeconds = 0;
     const days = getDuration(value, new RegExp(/(\d+)\s*d/g));
     const hours = getDuration(value, new RegExp(/(\d+)\s*h/g));
-    const minutes = getDuration(value, new RegExp(/(\d+)\s*m/g));
+    const minutes = getDuration(value, new RegExp(/(\d+)\s*m\b/g));
     const sec = getDuration(value, new RegExp(/(\d+)\s*s/g));
     const millisec = getDuration(value, new RegExp(/(\d+)\s*ms/g));
     if (days) {

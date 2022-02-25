@@ -344,7 +344,7 @@ function splitUInt128toUInt64LE(bigint: bigint): {
 }
 
 /**
- * Serailize the parameters
+ * Serializes the userInput according to the given schema
  * @param paramSchema type of the init or update contract
  * @param userInput user input
  * @returns Buffer of parameters

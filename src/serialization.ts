@@ -457,7 +457,7 @@ export function serializeInitContractParameters(
 
 /**
  *
- * @param contractName  name of contract to update contract parameters
+ * @param contractName name of the contract that the update contract transaction will update
  * @param receiveFunctionName name of function that the update contract transaction will invoke
  * @param userInput user input
  * @param modulefileBuffer buffer of embedded schema file

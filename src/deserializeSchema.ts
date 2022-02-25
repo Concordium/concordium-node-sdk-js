@@ -272,7 +272,7 @@ export enum FieldsTag {
  */
 export type Fields =
     | NamedFields
-    | UnNamedFields
+    | UnnamedFields
     | {
           fieldsTag: FieldsTag.None;
       };

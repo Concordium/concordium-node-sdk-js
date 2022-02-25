@@ -9,7 +9,7 @@ import {
     Type,
     StructType,
     NamedFields,
-    UnNamedFields,
+    UnnamedFields,
     ListType,
     PairType,
     MapType,
@@ -559,7 +559,7 @@ export function serializeParameters(
  * @param size array size
  * @param arrayType type of array
  * @param userArrayValues user input
- * @returns serialize array of parameters to Buffer
+ * @returns Buffer containing serialization of array
  */
 export function serializeArray(
     arraySchema: ArrayType,
@@ -586,7 +586,7 @@ export function serializeArray(
  * Serialize struct of parameters to Buffer
  * @param structType type of struct
  * @param structData user input
- * @returns serialize struct of parameters to Buffer
+ * @returns Buffer containing serialization of struct
  */
 export function serializeStruct(
     structType: StructType,
@@ -603,7 +603,7 @@ export function serializeStruct(
  * Serialize the list type parameters to Buffer
  * @param listType type of list
  * @param listData user input
- * @returns serialize list parameters to Buffer
+ * @returns Buffer containing serialization of list
  */
 export function serializeListOrSet(
     listType: ListType,
@@ -627,9 +627,9 @@ export function serializeListOrSet(
 
 /**
  * Serialize the pair type parameters to Buffer
- * @param pairType type of list parameters
+ * @param pairType type of pair
  * @param pairData user input
- * @returns serialize pair parameters to Buffer
+ * @returns Buffer containing serialization of pair
  */
 export function serializePairType(
     pairType: PairType,
@@ -655,7 +655,7 @@ export function serializePairType(
  * Serialize the map type parameters to Buffer
  * @param mapType type of map parameters
  * @param mapData user input
- * @returns serialize map parameters to Buffer
+ * @returns Buffer containing serialization of map
  */
 export function serializeMapType(
     mapType: MapType,
@@ -688,7 +688,7 @@ export function serializeMapType(
  * Serialize the enum type parameters to Buffer
  * @param enumType type of enum parameters
  * @param enumData user input
- * @returns serialize enum parameters to Buffer
+ * @returns Buffer containing serialization of enum
  */
 export function serializeEnumType(
     enumType: EnumType,
@@ -730,7 +730,7 @@ export function serializeEnumType(
  *
  * @param fields Field type of the schema
  * @param userData user data
- * @returns
+ * @returns Buffer containing serialization of struct or enum based on the fields
  */
 export function serializeSchemaFields(
     fields: Fields,
@@ -758,7 +758,7 @@ export function serializeSchemaFields(
                 );
             }
         case FieldsTag.Unnamed:
-            const unNamedFields = fields as UnNamedFields;
+            const unNamedFields = fields as UnnamedFields;
             if (userData.length === unNamedFields.contents.length) {
                 for (let i = 0; i < unNamedFields.contents.length; i++) {
                     const fieldInfo = unNamedFields.contents[i];
@@ -783,7 +783,7 @@ export function serializeSchemaFields(
  *
  * @param length length of the values provided by the user
  * @param sizeLength sizeLength represented as an unsigned integer
- * @returns
+ * @returns serialization of the length using the number of bytes specified by the sizeLength
  */
 
 export function serializeLength(

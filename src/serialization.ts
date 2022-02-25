@@ -436,7 +436,7 @@ export function serializeCredentialDeploymentTransactionForSubmission(
  * @param contractName name of the contract that the init contract transaction will initialize
  * @param userInput  user input
  * @param modulefileBuffer buffer of embedded schema file
- * @returns
+ * @returns serialized buffer of init contract parameters
  */
 export function serializeInitContractParameters(
     contractName: string,
@@ -461,7 +461,7 @@ export function serializeInitContractParameters(
  * @param receiveFunctionName name of function that the update contract transaction will invoke
  * @param userInput user input
  * @param modulefileBuffer buffer of embedded schema file
- * @returns buffer of update contract parameters
+ * @returns serialized buffer of update contract parameters
  */
 export function serializeUpdateContractParameters(
     contractName: string,

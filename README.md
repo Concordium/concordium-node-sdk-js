@@ -667,7 +667,7 @@ Finally, to actually update the contract on the chain, send the constructed `upd
 In the previous sections we have seen how to initialize and update contracts without parameters. In this section we will describe how to initialize and update contracts with parameters.
 The user should provide the input in the JSON format specified in [our documentation](https://developer.concordium.software/en/mainnet/smart-contracts/references/schema-json.html).
 
-Let us consider the following example where the contract's initialization parameters are the following structure:
+Let us consider the following example where the contract's initialization parameter is the following structure:
 ```rust
 #[derive(SchemaType, Serialize)]
 struct MyStruct {

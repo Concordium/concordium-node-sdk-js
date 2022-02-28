@@ -13,6 +13,7 @@ import { ipVerifyKey1, ipVerifyKey2 } from './resources/ipVerifyKeys';
 import { PeerElement } from '../grpc/concordium_p2p_rpc_pb';
 import { CredentialRegistrationId } from '../src/types/CredentialRegistrationId';
 import { isBlockSummaryV1 } from '../src/blockSummaryHelpers';
+import { isBakerAccount } from '../src/accountHelpers';
 
 const client = getNodeClient();
 
@@ -409,7 +410,9 @@ test('account info with baker details, and with no pending change', async () => 
         throw new Error('Test failed to find account info');
     }
 
-    const bakerDetails = accountInfo.accountBaker;
+    const bakerDetails = isBakerAccount(accountInfo)
+        ? accountInfo.accountBaker
+        : undefined;
 
     if (!bakerDetails) {
         throw new Error('Account info doesnt contain baker details');
@@ -444,7 +447,9 @@ test('account info with baker details, and with a pending baker removal', async 
         throw new Error('Test failed to find account info');
     }
 
-    const bakerDetails = accountInfo.accountBaker;
+    const bakerDetails = isBakerAccount(accountInfo)
+        ? accountInfo.accountBaker
+        : undefined;
 
     if (!bakerDetails) {
         throw new Error('Account info doesnt contain baker details');
@@ -486,7 +491,9 @@ test('account info with baker details, and with a pending stake reduction', asyn
         throw new Error('Test failed to find account info');
     }
 
-    const bakerDetails = accountInfo.accountBaker;
+    const bakerDetails = isBakerAccount(accountInfo)
+        ? accountInfo.accountBaker
+        : undefined;
 
     if (!bakerDetails) {
         throw new Error('Account info doesnt contain baker details');

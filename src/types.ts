@@ -856,7 +856,7 @@ export interface DelegationTargetBaker {
 
 export type DelegationTarget = DelegationTargetLPool | DelegationTargetBaker;
 
-export interface AccountBakerDetails {
+interface AccountBakerDetailsCommon {
     restakeEarnings: boolean;
     bakerId: BakerId;
     bakerAggregationVerifyKey: string;
@@ -864,10 +864,15 @@ export interface AccountBakerDetails {
     bakerSignatureVerifyKey: string;
     stakedAmount: bigint;
     pendingChange?: StakePendingChange;
-
-    /** Protocol version 4 and later. */
-    bakerPoolInfo?: BakerPoolInfo;
 }
+
+export type AccountBakerDetailsV0 = AccountBakerDetailsCommon;
+
+export interface AccountBakerDetailsV1 extends AccountBakerDetailsCommon {
+    bakerPoolInfo: BakerPoolInfo;
+}
+
+export type AccountBakerDetails = AccountBakerDetailsV0 | AccountBakerDetailsV1;
 
 export interface AccountDelegationDetails {
     restakeEarnings: boolean;
@@ -896,9 +901,16 @@ interface AccountInfoCommon {
 
 export type AccountInfoSimple = AccountInfoCommon;
 
-export interface AccountInfoBaker extends AccountInfoCommon {
-    accountBaker: AccountBakerDetails;
+export interface AccountInfoBakerV0 extends AccountInfoCommon {
+    accountBaker: AccountBakerDetailsV0;
 }
+
+/** Protocol version 4 and later. */
+export interface AccountInfoBakerV1 extends AccountInfoCommon {
+    accountBaker: AccountBakerDetailsV1;
+}
+
+export type AccountInfoBaker = AccountInfoBakerV0 | AccountInfoBakerV1;
 
 /** Protocol version 4 and later. */
 export interface AccountInfoDelegator extends AccountInfoCommon {

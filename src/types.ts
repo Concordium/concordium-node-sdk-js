@@ -876,7 +876,7 @@ export interface AccountDelegationDetails {
     pendingChange?: StakePendingChange;
 }
 
-export interface AccountInfo {
+interface AccountInfoCommon {
     accountNonce: bigint;
     accountAmount: bigint;
     accountIndex: bigint;
@@ -892,12 +892,23 @@ export interface AccountInfo {
         number,
         Versioned<InitialAccountCredential | NormalAccountCredential>
     >;
-
-    // Only one of either accountBaker or accountDelegation can be active at any time.
-    accountBaker?: AccountBakerDetails;
-    /** Protocol version 4 and later. */
-    accountDelegation?: AccountDelegationDetails;
 }
+
+export type AccountInfoSimple = AccountInfoCommon;
+
+export interface AccountInfoBaker extends AccountInfoCommon {
+    accountBaker: AccountBakerDetails;
+}
+
+/** Protocol version 4 and later. */
+export interface AccountInfoDelegator extends AccountInfoCommon {
+    accountDelegation: AccountDelegationDetails;
+}
+
+export type AccountInfo =
+    | AccountInfoSimple
+    | AccountInfoBaker
+    | AccountInfoDelegator;
 
 export interface Description {
     name: string;

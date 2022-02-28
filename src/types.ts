@@ -731,7 +731,6 @@ export enum OpenStatus {
     ClosedForAll = 2,
 }
 
-export type Hex = string;
 export type Amount = bigint;
 export type BakerId = bigint;
 
@@ -813,7 +812,7 @@ interface PoolStatusWrapper<T extends keyof typeof PoolStatusType, S> {
 
 export interface BakerPoolStatusDetails {
     bakerId: BakerId;
-    bakerAddress: Hex;
+    bakerAddress: string;
     bakerEquityCapital: Amount;
     delegatedCapital: Amount;
     delegatedCapitalCap: Amount;

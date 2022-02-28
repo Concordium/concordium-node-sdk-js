@@ -24,7 +24,7 @@ function intToString(jsonStruct: string, keys: string[]): string {
 }
 
 export function intListToStringList(jsonStruct: string): string {
-    return jsonStruct.replace(/([0-9]+)/g, '"$1"');
+    return jsonStruct.replace(/(\-?[0-9]+)/g, '"$1"');
 }
 
 /**

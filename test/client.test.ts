@@ -410,13 +410,11 @@ test('account info with baker details, and with no pending change', async () => 
         throw new Error('Test failed to find account info');
     }
 
-    const bakerDetails = isBakerAccount(accountInfo)
-        ? accountInfo.accountBaker
-        : undefined;
-
-    if (!bakerDetails) {
+    if (!isBakerAccount(accountInfo)) {
         throw new Error('Account info doesnt contain baker details');
     }
+
+    const bakerDetails = accountInfo.accountBaker;
 
     expect(bakerDetails.bakerId).toEqual(743n);
     expect(bakerDetails.stakedAmount).toEqual(15000000000n);

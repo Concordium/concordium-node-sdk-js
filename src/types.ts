@@ -277,10 +277,9 @@ export interface InclusiveRange<N extends number> {
 }
 
 /**
- * Used as index of a reward period, or as a number of reward periods.
- * A reward period spans a number of epochs, as defined in chain parameters as "rewardPeriodLength"
+ * A duration in seconds.
  */
-export type RewardPeriod = bigint;
+export type DurationSeconds = bigint;
 /** Index of an epoch, or number of epochs. */
 export type Epoch = bigint;
 
@@ -340,8 +339,8 @@ export interface CooldownParametersV0 {
 }
 
 export interface CooldownParametersV1 {
-    poolOwnerCooldown: RewardPeriod;
-    delegatorCooldown: RewardPeriod;
+    poolOwnerCooldown: DurationSeconds;
+    delegatorCooldown: DurationSeconds;
 }
 
 export interface PoolParametersV0 {

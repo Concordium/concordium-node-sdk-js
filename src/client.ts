@@ -660,6 +660,10 @@ export default class ConcordiumNodeClient {
     async getPoolStatus(
         blockHash: string,
         bakerId?: BakerId
+    ): Promise<PoolStatus | undefined>;
+    async getPoolStatus(
+        blockHash: string,
+        bakerId?: BakerId
     ): Promise<PoolStatus | undefined> {
         if (!isValidHash(blockHash)) {
             throw new Error('The input was not a valid hash: ' + blockHash);

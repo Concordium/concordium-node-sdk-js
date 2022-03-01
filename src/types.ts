@@ -276,9 +276,6 @@ export interface InclusiveRange<N extends number> {
     max: N;
 }
 
-/**
- * A duration in seconds.
- */
 export type DurationSeconds = bigint;
 /** Index of an epoch, or number of epochs. */
 export type Epoch = bigint;

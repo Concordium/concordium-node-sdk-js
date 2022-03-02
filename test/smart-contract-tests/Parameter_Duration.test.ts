@@ -21,6 +21,7 @@ const senderAccountAddress =
 const wrongPrivateKey =
     'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
 // test case for init contract
+// Source of module: test/resources/smartcontracts/ContractForDuration
 test('Parameter of Duration with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
         new AccountAddress(senderAccountAddress)

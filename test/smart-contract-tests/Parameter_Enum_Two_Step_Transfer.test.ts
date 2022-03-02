@@ -23,6 +23,7 @@ const senderAccountAddress =
 const wrongPrivateKey =
     'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
 // test case for init contract
+// Source of module: https://github.com/Concordium/concordium-rust-smart-contracts/blob/main/examples/two-step-transfer/src/lib.rs
 test('Parameter of Enum with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
         new AccountAddress(senderAccountAddress)

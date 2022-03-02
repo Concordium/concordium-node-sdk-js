@@ -357,6 +357,9 @@ export interface PoolParametersV1 {
 }
 
 export interface TimeParametersV1 {
+    /**
+     * In epochs
+     */
     rewardPeriodLength: Epoch;
     mintPerPayday: number;
 }
@@ -552,6 +555,26 @@ export interface BlockSummaryV1 extends BlockSummaryCommon {
 
 export type BlockSummary = BlockSummaryV0 | BlockSummaryV1;
 
+interface RewardStatusCommon {
+    totalAmount: Amount;
+    totalEncryptedAmount: Amount;
+    bakingRewardAccount: Amount;
+    finalizationRewardAccount: Amount;
+    gasAccount: Amount;
+}
+
+export type RewardStatusV0 = RewardStatusCommon;
+
+export interface RewardStatusV1 extends RewardStatusCommon {
+    foundationTransactionRewards: Amount;
+    nextPaydayTime: Date;
+    nextPaydayMintRate: MintRate;
+    totalStakedCapital: Amount;
+    protocolVersion: bigint;
+}
+
+export type RewardStatus = RewardStatusV0 | RewardStatusV1;
+
 export interface BlockInfo {
     blockParent: string;
     blockHash: string;
@@ -579,7 +602,13 @@ export interface ConsensusStatus {
     currentEraGenesisBlock: string;
     lastFinalizedBlock: string;
 
+    /**
+     * In milliseconds
+     */
     epochDuration: bigint;
+    /**
+     * In milliseconds
+     */
     slotDuration: bigint;
     bestBlockHeight: bigint;
     lastFinalizedBlockHeight: bigint;

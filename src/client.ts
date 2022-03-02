@@ -59,6 +59,9 @@ import {
     BakerPoolPendingChangeReduceBakerCapitalDetails,
     LPoolStatus,
     BakerPoolStatus,
+    RewardStatusV0,
+    RewardStatus,
+    RewardStatusV1,
 } from './types';
 import {
     buildJsonResponseReviver,
@@ -611,6 +614,43 @@ export default class ConcordiumNodeClient {
             };
             return instanceInfo;
         }
+    }
+
+    async getRewardStatus(
+        blockHash: string
+    ): Promise<RewardStatus | undefined> {
+        if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+
+        type DateKey = KeysMatching<RewardStatusV1, Date>;
+        type BigIntKey = KeysMatching<RewardStatusV0 & RewardStatusV1, bigint>;
+
+        const dates: DateKey[] = ['nextPaydayTime'];
+        const bigInts: BigIntKey[] = [
+            'protocolVersion',
+            'gasAccount',
+            'totalAmount',
+            'totalStakedCapital',
+            'bakingRewardAccount',
+            'totalEncryptedAmount',
+            'finalizationRewardAccount',
+            'foundationTransactionRewards',
+        ];
+
+        const bh = new BlockHash();
+        bh.setBlockHash(blockHash);
+
+        const response = await this.sendRequest(
+            this.client.getRewardStatus,
+            bh
+        );
+
+        return unwrapJsonResponse<RewardStatus>(
+            response,
+            buildJsonResponseReviver(dates, bigInts),
+            intToStringTransformer(bigInts)
+        );
     }
 
     /**

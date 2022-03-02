@@ -106,7 +106,7 @@ test('transferred event is parsed correctly', async () => {
     }
 });
 
-test('block summary for valid block hash retrieves block summary', async () => {
+test('block summary for valid block hash retrieves block summary (v0)', async () => {
     const blockHash =
         '4b39a13d326f422c76f12e20958a90a4af60a2b7e098b2a59d21d402fff44bfc';
     const blockSummary = await client.getBlockSummary(blockHash);
@@ -114,21 +114,21 @@ test('block summary for valid block hash retrieves block summary', async () => {
         throw new Error('The block could not be found by the test');
     }
 
-    // Pre delegation protocol version (protocol version 4)
-    if (!isBlockSummaryV1(blockSummary)) {
-        expect(
-            blockSummary.updates.chainParameters.rewardParameters
-                .mintDistribution.mintPerSlot
-        ).toBe(7.555665e-10);
-        expect(
-            blockSummary.updates.chainParameters.minimumThresholdForBaking
-        ).toBe(15000000000n);
-        expect(blockSummary.updates.chainParameters.bakerCooldownEpochs).toBe(
-            166n
-        );
+    if (isBlockSummaryV1(blockSummary)) {
+        throw new Error('Expected block to adhere to version 0 spec.');
     }
 
     return Promise.all([
+        expect(
+            blockSummary.updates.chainParameters.rewardParameters
+                .mintDistribution.mintPerSlot
+        ).toBe(7.555665e-10),
+        expect(
+            blockSummary.updates.chainParameters.minimumThresholdForBaking
+        ).toBe(15000000000n),
+        expect(blockSummary.updates.chainParameters.bakerCooldownEpochs).toBe(
+            166n
+        ),
         expect(blockSummary.finalizationData.finalizationIndex).toBe(15436n),
         expect(blockSummary.finalizationData.finalizationDelay).toBe(0n),
         expect(blockSummary.finalizationData.finalizationBlockPointer).toBe(
@@ -1073,4 +1073,36 @@ test('anonymity revokers are retrieved at the given block', async () => {
             'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a791a28a6d3e7ca0857c0f996f94e65da78b8d9b5de5e32164e291e553ed103bf14d6fab1f21749d59664e34813afe77'
         ),
     ]);
+});
+
+test('reward status can be accessed at given block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749';
+
+    const rewardStatus = await client.getRewardStatus(blockHash);
+
+    if (!rewardStatus) {
+        throw new Error('Test could not retrieve reward status of block.');
+    }
+
+    const {
+        finalizationRewardAccount,
+        totalEncryptedAmount,
+        bakingRewardAccount,
+        totalAmount,
+        gasAccount,
+    } = rewardStatus;
+
+    expect(finalizationRewardAccount.toString()).toBe('5');
+    expect(totalEncryptedAmount.toString()).toBe('0');
+    expect(bakingRewardAccount.toString()).toBe('3663751591');
+    expect(totalAmount.toString()).toBe('10014486887211834');
+    expect(gasAccount.toString()).toBe('3');
+});
+
+test('reward status is undefined at an unknown block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749';
+    const rs = await client.getRewardStatus(blockHash);
+    return expect(rs).toBeUndefined();
 });

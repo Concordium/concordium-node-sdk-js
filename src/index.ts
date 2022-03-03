@@ -41,3 +41,4 @@ export {
     serializeBakerCredentials,
     getBakerId,
 } from './wallet/baker';
+export { deserializeContractState } from './deserialization';

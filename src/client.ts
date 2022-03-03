@@ -8,6 +8,7 @@ import {
     BlockHeight,
     Empty,
     GetAddressInfoRequest,
+    GetModuleSourceRequest,
     PeerListResponse,
     PeersRequest,
     SendTransactionRequest,
@@ -598,6 +599,25 @@ export default class ConcordiumNodeClient {
             };
             return instanceInfo;
         }
+    }
+
+    async getModuleSource(
+        blockHash: string,
+        moduleReference: ModuleReference
+    ): Promise<Uint8Array> {
+        if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+        const requestObject = new GetModuleSourceRequest();
+        requestObject.setBlockHash(blockHash);
+        requestObject.setModuleRef(moduleReference.moduleRef);
+
+        const response = await this.sendRequest(
+            this.client.getModuleSource,
+            requestObject
+        );
+
+        return response;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

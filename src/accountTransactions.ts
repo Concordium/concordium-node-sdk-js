@@ -98,9 +98,9 @@ export class InitContractHandler
         );
         const serializedInitName = packBufferWithWord16Length(initNameBuffer);
         const serializedModuleRef = payload.moduleRef.decodedModuleRef;
-        const serializedParameters = packBufferWithWord16Length(
-            Buffer.from(payload.parameter)
-        );
+        const parameterBuffer = payload.parameter;
+        const serializedParameters =
+            packBufferWithWord16Length(parameterBuffer);
         return Buffer.concat([
             serializedAmount,
             serializedModuleRef,
@@ -130,8 +130,9 @@ export class UpdateContractHandler
         const receiveNameBuffer = Buffer.from(payload.receiveName, 'utf8');
         const serializedReceiveName =
             packBufferWithWord16Length(receiveNameBuffer);
+        const parameterBuffer = payload.parameter;
         const serializedParameters = packBufferWithWord16Length(
-            Buffer.from(payload.parameter)
+            Buffer.from(parameterBuffer)
         );
         return Buffer.concat([
             serializedAmount,

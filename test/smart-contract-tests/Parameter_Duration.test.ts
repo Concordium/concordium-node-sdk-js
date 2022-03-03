@@ -4,22 +4,25 @@ import {
     AccountTransactionSignature,
     AccountTransactionType,
     InitContractPayload,
-} from '../src/types';
+} from '../../src/types';
 import * as ed from 'noble-ed25519';
-import { getAccountTransactionSignDigest } from '../src/serialization';
-import { getNodeClient } from './testHelpers';
-import { AccountAddress } from '../src/types/accountAddress';
-import { GtuAmount } from '../src/types/gtuAmount';
-import { TransactionExpiry } from '../src/types/transactionExpiry';
+import { getAccountTransactionSignDigest } from '../../src/serialization';
+import { getNodeClient } from '../testHelpers';
+import { AccountAddress } from '../../src/types/accountAddress';
+import { GtuAmount } from '../../src/types/gtuAmount';
+import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
-import { ModuleReference } from '../src/types/moduleReference';
+import { ModuleReference } from '../../src/types/moduleReference';
+import { getModuleBuffer } from '../../src/deserializeSchema';
+import { serializeInitContractParameters } from '../../src/serialization';
 const client = getNodeClient();
 const senderAccountAddress =
     '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
 const wrongPrivateKey =
     'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
 // test case for init contract
-test('init contract with the wrong private key', async () => {
+// Source of module: test/resources/smartcontracts/ContractForDuration
+test('Parameter of Duration with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
         new AccountAddress(senderAccountAddress)
     );
@@ -32,19 +35,28 @@ test('init contract with the wrong private key', async () => {
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const contractName = 'INDBank';
-    const params = Buffer.from([]);
-    const maxContractExecutionEnergy = 300000n;
+    const contractName = 'ContractForDuration';
+
+    const userInput = '10d 1h 42s 1h';
+    const modulefileBuffer = getModuleBuffer(
+        'test/resources/schemaFiles/schema18.bin'
+    );
+    const inputParams = serializeInitContractParameters(
+        contractName,
+        userInput,
+        modulefileBuffer
+    );
+    const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {
         amount: new GtuAmount(0n),
         moduleRef: new ModuleReference(
-            'e51d9f9329f103faa18b1c99335281204df9e3eec23d7138f69ddd17fd63e9d0'
+            'b4019e327beaf53b21417369f09bfb2c3671fd3b920a28a51bc1f900d490b7a7'
         ),
         contractName: contractName,
-        parameter: params,
-        maxContractExecutionEnergy: maxContractExecutionEnergy,
-    };
+        parameter: inputParams,
+        maxContractExecutionEnergy: baseEnergy,
+    } as InitContractPayload;
 
     const initContractTransaction: AccountTransaction = {
         header: header,

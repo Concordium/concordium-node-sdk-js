@@ -739,34 +739,61 @@ export interface AccountTransaction {
     payload: AccountTransactionPayload;
 }
 
-export enum Type {
-    Unit = 'Unit',
-    Bool = 'Bool',
-    U8 = 'U8',
-    u16 = 'U16',
-    U32 = 'U32',
-    U64 = 'U64',
-    U128 = 'U128',
-    I8 = 'I8',
-    I16 = 'I16',
-    I32 = 'I32',
-    I64 = 'I64',
-    I128 = 'I128',
-    Amount = 'Amount',
-    AccountAddress = 'AccountAddress',
-    ContractAddress = 'ContractAddress',
-    Timestamp = 'Timestamp',
-    Duration = 'Duration',
-    Pair = 'Pair',
-    List = 'List',
-    Set = 'Set',
-    Map = 'Map',
-    Array = 'Array',
-    Struct = 'Struct',
-    Enum = 'Enum(List (String, Fields))',
-    String = 'String(SizeLength)',
-    ContractName = 'ContractName(SizeLength)',
-    ReceiveName = 'ReceiveName(SizeLength)',
+export enum ParameterType {
+    /** Nothing. */
+    Unit = 0,
+    /** Boolean (`true` or `false`). */
+    Bool,
+    /** Unsigned 8-bit integer. */
+    U8,
+    /** Unsigned 16-bit integer. */
+    U16,
+    /** Unsigned 32-bit integer. */
+    U32,
+    /** Unsigned 64-bit integer. */
+    U64,
+    /** Signed 8-bit integer. */
+    I8,
+    /** Signed 16-bit integer. */
+    I16,
+    /** Signed 32-bit integer. */
+    I32,
+    /** Signed 64-bit integer. */
+    I64,
+    /** Token amount in microGTU (10^-6 GTU). */
+    Amount,
+    /** Sender account address. */
+    AccountAddress,
+    /** Address of the contract instance consisting of an index and a subindex. */
+    ContractAddress,
+    /** Unsigned 64-bit integer storing milliseconds since UNIX epoch and representing a timestamp. */
+    Timestamp,
+    /** Unsigned 64-bit integer storing milliseconds and representing a duration. */
+    Duration,
+    /** Tuple. */
+    Pair,
+    /** Variable size list. */
+    List,
+    /** Unordered collection of unique elements. */
+    Set,
+    /** Unordered map from keys to values.  */
+    Map,
+    /** Fixed size array. */
+    Array,
+    /** Struct. */
+    Struct,
+    /** Enum. */
+    Enum,
+    /** List of bytes representing a string. */
+    String,
+    /** Unsigned 128-bit integer. */
+    U128,
+    /** Signed 128-bit integer. */
+    I128,
+    /** Name of the contract. */
+    ContractName,
+    /** Receive function name. */
+    ReceiveName,
 }
 
 export interface InstanceInfo {

@@ -33,3 +33,23 @@ pub fn get_credential_deployment_info_ext(
         Err(e) => format!("unable to get credential due to: {}", e),
     }
 }
+
+#[wasm_bindgen]
+pub enum BakerKeyVariant {
+    ADD,
+    UPDATE
+}
+
+#[wasm_bindgen(js_name = generateBakerKeys)]
+pub fn _generate_baker_keys(
+    sender: &str,
+    key_variant: BakerKeyVariant
+) -> String {
+    let sender = match sender.parse() {
+        Ok(sender) => sender,
+        Err(e) => return format!("unable to parse sender account address: {}.", e)
+    };
+
+    serde_json::to_string(&generate_baker_keys(&sender, key_variant))
+        .unwrap_or_else(|e| format!("unable to serialize baker keys: {}", e))
+}

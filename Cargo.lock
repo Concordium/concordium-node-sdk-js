@@ -3,6 +3,25 @@
 version = 3
 
 [[package]]
+name = "aggregate_sig"
+version = "0.1.0"
+dependencies = [
+ "crypto_common",
+ "crypto_common_derive",
+ "curve_arithmetic",
+ "ff",
+ "ffi_helpers",
+ "generic-array 0.14.4",
+ "id",
+ "pairing",
+ "rand",
+ "random_oracle",
+ "rayon",
+ "serde",
+ "sha2 0.9.8",
+]
+
+[[package]]
 name = "anyhow"
 version = "1.0.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -570,16 +589,20 @@ dependencies = [
 name = "node_sdk_helpers"
 version = "0.1.0"
 dependencies = [
+ "aggregate_sig",
  "anyhow",
  "crypto_common",
  "curve_arithmetic",
  "dodis_yampolskiy_prf",
  "ed25519-dalek",
+ "eddsa_ed25519",
  "hex",
  "id",
  "pairing",
  "pedersen_scheme",
  "ps_sig",
+ "rand",
+ "random_oracle",
  "serde",
  "serde_json",
  "sha2 0.9.8",

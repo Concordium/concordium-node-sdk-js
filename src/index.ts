@@ -33,3 +33,11 @@ export {
     buildSignedCredentialForExistingAccount,
 } from './credentialDeploymentTransactions';
 export { isAlias, getAlias } from './alias';
+export {
+    generateBakerKeys,
+    BakerKeyVariant,
+    buildAddBakerPayload,
+    buildUpdateBakerKeysPayload,
+    serializeBakerCredentials,
+    getBakerId,
+} from './wallet/baker';

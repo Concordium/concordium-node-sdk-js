@@ -29,14 +29,19 @@ const client = new ConcordiumNodeClient(
 );
 ```
 
-## Create a simple transfer
-The following example demonstrates how a simple transfer can be created.
+## Create an account transaction header
+The following example demonstrates how an account transaction's header is constructed. It is the same for all transactions types.
 ```js
 const header: AccountTransactionHeader = {
     expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
     nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
     sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
 };
+```
+
+## Create a simple transfer
+The following example demonstrates how a simple transfer can be created. ([The header is built in the account transaction header section](#create-an-account-transaction-header))
+```js
 const simpleTransfer: SimpleTransferPayload = {
     amount: new GtuAmount(100n),
     toAddress: new AccountAddress("4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf"),
@@ -49,13 +54,8 @@ const simpleTransferAccountTransaction: AccountTransaction = {
 ```
 
 ## Create a simple transfer with a memo
-The following example demonstrates how a simple transfer with a memo can be created.
+The following example demonstrates how a simple transfer with a memo can be created. ([The header is built in the account transaction header section](#create-an-account-transaction-header))
 ```js
-const header: AccountTransactionHeader = {
-    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
-    nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
-    sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
-};
 const simpleTransferWithMemo: SimpleTransferWithMemoPayload = {
     amount: new GtuAmount(100n),
     toAddress: new AccountAddress("4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf"),
@@ -68,13 +68,8 @@ const simpleTransferWithMemoAccountTransaction: AccountTransaction = {
 };
 ```
 ## Create a Register data transaction
-The following example demonstrates how a register data transaction can be created.
+The following example demonstrates how a register data transaction can be created. ([The header is built in the account transaction header section](#create-an-account-transaction-header))
 ```js
-const header: AccountTransactionHeader = {
-    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
-    nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
-    sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
-};
 const registerData: RegisterDataPayload = {
     data: new DataBlob(Buffer.from('6B68656C6C6F20776F726C64', 'hex')) // Add the bytes you wish to register as a DataBlob
 };
@@ -82,6 +77,84 @@ const registerDataAccountTransaction: AccountTransaction = {
     header: header,
     payload: registerData,
     type: AccountTransactionType.RegisterData,
+};
+```
+
+## Create an Add baker transaction
+The following example demonstrates how an add baker transaction can be created.
+Note that the bakerKeys that are generated needs to be provided to the baker node.
+```js
+sender = new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M");
+
+const header = ...  // create the header with the chosen sender
+
+const initialStake = new GtuAmount(14000000000n);
+const bakerKeys = await generateBakerKeys(sender, BakerKeyVariant.Add);
+const addBaker = buildAddBakerPayload(bakerKeys, initialStake, restakeEarnings);
+const addBakerTransaction: AccountTransaction = {
+    header: header,
+    payload: addBaker,
+    type: AccountTransactionType.AddBaker,
+};
+```
+
+To generate the baker-credential file, which should be provided to the baker node, we need the baker keys generated, and the account's accountInfo. See [getAccountInfo section](#getAccountInfo) for how to retrieve the accountInfo:
+
+```js
+const bakerId = getBakerId(accountInfo);
+const bakerCredentials = serializeBakerCredentials(bakerKeys, bakerId);
+```
+
+## Create an Update baker keys transaction
+The following example demonstrates how an update baker keys transaction can be created.
+Note that the new bakerKeys that are generated needs to be provided to the baker node. (See the [add baker section](#Create-an-add-baker-transaction) how to generate the baker-credentials file)
+```js
+sender = new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M");
+
+const header = ...  // create the header with the chosen sender
+
+const bakerKeys = await generateBakerKeys(sender, BakerKeyVariant.Update);
+const updateBakerKeys = buildUpdateBakerKeysPayload(bakerKeys);
+const updateBakerKeysTransaction: AccountTransaction = {
+    header: header,
+    payload: updateBakerKeys,
+    type: AccountTransactionType.UpdateBakerKeys,
+};
+```
+
+## Create an Update baker stake transaction
+The following example demonstrates how an update baker stake transaction can be created. ([The header is built in the account transaction header section](#create-an-account-transaction-header))
+```js
+const updateBakerStake = {
+    stake: new GtuAmount(newStakeAmount);
+};
+const updateBakerKeysTransaction: AccountTransaction = {
+    header: header,
+    payload: updateBakerStake,
+    type: AccountTransactionType.UpdateBakerStake,
+};
+```
+
+## Create an Update baker restake earnings transaction
+The following example demonstrates how an update baker restake earnings transaction can be created. ([The header is built in the account transaction header section](#create-an-account-transaction-header))
+```js
+const updateBakerRestakeEarnings = {
+    restakeEarnings: false
+};
+const updateBakerKeysTransaction: AccountTransaction = {
+    header: header,
+    payload: updateBakerRestakeEarnings,
+    type: AccountTransactionType.UpdateBakerRestakeEarnings,
+};
+```
+
+## Create an Remove baker transaction
+The following example demonstrates how a Remove baker transaction can be created. ([The header is built in the account transaction header section](#create-an-account-transaction-header))
+```js
+const updateBakerKeysTransaction: AccountTransaction = {
+    header: header,
+    payload: {},
+    type: AccountTransactionType.UpdateBakerRestakeEarnings,
 };
 ```
 

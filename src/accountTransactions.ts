@@ -1,5 +1,9 @@
 import { Buffer } from 'buffer/';
-import { serializeCredentialDeploymentInfo } from './serialization';
+import {
+    serializeBakerKeyProofs,
+    serializeBakerVerifyKeys,
+    serializeCredentialDeploymentInfo,
+} from './serialization';
 import {
     encodeWord64,
     encodeDataBlob,
@@ -8,6 +12,7 @@ import {
     packBufferWithWord16Length,
     serializeList,
     encodeWord8,
+    encodeBoolean,
 } from './serializationHelpers';
 import {
     AccountTransactionType,
@@ -19,6 +24,11 @@ import {
     AccountTransactionPayload,
     UpdateCredentialsPayload,
     RegisterDataPayload,
+    UpdateBakerKeysPayload,
+    AddBakerPayload,
+    UpdateBakerStakePayload,
+    UpdateBakerRestakeEarningsPayload,
+    RemoveBakerPayload,
 } from './types';
 
 interface AccountTransactionHandler<
@@ -188,6 +198,69 @@ export class RegisterDataHandler
     }
 }
 
+export class AddBakerHandler
+    implements AccountTransactionHandler<AddBakerPayload>
+{
+    getBaseEnergyCost(): bigint {
+        return 4050n;
+    }
+    serialize(addBaker: AddBakerPayload): Buffer {
+        return Buffer.concat([
+            serializeBakerVerifyKeys(addBaker),
+            serializeBakerKeyProofs(addBaker),
+            encodeWord64(addBaker.bakingStake.microGtuAmount),
+            encodeBoolean(addBaker.restakeEarnings),
+        ]);
+    }
+}
+
+export class UpdateBakerKeysHandler
+    implements AccountTransactionHandler<UpdateBakerKeysPayload>
+{
+    getBaseEnergyCost(): bigint {
+        return 4050n;
+    }
+    serialize(updateBakerKeys: UpdateBakerKeysPayload): Buffer {
+        return Buffer.concat([
+            serializeBakerVerifyKeys(updateBakerKeys),
+            serializeBakerKeyProofs(updateBakerKeys),
+        ]);
+    }
+}
+
+export class RemoveBakerHandler
+    implements AccountTransactionHandler<RemoveBakerPayload>
+{
+    getBaseEnergyCost(): bigint {
+        return 300n;
+    }
+    serialize(): Buffer {
+        return Buffer.alloc(0);
+    }
+}
+
+export class UpdateBakerStakeHandler
+    implements AccountTransactionHandler<UpdateBakerStakePayload>
+{
+    getBaseEnergyCost(): bigint {
+        return 300n;
+    }
+    serialize(updateStake: UpdateBakerStakePayload): Buffer {
+        return encodeWord64(updateStake.stake.microGtuAmount);
+    }
+}
+
+export class UpdateBakerRestakeEarningsHandler
+    implements AccountTransactionHandler<UpdateBakerRestakeEarningsPayload>
+{
+    getBaseEnergyCost(): bigint {
+        return 300n;
+    }
+    serialize(updateRestake: UpdateBakerRestakeEarningsPayload): Buffer {
+        return encodeBoolean(updateRestake.restakeEarnings);
+    }
+}
+
 export function getAccountTransactionHandler(
     type: AccountTransactionType.SimpleTransfer
 ): SimpleTransferHandler;
@@ -212,6 +285,21 @@ export function getAccountTransactionHandler(
 export function getAccountTransactionHandler(
     type: AccountTransactionType.RegisterData
 ): RegisterDataHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.AddBaker
+): AddBakerHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.UpdateBakerKeys
+): UpdateBakerKeysHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.RemoveBaker
+): RemoveBakerHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.UpdateBakerStake
+): UpdateBakerStakeHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.UpdateBakerRestakeEarnings
+): UpdateBakerRestakeEarningsHandler;
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function getAccountTransactionHandler(type: AccountTransactionType) {
@@ -230,6 +318,16 @@ export function getAccountTransactionHandler(type: AccountTransactionType) {
             return new UpdateCredentialsHandler();
         case AccountTransactionType.RegisterData:
             return new RegisterDataHandler();
+        case AccountTransactionType.AddBaker:
+            return new AddBakerHandler();
+        case AccountTransactionType.UpdateBakerKeys:
+            return new UpdateBakerKeysHandler();
+        case AccountTransactionType.RemoveBaker:
+            return new RemoveBakerHandler();
+        case AccountTransactionType.UpdateBakerStake:
+            return new UpdateBakerStakeHandler();
+        case AccountTransactionType.UpdateBakerRestakeEarnings:
+            return new UpdateBakerRestakeEarningsHandler();
         default:
             throw new Error(
                 'The provided type does not have a handler: ' + type

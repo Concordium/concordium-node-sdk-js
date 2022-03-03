@@ -1,3 +1,4 @@
+use crate::external_functions::BakerKeyVariant;
 use crate::{helpers::*, types::*};
 use crypto_common::{types::TransactionTime, *};
 use dodis_yampolskiy_prf as prf;
@@ -7,6 +8,10 @@ use std::collections::BTreeMap;
 type ExampleCurve = G1;
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use sha2::{Digest, Sha256};
+use eddsa_ed25519::{prove_dlog_ed25519, Ed25519DlogProof};
+use ed25519_dalek as ed25519;
+use random_oracle::RandomOracle;
+use rand::thread_rng;
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
 pub struct CredId {
@@ -175,4 +180,61 @@ pub fn get_credential_deployment_info_aux(
     let cdi = get_credential_deployment_info(signatures, unsigned_info)?;
     let cdi_json = json!(cdi);
     Ok(cdi_json.to_string())
+}
+
+#[derive(SerdeSerialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BakerKeys {
+    #[serde(serialize_with = "base16_encode")]
+    election_secret: ed25519::SecretKey,
+    #[serde(serialize_with = "base16_encode")]
+    election_public: ed25519::PublicKey,
+    #[serde(serialize_with = "base16_encode")]
+    signature_secret: ed25519::SecretKey,
+    #[serde(serialize_with = "base16_encode")]
+    signature_public: ed25519::PublicKey,
+    #[serde(serialize_with = "base16_encode")]
+    aggregation_secret: aggregate_sig::SecretKey<Bls12>,
+    #[serde(serialize_with = "base16_encode")]
+    aggregation_public: aggregate_sig::PublicKey<Bls12>,
+    #[serde(serialize_with = "base16_encode")]
+    proof_election: Ed25519DlogProof,
+    #[serde(serialize_with = "base16_encode")]
+    proof_signature: Ed25519DlogProof,
+    #[serde(serialize_with = "base16_encode")]
+    proof_aggregation: aggregate_sig::Proof<Bls12>
+}
+
+pub fn generate_baker_keys(sender: &AccountAddress, key_variant: BakerKeyVariant) -> BakerKeys {
+    let mut csprng = thread_rng();
+    let election = ed25519::Keypair::generate(&mut csprng);
+    let signature = ed25519::Keypair::generate(&mut csprng);
+    let aggregation_secret = aggregate_sig::SecretKey::<Bls12>::generate(&mut csprng);
+    let aggregation_public = aggregate_sig::PublicKey::<Bls12>::from_secret(&aggregation_secret);
+
+    let mut challenge = match key_variant {
+        BakerKeyVariant::ADD => b"addBaker".to_vec(),
+        BakerKeyVariant::UPDATE => b"updateBakerKeys".to_vec()
+    };
+
+    sender.serial(&mut challenge);
+    election.public.serial(&mut challenge);
+    signature.public.serial(&mut challenge);
+    aggregation_public.serial(&mut challenge);
+
+    let proof_election = prove_dlog_ed25519(&mut RandomOracle::domain(&challenge), &election.public, &election.secret);
+    let proof_signature = prove_dlog_ed25519(&mut RandomOracle::domain(&challenge), &signature.public, &signature.secret);
+    let proof_aggregation = aggregation_secret.prove(&mut csprng, &mut RandomOracle::domain(&challenge));
+
+    BakerKeys {
+        election_secret: election.secret,
+        election_public: election.public,
+        signature_secret: signature.secret,
+        signature_public: signature.public,
+        aggregation_secret,
+        aggregation_public,
+        proof_election,
+        proof_signature,
+        proof_aggregation
+    }
 }

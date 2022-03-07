@@ -409,6 +409,9 @@ interface AuthorizationsCommon {
     mintDistribution: Authorization;
     protocol: Authorization;
     paramGASRewards: Authorization;
+    /**
+     * From protocol version 4 and later, these control the configuration of poolParamenters.
+     */
     bakerStakeThreshold: Authorization;
     electionDifficulty: Authorization;
     addAnonymityRevoker: Authorization;

@@ -4,6 +4,7 @@ import {
     instanceOfTransferWithMemoTransactionSummary,
     NormalAccountCredential,
     TransferredWithScheduleEvent,
+    PoolStatusType,
 } from '../src/types';
 import { AccountAddress } from '../src/types/accountAddress';
 import { isHex } from '../src/util';
@@ -1093,11 +1094,11 @@ test('reward status can be accessed at given block', async () => {
         gasAccount,
     } = rewardStatus;
 
-    expect(finalizationRewardAccount.toString()).toBe('5');
-    expect(totalEncryptedAmount.toString()).toBe('0');
-    expect(bakingRewardAccount.toString()).toBe('3663751591');
-    expect(totalAmount.toString()).toBe('10014486887211834');
-    expect(gasAccount.toString()).toBe('3');
+    expect(finalizationRewardAccount).toBe(5n);
+    expect(totalEncryptedAmount).toBe(0n);
+    expect(bakingRewardAccount).toBe(3663751591n);
+    expect(totalAmount).toBe(10014486887211834n);
+    expect(gasAccount).toBe(3n);
 });
 
 test('reward status is undefined at an unknown block', async () => {
@@ -1105,4 +1106,57 @@ test('reward status is undefined at an unknown block', async () => {
         '7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749';
     const rs = await client.getRewardStatus(blockHash);
     return expect(rs).toBeUndefined();
+});
+
+test('baker list can be accessed at given block', async () => {
+    const blockHash =
+        '1e69dbed0234f0e8cf7965191bae42cd49415646984346e01716c8f8577ab6e0';
+    const bl = await client.getBakerList(blockHash);
+
+    expect(bl).toEqual([0n, 1n, 2n, 3n, 4n]);
+});
+
+test('baker list is undefined at an unknown block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749';
+    const bl = await client.getBakerList(blockHash);
+    return expect(bl).toBeUndefined();
+});
+
+test('pool status can be accessed at given block for L-pool', async () => {
+    const blockHash =
+        '1e69dbed0234f0e8cf7965191bae42cd49415646984346e01716c8f8577ab6e0';
+
+    const ps = await client.getPoolStatus(blockHash);
+
+    if (!ps) {
+        throw new Error('Test could not retrieve reward status of block.');
+    }
+
+    expect(ps.poolType).toBe(PoolStatusType.LPool);
+
+    if (ps.poolType !== PoolStatusType.LPool) {
+        throw new Error('Test assumes pool status type of L-pool');
+    }
+
+    const {
+        commissionRates,
+        delegatedCapital,
+        currentPaydayDelegatedCapital,
+        currentPaydayTransactionFeesEarned,
+    } = ps;
+
+    expect(commissionRates.bakingCommission).toBe(0.1);
+    expect(commissionRates.transactionCommission).toBe(0.1);
+    expect(commissionRates.finalizationCommission).toBe(1);
+    expect(delegatedCapital.toString()).toBe('1000000000');
+    expect(currentPaydayDelegatedCapital.toString()).toBe('0');
+    expect(currentPaydayTransactionFeesEarned.toString()).toBe('0');
+});
+
+test('pool status is undefined at an unknown block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749';
+    const ps = await client.getPoolStatus(blockHash);
+    return expect(ps).toBeUndefined();
 });

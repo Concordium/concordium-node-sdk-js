@@ -670,9 +670,9 @@ export default class ConcordiumNodeClient {
 
         return unwrapJsonResponse<BakerId[]>(
             response,
-            (_, v) => BigInt(v as string),
+            undefined,
             intListToStringList
-        );
+        )?.map((v) => BigInt(v));
     }
 
     /**

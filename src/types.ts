@@ -479,7 +479,6 @@ interface UpdateQueuesCommon {
     mintDistribution: UpdateQueue;
     protocol: UpdateQueue;
     gasRewards: UpdateQueue;
-    bakerStakeThreshold: UpdateQueue;
     addAnonymityRevoker: UpdateQueue;
     addIdentityProvider: UpdateQueue;
     rootKeys: UpdateQueue;
@@ -490,7 +489,9 @@ interface UpdateQueuesCommon {
 /**
  * Used from protocol version 1-3
  */
-export type UpdateQueuesV0 = UpdateQueuesCommon;
+export interface UpdateQueuesV0 extends UpdateQueuesCommon {
+    bakerStakeThreshold: UpdateQueue;
+}
 
 /**
  * Used from protocol version 4
@@ -498,6 +499,7 @@ export type UpdateQueuesV0 = UpdateQueuesCommon;
 export interface UpdateQueuesV1 extends UpdateQueuesCommon {
     cooldownParameters: UpdateQueue;
     timeParameters: UpdateQueue;
+    poolParameters: UpdateQueue;
 }
 
 export type UpdateQueues = UpdateQueuesV0 | UpdateQueuesV1;
@@ -787,13 +789,12 @@ export enum BakerPoolPendingChangeType {
     NoChange = 'NoChange',
 }
 
-interface BakerPoolPendingChangeWrapper<
+type BakerPoolPendingChangeWrapper<
     T extends keyof typeof BakerPoolPendingChangeType,
     S
-> {
+> = S & {
     pendingChangeType: T;
-    pendingChangeDetails: S;
-}
+};
 
 export interface BakerPoolPendingChangeReduceBakerCapitalDetails {
     bakerEquityCapital: Amount;
@@ -830,10 +831,9 @@ export enum PoolStatusType {
     LPool = 'LPool',
 }
 
-interface PoolStatusWrapper<T extends keyof typeof PoolStatusType, S> {
+type PoolStatusWrapper<T extends keyof typeof PoolStatusType, S> = S & {
     poolType: T;
-    poolStatus: S;
-}
+};
 
 export interface BakerPoolStatusDetails {
     bakerId: BakerId;

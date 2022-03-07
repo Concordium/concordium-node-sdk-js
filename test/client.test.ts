@@ -5,6 +5,9 @@ import {
     NormalAccountCredential,
     TransferredWithScheduleEvent,
     PoolStatusType,
+    BakerId,
+    BakerPoolPendingChangeType,
+    OpenStatusText,
 } from '../src/types';
 import { AccountAddress } from '../src/types/accountAddress';
 import { isHex } from '../src/util';
@@ -1135,10 +1138,6 @@ test('pool status can be accessed at given block for L-pool', async () => {
 
     expect(ps.poolType).toBe(PoolStatusType.LPool);
 
-    if (ps.poolType !== PoolStatusType.LPool) {
-        throw new Error('Test assumes pool status type of L-pool');
-    }
-
     const {
         commissionRates,
         delegatedCapital,
@@ -1152,6 +1151,62 @@ test('pool status can be accessed at given block for L-pool', async () => {
     expect(delegatedCapital.toString()).toBe('1000000000');
     expect(currentPaydayDelegatedCapital.toString()).toBe('0');
     expect(currentPaydayTransactionFeesEarned.toString()).toBe('0');
+});
+
+test('pool status can be accessed at given block for specific baker', async () => {
+    const blockHash =
+        '1e69dbed0234f0e8cf7965191bae42cd49415646984346e01716c8f8577ab6e0';
+    const bid: BakerId = 0n;
+
+    const ps = await client.getPoolStatus(blockHash, bid);
+
+    if (!ps) {
+        throw new Error('Test could not retrieve reward status of block.');
+    }
+
+    expect(ps.poolType).toBe(PoolStatusType.BakerPool);
+
+    const {
+        delegatedCapital,
+        bakerId,
+        poolInfo: {
+            openStatus,
+            metadataUrl,
+            commissionRates: {
+                finalizationCommission,
+                transactionCommission,
+                bakingCommission,
+            },
+        },
+        bakerAddress,
+        bakerEquityCapital,
+        delegatedCapitalCap,
+        bakerStakePendingChange,
+        currentPaydayStatus,
+    } = ps;
+
+    expect(bakerId).toBe(0n);
+    expect(bakerAddress).toBe(
+        '2zmRFpd7g12oBAZHSDqnbJ3Eg5HGr2sE9aFCL6mD3pyUSsiDSJ'
+    );
+    expect(delegatedCapital).toBe(1000000000n);
+    expect(openStatus).toBe(OpenStatusText.OpenForAll);
+    expect(metadataUrl).toBe('');
+    expect(finalizationCommission).toBe(1);
+    expect(transactionCommission).toBe(0.05);
+    expect(bakingCommission).toBe(0.05);
+    expect(bakerEquityCapital).toBe(3000000000000n);
+    expect(delegatedCapitalCap).toBe(1000333333333n);
+    expect(bakerStakePendingChange.pendingChangeType).toBe(
+        BakerPoolPendingChangeType.NoChange
+    );
+    expect(currentPaydayStatus?.bakerEquityCapital).toBe(3000000000000n);
+    expect(currentPaydayStatus?.blocksBaked).toBe(9n);
+    expect(currentPaydayStatus?.finalizationLive).toBe(true);
+    expect(currentPaydayStatus?.transactionFeesEarned).toBe(0n);
+    expect(currentPaydayStatus?.effectiveStake).toBe(3000000000000n);
+    expect(currentPaydayStatus?.lotteryPower).toBe(0.2);
+    expect(currentPaydayStatus?.delegatedCapital).toBe(0n);
 });
 
 test('pool status is undefined at an unknown block', async () => {

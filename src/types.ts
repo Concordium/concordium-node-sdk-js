@@ -761,11 +761,17 @@ export enum OpenStatus {
     ClosedForAll = 2,
 }
 
+export enum OpenStatusText {
+    OpenForAll = 'openForAll',
+    ClosedForNew = 'closedForNew',
+    ClosedForAll = 'closedForAll',
+}
+
 export type Amount = bigint;
 export type BakerId = bigint;
 
 export interface BakerPoolInfo {
-    openStatus: OpenStatus;
+    openStatus: OpenStatusText;
     metadataUrl: string;
     commissionRates: CommissionRates;
 }
@@ -794,7 +800,7 @@ export enum BakerPoolPendingChangeType {
 
 type BakerPoolPendingChangeWrapper<
     T extends keyof typeof BakerPoolPendingChangeType,
-    S
+    S extends Record<string, any>
 > = S & {
     pendingChangeType: T;
 };
@@ -821,7 +827,8 @@ export type BakerPoolPendingChangeRemovePool = BakerPoolPendingChangeWrapper<
 
 export type BakerPoolPendingChangeNoChange = BakerPoolPendingChangeWrapper<
     BakerPoolPendingChangeType.NoChange,
-    undefined
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    {}
 >;
 
 export type BakerPoolPendingChange =

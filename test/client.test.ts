@@ -18,6 +18,7 @@ import { PeerElement } from '../grpc/concordium_p2p_rpc_pb';
 import { CredentialRegistrationId } from '../src/types/CredentialRegistrationId';
 import { isBlockSummaryV1 } from '../src/blockSummaryHelpers';
 import { isBakerAccount } from '../src/accountHelpers';
+import { isRewardStatusV1 } from '../src/rewardStatusHelpers';
 
 const client = getNodeClient();
 
@@ -1102,6 +1103,47 @@ test('reward status can be accessed at given block', async () => {
     expect(bakingRewardAccount).toBe(3663751591n);
     expect(totalAmount).toBe(10014486887211834n);
     expect(gasAccount).toBe(3n);
+});
+
+test('new version of reward status can be accessed at given block', async () => {
+    const blockHash =
+        '1e69dbed0234f0e8cf7965191bae42cd49415646984346e01716c8f8577ab6e0';
+
+    const rewardStatus = await client.getRewardStatus(blockHash);
+
+    if (!rewardStatus) {
+        throw new Error('Test could not retrieve reward status of block.');
+    }
+
+    if (!isRewardStatusV1(rewardStatus)) {
+        throw new Error(
+            'Test expected reward status to be delegation protocol version.'
+        );
+    }
+
+    const {
+        finalizationRewardAccount,
+        totalEncryptedAmount,
+        bakingRewardAccount,
+        totalAmount,
+        gasAccount,
+        nextPaydayTime,
+        protocolVersion,
+        nextPaydayMintRate,
+        totalStakedCapital,
+        foundationTransactionRewards,
+    } = rewardStatus;
+
+    expect(finalizationRewardAccount).toBe(3n);
+    expect(totalEncryptedAmount).toBe(0n);
+    expect(bakingRewardAccount).toBe(2n);
+    expect(totalAmount).toBe(188279875066742n);
+    expect(gasAccount).toBe(3n);
+    expect(protocolVersion).toBe(4n);
+    expect(totalStakedCapital).toBe(15002000000000n);
+    expect(foundationTransactionRewards).toBe(0n);
+    expect(nextPaydayTime).toEqual(new Date('2022-03-07T07:15:01.5Z'));
+    expect(nextPaydayMintRate).toBe(1.088e-5);
 });
 
 test('reward status is undefined at an unknown block', async () => {

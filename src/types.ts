@@ -296,7 +296,7 @@ export interface MintRate {
 }
 
 export interface MintDistributionV0 extends MintDistributionCommon {
-    mintPerSlot: MintRate;
+    mintPerSlot: number;
 }
 
 export type MintDistributionV1 = MintDistributionCommon;
@@ -761,6 +761,9 @@ export enum OpenStatus {
     ClosedForAll = 2,
 }
 
+/**
+ * How the node translates OpenStatus to JSON.
+ */
 export enum OpenStatusText {
     OpenForAll = 'openForAll',
     ClosedForNew = 'closedForNew',

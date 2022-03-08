@@ -884,11 +884,11 @@ export enum DelegationTargetType {
 }
 
 export interface DelegationTargetLPool {
-    delegationType: DelegationTargetType.LPool;
+    delegateType: DelegationTargetType.LPool;
 }
 
 export interface DelegationTargetBaker {
-    delegationType: DelegationTargetType.Baker;
+    delegateType: DelegationTargetType.Baker;
     bakerId: BakerId;
 }
 

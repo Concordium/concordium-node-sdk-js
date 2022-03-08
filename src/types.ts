@@ -12,14 +12,6 @@ export type KeysMatching<T, V> = {
     [K in keyof T]-?: T[K] extends V ? K : never;
 }[keyof T];
 
-/**
- * A reward fraction with a resolution of 1/100000, i.e. the
- * denominator is implicitly 100000, and the interface therefore
- * only contains the numerator value which can be in the interval
- * [1, 100000].
- */
-export type RewardFraction = number;
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export interface Versioned<T> {
     v: number;
@@ -780,9 +772,9 @@ export interface BakerPoolInfo {
 }
 
 export interface CommissionRates {
-    transactionCommission: RewardFraction;
-    bakingCommission: RewardFraction;
-    finalizationCommission: RewardFraction;
+    transactionCommission: number;
+    bakingCommission: number;
+    finalizationCommission: number;
 }
 
 export interface CurrentPaydayBakerPoolStatus {

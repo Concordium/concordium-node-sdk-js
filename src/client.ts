@@ -347,8 +347,6 @@ export default class ConcordiumNodeClient {
             'cost',
             'energyCost',
             'index',
-            'bakerCooldownEpochs',
-            'minimumThresholdForBaking',
             'foundationAccountIndex',
             'numerator',
             'denominator',
@@ -356,6 +354,16 @@ export default class ConcordiumNodeClient {
             'amount',
             'index',
             'subindex',
+
+            // v0 keys
+            'bakerCooldownEpochs',
+            'minimumThresholdForBaking',
+
+            // v1 keys
+            'rewardPeriodLength',
+            'minimumEquityCapital',
+            'poolOwnerCooldown',
+            'delegatorCooldown',
         ];
 
         return unwrapJsonResponse<BlockSummary>(

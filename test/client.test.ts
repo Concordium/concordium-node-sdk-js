@@ -285,6 +285,95 @@ test('block summary for valid block hash retrieves block summary (v0)', async ()
     ]);
 });
 
+test('block summary for valid block hash retrieves block summary (v1)', async () => {
+    const blockHash =
+        '1e69dbed0234f0e8cf7965191bae42cd49415646984346e01716c8f8577ab6e0';
+    const blockSummary = await client.getBlockSummary(blockHash);
+    if (!blockSummary) {
+        throw new Error('The block could not be found by the test');
+    }
+
+    if (!isBlockSummaryV1(blockSummary)) {
+        throw new Error('Expected block to adhere to version 1 spec.');
+    }
+
+    return Promise.all([
+        // Chain parameters
+        expect(blockSummary.updates.chainParameters.mintPerPayday).toBe(
+            1.088e-5
+        ),
+        expect(blockSummary.updates.chainParameters.rewardPeriodLength).toBe(
+            4n
+        ),
+        expect(blockSummary.updates.chainParameters.minimumEquityCapital).toBe(
+            14000n
+        ),
+        expect(blockSummary.updates.chainParameters.capitalBound).toBe(0.25),
+        expect(blockSummary.updates.chainParameters.poolOwnerCooldown).toBe(
+            10800n
+        ),
+        expect(blockSummary.updates.chainParameters.delegatorCooldown).toBe(
+            7200n
+        ),
+        expect(
+            blockSummary.updates.chainParameters.transactionCommissionLPool
+        ).toBe(0.1),
+        expect(
+            blockSummary.updates.chainParameters.finalizationCommissionLPool
+        ).toBe(1.0),
+        expect(blockSummary.updates.chainParameters.bakingCommissionLPool).toBe(
+            0.1
+        ),
+        expect(
+            blockSummary.updates.chainParameters.leverageBound.numerator
+        ).toBe(3n),
+        expect(
+            blockSummary.updates.chainParameters.leverageBound.denominator
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.chainParameters.transactionCommissionRange.min
+        ).toBe(0.05),
+        expect(
+            blockSummary.updates.chainParameters.transactionCommissionRange.max
+        ).toBe(0.05),
+        expect(
+            blockSummary.updates.chainParameters.bakingCommissionRange.min
+        ).toBe(0.05),
+        expect(
+            blockSummary.updates.chainParameters.bakingCommissionRange.max
+        ).toBe(0.05),
+        expect(
+            blockSummary.updates.chainParameters.finalizationCommissionRange.min
+        ).toBe(1),
+        expect(
+            blockSummary.updates.chainParameters.finalizationCommissionRange.max
+        ).toBe(1),
+
+        // Update queues
+        expect(
+            blockSummary.updates.updateQueues.protocol.nextSequenceNumber
+        ).toBe(4n),
+        expect(
+            blockSummary.updates.updateQueues.cooldownParameters
+                .nextSequenceNumber
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.updateQueues.timeParameters.nextSequenceNumber
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.updateQueues.poolParameters.nextSequenceNumber
+        ).toBe(1n),
+
+        // keys
+        expect(
+            blockSummary.updates.keys.level2Keys.cooldownParameters.threshold
+        ).toBe(1),
+        expect(
+            blockSummary.updates.keys.level2Keys.timeParameters.threshold
+        ).toBe(1),
+    ]);
+});
+
 test('block summary for invalid block hash throws error', async () => {
     const invalidBlockHash =
         'fd4915edca67b4e8f6521641a638a3abdbdd7934e42a9a52d8673861e2ebdd2';

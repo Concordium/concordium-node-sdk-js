@@ -281,18 +281,18 @@ export type DurationSeconds = bigint;
 export type Epoch = bigint;
 
 export interface TransactionFeeDistribution {
-    baker: RewardFraction;
-    gasAccount: RewardFraction;
-}
-
-interface MintDistributionCommon {
-    bakingReward: RewardFraction;
-    finalizationReward: RewardFraction;
+    baker: number;
+    gasAccount: number;
 }
 
 export interface MintRate {
     mantissa: number;
     exponent: number;
+}
+
+interface MintDistributionCommon {
+    bakingReward: number;
+    finalizationReward: number;
 }
 
 export interface MintDistributionV0 extends MintDistributionCommon {
@@ -304,10 +304,10 @@ export type MintDistributionV1 = MintDistributionCommon;
 export type MintDistribution = MintDistributionV0 | MintDistributionV1;
 
 export interface GasRewards {
-    baker: RewardFraction;
-    finalizationProof: RewardFraction;
-    accountCreation: RewardFraction;
-    chainUpdate: RewardFraction;
+    baker: number;
+    finalizationProof: number;
+    accountCreation: number;
+    chainUpdate: number;
 }
 
 interface RewardParametersCommon {
@@ -345,14 +345,14 @@ export interface PoolParametersV0 {
 }
 
 export interface PoolParametersV1 {
-    finalizationCommissionLPool: RewardFraction;
-    bakingCommissionLPool: RewardFraction;
-    transactionCommissionLPool: RewardFraction;
-    finalizationCommissionRange: InclusiveRange<RewardFraction>;
-    bakingCommissionRange: InclusiveRange<RewardFraction>;
-    transactionCommissionRange: InclusiveRange<RewardFraction>;
+    finalizationCommissionLPool: number;
+    bakingCommissionLPool: number;
+    transactionCommissionLPool: number;
+    finalizationCommissionRange: InclusiveRange<number>;
+    bakingCommissionRange: InclusiveRange<number>;
+    transactionCommissionRange: InclusiveRange<number>;
     minimumEquityCapital: Amount;
-    capitalBound: RewardFraction;
+    capitalBound: number;
     leverageBound: Ratio;
 }
 

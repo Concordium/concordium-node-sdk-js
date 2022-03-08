@@ -410,7 +410,7 @@ interface AuthorizationsCommon {
     protocol: Authorization;
     paramGASRewards: Authorization;
     /**
-     * From protocol version 4 and later, these control the configuration of poolParamenters.
+     * From protocol version 4 and later, this controls the authorization of the poolParameters update.
      */
     bakerStakeThreshold: Authorization;
     electionDifficulty: Authorization;

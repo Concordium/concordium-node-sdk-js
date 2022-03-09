@@ -1,12 +1,13 @@
 # Changelog
 
-## Unreleased
+## 0.7.0 2022-03-09
 
 ### Added
 
 - Support for getting baker list from node.
 - Support for getting status of Baker-/L-pool (required node to have protocol version 4 or later)
 - Helper functions for determining the version of `BlockSummary` and nested types. 
+- Support for initiating and updating contracts with parameters.
 
 ### Changed
 

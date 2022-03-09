@@ -1,8 +1,14 @@
 import {
-    BakerReduceStakePendingChange,
+    ReduceStakePendingChange,
     instanceOfTransferWithMemoTransactionSummary,
     NormalAccountCredential,
     TransferredWithScheduleEvent,
+    PoolStatusType,
+    BakerId,
+    BakerPoolPendingChangeType,
+    OpenStatusText,
+    DelegationTargetType,
+    DelegationTargetBaker,
 } from '../src/types';
 import { AccountAddress } from '../src/types/accountAddress';
 import { isValidDate, getNodeClient } from './testHelpers';
@@ -10,6 +16,13 @@ import { bulletProofGenerators } from './resources/bulletproofgenerators';
 import { ipVerifyKey1, ipVerifyKey2 } from './resources/ipVerifyKeys';
 import { PeerElement } from '../grpc/concordium_p2p_rpc_pb';
 import { CredentialRegistrationId } from '../src/types/CredentialRegistrationId';
+import { isBlockSummaryV1 } from '../src/blockSummaryHelpers';
+import {
+    isBakerAccount,
+    isBakerAccountV1,
+    isDelegatorAccount,
+} from '../src/accountHelpers';
+import { isRewardStatusV1 } from '../src/rewardStatusHelpers';
 
 const client = getNodeClient();
 
@@ -102,14 +115,29 @@ test('transferred event is parsed correctly', async () => {
     }
 });
 
-test('block summary for valid block hash retrieves block summary', async () => {
+test('block summary for valid block hash retrieves block summary (v0)', async () => {
     const blockHash =
         '4b39a13d326f422c76f12e20958a90a4af60a2b7e098b2a59d21d402fff44bfc';
     const blockSummary = await client.getBlockSummary(blockHash);
     if (!blockSummary) {
         throw new Error('The block could not be found by the test');
     }
+
+    if (isBlockSummaryV1(blockSummary)) {
+        throw new Error('Expected block to adhere to version 0 spec.');
+    }
+
     return Promise.all([
+        expect(
+            blockSummary.updates.chainParameters.rewardParameters
+                .mintDistribution.mintPerSlot
+        ).toBe(7.555665e-10),
+        expect(
+            blockSummary.updates.chainParameters.minimumThresholdForBaking
+        ).toBe(15000000000n),
+        expect(blockSummary.updates.chainParameters.bakerCooldownEpochs).toBe(
+            166n
+        ),
         expect(blockSummary.finalizationData.finalizationIndex).toBe(15436n),
         expect(blockSummary.finalizationData.finalizationDelay).toBe(0n),
         expect(blockSummary.finalizationData.finalizationBlockPointer).toBe(
@@ -149,10 +177,6 @@ test('block summary for valid block hash retrieves block summary', async () => {
                 .mintDistribution.finalizationReward
         ).toBe(0.3),
         expect(
-            blockSummary.updates.chainParameters.rewardParameters
-                .mintDistribution.mintPerSlot
-        ).toBe(7.555665e-10),
-        expect(
             blockSummary.updates.chainParameters.rewardParameters.gASRewards
                 .chainUpdate
         ).toBe(0.005),
@@ -168,10 +192,6 @@ test('block summary for valid block hash retrieves block summary', async () => {
             blockSummary.updates.chainParameters.rewardParameters.gASRewards
                 .finalizationProof
         ).toBe(0.005),
-
-        expect(
-            blockSummary.updates.chainParameters.minimumThresholdForBaking
-        ).toBe(15000000000n),
         expect(
             blockSummary.updates.chainParameters.microGTUPerEuro.numerator
         ).toBe(500000n),
@@ -188,9 +208,6 @@ test('block summary for valid block hash retrieves block summary', async () => {
         expect(
             blockSummary.updates.chainParameters.foundationAccountIndex
         ).toBe(10n),
-        expect(blockSummary.updates.chainParameters.bakerCooldownEpochs).toBe(
-            166n
-        ),
         expect(blockSummary.updates.chainParameters.accountCreationLimit).toBe(
             10
         ),
@@ -263,6 +280,95 @@ test('block summary for valid block hash retrieves block summary', async () => {
             blockSummary.updates.keys.level2Keys.addAnonymityRevoker
                 .authorizedKeys[0]
         ).toBe(0),
+    ]);
+});
+
+test('block summary for valid block hash retrieves block summary (v1)', async () => {
+    const blockHash =
+        '1e69dbed0234f0e8cf7965191bae42cd49415646984346e01716c8f8577ab6e0';
+    const blockSummary = await client.getBlockSummary(blockHash);
+    if (!blockSummary) {
+        throw new Error('The block could not be found by the test');
+    }
+
+    if (!isBlockSummaryV1(blockSummary)) {
+        throw new Error('Expected block to adhere to version 1 spec.');
+    }
+
+    return Promise.all([
+        // Chain parameters
+        expect(blockSummary.updates.chainParameters.mintPerPayday).toBe(
+            1.088e-5
+        ),
+        expect(blockSummary.updates.chainParameters.rewardPeriodLength).toBe(
+            4n
+        ),
+        expect(blockSummary.updates.chainParameters.minimumEquityCapital).toBe(
+            14000n
+        ),
+        expect(blockSummary.updates.chainParameters.capitalBound).toBe(0.25),
+        expect(blockSummary.updates.chainParameters.poolOwnerCooldown).toBe(
+            10800n
+        ),
+        expect(blockSummary.updates.chainParameters.delegatorCooldown).toBe(
+            7200n
+        ),
+        expect(
+            blockSummary.updates.chainParameters.transactionCommissionLPool
+        ).toBe(0.1),
+        expect(
+            blockSummary.updates.chainParameters.finalizationCommissionLPool
+        ).toBe(1.0),
+        expect(blockSummary.updates.chainParameters.bakingCommissionLPool).toBe(
+            0.1
+        ),
+        expect(
+            blockSummary.updates.chainParameters.leverageBound.numerator
+        ).toBe(3n),
+        expect(
+            blockSummary.updates.chainParameters.leverageBound.denominator
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.chainParameters.transactionCommissionRange.min
+        ).toBe(0.05),
+        expect(
+            blockSummary.updates.chainParameters.transactionCommissionRange.max
+        ).toBe(0.05),
+        expect(
+            blockSummary.updates.chainParameters.bakingCommissionRange.min
+        ).toBe(0.05),
+        expect(
+            blockSummary.updates.chainParameters.bakingCommissionRange.max
+        ).toBe(0.05),
+        expect(
+            blockSummary.updates.chainParameters.finalizationCommissionRange.min
+        ).toBe(1),
+        expect(
+            blockSummary.updates.chainParameters.finalizationCommissionRange.max
+        ).toBe(1),
+
+        // Update queues
+        expect(
+            blockSummary.updates.updateQueues.protocol.nextSequenceNumber
+        ).toBe(4n),
+        expect(
+            blockSummary.updates.updateQueues.cooldownParameters
+                .nextSequenceNumber
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.updateQueues.timeParameters.nextSequenceNumber
+        ).toBe(1n),
+        expect(
+            blockSummary.updates.updateQueues.poolParameters.nextSequenceNumber
+        ).toBe(1n),
+
+        // keys
+        expect(
+            blockSummary.updates.keys.level2Keys.cooldownParameters.threshold
+        ).toBe(1),
+        expect(
+            blockSummary.updates.keys.level2Keys.timeParameters.threshold
+        ).toBe(1),
     ]);
 });
 
@@ -402,11 +508,11 @@ test('account info with baker details, and with no pending change', async () => 
         throw new Error('Test failed to find account info');
     }
 
-    const bakerDetails = accountInfo.accountBaker;
-
-    if (!bakerDetails) {
+    if (!isBakerAccount(accountInfo)) {
         throw new Error('Account info doesnt contain baker details');
     }
+
+    const bakerDetails = accountInfo.accountBaker;
 
     expect(bakerDetails.bakerId).toEqual(743n);
     expect(bakerDetails.stakedAmount).toEqual(15000000000n);
@@ -437,7 +543,9 @@ test('account info with baker details, and with a pending baker removal', async 
         throw new Error('Test failed to find account info');
     }
 
-    const bakerDetails = accountInfo.accountBaker;
+    const bakerDetails = isBakerAccount(accountInfo)
+        ? accountInfo.accountBaker
+        : undefined;
 
     if (!bakerDetails) {
         throw new Error('Account info doesnt contain baker details');
@@ -479,7 +587,9 @@ test('account info with baker details, and with a pending stake reduction', asyn
         throw new Error('Test failed to find account info');
     }
 
-    const bakerDetails = accountInfo.accountBaker;
+    const bakerDetails = isBakerAccount(accountInfo)
+        ? accountInfo.accountBaker
+        : undefined;
 
     if (!bakerDetails) {
         throw new Error('Account info doesnt contain baker details');
@@ -505,7 +615,7 @@ test('account info with baker details, and with a pending stake reduction', asyn
     }
 
     expect(pendingChange.change).toEqual('ReduceStake');
-    expect((pendingChange as BakerReduceStakePendingChange).newStake).toEqual(
+    expect((pendingChange as ReduceStakePendingChange).newStake).toEqual(
         14000000000n
     );
     expect(pendingChange.epoch).toEqual(838n);
@@ -997,4 +1107,298 @@ test('anonymity revokers are retrieved at the given block', async () => {
             'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a791a28a6d3e7ca0857c0f996f94e65da78b8d9b5de5e32164e291e553ed103bf14d6fab1f21749d59664e34813afe77'
         ),
     ]);
+});
+
+test('reward status can be accessed at given block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749';
+
+    const rewardStatus = await client.getRewardStatus(blockHash);
+
+    if (!rewardStatus) {
+        throw new Error('Test could not retrieve reward status of block.');
+    }
+
+    const {
+        finalizationRewardAccount,
+        totalEncryptedAmount,
+        bakingRewardAccount,
+        totalAmount,
+        gasAccount,
+    } = rewardStatus;
+
+    expect(finalizationRewardAccount).toBe(5n);
+    expect(totalEncryptedAmount).toBe(0n);
+    expect(bakingRewardAccount).toBe(3663751591n);
+    expect(totalAmount).toBe(10014486887211834n);
+    expect(gasAccount).toBe(3n);
+});
+
+test('new version of reward status can be accessed at given block', async () => {
+    const blockHash =
+        '1e69dbed0234f0e8cf7965191bae42cd49415646984346e01716c8f8577ab6e0';
+
+    const rewardStatus = await client.getRewardStatus(blockHash);
+
+    if (!rewardStatus) {
+        throw new Error('Test could not retrieve reward status of block.');
+    }
+
+    if (!isRewardStatusV1(rewardStatus)) {
+        throw new Error(
+            'Test expected reward status to be delegation protocol version.'
+        );
+    }
+
+    const {
+        finalizationRewardAccount,
+        totalEncryptedAmount,
+        bakingRewardAccount,
+        totalAmount,
+        gasAccount,
+        nextPaydayTime,
+        protocolVersion,
+        nextPaydayMintRate,
+        totalStakedCapital,
+        foundationTransactionRewards,
+    } = rewardStatus;
+
+    expect(finalizationRewardAccount).toBe(3n);
+    expect(totalEncryptedAmount).toBe(0n);
+    expect(bakingRewardAccount).toBe(2n);
+    expect(totalAmount).toBe(188279875066742n);
+    expect(gasAccount).toBe(3n);
+    expect(protocolVersion).toBe(4n);
+    expect(totalStakedCapital).toBe(15002000000000n);
+    expect(foundationTransactionRewards).toBe(0n);
+    expect(nextPaydayTime).toEqual(new Date('2022-03-07T07:15:01.5Z'));
+    expect(nextPaydayMintRate).toBe(1.088e-5);
+});
+
+test('reward status is undefined at an unknown block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749';
+    const rs = await client.getRewardStatus(blockHash);
+    return expect(rs).toBeUndefined();
+});
+
+test('baker list can be accessed at given block', async () => {
+    const blockHash =
+        '1e69dbed0234f0e8cf7965191bae42cd49415646984346e01716c8f8577ab6e0';
+    const bl = await client.getBakerList(blockHash);
+
+    expect(bl).toEqual([0n, 1n, 2n, 3n, 4n]);
+});
+
+test('baker list is undefined at an unknown block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749';
+    const bl = await client.getBakerList(blockHash);
+    return expect(bl).toBeUndefined();
+});
+
+test('pool status can be accessed at given block for L-pool', async () => {
+    const blockHash =
+        '1e69dbed0234f0e8cf7965191bae42cd49415646984346e01716c8f8577ab6e0';
+
+    const ps = await client.getPoolStatus(blockHash);
+
+    if (!ps) {
+        throw new Error('Test could not retrieve reward status of block.');
+    }
+
+    expect(ps.poolType).toBe(PoolStatusType.LPool);
+
+    const {
+        commissionRates,
+        delegatedCapital,
+        currentPaydayDelegatedCapital,
+        currentPaydayTransactionFeesEarned,
+    } = ps;
+
+    expect(commissionRates.bakingCommission).toBe(0.1);
+    expect(commissionRates.transactionCommission).toBe(0.1);
+    expect(commissionRates.finalizationCommission).toBe(1);
+    expect(delegatedCapital.toString()).toBe('1000000000');
+    expect(currentPaydayDelegatedCapital.toString()).toBe('0');
+    expect(currentPaydayTransactionFeesEarned.toString()).toBe('0');
+});
+
+test('pool status can be accessed at given block for specific baker', async () => {
+    const blockHash =
+        '1e69dbed0234f0e8cf7965191bae42cd49415646984346e01716c8f8577ab6e0';
+    const bid: BakerId = 1n;
+
+    const ps = await client.getPoolStatus(blockHash, bid);
+
+    if (!ps) {
+        throw new Error('Test could not retrieve reward status of block.');
+    }
+
+    const {
+        poolType,
+        delegatedCapital,
+        bakerId,
+        poolInfo: {
+            openStatus,
+            metadataUrl,
+            commissionRates: {
+                finalizationCommission,
+                transactionCommission,
+                bakingCommission,
+            },
+        },
+        bakerAddress,
+        bakerEquityCapital,
+        delegatedCapitalCap,
+        bakerStakePendingChange,
+        currentPaydayStatus,
+    } = ps;
+
+    console.log(ps);
+    console.log(ps.currentPaydayStatus);
+
+    expect(poolType).toBe(PoolStatusType.BakerPool);
+    expect(bakerId).toBe(1n);
+    expect(bakerAddress).toBe(
+        '39BjG2g6JaTUVSEizZQu6DrsPjwNMKW2ftqToBvTVTMna7pNud'
+    );
+    expect(delegatedCapital).toBe(0n);
+    expect(openStatus).toBe(OpenStatusText.OpenForAll);
+    expect(metadataUrl).toBe('');
+    expect(finalizationCommission).toBe(1);
+    expect(transactionCommission).toBe(0.05);
+    expect(bakingCommission).toBe(0.05);
+    expect(bakerEquityCapital).toBe(3000000000000n);
+    expect(delegatedCapitalCap).toBe(1000666666666n);
+    expect(bakerStakePendingChange.pendingChangeType).toBe(
+        BakerPoolPendingChangeType.NoChange
+    );
+    expect(currentPaydayStatus?.bakerEquityCapital).toBe(3000000000000n);
+    expect(currentPaydayStatus?.blocksBaked).toBe(25n);
+    expect(currentPaydayStatus?.finalizationLive).toBe(true);
+    expect(currentPaydayStatus?.transactionFeesEarned).toBe(0n);
+    expect(currentPaydayStatus?.effectiveStake).toBe(3000000000000n);
+    expect(currentPaydayStatus?.lotteryPower).toBe(0.2);
+    expect(currentPaydayStatus?.delegatedCapital).toBe(0n);
+});
+
+test('pool status is undefined at an unknown block', async () => {
+    const blockHash =
+        '7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749';
+    const ps = await client.getPoolStatus(blockHash);
+    return expect(ps).toBeUndefined();
+});
+
+test('account info with new baker info can be accessed', async () => {
+    const blockHash =
+        '1e69dbed0234f0e8cf7965191bae42cd49415646984346e01716c8f8577ab6e0';
+    const address = new AccountAddress(
+        '2zmRFpd7g12oBAZHSDqnbJ3Eg5HGr2sE9aFCL6mD3pyUSsiDSJ'
+    );
+
+    const ai = await client.getAccountInfo(address, blockHash);
+
+    if (!ai) {
+        throw new Error('Expected account info to be accessible.');
+    }
+
+    if (!isBakerAccountV1(ai)) {
+        throw new Error(
+            'Test assumes the account is a baker on delegation protocol version'
+        );
+    }
+
+    const {
+        accountBaker: {
+            bakerId,
+            stakedAmount,
+            bakerPoolInfo: {
+                metadataUrl,
+                openStatus,
+                commissionRates: {
+                    bakingCommission,
+                    transactionCommission,
+                    finalizationCommission,
+                },
+            },
+            restakeEarnings,
+            pendingChange,
+        },
+    } = ai;
+
+    expect(bakerId).toBe(0n);
+    expect(stakedAmount).toBe(3000000000000n);
+    expect(restakeEarnings).toBe(false);
+    expect(pendingChange).toBeUndefined();
+    expect(metadataUrl).toBe('');
+    expect(openStatus).toBe(OpenStatusText.OpenForAll);
+    expect(bakingCommission).toBe(0.05);
+    expect(transactionCommission).toBe(0.05);
+    expect(finalizationCommission).toBe(1);
+});
+
+test('account info with delegation to specific baker can be accessed', async () => {
+    const blockHash =
+        '1e69dbed0234f0e8cf7965191bae42cd49415646984346e01716c8f8577ab6e0';
+    const address = new AccountAddress(
+        '3UztagvMc6dMeRgW51tG8SR18BdHXaGyWBdx8nAz3caKTrWnuo'
+    );
+
+    const ai = await client.getAccountInfo(address, blockHash);
+
+    if (!ai) {
+        throw new Error('Expected account info to be accessible.');
+    }
+
+    if (!isDelegatorAccount(ai)) {
+        throw new Error('Test assumes the account is a delegator');
+    }
+
+    const {
+        accountDelegation: {
+            restakeEarnings,
+            stakedAmount,
+            pendingChange,
+            delegationTarget,
+        },
+    } = ai;
+
+    expect(stakedAmount).toBe(1000000000n);
+    expect(restakeEarnings).toBe(true);
+    expect(pendingChange).toBeUndefined();
+    expect(delegationTarget.delegateType).toBe(DelegationTargetType.Baker);
+    expect((delegationTarget as DelegationTargetBaker).bakerId).toBe(0n);
+});
+
+test('account info with delegation to L-pool can be accessed', async () => {
+    const blockHash =
+        '1e69dbed0234f0e8cf7965191bae42cd49415646984346e01716c8f8577ab6e0';
+    const address = new AccountAddress(
+        '4Y7qexYDywtB8K5NySAqZDUqg8FBNwDdu616NdvVqUfVQ1ULSq'
+    );
+
+    const ai = await client.getAccountInfo(address, blockHash);
+
+    if (!ai) {
+        throw new Error('Expected account info to be accessible.');
+    }
+
+    if (!isDelegatorAccount(ai)) {
+        throw new Error('Test assumes the account is a delegator');
+    }
+
+    const {
+        accountDelegation: {
+            restakeEarnings,
+            stakedAmount,
+            pendingChange,
+            delegationTarget,
+        },
+    } = ai;
+
+    expect(stakedAmount).toBe(1000000000n);
+    expect(restakeEarnings).toBe(true);
+    expect(pendingChange).toBeUndefined();
+    expect(delegationTarget.delegateType).toBe(DelegationTargetType.LPool);
 });

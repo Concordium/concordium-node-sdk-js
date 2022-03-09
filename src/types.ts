@@ -732,20 +732,65 @@ export interface InitialAccountCredential {
     contents: InitialCredentialDeploymentValues;
 }
 
-export interface ReduceStakePendingChange {
-    change: 'ReduceStake';
+export enum StakePendingChangeTypeV0 {
+    ReduceStake = 'ReduceStake',
+    RemoveStake = 'RemoveBaker',
+}
+
+export enum StakePendingChangeTypeV1 {
+    ReduceStake = 'ReduceStake',
+    RemoveStake = 'RemoveStake',
+}
+
+interface StakePendingChangeV0Common {
+    epoch: bigint;
+}
+
+interface StakePendingChangeV1Common {
+    effectiveTime: Date;
+}
+
+interface ReduceStakePendingChangeCommon {
     newStake: bigint;
-    epoch: bigint;
 }
 
-export interface RemovalPendingChange {
-    change: 'RemoveStake';
-    epoch: bigint;
+export interface ReduceStakePendingChangeV0
+    extends ReduceStakePendingChangeCommon,
+        StakePendingChangeV0Common {
+    change: StakePendingChangeTypeV0.ReduceStake;
 }
 
-export type StakePendingChange =
-    | ReduceStakePendingChange
-    | RemovalPendingChange;
+export interface ReduceStakePendingChangeV1
+    extends ReduceStakePendingChangeCommon,
+        StakePendingChangeV1Common {
+    change: StakePendingChangeTypeV1.ReduceStake;
+}
+
+export type ReduceStakePendingChange =
+    | ReduceStakePendingChangeV0
+    | ReduceStakePendingChangeV1;
+
+export interface RemovalPendingChangeV0 extends StakePendingChangeV0Common {
+    change: StakePendingChangeTypeV0.RemoveStake;
+}
+
+export interface RemovalPendingChangeV1 extends StakePendingChangeV1Common {
+    change: StakePendingChangeTypeV1.RemoveStake;
+}
+
+export type RemovalPendingChange =
+    | RemovalPendingChangeV0
+    | RemovalPendingChangeV1;
+
+export type StakePendingChangeV0 =
+    | ReduceStakePendingChangeV0
+    | RemovalPendingChangeV0;
+
+export type StakePendingChangeV1 =
+    | ReduceStakePendingChangeV1
+    | RemovalPendingChangeV1;
+
+export type StakePendingChange = StakePendingChangeV0 | StakePendingChangeV1;
 
 export enum OpenStatus {
     OpenForAll = 0,
@@ -908,7 +953,7 @@ export interface AccountDelegationDetails {
     restakeEarnings: boolean;
     stakedAmount: bigint;
     delegationTarget: DelegationTarget;
-    pendingChange?: StakePendingChange;
+    pendingChange?: StakePendingChangeV1;
 }
 
 interface AccountInfoCommon {

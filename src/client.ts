@@ -27,8 +27,6 @@ import {
     AccountTransaction,
     AccountTransactionSignature,
     ArInfo,
-    ReduceStakePendingChange,
-    RemovalPendingChange,
     BlockInfo,
     BlockSummary,
     ConsensusStatus,
@@ -63,6 +61,7 @@ import {
     RewardStatusV0,
     RewardStatus,
     RewardStatusV1,
+    ReduceStakePendingChangeV0,
 } from './types';
 import {
     buildJsonResponseReviver,
@@ -75,6 +74,7 @@ import {
 import { GtuAmount } from './types/gtuAmount';
 import { ModuleReference } from './types/moduleReference';
 import { Buffer as BufferFormater } from 'buffer/';
+import { ReduceStakePendingChangeV1 } from '.';
 
 /**
  * A concordium-node specific gRPC client wrapper.
@@ -220,15 +220,17 @@ export default class ConcordiumNodeClient {
             this.client.getAccountInfo,
             getAddressInfoRequest
         );
-        const datePropertyKeys: (keyof ReleaseSchedule)[] = ['timestamp'];
+        const datePropertyKeys: (
+            | keyof ReleaseSchedule
+            | keyof ReduceStakePendingChangeV1
+        )[] = ['timestamp', 'effectiveTime'];
         const bigIntPropertyKeys: (
             | keyof AccountInfo
             | keyof AccountEncryptedAmount
             | keyof AccountReleaseSchedule
             | keyof ReleaseSchedule
             | keyof AccountBakerDetails
-            | keyof ReduceStakePendingChange
-            | keyof RemovalPendingChange
+            | keyof ReduceStakePendingChangeV0
         )[] = [
             'accountAmount',
             'accountNonce',

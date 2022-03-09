@@ -9,11 +9,11 @@ import { MobileWalletExport } from '../src/wallet/types';
  * Creates a client to communicate with a local concordium-node
  * used for automatic tests.
  */
-export function getNodeClient(): ConcordiumNodeClient {
+export function getNodeClient(address = '127.0.0.1'): ConcordiumNodeClient {
     const metadata = new Metadata();
     metadata.add('authentication', 'rpcadmin');
     return new ConcordiumNodeClient(
-        '127.0.0.1',
+        address,
         10000,
         credentials.createInsecure(),
         metadata,

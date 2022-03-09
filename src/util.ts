@@ -23,6 +23,10 @@ function intToString(jsonStruct: string, keys: string[]): string {
     return result;
 }
 
+export function intListToStringList(jsonStruct: string): string {
+    return jsonStruct.replace(/(\-?[0-9]+)/g, '"$1"');
+}
+
 /**
  * A transformer that converts all the values provided as keys to
  * string values.

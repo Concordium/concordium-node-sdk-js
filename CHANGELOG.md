@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Support for getting baker list from node.
+- Support for getting status of Baker-/L-pool (required node to have protocol version 4 or later)
+- Helper functions for determining the version of `BlockSummary` and nested types. 
+
+### Changed
+
+- Updated `BlockSummary` type to include new version, effective from protocol version 4.
+- Updated `AccountInfo` type to include new fields related to delegation introduced with protocol version 4.
+
 ## 0.7.1 2022-03-09
 
 ### Added

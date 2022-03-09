@@ -6,11 +6,12 @@ import { Buffer } from 'buffer/';
 import { ModuleReference } from './types/moduleReference';
 
 /**
- * Returns a union of all keys of type T with values matching type V.
+ * A reward fraction with a resolution of 1/100000, i.e. the
+ * denominator is implicitly 100000, and the interface therefore
+ * only contains the numerator value which can be in the interval
+ * [1, 100000].
  */
-export type KeysMatching<T, V> = {
-    [K in keyof T]-?: T[K] extends V ? K : never;
-}[keyof T];
+export type RewardFraction = number;
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export interface Versioned<T> {
@@ -256,143 +257,52 @@ export interface FinalizationData {
     finalizers: PartyInfo[];
 }
 
-export interface Ratio {
+export interface ExchangeRate {
     numerator: bigint;
     denominator: bigint;
 }
 
-export type ExchangeRate = Ratio;
-
-export interface InclusiveRange<N extends number> {
-    min: N;
-    max: N;
-}
-
-export type DurationSeconds = bigint;
-/** Index of an epoch, or number of epochs. */
-export type Epoch = bigint;
-
 export interface TransactionFeeDistribution {
-    baker: number;
-    gasAccount: number;
+    baker: RewardFraction;
+    gasAccount: RewardFraction;
 }
 
-export interface MintRate {
-    mantissa: number;
-    exponent: number;
-}
-
-interface MintDistributionCommon {
-    bakingReward: number;
-    finalizationReward: number;
-}
-
-export interface MintDistributionV0 extends MintDistributionCommon {
+export interface MintDistribution {
     mintPerSlot: number;
+    bakingReward: RewardFraction;
+    finalizationReward: RewardFraction;
 }
-
-export type MintDistributionV1 = MintDistributionCommon;
-
-export type MintDistribution = MintDistributionV0 | MintDistributionV1;
 
 export interface GasRewards {
-    baker: number;
-    finalizationProof: number;
-    accountCreation: number;
-    chainUpdate: number;
+    baker: RewardFraction;
+    finalizationProof: RewardFraction;
+    accountCreation: RewardFraction;
+    chainUpdate: RewardFraction;
 }
 
-interface RewardParametersCommon {
+export interface RewardParameters {
     transactionFeeDistribution: TransactionFeeDistribution;
+    mintDistribution: MintDistribution;
     gASRewards: GasRewards;
 }
 
-/**
- * Used from protocol version 1-3
- */
-export interface RewardParametersV0 extends RewardParametersCommon {
-    mintDistribution: MintDistributionV0;
-}
-
-/**
- * Used from protocol version 4
- */
-export interface RewardParametersV1 extends RewardParametersCommon {
-    mintDistribution: MintDistributionV1;
-}
-
-export type RewardParameters = RewardParametersV0 | RewardParametersV1;
-
-export interface CooldownParametersV0 {
-    bakerCooldownEpochs: Epoch;
-}
-
-export interface CooldownParametersV1 {
-    poolOwnerCooldown: DurationSeconds;
-    delegatorCooldown: DurationSeconds;
-}
-
-export interface PoolParametersV0 {
-    minimumThresholdForBaking: Amount;
-}
-
-export interface PoolParametersV1 {
-    finalizationCommissionLPool: number;
-    bakingCommissionLPool: number;
-    transactionCommissionLPool: number;
-    finalizationCommissionRange: InclusiveRange<number>;
-    bakingCommissionRange: InclusiveRange<number>;
-    transactionCommissionRange: InclusiveRange<number>;
-    minimumEquityCapital: Amount;
-    capitalBound: number;
-    leverageBound: Ratio;
-}
-
-export interface TimeParametersV1 {
-    /**
-     * In epochs
-     */
-    rewardPeriodLength: Epoch;
-    mintPerPayday: number;
-}
-
-interface ChainParametersCommon {
+export interface ChainParameters {
     electionDifficulty: number;
     euroPerEnergy: ExchangeRate;
     microGTUPerEuro: ExchangeRate;
     accountCreationLimit: number;
+    bakerCooldownEpochs: bigint;
+    minimumThresholdForBaking: bigint;
+    rewardParameters: RewardParameters;
     foundationAccountIndex: bigint;
 }
-
-/**
- * Used from protocol version 1-3
- */
-export interface ChainParametersV0
-    extends ChainParametersCommon,
-        CooldownParametersV0,
-        PoolParametersV0 {
-    rewardParameters: RewardParametersV0;
-}
-
-/**
- * Used from protocol version 4
- */
-export interface ChainParametersV1
-    extends ChainParametersCommon,
-        CooldownParametersV1,
-        PoolParametersV1,
-        TimeParametersV1 {
-    rewardParameters: RewardParametersV1;
-}
-
-export type ChainParameters = ChainParametersV0 | ChainParametersV1;
 
 export interface Authorization {
     threshold: number;
     authorizedKeys: number[];
 }
 
-interface AuthorizationsCommon {
+export interface Authorizations {
     emergency: Authorization;
     microGTUPerEuro: Authorization;
     euroPerEnergy: Authorization;
@@ -401,9 +311,6 @@ interface AuthorizationsCommon {
     mintDistribution: Authorization;
     protocol: Authorization;
     paramGASRewards: Authorization;
-    /**
-     * From protocol version 4 and later, this controls the authorization of the poolParameters update.
-     */
     bakerStakeThreshold: Authorization;
     electionDifficulty: Authorization;
     addAnonymityRevoker: Authorization;
@@ -411,52 +318,22 @@ interface AuthorizationsCommon {
     keys: VerifyKey[];
 }
 
-/**
- * Used from protocol version 1-3
- */
-export type AuthorizationsV0 = AuthorizationsCommon;
-
-/**
- * Used from protocol version 4
- */
-export interface AuthorizationsV1 extends AuthorizationsCommon {
-    cooldownParameters: Authorization;
-    timeParameters: Authorization;
-}
-
-export type Authorizations = AuthorizationsV0 | AuthorizationsV1;
-
 export interface KeysWithThreshold {
     keys: VerifyKey[];
     threshold: number;
 }
 
-interface KeysCommon {
+export interface Keys {
     rootKeys: KeysWithThreshold;
     level1Keys: KeysWithThreshold;
+    level2Keys: Authorizations;
 }
-
-/**
- * Used from protocol version 1-3
- */
-export interface KeysV0 extends KeysCommon {
-    level2Keys: AuthorizationsV0;
-}
-
-/**
- * Used from protocol version 4
- */
-export interface KeysV1 extends KeysCommon {
-    level2Keys: AuthorizationsV1;
-}
-
-export type Keys = KeysV0 | KeysV1;
 
 export interface UpdateQueueQueue {
     effectiveTime: Date;
     // TODO Update the type of update to a generic update transaction when
     // update types have been added.
-    /** Information about the actual update. */
+    // Information about the actual update.
     update: unknown;
 }
 
@@ -465,7 +342,7 @@ export interface UpdateQueue {
     queue: UpdateQueueQueue;
 }
 
-interface UpdateQueuesCommon {
+interface UpdateQueues {
     microGTUPerEuro: UpdateQueue;
     euroPerEnergy: UpdateQueue;
     transactionFeeDistribution: UpdateQueue;
@@ -474,6 +351,7 @@ interface UpdateQueuesCommon {
     mintDistribution: UpdateQueue;
     protocol: UpdateQueue;
     gasRewards: UpdateQueue;
+    bakerStakeThreshold: UpdateQueue;
     addAnonymityRevoker: UpdateQueue;
     addIdentityProvider: UpdateQueue;
     rootKeys: UpdateQueue;
@@ -481,96 +359,17 @@ interface UpdateQueuesCommon {
     level2Keys: UpdateQueue;
 }
 
-/**
- * Used from protocol version 1-3
- */
-export interface UpdateQueuesV0 extends UpdateQueuesCommon {
-    bakerStakeThreshold: UpdateQueue;
+export interface Updates {
+    chainParameters: ChainParameters;
+    keys: Keys;
+    updateQueues: UpdateQueues;
 }
 
-/**
- * Used from protocol version 4
- */
-export interface UpdateQueuesV1 extends UpdateQueuesCommon {
-    cooldownParameters: UpdateQueue;
-    timeParameters: UpdateQueue;
-    poolParameters: UpdateQueue;
-}
-
-export type UpdateQueues = UpdateQueuesV0 | UpdateQueuesV1;
-
-interface ProtocolUpdate {
-    message: string;
-    specificationUrl: string;
-    specificationHash: string;
-    specificationAuxiliaryData: string;
-}
-
-interface UpdatesCommon {
-    protocolUpdate: ProtocolUpdate | undefined;
-}
-
-/**
- * Used from protocol version 1-3
- */
-export interface UpdatesV0 extends UpdatesCommon {
-    chainParameters: ChainParametersV0;
-    updateQueues: UpdateQueuesV0;
-    keys: KeysV0;
-}
-
-/**
- * Used from protocol version 4
- */
-export interface UpdatesV1 extends UpdatesCommon {
-    chainParameters: ChainParametersV1;
-    updateQueues: UpdateQueuesV1;
-    keys: KeysV1;
-}
-
-export type Updates = UpdatesV0 | UpdatesV1;
-
-interface BlockSummaryCommon {
+export interface BlockSummary {
     finalizationData: FinalizationData;
     transactionSummaries: TransactionSummary[];
+    updates: Updates;
 }
-
-/**
- * Used from protocol version 1-3
- */
-export interface BlockSummaryV0 extends BlockSummaryCommon {
-    updates: UpdatesV0;
-}
-
-/**
- * Used from protocol version 4
- */
-export interface BlockSummaryV1 extends BlockSummaryCommon {
-    updates: UpdatesV1;
-    protocolVersion: bigint;
-}
-
-export type BlockSummary = BlockSummaryV0 | BlockSummaryV1;
-
-interface RewardStatusCommon {
-    totalAmount: Amount;
-    totalEncryptedAmount: Amount;
-    bakingRewardAccount: Amount;
-    finalizationRewardAccount: Amount;
-    gasAccount: Amount;
-}
-
-export type RewardStatusV0 = RewardStatusCommon;
-
-export interface RewardStatusV1 extends RewardStatusCommon {
-    foundationTransactionRewards: Amount;
-    nextPaydayTime: Date;
-    nextPaydayMintRate: MintRate;
-    totalStakedCapital: Amount;
-    protocolVersion: bigint;
-}
-
-export type RewardStatus = RewardStatusV0 | RewardStatusV1;
 
 export interface BlockInfo {
     blockParent: string;
@@ -599,13 +398,7 @@ export interface ConsensusStatus {
     currentEraGenesisBlock: string;
     lastFinalizedBlock: string;
 
-    /**
-     * In milliseconds
-     */
     epochDuration: bigint;
-    /**
-     * In milliseconds
-     */
     slotDuration: bigint;
     bestBlockHeight: bigint;
     lastFinalizedBlockHeight: bigint;
@@ -732,186 +525,32 @@ export interface InitialAccountCredential {
     contents: InitialCredentialDeploymentValues;
 }
 
-export interface ReduceStakePendingChange {
+export interface BakerReduceStakePendingChange {
     change: 'ReduceStake';
     newStake: bigint;
     epoch: bigint;
 }
 
-export interface RemovalPendingChange {
-    change: 'RemoveStake';
+export interface BakerRemovalPendingChange {
+    change: 'RemoveBaker';
     epoch: bigint;
 }
 
-export type StakePendingChange =
-    | ReduceStakePendingChange
-    | RemovalPendingChange;
+export type BakerPendingChange =
+    | BakerReduceStakePendingChange
+    | BakerRemovalPendingChange;
 
-export enum OpenStatus {
-    OpenForAll = 0,
-    ClosedForNew = 1,
-    ClosedForAll = 2,
-}
-
-/**
- * How the node translates OpenStatus to JSON.
- */
-export enum OpenStatusText {
-    OpenForAll = 'openForAll',
-    ClosedForNew = 'closedForNew',
-    ClosedForAll = 'closedForAll',
-}
-
-export type Amount = bigint;
-export type BakerId = bigint;
-
-export interface BakerPoolInfo {
-    openStatus: OpenStatusText;
-    metadataUrl: string;
-    commissionRates: CommissionRates;
-}
-
-export interface CommissionRates {
-    transactionCommission: number;
-    bakingCommission: number;
-    finalizationCommission: number;
-}
-
-export interface CurrentPaydayBakerPoolStatus {
-    blocksBaked: bigint;
-    finalizationLive: boolean;
-    transactionFeesEarned: Amount;
-    effectiveStake: Amount;
-    lotteryPower: number;
-    bakerEquityCapital: Amount;
-    delegatedCapital: Amount;
-}
-
-export enum BakerPoolPendingChangeType {
-    ReduceBakerCapital = 'ReduceBakerCapital',
-    RemovePool = 'RemovePool',
-    NoChange = 'NoChange',
-}
-
-type BakerPoolPendingChangeWrapper<
-    T extends keyof typeof BakerPoolPendingChangeType,
-    S extends Record<string, any>
-> = S & {
-    pendingChangeType: T;
-};
-
-export interface BakerPoolPendingChangeReduceBakerCapitalDetails {
-    bakerEquityCapital: Amount;
-    effectiveTime: Date;
-}
-
-export type BakerPoolPendingChangeReduceBakerCapital =
-    BakerPoolPendingChangeWrapper<
-        BakerPoolPendingChangeType.ReduceBakerCapital,
-        BakerPoolPendingChangeReduceBakerCapitalDetails
-    >;
-
-export interface BakerPoolPendingChangeRemovePoolDetails {
-    effectiveTime: Date;
-}
-
-export type BakerPoolPendingChangeRemovePool = BakerPoolPendingChangeWrapper<
-    BakerPoolPendingChangeType.RemovePool,
-    BakerPoolPendingChangeRemovePoolDetails
->;
-
-export type BakerPoolPendingChangeNoChange = BakerPoolPendingChangeWrapper<
-    BakerPoolPendingChangeType.NoChange,
-    // eslint-disable-next-line @typescript-eslint/ban-types
-    {}
->;
-
-export type BakerPoolPendingChange =
-    | BakerPoolPendingChangeReduceBakerCapital
-    | BakerPoolPendingChangeRemovePool
-    | BakerPoolPendingChangeNoChange;
-
-export enum PoolStatusType {
-    BakerPool = 'BakerPool',
-    LPool = 'LPool',
-}
-
-type PoolStatusWrapper<T extends keyof typeof PoolStatusType, S> = S & {
-    poolType: T;
-};
-
-export interface BakerPoolStatusDetails {
-    bakerId: BakerId;
-    bakerAddress: string;
-    bakerEquityCapital: Amount;
-    delegatedCapital: Amount;
-    delegatedCapitalCap: Amount;
-    poolInfo: BakerPoolInfo;
-    bakerStakePendingChange: BakerPoolPendingChange;
-    currentPaydayStatus?: CurrentPaydayBakerPoolStatus;
-}
-
-export type BakerPoolStatus = PoolStatusWrapper<
-    PoolStatusType.BakerPool,
-    BakerPoolStatusDetails
->;
-
-export interface LPoolStatusDetails {
-    delegatedCapital: Amount;
-    commissionRates: CommissionRates;
-    currentPaydayTransactionFeesEarned: Amount;
-    currentPaydayDelegatedCapital: Amount;
-}
-
-export type LPoolStatus = PoolStatusWrapper<
-    PoolStatusType.LPool,
-    LPoolStatusDetails
->;
-
-export type PoolStatus = BakerPoolStatus | LPoolStatus;
-
-export enum DelegationTargetType {
-    LPool = 'L-Pool',
-    Baker = 'Baker',
-}
-
-export interface DelegationTargetLPool {
-    delegateType: DelegationTargetType.LPool;
-}
-
-export interface DelegationTargetBaker {
-    delegateType: DelegationTargetType.Baker;
-    bakerId: BakerId;
-}
-
-export type DelegationTarget = DelegationTargetLPool | DelegationTargetBaker;
-
-interface AccountBakerDetailsCommon {
+export interface AccountBakerDetails {
     restakeEarnings: boolean;
-    bakerId: BakerId;
+    bakerId: bigint;
     bakerAggregationVerifyKey: string;
     bakerElectionVerifyKey: string;
     bakerSignatureVerifyKey: string;
     stakedAmount: bigint;
-    pendingChange?: StakePendingChange;
+    pendingChange?: BakerPendingChange;
 }
 
-export type AccountBakerDetailsV0 = AccountBakerDetailsCommon;
-
-export interface AccountBakerDetailsV1 extends AccountBakerDetailsCommon {
-    bakerPoolInfo: BakerPoolInfo;
-}
-
-export type AccountBakerDetails = AccountBakerDetailsV0 | AccountBakerDetailsV1;
-
-export interface AccountDelegationDetails {
-    restakeEarnings: boolean;
-    stakedAmount: bigint;
-    delegationTarget: DelegationTarget;
-    pendingChange?: StakePendingChange;
-}
-
-interface AccountInfoCommon {
+export interface AccountInfo {
     accountNonce: bigint;
     accountAmount: bigint;
     accountIndex: bigint;
@@ -927,30 +566,9 @@ interface AccountInfoCommon {
         number,
         Versioned<InitialAccountCredential | NormalAccountCredential>
     >;
+
+    accountBaker?: AccountBakerDetails;
 }
-
-export type AccountInfoSimple = AccountInfoCommon;
-
-export interface AccountInfoBakerV0 extends AccountInfoCommon {
-    accountBaker: AccountBakerDetailsV0;
-}
-
-/** Protocol version 4 and later. */
-export interface AccountInfoBakerV1 extends AccountInfoCommon {
-    accountBaker: AccountBakerDetailsV1;
-}
-
-export type AccountInfoBaker = AccountInfoBakerV0 | AccountInfoBakerV1;
-
-/** Protocol version 4 and later. */
-export interface AccountInfoDelegator extends AccountInfoCommon {
-    accountDelegation: AccountDelegationDetails;
-}
-
-export type AccountInfo =
-    | AccountInfoSimple
-    | AccountInfoBaker
-    | AccountInfoDelegator;
 
 export interface Description {
     name: string;

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.1 2022-03-09
+
+### Added
+
+- Support for initiating and updating contracts with parameters.
+
 ## 0.6.0 2022-02-02
 
 ### Added

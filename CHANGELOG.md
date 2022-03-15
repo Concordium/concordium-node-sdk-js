@@ -5,7 +5,8 @@
 ### Added
 
 - Support for getting baker list from node.
-- Support for getting status of Baker-/L-pool (required node to have protocol version 4 or later)
+- Support for getting status of Baker-/L-pool (required node to have protocol version 4 or later).
+- Support for getting reward status of chain at specific block.
 - Helper functions for determining the version of `BlockSummary` and nested types. 
 - Helper functions for determining the version of `AccountInfo` variants. 
 

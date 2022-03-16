@@ -732,14 +732,10 @@ export interface InitialAccountCredential {
     contents: InitialCredentialDeploymentValues;
 }
 
-export enum StakePendingChangeTypeV0 {
+export enum StakePendingChangeType {
     ReduceStake = 'ReduceStake',
-    RemoveStake = 'RemoveBaker',
-}
-
-export enum StakePendingChangeTypeV1 {
-    ReduceStake = 'ReduceStake',
-    RemoveStake = 'RemoveStake',
+    RemoveStakeV0 = 'RemoveBaker',
+    RemoveStakeV1 = 'RemoveStake',
 }
 
 interface StakePendingChangeV0Common {
@@ -757,13 +753,13 @@ interface ReduceStakePendingChangeCommon {
 export interface ReduceStakePendingChangeV0
     extends ReduceStakePendingChangeCommon,
         StakePendingChangeV0Common {
-    change: StakePendingChangeTypeV0.ReduceStake;
+    change: StakePendingChangeType.ReduceStake;
 }
 
 export interface ReduceStakePendingChangeV1
     extends ReduceStakePendingChangeCommon,
         StakePendingChangeV1Common {
-    change: StakePendingChangeTypeV1.ReduceStake;
+    change: StakePendingChangeType.ReduceStake;
 }
 
 export type ReduceStakePendingChange =
@@ -771,11 +767,11 @@ export type ReduceStakePendingChange =
     | ReduceStakePendingChangeV1;
 
 export interface RemovalPendingChangeV0 extends StakePendingChangeV0Common {
-    change: StakePendingChangeTypeV0.RemoveStake;
+    change: StakePendingChangeType.RemoveStakeV0;
 }
 
 export interface RemovalPendingChangeV1 extends StakePendingChangeV1Common {
-    change: StakePendingChangeTypeV1.RemoveStake;
+    change: StakePendingChangeType.RemoveStakeV1;
 }
 
 export type RemovalPendingChange =

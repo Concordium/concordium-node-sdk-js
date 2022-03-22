@@ -5,8 +5,11 @@ import {
     getCredentialDeploymentSignDigest,
     getCredentialDeploymentTransactionHash,
     getCredentialForExistingAccountSignDigest,
+    serializeInitContractParameters,
+    serializeUpdateContractParameters,
 } from './serialization';
 import { sha256 } from './hash';
+import { getModuleBuffer } from './deserializeSchema';
 
 export { ConcordiumNodeClient };
 export * from './types';
@@ -16,6 +19,9 @@ export {
     getCredentialDeploymentSignDigest,
     getCredentialDeploymentTransactionHash,
     getCredentialForExistingAccountSignDigest,
+    serializeInitContractParameters,
+    serializeUpdateContractParameters,
+    getModuleBuffer,
 };
 export { sha256 };
 export { CredentialRegistrationId } from './types/CredentialRegistrationId';
@@ -34,3 +40,5 @@ export {
 } from './credentialDeploymentTransactions';
 export { isAlias, getAlias } from './alias';
 export * from './encryptedTransferHelpers';
+export { deserializeContractState } from './deserialization';
+export * from './blockSummaryHelpers';

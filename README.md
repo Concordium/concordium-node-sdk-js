@@ -591,6 +591,26 @@ const peersList = peerListResponse.getPeersList();
 ...
 ```
 
+## getBakerList
+Retrieves the list of ID's for registered bakers on the network at a specific block.
+```js
+const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
+const bakerIds = await client.getBakerList(blockHash);
+...
+```
+
+## getPoolStatus
+Retrieves the status of a pool (either L-Pool or specific baker) at a specific block.
+If a baker ID is specified, the status of that baker is returned. To get the status of the L-Pool, a baker ID should be left undefined.
+```js
+const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
+const bakerId = BigInt(1);
+
+const bakerStatus = await client.getPoolStatus(blockHash, bakerId);
+const lPoolStatus = await client.getPoolStatus(blockHash); 
+...
+```
+
 ## Check block for transfers with memo
 The following example demonstrates how to check and parse a block 
 for transfers with a memo.
@@ -642,7 +662,7 @@ const header: AccountTransactionHeader = {
 
 const deployModuleTransaction: AccountTransaction = {
     header: header,
-    payload: deployModule as AccountTransactionPayload,
+    payload: deployModule,
     type: AccountTransactionType.DeployModule,
 };
 ```
@@ -652,14 +672,13 @@ Finally, to actually deploy the module to the chain, send the constructed `deplo
 ## Init Contract (parameterless smart contract)
 The following example demonstrates how to initialize a smart contract from a module, which has already been deployed. 
 The name of the contract "INDBank".
-In this example, the contract does not take any parameters, so we can leave params as an empty Buffer.  
+In this example, the contract does not take any parameters, so we can leave parameters as an empty buffer.
 ```js
 const contractName = 'INDBank'; 
 const params = Buffer.from([]);
 //The amount of energy that can be used for contract execution.
 const maxContractExecutionEnergy = 300000n;
 ```
-
 Create init contract transaction
 ```js
 const initModule: InitContractPayload = {
@@ -669,7 +688,6 @@ const initModule: InitContractPayload = {
     parameter: params,
     maxContractExecutionEnergy: maxContractExecutionEnergy
 };
-
 const initContractTransaction: AccountTransaction = {
     header: header,
     payload: initModule,
@@ -679,15 +697,15 @@ const initContractTransaction: AccountTransaction = {
 
 Finally, to actually initialize the contract on the chain, send the constructed `initContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
 
-## Update Contract(parameterless smart contract)
+## Update Contract (parameterless smart contract)
 The following example demonstrates how to update a smart contract. 
 
 To update a smart contract we create a 'updateContractTransaction'.
-To do this we need to specify the name of the receive function, which should contain the contract name as a prefix ( So if the contract has the name "INDBank" and the receive function has the name "insertAmount" then the receiveName should be "INDBank.insertAmount").
+To do this we need to specify the name of the receive function, which should contain the contract name as a prefix (So if the contract has the name "INDBank" and the receive function has the name "insertAmount" then the receiveName should be "INDBank.insertAmount").
 
 We also need to supply the contract address of the contract instance. This consists of an index and a subindex.
 
-In this example, the contract does not take any parameters, so we can leave the parameters as an empty list.  
+In this example, the contract does not take any parameters, so we can leave the parameters as an empty buffer.
 ```js
 const receiveName = 'INDBank.insertAmount';
 const params = Buffer.from([]);
@@ -705,7 +723,6 @@ const updateModule: UpdateContractPayload =
     parameter: params,
     maxContractExecutionEnergy: maxContractExecutionEnergy
 };
-
 const updateContractTransaction: AccountTransaction = {
     header: header,
     payload: updateModule,
@@ -714,6 +731,132 @@ const updateContractTransaction: AccountTransaction = {
 ```
 
 Finally, to actually update the contract on the chain, send the constructed `updateContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
+
+## Smart contract with parameters
+In the previous sections we have seen how to initialize and update contracts without parameters. In this section we will describe how to initialize and update contracts with parameters.
+The user should provide the input in the JSON format specified in [our documentation](https://developer.concordium.software/en/mainnet/smart-contracts/references/schema-json.html).
+
+Let us consider the following example where the contract's initialization parameter is the following structure:
+```rust
+#[derive(SchemaType, Serialize)]
+struct MyStruct {
+    age: u16,
+    name: String,
+    city: String,
+}
+```
+An example of a valid input would be:
+```js
+const userInput = {
+        age: 51,
+        name: 'Concordium',
+        city: 'Zug',
+    };
+```
+An other example could be if the parameter is the following "SomeEnum":
+```rust
+#[derive(SchemaType, Serialize)]
+enum AnotherEnum {
+    D,
+}
+#[derive(SchemaType, Serialize)]
+enum SomeEnum {
+    B(AnotherEnum),
+}
+```
+Then the following would be a valid input:
+```js
+const userInput = {
+    B: [
+      {
+        D: []
+      }
+    ]
+  };
+```
+Then the user needs to provide the schema for the module. Here we use getModuleBuffer to load the schema file:
+```js
+const modulefileBuffer = getModuleBuffer(
+    'SCHEMA-FILE-PATH'
+);
+```
+Then the parameters can be serialized into bytes:
+```js
+const inputParams = serializeInitContractParameters(
+    "my-contract-name",
+    userInput,
+    modulefileBuffer
+);
+```
+Then the payload and transaction can be constructed, in the same way as the parameterless example:
+```js
+const initModule: InitContractPayload = {
+        amount: new GtuAmount(0n),
+        moduleRef: new ModuleReference(
+            '6cabee5b2d9d5013216eef3e5745288dcade77a4b1cd0d7a8951262476d564a0'
+        ),
+        contractName: contractName,
+        parameter: inputParams,
+        maxContractExecutionEnergy: baseEnergy,
+    };
+const initContractTransaction: AccountTransaction = {
+    header: header,
+    payload: initModule,
+    type: AccountTransactionType.InitializeSmartContractInstance,
+};
+```
+
+Finally, to actually initialize the contract on the chain, send the constructed `initContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
+
+To update a contract with parameters, consider the example where the input is an i64 value, like -2000000.
+```js
+const userInput = -2000000;
+const contractName = "my-contract-name";
+const receiveFunctionName = "my-receive-function-name";
+const receiveName = contractName + '.' + receiveFunctionName;
+```
+
+Then the user need to provide the schema. Here we use getModuleBuffer to load the schema file:
+```js
+const modulefileBuffer = getModuleBuffer(
+    'SCHEMA-PATH'
+);
+```
+Then the parameters can be serialized into bytes:
+```js
+const inputParams = serializeUpdateContractParameters(
+        contractName,
+        receiveFunctionName,
+        userInput,
+        modulefileBuffer
+);
+```
+Then we will construct the update payload with parameters obtained 
+```js
+const updateModule: UpdateContractPayload = {
+        amount: new GtuAmount(1000n),
+        contractAddress: contractAddress,
+        receiveName: receiveName,
+        parameter: inputParams,
+        maxContractExecutionEnergy: baseEnergy,
+} as UpdateContractPayload;
+const updateContractTransaction: AccountTransaction = {
+        header: header,
+        payload: updateModule,
+        type: AccountTransactionType.UpdateSmartContractInstance,
+};
+```
+Finally, to actually update the contract on the chain, send the constructed `updateContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
+
+## Deserialize contract state
+The following example demonstrates how to deserialize a contract's state:
+
+```js
+const contractName = "my-contract-name"
+const schema = Buffer.from(schemaSource); // Load schema from file
+const rawContractState = Buffer.from(stateSource); // Could be getinstanceInfo(...).model
+const state = deserializeContractState(contractName, schema, rawContractState);
+```
 
 # Build
 

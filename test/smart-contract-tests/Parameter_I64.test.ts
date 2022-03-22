@@ -5,14 +5,16 @@ import {
     AccountTransactionType,
     UpdateContractPayload,
     ContractAddress,
-} from '../src/types';
+} from '../../src/types';
 import * as ed from 'noble-ed25519';
-import { getAccountTransactionSignDigest } from '../src/serialization';
-import { getNodeClient } from './testHelpers';
-import { AccountAddress } from '../src/types/accountAddress';
-import { GtuAmount } from '../src/types/gtuAmount';
-import { TransactionExpiry } from '../src/types/transactionExpiry';
+import { getAccountTransactionSignDigest } from '../../src/serialization';
+import { getNodeClient } from '../testHelpers';
+import { AccountAddress } from '../../src/types/accountAddress';
+import { GtuAmount } from '../../src/types/gtuAmount';
+import { TransactionExpiry } from '../../src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
+import { getModuleBuffer } from '../../src/deserializeSchema';
+import { serializeUpdateContractParameters } from '../../src/serialization';
 
 const client = getNodeClient();
 const senderAccountAddress =
@@ -20,7 +22,8 @@ const senderAccountAddress =
 const wrongPrivateKey =
     'ce432f6cca0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c';
 //test case for update contract
-test('update contract with the wrong private key', async () => {
+// Source of module: test/resources/smartcontracts/INDBankU83
+test('Parameter of I64 with the wrong private key', async () => {
     const nextAccountNonce = await client.getNextAccountNonce(
         new AccountAddress(senderAccountAddress)
     );
@@ -33,21 +36,32 @@ test('update contract with the wrong private key', async () => {
         sender: new AccountAddress(senderAccountAddress),
     };
 
-    const receiveName = 'INDBank.insertAmount';
-    const params = Buffer.from([]);
-    const contractAddress: ContractAddress = {
-        index: BigInt(87),
+    const contractName = 'INDBankU83';
+    const receiveFunctionName = 'insertAmount7';
+    const receiveName = contractName + '.' + receiveFunctionName;
+    const userInput = -2000000;
+    const contractAddress = {
+        index: BigInt(108),
         subindex: BigInt(0),
-    };
-    const maxContractExecutionEnergy = 30000n;
+    } as ContractAddress;
+    const baseEnergy = 30000n;
 
+    const modulefileBuffer = getModuleBuffer(
+        'test/resources/schemaFiles/schema6.bin'
+    );
+    const inputParams = serializeUpdateContractParameters(
+        contractName,
+        receiveFunctionName,
+        userInput,
+        modulefileBuffer
+    );
     const updateModule: UpdateContractPayload = {
         amount: new GtuAmount(1000n),
         contractAddress: contractAddress,
         receiveName: receiveName,
-        parameter: params,
-        maxContractExecutionEnergy: maxContractExecutionEnergy,
-    };
+        parameter: inputParams,
+        maxContractExecutionEnergy: baseEnergy,
+    } as UpdateContractPayload;
 
     const updateContractTransaction: AccountTransaction = {
         header: header,

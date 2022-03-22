@@ -143,6 +143,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "concordium-contracts-common"
+version = "2.0.0"
+dependencies = [
+ "base58check",
+ "chrono",
+ "fnv",
+ "hashbrown",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "convert_case"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -435,6 +447,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "fnv"
+version = "1.0.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
+
+[[package]]
 name = "generic-array"
 version = "0.12.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -476,6 +494,12 @@ dependencies = [
  "rand",
  "rand_xorshift",
 ]
+
+[[package]]
+name = "hashbrown"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab5ef0d4909ef3724cc8cce6ccc8572c5c817592e9285f5464f8e86f8bd3726e"
 
 [[package]]
 name = "hermit-abi"
@@ -593,6 +617,7 @@ name = "node_sdk_helpers"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "concordium-contracts-common",
  "crypto_common",
  "curve_arithmetic",
  "dodis_yampolskiy_prf",

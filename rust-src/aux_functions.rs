@@ -13,6 +13,12 @@ use elgamal::BabyStepGiantStep;
 use rand::thread_rng;
 use crypto_common::types::Amount;
 
+use concordium_contracts_common::{from_bytes, Cursor, schema};
+use hex;
+
+use anyhow::{bail, Result, anyhow};
+use id::{account_holder::create_unsigned_credential, constants::AttributeKind, types::*};
+use pedersen_scheme::Value;
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
 pub struct CredId {
@@ -23,10 +29,6 @@ pub struct CredId {
     )]
     pub cred_id: ExampleCurve,
 }
-
-use anyhow::{bail, Result};
-use id::{account_holder::create_unsigned_credential, constants::AttributeKind, types::*};
-use pedersen_scheme::Value;
 
 pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
     let v: SerdeValue = from_str(input)?;
@@ -236,4 +238,21 @@ pub fn create_encrypted_transfer_aux(
 
     let response = json!(payload);
     Ok(response.to_string())
+}
+
+/// Given the bytes of a contract's state, deserialize them to a json object, using the provided schema.
+/// Both the state bytes and the schema are given as hex-encoded strings.
+pub fn deserialize_state_aux(
+    contract_name: &str,
+    state_bytes: String,
+    schema: String,
+) -> Result<String> {
+    let module_schema: schema::Module = match from_bytes(&hex::decode(schema)?) {
+        Ok(o) => o,
+        Err(e) => return Err(anyhow!("unable to parse schema: {:#?}", e))
+    };
+    let mut state_cursor = Cursor::new(hex::decode(state_bytes)?);
+    let contract_schema = module_schema.contracts.get(contract_name).ok_or(anyhow!("Unable to get contract schema: not included in module schema"))?;
+    let state_schema = contract_schema.state.as_ref().ok_or(anyhow!("Unable to get state schema: not included in contract schema"))?;
+    Ok(state_schema.to_json(&mut state_cursor).expect("Unable to parse state to json").to_string())
 }

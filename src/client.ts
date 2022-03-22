@@ -8,6 +8,8 @@ import {
     BlockHeight,
     Empty,
     GetAddressInfoRequest,
+    GetPoolStatusRequest,
+    GetModuleSourceRequest,
     PeerListResponse,
     PeersRequest,
     SendTransactionRequest,
@@ -25,11 +27,8 @@ import {
     AccountTransaction,
     AccountTransactionSignature,
     ArInfo,
-    BakerReduceStakePendingChange,
-    BakerRemovalPendingChange,
     BlockInfo,
     BlockSummary,
-    ChainParameters,
     ConsensusStatus,
     ContractAddress,
     CredentialDeploymentTransaction,
@@ -48,9 +47,25 @@ import {
     Versioned,
     InstanceInfo,
     InstanceInfoSerialized,
+    BakerId,
+    ChainParametersV0,
+    ChainParametersV1,
+    PoolStatus,
+    BakerPoolStatusDetails,
+    CurrentPaydayBakerPoolStatus,
+    LPoolStatusDetails,
+    KeysMatching,
+    BakerPoolPendingChangeReduceBakerCapitalDetails,
+    LPoolStatus,
+    BakerPoolStatus,
+    RewardStatusV0,
+    RewardStatus,
+    RewardStatusV1,
+    ReduceStakePendingChangeV0,
 } from './types';
 import {
     buildJsonResponseReviver,
+    intListToStringList,
     intToStringTransformer,
     isValidHash,
     unwrapBoolResponse,
@@ -59,6 +74,8 @@ import {
 import { GtuAmount } from './types/gtuAmount';
 import { ModuleReference } from './types/moduleReference';
 import { Buffer as BufferFormater } from 'buffer/';
+import { ReduceStakePendingChangeV1 } from '.';
+
 /**
  * A concordium-node specific gRPC client wrapper.
  *
@@ -203,15 +220,17 @@ export default class ConcordiumNodeClient {
             this.client.getAccountInfo,
             getAddressInfoRequest
         );
-        const datePropertyKeys: (keyof ReleaseSchedule)[] = ['timestamp'];
+        const datePropertyKeys: (
+            | keyof ReleaseSchedule
+            | keyof ReduceStakePendingChangeV1
+        )[] = ['timestamp', 'effectiveTime'];
         const bigIntPropertyKeys: (
             | keyof AccountInfo
             | keyof AccountEncryptedAmount
             | keyof AccountReleaseSchedule
             | keyof ReleaseSchedule
             | keyof AccountBakerDetails
-            | keyof BakerReduceStakePendingChange
-            | keyof BakerRemovalPendingChange
+            | keyof ReduceStakePendingChangeV0
         )[] = [
             'accountAmount',
             'accountNonce',
@@ -317,7 +336,7 @@ export default class ConcordiumNodeClient {
             | keyof PartyInfo
             | keyof FinalizationData
             | keyof TransactionSummary
-            | keyof ChainParameters
+            | keyof (ChainParametersV0 & ChainParametersV1)
             | keyof ExchangeRate
             | keyof UpdateQueue
             | keyof KeysWithThreshold
@@ -331,8 +350,6 @@ export default class ConcordiumNodeClient {
             'cost',
             'energyCost',
             'index',
-            'bakerCooldownEpochs',
-            'minimumThresholdForBaking',
             'foundationAccountIndex',
             'numerator',
             'denominator',
@@ -340,6 +357,16 @@ export default class ConcordiumNodeClient {
             'amount',
             'index',
             'subindex',
+
+            // v0 keys
+            'bakerCooldownEpochs',
+            'minimumThresholdForBaking',
+
+            // v1 keys
+            'rewardPeriodLength',
+            'minimumEquityCapital',
+            'poolOwnerCooldown',
+            'delegatorCooldown',
         ];
 
         return unwrapJsonResponse<BlockSummary>(
@@ -598,6 +625,159 @@ export default class ConcordiumNodeClient {
             };
             return instanceInfo;
         }
+    }
+
+    async getRewardStatus(
+        blockHash: string
+    ): Promise<RewardStatus | undefined> {
+        if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+
+        type DateKey = KeysMatching<RewardStatusV1, Date>;
+        type BigIntKey = KeysMatching<RewardStatusV0 & RewardStatusV1, bigint>;
+
+        const dates: DateKey[] = ['nextPaydayTime'];
+        const bigInts: BigIntKey[] = [
+            'protocolVersion',
+            'gasAccount',
+            'totalAmount',
+            'totalStakedCapital',
+            'bakingRewardAccount',
+            'totalEncryptedAmount',
+            'finalizationRewardAccount',
+            'foundationTransactionRewards',
+        ];
+
+        const bh = new BlockHash();
+        bh.setBlockHash(blockHash);
+
+        const response = await this.sendRequest(
+            this.client.getRewardStatus,
+            bh
+        );
+
+        return unwrapJsonResponse<RewardStatus>(
+            response,
+            buildJsonResponseReviver(dates, bigInts),
+            intToStringTransformer(bigInts)
+        );
+    }
+
+    /**
+     * Retrieve list of bakers on the network.
+     * @param blockHash the block hash to get the smart contact instances at
+     * @returns A JSON list of baker IDs
+     */
+    async getBakerList(blockHash: string): Promise<BakerId[] | undefined> {
+        if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+
+        const bh = new BlockHash();
+        bh.setBlockHash(blockHash);
+
+        const response = await this.sendRequest(this.client.getBakerList, bh);
+
+        return unwrapJsonResponse<BakerId[]>(
+            response,
+            undefined,
+            intListToStringList
+        )?.map((v) => BigInt(v));
+    }
+
+    /**
+     * Gets the status the L-pool.
+     * @param blockHash the block hash the status at
+     * @returns The status of the L-pool.
+     */
+    async getPoolStatus(blockHash: string): Promise<LPoolStatus | undefined>;
+    /**
+     * Gets the status a baker.
+     * @param blockHash the block hash the status at
+     * @param bakerId the ID of the baker to get the status for.
+     * @returns The status of the corresponding baker pool.
+     */
+    async getPoolStatus(
+        blockHash: string,
+        bakerId: BakerId
+    ): Promise<BakerPoolStatus | undefined>;
+    /**
+     * Gets the status of either a baker, if a baker ID is supplied, or the L-pool if left undefined.
+     * @param blockHash the block hash the status at
+     * @param [bakerId] the ID of the baker to get the status for. If left undefined, the status of the L-pool is returned.
+     * @returns The status of the corresponding pool.
+     */
+    async getPoolStatus(
+        blockHash: string,
+        bakerId?: BakerId
+    ): Promise<PoolStatus | undefined>;
+    async getPoolStatus(
+        blockHash: string,
+        bakerId?: BakerId
+    ): Promise<PoolStatus | undefined> {
+        if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+
+        const req = new GetPoolStatusRequest();
+        req.setBlockHash(blockHash);
+        req.setLPool(bakerId === undefined);
+
+        if (bakerId !== undefined) {
+            req.setBakerId(bakerId.toString());
+        }
+
+        type DateKey = KeysMatching<
+            BakerPoolPendingChangeReduceBakerCapitalDetails,
+            Date
+        >;
+        type BigIntKey = KeysMatching<
+            BakerPoolStatusDetails &
+                LPoolStatusDetails &
+                CurrentPaydayBakerPoolStatus,
+            bigint
+        >;
+
+        const dates: DateKey[] = ['effectiveTime'];
+        const bigInts: BigIntKey[] = [
+            'bakerId',
+            'bakerEquityCapital',
+            'delegatedCapital',
+            'delegatedCapitalCap',
+            'currentPaydayTransactionFeesEarned',
+            'currentPaydayDelegatedCapital',
+            'blocksBaked',
+            'transactionFeesEarned',
+            'effectiveStake',
+        ];
+
+        const response = await this.sendRequest(this.client.getPoolStatus, req);
+
+        return unwrapJsonResponse<PoolStatus>(
+            response,
+            buildJsonResponseReviver(dates, bigInts),
+            intToStringTransformer(bigInts)
+        );
+    }
+
+    async getModuleSource(
+        blockHash: string,
+        moduleReference: ModuleReference
+    ): Promise<Uint8Array> {
+        if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+        const requestObject = new GetModuleSourceRequest();
+        requestObject.setBlockHash(blockHash);
+        requestObject.setModuleRef(moduleReference.moduleRef);
+
+        const response = await this.sendRequest(
+            this.client.getModuleSource,
+            requestObject
+        );
+
+        return response;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

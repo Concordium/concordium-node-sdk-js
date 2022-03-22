@@ -43,3 +43,15 @@ pub fn create_encrypted_transfer_ext(
         Err(e) => format!("unable to create encrypted transfer due to: {}", e),
     }
 }
+
+#[wasm_bindgen(js_name = deserializeState)]
+pub fn deserialize_state(
+    contract_name: &str,
+    state_bytes: String,
+    schema: String,
+) -> String {
+    match deserialize_state_aux(contract_name, state_bytes, schema) {
+        Ok(s) => s.to_string(),
+        Err(e) => format!("{}", e),
+    }
+}

@@ -53,6 +53,11 @@ version = "0"
 path = "deps/concordium-base/rust-src/elgamal"
 version = "0"
 
+[dependencies.concordium-contracts-common]
+features = ["derive-serde"]
+path = "deps/concordium-contracts-common"
+version = "2.0.0"
+
 [lib]
 name = "node_sdk_helpers"
 crate-type = ["cdylib"]

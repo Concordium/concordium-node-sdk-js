@@ -1043,6 +1043,7 @@ export enum AccountTransactionType {
     SimpleTransferWithMemo = 22,
     EncryptedTransferWithMemo = 23,
     TransferWithScheduleWithMemo = 24,
+    ConfigureDelegation = 26,
 }
 
 export interface DeployModulePayload {
@@ -1147,6 +1148,15 @@ export interface UpdateCredentialsPayload {
     currentNumberOfCredentials: bigint;
 }
 
+export interface ConfigureDelegationPayload {
+    /* stake to delegate. if set to 0, this removes the account as a delegator */
+    stake?: GtuAmount;
+    /* should earnings from delegation be added to staked amount  */
+    restakeEarnings?: boolean;
+    /* determines which baker (or the L-pool), the account should delegate to  */
+    delegationTarget?: DelegationTarget;
+}
+
 export type AccountTransactionPayload =
     | SimpleTransferPayload
     | SimpleTransferWithMemoPayload
@@ -1154,7 +1164,8 @@ export type AccountTransactionPayload =
     | DeployModulePayload
     | InitContractPayload
     | UpdateContractPayload
-    | UpdateCredentialsPayload;
+    | UpdateCredentialsPayload
+    | ConfigureDelegationPayload;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

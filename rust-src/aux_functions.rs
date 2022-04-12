@@ -7,7 +7,6 @@ use std::collections::BTreeMap;
 type ExampleCurve = G1;
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use sha2::{Digest, Sha256};
-// Used for shielded transfer:
 use encrypted_transfers::types::{AggregatedDecryptedAmount, EncryptedAmount, EncryptedAmountAggIndex};
 use elgamal::BabyStepGiantStep;
 use rand::thread_rng;
@@ -256,3 +255,4 @@ pub fn deserialize_state_aux(
     let state_schema = contract_schema.state.as_ref().ok_or(anyhow!("Unable to get state schema: not included in contract schema"))?;
     Ok(state_schema.to_json(&mut state_cursor).expect("Unable to parse state to json").to_string())
 }
+

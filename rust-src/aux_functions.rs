@@ -193,6 +193,9 @@ pub fn deserialize_state_aux(
     let mut state_cursor = Cursor::new(hex::decode(state_bytes)?);
     let contract_schema = module_schema.contracts.get(contract_name).ok_or(anyhow!("Unable to get contract schema: not included in module schema"))?;
     let state_schema = contract_schema.state.as_ref().ok_or(anyhow!("Unable to get state schema: not included in contract schema"))?;
-    Ok(state_schema.to_json(&mut state_cursor).expect("Unable to parse state to json").to_string())
+    match state_schema.to_json(&mut state_cursor) {
+        Ok(schema) => Ok(schema.to_string()),
+        Err(_) => return Err(anyhow!("unable to parse state to json"))
+    }
 }
 

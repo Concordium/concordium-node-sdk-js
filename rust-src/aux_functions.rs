@@ -195,7 +195,7 @@ pub fn deserialize_state_aux(
     let state_schema = contract_schema.state.as_ref().ok_or(anyhow!("Unable to get state schema: not included in contract schema"))?;
     match state_schema.to_json(&mut state_cursor) {
         Ok(schema) => Ok(schema.to_string()),
-        Err(_) => return Err(anyhow!("unable to parse state to json"))
+        Err(_) => return Err(anyhow!("Unable to parse state to json"))
     }
 }
 

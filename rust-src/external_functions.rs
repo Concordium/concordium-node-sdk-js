@@ -23,10 +23,7 @@ pub fn get_credential_deployment_details_ext(
 }
 
 #[wasm_bindgen(js_name = getDeploymentInfo)]
-pub fn get_credential_deployment_info_ext(
-    signatures: &JsValue,
-    unsigned_info: &str,
-) -> String {
+pub fn get_credential_deployment_info_ext(signatures: &JsValue, unsigned_info: &str) -> String {
     let signatures_vec: Vec<String> = signatures.into_serde().unwrap();
     match get_credential_deployment_info_aux(signatures_vec, unsigned_info) {
         Ok(s) => s,
@@ -35,14 +32,9 @@ pub fn get_credential_deployment_info_ext(
 }
 
 #[wasm_bindgen(js_name = deserializeState)]
-pub fn deserialize_state(
-    contract_name: &str,
-    state_bytes: String,
-    schema: String,
-) -> String {
+pub fn deserialize_state(contract_name: &str, state_bytes: String, schema: String) -> String {
     match deserialize_state_aux(contract_name, state_bytes, schema) {
-        Ok(s) => s.to_string(),
+        Ok(s) => s,
         Err(e) => format!("{}", e),
     }
 }
-

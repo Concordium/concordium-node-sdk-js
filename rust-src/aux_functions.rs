@@ -5,12 +5,12 @@ use pairing::bls12_381::{Bls12, G1};
 use serde_json::{from_str, Value as SerdeValue};
 use std::collections::BTreeMap;
 type ExampleCurve = G1;
+use concordium_contracts_common::{from_bytes, schema, Cursor};
+use hex;
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use sha2::{Digest, Sha256};
-use concordium_contracts_common::{from_bytes, Cursor, schema};
-use hex;
 
-use anyhow::{bail, Result, anyhow};
+use anyhow::{anyhow, bail, Result};
 use id::{account_holder::create_unsigned_credential, constants::AttributeKind, types::*};
 use pedersen_scheme::Value;
 
@@ -188,14 +188,19 @@ pub fn deserialize_state_aux(
 ) -> Result<String> {
     let module_schema: schema::Module = match from_bytes(&hex::decode(schema)?) {
         Ok(o) => o,
-        Err(e) => return Err(anyhow!("unable to parse schema: {:#?}", e))
+        Err(e) => return Err(anyhow!("unable to parse schema: {:#?}", e)),
     };
     let mut state_cursor = Cursor::new(hex::decode(state_bytes)?);
-    let contract_schema = module_schema.contracts.get(contract_name).ok_or(anyhow!("Unable to get contract schema: not included in module schema"))?;
-    let state_schema = contract_schema.state.as_ref().ok_or(anyhow!("Unable to get state schema: not included in contract schema"))?;
+    let contract_schema = module_schema
+        .contracts
+        .get(contract_name)
+        .ok_or_else(|| anyhow!("Unable to get contract schema: not included in module schema"))?;
+    let state_schema = contract_schema
+        .state
+        .as_ref()
+        .ok_or_else(|| anyhow!("Unable to get state schema: not included in contract schema"))?;
     match state_schema.to_json(&mut state_cursor) {
         Ok(schema) => Ok(schema.to_string()),
-        Err(_) => return Err(anyhow!("Unable to parse state to json"))
+        Err(e) => Err(anyhow!("Unable to parse state to json: {:?}", e)),
     }
 }
-

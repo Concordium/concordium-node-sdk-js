@@ -7,16 +7,14 @@ use serde_json::{from_value, Value as SerdeValue};
 use std::collections::BTreeMap;
 use std::convert::TryInto;
 
-pub fn build_key_map(keys: &Vec<VerifyKey>) -> BTreeMap<KeyIndex, VerifyKey> {
+pub fn build_key_map(keys: &[VerifyKey]) -> BTreeMap<KeyIndex, VerifyKey> {
     keys.iter()
         .enumerate()
         .map(|(index, key)| (KeyIndex(index.try_into().unwrap()), key.clone()))
         .collect()
 }
 
-pub fn build_signature_map(
-    signatures: &Vec<String>,
-) -> BTreeMap<KeyIndex, AccountOwnershipSignature> {
+pub fn build_signature_map(signatures: &[String]) -> BTreeMap<KeyIndex, AccountOwnershipSignature> {
     signatures
         .iter()
         .enumerate()
@@ -25,8 +23,7 @@ pub fn build_signature_map(
                 KeyIndex(index.try_into().unwrap()),
                 AccountOwnershipSignature::from(ed25519::Signature::new(
                     <[u8; 64]>::from_hex(key).unwrap(),
-                ))
-                .clone(),
+                )),
             )
         })
         .collect()

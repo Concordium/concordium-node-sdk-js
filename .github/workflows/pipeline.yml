@@ -61,44 +61,44 @@ jobs:
             - name: Lint
               run: yarn lint
 
-  rust_lint_fmt:
-    name: rust:lint:fmt
-    # Don't run on draft pull requests
-    if: ${{ !github.event.pull_request.draft }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ env.RUST_FMT }}
-          override: true
-          components: rustfmt
-      - name: Format
-        run: |
-          cargo fmt -- --color=always --check
-  rust_lint_clippy:
-    name: rust:lint:clippy
-    needs: "lint_fmt"
-    # Don't run on draft pull requests
-    if: ${{ !github.event.pull_request.draft }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: ${{ env.RUST_CLIPPY }}
-          override: true
-          target: ${{ env.TARGET }}
-          components: rustfmt, clippy
-      - name: Clippy
-        run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          cargo clippy --color=always --tests --benches -- -Dclippy::all
+    rust_lint_fmt:
+      name: rust:lint:fmt
+      # Don't run on draft pull requests
+      if: ${{ !github.event.pull_request.draft }}
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v2
+        - name: Install Rust
+          uses: actions-rs/toolchain@v1
+          with:
+            profile: minimal
+            toolchain: ${{ env.RUST_FMT }}
+            override: true
+            components: rustfmt
+        - name: Format
+          run: |
+            cargo fmt -- --color=always --check
+    rust_lint_clippy:
+      name: rust:lint:clippy
+      needs: "rust_lint_fmt"
+      # Don't run on draft pull requests
+      if: ${{ !github.event.pull_request.draft }}
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v2
+          with:
+            submodules: recursive
+        - name: Install Rust
+          uses: actions-rs/toolchain@v1
+          with:
+            profile: minimal
+            toolchain: ${{ env.RUST_CLIPPY }}
+            override: true
+            target: ${{ env.TARGET }}
+            components: rustfmt, clippy
+        - name: Clippy
+          run: |
+            git config --global url."https://github.com/".insteadOf "git@github.com:"
+            cargo clippy --color=always --tests --benches -- -Dclippy::all

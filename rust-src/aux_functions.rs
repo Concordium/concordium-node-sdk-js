@@ -41,7 +41,7 @@ pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
 
     let public_keys: Vec<VerifyKey> = try_get(&v, "publicKeys")?;
     let cred_key_info = CredentialPublicKeys {
-        keys: build_key_map(&public_keys),
+        keys:      build_key_map(&public_keys),
         threshold: try_get(&v, "threshold")?,
     };
 
@@ -144,7 +144,7 @@ pub fn get_credential_deployment_details_aux(
     let acc_cred = AccountCredential::Normal { cdi };
 
     let credential_message = AccountCredentialMessage {
-        credential: acc_cred,
+        credential:     acc_cred,
         message_expiry: TransactionTime { seconds: expiry },
     };
 
@@ -179,8 +179,9 @@ pub fn get_credential_deployment_info_aux(
     Ok(cdi_json.to_string())
 }
 
-/// Given the bytes of a contract's state, deserialize them to a json object, using the provided schema.
-/// Both the state bytes and the schema are given as hex-encoded strings.
+/// Given the bytes of a contract's state, deserialize them to a json object,
+/// using the provided schema. Both the state bytes and the schema are given as
+/// hex-encoded strings.
 pub fn deserialize_state_aux(
     contract_name: &str,
     state_bytes: String,

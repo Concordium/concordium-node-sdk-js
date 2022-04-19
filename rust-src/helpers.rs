@@ -4,8 +4,7 @@ use ed25519_dalek as ed25519;
 use hex::FromHex;
 use id::types::*;
 use serde_json::{from_value, Value as SerdeValue};
-use std::collections::BTreeMap;
-use std::convert::TryInto;
+use std::{collections::BTreeMap, convert::TryInto};
 
 pub fn build_key_map(keys: &[VerifyKey]) -> BTreeMap<KeyIndex, VerifyKey> {
     keys.iter()

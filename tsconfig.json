@@ -12,7 +12,7 @@
     },
     "files": [],
     "references": [
-        { "path": "./common" },
-        { "path": "./nodejs" }
+        { "path": "./packages/common" },
+        { "path": "./packages/nodejs" }
     ]
 }

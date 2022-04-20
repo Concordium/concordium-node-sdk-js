@@ -19,5 +19,5 @@
     "rules": {
         "quotes": [2, "single", { "avoidEscape": true }]
     },
-    "ignorePatterns": ["pkg/**/"]
+    "ignorePatterns": ["**/pkg/**/", "**/lib/**/"]
 }

@@ -1,6 +1,6 @@
 {
     "private": true,
-    "workspaces": ["./nodejs", "./web", "./common"],
+    "workspaces": ["./packages/nodejs", "./packages/web", "./packages/common"],
     "husky": {
         "hooks": {
             "pre-commit": "lint-staged"

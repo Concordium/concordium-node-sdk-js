@@ -8,8 +8,6 @@ import {
     serializeUpdateContractParameters,
 } from './serialization';
 import { sha256 } from './hash';
-import { getModuleBuffer } from './deserializeSchema';
-
 export * from './types';
 export {
     getAccountTransactionHash,
@@ -19,7 +17,6 @@ export {
     getCredentialForExistingAccountSignDigest,
     serializeInitContractParameters,
     serializeUpdateContractParameters,
-    getModuleBuffer,
 };
 export { sha256 };
 export { CredentialRegistrationId } from './types/CredentialRegistrationId';
@@ -28,8 +25,6 @@ export { GtuAmount } from './types/gtuAmount';
 export { TransactionExpiry } from './types/transactionExpiry';
 export { DataBlob } from './types/DataBlob';
 export { ModuleReference } from './types/moduleReference';
-export { decryptMobileWalletExport, EncryptedData } from './wallet/crypto';
-export { MobileWalletExport } from './wallet/types';
 export {
     createCredentialDeploymentTransaction,
     createUnsignedCredentialForExistingAccount,

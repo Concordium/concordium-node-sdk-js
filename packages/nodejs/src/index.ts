@@ -9,7 +9,6 @@ import {
     serializeUpdateContractParameters,
 } from '@concordium/common/lib/src/serialization';
 import { sha256 } from '@concordium/common/lib/src/hash';
-import { getModuleBuffer } from '@concordium/common/lib/src/deserializeSchema';
 
 export { ConcordiumNodeClient };
 export * from '@concordium/common/lib/src/types';
@@ -21,7 +20,6 @@ export {
     getCredentialForExistingAccountSignDigest,
     serializeInitContractParameters,
     serializeUpdateContractParameters,
-    getModuleBuffer,
 };
 export { sha256 };
 export { CredentialRegistrationId } from '@concordium/common/lib/src/types/CredentialRegistrationId';
@@ -30,11 +28,8 @@ export { GtuAmount } from '@concordium/common/lib/src/types/gtuAmount';
 export { TransactionExpiry } from '@concordium/common/lib/src/types/transactionExpiry';
 export { DataBlob } from '@concordium/common/lib/src/types/DataBlob';
 export { ModuleReference } from '@concordium/common/lib/src/types/moduleReference';
-export {
-    decryptMobileWalletExport,
-    EncryptedData,
-} from '@concordium/common/lib/src/wallet/crypto';
-export { MobileWalletExport } from '@concordium/common/lib/src/wallet/types';
+export { decryptMobileWalletExport, EncryptedData } from './wallet/crypto';
+export { MobileWalletExport } from './wallet/types';
 export {
     createCredentialDeploymentTransaction,
     createUnsignedCredentialForExistingAccount,

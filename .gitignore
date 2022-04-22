@@ -7,6 +7,7 @@ node_modules
 # Compiled files
 lib
 target
+dist
 
 # Auto generate files from the gRPC proto file
 grpc
@@ -20,3 +21,5 @@ testing.js
 
 # Package lock
 package-lock.json
+
+yarn-error.log

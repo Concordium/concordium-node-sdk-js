@@ -21,32 +21,32 @@ hex = "0.4"
 sha2 = "0.9"
 
 [dependencies.id]
-path = "../deps/concordium-base/rust-src/id"
+path = "../../deps/concordium-base/rust-src/id"
 version = "0"
 
 [dependencies.curve_arithmetic]
-path = "../deps/concordium-base/rust-src/curve_arithmetic"
+path = "../../deps/concordium-base/rust-src/curve_arithmetic"
 version = "0"
 
 [dependencies.dodis_yampolskiy_prf]
-path = "../deps/concordium-base/rust-src/dodis_yampolskiy_prf"
+path = "../../deps/concordium-base/rust-src/dodis_yampolskiy_prf"
 version = "0"
 
 [dependencies.crypto_common]
-path = "../deps/concordium-base/rust-src/crypto_common"
+path = "../../deps/concordium-base/rust-src/crypto_common"
 version = "0"
 
 [dependencies.pedersen_scheme]
-path = "../deps/concordium-base/rust-src/pedersen_scheme"
+path = "../../deps/concordium-base/rust-src/pedersen_scheme"
 version = "0"
 
 [dependencies.ps_sig]
-path = "../deps/concordium-base/rust-src/ps_sig"
+path = "../../deps/concordium-base/rust-src/ps_sig"
 version = "0"
 
 [dependencies.concordium-contracts-common]
 features = ["derive-serde"]
-path = "../deps/concordium-contracts-common"
+path = "../../deps/concordium-contracts-common"
 version = "2.0.0"
 
 [lib]

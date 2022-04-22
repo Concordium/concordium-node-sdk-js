@@ -18,7 +18,7 @@ import {
     Fields,
     StringType,
 } from './deserializeSchema';
-const MAX_UINT_64 = 2n ** 64n - 1n; // 2^64 - 1
+const MAX_UINT_64 = 18446744073709551615n; // 2^64 - 1
 import { DataBlob } from './types/DataBlob';
 
 export function serializeMap<K extends string | number | symbol, T>(

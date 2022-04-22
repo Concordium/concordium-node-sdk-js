@@ -310,11 +310,11 @@ const userInput = {
     ]
   };
 ```
-Then the user needs to provide the schema for the module. Here we use getModuleBuffer to load the schema file:
+Then the user needs to provide the schema for the module. Here we load the schema from a file:
 ```js
-const modulefileBuffer = getModuleBuffer(
+const modulefileBuffer = Buffer.from(fs.readFileSync(
     'SCHEMA-FILE-PATH'
-);
+));
 ```
 Then the parameters can be serialized into bytes:
 ```js
@@ -352,11 +352,11 @@ const receiveFunctionName = "my-receive-function-name";
 const receiveName = contractName + '.' + receiveFunctionName;
 ```
 
-Then the user need to provide the schema. Here we use getModuleBuffer to load the schema file:
+Then the user need to provide the schema. Here we load the schema from a file:
 ```js
-const modulefileBuffer = getModuleBuffer(
-    'SCHEMA-PATH'
-);
+const modulefileBuffer = Buffer.from(fs.readFileSync(
+    'SCHEMA-FILE-PATH'
+));
 ```
 Then the parameters can be serialized into bytes:
 ```js

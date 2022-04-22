@@ -44,11 +44,11 @@
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
-        "build": "wasm-pack build --target nodejs && tsc && cp -r ./grpc/ ./lib/ && cp -r ./pkg/ ./lib/"
+        "build": "wasm-pack build && tsc && cp -r ./grpc/ ./lib/ && cp -r ./pkg/ ./lib/"
     },
     "dependencies": {
         "bs58check": "^2.1.2",
         "buffer": "^6.0.3",
         "hash.js": "^1.1.7"
-    },
+    }
 }

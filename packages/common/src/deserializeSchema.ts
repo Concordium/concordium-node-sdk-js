@@ -1,8 +1,6 @@
 import { Readable } from 'stream';
-import { TextDecoder } from 'util';
 import { ParameterType } from './types';
 import { PassThrough } from 'stream';
-import * as fs from 'fs';
 import { Buffer } from 'buffer/';
 /**
  * Function that reags an output of specified type from {@link Readable}.
@@ -328,9 +326,8 @@ export function deserialFields(source: Readable): Fields {
  */
 export function deserialString(source: Readable): string {
     const bytes = deserialArrayFn<number>(deserialUint8)(source);
-    const uint8Array = Uint8Array.from(bytes);
 
-    return new TextDecoder().decode(uint8Array);
+    return Buffer.from(bytes).toString('utf8');
 }
 
 /**
@@ -474,13 +471,4 @@ export function deserialModuleFromBuffer(buffer: Buffer): Module {
     const bufferStream = new PassThrough();
     bufferStream.end(buffer);
     return deserialModule(bufferStream);
-}
-
-/**
- *
- * @param filePath wasm file path
- * @returns Buffer of the wasm file contents
- */
-export function getModuleBuffer(filePath: string): Buffer {
-    return Buffer.from(fs.readFileSync(filePath));
 }

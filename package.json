@@ -1,9 +1,9 @@
 {
     "private": true,
     "workspaces": [
-        "./packages/nodejs",
-        "./packages/web",
-        "./packages/common"
+        "./packages/common",
+       "./packages/nodejs",
+        "./packages/web"
     ],
     "husky": {
         "hooks": {

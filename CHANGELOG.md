@@ -9,6 +9,7 @@
 - Support for getting reward status of chain at specific block.
 - Helper functions for determining the version of `BlockSummary` and nested types. 
 - Helper functions for determining the version of `AccountInfo` variants. 
+- Support for the new "configure delegation" transaction type.
 
 ### Changed
 

@@ -85,6 +85,31 @@ const registerDataAccountTransaction: AccountTransaction = {
 };
 ```
 
+## Create a configure delegation transaction
+The following example demonstrates how a configure delegation transaction can be created.
+Note that although all the fields are optional, they are all required, when becoming a delegator.
+```js
+const header: AccountTransactionHeader = {
+    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+    nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
+    sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
+};
+const configureDelegationPayload: ConfigureDelegationPayload = {
+        stake: new GtuAmount(1000000000n),
+        delegationTarget: {
+            delegateType: DelegationTargetType.Baker,
+            bakerId: 100n
+        },
+        restakeEarnings: true,
+};
+
+const configureDelegationAccountTransaction: AccountTransaction = {
+    header: header,
+    payload: configureDelegationPayload,
+    type: AccountTransactionType.ConfigureDelegation,
+};
+```
+
 ## Create a credential for an existing account
 The following example demonstrates how to create a credential for an existing account. This
 credential can then be deployed onto the account by the account owner with an update

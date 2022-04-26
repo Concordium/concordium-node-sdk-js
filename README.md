@@ -576,14 +576,14 @@ const bakerIds = await client.getBakerList(blockHash);
 ```
 
 ## getPoolStatus
-Retrieves the status of a pool (either L-Pool or specific baker) at a specific block.
-If a baker ID is specified, the status of that baker is returned. To get the status of the L-Pool, a baker ID should be left undefined.
+Retrieves the status of a pool (either a specific baker or passive delegation) at a specific block.
+If a baker ID is specified, the status of that baker is returned. To get the status of passive delegation, baker ID should be left undefined.
 ```js
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
 const bakerId = BigInt(1);
 
 const bakerStatus = await client.getPoolStatus(blockHash, bakerId);
-const lPoolStatus = await client.getPoolStatus(blockHash); 
+const passiveDelegationStatus = await client.getPoolStatus(blockHash); 
 ...
 ```
 

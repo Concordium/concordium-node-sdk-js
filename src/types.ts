@@ -337,9 +337,9 @@ export interface PoolParametersV0 {
 }
 
 export interface PoolParametersV1 {
-    finalizationCommissionLPool: number;
-    bakingCommissionLPool: number;
-    transactionCommissionLPool: number;
+    passiveFinalizationCommission: number;
+    passiveBakingCommission: number;
+    passiveTransactionCommission: number;
     finalizationCommissionRange: InclusiveRange<number>;
     bakingCommissionRange: InclusiveRange<number>;
     transactionCommissionRange: InclusiveRange<number>;
@@ -874,7 +874,7 @@ export type BakerPoolPendingChange =
 
 export enum PoolStatusType {
     BakerPool = 'BakerPool',
-    LPool = 'LPool',
+    PassiveDelegation = 'PassiveDelegation',
 }
 
 type PoolStatusWrapper<T extends keyof typeof PoolStatusType, S> = S & {
@@ -897,27 +897,27 @@ export type BakerPoolStatus = PoolStatusWrapper<
     BakerPoolStatusDetails
 >;
 
-export interface LPoolStatusDetails {
+export interface PassiveDelegationStatusDetails {
     delegatedCapital: Amount;
     commissionRates: CommissionRates;
     currentPaydayTransactionFeesEarned: Amount;
     currentPaydayDelegatedCapital: Amount;
 }
 
-export type LPoolStatus = PoolStatusWrapper<
-    PoolStatusType.LPool,
-    LPoolStatusDetails
+export type PassiveDelegationStatus = PoolStatusWrapper<
+    PoolStatusType.PassiveDelegation,
+    PassiveDelegationStatusDetails
 >;
 
-export type PoolStatus = BakerPoolStatus | LPoolStatus;
+export type PoolStatus = BakerPoolStatus | PassiveDelegationStatus;
 
 export enum DelegationTargetType {
-    LPool = 'L-Pool',
+    PassiveDelegation = 'PassiveDelegation',
     Baker = 'Baker',
 }
 
-export interface DelegationTargetLPool {
-    delegateType: DelegationTargetType.LPool;
+export interface DelegationTargetPassiveDelegation {
+    delegateType: DelegationTargetType.PassiveDelegation;
 }
 
 export interface DelegationTargetBaker {
@@ -925,7 +925,9 @@ export interface DelegationTargetBaker {
     bakerId: BakerId;
 }
 
-export type DelegationTarget = DelegationTargetLPool | DelegationTargetBaker;
+export type DelegationTarget =
+    | DelegationTargetPassiveDelegation
+    | DelegationTargetBaker;
 
 interface AccountBakerDetailsCommon {
     restakeEarnings: boolean;

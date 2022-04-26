@@ -924,7 +924,7 @@ export const orUndefined =
         v !== undefined ? fun(v) : undefined;
 
 function serializeDelegationTarget(target: DelegationTarget) {
-    if (target.delegateType === DelegationTargetType.LPool) {
+    if (target.delegateType === DelegationTargetType.PassiveDelegation) {
         return encodeInt8(0);
     } else {
         return Buffer.concat([encodeInt8(1), encodeWord64(target.bakerId)]);

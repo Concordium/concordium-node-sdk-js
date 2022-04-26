@@ -1155,7 +1155,7 @@ export interface ConfigureDelegationPayload {
     stake?: GtuAmount;
     /* should earnings from delegation be added to staked amount  */
     restakeEarnings?: boolean;
-    /* determines which baker (or the L-pool), the account should delegate to  */
+    /* determines if the account should use passive delegation, or which specific baker to delegate to  */
     delegationTarget?: DelegationTarget;
 }
 

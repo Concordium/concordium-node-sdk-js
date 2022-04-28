@@ -531,6 +531,7 @@ export interface UpdatesV1 extends UpdatesCommon {
 export type Updates = UpdatesV0 | UpdatesV1;
 
 interface BlockSummaryCommon {
+    protocolVersion?: bigint;
     finalizationData: FinalizationData;
     transactionSummaries: TransactionSummary[];
 }
@@ -553,6 +554,7 @@ export interface BlockSummaryV1 extends BlockSummaryCommon {
 export type BlockSummary = BlockSummaryV0 | BlockSummaryV1;
 
 interface RewardStatusCommon {
+    protocolVersion?: bigint;
     totalAmount: Amount;
     totalEncryptedAmount: Amount;
     bakingRewardAccount: Amount;

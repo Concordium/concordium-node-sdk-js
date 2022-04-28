@@ -402,9 +402,9 @@ interface AuthorizationsCommon {
     protocol: Authorization;
     paramGASRewards: Authorization;
     /**
-     * From protocol version 4 and later, this controls the authorization of the poolParameters update.
+     * For protocol version 3 and earlier, this controls the authorization of the bakerStakeThreshold update.
      */
-    bakerStakeThreshold: Authorization;
+    poolParameters: Authorization;
     electionDifficulty: Authorization;
     addAnonymityRevoker: Authorization;
     addIdentityProvider: Authorization;

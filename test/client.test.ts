@@ -1,5 +1,4 @@
 import {
-    ReduceStakePendingChange,
     instanceOfTransferWithMemoTransactionSummary,
     NormalAccountCredential,
     TransferredWithScheduleEvent,
@@ -9,6 +8,8 @@ import {
     OpenStatusText,
     DelegationTargetType,
     DelegationTargetBaker,
+    ReduceStakePendingChangeV0,
+    RemovalPendingChangeV0,
 } from '../src/types';
 import { AccountAddress } from '../src/types/accountAddress';
 import { isValidDate, getNodeClient } from './testHelpers';
@@ -17,6 +18,7 @@ import { ipVerifyKey1, ipVerifyKey2 } from './resources/ipVerifyKeys';
 import { PeerElement } from '../grpc/concordium_p2p_rpc_pb';
 import { CredentialRegistrationId } from '../src/types/CredentialRegistrationId';
 import { isBlockSummaryV1 } from '../src/blockSummaryHelpers';
+import { isReduceStakePendingChange } from '../src/accountHelpers';
 import {
     isBakerAccount,
     isBakerAccountV1,
@@ -571,7 +573,7 @@ test('account info with baker details, and with a pending baker removal', async 
     }
 
     expect(pendingChange.change).toEqual('RemoveBaker');
-    expect(pendingChange.epoch).toEqual(334n);
+    expect((pendingChange as RemovalPendingChangeV0).epoch).toEqual(334n);
 });
 
 test('account info with baker details, and with a pending stake reduction', async () => {
@@ -614,11 +616,12 @@ test('account info with baker details, and with a pending stake reduction', asyn
         throw new Error('Baker details doesnt contain pending change');
     }
 
-    expect(pendingChange.change).toEqual('ReduceStake');
-    expect((pendingChange as ReduceStakePendingChange).newStake).toEqual(
-        14000000000n
-    );
-    expect(pendingChange.epoch).toEqual(838n);
+    if (!isReduceStakePendingChange(pendingChange)) {
+        throw new Error('pending change has unexpected type');
+    }
+
+    expect(pendingChange.newStake).toEqual(14000000000n);
+    expect((pendingChange as ReduceStakePendingChangeV0).epoch).toEqual(838n);
 });
 
 test('retrieves the account info', async () => {

@@ -402,9 +402,9 @@ interface AuthorizationsCommon {
     protocol: Authorization;
     paramGASRewards: Authorization;
     /**
-     * From protocol version 4 and later, this controls the authorization of the poolParameters update.
+     * For protocol version 3 and earlier, this controls the authorization of the bakerStakeThreshold update.
      */
-    bakerStakeThreshold: Authorization;
+    poolParameters: Authorization;
     electionDifficulty: Authorization;
     addAnonymityRevoker: Authorization;
     addIdentityProvider: Authorization;
@@ -531,6 +531,7 @@ export interface UpdatesV1 extends UpdatesCommon {
 export type Updates = UpdatesV0 | UpdatesV1;
 
 interface BlockSummaryCommon {
+    protocolVersion?: bigint;
     finalizationData: FinalizationData;
     transactionSummaries: TransactionSummary[];
 }
@@ -553,6 +554,7 @@ export interface BlockSummaryV1 extends BlockSummaryCommon {
 export type BlockSummary = BlockSummaryV0 | BlockSummaryV1;
 
 interface RewardStatusCommon {
+    protocolVersion?: bigint;
     totalAmount: Amount;
     totalEncryptedAmount: Amount;
     bakingRewardAccount: Amount;

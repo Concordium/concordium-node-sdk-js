@@ -914,7 +914,7 @@ export type PassiveDelegationStatus = PoolStatusWrapper<
 export type PoolStatus = BakerPoolStatus | PassiveDelegationStatus;
 
 export enum DelegationTargetType {
-    PassiveDelegation = 'PassiveDelegation',
+    PassiveDelegation = 'Passive',
     Baker = 'Baker',
 }
 

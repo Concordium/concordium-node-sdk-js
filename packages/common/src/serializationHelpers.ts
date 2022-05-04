@@ -1,6 +1,11 @@
 import { Buffer } from 'buffer/';
 import { VerifyKey } from '.';
-import { ParameterType } from './types';
+import {
+    ConfigureDelegationPayload,
+    DelegationTarget,
+    DelegationTargetType,
+    ParameterType,
+} from './types';
 import { AccountAddress } from './types/accountAddress';
 import { GtuAmount } from '../src/types/gtuAmount';
 import {
@@ -244,6 +249,13 @@ export function encodeWord8(value: number): Buffer {
 
 export function encodeWord8FromString(value: string): Buffer {
     return encodeWord8(Number(value));
+}
+
+export function encodeWord16FromString(
+    value: string,
+    useLittleEndian = false
+): Buffer {
+    return encodeWord16(Number(value), useLittleEndian);
 }
 
 /**
@@ -845,4 +857,106 @@ function getDuration(value: string, regex: RegExp): number {
         hours += parseInt(z[1]);
     }
     return hours;
+}
+
+/**
+ * Makes a bitmap for transactions with optional payload fields, where each bit indicates whether a value is included or not.
+ *
+ * @param payload the payload to generate the bitmap for
+ * @param fieldOrder the order the payload fields are serialized in. The order is represented in the bitmap from right to left, i.e index 0 of the order translates to first bit.
+ *
+ * @example
+ * getPayloadBitmap<{test?: string; test2?: string}>({test2: 'yes'}, ['test', 'test2']) // returns 2 (00000010 as bits of UInt8)
+ * getPayloadBitmap<{test?: string; test2?: string; test3?: number}>({test: 'yes', test3: 100}, ['test', 'test2', 'test3']) // returns 5 (00000101 as bits of UInt8)
+ */
+function getPayloadBitmap<T>(payload: T, fieldOrder: Array<keyof T>) {
+    return fieldOrder
+        .map((k) => payload[k])
+        .reduceRight(
+            // eslint-disable-next-line no-bitwise
+            (acc, cur) => (acc << 1) | Number(cur !== undefined),
+            0
+        );
+}
+
+// Makes all properties of type T non-optional.
+export type NotOptional<T> = {
+    [P in keyof T]-?: T[P];
+};
+
+/**
+ * Makes a type with keys from Object and values being functions that take values with types of respective original values, returning a Buffer or undefined.
+ */
+type SerializationSpec<T> = NotOptional<{
+    [P in keyof T]: (v: T[P]) => Buffer | undefined;
+}>;
+
+export function isDefined<T>(v?: T): v is T {
+    return v !== undefined;
+}
+
+/**
+ * Given a specification describing how to serialize the fields of a payload of type T, this function produces a function
+ * that serializes payloads of type T, returning a buffer of the serialized fields by order of occurance in serialization spec.
+ */
+const serializeFromSpec =
+    <T>(spec: SerializationSpec<T>) =>
+    (payload: T) => {
+        const buffers = Object.keys(spec)
+            .map((k) => {
+                const v = payload[k as keyof T];
+                const f = spec[k as keyof typeof spec] as (
+                    x: typeof v
+                ) => Buffer | undefined;
+                return f(v);
+            })
+            .filter(isDefined);
+
+        return Buffer.concat(buffers);
+    };
+
+/**
+ * Takes a callback function taking 1 argument, returning a new function taking same argument, applying callback only if supplied argument is defined.
+ */
+export const orUndefined =
+    <A, R>(fun: (v: A) => R) =>
+    (v: A | undefined): R | undefined =>
+        v !== undefined ? fun(v) : undefined;
+
+function serializeDelegationTarget(target: DelegationTarget) {
+    if (target.delegateType === DelegationTargetType.PassiveDelegation) {
+        return encodeInt8(0);
+    } else {
+        return Buffer.concat([encodeInt8(1), encodeWord64(target.bakerId)]);
+    }
+}
+
+export const configureDelegationSerializationSpec: SerializationSpec<ConfigureDelegationPayload> =
+    {
+        stake: orUndefined((x) => encodeWord64(x.microGtuAmount)),
+        restakeEarnings: orUndefined(encodeBool),
+        delegationTarget: orUndefined(serializeDelegationTarget),
+    };
+
+export const getSerializedConfigureDelegationBitmap = (
+    payload: ConfigureDelegationPayload
+): Buffer =>
+    encodeWord16(
+        getPayloadBitmap(
+            payload,
+            Object.keys(configureDelegationSerializationSpec) as Array<
+                keyof ConfigureDelegationPayload
+            >
+        )
+    );
+
+export function serializeConfigureDelegationPayload(
+    payload: ConfigureDelegationPayload
+): Buffer {
+    const bitmap = getSerializedConfigureDelegationBitmap(payload);
+    const sPayload = serializeFromSpec(configureDelegationSerializationSpec)(
+        payload
+    );
+
+    return Buffer.concat([bitmap, sPayload]);
 }

@@ -1,5 +1,4 @@
 import {
-    ReduceStakePendingChange,
     instanceOfTransferWithMemoTransactionSummary,
     NormalAccountCredential,
     TransferredWithScheduleEvent,
@@ -9,6 +8,8 @@ import {
     OpenStatusText,
     DelegationTargetType,
     DelegationTargetBaker,
+    ReduceStakePendingChangeV0,
+    RemovalPendingChangeV0,
 } from '@concordium/common/lib/src/types';
 import { AccountAddress } from '@concordium/common/lib/src/types/accountAddress';
 import { isValidDate, getNodeClient } from './testHelpers';
@@ -21,6 +22,7 @@ import {
     isBakerAccount,
     isBakerAccountV1,
     isDelegatorAccount,
+    isReduceStakePendingChange,
 } from '@concordium/common/lib/src/accountHelpers';
 import { isRewardStatusV1 } from '@concordium/common/lib/src/rewardStatusHelpers';
 
@@ -314,14 +316,14 @@ test('block summary for valid block hash retrieves block summary (v1)', async ()
             7200n
         ),
         expect(
-            blockSummary.updates.chainParameters.transactionCommissionLPool
+            blockSummary.updates.chainParameters.passiveTransactionCommission
         ).toBe(0.1),
         expect(
-            blockSummary.updates.chainParameters.finalizationCommissionLPool
+            blockSummary.updates.chainParameters.passiveFinalizationCommission
         ).toBe(1.0),
-        expect(blockSummary.updates.chainParameters.bakingCommissionLPool).toBe(
-            0.1
-        ),
+        expect(
+            blockSummary.updates.chainParameters.passiveBakingCommission
+        ).toBe(0.1),
         expect(
             blockSummary.updates.chainParameters.leverageBound.numerator
         ).toBe(3n),
@@ -571,7 +573,7 @@ test('account info with baker details, and with a pending baker removal', async 
     }
 
     expect(pendingChange.change).toEqual('RemoveBaker');
-    expect(pendingChange.epoch).toEqual(334n);
+    expect((pendingChange as RemovalPendingChangeV0).epoch).toEqual(334n);
 });
 
 test('account info with baker details, and with a pending stake reduction', async () => {
@@ -614,11 +616,12 @@ test('account info with baker details, and with a pending stake reduction', asyn
         throw new Error('Baker details doesnt contain pending change');
     }
 
-    expect(pendingChange.change).toEqual('ReduceStake');
-    expect((pendingChange as ReduceStakePendingChange).newStake).toEqual(
-        14000000000n
-    );
-    expect(pendingChange.epoch).toEqual(838n);
+    if (!isReduceStakePendingChange(pendingChange)) {
+        throw new Error('pending change has unexpected type');
+    }
+
+    expect(pendingChange.newStake).toEqual(14000000000n);
+    expect((pendingChange as ReduceStakePendingChangeV0).epoch).toEqual(838n);
 });
 
 test('retrieves the account info', async () => {
@@ -1197,7 +1200,7 @@ test('baker list is undefined at an unknown block', async () => {
     return expect(bl).toBeUndefined();
 });
 
-test('pool status can be accessed at given block for L-pool', async () => {
+test('pool status can be accessed at given block for passive delegation', async () => {
     const blockHash =
         '1e69dbed0234f0e8cf7965191bae42cd49415646984346e01716c8f8577ab6e0';
 
@@ -1207,7 +1210,7 @@ test('pool status can be accessed at given block for L-pool', async () => {
         throw new Error('Test could not retrieve reward status of block.');
     }
 
-    expect(ps.poolType).toBe(PoolStatusType.LPool);
+    expect(ps.poolType).toBe(PoolStatusType.PassiveDelegation);
 
     const {
         commissionRates,
@@ -1371,7 +1374,7 @@ test('account info with delegation to specific baker can be accessed', async () 
     expect((delegationTarget as DelegationTargetBaker).bakerId).toBe(0n);
 });
 
-test('account info with delegation to L-pool can be accessed', async () => {
+test('account info with passive delegation can be accessed', async () => {
     const blockHash =
         '1e69dbed0234f0e8cf7965191bae42cd49415646984346e01716c8f8577ab6e0';
     const address = new AccountAddress(
@@ -1400,5 +1403,7 @@ test('account info with delegation to L-pool can be accessed', async () => {
     expect(stakedAmount).toBe(1000000000n);
     expect(restakeEarnings).toBe(true);
     expect(pendingChange).toBeUndefined();
-    expect(delegationTarget.delegateType).toBe(DelegationTargetType.LPool);
+    expect(delegationTarget.delegateType).toBe(
+        DelegationTargetType.PassiveDelegation
+    );
 });

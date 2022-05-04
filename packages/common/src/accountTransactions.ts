@@ -8,6 +8,7 @@ import {
     packBufferWithWord16Length,
     serializeList,
     encodeWord8,
+    serializeConfigureDelegationPayload,
 } from './serializationHelpers';
 import {
     AccountTransactionType,
@@ -19,6 +20,7 @@ import {
     AccountTransactionPayload,
     UpdateCredentialsPayload,
     RegisterDataPayload,
+    ConfigureDelegationPayload,
 } from './types';
 
 interface AccountTransactionHandler<
@@ -189,6 +191,18 @@ export class RegisterDataHandler
     }
 }
 
+export class ConfigureDelegationHandler
+    implements AccountTransactionHandler<ConfigureDelegationPayload>
+{
+    getBaseEnergyCost(): bigint {
+        return 300n;
+    }
+
+    serialize(payload: ConfigureDelegationPayload): Buffer {
+        return serializeConfigureDelegationPayload(payload);
+    }
+}
+
 export function getAccountTransactionHandler(
     type: AccountTransactionType.SimpleTransfer
 ): SimpleTransferHandler;
@@ -213,6 +227,9 @@ export function getAccountTransactionHandler(
 export function getAccountTransactionHandler(
     type: AccountTransactionType.RegisterData
 ): RegisterDataHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.ConfigureDelegation
+): ConfigureDelegationHandler;
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function getAccountTransactionHandler(type: AccountTransactionType) {
@@ -231,6 +248,8 @@ export function getAccountTransactionHandler(type: AccountTransactionType) {
             return new UpdateCredentialsHandler();
         case AccountTransactionType.RegisterData:
             return new RegisterDataHandler();
+        case AccountTransactionType.ConfigureDelegation:
+            return new ConfigureDelegationHandler();
         default:
             throw new Error(
                 'The provided type does not have a handler: ' + type

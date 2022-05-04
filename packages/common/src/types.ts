@@ -337,9 +337,9 @@ export interface PoolParametersV0 {
 }
 
 export interface PoolParametersV1 {
-    finalizationCommissionLPool: number;
-    bakingCommissionLPool: number;
-    transactionCommissionLPool: number;
+    passiveFinalizationCommission: number;
+    passiveBakingCommission: number;
+    passiveTransactionCommission: number;
     finalizationCommissionRange: InclusiveRange<number>;
     bakingCommissionRange: InclusiveRange<number>;
     transactionCommissionRange: InclusiveRange<number>;
@@ -402,9 +402,9 @@ interface AuthorizationsCommon {
     protocol: Authorization;
     paramGASRewards: Authorization;
     /**
-     * From protocol version 4 and later, this controls the authorization of the poolParameters update.
+     * For protocol version 3 and earlier, this controls the authorization of the bakerStakeThreshold update.
      */
-    bakerStakeThreshold: Authorization;
+    poolParameters: Authorization;
     electionDifficulty: Authorization;
     addAnonymityRevoker: Authorization;
     addIdentityProvider: Authorization;
@@ -531,6 +531,7 @@ export interface UpdatesV1 extends UpdatesCommon {
 export type Updates = UpdatesV0 | UpdatesV1;
 
 interface BlockSummaryCommon {
+    protocolVersion?: bigint;
     finalizationData: FinalizationData;
     transactionSummaries: TransactionSummary[];
 }
@@ -553,6 +554,7 @@ export interface BlockSummaryV1 extends BlockSummaryCommon {
 export type BlockSummary = BlockSummaryV0 | BlockSummaryV1;
 
 interface RewardStatusCommon {
+    protocolVersion?: bigint;
     totalAmount: Amount;
     totalEncryptedAmount: Amount;
     bakingRewardAccount: Amount;
@@ -874,7 +876,7 @@ export type BakerPoolPendingChange =
 
 export enum PoolStatusType {
     BakerPool = 'BakerPool',
-    LPool = 'LPool',
+    PassiveDelegation = 'PassiveDelegation',
 }
 
 type PoolStatusWrapper<T extends keyof typeof PoolStatusType, S> = S & {
@@ -897,27 +899,27 @@ export type BakerPoolStatus = PoolStatusWrapper<
     BakerPoolStatusDetails
 >;
 
-export interface LPoolStatusDetails {
+export interface PassiveDelegationStatusDetails {
     delegatedCapital: Amount;
     commissionRates: CommissionRates;
     currentPaydayTransactionFeesEarned: Amount;
     currentPaydayDelegatedCapital: Amount;
 }
 
-export type LPoolStatus = PoolStatusWrapper<
-    PoolStatusType.LPool,
-    LPoolStatusDetails
+export type PassiveDelegationStatus = PoolStatusWrapper<
+    PoolStatusType.PassiveDelegation,
+    PassiveDelegationStatusDetails
 >;
 
-export type PoolStatus = BakerPoolStatus | LPoolStatus;
+export type PoolStatus = BakerPoolStatus | PassiveDelegationStatus;
 
 export enum DelegationTargetType {
-    LPool = 'L-Pool',
+    PassiveDelegation = 'Passive',
     Baker = 'Baker',
 }
 
-export interface DelegationTargetLPool {
-    delegateType: DelegationTargetType.LPool;
+export interface DelegationTargetPassiveDelegation {
+    delegateType: DelegationTargetType.PassiveDelegation;
 }
 
 export interface DelegationTargetBaker {
@@ -925,7 +927,9 @@ export interface DelegationTargetBaker {
     bakerId: BakerId;
 }
 
-export type DelegationTarget = DelegationTargetLPool | DelegationTargetBaker;
+export type DelegationTarget =
+    | DelegationTargetPassiveDelegation
+    | DelegationTargetBaker;
 
 interface AccountBakerDetailsCommon {
     restakeEarnings: boolean;
@@ -1043,6 +1047,7 @@ export enum AccountTransactionType {
     SimpleTransferWithMemo = 22,
     EncryptedTransferWithMemo = 23,
     TransferWithScheduleWithMemo = 24,
+    ConfigureDelegation = 26,
 }
 
 export interface DeployModulePayload {
@@ -1147,6 +1152,15 @@ export interface UpdateCredentialsPayload {
     currentNumberOfCredentials: bigint;
 }
 
+export interface ConfigureDelegationPayload {
+    /* stake to delegate. if set to 0, this removes the account as a delegator */
+    stake?: GtuAmount;
+    /* should earnings from delegation be added to staked amount  */
+    restakeEarnings?: boolean;
+    /* determines if the account should use passive delegation, or which specific baker to delegate to  */
+    delegationTarget?: DelegationTarget;
+}
+
 export type AccountTransactionPayload =
     | SimpleTransferPayload
     | SimpleTransferWithMemoPayload
@@ -1154,7 +1168,8 @@ export type AccountTransactionPayload =
     | DeployModulePayload
     | InitContractPayload
     | UpdateContractPayload
-    | UpdateCredentialsPayload;
+    | UpdateCredentialsPayload
+    | ConfigureDelegationPayload;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

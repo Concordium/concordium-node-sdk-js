@@ -31,4 +31,4 @@ export const isUpdatesV1 = (u: Updates): u is UpdatesV1 =>
     isUpdateQueuesV1(u.updateQueues);
 
 export const isBlockSummaryV1 = (bs: BlockSummary): bs is BlockSummaryV1 =>
-    (bs as BlockSummaryV1).protocolVersion !== undefined;
+    bs.protocolVersion !== undefined && bs.protocolVersion > 3n;

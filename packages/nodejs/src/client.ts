@@ -53,15 +53,15 @@ import {
     PoolStatus,
     BakerPoolStatusDetails,
     CurrentPaydayBakerPoolStatus,
-    LPoolStatusDetails,
     KeysMatching,
     BakerPoolPendingChangeReduceBakerCapitalDetails,
-    LPoolStatus,
     BakerPoolStatus,
     RewardStatusV0,
     RewardStatus,
     RewardStatusV1,
     ReduceStakePendingChangeV0,
+    PassiveDelegationStatus,
+    PassiveDelegationStatusDetails,
 } from '@concordium/common/lib/src/types';
 import {
     buildJsonResponseReviver,
@@ -687,11 +687,13 @@ export default class ConcordiumNodeClient {
     }
 
     /**
-     * Gets the status the L-pool.
+     * Gets the status of passive delegation.
      * @param blockHash the block hash the status at
-     * @returns The status of the L-pool.
+     * @returns The status of passive delegation.
      */
-    async getPoolStatus(blockHash: string): Promise<LPoolStatus | undefined>;
+    async getPoolStatus(
+        blockHash: string
+    ): Promise<PassiveDelegationStatus | undefined>;
     /**
      * Gets the status a baker.
      * @param blockHash the block hash the status at
@@ -703,9 +705,9 @@ export default class ConcordiumNodeClient {
         bakerId: BakerId
     ): Promise<BakerPoolStatus | undefined>;
     /**
-     * Gets the status of either a baker, if a baker ID is supplied, or the L-pool if left undefined.
+     * Gets the status of either a baker, if a baker ID is supplied, or passive delegation if left undefined.
      * @param blockHash the block hash the status at
-     * @param [bakerId] the ID of the baker to get the status for. If left undefined, the status of the L-pool is returned.
+     * @param [bakerId] the ID of the baker to get the status for. If left undefined, the status of passive delegation is returned.
      * @returns The status of the corresponding pool.
      */
     async getPoolStatus(
@@ -722,7 +724,7 @@ export default class ConcordiumNodeClient {
 
         const req = new GetPoolStatusRequest();
         req.setBlockHash(blockHash);
-        req.setLPool(bakerId === undefined);
+        req.setPassiveDelegation(bakerId === undefined);
 
         if (bakerId !== undefined) {
             req.setBakerId(bakerId.toString());
@@ -734,7 +736,7 @@ export default class ConcordiumNodeClient {
         >;
         type BigIntKey = KeysMatching<
             BakerPoolStatusDetails &
-                LPoolStatusDetails &
+                PassiveDelegationStatusDetails &
                 CurrentPaydayBakerPoolStatus,
             bigint
         >;

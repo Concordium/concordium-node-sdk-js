@@ -7,6 +7,7 @@ import {
     getCredentialForExistingAccountSignDigest,
     serializeInitContractParameters,
     serializeUpdateContractParameters,
+    serializeAccountTransactionForSubmission,
 } from './serialization';
 import { sha256 } from './hash';
 import { getModuleBuffer } from './deserializeSchema';
@@ -21,6 +22,7 @@ export {
     getCredentialForExistingAccountSignDigest,
     serializeInitContractParameters,
     serializeUpdateContractParameters,
+    serializeAccountTransactionForSubmission,
     getModuleBuffer,
 };
 export { sha256 };

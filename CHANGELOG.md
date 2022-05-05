@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.3 2022-05-05
+
+### Added
+
+- Export of serializeCredentialDeploymentTransactionForSubmission.
+
+### Fixed
+
+- Added missing dependency "google-protobuf"
+
 ## 0.7.2 2022-05-05
 
 ### Added

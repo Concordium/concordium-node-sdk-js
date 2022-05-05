@@ -8,6 +8,7 @@ import {
     serializeInitContractParameters,
     serializeUpdateContractParameters,
     serializeAccountTransactionForSubmission,
+    serializeCredentialDeploymentTransactionForSubmission,
 } from './serialization';
 import { sha256 } from './hash';
 import { getModuleBuffer } from './deserializeSchema';
@@ -23,6 +24,7 @@ export {
     serializeInitContractParameters,
     serializeUpdateContractParameters,
     serializeAccountTransactionForSubmission,
+    serializeCredentialDeploymentTransactionForSubmission,
     getModuleBuffer,
 };
 export { sha256 };

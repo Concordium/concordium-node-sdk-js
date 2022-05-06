@@ -41,11 +41,16 @@ export class HttpProvider implements ConcordiumNodeProvider {
     async getNextAccountNonce(
         accountAddress: AccountAddress
     ): Promise<NextAccountNonce | undefined> {
-        const res = await this.client('add', { foo: 1, bar: 2 });
-        if (res.result) {
+        const res = await this.client('getNextAccountNonce', {
+            address: accountAddress.address,
+        });
+        if (res.error) {
+            throw new Error(res.error.code + ': ' + res.error.message);
+        } else if (res.result) {
+            const nonce = JSON.parse(res.result);
             return {
-                nonce: BigInt(res.result),
-                allFinal: true,
+                nonce: BigInt(nonce.nonce),
+                allFinal: nonce.allFinal,
             };
         }
         return undefined;

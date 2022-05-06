@@ -7,9 +7,9 @@
         <script  type="module" >
          const http = new concordium.HttpProvider("http://localhost", "9095");
          const update = function () {
-             const accountAddess = new concordium.AccountAddress(address.value);
-             http.getNextAccountNonce(accountAddess).then((res) => {
-                 nonce.setInnerHTML = res.nonce;
+             const accountAddress = new concordium.AccountAddress(address.value);
+             http.getNextAccountNonce(accountAddress).then((res) => {
+                 document.getElementById('nonce').innerHTML = res.nonce;
              });
          };
          document.getElementById('button').onclick = update;
@@ -20,6 +20,6 @@
         <button id="button">
             Click
         </button>
-        <label id="nonce"/>
+        Nonce: <label id="nonce"/>
     </body>
 </html>

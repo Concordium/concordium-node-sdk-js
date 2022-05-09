@@ -16,8 +16,8 @@
     "engines": {
         "node": ">=14.16.0"
     },
-    "main": "lib/src/index.js",
-    "types": "lib/src/index.d.ts",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
     "files": [
         "/lib/**/*"
     ],

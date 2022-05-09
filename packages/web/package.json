@@ -1,10 +1,10 @@
 {
-    "name": "@concordium/web",
+    "name": "@concordium/web-sdk",
     "version": "0.0.1",
     "license": "Apache-2.0",
     "private": false,
-    "main": "lib/src/index.js",
-    "types": "lib/src/index.d.ts",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
     "files": [
         "/lib/**/*"
     ],
@@ -33,9 +33,12 @@
         "webpack-cli": "^4.9.2",
         "stream-browserify": "^3.0.0"
     },
+    "dependencies": {
+        "@concordium/common": "0.0.1"
+    },
     "scripts": {
         "build": "tsc",
-        "postbuild": "yarn webpack",
+        "postbuild": "webpack",
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest"

@@ -10,7 +10,7 @@ To build the package run
 yarn build
 ```
 
-This builds the [common package](../common), and compiles the project in to javascript. Then it uses webpack to create a single, pure-js file, which is put in dist.
+This builds the [common package](../common), and transpiles the project to javascript. Then it uses webpack to create a single, pure-js file, which is put in dist.
 
 ## Publishing a release
 Before publishing a new release it is essential that it has been built first. So make sure that 

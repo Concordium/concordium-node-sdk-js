@@ -4,7 +4,7 @@ const webpack = require("webpack");
 module.exports = {
     mode: "production",
     entry: {
-        concordium: "./lib/src/index.js",
+        concordium: "./lib/index.js",
     },
     plugins: [
         new webpack.SourceMapDevToolPlugin({

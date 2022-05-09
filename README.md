@@ -85,6 +85,31 @@ const registerDataAccountTransaction: AccountTransaction = {
 };
 ```
 
+## Create a configure delegation transaction
+The following example demonstrates how a configure delegation transaction can be created.
+Note that although all the fields are optional, they are all required, when becoming a delegator.
+```js
+const header: AccountTransactionHeader = {
+    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+    nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
+    sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
+};
+const configureDelegationPayload: ConfigureDelegationPayload = {
+        stake: new GtuAmount(1000000000n),
+        delegationTarget: {
+            delegateType: DelegationTargetType.Baker,
+            bakerId: 100n
+        },
+        restakeEarnings: true,
+};
+
+const configureDelegationAccountTransaction: AccountTransaction = {
+    header: header,
+    payload: configureDelegationPayload,
+    type: AccountTransactionType.ConfigureDelegation,
+};
+```
+
 ## Create a credential for an existing account
 The following example demonstrates how to create a credential for an existing account. This
 credential can then be deployed onto the account by the account owner with an update
@@ -539,6 +564,26 @@ should include bootstrapper nodes or not.
 ```js
 const peerListResponse = await client.getPeerList(false);
 const peersList = peerListResponse.getPeersList();
+...
+```
+
+## getBakerList
+Retrieves the list of ID's for registered bakers on the network at a specific block.
+```js
+const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
+const bakerIds = await client.getBakerList(blockHash);
+...
+```
+
+## getPoolStatus
+Retrieves the status of a pool (either a specific baker or passive delegation) at a specific block.
+If a baker ID is specified, the status of that baker is returned. To get the status of passive delegation, baker ID should be left undefined.
+```js
+const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
+const bakerId = BigInt(1);
+
+const bakerStatus = await client.getPoolStatus(blockHash, bakerId);
+const passiveDelegationStatus = await client.getPoolStatus(blockHash); 
 ...
 ```
 

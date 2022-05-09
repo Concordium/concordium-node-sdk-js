@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+        <script src="../dist/concordium.min.js"></script>
+        <script src="./noble-ed25519.js"></script>
+        <script  type="module" >
+         const http = new concordium.HttpProvider("http://localhost", "9095");
+         const send = async function () {
+             const payload = {
+                 amount: new concordium.GtuAmount(BigInt(amount.value)),
+                 toAddress: new concordium.AccountAddress(receiver.value),
+             };
+
+             const senderAddress = new concordium.AccountAddress(sender.value);
+
+             const n = await http.getNextAccountNonce(senderAddress);
+             const header = {
+                 expiry: new concordium.TransactionExpiry(new Date(Date.now() + 3600000)),
+                 nonce: n.nonce,
+                 sender: senderAddress,
+             };
+
+             console.log(n);
+
+             const t = {
+                 header,
+                 payload,
+                 type: concordium.AccountTransactionType.SimpleTransfer,
+             };
+
+             const digest = concordium.getAccountTransactionSignDigest(t);
+
+             const s = {
+                 0: {
+                     0: (await nobleEd25519.sign(digest, key.value)).reduce((a, b) => a + b.toString(16).padStart(2, '0'), '')
+                 }
+             };
+
+             const result = await http.sendAccountTransaction(t, s);
+             document.getElementById('status').innerHTML = result.toString();
+             document.getElementById('hash').innerHTML = concordium.getAccountTransactionHash(t,s);
+         };
+
+         const update = function() {
+             http.getTransactionStatus(hash.value).then((res) => {
+                 document.getElementById('status').innerHTML = res.status;
+             });
+         }
+         document.getElementById('button').onclick = send;
+         document.getElementById('button2').onclick = update;
+        </script>
+    </head>
+    <body>
+        Amount: <input type="number" id="amount" value="1" />
+        Receiver: <input type="text" id="receiver" value="44Ernz8GQrPvPSDRiC59xQE2GsXPDok9hLKU9KTVteH4xq9HyH" />
+        Sender: <input type="text" id="sender" value="39bKAuC7sXCZQfo7DmVQTMbiUuBMQJ5bCfsS7sva1HvDnUXp13"/>
+        PrivateKey: <input type="text" id="key" value="82a39ad1b07cf848727bd9538c242ce4b91b6dddeb852eeaef403122ba23ce4e"/>
+        <br/>
+        <button id="button">
+            Send
+        </button>
+        Hash: <label id="hash"/>
+        <br/>
+        <button id="button2">
+            Update status
+        </button>
+        Status: <label id="status"/>
+    </body>
+</html>

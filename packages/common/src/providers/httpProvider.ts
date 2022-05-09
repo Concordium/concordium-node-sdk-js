@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer/';
 import {
     AccountTransaction,
     AccountTransactionSignature,
@@ -7,6 +8,7 @@ import {
 import { AccountAddress } from '../types/accountAddress';
 import ConcordiumNodeProvider from './provider';
 import fetch from 'cross-fetch';
+import { serializeAccountTransactionForSubmission } from '../serialization';
 
 export class HttpProvider implements ConcordiumNodeProvider {
     client: (method: string, params: object) => Promise<any>;
@@ -56,16 +58,42 @@ export class HttpProvider implements ConcordiumNodeProvider {
         return undefined;
     }
 
-    getTransactionStatus(
+    async getTransactionStatus(
         transactionHash: string
     ): Promise<TransactionStatus | undefined> {
-        throw new Error('Not implemented yet');
+        const res = await this.client('getTransactionStatus', {
+            transactionHash: transactionHash,
+        });
+        console.log(res);
+        if (res.error) {
+            throw new Error(res.error.code + ': ' + res.error.message);
+        } else if (res.result) {
+            return JSON.parse(res.result);
+        }
+        return undefined;
     }
 
-    sendAccountTransaction(
+    async sendAccountTransaction(
         accountTransaction: AccountTransaction,
         signatures: AccountTransactionSignature
     ): Promise<boolean> {
-        throw new Error('Not implemented yet');
+        const serializedAccountTransaction: Buffer = Buffer.from(
+            serializeAccountTransactionForSubmission(
+                accountTransaction,
+                signatures
+            )
+        );
+
+        const res = await this.client('sendAccountTransaction', {
+            transaction: serializedAccountTransaction.toString('base64'),
+        });
+
+        console.log(res);
+        if (res.error) {
+            throw new Error(res.error.code + ': ' + res.error.message);
+        } else if (res.result) {
+            return JSON.parse(res.result);
+        }
+        return false;
     }
 }

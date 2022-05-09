@@ -1185,6 +1185,28 @@ export interface UpdateCredentialsPayload {
     currentNumberOfCredentials: bigint;
 }
 
+export interface BakerKeysWithProofs {
+    signatureVerifyKey: string;
+    signatureKeyProof: string;
+    electionVerifyKey: string;
+    electionKeyProof: string;
+    aggregationVerifyKey: string;
+    aggregationKeyProof: string;
+}
+
+export interface ConfigureBakerPayload {
+    /* stake to bake. if set to 0, this removes the account as a baker */
+    stake?: GtuAmount;
+    /* should earnings from baking be added to staked amount  */
+    restakeEarnings?: boolean;
+    openForDelegation?: OpenStatus;
+    keys?: BakerKeysWithProofs;
+    metadataUrl?: string;
+    transactionFeeCommission?: number;
+    bakingRewardCommission?: number;
+    finalizationRewardCommission?: number;
+}
+
 export interface ConfigureDelegationPayload {
     /* stake to delegate. if set to 0, this removes the account as a delegator */
     stake?: CcdAmount;
@@ -1202,6 +1224,7 @@ export type AccountTransactionPayload =
     | InitContractPayload
     | UpdateContractPayload
     | UpdateCredentialsPayload
+    | ConfigureBakerPayload
     | ConfigureDelegationPayload;
 
 export interface AccountTransaction {

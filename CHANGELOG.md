@@ -1,6 +1,7 @@
 # Changelog
 
-## 0.8.0 2022-03-15
+
+## 0.8.0 2022-05-??
 
 ### Added
 
@@ -15,6 +16,22 @@
 
 - Updated `BlockSummary` type to include new version, effective from protocol version 4.
 - Updated `AccountInfo` type to include new fields related to delegation introduced with protocol version 4.
+
+## 0.7.3 2022-05-05
+
+### Added
+
+- Export of serializeCredentialDeploymentTransactionForSubmission.
+
+### Fixed
+
+- Added missing dependency "google-protobuf"
+
+## 0.7.2 2022-05-05
+
+### Added
+
+- Export of serializeAccountTransactionForSubmission.
 
 ## 0.7.1 2022-03-09
 

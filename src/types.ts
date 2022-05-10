@@ -69,7 +69,20 @@ export interface TransactionEvent {
         | 'UpdateEnqueued'
         | 'TransferredWithSchedule'
         | 'CredentialsUpdated'
-        | 'DataRegistered';
+        | 'DataRegistered'
+        | 'Interrupted'
+        | 'Resumed'
+        | 'BakerSetOpenStatus'
+        | 'BakerSetMetadataURL'
+        | 'BakerSetTransactionFeeCommission'
+        | 'BakerSetBakingRewardCommission'
+        | 'BakerSetFinalizationRewardCommission'
+        | 'DelegationStakeIncreased'
+        | 'DelegationStakeDecreased'
+        | 'DelegationSetRestakeEarnings'
+        | 'DelegationSetDelegationTarget'
+        | 'DelegationAdded'
+        | 'DelegationRemoved';
 }
 
 export interface ContractAddress {
@@ -155,6 +168,20 @@ export enum RejectReasonTag {
     NotAllowedMultipleCredentials = 'NotAllowedMultipleCredentials',
     NotAllowedToReceiveEncrypted = 'NotAllowedToReceiveEncrypted',
     NotAllowedToHandleEncrypted = 'NotAllowedToHandleEncrypted',
+    MissingBakerAddParameters = 'MissingBakerAddParameters',
+    FinalizationRewardCommissionNotInRange = 'FinalizationRewardCommissionNotInRange',
+    BakingRewardCommissionNotInRange = 'BakingRewardCommissionNotInRange',
+    TransactionFeeCommissionNotInRange = 'TransactionFeeCommissionNotInRange',
+    AlreadyADelegator = 'AlreadyADelegator',
+    InsufficientBalanceForDelegationStake = 'InsufficientBalanceForDelegationStake',
+    MissingDelegationAddParameters = 'MissingDelegationAddParameters',
+    InsufficientDelegationStake = 'InsufficientDelegationStake',
+    DelegatorInCooldown = 'DelegatorInCooldown',
+    NotADelegator = 'NotADelegator',
+    DelegationTargetNotABaker = 'DelegationTargetNotABaker',
+    StakeOverMaximumThresholdForPool = 'StakeOverMaximumThresholdForPool',
+    PoolWouldBecomeOverDelegated = 'PoolWouldBecomeOverDelegated',
+    PoolClosed = 'PoolClosed',
 }
 
 export interface RejectReason {

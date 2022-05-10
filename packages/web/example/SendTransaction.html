@@ -6,7 +6,7 @@
         <script src="../dist/concordium.min.js"></script>
         <script src="./noble-ed25519.js"></script>
         <script  type="module" >
-         const http = new concordium.HttpProvider("http://localhost", "9095");
+         const client = new concordium.JsonRpcClient(new concordium.HttpProvider("http://localhost", "9095"));
          const send = async function () {
              const payload = {
                  amount: new concordium.GtuAmount(BigInt(amount.value)),
@@ -15,14 +15,13 @@
 
              const senderAddress = new concordium.AccountAddress(sender.value);
 
-             const n = await http.getNextAccountNonce(senderAddress);
+             const n = await client.getNextAccountNonce(senderAddress);
              const header = {
                  expiry: new concordium.TransactionExpiry(new Date(Date.now() + 3600000)),
                  nonce: n.nonce,
                  sender: senderAddress,
              };
 
-             console.log(n);
 
              const t = {
                  header,
@@ -38,13 +37,13 @@
                  }
              };
 
-             const result = await http.sendAccountTransaction(t, s);
+             const result = await client.sendAccountTransaction(t, s);
              document.getElementById('status').innerHTML = result.toString();
              document.getElementById('hash').innerHTML = concordium.getAccountTransactionHash(t,s);
          };
 
          const update = function() {
-             http.getTransactionStatus(hash.value).then((res) => {
+             client.getTransactionStatus(hash.value).then((res) => {
                  document.getElementById('status').innerHTML = res.status;
              });
          }

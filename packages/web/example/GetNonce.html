@@ -5,10 +5,10 @@
         <title></title>
         <script src="../dist/concordium.min.js"></script>
         <script  type="module" >
-         const http = new concordium.HttpProvider("http://localhost", "9095");
+         const client = new concordium.JsonRpcClient(new concordium.HttpProvider("http://localhost", "9095"));
          const update = function () {
              const accountAddress = new concordium.AccountAddress(address.value);
-             http.getNextAccountNonce(accountAddress).then((res) => {
+             client.getNextAccountNonce(accountAddress).then((res) => {
                  document.getElementById('nonce').innerHTML = res.nonce;
              });
          };

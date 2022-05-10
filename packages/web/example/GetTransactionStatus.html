@@ -5,9 +5,9 @@
         <title></title>
         <script src="../dist/concordium.min.js"></script>
         <script  type="module" >
-         const http = new concordium.HttpProvider("http://localhost", "9095");
+         const client = new concordium.JsonRpcClient(new concordium.HttpProvider("http://localhost", "9095"));
          const update = function () {
-             http.getTransactionStatus(hash.value).then((res) => {
+             client.getTransactionStatus(hash.value).then((res) => {
                  document.getElementById('status').innerHTML = JSON.stringify(res);
              });
          };

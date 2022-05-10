@@ -450,7 +450,7 @@ const amount: bigint = accountInfo.accountAmount;
 const nationality: string = accountInfo.accountCredentials[0].value.contents.policy.revealedAttributes["nationality"];
 ```
 
-To check if the account is a baker or a delegator, one can use type guards `isDelegatorAccount` and `isBakerAccount`.
+To check if the account is a baker or a delegator, one can use the functions `isDelegatorAccount` and `isBakerAccount`.
 ```js
 ...
 const accountInfo: AccountInfo = await client.getAccountInfo(accountAddress, blockHash);
@@ -459,12 +459,13 @@ if (isDelegatorAccount(accountInfo)) {
     ...
 } else if (isBakerAccount(accountInfo) {
     const bakingDetails = accountInfo.accountBaker;
+    ...
 } else {
     // Neither a baker nor a delegator
 }
 ```
 Furthermore there are different versions, based on Protocol version, of a baker's accountInfo.
-Particular in P4 the concept of baker pools were introduced, so to get the information, one has to use `isBakerAccountV1`.
+In protocol version 4 the concept of baker pools were introduced, so to get baker pool information, one should confirm the version first with `isBakerAccountV0` or `isBakerAccountV1`.
 
 ```js
 ...
@@ -532,7 +533,8 @@ const numberOfFinalizers = blockSummary.finalizationData.finalizers.length;
 ...
 ```
 
-Blocks before P4 have a different type than those that came later. To determine the type, use `isBlockSummaryV1` and `isBlockSummaryV0`:
+Blocks before protocol version 4 have a different type than those from higher protocol versions.
+To determine the version, use `isBlockSummaryV1` and `isBlockSummaryV0`:
 
 ```js
 ...
@@ -892,13 +894,13 @@ const instances = await client.getInstances(blockHash);
 ```
 
 ## getInstanceInfo
-Used to get information of a specific contract instance, at a specific block.
+Used to get information about a specific contract instance, at a specific block.
 
 ```js
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
 const contractAddress = { index: 1n, subindex: 0n };
 
-const instanceInfo = await client.getPoolStatus(blockHash,contractAddress);
+const instanceInfo = await client.getPoolStatus(blockHash, contractAddress);
 const name = instanceInfo.name; 
 ...
 ```

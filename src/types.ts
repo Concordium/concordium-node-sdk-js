@@ -1285,7 +1285,7 @@ export const isInstanceInfoV1 = (info: InstanceInfo): info is InstanceInfoV1 =>
     info.version === 1;
 
 export const isInstanceInfoV0 = (info: InstanceInfo): info is InstanceInfoV0 =>
-    info.version === 0;
+    info.version === undefined || info.version === 0;
 
 export type CredentialSignature = Record<number, string>;
 export type AccountTransactionSignature = Record<number, CredentialSignature>;

@@ -25,7 +25,7 @@ export const isBakerAccountV1 = (ai: AccountInfo): ai is AccountInfoBakerV1 =>
     (ai as AccountInfoBakerV1).accountBaker?.bakerPoolInfo !== undefined;
 
 export const isBakerAccountV0 = (ai: AccountInfo): ai is AccountInfoBakerV0 =>
-    ai.accountBaker?.bakerPoolInfo === undefined;
+    (ai as AccountInfoBakerV1).accountBaker?.bakerPoolInfo === undefined;
 
 export const isStakePendingChangeV1 = (
     spc: StakePendingChange

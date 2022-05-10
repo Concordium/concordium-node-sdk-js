@@ -615,15 +615,34 @@ export default class ConcordiumNodeClient {
 
         const result = unwrapJsonResponse<InstanceInfoSerialized>(response);
         if (result !== undefined) {
-            const instanceInfo: InstanceInfo = {
+            const common = {
                 amount: new GtuAmount(BigInt(result.amount)),
                 sourceModule: new ModuleReference(result.sourceModule),
                 owner: new Address(result.owner),
                 methods: result.methods,
                 name: result.name,
-                model: BufferFormater.from(result.model, 'hex'),
             };
-            return instanceInfo;
+
+            switch (result.version) {
+                case 1:
+                    return {
+                        version: 1,
+                        ...common,
+                    };
+                case undefined:
+                case 0:
+                    return {
+                        version: 0,
+                        ...common,
+                        model: BufferFormater.from(result.model, 'hex'),
+                    };
+                default:
+                    throw new Error(
+                        'InstanceInfo had unsupported version: ' +
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            (result as any).version
+                    );
+            }
         }
     }
 

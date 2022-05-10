@@ -22,8 +22,9 @@ import {
 export const isAuthorizationsV1 = (a: Authorizations): a is AuthorizationsV1 =>
     (a as AuthorizationsV1).timeParameters !== undefined;
 
-export const isAuthorizationsV0 = (a: Authorizations): a is AuthorizationsV0 =>
-    (a as AuthorizationsV1).timeParameters === undefined;
+export function isAuthorizationsV0(a: Authorizations): a is AuthorizationsV0 {
+    return (a as AuthorizationsV1).timeParameters === undefined;
+}
 
 export const isChainParametersV1 = (
     cp: ChainParameters

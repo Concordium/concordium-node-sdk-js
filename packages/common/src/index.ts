@@ -35,4 +35,4 @@ export { isAlias, getAlias } from './alias';
 export { deserializeContractState } from './deserialization';
 export * from './blockSummaryHelpers';
 export { HttpProvider } from './providers/httpProvider';
-export { JsonRpcClient } from './providers/provider';
+export { JsonRpcClient } from './JsonRpcClient';

@@ -6,7 +6,7 @@ import {
     TransactionStatus,
 } from '../types';
 import { AccountAddress } from '../types/accountAddress';
-import { Provider } from './provider';
+import Provider from './provider';
 import fetch from 'cross-fetch';
 
 export class HttpProvider implements Provider {

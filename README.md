@@ -450,6 +450,35 @@ const amount: bigint = accountInfo.accountAmount;
 const nationality: string = accountInfo.accountCredentials[0].value.contents.policy.revealedAttributes["nationality"];
 ```
 
+To check if the account is a baker or a delegator, one can use the functions `isDelegatorAccount` and `isBakerAccount`.
+```js
+...
+const accountInfo: AccountInfo = await client.getAccountInfo(accountAddress, blockHash);
+if (isDelegatorAccount(accountInfo)) {
+    const delegationDetails = accountInfo.accountDelegation;
+    ...
+} else if (isBakerAccount(accountInfo) {
+    const bakingDetails = accountInfo.accountBaker;
+    ...
+} else {
+    // Neither a baker nor a delegator
+}
+```
+Furthermore there are different versions, based on Protocol version, of a baker's accountInfo.
+In protocol version 4 the concept of baker pools was introduced, so to get baker pool information one should confirm the version with `isBakerAccountV0` or `isBakerAccountV1`.
+
+```js
+...
+const accountInfo: AccountInfo = await client.getAccountInfo(accountAddress, blockHash);
+if (isBakerAccountV1(accountInfo)) {
+    const bakerPoolInfo = accountInfo.accountBaker.bakerPoolInfo;
+    ...
+} else if (isBakerAccountV0(accountInfo) {
+    // accountInfo is from protocol version < 4, so it will not contain bakerPoolInfo
+    ...
+}
+```
+
 ## getNextAccountNonce
 Retrieves the next account nonce, i.e. the nonce that must be set in the account transaction
 header for the next transaction submitted by that account. Along with the nonce there is a boolean
@@ -507,6 +536,25 @@ const blockSummary: BlockSummary = await client.getBlockSummary(blockHash);
 const numberOfFinalizers = blockSummary.finalizationData.finalizers.length;
 ...
 ```
+
+Blocks before protocol version 4 have a different type than those from higher protocol versions.
+To determine the version, use `isBlockSummaryV1` and `isBlockSummaryV0`:
+
+```js
+...
+const blockSummary: BlockSummary = await client.getBlockSummary(blockHash);
+if (isBlockSummaryV0(blockSummary)) {
+    // This block is from protocol version <= 3, and so the summary has version 0 structure
+    ...
+} else if (isBlockSummaryV1(blockSummary) {
+    // This block is from protocol version >= 4, and so the summary has version 1 structure
+    ...
+} else {
+    // Must be a future version of a blockSummary (or the given object is not a blockSummary)
+}
+```
+
+There are also type checks for specific fields in the summary, which can be found in [blockSummaryHelpers](src/blockSummaryHelpers.ts).
 
 ## getBlockInfo
 Retrieves information about a specific block.
@@ -584,6 +632,25 @@ const bakerId = BigInt(1);
 
 const bakerStatus = await client.getPoolStatus(blockHash, bakerId);
 const passiveDelegationStatus = await client.getPoolStatus(blockHash); 
+...
+```
+
+## getRewardStatus
+Retrieves the current amount of funds in the system at a specific block, and the state of the special accounts. 
+Protocol version 4 expanded the amount of information in the response, so one should check the type to access that.
+This information includes information about the payday and total amount of funds staked.
+```js
+const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
+
+const rewardStatus = await client.getRewardStatus(blockHash);
+
+if (isRewardStatusV1(rewardStatus)) {
+    const nextPaydayTime = rewardStatus.nextPaydayTime; 
+    ...
+} else if (isRewardStatusV0(rewardStatus)) {
+    // This status is for a block from protocol version <= 3, so it will only have limited information
+    ...
+}
 ...
 ```
 
@@ -824,13 +891,37 @@ const updateContractTransaction: AccountTransaction = {
 ```
 Finally, to actually update the contract on the chain, send the constructed `updateContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
 
+
+## getInstances
+Used to get the full list of contract instances on the chain at a specific block.
+```js
+const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
+
+const instances = await client.getInstances(blockHash);
+...
+```
+
+## getInstanceInfo
+Used to get information about a specific contract instance, at a specific block.
+
+```js
+const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
+const contractAddress = { index: 1n, subindex: 0n };
+
+const instanceInfo = await client.getInstanceInfo(blockHash, contractAddress);
+const name = instanceInfo.name; 
+...
+```
+
+Note that only version 0 contracts returns the model. (use `isInstanceInfoV0`/`isInstanceInfoV1` to check the version)
+
 ## Deserialize contract state
 The following example demonstrates how to deserialize a contract's state:
 
 ```js
 const contractName = "my-contract-name"
 const schema = Buffer.from(schemaSource); // Load schema from file
-const rawContractState = Buffer.from(stateSource); // Could be getinstanceInfo(...).model
+const rawContractState = Buffer.from(stateSource); // Could be getinstanceInfo(...).model (if contract is version 0)
 const state = deserializeContractState(contractName, schema, rawContractState);
 ```
 

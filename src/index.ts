@@ -44,4 +44,7 @@ export {
 } from './credentialDeploymentTransactions';
 export { isAlias, getAlias } from './alias';
 export { deserializeContractState } from './deserialization';
+
+export * from './accountHelpers';
 export * from './blockSummaryHelpers';
+export * from './rewardStatusHelpers';

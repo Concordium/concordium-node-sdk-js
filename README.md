@@ -465,7 +465,7 @@ if (isDelegatorAccount(accountInfo)) {
 }
 ```
 Furthermore there are different versions, based on Protocol version, of a baker's accountInfo.
-In protocol version 4 the concept of baker pools were introduced, so to get baker pool information, one should confirm the version first with `isBakerAccountV0` or `isBakerAccountV1`.
+In protocol version 4 the concept of baker pools was introduced, so to get baker pool information one should confirm the version with `isBakerAccountV0` or `isBakerAccountV1`.
 
 ```js
 ...
@@ -473,6 +473,10 @@ const accountInfo: AccountInfo = await client.getAccountInfo(accountAddress, blo
 if (isBakerAccountV1(accountInfo)) {
     const bakerPoolInfo = accountInfo.accountBaker.bakerPoolInfo;
     ...
+} else if (isBakerAccountV0(accountInfo) {
+    // accountInfo is from protocol version < 4, so it will not contain bakerPoolInfo
+    ...
+}
 ```
 
 ## getNextAccountNonce
@@ -540,10 +544,10 @@ To determine the version, use `isBlockSummaryV1` and `isBlockSummaryV0`:
 ...
 const blockSummary: BlockSummary = await client.getBlockSummary(blockHash);
 if (isBlockSummaryV0(blockSummary)) {
-    // blockSummary has version 0 structure 
+    // This block is from protocol version <= 3, and so the summary has version 0 structure
     ...
 } else if (isBlockSummaryV1(blockSummary) {
-    // blockSummary has version 1 structure 
+    // This block is from protocol version >= 4, and so the summary has version 1 structure
     ...
 } else {
     // Must be a future version of a blockSummary (or the given object is not a blockSummary)
@@ -640,8 +644,12 @@ const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42
 
 const rewardStatus = await client.getRewardStatus(blockHash);
 
-if (isRewardStatusV1()) {
+if (isRewardStatusV1(rewardStatus)) {
     const nextPaydayTime = rewardStatus.nextPaydayTime; 
+    ...
+} else if (isRewardStatusV0(rewardStatus)) {
+    // This status is for a block from protocol version <= 3, so it will only have limited information
+    ...
 }
 ...
 ```
@@ -900,7 +908,7 @@ Used to get information about a specific contract instance, at a specific block.
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
 const contractAddress = { index: 1n, subindex: 0n };
 
-const instanceInfo = await client.getPoolStatus(blockHash, contractAddress);
+const instanceInfo = await client.getInstanceInfo(blockHash, contractAddress);
 const name = instanceInfo.name; 
 ...
 ```

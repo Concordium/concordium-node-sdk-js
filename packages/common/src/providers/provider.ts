@@ -38,10 +38,9 @@ export class JsonRpcClient {
         if (res.error) {
             throw new Error(res.error.code + ': ' + res.error.message);
         } else if (res.result) {
-            const nonce = JSON.parse(res.result);
             return {
-                nonce: BigInt(nonce.nonce),
-                allFinal: nonce.allFinal,
+                nonce: BigInt(res.result.nonce),
+                allFinal: res.result.allFinal,
             };
         }
         return undefined;
@@ -57,7 +56,7 @@ export class JsonRpcClient {
         if (res.error) {
             throw new Error(res.error.code + ': ' + res.error.message);
         } else if (res.result) {
-            return JSON.parse(res.result);
+            return res.result;
         }
         return undefined;
     }
@@ -80,7 +79,7 @@ export class JsonRpcClient {
         if (res.error) {
             throw new Error(res.error.code + ': ' + res.error.message);
         } else if (res.result) {
-            return JSON.parse(res.result);
+            return res.result;
         }
         return false;
     }

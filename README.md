@@ -637,21 +637,19 @@ const passiveDelegationStatus = await client.getPoolStatus(blockHash);
 
 ## getRewardStatus
 Retrieves the current amount of funds in the system at a specific block, and the state of the special accounts. 
-Protocol version 4 expanded the amount of information in the response, so one should check the type to access that.
-This information includes information about the payday and total amount of funds staked.
 ```js
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
 
 const rewardStatus = await client.getRewardStatus(blockHash);
+```
 
+Protocol version 4 expanded the amount of information in the response, so one should check the type to access that.
+This information includes information about the payday and total amount of funds staked.
+```js
 if (isRewardStatusV1(rewardStatus)) {
     const nextPaydayTime = rewardStatus.nextPaydayTime; 
     ...
-} else if (isRewardStatusV0(rewardStatus)) {
-    // This status is for a block from protocol version <= 3, so it will only have limited information
-    ...
 }
-...
 ```
 
 ## Check block for transfers with memo

@@ -1,6 +1,5 @@
 import {
     Authorizations,
-    AuthorizationsV0,
     AuthorizationsV1,
     BlockSummary,
     BlockSummaryV0,
@@ -22,10 +21,6 @@ import {
 export const isAuthorizationsV1 = (a: Authorizations): a is AuthorizationsV1 =>
     (a as AuthorizationsV1).timeParameters !== undefined;
 
-export function isAuthorizationsV0(a: Authorizations): a is AuthorizationsV0 {
-    return (a as AuthorizationsV1).timeParameters === undefined;
-}
-
 export const isChainParametersV1 = (
     cp: ChainParameters
 ): cp is ChainParametersV1 =>
@@ -40,7 +35,7 @@ export const isKeysV1 = (k: Keys): k is KeysV1 =>
     isAuthorizationsV1(k.level2Keys);
 
 export const isKeysV0 = (k: Keys): k is KeysV0 =>
-    isAuthorizationsV0(k.level2Keys);
+    !isAuthorizationsV1(k.level2Keys);
 
 export const isUpdateQueuesV1 = (uq: UpdateQueues): uq is UpdateQueuesV1 =>
     (uq as UpdateQueuesV1).timeParameters !== undefined;

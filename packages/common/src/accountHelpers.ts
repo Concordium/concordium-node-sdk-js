@@ -7,8 +7,10 @@ import {
 import {
     AccountInfo,
     AccountInfoBaker,
+    AccountInfoBakerV0,
     AccountInfoBakerV1,
     AccountInfoDelegator,
+    StakePendingChangeV0,
 } from './types';
 
 export const isDelegatorAccount = (
@@ -22,10 +24,18 @@ export const isBakerAccount = (ai: AccountInfo): ai is AccountInfoBaker =>
 export const isBakerAccountV1 = (ai: AccountInfo): ai is AccountInfoBakerV1 =>
     (ai as AccountInfoBakerV1).accountBaker?.bakerPoolInfo !== undefined;
 
+export const isBakerAccountV0 = (ai: AccountInfo): ai is AccountInfoBakerV0 =>
+    (ai as AccountInfoBakerV1).accountBaker?.bakerPoolInfo === undefined;
+
 export const isStakePendingChangeV1 = (
     spc: StakePendingChange
 ): spc is StakePendingChangeV1 =>
     (spc as StakePendingChangeV1).effectiveTime !== undefined;
+
+export const isStakePendingChangeV0 = (
+    spc: StakePendingChange
+): spc is StakePendingChangeV0 =>
+    (spc as StakePendingChangeV0).epoch !== undefined;
 
 export const isReduceStakePendingChange = (
     spc: ReduceStakePendingChange | RemovalPendingChange

@@ -48,7 +48,7 @@
     "scripts": {
         "generate-js": "yarn run grpc_tools_node_protoc --js_out=import_style=commonjs,binary:grpc --grpc_out=grpc_js:grpc --plugin=protoc-gen-grpc=./node_modules/.bin/grpc_tools_node_protoc_plugin -I ../../deps/concordium-grpc-api ../../deps/concordium-grpc-api/*.proto",
         "generate-ts": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:grpc -I ../../deps/concordium-grpc-api ../../deps/concordium-grpc-api/*.proto",
-        "generate": "mkdir -p grpc && yarn generate-js && yarn generate-ts",
+        "generate": "if [ -e \"../../deps/concordium-grpc-api\" ]; then (mkdir -p grpc && yarn generate-js && yarn generate-ts) else echo 'Please checkout submodules before building'; fi",
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",

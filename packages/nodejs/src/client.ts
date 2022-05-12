@@ -68,7 +68,7 @@ import {
 import {
     buildJsonResponseReviver,
     isValidHash,
-} from '@concordium/common-sdk/lib/src/util';
+} from '@concordium/common-sdk/lib/util';
 import {
     intListToStringList,
     intToStringTransformer,

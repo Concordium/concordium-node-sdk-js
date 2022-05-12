@@ -3,7 +3,7 @@
     "version": "0.0.1",
     "license": "Apache-2.0",
     "private": false,
-    "main": "lib/index.js",
+    "main": "dist/concordium.min.js",
     "types": "lib/index.d.ts",
     "files": [
         "/lib/**/*"

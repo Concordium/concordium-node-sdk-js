@@ -69,7 +69,20 @@ export interface TransactionEvent {
         | 'UpdateEnqueued'
         | 'TransferredWithSchedule'
         | 'CredentialsUpdated'
-        | 'DataRegistered';
+        | 'DataRegistered'
+        | 'Interrupted'
+        | 'Resumed'
+        | 'BakerSetOpenStatus'
+        | 'BakerSetMetadataURL'
+        | 'BakerSetTransactionFeeCommission'
+        | 'BakerSetBakingRewardCommission'
+        | 'BakerSetFinalizationRewardCommission'
+        | 'DelegationStakeIncreased'
+        | 'DelegationStakeDecreased'
+        | 'DelegationSetRestakeEarnings'
+        | 'DelegationSetDelegationTarget'
+        | 'DelegationAdded'
+        | 'DelegationRemoved';
 }
 
 export interface ContractAddress {
@@ -155,6 +168,20 @@ export enum RejectReasonTag {
     NotAllowedMultipleCredentials = 'NotAllowedMultipleCredentials',
     NotAllowedToReceiveEncrypted = 'NotAllowedToReceiveEncrypted',
     NotAllowedToHandleEncrypted = 'NotAllowedToHandleEncrypted',
+    MissingBakerAddParameters = 'MissingBakerAddParameters',
+    FinalizationRewardCommissionNotInRange = 'FinalizationRewardCommissionNotInRange',
+    BakingRewardCommissionNotInRange = 'BakingRewardCommissionNotInRange',
+    TransactionFeeCommissionNotInRange = 'TransactionFeeCommissionNotInRange',
+    AlreadyADelegator = 'AlreadyADelegator',
+    InsufficientBalanceForDelegationStake = 'InsufficientBalanceForDelegationStake',
+    MissingDelegationAddParameters = 'MissingDelegationAddParameters',
+    InsufficientDelegationStake = 'InsufficientDelegationStake',
+    DelegatorInCooldown = 'DelegatorInCooldown',
+    NotADelegator = 'NotADelegator',
+    DelegationTargetNotABaker = 'DelegationTargetNotABaker',
+    StakeOverMaximumThresholdForPool = 'StakeOverMaximumThresholdForPool',
+    PoolWouldBecomeOverDelegated = 'PoolWouldBecomeOverDelegated',
+    PoolClosed = 'PoolClosed',
 }
 
 export interface RejectReason {
@@ -1234,26 +1261,56 @@ export enum ParameterType {
     ReceiveName,
 }
 
-export interface InstanceInfo {
+export interface InstanceInfoCommon {
+    version: number;
     amount: GtuAmount;
     sourceModule: ModuleReference;
     owner: AccountAddress;
     methods: string[];
     name: string;
+}
+
+export interface InstanceInfoV0 extends InstanceInfoCommon {
+    version: 0;
     model: Buffer;
 }
+
+export interface InstanceInfoV1 extends InstanceInfoCommon {
+    version: 1;
+}
+
+export type InstanceInfo = InstanceInfoV0 | InstanceInfoV1;
+
+export const isInstanceInfoV1 = (info: InstanceInfo): info is InstanceInfoV1 =>
+    info.version === 1;
+
+export const isInstanceInfoV0 = (info: InstanceInfo): info is InstanceInfoV0 =>
+    info.version === undefined || info.version === 0;
 
 export type CredentialSignature = Record<number, string>;
 export type AccountTransactionSignature = Record<number, CredentialSignature>;
 
-export interface InstanceInfoSerialized {
+export interface InstanceInfoSerializedCommon {
+    version?: number;
     amount: string;
     sourceModule: string;
     owner: string;
     methods: string[];
     name: string;
+}
+
+export interface InstanceInfoSerializedV0 extends InstanceInfoSerializedCommon {
+    version?: 0;
     model: string;
 }
+
+export interface InstanceInfoSerializedV1 extends InstanceInfoSerializedCommon {
+    version: 1;
+}
+
+export type InstanceInfoSerialized =
+    | InstanceInfoSerializedV0
+    | InstanceInfoSerializedV1;
 
 export interface CredentialDeploymentTransaction {
     expiry: TransactionExpiry;

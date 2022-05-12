@@ -6,6 +6,8 @@ import {
     getCredentialForExistingAccountSignDigest,
     serializeInitContractParameters,
     serializeUpdateContractParameters,
+    serializeAccountTransactionForSubmission,
+    serializeCredentialDeploymentTransactionForSubmission,
 } from './serialization';
 import { sha256 } from './hash';
 export * from './types';
@@ -17,6 +19,8 @@ export {
     getCredentialForExistingAccountSignDigest,
     serializeInitContractParameters,
     serializeUpdateContractParameters,
+    serializeAccountTransactionForSubmission,
+    serializeCredentialDeploymentTransactionForSubmission,
 };
 export { sha256 };
 export { CredentialRegistrationId } from './types/CredentialRegistrationId';
@@ -33,4 +37,7 @@ export {
 } from './credentialDeploymentTransactions';
 export { isAlias, getAlias } from './alias';
 export { deserializeContractState } from './deserialization';
+
+export * from './accountHelpers';
 export * from './blockSummaryHelpers';
+export * from './rewardStatusHelpers';

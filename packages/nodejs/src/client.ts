@@ -65,12 +65,14 @@ import {
 } from '@concordium/common/lib/src/types';
 import {
     buildJsonResponseReviver,
+    isValidHash,
+} from '@concordium/common/lib/src/util';
+import {
     intListToStringList,
     intToStringTransformer,
-    isValidHash,
     unwrapBoolResponse,
     unwrapJsonResponse,
-} from '@concordium/common/lib/src/util';
+} from './util';
 import { GtuAmount } from '@concordium/common/lib/src/types/gtuAmount';
 import { ModuleReference } from '@concordium/common/lib/src/types/moduleReference';
 import { Buffer as BufferFormater } from 'buffer/';

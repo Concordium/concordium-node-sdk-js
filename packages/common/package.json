@@ -13,7 +13,6 @@
     ],
     "devDependencies": {
         "@types/bs58check": "^2.1.0",
-        "@types/google-protobuf": "^3.15.3",
         "@types/jest": "^26.0.23",
         "@typescript-eslint/eslint-plugin": "^4.28.1",
         "@typescript-eslint/parser": "^4.28.1",
@@ -22,8 +21,6 @@
         "eslint-config-prettier": "^8.3.0",
         "eslint-plugin-import": "^2.23.4",
         "eslint-plugin-prettier": "^3.4.0",
-        "grpc-tools": "^1.11.2",
-        "grpc_tools_node_protoc_ts": "5.3.0",
         "husky": "^4.2.5",
         "jest": "^27.0.6",
         "lint-staged": "^12.0.2",
@@ -38,14 +35,10 @@
         "tabWidth": 4
     },
     "scripts": {
-        "generate-js": "yarn run grpc_tools_node_protoc --js_out=import_style=commonjs,binary:grpc --grpc_out=grpc_js:grpc --plugin=protoc-gen-grpc=./node_modules/.bin/grpc_tools_node_protoc_plugin -I ../../deps/concordium-grpc-api ../../deps/concordium-grpc-api/*.proto",
-        "generate-ts": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:grpc -I ../../deps/concordium-grpc-api ../../deps/concordium-grpc-api/*.proto",
-        "generate": "mkdir -p grpc && yarn generate-js && yarn generate-ts",
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
-        "prebuild": "if [ ! -e \"grpc\" ]; then yarn generate; fi",
-        "build": "wasm-pack build && tsc && cp -r ./grpc/ ./lib/ && cp -r ./pkg/ ./lib/"
+        "build": "wasm-pack build && tsc && cp -r ./pkg/ ./lib/"
     },
     "dependencies": {
         "bs58check": "^2.1.2",

@@ -1,9 +1,9 @@
 {
     "name": "@concordium/web-sdk",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "license": "Apache-2.0",
     "private": false,
-    "main": "lib/index.js",
+    "main": "lib/concordium.min.js",
     "types": "lib/index.d.ts",
     "files": [
         "/lib/**/*"
@@ -34,7 +34,7 @@
         "stream-browserify": "^3.0.0"
     },
     "dependencies": {
-        "@concordium/common": "0.0.1"
+        "@concordium/common": "1.0.0"
     },
     "scripts": {
         "build": "tsc",

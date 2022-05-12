@@ -4,12 +4,12 @@ import {
     AccountTransactionSignature,
     AccountTransactionType,
     DeployModulePayload,
-} from '@concordium/common/lib/src/types';
+} from '@concordium/common-sdk/lib/src/types';
 import * as ed from 'noble-ed25519';
-import { getAccountTransactionSignDigest } from '@concordium/common/lib/src/serialization';
+import { getAccountTransactionSignDigest } from '@concordium/common-sdk/lib/src/serialization';
 import { getNodeClient } from '../testHelpers';
-import { AccountAddress } from '@concordium/common/lib/src/types/accountAddress';
-import { TransactionExpiry } from '@concordium/common/lib/src/types/transactionExpiry';
+import { AccountAddress } from '@concordium/common-sdk/lib/src/types/accountAddress';
+import { TransactionExpiry } from '@concordium/common-sdk/lib/src/types/transactionExpiry';
 import * as fs from 'fs';
 import { Buffer } from 'buffer/';
 const client = getNodeClient();

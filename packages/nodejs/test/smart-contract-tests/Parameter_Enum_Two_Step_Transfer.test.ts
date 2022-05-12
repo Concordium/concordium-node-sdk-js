@@ -5,18 +5,18 @@ import {
     AccountTransactionType,
     ContractAddress,
     UpdateContractPayload,
-} from '@concordium/common/lib/src/types';
+} from '@concordium/common-sdk/lib/src/types';
 import * as ed from 'noble-ed25519';
 import {
     getAccountTransactionSignDigest,
     serializeUpdateContractParameters,
-} from '@concordium/common/lib/src/serialization';
+} from '@concordium/common-sdk/lib/src/serialization';
 import { getNodeClient } from '../testHelpers';
-import { AccountAddress } from '@concordium/common/lib/src/types/accountAddress';
-import { GtuAmount } from '@concordium/common/lib/src/types/gtuAmount';
-import { TransactionExpiry } from '@concordium/common/lib/src/types/transactionExpiry';
+import { AccountAddress } from '@concordium/common-sdk/lib/src/types/accountAddress';
+import { GtuAmount } from '@concordium/common-sdk/lib/src/types/gtuAmount';
+import { TransactionExpiry } from '@concordium/common-sdk/lib/src/types/transactionExpiry';
 import { Buffer } from 'buffer/';
-import { getModuleBuffer } from '@concordium/common/lib/src/deserializeSchema';
+import { getModuleBuffer } from '../testHelpers';
 const client = getNodeClient();
 const senderAccountAddress =
     '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';

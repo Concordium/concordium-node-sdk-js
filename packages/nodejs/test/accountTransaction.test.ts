@@ -14,21 +14,21 @@ import {
     VerifyKey,
     ConfigureDelegationPayload,
     DelegationTargetType,
-} from '@concordium/common/lib/src/types';
+} from '@concordium/common-sdk/lib/src/types';
 import * as ed from 'noble-ed25519';
 import {
     getAccountTransactionSignDigest,
     getCredentialForExistingAccountSignDigest,
-} from '@concordium/common/lib/src/serialization';
+} from '@concordium/common-sdk/lib/src/serialization';
 import { getIdentityInput, getNodeClient } from './testHelpers';
-import { AccountAddress } from '@concordium/common/lib/src/types/accountAddress';
-import { GtuAmount } from '@concordium/common/lib/src/types/gtuAmount';
-import { TransactionExpiry } from '@concordium/common/lib/src/types/transactionExpiry';
-import { DataBlob } from '@concordium/common/lib/src/types/DataBlob';
+import { AccountAddress } from '@concordium/common-sdk/lib/src/types/accountAddress';
+import { GtuAmount } from '@concordium/common-sdk/lib/src/types/gtuAmount';
+import { TransactionExpiry } from '@concordium/common-sdk/lib/src/types/transactionExpiry';
+import { DataBlob } from '@concordium/common-sdk/lib/src/types/DataBlob';
 import {
     buildSignedCredentialForExistingAccount,
     createUnsignedCredentialForExistingAccount,
-} from '@concordium/common/lib/src/credentialDeploymentTransactions';
+} from '@concordium/common-sdk/lib/src/credentialDeploymentTransactions';
 
 const client = getNodeClient();
 

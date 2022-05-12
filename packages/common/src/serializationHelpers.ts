@@ -7,7 +7,7 @@ import {
     ParameterType,
 } from './types';
 import { AccountAddress } from './types/accountAddress';
-import { GtuAmount } from '../src/types/gtuAmount';
+import { GtuAmount } from './types/gtuAmount';
 import {
     ArrayType,
     FieldsTag,

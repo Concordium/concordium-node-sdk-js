@@ -34,7 +34,7 @@
         "stream-browserify": "^3.0.0"
     },
     "dependencies": {
-        "@concordium/common": "1.0.0"
+        "@concordium/common-sdk": "1.0.0"
     },
     "scripts": {
         "build": "tsc",

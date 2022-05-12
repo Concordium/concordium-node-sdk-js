@@ -1,7 +1,6 @@
 import { ChannelCredentials, Metadata, ServiceError } from '@grpc/grpc-js';
+import { Buffer as BufferFormater } from 'buffer/';
 import { P2PClient } from '../grpc/concordium_p2p_rpc_grpc_pb';
-import { AccountAddress as Address } from '@concordium/common/lib/src/types/accountAddress';
-import { CredentialRegistrationId } from '@concordium/common/lib/src/types/CredentialRegistrationId';
 import {
     AccountAddress,
     BlockHash,
@@ -18,8 +17,8 @@ import {
 import {
     serializeAccountTransactionForSubmission,
     serializeCredentialDeploymentTransactionForSubmission,
-} from '@concordium/common/lib/src/serialization';
-import {
+    AccountAddress as Address,
+    CredentialRegistrationId,
     AccountBakerDetails,
     AccountEncryptedAmount,
     AccountInfo,
@@ -62,21 +61,20 @@ import {
     ReduceStakePendingChangeV0,
     PassiveDelegationStatus,
     PassiveDelegationStatusDetails,
-} from '@concordium/common/lib/src/types';
+    GtuAmount,
+    ModuleReference,
+    ReduceStakePendingChangeV1,
+} from '@concordium/common-sdk';
 import {
     buildJsonResponseReviver,
     isValidHash,
-} from '@concordium/common/lib/src/util';
+} from '@concordium/common-sdk/lib/src/util';
 import {
     intListToStringList,
     intToStringTransformer,
     unwrapBoolResponse,
     unwrapJsonResponse,
 } from './util';
-import { GtuAmount } from '@concordium/common/lib/src/types/gtuAmount';
-import { ModuleReference } from '@concordium/common/lib/src/types/moduleReference';
-import { Buffer as BufferFormater } from 'buffer/';
-import { ReduceStakePendingChangeV1 } from '.';
 
 /**
  * A concordium-node specific gRPC client wrapper.

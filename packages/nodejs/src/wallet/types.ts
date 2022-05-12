@@ -1,4 +1,4 @@
-import { IdentityProvider, Versioned } from '@concordium/common';
+import { IdentityProvider, Versioned } from '@concordium/common-sdk';
 
 interface CredentialHolderInformation {
     idCredSecret: string;

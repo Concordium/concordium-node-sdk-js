@@ -1,5 +1,5 @@
 import { ChannelCredentials, Metadata, ServiceError } from '@grpc/grpc-js';
-import { P2PClient } from '@concordium/common/lib/grpc/concordium_p2p_rpc_grpc_pb';
+import { P2PClient } from '../grpc/concordium_p2p_rpc_grpc_pb';
 import { AccountAddress as Address } from '@concordium/common/lib/src/types/accountAddress';
 import { CredentialRegistrationId } from '@concordium/common/lib/src/types/CredentialRegistrationId';
 import {
@@ -14,7 +14,7 @@ import {
     PeersRequest,
     SendTransactionRequest,
     TransactionHash,
-} from '@concordium/common/lib/grpc/concordium_p2p_rpc_pb';
+} from '../grpc/concordium_p2p_rpc_pb';
 import {
     serializeAccountTransactionForSubmission,
     serializeCredentialDeploymentTransactionForSubmission,

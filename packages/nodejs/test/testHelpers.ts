@@ -3,10 +3,7 @@ import { Buffer } from 'buffer/';
 import { credentials, Metadata } from '@grpc/grpc-js/';
 import ConcordiumNodeClient from '../src/client';
 import { IdentityInput } from '@concordium/common-sdk/lib/src/types';
-import {
-    decryptMobileWalletExport,
-    EncryptedData,
-} from '../src/wallet/crypto';
+import { decryptMobileWalletExport, EncryptedData } from '../src/wallet/crypto';
 import { MobileWalletExport } from '../src/wallet/types';
 
 /**

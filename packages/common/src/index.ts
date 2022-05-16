@@ -41,3 +41,5 @@ export { deserializeContractState } from './deserialization';
 export * from './accountHelpers';
 export * from './blockSummaryHelpers';
 export * from './rewardStatusHelpers';
+
+export { isHex } from './util';

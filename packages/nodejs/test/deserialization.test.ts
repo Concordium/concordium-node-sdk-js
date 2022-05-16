@@ -1,5 +1,5 @@
 import { getNodeClient } from './testHelpers';
-import { deserializeContractState } from '@concordium/common-sdk/lib/src/deserialization';
+import { deserializeContractState, isInstanceInfoV0 } from '@concordium/common-sdk';
 import { Buffer } from 'buffer/';
 import * as fs from 'fs';
 
@@ -19,6 +19,13 @@ test('Deserialize state with schema from file (two-step-transfer)', async () => 
             'The instance info should exist for the provided block hash.'
         );
     }
+
+    if (!isInstanceInfoV0(instanceInfo)) {
+        throw new Error(
+            'The contract should be version 0, but was not.'
+        );
+    }
+
     const schema = Buffer.from(
         fs.readFileSync('./test/resources/two-step-transfer-schema.bin')
     );

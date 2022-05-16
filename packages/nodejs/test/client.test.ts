@@ -10,21 +10,21 @@ import {
     DelegationTargetBaker,
     ReduceStakePendingChangeV0,
     RemovalPendingChangeV0,
-} from '@concordium/common-sdk-sdk-sdk/lib/src/types';
-import { AccountAddress } from '@concordium/common-sdk-sdk-sdk/lib/src/types/accountAddress';
+} from '@concordium/common-sdk';
+import { AccountAddress } from '@concordium/common-sdk';
 import { isValidDate, getNodeClient } from './testHelpers';
 import { bulletProofGenerators } from './resources/bulletproofgenerators';
 import { ipVerifyKey1, ipVerifyKey2 } from './resources/ipVerifyKeys';
-import { PeerElement } from '@concordium/common-sdk-sdk-sdk/lib/grpc/concordium_p2p_rpc_pb';
-import { CredentialRegistrationId } from '@concordium/common-sdk-sdk-sdk/lib/src/types/CredentialRegistrationId';
-import { isBlockSummaryV1 } from '@concordium/common-sdk-sdk-sdk/lib/src/blockSummaryHelpers';
+import { PeerElement } from '../grpc/concordium_p2p_rpc_pb';
+import { CredentialRegistrationId } from '@concordium/common-sdk';
+import { isBlockSummaryV1 } from '@concordium/common-sdk';
 import {
     isBakerAccount,
     isBakerAccountV1,
     isDelegatorAccount,
     isReduceStakePendingChange,
-} from '@concordium/common-sdk-sdk-sdk/lib/src/accountHelpers';
-import { isRewardStatusV1 } from '@concordium/common-sdk-sdk-sdk/lib/src/rewardStatusHelpers';
+} from '@concordium/common-sdk';
+import { isRewardStatusV1 } from '@concordium/common-sdk';
 
 const client = getNodeClient();
 

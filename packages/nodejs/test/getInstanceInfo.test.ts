@@ -2,6 +2,7 @@ import {
     AccountAddress,
     ContractAddress,
     GtuAmount,
+    isInstanceInfoV0,
     ModuleReference,
 } from '@concordium/common-sdk';
 import { getNodeClient } from './testHelpers';
@@ -24,6 +25,13 @@ test('retrieve information about a given smart contract instance', async () => {
             'The instance info should exist for the provided block hash.'
         );
     }
+
+    if (!isInstanceInfoV0(instanceInfo)) {
+        throw new Error(
+            'The contract should be version 0, but was not.'
+        );
+    }
+
     return Promise.all([
         expect(instanceInfo).not.toBe(null),
         expect(instanceInfo.amount).toStrictEqual(new GtuAmount(0n)),

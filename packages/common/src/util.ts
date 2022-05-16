@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ReleaseSchedule } from '.';
-import { AccountTransactionSignature } from './types';
+import { serializeAccountTransaction } from './serialization';
+import { AccountTransactionSignature, ReleaseSchedule } from './types';
 
 /**
  * Builds a JSON.parse() reviver function used to parse dates and big integers.

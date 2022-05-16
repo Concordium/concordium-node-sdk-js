@@ -1,12 +1,10 @@
 import * as fs from 'fs';
+import { Buffer } from 'buffer/';
 import { credentials, Metadata } from '@grpc/grpc-js/';
 import ConcordiumNodeClient from '../src/client';
-import { IdentityInput } from '@concordium/common/lib/src/types';
-import {
-    decryptMobileWalletExport,
-    EncryptedData,
-} from '@concordium/common/lib/src/wallet/crypto';
-import { MobileWalletExport } from '@concordium/common/lib/src/wallet/types';
+import { IdentityInput } from '@concordium/common-sdk/lib/src/types';
+import { decryptMobileWalletExport, EncryptedData } from '../src/wallet/crypto';
+import { MobileWalletExport } from '../src/wallet/types';
 
 /**
  * Creates a client to communicate with a local concordium-node
@@ -49,4 +47,8 @@ export function getIdentityInput(): IdentityInput {
         randomness: identity.privateIdObjectData.randomness,
     };
     return identityInput;
+}
+
+export function getModuleBuffer(filePath: string): Buffer {
+    return Buffer.from(fs.readFileSync(filePath));
 }

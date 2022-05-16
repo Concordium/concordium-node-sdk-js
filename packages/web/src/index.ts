@@ -1,1 +1,1 @@
-export * from '@concordium/common';
+export * from '@concordium/common-sdk';

@@ -3,7 +3,7 @@ import {
     ContractAddress,
     GtuAmount,
     ModuleReference,
-} from '@concordium/common';
+} from '@concordium/common-sdk';
 import { getNodeClient } from './testHelpers';
 const client = getNodeClient();
 

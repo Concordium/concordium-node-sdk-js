@@ -31,7 +31,7 @@ jobs:
               run: yarn
 
             - name: Build gRPC
-              working-directory: packages/common
+              working-directory: packages/nodejs
               run: yarn generate
 
             - name: Install rust

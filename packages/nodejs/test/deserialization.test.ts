@@ -1,5 +1,5 @@
 import { getNodeClient } from './testHelpers';
-import { deserializeContractState } from '@concordium/common/lib/src/deserialization';
+import { deserializeContractState } from '@concordium/common-sdk/lib/src/deserialization';
 import { Buffer } from 'buffer/';
 import * as fs from 'fs';
 

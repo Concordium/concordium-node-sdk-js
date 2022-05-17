@@ -37,7 +37,7 @@
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "yarn pack-nodejs && jest",
-        "build": "wasm-pack build && tsc && cp -r ./pkg/ ./lib/",
+        "build": "wasm-pack build && tsc -b && cp -r ./pkg/ ./lib/",
         "pack-nodejs": "wasm-pack build --target nodejs  && cp -r ./pkg/ ./lib/"
     },
     "dependencies": {

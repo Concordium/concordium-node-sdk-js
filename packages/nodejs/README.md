@@ -494,7 +494,7 @@ To build the package run
 yarn build
 ```
 
-Note that this also builds the [common package](../common).
+Note that the [common package](../common) must already be built.
 
 ## Publishing a release
 Before publishing a new release it is essential that it has been built first. So make sure that 

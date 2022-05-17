@@ -54,7 +54,7 @@
         "pretest": "cd ../common && yarn pack-nodejs",
         "test": "jest",
         "prebuild": "if [ ! -e \"grpc\" ]; then yarn generate; fi",
-        "build": "tsc && cp -r ./grpc/ ./lib/ "
+        "build": "tsc -b && cp -r ./grpc/ ./lib/ "
     },
     "dependencies": {
         "@grpc/grpc-js": "^1.3.4",

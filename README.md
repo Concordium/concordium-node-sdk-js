@@ -19,8 +19,7 @@ Contains the nodejs SDK, particularly the client that wraps the grpc calls to th
 
 ## [Web](./packages/web)
 
-Coming soon.
-
+Contains the web SDK, which can used in a web environment.
 
 # Build
 
@@ -29,6 +28,7 @@ To build the project run
 ```
 yarn build
 ```
+This will build all the subprojects.
 Note that you must have [wasm-pack](https://rustwasm.github.io/wasm-pack/) installed to build the project.
 
 ## Publishing a release

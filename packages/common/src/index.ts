@@ -43,5 +43,7 @@ export * from './accountHelpers';
 export * from './blockSummaryHelpers';
 export * from './rewardStatusHelpers';
 
+export { isHex } from './util';
+
 export { HttpProvider } from './providers/httpProvider';
 export { JsonRpcClient } from './JsonRpcClient';

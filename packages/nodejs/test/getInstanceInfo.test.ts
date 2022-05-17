@@ -27,9 +27,7 @@ test('retrieve information about a given smart contract instance', async () => {
     }
 
     if (!isInstanceInfoV0(instanceInfo)) {
-        throw new Error(
-            'The contract should be version 0, but was not.'
-        );
+        throw new Error('The contract should be version 0, but was not.');
     }
 
     return Promise.all([

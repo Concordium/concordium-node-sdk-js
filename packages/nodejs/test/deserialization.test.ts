@@ -1,5 +1,8 @@
 import { getNodeClient } from './testHelpers';
-import { deserializeContractState, isInstanceInfoV0 } from '@concordium/common-sdk';
+import {
+    deserializeContractState,
+    isInstanceInfoV0,
+} from '@concordium/common-sdk';
 import { Buffer } from 'buffer/';
 import * as fs from 'fs';
 
@@ -21,9 +24,7 @@ test('Deserialize state with schema from file (two-step-transfer)', async () => 
     }
 
     if (!isInstanceInfoV0(instanceInfo)) {
-        throw new Error(
-            'The contract should be version 0, but was not.'
-        );
+        throw new Error('The contract should be version 0, but was not.');
     }
 
     const schema = Buffer.from(

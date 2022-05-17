@@ -30,7 +30,7 @@ export class HttpProvider implements Provider {
                 },
             };
 
-            const res = await fetch(ip + ':' + port + '/json-rpc', options);
+            const res = await fetch(ip + ':' + port, options);
             if (res.status >= 400) {
                 throw new Error('Bad response from server');
             }

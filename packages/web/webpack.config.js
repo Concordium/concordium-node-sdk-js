@@ -31,7 +31,7 @@ module.exports = {
                                     useBuiltIns: "entry",
                                     corejs: 3,
                                     targets: {
-                                        ie: 10,
+                                        chrome: 67,
                                     },
                                 },
                             ],

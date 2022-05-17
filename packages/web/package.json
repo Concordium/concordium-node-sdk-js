@@ -17,6 +17,21 @@
         "email": "support@concordium.software",
         "url": "https://concordium.com"
     },
+    "browserslist": {
+    "production": [
+      "chrome >= 67",
+      "edge >= 79",
+      "firefox >= 68",
+      "opera >= 54",
+        "safari >= 14",
+        "ie >= 100"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
     "devDependencies": {
         "@typescript-eslint/eslint-plugin": "^4.28.1",
         "@typescript-eslint/parser": "^4.28.1",

@@ -1,5 +1,5 @@
 [package]
-name = "node_sdk_helpers"
+name = "concordium-rust-bindings"
 version = "0.1.0"
 authors = ["Concordium AG <developers@concordium.com>"]
 edition = "2018"
@@ -50,6 +50,6 @@ path = "../../deps/concordium-contracts-common"
 version = "2.0.0"
 
 [lib]
-name = "node_sdk_helpers"
+name = "concordium_rust_bindings"
 crate-type = ["cdylib"]
-path = "rust-src/lib.rs"
+path = "src/lib.rs"

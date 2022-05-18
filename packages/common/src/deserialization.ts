@@ -1,4 +1,4 @@
-import * as wasm from '../pkg/node_sdk_helpers';
+import * as wasm from '@concordium/rust-bindings';
 import { Buffer } from 'buffer/';
 
 /**

@@ -36,11 +36,11 @@
     "scripts": {
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
-        "test": "yarn pack-nodejs && jest",
-        "build": "wasm-pack build && tsc -b && cp -r ./pkg/ ./lib/",
-        "pack-nodejs": "wasm-pack build --target nodejs  && cp -r ./pkg/ ./lib/"
+        "test": "jest",
+        "build": "tsc -b"
     },
     "dependencies": {
+        "@concordium/rust-bindings": "0.1.0",
         "bs58check": "^2.1.2",
         "buffer": "^6.0.3",
         "hash.js": "^1.1.7"

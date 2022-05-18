@@ -1,6 +1,7 @@
 {
     "private": true,
     "workspaces": [
+        "./packages/rust-bindings",
         "./packages/common",
         "./packages/nodejs",
         "./packages/web"
@@ -53,7 +54,7 @@
     "scripts": {
         "test": "yarn workspaces run test --passWithNoTests",
         "lint": "yarn workspaces run lint",
-        "lint-fix": "yarn workspaces run lint-fix",
+        "lint-fix": "yarn eslint --fix",
         "build": "yarn workspaces run build"
     }
 }

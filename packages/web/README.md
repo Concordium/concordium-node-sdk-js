@@ -10,7 +10,7 @@ To build the package run
 yarn build
 ```
 
-This transpiles the project to javascript. Then it uses webpack to create a single, pure-js file, which is put in dist.
+This transpiles the project to Javascript, wherefter webpack is used to create a single pure Javascript file which is put in the `lib` directory.
 
 Note that the dependent packages must already have been built. To easily do this, build from the package root instead.
 
@@ -20,7 +20,7 @@ you have just built the up-to-date code you want to publish. To publish the rele
 ```
 yarn publish
 ```
-and step through the steps precented to you.
+and step through the steps presented to you.
 
 
 ## Examples

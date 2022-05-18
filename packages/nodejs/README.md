@@ -502,7 +502,7 @@ you have just built the up-to-date code you want to publish. To publish the rele
 ```
 yarn publish
 ```
-and step through the steps precented to you.
+and step through the steps presented to you.
 
 # Test
 An automatic test suite is part of this project, and it is run by executing:

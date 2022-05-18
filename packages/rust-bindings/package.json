@@ -12,9 +12,6 @@
     "files": [
         "/pkg/**/*"
     ],
-    "devDependencies": {
-        "cross-env": "5.0.5"
-    },
     "scripts": {
         "lint": "cargo clippy",
         "lint-fix": "cargo +nightly-2021-06-09-x86_64-unknown-linux-gnu fmt",

@@ -2,7 +2,7 @@
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](https://github.com/Concordium/.github/blob/main/.github/CODE_OF_CONDUCT.md)
 
-Bindings for rust function, that is to be used in the sdk's.
+Bindings for the Rust functions that are used by the SDK.
 
 ## Building for a release
 To build the package run
@@ -10,7 +10,7 @@ To build the package run
 yarn build
 ```
 
-This compiles the rust into wasm with javascript wrappers.
+This compiles the Rust code into wasm with Javascript wrappers.
 
 ## Publishing a release
 Before publishing a new release it is essential that it has been built first. So make sure that 

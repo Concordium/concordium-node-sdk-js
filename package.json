@@ -1,11 +1,13 @@
 {
     "private": true,
-    "workspaces": [
-        "./packages/rust-bindings",
-        "./packages/common",
-        "./packages/nodejs",
-        "./packages/web"
-    ],
+    "workspaces": {
+        "packages": [
+            "./packages/rust-bindings",
+            "./packages/common",
+            "./packages/nodejs",
+            "./packages/web"
+        ]
+    },
     "husky": {
         "hooks": {
             "pre-commit": "lint-staged"
@@ -14,6 +16,7 @@
     "lint-staged": {
         "*.ts": "yarn lint-fix"
     },
+    "packageManager": "yarn@berry",
     "repository": {
         "type": "git",
         "url": "https://github.com/Concordium/concordium-node-sdk-js"
@@ -51,9 +54,9 @@
         "webpack-cli": "^4.9.2"
     },
     "scripts": {
-        "test": "yarn workspaces run test --passWithNoTests",
-        "lint": "yarn workspaces run lint",
+        "test": "FORCE_COLOR=true yarn workspaces foreach --no-private run test --passWithNoTests",
+        "lint": "FORCE_COLOR=true yarn workspaces foreach --no-private run lint",
         "lint-fix": "yarn eslint --fix",
-        "build": "yarn workspaces run build"
+        "build": "FORCE_COLOR=true yarn workspaces foreach --no-private run build"
     }
 }

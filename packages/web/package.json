@@ -50,8 +50,7 @@
         "@concordium/common-sdk": "1.0.0"
     },
     "scripts": {
-        "build": "tsc -b",
-        "postbuild": "webpack",
+        "build": "tsc -b && webpack",
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest"

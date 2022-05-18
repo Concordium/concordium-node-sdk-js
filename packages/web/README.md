@@ -12,7 +12,7 @@ yarn build
 
 This transpiles the project to javascript. Then it uses webpack to create a single, pure-js file, which is put in dist.
 
-Note that the [common package](../common) must already be built.
+Note that the dependent packages must already have been built. To easily do this, build from the package root instead.
 
 ## Publishing a release
 Before publishing a new release it is essential that it has been built first. So make sure that 

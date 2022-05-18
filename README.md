@@ -21,6 +21,11 @@ Contains the nodejs SDK, particularly the client that wraps the grpc calls to th
 
 Contains the web SDK, which can used in a web environment.
 
+## [Rust-bindings](./packages/common)
+
+Contains bindings for rust code, which is used by the common package.
+(This should not be used directly, but instead through common)
+
 # Build
 
 ## Building for a release
@@ -32,7 +37,7 @@ This will build all the subprojects.
 Note that you must have [wasm-pack](https://rustwasm.github.io/wasm-pack/) installed to build the project.
 
 ## Publishing a release
-Currently publishing is done indiviudally for each package. 
+Currently publishing is done individually for each package. 
 
 # Test
 An automatic test suite is part of this project, and it is run by executing:

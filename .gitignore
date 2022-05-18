@@ -1,3 +1,13 @@
+// Yarn stuff
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+yarn-error.log
+
 # Dependency directory
 node_modules
 
@@ -21,8 +31,6 @@ testing.js
 
 # Package lock
 package-lock.json
-
-yarn-error.log
 
 #tsc build files
 *.tsbuildinfo

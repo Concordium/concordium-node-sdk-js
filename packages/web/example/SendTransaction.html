@@ -6,7 +6,7 @@
         <script src="../lib/concordium.min.js"></script>
         <script src="./noble-ed25519.js"></script>
         <script  type="module" >
-         const client = new concordium.JsonRpcClient(new concordium.HttpProvider("http://localhost", "11900"));
+         const client = new concordium.JsonRpcClient(new concordium.HttpProvider("http://localhost:9095"));
          const send = async function () {
              const payload = {
                  amount: new concordium.GtuAmount(BigInt(amount.value)),

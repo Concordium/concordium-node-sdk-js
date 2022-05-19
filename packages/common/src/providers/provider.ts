@@ -8,7 +8,9 @@ export interface JsonRpcResponse {
     jsonrpc: '2.0';
     id: number | null;
 }
-
 export default interface Provider {
-    request: (method: string, params: object) => Promise<JsonRpcResponse>;
+    request: (
+        method: string,
+        params: Record<string, unknown>
+    ) => Promise<JsonRpcResponse>;
 }

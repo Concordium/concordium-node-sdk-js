@@ -10,6 +10,9 @@ module.exports = {
         new webpack.SourceMapDevToolPlugin({
             filename: "[file].map",
         }),
+        new webpack.ProvidePlugin({
+            process: 'process/browser',
+        }),
     ],
     resolve: {
         fallback: {
@@ -55,7 +58,7 @@ module.exports = {
     output: {
         filename: "[name].min.js",
         path: path.resolve(__dirname, "lib"),
-        library: "concordium",
+        library: "concordiumSDK",
         libraryTarget: "umd",
         publicPath: '',
     },

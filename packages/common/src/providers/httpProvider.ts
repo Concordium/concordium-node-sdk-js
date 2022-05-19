@@ -1,20 +1,19 @@
-import { Buffer } from 'buffer/';
-import {
-    AccountTransaction,
-    AccountTransactionSignature,
-    NextAccountNonce,
-    TransactionStatus,
-} from '../types';
-import { AccountAddress } from '../types/accountAddress';
-import Provider from './provider';
+import Provider, { JsonRpcResponse } from './provider';
 import fetch from 'cross-fetch';
 
 export class HttpProvider implements Provider {
-    request: (method: string, params: object) => Promise<any>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    request: (
+        method: string,
+        params?: Record<string, unknown>
+    ) => Promise<JsonRpcResponse>;
     nextId = 0;
 
-    constructor(ip: string, port: number) {
-        this.request = async function (method: string, params: object) {
+    constructor(url: string) {
+        this.request = async function (
+            method: string,
+            params?: Record<string, unknown>
+        ) {
             const request = {
                 method: method,
                 params: params,
@@ -30,7 +29,7 @@ export class HttpProvider implements Provider {
                 },
             };
 
-            const res = await fetch(ip + ':' + port, options);
+            const res = await fetch(url, options);
             if (res.status >= 400) {
                 throw new Error('Bad response from server');
             }

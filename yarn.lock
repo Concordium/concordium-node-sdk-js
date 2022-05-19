@@ -1371,6 +1371,7 @@ __metadata:
     eslint-plugin-import: ^2.23.4
     eslint-plugin-prettier: ^3.4.0
     jest: ^27.0.6
+    process: ^0.11.10
     stream-browserify: ^3.0.0
     ts-jest: ^27.0.3
     typescript: ^4.3.5
@@ -6637,6 +6638,13 @@ __metadata:
     ansi-styles: ^5.0.0
     react-is: ^17.0.1
   checksum: cf610cffcb793885d16f184a62162f2dd0df31642d9a18edf4ca298e909a8fe80bdbf556d5c9573992c102ce8bf948691da91bf9739bee0ffb6e79c8a8a6e088
+  languageName: node
+  linkType: hard
+
+"process@npm:^0.11.10":
+  version: 0.11.10
+  resolution: "process@npm:0.11.10"
+  checksum: bfcce49814f7d172a6e6a14d5fa3ac92cc3d0c3b9feb1279774708a719e19acd673995226351a082a9ae99978254e320ccda4240ddc474ba31a76c79491ca7c3
   languageName: node
   linkType: hard
 

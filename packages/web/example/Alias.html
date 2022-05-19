@@ -8,8 +8,8 @@
          const update = function () {
              try {
                  const count = parseInt(alias.value);
-                 const accountAddess = new concordium.AccountAddress(address.value);
-                 showAlias.innerHTML = concordium.getAlias(accountAddess, count).address;
+                 const accountAddess = new concordiumSDK.AccountAddress(address.value);
+                 showAlias.innerHTML = concordiumSDK.getAlias(accountAddess, count).address;
              } catch (e) {
                  showError.innerHTML = e.toString();
              }

@@ -35,7 +35,7 @@
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
-        "build": "tsc -b"
+        "build": "tsc"
     },
     "dependencies": {
         "@concordium/rust-bindings": "0.1.0",

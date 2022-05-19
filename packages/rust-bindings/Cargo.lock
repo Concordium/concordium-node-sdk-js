@@ -155,6 +155,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "concordium-rust-bindings"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "concordium-contracts-common",
+ "crypto_common",
+ "curve_arithmetic",
+ "dodis_yampolskiy_prf",
+ "ed25519-dalek",
+ "hex",
+ "id",
+ "pairing",
+ "pedersen_scheme",
+ "ps_sig",
+ "serde",
+ "serde_json",
+ "sha2 0.9.8",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "convert_case"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -588,27 +609,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "59accc507f1338036a0477ef61afdae33cde60840f4dfe481319ce3ad116ddf9"
 dependencies = [
  "autocfg",
-]
-
-[[package]]
-name = "node_sdk_helpers"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "concordium-contracts-common",
- "crypto_common",
- "curve_arithmetic",
- "dodis_yampolskiy_prf",
- "ed25519-dalek",
- "hex",
- "id",
- "pairing",
- "pedersen_scheme",
- "ps_sig",
- "serde",
- "serde_json",
- "sha2 0.9.8",
- "wasm-bindgen",
 ]
 
 [[package]]

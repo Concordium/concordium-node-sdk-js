@@ -8,7 +8,7 @@ import {
     UnsignedCredentialDeploymentInformation,
     VerifyKey,
 } from './types';
-import * as wasm from '../pkg/node_sdk_helpers';
+import * as wasm from '@concordium/rust-bindings';
 import { TransactionExpiry } from './types/transactionExpiry';
 import { AccountAddress } from './types/accountAddress';
 import { sha256 } from './hash';

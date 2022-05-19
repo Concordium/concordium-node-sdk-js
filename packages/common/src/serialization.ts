@@ -29,7 +29,7 @@ import { calculateEnergyCost } from './energyCost';
 import { countSignatures } from './util';
 import { AccountAddress } from './types/accountAddress';
 import { sha256 } from './hash';
-import * as wasm from '../pkg/node_sdk_helpers';
+import * as wasm from '@concordium/rust-bindings';
 import { deserialModuleFromBuffer } from './deserializeSchema';
 
 function serializeAccountTransactionType(type: AccountTransactionType): Buffer {

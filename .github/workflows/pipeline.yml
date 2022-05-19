@@ -30,10 +30,6 @@ jobs:
             - name: Get dependencies
               run: yarn
 
-            - name: Build gRPC
-              working-directory: packages/nodejs
-              run: yarn generate
-
             - name: Install rust
               run: rustup default 1.53
 
@@ -69,7 +65,7 @@ jobs:
       runs-on: ubuntu-latest
       defaults:
         run:
-          working-directory: packages/common
+          working-directory: packages/rust-bindings
       steps:
         - name: Checkout
           uses: actions/checkout@v2
@@ -91,7 +87,7 @@ jobs:
       runs-on: ubuntu-latest
       defaults:
         run:
-          working-directory: packages/common
+          working-directory: packages/rust-bindings
       steps:
         - name: Checkout
           uses: actions/checkout@v2

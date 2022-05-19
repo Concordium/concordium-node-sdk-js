@@ -56,7 +56,7 @@
     "scripts": {
         "test": "FORCE_COLOR=true yarn workspaces foreach --no-private run test --passWithNoTests",
         "lint": "FORCE_COLOR=true yarn workspaces foreach --no-private run lint",
-        "lint-fix": "yarn eslint --fix",
+        "lint-fix": "eslint --cache . --fix",
         "build": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build"
     }
 }

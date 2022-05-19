@@ -1,14 +1,14 @@
-const path = require("path");
-const webpack = require("webpack");
+const path = require('path');
+const webpack = require('webpack');
 
 module.exports = {
-    mode: "production",
+    mode: 'production',
     entry: {
-        concordium: "./lib/index.js",
+        concordium: './lib/index.js',
     },
     plugins: [
         new webpack.SourceMapDevToolPlugin({
-            filename: "[file].map",
+            filename: '[file].map',
         }),
         new webpack.ProvidePlugin({
             process: 'process/browser',
@@ -18,20 +18,19 @@ module.exports = {
         fallback: {
             stream: require.resolve('stream-browserify'),
         },
-
     },
     module: {
         rules: [
             {
                 test: /\.m?js$/,
                 use: {
-                    loader: "babel-loader",
+                    loader: 'babel-loader',
                     options: {
                         presets: [
                             [
-                                "@babel/preset-env",
+                                '@babel/preset-env',
                                 {
-                                    useBuiltIns: "entry",
+                                    useBuiltIns: 'entry',
                                     corejs: 3,
                                     targets: {
                                         chrome: 67,
@@ -40,26 +39,26 @@ module.exports = {
                             ],
                         ],
                         plugins: [
-                            "@babel/plugin-transform-runtime",
-                            "@babel/plugin-transform-modules-commonjs",
+                            '@babel/plugin-transform-runtime',
+                            '@babel/plugin-transform-modules-commonjs',
                         ],
                     },
                 },
             },
             {
                 test: /\.wasm$/,
-                type: "asset/inline",
-            }
+                type: 'asset/inline',
+            },
         ],
     },
     experiments: {
         asyncWebAssembly: true,
     },
     output: {
-        filename: "[name].min.js",
-        path: path.resolve(__dirname, "lib"),
-        library: "concordiumSDK",
-        libraryTarget: "umd",
+        filename: '[name].min.js',
+        path: path.resolve(__dirname, 'lib'),
+        library: 'concordiumSDK',
+        libraryTarget: 'umd',
         publicPath: '',
     },
 };

@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { serializeAccountTransaction } from './serialization';
 import { AccountTransactionSignature, ReleaseSchedule } from './types';
 
 /**

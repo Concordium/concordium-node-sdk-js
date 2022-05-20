@@ -74,3 +74,13 @@ export function signTransaction(
     );
     return signer.sign(digest);
 }
+
+export function signMessage(
+    message: string,
+    signer: AccountSigner
+): Promise<AccountTransactionSignature> {
+    // TODO: check if it has prepended or we should do it here + what encoding?
+    const prepend = Buffer.from('MyGoodPrepend', 'utf8');
+    const digest = Buffer.from(message, 'utf8');
+    return signer.sign(Buffer.concat([prepend, digest]));
+}

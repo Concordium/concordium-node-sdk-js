@@ -6,18 +6,18 @@
         <script src="../lib/concordium.min.js"></script>
         <script src="./lib/noble-ed25519.js"></script>
         <script  type="module" >
-         const client = new concordium.JsonRpcClient(new concordium.HttpProvider("http://localhost:9095"));
+         const client = new concordiumSDK.JsonRpcClient(new concordiumSDK.HttpProvider("http://localhost:9095"));
          const send = async function () {
              const payload = {
-                 amount: new concordium.GtuAmount(BigInt(amount.value)),
-                 toAddress: new concordium.AccountAddress(receiver.value),
+                 amount: new concordiumSDK.GtuAmount(BigInt(amount.value)),
+                 toAddress: new concordiumSDK.AccountAddress(receiver.value),
              };
 
-             const senderAddress = new concordium.AccountAddress(sender.value);
+             const senderAddress = new concordiumSDK.AccountAddress(sender.value);
 
              const n = await client.getNextAccountNonce(senderAddress);
              const header = {
-                 expiry: new concordium.TransactionExpiry(new Date(Date.now() + 3600000)),
+                 expiry: new concordiumSDK.TransactionExpiry(new Date(Date.now() + 3600000)),
                  nonce: n.nonce,
                  sender: senderAddress,
              };
@@ -26,10 +26,10 @@
              const t = {
                  header,
                  payload,
-                 type: concordium.AccountTransactionType.SimpleTransfer,
+                 type: concordiumSDK.AccountTransactionType.SimpleTransfer,
              };
 
-             const digest = concordium.getAccountTransactionSignDigest(t);
+             const digest = concordiumSDK.getAccountTransactionSignDigest(t);
 
              const s = {
                  0: {
@@ -39,7 +39,7 @@
 
              const result = await client.sendAccountTransaction(t, s);
              document.getElementById('status').innerHTML = result.toString();
-             document.getElementById('hash').innerHTML = concordium.getAccountTransactionHash(t,s);
+             document.getElementById('hash').innerHTML = concordiumSDK.getAccountTransactionHash(t,s);
          };
 
          const update = function() {

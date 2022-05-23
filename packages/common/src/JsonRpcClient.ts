@@ -7,6 +7,7 @@ import {
     InstanceInfo,
     NextAccountNonce,
     TransactionStatus,
+    TransactionSummary,
 } from './types';
 import { AccountAddress } from './types/accountAddress';
 import Provider, { JsonRpcResponse } from './providers/provider';
@@ -55,22 +56,42 @@ export class JsonRpcClient {
     async getNextAccountNonce(
         accountAddress: AccountAddress
     ): Promise<NextAccountNonce | undefined> {
-        const res = await this.provider.request('getNextAccountNonce', {
+        const response = await this.provider.request('getNextAccountNonce', {
             address: accountAddress.address,
         });
-        return handleResponse(res, (result) => ({
-            nonce: BigInt(result.nonce),
-            allFinal: result.allFinal,
-        }));
+
+        const bigIntPropertyKeys: (keyof NextAccountNonce)[] = ['nonce'];
+
+        return handleResponse(response, (r) =>
+            transformJsonResponse(
+                JSON.stringify(r),
+                buildJsonResponseReviver([], bigIntPropertyKeys),
+                intToStringTransformer(bigIntPropertyKeys)
+            )
+        );
     }
 
     async getTransactionStatus(
         transactionHash: string
     ): Promise<TransactionStatus | undefined> {
-        const res = await this.provider.request('getTransactionStatus', {
+        const response = await this.provider.request('getTransactionStatus', {
             transactionHash: transactionHash,
         });
-        return handleResponse(res);
+
+        // TODO avoid code duplication with nodejs client
+        const bigIntPropertyKeys: (keyof TransactionSummary)[] = [
+            'cost',
+            'energyCost',
+            'index',
+        ];
+
+        return handleResponse(response, (r) =>
+            transformJsonResponse(
+                JSON.stringify(r),
+                buildJsonResponseReviver([], bigIntPropertyKeys),
+                intToStringTransformer(bigIntPropertyKeys)
+            )
+        );
     }
 
     async sendAccountTransaction(

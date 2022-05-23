@@ -8,7 +8,10 @@
          const client = new concordiumSDK.JsonRpcClient(new concordiumSDK.HttpProvider("http://localhost:9095"));
          const update = function () {
              client.getTransactionStatus(hash.value).then((res) => {
-                 document.getElementById('status').innerHTML = JSON.stringify(res);
+                 console.log(res);
+                 const statusC = document.getElementById('status');
+                 document.getElementById('blockHash').innerHTML = Object.keys(res.outcomes);
+                 statusC.innerHTML = res.status;
              });
          };
          document.getElementById('button').onclick = update;
@@ -19,6 +22,9 @@
         <button id="button">
             Click
         </button>
-        Status: <label id="status"/>
+        <div>
+            Status: <label id="status"/>
+        </div>
+        BlockHash: <label id="blockHash"/>
     </body>
 </html>

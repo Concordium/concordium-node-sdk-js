@@ -30,9 +30,6 @@ jobs:
             - name: Get dependencies
               run: yarn
 
-            - name: Build gRPC
-              run: yarn generate
-
             - name: Install rust
               run: rustup default 1.53
 
@@ -66,6 +63,9 @@ jobs:
       # Don't run on draft pull requests
       if: ${{ !github.event.pull_request.draft }}
       runs-on: ubuntu-latest
+      defaults:
+        run:
+          working-directory: packages/rust-bindings
       steps:
         - name: Checkout
           uses: actions/checkout@v2
@@ -85,6 +85,9 @@ jobs:
       # Don't run on draft pull requests
       if: ${{ !github.event.pull_request.draft }}
       runs-on: ubuntu-latest
+      defaults:
+        run:
+          working-directory: packages/rust-bindings
       steps:
         - name: Checkout
           uses: actions/checkout@v2

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+        <script src="../lib/concordium.min.js"></script>
+        <script type="module" >
+         const update = function () {
+             try {
+                 const count = parseInt(alias.value);
+                 const accountAddess = new concordiumSDK.AccountAddress(address.value);
+                 showAlias.innerHTML = concordiumSDK.getAlias(accountAddess, count).address;
+             } catch (e) {
+                 showError.innerHTML = e.toString();
+             }
+         };
+         document.getElementById('address').addEventListener('input', update);
+         document.getElementById('alias').addEventListener('input', update);
+        </script>
+    </head>
+    <body>
+        <input type="text" id="address"/>
+        <br>
+        <input type="number" id="alias"/>
+        <br>
+        <label id="showAlias"/>
+        <br>
+        <label id="showError"/>
+    </body>
+</html>

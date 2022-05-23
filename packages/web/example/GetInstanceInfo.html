@@ -7,7 +7,7 @@
         <script  type="module" >
          const client = new concordiumSDK.JsonRpcClient(new concordiumSDK.HttpProvider("http://localhost:9095"));
          const update = function () {
-             client.getInstanceInfo(hash.value, {index: index.value, subindex: subindex.value}).then((res) => {
+             client.getInstanceInfo({index: index.value, subindex: subindex.value}).then((res) => {
                  console.log(res);
                  const result = {
                      ...res,
@@ -20,7 +20,6 @@
         </script>
     </head>
     <body>
-        Blockhash: <input type="text" id="hash"/>
         Index: <input type="text" id="index"/>
         Subindex: <input type="text" id="subindex" value="0"/>
         <button id="button">

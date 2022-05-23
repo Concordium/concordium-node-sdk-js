@@ -2,6 +2,39 @@
 import { AccountTransactionSignature, ReleaseSchedule } from './types';
 
 /**
+ * Replaces a number in a JSON string with the same number as a
+ * string, i.e. with quotes (") prior to and after the number. This
+ * is needed as the default JSON parser cannot intepret BigInts
+ * correctly when they arrive as JSON numbers.
+ * @param jsonStruct the JSON structure as a string
+ * @param keys the keys where the number has to be quoted
+ * @returns the same JSON string where the numbers at the supplied keys are quoted
+ */
+function intToString(jsonStruct: string, keys: string[]): string {
+    const result = jsonStruct;
+    for (const key of keys) {
+        result.replace(
+            new RegExp(`"${key}":\\s*([0-9]+)`, 'g'),
+            `"${key}":"$1"`
+        );
+    }
+    return result;
+}
+
+/**
+ * A transformer that converts all the values provided as keys to
+ * string values.
+ * @param json the json to transform
+ * @param bigIntPropertyKeys the keys in the json that must be converted to strings
+ * @returns the transformed json where numbers have been replaced with strings
+ */
+export function intToStringTransformer(
+    bigIntPropertyKeys: string[]
+): (json: string) => string {
+    return (json: string) => intToString(json, bigIntPropertyKeys);
+}
+
+/**
  * Builds a JSON.parse() reviver function used to parse dates and big integers.
  * @param datePropertyKeys the JSON keys that must be parsed as dates
  * @param bigIntPropertyKeys the JSON keys that must be parsed as big integers

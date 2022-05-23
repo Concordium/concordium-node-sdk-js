@@ -2,6 +2,7 @@ import { Buffer } from 'buffer/';
 import {
     AccountTransaction,
     AccountTransactionSignature,
+    ConsensusStatus,
     ContractAddress,
     InstanceInfo,
     NextAccountNonce,
@@ -12,6 +13,7 @@ import Provider, { JsonRpcResponse } from './providers/provider';
 import { serializeAccountTransactionForSubmission } from './serialization';
 import { GtuAmount } from './types/gtuAmount';
 import { ModuleReference } from './types/moduleReference';
+import { buildJsonResponseReviver, intToStringTransformer } from './util';
 
 function handleResponse<R>(
     res: JsonRpcResponse,
@@ -24,6 +26,23 @@ function handleResponse<R>(
         return transform(res.result);
     }
     return undefined;
+}
+
+function transformJsonResponse(
+    jsonString: string,
+    reviver?: (this: unknown, key: string, value: unknown) => unknown,
+    transformer?: (json: string) => string
+) {
+    if (jsonString === 'null') {
+        return undefined;
+    }
+
+    if (transformer) {
+        const transformedJson = transformer(jsonString);
+        return JSON.parse(transformedJson, reviver);
+    }
+
+    return JSON.parse(jsonString, reviver);
 }
 
 export class JsonRpcClient {
@@ -70,6 +89,37 @@ export class JsonRpcClient {
         return handleResponse(res) || false;
     }
 
+    async getConsensusStatus(): Promise<ConsensusStatus> {
+        const response = await this.provider.request('getConsensusStatus', {});
+
+        // TODO Avoid code duplication with nodejs client
+        const datePropertyKeys: (keyof ConsensusStatus)[] = [
+            'blockLastReceivedTime',
+            'blockLastArrivedTime',
+            'genesisTime',
+            'currentEraGenesisTime',
+            'lastFinalizedTime',
+        ];
+        const bigIntPropertyKeys: (keyof ConsensusStatus)[] = [
+            'epochDuration',
+            'slotDuration',
+            'bestBlockHeight',
+            'lastFinalizedBlockHeight',
+            'finalizationCount',
+            'blocksVerifiedCount',
+            'blocksReceivedCount',
+            'protocolVersion',
+        ];
+
+        return handleResponse(response, (r) =>
+            transformJsonResponse(
+                JSON.stringify(r),
+                buildJsonResponseReviver(datePropertyKeys, bigIntPropertyKeys),
+                intToStringTransformer(bigIntPropertyKeys)
+            )
+        );
+    }
+
     /**
      * Retrieve information about a given smart contract instance.
      * @param blockHash the block hash to get the smart contact instances at
@@ -77,14 +127,20 @@ export class JsonRpcClient {
      * @returns A JSON object with information about the contract instance
      */
     async getInstanceInfo(
-        blockHash: string,
-        address: ContractAddress
+        address: ContractAddress,
+        blockHash?: string
     ): Promise<InstanceInfo | undefined> {
+        if (!blockHash) {
+            const consensusStatus = await this.getConsensusStatus();
+            blockHash = consensusStatus.lastFinalizedBlock;
+        }
+
         const res = await this.provider.request('getInstanceInfo', {
             address: `{"subindex":${address.subindex},"index":${address.index}}`,
             blockHash,
         });
         return handleResponse(res, (result) => {
+            // TODO: Avoid code duplication with nodejs client
             const common = {
                 amount: new GtuAmount(BigInt(result.amount)),
                 sourceModule: new ModuleReference(result.sourceModule),

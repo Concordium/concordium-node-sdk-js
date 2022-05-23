@@ -2,15 +2,20 @@ import { Buffer } from 'buffer/';
 import {
     AccountTransaction,
     AccountTransactionSignature,
+    ContractAddress,
+    InstanceInfo,
     NextAccountNonce,
     TransactionStatus,
 } from './types';
 import { AccountAddress } from './types/accountAddress';
 import Provider, { JsonRpcResponse } from './providers/provider';
 import { serializeAccountTransactionForSubmission } from './serialization';
+import { GtuAmount } from './types/gtuAmount';
+import { ModuleReference } from './types/moduleReference';
 
 function handleResponse<R>(
     res: JsonRpcResponse,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     transform: (res: any) => R = (result) => result
 ): R | undefined {
     if (res.error) {
@@ -63,5 +68,51 @@ export class JsonRpcClient {
             transaction: serializedAccountTransaction.toString('base64'),
         });
         return handleResponse(res) || false;
+    }
+
+    /**
+     * Retrieve information about a given smart contract instance.
+     * @param blockHash the block hash to get the smart contact instances at
+     * @param address the address of the smart contract
+     * @returns A JSON object with information about the contract instance
+     */
+    async getInstanceInfo(
+        blockHash: string,
+        address: ContractAddress
+    ): Promise<InstanceInfo | undefined> {
+        const res = await this.provider.request('getInstanceInfo', {
+            address: `{"subindex":${address.subindex},"index":${address.index}}`,
+            blockHash,
+        });
+        return handleResponse(res, (result) => {
+            const common = {
+                amount: new GtuAmount(BigInt(result.amount)),
+                sourceModule: new ModuleReference(result.sourceModule),
+                owner: new AccountAddress(result.owner),
+                methods: result.methods,
+                name: result.name,
+            };
+
+            switch (result.version) {
+                case 1:
+                    return {
+                        version: 1,
+                        ...common,
+                    };
+                case undefined:
+                case 0:
+                    return {
+                        version: 0,
+                        ...common,
+                        model: Buffer.from(result.model, 'hex'),
+                    };
+                default:
+                    throw new Error(
+                        'InstanceInfo had unsupported version: ' +
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            (result as any).version
+                    );
+            }
+        });
     }
 }

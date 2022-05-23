@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+        <script src="../lib/concordium.min.js"></script>
+        <script  type="module" >
+         const client = new concordiumSDK.JsonRpcClient(new concordiumSDK.HttpProvider("http://localhost:9095"));
+         const update = function () {
+             client.getInstanceInfo(hash.value, {index: index.value, subindex: subindex.value}).then((res) => {
+                 console.log(res);
+                 cVersion.innerHTML = res.version;
+                 cName.innerHTML = res.name;
+                 document.getElementById('cAmount').innerHTML = res.amount.toString();
+             });
+         };
+         document.getElementById('button').onclick = update;
+        </script>
+    </head>
+    <body>
+        <input type="text" id="hash"/>
+        <input type="text" id="index"/>
+        <input type="text" id="subindex" value="0"/>
+        <button id="button">
+            Click
+        </button>
+        <br/>
+        Version: <label id="cVersion"/>
+        <br/>
+        amount: <label id="cAmount"/>
+        <br/>
+        name: <label id="cName"/>
+    </body>
+</html>

@@ -9,26 +9,24 @@
          const update = function () {
              client.getInstanceInfo(hash.value, {index: index.value, subindex: subindex.value}).then((res) => {
                  console.log(res);
-                 cVersion.innerHTML = res.version;
-                 cName.innerHTML = res.name;
-                 document.getElementById('cAmount').innerHTML = res.amount.toString();
+                 const result = {
+                     ...res,
+                     amount: res.amount.toString
+                 }
+                 document.getElementById('result').innerHTML = JSON.stringify(result, null, 2);
              });
          };
          document.getElementById('button').onclick = update;
         </script>
     </head>
     <body>
-        <input type="text" id="hash"/>
-        <input type="text" id="index"/>
-        <input type="text" id="subindex" value="0"/>
+        Blockhash: <input type="text" id="hash"/>
+        Index: <input type="text" id="index"/>
+        Subindex: <input type="text" id="subindex" value="0"/>
         <button id="button">
             Click
         </button>
         <br/>
-        Version: <label id="cVersion"/>
-        <br/>
-        amount: <label id="cAmount"/>
-        <br/>
-        name: <label id="cName"/>
+        <label id="result"/>
     </body>
 </html>

@@ -2,7 +2,6 @@ import Provider, { JsonRpcResponse } from './provider';
 import fetch from 'cross-fetch';
 
 export class HttpProvider implements Provider {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     request: (
         method: string,
         params?: Record<string, unknown>

@@ -43,10 +43,6 @@ export function buildAdvancedAccountSigner(
             return signatureCount;
         },
         async sign(digest: Buffer) {
-            //const signatures: AccountTransactionSignature = Object.entries(keyStructure).map(([credIndex, credStructure]) => []Object.entries(credStructure).map(async ([keyIndex, key]) => Buffer.from(
-            //    await ed.sign(digest, key)
-            //).toString('hex')));
-
             const signatures: AccountTransactionSignature = {};
             for (const [credIndex, credStructure] of Object.entries(
                 keyStructure
@@ -79,7 +75,7 @@ export function signMessage(
     message: string,
     signer: AccountSigner
 ): Promise<AccountTransactionSignature> {
-    // TODO: check if it has prepended or we should do it here + what encoding?
+    // TODO: use real encoding
     const prepend = Buffer.from('MyGoodPrepend', 'utf8');
     const digest = Buffer.from(message, 'utf8');
     return signer.sign(Buffer.concat([prepend, digest]));

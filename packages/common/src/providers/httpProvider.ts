@@ -1,12 +1,12 @@
-import Provider, { JsonRpcResponse } from './provider';
+import Provider from './provider';
 import fetch from 'cross-fetch';
+import { v4 as uuidv4 } from 'uuid';
 
 export class HttpProvider implements Provider {
     request: (
         method: string,
         params?: Record<string, unknown>
-    ) => Promise<JsonRpcResponse>;
-    nextId = 0;
+    ) => Promise<string>;
 
     constructor(url: string) {
         this.request = async function (
@@ -16,7 +16,7 @@ export class HttpProvider implements Provider {
             const request = {
                 method: method,
                 params: params,
-                id: this.nextId++,
+                id: uuidv4(),
                 jsonrpc: '2.0',
             };
 
@@ -30,10 +30,19 @@ export class HttpProvider implements Provider {
 
             const res = await fetch(url, options);
             if (res.status >= 400) {
-                throw new Error('Bad response from server');
+                const json = await res.json();
+                if (json.error) {
+                    throw new Error(
+                        `${json.error.code}: ${json.error.message} (id: ${json.id})`
+                    );
+                } else {
+                    throw new Error(
+                        `${res.status}: ${res.statusText} (id: ${json.id})`
+                    );
+                }
             }
 
-            return res.json();
+            return res.text();
         };
     }
 }

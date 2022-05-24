@@ -11,9 +11,9 @@ import { AccountTransactionSignature, ReleaseSchedule } from './types';
  * @returns the same JSON string where the numbers at the supplied keys are quoted
  */
 function intToString(jsonStruct: string, keys: string[]): string {
-    const result = jsonStruct;
+    let result = jsonStruct;
     for (const key of keys) {
-        result.replace(
+        result = result.replace(
             new RegExp(`"${key}":\\s*([0-9]+)`, 'g'),
             `"${key}":"$1"`
         );

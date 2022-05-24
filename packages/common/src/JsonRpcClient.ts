@@ -16,28 +16,11 @@ import { GtuAmount } from './types/gtuAmount';
 import { ModuleReference } from './types/moduleReference';
 import { buildJsonResponseReviver, intToStringTransformer } from './util';
 
-function handleResponse<R>(
-    res: JsonRpcResponse,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    transform: (res: any) => R = (result) => result
-): R | undefined {
-    if (res.error) {
-        throw new Error(res.error.code + ': ' + res.error.message);
-    } else if (res.result) {
-        return transform(res.result);
-    }
-    return undefined;
-}
-
-function transformJsonResponse(
+function transformJsonResponse<Result>(
     jsonString: string,
     reviver?: (this: unknown, key: string, value: unknown) => unknown,
     transformer?: (json: string) => string
-) {
-    if (jsonString === 'null') {
-        return undefined;
-    }
-
+): JsonRpcResponse<Result | undefined> {
     if (transformer) {
         const transformedJson = transformer(jsonString);
         return JSON.parse(transformedJson, reviver);
@@ -62,13 +45,12 @@ export class JsonRpcClient {
 
         const bigIntPropertyKeys: (keyof NextAccountNonce)[] = ['nonce'];
 
-        return handleResponse(response, (r) =>
-            transformJsonResponse(
-                JSON.stringify(r),
-                buildJsonResponseReviver([], bigIntPropertyKeys),
-                intToStringTransformer(bigIntPropertyKeys)
-            )
+        const res = transformJsonResponse<NextAccountNonce>(
+            response,
+            buildJsonResponseReviver([], bigIntPropertyKeys),
+            intToStringTransformer(bigIntPropertyKeys)
         );
+        return res.result;
     }
 
     async getTransactionStatus(
@@ -85,13 +67,12 @@ export class JsonRpcClient {
             'index',
         ];
 
-        return handleResponse(response, (r) =>
-            transformJsonResponse(
-                JSON.stringify(r),
-                buildJsonResponseReviver([], bigIntPropertyKeys),
-                intToStringTransformer(bigIntPropertyKeys)
-            )
+        const res = transformJsonResponse<TransactionStatus>(
+            response,
+            buildJsonResponseReviver([], bigIntPropertyKeys),
+            intToStringTransformer(bigIntPropertyKeys)
         );
+        return res.result;
     }
 
     async sendAccountTransaction(
@@ -107,11 +88,11 @@ export class JsonRpcClient {
         const res = await this.provider.request('sendAccountTransaction', {
             transaction: serializedAccountTransaction.toString('base64'),
         });
-        return handleResponse(res) || false;
+        return JSON.parse(res).result || false;
     }
 
     async getConsensusStatus(): Promise<ConsensusStatus> {
-        const response = await this.provider.request('getConsensusStatus', {});
+        const response = await this.provider.request('getConsensusStatus');
 
         // TODO Avoid code duplication with nodejs client
         const datePropertyKeys: (keyof ConsensusStatus)[] = [
@@ -132,13 +113,19 @@ export class JsonRpcClient {
             'protocolVersion',
         ];
 
-        return handleResponse(response, (r) =>
-            transformJsonResponse(
-                JSON.stringify(r),
-                buildJsonResponseReviver(datePropertyKeys, bigIntPropertyKeys),
-                intToStringTransformer(bigIntPropertyKeys)
-            )
+        const res = transformJsonResponse<ConsensusStatus>(
+            response,
+            buildJsonResponseReviver(datePropertyKeys, bigIntPropertyKeys),
+            intToStringTransformer(bigIntPropertyKeys)
         );
+
+        if (!res.result) {
+            throw new Error(
+                'Nothing was returned when trying to get the consensus status.'
+            );
+        }
+
+        return res.result;
     }
 
     /**
@@ -156,40 +143,41 @@ export class JsonRpcClient {
             blockHash = consensusStatus.lastFinalizedBlock;
         }
 
-        const res = await this.provider.request('getInstanceInfo', {
+        const response = await this.provider.request('getInstanceInfo', {
             address: `{"subindex":${address.subindex},"index":${address.index}}`,
             blockHash,
         });
-        return handleResponse(res, (result) => {
-            // TODO: Avoid code duplication with nodejs client
-            const common = {
-                amount: new GtuAmount(BigInt(result.amount)),
-                sourceModule: new ModuleReference(result.sourceModule),
-                owner: new AccountAddress(result.owner),
-                methods: result.methods,
-                name: result.name,
-            };
 
-            switch (result.version) {
-                case 1:
-                    return {
-                        version: 1,
-                        ...common,
-                    };
-                case undefined:
-                case 0:
-                    return {
-                        version: 0,
-                        ...common,
-                        model: Buffer.from(result.model, 'hex'),
-                    };
-                default:
-                    throw new Error(
-                        'InstanceInfo had unsupported version: ' +
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            (result as any).version
-                    );
-            }
-        });
+        const result = JSON.parse(response).result;
+
+        // TODO: Avoid code duplication with nodejs client
+        const common = {
+            amount: new GtuAmount(BigInt(result.amount)),
+            sourceModule: new ModuleReference(result.sourceModule),
+            owner: new AccountAddress(result.owner),
+            methods: result.methods,
+            name: result.name,
+        };
+
+        switch (result.version) {
+            case 1:
+                return {
+                    version: 1,
+                    ...common,
+                };
+            case undefined:
+            case 0:
+                return {
+                    version: 0,
+                    ...common,
+                    model: Buffer.from(result.model, 'hex'),
+                };
+            default:
+                throw new Error(
+                    'InstanceInfo had unsupported version: ' +
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        (result as any).version
+                );
+        }
     }
 }

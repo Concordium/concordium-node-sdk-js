@@ -1,10 +1,5 @@
 import { getAccountTransactionSignDigest } from './serialization';
-import {
-    AccountTransaction,
-    CredentialSignature,
-    AccountTransactionSignature,
-} from './types';
-import { countSignatures } from './util';
+import { AccountTransaction, AccountTransactionSignature } from './types';
 import * as ed from 'noble-ed25519';
 import { Buffer } from 'buffer/';
 
@@ -13,6 +8,11 @@ export interface AccountSigner {
     getSignatureCount(): bigint;
 }
 
+/**
+ * Creates a signer for an account which uses the first credential's first keypair.
+ * Note that if the account has a threshold > 1 or the first credentials has a threshold > 1, the transaction signed using this will fail.
+ * @param privateKey the ed25519 private key in HEX format. (First credential's first keypair's private key)
+ */
 export function buildBasicAccountSigner(privateKey: string): AccountSigner {
     return {
         getSignatureCount() {
@@ -31,35 +31,11 @@ export function buildBasicAccountSigner(privateKey: string): AccountSigner {
     };
 }
 
-export type CredentialKeyStructure = Record<number, string>;
-export type AccountKeyStructure = Record<number, CredentialKeyStructure>;
-
-export function buildAdvancedAccountSigner(
-    keyStructure: AccountKeyStructure
-): AccountSigner {
-    const signatureCount = countSignatures(keyStructure);
-    return {
-        getSignatureCount() {
-            return signatureCount;
-        },
-        async sign(digest: Buffer) {
-            const signatures: AccountTransactionSignature = {};
-            for (const [credIndex, credStructure] of Object.entries(
-                keyStructure
-            )) {
-                const credSignatures: CredentialSignature = {};
-                for (const [keyIndex, key] of Object.entries(credStructure)) {
-                    credSignatures[Number(keyIndex)] = Buffer.from(
-                        await ed.sign(digest, key)
-                    ).toString('hex');
-                }
-                signatures[Number(credIndex)] = credSignatures;
-            }
-            return signatures;
-        },
-    };
-}
-
+/**
+ * Helper function to sign an AccountTransaction.
+ * @param transaction the account transaction to sign
+ * @param signer An object that handles the keys of the account, and performs the actual signing.
+ */
 export function signTransaction(
     transaction: AccountTransaction,
     signer: AccountSigner
@@ -71,6 +47,12 @@ export function signTransaction(
     return signer.sign(digest);
 }
 
+/**
+ * Helper function to sign a message.
+ * Note that this function prepends the string "MyGoodPrepend" to ensure that the message is not a transaction.
+ * @param message the message to sign, assumed to be utf8 encoded.
+ * @param signer An object that handles the keys of the account, and performs the actual signing.
+ */
 export function signMessage(
     message: string,
     signer: AccountSigner

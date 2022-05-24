@@ -13,6 +13,7 @@
     "devDependencies": {
         "@types/bs58check": "^2.1.0",
         "@types/jest": "^26.0.23",
+        "@types/uuid": "^8.3.4",
         "@typescript-eslint/eslint-plugin": "^4.28.1",
         "@typescript-eslint/parser": "^4.28.1",
         "babel-jest": "^27.0.6",
@@ -42,6 +43,7 @@
         "@concordium/rust-bindings": "0.1.0",
         "bs58check": "^2.1.2",
         "buffer": "^6.0.3",
-        "hash.js": "^1.1.7"
+        "hash.js": "^1.1.7",
+        "uuid": "^8.3.2"
     }
 }

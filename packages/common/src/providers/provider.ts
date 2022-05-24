@@ -22,7 +22,7 @@ export type JsonRpcResponse<Result> =
     | JsonRpcResponseError
     | JsonRpcResponseSuccess<Result>;
 
-type JsonRpcRequest = (
+export type JsonRpcRequest = (
     ...args:
         | ['getNextAccountNonce', { address: string }]
         | ['getTransactionStatus', { transactionHash: string }]

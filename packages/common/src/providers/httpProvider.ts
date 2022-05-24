@@ -1,18 +1,12 @@
-import Provider from './provider';
+import Provider, { JsonRpcRequest } from './provider';
 import fetch from 'cross-fetch';
 import { v4 as uuidv4 } from 'uuid';
 
 export class HttpProvider implements Provider {
-    request: (
-        method: string,
-        params?: Record<string, unknown>
-    ) => Promise<string>;
+    request: JsonRpcRequest;
 
     constructor(url: string) {
-        this.request = async function (
-            method: string,
-            params?: Record<string, unknown>
-        ) {
+        this.request = async function (method, params?) {
             const request = {
                 method: method,
                 params: params,

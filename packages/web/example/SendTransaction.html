@@ -4,7 +4,6 @@
         <meta charset="utf-8">
         <title></title>
         <script src="../lib/concordium.min.js"></script>
-        <script src="./lib/noble-ed25519.js"></script>
         <script  type="module" >
          const client = new concordiumSDK.JsonRpcClient(new concordiumSDK.HttpProvider("http://localhost:9095"));
          const send = async function () {
@@ -29,13 +28,7 @@
                  type: concordiumSDK.AccountTransactionType.SimpleTransfer,
              };
 
-             const digest = concordiumSDK.getAccountTransactionSignDigest(t);
-
-             const s = {
-                 0: {
-                     0: (await nobleEd25519.sign(digest, key.value)).reduce((a, b) => a + b.toString(16).padStart(2, '0'), '')
-                 }
-             };
+             const s = await concordiumSDK.signTransaction(t, concordiumSDK.buildBasicAccountSigner(key.value))
 
              const result = await client.sendAccountTransaction(t, s);
              document.getElementById('status').innerHTML = result.toString();

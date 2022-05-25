@@ -67,11 +67,11 @@ import {
 } from '@concordium/common-sdk';
 import {
     buildJsonResponseReviver,
+    intToStringTransformer,
     isValidHash,
 } from '@concordium/common-sdk/lib/util';
 import {
     intListToStringList,
-    intToStringTransformer,
     unwrapBoolResponse,
     unwrapJsonResponse,
 } from './util';

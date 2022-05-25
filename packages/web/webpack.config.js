@@ -10,6 +10,9 @@ module.exports = {
         new webpack.SourceMapDevToolPlugin({
             filename: '[file].map',
         }),
+        new webpack.ProvidePlugin({
+            process: 'process/browser',
+        }),
     ],
     resolve: {
         fallback: {
@@ -30,7 +33,7 @@ module.exports = {
                                     useBuiltIns: 'entry',
                                     corejs: 3,
                                     targets: {
-                                        ie: 10,
+                                        chrome: 67,
                                     },
                                 },
                             ],

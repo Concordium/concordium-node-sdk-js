@@ -38,8 +38,12 @@ export {
 export { isAlias, getAlias } from './alias';
 export { deserializeContractState } from './deserialization';
 
+export * from './signHelpers';
 export * from './accountHelpers';
 export * from './blockSummaryHelpers';
 export * from './rewardStatusHelpers';
 
 export { isHex } from './util';
+
+export { HttpProvider } from './providers/httpProvider';
+export { JsonRpcClient } from './JsonRpcClient';

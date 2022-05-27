@@ -14,6 +14,7 @@ import {
     PeersRequest,
     SendTransactionRequest,
     TransactionHash,
+    InvokeContractRequest,
 } from '../grpc/concordium_p2p_rpc_pb';
 import {
     serializeAccountTransactionForSubmission,
@@ -62,6 +63,8 @@ import {
     ReduceStakePendingChangeV0,
     PassiveDelegationStatus,
     PassiveDelegationStatusDetails,
+    ContractContext,
+    InvokeContractResult,
 } from './types';
 import {
     buildJsonResponseReviver,
@@ -70,6 +73,7 @@ import {
     isValidHash,
     unwrapBoolResponse,
     unwrapJsonResponse,
+    stringToInt,
 } from './util';
 import { GtuAmount } from './types/gtuAmount';
 import { ModuleReference } from './types/moduleReference';
@@ -799,6 +803,68 @@ export default class ConcordiumNodeClient {
         );
 
         return response;
+    }
+
+    async invokeContract(
+        blockHash: string,
+        contractContext: ContractContext
+    ): Promise<InvokeContractResult | undefined> {
+        if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+
+        let invoker;
+        if (!contractContext.invoker) {
+            invoker = null;
+        } else if ((contractContext.invoker as Address).address) {
+            invoker = {
+                type: 'AddressAccount',
+                address: (contractContext.invoker as Address).address,
+            };
+        } else {
+            const invokerContract = contractContext.invoker as ContractAddress;
+            invoker = {
+                type: 'AddressContract',
+                address: {
+                    subindex: invokerContract.subindex.toString(),
+                    index: invokerContract.index.toString(),
+                },
+            };
+        }
+
+        const requestObject = new InvokeContractRequest();
+        requestObject.setBlockHash(blockHash);
+        requestObject.setContext(
+            stringToInt(
+                JSON.stringify({
+                    invoker,
+                    contract: {
+                        subindex: contractContext.contract.subindex.toString(),
+                        index: contractContext.contract.index.toString(),
+                    },
+                    amount: contractContext.amount.microGtuAmount.toString(),
+                    method: contractContext.method,
+                    parameter: contractContext.parameter
+                        ? contractContext.parameter.toString('hex')
+                        : '',
+                    energy:
+                        contractContext.energy &&
+                        Number(contractContext.energy.toString()),
+                }),
+                ['index', 'subindex']
+            )
+        );
+
+        const response = await this.sendRequest(
+            this.client.invokeContract,
+            requestObject
+        );
+        const bigIntPropertyKeys = ['usedEnergy', 'index', 'subindex'];
+        return unwrapJsonResponse<InvokeContractResult>(
+            response,
+            buildJsonResponseReviver([], bigIntPropertyKeys),
+            intToStringTransformer(bigIntPropertyKeys)
+        );
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

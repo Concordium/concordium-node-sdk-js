@@ -184,11 +184,78 @@ export enum RejectReasonTag {
     PoolClosed = 'PoolClosed',
 }
 
-export interface RejectReason {
-    tag: RejectReasonTag;
+export interface RejectedReceive {
+    tag: RejectReasonTag.RejectedReceive;
+    contractAddress: ContractAddress;
+    receiveName: string;
+    rejectReason: number;
+    parameter: string;
+}
+
+export interface RejectedInit {
+    tag: RejectReasonTag.RejectedInit;
+    rejectReason: number;
+}
+
+export type SimpleRejectReasonTag =
+    | RejectReasonTag.ModuleNotWF
+    | RejectReasonTag.RuntimeFailure
+    | RejectReasonTag.SerializationFailure
+    | RejectReasonTag.OutOfEnergy
+    | RejectReasonTag.InvalidProof
+    | RejectReasonTag.InsufficientBalanceForBakerStake
+    | RejectReasonTag.StakeUnderMinimumThresholdForBaking
+    | RejectReasonTag.BakerInCooldown
+    | RejectReasonTag.NonExistentCredentialID
+    | RejectReasonTag.KeyIndexAlreadyInUse
+    | RejectReasonTag.InvalidAccountThreshold
+    | RejectReasonTag.InvalidCredentialKeySignThreshold
+    | RejectReasonTag.InvalidEncryptedAmountTransferProof
+    | RejectReasonTag.InvalidTransferToPublicProof
+    | RejectReasonTag.InvalidIndexOnEncryptedTransfer
+    | RejectReasonTag.ZeroScheduledAmount
+    | RejectReasonTag.NonIncreasingSchedule
+    | RejectReasonTag.FirstScheduledReleaseExpired
+    | RejectReasonTag.InvalidCredentials
+    | RejectReasonTag.RemoveFirstCredential
+    | RejectReasonTag.CredentialHolderDidNotSign
+    | RejectReasonTag.NotAllowedMultipleCredentials
+    | RejectReasonTag.NotAllowedToReceiveEncrypted
+    | RejectReasonTag.NotAllowedToHandleEncrypted
+    | RejectReasonTag.MissingBakerAddParameters
+    | RejectReasonTag.FinalizationRewardCommissionNotInRange
+    | RejectReasonTag.BakingRewardCommissionNotInRange
+    | RejectReasonTag.TransactionFeeCommissionNotInRange
+    | RejectReasonTag.AlreadyADelegator
+    | RejectReasonTag.InsufficientBalanceForDelegationStake
+    | RejectReasonTag.MissingDelegationAddParameters
+    | RejectReasonTag.InsufficientDelegationStake
+    | RejectReasonTag.DelegatorInCooldown
+    | RejectReasonTag.StakeOverMaximumThresholdForPool
+    | RejectReasonTag.PoolWouldBecomeOverDelegated
+    | RejectReasonTag.PoolClosed;
+
+export interface SimpleRejectReason {
+    tag: SimpleRejectReasonTag;
+}
+
+// TODO split this into types with contents properly typed/parsed;
+export interface RejectReasonWithContents {
+    tag: Exclude<
+        RejectReasonTag,
+        | RejectReasonTag.RejectedReceive
+        | RejectReasonTag.RejectedInit
+        | SimpleRejectReasonTag
+    >;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     contents: any;
 }
+
+export type RejectReason =
+    | RejectReasonWithContents
+    | SimpleRejectReason
+    | RejectedReceive
+    | RejectedInit;
 
 interface RejectedEventResult {
     outcome: 'reject';
@@ -1311,6 +1378,32 @@ export interface InstanceInfoSerializedV1 extends InstanceInfoSerializedCommon {
 export type InstanceInfoSerialized =
     | InstanceInfoSerializedV0
     | InstanceInfoSerializedV1;
+
+export interface ContractContext {
+    invoker?: ContractAddress | AccountAddress;
+    contract: ContractAddress;
+    amount: GtuAmount;
+    method: string;
+    parameter?: Buffer;
+    energy?: bigint;
+}
+
+export interface InvokeContractSuccessResult
+    extends Omit<SuccessfulEventResult, 'outcome'> {
+    tag: 'success';
+    usedEnergy: bigint;
+    returnValue?: string;
+}
+
+export interface InvokeContractFailedResult
+    extends Omit<RejectedEventResult, 'outcome'> {
+    tag: 'failure';
+    usedEnergy: bigint;
+}
+
+export type InvokeContractResult =
+    | InvokeContractSuccessResult
+    | InvokeContractFailedResult;
 
 export interface CredentialDeploymentTransaction {
     expiry: TransactionExpiry;

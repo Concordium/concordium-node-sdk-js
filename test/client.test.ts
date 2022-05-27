@@ -25,6 +25,7 @@ import {
     isDelegatorAccount,
 } from '../src/accountHelpers';
 import { isRewardStatusV1 } from '../src/rewardStatusHelpers';
+import { GtuAmount, RejectReasonTag } from '../src';
 
 const client = getNodeClient();
 
@@ -1258,9 +1259,6 @@ test('pool status can be accessed at given block for specific baker', async () =
         currentPaydayStatus,
     } = ps;
 
-    console.log(ps);
-    console.log(ps.currentPaydayStatus);
-
     expect(poolType).toBe(PoolStatusType.BakerPool);
     expect(bakerId).toBe(1n);
     expect(bakerAddress).toBe(
@@ -1406,4 +1404,71 @@ test('account info with passive delegation can be accessed', async () => {
     expect(delegationTarget.delegateType).toBe(
         DelegationTargetType.PassiveDelegation
     );
+});
+
+test('Invoke contract on v0 contract', async () => {
+    const result = await client.invokeContract(
+        '9b689a646ae3f572cd794a4b19590161c1eeb0d0bf16e1da6afd848998d32710',
+        {
+            invoker: new AccountAddress(
+                '3tXiu8d4CWeuC12irAB7YVb1hzp3YxsmmmNzzkdujCPqQ9EjDm'
+            ),
+            contract: {
+                index: 1000n,
+                subindex: 0n,
+            },
+            method: 'PiggyBank.smash',
+            amount: new GtuAmount(0n),
+            parameter: undefined,
+            energy: 30000n,
+        }
+    );
+
+    if (!result) {
+        throw new Error('Expected a result');
+    }
+
+    if (result.tag !== 'failure') {
+        throw new Error('Expected invoke to be fail');
+    }
+
+    expect(result.usedEnergy).toBe(340n);
+    expect(result.rejectReason.tag).toBe(RejectReasonTag.RejectedReceive);
+});
+
+test('Invoke contract on v1 contract', async () => {
+    const result = await client.invokeContract(
+        '9b689a646ae3f572cd794a4b19590161c1eeb0d0bf16e1da6afd848998d32710',
+        {
+            invoker: new AccountAddress(
+                '3tXiu8d4CWeuC12irAB7YVb1hzp3YxsmmmNzzkdujCPqQ9EjDm'
+            ),
+            contract: {
+                index: 5102n,
+                subindex: 0n,
+            },
+            method: 'PiggyBank.view',
+            amount: new GtuAmount(0n),
+            parameter: undefined,
+            energy: 30000n,
+        }
+    );
+
+    if (!result) {
+        throw new Error('Expected a result');
+    }
+
+    if (result.tag !== 'success') {
+        throw new Error('Expected invoke to be successful');
+    }
+
+    if (result.events[0].tag !== 'Updated') {
+        throw new Error('Expected resulting event to be Updated');
+    }
+
+    expect(result.events[0].address.index).toBe(5102n);
+    expect(result.events[0].address.subindex).toBe(0n);
+    expect(result.events[0].amount).toBe('0');
+    expect(result.usedEnergy).toBe(503n);
+    expect(result.returnValue).toBe('00d2f35e0100000000');
 });

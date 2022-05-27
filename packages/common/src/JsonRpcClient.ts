@@ -150,6 +150,10 @@ export class JsonRpcClient {
 
         const result = JSON.parse(response).result;
 
+        if (!result) {
+            return undefined;
+        }
+
         // TODO: Avoid code duplication with nodejs client
         const common = {
             amount: new GtuAmount(BigInt(result.amount)),

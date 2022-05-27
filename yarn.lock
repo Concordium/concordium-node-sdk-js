@@ -1297,11 +1297,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@concordium/common-sdk@1.0.0, @concordium/common-sdk@workspace:packages/common":
+"@concordium/common-sdk@1.0.1, @concordium/common-sdk@workspace:packages/common":
   version: 0.0.0-use.local
   resolution: "@concordium/common-sdk@workspace:packages/common"
   dependencies:
-    "@concordium/rust-bindings": 0.1.0
+    "@concordium/rust-bindings": 0.1.1
     "@types/bs58check": ^2.1.0
     "@types/jest": ^26.0.23
     "@types/uuid": ^8.3.4
@@ -1325,6 +1325,19 @@ __metadata:
     uuid: ^8.3.2
   languageName: unknown
   linkType: soft
+
+"@concordium/common-sdk@npm:1.0.0":
+  version: 1.0.0
+  resolution: "@concordium/common-sdk@npm:1.0.0"
+  dependencies:
+    "@concordium/rust-bindings": 0.1.0
+    bs58check: ^2.1.2
+    buffer: ^6.0.3
+    hash.js: ^1.1.7
+    uuid: ^8.3.2
+  checksum: c51e55bbbb794435ff5b44e72403c30e6783c6ed7203eebea130f055213643becfaa288c8394db0b70d668ce7a5a9c80417685a961d596cb583996e0ccff8b66
+  languageName: node
+  linkType: hard
 
 "@concordium/node-sdk@workspace:packages/nodejs":
   version: 0.0.0-use.local
@@ -1354,20 +1367,28 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@concordium/rust-bindings@0.1.0, @concordium/rust-bindings@workspace:packages/rust-bindings":
+"@concordium/rust-bindings@0.1.1, @concordium/rust-bindings@workspace:packages/rust-bindings":
   version: 0.0.0-use.local
   resolution: "@concordium/rust-bindings@workspace:packages/rust-bindings"
   languageName: unknown
   linkType: soft
 
+"@concordium/rust-bindings@npm:0.1.0":
+  version: 0.1.0
+  resolution: "@concordium/rust-bindings@npm:0.1.0"
+  checksum: 2367b0517a892043bd9de6a4deff42cb55ec3313ee94d3c69f78c0ee3e71b7ab718fcb43227c02c6e9b4f6243df10fdda0ba176d9a7208b03fcdf7f9d55b1457
+  languageName: node
+  linkType: hard
+
 "@concordium/web-sdk@workspace:packages/web":
   version: 0.0.0-use.local
   resolution: "@concordium/web-sdk@workspace:packages/web"
   dependencies:
-    "@concordium/common-sdk": 1.0.0
+    "@concordium/common-sdk": 1.0.1
     "@typescript-eslint/eslint-plugin": ^4.28.1
     "@typescript-eslint/parser": ^4.28.1
     babel-jest: ^27.0.6
+    buffer: ^6.0.3
     eslint: ^7.29.0
     eslint-config-prettier: ^8.3.0
     eslint-plugin-import: ^2.23.4

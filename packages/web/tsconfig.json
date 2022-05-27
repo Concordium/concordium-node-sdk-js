@@ -5,6 +5,7 @@
         { "path": "../common"}
     ],
     "compilerOptions": {
+        "lib": ["ES2020", "dom"],
         "rootDir": "./src",
         "outDir": "./lib"
     }

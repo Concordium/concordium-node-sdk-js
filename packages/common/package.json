@@ -1,6 +1,6 @@
 {
     "name": "@concordium/common-sdk",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "license": "Apache-2.0",
     "engines": {
         "node": ">=14.16.0"
@@ -40,7 +40,7 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@concordium/rust-bindings": "0.1.0",
+        "@concordium/rust-bindings": "0.1.1",
         "bs58check": "^2.1.2",
         "buffer": "^6.0.3",
         "hash.js": "^1.1.7",

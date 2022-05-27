@@ -16,6 +16,6 @@ This compiles the Rust code into wasm with Javascript wrappers.
 Before publishing a new release it is essential that it has been built first. So make sure that 
 you have just built the up-to-date code you want to publish. To publish the release run
 ```
-yarn publish
+yarn npm publish
 ```
 and step through the steps precented to you.

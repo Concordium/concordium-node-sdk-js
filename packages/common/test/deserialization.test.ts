@@ -1,7 +1,7 @@
 import { deserializeContractState } from '../src/deserialization';
 import { Buffer } from 'buffer/';
 
-test('fail account transaction serialization if no signatures', () => {
+test('test that deserializeContractState works', () => {
     const state = deserializeContractState(
         'PiggyBank',
         Buffer.from(

@@ -1,5 +1,6 @@
 import Provider, { JsonRpcRequest } from './provider';
 import fetch from 'cross-fetch';
+import JSONBig from 'json-bigint';
 import { v4 as uuidv4 } from 'uuid';
 
 export class HttpProvider implements Provider {
@@ -16,7 +17,8 @@ export class HttpProvider implements Provider {
 
             const options = {
                 method: 'POST',
-                body: JSON.stringify(request),
+                // Use JSONBig in order ensure bigints are automatically parsed (as numbers)
+                body: JSONBig.stringify(request),
                 headers: {
                     'Content-Type': 'application/json',
                 },

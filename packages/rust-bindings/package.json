@@ -6,7 +6,7 @@
         "node": ">=14.16.0"
     },
     "main": "pkg/node/concordium_rust_bindings.js",
-    "module": "pkg/bundler/concordium_rust_bindings.js",
+    "browser": "pkg/bundler/concordium_rust_bindings.js",
     "types": "pkg/bundler/concordium_rust_bindings.d.ts",
     "files": [
         "/pkg/**/concordium_rust_bindings*"

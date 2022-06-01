@@ -144,7 +144,8 @@ export class JsonRpcClient {
         }
 
         const response = await this.provider.request('getInstanceInfo', {
-            address: `{"subindex":${address.subindex},"index":${address.index}}`,
+            index: address.index,
+            subindex: address.subindex,
             blockHash,
         });
 

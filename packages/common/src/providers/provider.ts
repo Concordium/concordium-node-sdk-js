@@ -27,7 +27,10 @@ export type JsonRpcRequest = (
         | ['getNextAccountNonce', { address: string }]
         | ['getTransactionStatus', { transactionHash: string }]
         | ['getConsensusStatus']
-        | ['getInstanceInfo', { address: string; blockHash: string }]
+        | [
+              'getInstanceInfo',
+              { blockHash: string; index: bigint; subindex: bigint }
+          ]
         | ['sendAccountTransaction', { transaction: string }]
 ) => Promise<string>;
 

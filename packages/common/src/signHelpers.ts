@@ -55,7 +55,7 @@ export function signTransaction(
  * @param message the message to sign, assumed to be utf8 encoded.
  */
 function getMessageDigest(message: string): Buffer {
-    // TODO: use real encoding
+    // TODO: use real prepend
     const prepend = Buffer.from('MyGoodPrepend', 'utf8');
     const digest = Buffer.from(message, 'utf8');
     return Buffer.concat([prepend, digest]);
@@ -80,7 +80,6 @@ export function signMessage(
  * @param message the message to sign, assumed to be utf8 encoded.
  * @param signature the signature of a message, from a specific account.
  * @param accountCredentials the credentials of the account
- * @param signer An object that handles the keys of the account, and performs the actual signing.
  */
 export async function verifyMessageSignature(
     message: string,

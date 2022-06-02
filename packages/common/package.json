@@ -1,6 +1,6 @@
 {
     "name": "@concordium/common-sdk",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "license": "Apache-2.0",
     "engines": {
         "node": ">=14.16.0"
@@ -13,6 +13,7 @@
     "devDependencies": {
         "@types/bs58check": "^2.1.0",
         "@types/jest": "^26.0.23",
+        "@types/json-bigint": "^1.0.1",
         "@types/uuid": "^8.3.4",
         "@typescript-eslint/eslint-plugin": "^4.28.1",
         "@typescript-eslint/parser": "^4.28.1",
@@ -40,10 +41,11 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@concordium/rust-bindings": "0.1.0",
+        "@concordium/rust-bindings": "0.1.1",
         "bs58check": "^2.1.2",
         "buffer": "^6.0.3",
         "hash.js": "^1.1.7",
+        "json-bigint": "^1.0.0",
         "uuid": "^8.3.2"
     }
 }

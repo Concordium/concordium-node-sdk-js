@@ -144,11 +144,16 @@ export class JsonRpcClient {
         }
 
         const response = await this.provider.request('getInstanceInfo', {
-            address: `{"subindex":${address.subindex},"index":${address.index}}`,
+            index: address.index,
+            subindex: address.subindex,
             blockHash,
         });
 
         const result = JSON.parse(response).result;
+
+        if (!result) {
+            return undefined;
+        }
 
         // TODO: Avoid code duplication with nodejs client
         const common = {

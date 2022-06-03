@@ -70,8 +70,8 @@ export interface TransactionEvent {
         | 'TransferredWithSchedule'
         | 'CredentialsUpdated'
         | 'DataRegistered'
-        | 'Interrupted'
-        | 'Resumed'
+        // | 'Interrupted'
+        // | 'Resumed'
         | 'BakerSetOpenStatus'
         | 'BakerSetMetadataURL'
         | 'BakerSetTransactionFeeCommission'
@@ -88,6 +88,18 @@ export interface TransactionEvent {
 export interface ContractAddress {
     index: bigint;
     subindex: bigint;
+}
+
+export interface InterruptedEvent {
+    tag: 'Interrupted';
+    address: ContractAddress;
+    events: string[];
+}
+
+export interface ResumedEvent {
+    tag: 'Resumed';
+    address: ContractAddress;
+    success: boolean;
 }
 
 export interface UpdatedEvent {
@@ -268,6 +280,8 @@ interface SuccessfulEventResult {
         | TransactionEvent
         | TransferredEvent
         | UpdatedEvent
+        | ResumedEvent
+        | InterruptedEvent
         | MemoEvent
         | TransferredWithScheduleEvent
     )[];

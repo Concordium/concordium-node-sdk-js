@@ -1,11 +1,12 @@
 {
     "name": "@concordium/web-sdk",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "license": "Apache-2.0",
     "browser": "lib/concordium.min.js",
     "types": "lib/index.d.ts",
     "files": [
-        "lib/concordium.min*"
+        "lib/concordium.min*",
+        "lib/index.d.ts"
     ],
     "repository": {
         "type": "git",

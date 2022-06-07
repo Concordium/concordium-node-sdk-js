@@ -1,4 +1,4 @@
-import { intListToStringList } from '../src/util';
+import { intListToStringList, intToStringTransformer } from '../src/util';
 
 test('Correctly converts stringified list of numbers to stringified list of corresponding strings', () => {
     // List of ints
@@ -24,4 +24,25 @@ test('Correctly converts stringified list of numbers to stringified list of corr
     strings = intListToStringList(numbers);
 
     expect(strings).toEqual('["-1", "21", "-32"]');
+});
+
+test('intToStringTransformer transform chosen field, but not others', () => {
+    const keysToTransform = ['a'];
+    const input = '{ "a":1, "b":2, "aa":3}';
+    const transformed = intToStringTransformer(keysToTransform)(input);
+    expect(transformed).toEqual('{ "a":"1", "b":2, "aa":3}');
+});
+
+test('intToStringTransformer transforms multiple fields', () => {
+    const keysToTransform = ['a', 'b'];
+    const input = '{ "a":1, "b":2, "aa":{"a":124,"c":1}}';
+    const transformed = intToStringTransformer(keysToTransform)(input);
+    expect(transformed).toEqual('{ "a":"1", "b":"2", "aa":{"a":"124","c":1}}');
+});
+
+test('intToStringTransformer will not change the string if no keys match', () => {
+    const keysToTransform = ['d', 'aaa'];
+    const input = '{ "a":1, "b":2, "aa":{"a":124,"c":1}}';
+    const transformed = intToStringTransformer(keysToTransform)(input);
+    expect(transformed).toEqual(input);
 });

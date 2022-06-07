@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.0 2022-06-11
+
+### Added
+
+- Support for the Invoke contract node entrypoint.
+
+### Fixed
+
+- Lossy parsing of uint64's from the node, if their value was above MAX_SAFE_INTEGER.
 
 ## 1.0.0 2022-05-11
 

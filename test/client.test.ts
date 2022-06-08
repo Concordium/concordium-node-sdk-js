@@ -25,7 +25,12 @@ import {
     isDelegatorAccount,
 } from '../src/accountHelpers';
 import { isRewardStatusV1 } from '../src/rewardStatusHelpers';
-import { GtuAmount, RejectReasonTag } from '../src';
+import {
+    getModuleBuffer,
+    GtuAmount,
+    RejectReasonTag,
+    serializeUpdateContractParameters,
+} from '../src';
 
 const client = getNodeClient();
 
@@ -1433,7 +1438,7 @@ test('Invoke contract on v0 contract', async () => {
     }
 
     expect(result.usedEnergy).toBe(340n);
-    expect(result.rejectReason.tag).toBe(RejectReasonTag.RejectedReceive);
+    expect(result.reason.tag).toBe(RejectReasonTag.RejectedReceive);
 });
 
 test('Invoke contract on v1 contract', async () => {
@@ -1471,4 +1476,92 @@ test('Invoke contract on v1 contract', async () => {
     expect(result.events[0].amount).toBe('0');
     expect(result.usedEnergy).toBe(503n);
     expect(result.returnValue).toBe('00d2f35e0100000000');
+});
+
+test('Invoke contract with full default', async () => {
+    const result = await client.invokeContract(
+        '9b689a646ae3f572cd794a4b19590161c1eeb0d0bf16e1da6afd848998d32710',
+        {
+            contract: {
+                index: 5102n,
+                subindex: 0n,
+            },
+            method: 'PiggyBank.view',
+        }
+    );
+
+    if (!result) {
+        throw new Error('Expected a result');
+    }
+
+    if (result.tag !== 'success') {
+        throw new Error('Expected invoke to be successful');
+    }
+
+    if (result.events[0].tag !== 'Updated') {
+        throw new Error('Expected resulting event to be Updated');
+    }
+
+    expect(result.events[0].address.index).toBe(5102n);
+    expect(result.events[0].address.subindex).toBe(0n);
+    expect(result.events[0].amount).toBe('0');
+    expect(result.usedEnergy).toBe(503n);
+    expect(result.returnValue).toBe('00d2f35e0100000000');
+});
+
+test('Invoke contract with parameters', async () => {
+    const parameters = {
+        RequestTransfer: [
+            '1',
+            '5',
+            '3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5',
+        ],
+    };
+
+    const contractName = 'two-step-transfer';
+    const receiveFunctionName = 'receive';
+    const methodName = contractName + '.' + receiveFunctionName;
+
+    const modulefileBuffer = getModuleBuffer(
+        'test/resources/schemaFiles/schema_two_step_transfer.bin'
+    );
+    const inputParams = serializeUpdateContractParameters(
+        contractName,
+        receiveFunctionName,
+        parameters,
+        modulefileBuffer
+    );
+
+    const result = await client.invokeContract(
+        '9b689a646ae3f572cd794a4b19590161c1eeb0d0bf16e1da6afd848998d32710',
+        {
+            invoker: new AccountAddress(
+                '3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5'
+            ),
+            contract: {
+                index: 1671n,
+                subindex: 0n,
+            },
+            method: methodName,
+            parameter: inputParams,
+        }
+    );
+
+    if (!result) {
+        throw new Error('Expected a result');
+    }
+
+    if (result.tag !== 'success') {
+        throw new Error('Expected invoke to be successful');
+    }
+
+    if (result.events[0].tag !== 'Updated') {
+        throw new Error('Expected resulting event to be Updated');
+    }
+
+    expect(result.events[0].address.index).toBe(1671n);
+    expect(result.events[0].address.subindex).toBe(0n);
+    expect(result.events[0].amount).toBe('0');
+    expect(result.events[0].message).toBe(inputParams.toString('hex'));
+    expect(result.usedEnergy).toBe(1409n);
 });

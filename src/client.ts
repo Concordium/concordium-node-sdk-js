@@ -813,7 +813,20 @@ export default class ConcordiumNodeClient {
             throw new Error('The input was not a valid hash: ' + blockHash);
         }
 
-        let invoker;
+        let invoker:
+            | {
+                  type: 'AddressContract';
+                  address: {
+                      index: string;
+                      subindex: string;
+                  };
+              }
+            | {
+                  type: 'AddressAccount';
+                  address: string;
+              }
+            | null;
+
         if (!contractContext.invoker) {
             invoker = null;
         } else if ((contractContext.invoker as Address).address) {
@@ -842,11 +855,13 @@ export default class ConcordiumNodeClient {
                         subindex: contractContext.contract.subindex.toString(),
                         index: contractContext.contract.index.toString(),
                     },
-                    amount: contractContext.amount.microGtuAmount.toString(),
+                    amount:
+                        contractContext.amount &&
+                        contractContext.amount.microGtuAmount.toString(),
                     method: contractContext.method,
-                    parameter: contractContext.parameter
-                        ? contractContext.parameter.toString('hex')
-                        : '',
+                    parameter:
+                        contractContext.parameter &&
+                        contractContext.parameter.toString('hex'),
                     energy:
                         contractContext.energy &&
                         Number(contractContext.energy.toString()),

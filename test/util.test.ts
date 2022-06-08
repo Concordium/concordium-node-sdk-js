@@ -1,4 +1,8 @@
-import { intListToStringList, intToStringTransformer } from '../src/util';
+import {
+    intListToStringList,
+    intToStringTransformer,
+    stringToInt,
+} from '../src/util';
 
 test('Correctly converts stringified list of numbers to stringified list of corresponding strings', () => {
     // List of ints
@@ -44,5 +48,45 @@ test('intToStringTransformer will not change the string if no keys match', () =>
     const keysToTransform = ['d', 'aaa'];
     const input = '{ "a":1, "b":2, "aa":{"a":124,"c":1}}';
     const transformed = intToStringTransformer(keysToTransform)(input);
+    expect(transformed).toEqual(input);
+});
+
+test('stringToInt transforms chosen field, but not others', () => {
+    const keysToTransform = ['a'];
+    const input = '{ "a":"1", "b":"2", "aa":"3"}';
+    const transformed = stringToInt(input, keysToTransform);
+    expect(transformed).toEqual('{ "a":1, "b":"2", "aa":"3"}');
+});
+
+test('stringToInt transforms multiple fields', () => {
+    const keysToTransform = ['a', 'b'];
+    const input = '{ "a":"1", "b":"2", "aa":{"a":"124","c":"1"}}';
+    const transformed = stringToInt(input, keysToTransform);
+    expect(transformed).toEqual('{ "a":1, "b":2, "aa":{"a":124,"c":"1"}}');
+});
+
+test('stringToInt will not change the string if no keys match', () => {
+    const keysToTransform = ['d', 'aaa'];
+    const input = '{ "a":"1", "b":"2", "aa":{"a":"124","c":"1"}}';
+    const transformed = stringToInt(input, keysToTransform);
+    expect(transformed).toEqual(input);
+});
+
+test('stringToInt can inverse intToStringTransformer (with same chosen keys, and no matching number fields)', () => {
+    const keysToTransform = ['a', 'b'];
+    const input = '{ "a":1, "b":2, "aa":{"a":124,"c":"1"}, "d": true}';
+    const transformed = stringToInt(
+        intToStringTransformer(keysToTransform)(input),
+        keysToTransform
+    );
+    expect(transformed).toEqual(input);
+});
+
+test('intToStringTransformer is inverse of stringToInt (with same chosen keys, and no matching string fields)', () => {
+    const keysToTransform = ['a', 'b'];
+    const input = '{ "a":"1", "b":"2", "aa":{"a":"124","c":"1"}, "d": true}';
+    const transformed = intToStringTransformer(keysToTransform)(
+        stringToInt(input, keysToTransform)
+    );
     expect(transformed).toEqual(input);
 });

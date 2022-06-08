@@ -70,8 +70,6 @@ export interface TransactionEvent {
         | 'TransferredWithSchedule'
         | 'CredentialsUpdated'
         | 'DataRegistered'
-        // | 'Interrupted'
-        // | 'Resumed'
         | 'BakerSetOpenStatus'
         | 'BakerSetMetadataURL'
         | 'BakerSetTransactionFeeCommission'
@@ -1396,23 +1394,23 @@ export type InstanceInfoSerialized =
 export interface ContractContext {
     invoker?: ContractAddress | AccountAddress;
     contract: ContractAddress;
-    amount: GtuAmount;
+    amount?: GtuAmount;
     method: string;
     parameter?: Buffer;
     energy?: bigint;
 }
 
 export interface InvokeContractSuccessResult
-    extends Omit<SuccessfulEventResult, 'outcome'> {
+    extends Pick<SuccessfulEventResult, 'events'> {
     tag: 'success';
     usedEnergy: bigint;
     returnValue?: string;
 }
 
-export interface InvokeContractFailedResult
-    extends Omit<RejectedEventResult, 'outcome'> {
+export interface InvokeContractFailedResult {
     tag: 'failure';
     usedEnergy: bigint;
+    reason: RejectReason;
 }
 
 export type InvokeContractResult =

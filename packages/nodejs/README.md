@@ -1,8 +1,10 @@
-# concordium-nodejs-sdk
+# Concordium Nodejs SDK
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](https://github.com/Concordium/.github/blob/main/.github/CODE_OF_CONDUCT.md)
 
 Wrappers for interacting with the Concordium node, using nodejs.
+
+[Note that this package contains and exports the functions from the common-sdk, check the readme of that package for an overview of those](../common/README.md).
 
 # ConcordiumNodeClient
 
@@ -33,29 +35,17 @@ const client = new ConcordiumNodeClient(
 The following example demonstrates how to send any account transaction.
 
 See the Constructing transactions section for the [common package](../common#constructing-transactions) for how to create an account transaction.
+See the signing a transaction section for the [common package](../common#sign-an-account-transaction) for how to sign an account transaction.
 
 ```js
-import * as ed from "noble-ed25519";
 
 let accountTransaction: AccountTransaction;
 // Create the transaction
 // ...
 
-// Sign the transaction, the following is just an example, and any method for signing
-// with the key can be employed.
-const signingKey = "ce432f6bba0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c";
-const hashToSign = getAccountTransactionSignDigest(accountTransaction);
-const signature = Buffer.from(await ed.sign(hashToSign, signingKey)).toString("hex");
-
-// The signatures used to sign the transaction must be provided in a structured way,
-// so that each signature can be mapped to the credential that signed the transaction.
-// In this example we assume the key used was from the credential with index 0, and it
-// was the key with index 0.
-const signatures: AccountTransactionSignature = {
-    0: {
-        0: signature
-    }
-};
+let signatures: AccountTransactionSignature;
+// Sign the transaction
+// ...
 
 // Send the transaction to the node.
 const success = await client.sendAccountTransaction(accountTransaction, signatures);

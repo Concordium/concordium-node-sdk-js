@@ -6,6 +6,40 @@ Wrappers for interacting with the Concordium node, using nodejs.
 
 [Note that this package contains and exports the functions from the common-sdk, check the readme of that package for an overview of those](../common/README.md).
 
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
+- [ConcordiumNodeClient](#concordiumnodeclient)
+    - [Creating a client](#creating-a-client)
+    - [Send Account Transaction](#send-account-transaction)
+    - [Create a new account](#create-a-new-account)
+    - [Construct IdentityInput for creating credentials](#construct-identityinput-for-creating-credentials)
+        - [Construct from user-cli output:](#construct-from-user-cli-output)
+        - [Construct from mobile wallet export:](#construct-from-mobile-wallet-export)
+    - [getAccountInfo](#getaccountinfo)
+    - [getNextAccountNonce](#getnextaccountnonce)
+    - [getTransactionStatus](#gettransactionstatus)
+    - [getBlockSummary](#getblocksummary)
+    - [getBlockInfo](#getblockinfo)
+    - [getBlocksAtHeight](#getblocksatheight)
+    - [getConsensusStatus](#getconsensusstatus)
+    - [getCryptographicParameters](#getcryptographicparameters)
+    - [getIdentityProviders](#getidentityproviders)
+    - [getAnonymityRevokers](#getanonymityrevokers)
+    - [getPeerList](#getpeerlist)
+    - [getBakerList](#getbakerlist)
+    - [getPoolStatus](#getpoolstatus)
+    - [getRewardStatus](#getrewardstatus)
+    - [Check block for transfers with memo](#check-block-for-transfers-with-memo)
+    - [getInstances](#getinstances)
+    - [getInstanceInfo](#getinstanceinfo)
+- [Build](#build)
+    - [Building for a release](#building-for-a-release)
+    - [Publishing a release](#publishing-a-release)
+- [Test](#test)
+
+<!-- markdown-toc end -->
+
+
 # ConcordiumNodeClient
 
 The ConcordiumNodeClient defines the interface to be used to send and receive data from

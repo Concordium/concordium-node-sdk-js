@@ -2,6 +2,29 @@
 
 This package is the shared library for the nodejs and web SDK's. 
 
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
+- [Constructing transactions](#constructing-transactions)
+    - [Create a simple transfer](#create-a-simple-transfer)
+    - [Create a simple transfer with a memo](#create-a-simple-transfer-with-a-memo)
+    - [Create a Register data transaction](#create-a-register-data-transaction)
+    - [Create a configure delegation transaction](#create-a-configure-delegation-transaction)
+    - [Create a credential for an existing account](#create-a-credential-for-an-existing-account)
+    - [Create an update credentials transaction](#create-an-update-credentials-transaction)
+    - [Deploy module](#deploy-module)
+    - [Init Contract (parameterless smart contract)](#init-contract-parameterless-smart-contract)
+    - [Update Contract (parameterless smart contract)](#update-contract-parameterless-smart-contract)
+    - [Smart contract with parameters](#smart-contract-with-parameters)
+- [Utility functions](#utility-functions)
+    - [Generate account alias](#generate-account-alias)
+    - [Check for account alias](#check-for-account-alias)
+    - [Deserialize contract state](#deserialize-contract-state)
+    - [Sign an account transaction](#sign-an-account-transaction)
+    - [Sign a message](#sign-a-message)
+- [Json-Rpc client](#json-rpc-client)
+
+<!-- markdown-toc end -->
+
 # Constructing transactions
 
 ## Create a simple transfer

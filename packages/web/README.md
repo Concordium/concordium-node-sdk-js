@@ -6,17 +6,36 @@ Wrappers for interacting with the Concordium node, for the web environment.
 
 [Note that this package contains and exports the functions from the common-sdk, check the readme of that package for an overview of those](../common/README.md).
 
-## Json-Rpc client
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
+- [Json-Rpc client](#json-rpc-client)
+    - [Creating a client](#creating-a-client)
+    - [API Entrypoints](#api-entrypoints)
+- [Creating buffers](#creating-buffers)
+- [Examples](#examples)
+    - [SendTransaction.html](#sendtransactionhtml)
+    - [GetInstanceInfo.html](#getinstanceinfohtml)
+    - [Alias.html](#aliashtml)
+    - [GetTransactionStatus.html](#gettransactionstatushtml)
+    - [GetNonce.html](#getnoncehtml)
+- [Build](#build)
+    - [Building for a release](#building-for-a-release)
+    - [Publishing a release](#publishing-a-release)
+
+<!-- markdown-toc end -->
+
+
+# Json-Rpc client
 The SDK provides a json-rpc client, which can interact with the [Concordium json-rpc server](https://github.com/Concordium/concordium-json-rpc)
 
-### Creating a client
+## Creating a client
 To create a client, one needs a provider, which handles sending and receiving over a specific protocol. Currently the only one available is the HTTP provider.
 The http provider needs the url to the json-rpc server. The following example demonstrates how to create a client that connects to a local server on port 9095:
 ```js
 const client = new JsonRpcClient(new HttpProvider("http://localhost:9095"));
 ```
 
-### API Entrypoint
+## API Entrypoints
 Currently the client only supports the following entrypoints, with the same interface as the node client:
 
 - [SendTransaction](../nodejs#constructing-transactions)
@@ -24,32 +43,35 @@ Currently the client only supports the following entrypoints, with the same inte
 - [getInstanceInfo](../nodejs#getInstanceInfo)
 - [getConsensusStatus](../nodejs#getConsensusStatus)
 
-## Creating buffers
+# Creating buffers
 Some of the functions in the SDK expects buffers as input.
 For this purpose the SDK exports a `toBuffer` function, which is a polyfill of the [buffer.from from the Nodejs API](https://nodejs.org/api/buffer.html#static-method-bufferfromstring-encoding) for strings.
 ```js
 const myBuffer = toBuffer('AB2C2D', 'hex');
 ```
 
-## Examples
+# Examples
 A few simple webpages have been made, to showcase using the web-sdk. They can be found in the `example` folder.
 Note that the project should be built before running the example, otherwise they won't work.
 The examples that uses json-rpc, expects a json-rpc server on `http://localhost:9095`.
 
-### SendTransaction.html
+## SendTransaction.html
 An example of how to send a transaction using the SDK to a json-rpc server.
 
-### GetInstanceInfo.html
+## GetInstanceInfo.html
 An example of getting the info of a given smart contract instance using a json-rpc server.
 
-### Alias.html
+## Alias.html
 A very minimal example of a webpage showing alias'es of a given address, using the bundled blob.
 
-### GetTransactionStatus.html
+## GetTransactionStatus.html
 A simple example that allows calling a json-rpc server for a given transaction's status and displays the status.
 
-### GetNonce.html
+## GetNonce.html
 A simple example that allows calling a json-rpc server for a given account's next nonce and displays it.
+
+
+# Build
 
 ## Building for a release
 To build the package run

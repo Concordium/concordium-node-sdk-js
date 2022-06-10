@@ -805,6 +805,12 @@ export default class ConcordiumNodeClient {
         return response;
     }
 
+    /**
+     * Simulates a smart contract update, and returns the updated state of smart contract instance (if V0 contract) or returnValue of the invoked method (if the method has a return value)  .
+     * @param blockHash the block hash at which the contract should be invoked at.
+     * @param context the collection of details used to invoke the contract. Must include the address of the contract and the method invoked.
+     * @returns If the node was able to invoke, then the outcome is returned. If the contract is not defined at the given block hash, then undefined is returned.
+     */
     async invokeContract(
         blockHash: string,
         contractContext: ContractContext

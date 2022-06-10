@@ -26,11 +26,11 @@ Wrappers for interacting with the Concordium node, for the web environment.
 
 
 # Json-Rpc client
-The SDK provides a json-rpc client, which can interact with the [Concordium json-rpc server](https://github.com/Concordium/concordium-json-rpc)
+The SDK provides a JSON-RPC client, which can interact with the [Concordium JSON-RPC server](https://github.com/Concordium/concordium-json-rpc)
 
 ## Creating a client
 To create a client, one needs a provider, which handles sending and receiving over a specific protocol. Currently the only one available is the HTTP provider.
-The http provider needs the url to the json-rpc server. The following example demonstrates how to create a client that connects to a local server on port 9095:
+The HTTP provider needs the URL to the JSON-RPC server. The following example demonstrates how to create a client that connects to a local server on port 9095:
 ```js
 const client = new JsonRpcClient(new HttpProvider("http://localhost:9095"));
 ```
@@ -52,11 +52,11 @@ const myBuffer = toBuffer('AB2C2D', 'hex');
 
 # Examples
 A few simple webpages have been made, to showcase using the web-sdk. They can be found in the `example` folder.
-Note that the project should be built before running the example, otherwise they won't work.
-The examples that uses json-rpc, expects a json-rpc server on `http://localhost:9095`.
+Note that the project should be built before running the examples, otherwise they won't work.
+The examples that use JSON-RPC expect a JSON-RPC server on running at `http://localhost:9095`.
 
 ## SendTransaction.html
-An example of how to send a transaction using the SDK to a json-rpc server.
+An example of how to send a transaction using the SDK to a JSON-RPC server.
 
 ## GetInstanceInfo.html
 An example of getting the info of a given smart contract instance using a json-rpc server.

@@ -30,7 +30,10 @@ import { countSignatures } from './util';
 import { AccountAddress } from './types/accountAddress';
 import { sha256 } from './hash';
 import * as wasm from '../pkg/node_sdk_helpers';
-import { deserialModuleFromBuffer } from './deserializeSchema';
+import {
+    deserialModuleFromBuffer,
+    getParameterType,
+} from './deserializeSchema';
 
 function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
     return Buffer.from(Uint8Array.of(type));
@@ -442,17 +445,23 @@ export function serializeInitContractParameters(
     contractName: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     userInput: any,
-    modulefileBuffer: Buffer
+    modulefileBuffer: Buffer,
+    moduleVersion = 0
 ): Buffer {
-    const getSchemaModule = deserialModuleFromBuffer(modulefileBuffer);
-    if (getSchemaModule !== undefined) {
-        const getInitType = getSchemaModule[contractName].init;
-        return serializeParameters(getInitType, userInput);
-    } else {
+    const schemaModule = deserialModuleFromBuffer(
+        modulefileBuffer,
+        moduleVersion
+    );
+    if (!schemaModule) {
         throw new Error(
             'Schema module not found. Please provide a valid schema file.'
         );
+    } else if (!schemaModule[contractName]) {
+        throw new Error('Schema module does not contain specified contract');
     }
+    const init = schemaModule[contractName].init;
+    const initType = getParameterType(init, moduleVersion);
+    return serializeParameters(initType, userInput);
 }
 
 /**
@@ -468,26 +477,25 @@ export function serializeUpdateContractParameters(
     receiveFunctionName: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     userInput: any,
-    modulefileBuffer: Buffer
+    modulefileBuffer: Buffer,
+    moduleVersion = 0
 ): Buffer {
-    const getSchemaModule = deserialModuleFromBuffer(modulefileBuffer);
-    if (getSchemaModule !== undefined) {
-        if (
-            getSchemaModule[contractName].receive.hasOwnProperty(
-                receiveFunctionName
-            )
-        ) {
-            const getReceiveType =
-                getSchemaModule[contractName].receive[receiveFunctionName];
-            return serializeParameters(getReceiveType, userInput);
-        } else {
-            throw new Error(
-                'Could not find the receive function name provided'
-            );
-        }
-    } else {
+    const schemaModule = deserialModuleFromBuffer(
+        modulefileBuffer,
+        moduleVersion
+    );
+    if (!schemaModule) {
         throw new Error(
             'Schema module not found. Please provide a valid schema file.'
         );
+    } else if (!schemaModule[contractName]) {
+        throw new Error('Schema module does not contain specified contract');
+    } else if (!schemaModule[contractName].receive[receiveFunctionName]) {
+        throw new Error('Could not find the receive function name provided');
     }
+    const receiveType = getParameterType(
+        schemaModule[contractName].receive[receiveFunctionName],
+        moduleVersion
+    );
+    return serializeParameters(receiveType, userInput);
 }

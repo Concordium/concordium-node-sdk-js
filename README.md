@@ -829,6 +829,16 @@ const inputParams = serializeInitContractParameters(
     modulefileBuffer
 );
 ```
+Note that if using a V1 contract, the 4th argument to `serializeInitContractParameters` should be 1, otherwise it defaults to 0:
+```js
+const inputParams = serializeInitContractParameters(
+    "my-v1-contract-name",
+    userInput,
+    modulefileBuffer,
+    1
+);
+```
+
 Then the payload and transaction can be constructed, in the same way as the parameterless example:
 ```js
 const initModule: InitContractPayload = {
@@ -870,6 +880,16 @@ const inputParams = serializeUpdateContractParameters(
         receiveFunctionName,
         userInput,
         modulefileBuffer
+);
+```
+Note that if using a V1 contract, the 5th argument to `serializeUpdateContractParameters` should be 1:
+```js
+const inputParams = serializeUpdateContractParameters(
+        contractName,
+        receiveFunctionName,
+        userInput,
+        modulefileBuffer,
+        1
 );
 ```
 Then we will construct the update payload with parameters obtained 

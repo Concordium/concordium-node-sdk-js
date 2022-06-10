@@ -1,10 +1,12 @@
 # Changelog
 
-## 1.1.0 2022-06-11
+## 1.1.0
 
 ### Added
 
 - Support for the Invoke contract node entrypoint.
+- Support deserializing version 2 schemas.
+- Support serializing parameters for V1 contracts.
 
 ### Fixed
 
@@ -37,6 +39,7 @@
 - Added missing dependency "google-protobuf"
 
 ## 0.7.2 2022-05-05
+
 
 ### Added
 

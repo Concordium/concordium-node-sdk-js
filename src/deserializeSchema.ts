@@ -17,17 +17,31 @@ export interface Deserial<T> {
  * Map of contract names to contract schemas.
  */
 export type Module = Record<string, Contract>;
+export type ModuleV1 = Record<string, ContractV1>;
 
 /**
  * Reads {@link Module} from the given {@link Readable}.
  *
  * @param source input stream
- * @returns module (contract map)
+ * @returns V0 module (contract map)
  */
 export function deserialModule(source: Readable): Module {
     return deserialMapFn<string, Contract>(
         deserialString,
         deserialContract
+    )(source);
+}
+
+/**
+ * Reads {@link ModuleV1} from the given {@link Readable}.
+ *
+ * @param source input stream
+ * @returns V1 module (contract map)
+ */
+export function deserialModuleV1(source: Readable): ModuleV1 {
+    return deserialMapFn<string, ContractV1>(
+        deserialString,
+        deserialContractV1
     )(source);
 }
 
@@ -42,12 +56,18 @@ export type Contract = {
     /** Map of receive function names to schemas for their respective parameters. */
     receive: Record<string, Type>;
 };
+export type ContractV1 = {
+    /** Optional schema for init function. */
+    init: ContractFunction | null;
+    /** Map of receive function names to schemas for their respective parameters and return values. */
+    receive: Record<string, ContractFunction>;
+};
 
 /**
  * Reads {@link Contract} from the given {@link Readable}.
  *
  * @param source input stream
- * @returns contract
+ * @returns V0 contract
  */
 export function deserialContract(source: Readable): Contract {
     return {
@@ -56,6 +76,22 @@ export function deserialContract(source: Readable): Contract {
         receive: deserialMapFn<string, Type>(
             deserialString,
             deserialType
+        )(source),
+    };
+}
+
+/**
+ * Reads {@link ContractV1} from the given {@link Readable}.
+ *
+ * @param source input stream
+ * @returns V1 contract
+ */
+export function deserialContractV1(source: Readable): ContractV1 {
+    return {
+        init: deserialOptionFn<ContractFunction>(deserialFunction)(source),
+        receive: deserialMapFn<string, ContractFunction>(
+            deserialString,
+            deserialFunction
         )(source),
     };
 }
@@ -105,6 +141,11 @@ export type Type =
     | StructType
     | EnumType
     | StringType;
+
+export type ContractFunction = {
+    parameter?: Type;
+    returnValue?: Type;
+};
 
 export type StringType = {
     typeTag:
@@ -165,6 +206,27 @@ export type PairType = {
     ofLeft: Type;
     ofRight: Type;
 };
+
+export function deserialFunction(source: Readable): ContractFunction {
+    const idx = deserialUint8(source);
+    switch (idx) {
+        case 0:
+            return {
+                parameter: deserialType(source),
+            };
+        case 1:
+            return {
+                returnValue: deserialType(source),
+            };
+        case 2:
+            return {
+                parameter: deserialType(source),
+                returnValue: deserialType(source),
+            };
+        default:
+            throw new Error('Incorrect index for function');
+    }
+}
 
 /**
  * Reads {@link Type} from the given {@link Readable}.
@@ -466,14 +528,36 @@ export function deserialUint32(source: Readable): number {
 }
 
 /**
- *
  * @param buffer wasm file buffer
+ * @param moduleVersion the version of the module, defaults to 0
  * @returns deserialized module of wasm file
  */
-export function deserialModuleFromBuffer(buffer: Buffer): Module {
+export function deserialModuleFromBuffer(
+    buffer: Buffer,
+    moduleVersion: 0
+): Module;
+export function deserialModuleFromBuffer(
+    buffer: Buffer,
+    moduleVersion: 1
+): ModuleV1;
+export function deserialModuleFromBuffer(
+    buffer: Buffer,
+    moduleVersion: number
+): Module | ModuleV1;
+export function deserialModuleFromBuffer(
+    buffer: Buffer,
+    moduleVersion = 0
+): Module | ModuleV1 {
     const bufferStream = new PassThrough();
     bufferStream.end(buffer);
-    return deserialModule(bufferStream);
+    switch (moduleVersion) {
+        case 0:
+            return deserialModule(bufferStream);
+        case 1:
+            return deserialModuleV1(bufferStream);
+        default:
+            throw new Error('Unsupported module version');
+    }
 }
 
 /**
@@ -483,4 +567,21 @@ export function deserialModuleFromBuffer(buffer: Buffer): Module {
  */
 export function getModuleBuffer(filePath: string): Buffer {
     return Buffer.from(fs.readFileSync(filePath));
+}
+
+export function getParameterType(
+    schema: ContractFunction | Type | null,
+    moduleVersion: number
+): Type | null {
+    if (!schema) {
+        return null;
+    }
+    switch (moduleVersion) {
+        case 0:
+            return schema as Type;
+        case 1:
+            return (schema as ContractFunction).parameter || null;
+        default:
+            throw new Error('Unsupported module version');
+    }
 }

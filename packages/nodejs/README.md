@@ -6,7 +6,6 @@ Wrappers for interacting with the Concordium node, using nodejs.
 
 [Note that this package contains and exports the functions from the common-sdk, check the readme of that package for an overview of those](../common/README.md).
 
-<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
 - [ConcordiumNodeClient](#concordiumnodeclient)
     - [Creating a client](#creating-a-client)
@@ -36,8 +35,6 @@ Wrappers for interacting with the Concordium node, using nodejs.
     - [Building for a release](#building-for-a-release)
     - [Publishing a release](#publishing-a-release)
 - [Test](#test)
-
-<!-- markdown-toc end -->
 
 
 # ConcordiumNodeClient

@@ -2,7 +2,6 @@
 
 This package is the shared library for the nodejs and web SDK's. 
 
-<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
 - [Constructing transactions](#constructing-transactions)
     - [Create a simple transfer](#create-a-simple-transfer)
@@ -22,8 +21,6 @@ This package is the shared library for the nodejs and web SDK's.
     - [Sign an account transaction](#sign-an-account-transaction)
     - [Sign a message](#sign-a-message)
 - [Json-Rpc client](#json-rpc-client)
-
-<!-- markdown-toc end -->
 
 # Constructing transactions
 
@@ -528,6 +525,6 @@ if (!verifyMessageSignature(message, signature, accountInfo)) {
 }
 ```
 
-# Json-Rpc client
-The SDK also provides a Json-Rpc client, but it is primarily used for web, [so it has been documented in the web-sdk package instead](../web#Json-Rpc-client).
+# JSON-RPC client
+The SDK also provides a JSON-RPC client, but it is primarily used for web, [so it has been documented in the web-sdk package instead](../web#JSON-RPC-client).
 The nodejs SDK also provides a [gRPC client, which can interact directly with a node](../nodejs#ConcordiumNodeClient).

@@ -6,9 +6,8 @@ Wrappers for interacting with the Concordium node, for the web environment.
 
 [Note that this package contains and exports the functions from the common-sdk, check the readme of that package for an overview of those](../common/README.md).
 
-<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
-- [Json-Rpc client](#json-rpc-client)
+- [JSON-RPC client](#json-rpc-client)
     - [Creating a client](#creating-a-client)
     - [API Entrypoints](#api-entrypoints)
 - [Creating buffers](#creating-buffers)
@@ -22,10 +21,7 @@ Wrappers for interacting with the Concordium node, for the web environment.
     - [Building for a release](#building-for-a-release)
     - [Publishing a release](#publishing-a-release)
 
-<!-- markdown-toc end -->
-
-
-# Json-Rpc client
+# JSON-RPC client
 The SDK provides a JSON-RPC client, which can interact with the [Concordium JSON-RPC server](https://github.com/Concordium/concordium-json-rpc)
 
 ## Creating a client
@@ -38,7 +34,7 @@ const client = new JsonRpcClient(new HttpProvider("http://localhost:9095"));
 ## API Entrypoints
 Currently the client only supports the following entrypoints, with the same interface as the node client:
 
-- [SendTransaction](../nodejs#constructing-transactions)
+- [sendTransaction](../nodejs#send-account-transaction)
 - [getTransactionStatus](../nodejs#getTransactionStatus)
 - [getInstanceInfo](../nodejs#getInstanceInfo)
 - [getConsensusStatus](../nodejs#getConsensusStatus)
@@ -59,16 +55,16 @@ The examples that use JSON-RPC expect a JSON-RPC server on running at `http://lo
 An example of how to send a transaction using the SDK to a JSON-RPC server.
 
 ## GetInstanceInfo.html
-An example of getting the info of a given smart contract instance using a json-rpc server.
+An example of getting the info of a given smart contract instance using a JSON-RPC server.
 
 ## Alias.html
-A very minimal example of a webpage showing alias'es of a given address, using the bundled blob.
+A very minimal example of a webpage showing alias'es of a given address, using the bundled SDK.
 
 ## GetTransactionStatus.html
-A simple example that allows calling a json-rpc server for a given transaction's status and displays the status.
+A simple example that allows calling a JSON-RPC server for a given transaction's status and displays the status.
 
 ## GetNonce.html
-A simple example that allows calling a json-rpc server for a given account's next nonce and displays it.
+A simple example that allows calling a JSON-RPC server for a given account's next nonce and displays it.
 
 
 # Build

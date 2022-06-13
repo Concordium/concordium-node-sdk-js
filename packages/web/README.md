@@ -4,6 +4,71 @@
 
 Wrappers for interacting with the Concordium node, for the web environment.
 
+[Note that this package contains and exports the functions from the common-sdk, check the readme of that package for an overview of those](../common/README.md).
+
+**Table of Contents**
+- [JSON-RPC client](#json-rpc-client)
+    - [Creating a client](#creating-a-client)
+    - [API Entrypoints](#api-entrypoints)
+- [Creating buffers](#creating-buffers)
+- [Examples](#examples)
+    - [SendTransaction.html](#sendtransactionhtml)
+    - [GetInstanceInfo.html](#getinstanceinfohtml)
+    - [Alias.html](#aliashtml)
+    - [GetTransactionStatus.html](#gettransactionstatushtml)
+    - [GetNonce.html](#getnoncehtml)
+- [Build](#build)
+    - [Building for a release](#building-for-a-release)
+    - [Publishing a release](#publishing-a-release)
+
+# JSON-RPC client
+The SDK provides a JSON-RPC client, which can interact with the [Concordium JSON-RPC server](https://github.com/Concordium/concordium-json-rpc)
+
+## Creating a client
+To create a client, one needs a provider, which handles sending and receiving over a specific protocol. Currently the only one available is the HTTP provider.
+The HTTP provider needs the URL to the JSON-RPC server. The following example demonstrates how to create a client that connects to a local server on port 9095:
+```js
+const client = new JsonRpcClient(new HttpProvider("http://localhost:9095"));
+```
+
+## API Entrypoints
+Currently the client only supports the following entrypoints, with the same interface as the node client:
+
+- [sendTransaction](../nodejs#send-account-transaction)
+- [getTransactionStatus](../nodejs#getTransactionStatus)
+- [getInstanceInfo](../nodejs#getInstanceInfo)
+- [getConsensusStatus](../nodejs#getConsensusStatus)
+
+# Creating buffers
+Some of the functions in the SDK expects buffers as input.
+For this purpose the SDK exports a `toBuffer` function, which is a polyfill of the [buffer.from from the Nodejs API](https://nodejs.org/api/buffer.html#static-method-bufferfromstring-encoding) for strings.
+```js
+const myBuffer = toBuffer('AB2C2D', 'hex');
+```
+
+# Examples
+A few simple webpages have been made, to showcase using the web-sdk. They can be found in the `example` folder.
+Note that the project should be built before running the examples, otherwise they won't work.
+The examples that use JSON-RPC expect a JSON-RPC server on running at `http://localhost:9095`.
+
+## SendTransaction.html
+An example of how to send a transaction using the SDK to a JSON-RPC server.
+
+## GetInstanceInfo.html
+An example of getting the info of a given smart contract instance using a JSON-RPC server.
+
+## Alias.html
+A very minimal example of a webpage showing alias'es of a given address, using the bundled SDK.
+
+## GetTransactionStatus.html
+A simple example that allows calling a JSON-RPC server for a given transaction's status and displays the status.
+
+## GetNonce.html
+A simple example that allows calling a JSON-RPC server for a given account's next nonce and displays it.
+
+
+# Build
+
 ## Building for a release
 To build the package run
 ```
@@ -21,13 +86,3 @@ you have just built the up-to-date code you want to publish. To publish the rele
 yarn npm publish
 ```
 and step through the steps presented to you.
-
-
-## Examples
-
-### Alias.html
-A very minimal example of a webpage showing alias'es of a given address, using the bundled blob.
-
-(The project should be built before running the example) 
-
-

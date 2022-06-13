@@ -1,4 +1,4 @@
-# concordium-node-sdk-js
+# Concordium SDK for Javascript
 
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](https://github.com/Concordium/.github/blob/main/.github/CODE_OF_CONDUCT.md)
 
@@ -8,11 +8,6 @@ Wrappers for interacting with the Concordium node.
 
 Contains the different packages for the js SDK's.
 
-## [Common](./packages/common)
-
-Contains the shared library for the nodejs and web SDK's.
-All serialization and most utility functions are located in this package.
-
 ## [Nodejs](./packages/nodejs)
 
 Contains the nodejs SDK, particularly the client that wraps the grpc calls to the node, using grpc, is located here. 
@@ -20,6 +15,12 @@ Contains the nodejs SDK, particularly the client that wraps the grpc calls to th
 ## [Web](./packages/web)
 
 Contains the web SDK, which can used in a web environment.
+
+## [Common](./packages/common)
+
+Contains the shared library for the nodejs and web SDK's.
+All serialization and most utility functions are located in this package.
+
 
 ## [Rust-bindings](./packages/common)
 

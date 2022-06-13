@@ -2,6 +2,26 @@
 
 This package is the shared library for the nodejs and web SDK's. 
 
+**Table of Contents**
+- [Constructing transactions](#constructing-transactions)
+    - [Create a simple transfer](#create-a-simple-transfer)
+    - [Create a simple transfer with a memo](#create-a-simple-transfer-with-a-memo)
+    - [Create a Register data transaction](#create-a-register-data-transaction)
+    - [Create a configure delegation transaction](#create-a-configure-delegation-transaction)
+    - [Create a credential for an existing account](#create-a-credential-for-an-existing-account)
+    - [Create an update credentials transaction](#create-an-update-credentials-transaction)
+    - [Deploy module](#deploy-module)
+    - [Init Contract (parameterless smart contract)](#init-contract-parameterless-smart-contract)
+    - [Update Contract (parameterless smart contract)](#update-contract-parameterless-smart-contract)
+    - [Smart contract with parameters](#smart-contract-with-parameters)
+- [Utility functions](#utility-functions)
+    - [Generate account alias](#generate-account-alias)
+    - [Check for account alias](#check-for-account-alias)
+    - [Deserialize contract state](#deserialize-contract-state)
+    - [Sign an account transaction](#sign-an-account-transaction)
+    - [Sign a message](#sign-a-message)
+- [Json-Rpc client](#json-rpc-client)
+
 # Constructing transactions
 
 ## Create a simple transfer
@@ -442,3 +462,69 @@ const schema = Buffer.from(schemaSource); // Load schema from file
 const rawContractState = Buffer.from(stateSource); // Could be getinstanceInfo(...).model
 const state = deserializeContractState(contractName, schema, rawContractState);
 ```
+
+## Sign an account transaction
+The following example demonstrates how to use the `signTransaction` helper function to sign a account transaction:
+
+```js
+let accountTransaction: AccountTransaction;
+// Create the transaction
+// ...
+
+const signer: AccountSigner = ...;
+const transactionSignature: AccountTransactionSignature = signTransaction(accountTransaction, signer);
+...
+sendTransaction(accountTransaction, transactionSignature);
+```
+
+For a simple account, with a single credential and one keypair in the credential, one can use the `buildBasicAccountSigner` to get the signer. Otherwise one needs to implement the AccountSigner interface themselves, for now.
+The `buildBasicAccountSigner` function take the account's private key as a hex string.
+
+The following is an example of how to sign an account transaction without using the `signTransaction` helper function:
+```js
+import * as ed from "@noble/ed25519";
+
+let accountTransaction: AccountTransaction;
+// Create the transaction
+// ...
+
+// Sign the transaction, the following is just an example, and any method for signing
+// with the key can be employed.
+const signingKey = "ce432f6bba0d47caec1f45739331dc354b6d749fdb8ab7c2b7f6cb24db39ca0c";
+const hashToSign = getAccountTransactionSignDigest(accountTransaction);
+const signature = Buffer.from(await ed.sign(hashToSign, signingKey)).toString("hex");
+
+// The signatures used to sign the transaction must be provided in a structured way,
+// so that each signature can be mapped to the credential that signed the transaction.
+// In this example we assume the key used was from the credential with index 0, and it
+// was the key with index 0.
+const signatures: AccountTransactionSignature = {
+    0: {
+        0: signature
+    }
+};
+```
+
+## Sign a message
+To have an account sign an arbritrary message, one can use the `signMessage` function: 
+
+```js
+const message = "testMessage";
+const signer: AccountSigner = ...;
+const signature = signMessage(message, signer);
+```
+
+Note that the signMessage preprends a short string, to ensure that the message cannot be a account transaction. To easily verify the signature, one can use the `verifyMessageSignature` function:
+
+```js
+const message = "testMessage";
+const signature = ...; // signature from signMessage
+const accountInfo = ...; // the getAccountInfo node entrypoint can be used for this
+if (!verifyMessageSignature(message, signature, accountInfo)) {
+   // the signature is incorrect
+}
+```
+
+# JSON-RPC client
+The SDK also provides a JSON-RPC client, but it is primarily used for web, [so it has been documented in the web-sdk package instead](../web#JSON-RPC-client).
+The nodejs SDK also provides a [gRPC client, which can interact directly with a node](../nodejs#ConcordiumNodeClient).

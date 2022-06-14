@@ -34,6 +34,7 @@ export type JsonRpcRequest = (
         | ['sendAccountTransaction', { transaction: string }]
         | ['getAccountInfo', { address: string; blockHash: string }]
         | ['getCryptographicParameters', { blockHash: string }]
+        | ['getModuleSource', { blockHash: string; moduleReference: string }]
 ) => Promise<string>;
 
 export default interface Provider {

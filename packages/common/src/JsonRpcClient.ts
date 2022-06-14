@@ -278,4 +278,30 @@ export class JsonRpcClient {
 
         return res.result;
     }
+
+    /**
+     * Retrieves the source of the given module at
+     * the provided block.
+     * @param moduleReference the module's reference, which is the hex encoded hash of the source.
+     * @param blockHash the block to get the cryptographic parameters at
+     * @returns the source of the module as raw bytes.
+     */
+    async getModuleSource(
+        moduleReference: ModuleReference,
+        blockHash?: string
+    ): Promise<Buffer> {
+        if (!blockHash) {
+            const consensusStatus = await this.getConsensusStatus();
+            blockHash = consensusStatus.lastFinalizedBlock;
+        } else if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+
+        const response = await this.provider.request('getModuleSource', {
+            moduleReference: moduleReference.moduleRef,
+            blockHash,
+        });
+
+        return Buffer.from(JSON.parse(response).result, 'base64');
+    }
 }

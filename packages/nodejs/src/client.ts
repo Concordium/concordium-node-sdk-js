@@ -786,6 +786,14 @@ export default class ConcordiumNodeClient {
         );
     }
 
+    // TODO flip the parameters, and change the return value to a Buffer.
+    /**
+     * Retrieves the source of the given module at
+     * the provided block.
+     * @param blockHash the block to get the cryptographic parameters at
+     * @param moduleReference the module's reference, which is the hex encoded hash of the source.
+     * @returns the source of the module as raw bytes.
+     */
     async getModuleSource(
         blockHash: string,
         moduleReference: ModuleReference

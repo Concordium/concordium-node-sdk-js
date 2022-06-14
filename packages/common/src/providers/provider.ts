@@ -33,6 +33,7 @@ export type JsonRpcRequest = (
           ]
         | ['sendAccountTransaction', { transaction: string }]
         | ['getAccountInfo', { address: string; blockHash: string }]
+        | ['getCryptographicParameters', { blockHash: string }]
 ) => Promise<string>;
 
 export default interface Provider {

@@ -5,10 +5,12 @@ import {
     AccountTransactionSignature,
     ConsensusStatus,
     ContractAddress,
+    CryptographicParameters,
     InstanceInfo,
     NextAccountNonce,
     TransactionStatus,
     TransactionSummary,
+    Versioned,
 } from './types';
 import { AccountAddress } from './types/accountAddress';
 import Provider, { JsonRpcResponse } from './providers/provider';
@@ -244,6 +246,35 @@ export class JsonRpcClient {
             buildJsonResponseReviver(datePropertyKeys, bigIntPropertyKeys),
             intToStringTransformer(bigIntPropertyKeys)
         );
+
+        return res.result;
+    }
+
+    /**
+     * Retrieves the global cryptographic parameters on the blockchain at
+     * the provided block.
+     * @param blockHash the block to get the cryptographic parameters at
+     * @returns the global cryptographic parameters at the given block, or undefined it the block does not exist.
+     */
+    async getCryptographicParameters(
+        blockHash?: string
+    ): Promise<Versioned<CryptographicParameters> | undefined> {
+        if (!blockHash) {
+            const consensusStatus = await this.getConsensusStatus();
+            blockHash = consensusStatus.lastFinalizedBlock;
+        } else if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+
+        const response = await this.provider.request(
+            'getCryptographicParameters',
+            {
+                blockHash,
+            }
+        );
+
+        const res =
+            transformJsonResponse<Versioned<CryptographicParameters>>(response);
 
         return res.result;
     }

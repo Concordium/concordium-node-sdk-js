@@ -1,5 +1,6 @@
 import { Buffer } from 'buffer/';
 import {
+    AccountInfo,
     AccountTransaction,
     AccountTransactionSignature,
     ConsensusStatus,
@@ -14,7 +15,12 @@ import Provider, { JsonRpcResponse } from './providers/provider';
 import { serializeAccountTransactionForSubmission } from './serialization';
 import { GtuAmount } from './types/gtuAmount';
 import { ModuleReference } from './types/moduleReference';
-import { buildJsonResponseReviver, intToStringTransformer } from './util';
+import {
+    buildJsonResponseReviver,
+    intToStringTransformer,
+    isValidHash,
+} from './util';
+import { CredentialRegistrationId } from './types/CredentialRegistrationId';
 
 function transformJsonResponse<Result>(
     jsonString: string,
@@ -141,6 +147,8 @@ export class JsonRpcClient {
         if (!blockHash) {
             const consensusStatus = await this.getConsensusStatus();
             blockHash = consensusStatus.lastFinalizedBlock;
+        } else if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
         }
 
         const response = await this.provider.request('getInstanceInfo', {
@@ -184,5 +192,59 @@ export class JsonRpcClient {
                         (result as any).version
                 );
         }
+    }
+
+    /**
+     * Retrieves the account info for the given account. If the provided block
+     * hash is in a block prior to the finalization of the account, then the account
+     * information will not be available.
+     * A credential registration id can also be provided, instead of an address. In this case
+     * the node will return the account info of the account, which the corresponding credential
+     * is (or was) deployed to.
+     * @param accountAddress base58 account address (or a credential registration id) to get the account info for
+     * @param blockHash the block hash to get the account info at
+     * @returns the account info for the provided account address, undefined is the account does not exist
+     */
+    async getAccountInfo(
+        accountAddress: AccountAddress | CredentialRegistrationId,
+        blockHash?: string
+    ): Promise<AccountInfo | undefined> {
+        if (!blockHash) {
+            const consensusStatus = await this.getConsensusStatus();
+            blockHash = consensusStatus.lastFinalizedBlock;
+        } else if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+
+        const address =
+            accountAddress instanceof AccountAddress
+                ? accountAddress.address
+                : accountAddress.credId;
+
+        const response = await this.provider.request('getAccountInfo', {
+            blockHash,
+            address,
+        });
+
+        const datePropertyKeys = ['timestamp', 'effectiveTime'];
+        const bigIntPropertyKeys = [
+            'accountAmount',
+            'accountNonce',
+            'accountIndex',
+            'startIndex',
+            'total',
+            'amount',
+            'stakedAmount',
+            'bakerId',
+            'newStake',
+            'epoch',
+        ];
+        const res = transformJsonResponse<AccountInfo>(
+            response,
+            buildJsonResponseReviver(datePropertyKeys, bigIntPropertyKeys),
+            intToStringTransformer(bigIntPropertyKeys)
+        );
+
+        return res.result;
     }
 }

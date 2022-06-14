@@ -38,6 +38,7 @@ Currently the client only supports the following entrypoints, with the same inte
 - [getTransactionStatus](../nodejs#getTransactionStatus)
 - [getInstanceInfo](../nodejs#getInstanceInfo)
 - [getConsensusStatus](../nodejs#getConsensusStatus)
+- [getAccountInfo](../nodejs#getAccountInfo)
 
 # Creating buffers
 Some of the functions in the SDK expects buffers as input.

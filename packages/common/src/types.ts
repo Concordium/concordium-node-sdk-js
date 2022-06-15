@@ -1471,6 +1471,6 @@ export interface IdentityInput {
 }
 
 export enum SchemaVersion {
-    V1 = 0, // Used by modules with version 0.
-    V2 = 1, // Used by modules with version 1.
+    V1 = 0, // Used by version 0 smart contracts.
+    V2 = 1, // Used by version 1 smart contracts.
 }

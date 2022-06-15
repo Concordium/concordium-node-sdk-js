@@ -369,7 +369,7 @@ const inputParams = serializeInitContractParameters(
     schemaVersion
 );
 ```
-For V0 contracts the schemaVersion should be SchemaVersion.V1. For V1 contracts it should currently be SchemaVersion.V2.
+For V0 contracts the schemaVersion should be `SchemaVersion.V1`. For V1 contracts it should currently be `SchemaVersion.V2`.
 
 Then the payload and transaction can be constructed, in the same way as the parameterless example:
 ```js
@@ -414,9 +414,9 @@ const inputParams = serializeUpdateContractParameters(
         rawModuleSchema,
         schemaVersion
 );
-For V0 contracts the schema version should be SchemaVersion.V1. For V1 contracts it should currently be Schema version.V2.
-
 ```
+For V0 contracts the schema version should be `SchemaVersion.V1`. For V1 contracts it should currently be `SchemaVersion.V2`.
+
 Then we will construct the update payload with parameters obtained 
 ```js
 const updateModule: UpdateContractPayload = {

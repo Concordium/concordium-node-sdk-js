@@ -22,6 +22,10 @@ export type ModuleV1 = Record<string, ContractV1>;
  */
 export type ModuleV2 = Record<string, ContractV2>;
 
+/**
+ * Versioned schema for a module.
+ * Note that the version is the schema version and not the module version.
+ */
 export type VersionedModule =
     | {
           v: SchemaVersion.V1;

@@ -10,21 +10,23 @@ import {
     DelegationTargetBaker,
     ReduceStakePendingChangeV0,
     RemovalPendingChangeV0,
+    AccountAddress,
+    CredentialRegistrationId,
+    isBlockSummaryV1,
+    isBakerAccount,
+    isBakerAccountV1,
+    isDelegatorAccount,
+    isRewardStatusV1,
+    GtuAmount,
+    RejectReasonTag,
+    serializeUpdateContractParameters,
+    isReduceStakePendingChange,
 } from '@concordium/common-sdk';
-import { AccountAddress } from '@concordium/common-sdk';
 import { isValidDate, getNodeClient } from './testHelpers';
 import { bulletProofGenerators } from './resources/bulletproofgenerators';
 import { ipVerifyKey1, ipVerifyKey2 } from './resources/ipVerifyKeys';
 import { PeerElement } from '../grpc/concordium_p2p_rpc_pb';
-import { CredentialRegistrationId } from '@concordium/common-sdk';
-import { isBlockSummaryV1 } from '@concordium/common-sdk';
-import {
-    isBakerAccount,
-    isBakerAccountV1,
-    isDelegatorAccount,
-    isReduceStakePendingChange,
-} from '@concordium/common-sdk';
-import { isRewardStatusV1 } from '@concordium/common-sdk';
+import { getModuleBuffer } from './testHelpers';
 
 const client = getNodeClient();
 
@@ -1258,9 +1260,6 @@ test('pool status can be accessed at given block for specific baker', async () =
         currentPaydayStatus,
     } = ps;
 
-    console.log(ps);
-    console.log(ps.currentPaydayStatus);
-
     expect(poolType).toBe(PoolStatusType.BakerPool);
     expect(bakerId).toBe(1n);
     expect(bakerAddress).toBe(
@@ -1406,4 +1405,159 @@ test('account info with passive delegation can be accessed', async () => {
     expect(delegationTarget.delegateType).toBe(
         DelegationTargetType.PassiveDelegation
     );
+});
+
+test('Invoke contract on v0 contract', async () => {
+    const result = await client.invokeContract(
+        '9b689a646ae3f572cd794a4b19590161c1eeb0d0bf16e1da6afd848998d32710',
+        {
+            invoker: new AccountAddress(
+                '3tXiu8d4CWeuC12irAB7YVb1hzp3YxsmmmNzzkdujCPqQ9EjDm'
+            ),
+            contract: {
+                index: 1000n,
+                subindex: 0n,
+            },
+            method: 'PiggyBank.smash',
+            amount: new GtuAmount(0n),
+            parameter: undefined,
+            energy: 30000n,
+        }
+    );
+
+    if (!result) {
+        throw new Error('Expected a result');
+    }
+
+    if (result.tag !== 'failure') {
+        throw new Error('Expected invoke to be fail');
+    }
+
+    expect(result.usedEnergy).toBe(340n);
+    expect(result.reason.tag).toBe(RejectReasonTag.RejectedReceive);
+});
+
+test('Invoke contract on v1 contract', async () => {
+    const result = await client.invokeContract(
+        '9b689a646ae3f572cd794a4b19590161c1eeb0d0bf16e1da6afd848998d32710',
+        {
+            invoker: new AccountAddress(
+                '3tXiu8d4CWeuC12irAB7YVb1hzp3YxsmmmNzzkdujCPqQ9EjDm'
+            ),
+            contract: {
+                index: 5102n,
+                subindex: 0n,
+            },
+            method: 'PiggyBank.view',
+            amount: new GtuAmount(0n),
+            parameter: undefined,
+            energy: 30000n,
+        }
+    );
+
+    if (!result) {
+        throw new Error('Expected a result');
+    }
+
+    if (result.tag !== 'success') {
+        throw new Error('Expected invoke to be successful');
+    }
+
+    if (result.events[0].tag !== 'Updated') {
+        throw new Error('Expected resulting event to be Updated');
+    }
+
+    expect(result.events[0].address.index).toBe(5102n);
+    expect(result.events[0].address.subindex).toBe(0n);
+    expect(result.events[0].amount).toBe('0');
+    expect(result.usedEnergy).toBe(503n);
+    expect(result.returnValue).toBe('00d2f35e0100000000');
+});
+
+test('Invoke contract with full default', async () => {
+    const result = await client.invokeContract(
+        '9b689a646ae3f572cd794a4b19590161c1eeb0d0bf16e1da6afd848998d32710',
+        {
+            contract: {
+                index: 5102n,
+                subindex: 0n,
+            },
+            method: 'PiggyBank.view',
+        }
+    );
+
+    if (!result) {
+        throw new Error('Expected a result');
+    }
+
+    if (result.tag !== 'success') {
+        throw new Error('Expected invoke to be successful');
+    }
+
+    if (result.events[0].tag !== 'Updated') {
+        throw new Error('Expected resulting event to be Updated');
+    }
+
+    expect(result.events[0].address.index).toBe(5102n);
+    expect(result.events[0].address.subindex).toBe(0n);
+    expect(result.events[0].amount).toBe('0');
+    expect(result.usedEnergy).toBe(503n);
+    expect(result.returnValue).toBe('00d2f35e0100000000');
+});
+
+test('Invoke contract with parameters', async () => {
+    const parameters = {
+        RequestTransfer: [
+            '1',
+            '5',
+            '3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5',
+        ],
+    };
+
+    const contractName = 'two-step-transfer';
+    const receiveFunctionName = 'receive';
+    const methodName = contractName + '.' + receiveFunctionName;
+
+    const modulefileBuffer = getModuleBuffer(
+        'test/resources/schemaFiles/schema_two_step_transfer.bin'
+    );
+    const inputParams = serializeUpdateContractParameters(
+        contractName,
+        receiveFunctionName,
+        parameters,
+        modulefileBuffer
+    );
+
+    const result = await client.invokeContract(
+        '9b689a646ae3f572cd794a4b19590161c1eeb0d0bf16e1da6afd848998d32710',
+        {
+            invoker: new AccountAddress(
+                '3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5'
+            ),
+            contract: {
+                index: 1671n,
+                subindex: 0n,
+            },
+            method: methodName,
+            parameter: inputParams,
+        }
+    );
+
+    if (!result) {
+        throw new Error('Expected a result');
+    }
+
+    if (result.tag !== 'success') {
+        throw new Error('Expected invoke to be successful');
+    }
+
+    if (result.events[0].tag !== 'Updated') {
+        throw new Error('Expected resulting event to be Updated');
+    }
+
+    expect(result.events[0].address.index).toBe(1671n);
+    expect(result.events[0].address.subindex).toBe(0n);
+    expect(result.events[0].amount).toBe('0');
+    expect(result.events[0].message).toBe(inputParams.toString('hex'));
+    expect(result.usedEnergy).toBe(1409n);
 });

@@ -22,6 +22,27 @@ function intToString(jsonStruct: string, keys: string[]): string {
 }
 
 /**
+ * Replaces a string in a JSON string with the same string as a
+ * number, i.e. removing quotes (") prior to and after the string. This
+ * is needed as the default JSON stringify cannot serialize BigInts as numbers.
+ * So one can turn them into strings, stringify the structure, and then use this function
+ * to make those fields into JSON numbers.
+ * @param jsonStruct the JSON structure as a string
+ * @param keys the keys where the strings has to be unquoted
+ * @returns the same JSON string where the strings at the supplied keys are unquoted
+ */
+export function stringToInt(jsonStruct: string, keys: string[]): string {
+    let result = jsonStruct;
+    for (const key of keys) {
+        result = result.replace(
+            new RegExp(`"${key}":\\s*"([0-9]+)"`, 'g'),
+            `"${key}":$1`
+        );
+    }
+    return result;
+}
+
+/**
  * A transformer that converts all the values provided as keys to
  * string values.
  * @param json the json to transform

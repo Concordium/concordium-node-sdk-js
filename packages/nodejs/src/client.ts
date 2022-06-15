@@ -13,6 +13,7 @@ import {
     PeersRequest,
     SendTransactionRequest,
     TransactionHash,
+    InvokeContractRequest,
 } from '../grpc/concordium_p2p_rpc_pb';
 import {
     serializeAccountTransactionForSubmission,
@@ -61,6 +62,8 @@ import {
     ReduceStakePendingChangeV0,
     PassiveDelegationStatus,
     PassiveDelegationStatusDetails,
+    ContractContext,
+    InvokeContractResult,
     GtuAmount,
     ModuleReference,
     ReduceStakePendingChangeV1,
@@ -69,6 +72,7 @@ import {
     buildJsonResponseReviver,
     intToStringTransformer,
     isValidHash,
+    stringToInt,
 } from '@concordium/common-sdk/lib/util';
 import {
     intListToStringList,
@@ -799,6 +803,95 @@ export default class ConcordiumNodeClient {
         );
 
         return response;
+    }
+
+    /**
+     * Invokes a smart contract.
+     * @param blockHash the block hash at which the contract should be invoked at. The contract is invoked in the state at the end of this block.
+     * @param context the collection of details used to invoke the contract. Must include the address of the contract and the method invoked.
+     * @returns If the node was able to invoke, then a object describing the outcome is returned.
+     * The outcome is determined by the `tag` field, which is either `success` or `failure`.
+     * The `usedEnergy` field will always be present, and is the amount of NRG was used during the execution.
+     * If the tag is `success`, then an `events` field is present, and it contains the events that would have been generated.
+     * If invoking a V1 contract and it produces a return value, it will be present in the `returnValue` field.
+     * If the tag is `failure`, then a `reason` field is present, and it contains the reason the update would have been rejected.
+     * If either the block does not exist, or then node fails to parse of any of the inputs, then undefined is returned.
+     */
+    async invokeContract(
+        blockHash: string,
+        contractContext: ContractContext
+    ): Promise<InvokeContractResult | undefined> {
+        if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+
+        let invoker:
+            | {
+                  type: 'AddressContract';
+                  address: {
+                      index: string;
+                      subindex: string;
+                  };
+              }
+            | {
+                  type: 'AddressAccount';
+                  address: string;
+              }
+            | null;
+
+        if (!contractContext.invoker) {
+            invoker = null;
+        } else if ((contractContext.invoker as Address).address) {
+            invoker = {
+                type: 'AddressAccount',
+                address: (contractContext.invoker as Address).address,
+            };
+        } else {
+            const invokerContract = contractContext.invoker as ContractAddress;
+            invoker = {
+                type: 'AddressContract',
+                address: {
+                    subindex: invokerContract.subindex.toString(),
+                    index: invokerContract.index.toString(),
+                },
+            };
+        }
+
+        const requestObject = new InvokeContractRequest();
+        requestObject.setBlockHash(blockHash);
+        requestObject.setContext(
+            stringToInt(
+                JSON.stringify({
+                    invoker,
+                    contract: {
+                        subindex: contractContext.contract.subindex.toString(),
+                        index: contractContext.contract.index.toString(),
+                    },
+                    amount:
+                        contractContext.amount &&
+                        contractContext.amount.microGtuAmount.toString(),
+                    method: contractContext.method,
+                    parameter:
+                        contractContext.parameter &&
+                        contractContext.parameter.toString('hex'),
+                    energy:
+                        contractContext.energy &&
+                        Number(contractContext.energy.toString()),
+                }),
+                ['index', 'subindex']
+            )
+        );
+
+        const response = await this.sendRequest(
+            this.client.invokeContract,
+            requestObject
+        );
+        const bigIntPropertyKeys = ['usedEnergy', 'index', 'subindex'];
+        return unwrapJsonResponse<InvokeContractResult>(
+            response,
+            buildJsonResponseReviver([], bigIntPropertyKeys),
+            intToStringTransformer(bigIntPropertyKeys)
+        );
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

@@ -1,3 +1,13 @@
+// Yarn stuff
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+yarn-error.log
+
 # Dependency directory
 node_modules
 
@@ -7,6 +17,7 @@ node_modules
 # Compiled files
 lib
 target
+dist
 
 # Auto generate files from the gRPC proto file
 grpc
@@ -20,3 +31,6 @@ testing.js
 
 # Package lock
 package-lock.json
+
+#tsc build files
+*.tsbuildinfo

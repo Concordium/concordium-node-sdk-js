@@ -11,7 +11,7 @@
     "parserOptions": {
         "ecmaVersion": 2020,
         "sourceType": "module",
-        "project": "./tsconfig.eslint.json"
+        "project": [ "./packages/**/tsconfig.eslint.json", "./tsconfig.eslint.json"]
     },
     "plugins": [
         "@typescript-eslint"
@@ -19,5 +19,13 @@
     "rules": {
         "quotes": [2, "single", { "avoidEscape": true }]
     },
-    "ignorePatterns": ["pkg/**/"]
+    "overrides": [
+        {
+            "files": ["*.config.js"],
+            "rules": {
+                "@typescript-eslint/no-var-requires": "off"
+            }
+        }
+    ],
+    "ignorePatterns": ["**/pkg/**/", "**/lib/**/", "deps/**/*", "**/nodejs/grpc/*"]
 }

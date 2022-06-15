@@ -36,7 +36,7 @@ test('Parameter of Struct (U8, string, string variables) with the wrong private 
     };
 
     const contractName = 'UserDetails';
-    const modulefileBuffer = getModuleBuffer(
+    const moduleFileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema11.bin'
     );
     const userInput = {
@@ -47,7 +47,8 @@ test('Parameter of Struct (U8, string, string variables) with the wrong private 
     const inputParams = serializeInitContractParameters(
         contractName,
         userInput,
-        modulefileBuffer
+        moduleFileBuffer,
+        0
     );
 
     const baseEnergy = 300000n;

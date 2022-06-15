@@ -83,9 +83,7 @@ test('serialize UpdateContractParameters using CIS2 contract', () => {
                 data: [],
             },
         ],
-        Buffer.from(
-            fs.readFileSync('./test/resources/schemaFiles/cis2-nft-schema.bin')
-        ),
+        Buffer.from(fs.readFileSync('./test/resources/cis2-nft-schema.bin')),
         1
     );
 

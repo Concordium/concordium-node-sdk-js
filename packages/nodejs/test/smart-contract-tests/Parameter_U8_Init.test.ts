@@ -38,13 +38,14 @@ test('Parameter of U8 with the wrong private key', async () => {
     const userInput = 25;
     const contractName = 'SimpleU8';
 
-    const modulefileBuffer = getModuleBuffer(
+    const moduleFileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema31.bin'
     );
     const inputParams = serializeInitContractParameters(
         contractName,
         userInput,
-        modulefileBuffer
+        moduleFileBuffer,
+        0
     );
     const baseEnergy = 300000n;
 

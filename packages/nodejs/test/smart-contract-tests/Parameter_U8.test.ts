@@ -46,14 +46,15 @@ test('Parameter of U8 with the wrong private key', async () => {
         subindex: BigInt(0),
     } as ContractAddress;
 
-    const modulefileBuffer = getModuleBuffer(
+    const moduleFileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema8.bin'
     );
     const inputParams = serializeUpdateContractParameters(
         contractName,
         receiveFunctionName,
         userInput,
-        modulefileBuffer
+        moduleFileBuffer,
+        0
     );
     const baseEnergy = 30000n;
 

@@ -24,6 +24,7 @@ import {
     CredentialDeploymentTransaction,
     UnsignedCredentialDeploymentInformation,
     CredentialDeploymentInfo,
+    SchemaVersion,
 } from './types';
 import { calculateEnergyCost } from './energyCost';
 import { countSignatures } from './util';
@@ -435,67 +436,61 @@ export function serializeCredentialDeploymentTransactionForSubmission(
 }
 
 /**
- *
  * @param contractName name of the contract that the init contract transaction will initialize
- * @param userInput  user input
- * @param modulefileBuffer buffer of embedded schema file
+ * @param parameters  the parameters to be serialized, should correspond to the JSON representation.
+ * @param rawSchema buffer for the schema of a module that contains the contract
+ * @param schemaVersion the version of the schema provided
  * @returns serialized buffer of init contract parameters
  */
 export function serializeInitContractParameters(
     contractName: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-    userInput: any,
-    modulefileBuffer: Buffer,
-    moduleVersion = 0
+    parameters: any,
+    rawSchema: Buffer,
+    schemaVersion: SchemaVersion
 ): Buffer {
-    const schemaModule = deserialModuleFromBuffer(
-        modulefileBuffer,
-        moduleVersion
-    );
-    if (!schemaModule) {
+    const schemaModule = deserialModuleFromBuffer(rawSchema, schemaVersion);
+    if (!schemaModule.value) {
         throw new Error(
             'Schema module not found. Please provide a valid schema file.'
         );
-    } else if (!schemaModule[contractName]) {
+    } else if (!schemaModule.value[contractName]) {
         throw new Error('Schema module does not contain specified contract');
     }
-    const init = schemaModule[contractName].init;
-    const initType = getParameterType(init, moduleVersion);
-    return serializeParameters(initType, userInput);
+    const init = schemaModule.value[contractName].init;
+    const initType = getParameterType(init, schemaModule.v);
+    return serializeParameters(initType, parameters);
 }
 
 /**
- *
  * @param contractName name of the contract that the update contract transaction will update
  * @param receiveFunctionName name of function that the update contract transaction will invoke
- * @param userInput user input
- * @param modulefileBuffer buffer of embedded schema file
+ * @param parameters  the parameters to be serialized, should correspond to the JSON representation
+ * @param rawSchema buffer for the schema of a module that contains the contract
+ * @param schemaVersion the version of the schema provided
  * @returns serialized buffer of update contract parameters
  */
 export function serializeUpdateContractParameters(
     contractName: string,
     receiveFunctionName: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-    userInput: any,
-    modulefileBuffer: Buffer,
-    moduleVersion = 0
+    parameters: any,
+    rawSchema: Buffer,
+    schemaVersion: SchemaVersion
 ): Buffer {
-    const schemaModule = deserialModuleFromBuffer(
-        modulefileBuffer,
-        moduleVersion
-    );
-    if (!schemaModule) {
+    const schemaModule = deserialModuleFromBuffer(rawSchema, schemaVersion);
+    if (!schemaModule.value) {
         throw new Error(
             'Schema module not found. Please provide a valid schema file.'
         );
-    } else if (!schemaModule[contractName]) {
+    } else if (!schemaModule.value[contractName]) {
         throw new Error('Schema module does not contain specified contract');
-    } else if (!schemaModule[contractName].receive[receiveFunctionName]) {
+    } else if (!schemaModule.value[contractName].receive[receiveFunctionName]) {
         throw new Error('Could not find the receive function name provided');
     }
     const receiveType = getParameterType(
-        schemaModule[contractName].receive[receiveFunctionName],
-        moduleVersion
+        schemaModule.value[contractName].receive[receiveFunctionName],
+        schemaModule.v
     );
-    return serializeParameters(receiveType, userInput);
+    return serializeParameters(receiveType, parameters);
 }

@@ -43,13 +43,14 @@ test('Parameter of Struct parameter (Complex) the wrong private key', async () =
         nicknames: ['CCD', 'Concordium', 'GTU', 'ABC'],
     };
 
-    const modulefileBuffer = getModuleBuffer(
+    const moduleFileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema30.bin'
     );
     const inputParams = serializeInitContractParameters(
         contractName,
         userInput,
-        modulefileBuffer
+        moduleFileBuffer,
+        0
     );
 
     const baseEnergy = 300000n;

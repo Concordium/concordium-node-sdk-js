@@ -67,6 +67,7 @@ import {
     GtuAmount,
     ModuleReference,
     ReduceStakePendingChangeV1,
+    buildInvoker,
 } from '@concordium/common-sdk';
 import {
     buildJsonResponseReviver,
@@ -833,44 +834,12 @@ export default class ConcordiumNodeClient {
             throw new Error('The input was not a valid hash: ' + blockHash);
         }
 
-        let invoker:
-            | {
-                  type: 'AddressContract';
-                  address: {
-                      index: string;
-                      subindex: string;
-                  };
-              }
-            | {
-                  type: 'AddressAccount';
-                  address: string;
-              }
-            | null;
-
-        if (!contractContext.invoker) {
-            invoker = null;
-        } else if ((contractContext.invoker as Address).address) {
-            invoker = {
-                type: 'AddressAccount',
-                address: (contractContext.invoker as Address).address,
-            };
-        } else {
-            const invokerContract = contractContext.invoker as ContractAddress;
-            invoker = {
-                type: 'AddressContract',
-                address: {
-                    subindex: invokerContract.subindex.toString(),
-                    index: invokerContract.index.toString(),
-                },
-            };
-        }
-
         const requestObject = new InvokeContractRequest();
         requestObject.setBlockHash(blockHash);
         requestObject.setContext(
             stringToInt(
                 JSON.stringify({
-                    invoker,
+                    invoker: buildInvoker(contractContext.invoker),
                     contract: {
                         subindex: contractContext.contract.subindex.toString(),
                         index: contractContext.contract.index.toString(),

@@ -3,10 +3,13 @@ import {
     AccountInfo,
     AccountTransaction,
     AccountTransactionSignature,
+    buildInvoker,
     ConsensusStatus,
     ContractAddress,
+    ContractContext,
     CryptographicParameters,
     InstanceInfo,
+    InvokeContractResult,
     NextAccountNonce,
     TransactionStatus,
     TransactionSummary,
@@ -303,5 +306,55 @@ export class JsonRpcClient {
         });
 
         return Buffer.from(JSON.parse(response).result, 'base64');
+    }
+
+    /**
+     * Invokes a smart contract.
+     * @param context the collection of details used to invoke the contract. Must include the address of the contract and the method invoked.
+     * @param blockHash the block hash at which the contract should be invoked at. The contract is invoked in the state at the end of this block.
+     * @returns If the node was able to invoke, then a object describing the outcome is returned.
+     * The outcome is determined by the `tag` field, which is either `success` or `failure`.
+     * The `usedEnergy` field will always be present, and is the amount of NRG was used during the execution.
+     * If the tag is `success`, then an `events` field is present, and it contains the events that would have been generated.
+     * If invoking a V1 contract and it produces a return value, it will be present in the `returnValue` field.
+     * If the tag is `failure`, then a `reason` field is present, and it contains the reason the update would have been rejected.
+     * If either the block does not exist, or then node fails to parse of any of the inputs, then undefined is returned.
+     */
+    async invokeContract(
+        contractContext: ContractContext,
+        blockHash?: string
+    ): Promise<InvokeContractResult | undefined> {
+        if (!blockHash) {
+            const consensusStatus = await this.getConsensusStatus();
+            blockHash = consensusStatus.lastFinalizedBlock;
+        } else if (!isValidHash(blockHash)) {
+            throw new Error('The input was not a valid hash: ' + blockHash);
+        }
+
+        const invoker = buildInvoker(contractContext.invoker);
+
+        const context = {
+            ...contractContext,
+            invoker,
+            amount:
+                contractContext.amount && contractContext.amount.microGtuAmount,
+            parameter:
+                contractContext.parameter &&
+                contractContext.parameter.toString('hex'),
+        };
+
+        const response = await this.provider.request('invokeContract', {
+            blockHash,
+            context,
+        });
+
+        const bigIntPropertyKeys = ['usedEnergy', 'index', 'subindex'];
+        const res = transformJsonResponse<InvokeContractResult>(
+            response,
+            buildJsonResponseReviver([], bigIntPropertyKeys),
+            intToStringTransformer(bigIntPropertyKeys)
+        );
+
+        return res.result;
     }
 }

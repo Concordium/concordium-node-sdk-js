@@ -7,7 +7,7 @@
         <script  type="module" >
          const client = new concordiumSDK.JsonRpcClient(new concordiumSDK.HttpProvider("http://localhost:9095"));
          const update = function () {
-             client.getInstanceInfo({index: index.value, subindex: subindex.value}).then((res) => {
+             client.getInstanceInfo({index: BigInt(index.value), subindex: BigInt(subindex.value)}).then((res) => {
                  console.log(res);
                  const result = {
                      ...res,

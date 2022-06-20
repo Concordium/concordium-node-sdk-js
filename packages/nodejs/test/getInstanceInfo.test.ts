@@ -17,8 +17,8 @@ test('retrieve information about a given smart contract instance', async () => {
         index: BigInt(104),
     };
     const instanceInfo = await client.getInstanceInfo(
-        blockHash,
-        contractAddress
+        contractAddress,
+        blockHash
     );
     if (!instanceInfo) {
         throw new Error(

@@ -1,5 +1,12 @@
 # Changelog
 
+
+## Unreleased
+
+### Added
+
+- Add support for getAccountInfo, InvokeContract, getCryptographicParameters and getModuleSource with JSON-RPC
+
 ## 0.1.2
 
 - Add type file missing from the package

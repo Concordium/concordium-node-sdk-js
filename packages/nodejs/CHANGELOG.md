@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Breaking changes
+
+- getInstanceInfo, getModuleSource and invokeContract's parameters have changed order. Now the blockHash is the 2nd parameter instead of the 1st.
+
 ## 1.1.0 2022-06-14
 
 ### Added

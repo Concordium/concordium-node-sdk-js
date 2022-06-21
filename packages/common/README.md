@@ -217,21 +217,11 @@ const updateCredentialsPayload: UpdateCredentialsPayload = {
 The following example demonstrates how to construct a "deployModule" transaction, which is used to deploy a smart contract module.
 
 ```js
-/**
- *
- * @param filePath for the wasm file moudule
- * @returns Buffer of the wasm file
- */
-function getByteArray(filePath: string): Buffer {
-    const data = fs.readFileSync(filePath);
-    return Buffer.from(data);
-}
-//To get the buffer of the wasm file from the previous method
-const wasmFileBuffer = getByteArray(wasmFilePath) as Buffer;
+//Get the wasm file as a buffer.
+const wasmModule = Buffer.from(fs.readFileSync('path/to/module.wasm'));
 
 const deployModule: DeployModulePayload = {
-        content: wasmFileBuffer,
-        version: 0,
+    content: wasmModule
 };
 
 const header: AccountTransactionHeader = {
@@ -244,6 +234,15 @@ const deployModuleTransaction: AccountTransaction = {
     header: header,
     payload: deployModule,
     type: AccountTransactionType.DeployModule,
+};
+```
+
+Note that if build using cargo-concordium `1.0.0`, the version should be added to the payload. In `1.1.0` and newer, the version is prepended into the module itself. To deploy a V0 module, which has been built with cargo `1.0.0`,
+you should add the version field to the payload:
+```js
+const deployModule: DeployModulePayload = {
+        content: wasmModule,
+        version: 0,
 };
 ```
 

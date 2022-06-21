@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Support for deploying versioned smart contract modules. (This is done by not supplying the version field in the payload)
+
 ## 1.1.0 2022-06-14
 
 ### Added

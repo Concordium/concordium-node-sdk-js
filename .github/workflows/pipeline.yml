@@ -3,12 +3,16 @@ name: Build and lint
 on:
     # Triggers the workflow on push or pull request events but only for the main branch
     push:
-        branches: [main]
+        branches: [main, release**]
     pull_request:
-        branches: [main]
+        branches: [main, release**]
 
     # Allows us to run the workflow manually from the Actions tab
     workflow_dispatch:
+
+env:
+  RUST_FMT: nightly-2021-06-09-x86_64-unknown-linux-gnu
+  RUST_CLIPPY: 1.53
 
 jobs:
     build:
@@ -25,9 +29,6 @@ jobs:
 
             - name: Get dependencies
               run: yarn
-
-            - name: Build gRPC
-              run: yarn generate
 
             - name: Install rust
               run: rustup default 1.53
@@ -56,3 +57,51 @@ jobs:
 
             - name: Lint
               run: yarn lint
+
+    rust_lint_fmt:
+      name: rust:lint:fmt
+      # Don't run on draft pull requests
+      if: ${{ !github.event.pull_request.draft }}
+      runs-on: ubuntu-latest
+      defaults:
+        run:
+          working-directory: packages/rust-bindings
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v2
+        - name: Install Rust
+          uses: actions-rs/toolchain@v1
+          with:
+            profile: minimal
+            toolchain: ${{ env.RUST_FMT }}
+            override: true
+            components: rustfmt
+        - name: Format
+          run: |
+            cargo fmt -- --color=always --check
+    rust_lint_clippy:
+      name: rust:lint:clippy
+      needs: "rust_lint_fmt"
+      # Don't run on draft pull requests
+      if: ${{ !github.event.pull_request.draft }}
+      runs-on: ubuntu-latest
+      defaults:
+        run:
+          working-directory: packages/rust-bindings
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v2
+          with:
+            submodules: recursive
+        - name: Install Rust
+          uses: actions-rs/toolchain@v1
+          with:
+            profile: minimal
+            toolchain: ${{ env.RUST_CLIPPY }}
+            override: true
+            target: ${{ env.TARGET }}
+            components: rustfmt, clippy
+        - name: Clippy
+          run: |
+            git config --global url."https://github.com/".insteadOf "git@github.com:"
+            cargo clippy --color=always --tests --benches -- -Dclippy::all

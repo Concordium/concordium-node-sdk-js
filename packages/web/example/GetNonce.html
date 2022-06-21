@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+        <script src="../lib/concordium.min.js"></script>
+        <script  type="module" >
+         const client = new concordiumSDK.JsonRpcClient(new concordiumSDK.HttpProvider("http://localhost:9095"));
+         const update = function () {
+             const accountAddress = new concordiumSDK.AccountAddress(address.value);
+             client.getNextAccountNonce(accountAddress).then((res) => {
+                 document.getElementById('nonce').innerHTML = res.nonce;
+             });
+         };
+         document.getElementById('button').onclick = update;
+        </script>
+    </head>
+    <body>
+        <input type="text" id="address"/>
+        <button id="button">
+            Click
+        </button>
+        Nonce: <label id="nonce"/>
+    </body>
+</html>

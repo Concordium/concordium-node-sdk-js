@@ -164,11 +164,14 @@ dependencies = [
  "curve_arithmetic",
  "dodis_yampolskiy_prf",
  "ed25519-dalek",
+ "elgamal",
+ "encrypted_transfers",
  "hex",
  "id",
  "pairing",
  "pedersen_scheme",
  "ps_sig",
+ "rand",
  "serde",
  "serde_json",
  "sha2 0.9.8",
@@ -405,6 +408,28 @@ dependencies = [
  "rand_core",
  "serde",
  "thiserror",
+]
+
+[[package]]
+name = "encrypted_transfers"
+version = "0.1.0"
+dependencies = [
+ "bulletproofs",
+ "crypto_common",
+ "crypto_common_derive",
+ "curve_arithmetic",
+ "elgamal",
+ "ff",
+ "ffi_helpers",
+ "id",
+ "itertools",
+ "libc",
+ "pairing",
+ "pedersen_scheme",
+ "rand",
+ "random_oracle",
+ "serde",
+ "wasm-bindgen",
 ]
 
 [[package]]

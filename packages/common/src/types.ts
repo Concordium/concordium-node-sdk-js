@@ -1152,7 +1152,7 @@ export enum AccountTransactionType {
     RegisterData = 21,
     SimpleTransferWithMemo = 22,
     EncryptedTransferWithMemo = 23,
-    TransferWithScheduleWithMemo = 24,
+    TransferWithScheduleAndMemo = 24,
     ConfigureDelegation = 26,
 }
 
@@ -1222,10 +1222,43 @@ export interface SimpleTransferPayload {
     toAddress: AccountAddress;
 }
 
-export interface SimpleTransferWithMemoPayload extends SimpleTransferPayload {
-    /** The byte representation of the memo of the transaction  */
-    memo: DataBlob;
+export interface SchedulePoint {
+    timestamp: Date;
+    amount: GtuAmount;
 }
+export type Schedule = SchedulePoint[];
+
+export interface TransferWithSchedulePayload {
+    /** Schedule */
+    schedule: Schedule;
+
+    /** the recipient of the transfer*/
+    toAddress: AccountAddress;
+}
+
+export interface EncryptedTransferPayload {
+    /** the recipient of the transfer*/
+    toAddress: AccountAddress;
+    /** encrypted µGTU amount to transfer */
+    transferAmount: string;
+    /** encrypted µGTU amount remaining in shielded balance */
+    remainingAmount: string;
+
+    index: bigint;
+    /** Proof string for the transaction */
+    proof: string;
+}
+
+type WithMemo<T> = T & {
+    /** The bytes representation of the memo of the transaction  */
+    memo: DataBlob;
+};
+
+export type SimpleTransferWithMemoPayload = WithMemo<SimpleTransferPayload>;
+export type EncryptedTransferWithMemoPayload =
+    WithMemo<EncryptedTransferPayload>;
+export type TransferWithScheduleAndMemoPayload =
+    WithMemo<TransferWithSchedulePayload>;
 
 export interface RegisterDataPayload {
     /** The byte representation of the data to be registered  */
@@ -1275,6 +1308,10 @@ export type AccountTransactionPayload =
     | InitContractPayload
     | UpdateContractPayload
     | UpdateCredentialsPayload
+    | TransferWithSchedulePayload
+    | TransferWithScheduleAndMemoPayload
+    | EncryptedTransferPayload
+    | EncryptedTransferWithMemoPayload
     | ConfigureDelegationPayload;
 
 export interface AccountTransaction {

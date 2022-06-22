@@ -1,5 +1,8 @@
 import { Buffer } from 'buffer/';
-import { serializeCredentialDeploymentInfo } from './serialization';
+import {
+    serializeCredentialDeploymentInfo,
+    serializeEncryptedData,
+} from './serialization';
 import {
     encodeWord64,
     encodeDataBlob,
@@ -12,9 +15,13 @@ import {
 } from './serializationHelpers';
 import {
     AccountTransactionType,
-    InitContractPayload,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
+    EncryptedTransferPayload,
+    EncryptedTransferWithMemoPayload,
+    TransferWithSchedulePayload,
+    TransferWithScheduleAndMemoPayload,
+    InitContractPayload,
     DeployModulePayload,
     UpdateContractPayload,
     AccountTransactionPayload,
@@ -135,6 +142,98 @@ export class UpdateContractHandler
     }
 }
 
+export class TransferWithScheduleHandler
+    implements AccountTransactionHandler<TransferWithSchedulePayload>
+{
+    getBaseEnergyCost(transfer?: TransferWithSchedulePayload): bigint {
+        if (!transfer) {
+            throw new Error(
+                'payload is required to determine the base energy cost of transfer with schedule'
+            );
+        }
+        return BigInt(transfer.schedule.length) * 364n;
+    }
+
+    serialize(scheduledTransfer: TransferWithSchedulePayload): Buffer {
+        const serializedToAddress = scheduledTransfer.toAddress.decodedAddress;
+        const serializedScheduleLength = encodeWord8(
+            scheduledTransfer.schedule.length
+        );
+        const serializedSchedule = scheduledTransfer.schedule.map(
+            ({ amount, timestamp }) =>
+                Buffer.concat([
+                    encodeWord64(BigInt(timestamp.getTime())),
+                    encodeWord64(amount.microGtuAmount),
+                ])
+        );
+        return Buffer.concat([
+            serializedToAddress,
+            serializedScheduleLength,
+            ...serializedSchedule,
+        ]);
+    }
+}
+
+export class TransferWithScheduleAndMemoHandler
+    extends TransferWithScheduleHandler
+    implements AccountTransactionHandler<TransferWithScheduleAndMemoPayload>
+{
+    serialize(scheduledTransfer: TransferWithScheduleAndMemoPayload): Buffer {
+        const serializedMemo = encodeDataBlob(scheduledTransfer.memo);
+        const serializedToAddress = scheduledTransfer.toAddress.decodedAddress;
+        const serializedScheduleLength = encodeWord8(
+            scheduledTransfer.schedule.length
+        );
+        const serializedSchedule = scheduledTransfer.schedule.map(
+            ({ amount, timestamp }) =>
+                Buffer.concat([
+                    encodeWord64(BigInt(timestamp.getTime())),
+                    encodeWord64(amount.microGtuAmount),
+                ])
+        );
+        return Buffer.concat([
+            serializedToAddress,
+            serializedMemo,
+            serializedScheduleLength,
+            ...serializedSchedule,
+        ]);
+    }
+}
+
+export class EncryptedTransferHandler
+    implements AccountTransactionHandler<EncryptedTransferPayload>
+{
+    getBaseEnergyCost(): bigint {
+        return 27000n;
+    }
+
+    serialize(encryptedTransfer: EncryptedTransferPayload): Buffer {
+        const serializedToAddress = encryptedTransfer.toAddress.decodedAddress;
+        const serializedEncryptedData =
+            serializeEncryptedData(encryptedTransfer);
+
+        return Buffer.concat([serializedToAddress, serializedEncryptedData]);
+    }
+}
+
+export class EncryptedTransferWithMemoHandler
+    extends EncryptedTransferHandler
+    implements AccountTransactionHandler<EncryptedTransferWithMemoPayload>
+{
+    serialize(encryptedTransfer: EncryptedTransferWithMemoPayload): Buffer {
+        const serializedToAddress = encryptedTransfer.toAddress.decodedAddress;
+        const serializedMemo = encodeDataBlob(encryptedTransfer.memo);
+        const serializedEncryptedData =
+            serializeEncryptedData(encryptedTransfer);
+
+        return Buffer.concat([
+            serializedToAddress,
+            serializedMemo,
+            serializedEncryptedData,
+        ]);
+    }
+}
+
 export class UpdateCredentialsHandler
     implements AccountTransactionHandler<UpdateCredentialsPayload>
 {
@@ -210,6 +309,18 @@ export function getAccountTransactionHandler(
     type: AccountTransactionType.SimpleTransferWithMemo
 ): SimpleTransferWithMemoHandler;
 export function getAccountTransactionHandler(
+    type: AccountTransactionType.TransferWithSchedule
+): TransferWithScheduleHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.TransferWithScheduleAndMemo
+): TransferWithScheduleAndMemoHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.EncryptedTransfer
+): EncryptedTransferHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.EncryptedTransferWithMemo
+): EncryptedTransferWithMemoHandler;
+export function getAccountTransactionHandler(
     type: AccountTransactionType.UpdateCredentials
 ): UpdateCredentialsHandler;
 export function getAccountTransactionHandler(
@@ -231,6 +342,10 @@ export function getAccountTransactionHandler(
     type: AccountTransactionType.ConfigureDelegation
 ): ConfigureDelegationHandler;
 
+export function getAccountTransactionHandler(
+    type: AccountTransactionType
+): AccountTransactionHandler;
+
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function getAccountTransactionHandler(type: AccountTransactionType) {
     switch (type) {
@@ -238,6 +353,14 @@ export function getAccountTransactionHandler(type: AccountTransactionType) {
             return new SimpleTransferHandler();
         case AccountTransactionType.SimpleTransferWithMemo:
             return new SimpleTransferWithMemoHandler();
+        case AccountTransactionType.TransferWithSchedule:
+            return new TransferWithScheduleHandler();
+        case AccountTransactionType.TransferWithScheduleAndMemo:
+            return new TransferWithScheduleAndMemoHandler();
+        case AccountTransactionType.EncryptedTransfer:
+            return new EncryptedTransferHandler();
+        case AccountTransactionType.EncryptedTransferWithMemo:
+            return new EncryptedTransferWithMemoHandler();
         case AccountTransactionType.DeployModule:
             return new DeployModuleHandler();
         case AccountTransactionType.InitializeSmartContractInstance:

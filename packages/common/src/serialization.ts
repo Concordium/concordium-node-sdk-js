@@ -24,6 +24,7 @@ import {
     CredentialDeploymentTransaction,
     UnsignedCredentialDeploymentInformation,
     CredentialDeploymentInfo,
+    EncryptedTransferPayload,
 } from './types';
 import { calculateEnergyCost } from './energyCost';
 import { countSignatures } from './util';
@@ -432,7 +433,33 @@ export function serializeCredentialDeploymentTransactionForSubmission(
 }
 
 /**
- *
+ * Serializes the fields of an encryptedTransfer, which is related to the encrypted amount, which is everything except the receiver address.
+ * @param encryptedTransfer transfer which fields should be serialized.
+ * @returns the serialization of remainingEncryptedAmount, transferAmount, index and proof.
+ */
+export function serializeEncryptedData(
+    encryptedTransfer: EncryptedTransferPayload
+): Buffer {
+    const serializedRemainingAmount = Buffer.from(
+        encryptedTransfer.remainingAmount,
+        'hex'
+    );
+    const serializedTransferAmount = Buffer.from(
+        encryptedTransfer.transferAmount,
+        'hex'
+    );
+    const serializedIndex = encodeWord64(encryptedTransfer.index);
+    const serializedProof = Buffer.from(encryptedTransfer.proof, 'hex');
+
+    return Buffer.concat([
+        serializedRemainingAmount,
+        serializedTransferAmount,
+        serializedIndex,
+        serializedProof,
+    ]);
+}
+
+/**
  * @param contractName name of the contract that the init contract transaction will initialize
  * @param userInput  user input
  * @param modulefileBuffer buffer of embedded schema file

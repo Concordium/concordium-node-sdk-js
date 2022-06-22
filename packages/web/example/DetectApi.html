@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <script src="../lib/concordium.min.js"></script>
+    <script type="module">
+        function walletStatus(text) {
+            return 'Wallet status: ' + text;
+        }
+
+        function apiStatus(text) {
+            return 'API status: ' + text;
+        }
+
+        document.getElementById('walletStatus').innerHTML = walletStatus('Not connected');
+        document.getElementById('apiStatus').innerHTML = apiStatus('Not connected');
+
+        concordiumSDK.detectConcordiumProvider().then((provider) => {
+            document.getElementById('apiStatus').innerHTML = apiStatus('Connected');
+
+            document.getElementById('connect').onclick = () => {
+                provider.connect().then((accountAddress) => {
+                    document.getElementById('connect').disabled = true;
+                    document.getElementById('walletStatus').innerHTML = walletStatus('Connected to: ' + accountAddress);
+                }).catch(() => {
+                    document.getElementById('walletStatus').innerHTML = walletStatus('Connection rejected by wallet');
+                });
+            }
+
+            document.getElementById('connect').disabled = false;
+        })
+        .catch((e) => document.getElementById('apiStatus').innerHTML = apiStatus('Connection timed out'));
+    </script>
+</head>
+
+<body>
+    <label id="apiStatus"></label>
+    <br />
+    <label id="walletStatus"></label>
+    <br />
+    <button id="connect" disabled>Connect</button>
+</body>
+
+</html>

@@ -39,6 +39,23 @@ Currently the client only supports the following entrypoints, with the same inte
 - [getInstanceInfo](../nodejs#getInstanceInfo)
 - [getConsensusStatus](../nodejs#getConsensusStatus)
 
+# Detecting the Concordium browser wallet API
+The SDK provides a helper method that can be used to get access to the Concordium browser wallet API. The helper ensures that the browser wallet API is correctly injected before exposing the API methods to the caller. The following exemplifies how accessing the API can be done.
+
+```typescript
+detectConcordiumProvider()
+    .then((provider) => {
+        // The API is ready for use.
+        provider
+            .connect()
+            .then((accountAddress) => {
+                // The wallet is connected to the dApp.
+            })
+            .catch(() => console.log('Connection to the Concordium browser wallet was rejected.'));
+    })
+    .catch(() => console.log('Connection to the Concordium browser wallet timed out.'));
+```
+
 # Creating buffers
 Some of the functions in the SDK expects buffers as input.
 For this purpose the SDK exports a `toBuffer` function, which is a polyfill of the [buffer.from from the Nodejs API](https://nodejs.org/api/buffer.html#static-method-bufferfromstring-encoding) for strings.
@@ -66,6 +83,8 @@ A simple example that allows calling a JSON-RPC server for a given transaction's
 ## GetNonce.html
 A simple example that allows calling a JSON-RPC server for a given account's next nonce and displays it.
 
+## DetectApi.html
+A simple example that shows how a website can detect the injected Concordium browser wallet API and use it to connect to an account.
 
 # Build
 

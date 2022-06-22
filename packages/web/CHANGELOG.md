@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.0
+
+- Added helper method for detecting the Concordium browser wallet API.
+
 ## 0.1.2
 
 - Add type file missing from the package

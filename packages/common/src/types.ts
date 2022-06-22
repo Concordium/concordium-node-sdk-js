@@ -1152,7 +1152,7 @@ export enum AccountTransactionType {
     RegisterData = 21,
     SimpleTransferWithMemo = 22,
     EncryptedTransferWithMemo = 23,
-    TransferWithScheduleWithMemo = 24,
+    TransferWithScheduleAndMemo = 24,
     ConfigureDelegation = 26,
 }
 

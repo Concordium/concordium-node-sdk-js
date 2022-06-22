@@ -1,19 +1,34 @@
-import { EncryptedTransferPayload } from './types';
+import * as wasm from '@concordium/rust-bindings';
+import {
+    EncryptedTransferPayload,
+    Versioned,
+    CryptographicParameters,
+    AccountInfo,
+    ConsensusStatus,
+} from './types';
 import { AccountAddress } from './types/accountAddress';
 import { GtuAmount } from './types/gtuAmount';
-import * as wasm from '@concordium/rust-bindings';
+import { CredentialRegistrationId } from './types/CredentialRegistrationId';
 
 interface NodeClient {
     getCryptographicParameters(
         blockHash: string
     ): Promise<Versioned<CryptographicParameters> | undefined>;
     getAccountInfo(
-        accountAddress: Address | CredentialRegistrationId,
+        accountAddress: AccountAddress | CredentialRegistrationId,
         blockHash: string
     ): Promise<AccountInfo | undefined>;
     getConsensusStatus(): Promise<ConsensusStatus>;
 }
 
+/**
+ * Function that builds the payload of an encrypted transfer.
+ * @param sender address of the account that will send the transfer
+ * @param receiver address of the account that will receive the transfer
+ * @param amount the amount of ccd's that will be transfered
+ * @param senderDecryptionKey the decryption key for the sender
+ * @param client a node client to fetch accountInfo and parameters necessary to build the payload
+ */
 export async function createEncryptedTransferPayload(
     sender: AccountAddress,
     receiver: AccountAddress,
@@ -31,7 +46,7 @@ export async function createEncryptedTransferPayload(
     const global = await client.getCryptographicParameters(blockhash);
 
     if (!senderAccountInfo || !receiverAccountInfo) {
-        throw new Error('Non Existent accounts');
+        throw new Error('Unable to get account info for both accounts');
     }
 
     if (!global) {

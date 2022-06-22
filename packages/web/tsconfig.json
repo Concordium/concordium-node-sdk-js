@@ -1,6 +1,6 @@
 {
     "extends": "../../tsconfig-base.json",
-    "include": ["src/**/*"],
+    "include": ["src/**/*", "../../node_modules/@concordium/browser-wallet-api-types/extend-window.d.ts"],
     "references": [
         { "path": "../common"}
     ],

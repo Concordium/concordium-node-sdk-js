@@ -1297,6 +1297,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@concordium/browser-wallet-api-types@npm:^0.1.1":
+  version: 0.1.1
+  resolution: "@concordium/browser-wallet-api-types@npm:0.1.1"
+  dependencies:
+    "@concordium/web-sdk": ^0.1.1
+  checksum: 995661c91b74b48faebfb8e6886bc50911aab63517e83b3b4895ce0d714fd25bde6d14b43e1988d9b4f71494c044dfc945c81f6a294c188e59b2b82e398a70d7
+  languageName: node
+  linkType: hard
+
 "@concordium/common-sdk@1.0.1, @concordium/common-sdk@workspace:packages/common":
   version: 0.0.0-use.local
   resolution: "@concordium/common-sdk@workspace:packages/common"
@@ -1362,10 +1371,23 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@concordium/web-sdk@npm:^0.1.1":
+  version: 0.1.2
+  resolution: "@concordium/web-sdk@npm:0.1.2"
+  dependencies:
+    "@concordium/common-sdk": 1.0.1
+    "@concordium/rust-bindings": 0.1.1
+    buffer: ^6.0.3
+    process: ^0.11.10
+  checksum: f683982d1b70396f6fb8730959d5713ea135c18ac3dd40fb1eac7223079c50ddb43cf332b57c0a9b4274552ca0877c8b8a0f10f7ca1bb44ad641997424d6dd44
+  languageName: node
+  linkType: hard
+
 "@concordium/web-sdk@workspace:packages/web":
   version: 0.0.0-use.local
   resolution: "@concordium/web-sdk@workspace:packages/web"
   dependencies:
+    "@concordium/browser-wallet-api-types": ^0.1.1
     "@concordium/common-sdk": 1.0.1
     "@concordium/rust-bindings": 0.1.1
     "@typescript-eslint/eslint-plugin": ^4.28.1

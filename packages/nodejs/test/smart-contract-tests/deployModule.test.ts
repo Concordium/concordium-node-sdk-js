@@ -4,12 +4,12 @@ import {
     AccountTransactionSignature,
     AccountTransactionType,
     DeployModulePayload,
+    getAccountTransactionSignDigest,
+    AccountAddress,
+    TransactionExpiry,
 } from '@concordium/common-sdk';
 import * as ed from 'noble-ed25519';
-import { getAccountTransactionSignDigest } from '@concordium/common-sdk';
 import { getNodeClient } from '../testHelpers';
-import { AccountAddress } from '@concordium/common-sdk';
-import { TransactionExpiry } from '@concordium/common-sdk';
 import * as fs from 'fs';
 import { Buffer } from 'buffer/';
 const client = getNodeClient();

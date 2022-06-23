@@ -4,19 +4,16 @@ import {
     AccountTransactionSignature,
     AccountTransactionType,
     InitContractPayload,
-} from '@concordium/common-sdk';
-import * as ed from 'noble-ed25519';
-import {
     getAccountTransactionSignDigest,
     serializeInitContractParameters,
+    AccountAddress,
+    GtuAmount,
+    TransactionExpiry,
+    ModuleReference,
 } from '@concordium/common-sdk';
-import { getNodeClient } from '../testHelpers';
-import { AccountAddress } from '@concordium/common-sdk';
-import { GtuAmount } from '@concordium/common-sdk';
-import { TransactionExpiry } from '@concordium/common-sdk';
+import * as ed from 'noble-ed25519';
+import { getNodeClient, getModuleBuffer } from '../testHelpers';
 import { Buffer } from 'buffer/';
-import { ModuleReference } from '@concordium/common-sdk';
-import { getModuleBuffer } from '../testHelpers';
 const client = getNodeClient();
 const senderAccountAddress =
     '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';

@@ -11,6 +11,7 @@
         "/lib/**/*"
     ],
     "devDependencies": {
+        "@noble/ed25519": "^1.6.0",
         "@types/bs58check": "^2.1.0",
         "@types/jest": "^26.0.23",
         "@types/json-bigint": "^1.0.1",
@@ -21,7 +22,6 @@
         "cross-fetch": "3.1.5",
         "eslint": "^7.29.0",
         "eslint-config-prettier": "^8.3.0",
-        "eslint-plugin-import": "^2.23.4",
         "eslint-plugin-prettier": "^3.4.0",
         "husky": "^4.2.5",
         "jest": "^27.0.6",

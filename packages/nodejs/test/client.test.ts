@@ -22,11 +22,10 @@ import {
     serializeUpdateContractParameters,
     isReduceStakePendingChange,
 } from '@concordium/common-sdk';
-import { isValidDate, getNodeClient } from './testHelpers';
+import { isValidDate, getNodeClient, getModuleBuffer } from './testHelpers';
 import { bulletProofGenerators } from './resources/bulletproofgenerators';
 import { ipVerifyKey1, ipVerifyKey2 } from './resources/ipVerifyKeys';
 import { PeerElement } from '../grpc/concordium_p2p_rpc_pb';
-import { getModuleBuffer } from './testHelpers';
 
 const client = getNodeClient();
 

@@ -1514,3 +1514,8 @@ export interface IdentityInput {
     idCredSecret: string;
     randomness: string;
 }
+
+export enum SchemaVersion {
+    V1 = 0, // Used by version 0 smart contracts.
+    V2 = 1, // Used by version 1 smart contracts.
+}

@@ -1519,14 +1519,15 @@ test('Invoke contract with parameters', async () => {
     const receiveFunctionName = 'receive';
     const methodName = contractName + '.' + receiveFunctionName;
 
-    const modulefileBuffer = getModuleBuffer(
+    const moduleFileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema_two_step_transfer.bin'
     );
     const inputParams = serializeUpdateContractParameters(
         contractName,
         receiveFunctionName,
         parameters,
-        modulefileBuffer
+        moduleFileBuffer,
+        0
     );
 
     const result = await client.invokeContract(

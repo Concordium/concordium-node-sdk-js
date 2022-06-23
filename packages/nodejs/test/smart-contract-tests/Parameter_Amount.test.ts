@@ -37,13 +37,14 @@ test('Parameter of Amount with the wrong private key', async () => {
 
     const contractName = 'UserAmount';
     const userInput = '1000';
-    const modulefileBuffer = getModuleBuffer(
+    const moduleFileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema15.bin'
     );
     const inputParams = serializeInitContractParameters(
         contractName,
         userInput,
-        modulefileBuffer
+        moduleFileBuffer,
+        0
     );
     const baseEnergy = 300000n;
 

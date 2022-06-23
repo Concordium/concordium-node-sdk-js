@@ -46,14 +46,15 @@ test('Parameter of I64 with the wrong private key', async () => {
     } as ContractAddress;
     const baseEnergy = 30000n;
 
-    const modulefileBuffer = getModuleBuffer(
+    const moduleFileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema6.bin'
     );
     const inputParams = serializeUpdateContractParameters(
         contractName,
         receiveFunctionName,
         userInput,
-        modulefileBuffer
+        moduleFileBuffer,
+        0
     );
     const updateModule: UpdateContractPayload = {
         amount: new GtuAmount(1000n),

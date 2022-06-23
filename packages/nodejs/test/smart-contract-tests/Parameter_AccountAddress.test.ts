@@ -39,13 +39,14 @@ test('Parameter of AccountAddress with the wrong private key', async () => {
     const userInput = '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
 
     const baseEnergy = 300000n;
-    const modulefileBuffer = getModuleBuffer(
+    const moduleFileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema14.bin'
     );
     const inputParams = serializeInitContractParameters(
         contractName,
         userInput,
-        modulefileBuffer
+        moduleFileBuffer,
+        0
     );
     const initModule: InitContractPayload = {
         amount: new GtuAmount(0n),

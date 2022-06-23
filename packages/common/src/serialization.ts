@@ -437,7 +437,7 @@ export function serializeCredentialDeploymentTransactionForSubmission(
 
 /**
  * @param contractName name of the contract that the init contract transaction will initialize
- * @param parameters  the parameters to be serialized, should correspond to the JSON representation.
+ * @param parameters the parameters to be serialized. Should correspond to the JSON representation.
  * @param rawSchema buffer for the schema of a module that contains the contract
  * @param schemaVersion the version of the schema provided
  * @returns serialized buffer of init contract parameters
@@ -465,7 +465,7 @@ export function serializeInitContractParameters(
 /**
  * @param contractName name of the contract that the update contract transaction will update
  * @param receiveFunctionName name of function that the update contract transaction will invoke
- * @param parameters  the parameters to be serialized, should correspond to the JSON representation
+ * @param parameters the parameters to be serialized. Should correspond to the JSON representation.
  * @param rawSchema buffer for the schema of a module that contains the contract
  * @param schemaVersion the version of the schema provided
  * @returns serialized buffer of update contract parameters

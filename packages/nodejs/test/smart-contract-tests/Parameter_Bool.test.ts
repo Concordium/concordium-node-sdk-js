@@ -38,13 +38,14 @@ test('Parameter of Bool with the wrong private key', async () => {
     const contractName = 'INDBankBool1';
     const userInput = true;
 
-    const modulefileBuffer = getModuleBuffer(
+    const moduleFileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema8.bin'
     );
     const inputParams = serializeInitContractParameters(
         contractName,
         userInput,
-        modulefileBuffer
+        moduleFileBuffer,
+        0
     );
     const baseEnergy = 300000n;
 

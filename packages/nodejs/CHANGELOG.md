@@ -1,8 +1,18 @@
 # Changelog
 
-## Unreleased
+## 2.0.0
 
+### Added
+
+- Using `@concordium/common-sdk` as a dependency, and most features have been removed from this package. (But are re-exported instead)
+- Support deserializing version 2 schemas.
+- Support serializing parameters for contracts using version 2 schemas.
 - Support for deploying versioned smart contract modules. (This is done by not supplying the version field in the payload)
+
+### Breaking changes
+
+- `serializeInitContractParameters` and `serializeUpdateContractParameters` each have an additional parameter, which denotes the version of the schema provided. For existing users that are using V0 contracts, that parameter should be `SchemaVersion.V1`.
+- Deserialization of schemas have been changed: types and functions have been renamed and `getModuleFromBuffer` have an additional parameter, and now returns a versioned module schema.
 
 ## 1.1.0 2022-06-14
 
@@ -41,6 +51,7 @@
 - Added missing dependency "google-protobuf"
 
 ## 0.7.2 2022-05-05
+
 
 ### Added
 

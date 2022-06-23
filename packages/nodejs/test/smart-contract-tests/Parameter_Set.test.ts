@@ -38,13 +38,14 @@ test('Parameter of Set with the wrong private key', async () => {
     const userInput = [800000, 200000, 78000, 100000];
     const contractName = 'ListContract';
 
-    const modulefileBuffer = getModuleBuffer(
+    const moduleFileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema34.bin'
     );
     const inputParams = serializeInitContractParameters(
         contractName,
         userInput,
-        modulefileBuffer
+        moduleFileBuffer,
+        0
     );
     const baseEnergy = 300000n;
 

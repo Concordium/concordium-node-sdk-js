@@ -44,7 +44,8 @@ test('Parameter of Array of U8 with the wrong private key', async () => {
     const inputParams = serializeInitContractParameters(
         contractName,
         userInput,
-        scheme
+        scheme,
+        0
     );
     const baseEnergy = 300000n;
 

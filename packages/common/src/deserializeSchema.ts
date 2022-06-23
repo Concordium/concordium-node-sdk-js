@@ -229,7 +229,7 @@ export type PairType = {
 };
 
 /**
- * The first byte of the function denotes what whether the parameters/return value or both are typed.
+ * The first byte of the function denotes whether the parameters, return value, or both are typed.
  */
 enum FunctionTag {
     Parameter = 0,

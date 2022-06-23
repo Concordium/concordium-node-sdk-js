@@ -41,13 +41,14 @@ test('Parameter of Array of string with the wrong private key', async () => {
 
     const baseEnergy = 300000n;
 
-    const modulefileBuffer = getModuleBuffer(
+    const moduleFileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema21.bin'
     );
     const inputParams = serializeInitContractParameters(
         contractName,
         userInput,
-        modulefileBuffer
+        moduleFileBuffer,
+        0
     );
 
     const initModule: InitContractPayload = {

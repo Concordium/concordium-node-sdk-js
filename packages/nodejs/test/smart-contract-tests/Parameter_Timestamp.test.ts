@@ -38,13 +38,14 @@ test('Parameter of Timestamp with the wrong private key', async () => {
     const contractName = 'ContractForTime';
 
     const userInput = '2020-12-11T11:38:37Z';
-    const modulefileBuffer = getModuleBuffer(
+    const moduleFileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema17.bin'
     );
     const inputParams = serializeInitContractParameters(
         contractName,
         userInput,
-        modulefileBuffer
+        moduleFileBuffer,
+        0
     );
     const baseEnergy = 300000n;
 

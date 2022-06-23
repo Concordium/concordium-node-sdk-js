@@ -45,13 +45,14 @@ test('Parameter of Enum with the wrong private key', async () => {
     const userInput = { Intact: [DCBBankState[DCBBankState.Intact]] };
     const contractName = 'SimpleEnum';
 
-    const modulefileBuffer = getModuleBuffer(
+    const moduleFileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema32.bin'
     );
     const inputParams = serializeInitContractParameters(
         contractName,
         userInput,
-        modulefileBuffer
+        moduleFileBuffer,
+        0
     );
     const baseEnergy = 300000n;
 

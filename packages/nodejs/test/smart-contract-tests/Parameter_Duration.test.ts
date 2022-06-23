@@ -38,13 +38,14 @@ test('Parameter of Duration with the wrong private key', async () => {
     const contractName = 'ContractForDuration';
 
     const userInput = '10d 1h 42s 1h';
-    const modulefileBuffer = getModuleBuffer(
+    const moduleFileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema18.bin'
     );
     const inputParams = serializeInitContractParameters(
         contractName,
         userInput,
-        modulefileBuffer
+        moduleFileBuffer,
+        0
     );
     const baseEnergy = 300000n;
 

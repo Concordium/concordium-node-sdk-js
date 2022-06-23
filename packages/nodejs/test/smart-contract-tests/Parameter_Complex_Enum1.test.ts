@@ -50,14 +50,15 @@ test('Parameter of Enum with the wrong private key', async () => {
     const receiveFunctionName = 'insertAmount';
     const receiveName = contractName + '.' + receiveFunctionName;
 
-    const modulefileBuffer = getModuleBuffer(
+    const moduleFileBuffer = getModuleBuffer(
         'test/resources/schemaFiles/schema35.bin'
     );
     const inputParams = serializeUpdateContractParameters(
         contractName,
         receiveFunctionName,
         userInput,
-        modulefileBuffer
+        moduleFileBuffer,
+        0
     );
     const baseEnergy = 300000n;
     const contractAddress = {

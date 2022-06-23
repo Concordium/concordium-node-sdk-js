@@ -356,7 +356,7 @@ const userInput = {
 ```
 Then the user needs to provide the schema for the module. Here we load the schema from a file:
 ```js
-const modulefileBuffer = Buffer.from(fs.readFileSync(
+const rawModuleSchema = Buffer.from(fs.readFileSync(
     'SCHEMA-FILE-PATH'
 ));
 ```
@@ -365,9 +365,12 @@ Then the parameters can be serialized into bytes:
 const inputParams = serializeInitContractParameters(
     "my-contract-name",
     userInput,
-    modulefileBuffer
+    rawModuleSchema,
+    schemaVersion
 );
 ```
+For V0 contracts the schemaVersion should be `SchemaVersion.V1`. For V1 contracts it should currently be `SchemaVersion.V2`.
+
 Then the payload and transaction can be constructed, in the same way as the parameterless example:
 ```js
 const initModule: InitContractPayload = {
@@ -398,7 +401,7 @@ const receiveName = contractName + '.' + receiveFunctionName;
 
 Then the user need to provide the schema. Here we load the schema from a file:
 ```js
-const modulefileBuffer = Buffer.from(fs.readFileSync(
+const rawModuleSchema = Buffer.from(fs.readFileSync(
     'SCHEMA-FILE-PATH'
 ));
 ```
@@ -408,9 +411,12 @@ const inputParams = serializeUpdateContractParameters(
         contractName,
         receiveFunctionName,
         userInput,
-        modulefileBuffer
+        rawModuleSchema,
+        schemaVersion
 );
 ```
+For V0 contracts the schema version should be `SchemaVersion.V1`. For V1 contracts it should currently be `SchemaVersion.V2`.
+
 Then we will construct the update payload with parameters obtained 
 ```js
 const updateModule: UpdateContractPayload = {

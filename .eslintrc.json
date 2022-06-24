@@ -5,7 +5,9 @@
     },
     "extends": [
         "plugin:prettier/recommended",
-        "plugin:@typescript-eslint/recommended"
+        "plugin:@typescript-eslint/recommended",
+        "plugin:import/recommended",
+        "plugin:import/typescript"
     ],
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
@@ -14,18 +16,37 @@
         "project": [ "./packages/**/tsconfig.eslint.json", "./tsconfig.eslint.json"]
     },
     "plugins": [
-        "@typescript-eslint"
+        "@typescript-eslint",
+        "import"
     ],
     "rules": {
-        "quotes": [2, "single", { "avoidEscape": true }]
+        "quotes": [2, "single", { "avoidEscape": true }],
+        "import/no-unresolved": [2, { "ignore": ["@concordium/rust-bindings", "@concordium/common-sdk", "concordium_p2p"]}]
     },
     "overrides": [
         {
             "files": ["*.config.js"],
             "rules": {
-                "@typescript-eslint/no-var-requires": "off"
+                "@typescript-eslint/no-var-requires": "off",
+                "import/namespace": "off"
             }
         }
     ],
-    "ignorePatterns": ["**/pkg/**/", "**/lib/**/", "deps/**/*", "**/nodejs/grpc/*"]
+    "ignorePatterns": ["**/pkg/**/", "**/lib/**/", "deps/**/*", "**/nodejs/grpc/*"],
+    "settings": {
+        "import/ignore": [
+            "bs58check"
+        ],
+        "import/parsers": {
+            "@typescript-eslint/parser": [".ts", ".tsx"]
+        },
+        "import/resolver": {
+            "typescript": {
+                "project": ["packages/*/tsconfig.json"]
+            },
+            "node": {
+                "project": ["packages/*/tsconfig.json"]
+            }
+        }
+    }
 }

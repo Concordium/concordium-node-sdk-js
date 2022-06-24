@@ -5,13 +5,13 @@ import {
     AccountTransactionType,
     UpdateContractPayload,
     ContractAddress,
+    getAccountTransactionSignDigest,
+    AccountAddress,
+    GtuAmount,
+    TransactionExpiry,
 } from '@concordium/common-sdk';
-import * as ed from 'noble-ed25519';
-import { getAccountTransactionSignDigest } from '@concordium/common-sdk';
+import * as ed from '@noble/ed25519';
 import { getNodeClient } from '../testHelpers';
-import { AccountAddress } from '@concordium/common-sdk';
-import { GtuAmount } from '@concordium/common-sdk';
-import { TransactionExpiry } from '@concordium/common-sdk';
 import { Buffer } from 'buffer/';
 
 const client = getNodeClient();

@@ -21,6 +21,7 @@
         "/lib/**/*"
     ],
     "devDependencies": {
+        "@noble/ed25519": "^1.6.0",
         "@types/google-protobuf": "^3.15.3",
         "@types/jest": "^26.0.23",
         "@typescript-eslint/eslint-plugin": "^4.28.1",
@@ -35,7 +36,6 @@
         "grpc_tools_node_protoc_ts": "5.3.0",
         "jest": "^27.0.6",
         "lint-staged": "^12.0.2",
-        "noble-ed25519": "^1.2.5",
         "prettier": "^2.3.2",
         "ts-jest": "^27.0.3",
         "typescript": "^4.3.5"

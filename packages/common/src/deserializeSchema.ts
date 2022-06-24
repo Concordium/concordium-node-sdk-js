@@ -1,6 +1,5 @@
-import { Readable } from 'stream';
+import { PassThrough, Readable } from 'stream';
 import { ParameterType, SchemaVersion } from './types';
-import { PassThrough } from 'stream';
 import { Buffer } from 'buffer/';
 /**
  * Function that reags an output of specified type from {@link Readable}.

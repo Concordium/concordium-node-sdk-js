@@ -237,7 +237,7 @@ const deployModuleTransaction: AccountTransaction = {
 };
 ```
 
-Note that if build using cargo-concordium `1.0.0`, the version should be added to the payload. In `2.0.0` and newer, the version is prepended into the module itself. To deploy a V0 module, which has been built with cargo-concordium version below 2,
+Note that if built using cargo-concordium `1.0.0`, the version should be added to the payload. In `2.0.0` and newer, the version is prepended into the module itself. To deploy a V0 module, which has been built with cargo-concordium version below 2,
 you should add the version field to the payload:
 ```js
 const deployModule: DeployModulePayload = {

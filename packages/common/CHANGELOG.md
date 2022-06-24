@@ -6,6 +6,7 @@
 
 - Support deserializing version 2 schemas.
 - Support serializing parameters for contracts using version 2 schemas.
+- Support for deploying versioned smart contract modules, which is the format used in cargo-concordium v2+. (This is done by not supplying the version field in the payload)
 
 ### Breaking changes
 

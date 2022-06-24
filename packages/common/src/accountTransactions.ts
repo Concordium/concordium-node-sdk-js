@@ -69,9 +69,15 @@ export class DeployModuleHandler
     }
 
     serialize(payload: DeployModulePayload): Buffer {
-        const serializedWasm = packBufferWithWord32Length(payload.content);
-        const serializedVersion = encodeWord32(payload.version);
-        return Buffer.concat([serializedVersion, serializedWasm]);
+        if (payload.version === undefined) {
+            // Assume the module has version and length embedded
+            return payload.content;
+        } else {
+            // Assume the module is legacy build, which doesn't contain version and length
+            const serializedWasm = packBufferWithWord32Length(payload.content);
+            const serializedVersion = encodeWord32(payload.version);
+            return Buffer.concat([serializedVersion, serializedWasm]);
+        }
     }
 }
 

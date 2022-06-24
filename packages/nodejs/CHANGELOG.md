@@ -7,7 +7,7 @@
 - Using `@concordium/common-sdk` as a dependency, and most features have been removed from this package. (But are re-exported instead)
 - Support deserializing version 2 schemas.
 - Support serializing parameters for contracts using version 2 schemas.
-- Support for deploying versioned smart contract modules. (This is done by not supplying the version field in the payload)
+- Support for deploying versioned smart contract modules, which is the format used in cargo-concordium v2+. (This is done by not supplying the version field in the payload)
 
 ### Breaking changes
 

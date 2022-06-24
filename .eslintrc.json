@@ -21,7 +21,7 @@
     ],
     "rules": {
         "quotes": [2, "single", { "avoidEscape": true }],
-        "import/no-unresolved": "off"
+        "import/no-unresolved": [2, { "ignore": ["@concordium/rust-bindings", "@concordium/common-sdk", "concordium_p2p"]}]
     },
     "overrides": [
         {

@@ -10,7 +10,7 @@ import {
     GtuAmount,
     TransactionExpiry,
 } from '@concordium/common-sdk';
-import * as ed from 'noble-ed25519';
+import * as ed from '@noble/ed25519';
 import { getNodeClient } from '../testHelpers';
 import { Buffer } from 'buffer/';
 

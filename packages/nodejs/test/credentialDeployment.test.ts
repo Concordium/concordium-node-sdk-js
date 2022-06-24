@@ -8,7 +8,7 @@ import {
     TransactionExpiry,
     getCredentialDeploymentSignDigest,
 } from '@concordium/common-sdk';
-import * as ed from 'noble-ed25519';
+import * as ed from '@noble/ed25519';
 import { Buffer } from 'buffer/';
 
 const client = getNodeClient();

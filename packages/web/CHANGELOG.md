@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.2.0
+## 0.2.1 2022-6-27
+
+- Fixed errors in common dependency. 
+
+## 0.2.0 2022-6-24
 
 ### Added
 

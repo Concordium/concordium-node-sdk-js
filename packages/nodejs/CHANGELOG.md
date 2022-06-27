@@ -9,6 +9,8 @@
 ### Fixed
 
 - Error in build, which caused imports to fail.
+- Added missing dependency google-protobuf.
+- @noble/ed25519 and cross-fetch moved from devDependencies to dependencies. (In common-sdk)
 
 ## 2.0.0 2022-6-24
 

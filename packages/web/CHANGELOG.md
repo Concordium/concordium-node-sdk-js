@@ -2,7 +2,9 @@
 
 ## 0.2.1 2022-6-27
 
-- Fixed errors in common dependency. 
+### Fixed
+
+- @noble/ed25519 and cross-fetch moved from devDependencies to dependencies. (In common-sdk)
 
 ## 0.2.0 2022-6-24
 

@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- @noble/ed25519 moved from devDependencies to dependencies.
+- @noble/ed25519 and cross-fetch moved from devDependencies to dependencies.
 
 ## 2.0.0 2022-6-24
 

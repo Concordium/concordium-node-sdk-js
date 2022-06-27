@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.2 2022-6-27
+
+### Fixed
+
+- `getModuleBuffer` returns correct type of `Buffer`.
+
 ## 2.0.1 2022-6-27
 
 ### Added

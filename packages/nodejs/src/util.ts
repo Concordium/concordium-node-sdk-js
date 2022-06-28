@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import { Buffer } from 'buffer/';
 import { BoolResponse, JsonResponse } from '../grpc/concordium_p2p_rpc_pb';
 
 export function intListToStringList(jsonStruct: string): string {

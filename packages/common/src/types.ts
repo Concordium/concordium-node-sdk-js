@@ -1338,6 +1338,14 @@ export enum ParameterType {
     ContractName,
     /** Receive function name. */
     ReceiveName,
+    /** LEB128 encoding of an unsigned integer */
+    ULeb128,
+    /** LEB128 encoding of an signed integer */
+    ILeb128,
+    /** Variable size list of bytes */
+    ByteList,
+    /** Fixed size list of bytes */
+    ByteArray
 }
 
 export interface InstanceInfoCommon {

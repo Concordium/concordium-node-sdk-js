@@ -900,7 +900,9 @@ export function serializeILeb128(
             'Invalid input for type ULeb128, must be a string containing an unsigned integer'
         );
     }
-
+    // Since BigInt does not support bitwise right shifting, the current workaround is to convert
+    // the bigint to a string with the two-complement binary representation and split this into
+    // chunks for the leb128 encoding.
     const value = BigInt(data.toString());
     const isNegative = value < 0;
     const unsignedBitString = value.toString(2);
@@ -939,7 +941,7 @@ export function serializeILeb128(
 
 /**
  *
- * @Param length length of the values provided by the user
+ * @param length length of the values provided by the user
  * @param sizeLength sizeLength represented as an unsigned integer
  * @returns serialization of the length using the number of bytes specified by the sizeLength
  */

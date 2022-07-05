@@ -71,24 +71,27 @@ export const VERSIONED_SCHEMA_PREFIX = 65535; // The constant is corresponding t
  * @returns schema (Versioned) of a module (contract map)
  */
 export function deserialVersionedModule(source: Readable): VersionedModule {
-    let prefix = deserialUint16(source);
-    if (prefix != VERSIONED_SCHEMA_PREFIX) { // The constant is corresponding to two full bytes.
-        throw new Error("Versioned schema module must be prefixed with two full bytes")
+    const prefix = deserialUint16(source);
+    if (prefix != VERSIONED_SCHEMA_PREFIX) {
+        // The constant is corresponding to two full bytes.
+        throw new Error(
+            'Versioned schema module must be prefixed with two full bytes'
+        );
     }
-    let version = deserialUint8(source);
+    const version = deserialUint8(source);
     switch (version) {
         case SchemaVersion.V1:
             return {
                 v: version,
-                value: deserialModuleV1(source)
-            }
+                value: deserialModuleV1(source),
+            };
         case SchemaVersion.V2:
             return {
                 v: version,
-                value: deserialModuleV2(source)
-            }
+                value: deserialModuleV2(source),
+            };
         default:
-            throw new Error("Unsupported schema version");
+            throw new Error('Unsupported schema version');
     }
 }
 
@@ -267,16 +270,15 @@ export type PairType = {
  */
 export type ULeb128Type = {
     typeTag: ParameterType.ULeb128;
-    constraint: number
+    constraint: number;
 };
-
 
 /**
  *  LEB128 for signed integers type.
  */
 export type ILeb128Type = {
     typeTag: ParameterType.ILeb128;
-    constraint: number
+    constraint: number;
 };
 
 /**
@@ -284,7 +286,7 @@ export type ILeb128Type = {
  */
 export type ByteListType = {
     typeTag: ParameterType.ByteList;
-    sizeLength: SizeLength
+    sizeLength: SizeLength;
 };
 
 /**
@@ -292,7 +294,7 @@ export type ByteListType = {
  */
 export type ByteArrayType = {
     typeTag: ParameterType.ByteArray;
-    size: number
+    size: number;
 };
 
 /**
@@ -649,7 +651,6 @@ export function deserialUint32(source: Readable): number {
     return source.read(4).readUInt32LE(0);
 }
 
-
 /**
  * Reads an unsigned 16-bit integer from the given {@link Readable}.
  *
@@ -675,7 +676,9 @@ export function deserialModuleFromBuffer(
         return deserialVersionedModule(bufferStream);
     }
     if (schemaVersion === undefined) {
-        throw new Error('Supply a schema version to deserialize an unversioned schema');
+        throw new Error(
+            'Supply a schema version to deserialize an unversioned schema'
+        );
     }
     switch (schemaVersion) {
         case SchemaVersion.V1:

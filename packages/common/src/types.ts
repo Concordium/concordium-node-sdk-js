@@ -1345,7 +1345,7 @@ export enum ParameterType {
     /** Variable size list of bytes */
     ByteList,
     /** Fixed size list of bytes */
-    ByteArray
+    ByteArray,
 }
 
 export interface InstanceInfoCommon {

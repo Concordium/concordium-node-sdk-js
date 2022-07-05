@@ -49,7 +49,6 @@ test('Deserialize V1 versioned schema from file (cis1-wccd)', async () => {
     expect(parsedModule.value[contractName].receive).toBeDefined();
 });
 
-
 test('Deserialize V2 versioned schema from file (cis2-wccd)', async () => {
     const rawModule = Buffer.from(
         fs.readFileSync('./test/resources/cis2-wccd-schema-v2-versioned.bin')
@@ -61,4 +60,3 @@ test('Deserialize V2 versioned schema from file (cis2-wccd)', async () => {
     expect(parsedModule.value[contractName].init).toBeDefined();
     expect(parsedModule.value[contractName].receive).toBeDefined();
 });
-

@@ -22,6 +22,10 @@ import {
     SizeLength,
     Fields,
     StringType,
+    ULeb128Type,
+    ILeb128Type,
+    ByteListType,
+    ByteArrayType,
 } from './deserializeSchema';
 const MAX_UINT_64 = 18446744073709551615n; // 2^64 - 1
 import { DataBlob } from './types/DataBlob';
@@ -561,6 +565,14 @@ export function serializeParameters(
             return serializeMapType(paramSchema as MapType, userInput);
         case ParameterType.Enum:
             return serializeEnumType(paramSchema as EnumType, userInput);
+        case ParameterType.ULeb128:
+            return serializeULeb128(paramSchema as ULeb128Type, userInput);
+        case ParameterType.ILeb128:
+            return serializeILeb128(paramSchema as ILeb128Type, userInput);
+        case ParameterType.ByteList:
+            return serializeByteList(paramSchema as ByteListType, userInput);
+        case ParameterType.ByteArray:
+            return serializeByteArray(paramSchema as ByteArrayType, userInput);
         default:
             throw new Error('Type is not supported currently.');
     }
@@ -592,6 +604,52 @@ export function serializeArray(
         throw new Error('Array size and user input array not matched');
     }
     return Buffer.concat(bufferArray);
+}
+
+/**
+ * Serialize fixed sized hex string to Buffer
+ * @param schema Schema for the input
+ * @param data user input
+ * @returns Buffer containing serialization of the byte array
+ */
+export function serializeByteArray(
+    schema: ByteArrayType,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+    data: any
+): Buffer {
+    if (typeof data !== 'string' && !(data instanceof String)) {
+        throw new Error(
+            `Invalid input for type ByteArray, must be a string containing a lowercase hex encoding of ${schema.size} bytes.`
+        );
+    }
+    const buffer = Buffer.from(data.toString(), 'hex');
+    if (buffer.length !== schema.size) {
+        throw new Error(
+            `Invalid input for type ByteArray, must be a string containing a lowercase hex encoding of ${schema.size} bytes.`
+        );
+    }
+    return buffer;
+}
+
+/**
+ * Serialize hex string to Buffer
+ * @param schema Schema for the input
+ * @param data user input
+ * @returns Buffer containing serialization of the byte list
+ */
+export function serializeByteList(
+    schema: ByteListType,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+    data: any
+): Buffer {
+    if (typeof data !== 'string' && !(data instanceof String)) {
+        throw new Error(
+            'Invalid input for type ByteArray, must be a string containing a lowercase hex encoding of bytes.'
+        );
+    }
+    const bytes = Buffer.from(data.toString(), 'hex');
+    const listLengthBuffer = serializeLength(bytes.length, schema.sizeLength);
+    return Buffer.from([listLengthBuffer, bytes]);
 }
 
 /**
@@ -789,6 +847,96 @@ export function serializeSchemaFields(
         default:
             return Buffer.from(bufferStruct);
     }
+}
+
+/**
+ * Serialize a string with an unsigned integer using LEB128 to a Buffer.
+ * @param uleb128Type type of parameters
+ * @param data user input
+ * @returns Buffer containing serialization of unsigned integer
+ */
+export function serializeULeb128(
+    uleb128Type: ULeb128Type,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+    data: any
+): Buffer {
+    if (typeof data !== 'string' && !(data instanceof String)) {
+        throw new Error(
+            'Invalid input for type ULeb128, must be a string containing an unsigned integer'
+        );
+    }
+    let value = BigInt(data.toString());
+    if (value < 0n) {
+        throw new Error(
+            'Invalid input for type ULeb128, must contain a positive value'
+        );
+    }
+    const buffer: Buffer[] = [];
+    for (let i = 0; i < uleb128Type.constraint; i++) {
+        const byte = Number(BigInt.asUintN(7, value));
+        value = value / 128n; // Note: this is integer division
+        const lastByte = value === 0n;
+        buffer.push(encodeWord8(lastByte ? byte : byte | 0b1000_0000));
+        if (lastByte) {
+            return Buffer.concat(buffer);
+        }
+    }
+    throw new Error('Invalid LEB128 unsigned integer encoding');
+}
+
+/**
+ * Serialize a string with a signed integer using LEB128 to a Buffer.
+ * @param ileb128Type type of parameters
+ * @param data user input
+ * @returns Buffer containing serialization of unsigned integer
+ */
+export function serializeILeb128(
+    ileb128Type: ILeb128Type,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+    data: any
+): Buffer {
+    if (typeof data !== 'string' && !(data instanceof String)) {
+        throw new Error(
+            'Invalid input for type ULeb128, must be a string containing a signed integer'
+        );
+    }
+    // Since BigInt does not support bitwise right shifting, the current workaround is to convert
+    // the bigint to a string with the two-complement binary representation and split this into
+    // chunks for the leb128 encoding.
+    const value = BigInt(data.toString());
+    const isNegative = value < 0;
+    const unsignedBitString = value.toString(2);
+    const totalBits = unsignedBitString.length;
+    const totalBytes = Math.ceil(totalBits / 7);
+    const binaryString = isNegative
+        ? BigInt.asUintN(totalBytes * 7, value).toString(2)
+        : unsignedBitString.padStart(totalBytes * 7, '0');
+
+    if (totalBytes > ileb128Type.constraint) {
+        throw new Error(
+            `'Invalid LEB128 signed integer encoding, the encoding is constraint to at most ${ileb128Type.constraint} bytes`
+        );
+    }
+
+    const buffer: Buffer[] = [];
+
+    for (let i = 0; i < totalBytes; i++) {
+        const startIndex = (totalBytes - i - 1) * 7;
+        const valueBits = binaryString.substring(startIndex, startIndex + 7);
+        const byte = parseInt(valueBits, 2);
+        const isLastByte = !(i + 1 < totalBytes);
+        buffer.push(
+            encodeWord8(
+                !isLastByte
+                    ? byte | 0b1000_0000
+                    : isNegative
+                    ? byte | 0b0100_0000
+                    : byte
+            )
+        );
+    }
+
+    return Buffer.concat(buffer);
 }
 
 /**

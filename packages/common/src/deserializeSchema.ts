@@ -62,6 +62,44 @@ export function deserialModuleV2(source: Readable): ModuleV2 {
 }
 
 /**
+ *  Magic prefix for versioned schemas, used to distinguish between a versioned
+ *  schema and the older format without versioning as part of the schema.
+ *
+ *  The constant is corresponding to two maxed-out bytes, interpreted as a 16-bit unsigned integer.
+ */
+export const VERSIONED_SCHEMA_PREFIX = 65535;
+
+/**
+ *  Reads a versioned schema for a contract module from the given{@link Readable}.
+ *
+ * @param source input stream
+ * @returns schema (Versioned) of a module (contract map)
+ */
+export function deserialVersionedModule(source: Readable): VersionedModule {
+    const prefix = deserialUint16(source);
+    if (prefix != VERSIONED_SCHEMA_PREFIX) {
+        throw new Error(
+            'Versioned schema module must be prefixed with two maxed-out bytes'
+        );
+    }
+    const version = deserialUint8(source);
+    switch (version) {
+        case SchemaVersion.V1:
+            return {
+                v: version,
+                value: deserialModuleV1(source),
+            };
+        case SchemaVersion.V2:
+            return {
+                v: version,
+                value: deserialModuleV2(source),
+            };
+        default:
+            throw new Error('Unsupported schema version');
+    }
+}
+
+/**
  *   schema (V1) for a contract.
  */
 export type ContractV1 = {
@@ -160,7 +198,11 @@ export type Type =
     | ArrayType
     | StructType
     | EnumType
-    | StringType;
+    | StringType
+    | ULeb128Type
+    | ILeb128Type
+    | ByteListType
+    | ByteArrayType;
 
 export type ContractFunction = {
     parameter?: Type;
@@ -225,6 +267,38 @@ export type PairType = {
     typeTag: ParameterType.Pair;
     ofLeft: Type;
     ofRight: Type;
+};
+
+/**
+ *  LEB128 for unsigned integers type.
+ */
+export type ULeb128Type = {
+    typeTag: ParameterType.ULeb128;
+    constraint: number;
+};
+
+/**
+ *  LEB128 for signed integers type.
+ */
+export type ILeb128Type = {
+    typeTag: ParameterType.ILeb128;
+    constraint: number;
+};
+
+/**
+ *  List of bytes type.
+ */
+export type ByteListType = {
+    typeTag: ParameterType.ByteList;
+    sizeLength: SizeLength;
+};
+
+/**
+ *  Array of bytes type.
+ */
+export type ByteArrayType = {
+    typeTag: ParameterType.ByteArray;
+    size: number;
 };
 
 /**
@@ -337,6 +411,26 @@ export function deserialType(source: Readable): Type {
             return {
                 typeTag: tag,
                 sizeLength: deserialUint8(source),
+            };
+        case ParameterType.ULeb128:
+            return {
+                typeTag: tag,
+                constraint: deserialUint32(source),
+            };
+        case ParameterType.ILeb128:
+            return {
+                typeTag: tag,
+                constraint: deserialUint32(source),
+            };
+        case ParameterType.ByteList:
+            return {
+                typeTag: tag,
+                sizeLength: deserialUint8(source),
+            };
+        case ParameterType.ByteArray:
+            return {
+                typeTag: tag,
+                size: deserialUint32(source),
             };
         default:
             throw new Error(`unsupported type tag: ${tag}`);
@@ -562,16 +656,34 @@ export function deserialUint32(source: Readable): number {
 }
 
 /**
- * @param buffer wasm file buffer
- * @param moduleVersion the version of the module
+ * Reads an unsigned 16-bit integer from the given {@link Readable}.
+ *
+ * @param source input stream
+ * @returns number from 0 to 65535
+ */
+export function deserialUint16(source: Readable): number {
+    return source.read(2).readUInt16LE(0);
+}
+
+/**
+ * @param buffer Schema buffer
+ * @param moduleVersion the version of the module (only needed for older versions of the schema).
  * @returns deserialized module of wasm file
  */
 export function deserialModuleFromBuffer(
     buffer: Buffer,
-    schemaVersion: SchemaVersion
+    schemaVersion?: SchemaVersion
 ): VersionedModule {
     const bufferStream = new PassThrough();
     bufferStream.end(buffer);
+    if (buffer.readUInt16LE(0) === VERSIONED_SCHEMA_PREFIX) {
+        return deserialVersionedModule(bufferStream);
+    }
+    if (schemaVersion === undefined) {
+        throw new Error(
+            'Supply a schema version to deserialize an unversioned schema'
+        );
+    }
     switch (schemaVersion) {
         case SchemaVersion.V1:
             return {

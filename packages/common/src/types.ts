@@ -1340,7 +1340,7 @@ export enum ParameterType {
     ReceiveName,
     /** LEB128 encoding of an unsigned integer */
     ULeb128,
-    /** LEB128 encoding of an signed integer */
+    /** LEB128 encoding of a signed integer */
     ILeb128,
     /** Variable size list of bytes */
     ByteList,

@@ -61,8 +61,13 @@ export function deserialModuleV2(source: Readable): ModuleV2 {
     )(source);
 }
 
-/** Magic prefix for versioned schemas, used to distinguish between a versioned schema and the older format without versioning as part of the schema */
-export const VERSIONED_SCHEMA_PREFIX = 65535; // The constant is corresponding to two full bytes.
+/**
+ *  Magic prefix for versioned schemas, used to distinguish between a versioned
+ *  schema and the older format without versioning as part of the schema.
+ *
+ *  The constant is corresponding to two maxed-out bytes, interpreted as a 16-bit unsigned integer.
+ */
+export const VERSIONED_SCHEMA_PREFIX = 65535;
 
 /**
  *  Reads a versioned schema for a contract module from the given{@link Readable}.
@@ -73,9 +78,8 @@ export const VERSIONED_SCHEMA_PREFIX = 65535; // The constant is corresponding t
 export function deserialVersionedModule(source: Readable): VersionedModule {
     const prefix = deserialUint16(source);
     if (prefix != VERSIONED_SCHEMA_PREFIX) {
-        // The constant is corresponding to two full bytes.
         throw new Error(
-            'Versioned schema module must be prefixed with two full bytes'
+            'Versioned schema module must be prefixed with two maxed-out bytes'
         );
     }
     const version = deserialUint8(source);
@@ -282,7 +286,7 @@ export type ILeb128Type = {
 };
 
 /**
- *  List of bytes type
+ *  List of bytes type.
  */
 export type ByteListType = {
     typeTag: ParameterType.ByteList;
@@ -290,7 +294,7 @@ export type ByteListType = {
 };
 
 /**
- *  Array of bytes type
+ *  Array of bytes type.
  */
 export type ByteArrayType = {
     typeTag: ParameterType.ByteArray;

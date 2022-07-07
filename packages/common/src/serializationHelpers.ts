@@ -850,7 +850,7 @@ export function serializeSchemaFields(
 }
 
 /**
- * Serialize a string with unsigned integer using LEB128 to a Buffer
+ * Serialize a string with an unsigned integer using LEB128 to a Buffer.
  * @param uleb128Type type of parameters
  * @param data user input
  * @returns Buffer containing serialization of unsigned integer
@@ -885,7 +885,7 @@ export function serializeULeb128(
 }
 
 /**
- * Serialize a string with signed integer using LEB128 to a Buffer
+ * Serialize a string with a signed integer using LEB128 to a Buffer.
  * @param ileb128Type type of parameters
  * @param data user input
  * @returns Buffer containing serialization of unsigned integer
@@ -897,7 +897,7 @@ export function serializeILeb128(
 ): Buffer {
     if (typeof data !== 'string' && !(data instanceof String)) {
         throw new Error(
-            'Invalid input for type ULeb128, must be a string containing an unsigned integer'
+            'Invalid input for type ULeb128, must be a string containing a signed integer'
         );
     }
     // Since BigInt does not support bitwise right shifting, the current workaround is to convert
@@ -914,7 +914,7 @@ export function serializeILeb128(
 
     if (totalBytes > ileb128Type.constraint) {
         throw new Error(
-            `'Invalid LEB128 unsigned integer encoding, the encoding is constraint to at most ${ileb128Type.constraint} bytes`
+            `'Invalid LEB128 signed integer encoding, the encoding is constraint to at most ${ileb128Type.constraint} bytes`
         );
     }
 

@@ -57,6 +57,10 @@ test('Deserialize V2 versioned schema from file (cis2-wccd)', async () => {
 
     const contractName = 'CIS2-wCCD';
 
+    if (parsedModule.v != SchemaVersion.V2) {
+        throw new Error('Unexpected schema version');
+    }
+
     expect(parsedModule.value[contractName].init).toBeDefined();
     expect(parsedModule.value[contractName].receive).toBeDefined();
 });

@@ -166,35 +166,30 @@ test('serialize ILeb128', () => {
     expect(parameter.toString('hex')).toBe('8080808080808080807f');
 });
 
-
 test('serialize ByteList', () => {
     let parameter = serializeByteList(
-        { typeTag: ParameterType.ByteList, sizeLength: SizeLength.U8},
+        { typeTag: ParameterType.ByteList, sizeLength: SizeLength.U8 },
         '00000000'
     );
     expect(parameter.toString('hex')).toBe('0400000000');
 
     parameter = serializeByteList(
-        { typeTag: ParameterType.ByteList, sizeLength: SizeLength.U8},
+        { typeTag: ParameterType.ByteList, sizeLength: SizeLength.U8 },
         '1234567890abcdef'
     );
     expect(parameter.toString('hex')).toBe('081234567890abcdef');
-
 });
-
 
 test('serialize ByteArray', () => {
     let parameter = serializeByteArray(
-        { typeTag: ParameterType.ByteArray, size: 4},
+        { typeTag: ParameterType.ByteArray, size: 4 },
         '00000000'
     );
     expect(parameter.toString('hex')).toBe('00000000');
 
-
     parameter = serializeByteArray(
-        { typeTag: ParameterType.ByteArray, size: 8},
+        { typeTag: ParameterType.ByteArray, size: 8 },
         '1234567890abcdef'
     );
     expect(parameter.toString('hex')).toBe('1234567890abcdef');
-
 });

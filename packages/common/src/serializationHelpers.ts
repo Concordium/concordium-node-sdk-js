@@ -649,7 +649,7 @@ export function serializeByteList(
     }
     const bytes = Buffer.from(data.toString(), 'hex');
     const listLengthBuffer = serializeLength(bytes.length, schema.sizeLength);
-    return Buffer.from([listLengthBuffer, bytes]);
+    return Buffer.concat([listLengthBuffer, bytes]);
 }
 
 /**

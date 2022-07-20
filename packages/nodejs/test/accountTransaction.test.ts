@@ -14,21 +14,17 @@ import {
     VerifyKey,
     ConfigureDelegationPayload,
     DelegationTargetType,
-} from '@concordium/common-sdk';
-import * as ed from 'noble-ed25519';
-import {
     getAccountTransactionSignDigest,
     getCredentialForExistingAccountSignDigest,
-} from '@concordium/common-sdk';
-import { getIdentityInput, getNodeClient } from './testHelpers';
-import { AccountAddress } from '@concordium/common-sdk';
-import { GtuAmount } from '@concordium/common-sdk';
-import { TransactionExpiry } from '@concordium/common-sdk';
-import { DataBlob } from '@concordium/common-sdk';
-import {
+    AccountAddress,
+    GtuAmount,
+    TransactionExpiry,
+    DataBlob,
     buildSignedCredentialForExistingAccount,
     createUnsignedCredentialForExistingAccount,
 } from '@concordium/common-sdk';
+import * as ed from '@noble/ed25519';
+import { getIdentityInput, getNodeClient } from './testHelpers';
 
 const client = getNodeClient();
 

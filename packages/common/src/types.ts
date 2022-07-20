@@ -1157,8 +1157,8 @@ export enum AccountTransactionType {
 }
 
 export interface DeployModulePayload {
-    /** Version of the wasm module which is 0 currently the only one supported */
-    version: number;
+    /** Version of the wasm module. This should only be supplied if wasm module is not already versioned. */
+    version?: number;
 
     /** Wasm module to be deployed */
     content: Buffer;
@@ -1338,6 +1338,14 @@ export enum ParameterType {
     ContractName,
     /** Receive function name. */
     ReceiveName,
+    /** LEB128 encoding of an unsigned integer */
+    ULeb128,
+    /** LEB128 encoding of a signed integer */
+    ILeb128,
+    /** Variable size list of bytes */
+    ByteList,
+    /** Fixed size list of bytes */
+    ByteArray,
 }
 
 export interface InstanceInfoCommon {

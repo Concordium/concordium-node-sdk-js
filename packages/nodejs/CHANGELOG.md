@@ -1,19 +1,60 @@
 # Changelog
 
 
-## 2.0.0
+## Unreleased
+
+### Added
+
+- getInstanceInfo, getModuleSource and invokeContract's parameters have changed order. Now the blockHash is the 2nd parameter instead of the 1st.
+
+## 2.1.1 2022-7-8
+
+### Fixed
+
+- Fixed contract schema serialization for ByteList.
+
+## 2.1.0 2022-7-5
+
+### Added
+
+- Support deserializing new schema types: ULeb128, ILeb128, ByteArray and ByteList.
+- Support deserializing schemas with versioning information.
+
+### Changes
+
+- The function for deserializing a module schema `deserialModuleFromBuffer` now have the schema version as an optional argument. The function will try to extract the version from the buffer. When a version is provided it falls back to this, otherwise it throws an error.
+
+## 2.0.2 2022-6-27
+
+### Fixed
+
+- `getModuleBuffer` returns correct type of `Buffer`.
+
+## 2.0.1 2022-6-27
+
+### Added
+
+- `getModuleBuffer`, which is `getModuleFromBuffer` renamed (which was removed in 2.0.0).
+
+### Fixed
+
+- Error in build, which caused imports to fail.
+- Added missing dependency google-protobuf.
+- @noble/ed25519 and cross-fetch moved from devDependencies to dependencies. (In common-sdk)
+
+## 2.0.0 2022-6-24
 
 ### Added
 
 - Using `@concordium/common-sdk` as a dependency, and most features have been removed from this package. (But are re-exported instead)
 - Support deserializing version 2 schemas.
 - Support serializing parameters for contracts using version 2 schemas.
+- Support for deploying versioned smart contract modules, which is the format used in cargo-concordium v2+. (This is done by not supplying the version field in the payload)
 
 ### Breaking changes
 
 - `serializeInitContractParameters` and `serializeUpdateContractParameters` each have an additional parameter, which denotes the version of the schema provided. For existing users that are using V0 contracts, that parameter should be `SchemaVersion.V1`.
-- Deserialization of schemas have been changed: types and functions have been renamed and `getModuleFromBuffer` have an additional parameter, and now returns a versioned module schema.
-- getInstanceInfo, getModuleSource and invokeContract's parameters have changed order. Now the blockHash is the 2nd parameter instead of the 1st.
+- Deserialization of schemas have been changed: types and functions have been renamed and `deserialModuleFromBuffer` have an additional parameter, and now returns a versioned module schema.
 
 ## 1.1.0 2022-06-14
 

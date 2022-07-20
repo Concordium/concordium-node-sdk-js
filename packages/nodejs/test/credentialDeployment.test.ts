@@ -4,11 +4,11 @@ import {
     CredentialDeploymentTransaction,
     AttributeKey,
     IdentityInput,
+    createCredentialDeploymentTransaction,
+    TransactionExpiry,
+    getCredentialDeploymentSignDigest,
 } from '@concordium/common-sdk';
-import { createCredentialDeploymentTransaction } from '@concordium/common-sdk';
-import { TransactionExpiry } from '@concordium/common-sdk';
-import * as ed from 'noble-ed25519';
-import { getCredentialDeploymentSignDigest } from '@concordium/common-sdk';
+import * as ed from '@noble/ed25519';
 import { Buffer } from 'buffer/';
 
 const client = getNodeClient();

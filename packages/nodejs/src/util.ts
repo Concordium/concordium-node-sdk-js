@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import { Buffer } from 'buffer/';
 import { BoolResponse, JsonResponse } from '../grpc/concordium_p2p_rpc_pb';
 
 export function intListToStringList(jsonStruct: string): string {
@@ -36,4 +38,13 @@ export function unwrapJsonResponse<T>(
     }
 
     return JSON.parse(jsonString, reviver);
+}
+
+/**
+ * Loads the module as a buffer, given the given filePath.
+ * @param filepath the location of the module
+ * @returns the module as a buffer
+ */
+export function getModuleBuffer(filePath: string): Buffer {
+    return Buffer.from(fs.readFileSync(filePath));
 }

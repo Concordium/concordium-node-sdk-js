@@ -4,7 +4,7 @@ import {
     AccountTransaction,
     AccountTransactionSignature,
 } from './types';
-import * as ed from 'noble-ed25519';
+import * as ed from '@noble/ed25519';
 import { Buffer } from 'buffer/';
 
 export interface AccountSigner {

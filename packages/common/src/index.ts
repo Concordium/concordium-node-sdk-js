@@ -8,6 +8,7 @@ import {
     serializeUpdateContractParameters,
     serializeAccountTransactionForSubmission,
     serializeCredentialDeploymentTransactionForSubmission,
+    serializeInvokeContractForSubmission,
 } from './serialization';
 import { sha256 } from './hash';
 export * from './types';
@@ -21,6 +22,7 @@ export {
     serializeUpdateContractParameters,
     serializeAccountTransactionForSubmission,
     serializeCredentialDeploymentTransactionForSubmission,
+    serializeInvokeContractForSubmission,
 };
 export { sha256 };
 export { CredentialRegistrationId } from './types/CredentialRegistrationId';

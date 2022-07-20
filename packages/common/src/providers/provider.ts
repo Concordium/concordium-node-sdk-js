@@ -1,3 +1,5 @@
+import { ContractContext, InvokeContractContext } from "../types";
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 interface JsonRpcResponseBase {
     jsonrpc: '2.0';
@@ -32,6 +34,7 @@ export type JsonRpcRequest = (
               { blockHash: string; index: bigint; subindex: bigint }
           ]
         | ['sendAccountTransaction', { transaction: string }]
+        | ['invokeContract', { blockHash: string, context: InvokeContractContext }]
 ) => Promise<string>;
 
 export default interface Provider {

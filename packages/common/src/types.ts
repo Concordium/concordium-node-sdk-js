@@ -1408,6 +1408,26 @@ export interface ContractContext {
     energy?: bigint;
 }
 
+export type Invoker =
+    | {
+        type: 'AddressContract';
+        address: ContractAddress;
+    }
+    | {
+        type: 'AddressAccount';
+        address: string;
+    }
+    | null;
+
+export interface InvokeContractContext {
+    invoker?: Invoker;
+    contract: ContractAddress;
+    amount?: bigint | number;
+    method: string;
+    parameter?: string;
+    energy?: bigint;
+}
+
 export interface InvokeContractSuccessResult
     extends Pick<SuccessfulEventResult, 'events'> {
     tag: 'success';

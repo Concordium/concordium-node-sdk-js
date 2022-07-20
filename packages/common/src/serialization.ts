@@ -25,6 +25,10 @@ import {
     UnsignedCredentialDeploymentInformation,
     CredentialDeploymentInfo,
     SchemaVersion,
+    ContractContext,
+    InvokeContractContext,
+    ContractAddress,
+    Invoker,
 } from './types';
 import { calculateEnergyCost } from './energyCost';
 import { countSignatures } from './util';
@@ -221,6 +225,33 @@ export function serializeAccountTransactionForSubmission(
 
     const serializedVersion = encodeWord8(0);
     return Buffer.concat([serializedVersion, serializedAccountTransaction]);
+}
+
+/**
+ * @param context context object as ContractContext
+ * @returns object with Invoker field modified.
+ */
+export function serializeInvokeContractForSubmission(context: ContractContext): InvokeContractContext {
+    let invoker: Invoker;
+
+    if ((context.invoker as AccountAddress).address) {
+        invoker = { type: 'AddressAccount', address: (context.invoker as AccountAddress).address };
+    } else {
+        invoker = { type: 'AddressContract', address: context.invoker as ContractAddress };
+    }
+
+    let parameter = context.parameter?.toString('hex');
+
+    let responseContext = {
+        invoker: invoker,
+        contract: context.contract,
+        amount: context.amount,
+        method: context.method,
+        parameter: parameter,
+        energy: context.energy
+    } as InvokeContractContext;
+
+    return responseContext;
 }
 
 /**

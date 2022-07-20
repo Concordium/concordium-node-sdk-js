@@ -4,6 +4,7 @@ import {
     AccountTransactionSignature,
     ConsensusStatus,
     ContractAddress,
+    ContractContext,
     InstanceInfo,
     NextAccountNonce,
     TransactionStatus,
@@ -11,7 +12,7 @@ import {
 } from './types';
 import { AccountAddress } from './types/accountAddress';
 import Provider, { JsonRpcResponse } from './providers/provider';
-import { serializeAccountTransactionForSubmission } from './serialization';
+import { serializeAccountTransactionForSubmission, serializeInvokeContractForSubmission } from './serialization';
 import { GtuAmount } from './types/gtuAmount';
 import { ModuleReference } from './types/moduleReference';
 import { buildJsonResponseReviver, intToStringTransformer } from './util';
@@ -87,6 +88,19 @@ export class JsonRpcClient {
         );
         const res = await this.provider.request('sendAccountTransaction', {
             transaction: serializedAccountTransaction.toString('base64'),
+        });
+        return JSON.parse(res).result || false;
+    }
+
+    async invokeContract(
+        blockHash: string,
+        contractContext: ContractContext,
+    ): Promise<boolean> {
+        const serializedInvokeContext = serializeInvokeContractForSubmission(contractContext);
+
+        const res = await this.provider.request('invokeContract', {
+            blockHash: blockHash,
+            context: serializedInvokeContext,
         });
         return JSON.parse(res).result || false;
     }

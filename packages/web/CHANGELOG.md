@@ -1,15 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 2022-7-25
 
 ### Added
 
 - Add support for getAccountInfo, InvokeContract, getCryptographicParameters and getModuleSource with JSON-RPC
-
-## 0.3.0 2022-7-5
-
-### Added
-
 - Support deserializing new schema types: ULeb128, ILeb128, ByteArray and ByteList.
 - Support deserializing schemas with versioning information.
 

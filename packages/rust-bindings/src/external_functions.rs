@@ -38,3 +38,23 @@ pub fn deserialize_state(contract_name: &str, state_bytes: String, schema: Strin
         Err(e) => format!("{}", e),
     }
 }
+
+extern crate console_error_panic_hook;
+
+#[wasm_bindgen(js_name = createIdRequestV1)]
+pub fn create_id_request_v1_ext(input: &str) -> String {
+    console_error_panic_hook::set_once();
+    match create_id_request_v1_aux(serde_json::from_str(input).unwrap()) {
+            Ok(s) => s,
+            Err(e) => format!("{}", e),
+        }
+}
+
+#[wasm_bindgen(js_name = createCredentialV1)]
+pub fn create_credential_v1_ext(input: &str) -> String {
+    console_error_panic_hook::set_once();
+    match create_credential_v1_aux(serde_json::from_str(input).unwrap()) {
+        Ok(s) => s,
+        Err(e) => format!("{}", e),
+    }
+}

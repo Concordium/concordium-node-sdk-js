@@ -1398,7 +1398,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@concordium/web-sdk@workspace:packages/web"
   dependencies:
-    "@concordium/common-sdk": 2.1.0
+    "@concordium/common-sdk": 2.1.1
     "@concordium/rust-bindings": 0.1.1
     "@typescript-eslint/eslint-plugin": ^4.28.1
     "@typescript-eslint/parser": ^4.28.1

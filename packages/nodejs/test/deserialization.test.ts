@@ -14,8 +14,8 @@ test('Deserialize state with schema from file (two-step-transfer)', async () => 
     const contractAddress = { index: BigInt(1646), subindex: BigInt(0) };
 
     const instanceInfo = await client.getInstanceInfo(
-        blockHash,
-        contractAddress
+        contractAddress,
+        blockHash
     );
     if (!instanceInfo) {
         throw new Error(

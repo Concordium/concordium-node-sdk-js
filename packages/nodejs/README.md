@@ -6,6 +6,7 @@ Wrappers for interacting with the Concordium node, using nodejs.
 
 [Note that this package contains and exports the functions from the common-sdk, check the readme of that package for an overview of those](../common/README.md).
 
+
 **Table of Contents**
 - [ConcordiumNodeClient](#concordiumnodeclient)
     - [Creating a client](#creating-a-client)
@@ -31,11 +32,12 @@ Wrappers for interacting with the Concordium node, using nodejs.
     - [Check block for transfers with memo](#check-block-for-transfers-with-memo)
     - [getInstances](#getinstances)
     - [getInstanceInfo](#getinstanceinfo)
+    - [invokeContract](#invokecontract)
+    - [getModuleSource](#getModuleSource)
 - [Build](#build)
     - [Building for a release](#building-for-a-release)
     - [Publishing a release](#publishing-a-release)
 - [Test](#test)
-
 
 # ConcordiumNodeClient
 
@@ -500,14 +502,14 @@ Used to get information about a specific contract instance, at a specific block.
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
 const contractAddress = { index: 1n, subindex: 0n };
 
-const instanceInfo = await client.getInstanceInfo(blockHash, contractAddress);
+const instanceInfo = await client.getInstanceInfo(contractAddress, blockHash);
 const name = instanceInfo.name; 
 ...
 ```
 
 Note that only version 0 contracts returns the model. (use `isInstanceInfoV0`/`isInstanceInfoV1` to check the version)
 
-## InvokeContract
+## invokeContract
 Used to simulate a contract update, and to trigger view functions.
 
 ```js
@@ -515,7 +517,6 @@ const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42
 const contractAddress = { index: 1n, subindex: 0n };
 const invoker = new AccountAddress('3tXiu8d4CWeuC12irAB7YVb1hzp3YxsmmmNzzkdujCPqQ9EjDm');
 const result = await client.invokeContract(
-    blockHash,
     {
         invoker: invoker,
         contract: contractAddress,
@@ -523,7 +524,8 @@ const result = await client.invokeContract(
         amount: undefined,
         parameter: undefined,
         energy: 30000n,
-    }
+    },
+    blockHash
 );
 
 if (!result) {
@@ -546,7 +548,19 @@ Note that some of the parts of the context are optional:
  - energy: defaults to 10 million
  - parameter: defaults to no parameters
  - invoker: uses the zero account address, which can be used instead of finding a random address.
+ 
+## getModuleSource
+This commands gets the source of a module on the chain.
 
+Note that this returns the raw bytes of the source, as a buffer.
+```js
+const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
+const moduleReference = "c0e51cd55ccbff4fa8da9bb76c9917e83ae8286d86b47647104bf715b4821c1a";
+const source = await client.getModuleSource(moduleReference, blockHash);
+if (!source) {
+    // the blockHash is unknown or the module doesn't exist at the given blockHash
+}
+```
 
 # Build
 

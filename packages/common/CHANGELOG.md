@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.0 2022-7-21
+
+### Added
+
+- Add support for getAccountInfo, InvokeContract, getCryptographicParameters and getModuleSource with JSON-RPC
+
 ## 2.1.1 2022-7-8
 
 ### Fixed

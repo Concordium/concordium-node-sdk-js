@@ -7,25 +7,21 @@
         <script  type="module" >
          const client = new concordiumSDK.JsonRpcClient(new concordiumSDK.HttpProvider("http://localhost:9095"));
          const update = function () {
-             client.getInstanceInfo({index: BigInt(index.value), subindex: BigInt(subindex.value)}).then((res) => {
+             client.getCryptographicParameters().then((res) => {
                  console.log(res);
-                 const result = {
-                     ...res,
-                     amount: res.amount.toString()
-                 }
-                 document.getElementById('result').innerHTML = JSON.stringify(result, null, 2);
+                 document.getElementById('result').innerHTML = JSON.stringify(res.value, null, 2);
              });
          };
          document.getElementById('button').onclick = update;
         </script>
     </head>
     <body>
-        Index: <input type="text" id="index"/>
-        Subindex: <input type="text" id="subindex" value="0"/>
         <button id="button">
-            Click
+            Load
         </button>
         <br/>
-        <label id="result"/>
+        <div>
+            <label id="result">
+        </div>
     </body>
 </html>

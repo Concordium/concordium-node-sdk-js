@@ -67,6 +67,7 @@ import {
     GtuAmount,
     ModuleReference,
     ReduceStakePendingChangeV1,
+    buildInvoker,
 } from '@concordium/common-sdk';
 import {
     buildJsonResponseReviver,
@@ -600,8 +601,8 @@ export default class ConcordiumNodeClient {
      * @returns A JSON object with information about the contract instance
      */
     async getInstanceInfo(
-        blockHash: string,
-        address: ContractAddress
+        address: ContractAddress,
+        blockHash: string
     ): Promise<InstanceInfo | undefined> {
         if (!isValidHash(blockHash)) {
             throw new Error('The input was not a valid hash: ' + blockHash);
@@ -786,10 +787,17 @@ export default class ConcordiumNodeClient {
         );
     }
 
+    /**
+     * Retrieves the source of the given module at
+     * the provided block.
+     * @param moduleReference the module's reference, which is the hex encoded hash of the source.
+     * @param blockHash the block to get the cryptographic parameters at
+     * @returns the source of the module as raw bytes.
+     */
     async getModuleSource(
-        blockHash: string,
-        moduleReference: ModuleReference
-    ): Promise<Uint8Array> {
+        moduleReference: ModuleReference,
+        blockHash: string
+    ): Promise<Buffer | undefined> {
         if (!isValidHash(blockHash)) {
             throw new Error('The input was not a valid hash: ' + blockHash);
         }
@@ -802,13 +810,16 @@ export default class ConcordiumNodeClient {
             requestObject
         );
 
-        return response;
+        if (response.length === 0) {
+            return undefined;
+        }
+        return Buffer.from(response);
     }
 
     /**
      * Invokes a smart contract.
-     * @param blockHash the block hash at which the contract should be invoked at. The contract is invoked in the state at the end of this block.
      * @param context the collection of details used to invoke the contract. Must include the address of the contract and the method invoked.
+     * @param blockHash the block hash at which the contract should be invoked at. The contract is invoked in the state at the end of this block.
      * @returns If the node was able to invoke, then a object describing the outcome is returned.
      * The outcome is determined by the `tag` field, which is either `success` or `failure`.
      * The `usedEnergy` field will always be present, and is the amount of NRG was used during the execution.
@@ -818,43 +829,11 @@ export default class ConcordiumNodeClient {
      * If either the block does not exist, or then node fails to parse of any of the inputs, then undefined is returned.
      */
     async invokeContract(
-        blockHash: string,
-        contractContext: ContractContext
+        contractContext: ContractContext,
+        blockHash: string
     ): Promise<InvokeContractResult | undefined> {
         if (!isValidHash(blockHash)) {
             throw new Error('The input was not a valid hash: ' + blockHash);
-        }
-
-        let invoker:
-            | {
-                  type: 'AddressContract';
-                  address: {
-                      index: string;
-                      subindex: string;
-                  };
-              }
-            | {
-                  type: 'AddressAccount';
-                  address: string;
-              }
-            | null;
-
-        if (!contractContext.invoker) {
-            invoker = null;
-        } else if ((contractContext.invoker as Address).address) {
-            invoker = {
-                type: 'AddressAccount',
-                address: (contractContext.invoker as Address).address,
-            };
-        } else {
-            const invokerContract = contractContext.invoker as ContractAddress;
-            invoker = {
-                type: 'AddressContract',
-                address: {
-                    subindex: invokerContract.subindex.toString(),
-                    index: invokerContract.index.toString(),
-                },
-            };
         }
 
         const requestObject = new InvokeContractRequest();
@@ -862,7 +841,7 @@ export default class ConcordiumNodeClient {
         requestObject.setContext(
             stringToInt(
                 JSON.stringify({
-                    invoker,
+                    invoker: buildInvoker(contractContext.invoker),
                     contract: {
                         subindex: contractContext.contract.subindex.toString(),
                         index: contractContext.contract.index.toString(),

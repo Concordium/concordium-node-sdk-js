@@ -1408,6 +1408,51 @@ export interface ContractContext {
     energy?: bigint;
 }
 
+/**
+ * Format of invoker expected by the node for the invokeContract entrypoint.
+ */
+export type Invoker =
+    | {
+          type: 'AddressContract';
+          address: {
+              index: string;
+              subindex: string;
+          };
+      }
+    | {
+          type: 'AddressAccount';
+          address: string;
+      }
+    | null;
+
+/**
+ * Takes an accountAddress or ContractAddress and transforms it into the specific format used for
+ * InvokeContract's invoker parameter.
+ */
+export function buildInvoker(
+    invoker?: AccountAddress | ContractAddress
+): Invoker {
+    if (!invoker) {
+        return null;
+    } else if ((invoker as AccountAddress).address) {
+        return {
+            type: 'AddressAccount',
+            address: (invoker as AccountAddress).address,
+        };
+    } else if ((invoker as ContractAddress).index !== undefined) {
+        const invokerContract = invoker as ContractAddress;
+        return {
+            type: 'AddressContract',
+            address: {
+                subindex: invokerContract.subindex.toString(),
+                index: invokerContract.index.toString(),
+            },
+        };
+    } else {
+        throw new Error('Unexpected input to build invoker');
+    }
+}
+
 export interface InvokeContractSuccessResult
     extends Pick<SuccessfulEventResult, 'events'> {
     tag: 'success';

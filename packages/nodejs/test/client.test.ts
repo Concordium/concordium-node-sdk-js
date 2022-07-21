@@ -21,6 +21,7 @@ import {
     RejectReasonTag,
     serializeUpdateContractParameters,
     isReduceStakePendingChange,
+    ModuleReference,
 } from '@concordium/common-sdk';
 import { isValidDate, getNodeClient, getModuleBuffer } from './testHelpers';
 import { bulletProofGenerators } from './resources/bulletproofgenerators';
@@ -1408,7 +1409,6 @@ test('account info with passive delegation can be accessed', async () => {
 
 test('Invoke contract on v0 contract', async () => {
     const result = await client.invokeContract(
-        '9b689a646ae3f572cd794a4b19590161c1eeb0d0bf16e1da6afd848998d32710',
         {
             invoker: new AccountAddress(
                 '3tXiu8d4CWeuC12irAB7YVb1hzp3YxsmmmNzzkdujCPqQ9EjDm'
@@ -1421,7 +1421,8 @@ test('Invoke contract on v0 contract', async () => {
             amount: new GtuAmount(0n),
             parameter: undefined,
             energy: 30000n,
-        }
+        },
+        '9b689a646ae3f572cd794a4b19590161c1eeb0d0bf16e1da6afd848998d32710'
     );
 
     if (!result) {
@@ -1438,7 +1439,6 @@ test('Invoke contract on v0 contract', async () => {
 
 test('Invoke contract on v1 contract', async () => {
     const result = await client.invokeContract(
-        '9b689a646ae3f572cd794a4b19590161c1eeb0d0bf16e1da6afd848998d32710',
         {
             invoker: new AccountAddress(
                 '3tXiu8d4CWeuC12irAB7YVb1hzp3YxsmmmNzzkdujCPqQ9EjDm'
@@ -1451,7 +1451,8 @@ test('Invoke contract on v1 contract', async () => {
             amount: new GtuAmount(0n),
             parameter: undefined,
             energy: 30000n,
-        }
+        },
+        '9b689a646ae3f572cd794a4b19590161c1eeb0d0bf16e1da6afd848998d32710'
     );
 
     if (!result) {
@@ -1475,14 +1476,14 @@ test('Invoke contract on v1 contract', async () => {
 
 test('Invoke contract with full default', async () => {
     const result = await client.invokeContract(
-        '9b689a646ae3f572cd794a4b19590161c1eeb0d0bf16e1da6afd848998d32710',
         {
             contract: {
                 index: 5102n,
                 subindex: 0n,
             },
             method: 'PiggyBank.view',
-        }
+        },
+        '9b689a646ae3f572cd794a4b19590161c1eeb0d0bf16e1da6afd848998d32710'
     );
 
     if (!result) {
@@ -1529,7 +1530,6 @@ test('Invoke contract with parameters', async () => {
     );
 
     const result = await client.invokeContract(
-        '9b689a646ae3f572cd794a4b19590161c1eeb0d0bf16e1da6afd848998d32710',
         {
             invoker: new AccountAddress(
                 '3gLPtBSqSi7i7TEzDPpcpgD8zHiSbWEmn23QZH29A7hj4sMoL5'
@@ -1540,7 +1540,8 @@ test('Invoke contract with parameters', async () => {
             },
             method: methodName,
             parameter: inputParams,
-        }
+        },
+        '9b689a646ae3f572cd794a4b19590161c1eeb0d0bf16e1da6afd848998d32710'
     );
 
     if (!result) {
@@ -1560,4 +1561,45 @@ test('Invoke contract with parameters', async () => {
     expect(result.events[0].amount).toBe('0');
     expect(result.events[0].message).toBe(inputParams.toString('hex'));
     expect(result.usedEnergy).toBe(1409n);
+});
+
+test('Get module source', async () => {
+    const blockHash =
+        'c6ef3705e1e6230f30164bcad85bfe6b6dc1c45b4f1c6e16e71eac55e9038230';
+    const moduleReference = new ModuleReference(
+        '7e8398adc406a97db4d869c3fd7adc813a3183667a3a7db078ebae6f7dce5f64'
+    );
+    const source = await client.getModuleSource(moduleReference, blockHash);
+    const localSource = getModuleBuffer('test/resources/piggy_bank.wasm');
+
+    if (!source) {
+        throw new Error('Expected a source to be returned');
+    }
+
+    expect(source.toString('hex')).toBe(
+        Buffer.concat([
+            Buffer.from('0aff0e0000000000000777', 'hex'),
+            localSource,
+        ]).toString('hex')
+    );
+});
+
+test('Get module source returns undefined when hash is unknown', async () => {
+    const blockHash =
+        '6d9483892c1ec25ac431910fe34eafe7c39f26b766f6656c9fb5ace417019511';
+    const moduleReference = new ModuleReference(
+        '7e8398adc406a97db4d869c3fd7adc813a3183667a3a7db078ebae6f7dce5f64'
+    );
+    const source = await client.getModuleSource(moduleReference, blockHash);
+    expect(source).toBeUndefined();
+});
+
+test('Get module source returns undefined when reference is unknown', async () => {
+    const blockHash =
+        'c6ef3705e1e6230f30164bcad85bfe6b6dc1c45b4f1c6e16e71eac55e9038230';
+    const moduleReference = new ModuleReference(
+        '7e8398adc406a97db4d869c3fd7adc813a3183667a3a7db078ebae6f7dce5f65'
+    );
+    const source = await client.getModuleSource(moduleReference, blockHash);
+    expect(source).toBeUndefined();
 });

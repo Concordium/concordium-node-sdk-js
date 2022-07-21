@@ -35,9 +35,13 @@ const client = new JsonRpcClient(new HttpProvider("http://localhost:9095"));
 Currently the client only supports the following entrypoints, with the same interface as the node client:
 
 - [sendTransaction](../nodejs#send-account-transaction)
-- [getTransactionStatus](../nodejs#getTransactionStatus)
+- [getTransactionStatus](../nodejs#gettransactionstatus)
 - [getInstanceInfo](../nodejs#getInstanceInfo)
-- [getConsensusStatus](../nodejs#getConsensusStatus)
+- [getConsensusStatus](../nodejs#getconsensusstatus)
+- [getAccountInfo](../nodejs#getAccountInfo)
+- [getCryptographicParameters](../nodejs#getcryptographicparameters)
+- [invokeContract](../nodejs#invokecontract)
+- [getModuleSource](../nodejs#getModuleSource)
 
 # Creating buffers
 Some of the functions in the SDK expects buffers as input.
@@ -65,6 +69,18 @@ A simple example that allows calling a JSON-RPC server for a given transaction's
 
 ## GetNonce.html
 A simple example that allows calling a JSON-RPC server for a given account's next nonce and displays it.
+
+## InvokeContract.html
+An simple example of how to invoke a given smart contract instance using a JSON-RPC server.
+
+## GetCryptographicParameters.html
+An example of getting the crypgographic parameters of the chain using a JSON-RPC server.
+
+## GetAccountInfo.html
+An example of getting the info of a given account using a JSON-RPC server.
+
+## GetModuleSource.html
+An example of getting the source of a model on the chain using a JSON-RPC server.
 
 
 # Build

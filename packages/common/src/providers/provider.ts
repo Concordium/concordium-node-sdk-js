@@ -1,3 +1,5 @@
+import { Invoker } from '../types';
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 interface JsonRpcResponseBase {
     jsonrpc: '2.0';
@@ -32,6 +34,23 @@ export type JsonRpcRequest = (
               { blockHash: string; index: bigint; subindex: bigint }
           ]
         | ['sendAccountTransaction', { transaction: string }]
+        | ['getAccountInfo', { address: string; blockHash: string }]
+        | ['getCryptographicParameters', { blockHash: string }]
+        | ['getModuleSource', { blockHash: string; moduleReference: string }]
+        | [
+              'invokeContract',
+              {
+                  blockHash: string;
+                  context: {
+                      contract: { index: bigint; subindex: bigint };
+                      method: string;
+                      amount?: bigint;
+                      invoker: Invoker;
+                      energy?: bigint;
+                      parameter?: string;
+                  };
+              }
+          ]
 ) => Promise<string>;
 
 export default interface Provider {

@@ -87,6 +87,7 @@ export function serializeAccountTransactionSignature(
     };
     const putCredentialSignatures = (credSig: CredentialSignature) =>
         serializeMap(credSig, encodeWord8, encodeWord8FromString, putSignature);
+
     return serializeMap(
         signatures,
         encodeWord8,

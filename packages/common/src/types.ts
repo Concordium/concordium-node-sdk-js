@@ -1134,7 +1134,7 @@ export enum BlockItemKind {
  * transaction.
  */
 export enum AccountTransactionType {
-    DeployModule = 0,
+    DeployModule = 100,
     InitializeSmartContractInstance = 1,
     UpdateSmartContractInstance = 2,
     SimpleTransfer = 3,

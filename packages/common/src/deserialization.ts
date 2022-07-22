@@ -7,7 +7,7 @@ import {
     AccountTransactionSignature,
     AccountTransactionType,
     BlockItemKind,
-    NormalAccountCredential,
+    TypedCredentialDeployment,
 } from './types';
 import { AccountAddress } from './types/accountAddress';
 import { TransactionExpiry } from './types/transactionExpiry';
@@ -85,6 +85,7 @@ function deserializeAccountTransactionSignature(
     );
 }
 
+/** We do not return the byte length, because it is always 60 (32 + 8 + 8 + 4 + 8) for the header */
 function deserializeTransactionHeader(
     serializedHeader: Buffer
 ): AccountTransactionHeader {
@@ -103,7 +104,7 @@ function deserializeTransactionHeader(
     };
 }
 
-export function deserializeAccountTransaction(serializedTransaction: Buffer): {
+function deserializeAccountTransaction(serializedTransaction: Buffer): {
     accountTransaction: AccountTransaction;
     signatures: AccountTransactionSignature;
 } {
@@ -117,7 +118,7 @@ export function deserializeAccountTransaction(serializedTransaction: Buffer): {
     const header = deserializeTransactionHeader(
         serializedTransaction.subarray(pointer)
     );
-    pointer += 32 + 8 + 8 + 4 + 8;
+    pointer += 60;
 
     const transactionType = serializedTransaction.readUInt8(pointer);
     pointer += 1;
@@ -141,9 +142,8 @@ export function deserializeAccountTransaction(serializedTransaction: Buffer): {
     };
 }
 
-export function deserializeCredentialDeployment(serializedDeployment: Buffer) {
-    // TODO parse proofs properly
-    const raw = wasm.deserializeCredentialDeploymentDetails(
+function deserializeCredentialDeployment(serializedDeployment: Buffer) {
+    const raw = wasm.deserializeCredentialDeployment(
         serializedDeployment.toString('hex')
     );
     try {
@@ -157,7 +157,7 @@ export function deserializeCredentialDeployment(serializedDeployment: Buffer) {
     }
 }
 
-export type DeserializedTransaction =
+export type BlockItem =
     | {
           kind: BlockItemKind.AccountTransactionKind;
           transaction: {
@@ -168,16 +168,19 @@ export type DeserializedTransaction =
     | {
           kind: BlockItemKind.CredentialDeploymentKind;
           transaction: {
-              credential: NormalAccountCredential & {
-                  contents: { proofs: string };
-              };
+              credential: TypedCredentialDeployment;
               expiry: number;
           };
       };
 
+/**
+ * Deserializes a transaction, from the binary format used to send it to the node, back into an js object.
+ * @param serializedTransaction A buffer containing the binary transaction. It is expected to start with the version and blockItemKind.
+ * @returns An object specifiying the blockItemKind that the transaction has. The object also contains the actual transaction under the transaction field.
+ **/
 export function deserializeTransaction(
     serializedTransaction: Buffer
-): DeserializedTransaction {
+): BlockItem {
     let pointer = 0;
     const version = serializedTransaction.readUInt8(pointer);
     pointer += 1;

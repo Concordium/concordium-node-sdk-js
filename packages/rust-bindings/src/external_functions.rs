@@ -39,9 +39,9 @@ pub fn deserialize_state(contract_name: &str, state_bytes: String, schema: Strin
     }
 }
 
-#[wasm_bindgen(js_name = deserializeCredentialDeploymentDetails)]
-pub fn deserialize_credential_deployment_details_ext(serialized: &str) -> String {
-    match deserialize_credential_deployment_details_aux(serialized) {
+#[wasm_bindgen(js_name = deserializeCredentialDeployment)]
+pub fn deserialize_credential_deployment_ext(serialized: &str) -> String {
+    match deserialize_credential_deployment_aux(serialized) {
         Ok(s) => s,
         Err(e) => format!("{}", e),
     }

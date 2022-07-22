@@ -1,5 +1,4 @@
 import {
-    deserializeAccountTransaction,
     deserializeContractState,
     deserializeTransaction,
 } from '../src/deserialization';

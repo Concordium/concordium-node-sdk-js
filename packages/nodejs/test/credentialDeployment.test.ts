@@ -161,9 +161,10 @@ test('test deserialize credentialDeployment ', async () => {
 
     // TODO: Check correctness of proofs
 
-    const { proofs: deserializedProofs, ...deserializedValues } =
+    const { proofs: _, ...deserializedValues } =
         deployment.transaction.credential.contents;
-    const { proofs, ...values } = credentialDeploymentTransaction.unsignedCdi;
+    const { proofs: orig, ...values } =
+        credentialDeploymentTransaction.unsignedCdi;
     expect(deserializedValues).toEqual(values);
     expect(BigInt(deployment.transaction.expiry)).toEqual(
         credentialDeploymentTransaction.expiry.expiryEpochSeconds

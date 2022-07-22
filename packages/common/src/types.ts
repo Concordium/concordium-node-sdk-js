@@ -1134,7 +1134,7 @@ export enum BlockItemKind {
  * transaction.
  */
 export enum AccountTransactionType {
-    DeployModule = 100,
+    DeployModule = 0,
     InitializeSmartContractInstance = 1,
     UpdateSmartContractInstance = 2,
     SimpleTransfer = 3,
@@ -1470,10 +1470,9 @@ export type InvokeContractResult =
     | InvokeContractSuccessResult
     | InvokeContractFailedResult;
 
-export interface CredentialDeploymentTransaction {
+export interface CredentialDeploymentDetails {
     expiry: TransactionExpiry;
     unsignedCdi: UnsignedCredentialDeploymentInformation;
-    randomness: CommitmentsRandomness;
 }
 
 export interface IdOwnershipProofs {
@@ -1501,14 +1500,31 @@ export interface CommitmentsRandomness {
     attributesRand: AttributesRandomness;
 }
 
-export interface UnsignedCdiWithRandomness {
-    unsignedCdi: UnsignedCredentialDeploymentInformation;
+interface CdiRandomness {
     randomness: CommitmentsRandomness;
 }
+
+// TODO Rename
+export type CredentialDeploymentTransaction = CredentialDeploymentDetails &
+    CdiRandomness;
+/** Internal type used when building credentials */
+export type UnsignedCdiWithRandomness = {
+    unsignedCdi: UnsignedCredentialDeploymentInformation;
+} & CdiRandomness;
 
 export interface CredentialDeploymentInfo extends CredentialDeploymentValues {
     proofs: string;
 }
+
+export type TypedCredentialDeployment =
+    | {
+          type: 'normal';
+          contents: CredentialDeploymentInfo;
+      }
+    | {
+          type: 'initial';
+          contents: InitialCredentialDeploymentValues & { sig: string };
+      };
 
 export interface IdentityProvider {
     arsInfos: Record<number, ArInfo>;

@@ -84,7 +84,7 @@ function createUnsignedCredentialInfo(
  * @param credentialIndex the index of the credential to create, has to be in sequence and unused
  * @param revealedAttributes the attributes about the account holder that should be revealed on chain
  * @param expiry the expiry of the transaction
- * @returns a credential deployment transaction
+ * @returns the details used in a credential deployment transaction
  */
 export function createCredentialDeploymentTransaction(
     identity: IdentityInput,

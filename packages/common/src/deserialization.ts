@@ -7,6 +7,7 @@ import {
     AccountTransactionSignature,
     AccountTransactionType,
     BlockItemKind,
+    NormalAccountCredential,
 } from './types';
 import { AccountAddress } from './types/accountAddress';
 import { TransactionExpiry } from './types/transactionExpiry';
@@ -102,31 +103,11 @@ function deserializeTransactionHeader(
     };
 }
 
-/**
- * Serializes an account transaction so that it is ready for being submitted
- * to the node. This consists of the standard serialization of an account transaction
- * prefixed by a version byte.
- * @param accountTransaction the transaction to serialize
- * @param signatures the signatures on the hash of the account transaction
- * @returns the serialization of the account transaction ready for being submitted to a node
- */
 export function deserializeAccountTransaction(serializedTransaction: Buffer): {
     accountTransaction: AccountTransaction;
     signatures: AccountTransactionSignature;
 } {
     let pointer = 0;
-    const version = serializedTransaction.readUInt8(pointer);
-    pointer += 1;
-    if (version !== 0) {
-        throw new Error(
-            'Only transactions with version 0 format are supported'
-        );
-    }
-    const blockItemKind = serializedTransaction.readUInt8(pointer);
-    pointer += 1;
-    if (blockItemKind !== BlockItemKind.AccountTransactionKind) {
-        throw new Error('Transaction is not a AccountTransactionKind');
-    }
     const { value: signatures, length: signaturesLength } =
         deserializeAccountTransactionSignature(
             serializedTransaction.subarray(pointer)
@@ -158,4 +139,75 @@ export function deserializeAccountTransaction(serializedTransaction: Buffer): {
         },
         signatures,
     };
+}
+
+export function deserializeCredentialDeployment(serializedDeployment: Buffer) {
+    // TODO parse proofs properly
+    const raw = wasm.deserializeCredentialDeploymentDetails(
+        serializedDeployment.toString('hex')
+    );
+    try {
+        const parsed = JSON.parse(raw);
+        return {
+            credential: parsed.credential,
+            expiry: parsed.messageExpiry,
+        };
+    } catch {
+        throw new Error(raw);
+    }
+}
+
+export type DeserializedTransaction =
+    | {
+          kind: BlockItemKind.AccountTransactionKind;
+          transaction: {
+              accountTransaction: AccountTransaction;
+              signatures: AccountTransactionSignature;
+          };
+      }
+    | {
+          kind: BlockItemKind.CredentialDeploymentKind;
+          transaction: {
+              credential: NormalAccountCredential & {
+                  contents: { proofs: string };
+              };
+              expiry: number;
+          };
+      };
+
+export function deserializeTransaction(
+    serializedTransaction: Buffer
+): DeserializedTransaction {
+    let pointer = 0;
+    const version = serializedTransaction.readUInt8(pointer);
+    pointer += 1;
+    if (version !== 0) {
+        throw new Error(
+            'Only transactions with version 0 format are supported'
+        );
+    }
+    const blockItemKind = serializedTransaction.readUInt8(pointer);
+    pointer += 1;
+    switch (blockItemKind) {
+        case BlockItemKind.AccountTransactionKind:
+            return {
+                kind: BlockItemKind.AccountTransactionKind,
+                transaction: deserializeAccountTransaction(
+                    serializedTransaction.subarray(pointer)
+                ),
+            };
+        case BlockItemKind.CredentialDeploymentKind:
+            return {
+                kind: BlockItemKind.CredentialDeploymentKind,
+                transaction: deserializeCredentialDeployment(
+                    serializedTransaction.subarray(pointer)
+                ),
+            };
+        case BlockItemKind.UpdateInstructionKind:
+            throw new Error(
+                'deserialization of UpdateInstructions is not supported'
+            );
+        default:
+            throw new Error('Invalid blockItemKind');
+    }
 }

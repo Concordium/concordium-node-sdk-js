@@ -246,7 +246,7 @@ export class RegisterDataHandler
     }
 
     deserialize(serializedPayload: Buffer): RegisterDataPayload {
-        const memoLength = serializedPayload.readUInt16BE(32);
+        const memoLength = serializedPayload.readUInt16BE(0);
         return {
             data: new DataBlob(serializedPayload.subarray(2, 2 + memoLength)),
         };

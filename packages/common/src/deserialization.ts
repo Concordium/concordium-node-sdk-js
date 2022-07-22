@@ -11,6 +11,7 @@ import {
 } from './types';
 import { AccountAddress } from './types/accountAddress';
 import { TransactionExpiry } from './types/transactionExpiry';
+import { sliceBuffer } from './util';
 
 /**
  * Given a contract's raw state, its name and its schema, return the state as a JSON object.
@@ -51,9 +52,9 @@ function deserializeMap<K extends string | number | symbol, T>(
     pointer += size.length;
     const result = {} as Record<K, T>;
     for (let i = 0; i < size.value; i += 1) {
-        const key = decodeKey(serialized.subarray(pointer));
+        const key = decodeKey(sliceBuffer(serialized, pointer));
         pointer += key.length;
-        const value = decodeValue(serialized.subarray(pointer));
+        const value = decodeValue(sliceBuffer(serialized, pointer));
         pointer += value.length;
         result[key.value] = value.value;
     }
@@ -71,7 +72,7 @@ function deserializeAccountTransactionSignature(
     const decodeSignature = (serialized: Buffer) => {
         const length = serialized.readUInt16BE(0);
         return {
-            value: serialized.subarray(2, 2 + length).toString('hex'),
+            value: sliceBuffer(serialized, 2, 2 + length).toString('hex'),
             length: 2 + length,
         };
     };
@@ -89,13 +90,15 @@ function deserializeAccountTransactionSignature(
 function deserializeTransactionHeader(
     serializedHeader: Buffer
 ): AccountTransactionHeader {
-    const sender = AccountAddress.fromBytes(serializedHeader.subarray(0, 32));
-    const nonce = serializedHeader.readBigUInt64BE(32);
+    const sender = AccountAddress.fromBytes(
+        sliceBuffer(serializedHeader, 0, 32)
+    );
+    const nonce = serializedHeader.readBigUInt64BE(32) as bigint;
     // TODO: extract payloadSize and energyAmount?
     // const energyAmount = serializedPayload.readBigUInt64BE(40);
     // const payloadSize = serializedPayload.readBigUInt64BE(48);
     const expiry = TransactionExpiry.fromEpochSeconds(
-        serializedHeader.readBigUInt64BE(52)
+        serializedHeader.readBigUInt64BE(52) as bigint
     );
     return {
         sender,
@@ -111,12 +114,12 @@ function deserializeAccountTransaction(serializedTransaction: Buffer): {
     let pointer = 0;
     const { value: signatures, length: signaturesLength } =
         deserializeAccountTransactionSignature(
-            serializedTransaction.subarray(pointer)
+            sliceBuffer(serializedTransaction, pointer)
         );
     pointer += signaturesLength;
 
     const header = deserializeTransactionHeader(
-        serializedTransaction.subarray(pointer)
+        sliceBuffer(serializedTransaction, pointer)
     );
     pointer += 60;
 
@@ -129,7 +132,7 @@ function deserializeAccountTransaction(serializedTransaction: Buffer): {
         transactionType as AccountTransactionType
     );
     const payload = accountTransactionHandler.deserialize(
-        serializedTransaction.subarray(pointer)
+        sliceBuffer(serializedTransaction, pointer)
     );
 
     return {
@@ -196,14 +199,14 @@ export function deserializeTransaction(
             return {
                 kind: BlockItemKind.AccountTransactionKind,
                 transaction: deserializeAccountTransaction(
-                    serializedTransaction.subarray(pointer)
+                    sliceBuffer(serializedTransaction, pointer)
                 ),
             };
         case BlockItemKind.CredentialDeploymentKind:
             return {
                 kind: BlockItemKind.CredentialDeploymentKind,
                 transaction: deserializeCredentialDeployment(
-                    serializedTransaction.subarray(pointer)
+                    sliceBuffer(serializedTransaction, pointer)
                 ),
             };
         case BlockItemKind.UpdateInstructionKind:

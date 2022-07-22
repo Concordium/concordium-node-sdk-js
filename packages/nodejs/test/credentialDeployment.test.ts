@@ -158,13 +158,15 @@ test('test deserialize credentialDeployment ', async () => {
     if (deployment.kind !== BlockItemKind.CredentialDeploymentKind) {
         throw new Error('Incorrect BlockItemKind');
     }
+    if (deployment.transaction.credential.type !== 'normal') {
+        throw new Error('Incorrect deployment type');
+    }
 
     // TODO: Check correctness of proofs
 
-    const { proofs: _, ...deserializedValues } =
+    const { proofs: deserializedProofs, ...deserializedValues } =
         deployment.transaction.credential.contents;
-    const { proofs: orig, ...values } =
-        credentialDeploymentTransaction.unsignedCdi;
+    const { proofs, ...values } = credentialDeploymentTransaction.unsignedCdi;
     expect(deserializedValues).toEqual(values);
     expect(BigInt(deployment.transaction.expiry)).toEqual(
         credentialDeploymentTransaction.expiry.expiryEpochSeconds

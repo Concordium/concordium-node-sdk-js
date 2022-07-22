@@ -25,6 +25,7 @@ import {
 import { AccountAddress } from './types/accountAddress';
 import { DataBlob } from './types/DataBlob';
 import { GtuAmount } from './types/gtuAmount';
+import { sliceBuffer } from './util';
 
 interface AccountTransactionHandler<
     PayloadType extends AccountTransactionPayload = AccountTransactionPayload
@@ -49,9 +50,11 @@ export class SimpleTransferHandler
 
     deserialize(serializedPayload: Buffer): SimpleTransferPayload {
         const toAddress = AccountAddress.fromBytes(
-            serializedPayload.subarray(0, 32)
+            sliceBuffer(serializedPayload, 0, 32)
         );
-        const amount = new GtuAmount(serializedPayload.readBigUInt64BE(32));
+        const amount = new GtuAmount(
+            serializedPayload.readBigUInt64BE(32) as bigint
+        );
         return {
             toAddress,
             amount,
@@ -76,14 +79,14 @@ export class SimpleTransferWithMemoHandler
 
     deserialize(serializedPayload: Buffer): SimpleTransferWithMemoPayload {
         const toAddress = AccountAddress.fromBytes(
-            serializedPayload.subarray(0, 32)
+            sliceBuffer(serializedPayload, 0, 32)
         );
         const memoLength = serializedPayload.readUInt16BE(32);
         const memo = new DataBlob(
-            serializedPayload.subarray(32 + 2, 32 + 2 + memoLength)
+            sliceBuffer(serializedPayload, 32 + 2, 32 + 2 + memoLength)
         );
         const amount = new GtuAmount(
-            serializedPayload.readBigUInt64BE(32 + 2 + memoLength)
+            serializedPayload.readBigUInt64BE(32 + 2 + memoLength) as bigint
         );
         return {
             toAddress,
@@ -248,7 +251,9 @@ export class RegisterDataHandler
     deserialize(serializedPayload: Buffer): RegisterDataPayload {
         const memoLength = serializedPayload.readUInt16BE(0);
         return {
-            data: new DataBlob(serializedPayload.subarray(2, 2 + memoLength)),
+            data: new DataBlob(
+                sliceBuffer(serializedPayload, 2, 2 + memoLength)
+            ),
         };
     }
 }

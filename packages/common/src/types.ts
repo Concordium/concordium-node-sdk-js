@@ -1156,6 +1156,12 @@ export enum AccountTransactionType {
     ConfigureDelegation = 26,
 }
 
+export function isAccountTransactionType(
+    candidate: number
+): candidate is AccountTransactionType {
+    return candidate in AccountTransactionType;
+}
+
 export interface DeployModulePayload {
     /** Version of the wasm module. This should only be supplied if wasm module is not already versioned. */
     version?: number;
@@ -1470,10 +1476,9 @@ export type InvokeContractResult =
     | InvokeContractSuccessResult
     | InvokeContractFailedResult;
 
-export interface CredentialDeploymentTransaction {
+export interface CredentialDeploymentDetails {
     expiry: TransactionExpiry;
     unsignedCdi: UnsignedCredentialDeploymentInformation;
-    randomness: CommitmentsRandomness;
 }
 
 export interface IdOwnershipProofs {
@@ -1501,14 +1506,31 @@ export interface CommitmentsRandomness {
     attributesRand: AttributesRandomness;
 }
 
-export interface UnsignedCdiWithRandomness {
-    unsignedCdi: UnsignedCredentialDeploymentInformation;
+interface CdiRandomness {
     randomness: CommitmentsRandomness;
 }
+
+// TODO Should we rename this, As it is not actually the transaction that is sent to the node. (Note that this would be a breaking change)
+export type CredentialDeploymentTransaction = CredentialDeploymentDetails &
+    CdiRandomness;
+/** Internal type used when building credentials */
+export type UnsignedCdiWithRandomness = {
+    unsignedCdi: UnsignedCredentialDeploymentInformation;
+} & CdiRandomness;
 
 export interface CredentialDeploymentInfo extends CredentialDeploymentValues {
     proofs: string;
 }
+
+export type TypedCredentialDeployment =
+    | {
+          type: 'normal';
+          contents: CredentialDeploymentInfo;
+      }
+    | {
+          type: 'initial';
+          contents: InitialCredentialDeploymentValues & { sig: string };
+      };
 
 export interface IdentityProvider {
     arsInfos: Record<number, ArInfo>;

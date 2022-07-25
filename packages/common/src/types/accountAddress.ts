@@ -28,4 +28,10 @@ export class AccountAddress {
             throw error;
         }
     }
+
+    static fromBytes(bytes: Buffer): AccountAddress {
+        return new AccountAddress(
+            bs58check.encode(Buffer.concat([Buffer.of(1), bytes]))
+        );
+    }
 }

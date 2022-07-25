@@ -20,4 +20,8 @@ export class TransactionExpiry {
         }
         this.expiryEpochSeconds = secondsSinceEpoch(expiry);
     }
+
+    static fromEpochSeconds(seconds: bigint): TransactionExpiry {
+        return new TransactionExpiry(new Date(Number(seconds) * 1000));
+    }
 }

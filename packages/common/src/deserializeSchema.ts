@@ -651,7 +651,7 @@ export function deserialUint8(source: Readable): number {
  * @param source input stream
  * @returns number from 0 to 4294967295
  */
-export function deserialUint32(source: Readable): number {
+function deserialUint32(source: Readable): number {
     return source.read(4).readUInt32LE(0);
 }
 
@@ -661,7 +661,7 @@ export function deserialUint32(source: Readable): number {
  * @param source input stream
  * @returns number from 0 to 65535
  */
-export function deserialUint16(source: Readable): number {
+function deserialUint16(source: Readable): number {
     return source.read(2).readUInt16LE(0);
 }
 

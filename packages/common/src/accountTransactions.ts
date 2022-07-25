@@ -22,11 +22,16 @@ import {
     RegisterDataPayload,
     ConfigureDelegationPayload,
 } from './types';
+import { AccountAddress } from './types/accountAddress';
+import { DataBlob } from './types/DataBlob';
+import { GtuAmount } from './types/gtuAmount';
+import { Readable } from 'stream';
 
 interface AccountTransactionHandler<
     PayloadType extends AccountTransactionPayload = AccountTransactionPayload
 > {
     serialize: (payload: PayloadType) => Buffer;
+    deserialize: (serializedPayload: Readable) => PayloadType;
     getBaseEnergyCost: (payload: PayloadType) => bigint;
 }
 
@@ -41,6 +46,19 @@ export class SimpleTransferHandler
         const serializedToAddress = transfer.toAddress.decodedAddress;
         const serializedAmount = encodeWord64(transfer.amount.microGtuAmount);
         return Buffer.concat([serializedToAddress, serializedAmount]);
+    }
+
+    deserialize(serializedPayload: Readable): SimpleTransferPayload {
+        const toAddress = AccountAddress.fromBytes(
+            Buffer.from(serializedPayload.read(32))
+        );
+        const amount = new GtuAmount(
+            serializedPayload.read(8).readBigUInt64BE(0)
+        );
+        return {
+            toAddress,
+            amount,
+        };
     }
 }
 
@@ -57,6 +75,24 @@ export class SimpleTransferWithMemoHandler
             serializedMemo,
             serializedAmount,
         ]);
+    }
+
+    deserialize(serializedPayload: Readable): SimpleTransferWithMemoPayload {
+        const toAddress = AccountAddress.fromBytes(
+            Buffer.from(serializedPayload.read(32))
+        );
+        const memoLength = serializedPayload.read(2).readUInt16BE(0);
+        const memo = new DataBlob(
+            Buffer.from(serializedPayload.read(memoLength))
+        );
+        const amount = new GtuAmount(
+            serializedPayload.read(8).readBigUInt64BE(0)
+        );
+        return {
+            toAddress,
+            memo,
+            amount,
+        };
     }
 }
 
@@ -78,6 +114,10 @@ export class DeployModuleHandler
             const serializedVersion = encodeWord32(payload.version);
             return Buffer.concat([serializedVersion, serializedWasm]);
         }
+    }
+
+    deserialize(): DeployModulePayload {
+        throw new Error('deserialize not supported');
     }
 }
 
@@ -105,6 +145,10 @@ export class InitContractHandler
             serializedInitName,
             serializedParameters,
         ]);
+    }
+
+    deserialize(): InitContractPayload {
+        throw new Error('deserialize not supported');
     }
 }
 
@@ -138,6 +182,10 @@ export class UpdateContractHandler
             serializedReceiveName,
             serializedParameters,
         ]);
+    }
+
+    deserialize(): UpdateContractPayload {
+        throw new Error('deserialize not supported');
     }
 }
 
@@ -183,6 +231,10 @@ export class UpdateCredentialsHandler
             serializedThreshold,
         ]);
     }
+
+    deserialize(): UpdateCredentialsPayload {
+        throw new Error('deserialize not supported');
+    }
 }
 
 export class RegisterDataHandler
@@ -194,6 +246,13 @@ export class RegisterDataHandler
 
     serialize(payload: RegisterDataPayload): Buffer {
         return encodeDataBlob(payload.data);
+    }
+
+    deserialize(serializedPayload: Readable): RegisterDataPayload {
+        const memoLength = serializedPayload.read(2).readUInt16BE(0);
+        return {
+            data: new DataBlob(Buffer.from(serializedPayload.read(memoLength))),
+        };
     }
 }
 
@@ -207,8 +266,15 @@ export class ConfigureDelegationHandler
     serialize(payload: ConfigureDelegationPayload): Buffer {
         return serializeConfigureDelegationPayload(payload);
     }
+
+    deserialize(): ConfigureDelegationPayload {
+        throw new Error('deserialize not supported');
+    }
 }
 
+export function getAccountTransactionHandler(
+    type: AccountTransactionType
+): AccountTransactionHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType.SimpleTransfer
 ): SimpleTransferHandler;
@@ -218,9 +284,6 @@ export function getAccountTransactionHandler(
 export function getAccountTransactionHandler(
     type: AccountTransactionType.UpdateCredentials
 ): UpdateCredentialsHandler;
-export function getAccountTransactionHandler(
-    type: AccountTransactionType
-): AccountTransactionHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType.DeployModule
 ): DeployModuleHandler;
@@ -236,9 +299,10 @@ export function getAccountTransactionHandler(
 export function getAccountTransactionHandler(
     type: AccountTransactionType.ConfigureDelegation
 ): ConfigureDelegationHandler;
-
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function getAccountTransactionHandler(type: AccountTransactionType) {
+export function getAccountTransactionHandler(
+    type: AccountTransactionType
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): any {
     switch (type) {
         case AccountTransactionType.SimpleTransfer:
             return new SimpleTransferHandler();

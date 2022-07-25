@@ -468,6 +468,28 @@ const rawContractState = Buffer.from(stateSource); // Could be getinstanceInfo(.
 const state = deserializeContractState(contractName, schema, rawContractState);
 ```
 
+## Deserialize a transaction
+The following example demonstrates how to deserialize a transaction:
+
+```js
+const serializedTransaction: Buffer = ...
+const deserialized = deserializeTransaction(serializedTransaction);
+if (deserialized.kind === BlockItemKind.AccountTransactionKind) {
+        // transaction is an account transaction
+    const accountTransaction: AccountTransaction = deserialized.transaction.accountTransaction;
+    const signatures: AccountTransactionSignature = deserialized.transaction.signatures;
+    ...
+    if (accountTransaction.type === AccountTransactionType.SimpleTransfer) {
+        // transaction is a simple transfer
+    }
+} else if (deserialized.kind === BlockItemKind.CredentialDeploymentKind) {
+    // transaction is a credentialDeployment
+    const credentialDeployment = deserialized.transaction.credential;
+}
+```
+
+Note that currently the only supported account transaction kinds are `SimpleTransfer`, `SimpleTransferWithMemo` and `RegisterData`. If attempting to deserialize other transaction kinds, the function will throw an error;
+
 ## Sign an account transaction
 The following example demonstrates how to use the `signTransaction` helper function to sign a account transaction:
 

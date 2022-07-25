@@ -1156,6 +1156,12 @@ export enum AccountTransactionType {
     ConfigureDelegation = 26,
 }
 
+export function isAccountTransactionType(
+    candidate: number
+): candidate is AccountTransactionType {
+    return candidate in AccountTransactionType;
+}
+
 export interface DeployModulePayload {
     /** Version of the wasm module. This should only be supplied if wasm module is not already versioned. */
     version?: number;

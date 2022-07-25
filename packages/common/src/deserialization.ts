@@ -5,8 +5,8 @@ import {
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionSignature,
-    AccountTransactionType,
     BlockItemKind,
+    isAccountTransactionType,
     TypedCredentialDeployment,
 } from './types';
 import { AccountAddress } from './types/accountAddress';
@@ -109,21 +109,20 @@ function deserializeAccountTransaction(serializedTransaction: Readable): {
     const header = deserializeTransactionHeader(serializedTransaction);
 
     const transactionType = deserialUint8(serializedTransaction);
-    if (!(transactionType in AccountTransactionType)) {
+    if (!isAccountTransactionType(transactionType)) {
         throw new Error(
             'TransactionType is not a valid value: ' + transactionType
         );
     }
-    const accountTransactionHandler = getAccountTransactionHandler(
-        transactionType as AccountTransactionType
-    );
+    const accountTransactionHandler =
+        getAccountTransactionHandler(transactionType);
     const payload = accountTransactionHandler.deserialize(
         serializedTransaction
     );
 
     return {
         accountTransaction: {
-            type: transactionType as AccountTransactionType,
+            type: transactionType,
             payload,
             header,
         },

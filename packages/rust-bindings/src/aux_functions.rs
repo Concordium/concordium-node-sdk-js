@@ -174,10 +174,7 @@ pub fn get_credential_deployment_details_aux(
 /// deserialize it and return as json.
 pub fn deserialize_credential_deployment_aux(input: &str) -> Result<String> {
     let credential_message: AccountCredentialMessage<Bls12, ExampleCurve, AttributeKind> =
-        match crypto_common::from_bytes(&mut hex::decode(input)?.as_slice()) {
-            Ok(c) => c,
-            Err(e) => bail!(format!("{}", e)),
-        };
+        crypto_common::from_bytes(&mut hex::decode(input)?.as_slice())?;
     let cdi_json = json!(credential_message);
     Ok(cdi_json.to_string())
 }

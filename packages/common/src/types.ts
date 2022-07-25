@@ -1504,7 +1504,7 @@ interface CdiRandomness {
     randomness: CommitmentsRandomness;
 }
 
-// TODO Rename
+// TODO Should we rename this, As it is not actually the transaction that is sent to the node. (Note that this would be a breaking change)
 export type CredentialDeploymentTransaction = CredentialDeploymentDetails &
     CdiRandomness;
 /** Internal type used when building credentials */

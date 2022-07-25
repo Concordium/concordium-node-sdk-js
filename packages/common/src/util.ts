@@ -130,14 +130,3 @@ export function countSignatures(
 export function secondsSinceEpoch(date: Date): bigint {
     return BigInt(Math.floor(date.getTime() / 1000));
 }
-
-/**
- * Helper function to deal with the incorrect return type of Buffer.subarray;
- * TODO: Remove this when Buffer types are updated.
- */
-export function sliceBuffer(
-    buf: Buffer,
-    ...input: Parameters<InstanceType<typeof Buffer>['subarray']>
-): Buffer {
-    return buf.subarray(...input) as Buffer;
-}

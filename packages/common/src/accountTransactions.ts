@@ -25,13 +25,13 @@ import {
 import { AccountAddress } from './types/accountAddress';
 import { DataBlob } from './types/DataBlob';
 import { GtuAmount } from './types/gtuAmount';
-import { sliceBuffer } from './util';
+import { Readable } from 'stream';
 
 interface AccountTransactionHandler<
     PayloadType extends AccountTransactionPayload = AccountTransactionPayload
 > {
     serialize: (payload: PayloadType) => Buffer;
-    deserialize: (serializedPayload: Buffer) => PayloadType;
+    deserialize: (serializedPayload: Readable) => PayloadType;
     getBaseEnergyCost: (payload: PayloadType) => bigint;
 }
 
@@ -48,12 +48,12 @@ export class SimpleTransferHandler
         return Buffer.concat([serializedToAddress, serializedAmount]);
     }
 
-    deserialize(serializedPayload: Buffer): SimpleTransferPayload {
+    deserialize(serializedPayload: Readable): SimpleTransferPayload {
         const toAddress = AccountAddress.fromBytes(
-            sliceBuffer(serializedPayload, 0, 32)
+            Buffer.from(serializedPayload.read(32))
         );
         const amount = new GtuAmount(
-            serializedPayload.readBigUInt64BE(32) as bigint
+            serializedPayload.read(8).readBigUInt64BE(0)
         );
         return {
             toAddress,
@@ -77,16 +77,16 @@ export class SimpleTransferWithMemoHandler
         ]);
     }
 
-    deserialize(serializedPayload: Buffer): SimpleTransferWithMemoPayload {
+    deserialize(serializedPayload: Readable): SimpleTransferWithMemoPayload {
         const toAddress = AccountAddress.fromBytes(
-            sliceBuffer(serializedPayload, 0, 32)
+            Buffer.from(serializedPayload.read(32))
         );
-        const memoLength = serializedPayload.readUInt16BE(32);
+        const memoLength = serializedPayload.read(2).readUInt16BE(0);
         const memo = new DataBlob(
-            sliceBuffer(serializedPayload, 32 + 2, 32 + 2 + memoLength)
+            Buffer.from(serializedPayload.read(memoLength))
         );
         const amount = new GtuAmount(
-            serializedPayload.readBigUInt64BE(32 + 2 + memoLength) as bigint
+            serializedPayload.read(8).readBigUInt64BE(0)
         );
         return {
             toAddress,
@@ -248,12 +248,10 @@ export class RegisterDataHandler
         return encodeDataBlob(payload.data);
     }
 
-    deserialize(serializedPayload: Buffer): RegisterDataPayload {
-        const memoLength = serializedPayload.readUInt16BE(0);
+    deserialize(serializedPayload: Readable): RegisterDataPayload {
+        const memoLength = serializedPayload.read(2).readUInt16BE(0);
         return {
-            data: new DataBlob(
-                sliceBuffer(serializedPayload, 2, 2 + memoLength)
-            ),
+            data: new DataBlob(Buffer.from(serializedPayload.read(memoLength))),
         };
     }
 }

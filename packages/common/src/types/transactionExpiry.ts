@@ -22,8 +22,6 @@ export class TransactionExpiry {
     }
 
     static fromEpochSeconds(seconds: bigint): TransactionExpiry {
-        return new TransactionExpiry(
-            new Date(parseInt(seconds.toString(), 10) * 1000)
-        );
+        return new TransactionExpiry(new Date(Number(seconds) * 1000));
     }
 }

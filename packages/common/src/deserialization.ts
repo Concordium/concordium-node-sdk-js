@@ -11,7 +11,8 @@ import {
 } from './types';
 import { AccountAddress } from './types/accountAddress';
 import { TransactionExpiry } from './types/transactionExpiry';
-import { sliceBuffer } from './util';
+import { PassThrough, Readable } from 'stream';
+import { deserialUint8 } from './deserializeSchema';
 
 /**
  * Given a contract's raw state, its name and its schema, return the state as a JSON object.
@@ -37,68 +38,58 @@ export function deserializeContractState(
     }
 }
 
-interface WithByteLength<T> {
-    length: number;
-    value: T;
-}
 function deserializeMap<K extends string | number | symbol, T>(
-    serialized: Buffer,
-    decodeSize: (size: Buffer) => WithByteLength<number>,
-    decodeKey: (k: Buffer) => WithByteLength<K>,
-    decodeValue: (t: Buffer) => WithByteLength<T>
-): WithByteLength<Record<K, T>> {
+    serialized: Readable,
+    decodeSize: (size: Readable) => number,
+    decodeKey: (k: Readable) => K,
+    decodeValue: (t: Readable) => T
+): Record<K, T> {
     const size = decodeSize(serialized);
-    let pointer = 0;
-    pointer += size.length;
     const result = {} as Record<K, T>;
-    for (let i = 0; i < size.value; i += 1) {
-        const key = decodeKey(sliceBuffer(serialized, pointer));
-        pointer += key.length;
-        const value = decodeValue(sliceBuffer(serialized, pointer));
-        pointer += value.length;
-        result[key.value] = value.value;
+    for (let i = 0; i < size; i += 1) {
+        const key = decodeKey(serialized);
+        const value = decodeValue(serialized);
+        result[key] = value;
     }
-    return { value: result, length: pointer };
+    return result;
 }
 
 function deserializeAccountTransactionSignature(
-    signatures: Buffer
-): WithByteLength<AccountTransactionSignature> {
-    const decodeWord8 = (buffer: Buffer) => ({
-        value: buffer.readUInt8(0),
-        length: 1,
-    });
-
-    const decodeSignature = (serialized: Buffer) => {
-        const length = serialized.readUInt16BE(0);
-        return {
-            value: sliceBuffer(serialized, 2, 2 + length).toString('hex'),
-            length: 2 + length,
-        };
+    signatures: Readable
+): AccountTransactionSignature {
+    const decodeSignature = (serialized: Readable) => {
+        const length = serialized.read(2).readUInt16BE(0);
+        return serialized.read(length).toString('hex');
     };
-    const decodeCredentialSignatures = (serialized: Buffer) =>
-        deserializeMap(serialized, decodeWord8, decodeWord8, decodeSignature);
+    const decodeCredentialSignatures = (serialized: Readable) =>
+        deserializeMap(
+            serialized,
+            deserialUint8,
+            deserialUint8,
+            decodeSignature
+        );
     return deserializeMap(
         signatures,
-        decodeWord8,
-        decodeWord8,
+        deserialUint8,
+        deserialUint8,
         decodeCredentialSignatures
     );
 }
 
-/** We do not return the byte length, because it is always 60 (32 + 8 + 8 + 4 + 8) for the header */
 function deserializeTransactionHeader(
-    serializedHeader: Buffer
+    serializedHeader: Readable
 ): AccountTransactionHeader {
     const sender = AccountAddress.fromBytes(
-        sliceBuffer(serializedHeader, 0, 32)
+        Buffer.from(serializedHeader.read(32))
     );
-    const nonce = serializedHeader.readBigUInt64BE(32) as bigint;
+    const nonce = serializedHeader.read(8).readBigUInt64BE(0);
     // TODO: extract payloadSize and energyAmount?
-    // const energyAmount = serializedPayload.readBigUInt64BE(40);
-    // const payloadSize = serializedPayload.readBigUInt64BE(48);
+    // energyAmount
+    serializedHeader.read(8).readBigUInt64BE(0);
+    // payloadSize
+    serializedHeader.read(4).readUInt32BE(0);
     const expiry = TransactionExpiry.fromEpochSeconds(
-        serializedHeader.readBigUInt64BE(52) as bigint
+        serializedHeader.read(8).readBigUInt64BE(0)
     );
     return {
         sender,
@@ -107,32 +98,27 @@ function deserializeTransactionHeader(
     };
 }
 
-function deserializeAccountTransaction(serializedTransaction: Buffer): {
+function deserializeAccountTransaction(serializedTransaction: Readable): {
     accountTransaction: AccountTransaction;
     signatures: AccountTransactionSignature;
 } {
-    let pointer = 0;
-    const { value: signatures, length: signaturesLength } =
-        deserializeAccountTransactionSignature(
-            sliceBuffer(serializedTransaction, pointer)
-        );
-    pointer += signaturesLength;
-
-    const header = deserializeTransactionHeader(
-        sliceBuffer(serializedTransaction, pointer)
+    const signatures = deserializeAccountTransactionSignature(
+        serializedTransaction
     );
-    pointer += 60;
 
-    const transactionType = serializedTransaction.readUInt8(pointer);
-    pointer += 1;
+    const header = deserializeTransactionHeader(serializedTransaction);
+
+    const transactionType = deserialUint8(serializedTransaction);
     if (!(transactionType in AccountTransactionType)) {
-        throw new Error('TransactionType is not a valid value ');
+        throw new Error(
+            'TransactionType is not a valid value: ' + transactionType
+        );
     }
     const accountTransactionHandler = getAccountTransactionHandler(
         transactionType as AccountTransactionType
     );
     const payload = accountTransactionHandler.deserialize(
-        sliceBuffer(serializedTransaction, pointer)
+        serializedTransaction
     );
 
     return {
@@ -145,9 +131,9 @@ function deserializeAccountTransaction(serializedTransaction: Buffer): {
     };
 }
 
-function deserializeCredentialDeployment(serializedDeployment: Buffer) {
+function deserializeCredentialDeployment(serializedDeployment: Readable) {
     const raw = wasm.deserializeCredentialDeployment(
-        serializedDeployment.toString('hex')
+        serializedDeployment.read().toString('hex')
     );
     try {
         const parsed = JSON.parse(raw);
@@ -184,30 +170,28 @@ export type BlockItem =
 export function deserializeTransaction(
     serializedTransaction: Buffer
 ): BlockItem {
-    let pointer = 0;
-    const version = serializedTransaction.readUInt8(pointer);
-    pointer += 1;
+    const bufferStream = new PassThrough();
+    bufferStream.end(serializedTransaction);
+
+    const version = deserialUint8(bufferStream);
     if (version !== 0) {
         throw new Error(
-            'Only transactions with version 0 format are supported'
+            'Supplied version ' +
+                version +
+                ' is not valid. Only transactions with version 0 format are supported'
         );
     }
-    const blockItemKind = serializedTransaction.readUInt8(pointer);
-    pointer += 1;
+    const blockItemKind = deserialUint8(bufferStream);
     switch (blockItemKind) {
         case BlockItemKind.AccountTransactionKind:
             return {
                 kind: BlockItemKind.AccountTransactionKind,
-                transaction: deserializeAccountTransaction(
-                    sliceBuffer(serializedTransaction, pointer)
-                ),
+                transaction: deserializeAccountTransaction(bufferStream),
             };
         case BlockItemKind.CredentialDeploymentKind:
             return {
                 kind: BlockItemKind.CredentialDeploymentKind,
-                transaction: deserializeCredentialDeployment(
-                    sliceBuffer(serializedTransaction, pointer)
-                ),
+                transaction: deserializeCredentialDeployment(bufferStream),
             };
         case BlockItemKind.UpdateInstructionKind:
             throw new Error(

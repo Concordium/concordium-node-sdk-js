@@ -142,6 +142,7 @@ function deserializeCredentialDeployment(serializedDeployment: Readable) {
             expiry: parsed.messageExpiry,
         };
     } catch {
+        // If the return value is not a proper JSON, it should be an error message.
         throw new Error(raw);
     }
 }

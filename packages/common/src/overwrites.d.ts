@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Buffer } from 'buffer/';
 
 declare module 'buffer/' {

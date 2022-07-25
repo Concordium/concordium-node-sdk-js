@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer/';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AccountTransactionSignature, ReleaseSchedule } from './types';
 

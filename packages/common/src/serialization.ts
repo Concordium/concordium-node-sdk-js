@@ -21,10 +21,10 @@ import {
     CredentialSignature,
     CredentialDeploymentValues,
     IdOwnershipProofs,
-    CredentialDeploymentTransaction,
     UnsignedCredentialDeploymentInformation,
     CredentialDeploymentInfo,
     SchemaVersion,
+    CredentialDeploymentDetails,
 } from './types';
 import { calculateEnergyCost } from './energyCost';
 import { countSignatures } from './util';
@@ -370,20 +370,20 @@ export function getCredentialForExistingAccountSignDigest(
  * @returns the sha256 of the serialized unsigned credential deployment information
  */
 export function getCredentialDeploymentSignDigest(
-    credentialDeploymentTransaction: CredentialDeploymentTransaction
+    credentialDeployment: CredentialDeploymentDetails
 ): Buffer {
     const serializedCredentialValues = serializeCredentialDeploymentValues(
-        credentialDeploymentTransaction.unsignedCdi
+        credentialDeployment.unsignedCdi
     );
     const serializedIdOwnershipProofs = serializeIdOwnershipProofs(
-        credentialDeploymentTransaction.unsignedCdi.proofs
+        credentialDeployment.unsignedCdi.proofs
     );
     const newAccountByte = encodeWord8(0);
     return sha256([
         serializedCredentialValues,
         serializedIdOwnershipProofs,
         newAccountByte,
-        encodeWord64(credentialDeploymentTransaction.expiry.expiryEpochSeconds),
+        encodeWord64(credentialDeployment.expiry.expiryEpochSeconds),
     ]);
 }
 
@@ -401,14 +401,14 @@ interface DeploymentDetailsResult {
  * @returns the sha256 hash of the serialized block item kind, signatures, and credential deployment transaction
  */
 export function getCredentialDeploymentTransactionHash(
-    credentialDeploymentTransaction: CredentialDeploymentTransaction,
+    credentialDeployment: CredentialDeploymentDetails,
     signatures: string[]
 ): string {
     const credentialDeploymentInfo: DeploymentDetailsResult = JSON.parse(
         wasm.getDeploymentDetails(
             signatures,
-            JSON.stringify(credentialDeploymentTransaction.unsignedCdi),
-            credentialDeploymentTransaction.expiry.expiryEpochSeconds
+            JSON.stringify(credentialDeployment.unsignedCdi),
+            credentialDeployment.expiry.expiryEpochSeconds
         )
     );
     return credentialDeploymentInfo.transactionHash;
@@ -422,14 +422,14 @@ export function getCredentialDeploymentTransactionHash(
  * @returns the serialization of the credential deployment transaction ready for being submitted to a node
  */
 export function serializeCredentialDeploymentTransactionForSubmission(
-    credentialDeploymentTransaction: CredentialDeploymentTransaction,
+    credentialDeployment: CredentialDeploymentDetails,
     signatures: string[]
 ): Buffer {
     const credentialDeploymentInfo: DeploymentDetailsResult = JSON.parse(
         wasm.getDeploymentDetails(
             signatures,
-            JSON.stringify(credentialDeploymentTransaction.unsignedCdi),
-            credentialDeploymentTransaction.expiry.expiryEpochSeconds
+            JSON.stringify(credentialDeployment.unsignedCdi),
+            credentialDeployment.expiry.expiryEpochSeconds
         )
     );
     return Buffer.from(credentialDeploymentInfo.serializedTransaction, 'hex');

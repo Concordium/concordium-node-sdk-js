@@ -35,10 +35,11 @@ test('test that deserializeContractState works', () => {
 
 function deserializeAccountTransactionBase(
     type: AccountTransactionType,
-    payload: AccountTransactionPayload
+    payload: AccountTransactionPayload,
+    expiry = new TransactionExpiry(new Date(Date.now() + 1200000))
 ) {
     const header: AccountTransactionHeader = {
-        expiry: new TransactionExpiry(new Date(Date.now() + 1200000)),
+        expiry,
         nonce: 0n,
         sender: new AccountAddress(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
@@ -105,5 +106,19 @@ test('test deserialize registerData ', () => {
     deserializeAccountTransactionBase(
         AccountTransactionType.RegisterData,
         payload
+    );
+});
+
+test('Expired transactions can be deserialized', () => {
+    const payload: SimpleTransferPayload = {
+        amount: new GtuAmount(5100000n),
+        toAddress: new AccountAddress(
+            '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
+        ),
+    };
+    deserializeAccountTransactionBase(
+        AccountTransactionType.SimpleTransfer,
+        payload,
+        new TransactionExpiry(new Date(2000, 1), true)
     );
 });

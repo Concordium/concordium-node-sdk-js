@@ -11,8 +11,8 @@ export class TransactionExpiry {
     /** expiry is measured as seconds since epoch */
     expiryEpochSeconds: bigint;
 
-    constructor(expiry: Date) {
-        if (expiry < new Date()) {
+    constructor(expiry: Date, allowExpired = false) {
+        if (!allowExpired && expiry < new Date()) {
             throw new Error(
                 'A transaction expiry is not allowed to be in the past: ' +
                     expiry
@@ -21,7 +21,13 @@ export class TransactionExpiry {
         this.expiryEpochSeconds = secondsSinceEpoch(expiry);
     }
 
-    static fromEpochSeconds(seconds: bigint): TransactionExpiry {
-        return new TransactionExpiry(new Date(Number(seconds) * 1000));
+    static fromEpochSeconds(
+        seconds: bigint,
+        allowExpired = false
+    ): TransactionExpiry {
+        return new TransactionExpiry(
+            new Date(Number(seconds) * 1000),
+            allowExpired
+        );
     }
 }

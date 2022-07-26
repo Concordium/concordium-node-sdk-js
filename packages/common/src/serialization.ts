@@ -447,7 +447,7 @@ export function serializeInitContractParameters(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     parameters: any,
     rawSchema: Buffer,
-    schemaVersion: SchemaVersion
+    schemaVersion?: SchemaVersion
 ): Buffer {
     const schemaModule = deserialModuleFromBuffer(rawSchema, schemaVersion);
     if (!schemaModule.value) {
@@ -476,7 +476,7 @@ export function serializeUpdateContractParameters(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     parameters: any,
     rawSchema: Buffer,
-    schemaVersion: SchemaVersion
+    schemaVersion?: SchemaVersion
 ): Buffer {
     const schemaModule = deserialModuleFromBuffer(rawSchema, schemaVersion);
     if (!schemaModule.value) {

@@ -46,3 +46,11 @@ pub fn deserialize_credential_deployment_ext(serialized: &str) -> String {
         Err(e) => format!("{}", e),
     }
 }
+
+#[wasm_bindgen(js_name = createIdRequestV1)]
+pub fn create_id_request_v1_ext(input: &str) -> String {
+    match create_id_request_v1_aux(serde_json::from_str(input).unwrap()) {
+            Ok(s) => s,
+            Err(e) => format!("{}", e),
+        }
+}

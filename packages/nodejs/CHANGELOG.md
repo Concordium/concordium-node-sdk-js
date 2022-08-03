@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `createIdentityRequest`, to create identity requests.
+
 ## 3.0.2 2022-7-26
 
 ### Fixed

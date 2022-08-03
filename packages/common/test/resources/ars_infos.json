@@ -1,0 +1,32 @@
+{
+  "v": 0,
+  "value": {
+    "1": {
+      "arIdentity": 1,
+      "arDescription": {
+        "name": "AR-1",
+        "url": "",
+        "description": ""
+      },
+      "arPublicKey": "b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c587a95c1e9f3070f1c739b9396b97ce8045b89ec10e0c33f75f803b1b2fb50edf8a45481eb037160d67590d1498aab88f"
+    },
+    "2": {
+      "arIdentity": 2,
+      "arDescription": {
+        "name": "AR-2",
+        "url": "",
+        "description": ""
+      },
+      "arPublicKey": "b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a0f155cc4436ac5f14ad81e4717b2b250c3b780c4d8acd7b558682096960bc8fbfe94f9fe7398be5b247cdfc1fa2e961"
+    },
+    "3": {
+      "arIdentity": 3,
+      "arDescription": {
+        "name": "AR-3",
+        "url": "",
+        "description": ""
+      },
+      "arPublicKey": "b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5ab6f676acee16137608342e31f9190cc4449750386d4485db080314001c85215b01fdb4e911beb84a35ea8676ca284bf"
+    }
+  }
+}

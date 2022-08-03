@@ -50,3 +50,4 @@ export { isHex } from './util';
 
 export { HttpProvider } from './providers/httpProvider';
 export { JsonRpcClient } from './JsonRpcClient';
+export { createIdentityRequest } from './identity';

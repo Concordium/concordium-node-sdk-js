@@ -1312,11 +1312,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@concordium/common-sdk@2.3.2, @concordium/common-sdk@workspace:packages/common":
+"@concordium/common-sdk@npm:2.3.2":
+  version: 2.3.2
+  resolution: "@concordium/common-sdk@npm:2.3.2"
+  dependencies:
+    "@concordium/rust-bindings": 0.2.0
+    "@noble/ed25519": ^1.6.0
+    bs58check: ^2.1.2
+    buffer: ^6.0.3
+    cross-fetch: 3.1.5
+    hash.js: ^1.1.7
+    json-bigint: ^1.0.0
+    uuid: ^8.3.2
+  checksum: 6f4dbb6783b1bf6d192d3d82174a3d55c571bf59a1c2a959ec0adc7a08daeb5c7c1369806f4f4f22a9097832a1e1f2a0fbeab724759589f0b80a334a88daa389
+  languageName: node
+  linkType: hard
+
+"@concordium/common-sdk@workspace:packages/common":
   version: 0.0.0-use.local
   resolution: "@concordium/common-sdk@workspace:packages/common"
   dependencies:
-    "@concordium/rust-bindings": 0.2.0
+    "@concordium/rust-bindings": 0.3.0
     "@noble/ed25519": ^1.6.0
     "@types/bs58check": ^2.1.0
     "@types/jest": ^26.0.23
@@ -1372,11 +1388,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@concordium/rust-bindings@0.2.0, @concordium/rust-bindings@workspace:packages/rust-bindings":
+"@concordium/rust-bindings@0.3.0, @concordium/rust-bindings@workspace:packages/rust-bindings":
   version: 0.0.0-use.local
   resolution: "@concordium/rust-bindings@workspace:packages/rust-bindings"
   languageName: unknown
   linkType: soft
+
+"@concordium/rust-bindings@npm:0.2.0":
+  version: 0.2.0
+  resolution: "@concordium/rust-bindings@npm:0.2.0"
+  checksum: f98301abae90cc70d82b3397ed6533c89bdbdf4857d776e852721cc245cb8d81c71dd10dbdd00b37f2352464e702aa36b7f3e0ab23216acc1d29b022403284a9
+  languageName: node
+  linkType: hard
 
 "@concordium/web-sdk@workspace:packages/web":
   version: 0.0.0-use.local

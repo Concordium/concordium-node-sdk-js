@@ -12,15 +12,11 @@ use sha2::{Digest, Sha256};
 use key_derivation::{ConcordiumHdWallet, Net};
 
 use anyhow::{anyhow, bail, ensure, Result};
-use id::{account_holder::{create_unsigned_credential, generate_pio_v1, create_credential}, constants::{AttributeKind, ArCurve}, types::*, pedersen_commitment::{Randomness as PedersenRandomness, Value as PedersenValue},};
+use id::{account_holder::{create_unsigned_credential, generate_pio_v1}, constants::{AttributeKind, ArCurve}, types::*, pedersen_commitment::{Value as PedersenValue},};
 use pedersen_scheme::Value;
 use serde_json::{to_string};
 
-use ed25519_dalek as ed25519;
-use ed25519_hd_key_derivation::DeriveError;
 use id::secret_sharing::Threshold;
-use crypto_common::types::{KeyPair, KeyIndex};
-use either::Either::{Left};
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
 pub struct CredId {
@@ -108,133 +104,6 @@ pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<String> {
     let response = json!({ "idObjectRequest": Versioned::new(VERSION_0, pio) });
 
     Ok(to_string(&response)?)
-}
-
-#[derive(SerdeSerialize, SerdeDeserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CredentialInput {
-    ip_info: IpInfo<Bls12>,
-    global_context: GlobalContext<ExampleCurve>,
-    ars_infos: BTreeMap<ArIdentity, ArInfo<ExampleCurve>>,
-    id_object: IdentityObject<Bls12, ExampleCurve, AttributeKind>,
-    revealed_attributes: Vec<AttributeTag>,
-    seed: String,
-    net: Net,
-    identity_index: u32,
-    cred_number: u8,
-    expiry: TransactionTime,
-}
-
-/// A ConcordiumHdWallet together with an identity index and credential index
-/// for the credential to be created. A CredentialContext can then be parsed to
-/// the `create_credential` function due to the implementation of
-/// `HasAttributeRandomness` below.
-struct CredentialContext {
-    wallet:           ConcordiumHdWallet,
-    identity_index:   u32,
-    credential_index: u32,
-}
-
-impl HasAttributeRandomness<ArCurve> for CredentialContext {
-    type ErrorType = DeriveError;
-
-    fn get_attribute_commitment_randomness(
-        &self,
-        attribute_tag: AttributeTag,
-    ) -> Result<PedersenRandomness<ArCurve>, Self::ErrorType> {
-        self.wallet.get_attribute_commitment_randomness(
-            self.identity_index,
-            self.credential_index,
-            attribute_tag,
-        )
-    }
-}
-
-pub fn create_credential_v1_aux(input: CredentialInput) -> Result<String> {
-    let seed_decoded = hex::decode(&input.seed)?;
-    let seed: [u8; 64] = match seed_decoded.try_into() {
-        Ok(s) => s,
-        Err(_) => bail!("The provided seed {} was not 64 bytes", input.seed),
-    };
-
-    let wallet = ConcordiumHdWallet { seed, net: input.net };
-
-    let prf_key: prf::SecretKey<ArCurve> = wallet.get_prf_key(input.identity_index)?;
-
-    let id_cred_sec: PedersenValue<ArCurve> =
-        PedersenValue::new(wallet.get_id_cred_sec(input.identity_index)?);
-    let id_cred: IdCredentials<ArCurve> = IdCredentials { id_cred_sec };
-
-    let sig_retrievel_randomness: ps_sig::SigRetrievalRandomness<Bls12> =
-        wallet.get_blinding_randomness(input.identity_index)?;
-
-    let chi = CredentialHolderInfo::<ArCurve> { id_cred };
-    let aci = AccCredentialInfo {
-        cred_holder_info: chi,
-        prf_key,
-    };
-    let id_use_data = IdObjectUseData {
-        aci,
-        randomness: sig_retrievel_randomness,
-    };
-
-    // For now we can only create new accounts and do not support
-    // adding credentials onto existing ones. Once that is supported the address
-    // should be coming from the input data.
-    let new_or_existing = Left(input.expiry);
-
-    let cred_data = {
-        let mut keys = std::collections::BTreeMap::new();
-        let secret = wallet.get_account_signing_key(input.identity_index, u32::from(input.cred_number))?;
-        let public = ed25519::PublicKey::from(&secret);
-        keys.insert(KeyIndex(0), KeyPair { secret, public });
-
-        CredentialData {
-            keys,
-            threshold: SignatureThreshold(1),
-        }
-    };
-
-    let context = IpContext::new(&input.ip_info, &input.ars_infos, &input.global_context);
-
-    // And a policy.
-    let mut policy_vec = std::collections::BTreeMap::new();
-    for tag in input.revealed_attributes {
-        if let Some(att) = input.id_object.alist.alist.get(&tag) {
-            if policy_vec.insert(tag, att.clone()).is_some() {
-                bail!("Cannot reveal an attribute more than once.")
-            }
-        } else {
-            bail!("Cannot reveal an attribute which is not part of the attribute list.")
-        }
-    }
-
-    let policy = Policy {
-        valid_to: input.id_object.alist.valid_to,
-        created_at: input.id_object.alist.created_at,
-        policy_vec,
-        _phantom: Default::default(),
-    };
-
-    let credential_context = CredentialContext {
-        wallet,
-        identity_index: input.identity_index,
-        credential_index: u32::from(input.cred_number),
-    };
-
-    let (cdi, _) = create_credential(
-        context,
-        &input.id_object,
-        &id_use_data,
-        input.cred_number,
-        policy,
-        &cred_data,
-        &credential_context,
-        &new_or_existing,
-    )?;
-
-    let cdi_json = json!(cdi);
-    Ok(cdi_json.to_string())
 }
 
 pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {

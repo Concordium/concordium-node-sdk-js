@@ -110,8 +110,8 @@ pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<String> {
     Ok(to_string(&response)?)
 }
 
-
 #[derive(SerdeSerialize, SerdeDeserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CredentialInput {
     ip_info: IpInfo<Bls12>,
     global_context: GlobalContext<ExampleCurve>,
@@ -178,7 +178,7 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<String> {
         randomness: sig_retrievel_randomness,
     };
 
-    // The mobile wallet for now only creates new accounts and does not support
+    // For now we can only create new accounts and do not support
     // adding credentials onto existing ones. Once that is supported the address
     // should be coming from the input data.
     let new_or_existing = Left(input.expiry);

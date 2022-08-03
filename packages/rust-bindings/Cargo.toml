@@ -19,7 +19,6 @@ anyhow = "1.0"
 ed25519-dalek = {version = "=1.0.0", features = ["serde"] }
 hex = "0.4"
 sha2 = "0.9"
-console_error_panic_hook = "0.1.7"
 either = "1.6"
 
 [dependencies.id]

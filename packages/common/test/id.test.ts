@@ -23,8 +23,8 @@ test('idrequest', () => {
         identityIndex: 0,
         arThreshold: 1,
     };
-    const output = createIdentityRequest(input);
-    const output2 = createIdentityRequest(input);
+    const output = createIdentityRequest(input).value;
+    const output2 = createIdentityRequest(input).value;
     expect(typeof output.proofsOfKnowledge).toBe('string');
     expect(output.idCredPub).toEqual(output2.value.idCredPub);
 });

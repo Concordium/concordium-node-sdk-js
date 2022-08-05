@@ -1,5 +1,5 @@
 import * as wasm from '@concordium/rust-bindings';
-import { ArInfo, CryptographicParameters, IpInfo } from './types';
+import { Versioned, ArInfo, CryptographicParameters, IpInfo } from './types';
 
 export type IdentityRequestInput = {
     ipInfo: IpInfo;
@@ -34,10 +34,10 @@ export interface IdObjectRequest {
  */
 export function createIdentityRequest(
     input: IdentityRequestInput
-): IdObjectRequest {
+): Versioned<IdObjectRequest> {
     const rawRequest = wasm.createIdRequestV1(JSON.stringify(input));
     try {
-        return JSON.parse(rawRequest).idObjectRequest.value;
+        return JSON.parse(rawRequest).idObjectRequest;
     } catch (e) {
         throw new Error(rawRequest);
     }

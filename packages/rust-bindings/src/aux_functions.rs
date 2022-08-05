@@ -7,14 +7,19 @@ use std::{cmp::max, collections::BTreeMap, convert::TryInto};
 type ExampleCurve = G1;
 use concordium_contracts_common::{from_bytes, schema, Cursor};
 use hex;
+use key_derivation::{ConcordiumHdWallet, Net};
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use sha2::{Digest, Sha256};
-use key_derivation::{ConcordiumHdWallet, Net};
 
 use anyhow::{anyhow, bail, ensure, Result};
-use id::{account_holder::{create_unsigned_credential, generate_pio_v1}, constants::{AttributeKind, ArCurve}, types::*, pedersen_commitment::{Value as PedersenValue},};
+use id::{
+    account_holder::{create_unsigned_credential, generate_pio_v1},
+    constants::{ArCurve, AttributeKind},
+    pedersen_commitment::Value as PedersenValue,
+    types::*,
+};
 use pedersen_scheme::Value;
-use serde_json::{to_string};
+use serde_json::to_string;
 
 use id::secret_sharing::Threshold;
 
@@ -28,17 +33,16 @@ pub struct CredId {
     pub cred_id: ExampleCurve,
 }
 
-
 #[derive(SerdeSerialize, SerdeDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IdRequestInput {
-    ip_info: IpInfo<Bls12>,
+    ip_info:        IpInfo<Bls12>,
     global_context: GlobalContext<ExampleCurve>,
-    ars_infos: BTreeMap<ArIdentity, ArInfo<ExampleCurve>>,
-    seed: String,
-    net: String,
+    ars_infos:      BTreeMap<ArIdentity, ArInfo<ExampleCurve>>,
+    seed:           String,
+    net:            String,
     identity_index: u32,
-    ar_threshold: Option<u8>,
+    ar_threshold:   Option<u8>,
 }
 
 pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<String> {
@@ -51,7 +55,7 @@ pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<String> {
     let net = match input.net.as_str() {
         "Mainnet" => Net::Mainnet,
         "Testnet" => Net::Testnet,
-        _ => bail!("Unknown net")
+        _ => bail!("Unknown net"),
     };
     let wallet = ConcordiumHdWallet { seed, net };
 
@@ -184,7 +188,7 @@ pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
         policy,
         cred_key_info,
         address.as_ref(),
-        &SystemAttributeRandomness {}
+        &SystemAttributeRandomness {},
     )?;
 
     let response = json!({"unsignedCdi": unsigned_cdi, "randomness": rand});

@@ -36,7 +36,10 @@ export {
     buildSignedCredentialForExistingAccount,
 } from './credentialDeploymentTransactions';
 export { isAlias, getAlias } from './alias';
-export { deserializeContractState } from './deserialization';
+export {
+    deserializeContractState,
+    deserializeTransaction,
+} from './deserialization';
 
 export * from './signHelpers';
 export * from './accountHelpers';

@@ -89,7 +89,8 @@ function deserializeTransactionHeader(
     // payloadSize
     serializedHeader.read(4).readUInt32BE(0);
     const expiry = TransactionExpiry.fromEpochSeconds(
-        serializedHeader.read(8).readBigUInt64BE(0)
+        serializedHeader.read(8).readBigUInt64BE(0),
+        true
     );
     return {
         sender,

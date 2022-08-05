@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.3.2 2022-7-26
+
+### Fixed
+
+- `deserializeTransaction` no longer throws an error on expired transactions.
+
+## 2.3.1 2022-7-26
+
+### Fixed
+
+- `deserializeTransaction` is now exported from index.
+
 ## 2.3.0 2022-7-25
 
 ### Added

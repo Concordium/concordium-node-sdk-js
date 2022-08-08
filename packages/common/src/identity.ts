@@ -5,8 +5,10 @@ import {
     CredentialDeploymentInfo,
     CryptographicParameters,
     IpInfo,
+    SignedCredentialDeploymentDetails,
     Versioned,
 } from './types';
+import { TransactionExpiry } from './types/transactionExpiry';
 
 export type IdentityRequestInput = {
     ipInfo: IpInfo;
@@ -76,13 +78,21 @@ export type CredentialInput = {
     expiry: number;
 };
 
+/**
+ * Creates a V1 credential for a new account.
+ */
 export function createCredentialV1(
     input: CredentialInput
-): CredentialDeploymentInfo {
+): SignedCredentialDeploymentDetails {
     const rawRequest = wasm.createCredentialV1(JSON.stringify(input));
+    let info: CredentialDeploymentInfo;
     try {
-        return JSON.parse(rawRequest);
+        info = JSON.parse(rawRequest);
     } catch (e) {
         throw new Error(rawRequest);
     }
+    return {
+        expiry: TransactionExpiry.fromEpochSeconds(BigInt(input.expiry)),
+        cdi: info,
+    };
 }

@@ -25,6 +25,7 @@ import {
     CredentialDeploymentInfo,
     SchemaVersion,
     CredentialDeploymentDetails,
+    SignedCredentialDeploymentDetails,
 } from './types';
 import { calculateEnergyCost } from './energyCost';
 import { countSignatures } from './util';
@@ -493,4 +494,42 @@ export function serializeUpdateContractParameters(
         schemaModule.v
     );
     return serializeParameters(receiveType, parameters);
+}
+
+function serializeSignedCredentialDeploymentDetails(
+    credentialDetails: SignedCredentialDeploymentDetails
+) {
+    const serializedBlockItemKind = encodeWord8(
+        BlockItemKind.CredentialDeploymentKind
+    );
+    const serializedExpiry = encodeWord64(
+        credentialDetails.expiry.expiryEpochSeconds
+    );
+    const serializedCredentialKind = encodeWord8(1);
+    const serializedInfo: Buffer = Buffer.from(
+        serializeCredentialDeploymentInfo(credentialDetails.cdi)
+    );
+    return Buffer.concat([
+        serializedBlockItemKind,
+        serializedExpiry,
+        serializedCredentialKind,
+        serializedInfo,
+    ]);
+}
+
+export function serializeSignedCredentialDeploymentDetailsForSubmission(
+    credentialDetails: SignedCredentialDeploymentDetails
+) {
+    const serializedVersion = encodeWord8(0);
+    const serializedDetails =
+        serializeSignedCredentialDeploymentDetails(credentialDetails);
+    return Buffer.concat([serializedVersion, serializedDetails]);
+}
+
+export function getSignedCredentialDeploymentTransactionHash(
+    credentialDetails: SignedCredentialDeploymentDetails
+) {
+    const serializedDetails =
+        serializeSignedCredentialDeploymentDetails(credentialDetails);
+    return sha256([serializedDetails]).toString('hex');
 }

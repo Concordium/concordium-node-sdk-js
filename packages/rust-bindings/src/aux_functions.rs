@@ -125,7 +125,7 @@ pub struct CredentialInput {
     ip_info: IpInfo<Bls12>,
     global_context: GlobalContext<ExampleCurve>,
     ars_infos: BTreeMap<ArIdentity, ArInfo<ExampleCurve>>,
-    id_object: IdentityObject<Bls12, ExampleCurve, AttributeKind>,
+    id_object: IdentityObjectV1<Bls12, ExampleCurve, AttributeKind>,
     revealed_attributes: Vec<AttributeTag>,
     seed: String,
     net: String,

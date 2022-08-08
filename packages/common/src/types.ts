@@ -1522,6 +1522,11 @@ export interface CredentialDeploymentInfo extends CredentialDeploymentValues {
     proofs: string;
 }
 
+export interface SignedCredentialDeploymentDetails {
+    expiry: TransactionExpiry;
+    cdi: CredentialDeploymentInfo;
+}
+
 export type TypedCredentialDeployment =
     | {
           type: 'normal';

@@ -2,6 +2,7 @@ import { Buffer } from 'buffer/';
 import { VerifyKey } from '.';
 import {
     ConfigureDelegationPayload,
+    CredentialDeploymentInfo,
     DelegationTarget,
     DelegationTargetType,
     ParameterType,

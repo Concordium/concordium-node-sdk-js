@@ -7,17 +7,23 @@ import {
     ConsensusStatus,
     ContractAddress,
     ContractContext,
+    CredentialDeploymentInfo,
     CryptographicParameters,
     InstanceInfo,
     InvokeContractResult,
     NextAccountNonce,
+    SignedCredentialDeploymentDetails,
     TransactionStatus,
     TransactionSummary,
     Versioned,
 } from './types';
 import { AccountAddress } from './types/accountAddress';
 import Provider, { JsonRpcResponse } from './providers/provider';
-import { serializeAccountTransactionForSubmission } from './serialization';
+import {
+    serializeAccountTransactionForSubmission,
+    serializeCredentialDeploymentInfo,
+    serializeSignedCredentialDeploymentDetailsForSubmission,
+} from './serialization';
 import { GtuAmount } from './types/gtuAmount';
 import { ModuleReference } from './types/moduleReference';
 import {
@@ -86,6 +92,16 @@ export class JsonRpcClient {
         return res.result;
     }
 
+    /**
+     * @param serializedTransaction the transaction serialized as a base64-encoded string.
+     */
+    async sendRawTransaction(serializedTransaction: string): Promise<boolean> {
+        const res = await this.provider.request('sendAccountTransaction', {
+            transaction: serializedTransaction,
+        });
+        return JSON.parse(res).result || false;
+    }
+
     async sendAccountTransaction(
         accountTransaction: AccountTransaction,
         signatures: AccountTransactionSignature
@@ -96,10 +112,19 @@ export class JsonRpcClient {
                 signatures
             )
         );
-        const res = await this.provider.request('sendAccountTransaction', {
-            transaction: serializedAccountTransaction.toString('base64'),
-        });
-        return JSON.parse(res).result || false;
+        return this.sendRawTransaction(
+            serializedAccountTransaction.toString('base64')
+        );
+    }
+
+    async sendCredentialDeployment(
+        credentialDetails: SignedCredentialDeploymentDetails
+    ): Promise<boolean> {
+        const serializedDetails =
+            serializeSignedCredentialDeploymentDetailsForSubmission(
+                credentialDetails
+            );
+        return this.sendRawTransaction(serializedDetails.toString('base64'));
     }
 
     async getConsensusStatus(): Promise<ConsensusStatus> {

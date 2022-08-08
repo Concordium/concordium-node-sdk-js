@@ -31,7 +31,7 @@ test('idrequest', () => {
     const output = createIdentityRequest(input);
     const output2 = createIdentityRequest(input);
     expect(typeof output.proofsOfKnowledge).toBe('string');
-    expect(output.idCredPub).toEqual(output2.value.idCredPub);
+    expect(output.idCredPub).toEqual(output2.idCredPub);
 });
 
 test('credential', () => {
@@ -64,10 +64,10 @@ test('credential', () => {
         expiry: Math.floor(Date.now() / 1000) + 720,
     };
     const output = createCredentialV1(input);
-    expect(output.credId).toEqual(
+    expect(output.cdi.credId).toEqual(
         'b6e5837a032c2845e94edd7ac617e5281c30b27dc9acfbd94de10f80ba42b6e5fc57c8e8a14eceb503bdff375bd17458'
     );
-    expect(output.credentialPublicKeys.keys[0].verifyKey).toEqual(
+    expect(output.cdi.credentialPublicKeys.keys[0].verifyKey).toEqual(
         'a5a820b4947d2ddef4d9252f940b73ee8f3da17262ddb0c8c9593c6a0c617989'
     );
 });

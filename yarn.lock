@@ -1312,23 +1312,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@concordium/common-sdk@npm:2.3.2":
-  version: 2.3.2
-  resolution: "@concordium/common-sdk@npm:2.3.2"
-  dependencies:
-    "@concordium/rust-bindings": 0.2.0
-    "@noble/ed25519": ^1.6.0
-    bs58check: ^2.1.2
-    buffer: ^6.0.3
-    cross-fetch: 3.1.5
-    hash.js: ^1.1.7
-    json-bigint: ^1.0.0
-    uuid: ^8.3.2
-  checksum: 6f4dbb6783b1bf6d192d3d82174a3d55c571bf59a1c2a959ec0adc7a08daeb5c7c1369806f4f4f22a9097832a1e1f2a0fbeab724759589f0b80a334a88daa389
-  languageName: node
-  linkType: hard
-
-"@concordium/common-sdk@workspace:packages/common":
+"@concordium/common-sdk@2.4.0, @concordium/common-sdk@workspace:packages/common":
   version: 0.0.0-use.local
   resolution: "@concordium/common-sdk@workspace:packages/common"
   dependencies:
@@ -1358,6 +1342,22 @@ __metadata:
     uuid: ^8.3.2
   languageName: unknown
   linkType: soft
+
+"@concordium/common-sdk@npm:2.3.2":
+  version: 2.3.2
+  resolution: "@concordium/common-sdk@npm:2.3.2"
+  dependencies:
+    "@concordium/rust-bindings": 0.2.0
+    "@noble/ed25519": ^1.6.0
+    bs58check: ^2.1.2
+    buffer: ^6.0.3
+    cross-fetch: 3.1.5
+    hash.js: ^1.1.7
+    json-bigint: ^1.0.0
+    uuid: ^8.3.2
+  checksum: 6f4dbb6783b1bf6d192d3d82174a3d55c571bf59a1c2a959ec0adc7a08daeb5c7c1369806f4f4f22a9097832a1e1f2a0fbeab724759589f0b80a334a88daa389
+  languageName: node
+  linkType: hard
 
 "@concordium/node-sdk@workspace:packages/nodejs":
   version: 0.0.0-use.local
@@ -1405,8 +1405,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@concordium/web-sdk@workspace:packages/web"
   dependencies:
-    "@concordium/common-sdk": 2.3.2
-    "@concordium/rust-bindings": 0.2.0
+    "@concordium/common-sdk": 2.4.0
+    "@concordium/rust-bindings": 0.3.0
     "@typescript-eslint/eslint-plugin": ^4.28.1
     "@typescript-eslint/parser": ^4.28.1
     babel-jest: ^27.0.6

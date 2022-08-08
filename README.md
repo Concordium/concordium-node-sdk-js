@@ -74,8 +74,8 @@ The following describes the requirements for creating  a new release for each of
 ### rust-bindings
 - Bump the version in [package.json](./packages/rust-bindings/package.json).
 - Update the [CHANGELOG](./packages/rust-bindings/CHANGELOG.md) describing the changes made.
-- Update the dependency to rust-bindings in the [common](./packages/common/package.json) package.
-- Update the CHANGELOG in the [common](./packages/common/CHANGELOG.md) package
+- Update the dependency to rust-bindings in the [common](./packages/common/package.json) and [web](./packages/web/package.json) packages.
+- Update the CHANGELOG in the [common](./packages/common/CHANGELOG.md) and [web](./packages/web/CHANGELOG.md) packages.
   - Add a change entry: Bumped @concordium/rust-bindings to x.y.z.
 - Commit and tag the release.
   - Tag should be `rust-bindings/x.y.z`.

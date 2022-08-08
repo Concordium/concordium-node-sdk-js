@@ -16,7 +16,7 @@ export type IpArData = {
     proofComEncEq: string;
 };
 
-export interface IdObjectRequest {
+export interface IdObjectRequestV1 {
     idCredPub: string;
     choiceArData: {
         arIdentities: number[];
@@ -30,11 +30,11 @@ export interface IdObjectRequest {
 }
 
 /**
- * Creates an V1 identityRequest.
+ * Creates a V1 identityRequest.
  */
 export function createIdentityRequest(
     input: IdentityRequestInput
-): Versioned<IdObjectRequest> {
+): Versioned<IdObjectRequestV1> {
     const rawRequest = wasm.createIdRequestV1(JSON.stringify(input));
     try {
         return JSON.parse(rawRequest).idObjectRequest;

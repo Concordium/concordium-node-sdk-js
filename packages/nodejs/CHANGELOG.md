@@ -2,9 +2,9 @@
 
 ## Unreleased
 
-### Added
+### Changed
 
-- `createIdentityRequest`, to create identity requests.
+- Bumped @concordium/common-sdk to 2.4.0.
 
 ## 3.0.2 2022-7-26
 

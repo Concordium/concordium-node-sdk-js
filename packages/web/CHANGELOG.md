@@ -2,10 +2,9 @@
 
 ## Unreleased
 
-### Added
+### Changed
 
-- `createIdentityRequest`, to create identity requests.
-- `deserializeTransaction` function to deserialize transaction created by `serializeAccountTransactionForSubmission` and `serializeCredentialDeploymentTransactionForSubmission`. (Currently SimpleTransfer, SimpleTransferWithMemo and RegisterData are the only supported account transactions kinds)
+- Bumped @concordium/common-sdk to 2.4.0.
 
 ## 0.3.0 2022-7-21
 

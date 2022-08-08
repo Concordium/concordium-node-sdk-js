@@ -1,10 +1,13 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 2022-8-8
 
 ### Added
 
 - `deserializeTransaction` function to deserialize transaction created by `serializeAccountTransactionForSubmission` and `serializeCredentialDeploymentTransactionForSubmission`. (Currently SimpleTransfer, SimpleTransferWithMemo and RegisterData are the only supported account transactions kinds)
+
+### Changes
+- Bumped @concordium/common-sdk to 2.4.0.
 
 ## 0.3.0 2022-7-21
 

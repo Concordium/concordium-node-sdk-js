@@ -57,7 +57,8 @@ metadata.add("authentication", "rpcadmin");
 const insecureCredentials = credentials.createInsecure();
 const client = new ConcordiumNodeClient(
     "127.0.0.1",    // ip address
-    10000,          // portge is the shared library for the nodejs and web SDK's.
+    10000,          // port
+    insecureCredentials,
     metadata,
     15000           // timeout in ms
 );

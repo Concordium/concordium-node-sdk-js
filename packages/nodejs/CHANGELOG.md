@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Bumped @concordium/common-sdk to 2.4.0.
+
 ## 3.0.2 2022-7-26
 
 ### Fixed
@@ -35,7 +41,7 @@
 - Support deserializing new schema types: ULeb128, ILeb128, ByteArray and ByteList.
 - Support deserializing schemas with versioning information.
 
-### Changes
+### Changed
 
 - The function for deserializing a module schema `deserialModuleFromBuffer` now have the schema version as an optional argument. The function will try to extract the version from the buffer. When a version is provided it falls back to this, otherwise it throws an error.
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.4.0 2022-8-8
+
+- Added `ConfigureBaker` to `AccountTransactionType` enum.
+
 ## 2.3.2 2022-7-26
 
 ### Fixed

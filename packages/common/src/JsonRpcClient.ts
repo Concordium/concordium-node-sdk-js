@@ -7,7 +7,6 @@ import {
     ConsensusStatus,
     ContractAddress,
     ContractContext,
-    CredentialDeploymentInfo,
     CryptographicParameters,
     InstanceInfo,
     InvokeContractResult,
@@ -21,7 +20,6 @@ import { AccountAddress } from './types/accountAddress';
 import Provider, { JsonRpcResponse } from './providers/provider';
 import {
     serializeAccountTransactionForSubmission,
-    serializeCredentialDeploymentInfo,
     serializeSignedCredentialDeploymentDetailsForSubmission,
 } from './serialization';
 import { GtuAmount } from './types/gtuAmount';

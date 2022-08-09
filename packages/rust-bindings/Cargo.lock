@@ -182,6 +182,7 @@ dependencies = [
  "curve_arithmetic",
  "dodis_yampolskiy_prf",
  "ed25519-dalek",
+ "ed25519_hd_key_derivation",
  "either",
  "hex",
  "id",

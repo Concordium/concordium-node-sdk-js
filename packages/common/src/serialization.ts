@@ -498,7 +498,7 @@ export function serializeUpdateContractParameters(
 
 function serializeSignedCredentialDeploymentDetails(
     credentialDetails: SignedCredentialDeploymentDetails
-) {
+): Buffer {
     const serializedBlockItemKind = encodeWord8(
         BlockItemKind.CredentialDeploymentKind
     );
@@ -519,7 +519,7 @@ function serializeSignedCredentialDeploymentDetails(
 
 export function serializeSignedCredentialDeploymentDetailsForSubmission(
     credentialDetails: SignedCredentialDeploymentDetails
-) {
+): Buffer {
     const serializedVersion = encodeWord8(0);
     const serializedDetails =
         serializeSignedCredentialDeploymentDetails(credentialDetails);
@@ -528,7 +528,7 @@ export function serializeSignedCredentialDeploymentDetailsForSubmission(
 
 export function getSignedCredentialDeploymentTransactionHash(
     credentialDetails: SignedCredentialDeploymentDetails
-) {
+): string {
     const serializedDetails =
         serializeSignedCredentialDeploymentDetails(credentialDetails);
     return sha256([serializedDetails]).toString('hex');

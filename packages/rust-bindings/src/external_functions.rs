@@ -61,7 +61,7 @@ pub fn create_credential_v1_ext(raw_input: &str) -> String {
         Ok(input) => match create_credential_v1_aux(input) {
             Ok(s) => s,
             Err(e) => format!("{}", e),
-        }
+        },
         Err(e) => format!("{}", e),
     }
 }

@@ -12,15 +12,20 @@ use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use sha2::{Digest, Sha256};
 
 use anyhow::{anyhow, bail, ensure, Result};
-use id::{account_holder::{create_unsigned_credential, generate_pio_v1, create_credential}, constants::{AttributeKind, ArCurve}, types::*, pedersen_commitment::{Randomness as PedersenRandomness, Value as PedersenValue},};
+use id::{
+    account_holder::{create_credential, create_unsigned_credential, generate_pio_v1},
+    constants::{ArCurve, AttributeKind},
+    pedersen_commitment::{Randomness as PedersenRandomness, Value as PedersenValue},
+    types::*,
+};
 use pedersen_scheme::Value;
 use serde_json::to_string;
 
+use crypto_common::types::{KeyIndex, KeyPair};
 use ed25519_dalek as ed25519;
 use ed25519_hd_key_derivation::DeriveError;
+use either::Either::Left;
 use id::secret_sharing::Threshold;
-use crypto_common::types::{KeyPair, KeyIndex};
-use either::Either::{Left};
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
 pub struct CredId {
@@ -48,7 +53,7 @@ fn get_net(net: String) -> Result<Net> {
     Ok(match net.as_str() {
         "Mainnet" => Net::Mainnet,
         "Testnet" => Net::Testnet,
-        _ => bail!("Unknown net")
+        _ => bail!("Unknown net"),
     })
 }
 
@@ -109,16 +114,16 @@ pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<String> {
 #[derive(SerdeSerialize, SerdeDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CredentialInput {
-    ip_info: IpInfo<Bls12>,
-    global_context: GlobalContext<ExampleCurve>,
-    ars_infos: BTreeMap<ArIdentity, ArInfo<ExampleCurve>>,
-    id_object: IdentityObjectV1<Bls12, ExampleCurve, AttributeKind>,
+    ip_info:             IpInfo<Bls12>,
+    global_context:      GlobalContext<ExampleCurve>,
+    ars_infos:           BTreeMap<ArIdentity, ArInfo<ExampleCurve>>,
+    id_object:           IdentityObjectV1<Bls12, ExampleCurve, AttributeKind>,
     revealed_attributes: Vec<AttributeTag>,
-    seed: String,
-    net: String,
-    identity_index: u32,
-    cred_number: u8,
-    expiry: TransactionTime,
+    seed:                String,
+    net:                 String,
+    identity_index:      u32,
+    cred_number:         u8,
+    expiry:              TransactionTime,
 }
 
 /// A ConcordiumHdWallet together with an identity index and credential index
@@ -153,7 +158,10 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<String> {
         Err(_) => bail!("The provided seed {} was not 64 bytes", input.seed),
     };
 
-    let wallet = ConcordiumHdWallet { seed, net: get_net(input.net)? };
+    let wallet = ConcordiumHdWallet {
+        seed,
+        net: get_net(input.net)?,
+    };
 
     let prf_key: prf::SecretKey<ArCurve> = wallet.get_prf_key(input.identity_index)?;
 
@@ -181,7 +189,8 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<String> {
 
     let cred_data = {
         let mut keys = std::collections::BTreeMap::new();
-        let secret = wallet.get_account_signing_key(input.identity_index, u32::from(input.cred_number))?;
+        let secret =
+            wallet.get_account_signing_key(input.identity_index, u32::from(input.cred_number))?;
         let public = ed25519::PublicKey::from(&secret);
         keys.insert(KeyIndex(0), KeyPair { secret, public });
 

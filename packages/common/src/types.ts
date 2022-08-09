@@ -1555,3 +1555,34 @@ export enum SchemaVersion {
     V1 = 0, // Used by version 0 smart contracts.
     V2 = 1, // Used by version 1 smart contracts.
 }
+
+export type IpArData = {
+    encPrfKeyShare: string;
+    proofComEncEq: string;
+};
+
+export interface IdObjectRequestV1 {
+    idCredPub: string;
+    choiceArData: {
+        arIdentities: number[];
+        threshold: number;
+    };
+    ipArData: Record<string, IpArData>;
+    idCredSecCommitment: string;
+    prfKeyCommitmentWithIP: string;
+    prfKeySharingCoeffCommitments: string[];
+    proofsOfKnowledge: string;
+}
+
+export interface AttributeList {
+    validTo: string; // "YYYYMM"
+    createdAt: string; // "YYYYMM"
+    maxAccounts: number;
+    chosenAttributes: Record<AttributeKey, string>;
+}
+
+export type IdentityObjectV1 = {
+    preIdentityObject: IdObjectRequestV1;
+    attributeList: AttributeList;
+    signature: string;
+};

@@ -1,8 +1,11 @@
 # Changelog
 
-## 2.4.0 2022-8-8
+## 2.4.0
 
-- Added `ConfigureBaker` to `AccountTransactionType` enum.
+### Added
+
+- `createIdentityRequest`, to create identity requests.
+-  Added `ConfigureBaker` to `AccountTransactionType` enum.
 
 ## 2.3.2 2022-7-26
 

@@ -19,6 +19,7 @@ anyhow = "1.0"
 ed25519-dalek = {version = "=1.0.0", features = ["serde"] }
 hex = "0.4"
 sha2 = "0.9"
+either = "1.6"
 
 [dependencies.id]
 path = "../../deps/concordium-base/rust-src/id"
@@ -48,6 +49,10 @@ version = "0"
 features = ["derive-serde"]
 path = "../../deps/concordium-contracts-common"
 version = "2.0.0"
+
+[dependencies.key_derivation]
+path = "../../deps/concordium-base/rust-src/key_derivation"
+version = "1.0.0"
 
 [lib]
 name = "concordium_rust_bindings"

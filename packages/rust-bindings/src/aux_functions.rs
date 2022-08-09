@@ -3,16 +3,25 @@ use crypto_common::{types::TransactionTime, *};
 use dodis_yampolskiy_prf as prf;
 use pairing::bls12_381::{Bls12, G1};
 use serde_json::{from_str, Value as SerdeValue};
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, convert::TryInto};
 type ExampleCurve = G1;
 use concordium_contracts_common::{from_bytes, schema, Cursor};
 use hex;
+use key_derivation::{ConcordiumHdWallet, Net};
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use sha2::{Digest, Sha256};
 
-use anyhow::{anyhow, bail, Result};
-use id::{account_holder::create_unsigned_credential, constants::AttributeKind, types::*};
+use anyhow::{anyhow, bail, ensure, Result};
+use id::{
+    account_holder::{create_unsigned_credential, generate_pio_v1},
+    constants::{ArCurve, AttributeKind},
+    pedersen_commitment::Value as PedersenValue,
+    types::*,
+};
 use pedersen_scheme::Value;
+use serde_json::to_string;
+
+use id::secret_sharing::Threshold;
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
 pub struct CredId {
@@ -22,6 +31,76 @@ pub struct CredId {
         deserialize_with = "base16_decode"
     )]
     pub cred_id: ExampleCurve,
+}
+
+#[derive(SerdeSerialize, SerdeDeserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IdRequestInput {
+    ip_info:        IpInfo<Bls12>,
+    global_context: GlobalContext<ExampleCurve>,
+    ars_infos:      BTreeMap<ArIdentity, ArInfo<ExampleCurve>>,
+    seed:           String,
+    net:            String,
+    identity_index: u32,
+    ar_threshold:   u8,
+}
+
+pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<String> {
+    let seed_decoded = hex::decode(&input.seed)?;
+    let seed: [u8; 64] = match seed_decoded.try_into() {
+        Ok(s) => s,
+        Err(_) => bail!("The provided seed {} was not 64 bytes", input.seed),
+    };
+
+    let net = match input.net.as_str() {
+        "Mainnet" => Net::Mainnet,
+        "Testnet" => Net::Testnet,
+        _ => bail!("Unknown net"),
+    };
+    let wallet = ConcordiumHdWallet { seed, net };
+
+    let prf_key: prf::SecretKey<ArCurve> = wallet.get_prf_key(input.identity_index)?;
+
+    let id_cred_sec: PedersenValue<ArCurve> =
+        PedersenValue::new(wallet.get_id_cred_sec(input.identity_index)?);
+    let id_cred: IdCredentials<ArCurve> = IdCredentials { id_cred_sec };
+
+    let sig_retrievel_randomness: ps_sig::SigRetrievalRandomness<Bls12> =
+        wallet.get_blinding_randomness(input.identity_index)?;
+
+    let num_of_ars = input.ars_infos.len();
+
+    ensure!(input.ar_threshold > 0, "arThreshold must be at least 1.");
+    ensure!(
+        num_of_ars >= usize::from(input.ar_threshold),
+        "Number of anonymity revokers in arsInfos should be at least arThreshold."
+    );
+
+    let threshold = Threshold(input.ar_threshold);
+
+    let chi = CredentialHolderInfo::<ArCurve> { id_cred };
+
+    let aci = AccCredentialInfo {
+        cred_holder_info: chi,
+        prf_key,
+    };
+
+    let context = IpContext::new(&input.ip_info, &input.ars_infos, &input.global_context);
+
+    let id_use_data = IdObjectUseData {
+        aci,
+        randomness: sig_retrievel_randomness,
+    };
+    let (pio, _) = {
+        match generate_pio_v1(&context, threshold, &id_use_data) {
+            Some(x) => x,
+            None => bail!("Generating the pre-identity object failed."),
+        }
+    };
+
+    let response = json!({ "idObjectRequest": Versioned::new(VERSION_0, pio) });
+
+    Ok(to_string(&response)?)
 }
 
 pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
@@ -97,6 +176,7 @@ pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
         policy,
         cred_key_info,
         address.as_ref(),
+        &SystemAttributeRandomness {},
     )?;
 
     let response = json!({"unsignedCdi": unsigned_cdi, "randomness": rand});

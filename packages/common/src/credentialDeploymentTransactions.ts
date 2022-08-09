@@ -17,6 +17,7 @@ import { TransactionExpiry } from './types/transactionExpiry';
 import { AccountAddress } from './types/accountAddress';
 import { sha256 } from './hash';
 import * as bs58check from 'bs58check';
+import { Buffer } from 'buffer/';
 
 /**
  * Generates the unsigned credential information that has to be signed when

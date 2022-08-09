@@ -1,11 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 2022-8-8
 
-### Added
+### Changed
 
-- `createIdentityRequest`, to create identity requests.
-- `deserializeTransaction` function to deserialize transaction created by `serializeAccountTransactionForSubmission` and `serializeCredentialDeploymentTransactionForSubmission`. (Currently SimpleTransfer, SimpleTransferWithMemo and RegisterData are the only supported account transactions kinds)
+- Bumped @concordium/common-sdk to 2.4.0.
 
 ## 0.3.0 2022-7-21
 
@@ -15,7 +14,7 @@
 - Support deserializing new schema types: ULeb128, ILeb128, ByteArray and ByteList.
 - Support deserializing schemas with versioning information.
 
-### Changes
+### Changed
 
 - The function for deserializing a module schema `deserialModuleFromBuffer` now have the schema version as an optional argument. The function will try to extract the version from the buffer. When a version is provided it falls back to this, otherwise it throws an error.
 

@@ -50,12 +50,12 @@ features = ["derive-serde"]
 path = "../../deps/concordium-contracts-common"
 version = "2.0.0"
 
-[dependencies.key_derivation]
-path = "../../deps/concordium-base/rust-src/key_derivation"
-version = "1.0.0"
-
 [dependencies.ed25519_hd_key_derivation]
 path = "../../deps/concordium-base/rust-src/ed25519_hd_key_derivation"
+version = "1.0.0"
+
+[dependencies.key_derivation]
+path = "../../deps/concordium-base/rust-src/key_derivation"
 version = "1.0.0"
 
 [lib]

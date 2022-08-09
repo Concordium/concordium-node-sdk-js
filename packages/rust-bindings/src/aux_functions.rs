@@ -3,18 +3,18 @@ use crypto_common::{types::TransactionTime, *};
 use dodis_yampolskiy_prf as prf;
 use pairing::bls12_381::{Bls12, G1};
 use serde_json::{from_str, Value as SerdeValue};
-use std::{cmp::max, collections::BTreeMap, convert::TryInto};
+use std::{collections::BTreeMap, convert::TryInto};
 type ExampleCurve = G1;
 use concordium_contracts_common::{from_bytes, schema, Cursor};
 use hex;
+use key_derivation::{ConcordiumHdWallet, Net};
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use sha2::{Digest, Sha256};
-use key_derivation::{ConcordiumHdWallet, Net};
 
 use anyhow::{anyhow, bail, ensure, Result};
 use id::{account_holder::{create_unsigned_credential, generate_pio_v1, create_credential}, constants::{AttributeKind, ArCurve}, types::*, pedersen_commitment::{Randomness as PedersenRandomness, Value as PedersenValue},};
 use pedersen_scheme::Value;
-use serde_json::{to_string};
+use serde_json::to_string;
 
 use ed25519_dalek as ed25519;
 use ed25519_hd_key_derivation::DeriveError;
@@ -32,17 +32,16 @@ pub struct CredId {
     pub cred_id: ExampleCurve,
 }
 
-
 #[derive(SerdeSerialize, SerdeDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IdRequestInput {
-    ip_info: IpInfo<Bls12>,
+    ip_info:        IpInfo<Bls12>,
     global_context: GlobalContext<ExampleCurve>,
-    ars_infos: BTreeMap<ArIdentity, ArInfo<ExampleCurve>>,
-    seed: String,
-    net: String,
+    ars_infos:      BTreeMap<ArIdentity, ArInfo<ExampleCurve>>,
+    seed:           String,
+    net:            String,
     identity_index: u32,
-    ar_threshold: Option<u8>,
+    ar_threshold:   u8,
 }
 
 fn get_net(net: String) -> Result<Net> {
@@ -73,25 +72,14 @@ pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<String> {
         wallet.get_blinding_randomness(input.identity_index)?;
 
     let num_of_ars = input.ars_infos.len();
-    let threshold = match input.ar_threshold {
-        Some(threshold) => {
-            ensure!(threshold > 0, "arThreshold must be at least 1.");
-            ensure!(
-                num_of_ars >= usize::from(threshold),
-                "Number of anonymity revokers in arsInfos should be at least arThreshold."
-            );
-            Threshold(threshold)
-        }
-        None => {
-            // arThreshold not specified, use `number of anonymity revokers` - 1 or 1 in the
-            // case of only a single anonymity revoker.
-            ensure!(
-                num_of_ars > 0,
-                "arsInfos should have at least 1 anonymity revoker."
-            );
-            Threshold(max((num_of_ars - 1).try_into().unwrap_or(255), 1))
-        }
-    };
+
+    ensure!(input.ar_threshold > 0, "arThreshold must be at least 1.");
+    ensure!(
+        num_of_ars >= usize::from(input.ar_threshold),
+        "Number of anonymity revokers in arsInfos should be at least arThreshold."
+    );
+
+    let threshold = Threshold(input.ar_threshold);
 
     let chi = CredentialHolderInfo::<ArCurve> { id_cred };
 
@@ -100,7 +88,6 @@ pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<String> {
         prf_key,
     };
 
-    // Choice of anonymity revokers, all of them in this implementation.
     let context = IpContext::new(&input.ip_info, &input.ars_infos, &input.global_context);
 
     let id_use_data = IdObjectUseData {
@@ -319,7 +306,7 @@ pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
         policy,
         cred_key_info,
         address.as_ref(),
-        &SystemAttributeRandomness {}
+        &SystemAttributeRandomness {},
     )?;
 
     let response = json!({"unsignedCdi": unsigned_cdi, "randomness": rand});

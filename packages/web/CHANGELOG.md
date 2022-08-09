@@ -6,9 +6,6 @@
 
 - Bumped @concordium/common-sdk to 2.4.0.
 
-### Changed
-- Bumped @concordium/common-sdk to 2.4.0.
-
 ## 0.3.0 2022-7-21
 
 ### Added

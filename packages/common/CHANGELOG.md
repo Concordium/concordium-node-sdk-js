@@ -5,6 +5,7 @@
 ### Added
 
 - `createIdentityRequest`, to create identity requests.
+-  Added `ConfigureBaker` to `AccountTransactionType` enum.
 
 ## 2.3.2 2022-7-26
 

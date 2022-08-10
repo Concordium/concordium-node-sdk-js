@@ -119,7 +119,7 @@ pub struct CredentialInput {
     ars_infos:           BTreeMap<ArIdentity, ArInfo<ExampleCurve>>,
     id_object:           IdentityObjectV1<Bls12, ExampleCurve, AttributeKind>,
     revealed_attributes: Vec<AttributeTag>,
-    seed:                String,
+    seed_as_hex:         String,
     net:                 String,
     identity_index:      u32,
     cred_number:         u8,
@@ -152,10 +152,10 @@ impl HasAttributeRandomness<ArCurve> for CredentialContext {
 }
 
 pub fn create_credential_v1_aux(input: CredentialInput) -> Result<String> {
-    let seed_decoded = hex::decode(&input.seed)?;
+    let seed_decoded = hex::decode(&input.seed_as_hex)?;
     let seed: [u8; 64] = match seed_decoded.try_into() {
         Ok(s) => s,
-        Err(_) => bail!("The provided seed {} was not 64 bytes", input.seed),
+        Err(_) => bail!("The provided seed {} was not 64 bytes", input.seed_as_hex),
     };
 
     let wallet = ConcordiumHdWallet {

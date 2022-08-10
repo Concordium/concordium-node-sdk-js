@@ -1586,3 +1586,5 @@ export type IdentityObjectV1 = {
     attributeList: AttributeList;
     signature: string;
 };
+
+export type Network = 'Testnet' | 'Mainnet';

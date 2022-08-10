@@ -33,7 +33,7 @@ export type JsonRpcRequest = (
               'getInstanceInfo',
               { blockHash: string; index: bigint; subindex: bigint }
           ]
-        | ['sendAccountTransaction', { transaction: string }]
+        | ['sendTransaction', { transaction: string }]
         | ['getAccountInfo', { address: string; blockHash: string }]
         | ['getCryptographicParameters', { blockHash: string }]
         | ['getModuleSource', { blockHash: string; moduleReference: string }]

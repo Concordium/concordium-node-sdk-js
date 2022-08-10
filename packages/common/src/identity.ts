@@ -4,6 +4,7 @@ import {
     CryptographicParameters,
     IdObjectRequestV1,
     IpInfo,
+    Network,
     Versioned,
 } from './types';
 
@@ -12,7 +13,7 @@ export type IdentityRequestInput = {
     globalContext: CryptographicParameters;
     arsInfos: Record<string, ArInfo>;
     seed: string;
-    net: 'Testnet' | 'Mainnet';
+    net: Network;
     identityIndex: number;
     arThreshold: number;
 };

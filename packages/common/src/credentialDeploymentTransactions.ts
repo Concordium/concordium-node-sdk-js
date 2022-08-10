@@ -11,6 +11,7 @@ import {
     ArInfo,
     IdentityObjectV1,
     SignedCredentialDeploymentDetails,
+    Network,
 } from './types';
 import * as wasm from '@concordium/rust-bindings';
 import { TransactionExpiry } from './types/transactionExpiry';
@@ -189,8 +190,8 @@ export type CredentialInputV1 = {
     arsInfos: Record<string, ArInfo>;
     idObject: IdentityObjectV1;
     revealedAttributes: AttributeKey[];
-    seed: string;
-    net: 'Testnet' | 'Mainnet';
+    seedAsHex: string;
+    net: Network;
     identityIndex: number;
     credNumber: number;
     expiry: number;

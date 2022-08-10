@@ -93,8 +93,10 @@ export class JsonRpcClient {
     /**
      * @param serializedTransaction the transaction serialized as a base64-encoded string.
      */
-    async sendRawTransaction(serializedTransaction: string): Promise<boolean> {
-        const res = await this.provider.request('sendAccountTransaction', {
+    private async sendRawTransaction(
+        serializedTransaction: string
+    ): Promise<boolean> {
+        const res = await this.provider.request('sendTransaction', {
             transaction: serializedTransaction,
         });
         return JSON.parse(res).result || false;

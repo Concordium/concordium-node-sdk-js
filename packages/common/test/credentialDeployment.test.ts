@@ -19,7 +19,7 @@ test('Test createCredentialV1', () => {
         fs.readFileSync('./test/resources/identity-object.json').toString()
     ).value;
 
-    const seed =
+    const seedAsHex =
         'efa5e27326f8fa0902e647b52449bf335b7b605adc387015ec903f41d95080eb71361cbc7fb78721dcd4f3926a337340aa1406df83332c44c1cdcfe100603860';
     const expiry = Math.floor(Date.now() / 1000) + 720;
     const revealedAttributes: AttributeKey[] = ['firstName'];
@@ -30,7 +30,7 @@ test('Test createCredentialV1', () => {
         arsInfos,
         idObject,
         revealedAttributes,
-        seed,
+        seedAsHex,
         net: 'Testnet',
         identityIndex: 0,
         credNumber: 1,

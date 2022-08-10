@@ -6,7 +6,10 @@ import { v4 as uuidv4 } from 'uuid';
 export class HttpProvider implements Provider {
     request: JsonRpcRequest;
 
-    constructor(url: string) {
+    /**
+     * @param internalFetch Fetch function that performs the request. Defaults to using the cross-fetch package.
+     */
+    constructor(url: string, internalFetch: typeof fetch = fetch) {
         this.request = async function (method, params?) {
             const request = {
                 method: method,
@@ -24,7 +27,7 @@ export class HttpProvider implements Provider {
                 },
             };
 
-            const res = await fetch(url, options);
+            const res = await internalFetch(url, options);
             if (res.status >= 400) {
                 const json = await res.json();
                 if (json.error) {

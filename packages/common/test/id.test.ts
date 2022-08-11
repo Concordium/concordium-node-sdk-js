@@ -1,4 +1,9 @@
-import { createIdentityRequest, IdentityRequestInput } from '../src/identity';
+import {
+    createIdentityRequest,
+    IdentityRequestInput,
+    IdentityRecoveryRequestInput,
+    createIdentityRecoveryRequest,
+} from '../src/identity';
 import fs from 'fs';
 
 test('idrequest', () => {
@@ -40,4 +45,33 @@ test('idrequest', () => {
     expect(typeof output.ipArData[2].proofComEncEq).toEqual('string');
     expect(typeof output.ipArData[3].encPrfKeyShare).toEqual('string');
     expect(typeof output.ipArData[3].proofComEncEq).toEqual('string');
+});
+
+test('Create id recovery request', () => {
+    const ipInfo = JSON.parse(
+        fs.readFileSync('./test/resources/ip_info.json').toString()
+    ).value;
+    const globalContext = JSON.parse(
+        fs.readFileSync('./test/resources/global.json').toString()
+    ).value;
+    const seedAsHex =
+        'efa5e27326f8fa0902e647b52449bf335b7b605adc387015ec903f41d95080eb71361cbc7fb78721dcd4f3926a337340aa1406df83332c44c1cdcfe100603860';
+
+    const timestamp = Math.floor(Date.now() / 1000);
+
+    const input: IdentityRecoveryRequestInput = {
+        ipInfo,
+        globalContext,
+        seedAsHex,
+        net: 'Testnet',
+        identityIndex: 0,
+        timestamp,
+    };
+    const output = createIdentityRecoveryRequest(input);
+
+    expect(output.value.idCredPub).toEqual(
+        'afda55c40e28459b75c2fcbadb55c8ab512cbcf8a7b3317be4ab33cb852e28e3f2bd07c887fcf52300cf63c39622d654'
+    );
+    expect(typeof output.value.proof).toBe('string');
+    expect(output.value.timestamp).toBe(timestamp);
 });

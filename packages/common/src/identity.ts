@@ -3,6 +3,7 @@ import {
     ArInfo,
     CryptographicParameters,
     IdObjectRequestV1,
+    IdRecoveryRequest,
     IpInfo,
     Network,
     Versioned,
@@ -27,6 +28,32 @@ export function createIdentityRequest(
     const rawRequest = wasm.createIdRequestV1(JSON.stringify(input));
     try {
         return JSON.parse(rawRequest).idObjectRequest;
+    } catch (e) {
+        throw new Error(rawRequest);
+    }
+}
+
+export type IdentityRecoveryRequestInput = {
+    ipInfo: IpInfo;
+    globalContext: CryptographicParameters;
+    seedAsHex: string;
+    net: Network;
+    identityIndex: number;
+    // TODO: change to bigint as the type is u64
+    timestamp: number;
+};
+
+/**
+ * Creates a identity Recovery Request.
+ */
+export function createIdentityRecoveryRequest(
+    input: IdentityRecoveryRequestInput
+): Versioned<IdRecoveryRequest> {
+    const rawRequest = wasm.createIdentityRecoveryRequest(
+        JSON.stringify(input)
+    );
+    try {
+        return JSON.parse(rawRequest).idRecoveryRequest;
     } catch (e) {
         throw new Error(rawRequest);
     }

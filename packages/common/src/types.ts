@@ -1574,6 +1574,12 @@ export interface IdObjectRequestV1 {
     proofsOfKnowledge: string;
 }
 
+export interface IdRecoveryRequest {
+    idCredPub: string;
+    timestamp: bigint;
+    proof: string;
+}
+
 export interface AttributeList {
     validTo: string; // "YYYYMM"
     createdAt: string; // "YYYYMM"

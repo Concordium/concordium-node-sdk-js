@@ -1,14 +1,3 @@
-import {
-    getAccountTransactionHash,
-    getAccountTransactionSignDigest,
-    getCredentialDeploymentSignDigest,
-    getCredentialDeploymentTransactionHash,
-    getCredentialForExistingAccountSignDigest,
-    serializeInitContractParameters,
-    serializeUpdateContractParameters,
-    serializeAccountTransactionForSubmission,
-    serializeCredentialDeploymentTransactionForSubmission,
-} from './serialization';
 import { sha256 } from './hash';
 export * from './types';
 export {
@@ -21,7 +10,8 @@ export {
     serializeUpdateContractParameters,
     serializeAccountTransactionForSubmission,
     serializeCredentialDeploymentTransactionForSubmission,
-};
+    getSignedCredentialDeploymentTransactionHash,
+} from './serialization';
 export { sha256 };
 export { CredentialRegistrationId } from './types/CredentialRegistrationId';
 export { AccountAddress } from './types/accountAddress';
@@ -34,6 +24,8 @@ export {
     createUnsignedCredentialForExistingAccount,
     getAccountAddress,
     buildSignedCredentialForExistingAccount,
+    createCredentialV1,
+    CredentialInputV1,
 } from './credentialDeploymentTransactions';
 export { isAlias, getAlias } from './alias';
 export {
@@ -50,4 +42,4 @@ export { isHex } from './util';
 
 export { HttpProvider } from './providers/httpProvider';
 export { JsonRpcClient } from './JsonRpcClient';
-export { createIdentityRequest } from './identity';
+export * from './identity';

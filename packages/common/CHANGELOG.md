@@ -5,6 +5,9 @@
 ### Added
 
 - `createIdentityRequest`, to create identity requests.
+- `createCredentialV1`, to create credentials using a seedPhrase.
+- Added `sendCredentialDeployment` to send credentials created from `createCredentialV1` to the chain.
+- `getSignedCredentialDeploymentTransactionHash` to get the transaction hash of credentials created from `createCredentialV1`.
 -  Added `ConfigureBaker` to `AccountTransactionType` enum.
 
 ## 2.3.2 2022-7-26

@@ -54,3 +54,14 @@ pub fn create_id_request_v1_ext(input: &str) -> String {
         Err(e) => format!("{}", e),
     }
 }
+
+#[wasm_bindgen(js_name = createCredentialV1)]
+pub fn create_credential_v1_ext(raw_input: &str) -> String {
+    match serde_json::from_str(raw_input) {
+        Ok(input) => match create_credential_v1_aux(input) {
+            Ok(s) => s,
+            Err(e) => format!("{}", e),
+        },
+        Err(e) => format!("{}", e),
+    }
+}

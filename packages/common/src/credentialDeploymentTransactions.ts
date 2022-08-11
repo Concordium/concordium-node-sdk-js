@@ -7,12 +7,18 @@ import {
     UnsignedCdiWithRandomness,
     UnsignedCredentialDeploymentInformation,
     VerifyKey,
+    IpInfo,
+    ArInfo,
+    IdentityObjectV1,
+    SignedCredentialDeploymentDetails,
+    Network,
 } from './types';
 import * as wasm from '@concordium/rust-bindings';
 import { TransactionExpiry } from './types/transactionExpiry';
 import { AccountAddress } from './types/accountAddress';
 import { sha256 } from './hash';
 import * as bs58check from 'bs58check';
+import { Buffer } from 'buffer/';
 
 /**
  * Generates the unsigned credential information that has to be signed when
@@ -176,4 +182,36 @@ export function getAccountAddress(credId: string): AccountAddress {
         bs58check.encode(prefixedWithVersion)
     );
     return accountAddress;
+}
+
+export type CredentialInputV1 = {
+    ipInfo: IpInfo;
+    globalContext: CryptographicParameters;
+    arsInfos: Record<string, ArInfo>;
+    idObject: IdentityObjectV1;
+    revealedAttributes: AttributeKey[];
+    seedAsHex: string;
+    net: Network;
+    identityIndex: number;
+    credNumber: number;
+    expiry: number;
+};
+
+/**
+ * Creates a credential for a new account, using the version 1 algorithm, which uses a seed to generate keys and commitments.
+ */
+export function createCredentialV1(
+    input: CredentialInputV1
+): SignedCredentialDeploymentDetails {
+    const rawRequest = wasm.createCredentialV1(JSON.stringify(input));
+    let info: CredentialDeploymentInfo;
+    try {
+        info = JSON.parse(rawRequest);
+    } catch (e) {
+        throw new Error(rawRequest);
+    }
+    return {
+        expiry: TransactionExpiry.fromEpochSeconds(BigInt(input.expiry)),
+        cdi: info,
+    };
 }

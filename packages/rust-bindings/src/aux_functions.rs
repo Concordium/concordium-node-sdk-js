@@ -49,12 +49,85 @@ pub struct IdRequestInput {
     ar_threshold:   u8,
 }
 
-fn get_net(net: String) -> Result<Net> {
-    Ok(match net.as_str() {
+pub fn error_to_string(result: Result<String>) -> String {
+    match result {
+        Ok(s) => s,
+        Err(e) => format!("{}", e),
+    }
+}
+
+fn get_net(net: &str) -> Result<Net> {
+    Ok(match net {
         "Mainnet" => Net::Mainnet,
         "Testnet" => Net::Testnet,
         _ => bail!("Unknown net"),
     })
+}
+
+fn get_wallet(seed_as_hex: &str, raw_net: &str) -> anyhow::Result<ConcordiumHdWallet> {
+    let seed_decoded = hex::decode(seed_as_hex)?;
+    let seed: [u8; 64] = match seed_decoded.try_into() {
+        Ok(s) => s,
+        Err(_) => bail!("The provided seed {} was not 64 bytes", seed_as_hex),
+    };
+
+    let net = get_net(raw_net)?;
+    let wallet = ConcordiumHdWallet { seed, net };
+    Ok(wallet)
+}
+
+pub fn get_account_signing_key_aux(
+    seed_as_hex: &str,
+    raw_net: &str,
+    identity_index: u32,
+    credential_counter: u32,
+) -> Result<String> {
+    let wallet = get_wallet(seed_as_hex, raw_net)?;
+    let key = wallet.get_account_signing_key(identity_index, credential_counter)?;
+    Ok(hex::encode(key.as_bytes()))
+}
+
+pub fn get_account_public_key_aux(
+    seed_as_hex: &str,
+    raw_net: &str,
+    identity_index: u32,
+    credential_counter: u32,
+) -> Result<String> {
+    let wallet = get_wallet(seed_as_hex, raw_net)?;
+    let key = wallet.get_account_public_key(identity_index, credential_counter)?;
+    Ok(hex::encode(key.as_bytes()))
+}
+
+pub fn get_prf_key_aux(seed_as_hex: &str, raw_net: &str, identity_index: u32) -> Result<String> {
+    let wallet = get_wallet(seed_as_hex, raw_net)?;
+    let key = wallet.get_prf_key(identity_index)?;
+    Ok(serde_json::to_string(&key)?)
+}
+
+pub fn get_signature_blinding_randomness_aux(
+    seed_as_hex: &str,
+    raw_net: &str,
+    identity_index: u32,
+) -> Result<String> {
+    let wallet = get_wallet(seed_as_hex, raw_net)?;
+    let key = wallet.get_blinding_randomness(identity_index)?;
+    Ok(hex::encode(to_bytes(&key)))
+}
+
+pub fn get_attribute_commitment_randomness_aux(
+    seed_as_hex: &str,
+    raw_net: &str,
+    identity_index: u32,
+    credential_counter: u32,
+    attribute: u8,
+) -> Result<String> {
+    let wallet = get_wallet(seed_as_hex, raw_net)?;
+    let key = wallet.get_attribute_commitment_randomness(
+        identity_index,
+        credential_counter,
+        AttributeTag(attribute),
+    )?;
+    Ok(serde_json::to_string(&key)?)
 }
 
 pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<String> {
@@ -64,7 +137,7 @@ pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<String> {
         Err(_) => bail!("The provided seed {} was not 64 bytes", input.seed),
     };
 
-    let net = get_net(input.net)?;
+    let net = get_net(&input.net)?;
     let wallet = ConcordiumHdWallet { seed, net };
 
     let prf_key: prf::SecretKey<ArCurve> = wallet.get_prf_key(input.identity_index)?;
@@ -160,7 +233,7 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<String> {
 
     let wallet = ConcordiumHdWallet {
         seed,
-        net: get_net(input.net)?,
+        net: get_net(&input.net)?,
     };
 
     let prf_key: prf::SecretKey<ArCurve> = wallet.get_prf_key(input.identity_index)?;

@@ -65,3 +65,68 @@ pub fn create_credential_v1_ext(raw_input: &str) -> String {
         Err(e) => format!("{}", e),
     }
 }
+
+#[wasm_bindgen(js_name = getAccountSigningKey)]
+pub fn get_account_signing_key_ext(
+    seed_as_hex: &str,
+    raw_net: &str,
+    identity_index: u32,
+    credential_counter: u32,
+) -> String {
+    error_to_string(get_account_signing_key_aux(
+        seed_as_hex,
+        raw_net,
+        identity_index,
+        credential_counter,
+    ))
+}
+
+#[wasm_bindgen(js_name = getAccountPublicKey)]
+pub fn get_account_public_key_ext(
+    seed_as_hex: &str,
+    raw_net: &str,
+    identity_index: u32,
+    credential_counter: u32,
+) -> String {
+    error_to_string(get_account_public_key_aux(
+        seed_as_hex,
+        raw_net,
+        identity_index,
+        credential_counter,
+    ))
+}
+
+#[wasm_bindgen(js_name = getPrfKey)]
+pub fn get_prf_key_ext(seed_as_hex: &str, raw_net: &str, identity_index: u32) -> String {
+    error_to_string(get_prf_key_aux(seed_as_hex, raw_net, identity_index))
+}
+
+#[wasm_bindgen(js_name = getSignatureBlindingRandomness)]
+pub fn get_signature_blinding_randomness_ext(
+    seed_as_hex: &str,
+    raw_net: &str,
+    identity_index: u32,
+) -> String {
+    error_to_string(get_signature_blinding_randomness_aux(
+        seed_as_hex,
+        raw_net,
+        identity_index,
+    ))
+}
+
+#[wasm_bindgen(js_name = getAttributeCommitmentRandomness)]
+pub fn get_attribute_commitment_randomness_ext(
+    seed_as_hex: &str,
+    raw_net: &str,
+    identity_index: u32,
+    credential_counter: u32,
+    attribute: u8,
+) -> String {
+    error_to_string(get_attribute_commitment_randomness_aux(
+        seed_as_hex,
+        raw_net,
+        identity_index,
+        credential_counter,
+        attribute,
+    ))
+}

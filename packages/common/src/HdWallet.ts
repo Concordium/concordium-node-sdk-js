@@ -77,6 +77,13 @@ export class ConcordiumHdWallet {
         );
     }
 
+    getIdCredSec(identityIndex: number): Buffer {
+        return Buffer.from(
+            wasm.getIdCredSec(this.seedAsHex, this.network, identityIndex),
+            'hex'
+        );
+    }
+
     getSignatureBlindingRandomness(identityIndex: number): Buffer {
         return Buffer.from(
             wasm.getSignatureBlindingRandomness(

@@ -101,6 +101,11 @@ pub fn get_prf_key_ext(seed_as_hex: &str, raw_net: &str, identity_index: u32) ->
     error_to_string(get_prf_key_aux(seed_as_hex, raw_net, identity_index))
 }
 
+#[wasm_bindgen(js_name = getIdCredSec)]
+pub fn get_id_cred_sec_ext(seed_as_hex: &str, raw_net: &str, identity_index: u32) -> String {
+    error_to_string(get_id_cred_sec_aux(seed_as_hex, raw_net, identity_index))
+}
+
 #[wasm_bindgen(js_name = getSignatureBlindingRandomness)]
 pub fn get_signature_blinding_randomness_ext(
     seed_as_hex: &str,

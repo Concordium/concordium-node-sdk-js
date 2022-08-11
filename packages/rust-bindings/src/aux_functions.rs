@@ -101,7 +101,17 @@ pub fn get_account_public_key_aux(
 pub fn get_prf_key_aux(seed_as_hex: &str, raw_net: &str, identity_index: u32) -> Result<String> {
     let wallet = get_wallet(seed_as_hex, raw_net)?;
     let key = wallet.get_prf_key(identity_index)?;
-    Ok(serde_json::to_string(&key)?)
+    Ok(hex::encode(to_bytes(&key)))
+}
+
+pub fn get_id_cred_sec_aux(
+    seed_as_hex: &str,
+    raw_net: &str,
+    identity_index: u32,
+) -> Result<String> {
+    let wallet = get_wallet(seed_as_hex, raw_net)?;
+    let key = wallet.get_id_cred_sec(identity_index)?;
+    Ok(hex::encode(to_bytes(&key)))
 }
 
 pub fn get_signature_blinding_randomness_aux(

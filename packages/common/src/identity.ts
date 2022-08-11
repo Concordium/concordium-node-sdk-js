@@ -1,33 +1,22 @@
 import * as wasm from '@concordium/rust-bindings';
-import { Versioned, ArInfo, CryptographicParameters, IpInfo } from './types';
+import {
+    ArInfo,
+    CryptographicParameters,
+    IdObjectRequestV1,
+    IpInfo,
+    Network,
+    Versioned,
+} from './types';
 
 export type IdentityRequestInput = {
     ipInfo: IpInfo;
     globalContext: CryptographicParameters;
     arsInfos: Record<string, ArInfo>;
     seed: string;
-    net: 'Testnet' | 'Mainnet';
+    net: Network;
     identityIndex: number;
     arThreshold: number;
 };
-
-export type IpArData = {
-    encPrfKeyShare: string;
-    proofComEncEq: string;
-};
-
-export interface IdObjectRequestV1 {
-    idCredPub: string;
-    choiceArData: {
-        arIdentities: number[];
-        threshold: number;
-    };
-    ipArData: Record<string, IpArData>;
-    idCredSecCommitment: string;
-    prfKeyCommitmentWithIP: string;
-    prfKeySharingCoeffCommitments: string[];
-    proofsOfKnowledge: string;
-}
 
 /**
  * Creates a V1 identityRequest.

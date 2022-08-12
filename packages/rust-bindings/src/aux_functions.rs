@@ -5,7 +5,7 @@ use pairing::bls12_381::{Bls12, G1};
 use serde_json::{from_str, Value as SerdeValue};
 use std::{collections::BTreeMap, convert::TryInto};
 type ExampleCurve = G1;
-use concordium_contracts_common::{from_bytes, schema, Cursor};
+use concordium_contracts_common::{from_bytes, schema::ModuleV0, Cursor};
 use hex;
 use key_derivation::{ConcordiumHdWallet, Net};
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
@@ -415,7 +415,7 @@ pub fn deserialize_state_aux(
     state_bytes: String,
     schema: String,
 ) -> Result<String> {
-    let module_schema: schema::Module = match from_bytes(&hex::decode(schema)?) {
+    let module_schema: ModuleV0 = match from_bytes(&hex::decode(schema)?) {
         Ok(o) => o,
         Err(e) => return Err(anyhow!("unable to parse schema: {:#?}", e)),
     };

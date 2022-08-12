@@ -137,7 +137,7 @@ pub fn get_attribute_commitment_randomness_aux(
         credential_counter,
         AttributeTag(attribute),
     )?;
-    Ok(serde_json::to_string(&key)?)
+    Ok(hex::encode(to_bytes(&key)))
 }
 
 pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<String> {

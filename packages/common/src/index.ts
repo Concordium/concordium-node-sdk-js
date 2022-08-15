@@ -37,6 +37,7 @@ export * from './signHelpers';
 export * from './accountHelpers';
 export * from './blockSummaryHelpers';
 export * from './rewardStatusHelpers';
+export * from './HdWallet';
 
 export { isHex } from './util';
 

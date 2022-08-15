@@ -39,7 +39,6 @@ export type IdentityRecoveryRequestInput = {
     seedAsHex: string;
     net: Network;
     identityIndex: number;
-    // TODO: change to bigint as the type is u64
     timestamp: number;
 };
 

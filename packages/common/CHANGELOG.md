@@ -10,7 +10,7 @@
 - Added `sendCredentialDeployment` to send credentials created from `createCredentialV1` to the chain.
 - `getSignedCredentialDeploymentTransactionHash` to get the transaction hash of credentials created from `createCredentialV1`.
 - Added `ConfigureBaker` to `AccountTransactionType` enum.
-- Added `ConcordiumHdWallet` with functions to get keys and randomness from a seedPhrase.
+- Added `ConcordiumHdWallet` with functions to get keys and randomness from a seed phrase.
 
 ## 2.3.2 2022-7-26
 

@@ -13,7 +13,10 @@ use sha2::{Digest, Sha256};
 
 use anyhow::{anyhow, bail, ensure, Result};
 use id::{
-    account_holder::{create_credential, create_unsigned_credential, generate_pio_v1},
+    account_holder::{
+        create_credential, create_unsigned_credential, generate_id_recovery_request,
+        generate_pio_v1,
+    },
     constants::{ArCurve, AttributeKind},
     pedersen_commitment::{Randomness as PedersenRandomness, Value as PedersenValue},
     types::*,
@@ -191,6 +194,33 @@ pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<String> {
 
     let response = json!({ "idObjectRequest": Versioned::new(VERSION_0, pio) });
 
+    Ok(to_string(&response)?)
+}
+
+#[derive(SerdeSerialize, SerdeDeserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IdRecoveryRequestInput {
+    ip_info:        IpInfo<Bls12>,
+    global_context: GlobalContext<ExampleCurve>,
+    seed_as_hex:    String,
+    net:            String,
+    identity_index: u32,
+    timestamp:      u64,
+}
+
+pub fn create_identity_recovery_request_aux(input: IdRecoveryRequestInput) -> Result<String> {
+    let wallet = get_wallet(&input.seed_as_hex, &input.net)?;
+    let id_cred_sec = wallet.get_id_cred_sec(input.identity_index)?;
+    let request = generate_id_recovery_request(
+        &input.ip_info,
+        &input.global_context,
+        &PedersenValue::new(id_cred_sec),
+        input.timestamp,
+    );
+
+    let response = json!({
+        "idRecoveryRequest": Versioned::new(VERSION_0, request),
+    });
     Ok(to_string(&response)?)
 }
 

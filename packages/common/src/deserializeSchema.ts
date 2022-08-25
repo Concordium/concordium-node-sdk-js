@@ -20,6 +20,11 @@ export type ModuleV1 = Record<string, ContractV1>;
  * map of contract names to contract schemas.
  */
 export type ModuleV2 = Record<string, ContractV2>;
+/**
+ * schema (V3) for a module, which is a
+ * map of contract names to contract schemas.
+ */
+export type ModuleV3 = Record<string, ContractV3>;
 
 /**
  * Versioned schema for a module.
@@ -33,6 +38,10 @@ export type VersionedModule =
     | {
           v: SchemaVersion.V2;
           value: ModuleV2;
+      }
+    | {
+          v: SchemaVersion.V3;
+          value: ModuleV3;
       };
 
 /**
@@ -58,6 +67,13 @@ export function deserialModuleV2(source: Readable): ModuleV2 {
     return deserialMapFn<string, ContractV2>(
         deserialString,
         deserialContractV2
+    )(source);
+}
+
+export function deserialModuleV3(source: Readable): ModuleV3 {
+    return deserialMapFn<string, ContractV3>(
+        deserialString,
+        deserialContractV3
     )(source);
 }
 
@@ -94,6 +110,11 @@ export function deserialVersionedModule(source: Readable): VersionedModule {
                 v: version,
                 value: deserialModuleV2(source),
             };
+        case SchemaVersion.V3:
+            return {
+                v: version,
+                value: deserialModuleV3(source),
+            };
         default:
             throw new Error('Unsupported schema version');
     }
@@ -119,6 +140,16 @@ export type ContractV2 = {
     init: ContractFunction | null;
     /** Map of receive function names to schemas for their respective parameters and return values. */
     receive: Record<string, ContractFunction>;
+};
+
+/**
+ *  schema (V3) for a contract.
+ */
+export type ContractV3 = {
+    /** Optional schema for init function. */
+    init: ContractFunctionV2 | null;
+    /** Map of receive function names to schemas for their respective parameters and return values. */
+    receive: Record<string, ContractFunctionV2>;
 };
 
 /**
@@ -150,6 +181,22 @@ export function deserialContractV2(source: Readable): ContractV2 {
         receive: deserialMapFn<string, ContractFunction>(
             deserialString,
             deserialFunction
+        )(source),
+    };
+}
+
+/**
+ * Reads {@link ContractV3} from the given {@link Readable}.
+ *
+ * @param source input stream
+ * @returns schema (V3) for a contract.
+ */
+export function deserialContractV3(source: Readable): ContractV3 {
+    return {
+        init: deserialOptionFn<ContractFunctionV2>(deserialFunctionV2)(source),
+        receive: deserialMapFn<string, ContractFunctionV2>(
+            deserialString,
+            deserialFunctionV2
         )(source),
     };
 }
@@ -207,6 +254,12 @@ export type Type =
 export type ContractFunction = {
     parameter?: Type;
     returnValue?: Type;
+};
+
+export type ContractFunctionV2 = {
+    parameter?: Type;
+    returnValue?: Type;
+    error?: Type;
 };
 
 export type StringType = {
@@ -331,6 +384,67 @@ export function deserialFunction(source: Readable): ContractFunction {
             return {
                 parameter: deserialType(source),
                 returnValue: deserialType(source),
+            };
+        default:
+            throw new Error('Incorrect tag for function');
+    }
+}
+
+/**
+ * The first byte of the function denotes whether the parameters, return value, errors or some combination of those, are typed.
+ */
+enum FunctionTagV2 {
+    Param = 0,
+    /// Rv is short for Return value.
+    RV = 1,
+    ParamRv = 2,
+    Error = 3,
+    ParamError = 4,
+    RvError = 5,
+    ParamRvError = 6,
+}
+
+/**
+ * Reads {@link ContractFunctionV2} from the given {@link Readable}.
+ *
+ * @param source input stream
+ * @returns Function schema type
+ */
+export function deserialFunctionV2(source: Readable): ContractFunctionV2 {
+    const tag: FunctionTagV2 = deserialUint8(source);
+    switch (tag) {
+        case FunctionTagV2.Param:
+            return {
+                parameter: deserialType(source),
+            };
+        case FunctionTagV2.RV:
+            return {
+                returnValue: deserialType(source),
+            };
+        case FunctionTagV2.ParamRv:
+            return {
+                parameter: deserialType(source),
+                returnValue: deserialType(source),
+            };
+        case FunctionTagV2.Error:
+            return {
+                error: deserialType(source),
+            };
+        case FunctionTagV2.ParamError:
+            return {
+                parameter: deserialType(source),
+                error: deserialType(source),
+            };
+        case FunctionTagV2.RvError:
+            return {
+                returnValue: deserialType(source),
+                error: deserialType(source),
+            };
+        case FunctionTagV2.ParamRvError:
+            return {
+                parameter: deserialType(source),
+                returnValue: deserialType(source),
+                error: deserialType(source),
             };
         default:
             throw new Error('Incorrect tag for function');

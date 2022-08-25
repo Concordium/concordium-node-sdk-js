@@ -64,3 +64,22 @@ test('Deserialize V2 versioned schema from file (cis2-wccd)', async () => {
     expect(parsedModule.value[contractName].init).toBeDefined();
     expect(parsedModule.value[contractName].receive).toBeDefined();
 });
+
+test('Deserialize V3 versioned schema from file (auction)', async () => {
+    const rawModule = Buffer.from(
+        fs.readFileSync('./test/resources/auction.schema')
+    );
+    const parsedModule = deserialModuleFromBuffer(rawModule);
+
+    const contractName = 'auction';
+
+    if (parsedModule.v != SchemaVersion.V3) {
+        throw new Error('Unexpected schema version');
+    }
+
+    console.debug(JSON.stringify(parsedModule));
+
+    expect(parsedModule.value[contractName].init).toBeDefined();
+    expect(parsedModule.value[contractName].receive).toBeDefined();
+    expect(parsedModule.value[contractName].init?.error).toBeDefined();
+});

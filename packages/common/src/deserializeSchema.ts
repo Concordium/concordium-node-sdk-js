@@ -367,7 +367,7 @@ enum FunctionTag {
     // V1 Functions only use the first three tags
     Param = 0,
     /// Rv is short for Return value.
-    RV = 1,
+    Rv = 1,
     ParamRv = 2,
     Error = 3,
     ParamError = 4,
@@ -388,7 +388,7 @@ export function deserialFunctionV1(source: Readable): ContractFunctionV1 {
             return {
                 parameter: deserialType(source),
             };
-        case FunctionTag.RV:
+        case FunctionTag.Rv:
             return {
                 returnValue: deserialType(source),
             };
@@ -415,7 +415,7 @@ export function deserialFunctionV2(source: Readable): ContractFunctionV2 {
             return {
                 parameter: deserialType(source),
             };
-        case FunctionTag.RV:
+        case FunctionTag.Rv:
             return {
                 returnValue: deserialType(source),
             };

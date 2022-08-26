@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0 2022-8-26
+
+### Breaking Changes
+
+- Bumped @concordium/common-sdk to 3.0.0. (Which includes breaking changes to schema versioning)
+
 ## 0.4.0 2022-8-15
 
 ### Changed

@@ -4,7 +4,3 @@
 [submodule "deps/concordium-base"]
 	path = deps/concordium-base
 	url = https://github.com/Concordium/concordium-base.git
-[submodule "deps/concordium-contracts-common"]
-	path = deps/concordium-contracts-common
-	url = https://github.com/Concordium/concordium-contracts-common.git
-

@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.0.0 2022-8-26
+
+### Added
+
+- Support for new V2 schemas which can specify error types.
+
+### Breaking changes
+
+- SchemaVersion, Module, and schema types are now 0-indexed instead of 1-indexed. This means that the schemas used for V0 contracts are now version 0, and so is the associated types. And the first schema version for V1 contracts are now version 1.
+
 ## 2.4.0 2022-8-15
 
 ### Added

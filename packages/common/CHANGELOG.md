@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.0.0
+## 3.0.0 2022-8-26
 
 ### Added
 
@@ -10,15 +10,17 @@
 
 - SchemaVersion, Module, and schema types are now 0-indexed instead of 1-indexed. This means that the schemas used for V0 contracts are now version 0, and so is the associated types. And the first schema version for V1 contracts are now version 1.
 
-## 2.4.0
+## 2.4.0 2022-8-15
 
 ### Added
 
 - `createIdentityRequest`, to create identity requests.
 - `createCredentialV1`, to create credentials using a seedPhrase.
+- `createIdentityRecoveryRequest`, to create identity recovery requests.
 - Added `sendCredentialDeployment` to send credentials created from `createCredentialV1` to the chain.
 - `getSignedCredentialDeploymentTransactionHash` to get the transaction hash of credentials created from `createCredentialV1`.
--  Added `ConfigureBaker` to `AccountTransactionType` enum.
+- Added `ConfigureBaker` to `AccountTransactionType` enum.
+- Added `ConcordiumHdWallet` with functions to get keys and randomness from a seed phrase.
 
 ## 2.3.2 2022-7-26
 

@@ -368,7 +368,7 @@ const inputParams = serializeInitContractParameters(
     schemaVersion
 );
 ```
-For V0 contracts the schemaVersion should be `SchemaVersion.V1`. For V1 contracts it should currently be `SchemaVersion.V2`.
+For V0 contracts the schemaVersion should be `SchemaVersion.V0`. For V1 contracts it should currently be `SchemaVersion.V1`, unless the contract have been built using cargo-concordium >=2.0.0, which are internally versioned, and then the version does not need to be provided.
 
 Then the payload and transaction can be constructed, in the same way as the parameterless example:
 ```js
@@ -414,7 +414,7 @@ const inputParams = serializeUpdateContractParameters(
         schemaVersion
 );
 ```
-For V0 contracts the schema version should be `SchemaVersion.V1`. For V1 contracts it should currently be `SchemaVersion.V2`.
+For V0 contracts the schema version should be `SchemaVersion.V0`. For V1 contracts it should currently be `SchemaVersion.V1`, unless the contract have been built using cargo-concordium >=2.0.0, which are internally versioned, and then the version does not need to be provided.
 
 Then we will construct the update payload with parameters obtained 
 ```js

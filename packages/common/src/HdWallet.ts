@@ -42,6 +42,7 @@ export class ConcordiumHdWallet {
     private constructor(private seedAsHex: string, private network: Network) {}
 
     getAccountSigningKey(
+        identityProviderIndex: number,
         identityIndex: number,
         credentialCounter: number
     ): Buffer {
@@ -49,6 +50,7 @@ export class ConcordiumHdWallet {
             wasm.getAccountSigningKey(
                 this.seedAsHex,
                 this.network,
+                identityProviderIndex,
                 identityIndex,
                 credentialCounter
             ),
@@ -56,6 +58,7 @@ export class ConcordiumHdWallet {
         );
     }
     getAccountPublicKey(
+        identityProviderIndex: number,
         identityIndex: number,
         credentialCounter: number
     ): Buffer {
@@ -63,6 +66,7 @@ export class ConcordiumHdWallet {
             wasm.getAccountPublicKey(
                 this.seedAsHex,
                 this.network,
+                identityProviderIndex,
                 identityIndex,
                 credentialCounter
             ),
@@ -70,31 +74,46 @@ export class ConcordiumHdWallet {
         );
     }
 
-    getPrfKey(identityIndex: number): Buffer {
+    getPrfKey(identityProviderIndex: number, identityIndex: number): Buffer {
         return Buffer.from(
-            wasm.getPrfKey(this.seedAsHex, this.network, identityIndex),
+            wasm.getPrfKey(
+                this.seedAsHex,
+                this.network,
+                identityProviderIndex,
+                identityIndex
+            ),
             'hex'
         );
     }
 
-    getIdCredSec(identityIndex: number): Buffer {
+    getIdCredSec(identityProviderIndex: number, identityIndex: number): Buffer {
         return Buffer.from(
-            wasm.getIdCredSec(this.seedAsHex, this.network, identityIndex),
+            wasm.getIdCredSec(
+                this.seedAsHex,
+                this.network,
+                identityProviderIndex,
+                identityIndex
+            ),
             'hex'
         );
     }
 
-    getSignatureBlindingRandomness(identityIndex: number): Buffer {
+    getSignatureBlindingRandomness(
+        identityProviderIndex: number,
+        identityIndex: number
+    ): Buffer {
         return Buffer.from(
             wasm.getSignatureBlindingRandomness(
                 this.seedAsHex,
                 this.network,
+                identityProviderIndex,
                 identityIndex
             ),
             'hex'
         );
     }
     getAttributeCommitmentRandomness(
+        identityProviderIndex: number,
         identityIndex: number,
         credentialCounter: number,
         attribute: AttributesKeys
@@ -103,6 +122,7 @@ export class ConcordiumHdWallet {
             wasm.getAttributeCommitmentRandomness(
                 this.seedAsHex,
                 this.network,
+                identityProviderIndex,
                 identityIndex,
                 credentialCounter,
                 attribute

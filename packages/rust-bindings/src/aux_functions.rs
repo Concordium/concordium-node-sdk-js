@@ -82,60 +82,79 @@ fn get_wallet(seed_as_hex: &str, raw_net: &str) -> anyhow::Result<ConcordiumHdWa
 pub fn get_account_signing_key_aux(
     seed_as_hex: &str,
     raw_net: &str,
+    identity_provider_index: u32,
     identity_index: u32,
     credential_counter: u32,
 ) -> Result<String> {
     let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_account_signing_key(identity_index, credential_counter)?;
+    let key = wallet.get_account_signing_key(
+        identity_provider_index,
+        identity_index,
+        credential_counter,
+    )?;
     Ok(hex::encode(key.as_bytes()))
 }
 
 pub fn get_account_public_key_aux(
     seed_as_hex: &str,
     raw_net: &str,
+    identity_provider_index: u32,
     identity_index: u32,
     credential_counter: u32,
 ) -> Result<String> {
     let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_account_public_key(identity_index, credential_counter)?;
+    let key = wallet.get_account_public_key(
+        identity_provider_index,
+        identity_index,
+        credential_counter,
+    )?;
     Ok(hex::encode(key.as_bytes()))
 }
 
-pub fn get_prf_key_aux(seed_as_hex: &str, raw_net: &str, identity_index: u32) -> Result<String> {
+pub fn get_prf_key_aux(
+    seed_as_hex: &str,
+    raw_net: &str,
+    identity_provider_index: u32,
+    identity_index: u32,
+) -> Result<String> {
     let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_prf_key(identity_index)?;
+    let key = wallet.get_prf_key(identity_provider_index, identity_index)?;
     Ok(hex::encode(to_bytes(&key)))
 }
 
 pub fn get_id_cred_sec_aux(
     seed_as_hex: &str,
     raw_net: &str,
+    identity_provider_index: u32,
     identity_index: u32,
 ) -> Result<String> {
     let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_id_cred_sec(identity_index)?;
+    let key = wallet.get_id_cred_sec(identity_provider_index, identity_index)?;
     Ok(hex::encode(to_bytes(&key)))
 }
 
 pub fn get_signature_blinding_randomness_aux(
     seed_as_hex: &str,
     raw_net: &str,
+    identity_provider_index: u32,
     identity_index: u32,
 ) -> Result<String> {
     let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_blinding_randomness(identity_index)?;
+    let key = wallet.get_blinding_randomness(identity_provider_index, identity_index)?;
     Ok(hex::encode(to_bytes(&key)))
 }
 
 pub fn get_attribute_commitment_randomness_aux(
     seed_as_hex: &str,
     raw_net: &str,
+    identity_provider_index: u32,
     identity_index: u32,
     credential_counter: u32,
     attribute: u8,
 ) -> Result<String> {
     let wallet = get_wallet(seed_as_hex, raw_net)?;
     let key = wallet.get_attribute_commitment_randomness(
+        identity_provider_index,
         identity_index,
         credential_counter,
         AttributeTag(attribute),
@@ -149,18 +168,20 @@ pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<String> {
         Ok(s) => s,
         Err(_) => bail!("The provided seed {} was not 64 bytes", input.seed),
     };
+    let identity_provider_index = input.ip_info.ip_identity.0;
 
     let net = get_net(&input.net)?;
     let wallet = ConcordiumHdWallet { seed, net };
 
-    let prf_key: prf::SecretKey<ArCurve> = wallet.get_prf_key(input.identity_index)?;
+    let prf_key: prf::SecretKey<ArCurve> =
+        wallet.get_prf_key(identity_provider_index, input.identity_index)?;
 
     let id_cred_sec: PedersenValue<ArCurve> =
-        PedersenValue::new(wallet.get_id_cred_sec(input.identity_index)?);
+        PedersenValue::new(wallet.get_id_cred_sec(identity_provider_index, input.identity_index)?);
     let id_cred: IdCredentials<ArCurve> = IdCredentials { id_cred_sec };
 
     let sig_retrievel_randomness: ps_sig::SigRetrievalRandomness<Bls12> =
-        wallet.get_blinding_randomness(input.identity_index)?;
+        wallet.get_blinding_randomness(identity_provider_index, input.identity_index)?;
 
     let num_of_ars = input.ars_infos.len();
 
@@ -209,8 +230,9 @@ pub struct IdRecoveryRequestInput {
 }
 
 pub fn create_identity_recovery_request_aux(input: IdRecoveryRequestInput) -> Result<String> {
+    let identity_provider_index = input.ip_info.ip_identity.0;
     let wallet = get_wallet(&input.seed_as_hex, &input.net)?;
-    let id_cred_sec = wallet.get_id_cred_sec(input.identity_index)?;
+    let id_cred_sec = wallet.get_id_cred_sec(identity_provider_index, input.identity_index)?;
     let request = generate_id_recovery_request(
         &input.ip_info,
         &input.global_context,
@@ -244,9 +266,10 @@ pub struct CredentialInput {
 /// the `create_credential` function due to the implementation of
 /// `HasAttributeRandomness` below.
 struct CredentialContext {
-    wallet:           ConcordiumHdWallet,
-    identity_index:   u32,
-    credential_index: u32,
+    wallet:                  ConcordiumHdWallet,
+    identity_provider_index: u32,
+    identity_index:          u32,
+    credential_index:        u32,
 }
 
 impl HasAttributeRandomness<ArCurve> for CredentialContext {
@@ -257,6 +280,7 @@ impl HasAttributeRandomness<ArCurve> for CredentialContext {
         attribute_tag: AttributeTag,
     ) -> Result<PedersenRandomness<ArCurve>, Self::ErrorType> {
         self.wallet.get_attribute_commitment_randomness(
+            self.identity_provider_index,
             self.identity_index,
             self.credential_index,
             attribute_tag,
@@ -276,14 +300,17 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<String> {
         net: get_net(&input.net)?,
     };
 
-    let prf_key: prf::SecretKey<ArCurve> = wallet.get_prf_key(input.identity_index)?;
+    let identity_provider_index = input.ip_info.ip_identity.0;
+
+    let prf_key: prf::SecretKey<ArCurve> =
+        wallet.get_prf_key(identity_provider_index, input.identity_index)?;
 
     let id_cred_sec: PedersenValue<ArCurve> =
-        PedersenValue::new(wallet.get_id_cred_sec(input.identity_index)?);
+        PedersenValue::new(wallet.get_id_cred_sec(identity_provider_index, input.identity_index)?);
     let id_cred: IdCredentials<ArCurve> = IdCredentials { id_cred_sec };
 
     let sig_retrievel_randomness: ps_sig::SigRetrievalRandomness<Bls12> =
-        wallet.get_blinding_randomness(input.identity_index)?;
+        wallet.get_blinding_randomness(identity_provider_index, input.identity_index)?;
 
     let chi = CredentialHolderInfo::<ArCurve> { id_cred };
     let aci = AccCredentialInfo {
@@ -302,8 +329,11 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<String> {
 
     let cred_data = {
         let mut keys = std::collections::BTreeMap::new();
-        let secret =
-            wallet.get_account_signing_key(input.identity_index, u32::from(input.cred_number))?;
+        let secret = wallet.get_account_signing_key(
+            identity_provider_index,
+            input.identity_index,
+            u32::from(input.cred_number),
+        )?;
         let public = ed25519::PublicKey::from(&secret);
         keys.insert(KeyIndex(0), KeyPair { secret, public });
 
@@ -336,6 +366,7 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<String> {
 
     let credential_context = CredentialContext {
         wallet,
+        identity_provider_index,
         identity_index: input.identity_index,
         credential_index: u32::from(input.cred_number),
     };

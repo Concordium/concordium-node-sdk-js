@@ -77,12 +77,14 @@ pub fn create_credential_v1_ext(raw_input: &str) -> String {
 pub fn get_account_signing_key_ext(
     seed_as_hex: &str,
     raw_net: &str,
+    identity_provider_index: u32,
     identity_index: u32,
     credential_counter: u32,
 ) -> String {
     error_to_string(get_account_signing_key_aux(
         seed_as_hex,
         raw_net,
+        identity_provider_index,
         identity_index,
         credential_counter,
     ))
@@ -92,36 +94,60 @@ pub fn get_account_signing_key_ext(
 pub fn get_account_public_key_ext(
     seed_as_hex: &str,
     raw_net: &str,
+    identity_provider_index: u32,
     identity_index: u32,
     credential_counter: u32,
 ) -> String {
     error_to_string(get_account_public_key_aux(
         seed_as_hex,
         raw_net,
+        identity_provider_index,
         identity_index,
         credential_counter,
     ))
 }
 
 #[wasm_bindgen(js_name = getPrfKey)]
-pub fn get_prf_key_ext(seed_as_hex: &str, raw_net: &str, identity_index: u32) -> String {
-    error_to_string(get_prf_key_aux(seed_as_hex, raw_net, identity_index))
+pub fn get_prf_key_ext(
+    seed_as_hex: &str,
+    raw_net: &str,
+    identity_provider_index: u32,
+    identity_index: u32,
+) -> String {
+    error_to_string(get_prf_key_aux(
+        seed_as_hex,
+        raw_net,
+        identity_provider_index,
+        identity_index,
+    ))
 }
 
 #[wasm_bindgen(js_name = getIdCredSec)]
-pub fn get_id_cred_sec_ext(seed_as_hex: &str, raw_net: &str, identity_index: u32) -> String {
-    error_to_string(get_id_cred_sec_aux(seed_as_hex, raw_net, identity_index))
+pub fn get_id_cred_sec_ext(
+    seed_as_hex: &str,
+    raw_net: &str,
+    identity_provider_index: u32,
+    identity_index: u32,
+) -> String {
+    error_to_string(get_id_cred_sec_aux(
+        seed_as_hex,
+        raw_net,
+        identity_provider_index,
+        identity_index,
+    ))
 }
 
 #[wasm_bindgen(js_name = getSignatureBlindingRandomness)]
 pub fn get_signature_blinding_randomness_ext(
     seed_as_hex: &str,
     raw_net: &str,
+    identity_provider_index: u32,
     identity_index: u32,
 ) -> String {
     error_to_string(get_signature_blinding_randomness_aux(
         seed_as_hex,
         raw_net,
+        identity_provider_index,
         identity_index,
     ))
 }
@@ -130,6 +156,7 @@ pub fn get_signature_blinding_randomness_ext(
 pub fn get_attribute_commitment_randomness_ext(
     seed_as_hex: &str,
     raw_net: &str,
+    identity_provider_index: u32,
     identity_index: u32,
     credential_counter: u32,
     attribute: u8,
@@ -137,6 +164,7 @@ pub fn get_attribute_commitment_randomness_ext(
     error_to_string(get_attribute_commitment_randomness_aux(
         seed_as_hex,
         raw_net,
+        identity_provider_index,
         identity_index,
         credential_counter,
         attribute,

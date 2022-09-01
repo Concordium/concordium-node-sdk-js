@@ -1,5 +1,16 @@
 # Changelog
 
+## 4.0.0 2022-8-26
+
+### Breaking changes
+
+- ConcordiumHdWallet methods now take the identity provider index as arguments.
+- Bumped @concordium/rust-bindings to 0.4.0.
+
+### Fixed
+
+ - Added missing `accountAddress` field to `AccountInfo` types.
+
 ## 3.0.0 2022-8-26
 
 ### Added

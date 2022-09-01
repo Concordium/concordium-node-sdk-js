@@ -6,9 +6,9 @@ import * as ed from '@noble/ed25519';
 
 test('Mainnet signing key', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Mainnet');
-    expect(wallet.getAccountSigningKey(55, 7)).toEqual(
+    expect(wallet.getAccountSigningKey(0, 55, 7)).toEqual(
         Buffer.from(
-            'b44f7320f156971927596f471a2302e5be8d3717a85bedfc5a0e2994615eea7d',
+            'e4d1693c86eb9438feb9cbc3d561fbd9299e3a8b3a676eb2483b135f8dbf6eb1',
             'hex'
         )
     );
@@ -16,9 +16,9 @@ test('Mainnet signing key', () => {
 
 test('Mainnet public key', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Mainnet');
-    expect(wallet.getAccountPublicKey(341, 9)).toEqual(
+    expect(wallet.getAccountPublicKey(1, 341, 9)).toEqual(
         Buffer.from(
-            'cc2f4d34bdd0d8e206cf1704516d7ce533f83773492f670144fcbeda33774c5c',
+            'd54aab7218fc683cbd4d822f7c2b4e7406c41ae08913012fab0fa992fa008e98',
             'hex'
         )
     );
@@ -26,8 +26,8 @@ test('Mainnet public key', () => {
 
 test('Mainnet public and signing key match', async () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Mainnet');
-    const privateKey = wallet.getAccountSigningKey(0, 0);
-    const publicKey = wallet.getAccountPublicKey(0, 0);
+    const privateKey = wallet.getAccountSigningKey(0, 0, 0);
+    const publicKey = wallet.getAccountPublicKey(0, 0, 0);
     const message = 'abcd1234abcd5678';
     const signature = await ed.sign(message, privateKey.toString('hex'));
     expect(await ed.verify(signature, message, publicKey)).toBeTruthy();
@@ -35,9 +35,9 @@ test('Mainnet public and signing key match', async () => {
 
 test('Mainnet Id Cred Sec', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Mainnet');
-    expect(wallet.getIdCredSec(115)).toEqual(
+    expect(wallet.getIdCredSec(2, 115)).toEqual(
         Buffer.from(
-            '27db5d5c1e346670bd2d9b4235a180629c750b067a83942e55fc43303531c1aa',
+            '33b9d19b2496f59ed853eb93b9d374482d2e03dd0a12e7807929d6ee54781bb1',
             'hex'
         )
     );
@@ -45,9 +45,9 @@ test('Mainnet Id Cred Sec', () => {
 
 test('Mainnet Prf Key', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Mainnet');
-    expect(wallet.getPrfKey(35)).toEqual(
+    expect(wallet.getPrfKey(3, 35)).toEqual(
         Buffer.from(
-            '1c8a30e2136dcc5e4f8b6fa359e908718d65ea2c2638d8fa6ff72c24d8ed3d68',
+            '4409e2e4acffeae641456b5f7406ecf3e1e8bd3472e2df67a9f1e8574f211bc5',
             'hex'
         )
     );
@@ -55,9 +55,9 @@ test('Mainnet Prf Key', () => {
 
 test('Mainnet blinding randomness', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Mainnet');
-    expect(wallet.getSignatureBlindingRandomness(5713)).toEqual(
+    expect(wallet.getSignatureBlindingRandomness(4, 5713)).toEqual(
         Buffer.from(
-            '2924d5bc605cc06632e061cec491c1f6b476b3abe51e526f641bcea355cd8bf6',
+            '1e3633af2b1dbe5600becfea0324bae1f4fa29f90bdf419f6fba1ff520cb3167',
             'hex'
         )
     );
@@ -65,9 +65,9 @@ test('Mainnet blinding randomness', () => {
 
 test('Mainnet attribute commitment randomness', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Mainnet');
-    expect(wallet.getAttributeCommitmentRandomness(0, 4, 0)).toEqual(
+    expect(wallet.getAttributeCommitmentRandomness(5, 0, 4, 0)).toEqual(
         Buffer.from(
-            '462e12bbda5b58ac6e3be920d41adce8b9d0779c13c34913b1f61748f0bbf051',
+            '6ef6ba6490fa37cd517d2b89a12b77edf756f89df5e6f5597440630cd4580b8f',
             'hex'
         )
     );
@@ -75,9 +75,9 @@ test('Mainnet attribute commitment randomness', () => {
 
 test('Testnet signing key', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
-    expect(wallet.getAccountSigningKey(55, 7)).toEqual(
+    expect(wallet.getAccountSigningKey(0, 55, 7)).toEqual(
         Buffer.from(
-            '67a5619aaa5d67b548f83c857c92024f57a9d902f273a62f283f2536fcb203aa',
+            'aff97882c6df085e91ae2695a32d39dccb8f4b8d68d2f0db9637c3a95f845e3c',
             'hex'
         )
     );
@@ -85,9 +85,9 @@ test('Testnet signing key', () => {
 
 test('Testnet public key', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
-    expect(wallet.getAccountPublicKey(341, 9)).toEqual(
+    expect(wallet.getAccountPublicKey(1, 341, 9)).toEqual(
         Buffer.from(
-            'b90e8e5f45c1181e93d5cad6ad7414036538c6c806140cb4bf7957d8ff350004',
+            'ef6fd561ca0291a57cdfee896245db9803a86da74c9a6c1bf0252b18f8033003',
             'hex'
         )
     );
@@ -95,8 +95,8 @@ test('Testnet public key', () => {
 
 test('Testnet public and signing key match', async () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
-    const privateKey = wallet.getAccountSigningKey(0, 0);
-    const publicKey = wallet.getAccountPublicKey(0, 0);
+    const privateKey = wallet.getAccountSigningKey(0, 0, 0);
+    const publicKey = wallet.getAccountPublicKey(0, 0, 0);
     const message = 'abcd1234abcd5678';
     const signature = await ed.sign(message, privateKey.toString('hex'));
     expect(await ed.verify(signature, message, publicKey)).toBeTruthy();
@@ -104,9 +104,9 @@ test('Testnet public and signing key match', async () => {
 
 test('Testnet Id Cred Sec', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
-    expect(wallet.getIdCredSec(115)).toEqual(
+    expect(wallet.getIdCredSec(2, 115)).toEqual(
         Buffer.from(
-            '719130a7429a69d1f673a7d051043e63ab237098928ffa2066bdddbc3f93bdb1',
+            '33c9c538e362c5ac836afc08210f4b5d881ba65a0a45b7e353586dad0a0f56df',
             'hex'
         )
     );
@@ -114,9 +114,9 @@ test('Testnet Id Cred Sec', () => {
 
 test('Testnet Prf Key', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
-    expect(wallet.getPrfKey(35)).toEqual(
+    expect(wallet.getPrfKey(3, 35)).toEqual(
         Buffer.from(
-            '623cc233afcdf8063800615d7b52aa535533f0ab054891b4f821e2912018a2fb',
+            '41d794d0b06a7a31fb79bb76c44e6b87c63e78f9afe8a772fc64d20f3d9e8e82',
             'hex'
         )
     );
@@ -124,9 +124,9 @@ test('Testnet Prf Key', () => {
 
 test('Testnet blinding randomness', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
-    expect(wallet.getSignatureBlindingRandomness(5713)).toEqual(
+    expect(wallet.getSignatureBlindingRandomness(4, 5713)).toEqual(
         Buffer.from(
-            '2d6093f16ce3cc2d1d7eca2c7c4c7a80449980b10baf0b3366dc70ba2564c7aa',
+            '079eb7fe4a2e89007f411ede031543bd7f687d50341a5596e015c9f2f4c1f39b',
             'hex'
         )
     );
@@ -134,9 +134,9 @@ test('Testnet blinding randomness', () => {
 
 test('Testnet attribute commitment randomness', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
-    expect(wallet.getAttributeCommitmentRandomness(0, 4, 0)).toEqual(
+    expect(wallet.getAttributeCommitmentRandomness(5, 0, 4, 0)).toEqual(
         Buffer.from(
-            '50cb39a9009b36c8ce21fdedab9db520de300a6405e5ffe4786c3c75b09f9ae0',
+            '409fa90314ec8fb4a2ae812fd77fe58bfac81765cad3990478ff7a73ba6d88ae',
             'hex'
         )
     );

@@ -35,7 +35,7 @@ test('idrequest', () => {
     expect(typeof output.idCredSecCommitment).toEqual('string');
     expect(typeof output.prfKeyCommitmentWithIP).toEqual('string');
     expect(output.idCredPub).toEqual(
-        'afda55c40e28459b75c2fcbadb55c8ab512cbcf8a7b3317be4ab33cb852e28e3f2bd07c887fcf52300cf63c39622d654'
+        'b23e360b21cb8baad1fb1f9a593d1115fc678cb9b7c1a5b5631f82e088092d79d34b6a6c8520c06c41002a666adf792f'
     );
     expect(output.choiceArData.threshold).toEqual(arThreshold);
     expect(output.choiceArData.arIdentities).toEqual([1, 2, 3]);
@@ -70,7 +70,7 @@ test('Create id recovery request', () => {
     const output = createIdentityRecoveryRequest(input);
 
     expect(output.value.idCredPub).toEqual(
-        'afda55c40e28459b75c2fcbadb55c8ab512cbcf8a7b3317be4ab33cb852e28e3f2bd07c887fcf52300cf63c39622d654'
+        'b23e360b21cb8baad1fb1f9a593d1115fc678cb9b7c1a5b5631f82e088092d79d34b6a6c8520c06c41002a666adf792f'
     );
     expect(typeof output.value.proof).toBe('string');
     expect(output.value.timestamp).toBe(timestamp);

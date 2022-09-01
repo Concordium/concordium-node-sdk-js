@@ -38,10 +38,10 @@ test('Test createCredentialV1', () => {
     };
     const output = createCredentialV1(input);
     expect(output.cdi.credId).toEqual(
-        'b6e5837a032c2845e94edd7ac617e5281c30b27dc9acfbd94de10f80ba42b6e5fc57c8e8a14eceb503bdff375bd17458'
+        'b317d3fea7de56f8c96f6e72820c5cd502cc0eef8454016ee548913255897c6b52156cc60df965d3efb3f160eff6ced4'
     );
     expect(output.cdi.credentialPublicKeys.keys[0].verifyKey).toEqual(
-        'a5a820b4947d2ddef4d9252f940b73ee8f3da17262ddb0c8c9593c6a0c617989'
+        '29723ec9a0b4ca16d5d548b676a1a0adbecdedc5446894151acb7699293d69b1'
     );
     expect(output.cdi.credentialPublicKeys.threshold).toEqual(1);
     expect(output.cdi.ipIdentity).toEqual(0);

@@ -1063,6 +1063,7 @@ export interface AccountDelegationDetails {
 }
 
 interface AccountInfoCommon {
+    accountAddress: string;
     accountNonce: bigint;
     accountAmount: bigint;
     accountIndex: bigint;

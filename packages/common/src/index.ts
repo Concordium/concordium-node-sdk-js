@@ -25,6 +25,7 @@ export {
     getAccountAddress,
     buildSignedCredentialForExistingAccount,
     createCredentialV1,
+    createAgeProofV1,
     CredentialInputV1,
 } from './credentialDeploymentTransactions';
 export { isAlias, getAlias } from './alias';

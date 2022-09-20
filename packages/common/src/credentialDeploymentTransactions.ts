@@ -215,3 +215,34 @@ export function createCredentialV1(
         cdi: info,
     };
 }
+
+export type AgeProofInput = {
+    idObject: IdentityObjectV1;
+    globalContext: CryptographicParameters;
+    seedAsHex: string;
+    net: Network;
+    identityProviderIndex: number;
+    identityIndex: number;
+    credNumber: number;
+};
+
+export type AgeProofOutput = {
+    account: AccountAddress;
+    lower: string;
+    upper: string;
+    proof: string;
+};
+
+/**
+ * Creates a credential for a new account, using the version 1 algorithm, which uses a seed to generate keys and commitments.
+ */
+export function createAgeProofV1(input: AgeProofInput): AgeProofOutput {
+    const rawRequest = wasm.createAgeProof(JSON.stringify(input));
+    let out: AgeProofOutput;
+    try {
+        out = JSON.parse(rawRequest);
+    } catch (e) {
+        throw new Error(rawRequest);
+    }
+    return out;
+}

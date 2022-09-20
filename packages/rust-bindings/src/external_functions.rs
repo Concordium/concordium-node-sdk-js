@@ -73,6 +73,17 @@ pub fn create_credential_v1_ext(raw_input: &str) -> String {
     }
 }
 
+#[wasm_bindgen(js_name = createAgeProof)]
+pub fn create_age_proof_v1_ext(raw_input: &str) -> String {
+    match serde_json::from_str(raw_input) {
+        Ok(input) => match create_age_proof_v1_aux(input) {
+            Ok(s) => s,
+            Err(e) => format!("{}", e),
+        },
+        Err(e) => format!("{}", e),
+    }
+}
+
 #[wasm_bindgen(js_name = getAccountSigningKey)]
 pub fn get_account_signing_key_ext(
     seed_as_hex: &str,

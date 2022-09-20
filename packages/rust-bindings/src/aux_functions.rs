@@ -11,14 +11,16 @@ use key_derivation::{ConcordiumHdWallet, Net};
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use sha2::{Digest, Sha256};
 
-use anyhow::{anyhow, bail, ensure, Result};
+use anyhow::{anyhow, bail, ensure, Context, Result};
 use id::{
     account_holder::{
         create_credential, create_unsigned_credential, generate_id_recovery_request,
         generate_pio_v1,
     },
     constants::{ArCurve, AttributeKind},
+    id_prover::prove_attribute_in_range,
     pedersen_commitment::{Randomness as PedersenRandomness, Value as PedersenValue},
+    range_proof::RangeProof,
     types::*,
 };
 use pedersen_scheme::Value;
@@ -384,6 +386,87 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<String> {
 
     let cdi_json = json!(cdi);
     Ok(cdi_json.to_string())
+}
+
+#[derive(SerdeSerialize, SerdeDeserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AgeProofInput {
+    id_object:               IdentityObjectV1<Bls12, ExampleCurve, AttributeKind>,
+    global_context:          GlobalContext<ExampleCurve>,
+    seed_as_hex:             String,
+    net:                     String,
+    identity_provider_index: u32,
+    identity_index:          u32,
+    cred_number:             u8,
+}
+
+#[derive(SerdeSerialize, SerdeDeserialize)]
+struct AgeProofOutput {
+    account: AccountAddress,
+    lower:   AttributeKind,
+    upper:   AttributeKind,
+    proof:   RangeProof<ExampleCurve>,
+}
+
+pub fn create_age_proof_v1_aux(input: AgeProofInput) -> Result<String> {
+    let seed_decoded = hex::decode(&input.seed_as_hex)?;
+    let seed: [u8; 64] = match seed_decoded.try_into() {
+        Ok(s) => s,
+        Err(_) => bail!("The provided seed {} was not 64 bytes", input.seed_as_hex),
+    };
+
+    let wallet = ConcordiumHdWallet {
+        seed,
+        net: get_net(&input.net)?,
+    };
+
+    let attribute = input
+        .id_object
+        .alist
+        .alist
+        .get(&AttributeTag(3))
+        .context("No DOB")?;
+
+    let cred_id_exponent = wallet
+        .get_prf_key(input.identity_provider_index, input.identity_index)?
+        .prf_exponent(input.cred_number)?;
+
+    let credential_context = CredentialContext {
+        wallet,
+        identity_provider_index: input.identity_provider_index,
+        credential_index: u32::from(input.cred_number),
+        identity_index: input.identity_index,
+    };
+
+    let lower = AttributeKind("18000101".to_string());
+    let upper = AttributeKind("20040920".to_string());
+    let proof = prove_attribute_in_range(
+        input.global_context.bulletproof_generators(),
+        &input.global_context.on_chain_commitment_key,
+        attribute,
+        &lower,
+        &upper,
+        &credential_context.get_attribute_commitment_randomness(AttributeTag(3))?,
+    )
+    .context("Unable to generate proof.")?;
+
+    let cred_id = input
+        .global_context
+        .on_chain_commitment_key
+        .hide(
+            &Value::<ExampleCurve>::new(cred_id_exponent),
+            &PedersenRandomness::zero(),
+        )
+        .0;
+
+    let out = AgeProofOutput {
+        account: account_address_from_registration_id(&cred_id),
+        lower,
+        upper,
+        proof,
+    };
+
+    Ok(json!(out).to_string())
 }
 
 pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {

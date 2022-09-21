@@ -27,6 +27,8 @@ export {
     createCredentialV1,
     createAgeProofV1,
     CredentialInputV1,
+    AgeProofInput,
+    AgeProofOutput,
 } from './credentialDeploymentTransactions';
 export { isAlias, getAlias } from './alias';
 export {

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+
+- Add `getCredentialId` method for the HdWallet.
+
 ## 0.4.0
 
 ### Changes

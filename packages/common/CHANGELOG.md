@@ -2,6 +2,10 @@
 
 ## 5.0.0
 
+### Added
+
+- `getCredentialId` to the HdWallet.
+
 ### Breaking changes
 
 - Updated the signature of helper functions for accounts to sign messages. (and changed the prepend)

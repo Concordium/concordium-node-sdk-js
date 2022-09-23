@@ -2,7 +2,7 @@ import * as wasm from '@concordium/rust-bindings';
 import { mnemonicToSeedSync, validateMnemonic } from '@scure/bip39';
 import { wordlist } from '@scure/bip39/wordlists/english';
 import { Buffer } from 'buffer/';
-import { AttributesKeys, Network } from './types';
+import { AttributesKeys, Network, CryptographicParameters } from './types';
 import { isHex } from './util';
 
 /**
@@ -69,6 +69,27 @@ export class ConcordiumHdWallet {
                 identityProviderIndex,
                 identityIndex,
                 credentialCounter
+            ),
+            'hex'
+        );
+    }
+
+    getCredentialId(
+        identityProviderIndex: number,
+        identityIndex: number,
+        credentialCounter: number,
+        {
+            onChainCommitmentKey,
+        }: Pick<CryptographicParameters, 'onChainCommitmentKey'>
+    ) {
+        return Buffer.from(
+            wasm.getCredentialId(
+                this.seedAsHex,
+                this.network,
+                identityProviderIndex,
+                identityIndex,
+                credentialCounter,
+                onChainCommitmentKey
             ),
             'hex'
         );

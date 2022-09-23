@@ -53,6 +53,21 @@ test('Mainnet Prf Key', () => {
     );
 });
 
+test('Mainnet CredId', () => {
+    const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Mainnet');
+    expect(
+        wallet.getCredentialId(10, 50, 5, {
+            onChainCommitmentKey:
+                'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a8d45e64b6f917c540eee16c970c3d4b7f3caf48a7746284878e2ace21c82ea44bf84609834625be1f309988ac523fac',
+        })
+    ).toEqual(
+        Buffer.from(
+            '8a3a87f3f38a7a507d1e85dc02a92b8bcaa859f5cf56accb3c1bc7c40e1789b4933875a38dd4c0646ca3e940a02c42d8',
+            'hex'
+        )
+    );
+});
+
 test('Mainnet blinding randomness', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Mainnet');
     expect(wallet.getSignatureBlindingRandomness(4, 5713)).toEqual(
@@ -122,6 +137,21 @@ test('Testnet Prf Key', () => {
     );
 });
 
+test('Testnet CredId', () => {
+    const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
+    expect(
+        wallet.getCredentialId(10, 50, 5, {
+            onChainCommitmentKey:
+                'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a8d45e64b6f917c540eee16c970c3d4b7f3caf48a7746284878e2ace21c82ea44bf84609834625be1f309988ac523fac',
+        })
+    ).toEqual(
+        Buffer.from(
+            '9535e4f2f964c955c1dd0f312f2edcbf4c7d036fe3052372a9ad949ff061b9b7ed6b00f93bc0713e381a93a43715206c',
+            'hex'
+        )
+    );
+});
+
 test('Testnet blinding randomness', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
     expect(wallet.getSignatureBlindingRandomness(4, 5713)).toEqual(
@@ -137,6 +167,24 @@ test('Testnet attribute commitment randomness', () => {
     expect(wallet.getAttributeCommitmentRandomness(5, 0, 4, 0)).toEqual(
         Buffer.from(
             '409fa90314ec8fb4a2ae812fd77fe58bfac81765cad3990478ff7a73ba6d88ae',
+            'hex'
+        )
+    );
+});
+
+test('Testnet CredId matches credDeployment test', () => {
+    const wallet = ConcordiumHdWallet.fromHex(
+        'efa5e27326f8fa0902e647b52449bf335b7b605adc387015ec903f41d95080eb71361cbc7fb78721dcd4f3926a337340aa1406df83332c44c1cdcfe100603860',
+        'Testnet'
+    );
+    expect(
+        wallet.getCredentialId(0, 0, 1, {
+            onChainCommitmentKey:
+                'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a8d45e64b6f917c540eee16c970c3d4b7f3caf48a7746284878e2ace21c82ea44bf84609834625be1f309988ac523fac',
+        })
+    ).toEqual(
+        Buffer.from(
+            'b317d3fea7de56f8c96f6e72820c5cd502cc0eef8454016ee548913255897c6b52156cc60df965d3efb3f160eff6ced4',
             'hex'
         )
     );

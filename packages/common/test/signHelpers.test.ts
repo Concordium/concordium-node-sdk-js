@@ -3,18 +3,22 @@ import {
     buildBasicAccountSigner,
     verifyMessageSignature,
 } from '../src/signHelpers';
-import { AccountInfo } from '../src';
+import { AccountAddress, AccountInfo } from '../src';
 
 test('test signMessage', async () => {
+    const account = new AccountAddress(
+        '3eP94feEdmhYiPC1333F9VoV31KGMswonuHk5tqmZrzf761zK5'
+    );
     const message = 'test';
     const signature = await signMessage(
+        account,
         message,
         buildBasicAccountSigner(
             'e1cf504954663e49f4fe884c7c35415b09632cccd82d3d2a62ab2825e67d785d'
         )
     );
     expect(signature[0][0]).toBe(
-        '5420cc5a6c956e8a9b47a834d8aaee1176349435f8d172f0255db28a96040eed553d18cd98e2c873bf37a0c1794d382397f68a230485efab1ef16f678008080a'
+        '445197d79ca90d8cc8440328dac9f307932ade0c03cc7aa575b59b746e26e5f1bca13ade5ff7a56e918ba5a32450fdf52b034cd2580929b21213263e81f7f809'
     );
 });
 
@@ -24,10 +28,12 @@ test('test verifyMessageSignature', async () => {
         message,
         {
             0: {
-                0: '5420cc5a6c956e8a9b47a834d8aaee1176349435f8d172f0255db28a96040eed553d18cd98e2c873bf37a0c1794d382397f68a230485efab1ef16f678008080a',
+                0: '445197d79ca90d8cc8440328dac9f307932ade0c03cc7aa575b59b746e26e5f1bca13ade5ff7a56e918ba5a32450fdf52b034cd2580929b21213263e81f7f809',
             },
         },
         {
+            accountAddress:
+                '3eP94feEdmhYiPC1333F9VoV31KGMswonuHk5tqmZrzf761zK5',
             accountThreshold: 1,
             accountCredentials: {
                 0: {

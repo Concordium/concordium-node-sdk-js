@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.0.0
+
+### Breaking changes
+
+- Updated the signature of helper functions for accounts to sign messages. (and changed the prepend)
+
 ## 4.0.0 2022-8-26
 
 ### Breaking changes

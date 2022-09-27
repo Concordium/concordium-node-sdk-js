@@ -3,6 +3,7 @@ import { ConcordiumHdWallet } from '../src/HdWallet';
 const TEST_SEED_1 =
     'efa5e27326f8fa0902e647b52449bf335b7b605adc387015ec903f41d95080eb71361cbc7fb78721dcd4f3926a337340aa1406df83332c44c1cdcfe100603860';
 import * as ed from '@noble/ed25519';
+import { createCredential } from './credentialDeployment.test';
 
 test('Mainnet signing key', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Mainnet');
@@ -177,15 +178,11 @@ test('Testnet CredId matches credDeployment test', () => {
         'efa5e27326f8fa0902e647b52449bf335b7b605adc387015ec903f41d95080eb71361cbc7fb78721dcd4f3926a337340aa1406df83332c44c1cdcfe100603860',
         'Testnet'
     );
+    const credentialDeployment = createCredential(Date.now(), []);
     expect(
         wallet.getCredentialId(0, 0, 1, {
             onChainCommitmentKey:
                 'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a8d45e64b6f917c540eee16c970c3d4b7f3caf48a7746284878e2ace21c82ea44bf84609834625be1f309988ac523fac',
         })
-    ).toEqual(
-        Buffer.from(
-            'b317d3fea7de56f8c96f6e72820c5cd502cc0eef8454016ee548913255897c6b52156cc60df965d3efb3f160eff6ced4',
-            'hex'
-        )
-    );
+    ).toEqual(Buffer.from(credentialDeployment.cdi.credId, 'hex'));
 });

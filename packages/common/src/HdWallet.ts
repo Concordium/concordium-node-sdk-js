@@ -81,7 +81,7 @@ export class ConcordiumHdWallet {
         {
             onChainCommitmentKey,
         }: Pick<CryptographicParameters, 'onChainCommitmentKey'>
-    ) {
+    ): Buffer {
         return Buffer.from(
             wasm.getCredentialId(
                 this.seedAsHex,

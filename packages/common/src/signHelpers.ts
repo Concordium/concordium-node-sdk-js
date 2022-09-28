@@ -6,6 +6,8 @@ import {
 } from './types';
 import * as ed from '@noble/ed25519';
 import { Buffer } from 'buffer/';
+import { AccountAddress } from './types/accountAddress';
+import { sha256 } from './hash';
 
 export interface AccountSigner {
     sign(digest: Buffer): Promise<AccountTransactionSignature>;
@@ -52,13 +54,13 @@ export function signTransaction(
 }
 
 /**
+ * @param account the address of the account that will sign this message.
  * @param message the message to sign, assumed to be utf8 encoded.
  */
-function getMessageDigest(message: string): Buffer {
-    // TODO: use real prepend
-    const prepend = Buffer.from('MyGoodPrepend', 'utf8');
-    const digest = Buffer.from(message, 'utf8');
-    return Buffer.concat([prepend, digest]);
+function getMessageDigest(account: AccountAddress, message: string): Buffer {
+    const prepend = Buffer.alloc(8, 0);
+    const rawMessage = Buffer.from(message, 'utf8');
+    return sha256([account.decodedAddress, prepend, rawMessage]);
 }
 
 /**
@@ -69,29 +71,36 @@ function getMessageDigest(message: string): Buffer {
  * @param signer An object that handles the keys of the account, and performs the actual signing.
  */
 export function signMessage(
+    account: AccountAddress,
     message: string,
     signer: AccountSigner
 ): Promise<AccountTransactionSignature> {
-    return signer.sign(getMessageDigest(message));
+    return signer.sign(getMessageDigest(account, message));
 }
 
 /**
  * Helper function to verify a signed message.
  * @param message the message to sign, assumed to be utf8 encoded.
  * @param signature the signature of a message, from a specific account.
- * @param accountCredentials the credentials of the account
+ * @param accountInfo the address and credentials of the account
  */
 export async function verifyMessageSignature(
     message: string,
     signature: AccountTransactionSignature,
-    accountInfo: Pick<AccountInfo, 'accountThreshold' | 'accountCredentials'>
+    accountInfo: Pick<
+        AccountInfo,
+        'accountThreshold' | 'accountCredentials' | 'accountAddress'
+    >
 ): Promise<boolean> {
     if (Object.keys(signature).length < accountInfo.accountThreshold) {
         // Not enough credentials have signed;
         return false;
     }
 
-    const digest = getMessageDigest(message);
+    const digest = getMessageDigest(
+        new AccountAddress(accountInfo.accountAddress),
+        message
+    );
 
     for (const credentialIndex of Object.keys(signature)) {
         const credential =

@@ -536,12 +536,13 @@ const signatures: AccountTransactionSignature = {
 To have an account sign an arbritrary message, one can use the `signMessage` function: 
 
 ```js
+const account = new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M");
 const message = "testMessage";
 const signer: AccountSigner = ...;
-const signature = signMessage(message, signer);
+const signature = signMessage(account, message, signer);
 ```
 
-Note that the signMessage preprends a short string, to ensure that the message cannot be a account transaction. To easily verify the signature, one can use the `verifyMessageSignature` function:
+What is actually signed is the sha256 hash of the account address, eight zero bytes and the actual message. This ensures that the message cannot be an account transaction. To easily verify the signature, one can use the `verifyMessageSignature` function:
 
 ```js
 const message = "testMessage";

@@ -3,9 +3,12 @@ import {
     CredentialInputV1,
 } from '../src/credentialDeploymentTransactions';
 import fs from 'fs';
-import { AttributeKey } from '../src/types';
+import { AttributeKey, SignedCredentialDeploymentDetails } from '../src/types';
 
-test('Test createCredentialV1', () => {
+export function createCredential(
+    expiry: number,
+    revealedAttributes: AttributeKey[]
+): SignedCredentialDeploymentDetails {
     const ipInfo = JSON.parse(
         fs.readFileSync('./test/resources/ip_info.json').toString()
     ).value;
@@ -21,8 +24,6 @@ test('Test createCredentialV1', () => {
 
     const seedAsHex =
         'efa5e27326f8fa0902e647b52449bf335b7b605adc387015ec903f41d95080eb71361cbc7fb78721dcd4f3926a337340aa1406df83332c44c1cdcfe100603860';
-    const expiry = Math.floor(Date.now() / 1000) + 720;
-    const revealedAttributes: AttributeKey[] = ['firstName'];
 
     const input: CredentialInputV1 = {
         ipInfo,
@@ -36,7 +37,14 @@ test('Test createCredentialV1', () => {
         credNumber: 1,
         expiry,
     };
-    const output = createCredentialV1(input);
+    return createCredentialV1(input);
+}
+
+test('Test createCredentialV1', () => {
+    const expiry = Math.floor(Date.now() / 1000) + 720;
+    const revealedAttributes: AttributeKey[] = ['firstName'];
+    const output = createCredential(expiry, revealedAttributes);
+
     expect(output.cdi.credId).toEqual(
         'b317d3fea7de56f8c96f6e72820c5cd502cc0eef8454016ee548913255897c6b52156cc60df965d3efb3f160eff6ced4'
     );

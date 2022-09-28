@@ -107,6 +107,25 @@ pub fn get_account_public_key_ext(
     ))
 }
 
+#[wasm_bindgen(js_name = getCredentialId)]
+pub fn get_credential_id_ext(
+    seed_as_hex: &str,
+    raw_net: &str,
+    identity_provider_index: u32,
+    identity_index: u32,
+    credential_counter: u8,
+    raw_on_chain_commitment_key: &str,
+) -> String {
+    error_to_string(get_credential_id_aux(
+        seed_as_hex,
+        raw_net,
+        identity_provider_index,
+        identity_index,
+        credential_counter,
+        raw_on_chain_commitment_key,
+    ))
+}
+
 #[wasm_bindgen(js_name = getPrfKey)]
 pub fn get_prf_key_ext(
     seed_as_hex: &str,

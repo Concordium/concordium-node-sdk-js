@@ -4,7 +4,7 @@
 
 ### Breaking Changes
 
-- Bumped @concordium/common-sdk to 4.0.0. (Which changes the function signature of ConcordiumHdWallet)
+- Bumped @concordium/common-sdk to 5.0.0. (Which changes the function signature of ConcordiumHdWallet and sign helpers functions)
 
 ## 4.0.0 2022-8-26
 

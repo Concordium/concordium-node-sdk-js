@@ -1,6 +1,12 @@
 # Changelog
 
-## 1.0.0
+## 2.0.0 2022-9-29
+
+### Breaking Changes
+
+- Bumped @concordium/common-sdk to 5.0.0. (Which changes the function signature of signMessage and verifySignMessage)
+
+## 1.0.0 2022-9-2
 
 ### Breaking Changes
 

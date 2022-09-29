@@ -22,7 +22,7 @@
         "/lib/**/*"
     ],
     "devDependencies": {
-        "@noble/ed25519": "^1.6.0",
+        "@noble/ed25519": "^1.7.1",
         "@types/google-protobuf": "^3.15.3",
         "@types/jest": "^26.0.23",
         "@typescript-eslint/eslint-plugin": "^4.28.1",

@@ -1317,7 +1317,7 @@ __metadata:
   resolution: "@concordium/common-sdk@workspace:packages/common"
   dependencies:
     "@concordium/rust-bindings": 0.5.0
-    "@noble/ed25519": ^1.6.0
+    "@noble/ed25519": ^1.7.1
     "@scure/bip39": ^1.1.0
     "@types/bs58check": ^2.1.0
     "@types/jest": ^26.0.23
@@ -1350,7 +1350,7 @@ __metadata:
   dependencies:
     "@concordium/common-sdk": 5.0.0
     "@grpc/grpc-js": ^1.3.4
-    "@noble/ed25519": ^1.6.0
+    "@noble/ed25519": ^1.7.1
     "@types/google-protobuf": ^3.15.3
     "@types/jest": ^26.0.23
     "@typescript-eslint/eslint-plugin": ^4.28.1
@@ -1792,10 +1792,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@noble/ed25519@npm:^1.6.0":
-  version: 1.6.1
-  resolution: "@noble/ed25519@npm:1.6.1"
-  checksum: 4bf9177549e8e93464cdc6740990973ca5d3447e68dd608aff3d7380b12d1007eb77e38b4806d74b580ba4eee7408f036331dc0387319fa49d64d4d62c648aaf
+"@noble/ed25519@npm:^1.7.1":
+  version: 1.7.1
+  resolution: "@noble/ed25519@npm:1.7.1"
+  checksum: b8e50306ac70f5cecc349111997e72e897b47a28d406b96cf95d0ebe7cbdefb8380d26117d7847d94102281db200aa3a494e520f9fc12e2f292e0762cb0fa333
   languageName: node
   linkType: hard
 

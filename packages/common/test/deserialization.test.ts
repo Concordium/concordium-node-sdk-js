@@ -3,7 +3,7 @@ import {
     deserializeTransaction,
 } from '../src/deserialization';
 import { Buffer } from 'buffer/';
-import { serializeAccountTransactionForSubmission } from '../src/serialization';
+import { serializeSignedAccountTransactionForSubmission } from '../src/serialization';
 import {
     AccountAddress,
     AccountTransaction,
@@ -59,7 +59,7 @@ function deserializeAccountTransactionBase(
     };
 
     const deserialized = deserializeTransaction(
-        serializeAccountTransactionForSubmission(transaction, signatures)
+        serializeSignedAccountTransactionForSubmission(transaction, signatures)
     );
 
     if (deserialized.kind !== BlockItemKind.AccountTransactionKind) {

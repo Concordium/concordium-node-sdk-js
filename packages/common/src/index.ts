@@ -6,9 +6,10 @@ export {
     getCredentialDeploymentSignDigest,
     getCredentialDeploymentTransactionHash,
     getCredentialForExistingAccountSignDigest,
+    serializeAccountTransaction,
     serializeInitContractParameters,
     serializeUpdateContractParameters,
-    serializeAccountTransactionForSubmission,
+    serializeSignedAccountTransactionForSubmission,
     serializeCredentialDeploymentTransactionForSubmission,
     getSignedCredentialDeploymentTransactionHash,
 } from './serialization';

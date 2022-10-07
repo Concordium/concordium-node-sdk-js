@@ -97,39 +97,26 @@ export function serializeAccountTransactionSignature(
 }
 
 /**
- * Serializes a transaction and its signatures. This serialization when sha256 hashed
- * is considered as the transaction hash, and is used to look up the status of a
- * submitted transaction.
+ * Serializes an account transaction into a buffer.
  * @param accountTransaction the transaction to serialize
- * @param signatures signatures on the signed digest of the transaction
- * @returns the serialization of the account transaction, which is used to calculate the transaction hash
+ * @param signatureCount the number of signatures that will be used to sign
+ * @returns the serialization of the account transaction
  */
 export function serializeAccountTransaction(
     accountTransaction: AccountTransaction,
-    signatures: AccountTransactionSignature
+    signatureCount: bigint
 ): Buffer {
-    const serializedBlockItemKind = encodeWord8(
-        BlockItemKind.AccountTransactionKind
-    );
-    const serializedAccountTransactionSignatures =
-        serializeAccountTransactionSignature(signatures);
-
-    const serializedType = serializeAccountTransactionType(
-        accountTransaction.type
-    );
-
     const accountTransactionHandler = getAccountTransactionHandler(
         accountTransaction.type
     );
     const serializedPayload = accountTransactionHandler.serialize(
         accountTransaction.payload
     );
-
     const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(
         accountTransaction.payload
     );
     const energyCost = calculateEnergyCost(
-        countSignatures(signatures),
+        signatureCount,
         BigInt(serializedPayload.length + 1),
         baseEnergyCost
     );
@@ -138,13 +125,38 @@ export function serializeAccountTransaction(
         serializedPayload.length + 1,
         energyCost
     );
+    return Buffer.concat([
+        serializedHeader,
+        serializeAccountTransactionType(accountTransaction.type),
+        serializedPayload,
+    ]);
+}
 
+/**
+ * Serializes a transaction and its signatures. This serialization when sha256 hashed
+ * is considered as the transaction hash, and is used to look up the status of a
+ * submitted transaction.
+ * @param accountTransaction the transaction to serialize
+ * @param signatures signatures on the signed digest of the transaction
+ * @returns the serialization of the account transaction, which is used to calculate the transaction hash
+ */
+export function serializeSignedAccountTransaction(
+    accountTransaction: AccountTransaction,
+    signatures: AccountTransactionSignature
+): Buffer {
+    const serializedBlockItemKind = encodeWord8(
+        BlockItemKind.AccountTransactionKind
+    );
+    const serializedAccountTransactionSignatures =
+        serializeAccountTransactionSignature(signatures);
+    const serializedAccountTransaction = serializeAccountTransaction(
+        accountTransaction,
+        countSignatures(signatures)
+    );
     return Buffer.concat([
         serializedBlockItemKind,
         serializedAccountTransactionSignatures,
-        serializedHeader,
-        serializedType,
-        serializedPayload,
+        serializedAccountTransaction,
     ]);
 }
 
@@ -158,7 +170,7 @@ export function getAccountTransactionHash(
     accountTransaction: AccountTransaction,
     signatures: AccountTransactionSignature
 ): string {
-    const serializedAccountTransaction = serializeAccountTransaction(
+    const serializedAccountTransaction = serializeSignedAccountTransaction(
         accountTransaction,
         signatures
     );
@@ -175,31 +187,8 @@ export function getAccountTransactionSignDigest(
     accountTransaction: AccountTransaction,
     signatureCount = 1n
 ): Buffer {
-    const accountTransactionHandler = getAccountTransactionHandler(
-        accountTransaction.type
-    );
-    const serializedPayload = accountTransactionHandler.serialize(
-        accountTransaction.payload
-    );
-
-    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(
-        accountTransaction.payload
-    );
-    const energyCost = calculateEnergyCost(
-        signatureCount,
-        BigInt(serializedPayload.length + 1),
-        baseEnergyCost
-    );
-    const serializedHeader = serializeAccountTransactionHeader(
-        accountTransaction.header,
-        serializedPayload.length + 1,
-        energyCost
-    );
-
     return sha256([
-        serializedHeader,
-        serializeAccountTransactionType(accountTransaction.type),
-        serializedPayload,
+        serializeAccountTransaction(accountTransaction, signatureCount),
     ]);
 }
 
@@ -211,16 +200,15 @@ export function getAccountTransactionSignDigest(
  * @param signatures the signatures on the hash of the account transaction
  * @returns the serialization of the account transaction ready for being submitted to a node
  */
-export function serializeAccountTransactionForSubmission(
+export function serializeSignedAccountTransactionForSubmission(
     accountTransaction: AccountTransaction,
     signatures: AccountTransactionSignature
 ): Buffer {
-    const serializedAccountTransaction = serializeAccountTransaction(
+    const serializedVersion = encodeWord8(0);
+    const serializedAccountTransaction = serializeSignedAccountTransaction(
         accountTransaction,
         signatures
     );
-
-    const serializedVersion = encodeWord8(0);
     return Buffer.concat([serializedVersion, serializedAccountTransaction]);
 }
 

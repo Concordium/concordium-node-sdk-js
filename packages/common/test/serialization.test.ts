@@ -3,7 +3,7 @@ import { Buffer } from 'buffer/';
 import { AccountAddress } from '../src/types/accountAddress';
 import { GtuAmount } from '../src/types/gtuAmount';
 import {
-    serializeSignedAccountTransactionForSubmission,
+    serializeAccountTransactionForSubmission,
     serializeAccountTransactionSignature,
     serializeUpdateContractParameters,
 } from '../src/serialization';
@@ -47,7 +47,7 @@ test('fail account transaction serialization if no signatures', () => {
     };
 
     expect(() =>
-        serializeSignedAccountTransactionForSubmission(
+        serializeAccountTransactionForSubmission(
             simpleTransferAccountTransaction,
             {}
         )

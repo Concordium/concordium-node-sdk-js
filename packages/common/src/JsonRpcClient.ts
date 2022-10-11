@@ -19,7 +19,7 @@ import {
 import { AccountAddress } from './types/accountAddress';
 import Provider, { JsonRpcResponse } from './providers/provider';
 import {
-    serializeSignedAccountTransactionForSubmission,
+    serializeAccountTransactionForSubmission,
     serializeSignedCredentialDeploymentDetailsForSubmission,
 } from './serialization';
 import { GtuAmount } from './types/gtuAmount';
@@ -107,7 +107,7 @@ export class JsonRpcClient {
         signatures: AccountTransactionSignature
     ): Promise<boolean> {
         const serializedAccountTransaction: Buffer = Buffer.from(
-            serializeSignedAccountTransactionForSubmission(
+            serializeAccountTransactionForSubmission(
                 accountTransaction,
                 signatures
             )

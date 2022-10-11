@@ -102,7 +102,7 @@ export function serializeAccountTransactionSignature(
  * @param signatureCount the number of signatures that will be used to sign
  * @returns the serialization of the account transaction
  */
-export function serializeAccountTransaction(
+export function serializeUnsignedAccountTransaction(
     accountTransaction: AccountTransaction,
     signatureCount: bigint
 ): Buffer {
@@ -140,7 +140,7 @@ export function serializeAccountTransaction(
  * @param signatures signatures on the signed digest of the transaction
  * @returns the serialization of the account transaction, which is used to calculate the transaction hash
  */
-export function serializeSignedAccountTransaction(
+export function serializeAccountTransaction(
     accountTransaction: AccountTransaction,
     signatures: AccountTransactionSignature
 ): Buffer {
@@ -149,7 +149,7 @@ export function serializeSignedAccountTransaction(
     );
     const serializedAccountTransactionSignatures =
         serializeAccountTransactionSignature(signatures);
-    const serializedAccountTransaction = serializeAccountTransaction(
+    const serializedAccountTransaction = serializeUnsignedAccountTransaction(
         accountTransaction,
         countSignatures(signatures)
     );
@@ -170,7 +170,7 @@ export function getAccountTransactionHash(
     accountTransaction: AccountTransaction,
     signatures: AccountTransactionSignature
 ): string {
-    const serializedAccountTransaction = serializeSignedAccountTransaction(
+    const serializedAccountTransaction = serializeAccountTransaction(
         accountTransaction,
         signatures
     );
@@ -188,7 +188,7 @@ export function getAccountTransactionSignDigest(
     signatureCount = 1n
 ): Buffer {
     return sha256([
-        serializeAccountTransaction(accountTransaction, signatureCount),
+        serializeUnsignedAccountTransaction(accountTransaction, signatureCount),
     ]);
 }
 
@@ -200,12 +200,12 @@ export function getAccountTransactionSignDigest(
  * @param signatures the signatures on the hash of the account transaction
  * @returns the serialization of the account transaction ready for being submitted to a node
  */
-export function serializeSignedAccountTransactionForSubmission(
+export function serializeAccountTransactionForSubmission(
     accountTransaction: AccountTransaction,
     signatures: AccountTransactionSignature
 ): Buffer {
     const serializedVersion = encodeWord8(0);
-    const serializedAccountTransaction = serializeSignedAccountTransaction(
+    const serializedAccountTransaction = serializeAccountTransaction(
         accountTransaction,
         signatures
     );
@@ -332,6 +332,7 @@ export function serializeCredentialDeploymentInfo(
  * Returns the digest to be signed for a credential that has been generated for
  * deployment to an existing account.
  * @param unsignedCredentialDeploymentInfo the credential information to be deployed to an existing account
+ * @param address the existing account
  * @returns the sha256 of the serialization of the unsigned credential
  */
 export function getCredentialForExistingAccountSignDigest(
@@ -355,7 +356,7 @@ export function getCredentialForExistingAccountSignDigest(
 
 /**
  * Returns the digest of the credential deployment transaction that has to be signed.
- * @param credentialDeploymentTransaction the credential deployment transaction
+ * @param credentialDeployment the credential deployment transaction
  * @returns the sha256 of the serialized unsigned credential deployment information
  */
 export function getCredentialDeploymentSignDigest(
@@ -385,7 +386,7 @@ interface DeploymentDetailsResult {
 /**
  * Gets the transaction hash that is used to look up the status of a credential
  * deployment transaction.
- * @param credentialDeploymentTransaction the transaction to hash
+ * @param credentialDeployment the transaction to hash
  * @param signatures the signatures that will also be part of the hash
  * @returns the sha256 hash of the serialized block item kind, signatures, and credential deployment transaction
  */
@@ -406,7 +407,7 @@ export function getCredentialDeploymentTransactionHash(
 /**
  * Serializes a credential deployment transaction of a new account, so that it is ready for being
  * submitted to the node.
- * @param credentialDeploymentTransaction the credenetial deployment transaction
+ * @param credentialDeployment the credenetial deployment transaction
  * @param signatures the signatures on the hash of unsigned credential deployment information
  * @returns the serialization of the credential deployment transaction ready for being submitted to a node
  */

@@ -218,6 +218,7 @@ export function deserializeReturnValue(
     contractName: string,
     functionName: string,
     schemaVersion?: number
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
     const deserializedReturnValue = wasm.deserializeReturnValue(
         returnValueBytes.toString('hex'),
@@ -230,7 +231,8 @@ export function deserializeReturnValue(
         return JSON.parse(deserializedReturnValue);
     } catch (e) {
         throw new Error(
-            'unable to deserialize state, due to: ' + deserializedReturnValue
+            'unable to deserialize the return value, due to: ' +
+                deserializedReturnValue
         ); // In this case serializedState is the error message from the rust module
     }
 }

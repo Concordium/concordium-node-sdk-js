@@ -1,15 +1,18 @@
 use crate::{helpers::*, types::*};
+use concordium_contracts_common::{
+    from_bytes,
+    schema::{ModuleV0, Type, VersionedModuleSchema},
+    Cursor,
+};
 use crypto_common::{types::TransactionTime, *};
 use dodis_yampolskiy_prf as prf;
-use pairing::bls12_381::{Bls12, G1};
-use serde_json::{from_str, Value as SerdeValue};
-use std::{collections::BTreeMap, convert::TryInto};
-use concordium_contracts_common::{from_bytes, Cursor};
-use concordium_contracts_common::schema::{Type, ModuleV0, VersionedModuleSchema};
 use hex;
 use key_derivation::{ConcordiumHdWallet, Net};
+use pairing::bls12_381::{Bls12, G1};
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
+use serde_json::{from_str, Value as SerdeValue};
 use sha2::{Digest, Sha256};
+use std::{collections::BTreeMap, convert::TryInto};
 
 type ExampleCurve = G1;
 type JsonString = String;
@@ -612,7 +615,9 @@ fn get_return_value_schema(
 ) -> Result<Type> {
     let return_value = match module_schema {
         VersionedModuleSchema::V0(_) => {
-            return Err(anyhow!("Return values are not supported V0 smart contracts."))
+            return Err(anyhow!(
+                "Return values are not supported V0 smart contracts."
+            ))
         }
         VersionedModuleSchema::V1(module_schema) => {
             let contract_schema = module_schema
@@ -657,7 +662,7 @@ pub fn deserialize_return_value_receive_aux(
     contract_name: &str,
     function_name: &str,
     schema_version: Option<u8>,
-) -> Result<JsonString>{
+) -> Result<JsonString> {
     let schema_bytes = hex::decode(schema)?;
 
     let module_schema = match from_bytes::<VersionedModuleSchema>(&schema_bytes) {
@@ -676,6 +681,6 @@ pub fn deserialize_return_value_receive_aux(
     let mut rv_cursor = Cursor::new(hex::decode(return_value_bytes)?);
     match return_value_schema.to_json(&mut rv_cursor) {
         Ok(rv) => Ok(rv.to_string()),
-        Err(_) => Err(anyhow!("Unable to parse state to json.")),
+        Err(_) => Err(anyhow!("Unable to parse return value to json.")),
     }
 }

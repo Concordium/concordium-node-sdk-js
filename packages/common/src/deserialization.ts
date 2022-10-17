@@ -202,3 +202,35 @@ export function deserializeTransaction(
             throw new Error('Invalid blockItemKind');
     }
 }
+
+/**
+ * Deserializes a return value from a sequence of bytes into a json object.
+ * @param returnValueBytes A buffer containing the return value as raw bytes.
+ * @param moduleSchema The raw module schema as a buffer.
+ * @param contractName The name of the contract where the receive function is located.
+ * @param functionName The name of the receive function whose return value you want to deserialize.
+ * @param schemaVersion The schema version as a number. This parameter is optional,
+ * if you provide a serialized versioned schema this argument won't be needed.
+ */
+export function deserializeReturnValue(
+    returnValueBytes: Buffer,
+    moduleSchema: Buffer,
+    contractName: string,
+    functionName: string,
+    schemaVersion?: number
+): any {
+    const deserializedReturnValue = wasm.deserializeReturnValue(
+        returnValueBytes.toString('hex'),
+        moduleSchema.toString('hex'),
+        contractName,
+        functionName,
+        schemaVersion
+    );
+    try {
+        return JSON.parse(deserializedReturnValue);
+    } catch (e) {
+        throw new Error(
+            'unable to deserialize state, due to: ' + deserializedReturnValue
+        ); // In this case serializedState is the error message from the rust module
+    }
+}

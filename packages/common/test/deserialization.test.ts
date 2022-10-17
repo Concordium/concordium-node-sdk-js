@@ -1,6 +1,7 @@
 import {
     deserializeContractState,
     deserializeTransaction,
+    deserializeReturnValue,
 } from '../src/deserialization';
 import { Buffer } from 'buffer/';
 import { serializeAccountTransactionForSubmission } from '../src/serialization';
@@ -121,4 +122,18 @@ test('Expired transactions can be deserialized', () => {
         payload,
         new TransactionExpiry(new Date(2000, 1), true)
     );
+});
+
+test('Return value can be deserialized', () => {
+    const returnValue = deserializeReturnValue(
+        Buffer.from('80f18c27', 'hex'),
+        Buffer.from(
+            '//8CAQAAAA8AAABDSVMyLXdDQ0QtU3RhdGUAAQAAAAoAAABnZXRCYWxhbmNlAhQAAQAAAAUAAABvd25lchUCAAAABwAAAEFjY291bnQBAQAAAAsIAAAAQ29udHJhY3QBAQAAAAwbJQAAAA==',
+            'base64'
+        ),
+        'CIS2-wCCD-State',
+        'getBalance'
+    );
+
+    expect(returnValue).toEqual('82000000');
 });

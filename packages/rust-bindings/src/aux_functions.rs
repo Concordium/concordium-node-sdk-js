@@ -4,12 +4,16 @@ use dodis_yampolskiy_prf as prf;
 use pairing::bls12_381::{Bls12, G1};
 use serde_json::{from_str, Value as SerdeValue};
 use std::{collections::BTreeMap, convert::TryInto};
-type ExampleCurve = G1;
-use concordium_contracts_common::{from_bytes, schema::ModuleV0, Cursor};
+use concordium_contracts_common::{from_bytes, Cursor};
+use concordium_contracts_common::schema::{Type, ModuleV0, VersionedModuleSchema};
 use hex;
 use key_derivation::{ConcordiumHdWallet, Net};
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use sha2::{Digest, Sha256};
+
+type ExampleCurve = G1;
+type JsonString = String;
+type HexString = String;
 
 use anyhow::{anyhow, bail, ensure, Result};
 use id::{
@@ -598,5 +602,80 @@ pub fn deserialize_state_aux(
     match state_schema.to_json(&mut state_cursor) {
         Ok(schema) => Ok(schema.to_string()),
         Err(e) => Err(anyhow!("Unable to parse state to json: {:?}", e)),
+    }
+}
+
+fn get_return_value_schema(
+    module_schema: VersionedModuleSchema,
+    contract_name: &str,
+    function_name: &str,
+) -> Result<Type> {
+    let return_value = match module_schema {
+        VersionedModuleSchema::V0(_) => {
+            return Err(anyhow!("Return values are not supported V0 smart contracts."))
+        }
+        VersionedModuleSchema::V1(module_schema) => {
+            let contract_schema = module_schema
+                .contracts
+                .get(function_name)
+                .ok_or_else(|| anyhow!("Unable to find contract inside module"))?;
+
+            let return_value = contract_schema
+                .receive
+                .get(function_name)
+                .ok_or_else(|| anyhow!("Unable to find receive schema"))?
+                .return_value();
+            match return_value {
+                Some(value) => value.clone(),
+                None => return Err(anyhow!("Given function does not return value")),
+            }
+        }
+        VersionedModuleSchema::V2(module_schema) => {
+            let contract_schema = module_schema
+                .contracts
+                .get(contract_name)
+                .ok_or_else(|| anyhow!("Unable to find contract inside module"))?;
+
+            let return_value = contract_schema
+                .receive
+                .get(function_name)
+                .ok_or_else(|| anyhow!("Unable to find receive schema"))?
+                .return_value();
+            match return_value {
+                Some(value) => value.clone(),
+                None => return Err(anyhow!("Given function does not return value")),
+            }
+        }
+    };
+
+    Ok(return_value)
+}
+
+pub fn deserialize_return_value_receive_aux(
+    return_value_bytes: HexString,
+    schema: HexString,
+    contract_name: &str,
+    function_name: &str,
+    schema_version: Option<u8>,
+) -> Result<JsonString>{
+    let schema_bytes = hex::decode(schema)?;
+
+    let module_schema = match from_bytes::<VersionedModuleSchema>(&schema_bytes) {
+        Ok(versioned) => versioned,
+        Err(_) => match schema_version {
+            Some(0) => VersionedModuleSchema::V0(from_bytes(&schema_bytes)?),
+            Some(1) => VersionedModuleSchema::V1(from_bytes(&schema_bytes)?),
+            Some(2) => VersionedModuleSchema::V2(from_bytes(&schema_bytes)?),
+            Some(_) => return Err(anyhow!("Invalid schema version")),
+            None => return Err(anyhow!("Missing schema version")),
+        },
+    };
+
+    let return_value_schema = get_return_value_schema(module_schema, contract_name, function_name)?;
+
+    let mut rv_cursor = Cursor::new(hex::decode(return_value_bytes)?);
+    match return_value_schema.to_json(&mut rv_cursor) {
+        Ok(rv) => Ok(rv.to_string()),
+        Err(_) => Err(anyhow!("Unable to parse state to json.")),
     }
 }

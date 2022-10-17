@@ -218,6 +218,7 @@ export function deserializeReturnValue(
     contractName: string,
     functionName: string,
     schemaVersion?: number
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
     const deserializedReturnValue = wasm.deserializeReturnValue(
         returnValueBytes.toString('hex'),

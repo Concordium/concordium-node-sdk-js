@@ -15,8 +15,8 @@ use sha2::{Digest, Sha256};
 use std::{collections::BTreeMap, convert::TryInto};
 
 type ExampleCurve = G1;
-type JsonString = String;
-type HexString = String;
+pub type JsonString = String;
+pub type HexString = String;
 
 use anyhow::{anyhow, bail, ensure, Result};
 use id::{
@@ -664,24 +664,158 @@ pub fn deserialize_receive_return_value_aux(
     schema_version: Option<u8>,
 ) -> Result<JsonString> {
     let schema_bytes = hex::decode(schema)?;
-
-    let module_schema = match from_bytes::<VersionedModuleSchema>(&schema_bytes) {
-        Ok(versioned) => versioned,
-        Err(_) => match schema_version {
-            Some(0) => VersionedModuleSchema::V0(from_bytes(&schema_bytes)?),
-            Some(1) => VersionedModuleSchema::V1(from_bytes(&schema_bytes)?),
-            Some(2) => VersionedModuleSchema::V2(from_bytes(&schema_bytes)?),
-            Some(_) => return Err(anyhow!("Invalid schema version")),
-            None => return Err(anyhow!("Missing schema version")),
-        },
-    };
-
-    let return_value_schema =
-        get_receive_return_value_schema(module_schema, contract_name, function_name)?;
+    let module_schema = get_versioned_schema(&schema_bytes, schema_version)?;
+    let return_value_schema = get_return_value_schema(module_schema, contract_name, function_name)?;
 
     let mut rv_cursor = Cursor::new(hex::decode(return_value_bytes)?);
     match return_value_schema.to_json(&mut rv_cursor) {
         Ok(rv) => Ok(rv.to_string()),
         Err(_) => Err(anyhow!("Unable to parse return value to json.")),
     }
+}
+
+// This function is from concordium base, it could probably be imported.
+// (https://github.com/Concordium/concordium-base/pull/238)
+fn get_receive_schema(
+    versioned_module_schema: VersionedModuleSchema,
+    contract_name: &str,
+    entrypoint_name: &str,
+) -> anyhow::Result<Type> {
+    let receive_schema = match versioned_module_schema {
+        VersionedModuleSchema::V0(module_schema) => {
+            let contract_schema = module_schema
+                .contracts
+                .get(contract_name)
+                .ok_or_else(|| anyhow::anyhow!("Unable to find contract inside module"))?;
+
+            contract_schema
+                .receive
+                .get(entrypoint_name)
+                .ok_or_else(|| anyhow::anyhow!("Unable to find receive schema"))?
+                .clone()
+        }
+        VersionedModuleSchema::V1(module_schema) => {
+            let contract_schema = module_schema
+                .contracts
+                .get(contract_name)
+                .ok_or_else(|| anyhow::anyhow!("Unable to find contract inside module"))?;
+
+            let entrypoint_parameter = contract_schema
+                .receive
+                .get(entrypoint_name)
+                .ok_or_else(|| anyhow::anyhow!("Unable to find receive schema"))?
+                .parameter();
+            match entrypoint_parameter {
+                Some(value) => value.clone(),
+                None => return Err(anyhow::anyhow!("Missing parameter for entrypoint")),
+            }
+        }
+        VersionedModuleSchema::V2(module_schema) => {
+            let contract_schema = module_schema
+                .contracts
+                .get(contract_name)
+                .ok_or_else(|| anyhow::anyhow!("Unable to find contract inside module"))?;
+
+            let entrypoint_parameter = contract_schema
+                .receive
+                .get(entrypoint_name)
+                .ok_or_else(|| anyhow::anyhow!("Unable to find receive schema"))?
+                .parameter();
+            match entrypoint_parameter {
+                Some(value) => value.clone(),
+                None => return Err(anyhow::anyhow!("Missing parameter for entrypoint")),
+            }
+        }
+    };
+    Ok(receive_schema)
+}
+
+fn get_init_param_schema(
+    versioned_module_schema: VersionedModuleSchema,
+    contract_name: &str,
+) -> anyhow::Result<Type> {
+    let receive_schema = match versioned_module_schema {
+        VersionedModuleSchema::V0(module_schema) => {
+            let contract_schema = module_schema
+                .contracts
+                .get(contract_name)
+                .ok_or_else(|| anyhow::anyhow!("Unable to find contract inside module"))?;
+
+            contract_schema
+                .init
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("Unable to find receive schema"))?
+                .clone()
+        }
+        VersionedModuleSchema::V1(module_schema) => {
+            let contract_schema = module_schema
+                .contracts
+                .get(contract_name)
+                .ok_or_else(|| anyhow::anyhow!("Unable to find contract inside module"))?;
+
+            let init_parameter = contract_schema
+                .init
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("Unable to find receive schema"))?
+                .parameter();
+            match init_parameter {
+                Some(value) => value.clone(),
+                None => return Err(anyhow::anyhow!("Missing parameter for entrypoint")),
+            }
+        }
+        VersionedModuleSchema::V2(module_schema) => {
+            let contract_schema = module_schema
+                .contracts
+                .get(contract_name)
+                .ok_or_else(|| anyhow::anyhow!("Unable to find contract inside module"))?;
+
+            let init_parameter = contract_schema
+                .init
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("Unable to find receive schema"))?
+                .parameter();
+            match init_parameter {
+                Some(value) => value.clone(),
+                None => return Err(anyhow::anyhow!("Missing parameter for entrypoint")),
+            }
+        }
+    };
+    Ok(receive_schema)
+}
+
+// Function from concordium-smart-contract-tools, should probably be moved to
+// concordium-base. Duplicated for testing.
+use crate::schema_json::write_bytes_from_json_schema_type;
+
+pub fn serialize_receive_contract_parameters_aux(
+    parameters: JsonString,
+    schema: HexString,
+    contract_name: &str,
+    function_name: &str,
+    schema_version: Option<u8>,
+) -> Result<HexString> {
+    let module_schema = get_versioned_schema(&hex::decode(schema)?, schema_version)?;
+    let parameter_type = get_receive_schema(module_schema, contract_name, function_name)?;
+    let value: SerdeValue = serde_json::from_str(&parameters)?;
+
+    let mut buf: Vec<u8> = vec![];
+    write_bytes_from_json_schema_type(&parameter_type, &value, &mut buf);
+
+    Ok(hex::encode(buf))
+}
+
+pub fn serialize_init_contract_parameters_aux(
+    parameters: JsonString,
+    schema: HexString,
+    contract_name: &str,
+    schema_version: Option<u8>,
+) -> Result<HexString> {
+    let module_schema = get_versioned_schema(&hex::decode(schema)?, schema_version)?;
+    let parameter_type = get_init_param_schema(module_schema, contract_name)?;
+    let value: SerdeValue = serde_json::from_str(&parameters)?;
+
+    let mut buf: Vec<u8> = vec![];
+    write_bytes_from_json_schema_type(&parameter_type, &value, &mut buf);
+
+    Ok(hex::encode(buf))
 }

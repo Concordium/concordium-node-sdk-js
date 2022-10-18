@@ -9,7 +9,6 @@ import {
     serializeMap,
     serializeVerifyKey,
     serializeYearMonth,
-    serializeParameters,
 } from './serializationHelpers';
 import {
     AccountTransactionHeader,
@@ -31,10 +30,6 @@ import { calculateEnergyCost } from './energyCost';
 import { countSignatures } from './util';
 import { AccountAddress } from './types/accountAddress';
 import { sha256 } from './hash';
-import {
-    deserialModuleFromBuffer,
-    getParameterType,
-} from './deserializeSchema';
 import * as wasm from '@concordium/rust-bindings';
 
 function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
@@ -450,17 +445,19 @@ export function serializeInitContractParameters(
     rawSchema: Buffer,
     schemaVersion?: SchemaVersion
 ): Buffer {
-    const schemaModule = deserialModuleFromBuffer(rawSchema, schemaVersion);
-    if (!schemaModule.value) {
+    const serializedParameters = wasm.serializeInitContractParameters(
+        JSON.stringify(parameters),
+        rawSchema.toString('hex'),
+        contractName,
+        schemaVersion
+    );
+    try {
+        return Buffer.from(serializedParameters, 'hex');
+    } catch (e) {
         throw new Error(
-            'Schema module not found. Please provide a valid schema file.'
-        );
-    } else if (!schemaModule.value[contractName]) {
-        throw new Error('Schema module does not contain specified contract');
+            'unable to deserialize state, due to: ' + serializedParameters
+        ); // In this case serializedState is the error message from the rust module
     }
-    const init = schemaModule.value[contractName].init;
-    const initType = getParameterType(init, schemaModule.v);
-    return serializeParameters(initType, parameters);
 }
 
 /**
@@ -479,21 +476,20 @@ export function serializeUpdateContractParameters(
     rawSchema: Buffer,
     schemaVersion?: SchemaVersion
 ): Buffer {
-    const schemaModule = deserialModuleFromBuffer(rawSchema, schemaVersion);
-    if (!schemaModule.value) {
-        throw new Error(
-            'Schema module not found. Please provide a valid schema file.'
-        );
-    } else if (!schemaModule.value[contractName]) {
-        throw new Error('Schema module does not contain specified contract');
-    } else if (!schemaModule.value[contractName].receive[receiveFunctionName]) {
-        throw new Error('Could not find the receive function name provided');
-    }
-    const receiveType = getParameterType(
-        schemaModule.value[contractName].receive[receiveFunctionName],
-        schemaModule.v
+    const serializedParameters = wasm.serializeReceiveContractParameters(
+        JSON.stringify(parameters),
+        rawSchema.toString('hex'),
+        contractName,
+        receiveFunctionName,
+        schemaVersion
     );
-    return serializeParameters(receiveType, parameters);
+    try {
+        return Buffer.from(serializedParameters, 'hex');
+    } catch (e) {
+        throw new Error(
+            'unable to deserialize state, due to: ' + serializedParameters
+        ); // In this case serializedState is the error message from the rust module
+    }
 }
 
 function serializeSignedCredentialDeploymentDetails(

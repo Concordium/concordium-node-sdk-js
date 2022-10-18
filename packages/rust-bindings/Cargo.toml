@@ -20,6 +20,9 @@ ed25519-dalek = {version = "=1.0.0", features = ["serde"] }
 hex = "0.4"
 sha2 = "0.9"
 either = "1.6"
+# Used by the tempoary schema_json.rs
+num-bigint = "0.4.3"
+num-traits = "0.2.15"
 
 [dependencies.id]
 path = "../../deps/concordium-base/rust-src/id"

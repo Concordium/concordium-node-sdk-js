@@ -49,12 +49,12 @@ pub fn deserialize_credential_deployment_ext(serialized: &str) -> String {
 
 #[wasm_bindgen(js_name = deserializeReturnValue)]
 pub fn deserialize_return_value_receive(
-    return_value_bytes: String,
-    module_schema: String,
+    return_value_bytes: HexString,
+    module_schema: HexString,
     contract_name: &str,
     function_name: &str,
     schema_version: Option<u8>,
-) -> String {
+) -> JsonString {
     match deserialize_return_value_receive_aux(
         return_value_bytes,
         module_schema,
@@ -62,6 +62,39 @@ pub fn deserialize_return_value_receive(
         function_name,
         schema_version,
     ) {
+        Ok(s) => s,
+        Err(e) => format!("{}", e),
+    }
+}
+
+#[wasm_bindgen(js_name = serializeReceiveContractParameters)]
+pub fn serialize_receive_contract_parameters(
+    parameters: JsonString,
+    schema: HexString,
+    contract_name: &str,
+    function_name: &str,
+    schema_version: Option<u8>,
+) -> String {
+    match serialize_receive_contract_parameters_aux(
+        parameters,
+        schema,
+        contract_name,
+        function_name,
+        schema_version,
+    ) {
+        Ok(s) => s,
+        Err(e) => format!("{}", e),
+    }
+}
+#[wasm_bindgen(js_name = serializeInitContractParameters)]
+pub fn serialize_init_contract_parameters(
+    parameters: JsonString,
+    schema: HexString,
+    contract_name: &str,
+    schema_version: Option<u8>,
+) -> String {
+    match serialize_init_contract_parameters_aux(parameters, schema, contract_name, schema_version)
+    {
         Ok(s) => s,
         Err(e) => format!("{}", e),
     }

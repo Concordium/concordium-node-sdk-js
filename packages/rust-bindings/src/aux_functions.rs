@@ -799,7 +799,7 @@ pub fn serialize_receive_contract_parameters_aux(
     let value: SerdeValue = serde_json::from_str(&parameters)?;
 
     let mut buf: Vec<u8> = vec![];
-    write_bytes_from_json_schema_type(&parameter_type, &value, &mut buf);
+    write_bytes_from_json_schema_type(&parameter_type, &value, &mut buf)?;
 
     Ok(hex::encode(buf))
 }
@@ -815,7 +815,7 @@ pub fn serialize_init_contract_parameters_aux(
     let value: SerdeValue = serde_json::from_str(&parameters)?;
 
     let mut buf: Vec<u8> = vec![];
-    write_bytes_from_json_schema_type(&parameter_type, &value, &mut buf);
+    write_bytes_from_json_schema_type(&parameter_type, &value, &mut buf)?;
 
     Ok(hex::encode(buf))
 }

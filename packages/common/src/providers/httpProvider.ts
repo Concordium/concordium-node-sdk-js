@@ -9,7 +9,12 @@ export class HttpProvider implements Provider {
     /**
      * @param internalFetch Fetch function that performs the request. Defaults to using the cross-fetch package.
      */
-    constructor(url: string, internalFetch: typeof fetch = fetch) {
+    constructor(
+        url: string,
+        internalFetch: typeof fetch = fetch,
+        setCookie: (cookie: string) => void = noOp,
+        cookie?: string
+    ) {
         this.request = async function (method, params?) {
             const request = {
                 method: method,
@@ -24,6 +29,7 @@ export class HttpProvider implements Provider {
                 body: JSONBig.stringify(request),
                 headers: {
                     'Content-Type': 'application/json',
+                    cookie: cookie,
                 },
             };
 
@@ -39,6 +45,11 @@ export class HttpProvider implements Provider {
                         `${res.status}: ${res.statusText} (id: ${json.id})`
                     );
                 }
+            }
+
+            const setCookieValue = res.headers.get('set-cookie');
+            if (setCookieValue) {
+                setCookie(setCookieValue);
             }
 
             return res.text();

@@ -51,8 +51,8 @@ export class HttpProvider implements Provider {
             }
 
             const setCookieValue = res.headers.get('set-cookie');
-            if (onSetCookie && setCookieValue) {
-                onSetCookie(setCookieValue);
+            if (setCookieValue) {
+                onSetCookie?.(setCookieValue);
                 if (autoUpdateCookie) {
                     this.updateCookie(setCookieValue);
                 }
@@ -62,7 +62,7 @@ export class HttpProvider implements Provider {
         };
     }
 
-    updateCookie(newCookie: string) {
+    updateCookie(newCookie: string): void {
         this.cookie = newCookie;
     }
 }

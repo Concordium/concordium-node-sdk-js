@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.1.0 2022-9-29
+
+### Added
+
+- Additional arguments to the JSON-RPC HttpProvider, to enable is to receive and forward cookies.
+
 ## 5.0.0 2022-9-29
 
 ### Added

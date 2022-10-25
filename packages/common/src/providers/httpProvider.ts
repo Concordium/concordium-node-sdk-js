@@ -12,7 +12,7 @@ export class HttpProvider implements Provider {
     constructor(
         url: string,
         internalFetch: typeof fetch = fetch,
-        setCookie: (cookie: string) => void = noOp,
+        setCookie?: (cookie: string) => void,
         cookie?: string
     ) {
         this.request = async function (method, params?) {
@@ -29,7 +29,7 @@ export class HttpProvider implements Provider {
                 body: JSONBig.stringify(request),
                 headers: {
                     'Content-Type': 'application/json',
-                    cookie: cookie,
+                    cookie: cookie || '',
                 },
             };
 
@@ -48,7 +48,7 @@ export class HttpProvider implements Provider {
             }
 
             const setCookieValue = res.headers.get('set-cookie');
-            if (setCookieValue) {
+            if (setCookie && setCookieValue) {
                 setCookie(setCookieValue);
             }
 

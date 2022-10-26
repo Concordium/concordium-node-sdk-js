@@ -1,7 +1,6 @@
 pub mod aux_functions;
 pub mod external_functions;
 mod helpers;
-mod schema_json;
 pub mod types;
 
 #[macro_use]

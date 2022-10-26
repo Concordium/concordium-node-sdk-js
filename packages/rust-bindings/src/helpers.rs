@@ -1,5 +1,4 @@
 use anyhow::{anyhow, Result};
-use concordium_contracts_common::{from_bytes, schema::VersionedModuleSchema};
 use crypto_common::types::KeyIndex;
 use ed25519_dalek as ed25519;
 use hex::FromHex;
@@ -35,23 +34,4 @@ pub fn try_get<A: serde::de::DeserializeOwned>(v: &SerdeValue, fname: &str) -> R
         Some(v) => Ok(from_value(v.clone())?),
         None => Err(anyhow!("Field {} not present, but should be.", fname)),
     }
-}
-
-/// Get a versioned module schema. First reads header to see if the version can
-/// be discerned, otherwise tries using provided schema_version.
-pub fn get_versioned_schema(
-    schema_bytes: &[u8],
-    schema_version: Option<u8>,
-) -> Result<VersionedModuleSchema> {
-    let module_schema = match from_bytes::<VersionedModuleSchema>(schema_bytes) {
-        Ok(versioned) => versioned,
-        Err(_) => match schema_version {
-            Some(0) => VersionedModuleSchema::V0(from_bytes(schema_bytes)?),
-            Some(1) => VersionedModuleSchema::V1(from_bytes(schema_bytes)?),
-            Some(2) => VersionedModuleSchema::V2(from_bytes(schema_bytes)?),
-            Some(_) => return Err(anyhow!("Invalid schema version")),
-            None => return Err(anyhow!("Missing schema version")),
-        },
-    };
-    Ok(module_schema)
 }

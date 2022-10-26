@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export class HttpProvider implements Provider {
     request: JsonRpcRequest;
-    cookie: string;
+    cookie?: string;
 
     /**
      * @param internalFetch Fetch function that performs the request. Defaults to using the cross-fetch package.
@@ -17,7 +17,7 @@ export class HttpProvider implements Provider {
         initialCookie?: string,
         autoUpdateCookie = true
     ) {
-        this.cookie = initialCookie || '';
+        this.cookie = initialCookie;
         this.request = async function (method, params?) {
             const request = {
                 method: method,
@@ -32,7 +32,7 @@ export class HttpProvider implements Provider {
                 body: JSONBig.stringify(request),
                 headers: {
                     'Content-Type': 'application/json',
-                    cookie: this.cookie,
+                    ...(this.cookie && { cookie: this.cookie }),
                 },
             };
 

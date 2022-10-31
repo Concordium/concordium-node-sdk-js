@@ -608,7 +608,7 @@ pub fn deserialize_state_aux(
     }
 }
 
-fn get_return_value_schema(
+fn get_receive_return_value_schema(
     module_schema: VersionedModuleSchema,
     contract_name: &str,
     function_name: &str,
@@ -656,7 +656,7 @@ fn get_return_value_schema(
     Ok(return_value)
 }
 
-pub fn deserialize_return_value_receive_aux(
+pub fn deserialize_receive_return_value_aux(
     return_value_bytes: HexString,
     schema: HexString,
     contract_name: &str,
@@ -676,7 +676,7 @@ pub fn deserialize_return_value_receive_aux(
         },
     };
 
-    let return_value_schema = get_return_value_schema(module_schema, contract_name, function_name)?;
+    let return_value_schema = get_receive_return_value_schema(module_schema, contract_name, function_name)?;
 
     let mut rv_cursor = Cursor::new(hex::decode(return_value_bytes)?);
     match return_value_schema.to_json(&mut rv_cursor) {

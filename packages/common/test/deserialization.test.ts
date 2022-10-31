@@ -1,7 +1,7 @@
 import {
     deserializeContractState,
     deserializeTransaction,
-    deserializeReturnValue,
+    deserializeReceiveReturnValue,
 } from '../src/deserialization';
 import { Buffer } from 'buffer/';
 import { serializeAccountTransactionForSubmission } from '../src/serialization';
@@ -125,7 +125,7 @@ test('Expired transactions can be deserialized', () => {
 });
 
 test('Return value can be deserialized', () => {
-    const returnValue = deserializeReturnValue(
+    const returnValue = deserializeReceiveReturnValue(
         Buffer.from('80f18c27', 'hex'),
         Buffer.from(
             '//8CAQAAAA8AAABDSVMyLXdDQ0QtU3RhdGUAAQAAAAoAAABnZXRCYWxhbmNlAhQAAQAAAAUAAABvd25lchUCAAAABwAAAEFjY291bnQBAQAAAAsIAAAAQ29udHJhY3QBAQAAAAwbJQAAAA==',

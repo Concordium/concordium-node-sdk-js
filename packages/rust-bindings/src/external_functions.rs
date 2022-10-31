@@ -47,15 +47,15 @@ pub fn deserialize_credential_deployment_ext(serialized: &str) -> String {
     }
 }
 
-#[wasm_bindgen(js_name = deserializeReturnValue)]
-pub fn deserialize_return_value_receive(
+#[wasm_bindgen(js_name = deserializeReceiveReturnValue)]
+pub fn deserialize_receive_return_value(
     return_value_bytes: String,
     module_schema: String,
     contract_name: &str,
     function_name: &str,
     schema_version: Option<u8>,
 ) -> String {
-    match deserialize_return_value_receive_aux(
+    match deserialize_receive_return_value_aux(
         return_value_bytes,
         module_schema,
         contract_name,

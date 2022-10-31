@@ -212,7 +212,7 @@ export function deserializeTransaction(
  * @param schemaVersion The schema version as a number. This parameter is optional,
  * if you provide a serialized versioned schema this argument won't be needed.
  */
-export function deserializeReturnValue(
+export function deserializeReceiveReturnValue(
     returnValueBytes: Buffer,
     moduleSchema: Buffer,
     contractName: string,
@@ -220,7 +220,7 @@ export function deserializeReturnValue(
     schemaVersion?: number
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
-    const deserializedReturnValue = wasm.deserializeReturnValue(
+    const deserializedReturnValue = wasm.deserializeReceiveReturnValue(
         returnValueBytes.toString('hex'),
         moduleSchema.toString('hex'),
         contractName,

@@ -468,6 +468,16 @@ const rawContractState = Buffer.from(stateSource); // Could be getinstanceInfo(.
 const state = deserializeContractState(contractName, schema, rawContractState);
 ```
 
+## Deserialize a receive function's return value
+The following example demonstrates how to deserialize a receive function's return value:
+
+```js
+const contractName = "my-contract-name"
+const schema = Buffer.from(schemaSource); // Load schema from file
+const rawReturnValue = Buffer.from(returnValueSource);
+const returnValue = deserializeReceiveReturnValue(contractName, schema, rawReturnValue);
+```
+
 ## Deserialize a transaction
 The following example demonstrates how to deserialize a transaction:
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.0 2022-10-27
+
+### Changed
+
+- Bumped @concordium/common-sdk to 5.1.0. (Which adds cookie support to HttpProvider)
+
 ## 2.0.0 2022-9-29
 
 ### Breaking Changes

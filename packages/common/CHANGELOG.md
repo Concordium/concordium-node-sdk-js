@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.2.0 2022-10-31
+
+### Added
+
+- The ability to deserialize the return values of receive functions using `deserializeReceiveReturnValue()`.
+
 ## 5.1.0 2022-9-29
 
 ### Added

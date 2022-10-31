@@ -124,7 +124,7 @@ test('Expired transactions can be deserialized', () => {
     );
 });
 
-test('Return value can be deserialized', () => {
+test('Receive return value can be deserialized', () => {
     const returnValue = deserializeReceiveReturnValue(
         Buffer.from('80f18c27', 'hex'),
         Buffer.from(

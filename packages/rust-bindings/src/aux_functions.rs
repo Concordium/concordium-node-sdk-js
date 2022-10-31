@@ -676,7 +676,8 @@ pub fn deserialize_receive_return_value_aux(
         },
     };
 
-    let return_value_schema = get_receive_return_value_schema(module_schema, contract_name, function_name)?;
+    let return_value_schema =
+        get_receive_return_value_schema(module_schema, contract_name, function_name)?;
 
     let mut rv_cursor = Cursor::new(hex::decode(return_value_bytes)?);
     match return_value_schema.to_json(&mut rv_cursor) {

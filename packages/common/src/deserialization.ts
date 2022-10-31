@@ -204,7 +204,7 @@ export function deserializeTransaction(
 }
 
 /**
- * Deserializes a return value from a sequence of bytes into a json object.
+ * Deserializes a receive functions's return value from a sequence of bytes into a json object.
  * @param returnValueBytes A buffer containing the return value as raw bytes.
  * @param moduleSchema The raw module schema as a buffer.
  * @param contractName The name of the contract where the receive function is located.
@@ -233,6 +233,6 @@ export function deserializeReceiveReturnValue(
         throw new Error(
             'unable to deserialize the return value, due to: ' +
                 deserializedReturnValue
-        ); // In this case serializedState is the error message from the rust module
+        ); // In this case deserializedReturnValue is the error message from the rust module
     }
 }

@@ -1,5 +1,12 @@
 # Changelog
 
+## 5.3.0 2022-10-31
+
+### Added
+
+- The ability to deserialize error values of receive and init functions using `deserializeReceiveError()` and `deserializeInitError()` respectfully.
+- Refactored the `upserializeUpdateContractParameters()` and `serializeInitContractParameters()` to call into rust functions.
+
 ## 5.2.0 2022-10-31
 
 ### Added

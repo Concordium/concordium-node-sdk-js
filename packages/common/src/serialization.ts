@@ -455,8 +455,8 @@ export function serializeInitContractParameters(
         return Buffer.from(serializedParameters, 'hex');
     } catch (e) {
         throw new Error(
-            'unable to deserialize state, due to: ' + serializedParameters
-        ); // In this case serializedState is the error message from the rust module
+            'unable to deserialize parameters, due to: ' + serializedParameters
+        ); // In this case serializedParameters is the error message from the rust module
     }
 }
 
@@ -468,6 +468,7 @@ export function serializeInitContractParameters(
  * @param schemaVersion the version of the schema provided
  * @returns serialized buffer of update contract parameters
  */
+
 export function serializeUpdateContractParameters(
     contractName: string,
     receiveFunctionName: string,
@@ -487,8 +488,8 @@ export function serializeUpdateContractParameters(
         return Buffer.from(serializedParameters, 'hex');
     } catch (e) {
         throw new Error(
-            'unable to deserialize state, due to: ' + serializedParameters
-        ); // In this case serializedState is the error message from the rust module
+            'unable to deserialize parameters, due to: ' + serializedParameters
+        ); // In this case serializedParameters is the error message from the rust module
     }
 }
 

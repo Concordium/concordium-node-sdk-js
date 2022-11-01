@@ -73,15 +73,8 @@ pub fn deserialize_receive_error(
     schema: HexString,
     contract_name: &str,
     function_name: &str,
-    schema_version: Option<u8>,
 ) -> JsonString {
-    match deserialize_receive_error_aux(
-        error_bytes,
-        schema,
-        contract_name,
-        function_name,
-        schema_version,
-    ) {
+    match deserialize_receive_error_aux(error_bytes, schema, contract_name, function_name) {
         Ok(s) => s,
         Err(e) => format!("{}", e),
     }
@@ -92,14 +85,8 @@ pub fn deserialize_init_error(
     error_bytes: HexString,
     schema: HexString,
     contract_name: &str,
-    schema_version: Option<u8>,
 ) -> JsonString {
-    match deserialize_init_error_aux(
-        error_bytes,
-        schema,
-        contract_name,
-        schema_version,
-    ) {
+    match deserialize_init_error_aux(error_bytes, schema, contract_name) {
         Ok(s) => s,
         Err(e) => format!("{}", e),
     }

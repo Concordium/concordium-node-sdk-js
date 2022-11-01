@@ -243,23 +243,19 @@ export function deserializeReceiveReturnValue(
  * @param moduleSchema The raw module schema as a buffer.
  * @param contractName The name of the contract where the receive function is located.
  * @param functionName The name of the receive function whose return value you want to deserialize.
- * @param schemaVersion The schema version as a number. This parameter is optional,
- * if you provide a serialized versioned schema this argument won't be needed.
  */
 export function deserializeReceiveError(
     errorBytes: Buffer,
     moduleSchema: Buffer,
     contractName: string,
-    functionName: string,
-    schemaVersion?: number
+    functionName: string
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
     const deserializedError = wasm.deserializeReceiveError(
         errorBytes.toString('hex'),
         moduleSchema.toString('hex'),
         contractName,
-        functionName,
-        schemaVersion
+        functionName
     );
     try {
         return JSON.parse(deserializedError);
@@ -276,21 +272,17 @@ export function deserializeReceiveError(
  * @param returnValueBytes A buffer containing the error as raw bytes.
  * @param moduleSchema The raw module schema as a buffer.
  * @param contractName The name of the contract whose init function is needed.
- * @param schemaVersion The schema version as a number. This parameter is optional,
- * if you provide a serialized versioned schema this argument won't be needed.
  */
 export function deserializeInitError(
     errorBytes: Buffer,
     moduleSchema: Buffer,
-    contractName: string,
-    schemaVersion?: number
+    contractName: string
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
     const deserializedError = wasm.deserializeInitError(
         errorBytes.toString('hex'),
         moduleSchema.toString('hex'),
-        contractName,
-        schemaVersion
+        contractName
     );
     try {
         return JSON.parse(deserializedError);

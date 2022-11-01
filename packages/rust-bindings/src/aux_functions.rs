@@ -606,8 +606,8 @@ pub fn deserialize_state_aux(
     }
 }
 
-/// Given the bytes of a receive function's return value, deserialize them to a json object,
-/// using the provided schema.
+/// Given the bytes of a receive function's return value, deserialize them to a
+/// json object, using the provided schema.
 pub fn deserialize_receive_return_value_aux(
     return_value_bytes: HexString,
     schema: HexString,
@@ -626,18 +626,16 @@ pub fn deserialize_receive_return_value_aux(
     }
 }
 
-/// Given the bytes of a receive function's error, deserialize them to a json object,
-/// using the provided schema.
+/// Given the bytes of a receive function's error, deserialize them to a json
+/// object, using the provided schema.
 pub fn deserialize_receive_error_aux(
     error_bytes: HexString,
     schema: HexString,
     contract_name: &str,
     function_name: &str,
-    schema_version: Option<u8>,
 ) -> Result<JsonString> {
-    let module_schema = get_versioned_module_schema(&hex::decode(schema)?, &schema_version)?;
-    let error_schema =
-        get_receive_error_schema(&module_schema, contract_name, function_name)?;
+    let module_schema = get_versioned_module_schema(&hex::decode(schema)?, &None)?;
+    let error_schema = get_receive_error_schema(&module_schema, contract_name, function_name)?;
 
     let mut error_cursor = Cursor::new(hex::decode(error_bytes)?);
     match error_schema.to_json(&mut error_cursor) {
@@ -646,17 +644,15 @@ pub fn deserialize_receive_error_aux(
     }
 }
 
-/// Given the bytes of an init function's error, deserialize them to a json object,
-/// using the provided schema.
+/// Given the bytes of an init function's error, deserialize them to a json
+/// object, using the provided schema.
 pub fn deserialize_init_error_aux(
     error_bytes: HexString,
     schema: HexString,
     contract_name: &str,
-    schema_version: Option<u8>,
 ) -> Result<JsonString> {
-    let module_schema = get_versioned_module_schema(&hex::decode(schema)?, &schema_version)?;
-    let error_schema =
-        get_init_error_schema(&module_schema, contract_name)?;
+    let module_schema = get_versioned_module_schema(&hex::decode(schema)?, &None)?;
+    let error_schema = get_init_error_schema(&module_schema, contract_name)?;
 
     let mut error_cursor = Cursor::new(hex::decode(error_bytes)?);
     match error_schema.to_json(&mut error_cursor) {

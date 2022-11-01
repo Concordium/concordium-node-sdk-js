@@ -2,6 +2,8 @@ import {
     deserializeContractState,
     deserializeTransaction,
     deserializeReceiveReturnValue,
+    deserializeReceiveError,
+    deserializeInitError,
 } from '../src/deserialization';
 import { Buffer } from 'buffer/';
 import { serializeAccountTransactionForSubmission } from '../src/serialization';
@@ -124,7 +126,7 @@ test('Expired transactions can be deserialized', () => {
     );
 });
 
-test('Return value can be deserialized', () => {
+test('Receive return value can be deserialized', () => {
     const returnValue = deserializeReceiveReturnValue(
         Buffer.from('80f18c27', 'hex'),
         Buffer.from(
@@ -136,4 +138,31 @@ test('Return value can be deserialized', () => {
     );
 
     expect(returnValue).toEqual('82000000');
+});
+
+test('Receive error can be deserialized', () => {
+    const error = deserializeReceiveError(
+        Buffer.from('ffff', 'hex'),
+        Buffer.from(
+            '//8CAQAAAAwAAABUZXN0Q29udHJhY3QBBAIDAQAAABAAAAByZWNlaXZlX2Z1bmN0aW9uBgYIBw==',
+            'base64'
+        ),
+        'TestContract',
+        'receive_function'
+    );
+
+    expect(error).toEqual(-1);
+});
+
+test('Init error can be deserialized', () => {
+    const error = deserializeInitError(
+        Buffer.from('0100', 'hex'),
+        Buffer.from(
+            '//8CAQAAAAwAAABUZXN0Q29udHJhY3QBBAIDAQAAABAAAAByZWNlaXZlX2Z1bmN0aW9uBgYIBw==',
+            'base64'
+        ),
+        'TestContract'
+    );
+
+    expect(error).toEqual(1);
 });

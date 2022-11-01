@@ -233,6 +233,71 @@ export function deserializeReceiveReturnValue(
         throw new Error(
             'unable to deserialize the return value, due to: ' +
                 deserializedReturnValue
-        ); // In this case serializedState is the error message from the rust module
+        ); // In this case deserializedReturnValue is the error message from the rust module
+    }
+}
+
+/**
+ * Deserializes a receive function's error from a sequence of bytes into a json object.
+ * @param errorBytes A buffer containing the error as raw bytes.
+ * @param moduleSchema The raw module schema as a buffer.
+ * @param contractName The name of the contract where the receive function is located.
+ * @param functionName The name of the receive function whose return value you want to deserialize.
+ * @param schemaVersion The schema version as a number. This parameter is optional,
+ * if you provide a serialized versioned schema this argument won't be needed.
+ */
+export function deserializeReceiveError(
+    errorBytes: Buffer,
+    moduleSchema: Buffer,
+    contractName: string,
+    functionName: string,
+    schemaVersion?: number
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): any {
+    const deserializedError = wasm.deserializeReceiveError(
+        errorBytes.toString('hex'),
+        moduleSchema.toString('hex'),
+        contractName,
+        functionName,
+        schemaVersion
+    );
+    try {
+        return JSON.parse(deserializedError);
+    } catch (e) {
+        throw new Error(
+            'unable to deserialize the error value, due to: ' +
+                deserializedError
+        ); // In this case deserializedError is the error message from the rust module
+    }
+}
+
+/**
+ * Deserializes an init functions error from a sequence of bytes into a json object.
+ * @param returnValueBytes A buffer containing the error as raw bytes.
+ * @param moduleSchema The raw module schema as a buffer.
+ * @param contractName The name of the contract whose init function is needed.
+ * @param schemaVersion The schema version as a number. This parameter is optional,
+ * if you provide a serialized versioned schema this argument won't be needed.
+ */
+export function deserializeInitError(
+    errorBytes: Buffer,
+    moduleSchema: Buffer,
+    contractName: string,
+    schemaVersion?: number
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): any {
+    const deserializedError = wasm.deserializeInitError(
+        errorBytes.toString('hex'),
+        moduleSchema.toString('hex'),
+        contractName,
+        schemaVersion
+    );
+    try {
+        return JSON.parse(deserializedError);
+    } catch (e) {
+        throw new Error(
+            'unable to deserialize the error value, due to: ' +
+                deserializedError
+        ); // In this case deserializedError is the error message from the rust module
     }
 }

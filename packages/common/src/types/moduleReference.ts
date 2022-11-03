@@ -27,7 +27,7 @@ export class ModuleReference {
         }
     }
 
-    toJSON() {
+    toJSON(): string {
         return packBufferWithWord32Length(
             Buffer.from(this.decodedModuleRef)
         ).toString('hex');

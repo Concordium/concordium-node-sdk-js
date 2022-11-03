@@ -22,7 +22,7 @@ export class CcdAmount {
         this.microCcdAmount = microCcdAmount;
     }
 
-    toJSON() {
+    toJSON(): string {
         return this.microCcdAmount.toString();
     }
 }

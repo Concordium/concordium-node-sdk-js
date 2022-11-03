@@ -15,7 +15,7 @@ export class DataBlob {
         this.data = data;
     }
 
-    toJSON() {
+    toJSON(): string {
         return packBufferWithWord16Length(this.data).toString('hex');
     }
 }

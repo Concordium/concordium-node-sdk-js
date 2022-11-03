@@ -36,7 +36,7 @@ export class CredentialRegistrationId {
         this.credId = credId;
     }
 
-    toJSON() {
+    toJSON(): string {
         return this.credId;
     }
 }

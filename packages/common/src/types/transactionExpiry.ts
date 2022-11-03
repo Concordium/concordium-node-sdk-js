@@ -31,7 +31,7 @@ export class TransactionExpiry {
         );
     }
 
-    toJSON() {
+    toJSON(): number {
         return Number(this.expiryEpochSeconds);
     }
 }

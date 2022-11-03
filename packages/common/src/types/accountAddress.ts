@@ -35,7 +35,7 @@ export class AccountAddress {
         );
     }
 
-    toJSON() {
+    toJSON(): string {
         return this.address;
     }
 }

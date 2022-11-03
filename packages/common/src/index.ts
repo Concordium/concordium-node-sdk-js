@@ -15,7 +15,7 @@ export {
 export { sha256 };
 export { CredentialRegistrationId } from './types/CredentialRegistrationId';
 export { AccountAddress } from './types/accountAddress';
-export { GtuAmount } from './types/gtuAmount';
+export { CcdAmount } from './types/ccdAmount';
 export { TransactionExpiry } from './types/transactionExpiry';
 export { DataBlob } from './types/DataBlob';
 export { ModuleReference } from './types/moduleReference';

@@ -1,4 +1,5 @@
 import { Buffer } from 'buffer/';
+import { packBufferWithWord16Length } from '../serializationHelpers';
 
 /**
  * Representation of a transfer's memo or a registerData transaction's data, which enforces that:
@@ -12,5 +13,9 @@ export class DataBlob {
             throw new Error("A data blob's size cannot exceed 256 bytes");
         }
         this.data = data;
+    }
+
+    toJSON() {
+        return packBufferWithWord16Length(this.data).toString('hex');
     }
 }

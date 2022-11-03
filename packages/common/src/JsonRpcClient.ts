@@ -22,7 +22,7 @@ import {
     serializeAccountTransactionForSubmission,
     serializeSignedCredentialDeploymentDetailsForSubmission,
 } from './serialization';
-import { GtuAmount } from './types/gtuAmount';
+import { CcdAmount } from './types/ccdAmount';
 import { ModuleReference } from './types/moduleReference';
 import {
     buildJsonResponseReviver,
@@ -195,7 +195,7 @@ export class JsonRpcClient {
 
         // TODO: Avoid code duplication with nodejs client
         const common = {
-            amount: new GtuAmount(BigInt(result.amount)),
+            amount: new CcdAmount(BigInt(result.amount)),
             sourceModule: new ModuleReference(result.sourceModule),
             owner: new AccountAddress(result.owner),
             methods: result.methods,
@@ -368,7 +368,7 @@ export class JsonRpcClient {
             ...contractContext,
             invoker,
             amount:
-                contractContext.amount && contractContext.amount.microGtuAmount,
+                contractContext.amount && contractContext.amount.microCcdAmount,
             parameter:
                 contractContext.parameter &&
                 contractContext.parameter.toString('hex'),

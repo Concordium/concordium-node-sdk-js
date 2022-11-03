@@ -30,4 +30,8 @@ export class TransactionExpiry {
             allowExpired
         );
     }
+
+    toJSON() {
+        return Number(this.expiryEpochSeconds);
+    }
 }

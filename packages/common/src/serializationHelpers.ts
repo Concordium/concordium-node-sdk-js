@@ -7,7 +7,7 @@ import {
     ParameterType,
 } from './types';
 import { AccountAddress } from './types/accountAddress';
-import { GtuAmount } from './types/gtuAmount';
+import { CcdAmount } from './types/ccdAmount';
 import {
     ArrayType,
     FieldsTag,
@@ -464,8 +464,8 @@ export function serializeParameters(
             return accountAddress.decodedAddress;
         case ParameterType.Amount:
             if (typeof userInput === 'string') {
-                const GTUAmount = new GtuAmount(BigInt(userInput));
-                return encodeWord64(GTUAmount.microGtuAmount, true);
+                const GTUAmount = new CcdAmount(BigInt(userInput));
+                return encodeWord64(GTUAmount.microCcdAmount, true);
             } else {
                 throw new Error('Amount required in string format');
             }
@@ -1081,7 +1081,7 @@ function serializeDelegationTarget(target: DelegationTarget) {
 
 export const configureDelegationSerializationSpec: SerializationSpec<ConfigureDelegationPayload> =
     {
-        stake: orUndefined((x) => encodeWord64(x.microGtuAmount)),
+        stake: orUndefined((x) => encodeWord64(x.microCcdAmount)),
         restakeEarnings: orUndefined(encodeBool),
         delegationTarget: orUndefined(serializeDelegationTarget),
     };

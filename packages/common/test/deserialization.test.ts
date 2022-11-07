@@ -1,6 +1,7 @@
 import {
     deserializeContractState,
     deserializeTransaction,
+    deserializeReceiveReturnValue,
 } from '../src/deserialization';
 import { Buffer } from 'buffer/';
 import { serializeAccountTransactionForSubmission } from '../src/serialization';
@@ -19,6 +20,7 @@ import {
     SimpleTransferWithMemoPayload,
     TransactionExpiry,
 } from '../src';
+import * as fs from 'fs';
 
 test('test that deserializeContractState works', () => {
     const state = deserializeContractState(
@@ -121,4 +123,37 @@ test('Expired transactions can be deserialized', () => {
         payload,
         new TransactionExpiry(new Date(2000, 1), true)
     );
+});
+
+test('Receive return value can be deserialized', () => {
+    const returnValue = deserializeReceiveReturnValue(
+        Buffer.from('80f18c27', 'hex'),
+        Buffer.from(
+            '//8CAQAAAA8AAABDSVMyLXdDQ0QtU3RhdGUAAQAAAAoAAABnZXRCYWxhbmNlAhQAAQAAAAUAAABvd25lchUCAAAABwAAAEFjY291bnQBAQAAAAsIAAAAQ29udHJhY3QBAQAAAAwbJQAAAA==',
+            'base64'
+        ),
+        'CIS2-wCCD-State',
+        'getBalance'
+    );
+
+    expect(returnValue).toEqual('82000000');
+});
+
+test('Return value can be deserialized - auction', () => {
+    const returnValue = deserializeReceiveReturnValue(
+        Buffer.from(
+            '00000b0000004120676f6f64206974656d00a4fbca84010000',
+            'hex'
+        ),
+        Buffer.from(
+            fs.readFileSync('./test/resources/auction-with-errors-schema.bin')
+        ),
+        'auction',
+        'view'
+    );
+
+    expect(returnValue.item).toEqual('A good item');
+    expect(returnValue.end).toEqual('2022-12-01T00:00:00+00:00');
+    expect(returnValue.auction_state).toHaveProperty('NotSoldYet');
+    expect(returnValue.highest_bidder).toHaveProperty('None');
 });

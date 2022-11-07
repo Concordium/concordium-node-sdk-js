@@ -7,6 +7,7 @@ import {
     BlockHashInput,
     BlockHash,
 } from '../grpc/v2/concordium/types_pb';
+import { CryptographicParameters as CryptographicParametersJS } from '@concordium/common-sdk';
 /**
  * A concordium-node specific gRPC client wrapper.
  *
@@ -65,22 +66,23 @@ export default class ConcordiumNodeClient {
      */
     async getCryptographicParameters(
         blockHash?: string
-    ): Promise<CryptographicParameters> {
+    ): Promise<CryptographicParametersJS> {
         const blockHashInput = new BlockHashInput();
         if (blockHash) {
-            const b = new BlockHash();
-            b.setValue(blockHash);
-            blockHashInput.setGiven(b);
+            blockHashInput.setGiven(new BlockHash().setValue(blockHash));
         } else {
             blockHashInput.setLastFinal(new Empty());
         }
-
         const response = await this.sendRequest<
             BlockHashInput,
             CryptographicParameters
         >(this.client.getCryptographicParameters, blockHashInput);
 
-        return response;
+        return {
+            genesisString: response.getGenesisString(),
+            bulletproofGenerators: response.getBulletproofGenerators_asB64(),
+            onChainCommitmentKey: response.getOnChainCommitmentKey_asB64(),
+        };
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -107,7 +109,7 @@ export default class ConcordiumNodeClient {
                         if (err) {
                             return reject(err);
                         }
-                        return resolve(response.serializeBinary());
+                        return resolve(response);
                     }
                 );
             });

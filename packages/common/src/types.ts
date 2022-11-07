@@ -1173,7 +1173,7 @@ export interface DeployModulePayload {
 }
 
 export interface InitContractPayload {
-    /** µGTU amount to transfer */
+    /** µCCD amount to transfer */
     amount: CcdAmount;
 
     /** Hash of the module on chain */
@@ -1191,7 +1191,7 @@ export interface InitContractPayload {
 }
 
 export interface UpdateContractPayload {
-    /** µGTU amount to transfer */
+    /** µCCD amount to transfer */
     amount: CcdAmount;
 
     /** Address of contract instance consisting of an index and a subindex */
@@ -1223,7 +1223,7 @@ export interface AccountTransactionHeader {
 }
 
 export interface SimpleTransferPayload {
-    /** µGTU amount to transfer */
+    /** µCCD amount to transfer */
     amount: CcdAmount;
 
     /** the recipient of the transfer */
@@ -1312,7 +1312,7 @@ export enum ParameterType {
     I32,
     /** Signed 64-bit integer. */
     I64,
-    /** Token amount in microGTU (10^-6 GTU). */
+    /** Token amount in microCCD (10^-6 GTU). */
     Amount,
     /** Sender account address. */
     AccountAddress,

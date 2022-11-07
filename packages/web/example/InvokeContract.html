@@ -7,7 +7,7 @@
         <script  type="module" >
          const client = new concordiumSDK.JsonRpcClient(new concordiumSDK.HttpProvider("http://localhost:9095"));
          const update = function () {
-             client.invokeContract({ contract: { index: BigInt(index.value), subindex: 0n}, method: method.value, amount: new concordiumSDK.GtuAmount(BigInt(amount.value))}).then((res) => {
+             client.invokeContract({ contract: { index: BigInt(index.value), subindex: 0n}, method: method.value, amount: new concordiumSDK.CcdAmount(BigInt(amount.value))}).then((res) => {
                  console.log(res);
                  document.getElementById('result').innerHTML = res.tag;
                  errorBox.hidden = true;

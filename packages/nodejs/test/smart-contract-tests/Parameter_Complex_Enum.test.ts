@@ -6,7 +6,7 @@ import {
     InitContractPayload,
     getAccountTransactionSignDigest,
     AccountAddress,
-    GtuAmount,
+    CcdAmount,
     TransactionExpiry,
     ModuleReference,
     serializeInitContractParameters,
@@ -51,7 +51,7 @@ test('Parameter of Enum with the wrong private key', async () => {
     const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {
-        amount: new GtuAmount(0n),
+        amount: new CcdAmount(0n),
         moduleRef: new ModuleReference(
             '4782598aac67f1b8afbcd64c6b4a676e08b434e68c2f0b70828849e493e9f2ce'
         ),

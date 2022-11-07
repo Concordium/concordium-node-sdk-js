@@ -464,8 +464,8 @@ export function serializeParameters(
             return accountAddress.decodedAddress;
         case ParameterType.Amount:
             if (typeof userInput === 'string') {
-                const GTUAmount = new CcdAmount(BigInt(userInput));
-                return encodeWord64(GTUAmount.microCcdAmount, true);
+                const amount = new CcdAmount(BigInt(userInput));
+                return encodeWord64(amount.microCcdAmount, true);
             } else {
                 throw new Error('Amount required in string format');
             }

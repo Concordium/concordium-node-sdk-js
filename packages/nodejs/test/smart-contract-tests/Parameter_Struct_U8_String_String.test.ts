@@ -6,7 +6,7 @@ import {
     InitContractPayload,
     getAccountTransactionSignDigest,
     AccountAddress,
-    GtuAmount,
+    CcdAmount,
     TransactionExpiry,
     ModuleReference,
     serializeInitContractParameters,
@@ -53,7 +53,7 @@ test('Parameter of Struct (U8, string, string variables) with the wrong private 
     const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {
-        amount: new GtuAmount(0n),
+        amount: new CcdAmount(0n),
         moduleRef: new ModuleReference(
             '8e4222c5e7d7a2f950aac1f8073b35d43a8ee11108e52534470a70c57aa6f780'
         ),

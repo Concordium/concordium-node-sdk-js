@@ -236,7 +236,7 @@ export class JsonRpcClient {
      * @returns the account info for the provided account address, undefined is the account does not exist
      */
     async getAccountInfo(
-        accountAddress: AccountAddress | CredentialRegistrationId,
+        accountAddress: string | AccountAddress | CredentialRegistrationId,
         blockHash?: string
     ): Promise<AccountInfo | undefined> {
         if (!blockHash) {
@@ -246,10 +246,16 @@ export class JsonRpcClient {
             throw new Error('The input was not a valid hash: ' + blockHash);
         }
 
-        const address =
-            accountAddress instanceof AccountAddress
-                ? accountAddress.address
-                : accountAddress.credId;
+        let address: string;
+        if (typeof accountAddress === 'string') {
+            address = accountAddress;
+        } else if ('address' in accountAddress) {
+            address = accountAddress.address;
+        } else if ('credId' in accountAddress) {
+            address = accountAddress.credId;
+        } else {
+            throw new Error('Invalid accountAddress input');
+        }
 
         const response = await this.provider.request('getAccountInfo', {
             blockHash,

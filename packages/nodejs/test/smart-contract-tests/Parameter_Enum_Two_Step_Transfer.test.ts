@@ -8,7 +8,7 @@ import {
     getAccountTransactionSignDigest,
     serializeUpdateContractParameters,
     AccountAddress,
-    GtuAmount,
+    CcdAmount,
     TransactionExpiry,
 } from '@concordium/common-sdk';
 import * as ed from '@noble/ed25519';
@@ -63,7 +63,7 @@ test('Parameter of Enum with the wrong private key', async () => {
     } as ContractAddress;
 
     const initModule: UpdateContractPayload = {
-        amount: new GtuAmount(10000n),
+        amount: new CcdAmount(10000n),
         contractAddress: contractAddress,
         contractName: contractName,
         receiveName: receiveName,

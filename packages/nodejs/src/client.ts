@@ -64,7 +64,7 @@ import {
     PassiveDelegationStatusDetails,
     ContractContext,
     InvokeContractResult,
-    GtuAmount,
+    CcdAmount,
     ModuleReference,
     ReduceStakePendingChangeV1,
     buildInvoker,
@@ -627,7 +627,7 @@ export default class ConcordiumNodeClient {
         const result = unwrapJsonResponse<InstanceInfoSerialized>(response);
         if (result !== undefined) {
             const common = {
-                amount: new GtuAmount(BigInt(result.amount)),
+                amount: new CcdAmount(BigInt(result.amount)),
                 sourceModule: new ModuleReference(result.sourceModule),
                 owner: new Address(result.owner),
                 methods: result.methods,
@@ -854,7 +854,7 @@ export default class ConcordiumNodeClient {
                     },
                     amount:
                         contractContext.amount &&
-                        contractContext.amount.microGtuAmount.toString(),
+                        contractContext.amount.microCcdAmount.toString(),
                     method: contractContext.method,
                     parameter:
                         contractContext.parameter &&

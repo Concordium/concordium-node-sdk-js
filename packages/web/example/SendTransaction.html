@@ -8,7 +8,7 @@
          const client = new concordiumSDK.JsonRpcClient(new concordiumSDK.HttpProvider("http://localhost:9095"));
          const send = async function () {
              const payload = {
-                 amount: new concordiumSDK.GtuAmount(BigInt(amount.value)),
+                 amount: new concordiumSDK.CcdAmount(BigInt(amount.value)),
                  toAddress: new concordiumSDK.AccountAddress(receiver.value),
              };
 

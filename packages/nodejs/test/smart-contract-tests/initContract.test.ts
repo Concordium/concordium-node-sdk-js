@@ -6,7 +6,7 @@ import {
     InitContractPayload,
     getAccountTransactionSignDigest,
     AccountAddress,
-    GtuAmount,
+    CcdAmount,
     TransactionExpiry,
     ModuleReference,
 } from '@concordium/common-sdk';
@@ -38,7 +38,7 @@ test('init contract with the wrong private key', async () => {
     const maxContractExecutionEnergy = 300000n;
 
     const initModule: InitContractPayload = {
-        amount: new GtuAmount(0n),
+        amount: new CcdAmount(0n),
         moduleRef: new ModuleReference(
             'e51d9f9329f103faa18b1c99335281204df9e3eec23d7138f69ddd17fd63e9d0'
         ),

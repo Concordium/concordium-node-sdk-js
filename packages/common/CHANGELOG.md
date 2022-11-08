@@ -1,10 +1,18 @@
 # Changelog
 
-## 5.2.0 2022-10-31
+## 6.0.0 2022-11-11
 
+### Breaking changes
+
+- Change AccountTransactionType names/string values to align with those in Concordium base.
+- Change some field names in UpdateConcractPayload, InitContractPayload and DeployModule to align with those in Concordium base.
+- Rename GtuAmount class to CcdAmount. And change the microGtuAmount field to microCcdAmount.
+- Add custom toJSON methods for the classes CcdAmount, AccountAddress, ModuleReference, CredentialRegistrationId, DataBlob and TransactionExpiry, in order to match the serialisation of their equivalents in Concordium base.
+  
 ### Added
 
 - The ability to deserialize the return values of receive functions using `deserializeReceiveReturnValue()`.
+
 
 ## 5.1.0 2022-9-29
 

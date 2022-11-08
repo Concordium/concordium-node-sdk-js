@@ -1,4 +1,5 @@
 import { Buffer } from 'buffer/';
+import { packBufferWithWord32Length } from '../serializationHelpers';
 
 /**
  * Representation of a module reference, which enforces that it:
@@ -24,5 +25,11 @@ export class ModuleReference {
         } catch (error) {
             throw error;
         }
+    }
+
+    toJSON(): string {
+        return packBufferWithWord32Length(
+            Buffer.from(this.decodedModuleRef)
+        ).toString('hex');
     }
 }

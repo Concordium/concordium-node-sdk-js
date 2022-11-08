@@ -6,7 +6,7 @@ import {
     InitContractPayload,
     getAccountTransactionSignDigest,
     AccountAddress,
-    GtuAmount,
+    CcdAmount,
     TransactionExpiry,
     ModuleReference,
     serializeInitContractParameters,
@@ -49,7 +49,7 @@ test('Parameter of Bool with the wrong private key', async () => {
     const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {
-        amount: new GtuAmount(0n),
+        amount: new CcdAmount(0n),
         moduleRef: new ModuleReference(
             '3e553405f26906eb1f9f334bb648bd7112a6bdf18943b616c9b3110ce3c0b372'
         ),

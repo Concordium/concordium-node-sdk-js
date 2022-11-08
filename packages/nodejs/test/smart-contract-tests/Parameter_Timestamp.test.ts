@@ -6,7 +6,7 @@ import {
     InitContractPayload,
     getAccountTransactionSignDigest,
     AccountAddress,
-    GtuAmount,
+    CcdAmount,
     TransactionExpiry,
     ModuleReference,
     serializeInitContractParameters,
@@ -49,7 +49,7 @@ test('Parameter of Timestamp with the wrong private key', async () => {
     const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {
-        amount: new GtuAmount(0n),
+        amount: new CcdAmount(0n),
         moduleRef: new ModuleReference(
             '8d86af90f478a313529410c60df0d4f243fabb8061e5537f62344fe44203cb12'
         ),

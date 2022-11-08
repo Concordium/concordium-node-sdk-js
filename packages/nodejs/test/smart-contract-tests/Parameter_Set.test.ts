@@ -6,7 +6,7 @@ import {
     InitContractPayload,
     getAccountTransactionSignDigest,
     AccountAddress,
-    GtuAmount,
+    CcdAmount,
     TransactionExpiry,
     ModuleReference,
     serializeInitContractParameters,
@@ -49,7 +49,7 @@ test('Parameter of Set with the wrong private key', async () => {
     const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {
-        amount: new GtuAmount(0n),
+        amount: new CcdAmount(0n),
         moduleRef: new ModuleReference(
             '1ad412d228edc8d870f0bc505e5bf0e4ccb144217b1a7f1317dc140c5fae23c0'
         ),

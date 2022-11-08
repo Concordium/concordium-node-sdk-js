@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.0 2022-11-8
+
+### Added
+
+- `deserializeReceiveReturnValue`.
+
 ## 0.5.0
 
 - Add `getCredentialId` method for the HdWallet.

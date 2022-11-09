@@ -31,6 +31,7 @@ export { isAlias, getAlias } from './alias';
 export {
     deserializeContractState,
     deserializeTransaction,
+    deserializeReceiveReturnValue,
 } from './deserialization';
 
 export * from './signHelpers';

@@ -14,7 +14,7 @@ import {
     AccountTransactionType,
     BlockItemKind,
     DataBlob,
-    GtuAmount,
+    CcdAmount,
     RegisterDataPayload,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
@@ -76,27 +76,24 @@ function deserializeAccountTransactionBase(
 
 test('test deserialize simpleTransfer ', () => {
     const payload: SimpleTransferPayload = {
-        amount: new GtuAmount(5100000n),
+        amount: new CcdAmount(5100000n),
         toAddress: new AccountAddress(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
     };
-    deserializeAccountTransactionBase(
-        AccountTransactionType.SimpleTransfer,
-        payload
-    );
+    deserializeAccountTransactionBase(AccountTransactionType.Transfer, payload);
 });
 
 test('test deserialize simpleTransfer with memo ', () => {
     const payload: SimpleTransferWithMemoPayload = {
-        amount: new GtuAmount(5100000n),
+        amount: new CcdAmount(5100000n),
         toAddress: new AccountAddress(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
         memo: new DataBlob(Buffer.from('00', 'hex')),
     };
     deserializeAccountTransactionBase(
-        AccountTransactionType.SimpleTransferWithMemo,
+        AccountTransactionType.TransferWithMemo,
         payload
     );
 });
@@ -113,13 +110,13 @@ test('test deserialize registerData ', () => {
 
 test('Expired transactions can be deserialized', () => {
     const payload: SimpleTransferPayload = {
-        amount: new GtuAmount(5100000n),
+        amount: new CcdAmount(5100000n),
         toAddress: new AccountAddress(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
     };
     deserializeAccountTransactionBase(
-        AccountTransactionType.SimpleTransfer,
+        AccountTransactionType.Transfer,
         payload,
         new TransactionExpiry(new Date(2000, 1), true)
     );

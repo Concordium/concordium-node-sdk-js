@@ -1,5 +1,5 @@
 import { AccountAddress } from './types/accountAddress';
-import { GtuAmount } from './types/gtuAmount';
+import { CcdAmount } from './types/ccdAmount';
 import { DataBlob } from './types/DataBlob';
 import { TransactionExpiry } from './types/transactionExpiry';
 import { Buffer } from 'buffer/';
@@ -1136,23 +1136,23 @@ export enum BlockItemKind {
  */
 export enum AccountTransactionType {
     DeployModule = 0,
-    InitializeSmartContractInstance = 1,
-    UpdateSmartContractInstance = 2,
-    SimpleTransfer = 3,
+    InitContract = 1,
+    Update = 2,
+    Transfer = 3,
     AddBaker = 4,
     RemoveBaker = 5,
     UpdateBakerStake = 6,
     UpdateBakerRestakeEarnings = 7,
     UpdateBakerKeys = 8,
     UpdateCredentialKeys = 13,
-    EncryptedTransfer = 16,
+    EncryptedAmountTransfer = 16,
     TransferToEncrypted = 17,
     TransferToPublic = 18,
     TransferWithSchedule = 19,
     UpdateCredentials = 20,
     RegisterData = 21,
-    SimpleTransferWithMemo = 22,
-    EncryptedTransferWithMemo = 23,
+    TransferWithMemo = 22,
+    EncryptedAmountTransferWithMemo = 23,
     TransferWithScheduleWithMemo = 24,
     ConfigureBaker = 25,
     ConfigureDelegation = 26,
@@ -1169,21 +1169,21 @@ export interface DeployModulePayload {
     version?: number;
 
     /** Wasm module to be deployed */
-    content: Buffer;
+    source: Buffer;
 }
 
 export interface InitContractPayload {
-    /** µGTU amount to transfer */
-    amount: GtuAmount;
+    /** µCCD amount to transfer */
+    amount: CcdAmount;
 
     /** Hash of the module on chain */
     moduleRef: ModuleReference;
 
     /** Name of the contract */
-    contractName: string;
+    initName: string;
 
     /** Parameters for the init function */
-    parameter: Buffer;
+    param: Buffer;
 
     /** The amount of energy that can be used for contract execution.
     The base energy amount for transaction verification will be added to this cost.*/
@@ -1191,17 +1191,17 @@ export interface InitContractPayload {
 }
 
 export interface UpdateContractPayload {
-    /** µGTU amount to transfer */
-    amount: GtuAmount;
+    /** µCCD amount to transfer */
+    amount: CcdAmount;
 
     /** Address of contract instance consisting of an index and a subindex */
-    contractAddress: ContractAddress;
+    address: ContractAddress;
 
     /** Name of receive function including <contractName>. prefix */
     receiveName: string;
 
     /** Parameters for the update function */
-    parameter: Buffer;
+    message: Buffer;
 
     /** The amount of energy that can be used for contract execution.
     The base energy amount for transaction verification will be added to this cost.*/
@@ -1223,8 +1223,8 @@ export interface AccountTransactionHeader {
 }
 
 export interface SimpleTransferPayload {
-    /** µGTU amount to transfer */
-    amount: GtuAmount;
+    /** µCCD amount to transfer */
+    amount: CcdAmount;
 
     /** the recipient of the transfer */
     toAddress: AccountAddress;
@@ -1268,7 +1268,7 @@ export interface UpdateCredentialsPayload {
 
 export interface ConfigureDelegationPayload {
     /* stake to delegate. if set to 0, this removes the account as a delegator */
-    stake?: GtuAmount;
+    stake?: CcdAmount;
     /* should earnings from delegation be added to staked amount  */
     restakeEarnings?: boolean;
     /* determines if the account should use passive delegation, or which specific baker to delegate to  */
@@ -1312,7 +1312,7 @@ export enum ParameterType {
     I32,
     /** Signed 64-bit integer. */
     I64,
-    /** Token amount in microGTU (10^-6 GTU). */
+    /** Token amount in microCCD (10^-6 GTU). */
     Amount,
     /** Sender account address. */
     AccountAddress,
@@ -1358,7 +1358,7 @@ export enum ParameterType {
 
 export interface InstanceInfoCommon {
     version: number;
-    amount: GtuAmount;
+    amount: CcdAmount;
     sourceModule: ModuleReference;
     owner: AccountAddress;
     methods: string[];
@@ -1410,7 +1410,7 @@ export type InstanceInfoSerialized =
 export interface ContractContext {
     invoker?: ContractAddress | AccountAddress;
     contract: ContractAddress;
-    amount?: GtuAmount;
+    amount?: CcdAmount;
     method: string;
     parameter?: Buffer;
     energy?: bigint;

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { Buffer } from 'buffer/';
 import { AccountAddress } from '../src/types/accountAddress';
-import { GtuAmount } from '../src/types/gtuAmount';
+import { CcdAmount } from '../src/types/ccdAmount';
 import {
     serializeAccountTransactionForSubmission,
     serializeAccountTransactionSignature,
@@ -26,7 +26,7 @@ import { SizeLength } from '../src/deserializeSchema';
 
 test('fail account transaction serialization if no signatures', () => {
     const simpleTransferPayload: SimpleTransferPayload = {
-        amount: new GtuAmount(5100000n),
+        amount: new CcdAmount(5100000n),
         toAddress: new AccountAddress(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
@@ -43,7 +43,7 @@ test('fail account transaction serialization if no signatures', () => {
     const simpleTransferAccountTransaction: AccountTransaction = {
         header: header,
         payload: simpleTransferPayload,
-        type: AccountTransactionType.SimpleTransfer,
+        type: AccountTransactionType.Transfer,
     };
 
     expect(() =>

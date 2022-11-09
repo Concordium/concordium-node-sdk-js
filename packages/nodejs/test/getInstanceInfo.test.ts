@@ -1,7 +1,7 @@
 import {
     AccountAddress,
     ContractAddress,
-    GtuAmount,
+    CcdAmount,
     isInstanceInfoV0,
     ModuleReference,
 } from '@concordium/common-sdk';
@@ -32,7 +32,7 @@ test('retrieve information about a given smart contract instance', async () => {
 
     return Promise.all([
         expect(instanceInfo).not.toBe(null),
-        expect(instanceInfo.amount).toStrictEqual(new GtuAmount(0n)),
+        expect(instanceInfo.amount).toStrictEqual(new CcdAmount(0n)),
         expect(instanceInfo.methods).toStrictEqual([
             'INDBankU81.insertAmount',
             'INDBankU81.smashAmount',

@@ -8,7 +8,7 @@ import {
     getAccountTransactionSignDigest,
     serializeUpdateContractParameters,
     AccountAddress,
-    GtuAmount,
+    CcdAmount,
     TransactionExpiry,
 } from '@concordium/common-sdk';
 import * as ed from '@noble/ed25519';
@@ -35,9 +35,9 @@ test('Parameter of Enum with the wrong private key', async () => {
     };
 
     enum DCBBankState {
-        /// Alive and well, allows for GTU to be inserted.
+        /// Alive and well, allows for CCD to be inserted.
         Intact = 1,
-        /// The dcb bank has been emptied, preventing further GTU to be inserted.
+        /// The dcb bank has been emptied, preventing further CCD to be inserted.
         Smashed,
     }
 
@@ -64,7 +64,7 @@ test('Parameter of Enum with the wrong private key', async () => {
     } as ContractAddress;
 
     const initModule: UpdateContractPayload = {
-        amount: new GtuAmount(0n),
+        amount: new CcdAmount(0n),
         contractAddress: contractAddress,
         contractName: contractName,
         receiveName: receiveName,

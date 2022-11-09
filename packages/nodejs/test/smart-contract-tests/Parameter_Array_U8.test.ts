@@ -7,7 +7,7 @@ import {
     getAccountTransactionSignDigest,
     serializeInitContractParameters,
     AccountAddress,
-    GtuAmount,
+    CcdAmount,
     TransactionExpiry,
     ModuleReference,
 } from '@concordium/common-sdk';
@@ -47,7 +47,7 @@ test('Parameter of Array of U8 with the wrong private key', async () => {
     const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {
-        amount: new GtuAmount(0n),
+        amount: new CcdAmount(0n),
         moduleRef: new ModuleReference(
             'd883ce0619ff08711dea54f48acda749db62ace27d8dcc5eddc3796d5ebb5688'
         ),

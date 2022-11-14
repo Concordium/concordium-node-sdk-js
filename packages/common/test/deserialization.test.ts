@@ -138,6 +138,25 @@ test('Receive return value can be deserialized', () => {
     expect(returnValue).toEqual('82000000');
 });
 
+test('Return value can be deserialized - auction', () => {
+    const returnValue = deserializeReceiveReturnValue(
+        Buffer.from(
+            '00000b0000004120676f6f64206974656d00a4fbca84010000',
+            'hex'
+        ),
+        Buffer.from(
+            fs.readFileSync('./test/resources/auction-with-errors-schema.bin')
+        ),
+        'auction',
+        'view'
+    );
+
+    expect(returnValue.item).toEqual('A good item');
+    expect(returnValue.end).toEqual('2022-12-01T00:00:00+00:00');
+    expect(returnValue.auction_state).toHaveProperty('NotSoldYet');
+    expect(returnValue.highest_bidder).toHaveProperty('None');
+});
+
 test('Receive error can be deserialized', () => {
     const error = deserializeReceiveError(
         Buffer.from('ffff', 'hex'),
@@ -163,22 +182,4 @@ test('Init error can be deserialized', () => {
     );
 
     expect(error).toEqual(1);
-
-test('Return value can be deserialized - auction', () => {
-    const returnValue = deserializeReceiveReturnValue(
-        Buffer.from(
-            '00000b0000004120676f6f64206974656d00a4fbca84010000',
-            'hex'
-        ),
-        Buffer.from(
-            fs.readFileSync('./test/resources/auction-with-errors-schema.bin')
-        ),
-        'auction',
-        'view'
-    );
-
-    expect(returnValue.item).toEqual('A good item');
-    expect(returnValue.end).toEqual('2022-12-01T00:00:00+00:00');
-    expect(returnValue.auction_state).toHaveProperty('NotSoldYet');
-    expect(returnValue.highest_bidder).toHaveProperty('None');
 });

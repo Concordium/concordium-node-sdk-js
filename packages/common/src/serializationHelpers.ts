@@ -5,8 +5,6 @@ import {
     DelegationTarget,
     DelegationTargetType,
 } from './types';
-import { AccountAddress } from './types/accountAddress';
-import { CcdAmount } from './types/ccdAmount';
 import {
     SizeLength,
     ULeb128Type,

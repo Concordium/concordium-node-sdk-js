@@ -1,6 +1,6 @@
 use crate::{helpers::*, types::*};
 use concordium_contracts_common::{
-    from_bytes, schema::ModuleV0, schema_json::*, versioned_schema_helpers::*, Cursor,
+    from_bytes, schema::{ModuleV0, VersionedModuleSchema, Type}, Cursor,
 };
 use crypto_common::{types::TransactionTime, *};
 use dodis_yampolskiy_prf as prf;
@@ -615,9 +615,9 @@ pub fn deserialize_receive_return_value_aux(
     function_name: &str,
     schema_version: Option<u8>,
 ) -> Result<JsonString> {
-    let module_schema = get_versioned_module_schema(&hex::decode(schema)?, &schema_version)?;
+    let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &schema_version)?;
     let return_value_schema =
-        get_receive_return_value_schema(&module_schema, contract_name, function_name)?;
+        module_schema.get_receive_return_value_schema(contract_name, function_name)?;
 
     let mut rv_cursor = Cursor::new(hex::decode(return_value_bytes)?);
     match return_value_schema.to_json(&mut rv_cursor) {
@@ -634,8 +634,8 @@ pub fn deserialize_receive_error_aux(
     contract_name: &str,
     function_name: &str,
 ) -> Result<JsonString> {
-    let module_schema = get_versioned_module_schema(&hex::decode(schema)?, &None)?;
-    let error_schema = get_receive_error_schema(&module_schema, contract_name, function_name)?;
+    let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &None)?;
+    let error_schema = module_schema.get_receive_error_schema(contract_name, function_name)?;
 
     let mut error_cursor = Cursor::new(hex::decode(error_bytes)?);
     match error_schema.to_json(&mut error_cursor) {
@@ -651,8 +651,8 @@ pub fn deserialize_init_error_aux(
     schema: HexString,
     contract_name: &str,
 ) -> Result<JsonString> {
-    let module_schema = get_versioned_module_schema(&hex::decode(schema)?, &None)?;
-    let error_schema = get_init_error_schema(&module_schema, contract_name)?;
+    let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &None)?;
+    let error_schema = module_schema.get_init_error_schema(contract_name)?;
 
     let mut error_cursor = Cursor::new(hex::decode(error_bytes)?);
     match error_schema.to_json(&mut error_cursor) {
@@ -670,12 +670,12 @@ pub fn serialize_receive_contract_parameters_aux(
     function_name: &str,
     schema_version: Option<u8>,
 ) -> Result<HexString> {
-    let module_schema = get_versioned_module_schema(&hex::decode(schema)?, &schema_version)?;
-    let parameter_type = get_receive_param_schema(&module_schema, contract_name, function_name)?;
+    let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &schema_version)?;
+    let parameter_type = module_schema.get_receive_param_schema(contract_name, function_name)?;
     let value: SerdeValue = serde_json::from_str(&parameters)?;
 
     let mut buf: Vec<u8> = vec![];
-    write_bytes_from_json_schema_type(&parameter_type, &value, &mut buf)?;
+    Type::write_bytes_from_json_schema_type(&parameter_type, &value, &mut buf)?;
 
     Ok(hex::encode(buf))
 }
@@ -688,12 +688,12 @@ pub fn serialize_init_contract_parameters_aux(
     contract_name: &str,
     schema_version: Option<u8>,
 ) -> Result<HexString> {
-    let module_schema = get_versioned_module_schema(&hex::decode(schema)?, &schema_version)?;
-    let parameter_type = get_init_param_schema(&module_schema, contract_name)?;
+    let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &schema_version)?;
+    let parameter_type = module_schema.get_init_param_schema(contract_name)?;
     let value: SerdeValue = serde_json::from_str(&parameters)?;
 
     let mut buf: Vec<u8> = vec![];
-    write_bytes_from_json_schema_type(&parameter_type, &value, &mut buf)?;
+    Type::write_bytes_from_json_schema_type(&parameter_type, &value, &mut buf)?;
 
     Ok(hex::encode(buf))
 }

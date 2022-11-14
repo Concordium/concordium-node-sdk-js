@@ -1,6 +1,6 @@
 {
     "name": "@concordium/web-sdk",
-    "version": "2.1.0",
+    "version": "3.0.0",
     "license": "Apache-2.0",
     "browser": "lib/concordium.min.js",
     "types": "lib/index.d.ts",
@@ -48,8 +48,8 @@
         "webpack-cli": "^4.9.2"
     },
     "dependencies": {
-        "@concordium/common-sdk": "5.1.0",
-        "@concordium/rust-bindings": "0.5.0",
+        "@concordium/common-sdk": "6.0.0",
+        "@concordium/rust-bindings": "0.6.0",
         "buffer": "^6.0.3",
         "process": "^0.11.10"
     },

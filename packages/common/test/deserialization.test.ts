@@ -16,12 +16,13 @@ import {
     AccountTransactionType,
     BlockItemKind,
     DataBlob,
-    GtuAmount,
+    CcdAmount,
     RegisterDataPayload,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
     TransactionExpiry,
 } from '../src';
+import * as fs from 'fs';
 
 test('test that deserializeContractState works', () => {
     const state = deserializeContractState(
@@ -77,27 +78,24 @@ function deserializeAccountTransactionBase(
 
 test('test deserialize simpleTransfer ', () => {
     const payload: SimpleTransferPayload = {
-        amount: new GtuAmount(5100000n),
+        amount: new CcdAmount(5100000n),
         toAddress: new AccountAddress(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
     };
-    deserializeAccountTransactionBase(
-        AccountTransactionType.SimpleTransfer,
-        payload
-    );
+    deserializeAccountTransactionBase(AccountTransactionType.Transfer, payload);
 });
 
 test('test deserialize simpleTransfer with memo ', () => {
     const payload: SimpleTransferWithMemoPayload = {
-        amount: new GtuAmount(5100000n),
+        amount: new CcdAmount(5100000n),
         toAddress: new AccountAddress(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
         memo: new DataBlob(Buffer.from('00', 'hex')),
     };
     deserializeAccountTransactionBase(
-        AccountTransactionType.SimpleTransferWithMemo,
+        AccountTransactionType.TransferWithMemo,
         payload
     );
 });
@@ -114,13 +112,13 @@ test('test deserialize registerData ', () => {
 
 test('Expired transactions can be deserialized', () => {
     const payload: SimpleTransferPayload = {
-        amount: new GtuAmount(5100000n),
+        amount: new CcdAmount(5100000n),
         toAddress: new AccountAddress(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
     };
     deserializeAccountTransactionBase(
-        AccountTransactionType.SimpleTransfer,
+        AccountTransactionType.Transfer,
         payload,
         new TransactionExpiry(new Date(2000, 1), true)
     );
@@ -165,4 +163,22 @@ test('Init error can be deserialized', () => {
     );
 
     expect(error).toEqual(1);
+
+test('Return value can be deserialized - auction', () => {
+    const returnValue = deserializeReceiveReturnValue(
+        Buffer.from(
+            '00000b0000004120676f6f64206974656d00a4fbca84010000',
+            'hex'
+        ),
+        Buffer.from(
+            fs.readFileSync('./test/resources/auction-with-errors-schema.bin')
+        ),
+        'auction',
+        'view'
+    );
+
+    expect(returnValue.item).toEqual('A good item');
+    expect(returnValue.end).toEqual('2022-12-01T00:00:00+00:00');
+    expect(returnValue.auction_state).toHaveProperty('NotSoldYet');
+    expect(returnValue.highest_bidder).toHaveProperty('None');
 });

@@ -7,7 +7,7 @@ import {
     ContractAddress,
     getAccountTransactionSignDigest,
     AccountAddress,
-    GtuAmount,
+    CcdAmount,
     TransactionExpiry,
 } from '@concordium/common-sdk';
 import * as ed from '@noble/ed25519';
@@ -43,7 +43,7 @@ test('update contract with the wrong private key', async () => {
     const maxContractExecutionEnergy = 30000n;
 
     const updateModule: UpdateContractPayload = {
-        amount: new GtuAmount(1000n),
+        amount: new CcdAmount(1000n),
         contractAddress: contractAddress,
         receiveName: receiveName,
         parameter: params,

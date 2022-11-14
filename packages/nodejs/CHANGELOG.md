@@ -1,10 +1,10 @@
 # Changelog
 
-## 5.0.0
+## 5.0.0 2022-11-8
 
 ### Breaking Changes
 
-- Bumped @concordium/common-sdk to 5.0.0. (Which changes the function signature of ConcordiumHdWallet and sign helpers functions)
+- Bumped @concordium/common-sdk to 6.0.0. (Which changes the function signature of ConcordiumHdWallet and sign helpers functions. Also changes transaction type names and field names to be aligned with other implementations)
 
 ## 4.0.0 2022-8-26
 

@@ -34,4 +34,8 @@ export class AccountAddress {
             bs58check.encode(Buffer.concat([Buffer.of(1), bytes]))
         );
     }
+
+    toJSON(): string {
+        return this.address;
+    }
 }

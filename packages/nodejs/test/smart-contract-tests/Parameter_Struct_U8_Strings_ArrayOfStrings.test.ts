@@ -6,7 +6,7 @@ import {
     InitContractPayload,
     getAccountTransactionSignDigest,
     AccountAddress,
-    GtuAmount,
+    CcdAmount,
     TransactionExpiry,
     ModuleReference,
     serializeInitContractParameters,
@@ -39,7 +39,7 @@ test('Parameter of Struct parameter (Complex) the wrong private key', async () =
         name: 'Concordium',
         city: 'Zug',
         country: 'Denmark',
-        nicknames: ['CCD', 'Concordium', 'GTU', 'ABC'],
+        nicknames: ['CCD', 'Concordium', 'CCD', 'ABC'],
     };
 
     const moduleFileBuffer = getModuleBuffer(
@@ -55,7 +55,7 @@ test('Parameter of Struct parameter (Complex) the wrong private key', async () =
     const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {
-        amount: new GtuAmount(0n),
+        amount: new CcdAmount(0n),
         moduleRef: new ModuleReference(
             '10c8e1091d0d82b0da90f9530bf23d44d4029fc1964644f9fffe0d4f838decd2'
         ),

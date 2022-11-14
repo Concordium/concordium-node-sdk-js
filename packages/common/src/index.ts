@@ -15,7 +15,7 @@ export {
 export { sha256 };
 export { CredentialRegistrationId } from './types/CredentialRegistrationId';
 export { AccountAddress } from './types/accountAddress';
-export { GtuAmount } from './types/gtuAmount';
+export { CcdAmount } from './types/ccdAmount';
 export { TransactionExpiry } from './types/transactionExpiry';
 export { DataBlob } from './types/DataBlob';
 export { ModuleReference } from './types/moduleReference';
@@ -31,6 +31,7 @@ export { isAlias, getAlias } from './alias';
 export {
     deserializeContractState,
     deserializeTransaction,
+    deserializeReceiveReturnValue,
 } from './deserialization';
 
 export * from './signHelpers';
@@ -44,3 +45,6 @@ export { isHex } from './util';
 export { HttpProvider } from './providers/httpProvider';
 export { JsonRpcClient } from './JsonRpcClient';
 export * from './identity';
+
+export { getAccountTransactionHandler } from './accountTransactions';
+export { calculateEnergyCost } from './energyCost';

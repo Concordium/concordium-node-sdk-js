@@ -6,7 +6,7 @@ import {
     InitContractPayload,
     getAccountTransactionSignDigest,
     AccountAddress,
-    GtuAmount,
+    CcdAmount,
     TransactionExpiry,
     ModuleReference,
     serializeInitContractParameters,
@@ -35,9 +35,9 @@ test('Parameter of Enum with the wrong private key', async () => {
     };
 
     enum DCBBankState {
-        /// Alive and well, allows for GTU to be inserted.
+        /// Alive and well, allows for CCD to be inserted.
         Intact = 1,
-        /// The dcb bank has been emptied, preventing further GTU to be inserted.
+        /// The dcb bank has been emptied, preventing further CCD to be inserted.
         Smashed,
     }
 
@@ -56,7 +56,7 @@ test('Parameter of Enum with the wrong private key', async () => {
     const baseEnergy = 300000n;
 
     const initModule: InitContractPayload = {
-        amount: new GtuAmount(0n),
+        amount: new CcdAmount(0n),
         moduleRef: new ModuleReference(
             '3a0f94e60949c0be213613550104e12efdb33b47c7fcb9dbb1b51a496b1e30ad'
         ),

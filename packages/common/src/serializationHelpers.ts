@@ -5,6 +5,8 @@ import {
     DelegationTarget,
     DelegationTargetType,
 } from './types';
+import { AccountAddress } from './types/accountAddress';
+import { CcdAmount } from './types/ccdAmount';
 import {
     SizeLength,
     ULeb128Type,
@@ -579,7 +581,7 @@ function serializeDelegationTarget(target: DelegationTarget) {
 
 export const configureDelegationSerializationSpec: SerializationSpec<ConfigureDelegationPayload> =
     {
-        stake: orUndefined((x) => encodeWord64(x.microGtuAmount)),
+        stake: orUndefined((x) => encodeWord64(x.microCcdAmount)),
         restakeEarnings: orUndefined(encodeBool),
         delegationTarget: orUndefined(serializeDelegationTarget),
     };

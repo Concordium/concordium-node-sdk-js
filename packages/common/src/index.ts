@@ -32,6 +32,8 @@ export {
     deserializeContractState,
     deserializeTransaction,
     deserializeReceiveReturnValue,
+    deserializeReceiveError,
+    deserializeInitError,
 } from './deserialization';
 
 export * from './signHelpers';

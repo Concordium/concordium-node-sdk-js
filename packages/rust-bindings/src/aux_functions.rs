@@ -1,6 +1,8 @@
 use crate::{helpers::*, types::*};
 use concordium_contracts_common::{
-    from_bytes, schema::{ModuleV0, VersionedModuleSchema, Type}, Cursor,
+    from_bytes,
+    schema::{ModuleV0, Type, VersionedModuleSchema},
+    Cursor,
 };
 use crypto_common::{types::TransactionTime, *};
 use dodis_yampolskiy_prf as prf;

@@ -208,7 +208,7 @@ export function deserializeTransaction(
  * @param returnValueBytes A buffer containing the return value as raw bytes.
  * @param moduleSchema The raw module schema as a buffer.
  * @param contractName The name of the contract where the receive function is located.
- * @param functionName The name of the receive function whose return value you want to deserialize.
+ * @param functionName The name of the receive function which return value you want to deserialize.
  * @param schemaVersion The schema version as a number. This parameter is optional,
  * if you provide a serialized versioned schema this argument won't be needed.
  */
@@ -242,7 +242,7 @@ export function deserializeReceiveReturnValue(
  * @param errorBytes A buffer containing the error as raw bytes.
  * @param moduleSchema The raw module schema as a buffer.
  * @param contractName The name of the contract where the receive function is located.
- * @param functionName The name of the receive function whose return value you want to deserialize.
+ * @param functionName The name of the receive function which error you want to deserialize.
  */
 export function deserializeReceiveError(
     errorBytes: Buffer,
@@ -268,10 +268,10 @@ export function deserializeReceiveError(
 }
 
 /**
- * Deserializes an init functions error from a sequence of bytes into a json object.
+ * Deserializes an init function's error from a sequence of bytes into a json object.
  * @param returnValueBytes A buffer containing the error as raw bytes.
  * @param moduleSchema The raw module schema as a buffer.
- * @param contractName The name of the contract whose init function is needed.
+ * @param contractName The name of the init function which error you want to deserialize.
  */
 export function deserializeInitError(
     errorBytes: Buffer,

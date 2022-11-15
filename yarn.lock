@@ -1379,19 +1379,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@concordium/rust-bindings@npm:0.6.0":
-  version: 0.6.0
-  resolution: "@concordium/rust-bindings@npm:0.6.0"
-  checksum: 36b0a2ac4673cdeb5184df67b75890cf27eab5fb0a91ada63abb53d698be3285d542f15971da898aba94ddf2a6a34dd8459126977cdcafbb91f8420d53bfb098
-  languageName: node
-  linkType: hard
-
 "@concordium/web-sdk@workspace:packages/web":
   version: 0.0.0-use.local
   resolution: "@concordium/web-sdk@workspace:packages/web"
   dependencies:
     "@concordium/common-sdk": 6.0.0
-    "@concordium/rust-bindings": 0.6.0
+    "@concordium/rust-bindings": 0.7.0
     "@typescript-eslint/eslint-plugin": ^4.28.1
     "@typescript-eslint/parser": ^4.28.1
     babel-jest: ^27.0.6

@@ -49,7 +49,7 @@
     },
     "dependencies": {
         "@concordium/common-sdk": "6.0.0",
-        "@concordium/rust-bindings": "0.6.0",
+        "@concordium/rust-bindings": "0.7.0",
         "buffer": "^6.0.3",
         "process": "^0.11.10"
     },

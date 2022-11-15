@@ -499,7 +499,6 @@ Likewise for an init function's error:
 const rawError = Buffer.from(errorSource);
 const schema = Buffer.from(schemaSource); // Load schema from file
 const contractName = "my-contract-name";
-const schemaVersion = SchemaVersion.V1;
 const error = deserializeInitError(rawError, schema, contractName);
 ```
 

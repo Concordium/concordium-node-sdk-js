@@ -482,6 +482,26 @@ const returnValue = deserializeReceiveReturnValue(rawReturnValue, schema, contra
 
 Note that for V0 contracts the schemaVersion should be `SchemaVersion.V0`. For V1 contracts it should currently be `SchemaVersion.V1`, unless the contract have been built using cargo-concordium >=2.0.0, which are internally versioned, and then the version does not need to be provided.
 
+## Deserialize a function's error
+The following example demonstrates how to deserialize a receive function's error:
+
+```js
+const rawError = Buffer.from(errorSource);
+const schema = Buffer.from(schemaSource); // Load schema from file
+const contractName = "my-contract-name";
+const functionName = "receive-function";
+const error = deserializeReceiveError(rawError, schema, contractName, functionName);
+```
+
+Likewise for an init function's error:
+
+```js
+const rawError = Buffer.from(errorSource);
+const schema = Buffer.from(schemaSource); // Load schema from file
+const contractName = "my-contract-name";
+const error = deserializeInitError(rawError, schema, contractName);
+```
+
 ## Deserialize a transaction
 The following example demonstrates how to deserialize a transaction:
 

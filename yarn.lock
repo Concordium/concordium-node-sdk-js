@@ -1316,7 +1316,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@concordium/common-sdk@workspace:packages/common"
   dependencies:
-    "@concordium/rust-bindings": 0.6.0
+    "@concordium/rust-bindings": 0.7.0
     "@noble/ed25519": ^1.7.1
     "@scure/bip39": ^1.1.0
     "@types/bs58check": ^2.1.0
@@ -1373,7 +1373,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@concordium/rust-bindings@0.6.0, @concordium/rust-bindings@workspace:packages/rust-bindings":
+"@concordium/rust-bindings@0.7.0, @concordium/rust-bindings@workspace:packages/rust-bindings":
   version: 0.0.0-use.local
   resolution: "@concordium/rust-bindings@workspace:packages/rust-bindings"
   languageName: unknown
@@ -1384,7 +1384,7 @@ __metadata:
   resolution: "@concordium/web-sdk@workspace:packages/web"
   dependencies:
     "@concordium/common-sdk": 6.0.0
-    "@concordium/rust-bindings": 0.6.0
+    "@concordium/rust-bindings": 0.7.0
     "@typescript-eslint/eslint-plugin": ^4.28.1
     "@typescript-eslint/parser": ^4.28.1
     babel-jest: ^27.0.6

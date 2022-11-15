@@ -2,6 +2,8 @@ import {
     deserializeContractState,
     deserializeTransaction,
     deserializeReceiveReturnValue,
+    deserializeReceiveError,
+    deserializeInitError,
 } from '../src/deserialization';
 import { Buffer } from 'buffer/';
 import { serializeAccountTransactionForSubmission } from '../src/serialization';
@@ -153,4 +155,31 @@ test('Return value can be deserialized - auction', () => {
     expect(returnValue.end).toEqual('2022-12-01T00:00:00+00:00');
     expect(returnValue.auction_state).toHaveProperty('NotSoldYet');
     expect(returnValue.highest_bidder).toHaveProperty('None');
+});
+
+test('Receive error can be deserialized', () => {
+    const error = deserializeReceiveError(
+        Buffer.from('ffff', 'hex'),
+        Buffer.from(
+            '//8CAQAAAAwAAABUZXN0Q29udHJhY3QBBAIDAQAAABAAAAByZWNlaXZlX2Z1bmN0aW9uBgYIBw==',
+            'base64'
+        ),
+        'TestContract',
+        'receive_function'
+    );
+
+    expect(error).toEqual(-1);
+});
+
+test('Init error can be deserialized', () => {
+    const error = deserializeInitError(
+        Buffer.from('0100', 'hex'),
+        Buffer.from(
+            '//8CAQAAAAwAAABUZXN0Q29udHJhY3QBBAIDAQAAABAAAAByZWNlaXZlX2Z1bmN0aW9uBgYIBw==',
+            'base64'
+        ),
+        'TestContract'
+    );
+
+    expect(error).toEqual(1);
 });

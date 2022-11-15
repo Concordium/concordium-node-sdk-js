@@ -811,21 +811,3 @@ export function deserialModuleFromBuffer(
             throw new Error('Unsupported module version');
     }
 }
-
-export function getParameterType(
-    schema: ContractFunctionV1 | ContractFunctionV2 | Type | null,
-    schemaVersion: SchemaVersion
-): Type | null {
-    if (!schema) {
-        return null;
-    }
-    switch (schemaVersion) {
-        case SchemaVersion.V0:
-            return schema as Type;
-        case SchemaVersion.V1:
-        case SchemaVersion.V2:
-            return (schema as ContractFunctionV1).parameter || null;
-        default:
-            throw new Error('Unsupported module version');
-    }
-}

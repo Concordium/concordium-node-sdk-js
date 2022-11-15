@@ -15,8 +15,8 @@ use sha2::{Digest, Sha256};
 use std::{collections::BTreeMap, convert::TryInto};
 
 type ExampleCurve = G1;
-type JsonString = String;
-type HexString = String;
+pub type JsonString = String;
+pub type HexString = String;
 
 use anyhow::{anyhow, bail, ensure, Result};
 use id::{
@@ -608,54 +608,8 @@ pub fn deserialize_state_aux(
     }
 }
 
-fn get_receive_return_value_schema(
-    module_schema: VersionedModuleSchema,
-    contract_name: &str,
-    function_name: &str,
-) -> Result<Type> {
-    let return_value = match module_schema {
-        VersionedModuleSchema::V0(_) => {
-            return Err(anyhow!(
-                "Return values are not supported V0 smart contracts."
-            ))
-        }
-        VersionedModuleSchema::V1(module_schema) => {
-            let contract_schema = module_schema
-                .contracts
-                .get(function_name)
-                .ok_or_else(|| anyhow!("Unable to find contract inside module"))?;
-
-            let return_value = contract_schema
-                .receive
-                .get(function_name)
-                .ok_or_else(|| anyhow!("Unable to find receive schema"))?
-                .return_value();
-            match return_value {
-                Some(value) => value.clone(),
-                None => return Err(anyhow!("Given function does not return value")),
-            }
-        }
-        VersionedModuleSchema::V2(module_schema) => {
-            let contract_schema = module_schema
-                .contracts
-                .get(contract_name)
-                .ok_or_else(|| anyhow!("Unable to find contract inside module"))?;
-
-            let return_value = contract_schema
-                .receive
-                .get(function_name)
-                .ok_or_else(|| anyhow!("Unable to find receive schema"))?
-                .return_value();
-            match return_value {
-                Some(value) => value.clone(),
-                None => return Err(anyhow!("Given function does not return value")),
-            }
-        }
-    };
-
-    Ok(return_value)
-}
-
+/// Given the bytes of a receive function's return value, deserialize them to a
+/// json object, using the provided schema.
 pub fn deserialize_receive_return_value_aux(
     return_value_bytes: HexString,
     schema: HexString,
@@ -663,25 +617,85 @@ pub fn deserialize_receive_return_value_aux(
     function_name: &str,
     schema_version: Option<u8>,
 ) -> Result<JsonString> {
-    let schema_bytes = hex::decode(schema)?;
-
-    let module_schema = match from_bytes::<VersionedModuleSchema>(&schema_bytes) {
-        Ok(versioned) => versioned,
-        Err(_) => match schema_version {
-            Some(0) => VersionedModuleSchema::V0(from_bytes(&schema_bytes)?),
-            Some(1) => VersionedModuleSchema::V1(from_bytes(&schema_bytes)?),
-            Some(2) => VersionedModuleSchema::V2(from_bytes(&schema_bytes)?),
-            Some(_) => return Err(anyhow!("Invalid schema version")),
-            None => return Err(anyhow!("Missing schema version")),
-        },
-    };
-
+    let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &schema_version)?;
     let return_value_schema =
-        get_receive_return_value_schema(module_schema, contract_name, function_name)?;
+        module_schema.get_receive_return_value_schema(contract_name, function_name)?;
 
     let mut rv_cursor = Cursor::new(hex::decode(return_value_bytes)?);
     match return_value_schema.to_json(&mut rv_cursor) {
         Ok(rv) => Ok(rv.to_string()),
         Err(_) => Err(anyhow!("Unable to parse return value to json.")),
     }
+}
+
+/// Given the bytes of a receive function's error, deserialize them to a json
+/// object, using the provided schema.
+pub fn deserialize_receive_error_aux(
+    error_bytes: HexString,
+    schema: HexString,
+    contract_name: &str,
+    function_name: &str,
+) -> Result<JsonString> {
+    let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &None)?;
+    let error_schema = module_schema.get_receive_error_schema(contract_name, function_name)?;
+
+    let mut error_cursor = Cursor::new(hex::decode(error_bytes)?);
+    match error_schema.to_json(&mut error_cursor) {
+        Ok(e) => Ok(e.to_string()),
+        Err(_) => Err(anyhow!("Unable to parse error value to json.")),
+    }
+}
+
+/// Given the bytes of an init function's error, deserialize them to a json
+/// object, using the provided schema.
+pub fn deserialize_init_error_aux(
+    error_bytes: HexString,
+    schema: HexString,
+    contract_name: &str,
+) -> Result<JsonString> {
+    let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &None)?;
+    let error_schema = module_schema.get_init_error_schema(contract_name)?;
+
+    let mut error_cursor = Cursor::new(hex::decode(error_bytes)?);
+    match error_schema.to_json(&mut error_cursor) {
+        Ok(e) => Ok(e.to_string()),
+        Err(_) => Err(anyhow!("Unable to parse error value to json.")),
+    }
+}
+
+/// Given parameters to a receive function as a stringified json, serialize them
+/// using the provided schema.
+pub fn serialize_receive_contract_parameters_aux(
+    parameters: JsonString,
+    schema: HexString,
+    contract_name: &str,
+    function_name: &str,
+    schema_version: Option<u8>,
+) -> Result<HexString> {
+    let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &schema_version)?;
+    let parameter_type = module_schema.get_receive_param_schema(contract_name, function_name)?;
+    let value: SerdeValue = serde_json::from_str(&parameters)?;
+
+    let mut buf: Vec<u8> = vec![];
+    Type::write_bytes_from_json_schema_type(&parameter_type, &value, &mut buf)?;
+
+    Ok(hex::encode(buf))
+}
+
+/// Given parameters to an init function as a stringified json, serialize them
+/// using the provided schema.
+pub fn serialize_init_contract_parameters_aux(
+    parameters: JsonString,
+    schema: HexString,
+    contract_name: &str,
+    schema_version: Option<u8>,
+) -> Result<HexString> {
+    let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &schema_version)?;
+    let parameter_type = module_schema.get_init_param_schema(contract_name)?;
+    let value: SerdeValue = serde_json::from_str(&parameters)?;
+
+    let mut buf: Vec<u8> = vec![];
+    Type::write_bytes_from_json_schema_type(&parameter_type, &value, &mut buf)?;
+
+    Ok(hex::encode(buf))
 }

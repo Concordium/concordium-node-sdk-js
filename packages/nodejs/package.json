@@ -23,6 +23,8 @@
     ],
     "devDependencies": {
         "@noble/ed25519": "^1.7.1",
+        "@protobuf-ts/grpc-transport": "2.8.1",
+        "@protobuf-ts/plugin": "2.8.1",
         "@types/google-protobuf": "^3.15.3",
         "@types/jest": "^26.0.23",
         "@typescript-eslint/eslint-plugin": "^4.28.1",
@@ -47,12 +49,13 @@
     },
     "scripts": {
         "generate-js": "yarn run grpc_tools_node_protoc --js_out=import_style=commonjs,binary:grpc --grpc_out=grpc_js:grpc --plugin=protoc-gen-grpc=../../node_modules/.bin/grpc_tools_node_protoc_plugin -I ../../deps/concordium-grpc-api ../../deps/concordium-grpc-api/**/*.proto",
-        "generate-ts": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:grpc -I ../../deps/concordium-grpc-api ../../deps/concordium-grpc-api/**/*.proto",
-        "generate": "([ -e \"../../deps/concordium-grpc-api\" ] && mkdir -p grpc && yarn generate-js && yarn generate-ts) || echo 'Please checkout submodules before building'; false",
+        "generate-ts": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/grpc_tools_node_protoc_ts/bin/protoc-gen-ts --ts_out=grpc_js:grpc -I ../../deps/concordium-grpc-api ../../deps/concordium-grpc-api/**/*.proto",
+        "generate-ts-v2": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/@protobuf-ts/plugin/bin/protoc-gen-ts --ts_out=src/grpc -I ../../deps/concordium-grpc-api ../../deps/concordium-grpc-api/**/*.proto",
+        "generate": "([ -e \"../../deps/concordium-grpc-api\" ] && mkdir -p grpc && mkdir -p src/grpc && yarn generate-js && yarn generate-ts && yarn generate-ts-v2) || echo 'Please checkout submodules before building'; false",
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
-        "build": "([ ! -e \"grpc\" ] && yarn generate) || true && tsc"
+        "build": "rm -r grpc src/grpc && yarn generate && tsc"
     },
     "dependencies": {
         "@concordium/common-sdk": "5.0.0",

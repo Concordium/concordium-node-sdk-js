@@ -1,13 +1,68 @@
-import { ChannelCredentials, Metadata, ServiceError } from '@grpc/grpc-js';
-import { SurfaceCall } from '@grpc/grpc-js/build/src/call';
-import { Empty } from '../grpc/concordium_p2p_rpc_pb';
-import { QueriesClient } from '../grpc/v2/concordium/service_grpc_pb';
-import {
-    CryptographicParameters,
-    BlockHashInput,
-    BlockHash,
-} from '../grpc/v2/concordium/types_pb';
+import { ChannelCredentials, ServiceError } from '@grpc/grpc-js';
 import { CryptographicParameters as CryptographicParametersJS } from '@concordium/common-sdk';
+import {
+    AccountAddress as AccountAddressLocal,
+    CredentialRegistrationId as CredentialRegistrationIdLocal,
+} from '@concordium/common-sdk';
+import {
+    AccountAddress,
+    BlockHashInput,
+    CryptographicParameters,
+    Empty,
+    NextAccountSequenceNumber,
+    CredentialRegistrationId,
+    AccountIndex,
+    AccountInfoRequest,
+    AccountIdentifierInput,
+    AccountInfo
+} from "./grpc/v2/concordium/types"
+
+import {
+    QueriesClient
+} from "./grpc/v2/concordium/service.client"
+import {GrpcTransport} from "@protobuf-ts/grpc-transport";
+
+import { Metadata } from '@grpc/grpc-js/';
+
+import { _grpc_channelz_v1_ChannelConnectivityState_State } from '@grpc/grpc-js/build/src/generated/grpc/channelz/v1/ChannelConnectivityState';
+
+export type AccountIdentifierInputLocal = AccountAddressLocal | CredentialRegistrationIdLocal | bigint
+
+function getBlockHashInput(blockHash?: Uint8Array): BlockHashInput {
+    let blockHashInput: any = {};
+    if (blockHash) {
+        blockHashInput = {
+            oneofKind: "given",
+            given: {value: blockHash}
+        };
+    } else {
+        blockHashInput = {
+            oneofKind: "lastFinal",
+            lastFinal: Empty
+        };
+    }
+    return {blockHashInput : blockHashInput}
+}
+
+function getAccountIdentifierInput(accountIdentifier: AccountIdentifierInputLocal): AccountIdentifierInput {
+    let returnIdentifier: any = {};
+
+    if (accountIdentifier instanceof AccountAddressLocal) {
+        const decodedAddress = new Uint8Array(accountIdentifier.decodedAddress);
+        returnIdentifier.oneofKind = "address"
+        returnIdentifier.address = {value: decodedAddress}
+    } else if (accountIdentifier instanceof CredentialRegistrationIdLocal) {
+        const credId = new Uint8Array(Buffer.from(accountIdentifier.credId, 'hex'));
+        returnIdentifier.oneofKind = "credId"
+        returnIdentifier.credId = {value: credId}
+    } else {
+        returnIdentifier.oneofKind = "accountIndex"
+        returnIdentifier.accountIndex = {value: accountIdentifier};
+    }
+
+    return {accountIdentifierInput: returnIdentifier}
+}
+
 /**
  * A concordium-node specific gRPC client wrapper.
  *
@@ -48,15 +103,31 @@ export default class ConcordiumNodeClient {
             );
         }
 
+        const grpcTransport = new GrpcTransport({
+            host: `${address}:${port}`,
+            channelCredentials: credentials
+        });
+
         this.address = address;
         this.port = port;
         this.timeout = timeout;
         this.metadata = metadata;
-        this.client = new QueriesClient(
-            `${address}:${port}`,
-            credentials,
-            options
-        );
+        this.client = new QueriesClient(grpcTransport);
+    }
+
+    /**
+     * Retrieves the next account nonce for the given account. The account nonce is
+     * used in all account transactions as part of their header.
+     * @param accountAddress base58 account address to get the next account nonce for
+     * @returns the next account nonce, and a boolean indicating if the nonce is reliable
+     */
+    async getNextAccountSequenceNumber(
+        accountAddress: AccountAddressLocal
+    ): Promise<NextAccountSequenceNumber> {
+        const address: AccountAddress = {
+            value: new Uint8Array(accountAddress.decodedAddress)
+        };
+        return await this.client.getNextAccountSequenceNumber(address).response
     }
 
     /**
@@ -65,56 +136,28 @@ export default class ConcordiumNodeClient {
      * enough data yet.
      */
     async getCryptographicParameters(
-        blockHash?: string
-    ): Promise<CryptographicParametersJS> {
-        const blockHashInput = new BlockHashInput();
-        if (blockHash) {
-            blockHashInput.setGiven(new BlockHash().setValue(blockHash));
-        } else {
-            blockHashInput.setLastFinal(new Empty());
-        }
-        const response = await this.sendRequest<
-            BlockHashInput,
-            CryptographicParameters
-        >(this.client.getCryptographicParameters, blockHashInput);
-
-        return {
-            genesisString: response.getGenesisString(),
-            bulletproofGenerators: response.getBulletproofGenerators_asB64(),
-            onChainCommitmentKey: response.getOnChainCommitmentKey_asB64(),
-        };
+        blockHash?: Uint8Array
+    ): Promise<CryptographicParameters> {
+        const blockHashInput = getBlockHashInput(blockHash)
+        return await this.client.getCryptographicParameters(blockHashInput).response
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-    sendRequest<T, V>(
-        command: (
-            input: T,
-            metadata: Metadata,
-            callback: Callback<V>
-        ) => SurfaceCall,
-        input: T
-    ): Promise<V> {
-        const deadline = new Date(Date.now() + this.timeout);
-        return new Promise<V>((resolve, reject) => {
-            this.client.waitForReady(deadline, (error) => {
-                if (error) {
-                    return reject(error);
-                }
+    async getAccountInfo(
+        accountIdentifier: AccountIdentifierInputLocal,
+        blockHash?: Uint8Array
+    ): Promise<AccountInfo> {
+        const blockHashInput = getBlockHashInput(blockHash);
+        const accountIdentifierGrpc = getAccountIdentifierInput(accountIdentifier);
+        //console.log(accountIdentifierGrpc);
+        //console.log(blockHashInput);
+        //console.log(blockHashInput.blockHashInput);
 
-                return command.bind(this.client)(
-                    input,
-                    this.metadata,
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (err: ServiceError | null, response: any) => {
-                        if (err) {
-                            return reject(err);
-                        }
-                        return resolve(response);
-                    }
-                );
-            });
-        });
+        const accountInfoRequest: AccountInfoRequest = {
+            blockHash: blockHashInput,
+            accountIdentifier: accountIdentifierGrpc
+        };
+        //console.log(accountInfoRequest);
+
+        return await this.client.getAccountInfo(accountInfoRequest).response;
     }
 }
-
-type Callback<V> = (error: ServiceError | null, response: V) => void;

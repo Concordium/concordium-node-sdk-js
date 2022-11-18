@@ -17,7 +17,7 @@ import {
     getAccountTransactionSignDigest,
     getCredentialForExistingAccountSignDigest,
     AccountAddress,
-    GtuAmount,
+    CcdAmount,
     TransactionExpiry,
     DataBlob,
     buildSignedCredentialForExistingAccount,
@@ -32,7 +32,7 @@ test('send simple transfer signed with wrong private key is accepted', async () 
     const senderAccountAddress =
         '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
     const simpleTransferPayload: SimpleTransferPayload = {
-        amount: new GtuAmount(100n),
+        amount: new CcdAmount(100n),
         toAddress: new AccountAddress(
             '4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf'
         ),
@@ -82,7 +82,7 @@ test('send simple transfer with memo signed with wrong private key is accepted',
     const senderAccountAddress =
         '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
     const payload: SimpleTransferWithMemoPayload = {
-        amount: new GtuAmount(100n),
+        amount: new CcdAmount(100n),
         toAddress: new AccountAddress(
             '4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf'
         ),
@@ -298,7 +298,7 @@ test('send configureDelegation signed with wrong private key is accepted', async
         sender: new AccountAddress(senderAccountAddress),
     };
     const configureDelegationPayload: ConfigureDelegationPayload = {
-        stake: new GtuAmount(1000000000n),
+        stake: new CcdAmount(1000000000n),
         delegationTarget: {
             delegateType: DelegationTargetType.Baker,
             bakerId: 0n,

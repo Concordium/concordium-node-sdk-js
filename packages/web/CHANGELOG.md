@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0 2022-11-15
+
+### Changed
+
+- Bumped @concordium/common-sdk to 6.0.0. (Which changes transaction type names and field names to be aligned with other implementations)
+
 ## 2.1.0 2022-10-27
 
 ### Changed

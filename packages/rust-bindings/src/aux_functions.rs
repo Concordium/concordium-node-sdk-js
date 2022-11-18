@@ -1,15 +1,22 @@
 use crate::{helpers::*, types::*};
+use concordium_contracts_common::{
+    from_bytes,
+    schema::{ModuleV0, Type, VersionedModuleSchema},
+    Cursor,
+};
 use crypto_common::{types::TransactionTime, *};
 use dodis_yampolskiy_prf as prf;
-use pairing::bls12_381::{Bls12, G1};
-use serde_json::{from_str, Value as SerdeValue};
-use std::{collections::BTreeMap, convert::TryInto};
-type ExampleCurve = G1;
-use concordium_contracts_common::{from_bytes, schema::ModuleV0, Cursor};
 use hex;
 use key_derivation::{ConcordiumHdWallet, Net};
+use pairing::bls12_381::{Bls12, G1};
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
+use serde_json::{from_str, Value as SerdeValue};
 use sha2::{Digest, Sha256};
+use std::{collections::BTreeMap, convert::TryInto};
+
+type ExampleCurve = G1;
+pub type JsonString = String;
+pub type HexString = String;
 
 use anyhow::{anyhow, bail, ensure, Result};
 use id::{
@@ -599,4 +606,96 @@ pub fn deserialize_state_aux(
         Ok(schema) => Ok(schema.to_string()),
         Err(e) => Err(anyhow!("Unable to parse state to json: {:?}", e)),
     }
+}
+
+/// Given the bytes of a receive function's return value, deserialize them to a
+/// json object, using the provided schema.
+pub fn deserialize_receive_return_value_aux(
+    return_value_bytes: HexString,
+    schema: HexString,
+    contract_name: &str,
+    function_name: &str,
+    schema_version: Option<u8>,
+) -> Result<JsonString> {
+    let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &schema_version)?;
+    let return_value_schema =
+        module_schema.get_receive_return_value_schema(contract_name, function_name)?;
+
+    let mut rv_cursor = Cursor::new(hex::decode(return_value_bytes)?);
+    match return_value_schema.to_json(&mut rv_cursor) {
+        Ok(rv) => Ok(rv.to_string()),
+        Err(_) => Err(anyhow!("Unable to parse return value to json.")),
+    }
+}
+
+/// Given the bytes of a receive function's error, deserialize them to a json
+/// object, using the provided schema.
+pub fn deserialize_receive_error_aux(
+    error_bytes: HexString,
+    schema: HexString,
+    contract_name: &str,
+    function_name: &str,
+) -> Result<JsonString> {
+    let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &None)?;
+    let error_schema = module_schema.get_receive_error_schema(contract_name, function_name)?;
+
+    let mut error_cursor = Cursor::new(hex::decode(error_bytes)?);
+    match error_schema.to_json(&mut error_cursor) {
+        Ok(e) => Ok(e.to_string()),
+        Err(_) => Err(anyhow!("Unable to parse error value to json.")),
+    }
+}
+
+/// Given the bytes of an init function's error, deserialize them to a json
+/// object, using the provided schema.
+pub fn deserialize_init_error_aux(
+    error_bytes: HexString,
+    schema: HexString,
+    contract_name: &str,
+) -> Result<JsonString> {
+    let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &None)?;
+    let error_schema = module_schema.get_init_error_schema(contract_name)?;
+
+    let mut error_cursor = Cursor::new(hex::decode(error_bytes)?);
+    match error_schema.to_json(&mut error_cursor) {
+        Ok(e) => Ok(e.to_string()),
+        Err(_) => Err(anyhow!("Unable to parse error value to json.")),
+    }
+}
+
+/// Given parameters to a receive function as a stringified json, serialize them
+/// using the provided schema.
+pub fn serialize_receive_contract_parameters_aux(
+    parameters: JsonString,
+    schema: HexString,
+    contract_name: &str,
+    function_name: &str,
+    schema_version: Option<u8>,
+) -> Result<HexString> {
+    let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &schema_version)?;
+    let parameter_type = module_schema.get_receive_param_schema(contract_name, function_name)?;
+    let value: SerdeValue = serde_json::from_str(&parameters)?;
+
+    let mut buf: Vec<u8> = vec![];
+    Type::write_bytes_from_json_schema_type(&parameter_type, &value, &mut buf)?;
+
+    Ok(hex::encode(buf))
+}
+
+/// Given parameters to an init function as a stringified json, serialize them
+/// using the provided schema.
+pub fn serialize_init_contract_parameters_aux(
+    parameters: JsonString,
+    schema: HexString,
+    contract_name: &str,
+    schema_version: Option<u8>,
+) -> Result<HexString> {
+    let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &schema_version)?;
+    let parameter_type = module_schema.get_init_param_schema(contract_name)?;
+    let value: SerdeValue = serde_json::from_str(&parameters)?;
+
+    let mut buf: Vec<u8> = vec![];
+    Type::write_bytes_from_json_schema_type(&parameter_type, &value, &mut buf)?;
+
+    Ok(hex::encode(buf))
 }

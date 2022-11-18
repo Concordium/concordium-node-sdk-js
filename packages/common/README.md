@@ -33,7 +33,7 @@ const header: AccountTransactionHeader = {
     sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
 };
 const simpleTransfer: SimpleTransferPayload = {
-    amount: new GtuAmount(100n),
+    amount: new CcdAmount(100n),
     toAddress: new AccountAddress("4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf"),
 };
 const simpleTransferAccountTransaction: AccountTransaction = {
@@ -52,7 +52,7 @@ const header: AccountTransactionHeader = {
     sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
 };
 const simpleTransferWithMemo: SimpleTransferWithMemoPayload = {
-    amount: new GtuAmount(100n),
+    amount: new CcdAmount(100n),
     toAddress: new AccountAddress("4hXCdgNTxgM7LNm8nFJEfjDhEcyjjqQnPSRyBS9QgmHKQVxKRf"),
     memo: new DataBlob(Buffer.from('6B68656C6C6F20776F726C64', 'hex')),
 };
@@ -90,7 +90,7 @@ const header: AccountTransactionHeader = {
     sender: new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M"),
 };
 const configureDelegationPayload: ConfigureDelegationPayload = {
-        stake: new GtuAmount(1000000000n),
+        stake: new CcdAmount(1000000000n),
         delegationTarget: {
             delegateType: DelegationTargetType.Baker,
             bakerId: 100n
@@ -261,7 +261,7 @@ const maxContractExecutionEnergy = 300000n;
 Create init contract transaction
 ```js
 const initModule: InitContractPayload = {
-    amount: new GtuAmount(0n), // Amount to send to the contract. If the smart contract is not payable, set the amount to 0.
+    amount: new CcdAmount(0n), // Amount to send to the contract. If the smart contract is not payable, set the amount to 0.
     moduleRef: new ModuleReference('a225a5aeb0a5cf9bbc59209e15df030e8cc2c17b8dba08c4bf59f80edaedd8b1'), // Module reference
     contractName: contractName,
     parameter: params,
@@ -296,7 +296,7 @@ Create update contract transaction
 ```js
 const updateModule: UpdateContractPayload =
 {
-    amount: new GtuAmount(1000n),
+    amount: new CcdAmount(1000n),
     contractAddress: contractAddress,
     receiveName: receiveName,
     parameter: params,
@@ -373,7 +373,7 @@ For V0 contracts the schemaVersion should be `SchemaVersion.V0`. For V1 contract
 Then the payload and transaction can be constructed, in the same way as the parameterless example:
 ```js
 const initModule: InitContractPayload = {
-        amount: new GtuAmount(0n),
+        amount: new CcdAmount(0n),
         moduleRef: new ModuleReference(
             '6cabee5b2d9d5013216eef3e5745288dcade77a4b1cd0d7a8951262476d564a0'
         ),
@@ -419,7 +419,7 @@ For V0 contracts the schema version should be `SchemaVersion.V0`. For V1 contrac
 Then we will construct the update payload with parameters obtained 
 ```js
 const updateModule: UpdateContractPayload = {
-        amount: new GtuAmount(1000n),
+        amount: new CcdAmount(1000n),
         contractAddress: contractAddress,
         receiveName: receiveName,
         parameter: inputParams,
@@ -466,6 +466,40 @@ const contractName = "my-contract-name"
 const schema = Buffer.from(schemaSource); // Load schema from file
 const rawContractState = Buffer.from(stateSource); // Could be getinstanceInfo(...).model
 const state = deserializeContractState(contractName, schema, rawContractState);
+```
+
+## Deserialize a receive function's return value
+The following example demonstrates how to deserialize a receive function's return value:
+
+```js
+const rawReturnValue = Buffer.from(returnValueSource);
+const schema = Buffer.from(schemaSource); // Load schema from file
+const contractName = "my-contract-name";
+const functionName = "receive-function";
+const schemaVersion = SchemaVersion.V1;
+const returnValue = deserializeReceiveReturnValue(rawReturnValue, schema, contractName, functionName, schemaVersion);
+```
+
+Note that for V0 contracts the schemaVersion should be `SchemaVersion.V0`. For V1 contracts it should currently be `SchemaVersion.V1`, unless the contract have been built using cargo-concordium >=2.0.0, which are internally versioned, and then the version does not need to be provided.
+
+## Deserialize a function's error
+The following example demonstrates how to deserialize a receive function's error:
+
+```js
+const rawError = Buffer.from(errorSource);
+const schema = Buffer.from(schemaSource); // Load schema from file
+const contractName = "my-contract-name";
+const functionName = "receive-function";
+const error = deserializeReceiveError(rawError, schema, contractName, functionName);
+```
+
+Likewise for an init function's error:
+
+```js
+const rawError = Buffer.from(errorSource);
+const schema = Buffer.from(schemaSource); // Load schema from file
+const contractName = "my-contract-name";
+const error = deserializeInitError(rawError, schema, contractName);
 ```
 
 ## Deserialize a transaction

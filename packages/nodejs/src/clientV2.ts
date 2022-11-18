@@ -24,6 +24,7 @@ export type AccountIdentifierInputLocal = AccountAddressLocal | CredentialRegist
 
 function getBlockHashInput(blockHash?: Uint8Array): BlockHashInput {
     let blockHashInput: any = {};
+
     if (blockHash) {
         blockHashInput = {
             oneofKind: "given",
@@ -35,6 +36,7 @@ function getBlockHashInput(blockHash?: Uint8Array): BlockHashInput {
             lastFinal: Empty
         };
     }
+
     return {blockHashInput : blockHashInput}
 }
 
@@ -99,7 +101,8 @@ export default class ConcordiumNodeClient {
 
         const grpcTransport = new GrpcTransport({
             host: `${address}:${port}`,
-            channelCredentials: credentials
+            channelCredentials: credentials,
+            options: options,
         });
 
         this.address = address;

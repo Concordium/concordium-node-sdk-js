@@ -7,7 +7,7 @@ import {
     ContractAddress,
     getAccountTransactionSignDigest,
     AccountAddress,
-    GtuAmount,
+    CcdAmount,
     TransactionExpiry,
     serializeUpdateContractParameters,
 } from '@concordium/common-sdk';
@@ -56,7 +56,7 @@ test('Parameter of I64 with the wrong private key', async () => {
         0
     );
     const updateModule: UpdateContractPayload = {
-        amount: new GtuAmount(1000n),
+        amount: new CcdAmount(1000n),
         contractAddress: contractAddress,
         receiveName: receiveName,
         parameter: inputParams,

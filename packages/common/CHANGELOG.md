@@ -1,10 +1,34 @@
 # Changelog
 
+## 6.0.0 2022-11-15
+
+### Breaking changes
+
+- Change AccountTransactionType names/string values to align with those in Concordium base.
+- Change some field names in UpdateConcractPayload, InitContractPayload and DeployModule to align with those in Concordium base.
+- Rename GtuAmount class to CcdAmount. And change the microGtuAmount field to microCcdAmount.
+- Add custom toJSON methods for the classes CcdAmount, AccountAddress, ModuleReference, CredentialRegistrationId, DataBlob and TransactionExpiry, in order to match the serialisation of their equivalents in Concordium base.
+
+### Added
+
+- The ability to deserialize error values of receive and init functions using `deserializeReceiveError()` and `deserializeInitError()` respectfully.
+- Refactored the `upserializeUpdateContractParameters()` and `serializeInitContractParameters()` to call into rust functions.
+
+## 5.2.0 2022-11-8
+
+### Added
+
+- The ability to deserialize the return values of receive functions using `deserializeReceiveReturnValue()`.
+
 ## 5.1.0 2022-9-29
 
 ### Added
 
 - Additional arguments to the JSON-RPC HttpProvider, to enable is to receive and forward cookies.
+
+### Fixed
+
+- getAccountInfo no longer relies on instanceof to determine the type of input.
 
 ## 5.0.0 2022-9-29
 

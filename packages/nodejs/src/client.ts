@@ -64,7 +64,7 @@ import {
     PassiveDelegationStatusDetails,
     ContractContext,
     InvokeContractResult,
-    GtuAmount,
+    CcdAmount,
     ModuleReference,
     ReduceStakePendingChangeV1,
     buildInvoker,
@@ -206,7 +206,7 @@ export default class ConcordiumNodeClient {
      * @returns the account info for the provided account address, undefined is the account does not exist
      */
     async getAccountInfo(
-        accountAddress: Address | CredentialRegistrationId,
+        accountAddress: string | Address | CredentialRegistrationId,
         blockHash: string
     ): Promise<AccountInfo | undefined> {
         if (!isValidHash(blockHash)) {
@@ -214,11 +214,17 @@ export default class ConcordiumNodeClient {
         }
 
         const getAddressInfoRequest = new GetAddressInfoRequest();
-        if (accountAddress instanceof Address) {
+
+        if (typeof accountAddress === 'string') {
+            getAddressInfoRequest.setAddress(accountAddress);
+        } else if ('address' in accountAddress) {
             getAddressInfoRequest.setAddress(accountAddress.address);
-        } else {
+        } else if ('credId' in accountAddress) {
             getAddressInfoRequest.setAddress(accountAddress.credId);
+        } else {
+            throw new Error('Invalid accountAddress input');
         }
+
         getAddressInfoRequest.setBlockHash(blockHash);
 
         const response = await this.sendRequest(
@@ -621,7 +627,7 @@ export default class ConcordiumNodeClient {
         const result = unwrapJsonResponse<InstanceInfoSerialized>(response);
         if (result !== undefined) {
             const common = {
-                amount: new GtuAmount(BigInt(result.amount)),
+                amount: new CcdAmount(BigInt(result.amount)),
                 sourceModule: new ModuleReference(result.sourceModule),
                 owner: new Address(result.owner),
                 methods: result.methods,
@@ -848,7 +854,7 @@ export default class ConcordiumNodeClient {
                     },
                     amount:
                         contractContext.amount &&
-                        contractContext.amount.microGtuAmount.toString(),
+                        contractContext.amount.microCcdAmount.toString(),
                     method: contractContext.method,
                     parameter:
                         contractContext.parameter &&

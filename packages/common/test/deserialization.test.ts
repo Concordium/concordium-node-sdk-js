@@ -1,6 +1,9 @@
 import {
     deserializeContractState,
     deserializeTransaction,
+    deserializeReceiveReturnValue,
+    deserializeReceiveError,
+    deserializeInitError,
 } from '../src/deserialization';
 import { Buffer } from 'buffer/';
 import { serializeAccountTransactionForSubmission } from '../src/serialization';
@@ -13,12 +16,13 @@ import {
     AccountTransactionType,
     BlockItemKind,
     DataBlob,
-    GtuAmount,
+    CcdAmount,
     RegisterDataPayload,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
     TransactionExpiry,
 } from '../src';
+import * as fs from 'fs';
 
 test('test that deserializeContractState works', () => {
     const state = deserializeContractState(
@@ -74,27 +78,24 @@ function deserializeAccountTransactionBase(
 
 test('test deserialize simpleTransfer ', () => {
     const payload: SimpleTransferPayload = {
-        amount: new GtuAmount(5100000n),
+        amount: new CcdAmount(5100000n),
         toAddress: new AccountAddress(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
     };
-    deserializeAccountTransactionBase(
-        AccountTransactionType.SimpleTransfer,
-        payload
-    );
+    deserializeAccountTransactionBase(AccountTransactionType.Transfer, payload);
 });
 
 test('test deserialize simpleTransfer with memo ', () => {
     const payload: SimpleTransferWithMemoPayload = {
-        amount: new GtuAmount(5100000n),
+        amount: new CcdAmount(5100000n),
         toAddress: new AccountAddress(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
         memo: new DataBlob(Buffer.from('00', 'hex')),
     };
     deserializeAccountTransactionBase(
-        AccountTransactionType.SimpleTransferWithMemo,
+        AccountTransactionType.TransferWithMemo,
         payload
     );
 });
@@ -111,14 +112,74 @@ test('test deserialize registerData ', () => {
 
 test('Expired transactions can be deserialized', () => {
     const payload: SimpleTransferPayload = {
-        amount: new GtuAmount(5100000n),
+        amount: new CcdAmount(5100000n),
         toAddress: new AccountAddress(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
     };
     deserializeAccountTransactionBase(
-        AccountTransactionType.SimpleTransfer,
+        AccountTransactionType.Transfer,
         payload,
         new TransactionExpiry(new Date(2000, 1), true)
     );
+});
+
+test('Receive return value can be deserialized', () => {
+    const returnValue = deserializeReceiveReturnValue(
+        Buffer.from('80f18c27', 'hex'),
+        Buffer.from(
+            '//8CAQAAAA8AAABDSVMyLXdDQ0QtU3RhdGUAAQAAAAoAAABnZXRCYWxhbmNlAhQAAQAAAAUAAABvd25lchUCAAAABwAAAEFjY291bnQBAQAAAAsIAAAAQ29udHJhY3QBAQAAAAwbJQAAAA==',
+            'base64'
+        ),
+        'CIS2-wCCD-State',
+        'getBalance'
+    );
+
+    expect(returnValue).toEqual('82000000');
+});
+
+test('Return value can be deserialized - auction', () => {
+    const returnValue = deserializeReceiveReturnValue(
+        Buffer.from(
+            '00000b0000004120676f6f64206974656d00a4fbca84010000',
+            'hex'
+        ),
+        Buffer.from(
+            fs.readFileSync('./test/resources/auction-with-errors-schema.bin')
+        ),
+        'auction',
+        'view'
+    );
+
+    expect(returnValue.item).toEqual('A good item');
+    expect(returnValue.end).toEqual('2022-12-01T00:00:00+00:00');
+    expect(returnValue.auction_state).toHaveProperty('NotSoldYet');
+    expect(returnValue.highest_bidder).toHaveProperty('None');
+});
+
+test('Receive error can be deserialized', () => {
+    const error = deserializeReceiveError(
+        Buffer.from('ffff', 'hex'),
+        Buffer.from(
+            '//8CAQAAAAwAAABUZXN0Q29udHJhY3QBBAIDAQAAABAAAAByZWNlaXZlX2Z1bmN0aW9uBgYIBw==',
+            'base64'
+        ),
+        'TestContract',
+        'receive_function'
+    );
+
+    expect(error).toEqual(-1);
+});
+
+test('Init error can be deserialized', () => {
+    const error = deserializeInitError(
+        Buffer.from('0100', 'hex'),
+        Buffer.from(
+            '//8CAQAAAAwAAABUZXN0Q29udHJhY3QBBAIDAQAAABAAAAByZWNlaXZlX2Z1bmN0aW9uBgYIBw==',
+            'base64'
+        ),
+        'TestContract'
+    );
+
+    expect(error).toEqual(1);
 });

@@ -1,5 +1,14 @@
 # Changelog
 
+## 6.0.0
+
+### Added Changes
+
+- Began upgrade to GrpcV2 starting with the following functions:
+    - `getAccountInfo()`
+    - `getNextAccountSequenceNumber()`
+    - `getCryptographicParameters()`
+
 ## 5.0.0
 
 ### Breaking Changes

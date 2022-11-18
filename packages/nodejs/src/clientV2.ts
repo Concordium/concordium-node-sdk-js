@@ -1,5 +1,4 @@
-import { ChannelCredentials, ServiceError } from '@grpc/grpc-js';
-import { CryptographicParameters as CryptographicParametersJS } from '@concordium/common-sdk';
+import { ChannelCredentials, Metadata } from '@grpc/grpc-js';
 import {
     AccountAddress as AccountAddressLocal,
     CredentialRegistrationId as CredentialRegistrationIdLocal,
@@ -10,23 +9,18 @@ import {
     CryptographicParameters,
     Empty,
     NextAccountSequenceNumber,
-    CredentialRegistrationId,
-    AccountIndex,
     AccountInfoRequest,
     AccountIdentifierInput,
     AccountInfo
 } from "./grpc/v2/concordium/types"
-
-import {
-    QueriesClient
-} from "./grpc/v2/concordium/service.client"
+import { QueriesClient } from "./grpc/v2/concordium/service.client"
 import {GrpcTransport} from "@protobuf-ts/grpc-transport";
 
-import { Metadata } from '@grpc/grpc-js/';
-
-import { _grpc_channelz_v1_ChannelConnectivityState_State } from '@grpc/grpc-js/build/src/generated/grpc/channelz/v1/ChannelConnectivityState';
-
 export type AccountIdentifierInputLocal = AccountAddressLocal | CredentialRegistrationIdLocal | bigint
+
+//////////////////////
+// Helper Functions //
+//////////////////////
 
 function getBlockHashInput(blockHash?: Uint8Array): BlockHashInput {
     let blockHashInput: any = {};
@@ -52,7 +46,7 @@ function getAccountIdentifierInput(accountIdentifier: AccountIdentifierInputLoca
         returnIdentifier.oneofKind = "address"
         returnIdentifier.address = {value: decodedAddress}
     } else if (accountIdentifier instanceof CredentialRegistrationIdLocal) {
-        const credId = new Uint8Array(Buffer.from(accountIdentifier.credId, 'hex'));
+        const credId = Buffer.from(accountIdentifier.credId, 'hex');
         returnIdentifier.oneofKind = "credId"
         returnIdentifier.credId = {value: credId}
     } else {
@@ -142,21 +136,28 @@ export default class ConcordiumNodeClient {
         return await this.client.getCryptographicParameters(blockHashInput).response
     }
 
+    /**
+     * Retrieves the account info for the given account. If the provided block
+     * hash is in a block prior to the finalization of the account, then the account
+     * information will not be available.
+     * A credential registration id can also be provided, instead of an address. In this case
+     * the node will return the account info of the account, which the corresponding credential
+     * is (or was) deployed to. An account index can also be provided.
+     * @param accountIdentifier base58 account address, or a credential registration id or account index to get the account info for
+     * @param blockHash optional block hash to get the account info at, otherwise retrieves from last finalized block
+     * @returns the account info for the provided account address, undefined is the account does not exist
+     */
     async getAccountInfo(
         accountIdentifier: AccountIdentifierInputLocal,
         blockHash?: Uint8Array
     ): Promise<AccountInfo> {
         const blockHashInput = getBlockHashInput(blockHash);
         const accountIdentifierGrpc = getAccountIdentifierInput(accountIdentifier);
-        //console.log(accountIdentifierGrpc);
-        //console.log(blockHashInput);
-        //console.log(blockHashInput.blockHashInput);
 
         const accountInfoRequest: AccountInfoRequest = {
             blockHash: blockHashInput,
             accountIdentifier: accountIdentifierGrpc
         };
-        //console.log(accountInfoRequest);
 
         return await this.client.getAccountInfo(accountInfoRequest).response;
     }

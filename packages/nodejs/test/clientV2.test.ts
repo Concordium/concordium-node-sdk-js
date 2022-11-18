@@ -3,19 +3,7 @@ import ConcordiumNodeClient from '../src/clientV2';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
 import {
     AccountAddress,
-    NextAccountNonce
 } from '@concordium/common-sdk';
-import {
-    BlockHashInput,
-    CryptographicParameters,
-    Empty,
-    NextAccountSequenceNumber,
-    CredentialRegistrationId,
-    AccountIndex,
-    AccountInfoRequest,
-    AccountIdentifierInput,
-    AccountInfo
-} from "../src/grpc/v2/concordium/types"
 
 
 /**
@@ -37,6 +25,7 @@ export function getNodeClient(
 }
 
 const client = getNodeClient();
+
 const testAccount = '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G';
 const testBlockHash = Buffer.from('/oj/NUVAecPfEdiuE9V3e6vWHyi+WElO/lG2WT4wcW4=', 'base64')
 
@@ -63,12 +52,12 @@ test('AccountInfo', async () => {
     const accountAddress = new AccountAddress(testAccount);
     const accountInfo = await client.getAccountInfo(accountAddress, testBlockHash);
 
-    expect(accountInfo.creds).toBeDefined();
+    expect(accountInfo.creds).toBeDefined(); // Todo: Properly test this
     expect(accountInfo.sequenceNumber?.value).toEqual(19n);
     expect(accountInfo.amount?.value).toEqual(35495453082577742n);
     expect(accountInfo.schedule?.total?.value).toEqual(0n);
     expect(accountInfo.threshold?.value).toEqual(1);
-    expect(accountInfo.encryptedBalance).toBeDefined();
+    expect(accountInfo.encryptedBalance).toBeDefined(); // Todo: Properly test this
     expect(accountInfo.encryptionKey?.value).toEqual(
         Buffer.from('sUy/5EoCxrH3hxEXbV9DcpU2eqTyqMJVHuENJaA63GnWGjMqBYlxkZ2tcxLh/JTFqnMARbzSC7XCQ0nbKdlJ92fnL3zORZ3BY8S5PHgKfX9lgB3aj/fk/Ab98aGyRidv', 'base64')
     );

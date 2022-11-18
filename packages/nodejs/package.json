@@ -51,11 +51,11 @@
         "generate-js": "yarn run grpc_tools_node_protoc --js_out=import_style=commonjs,binary:grpc --grpc_out=grpc_js:grpc --plugin=protoc-gen-grpc=../../node_modules/.bin/grpc_tools_node_protoc_plugin -I ../../deps/concordium-grpc-api ../../deps/concordium-grpc-api/**/*.proto",
         "generate-ts": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/grpc_tools_node_protoc_ts/bin/protoc-gen-ts --ts_out=grpc_js:grpc -I ../../deps/concordium-grpc-api ../../deps/concordium-grpc-api/**/*.proto",
         "generate-ts-v2": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/@protobuf-ts/plugin/bin/protoc-gen-ts --ts_out=src/grpc -I ../../deps/concordium-grpc-api ../../deps/concordium-grpc-api/**/*.proto",
-        "generate": "([ -e \"../../deps/concordium-grpc-api\" ] && mkdir -p grpc && mkdir -p src/grpc && yarn generate-js && yarn generate-ts && yarn generate-ts-v2) || echo 'Please checkout submodules before building'; false",
+        "generate": "([ -e \"../../deps/concordium-grpc-api\" ] && mkdir -p grpc && mkdir -p src/grpc && yarn generate-js && yarn generate-ts && yarn generate-ts-v2) || echo 'Please checkout submodules before building'",
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
-        "build": "rm -r grpc src/grpc && yarn generate && tsc"
+        "build": "rm -r grpc src/grpc; yarn generate && tsc"
     },
     "dependencies": {
         "@concordium/common-sdk": "5.0.0",

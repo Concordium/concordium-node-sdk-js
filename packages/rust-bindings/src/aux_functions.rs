@@ -18,19 +18,19 @@ type ExampleCurve = G1;
 pub type JsonString = String;
 pub type HexString = String;
 
-use anyhow::{anyhow, bail, ensure, Result};
+use anyhow::{anyhow, bail, ensure, Context, Result};
 use id::{
     account_holder::{
         create_credential, create_unsigned_credential, generate_id_recovery_request,
         generate_pio_v1,
     },
+    id_proof_types::{Statement, Proof, StatementWithContext},
     constants::{ArCurve, AttributeKind},
     pedersen_commitment::{Randomness as PedersenRandomness, Value as PedersenValue},
     types::*,
 };
 use pedersen_scheme::{CommitmentKey as PedersenKey, Value};
 use serde_json::to_string;
-
 use crypto_common::types::{KeyIndex, KeyPair};
 use ed25519_dalek as ed25519;
 use ed25519_hd_key_derivation::DeriveError;
@@ -699,3 +699,81 @@ pub fn serialize_init_contract_parameters_aux(
 
     Ok(hex::encode(buf))
 }
+
+#[derive(SerdeSerialize, SerdeDeserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IdProofInput {
+    id_object:               IdentityObjectV1<Bls12, ExampleCurve, AttributeKind>,
+    global_context:          GlobalContext<ExampleCurve>,
+    seed_as_hex:             String,
+    net:                     String,
+    identity_provider_index: u32,
+    identity_index:          u32,
+    cred_number:             u8,
+    statement: Statement<ExampleCurve, AttributeKind>,
+    challenge: String
+}
+
+#[derive(SerdeSerialize, SerdeDeserialize)]
+struct IdProofOutput {
+    account: AccountAddress,
+    proof: Proof<ExampleCurve, AttributeKind>,
+}
+
+pub fn create_id_proof_aux(input: IdProofInput) -> Result<String> {
+    let seed_decoded = hex::decode(&input.seed_as_hex)?;
+    let seed: [u8; 64] = match seed_decoded.try_into() {
+        Ok(s) => s,
+        Err(_) => bail!("The provided seed {} was not 64 bytes", input.seed_as_hex),
+    };
+
+    let challenge_decoded = hex::decode(&input.challenge)?;
+
+    let wallet = ConcordiumHdWallet {
+        seed,
+        net: get_net(&input.net)?,
+    };
+
+    let attribute_list = input
+        .id_object
+        .alist;
+
+    let cred_id_exponent = wallet
+        .get_prf_key(input.identity_provider_index, input.identity_index)?
+        .prf_exponent(input.cred_number)?;
+
+    let credential_context = CredentialContext {
+        wallet,
+        identity_provider_index: input.identity_provider_index,
+        credential_index: u32::from(input.cred_number),
+        identity_index: input.identity_index,
+    };
+
+    let credential = input
+        .global_context
+        .on_chain_commitment_key
+        .hide(
+            &Value::<ExampleCurve>::new(cred_id_exponent),
+            &PedersenRandomness::zero(),
+        )
+        .0;
+
+    let proofs =  StatementWithContext{
+        credential,
+        statement: input.statement
+    }.prove(
+        &input.global_context,
+        &challenge_decoded,
+        &attribute_list,
+        &credential_context,
+    )
+    .context("Unable to generate proof.")?;
+
+    let out = IdProofOutput {
+        account: account_address_from_registration_id(&credential),
+        proofs,
+    };
+
+    Ok(json!(out).to_string())
+}
+

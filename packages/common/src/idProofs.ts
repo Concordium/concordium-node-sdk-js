@@ -1,49 +1,12 @@
 import * as wasm from '@concordium/rust-bindings';
+import { AttributeKey, AttributesKeys } from '.';
 import {
-    AttributeKey,
-    AttributesKeys,
-    CryptographicParameters,
-    IdentityObjectV1,
-    Network,
-} from '.';
-
-enum StatementTypes {
-    RevealAttribute = 'RevealAttribute',
-    AttributeInSet = 'AttributeInSet',
-    AttributeNotInSet = 'AttributeNotInSet',
-    AttributeInRange = 'AttributeInRange',
-}
-
-type RevealStatement = {
-    type: StatementTypes.RevealAttribute;
-    attributeTag: AttributeKey;
-};
-
-type MembershipStatement = {
-    type: StatementTypes.AttributeInSet;
-    attributeTag: AttributeKey;
-    set: string[];
-};
-
-type NonMembershipStatement = {
-    type: StatementTypes.AttributeNotInSet;
-    attributeTag: AttributeKey;
-    set: string[];
-};
-
-type RangeStatement = {
-    type: StatementTypes.AttributeInRange;
-    attributeTag: AttributeKey;
-    lower: string;
-    upper: string;
-};
-
-type AtomicStatement =
-    | RevealStatement
-    | MembershipStatement
-    | NonMembershipStatement
-    | RangeStatement;
-type IdStatement = AtomicStatement[];
+    AtomicStatement,
+    IdProofInput,
+    IdProofOutput,
+    IdStatement,
+    StatementTypes,
+} from './idProofTypes';
 
 const minYearMonth = '00000101';
 
@@ -97,7 +60,7 @@ export class IdStatementBuilder {
         }
         if (
             statement.type === StatementTypes.AttributeInRange &&
-            attributesWithRange.includes(statement.attributeTag)
+            !attributesWithRange.includes(statement.attributeTag)
         ) {
             throw new Error(
                 statement.attributeTag +
@@ -106,7 +69,7 @@ export class IdStatementBuilder {
         }
         if (
             statement.type === StatementTypes.AttributeInSet &&
-            attributesWithSet.includes(statement.attributeTag)
+            !attributesWithSet.includes(statement.attributeTag)
         ) {
             throw new Error(
                 statement.attributeTag +
@@ -115,7 +78,7 @@ export class IdStatementBuilder {
         }
         if (
             statement.type === StatementTypes.AttributeNotInSet &&
-            attributesWithSet.includes(statement.attributeTag)
+            !attributesWithSet.includes(statement.attributeTag)
         ) {
             throw new Error(
                 statement.attributeTag +
@@ -178,7 +141,7 @@ export class IdStatementBuilder {
         return this;
     }
 
-    addMinimumAgeProof(age: number) {
+    addMinimumAge(age: number) {
         return this.addRangeProof(
             AttributesKeys.dob,
             minYearMonth,
@@ -186,36 +149,6 @@ export class IdStatementBuilder {
         );
     }
 }
-
-export type IdProofInput = {
-    idObject: IdentityObjectV1;
-    globalContext: CryptographicParameters;
-    seedAsHex: string;
-    net: Network;
-    identityProviderIndex: number;
-    identityIndex: number;
-    credNumber: number;
-    statement: IdStatement;
-};
-
-type RevealProof = {
-    type: StatementTypes.RevealAttribute;
-    proof: string;
-    attribute: string;
-};
-
-type ZKAtomicProof = {
-    type: Exclude<StatementTypes, StatementTypes.RevealAttribute>;
-    proof: string;
-};
-
-type AtomicProof = RevealProof | ZKAtomicProof;
-type IdProof = AtomicProof[];
-
-type IdProofOutput = {
-    account: string;
-    proof: IdProof;
-};
 
 export function getIdProof(input: IdProofInput): IdProofOutput {
     const rawRequest = wasm.createIdProof(JSON.stringify(input));

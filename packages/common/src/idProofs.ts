@@ -1,21 +1,13 @@
-import { AttributeKey, AttributesKeys } from '.';
-import { AgeProofInput } from './credentialDeploymentTransactions';
+import * as wasm from '@concordium/rust-bindings';
+import {
+    AttributeKey,
+    AttributesKeys,
+    CryptographicParameters,
+    IdentityObjectV1,
+    Network,
+} from '.';
 
-/**
- * Creates a credential for a new account, using the version 1 algorithm, which uses a seed to generate keys and commitments.
- */
-export function createAgeProofV1(input: AgeProofInput): AgeProofOutput {
-    const rawRequest = wasm.createAgeProof(JSON.stringify(input));
-    let out: AgeProofOutput;
-    try {
-        out = JSON.parse(rawRequest);
-    } catch (e) {
-        throw new Error(rawRequest);
-    }
-    return out;
-}
-
-enum stateTypes {
+enum StatementTypes {
     RevealAttribute = 'RevealAttribute',
     AttributeInSet = 'AttributeInSet',
     AttributeNotInSet = 'AttributeNotInSet',
@@ -23,24 +15,24 @@ enum stateTypes {
 }
 
 type RevealStatement = {
-    type: stateTypes.RevealAttribute;
+    type: StatementTypes.RevealAttribute;
     attributeTag: AttributeKey;
 };
 
 type MembershipStatement = {
-    type: stateTypes.AttributeInSet;
+    type: StatementTypes.AttributeInSet;
     attributeTag: AttributeKey;
     set: string[];
 };
 
 type NonMembershipStatement = {
-    type: stateTypes.AttributeNotInSet;
+    type: StatementTypes.AttributeNotInSet;
     attributeTag: AttributeKey;
     set: string[];
 };
 
 type RangeStatement = {
-    type: stateTypes.AttributeInRange;
+    type: StatementTypes.AttributeInRange;
     attributeTag: AttributeKey;
     lower: string;
     upper: string;
@@ -53,7 +45,7 @@ type AtomicStatement =
     | RangeStatement;
 type IdStatement = AtomicStatement[];
 
-const minYearMonth = '000001';
+const minYearMonth = '00000101';
 
 function getPastDate(yearsAgo: number) {
     const date = new Date();
@@ -63,15 +55,73 @@ function getPastDate(yearsAgo: number) {
     return year + month + day;
 }
 
+const attributesWithRange: AttributeKey[] = [
+    'dob',
+    'idDocIssuedAt',
+    'idDocExpiresAt',
+];
+const attributesWithSet: AttributeKey[] = [
+    'countryOfResidence',
+    'nationality',
+    'idDocType',
+    'idDocIssuer',
+];
+
+function getAttributeString(key: AttributesKeys): AttributeKey {
+    if (!(key in AttributesKeys)) {
+        throw new Error('invalid attribute key');
+    }
+    return AttributesKeys[key] as AttributeKey;
+}
+
 export class IdStatementBuilder {
     statements: IdStatement;
+    checkConstraints: boolean;
 
-    constructor() {
+    constructor(checkConstraints: boolean) {
         this.statements = [];
+        this.checkConstraints = checkConstraints;
     }
 
     getStatement(): IdStatement {
-        return statements;
+        return this.statements;
+    }
+
+    check(statement: AtomicStatement) {
+        if (
+            this.statements.some(
+                (v) => v.attributeTag === statement.attributeTag
+            )
+        ) {
+            throw new Error('Only 1 statement is allowed for each attribute');
+        }
+        if (
+            statement.type === StatementTypes.AttributeInRange &&
+            attributesWithRange.includes(statement.attributeTag)
+        ) {
+            throw new Error(
+                statement.attributeTag +
+                    ' is not allowed to be used in range statements'
+            );
+        }
+        if (
+            statement.type === StatementTypes.AttributeInSet &&
+            attributesWithSet.includes(statement.attributeTag)
+        ) {
+            throw new Error(
+                statement.attributeTag +
+                    ' is not allowed to be used in membership statements'
+            );
+        }
+        if (
+            statement.type === StatementTypes.AttributeNotInSet &&
+            attributesWithSet.includes(statement.attributeTag)
+        ) {
+            throw new Error(
+                statement.attributeTag +
+                    ' is not allowed to be used in non-membership statements'
+            );
+        }
     }
 
     addRangeProof(
@@ -79,12 +129,14 @@ export class IdStatementBuilder {
         lower: string,
         upper: string
     ): IdStatementBuilder {
-        this.statements.push({
-            type: stateTypes.AttributeInRange,
-            attributeTag: AttributesKeys[attribute],
+        const statement: AtomicStatement = {
+            type: StatementTypes.AttributeInRange,
+            attributeTag: getAttributeString(attribute),
             lower,
             upper,
-        });
+        };
+        this.check(statement);
+        this.statements.push(statement);
         return this;
     }
 
@@ -92,11 +144,13 @@ export class IdStatementBuilder {
         attribute: AttributesKeys,
         set: string[]
     ): IdStatementBuilder {
-        this.statements.push({
-            type: stateTypes.AttributeInSet,
-            attributeTag: AttributesKeys[attribute],
+        const statement: AtomicStatement = {
+            type: StatementTypes.AttributeInSet,
+            attributeTag: getAttributeString(attribute),
             set,
-        });
+        };
+        this.check(statement);
+        this.statements.push(statement);
         return this;
     }
 
@@ -104,30 +158,32 @@ export class IdStatementBuilder {
         attribute: AttributesKeys,
         set: string[]
     ): IdStatementBuilder {
-        this.statements.push({
-            type: stateTypes.AttributeNotInSet,
-            attributeTag: AttributesKeys[attribute],
+        const statement: AtomicStatement = {
+            type: StatementTypes.AttributeNotInSet,
+            attributeTag: getAttributeString(attribute),
             set,
-        });
+        };
+        this.check(statement);
+        this.statements.push(statement);
         return this;
     }
 
     revealAttribute(attribute: AttributesKeys): IdStatementBuilder {
-        this.statements.push({
-            type: stateTypes.RevealAttribute,
-            attributeTag: AttributesKeys[attribute],
-        });
+        const statement: AtomicStatement = {
+            type: StatementTypes.RevealAttribute,
+            attributeTag: getAttributeString(attribute),
+        };
+        this.check(statement);
+        this.statements.push(statement);
         return this;
     }
 
     addMinimumAgeProof(age: number) {
-        this.statements.push({
-            type: stateTypes.AttributeInRange,
-            attributeTag: AttributesKeys.dob,
-            lower: minYearMonth,
-            upper: getPastYearMonth(age),
-        });
-        return this;
+        return this.addRangeProof(
+            AttributesKeys.dob,
+            minYearMonth,
+            getPastDate(age)
+        );
     }
 }
 
@@ -143,13 +199,13 @@ export type IdProofInput = {
 };
 
 type RevealProof = {
-    type: stateTypes.RevealAttribute;
+    type: StatementTypes.RevealAttribute;
     proof: string;
     attribute: string;
 };
 
 type ZKAtomicProof = {
-    type: Exclude<stateTypes, stateTypes.RevealAttribute>;
+    type: Exclude<StatementTypes, StatementTypes.RevealAttribute>;
     proof: string;
 };
 
@@ -158,12 +214,12 @@ type IdProof = AtomicProof[];
 
 type IdProofOutput = {
     account: string;
-    proofs: IdProof;
+    proof: IdProof;
 };
 
-export function getIdProof(input: IdProofInput): IdProof {
+export function getIdProof(input: IdProofInput): IdProofOutput {
     const rawRequest = wasm.createIdProof(JSON.stringify(input));
-    let out: IdProof;
+    let out: IdProofOutput;
     try {
         out = JSON.parse(rawRequest);
     } catch (e) {

@@ -758,7 +758,7 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<String> {
         )
         .0;
 
-    let proofs =  StatementWithContext{
+    let proof =  StatementWithContext{
         credential,
         statement: input.statement
     }.prove(
@@ -771,7 +771,7 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<String> {
 
     let out = IdProofOutput {
         account: account_address_from_registration_id(&credential),
-        proofs,
+        proof,
     };
 
     Ok(json!(out).to_string())

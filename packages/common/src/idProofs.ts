@@ -8,7 +8,36 @@ import {
     StatementTypes,
 } from './idProofTypes';
 
-const minYearMonth = '00000101';
+const MIN_DATE = '00000101';
+const EU_MEMBERS = [
+    'AT',
+    'BE',
+    'BG',
+    'CY',
+    'CZ',
+    'DK',
+    'EE',
+    'FI',
+    'FR',
+    'DE',
+    'GR',
+    'HU',
+    'IE',
+    'IT',
+    'LV',
+    'LT',
+    'LU',
+    'MT',
+    'NL',
+    'PL',
+    'PT',
+    'RO',
+    'SK',
+    'SI',
+    'ES',
+    'SE',
+    'HR',
+];
 
 function getPastDate(yearsAgo: number) {
     const date = new Date();
@@ -30,6 +59,26 @@ const attributesWithSet: AttributeKey[] = [
     'idDocIssuer',
 ];
 
+interface StatementBuilder {
+    addRangeProof(
+        attribute: AttributesKeys,
+        lower: string,
+        upper: string
+    ): IdStatementBuilder;
+
+    addMembershipProof(
+        attribute: AttributesKeys,
+        set: string[]
+    ): IdStatementBuilder;
+
+    addNonMembershipProof(
+        attribute: AttributesKeys,
+        set: string[]
+    ): IdStatementBuilder;
+    revealAttribute(attribute: AttributesKeys): IdStatementBuilder;
+    getStatement(): IdStatement;
+}
+
 function getAttributeString(key: AttributesKeys): AttributeKey {
     if (!(key in AttributesKeys)) {
         throw new Error('invalid attribute key');
@@ -37,7 +86,7 @@ function getAttributeString(key: AttributesKeys): AttributeKey {
     return AttributesKeys[key] as AttributeKey;
 }
 
-export class IdStatementBuilder {
+export class IdStatementBuilder implements StatementBuilder {
     statements: IdStatement;
     checkConstraints: boolean;
 
@@ -144,9 +193,24 @@ export class IdStatementBuilder {
     addMinimumAge(age: number) {
         return this.addRangeProof(
             AttributesKeys.dob,
-            minYearMonth,
+            MIN_DATE,
             getPastDate(age)
         );
+    }
+
+    addEUResidency() {
+        return this.addMembershipProof(
+            AttributesKeys.countryOfResidence,
+            EU_MEMBERS
+        );
+    }
+
+    addEUNationality() {
+        return this.addMembershipProof(AttributesKeys.nationality, EU_MEMBERS);
+    }
+
+    addEUDocumentIssuer() {
+        return this.addMembershipProof(AttributesKeys.idDocIssuer, EU_MEMBERS);
     }
 }
 

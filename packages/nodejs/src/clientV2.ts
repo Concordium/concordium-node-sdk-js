@@ -11,52 +11,59 @@ import {
     NextAccountSequenceNumber,
     AccountInfoRequest,
     AccountIdentifierInput,
-    AccountInfo
-} from "./grpc/v2/concordium/types"
-import { QueriesClient } from "./grpc/v2/concordium/service.client"
-import {GrpcTransport} from "@protobuf-ts/grpc-transport";
+    AccountInfo,
+} from './grpc/v2/concordium/types';
+import { QueriesClient } from './grpc/v2/concordium/service.client';
+import { GrpcTransport } from '@protobuf-ts/grpc-transport';
 
-export type AccountIdentifierInputLocal = AccountAddressLocal | CredentialRegistrationIdLocal | bigint
+export type AccountIdentifierInputLocal =
+    | AccountAddressLocal
+    | CredentialRegistrationIdLocal
+    | bigint;
 
 //////////////////////
 // Helper Functions //
 //////////////////////
 
 function getBlockHashInput(blockHash?: Uint8Array): BlockHashInput {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let blockHashInput: any = {};
 
     if (blockHash) {
         blockHashInput = {
-            oneofKind: "given",
-            given: {value: blockHash}
+            oneofKind: 'given',
+            given: { value: blockHash },
         };
     } else {
         blockHashInput = {
-            oneofKind: "lastFinal",
-            lastFinal: Empty
+            oneofKind: 'lastFinal',
+            lastFinal: Empty,
         };
     }
 
-    return {blockHashInput : blockHashInput}
+    return { blockHashInput: blockHashInput };
 }
 
-function getAccountIdentifierInput(accountIdentifier: AccountIdentifierInputLocal): AccountIdentifierInput {
-    let returnIdentifier: any = {};
+function getAccountIdentifierInput(
+    accountIdentifier: AccountIdentifierInputLocal
+): AccountIdentifierInput {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const returnIdentifier: any = {};
 
     if (accountIdentifier instanceof AccountAddressLocal) {
         const decodedAddress = new Uint8Array(accountIdentifier.decodedAddress);
-        returnIdentifier.oneofKind = "address"
-        returnIdentifier.address = {value: decodedAddress}
+        returnIdentifier.oneofKind = 'address';
+        returnIdentifier.address = { value: decodedAddress };
     } else if (accountIdentifier instanceof CredentialRegistrationIdLocal) {
         const credId = Buffer.from(accountIdentifier.credId, 'hex');
-        returnIdentifier.oneofKind = "credId"
-        returnIdentifier.credId = {value: credId}
+        returnIdentifier.oneofKind = 'credId';
+        returnIdentifier.credId = { value: credId };
     } else {
-        returnIdentifier.oneofKind = "accountIndex"
-        returnIdentifier.accountIndex = {value: accountIdentifier};
+        returnIdentifier.oneofKind = 'accountIndex';
+        returnIdentifier.accountIndex = { value: accountIdentifier };
     }
 
-    return {accountIdentifierInput: returnIdentifier}
+    return { accountIdentifierInput: returnIdentifier };
 }
 
 /**
@@ -122,9 +129,9 @@ export default class ConcordiumNodeClient {
         accountAddress: AccountAddressLocal
     ): Promise<NextAccountSequenceNumber> {
         const address: AccountAddress = {
-            value: new Uint8Array(accountAddress.decodedAddress)
+            value: new Uint8Array(accountAddress.decodedAddress),
         };
-        return await this.client.getNextAccountSequenceNumber(address).response
+        return await this.client.getNextAccountSequenceNumber(address).response;
     }
 
     /**
@@ -135,8 +142,9 @@ export default class ConcordiumNodeClient {
     async getCryptographicParameters(
         blockHash?: Uint8Array
     ): Promise<CryptographicParameters> {
-        const blockHashInput = getBlockHashInput(blockHash)
-        return await this.client.getCryptographicParameters(blockHashInput).response
+        const blockHashInput = getBlockHashInput(blockHash);
+        return await this.client.getCryptographicParameters(blockHashInput)
+            .response;
     }
 
     /**
@@ -155,11 +163,12 @@ export default class ConcordiumNodeClient {
         blockHash?: Uint8Array
     ): Promise<AccountInfo> {
         const blockHashInput = getBlockHashInput(blockHash);
-        const accountIdentifierGrpc = getAccountIdentifierInput(accountIdentifier);
+        const accountIdentifierGrpc =
+            getAccountIdentifierInput(accountIdentifier);
 
         const accountInfoRequest: AccountInfoRequest = {
             blockHash: blockHashInput,
-            accountIdentifier: accountIdentifierGrpc
+            accountIdentifier: accountIdentifierGrpc,
         };
 
         return await this.client.getAccountInfo(accountInfoRequest).response;

@@ -2,10 +2,7 @@ import { credentials, Metadata } from '@grpc/grpc-js/';
 import ConcordiumNodeClient from '../src/clientV2';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
 import { AccountAddress } from '@concordium/common-sdk';
-import {
-    AccountCredential,
-    EncryptedBalance,
-} from '../src/grpc/v2/concordium/types';
+import { AccountInfo } from '../grpc/v2/concordium/types';
 
 /**
  * Creates a client to communicate with a local concordium-node
@@ -66,34 +63,92 @@ test('AccountInfo', async () => {
         testBlockHash
     );
 
-    expect(accountInfo.creds[0]).toEqual(
-        AccountCredential.fromBinary(
-            Buffer.from(
-                'EpsDCnwKJggAEiIKIJ6XXIONA3E2z/VPf1t0GSLdm8MeXdPJ63k6Amt9H1ElCiYIARIiCiAtMiuHRPpdAYI63OP2oTu+vde4UDwIzMPYSX5sRgIZdgomCAISIgogmnffP4aSBqfAhbwauCHx4kh2KiK7N0cbPO/Lg3QHZMkSAggCEjIKMKpzAEW80gu1wkNJ2ynZSfdn5y98zkWdwWPEuTx4Cn1/ZYAd2o/35PwG/fGhskYnbxoAIg4KBQjmDxAGEgUI5w8QBioCCAE60AEKMgowuJMOSJdpAvZ/DLtQuMKRH8wGRvvM9L+2pELvfUCoNR9IrnIG7oCD4o01e+gIgD+CEjIKMLCqZfQgqfP6th0/h17rzCIeQxVL+vG2Nl2s6Zv/IHeN5wA0N2MSIuhF/ZkXyNKHSxoyCjCGnivdssYHA+zVErVbdyuvdWkfgbvEU2L4jlq82rhaI3FKktRv5ARXNk1QarwiAqMqMgowi6xECi5GzL+/p2jGrZnyq/JfizJ6eV7PI7K4BMMnAi8G0KztC17tZYmaPvMCmATs',
-                'base64'
-            )
-        )
-    );
-    expect(accountInfo.sequenceNumber?.value).toEqual(19n);
-    expect(accountInfo.amount?.value).toEqual(35495453082577742n);
-    expect(accountInfo.schedule?.total?.value).toEqual(0n);
-    expect(accountInfo.threshold?.value).toEqual(1);
-    expect(accountInfo.encryptedBalance).toEqual(
-        EncryptedBalance.fromBinary(
-            Buffer.from(
-                'CsMBCsABwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-                'base64'
-            )
-        )
-    );
-    expect(accountInfo.encryptionKey?.value).toEqual(
-        Buffer.from(
-            'sUy/5EoCxrH3hxEXbV9DcpU2eqTyqMJVHuENJaA63GnWGjMqBYlxkZ2tcxLh/JTFqnMARbzSC7XCQ0nbKdlJ92fnL3zORZ3BY8S5PHgKfX9lgB3aj/fk/Ab98aGyRidv',
-            'base64'
-        )
-    );
-    expect(accountInfo.index?.value).toEqual(11n);
-    expect(accountInfo.address?.value).toEqual(
-        Buffer.from(accountAddress.decodedAddress)
-    );
+    const expected = {
+        sequenceNumber: {
+            value: '19',
+        },
+        amount: {
+            value: '35495453082577742',
+        },
+        schedule: {
+            total: {},
+        },
+        creds: {
+            '0': {
+                normal: {
+                    keys: {
+                        keys: {
+                            '0': {
+                                ed25519Key:
+                                    'npdcg40DcTbP9U9/W3QZIt2bwx5d08nreToCa30fUSU=',
+                            },
+                            '1': {
+                                ed25519Key:
+                                    'LTIrh0T6XQGCOtzj9qE7vr3XuFA8CMzD2El+bEYCGXY=',
+                            },
+                            '2': {
+                                ed25519Key:
+                                    'mnffP4aSBqfAhbwauCHx4kh2KiK7N0cbPO/Lg3QHZMk=',
+                            },
+                        },
+                        threshold: {
+                            value: 2,
+                        },
+                    },
+                    credId: {
+                        value: 'qnMARbzSC7XCQ0nbKdlJ92fnL3zORZ3BY8S5PHgKfX9lgB3aj/fk/Ab98aGyRidv',
+                    },
+                    ipId: {},
+                    policy: {
+                        createdAt: {
+                            year: 2022,
+                            month: 6,
+                        },
+                        validTo: {
+                            year: 2023,
+                            month: 6,
+                        },
+                    },
+                    arThreshold: {
+                        value: 1,
+                    },
+                    commitments: {
+                        prf: {
+                            value: 'uJMOSJdpAvZ/DLtQuMKRH8wGRvvM9L+2pELvfUCoNR9IrnIG7oCD4o01e+gIgD+C',
+                        },
+                        credCounter: {
+                            value: 'sKpl9CCp8/q2HT+HXuvMIh5DFUv68bY2Xazpm/8gd43nADQ3YxIi6EX9mRfI0odL',
+                        },
+                        maxAccounts: {
+                            value: 'hp4r3bLGBwPs1RK1W3crr3VpH4G7xFNi+I5avNq4WiNxSpLUb+QEVzZNUGq8IgKj',
+                        },
+                        idCredSecSharingCoeff: [
+                            {
+                                value: 'i6xECi5GzL+/p2jGrZnyq/JfizJ6eV7PI7K4BMMnAi8G0KztC17tZYmaPvMCmATs',
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+        threshold: {
+            value: 1,
+        },
+        encryptedBalance: {
+            selfAmount: {
+                value: 'wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+            },
+        },
+        encryptionKey: {
+            value: 'sUy/5EoCxrH3hxEXbV9DcpU2eqTyqMJVHuENJaA63GnWGjMqBYlxkZ2tcxLh/JTFqnMARbzSC7XCQ0nbKdlJ92fnL3zORZ3BY8S5PHgKfX9lgB3aj/fk/Ab98aGyRidv',
+        },
+        index: {
+            value: '11',
+        },
+        address: {
+            value: 'aXUkBsyTn8kMpqc7V87hCZY1R/lCAG0hkUSST4SF+w0=',
+        },
+    };
+
+    expect(AccountInfo.toJson(accountInfo)).toEqual(expected);
 });

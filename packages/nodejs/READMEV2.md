@@ -21,8 +21,8 @@ The ConcordiumNodeClient defines the interface to be used to send and receive da
 a concordium-node.
 
 ## Creating a client
-The current node setup only allows for insecure connections, which can be set up in the following way.
-The access is controlled by the credentials and the metadata.
+Connection to a node can be done using either an insecure connection or a TLS connection. If the node that you are trying to connect to supports TLS, you can create a TLS connection in the following way:
+
 ```js
 import { credentials, Metadata } from "@grpc/grpc-js";
 import { ConcordiumNodeClient } from "@concordium/node-sdk";
@@ -30,15 +30,16 @@ import { ConcordiumNodeClient } from "@concordium/node-sdk";
 const metadata = new Metadata();
 metadata.add("authentication", "rpcadmin");
 
-const insecureCredentials = credentials.createInsecure();
 const client = new ConcordiumNodeClient(
     "127.0.0.1",    // ip address
     10000,          // port
-    insecureCredentials,
+    credentials.createSsl(),  //
     metadata,
     15000           // timeout in ms
 );
 ```
+
+The access is controlled by the credentials and the metadata. If the node does not support TLS an insecure connection can be established using `credentials.createInsecure()` instead of `credentials.createSsl()`.
 
 ## getAccountInfo
 Retrieves information about an account. The function must be provided an account address or a credential registration id.

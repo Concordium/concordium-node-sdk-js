@@ -1,6 +1,16 @@
 import * as fs from 'fs';
 import { Buffer } from 'buffer/';
 import { BoolResponse, JsonResponse } from '../grpc/concordium_p2p_rpc_pb';
+import {
+    BlockHashInput,
+    Empty,
+    AccountIdentifierInput,
+} from '../grpc/v2/concordium/types';
+import {
+    AccountAddress,
+    CredentialRegistrationId as CredRegId,
+} from '@concordium/common-sdk';
+import { AccountIdentifierInputLocal } from './types';
 
 export function intListToStringList(jsonStruct: string): string {
     return jsonStruct.replace(/(\-?[0-9]+)/g, '"$1"');
@@ -47,4 +57,45 @@ export function unwrapJsonResponse<T>(
  */
 export function getModuleBuffer(filePath: string): Buffer {
     return Buffer.from(fs.readFileSync(filePath));
+}
+
+export function getBlockHashInput(blockHash?: Uint8Array): BlockHashInput {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let blockHashInput: any = {};
+
+    if (blockHash) {
+        blockHashInput = {
+            oneofKind: 'given',
+            given: { value: blockHash },
+        };
+    } else {
+        blockHashInput = {
+            oneofKind: 'lastFinal',
+            lastFinal: Empty,
+        };
+    }
+
+    return { blockHashInput: blockHashInput };
+}
+
+export function getAccountIdentifierInput(
+    accountIdentifier: AccountIdentifierInputLocal
+): AccountIdentifierInput {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const returnIdentifier: any = {};
+
+    if ((<AccountAddress>accountIdentifier).decodedAddress !== undefined) {
+        const address = (<AccountAddress>accountIdentifier).decodedAddress;
+        returnIdentifier.oneofKind = 'address';
+        returnIdentifier.address = { value: address };
+    } else if ((<CredRegId>accountIdentifier).credId !== undefined) {
+        const credId = (<CredRegId>accountIdentifier).credId;
+        returnIdentifier.oneofKind = 'credId';
+        returnIdentifier.credId = { value: credId };
+    } else {
+        returnIdentifier.oneofKind = 'accountIndex';
+        returnIdentifier.accountIndex = { value: accountIdentifier };
+    }
+
+    return { accountIdentifierInput: returnIdentifier };
 }

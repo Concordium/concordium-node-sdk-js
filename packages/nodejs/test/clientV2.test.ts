@@ -2,6 +2,10 @@ import { credentials, Metadata } from '@grpc/grpc-js/';
 import ConcordiumNodeClient from '../src/clientV2';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
 import { AccountAddress } from '@concordium/common-sdk';
+import {
+    AccountCredential,
+    EncryptedBalance,
+} from '../src/grpc/v2/concordium/types';
 
 /**
  * Creates a client to communicate with a local concordium-node
@@ -62,12 +66,26 @@ test('AccountInfo', async () => {
         testBlockHash
     );
 
-    expect(accountInfo.creds).toBeDefined(); // Todo: Properly test this
+    expect(accountInfo.creds[0]).toEqual(
+        AccountCredential.fromBinary(
+            Buffer.from(
+                'EpsDCnwKJggAEiIKIJ6XXIONA3E2z/VPf1t0GSLdm8MeXdPJ63k6Amt9H1ElCiYIARIiCiAtMiuHRPpdAYI63OP2oTu+vde4UDwIzMPYSX5sRgIZdgomCAISIgogmnffP4aSBqfAhbwauCHx4kh2KiK7N0cbPO/Lg3QHZMkSAggCEjIKMKpzAEW80gu1wkNJ2ynZSfdn5y98zkWdwWPEuTx4Cn1/ZYAd2o/35PwG/fGhskYnbxoAIg4KBQjmDxAGEgUI5w8QBioCCAE60AEKMgowuJMOSJdpAvZ/DLtQuMKRH8wGRvvM9L+2pELvfUCoNR9IrnIG7oCD4o01e+gIgD+CEjIKMLCqZfQgqfP6th0/h17rzCIeQxVL+vG2Nl2s6Zv/IHeN5wA0N2MSIuhF/ZkXyNKHSxoyCjCGnivdssYHA+zVErVbdyuvdWkfgbvEU2L4jlq82rhaI3FKktRv5ARXNk1QarwiAqMqMgowi6xECi5GzL+/p2jGrZnyq/JfizJ6eV7PI7K4BMMnAi8G0KztC17tZYmaPvMCmATs',
+                'base64'
+            )
+        )
+    );
     expect(accountInfo.sequenceNumber?.value).toEqual(19n);
     expect(accountInfo.amount?.value).toEqual(35495453082577742n);
     expect(accountInfo.schedule?.total?.value).toEqual(0n);
     expect(accountInfo.threshold?.value).toEqual(1);
-    expect(accountInfo.encryptedBalance).toBeDefined(); // Todo: Properly test this
+    expect(accountInfo.encryptedBalance).toEqual(
+        EncryptedBalance.fromBinary(
+            Buffer.from(
+                'CsMBCsABwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+                'base64'
+            )
+        )
+    );
     expect(accountInfo.encryptionKey?.value).toEqual(
         Buffer.from(
             'sUy/5EoCxrH3hxEXbV9DcpU2eqTyqMJVHuENJaA63GnWGjMqBYlxkZ2tcxLh/JTFqnMARbzSC7XCQ0nbKdlJ92fnL3zORZ3BY8S5PHgKfX9lgB3aj/fk/Ab98aGyRidv',

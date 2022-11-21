@@ -3,9 +3,9 @@ import * as v1 from '@concordium/common-sdk';
 import * as v2 from '../grpc/v2/concordium/types';
 import * as translate from './typeTranslation';
 import { HexString } from '@concordium/common-sdk';
-import { getBlockHashInput, getAccountIdentifierInput } from './util';
 import { QueriesClient } from '../grpc/v2/concordium/service.client';
 import { GrpcTransport } from '@protobuf-ts/grpc-transport';
+import { getBlockHashInput, getAccountIdentifierInput, assertValidHash, assertValidModuleRef, assertAmount } from './util';
 
 /**
  * A concordium-node specific gRPC client wrapper.
@@ -119,5 +119,75 @@ export default class ConcordiumNodeClient {
         const response = await this.client.getAccountInfo(accountInfoRequest)
             .response;
         return translate.accountInfo(response);
+    }
+
+    async getBlockItemStatus(
+        transactionHash: HexString
+    ): Promise<v2.BlockItemStatus> {
+        assertValidHash(transactionHash);
+        const transactionHashV2: v2.TransactionHash = {
+            value: Buffer.from(transactionHash, 'hex')
+        }
+
+        return await this.client.getBlockItemStatus(transactionHashV2)
+            .response;
+    }
+
+    async getConsensusInfo(): Promise<v2.ConsensusInfo> {
+        return await this.client.getConsensusInfo(v2.Empty).response;
+    }
+
+    async getModuleSource(
+        blockHash: HexString,
+        moduleRef: Uint8Array
+    ): Promise<v2.VersionedModuleSource> {
+        const blockHashInput = getBlockHashInput(blockHash);
+        assertValidModuleRef(moduleRef);
+
+        const moduleSourceRequest = {
+            blockHashInput: blockHashInput,
+            moduleRef: { value: moduleRef },
+        };
+
+        return await this.client.getModuleSource(moduleSourceRequest).response;
+    }
+
+    async getInstanceInfo(
+        blockHash: HexString,
+        contractAddress: v1.ContractAddress
+    ): Promise<v2.InstanceInfo> {
+        const blockHashInput = getBlockHashInput(blockHash);
+
+        const instanceInfoRequest = {
+            blockHashInput: blockHashInput,
+            address: contractAddress,
+        };
+
+        return await this.client.getInstanceInfo(instanceInfoRequest).response;
+    }
+
+    async invokeInstance(
+        blockHash: HexString,
+        instance: v1.ContractAddress,
+        amount: bigint,
+        entrypoint: string,
+        parameter: Uint8Array,
+        energy: bigint,
+        invoker?: v2.Address
+    ): Promise<v2.InvokeInstanceResponse> {
+        const blockHashInput = getBlockHashInput(blockHash);
+        assertAmount(amount);
+
+        const request: v2.InvokeInstanceRequest = {
+            blockHash: blockHashInput,
+            invoker: invoker,
+            instance: instance,
+            amount: { value: amount },
+            entrypoint: { value: entrypoint },
+            parameter: { value: parameter },
+            energy: { value: energy },
+        };
+
+        return await this.client.invokeInstance(request).response;
     }
 }

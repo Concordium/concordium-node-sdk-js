@@ -287,4 +287,22 @@ test('accountInfo implementations is the same', async () => {
     expect(oldCredId).toEqual(newCredId);
     expect(oldDeleg).toEqual(newDeleg);
     expect(oldBaker).toEqual(newBaker);
+})
+
+test('getBlockItemStatus', async () => {
+    const transactionHash = '3de823b876d05cdd33a311a0f84124079f5f677afb2534c4943f830593edc650';
+    const blockItemStatus = await clientV2.getBlockItemStatus(transactionHash);
+
+    const expectedBlockItemStatus = Buffer.from(
+        'GmwKagoiCiAtnhoIGBmtjb+B1aiC6i9TUss0KfwSsOwYwTGjYHUaZhJECgASABoiCiA96CO4dtBc3TOjEaD4QSQHn19nevslNMSUP4MFk+3GUDIaCgASFiIUChIIgICnqLnVuJL0ARDDqpuv4gQ=',
+        'base64'
+    );
+    expect(blockItemStatus).toEqual(
+        v2.BlockItemStatus.fromBinary(expectedBlockItemStatus)
+    );
+});
+
+test('getConsensusInfo', async () => {
+    const consensusInfo = await clientV2.getConsensusInfo();
+    console.log(consensusInfo);
 });

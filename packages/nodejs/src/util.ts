@@ -138,7 +138,7 @@ export function unwrap<A>(x: A | undefined): A {
     }
 }
 
-export function assertValidModuleRef(moduleRef: Uint8Array) {
+export function assertValidModuleRef(moduleRef: Uint8Array): void {
     if (moduleRef.length !== 32) {
         throw new Error(
             'The input was not a valid module reference, must be 32 bytes: ' +
@@ -147,7 +147,7 @@ export function assertValidModuleRef(moduleRef: Uint8Array) {
     }
 }
 
-export function assertAmount(amount: bigint) {
+export function assertAmount(amount: bigint): void {
     if (amount < 0n) {
         throw new Error(
             'A micro CCD amount must be a non-negative integer but was: ' +

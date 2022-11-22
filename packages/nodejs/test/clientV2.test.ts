@@ -293,16 +293,33 @@ test('getBlockItemStatus', async () => {
     const transactionHash = '3de823b876d05cdd33a311a0f84124079f5f677afb2534c4943f830593edc650';
     const blockItemStatus = await clientV2.getBlockItemStatus(transactionHash);
 
-    const expectedBlockItemStatus = Buffer.from(
-        'GmwKagoiCiAtnhoIGBmtjb+B1aiC6i9TUss0KfwSsOwYwTGjYHUaZhJECgASABoiCiA96CO4dtBc3TOjEaD4QSQHn19nevslNMSUP4MFk+3GUDIaCgASFiIUChIIgICnqLnVuJL0ARDDqpuv4gQ=',
-        'base64'
-    );
-    expect(blockItemStatus).toEqual(
-        v2.BlockItemStatus.fromBinary(expectedBlockItemStatus)
-    );
-});
+    const expected = {
+        finalized: {
+            outcome: {
+                blockHash: {
+                    value: 'LZ4aCBgZrY2/gdWoguovU1LLNCn8ErDsGMExo2B1GmY=',
+                },
+                outcome: {
+                    index: {},
+                    energyCost: {},
+                    hash: {
+                        value: 'PegjuHbQXN0zoxGg+EEkB59fZ3r7JTTElD+DBZPtxlA=',
+                    },
+                    update: {
+                        effectiveTime: {},
+                        payload: {
+                            microCcdPerEuroUpdate: {
+                                value: {
+                                    numerator: '17592435270983729152',
+                                    denominator: '163844642115',
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    };
 
-test('getConsensusInfo', async () => {
-    const consensusInfo = await clientV2.getConsensusInfo();
-    console.log(consensusInfo);
+    expect(v2.BlockItemStatus.toJson(blockItemStatus)).toEqual(expected);
 });

@@ -138,14 +138,14 @@ export default class ConcordiumNodeClient {
     }
 
     async getModuleSource(
-        blockHash: HexString,
-        moduleRef: Uint8Array
+        moduleRef: Uint8Array,
+        blockHash?: HexString
     ): Promise<v2.VersionedModuleSource> {
         const blockHashInput = getBlockHashInput(blockHash);
         assertValidModuleRef(moduleRef);
 
-        const moduleSourceRequest = {
-            blockHashInput: blockHashInput,
+        const moduleSourceRequest: v2.ModuleSourceRequest = {
+            blockHash: blockHashInput,
             moduleRef: { value: moduleRef },
         };
 
@@ -153,13 +153,13 @@ export default class ConcordiumNodeClient {
     }
 
     async getInstanceInfo(
-        blockHash: HexString,
-        contractAddress: v1.ContractAddress
+        contractAddress: v2.ContractAddress,
+        blockHash?: HexString
     ): Promise<v2.InstanceInfo> {
         const blockHashInput = getBlockHashInput(blockHash);
 
-        const instanceInfoRequest = {
-            blockHashInput: blockHashInput,
+        const instanceInfoRequest: v2.InstanceInfoRequest = {
+            blockHash: blockHashInput,
             address: contractAddress,
         };
 
@@ -167,18 +167,18 @@ export default class ConcordiumNodeClient {
     }
 
     async invokeInstance(
-        blockHash: HexString,
-        instance: v1.ContractAddress,
+        instance: v2.ContractAddress,
         amount: bigint,
         entrypoint: string,
         parameter: Uint8Array,
         energy: bigint,
-        invoker?: v2.Address
+        invoker?: v2.Address,
+        blockHash?: HexString
     ): Promise<v2.InvokeInstanceResponse> {
         const blockHashInput = getBlockHashInput(blockHash);
         assertAmount(amount);
 
-        const request: v2.InvokeInstanceRequest = {
+        const invokeInstanceRequest: v2.InvokeInstanceRequest = {
             blockHash: blockHashInput,
             invoker: invoker,
             instance: instance,
@@ -188,6 +188,6 @@ export default class ConcordiumNodeClient {
             energy: { value: energy },
         };
 
-        return await this.client.invokeInstance(request).response;
+        return await this.client.invokeInstance(invokeInstanceRequest).response;
     }
 }

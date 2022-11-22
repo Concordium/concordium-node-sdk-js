@@ -4,7 +4,7 @@ import * as v2 from '../grpc/v2/concordium/types';
 import ConcordiumNodeClientV1 from '../src/client';
 import ConcordiumNodeClientV2 from '../src/clientV2';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
-import { getAccountIdentifierInput, getBlockHashInput } from '../src/util';
+import { getAccountIdentifierInput, getBlockHashInput, getModuleBuffer } from '../src/util';
 
 /**
  * Creates a client to communicate with a local concordium-node
@@ -322,4 +322,68 @@ test('getBlockItemStatus', async () => {
     };
 
     expect(v2.BlockItemStatus.toJson(blockItemStatus)).toEqual(expected);
+});
+
+test('getInstanceInfo', async () => {
+    const contractAddress = {
+        index: 0n,
+        subindex: 0n,
+    };
+    const instanceInfo = await clientV2.getInstanceInfo(
+        contractAddress,
+        testBlockHash
+    );
+
+    const expected = {
+        v1: {
+            owner: {
+                value: '0YBPp1cC7ISiGOEh3OLFvm9rCgolsXjymRwBmxeX1R4=',
+            },
+            amount: {},
+            methods: [
+                {
+                    value: 'weather.get',
+                },
+                {
+                    value: 'weather.set',
+                },
+            ],
+            name: {
+                value: 'init_weather',
+            },
+            sourceModule: {
+                value: 'Z9VoQzvXLkMmJB8mIhPXf0RtuLoD37o1GuNcGy5+UQk=',
+            },
+        },
+    };
+
+    expect(v2.InstanceInfo.toJson(instanceInfo)).toEqual(expected);
+});
+
+test('getModuleSource', async () => {
+    const localModuleBytes = getModuleBuffer('test/resources/piggy_bank.wasm');
+    const moduleRef = Buffer.from(
+        'foOYrcQGqX202GnD/XrcgToxg2Z6On2weOuub33OX2Q=',
+        'base64'
+    );
+
+    const versionedModuleSource = await clientV2.getModuleSource(
+        moduleRef,
+        testBlockHash
+    );
+
+    if (versionedModuleSource.module.oneofKind == 'v0') {
+        const localModuleHex = Buffer.from(localModuleBytes).toString('hex');
+        const chainModuleHex = Buffer.from(
+            versionedModuleSource.module.v0.value
+        ).toString('hex');
+
+        expect(localModuleHex).toEqual(chainModuleHex);
+    } else {
+        throw new Error('Expected module to have version 0, but it did not.');
+    }
+});
+
+test('invokeInstance', async () => {
+    throw new Error('Not implemented yet!');
 });

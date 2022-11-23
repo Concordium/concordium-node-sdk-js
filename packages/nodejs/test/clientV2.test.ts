@@ -1,8 +1,11 @@
 import { credentials, Metadata } from '@grpc/grpc-js/';
 import ConcordiumNodeClient from '../src/clientV2';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
-import { AccountAddress } from '@concordium/common-sdk';
-import { AccountInfo } from '../grpc/v2/concordium/types';
+import {
+    AccountAddress,
+    CredentialRegistrationId,
+} from '@concordium/common-sdk';
+import { AccountInfo, AccountStakingInfo } from '../grpc/v2/concordium/types';
 
 /**
  * Creates a client to communicate with a local concordium-node
@@ -24,7 +27,9 @@ export function getNodeClient(
 
 const client = getNodeClient();
 
-const testAccount = '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G';
+const testAccount = new AccountAddress(
+    '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'
+);
 const testBlockHash = Buffer.from(
     '/oj/NUVAecPfEdiuE9V3e6vWHyi+WElO/lG2WT4wcW4=',
     'base64'
@@ -46,9 +51,8 @@ test('getCryptographicParameters', async () => {
 });
 
 test('NextAccountSequenceNumber', async () => {
-    const accountAddress = new AccountAddress(testAccount);
     const nextAccountSequenceNumber = await client.getNextAccountSequenceNumber(
-        accountAddress
+        testAccount
     );
     expect(
         nextAccountSequenceNumber.sequenceNumber?.value
@@ -57,11 +61,7 @@ test('NextAccountSequenceNumber', async () => {
 });
 
 test('AccountInfo', async () => {
-    const accountAddress = new AccountAddress(testAccount);
-    const accountInfo = await client.getAccountInfo(
-        accountAddress,
-        testBlockHash
-    );
+    const accountInfo = await client.getAccountInfo(testAccount, testBlockHash);
 
     const expected = {
         sequenceNumber: {
@@ -151,4 +151,88 @@ test('AccountInfo', async () => {
     };
 
     expect(AccountInfo.toJson(accountInfo)).toEqual(expected);
+});
+
+test('getAccountInfo: Invalid hash throws error', async () => {
+    const invalidBlockHash = Buffer.from('1010101010', 'hex');
+    await expect(
+        client.getAccountInfo(testAccount, invalidBlockHash)
+    ).rejects.toEqual(
+        new Error(
+            'The input was not a valid hash, must be 32 bytes: ' +
+                Buffer.from(invalidBlockHash).toString('hex')
+        )
+    );
+});
+
+test('getAccountInfo for baker', async () => {
+    const accountInfo = await client.getAccountInfo(5n, testBlockHash);
+
+    const expected = {
+        baker: {
+            stakedAmount: { value: '7349646704751788' },
+            restakeEarnings: true,
+            bakerInfo: {
+                bakerId: { value: '5' },
+                electionKey: {
+                    value: 'oJBoHsezXvOnce1D67Zyj9leSyZ6vt+pXx3BdyAZPcs=',
+                },
+                signatureKey: {
+                    value: 'w4XMtcigcQoWLywQcSN0RlD/NfAAQL+iYtl0v7PD+PE=',
+                },
+                aggregationKey: {
+                    value: 'sYoC3nSCblX26twPMdDZpu37KZPQMOZRNvHhJWppulI6y0D6TTBNBmiqMHwZJXoKEHJucBSckE4e8prtsmecglmX4/FO3TA78nbywLDFpMSHD/8MBDFQvga3FUZr5WTE',
+                },
+            },
+            poolInfo: {
+                openStatus: 'OPEN_STATUS_CLOSED_FOR_ALL',
+                commissionRates: {
+                    finalization: { partsPerHundredThousand: 100000 },
+                    baking: { partsPerHundredThousand: 10000 },
+                    transaction: { partsPerHundredThousand: 10000 },
+                },
+            },
+        },
+    };
+    if (accountInfo.stake) {
+        const stake = AccountStakingInfo.toJson(accountInfo.stake);
+        expect(stake).toEqual(expected);
+    }
+});
+
+test('getAccountInfo for delegator', async () => {
+    const delegator = '3bFo43GiPnkk5MmaSdsRVboaX2DNSKaRkLseQbyB3WPW1osPwh';
+    const accountInfo = await client.getAccountInfo(
+        new AccountAddress(delegator),
+        testBlockHash
+    );
+
+    const expected = {
+        delegator: {
+            stakedAmount: { value: '620942412516' },
+            restakeEarnings: true,
+            target: { passive: {} },
+        },
+    };
+
+    if (accountInfo.stake) {
+        const stakeJson = AccountStakingInfo.toJson(accountInfo.stake);
+        expect(stakeJson).toEqual(expected);
+    }
+});
+
+test('getAccountInfo: Account Address and CredentialRegistrationId is equal', async () => {
+    const credId =
+        'aa730045bcd20bb5c24349db29d949f767e72f7cce459dc163c4b93c780a7d7f65801dda8ff7e4fc06fdf1a1b246276f';
+    const accountInfoAddress = await client.getAccountInfo(
+        new CredentialRegistrationId(credId),
+        testBlockHash
+    );
+
+    const accountInfoCredId = await client.getAccountInfo(
+        new CredentialRegistrationId(credId),
+        testBlockHash
+    );
+
+    expect(accountInfoAddress).toEqual(accountInfoCredId);
 });

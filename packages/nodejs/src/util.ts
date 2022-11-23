@@ -64,6 +64,7 @@ export function getBlockHashInput(blockHash?: Uint8Array): BlockHashInput {
     let blockHashInput: any = {};
 
     if (blockHash) {
+        assertValidHash(blockHash);
         blockHashInput = {
             oneofKind: 'given',
             given: { value: blockHash },
@@ -90,12 +91,22 @@ export function getAccountIdentifierInput(
         returnIdentifier.address = { value: address };
     } else if ((<CredRegId>accountIdentifier).credId !== undefined) {
         const credId = (<CredRegId>accountIdentifier).credId;
+        const credIdBytes = Buffer.from(credId, 'hex');
         returnIdentifier.oneofKind = 'credId';
-        returnIdentifier.credId = { value: credId };
+        returnIdentifier.credId = { value: credIdBytes };
     } else {
         returnIdentifier.oneofKind = 'accountIndex';
         returnIdentifier.accountIndex = { value: accountIdentifier };
     }
 
     return { accountIdentifierInput: returnIdentifier };
+}
+
+export function assertValidHash(hash: Uint8Array): void {
+    if (hash.length !== 32) {
+        throw new Error(
+            'The input was not a valid hash, must be 32 bytes: ' +
+                Buffer.from(hash).toString('hex')
+        );
+    }
 }

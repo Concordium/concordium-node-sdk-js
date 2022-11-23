@@ -234,6 +234,47 @@ test('invokeInstance on v0 contract', async () => {
     expect(responseJson).toEqual(expected.invokeInstanceResponseV0);
 });
 
+test('invokeInstance on v0 contract', async () => {
+    const contractAddress = {
+        index: 6n,
+        subindex: 0n,
+    };
+
+    const invokeInstanceResponse = await clientV2.invokeInstance(
+        contractAddress,
+        new v1.CcdAmount(42n),
+        'PiggyBank.insert',
+        new Uint8Array(),
+        30000n,
+        undefined,
+        testBlockHash
+    );
+
+    const expected = {
+        success: {
+            usedEnergy: { value: '342' },
+            effects: [
+                {
+                    updated: {
+                        address: { index: '6' },
+                        instigator: {
+                            account: {
+                                value: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+                            },
+                        },
+                        amount: { value: '42' },
+                        parameter: {},
+                        receiveName: { value: 'PiggyBank.insert' },
+                    },
+                },
+            ],
+        },
+    };
+
+    const responseJson = v2.InvokeInstanceResponse.toJson(invokeInstanceResponse);
+    expect(responseJson).toEqual(expected);
+});
+
 test('getModuleSource', async () => {
     const localModuleBytes = getModuleBuffer('test/resources/piggy_bank.wasm');
     const moduleRef = Buffer.from(

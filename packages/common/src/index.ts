@@ -14,7 +14,6 @@ export {
     serializeTypeValue,
     serializeAccountTransactionPayload,
     serializeCredentialDeploymentPayload,
-    serializeTypeValue,
 } from './serialization';
 export { sha256 };
 export { CredentialRegistrationId } from './types/CredentialRegistrationId';

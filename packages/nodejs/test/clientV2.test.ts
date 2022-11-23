@@ -4,7 +4,12 @@ import * as v2 from '../grpc/v2/concordium/types';
 import ConcordiumNodeClientV1 from '../src/client';
 import ConcordiumNodeClientV2 from '../src/clientV2';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
-import { getAccountIdentifierInput, getBlockHashInput, getModuleBuffer } from '../src/util';
+import { getAccountIdentifierInput, getBlockHashInput } from '../src/util';
+import { buildBasicAccountSigner, calculateEnergyCost, createCredentialDeploymentTransaction, getAccountTransactionHandler, sha256, signTransaction } from '@concordium/common-sdk';
+import { serializeAccountTransactionPayload } from '@concordium/common-sdk/src';
+import { getCredentialDeploymentSignDigest, serializeAccountTransaction } from '@concordium/common-sdk/lib/serialization';
+import { getModuleBuffer, getIdentityInput } from './testHelpers';
+import * as ed from '@noble/ed25519';
 
 /**
  * Creates a client to communicate with a local concordium-node
@@ -229,6 +234,8 @@ test('getAccountInfo for baker', async () => {
         );
         expect(stake).toEqual(expected);
         expect(stake).toEqual(stakeAccountIndex);
+    } else {
+        throw Error('Stake field not found in accountInfo.');
     }
 });
 
@@ -246,6 +253,8 @@ test('getAccountInfo for delegator', async () => {
     if (accInfo.stake) {
         const stakeJson = v2.AccountStakingInfo.toJson(accInfo.stake);
         expect(stakeJson).toEqual(expected);
+    } else {
+        throw Error('Stake field not found in accountInfo.');
     }
 });
 
@@ -360,6 +369,47 @@ test('getInstanceInfo', async () => {
     expect(v2.InstanceInfo.toJson(instanceInfo)).toEqual(expected);
 });
 
+test('invokeInstance on v0 contract', async () => {
+    const contractAddress = {
+        index: 6n,
+        subindex: 0n,
+    };
+
+    const invokeInstanceResponse = await clientV2.invokeInstance(
+        contractAddress,
+        new v1.CcdAmount(42n),
+        'PiggyBank.insert',
+        new Uint8Array(),
+        30000n,
+        undefined,
+        testBlockHash
+    );
+
+    const expected = {
+        success: {
+            usedEnergy: { value: '342' },
+            effects: [
+                {
+                    updated: {
+                        address: { index: '6' },
+                        instigator: {
+                            account: {
+                                value: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
+                            },
+                        },
+                        amount: { value: '42' },
+                        parameter: {},
+                        receiveName: { value: 'PiggyBank.insert' },
+                    },
+                },
+            ],
+        },
+    };
+
+    const responseJson = v2.InvokeInstanceResponse.toJson(invokeInstanceResponse);
+    expect(responseJson).toEqual(expected);
+});
+
 test('getModuleSource', async () => {
     const localModuleBytes = getModuleBuffer('test/resources/piggy_bank.wasm');
     const moduleRef = Buffer.from(
@@ -380,10 +430,205 @@ test('getModuleSource', async () => {
 
         expect(localModuleHex).toEqual(chainModuleHex);
     } else {
-        throw new Error('Expected module to have version 0, but it did not.');
+        throw new Error('Expected module to have version 0.');
     }
 });
 
-test('invokeInstance', async () => {
-    throw new Error('Not implemented yet!');
+test('getConsensusInfo', async () => {
+    const genesisBlock = Buffer.from(
+        'QiEzLTThaUFowqDAs/0PJzgJYSyxPQANXC4A6F9Q95Y=',
+        'base64'
+    );
+
+    const consensusInfo = await clientV2.getConsensusInfo();
+
+    expect(consensusInfo.blocksReceivedCount).toBeGreaterThan(9571n);
+    expect(consensusInfo.blocksVerifiedCount).toBeGreaterThan(9571n);
+    expect(consensusInfo.finalizationCount).toBeGreaterThan(8640n);
+    expect(consensusInfo.genesisBlock?.value).toEqual(genesisBlock);
+    expect(consensusInfo.lastFinalizedTime?.value).toBeGreaterThan(
+        1669214033937n
+    );
+    expect(consensusInfo.lastFinalizedBlockHeight?.value).toBeGreaterThan(
+        1395315n
+    );
+});
+
+test('sendBlockItem', async () => {
+    const senderAccount = new v1.AccountAddress(
+        '37TRfx9PqFX386rFcNThyA3zdoWsjF8Koy6Nh3i8VrPy4duEsA'
+    );
+    const privateKey =
+        '1f7d20585457b542b22b51f218f0636c8e05ead4b64074e6eafd1d418b04e4ac';
+    const nextNonce = (
+        await clientV2.getNextAccountNonce(senderAccount)
+    );
+
+    // Create local transaction
+    const header: v1.AccountTransactionHeader = {
+        expiry: new v1.TransactionExpiry(new Date(Date.now() + 3600000)),
+        nonce: nextNonce.nonce,
+        sender: senderAccount,
+    };
+    const simpleTransfer: v1.SimpleTransferPayload = {
+        amount: new v1.CcdAmount(10000000000n),
+        toAddress: testAccount,
+    };
+    const accountTransaction: v1.AccountTransaction = {
+        header: header,
+        payload: simpleTransfer,
+        type: v1.AccountTransactionType.Transfer,
+    };
+
+    // Sign transaction
+    const signer = buildBasicAccountSigner(privateKey);
+    const signature: v1.AccountTransactionSignature = await signTransaction(
+        accountTransaction,
+        signer
+    );
+
+    expect(
+        clientV2.sendAccountTransaction(accountTransaction, signature)
+    ).rejects.toThrow(
+        '3 INVALID_ARGUMENT: The sender did not have enough funds to cover the costs'
+    );
+});
+
+test('transactionHash', async () => {
+    const senderAccount = new v1.AccountAddress(
+        '37TRfx9PqFX386rFcNThyA3zdoWsjF8Koy6Nh3i8VrPy4duEsA'
+    );
+    const privateKey =
+        '1f7d20585457b542b22b51f218f0636c8e05ead4b64074e6eafd1d418b04e4ac';
+    const nextNonce = (
+        await clientV2.getNextAccountNonce(senderAccount)
+    );
+
+    // Create local transaction
+    const headerLocal: v1.AccountTransactionHeader = {
+        expiry: new v1.TransactionExpiry(new Date(Date.now() + 3600000)),
+        nonce: nextNonce.nonce,
+        sender: senderAccount,
+    };
+    const simpleTransfer: v1.SimpleTransferPayload = {
+        amount: new v1.CcdAmount(10000000000n),
+        toAddress: testAccount,
+    };
+    const transaction: v1.AccountTransaction = {
+        header: headerLocal,
+        payload: simpleTransfer,
+        type: v1.AccountTransactionType.Transfer,
+    };
+
+    const rawPayload = serializeAccountTransactionPayload(transaction);
+
+    // Energy cost
+    const accountTransactionHandler = getAccountTransactionHandler(
+        transaction.type
+    );
+    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(
+        transaction.payload
+    );
+    const energyCost = calculateEnergyCost(
+        1n,
+        BigInt(rawPayload.length),
+        baseEnergyCost
+    );
+
+    // Sign transaction
+    const signer = buildBasicAccountSigner(privateKey);
+    const signature: v1.AccountTransactionSignature = await signTransaction(
+        transaction,
+        signer
+    );
+
+    // Put together sendBlockItemRequest
+    const header: v2.AccountTransactionHeader = {
+        sender: { value: transaction.header.sender.decodedAddress },
+        sequenceNumber: { value: transaction.header.nonce },
+        energyAmount: { value: energyCost },
+        expiry: { value: transaction.header.expiry.expiryEpochSeconds },
+    };
+    const accountTransaction: v2.PreAccountTransaction = {
+        header: header,
+        payload: {
+            payload: { oneofKind: 'rawPayload', rawPayload: rawPayload },
+        },
+    };
+
+    const serializedAccountTransaction = serializeAccountTransaction(
+        transaction,
+        signature
+    ).slice(71);
+    const localHash = Buffer.from(
+        sha256([serializedAccountTransaction])
+    ).toString('hex');
+    const nodeHash = await clientV2.getAccountTransactionSignHash(
+        accountTransaction
+    );
+
+    expect(localHash).toEqual(Buffer.from(nodeHash).toString('hex'));
+});
+
+// Todo: verify that accounts can actually be created.
+test('createAccount', async () => {
+    // Get information from node
+    const lastFinalizedBlockHash = (await clientV2.getConsensusInfo())
+        .lastFinalizedBlock;
+    if (!lastFinalizedBlockHash) {
+        throw new Error('Could not find latest finalized block.');
+    }
+    const cryptoParams = await clientV2.getCryptographicParameters(
+        Buffer.from(lastFinalizedBlockHash.value).toString('hex')
+    );
+    if (!cryptoParams) {
+        throw new Error(
+            'Cryptographic parameters were not found on a block that has been finalized.'
+        );
+    }
+
+    // Create credentialDeploymentTransaction
+    const identityInput: v1.IdentityInput = getIdentityInput();
+    const threshold = 1;
+    const credentialIndex = 1;
+    const expiry = new v1.TransactionExpiry(new Date(Date.now() + 3600000));
+    const revealedAttributes: v1.AttributeKey[] = [];
+    const publicKeys: v1.VerifyKey[] = [
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                'c8cd7623c5a9316d8e2fccb51e1deee615bdb5d324fb4a6d33801848fb5e459e',
+        },
+    ];
+
+    const credentialDeploymentTransaction: v1.CredentialDeploymentTransaction =
+        createCredentialDeploymentTransaction(
+            identityInput,
+            cryptoParams,
+            threshold,
+            publicKeys,
+            credentialIndex,
+            revealedAttributes,
+            expiry
+        );
+
+    // Sign transaction
+    const hashToSign = getCredentialDeploymentSignDigest(
+        credentialDeploymentTransaction
+    );
+    const signingKey1 =
+        '1053de23867e0f92a48814aabff834e2ca0b518497abaef71cad4e1be506334a';
+    const signature = Buffer.from(
+        await ed.sign(hashToSign, signingKey1)
+    ).toString('hex');
+    const signatures: string[] = [signature];
+
+    expect(
+        clientV2.sendCredentialDeploymentTransaction(
+            credentialDeploymentTransaction,
+            signatures
+        )
+    ).rejects.toThrow(
+        '3 INVALID_ARGUMENT: The credential deployment was expired'
+    );
 });

@@ -34,7 +34,7 @@
             }
         }
     ],
-    "ignorePatterns": ["**/pkg/**/", "**/lib/**/", "deps/**/*", "**/nodejs/grpc/*", "**/nodejs/src/grpc/*"],
+    "ignorePatterns": ["**/pkg/**/", "**/lib/**/", "deps/**/*", "**/nodejs/grpc/*"],
     "settings": {
         "import/ignore": [
             "bs58check"

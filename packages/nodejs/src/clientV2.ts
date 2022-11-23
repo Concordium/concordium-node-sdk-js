@@ -2,10 +2,11 @@ import { ChannelCredentials, Metadata } from '@grpc/grpc-js';
 import * as v1 from '@concordium/common-sdk';
 import * as v2 from '../grpc/v2/concordium/types';
 import * as translate from './typeTranslation';
-import { HexString } from '@concordium/common-sdk';
+import { calculateEnergyCost, getAccountTransactionHandler, HexString, serializeAccountTransactionPayload, serializeCredentialDeploymentPayload } from '@concordium/common-sdk';
 import { QueriesClient } from '../grpc/v2/concordium/service.client';
 import { GrpcTransport } from '@protobuf-ts/grpc-transport';
-import { getBlockHashInput, getAccountIdentifierInput, assertValidHash, assertValidModuleRef, assertAmount } from './util';
+import { getBlockHashInput, getAccountIdentifierInput, assertValidHash, assertValidModuleRef, translateSignature } from './util';
+import { countSignatures } from '@concordium/common-sdk/src/util';
 
 /**
  * A concordium-node specific gRPC client wrapper.
@@ -28,10 +29,10 @@ export default class ConcordiumNodeClient {
     /**
      * Initialize a gRPC client for a specific concordium node.
      * @param address the ip address of the node, e.g. 127.0.0.1
-     * @param port the port to use when econnecting to the node
-     * @param credentials credentials to use to connect to the node
-     * @param timeout milliseconds to wait before timing out
-     * @param options optional options for the P2PClient
+     * @param port the port to use when econnecting to the node.
+     * @param credentials credentials to use to connect to the node.
+     * @param timeout milliseconds to wait before timing out.
+     * @param options optional options for the P2PClient.
      */
     constructor(
         address: string,
@@ -63,8 +64,8 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieves the next account nonce for the given account. The account nonce is
      * used in all account transactions as part of their header.
-     * @param accountAddress base58 account address to get the next account nonce for
-     * @returns the next account nonce, and a boolean indicating if the nonce is reliable
+     * @param accountAddress base58 account address to get the next account nonce for.
+     * @returns the next account nonce, and a boolean indicating if the nonce is reliable.
      */
     async getNextAccountNonce(
         accountAddress: v1.AccountAddress
@@ -82,7 +83,7 @@ export default class ConcordiumNodeClient {
      * Retrieves the consensus status information from the node. Note that the optional
      * fields will only be unavailable for a newly started node that has not processed
      * enough data yet.
-     * @param blockHash optional block hash to get the account info at, otherwise retrieves from last finalized block
+     * @param blockHash optional block hash to get the account info at, otherwise retrieves from last finalized block.
      * @returns the global cryptographic parameters at the given block, or undefined it the block does not exist.
      */
     async getCryptographicParameters(
@@ -121,6 +122,11 @@ export default class ConcordiumNodeClient {
         return translate.accountInfo(response);
     }
 
+    /**
+     * Retrieves a status for the given transaction/block item.
+     * @param transactionHash the transaction/block item to get a status for.
+     * @returns the status for the given transaction/block item, or undefined if it does not exist.
+     */
     async getBlockItemStatus(
         transactionHash: HexString
     ): Promise<v2.BlockItemStatus> {
@@ -133,42 +139,74 @@ export default class ConcordiumNodeClient {
             .response;
     }
 
+    /**
+     * Retrieves the consensus status information from the node. Note that the optional
+     * fields will only be unavailable for a newly started node that has not processed
+     * enough data yet.
+     */
     async getConsensusInfo(): Promise<v2.ConsensusInfo> {
         return await this.client.getConsensusInfo(v2.Empty).response;
     }
 
+    /**
+     * Retrieves the source of the given module at
+     * the provided block.
+     * @param moduleRef the module's reference, hash of the source represented as a bytearray.
+     * @param blockHash the block to get the module source at.
+     * @returns the source of the module as raw bytes.
+     */
     async getModuleSource(
         moduleRef: Uint8Array,
         blockHash?: HexString
     ): Promise<v2.VersionedModuleSource> {
-        const blockHashInput = getBlockHashInput(blockHash);
         assertValidModuleRef(moduleRef);
 
         const moduleSourceRequest: v2.ModuleSourceRequest = {
-            blockHash: blockHashInput,
+            blockHash: getBlockHashInput(blockHash),
             moduleRef: { value: moduleRef },
         };
 
         return await this.client.getModuleSource(moduleSourceRequest).response;
     }
 
+    /**
+     * Retrieve information about a given smart contract instance.
+     * @param contractAddress the address of the smart contract.
+     * @param blockHash the block hash to get the smart contact instances at.
+     * @returns An object with information about the contract instance.
+     */
     async getInstanceInfo(
         contractAddress: v2.ContractAddress,
         blockHash?: HexString
     ): Promise<v2.InstanceInfo> {
-        const blockHashInput = getBlockHashInput(blockHash);
-
         const instanceInfoRequest: v2.InstanceInfoRequest = {
-            blockHash: blockHashInput,
+            blockHash: getBlockHashInput(blockHash),
             address: contractAddress,
         };
 
         return await this.client.getInstanceInfo(instanceInfoRequest).response;
     }
 
+    /**
+     * Invokes a smart contract.
+     * @param instance The address of the smart contract that shall be evoked.
+     * @param amount The amount of microCCD to invoke the contract with.
+     * @param entrypoint The entrypoint (receive function) that shall be invoked.
+     * @param parameter The serialized parameters that the contract will be invoked with.
+     * @param energy The maximum amount of energy to allow for execution.
+     * @param invoker The address of the invoker, if undefined uses the zero account address.
+     * @param blockHash the block hash at which the contract should be invoked at. The contract is invoked in the state at the end of this block.
+     * @returns If the node was able to invoke, then a object describing the outcome is returned.
+     * The outcome is determined by the `tag` field, which is either `success` or `failure`.
+     * The `usedEnergy` field will always be present, and is the amount of NRG was used during the execution.
+     * If the tag is `success`, then an `events` field is present, and it contains the events that would have been generated.
+     * If invoking a V1 contract and it produces a return value, it will be present in the `returnValue` field.
+     * If the tag is `failure`, then a `reason` field is present, and it contains the reason the update would have been rejected.
+     * If either the block does not exist, or then node fails to parse of any of the inputs, then undefined is returned.
+     */
     async invokeInstance(
         instance: v2.ContractAddress,
-        amount: bigint,
+        amount: v1.CcdAmount,
         entrypoint: string,
         parameter: Uint8Array,
         energy: bigint,
@@ -176,18 +214,132 @@ export default class ConcordiumNodeClient {
         blockHash?: HexString
     ): Promise<v2.InvokeInstanceResponse> {
         const blockHashInput = getBlockHashInput(blockHash);
-        assertAmount(amount);
 
         const invokeInstanceRequest: v2.InvokeInstanceRequest = {
             blockHash: blockHashInput,
             invoker: invoker,
             instance: instance,
-            amount: { value: amount },
+            amount: { value: amount.microCcdAmount },
             entrypoint: { value: entrypoint },
             parameter: { value: parameter },
             energy: { value: energy },
         };
 
         return await this.client.invokeInstance(invokeInstanceRequest).response;
+    }
+
+    /**
+     * Get the hash to be signed for an account transaction. The hash returned
+     * can be signed and the signatures included as an
+     * AccountTransactionSignature when calling `SendBlockItem`. This function should only serve
+     * for verification and in most cases the local method with the same name should be prefered
+     * @param PreAccountTransaction The account transaction which hash should be returned.
+     * @returns The account transaction hash to be signed as a byte array.
+     */
+    async getAccountTransactionSignHash(
+        preAccountTransaction: v2.PreAccountTransaction
+    ): Promise<Uint8Array> {
+        const response = await this.client.getAccountTransactionSignHash(
+            preAccountTransaction
+        ).response;
+        return response.value;
+    }
+
+    /**
+     * Serializes and sends an account transaction to the node to be
+     * put in a block on the chain.
+     *
+     * Note that a transaction can still fail even if it was accepted by the node.
+     * To keep track of the transaction use getTransactionStatus.
+     * @param transaction the transaction to send to the node
+     * @param signatures the signatures on the signing digest of the transaction
+     * @returns The transaction hash as a byte array
+     */
+    async sendAccountTransaction(
+        transaction: v1.AccountTransaction,
+        signature: v1.AccountTransactionSignature
+    ): Promise<Uint8Array> {
+        const rawPayload = serializeAccountTransactionPayload(transaction);
+        const transactionSignature: v2.AccountTransactionSignature =
+            translateSignature(signature);
+
+        // Energy cost
+        const accountTransactionHandler = getAccountTransactionHandler(
+            transaction.type
+        );
+        const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(
+            transaction.payload
+        );
+        const energyCost = calculateEnergyCost(
+            countSignatures(signature),
+            BigInt(rawPayload.length),
+            baseEnergyCost
+        );
+
+        // Put together sendBlockItemRequest
+        const header: v2.AccountTransactionHeader = {
+            sender: { value: transaction.header.sender.decodedAddress },
+            sequenceNumber: { value: transaction.header.nonce },
+            energyAmount: { value: energyCost },
+            expiry: { value: transaction.header.expiry.expiryEpochSeconds },
+        };
+        const accountTransaction: v2.AccountTransaction = {
+            signature: transactionSignature,
+            header: header,
+            payload: {
+                payload: { oneofKind: 'rawPayload', rawPayload: rawPayload },
+            },
+        };
+        const sendBlockItemRequest: v2.SendBlockItemRequest = {
+            blockItem: {
+                oneofKind: 'accountTransaction',
+                accountTransaction: accountTransaction,
+            },
+        };
+
+        const response = await this.client.sendBlockItem(sendBlockItemRequest)
+            .response;
+        return response.value;
+    }
+
+    /**
+     * Sends a credential deployment transaction, for creating a new account,
+     * to the node to be put in a block on the chain.
+     *
+     * Note that a transaction can still fail even if it was accepted by the node.
+     * To keep track of the transaction use getTransactionStatus.
+     * @param credentialDeploymentTransaction the credential deployment transaction to send to the node
+     * @param signatures the signatures on the hash of the serialized unsigned credential deployment information, in order
+     * @returns The transaction hash as a byte array
+     */
+    async sendCredentialDeploymentTransaction(
+        credentialDeploymentTransaction: v1.CredentialDeploymentTransaction,
+        signatures: string[]
+    ): Promise<Uint8Array> {
+        const payloadHex = serializeCredentialDeploymentPayload(
+            signatures,
+            credentialDeploymentTransaction
+        );
+
+        const credentialDeployment: v2.CredentialDeployment = {
+            messageExpiry: {
+                value: credentialDeploymentTransaction.expiry
+                    .expiryEpochSeconds,
+            },
+            payload: {
+                oneofKind: 'rawPayload',
+                rawPayload: payloadHex,
+            },
+        };
+        const sendBlockItemRequest: v2.SendBlockItemRequest = {
+            blockItem: {
+                oneofKind: 'credentialDeployment',
+                credentialDeployment: credentialDeployment,
+            },
+        };
+
+        const response = await this.client.sendBlockItem(sendBlockItemRequest)
+            .response;
+        return response.value;
     }
 }

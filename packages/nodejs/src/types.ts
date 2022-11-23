@@ -1,9 +1,9 @@
 import {
-    AccountAddress as AccountAddressLocal,
-    CredentialRegistrationId as CredentialRegistrationIdLocal,
+    AccountAddress,
+    CredentialRegistrationId,
 } from '@concordium/common-sdk';
 
 export type AccountIdentifierInput =
-    | AccountAddressLocal
-    | CredentialRegistrationIdLocal
+    | AccountAddress
+    | CredentialRegistrationId
     | bigint;

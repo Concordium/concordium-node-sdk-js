@@ -25,6 +25,7 @@ import {
     SchemaVersion,
     CredentialDeploymentDetails,
     SignedCredentialDeploymentDetails,
+    CredentialDeploymentTransaction,
 } from './types';
 import { calculateEnergyCost } from './energyCost';
 import { countSignatures } from './util';
@@ -141,6 +142,28 @@ export function serializeAccountTransaction(
         serializedType,
         serializedPayload,
     ]);
+}
+
+/**
+ * Serializes a transaction payload.
+ * @param accountTransaction the transaction which payload is to be serialized
+ * @returns the account transaction payload serialized as a buffer.
+ */
+export function serializeAccountTransactionPayload(
+    accountTransaction: AccountTransaction
+): Buffer {
+    const serializedType = serializeAccountTransactionType(
+        accountTransaction.type
+    );
+
+    const accountTransactionHandler = getAccountTransactionHandler(
+        accountTransaction.type
+    );
+    const serializedPayload = accountTransactionHandler.serialize(
+        accountTransaction.payload
+    );
+
+    return Buffer.concat([serializedType, serializedPayload]);
 }
 
 /**
@@ -552,4 +575,15 @@ export function getSignedCredentialDeploymentTransactionHash(
     const serializedDetails =
         serializeSignedCredentialDeploymentDetails(credentialDetails);
     return sha256([serializedDetails]).toString('hex');
+}
+
+export function serializeCredentialDeploymentPayload(
+    signatures: string[],
+    credentialDeploymentTransaction: CredentialDeploymentTransaction
+): Buffer {
+    const payloadByteArray = wasm.serializeCredentialDeploymentPayload(
+        signatures,
+        JSON.stringify(credentialDeploymentTransaction.unsignedCdi)
+    );
+    return Buffer.from(payloadByteArray);
 }

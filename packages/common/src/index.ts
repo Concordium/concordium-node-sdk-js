@@ -12,6 +12,8 @@ export {
     serializeCredentialDeploymentTransactionForSubmission,
     getSignedCredentialDeploymentTransactionHash,
     serializeTypeValue,
+    serializeAccountTransactionPayload,
+    serializeCredentialDeploymentPayload,
 } from './serialization';
 export { sha256 };
 export { CredentialRegistrationId } from './types/CredentialRegistrationId';

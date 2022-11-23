@@ -814,3 +814,17 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<String> {
 
     Ok(json!(out).to_string())
 }
+
+pub fn serialize_credential_deployment_payload_aux(
+    signatures: Vec<String>,
+    unsigned_info: &str,
+) -> Result<Vec<u8>> {
+    let cdi = get_credential_deployment_info(signatures, unsigned_info)?;
+
+    let acc_cred = AccountCredential::Normal { cdi };
+
+    let mut acc_cred_ser = Vec::<u8>::new();
+    acc_cred.serial(&mut acc_cred_ser);
+
+    Ok(acc_cred_ser)
+}

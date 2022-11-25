@@ -587,6 +587,84 @@ if (!verifyMessageSignature(message, signature, accountInfo)) {
 }
 ```
 
+# Identity proofs
+The SDK contains a helper to create statements about identities, which can then be proven.
+
+To do so, use the IdStatementBuilder, to build a statement:
+```js
+const statementBuilder = new IdStatementBuilder();
+...
+const statement = statementBuilder.getStatement();
+```
+
+The statement can then be proved using the `getIdProof`, or be provided to a wallet for them it to provide a proof for the statement.
+There are currently 4 types of the statements, and if multiple are added, the resulting statement is the conjuction between them.
+
+//TODO: list the attributes and their format
+
+### Minimum Age
+There is a helper function for specifying the prover must have some minimum age.
+
+Example: add the statement that the prover must be born at least 18 years old:
+
+```js
+statementBuilder.addMinimumAge(18);
+```
+
+### Eu membership
+There are helpers for specifying the country of residency or nationality to be one of the EU member states.
+
+```js
+statementBuilder.addEUNationality();
+statementBuilder.addEUResidency();
+```
+
+### Reveal statement
+State that a given attribute should be revealed as part of the proof.
+
+```js
+statementBuilder.revealAttribute(AttributesKeys.nationality);
+```
+
+### Range statement
+State that a given attribute should be between 2 given values.
+
+Example: add the statement that the prover must be born between January 1, 1941 and Februar 2, 2005.
+```js
+statementBuilder.addRange(AttributesKeys.dob, 19410101, 20050202);
+```
+
+Note that this type of statement is only allowed for the following attributes:
+ - dob (date of birth)
+ - idDocIssuedAt 
+ - idDocExpiresAt.
+
+### Membership statement
+
+Example: add the statement that the prover's country of residency is France or Spain:
+```js
+statementBuilder.addMembership(AttributesKeys.CountryOfResidency, ['FR', 'ES']);
+```
+
+Note that this type of statement is only allowed for the following attributes:
+ - Nationality
+ - CountryOfResidency
+ - IdDocIssuer
+ - IdDocType
+
+### Non membership statement
+
+Example: add the statement that the prover's country of residency not Germany nor Portugal:
+```js
+statementBuilder.addNonMembership(AttributesKeys.CountryOfResidency, ['DE', 'PT']);
+```
+
+Note that this type of statement is only allowed for the following attributes:
+ - Nationality
+ - CountryOfResidency
+ - IdDocIssuer
+ - IdDocType
+
 # JSON-RPC client
 The SDK also provides a JSON-RPC client, but it is primarily used for web, [so it has been documented in the web-sdk package instead](../web#JSON-RPC-client).
 The nodejs SDK also provides a [gRPC client, which can interact directly with a node](../nodejs#ConcordiumNodeClient).

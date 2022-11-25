@@ -33,10 +33,27 @@ export enum AttributesKeys {
     nationalIdNo,
     taxIdNo,
 }
+
 export type Attributes = {
     [P in keyof typeof AttributesKeys]: string;
 };
 export type AttributeKey = keyof Attributes;
+
+export enum AttributeKeyString {
+    firstName = 'firstName',
+    lastName = 'lastName',
+    sex = 'sex',
+    dob = 'dob',
+    countryOfResidence = 'countryOfResidence',
+    nationality = 'nationality',
+    idDocType = 'idDocType',
+    idDocNo = 'idDocNo',
+    idDocIssuer = 'idDocIssuer',
+    idDocIssuedAt = 'idDocIssuedAt',
+    idDocExpiresAt = 'idDocExpiresAt',
+    nationalIdNo = 'nationalIdNo',
+    taxIdNo = 'taxIdNo',
+}
 
 export enum TransactionStatusEnum {
     Received = 'received',

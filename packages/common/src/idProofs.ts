@@ -1,12 +1,17 @@
 import * as wasm from '@concordium/rust-bindings';
-import { AttributeKey, AttributesKeys } from '.';
+import { AttributeKey, AttributeKeyString, AttributesKeys } from '.';
 import {
     AtomicStatement,
+    IdDocType,
     IdProofInput,
     IdProofOutput,
     IdStatement,
+    MembershipStatement,
+    NonMembershipStatement,
+    RangeStatement,
     StatementTypes,
 } from './idProofTypes';
+import { whereAlpha2 } from 'iso-3166-1';
 
 const MIN_DATE = '00000101';
 const EU_MEMBERS = [
@@ -39,39 +44,28 @@ const EU_MEMBERS = [
     'HR',
 ];
 
+/**
+ * Given a number x, return the date string for x years ago.
+ * @returns YYYYMMDD for x years ago today in local time.
+ */
 function getPastDate(yearsAgo: number) {
     const date = new Date();
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
     const year = (date.getFullYear() - yearsAgo).toString();
     return year + month + day;
 }
 
-const attributesWithRange: AttributeKey[] = [
-    'dob',
-    'idDocIssuedAt',
-    'idDocExpiresAt',
-];
-const attributesWithSet: AttributeKey[] = [
-    'countryOfResidence',
-    'nationality',
-    'idDocType',
-    'idDocIssuer',
-];
-
 interface StatementBuilder {
-    addRangeProof(
+    addRange(
         attribute: AttributesKeys,
         lower: string,
         upper: string
     ): IdStatementBuilder;
 
-    addMembershipProof(
-        attribute: AttributesKeys,
-        set: string[]
-    ): IdStatementBuilder;
+    addMembership(attribute: AttributesKeys, set: string[]): IdStatementBuilder;
 
-    addNonMembershipProof(
+    addNonMembership(
         attribute: AttributesKeys,
         set: string[]
     ): IdStatementBuilder;
@@ -79,6 +73,9 @@ interface StatementBuilder {
     getStatement(): IdStatement;
 }
 
+/**
+ * Converts the attribute value into the name string.
+ */
 function getAttributeString(key: AttributesKeys): AttributeKey {
     if (!(key in AttributesKeys)) {
         throw new Error('invalid attribute key');
@@ -86,10 +83,114 @@ function getAttributeString(key: AttributesKeys): AttributeKey {
     return AttributesKeys[key] as AttributeKey;
 }
 
+function isISO8601(date: string): boolean {
+    if (date.length !== 8) {
+        return false;
+    }
+    if (!/^\d+$/.test(date)) {
+        return false;
+    }
+    const month = Number(date.substring(4, 6));
+    if (month < 1 || month > 12) {
+        return false;
+    }
+    const day = Number(date.substring(6));
+    if (day < 1 || day > 31) {
+        return false;
+    }
+    return true;
+}
+
+function isISO3166_1Alpha2(code: string) {
+    return Boolean(whereAlpha2(code));
+}
+
+/**
+ * ISO3166-2 codes consist of a ISO3166_1Alpha2 code, then a dash, and then 1-3 alphanumerical characters
+ */
+function isISO3166_2(code: string) {
+    return (
+        Boolean(whereAlpha2(code.substring(0, 2))) &&
+        /^\-([a-zA-Z0-9]){1,3}$/.test(code.substring(2))
+    );
+}
+
+function verifyRangeStatement(statement: RangeStatement) {
+    switch (statement.attributeTag) {
+        case AttributeKeyString.dob:
+        case AttributeKeyString.idDocIssuedAt:
+        case AttributeKeyString.idDocExpiresAt: {
+            if (!isISO8601(statement.lower)) {
+                throw new Error(
+                    statement.attributeTag +
+                        ' lower range value must be YYYYMMDD'
+                );
+            }
+            if (!isISO8601(statement.upper)) {
+                throw new Error(
+                    statement.attributeTag +
+                        ' upper range value must be YYYYMMDD'
+                );
+            }
+            break;
+        }
+        default:
+            throw new Error(
+                statement.attributeTag +
+                    ' is not allowed to be used in range statements'
+            );
+    }
+}
+
+function verifySetStatement(
+    statement: MembershipStatement | NonMembershipStatement,
+    typeName: string
+) {
+    switch (statement.attributeTag) {
+        case AttributeKeyString.countryOfResidence:
+        case AttributeKeyString.nationality:
+            if (!statement.set.every(isISO3166_1Alpha2)) {
+                throw new Error(
+                    statement.attributeTag +
+                        ' values must be ISO3166-1 Alpha 2 codes'
+                );
+            }
+            break;
+        case AttributeKeyString.idDocIssuer:
+            if (
+                !statement.set.every(
+                    (x) => isISO3166_1Alpha2(x) || isISO3166_2(x)
+                )
+            ) {
+                throw new Error(
+                    'idDocIssuer must be ISO3166-1 Alpha 2 or ISO3166-2 codes'
+                );
+            }
+            break;
+        case AttributeKeyString.idDocType:
+            if (!statement.set.every((v) => v in IdDocType)) {
+                throw new Error(
+                    'idDocType values must be one from IdDocType enum'
+                );
+            }
+            break;
+        default:
+            throw new Error(
+                statement.attributeTag +
+                    ' is not allowed to be used in ' +
+                    typeName +
+                    ' statements'
+            );
+    }
+}
+
 function verifyAtomicStatement(
     statement: AtomicStatement,
     existingStatements: IdStatement
 ) {
+    if (!(statement.attributeTag in AttributeKeyString)) {
+        throw new Error('Unknown attributeTag: ' + statement.attributeTag);
+    }
     if (
         existingStatements.some(
             (v) => v.attributeTag === statement.attributeTag
@@ -97,36 +198,26 @@ function verifyAtomicStatement(
     ) {
         throw new Error('Only 1 statement is allowed for each attribute');
     }
-    if (
-        statement.type === StatementTypes.AttributeInRange &&
-        !attributesWithRange.includes(statement.attributeTag)
-    ) {
-        throw new Error(
-            statement.attributeTag +
-                ' is not allowed to be used in range statements'
-        );
+    switch (statement.type) {
+        case StatementTypes.AttributeInRange:
+            return verifyRangeStatement(statement);
+        case StatementTypes.AttributeInSet:
+            return verifySetStatement(statement, 'membership');
+        case StatementTypes.AttributeNotInSet:
+            return verifySetStatement(statement, 'non-membership');
+        case StatementTypes.RevealAttribute:
+            return true;
+        default:
+            throw new Error(
+                'Unknown statement type: ' + (statement as any).type
+            );
     }
-    if (
-        statement.type === StatementTypes.AttributeInSet &&
-        !attributesWithSet.includes(statement.attributeTag)
-    ) {
-        throw new Error(
-            statement.attributeTag +
-                ' is not allowed to be used in membership statements'
-        );
-    }
-    if (
-        statement.type === StatementTypes.AttributeNotInSet &&
-        !attributesWithSet.includes(statement.attributeTag)
-    ) {
-        throw new Error(
-            statement.attributeTag +
-                ' is not allowed to be used in non-membership statements'
-        );
-    }
-    return true;
 }
 
+/**
+ * Check that the Id statement is well formed and do not break any rules.
+ * If it does not verify, this throw an error.
+ */
 export function verifyIdstatement(statements: IdStatement) {
     const checkedStatements = [];
     for (const s of statements) {
@@ -145,15 +236,32 @@ export class IdStatementBuilder implements StatementBuilder {
         this.checkConstraints = checkConstraints;
     }
 
+    /**
+     * Outputs the built statement.
+     */
     getStatement(): IdStatement {
         return this.statements;
     }
 
-    check(statement: AtomicStatement) {
-        verifyAtomicStatement(statement, this.statements);
+    /**
+     * If checkConstraints is true, this checks whether the given statement may be added to the statement being built.
+     * If the statement breaks any rules, this will throw an error.
+     */
+    private check(statement: AtomicStatement) {
+        if (this.checkConstraints) {
+            verifyAtomicStatement(statement, this.statements);
+        }
     }
 
-    addRangeProof(
+    /**
+     * Add to the statement, that the given attribute should be in the given range, i.e. that lower <= attribute < upper.
+     * @param attribute the attribute that should be checked
+     * @param lower: the lower end of the range, inclusive.
+     * @param upper: the upper end of the range, exclusive.
+     * @returns the updated builder
+     */
+    addRange(
+        // TODO: use an Enum with string values instead, maybe?
         attribute: AttributesKeys,
         lower: string,
         upper: string
@@ -169,7 +277,13 @@ export class IdStatementBuilder implements StatementBuilder {
         return this;
     }
 
-    addMembershipProof(
+    /**
+     * Add to the statement, that the given attribute should be one of the values in the given set.
+     * @param attribute the attribute that should be checked
+     * @param set: the set of values that the attribute must be included in.
+     * @returns the updated builder
+     */
+    addMembership(
         attribute: AttributesKeys,
         set: string[]
     ): IdStatementBuilder {
@@ -183,7 +297,13 @@ export class IdStatementBuilder implements StatementBuilder {
         return this;
     }
 
-    addNonMembershipProof(
+    /**
+     * Add to the statement, that the given attribute should be one of the values in the given set.
+     * @param attribute the attribute that should be checked
+     * @param set: the set of values that the attribute must be included in.
+     * @returns the updated builder
+     */
+    addNonMembership(
         attribute: AttributesKeys,
         set: string[]
     ): IdStatementBuilder {
@@ -197,6 +317,12 @@ export class IdStatementBuilder implements StatementBuilder {
         return this;
     }
 
+    /**
+     * Add to the statement, that the given attribute should be revealed.
+     * The proof will contain the value.
+     * @param attribute the attribute that should be revealed
+     * @returns the updated builder
+     */
     revealAttribute(attribute: AttributesKeys): IdStatementBuilder {
         const statement: AtomicStatement = {
             type: StatementTypes.RevealAttribute,
@@ -207,30 +333,39 @@ export class IdStatementBuilder implements StatementBuilder {
         return this;
     }
 
+    /**
+     * Add to the statement that the age is at minimum the given value.
+     * This adds a range statement that the date of birth is between <age> years ago and 1st of janurary 0000
+     * @param age: the minimum age allowed.
+     * @returns the updated builder
+     */
     addMinimumAge(age: number) {
-        return this.addRangeProof(
-            AttributesKeys.dob,
-            MIN_DATE,
-            getPastDate(age)
-        );
+        return this.addRange(AttributesKeys.dob, MIN_DATE, getPastDate(age));
     }
 
+    /**
+     * Add to the statement that the country of residence is one of the EU countries
+     * @returns the updated builder
+     */
     addEUResidency() {
-        return this.addMembershipProof(
+        return this.addMembership(
             AttributesKeys.countryOfResidence,
             EU_MEMBERS
         );
     }
 
+    /**
+     * Add to the statement that the nationality is one of the EU countries
+     * @returns the updated builder
+     */
     addEUNationality() {
-        return this.addMembershipProof(AttributesKeys.nationality, EU_MEMBERS);
-    }
-
-    addEUDocumentIssuer() {
-        return this.addMembershipProof(AttributesKeys.idDocIssuer, EU_MEMBERS);
+        return this.addMembership(AttributesKeys.nationality, EU_MEMBERS);
     }
 }
 
+/**
+ * Given a statement about an identity and the inputs necessary to prove the statement, produces a proof that the associated identity fulfills the statement.
+ */
 export function getIdProof(input: IdProofInput): IdProofOutput {
     const rawRequest = wasm.createIdProof(JSON.stringify(input));
     let out: IdProofOutput;

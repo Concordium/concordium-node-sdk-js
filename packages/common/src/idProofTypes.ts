@@ -88,3 +88,22 @@ export enum IdDocType {
     DriversLicense = '3',
     ImmigrationCard = '4',
 }
+
+/**
+ * The attributes that can be used for range statements
+ */
+export const attributesWithRange: AttributeKey[] = [
+    'dob',
+    'idDocIssuedAt',
+    'idDocExpiresAt',
+];
+
+/**
+ * The attributes that can be used for (non)membership statements
+ */
+export const attributesWithSet: AttributeKey[] = [
+    'countryOfResidence',
+    'nationality',
+    'idDocType',
+    'idDocIssuer',
+];

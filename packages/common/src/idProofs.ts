@@ -86,6 +86,56 @@ function getAttributeString(key: AttributesKeys): AttributeKey {
     return AttributesKeys[key] as AttributeKey;
 }
 
+function verifyAtomicStatement(
+    statement: AtomicStatement,
+    existingStatements: IdStatement
+) {
+    if (
+        existingStatements.some(
+            (v) => v.attributeTag === statement.attributeTag
+        )
+    ) {
+        throw new Error('Only 1 statement is allowed for each attribute');
+    }
+    if (
+        statement.type === StatementTypes.AttributeInRange &&
+        !attributesWithRange.includes(statement.attributeTag)
+    ) {
+        throw new Error(
+            statement.attributeTag +
+                ' is not allowed to be used in range statements'
+        );
+    }
+    if (
+        statement.type === StatementTypes.AttributeInSet &&
+        !attributesWithSet.includes(statement.attributeTag)
+    ) {
+        throw new Error(
+            statement.attributeTag +
+                ' is not allowed to be used in membership statements'
+        );
+    }
+    if (
+        statement.type === StatementTypes.AttributeNotInSet &&
+        !attributesWithSet.includes(statement.attributeTag)
+    ) {
+        throw new Error(
+            statement.attributeTag +
+                ' is not allowed to be used in non-membership statements'
+        );
+    }
+    return true;
+}
+
+export function verifyIdstatement(statements: IdStatement) {
+    const checkedStatements = [];
+    for (const s of statements) {
+        verifyAtomicStatement(s, checkedStatements);
+        checkedStatements.push(s);
+    }
+    return true;
+}
+
 export class IdStatementBuilder implements StatementBuilder {
     statements: IdStatement;
     checkConstraints: boolean;
@@ -100,40 +150,7 @@ export class IdStatementBuilder implements StatementBuilder {
     }
 
     check(statement: AtomicStatement) {
-        if (
-            this.statements.some(
-                (v) => v.attributeTag === statement.attributeTag
-            )
-        ) {
-            throw new Error('Only 1 statement is allowed for each attribute');
-        }
-        if (
-            statement.type === StatementTypes.AttributeInRange &&
-            !attributesWithRange.includes(statement.attributeTag)
-        ) {
-            throw new Error(
-                statement.attributeTag +
-                    ' is not allowed to be used in range statements'
-            );
-        }
-        if (
-            statement.type === StatementTypes.AttributeInSet &&
-            !attributesWithSet.includes(statement.attributeTag)
-        ) {
-            throw new Error(
-                statement.attributeTag +
-                    ' is not allowed to be used in membership statements'
-            );
-        }
-        if (
-            statement.type === StatementTypes.AttributeNotInSet &&
-            !attributesWithSet.includes(statement.attributeTag)
-        ) {
-            throw new Error(
-                statement.attributeTag +
-                    ' is not allowed to be used in non-membership statements'
-            );
-        }
+        verifyAtomicStatement(statement, this.statements);
     }
 
     addRangeProof(

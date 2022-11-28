@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0 2022-11-30
+
+### Added
+
+- `createIdProof`.
+
 ## 0.7.0 2022-11-15
 
 ### Added

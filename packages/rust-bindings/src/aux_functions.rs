@@ -19,23 +19,23 @@ pub type JsonString = String;
 pub type HexString = String;
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
+use crypto_common::types::{KeyIndex, KeyPair};
+use ed25519_dalek as ed25519;
+use ed25519_hd_key_derivation::DeriveError;
+use either::Either::Left;
 use id::{
     account_holder::{
         create_credential, create_unsigned_credential, generate_id_recovery_request,
         generate_pio_v1,
     },
-    id_proof_types::{Statement, Proof, StatementWithContext},
     constants::{ArCurve, AttributeKind},
+    id_proof_types::{Proof, Statement, StatementWithContext},
     pedersen_commitment::{Randomness as PedersenRandomness, Value as PedersenValue},
+    secret_sharing::Threshold,
     types::*,
 };
 use pedersen_scheme::{CommitmentKey as PedersenKey, Value};
 use serde_json::to_string;
-use crypto_common::types::{KeyIndex, KeyPair};
-use ed25519_dalek as ed25519;
-use ed25519_hd_key_derivation::DeriveError;
-use either::Either::Left;
-use id::secret_sharing::Threshold;
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
 pub struct CredId {
@@ -710,14 +710,14 @@ pub struct IdProofInput {
     identity_provider_index: u32,
     identity_index:          u32,
     cred_number:             u8,
-    statement: Statement<ExampleCurve, AttributeKind>,
-    challenge: String
+    statement:               Statement<ExampleCurve, AttributeKind>,
+    challenge:               String,
 }
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
 struct IdProofOutput {
     account: AccountAddress,
-    proof: Proof<ExampleCurve, AttributeKind>,
+    proof:   Proof<ExampleCurve, AttributeKind>,
 }
 
 pub fn create_id_proof_aux(input: IdProofInput) -> Result<String> {
@@ -734,9 +734,7 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<String> {
         net: get_net(&input.net)?,
     };
 
-    let attribute_list = input
-        .id_object
-        .alist;
+    let attribute_list = input.id_object.alist;
 
     let cred_id_exponent = wallet
         .get_prf_key(input.identity_provider_index, input.identity_index)?
@@ -758,10 +756,11 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<String> {
         )
         .0;
 
-    let proof =  StatementWithContext{
+    let proof = StatementWithContext {
         credential,
-        statement: input.statement
-    }.prove(
+        statement: input.statement,
+    }
+    .prove(
         &input.global_context,
         &challenge_decoded,
         &attribute_list,
@@ -776,4 +775,3 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<String> {
 
     Ok(json!(out).to_string())
 }
-

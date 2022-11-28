@@ -110,7 +110,7 @@ function isISO3166_1Alpha2(code: string) {
  */
 function isISO3166_2(code: string) {
     return (
-        Boolean(whereAlpha2(code.substring(0, 2))) &&
+        isISO3166_1Alpha2(code.substring(0, 2)) &&
         /^\-([a-zA-Z0-9]){1,3}$/.test(code.substring(2))
     );
 }
@@ -146,6 +146,10 @@ function verifySetStatement(
     statement: MembershipStatement | NonMembershipStatement,
     typeName: string
 ) {
+    if (statement.set.length === 0) {
+        throw new Error(typeName + ' statements may not use empty sets');
+    }
+
     switch (statement.attributeTag) {
         case AttributeKeyString.countryOfResidence:
         case AttributeKeyString.nationality:
@@ -206,9 +210,10 @@ function verifyAtomicStatement(
         case StatementTypes.AttributeNotInSet:
             return verifySetStatement(statement, 'non-membership');
         case StatementTypes.RevealAttribute:
-            return true;
+            return;
         default:
             throw new Error(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 'Unknown statement type: ' + (statement as any).type
             );
     }
@@ -218,7 +223,7 @@ function verifyAtomicStatement(
  * Check that the Id statement is well formed and do not break any rules.
  * If it does not verify, this throw an error.
  */
-export function verifyIdstatement(statements: IdStatement) {
+export function verifyIdstatement(statements: IdStatement): boolean {
     const checkedStatements = [];
     for (const s of statements) {
         verifyAtomicStatement(s, checkedStatements);
@@ -231,7 +236,7 @@ export class IdStatementBuilder implements StatementBuilder {
     statements: IdStatement;
     checkConstraints: boolean;
 
-    constructor(checkConstraints: boolean) {
+    constructor(checkConstraints = true) {
         this.statements = [];
         this.checkConstraints = checkConstraints;
     }
@@ -339,7 +344,7 @@ export class IdStatementBuilder implements StatementBuilder {
      * @param age: the minimum age allowed.
      * @returns the updated builder
      */
-    addMinimumAge(age: number) {
+    addMinimumAge(age: number): IdStatementBuilder {
         return this.addRange(AttributesKeys.dob, MIN_DATE, getPastDate(age));
     }
 
@@ -347,7 +352,7 @@ export class IdStatementBuilder implements StatementBuilder {
      * Add to the statement that the country of residence is one of the EU countries
      * @returns the updated builder
      */
-    addEUResidency() {
+    addEUResidency(): IdStatementBuilder {
         return this.addMembership(
             AttributesKeys.countryOfResidence,
             EU_MEMBERS
@@ -358,7 +363,7 @@ export class IdStatementBuilder implements StatementBuilder {
      * Add to the statement that the nationality is one of the EU countries
      * @returns the updated builder
      */
-    addEUNationality() {
+    addEUNationality(): IdStatementBuilder {
         return this.addMembership(AttributesKeys.nationality, EU_MEMBERS);
     }
 }

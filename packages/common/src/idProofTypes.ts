@@ -67,7 +67,9 @@ export type ZKAtomicProof = {
 };
 
 export type AtomicProof = RevealProof | ZKAtomicProof;
-export type IdProof = AtomicProof[];
+export type IdProof = {
+    proofs: AtomicProof[];
+};
 
 export type IdProofOutput = {
     account: string;

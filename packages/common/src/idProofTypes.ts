@@ -3,6 +3,7 @@ import {
     CryptographicParameters,
     IdentityObjectV1,
     Network,
+    Versioned,
 } from '.';
 
 export enum StatementTypes {
@@ -72,8 +73,8 @@ export type IdProof = {
 };
 
 export type IdProofOutput = {
-    account: string;
-    proof: IdProof;
+    credential: string;
+    proof: Versioned<IdProof>;
 };
 
 export enum Sex {

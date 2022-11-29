@@ -129,14 +129,15 @@ test('Can create id Proof', () => {
         statement,
         challenge,
     });
-    expect(proof.account).toEqual(
-        '4Rrg8bdCfGKVe7qMgbXS2UfRq8EbCPmdLZqSarXkHjm66Tv6F7'
+    expect(proof.credential).toEqual(
+        'b317d3fea7de56f8c96f6e72820c5cd502cc0eef8454016ee548913255897c6b52156cc60df965d3efb3f160eff6ced4'
     );
-    expect(proof.proof.proofs.length).toBe(3);
-    expect(proof.proof.proofs[0].type).toBe(StatementTypes.AttributeInSet);
-    expect(proof.proof.proofs[1].type).toBe(StatementTypes.AttributeInSet);
-    expect(proof.proof.proofs[2].type).toBe(StatementTypes.AttributeInRange);
-    expect(proof.proof.proofs[0].proof).toBeDefined();
-    expect(proof.proof.proofs[1].proof).toBeDefined();
-    expect(proof.proof.proofs[2].proof).toBeDefined();
+    const proofValue = proof.proof.value.proofs;
+    expect(proofValue.length).toBe(3);
+    expect(proofValue[0].type).toBe(StatementTypes.AttributeInSet);
+    expect(proofValue[1].type).toBe(StatementTypes.AttributeInSet);
+    expect(proofValue[2].type).toBe(StatementTypes.AttributeInRange);
+    expect(proofValue[0].proof).toBeDefined();
+    expect(proofValue[1].proof).toBeDefined();
+    expect(proofValue[2].proof).toBeDefined();
 });

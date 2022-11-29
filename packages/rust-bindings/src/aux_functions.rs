@@ -716,8 +716,8 @@ pub struct IdProofInput {
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
 struct IdProofOutput {
-    account: AccountAddress,
-    proof:   Proof<ExampleCurve, AttributeKind>,
+    credential: String,
+    proof:      Versioned<Proof<ExampleCurve, AttributeKind>>,
 }
 
 pub fn create_id_proof_aux(input: IdProofInput) -> Result<String> {
@@ -769,8 +769,8 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<String> {
     .context("Unable to generate proof.")?;
 
     let out = IdProofOutput {
-        account: account_address_from_registration_id(&credential),
-        proof,
+        credential: base16_encode_string(&credential),
+        proof:      Versioned::new(VERSION_0, proof),
     };
 
     Ok(json!(out).to_string())

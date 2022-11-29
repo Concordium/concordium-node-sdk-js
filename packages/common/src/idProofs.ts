@@ -13,7 +13,8 @@ import {
 } from './idProofTypes';
 import { whereAlpha2 } from 'iso-3166-1';
 
-const MIN_DATE = '00000101';
+const MIN_DATE = '18000101';
+const MAX_DATE = '99990101';
 const EU_MEMBERS = [
     'AT',
     'BE',
@@ -340,12 +341,55 @@ export class IdStatementBuilder implements StatementBuilder {
 
     /**
      * Add to the statement that the age is at minimum the given value.
-     * This adds a range statement that the date of birth is between <age> years ago and 1st of janurary 0000
+     * This adds a range statement that the date of birth is between 1st of january 1800 and <age> years ago.
      * @param age: the minimum age allowed.
      * @returns the updated builder
      */
     addMinimumAge(age: number): IdStatementBuilder {
         return this.addRange(AttributesKeys.dob, MIN_DATE, getPastDate(age));
+    }
+
+    /**
+     * Add to the statement that the age is at maximum the given value.
+     * This adds a range statement that the date of birth is between <age> years ago and today.
+     * @param age: the maximum age allowed.
+     * @returns the updated builder
+     */
+    addMaximumAge(age: number): IdStatementBuilder {
+        return this.addRange(
+            AttributesKeys.dob,
+            getPastDate(age),
+            getPastDate(0)
+        );
+    }
+
+    /**
+     * Add to the statement that the age is between two given ages.
+     * This adds a range statement that the date of birth is between <maxAge> years ago and <minAge> years ago.
+     * @param minAge: the maximum age allowed.
+     * @param maxAge: the maximum age allowed.
+     * @returns the updated builder
+     */
+    addAgeInRange(minAge: number, maxAge: number): IdStatementBuilder {
+        return this.addRange(
+            AttributesKeys.dob,
+            getPastDate(maxAge),
+            getPastDate(minAge)
+        );
+    }
+
+    /**
+     * Add to the statement that the user's document expiry is atleast the given date.
+     * This adds a range statement that the idDocExpiresAt is between the given date and 1st of january 9999 .
+     * @param earliestDate: the earliest the document is allow to be expired at, should be a string in YYYYMMDD format.
+     * @returns the updated builder
+     */
+    documentExpiryNoEarlierThan(earliestDate: string): IdStatementBuilder {
+        return this.addRange(
+            AttributesKeys.idDocExpiresAt,
+            earliestDate,
+            MAX_DATE
+        );
     }
 
     /**

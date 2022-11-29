@@ -62,12 +62,13 @@ export type RevealProof = {
     attribute: string;
 };
 
-export type ZKAtomicProof = {
+// Type for proofs that do not have additional fields
+export type GenericAtomicProof = {
     type: Exclude<StatementTypes, StatementTypes.RevealAttribute>;
     proof: string;
 };
 
-export type AtomicProof = RevealProof | ZKAtomicProof;
+export type AtomicProof = RevealProof | GenericAtomicProof;
 export type IdProof = {
     proofs: AtomicProof[];
 };

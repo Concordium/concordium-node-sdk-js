@@ -10,6 +10,7 @@ import { serializeAccountTransactionPayload } from '@concordium/common-sdk/src';
 import { getCredentialDeploymentSignDigest, serializeAccountTransaction } from '@concordium/common-sdk/lib/serialization';
 import { getModuleBuffer, getIdentityInput } from './testHelpers';
 import * as ed from '@noble/ed25519';
+import * as expected from './resources/expectedJsons';
 
 /**
  * Creates a client to communicate with a local concordium-node
@@ -92,97 +93,10 @@ test('NextAccountSequenceNumber', async () => {
     expect(nan.allFinal).toBeDefined();
 });
 
-test('AccountInfo', async () => {
+test('getAccountInfo', async () => {
     const accountInfo = await getAccountInfoV2(clientV2, testAccount);
 
-    const expected = {
-        sequenceNumber: {
-            value: '19',
-        },
-        amount: {
-            value: '35495453082577742',
-        },
-        schedule: {
-            total: {},
-        },
-        creds: {
-            '0': {
-                normal: {
-                    keys: {
-                        keys: {
-                            '0': {
-                                ed25519Key:
-                                    'npdcg40DcTbP9U9/W3QZIt2bwx5d08nreToCa30fUSU=',
-                            },
-                            '1': {
-                                ed25519Key:
-                                    'LTIrh0T6XQGCOtzj9qE7vr3XuFA8CMzD2El+bEYCGXY=',
-                            },
-                            '2': {
-                                ed25519Key:
-                                    'mnffP4aSBqfAhbwauCHx4kh2KiK7N0cbPO/Lg3QHZMk=',
-                            },
-                        },
-                        threshold: {
-                            value: 2,
-                        },
-                    },
-                    credId: {
-                        value: 'qnMARbzSC7XCQ0nbKdlJ92fnL3zORZ3BY8S5PHgKfX9lgB3aj/fk/Ab98aGyRidv',
-                    },
-                    ipId: {},
-                    policy: {
-                        createdAt: {
-                            year: 2022,
-                            month: 6,
-                        },
-                        validTo: {
-                            year: 2023,
-                            month: 6,
-                        },
-                    },
-                    arThreshold: {
-                        value: 1,
-                    },
-                    commitments: {
-                        prf: {
-                            value: 'uJMOSJdpAvZ/DLtQuMKRH8wGRvvM9L+2pELvfUCoNR9IrnIG7oCD4o01e+gIgD+C',
-                        },
-                        credCounter: {
-                            value: 'sKpl9CCp8/q2HT+HXuvMIh5DFUv68bY2Xazpm/8gd43nADQ3YxIi6EX9mRfI0odL',
-                        },
-                        maxAccounts: {
-                            value: 'hp4r3bLGBwPs1RK1W3crr3VpH4G7xFNi+I5avNq4WiNxSpLUb+QEVzZNUGq8IgKj',
-                        },
-                        idCredSecSharingCoeff: [
-                            {
-                                value: 'i6xECi5GzL+/p2jGrZnyq/JfizJ6eV7PI7K4BMMnAi8G0KztC17tZYmaPvMCmATs',
-                            },
-                        ],
-                    },
-                },
-            },
-        },
-        threshold: {
-            value: 1,
-        },
-        encryptedBalance: {
-            selfAmount: {
-                value: 'wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-            },
-        },
-        encryptionKey: {
-            value: 'sUy/5EoCxrH3hxEXbV9DcpU2eqTyqMJVHuENJaA63GnWGjMqBYlxkZ2tcxLh/JTFqnMARbzSC7XCQ0nbKdlJ92fnL3zORZ3BY8S5PHgKfX9lgB3aj/fk/Ab98aGyRidv',
-        },
-        index: {
-            value: '11',
-        },
-        address: {
-            value: 'aXUkBsyTn8kMpqc7V87hCZY1R/lCAG0hkUSST4SF+w0=',
-        },
-    };
-
-    expect(v2.AccountInfo.toJson(accountInfo)).toEqual(expected);
+    expect(v2.AccountInfo.toJson(accountInfo)).toEqual(expected.accountInfo);
 });
 
 test('getAccountInfo: Invalid hash throws error', async () => {
@@ -201,38 +115,12 @@ test('getAccountInfo for baker', async () => {
     const accInfo = await getAccountInfoV2(clientV2, testAccBaker);
     const accountIndexInfo = await getAccountInfoV2(clientV2, 5n);
 
-    const expected = {
-        baker: {
-            stakedAmount: { value: '7349646704751788' },
-            restakeEarnings: true,
-            bakerInfo: {
-                bakerId: { value: '5' },
-                electionKey: {
-                    value: 'oJBoHsezXvOnce1D67Zyj9leSyZ6vt+pXx3BdyAZPcs=',
-                },
-                signatureKey: {
-                    value: 'w4XMtcigcQoWLywQcSN0RlD/NfAAQL+iYtl0v7PD+PE=',
-                },
-                aggregationKey: {
-                    value: 'sYoC3nSCblX26twPMdDZpu37KZPQMOZRNvHhJWppulI6y0D6TTBNBmiqMHwZJXoKEHJucBSckE4e8prtsmecglmX4/FO3TA78nbywLDFpMSHD/8MBDFQvga3FUZr5WTE',
-                },
-            },
-            poolInfo: {
-                openStatus: 'OPEN_STATUS_CLOSED_FOR_ALL',
-                commissionRates: {
-                    finalization: { partsPerHundredThousand: 100000 },
-                    baking: { partsPerHundredThousand: 10000 },
-                    transaction: { partsPerHundredThousand: 10000 },
-                },
-            },
-        },
-    };
     if (accInfo.stake && accountIndexInfo.stake) {
         const stake = v2.AccountStakingInfo.toJson(accInfo.stake);
         const stakeAccountIndex = v2.AccountStakingInfo.toJson(
             accountIndexInfo.stake
         );
-        expect(stake).toEqual(expected);
+        expect(stake).toEqual(expected.stakingInfoBaker);
         expect(stake).toEqual(stakeAccountIndex);
     } else {
         throw Error('Stake field not found in accountInfo.');
@@ -242,17 +130,10 @@ test('getAccountInfo for baker', async () => {
 test('getAccountInfo for delegator', async () => {
     const accInfo = await getAccountInfoV2(clientV2, testAccDeleg);
 
-    const expected = {
-        delegator: {
-            stakedAmount: { value: '620942412516' },
-            restakeEarnings: true,
-            target: { passive: {} },
-        },
-    };
-
     if (accInfo.stake) {
-        const stakeJson = v2.AccountStakingInfo.toJson(accInfo.stake);
-        expect(stakeJson).toEqual(expected);
+        expect(v2.AccountStakingInfo.toJson(accInfo.stake)).toEqual(
+            expected.stakingInfoDelegator
+        );
     } else {
         throw Error('Stake field not found in accountInfo.');
     }
@@ -302,35 +183,9 @@ test('getBlockItemStatus', async () => {
     const transactionHash = '3de823b876d05cdd33a311a0f84124079f5f677afb2534c4943f830593edc650';
     const blockItemStatus = await clientV2.getBlockItemStatus(transactionHash);
 
-    const expected = {
-        finalized: {
-            outcome: {
-                blockHash: {
-                    value: 'LZ4aCBgZrY2/gdWoguovU1LLNCn8ErDsGMExo2B1GmY=',
-                },
-                outcome: {
-                    index: {},
-                    energyCost: {},
-                    hash: {
-                        value: 'PegjuHbQXN0zoxGg+EEkB59fZ3r7JTTElD+DBZPtxlA=',
-                    },
-                    update: {
-                        effectiveTime: {},
-                        payload: {
-                            microCcdPerEuroUpdate: {
-                                value: {
-                                    numerator: '17592435270983729152',
-                                    denominator: '163844642115',
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    };
-
-    expect(v2.BlockItemStatus.toJson(blockItemStatus)).toEqual(expected);
+    expect(v2.BlockItemStatus.toJson(blockItemStatus)).toEqual(
+        expected.blockItemStatus
+    );
 });
 
 test('getInstanceInfo', async () => {
@@ -343,30 +198,7 @@ test('getInstanceInfo', async () => {
         testBlockHash
     );
 
-    const expected = {
-        v1: {
-            owner: {
-                value: '0YBPp1cC7ISiGOEh3OLFvm9rCgolsXjymRwBmxeX1R4=',
-            },
-            amount: {},
-            methods: [
-                {
-                    value: 'weather.get',
-                },
-                {
-                    value: 'weather.set',
-                },
-            ],
-            name: {
-                value: 'init_weather',
-            },
-            sourceModule: {
-                value: 'Z9VoQzvXLkMmJB8mIhPXf0RtuLoD37o1GuNcGy5+UQk=',
-            },
-        },
-    };
-
-    expect(v2.InstanceInfo.toJson(instanceInfo)).toEqual(expected);
+    expect(v2.InstanceInfo.toJson(instanceInfo)).toEqual(expected.instanceInfo);
 });
 
 test('invokeInstance on v0 contract', async () => {
@@ -385,29 +217,8 @@ test('invokeInstance on v0 contract', async () => {
         testBlockHash
     );
 
-    const expected = {
-        success: {
-            usedEnergy: { value: '342' },
-            effects: [
-                {
-                    updated: {
-                        address: { index: '6' },
-                        instigator: {
-                            account: {
-                                value: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
-                            },
-                        },
-                        amount: { value: '42' },
-                        parameter: {},
-                        receiveName: { value: 'PiggyBank.insert' },
-                    },
-                },
-            ],
-        },
-    };
-
     const responseJson = v2.InvokeInstanceResponse.toJson(invokeInstanceResponse);
-    expect(responseJson).toEqual(expected);
+    expect(responseJson).toEqual(expected.invokeInstanceResponseV0);
 });
 
 test('getModuleSource', async () => {
@@ -442,9 +253,6 @@ test('getConsensusInfo', async () => {
 
     const consensusInfo = await clientV2.getConsensusInfo();
 
-    expect(consensusInfo.blocksReceivedCount).toBeGreaterThan(9571n);
-    expect(consensusInfo.blocksVerifiedCount).toBeGreaterThan(9571n);
-    expect(consensusInfo.finalizationCount).toBeGreaterThan(8640n);
     expect(consensusInfo.genesisBlock?.value).toEqual(genesisBlock);
     expect(consensusInfo.lastFinalizedTime?.value).toBeGreaterThan(
         1669214033937n

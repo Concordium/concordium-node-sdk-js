@@ -2,7 +2,7 @@ import { ChannelCredentials, Metadata } from '@grpc/grpc-js';
 import * as v1 from '@concordium/common-sdk';
 import * as v2 from '../grpc/v2/concordium/types';
 import * as translate from './typeTranslation';
-import { calculateEnergyCost, getAccountTransactionHandler, HexString, serializeAccountTransactionPayload, serializeCredentialDeploymentPayload } from '@concordium/common-sdk';
+import { calculateEnergyCost, getAccountTransactionHandler, HexString } from '@concordium/common-sdk';
 import { QueriesClient } from '../grpc/v2/concordium/service.client';
 import { GrpcTransport } from '@protobuf-ts/grpc-transport';
 import { getBlockHashInput, getAccountIdentifierInput, assertValidHash, assertValidModuleRef, translateSignature } from './util';
@@ -259,7 +259,7 @@ export default class ConcordiumNodeClient {
         transaction: v1.AccountTransaction,
         signature: v1.AccountTransactionSignature
     ): Promise<Uint8Array> {
-        const rawPayload = serializeAccountTransactionPayload(transaction);
+        const rawPayload = v1.serializeAccountTransactionPayload(transaction);
         const transactionSignature: v2.AccountTransactionSignature =
             translateSignature(signature);
 
@@ -316,7 +316,7 @@ export default class ConcordiumNodeClient {
         credentialDeploymentTransaction: v1.CredentialDeploymentTransaction,
         signatures: string[]
     ): Promise<Uint8Array> {
-        const payloadHex = serializeCredentialDeploymentPayload(
+        const payloadHex = v1.serializeCredentialDeploymentPayload(
             signatures,
             credentialDeploymentTransaction
         );

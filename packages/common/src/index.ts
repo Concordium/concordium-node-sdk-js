@@ -35,7 +35,7 @@ export {
     deserializeReceiveError,
     deserializeInitError,
 } from './deserialization';
-export { getIdProof, IdStatementBuilder, verifyIdstatement } from './idProofs';
+export * from './idProofs';
 export * from './idProofTypes';
 export * from './signHelpers';
 export * from './accountHelpers';

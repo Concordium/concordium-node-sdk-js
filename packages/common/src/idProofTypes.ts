@@ -78,21 +78,6 @@ export type IdProofOutput = {
     proof: Versioned<IdProof>;
 };
 
-export enum Sex {
-    NotKnown = '0',
-    Male = '1',
-    Female = '2',
-    NA = '9',
-}
-
-export enum IdDocType {
-    NA = '0',
-    Passport = '1',
-    NationalIdCard = '2',
-    DriversLicense = '3',
-    ImmigrationCard = '4',
-}
-
 /**
  * The attributes that can be used for range statements
  */

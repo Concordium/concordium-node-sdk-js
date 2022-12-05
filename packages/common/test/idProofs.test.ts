@@ -1,8 +1,8 @@
 import { AttributeKeyString, AttributesKeys } from '../src/types';
 import {
+    StatementTypes,
     attributesWithRange,
     attributesWithSet,
-    StatementTypes,
 } from '../src/idProofTypes';
 import { getIdProof, IdStatementBuilder } from '../src/idProofs';
 import fs from 'fs';

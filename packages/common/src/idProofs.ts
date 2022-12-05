@@ -1,8 +1,12 @@
 import * as wasm from '@concordium/rust-bindings';
-import { AttributeKey, AttributeKeyString, AttributesKeys } from '.';
+import {
+    AttributeKey,
+    AttributeKeyString,
+    AttributesKeys,
+    IdDocType,
+} from './types';
 import {
     AtomicStatement,
-    IdDocType,
     IdProofInput,
     IdProofOutput,
     IdStatement,
@@ -13,9 +17,9 @@ import {
 } from './idProofTypes';
 import { whereAlpha2 } from 'iso-3166-1';
 
-const MIN_DATE = '18000101';
-const MAX_DATE = '99990101';
-const EU_MEMBERS = [
+export const MIN_DATE = '18000101';
+export const MAX_DATE = '99990101';
+export const EU_MEMBERS = [
     'AT',
     'BE',
     'BG',
@@ -49,7 +53,7 @@ const EU_MEMBERS = [
  * Given a number x, return the date string for x years ago.
  * @returns YYYYMMDD for x years ago today in local time.
  */
-function getPastDate(yearsAgo: number) {
+export function getPastDate(yearsAgo: number): string {
     const date = new Date();
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
@@ -351,16 +355,12 @@ export class IdStatementBuilder implements StatementBuilder {
 
     /**
      * Add to the statement that the age is at maximum the given value.
-     * This adds a range statement that the date of birth is between <age> years ago and today.
+     * This adds a range statement that the date of birth is between <age> years ago and 1st of january 9999.
      * @param age: the maximum age allowed.
      * @returns the updated builder
      */
     addMaximumAge(age: number): IdStatementBuilder {
-        return this.addRange(
-            AttributesKeys.dob,
-            getPastDate(age),
-            getPastDate(0)
-        );
+        return this.addRange(AttributesKeys.dob, getPastDate(age), MAX_DATE);
     }
 
     /**

@@ -1,5 +1,11 @@
 # Changelog
 
+## 6.1.0 2022-11-30
+
+### Changed
+
+- Bumped @concordium/common-sdk to 6.1.0. (adds support for id statements and proofs)
+
 ## 6.0.0 2022-11-15
 
 ### Breaking Changes

@@ -1312,11 +1312,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@concordium/common-sdk@6.0.0, @concordium/common-sdk@workspace:packages/common":
+"@concordium/common-sdk@6.1.0, @concordium/common-sdk@workspace:packages/common":
   version: 0.0.0-use.local
   resolution: "@concordium/common-sdk@workspace:packages/common"
   dependencies:
-    "@concordium/rust-bindings": 0.7.0
+    "@concordium/rust-bindings": 0.8.0
     "@noble/ed25519": ^1.7.1
     "@scure/bip39": ^1.1.0
     "@types/bs58check": ^2.1.0
@@ -1334,6 +1334,7 @@ __metadata:
     eslint-plugin-prettier: ^3.4.0
     hash.js: ^1.1.7
     husky: ^4.2.5
+    iso-3166-1: ^2.1.1
     jest: ^27.0.6
     json-bigint: ^1.0.0
     lint-staged: ^12.0.2
@@ -1348,7 +1349,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@concordium/node-sdk@workspace:packages/nodejs"
   dependencies:
-    "@concordium/common-sdk": 6.0.0
+    "@concordium/common-sdk": 6.1.0
     "@grpc/grpc-js": ^1.3.4
     "@noble/ed25519": ^1.7.1
     "@types/google-protobuf": ^3.15.3
@@ -1373,7 +1374,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@concordium/rust-bindings@0.7.0, @concordium/rust-bindings@workspace:packages/rust-bindings":
+"@concordium/rust-bindings@0.8.0, @concordium/rust-bindings@workspace:packages/rust-bindings":
   version: 0.0.0-use.local
   resolution: "@concordium/rust-bindings@workspace:packages/rust-bindings"
   languageName: unknown
@@ -1383,8 +1384,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@concordium/web-sdk@workspace:packages/web"
   dependencies:
-    "@concordium/common-sdk": 6.0.0
-    "@concordium/rust-bindings": 0.7.0
+    "@concordium/common-sdk": 6.1.0
+    "@concordium/rust-bindings": 0.8.0
     "@typescript-eslint/eslint-plugin": ^4.28.1
     "@typescript-eslint/parser": ^4.28.1
     babel-jest: ^27.0.6
@@ -5089,6 +5090,13 @@ __metadata:
   version: 2.0.0
   resolution: "isexe@npm:2.0.0"
   checksum: 26bf6c5480dda5161c820c5b5c751ae1e766c587b1f951ea3fcfc973bafb7831ae5b54a31a69bd670220e42e99ec154475025a468eae58ea262f813fdc8d1c62
+  languageName: node
+  linkType: hard
+
+"iso-3166-1@npm:^2.1.1":
+  version: 2.1.1
+  resolution: "iso-3166-1@npm:2.1.1"
+  checksum: 01c7027381baabd82e24d869a46f57cb8d4deb7ca3686d5aaca4f8c0b20c5287be84e8bc142cbbad461a0ac7b9aaaabfb2d8fe132ccc39cdf82f542d71e791d8
   languageName: node
   linkType: hard
 

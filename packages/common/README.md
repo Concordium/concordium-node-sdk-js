@@ -613,7 +613,7 @@ const statement = statementBuilder.getStatement();
 ```
 
 The statement can then be proved using the `getIdProof`, or be provided to a wallet for them it to provide a proof for the statement.
-There are currently 4 types of the statements, and if multiple are added, the resulting statement is the conjuction between them.
+There are currently 4 types of the statements, and if multiple are added, the resulting statement is the conjunction between them.
 
 | Attribute name     | Format                                                                      |
 |--------------------|-----------------------------------------------------------------------------|
@@ -634,8 +634,8 @@ There are currently 4 types of the statements, and if multiple are added, the re
 The first parameter of the statement builder is a boolean, which defaults to true, that specifies whether the statement should be checked while being built.
 It checks that:
 - The used attribute tag is a known one
-- there is not multiple statements on the same attribute
-- lower, upper and sets members have the format expected of the attribute
+- There is not multiple statements on the same attribute
+- Lower, upper and sets members have the format expected of the attribute
 
 ### Minimum Age
 There is a helper function for specifying the prover must have some minimum age.
@@ -672,7 +672,7 @@ statementBuilder.addRange(AttributesKeys.dob, 19410101, 20050202);
 Note that this type of statement is only allowed for the following attributes:
  - dob (date of birth)
  - idDocIssuedAt 
- - idDocExpiresAt.
+ - idDocExpiresAt
 
 ### Membership statement
 

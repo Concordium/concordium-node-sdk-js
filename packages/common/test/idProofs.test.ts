@@ -1,4 +1,4 @@
-import { AttributeKeyString, AttributesKeys } from '../src/types';
+import { AttributeKeyString, AttributesKeys, IdDocType } from '../src/types';
 import {
     StatementTypes,
     attributesWithRange,
@@ -85,6 +85,11 @@ test('Only attributesWithSet can have membership statements added', () => {
     expect(builder.getStatement().length).toBe(0);
 });
 
+test('Upper bound must be greater than lower bound for attribute statement', () => {
+    const builder = new IdStatementBuilder(true);
+    expect(() => builder.addAgeInRange(30, 15)).toThrow();
+});
+
 test('Unknown attribute tags are rejected', () => {
     const builder = new IdStatementBuilder(true);
     expect(() => builder.addMembership(-1, ['DK'])).toThrow();
@@ -115,6 +120,8 @@ test('Can create id Proof', () => {
         .addEUResidency()
         .addEUNationality()
         .addMinimumAge(18)
+        .documentExpiryNoEarlierThan('20200101')
+        .addMembership(6, [IdDocType.Passport])
         .getStatement();
     const challenge = 'AAAAAA';
     const proof = getIdProof({
@@ -133,7 +140,7 @@ test('Can create id Proof', () => {
         'b317d3fea7de56f8c96f6e72820c5cd502cc0eef8454016ee548913255897c6b52156cc60df965d3efb3f160eff6ced4'
     );
     const proofValue = proof.proof.value.proofs;
-    expect(proofValue.length).toBe(3);
+    expect(proofValue.length).toBe(5);
     expect(proofValue[0].type).toBe(StatementTypes.AttributeInSet);
     expect(proofValue[1].type).toBe(StatementTypes.AttributeInSet);
     expect(proofValue[2].type).toBe(StatementTypes.AttributeInRange);

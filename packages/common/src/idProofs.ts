@@ -121,6 +121,10 @@ function isISO3166_2(code: string) {
 }
 
 function verifyRangeStatement(statement: RangeStatement) {
+    if (statement.upper < statement.lower) {
+        throw new Error('Upper bound must be greater than lower bound');
+    }
+
     switch (statement.attributeTag) {
         case AttributeKeyString.dob:
         case AttributeKeyString.idDocIssuedAt:
@@ -128,13 +132,13 @@ function verifyRangeStatement(statement: RangeStatement) {
             if (!isISO8601(statement.lower)) {
                 throw new Error(
                     statement.attributeTag +
-                        ' lower range value must be YYYYMMDD'
+                    ' lower range value must be YYYYMMDD'
                 );
             }
             if (!isISO8601(statement.upper)) {
                 throw new Error(
                     statement.attributeTag +
-                        ' upper range value must be YYYYMMDD'
+                    ' upper range value must be YYYYMMDD'
                 );
             }
             break;
@@ -142,7 +146,7 @@ function verifyRangeStatement(statement: RangeStatement) {
         default:
             throw new Error(
                 statement.attributeTag +
-                    ' is not allowed to be used in range statements'
+                ' is not allowed to be used in range statements'
             );
     }
 }
@@ -161,7 +165,7 @@ function verifySetStatement(
             if (!statement.set.every(isISO3166_1Alpha2)) {
                 throw new Error(
                     statement.attributeTag +
-                        ' values must be ISO3166-1 Alpha 2 codes'
+                    ' values must be ISO3166-1 Alpha 2 codes'
                 );
             }
             break;
@@ -177,7 +181,11 @@ function verifySetStatement(
             }
             break;
         case AttributeKeyString.idDocType:
-            if (!statement.set.every((v) => v in IdDocType)) {
+            if (
+                !statement.set.every((v) =>
+                    Object.values(IdDocType).includes(v as IdDocType)
+                )
+            ) {
                 throw new Error(
                     'idDocType values must be one from IdDocType enum'
                 );
@@ -186,9 +194,9 @@ function verifySetStatement(
         default:
             throw new Error(
                 statement.attributeTag +
-                    ' is not allowed to be used in ' +
-                    typeName +
-                    ' statements'
+                ' is not allowed to be used in ' +
+                typeName +
+                ' statements'
             );
     }
 }

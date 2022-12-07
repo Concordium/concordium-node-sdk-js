@@ -121,6 +121,10 @@ function isISO3166_2(code: string) {
 }
 
 function verifyRangeStatement(statement: RangeStatement) {
+    if (statement.upper < statement.lower) {
+        throw new Error('Upper bound must be greater than lower bound');
+    }
+
     switch (statement.attributeTag) {
         case AttributeKeyString.dob:
         case AttributeKeyString.idDocIssuedAt:
@@ -177,7 +181,11 @@ function verifySetStatement(
             }
             break;
         case AttributeKeyString.idDocType:
-            if (!statement.set.every((v) => v in IdDocType)) {
+            if (
+                !statement.set.every((v) =>
+                    Object.values(IdDocType).includes(v as IdDocType)
+                )
+            ) {
                 throw new Error(
                     'idDocType values must be one from IdDocType enum'
                 );
@@ -229,6 +237,9 @@ function verifyAtomicStatement(
  * If it does not verify, this throw an error.
  */
 export function verifyIdstatement(statements: IdStatement): boolean {
+    if (statements.length === 0) {
+        throw new Error('Empty statements are not allowed');
+    }
     const checkedStatements = [];
     for (const s of statements) {
         verifyAtomicStatement(s, checkedStatements);

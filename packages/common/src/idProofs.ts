@@ -237,6 +237,9 @@ function verifyAtomicStatement(
  * If it does not verify, this throw an error.
  */
 export function verifyIdstatement(statements: IdStatement): boolean {
+    if (statements.length === 0) {
+        throw new Error('Empty statements are not allowed');
+    }
     const checkedStatements = [];
     for (const s of statements) {
         verifyAtomicStatement(s, checkedStatements);

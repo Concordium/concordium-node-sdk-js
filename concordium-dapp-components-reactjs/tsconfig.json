@@ -1,0 +1,11 @@
+{
+    "extends": "@tsconfig/create-react-app/tsconfig.json",
+    "compilerOptions": {
+        "declaration": true,
+        "declarationMap": true,
+        "sourceMap": true,
+        "outDir": "./dist",
+        "jsx": "react"
+    },
+    "include": ["./src"]
+}

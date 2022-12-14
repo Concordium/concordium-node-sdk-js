@@ -107,7 +107,7 @@ function isISO8601(date: string): boolean {
 }
 
 function isISO3166_1Alpha2(code: string) {
-    return Boolean(whereAlpha2(code));
+    return Boolean(whereAlpha2(code)) && /^[A-Z][A-Z]$/.test(code);
 }
 
 /**
@@ -165,7 +165,7 @@ function verifySetStatement(
             if (!statement.set.every(isISO3166_1Alpha2)) {
                 throw new Error(
                     statement.attributeTag +
-                        ' values must be ISO3166-1 Alpha 2 codes'
+                        ' values must be ISO3166-1 Alpha 2 codes in upper case'
                 );
             }
             break;
@@ -176,7 +176,7 @@ function verifySetStatement(
                 )
             ) {
                 throw new Error(
-                    'idDocIssuer must be ISO3166-1 Alpha 2 or ISO3166-2 codes'
+                    'idDocIssuer must be ISO3166-1 Alpha 2  in upper case or ISO3166-2 codes'
                 );
             }
             break;

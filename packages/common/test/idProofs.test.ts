@@ -3,6 +3,7 @@ import {
     StatementTypes,
     attributesWithRange,
     attributesWithSet,
+    RangeStatement,
 } from '../src/idProofTypes';
 import { getIdProof, IdStatementBuilder } from '../src/idProofs';
 import fs from 'fs';
@@ -147,4 +148,19 @@ test('Can create id Proof', () => {
     expect(proofValue[0].proof).toBeDefined();
     expect(proofValue[1].proof).toBeDefined();
     expect(proofValue[2].proof).toBeDefined();
+});
+
+test('Non uppercase ISO3166_1Alpha2 are rejected', () => {
+    const builder = new IdStatementBuilder(true);
+    expect(() =>
+        builder.addMembership(AttributesKeys.nationality, ['dk'])
+    ).toThrow();
+    expect(() =>
+        builder.addMembership(AttributesKeys.nationality, ['Dk'])
+    ).toThrow();
+    expect(() =>
+        builder.addMembership(AttributesKeys.nationality, ['dK'])
+    ).toThrow();
+    builder.addMembership(AttributesKeys.nationality, ['DK']);
+    expect(builder.getStatement().length).toBe(1);
 });

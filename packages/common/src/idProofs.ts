@@ -53,8 +53,9 @@ export const EU_MEMBERS = [
  * Given a number x, return the date string for x years ago.
  * @returns YYYYMMDD for x years ago today in local time.
  */
-export function getPastDate(yearsAgo: number): string {
+export function getPastDate(yearsAgo: number, daysOffset = 0): string {
     const date = new Date();
+    date.setDate(date.getDate() - daysOffset);
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
     const year = (date.getFullYear() - yearsAgo).toString();
@@ -366,12 +367,16 @@ export class IdStatementBuilder implements StatementBuilder {
 
     /**
      * Add to the statement that the age is at maximum the given value.
-     * This adds a range statement that the date of birth is between <age> years ago and 1st of january 9999.
+     * This adds a range statement that the date of birth is between <age + 1> years ago and 1st of january 9999.
      * @param age: the maximum age allowed.
      * @returns the updated builder
      */
     addMaximumAge(age: number): IdStatementBuilder {
-        return this.addRange(AttributesKeys.dob, getPastDate(age), MAX_DATE);
+        return this.addRange(
+            AttributesKeys.dob,
+            getPastDate(age + 1, 1),
+            MAX_DATE
+        );
     }
 
     /**
@@ -384,7 +389,7 @@ export class IdStatementBuilder implements StatementBuilder {
     addAgeInRange(minAge: number, maxAge: number): IdStatementBuilder {
         return this.addRange(
             AttributesKeys.dob,
-            getPastDate(maxAge),
+            getPastDate(maxAge + 1, 1),
             getPastDate(minAge)
         );
     }

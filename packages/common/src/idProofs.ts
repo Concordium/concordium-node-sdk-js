@@ -124,6 +124,12 @@ function isISO3166_2(code: string) {
 }
 
 function verifyRangeStatement(statement: RangeStatement) {
+    if (statement.lower === undefined) {
+        throw new Error('Range statements must contain a lower field');
+    }
+    if (statement.upper === undefined) {
+        throw new Error('Range statements must contain an upper field');
+    }
     if (statement.upper < statement.lower) {
         throw new Error('Upper bound must be greater than lower bound');
     }
@@ -158,6 +164,9 @@ function verifySetStatement(
     statement: MembershipStatement | NonMembershipStatement,
     typeName: string
 ) {
+    if (statement.set  === undefined) {
+        throw new Error(typeName + 'statements must contain a lower field');
+    }
     if (statement.set.length === 0) {
         throw new Error(typeName + ' statements may not use empty sets');
     }
@@ -208,6 +217,12 @@ function verifyAtomicStatement(
     statement: AtomicStatement,
     existingStatements: IdStatement
 ) {
+    if (statement.type === undefined) {
+        throw new Error('Statements must contain a type field');
+    }
+    if (statement.attributeTag === undefined) {
+        throw new Error('Statements must contain an attributeTag field');
+    }
     if (!(statement.attributeTag in AttributeKeyString)) {
         throw new Error('Unknown attributeTag: ' + statement.attributeTag);
     }

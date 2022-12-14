@@ -51,11 +51,13 @@ export const EU_MEMBERS = [
 
 /**
  * Given a number x, return the date string for x years ago.
+ * @param yearsAgo how many years to go back from today
+ * @param daysOffset optional, how many days should be added to the current date
  * @returns YYYYMMDD for x years ago today in local time.
  */
 export function getPastDate(yearsAgo: number, daysOffset = 0): string {
     const date = new Date();
-    date.setDate(date.getDate() - daysOffset);
+    date.setDate(date.getDate() + daysOffset);
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
     const year = (date.getFullYear() - yearsAgo).toString();

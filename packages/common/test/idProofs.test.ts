@@ -172,7 +172,7 @@ test('Maximum age 17 gives negative inf - 17.9999 range', () => {
         .addMaximumAge(17)
         .getStatement()[0] as RangeStatement;
     expect(statement.upper).toBe('99990101');
-    expect(statement.lower).toBe('20020101');
+    expect(statement.lower).toBe('20020103');
 });
 
 test('Age between 14 and 17 gives 14 - 17.9999 range', () => {
@@ -182,7 +182,7 @@ test('Age between 14 and 17 gives 14 - 17.9999 range', () => {
         .addAgeInRange(14, 17)
         .getStatement()[0] as RangeStatement;
     expect(statement.upper).toBe('20060102');
-    expect(statement.lower).toBe('20020101');
+    expect(statement.lower).toBe('20020103');
 });
 
 test('Age between 1 and 1 gives 1 - 1.9999 range', () => {
@@ -192,5 +192,5 @@ test('Age between 1 and 1 gives 1 - 1.9999 range', () => {
         .addAgeInRange(1, 1)
         .getStatement()[0] as RangeStatement;
     expect(statement.upper).toBe('20190102');
-    expect(statement.lower).toBe('20180101');
+    expect(statement.lower).toBe('20180103');
 });

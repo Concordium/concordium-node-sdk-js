@@ -164,7 +164,7 @@ function verifySetStatement(
     statement: MembershipStatement | NonMembershipStatement,
     typeName: string
 ) {
-    if (statement.set  === undefined) {
+    if (statement.set === undefined) {
         throw new Error(typeName + 'statements must contain a lower field');
     }
     if (statement.set.length === 0) {

@@ -51,10 +51,13 @@ export const EU_MEMBERS = [
 
 /**
  * Given a number x, return the date string for x years ago.
+ * @param yearsAgo how many years to go back from today
+ * @param daysOffset optional, how many days should be added to the current date
  * @returns YYYYMMDD for x years ago today in local time.
  */
-export function getPastDate(yearsAgo: number): string {
+export function getPastDate(yearsAgo: number, daysOffset = 0): string {
     const date = new Date();
+    date.setDate(date.getDate() + daysOffset);
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
     const year = (date.getFullYear() - yearsAgo).toString();
@@ -107,7 +110,7 @@ function isISO8601(date: string): boolean {
 }
 
 function isISO3166_1Alpha2(code: string) {
-    return Boolean(whereAlpha2(code));
+    return Boolean(whereAlpha2(code)) && /^[A-Z][A-Z]$/.test(code);
 }
 
 /**
@@ -121,6 +124,12 @@ function isISO3166_2(code: string) {
 }
 
 function verifyRangeStatement(statement: RangeStatement) {
+    if (statement.lower === undefined) {
+        throw new Error('Range statements must contain a lower field');
+    }
+    if (statement.upper === undefined) {
+        throw new Error('Range statements must contain an upper field');
+    }
     if (statement.upper < statement.lower) {
         throw new Error('Upper bound must be greater than lower bound');
     }
@@ -155,6 +164,9 @@ function verifySetStatement(
     statement: MembershipStatement | NonMembershipStatement,
     typeName: string
 ) {
+    if (statement.set === undefined) {
+        throw new Error(typeName + 'statements must contain a lower field');
+    }
     if (statement.set.length === 0) {
         throw new Error(typeName + ' statements may not use empty sets');
     }
@@ -165,7 +177,7 @@ function verifySetStatement(
             if (!statement.set.every(isISO3166_1Alpha2)) {
                 throw new Error(
                     statement.attributeTag +
-                        ' values must be ISO3166-1 Alpha 2 codes'
+                        ' values must be ISO3166-1 Alpha 2 codes in upper case'
                 );
             }
             break;
@@ -176,7 +188,7 @@ function verifySetStatement(
                 )
             ) {
                 throw new Error(
-                    'idDocIssuer must be ISO3166-1 Alpha 2 or ISO3166-2 codes'
+                    'idDocIssuer must be ISO3166-1 Alpha 2  in upper case or ISO3166-2 codes'
                 );
             }
             break;
@@ -205,6 +217,12 @@ function verifyAtomicStatement(
     statement: AtomicStatement,
     existingStatements: IdStatement
 ) {
+    if (statement.type === undefined) {
+        throw new Error('Statements must contain a type field');
+    }
+    if (statement.attributeTag === undefined) {
+        throw new Error('Statements must contain an attributeTag field');
+    }
     if (!(statement.attributeTag in AttributeKeyString)) {
         throw new Error('Unknown attributeTag: ' + statement.attributeTag);
     }
@@ -366,12 +384,16 @@ export class IdStatementBuilder implements StatementBuilder {
 
     /**
      * Add to the statement that the age is at maximum the given value.
-     * This adds a range statement that the date of birth is between <age> years ago and 1st of january 9999.
+     * This adds a range statement that the date of birth is between <age + 1> years ago and 1st of january 9999.
      * @param age: the maximum age allowed.
      * @returns the updated builder
      */
     addMaximumAge(age: number): IdStatementBuilder {
-        return this.addRange(AttributesKeys.dob, getPastDate(age), MAX_DATE);
+        return this.addRange(
+            AttributesKeys.dob,
+            getPastDate(age + 1, 1),
+            MAX_DATE
+        );
     }
 
     /**
@@ -384,7 +406,7 @@ export class IdStatementBuilder implements StatementBuilder {
     addAgeInRange(minAge: number, maxAge: number): IdStatementBuilder {
         return this.addRange(
             AttributesKeys.dob,
-            getPastDate(maxAge),
+            getPastDate(maxAge + 1, 1),
             getPastDate(minAge)
         );
     }

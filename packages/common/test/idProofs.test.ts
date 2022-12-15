@@ -3,6 +3,7 @@ import {
     StatementTypes,
     attributesWithRange,
     attributesWithSet,
+    RangeStatement,
 } from '../src/idProofTypes';
 import { getIdProof, IdStatementBuilder } from '../src/idProofs';
 import fs from 'fs';
@@ -147,4 +148,49 @@ test('Can create id Proof', () => {
     expect(proofValue[0].proof).toBeDefined();
     expect(proofValue[1].proof).toBeDefined();
     expect(proofValue[2].proof).toBeDefined();
+});
+
+test('Non uppercase ISO3166_1Alpha2 are rejected', () => {
+    const builder = new IdStatementBuilder(true);
+    expect(() =>
+        builder.addMembership(AttributesKeys.nationality, ['dk'])
+    ).toThrow();
+    expect(() =>
+        builder.addMembership(AttributesKeys.nationality, ['Dk'])
+    ).toThrow();
+    expect(() =>
+        builder.addMembership(AttributesKeys.nationality, ['dK'])
+    ).toThrow();
+    builder.addMembership(AttributesKeys.nationality, ['DK']);
+    expect(builder.getStatement().length).toBe(1);
+});
+
+test('Maximum age 17 gives negative inf - 17.9999 range', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2020-01-02'));
+    const builder = new IdStatementBuilder(true);
+    const statement = builder
+        .addMaximumAge(17)
+        .getStatement()[0] as RangeStatement;
+    expect(statement.upper).toBe('99990101');
+    expect(statement.lower).toBe('20020103');
+});
+
+test('Age between 14 and 17 gives 14 - 17.9999 range', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2020-01-02'));
+    const builder = new IdStatementBuilder(true);
+    const statement = builder
+        .addAgeInRange(14, 17)
+        .getStatement()[0] as RangeStatement;
+    expect(statement.upper).toBe('20060102');
+    expect(statement.lower).toBe('20020103');
+});
+
+test('Age between 1 and 1 gives 1 - 1.9999 range', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2020-01-02'));
+    const builder = new IdStatementBuilder(true);
+    const statement = builder
+        .addAgeInRange(1, 1)
+        .getStatement()[0] as RangeStatement;
+    expect(statement.upper).toBe('20190102');
+    expect(statement.lower).toBe('20180103');
 });

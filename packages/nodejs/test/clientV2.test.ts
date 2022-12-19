@@ -6,6 +6,7 @@ import {
     CredentialRegistrationId,
 } from '@concordium/common-sdk';
 import { AccountInfo, AccountStakingInfo } from '../grpc/v2/concordium/types';
+import OldConcordiumNodeClient from '../src/client';
 
 /**
  * Creates a client to communicate with a local concordium-node
@@ -25,7 +26,22 @@ export function getNodeClient(
     );
 }
 
+export function getOldNodeClient(
+    address = 'service.internal.testnet.concordium.com'
+): OldConcordiumNodeClient {
+    const metadata = new Metadata();
+    metadata.add('authentication', 'rpcadmin');
+    return new OldConcordiumNodeClient(
+        address,
+        10000,
+        credentials.createInsecure(),
+        metadata,
+        15000
+    );
+}
+
 const client = getNodeClient();
+const oldClient = getOldNodeClient();
 
 const testAccount = new AccountAddress(
     '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'
@@ -33,6 +49,15 @@ const testAccount = new AccountAddress(
 const testBlockHash = Buffer.from(
     '/oj/NUVAecPfEdiuE9V3e6vWHyi+WElO/lG2WT4wcW4=',
     'base64'
+);
+const testCredId = new CredentialRegistrationId(
+    'aa730045bcd20bb5c24349db29d949f767e72f7cce459dc163c4b93c780a7d7f65801dda8ff7e4fc06fdf1a1b246276f'
+);
+const testAccBaker = new AccountAddress(
+    '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L'
+);
+const testAccDeleg = new AccountAddress(
+    '3bFo43GiPnkk5MmaSdsRVboaX2DNSKaRkLseQbyB3WPW1osPwh'
 );
 
 test('getCryptographicParameters', async () => {
@@ -61,7 +86,10 @@ test('NextAccountSequenceNumber', async () => {
 });
 
 test('AccountInfo', async () => {
-    const accountInfo = await client.getAccountInfo(testAccount, testBlockHash);
+    const accountInfo = await client.getAccountInfoV2(
+        testAccount,
+        testBlockHash
+    );
 
     const expected = {
         sequenceNumber: {
@@ -166,7 +194,8 @@ test('getAccountInfo: Invalid hash throws error', async () => {
 });
 
 test('getAccountInfo for baker', async () => {
-    const accountInfo = await client.getAccountInfo(5n, testBlockHash);
+    const accInfo = await client.getAccountInfoV2(testAccBaker, testBlockHash);
+    const accountIndexInfo = await client.getAccountInfoV2(5n, testBlockHash);
 
     const expected = {
         baker: {
@@ -194,18 +223,18 @@ test('getAccountInfo for baker', async () => {
             },
         },
     };
-    if (accountInfo.stake) {
-        const stake = AccountStakingInfo.toJson(accountInfo.stake);
+    if (accInfo.stake && accountIndexInfo.stake) {
+        const stake = AccountStakingInfo.toJson(accInfo.stake);
+        const stakeAccountIndex = AccountStakingInfo.toJson(
+            accountIndexInfo.stake
+        );
         expect(stake).toEqual(expected);
+        expect(stake).toEqual(stakeAccountIndex);
     }
 });
 
 test('getAccountInfo for delegator', async () => {
-    const delegator = '3bFo43GiPnkk5MmaSdsRVboaX2DNSKaRkLseQbyB3WPW1osPwh';
-    const accountInfo = await client.getAccountInfo(
-        new AccountAddress(delegator),
-        testBlockHash
-    );
+    const accInfo = await client.getAccountInfoV2(testAccDeleg, testBlockHash);
 
     const expected = {
         delegator: {
@@ -215,24 +244,83 @@ test('getAccountInfo for delegator', async () => {
         },
     };
 
-    if (accountInfo.stake) {
-        const stakeJson = AccountStakingInfo.toJson(accountInfo.stake);
+    if (accInfo.stake) {
+        const stakeJson = AccountStakingInfo.toJson(accInfo.stake);
         expect(stakeJson).toEqual(expected);
     }
 });
 
 test('getAccountInfo: Account Address and CredentialRegistrationId is equal', async () => {
-    const credId =
-        'aa730045bcd20bb5c24349db29d949f767e72f7cce459dc163c4b93c780a7d7f65801dda8ff7e4fc06fdf1a1b246276f';
-    const accountInfoAddress = await client.getAccountInfo(
-        new CredentialRegistrationId(credId),
+    const accInfo = await client.getAccountInfo(testAccount, testBlockHash);
+    const credIdInfo = await client.getAccountInfo(testCredId, testBlockHash);
+
+    expect(accInfo).toEqual(credIdInfo);
+});
+
+// Todo: test ARData
+test('accountInfo arData check', async () => {
+    const newInfoLog = await client.getAccountInfoV2(
+        testAccount,
         testBlockHash
     );
+    console.debug(AccountInfo.toJsonString(newInfoLog));
 
-    const accountInfoCredId = await client.getAccountInfo(
-        new CredentialRegistrationId(credId),
-        testBlockHash
+    const oldInfo = await oldClient.getAccountInfo(
+        testAccount,
+        testBlockHash.toString('hex')
     );
+    const newInfo = await client.getAccountInfo(testAccount, testBlockHash);
 
-    expect(accountInfoAddress).toEqual(accountInfoCredId);
+    console.debug(JSON.stringify(newInfo.accountCredentials));
+
+    if (
+        newInfoLog.creds[0].credentialValues.oneofKind === 'normal' &&
+        oldInfo?.accountCredentials[0].value.type === 'normal'
+    ) {
+        //oldInfo.accountCredentials[0].value.contents.arData = {};
+        console.debug(
+            'new ArData:',
+            newInfoLog.creds[0].credentialValues.normal.arData[1]
+        );
+        console.debug(
+            'old ArData',
+            oldInfo?.accountCredentials[0].value.contents.arData
+        );
+    }
+
+    expect(oldInfo).toEqual(newInfo);
+});
+
+test('accountInfo implementations is the same', async () => {
+    const hexBlockHash = testBlockHash.toString('hex');
+    const oldReg = await oldClient.getAccountInfo(testAccount, hexBlockHash);
+    const newReg = await client.getAccountInfo(testAccount, testBlockHash);
+
+    const oldCredId = await oldClient.getAccountInfo(testCredId, hexBlockHash);
+    const newCredId = await client.getAccountInfo(testCredId, testBlockHash);
+
+    const oldBaker = await oldClient.getAccountInfo(testAccBaker, hexBlockHash);
+    const newBaker = await client.getAccountInfo(testAccBaker, testBlockHash);
+
+    const oldDeleg = await oldClient.getAccountInfo(testAccDeleg, hexBlockHash);
+    const newDeleg = await client.getAccountInfo(testAccDeleg, testBlockHash);
+
+    // Tempoary
+    if (oldReg?.accountCredentials[0].value.type === 'normal') {
+        oldReg.accountCredentials[0].value.contents.arData = {};
+    }
+    if (oldCredId?.accountCredentials[0].value.type === 'normal') {
+        oldCredId.accountCredentials[0].value.contents.arData = {};
+    }
+    if (oldBaker?.accountCredentials[0].value.type === 'normal') {
+        oldBaker.accountCredentials[0].value.contents.arData = {};
+    }
+    if (oldDeleg?.accountCredentials[0].value.type === 'normal') {
+        oldDeleg.accountCredentials[0].value.contents.arData = {};
+    }
+
+    expect(oldReg).toEqual(newReg);
+    expect(oldCredId).toEqual(newCredId);
+    expect(oldDeleg).toEqual(newDeleg);
+    expect(oldBaker).toEqual(newBaker);
 });

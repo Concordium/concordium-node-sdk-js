@@ -780,7 +780,8 @@ export interface AccountEncryptedAmount {
     selfAmount: string;
     startIndex: bigint;
     incomingAmounts: string[];
-    numAggregated: number;
+    numAggregated?: number;
+    aggregatedAmount?: string;
 }
 
 export interface VerifyKey {
@@ -1062,6 +1063,10 @@ export interface AccountDelegationDetails {
     pendingChange?: StakePendingChangeV1;
 }
 
+export type AccountCredential = Versioned<
+    InitialAccountCredential | NormalAccountCredential
+>;
+
 interface AccountInfoCommon {
     accountAddress: string;
     accountNonce: bigint;
@@ -1075,10 +1080,7 @@ interface AccountInfoCommon {
 
     accountReleaseSchedule: AccountReleaseSchedule;
 
-    accountCredentials: Record<
-        number,
-        Versioned<InitialAccountCredential | NormalAccountCredential>
-    >;
+    accountCredentials: Record<number, AccountCredential>;
 }
 
 export type AccountInfoSimple = AccountInfoCommon;

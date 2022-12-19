@@ -110,3 +110,33 @@ export function assertValidHash(hash: Uint8Array): void {
         );
     }
 }
+
+// Maps a `Record<A,C>` to a `Record<B,D>`.
+// Works the same way as a list mapping, allowing both a value and key mapping.
+// If `keyMapper()` is not provided, it will map `Record<A,C>` to `Record<A,D>`
+export function recordMap<
+    A extends string | number | symbol,
+    B,
+    C extends string | number | symbol,
+    D
+>(
+    rec: Record<A, B>,
+    valMapper: (x: B) => D,
+    keyMapper: (x: A) => C = (a: any) => a
+): Record<C, D> {
+    const ret: any = {};
+    for (const i in rec) {
+        ret[keyMapper(i)] = valMapper(rec[i]);
+    }
+    return ret;
+}
+
+// Retrieves a value that might be undefined. Throws if value is undefined
+export function unwrap<A>(x: A | undefined): A {
+    if (x === undefined) {
+        console.trace();
+        throw Error('Undefined value found.');
+    } else {
+        return x;
+    }
+}

@@ -1,5 +1,14 @@
 # Changelog
 
+## 6.1.0 2022-11-30
+
+### Added
+
+- `IdStatementBuilder` class to help build id statements.
+- `verifyIdStatement` function to verify that a statement is well-formed and complies with rules for id statements.
+- `getIdProof` function to prove a statement holds for the given identity/account.
+- Enums for sex and idDocType values.
+
 ## 6.0.0 2022-11-15
 
 ### Breaking changes

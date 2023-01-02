@@ -35,7 +35,8 @@ export {
     deserializeReceiveError,
     deserializeInitError,
 } from './deserialization';
-
+export * from './idProofs';
+export * from './idProofTypes';
 export * from './signHelpers';
 export * from './accountHelpers';
 export * from './blockSummaryHelpers';

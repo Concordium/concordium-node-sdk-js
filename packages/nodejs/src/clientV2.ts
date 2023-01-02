@@ -8,7 +8,6 @@ import {
     CryptographicParameters,
     NextAccountSequenceNumber,
     AccountInfoRequest,
-    AccountInfo,
 } from '../grpc/v2/concordium/types';
 import { AccountIdentifierInputLocal } from './types';
 import { getBlockHashInput, getAccountIdentifierInput } from './util';
@@ -97,29 +96,6 @@ export default class ConcordiumNodeClient {
         const blockHashInput = getBlockHashInput(blockHash);
         return await this.client.getCryptographicParameters(blockHashInput)
             .response;
-    }
-
-    /**
-     * Retrieves the account info for the given account. If the provided block
-     * hash is in a block prior to the finalization of the account, then the account
-     * information will not be available.
-     * A credential registration id can also be provided, instead of an address. In this case
-     * the node will return the account info of the account, which the corresponding credential
-     * is (or was) deployed to. An account index can also be provided.
-     * @param accountIdentifier base58 account address, or a credential registration id or account index to get the account info for
-     * @param blockHash optional block hash to get the account info at, otherwise retrieves from last finalized block
-     * @returns the account info for the provided account address, throws if the account does not exist
-     */
-    async getAccountInfoV2(
-        accountIdentifier: AccountIdentifierInputLocal,
-        blockHash?: Uint8Array
-    ): Promise<AccountInfo> {
-        const accountInfoRequest: AccountInfoRequest = {
-            blockHash: getBlockHashInput(blockHash),
-            accountIdentifier: getAccountIdentifierInput(accountIdentifier),
-        };
-
-        return await this.client.getAccountInfo(accountInfoRequest).response;
     }
 
     /**

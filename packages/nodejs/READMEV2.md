@@ -33,7 +33,7 @@ metadata.add("authentication", "rpcadmin");
 const client = new ConcordiumNodeClient(
     "127.0.0.1",    // ip address
     10000,          // port
-    credentials.createSsl(),  //
+    credentials.createSsl(),
     metadata,
     15000           // timeout in ms
 );

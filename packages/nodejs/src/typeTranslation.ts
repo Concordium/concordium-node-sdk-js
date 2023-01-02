@@ -2,44 +2,45 @@ import * as v1 from '@concordium/common-sdk';
 import * as v2 from '../grpc/v2/concordium/types';
 import { recordMap, unwrap } from './util';
 
-function unwrapHex(x: Uint8Array | undefined): string {
+function unwrapToHex(x: Uint8Array | undefined): string {
     return Buffer.from(unwrap(x)).toString('hex');
 }
+
 function unwrapValueToHex(x: v2.EncryptedAmount | v2.TransactionHash): string {
-    return unwrapHex(x.value);
+    return unwrapToHex(x.value);
 }
 
-function transRelease(x: v2.Release): v1.ReleaseScheduleWithTransactions {
+function transRelease(release: v2.Release): v1.ReleaseScheduleWithTransactions {
     return {
-        timestamp: new Date(Number(unwrap(x.timestamp?.value)) * 1000),
-        amount: unwrap(x.amount?.value),
-        transactions: x.transactions.map(unwrapValueToHex),
+        timestamp: new Date(Number(unwrap(release.timestamp?.value)) * 1000),
+        amount: unwrap(release.amount?.value),
+        transactions: release.transactions.map(unwrapValueToHex),
     };
 }
 
-function transDate(x: v2.YearMonth): string {
-    const month = x.month < 10 ? '0' + String(x.month) : String(x.month);
-    return String(x.year) + month;
+function transDate(ym: v2.YearMonth): string {
+    const month = ym.month < 10 ? '0' + String(ym.month) : String(ym.month);
+    return String(ym.year) + month;
 }
 
-function transAttKey(x: number): v1.AttributeKey {
-    return v1.AttributesKeys[x] as v1.AttributeKey;
+function transAttKey(attributeKey: number): v1.AttributeKey {
+    return v1.AttributesKeys[attributeKey] as v1.AttributeKey;
 }
 
-function transCommit(x: v2.Commitment): string {
-    return unwrapHex(x.value);
+function transCommit(commitment: v2.Commitment): string {
+    return unwrapToHex(commitment.value);
 }
 
 function transCommits(
     cmm: v2.CredentialCommitments
 ): v1.CredentialDeploymentCommitments {
     return {
-        cmmPrf: unwrapHex(cmm.prf?.value),
-        cmmCredCounter: unwrapHex(cmm.credCounter?.value),
+        cmmPrf: unwrapToHex(cmm.prf?.value),
+        cmmCredCounter: unwrapToHex(cmm.credCounter?.value),
         cmmIdCredSecSharingCoeff:
             cmm.idCredSecSharingCoeff.map(unwrapValueToHex),
         cmmAttributes: recordMap(cmm.attributes, transCommit, transAttKey),
-        cmmMaxAccounts: unwrapHex(cmm.maxAccounts?.value),
+        cmmMaxAccounts: unwrapToHex(cmm.maxAccounts?.value),
     };
 }
 
@@ -47,10 +48,13 @@ function transVerifyKey(verifyKey: v2.AccountVerifyKey): v1.VerifyKey {
     if (verifyKey.key.oneofKind === 'ed25519Key') {
         return {
             schemeId: 'Ed25519',
-            verifyKey: unwrapHex(verifyKey.key.ed25519Key),
+            verifyKey: unwrapToHex(verifyKey.key.ed25519Key),
         };
     } else {
-        throw Error('Undefined value found.');
+        throw Error(
+            'AccountVerifyKey was expected to be of type "ed25519Key", but found' +
+                verifyKey.key.oneofKind
+        );
     }
 }
 
@@ -65,14 +69,15 @@ function transCredKeys(
 
 function transChainArData(chainArData: v2.ChainArData): v1.ChainArData {
     return {
-        encIdCredPubShare: unwrapHex(chainArData.encIdCredPubShare),
+        encIdCredPubShare: unwrapToHex(chainArData.encIdCredPubShare),
     };
 }
 
 function transCred(cred: v2.AccountCredential): v1.AccountCredential {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const crd = cred.credentialValues as any;
     if (crd === undefined) {
-        throw Error('Unexpected undefined value found');
+        throw Error('CredentialValues were undefined.');
     }
     const isNormal = crd.oneofKind === 'normal';
     const credVals = isNormal ? crd.normal : crd.initial;
@@ -82,9 +87,9 @@ function transCred(cred: v2.AccountCredential): v1.AccountCredential {
         createdAt: transDate(unwrap(credVals.policy?.createdAt)),
         revealedAttributes: recordMap(
             credVals.policy?.attributes,
-            unwrapHex,
+            unwrapToHex,
             transAttKey
-        ), //as Record<v1.AttributeKey, string>,
+        ),
     };
     const deploymentValues = {
         ipIdentity: unwrap(credVals.ipId?.value),
@@ -92,13 +97,13 @@ function transCred(cred: v2.AccountCredential): v1.AccountCredential {
         policy: policy,
         ...((isNormal && {
             // if isNormal...
-            credId: unwrapHex(credVals.credId?.value),
+            credId: unwrapToHex(credVals.credId?.value),
             revocationThreshold: unwrap(credVals.arThreshold?.value),
             arData: recordMap(credVals.arData, transChainArData, String),
             commitments: transCommits(unwrap(credVals.commitments)),
         }) || {
             // else...
-            regId: unwrapHex(credVals.credId?.value),
+            regId: unwrapToHex(credVals.credId?.value),
         }),
     };
     const val = {
@@ -127,7 +132,10 @@ function transDelegatorTarget(
             bakerId: target.target.baker.value,
         };
     } else {
-        throw Error('asdf');
+        throw Error(
+            'DelegatorTarget expected to be of type "passive" or "baker", but found ' +
+                target.target.oneofKind
+        );
     }
 }
 
@@ -135,7 +143,6 @@ function transTimestamp(timestamp: v2.Timestamp | undefined): Date {
     return new Date(Number(unwrap(timestamp?.value)) * 1000);
 }
 
-// StakePendingChangeV0Common, this is only done for v1
 function transPendingChange(
     pendingChange: v2.StakePendingChange | undefined
 ): v1.StakePendingChange {
@@ -152,7 +159,10 @@ function transPendingChange(
             change: v1.StakePendingChangeType.RemoveStakeV1,
         };
     } else {
-        throw Error('Unexpected undefined variable found.');
+        throw Error(
+            'PendingChange expected to be of type "reduce" or "remove", but found ' +
+                change.oneofKind
+        );
     }
 }
 
@@ -163,6 +173,7 @@ function transDelegator(
         restakeEarnings: deleg.restakeEarnings,
         stakedAmount: unwrap(deleg.stakedAmount?.value),
         delegationTarget: transDelegatorTarget(unwrap(deleg.target)),
+        // Set the following value if deleg.pendingChange is set to true
         ...(deleg.pendingChange && {
             pendingChange: transPendingChange(
                 deleg.pendingChange
@@ -207,11 +218,16 @@ function transBaker(
     return {
         restakeEarnings: baker.restakeEarnings,
         bakerId: unwrap(baker.bakerInfo?.bakerId?.value),
-        bakerAggregationVerifyKey: unwrapHex(bakerInfo?.aggregationKey?.value),
-        bakerElectionVerifyKey: unwrapHex(baker.bakerInfo?.electionKey?.value),
-        bakerSignatureVerifyKey: unwrapHex(bakerInfo?.signatureKey?.value),
+        bakerAggregationVerifyKey: unwrapToHex(
+            bakerInfo?.aggregationKey?.value
+        ),
+        bakerElectionVerifyKey: unwrapToHex(
+            baker.bakerInfo?.electionKey?.value
+        ),
+        bakerSignatureVerifyKey: unwrapToHex(bakerInfo?.signatureKey?.value),
         bakerPoolInfo: bakerPoolInfo,
         stakedAmount: unwrap(baker.stakedAmount?.value),
+        // Set the following value if baker.pendingChange is set to true
         ...(baker.pendingChange && {
             pendingChange: transPendingChange(baker.pendingChange),
         }),
@@ -219,19 +235,20 @@ function transBaker(
 }
 
 export function translateAccountInfo(acc: v2.AccountInfo): v1.AccountInfo {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const accAdrRaw = Buffer.from(unwrap(acc.address?.value)) as any;
     const aggAmount = acc.encryptedBalance?.aggregatedAmount?.value;
     const numAggregated = acc.encryptedBalance?.numAggregated;
 
     const encryptedAmount: v1.AccountEncryptedAmount = {
-        selfAmount: unwrapHex(acc.encryptedBalance?.selfAmount?.value),
+        selfAmount: unwrapToHex(acc.encryptedBalance?.selfAmount?.value),
         startIndex: unwrap(acc.encryptedBalance?.startIndex),
         incomingAmounts: unwrap(acc.encryptedBalance?.incomingAmounts).map(
             unwrapValueToHex
         ),
         // Set the following values if they are not undefined
         ...(numAggregated && { numAggregated: numAggregated }),
-        ...(aggAmount && { aggregatedAmount: unwrapHex(aggAmount) }),
+        ...(aggAmount && { aggregatedAmount: unwrapToHex(aggAmount) }),
     };
     const releaseSchedule = {
         total: unwrap(acc.schedule?.total?.value),
@@ -243,22 +260,23 @@ export function translateAccountInfo(acc: v2.AccountInfo): v1.AccountInfo {
         accountAmount: unwrap(acc.amount?.value),
         accountIndex: unwrap(acc.index?.value),
         accountThreshold: unwrap(acc.threshold?.value),
-        accountEncryptionKey: unwrapHex(acc.encryptionKey?.value),
+        accountEncryptionKey: unwrapToHex(acc.encryptionKey?.value),
         accountEncryptedAmount: encryptedAmount,
         accountReleaseSchedule: releaseSchedule,
         accountCredentials: recordMap(acc.creds, transCred),
     };
+
     if (acc.stake?.stakingInfo.oneofKind === 'delegator') {
         const accInfo = accInfoCommon as v1.AccountInfoDelegator;
         accInfo.accountDelegation = transDelegator(
             acc.stake.stakingInfo.delegator
         );
         return accInfo;
-    }
-    if (acc.stake?.stakingInfo.oneofKind === 'baker') {
+    } else if (acc.stake?.stakingInfo.oneofKind === 'baker') {
         const accInfo = accInfoCommon as v1.AccountInfoBaker;
         accInfo.accountBaker = transBaker(acc.stake.stakingInfo.baker);
         return accInfo;
+    } else {
+        return accInfoCommon;
     }
-    return accInfoCommon;
 }

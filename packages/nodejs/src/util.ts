@@ -114,6 +114,7 @@ export function assertValidHash(hash: Uint8Array): void {
 // Maps a `Record<A,C>` to a `Record<B,D>`.
 // Works the same way as a list mapping, allowing both a value and key mapping.
 // If `keyMapper()` is not provided, it will map `Record<A,C>` to `Record<A,D>`
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export function recordMap<
     A extends string | number | symbol,
     B,
@@ -130,6 +131,7 @@ export function recordMap<
     }
     return ret;
 }
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 // Retrieves a value that might be undefined. Throws if value is undefined
 export function unwrap<A>(x: A | undefined): A {

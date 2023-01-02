@@ -7,6 +7,8 @@ import {
 } from '@concordium/common-sdk';
 import { AccountInfo, AccountStakingInfo } from '../grpc/v2/concordium/types';
 import OldConcordiumNodeClient from '../src/client';
+import { AccountIdentifierInputLocal } from '../src/types';
+import { getAccountIdentifierInput, getBlockHashInput } from '../src/util';
 
 /**
  * Creates a client to communicate with a local concordium-node
@@ -60,6 +62,19 @@ const testAccDeleg = new AccountAddress(
     '3bFo43GiPnkk5MmaSdsRVboaX2DNSKaRkLseQbyB3WPW1osPwh'
 );
 
+// Retrieves the account info for the given account in the GRPCv2 type format.
+function getAccountInfoV2(
+    client: ConcordiumNodeClient,
+    accountIdentifier: AccountIdentifierInputLocal
+): Promise<AccountInfo> {
+    const accountInfoRequest = {
+        blockHash: getBlockHashInput(testBlockHash),
+        accountIdentifier: getAccountIdentifierInput(accountIdentifier),
+    };
+
+    return client.client.getAccountInfo(accountInfoRequest).response;
+}
+
 test('getCryptographicParameters', async () => {
     const parameters = await client.getCryptographicParameters(testBlockHash);
     expect(parameters.genesisString).toEqual('Concordium Testnet Version 5');
@@ -86,10 +101,7 @@ test('NextAccountSequenceNumber', async () => {
 });
 
 test('AccountInfo', async () => {
-    const accountInfo = await client.getAccountInfoV2(
-        testAccount,
-        testBlockHash
-    );
+    const accountInfo = await getAccountInfoV2(client, testAccount);
 
     const expected = {
         sequenceNumber: {
@@ -194,8 +206,8 @@ test('getAccountInfo: Invalid hash throws error', async () => {
 });
 
 test('getAccountInfo for baker', async () => {
-    const accInfo = await client.getAccountInfoV2(testAccBaker, testBlockHash);
-    const accountIndexInfo = await client.getAccountInfoV2(5n, testBlockHash);
+    const accInfo = await getAccountInfoV2(client, testAccBaker);
+    const accountIndexInfo = await getAccountInfoV2(client, 5n);
 
     const expected = {
         baker: {
@@ -234,7 +246,7 @@ test('getAccountInfo for baker', async () => {
 });
 
 test('getAccountInfo for delegator', async () => {
-    const accInfo = await client.getAccountInfoV2(testAccDeleg, testBlockHash);
+    const accInfo = await getAccountInfoV2(client, testAccDeleg);
 
     const expected = {
         delegator: {
@@ -255,40 +267,6 @@ test('getAccountInfo: Account Address and CredentialRegistrationId is equal', as
     const credIdInfo = await client.getAccountInfo(testCredId, testBlockHash);
 
     expect(accInfo).toEqual(credIdInfo);
-});
-
-// Todo: test ARData
-test('accountInfo arData check', async () => {
-    const newInfoLog = await client.getAccountInfoV2(
-        testAccount,
-        testBlockHash
-    );
-    console.debug(AccountInfo.toJsonString(newInfoLog));
-
-    const oldInfo = await oldClient.getAccountInfo(
-        testAccount,
-        testBlockHash.toString('hex')
-    );
-    const newInfo = await client.getAccountInfo(testAccount, testBlockHash);
-
-    console.debug(JSON.stringify(newInfo.accountCredentials));
-
-    if (
-        newInfoLog.creds[0].credentialValues.oneofKind === 'normal' &&
-        oldInfo?.accountCredentials[0].value.type === 'normal'
-    ) {
-        //oldInfo.accountCredentials[0].value.contents.arData = {};
-        console.debug(
-            'new ArData:',
-            newInfoLog.creds[0].credentialValues.normal.arData[1]
-        );
-        console.debug(
-            'old ArData',
-            oldInfo?.accountCredentials[0].value.contents.arData
-        );
-    }
-
-    expect(oldInfo).toEqual(newInfo);
 });
 
 test('accountInfo implementations is the same', async () => {

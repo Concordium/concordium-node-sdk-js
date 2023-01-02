@@ -1,6 +1,3 @@
-/* eslint-disable no-console */
-
-// eslint-disable-next-line max-classes-per-file
 import { detectConcordiumProvider, WalletApi } from '@concordium/browser-wallet-api-helpers';
 import {
     AccountTransactionPayload,
@@ -11,11 +8,16 @@ import {
 } from '@concordium/web-sdk';
 import { WalletConnectionDelegate, WalletConnection, WalletConnector } from './WalletConnection';
 
+const BROWSER_WALLET_DETECT_TIMEOUT = 2000;
+
 export class BrowserWalletConnector implements WalletConnector, WalletConnection {
     readonly client: WalletApi;
 
+    readonly delegate: WalletConnectionDelegate;
+
     constructor(client: WalletApi, delegate: WalletConnectionDelegate) {
         this.client = client;
+        this.delegate = delegate;
 
         this.client.on('chainChanged', (c) => delegate.onChainChanged(this, c));
         this.client.on('accountChanged', (a) => delegate.onAccountChanged(this, a));
@@ -28,20 +30,26 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
     }
 
     static async create(delegate: WalletConnectionDelegate) {
-        const client = await detectConcordiumProvider();
-        return new BrowserWalletConnector(client, delegate);
+        try {
+            const client = await detectConcordiumProvider(BROWSER_WALLET_DETECT_TIMEOUT);
+            return new BrowserWalletConnector(client, delegate);
+        } catch (e) {
+            // Provider detector throws 'undefined' when rejecting!
+            throw new Error('Browser Wallet extension not detected');
+        }
     }
 
     async connect() {
         const account = await this.client.connect();
         if (!account) {
-            throw new Error('connection failed');
+            throw new Error('Browser Wallet connection failed');
         }
         return this;
     }
 
     async getConnections() {
-        // Defining "connection" as a connected account.
+        // Defining "connected" as the presence of a connected account.
+        // TODO Would be more stable to base on availability of RPC client?
         const account = await this.getConnectedAccount();
         return account ? [this] : [];
     }
@@ -59,8 +67,13 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
     }
 
     async disconnect() {
-        // Only the wallet can initiate a disconnect.
-        return undefined;
+        // The connection itself cannot actually be disconnected by the dApp as
+        // only the wallet can initiate disconnecting individual accounts.
+        // This "disconnect" only ensures that we stop interacting with the client
+        // (which stays in the browser window's global state)
+        // such that it doesn't interfere with a future reconnection.
+        this.client.removeAllListeners();
+        this.delegate.onDisconnect(this);
     }
 
     async signAndSendTransaction(

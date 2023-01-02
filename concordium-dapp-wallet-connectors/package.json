@@ -5,19 +5,21 @@
   "author": "Concordium Software",
   "license": "Apache-2.0",
   "main": "./dist/index.js",
-  "files": ["./dist"],
+  "files": [
+    "./dist"
+  ],
   "scripts": {
     "build": "tsc"
   },
   "dependencies": {
     "@concordium/browser-wallet-api-helpers": "^2.0.0",
-    "@concordium/web-sdk": "^3.0.0",
     "@walletconnect/qrcode-modal": "^1.8.0",
     "@walletconnect/sign-client": "^2.1.4"
   },
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.1",
     "@walletconnect/types": "^2.1.4",
+    "prettier": "2.8.1",
     "typescript": "^4.9.4"
   }
 }

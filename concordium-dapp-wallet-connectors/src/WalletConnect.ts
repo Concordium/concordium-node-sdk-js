@@ -1,9 +1,6 @@
-/* eslint-disable no-console */
-
-// eslint-disable-next-line max-classes-per-file
 import SignClient from '@walletconnect/sign-client';
 import QRCodeModal from '@walletconnect/qrcode-modal';
-import { SessionTypes, SignClientTypes } from '@walletconnect/types';
+import { SessionTypes, SignClientTypes, ISignClient } from '@walletconnect/types';
 import {
     AccountTransactionPayload,
     AccountTransactionSignature,
@@ -21,7 +18,7 @@ import { WalletConnectionDelegate, Network, WalletConnection, WalletConnector } 
 
 const WALLET_CONNECT_SESSION_NAMESPACE = 'ccd';
 
-async function connect(client: SignClient, chainId: string, setModalOpen: (val: boolean) => void) {
+async function connect(client: ISignClient, chainId: string, cancel: () => void) {
     try {
         const { uri, approval } = await client.connect({
             requiredNamespaces: {
@@ -32,19 +29,18 @@ async function connect(client: SignClient, chainId: string, setModalOpen: (val: 
                 },
             },
         });
-
-        // Open QRCode modal if a URI was returned (i.e. we're not connecting an existing pairing).
         if (uri) {
-            setModalOpen(true);
-            QRCodeModal.open(uri, () => {
-                setModalOpen(false);
-            });
+            // Open modal as we're not connecting to an existing pairing.
+            QRCodeModal.open(uri, cancel);
         }
-
-        // Await session approval from the wallet.
         return await approval();
+    } catch (e) {
+        // Ignore falsy errors.
+        if (e) {
+            console.error(`WalletConnect client error: ${e}`);
+        }
+        cancel();
     } finally {
-        // Close the QRCode modal in case it was open.
         QRCodeModal.close();
     }
 }
@@ -58,7 +54,6 @@ interface SignAndSendTransactionError {
     message: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isSignAndSendTransactionError(obj: any): obj is SignAndSendTransactionError {
     return 'code' in obj && 'message' in obj;
 }
@@ -248,7 +243,7 @@ export class WalletConnectConnection implements WalletConnection {
 }
 
 export class WalletConnectConnector implements WalletConnector {
-    readonly client: SignClient;
+    readonly client: ISignClient;
 
     readonly network: Network;
 
@@ -256,22 +251,20 @@ export class WalletConnectConnector implements WalletConnector {
 
     readonly connections = new Map<string, WalletConnectConnection>();
 
-    isModalOpen = false;
-
     constructor(client: SignClient, network: Network, delegate: WalletConnectionDelegate) {
         this.client = client;
         this.network = network;
         this.delegate = delegate;
 
-        this.client.on('session_event', ({ topic, params: { chainId: cid, event }, id }) => {
-            console.debug('Wallet Connect event: session_event', { topic, id, chainId: cid, event });
+        client.on('session_event', ({ topic, params: { chainId, event }, id }) => {
+            console.debug('WalletConnect event: session_event', { topic, id, chainId, event });
         });
-        this.client.on('session_update', ({ topic, params }) => {
-            console.debug('Wallet Connect event: session_update', { topic, params });
+        client.on('session_update', ({ topic, params }) => {
+            console.debug('WalletConnect event: session_update', { topic, params });
 
             const connection = this.connections.get(topic);
             if (!connection) {
-                console.error(`Wallet Connect event 'session_update' received for unknown topic '${topic}'.`);
+                console.error(`WalletConnect event 'session_update' received for unknown topic '${topic}'.`);
                 return;
             }
             const { namespaces } = params;
@@ -282,12 +275,12 @@ export class WalletConnectConnector implements WalletConnector {
                 .then((a) => delegate.onAccountChanged(connection, a))
                 .catch(console.error);
         });
-        this.client.on('session_delete', ({ topic }) => {
+        client.on('session_delete', ({ topic }) => {
             // Session was deleted: Reset the dApp state, clean up user session, etc.
-            console.debug('Wallet Connect event: session_delete');
+            console.debug('WalletConnect event: session_delete', { topic });
             const connection = this.connections.get(topic);
             if (!connection) {
-                console.error(`Wallet Connect event 'session_delete' received for unknown topic '${topic}'.`);
+                console.error(`WalletConnect event 'session_delete' received for unknown topic '${topic}'.`);
                 return;
             }
             this.connections.delete(topic);
@@ -306,11 +299,17 @@ export class WalletConnectConnector implements WalletConnector {
 
     async connect() {
         const chainId = `${WALLET_CONNECT_SESSION_NAMESPACE}:${this.network.name}`;
-        const session = await connect(this.client, chainId, (v) => {
-            this.isModalOpen = v;
+        const session = await new Promise<SessionTypes.Struct | undefined>((resolve) => {
+            connect(this.client, chainId, () => resolve(undefined)).then(resolve);
         });
+        if (!session) {
+            // Connect was cancelled.
+            return undefined;
+        }
         const rpcClient = new JsonRpcClient(new HttpProvider(this.network.jsonRpcUrl));
-        return new WalletConnectConnection(this, rpcClient, chainId, session);
+        const connection = new WalletConnectConnection(this, rpcClient, chainId, session);
+        this.connections.set(session.topic, connection);
+        return connection;
     }
 
     onDisconnect(connection: WalletConnectConnection) {
@@ -320,5 +319,10 @@ export class WalletConnectConnector implements WalletConnector {
 
     async getConnections() {
         return Array.from(this.connections.values());
+    }
+
+    async disconnect() {
+        const connections = await this.getConnections();
+        return Promise.all(connections.map((c) => c.disconnect())).then(() => {});
     }
 }

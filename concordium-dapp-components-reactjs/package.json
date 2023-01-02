@@ -12,14 +12,17 @@
     "build": "tsc"
   },
   "dependencies": {
-    "concordium-dapp-wallet-connectors": "../concordium-dapp-wallet-connectors",
-    "neverthrow": "^6.0.0",
-    "react": "^18.2.0",
-    "react-bootstrap": "^2.7.0"
+    "concordium-dapp-wallet-connectors": "../concordium-dapp-wallet-connectors"
   },
   "devDependencies": {
-    "@tsconfig/create-react-app": "^1.0.3",
+    "@tsconfig/recommended": "^1.0.1",
+    "@types/node": "^18.11.17",
     "@types/react": "^18",
+    "@walletconnect/types": "^2.1.4",
+    "prettier": "2.8.1",
     "typescript": "^4.9.4"
+  },
+  "peerDependencies": {
+    "react": "^18"
   }
 }

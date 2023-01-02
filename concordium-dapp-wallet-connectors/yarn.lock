@@ -9,33 +9,34 @@
   dependencies:
     "@concordium/web-sdk" "^3.0.0"
 
-"@concordium/common-sdk@6.0.0":
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/@concordium/common-sdk/-/common-sdk-6.0.0.tgz#82093fbaac444ba6365264cb492353434b9fb382"
-  integrity sha512-YWY2ecPEIbIk5Ed8U7WJBR7TUlpIOL0NbUIZMS86feXynQFVdqpBtYJQmxtbBpIXNXlHtTXR0QG3nBR+PHygFA==
+"@concordium/common-sdk@6.1.0":
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/@concordium/common-sdk/-/common-sdk-6.1.0.tgz#af3ade89b120cbbf86aa909eb2806d585db0896e"
+  integrity sha512-iS4L7LRAz2vBQcJKertK/jctQ0sNCM3lrkmFKKbQi2qM62KI9yQ2zBpLDKGkkoh+eoS215+LAGsKl0u242f3Gg==
   dependencies:
-    "@concordium/rust-bindings" "0.7.0"
+    "@concordium/rust-bindings" "0.8.0"
     "@noble/ed25519" "^1.7.1"
     "@scure/bip39" "^1.1.0"
     bs58check "^2.1.2"
     buffer "^6.0.3"
     cross-fetch "3.1.5"
     hash.js "^1.1.7"
+    iso-3166-1 "^2.1.1"
     json-bigint "^1.0.0"
     uuid "^8.3.2"
 
-"@concordium/rust-bindings@0.7.0":
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/@concordium/rust-bindings/-/rust-bindings-0.7.0.tgz#ecddb02431663ebf5361d4663e1022ce8216e7f7"
-  integrity sha512-2KdWnt0AVuyQQwQV5m3XjSQJkl9cckDlf/JP7/yReKb5zyL24CfIJ44zipUj1gR5pXo3UUxtX0B1+VTSW0/eOA==
+"@concordium/rust-bindings@0.8.0":
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/@concordium/rust-bindings/-/rust-bindings-0.8.0.tgz#5a2dc2487b9d67d5adc283a5dcaf6db890bac300"
+  integrity sha512-ZcxdPUo+PnEkw4FbHPl0ZI5HQzbg6ttlG8pZR88EAHvkneILI27Fj/mprrsOVamtawsmY3WYDNP3rUt4NdVkQA==
 
 "@concordium/web-sdk@^3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@concordium/web-sdk/-/web-sdk-3.0.0.tgz#601f702e83ebf6bf8d6f5b20eb50c9f4b7836469"
-  integrity sha512-SBvEHhEMNZjFey75rYIVKPg24nbSBpl3NnCI5p848l2Bl6CbwDEnZ+aqWMa1k5vG/4btHpYE9KzQPdMOcutoTQ==
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/@concordium/web-sdk/-/web-sdk-3.1.0.tgz#e030a3ad0d5e90d9267cd5ee13d73f7a7eea07bd"
+  integrity sha512-PUUIrmMHow9cGnjLTxXz2S3m8rLuc+A25N6JpegmR1pNRVnXK5vf/YAACnOySGwp61DvoCEeJQweFf9lcv+Jzg==
   dependencies:
-    "@concordium/common-sdk" "6.0.0"
-    "@concordium/rust-bindings" "0.7.0"
+    "@concordium/common-sdk" "6.1.0"
+    "@concordium/rust-bindings" "0.8.0"
     buffer "^6.0.3"
     process "^0.11.10"
 
@@ -45,9 +46,9 @@
   integrity sha512-Rk4SkJFaXZiznFyC/t77Q0NKS4FL7TLJJsVG2V2oiEq3kJVeTdxysEe/yRWSpnWMe808XRDJ+VFh5pt/FN5plw==
 
 "@noble/hashes@~1.1.1":
-  version "1.1.4"
-  resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-1.1.4.tgz#2611ebf5764c1bf754da7c7794de4fb30512336d"
-  integrity sha512-+PYsVPrTSqtVjatKt2A/Proukn2Yrz61OBThOCKErc5w2/r1Fh37vbDv0Eah7pyNltrmacjwTvdw3JoR+WE4TA==
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-1.1.5.tgz#1a0377f3b9020efe2fae03290bd2a12140c95c11"
+  integrity sha512-LTMZiiLc+V4v1Yi16TD6aX2gmtKszNye0pQgbaLqkvhIqP7nVsSaJsWloGQjJfJ8offaoP5GtX3yY5swbcJxxQ==
 
 "@scure/base@~1.1.0":
   version "1.1.1"
@@ -285,12 +286,13 @@
     tslib "1.14.1"
 
 "@walletconnect/jsonrpc-ws-connection@^1.0.5":
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/@walletconnect/jsonrpc-ws-connection/-/jsonrpc-ws-connection-1.0.5.tgz#cf43e40f283da34ca962e74007829930f7aa4a75"
-  integrity sha512-M8a7nPmJbY3itLVdkq6d+EjZUsDDwyNpK1rYlhT1xcD07oXqFSqzkSCvFXylUaPlOsBVIhJ8l7I8oOYkb6K5XQ==
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/@walletconnect/jsonrpc-ws-connection/-/jsonrpc-ws-connection-1.0.6.tgz#8ef6747ddf9347f4b61c136d06fcdae6c7efad39"
+  integrity sha512-WFu8uTXbIDgxFfyax9uNcqFYtexUq/OdCA3SBsOqIipsnJFbjXK8OaR8WCoec4tkJbDRQO9mrr1KpA0ZlIcnCQ==
   dependencies:
     "@walletconnect/jsonrpc-utils" "^1.0.4"
     "@walletconnect/safe-json" "^1.0.1"
+    events "^3.3.0"
     tslib "1.14.1"
     ws "^7.5.1"
 
@@ -707,6 +709,11 @@ isarray@^2.0.1:
   resolved "https://registry.yarnpkg.com/isarray/-/isarray-2.0.5.tgz#8af1e4c1221244cc62459faf38940d4e644a5723"
   integrity sha512-xHjhDr3cNBK0BzdUJSPXZntQUx/mwMS5Rw4A7lPJ90XGAO6ISP/ePDNuo0vhqOZU+UD5JoodwCAAoZQd3FeAKw==
 
+iso-3166-1@^2.1.1:
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/iso-3166-1/-/iso-3166-1-2.1.1.tgz#79b80d2aebc3c9528d792bdbb8316c912fe37c68"
+  integrity sha512-RZxXf8cw5Y8LyHZIwIRvKw8sWTIHh2/txBT+ehO0QroesVfnz3JNFFX4i/OC/Yuv2bDIVYrHna5PMvjtpefq5w==
+
 json-bigint@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/json-bigint/-/json-bigint-1.0.0.tgz#ae547823ac0cad8398667f8cd9ef4730f5b01ff1"
@@ -833,6 +840,11 @@ preact@10.4.1:
   version "10.4.1"
   resolved "https://registry.yarnpkg.com/preact/-/preact-10.4.1.tgz#9b3ba020547673a231c6cf16f0fbaef0e8863431"
   integrity sha512-WKrRpCSwL2t3tpOOGhf2WfTpcmbpxaWtDbdJdKdjd0aEiTkvOmS4NBkG6kzlaAHI9AkQ3iVqbFWM3Ei7mZ4o1Q==
+
+prettier@2.8.1:
+  version "2.8.1"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.8.1.tgz#4e1fd11c34e2421bc1da9aea9bd8127cd0a35efc"
+  integrity sha512-lqGoSJBQNJidqCHE80vqZJHWHRFoNYsSpP9AjFhlhi9ODCJA541svILes/+/1GM3VaL/abZi7cpFzOpdR9UPKg==
 
 process-warning@^1.0.0:
   version "1.0.0"

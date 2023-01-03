@@ -115,7 +115,7 @@ export function assertValidHash(hash: Uint8Array): void {
 // Works the same way as a list mapping, allowing both a value and key mapping.
 // If `keyMapper()` is not provided, it will map `Record<A,C>` to `Record<A,D>`
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export function recordMap<
+export function mapRecord<
     A extends string | number | symbol,
     B,
     C extends string | number | symbol,

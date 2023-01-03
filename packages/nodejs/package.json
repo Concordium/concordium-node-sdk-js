@@ -1,6 +1,6 @@
 {
     "name": "@concordium/node-sdk",
-    "version": "7.0.0",
+    "version": "6.2.0",
     "description": "Helpers for interacting with the Concordium node",
     "repository": {
         "type": "git",

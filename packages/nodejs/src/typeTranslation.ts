@@ -1,6 +1,7 @@
 import * as v1 from '@concordium/common-sdk';
 import * as v2 from '../grpc/v2/concordium/types';
-import { recordMap, unwrap } from './util';
+import { mapRecord, unwrap } from './util';
+import { Buffer } from 'buffer/';
 
 function unwrapToHex(x: Uint8Array | undefined): string {
     return Buffer.from(unwrap(x)).toString('hex');
@@ -34,7 +35,7 @@ function transCommits(
         cmmCredCounter: unwrapToHex(cmm.credCounter?.value),
         cmmIdCredSecSharingCoeff:
             cmm.idCredSecSharingCoeff.map(unwrapValueToHex),
-        cmmAttributes: recordMap(cmm.attributes, unwrapValueToHex, transAttKey),
+        cmmAttributes: mapRecord(cmm.attributes, unwrapValueToHex, transAttKey),
         cmmMaxAccounts: unwrapToHex(cmm.maxAccounts?.value),
     };
 }
@@ -58,7 +59,7 @@ function transCredKeys(
 ): v1.CredentialPublicKeys {
     return {
         threshold: unwrap(credKeys.threshold?.value),
-        keys: recordMap(credKeys.keys, transVerifyKey),
+        keys: mapRecord(credKeys.keys, transVerifyKey),
     };
 }
 
@@ -80,37 +81,45 @@ function transCred(cred: v2.AccountCredential): v1.AccountCredential {
     const policy: v1.Policy = {
         validTo: transDate(unwrap(credVals.policy?.validTo)),
         createdAt: transDate(unwrap(credVals.policy?.createdAt)),
-        revealedAttributes: recordMap(
+        revealedAttributes: mapRecord(
             credVals.policy?.attributes,
             unwrapToHex,
             transAttKey
         ),
     };
-    const deploymentValues = {
+    const commonValues = {
         ipIdentity: unwrap(credVals.ipId?.value),
         credentialPublicKeys: transCredKeys(unwrap(credVals.keys)),
         policy: policy,
-        ...((isNormal && {
-            // if isNormal...
+    };
+
+    let value: v1.InitialAccountCredential | v1.NormalAccountCredential;
+    if (isNormal) {
+        const deploymentValues = {
+            ...commonValues,
             credId: unwrapToHex(credVals.credId?.value),
             revocationThreshold: unwrap(credVals.arThreshold?.value),
-            arData: recordMap(credVals.arData, transChainArData, String),
+            arData: mapRecord(credVals.arData, transChainArData, String),
             commitments: transCommits(unwrap(credVals.commitments)),
-        }) || {
-            // else...
+        };
+        value = {
+            type: 'normal',
+            contents: deploymentValues,
+        };
+    } else {
+        const deploymentValues = {
+            ...commonValues,
             regId: unwrapToHex(credVals.credId?.value),
-        }),
-    };
-    const val = {
-        type: isNormal ? 'normal' : 'initial',
-        contents: deploymentValues,
-    };
+        };
+        value = {
+            type: 'initial',
+            contents: deploymentValues,
+        };
+    }
 
     return {
         v: 0,
-        value: isNormal
-            ? (val as v1.NormalAccountCredential)
-            : (val as v1.InitialAccountCredential),
+        value,
     };
 }
 
@@ -140,7 +149,7 @@ function transTimestamp(timestamp: v2.Timestamp | undefined): Date {
 
 function transPendingChange(
     pendingChange: v2.StakePendingChange | undefined
-): v1.StakePendingChange {
+): v1.StakePendingChangeV1 {
     const change = unwrap(pendingChange?.change);
     if (change.oneofKind === 'reduce') {
         return {
@@ -170,9 +179,7 @@ function transDelegator(
         delegationTarget: transDelegatorTarget(unwrap(deleg.target)),
         // Set the following value if deleg.pendingChange is set to true
         ...(deleg.pendingChange && {
-            pendingChange: transPendingChange(
-                deleg.pendingChange
-            ) as v1.StakePendingChangeV1,
+            pendingChange: transPendingChange(deleg.pendingChange),
         }),
     };
 }
@@ -181,7 +188,6 @@ function transAmountFraction(amount: v2.AmountFraction | undefined): number {
     return unwrap(amount?.partsPerHundredThousand) / 100000;
 }
 
-// Todo: Smart way to do this?
 function transOpenStatus(
     openStatus: v2.OpenStatus | undefined
 ): v1.OpenStatusText {
@@ -230,8 +236,7 @@ function transBaker(
 }
 
 export function translateAccountInfo(acc: v2.AccountInfo): v1.AccountInfo {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const accAdrRaw = Buffer.from(unwrap(acc.address?.value)) as any;
+    const accAdrRaw = Buffer.from(unwrap(acc.address?.value));
     const aggAmount = acc.encryptedBalance?.aggregatedAmount?.value;
     const numAggregated = acc.encryptedBalance?.numAggregated;
 
@@ -258,7 +263,7 @@ export function translateAccountInfo(acc: v2.AccountInfo): v1.AccountInfo {
         accountEncryptionKey: unwrapToHex(acc.encryptionKey?.value),
         accountEncryptedAmount: encryptedAmount,
         accountReleaseSchedule: releaseSchedule,
-        accountCredentials: recordMap(acc.creds, transCred),
+        accountCredentials: mapRecord(acc.creds, transCred),
     };
 
     if (acc.stake?.stakingInfo.oneofKind === 'delegator') {

@@ -6,29 +6,24 @@ function unwrapToHex(x: Uint8Array | undefined): string {
     return Buffer.from(unwrap(x)).toString('hex');
 }
 
-function unwrapValueToHex(x: v2.EncryptedAmount | v2.TransactionHash): string {
+function unwrapValueToHex(x: { value: Uint8Array }): string {
     return unwrapToHex(x.value);
 }
 
 function transRelease(release: v2.Release): v1.ReleaseScheduleWithTransactions {
     return {
-        timestamp: new Date(Number(unwrap(release.timestamp?.value)) * 1000),
+        timestamp: transTimestamp(release.timestamp),
         amount: unwrap(release.amount?.value),
         transactions: release.transactions.map(unwrapValueToHex),
     };
 }
 
 function transDate(ym: v2.YearMonth): string {
-    const month = ym.month < 10 ? '0' + String(ym.month) : String(ym.month);
-    return String(ym.year) + month;
+    return String(ym.year) + String(ym.month).padStart(2, '0');
 }
 
 function transAttKey(attributeKey: number): v1.AttributeKey {
     return v1.AttributesKeys[attributeKey] as v1.AttributeKey;
-}
-
-function transCommit(commitment: v2.Commitment): string {
-    return unwrapToHex(commitment.value);
 }
 
 function transCommits(
@@ -39,7 +34,7 @@ function transCommits(
         cmmCredCounter: unwrapToHex(cmm.credCounter?.value),
         cmmIdCredSecSharingCoeff:
             cmm.idCredSecSharingCoeff.map(unwrapValueToHex),
-        cmmAttributes: recordMap(cmm.attributes, transCommit, transAttKey),
+        cmmAttributes: recordMap(cmm.attributes, unwrapValueToHex, transAttKey),
         cmmMaxAccounts: unwrapToHex(cmm.maxAccounts?.value),
     };
 }
@@ -267,15 +262,15 @@ export function translateAccountInfo(acc: v2.AccountInfo): v1.AccountInfo {
     };
 
     if (acc.stake?.stakingInfo.oneofKind === 'delegator') {
-        const accInfo = accInfoCommon as v1.AccountInfoDelegator;
-        accInfo.accountDelegation = transDelegator(
-            acc.stake.stakingInfo.delegator
-        );
-        return accInfo;
+        return {
+            ...accInfoCommon,
+            accountDelegation: transDelegator(acc.stake.stakingInfo.delegator),
+        };
     } else if (acc.stake?.stakingInfo.oneofKind === 'baker') {
-        const accInfo = accInfoCommon as v1.AccountInfoBaker;
-        accInfo.accountBaker = transBaker(acc.stake.stakingInfo.baker);
-        return accInfo;
+        return {
+            ...accInfoCommon,
+            accountBaker: transBaker(acc.stake.stakingInfo.baker),
+        };
     } else {
         return accInfoCommon;
     }

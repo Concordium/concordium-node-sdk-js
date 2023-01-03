@@ -1,17 +1,9 @@
 import { ChannelCredentials, Metadata } from '@grpc/grpc-js';
-import {
-    AccountAddress as AccountAddressLocal,
-    AccountInfo as AccountInfoLocal,
-} from '@concordium/common-sdk';
-import {
-    AccountAddress,
-    CryptographicParameters,
-    NextAccountSequenceNumber,
-    AccountInfoRequest,
-} from '../grpc/v2/concordium/types';
-import { AccountIdentifierInputLocal } from './types';
+import * as v1 from '@concordium/common-sdk';
+import * as v2 from '../grpc/v2/concordium/types';
+import * as translate from './typeTranslation';
+import { HexString } from '@concordium/common-sdk';
 import { getBlockHashInput, getAccountIdentifierInput } from './util';
-import { translateAccountInfo } from './typeTranslation';
 import { QueriesClient } from '../grpc/v2/concordium/service.client';
 import { GrpcTransport } from '@protobuf-ts/grpc-transport';
 
@@ -74,13 +66,16 @@ export default class ConcordiumNodeClient {
      * @param accountAddress base58 account address to get the next account nonce for
      * @returns the next account nonce, and a boolean indicating if the nonce is reliable
      */
-    async getNextAccountSequenceNumber(
-        accountAddress: AccountAddressLocal
-    ): Promise<NextAccountSequenceNumber> {
-        const address: AccountAddress = {
+    async getNextAccountNonce(
+        accountAddress: v1.AccountAddress
+    ): Promise<v1.NextAccountNonce> {
+        const address: v2.AccountAddress = {
             value: new Uint8Array(accountAddress.decodedAddress),
         };
-        return await this.client.getNextAccountSequenceNumber(address).response;
+
+        const response = await this.client.getNextAccountSequenceNumber(address)
+            .response;
+        return translate.nextAccountSequenceNumber(response);
     }
 
     /**
@@ -91,11 +86,14 @@ export default class ConcordiumNodeClient {
      * @returns the global cryptographic parameters at the given block, or undefined it the block does not exist.
      */
     async getCryptographicParameters(
-        blockHash?: Uint8Array
-    ): Promise<CryptographicParameters> {
+        blockHash?: HexString
+    ): Promise<v1.CryptographicParameters> {
         const blockHashInput = getBlockHashInput(blockHash);
-        return await this.client.getCryptographicParameters(blockHashInput)
-            .response;
+
+        const response = await this.client.getCryptographicParameters(
+            blockHashInput
+        ).response;
+        return translate.cryptographicParameters(response);
     }
 
     /**
@@ -110,18 +108,16 @@ export default class ConcordiumNodeClient {
      * @returns the account info for the provided account address, throws if the account does not exist
      */
     async getAccountInfo(
-        accountIdentifier: AccountIdentifierInputLocal,
-        blockHash?: Uint8Array
-    ): Promise<AccountInfoLocal> {
-        const accountInfoRequest: AccountInfoRequest = {
+        accountIdentifier: v1.AccountIdentifierInput,
+        blockHash?: HexString
+    ): Promise<v1.AccountInfo> {
+        const accountInfoRequest: v2.AccountInfoRequest = {
             blockHash: getBlockHashInput(blockHash),
             accountIdentifier: getAccountIdentifierInput(accountIdentifier),
         };
 
-        const newInfo = await this.client.getAccountInfo(accountInfoRequest)
+        const response = await this.client.getAccountInfo(accountInfoRequest)
             .response;
-        const oldInfo = translateAccountInfo(newInfo);
-
-        return oldInfo;
+        return translate.accountInfo(response);
     }
 }

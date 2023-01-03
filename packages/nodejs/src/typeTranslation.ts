@@ -235,7 +235,7 @@ function transBaker(
     };
 }
 
-export function translateAccountInfo(acc: v2.AccountInfo): v1.AccountInfo {
+export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
     const accAdrRaw = Buffer.from(unwrap(acc.address?.value));
     const aggAmount = acc.encryptedBalance?.aggregatedAmount?.value;
     const numAggregated = acc.encryptedBalance?.numAggregated;
@@ -279,4 +279,23 @@ export function translateAccountInfo(acc: v2.AccountInfo): v1.AccountInfo {
     } else {
         return accInfoCommon;
     }
+}
+
+export function nextAccountSequenceNumber(
+    nasn: v2.NextAccountSequenceNumber
+): v1.NextAccountNonce {
+    return {
+        nonce: unwrap(nasn.sequenceNumber?.value),
+        allFinal: nasn.allFinal,
+    };
+}
+
+export function cryptographicParameters(
+    cp: v2.CryptographicParameters
+): v1.CryptographicParameters {
+    return {
+        onChainCommitmentKey: unwrapToHex(cp.onChainCommitmentKey),
+        bulletproofGenerators: unwrapToHex(cp.bulletproofGenerators),
+        genesisString: cp.genesisString,
+    };
 }

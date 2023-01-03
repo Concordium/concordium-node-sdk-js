@@ -1,9 +1,12 @@
 import { AccountAddress } from './types/accountAddress';
+import { CredentialRegistrationId } from './types/CredentialRegistrationId';
 import { CcdAmount } from './types/ccdAmount';
 import { DataBlob } from './types/DataBlob';
 import { TransactionExpiry } from './types/transactionExpiry';
 import { Buffer } from 'buffer/';
 import { ModuleReference } from './types/moduleReference';
+
+export type HexString = string;
 
 /**
  * Returns a union of all keys of type T with values matching type V.
@@ -80,6 +83,11 @@ export interface AddressAccount {
     type: 'AddressAccount';
     address: string;
 }
+
+export type AccountIdentifierInput =
+    | AccountAddress
+    | CredentialRegistrationId
+    | bigint;
 
 export interface TransactionEvent {
     tag:

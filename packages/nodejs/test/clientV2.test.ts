@@ -1,25 +1,21 @@
 import { credentials, Metadata } from '@grpc/grpc-js/';
-import ConcordiumNodeClient from '../src/clientV2';
+import * as v1 from '@concordium/common-sdk';
+import * as v2 from '../grpc/v2/concordium/types';
+import ConcordiumNodeClientV1 from '../src/client';
+import ConcordiumNodeClientV2 from '../src/clientV2';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
-import {
-    AccountAddress,
-    CredentialRegistrationId,
-} from '@concordium/common-sdk';
-import { AccountInfo, AccountStakingInfo } from '../grpc/v2/concordium/types';
-import OldConcordiumNodeClient from '../src/client';
-import { AccountIdentifierInputLocal } from '../src/types';
 import { getAccountIdentifierInput, getBlockHashInput } from '../src/util';
 
 /**
  * Creates a client to communicate with a local concordium-node
  * used for automatic tests.
  */
-export function getNodeClient(
+export function getNodeClientV2(
     address = 'service.internal.testnet.concordium.com',
     port = 20000
-): ConcordiumNodeClient {
+): ConcordiumNodeClientV2 {
     const metadata = new Metadata();
-    return new ConcordiumNodeClient(
+    return new ConcordiumNodeClientV2(
         address,
         port,
         credentials.createInsecure(),
@@ -28,12 +24,12 @@ export function getNodeClient(
     );
 }
 
-export function getOldNodeClient(
+export function getNodeClientV1(
     address = 'service.internal.testnet.concordium.com'
-): OldConcordiumNodeClient {
+): ConcordiumNodeClientV1 {
     const metadata = new Metadata();
     metadata.add('authentication', 'rpcadmin');
-    return new OldConcordiumNodeClient(
+    return new ConcordiumNodeClientV1(
         address,
         10000,
         credentials.createInsecure(),
@@ -42,31 +38,29 @@ export function getOldNodeClient(
     );
 }
 
-const client = getNodeClient();
-const oldClient = getOldNodeClient();
+const clientV1 = getNodeClientV1();
+const clientV2 = getNodeClientV2();
 
-const testAccount = new AccountAddress(
+const testAccount = new v1.AccountAddress(
     '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'
 );
-const testBlockHash = Buffer.from(
-    '/oj/NUVAecPfEdiuE9V3e6vWHyi+WElO/lG2WT4wcW4=',
-    'base64'
-);
-const testCredId = new CredentialRegistrationId(
+const testCredId = new v1.CredentialRegistrationId(
     'aa730045bcd20bb5c24349db29d949f767e72f7cce459dc163c4b93c780a7d7f65801dda8ff7e4fc06fdf1a1b246276f'
 );
-const testAccBaker = new AccountAddress(
+const testAccBaker = new v1.AccountAddress(
     '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L'
 );
-const testAccDeleg = new AccountAddress(
+const testAccDeleg = new v1.AccountAddress(
     '3bFo43GiPnkk5MmaSdsRVboaX2DNSKaRkLseQbyB3WPW1osPwh'
 );
+const testBlockHash =
+    'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
 
 // Retrieves the account info for the given account in the GRPCv2 type format.
 function getAccountInfoV2(
-    client: ConcordiumNodeClient,
-    accountIdentifier: AccountIdentifierInputLocal
-): Promise<AccountInfo> {
+    client: ConcordiumNodeClientV2,
+    accountIdentifier: v1.AccountIdentifierInput
+): Promise<v2.AccountInfo> {
     const accountInfoRequest = {
         blockHash: getBlockHashInput(testBlockHash),
         accountIdentifier: getAccountIdentifierInput(accountIdentifier),
@@ -76,32 +70,25 @@ function getAccountInfoV2(
 }
 
 test('getCryptographicParameters', async () => {
-    const parameters = await client.getCryptographicParameters(testBlockHash);
+    const parameters = await clientV2.getCryptographicParameters(testBlockHash);
     expect(parameters.genesisString).toEqual('Concordium Testnet Version 5');
     expect(parameters.onChainCommitmentKey).toEqual(
-        Buffer.from(
-            'sUy/5EoCxrH3hxEXbV9DcpU2eqTyqMJVHuENJaA63GnWGjMqBYlxkZ2tcxLh/JTFqNReZLb5F8VA7uFslww9S388r0indGKEh44qziHILqRL+EYJg0Ylvh8wmYisUj+s',
-            'base64'
-        )
+        'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a8d45e64b6f917c540eee16c970c3d4b7f3caf48a7746284878e2ace21c82ea44bf84609834625be1f309988ac523fac'
     );
 
     expect(parameters.bulletproofGenerators).toEqual(
-        Buffer.from(testnetBulletproofGenerators, 'base64')
+        Buffer.from(testnetBulletproofGenerators, 'base64').toString('hex')
     );
 });
 
 test('NextAccountSequenceNumber', async () => {
-    const nextAccountSequenceNumber = await client.getNextAccountSequenceNumber(
-        testAccount
-    );
-    expect(
-        nextAccountSequenceNumber.sequenceNumber?.value
-    ).toBeGreaterThanOrEqual(19n);
-    expect(nextAccountSequenceNumber.allFinal).toBeDefined();
+    const nan = await clientV2.getNextAccountNonce(testAccount);
+    expect(nan.nonce).toBeGreaterThanOrEqual(19n);
+    expect(nan.allFinal).toBeDefined();
 });
 
 test('AccountInfo', async () => {
-    const accountInfo = await getAccountInfoV2(client, testAccount);
+    const accountInfo = await getAccountInfoV2(clientV2, testAccount);
 
     const expected = {
         sequenceNumber: {
@@ -190,24 +177,24 @@ test('AccountInfo', async () => {
         },
     };
 
-    expect(AccountInfo.toJson(accountInfo)).toEqual(expected);
+    expect(v2.AccountInfo.toJson(accountInfo)).toEqual(expected);
 });
 
 test('getAccountInfo: Invalid hash throws error', async () => {
-    const invalidBlockHash = Buffer.from('1010101010', 'hex');
+    const invalidBlockHash = '1010101010';
     await expect(
-        client.getAccountInfo(testAccount, invalidBlockHash)
+        clientV2.getAccountInfo(testAccount, invalidBlockHash)
     ).rejects.toEqual(
         new Error(
             'The input was not a valid hash, must be 32 bytes: ' +
-                Buffer.from(invalidBlockHash).toString('hex')
+                invalidBlockHash
         )
     );
 });
 
 test('getAccountInfo for baker', async () => {
-    const accInfo = await getAccountInfoV2(client, testAccBaker);
-    const accountIndexInfo = await getAccountInfoV2(client, 5n);
+    const accInfo = await getAccountInfoV2(clientV2, testAccBaker);
+    const accountIndexInfo = await getAccountInfoV2(clientV2, 5n);
 
     const expected = {
         baker: {
@@ -236,8 +223,8 @@ test('getAccountInfo for baker', async () => {
         },
     };
     if (accInfo.stake && accountIndexInfo.stake) {
-        const stake = AccountStakingInfo.toJson(accInfo.stake);
-        const stakeAccountIndex = AccountStakingInfo.toJson(
+        const stake = v2.AccountStakingInfo.toJson(accInfo.stake);
+        const stakeAccountIndex = v2.AccountStakingInfo.toJson(
             accountIndexInfo.stake
         );
         expect(stake).toEqual(expected);
@@ -246,7 +233,7 @@ test('getAccountInfo for baker', async () => {
 });
 
 test('getAccountInfo for delegator', async () => {
-    const accInfo = await getAccountInfoV2(client, testAccDeleg);
+    const accInfo = await getAccountInfoV2(clientV2, testAccDeleg);
 
     const expected = {
         delegator: {
@@ -257,31 +244,30 @@ test('getAccountInfo for delegator', async () => {
     };
 
     if (accInfo.stake) {
-        const stakeJson = AccountStakingInfo.toJson(accInfo.stake);
+        const stakeJson = v2.AccountStakingInfo.toJson(accInfo.stake);
         expect(stakeJson).toEqual(expected);
     }
 });
 
 test('getAccountInfo: Account Address and CredentialRegistrationId is equal', async () => {
-    const accInfo = await client.getAccountInfo(testAccount, testBlockHash);
-    const credIdInfo = await client.getAccountInfo(testCredId, testBlockHash);
+    const accInfo = await clientV2.getAccountInfo(testAccount, testBlockHash);
+    const credIdInfo = await clientV2.getAccountInfo(testCredId, testBlockHash);
 
     expect(accInfo).toEqual(credIdInfo);
 });
 
 test('accountInfo implementations is the same', async () => {
-    const hexBlockHash = testBlockHash.toString('hex');
-    const oldReg = await oldClient.getAccountInfo(testAccount, hexBlockHash);
-    const newReg = await client.getAccountInfo(testAccount, testBlockHash);
+    const oldReg = await clientV1.getAccountInfo(testAccount, testBlockHash);
+    const newReg = await clientV2.getAccountInfo(testAccount, testBlockHash);
 
-    const oldCredId = await oldClient.getAccountInfo(testCredId, hexBlockHash);
-    const newCredId = await client.getAccountInfo(testCredId, testBlockHash);
+    const oldCredId = await clientV1.getAccountInfo(testCredId, testBlockHash);
+    const newCredId = await clientV2.getAccountInfo(testCredId, testBlockHash);
 
-    const oldBaker = await oldClient.getAccountInfo(testAccBaker, hexBlockHash);
-    const newBaker = await client.getAccountInfo(testAccBaker, testBlockHash);
+    const oldBaker = await clientV1.getAccountInfo(testAccBaker, testBlockHash);
+    const newBaker = await clientV2.getAccountInfo(testAccBaker, testBlockHash);
 
-    const oldDeleg = await oldClient.getAccountInfo(testAccDeleg, hexBlockHash);
-    const newDeleg = await client.getAccountInfo(testAccDeleg, testBlockHash);
+    const oldDeleg = await clientV1.getAccountInfo(testAccDeleg, testBlockHash);
+    const newDeleg = await clientV2.getAccountInfo(testAccDeleg, testBlockHash);
 
     // Tempoary
     if (oldReg?.accountCredentials[0].value.type === 'normal') {

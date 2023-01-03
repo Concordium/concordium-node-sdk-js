@@ -1,16 +1,12 @@
 import * as fs from 'fs';
+import * as v1 from '@concordium/common-sdk';
+import * as v2 from '../grpc/v2/concordium/types';
 import { Buffer } from 'buffer/';
 import { BoolResponse, JsonResponse } from '../grpc/concordium_p2p_rpc_pb';
 import {
-    BlockHashInput,
-    Empty,
-    AccountIdentifierInput,
-} from '../grpc/v2/concordium/types';
-import {
-    AccountAddress,
     CredentialRegistrationId as CredRegId,
+    HexString,
 } from '@concordium/common-sdk';
-import { AccountIdentifierInputLocal } from './types';
 
 export function intListToStringList(jsonStruct: string): string {
     return jsonStruct.replace(/(\-?[0-9]+)/g, '"$1"');
@@ -59,7 +55,7 @@ export function getModuleBuffer(filePath: string): Buffer {
     return Buffer.from(fs.readFileSync(filePath));
 }
 
-export function getBlockHashInput(blockHash?: Uint8Array): BlockHashInput {
+export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let blockHashInput: any = {};
 
@@ -67,12 +63,12 @@ export function getBlockHashInput(blockHash?: Uint8Array): BlockHashInput {
         assertValidHash(blockHash);
         blockHashInput = {
             oneofKind: 'given',
-            given: { value: blockHash },
+            given: { value: Buffer.from(blockHash, 'hex') },
         };
     } else {
         blockHashInput = {
             oneofKind: 'lastFinal',
-            lastFinal: Empty,
+            lastFinal: v2.Empty,
         };
     }
 
@@ -80,13 +76,13 @@ export function getBlockHashInput(blockHash?: Uint8Array): BlockHashInput {
 }
 
 export function getAccountIdentifierInput(
-    accountIdentifier: AccountIdentifierInputLocal
-): AccountIdentifierInput {
+    accountIdentifier: v1.AccountIdentifierInput
+): v2.AccountIdentifierInput {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const returnIdentifier: any = {};
 
-    if ((<AccountAddress>accountIdentifier).decodedAddress !== undefined) {
-        const address = (<AccountAddress>accountIdentifier).decodedAddress;
+    if ((<v1.AccountAddress>accountIdentifier).decodedAddress !== undefined) {
+        const address = (<v1.AccountAddress>accountIdentifier).decodedAddress;
         returnIdentifier.oneofKind = 'address';
         returnIdentifier.address = { value: address };
     } else if ((<CredRegId>accountIdentifier).credId !== undefined) {
@@ -102,11 +98,10 @@ export function getAccountIdentifierInput(
     return { accountIdentifierInput: returnIdentifier };
 }
 
-export function assertValidHash(hash: Uint8Array): void {
-    if (hash.length !== 32) {
+export function assertValidHash(hash: HexString): void {
+    if (hash.length !== 64) {
         throw new Error(
-            'The input was not a valid hash, must be 32 bytes: ' +
-                Buffer.from(hash).toString('hex')
+            'The input was not a valid hash, must be 32 bytes: ' + hash
         );
     }
 }

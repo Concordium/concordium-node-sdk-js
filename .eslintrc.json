@@ -21,7 +21,7 @@
     ],
     "rules": {
         "quotes": [2, "single", { "avoidEscape": true }],
-        "import/no-unresolved": [2, { "ignore": ["@concordium/rust-bindings", "@concordium/common-sdk", "concordium_p2p"]}],
+        "import/no-unresolved": [2, { "ignore": ["@concordium/rust-bindings", "@concordium/common-sdk", "grpc"]}],
         "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*.test.ts", "**/*.test.tsx", "**/*.config.js"]}],
         "@typescript-eslint/no-unused-vars": ["warn", { "ignoreRestSiblings": true }]
     },
@@ -34,7 +34,7 @@
             }
         }
     ],
-    "ignorePatterns": ["**/pkg/**/", "**/lib/**/", "deps/**/*", "**/nodejs/grpc/*"],
+    "ignorePatterns": ["**/pkg/**/", "**/lib/**/", "deps/**/*", "**/nodejs/grpc/*", "**/nodejs/src/grpc/*"],
     "settings": {
         "import/ignore": [
             "bs58check"

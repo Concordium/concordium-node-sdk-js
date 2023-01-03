@@ -24,7 +24,7 @@ import {
     ModuleReference,
 } from '@concordium/common-sdk';
 import { isValidDate, getNodeClient, getModuleBuffer } from './testHelpers';
-import { bulletProofGenerators } from './resources/bulletproofgenerators';
+import { testnetBulletproofGenerators as bulletProofGenerators } from './resources/bulletproofgenerators';
 import { ipVerifyKey1, ipVerifyKey2 } from './resources/ipVerifyKeys';
 import { PeerElement } from '../grpc/concordium_p2p_rpc_pb';
 

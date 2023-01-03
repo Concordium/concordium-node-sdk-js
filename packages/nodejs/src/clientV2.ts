@@ -2,10 +2,20 @@ import { ChannelCredentials, Metadata } from '@grpc/grpc-js';
 import * as v1 from '@concordium/common-sdk';
 import * as v2 from '../grpc/v2/concordium/types';
 import * as translate from './typeTranslation';
-import { calculateEnergyCost, getAccountTransactionHandler, HexString } from '@concordium/common-sdk';
+import {
+    calculateEnergyCost,
+    getAccountTransactionHandler,
+    HexString,
+} from '@concordium/common-sdk';
 import { QueriesClient } from '../grpc/v2/concordium/service.client';
 import { GrpcTransport } from '@protobuf-ts/grpc-transport';
-import { getBlockHashInput, getAccountIdentifierInput, assertValidHash, assertValidModuleRef, translateSignature } from './util';
+import {
+    getBlockHashInput,
+    getAccountIdentifierInput,
+    assertValidHash,
+    assertValidModuleRef,
+    translateSignature,
+} from './util';
 import { countSignatures } from '@concordium/common-sdk/src/util';
 
 /**
@@ -132,11 +142,10 @@ export default class ConcordiumNodeClient {
     ): Promise<v2.BlockItemStatus> {
         assertValidHash(transactionHash);
         const transactionHashV2: v2.TransactionHash = {
-            value: Buffer.from(transactionHash, 'hex')
-        }
+            value: Buffer.from(transactionHash, 'hex'),
+        };
 
-        return await this.client.getBlockItemStatus(transactionHashV2)
-            .response;
+        return await this.client.getBlockItemStatus(transactionHashV2).response;
     }
 
     /**

@@ -5,9 +5,19 @@ import ConcordiumNodeClientV1 from '../src/client';
 import ConcordiumNodeClientV2 from '../src/clientV2';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
 import { getAccountIdentifierInput, getBlockHashInput } from '../src/util';
-import { buildBasicAccountSigner, calculateEnergyCost, createCredentialDeploymentTransaction, getAccountTransactionHandler, sha256, signTransaction } from '@concordium/common-sdk';
+import {
+    buildBasicAccountSigner,
+    calculateEnergyCost,
+    createCredentialDeploymentTransaction,
+    getAccountTransactionHandler,
+    sha256,
+    signTransaction,
+} from '@concordium/common-sdk';
 import { serializeAccountTransactionPayload } from '@concordium/common-sdk/src';
-import { getCredentialDeploymentSignDigest, serializeAccountTransaction } from '@concordium/common-sdk/lib/serialization';
+import {
+    getCredentialDeploymentSignDigest,
+    serializeAccountTransaction,
+} from '@concordium/common-sdk/lib/serialization';
 import { getModuleBuffer, getIdentityInput } from './testHelpers';
 import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons';
@@ -177,10 +187,11 @@ test('accountInfo implementations is the same', async () => {
     expect(oldCredId).toEqual(newCredId);
     expect(oldDeleg).toEqual(newDeleg);
     expect(oldBaker).toEqual(newBaker);
-})
+});
 
 test('getBlockItemStatus', async () => {
-    const transactionHash = '3de823b876d05cdd33a311a0f84124079f5f677afb2534c4943f830593edc650';
+    const transactionHash =
+        '3de823b876d05cdd33a311a0f84124079f5f677afb2534c4943f830593edc650';
     const blockItemStatus = await clientV2.getBlockItemStatus(transactionHash);
 
     expect(v2.BlockItemStatus.toJson(blockItemStatus)).toEqual(
@@ -217,7 +228,9 @@ test('invokeInstance on v0 contract', async () => {
         testBlockHash
     );
 
-    const responseJson = v2.InvokeInstanceResponse.toJson(invokeInstanceResponse);
+    const responseJson = v2.InvokeInstanceResponse.toJson(
+        invokeInstanceResponse
+    );
     expect(responseJson).toEqual(expected.invokeInstanceResponseV0);
 });
 
@@ -268,9 +281,7 @@ test('sendBlockItem', async () => {
     );
     const privateKey =
         '1f7d20585457b542b22b51f218f0636c8e05ead4b64074e6eafd1d418b04e4ac';
-    const nextNonce = (
-        await clientV2.getNextAccountNonce(senderAccount)
-    );
+    const nextNonce = await clientV2.getNextAccountNonce(senderAccount);
 
     // Create local transaction
     const header: v1.AccountTransactionHeader = {
@@ -308,9 +319,7 @@ test('transactionHash', async () => {
     );
     const privateKey =
         '1f7d20585457b542b22b51f218f0636c8e05ead4b64074e6eafd1d418b04e4ac';
-    const nextNonce = (
-        await clientV2.getNextAccountNonce(senderAccount)
-    );
+    const nextNonce = await clientV2.getNextAccountNonce(senderAccount);
 
     // Create local transaction
     const headerLocal: v1.AccountTransactionHeader = {

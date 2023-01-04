@@ -6,6 +6,7 @@ import {
     serializeAccountTransactionForSubmission,
     serializeAccountTransactionSignature,
     serializeUpdateContractParameters,
+    serializeTypeValue,
 } from '../src/serialization';
 import {
     AccountTransaction,
@@ -23,6 +24,7 @@ import {
     serializeULeb128,
 } from '../src/serializationHelpers';
 import { SizeLength } from '../src/deserializeSchema';
+import { getUpdateContractParameterSchema } from '../src';
 
 test('fail account transaction serialization if no signatures', () => {
     const simpleTransferPayload: SimpleTransferPayload = {
@@ -97,6 +99,50 @@ test('serialize UpdateContractParameters using CIS2 contract', () => {
 
     expect(parameter.toString('hex')).toBe(
         '010000c80000c320b41f1997accd5d21c6bf4992370948ed711435e0e2c9302def62afd1295f004651a37c65c8461540decd511e7440d1ff6d4191b7e2133b7239b2485be1a4860000'
+    );
+});
+
+test('serialize type value and serializeUpdateContractParameters give same result', () => {
+    const parameters = [
+        {
+            token_id: [],
+            amount: [200, 0],
+            from: {
+                Account: ['4RgTGQhg1Y8DAUkC2TpZsKmXdicArDqY9gcgJmBDECg4kkYNg4'],
+            },
+            to: {
+                Account: ['3UiNwnmZ64YR423uamgZyY8RnRkD88tfn6SYtKzvWZCkyFdN94'],
+            },
+            data: [],
+        },
+    ];
+    const fullSchema = Buffer.from(
+        fs.readFileSync('./test/resources/cis2-nft-schema.bin')
+    );
+    const schemaVersion = 1;
+    const contractName = 'CIS2-NFT';
+    const functionName = 'transfer';
+
+    const serializedParameter = serializeUpdateContractParameters(
+        contractName,
+        functionName,
+        parameters,
+        fullSchema,
+        schemaVersion
+    );
+
+    const serializedType = serializeTypeValue(
+        parameters,
+        getUpdateContractParameterSchema(
+            fullSchema,
+            contractName,
+            functionName,
+            schemaVersion
+        )
+    );
+
+    expect(serializedParameter.toString('hex')).toEqual(
+        serializedType.toString('hex')
     );
 });
 

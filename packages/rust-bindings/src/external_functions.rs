@@ -111,6 +111,7 @@ pub fn serialize_receive_contract_parameters(
         Err(e) => format!("{}", e),
     }
 }
+
 #[wasm_bindgen(js_name = serializeInitContractParameters)]
 pub fn serialize_init_contract_parameters(
     parameters: JsonString,
@@ -123,6 +124,39 @@ pub fn serialize_init_contract_parameters(
         Ok(s) => s,
         Err(e) => format!("{}", e),
     }
+}
+
+#[wasm_bindgen(js_name = getReceiveContractParameterSchema)]
+pub fn get_receive_contract_parameter_schema_ext(
+    schema: HexString,
+    contract_name: &str,
+    function_name: &str,
+    schema_version: Option<u8>,
+) -> String {
+    error_to_string(get_receive_contract_parameter_schema_aux(
+        schema,
+        contract_name,
+        function_name,
+        schema_version,
+    ))
+}
+
+#[wasm_bindgen(js_name = getInitContractParameterSchema)]
+pub fn get_init_contract_parameter_schema_ext(
+    schema: HexString,
+    contract_name: &str,
+    schema_version: Option<u8>,
+) -> String {
+    error_to_string(get_init_contract_parameter_schema_aux(
+        schema,
+        contract_name,
+        schema_version,
+    ))
+}
+
+#[wasm_bindgen(js_name = serializeTypeValue)]
+pub fn serialize_type_value_ext(value: JsonString, value_type: HexString) -> String {
+    error_to_string(serialize_type_value_aux(value, value_type))
 }
 
 #[wasm_bindgen(js_name = createIdRequestV1)]

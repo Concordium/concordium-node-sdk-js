@@ -11,6 +11,7 @@ export {
     serializeAccountTransactionForSubmission,
     serializeCredentialDeploymentTransactionForSubmission,
     getSignedCredentialDeploymentTransactionHash,
+    serializeTypeValue,
 } from './serialization';
 export { sha256 };
 export { CredentialRegistrationId } from './types/CredentialRegistrationId';
@@ -42,6 +43,7 @@ export * from './accountHelpers';
 export * from './blockSummaryHelpers';
 export * from './rewardStatusHelpers';
 export * from './HdWallet';
+export * from './schemaHelpers';
 
 export { isHex } from './util';
 

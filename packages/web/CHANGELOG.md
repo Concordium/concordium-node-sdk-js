@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.2.0 2022-1-4
+
+### Changed
+
+- Bumped @concordium/common-sdk to 6.2.0. (adds support serializing smart contract types with only the specific type's schema)
+
 ## 3.1.0 2022-11-30
 
 ### Changed

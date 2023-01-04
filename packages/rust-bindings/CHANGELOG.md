@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0 2023-1-4
+
+### Added
+
+- `serializeTypeValue`
+- `getInitContractParameterSchema`
+- `getReceiveContractParameterSchema`
+
 ## 0.8.0 2022-11-30
 
 ### Added

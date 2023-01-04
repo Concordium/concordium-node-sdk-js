@@ -362,7 +362,7 @@ export function getCredentialForExistingAccountSignDigest(
 
 /**
  * Returns the digest of the credential deployment transaction that has to be signed.
- * @param credentialDeploymentTransaction the credential deployment transaction
+ * @param credentialDeployment the credential deployment transaction
  * @returns the sha256 of the serialized unsigned credential deployment information
  */
 export function getCredentialDeploymentSignDigest(
@@ -392,7 +392,7 @@ interface DeploymentDetailsResult {
 /**
  * Gets the transaction hash that is used to look up the status of a credential
  * deployment transaction.
- * @param credentialDeploymentTransaction the transaction to hash
+ * @param credentialDeployment the transaction to hash
  * @param signatures the signatures that will also be part of the hash
  * @returns the sha256 hash of the serialized block item kind, signatures, and credential deployment transaction
  */
@@ -413,7 +413,7 @@ export function getCredentialDeploymentTransactionHash(
 /**
  * Serializes a credential deployment transaction of a new account, so that it is ready for being
  * submitted to the node.
- * @param credentialDeploymentTransaction the credenetial deployment transaction
+ * @param credentialDeployment the credenetial deployment transaction
  * @param signatures the signatures on the hash of unsigned credential deployment information
  * @returns the serialization of the credential deployment transaction ready for being submitted to a node
  */
@@ -468,7 +468,6 @@ export function serializeInitContractParameters(
  * @param schemaVersion the version of the schema provided
  * @returns serialized buffer of update contract parameters
  */
-
 export function serializeUpdateContractParameters(
     contractName: string,
     receiveFunctionName: string,
@@ -490,6 +489,29 @@ export function serializeUpdateContractParameters(
         throw new Error(
             'unable to deserialize parameters, due to: ' + serializedParameters
         ); // In this case serializedParameters is the error message from the rust module
+    }
+}
+
+/**
+ * @param value the value that should be serialized. Should correspond to the JSON representation.
+ * @param rawSchema the schema for the type that the given value should be serialized as
+ * @returns serialized buffer of the value
+ */
+export function serializeTypeValue(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+    value: any,
+    rawSchema: Buffer
+): Buffer {
+    const serializedValue = wasm.serializeTypeValue(
+        JSON.stringify(value),
+        rawSchema.toString('hex')
+    );
+    try {
+        return Buffer.from(serializedValue, 'hex');
+    } catch (e) {
+        throw new Error(
+            'unable to deserialize value, due to: ' + serializedValue
+        ); // In this case serializedValue is the error message from the rust module
     }
 }
 

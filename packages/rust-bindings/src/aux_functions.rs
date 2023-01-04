@@ -700,6 +700,45 @@ pub fn serialize_init_contract_parameters_aux(
     Ok(hex::encode(buf))
 }
 
+pub fn get_receive_contract_parameter_schema_aux(
+    schema: HexString,
+    contract_name: &str,
+    function_name: &str,
+    schema_version: Option<u8>,
+) -> Result<HexString> {
+    let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &schema_version)?;
+    let parameter_type = module_schema.get_receive_param_schema(contract_name, function_name)?;
+    Ok(hex::encode(concordium_contracts_common::to_bytes(
+        &parameter_type,
+    )))
+}
+
+pub fn get_init_contract_parameter_schema_aux(
+    schema: HexString,
+    contract_name: &str,
+    schema_version: Option<u8>,
+) -> Result<HexString> {
+    let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &schema_version)?;
+    let parameter_type = module_schema.get_init_param_schema(contract_name)?;
+    Ok(hex::encode(concordium_contracts_common::to_bytes(
+        &parameter_type,
+    )))
+}
+
+pub fn serialize_type_value_aux(parameters: JsonString, schema: HexString) -> Result<HexString> {
+    let parameter_type: Type = from_bytes(&hex::decode(schema)?)?;
+    serialize_type_value(parameters, parameter_type)
+}
+
+fn serialize_type_value(raw_value: JsonString, value_type: Type) -> Result<HexString> {
+    let value: SerdeValue = serde_json::from_str(&raw_value)?;
+
+    let mut buf: Vec<u8> = vec![];
+    Type::write_bytes_from_json_schema_type(&value_type, &value, &mut buf)?;
+
+    Ok(hex::encode(buf))
+}
+
 #[derive(SerdeSerialize, SerdeDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IdProofInput {

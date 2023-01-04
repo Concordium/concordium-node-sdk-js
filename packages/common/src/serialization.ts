@@ -493,7 +493,8 @@ export function serializeUpdateContractParameters(
 }
 
 /**
- * @param value the value that should be serialized. Should correspond to the JSON representation.
+ * Given a value for a smart contract type, and the raw schema for that type, serialize the value into binary format.
+ * @param value the value that should be serialized. Should correspond to the JSON representation
  * @param rawSchema the schema for the type that the given value should be serialized as
  * @returns serialized buffer of the value
  */

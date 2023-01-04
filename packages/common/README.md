@@ -447,6 +447,26 @@ const updateContractTransaction: AccountTransaction = {
 ```
 Finally, to actually update the contract on the chain, send the constructed `updateContractTransaction` to the chain using `sendAccountTransaction`. (See [Send Account Transaction](#Send-Account-Transaction) for how to do this)
 
+## Serialize parameters with only the specific type's schema
+In the previous section the schema used was assumed to be the schema for an entire module. In some cases one might want to use a schema containing only the specific type of the parameter.
+
+For this, the function `serializeTypeValue` can used.
+```
+const inputParams = serializeTypeValue(userInput, rawTypeSchema);
+```
+
+For reference, the type schema for parameters can be extracted using the functions `getInitContractParameterSchema` and `getUpdateContractParameterSchema`.
+
+```
+const rawTypeSchema = getUpdateContractParameterSchema(
+        rawModuleSchema,
+        contractName,
+        receiveFunctionName,
+        userInput,
+        schemaVersion
+)
+```
+
 # Utility functions
 
 ## Generate account alias

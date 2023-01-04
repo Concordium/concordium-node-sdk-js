@@ -13,7 +13,6 @@ import {
     getBlockHashInput,
     getAccountIdentifierInput,
     assertValidHash,
-    assertValidModuleRef,
     translateSignature,
 } from './util';
 import { countSignatures } from '@concordium/common-sdk/src/util';
@@ -153,8 +152,9 @@ export default class ConcordiumNodeClient {
      * fields will only be unavailable for a newly started node that has not processed
      * enough data yet.
      */
-    async getConsensusInfo(): Promise<v2.ConsensusInfo> {
-        return await this.client.getConsensusInfo(v2.Empty).response;
+    async getConsensusStatus(): Promise<v1.ConsensusStatus> {
+        const response = await this.client.getConsensusInfo(v2.Empty).response;
+        return translate.consensusInfo(response);
     }
 
     /**
@@ -165,17 +165,23 @@ export default class ConcordiumNodeClient {
      * @returns the source of the module as raw bytes.
      */
     async getModuleSource(
-        moduleRef: Uint8Array,
+        moduleRef: v1.ModuleReference,
         blockHash?: HexString
-    ): Promise<v2.VersionedModuleSource> {
-        assertValidModuleRef(moduleRef);
-
+    ): Promise<Buffer> {
         const moduleSourceRequest: v2.ModuleSourceRequest = {
             blockHash: getBlockHashInput(blockHash),
-            moduleRef: { value: moduleRef },
+            moduleRef: { value: moduleRef.decodedModuleRef },
         };
 
-        return await this.client.getModuleSource(moduleSourceRequest).response;
+        const response = await this.client.getModuleSource(moduleSourceRequest)
+            .response;
+        if (response.module.oneofKind === 'v0') {
+            return Buffer.from(response.module.v0.value);
+        } else if (response.module.oneofKind === 'v1') {
+            return Buffer.from(response.module.v1.value);
+        } else {
+            throw Error('Invalid ModuleSource response received!');
+        }
     }
 
     /**
@@ -185,7 +191,7 @@ export default class ConcordiumNodeClient {
      * @returns An object with information about the contract instance.
      */
     async getInstanceInfo(
-        contractAddress: v2.ContractAddress,
+        contractAddress: v1.ContractAddress,
         blockHash?: HexString
     ): Promise<v2.InstanceInfo> {
         const instanceInfoRequest: v2.InstanceInfoRequest = {
@@ -238,23 +244,6 @@ export default class ConcordiumNodeClient {
     }
 
     /**
-     * Get the hash to be signed for an account transaction. The hash returned
-     * can be signed and the signatures included as an
-     * AccountTransactionSignature when calling `SendBlockItem`. This function should only serve
-     * for verification and in most cases the local method with the same name should be prefered
-     * @param PreAccountTransaction The account transaction which hash should be returned.
-     * @returns The account transaction hash to be signed as a byte array.
-     */
-    async getAccountTransactionSignHash(
-        preAccountTransaction: v2.PreAccountTransaction
-    ): Promise<Uint8Array> {
-        const response = await this.client.getAccountTransactionSignHash(
-            preAccountTransaction
-        ).response;
-        return response.value;
-    }
-
-    /**
      * Serializes and sends an account transaction to the node to be
      * put in a block on the chain.
      *
@@ -267,7 +256,7 @@ export default class ConcordiumNodeClient {
     async sendAccountTransaction(
         transaction: v1.AccountTransaction,
         signature: v1.AccountTransactionSignature
-    ): Promise<Uint8Array> {
+    ): Promise<HexString> {
         const rawPayload = v1.serializeAccountTransactionPayload(transaction);
         const transactionSignature: v2.AccountTransactionSignature =
             translateSignature(signature);
@@ -308,7 +297,7 @@ export default class ConcordiumNodeClient {
 
         const response = await this.client.sendBlockItem(sendBlockItemRequest)
             .response;
-        return response.value;
+        return Buffer.from(response.value).toString('hex');
     }
 
     /**
@@ -319,12 +308,12 @@ export default class ConcordiumNodeClient {
      * To keep track of the transaction use getTransactionStatus.
      * @param credentialDeploymentTransaction the credential deployment transaction to send to the node
      * @param signatures the signatures on the hash of the serialized unsigned credential deployment information, in order
-     * @returns The transaction hash as a byte array
+     * @returns The transaction hash as a hex string
      */
     async sendCredentialDeploymentTransaction(
         credentialDeploymentTransaction: v1.CredentialDeploymentTransaction,
         signatures: string[]
-    ): Promise<Uint8Array> {
+    ): Promise<HexString> {
         const payloadHex = v1.serializeCredentialDeploymentPayload(
             signatures,
             credentialDeploymentTransaction
@@ -349,6 +338,6 @@ export default class ConcordiumNodeClient {
 
         const response = await this.client.sendBlockItem(sendBlockItemRequest)
             .response;
-        return response.value;
+        return Buffer.from(response.value).toString('hex');
     }
 }

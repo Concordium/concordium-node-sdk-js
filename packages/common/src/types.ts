@@ -285,27 +285,83 @@ export type SimpleRejectReasonTag =
     | RejectReasonTag.PoolWouldBecomeOverDelegated
     | RejectReasonTag.PoolClosed;
 
+export type ModuleRefRejectReasonTag =
+    | RejectReasonTag.ModuleHashAlreadyExists
+    | RejectReasonTag.InvalidModuleReference;
+
+export type AccountAddressRejectReasonTag =
+    | RejectReasonTag.InvalidAccountReference
+    | RejectReasonTag.NotADelegator
+    | RejectReasonTag.NonExistentRewardAccount
+    | RejectReasonTag.NotABaker
+    | RejectReasonTag.ScheduledSelfTransfer
+    | RejectReasonTag.EncryptedAmountSelfTransfer
+;
+
+export type StringRejectReasonTag = ModuleRefRejectReasonTag | AccountAddressRejectReasonTag | RejectReasonTag.NonExistentCredentialID | RejectReasonTag.DuplicateAggregationKey;
+
+export interface StringRejectReason {
+    tag: StringRejectReasonTag;
+    contents: string;
+}
+export type NumberRejectReasonTag = RejectReasonTag.AlreadyABaker | RejectReasonTag.DelegationTargetNotABaker;
+
+export interface NumberRejectReason {
+    tag: NumberRejectReasonTag;
+    contents: number;
+}
+
 export interface SimpleRejectReason {
     tag: SimpleRejectReasonTag;
 }
 
-// TODO split this into types with contents properly typed/parsed;
-export interface RejectReasonWithContents {
-    tag: Exclude<
-        RejectReasonTag,
-        | RejectReasonTag.RejectedReceive
-        | RejectReasonTag.RejectedInit
-        | SimpleRejectReasonTag
-    >;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    contents: any;
+export interface InvalidReceiveMethod {
+    tag: RejectReasonTag.InvalidReceiveMethod;
+    contents: {
+        moduleRef: string;
+        receiveName: string;
+    };
+}
+
+export interface InvalidInitMethod {
+    tag: RejectReasonTag.InvalidInitMethod;
+    contents: {
+        moduleRef: string;
+        initName: string;
+    };
+}
+
+export interface AmountTooLarge {
+    tag: RejectReasonTag.AmountTooLarge;
+    contents: {
+        address: string;
+        amount: string;
+    };
+}
+
+export interface InvalidContractAddress {
+    tag: RejectReasonTag.InvalidContractAddress,
+    contents: ContractAddress
+}
+
+export type CredIdsRejectReasonTag = RejectReasonTag.DuplicateCredIDs | RejectReasonTag.NonExistentCredIDs;
+
+export interface CredIdsRejectReason {
+    tag: CredIdsRejectReasonTag;
+    contents: string[]
 }
 
 export type RejectReason =
-    | RejectReasonWithContents
     | SimpleRejectReason
     | RejectedReceive
-    | RejectedInit;
+    | RejectedInit
+    | StringRejectReason
+    | NumberRejectReason
+    | InvalidReceiveMethod
+    | InvalidInitMethod
+    | AmountTooLarge
+    | InvalidContractAddress
+    | CredIdsRejectReason;
 
 interface RejectedEventResult {
     outcome: 'reject';

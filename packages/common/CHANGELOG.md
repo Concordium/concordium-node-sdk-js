@@ -1,5 +1,13 @@
 # Changelog
 
+## 6.2.0 2023-01-04
+
+### Added
+
+- `serializeTypeValue` that allows smart contract types to be serialized using the specific schema, instead of only by providing the entire module's schema.
+- `getInitContractParameterSchema` Given a buffer containing the schema for a module, extract the schema for a given contract's init function's parameters.
+- `getReceiveContractParameterSchema` Given a buffer containing the schema for a module, extract the schema for a given contract's receive methods' parameters.
+
 ## 6.1.0 2022-11-30
 
 ### Added

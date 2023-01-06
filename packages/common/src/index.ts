@@ -50,6 +50,9 @@ export { isHex } from './util';
 export { HttpProvider } from './providers/httpProvider';
 export { JsonRpcClient } from './JsonRpcClient';
 export * from './identity';
+export * from './types/rejectReason';
+export * from './types/chainUpdate';
+export * from './types/transactionEvent';
 
 export { getAccountTransactionHandler } from './accountTransactions';
 export { calculateEnergyCost } from './energyCost';

@@ -7,15 +7,15 @@ function unwrapToHex(x: Uint8Array | undefined): string {
     return Buffer.from(unwrap(x)).toString('hex');
 }
 
-function unwrapValueToHex(x: { value: Uint8Array }): string {
-    return unwrapToHex(x.value);
+function unwrapValToHex(x: { value: Uint8Array } | undefined): string {
+    return unwrapToHex(unwrap(x).value);
 }
 
 function transRelease(release: v2.Release): v1.ReleaseScheduleWithTransactions {
     return {
         timestamp: transTimestamp(release.timestamp),
         amount: unwrap(release.amount?.value),
-        transactions: release.transactions.map(unwrapValueToHex),
+        transactions: release.transactions.map(unwrapValToHex),
     };
 }
 
@@ -31,12 +31,11 @@ function transCommits(
     cmm: v2.CredentialCommitments
 ): v1.CredentialDeploymentCommitments {
     return {
-        cmmPrf: unwrapToHex(cmm.prf?.value),
-        cmmCredCounter: unwrapToHex(cmm.credCounter?.value),
-        cmmIdCredSecSharingCoeff:
-            cmm.idCredSecSharingCoeff.map(unwrapValueToHex),
-        cmmAttributes: mapRecord(cmm.attributes, unwrapValueToHex, transAttKey),
-        cmmMaxAccounts: unwrapToHex(cmm.maxAccounts?.value),
+        cmmPrf: unwrapValToHex(cmm.prf),
+        cmmCredCounter: unwrapValToHex(cmm.credCounter),
+        cmmIdCredSecSharingCoeff: cmm.idCredSecSharingCoeff.map(unwrapValToHex),
+        cmmAttributes: mapRecord(cmm.attributes, unwrapValToHex, transAttKey),
+        cmmMaxAccounts: unwrapValToHex(cmm.maxAccounts),
     };
 }
 
@@ -97,7 +96,7 @@ function transCred(cred: v2.AccountCredential): v1.AccountCredential {
     if (isNormal) {
         const deploymentValues = {
             ...commonValues,
-            credId: unwrapToHex(credVals.credId?.value),
+            credId: unwrapValToHex(credVals.credId),
             revocationThreshold: unwrap(credVals.arThreshold?.value),
             arData: mapRecord(credVals.arData, transChainArData, String),
             commitments: transCommits(unwrap(credVals.commitments)),
@@ -109,7 +108,7 @@ function transCred(cred: v2.AccountCredential): v1.AccountCredential {
     } else {
         const deploymentValues = {
             ...commonValues,
-            regId: unwrapToHex(credVals.credId?.value),
+            regId: unwrapValToHex(credVals.credId),
         };
         value = {
             type: 'initial',
@@ -219,13 +218,9 @@ function transBaker(
     return {
         restakeEarnings: baker.restakeEarnings,
         bakerId: unwrap(baker.bakerInfo?.bakerId?.value),
-        bakerAggregationVerifyKey: unwrapToHex(
-            bakerInfo?.aggregationKey?.value
-        ),
-        bakerElectionVerifyKey: unwrapToHex(
-            baker.bakerInfo?.electionKey?.value
-        ),
-        bakerSignatureVerifyKey: unwrapToHex(bakerInfo?.signatureKey?.value),
+        bakerAggregationVerifyKey: unwrapValToHex(bakerInfo?.aggregationKey),
+        bakerElectionVerifyKey: unwrapValToHex(baker.bakerInfo?.electionKey),
+        bakerSignatureVerifyKey: unwrapValToHex(bakerInfo?.signatureKey),
         bakerPoolInfo: bakerPoolInfo,
         stakedAmount: unwrap(baker.stakedAmount?.value),
         // Set the following value if baker.pendingChange is set to true
@@ -241,10 +236,10 @@ export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
     const numAggregated = acc.encryptedBalance?.numAggregated;
 
     const encryptedAmount: v1.AccountEncryptedAmount = {
-        selfAmount: unwrapToHex(acc.encryptedBalance?.selfAmount?.value),
+        selfAmount: unwrapValToHex(acc.encryptedBalance?.selfAmount),
         startIndex: unwrap(acc.encryptedBalance?.startIndex),
         incomingAmounts: unwrap(acc.encryptedBalance?.incomingAmounts).map(
-            unwrapValueToHex
+            unwrapValToHex
         ),
         // Set the following values if they are not undefined
         ...(numAggregated && { numAggregated: numAggregated }),
@@ -260,7 +255,7 @@ export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
         accountAmount: unwrap(acc.amount?.value),
         accountIndex: unwrap(acc.index?.value),
         accountThreshold: unwrap(acc.threshold?.value),
-        accountEncryptionKey: unwrapToHex(acc.encryptionKey?.value),
+        accountEncryptionKey: unwrapValToHex(acc.encryptionKey),
         accountEncryptedAmount: encryptedAmount,
         accountReleaseSchedule: releaseSchedule,
         accountCredentials: mapRecord(acc.creds, transCred),
@@ -297,5 +292,59 @@ export function cryptographicParameters(
         onChainCommitmentKey: unwrapToHex(cp.onChainCommitmentKey),
         bulletproofGenerators: unwrapToHex(cp.bulletproofGenerators),
         genesisString: cp.genesisString,
+    };
+}
+
+export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
+    return {
+        bestBlock: unwrapValToHex(ci.bestBlock),
+        genesisBlock: unwrapValToHex(ci.genesisBlock),
+        currentEraGenesisBlock: unwrapValToHex(ci.currentEraGenesisBlock),
+        lastFinalizedBlock: unwrapValToHex(ci.lastFinalizedBlock),
+        epochDuration: unwrap(ci.epochDuration?.value),
+        slotDuration: unwrap(ci.slotDuration?.value),
+        bestBlockHeight: unwrap(ci.bestBlockHeight?.value),
+        lastFinalizedBlockHeight: unwrap(ci.lastFinalizedBlockHeight?.value),
+        finalizationCount: BigInt(unwrap(ci.finalizationCount)),
+        blocksVerifiedCount: BigInt(unwrap(ci.blocksVerifiedCount)),
+        blocksReceivedCount: BigInt(unwrap(ci.blocksReceivedCount)),
+        blockArriveLatencyEMA: unwrap(ci.blockArriveLatencyEma),
+        blockArriveLatencyEMSD: unwrap(ci.blockArriveLatencyEmsd),
+        blockReceiveLatencyEMA: unwrap(ci.blockReceiveLatencyEma),
+        blockReceiveLatencyEMSD: unwrap(ci.blockReceiveLatencyEmsd),
+        transactionsPerBlockEMA: unwrap(ci.transactionsPerBlockEma),
+        transactionsPerBlockEMSD: unwrap(ci.transactionsPerBlockEmsd),
+        genesisTime: transTimestamp(ci.genesisTime),
+        currentEraGenesisTime: transTimestamp(ci.currentEraGenesisTime),
+        genesisIndex: unwrap(ci.genesisIndex?.value),
+        protocolVersion: BigInt(unwrap(ci.protocolVersion)),
+        // Only include the following if they are not undefined
+        ...(ci.blockReceivePeriodEma && {
+            blockReceivePeriodEMA: ci.blockReceivePeriodEma,
+        }),
+        ...(ci.blockReceivePeriodEmsd && {
+            blockReceivePeriodEMSD: ci.blockReceivePeriodEmsd,
+        }),
+        ...(ci.blockArrivePeriodEma && {
+            blockArrivePeriodEMA: ci.blockArrivePeriodEma,
+        }),
+        ...(ci.blockArrivePeriodEmsd && {
+            blockArrivePeriodEMSD: ci.blockArrivePeriodEmsd,
+        }),
+        ...(ci.finalizationPeriodEma && {
+            blockArrivePeriodEMA: ci.blockArrivePeriodEma,
+        }),
+        ...(ci.finalizationPeriodEmsd && {
+            blockArrivePeriodEMSD: ci.blockArrivePeriodEmsd,
+        }),
+        ...(ci.blockLastReceivedTime && {
+            blockLastReceivedTime: transTimestamp(ci.blockLastReceivedTime),
+        }),
+        ...(ci.blockLastArrivedTime && {
+            blockLastArrivedTime: transTimestamp(ci.blockLastArrivedTime),
+        }),
+        ...(ci.lastFinalizedTime && {
+            lastFinalizedTime: transTimestamp(ci.lastFinalizedTime),
+        }),
     };
 }

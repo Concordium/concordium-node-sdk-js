@@ -1,13 +1,17 @@
-import { WalletConnection } from 'concordium-dapp-wallet-connectors';
-import { Col, Row, Form, Spinner } from 'react-bootstrap';
+import { Network, WalletConnection } from 'concordium-dapp-wallet-connectors';
+import { Col, Form, Row, Spinner } from 'react-bootstrap';
 import { useContractSelector } from 'concordium-dapp-components-reactjs';
 import { ContractDetails } from './ContractDetails';
+import React from 'react';
+import { ContractInvoker } from './ContractInvoker';
 
 interface Props {
+    network: Network;
     connection: WalletConnection | undefined;
+    connectedAccount: string | undefined;
 }
 
-export function App({ connection }: Props) {
+export function App({ network, connection, connectedAccount }: Props) {
     const contract = useContractSelector(connection?.getJsonRpcClient());
     return (
         <>
@@ -30,7 +34,13 @@ export function App({ connection }: Props) {
                         </Col>
                     </Form.Group>
                     {contract.isLoading && <Spinner animation="border" />}
-                    {contract.selected && <ContractDetails contract={contract.selected} />}
+                    {contract.selected && (
+                        <>
+                            <ContractDetails contract={contract.selected} />
+                            <hr/>
+                            <ContractInvoker network={network} connection={connection} connectedAccount={connectedAccount} contract={contract.selected} />
+                        </>
+                    )}
                 </>
             )}
         </>

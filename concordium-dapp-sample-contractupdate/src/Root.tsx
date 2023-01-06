@@ -110,7 +110,7 @@ function Main(props: WalletConnectionProps) {
                         />
                     )}
                     {rpcError && <Alert variant="warning">RPC error: {rpcError}</Alert>}
-                    <App connection={props.activeConnection} />
+                    <App network={props.network} connection={props.activeConnection} connectedAccount={props.activeConnectedAccount} />
                 </Col>
             </Row>
         </>

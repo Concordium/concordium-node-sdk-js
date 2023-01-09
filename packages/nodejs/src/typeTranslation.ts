@@ -2,6 +2,7 @@ import * as v1 from '@concordium/common-sdk';
 import * as v2 from '../grpc/v2/concordium/types';
 import { mapRecord, unwrap } from './util';
 import { Buffer } from 'buffer/';
+import { TransactionSummary } from '@concordium/common-sdk';
 
 function unwrapToHex(x: Uint8Array | undefined): string {
     return Buffer.from(unwrap(x)).toString('hex');
@@ -348,6 +349,53 @@ export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
         }),
     };
 }
+
+/*
+function BlockItemSummary(bis: v2.BlockItemSummary): v1.TransactionSummary {
+    return = {
+        hash: unwrapValToHex(bis.hash),
+        cost: unwrap(bis.energyCost?.value),
+        energyCost: unwrap(b)
+
+    }
+}
+
+function transBlockItemSummaryInBlock(bisib: v2.BlockItemSummaryInBlock): [string, v1.TransactionSummary] {
+    
+}
+
+function transBlockItemSummaryInBlocks(bisibs: [v2.BlockItemSummaryInBlock]): Record<string, v1.TransactionSummary> {
+    const ret: Record<string, v1.TransactionSummary> = {};
+    for (const bisib in bisibs) {
+        const [blockHash, outcome] = transBlockItemSummaryInBlock(bisib);
+        ret[blockHash] = outcome
+    }
+    return ret
+}
+*/
+
+// Todo: committed and finalized
+export function blockItemStatus(bis: v2.BlockItemStatus): v1.TransactionStatus {
+    if (bis.status.oneofKind === 'received') {
+        return {
+            status: v1.TransactionStatusEnum.Received,
+        };
+    } else if (bis.status.oneofKind === 'committed') {
+        return {
+            status: v1.TransactionStatusEnum.Committed,
+        };
+    } else if (bis.status.oneofKind === 'finalized') {
+        return {
+            status: v1.TransactionStatusEnum.Finalized,
+        };
+    } else {
+        throw Error('BlockItemStatus was undefined!');
+    }
+}
+
+// ---------------------------- //
+// --- V1 => V2 translation --- //
+// ---------------------------- //
 
 export function accountTransactionSignatureToV2(
     signature: v1.AccountTransactionSignature

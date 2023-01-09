@@ -303,3 +303,12 @@ test('getChainParameters corresponds to GetBlockummary subset', async () => {
 
     expect(blockSummary.updates.chainParameters).toEqual(chainParameters);
 });
+
+test('getPoolInfo corresponds to getPoolStatus with a bakerId', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const oldStatus: any = await clientV1.getPoolStatus(testBlockHash, 1n);
+   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const newStatus: any = await clientV2.getPoolInfo(1n, testBlockHash);
+
+    expect(oldStatus).toEqual(newStatus);
+});

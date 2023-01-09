@@ -2,6 +2,7 @@ import * as v1 from '@concordium/common-sdk';
 import * as v2 from '../grpc/v2/concordium/types';
 import { mapRecord, unwrap } from './util';
 import { Buffer } from 'buffer/';
+import { AccountAddress, BakerPoolPendingChangeType, PoolStatusType } from '@concordium/common-sdk';
 
 function unwrapToHex(x: Uint8Array | undefined): string {
     return Buffer.from(unwrap(x)).toString('hex');
@@ -239,8 +240,8 @@ function translateChainParametersCommon(
     params: v2.ChainParametersV1 | v2.ChainParametersV0
 ): v1.ChainParametersCommon {
     return {
-        electionDifficulty: unwrap(
-            params.electionDifficulty?.value?.partsPerHundredThousand
+        electionDifficulty: transAmountFraction(
+            params.electionDifficulty?.value
         ),
         euroPerEnergy: unwrap(params.euroPerEnergy?.value),
         microGTUPerEuro: unwrap(params.microCcdPerEuro?.value),
@@ -254,8 +255,8 @@ function translateCommissionRange(
     range: v2.InclusiveRangeAmountFraction | undefined
 ): v1.InclusiveRange<number> {
     return {
-        min: unwrap(range?.min?.partsPerHundredThousand),
-        max: unwrap(range?.max?.partsPerHundredThousand),
+        min: transAmountFraction(range?.min),
+        max: transAmountFraction(range?.max),
     };
 }
 
@@ -264,25 +265,24 @@ function translateRewardParametersCommon(
 ): v1.RewardParametersCommon {
     return {
         transactionFeeDistribution: {
-            baker: unwrap(
+            baker: transAmountFraction(
                 params.transactionFeeDistribution?.baker
-                    ?.partsPerHundredThousand
+
             ),
-            gasAccount: unwrap(
+            gasAccount: transAmountFraction(
                 params.transactionFeeDistribution?.gasAccount
-                    ?.partsPerHundredThousand
             ),
         },
         gASRewards: {
-            baker: unwrap(params.gasRewards?.baker?.partsPerHundredThousand),
-            finalizationProof: unwrap(
-                params.gasRewards?.finalizationProof?.partsPerHundredThousand
+            baker: transAmountFraction(params.gasRewards?.baker),
+            finalizationProof: transAmountFraction(
+                params.gasRewards?.finalizationProof
             ),
-            accountCreation: unwrap(
-                params.gasRewards?.accountCreation?.partsPerHundredThousand
+            accountCreation: transAmountFraction(
+                params.gasRewards?.accountCreation
             ),
-            chainUpdate: unwrap(
-                params.gasRewards?.chainUpdate?.partsPerHundredThousand
+            chainUpdate: transAmountFraction(
+                params.gasRewards?.chainUpdate
             ),
         },
     };
@@ -383,17 +383,16 @@ export function blockChainParameters(
                     params.parameters.v1.cooldownParameters?.poolOwnerCooldown
                         ?.value
                 ),
-                passiveFinalizationCommission: unwrap(
+                passiveFinalizationCommission: transAmountFraction(
                     params.parameters.v1.poolParameters
-                        ?.passiveFinalizationCommission?.partsPerHundredThousand
+                        ?.passiveFinalizationCommission
                 ),
-                passiveBakingCommission: unwrap(
+                passiveBakingCommission: transAmountFraction(
                     params.parameters.v1.poolParameters?.passiveBakingCommission
-                        ?.partsPerHundredThousand
                 ),
-                passiveTransactionCommission: unwrap(
+                passiveTransactionCommission: transAmountFraction(
                     params.parameters.v1.poolParameters
-                        ?.passiveTransactionCommission?.partsPerHundredThousand
+                        ?.passiveTransactionCommission
                 ),
                 finalizationCommissionRange: translateCommissionRange(
                     params.parameters.v1.poolParameters?.commissionBounds
@@ -411,9 +410,8 @@ export function blockChainParameters(
                     params.parameters.v1.poolParameters?.minimumEquityCapital
                         ?.value
                 ),
-                capitalBound: unwrap(
+                capitalBound: transAmountFraction(
                     params.parameters.v1.poolParameters?.capitalBound?.value
-                        ?.partsPerHundredThousand
                 ),
                 leverageBound: unwrap(
                     params.parameters.v1.poolParameters?.leverageBound?.value
@@ -421,13 +419,12 @@ export function blockChainParameters(
                 rewardParameters: {
                     ...commonRewardParameters,
                     mintDistribution: {
-                        bakingReward: unwrap(
+                        bakingReward: transAmountFraction(
                             params.parameters.v1.mintDistribution?.bakingReward
-                                ?.partsPerHundredThousand
                         ),
-                        finalizationReward: unwrap(
+                        finalizationReward: transAmountFraction(
                             params.parameters.v1.mintDistribution
-                                ?.finalizationReward?.partsPerHundredThousand
+                                ?.finalizationReward
                         ),
                     },
                 },
@@ -450,13 +447,11 @@ export function blockChainParameters(
                 rewardParameters: {
                     ...commonRewardParameters,
                     mintDistribution: {
-                        bakingReward: unwrap(
+                        bakingReward: transAmountFraction(
                             params.parameters.v0.mintDistribution?.bakingReward
-                                ?.partsPerHundredThousand
                         ),
-                        finalizationReward: unwrap(
-                            params.parameters.v0.mintDistribution
-                                ?.finalizationReward?.partsPerHundredThousand
+                        finalizationReward: transAmountFraction(
+                            params.parameters.v0.mintDistribution?.finalizationReward
                         ),
                         mintPerSlot: translateMintRate(
                             params.parameters.v0.mintDistribution?.mintPerSlot
@@ -468,5 +463,70 @@ export function blockChainParameters(
         }
         default:
             throw new Error('Missing chain parameters');
+    }
+}
+
+function transPoolPendingChange(change: v2.PoolPendingChange | undefined): v1.BakerPoolPendingChange {
+    switch(change?.change?.oneofKind) {
+        case 'reduce': {
+            return {
+               pendingChangeType: BakerPoolPendingChangeType.ReduceBakerCapital,
+                effectiveTime: new Date(Number(unwrap(change.change.reduce.effectiveTime?.value))),
+                bakerEquityCapital: unwrap(change.change.reduce.reducedEquityCapital?.value)
+            }
+        }
+        case 'remove': {
+            return {
+                pendingChangeType: BakerPoolPendingChangeType.RemovePool,
+                effectiveTime: new Date(Number(unwrap(change.change.remove.effectiveTime?.value))),
+            }
+
+        }
+        default:
+            return {
+                pendingChangeType: BakerPoolPendingChangeType.NoChange
+            }
+    }
+}
+
+function transPoolInfo(info: v2.BakerPoolInfo): v1.BakerPoolInfo {
+   return {
+        openStatus: transOpenStatus(info.openStatus),
+        metadataUrl: info.url,
+        commissionRates: {
+            transactionCommission: transAmountFraction(info.commissionRates?.transaction),
+            bakingCommission: transAmountFraction(info.commissionRates?.baking),
+            finalizationCommission: transAmountFraction(info.commissionRates?.finalization)
+        }
+    }
+}
+
+function transPaydayStatus(status: v2.PoolCurrentPaydayInfo | undefined): v1.CurrentPaydayBakerPoolStatus | undefined {
+    if (!status) {
+        return undefined;
+    }
+    return {
+        blocksBaked: status.blocksBaked,
+        finalizationLive: status.finalizationLive,
+        transactionFeesEarned: unwrap(status.transactionFeesEarned?.value),
+        effectiveStake: unwrap(status.effectiveStake?.value),
+        lotteryPower: status.lotteryPower,
+        bakerEquityCapital: unwrap(status.bakerEquityCapital?.value),
+        delegatedCapital: unwrap(status.delegatedCapital?.value)
+    }
+}
+
+export function bakerPoolInfo(info: v2.PoolInfoResponse): v1.BakerPoolStatus {
+      return {
+        poolType: PoolStatusType.BakerPool,
+        bakerId: unwrap(info.baker?.value),
+        bakerAddress: AccountAddress.fromBytes(Buffer.from(unwrap(info.address?.value))).address,
+        bakerEquityCapital: unwrap(info.equityCapital?.value),
+        delegatedCapital: unwrap(info.delegatedCapital?.value),
+        delegatedCapitalCap: unwrap(info.delegatedCapitalCap?.value),
+        poolInfo: transPoolInfo(unwrap(info?.poolInfo)),
+        bakerStakePendingChange: transPoolPendingChange(info.equityPendingChange),
+        currentPaydayStatus: transPaydayStatus(info.currentPaydayInfo),
+        allPoolTotalCapital: unwrap(info.allPoolTotalCapital?.value)
     }
 }

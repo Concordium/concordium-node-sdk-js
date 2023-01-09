@@ -1039,6 +1039,7 @@ export interface BakerPoolStatusDetails {
     poolInfo: BakerPoolInfo;
     bakerStakePendingChange: BakerPoolPendingChange;
     currentPaydayStatus?: CurrentPaydayBakerPoolStatus;
+    allPoolTotalCapital?: Amount;
 }
 
 export type BakerPoolStatus = PoolStatusWrapper<

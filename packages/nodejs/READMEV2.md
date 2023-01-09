@@ -85,3 +85,12 @@ Retrieves the block chain update parameters, which can be chained by chain updat
 const blockHash = Buffer.from('7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749', 'hex')
 const cryptographicParameters: ChainParameters = await client.getBlockChainParameters(blockHash);
 ```
+
+## getPoolInfo
+Retrives various information on the specified baker pool, at the end of the specified block.
+```
+const bakerId = 1n;
+const blockHash = Buffer.from('7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749', 'hex');
+const bakerPoolInfo: PoolStatus = await client.getBlockChainParameters(bakerId, blockHash);
+```
+

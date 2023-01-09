@@ -170,6 +170,7 @@ test('accountInfo implementations is the same', async () => {
     const newDeleg = await clientV2.getAccountInfo(testAccDeleg, testBlockHash);
 
     // Tempoary
+    /*
     if (oldReg?.accountCredentials[0].value.type === 'normal') {
         oldReg.accountCredentials[0].value.contents.arData = {};
     }
@@ -182,6 +183,7 @@ test('accountInfo implementations is the same', async () => {
     if (oldDeleg?.accountCredentials[0].value.type === 'normal') {
         oldDeleg.accountCredentials[0].value.contents.arData = {};
     }
+    */
 
     expect(oldReg).toEqual(newReg);
     expect(oldCredId).toEqual(newCredId);
@@ -271,32 +273,28 @@ test('invokeInstance on v0 contract', async () => {
         },
     };
 
-    const responseJson = v2.InvokeInstanceResponse.toJson(invokeInstanceResponse);
+    const responseJson = v2.InvokeInstanceResponse.toJson(
+        invokeInstanceResponse
+    );
     expect(responseJson).toEqual(expected);
 });
 
 test('getModuleSource', async () => {
     const localModuleBytes = getModuleBuffer('test/resources/piggy_bank.wasm');
-    const moduleRef = Buffer.from(
-        'foOYrcQGqX202GnD/XrcgToxg2Z6On2weOuub33OX2Q=',
-        'base64'
+    const moduleRef = new v1.ModuleReference(
+        Buffer.from(
+            'foOYrcQGqX202GnD/XrcgToxg2Z6On2weOuub33OX2Q=',
+            'base64'
+        ).toString('hex')
     );
 
-    const versionedModuleSource = await clientV2.getModuleSource(
+    const localModuleHex = Buffer.from(localModuleBytes);
+    const moduleSource = await clientV2.getModuleSource(
         moduleRef,
         testBlockHash
     );
 
-    if (versionedModuleSource.module.oneofKind == 'v0') {
-        const localModuleHex = Buffer.from(localModuleBytes).toString('hex');
-        const chainModuleHex = Buffer.from(
-            versionedModuleSource.module.v0.value
-        ).toString('hex');
-
-        expect(localModuleHex).toEqual(chainModuleHex);
-    } else {
-        throw new Error('Expected module to have version 0.');
-    }
+    expect(localModuleHex).toEqual(moduleSource);
 });
 
 test('getConsensusInfo', async () => {
@@ -305,7 +303,8 @@ test('getConsensusInfo', async () => {
         'base64'
     );
 
-    const consensusInfo = await clientV2.getConsensusInfo();
+    const consensusInfo = await clientV2.client.getConsensusInfo(v2.Empty)
+        .response;
 
     expect(consensusInfo.genesisBlock?.value).toEqual(genesisBlock);
     expect(consensusInfo.lastFinalizedTime?.value).toBeGreaterThan(
@@ -421,23 +420,23 @@ test('transactionHash', async () => {
     const localHash = Buffer.from(
         sha256([serializedAccountTransaction])
     ).toString('hex');
-    const nodeHash = await clientV2.getAccountTransactionSignHash(
+    const nodeHash = await clientV2.client.getAccountTransactionSignHash(
         accountTransaction
-    );
+    ).response;
 
-    expect(localHash).toEqual(Buffer.from(nodeHash).toString('hex'));
+    expect(localHash).toEqual(Buffer.from(nodeHash.value).toString('hex'));
 });
 
 // Todo: verify that accounts can actually be created.
 test('createAccount', async () => {
     // Get information from node
-    const lastFinalizedBlockHash = (await clientV2.getConsensusInfo())
+    const lastFinalizedBlockHash = (await clientV2.getConsensusStatus())
         .lastFinalizedBlock;
     if (!lastFinalizedBlockHash) {
         throw new Error('Could not find latest finalized block.');
     }
     const cryptoParams = await clientV2.getCryptographicParameters(
-        Buffer.from(lastFinalizedBlockHash.value).toString('hex')
+        lastFinalizedBlockHash
     );
     if (!cryptoParams) {
         throw new Error(

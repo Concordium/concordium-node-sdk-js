@@ -44,6 +44,12 @@ export const accountInfo = {
                         month: 6,
                     },
                 },
+                arData: {
+                    1: {
+                        encIdCredPubShare:
+                            'qR5XDlS57nwwRXC8OgZup13YMwhsaDpCHBHlZUgt4B/8L7dCQIzx29bHRM3eiDVGkSDOag4MEvv9U+m+gWVpAKlRCfgEGOfLulEMRX8VoMs0e9w/VQjUbOyHqSFGhqYd',
+                    },
+                },
                 arThreshold: {
                     value: 1,
                 },

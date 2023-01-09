@@ -15,6 +15,7 @@ This package is the shared library for the nodejs and web SDK's.
     - [Init Contract (parameterless smart contract)](#init-contract-parameterless-smart-contract)
     - [Update Contract (parameterless smart contract)](#update-contract-parameterless-smart-contract)
     - [Smart contract with parameters](#smart-contract-with-parameters)
+    - [Serialize parameters with only the specific type's schema](#serialize-parameters-with-only-the-specific-types-schema)
 - [Utility functions](#utility-functions)
     - [Generate account alias](#generate-account-alias)
     - [Check for account alias](#check-for-account-alias)
@@ -455,14 +456,20 @@ For this, the function `serializeTypeValue` can used.
 const inputParams = serializeTypeValue(userInput, rawTypeSchema);
 ```
 
-For reference, the type schema for parameters can be extracted using the functions `getInitContractParameterSchema` and `getUpdateContractParameterSchema`.
-
+For reference, the type schema for parameters can be extracted using the functions `getInitContractParameterSchema` and `getUpdateContractParameterSchema`. For a receive function:
 ```
 const rawTypeSchema = getUpdateContractParameterSchema(
         rawModuleSchema,
         contractName,
         receiveFunctionName,
-        userInput,
+        schemaVersion
+)
+```
+And for the initialization:
+```
+const rawTypeSchema = getInitContractParameterSchema(
+        rawModuleSchema,
+        contractName,
         schemaVersion
 )
 ```

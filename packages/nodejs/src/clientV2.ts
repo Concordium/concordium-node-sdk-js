@@ -120,4 +120,14 @@ export default class ConcordiumNodeClient {
             .response;
         return translate.accountInfo(response);
     }
+
+    async getBlockChainParameters(
+        blockHash?: HexString
+    ): Promise<v1.ChainParameters> {
+        const blockHashInput = getBlockHashInput(blockHash);
+        const response = await this.client.getBlockChainParameters(
+            blockHashInput
+        ).response;
+        return translate.blockChainParameters(response);
+    }
 }

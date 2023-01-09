@@ -448,7 +448,7 @@ export interface GasRewards {
     chainUpdate: number;
 }
 
-interface RewardParametersCommon {
+export interface RewardParametersCommon {
     transactionFeeDistribution: TransactionFeeDistribution;
     gASRewards: GasRewards;
 }
@@ -502,7 +502,7 @@ export interface TimeParametersV1 {
     mintPerPayday: number;
 }
 
-interface ChainParametersCommon {
+export interface ChainParametersCommon {
     electionDifficulty: number;
     euroPerEnergy: ExchangeRate;
     microGTUPerEuro: ExchangeRate;

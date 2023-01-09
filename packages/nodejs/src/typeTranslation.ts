@@ -235,6 +235,63 @@ function transBaker(
     };
 }
 
+function translateChainParametersCommon(
+    params: v2.ChainParametersV1 | v2.ChainParametersV0
+): v1.ChainParametersCommon {
+    return {
+        electionDifficulty: unwrap(
+            params.electionDifficulty?.value?.partsPerHundredThousand
+        ),
+        euroPerEnergy: unwrap(params.euroPerEnergy?.value),
+        microGTUPerEuro: unwrap(params.microCcdPerEuro?.value),
+        accountCreationLimit: unwrap(params.accountCreationLimit?.value),
+        foundationAccountIndex: 0n,
+        // foundationAccount: v1.AccountAddress.fromBytes(accAdrRaw).address // TODO migration guide from index to this? (We can't fix it)
+    };
+}
+
+function translateCommissionRange(
+    range: v2.InclusiveRangeAmountFraction | undefined
+): v1.InclusiveRange<number> {
+    return {
+        min: unwrap(range?.min?.partsPerHundredThousand),
+        max: unwrap(range?.max?.partsPerHundredThousand),
+    };
+}
+
+function translateRewardParametersCommon(
+    params: v2.ChainParametersV1 | v2.ChainParametersV0
+): v1.RewardParametersCommon {
+    return {
+        transactionFeeDistribution: {
+            baker: unwrap(
+                params.transactionFeeDistribution?.baker
+                    ?.partsPerHundredThousand
+            ),
+            gasAccount: unwrap(
+                params.transactionFeeDistribution?.gasAccount
+                    ?.partsPerHundredThousand
+            ),
+        },
+        gASRewards: {
+            baker: unwrap(params.gasRewards?.baker?.partsPerHundredThousand),
+            finalizationProof: unwrap(
+                params.gasRewards?.finalizationProof?.partsPerHundredThousand
+            ),
+            accountCreation: unwrap(
+                params.gasRewards?.accountCreation?.partsPerHundredThousand
+            ),
+            chainUpdate: unwrap(
+                params.gasRewards?.chainUpdate?.partsPerHundredThousand
+            ),
+        },
+    };
+}
+
+function translateMintRate(mintRate: v2.MintRate | undefined): number {
+    return unwrap(mintRate?.mantissa) * 10 ** unwrap(mintRate?.exponent);
+}
+
 export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
     const accAdrRaw = Buffer.from(unwrap(acc.address?.value));
     const aggAmount = acc.encryptedBalance?.aggregatedAmount?.value;
@@ -298,4 +355,118 @@ export function cryptographicParameters(
         bulletproofGenerators: unwrapToHex(cp.bulletproofGenerators),
         genesisString: cp.genesisString,
     };
+}
+
+export function blockChainParameters(
+    params: v2.ChainParameters
+): v1.ChainParameters {
+    switch (params.parameters.oneofKind) {
+        case 'v1': {
+            const common = translateChainParametersCommon(params.parameters.v1);
+            const commonRewardParameters = translateRewardParametersCommon(
+                params.parameters.v1
+            );
+            const x: v1.ChainParametersV1 = {
+                ...common,
+                rewardPeriodLength: unwrap(
+                    params.parameters.v1.timeParameters?.rewardPeriodLength
+                        ?.value?.value
+                ),
+                mintPerPayday: translateMintRate(
+                    params.parameters.v1.timeParameters?.mintPerPayday
+                ),
+                delegatorCooldown: unwrap(
+                    params.parameters.v1.cooldownParameters?.delegatorCooldown
+                        ?.value
+                ),
+                poolOwnerCooldown: unwrap(
+                    params.parameters.v1.cooldownParameters?.poolOwnerCooldown
+                        ?.value
+                ),
+                passiveFinalizationCommission: unwrap(
+                    params.parameters.v1.poolParameters
+                        ?.passiveFinalizationCommission?.partsPerHundredThousand
+                ),
+                passiveBakingCommission: unwrap(
+                    params.parameters.v1.poolParameters?.passiveBakingCommission
+                        ?.partsPerHundredThousand
+                ),
+                passiveTransactionCommission: unwrap(
+                    params.parameters.v1.poolParameters
+                        ?.passiveTransactionCommission?.partsPerHundredThousand
+                ),
+                finalizationCommissionRange: translateCommissionRange(
+                    params.parameters.v1.poolParameters?.commissionBounds
+                        ?.finalization
+                ),
+                bakingCommissionRange: translateCommissionRange(
+                    params.parameters.v1.poolParameters?.commissionBounds
+                        ?.baking
+                ),
+                transactionCommissionRange: translateCommissionRange(
+                    params.parameters.v1.poolParameters?.commissionBounds
+                        ?.transaction
+                ),
+                minimumEquityCapital: unwrap(
+                    params.parameters.v1.poolParameters?.minimumEquityCapital
+                        ?.value
+                ),
+                capitalBound: unwrap(
+                    params.parameters.v1.poolParameters?.capitalBound?.value
+                        ?.partsPerHundredThousand
+                ),
+                leverageBound: unwrap(
+                    params.parameters.v1.poolParameters?.leverageBound?.value
+                ),
+                rewardParameters: {
+                    ...commonRewardParameters,
+                    mintDistribution: {
+                        bakingReward: unwrap(
+                            params.parameters.v1.mintDistribution?.bakingReward
+                                ?.partsPerHundredThousand
+                        ),
+                        finalizationReward: unwrap(
+                            params.parameters.v1.mintDistribution
+                                ?.finalizationReward?.partsPerHundredThousand
+                        ),
+                    },
+                },
+            };
+            return x;
+        }
+        case 'v0': {
+            const common = translateChainParametersCommon(params.parameters.v0);
+            const commonRewardParameters = translateRewardParametersCommon(
+                params.parameters.v0
+            );
+            const x: v1.ChainParametersV0 = {
+                ...common,
+                bakerCooldownEpochs: unwrap(
+                    params.parameters.v0.bakerCooldownEpochs?.value
+                ),
+                minimumThresholdForBaking: unwrap(
+                    params.parameters.v0.minimumThresholdForBaking?.value
+                ),
+                rewardParameters: {
+                    ...commonRewardParameters,
+                    mintDistribution: {
+                        bakingReward: unwrap(
+                            params.parameters.v0.mintDistribution?.bakingReward
+                                ?.partsPerHundredThousand
+                        ),
+                        finalizationReward: unwrap(
+                            params.parameters.v0.mintDistribution
+                                ?.finalizationReward?.partsPerHundredThousand
+                        ),
+                        mintPerSlot: translateMintRate(
+                            params.parameters.v0.mintDistribution?.mintPerSlot
+                        ),
+                    },
+                },
+            };
+            return x;
+        }
+        default:
+            throw new Error('Missing chain parameters');
+    }
 }

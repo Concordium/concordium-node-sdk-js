@@ -14,6 +14,7 @@ Wrappers for interacting with the Concordium node, using nodejs.
     - [getAccountInfo](#getaccountinfo)
     - [getNextAccountSequenceNumber](#getnextaccountsequencenumber)
     - [getCryptographicParameters](#getcryptographicparameters)
+    - [getBlockChainParameters](#getblockchainparameters)
 
 # ConcordiumNodeClient
 
@@ -76,4 +77,11 @@ These are a required input for e.g. creating credentials.
 const blockHash = Buffer.from('7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749', 'hex')
 const cryptographicParameters: CryptographicParameters = await client.getCryptographicParameters(blockHash);
 ...
+```
+
+## getBlockChainParameters
+Retrieves the block chain update parameters, which can be chained by chain updates, at a specific block.
+```
+const blockHash = Buffer.from('7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749', 'hex')
+const cryptographicParameters: ChainParameters = await client.getBlockChainParameters(blockHash);
 ```

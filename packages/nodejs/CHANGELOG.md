@@ -8,6 +8,7 @@
     - `getAccountInfo()`
     - `getNextAccountSequenceNumber()`
     - `getCryptographicParameters()`
+    - `getBlockChainParameters()`
 
 ## 6.1.0 2022-11-30
 

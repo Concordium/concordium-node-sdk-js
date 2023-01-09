@@ -269,7 +269,7 @@ test('accountInfo implementations is the same', async () => {
     const oldDeleg = await clientV1.getAccountInfo(testAccDeleg, testBlockHash);
     const newDeleg = await clientV2.getAccountInfo(testAccDeleg, testBlockHash);
 
-    // Tempoary
+    // Temporary
     if (oldReg?.accountCredentials[0].value.type === 'normal') {
         oldReg.accountCredentials[0].value.contents.arData = {};
     }
@@ -287,4 +287,19 @@ test('accountInfo implementations is the same', async () => {
     expect(oldCredId).toEqual(newCredId);
     expect(oldDeleg).toEqual(newDeleg);
     expect(oldBaker).toEqual(newBaker);
+});
+
+test('getChainParameters corresponds to GetBlockummary subset', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const blockSummary: any = await clientV1.getBlockSummary(testBlockHash);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const chainParameters: any = await clientV2.getBlockChainParameters(
+        testBlockHash
+    );
+
+    // TODO Fix the foundation account change
+    blockSummary.updates.chainParameters.foundationAccountIndex = undefined;
+    chainParameters.foundationAccountIndex = undefined;
+
+    expect(blockSummary.updates.chainParameters).toEqual(chainParameters);
 });

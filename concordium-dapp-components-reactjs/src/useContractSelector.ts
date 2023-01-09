@@ -8,6 +8,7 @@ export interface Info {
     amount: CcdAmount;
     owner: AccountAddress;
     methods: string[];
+    moduleRef: string;
 }
 
 async function refresh(rpc: JsonRpcClient, index: bigint) {
@@ -17,12 +18,12 @@ async function refresh(rpc: JsonRpcClient, index: bigint) {
         throw new Error(`contract ${index} not found`);
     }
 
-    const { version, name, owner, amount, methods } = info;
+    const { version, name, owner, amount, methods, sourceModule } = info;
     const prefix = 'init_';
     if (!name.startsWith(prefix)) {
         throw new Error(`name "${name}" doesn't start with "init_"`);
     }
-    return { version, index, name: name.substring(prefix.length), amount, owner, methods };
+    return { version, index, name: name.substring(prefix.length), amount, owner, methods, moduleRef: sourceModule.moduleRef };
 }
 
 function parseContractIndex(input: string) {

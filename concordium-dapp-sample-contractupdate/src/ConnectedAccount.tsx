@@ -49,7 +49,7 @@ export function ConnectedAccount({ activeConnection, activeConnectedAccount, net
 function Details({ account }: { account: AccountInfo }) {
     return (
         <Alert variant="info">
-            <ul>
+            <ul className="mb-0">
                 <li>Address: {account.accountAddress}</li>
                 <li>Nonce: {account.accountNonce.toString()}</li>
                 <li>Balance: {account.accountAmount.toString()}</li>

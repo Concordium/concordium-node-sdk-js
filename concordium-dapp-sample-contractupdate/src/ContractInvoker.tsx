@@ -5,6 +5,7 @@ import { Alert, Button, Col, Dropdown, Form, Row } from 'react-bootstrap';
 import { Network, WalletConnection } from 'concordium-dapp-wallet-connectors';
 import { AccountAddress, AccountTransactionType, CcdAmount } from '@concordium/common-sdk';
 import { err, ok, Result, ResultAsync } from 'neverthrow';
+import { useContractSchemaRpc } from './useContractSchemaRpc';
 
 interface ContractParamEntry {
     name: string;
@@ -35,10 +36,13 @@ function ccdScanUrl(network: Network, txHash: string | undefined) {
 export function ContractInvoker({ network, connection, connectedAccount, contract }: ContractInvokerProps) {
     const [selectedMethodIndex, setSelectedMethodIndex] = useState(0);
     const [schemaInput, setSchemaInput] = useState('');
+    // Reset selected method and schema input on contract change.
     useEffect(() => {
         setSelectedMethodIndex(0);
         setSchemaInput('');
     }, [contract]);
+
+    const schemaRpcResult = useContractSchemaRpc(connection, contract);
 
     const [contractParams, setContractParams] = useState<Array<ContractParamEntry>>([]);
     const [contractAmountInput, setContractAmountInput] = useState('');
@@ -48,13 +52,20 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
         []
     );
 
-    const contractParamsResult = useMemo(() => {
-        return ok(Object.fromEntries(contractParams.map((p) => [p.name, parseParamValue(p.value)])));
-    }, [contractParams]);
-    const schemaResult = useMemo(
-        () => (isBase64(schemaInput) ? ok(schemaInput) : err('schema must be valid base64')),
-        [schemaInput]
+    const contractParamsResult = useMemo(
+        () => ok(Object.fromEntries(contractParams.map((p) => [p.name, parseParamValue(p.value)]))),
+        [contractParams]
     );
+    const schemaResult = useMemo(() => {
+        let input = schemaInput.trim();
+        if (input) {
+            return isBase64(input) ? ok({ fromRpc: false, schema: input }) : err('schema must be valid base64');
+        }
+        return (
+            schemaRpcResult?.map((r) => ({ fromRpc: true, schema: r ? r.schema : '' })) ||
+            ok({ fromRpc: false, schema: '' })
+        );
+    }, [schemaInput, schemaRpcResult]);
     const amountResult = useMemo(() => {
         try {
             return ok(BigInt(Math.round(Number(contractAmountInput) * 1e6)));
@@ -63,12 +74,7 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
         }
     }, [contractAmountInput]);
     const inputResult = useMemo(
-        () =>
-            Result.combine<[Result<Record<string, unknown>, string>, Result<string, string>, Result<bigint, string>]>([
-                contractParamsResult,
-                schemaResult,
-                amountResult,
-            ]),
+        () => Result.combine([contractParamsResult, schemaResult, amountResult]),
         [contractParamsResult, schemaResult, amountResult]
     );
 
@@ -88,18 +94,22 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
                                 maxContractExecutionEnergy: BigInt(30000),
                             },
                             params,
-                            schema
+                            schema.schema
                         ),
                         (e) => (e as Error).message
                     )
                 )
                 .then(setSubmittedTxHash);
         }
-    }, [connection, connectedAccount, contract, inputResult]);
-
+    }, [connection, connectedAccount, contract, selectedMethodIndex, inputResult]);
     return (
         <>
             <h4>Update Contract</h4>
+            {schemaRpcResult?.match(() => undefined, (e) => (
+                <Alert variant="warning">
+                    Error fetching contract schema from chain: <code>{e}</code>.
+                </Alert>
+            ))}
             <Form>
                 <Form.Group as={Row} className="mb-3">
                     <Form.Label column sm={2}>
@@ -118,11 +128,29 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
                         Schema (base64):
                     </Form.Label>
                     <Col sm={10}>
-                        <Form.Control value={schemaInput} onChange={onSchemaChange} isInvalid={schemaResult.isErr()} />
+                        <Form.Control
+                            value={schemaInput}
+                            onChange={onSchemaChange}
+                            isValid={schemaResult.match(
+                                ({ fromRpc }) => fromRpc,
+                                () => false
+                            )}
+                            isInvalid={schemaResult.isErr()}
+                            placeholder={schemaRpcResult?.match(
+                                (v) => v && v.schema,
+                                () => undefined
+                            )}
+                        />
                         {schemaResult.match(
-                            () => (
-                                <></>
-                            ),
+                            () =>
+                                schemaRpcResult?.match(
+                                    (v) => v && (
+                                        <Form.Control.Feedback>
+                                            Using schema from module section <code>{v.sectionName}</code>.
+                                        </Form.Control.Feedback>
+                                    ),
+                                    () => undefined
+                                ),
                             (e) => (
                                 <Form.Control.Feedback type="invalid">{e}</Form.Control.Feedback>
                             )
@@ -165,9 +193,7 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
                             isInvalid={amountResult.isErr()}
                         />
                         {amountResult.match(
-                            () => (
-                                <></>
-                            ),
+                            () => undefined,
                             (e) => (
                                 <Form.Control.Feedback type="invalid">{e}</Form.Control.Feedback>
                             )

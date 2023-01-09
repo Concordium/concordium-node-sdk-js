@@ -141,38 +141,3 @@ export function unwrap<A>(x: A | undefined): A {
         return x;
     }
 }
-
-export function assertValidModuleRef(moduleRef: Uint8Array): void {
-    if (moduleRef.length !== 32) {
-        throw new Error(
-            'The input was not a valid module reference, must be 32 bytes: ' +
-                Buffer.from(moduleRef).toString('hex')
-        );
-    }
-}
-
-/**
- * Gets an GRPCv2 AccountTransactionSignature from a GRPCv1 AccountTransactionSignature.
- * @param accountIdentifier a GRPCv1 AccountTransactionSignature.
- * @returns a GRPCv2 AccountTransactionSignature.
- */
-export function translateSignature(
-    signature: v1.AccountTransactionSignature
-): v2.AccountTransactionSignature {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const accountTransactionSignature: any = { signatures: {} };
-
-    for (const i in signature) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const accountSignatureMap: any = { signatures: {} };
-
-        for (const j in signature[i]) {
-            accountSignatureMap.signatures[i] = {
-                value: Buffer.from(signature[i][j], 'hex'),
-            };
-        }
-        accountTransactionSignature.signatures[i] = accountSignatureMap;
-    }
-
-    return accountTransactionSignature;
-}

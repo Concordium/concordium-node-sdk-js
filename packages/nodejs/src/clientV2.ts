@@ -13,7 +13,6 @@ import {
     getBlockHashInput,
     getAccountIdentifierInput,
     assertValidHash,
-    translateSignature,
 } from './util';
 import { countSignatures } from '@concordium/common-sdk/src/util';
 
@@ -259,7 +258,7 @@ export default class ConcordiumNodeClient {
     ): Promise<HexString> {
         const rawPayload = v1.serializeAccountTransactionPayload(transaction);
         const transactionSignature: v2.AccountTransactionSignature =
-            translateSignature(signature);
+            translate.accountTransactionSignatureToV2(signature);
 
         // Energy cost
         const accountTransactionHandler = getAccountTransactionHandler(

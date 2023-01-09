@@ -348,3 +348,16 @@ export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
         }),
     };
 }
+
+export function accountTransactionSignatureToV2(
+    signature: v1.AccountTransactionSignature
+): v2.AccountTransactionSignature {
+    function transSig(a: string): v2.Signature {
+        return { value: Buffer.from(a, 'hex') };
+    }
+    function transCredSig(a: v1.CredentialSignature): v2.AccountSignatureMap {
+        return { signatures: mapRecord(a, transSig) };
+    }
+
+    return { signatures: mapRecord(signature, transCredSig) };
+}

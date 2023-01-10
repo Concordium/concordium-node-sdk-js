@@ -105,11 +105,14 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
     return (
         <>
             <h4>Update Contract</h4>
-            {schemaRpcResult?.match(() => undefined, (e) => (
-                <Alert variant="warning">
-                    Error fetching contract schema from chain: <code>{e}</code>.
-                </Alert>
-            ))}
+            {schemaRpcResult?.match(
+                () => undefined,
+                (e) => (
+                    <Alert variant="warning">
+                        Error fetching contract schema from chain: <code>{e}</code>.
+                    </Alert>
+                )
+            )}
             <Form>
                 <Form.Group as={Row} className="mb-3">
                     <Form.Label column sm={2}>
@@ -144,11 +147,13 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
                         {schemaResult.match(
                             () =>
                                 schemaRpcResult?.match(
-                                    (v) => v && (
-                                        <Form.Control.Feedback>
-                                            Using schema from module section <code>{v.sectionName}</code>.
-                                        </Form.Control.Feedback>
-                                    ),
+                                    (v) =>
+                                        v && (
+                                            <Form.Control.Feedback>
+                                                Using schema from section <code>{v.sectionName}</code> of the contract's
+                                                module.
+                                            </Form.Control.Feedback>
+                                        ),
                                     () => undefined
                                 ),
                             (e) => (

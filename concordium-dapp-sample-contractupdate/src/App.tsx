@@ -37,8 +37,13 @@ export function App({ network, connection, connectedAccount }: Props) {
                     {contract.selected && (
                         <>
                             <ContractDetails contract={contract.selected} />
-                            <hr/>
-                            <ContractInvoker network={network} connection={connection} connectedAccount={connectedAccount} contract={contract.selected} />
+                            <hr />
+                            <ContractInvoker
+                                network={network}
+                                connection={connection}
+                                connectedAccount={connectedAccount}
+                                contract={contract.selected}
+                            />
                         </>
                     )}
                 </>

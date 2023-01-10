@@ -1,5 +1,5 @@
 import { err, ok, Result, ResultAsync } from 'neverthrow';
-import { Buffer } from 'buffer';
+import { Buffer } from 'buffer/';
 import { WalletConnection, withJsonRpcClient } from 'concordium-dapp-wallet-connectors';
 import { Info } from 'concordium-dapp-components-reactjs';
 import { useEffect, useState } from 'react';
@@ -31,7 +31,7 @@ function findSchema(m: WebAssembly.Module): Result<SchemaRpcResult | undefined, 
     if (schema.length !== 1) {
         return err(`unexpected size of custom section "${name}"`);
     }
-    return ok({sectionName: name, schema: Buffer.from(schema[0]).toString('base64')});
+    return ok({ sectionName: name, schema: Buffer.from(schema[0]).toString('base64') });
 }
 
 export function useContractSchemaRpc(connection: WalletConnection, contract: Info) {

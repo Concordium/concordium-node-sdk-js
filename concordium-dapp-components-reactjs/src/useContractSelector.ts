@@ -23,7 +23,15 @@ async function refresh(rpc: JsonRpcClient, index: bigint) {
     if (!name.startsWith(prefix)) {
         throw new Error(`name "${name}" doesn't start with "init_"`);
     }
-    return { version, index, name: name.substring(prefix.length), amount, owner, methods, moduleRef: sourceModule.moduleRef };
+    return {
+        version,
+        index,
+        name: name.substring(prefix.length),
+        amount,
+        owner,
+        methods,
+        moduleRef: sourceModule.moduleRef,
+    };
 }
 
 function parseContractIndex(input: string) {

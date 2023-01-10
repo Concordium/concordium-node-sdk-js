@@ -1,28 +1,26 @@
 {
-  "name": "concordium-dapp-components-reactjs",
-  "version": "0.0.0",
-  "description": "Utility library of React components for building dApps that interact with the Concordium blockchain.",
-  "main": "./dist/index.js",
-  "author": "Concordium Software",
-  "license": "Apache-2.0",
-  "files": [
-    "./dist"
-  ],
-  "scripts": {
-    "build": "tsc"
-  },
-  "dependencies": {
-    "concordium-dapp-wallet-connectors": "../concordium-dapp-wallet-connectors"
-  },
-  "devDependencies": {
-    "@tsconfig/recommended": "^1.0.1",
-    "@types/node": "^18.11.17",
-    "@types/react": "^18",
-    "@walletconnect/types": "^2.1.4",
-    "prettier": "2.8.1",
-    "typescript": "^4.9.4"
-  },
-  "peerDependencies": {
-    "react": "^18"
-  }
+    "name": "concordium-dapp-components-reactjs",
+    "version": "0.1.0",
+    "description": "Utility library of React components for building dApps that interact with the Concordium blockchain.",
+    "main": "./dist/index.js",
+    "author": "Concordium Software",
+    "license": "Apache-2.0",
+    "files": ["./dist"],
+    "scripts": {
+        "build": "tsc"
+    },
+    "dependencies": {
+        "concordium-dapp-wallet-connectors": "../concordium-dapp-wallet-connectors"
+    },
+    "devDependencies": {
+        "@tsconfig/recommended": "^1.0.1",
+        "@types/node": "^18.11.17",
+        "@types/react": "^18",
+        "@walletconnect/types": "^2.1.4",
+        "prettier": "2.8.1",
+        "typescript": "^4.9.4"
+    },
+    "peerDependencies": {
+        "react": "^18"
+    }
 }

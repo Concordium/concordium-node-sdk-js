@@ -154,17 +154,17 @@ export interface SimpleRejectReason {
 
 export interface InvalidReceiveMethod {
     tag: RejectReasonTag.InvalidReceiveMethod;
-    contents: [string, string] // [moduleRef, receiveName]
+    contents: [string, string]; // [moduleRef, receiveName]
 }
 
 export interface InvalidInitMethod {
     tag: RejectReasonTag.InvalidInitMethod;
-    contents: [string, string] // [moduleRef, initName]
+    contents: [string, string]; // [moduleRef, initName]
 }
 
 export interface AmountTooLarge {
     tag: RejectReasonTag.AmountTooLarge;
-    contents: [AddressAccount, string]; // [address, amount]
+    contents: [AddressAccount, string]; // [address, amount] // TODO change to Address
 }
 
 export interface InvalidContractAddress {

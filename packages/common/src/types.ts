@@ -1039,7 +1039,7 @@ export interface BakerPoolStatusDetails {
     poolInfo: BakerPoolInfo;
     bakerStakePendingChange: BakerPoolPendingChange;
     currentPaydayStatus?: CurrentPaydayBakerPoolStatus;
-    allPoolTotalCapital?: Amount;
+    allPoolTotalCapital: Amount;
 }
 
 export type BakerPoolStatus = PoolStatusWrapper<
@@ -1052,6 +1052,7 @@ export interface PassiveDelegationStatusDetails {
     commissionRates: CommissionRates;
     currentPaydayTransactionFeesEarned: Amount;
     currentPaydayDelegatedCapital: Amount;
+    allPoolTotalCapital: Amount;
 }
 
 export type PassiveDelegationStatus = PoolStatusWrapper<

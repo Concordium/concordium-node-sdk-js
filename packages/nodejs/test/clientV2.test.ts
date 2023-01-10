@@ -289,7 +289,7 @@ test('accountInfo implementations is the same', async () => {
     expect(oldBaker).toEqual(newBaker);
 });
 
-test('getChainParameters corresponds to GetBlockummary subset', async () => {
+test('getChainParameters corresponds to GetBlockSummary subset', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const blockSummary: any = await clientV1.getBlockSummary(testBlockHash);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -307,8 +307,19 @@ test('getChainParameters corresponds to GetBlockummary subset', async () => {
 test('getPoolInfo corresponds to getPoolStatus with a bakerId', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const oldStatus: any = await clientV1.getPoolStatus(testBlockHash, 1n);
-   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const newStatus: any = await clientV2.getPoolInfo(1n, testBlockHash);
+
+    expect(oldStatus).toEqual(newStatus);
+});
+
+test('getPassiveDelegationInfo corresponds to getPoolStatus with no bakerId', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const oldStatus: any = await clientV1.getPoolStatus(testBlockHash);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const newStatus: any = await clientV2.getPassiveDelegationInfo(
+        testBlockHash
+    );
 
     expect(oldStatus).toEqual(newStatus);
 });

@@ -131,17 +131,26 @@ export default class ConcordiumNodeClient {
         return translate.blockChainParameters(response);
     }
 
-    async getPoolInfo(bakerId: bigint, blockHash?: HexString): Promise<v1.PoolStatus> {
+    async getPoolInfo(
+        bakerId: bigint,
+        blockHash?: HexString
+    ): Promise<v1.BakerPoolStatus> {
         const input: v2.PoolInfoRequest = {
             blockHash: getBlockHashInput(blockHash),
             baker: {
-                value: bakerId
-            }
+                value: bakerId,
+            },
         };
-        const response = await this.client.getPoolInfo(
-            input
-        ).response;
+        const response = await this.client.getPoolInfo(input).response;
         return translate.bakerPoolInfo(response);
     }
 
+    async getPassiveDelegationInfo(
+        blockHash?: HexString
+    ): Promise<v1.PassiveDelegationStatus> {
+        const input = getBlockHashInput(blockHash);
+        const response = await this.client.getPassiveDelegationInfo(input)
+            .response;
+        return translate.passiveDelegationInfo(response);
+    }
 }

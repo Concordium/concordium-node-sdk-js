@@ -766,7 +766,7 @@ export default class ConcordiumNodeClient {
         >;
         type BigIntKey = KeysMatching<
             BakerPoolStatusDetails &
-            PassiveDelegationStatusDetails &
+                PassiveDelegationStatusDetails &
                 CurrentPaydayBakerPoolStatus,
             bigint
         >;
@@ -782,7 +782,7 @@ export default class ConcordiumNodeClient {
             'blocksBaked',
             'transactionFeesEarned',
             'effectiveStake',
-            'allPoolTotalCapital'
+            'allPoolTotalCapital',
         ];
 
         const response = await this.sendRequest(this.client.getPoolStatus, req);

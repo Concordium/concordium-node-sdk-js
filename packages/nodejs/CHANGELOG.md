@@ -9,6 +9,8 @@
     - `getNextAccountSequenceNumber()`
     - `getCryptographicParameters()`
     - `getBlockChainParameters()`
+    - `getPoolInfo()`
+    - `getPassiveDelegationInfo()`
 
 ## 6.1.0 2022-11-30
 

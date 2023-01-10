@@ -2,7 +2,11 @@ import * as v1 from '@concordium/common-sdk';
 import * as v2 from '../grpc/v2/concordium/types';
 import { mapRecord, unwrap } from './util';
 import { Buffer } from 'buffer/';
-import { AccountAddress, BakerPoolPendingChangeType, PoolStatusType } from '@concordium/common-sdk';
+import {
+    AccountAddress,
+    BakerPoolPendingChangeType,
+    PoolStatusType,
+} from '@concordium/common-sdk';
 
 function unwrapToHex(x: Uint8Array | undefined): string {
     return Buffer.from(unwrap(x)).toString('hex');
@@ -67,6 +71,16 @@ function transCredKeys(
 function transChainArData(chainArData: v2.ChainArData): v1.ChainArData {
     return {
         encIdCredPubShare: unwrapToHex(chainArData.encIdCredPubShare),
+    };
+}
+
+function transCommissionRates(
+    rates: v2.CommissionRates | undefined
+): v1.CommissionRates {
+    return {
+        transactionCommission: transAmountFraction(rates?.transaction),
+        bakingCommission: transAmountFraction(rates?.baking),
+        finalizationCommission: transAmountFraction(rates?.finalization),
     };
 }
 
@@ -206,16 +220,10 @@ function transBaker(
     baker: v2.AccountStakingInfo_Baker
 ): v1.AccountBakerDetails {
     const bakerInfo = baker.bakerInfo;
-    const rates = baker.poolInfo?.commissionRates;
-    const commissionRates: v1.CommissionRates = {
-        transactionCommission: transAmountFraction(rates?.transaction),
-        bakingCommission: transAmountFraction(rates?.baking),
-        finalizationCommission: transAmountFraction(rates?.finalization),
-    };
     const bakerPoolInfo: v1.BakerPoolInfo = {
         openStatus: transOpenStatus(baker.poolInfo?.openStatus),
         metadataUrl: unwrap(baker.poolInfo?.url),
-        commissionRates: commissionRates,
+        commissionRates: transCommissionRates(baker.poolInfo?.commissionRates),
     };
     return {
         restakeEarnings: baker.restakeEarnings,
@@ -267,7 +275,6 @@ function translateRewardParametersCommon(
         transactionFeeDistribution: {
             baker: transAmountFraction(
                 params.transactionFeeDistribution?.baker
-
             ),
             gasAccount: transAmountFraction(
                 params.transactionFeeDistribution?.gasAccount
@@ -281,15 +288,69 @@ function translateRewardParametersCommon(
             accountCreation: transAmountFraction(
                 params.gasRewards?.accountCreation
             ),
-            chainUpdate: transAmountFraction(
-                params.gasRewards?.chainUpdate
-            ),
+            chainUpdate: transAmountFraction(params.gasRewards?.chainUpdate),
         },
     };
 }
 
 function translateMintRate(mintRate: v2.MintRate | undefined): number {
     return unwrap(mintRate?.mantissa) * 10 ** unwrap(mintRate?.exponent);
+}
+
+function transPoolPendingChange(
+    change: v2.PoolPendingChange | undefined
+): v1.BakerPoolPendingChange {
+    switch (change?.change?.oneofKind) {
+        case 'reduce': {
+            return {
+                pendingChangeType:
+                    BakerPoolPendingChangeType.ReduceBakerCapital,
+                effectiveTime: new Date(
+                    Number(unwrap(change.change.reduce.effectiveTime?.value))
+                ),
+                bakerEquityCapital: unwrap(
+                    change.change.reduce.reducedEquityCapital?.value
+                ),
+            };
+        }
+        case 'remove': {
+            return {
+                pendingChangeType: BakerPoolPendingChangeType.RemovePool,
+                effectiveTime: new Date(
+                    Number(unwrap(change.change.remove.effectiveTime?.value))
+                ),
+            };
+        }
+        default:
+            return {
+                pendingChangeType: BakerPoolPendingChangeType.NoChange,
+            };
+    }
+}
+
+function transPoolInfo(info: v2.BakerPoolInfo): v1.BakerPoolInfo {
+    return {
+        openStatus: transOpenStatus(info.openStatus),
+        metadataUrl: info.url,
+        commissionRates: transCommissionRates(info.commissionRates),
+    };
+}
+
+function transPaydayStatus(
+    status: v2.PoolCurrentPaydayInfo | undefined
+): v1.CurrentPaydayBakerPoolStatus | undefined {
+    if (!status) {
+        return undefined;
+    }
+    return {
+        blocksBaked: status.blocksBaked,
+        finalizationLive: status.finalizationLive,
+        transactionFeesEarned: unwrap(status.transactionFeesEarned?.value),
+        effectiveStake: unwrap(status.effectiveStake?.value),
+        lotteryPower: status.lotteryPower,
+        bakerEquityCapital: unwrap(status.bakerEquityCapital?.value),
+        delegatedCapital: unwrap(status.delegatedCapital?.value),
+    };
 }
 
 export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
@@ -451,7 +512,8 @@ export function blockChainParameters(
                             params.parameters.v0.mintDistribution?.bakingReward
                         ),
                         finalizationReward: transAmountFraction(
-                            params.parameters.v0.mintDistribution?.finalizationReward
+                            params.parameters.v0.mintDistribution
+                                ?.finalizationReward
                         ),
                         mintPerSlot: translateMintRate(
                             params.parameters.v0.mintDistribution?.mintPerSlot
@@ -466,67 +528,38 @@ export function blockChainParameters(
     }
 }
 
-function transPoolPendingChange(change: v2.PoolPendingChange | undefined): v1.BakerPoolPendingChange {
-    switch(change?.change?.oneofKind) {
-        case 'reduce': {
-            return {
-               pendingChangeType: BakerPoolPendingChangeType.ReduceBakerCapital,
-                effectiveTime: new Date(Number(unwrap(change.change.reduce.effectiveTime?.value))),
-                bakerEquityCapital: unwrap(change.change.reduce.reducedEquityCapital?.value)
-            }
-        }
-        case 'remove': {
-            return {
-                pendingChangeType: BakerPoolPendingChangeType.RemovePool,
-                effectiveTime: new Date(Number(unwrap(change.change.remove.effectiveTime?.value))),
-            }
-
-        }
-        default:
-            return {
-                pendingChangeType: BakerPoolPendingChangeType.NoChange
-            }
-    }
-}
-
-function transPoolInfo(info: v2.BakerPoolInfo): v1.BakerPoolInfo {
-   return {
-        openStatus: transOpenStatus(info.openStatus),
-        metadataUrl: info.url,
-        commissionRates: {
-            transactionCommission: transAmountFraction(info.commissionRates?.transaction),
-            bakingCommission: transAmountFraction(info.commissionRates?.baking),
-            finalizationCommission: transAmountFraction(info.commissionRates?.finalization)
-        }
-    }
-}
-
-function transPaydayStatus(status: v2.PoolCurrentPaydayInfo | undefined): v1.CurrentPaydayBakerPoolStatus | undefined {
-    if (!status) {
-        return undefined;
-    }
-    return {
-        blocksBaked: status.blocksBaked,
-        finalizationLive: status.finalizationLive,
-        transactionFeesEarned: unwrap(status.transactionFeesEarned?.value),
-        effectiveStake: unwrap(status.effectiveStake?.value),
-        lotteryPower: status.lotteryPower,
-        bakerEquityCapital: unwrap(status.bakerEquityCapital?.value),
-        delegatedCapital: unwrap(status.delegatedCapital?.value)
-    }
-}
-
 export function bakerPoolInfo(info: v2.PoolInfoResponse): v1.BakerPoolStatus {
-      return {
+    return {
         poolType: PoolStatusType.BakerPool,
         bakerId: unwrap(info.baker?.value),
-        bakerAddress: AccountAddress.fromBytes(Buffer.from(unwrap(info.address?.value))).address,
+        bakerAddress: AccountAddress.fromBytes(
+            Buffer.from(unwrap(info.address?.value))
+        ).address,
         bakerEquityCapital: unwrap(info.equityCapital?.value),
         delegatedCapital: unwrap(info.delegatedCapital?.value),
         delegatedCapitalCap: unwrap(info.delegatedCapitalCap?.value),
         poolInfo: transPoolInfo(unwrap(info?.poolInfo)),
-        bakerStakePendingChange: transPoolPendingChange(info.equityPendingChange),
+        bakerStakePendingChange: transPoolPendingChange(
+            info.equityPendingChange
+        ),
         currentPaydayStatus: transPaydayStatus(info.currentPaydayInfo),
-        allPoolTotalCapital: unwrap(info.allPoolTotalCapital?.value)
-    }
+        allPoolTotalCapital: unwrap(info.allPoolTotalCapital?.value),
+    };
+}
+
+export function passiveDelegationInfo(
+    info: v2.PassiveDelegationInfo
+): v1.PassiveDelegationStatus {
+    return {
+        poolType: PoolStatusType.PassiveDelegation,
+        delegatedCapital: unwrap(info.delegatedCapital?.value),
+        commissionRates: transCommissionRates(info.commissionRates),
+        currentPaydayTransactionFeesEarned: unwrap(
+            info.currentPaydayTransactionFeesEarned?.value
+        ),
+        currentPaydayDelegatedCapital: unwrap(
+            info.currentPaydayDelegatedCapital?.value
+        ),
+        allPoolTotalCapital: unwrap(info.allPoolTotalCapital?.value),
+    };
 }

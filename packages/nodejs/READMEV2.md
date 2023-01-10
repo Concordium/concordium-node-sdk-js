@@ -91,6 +91,14 @@ Retrives various information on the specified baker pool, at the end of the spec
 ```
 const bakerId = 1n;
 const blockHash = Buffer.from('7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749', 'hex');
-const bakerPoolInfo: PoolStatus = await client.getBlockChainParameters(bakerId, blockHash);
+const bakerPoolInfo: BakerPoolStatus = await client.getBlockChainParameters(bakerId, blockHash);
 ```
+
+## getPassiveDelegationInfo
+Retrieves information about the passive delegators, at the end of the specified block.
+```
+const blockHash = Buffer.from('7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749', 'hex');
+const bakerPoolInfo: PassiveDelegationStatus = await client.getBlockChainParameters(blockHash);
+```
+
 

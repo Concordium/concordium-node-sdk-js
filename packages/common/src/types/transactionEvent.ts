@@ -146,7 +146,7 @@ export interface AccountCreatedEvent {
 }
 
 export interface AmountAddedByDecryptionEvent {
-    tag: TransactionEventTag.AmountAddedByDecryption
+    tag: TransactionEventTag.AmountAddedByDecryption;
     account: string;
     amount: bigint;
 }
@@ -188,7 +188,7 @@ export interface CredentialsUpdatedEvent {
     tag: TransactionEventTag.CredentialsUpdated;
     account: string;
     newCredIds: string[];
-    removedCredIDs: string[];
+    removedCredIds: string[];
     newThreshold: number;
 }
 

@@ -95,7 +95,7 @@ export interface UpdatedEvent {
     amount: bigint;
     message: string;
     receiveName: string;
-    events: [string];
+    events: string[];
 }
 
 export interface DataRegisteredEvent {
@@ -108,7 +108,7 @@ export interface ContractInitializedEvent {
     address: ContractAddress;
     amount: bigint;
     contractName: string;
-    events: [string];
+    events: string[];
 }
 
 export interface ModuleDeployedEvent {

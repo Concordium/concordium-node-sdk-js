@@ -50,8 +50,9 @@ export type TransactionEvent =
     | InterruptedEvent
     | MemoEvent
     | TransferredWithScheduleEvent
-    | AmountEvent
     | AccountCreatedEvent
+    | AmountAddedByDecryptionEvent
+    | EncryptedSelfAmountAddedEvent
     | NewEncryptedAmountEvent
     | EncryptedAmountsRemovedEvent
     | DataRegisteredEvent
@@ -139,17 +140,22 @@ export interface MemoEvent {
     memo: string;
 }
 
-export interface AmountEvent {
-    tag:
-        | TransactionEventTag.AmountAddedByDecryption
-        | TransactionEventTag.EncryptedSelfAmountAdded;
+export interface AccountCreatedEvent {
+    tag: TransactionEventTag.AccountCreated;
+    account: string;
+}
+
+export interface AmountAddedByDecryptionEvent {
+    tag: TransactionEventTag.AmountAddedByDecryption
     account: string;
     amount: bigint;
 }
 
-export interface AccountCreatedEvent {
-    tag: TransactionEventTag.AccountCreated;
+export interface EncryptedSelfAmountAddedEvent {
+    tag: TransactionEventTag.EncryptedSelfAmountAdded;
     account: string;
+    amount: bigint;
+    newAmount: string;
 }
 
 export interface EncryptedAmountsRemovedEvent {

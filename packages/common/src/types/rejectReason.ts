@@ -1,3 +1,4 @@
+import { AddressAccount } from '..';
 import type { ContractAddress } from '../types';
 
 /*
@@ -153,26 +154,17 @@ export interface SimpleRejectReason {
 
 export interface InvalidReceiveMethod {
     tag: RejectReasonTag.InvalidReceiveMethod;
-    contents: {
-        moduleRef: string;
-        receiveName: string;
-    };
+    contents: [string, string] // [moduleRef, receiveName]
 }
 
 export interface InvalidInitMethod {
     tag: RejectReasonTag.InvalidInitMethod;
-    contents: {
-        moduleRef: string;
-        initName: string;
-    };
+    contents: [string, string] // [moduleRef, initName]
 }
 
 export interface AmountTooLarge {
     tag: RejectReasonTag.AmountTooLarge;
-    contents: {
-        address: string;
-        amount: string;
-    };
+    contents: [AddressAccount, string]; // [address, amount]
 }
 
 export interface InvalidContractAddress {

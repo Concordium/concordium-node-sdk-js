@@ -13,6 +13,7 @@ import {
 } from './types/transactionEvent';
 
 export type HexString = string;
+export type Base58String = string;
 
 /**
  * Returns a union of all keys of type T with values matching type V.
@@ -87,7 +88,7 @@ export enum TransactionStatusEnum {
 
 export interface AddressAccount {
     type: 'AddressAccount';
-    address: string;
+    address: Base58String;
 }
 
 export interface ContractAddress {
@@ -99,6 +100,13 @@ export type AccountIdentifierInput =
     | AccountAddress
     | CredentialRegistrationId
     | bigint;
+
+export type Address =
+    | {
+          type: 'AddressContract';
+          address: ContractAddress;
+      }
+    | AddressAccount;
 
 interface RejectedEventResult {
     outcome: 'reject';
@@ -817,7 +825,7 @@ type PoolStatusWrapper<T extends keyof typeof PoolStatusType, S> = S & {
 
 export interface BakerPoolStatusDetails {
     bakerId: BakerId;
-    bakerAddress: string;
+    bakerAddress: Base58String;
     bakerEquityCapital: Amount;
     delegatedCapital: Amount;
     delegatedCapitalCap: Amount;
@@ -893,7 +901,7 @@ export type AccountCredential = Versioned<
 >;
 
 interface AccountInfoCommon {
-    accountAddress: string;
+    accountAddress: Base58String;
     accountNonce: bigint;
     accountAmount: bigint;
     accountIndex: bigint;
@@ -1256,7 +1264,7 @@ export type Invoker =
       }
     | {
           type: 'AddressAccount';
-          address: string;
+          address: Base58String;
       }
     | null;
 
@@ -1377,6 +1385,11 @@ export interface IdentityInput {
     prfKey: string;
     idCredSecret: string;
     randomness: string;
+}
+
+export enum ContractVersion {
+    V0 = 0,
+    V1 = 1,
 }
 
 export enum SchemaVersion {

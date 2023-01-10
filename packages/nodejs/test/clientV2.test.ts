@@ -169,22 +169,6 @@ test('accountInfo implementations is the same', async () => {
     const oldDeleg = await clientV1.getAccountInfo(testAccDeleg, testBlockHash);
     const newDeleg = await clientV2.getAccountInfo(testAccDeleg, testBlockHash);
 
-    // Tempoary
-    /*
-    if (oldReg?.accountCredentials[0].value.type === 'normal') {
-        oldReg.accountCredentials[0].value.contents.arData = {};
-    }
-    if (oldCredId?.accountCredentials[0].value.type === 'normal') {
-        oldCredId.accountCredentials[0].value.contents.arData = {};
-    }
-    if (oldBaker?.accountCredentials[0].value.type === 'normal') {
-        oldBaker.accountCredentials[0].value.contents.arData = {};
-    }
-    if (oldDeleg?.accountCredentials[0].value.type === 'normal') {
-        oldDeleg.accountCredentials[0].value.contents.arData = {};
-    }
-    */
-
     expect(oldReg).toEqual(newReg);
     expect(oldCredId).toEqual(newCredId);
     expect(oldDeleg).toEqual(newDeleg);

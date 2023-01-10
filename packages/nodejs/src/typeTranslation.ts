@@ -2,14 +2,23 @@ import * as v1 from '@concordium/common-sdk';
 import * as v2 from '../grpc/v2/concordium/types';
 import { mapRecord, unwrap } from './util';
 import { Buffer } from 'buffer/';
-import { TransactionSummary } from '@concordium/common-sdk';
+import { BakerAddedEvent, TransactionEventTag } from '@concordium/common-sdk';
+import * as bs58check from 'bs58check';
 
-function unwrapToHex(x: Uint8Array | undefined): string {
-    return Buffer.from(unwrap(x)).toString('hex');
+function unwrapToHex(bytes: Uint8Array | undefined): v1.HexString {
+    return Buffer.from(unwrap(bytes)).toString('hex');
+}
+
+function unwrapToBase58(address: v2.AccountAddress | undefined): v1.Base58String {
+    return bs58check.encode(Buffer.concat([Buffer.of(1), unwrap(address?.value)]));
 }
 
 function unwrapValToHex(x: { value: Uint8Array } | undefined): string {
     return unwrapToHex(unwrap(x).value);
+}
+
+function transModuleRef(moduleRef: v2.ModuleRef | undefined): v1.ModuleReference {
+    return new v1.ModuleReference(unwrapValToHex(moduleRef))
 }
 
 function transRelease(release: v2.Release): v1.ReleaseScheduleWithTransactions {
@@ -18,6 +27,13 @@ function transRelease(release: v2.Release): v1.ReleaseScheduleWithTransactions {
         amount: unwrap(release.amount?.value),
         transactions: release.transactions.map(unwrapValToHex),
     };
+}
+
+function transNewRelease(release: v2.NewRelease): v1.ReleaseSchedule {
+    return {
+        timestamp: transTimestamp(release.timestamp),
+        amount: unwrap(release.amount?.value)
+    }
 }
 
 function transDate(ym: v2.YearMonth): string {
@@ -350,43 +366,327 @@ export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
     };
 }
 
-/*
-function BlockItemSummary(bis: v2.BlockItemSummary): v1.TransactionSummary {
-    return = {
-        hash: unwrapValToHex(bis.hash),
-        cost: unwrap(bis.energyCost?.value),
-        energyCost: unwrap(b)
+const NotImplemented = Error("functionality not implemented yet")
 
+function transContractAddress(contractAddress: v2.ContractAddress | undefined): v1.ContractAddress {
+    return {
+        index: unwrap(contractAddress?.index),
+        subindex: unwrap(contractAddress?.subindex)
     }
 }
 
-function transBlockItemSummaryInBlock(bisib: v2.BlockItemSummaryInBlock): [string, v1.TransactionSummary] {
-    
+function transAccountAddress(accountAddress: v2.AccountAddress | undefined): v1.AddressAccount {
+    return {
+        type: 'AddressAccount',
+        address: unwrapToBase58(accountAddress)
+    }
 }
 
-function transBlockItemSummaryInBlocks(bisibs: [v2.BlockItemSummaryInBlock]): Record<string, v1.TransactionSummary> {
+function transAddress(addr: v2.Address | v2.ContractAddress | v2.AccountAddress | undefined): v1.Address {
+    const accountAddress = <v2.AccountAddress>unwrap(addr);
+    const contractAddress = <v2.ContractAddress>unwrap(addr);
+    const address = <v2.Address>unwrap(addr);
+
+    if (accountAddress.value) {
+        return transAccountAddress(accountAddress)
+    } else if (contractAddress.index) {
+        return {
+            type: 'AddressContract',
+            address: transContractAddress(contractAddress)
+        }
+    } else if (address.type.oneofKind === "account") {
+        return transAccountAddress(address.type.account)
+    } else if(address.type.oneofKind === 'contract') {
+        return {
+            type: 'AddressContract',
+            address: transContractAddress(address.type.contract)
+        }
+    } else {
+        throw Error("Invalid address encountered!")
+    }
+}
+
+function transContractTraceElement(contractTraceElement: v2.ContractTraceElement): v1.TransactionEvent {
+    const element = contractTraceElement.element;
+    switch (element.oneofKind) {
+        case "updated":
+            return {
+                tag: TransactionEventTag.Updated,
+                contractVersion: element.updated.contractVersion,
+                address: unwrap(element.updated.address),
+                instigator: transAddress(element.updated.instigator),
+                amount: unwrap(element.updated.amount?.value),
+                message: unwrapValToHex(element.updated.parameter),
+                receiveName: unwrap(element.updated.receiveName?.value),
+                events: element.updated.events.map(unwrapValToHex),
+            }
+        case "transferred":
+            return  {
+                tag: TransactionEventTag.Transferred,
+                from: transAddress(element.transferred.sender),
+                amount: unwrap(element.transferred.amount?.value),
+                to: transAddress(element.transferred.receiver)
+            }
+        case "interrupted":
+            return {
+                tag: TransactionEventTag.Interrupted,
+                address: transContractAddress(element.interrupted.address),
+                events: element.interrupted.events.map(unwrapValToHex)
+            }
+        case "resumed":
+            return {
+                tag: TransactionEventTag.Resumed,
+                address: transContractAddress(element.resumed.address),
+                success: unwrap(element.resumed.success)
+            }
+        case "upgraded":
+            return {
+                tag: TransactionEventTag.Upgraded,
+                address: transContractAddress(element.upgraded.address),
+                from: transModuleRef(element.upgraded.from),
+                to: transModuleRef(element.upgraded.to)
+            }
+        default:
+            throw Error("Invalid ContractTraceElement received, not able to translate to Transaction Event!")
+    }
+}
+
+function transBakerEvent(bakerEvent: v2.BakerEvent): v1.TransactionEvent {
+    const event = bakerEvent.event;
+    switch (event.oneofKind) {
+        case "bakerAdded":
+            return {
+                tag: TransactionEventTag.BakerAdded,
+                bakerId: Number(unwrap(event.bakerAdded.keysEvent?.bakerId?.value)),
+                account: unwrapToBase58(event.bakerAdded.keysEvent?.account),
+                signKey: unwrapValToHex(event.bakerAdded.keysEvent?.signKey),
+                electionKey: unwrapValToHex(event.bakerAdded.keysEvent?.electionKey),
+                aggregationKey: unwrapValToHex(event.bakerAdded.keysEvent?.aggregationKey),
+                stake: unwrap(event.bakerAdded.stake?.value),
+                restakeEarnings: unwrap(event.bakerAdded.restakeEarnings)
+            }
+        case "bakerRemoved":
+            return {
+                tag: TransactionEventTag.BakerRemoved,
+                bakerId: Number(unwrap(event.bakerRemoved.value)),
+
+            }
+        case "bakerStakeIncreased":
+            return {
+                tag: TransactionEventTag.BakerStakeIncreased,
+                bakerId: Number(unwrap(event.bakerStakeIncreased.bakerId)),
+                newStake: unwrap(event.bakerStakeIncreased.newStake?.value)
+            }
+        case "bakerStakeDecreased":
+            return {
+                tag: TransactionEventTag.BakerStakeDecreased,
+                bakerId: Number(unwrap(event.bakerStakeDecreased.bakerId)),
+                newStake: unwrap(event.bakerStakeDecreased.newStake?.value)
+            }
+        case "bakerRestakeEarningsUpdated":
+            return {
+                tag: TransactionEventTag.BakerSetRestakeEarnings,
+                bakerId: Number(unwrap(event.bakerRestakeEarningsUpdated.bakerId?.value)),
+                restakeEarnings: unwrap(event.bakerRestakeEarningsUpdated.restakeEarnings)
+            }
+        case "bakerKeysUpdated":
+            return {
+                tag: TransactionEventTag.BakerKeysUpdated,
+                bakerId: Number(unwrap(event.bakerKeysUpdated.bakerId?.value)),
+                account: unwrapToBase58(event.bakerKeysUpdated.account),
+                signKey: unwrapValToHex(event.bakerKeysUpdated.signKey),
+                electionKey: unwrapValToHex(event.bakerKeysUpdated.electionKey),
+                aggregationKey: unwrapValToHex(event.bakerKeysUpdated.aggregationKey)
+            }
+        case "bakerSetOpenStatus":
+            return {
+                tag: TransactionEventTag.BakerSetOpenStatus,
+                bakerId: Number(unwrap(event.bakerSetOpenStatus.bakerId?.value)),
+                openStatus: transOpenStatus(event.bakerSetOpenStatus.openStatus),
+            }
+        case "bakerSetMetadataUrl":
+            return {
+                tag: TransactionEventTag.BakerSetMetadataURL,
+                bakerId: Number(unwrap(event.bakerSetMetadataUrl.bakerId?.value)),
+                metadataURL: event.bakerSetMetadataUrl.url
+            }
+        case "bakerSetTransactionFeeCommission":
+            return {
+                tag: TransactionEventTag.BakerSetTransactionFeeCommission,
+                bakerId: Number(unwrap(event.bakerSetTransactionFeeCommission.bakerId?.value)),
+                transactionFeeCommission: transAmountFraction(event.bakerSetTransactionFeeCommission.transactionFeeCommission)
+            }
+        case "bakerSetBakingRewardCommission":
+            return {
+                tag: TransactionEventTag.BakerSetBakingRewardCommission,
+                bakerId: Number(unwrap(event.bakerSetBakingRewardCommission.bakerId?.value)),
+                bakingRewardCommission: transAmountFraction(event.bakerSetBakingRewardCommission.bakingRewardCommission)
+            }
+        case "bakerSetFinalizationRewardCommission":
+            return {
+                tag: TransactionEventTag.BakerSetFinalizationRewardCommission,
+                bakerId: Number(unwrap(event.bakerSetFinalizationRewardCommission.bakerId?.value)),
+                finalizationRewardCommission: transAmountFraction(event.bakerSetFinalizationRewardCommission.finalizationRewardCommission)
+            }
+        case undefined:
+            throw Error("Failed translating BakerEvent, encountered undefined")
+    }
+}
+
+function transDelegationEvent(bakerEvent: v2.DelegationEvent): v1.TransactionEvent {
+    throw NotImplemented
+}
+
+function transRejectReason(rejectReason: v2.RejectReason | undefined): v1.RejectReason {
+    throw NotImplemented
+}
+
+function transTransactionEvent(accountTransactionEffects: v2.AccountTransactionEffects): v1.TransactionEvent[] | v1.RejectReason {
+    const effect = accountTransactionEffects.effect;
+    switch (effect.oneofKind) {
+        case "none":
+            return transRejectReason(effect.none.rejectReason)
+        case "moduleDeployed":
+            return [{
+                tag: TransactionEventTag.ModuleDeployed,
+                contents: transModuleRef(effect.moduleDeployed)
+            }]
+        case "contractInitialized":
+            return [{
+                tag: TransactionEventTag.ContractInitialized,
+                address: unwrap(effect.contractInitialized.address),
+                amount: unwrap(effect.contractInitialized.amount?.value),
+                contractName: unwrap(effect.contractInitialized.initName?.value),
+                events: unwrap(effect.contractInitialized.events.map(unwrapValToHex)),
+                contractVersion: unwrap(effect.contractInitialized.contractVersion),
+                originRef: transModuleRef(effect.contractInitialized.originRef)
+            }]
+        case "contractUpdateIssued":
+            return effect.contractUpdateIssued.effects.map(transContractTraceElement);
+        case "accountTransfer": {
+            let ret: v1.TransactionEvent[] = [];
+            if (effect.accountTransfer.memo) {
+                const memo: v1.MemoEvent = {
+                    tag: TransactionEventTag.TransferMemo,
+                    memo: unwrapValToHex(effect.accountTransfer.memo),
+                }
+                ret.push(memo)
+            }
+            const transfer: v1.TransferredEvent = {
+                tag: TransactionEventTag.Transferred,
+                amount: unwrap(effect.accountTransfer.amount?.value),
+                to: transAccountAddress(effect.accountTransfer.receiver),
+            }
+            ret.push(transfer)
+            return ret
+        }
+        case "bakerAdded":
+        case "bakerRemoved":
+        case "bakerRestakeEarningsUpdated":
+        case "bakerKeysUpdated":
+            return [transBakerEvent({event: effect})]
+        case "bakerStakeUpdated": {
+            const increased = effect.bakerStakeUpdated.update?.increased;
+            return [{
+                tag: increased ? TransactionEventTag.BakerStakeIncreased : TransactionEventTag.BakerStakeDecreased,
+                bakerId: Number(unwrap(effect.bakerStakeUpdated.update?.bakerId)),
+                newStake: unwrap(effect.bakerStakeUpdated.update?.newStake?.value)
+            }]
+        }
+        case "encryptedAmountTransferred":
+            /*
+            const removed = {
+                tag: TransactionEventTag.EncryptedAmountsRemoved,
+                account: unwrapToBase58(effect.encryptedAmountTransferred.removed?.account),
+                amount: unwrapValToHex(effect.encryptedAmountTransferred.removed?.inputAmount),
+                newAmount: unwrapValToHex(effect.encryptedAmountTransferred.removed?.newAmount),
+                upToIndex: unwrap(effect.encryptedAmountTransferred.removed?.upToIndex)
+            }
+            */
+           throw NotImplemented;
+        case "transferredToEncrypted":
+            throw NotImplemented
+        case "transferredToPublic":
+            throw NotImplemented
+        case "transferredWithSchedule": {
+            let ret: v1.TransactionEvent[] = [];
+            if (effect.transferredWithSchedule.memo) {
+                const memo: v1.MemoEvent = {
+                    tag: TransactionEventTag.TransferMemo,
+                    memo: unwrapValToHex(effect.transferredWithSchedule.memo),
+                }
+                ret.push(memo)
+            }
+            const transfer: v1.TransferredWithScheduleEvent = {
+                tag: TransactionEventTag.TransferredWithSchedule,
+                to: unwrapToBase58(effect.transferredWithSchedule.receiver),
+                amount: effect.transferredWithSchedule.amount.map(transNewRelease)
+            }
+            ret.push(transfer)
+            return ret
+        }
+        case "credentialsUpdated":
+            return [{
+                tag: TransactionEventTag.CredentialsUpdated,
+                newCredIds: effect.credentialsUpdated.newCredIds.map(unwrapValToHex),
+                removedCredIDs: effect.credentialsUpdated.removedCredIds.map(unwrapValToHex),
+                newThreshold: unwrap(effect.credentialsUpdated.newThreshold?.value),
+            }]
+        case "dataRegistered":
+            return [{
+                tag: TransactionEventTag.DataRegistered,
+                data: unwrapValToHex(effect.dataRegistered)
+            }]
+        case "bakerConfigured":
+            return effect.bakerConfigured.events.map(transBakerEvent)
+        case "delegationConfigured":
+            return effect.delegationConfigured.events.map(transDelegationEvent)
+        case undefined:
+            throw Error("Failed translating AccountTransactionEffects, encountered undefined value")
+    }
+}
+
+function BlockItemSummary(summary: v2.BlockItemSummary): v1.TransactionSummary {
+    if (summary.details.oneofKind === "accountTransaction") {
+        throw NotImplemented
+    } else if (summary.details.oneofKind === "accountCreation") {
+        throw NotImplemented
+    } else if (summary.details.oneofKind === "update") {
+        throw NotImplemented
+    }
+    else {
+        throw Error("Invalid BlockItemSummary encountered!");
+    }
+}
+
+function transBlockItemSummaryInBlock(summary: v2.BlockItemSummaryInBlock): [string, v1.TransactionSummary] {
+    throw NotImplemented;
+}
+
+function transBlockItemSummaryInBlocks(summaries: v2.BlockItemSummaryInBlock[]): Record<string, v1.TransactionSummary> {
     const ret: Record<string, v1.TransactionSummary> = {};
-    for (const bisib in bisibs) {
-        const [blockHash, outcome] = transBlockItemSummaryInBlock(bisib);
+    for (const summary of summaries) {
+        const [blockHash, outcome] = transBlockItemSummaryInBlock(summary);
         ret[blockHash] = outcome
     }
     return ret
 }
-*/
 
 // Todo: committed and finalized
-export function blockItemStatus(bis: v2.BlockItemStatus): v1.TransactionStatus {
-    if (bis.status.oneofKind === 'received') {
+export function blockItemStatus(itemStatus: v2.BlockItemStatus): v1.TransactionStatus {
+    if (itemStatus.status.oneofKind === 'received') {
         return {
             status: v1.TransactionStatusEnum.Received,
         };
-    } else if (bis.status.oneofKind === 'committed') {
+    } else if (itemStatus.status.oneofKind === 'committed') {
         return {
             status: v1.TransactionStatusEnum.Committed,
+            outcomes: transBlockItemSummaryInBlocks(itemStatus.status.committed.outcomes)
         };
-    } else if (bis.status.oneofKind === 'finalized') {
+    } else if (itemStatus.status.oneofKind === 'finalized') {
         return {
             status: v1.TransactionStatusEnum.Finalized,
+            outcomes: transBlockItemSummaryInBlocks([unwrap(itemStatus.status.finalized.outcome)])
         };
     } else {
         throw Error('BlockItemStatus was undefined!');

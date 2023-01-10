@@ -1,12 +1,16 @@
 import type {
     OpenStatusText,
     ContractAddress,
-    AddressAccount,
     ReleaseSchedule,
     DelegationTargetType,
     DelegationTargetPassiveDelegation,
+    ContractVersion,
+    Address,
+    Base58String,
+    HexString,
 } from '../types';
 import type { UpdateInstructionPayload } from './chainUpdate';
+import { ModuleReference } from './moduleReference';
 
 export enum TransactionEventTag {
     ModuleDeployed = 'ModuleDeployed',
@@ -44,6 +48,7 @@ export enum TransactionEventTag {
     Interrupted = 'Interrupted',
     Resumed = 'Resumed',
     Updated = 'Updated',
+    Upgraded = 'Upgraded',
 }
 
 export type TransactionEvent =
@@ -51,6 +56,7 @@ export type TransactionEvent =
     | UpdatedEvent
     | ResumedEvent
     | InterruptedEvent
+    | UpgradedEvent
     | MemoEvent
     | TransferredWithScheduleEvent
     | AccountCreatedEvent
@@ -85,7 +91,7 @@ export type TransactionEvent =
 export interface InterruptedEvent {
     tag: TransactionEventTag.Interrupted;
     address: ContractAddress;
-    events: string[];
+    events: HexString[];
 }
 
 export interface ResumedEvent {
@@ -97,16 +103,24 @@ export interface ResumedEvent {
 export interface UpdatedEvent {
     tag: TransactionEventTag.Updated;
     address: ContractAddress;
-    instigator: AddressAccount;
+    instigator: Address;
     amount: bigint;
-    message: string;
+    contractVersion: ContractVersion;
+    message: HexString;
     receiveName: string;
-    events: string[];
+    events: HexString[];
+}
+
+export interface UpgradedEvent {
+    tag: TransactionEventTag.Upgraded;
+    address: ContractAddress;
+    from: ModuleReference;
+    to: ModuleReference;
 }
 
 export interface DataRegisteredEvent {
     tag: TransactionEventTag.DataRegistered;
-    data: string;
+    data: HexString;
 }
 
 export interface ContractInitializedEvent {
@@ -114,12 +128,14 @@ export interface ContractInitializedEvent {
     address: ContractAddress;
     amount: bigint;
     contractName: string;
-    events: string[];
+    events: HexString[];
+    contractVersion?: ContractVersion;
+    originRef?: ModuleReference;
 }
 
 export interface ModuleDeployedEvent {
     tag: TransactionEventTag.ModuleDeployed;
-    contents: string;
+    contents: ModuleReference;
 }
 
 // Account and transfer Events
@@ -127,20 +143,20 @@ export interface ModuleDeployedEvent {
 export interface TransferredEvent {
     tag: TransactionEventTag.Transferred;
     amount: bigint;
-    to: AddressAccount;
-    from: AddressAccount;
+    to: Address;
+    from?: Address;
 }
 
 export interface TransferredWithScheduleEvent {
     tag: TransactionEventTag.TransferredWithSchedule;
-    to: AddressAccount;
-    from: AddressAccount;
+    to: Base58String;
+    from?: Base58String;
     amount: ReleaseSchedule[];
 }
 
 export interface MemoEvent {
     tag: TransactionEventTag.TransferMemo;
-    memo: string;
+    memo: HexString;
 }
 
 export interface AccountCreatedEvent {
@@ -178,20 +194,20 @@ export interface NewEncryptedAmountEvent {
 
 export interface CredentialDeployedEvent {
     tag: TransactionEventTag.CredentialDeployed;
-    regid: string;
-    account: string;
+    regid: HexString;
+    account: Base58String;
 }
 
 export interface CredentialKeysUpdatedEvent {
     tag: TransactionEventTag.CredentialKeysUpdated;
-    credId: string;
+    credId: HexString;
 }
 
 export interface CredentialsUpdatedEvent {
     tag: TransactionEventTag.CredentialsUpdated;
-    account: string;
-    newCredIds: string[];
-    removedCredIds: string[];
+    account?: Base58String;
+    newCredIds: HexString[];
+    removedCredIDs: HexString[];
     newThreshold: number;
 }
 
@@ -202,13 +218,13 @@ export interface DelegatorEvent {
         | TransactionEventTag.DelegationAdded
         | TransactionEventTag.DelegationRemoved;
     delegatorId: number;
-    account: string;
+    account: Base58String;
 }
 
 export interface DelegationSetDelegationTargetEvent {
     tag: TransactionEventTag.DelegationSetDelegationTarget;
     delegatorId: number;
-    account: string;
+    account: Base58String;
     delegationTarget:
         | {
               delegateType: DelegationTargetType.Baker;
@@ -220,7 +236,7 @@ export interface DelegationSetDelegationTargetEvent {
 export interface DelegationSetRestakeEarningsEvent {
     tag: TransactionEventTag.DelegationSetRestakeEarnings;
     delegatorId: number;
-    account: string;
+    account: Base58String;
     restakeEarnings: boolean;
 }
 
@@ -229,7 +245,7 @@ export interface DelegationStakeChangedEvent {
         | TransactionEventTag.DelegationStakeDecreased
         | TransactionEventTag.DelegationStakeIncreased;
     delegatorId: number;
-    account: string;
+    account: Base58String;
     newStake: bigint;
 }
 
@@ -249,7 +265,7 @@ export interface BakerAddedEvent {
 export interface BakerRemovedEvent {
     tag: TransactionEventTag.BakerRemoved;
     bakerId: number;
-    account: string;
+    account?: Base58String;
 }
 
 export interface BakerStakeChangedEvent {
@@ -257,58 +273,58 @@ export interface BakerStakeChangedEvent {
         | TransactionEventTag.BakerStakeIncreased
         | TransactionEventTag.BakerStakeDecreased;
     bakerId: number;
-    account: string;
+    account?: Base58String;
     newStake: bigint;
 }
 
 export interface BakerSetRestakeEarningsEvent {
     tag: TransactionEventTag.BakerSetRestakeEarnings;
     bakerId: number;
-    account: string;
+    account?: Base58String;
     restakeEarnings: boolean;
 }
 
 export interface BakerKeysUpdatedEvent {
     tag: TransactionEventTag.BakerKeysUpdated;
     bakerId: number;
-    account: string;
-    signKey: string;
-    electionKey: string;
-    aggregationKey: string;
+    account: Base58String;
+    signKey: HexString;
+    electionKey: HexString;
+    aggregationKey: HexString;
 }
 
 export interface BakerSetOpenStatusEvent {
     tag: TransactionEventTag.BakerSetOpenStatus;
     bakerId: number;
-    account: string;
+    account?: Base58String;
     openStatus: OpenStatusText;
 }
 
 export interface BakerSetMetadataURLEvent {
     tag: TransactionEventTag.BakerSetMetadataURL;
     bakerId: number;
-    account: string;
+    account?: Base58String;
     metadataURL: string;
 }
 
 export interface BakerSetFinalizationRewardCommissionEvent {
     tag: TransactionEventTag.BakerSetFinalizationRewardCommission;
     bakerId: number;
-    account: string;
+    account?: Base58String;
     finalizationRewardCommission: number;
 }
 
 export interface BakerSetBakingRewardCommissionEvent {
     tag: TransactionEventTag.BakerSetBakingRewardCommission;
     bakerId: number;
-    account: string;
+    account?: Base58String;
     bakingRewardCommission: number;
 }
 
 export interface BakerSetTransactionFeeCommissionEvent {
     tag: TransactionEventTag.BakerSetTransactionFeeCommission;
     bakerId: number;
-    account: string;
+    account?: Base58String;
     transactionFeeCommission: number;
 }
 

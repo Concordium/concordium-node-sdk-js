@@ -47,9 +47,8 @@ async function loadContract(rpc: JsonRpcClient, input: string) {
     return refresh(rpc, index);
 }
 
-export function useContractSelector(rpc: JsonRpcClient | undefined) {
+export function useContractSelector(rpc: JsonRpcClient | undefined, input: string) {
     const [selected, setSelected] = useState<Info>();
-    const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [validationError, setValidationError] = useState<string>();
     useEffect(() => {
@@ -66,5 +65,5 @@ export function useContractSelector(rpc: JsonRpcClient | undefined) {
                 .finally(() => setIsLoading(false));
         }
     }, [rpc, input]);
-    return { selected, input, setInput, isLoading, validationError };
+    return { selected, isLoading, validationError };
 }

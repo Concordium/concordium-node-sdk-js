@@ -150,8 +150,7 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
                                     (v) =>
                                         v && (
                                             <Form.Control.Feedback>
-                                                Using schema from section <code>{v.sectionName}</code> of the contract's
-                                                module.
+                                                Using schema from the contract's module (section <code>{v.sectionName}</code>).
                                             </Form.Control.Feedback>
                                         ),
                                     () => undefined

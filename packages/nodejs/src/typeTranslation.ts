@@ -254,8 +254,7 @@ function translateChainParametersCommon(
         euroPerEnergy: unwrap(params.euroPerEnergy?.value),
         microGTUPerEuro: unwrap(params.microCcdPerEuro?.value),
         accountCreationLimit: unwrap(params.accountCreationLimit?.value),
-        foundationAccountIndex: 0n,
-        // foundationAccount: v1.AccountAddress.fromBytes(accAdrRaw).address // TODO migration guide from index to this? (We can't fix it)
+        foundationAccount: v1.AccountAddress.fromBytes(Buffer.from(unwrap(params.foundationAccount?.value))).address
     };
 }
 
@@ -294,7 +293,7 @@ function translateRewardParametersCommon(
 }
 
 function translateMintRate(mintRate: v2.MintRate | undefined): number {
-    return unwrap(mintRate?.mantissa) * 10 ** unwrap(mintRate?.exponent);
+    return unwrap(mintRate?.mantissa) * 10 ** (-1*unwrap(mintRate?.exponent));
 }
 
 function transPoolPendingChange(

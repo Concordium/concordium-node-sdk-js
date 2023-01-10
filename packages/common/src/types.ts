@@ -507,7 +507,8 @@ export interface ChainParametersCommon {
     euroPerEnergy: ExchangeRate;
     microGTUPerEuro: ExchangeRate;
     accountCreationLimit: number;
-    foundationAccountIndex: bigint;
+    foundationAccountIndex?: bigint;
+    foundationAccount?: string;
 }
 
 /**

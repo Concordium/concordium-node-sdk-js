@@ -1,4 +1,5 @@
 import type {
+    OpenStatusText,
     ContractAddress,
     AddressAccount,
     ReleaseSchedule,
@@ -273,7 +274,7 @@ export interface BakerSetOpenStatusEvent {
     tag: TransactionEventTag.BakerSetOpenStatus;
     bakerId: number;
     account: string;
-    openStatus: string;
+    openStatus: OpenStatusText;
 }
 
 export interface BakerSetMetadataURLEvent {
@@ -287,21 +288,21 @@ export interface BakerSetFinalizationRewardCommissionEvent {
     tag: TransactionEventTag.BakerSetFinalizationRewardCommission;
     bakerId: number;
     account: string;
-    finalizationRewardCommission: string;
+    finalizationRewardCommission: number;
 }
 
 export interface BakerSetBakingRewardCommissionEvent {
     tag: TransactionEventTag.BakerSetBakingRewardCommission;
     bakerId: number;
     account: string;
-    bakingRewardCommission: string;
+    bakingRewardCommission: number;
 }
 
 export interface BakerSetTransactionFeeCommissionEvent {
     tag: TransactionEventTag.BakerSetTransactionFeeCommission;
     bakerId: number;
     account: string;
-    transactionFeeCommission: string;
+    transactionFeeCommission: number;
 }
 
 export interface UpdateEnqueuedEvent {

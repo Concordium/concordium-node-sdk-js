@@ -1,8 +1,8 @@
-import { Info } from 'concordium-dapp-components-reactjs';
+import { Info } from '@concordium/react-components';
 import isBase64 from 'is-base64';
 import React, { ChangeEvent, Dispatch, useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Button, Col, Dropdown, Form, Row } from 'react-bootstrap';
-import { Network, WalletConnection } from 'concordium-dapp-wallet-connectors';
+import { Network, WalletConnection } from '@concordium/wallet-connectors';
 import { AccountAddress, AccountTransactionType, CcdAmount } from '@concordium/common-sdk';
 import { err, ok, Result, ResultAsync } from 'neverthrow';
 import { useContractSchemaRpc } from './useContractSchemaRpc';
@@ -150,7 +150,8 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
                                     (v) =>
                                         v && (
                                             <Form.Control.Feedback>
-                                                Using schema from the contract's module (section <code>{v.sectionName}</code>).
+                                                Using schema from section <code>{v.sectionName}</code> of the contract's
+                                                module.
                                             </Form.Control.Feedback>
                                         ),
                                     () => undefined

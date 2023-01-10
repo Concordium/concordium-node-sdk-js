@@ -1,6 +1,6 @@
-import { Network, WalletConnection } from 'concordium-dapp-wallet-connectors';
+import { Network, WalletConnection } from '@concordium/wallet-connectors';
 import { Col, Form, Row, Spinner } from 'react-bootstrap';
-import { useContractSelector } from 'concordium-dapp-components-reactjs';
+import { useContractSelector } from '@concordium/react-components';
 import { ContractDetails } from './ContractDetails';
 import React, { useState } from 'react';
 import { ContractInvoker } from './ContractInvoker';

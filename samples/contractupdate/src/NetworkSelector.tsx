@@ -1,5 +1,5 @@
 import { Dropdown } from 'react-bootstrap';
-import { Network } from 'concordium-dapp-wallet-connectors';
+import { Network } from '@concordium/wallet-connectors';
 import { useCallback } from 'react';
 
 interface Props {

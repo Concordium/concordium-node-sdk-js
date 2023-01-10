@@ -1,0 +1,12 @@
+{
+    "private": true,
+    "packageManager": "yarn@3.3.1",
+    "workspaces": [
+        "packages/*",
+        "samples/*"
+    ],
+    "scripts": {
+        "fmt": "yarn workspaces foreach -v run prettier --write .",
+        "build": "yarn workspaces foreach -tv --no-private run build"
+    }
+}

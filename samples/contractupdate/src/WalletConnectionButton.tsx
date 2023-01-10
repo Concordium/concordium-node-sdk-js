@@ -1,6 +1,6 @@
 import React from 'react';
 import { Alert, Button, Spinner } from 'react-bootstrap';
-import { WalletConnectionProps } from 'concordium-dapp-components-reactjs';
+import { WalletConnectionProps } from '@concordium/react-components';
 
 export function WalletConnectionButton({
     activeConnectorType,

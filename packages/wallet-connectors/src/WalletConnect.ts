@@ -323,6 +323,7 @@ export class WalletConnectConnector implements WalletConnector {
 
     async disconnect() {
         const connections = await this.getConnections();
+        //eslint-disable-next-line @typescript-eslint/no-empty-function
         return Promise.all(connections.map((c) => c.disconnect())).then(() => {});
     }
 }

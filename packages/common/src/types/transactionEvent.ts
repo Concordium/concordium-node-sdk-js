@@ -3,6 +3,8 @@ import type {
     ContractAddress,
     AddressAccount,
     ReleaseSchedule,
+    DelegationTargetType,
+    DelegationTargetPassiveDelegation,
 } from '../types';
 import type { UpdateInstructionPayload } from './chainUpdate';
 
@@ -207,7 +209,12 @@ export interface DelegationSetDelegationTargetEvent {
     tag: TransactionEventTag.DelegationSetDelegationTarget;
     delegatorId: number;
     account: string;
-    delegationTarget: number;
+    delegationTarget:
+        | {
+              delegateType: DelegationTargetType.Baker;
+              bakerId: number;
+          }
+        | DelegationTargetPassiveDelegation;
 }
 
 export interface DelegationSetRestakeEarningsEvent {

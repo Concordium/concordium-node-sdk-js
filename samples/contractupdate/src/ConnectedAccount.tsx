@@ -1,4 +1,4 @@
-import { Network, WalletConnection, withJsonRpcClient } from 'concordium-dapp-wallet-connectors';
+import { Network, WalletConnection, withJsonRpcClient } from '@concordium/wallet-connectors';
 import { useEffect, useState } from 'react';
 import { AccountInfo } from '@concordium/web-sdk';
 import { Alert } from 'react-bootstrap';

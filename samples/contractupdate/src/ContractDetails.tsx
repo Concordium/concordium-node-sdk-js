@@ -1,4 +1,4 @@
-import { Info } from 'concordium-dapp-components-reactjs';
+import { Info } from '@concordium/react-components';
 import { Alert, Col, Row } from 'react-bootstrap';
 
 interface Props {

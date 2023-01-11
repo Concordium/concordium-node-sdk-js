@@ -1,8 +1,8 @@
-import { Network, WalletConnection } from 'concordium-dapp-wallet-connectors';
+import { Network, WalletConnection } from '@concordium/wallet-connectors';
 import { Col, Form, Row, Spinner } from 'react-bootstrap';
-import { useContractSelector } from 'concordium-dapp-components-reactjs';
+import { useContractSelector } from '@concordium/react-components';
 import { ContractDetails } from './ContractDetails';
-import React from 'react';
+import React, { useState } from 'react';
 import { ContractInvoker } from './ContractInvoker';
 
 interface Props {
@@ -12,7 +12,8 @@ interface Props {
 }
 
 export function App({ network, connection, connectedAccount }: Props) {
-    const contract = useContractSelector(connection?.getJsonRpcClient());
+    const [input, setInput] = useState('');
+    const contract = useContractSelector(connection?.getJsonRpcClient(), input);
     return (
         <>
             {connection && (
@@ -25,8 +26,8 @@ export function App({ network, connection, connectedAccount }: Props) {
                             <Form.Control
                                 type="text"
                                 placeholder="Address (index)"
-                                value={contract.input}
-                                onChange={(e) => contract.setInput(e.currentTarget.value)}
+                                value={input}
+                                onChange={(e) => setInput(e.currentTarget.value)}
                                 isInvalid={Boolean(contract.validationError)}
                                 autoFocus
                             />

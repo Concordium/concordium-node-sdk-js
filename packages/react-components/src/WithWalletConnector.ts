@@ -8,7 +8,7 @@ import {
     WalletConnection,
     WalletConnectionDelegate,
     WalletConnector,
-} from 'concordium-dapp-wallet-connectors';
+} from '@concordium/wallet-connectors';
 
 export type ConnectorType = 'BrowserWallet' | 'WalletConnect';
 
@@ -196,7 +196,7 @@ export class WithWalletConnector extends Component<Props, State> implements Wall
         });
     }
 
-    componentDidUpdate(prevProps: Props, prevState: State) {
+    componentDidUpdate(prevProps: Props) {
         if (prevProps.network !== this.props.network) {
             // Disconnect everything when user changes network.
             // In the future there may be a mechanism for negotiating with the wallet.

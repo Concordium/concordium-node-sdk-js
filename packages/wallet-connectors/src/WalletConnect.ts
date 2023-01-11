@@ -323,6 +323,6 @@ export class WalletConnectConnector implements WalletConnector {
 
     async disconnect() {
         const connections = await this.getConnections();
-        return Promise.all(connections.map((c) => c.disconnect())).then(() => {});
+        await Promise.all(connections.map((c) => c.disconnect()));
     }
 }

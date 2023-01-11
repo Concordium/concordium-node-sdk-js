@@ -1,7 +1,7 @@
 import { err, ok, Result, ResultAsync } from 'neverthrow';
 import { Buffer } from 'buffer/';
-import { WalletConnection, withJsonRpcClient } from 'concordium-dapp-wallet-connectors';
-import { Info } from 'concordium-dapp-components-reactjs';
+import { WalletConnection, withJsonRpcClient } from '@concordium/wallet-connectors';
+import { Info } from '@concordium/react-components';
 import { useEffect, useState } from 'react';
 import { ModuleReference } from '@concordium/common-sdk';
 

@@ -1,16 +1,18 @@
 {
-    "name": "concordium-dapp-components-reactjs",
+    "name": "@concordium/react-components",
     "version": "0.1.0",
     "description": "Utility library of React components for building dApps that interact with the Concordium blockchain.",
     "main": "./dist/index.js",
     "author": "Concordium Software",
     "license": "Apache-2.0",
-    "files": ["./dist"],
+    "files": [
+        "./dist"
+    ],
     "scripts": {
         "build": "tsc"
     },
     "dependencies": {
-        "concordium-dapp-wallet-connectors": "../concordium-dapp-wallet-connectors"
+        "@concordium/wallet-connectors": "0.1.0"
     },
     "devDependencies": {
         "@tsconfig/recommended": "^1.0.1",

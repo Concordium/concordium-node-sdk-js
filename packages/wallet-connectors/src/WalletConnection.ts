@@ -67,7 +67,3 @@ export interface WalletConnector {
 export async function withJsonRpcClient<T>(wc: WalletConnection, f: (c: JsonRpcClient) => Promise<T>) {
     return f(wc.getJsonRpcClient());
 }
-
-export async function connectedAccountOf(connection: WalletConnection | undefined) {
-    return connection ? connection.getConnectedAccount() : undefined;
-}

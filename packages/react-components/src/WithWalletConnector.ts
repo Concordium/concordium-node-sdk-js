@@ -2,7 +2,6 @@ import { Component } from 'react';
 import { SignClientTypes } from '@walletconnect/types';
 import {
     BrowserWalletConnector,
-    connectedAccountOf,
     Network,
     WalletConnectConnector,
     WalletConnection,
@@ -91,7 +90,7 @@ export class WithWalletConnector extends Component<Props, State> implements Wall
         // Not setting the active connector to that of the connection
         // as it isn't obvious that one would always want that.
         // The app can just do it explicitly.
-        connectedAccountOf(connection).then((connectedAccount) => {
+        connection?.getConnectedAccount().then((connectedAccount) => {
             console.log('WithWalletConnector: updating active connection and connected account state', {
                 connection,
                 connectedAccount,

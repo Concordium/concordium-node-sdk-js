@@ -1,7 +1,10 @@
 {
     "private": true,
     "packageManager": "yarn@3.3.1",
-    "workspaces": ["packages/*", "samples/*"],
+    "workspaces": [
+        "packages/*",
+        "samples/*"
+    ],
     "scripts": {
         "fmt": "yarn workspaces foreach -v run prettier --write .",
         "build": "yarn workspaces foreach -tv --no-private run build",
@@ -10,9 +13,12 @@
         "postpack": "pinst --enable"
     },
     "lint-staged": {
-        "*.{js,jsx,ts,tsx}": ["eslint --max-warnings=0", "prettier --check"],
-        "{*.json,.prettierrc}": ["prettier --parser=json --check"],
-        "*.{html,md,yml}": ["prettier --check"]
+        "*.{js,jsx,ts,tsx}": [
+            "eslint --max-warnings=0"
+        ],
+        "*.{js,jsx,ts,tsx,json,html,md,yml,yaml},.prettierrc": [
+            "prettier --check"
+        ]
     },
     "devDependencies": {
         "@typescript-eslint/eslint-plugin": "latest",

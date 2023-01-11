@@ -5,7 +5,9 @@
     "main": "./dist/index.js",
     "author": "Concordium Software",
     "license": "Apache-2.0",
-    "files": ["./dist"],
+    "files": [
+        "./dist"
+    ],
     "scripts": {
         "build": "tsc"
     },

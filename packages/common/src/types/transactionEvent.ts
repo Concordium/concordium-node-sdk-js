@@ -164,7 +164,7 @@ export interface EncryptedAmountsRemovedEvent {
     account: string;
     inputAmount: string;
     newAmount: string;
-    upToindex: number;
+    upToIndex: number;
 }
 
 export interface NewEncryptedAmountEvent {

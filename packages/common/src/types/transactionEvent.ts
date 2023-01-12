@@ -2,12 +2,11 @@ import type {
     OpenStatusText,
     ContractAddress,
     ReleaseSchedule,
-    DelegationTargetType,
-    DelegationTargetPassiveDelegation,
     ContractVersion,
     Address,
     Base58String,
     HexString,
+    EventDelegationTarget,
 } from '../types';
 import type { UpdateInstructionPayload } from './chainUpdate';
 import { ModuleReference } from './moduleReference';
@@ -161,35 +160,35 @@ export interface MemoEvent {
 
 export interface AccountCreatedEvent {
     tag: TransactionEventTag.AccountCreated;
-    account: string;
+    account: Base58String;
 }
 
 export interface AmountAddedByDecryptionEvent {
     tag: TransactionEventTag.AmountAddedByDecryption;
-    account: string;
+    account?: Base58String;
     amount: bigint;
 }
 
 export interface EncryptedSelfAmountAddedEvent {
     tag: TransactionEventTag.EncryptedSelfAmountAdded;
-    account: string;
+    account: Base58String;
     amount: bigint;
     newAmount: string;
 }
 
 export interface EncryptedAmountsRemovedEvent {
     tag: TransactionEventTag.EncryptedAmountsRemoved;
-    account: string;
-    inputAmount: string;
-    newAmount: string;
-    upToIndex: number;
+    account?: Base58String;
+    inputAmount: HexString;
+    newAmount: HexString;
+    upToindex: number;
 }
 
 export interface NewEncryptedAmountEvent {
     tag: TransactionEventTag.NewEncryptedAmount;
-    account: string;
+    account: Base58String;
     newIndex: number;
-    encryptedAmount: string;
+    encryptedAmount: HexString;
 }
 
 export interface CredentialDeployedEvent {
@@ -218,25 +217,20 @@ export interface DelegatorEvent {
         | TransactionEventTag.DelegationAdded
         | TransactionEventTag.DelegationRemoved;
     delegatorId: number;
-    account: Base58String;
+    account?: Base58String;
 }
 
 export interface DelegationSetDelegationTargetEvent {
     tag: TransactionEventTag.DelegationSetDelegationTarget;
     delegatorId: number;
-    account: Base58String;
-    delegationTarget:
-        | {
-              delegateType: DelegationTargetType.Baker;
-              bakerId: number;
-          }
-        | DelegationTargetPassiveDelegation;
+    account?: Base58String;
+    delegationTarget: EventDelegationTarget;
 }
 
 export interface DelegationSetRestakeEarningsEvent {
     tag: TransactionEventTag.DelegationSetRestakeEarnings;
     delegatorId: number;
-    account: Base58String;
+    account?: Base58String;
     restakeEarnings: boolean;
 }
 
@@ -245,7 +239,7 @@ export interface DelegationStakeChangedEvent {
         | TransactionEventTag.DelegationStakeDecreased
         | TransactionEventTag.DelegationStakeIncreased;
     delegatorId: number;
-    account: Base58String;
+    account?: Base58String;
     newStake: bigint;
 }
 

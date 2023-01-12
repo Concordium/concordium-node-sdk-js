@@ -1,4 +1,9 @@
-import { AddressAccount } from '..';
+import {
+    Address,
+    Base58String,
+    DigitString,
+    HexString,
+} from '..';
 import type { ContractAddress } from '../types';
 
 /*
@@ -9,6 +14,7 @@ import type { ContractAddress } from '../types';
  * found here: https://github.com/Concordium/concordium-base/blob/main/haskell-src/Concordium/Types/Execution.hs
  */
 export enum RejectReasonTag {
+    // Module not "well formed", meaning it is not a valid smart contract
     ModuleNotWF = 'ModuleNotWF',
     ModuleHashAlreadyExists = 'ModuleHashAlreadyExists',
     InvalidAccountReference = 'InvalidAccountReference',
@@ -71,7 +77,7 @@ export interface RejectedReceive {
     contractAddress: ContractAddress;
     receiveName: string;
     rejectReason: number;
-    parameter: string;
+    parameter: HexString;
 }
 
 export interface RejectedInit {
@@ -137,7 +143,7 @@ export type StringRejectReasonTag =
 
 export interface StringRejectReason {
     tag: StringRejectReasonTag;
-    contents: string;
+    contents: HexString | Base58String;
 }
 export type NumberRejectReasonTag =
     | RejectReasonTag.AlreadyABaker
@@ -154,17 +160,17 @@ export interface SimpleRejectReason {
 
 export interface InvalidReceiveMethod {
     tag: RejectReasonTag.InvalidReceiveMethod;
-    contents: [string, string]; // [moduleRef, receiveName]
+    contents: [HexString, string]; // [moduleRef, receiveName]
 }
 
 export interface InvalidInitMethod {
     tag: RejectReasonTag.InvalidInitMethod;
-    contents: [string, string]; // [moduleRef, initName]
+    contents: [HexString, string]; // [moduleRef, initName]
 }
 
 export interface AmountTooLarge {
     tag: RejectReasonTag.AmountTooLarge;
-    contents: [AddressAccount, string]; // [address, amount] // TODO change to Address
+    contents: [Address, DigitString]; // [address, amount]
 }
 
 export interface InvalidContractAddress {

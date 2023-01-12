@@ -14,6 +14,7 @@ import {
 
 export type HexString = string;
 export type Base58String = string;
+export type DigitString = string;
 
 /**
  * Returns a union of all keys of type T with values matching type V.
@@ -866,6 +867,12 @@ export interface DelegationTargetBaker {
     delegateType: DelegationTargetType.Baker;
     bakerId: BakerId;
 }
+export type EventDelegationTarget =
+    | {
+          delegateType: DelegationTargetType.Baker;
+          bakerId: number;
+      }
+    | DelegationTargetPassiveDelegation;
 
 export type DelegationTarget =
     | DelegationTargetPassiveDelegation
@@ -1258,8 +1265,8 @@ export type Invoker =
     | {
           type: 'AddressContract';
           address: {
-              index: string;
-              subindex: string;
+              index: DigitString;
+              subindex: DigitString;
           };
       }
     | {

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Col, Container, Row } from 'react-bootstrap';
 import { Network, withJsonRpcClient } from '@concordium/wallet-connectors';
 import { SignClientTypes } from '@walletconnect/types';
-import { useWalletConnectorSelector, WalletConnectionProps, WithWalletConnector } from '@concordium/react-components';
+import { WalletConnectionProps, WithWalletConnector } from '@concordium/react-components';
 import { WalletConnectionButton } from './WalletConnectionButton';
 import { WalletConnectorButton } from './WalletConnectorButton';
 import { ConnectedAccount } from './ConnectedAccount';
@@ -51,9 +51,6 @@ export default function Root() {
 }
 
 function Main(props: WalletConnectionProps) {
-    const browserWalletSelector = useWalletConnectorSelector('BrowserWallet', props);
-    const walletConnectSelector = useWalletConnectorSelector('WalletConnect', props);
-
     const [rpcGenesisHash, setRpcGenesisHash] = useState<string>();
     const [rpcError, setRpcError] = useState('');
 
@@ -80,10 +77,10 @@ function Main(props: WalletConnectionProps) {
         <>
             <Row className="mt-3 mb-3">
                 <Col>
-                    <WalletConnectorButton connectorName="Browser Wallet" {...browserWalletSelector} />
+                    <WalletConnectorButton connectorType="BrowserWallet" connectorName="Browser Wallet" {...props} />
                 </Col>
                 <Col>
-                    <WalletConnectorButton connectorName="Wallet Connect" {...walletConnectSelector} />
+                    <WalletConnectorButton connectorType="WalletConnect" connectorName="Wallet Connect" {...props} />
                 </Col>
             </Row>
             <Row className="mt-3 mb-3">

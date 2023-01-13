@@ -10,11 +10,26 @@ import { WalletConnectionDelegate, WalletConnection, WalletConnector } from './W
 
 const BROWSER_WALLET_DETECT_TIMEOUT = 2000;
 
+/**
+ * Implementation of both {@link WalletConnector} and {@link WalletConnection} for the Concordium Browser Wallet.
+ * Implementing both interfaces in the same class is a good fit for this protocol
+ * as all interaction with the wallet's API happens through a single stateful client.
+ */
 export class BrowserWalletConnector implements WalletConnector, WalletConnection {
     readonly client: WalletApi;
 
     readonly delegate: WalletConnectionDelegate;
 
+    /**
+     * Construct a new instance.
+     *
+     * Use {@link create} to have the API client initialized automatically.
+     *
+     * The constructor sets up event handling and appropriate forwarding to the provided delegate.
+     *
+     * @param client The underlying API client.
+     * @param delegate The object to receive events emitted by the client.
+     */
     constructor(client: WalletApi, delegate: WalletConnectionDelegate) {
         this.client = client;
         this.delegate = delegate;
@@ -66,6 +81,11 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
         return this.client.getJsonRpcClient();
     }
 
+    /**
+     * Deregister event handlers on the API client and notify the delegate.
+     * As there's no way to actually disconnect the Browser Wallet, this is all that we can reasonably do.
+     * The client object will remain in the browser's global state.
+     */
     async disconnect() {
         // The connection itself cannot actually be disconnected by the dApp as
         // only the wallet can initiate disconnecting individual accounts.

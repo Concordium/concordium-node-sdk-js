@@ -148,6 +148,15 @@ function encodePayloadParameters(
     }
 }
 
+/**
+ * Implementation of {@link WalletConnection} for WalletConnect v2.
+ *
+ * While WalletConnect doesn't set any restrictions on the amount of accounts and networks/chains
+ * that can be associated with a single connection,
+ * this implementation assumes that there is at least one and always use only the first one in the list.
+ *
+ * It also assumes that the network/chain is fixed to the one provided to {@link WalletConnector}.
+ */
 export class WalletConnectConnection implements WalletConnection {
     readonly connector: WalletConnectConnector;
 
@@ -242,6 +251,13 @@ export class WalletConnectConnection implements WalletConnection {
     }
 }
 
+/**
+ * Implementation of {@link WalletConnector} for WalletConnect v2.
+ *
+ * In relation to the interface it implements, this class imposes the restriction that all connections it initiates
+ * must live on the chain/network that the connector was created with.
+ * The connected wallet is assumed to respect this rule.
+ */
 export class WalletConnectConnector implements WalletConnector {
     readonly client: ISignClient;
 
@@ -251,6 +267,18 @@ export class WalletConnectConnector implements WalletConnector {
 
     readonly connections = new Map<string, WalletConnectConnection>();
 
+    /**
+     * Construct a new instance.
+     *
+     * Use {@link create} to have the sign client initialized from {@link SignClientTypes.Options}
+     * to not have to do it manually.
+     *
+     * The constructor sets up event handling and appropriate forwarding to the provided delegate.
+     *
+     * @param client The underlying WalletConnect client.
+     * @param network The network/chain that connected accounts must live on.
+     * @param delegate The object to receive events emitted by the client.
+     */
     constructor(client: SignClient, network: Network, delegate: WalletConnectionDelegate) {
         this.client = client;
         this.network = network;
@@ -258,6 +286,11 @@ export class WalletConnectConnector implements WalletConnector {
 
         client.on('session_event', ({ topic, params: { chainId, event }, id }) => {
             console.debug('WalletConnect event: session_event', { topic, id, chainId, event });
+            const connection = this.connections.get(topic);
+            if (!connection) {
+                console.error(`WalletConnect event 'session_event' received for unknown topic '${topic}'.`);
+                return;
+            }
         });
         client.on('session_update', ({ topic, params }) => {
             console.debug('WalletConnect event: session_update', { topic, params });
@@ -288,6 +321,13 @@ export class WalletConnectConnector implements WalletConnector {
         });
     }
 
+    /**
+     * Convenience function for creating a new instance from WalletConnection configuration instead of an already initialized client.
+     *
+     * @param signClientInitOpts WalletConnect configuration.
+     * @param network The network/chain that connected accounts must live on.
+     * @param delegate The object to receive events emitted by the client.
+     */
     static async create(
         signClientInitOpts: SignClientTypes.Options,
         network: Network,
@@ -321,8 +361,12 @@ export class WalletConnectConnector implements WalletConnector {
         return Array.from(this.connections.values());
     }
 
+    /**
+     * Disconnect all connections.
+     */
     async disconnect() {
         const connections = await this.getConnections();
         await Promise.all(connections.map((c) => c.disconnect()));
+        // TODO Disconnect the underlying client.
     }
 }

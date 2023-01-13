@@ -121,6 +121,11 @@ export default class ConcordiumNodeClient {
         return translate.accountInfo(response);
     }
 
+    /**
+     * Retrieves the status of the block chain parameters at the given blockHash.
+     * @param blockHash the block hash of the block to get the information from.
+     * @returns Info on all of the block chain parameters.
+     */
     async getBlockChainParameters(
         blockHash?: HexString
     ): Promise<v1.ChainParameters> {
@@ -131,6 +136,12 @@ export default class ConcordiumNodeClient {
         return translate.blockChainParameters(response);
     }
 
+    /**
+     * Retrieves information on the baker pool of the given bakerId.
+     * @param blockHash the block hash of the block to get the information from.
+     * @param bakerId the ID of the baker to get the status for.
+     * @returns The status of the corresponding baker pool.
+     */
     async getPoolInfo(
         bakerId: bigint,
         blockHash?: HexString
@@ -145,6 +156,11 @@ export default class ConcordiumNodeClient {
         return translate.bakerPoolInfo(response);
     }
 
+    /**
+     * Retrieves information on the passive delegators.
+     * @param blockHash the block hash of the block to get the information from.
+     * @returns The status of the passive delegators.
+     */
     async getPassiveDelegationInfo(
         blockHash?: HexString
     ): Promise<v1.PassiveDelegationStatus> {
@@ -152,5 +168,21 @@ export default class ConcordiumNodeClient {
         const response = await this.client.getPassiveDelegationInfo(input)
             .response;
         return translate.passiveDelegationInfo(response);
+    }
+
+    /**
+     * Retrieves the reward status at the given blockHash
+     * @param blockHash optional block hash to get the reward status at, otherwise retrieves from last finalized block
+     * @returns the reward status at the given block, or undefined it the block does not exist.
+     */
+    async getTokenomicsInfo(
+        blockHash?: HexString
+    ): Promise<v1.RewardStatus> {
+        const blockHashInput = getBlockHashInput(blockHash);
+
+        const response = await this.client.getTokenomicsInfo(
+            blockHashInput
+        ).response;
+        return translate.tokenomicsInfo(response);
     }
 }

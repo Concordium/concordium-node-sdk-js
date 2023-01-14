@@ -51,15 +51,12 @@ version = "0"
 [dependencies.concordium-contracts-common]
 features = ["derive-serde"]
 path = "../../deps/concordium-base/concordium-contracts-common/concordium-contracts-common"
-version = "4.0.0"
 
 [dependencies.ed25519_hd_key_derivation]
 path = "../../deps/concordium-base/rust-src/ed25519_hd_key_derivation"
-version = "1.0.0"
 
 [dependencies.key_derivation]
 path = "../../deps/concordium-base/rust-src/key_derivation"
-version = "1.0.0"
 
 [lib]
 name = "concordium_rust_bindings"

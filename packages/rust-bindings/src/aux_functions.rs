@@ -676,8 +676,7 @@ pub fn serialize_receive_contract_parameters_aux(
     let parameter_type = module_schema.get_receive_param_schema(contract_name, function_name)?;
     let value: SerdeValue = serde_json::from_str(&parameters)?;
 
-    let mut buf: Vec<u8> = vec![];
-    Type::write_bytes_from_json_schema_type(&parameter_type, &value, &mut buf)?;
+    let buf = parameter_type.serial_value(&value)?;
 
     Ok(hex::encode(buf))
 }
@@ -694,8 +693,7 @@ pub fn serialize_init_contract_parameters_aux(
     let parameter_type = module_schema.get_init_param_schema(contract_name)?;
     let value: SerdeValue = serde_json::from_str(&parameters)?;
 
-    let mut buf: Vec<u8> = vec![];
-    Type::write_bytes_from_json_schema_type(&parameter_type, &value, &mut buf)?;
+    let buf = parameter_type.serial_value(&value)?;
 
     Ok(hex::encode(buf))
 }
@@ -733,9 +731,7 @@ pub fn serialize_type_value_aux(parameters: JsonString, schema: HexString) -> Re
 fn serialize_type_value(raw_value: JsonString, value_type: Type) -> Result<HexString> {
     let value: SerdeValue = serde_json::from_str(&raw_value)?;
 
-    let mut buf: Vec<u8> = vec![];
-    Type::write_bytes_from_json_schema_type(&value_type, &value, &mut buf)?;
-
+    let buf = value_type.serial_value(&value)?;
     Ok(hex::encode(buf))
 }
 

@@ -12,6 +12,10 @@
     "publishConfig": {
         "access": "public"
     },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Concordium/concordium-dapp-libraries/tree/main/packages/react-components"
+    },
     "scripts": {
         "build": "tsc"
     },

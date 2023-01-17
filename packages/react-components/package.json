@@ -4,10 +4,14 @@
     "description": "Utility library of React components for building dApps that interact with the Concordium blockchain.",
     "author": "Concordium Software",
     "license": "Apache-2.0",
-    "main": "./dist/index.js",
+    "browser": "./dist/index.js",
+    "types": "./dist/index.d.ts",
     "files": [
         "./dist"
     ],
+    "publishConfig": {
+        "access": "public"
+    },
     "scripts": {
         "build": "tsc"
     },

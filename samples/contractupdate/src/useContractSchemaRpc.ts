@@ -3,7 +3,7 @@ import { Buffer } from 'buffer/';
 import { WalletConnection, withJsonRpcClient } from '@concordium/wallet-connectors';
 import { Info } from '@concordium/react-components';
 import { useEffect, useState } from 'react';
-import { ModuleReference } from '@concordium/common-sdk';
+import { ModuleReference } from '@concordium/web-sdk';
 
 export interface SchemaRpcResult {
     sectionName: string;

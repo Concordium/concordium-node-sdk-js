@@ -3,7 +3,7 @@ import isBase64 from 'is-base64';
 import React, { ChangeEvent, Dispatch, useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Button, Col, Dropdown, Form, Row } from 'react-bootstrap';
 import { Network, WalletConnection } from '@concordium/wallet-connectors';
-import { AccountAddress, AccountTransactionType, CcdAmount } from '@concordium/common-sdk';
+import { AccountAddress, AccountTransactionType, CcdAmount } from '@concordium/web-sdk';
 import { err, ok, Result, ResultAsync } from 'neverthrow';
 import { useContractSchemaRpc } from './useContractSchemaRpc';
 

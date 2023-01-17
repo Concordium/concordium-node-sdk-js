@@ -47,7 +47,10 @@ export interface WalletConnectorSelector {
  * @param props The props exposed by {@link WithWalletConnector} to its child component.
  * @return The resolved state.
  */
-export function useWalletConnectorSelector(connectorType: ConnectorType, props: WalletConnectionProps): WalletConnectorSelector {
+export function useWalletConnectorSelector(
+    connectorType: ConnectorType,
+    props: WalletConnectionProps
+): WalletConnectorSelector {
     const { disconnectActive, activeConnectorType, activeConnector, activeConnection, setActiveConnectorType } = props;
     const isSelected = activeConnectorType === connectorType;
     const select = useCallback(() => {

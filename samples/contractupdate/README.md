@@ -54,11 +54,11 @@ This command will build the app with default settings and deploy it in a HTTPd s
 
 The Compose spec is parameterized as follows:
 
-- `CONTRACTUPDATE_IMAGE` (default: `concordium-dapp-contractupdate:test`):
-  Image to build and/or start.
-  Remove the `--build` flag to start an existing image without building it.
-- `CONTRACTUPDATE_PORT` (default: `8080`):
-  Port to run the server on.
+-   `CONTRACTUPDATE_IMAGE` (default: `concordium-dapp-contractupdate:test`):
+    Image to build and/or start.
+    Remove the `--build` flag to start an existing image without building it.
+-   `CONTRACTUPDATE_PORT` (default: `8080`):
+    Port to run the server on.
 
 Note that the Dockerfile doesn't build using the repository's `yarn.lock` file
 as it resides in the repository root due to this being a yarn workspace.

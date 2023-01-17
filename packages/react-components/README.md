@@ -19,7 +19,7 @@ even if one only need to support a single protocol and network.
 The interface for managing the connectors is exposed through [`WalletConnectionProps`](./src/WithWalletConnector.ts#WalletConnectionProps)
 which is passed to the child component.
 
-*Example: Connect to wallets on Testnet:*
+_Example: Connect to wallets on Testnet:_
 
 ```typescript jsx
 import { SignClientTypes } from '@walletconnect/types';
@@ -54,7 +54,7 @@ See [the sample dApp](../../samples/contractupdate/src/Root.tsx) for a complete 
 
 Hook for managing a connector selector; connecting/disconnecting when clicked and computing its selected/connected/disabled state.
 
-*Example: Create a button for toggling a connector*
+_Example: Create a button for toggling a connector_
 
 ```typescript jsx
 import { ConnectorType, useWalletConnectorSelector, WalletConnectionProps } from '@concordium/react-components';
@@ -79,7 +79,7 @@ See [the sample dApp](../../samples/contractupdate/src/WalletConnectorButton.tsx
 
 Hook for managing the state of an input field and lookup smart contract info by its index.
 
-*Example: Look up the info of a smart contract by its index specified in an input field*
+_Example: Look up the info of a smart contract by its index specified in an input field_
 
 ```typescript jsx
 import React, { useState } from 'react';

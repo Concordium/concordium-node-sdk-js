@@ -25,8 +25,8 @@ Implementations may support multiple active connections from the same connector.
 A connection allows the application to interact with a wallet.
 The following kinds of interactions are supported:
 
-- Ask the wallet to sign a message
-- Ask the wallet to sign and send a transaction. 
+-   Ask the wallet to sign a message
+-   Ask the wallet to sign and send a transaction.
 
 The wallet is responsible for prompting for approval of all interactions.
 

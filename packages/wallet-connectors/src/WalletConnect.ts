@@ -303,6 +303,7 @@ export class WalletConnectConnector implements WalletConnector {
             const { namespaces } = params;
             // Overwrite session.
             connection.session = { ...connection.session, namespaces };
+            // TODO Only fire event if the account actually changed.
             connection
                 .getConnectedAccount()
                 .then((a) => delegate.onAccountChanged(connection, a))

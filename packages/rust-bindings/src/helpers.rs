@@ -1,8 +1,5 @@
 use anyhow::{anyhow, Result};
-use crypto_common::types::KeyIndex;
-use ed25519_dalek as ed25519;
-use hex::FromHex;
-use id::types::*;
+use concordium_base::{common::types::KeyIndex, id::types::*};
 use serde_json::{from_value, Value as SerdeValue};
 use std::{collections::BTreeMap, convert::TryInto};
 
@@ -20,9 +17,7 @@ pub fn build_signature_map(signatures: &[String]) -> BTreeMap<KeyIndex, AccountO
         .map(|(index, key)| {
             (
                 KeyIndex(index.try_into().unwrap()),
-                AccountOwnershipSignature::from(ed25519::Signature::new(
-                    <[u8; 64]>::from_hex(key).unwrap(),
-                )),
+                serde_json::from_str(key).unwrap(),
             )
         })
         .collect()

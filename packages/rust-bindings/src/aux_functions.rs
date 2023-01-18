@@ -1,40 +1,44 @@
 use crate::{helpers::*, types::*};
-use concordium_contracts_common::{
-    from_bytes,
-    schema::{ModuleV0, Type, VersionedModuleSchema},
-    Cursor,
+use concordium_base::{
+    common::{types::TransactionTime, *},
+    contracts_common::{
+        from_bytes,
+        schema::{ModuleV0, Type, VersionedModuleSchema},
+        Cursor,
+    },
+    id::dodis_yampolskiy_prf as prf,
+    transactions::Payload,
 };
-use crypto_common::{types::TransactionTime, *};
-use dodis_yampolskiy_prf as prf;
 use hex;
 use key_derivation::{ConcordiumHdWallet, Net};
-use pairing::bls12_381::{Bls12, G1};
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use serde_json::{from_str, Value as SerdeValue};
-use sha2::{Digest, Sha256};
 use std::{collections::BTreeMap, convert::TryInto};
 
-type ExampleCurve = G1;
 pub type JsonString = String;
 pub type HexString = String;
 
 use anyhow::{anyhow, bail, ensure, Context, Result};
-use crypto_common::types::{KeyIndex, KeyPair};
-use ed25519_dalek as ed25519;
+use concordium_base::{
+    common::types::{KeyIndex, KeyPair},
+    id::{
+        account_holder::{
+            create_credential, create_unsigned_credential, generate_id_recovery_request,
+            generate_pio_v1,
+        },
+        constants,
+        constants::{ArCurve, AttributeKind},
+        id_proof_types::{Proof, Statement, StatementWithContext},
+        pedersen_commitment::{
+            CommitmentKey as PedersenKey, Randomness as PedersenRandomness, Value as PedersenValue,
+            Value,
+        },
+        secret_sharing::Threshold,
+        types::*,
+    },
+};
 use ed25519_hd_key_derivation::DeriveError;
 use either::Either::Left;
-use id::{
-    account_holder::{
-        create_credential, create_unsigned_credential, generate_id_recovery_request,
-        generate_pio_v1,
-    },
-    constants::{ArCurve, AttributeKind},
-    id_proof_types::{Proof, Statement, StatementWithContext},
-    pedersen_commitment::{Randomness as PedersenRandomness, Value as PedersenValue},
-    secret_sharing::Threshold,
-    types::*,
-};
-use pedersen_scheme::{CommitmentKey as PedersenKey, Value};
 use serde_json::to_string;
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
@@ -44,15 +48,15 @@ pub struct CredId {
         serialize_with = "base16_encode",
         deserialize_with = "base16_decode"
     )]
-    pub cred_id: ExampleCurve,
+    pub cred_id: constants::ArCurve,
 }
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IdRequestInput {
-    ip_info:        IpInfo<Bls12>,
-    global_context: GlobalContext<ExampleCurve>,
-    ars_infos:      BTreeMap<ArIdentity, ArInfo<ExampleCurve>>,
+    ip_info:        IpInfo<constants::IpPairing>,
+    global_context: GlobalContext<constants::ArCurve>,
+    ars_infos:      BTreeMap<ArIdentity, ArInfo<constants::ArCurve>>,
     seed:           String,
     net:            String,
     identity_index: u32,
@@ -130,11 +134,11 @@ pub fn get_credential_id_aux(
     let prf_key = wallet.get_prf_key(identity_provider_index, identity_index)?;
 
     let cred_id_exponent = prf_key.prf_exponent(credential_counter)?;
-    let on_chain_commitment_key: PedersenKey<ExampleCurve> =
+    let on_chain_commitment_key: PedersenKey<constants::ArCurve> =
         base16_decode_string(raw_on_chain_commitment_key)?;
     let cred_id = on_chain_commitment_key
         .hide(
-            &Value::<ExampleCurve>::new(cred_id_exponent),
+            &Value::<constants::ArCurve>::new(cred_id_exponent),
             &PedersenRandomness::zero(),
         )
         .0;
@@ -210,8 +214,9 @@ pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<String> {
         PedersenValue::new(wallet.get_id_cred_sec(identity_provider_index, input.identity_index)?);
     let id_cred: IdCredentials<ArCurve> = IdCredentials { id_cred_sec };
 
-    let sig_retrievel_randomness: ps_sig::SigRetrievalRandomness<Bls12> =
-        wallet.get_blinding_randomness(identity_provider_index, input.identity_index)?;
+    let sig_retrievel_randomness: concordium_base::id::ps_sig::SigRetrievalRandomness<
+        constants::IpPairing,
+    > = wallet.get_blinding_randomness(identity_provider_index, input.identity_index)?;
 
     let num_of_ars = input.ars_infos.len();
 
@@ -251,8 +256,8 @@ pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<String> {
 #[derive(SerdeSerialize, SerdeDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IdRecoveryRequestInput {
-    ip_info:        IpInfo<Bls12>,
-    global_context: GlobalContext<ExampleCurve>,
+    ip_info:        IpInfo<constants::IpPairing>,
+    global_context: GlobalContext<constants::ArCurve>,
     seed_as_hex:    String,
     net:            String,
     identity_index: u32,
@@ -279,10 +284,10 @@ pub fn create_identity_recovery_request_aux(input: IdRecoveryRequestInput) -> Re
 #[derive(SerdeSerialize, SerdeDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CredentialInput {
-    ip_info:             IpInfo<Bls12>,
-    global_context:      GlobalContext<ExampleCurve>,
-    ars_infos:           BTreeMap<ArIdentity, ArInfo<ExampleCurve>>,
-    id_object:           IdentityObjectV1<Bls12, ExampleCurve, AttributeKind>,
+    ip_info:             IpInfo<constants::IpPairing>,
+    global_context:      GlobalContext<constants::ArCurve>,
+    ars_infos:           BTreeMap<ArIdentity, ArInfo<constants::ArCurve>>,
+    id_object:           IdentityObjectV1<constants::IpPairing, constants::ArCurve, AttributeKind>,
     revealed_attributes: Vec<AttributeTag>,
     seed_as_hex:         String,
     net:                 String,
@@ -339,8 +344,9 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<String> {
         PedersenValue::new(wallet.get_id_cred_sec(identity_provider_index, input.identity_index)?);
     let id_cred: IdCredentials<ArCurve> = IdCredentials { id_cred_sec };
 
-    let sig_retrievel_randomness: ps_sig::SigRetrievalRandomness<Bls12> =
-        wallet.get_blinding_randomness(identity_provider_index, input.identity_index)?;
+    let sig_retrievel_randomness: concordium_base::id::ps_sig::SigRetrievalRandomness<
+        constants::IpPairing,
+    > = wallet.get_blinding_randomness(identity_provider_index, input.identity_index)?;
 
     let chi = CredentialHolderInfo::<ArCurve> { id_cred };
     let aci = AccCredentialInfo {
@@ -364,7 +370,7 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<String> {
             input.identity_index,
             u32::from(input.cred_number),
         )?;
-        let public = ed25519::PublicKey::from(&secret);
+        let public = (&secret).into();
         keys.insert(KeyIndex(0), KeyPair { secret, public });
 
         CredentialData {
@@ -418,13 +424,13 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<String> {
 
 pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
     let v: SerdeValue = from_str(input)?;
-    let ip_info: IpInfo<Bls12> = try_get(&v, "ipInfo")?;
+    let ip_info: IpInfo<constants::IpPairing> = try_get(&v, "ipInfo")?;
 
-    let ars_infos: BTreeMap<ArIdentity, ArInfo<ExampleCurve>> = try_get(&v, "arsInfos")?;
+    let ars_infos: BTreeMap<ArIdentity, ArInfo<constants::ArCurve>> = try_get(&v, "arsInfos")?;
 
-    let global_context: GlobalContext<ExampleCurve> = try_get(&v, "global")?;
+    let global_context: GlobalContext<constants::ArCurve> = try_get(&v, "global")?;
 
-    let id_object: IdentityObject<Bls12, ExampleCurve, AttributeKind> =
+    let id_object: IdentityObject<constants::IpPairing, constants::ArCurve, AttributeKind> =
         try_get(&v, "identityObject")?;
 
     let tags: Vec<AttributeTag> = try_get(&v, "revealedAttributes")?;
@@ -437,10 +443,10 @@ pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
         threshold: try_get(&v, "threshold")?,
     };
 
-    let id_cred_sec: Value<ExampleCurve> = try_get(&v, "idCredSec")?;
-    let prf_key: prf::SecretKey<ExampleCurve> = try_get(&v, "prfKey")?;
+    let id_cred_sec: Value<constants::ArCurve> = try_get(&v, "idCredSec")?;
+    let prf_key: prf::SecretKey<constants::ArCurve> = try_get(&v, "prfKey")?;
 
-    let chi = CredentialHolderInfo::<ExampleCurve> {
+    let chi = CredentialHolderInfo::<constants::ArCurve> {
         id_cred: IdCredentials { id_cred_sec },
     };
 
@@ -449,7 +455,7 @@ pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
         prf_key,
     };
 
-    let randomness_wrapped: RandomnessWrapper<Bls12> = try_get(&v, "randomness")?;
+    let randomness_wrapped: RandomnessWrapper<constants::IpPairing> = try_get(&v, "randomness")?;
 
     let id_use_data = IdObjectUseData {
         aci,
@@ -500,12 +506,20 @@ pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
 fn get_credential_deployment_info(
     signatures: Vec<String>,
     unsigned_info: &str,
-) -> Result<CredentialDeploymentInfo<Bls12, ExampleCurve, AttributeKind>> {
+) -> Result<CredentialDeploymentInfo<constants::IpPairing, constants::ArCurve, AttributeKind>> {
     let v: SerdeValue = from_str(unsigned_info)?;
-    let values: CredentialDeploymentValues<ExampleCurve, AttributeKind> = from_str(unsigned_info)?;
-    let proofs: IdOwnershipProofs<Bls12, ExampleCurve> = try_get(&v, "proofs")?;
-    let unsigned_credential_info =
-        UnsignedCredentialDeploymentInfo::<Bls12, ExampleCurve, AttributeKind> { values, proofs };
+    let values: CredentialDeploymentValues<constants::ArCurve, AttributeKind> =
+        from_str(unsigned_info)?;
+    let proofs: IdOwnershipProofs<constants::IpPairing, constants::ArCurve> =
+        try_get(&v, "proofs")?;
+    let unsigned_credential_info = UnsignedCredentialDeploymentInfo::<
+        constants::IpPairing,
+        constants::ArCurve,
+        AttributeKind,
+    > {
+        values,
+        proofs,
+    };
 
     let signature_map = build_signature_map(&signatures);
     let proof_acc_sk = AccountOwnershipProof {
@@ -541,18 +555,14 @@ pub fn get_credential_deployment_details_aux(
         message_expiry: TransactionTime { seconds: expiry },
     };
 
-    let block_item = BlockItem::Deployment(credential_message);
-
-    let hash = {
-        let info_as_bytes = &to_bytes(&block_item);
-        hex::encode(Sha256::digest(info_as_bytes))
-    };
-
     let hex = {
-        let versioned = Versioned::new(VERSION_0, block_item);
+        let versioned = Versioned::new(VERSION_0, &credential_message);
         let versioned_as_bytes = &to_bytes(&versioned);
         hex::encode(versioned_as_bytes)
     };
+
+    let block_item = concordium_base::transactions::BlockItem::<Payload>::from(credential_message);
+    let hash = block_item.hash();
 
     let response = json!({
         "credInfo": cdi_json,
@@ -566,8 +576,11 @@ pub fn get_credential_deployment_details_aux(
 /// Given the bytes of a credential deployment (/AccountCredentialMessage),
 /// deserialize it and return as json.
 pub fn deserialize_credential_deployment_aux(input: &str) -> Result<String> {
-    let credential_message: AccountCredentialMessage<Bls12, ExampleCurve, AttributeKind> =
-        crypto_common::from_bytes(&mut hex::decode(input)?.as_slice())?;
+    let credential_message: AccountCredentialMessage<
+        constants::IpPairing,
+        constants::ArCurve,
+        AttributeKind,
+    > = concordium_base::common::from_bytes(&mut hex::decode(input)?.as_slice())?;
     let cdi_json = json!(credential_message);
     Ok(cdi_json.to_string())
 }
@@ -676,8 +689,7 @@ pub fn serialize_receive_contract_parameters_aux(
     let parameter_type = module_schema.get_receive_param_schema(contract_name, function_name)?;
     let value: SerdeValue = serde_json::from_str(&parameters)?;
 
-    let mut buf: Vec<u8> = vec![];
-    Type::write_bytes_from_json_schema_type(&parameter_type, &value, &mut buf)?;
+    let buf = parameter_type.serial_value(&value)?;
 
     Ok(hex::encode(buf))
 }
@@ -694,8 +706,7 @@ pub fn serialize_init_contract_parameters_aux(
     let parameter_type = module_schema.get_init_param_schema(contract_name)?;
     let value: SerdeValue = serde_json::from_str(&parameters)?;
 
-    let mut buf: Vec<u8> = vec![];
-    Type::write_bytes_from_json_schema_type(&parameter_type, &value, &mut buf)?;
+    let buf = parameter_type.serial_value(&value)?;
 
     Ok(hex::encode(buf))
 }
@@ -708,7 +719,7 @@ pub fn get_receive_contract_parameter_schema_aux(
 ) -> Result<HexString> {
     let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &schema_version)?;
     let parameter_type = module_schema.get_receive_param_schema(contract_name, function_name)?;
-    Ok(hex::encode(concordium_contracts_common::to_bytes(
+    Ok(hex::encode(concordium_base::contracts_common::to_bytes(
         &parameter_type,
     )))
 }
@@ -720,7 +731,7 @@ pub fn get_init_contract_parameter_schema_aux(
 ) -> Result<HexString> {
     let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &schema_version)?;
     let parameter_type = module_schema.get_init_param_schema(contract_name)?;
-    Ok(hex::encode(concordium_contracts_common::to_bytes(
+    Ok(hex::encode(concordium_base::contracts_common::to_bytes(
         &parameter_type,
     )))
 }
@@ -733,30 +744,28 @@ pub fn serialize_type_value_aux(parameters: JsonString, schema: HexString) -> Re
 fn serialize_type_value(raw_value: JsonString, value_type: Type) -> Result<HexString> {
     let value: SerdeValue = serde_json::from_str(&raw_value)?;
 
-    let mut buf: Vec<u8> = vec![];
-    Type::write_bytes_from_json_schema_type(&value_type, &value, &mut buf)?;
-
+    let buf = value_type.serial_value(&value)?;
     Ok(hex::encode(buf))
 }
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IdProofInput {
-    id_object:               IdentityObjectV1<Bls12, ExampleCurve, AttributeKind>,
-    global_context:          GlobalContext<ExampleCurve>,
+    id_object: IdentityObjectV1<constants::IpPairing, constants::ArCurve, AttributeKind>,
+    global_context:          GlobalContext<constants::ArCurve>,
     seed_as_hex:             String,
     net:                     String,
     identity_provider_index: u32,
     identity_index:          u32,
     cred_number:             u8,
-    statement:               Statement<ExampleCurve, AttributeKind>,
+    statement:               Statement<constants::ArCurve, AttributeKind>,
     challenge:               String,
 }
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
 struct IdProofOutput {
     credential: String,
-    proof:      Versioned<Proof<ExampleCurve, AttributeKind>>,
+    proof:      Versioned<Proof<constants::ArCurve, AttributeKind>>,
 }
 
 pub fn create_id_proof_aux(input: IdProofInput) -> Result<String> {
@@ -790,7 +799,7 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<String> {
         .global_context
         .on_chain_commitment_key
         .hide(
-            &Value::<ExampleCurve>::new(cred_id_exponent),
+            &Value::<constants::ArCurve>::new(cred_id_exponent),
             &PedersenRandomness::zero(),
         )
         .0;

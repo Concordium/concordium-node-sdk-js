@@ -124,11 +124,15 @@ export type EventResult =
     | TransferWithMemoEventResult
     | RejectedEventResult;
 
+export enum TransactionSummaryType {
+    AccountTransaction = 'accountTransaction',
+    CredentialDeploymentTransaction = 'credentialDeploymentTransaction',
+    AccountCreation = 'accountCreation',
+    UpdateTransaction = 'UpdateTransaction',
+}
+
 interface BaseTransactionSummaryType {
-    type:
-        | 'accountTransaction'
-        | 'credentialDeploymentTransaction'
-        | 'updateTransaction';
+    type: TransactionSummaryType;
 }
 
 export interface TransferWithMemoSummaryType

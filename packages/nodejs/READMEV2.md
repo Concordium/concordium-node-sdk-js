@@ -106,21 +106,51 @@ Retrieves status information about a block item (transaction).
 ```js
 const transactionHash = Buffer.from('f1f5f966e36b95d5474e6b85b85c273c81bac347c38621a0d8fefe68b69a430f', 'hex');
 const blockItemStatus: BlockItemStatus = await client.getBlockItemStatus(transactionHash);
-const isFinalized = transactionStatus.status.oneofKind === 'finalized';
+const isFinalized = transactionStatus.status === 'finalized';
 ...
 ```
 Note that there will be no outcomes for a transaction that has only been received:
 ```js
-if (blockItemStatus.status.oneofKind === 'received') {
+if (blockItemStatus.status === 'received') {
     // blockItemStatus.status.received will be empty
 }
 ```
 If the transaction has been finalized, then there is exactly one outcome:
 ```js
-if (blockItemStatus.status.oneofKind === 'finalized') {
-    const outcomes = blockItemStatus.status.finalized.outcome;
+if (blockItemStatus.status === 'finalized') {
+    const outcome  = blockItemStatus.outcome;
     // Only one outcome
 }
+```
+If the transaction has only been committed, then there is a list of outcomes:
+```js
+if (blockItemStatus.status === 'finalized') {
+    const outcomes = blockItemStatus.outcomes;
+    // Potentially multiple outcomes
+}
+```
+The outcome is contains the blockHash and the summary of the block item. The summary can be of three different types, `accountTransaction`, `accountCreation` or `UpdateTransaction`, which is denoted by the type field.
+```js
+const {blockHash, summary} = outcome.blockHash;
+const type = summary.type;
+if (type === 'accountTransaction') {
+    // The block item is an account transaction
+    const transactionType = summary.transactionType;
+    switch (transactionType) {
+        case 'transfer':
+            // the transaction is a simple transfer
+        ...
+        case undefined:
+            // the transaction was rejected, in which case the transaction type is still available under the failedTransactionType field
+            { failedTransactionType, rejectReason } = summary
+    }
+} else if (type === 'updateTransaction') {
+    // The block item is a chain update
+    const { effectiveTime, payload } = summary
+} else {
+    // The block item is an account creation
+    const { address, credentialType, regId } = summary
+
 ```
 
 ## getConsensusInfo

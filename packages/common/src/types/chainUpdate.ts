@@ -1,3 +1,4 @@
+import { AuthorizationsV0, AuthorizationsV1 } from '..';
 import type {
     IpInfo,
     ArInfo,
@@ -10,22 +11,126 @@ import type {
     CommissionRates,
 } from '../types';
 
+export interface MintDistributionUpdate {
+    updateType: UpdateType.MintDistribution;
+    update: MintDistribution;
+}
+
+export interface FoundationAccountUpdate {
+    updateType: UpdateType.FoundationAccount;
+    update: FoundationAccount;
+}
+
+export interface ElectionDifficultyUpdate {
+    updateType: UpdateType.ElectionDifficulty;
+    update: ElectionDifficulty;
+}
+
+export interface EuroPerEnergyUpdate {
+    updateType: UpdateType.EuroPerEnergy;
+    update: ExchangeRate;
+}
+
+export interface MicroGtuPerEuroUpdate {
+    updateType: UpdateType.MicroGtuPerEuro;
+    update: ExchangeRate;
+}
+
+export interface TransactionFeeDistributionUpdate {
+    updateType: UpdateType.TransactionFeeDistribution;
+    update: TransactionFeeDistribution;
+}
+
+export interface GasRewardsUpdate {
+    updateType: UpdateType.GasRewards;
+    update: GasRewards;
+}
+
+export interface AddAnonymityRevokerUpdate {
+    updateType: UpdateType.AddAnonymityRevoker;
+    update: AddAnonymityRevoker;
+}
+
+export interface AddIdentityProviderUpdate {
+    updateType: UpdateType.AddIdentityProvider;
+    update: AddIdentityProvider;
+}
+
+export interface CooldownParametersUpdate {
+    updateType: UpdateType.CooldownParameters;
+    update: CooldownParameters;
+}
+
+export interface TimeParametersUpdate {
+    updateType: UpdateType.TimeParameters;
+    update: TimeParameters;
+}
+
+export interface ProtocolUpdate {
+    updateType: UpdateType.Protocol;
+    update: ProtocolUpdateDetails;
+}
+
+export interface PoolParametersUpdate {
+    updateType: UpdateType.PoolParameters;
+    update: PoolParameters;
+}
+
+export interface BakerStakeThresholdUpdate {
+    updateType: UpdateType.BakerStakeThreshold;
+    update: BakerStakeThreshold;
+}
+
+export interface Level1Update {
+    updateType: UpdateType.Level1;
+    update: KeyUpdate;
+}
+
+export interface RootUpdate {
+    updateType: UpdateType.Root;
+    update: KeyUpdate;
+}
+
 export type UpdateInstructionPayload =
-    | ExchangeRate
-    | TransactionFeeDistribution
-    | FoundationAccount
-    | MintDistribution
+    | MicroGtuPerEuroUpdate
+    | EuroPerEnergyUpdate
+    | TransactionFeeDistributionUpdate
+    | FoundationAccountUpdate
+    | MintDistributionUpdate
     | ProtocolUpdate
-    | GasRewards
-    | BakerStakeThreshold
-    | ElectionDifficulty
-    | HigherLevelKeyUpdate
-    | AuthorizationKeysUpdate
-    | AddAnonymityRevoker
-    | AddIdentityProvider
-    | CooldownParameters
-    | PoolParameters
-    | TimeParameters;
+    | GasRewardsUpdate
+    | BakerStakeThresholdUpdate
+    | ElectionDifficultyUpdate
+    | AddAnonymityRevokerUpdate
+    | AddIdentityProviderUpdate
+    | CooldownParametersUpdate
+    | PoolParametersUpdate
+    | TimeParametersUpdate
+    | RootUpdate
+    | Level1Update;
+
+export enum UpdateType {
+    Root = 'root',
+    Level1 = 'level1',
+    Protocol = 'protocol',
+    ElectionDifficulty = 'electionDifficulty',
+    EuroPerEnergy = 'euroPerEnergy',
+    MicroGtuPerEuro = 'microGtuPerEuro',
+    FoundationAccount = 'foundationAccount',
+    MintDistribution = 'mintDistribution',
+    TransactionFeeDistribution = 'transactionFeeDistribution',
+    GasRewards = 'gasRewards',
+    PoolParameters = 'poolParameters',
+    AddAnonymityRevoker = 'addAnonymityRevoker',
+    AddIdentityProvider = 'addIdentityProvider',
+    CooldownParameters = 'cooldownParameters',
+    TimeParameters = 'timeParameters',
+    ProtocolUpdate = 'protocolUpdate',
+    BakerStakeThreshold = 'bakerStakeThreshold',
+    Emergency = 'emergency',
+}
+
+export type KeyUpdate = HigherLevelKeyUpdate | AuthorizationKeysUpdate;
 
 export interface Fraction {
     numerator: bigint;
@@ -39,7 +144,7 @@ export interface FoundationAccount {
     address: string;
 }
 
-export interface ProtocolUpdate {
+export interface ProtocolUpdateDetails {
     message: string;
     specificationUrl: string;
     specificationHash: string;
@@ -94,52 +199,28 @@ export interface KeyWithStatus {
     status: KeyUpdateEntryStatus;
 }
 
-export type HigherLevelKeyUpdateType = 0 | 1;
-/**
- * The higher level key update covers three transaction types:
- *  - Updating root keys with root keys
- *  - Updating level 1 keys with root keys
- *  - Updating level 1 keys with level 1 keys
- */
+export enum HigherLevelKeyUpdateType {
+    RootKeysUpdate = 'rootKeysUpdate',
+    Level1KeysUpdate = 'level1KeysUpdate',
+}
+
 export interface HigherLevelKeyUpdate {
-    // Has to be 0 when updating root keys with root keys,
-    // 1 when updating level 1 keys with root keys, and
-    // 0 when updating level 1 keys with level 1 keys.
-    keyUpdateType: HigherLevelKeyUpdateType;
-    updateKeys: KeyWithStatus[];
+    typeOfUpdate: HigherLevelKeyUpdateType;
+    updateKeys: VerifyKey[];
     threshold: number;
 }
 
-export interface KeyIndexWithStatus {
-    index: number;
-    status: KeyUpdateEntryStatus;
+export enum AuthorizationKeysUpdateType {
+    Level2KeysUpdate = 'level2KeysUpdate',
+    Level2KeysUpdateV1 = 'level2KeysUpdateV1',
 }
 
-export enum AccessStructureEnum {
-    emergency,
-    protocol,
-    electionDifficulty,
-    euroPerEnergy,
-    microGtuPerEuro,
-    foundationAccount,
-    mintDistribution,
-    transactionFeeDistribution,
-    gasRewards,
-    poolParameters,
-    addAnonymityRevoker,
-    addIdentityProvider,
-    cooldownParameters,
-    timeParameters,
-}
-
-export interface AccessStructure {
-    publicKeyIndicies: KeyIndexWithStatus[];
-    threshold: number;
-    type: AccessStructureEnum;
-}
-
-export interface AuthorizationKeysUpdate {
-    keyUpdateType: number;
-    keys: VerifyKey[];
-    accessStructures: AccessStructure[];
-}
+export type AuthorizationKeysUpdate =
+    | {
+          typeOfUpdate: AuthorizationKeysUpdateType.Level2KeysUpdate;
+          updatePayload: AuthorizationsV0;
+      }
+    | {
+          typeOfUpdate: AuthorizationKeysUpdateType.Level2KeysUpdateV1;
+          updatePayload: AuthorizationsV1;
+      };

@@ -3,8 +3,8 @@ import {
     Base58String,
     DigitString,
     HexString,
-} from '..';
-import type { ContractAddress } from '../types';
+    ContractAddress,
+} from '../types';
 
 /*
  * An enum containing all the possible reject reasons that can be

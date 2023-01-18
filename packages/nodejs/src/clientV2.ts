@@ -137,13 +137,15 @@ export default class ConcordiumNodeClient {
      */
     async getBlockItemStatus(
         transactionHash: HexString
-    ): Promise<v2.BlockItemStatus> {
+    ): Promise<v1.BlockItemStatus> {
         assertValidHash(transactionHash);
         const transactionHashV2: v2.TransactionHash = {
             value: Buffer.from(transactionHash, 'hex'),
         };
 
-        return await this.client.getBlockItemStatus(transactionHashV2).response;
+        const response = await this.client.getBlockItemStatus(transactionHashV2)
+            .response;
+        return translate.blockItemStatus(response);
     }
 
     /**

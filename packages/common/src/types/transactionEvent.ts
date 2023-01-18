@@ -327,3 +327,26 @@ export interface UpdateEnqueuedEvent {
     effectiveTime: string;
     payload: UpdateInstructionPayload;
 }
+
+export type ContractTraceEvent =
+    | ResumedEvent
+    | InterruptedEvent
+    | UpdatedEvent
+    | UpgradedEvent
+    | TransferredEvent;
+export type BakerEvent =
+    | BakerSetTransactionFeeCommissionEvent
+    | BakerSetBakingRewardCommissionEvent
+    | BakerSetFinalizationRewardCommissionEvent
+    | BakerSetMetadataURLEvent
+    | BakerSetOpenStatusEvent
+    | BakerSetRestakeEarningsEvent
+    | BakerStakeChangedEvent
+    | BakerAddedEvent
+    | BakerRemovedEvent
+    | BakerKeysUpdatedEvent;
+export type DelegationEvent =
+    | DelegatorEvent
+    | DelegationSetDelegationTargetEvent
+    | DelegationSetRestakeEarningsEvent
+    | DelegationStakeChangedEvent;

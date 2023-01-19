@@ -128,7 +128,7 @@ export enum TransactionSummaryType {
     AccountTransaction = 'accountTransaction',
     CredentialDeploymentTransaction = 'credentialDeploymentTransaction',
     AccountCreation = 'accountCreation',
-    UpdateTransaction = 'UpdateTransaction',
+    UpdateTransaction = 'updateTransaction',
 }
 
 interface BaseTransactionSummaryType {

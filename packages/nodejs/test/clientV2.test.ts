@@ -175,14 +175,20 @@ test('accountInfo implementations is the same', async () => {
     expect(oldBaker).toEqual(newBaker);
 });
 
-test('getBlockItemStatus', async () => {
+test('getBlockItemStatus on chain update', async () => {
     const transactionHash =
         '3de823b876d05cdd33a311a0f84124079f5f677afb2534c4943f830593edc650';
     const blockItemStatus = await clientV2.getBlockItemStatus(transactionHash);
 
-    expect(v2.BlockItemStatus.toJson(blockItemStatus)).toEqual(
-        expected.blockItemStatus
-    );
+    expect(blockItemStatus).toEqual(expected.blockItemStatusUpdate);
+});
+
+test('getBlockItemStatus on simple transfer', async () => {
+    const transactionHash =
+        '502332239efc0407eebef5c73c390080e5d7e1b127ff29f786a62b3c9ab6cfe7';
+    const blockItemStatus = await clientV2.getBlockItemStatus(transactionHash);
+
+    expect(blockItemStatus).toEqual(expected.blockItemStatusTransfer);
 });
 
 test('getInstanceInfo', async () => {

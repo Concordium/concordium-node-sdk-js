@@ -1,5 +1,5 @@
 use anyhow::{anyhow, Result};
-use concordium_base::{common::types::KeyIndex, id::types::*};
+use concordium_base::{common::{types::KeyIndex, base16_decode_string}, id::types::*};
 use serde_json::{from_value, Value as SerdeValue};
 use std::{collections::BTreeMap, convert::TryInto};
 
@@ -17,7 +17,7 @@ pub fn build_signature_map(signatures: &[String]) -> BTreeMap<KeyIndex, AccountO
         .map(|(index, key)| {
             (
                 KeyIndex(index.try_into().unwrap()),
-                serde_json::from_str(key).unwrap(),
+                base16_decode_string(key).unwrap(),
             )
         })
         .collect()

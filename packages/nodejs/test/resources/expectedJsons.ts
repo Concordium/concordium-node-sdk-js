@@ -1,3 +1,5 @@
+import { BlockItemStatus } from '@concordium/common-sdk';
+
 export const accountInfo = {
     sequenceNumber: {
         value: '19',
@@ -126,28 +128,48 @@ export const stakingInfoDelegator = {
     },
 };
 
-export const blockItemStatus = {
-    finalized: {
-        outcome: {
-            blockHash: {
-                value: 'LZ4aCBgZrY2/gdWoguovU1LLNCn8ErDsGMExo2B1GmY=',
-            },
-            outcome: {
-                index: {},
-                energyCost: {},
-                hash: {
-                    value: 'PegjuHbQXN0zoxGg+EEkB59fZ3r7JTTElD+DBZPtxlA=',
-                },
+export const blockItemStatusUpdate = {
+    status: 'finalized',
+    outcome: {
+        blockHash:
+            '2d9e1a081819ad8dbf81d5a882ea2f5352cb3429fc12b0ec18c131a360751a66',
+        summary: {
+            index: 0n,
+            energyCost: 0n,
+            hash: '3de823b876d05cdd33a311a0f84124079f5f677afb2534c4943f830593edc650',
+            type: 'updateTransaction',
+            effectiveTime: 0n,
+            payload: {
+                updateType: 'microGtuPerEuro',
                 update: {
-                    effectiveTime: {},
-                    payload: {
-                        microCcdPerEuroUpdate: {
-                            value: {
-                                numerator: '17592435270983729152',
-                                denominator: '163844642115',
-                            },
-                        },
-                    },
+                    numerator: 17592435270983729152n,
+                    denominator: 163844642115n,
+                },
+            },
+        },
+    },
+};
+
+export const blockItemStatusTransfer = {
+    status: 'finalized',
+    outcome: {
+        blockHash:
+            '577513ab772da146c7abb9f30c521668d7ef4fa01f4838cc51d5f59e27c7a5fc',
+        summary: {
+            type: 'accountTransaction',
+            index: 0n,
+            cost: 1480606n,
+            energyCost: 501n,
+            hash: '502332239efc0407eebef5c73c390080e5d7e1b127ff29f786a62b3c9ab6cfe7',
+            sender: '4fKPBDf9r5vhEpoeNY7SJbZv8bAJvYYyJSEggZkNyQPgao8iLy',
+            transactionType: 'transfer',
+            event: {
+                amount: 1000000n,
+                tag: 'Transferred',
+                to: {
+                    address:
+                        '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
+                    type: 'AddressAccount',
                 },
             },
         },

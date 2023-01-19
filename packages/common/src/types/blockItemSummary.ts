@@ -68,148 +68,140 @@ export enum TransactionKindString {
     StakingReward = 'paydayAccountReward',
 }
 
-export interface TransferSummary extends BaseAccountTransactionSummary {
+export interface TransferSummary {
     transactionType: TransactionKindString.Transfer;
-    events: [TransferredEvent];
+    event: TransferredEvent;
 }
 
-export interface TransferWithMemoSummary extends BaseAccountTransactionSummary {
+export interface TransferWithMemoSummary {
     transactionType: TransactionKindString.TransferWithMemo;
     events: [TransferredEvent, MemoEvent];
 }
 
-export interface TransferWithScheduleSummary
-    extends BaseAccountTransactionSummary {
+export interface TransferWithScheduleSummary {
     transactionType: TransactionKindString.TransferWithSchedule;
-    events: [TransferredWithScheduleEvent];
+    event: TransferredWithScheduleEvent;
 }
 
-export interface TransferWithScheduleAndMemoSummary
-    extends BaseAccountTransactionSummary {
+export interface TransferWithScheduleAndMemoSummary {
     transactionType: TransactionKindString.TransferWithScheduleAndMemo;
     events: [TransferredWithScheduleEvent, MemoEvent];
 }
 
-export interface EncryptedAmountTransferSummary
-    extends BaseAccountTransactionSummary {
+export interface EncryptedAmountTransferSummary {
     transactionType: TransactionKindString.EncryptedAmountTransfer;
     events: [EncryptedAmountsRemovedEvent, NewEncryptedAmountEvent];
 }
 
-export interface EncryptedAmountTransferWithMemoSummary
-    extends BaseAccountTransactionSummary {
+export interface EncryptedAmountTransferWithMemoSummary {
     transactionType: TransactionKindString.EncryptedAmountTransferWithMemo;
     events: [EncryptedAmountsRemovedEvent, NewEncryptedAmountEvent, MemoEvent];
 }
 
-export interface ModueDeployedSummary extends BaseAccountTransactionSummary {
+export interface ModueDeployedSummary {
     transactionType: TransactionKindString.DeployModule;
-    events: [ModuleDeployedEvent];
+    event: ModuleDeployedEvent;
 }
 
-export interface InitContractSummary extends BaseAccountTransactionSummary {
+export interface InitContractSummary {
     transactionType: TransactionKindString.InitContract;
-    events: [ContractInitializedEvent];
+    event: ContractInitializedEvent;
 }
 
-export interface UpdateContractSummary extends BaseAccountTransactionSummary {
+export interface UpdateContractSummary {
     transactionType: TransactionKindString.Update;
     events: ContractTraceEvent[];
 }
 
-export interface DataRegisteredSummary extends BaseAccountTransactionSummary {
+export interface DataRegisteredSummary {
     transactionType: TransactionKindString.RegisterData;
-    events: [DataRegisteredEvent];
+    event: DataRegisteredEvent;
 }
 
-export interface TransferToPublicSummary extends BaseAccountTransactionSummary {
+export interface TransferToPublicSummary {
     transactionType: TransactionKindString.TransferToPublic;
     events: [EncryptedAmountsRemovedEvent, AmountAddedByDecryptionEvent];
 }
 
-export interface TransferToEncryptedSummary
-    extends BaseAccountTransactionSummary {
+export interface TransferToEncryptedSummary {
     transactionType: TransactionKindString.TransferToEncrypted;
-    events: [EncryptedSelfAmountAddedEvent];
+    event: EncryptedSelfAmountAddedEvent;
 }
 
-export interface AddBakerSummary extends BaseAccountTransactionSummary {
+export interface AddBakerSummary {
     transactionType: TransactionKindString.AddBaker;
-    events: [BakerAddedEvent];
+    event: BakerAddedEvent;
 }
 
-export interface RemoveBakerSummary extends BaseAccountTransactionSummary {
+export interface RemoveBakerSummary {
     transactionType: TransactionKindString.RemoveBaker;
-    events: [BakerRemovedEvent];
+    event: BakerRemovedEvent;
 }
 
-export interface UpdateBakerKeysSummary extends BaseAccountTransactionSummary {
+export interface UpdateBakerKeysSummary {
     transactionType: TransactionKindString.UpdateBakerKeys;
-    events: [BakerKeysUpdatedEvent];
+    event: BakerKeysUpdatedEvent;
 }
 
-export interface UpdateBakerStakeSummary extends BaseAccountTransactionSummary {
+export interface UpdateBakerStakeSummary {
     transactionType: TransactionKindString.UpdateBakerStake;
-    events: [BakerStakeChangedEvent];
+    event: BakerStakeChangedEvent;
 }
 
-export interface UpdateBakerRestakeEarningsSummary
-    extends BaseAccountTransactionSummary {
+export interface UpdateBakerRestakeEarningsSummary {
     transactionType: TransactionKindString.UpdateBakerRestakeEarnings;
-    events: [BakerSetRestakeEarningsEvent];
+    event: BakerSetRestakeEarningsEvent;
 }
 
-export interface ConfigureBakerSummary extends BaseAccountTransactionSummary {
+export interface ConfigureBakerSummary {
     transactionType: TransactionKindString.ConfigureBaker;
     events: BakerEvent[];
 }
 
-export interface ConfigureDelegationSummary
-    extends BaseAccountTransactionSummary {
+export interface ConfigureDelegationSummary {
     transactionType: TransactionKindString.ConfigureDelegation;
     events: DelegationEvent[];
 }
 
-export interface UpdateCredentialKeysSummary
-    extends BaseAccountTransactionSummary {
+export interface UpdateCredentialKeysSummary {
     transactionType: TransactionKindString.UpdateCredentialKeys;
-    events: [CredentialKeysUpdatedEvent];
+    event: CredentialKeysUpdatedEvent;
 }
 
-export interface UpdateCredentialsSummary
-    extends BaseAccountTransactionSummary {
+export interface UpdateCredentialsSummary {
     transactionType: TransactionKindString.UpdateCredentials;
-    events: [CredentialsUpdatedEvent];
+    event: CredentialsUpdatedEvent;
 }
-export interface FailedTransactionSummary
-    extends BaseAccountTransactionSummary {
+export interface FailedTransactionSummary {
     failedTransactionType: TransactionKindString;
     rejectReason: RejectReason;
 }
 
-export type AccountTransactionSummary =
-    | TransferSummary
-    | TransferWithMemoSummary
-    | TransferWithScheduleSummary
-    | TransferWithScheduleAndMemoSummary
-    | EncryptedAmountTransferSummary
-    | EncryptedAmountTransferWithMemoSummary
-    | DataRegisteredSummary
-    | TransferToPublicSummary
-    | TransferToEncryptedSummary
-    | ModueDeployedSummary
-    | InitContractSummary
-    | UpdateContractSummary
-    | FailedTransactionSummary
-    | AddBakerSummary
-    | RemoveBakerSummary
-    | UpdateBakerKeysSummary
-    | UpdateBakerStakeSummary
-    | UpdateBakerRestakeEarningsSummary
-    | ConfigureBakerSummary
-    | ConfigureDelegationSummary
-    | UpdateCredentialKeysSummary
-    | UpdateCredentialsSummary;
+export type AccountTransactionSummary = BaseAccountTransactionSummary &
+    (
+        | TransferSummary
+        | TransferWithMemoSummary
+        | TransferWithScheduleSummary
+        | TransferWithScheduleAndMemoSummary
+        | EncryptedAmountTransferSummary
+        | EncryptedAmountTransferWithMemoSummary
+        | DataRegisteredSummary
+        | TransferToPublicSummary
+        | TransferToEncryptedSummary
+        | ModueDeployedSummary
+        | InitContractSummary
+        | UpdateContractSummary
+        | FailedTransactionSummary
+        | AddBakerSummary
+        | RemoveBakerSummary
+        | UpdateBakerKeysSummary
+        | UpdateBakerStakeSummary
+        | UpdateBakerRestakeEarningsSummary
+        | ConfigureBakerSummary
+        | ConfigureDelegationSummary
+        | UpdateCredentialKeysSummary
+        | UpdateCredentialsSummary
+    );
 
 export interface AccountCreationSummary {
     type: TransactionSummaryType.AccountCreation;

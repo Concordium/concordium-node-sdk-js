@@ -1,5 +1,8 @@
 use anyhow::{anyhow, Result};
-use concordium_base::{common::{types::KeyIndex, base16_decode_string}, id::types::*};
+use concordium_base::{
+    common::{base16_decode_string, types::KeyIndex},
+    id::types::*,
+};
 use serde_json::{from_value, Value as SerdeValue};
 use std::{collections::BTreeMap, convert::TryInto};
 

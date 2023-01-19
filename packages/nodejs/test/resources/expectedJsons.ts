@@ -1,5 +1,3 @@
-import { BlockItemStatus } from '@concordium/common-sdk';
-
 export const accountInfo = {
     sequenceNumber: {
         value: '19',

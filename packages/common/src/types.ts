@@ -720,6 +720,7 @@ export interface RewardStatusV1 extends RewardStatusCommon {
 }
 
 export type RewardStatus = RewardStatusV0 | RewardStatusV1;
+export type TokenomicsInfo = RewardStatus;
 
 export interface BlockInfo {
     blockParent: string;

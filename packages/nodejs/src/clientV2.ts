@@ -175,14 +175,11 @@ export default class ConcordiumNodeClient {
      * @param blockHash optional block hash to get the reward status at, otherwise retrieves from last finalized block
      * @returns the reward status at the given block, or undefined it the block does not exist.
      */
-    async getTokenomicsInfo(
-        blockHash?: HexString
-    ): Promise<v1.RewardStatus> {
+    async getTokenomicsInfo(blockHash?: HexString): Promise<v1.TokenomicsInfo> {
         const blockHashInput = getBlockHashInput(blockHash);
 
-        const response = await this.client.getTokenomicsInfo(
-            blockHashInput
-        ).response;
+        const response = await this.client.getTokenomicsInfo(blockHashInput)
+            .response;
         return translate.tokenomicsInfo(response);
     }
 }

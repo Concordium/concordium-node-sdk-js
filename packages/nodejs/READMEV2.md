@@ -101,4 +101,19 @@ const blockHash = Buffer.from('7f7409679e53875567e2ae812c9fcefe90ced8761d0855475
 const bakerPoolInfo: PassiveDelegationStatus = await client.getBlockChainParameters(blockHash);
 ```
 
+## getTokenomicsInfo
+Retrieves the current amount of funds in the system at a specific block, and the state of the special accounts.
+```js
+const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
 
+const tokenomicsInfo = await client.getTokenomicsInfo(blockHash);
+```
+
+Protocol version 4 expanded the amount of information in the response, so one should check the type to access that.
+This information includes information about the payday and total amount of funds staked.
+```js
+if (isRewardStatusV1(tokenomicsInfo)) {
+    const nextPaydayTime = tokenomicsInfo.nextPaydayTime;
+    ...
+}
+```

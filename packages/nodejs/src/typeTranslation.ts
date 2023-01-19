@@ -254,7 +254,9 @@ function translateChainParametersCommon(
         euroPerEnergy: unwrap(params.euroPerEnergy?.value),
         microGTUPerEuro: unwrap(params.microCcdPerEuro?.value),
         accountCreationLimit: unwrap(params.accountCreationLimit?.value),
-        foundationAccount: v1.AccountAddress.fromBytes(Buffer.from(unwrap(params.foundationAccount?.value))).address
+        foundationAccount: v1.AccountAddress.fromBytes(
+            Buffer.from(unwrap(params.foundationAccount?.value))
+        ).address,
     };
 }
 
@@ -293,7 +295,7 @@ function translateRewardParametersCommon(
 }
 
 function translateMintRate(mintRate: v2.MintRate | undefined): number {
-    return unwrap(mintRate?.mantissa) * 10 ** (-1*unwrap(mintRate?.exponent));
+    return unwrap(mintRate?.mantissa) * 10 ** (-1 * unwrap(mintRate?.exponent));
 }
 
 function transPoolPendingChange(
@@ -565,33 +567,39 @@ export function passiveDelegationInfo(
 
 export function tokenomicsInfo(info: v2.TokenomicsInfo): v1.RewardStatus {
     switch (info.tokenomics.oneofKind) {
-        case "v0": {
+        case 'v0': {
             const v0 = info.tokenomics.v0;
             return {
                 protocolVersion: BigInt(v0.protocolVersion),
                 totalAmount: unwrap(v0.totalAmount?.value),
                 totalEncryptedAmount: unwrap(v0.totalEncryptedAmount?.value),
                 bakingRewardAccount: unwrap(v0.bakingRewardAccount?.value),
-                finalizationRewardAccount: unwrap(v0.finalizationRewardAccount?.value),
+                finalizationRewardAccount: unwrap(
+                    v0.finalizationRewardAccount?.value
+                ),
                 gasAccount: unwrap(v0.gasAccount?.value),
-            }
+            };
         }
-        case "v1": {
+        case 'v1': {
             const v1 = info.tokenomics.v1;
             return {
-                    protocolVersion: BigInt(v1.protocolVersion),
-                    totalAmount: unwrap(v1.totalAmount?.value),
-                    totalEncryptedAmount: unwrap(v1.totalEncryptedAmount?.value),
-                    bakingRewardAccount: unwrap(v1.bakingRewardAccount?.value),
-                    finalizationRewardAccount: unwrap(v1.finalizationRewardAccount?.value),
+                protocolVersion: BigInt(v1.protocolVersion),
+                totalAmount: unwrap(v1.totalAmount?.value),
+                totalEncryptedAmount: unwrap(v1.totalEncryptedAmount?.value),
+                bakingRewardAccount: unwrap(v1.bakingRewardAccount?.value),
+                finalizationRewardAccount: unwrap(
+                    v1.finalizationRewardAccount?.value
+                ),
                 gasAccount: unwrap(v1.gasAccount?.value),
-                foundationTransactionRewards: unwrap(v1.foundationTransactionRewards?.value),
+                foundationTransactionRewards: unwrap(
+                    v1.foundationTransactionRewards?.value
+                ),
                 nextPaydayTime: transTimestamp(v1.nextPaydayTime),
                 nextPaydayMintRate: unwrap(v1.nextPaydayMintRate),
                 totalStakedCapital: unwrap(v1.totalStakedCapital?.value),
-                }
+            };
         }
         case undefined:
-            throw new Error("Missing tokenomics info")
+            throw new Error('Missing tokenomics info');
     }
 }

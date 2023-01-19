@@ -304,7 +304,8 @@ test('getChainParameters corresponds to GetBlockSummary subset', async () => {
 });
 
 test('getChainParameters corresponds to GetBlockSummary subset on protocol level < 4', async () => {
-    const oldBlockHash = "ed2507c4d05108038741e87757ab1c3acdeeb3327027cd2972666807c9c4a20d";
+    const oldBlockHash =
+        'ed2507c4d05108038741e87757ab1c3acdeeb3327027cd2972666807c9c4a20d';
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const blockSummary: any = await clientV1.getBlockSummary(oldBlockHash);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

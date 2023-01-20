@@ -1,5 +1,5 @@
 import * as v1 from './types';
-import * as v2 from '../../nodejs/grpc/v2/concordium/types';
+import * as v2 from '../grpc/v2/concordium/types';
 import { mapRecord, unwrap } from './util';
 import { Buffer } from 'buffer/';
 import {
@@ -12,10 +12,42 @@ import {
 import bs58check from 'bs58check';
 import { AccountAddress } from './types/accountAddress';
 import { ModuleReference } from './types/moduleReference';
-import { AmountAddedByDecryptionEvent, BakerAddedEvent, BakerEvent, BakerKeysUpdatedEvent, BakerRemovedEvent, BakerSetRestakeEarningsEvent, BakerStakeChangedEvent, ContractInitializedEvent, ContractTraceEvent, CredentialKeysUpdatedEvent, CredentialsUpdatedEvent, DataRegisteredEvent, DelegationEvent, EncryptedAmountsRemovedEvent, EncryptedSelfAmountAddedEvent, MemoEvent, ModuleDeployedEvent, NewEncryptedAmountEvent, TransferredEvent, TransferredWithScheduleEvent } from './types/transactionEvent';
+import {
+    AmountAddedByDecryptionEvent,
+    BakerAddedEvent,
+    BakerEvent,
+    BakerKeysUpdatedEvent,
+    BakerRemovedEvent,
+    BakerSetRestakeEarningsEvent,
+    BakerStakeChangedEvent,
+    ContractInitializedEvent,
+    ContractTraceEvent,
+    CredentialKeysUpdatedEvent,
+    CredentialsUpdatedEvent,
+    DataRegisteredEvent,
+    DelegationEvent,
+    EncryptedAmountsRemovedEvent,
+    EncryptedSelfAmountAddedEvent,
+    MemoEvent,
+    ModuleDeployedEvent,
+    NewEncryptedAmountEvent,
+    TransferredEvent,
+    TransferredWithScheduleEvent,
+} from './types/transactionEvent';
 import { RejectReason, SimpleRejectReasonTag } from './types/rejectReason';
-import { KeyUpdate, UpdateInstructionPayload, UpdateType } from './types/chainUpdate';
-import { AccountTransactionSummary, BaseAccountTransactionSummary, BaseBlockItemSummary, BlockItemStatus, BlockItemSummary, BlockItemSummaryInBlock } from './types/blockItemSummary';
+import {
+    KeyUpdate,
+    UpdateInstructionPayload,
+    UpdateType,
+} from './types/chainUpdate';
+import {
+    AccountTransactionSummary,
+    BaseAccountTransactionSummary,
+    BaseBlockItemSummary,
+    BlockItemStatus,
+    BlockItemSummary,
+    BlockItemSummaryInBlock,
+} from './types/blockItemSummary';
 
 function unwrapToHex(bytes: Uint8Array | undefined): v1.HexString {
     return Buffer.from(unwrap(bytes)).toString('hex');
@@ -33,9 +65,7 @@ function unwrapValToHex(x: { value: Uint8Array } | undefined): string {
     return unwrapToHex(unwrap(x).value);
 }
 
-function transModuleRef(
-    moduleRef: v2.ModuleRef | undefined
-): ModuleReference {
+function transModuleRef(moduleRef: v2.ModuleRef | undefined): ModuleReference {
     return new ModuleReference(unwrapValToHex(moduleRef));
 }
 
@@ -1491,9 +1521,7 @@ function translateAccountTransactionSummary(
     }
 }
 
-function transBlockItemSummary(
-    summary: v2.BlockItemSummary
-): BlockItemSummary {
+function transBlockItemSummary(summary: v2.BlockItemSummary): BlockItemSummary {
     const base = {
         index: unwrap(summary.index?.value),
         energyCost: unwrap(summary.energyCost?.value),

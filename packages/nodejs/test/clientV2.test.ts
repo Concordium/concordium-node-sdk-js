@@ -1,10 +1,13 @@
 import { credentials, Metadata } from '@grpc/grpc-js/';
 import * as v1 from '@concordium/common-sdk';
-import * as v2 from '../grpc/v2/concordium/types';
+import * as v2 from '../../common/grpc/v2/concordium/types';
 import ConcordiumNodeClientV1 from '../src/client';
 import createConcordiumClientV2 from '../src/clientV2';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
-import ConcordiumNodeClientV2, { getAccountIdentifierInput, getBlockHashInput } from '@concordium/common-sdk/lib/GRPCClient';
+import ConcordiumNodeClientV2, {
+    getAccountIdentifierInput,
+    getBlockHashInput,
+} from '@concordium/common-sdk/lib/GRPCClient';
 import {
     buildBasicAccountSigner,
     calculateEnergyCost,
@@ -12,23 +15,21 @@ import {
     getAccountTransactionHandler,
     sha256,
     getCredentialDeploymentSignDigest,
-   signTransaction,
+    signTransaction,
 } from '@concordium/common-sdk';
 import { serializeAccountTransactionPayload } from '@concordium/common-sdk/src';
 import { getModuleBuffer, getIdentityInput } from './testHelpers';
 import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons';
-import {
-    serializeAccountTransaction,
-} from '@concordium/common-sdk/lib/serialization';
+import { serializeAccountTransaction } from '@concordium/common-sdk/lib/serialization';
 
 /**
  * Creates a client to communicate with a local concordium-node
  * used for automatic tests.
  */
 export function getNodeClientV2(
-    address = 'service.internal.testnet.concordium.com',
-    port = 20000
+    address = 'localhost',
+    port = 20001
 ): ConcordiumNodeClientV2 {
     const metadata = new Metadata();
     return createConcordiumClientV2(
@@ -41,13 +42,14 @@ export function getNodeClientV2(
 }
 
 export function getNodeClientV1(
-    address = 'service.internal.testnet.concordium.com'
+    address = 'localhost',
+    port = 10001
 ): ConcordiumNodeClientV1 {
     const metadata = new Metadata();
     metadata.add('authentication', 'rpcadmin');
     return new ConcordiumNodeClientV1(
         address,
-        10000,
+        port,
         credentials.createInsecure(),
         metadata,
         15000

@@ -1319,7 +1319,8 @@ __metadata:
     "@concordium/rust-bindings": 0.9.0
     "@grpc/grpc-js": ^1.3.4
     "@noble/ed25519": ^1.7.1
-    "@protobuf-ts/grpc-transport": ^2.8.2
+    "@protobuf-ts/plugin": 2.8.1
+    "@protobuf-ts/runtime-rpc": ^2.8.2
     "@scure/bip39": ^1.1.0
     "@types/bs58check": ^2.1.0
     "@types/jest": ^26.0.23
@@ -1334,6 +1335,8 @@ __metadata:
     eslint: ^7.29.0
     eslint-config-prettier: ^8.3.0
     eslint-plugin-prettier: ^3.4.0
+    grpc-tools: ^1.11.2
+    grpc_tools_node_protoc_ts: 5.3.0
     hash.js: ^1.1.7
     husky: ^4.2.5
     iso-3166-1: ^2.1.1
@@ -1355,14 +1358,12 @@ __metadata:
     "@grpc/grpc-js": ^1.3.4
     "@noble/ed25519": ^1.7.1
     "@protobuf-ts/grpc-transport": ^2.8.2
-    "@protobuf-ts/plugin": 2.8.1
     "@types/bs58check": ^2.1.0
     "@types/google-protobuf": ^3.15.3
     "@types/jest": ^26.0.23
     "@typescript-eslint/eslint-plugin": ^4.28.1
     "@typescript-eslint/parser": ^4.28.1
     babel-jest: ^27.0.6
-    bs58check: ^2.1.2
     buffer: ^6.0.3
     cross-env: 5.0.5
     eslint: ^7.29.0
@@ -1392,6 +1393,7 @@ __metadata:
   dependencies:
     "@concordium/common-sdk": 6.2.0
     "@concordium/rust-bindings": 0.9.0
+    "@grpc/grpc-js": ^1.3.4
     "@protobuf-ts/grpcweb-transport": ^2.8.2
     "@typescript-eslint/eslint-plugin": ^4.28.1
     "@typescript-eslint/parser": ^4.28.1
@@ -1401,6 +1403,7 @@ __metadata:
     eslint-config-prettier: ^8.3.0
     eslint-plugin-import: ^2.23.4
     eslint-plugin-prettier: ^3.4.0
+    isomorphic-fetch: ^3.0.0
     jest: ^27.0.6
     process: ^0.11.10
     stream-browserify: ^3.0.0
@@ -5203,6 +5206,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"isomorphic-fetch@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "isomorphic-fetch@npm:3.0.0"
+  dependencies:
+    node-fetch: ^2.6.1
+    whatwg-fetch: ^3.4.1
+  checksum: e5ab79a56ce5af6ddd21265f59312ad9a4bc5a72cebc98b54797b42cb30441d5c5f8d17c5cd84a99e18101c8af6f90c081ecb8d12fd79e332be1778d58486d75
+  languageName: node
+  linkType: hard
+
 "istanbul-lib-coverage@npm:^3.0.0, istanbul-lib-coverage@npm:^3.2.0":
   version: 3.2.0
   resolution: "istanbul-lib-coverage@npm:3.2.0"
@@ -6408,6 +6421,20 @@ __metadata:
     encoding:
       optional: true
   checksum: 8d816ffd1ee22cab8301c7756ef04f3437f18dace86a1dae22cf81db8ef29c0bf6655f3215cb0cdb22b420b6fe141e64b26905e7f33f9377a7fa59135ea3e10b
+  languageName: node
+  linkType: hard
+
+"node-fetch@npm:^2.6.1":
+  version: 2.6.8
+  resolution: "node-fetch@npm:2.6.8"
+  dependencies:
+    whatwg-url: ^5.0.0
+  peerDependencies:
+    encoding: ^0.1.0
+  peerDependenciesMeta:
+    encoding:
+      optional: true
+  checksum: 91f57be68e29f9b1382750693619e199733a6936998e6d618f1aa779853ad8fc4a2facf170db7957bf1d2510bad33449edf74b5802713d81b63de5986fa3be00
   languageName: node
   linkType: hard
 
@@ -8335,6 +8362,13 @@ __metadata:
   dependencies:
     iconv-lite: 0.4.24
   checksum: 5be4efe111dce29ddee3448d3915477fcc3b28f991d9cf1300b4e50d6d189010d47bca2f51140a844cf9b726e8f066f4aee72a04d687bfe4f2ee2767b2f5b1e6
+  languageName: node
+  linkType: hard
+
+"whatwg-fetch@npm:^3.4.1":
+  version: 3.6.2
+  resolution: "whatwg-fetch@npm:3.6.2"
+  checksum: ee976b7249e7791edb0d0a62cd806b29006ad7ec3a3d89145921ad8c00a3a67e4be8f3fb3ec6bc7b58498724fd568d11aeeeea1f7827e7e1e5eae6c8a275afed
   languageName: node
   linkType: hard
 

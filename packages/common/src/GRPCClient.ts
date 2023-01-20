@@ -1,19 +1,18 @@
 import * as v1 from './types';
-import * as v2 from '../../nodejs/grpc/v2/concordium/types';
+import * as v2 from '../grpc/v2/concordium/types';
 import { HexString } from './types';
-import { QueriesClient } from '../../nodejs/grpc/v2/concordium/service.client';
+import { QueriesClient } from '../grpc/v2/concordium/service.client';
 import type { RpcTransport, RpcOptions } from '@protobuf-ts/runtime-rpc';
 import { CredentialRegistrationId } from './types/CredentialRegistrationId';
 import * as translate from './GRPCTypeTranslation';
 import { AccountAddress } from './types/accountAddress';
-import {
-    getAccountTransactionHandler,
-} from './accountTransactions';
-import {
-    calculateEnergyCost,
-} from './energyCost';
+import { getAccountTransactionHandler } from './accountTransactions';
+import { calculateEnergyCost } from './energyCost';
 import { countSignatures } from './util';
-import { serializeAccountTransactionPayload, serializeCredentialDeploymentPayload } from './serialization';
+import {
+    serializeAccountTransactionPayload,
+    serializeCredentialDeploymentPayload,
+} from './serialization';
 import { CcdAmount } from './types/ccdAmount';
 import { BlockItemStatus } from './types/blockItemSummary';
 import { ModuleReference } from './types/moduleReference';
@@ -102,12 +101,10 @@ export default class ConcordiumGRPCClient {
         };
 
         const response = await this.client.getAccountInfo(
-            accountInfoRequest,
-            this.options
+            accountInfoRequest
         ).response;
         return translate.accountInfo(response);
     }
-
 
     /**
      * Retrieves a status for the given transaction/block item.

@@ -1317,7 +1317,9 @@ __metadata:
   resolution: "@concordium/common-sdk@workspace:packages/common"
   dependencies:
     "@concordium/rust-bindings": 0.9.0
+    "@grpc/grpc-js": ^1.3.4
     "@noble/ed25519": ^1.7.1
+    "@protobuf-ts/grpc-transport": ^2.8.2
     "@scure/bip39": ^1.1.0
     "@types/bs58check": ^2.1.0
     "@types/jest": ^26.0.23
@@ -1352,7 +1354,7 @@ __metadata:
     "@concordium/common-sdk": 6.2.0
     "@grpc/grpc-js": ^1.3.4
     "@noble/ed25519": ^1.7.1
-    "@protobuf-ts/grpc-transport": 2.8.1
+    "@protobuf-ts/grpc-transport": ^2.8.2
     "@protobuf-ts/plugin": 2.8.1
     "@types/bs58check": ^2.1.0
     "@types/google-protobuf": ^3.15.3
@@ -1390,6 +1392,7 @@ __metadata:
   dependencies:
     "@concordium/common-sdk": 6.2.0
     "@concordium/rust-bindings": 0.9.0
+    "@protobuf-ts/grpcweb-transport": ^2.8.2
     "@typescript-eslint/eslint-plugin": ^4.28.1
     "@typescript-eslint/parser": ^4.28.1
     babel-jest: ^27.0.6
@@ -1858,15 +1861,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@protobuf-ts/grpc-transport@npm:2.8.1":
-  version: 2.8.1
-  resolution: "@protobuf-ts/grpc-transport@npm:2.8.1"
+"@protobuf-ts/grpc-transport@npm:^2.8.2":
+  version: 2.8.2
+  resolution: "@protobuf-ts/grpc-transport@npm:2.8.2"
   dependencies:
-    "@protobuf-ts/runtime": ^2.8.1
-    "@protobuf-ts/runtime-rpc": ^2.8.1
+    "@protobuf-ts/runtime": ^2.8.2
+    "@protobuf-ts/runtime-rpc": ^2.8.2
   peerDependencies:
     "@grpc/grpc-js": ^1.6.0
-  checksum: 4bf16ca9f8eedb2f49fba25cb637f8ec130145ad89bb9a2cd60a8b82cd9506b0c3919306a3424d82cd308041522297184cc1338a43f983e7e14d77c35262202b
+  checksum: 59ab8f2083bbfb9ff3c4b8669efa0e7d85756a821ee670d478a670c38b95ead961fcede4302569ba2a4f029dffd14d9988a790f109eb96f48dadab6bf7a1403c
+  languageName: node
+  linkType: hard
+
+"@protobuf-ts/grpcweb-transport@npm:^2.8.2":
+  version: 2.8.2
+  resolution: "@protobuf-ts/grpcweb-transport@npm:2.8.2"
+  dependencies:
+    "@protobuf-ts/runtime": ^2.8.2
+    "@protobuf-ts/runtime-rpc": ^2.8.2
+  checksum: c579ab87c5d20ae815fcd8ad59326fd36337cd35118dbecdfada8951efa9eeffffbc54052d4132b98615dd9c23c860b90f210ad538ab7b228b484645f7121ee9
   languageName: node
   linkType: hard
 
@@ -1914,10 +1927,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@protobuf-ts/runtime-rpc@npm:^2.8.2":
+  version: 2.8.2
+  resolution: "@protobuf-ts/runtime-rpc@npm:2.8.2"
+  dependencies:
+    "@protobuf-ts/runtime": ^2.8.2
+  checksum: a75847f34e93f3d3d17558797a3cfa7b3aa96207f88b00943fdf3e661c5c3b67f112f307b2b0c3e4bb3d40d435fdb41458dde492436befa738677e1e3d8d369d
+  languageName: node
+  linkType: hard
+
 "@protobuf-ts/runtime@npm:^2.8.1":
   version: 2.8.1
   resolution: "@protobuf-ts/runtime@npm:2.8.1"
   checksum: 456ce844edf22d1d744c616c661c0aee605d756e4d57fba35c721503f289b6bd7b2fd6c75501169b4d1dc94843dcfa397040a88003bf81b0268a91ad4e222013
+  languageName: node
+  linkType: hard
+
+"@protobuf-ts/runtime@npm:^2.8.2":
+  version: 2.8.2
+  resolution: "@protobuf-ts/runtime@npm:2.8.2"
+  checksum: ab322e832bfb347b271a8862b8ef3db27ffa380f9c49f94acb410534586a282ebd8af96d4459f959ad0fe5fbf34183f3f4fe512e50c9a4331b742a7445b16c92
   languageName: node
   linkType: hard
 

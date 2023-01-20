@@ -2,25 +2,25 @@ import { credentials, Metadata } from '@grpc/grpc-js/';
 import * as v1 from '@concordium/common-sdk';
 import * as v2 from '../grpc/v2/concordium/types';
 import ConcordiumNodeClientV1 from '../src/client';
-import ConcordiumNodeClientV2 from '../src/clientV2';
+import createConcordiumClientV2 from '../src/clientV2';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
-import { getAccountIdentifierInput, getBlockHashInput } from '../src/util';
+import ConcordiumNodeClientV2, { getAccountIdentifierInput, getBlockHashInput } from '@concordium/common-sdk/lib/GRPCClient';
 import {
     buildBasicAccountSigner,
     calculateEnergyCost,
     createCredentialDeploymentTransaction,
     getAccountTransactionHandler,
     sha256,
-    signTransaction,
+    getCredentialDeploymentSignDigest,
+   signTransaction,
 } from '@concordium/common-sdk';
 import { serializeAccountTransactionPayload } from '@concordium/common-sdk/src';
-import {
-    getCredentialDeploymentSignDigest,
-    serializeAccountTransaction,
-} from '@concordium/common-sdk/lib/serialization';
 import { getModuleBuffer, getIdentityInput } from './testHelpers';
 import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons';
+import {
+    serializeAccountTransaction,
+} from '@concordium/common-sdk/lib/serialization';
 
 /**
  * Creates a client to communicate with a local concordium-node
@@ -31,7 +31,7 @@ export function getNodeClientV2(
     port = 20000
 ): ConcordiumNodeClientV2 {
     const metadata = new Metadata();
-    return new ConcordiumNodeClientV2(
+    return createConcordiumClientV2(
         address,
         port,
         credentials.createInsecure(),

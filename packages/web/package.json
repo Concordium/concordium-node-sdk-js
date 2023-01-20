@@ -50,7 +50,9 @@
     "dependencies": {
         "@concordium/common-sdk": "6.2.0",
         "@concordium/rust-bindings": "0.9.0",
+        "@protobuf-ts/grpcweb-transport": "^2.8.2",
         "buffer": "^6.0.3",
+        "@grpc/grpc-js": "^1.3.4",
         "process": "^0.11.10"
     },
     "scripts": {

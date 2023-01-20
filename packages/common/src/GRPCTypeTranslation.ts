@@ -1,5 +1,5 @@
-import * as v1 from '@concordium/common-sdk';
-import * as v2 from '../grpc/v2/concordium/types';
+import * as v1 from './types';
+import * as v2 from '../../nodejs/grpc/v2/concordium/types';
 import { mapRecord, unwrap } from './util';
 import { Buffer } from 'buffer/';
 import {
@@ -8,8 +8,14 @@ import {
     RejectReasonTag,
     TransactionEventTag,
     TransactionKindString,
-} from '@concordium/common-sdk';
+} from '.';
 import bs58check from 'bs58check';
+import { AccountAddress } from './types/accountAddress';
+import { ModuleReference } from './types/moduleReference';
+import { AmountAddedByDecryptionEvent, BakerAddedEvent, BakerEvent, BakerKeysUpdatedEvent, BakerRemovedEvent, BakerSetRestakeEarningsEvent, BakerStakeChangedEvent, ContractInitializedEvent, ContractTraceEvent, CredentialKeysUpdatedEvent, CredentialsUpdatedEvent, DataRegisteredEvent, DelegationEvent, EncryptedAmountsRemovedEvent, EncryptedSelfAmountAddedEvent, MemoEvent, ModuleDeployedEvent, NewEncryptedAmountEvent, TransferredEvent, TransferredWithScheduleEvent } from './types/transactionEvent';
+import { RejectReason, SimpleRejectReasonTag } from './types/rejectReason';
+import { KeyUpdate, UpdateInstructionPayload, UpdateType } from './types/chainUpdate';
+import { AccountTransactionSummary, BaseAccountTransactionSummary, BaseBlockItemSummary, BlockItemStatus, BlockItemSummary, BlockItemSummaryInBlock } from './types/blockItemSummary';
 
 function unwrapToHex(bytes: Uint8Array | undefined): v1.HexString {
     return Buffer.from(unwrap(bytes)).toString('hex');
@@ -29,8 +35,8 @@ function unwrapValToHex(x: { value: Uint8Array } | undefined): string {
 
 function transModuleRef(
     moduleRef: v2.ModuleRef | undefined
-): v1.ModuleReference {
-    return new v1.ModuleReference(unwrapValToHex(moduleRef));
+): ModuleReference {
+    return new ModuleReference(unwrapValToHex(moduleRef));
 }
 
 function transRelease(release: v2.Release): v1.ReleaseScheduleWithTransactions {
@@ -279,7 +285,7 @@ export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
         schedule: unwrap(acc.schedule?.schedules).map(transRelease),
     };
     const accInfoCommon: v1.AccountInfoSimple = {
-        accountAddress: v1.AccountAddress.fromBytes(accAdrRaw).address,
+        accountAddress: AccountAddress.fromBytes(accAdrRaw).address,
         accountNonce: unwrap(acc.sequenceNumber?.value),
         accountAmount: unwrap(acc.amount?.value),
         accountIndex: unwrap(acc.index?.value),
@@ -424,7 +430,7 @@ function transAddress(
 
 function transContractTraceElement(
     contractTraceElement: v2.ContractTraceElement
-): v1.ContractTraceEvent {
+): ContractTraceEvent {
     const element = contractTraceElement.element;
     switch (element.oneofKind) {
         case 'updated':
@@ -471,7 +477,7 @@ function transContractTraceElement(
     }
 }
 
-function transBakerEvent(bakerEvent: v2.BakerEvent): v1.BakerEvent {
+function transBakerEvent(bakerEvent: v2.BakerEvent): BakerEvent {
     const event = bakerEvent.event;
     switch (event.oneofKind) {
         case 'bakerAdded': {
@@ -591,7 +597,7 @@ function transDelegTarget(
 
 function transDelegationEvent(
     delegationEvent: v2.DelegationEvent
-): v1.DelegationEvent {
+): DelegationEvent {
     const event = delegationEvent.event;
     switch (event.oneofKind) {
         case 'delegationStakeIncreased': {
@@ -643,8 +649,8 @@ function transDelegationEvent(
 
 function transRejectReason(
     rejectReason: v2.RejectReason | undefined
-): v1.RejectReason {
-    function simpleReason(tag: v1.SimpleRejectReasonTag): v1.RejectReason {
+): RejectReason {
+    function simpleReason(tag: SimpleRejectReasonTag): RejectReason {
         return {
             tag: RejectReasonTag[tag],
         };
@@ -842,12 +848,12 @@ function translateMintRate(mintRate: v2.MintRate | undefined): number {
 
 function translateUpdatePayload(
     payload: v2.UpdatePayload
-): v1.UpdateInstructionPayload {
+): UpdateInstructionPayload {
     switch (payload.payload.oneofKind) {
         case 'protocolUpdate': {
             const update = payload.payload.protocolUpdate;
             return {
-                updateType: v1.UpdateType.Protocol,
+                updateType: UpdateType.Protocol,
                 update: {
                     message: update.message,
                     specificationHash: unwrapToHex(
@@ -862,7 +868,7 @@ function translateUpdatePayload(
         }
         case 'electionDifficultyUpdate':
             return {
-                updateType: v1.UpdateType.ElectionDifficulty,
+                updateType: UpdateType.ElectionDifficulty,
                 update: {
                     electionDifficulty: transAmountFraction(
                         payload.payload.electionDifficultyUpdate.value
@@ -871,17 +877,17 @@ function translateUpdatePayload(
             };
         case 'euroPerEnergyUpdate':
             return {
-                updateType: v1.UpdateType.EuroPerEnergy,
+                updateType: UpdateType.EuroPerEnergy,
                 update: unwrap(payload.payload.euroPerEnergyUpdate.value),
             };
         case 'microCcdPerEuroUpdate':
             return {
-                updateType: v1.UpdateType.MicroGtuPerEuro,
+                updateType: UpdateType.MicroGtuPerEuro,
                 update: unwrap(payload.payload.microCcdPerEuroUpdate.value),
             };
         case 'foundationAccountUpdate':
             return {
-                updateType: v1.UpdateType.FoundationAccount,
+                updateType: UpdateType.FoundationAccount,
                 update: {
                     address: unwrapValToHex(
                         payload.payload.foundationAccountUpdate
@@ -891,7 +897,7 @@ function translateUpdatePayload(
         case 'mintDistributionUpdate': {
             const update = payload.payload.mintDistributionUpdate;
             return {
-                updateType: v1.UpdateType.MintDistribution,
+                updateType: UpdateType.MintDistribution,
                 update: {
                     bakingReward: transAmountFraction(update.bakingReward),
                     finalizationReward: transAmountFraction(
@@ -904,7 +910,7 @@ function translateUpdatePayload(
         case 'transactionFeeDistributionUpdate': {
             const update = payload.payload.transactionFeeDistributionUpdate;
             return {
-                updateType: v1.UpdateType.TransactionFeeDistribution,
+                updateType: UpdateType.TransactionFeeDistribution,
                 update: {
                     baker: transAmountFraction(update.baker),
                     gasAccount: transAmountFraction(update.gasAccount),
@@ -914,7 +920,7 @@ function translateUpdatePayload(
         case 'gasRewardsUpdate': {
             const update = payload.payload.gasRewardsUpdate;
             return {
-                updateType: v1.UpdateType.GasRewards,
+                updateType: UpdateType.GasRewards,
                 update: {
                     baker: transAmountFraction(update.baker),
                     finalizationProof: transAmountFraction(
@@ -930,7 +936,7 @@ function translateUpdatePayload(
         case 'bakerStakeThresholdUpdate': {
             const update = payload.payload.bakerStakeThresholdUpdate;
             return {
-                updateType: v1.UpdateType.BakerStakeThreshold,
+                updateType: UpdateType.BakerStakeThreshold,
                 update: {
                     threshold: unwrap(update.bakerStakeThreshold?.value),
                 },
@@ -938,24 +944,24 @@ function translateUpdatePayload(
         }
         case 'rootUpdate': {
             const rootUpdate = payload.payload.rootUpdate;
-            const keyUpdate: v1.KeyUpdate = translateKeyUpdate(rootUpdate);
+            const keyUpdate = translateKeyUpdate(rootUpdate);
             return {
-                updateType: v1.UpdateType.Root,
+                updateType: UpdateType.Root,
                 update: keyUpdate,
             };
         }
         case 'level1Update': {
             const lvl1Update = payload.payload.level1Update;
-            const keyUpdate: v1.KeyUpdate = translateKeyUpdate(lvl1Update);
+            const keyUpdate = translateKeyUpdate(lvl1Update);
             return {
-                updateType: v1.UpdateType.Level1,
+                updateType: UpdateType.Level1,
                 update: keyUpdate,
             };
         }
         case 'addAnonymityRevokerUpdate': {
             const update = payload.payload.addAnonymityRevokerUpdate;
             return {
-                updateType: v1.UpdateType.AddAnonymityRevoker,
+                updateType: UpdateType.AddAnonymityRevoker,
                 update: {
                     arDescription: unwrap(update.description),
                     arIdentity: unwrap(update.identity?.value),
@@ -966,7 +972,7 @@ function translateUpdatePayload(
         case 'addIdentityProviderUpdate': {
             const update = payload.payload.addIdentityProviderUpdate;
             return {
-                updateType: v1.UpdateType.AddIdentityProvider,
+                updateType: UpdateType.AddIdentityProvider,
                 update: {
                     ipDescription: unwrap(update.description),
                     ipIdentity: unwrap(update.identity?.value),
@@ -978,7 +984,7 @@ function translateUpdatePayload(
         case 'cooldownParametersCpv1Update': {
             const update = payload.payload.cooldownParametersCpv1Update;
             return {
-                updateType: v1.UpdateType.CooldownParameters,
+                updateType: UpdateType.CooldownParameters,
                 update: {
                     poolOwnerCooldown: unwrap(update.poolOwnerCooldown?.value),
                     delegatorCooldown: unwrap(update.delegatorCooldown?.value),
@@ -988,7 +994,7 @@ function translateUpdatePayload(
         case 'poolParametersCpv1Update': {
             const update = payload.payload.poolParametersCpv1Update;
             return {
-                updateType: v1.UpdateType.PoolParameters,
+                updateType: UpdateType.PoolParameters,
                 update: {
                     passiveCommissions: {
                         transactionCommission: transAmountFraction(
@@ -1025,7 +1031,7 @@ function translateUpdatePayload(
         case 'timeParametersCpv1Update': {
             const update = payload.payload.timeParametersCpv1Update;
             return {
-                updateType: v1.UpdateType.TimeParameters,
+                updateType: UpdateType.TimeParameters,
                 update: {
                     rewardPeriodLength: unwrap(
                         update.rewardPeriodLength?.value?.value
@@ -1037,7 +1043,7 @@ function translateUpdatePayload(
         case 'mintDistributionCpv1Update':
             const update = payload.payload.mintDistributionCpv1Update;
             return {
-                updateType: v1.UpdateType.MintDistribution,
+                updateType: UpdateType.MintDistribution,
                 update: {
                     bakingReward: transAmountFraction(update.bakingReward),
                     finalizationReward: transAmountFraction(
@@ -1076,7 +1082,7 @@ function translateAccessStructure(
 
 function translateKeyUpdate(
     keyUpdate: v2.RootUpdate | v2.Level1Update
-): v1.KeyUpdate {
+): KeyUpdate {
     switch (keyUpdate.updateType.oneofKind) {
         case 'rootKeysUpdate': {
             const update = keyUpdate.updateType.rootKeysUpdate;
@@ -1156,7 +1162,7 @@ function translateAuthorizationsV0(
     };
 }
 
-function translateMemoEvent(memo: v2.Memo): v1.MemoEvent {
+function translateMemoEvent(memo: v2.Memo): MemoEvent {
     return {
         tag: TransactionEventTag.TransferMemo,
         memo: unwrapValToHex(memo),
@@ -1165,7 +1171,7 @@ function translateMemoEvent(memo: v2.Memo): v1.MemoEvent {
 
 function translateTransactionType(
     type: v2.TransactionType | undefined
-): v1.TransactionKindString {
+): TransactionKindString {
     switch (type) {
         case v2.TransactionType.DEPLOY_MODULE:
             return TransactionKindString.DeployModule;
@@ -1216,9 +1222,9 @@ function translateTransactionType(
 
 function translateAccountTransactionSummary(
     details: v2.AccountTransactionDetails,
-    baseBlockItemSummary: v1.BaseBlockItemSummary
-): v1.AccountTransactionSummary {
-    const base: v1.BaseAccountTransactionSummary = {
+    baseBlockItemSummary: BaseBlockItemSummary
+): AccountTransactionSummary {
+    const base: BaseAccountTransactionSummary = {
         ...baseBlockItemSummary,
         type: v1.TransactionSummaryType.AccountTransaction,
         cost: unwrap(details.cost?.value),
@@ -1236,7 +1242,7 @@ function translateAccountTransactionSummary(
                 rejectReason: transRejectReason(effect.none.rejectReason),
             };
         case 'moduleDeployed': {
-            const event: v1.ModuleDeployedEvent = {
+            const event: ModuleDeployedEvent = {
                 tag: TransactionEventTag.ModuleDeployed,
                 contents: transModuleRef(effect.moduleDeployed),
             };
@@ -1248,7 +1254,7 @@ function translateAccountTransactionSummary(
         }
         case 'contractInitialized': {
             const contractInit = effect.contractInitialized;
-            const event: v1.ContractInitializedEvent = {
+            const event: ContractInitializedEvent = {
                 tag: TransactionEventTag.ContractInitialized,
                 address: unwrap(contractInit.address),
                 amount: unwrap(contractInit.amount?.value),
@@ -1273,7 +1279,7 @@ function translateAccountTransactionSummary(
             };
         }
         case 'accountTransfer': {
-            const event: v1.TransferredEvent = {
+            const event: TransferredEvent = {
                 tag: TransactionEventTag.Transferred,
                 amount: unwrap(effect.accountTransfer.amount?.value),
                 to: transAccountAddress(effect.accountTransfer.receiver),
@@ -1299,7 +1305,7 @@ function translateAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: TransactionKindString.AddBaker,
-                event: transBakerEvent({ event: effect }) as v1.BakerAddedEvent,
+                event: transBakerEvent({ event: effect }) as BakerAddedEvent,
             };
         case 'bakerRemoved':
             return {
@@ -1307,7 +1313,7 @@ function translateAccountTransactionSummary(
                 transactionType: TransactionKindString.RemoveBaker,
                 event: transBakerEvent({
                     event: effect,
-                }) as v1.BakerRemovedEvent,
+                }) as BakerRemovedEvent,
             };
         case 'bakerRestakeEarningsUpdated':
             return {
@@ -1316,7 +1322,7 @@ function translateAccountTransactionSummary(
                     TransactionKindString.UpdateBakerRestakeEarnings,
                 event: transBakerEvent({
                     event: effect,
-                }) as v1.BakerSetRestakeEarningsEvent,
+                }) as BakerSetRestakeEarningsEvent,
             };
         case 'bakerKeysUpdated':
             return {
@@ -1324,12 +1330,12 @@ function translateAccountTransactionSummary(
                 transactionType: TransactionKindString.UpdateBakerKeys,
                 event: transBakerEvent({
                     event: effect,
-                }) as v1.BakerKeysUpdatedEvent,
+                }) as BakerKeysUpdatedEvent,
             };
         case 'bakerStakeUpdated': {
             const increased = effect.bakerStakeUpdated.update?.increased;
             const update = effect.bakerStakeUpdated.update;
-            const event: v1.BakerStakeChangedEvent = {
+            const event: BakerStakeChangedEvent = {
                 tag: increased
                     ? TransactionEventTag.BakerStakeIncreased
                     : TransactionEventTag.BakerStakeDecreased,
@@ -1344,13 +1350,13 @@ function translateAccountTransactionSummary(
         }
         case 'encryptedAmountTransferred': {
             const transfer = effect.encryptedAmountTransferred;
-            const removed: v1.EncryptedAmountsRemovedEvent = {
+            const removed: EncryptedAmountsRemovedEvent = {
                 tag: TransactionEventTag.EncryptedAmountsRemoved,
                 inputAmount: unwrapValToHex(transfer.removed?.inputAmount),
                 newAmount: unwrapValToHex(transfer.removed?.newAmount),
                 upToindex: Number(unwrap(transfer.removed?.upToIndex)),
             };
-            const added: v1.NewEncryptedAmountEvent = {
+            const added: NewEncryptedAmountEvent = {
                 tag: TransactionEventTag.NewEncryptedAmount,
                 account: unwrapToBase58(transfer.added?.receiver),
                 newIndex: Number(unwrap(transfer.added?.newIndex)),
@@ -1376,7 +1382,7 @@ function translateAccountTransactionSummary(
         }
         case 'transferredToEncrypted': {
             const transfer = effect.transferredToEncrypted;
-            const event: v1.EncryptedSelfAmountAddedEvent = {
+            const event: EncryptedSelfAmountAddedEvent = {
                 tag: TransactionEventTag.EncryptedSelfAmountAdded,
                 account: unwrapToBase58(transfer.account),
                 amount: unwrap(transfer.amount?.value),
@@ -1390,13 +1396,13 @@ function translateAccountTransactionSummary(
         }
         case 'transferredToPublic': {
             const transfer = effect.transferredToPublic;
-            const removed: v1.EncryptedAmountsRemovedEvent = {
+            const removed: EncryptedAmountsRemovedEvent = {
                 tag: TransactionEventTag.EncryptedAmountsRemoved,
                 inputAmount: unwrapValToHex(transfer.removed?.inputAmount),
                 newAmount: unwrapValToHex(transfer.removed?.newAmount),
                 upToindex: Number(unwrap(transfer.removed?.upToIndex)),
             };
-            const added: v1.AmountAddedByDecryptionEvent = {
+            const added: AmountAddedByDecryptionEvent = {
                 tag: TransactionEventTag.AmountAddedByDecryption,
                 amount: unwrap(transfer.amount?.value),
             };
@@ -1408,7 +1414,7 @@ function translateAccountTransactionSummary(
         }
         case 'transferredWithSchedule': {
             const transfer = effect.transferredWithSchedule;
-            const event: v1.TransferredWithScheduleEvent = {
+            const event: TransferredWithScheduleEvent = {
                 tag: TransactionEventTag.TransferredWithSchedule,
                 to: unwrapToBase58(transfer.receiver),
                 amount: transfer.amount.map(transNewRelease),
@@ -1429,7 +1435,7 @@ function translateAccountTransactionSummary(
             }
         }
         case 'credentialKeysUpdated': {
-            const event: v1.CredentialKeysUpdatedEvent = {
+            const event: CredentialKeysUpdatedEvent = {
                 tag: TransactionEventTag.CredentialKeysUpdated,
                 credId: unwrapValToHex(effect.credentialKeysUpdated),
             };
@@ -1441,7 +1447,7 @@ function translateAccountTransactionSummary(
         }
         case 'credentialsUpdated': {
             const update = effect.credentialsUpdated;
-            const event: v1.CredentialsUpdatedEvent = {
+            const event: CredentialsUpdatedEvent = {
                 tag: TransactionEventTag.CredentialsUpdated,
                 newCredIds: update.newCredIds.map(unwrapValToHex),
                 removedCredIDs: update.removedCredIds.map(unwrapValToHex),
@@ -1454,7 +1460,7 @@ function translateAccountTransactionSummary(
             };
         }
         case 'dataRegistered': {
-            const event: v1.DataRegisteredEvent = {
+            const event: DataRegisteredEvent = {
                 tag: TransactionEventTag.DataRegistered,
                 data: unwrapValToHex(effect.dataRegistered),
             };
@@ -1487,7 +1493,7 @@ function translateAccountTransactionSummary(
 
 function transBlockItemSummary(
     summary: v2.BlockItemSummary
-): v1.BlockItemSummary {
+): BlockItemSummary {
     const base = {
         index: unwrap(summary.index?.value),
         energyCost: unwrap(summary.energyCost?.value),
@@ -1526,7 +1532,7 @@ function transBlockItemSummary(
 
 function transBlockItemSummaryInBlock(
     summary: v2.BlockItemSummaryInBlock
-): v1.BlockItemSummaryInBlock {
+): BlockItemSummaryInBlock {
     return {
         blockHash: unwrapValToHex(summary.blockHash),
         summary: transBlockItemSummary(unwrap(summary.outcome)),
@@ -1535,7 +1541,7 @@ function transBlockItemSummaryInBlock(
 
 export function blockItemStatus(
     itemStatus: v2.BlockItemStatus
-): v1.BlockItemStatus {
+): BlockItemStatus {
     if (itemStatus.status.oneofKind === 'received') {
         return {
             status: v1.TransactionStatusEnum.Received,

@@ -56,6 +56,7 @@ export * from './types/rejectReason';
 export * from './types/chainUpdate';
 export * from './types/transactionEvent';
 export * from './types/blockItemSummary';
+export {default as ConcordiumGRPCClient} from './GRPCClient';
 
 export { getAccountTransactionHandler } from './accountTransactions';
 export { calculateEnergyCost } from './energyCost';

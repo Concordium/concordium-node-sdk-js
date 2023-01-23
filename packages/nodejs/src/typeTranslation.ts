@@ -1243,7 +1243,7 @@ function translateAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: TransactionKindString.DeployModule,
-                event,
+                moduleDeployed: event,
             };
         }
         case 'contractInitialized': {
@@ -1260,7 +1260,7 @@ function translateAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: TransactionKindString.InitContract,
-                event,
+                contractInitialized: event,
             };
         }
         case 'contractUpdateIssued': {
@@ -1273,7 +1273,7 @@ function translateAccountTransactionSummary(
             };
         }
         case 'accountTransfer': {
-            const event: v1.TransferredEvent = {
+            const transfer: v1.TransferredEvent = {
                 tag: TransactionEventTag.Transferred,
                 amount: unwrap(effect.accountTransfer.amount?.value),
                 to: transAccountAddress(effect.accountTransfer.receiver),
@@ -1282,16 +1282,14 @@ function translateAccountTransactionSummary(
                 return {
                     ...base,
                     transactionType: TransactionKindString.TransferWithMemo,
-                    events: [
-                        event,
-                        translateMemoEvent(effect.accountTransfer.memo),
-                    ],
+                    transfer,
+                    memo: translateMemoEvent(effect.accountTransfer.memo),
                 };
             } else {
                 return {
                     ...base,
                     transactionType: TransactionKindString.Transfer,
-                    event,
+                    transfer,
                 };
             }
         }
@@ -1299,13 +1297,15 @@ function translateAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: TransactionKindString.AddBaker,
-                event: transBakerEvent({ event: effect }) as v1.BakerAddedEvent,
+                bakerAdded: transBakerEvent({
+                    event: effect,
+                }) as v1.BakerAddedEvent,
             };
         case 'bakerRemoved':
             return {
                 ...base,
                 transactionType: TransactionKindString.RemoveBaker,
-                event: transBakerEvent({
+                bakerRemoved: transBakerEvent({
                     event: effect,
                 }) as v1.BakerRemovedEvent,
             };
@@ -1314,7 +1314,7 @@ function translateAccountTransactionSummary(
                 ...base,
                 transactionType:
                     TransactionKindString.UpdateBakerRestakeEarnings,
-                event: transBakerEvent({
+                bakerRestakeEarningsUpdated: transBakerEvent({
                     event: effect,
                 }) as v1.BakerSetRestakeEarningsEvent,
             };
@@ -1322,7 +1322,7 @@ function translateAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: TransactionKindString.UpdateBakerKeys,
-                event: transBakerEvent({
+                bakerKeysUpdated: transBakerEvent({
                     event: effect,
                 }) as v1.BakerKeysUpdatedEvent,
             };
@@ -1339,7 +1339,7 @@ function translateAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: TransactionKindString.UpdateBakerStake,
-                event,
+                bakerStakeChanged: event,
             };
         }
         case 'encryptedAmountTransferred': {
@@ -1363,20 +1363,23 @@ function translateAccountTransactionSummary(
                     ...base,
                     transactionType:
                         TransactionKindString.EncryptedAmountTransferWithMemo,
-                    events: [removed, added, translateMemoEvent(transfer.memo)],
+                    removed,
+                    added,
+                    memo: translateMemoEvent(transfer.memo),
                 };
             } else {
                 return {
                     ...base,
                     transactionType:
                         TransactionKindString.EncryptedAmountTransfer,
-                    events: [removed, added],
+                    removed,
+                    added,
                 };
             }
         }
         case 'transferredToEncrypted': {
             const transfer = effect.transferredToEncrypted;
-            const event: v1.EncryptedSelfAmountAddedEvent = {
+            const added: v1.EncryptedSelfAmountAddedEvent = {
                 tag: TransactionEventTag.EncryptedSelfAmountAdded,
                 account: unwrapToBase58(transfer.account),
                 amount: unwrap(transfer.amount?.value),
@@ -1385,7 +1388,7 @@ function translateAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: TransactionKindString.TransferToEncrypted,
-                event,
+                added,
             };
         }
         case 'transferredToPublic': {
@@ -1403,7 +1406,8 @@ function translateAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: TransactionKindString.TransferToPublic,
-                events: [removed, added],
+                removed,
+                added,
             };
         }
         case 'transferredWithSchedule': {
@@ -1418,7 +1422,8 @@ function translateAccountTransactionSummary(
                     ...base,
                     transactionType:
                         TransactionKindString.TransferWithScheduleAndMemo,
-                    events: [event, translateMemoEvent(transfer.memo)],
+                    transfer: event,
+                    memo: translateMemoEvent(transfer.memo),
                 };
             } else {
                 return {
@@ -1436,7 +1441,7 @@ function translateAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: TransactionKindString.UpdateCredentialKeys,
-                event,
+                keysUpdated: event,
             };
         }
         case 'credentialsUpdated': {
@@ -1450,7 +1455,7 @@ function translateAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: TransactionKindString.UpdateCredentials,
-                event,
+                credentialsUpdated: event,
             };
         }
         case 'dataRegistered': {
@@ -1461,7 +1466,7 @@ function translateAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: TransactionKindString.RegisterData,
-                event,
+                dataRegistered: event,
             };
         }
         case 'bakerConfigured':

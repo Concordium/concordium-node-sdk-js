@@ -195,13 +195,15 @@ export default class ConcordiumNodeClient {
     async getInstanceInfo(
         contractAddress: v1.ContractAddress,
         blockHash?: HexString
-    ): Promise<v2.InstanceInfo> {
+    ): Promise<v1.InstanceInfo> {
         const instanceInfoRequest: v2.InstanceInfoRequest = {
             blockHash: getBlockHashInput(blockHash),
             address: contractAddress,
         };
 
-        return await this.client.getInstanceInfo(instanceInfoRequest).response;
+        const response = await this.client.getInstanceInfo(instanceInfoRequest)
+            .response;
+        return translate.instanceInfo(response);
     }
 
     /**

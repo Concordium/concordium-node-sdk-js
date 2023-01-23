@@ -832,18 +832,16 @@ function translateMintRate(mintRate: v2.MintRate | undefined): number {
 }
 
 function translateUpdatePayload(
-    payload: v2.UpdatePayload
+    payload: v2.UpdatePayload | undefined
 ): v1.UpdateInstructionPayload {
-    switch (payload.payload.oneofKind) {
+    switch (payload?.payload?.oneofKind) {
         case 'protocolUpdate': {
             const update = payload.payload.protocolUpdate;
             return {
                 updateType: v1.UpdateType.Protocol,
                 update: {
                     message: update.message,
-                    specificationHash: unwrapToHex(
-                        update.specificationHash?.value
-                    ),
+                    specificationHash: unwrapValToHex(update.specificationHash),
                     specificationUrl: update.specificationUrl,
                     specificationAuxiliaryData: unwrapToHex(
                         update.specificationAuxiliaryData
@@ -1254,7 +1252,7 @@ function translateAccountTransactionSummary(
                 contractInitialized: event,
             };
         }
-        case 'contractUpdateIssued': {
+        case 'contractUpdateIssued':
             return {
                 ...base,
                 transactionType: TransactionKindString.Update,
@@ -1262,7 +1260,6 @@ function translateAccountTransactionSummary(
                     transContractTraceElement
                 ),
             };
-        }
         case 'accountTransfer': {
             const transfer: v1.TransferredEvent = {
                 tag: TransactionEventTag.Transferred,
@@ -1511,9 +1508,7 @@ function transBlockItemSummary(
             type: v1.TransactionSummaryType.UpdateTransaction,
             ...base,
             effectiveTime: unwrap(summary.details.update.effectiveTime?.value),
-            payload: translateUpdatePayload(
-                unwrap(summary.details.update.payload)
-            ),
+            payload: translateUpdatePayload(summary.details.update.payload),
         };
     } else {
         throw Error('Invalid BlockItemSummary encountered!');
@@ -1581,6 +1576,43 @@ export function invokeInstanceResponse(
         }
         default:
             throw Error('BlockItemStatus was undefined!');
+    }
+}
+
+function transInstanceInfoCommon(
+    info: v2.InstanceInfo_V0 | v2.InstanceInfo_V1
+): Omit<v1.InstanceInfoCommon, 'version'> {
+    return {
+        amount: new v1.CcdAmount(unwrap(info.amount?.value)),
+        sourceModule: v1.ModuleReference.fromBytes(
+            Buffer.from(unwrap(info.sourceModule?.value))
+        ),
+        owner: v1.AccountAddress.fromBytes(
+            Buffer.from(unwrap(info.owner?.value))
+        ),
+        methods: info.methods.map((name) => name.value),
+        name: unwrap(info.name?.value),
+    };
+}
+
+export function instanceInfo(instanceInfo: v2.InstanceInfo): v1.InstanceInfo {
+    switch (instanceInfo.version.oneofKind) {
+        case 'v0':
+            return {
+                ...transInstanceInfoCommon(instanceInfo.version.v0),
+                version: 0,
+                model: Buffer.from(
+                    unwrap(instanceInfo.version.v0.model?.value)
+                ),
+            };
+        case 'v1':
+            return {
+                ...transInstanceInfoCommon(instanceInfo.version.v1),
+                version: 1,
+            };
+
+        default:
+            throw Error('InstanceInfo was undefined');
     }
 }
 

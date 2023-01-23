@@ -226,7 +226,6 @@ test('Failed invoke contract', async () => {
 
     expect(result.usedEnergy).toBe(340n);
     expect(result.reason.tag).toBe(v1.RejectReasonTag.RejectedReceive);
-
 });
 
 test('Invoke contract on v0 contract', async () => {
@@ -260,14 +259,8 @@ test('Invoke contract same in v1 and v2 on v1 contract', async () => {
         parameter: undefined,
         energy: 30000n,
     };
-    const resultV1 = await clientV1.invokeContract(
-        context,
-        testBlockHash
-    );
-   const resultV2 = await clientV2.invokeContract(
-        context,
-        testBlockHash
-    );
+    const resultV1 = await clientV1.invokeContract(context, testBlockHash);
+    const resultV2 = await clientV2.invokeContract(context, testBlockHash);
 
     expect(resultV2).toEqual(resultV1);
 });

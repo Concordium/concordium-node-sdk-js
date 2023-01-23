@@ -203,7 +203,7 @@ export const invokeInstanceResponseV0 = {
     returnValue: undefined,
     events: [
         {
-            tag: "Updated",
+            tag: 'Updated',
             events: [],
             amount: 1n,
             address: {
@@ -212,11 +212,11 @@ export const invokeInstanceResponseV0 = {
             },
             contractVersion: 0,
             instigator: {
-                type: "AddressAccount",
-                address: "3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G",
+                type: 'AddressAccount',
+                address: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
             },
             message: '',
             receiveName: 'PiggyBank.insert',
         },
-    ]
+    ],
 };

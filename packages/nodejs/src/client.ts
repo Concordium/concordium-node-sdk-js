@@ -871,7 +871,12 @@ export default class ConcordiumNodeClient {
             this.client.invokeContract,
             requestObject
         );
-        const bigIntPropertyKeys = ['usedEnergy', 'index', 'subindex', 'amount'];
+        const bigIntPropertyKeys = [
+            'usedEnergy',
+            'index',
+            'subindex',
+            'amount',
+        ];
         return unwrapJsonResponse<InvokeContractResult>(
             response,
             buildJsonResponseReviver([], bigIntPropertyKeys),

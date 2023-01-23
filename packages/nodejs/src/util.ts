@@ -102,25 +102,27 @@ export function getAccountIdentifierInput(
     return { accountIdentifierInput: returnIdentifier };
 }
 
-export function getInvokerInput(invoker?: v1.AccountAddress | v1.ContractAddress): v2.Address | undefined {
+export function getInvokerInput(
+    invoker?: v1.AccountAddress | v1.ContractAddress
+): v2.Address | undefined {
     if (!invoker) {
         return undefined;
     } else if ((<v1.AccountAddress>invoker).decodedAddress) {
         return {
             type: {
                 oneofKind: 'account',
-                account: {value:  (<v1.AccountAddress>invoker).decodedAddress}
-            }
-        }
+                account: { value: (<v1.AccountAddress>invoker).decodedAddress },
+            },
+        };
     } else if ((<v1.ContractAddress>invoker).index) {
         return {
             type: {
                 oneofKind: 'contract',
-                contract: (<v1.ContractAddress>invoker)
-            }
-        }
+                contract: <v1.ContractAddress>invoker,
+            },
+        };
     } else {
-            throw new Error('Unexpected input to build invoker');
+        throw new Error('Unexpected input to build invoker');
     }
 }
 

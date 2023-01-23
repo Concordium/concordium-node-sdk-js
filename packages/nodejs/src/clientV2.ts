@@ -240,7 +240,7 @@ export default class ConcordiumNodeClient {
         const response = await this.client.invokeInstance(invokeInstanceRequest)
             .response;
         return translate.invokeInstanceResponse(response);
-   }
+    }
 
     /**
      * Serializes and sends an account transaction to the node to be

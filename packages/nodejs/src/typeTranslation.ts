@@ -378,15 +378,6 @@ export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
     };
 }
 
-function transContractAddress(
-    contractAddress: v2.ContractAddress | undefined
-): v1.ContractAddress {
-    return {
-        index: unwrap(contractAddress?.index),
-        subindex: unwrap(contractAddress?.subindex),
-    };
-}
-
 function transAccountAddress(
     accountAddress: v2.AccountAddress | undefined
 ): v1.AddressAccount {
@@ -408,14 +399,14 @@ function transAddress(
     } else if (contractAddress.index) {
         return {
             type: 'AddressContract',
-            address: transContractAddress(contractAddress),
+            address: contractAddress,
         };
     } else if (address.type.oneofKind === 'account') {
         return transAccountAddress(address.type.account);
     } else if (address.type.oneofKind === 'contract') {
         return {
             type: 'AddressContract',
-            address: transContractAddress(address.type.contract),
+            address: address.type.contract,
         };
     } else {
         throw Error('Invalid address encountered!');
@@ -448,19 +439,19 @@ function transContractTraceElement(
         case 'interrupted':
             return {
                 tag: TransactionEventTag.Interrupted,
-                address: transContractAddress(element.interrupted.address),
+                address: unwrap(element.interrupted.address),
                 events: element.interrupted.events.map(unwrapValToHex),
             };
         case 'resumed':
             return {
                 tag: TransactionEventTag.Resumed,
-                address: transContractAddress(element.resumed.address),
+                address: unwrap(element.resumed.address),
                 success: unwrap(element.resumed.success),
             };
         case 'upgraded':
             return {
                 tag: TransactionEventTag.Upgraded,
-                address: transContractAddress(element.upgraded.address),
+                address: unwrap(element.upgraded.address),
                 from: transModuleRef(element.upgraded.from),
                 to: transModuleRef(element.upgraded.to),
             };
@@ -1060,7 +1051,7 @@ function translateCommissionRange(
 }
 function translateUpdatePublicKey(key: v2.UpdatePublicKey): v1.VerifyKey {
     return {
-        schemeId: 'Ed25516',
+        schemeId: 'Ed25519',
         verifyKey: unwrapValToHex(key),
     };
 }

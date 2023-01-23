@@ -198,22 +198,25 @@ export const instanceInfo = {
 };
 
 export const invokeInstanceResponseV0 = {
-    success: {
-        usedEnergy: { value: '342' },
-        effects: [
-            {
-                updated: {
-                    address: { index: '6' },
-                    instigator: {
-                        account: {
-                            value: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
-                        },
-                    },
-                    amount: { value: '42' },
-                    parameter: {},
-                    receiveName: { value: 'PiggyBank.insert' },
-                },
+    tag: 'success',
+    usedEnergy: 342n,
+    returnValue: undefined,
+    events: [
+        {
+            tag: "Updated",
+            events: [],
+            amount: 1n,
+            address: {
+                index: 6n,
+                subindex: 0n,
             },
-        ],
-    },
+            contractVersion: 0,
+            instigator: {
+                type: "AddressAccount",
+                address: "3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G",
+            },
+            message: '',
+            receiveName: 'PiggyBank.insert',
+        },
+    ]
 };

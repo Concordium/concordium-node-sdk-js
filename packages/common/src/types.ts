@@ -7,6 +7,7 @@ import { Buffer } from 'buffer/';
 import { ModuleReference } from './types/moduleReference';
 import { RejectReason } from './types/rejectReason';
 import {
+    ContractTraceEvent,
     MemoEvent,
     TransactionEvent,
     TransferredEvent,
@@ -1307,10 +1308,10 @@ export function buildInvoker(
     }
 }
 
-export interface InvokeContractSuccessResult
-    extends Pick<SuccessfulEventResult, 'events'> {
+export interface InvokeContractSuccessResult {
     tag: 'success';
     usedEnergy: bigint;
+    events: ContractTraceEvent[];
     returnValue?: string;
 }
 

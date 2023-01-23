@@ -204,69 +204,72 @@ test('getInstanceInfo', async () => {
     expect(v2.InstanceInfo.toJson(instanceInfo)).toEqual(expected.instanceInfo);
 });
 
-test('invokeInstance on v0 contract', async () => {
-    const contractAddress = {
-        index: 6n,
-        subindex: 0n,
-    };
-
-    const invokeInstanceResponse = await clientV2.invokeInstance(
-        contractAddress,
-        new v1.CcdAmount(42n),
-        'PiggyBank.insert',
-        new Uint8Array(),
-        30000n,
-        undefined,
+test('Failed invoke contract', async () => {
+    const result = await clientV2.invokeContract(
+        {
+            invoker: testAccount,
+            contract: {
+                index: 6n,
+                subindex: 0n,
+            },
+            method: 'PiggyBank.smash',
+            amount: new v1.CcdAmount(0n),
+            parameter: undefined,
+            energy: 30000n,
+        },
         testBlockHash
     );
 
-    const responseJson = v2.InvokeInstanceResponse.toJson(
-        invokeInstanceResponse
-    );
-    expect(responseJson).toEqual(expected.invokeInstanceResponseV0);
+    if (result.tag !== 'failure') {
+        throw new Error('Expected invoke to be fail');
+    }
+
+    expect(result.usedEnergy).toBe(340n);
+    expect(result.reason.tag).toBe(v1.RejectReasonTag.RejectedReceive);
+
 });
 
-test('invokeInstance on v0 contract', async () => {
-    const contractAddress = {
-        index: 6n,
-        subindex: 0n,
-    };
-
-    const invokeInstanceResponse = await clientV2.invokeInstance(
-        contractAddress,
-        new v1.CcdAmount(42n),
-        'PiggyBank.insert',
-        new Uint8Array(),
-        30000n,
-        undefined,
+test('Invoke contract on v0 contract', async () => {
+    const result = await clientV2.invokeContract(
+        {
+            invoker: testAccount,
+            contract: {
+                index: 6n,
+                subindex: 0n,
+            },
+            method: 'PiggyBank.insert',
+            amount: new v1.CcdAmount(1n),
+            parameter: undefined,
+            energy: 30000n,
+        },
         testBlockHash
     );
 
-    const expected = {
-        success: {
-            usedEnergy: { value: '342' },
-            effects: [
-                {
-                    updated: {
-                        address: { index: '6' },
-                        instigator: {
-                            account: {
-                                value: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
-                            },
-                        },
-                        amount: { value: '42' },
-                        parameter: {},
-                        receiveName: { value: 'PiggyBank.insert' },
-                    },
-                },
-            ],
-        },
-    };
+    expect(result).toEqual(expected.invokeInstanceResponseV0);
+});
 
-    const responseJson = v2.InvokeInstanceResponse.toJson(
-        invokeInstanceResponse
+test('Invoke contract same in v1 and v2 on v1 contract', async () => {
+    const context = {
+        invoker: testAccount,
+        contract: {
+            index: 81n,
+            subindex: 0n,
+        },
+        method: 'PiggyBank.view',
+        amount: new v1.CcdAmount(0n),
+        parameter: undefined,
+        energy: 30000n,
+    };
+    const resultV1 = await clientV1.invokeContract(
+        context,
+        testBlockHash
     );
-    expect(responseJson).toEqual(expected);
+   const resultV2 = await clientV2.invokeContract(
+        context,
+        testBlockHash
+    );
+
+    expect(resultV2).toEqual(resultV1);
 });
 
 test('getModuleSource', async () => {

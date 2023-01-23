@@ -13,6 +13,7 @@ import {
     getBlockHashInput,
     getAccountIdentifierInput,
     assertValidHash,
+    getInvokerInput,
 } from './util';
 import { countSignatures } from '@concordium/common-sdk/src/util';
 
@@ -205,12 +206,12 @@ export default class ConcordiumNodeClient {
 
     /**
      * Invokes a smart contract.
-     * @param instance The address of the smart contract that shall be evoked.
-     * @param amount The amount of microCCD to invoke the contract with.
-     * @param entrypoint The entrypoint (receive function) that shall be invoked.
-     * @param parameter The serialized parameters that the contract will be invoked with.
-     * @param energy The maximum amount of energy to allow for execution.
-     * @param invoker The address of the invoker, if undefined uses the zero account address.
+     * @param context.contract The address of the smart contract that shall be evoked.
+     * @param context.amount The amount of microCCD to invoke the contract with.
+     * @param context.method The entrypoint (receive function) that shall be invoked.
+     * @param context.parameter The serialized parameters that the contract will be invoked with.
+     * @param context.energy The maximum amount of energy to allow for execution.
+     * @param context.invoker The address of the invoker, if undefined uses the zero account address.
      * @param blockHash the block hash at which the contract should be invoked at. The contract is invoked in the state at the end of this block.
      * @returns If the node was able to invoke, then a object describing the outcome is returned.
      * The outcome is determined by the `tag` field, which is either `success` or `failure`.
@@ -220,29 +221,26 @@ export default class ConcordiumNodeClient {
      * If the tag is `failure`, then a `reason` field is present, and it contains the reason the update would have been rejected.
      * If either the block does not exist, or then node fails to parse of any of the inputs, then undefined is returned.
      */
-    async invokeInstance(
-        instance: v2.ContractAddress,
-        amount: v1.CcdAmount,
-        entrypoint: string,
-        parameter: Uint8Array,
-        energy: bigint,
-        invoker?: v2.Address,
+    async invokeContract(
+        context: v1.ContractContext,
         blockHash?: HexString
-    ): Promise<v2.InvokeInstanceResponse> {
+    ): Promise<v1.InvokeContractResult> {
         const blockHashInput = getBlockHashInput(blockHash);
 
         const invokeInstanceRequest: v2.InvokeInstanceRequest = {
             blockHash: blockHashInput,
-            invoker: invoker,
-            instance: instance,
-            amount: { value: amount.microCcdAmount },
-            entrypoint: { value: entrypoint },
-            parameter: { value: parameter },
-            energy: { value: energy },
+            invoker: getInvokerInput(context.invoker),
+            instance: context.contract,
+            amount: { value: context.amount?.microCcdAmount || 0n },
+            entrypoint: { value: context.method },
+            parameter: { value: context.parameter || Buffer.alloc(0) },
+            energy: { value: context.energy || 0n },
         };
 
-        return await this.client.invokeInstance(invokeInstanceRequest).response;
-    }
+        const response = await this.client.invokeInstance(invokeInstanceRequest)
+            .response;
+        return translate.invokeInstanceResponse(response);
+   }
 
     /**
      * Serializes and sends an account transaction to the node to be
@@ -251,7 +249,7 @@ export default class ConcordiumNodeClient {
      * Note that a transaction can still fail even if it was accepted by the node.
      * To keep track of the transaction use getTransactionStatus.
      * @param transaction the transaction to send to the node
-     * @param signatures the signatures on the signing digest of the transaction
+     * @param signature the signatures on the signing digest of the transaction
      * @returns The transaction hash as a byte array
      */
     async sendAccountTransaction(

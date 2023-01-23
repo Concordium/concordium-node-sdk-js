@@ -732,7 +732,7 @@ function transRejectReason(
             };
         case 'invalidAccountReference':
             return {
-                tag: Tag.ModuleHashAlreadyExists,
+                tag: Tag.InvalidAccountReference,
                 contents: unwrapToBase58(reason.invalidAccountReference),
             };
         case 'invalidInitMethod':
@@ -1536,26 +1536,49 @@ function transBlockItemSummaryInBlock(
 export function blockItemStatus(
     itemStatus: v2.BlockItemStatus
 ): v1.BlockItemStatus {
-    if (itemStatus.status.oneofKind === 'received') {
-        return {
-            status: v1.TransactionStatusEnum.Received,
-        };
-    } else if (itemStatus.status.oneofKind === 'committed') {
-        return {
-            status: v1.TransactionStatusEnum.Committed,
-            outcomes: itemStatus.status.committed.outcomes.map(
-                transBlockItemSummaryInBlock
-            ),
-        };
-    } else if (itemStatus.status.oneofKind === 'finalized') {
-        return {
-            status: v1.TransactionStatusEnum.Finalized,
-            outcome: transBlockItemSummaryInBlock(
-                unwrap(itemStatus.status.finalized.outcome)
-            ),
-        };
-    } else {
-        throw Error('BlockItemStatus was undefined!');
+    switch(itemStatus.status.oneofKind) {
+        case 'received':
+            return {
+                status: v1.TransactionStatusEnum.Received,
+            };
+       case 'committed':
+            return {
+                status: v1.TransactionStatusEnum.Committed,
+                outcomes: itemStatus.status.committed.outcomes.map(
+                    transBlockItemSummaryInBlock
+                ),
+            };
+       case 'finalized':
+            return {
+                status: v1.TransactionStatusEnum.Finalized,
+                outcome: transBlockItemSummaryInBlock(
+                    unwrap(itemStatus.status.finalized.outcome)
+                ),
+            };
+       default:
+            throw Error('BlockItemStatus was undefined!');
+    }
+}
+
+export function invokeInstanceResponse(invokeResponse: v2.InvokeInstanceResponse): v1.InvokeContractResult  {
+    switch (invokeResponse.result.oneofKind) {
+        case 'failure':
+            return {
+                tag: 'failure',
+                usedEnergy: unwrap(invokeResponse.result.failure.usedEnergy?.value),
+                reason: transRejectReason(invokeResponse.result.failure.reason)
+            }
+        case 'success': {
+            const result = invokeResponse.result.success;
+            return {
+                tag: 'success',
+                usedEnergy: unwrap(result.usedEnergy?.value),
+                returnValue: result.returnValue ? Buffer.from(unwrap(result.returnValue)).toString('hex') : undefined,
+                events: result.effects.map(transContractTraceElement)
+            }
+      }
+        default:
+            throw Error('BlockItemStatus was undefined!');
     }
 }
 

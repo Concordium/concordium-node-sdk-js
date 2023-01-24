@@ -451,7 +451,7 @@ function trContractTraceElement(
             };
         default:
             throw Error(
-                'Invalid ContractTraceElement received, not able to tr to Transaction Event!'
+                'Invalid ContractTraceElement received, not able to translate to Transaction Event!'
             );
     }
 }

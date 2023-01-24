@@ -27,48 +27,46 @@ function unwrapValToHex(x: { value: Uint8Array } | undefined): string {
     return unwrapToHex(unwrap(x).value);
 }
 
-function transModuleRef(
-    moduleRef: v2.ModuleRef | undefined
-): v1.ModuleReference {
+function trModuleRef(moduleRef: v2.ModuleRef | undefined): v1.ModuleReference {
     return new v1.ModuleReference(unwrapValToHex(moduleRef));
 }
 
-function transRelease(release: v2.Release): v1.ReleaseScheduleWithTransactions {
+function trRelease(release: v2.Release): v1.ReleaseScheduleWithTransactions {
     return {
-        timestamp: transTimestamp(release.timestamp),
+        timestamp: trTimestamp(release.timestamp),
         amount: unwrap(release.amount?.value),
         transactions: release.transactions.map(unwrapValToHex),
     };
 }
 
-function transNewRelease(release: v2.NewRelease): v1.ReleaseSchedule {
+function trNewRelease(release: v2.NewRelease): v1.ReleaseSchedule {
     return {
-        timestamp: transTimestamp(release.timestamp),
+        timestamp: trTimestamp(release.timestamp),
         amount: unwrap(release.amount?.value),
     };
 }
 
-function transDate(ym: v2.YearMonth): string {
+function trDate(ym: v2.YearMonth): string {
     return String(ym.year) + String(ym.month).padStart(2, '0');
 }
 
-function transAttKey(attributeKey: number): v1.AttributeKey {
+function trAttKey(attributeKey: number): v1.AttributeKey {
     return v1.AttributesKeys[attributeKey] as v1.AttributeKey;
 }
 
-function transCommits(
+function trCommits(
     cmm: v2.CredentialCommitments
 ): v1.CredentialDeploymentCommitments {
     return {
         cmmPrf: unwrapValToHex(cmm.prf),
         cmmCredCounter: unwrapValToHex(cmm.credCounter),
         cmmIdCredSecSharingCoeff: cmm.idCredSecSharingCoeff.map(unwrapValToHex),
-        cmmAttributes: mapRecord(cmm.attributes, unwrapValToHex, transAttKey),
+        cmmAttributes: mapRecord(cmm.attributes, unwrapValToHex, trAttKey),
         cmmMaxAccounts: unwrapValToHex(cmm.maxAccounts),
     };
 }
 
-function transVerifyKey(verifyKey: v2.AccountVerifyKey): v1.VerifyKey {
+function trVerifyKey(verifyKey: v2.AccountVerifyKey): v1.VerifyKey {
     if (verifyKey.key.oneofKind === 'ed25519Key') {
         return {
             schemeId: 'Ed25519',
@@ -82,22 +80,22 @@ function transVerifyKey(verifyKey: v2.AccountVerifyKey): v1.VerifyKey {
     }
 }
 
-function transCredKeys(
+function trCredKeys(
     credKeys: v2.CredentialPublicKeys
 ): v1.CredentialPublicKeys {
     return {
         threshold: unwrap(credKeys.threshold?.value),
-        keys: mapRecord(credKeys.keys, transVerifyKey),
+        keys: mapRecord(credKeys.keys, trVerifyKey),
     };
 }
 
-function transChainArData(chainArData: v2.ChainArData): v1.ChainArData {
+function trChainArData(chainArData: v2.ChainArData): v1.ChainArData {
     return {
         encIdCredPubShare: unwrapToHex(chainArData.encIdCredPubShare),
     };
 }
 
-function transCred(cred: v2.AccountCredential): v1.AccountCredential {
+function trCred(cred: v2.AccountCredential): v1.AccountCredential {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const crd = cred.credentialValues as any;
     if (crd === undefined) {
@@ -107,17 +105,17 @@ function transCred(cred: v2.AccountCredential): v1.AccountCredential {
     const credVals = isNormal ? crd.normal : crd.initial;
 
     const policy: v1.Policy = {
-        validTo: transDate(unwrap(credVals.policy?.validTo)),
-        createdAt: transDate(unwrap(credVals.policy?.createdAt)),
+        validTo: trDate(unwrap(credVals.policy?.validTo)),
+        createdAt: trDate(unwrap(credVals.policy?.createdAt)),
         revealedAttributes: mapRecord(
             credVals.policy?.attributes,
             unwrapToHex,
-            transAttKey
+            trAttKey
         ),
     };
     const commonValues = {
         ipIdentity: unwrap(credVals.ipId?.value),
-        credentialPublicKeys: transCredKeys(unwrap(credVals.keys)),
+        credentialPublicKeys: trCredKeys(unwrap(credVals.keys)),
         policy: policy,
     };
 
@@ -127,8 +125,8 @@ function transCred(cred: v2.AccountCredential): v1.AccountCredential {
             ...commonValues,
             credId: unwrapValToHex(credVals.credId),
             revocationThreshold: unwrap(credVals.arThreshold?.value),
-            arData: mapRecord(credVals.arData, transChainArData, String),
-            commitments: transCommits(unwrap(credVals.commitments)),
+            arData: mapRecord(credVals.arData, trChainArData, String),
+            commitments: trCommits(unwrap(credVals.commitments)),
         };
         value = {
             type: 'normal',
@@ -151,9 +149,7 @@ function transCred(cred: v2.AccountCredential): v1.AccountCredential {
     };
 }
 
-function transDelegatorTarget(
-    target: v2.DelegationTarget
-): v1.DelegationTarget {
+function trDelegatorTarget(target: v2.DelegationTarget): v1.DelegationTarget {
     if (target.target.oneofKind === 'passive') {
         return {
             delegateType: v1.DelegationTargetType.PassiveDelegation,
@@ -171,23 +167,23 @@ function transDelegatorTarget(
     }
 }
 
-function transTimestamp(timestamp: v2.Timestamp | undefined): Date {
+function trTimestamp(timestamp: v2.Timestamp | undefined): Date {
     return new Date(Number(unwrap(timestamp?.value)) * 1000);
 }
 
-function transPendingChange(
+function trPendingChange(
     pendingChange: v2.StakePendingChange | undefined
 ): v1.StakePendingChangeV1 {
     const change = unwrap(pendingChange?.change);
     if (change.oneofKind === 'reduce') {
         return {
             newStake: unwrap(change.reduce.newStake?.value),
-            effectiveTime: transTimestamp(change.reduce.effectiveTime),
+            effectiveTime: trTimestamp(change.reduce.effectiveTime),
             change: v1.StakePendingChangeType.ReduceStake,
         };
     } else if (change.oneofKind === 'remove') {
         return {
-            effectiveTime: transTimestamp(change.remove),
+            effectiveTime: trTimestamp(change.remove),
             change: v1.StakePendingChangeType.RemoveStakeV1,
         };
     } else {
@@ -198,25 +194,25 @@ function transPendingChange(
     }
 }
 
-function transDelegator(
+function trDelegator(
     deleg: v2.AccountStakingInfo_Delegator
 ): v1.AccountDelegationDetails {
     return {
         restakeEarnings: deleg.restakeEarnings,
         stakedAmount: unwrap(deleg.stakedAmount?.value),
-        delegationTarget: transDelegatorTarget(unwrap(deleg.target)),
+        delegationTarget: trDelegatorTarget(unwrap(deleg.target)),
         // Set the following value if deleg.pendingChange is set to true
         ...(deleg.pendingChange && {
-            pendingChange: transPendingChange(deleg.pendingChange),
+            pendingChange: trPendingChange(deleg.pendingChange),
         }),
     };
 }
 
-function transAmountFraction(amount: v2.AmountFraction | undefined): number {
+function trAmountFraction(amount: v2.AmountFraction | undefined): number {
     return unwrap(amount?.partsPerHundredThousand) / 100000;
 }
 
-function transOpenStatus(
+function trOpenStatus(
     openStatus: v2.OpenStatus | undefined
 ): v1.OpenStatusText {
     switch (unwrap(openStatus)) {
@@ -229,18 +225,16 @@ function transOpenStatus(
     }
 }
 
-function transBaker(
-    baker: v2.AccountStakingInfo_Baker
-): v1.AccountBakerDetails {
+function trBaker(baker: v2.AccountStakingInfo_Baker): v1.AccountBakerDetails {
     const bakerInfo = baker.bakerInfo;
     const rates = baker.poolInfo?.commissionRates;
     const commissionRates: v1.CommissionRates = {
-        transactionCommission: transAmountFraction(rates?.transaction),
-        bakingCommission: transAmountFraction(rates?.baking),
-        finalizationCommission: transAmountFraction(rates?.finalization),
+        transactionCommission: trAmountFraction(rates?.transaction),
+        bakingCommission: trAmountFraction(rates?.baking),
+        finalizationCommission: trAmountFraction(rates?.finalization),
     };
     const bakerPoolInfo: v1.BakerPoolInfo = {
-        openStatus: transOpenStatus(baker.poolInfo?.openStatus),
+        openStatus: trOpenStatus(baker.poolInfo?.openStatus),
         metadataUrl: unwrap(baker.poolInfo?.url),
         commissionRates: commissionRates,
     };
@@ -254,7 +248,7 @@ function transBaker(
         stakedAmount: unwrap(baker.stakedAmount?.value),
         // Set the following value if baker.pendingChange is set to true
         ...(baker.pendingChange && {
-            pendingChange: transPendingChange(baker.pendingChange),
+            pendingChange: trPendingChange(baker.pendingChange),
         }),
     };
 }
@@ -276,7 +270,7 @@ export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
     };
     const releaseSchedule = {
         total: unwrap(acc.schedule?.total?.value),
-        schedule: unwrap(acc.schedule?.schedules).map(transRelease),
+        schedule: unwrap(acc.schedule?.schedules).map(trRelease),
     };
     const accInfoCommon: v1.AccountInfoSimple = {
         accountAddress: v1.AccountAddress.fromBytes(accAdrRaw).address,
@@ -287,18 +281,18 @@ export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
         accountEncryptionKey: unwrapValToHex(acc.encryptionKey),
         accountEncryptedAmount: encryptedAmount,
         accountReleaseSchedule: releaseSchedule,
-        accountCredentials: mapRecord(acc.creds, transCred),
+        accountCredentials: mapRecord(acc.creds, trCred),
     };
 
     if (acc.stake?.stakingInfo.oneofKind === 'delegator') {
         return {
             ...accInfoCommon,
-            accountDelegation: transDelegator(acc.stake.stakingInfo.delegator),
+            accountDelegation: trDelegator(acc.stake.stakingInfo.delegator),
         };
     } else if (acc.stake?.stakingInfo.oneofKind === 'baker') {
         return {
             ...accInfoCommon,
-            accountBaker: transBaker(acc.stake.stakingInfo.baker),
+            accountBaker: trBaker(acc.stake.stakingInfo.baker),
         };
     } else {
         return accInfoCommon;
@@ -343,8 +337,8 @@ export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
         blockReceiveLatencyEMSD: unwrap(ci.blockReceiveLatencyEmsd),
         transactionsPerBlockEMA: unwrap(ci.transactionsPerBlockEma),
         transactionsPerBlockEMSD: unwrap(ci.transactionsPerBlockEmsd),
-        genesisTime: transTimestamp(ci.genesisTime),
-        currentEraGenesisTime: transTimestamp(ci.currentEraGenesisTime),
+        genesisTime: trTimestamp(ci.genesisTime),
+        currentEraGenesisTime: trTimestamp(ci.currentEraGenesisTime),
         genesisIndex: unwrap(ci.genesisIndex?.value),
         protocolVersion: BigInt(unwrap(ci.protocolVersion)),
         // Only include the following if they are not undefined
@@ -367,18 +361,18 @@ export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
             blockArrivePeriodEMSD: ci.blockArrivePeriodEmsd,
         }),
         ...(ci.blockLastReceivedTime && {
-            blockLastReceivedTime: transTimestamp(ci.blockLastReceivedTime),
+            blockLastReceivedTime: trTimestamp(ci.blockLastReceivedTime),
         }),
         ...(ci.blockLastArrivedTime && {
-            blockLastArrivedTime: transTimestamp(ci.blockLastArrivedTime),
+            blockLastArrivedTime: trTimestamp(ci.blockLastArrivedTime),
         }),
         ...(ci.lastFinalizedTime && {
-            lastFinalizedTime: transTimestamp(ci.lastFinalizedTime),
+            lastFinalizedTime: trTimestamp(ci.lastFinalizedTime),
         }),
     };
 }
 
-function transAccountAddress(
+function trAccountAddress(
     accountAddress: v2.AccountAddress | undefined
 ): v1.AddressAccount {
     return {
@@ -387,7 +381,7 @@ function transAccountAddress(
     };
 }
 
-function transAddress(
+function trAddress(
     addr: v2.Address | v2.ContractAddress | v2.AccountAddress | undefined
 ): v1.Address {
     const accountAddress = <v2.AccountAddress>unwrap(addr);
@@ -395,14 +389,14 @@ function transAddress(
     const address = <v2.Address>unwrap(addr);
 
     if (accountAddress.value) {
-        return transAccountAddress(accountAddress);
+        return trAccountAddress(accountAddress);
     } else if (contractAddress.index) {
         return {
             type: 'AddressContract',
             address: contractAddress,
         };
     } else if (address.type.oneofKind === 'account') {
-        return transAccountAddress(address.type.account);
+        return trAccountAddress(address.type.account);
     } else if (address.type.oneofKind === 'contract') {
         return {
             type: 'AddressContract',
@@ -413,7 +407,7 @@ function transAddress(
     }
 }
 
-function transContractTraceElement(
+function trContractTraceElement(
     contractTraceElement: v2.ContractTraceElement
 ): v1.ContractTraceEvent {
     const element = contractTraceElement.element;
@@ -423,7 +417,7 @@ function transContractTraceElement(
                 tag: TransactionEventTag.Updated,
                 contractVersion: element.updated.contractVersion,
                 address: unwrap(element.updated.address),
-                instigator: transAddress(element.updated.instigator),
+                instigator: trAddress(element.updated.instigator),
                 amount: unwrap(element.updated.amount?.value),
                 message: unwrapValToHex(element.updated.parameter),
                 receiveName: unwrap(element.updated.receiveName?.value),
@@ -432,9 +426,9 @@ function transContractTraceElement(
         case 'transferred':
             return {
                 tag: TransactionEventTag.Transferred,
-                from: transAddress(element.transferred.sender),
+                from: trAddress(element.transferred.sender),
                 amount: unwrap(element.transferred.amount?.value),
-                to: transAddress(element.transferred.receiver),
+                to: trAddress(element.transferred.receiver),
             };
         case 'interrupted':
             return {
@@ -452,17 +446,17 @@ function transContractTraceElement(
             return {
                 tag: TransactionEventTag.Upgraded,
                 address: unwrap(element.upgraded.address),
-                from: transModuleRef(element.upgraded.from),
-                to: transModuleRef(element.upgraded.to),
+                from: trModuleRef(element.upgraded.from),
+                to: trModuleRef(element.upgraded.to),
             };
         default:
             throw Error(
-                'Invalid ContractTraceElement received, not able to translate to Transaction Event!'
+                'Invalid ContractTraceElement received, not able to tr to Transaction Event!'
             );
     }
 }
 
-function transBakerEvent(bakerEvent: v2.BakerEvent): v1.BakerEvent {
+function trBakerEvent(bakerEvent: v2.BakerEvent): v1.BakerEvent {
     const event = bakerEvent.event;
     switch (event.oneofKind) {
         case 'bakerAdded': {
@@ -519,7 +513,7 @@ function transBakerEvent(bakerEvent: v2.BakerEvent): v1.BakerEvent {
             return {
                 tag: TransactionEventTag.BakerSetOpenStatus,
                 bakerId: Number(unwrap(setOpenStatus.bakerId?.value)),
-                openStatus: transOpenStatus(setOpenStatus.openStatus),
+                openStatus: trOpenStatus(setOpenStatus.openStatus),
             };
         }
         case 'bakerSetMetadataUrl': {
@@ -531,12 +525,12 @@ function transBakerEvent(bakerEvent: v2.BakerEvent): v1.BakerEvent {
             };
         }
         case 'bakerSetTransactionFeeCommission': {
-            const transFeeComm = event.bakerSetTransactionFeeCommission;
-            const amount = transFeeComm.transactionFeeCommission;
+            const transferFeeComm = event.bakerSetTransactionFeeCommission;
+            const amount = transferFeeComm.transactionFeeCommission;
             return {
                 tag: TransactionEventTag.BakerSetTransactionFeeCommission,
-                bakerId: Number(unwrap(transFeeComm.bakerId?.value)),
-                transactionFeeCommission: transAmountFraction(amount),
+                bakerId: Number(unwrap(transferFeeComm.bakerId?.value)),
+                transactionFeeCommission: trAmountFraction(amount),
             };
         }
         case 'bakerSetBakingRewardCommission': {
@@ -545,7 +539,7 @@ function transBakerEvent(bakerEvent: v2.BakerEvent): v1.BakerEvent {
             return {
                 tag: TransactionEventTag.BakerSetBakingRewardCommission,
                 bakerId: Number(unwrap(rewardComm.bakerId?.value)),
-                bakingRewardCommission: transAmountFraction(amount),
+                bakingRewardCommission: trAmountFraction(amount),
             };
         }
         case 'bakerSetFinalizationRewardCommission': {
@@ -554,7 +548,7 @@ function transBakerEvent(bakerEvent: v2.BakerEvent): v1.BakerEvent {
             return {
                 tag: TransactionEventTag.BakerSetFinalizationRewardCommission,
                 bakerId: Number(unwrap(rewardComm.bakerId?.value)),
-                finalizationRewardCommission: transAmountFraction(amount),
+                finalizationRewardCommission: trAmountFraction(amount),
             };
         }
         case undefined:
@@ -562,7 +556,7 @@ function transBakerEvent(bakerEvent: v2.BakerEvent): v1.BakerEvent {
     }
 }
 
-function transDelegTarget(
+function trDelegTarget(
     delegationTarget: v2.DelegationTarget | undefined
 ): v1.EventDelegationTarget {
     const target = delegationTarget?.target;
@@ -580,7 +574,7 @@ function transDelegTarget(
     }
 }
 
-function transDelegationEvent(
+function trDelegationEvent(
     delegationEvent: v2.DelegationEvent
 ): v1.DelegationEvent {
     const event = delegationEvent.event;
@@ -614,7 +608,7 @@ function transDelegationEvent(
             return {
                 tag: TransactionEventTag.DelegationSetDelegationTarget,
                 delegatorId: Number(unwrap(target.delegatorId?.id?.value)),
-                delegationTarget: transDelegTarget(target.delegationTarget),
+                delegationTarget: trDelegTarget(target.delegationTarget),
             };
         }
         case 'delegationAdded':
@@ -632,7 +626,7 @@ function transDelegationEvent(
     }
 }
 
-function transRejectReason(
+function trRejectReason(
     rejectReason: v2.RejectReason | undefined
 ): v1.RejectReason {
     function simpleReason(tag: v1.SimpleRejectReasonTag): v1.RejectReason {
@@ -756,7 +750,7 @@ function transRejectReason(
             return {
                 tag: Tag.AmountTooLarge,
                 contents: [
-                    transAddress(reason.amountTooLarge.address),
+                    trAddress(reason.amountTooLarge.address),
                     unwrap(String(reason.amountTooLarge.amount?.value)),
                 ],
             };
@@ -827,11 +821,11 @@ function transRejectReason(
     }
 }
 
-function translateMintRate(mintRate: v2.MintRate | undefined): number {
+function trMintRate(mintRate: v2.MintRate | undefined): number {
     return unwrap(mintRate?.mantissa) * 10 ** (-1 * unwrap(mintRate?.exponent));
 }
 
-function translateUpdatePayload(
+function trUpdatePayload(
     payload: v2.UpdatePayload | undefined
 ): v1.UpdateInstructionPayload {
     switch (payload?.payload?.oneofKind) {
@@ -853,7 +847,7 @@ function translateUpdatePayload(
             return {
                 updateType: v1.UpdateType.ElectionDifficulty,
                 update: {
-                    electionDifficulty: transAmountFraction(
+                    electionDifficulty: trAmountFraction(
                         payload.payload.electionDifficultyUpdate.value
                     ),
                 },
@@ -882,11 +876,11 @@ function translateUpdatePayload(
             return {
                 updateType: v1.UpdateType.MintDistribution,
                 update: {
-                    bakingReward: transAmountFraction(update.bakingReward),
-                    finalizationReward: transAmountFraction(
+                    bakingReward: trAmountFraction(update.bakingReward),
+                    finalizationReward: trAmountFraction(
                         update.finalizationReward
                     ),
-                    mintPerSlot: translateMintRate(update.mintPerSlot),
+                    mintPerSlot: trMintRate(update.mintPerSlot),
                 },
             };
         }
@@ -895,8 +889,8 @@ function translateUpdatePayload(
             return {
                 updateType: v1.UpdateType.TransactionFeeDistribution,
                 update: {
-                    baker: transAmountFraction(update.baker),
-                    gasAccount: transAmountFraction(update.gasAccount),
+                    baker: trAmountFraction(update.baker),
+                    gasAccount: trAmountFraction(update.gasAccount),
                 },
             };
         }
@@ -905,14 +899,12 @@ function translateUpdatePayload(
             return {
                 updateType: v1.UpdateType.GasRewards,
                 update: {
-                    baker: transAmountFraction(update.baker),
-                    finalizationProof: transAmountFraction(
+                    baker: trAmountFraction(update.baker),
+                    finalizationProof: trAmountFraction(
                         update.finalizationProof
                     ),
-                    accountCreation: transAmountFraction(
-                        update.accountCreation
-                    ),
-                    chainUpdate: transAmountFraction(update.accountCreation),
+                    accountCreation: trAmountFraction(update.accountCreation),
+                    chainUpdate: trAmountFraction(update.accountCreation),
                 },
             };
         }
@@ -927,7 +919,7 @@ function translateUpdatePayload(
         }
         case 'rootUpdate': {
             const rootUpdate = payload.payload.rootUpdate;
-            const keyUpdate: v1.KeyUpdate = translateKeyUpdate(rootUpdate);
+            const keyUpdate: v1.KeyUpdate = trKeyUpdate(rootUpdate);
             return {
                 updateType: v1.UpdateType.Root,
                 update: keyUpdate,
@@ -935,7 +927,7 @@ function translateUpdatePayload(
         }
         case 'level1Update': {
             const lvl1Update = payload.payload.level1Update;
-            const keyUpdate: v1.KeyUpdate = translateKeyUpdate(lvl1Update);
+            const keyUpdate: v1.KeyUpdate = trKeyUpdate(lvl1Update);
             return {
                 updateType: v1.UpdateType.Level1,
                 update: keyUpdate,
@@ -980,33 +972,31 @@ function translateUpdatePayload(
                 updateType: v1.UpdateType.PoolParameters,
                 update: {
                     passiveCommissions: {
-                        transactionCommission: transAmountFraction(
+                        transactionCommission: trAmountFraction(
                             update.passiveTransactionCommission
                         ),
-                        bakingCommission: transAmountFraction(
+                        bakingCommission: trAmountFraction(
                             update.passiveBakingCommission
                         ),
-                        finalizationCommission: transAmountFraction(
+                        finalizationCommission: trAmountFraction(
                             update.passiveFinalizationCommission
                         ),
                     },
                     commissionBounds: {
-                        transactionFeeCommission: translateCommissionRange(
+                        transactionFeeCommission: trCommissionRange(
                             update.commissionBounds?.transaction
                         ),
-                        bakingRewardCommission: translateCommissionRange(
+                        bakingRewardCommission: trCommissionRange(
                             update.commissionBounds?.baking
                         ),
-                        finalizationRewardCommission: translateCommissionRange(
+                        finalizationRewardCommission: trCommissionRange(
                             update.commissionBounds?.finalization
                         ),
                     },
                     minimumEquityCapital: unwrap(
                         update.minimumEquityCapital?.value
                     ),
-                    capitalBound: transAmountFraction(
-                        update.capitalBound?.value
-                    ),
+                    capitalBound: trAmountFraction(update.capitalBound?.value),
                     leverageBound: unwrap(update.leverageBound?.value),
                 },
             };
@@ -1028,8 +1018,8 @@ function translateUpdatePayload(
             return {
                 updateType: v1.UpdateType.MintDistribution,
                 update: {
-                    bakingReward: transAmountFraction(update.bakingReward),
-                    finalizationReward: transAmountFraction(
+                    bakingReward: trAmountFraction(update.bakingReward),
+                    finalizationReward: trAmountFraction(
                         update.finalizationReward
                     ),
                 },
@@ -1039,22 +1029,22 @@ function translateUpdatePayload(
     }
 }
 
-function translateCommissionRange(
+function trCommissionRange(
     range: v2.InclusiveRangeAmountFraction | undefined
 ): v1.InclusiveRange<number> {
     return {
-        min: transAmountFraction(range?.min),
-        max: transAmountFraction(range?.max),
+        min: trAmountFraction(range?.min),
+        max: trAmountFraction(range?.max),
     };
 }
-function translateUpdatePublicKey(key: v2.UpdatePublicKey): v1.VerifyKey {
+function trUpdatePublicKey(key: v2.UpdatePublicKey): v1.VerifyKey {
     return {
         schemeId: 'Ed25519',
         verifyKey: unwrapValToHex(key),
     };
 }
 
-function translateAccessStructure(
+function trAccessStructure(
     auths: v2.AccessStructure | undefined
 ): v1.Authorization {
     return {
@@ -1063,15 +1053,13 @@ function translateAccessStructure(
     };
 }
 
-function translateKeyUpdate(
-    keyUpdate: v2.RootUpdate | v2.Level1Update
-): v1.KeyUpdate {
+function trKeyUpdate(keyUpdate: v2.RootUpdate | v2.Level1Update): v1.KeyUpdate {
     switch (keyUpdate.updateType.oneofKind) {
         case 'rootKeysUpdate': {
             const update = keyUpdate.updateType.rootKeysUpdate;
             return {
                 typeOfUpdate: HigherLevelKeyUpdateType.RootKeysUpdate,
-                updateKeys: update.keys.map(translateUpdatePublicKey),
+                updateKeys: update.keys.map(trUpdatePublicKey),
                 threshold: unwrap(update.threshold?.value),
             };
         }
@@ -1079,7 +1067,7 @@ function translateKeyUpdate(
             const update = keyUpdate.updateType.level1KeysUpdate;
             return {
                 typeOfUpdate: HigherLevelKeyUpdateType.Level1KeysUpdate,
-                updateKeys: update.keys.map(translateUpdatePublicKey),
+                updateKeys: update.keys.map(trUpdatePublicKey),
                 threshold: unwrap(update.threshold?.value),
             };
         }
@@ -1087,7 +1075,7 @@ function translateKeyUpdate(
             const update = keyUpdate.updateType.level2KeysUpdateV0;
             return {
                 typeOfUpdate: AuthorizationKeysUpdateType.Level2KeysUpdate,
-                updatePayload: translateAuthorizationsV0(update),
+                updatePayload: trAuthorizationsV0(update),
             };
         }
         case 'level2KeysUpdateV1': {
@@ -1096,13 +1084,11 @@ function translateKeyUpdate(
             return {
                 typeOfUpdate: AuthorizationKeysUpdateType.Level2KeysUpdateV1,
                 updatePayload: {
-                    ...translateAuthorizationsV0(v0),
-                    cooldownParameters: translateAccessStructure(
+                    ...trAuthorizationsV0(v0),
+                    cooldownParameters: trAccessStructure(
                         update.parameterCooldown
                     ),
-                    timeParameters: translateAccessStructure(
-                        update.parameterTime
-                    ),
+                    timeParameters: trAccessStructure(update.parameterTime),
                 },
             };
         }
@@ -1111,48 +1097,36 @@ function translateKeyUpdate(
     }
 }
 
-function translateAuthorizationsV0(
-    auths: v2.AuthorizationsV0
-): v1.AuthorizationsV0 {
+function trAuthorizationsV0(auths: v2.AuthorizationsV0): v1.AuthorizationsV0 {
     return {
-        keys: auths.keys.map(translateUpdatePublicKey),
-        addIdentityProvider: translateAccessStructure(
-            auths.addIdentityProvider
-        ),
-        addAnonymityRevoker: translateAccessStructure(
-            auths.addAnonymityRevoker
-        ),
-        emergency: translateAccessStructure(auths.emergency),
-        electionDifficulty: translateAccessStructure(
+        keys: auths.keys.map(trUpdatePublicKey),
+        addIdentityProvider: trAccessStructure(auths.addIdentityProvider),
+        addAnonymityRevoker: trAccessStructure(auths.addAnonymityRevoker),
+        emergency: trAccessStructure(auths.emergency),
+        electionDifficulty: trAccessStructure(
             auths.parameterElectionDifficulty
         ),
-        euroPerEnergy: translateAccessStructure(auths.parameterEuroPerEnergy),
-        foundationAccount: translateAccessStructure(
-            auths.parameterFoundationAccount
-        ),
-        microGTUPerEuro: translateAccessStructure(
-            auths.parameterMicroCCDPerEuro
-        ),
-        paramGASRewards: translateAccessStructure(auths.parameterGasRewards),
-        mintDistribution: translateAccessStructure(
-            auths.parameterMintDistribution
-        ),
-        transactionFeeDistribution: translateAccessStructure(
+        euroPerEnergy: trAccessStructure(auths.parameterEuroPerEnergy),
+        foundationAccount: trAccessStructure(auths.parameterFoundationAccount),
+        microGTUPerEuro: trAccessStructure(auths.parameterMicroCCDPerEuro),
+        paramGASRewards: trAccessStructure(auths.parameterGasRewards),
+        mintDistribution: trAccessStructure(auths.parameterMintDistribution),
+        transactionFeeDistribution: trAccessStructure(
             auths.parameterTransactionFeeDistribution
         ),
-        poolParameters: translateAccessStructure(auths.poolParameters),
-        protocol: translateAccessStructure(auths.protocol),
+        poolParameters: trAccessStructure(auths.poolParameters),
+        protocol: trAccessStructure(auths.protocol),
     };
 }
 
-function translateMemoEvent(memo: v2.Memo): v1.MemoEvent {
+function trMemoEvent(memo: v2.Memo): v1.MemoEvent {
     return {
         tag: TransactionEventTag.TransferMemo,
         memo: unwrapValToHex(memo),
     };
 }
 
-function translateTransactionType(
+function trTransactionType(
     type: v2.TransactionType | undefined
 ): v1.TransactionKindString {
     switch (type) {
@@ -1203,7 +1177,7 @@ function translateTransactionType(
     }
 }
 
-function translateAccountTransactionSummary(
+function trAccountTransactionSummary(
     details: v2.AccountTransactionDetails,
     baseBlockItemSummary: v1.BaseBlockItemSummary
 ): v1.AccountTransactionSummary {
@@ -1219,15 +1193,15 @@ function translateAccountTransactionSummary(
         case 'none':
             return {
                 ...base,
-                failedTransactionType: translateTransactionType(
+                failedTransactionType: trTransactionType(
                     effect.none.transactionType
                 ),
-                rejectReason: transRejectReason(effect.none.rejectReason),
+                rejectReason: trRejectReason(effect.none.rejectReason),
             };
         case 'moduleDeployed': {
             const event: v1.ModuleDeployedEvent = {
                 tag: TransactionEventTag.ModuleDeployed,
-                contents: transModuleRef(effect.moduleDeployed),
+                contents: trModuleRef(effect.moduleDeployed),
             };
             return {
                 ...base,
@@ -1244,7 +1218,7 @@ function translateAccountTransactionSummary(
                 contractName: unwrap(contractInit.initName?.value),
                 events: unwrap(contractInit.events.map(unwrapValToHex)),
                 contractVersion: unwrap(contractInit.contractVersion),
-                originRef: transModuleRef(contractInit.originRef),
+                originRef: trModuleRef(contractInit.originRef),
             };
             return {
                 ...base,
@@ -1257,21 +1231,21 @@ function translateAccountTransactionSummary(
                 ...base,
                 transactionType: TransactionKindString.Update,
                 events: effect.contractUpdateIssued.effects.map(
-                    transContractTraceElement
+                    trContractTraceElement
                 ),
             };
         case 'accountTransfer': {
             const transfer: v1.TransferredEvent = {
                 tag: TransactionEventTag.Transferred,
                 amount: unwrap(effect.accountTransfer.amount?.value),
-                to: transAccountAddress(effect.accountTransfer.receiver),
+                to: trAccountAddress(effect.accountTransfer.receiver),
             };
             if (effect.accountTransfer.memo) {
                 return {
                     ...base,
                     transactionType: TransactionKindString.TransferWithMemo,
                     transfer,
-                    memo: translateMemoEvent(effect.accountTransfer.memo),
+                    memo: trMemoEvent(effect.accountTransfer.memo),
                 };
             } else {
                 return {
@@ -1285,7 +1259,7 @@ function translateAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: TransactionKindString.AddBaker,
-                bakerAdded: transBakerEvent({
+                bakerAdded: trBakerEvent({
                     event: effect,
                 }) as v1.BakerAddedEvent,
             };
@@ -1293,7 +1267,7 @@ function translateAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: TransactionKindString.RemoveBaker,
-                bakerRemoved: transBakerEvent({
+                bakerRemoved: trBakerEvent({
                     event: effect,
                 }) as v1.BakerRemovedEvent,
             };
@@ -1302,7 +1276,7 @@ function translateAccountTransactionSummary(
                 ...base,
                 transactionType:
                     TransactionKindString.UpdateBakerRestakeEarnings,
-                bakerRestakeEarningsUpdated: transBakerEvent({
+                bakerRestakeEarningsUpdated: trBakerEvent({
                     event: effect,
                 }) as v1.BakerSetRestakeEarningsEvent,
             };
@@ -1310,7 +1284,7 @@ function translateAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: TransactionKindString.UpdateBakerKeys,
-                bakerKeysUpdated: transBakerEvent({
+                bakerKeysUpdated: trBakerEvent({
                     event: effect,
                 }) as v1.BakerKeysUpdatedEvent,
             };
@@ -1353,7 +1327,7 @@ function translateAccountTransactionSummary(
                         TransactionKindString.EncryptedAmountTransferWithMemo,
                     removed,
                     added,
-                    memo: translateMemoEvent(transfer.memo),
+                    memo: trMemoEvent(transfer.memo),
                 };
             } else {
                 return {
@@ -1403,7 +1377,7 @@ function translateAccountTransactionSummary(
             const event: v1.TransferredWithScheduleEvent = {
                 tag: TransactionEventTag.TransferredWithSchedule,
                 to: unwrapToBase58(transfer.receiver),
-                amount: transfer.amount.map(transNewRelease),
+                amount: transfer.amount.map(trNewRelease),
             };
             if (transfer.memo) {
                 return {
@@ -1411,7 +1385,7 @@ function translateAccountTransactionSummary(
                     transactionType:
                         TransactionKindString.TransferWithScheduleAndMemo,
                     transfer: event,
-                    memo: translateMemoEvent(transfer.memo),
+                    memo: trMemoEvent(transfer.memo),
                 };
             } else {
                 return {
@@ -1461,14 +1435,14 @@ function translateAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: TransactionKindString.ConfigureBaker,
-                events: effect.bakerConfigured.events.map(transBakerEvent),
+                events: effect.bakerConfigured.events.map(trBakerEvent),
             };
         case 'delegationConfigured':
             return {
                 ...base,
                 transactionType: TransactionKindString.ConfigureDelegation,
                 events: effect.delegationConfigured.events.map(
-                    transDelegationEvent
+                    trDelegationEvent
                 ),
             };
         case undefined:
@@ -1478,16 +1452,14 @@ function translateAccountTransactionSummary(
     }
 }
 
-function transBlockItemSummary(
-    summary: v2.BlockItemSummary
-): v1.BlockItemSummary {
+function trBlockItemSummary(summary: v2.BlockItemSummary): v1.BlockItemSummary {
     const base = {
         index: unwrap(summary.index?.value),
         energyCost: unwrap(summary.energyCost?.value),
         hash: unwrapValToHex(summary.hash),
     };
     if (summary.details.oneofKind === 'accountTransaction') {
-        return translateAccountTransactionSummary(
+        return trAccountTransactionSummary(
             summary.details.accountTransaction,
             base
         );
@@ -1508,19 +1480,19 @@ function transBlockItemSummary(
             type: v1.TransactionSummaryType.UpdateTransaction,
             ...base,
             effectiveTime: unwrap(summary.details.update.effectiveTime?.value),
-            payload: translateUpdatePayload(summary.details.update.payload),
+            payload: trUpdatePayload(summary.details.update.payload),
         };
     } else {
         throw Error('Invalid BlockItemSummary encountered!');
     }
 }
 
-function transBlockItemSummaryInBlock(
+function trBlockItemSummaryInBlock(
     summary: v2.BlockItemSummaryInBlock
 ): v1.BlockItemSummaryInBlock {
     return {
         blockHash: unwrapValToHex(summary.blockHash),
-        summary: transBlockItemSummary(unwrap(summary.outcome)),
+        summary: trBlockItemSummary(unwrap(summary.outcome)),
     };
 }
 
@@ -1536,13 +1508,13 @@ export function blockItemStatus(
             return {
                 status: v1.TransactionStatusEnum.Committed,
                 outcomes: itemStatus.status.committed.outcomes.map(
-                    transBlockItemSummaryInBlock
+                    trBlockItemSummaryInBlock
                 ),
             };
         case 'finalized':
             return {
                 status: v1.TransactionStatusEnum.Finalized,
-                outcome: transBlockItemSummaryInBlock(
+                outcome: trBlockItemSummaryInBlock(
                     unwrap(itemStatus.status.finalized.outcome)
                 ),
             };
@@ -1561,7 +1533,7 @@ export function invokeInstanceResponse(
                 usedEnergy: unwrap(
                     invokeResponse.result.failure.usedEnergy?.value
                 ),
-                reason: transRejectReason(invokeResponse.result.failure.reason),
+                reason: trRejectReason(invokeResponse.result.failure.reason),
             };
         case 'success': {
             const result = invokeResponse.result.success;
@@ -1571,7 +1543,7 @@ export function invokeInstanceResponse(
                 returnValue: result.returnValue
                     ? Buffer.from(unwrap(result.returnValue)).toString('hex')
                     : undefined,
-                events: result.effects.map(transContractTraceElement),
+                events: result.effects.map(trContractTraceElement),
             };
         }
         default:
@@ -1579,7 +1551,7 @@ export function invokeInstanceResponse(
     }
 }
 
-function transInstanceInfoCommon(
+function trInstanceInfoCommon(
     info: v2.InstanceInfo_V0 | v2.InstanceInfo_V1
 ): Omit<v1.InstanceInfoCommon, 'version'> {
     return {
@@ -1599,7 +1571,7 @@ export function instanceInfo(instanceInfo: v2.InstanceInfo): v1.InstanceInfo {
     switch (instanceInfo.version.oneofKind) {
         case 'v0':
             return {
-                ...transInstanceInfoCommon(instanceInfo.version.v0),
+                ...trInstanceInfoCommon(instanceInfo.version.v0),
                 version: 0,
                 model: Buffer.from(
                     unwrap(instanceInfo.version.v0.model?.value)
@@ -1607,7 +1579,7 @@ export function instanceInfo(instanceInfo: v2.InstanceInfo): v1.InstanceInfo {
             };
         case 'v1':
             return {
-                ...transInstanceInfoCommon(instanceInfo.version.v1),
+                ...trInstanceInfoCommon(instanceInfo.version.v1),
                 version: 1,
             };
 
@@ -1623,12 +1595,12 @@ export function instanceInfo(instanceInfo: v2.InstanceInfo): v1.InstanceInfo {
 export function accountTransactionSignatureToV2(
     signature: v1.AccountTransactionSignature
 ): v2.AccountTransactionSignature {
-    function transSig(a: string): v2.Signature {
+    function trSig(a: string): v2.Signature {
         return { value: Buffer.from(a, 'hex') };
     }
-    function transCredSig(a: v1.CredentialSignature): v2.AccountSignatureMap {
-        return { signatures: mapRecord(a, transSig) };
+    function trCredSig(a: v1.CredentialSignature): v2.AccountSignatureMap {
+        return { signatures: mapRecord(a, trSig) };
     }
 
-    return { signatures: mapRecord(signature, transCredSig) };
+    return { signatures: mapRecord(signature, trCredSig) };
 }

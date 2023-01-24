@@ -1,4 +1,8 @@
-import { AccountAddress, CcdAmount, ModuleReference } from "@concordium/common-sdk";
+import {
+    AccountAddress,
+    CcdAmount,
+    ModuleReference,
+} from '@concordium/common-sdk';
 
 export const accountInfo = {
     sequenceNumber: {
@@ -178,14 +182,15 @@ export const blockItemStatusTransfer = {
 
 export const instanceInfo = {
     version: 1,
-        owner: new AccountAddress('4Y1c27ZRpRut9av69n3i1uhfeDp4XGuvsm9fkEjFvgpoxXWxQB'),
-        amount: new CcdAmount(0n),
-        methods: [
-            'weather.get',
-            'weather.set',
-        ],
-        name: 'init_weather',
-    sourceModule: new ModuleReference('67d568433bd72e4326241f262213d77f446db8ba03dfba351ae35c1b2e7e5109'),
+    owner: new AccountAddress(
+        '4Y1c27ZRpRut9av69n3i1uhfeDp4XGuvsm9fkEjFvgpoxXWxQB'
+    ),
+    amount: new CcdAmount(0n),
+    methods: ['weather.get', 'weather.set'],
+    name: 'init_weather',
+    sourceModule: new ModuleReference(
+        '67d568433bd72e4326241f262213d77f446db8ba03dfba351ae35c1b2e7e5109'
+    ),
 };
 
 export const invokeInstanceResponseV0 = {

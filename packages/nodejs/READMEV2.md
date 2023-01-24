@@ -6,15 +6,16 @@ Wrappers for interacting with the Concordium node, using nodejs.
 
 [Note that this package contains and exports the functions from the common-sdk, check the readme of that package for an overview of those](../common/README.md).
 
-
 **Table of Contents**
 - [ConcordiumNodeClient](#concordiumnodeclient)
     - [Creating a client](#creating-a-client)
-    - [Create a new account](#create-a-new-account)
     - [getAccountInfo](#getaccountinfo)
     - [getNextAccountSequenceNumber](#getnextaccountsequencenumber)
     - [getCryptographicParameters](#getcryptographicparameters)
     - [getBlockChainParameters](#getblockchainparameters)
+    - [getPoolInfo](#getpoolinfo)
+    - [getPassiveDelegationInfo](#getpassivedelegationinfo)
+    - [getTokenomicsInfo](#gettokenomicsinfo)
 
 # ConcordiumNodeClient
 

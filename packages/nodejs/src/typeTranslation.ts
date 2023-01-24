@@ -3,7 +3,6 @@ import * as v2 from '../grpc/v2/concordium/types';
 import { mapRecord, unwrap } from './util';
 import { Buffer } from 'buffer/';
 import {
-    AccountAddress,
     BakerPoolPendingChangeType,
     PoolStatusType,
 } from '@concordium/common-sdk';
@@ -159,7 +158,7 @@ function transDelegatorTarget(
 }
 
 function transTimestamp(timestamp: v2.Timestamp | undefined): Date {
-    return new Date(Number(unwrap(timestamp?.value)) * 1000);
+    return new Date(Number(unwrap(timestamp?.value)));
 }
 
 function transPendingChange(
@@ -244,6 +243,14 @@ function transBaker(
     };
 }
 
+function trAccountAddress(
+    accountAddress: v2.AccountAddress | undefined
+): string {
+    return v1.AccountAddress.fromBytes(
+        Buffer.from(unwrap(accountAddress?.value))
+    ).address;
+}
+
 function translateChainParametersCommon(
     params: v2.ChainParametersV1 | v2.ChainParametersV0
 ): v1.ChainParametersCommon {
@@ -254,9 +261,7 @@ function translateChainParametersCommon(
         euroPerEnergy: unwrap(params.euroPerEnergy?.value),
         microGTUPerEuro: unwrap(params.microCcdPerEuro?.value),
         accountCreationLimit: unwrap(params.accountCreationLimit?.value),
-        foundationAccount: v1.AccountAddress.fromBytes(
-            Buffer.from(unwrap(params.foundationAccount?.value))
-        ).address,
+        foundationAccount: trAccountAddress(params.foundationAccount),
     };
 }
 
@@ -272,24 +277,20 @@ function translateCommissionRange(
 function translateRewardParametersCommon(
     params: v2.ChainParametersV1 | v2.ChainParametersV0
 ): v1.RewardParametersCommon {
+    const feeDistribution = params.transactionFeeDistribution;
+    const gasRewards = params.gasRewards;
     return {
         transactionFeeDistribution: {
-            baker: transAmountFraction(
-                params.transactionFeeDistribution?.baker
-            ),
-            gasAccount: transAmountFraction(
-                params.transactionFeeDistribution?.gasAccount
-            ),
+            baker: transAmountFraction(feeDistribution?.baker),
+            gasAccount: transAmountFraction(feeDistribution?.gasAccount),
         },
         gASRewards: {
-            baker: transAmountFraction(params.gasRewards?.baker),
+            baker: transAmountFraction(gasRewards?.baker),
             finalizationProof: transAmountFraction(
-                params.gasRewards?.finalizationProof
+                gasRewards?.finalizationProof
             ),
-            accountCreation: transAmountFraction(
-                params.gasRewards?.accountCreation
-            ),
-            chainUpdate: transAmountFraction(params.gasRewards?.chainUpdate),
+            accountCreation: transAmountFraction(gasRewards?.accountCreation),
+            chainUpdate: transAmountFraction(gasRewards?.chainUpdate),
         },
     };
 }
@@ -306,8 +307,9 @@ function transPoolPendingChange(
             return {
                 pendingChangeType:
                     BakerPoolPendingChangeType.ReduceBakerCapital,
-                effectiveTime: new Date(
-                    Number(unwrap(change.change.reduce.effectiveTime?.value))
+                // TODO ensure units are aligned
+                effectiveTime: transTimestamp(
+                    change.change.reduce.effectiveTime
                 ),
                 bakerEquityCapital: unwrap(
                     change.change.reduce.reducedEquityCapital?.value
@@ -317,8 +319,8 @@ function transPoolPendingChange(
         case 'remove': {
             return {
                 pendingChangeType: BakerPoolPendingChangeType.RemovePool,
-                effectiveTime: new Date(
-                    Number(unwrap(change.change.remove.effectiveTime?.value))
+                effectiveTime: transTimestamp(
+                    change.change.remove.effectiveTime
                 ),
             };
         }
@@ -339,9 +341,9 @@ function transPoolInfo(info: v2.BakerPoolInfo): v1.BakerPoolInfo {
 
 function transPaydayStatus(
     status: v2.PoolCurrentPaydayInfo | undefined
-): v1.CurrentPaydayBakerPoolStatus | undefined {
+): v1.CurrentPaydayBakerPoolStatus | null {
     if (!status) {
-        return undefined;
+        return null;
     }
     return {
         blocksBaked: status.blocksBaked,
@@ -355,7 +357,6 @@ function transPaydayStatus(
 }
 
 export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
-    const accAdrRaw = Buffer.from(unwrap(acc.address?.value));
     const aggAmount = acc.encryptedBalance?.aggregatedAmount?.value;
     const numAggregated = acc.encryptedBalance?.numAggregated;
 
@@ -374,7 +375,7 @@ export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
         schedule: unwrap(acc.schedule?.schedules).map(transRelease),
     };
     const accInfoCommon: v1.AccountInfoSimple = {
-        accountAddress: v1.AccountAddress.fromBytes(accAdrRaw).address,
+        accountAddress: trAccountAddress(acc.address),
         accountNonce: unwrap(acc.sequenceNumber?.value),
         accountAmount: unwrap(acc.amount?.value),
         accountIndex: unwrap(acc.index?.value),
@@ -425,104 +426,85 @@ export function blockChainParameters(
     switch (params.parameters.oneofKind) {
         case 'v1': {
             const common = translateChainParametersCommon(params.parameters.v1);
-            const commonRewardParameters = translateRewardParametersCommon(
-                params.parameters.v1
-            );
-            const x: v1.ChainParametersV1 = {
+            const v1 = params.parameters.v1;
+            const commonRewardParameters = translateRewardParametersCommon(v1);
+            return {
                 ...common,
                 rewardPeriodLength: unwrap(
-                    params.parameters.v1.timeParameters?.rewardPeriodLength
-                        ?.value?.value
+                    v1.timeParameters?.rewardPeriodLength?.value?.value
                 ),
                 mintPerPayday: translateMintRate(
-                    params.parameters.v1.timeParameters?.mintPerPayday
+                    v1.timeParameters?.mintPerPayday
                 ),
                 delegatorCooldown: unwrap(
-                    params.parameters.v1.cooldownParameters?.delegatorCooldown
-                        ?.value
+                    v1.cooldownParameters?.delegatorCooldown?.value
                 ),
                 poolOwnerCooldown: unwrap(
-                    params.parameters.v1.cooldownParameters?.poolOwnerCooldown
-                        ?.value
+                    v1.cooldownParameters?.poolOwnerCooldown?.value
                 ),
                 passiveFinalizationCommission: transAmountFraction(
-                    params.parameters.v1.poolParameters
-                        ?.passiveFinalizationCommission
+                    v1.poolParameters?.passiveFinalizationCommission
                 ),
                 passiveBakingCommission: transAmountFraction(
-                    params.parameters.v1.poolParameters?.passiveBakingCommission
+                    v1.poolParameters?.passiveBakingCommission
                 ),
                 passiveTransactionCommission: transAmountFraction(
-                    params.parameters.v1.poolParameters
-                        ?.passiveTransactionCommission
+                    v1.poolParameters?.passiveTransactionCommission
                 ),
                 finalizationCommissionRange: translateCommissionRange(
-                    params.parameters.v1.poolParameters?.commissionBounds
-                        ?.finalization
+                    v1.poolParameters?.commissionBounds?.finalization
                 ),
                 bakingCommissionRange: translateCommissionRange(
-                    params.parameters.v1.poolParameters?.commissionBounds
-                        ?.baking
+                    v1.poolParameters?.commissionBounds?.baking
                 ),
                 transactionCommissionRange: translateCommissionRange(
-                    params.parameters.v1.poolParameters?.commissionBounds
-                        ?.transaction
+                    v1.poolParameters?.commissionBounds?.transaction
                 ),
                 minimumEquityCapital: unwrap(
-                    params.parameters.v1.poolParameters?.minimumEquityCapital
-                        ?.value
+                    v1.poolParameters?.minimumEquityCapital?.value
                 ),
                 capitalBound: transAmountFraction(
-                    params.parameters.v1.poolParameters?.capitalBound?.value
+                    v1.poolParameters?.capitalBound?.value
                 ),
-                leverageBound: unwrap(
-                    params.parameters.v1.poolParameters?.leverageBound?.value
-                ),
+                leverageBound: unwrap(v1.poolParameters?.leverageBound?.value),
                 rewardParameters: {
                     ...commonRewardParameters,
                     mintDistribution: {
                         bakingReward: transAmountFraction(
-                            params.parameters.v1.mintDistribution?.bakingReward
+                            v1.mintDistribution?.bakingReward
                         ),
                         finalizationReward: transAmountFraction(
-                            params.parameters.v1.mintDistribution
-                                ?.finalizationReward
+                            v1.mintDistribution?.finalizationReward
                         ),
                     },
                 },
             };
-            return x;
         }
         case 'v0': {
             const common = translateChainParametersCommon(params.parameters.v0);
-            const commonRewardParameters = translateRewardParametersCommon(
-                params.parameters.v0
-            );
-            const x: v1.ChainParametersV0 = {
+            const v0 = params.parameters.v0;
+            const commonRewardParameters = translateRewardParametersCommon(v0);
+            return {
                 ...common,
-                bakerCooldownEpochs: unwrap(
-                    params.parameters.v0.bakerCooldownEpochs?.value
-                ),
+                bakerCooldownEpochs: unwrap(v0.bakerCooldownEpochs?.value),
                 minimumThresholdForBaking: unwrap(
-                    params.parameters.v0.minimumThresholdForBaking?.value
+                    v0.minimumThresholdForBaking?.value
                 ),
                 rewardParameters: {
                     ...commonRewardParameters,
                     mintDistribution: {
                         bakingReward: transAmountFraction(
-                            params.parameters.v0.mintDistribution?.bakingReward
+                            v0.mintDistribution?.bakingReward
                         ),
                         finalizationReward: transAmountFraction(
-                            params.parameters.v0.mintDistribution
-                                ?.finalizationReward
+                            v0.mintDistribution?.finalizationReward
                         ),
                         mintPerSlot: translateMintRate(
-                            params.parameters.v0.mintDistribution?.mintPerSlot
+                            v0.mintDistribution?.mintPerSlot
                         ),
                     },
                 },
             };
-            return x;
         }
         default:
             throw new Error('Missing chain parameters');
@@ -533,9 +515,7 @@ export function bakerPoolInfo(info: v2.PoolInfoResponse): v1.BakerPoolStatus {
     return {
         poolType: PoolStatusType.BakerPool,
         bakerId: unwrap(info.baker?.value),
-        bakerAddress: AccountAddress.fromBytes(
-            Buffer.from(unwrap(info.address?.value))
-        ).address,
+        bakerAddress: trAccountAddress(info.address),
         bakerEquityCapital: unwrap(info.equityCapital?.value),
         delegatedCapital: unwrap(info.delegatedCapital?.value),
         delegatedCapitalCap: unwrap(info.delegatedCapitalCap?.value),

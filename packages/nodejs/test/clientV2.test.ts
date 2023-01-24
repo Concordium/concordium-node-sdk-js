@@ -297,6 +297,12 @@ test('getChainParameters corresponds to GetBlockSummary subset', async () => {
         testBlockHash
     );
 
+    const foundationAccount = (
+        await clientV2.getAccountInfo(
+            blockSummary.updates.chainParameters.foundationAccountIndex
+        )
+    ).accountAddress;
+    expect(chainParameters.foundationAccount).toEqual(foundationAccount);
     blockSummary.updates.chainParameters.foundationAccountIndex = undefined;
     chainParameters.foundationAccount = undefined;
 
@@ -313,7 +319,12 @@ test('getChainParameters corresponds to GetBlockSummary subset on protocol level
         oldBlockHash
     );
 
-    // TODO Fix the foundation account change
+    const foundationAccount = (
+        await clientV2.getAccountInfo(
+            blockSummary.updates.chainParameters.foundationAccountIndex
+        )
+    ).accountAddress;
+    expect(chainParameters.foundationAccount).toEqual(foundationAccount);
     blockSummary.updates.chainParameters.foundationAccountIndex = undefined;
     chainParameters.foundationAccount = undefined;
 
@@ -335,6 +346,24 @@ test('getPassiveDelegationInfo corresponds to getPoolStatus with no bakerId', as
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const newStatus: any = await clientV2.getPassiveDelegationInfo(
         testBlockHash
+    );
+
+    expect(oldStatus).toEqual(newStatus);
+});
+
+test('getPoolInfo corresponds to getPoolStatus with bakerId (with pending change)', async () => {
+    const changeHash =
+        '2aa7c4a54ad403a9f9b48de2469e5f13a64c95f2cf7a8e72c0f9f7ae0718f642';
+    const changedAccount = 1879n;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const oldStatus: any = await clientV1.getPoolStatus(
+        changeHash,
+        changedAccount
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const newStatus: any = await clientV2.getPoolInfo(
+        changedAccount,
+        changeHash
     );
 
     expect(oldStatus).toEqual(newStatus);

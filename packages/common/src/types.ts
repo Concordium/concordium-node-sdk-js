@@ -1040,7 +1040,7 @@ export interface BakerPoolStatusDetails {
     delegatedCapitalCap: Amount;
     poolInfo: BakerPoolInfo;
     bakerStakePendingChange: BakerPoolPendingChange;
-    currentPaydayStatus?: CurrentPaydayBakerPoolStatus;
+    currentPaydayStatus: CurrentPaydayBakerPoolStatus | null;
     allPoolTotalCapital: Amount;
 }
 

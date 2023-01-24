@@ -143,7 +143,7 @@ export default class ConcordiumNodeClient {
      * @returns The status of the corresponding baker pool.
      */
     async getPoolInfo(
-        bakerId: bigint,
+        bakerId: v1.BakerId,
         blockHash?: HexString
     ): Promise<v1.BakerPoolStatus> {
         const input: v2.PoolInfoRequest = {

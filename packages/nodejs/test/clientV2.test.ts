@@ -201,7 +201,7 @@ test('getInstanceInfo', async () => {
         testBlockHash
     );
 
-    expect(v2.InstanceInfo.toJson(instanceInfo)).toEqual(expected.instanceInfo);
+    expect(instanceInfo).toEqual(expected.instanceInfo);
 });
 
 test('Failed invoke contract', async () => {

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.0
+
+### Added
+
+- `serialize_credential_deployment_payload()`
+
 ## 0.9.0 2023-1-4
 
 ### Added

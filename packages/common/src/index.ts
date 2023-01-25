@@ -12,6 +12,8 @@ export {
     serializeCredentialDeploymentTransactionForSubmission,
     getSignedCredentialDeploymentTransactionHash,
     serializeTypeValue,
+    serializeAccountTransactionPayload,
+    serializeCredentialDeploymentPayload,
 } from './serialization';
 export { sha256 };
 export { CredentialRegistrationId } from './types/CredentialRegistrationId';
@@ -50,6 +52,10 @@ export { isHex } from './util';
 export { HttpProvider } from './providers/httpProvider';
 export { JsonRpcClient } from './JsonRpcClient';
 export * from './identity';
+export * from './types/rejectReason';
+export * from './types/chainUpdate';
+export * from './types/transactionEvent';
+export * from './types/blockItemSummary';
 
 export { getAccountTransactionHandler } from './accountTransactions';
 export { calculateEnergyCost } from './energyCost';

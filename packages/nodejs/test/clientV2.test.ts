@@ -4,7 +4,27 @@ import * as v2 from '../grpc/v2/concordium/types';
 import ConcordiumNodeClientV1 from '../src/client';
 import ConcordiumNodeClientV2 from '../src/clientV2';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
-import { getAccountIdentifierInput, getBlockHashInput } from '../src/util';
+import {
+    getAccountIdentifierInput,
+    getBlockHashInput,
+    unwrap,
+} from '../src/util';
+import {
+    buildBasicAccountSigner,
+    calculateEnergyCost,
+    createCredentialDeploymentTransaction,
+    getAccountTransactionHandler,
+    sha256,
+    signTransaction,
+} from '@concordium/common-sdk';
+import { serializeAccountTransactionPayload } from '@concordium/common-sdk/src';
+import {
+    getCredentialDeploymentSignDigest,
+    serializeAccountTransaction,
+} from '@concordium/common-sdk/lib/serialization';
+import { getModuleBuffer, getIdentityInput } from './testHelpers';
+import * as ed from '@noble/ed25519';
+import * as expected from './resources/expectedJsons';
 
 /**
  * Creates a client to communicate with a local concordium-node
@@ -87,97 +107,10 @@ test('NextAccountSequenceNumber', async () => {
     expect(nan.allFinal).toBeDefined();
 });
 
-test('AccountInfo', async () => {
+test('getAccountInfo', async () => {
     const accountInfo = await getAccountInfoV2(clientV2, testAccount);
 
-    const expected = {
-        sequenceNumber: {
-            value: '19',
-        },
-        amount: {
-            value: '35495453082577742',
-        },
-        schedule: {
-            total: {},
-        },
-        creds: {
-            '0': {
-                normal: {
-                    keys: {
-                        keys: {
-                            '0': {
-                                ed25519Key:
-                                    'npdcg40DcTbP9U9/W3QZIt2bwx5d08nreToCa30fUSU=',
-                            },
-                            '1': {
-                                ed25519Key:
-                                    'LTIrh0T6XQGCOtzj9qE7vr3XuFA8CMzD2El+bEYCGXY=',
-                            },
-                            '2': {
-                                ed25519Key:
-                                    'mnffP4aSBqfAhbwauCHx4kh2KiK7N0cbPO/Lg3QHZMk=',
-                            },
-                        },
-                        threshold: {
-                            value: 2,
-                        },
-                    },
-                    credId: {
-                        value: 'qnMARbzSC7XCQ0nbKdlJ92fnL3zORZ3BY8S5PHgKfX9lgB3aj/fk/Ab98aGyRidv',
-                    },
-                    ipId: {},
-                    policy: {
-                        createdAt: {
-                            year: 2022,
-                            month: 6,
-                        },
-                        validTo: {
-                            year: 2023,
-                            month: 6,
-                        },
-                    },
-                    arThreshold: {
-                        value: 1,
-                    },
-                    commitments: {
-                        prf: {
-                            value: 'uJMOSJdpAvZ/DLtQuMKRH8wGRvvM9L+2pELvfUCoNR9IrnIG7oCD4o01e+gIgD+C',
-                        },
-                        credCounter: {
-                            value: 'sKpl9CCp8/q2HT+HXuvMIh5DFUv68bY2Xazpm/8gd43nADQ3YxIi6EX9mRfI0odL',
-                        },
-                        maxAccounts: {
-                            value: 'hp4r3bLGBwPs1RK1W3crr3VpH4G7xFNi+I5avNq4WiNxSpLUb+QEVzZNUGq8IgKj',
-                        },
-                        idCredSecSharingCoeff: [
-                            {
-                                value: 'i6xECi5GzL+/p2jGrZnyq/JfizJ6eV7PI7K4BMMnAi8G0KztC17tZYmaPvMCmATs',
-                            },
-                        ],
-                    },
-                },
-            },
-        },
-        threshold: {
-            value: 1,
-        },
-        encryptedBalance: {
-            selfAmount: {
-                value: 'wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-            },
-        },
-        encryptionKey: {
-            value: 'sUy/5EoCxrH3hxEXbV9DcpU2eqTyqMJVHuENJaA63GnWGjMqBYlxkZ2tcxLh/JTFqnMARbzSC7XCQ0nbKdlJ92fnL3zORZ3BY8S5PHgKfX9lgB3aj/fk/Ab98aGyRidv',
-        },
-        index: {
-            value: '11',
-        },
-        address: {
-            value: 'aXUkBsyTn8kMpqc7V87hCZY1R/lCAG0hkUSST4SF+w0=',
-        },
-    };
-
-    expect(v2.AccountInfo.toJson(accountInfo)).toEqual(expected);
+    expect(v2.AccountInfo.toJson(accountInfo)).toEqual(expected.accountInfo);
 });
 
 test('getAccountInfo: Invalid hash throws error', async () => {
@@ -196,56 +129,27 @@ test('getAccountInfo for baker', async () => {
     const accInfo = await getAccountInfoV2(clientV2, testAccBaker);
     const accountIndexInfo = await getAccountInfoV2(clientV2, 5n);
 
-    const expected = {
-        baker: {
-            stakedAmount: { value: '7349646704751788' },
-            restakeEarnings: true,
-            bakerInfo: {
-                bakerId: { value: '5' },
-                electionKey: {
-                    value: 'oJBoHsezXvOnce1D67Zyj9leSyZ6vt+pXx3BdyAZPcs=',
-                },
-                signatureKey: {
-                    value: 'w4XMtcigcQoWLywQcSN0RlD/NfAAQL+iYtl0v7PD+PE=',
-                },
-                aggregationKey: {
-                    value: 'sYoC3nSCblX26twPMdDZpu37KZPQMOZRNvHhJWppulI6y0D6TTBNBmiqMHwZJXoKEHJucBSckE4e8prtsmecglmX4/FO3TA78nbywLDFpMSHD/8MBDFQvga3FUZr5WTE',
-                },
-            },
-            poolInfo: {
-                openStatus: 'OPEN_STATUS_CLOSED_FOR_ALL',
-                commissionRates: {
-                    finalization: { partsPerHundredThousand: 100000 },
-                    baking: { partsPerHundredThousand: 10000 },
-                    transaction: { partsPerHundredThousand: 10000 },
-                },
-            },
-        },
-    };
     if (accInfo.stake && accountIndexInfo.stake) {
         const stake = v2.AccountStakingInfo.toJson(accInfo.stake);
         const stakeAccountIndex = v2.AccountStakingInfo.toJson(
             accountIndexInfo.stake
         );
-        expect(stake).toEqual(expected);
+        expect(stake).toEqual(expected.stakingInfoBaker);
         expect(stake).toEqual(stakeAccountIndex);
+    } else {
+        throw Error('Stake field not found in accountInfo.');
     }
 });
 
 test('getAccountInfo for delegator', async () => {
     const accInfo = await getAccountInfoV2(clientV2, testAccDeleg);
 
-    const expected = {
-        delegator: {
-            stakedAmount: { value: '620942412516' },
-            restakeEarnings: true,
-            target: { passive: {} },
-        },
-    };
-
     if (accInfo.stake) {
-        const stakeJson = v2.AccountStakingInfo.toJson(accInfo.stake);
-        expect(stakeJson).toEqual(expected);
+        expect(v2.AccountStakingInfo.toJson(accInfo.stake)).toEqual(
+            expected.stakingInfoDelegator
+        );
+    } else {
+        throw Error('Stake field not found in accountInfo.');
     }
 });
 
@@ -269,22 +173,303 @@ test('accountInfo implementations is the same', async () => {
     const oldDeleg = await clientV1.getAccountInfo(testAccDeleg, testBlockHash);
     const newDeleg = await clientV2.getAccountInfo(testAccDeleg, testBlockHash);
 
-    // Tempoary
-    if (oldReg?.accountCredentials[0].value.type === 'normal') {
-        oldReg.accountCredentials[0].value.contents.arData = {};
-    }
-    if (oldCredId?.accountCredentials[0].value.type === 'normal') {
-        oldCredId.accountCredentials[0].value.contents.arData = {};
-    }
-    if (oldBaker?.accountCredentials[0].value.type === 'normal') {
-        oldBaker.accountCredentials[0].value.contents.arData = {};
-    }
-    if (oldDeleg?.accountCredentials[0].value.type === 'normal') {
-        oldDeleg.accountCredentials[0].value.contents.arData = {};
-    }
-
     expect(oldReg).toEqual(newReg);
     expect(oldCredId).toEqual(newCredId);
     expect(oldDeleg).toEqual(newDeleg);
     expect(oldBaker).toEqual(newBaker);
+});
+
+test('getBlockItemStatus on chain update', async () => {
+    const transactionHash =
+        '3de823b876d05cdd33a311a0f84124079f5f677afb2534c4943f830593edc650';
+    const blockItemStatus = await clientV2.getBlockItemStatus(transactionHash);
+
+    expect(blockItemStatus).toEqual(expected.blockItemStatusUpdate);
+});
+
+test('getBlockItemStatus on simple transfer', async () => {
+    const transactionHash =
+        '502332239efc0407eebef5c73c390080e5d7e1b127ff29f786a62b3c9ab6cfe7';
+    const blockItemStatus = await clientV2.getBlockItemStatus(transactionHash);
+
+    expect(blockItemStatus).toEqual(expected.blockItemStatusTransfer);
+});
+
+test('getInstanceInfo', async () => {
+    const contractAddress = {
+        index: 0n,
+        subindex: 0n,
+    };
+    const instanceInfo = await clientV2.getInstanceInfo(
+        contractAddress,
+        testBlockHash
+    );
+
+    expect(instanceInfo).toEqual(expected.instanceInfo);
+});
+
+test('Failed invoke contract', async () => {
+    const result = await clientV2.invokeContract(
+        {
+            invoker: testAccount,
+            contract: {
+                index: 6n,
+                subindex: 0n,
+            },
+            method: 'PiggyBank.smash',
+            amount: new v1.CcdAmount(0n),
+            parameter: undefined,
+            energy: 30000n,
+        },
+        testBlockHash
+    );
+
+    if (result.tag !== 'failure') {
+        throw new Error('Expected invoke to be fail');
+    }
+
+    expect(result.usedEnergy).toBe(340n);
+    expect(result.reason.tag).toBe(v1.RejectReasonTag.RejectedReceive);
+});
+
+test('Invoke contract on v0 contract', async () => {
+    const result = await clientV2.invokeContract(
+        {
+            invoker: testAccount,
+            contract: {
+                index: 6n,
+                subindex: 0n,
+            },
+            method: 'PiggyBank.insert',
+            amount: new v1.CcdAmount(1n),
+            parameter: undefined,
+            energy: 30000n,
+        },
+        testBlockHash
+    );
+
+    expect(result).toEqual(expected.invokeInstanceResponseV0);
+});
+
+test('Invoke contract same in v1 and v2 on v1 contract', async () => {
+    const context = {
+        invoker: testAccount,
+        contract: {
+            index: 81n,
+            subindex: 0n,
+        },
+        method: 'PiggyBank.view',
+        amount: new v1.CcdAmount(0n),
+        parameter: undefined,
+        energy: 30000n,
+    };
+    const resultV1 = await clientV1.invokeContract(context, testBlockHash);
+    const resultV2 = await clientV2.invokeContract(context, testBlockHash);
+
+    expect(resultV2).toEqual(resultV1);
+});
+
+test('getModuleSource', async () => {
+    const localModuleBytes = getModuleBuffer('test/resources/piggy_bank.wasm');
+    const moduleRef = new v1.ModuleReference(
+        Buffer.from(
+            'foOYrcQGqX202GnD/XrcgToxg2Z6On2weOuub33OX2Q=',
+            'base64'
+        ).toString('hex')
+    );
+
+    const localModuleHex = Buffer.from(localModuleBytes);
+    const moduleSource = await clientV2.getModuleSource(
+        moduleRef,
+        testBlockHash
+    );
+
+    expect(localModuleHex).toEqual(moduleSource);
+});
+
+test('getConsensusStatus', async () => {
+    const genesisBlock =
+        '4221332d34e1694168c2a0c0b3fd0f273809612cb13d000d5c2e00e85f50f796';
+
+    const ci = await clientV2.getConsensusStatus();
+    const lastFinTime = unwrap(ci.lastFinalizedTime?.getTime()) / 1000;
+
+    expect(ci.genesisBlock).toEqual(genesisBlock);
+    expect(ci.lastFinalizedBlockHeight).toBeGreaterThan(1395315n);
+    expect(lastFinTime).toBeGreaterThan(1669214033937n);
+});
+
+test('sendBlockItem', async () => {
+    const senderAccount = new v1.AccountAddress(
+        '37TRfx9PqFX386rFcNThyA3zdoWsjF8Koy6Nh3i8VrPy4duEsA'
+    );
+    const privateKey =
+        '1f7d20585457b542b22b51f218f0636c8e05ead4b64074e6eafd1d418b04e4ac';
+    const nextNonce = await clientV2.getNextAccountNonce(senderAccount);
+
+    // Create local transaction
+    const header: v1.AccountTransactionHeader = {
+        expiry: new v1.TransactionExpiry(new Date(Date.now() + 3600000)),
+        nonce: nextNonce.nonce,
+        sender: senderAccount,
+    };
+    const simpleTransfer: v1.SimpleTransferPayload = {
+        amount: new v1.CcdAmount(10000000000n),
+        toAddress: testAccount,
+    };
+    const accountTransaction: v1.AccountTransaction = {
+        header: header,
+        payload: simpleTransfer,
+        type: v1.AccountTransactionType.Transfer,
+    };
+
+    // Sign transaction
+    const signer = buildBasicAccountSigner(privateKey);
+    const signature: v1.AccountTransactionSignature = await signTransaction(
+        accountTransaction,
+        signer
+    );
+
+    expect(
+        clientV2.sendAccountTransaction(accountTransaction, signature)
+    ).rejects.toThrow(
+        '3 INVALID_ARGUMENT: The sender did not have enough funds to cover the costs'
+    );
+});
+
+test('transactionHash', async () => {
+    const senderAccount = new v1.AccountAddress(
+        '37TRfx9PqFX386rFcNThyA3zdoWsjF8Koy6Nh3i8VrPy4duEsA'
+    );
+    const privateKey =
+        '1f7d20585457b542b22b51f218f0636c8e05ead4b64074e6eafd1d418b04e4ac';
+    const nextNonce = await clientV2.getNextAccountNonce(senderAccount);
+
+    // Create local transaction
+    const headerLocal: v1.AccountTransactionHeader = {
+        expiry: new v1.TransactionExpiry(new Date(Date.now() + 3600000)),
+        nonce: nextNonce.nonce,
+        sender: senderAccount,
+    };
+    const simpleTransfer: v1.SimpleTransferPayload = {
+        amount: new v1.CcdAmount(10000000000n),
+        toAddress: testAccount,
+    };
+    const transaction: v1.AccountTransaction = {
+        header: headerLocal,
+        payload: simpleTransfer,
+        type: v1.AccountTransactionType.Transfer,
+    };
+
+    const rawPayload = serializeAccountTransactionPayload(transaction);
+
+    // Energy cost
+    const accountTransactionHandler = getAccountTransactionHandler(
+        transaction.type
+    );
+    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(
+        transaction.payload
+    );
+    const energyCost = calculateEnergyCost(
+        1n,
+        BigInt(rawPayload.length),
+        baseEnergyCost
+    );
+
+    // Sign transaction
+    const signer = buildBasicAccountSigner(privateKey);
+    const signature: v1.AccountTransactionSignature = await signTransaction(
+        transaction,
+        signer
+    );
+
+    // Put together sendBlockItemRequest
+    const header: v2.AccountTransactionHeader = {
+        sender: { value: transaction.header.sender.decodedAddress },
+        sequenceNumber: { value: transaction.header.nonce },
+        energyAmount: { value: energyCost },
+        expiry: { value: transaction.header.expiry.expiryEpochSeconds },
+    };
+    const accountTransaction: v2.PreAccountTransaction = {
+        header: header,
+        payload: {
+            payload: { oneofKind: 'rawPayload', rawPayload: rawPayload },
+        },
+    };
+
+    const serializedAccountTransaction = serializeAccountTransaction(
+        transaction,
+        signature
+    ).slice(71);
+    const localHash = Buffer.from(
+        sha256([serializedAccountTransaction])
+    ).toString('hex');
+    const nodeHash = await clientV2.client.getAccountTransactionSignHash(
+        accountTransaction
+    ).response;
+
+    expect(localHash).toEqual(Buffer.from(nodeHash.value).toString('hex'));
+});
+
+// Todo: verify that accounts can actually be created.
+test('createAccount', async () => {
+    // Get information from node
+    const lastFinalizedBlockHash = (await clientV2.getConsensusStatus())
+        .lastFinalizedBlock;
+    if (!lastFinalizedBlockHash) {
+        throw new Error('Could not find latest finalized block.');
+    }
+    const cryptoParams = await clientV2.getCryptographicParameters(
+        lastFinalizedBlockHash
+    );
+    if (!cryptoParams) {
+        throw new Error(
+            'Cryptographic parameters were not found on a block that has been finalized.'
+        );
+    }
+
+    // Create credentialDeploymentTransaction
+    const identityInput: v1.IdentityInput = getIdentityInput();
+    const threshold = 1;
+    const credentialIndex = 1;
+    const expiry = new v1.TransactionExpiry(new Date(Date.now() + 3600000));
+    const revealedAttributes: v1.AttributeKey[] = [];
+    const publicKeys: v1.VerifyKey[] = [
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                'c8cd7623c5a9316d8e2fccb51e1deee615bdb5d324fb4a6d33801848fb5e459e',
+        },
+    ];
+
+    const credentialDeploymentTransaction: v1.CredentialDeploymentTransaction =
+        createCredentialDeploymentTransaction(
+            identityInput,
+            cryptoParams,
+            threshold,
+            publicKeys,
+            credentialIndex,
+            revealedAttributes,
+            expiry
+        );
+
+    // Sign transaction
+    const hashToSign = getCredentialDeploymentSignDigest(
+        credentialDeploymentTransaction
+    );
+    const signingKey1 =
+        '1053de23867e0f92a48814aabff834e2ca0b518497abaef71cad4e1be506334a';
+    const signature = Buffer.from(
+        await ed.sign(hashToSign, signingKey1)
+    ).toString('hex');
+    const signatures: string[] = [signature];
+
+    expect(
+        clientV2.sendCredentialDeploymentTransaction(
+            credentialDeploymentTransaction,
+            signatures
+        )
+    ).rejects.toThrow(
+        '3 INVALID_ARGUMENT: The credential deployment was expired'
+    );
 });

@@ -4,7 +4,11 @@ import * as v2 from '../grpc/v2/concordium/types';
 import ConcordiumNodeClientV1 from '../src/client';
 import ConcordiumNodeClientV2 from '../src/clientV2';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
-import { getAccountIdentifierInput, getBlockHashInput } from '../src/util';
+import {
+    getAccountIdentifierInput,
+    getBlockHashInput,
+    unwrap,
+} from '../src/util';
 import {
     buildBasicAccountSigner,
     calculateEnergyCost,
@@ -283,22 +287,16 @@ test('getModuleSource', async () => {
     expect(localModuleHex).toEqual(moduleSource);
 });
 
-test('getConsensusInfo', async () => {
-    const genesisBlock = Buffer.from(
-        'QiEzLTThaUFowqDAs/0PJzgJYSyxPQANXC4A6F9Q95Y=',
-        'base64'
-    );
+test('getConsensusStatus', async () => {
+    const genesisBlock =
+        '4221332d34e1694168c2a0c0b3fd0f273809612cb13d000d5c2e00e85f50f796';
 
-    const consensusInfo = await clientV2.client.getConsensusInfo(v2.Empty)
-        .response;
+    const ci = await clientV2.getConsensusStatus();
+    const lastFinTime = unwrap(ci.lastFinalizedTime?.getTime()) / 1000;
 
-    expect(consensusInfo.genesisBlock?.value).toEqual(genesisBlock);
-    expect(consensusInfo.lastFinalizedTime?.value).toBeGreaterThan(
-        1669214033937n
-    );
-    expect(consensusInfo.lastFinalizedBlockHeight?.value).toBeGreaterThan(
-        1395315n
-    );
+    expect(ci.genesisBlock).toEqual(genesisBlock);
+    expect(ci.lastFinalizedBlockHeight).toBeGreaterThan(1395315n);
+    expect(lastFinTime).toBeGreaterThan(1669214033937n);
 });
 
 test('sendBlockItem', async () => {

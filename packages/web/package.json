@@ -40,7 +40,6 @@
         "eslint-config-prettier": "^8.3.0",
         "eslint-plugin-import": "^2.23.4",
         "eslint-plugin-prettier": "^3.4.0",
-        "isomorphic-fetch": "^3.0.0",
         "jest": "^27.0.6",
         "stream-browserify": "^3.0.0",
         "ts-jest": "^27.0.3",

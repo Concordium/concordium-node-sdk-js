@@ -1,0 +1,10 @@
+name: Build, test, and upload release [placeholder]
+
+on:
+    workflow_dispatch: # trigger manually
+
+jobs:
+  dummy:
+        runs-on: ubuntu-latest
+        steps:
+          - run: echo placeholder

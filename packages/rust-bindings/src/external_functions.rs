@@ -9,6 +9,7 @@ pub fn generate_unsigned_credential_ext(input: &str) -> String {
     }
 }
 
+// Will be deprecated after GRPCv1 is deprecated
 #[wasm_bindgen(js_name = getDeploymentDetails)]
 pub fn get_credential_deployment_details_ext(
     signatures: &JsValue,
@@ -311,4 +312,14 @@ pub fn get_attribute_commitment_randomness_ext(
         credential_counter,
         attribute,
     ))
+}
+
+#[wasm_bindgen(js_name = serializeCredentialDeploymentPayload)]
+pub fn serialize_credential_deployment_payload_ext(
+    signatures: &JsValue,
+    unsigned_info: &str,
+) -> Result<Vec<u8>, String> {
+    let signatures_vec: Vec<HexString> = signatures.into_serde().unwrap();
+    serialize_credential_deployment_payload_aux(signatures_vec, unsigned_info)
+        .map_err(|e| format!("Unable to get credential deployment payload due to: {}", e))
 }

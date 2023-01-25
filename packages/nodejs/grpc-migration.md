@@ -3,7 +3,6 @@
 ## General:
 Blockhash inputs are now optional, and if given must be given as a hex encoded string. If the blockhash is not given the function will use the last final block.
 
-
 ## GetBlockSummary
 
 The `getBlockSummary` endpoint has been split up.
@@ -23,3 +22,9 @@ for information on passive delegators, use the `getPassiveDelegationInfo` endpoi
 The `getRewardStatus` endpoint has been renamed to `getTokenomicsInfo`.
 
 The response has the same structure.
+
+## getTransactionStatus
+
+The `getTransactionStatus` has been replaced with the `getBlockItemStatus`.
+
+The `GetBlockItemStatus` endpoints has the same information, but has a simpler structure, with better typing.

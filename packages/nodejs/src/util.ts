@@ -48,7 +48,7 @@ export function unwrapJsonResponse<T>(
 
 /**
  * Loads the module as a buffer, given the given filePath.
- * @param filepath the location of the module
+ * @param filePath the location of the module
  * @returns the module as a buffer
  */
 export function getModuleBuffer(filePath: string): Buffer {
@@ -75,6 +75,11 @@ export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {
     return { blockHashInput: blockHashInput };
 }
 
+/**
+ * Gets an GRPCv2 AccountIdentifierInput from a GRPCv1 AccountIdentifierInput.
+ * @param accountIdentifier a GRPCv1 AccountIdentifierInput.
+ * @returns a GRPCv2 AccountIdentifierInput.
+ */
 export function getAccountIdentifierInput(
     accountIdentifier: v1.AccountIdentifierInput
 ): v2.AccountIdentifierInput {
@@ -87,15 +92,38 @@ export function getAccountIdentifierInput(
         returnIdentifier.address = { value: address };
     } else if ((<CredRegId>accountIdentifier).credId !== undefined) {
         const credId = (<CredRegId>accountIdentifier).credId;
-        const credIdBytes = Buffer.from(credId, 'hex');
         returnIdentifier.oneofKind = 'credId';
-        returnIdentifier.credId = { value: credIdBytes };
+        returnIdentifier.credId = { value: Buffer.from(credId, 'hex') };
     } else {
         returnIdentifier.oneofKind = 'accountIndex';
         returnIdentifier.accountIndex = { value: accountIdentifier };
     }
 
     return { accountIdentifierInput: returnIdentifier };
+}
+
+export function getInvokerInput(
+    invoker?: v1.AccountAddress | v1.ContractAddress
+): v2.Address | undefined {
+    if (!invoker) {
+        return undefined;
+    } else if ((<v1.AccountAddress>invoker).decodedAddress) {
+        return {
+            type: {
+                oneofKind: 'account',
+                account: { value: (<v1.AccountAddress>invoker).decodedAddress },
+            },
+        };
+    } else if ((<v1.ContractAddress>invoker).index) {
+        return {
+            type: {
+                oneofKind: 'contract',
+                contract: <v1.ContractAddress>invoker,
+            },
+        };
+    } else {
+        throw new Error('Unexpected input to build invoker');
+    }
 }
 
 export function assertValidHash(hash: HexString): void {

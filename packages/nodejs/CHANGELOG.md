@@ -1,5 +1,24 @@
 # Changelog
 
+## 6.3.0
+
+### Added Changes
+- Added more GRPCv2 functions:
+    - `getNextAccountSequenceNumber()`
+    - `getAccountInfo()`
+    - `getBlockItemStatus()`
+    - `getConsensusInfo()`
+    - `getModuleSource()`
+    - `getInstanceInfo()`
+    - `invokeInstance()`
+    - `getAccountTransactionSignHash()`
+    - `sendAccountTransaction()`
+    - `sendCredentialDeploymentTransaction()`
+
+### Fixed
+
+- Amount fields in events in invokeContract in GRPC v1 was string values instead of bigint as the type indicated.
+
 ## 6.2.0
 
 ### Added Changes

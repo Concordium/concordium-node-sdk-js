@@ -70,12 +70,13 @@ export enum TransactionKindString {
 
 export interface TransferSummary {
     transactionType: TransactionKindString.Transfer;
-    event: TransferredEvent;
+    transfer: TransferredEvent;
 }
 
 export interface TransferWithMemoSummary {
     transactionType: TransactionKindString.TransferWithMemo;
-    events: [TransferredEvent, MemoEvent];
+    transfer: TransferredEvent;
+    memo: MemoEvent;
 }
 
 export interface TransferWithScheduleSummary {
@@ -85,27 +86,31 @@ export interface TransferWithScheduleSummary {
 
 export interface TransferWithScheduleAndMemoSummary {
     transactionType: TransactionKindString.TransferWithScheduleAndMemo;
-    events: [TransferredWithScheduleEvent, MemoEvent];
+    transfer: TransferredWithScheduleEvent;
+    memo: MemoEvent;
 }
 
 export interface EncryptedAmountTransferSummary {
     transactionType: TransactionKindString.EncryptedAmountTransfer;
-    events: [EncryptedAmountsRemovedEvent, NewEncryptedAmountEvent];
+    removed: EncryptedAmountsRemovedEvent;
+    added: NewEncryptedAmountEvent;
 }
 
 export interface EncryptedAmountTransferWithMemoSummary {
     transactionType: TransactionKindString.EncryptedAmountTransferWithMemo;
-    events: [EncryptedAmountsRemovedEvent, NewEncryptedAmountEvent, MemoEvent];
+    removed: EncryptedAmountsRemovedEvent;
+    added: NewEncryptedAmountEvent;
+    memo: MemoEvent;
 }
 
-export interface ModueDeployedSummary {
+export interface ModuleDeployedSummary {
     transactionType: TransactionKindString.DeployModule;
-    event: ModuleDeployedEvent;
+    moduleDeployed: ModuleDeployedEvent;
 }
 
 export interface InitContractSummary {
     transactionType: TransactionKindString.InitContract;
-    event: ContractInitializedEvent;
+    contractInitialized: ContractInitializedEvent;
 }
 
 export interface UpdateContractSummary {
@@ -115,42 +120,43 @@ export interface UpdateContractSummary {
 
 export interface DataRegisteredSummary {
     transactionType: TransactionKindString.RegisterData;
-    event: DataRegisteredEvent;
+    dataRegistered: DataRegisteredEvent;
 }
 
 export interface TransferToPublicSummary {
     transactionType: TransactionKindString.TransferToPublic;
-    events: [EncryptedAmountsRemovedEvent, AmountAddedByDecryptionEvent];
+    removed: EncryptedAmountsRemovedEvent;
+    added: AmountAddedByDecryptionEvent;
 }
 
 export interface TransferToEncryptedSummary {
     transactionType: TransactionKindString.TransferToEncrypted;
-    event: EncryptedSelfAmountAddedEvent;
+    added: EncryptedSelfAmountAddedEvent;
 }
 
 export interface AddBakerSummary {
     transactionType: TransactionKindString.AddBaker;
-    event: BakerAddedEvent;
+    bakerAdded: BakerAddedEvent;
 }
 
 export interface RemoveBakerSummary {
     transactionType: TransactionKindString.RemoveBaker;
-    event: BakerRemovedEvent;
+    bakerRemoved: BakerRemovedEvent;
 }
 
 export interface UpdateBakerKeysSummary {
     transactionType: TransactionKindString.UpdateBakerKeys;
-    event: BakerKeysUpdatedEvent;
+    bakerKeysUpdated: BakerKeysUpdatedEvent;
 }
 
 export interface UpdateBakerStakeSummary {
     transactionType: TransactionKindString.UpdateBakerStake;
-    event: BakerStakeChangedEvent;
+    bakerStakeChanged: BakerStakeChangedEvent;
 }
 
 export interface UpdateBakerRestakeEarningsSummary {
     transactionType: TransactionKindString.UpdateBakerRestakeEarnings;
-    event: BakerSetRestakeEarningsEvent;
+    bakerRestakeEarningsUpdated: BakerSetRestakeEarningsEvent;
 }
 
 export interface ConfigureBakerSummary {
@@ -165,12 +171,12 @@ export interface ConfigureDelegationSummary {
 
 export interface UpdateCredentialKeysSummary {
     transactionType: TransactionKindString.UpdateCredentialKeys;
-    event: CredentialKeysUpdatedEvent;
+    keysUpdated: CredentialKeysUpdatedEvent;
 }
 
 export interface UpdateCredentialsSummary {
     transactionType: TransactionKindString.UpdateCredentials;
-    event: CredentialsUpdatedEvent;
+    credentialsUpdated: CredentialsUpdatedEvent;
 }
 export interface FailedTransactionSummary {
     failedTransactionType: TransactionKindString;
@@ -188,7 +194,7 @@ export type AccountTransactionSummary = BaseAccountTransactionSummary &
         | DataRegisteredSummary
         | TransferToPublicSummary
         | TransferToEncryptedSummary
-        | ModueDeployedSummary
+        | ModuleDeployedSummary
         | InitContractSummary
         | UpdateContractSummary
         | FailedTransactionSummary

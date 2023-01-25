@@ -27,6 +27,10 @@ export class ModuleReference {
         }
     }
 
+    static fromBytes(bytes: Buffer): ModuleReference {
+        return new ModuleReference(bytes.toString('hex'));
+    }
+
     toJSON(): string {
         return packBufferWithWord32Length(
             Buffer.from(this.decodedModuleRef)

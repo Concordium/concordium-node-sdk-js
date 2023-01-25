@@ -7,13 +7,12 @@ export default function createConcordiumClient(
     port: number,
     credentials: ChannelCredentials,
     metadata: Metadata,
-    timeout: number,
     options?: Record<string, unknown>
 ): ConcordiumGRPCClient {
     const grpcTransport = new GrpcTransport({
         host: `${address}:${port}`,
         channelCredentials: credentials,
-        options: options,
+        options,
     });
-    return new ConcordiumGRPCClient(timeout, grpcTransport);
+    return new ConcordiumGRPCClient(grpcTransport);
 }

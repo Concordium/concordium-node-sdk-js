@@ -3,8 +3,10 @@ import ConcordiumNodeClientV2 from '@concordium/common-sdk/lib/GRPCClient';
 import { TextEncoder, TextDecoder } from 'util';
 import 'isomorphic-fetch';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 global.TextEncoder = TextEncoder as any;
 global.TextDecoder = TextDecoder as any;
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 /**
  * Creates a client to communicate with a local concordium-node
@@ -31,7 +33,5 @@ test('getConsensusStatus', async () => {
     expect(consensusStatus.lastFinalizedTime?.getTime()).toBeGreaterThan(
         1669214033937000
     );
-    expect(consensusStatus.lastFinalizedBlockHeight).toBeGreaterThan(
-        1395315n
-    );
+    expect(consensusStatus.lastFinalizedBlockHeight).toBeGreaterThan(1395315n);
 });

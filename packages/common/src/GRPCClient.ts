@@ -2,7 +2,7 @@ import * as v1 from './types';
 import * as v2 from '../grpc/v2/concordium/types';
 import { HexString } from './types';
 import { QueriesClient } from '../grpc/v2/concordium/service.client';
-import type { RpcTransport, RpcOptions } from '@protobuf-ts/runtime-rpc';
+import type { RpcTransport } from '@protobuf-ts/runtime-rpc';
 import { CredentialRegistrationId } from './types/CredentialRegistrationId';
 import * as translate from './GRPCTypeTranslation';
 import { AccountAddress } from './types/accountAddress';
@@ -13,39 +13,32 @@ import {
     serializeAccountTransactionPayload,
     serializeCredentialDeploymentPayload,
 } from './serialization';
-import { CcdAmount } from './types/ccdAmount';
 import { BlockItemStatus } from './types/blockItemSummary';
 import { ModuleReference } from './types/moduleReference';
 
 /**
  * A concordium-node specific gRPC client wrapper.
  *
+ * @example
+ * import ConcordiumNodeClient from "..."
+ * const client = new ConcordiumNodeClient('127.0.0.1', 20000, credentials, metadata, 15000);
  */
-export default class ConcordiumGRPCClient {
+export default class ConcordiumNodeClient {
     client: QueriesClient;
-    options: RpcOptions;
 
     /**
      * Initialize a gRPC client for a specific concordium node.
-     * @param timeout milliseconds to wait before timing out
      * @param transport RpcTransport to send communication over
      */
-    constructor(timeout: number, transport: RpcTransport) {
-        if (timeout < 0 || !Number.isSafeInteger(timeout)) {
-            throw new Error(
-                'The timeout must be a positive integer, but was: ' + timeout
-            );
-        }
-
-        this.options = { timeout };
+    constructor(transport: RpcTransport) {
         this.client = new QueriesClient(transport);
     }
 
     /**
      * Retrieves the next account nonce for the given account. The account nonce is
      * used in all account transactions as part of their header.
-     * @param accountAddress base58 account address to get the next account nonce for
-     * @returns the next account nonce, and a boolean indicating if the nonce is reliable
+     * @param accountAddress base58 account address to get the next account nonce for.
+     * @returns the next account nonce, and a boolean indicating if the nonce is reliable.
      */
     async getNextAccountNonce(
         accountAddress: AccountAddress
@@ -54,10 +47,8 @@ export default class ConcordiumGRPCClient {
             value: new Uint8Array(accountAddress.decodedAddress),
         };
 
-        const response = await this.client.getNextAccountSequenceNumber(
-            address,
-            this.options
-        ).response;
+        const response = await this.client.getNextAccountSequenceNumber(address)
+            .response;
         return translate.nextAccountSequenceNumber(response);
     }
 
@@ -65,7 +56,7 @@ export default class ConcordiumGRPCClient {
      * Retrieves the consensus status information from the node. Note that the optional
      * fields will only be unavailable for a newly started node that has not processed
      * enough data yet.
-     * @param blockHash optional block hash to get the account info at, otherwise retrieves from last finalized block
+     * @param blockHash optional block hash to get the account info at, otherwise retrieves from last finalized block.
      * @returns the global cryptographic parameters at the given block, or undefined it the block does not exist.
      */
     async getCryptographicParameters(
@@ -74,8 +65,7 @@ export default class ConcordiumGRPCClient {
         const blockHashInput = getBlockHashInput(blockHash);
 
         const response = await this.client.getCryptographicParameters(
-            blockHashInput,
-            this.options
+            blockHashInput
         ).response;
         return translate.cryptographicParameters(response);
     }
@@ -100,9 +90,8 @@ export default class ConcordiumGRPCClient {
             accountIdentifier: getAccountIdentifierInput(accountIdentifier),
         };
 
-        const response = await this.client.getAccountInfo(
-            accountInfoRequest
-        ).response;
+        const response = await this.client.getAccountInfo(accountInfoRequest)
+            .response;
         return translate.accountInfo(response);
     }
 
@@ -170,23 +159,25 @@ export default class ConcordiumGRPCClient {
     async getInstanceInfo(
         contractAddress: v1.ContractAddress,
         blockHash?: HexString
-    ): Promise<v2.InstanceInfo> {
+    ): Promise<v1.InstanceInfo> {
         const instanceInfoRequest: v2.InstanceInfoRequest = {
             blockHash: getBlockHashInput(blockHash),
             address: contractAddress,
         };
 
-        return await this.client.getInstanceInfo(instanceInfoRequest).response;
+        const response = await this.client.getInstanceInfo(instanceInfoRequest)
+            .response;
+        return translate.instanceInfo(response);
     }
 
     /**
      * Invokes a smart contract.
-     * @param instance The address of the smart contract that shall be evoked.
-     * @param amount The amount of microCCD to invoke the contract with.
-     * @param entrypoint The entrypoint (receive function) that shall be invoked.
-     * @param parameter The serialized parameters that the contract will be invoked with.
-     * @param energy The maximum amount of energy to allow for execution.
-     * @param invoker The address of the invoker, if undefined uses the zero account address.
+     * @param context.contract The address of the smart contract that shall be evoked.
+     * @param context.amount The amount of microCCD to invoke the contract with.
+     * @param context.method The entrypoint (receive function) that shall be invoked.
+     * @param context.parameter The serialized parameters that the contract will be invoked with.
+     * @param context.energy The maximum amount of energy to allow for execution.
+     * @param context.invoker The address of the invoker, if undefined uses the zero account address.
      * @param blockHash the block hash at which the contract should be invoked at. The contract is invoked in the state at the end of this block.
      * @returns If the node was able to invoke, then a object describing the outcome is returned.
      * The outcome is determined by the `tag` field, which is either `success` or `failure`.
@@ -196,28 +187,25 @@ export default class ConcordiumGRPCClient {
      * If the tag is `failure`, then a `reason` field is present, and it contains the reason the update would have been rejected.
      * If either the block does not exist, or then node fails to parse of any of the inputs, then undefined is returned.
      */
-    async invokeInstance(
-        instance: v2.ContractAddress,
-        amount: CcdAmount,
-        entrypoint: string,
-        parameter: Uint8Array,
-        energy: bigint,
-        invoker?: v2.Address,
+    async invokeContract(
+        context: v1.ContractContext,
         blockHash?: HexString
-    ): Promise<v2.InvokeInstanceResponse> {
+    ): Promise<v1.InvokeContractResult> {
         const blockHashInput = getBlockHashInput(blockHash);
 
         const invokeInstanceRequest: v2.InvokeInstanceRequest = {
             blockHash: blockHashInput,
-            invoker: invoker,
-            instance: instance,
-            amount: { value: amount.microCcdAmount },
-            entrypoint: { value: entrypoint },
-            parameter: { value: parameter },
-            energy: { value: energy },
+            invoker: getInvokerInput(context.invoker),
+            instance: context.contract,
+            amount: { value: context.amount?.microCcdAmount || 0n },
+            entrypoint: { value: context.method },
+            parameter: { value: context.parameter || Buffer.alloc(0) },
+            energy: { value: context.energy || 0n },
         };
 
-        return await this.client.invokeInstance(invokeInstanceRequest).response;
+        const response = await this.client.invokeInstance(invokeInstanceRequest)
+            .response;
+        return translate.invokeInstanceResponse(response);
     }
 
     /**
@@ -362,6 +350,30 @@ export function getAccountIdentifierInput(
     }
 
     return { accountIdentifierInput: returnIdentifier };
+}
+
+export function getInvokerInput(
+    invoker?: AccountAddress | v1.ContractAddress
+): v2.Address | undefined {
+    if (!invoker) {
+        return undefined;
+    } else if ((<AccountAddress>invoker).decodedAddress) {
+        return {
+            type: {
+                oneofKind: 'account',
+                account: { value: (<AccountAddress>invoker).decodedAddress },
+            },
+        };
+    } else if ((<v1.ContractAddress>invoker).index) {
+        return {
+            type: {
+                oneofKind: 'contract',
+                contract: <v1.ContractAddress>invoker,
+            },
+        };
+    } else {
+        throw new Error('Unexpected input to build invoker');
+    }
 }
 
 function assertValidHash(hash: HexString): void {

@@ -42,7 +42,7 @@ export function unwrapJsonResponse<T>(
 
 /**
  * Loads the module as a buffer, given the given filePath.
- * @param filepath the location of the module
+ * @param filePath the location of the module
  * @returns the module as a buffer
  */
 export function getModuleBuffer(filePath: string): Buffer {

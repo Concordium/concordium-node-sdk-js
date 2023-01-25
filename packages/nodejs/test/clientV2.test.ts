@@ -22,6 +22,7 @@ import { getModuleBuffer, getIdentityInput } from './testHelpers';
 import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons';
 import { serializeAccountTransaction } from '@concordium/common-sdk/lib/serialization';
+import { unwrap } from '@concordium/common-sdk/lib/util';
 
 /**
  * Creates a client to communicate with a local concordium-node
@@ -203,72 +204,68 @@ test('getInstanceInfo', async () => {
         testBlockHash
     );
 
-    expect(v2.InstanceInfo.toJson(instanceInfo)).toEqual(expected.instanceInfo);
+    expect(instanceInfo).toEqual(expected.instanceInfo);
 });
 
-test('invokeInstance on v0 contract', async () => {
-    const contractAddress = {
-        index: 6n,
-        subindex: 0n,
-    };
-
-    const invokeInstanceResponse = await clientV2.invokeInstance(
-        contractAddress,
-        new v1.CcdAmount(42n),
-        'PiggyBank.insert',
-        new Uint8Array(),
-        30000n,
-        undefined,
-        testBlockHash
-    );
-
-    const responseJson = v2.InvokeInstanceResponse.toJson(
-        invokeInstanceResponse
-    );
-    expect(responseJson).toEqual(expected.invokeInstanceResponseV0);
-});
-
-test('invokeInstance on v0 contract', async () => {
-    const contractAddress = {
-        index: 6n,
-        subindex: 0n,
-    };
-
-    const invokeInstanceResponse = await clientV2.invokeInstance(
-        contractAddress,
-        new v1.CcdAmount(42n),
-        'PiggyBank.insert',
-        new Uint8Array(),
-        30000n,
-        undefined,
-        testBlockHash
-    );
-
-    const expected = {
-        success: {
-            usedEnergy: { value: '342' },
-            effects: [
-                {
-                    updated: {
-                        address: { index: '6' },
-                        instigator: {
-                            account: {
-                                value: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
-                            },
-                        },
-                        amount: { value: '42' },
-                        parameter: {},
-                        receiveName: { value: 'PiggyBank.insert' },
-                    },
-                },
-            ],
+test('Failed invoke contract', async () => {
+    const result = await clientV2.invokeContract(
+        {
+            invoker: testAccount,
+            contract: {
+                index: 6n,
+                subindex: 0n,
+            },
+            method: 'PiggyBank.smash',
+            amount: new v1.CcdAmount(0n),
+            parameter: undefined,
+            energy: 30000n,
         },
-    };
-
-    const responseJson = v2.InvokeInstanceResponse.toJson(
-        invokeInstanceResponse
+        testBlockHash
     );
-    expect(responseJson).toEqual(expected);
+
+    if (result.tag !== 'failure') {
+        throw new Error('Expected invoke to be fail');
+    }
+
+    expect(result.usedEnergy).toBe(340n);
+    expect(result.reason.tag).toBe(v1.RejectReasonTag.RejectedReceive);
+});
+
+test('Invoke contract on v0 contract', async () => {
+    const result = await clientV2.invokeContract(
+        {
+            invoker: testAccount,
+            contract: {
+                index: 6n,
+                subindex: 0n,
+            },
+            method: 'PiggyBank.insert',
+            amount: new v1.CcdAmount(1n),
+            parameter: undefined,
+            energy: 30000n,
+        },
+        testBlockHash
+    );
+
+    expect(result).toEqual(expected.invokeInstanceResponseV0);
+});
+
+test('Invoke contract same in v1 and v2 on v1 contract', async () => {
+    const context = {
+        invoker: testAccount,
+        contract: {
+            index: 81n,
+            subindex: 0n,
+        },
+        method: 'PiggyBank.view',
+        amount: new v1.CcdAmount(0n),
+        parameter: undefined,
+        energy: 30000n,
+    };
+    const resultV1 = await clientV1.invokeContract(context, testBlockHash);
+    const resultV2 = await clientV2.invokeContract(context, testBlockHash);
+
+    expect(resultV2).toEqual(resultV1);
 });
 
 test('getModuleSource', async () => {
@@ -289,22 +286,16 @@ test('getModuleSource', async () => {
     expect(localModuleHex).toEqual(moduleSource);
 });
 
-test('getConsensusInfo', async () => {
-    const genesisBlock = Buffer.from(
-        'QiEzLTThaUFowqDAs/0PJzgJYSyxPQANXC4A6F9Q95Y=',
-        'base64'
-    );
+test('getConsensusStatus', async () => {
+    const genesisBlock =
+        '4221332d34e1694168c2a0c0b3fd0f273809612cb13d000d5c2e00e85f50f796';
 
-    const consensusInfo = await clientV2.client.getConsensusInfo(v2.Empty)
-        .response;
+    const ci = await clientV2.getConsensusStatus();
+    const lastFinTime = unwrap(ci.lastFinalizedTime?.getTime()) / 1000;
 
-    expect(consensusInfo.genesisBlock?.value).toEqual(genesisBlock);
-    expect(consensusInfo.lastFinalizedTime?.value).toBeGreaterThan(
-        1669214033937n
-    );
-    expect(consensusInfo.lastFinalizedBlockHeight?.value).toBeGreaterThan(
-        1395315n
-    );
+    expect(ci.genesisBlock).toEqual(genesisBlock);
+    expect(ci.lastFinalizedBlockHeight).toBeGreaterThan(1395315n);
+    expect(lastFinTime).toBeGreaterThan(1669214033937n);
 });
 
 test('sendBlockItem', async () => {

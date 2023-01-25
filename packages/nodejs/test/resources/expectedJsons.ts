@@ -1,3 +1,9 @@
+import {
+    AccountAddress,
+    CcdAmount,
+    ModuleReference,
+} from '@concordium/common-sdk';
+
 export const accountInfo = {
     sequenceNumber: {
         value: '19',
@@ -161,7 +167,7 @@ export const blockItemStatusTransfer = {
             hash: '502332239efc0407eebef5c73c390080e5d7e1b127ff29f786a62b3c9ab6cfe7',
             sender: '4fKPBDf9r5vhEpoeNY7SJbZv8bAJvYYyJSEggZkNyQPgao8iLy',
             transactionType: 'transfer',
-            event: {
+            transfer: {
                 amount: 1000000n,
                 tag: 'Transferred',
                 to: {
@@ -175,45 +181,38 @@ export const blockItemStatusTransfer = {
 };
 
 export const instanceInfo = {
-    v1: {
-        owner: {
-            value: '0YBPp1cC7ISiGOEh3OLFvm9rCgolsXjymRwBmxeX1R4=',
-        },
-        amount: {},
-        methods: [
-            {
-                value: 'weather.get',
-            },
-            {
-                value: 'weather.set',
-            },
-        ],
-        name: {
-            value: 'init_weather',
-        },
-        sourceModule: {
-            value: 'Z9VoQzvXLkMmJB8mIhPXf0RtuLoD37o1GuNcGy5+UQk=',
-        },
-    },
+    version: 1,
+    owner: new AccountAddress(
+        '4Y1c27ZRpRut9av69n3i1uhfeDp4XGuvsm9fkEjFvgpoxXWxQB'
+    ),
+    amount: new CcdAmount(0n),
+    methods: ['weather.get', 'weather.set'],
+    name: 'init_weather',
+    sourceModule: new ModuleReference(
+        '67d568433bd72e4326241f262213d77f446db8ba03dfba351ae35c1b2e7e5109'
+    ),
 };
 
 export const invokeInstanceResponseV0 = {
-    success: {
-        usedEnergy: { value: '342' },
-        effects: [
-            {
-                updated: {
-                    address: { index: '6' },
-                    instigator: {
-                        account: {
-                            value: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
-                        },
-                    },
-                    amount: { value: '42' },
-                    parameter: {},
-                    receiveName: { value: 'PiggyBank.insert' },
-                },
+    tag: 'success',
+    usedEnergy: 342n,
+    returnValue: undefined,
+    events: [
+        {
+            tag: 'Updated',
+            events: [],
+            amount: 1n,
+            address: {
+                index: 6n,
+                subindex: 0n,
             },
-        ],
-    },
+            contractVersion: 0,
+            instigator: {
+                type: 'AddressAccount',
+                address: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
+            },
+            message: '',
+            receiveName: 'PiggyBank.insert',
+        },
+    ],
 };

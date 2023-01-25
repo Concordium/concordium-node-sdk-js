@@ -15,6 +15,10 @@
     - `sendAccountTransaction()`
     - `sendCredentialDeploymentTransaction()`
 
+### Fixed
+
+- Amount fields in events in invokeContract in GRPC v1 was string values instead of bigint as the type indicated.
+
 ## 6.2.0
 
 ### Added Changes

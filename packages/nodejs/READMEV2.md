@@ -81,9 +81,9 @@ If there is no account that matches the address or credential id at the provided
 block, then undefined will be returned.
 ```js
 const accountAddress = new AccountAddress('3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G');
-const blockHash = Buffer.from('fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e', 'hex');
+const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
 const accountInfo: AccountInfo = await client.getAccountInfo(accountAddress, blockHash);
-const amount: bigint = accountInfo.amount?.value;
+const amount: bigint = accountInfo.amount;
 ```
 
 ## getNextAccountSequenceNumber
@@ -93,8 +93,8 @@ that indicates whether all transactions are finalized. If this is true, then the
 if not then the next sequence number might be off.
 ```js
 const accountAddress = new AccountAddress('3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G');
-const nextAccountSequenceNumber: NextAccountSequenceNumber = await client.getNextAccountSequenceNumber(accountAddress);
-const sequenceNumber: bigint = nextAccountsequenceNumber.sequenceNumber?.value;
+const nextAccountSequenceNumber: NextAccountNonce = await client.getNextAccountNonce(accountAddress);
+const sequenceNumber: bigint = nextAccountsequenceNumber.nonce;
 const allFinal: boolean = nextAccountSequenceNumber.allFinal;
 if (allFinal) {
     // nonce is reliable
@@ -104,7 +104,7 @@ if (allFinal) {
 ## getBlockItemStatus
 Retrieves status information about a block item (transaction).
 ```js
-const transactionHash = Buffer.from('f1f5f966e36b95d5474e6b85b85c273c81bac347c38621a0d8fefe68b69a430f', 'hex');
+const transactionHash = 'f1f5f966e36b95d5474e6b85b85c273c81bac347c38621a0d8fefe68b69a430f';
 const blockItemStatus: BlockItemStatus = await client.getBlockItemStatus(transactionHash);
 const isFinalized = transactionStatus.status === 'finalized';
 ...
@@ -153,11 +153,11 @@ if (type === 'accountTransaction') {
 
 ```
 
-## getConsensusInfo
+## getConsensusStatus
 Retrieves the current consensus info from the node.
 ```js
-const consensusInfo: ConsensusInfo = await client.getConsensusInfo();
-const bestBlock = consensusInfo.bestBlock?.value;
+const consensusInfo: ConsensusStatus = await client.getConsensusStatus();
+const bestBlock = consensusInfo.bestBlock;
 ...
 ```
 
@@ -165,7 +165,7 @@ const bestBlock = consensusInfo.bestBlock?.value;
 Retrieves the global cryptographic parameters for the blockchain at a specific block.
 These are a required input for e.g. creating credentials.
 ```js
-const blockHash = Buffer.from('fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e', 'hex');
+const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
 const cryptographicParameters: CryptographicParameters = await client.getCryptographicParameters(blockHash);
 ...
 ```
@@ -174,7 +174,7 @@ const cryptographicParameters: CryptographicParameters = await client.getCryptog
 Used to get information about a specific contract instance, at a specific block.
 
 ```js
-const blockHash = Buffer.from('fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e', 'hex');
+const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
 const contractAddress: ContractAddress = { index: 1n, subindex: 0n };
 
 const instanceInfo: InstanceInfo = await client.getInstanceInfo(contractAddress, blockHash);
@@ -186,45 +186,45 @@ const name = instanceInfo.name;
 Used to simulate a contract update, and to trigger view functions.
 
 ```js
-const instance: ContractAddress = { index: 1n, subindex: 0n };
-const amount = 42n;
-const entrypoint = 'Piggybank.insert';
-const parameter = new Uint8Array();
-const energy = 30000n;
+const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
 const invoker = new AccountAddress('3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G');
-const blockHash = Buffer.from('fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e', 'hex');
+const context: ContractContext = {
+    invoker: invoker,
+    contract: {
+        index: 6n,
+        subindex: 0n,
+    },
+    method: 'PiggyBank.smash',
+    amount: new v1.CcdAmount(0n),
+    parameter: undefined,
+    energy: 30000n,
+},
 
 const result = await client.invokeContract(
-        instance,
-        amount,
-        entrypoint,
-        parameter: Uint8Array,
-        energy: bigint,
-        invoker?: Address,
-        blockHash?: Uint8Array
+    context,
+    blockHash,
 );
 
-if (response.result.oneofKind === 'failure') {
+if (result.tag === 'failure') {
     // Invoke was unsuccesful
-    const rejectReason = response.result.failure.reason; // Describes why the update failed;
+    const rejectReason = result.reason; // Describes why the update failed;
     ...
-} else if (response.result.oneofKind === 'success') {
-    const events = response.result.success.effects; // a list of effects that the update would have
-    const returnValue = response.result.success.returnValue; // If the invoked method has return value
+} else if (result.tag === 'success') {
+    const events = result.effects; // a list of effects that the update would have
+    const returnValue = result.returnValue; // If the invoked method has return value
     ...
 }
 ```
 
 Note that some of the parts of the context are optional:
  - blockHash: defaults to last finalized block
- - invoker: uses the zero account address, which can be used instead of finding a random address.
 
 ## getModuleSource
 This commands gets the source of a module on the chain.
 
 Note that this returns the raw bytes of the source, as a Uint8Array.
 ```js
-const blockHash = Buffer.from('fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e', 'hex');
-const moduleRef = Buffer.from('7e8398adc406a97db4d869c3fd7adc813a3183667a3a7db078ebae6f7dce5f64', 'hex');
+const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
+const moduleRef = '7e8398adc406a97db4d869c3fd7adc813a3183667a3a7db078ebae6f7dce5f64';
 const source = await client.getModuleSource(moduleReference, blockHash);
 ```

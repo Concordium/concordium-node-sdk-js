@@ -11,12 +11,15 @@ export { getModuleBuffer } from '../src/util';
  * Creates a client to communicate with a local concordium-node
  * used for automatic tests.
  */
-export function getNodeClient(address = '127.0.0.1'): ConcordiumNodeClient {
+export function getNodeClient(
+    address = '127.0.0.1',
+    port = 10000
+): ConcordiumNodeClient {
     const metadata = new Metadata();
     metadata.add('authentication', 'rpcadmin');
     return new ConcordiumNodeClient(
         address,
-        10000,
+        port,
         credentials.createInsecure(),
         metadata,
         15000

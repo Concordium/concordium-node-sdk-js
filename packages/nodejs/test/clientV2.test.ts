@@ -1,65 +1,70 @@
-import { credentials, Metadata } from '@grpc/grpc-js/';
+import { credentials } from '@grpc/grpc-js/';
 import * as v1 from '@concordium/common-sdk';
-import * as v2 from '../grpc/v2/concordium/types';
-import ConcordiumNodeClientV1 from '../src/client';
-import ConcordiumNodeClientV2 from '../src/clientV2';
+import * as v2 from '../../common/grpc/v2/concordium/types';
+import createConcordiumClientV2 from '../src/clientV2';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
-import {
+import ConcordiumNodeClientV2, {
     getAccountIdentifierInput,
     getBlockHashInput,
-    unwrap,
-} from '../src/util';
+} from '@concordium/common-sdk/lib/GRPCClient';
 import {
     buildBasicAccountSigner,
     calculateEnergyCost,
     createCredentialDeploymentTransaction,
     getAccountTransactionHandler,
     sha256,
+    getCredentialDeploymentSignDigest,
     signTransaction,
 } from '@concordium/common-sdk';
 import { serializeAccountTransactionPayload } from '@concordium/common-sdk/src';
 import {
-    getCredentialDeploymentSignDigest,
-    serializeAccountTransaction,
-} from '@concordium/common-sdk/lib/serialization';
-import { getModuleBuffer, getIdentityInput } from './testHelpers';
+    getModuleBuffer,
+    getIdentityInput,
+    getNodeClient as getNodeClientV1,
+} from './testHelpers';
 import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons';
+import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
+
+import { TextEncoder, TextDecoder } from 'util';
+import 'isomorphic-fetch';
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+global.TextEncoder = TextEncoder as any;
+global.TextDecoder = TextDecoder as any;
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 /**
  * Creates a client to communicate with a local concordium-node
  * used for automatic tests.
  */
-export function getNodeClientV2(
-    address = 'service.internal.testnet.concordium.com',
+function getNodeClientV2(
+    address = 'node.testnet.concordium.com',
     port = 20000
 ): ConcordiumNodeClientV2 {
-    const metadata = new Metadata();
-    return new ConcordiumNodeClientV2(
+    return createConcordiumClientV2(
         address,
         port,
         credentials.createInsecure(),
-        metadata,
-        15000
+        { timeout: 15000 }
     );
 }
 
-export function getNodeClientV1(
-    address = 'service.internal.testnet.concordium.com'
-): ConcordiumNodeClientV1 {
-    const metadata = new Metadata();
-    metadata.add('authentication', 'rpcadmin');
-    return new ConcordiumNodeClientV1(
-        address,
-        10000,
-        credentials.createInsecure(),
-        metadata,
-        15000
-    );
+// TODO find nice way to move this to web/common
+function getNodeClientWeb(
+    address = 'http://node.testnet.concordium.com',
+    port = 20000
+) {
+    const transport = new GrpcWebFetchTransport({
+        baseUrl: `${address}:${port}`,
+        timeout: 15000,
+    });
+    return new v1.ConcordiumGRPCClient(transport);
 }
 
-const clientV1 = getNodeClientV1();
+const clientV1 = getNodeClientV1('node.testnet.concordium.com', 10000);
 const clientV2 = getNodeClientV2();
+const clientWeb = getNodeClientWeb();
 
 const testAccount = new v1.AccountAddress(
     '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'
@@ -89,45 +94,58 @@ function getAccountInfoV2(
     return client.client.getAccountInfo(accountInfoRequest).response;
 }
 
-test('getCryptographicParameters', async () => {
-    const parameters = await clientV2.getCryptographicParameters(testBlockHash);
-    expect(parameters.genesisString).toEqual('Concordium Testnet Version 5');
-    expect(parameters.onChainCommitmentKey).toEqual(
-        'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a8d45e64b6f917c540eee16c970c3d4b7f3caf48a7746284878e2ace21c82ea44bf84609834625be1f309988ac523fac'
-    );
+test.each([clientV2, clientWeb])(
+    'getCryptographicParameters',
+    async (client) => {
+        const parameters = await client.getCryptographicParameters(
+            testBlockHash
+        );
+        expect(parameters.genesisString).toEqual(
+            'Concordium Testnet Version 5'
+        );
+        expect(parameters.onChainCommitmentKey).toEqual(
+            'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a8d45e64b6f917c540eee16c970c3d4b7f3caf48a7746284878e2ace21c82ea44bf84609834625be1f309988ac523fac'
+        );
 
-    expect(parameters.bulletproofGenerators).toEqual(
-        Buffer.from(testnetBulletproofGenerators, 'base64').toString('hex')
-    );
-});
+        expect(parameters.bulletproofGenerators).toEqual(
+            Buffer.from(testnetBulletproofGenerators, 'base64').toString('hex')
+        );
+    }
+);
 
-test('NextAccountSequenceNumber', async () => {
-    const nan = await clientV2.getNextAccountNonce(testAccount);
-    expect(nan.nonce).toBeGreaterThanOrEqual(19n);
-    expect(nan.allFinal).toBeDefined();
-});
+test.each([clientV2, clientWeb])(
+    'NextAccountSequenceNumber',
+    async (client) => {
+        const nan = await client.getNextAccountNonce(testAccount);
+        expect(nan.nonce).toBeGreaterThanOrEqual(19n);
+        expect(nan.allFinal).toBeDefined();
+    }
+);
 
-test('getAccountInfo', async () => {
-    const accountInfo = await getAccountInfoV2(clientV2, testAccount);
+test.each([clientV2, clientWeb])('getAccountInfo', async (client) => {
+    const accountInfo = await getAccountInfoV2(client, testAccount);
 
     expect(v2.AccountInfo.toJson(accountInfo)).toEqual(expected.accountInfo);
 });
 
-test('getAccountInfo: Invalid hash throws error', async () => {
-    const invalidBlockHash = '1010101010';
-    await expect(
-        clientV2.getAccountInfo(testAccount, invalidBlockHash)
-    ).rejects.toEqual(
-        new Error(
-            'The input was not a valid hash, must be 32 bytes: ' +
-                invalidBlockHash
-        )
-    );
-});
+test.each([clientV2, clientWeb])(
+    'getAccountInfo: Invalid hash throws error',
+    async (client) => {
+        const invalidBlockHash = '1010101010';
+        await expect(
+            client.getAccountInfo(testAccount, invalidBlockHash)
+        ).rejects.toEqual(
+            new Error(
+                'The input was not a valid hash, must be 32 bytes: ' +
+                    invalidBlockHash
+            )
+        );
+    }
+);
 
-test('getAccountInfo for baker', async () => {
-    const accInfo = await getAccountInfoV2(clientV2, testAccBaker);
-    const accountIndexInfo = await getAccountInfoV2(clientV2, 5n);
+test.each([clientV2, clientWeb])('getAccountInfo for baker', async (client) => {
+    const accInfo = await getAccountInfoV2(client, testAccBaker);
+    const accountIndexInfo = await getAccountInfoV2(client, 5n);
 
     if (accInfo.stake && accountIndexInfo.stake) {
         const stake = v2.AccountStakingInfo.toJson(accInfo.stake);
@@ -141,146 +159,203 @@ test('getAccountInfo for baker', async () => {
     }
 });
 
-test('getAccountInfo for delegator', async () => {
-    const accInfo = await getAccountInfoV2(clientV2, testAccDeleg);
+test.each([clientV2, clientWeb])(
+    'getAccountInfo for delegator',
+    async (client) => {
+        const accInfo = await getAccountInfoV2(client, testAccDeleg);
 
-    if (accInfo.stake) {
-        expect(v2.AccountStakingInfo.toJson(accInfo.stake)).toEqual(
-            expected.stakingInfoDelegator
-        );
-    } else {
-        throw Error('Stake field not found in accountInfo.');
+        if (accInfo.stake) {
+            expect(v2.AccountStakingInfo.toJson(accInfo.stake)).toEqual(
+                expected.stakingInfoDelegator
+            );
+        } else {
+            throw Error('Stake field not found in accountInfo.');
+        }
     }
-});
+);
 
-test('getAccountInfo: Account Address and CredentialRegistrationId is equal', async () => {
-    const accInfo = await clientV2.getAccountInfo(testAccount, testBlockHash);
-    const credIdInfo = await clientV2.getAccountInfo(testCredId, testBlockHash);
+test.each([clientV2, clientWeb])(
+    'getAccountInfo: Account Address and CredentialRegistrationId is equal',
+    async (client) => {
+        const accInfo = await client.getAccountInfo(testAccount, testBlockHash);
+        const credIdInfo = await client.getAccountInfo(
+            testCredId,
+            testBlockHash
+        );
 
-    expect(accInfo).toEqual(credIdInfo);
-});
+        expect(accInfo).toEqual(credIdInfo);
+    }
+);
 
-test('accountInfo implementations is the same', async () => {
-    const oldReg = await clientV1.getAccountInfo(testAccount, testBlockHash);
-    const newReg = await clientV2.getAccountInfo(testAccount, testBlockHash);
+test.each([clientV2, clientWeb])(
+    'accountInfo implementations is the same',
+    async (client) => {
+        const oldReg = await clientV1.getAccountInfo(
+            testAccount,
+            testBlockHash
+        );
+        const newReg = await client.getAccountInfo(testAccount, testBlockHash);
 
-    const oldCredId = await clientV1.getAccountInfo(testCredId, testBlockHash);
-    const newCredId = await clientV2.getAccountInfo(testCredId, testBlockHash);
+        const oldCredId = await clientV1.getAccountInfo(
+            testCredId,
+            testBlockHash
+        );
+        const newCredId = await client.getAccountInfo(
+            testCredId,
+            testBlockHash
+        );
 
-    const oldBaker = await clientV1.getAccountInfo(testAccBaker, testBlockHash);
-    const newBaker = await clientV2.getAccountInfo(testAccBaker, testBlockHash);
+        const oldBaker = await clientV1.getAccountInfo(
+            testAccBaker,
+            testBlockHash
+        );
+        const newBaker = await client.getAccountInfo(
+            testAccBaker,
+            testBlockHash
+        );
 
-    const oldDeleg = await clientV1.getAccountInfo(testAccDeleg, testBlockHash);
-    const newDeleg = await clientV2.getAccountInfo(testAccDeleg, testBlockHash);
+        const oldDeleg = await clientV1.getAccountInfo(
+            testAccDeleg,
+            testBlockHash
+        );
+        const newDeleg = await client.getAccountInfo(
+            testAccDeleg,
+            testBlockHash
+        );
 
-    expect(oldReg).toEqual(newReg);
-    expect(oldCredId).toEqual(newCredId);
-    expect(oldDeleg).toEqual(newDeleg);
-    expect(oldBaker).toEqual(newBaker);
-});
+        expect(oldReg).toEqual(newReg);
+        expect(oldCredId).toEqual(newCredId);
+        expect(oldDeleg).toEqual(newDeleg);
+        expect(oldBaker).toEqual(newBaker);
+    }
+);
 
-test('getChainParameters corresponds to GetBlockSummary subset', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const blockSummary: any = await clientV1.getBlockSummary(testBlockHash);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const chainParameters: any = await clientV2.getBlockChainParameters(
-        testBlockHash
-    );
+test.each([clientV2, clientWeb])(
+    'getChainParameters corresponds to GetBlockSummary subset',
+    async (client) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const blockSummary: any = await clientV1.getBlockSummary(testBlockHash);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const chainParameters: any = await client.getBlockChainParameters(
+            testBlockHash
+        );
 
-    const foundationAccount = (
-        await clientV2.getAccountInfo(
-            blockSummary.updates.chainParameters.foundationAccountIndex
-        )
-    ).accountAddress;
-    expect(chainParameters.foundationAccount).toEqual(foundationAccount);
-    blockSummary.updates.chainParameters.foundationAccountIndex = undefined;
-    chainParameters.foundationAccount = undefined;
+        const foundationAccount = (
+            await client.getAccountInfo(
+                blockSummary.updates.chainParameters.foundationAccountIndex
+            )
+        ).accountAddress;
+        expect(chainParameters.foundationAccount).toEqual(foundationAccount);
+        blockSummary.updates.chainParameters.foundationAccountIndex = undefined;
+        chainParameters.foundationAccount = undefined;
 
-    expect(blockSummary.updates.chainParameters).toEqual(chainParameters);
-});
+        expect(blockSummary.updates.chainParameters).toEqual(chainParameters);
+    }
+);
 
-test('getChainParameters corresponds to GetBlockSummary subset on protocol level < 4', async () => {
-    const oldBlockHash =
-        'ed2507c4d05108038741e87757ab1c3acdeeb3327027cd2972666807c9c4a20d';
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const blockSummary: any = await clientV1.getBlockSummary(oldBlockHash);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const chainParameters: any = await clientV2.getBlockChainParameters(
-        oldBlockHash
-    );
+test.each([clientV2, clientWeb])(
+    'getChainParameters corresponds to GetBlockSummary subset on protocol level < 4',
+    async (client) => {
+        const oldBlockHash =
+            'ed2507c4d05108038741e87757ab1c3acdeeb3327027cd2972666807c9c4a20d';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const blockSummary: any = await clientV1.getBlockSummary(oldBlockHash);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const chainParameters: any = await client.getBlockChainParameters(
+            oldBlockHash
+        );
 
-    const foundationAccount = (
-        await clientV2.getAccountInfo(
-            blockSummary.updates.chainParameters.foundationAccountIndex
-        )
-    ).accountAddress;
-    expect(chainParameters.foundationAccount).toEqual(foundationAccount);
-    blockSummary.updates.chainParameters.foundationAccountIndex = undefined;
-    chainParameters.foundationAccount = undefined;
+        const foundationAccount = (
+            await client.getAccountInfo(
+                blockSummary.updates.chainParameters.foundationAccountIndex
+            )
+        ).accountAddress;
+        expect(chainParameters.foundationAccount).toEqual(foundationAccount);
+        blockSummary.updates.chainParameters.foundationAccountIndex = undefined;
+        chainParameters.foundationAccount = undefined;
 
-    expect(blockSummary.updates.chainParameters).toEqual(chainParameters);
-});
+        expect(blockSummary.updates.chainParameters).toEqual(chainParameters);
+    }
+);
 
-test('getPoolInfo corresponds to getPoolStatus with a bakerId', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const oldStatus: any = await clientV1.getPoolStatus(testBlockHash, 1n);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const newStatus: any = await clientV2.getPoolInfo(1n, testBlockHash);
+test.each([clientV2, clientWeb])(
+    'getPoolInfo corresponds to getPoolStatus with a bakerId',
+    async (client) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const oldStatus: any = await clientV1.getPoolStatus(testBlockHash, 1n);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const newStatus: any = await client.getPoolInfo(1n, testBlockHash);
 
-    expect(oldStatus).toEqual(newStatus);
-});
+        expect(oldStatus).toEqual(newStatus);
+    }
+);
 
-test('getPassiveDelegationInfo corresponds to getPoolStatus with no bakerId', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const oldStatus: any = await clientV1.getPoolStatus(testBlockHash);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const newStatus: any = await clientV2.getPassiveDelegationInfo(
-        testBlockHash
-    );
+test.each([clientV2, clientWeb])(
+    'getPassiveDelegationInfo corresponds to getPoolStatus with no bakerId',
+    async (client) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const oldStatus: any = await clientV1.getPoolStatus(testBlockHash);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const newStatus: any = await client.getPassiveDelegationInfo(
+            testBlockHash
+        );
 
-    expect(oldStatus).toEqual(newStatus);
-});
+        expect(oldStatus).toEqual(newStatus);
+    }
+);
+test.each([clientV2, clientWeb])(
+    'getPoolInfo corresponds to getPoolStatus with bakerId (with pending change)',
+    async (client) => {
+        const changeHash =
+            '2aa7c4a54ad403a9f9b48de2469e5f13a64c95f2cf7a8e72c0f9f7ae0718f642';
+        const changedAccount = 1879n;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const oldStatus: any = await clientV1.getPoolStatus(
+            changeHash,
+            changedAccount
+        );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const newStatus: any = await client.getPoolInfo(
+            changedAccount,
+            changeHash
+        );
 
-test('getPoolInfo corresponds to getPoolStatus with bakerId (with pending change)', async () => {
-    const changeHash =
-        '2aa7c4a54ad403a9f9b48de2469e5f13a64c95f2cf7a8e72c0f9f7ae0718f642';
-    const changedAccount = 1879n;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const oldStatus: any = await clientV1.getPoolStatus(
-        changeHash,
-        changedAccount
-    );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const newStatus: any = await clientV2.getPoolInfo(
-        changedAccount,
-        changeHash
-    );
+        expect(oldStatus).toEqual(newStatus);
+    }
+);
 
-    expect(oldStatus).toEqual(newStatus);
-});
+test.each([clientV2, clientWeb])(
+    'getBlockItemStatus on chain update',
+    async (client) => {
+        const transactionHash =
+            '3de823b876d05cdd33a311a0f84124079f5f677afb2534c4943f830593edc650';
+        const blockItemStatus = await client.getBlockItemStatus(
+            transactionHash
+        );
 
-test('getBlockItemStatus on chain update', async () => {
-    const transactionHash =
-        '3de823b876d05cdd33a311a0f84124079f5f677afb2534c4943f830593edc650';
-    const blockItemStatus = await clientV2.getBlockItemStatus(transactionHash);
+        expect(blockItemStatus).toEqual(expected.blockItemStatusUpdate);
+    }
+);
 
-    expect(blockItemStatus).toEqual(expected.blockItemStatusUpdate);
-});
+test.each([clientV2, clientWeb])(
+    'getBlockItemStatus on simple transfer',
+    async (client) => {
+        const transactionHash =
+            '502332239efc0407eebef5c73c390080e5d7e1b127ff29f786a62b3c9ab6cfe7';
+        const blockItemStatus = await client.getBlockItemStatus(
+            transactionHash
+        );
 
-test('getBlockItemStatus on simple transfer', async () => {
-    const transactionHash =
-        '502332239efc0407eebef5c73c390080e5d7e1b127ff29f786a62b3c9ab6cfe7';
-    const blockItemStatus = await clientV2.getBlockItemStatus(transactionHash);
+        expect(blockItemStatus).toEqual(expected.blockItemStatusTransfer);
+    }
+);
 
-    expect(blockItemStatus).toEqual(expected.blockItemStatusTransfer);
-});
-
-test('getInstanceInfo', async () => {
+test.each([clientV2, clientWeb])('getInstanceInfo', async (client) => {
     const contractAddress = {
         index: 0n,
         subindex: 0n,
     };
-    const instanceInfo = await clientV2.getInstanceInfo(
+    const instanceInfo = await client.getInstanceInfo(
         contractAddress,
         testBlockHash
     );
@@ -288,8 +363,8 @@ test('getInstanceInfo', async () => {
     expect(instanceInfo).toEqual(expected.instanceInfo);
 });
 
-test('Failed invoke contract', async () => {
-    const result = await clientV2.invokeContract(
+test.each([clientV2, clientWeb])('Failed invoke contract', async (client) => {
+    const result = await client.invokeContract(
         {
             invoker: testAccount,
             contract: {
@@ -312,44 +387,50 @@ test('Failed invoke contract', async () => {
     expect(result.reason.tag).toBe(v1.RejectReasonTag.RejectedReceive);
 });
 
-test('Invoke contract on v0 contract', async () => {
-    const result = await clientV2.invokeContract(
-        {
+test.each([clientV2, clientWeb])(
+    'Invoke contract on v0 contract',
+    async (client) => {
+        const result = await client.invokeContract(
+            {
+                invoker: testAccount,
+                contract: {
+                    index: 6n,
+                    subindex: 0n,
+                },
+                method: 'PiggyBank.insert',
+                amount: new v1.CcdAmount(1n),
+                parameter: undefined,
+                energy: 30000n,
+            },
+            testBlockHash
+        );
+
+        expect(result).toEqual(expected.invokeInstanceResponseV0);
+    }
+);
+
+test.each([clientV2, clientWeb])(
+    'Invoke contract same in v1 and v2 on v1 contract',
+    async (client) => {
+        const context = {
             invoker: testAccount,
             contract: {
-                index: 6n,
+                index: 81n,
                 subindex: 0n,
             },
-            method: 'PiggyBank.insert',
-            amount: new v1.CcdAmount(1n),
+            method: 'PiggyBank.view',
+            amount: new v1.CcdAmount(0n),
             parameter: undefined,
             energy: 30000n,
-        },
-        testBlockHash
-    );
+        };
+        const resultV1 = await clientV1.invokeContract(context, testBlockHash);
+        const resultV2 = await client.invokeContract(context, testBlockHash);
 
-    expect(result).toEqual(expected.invokeInstanceResponseV0);
-});
+        expect(resultV2).toEqual(resultV1);
+    }
+);
 
-test('Invoke contract same in v1 and v2 on v1 contract', async () => {
-    const context = {
-        invoker: testAccount,
-        contract: {
-            index: 81n,
-            subindex: 0n,
-        },
-        method: 'PiggyBank.view',
-        amount: new v1.CcdAmount(0n),
-        parameter: undefined,
-        energy: 30000n,
-    };
-    const resultV1 = await clientV1.invokeContract(context, testBlockHash);
-    const resultV2 = await clientV2.invokeContract(context, testBlockHash);
-
-    expect(resultV2).toEqual(resultV1);
-});
-
-test('getModuleSource', async () => {
+test.each([clientV2, clientWeb])('getModuleSource', async (client) => {
     const localModuleBytes = getModuleBuffer('test/resources/piggy_bank.wasm');
     const moduleRef = new v1.ModuleReference(
         Buffer.from(
@@ -359,33 +440,29 @@ test('getModuleSource', async () => {
     );
 
     const localModuleHex = Buffer.from(localModuleBytes);
-    const moduleSource = await clientV2.getModuleSource(
-        moduleRef,
-        testBlockHash
-    );
+    const moduleSource = await client.getModuleSource(moduleRef, testBlockHash);
 
     expect(localModuleHex).toEqual(moduleSource);
 });
 
-test('getConsensusStatus', async () => {
+test.each([clientV2, clientWeb])('getConsensusStatus', async (client) => {
     const genesisBlock =
         '4221332d34e1694168c2a0c0b3fd0f273809612cb13d000d5c2e00e85f50f796';
 
-    const ci = await clientV2.getConsensusStatus();
-    const lastFinTime = unwrap(ci.lastFinalizedTime?.getTime()) / 1000;
+    const ci = await client.getConsensusStatus();
 
     expect(ci.genesisBlock).toEqual(genesisBlock);
     expect(ci.lastFinalizedBlockHeight).toBeGreaterThan(1395315n);
-    expect(lastFinTime).toBeGreaterThan(1669214033937n);
+    expect(ci.lastFinalizedTime?.getTime()).toBeGreaterThan(1669214033937n); // 23Nov2022 in milliseconds
 });
 
-test('sendBlockItem', async () => {
+test.each([clientV2, clientWeb])('sendBlockItem', async (client) => {
     const senderAccount = new v1.AccountAddress(
         '37TRfx9PqFX386rFcNThyA3zdoWsjF8Koy6Nh3i8VrPy4duEsA'
     );
     const privateKey =
         '1f7d20585457b542b22b51f218f0636c8e05ead4b64074e6eafd1d418b04e4ac';
-    const nextNonce = await clientV2.getNextAccountNonce(senderAccount);
+    const nextNonce = await client.getNextAccountNonce(senderAccount);
 
     // Create local transaction
     const header: v1.AccountTransactionHeader = {
@@ -411,19 +488,17 @@ test('sendBlockItem', async () => {
     );
 
     expect(
-        clientV2.sendAccountTransaction(accountTransaction, signature)
-    ).rejects.toThrow(
-        '3 INVALID_ARGUMENT: The sender did not have enough funds to cover the costs'
-    );
+        client.sendAccountTransaction(accountTransaction, signature)
+    ).rejects.toThrow('costs');
 });
 
-test('transactionHash', async () => {
+test.each([clientV2, clientWeb])('transactionHash', async (client) => {
     const senderAccount = new v1.AccountAddress(
         '37TRfx9PqFX386rFcNThyA3zdoWsjF8Koy6Nh3i8VrPy4duEsA'
     );
     const privateKey =
         '1f7d20585457b542b22b51f218f0636c8e05ead4b64074e6eafd1d418b04e4ac';
-    const nextNonce = await clientV2.getNextAccountNonce(senderAccount);
+    const nextNonce = await client.getNextAccountNonce(senderAccount);
 
     // Create local transaction
     const headerLocal: v1.AccountTransactionHeader = {
@@ -484,7 +559,7 @@ test('transactionHash', async () => {
     const localHash = Buffer.from(
         sha256([serializedAccountTransaction])
     ).toString('hex');
-    const nodeHash = await clientV2.client.getAccountTransactionSignHash(
+    const nodeHash = await client.client.getAccountTransactionSignHash(
         accountTransaction
     ).response;
 
@@ -492,14 +567,14 @@ test('transactionHash', async () => {
 });
 
 // Todo: verify that accounts can actually be created.
-test('createAccount', async () => {
+test.each([clientV2, clientWeb])('createAccount', async (client) => {
     // Get information from node
-    const lastFinalizedBlockHash = (await clientV2.getConsensusStatus())
+    const lastFinalizedBlockHash = (await client.getConsensusStatus())
         .lastFinalizedBlock;
     if (!lastFinalizedBlockHash) {
         throw new Error('Could not find latest finalized block.');
     }
-    const cryptoParams = await clientV2.getCryptographicParameters(
+    const cryptoParams = await client.getCryptographicParameters(
         lastFinalizedBlockHash
     );
     if (!cryptoParams) {
@@ -545,11 +620,9 @@ test('createAccount', async () => {
     const signatures: string[] = [signature];
 
     expect(
-        clientV2.sendCredentialDeploymentTransaction(
+        client.sendCredentialDeploymentTransaction(
             credentialDeploymentTransaction,
             signatures
         )
-    ).rejects.toThrow(
-        '3 INVALID_ARGUMENT: The credential deployment was expired'
-    );
+    ).rejects.toThrow('expired');
 });

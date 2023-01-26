@@ -278,7 +278,9 @@ export class WithWalletConnector extends Component<Props, State> implements Wall
         }
     };
 
-    onDisconnect = (connection: WalletConnection) => {
+    onConnected = () => undefined;
+
+    onDisconnected = (connection: WalletConnection) => {
         console.debug("WithWalletConnector: calling 'onDisconnect'", { connection, state: this.state });
         const { activeConnection } = this.state;
         // Ignore event on connections other than the active one.

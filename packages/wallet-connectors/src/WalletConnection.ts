@@ -175,10 +175,16 @@ export interface WalletConnectionDelegate {
     onAccountChanged(connection: WalletConnection, address: string | undefined): void;
 
     /**
+     * Notification that the given {@link WalletConnection} has been established.
+     * @param connection Affected connection.
+     */
+    onConnected(connection: WalletConnection): void;
+
+    /**
      * Notification that the given {@link WalletConnection} has been disconnected.
      * @param connection Affected connection.
      */
-    onDisconnect(connection: WalletConnection): void;
+    onDisconnected(connection: WalletConnection): void;
 }
 
 /**

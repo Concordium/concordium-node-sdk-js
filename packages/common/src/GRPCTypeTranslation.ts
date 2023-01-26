@@ -1,4 +1,4 @@
-import * as v1 from '@concordium/common-sdk';
+import * as v1 from './types';
 import * as v2 from '../grpc/v2/concordium/types';
 import { mapRecord, unwrap } from './util';
 import { Buffer } from 'buffer/';
@@ -8,8 +8,48 @@ import {
     RejectReasonTag,
     TransactionEventTag,
     TransactionKindString,
-} from '@concordium/common-sdk';
+    TransactionStatusEnum,
+} from '.';
 import bs58check from 'bs58check';
+import { AccountAddress } from './types/accountAddress';
+import { ModuleReference } from './types/moduleReference';
+import {
+    AmountAddedByDecryptionEvent,
+    BakerAddedEvent,
+    BakerEvent,
+    BakerKeysUpdatedEvent,
+    BakerRemovedEvent,
+    BakerSetRestakeEarningsEvent,
+    BakerStakeChangedEvent,
+    ContractInitializedEvent,
+    ContractTraceEvent,
+    CredentialKeysUpdatedEvent,
+    CredentialsUpdatedEvent,
+    DataRegisteredEvent,
+    DelegationEvent,
+    EncryptedAmountsRemovedEvent,
+    EncryptedSelfAmountAddedEvent,
+    MemoEvent,
+    ModuleDeployedEvent,
+    NewEncryptedAmountEvent,
+    TransferredEvent,
+    TransferredWithScheduleEvent,
+} from './types/transactionEvent';
+import { RejectReason, SimpleRejectReasonTag } from './types/rejectReason';
+import {
+    KeyUpdate,
+    UpdateInstructionPayload,
+    UpdateType,
+} from './types/chainUpdate';
+import {
+    AccountTransactionSummary,
+    BaseAccountTransactionSummary,
+    BaseBlockItemSummary,
+    BlockItemStatus,
+    BlockItemSummary,
+    BlockItemSummaryInBlock,
+} from './types/blockItemSummary';
+import { CcdAmount } from './types/ccdAmount';
 
 function unwrapToHex(bytes: Uint8Array | undefined): v1.HexString {
     return Buffer.from(unwrap(bytes)).toString('hex');
@@ -27,8 +67,8 @@ function unwrapValToHex(x: { value: Uint8Array } | undefined): string {
     return unwrapToHex(unwrap(x).value);
 }
 
-function trModuleRef(moduleRef: v2.ModuleRef | undefined): v1.ModuleReference {
-    return new v1.ModuleReference(unwrapValToHex(moduleRef));
+function trModuleRef(moduleRef: v2.ModuleRef | undefined): ModuleReference {
+    return new ModuleReference(unwrapValToHex(moduleRef));
 }
 
 function trRelease(release: v2.Release): v1.ReleaseScheduleWithTransactions {
@@ -273,7 +313,7 @@ export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
         schedule: unwrap(acc.schedule?.schedules).map(trRelease),
     };
     const accInfoCommon: v1.AccountInfoSimple = {
-        accountAddress: v1.AccountAddress.fromBytes(accAdrRaw).address,
+        accountAddress: AccountAddress.fromBytes(accAdrRaw).address,
         accountNonce: unwrap(acc.sequenceNumber?.value),
         accountAmount: unwrap(acc.amount?.value),
         accountIndex: unwrap(acc.index?.value),
@@ -409,7 +449,7 @@ function trAddress(
 
 function trContractTraceElement(
     contractTraceElement: v2.ContractTraceElement
-): v1.ContractTraceEvent {
+): ContractTraceEvent {
     const element = contractTraceElement.element;
     switch (element.oneofKind) {
         case 'updated':
@@ -456,7 +496,7 @@ function trContractTraceElement(
     }
 }
 
-function trBakerEvent(bakerEvent: v2.BakerEvent): v1.BakerEvent {
+function trBakerEvent(bakerEvent: v2.BakerEvent): BakerEvent {
     const event = bakerEvent.event;
     switch (event.oneofKind) {
         case 'bakerAdded': {
@@ -576,7 +616,7 @@ function trDelegTarget(
 
 function trDelegationEvent(
     delegationEvent: v2.DelegationEvent
-): v1.DelegationEvent {
+): DelegationEvent {
     const event = delegationEvent.event;
     switch (event.oneofKind) {
         case 'delegationStakeIncreased': {
@@ -628,8 +668,8 @@ function trDelegationEvent(
 
 function trRejectReason(
     rejectReason: v2.RejectReason | undefined
-): v1.RejectReason {
-    function simpleReason(tag: v1.SimpleRejectReasonTag): v1.RejectReason {
+): RejectReason {
+    function simpleReason(tag: SimpleRejectReasonTag): RejectReason {
         return {
             tag: RejectReasonTag[tag],
         };
@@ -827,12 +867,12 @@ function trMintRate(mintRate: v2.MintRate | undefined): number {
 
 function trUpdatePayload(
     payload: v2.UpdatePayload | undefined
-): v1.UpdateInstructionPayload {
+): UpdateInstructionPayload {
     switch (payload?.payload?.oneofKind) {
         case 'protocolUpdate': {
             const update = payload.payload.protocolUpdate;
             return {
-                updateType: v1.UpdateType.Protocol,
+                updateType: UpdateType.Protocol,
                 update: {
                     message: update.message,
                     specificationHash: unwrapValToHex(update.specificationHash),
@@ -845,7 +885,7 @@ function trUpdatePayload(
         }
         case 'electionDifficultyUpdate':
             return {
-                updateType: v1.UpdateType.ElectionDifficulty,
+                updateType: UpdateType.ElectionDifficulty,
                 update: {
                     electionDifficulty: trAmountFraction(
                         payload.payload.electionDifficultyUpdate.value
@@ -854,17 +894,17 @@ function trUpdatePayload(
             };
         case 'euroPerEnergyUpdate':
             return {
-                updateType: v1.UpdateType.EuroPerEnergy,
+                updateType: UpdateType.EuroPerEnergy,
                 update: unwrap(payload.payload.euroPerEnergyUpdate.value),
             };
         case 'microCcdPerEuroUpdate':
             return {
-                updateType: v1.UpdateType.MicroGtuPerEuro,
+                updateType: UpdateType.MicroGtuPerEuro,
                 update: unwrap(payload.payload.microCcdPerEuroUpdate.value),
             };
         case 'foundationAccountUpdate':
             return {
-                updateType: v1.UpdateType.FoundationAccount,
+                updateType: UpdateType.FoundationAccount,
                 update: {
                     address: unwrapValToHex(
                         payload.payload.foundationAccountUpdate
@@ -874,7 +914,7 @@ function trUpdatePayload(
         case 'mintDistributionUpdate': {
             const update = payload.payload.mintDistributionUpdate;
             return {
-                updateType: v1.UpdateType.MintDistribution,
+                updateType: UpdateType.MintDistribution,
                 update: {
                     bakingReward: trAmountFraction(update.bakingReward),
                     finalizationReward: trAmountFraction(
@@ -887,7 +927,7 @@ function trUpdatePayload(
         case 'transactionFeeDistributionUpdate': {
             const update = payload.payload.transactionFeeDistributionUpdate;
             return {
-                updateType: v1.UpdateType.TransactionFeeDistribution,
+                updateType: UpdateType.TransactionFeeDistribution,
                 update: {
                     baker: trAmountFraction(update.baker),
                     gasAccount: trAmountFraction(update.gasAccount),
@@ -897,7 +937,7 @@ function trUpdatePayload(
         case 'gasRewardsUpdate': {
             const update = payload.payload.gasRewardsUpdate;
             return {
-                updateType: v1.UpdateType.GasRewards,
+                updateType: UpdateType.GasRewards,
                 update: {
                     baker: trAmountFraction(update.baker),
                     finalizationProof: trAmountFraction(
@@ -911,7 +951,7 @@ function trUpdatePayload(
         case 'bakerStakeThresholdUpdate': {
             const update = payload.payload.bakerStakeThresholdUpdate;
             return {
-                updateType: v1.UpdateType.BakerStakeThreshold,
+                updateType: UpdateType.BakerStakeThreshold,
                 update: {
                     threshold: unwrap(update.bakerStakeThreshold?.value),
                 },
@@ -919,24 +959,24 @@ function trUpdatePayload(
         }
         case 'rootUpdate': {
             const rootUpdate = payload.payload.rootUpdate;
-            const keyUpdate: v1.KeyUpdate = trKeyUpdate(rootUpdate);
+            const keyUpdate = trKeyUpdate(rootUpdate);
             return {
-                updateType: v1.UpdateType.Root,
+                updateType: UpdateType.Root,
                 update: keyUpdate,
             };
         }
         case 'level1Update': {
             const lvl1Update = payload.payload.level1Update;
-            const keyUpdate: v1.KeyUpdate = trKeyUpdate(lvl1Update);
+            const keyUpdate = trKeyUpdate(lvl1Update);
             return {
-                updateType: v1.UpdateType.Level1,
+                updateType: UpdateType.Level1,
                 update: keyUpdate,
             };
         }
         case 'addAnonymityRevokerUpdate': {
             const update = payload.payload.addAnonymityRevokerUpdate;
             return {
-                updateType: v1.UpdateType.AddAnonymityRevoker,
+                updateType: UpdateType.AddAnonymityRevoker,
                 update: {
                     arDescription: unwrap(update.description),
                     arIdentity: unwrap(update.identity?.value),
@@ -947,7 +987,7 @@ function trUpdatePayload(
         case 'addIdentityProviderUpdate': {
             const update = payload.payload.addIdentityProviderUpdate;
             return {
-                updateType: v1.UpdateType.AddIdentityProvider,
+                updateType: UpdateType.AddIdentityProvider,
                 update: {
                     ipDescription: unwrap(update.description),
                     ipIdentity: unwrap(update.identity?.value),
@@ -959,7 +999,7 @@ function trUpdatePayload(
         case 'cooldownParametersCpv1Update': {
             const update = payload.payload.cooldownParametersCpv1Update;
             return {
-                updateType: v1.UpdateType.CooldownParameters,
+                updateType: UpdateType.CooldownParameters,
                 update: {
                     poolOwnerCooldown: unwrap(update.poolOwnerCooldown?.value),
                     delegatorCooldown: unwrap(update.delegatorCooldown?.value),
@@ -969,7 +1009,7 @@ function trUpdatePayload(
         case 'poolParametersCpv1Update': {
             const update = payload.payload.poolParametersCpv1Update;
             return {
-                updateType: v1.UpdateType.PoolParameters,
+                updateType: UpdateType.PoolParameters,
                 update: {
                     passiveCommissions: {
                         transactionCommission: trAmountFraction(
@@ -1004,7 +1044,7 @@ function trUpdatePayload(
         case 'timeParametersCpv1Update': {
             const update = payload.payload.timeParametersCpv1Update;
             return {
-                updateType: v1.UpdateType.TimeParameters,
+                updateType: UpdateType.TimeParameters,
                 update: {
                     rewardPeriodLength: unwrap(
                         update.rewardPeriodLength?.value?.value
@@ -1016,7 +1056,7 @@ function trUpdatePayload(
         case 'mintDistributionCpv1Update':
             const update = payload.payload.mintDistributionCpv1Update;
             return {
-                updateType: v1.UpdateType.MintDistribution,
+                updateType: UpdateType.MintDistribution,
                 update: {
                     bakingReward: trAmountFraction(update.bakingReward),
                     finalizationReward: trAmountFraction(
@@ -1053,7 +1093,7 @@ function trAccessStructure(
     };
 }
 
-function trKeyUpdate(keyUpdate: v2.RootUpdate | v2.Level1Update): v1.KeyUpdate {
+function trKeyUpdate(keyUpdate: v2.RootUpdate | v2.Level1Update): KeyUpdate {
     switch (keyUpdate.updateType.oneofKind) {
         case 'rootKeysUpdate': {
             const update = keyUpdate.updateType.rootKeysUpdate;
@@ -1119,7 +1159,7 @@ function trAuthorizationsV0(auths: v2.AuthorizationsV0): v1.AuthorizationsV0 {
     };
 }
 
-function trMemoEvent(memo: v2.Memo): v1.MemoEvent {
+function trMemoEvent(memo: v2.Memo): MemoEvent {
     return {
         tag: TransactionEventTag.TransferMemo,
         memo: unwrapValToHex(memo),
@@ -1128,7 +1168,7 @@ function trMemoEvent(memo: v2.Memo): v1.MemoEvent {
 
 function trTransactionType(
     type: v2.TransactionType | undefined
-): v1.TransactionKindString {
+): TransactionKindString {
     switch (type) {
         case v2.TransactionType.DEPLOY_MODULE:
             return TransactionKindString.DeployModule;
@@ -1179,9 +1219,9 @@ function trTransactionType(
 
 function trAccountTransactionSummary(
     details: v2.AccountTransactionDetails,
-    baseBlockItemSummary: v1.BaseBlockItemSummary
-): v1.AccountTransactionSummary {
-    const base: v1.BaseAccountTransactionSummary = {
+    baseBlockItemSummary: BaseBlockItemSummary
+): AccountTransactionSummary {
+    const base: BaseAccountTransactionSummary = {
         ...baseBlockItemSummary,
         type: v1.TransactionSummaryType.AccountTransaction,
         cost: unwrap(details.cost?.value),
@@ -1199,7 +1239,7 @@ function trAccountTransactionSummary(
                 rejectReason: trRejectReason(effect.none.rejectReason),
             };
         case 'moduleDeployed': {
-            const event: v1.ModuleDeployedEvent = {
+            const event: ModuleDeployedEvent = {
                 tag: TransactionEventTag.ModuleDeployed,
                 contents: trModuleRef(effect.moduleDeployed),
             };
@@ -1211,7 +1251,7 @@ function trAccountTransactionSummary(
         }
         case 'contractInitialized': {
             const contractInit = effect.contractInitialized;
-            const event: v1.ContractInitializedEvent = {
+            const event: ContractInitializedEvent = {
                 tag: TransactionEventTag.ContractInitialized,
                 address: unwrap(contractInit.address),
                 amount: unwrap(contractInit.amount?.value),
@@ -1235,7 +1275,7 @@ function trAccountTransactionSummary(
                 ),
             };
         case 'accountTransfer': {
-            const transfer: v1.TransferredEvent = {
+            const transfer: TransferredEvent = {
                 tag: TransactionEventTag.Transferred,
                 amount: unwrap(effect.accountTransfer.amount?.value),
                 to: trAccountAddress(effect.accountTransfer.receiver),
@@ -1261,7 +1301,7 @@ function trAccountTransactionSummary(
                 transactionType: TransactionKindString.AddBaker,
                 bakerAdded: trBakerEvent({
                     event: effect,
-                }) as v1.BakerAddedEvent,
+                }) as BakerAddedEvent,
             };
         case 'bakerRemoved':
             return {
@@ -1269,7 +1309,7 @@ function trAccountTransactionSummary(
                 transactionType: TransactionKindString.RemoveBaker,
                 bakerRemoved: trBakerEvent({
                     event: effect,
-                }) as v1.BakerRemovedEvent,
+                }) as BakerRemovedEvent,
             };
         case 'bakerRestakeEarningsUpdated':
             return {
@@ -1278,7 +1318,7 @@ function trAccountTransactionSummary(
                     TransactionKindString.UpdateBakerRestakeEarnings,
                 bakerRestakeEarningsUpdated: trBakerEvent({
                     event: effect,
-                }) as v1.BakerSetRestakeEarningsEvent,
+                }) as BakerSetRestakeEarningsEvent,
             };
         case 'bakerKeysUpdated':
             return {
@@ -1286,12 +1326,12 @@ function trAccountTransactionSummary(
                 transactionType: TransactionKindString.UpdateBakerKeys,
                 bakerKeysUpdated: trBakerEvent({
                     event: effect,
-                }) as v1.BakerKeysUpdatedEvent,
+                }) as BakerKeysUpdatedEvent,
             };
         case 'bakerStakeUpdated': {
             const increased = effect.bakerStakeUpdated.update?.increased;
             const update = effect.bakerStakeUpdated.update;
-            const event: v1.BakerStakeChangedEvent = {
+            const event: BakerStakeChangedEvent = {
                 tag: increased
                     ? TransactionEventTag.BakerStakeIncreased
                     : TransactionEventTag.BakerStakeDecreased,
@@ -1306,13 +1346,13 @@ function trAccountTransactionSummary(
         }
         case 'encryptedAmountTransferred': {
             const transfer = effect.encryptedAmountTransferred;
-            const removed: v1.EncryptedAmountsRemovedEvent = {
+            const removed: EncryptedAmountsRemovedEvent = {
                 tag: TransactionEventTag.EncryptedAmountsRemoved,
                 inputAmount: unwrapValToHex(transfer.removed?.inputAmount),
                 newAmount: unwrapValToHex(transfer.removed?.newAmount),
                 upToindex: Number(unwrap(transfer.removed?.upToIndex)),
             };
-            const added: v1.NewEncryptedAmountEvent = {
+            const added: NewEncryptedAmountEvent = {
                 tag: TransactionEventTag.NewEncryptedAmount,
                 account: unwrapToBase58(transfer.added?.receiver),
                 newIndex: Number(unwrap(transfer.added?.newIndex)),
@@ -1341,7 +1381,7 @@ function trAccountTransactionSummary(
         }
         case 'transferredToEncrypted': {
             const transfer = effect.transferredToEncrypted;
-            const added: v1.EncryptedSelfAmountAddedEvent = {
+            const added: EncryptedSelfAmountAddedEvent = {
                 tag: TransactionEventTag.EncryptedSelfAmountAdded,
                 account: unwrapToBase58(transfer.account),
                 amount: unwrap(transfer.amount?.value),
@@ -1355,13 +1395,13 @@ function trAccountTransactionSummary(
         }
         case 'transferredToPublic': {
             const transfer = effect.transferredToPublic;
-            const removed: v1.EncryptedAmountsRemovedEvent = {
+            const removed: EncryptedAmountsRemovedEvent = {
                 tag: TransactionEventTag.EncryptedAmountsRemoved,
                 inputAmount: unwrapValToHex(transfer.removed?.inputAmount),
                 newAmount: unwrapValToHex(transfer.removed?.newAmount),
                 upToindex: Number(unwrap(transfer.removed?.upToIndex)),
             };
-            const added: v1.AmountAddedByDecryptionEvent = {
+            const added: AmountAddedByDecryptionEvent = {
                 tag: TransactionEventTag.AmountAddedByDecryption,
                 amount: unwrap(transfer.amount?.value),
             };
@@ -1374,7 +1414,7 @@ function trAccountTransactionSummary(
         }
         case 'transferredWithSchedule': {
             const transfer = effect.transferredWithSchedule;
-            const event: v1.TransferredWithScheduleEvent = {
+            const event: TransferredWithScheduleEvent = {
                 tag: TransactionEventTag.TransferredWithSchedule,
                 to: unwrapToBase58(transfer.receiver),
                 amount: transfer.amount.map(trNewRelease),
@@ -1396,7 +1436,7 @@ function trAccountTransactionSummary(
             }
         }
         case 'credentialKeysUpdated': {
-            const event: v1.CredentialKeysUpdatedEvent = {
+            const event: CredentialKeysUpdatedEvent = {
                 tag: TransactionEventTag.CredentialKeysUpdated,
                 credId: unwrapValToHex(effect.credentialKeysUpdated),
             };
@@ -1408,7 +1448,7 @@ function trAccountTransactionSummary(
         }
         case 'credentialsUpdated': {
             const update = effect.credentialsUpdated;
-            const event: v1.CredentialsUpdatedEvent = {
+            const event: CredentialsUpdatedEvent = {
                 tag: TransactionEventTag.CredentialsUpdated,
                 newCredIds: update.newCredIds.map(unwrapValToHex),
                 removedCredIDs: update.removedCredIds.map(unwrapValToHex),
@@ -1421,7 +1461,7 @@ function trAccountTransactionSummary(
             };
         }
         case 'dataRegistered': {
-            const event: v1.DataRegisteredEvent = {
+            const event: DataRegisteredEvent = {
                 tag: TransactionEventTag.DataRegistered,
                 data: unwrapValToHex(effect.dataRegistered),
             };
@@ -1452,7 +1492,7 @@ function trAccountTransactionSummary(
     }
 }
 
-function trBlockItemSummary(summary: v2.BlockItemSummary): v1.BlockItemSummary {
+function trBlockItemSummary(summary: v2.BlockItemSummary): BlockItemSummary {
     const base = {
         index: unwrap(summary.index?.value),
         energyCost: unwrap(summary.energyCost?.value),
@@ -1489,7 +1529,7 @@ function trBlockItemSummary(summary: v2.BlockItemSummary): v1.BlockItemSummary {
 
 function trBlockItemSummaryInBlock(
     summary: v2.BlockItemSummaryInBlock
-): v1.BlockItemSummaryInBlock {
+): BlockItemSummaryInBlock {
     return {
         blockHash: unwrapValToHex(summary.blockHash),
         summary: trBlockItemSummary(unwrap(summary.outcome)),
@@ -1498,22 +1538,22 @@ function trBlockItemSummaryInBlock(
 
 export function blockItemStatus(
     itemStatus: v2.BlockItemStatus
-): v1.BlockItemStatus {
+): BlockItemStatus {
     switch (itemStatus.status.oneofKind) {
         case 'received':
             return {
-                status: v1.TransactionStatusEnum.Received,
+                status: TransactionStatusEnum.Received,
             };
         case 'committed':
             return {
-                status: v1.TransactionStatusEnum.Committed,
+                status: TransactionStatusEnum.Committed,
                 outcomes: itemStatus.status.committed.outcomes.map(
                     trBlockItemSummaryInBlock
                 ),
             };
         case 'finalized':
             return {
-                status: v1.TransactionStatusEnum.Finalized,
+                status: TransactionStatusEnum.Finalized,
                 outcome: trBlockItemSummaryInBlock(
                     unwrap(itemStatus.status.finalized.outcome)
                 ),
@@ -1555,13 +1595,11 @@ function trInstanceInfoCommon(
     info: v2.InstanceInfo_V0 | v2.InstanceInfo_V1
 ): Omit<v1.InstanceInfoCommon, 'version'> {
     return {
-        amount: new v1.CcdAmount(unwrap(info.amount?.value)),
-        sourceModule: v1.ModuleReference.fromBytes(
+        amount: new CcdAmount(unwrap(info.amount?.value)),
+        sourceModule: ModuleReference.fromBytes(
             Buffer.from(unwrap(info.sourceModule?.value))
         ),
-        owner: v1.AccountAddress.fromBytes(
-            Buffer.from(unwrap(info.owner?.value))
-        ),
+        owner: AccountAddress.fromBytes(Buffer.from(unwrap(info.owner?.value))),
         methods: info.methods.map((name) => name.value),
         name: unwrap(info.name?.value),
     };

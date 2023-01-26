@@ -182,6 +182,11 @@ export class WalletConnectConnection implements WalletConnection {
         return this.connector;
     }
 
+    async ping() {
+        const {topic} = this.session;
+        await this.connector.client.ping({ topic });
+    }
+
     async getConnectedAccount() {
         // We're only expecting a single account to be connected.
         const fullAddress = this.session.namespaces[WALLET_CONNECT_SESSION_NAMESPACE].accounts[0];

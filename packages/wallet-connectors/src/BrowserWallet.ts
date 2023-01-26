@@ -73,6 +73,10 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
         return this;
     }
 
+    async ping() {
+        return undefined;
+    }
+
     async getConnectedAccount() {
         return this.client.getMostRecentlySelectedAccount();
     }

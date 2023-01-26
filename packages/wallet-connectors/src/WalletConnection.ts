@@ -30,6 +30,11 @@ export interface WalletConnection {
     getConnector(): WalletConnector;
 
     /**
+     * Ping the connection.
+     */
+    ping(): Promise<void>
+
+    /**
      * @return The account that the wallet currently associates with this connection.
      */
     getConnectedAccount(): Promise<string | undefined>;

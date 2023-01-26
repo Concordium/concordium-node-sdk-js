@@ -79,9 +79,11 @@ jobs:
               - name: Get wasm-pack
                 uses: jetli/wasm-pack-action@v0.3.0
                 with:
-                  version: 'latest'
+                    version: 'latest'
               - name: build rust-bindings
                 run: yarn build:rust-bindings
+              - name: generate grpc
+                run: mkdir grpc; yarn generate
               - name: test
                 run: yarn test
 

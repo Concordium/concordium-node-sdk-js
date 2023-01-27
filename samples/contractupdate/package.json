@@ -4,7 +4,6 @@
     "private": true,
     "dependencies": {
         "@concordium/react-components": "0.1.0",
-        "@concordium/wallet-connectors": "0.1.0",
         "bootstrap": "^5.2.3",
         "buffer": "^6.0.3",
         "is-base64": "^1.1.0",

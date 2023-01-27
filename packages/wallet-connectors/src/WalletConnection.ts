@@ -32,7 +32,7 @@ export interface WalletConnection {
     /**
      * Ping the connection.
      */
-    ping(): Promise<void>
+    ping(): Promise<void>;
 
     /**
      * @return The account that the wallet currently associates with this connection.

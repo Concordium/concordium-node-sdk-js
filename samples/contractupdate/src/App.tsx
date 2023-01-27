@@ -1,4 +1,4 @@
-import { Network, WalletConnection } from '@concordium/wallet-connectors';
+import { Network, WalletConnection } from '@concordium/react-components';
 import { Col, Form, Row, Spinner } from 'react-bootstrap';
 import { useContractSelector } from '@concordium/react-components';
 import { ContractDetails } from './ContractDetails';
@@ -28,10 +28,10 @@ export function App({ network, connection, connectedAccount }: Props) {
                                 placeholder="Address (index)"
                                 value={input}
                                 onChange={(e) => setInput(e.currentTarget.value)}
-                                isInvalid={Boolean(contract.validationError)}
+                                isInvalid={Boolean(contract.error)}
                                 autoFocus
                             />
-                            <Form.Control.Feedback type="invalid">{contract.validationError}</Form.Control.Feedback>
+                            <Form.Control.Feedback type="invalid">{contract.error}</Form.Control.Feedback>
                         </Col>
                     </Form.Group>
                     {contract.isLoading && <Spinner animation="border" />}

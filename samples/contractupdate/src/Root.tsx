@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Col, Container, Row } from 'react-bootstrap';
-import { Network, withJsonRpcClient } from '@concordium/wallet-connectors';
+import { Network, withJsonRpcClient } from '@concordium/react-components';
 import { SignClientTypes } from '@walletconnect/types';
 import { WalletConnectionProps, WithWalletConnector } from '@concordium/react-components';
 import { WalletConnectionButton } from './WalletConnectionButton';

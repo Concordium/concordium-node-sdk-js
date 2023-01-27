@@ -5328,7 +5328,6 @@ __metadata:
   resolution: "concordium-dapp-contractupdate@workspace:samples/contractupdate"
   dependencies:
     "@concordium/react-components": 0.1.0
-    "@concordium/wallet-connectors": 0.1.0
     "@testing-library/jest-dom": ^5.14.1
     "@testing-library/react": ^13.0.0
     "@testing-library/user-event": ^13.2.1

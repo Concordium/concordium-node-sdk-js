@@ -183,7 +183,7 @@ export class WalletConnectConnection implements WalletConnection {
     }
 
     async ping() {
-        const {topic} = this.session;
+        const { topic } = this.session;
         await this.connector.client.ping({ topic });
     }
 

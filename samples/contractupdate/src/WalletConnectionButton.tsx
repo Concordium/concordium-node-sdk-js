@@ -2,6 +2,10 @@ import React from 'react';
 import { Alert, Button, Spinner } from 'react-bootstrap';
 import { WalletConnectionProps } from '@concordium/react-components';
 
+interface Props extends WalletConnectionProps {
+    children: JSX.Element;
+}
+
 export function WalletConnectionButton({
     activeConnectorType,
     activeConnector,
@@ -9,16 +13,15 @@ export function WalletConnectionButton({
     activeConnection,
     connectActive,
     isConnecting,
-}: WalletConnectionProps) {
+    children,
+}: Props) {
     return (
         <>
             {activeConnectorError && <Alert variant="danger">Error: {activeConnectorError}.</Alert>}
             {!activeConnectorError && activeConnectorType && !activeConnector && <Spinner />}
             {activeConnector && !activeConnection && (
                 <Button type="button" onClick={connectActive} disabled={isConnecting}>
-                    {isConnecting && 'Connecting...'}
-                    {!isConnecting && activeConnectorType === 'BrowserWallet' && 'Connect Browser Wallet'}
-                    {!isConnecting && activeConnectorType === 'WalletConnect' && 'Connect Mobile Wallet'}
+                    {children}
                 </Button>
             )}
         </>

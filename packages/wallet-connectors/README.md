@@ -83,7 +83,7 @@ In the appropriate context, set up connectors for both Browser Wallet and Wallet
 ```typescript
 const delegate = new MyDelegate();
 const browserWalletConnector = await BrowserWalletConnector.create(delegate);
-const walletConnectConnector = await WalletConnectConnector.create(walletConnectOpts, network, delegate);
+const walletConnectConnector = await WalletConnectConnector.create(walletConnectOpts, delegate, network);
 
 const browserWalletConnection = await browserWalletConnector.connect();
 const walletConnectConnection = await walletConnectConnector.connect();

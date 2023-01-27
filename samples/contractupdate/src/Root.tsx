@@ -1,51 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Col, Container, Row } from 'react-bootstrap';
-import { Network, withJsonRpcClient } from '@concordium/react-components';
-import { SignClientTypes } from '@walletconnect/types';
+import { withJsonRpcClient } from '@concordium/react-components';
 import { WalletConnectionProps, WithWalletConnector } from '@concordium/react-components';
 import { WalletConnectionButton } from './WalletConnectionButton';
 import { WalletConnectorButton } from './WalletConnectorButton';
 import { ConnectedAccount } from './ConnectedAccount';
 import { App } from './App';
 import { NetworkSelector } from './NetworkSelector';
-
-export const TESTNET_GENESIS_BLOCK_HASH = '4221332d34e1694168c2a0c0b3fd0f273809612cb13d000d5c2e00e85f50f796';
-export const MAINNET_GENESIS_BLOCK_HASH = '9dd9ca4d19e9393877d2c44b70f89acbfc0883c2243e5eeaecc0d1cd0503f478';
-export const WALLET_CONNECT_PROJECT_ID = '76324905a70fe5c388bab46d3e0564dc';
-
-const testnet: Network = {
-    name: 'testnet',
-    genesisHash: TESTNET_GENESIS_BLOCK_HASH,
-    jsonRpcUrl: 'https://json-rpc.testnet.concordium.com',
-    ccdScanBaseUrl: 'https://testnet.ccdscan.io',
-};
-const mainnet: Network = {
-    name: 'mainnet',
-    genesisHash: MAINNET_GENESIS_BLOCK_HASH,
-    jsonRpcUrl: 'https://json-rpc.mainnet.concordium.software',
-    ccdScanBaseUrl: 'https://ccdscan.io',
-};
-const networks = [testnet, mainnet];
-
-const walletConnectOpts: SignClientTypes.Options = {
-    projectId: WALLET_CONNECT_PROJECT_ID,
-    metadata: {
-        name: 'Contract Update',
-        description: 'Example dApp for the performing an update on a contract.',
-        url: '#',
-        icons: ['https://walletconnect.com/walletconnect-logo.png'],
-    },
-};
+import { BROWSER_WALLET, MAINNET, TESTNET, WALLET_CONNECT } from './config';
 
 export default function Root() {
-    const [network, setNetwork] = useState(testnet);
+    const [network, setNetwork] = useState(TESTNET);
     return (
         <Container>
             <h1>Sample dApp</h1>
-            <NetworkSelector selected={network} options={networks} select={setNetwork} />
-            <WithWalletConnector walletConnectOpts={walletConnectOpts} network={network}>
-                {(props) => <Main {...props} />}
-            </WithWalletConnector>
+            <NetworkSelector selected={network} options={[TESTNET, MAINNET]} select={setNetwork} />
+            <WithWalletConnector network={network}>{(props) => <Main {...props} />}</WithWalletConnector>
         </Container>
     );
 }
@@ -77,15 +47,25 @@ function Main(props: WalletConnectionProps) {
         <>
             <Row className="mt-3 mb-3">
                 <Col>
-                    <WalletConnectorButton connectorType="BrowserWallet" connectorName="Browser Wallet" {...props} />
+                    <WalletConnectorButton connectorType={BROWSER_WALLET} connectorName="Browser Wallet" {...props} />
                 </Col>
                 <Col>
-                    <WalletConnectorButton connectorType="WalletConnect" connectorName="Wallet Connect" {...props} />
+                    <WalletConnectorButton connectorType={WALLET_CONNECT} connectorName="WalletConnect" {...props} />
                 </Col>
             </Row>
             <Row className="mt-3 mb-3">
                 <Col>
-                    <WalletConnectionButton {...props} />
+                    <WalletConnectionButton {...props}>
+                        <>
+                            {props.isConnecting && 'Connecting...'}
+                            {!props.isConnecting &&
+                                props.activeConnectorType === BROWSER_WALLET &&
+                                'Connect Browser Wallet'}
+                            {!props.isConnecting &&
+                                props.activeConnectorType === WALLET_CONNECT &&
+                                'Connect Mobile Wallet'}
+                        </>
+                    </WalletConnectionButton>
                 </Col>
             </Row>
             <Row className="mt-3 mb-3">

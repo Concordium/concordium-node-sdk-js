@@ -1,11 +1,10 @@
 # `@concordium/react-components`
 
-React components and utilities for implementing common patterns used in dApps.
-The components only manage React state that is forwarded to application components.
-They don't render any HTML nor do styling.
+React components and hooks for implementing features commonly needed by dApps.
+The components only manage React state and pass data to application components - no actual HTML is being rendered.
 
-The components do as much as possible to help make sure that the dApp is connected to a wallet/account
-on the expected network and handle it gracefully when the dApp decides to switch network.
+As much as possible is done to help make sure that the dApp is connected to a wallet/account
+on the expected network while taking into account that the user may decide to switch network.
 
 ## Components
 
@@ -19,10 +18,12 @@ even if one only need to support a single protocol and network.
 The interface for managing the connectors is exposed through [`WalletConnectionProps`](./src/WithWalletConnector.ts#WalletConnectionProps)
 which is passed to the child component.
 
-_Example: Connect to wallets on Testnet:_
+_Example: Interact with wallets connected to Testnet:_
+
+Initialize the network configuration and wrap the component `MyAppComponent` that needs to do wallet interaction
+in `WithWalletConnector`:
 
 ```typescript jsx
-import { SignClientTypes } from '@walletconnect/types';
 import { Network, WalletConnectionProps, WithWalletConnector } from '@concordium/react-components';
 
 const testnet: Network = {
@@ -31,19 +32,26 @@ const testnet: Network = {
     jsonRpcUrl: 'https://json-rpc.testnet.concordium.com',
     ccdScanBaseUrl: 'https://testnet.ccdscan.io',
 };
-const walletConnectOpts: SignClientTypes.Options = { ... };
 
 function MyRootComponent() {
-    return (
-        <WithWalletConnector walletConnectOpts={walletConnectOpts} network={network}>
-            {(props) => <MyAppComponent {...props} />}
-        </WithWalletConnector>
-    );
+    return <WithWalletConnector network={network}>{(props) => <MyAppComponent {...props} />}</WithWalletConnector>;
 }
 
 function MyAppComponent(props: WalletConnectionProps) {
     // TODO Manage connections using the interface exposed through WalletConnectionProps (usually using useWalletConnectorSelector)...
 }
+```
+
+Use `props.setActiveConnectorType(...)` and `props.connectActive()` from within `MyAppComponent`
+to set up a connector and initiate a connection.
+
+This is most easily done using [`useWalletConnectorSelector`](#usecontractselector).
+
+Connector types for the Browser Wallet and WalletConnect connectors are usually initialized like so:
+
+```typescript
+export const BROWSER_WALLET = ephemeralConnectorType(BrowserWalletConnector.create);
+export const WALLET_CONNECT = ephemeralConnectorType(WalletConnectConnector.create.bind(this, WALLET_CONNECT_OPTS));
 ```
 
 See [the sample dApp](../../samples/contractupdate/src/Root.tsx) for a complete example.
@@ -55,6 +63,9 @@ See [the sample dApp](../../samples/contractupdate/src/Root.tsx) for a complete 
 Hook for managing a connector selector; connecting/disconnecting when clicked and computing its selected/connected/disabled state.
 
 _Example: Create a button for toggling a connector_
+
+The button accepts all the `props` exposed by `WithWalletConnector`
+as well as the particular `ConnectorType` that it manages:
 
 ```typescript jsx
 import { ConnectorType, useWalletConnectorSelector, WalletConnectionProps } from '@concordium/react-components';
@@ -72,6 +83,8 @@ export function WalletConnectorButton(props: Props) {
     );
 }
 ```
+
+It's important that the `ConnectorType` reference passed to the hook is fixed.
 
 See [the sample dApp](../../samples/contractupdate/src/WalletConnectorButton.tsx) for a complete example.
 

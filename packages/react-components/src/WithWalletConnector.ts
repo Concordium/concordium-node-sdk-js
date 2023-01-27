@@ -1,15 +1,67 @@
 import { Component } from 'react';
-import { SignClientTypes } from '@walletconnect/types';
-import {
-    BrowserWalletConnector,
-    Network,
-    WalletConnectConnector,
-    WalletConnection,
-    WalletConnectionDelegate,
-    WalletConnector,
-} from '@concordium/wallet-connectors';
+import { Network, WalletConnection, WalletConnectionDelegate, WalletConnector } from '@concordium/wallet-connectors';
 
-export type ConnectorType = 'BrowserWallet' | 'WalletConnect';
+/**
+ * Activation/deactivation controller of a given connector type.
+ */
+export interface ConnectorType {
+    /**
+     * Called when the connection type is being activated.
+     * The connector instance returned by this method becomes the new {@link State.activeConnector activeConnector}.
+     * @param component The component in which the instance is being activated.
+     *                  This object doubles as the delegate to pass to new connector instances.
+     * @param network The network to pass to new connector instances.
+     */
+    activate(component: WithWalletConnector, network: Network): Promise<WalletConnector>;
+
+    /**
+     * Called from {@link WithWalletConnector} when the connection type is being deactivated,
+     * i.e. right after {@link State.activeConnector activeConnector} has been unset from this value.
+     * @param component The component in which the instance is being deactivated.
+     * @param connector The connector to deactivate.
+     */
+    deactivate(component: WithWalletConnector, connector: WalletConnector): Promise<void>;
+}
+
+/**
+ * Produce a {@link ConnectorType} that creates a new connector instance on activation
+ * and disconnects the existing one on deactivation.
+ * This is the simplest connection type and should be used unless there's a reason not to.
+ * @param create Factory function for creating new connector instances.
+ */
+export function ephemeralConnectorType(create: (c: WithWalletConnector, n: Network) => Promise<WalletConnector>) {
+    return {
+        activate: create,
+        deactivate: (w: WithWalletConnector, c: WalletConnector) => c.disconnect(),
+    };
+}
+
+/**
+ * Produce a {@link ConnectorType} that reuse connectors between activation cycles.
+ * That is, once a connector is created, it's never automatically disconnected.
+ * Note that only the connector is permanent. Individual connections may still be disconnected by the application.
+ * @param create Factory function for creating new connector instances.
+ */
+export function persistentConnectorType(create: (c: WithWalletConnector, n: Network) => Promise<WalletConnector>) {
+    const connectorPromises = new Map<WithWalletConnector, Map<Network, Promise<WalletConnector>>>();
+    return {
+        activate: (component: WithWalletConnector, network: Network) => {
+            const delegateConnectorPromises =
+                connectorPromises.get(component) || new Map<Network, Promise<WalletConnector>>();
+            connectorPromises.set(component, delegateConnectorPromises);
+            const connectorPromise = delegateConnectorPromises.get(network) || create(component, network);
+            delegateConnectorPromises.set(network, connectorPromise);
+            connectorPromise
+                .then((connector) => connector.getConnections())
+                .then((connections) => {
+                    // If the connector already has a connection, set it as active.
+                    component.setActiveConnection(connections.length ? connections[0] : undefined);
+                });
+            return connectorPromise;
+        },
+        deactivate: async (component: WithWalletConnector) => component.setActiveConnection(undefined),
+    };
+}
 
 /**
  * The internal state of the component.
@@ -17,40 +69,28 @@ export type ConnectorType = 'BrowserWallet' | 'WalletConnect';
 interface State {
     /**
      * The active connector type. This value is updated using {@link WalletConnectionProps.setActiveConnectorType}.
-     * Changes to this value trigger new connectors to be initialized appropriately.
+     * Changes to this value trigger activation of a connector managed by the connector type.
      * This will cause {@link activeConnector} or {@link activeConnectorError} to change depending on the outcome.
-     *
-     * There currently is no way to provide an existing connector when changing the connector type
-     * as it isn't clear if this ability would be useful in practice.
      */
     activeConnectorType: ConnectorType | undefined;
 
     /**
-     * The active connector. New connectors get created automatically when {@link activeConnectorType} changes.
+     * The active connector. Connector instances get (de)activated appropriately when {@link activeConnectorType} changes.
      *
-     * Existing connectors are not disconnected automatically;
-     * this may be done using {@link WalletConnectionProps.disconnectActive}.
+     * It's up to the {@link ConnectorType} in {@link activeConnectorType} to implement any synchronization between
+     * the active connector and {@link activeConnector}:
+     * In general, it is perfectly possible for the active connection to not originate from the active connector.
      *
-     * The hook {@link useWalletConnectorSelector} adds a little more structure to the connector state
-     * and also takes care of disconnecting existing connectors as mentioned above.
-     *
-     * Note that the connector stored in this field only controls the creation of new connections.
-     * In particular, when a new connector becomes active, the current value of {@link activeConnection} is not touched.
-     * It is therefore perfectly possible for the active connection to not originate from the active connector.
-     *
-     * The reason for this behavior is it isn't obvious that one would always want this synchronization.
-     * And whenever one does, it's easy for the app to just disconnect the existing connection before changing the connector.
-     *
-     * The same is true the other way: Changes to {@link activeConnection} don't cause changes to this field as the only
-     * allowed way to change the connector is through setting the connector type.
+     * If the application disconnects the active connector manually, they must also call
+     * {@link WalletConnectionProps.setActiveConnectorType} to
      */
     activeConnector: WalletConnector | undefined;
 
     /**
      * Any of the following kinds of errors:
-     * - Error initializing a connector with a type of the current value of {@link activeConnectorType}.
+     * - Error activating a connector with {@link activeConnectorType}.
      *   In this case {@link activeConnector} is undefined.
-     * - Error disconnecting the previous connector.
+     * - Error deactivating the previous connector.
      *   In this case {@link activeConnectorType} and {@link activeConnector} are undefined.
      * - Error initiating a connection from the connector.
      *   In this case {@link activeConnector} is not undefined.
@@ -65,26 +105,40 @@ interface State {
     /**
      * The currently active connection.
      *
-     * For reasons explained in {@link activeConnector},
-     * there's no guarantee that this connection originates from the current value of {@link activeConnector}
-     * as there's no automatic synchronization between them.
+     * As explained in {@link activeConnector},
+     * this connection generally might not originate from {@link activeConnector}.
      */
     activeConnection: WalletConnection | undefined;
 
     /**
-     * The hash of the genesis block for the chain that {@link activeConnectedAccount} lives on.
+     * A map from open connections to their selected accounts.
+     * Connections without a selected account will not have an entry in this map.
+     */
+    connectedAccounts: Map<WalletConnection, string>;
+
+    /**
+     * A map from open connections to the hash of the genesis block for the chain that the selected accounts
+     * of the connections live on.
+     * Connections without a selected account (or the account's chain is unknown) will not have an entry in this map.
      *
-     * TODO The value of this field is not too reliable as it's updated only when the `onChainChanged` event fires.
+     * TODO The reported hash values are not too reliable as they're updated only when the `onChainChanged` event fires.
      *      And this doesn't happen when the connection is initiated.
      *      For WalletConnect we could do that manually as we control what chain we connect to.
      *      For BrowserWallet we don't have that option (see also https://concordium.atlassian.net/browse/CBW-633).
      */
-    activeConnectionGenesisHash: string | undefined;
+    genesisHashes: Map<WalletConnection, string>;
+}
 
-    /**
-     * The selected account of {@link activeConnection}.
-     */
-    activeConnectedAccount: string | undefined;
+function updateMapEntry<K, V>(map: Map<K, V>, key: K | undefined, value: V | undefined) {
+    const res = new Map(map);
+    if (key !== undefined) {
+        if (value !== undefined) {
+            res.set(key, value);
+        } else {
+            res.delete(key);
+        }
+    }
+    return res;
 }
 
 interface Props {
@@ -94,13 +148,6 @@ interface Props {
      * Changes to this value will cause all connections managed by {@link State.activeConnector} to get disconnected.
      */
     network: Network; // reacting to change in 'componentDidUpdate'
-
-    /**
-     * WalletConnect configuration.
-     * The component will use the current value of this field when initializing WalletConnect connections,
-     * but existing connections will not be affected by changes to the value.
-     */
-    walletConnectOpts: SignClientTypes.Options;
 
     /**
      * Function for generating the child component based on the props derived from the state of this component.
@@ -125,10 +172,19 @@ export interface WalletConnectionProps extends State {
     network: Network;
 
     /**
+     * The selected account of {@link activeConnection}.
+     */
+    activeConnectedAccount: string | undefined;
+
+    /**
+     * The hash of the genesis block for the chain that {@link activeConnectedAccount} lives on.
+     */
+    activeConnectionGenesisHash: string | undefined;
+
+    /**
      * Function for setting or resetting {@link State.activeConnectorType activeConnectorType}.
      *
-     * There currently is no way to provide an existing connector when changing the connector type
-     * as it isn't clear if this ability would be useful in practice.
+     * Any existing connector type value is deactivated and any new one is activated.
      *
      * @param type The new connector type or undefined to reset the value.
      */
@@ -136,7 +192,9 @@ export interface WalletConnectionProps extends State {
 
     /**
      * Function for setting or resetting {@link State.activeConnection activeConnection}.
-     * For reasons explained in the documentation of that field, this function does not touch the active connector.
+     * For reasons explained in the documentation of that field,
+     * calling this function does not cause {@link State.activeConnectorType activeConnector type}
+     * nor {@link State.activeConnector activeConnector} to change.
      * @param connection The wallet connection.
      */
     setActiveConnection: (connection: WalletConnection | undefined) => void;
@@ -148,14 +206,6 @@ export interface WalletConnectionProps extends State {
      * This does not automatically disconnect any existing connections.
      */
     connectActive: () => void;
-
-    /**
-     * Disconnect all connections owned by {@link State.activeConnector activeConnector} and reset this field,
-     * destroying its existing value.
-     *
-     * This function is called automatically when {@link network} changes.
-     */
-    disconnectActive: () => void;
 }
 
 /**
@@ -184,8 +234,8 @@ export class WithWalletConnector extends Component<Props, State> implements Wall
             activeConnectorError: '',
             isConnecting: false,
             activeConnection: undefined,
-            activeConnectionGenesisHash: undefined,
-            activeConnectedAccount: undefined,
+            genesisHashes: new Map(),
+            connectedAccounts: new Map(),
         };
     }
 
@@ -195,35 +245,41 @@ export class WithWalletConnector extends Component<Props, State> implements Wall
     setActiveConnectorType = (type: ConnectorType | undefined) => {
         console.debug("WithWalletConnector: calling 'setActiveConnectorType'", { type, state: this.state });
         const { network } = this.props;
-        const { activeConnectorType } = this.state;
-        if (type === activeConnectorType) {
-            return; // ensure idempotency
-        }
+        const { activeConnectorType, activeConnector } = this.state;
         this.setState({
             activeConnectorType: type,
             activeConnector: undefined,
-            activeConnection: undefined,
             activeConnectorError: '',
             isConnecting: false,
-            activeConnectionGenesisHash: undefined,
-            activeConnectedAccount: undefined,
         });
-        if (!type) {
-            return; // don't create a new connector
-        }
-        this.createConnector(type, network)
-            .then((connector: WalletConnector) => {
-                console.log('WithWalletConnector: setting active connector', { connector });
-                // Switch the connector type back in case the user changed it since initiating the connection.
-                this.setState({ activeConnectorType: type, activeConnector: connector, activeConnectorError: '' });
-            })
-            .catch((err) => {
-                if (this.state.activeConnectorType === type) {
+        if (activeConnectorType && activeConnector) {
+            activeConnectorType.deactivate(this, activeConnector).catch((err) =>
+                this.setState((state) => {
                     // Don't set error if user switched connector type since initializing this connector.
                     // It's OK to show it if the user switched away and back...
-                    this.setState({ activeConnectorError: (err as Error).message });
-                }
-            });
+                    if (state.activeConnectorType !== type) {
+                        return state;
+                    }
+                    return { ...state, activeConnectorError: (err as Error).message };
+                })
+            );
+        }
+        if (type) {
+            type.activate(this, network)
+                .then((connector: WalletConnector) => {
+                    console.log('WithWalletConnector: setting active connector', { connector });
+                    // Switch the connector (type) back in case the user changed it since initiating the connection.
+                    this.setState({ activeConnectorType: type, activeConnector: connector, activeConnectorError: '' });
+                })
+                .catch((err) =>
+                    this.setState((state) => {
+                        if (state.activeConnectorType !== type) {
+                            return state;
+                        }
+                        return { ...state, activeConnectorError: (err as Error).message };
+                    })
+                );
+        }
     };
 
     /**
@@ -231,68 +287,72 @@ export class WithWalletConnector extends Component<Props, State> implements Wall
      */
     setActiveConnection = (connection: WalletConnection | undefined) => {
         console.debug("WithWalletConnector: calling 'setActiveConnection'", { connection, state: this.state });
-        // Not setting the active connector to that of the connection for reasons described in
-        // the docstring of `State.activeConnection`.
-        connection?.getConnectedAccount().then((connectedAccount) => {
-            console.log('WithWalletConnector: updating active connection and connected account state', {
-                connection,
-                connectedAccount,
-            });
-            this.setState({
-                activeConnection: connection,
-                activeConnectedAccount: connectedAccount,
-            });
-        });
-    };
+        // NOTE As described in the docstring of `State.activeConnection`,
+        //      setting the active connection doesn't imply that the active connector should be set as well.
+        this.setState((state) => ({
+            ...state,
+            activeConnection: connection,
+            connectedAccounts: updateMapEntry(state.connectedAccounts, state.activeConnection, undefined),
+        }));
+        if (connection) {
+            connection.getConnectedAccount().then((connectedAccount) => {
+                // This might be redundant for existing connections as the delegate already listens for account change events.
+                // But for new connections we might get the account from the connector without having received any events.
+                console.log('WithWalletConnector: updating active connection and connected account state', {
+                    connection,
+                    connectedAccount,
+                });
 
-    private createConnector = (connectorType: ConnectorType, network: Network): Promise<WalletConnector> => {
-        console.debug("WithWalletConnector: calling 'createConnector'", { connectorType, network, state: this.state });
-        const { walletConnectOpts } = this.props;
-        switch (connectorType) {
-            case 'BrowserWallet':
-                console.log('WithWalletConnector: initializing Browser Wallet connector');
-                return BrowserWalletConnector.create(this);
-            case 'WalletConnect':
-                console.log('WithWalletConnector: initializing WalletConnect connector');
-                return WalletConnectConnector.create(walletConnectOpts, network, this);
-            default:
-                throw new Error(`invalid connector type '${connectorType}'`);
+                // Don't set connected accounts if the active connection changed while loading the accounts.
+                this.setState((state) => {
+                    const { activeConnection, connectedAccounts } = state;
+                    if (activeConnection !== connection) {
+                        return state;
+                    }
+                    return {
+                        ...state,
+                        connectedAccounts: updateMapEntry(connectedAccounts, connection, connectedAccount),
+                    };
+                });
+            });
         }
     };
 
     onAccountChanged = (connection: WalletConnection, address: string | undefined) => {
         console.debug("WithWalletConnector: calling 'onAccountChanged'", { connection, address, state: this.state });
-        const { activeConnection } = this.state;
-        // Ignore event on connections other than the active one.
-        if (connection === activeConnection) {
-            console.log('WithWalletConnector: updating connected account state', { address });
-            this.setState({ activeConnectedAccount: address });
-        }
+        this.setState((state) => ({
+            ...state,
+            connectedAccounts: updateMapEntry(state.connectedAccounts, connection, address),
+        }));
     };
 
     onChainChanged = (connection: WalletConnection, genesisHash: string) => {
         console.debug("WithWalletConnector: calling 'onChainChanged'", { connection, genesisHash, state: this.state });
-        const { activeConnection } = this.state;
-        if (connection === activeConnection) {
-            this.setState({ activeConnectionGenesisHash: genesisHash });
-        }
+        this.setState((state) => ({
+            ...state,
+            genesisHashes: updateMapEntry(state.genesisHashes, connection, genesisHash),
+        }));
     };
 
     onConnected = () => undefined;
 
     onDisconnected = (connection: WalletConnection) => {
         console.debug("WithWalletConnector: calling 'onDisconnect'", { connection, state: this.state });
-        const { activeConnection } = this.state;
-        // Ignore event on connections other than the active one.
-        if (connection === activeConnection) {
-            console.log('WithWalletConnector: clearing wallet connection and connected account state');
-            this.setState({ activeConnection: undefined, activeConnectedAccount: undefined });
-        }
+        this.setState((state) => ({
+            ...state,
+            activeConnection: connection === state.activeConnection ? undefined : state.activeConnection,
+            connectedAccounts: updateMapEntry(state.connectedAccounts, connection, undefined),
+        }));
     };
 
     /**
      * @see WalletConnectionProps.connectActive
      */
+    // The method does not support creating connections with any other connector besides `activeConnector`
+    // because that could cause `activeConnectorError` to hold an error that isn't from the active connector.
+    // If the error was split into one for connector error and one for connection error, this wouldn't be a problem.
+    // As an alternative to having this method altogether, we could add an event `onConnection` to `WalletConnectionDelegate`.
+    // Then the application would just call `connect` directly on the connector and have this component pick it up automatically.
     connectActive = () => {
         console.debug("WithWalletConnector: calling 'connectActive'", { state: this.state });
         const { activeConnector } = this.state;
@@ -307,50 +367,44 @@ export class WithWalletConnector extends Component<Props, State> implements Wall
                     }
                 })
                 .catch((err) => {
-                    if (this.state.activeConnector === activeConnector) {
-                        this.setState({ activeConnectorError: (err as Error).message });
-                    }
+                    this.setState((state) => {
+                        if (state.activeConnector !== activeConnector) {
+                            return state;
+                        }
+                        return { ...state, activeConnectorError: (err as Error).message };
+                    });
                 })
                 .finally(() => {
-                    if (this.state.activeConnector === activeConnector) {
-                        this.setState({ isConnecting: false });
-                    }
+                    this.setState((state) => {
+                        if (state.activeConnector !== activeConnector) {
+                            return state;
+                        }
+                        return { ...state, isConnecting: false };
+                    });
                 });
-        }
-    };
-
-    /**
-     * @see WalletConnectionProps.disconnectActive
-     */
-    disconnectActive = () => {
-        console.debug("WithWalletConnector: calling 'disconnectActive'", { state: this.state });
-        const { activeConnector } = this.state;
-        if (activeConnector) {
-            activeConnector.disconnect().catch((err) => {
-                if (this.state.activeConnector === activeConnector) {
-                    this.setState({ activeConnectorError: (err as Error).message });
-                }
-            });
         }
     };
 
     render() {
         const { children, network } = this.props;
+        const { connectedAccounts, genesisHashes, activeConnection } = this.state;
         return children({
             ...this.state,
             network,
+            activeConnectedAccount: activeConnection && connectedAccounts.get(activeConnection),
+            activeConnectionGenesisHash: activeConnection && genesisHashes.get(activeConnection),
             setActiveConnectorType: this.setActiveConnectorType,
             setActiveConnection: this.setActiveConnection,
             connectActive: this.connectActive,
-            disconnectActive: this.disconnectActive,
         });
     }
 
     componentDidUpdate(prevProps: Props) {
         if (prevProps.network !== this.props.network) {
-            // Disconnect everything when user changes network.
+            // Reset active connector and connection when user changes network.
             // In the future there may be a mechanism for negotiating with the wallet.
-            this.disconnectActive();
+            this.setActiveConnectorType(undefined);
+            this.setActiveConnection(undefined);
         }
     }
 

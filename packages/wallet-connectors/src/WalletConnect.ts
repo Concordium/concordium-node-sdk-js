@@ -281,10 +281,10 @@ export class WalletConnectConnector implements WalletConnector {
      * The constructor sets up event handling and appropriate forwarding to the provided delegate.
      *
      * @param client The underlying WalletConnect client.
-     * @param network The network/chain that connected accounts must live on.
      * @param delegate The object to receive events emitted by the client.
+     * @param network The network/chain that connected accounts must live on.
      */
-    constructor(client: SignClient, network: Network, delegate: WalletConnectionDelegate) {
+    constructor(client: SignClient, delegate: WalletConnectionDelegate, network: Network) {
         this.client = client;
         this.network = network;
         this.delegate = delegate;
@@ -330,16 +330,16 @@ export class WalletConnectConnector implements WalletConnector {
      * Convenience function for creating a new instance from WalletConnection configuration instead of an already initialized client.
      *
      * @param signClientInitOpts WalletConnect configuration.
-     * @param network The network/chain that connected accounts must live on.
      * @param delegate The object to receive events emitted by the client.
+     * @param network The network/chain that connected accounts must live on.
      */
     static async create(
         signClientInitOpts: SignClientTypes.Options,
-        network: Network,
-        delegate: WalletConnectionDelegate
+        delegate: WalletConnectionDelegate,
+        network: Network
     ) {
         const client = await SignClient.init(signClientInitOpts);
-        return new WalletConnectConnector(client, network, delegate);
+        return new WalletConnectConnector(client, delegate, network);
     }
 
     async connect() {

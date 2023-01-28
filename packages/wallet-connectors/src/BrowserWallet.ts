@@ -58,7 +58,7 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
         if (!account) {
             throw new Error('Browser Wallet connection failed');
         }
-        this.delegate.onConnected(this);
+        this.delegate.onConnected(this, account);
         return this;
     }
 

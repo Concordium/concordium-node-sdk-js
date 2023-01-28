@@ -177,8 +177,9 @@ export interface WalletConnectionDelegate {
     /**
      * Notification that the given {@link WalletConnection} has been established.
      * @param connection Affected connection.
+     * @param address The address of the initially connected account.
      */
-    onConnected(connection: WalletConnection): void;
+    onConnected(connection: WalletConnection, address: string | undefined): void;
 
     /**
      * Notification that the given {@link WalletConnection} has been disconnected.

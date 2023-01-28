@@ -187,10 +187,20 @@ export class WalletConnectConnection implements WalletConnection {
         await this.connector.client.ping({ topic });
     }
 
-    async getConnectedAccount() {
+    /**
+     * Non-async variant of {@link getConnectedAccount}.
+     * The async version is a simple wrapper around this one and
+     * only exists to satisfy the {@link WalletConnection} interface.
+     * So prefer this method when interacting with this concrete type.
+     */
+    getConnectedAccount_() {
         // We're only expecting a single account to be connected.
         const fullAddress = this.session.namespaces[WALLET_CONNECT_SESSION_NAMESPACE].accounts[0];
         return fullAddress.substring(fullAddress.lastIndexOf(':') + 1);
+    }
+
+    async getConnectedAccount() {
+        return this.getConnectedAccount_();
     }
 
     getJsonRpcClient() {
@@ -354,7 +364,7 @@ export class WalletConnectConnector implements WalletConnector {
         const rpcClient = new JsonRpcClient(new HttpProvider(this.network.jsonRpcUrl));
         const connection = new WalletConnectConnection(this, rpcClient, chainId, session);
         this.connections.set(session.topic, connection);
-        this.delegate.onConnected(connection);
+        this.delegate.onConnected(connection, connection.getConnectedAccount_());
         return connection;
     }
 

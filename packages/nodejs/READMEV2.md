@@ -228,3 +228,80 @@ const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e307
 const moduleRef = '7e8398adc406a97db4d869c3fd7adc813a3183667a3a7db078ebae6f7dce5f64';
 const source = await client.getModuleSource(moduleReference, blockHash);
 ```
+
+## getBlocks
+Returns a stream of blocks that is iterable. The following code will recieved blocks
+as long as there is a connection to the node:
+
+```js
+// Create stream
+const blockStream = client.getBlocks();
+
+// Prints blocks infinitely
+for await (const block of blockStream) {
+    console.log(block)
+}
+```
+
+You can pass it an abort signal to close the connection. This is particurlary useful for this
+function as it otherwise continues forever. An example of how to use `AbortSignal` can be seen below:
+
+```js
+// Create abort controller and block stream
+const ac = new AbortController();
+const blockStream = client.getBlocks(ac.signal);
+
+// Only get one item then break
+for await (const block of blockStream) {
+    console.log(block)
+    break
+}
+
+// Closes the stream
+ac.abort();
+```
+
+## getFinalizedBlocks
+Works exactly like `getBlocks()` but only returns finalized blocks:
+
+```js
+// Create stream
+const blockStream = client.getFinalizedBlocks();
+
+// Prints blocks infinitely
+for await (const block of blockStream) {
+    console.log(block)
+}
+```
+
+Likewise, you can also pass it an `AbortSignal`:
+
+```js
+// Create abort controller and block stream
+const ac = new AbortController();
+const blockStream = client.getFinalizedBlocks(ac.signal);
+
+// Only get one item then break
+for await (const block of blockStream) {
+    console.log(block)
+    break
+}
+
+// Closes the stream
+ac.abort();
+```
+
+### waitForTransactionFinalization
+This function waits for the given transaction hash (given as a hex string) to finalize and then returns
+the blockhash of the block that contains given transaction as a hex string.
+
+```js
+const transactionHash = await client.sendAccountTransaction(
+    someTransaction,
+    signature
+);
+
+const blockHash = await client.waitForTransactionFinalization(
+    transactionHash
+);
+```

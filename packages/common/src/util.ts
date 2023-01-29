@@ -130,6 +130,16 @@ export function secondsSinceEpoch(date: Date): bigint {
     return BigInt(Math.floor(date.getTime() / 1000));
 }
 
+// Retrieves a value that might be undefined. Throws if value is undefined
+export function unwrap<A>(x: A | undefined): A {
+    if (x === undefined) {
+        console.trace();
+        throw Error('Undefined value found.');
+    } else {
+        return x;
+    }
+}
+
 // Maps a `Record<A,C>` to a `Record<B,D>`.
 // Works the same way as a list mapping, allowing both a value and key mapping.
 // If `keyMapper()` is not provided, it will map `Record<A,C>` to `Record<A,D>`
@@ -152,12 +162,27 @@ export function mapRecord<
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-// Retrieves a value that might be undefined. Throws if value is undefined
-export function unwrap<A>(x: A | undefined): A {
-    if (x === undefined) {
-        console.trace();
-        throw Error('Undefined value found.');
-    } else {
-        return x;
-    }
+// Maps an infinite stream of type A to an infinite stream of type B
+export function mapAsyncIterable<A, B>(
+    stream: AsyncIterable<A>,
+    mapper: (x: A) => B
+): AsyncIterable<B> {
+    return {
+        [Symbol.asyncIterator]() {
+            return {
+                async next() {
+                    for await (const val of stream) {
+                        return {
+                            done: false,
+                            value: mapper(val),
+                        };
+                    }
+                    return {
+                        done: true,
+                        value: undefined,
+                    };
+                },
+            };
+        },
+    };
 }

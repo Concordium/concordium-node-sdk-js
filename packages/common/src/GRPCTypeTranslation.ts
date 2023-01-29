@@ -1653,6 +1653,15 @@ export function instanceInfo(instanceInfo: v2.InstanceInfo): v1.InstanceInfo {
     }
 }
 
+export function commonBlockInfo(
+    blockInfo: v2.ArrivedBlockInfo | v2.FinalizedBlockInfo
+): v1.CommonBlockInfo {
+    return {
+        hash: unwrapValToHex(blockInfo.hash),
+        height: unwrap(blockInfo.height?.value),
+    };
+}
+
 // ---------------------------- //
 // --- V1 => V2 translation --- //
 // ---------------------------- //

@@ -117,14 +117,11 @@ test.each([clientV2, clientWeb])(
     }
 );
 
-test.each([clientV2, clientWeb])(
-    'NextAccountSequenceNumber',
-    async (client) => {
-        const nan = await client.getNextAccountNonce(testAccount);
-        expect(nan.nonce).toBeGreaterThanOrEqual(19n);
-        expect(nan.allFinal).toBeDefined();
-    }
-);
+test.each([clientV2, clientWeb])('nextAccountNonce', async (client) => {
+    const nan = await client.getNextAccountNonce(testAccount);
+    expect(nan.nonce).toBeGreaterThanOrEqual(19n);
+    expect(nan.allFinal).toBeDefined();
+});
 
 test.each([clientV2, clientWeb])('getAccountInfo', async (client) => {
     const accountInfo = await getAccountInfoV2(client, testAccount);
@@ -536,4 +533,41 @@ test.each([clientV2, clientWeb])('createAccount', async (client) => {
             signatures
         )
     ).rejects.toThrow('expired');
+});
+
+// For tests that take a long time to run, is skipped by default
+describe.skip('Long run-time test suite', () => {
+    const longTestTime = 45000;
+
+    // Sometimes fails as there is no guarantee that a new block comes fast enough.
+    test.each([clientV2, clientWeb])(
+        'getFinalizedBlocks',
+        async (client) => {
+            const ac = new AbortController();
+            const blockStream = client.getFinalizedBlocks(ac.signal);
+
+            for await (const block of blockStream) {
+                expect(block.height).toBeGreaterThan(1553503n);
+                ac.abort();
+                break;
+            }
+        },
+        longTestTime
+    );
+
+    // Sometimes fails as there is no guarantee that a new block comes fast enough.
+    test.each([clientV2, clientWeb])(
+        'getBlocks',
+        async (client) => {
+            const ac = new AbortController();
+            const blockStream = client.getBlocks(ac.signal);
+
+            for await (const block of blockStream) {
+                expect(block.height).toBeGreaterThan(1553503n);
+                ac.abort();
+                break;
+            }
+        },
+        longTestTime
+    );
 });

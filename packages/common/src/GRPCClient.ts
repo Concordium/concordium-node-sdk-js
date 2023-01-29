@@ -495,6 +495,114 @@ export default class ConcordiumNodeClient {
             .response;
         return translate.unwrapValToHex(response);
     }
+
+    /**
+     * Retrieve the list of accounts that exist at the end of the given block.
+     *
+     * @param blockHash an optional block hash to get the accounts at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns an async iterable of account addresses
+     */
+    getAccountList(
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<AccountAddress> {
+        const opts = { abort: abortSignal };
+        const hash = getBlockHashInput(blockHash);
+        const asyncIter = this.client.getAccountList(hash, opts).responses;
+        return mapAsyncIterable(asyncIter, translate.accountAddress);
+    }
+
+    /**
+     * Get a list of all smart contract modules. The stream will end
+     * when all modules that exist in the state at the end of the given
+     * block have been returned.
+     *
+     * @param blockHash an optional block hash to get the contract modules at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns an async iterable of contract modules.
+     */
+    getModuleList(
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<ModuleReference> {
+        const opts = { abort: abortSignal };
+        const hash = getBlockHashInput(blockHash);
+        const asyncIter = this.client.getModuleList(hash, opts).responses;
+        return mapAsyncIterable(asyncIter, translate.moduleReference);
+    }
+
+    /**
+     * Get a stream of ancestors for the provided block.
+     * Starting with the provided block itself, moving backwards until no more
+     * ancestors or the requested number of ancestors has been returned.
+     *
+     * @param maxAmountOfAncestors the maximum amount of ancestors as a bigint.
+     * @param blockHash a optional block hash to get the ancestors at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns an async iterable of ancestors as hex strings.
+     */
+    getAncestors(
+        maxAmountOfAncestors: bigint,
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<HexString> {
+        const opts = { abort: abortSignal };
+        const request: v2.AncestorsRequest = {
+            blockHash: getBlockHashInput(blockHash),
+            amount: maxAmountOfAncestors,
+        };
+        const asyncIter = this.client.getAncestors(request, opts).responses;
+        return mapAsyncIterable(asyncIter, translate.unwrapValToHex);
+    }
+
+    /**
+     * Get the exact state of a specific contract instance, streamed as a list of
+     * key-value pairs. The list is streamed in lexicographic order of keys.
+     *
+     * @param contractAddress the contract to get the state of.
+     * @param blockHash a optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns an async iterable of instance states as key-value pairs of hex strings.
+     */
+    getInstanceState(
+        contractAddress: v1.ContractAddress,
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<v1.InstanceStateKVPair> {
+        const opts = { abort: abortSignal };
+        const request: v2.InstanceInfoRequest = {
+            blockHash: getBlockHashInput(blockHash),
+            address: contractAddress,
+        };
+        const asyncIter = this.client.getInstanceState(request, opts).responses;
+        return mapAsyncIterable(asyncIter, translate.instanceStateKVPair);
+    }
+
+    /**
+     * Get the value at a specific key of a contract state. In contrast to
+     * `GetInstanceState` this is more efficient, but requires the user to know
+     * the specific key to look for.
+     *
+     * @param contractAddress the contract to get the state of.
+     * @param key the key of the desired contract state.
+     * @param blockHash a optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @returns the state of the contract at the given key as a hex string.
+     */
+    async instanceStateLookup(
+        contractAddress: v1.ContractAddress,
+        key: HexString,
+        blockHash?: HexString
+    ): Promise<HexString> {
+        const request: v2.InstanceStateLookupRequest = {
+            address: contractAddress,
+            key: Buffer.from(key, 'hex'),
+            blockHash: getBlockHashInput(blockHash),
+        };
+        const response = await this.client.instanceStateLookup(request)
+            .response;
+        return translate.unwrapValToHex(response);
+    }
 }
 
 export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {

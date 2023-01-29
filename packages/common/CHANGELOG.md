@@ -1,5 +1,14 @@
 # Changelog
 
+## 6.5.0
+
+- Added the following GRPCv2 functions:
+    - `getAccountList()`
+    - `getModuleList()`
+    - `getAncestors()`
+    - `getInstanceState()`
+    - `instanceStateLookup()`
+
 ## 6.4.0
 
 - Added `getFinalizedBlocks()` & `getBlocks()` GRPCv2 functions.

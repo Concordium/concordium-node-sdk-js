@@ -178,7 +178,7 @@ export class WalletConnectConnection implements WalletConnection {
         this.session = session;
     }
 
-    getConnector(): WalletConnector {
+    getConnector() {
         return this.connector;
     }
 
@@ -193,7 +193,7 @@ export class WalletConnectConnection implements WalletConnection {
         return fullAddress.substring(fullAddress.lastIndexOf(':') + 1);
     }
 
-    getJsonRpcClient(): JsonRpcClient {
+    getJsonRpcClient() {
         return this.rpcClient;
     }
 

@@ -3,7 +3,6 @@ import {
     AccountTransactionPayload,
     AccountTransactionSignature,
     AccountTransactionType,
-    JsonRpcClient,
     SchemaVersion,
 } from '@concordium/web-sdk';
 import { WalletConnectionDelegate, WalletConnection, WalletConnector } from './WalletConnection';
@@ -70,7 +69,7 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
         return account ? [this] : [];
     }
 
-    getConnector(): WalletConnector {
+    getConnector() {
         return this;
     }
 
@@ -82,7 +81,7 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
         return this.client.getMostRecentlySelectedAccount();
     }
 
-    getJsonRpcClient(): JsonRpcClient {
+    getJsonRpcClient() {
         return this.client.getJsonRpcClient();
     }
 

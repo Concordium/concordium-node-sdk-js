@@ -77,6 +77,9 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
         return undefined;
     }
 
+    /**
+     * @return The account that the wallet currently associates with this connection.
+     */
     async getConnectedAccount() {
         return this.client.getMostRecentlySelectedAccount();
     }

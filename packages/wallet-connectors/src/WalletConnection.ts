@@ -35,11 +35,6 @@ export interface WalletConnection {
     ping(): Promise<void>;
 
     /**
-     * @return The account that the wallet currently associates with this connection.
-     */
-    getConnectedAccount(): Promise<string | undefined>;
-
-    /**
      * Returns a JSON-RPC client that is ready to perform requests against some Concordium Node connected to network/chain
      * that the connected account lives on.
      *

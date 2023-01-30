@@ -78,9 +78,11 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
         [contractParamsResult, schemaResult, amountResult]
     );
 
+    const [isAwaitingApproval, setIsAwaitingApproval] = useState(false);
     const [submittedTxHash, setSubmittedTxHash] = useState<Result<string, string>>();
     const submit = useCallback(() => {
         if (connectedAccount) {
+            setIsAwaitingApproval(true);
             inputResult
                 .asyncAndThen(([params, schema, amount]) =>
                     ResultAsync.fromPromise(
@@ -99,7 +101,10 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
                         (e) => (e as Error).message
                     )
                 )
-                .then(setSubmittedTxHash);
+                .then(r => {
+                    setSubmittedTxHash(r);
+                    setIsAwaitingApproval(false);
+                });
         }
     }, [connection, connectedAccount, contract, selectedMethodIndex, inputResult]);
     return (
@@ -207,8 +212,9 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
                 </Form.Group>
                 <Row>
                     <Col>
-                        <Button onClick={submit} disabled={inputResult.isErr()}>
-                            Submit
+                        <Button onClick={submit} disabled={isAwaitingApproval || inputResult.isErr()}>
+                            {isAwaitingApproval && 'Waiting for approval...'}
+                            {!isAwaitingApproval && 'Submit'}
                         </Button>
                     </Col>
                 </Row>

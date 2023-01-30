@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     for consistency.
 -   `WalletConnect`: Reordered constructor parameters to accommodate changes in `@concordium/react-components`.
 -   `WalletConnector`: Made `getConnections` non-async.
+-   `WalletConnection`: Removed `getConnectedAccount` (the implementation methods stay but are no longer forced to be async).
 
 ## [0.1.0] - 2023-01-17
 

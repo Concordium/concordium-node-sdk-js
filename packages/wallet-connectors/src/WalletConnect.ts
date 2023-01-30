@@ -187,7 +187,10 @@ export class WalletConnectConnection implements WalletConnection {
         await this.connector.client.ping({ topic });
     }
 
-    async getConnectedAccount() {
+    /**
+     * @return The account that the wallet currently associates with this connection.
+     */
+    getConnectedAccount() {
         // We're only expecting a single account to be connected.
         const fullAddress = this.session.namespaces[WALLET_CONNECT_SESSION_NAMESPACE].accounts[0];
         return fullAddress.substring(fullAddress.lastIndexOf(':') + 1);
@@ -308,11 +311,7 @@ export class WalletConnectConnector implements WalletConnector {
             const { namespaces } = params;
             // Overwrite session.
             connection.session = { ...connection.session, namespaces };
-            // TODO Only fire event if the account actually changed.
-            connection
-                .getConnectedAccount()
-                .then((a) => delegate.onAccountChanged(connection, a))
-                .catch(console.error);
+            delegate.onAccountChanged(connection, connection.getConnectedAccount());
         });
         client.on('session_delete', ({ topic }) => {
             // Session was deleted: Reset the dApp state, clean up user session, etc.
@@ -354,7 +353,7 @@ export class WalletConnectConnector implements WalletConnector {
         const rpcClient = new JsonRpcClient(new HttpProvider(this.network.jsonRpcUrl));
         const connection = new WalletConnectConnection(this, rpcClient, chainId, session);
         this.connections.set(session.topic, connection);
-        this.delegate.onConnected(connection);
+        this.delegate.onConnected(connection, connection.getConnectedAccount());
         return connection;
     }
 

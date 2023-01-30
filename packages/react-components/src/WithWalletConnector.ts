@@ -290,33 +290,7 @@ export class WithWalletConnector extends Component<Props, State> implements Wall
         console.debug("WithWalletConnector: calling 'setActiveConnection'", { connection, state: this.state });
         // NOTE As described in the docstring of `State.activeConnection`,
         //      setting the active connection doesn't imply that the active connector should be set as well.
-        this.setState((state) => ({
-            ...state,
-            activeConnection: connection,
-            connectedAccounts: updateMapEntry(state.connectedAccounts, state.activeConnection, undefined),
-        }));
-        if (connection) {
-            connection.getConnectedAccount().then((connectedAccount) => {
-                // This might be redundant for existing connections as the delegate already listens for account change events.
-                // But for new connections we might get the account from the connector without having received any events.
-                console.log('WithWalletConnector: updating active connection and connected account state', {
-                    connection,
-                    connectedAccount,
-                });
-
-                // Don't set connected accounts if the active connection changed while loading the accounts.
-                this.setState((state) => {
-                    const { activeConnection, connectedAccounts } = state;
-                    if (activeConnection !== connection) {
-                        return state;
-                    }
-                    return {
-                        ...state,
-                        connectedAccounts: updateMapEntry(connectedAccounts, connection, connectedAccount),
-                    };
-                });
-            });
-        }
+        this.setState({ activeConnection: connection });
     };
 
     onAccountChanged = (connection: WalletConnection, address: string | undefined) => {
@@ -335,7 +309,10 @@ export class WithWalletConnector extends Component<Props, State> implements Wall
         }));
     };
 
-    onConnected = () => undefined;
+    onConnected = (connection: WalletConnection, address: string | undefined) => {
+        console.debug("WithWalletConnector: calling 'onConnected'", { connection, state: this.state });
+        this.onAccountChanged(connection, address);
+    };
 
     onDisconnected = (connection: WalletConnection) => {
         console.debug("WithWalletConnector: calling 'onDisconnect'", { connection, state: this.state });

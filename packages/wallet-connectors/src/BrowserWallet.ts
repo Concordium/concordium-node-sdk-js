@@ -61,7 +61,7 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
             throw new Error('Browser Wallet connection failed');
         }
         this.isConnected = true;
-        this.delegate.onConnected(this);
+        this.delegate.onConnected(this, account);
         return this;
     }
 
@@ -77,6 +77,9 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
         return undefined;
     }
 
+    /**
+     * @return The account that the wallet currently associates with this connection.
+     */
     async getConnectedAccount() {
         return this.client.getMostRecentlySelectedAccount();
     }

@@ -1688,6 +1688,12 @@ export function arInfo(ar: v2.ArInfo): v1.ArInfo {
     };
 }
 
+export function BlocksAtHeightResponse(
+    blocks: v2.BlocksAtHeightResponse
+): v1.HexString[] {
+    return blocks.blocks.map(unwrapValToHex);
+}
+
 // ---------------------------- //
 // --- V1 => V2 translation --- //
 // ---------------------------- //
@@ -1703,4 +1709,28 @@ export function accountTransactionSignatureToV2(
     }
 
     return { signatures: mapRecord(signature, trCredSig) };
+}
+
+export function BlocksAtHeightRequestToV2(
+    request: v1.BlocksAtHeightRequest
+): v2.BlocksAtHeightRequest {
+    if (typeof request === 'bigint') {
+        return {
+            blocksAtHeight: {
+                oneofKind: 'absolute',
+                absolute: { height: { value: request } },
+            },
+        };
+    } else {
+        return {
+            blocksAtHeight: {
+                oneofKind: 'relative',
+                relative: {
+                    genesisIndex: { value: request.genesisIndex },
+                    height: { value: request.height },
+                    restrict: request.restrict,
+                },
+            },
+        };
+    }
 }

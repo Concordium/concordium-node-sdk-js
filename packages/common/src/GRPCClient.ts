@@ -641,6 +641,21 @@ export default class ConcordiumNodeClient {
         const ars = this.client.getAnonymityRevokers(block, opts).responses;
         return mapAsyncIterable(ars, translate.arInfo);
     }
+
+    /**
+     * Get a list of live blocks at a given height.
+     *
+     * @param blockHeightRequest Either an absolute block height request or a relative block height request
+     * @returns A lsit of block hashes as hex strings
+     */
+    async getBlocksAtHeight(
+        blockHeightRequest: v1.BlocksAtHeightRequest
+    ): Promise<HexString[]> {
+        const requestV2 =
+            translate.BlocksAtHeightRequestToV2(blockHeightRequest);
+        const blocks = await this.client.getBlocksAtHeight(requestV2).response;
+        return translate.BlocksAtHeightResponse(blocks);
+    }
 }
 
 export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {

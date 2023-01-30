@@ -548,6 +548,17 @@ export interface CommonBlockInfo {
 export type ArrivedBlockInfo = CommonBlockInfo;
 export type FinalizedBlockInfo = CommonBlockInfo;
 
+export type AbsoluteBlocksAtHeightRequest = bigint;
+export interface RelativeBlocksAtHeightRequest {
+    genesisIndex: number;
+    height: bigint;
+    restrict: boolean;
+}
+
+export type BlocksAtHeightRequest =
+    | AbsoluteBlocksAtHeightRequest
+    | RelativeBlocksAtHeightRequest;
+
 export interface ConsensusStatus {
     bestBlock: string;
     genesisBlock: string;

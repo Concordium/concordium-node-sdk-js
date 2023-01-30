@@ -418,3 +418,27 @@ for await (const ar of ars) {
 }
 ...
 ```
+
+## getBlocksAtHeight
+Get a list of live blocks at a given height.
+
+If a blockhash is not supplied it will pick the latest finalized block. An optional abortsignal can also be provided that closes the stream.
+
+It can accept an absolute height:
+```js
+const blocks = await client.getBlocksAtHeight(100n);
+...
+```
+Or it can accept a relative height:
+```js
+const request: BlocksAtHeightRequest = {
+    // Genesis index to start from.
+    genesisIndex: 1;
+    // Height starting from the genesis block at the genesis index.
+    height: 100n;
+    // Whether to return results only from the specified genesis index (`true`),
+    // or allow results from more recent genesis indices as well (`false`).
+    restrict: true;
+}
+const blocks = await client.getBlocksAtHeight(request);
+```

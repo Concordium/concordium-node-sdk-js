@@ -518,14 +518,14 @@ test.each([clientV2, clientWeb])('createAccount', async (client) => {
 });
 
 test.each([clientV2, clientWeb])('getAccountList', async (client) => {
-    const blocks = await clientV1.getBlocksAtHeight(10n);
+    const blocks = await client.getBlocksAtHeight(10n);
     const accountIter = client.getAccountList(blocks[0]);
     const accountList = await asyncIterableToList(accountIter);
     expect(accountList).toEqual(expected.accountList);
 });
 
 test.each([clientV2, clientWeb])('getModuleList', async (client) => {
-    const blocks = await clientV1.getBlocksAtHeight(5000n);
+    const blocks = await client.getBlocksAtHeight(5000n);
     const moduleIter = client.getModuleList(blocks[0]);
     const moduleList = await asyncIterableToList(moduleIter);
     expect(moduleList).toEqual(expected.moduleList);
@@ -565,7 +565,7 @@ test.each([clientV2, clientWeb])('instanceStateLookup', async (client) => {
 });
 
 test.each([clientV2, clientWeb])('getIdentityProviders', async (client) => {
-    const earlyBlock = await clientV1.getBlocksAtHeight(1n);
+    const earlyBlock = await client.getBlocksAtHeight(1n);
     const ips = client.getIdentityProviders(earlyBlock[0]);
     const ipList = await asyncIterableToList(ips);
     ipList.forEach((ip) => (ip.ipVerifyKey = ''));
@@ -574,12 +574,34 @@ test.each([clientV2, clientWeb])('getIdentityProviders', async (client) => {
 });
 
 test.each([clientV2, clientWeb])('getAnonymityRevokers', async (client) => {
-    const earlyBlock = await clientV1.getBlocksAtHeight(1n);
+    const earlyBlock = await client.getBlocksAtHeight(1n);
     const ars = client.getAnonymityRevokers(earlyBlock[0]);
     const arList = await asyncIterableToList(ars);
 
     expect(arList).toEqual(expected.arList);
 });
+
+test.each([clientV2, clientWeb])('getBlocksAtHeight', async (client) => {
+    const blocksV1 = await clientV1.getBlocksAtHeight(1n);
+    const blocksV2 = await client.getBlocksAtHeight(1n);
+
+    expect(blocksV1[0]).toEqual(blocksV2[0]);
+});
+
+test.each([clientV2, clientWeb])(
+    'getBlocksAtHeight different request',
+    async (client) => {
+        const request: v1.BlocksAtHeightRequest = {
+            genesisIndex: 1,
+            height: 100n,
+            restrict: true,
+        };
+        const expectedBlock =
+            '956c3bc5c9d10449e13686a4cc69e8bc7dee450608866242075a6ce37331187c';
+        const blocks = await client.getBlocksAtHeight(request);
+        expect(blocks[0]).toEqual(expectedBlock);
+    }
+);
 
 // For tests that take a long time to run, is skipped by default
 describe.skip('Long run-time test suite', () => {

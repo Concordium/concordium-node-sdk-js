@@ -1671,6 +1671,15 @@ export function instanceStateKVPair(
     };
 }
 
+export function ipInfo(ip: v2.IpInfo): v1.IpInfo {
+    return {
+        ipIdentity: unwrap(ip.identity?.value),
+        ipDescription: unwrap(ip.description),
+        ipVerifyKey: unwrapValToHex(ip.verifyKey),
+        ipCdiVerifyKey: unwrapValToHex(ip.cdiVerifyKey),
+    };
+}
+
 // ---------------------------- //
 // --- V1 => V2 translation --- //
 // ---------------------------- //

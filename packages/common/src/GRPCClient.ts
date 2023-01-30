@@ -603,6 +603,24 @@ export default class ConcordiumNodeClient {
             .response;
         return translate.unwrapValToHex(response);
     }
+
+    /**
+     * Get the identity providers registered as of the end of a given block.
+     * The stream will end when all the identity providers have been returned
+     *
+     * @param blockHash a optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns an async iterable of identity provider info objects.
+     */
+    getIdentityProviders(
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<v1.IpInfo> {
+        const opts = { abort: abortSignal };
+        const block = getBlockHashInput(blockHash);
+        const ips = this.client.getIdentityProviders(block, opts).responses;
+        return mapAsyncIterable(ips, translate.ipInfo);
+    }
 }
 
 export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {

@@ -564,6 +564,15 @@ test.each([clientV2, clientWeb])('instanceStateLookup', async (client) => {
     expect(value).toEqual(expectedValue);
 });
 
+test.each([clientV2, clientWeb])('getIdentityProviders', async (client) => {
+    const earlyBlock = await clientV1.getBlocksAtHeight(1n);
+    const ips = client.getIdentityProviders(earlyBlock[0]);
+
+    const ipList = await asyncIterableToList(ips);
+    ipList.forEach((ip) => (ip.ipVerifyKey = ''));
+    expect(ipList).toEqual(expected.ipList);
+});
+
 // For tests that take a long time to run, is skipped by default
 describe.skip('Long run-time test suite', () => {
     const longTestTime = 45000;

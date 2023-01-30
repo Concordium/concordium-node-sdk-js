@@ -8,3 +8,7 @@ Blockhash inputs are now optional, and if given must be given as a hex encoded s
 The `getTransactionStatus` has been replaced with the `getBlockItemStatus`.
 
 The `GetBlockItemStatus` endpoints has the same information, but has a simpler structure, with better typing.
+
+## getIdentityProviders
+
+Returns a stream of identity providers instead of a list.

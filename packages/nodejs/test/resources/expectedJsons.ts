@@ -263,3 +263,42 @@ export const instanceStateList = [
         value: '',
     },
 ];
+
+export const ipList = [
+    [
+        {
+            ipIdentity: 0,
+            ipDescription: {
+                name: 'Concordium testnet IP',
+                url: '',
+                description: 'Concordium testnet identity provider',
+            },
+            ipVerifyKey: '',
+            ipCdiVerifyKey:
+                '2e1cff3988174c379432c1fad7ccfc385c897c4477c06617262cec7193226eca',
+        },
+        {
+            ipIdentity: 1,
+            ipDescription: {
+                name: 'Notabene (Staging)',
+                url: 'https://notabene.studio',
+                description: 'Notabene Identity Issuer (Staging Service)',
+            },
+            ipVerifyKey: '',
+            ipCdiVerifyKey:
+                '4810d66439a25d9b345cf5c7ac11f9e512548c278542d9b24dc73541626d6197',
+        },
+        {
+            ipIdentity: 3,
+            ipDescription: {
+                name: 'Digital Trust Solutions TestNet',
+                url: 'https://www.digitaltrustsolutions.nl',
+                description:
+                    'Identity verified by Digital Trust Solutions on behalf of Concordium',
+            },
+            ipVerifyKey: '',
+            ipCdiVerifyKey:
+                '534858c8990f225b34be324c74c03ce8745080d5d5ea4fde2468157b4892b690',
+        },
+    ],
+];

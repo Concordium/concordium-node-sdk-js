@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AccountAddress, CcdAmount, JsonRpcClient } from '@concordium/web-sdk';
+import { errorString } from './error';
 
 /**
  * Data and state of a smart contract.
@@ -116,7 +117,7 @@ export function useContractSelector(rpc: JsonRpcClient | undefined, input: strin
             loadContract(rpc, input)
                 .then(setSelected)
                 .catch((err) => {
-                    setError((err as Error).message);
+                    setError(errorString(err));
                     setSelected(undefined); // prevents race condition against an ongoing successful query
                 })
                 .finally(() => setIsLoading(false));

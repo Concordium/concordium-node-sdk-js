@@ -362,7 +362,7 @@ export class WalletConnectConnector implements WalletConnector {
         this.delegate.onDisconnected(connection);
     }
 
-    async getConnections() {
+    getConnections() {
         return Array.from(this.connections.values());
     }
 

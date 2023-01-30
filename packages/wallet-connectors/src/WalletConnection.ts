@@ -208,7 +208,7 @@ export interface WalletConnector {
      * Get a list of all connections initiated by this connector that have not been disconnected.
      * @return A promise resolving to all the connector's connections.
      */
-    getConnections(): Promise<WalletConnection[]>;
+    getConnections(): WalletConnection[];
 
     /**
      * Ensure that all connections initiated by this connector are disconnected

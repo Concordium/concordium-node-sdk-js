@@ -6,6 +6,7 @@ import { Network, WalletConnection } from '@concordium/react-components';
 import { AccountAddress, AccountTransactionType, CcdAmount } from '@concordium/web-sdk';
 import { err, ok, Result, ResultAsync } from 'neverthrow';
 import { useContractSchemaRpc } from './useContractSchemaRpc';
+import { errorString } from './util';
 
 interface ContractParamEntry {
     name: string;
@@ -98,7 +99,7 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
                             params,
                             schema.schema
                         ),
-                        (e) => (e as Error).message
+                        (e) => errorString(e)
                     )
                 )
                 .then(r => {

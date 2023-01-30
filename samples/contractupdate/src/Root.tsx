@@ -8,6 +8,7 @@ import { ConnectedAccount } from './ConnectedAccount';
 import { App } from './App';
 import { NetworkSelector } from './NetworkSelector';
 import { BROWSER_WALLET, MAINNET, TESTNET, WALLET_CONNECT } from './config';
+import { errorString } from './util';
 
 export default function Root() {
     const [network, setNetwork] = useState(TESTNET);
@@ -38,7 +39,7 @@ function Main(props: WalletConnectionProps) {
                 })
                 .catch((err) => {
                     setRpcGenesisHash(undefined);
-                    setRpcError((err as Error).message);
+                    setRpcError(errorString(err));
                 });
         }
     }, [activeConnection, activeConnectionGenesisHash, network]);

@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import { Network, WalletConnection, WalletConnectionDelegate, WalletConnector } from '@concordium/wallet-connectors';
+import { errorString } from './error';
 
 /**
  * Activation/deactivation controller of a given connector type.
@@ -260,7 +261,7 @@ export class WithWalletConnector extends Component<Props, State> implements Wall
                     if (state.activeConnectorType !== type) {
                         return state;
                     }
-                    return { ...state, activeConnectorError: (err as Error).message };
+                    return { ...state, activeConnectorError: errorString(err) };
                 })
             );
         }
@@ -276,7 +277,7 @@ export class WithWalletConnector extends Component<Props, State> implements Wall
                         if (state.activeConnectorType !== type) {
                             return state;
                         }
-                        return { ...state, activeConnectorError: (err as Error).message };
+                        return { ...state, activeConnectorError: errorString(err) };
                     })
                 );
         }
@@ -371,7 +372,7 @@ export class WithWalletConnector extends Component<Props, State> implements Wall
                         if (state.activeConnector !== activeConnector) {
                             return state;
                         }
-                        return { ...state, activeConnectorError: (err as Error).message };
+                        return { ...state, activeConnectorError: errorString(err) };
                     });
                 })
                 .finally(() => {

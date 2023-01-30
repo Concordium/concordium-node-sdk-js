@@ -391,7 +391,7 @@ const state: HexString = await clientV2.instanceStateLookup(blockHash);
 ...
 ```
 
-### getInstanceState
+### getIdentityProviders
 Get the identity providers registered as of the end of a given block as a stream
 
 If a blockhash is not supplied it will pick the latest finalized block. An optional abortsignal can also be provided that closes the stream.
@@ -400,8 +400,21 @@ If a blockhash is not supplied it will pick the latest finalized block. An optio
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
 const ips = await client.getIdentityProviders(blockHash);
 
-// Prints instance state key-value pairs
 for await (const ip of ips) {
     console.log(ip.ipDescription);
 }
+```
+
+## getAnonymityRevokers
+Get the anonymity revokers registered as of the end of a given block as a stream.
+
+If a blockhash is not supplied it will pick the latest finalized block. An optional abortsignal can also be provided that closes the stream.
+```js
+const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
+const ars = await client.getAnonymityRevokers(blockHash);
+
+for await (const ar of ars) {
+    console.log(ar.ipDescription);
+}
+...
 ```

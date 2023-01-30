@@ -567,10 +567,18 @@ test.each([clientV2, clientWeb])('instanceStateLookup', async (client) => {
 test.each([clientV2, clientWeb])('getIdentityProviders', async (client) => {
     const earlyBlock = await clientV1.getBlocksAtHeight(1n);
     const ips = client.getIdentityProviders(earlyBlock[0]);
-
     const ipList = await asyncIterableToList(ips);
     ipList.forEach((ip) => (ip.ipVerifyKey = ''));
+
     expect(ipList).toEqual(expected.ipList);
+});
+
+test.each([clientV2, clientWeb])('getAnonymityRevokers', async (client) => {
+    const earlyBlock = await clientV1.getBlocksAtHeight(1n);
+    const ars = client.getAnonymityRevokers(earlyBlock[0]);
+    const arList = await asyncIterableToList(ars);
+
+    expect(arList).toEqual(expected.arList);
 });
 
 // For tests that take a long time to run, is skipped by default

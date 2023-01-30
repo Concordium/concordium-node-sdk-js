@@ -606,7 +606,8 @@ export default class ConcordiumNodeClient {
 
     /**
      * Get the identity providers registered as of the end of a given block.
-     * The stream will end when all the identity providers have been returned
+     * The stream will end when all the identity providers have been returned,
+     * or an abort signal is called.
      *
      * @param blockHash a optional block hash to get the instance states at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -620,6 +621,25 @@ export default class ConcordiumNodeClient {
         const block = getBlockHashInput(blockHash);
         const ips = this.client.getIdentityProviders(block, opts).responses;
         return mapAsyncIterable(ips, translate.ipInfo);
+    }
+
+    /**
+     * Get the anonymity revokers registered as of the end of a given block.
+     * The stream will end when all the anonymity revokers have been returned,
+     * or an abort signal is called.
+     *
+     * @param blockHash a optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns an async iterable of identity provider info objects.
+     */
+    getAnonymityRevokers(
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<v1.ArInfo> {
+        const opts = { abort: abortSignal };
+        const block = getBlockHashInput(blockHash);
+        const ars = this.client.getAnonymityRevokers(block, opts).responses;
+        return mapAsyncIterable(ars, translate.arInfo);
     }
 }
 

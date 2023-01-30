@@ -1680,6 +1680,14 @@ export function ipInfo(ip: v2.IpInfo): v1.IpInfo {
     };
 }
 
+export function arInfo(ar: v2.ArInfo): v1.ArInfo {
+    return {
+        arIdentity: unwrap(ar.identity?.value),
+        arDescription: unwrap(ar.description),
+        arPublicKey: unwrapValToHex(ar.publicKey),
+    };
+}
+
 // ---------------------------- //
 // --- V1 => V2 translation --- //
 // ---------------------------- //

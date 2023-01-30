@@ -12,3 +12,7 @@ The `GetBlockItemStatus` endpoints has the same information, but has a simpler s
 ## getIdentityProviders
 
 Returns a stream of identity providers instead of a list.
+
+## getAnonymityRevokers
+
+Returns a stream of anonymity revokers instead of a list.

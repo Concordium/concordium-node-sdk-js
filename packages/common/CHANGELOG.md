@@ -11,6 +11,7 @@
     - `getInstanceState()`
     - `instanceStateLookup()`
     - `getIdentityProviders()`
+    - `getAnonymityRevokers()`
 
 ## 6.4.0
 

@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Added a `createConcordiumClient` function to create the GRPCv2 client.
+
+### Changed
+
+- Bumped @concordium/common-sdk to 6.3.0. (Adds the initial version of GRPCv2 client)
+
 ## 3.2.0 2022-1-4
 
 ### Changed

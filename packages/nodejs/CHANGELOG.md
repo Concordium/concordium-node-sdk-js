@@ -1,32 +1,18 @@
 # Changelog
 
-## 6.3.0
+## Unreleased
 
-### Added Changes
-- Added more GRPCv2 functions:
-    - `getNextAccountSequenceNumber()`
-    - `getAccountInfo()`
-    - `getBlockItemStatus()`
-    - `getConsensusInfo()`
-    - `getModuleSource()`
-    - `getInstanceInfo()`
-    - `invokeInstance()`
-    - `getAccountTransactionSignHash()`
-    - `sendAccountTransaction()`
-    - `sendCredentialDeploymentTransaction()`
+### Added
+
+- Added a `createConcordiumClient` function to create the GRPC v2 client.
+
+### Changed
+
+- Bumped @concordium/common-sdk to 6.1.0. (adds support for id statements and proofs)
 
 ### Fixed
 
-- Amount fields in events in invokeContract in GRPC v1 was string values instead of bigint as the type indicated.
-
-## 6.2.0
-
-### Added Changes
-
-- Began upgrade to GrpcV2 starting with the following functions:
-    - `getAccountInfo()`
-    - `getNextAccountSequenceNumber()`
-    - `getCryptographicParameters()`
+- The value of amount fields in the GRPCv1 client's invokeContract's events has been changed to bigint (instead of string) as the type specifies.
 
 ## 6.1.0 2022-11-30
 

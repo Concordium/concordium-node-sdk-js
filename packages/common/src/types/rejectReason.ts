@@ -160,15 +160,39 @@ export interface SimpleRejectReason {
 
 export interface InvalidReceiveMethod {
     tag: RejectReasonTag.InvalidReceiveMethod;
+    contents: {
+        moduleRef: HexString;
+        receiveName: string;
+    };
+}
+
+export interface InvalidReceiveMethodV1 {
+    tag: RejectReasonTag.InvalidReceiveMethod;
     contents: [HexString, string]; // [moduleRef, receiveName]
 }
 
 export interface InvalidInitMethod {
     tag: RejectReasonTag.InvalidInitMethod;
+    contents: {
+        moduleRef: HexString;
+        initName: string; // [moduleRef, initName]
+    };
+}
+
+export interface InvalidInitMethodV1 {
+    tag: RejectReasonTag.InvalidInitMethod;
     contents: [HexString, string]; // [moduleRef, initName]
 }
 
 export interface AmountTooLarge {
+    tag: RejectReasonTag.AmountTooLarge;
+    contents: {
+        address: Address;
+        amount: DigitString;
+    };
+}
+
+export interface AmountTooLargeV1 {
     tag: RejectReasonTag.AmountTooLarge;
     contents: [Address, DigitString]; // [address, amount]
 }
@@ -187,10 +211,8 @@ export interface CredIdsRejectReason {
     contents: string[];
 }
 
-export type RejectReason =
+type RejectReasonCommon =
     | SimpleRejectReason
-    | RejectedReceive
-    | RejectedInit
     | StringRejectReason
     | NumberRejectReason
     | InvalidReceiveMethod
@@ -198,3 +220,15 @@ export type RejectReason =
     | AmountTooLarge
     | InvalidContractAddress
     | CredIdsRejectReason;
+
+export type RejectReason =
+    | RejectReasonCommon
+    | RejectedReceive
+    | RejectedInit
+    | AmountTooLarge;
+
+export type RejectReasonV1 =
+    | RejectReasonCommon
+    | RejectedReceiveV1
+    | RejectedInitV1
+    | AmountTooLargeV1;

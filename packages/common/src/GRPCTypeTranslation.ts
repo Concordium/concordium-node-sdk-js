@@ -771,18 +771,24 @@ function trRejectReason(
         case 'invalidInitMethod':
             return {
                 tag: Tag.InvalidInitMethod,
-                contents: [
-                    unwrapValToHex(reason.invalidInitMethod.moduleRef),
-                    unwrap(reason.invalidInitMethod.initName?.value),
-                ],
+                contents: {
+                    moduleRef: unwrapValToHex(
+                        reason.invalidInitMethod.moduleRef
+                    ),
+                    initName: unwrap(reason.invalidInitMethod.initName?.value),
+                },
             };
         case 'invalidReceiveMethod':
             return {
                 tag: Tag.InvalidReceiveMethod,
-                contents: [
-                    unwrapValToHex(reason.invalidReceiveMethod.moduleRef),
-                    unwrap(reason.invalidReceiveMethod.receiveName?.value),
-                ],
+                contents: {
+                    moduleRef: unwrapValToHex(
+                        reason.invalidReceiveMethod.moduleRef
+                    ),
+                    receiveName: unwrap(
+                        reason.invalidReceiveMethod.receiveName?.value
+                    ),
+                },
             };
         case 'invalidModuleReference':
             return {
@@ -797,10 +803,10 @@ function trRejectReason(
         case 'amountTooLarge':
             return {
                 tag: Tag.AmountTooLarge,
-                contents: [
-                    trAddress(reason.amountTooLarge.address),
-                    unwrap(String(reason.amountTooLarge.amount?.value)),
-                ],
+                contents: {
+                    address: trAddress(reason.amountTooLarge.address),
+                    amount: unwrap(String(reason.amountTooLarge.amount?.value)),
+                },
             };
         case 'rejectedInit':
             return {

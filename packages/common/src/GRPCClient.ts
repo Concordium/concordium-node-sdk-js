@@ -323,14 +323,15 @@ export default class ConcordiumNodeClient {
     }
 
     /**
-     * Gets a stream of blocks.
+     * Gets a stream of blocks. To get a stream of only finalized blocks
+     * use `getFinalizedBlocks()` instead.
      *
      * @param abortSignal an AbortSignal to close the stream. Note that the
      * stream does not close itself as it is infinite, so usually you'd want
      * to provide this parameter.
-     * @returns An AsyncIterator stream of finalized blocks.
+     * @returns An AsyncIterator stream of blocks.
      */
-    getBlocks(abortSignal?: AbortSignal): AsyncIterable<v1.FinalizedBlockInfo> {
+    getBlocks(abortSignal?: AbortSignal): AsyncIterable<v1.ArrivedBlockInfo> {
         const opts = { abort: abortSignal };
         const blocks = this.client.getBlocks(v2.Empty, opts).responses;
         return mapAsyncIterable(blocks, translate.commonBlockInfo);
@@ -340,27 +341,41 @@ export default class ConcordiumNodeClient {
      * Waits until given transaction is finalized.
      *
      * @param transactionHash a transaction hash as a bytearray.
+     * @param timeoutTime the number of milliseconds until the function throws error.
      * @returns A blockhash as a byte array.
      */
     async waitForTransactionFinalization(
-        transactionHash: HexString
+        transactionHash: HexString,
+        timeoutTime?: number
     ): Promise<HexString> {
+        if (timeoutTime) {
+            setTimeout(() => {
+                throw Error('Function timed out.');
+            }, timeoutTime);
+        }
+
         const abortController = new AbortController();
         const blockStream = this.getFinalizedBlocks(abortController.signal);
 
+        const response = await this.getBlockItemStatus(transactionHash);
+        if (response.status === 'finalized') {
+            // Simply doing `abortController.abort()` causes an error.
+            // See: https://github.com/grpc/grpc-node/issues/1652
+            setImmediate(() => abortController.abort());
+            return response.outcome.blockHash;
+        }
+
         for await (const block of blockStream) {
             const response = await this.getBlockItemStatus(transactionHash);
-
             if (response.status === 'finalized') {
                 if (response.outcome.blockHash === block.hash) {
-                    // Simply doing `abortController.abort()` causes an error.
-                    // See: https://github.com/grpc/grpc-node/issues/1652
                     setImmediate(() => abortController.abort());
                     return block.hash;
                 }
             }
         }
-        throw Error('Unexpected end of stream');
+
+        throw Error('Unexpected end of stream.');
     }
 }
 

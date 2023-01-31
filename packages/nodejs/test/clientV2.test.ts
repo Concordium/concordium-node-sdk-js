@@ -1,7 +1,5 @@
-import { credentials, Metadata } from '@grpc/grpc-js/';
 import * as v1 from '@concordium/common-sdk';
 import * as v2 from '../../common/grpc/v2/concordium/types';
-import createConcordiumClientV2 from '../src/clientV2';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
 import ConcordiumNodeClientV2, {
     getAccountIdentifierInput,
@@ -24,41 +22,24 @@ import {
 } from './testHelpers';
 import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons';
+import { getNodeClientV2 } from '../src/util';
 import { serializeAccountTransaction } from '@concordium/common-sdk/lib/serialization';
 import { unwrap } from '@concordium/common-sdk/lib/util';
-import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
 
 import { TextEncoder, TextDecoder } from 'util';
 import 'isomorphic-fetch';
+import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 global.TextEncoder = TextEncoder as any;
 global.TextDecoder = TextDecoder as any;
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-/**
- * Creates a client to communicate with a local concordium-node
- * used for automatic tests.
- */
-function getNodeClientV2(
-    address = 'node.testnet.concordium.com',
-    port = 20000
-): ConcordiumNodeClientV2 {
-    const metadata = new Metadata();
-    return createConcordiumClientV2(
-        address,
-        port,
-        credentials.createInsecure(),
-        metadata,
-        { timeout: 15000 }
-    );
-}
-
 // TODO find nice way to move this to web/common
-function getNodeClientWeb(
+export function getNodeClientWeb(
     address = 'http://node.testnet.concordium.com',
     port = 20000
-) {
+): ConcordiumNodeClientV2 {
     const transport = new GrpcWebFetchTransport({
         baseUrl: `${address}:${port}`,
         timeout: 15000,

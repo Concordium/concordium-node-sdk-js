@@ -215,20 +215,19 @@ type RejectReasonCommon =
     | SimpleRejectReason
     | StringRejectReason
     | NumberRejectReason
-    | InvalidReceiveMethod
-    | InvalidInitMethod
-    | AmountTooLarge
+    | RejectedInit
+    | RejectedReceive
     | InvalidContractAddress
     | CredIdsRejectReason;
 
 export type RejectReason =
     | RejectReasonCommon
-    | RejectedReceive
-    | RejectedInit
+    | InvalidReceiveMethod
+    | InvalidInitMethod
     | AmountTooLarge;
 
 export type RejectReasonV1 =
     | RejectReasonCommon
-    | RejectedReceiveV1
-    | RejectedInitV1
+    | InvalidReceiveMethodV1
+    | InvalidInitMethodV1
     | AmountTooLargeV1;

@@ -668,6 +668,22 @@ export default class ConcordiumNodeClient {
         const blockInfo = await this.client.getBlockInfo(block).response;
         return translate.blockInfo(blockInfo);
     }
+
+    /**
+     * Get all the bakers at the end of the given block.
+     *
+     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @returns an async iterable of BakerIds.
+     */
+    getBakerList(
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<v1.BakerId> {
+        const opts = { abort: abortSignal };
+        const block = getBlockHashInput(blockHash);
+        const bakers = this.client.getBakerList(block, opts).responses;
+        return mapAsyncIterable(bakers, (x) => x.value);
+    }
 }
 
 export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {

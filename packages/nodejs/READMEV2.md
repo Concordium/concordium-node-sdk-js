@@ -451,3 +451,15 @@ const blockInfo: BlockInfo = await client.getBlockInfo(blockHash);
 const transactionsCount = blockInfo.transactionCount;
 ...
 ```
+
+## getBakerList
+Retrieves a stream of ID's for registered bakers on the network at a specific block.
+```js
+const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
+const bakerIds = await client.getBakerList(blockHash);
+
+for await (const id of bakerIds) {
+    console.log(id);
+}
+...
+```

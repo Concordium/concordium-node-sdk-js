@@ -603,14 +603,20 @@ test.each([clientV2, clientWeb])(
     }
 );
 
-test.each([clientV2, clientWeb])(
-    'getBlocksAtHeight different request',
-    async (client) => {
-        const blockInfoV1 = await clientV1.getBlockInfo(testBlockHash);
-        const blockInfoV2 = await client.getBlockInfo(testBlockHash);
-        expect(blockInfoV2).toEqual(blockInfoV1);
-    }
-);
+test.each([clientV2, clientWeb])('getBlockInfo', async (client) => {
+    const blockInfoV1 = await clientV1.getBlockInfo(testBlockHash);
+    const blockInfoV2 = await client.getBlockInfo(testBlockHash);
+
+    expect(blockInfoV2).toEqual(blockInfoV1);
+});
+
+test.each([clientV2, clientWeb])('getBakerList', async (client) => {
+    const bakerAsyncIterable = client.getBakerList(testBlockHash);
+    const bakersV2 = await asyncIterableToList(bakerAsyncIterable);
+    const bakersV1 = await clientV1.getBakerList(testBlockHash);
+
+    expect(bakersV2).toEqual(bakersV1);
+});
 
 // For tests that take a long time to run, is skipped by default
 describe.skip('Long run-time test suite', () => {

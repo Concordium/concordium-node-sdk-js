@@ -13,6 +13,7 @@
     - `getIdentityProviders()`
     - `getAnonymityRevokers()`
     - `getBlockInfo()`
+    - `getBakerList()`
 
 ## 6.4.0
 

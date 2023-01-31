@@ -535,7 +535,7 @@ test.each([clientV2, clientWeb])('createAccount', async (client) => {
     ).rejects.toThrow('expired');
 });
 
-// For tests that take a long time to run, is skipped by default
+// Tests, which take a long time to run, are skipped by default
 describe.skip('Long run-time test suite', () => {
     const longTestTime = 45000;
 

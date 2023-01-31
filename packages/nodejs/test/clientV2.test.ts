@@ -293,9 +293,7 @@ test.each([clientV2, clientWeb])(
     'getPassiveDelegationInfo corresponds to getPoolStatus with no bakerId',
     async (client) => {
         const oldStatus = await clientV1.getPoolStatus(testBlockHash);
-        const newStatus = await client.getPassiveDelegationInfo(
-            testBlockHash
-        );
+        const newStatus = await client.getPassiveDelegationInfo(testBlockHash);
 
         expect(oldStatus).toEqual(newStatus);
     }
@@ -310,10 +308,7 @@ test.each([clientV2, clientWeb])(
             changeHash,
             changedAccount
         );
-        const newStatus = await client.getPoolInfo(
-            changedAccount,
-            changeHash
-        );
+        const newStatus = await client.getPoolInfo(changedAccount, changeHash);
 
         expect(oldStatus).toEqual(newStatus);
     }

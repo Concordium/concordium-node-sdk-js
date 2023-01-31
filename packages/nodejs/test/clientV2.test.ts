@@ -28,6 +28,7 @@ import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
 
 import { TextEncoder, TextDecoder } from 'util';
 import 'isomorphic-fetch';
+import { serializeAccountTransaction } from '@concordium/common-sdk/lib/serialization';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 global.TextEncoder = TextEncoder as any;
@@ -281,10 +282,8 @@ test.each([clientV2, clientWeb])(
 test.each([clientV2, clientWeb])(
     'getPoolInfo corresponds to getPoolStatus with a bakerId',
     async (client) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const oldStatus: any = await clientV1.getPoolStatus(testBlockHash, 1n);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const newStatus: any = await client.getPoolInfo(1n, testBlockHash);
+        const oldStatus = await clientV1.getPoolStatus(testBlockHash, 1n);
+        const newStatus = await client.getPoolInfo(1n, testBlockHash);
 
         expect(oldStatus).toEqual(newStatus);
     }
@@ -293,10 +292,8 @@ test.each([clientV2, clientWeb])(
 test.each([clientV2, clientWeb])(
     'getPassiveDelegationInfo corresponds to getPoolStatus with no bakerId',
     async (client) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const oldStatus: any = await clientV1.getPoolStatus(testBlockHash);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const newStatus: any = await client.getPassiveDelegationInfo(
+        const oldStatus = await clientV1.getPoolStatus(testBlockHash);
+        const newStatus = await client.getPassiveDelegationInfo(
             testBlockHash
         );
 
@@ -309,13 +306,11 @@ test.each([clientV2, clientWeb])(
         const changeHash =
             '2aa7c4a54ad403a9f9b48de2469e5f13a64c95f2cf7a8e72c0f9f7ae0718f642';
         const changedAccount = 1879n;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const oldStatus: any = await clientV1.getPoolStatus(
+        const oldStatus = await clientV1.getPoolStatus(
             changeHash,
             changedAccount
         );
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const newStatus: any = await client.getPoolInfo(
+        const newStatus = await client.getPoolInfo(
             changedAccount,
             changeHash
         );

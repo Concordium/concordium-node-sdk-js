@@ -299,13 +299,6 @@ function trBaker(baker: v2.AccountStakingInfo_Baker): v1.AccountBakerDetails {
     };
 }
 
-function trAccountAddressToString(
-    accountAddress: v2.AccountAddress | undefined
-): string {
-    return AccountAddress.fromBytes(Buffer.from(unwrap(accountAddress?.value)))
-        .address;
-}
-
 function translateChainParametersCommon(
     params: v2.ChainParametersV1 | v2.ChainParametersV0
 ): v1.ChainParametersCommon {
@@ -314,7 +307,7 @@ function translateChainParametersCommon(
         euroPerEnergy: unwrap(params.euroPerEnergy?.value),
         microGTUPerEuro: unwrap(params.microCcdPerEuro?.value),
         accountCreationLimit: unwrap(params.accountCreationLimit?.value),
-        foundationAccount: trAccountAddressToString(params.foundationAccount),
+        foundationAccount: unwrapToBase58(params.foundationAccount),
     };
 }
 
@@ -422,7 +415,7 @@ export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
         schedule: unwrap(acc.schedule?.schedules).map(trRelease),
     };
     const accInfoCommon: v1.AccountInfoSimple = {
-        accountAddress: trAccountAddressToString(acc.address),
+        accountAddress: unwrapToBase58(acc.address),
         accountNonce: unwrap(acc.sequenceNumber?.value),
         accountAmount: unwrap(acc.amount?.value),
         accountIndex: unwrap(acc.index?.value),
@@ -562,7 +555,7 @@ export function bakerPoolInfo(info: v2.PoolInfoResponse): v1.BakerPoolStatus {
     return {
         poolType: PoolStatusType.BakerPool,
         bakerId: unwrap(info.baker?.value),
-        bakerAddress: trAccountAddressToString(info.address),
+        bakerAddress: unwrapToBase58(info.address),
         bakerEquityCapital: unwrap(info.equityCapital?.value),
         delegatedCapital: unwrap(info.delegatedCapital?.value),
         delegatedCapitalCap: unwrap(info.delegatedCapitalCap?.value),

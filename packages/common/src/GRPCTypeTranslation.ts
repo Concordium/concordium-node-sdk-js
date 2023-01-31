@@ -208,7 +208,7 @@ function trDelegatorTarget(target: v2.DelegationTarget): v1.DelegationTarget {
 }
 
 function trTimestamp(timestamp: v2.Timestamp | undefined): Date {
-    return new Date(Number(unwrap(timestamp?.value)) * 1000);
+    return new Date(Number(unwrap(timestamp?.value)));
 }
 
 function trPendingChange(
@@ -1688,10 +1688,31 @@ export function arInfo(ar: v2.ArInfo): v1.ArInfo {
     };
 }
 
-export function BlocksAtHeightResponse(
+export function blocksAtHeightResponse(
     blocks: v2.BlocksAtHeightResponse
 ): v1.HexString[] {
     return blocks.blocks.map(unwrapValToHex);
+}
+
+export function blockInfo(blockInfo: v2.BlockInfo): v1.BlockInfo {
+    return {
+        blockParent: unwrapValToHex(blockInfo.parentBlock),
+        blockHash: unwrapValToHex(blockInfo.hash),
+        blockStateHash: unwrapValToHex(blockInfo.stateHash),
+        blockLastFinalized: unwrapValToHex(blockInfo.lastFinalizedBlock),
+        blockHeight: unwrap(blockInfo.height?.value),
+        blockBaker: unwrap(blockInfo.baker?.value),
+        blockSlot: unwrap(blockInfo.slotNumber?.value),
+        blockArriveTime: trTimestamp(blockInfo.arriveTime),
+        blockReceiveTime: trTimestamp(blockInfo.receiveTime),
+        blockSlotTime: trTimestamp(blockInfo.slotTime),
+        finalized: blockInfo.finalized,
+        transactionCount: BigInt(blockInfo.transactionCount),
+        transactionsSize: BigInt(blockInfo.transactionsSize),
+        transactionEnergyCost: unwrap(blockInfo.transactionsEnergyCost?.value),
+        genesisIndex: unwrap(blockInfo.genesisIndex?.value),
+        eraBlockHeight: Number(unwrap(blockInfo.eraBlockHeight?.value)),
+    };
 }
 
 // ---------------------------- //

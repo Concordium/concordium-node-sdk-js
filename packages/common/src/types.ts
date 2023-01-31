@@ -520,13 +520,13 @@ export interface RewardStatusV1 extends RewardStatusCommon {
 export type RewardStatus = RewardStatusV0 | RewardStatusV1;
 
 export interface BlockInfo {
-    blockParent: string;
-    blockHash: string;
-    blockStateHash: string;
-    blockLastFinalized: string;
+    blockParent: HexString;
+    blockHash: HexString;
+    blockStateHash: HexString;
+    blockLastFinalized: HexString;
 
     blockHeight: bigint;
-    blockBaker: bigint;
+    blockBaker: BakerId;
     blockSlot: bigint;
 
     blockArriveTime: Date;
@@ -538,6 +538,9 @@ export interface BlockInfo {
     transactionCount: bigint;
     transactionsSize: bigint;
     transactionEnergyCost: bigint;
+
+    genesisIndex: number;
+    eraBlockHeight: number;
 }
 
 export interface CommonBlockInfo {

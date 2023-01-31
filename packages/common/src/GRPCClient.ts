@@ -538,7 +538,7 @@ export default class ConcordiumNodeClient {
      * ancestors or the requested number of ancestors has been returned.
      *
      * @param maxAmountOfAncestors the maximum amount of ancestors as a bigint.
-     * @param blockHash a optional block hash to get the ancestors at, otherwise retrieves from last finalized block.
+     * @param blockHash an optional block hash to get the ancestors at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns an async iterable of ancestors as hex strings.
      */
@@ -561,7 +561,7 @@ export default class ConcordiumNodeClient {
      * key-value pairs. The list is streamed in lexicographic order of keys.
      *
      * @param contractAddress the contract to get the state of.
-     * @param blockHash a optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns an async iterable of instance states as key-value pairs of hex strings.
      */
@@ -586,7 +586,7 @@ export default class ConcordiumNodeClient {
      *
      * @param contractAddress the contract to get the state of.
      * @param key the key of the desired contract state.
-     * @param blockHash a optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
      * @returns the state of the contract at the given key as a hex string.
      */
     async instanceStateLookup(
@@ -609,7 +609,7 @@ export default class ConcordiumNodeClient {
      * The stream will end when all the identity providers have been returned,
      * or an abort signal is called.
      *
-     * @param blockHash a optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns an async iterable of identity provider info objects.
      */
@@ -628,7 +628,7 @@ export default class ConcordiumNodeClient {
      * The stream will end when all the anonymity revokers have been returned,
      * or an abort signal is called.
      *
-     * @param blockHash a optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns an async iterable of identity provider info objects.
      */
@@ -654,7 +654,19 @@ export default class ConcordiumNodeClient {
         const requestV2 =
             translate.BlocksAtHeightRequestToV2(blockHeightRequest);
         const blocks = await this.client.getBlocksAtHeight(requestV2).response;
-        return translate.BlocksAtHeightResponse(blocks);
+        return translate.blocksAtHeightResponse(blocks);
+    }
+
+    /**
+     * Get information, such as height, timings, and transaction counts for the given block.
+     *
+     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @returns information on a block.
+     */
+    async getBlockInfo(blockHash?: HexString): Promise<v1.BlockInfo> {
+        const block = getBlockHashInput(blockHash);
+        const blockInfo = await this.client.getBlockInfo(block).response;
+        return translate.blockInfo(blockInfo);
     }
 }
 

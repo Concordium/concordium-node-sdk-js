@@ -442,3 +442,12 @@ const request: BlocksAtHeightRequest = {
 }
 const blocks = await client.getBlocksAtHeight(request);
 ```
+
+## getBlockInfo
+Retrieves information about a specific block.
+```js
+const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749";
+const blockInfo: BlockInfo = await client.getBlockInfo(blockHash);
+const transactionsCount = blockInfo.transactionCount;
+...
+```

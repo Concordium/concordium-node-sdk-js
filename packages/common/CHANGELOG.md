@@ -12,6 +12,7 @@
     - `instanceStateLookup()`
     - `getIdentityProviders()`
     - `getAnonymityRevokers()`
+    - `getBlockInfo()`
 
 ## 6.4.0
 

@@ -339,7 +339,7 @@ test.each([clientV2, clientWeb])('getConsensusStatus', async (client) => {
         '4221332d34e1694168c2a0c0b3fd0f273809612cb13d000d5c2e00e85f50f796';
 
     const ci = await client.getConsensusStatus();
-    const lastFinTime = unwrap(ci.lastFinalizedTime?.getTime()) / 1000;
+    const lastFinTime = unwrap(ci.lastFinalizedTime?.getTime());
 
     expect(ci.genesisBlock).toEqual(genesisBlock);
     expect(ci.lastFinalizedBlockHeight).toBeGreaterThan(1395315n);
@@ -600,6 +600,15 @@ test.each([clientV2, clientWeb])(
             '956c3bc5c9d10449e13686a4cc69e8bc7dee450608866242075a6ce37331187c';
         const blocks = await client.getBlocksAtHeight(request);
         expect(blocks[0]).toEqual(expectedBlock);
+    }
+);
+
+test.each([clientV2, clientWeb])(
+    'getBlocksAtHeight different request',
+    async (client) => {
+        const blockInfoV1 = await clientV1.getBlockInfo(testBlockHash);
+        const blockInfoV2 = await client.getBlockInfo(testBlockHash);
+        expect(blockInfoV2).toEqual(blockInfoV1);
     }
 );
 

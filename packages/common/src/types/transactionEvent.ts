@@ -7,7 +7,7 @@ import type {
     Base58String,
     HexString,
     EventDelegationTarget,
-    Amount
+    Amount,
 } from '../types';
 import type { UpdateInstructionPayload } from './chainUpdate';
 import { ModuleReference } from './moduleReference';

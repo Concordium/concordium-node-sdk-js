@@ -4,6 +4,7 @@ import {
     DigitString,
     HexString,
     ContractAddress,
+    Amount,
 } from '../types';
 
 /*

@@ -1,4 +1,5 @@
 import {
+    Amount,
     AuthorizationsV0,
     AuthorizationsV1,
     Base58String,
@@ -188,7 +189,7 @@ export interface CommissionRanges {
 export interface PoolParameters {
     passiveCommissions: CommissionRates;
     commissionBounds: CommissionRanges;
-    minimumEquityCapital: bigint;
+    minimumEquityCapital: Amount;
     capitalBound: number;
     leverageBound: Fraction;
 }

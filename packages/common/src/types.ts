@@ -603,7 +603,7 @@ export interface NextAccountNonce {
 
 export interface ReleaseSchedule {
     timestamp: Date;
-    amount: bigint;
+    amount: Amount;
 }
 
 export interface ReleaseScheduleWithTransactions extends ReleaseSchedule {
@@ -611,7 +611,7 @@ export interface ReleaseScheduleWithTransactions extends ReleaseSchedule {
 }
 
 export interface AccountReleaseSchedule {
-    total: bigint;
+    total: Amount;
     schedule: ReleaseScheduleWithTransactions[];
 }
 

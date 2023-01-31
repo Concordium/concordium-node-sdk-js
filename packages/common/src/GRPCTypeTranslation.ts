@@ -805,7 +805,7 @@ function trRejectReason(
                 tag: Tag.AmountTooLarge,
                 contents: {
                     address: trAddress(reason.amountTooLarge.address),
-                    amount: unwrap(String(reason.amountTooLarge.amount?.value)),
+                    amount: unwrap(reason.amountTooLarge.amount?.value),
                 },
             };
         case 'rejectedInit':

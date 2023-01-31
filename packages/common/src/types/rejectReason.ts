@@ -188,7 +188,7 @@ export interface AmountTooLarge {
     tag: RejectReasonTag.AmountTooLarge;
     contents: {
         address: Address;
-        amount: DigitString;
+        amount: Amount;
     };
 }
 

@@ -3,8 +3,6 @@
 ## Unreleased
 
 - Added the following GRPCv2 functions:
-    - `getBlocks()`
-    - `getFinalizedBlocks()`
     - `getAccountList()`
     - `getModuleList()`
     - `getAncestors()`
@@ -12,6 +10,7 @@
     - `instanceStateLookup()`
     - `getIdentityProviders()`
     - `getAnonymityRevokers()`
+    - `getBlocksAtHeight()`
     - `getBlockInfo()`
     - `getBakerList()`
 

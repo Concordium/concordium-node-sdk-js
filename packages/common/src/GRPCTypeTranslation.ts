@@ -824,7 +824,7 @@ function trRejectReason(
         case 'alreadyABaker':
             return {
                 tag: Tag.AlreadyABaker,
-                contents: Number(unwrap(reason.alreadyABaker.value)),
+                contents: unwrap(reason.alreadyABaker.value),
             };
         case 'notABaker':
             return {
@@ -864,9 +864,7 @@ function trRejectReason(
         case 'delegationTargetNotABaker':
             return {
                 tag: Tag.DelegationTargetNotABaker,
-                contents: Number(
-                    unwrap(reason.delegationTargetNotABaker.value)
-                ),
+                contents: unwrap(reason.delegationTargetNotABaker.value),
             };
         case undefined:
             throw Error(

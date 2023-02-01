@@ -5,6 +5,7 @@ import {
     HexString,
     ContractAddress,
     Amount,
+    BakerId,
 } from '../types';
 
 /*
@@ -146,12 +147,17 @@ export interface StringRejectReason {
     tag: StringRejectReasonTag;
     contents: HexString | Base58String;
 }
-export type NumberRejectReasonTag =
+export type BakerIdRejectReasonTag =
     | RejectReasonTag.AlreadyABaker
     | RejectReasonTag.DelegationTargetNotABaker;
 
+export interface BakerIdRejectReason {
+    tag: BakerIdRejectReasonTag;
+    contents: BakerId;
+}
+
 export interface NumberRejectReason {
-    tag: NumberRejectReasonTag;
+    tag: BakerIdRejectReasonTag;
     contents: number;
 }
 
@@ -215,7 +221,6 @@ export interface CredIdsRejectReason {
 type RejectReasonCommon =
     | SimpleRejectReason
     | StringRejectReason
-    | NumberRejectReason
     | RejectedInit
     | RejectedReceive
     | InvalidContractAddress
@@ -223,12 +228,14 @@ type RejectReasonCommon =
 
 export type RejectReason =
     | RejectReasonCommon
+    | BakerIdRejectReason
     | InvalidReceiveMethod
     | InvalidInitMethod
     | AmountTooLarge;
 
 export type RejectReasonV1 =
     | RejectReasonCommon
+    | NumberRejectReason
     | InvalidReceiveMethodV1
     | InvalidInitMethodV1
     | AmountTooLargeV1;

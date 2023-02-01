@@ -389,7 +389,7 @@ export default class ConcordiumNodeClient {
     }
 
     /**
-     * Retrieve the list of accounts that exist at the end of the given block.
+     * Retrieve a stream of accounts that exist at the end of the given block.
      *
      * @param blockHash an optional block hash to get the accounts at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -406,13 +406,13 @@ export default class ConcordiumNodeClient {
     }
 
     /**
-     * Get a list of all smart contract modules. The stream will end
+     * Get a stream of all smart contract modules' references. The stream will end
      * when all modules that exist in the state at the end of the given
      * block have been returned.
      *
      * @param blockHash an optional block hash to get the contract modules at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
-     * @returns an async iterable of contract modules.
+     * @returns an async iterable of contract module references.
      */
     getModuleList(
         blockHash?: HexString,
@@ -432,7 +432,7 @@ export default class ConcordiumNodeClient {
      * @param maxAmountOfAncestors the maximum amount of ancestors as a bigint.
      * @param blockHash a optional block hash to get the ancestors at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
-     * @returns an async iterable of ancestors as hex strings.
+     * @returns an async iterable of ancestors' block hashes as hex strings.
      */
     getAncestors(
         maxAmountOfAncestors: bigint,

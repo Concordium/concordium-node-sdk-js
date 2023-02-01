@@ -521,14 +521,14 @@ test.each([clientV2, clientWeb])('getAccountList', async (client) => {
     const blocks = await clientV1.getBlocksAtHeight(10n);
     const accountIter = client.getAccountList(blocks[0]);
     const accountList = await asyncIterableToList(accountIter);
-    expect(accountList.map((x) => x.address)).toEqual(expected.accountList);
+    expect(accountList).toEqual(expected.accountList);
 });
 
 test.each([clientV2, clientWeb])('getModuleList', async (client) => {
     const blocks = await clientV1.getBlocksAtHeight(5000n);
     const moduleIter = client.getModuleList(blocks[0]);
     const moduleList = await asyncIterableToList(moduleIter);
-    expect(moduleList.map((x) => x.moduleRef)).toEqual(expected.moduleList);
+    expect(moduleList).toEqual(expected.moduleList);
 });
 
 test.each([clientV2, clientWeb])('getAncestors', async (client) => {

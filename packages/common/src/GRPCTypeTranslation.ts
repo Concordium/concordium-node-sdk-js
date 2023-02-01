@@ -59,7 +59,7 @@ export function unwrapValToHex(x: { value: Uint8Array } | undefined): string {
     return unwrapToHex(unwrap(x).value);
 }
 
-function unwrapToBase58(
+export function unwrapToBase58(
     address: v2.AccountAddress | undefined
 ): v1.Base58String {
     return bs58check.encode(
@@ -1660,14 +1660,6 @@ export function commonBlockInfo(
         hash: unwrapValToHex(blockInfo.hash),
         height: unwrap(blockInfo.height?.value),
     };
-}
-
-export function accountAddress(address: v2.AccountAddress): AccountAddress {
-    return AccountAddress.fromBytes(Buffer.from(address.value));
-}
-
-export function moduleReference(moduleRef: v2.ModuleRef): ModuleReference {
-    return trModuleRef(moduleRef);
 }
 
 export function instanceStateKVPair(

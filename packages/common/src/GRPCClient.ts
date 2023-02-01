@@ -1,6 +1,6 @@
 import * as v1 from './types';
 import * as v2 from '../grpc/v2/concordium/types';
-import { HexString } from './types';
+import { Base58String, HexString } from './types';
 import { QueriesClient } from '../grpc/v2/concordium/service.client';
 import type { RpcTransport } from '@protobuf-ts/runtime-rpc';
 import { CredentialRegistrationId } from './types/CredentialRegistrationId';
@@ -393,16 +393,16 @@ export default class ConcordiumNodeClient {
      *
      * @param blockHash an optional block hash to get the accounts at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
-     * @returns an async iterable of account addresses
+     * @returns an async iterable of account addresses represented as Base58 encoded strings.
      */
     getAccountList(
         blockHash?: HexString,
         abortSignal?: AbortSignal
-    ): AsyncIterable<AccountAddress> {
+    ): AsyncIterable<Base58String> {
         const opts = { abort: abortSignal };
         const hash = getBlockHashInput(blockHash);
         const asyncIter = this.client.getAccountList(hash, opts).responses;
-        return mapAsyncIterable(asyncIter, translate.accountAddress);
+        return mapAsyncIterable(asyncIter, translate.unwrapToBase58);
     }
 
     /**
@@ -412,16 +412,16 @@ export default class ConcordiumNodeClient {
      *
      * @param blockHash an optional block hash to get the contract modules at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
-     * @returns an async iterable of contract module references.
+     * @returns an async iterable of contract module references, represented as hex strings.
      */
     getModuleList(
         blockHash?: HexString,
         abortSignal?: AbortSignal
-    ): AsyncIterable<ModuleReference> {
+    ): AsyncIterable<HexString> {
         const opts = { abort: abortSignal };
         const hash = getBlockHashInput(blockHash);
         const asyncIter = this.client.getModuleList(hash, opts).responses;
-        return mapAsyncIterable(asyncIter, translate.moduleReference);
+        return mapAsyncIterable(asyncIter, translate.unwrapValToHex);
     }
 
     /**

@@ -19,10 +19,10 @@ import {
     getModuleBuffer,
     getIdentityInput,
     getNodeClient as getNodeClientV1,
+    getNodeClientV2,
 } from './testHelpers';
 import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons';
-import { getNodeClientV2 } from '../src/util';
 import { serializeAccountTransaction } from '@concordium/common-sdk/lib/serialization';
 import { unwrap } from '@concordium/common-sdk/lib/util';
 

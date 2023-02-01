@@ -1,27 +1,6 @@
 import * as fs from 'fs';
 import { Buffer } from 'buffer/';
 import { BoolResponse, JsonResponse } from '../grpc/concordium_p2p_rpc_pb';
-import createConcordiumClientV2 from '../src/clientV2';
-import ConcordiumNodeClientV2 from '@concordium/common-sdk/lib/GRPCClient';
-import { credentials, Metadata } from '@grpc/grpc-js/';
-
-/**
- * Creates a client to communicate with a local concordium-node
- * used for automatic tests.
- */
-export function getNodeClientV2(
-    address = 'node.testnet.concordium.com',
-    port = 20000
-): ConcordiumNodeClientV2 {
-    const metadata = new Metadata();
-    return createConcordiumClientV2(
-        address,
-        port,
-        credentials.createInsecure(),
-        metadata,
-        { timeout: 15000 }
-    );
-}
 
 export function intListToStringList(jsonStruct: string): string {
     return jsonStruct.replace(/(\-?[0-9]+)/g, '"$1"');

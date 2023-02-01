@@ -348,34 +348,43 @@ export default class ConcordiumNodeClient {
         transactionHash: HexString,
         timeoutTime?: number
     ): Promise<HexString> {
-        if (timeoutTime) {
-            setTimeout(() => {
-                throw Error('Function timed out.');
-            }, timeoutTime);
-        }
+        return new Promise(async (resolve, reject) => {
+            const abortController = new AbortController();
+            if (timeoutTime) {
+                setTimeout(() => {
+                    abortController.abort();
+                    reject(new Error('Function timed out.'));
+                }, timeoutTime);
+            }
 
-        const abortController = new AbortController();
-        const blockStream = this.getFinalizedBlocks(abortController.signal);
+            const blockStream = this.getFinalizedBlocks(abortController.signal);
 
-        const response = await this.getBlockItemStatus(transactionHash);
-        if (response.status === 'finalized') {
-            // Simply doing `abortController.abort()` causes an error.
-            // See: https://github.com/grpc/grpc-node/issues/1652
-            setImmediate(() => abortController.abort());
-            return response.outcome.blockHash;
-        }
-
-        for await (const block of blockStream) {
             const response = await this.getBlockItemStatus(transactionHash);
             if (response.status === 'finalized') {
-                if (response.outcome.blockHash === block.hash) {
-                    setImmediate(() => abortController.abort());
-                    return block.hash;
-                }
+                // Simply doing `abortController.abort()` causes an error.
+                // See: https://github.com/grpc/grpc-node/issues/1652
+                setImmediate(() => abortController.abort());
+                return resolve(response.outcome.blockHash);
             }
-        }
 
-        throw Error('Unexpected end of stream.');
+            try {
+                for await (const _ of blockStream) {
+                    const response = await this.getBlockItemStatus(
+                        transactionHash
+                    );
+                    if (response.status === 'finalized') {
+                        setImmediate(() => abortController.abort());
+                        return resolve(response.outcome.blockHash);
+                    }
+                }
+
+                if (!abortController.signal.aborted) {
+                    return reject(new Error('Unexpected end of stream.'));
+                }
+            } catch (error) {
+                return reject(error);
+            }
+        });
     }
 }
 

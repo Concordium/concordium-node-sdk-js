@@ -1,6 +1,6 @@
 import SignClient from '@walletconnect/sign-client';
 import QRCodeModal from '@walletconnect/qrcode-modal';
-import { SessionTypes, SignClientTypes, ISignClient } from '@walletconnect/types';
+import { ISignClient, SessionTypes, SignClientTypes } from '@walletconnect/types';
 import {
     AccountTransactionPayload,
     AccountTransactionSignature,
@@ -14,7 +14,7 @@ import {
     toBuffer,
     UpdateContractPayload,
 } from '@concordium/web-sdk';
-import { WalletConnectionDelegate, Network, WalletConnection, WalletConnector } from './WalletConnection';
+import { Network, WalletConnection, WalletConnectionDelegate, WalletConnector } from './WalletConnection';
 
 const WALLET_CONNECT_SESSION_NAMESPACE = 'ccd';
 
@@ -370,8 +370,7 @@ export class WalletConnectConnector implements WalletConnector {
      * Disconnect all connections.
      */
     async disconnect() {
-        const connections = await this.getConnections();
-        await Promise.all(connections.map((c) => c.disconnect()));
+        await Promise.all(this.getConnections().map((c) => c.disconnect()));
         // TODO Disconnect the underlying client.
     }
 }

@@ -102,7 +102,7 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
                         (e) => errorString(e)
                     )
                 )
-                .then(r => {
+                .then((r) => {
                     setSubmittedTxHash(r);
                     setIsAwaitingApproval(false);
                 });

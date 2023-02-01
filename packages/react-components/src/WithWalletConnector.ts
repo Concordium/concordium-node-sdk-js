@@ -93,15 +93,8 @@ interface State {
      *   In this case {@link activeConnector} is undefined.
      * - Error deactivating the previous connector.
      *   In this case {@link activeConnectorType} and {@link activeConnector} are undefined.
-     * - Error initiating a connection from the connector.
-     *   In this case {@link activeConnector} is not undefined.
      */
     activeConnectorError: string;
-
-    /**
-     * Boolean indicator of whether we're waiting for a connection to be established.
-     */
-    isConnecting: boolean;
 
     /**
      * The currently active connection.
@@ -199,14 +192,6 @@ export interface WalletConnectionProps extends State {
      * @param connection The wallet connection.
      */
     setActiveConnection: (connection: WalletConnection | undefined) => void;
-
-    /**
-     * Initiate a new connection using {@link State.activeConnector activeConnector}
-     * and set it as {@link State.activeConnection activeConnection} once it's established.
-     *
-     * This does not automatically disconnect any existing connections.
-     */
-    connectActive: () => void;
 }
 
 /**
@@ -233,7 +218,6 @@ export class WithWalletConnector extends Component<Props, State> implements Wall
             activeConnectorType: undefined,
             activeConnector: undefined,
             activeConnectorError: '',
-            isConnecting: false,
             activeConnection: undefined,
             genesisHashes: new Map(),
             connectedAccounts: new Map(),
@@ -251,7 +235,6 @@ export class WithWalletConnector extends Component<Props, State> implements Wall
             activeConnectorType: type,
             activeConnector: undefined,
             activeConnectorError: '',
-            isConnecting: false,
         });
         if (activeConnectorType && activeConnector) {
             activeConnectorType.deactivate(this, activeConnector).catch((err) =>
@@ -315,52 +298,12 @@ export class WithWalletConnector extends Component<Props, State> implements Wall
     };
 
     onDisconnected = (connection: WalletConnection) => {
-        console.debug("WithWalletConnector: calling 'onDisconnect'", { connection, state: this.state });
+        console.debug("WithWalletConnector: calling 'onDisconnected'", { connection, state: this.state });
         this.setState((state) => ({
             ...state,
             activeConnection: connection === state.activeConnection ? undefined : state.activeConnection,
             connectedAccounts: updateMapEntry(state.connectedAccounts, connection, undefined),
         }));
-    };
-
-    /**
-     * @see WalletConnectionProps.connectActive
-     */
-    // The method does not support creating connections with any other connector besides `activeConnector`
-    // because that could cause `activeConnectorError` to hold an error that isn't from the active connector.
-    // If the error was split into one for connector error and one for connection error, this wouldn't be a problem.
-    // As an alternative to having this method altogether, we could add an event `onConnection` to `WalletConnectionDelegate`.
-    // Then the application would just call `connect` directly on the connector and have this component pick it up automatically.
-    connectActive = () => {
-        console.debug("WithWalletConnector: calling 'connectActive'", { state: this.state });
-        const { activeConnector } = this.state;
-        if (activeConnector) {
-            this.setState({ isConnecting: true, activeConnectorError: '' });
-            activeConnector
-                .connect()
-                .then((c) => {
-                    // Don't clear any existing connection if the connection was cancelled.
-                    if (c) {
-                        this.setActiveConnection(c);
-                    }
-                })
-                .catch((err) => {
-                    this.setState((state) => {
-                        if (state.activeConnector !== activeConnector) {
-                            return state;
-                        }
-                        return { ...state, activeConnectorError: errorString(err) };
-                    });
-                })
-                .finally(() => {
-                    this.setState((state) => {
-                        if (state.activeConnector !== activeConnector) {
-                            return state;
-                        }
-                        return { ...state, isConnecting: false };
-                    });
-                });
-        }
     };
 
     render() {
@@ -373,7 +316,6 @@ export class WithWalletConnector extends Component<Props, State> implements Wall
             activeConnectionGenesisHash: activeConnection && genesisHashes.get(activeConnection),
             setActiveConnectorType: this.setActiveConnectorType,
             setActiveConnection: this.setActiveConnection,
-            connectActive: this.connectActive,
         });
     }
 

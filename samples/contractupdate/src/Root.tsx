@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Col, Container, Row } from 'react-bootstrap';
+import { Alert, Col, Container, Row, Spinner } from 'react-bootstrap';
 import { withJsonRpcClient } from '@concordium/react-components';
 import { WalletConnectionProps, WithWalletConnector } from '@concordium/react-components';
 import { WalletConnectionButton } from './WalletConnectionButton';
@@ -22,10 +22,16 @@ export default function Root() {
 }
 
 function Main(props: WalletConnectionProps) {
+    const {
+        activeConnectorType,
+        activeConnector,
+        activeConnectorError,
+        activeConnection,
+        activeConnectionGenesisHash,
+        network,
+    } = props;
     const [rpcGenesisHash, setRpcGenesisHash] = useState<string>();
     const [rpcError, setRpcError] = useState('');
-
-    const { activeConnection, activeConnectionGenesisHash, network } = props;
     useEffect(() => {
         if (activeConnection) {
             setRpcGenesisHash(undefined);
@@ -43,7 +49,6 @@ function Main(props: WalletConnectionProps) {
                 });
         }
     }, [activeConnection, activeConnectionGenesisHash, network]);
-
     return (
         <>
             <Row className="mt-3 mb-3">
@@ -56,16 +61,16 @@ function Main(props: WalletConnectionProps) {
             </Row>
             <Row className="mt-3 mb-3">
                 <Col>
+                    {activeConnectorError && <Alert variant="danger">Error: {activeConnectorError}.</Alert>}
+                    {!activeConnectorError && activeConnectorType && !activeConnector && <Spinner />}
                     <WalletConnectionButton {...props}>
-                        <>
-                            {props.isConnecting && 'Connecting...'}
-                            {!props.isConnecting &&
-                                props.activeConnectorType === BROWSER_WALLET &&
-                                'Connect Browser Wallet'}
-                            {!props.isConnecting &&
-                                props.activeConnectorType === WALLET_CONNECT &&
-                                'Connect Mobile Wallet'}
-                        </>
+                        {(isConnecting) => (
+                            <>
+                                {isConnecting && 'Connecting...'}
+                                {!isConnecting && activeConnectorType === BROWSER_WALLET && 'Connect Browser Wallet'}
+                                {!isConnecting && activeConnectorType === WALLET_CONNECT && 'Connect Mobile Wallet'}
+                            </>
+                        )}
                     </WalletConnectionButton>
                 </Col>
             </Row>

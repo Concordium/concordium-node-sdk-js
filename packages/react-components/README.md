@@ -42,16 +42,23 @@ function MyAppComponent(props: WalletConnectionProps) {
 }
 ```
 
-Use `props.setActiveConnectorType(...)` and `props.connectActive()` from within `MyAppComponent`
-to set up a connector and initiate a connection.
-
-This is most easily done using [`useWalletConnectorSelector`](#usecontractselector).
+Use `props.setActiveConnectorType(...)` from within `MyAppComponent` to set up a connector,
+and make it available on `props.activeConnector`.
+This is most easily done using [`useWalletConnectorSelector`](#usewalletconnectorselector).
 
 Connector types for the Browser Wallet and WalletConnect connectors are usually initialized like so:
 
 ```typescript
 export const BROWSER_WALLET = ephemeralConnectorType(BrowserWalletConnector.create);
 export const WALLET_CONNECT = ephemeralConnectorType(WalletConnectConnector.create.bind(this, WALLET_CONNECT_OPTS));
+```
+
+Initiate a connection by invoking `connect` on a connector.
+Set the resulting connection is "active" by passing it to `props.setActiveConnection`:
+
+```typescript
+const {activeConnector, setActiveConnection} = props;
+activeConnector.connect().then(setActiveConnection).catch(...);
 ```
 
 See [the sample dApp](../../samples/contractupdate/src/Root.tsx) for a complete example.

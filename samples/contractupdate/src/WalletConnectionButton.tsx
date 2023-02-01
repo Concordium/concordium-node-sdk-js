@@ -1,27 +1,34 @@
-import React from 'react';
-import { Alert, Button, Spinner } from 'react-bootstrap';
+import React, { useCallback, useState } from 'react';
+import { Alert, Button } from 'react-bootstrap';
 import { WalletConnectionProps } from '@concordium/react-components';
+import { setErrorString } from './util';
 
 interface Props extends WalletConnectionProps {
-    children: JSX.Element;
+    children: (isConnecting: boolean) => JSX.Element;
 }
 
-export function WalletConnectionButton({
-    activeConnectorType,
-    activeConnector,
-    activeConnectorError,
-    activeConnection,
-    connectActive,
-    isConnecting,
-    children,
-}: Props) {
+export function WalletConnectionButton({ activeConnector, activeConnection, setActiveConnection, children }: Props) {
+    const [isConnecting, setIsConnecting] = useState(false);
+    const [error, setError] = useState('');
+    const connect = useCallback(() => {
+        if (activeConnector) {
+            setIsConnecting(true);
+            activeConnector
+                .connect()
+                .then((c) => {
+                    setActiveConnection(c);
+                    setError('');
+                })
+                .catch(setErrorString(setError))
+                .finally(() => setIsConnecting(false));
+        }
+    }, [activeConnector, setActiveConnection]);
     return (
         <>
-            {activeConnectorError && <Alert variant="danger">Error: {activeConnectorError}.</Alert>}
-            {!activeConnectorError && activeConnectorType && !activeConnector && <Spinner />}
+            {error && <Alert variant="danger">Error: {error}.</Alert>}
             {activeConnector && !activeConnection && (
-                <Button type="button" onClick={connectActive} disabled={isConnecting}>
-                    {children}
+                <Button type="button" onClick={connect} disabled={isConnecting}>
+                    {children(isConnecting)}
                 </Button>
             )}
         </>

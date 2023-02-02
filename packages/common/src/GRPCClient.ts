@@ -690,7 +690,7 @@ export default class ConcordiumNodeClient {
      *
      * @returns a branch with a block hash and a list of branch-children
      */
-    async getBranches() {
+    async getBranches(): Promise<v1.Branch> {
         const branch = await this.client.getBranches(v2.Empty).response;
         return translate.branch(branch);
     }

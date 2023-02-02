@@ -673,6 +673,13 @@ test.each([clientV2, clientWeb])('getBranches', async (client) => {
     expect(branch.children).toBeDefined();
 });
 
+test.each([clientV2, clientWeb])('electionInfoBaker', async (client) => {
+    const blocks = await client.getBlocksAtHeight(10n);
+    const electionInfo = await client.getElectionInfo(blocks[0]);
+
+    expect(electionInfo).toEqual(expected.electionInfoList);
+});
+
 // For tests that take a long time to run, is skipped by default
 describe.skip('Long run-time test suite', () => {
     const longTestTime = 45000;

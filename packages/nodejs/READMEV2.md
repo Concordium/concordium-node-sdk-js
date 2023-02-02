@@ -444,6 +444,9 @@ const blocks = await client.getBlocksAtHeight(request);
 
 ## getBlockInfo
 Retrieves information about a specific block.
+
+If a blockhash is not supplied it will pick the latest finalized block.
+
 ```js
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749";
 const blockInfo: BlockInfo = await client.getBlockInfo(blockHash);
@@ -547,4 +550,22 @@ const branch = await client.getBranches();
 console.log(branch.blockhash);
 console.log(branch.children);
 ...
+```
+
+## getElectionInfo
+Get information related to the baker election for a particular block.
+
+If a blockhash is not supplied it will pick the latest finalized block.
+
+```js
+const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
+const electionInfo = await client.getElectionInfo(blockHash);
+
+console.log(electionInfo.electionDifficulty);
+console.log(electionInfo.electionNonce);
+for await (const bakerElectionInfo of electionInfo.bakerElectionInfo) {
+    console.log(bakerElectionInfo.baker);
+    console.log(bakerElectionInfo.account);
+    console.log(bakerElectionInfo.lotteryPower);
+}
 ```

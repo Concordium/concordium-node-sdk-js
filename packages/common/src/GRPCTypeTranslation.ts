@@ -1723,6 +1723,27 @@ export function branch(branchV2: v2.Branch): v1.Branch {
     };
 }
 
+function trBakerElectionInfo(
+    bakerElectionInfo: v2.ElectionInfo_Baker
+): v1.BakerElectionInfo {
+    return {
+        baker: unwrap(bakerElectionInfo.baker?.value),
+        account: unwrapToBase58(bakerElectionInfo.account),
+        lotteryPower: bakerElectionInfo.lotteryPower,
+    };
+}
+
+export function electionInfo(electionInfo: v2.ElectionInfo): v1.ElectionInfo {
+    return {
+        electionDifficulty: trAmountFraction(
+            electionInfo.electionDifficulty?.value
+        ),
+        electionNonce: unwrapValToHex(electionInfo.electionNonce),
+        bakerElectionInfo:
+            electionInfo.bakerElectionInfo.map(trBakerElectionInfo),
+    };
+}
+
 // ---------------------------- //
 // --- V1 => V2 translation --- //
 // ---------------------------- //

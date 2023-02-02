@@ -694,6 +694,19 @@ export default class ConcordiumNodeClient {
         const branch = await this.client.getBranches(v2.Empty).response;
         return translate.branch(branch);
     }
+
+    /**
+     * Get information related to the baker election for a particular block.
+     *
+     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @returns election info for the given block
+     */
+    async getElectionInfo(blockHash?: HexString): Promise<v1.ElectionInfo> {
+        const blockHashInput = getBlockHashInput(blockHash);
+        const electionInfo = await this.client.getElectionInfo(blockHashInput)
+            .response;
+        return translate.electionInfo(electionInfo);
+    }
 }
 
 export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {

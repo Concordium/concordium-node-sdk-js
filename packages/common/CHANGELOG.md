@@ -18,6 +18,7 @@
     - `getPassiveDelegators()`
     - `getPassiveDelegatorsRewardPeriod()`
     - `getBranches()`
+    - `getElectionInfo()`
 
 ## 6.4.0
 

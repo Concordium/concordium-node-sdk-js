@@ -1007,6 +1007,18 @@ export interface Branch {
     children: Branch[];
 }
 
+export interface BakerElectionInfo {
+    baker: BakerId;
+    account: Base58String;
+    lotteryPower: number;
+}
+
+export interface ElectionInfo {
+    electionDifficulty: number;
+    electionNonce: HexString;
+    bakerElectionInfo: BakerElectionInfo[];
+}
+
 export enum BlockItemKind {
     AccountTransactionKind = 0,
     CredentialDeploymentKind = 1,

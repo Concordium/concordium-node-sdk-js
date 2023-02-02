@@ -368,6 +368,7 @@ export default class ConcordiumNodeClient {
             }
 
             try {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 for await (const _ of blockStream) {
                     const response = await this.getBlockItemStatus(
                         transactionHash

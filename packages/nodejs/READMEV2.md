@@ -501,3 +501,22 @@ for await (const delegatorInfo of delegatorInfoList) {
 }
 ...
 ```
+
+## getPassiveDelegators
+Get the registered passive delegators at the end of a given block.
+In contrast to the `GetPassiveDelegatorsRewardPeriod` which returns delegators
+that are fixed for the reward period of the block, this endpoint returns the
+list of delegators that are registered in the block. Any changes to delegators
+are immediately visible in this list.
+The stream will end when all the delegators has been returned.
+
+If a blockhash is not supplied it will pick the latest finalized block. An optional abort signal can also be provided that closes the stream.
+```js
+const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
+const delegatorInfoList = await client.getPoolDelegatorsRewardPeriod(blockHash);
+
+for await (const delegatorInfo of delegatorInfoList) {
+    console.log(delegatorInfo);
+}
+...
+```

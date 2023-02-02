@@ -636,10 +636,18 @@ test.each([clientV2, clientWeb])(
             delegatorInfoStream
         );
 
-        console.log(delegatorInfoList);
         expect(delegatorInfoList).toEqual(expected.delegatorInfoList);
     }
 );
+test.each([clientV2, clientWeb])('getPassiveDelegators', async (client) => {
+    const blocks = await client.getBlocksAtHeight(10000n);
+    console.log(blocks[0]);
+    const delegatorInfoStream = client.getPassiveDelegators(blocks[0]);
+    const delegatorInfoList = await asyncIterableToList(delegatorInfoStream);
+
+    console.log(delegatorInfoList);
+    expect(delegatorInfoList).toEqual(expected.passiveDelegatorInfoList);
+});
 
 // For tests that take a long time to run, is skipped by default
 describe.skip('Long run-time test suite', () => {

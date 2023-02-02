@@ -15,6 +15,7 @@
     - `getBakerList()`
     - `getPoolDelegators()`
     - `getPoolDelegatorsRewardPeriod()`
+    - `getPoolDelegatorsRewardPeriod()`
 
 ## 6.4.0
 

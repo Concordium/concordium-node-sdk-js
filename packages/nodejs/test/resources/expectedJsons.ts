@@ -352,3 +352,22 @@ export const delegatorInfoList = [
         stake: 94000000n,
     },
 ];
+
+export const passiveDelegatorInfoList = [
+    {
+        account: '4gCvJ91EeYzsTzwiC7Kr4AcFzSuDmf5wxev7FRzU3uw49WamBm',
+        stake: 1900000000n,
+    },
+    {
+        account: '4mQweXtq3zHwS7CtK5fjWkpJDUvtUSKycNa8xaEbe6kErGeXcL',
+        stake: 1000000000n,
+    },
+    {
+        account: '3irV7FF3BZbz9ejGTm7EHLUi6CQHdJUELDfyhwkHcLqXmQyUfR',
+        stake: 100000000n,
+        pendingChange: {
+            effectiveTime: new Date('2022-06-28T11:47:37.750Z'),
+            change: 'RemoveStake',
+        },
+    },
+];

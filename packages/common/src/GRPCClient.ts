@@ -565,6 +565,7 @@ export default class ConcordiumNodeClient {
      * Get all the bakers at the end of the given block.
      *
      * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
      * @returns an async iterable of BakerIds.
      */
     getBakerList(
@@ -587,6 +588,7 @@ export default class ConcordiumNodeClient {
      *
      * @param baker The BakerId of the pool owner
      * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
      * @returns a stream of DelegatorInfo
      */
     getPoolDelegators(
@@ -599,7 +601,10 @@ export default class ConcordiumNodeClient {
             blockHash: getBlockHashInput(blockHash),
             baker: { value: baker },
         };
-        const delegatorInfo = this.client.getPoolDelegators(request).responses;
+        const delegatorInfo = this.client.getPoolDelegators(
+            request,
+            opts
+        ).responses;
         return mapAsyncIterable(delegatorInfo, translate.delegatorInfo);
     }
     /**
@@ -611,20 +616,48 @@ export default class ConcordiumNodeClient {
      *
      * @param baker The BakerId of the pool owner
      * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
      * @returns a stream of DelegatorInfo
      */
     getPoolDelegatorsRewardPeriod(
         baker: v1.BakerId,
         blockHash?: HexString,
         abortSignal?: AbortSignal
-    ) {
+    ): AsyncIterable<v1.DelegatorInfo> {
         const opts = { abort: abortSignal };
         const request: v2.GetPoolDelegatorsRequest = {
             blockHash: getBlockHashInput(blockHash),
             baker: { value: baker },
         };
-        const delegatorInfo =
-            this.client.getPoolDelegatorsRewardPeriod(request).responses;
+        const delegatorInfo = this.client.getPoolDelegatorsRewardPeriod(
+            request,
+            opts
+        ).responses;
+        return mapAsyncIterable(delegatorInfo, translate.delegatorInfo);
+    }
+
+    /**
+     * Get the registered passive delegators at the end of a given block.
+     * In contrast to the `GetPassiveDelegatorsRewardPeriod` which returns delegators
+     * that are fixed for the reward period of the block, this endpoint returns the
+     * list of delegators that are registered in the block. Any changes to delegators
+     * are immediately visible in this list.
+     * The stream will end when all the delegators has been returned.
+     *
+     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns a stream of DelegatorInfo
+     */
+    getPassiveDelegators(
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<v1.DelegatorInfo> {
+        const opts = { abort: abortSignal };
+        const blockHashInput = getBlockHashInput(blockHash);
+        const delegatorInfo = this.client.getPassiveDelegators(
+            blockHashInput,
+            opts
+        ).responses;
         return mapAsyncIterable(delegatorInfo, translate.delegatorInfo);
     }
 }

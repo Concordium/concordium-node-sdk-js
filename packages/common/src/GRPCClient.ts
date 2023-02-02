@@ -8,7 +8,7 @@ import * as translate from './GRPCTypeTranslation';
 import { AccountAddress } from './types/accountAddress';
 import { getAccountTransactionHandler } from './accountTransactions';
 import { calculateEnergyCost } from './energyCost';
-import { countSignatures } from './util';
+import { countSignatures, mapAsyncIterable } from './util';
 import {
     serializeAccountTransactionPayload,
     serializeCredentialDeploymentPayload,
@@ -366,6 +366,88 @@ export default class ConcordiumNodeClient {
         const response = await this.client.getTokenomicsInfo(blockHashInput)
             .response;
         return translate.tokenomicsInfo(response);
+    }
+
+    /**
+     * Gets a stream of finalized blocks.
+     *
+     * @param abortSignal an AbortSignal to close the stream. Note that the
+     * stream does not close itself as it is infinite, so usually you'd want
+     * to provide this parameter.
+     * @returns An AsyncIterator stream of finalized blocks.
+     */
+    getFinalizedBlocks(
+        abortSignal?: AbortSignal
+    ): AsyncIterable<v1.FinalizedBlockInfo> {
+        const opts = { abort: abortSignal };
+        const blocks = this.client.getFinalizedBlocks(v2.Empty, opts).responses;
+        return mapAsyncIterable(blocks, translate.commonBlockInfo);
+    }
+
+    /**
+     * Gets a stream of blocks. To get a stream of only finalized blocks
+     * use `getFinalizedBlocks()` instead.
+     *
+     * @param abortSignal an AbortSignal to close the stream. Note that the
+     * stream does not close itself as it is infinite, so usually you'd want
+     * to provide this parameter.
+     * @returns An AsyncIterator stream of blocks.
+     */
+    getBlocks(abortSignal?: AbortSignal): AsyncIterable<v1.ArrivedBlockInfo> {
+        const opts = { abort: abortSignal };
+        const blocks = this.client.getBlocks(v2.Empty, opts).responses;
+        return mapAsyncIterable(blocks, translate.commonBlockInfo);
+    }
+
+    /**
+     * Waits until given transaction is finalized.
+     *
+     * @param transactionHash a transaction hash as a bytearray.
+     * @param timeoutTime the number of milliseconds until the function throws error.
+     * @returns A blockhash as a byte array.
+     */
+    async waitForTransactionFinalization(
+        transactionHash: HexString,
+        timeoutTime?: number
+    ): Promise<HexString> {
+        return new Promise(async (resolve, reject) => {
+            const abortController = new AbortController();
+            if (timeoutTime) {
+                setTimeout(() => {
+                    abortController.abort();
+                    reject(new Error('Function timed out.'));
+                }, timeoutTime);
+            }
+
+            const blockStream = this.getFinalizedBlocks(abortController.signal);
+
+            const response = await this.getBlockItemStatus(transactionHash);
+            if (response.status === 'finalized') {
+                // Simply doing `abortController.abort()` causes an error.
+                // See: https://github.com/grpc/grpc-node/issues/1652
+                setImmediate(() => abortController.abort());
+                return resolve(response.outcome.blockHash);
+            }
+
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                for await (const _ of blockStream) {
+                    const response = await this.getBlockItemStatus(
+                        transactionHash
+                    );
+                    if (response.status === 'finalized') {
+                        setImmediate(() => abortController.abort());
+                        return resolve(response.outcome.blockHash);
+                    }
+                }
+
+                if (!abortController.signal.aborted) {
+                    return reject(new Error('Unexpected end of stream.'));
+                }
+            } catch (error) {
+                return reject(error);
+            }
+        });
     }
 }
 

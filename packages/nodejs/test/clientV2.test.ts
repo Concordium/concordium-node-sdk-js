@@ -1,7 +1,5 @@
-import { credentials } from '@grpc/grpc-js/';
 import * as v1 from '@concordium/common-sdk';
 import * as v2 from '../../common/grpc/v2/concordium/types';
-import createConcordiumClientV2 from '../src/clientV2';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
 import ConcordiumNodeClientV2, {
     getAccountIdentifierInput,
@@ -21,41 +19,27 @@ import {
     getModuleBuffer,
     getIdentityInput,
     getNodeClient as getNodeClientV1,
+    getNodeClientV2,
 } from './testHelpers';
 import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons';
-import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
+
+import { serializeAccountTransaction } from '@concordium/common-sdk/lib/serialization';
 
 import { TextEncoder, TextDecoder } from 'util';
 import 'isomorphic-fetch';
-import { serializeAccountTransaction } from '@concordium/common-sdk/lib/serialization';
+import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 global.TextEncoder = TextEncoder as any;
 global.TextDecoder = TextDecoder as any;
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-/**
- * Creates a client to communicate with a local concordium-node
- * used for automatic tests.
- */
-function getNodeClientV2(
-    address = 'node.testnet.concordium.com',
-    port = 20000
-): ConcordiumNodeClientV2 {
-    return createConcordiumClientV2(
-        address,
-        port,
-        credentials.createInsecure(),
-        { timeout: 15000 }
-    );
-}
-
 // TODO find nice way to move this to web/common
-function getNodeClientWeb(
+export function getNodeClientWeb(
     address = 'http://node.testnet.concordium.com',
     port = 20000
-) {
+): ConcordiumNodeClientV2 {
     const transport = new GrpcWebFetchTransport({
         baseUrl: `${address}:${port}`,
         timeout: 15000,
@@ -114,14 +98,11 @@ test.each([clientV2, clientWeb])(
     }
 );
 
-test.each([clientV2, clientWeb])(
-    'NextAccountSequenceNumber',
-    async (client) => {
-        const nan = await client.getNextAccountNonce(testAccount);
-        expect(nan.nonce).toBeGreaterThanOrEqual(19n);
-        expect(nan.allFinal).toBeDefined();
-    }
-);
+test.each([clientV2, clientWeb])('nextAccountNonce', async (client) => {
+    const nan = await client.getNextAccountNonce(testAccount);
+    expect(nan.nonce).toBeGreaterThanOrEqual(19n);
+    expect(nan.allFinal).toBeDefined();
+});
 
 test.each([clientV2, clientWeb])('getAccountInfo', async (client) => {
     const accountInfo = await getAccountInfoV2(client, testAccount);
@@ -615,4 +596,41 @@ test.each([clientV2, clientWeb])('createAccount', async (client) => {
             signatures
         )
     ).rejects.toThrow('expired');
+});
+
+// Tests, which take a long time to run, are skipped by default
+describe.skip('Long run-time test suite', () => {
+    const longTestTime = 45000;
+
+    // Sometimes fails as there is no guarantee that a new block comes fast enough.
+    test.each([clientV2, clientWeb])(
+        'getFinalizedBlocks',
+        async (client) => {
+            const ac = new AbortController();
+            const blockStream = client.getFinalizedBlocks(ac.signal);
+
+            for await (const block of blockStream) {
+                expect(block.height).toBeGreaterThan(1553503n);
+                ac.abort();
+                break;
+            }
+        },
+        longTestTime
+    );
+
+    // Sometimes fails as there is no guarantee that a new block comes fast enough.
+    test.each([clientV2, clientWeb])(
+        'getBlocks',
+        async (client) => {
+            const ac = new AbortController();
+            const blockStream = client.getBlocks(ac.signal);
+
+            for await (const block of blockStream) {
+                expect(block.height).toBeGreaterThan(1553503n);
+                ac.abort();
+                break;
+            }
+        },
+        longTestTime
+    );
 });

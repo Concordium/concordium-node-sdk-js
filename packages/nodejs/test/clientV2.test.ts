@@ -23,8 +23,8 @@ import {
 } from './testHelpers';
 import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons';
+
 import { serializeAccountTransaction } from '@concordium/common-sdk/lib/serialization';
-import { unwrap } from '@concordium/common-sdk/lib/util';
 
 import { TextEncoder, TextDecoder } from 'util';
 import 'isomorphic-fetch';
@@ -213,6 +213,89 @@ test.each([clientV2, clientWeb])(
 );
 
 test.each([clientV2, clientWeb])(
+    'getChainParameters corresponds to GetBlockSummary subset',
+    async (client) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const blockSummary: any = await clientV1.getBlockSummary(testBlockHash);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const chainParameters: any = await client.getBlockChainParameters(
+            testBlockHash
+        );
+
+        const foundationAccount = (
+            await client.getAccountInfo(
+                blockSummary.updates.chainParameters.foundationAccountIndex
+            )
+        ).accountAddress;
+        expect(chainParameters.foundationAccount).toEqual(foundationAccount);
+        blockSummary.updates.chainParameters.foundationAccountIndex = undefined;
+        chainParameters.foundationAccount = undefined;
+
+        expect(blockSummary.updates.chainParameters).toEqual(chainParameters);
+    }
+);
+
+test.each([clientV2, clientWeb])(
+    'getChainParameters corresponds to GetBlockSummary subset on protocol level < 4',
+    async (client) => {
+        const oldBlockHash =
+            'ed2507c4d05108038741e87757ab1c3acdeeb3327027cd2972666807c9c4a20d';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const blockSummary: any = await clientV1.getBlockSummary(oldBlockHash);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const chainParameters: any = await client.getBlockChainParameters(
+            oldBlockHash
+        );
+
+        const foundationAccount = (
+            await client.getAccountInfo(
+                blockSummary.updates.chainParameters.foundationAccountIndex
+            )
+        ).accountAddress;
+        expect(chainParameters.foundationAccount).toEqual(foundationAccount);
+        blockSummary.updates.chainParameters.foundationAccountIndex = undefined;
+        chainParameters.foundationAccount = undefined;
+
+        expect(blockSummary.updates.chainParameters).toEqual(chainParameters);
+    }
+);
+
+test.each([clientV2, clientWeb])(
+    'getPoolInfo corresponds to getPoolStatus with a bakerId',
+    async (client) => {
+        const oldStatus = await clientV1.getPoolStatus(testBlockHash, 1n);
+        const newStatus = await client.getPoolInfo(1n, testBlockHash);
+
+        expect(oldStatus).toEqual(newStatus);
+    }
+);
+
+test.each([clientV2, clientWeb])(
+    'getPassiveDelegationInfo corresponds to getPoolStatus with no bakerId',
+    async (client) => {
+        const oldStatus = await clientV1.getPoolStatus(testBlockHash);
+        const newStatus = await client.getPassiveDelegationInfo(testBlockHash);
+
+        expect(oldStatus).toEqual(newStatus);
+    }
+);
+test.each([clientV2, clientWeb])(
+    'getPoolInfo corresponds to getPoolStatus with bakerId (with pending change)',
+    async (client) => {
+        const changeHash =
+            '2aa7c4a54ad403a9f9b48de2469e5f13a64c95f2cf7a8e72c0f9f7ae0718f642';
+        const changedAccount = 1879n;
+        const oldStatus = await clientV1.getPoolStatus(
+            changeHash,
+            changedAccount
+        );
+        const newStatus = await client.getPoolInfo(changedAccount, changeHash);
+
+        expect(oldStatus).toEqual(newStatus);
+    }
+);
+
+test.each([clientV2, clientWeb])(
     'getBlockItemStatus on chain update',
     async (client) => {
         const transactionHash =
@@ -338,11 +421,10 @@ test.each([clientV2, clientWeb])('getConsensusStatus', async (client) => {
         '4221332d34e1694168c2a0c0b3fd0f273809612cb13d000d5c2e00e85f50f796';
 
     const ci = await client.getConsensusStatus();
-    const lastFinTime = unwrap(ci.lastFinalizedTime?.getTime()) / 1000;
 
     expect(ci.genesisBlock).toEqual(genesisBlock);
     expect(ci.lastFinalizedBlockHeight).toBeGreaterThan(1395315n);
-    expect(lastFinTime).toBeGreaterThan(1669214033937n);
+    expect(ci.lastFinalizedTime?.getTime()).toBeGreaterThan(1669214033937n); // 23Nov2022 in milliseconds
 });
 
 test.each([clientV2, clientWeb])('sendBlockItem', async (client) => {

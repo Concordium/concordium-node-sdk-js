@@ -307,6 +307,68 @@ export default class ConcordiumNodeClient {
     }
 
     /**
+     * Retrieves the status of the block chain parameters at the given blockHash.
+     * @param blockHash the block hash of the block to get the information from.
+     * @returns Info on all of the block chain parameters.
+     */
+    async getBlockChainParameters(
+        blockHash?: HexString
+    ): Promise<v1.ChainParameters> {
+        const blockHashInput = getBlockHashInput(blockHash);
+        const response = await this.client.getBlockChainParameters(
+            blockHashInput
+        ).response;
+        return translate.blockChainParameters(response);
+    }
+
+    /**
+     * Retrieves information on the baker pool of the given bakerId.
+     * @param blockHash the block hash of the block to get the information from.
+     * @param bakerId the ID of the baker to get the status for.
+     * @returns The status of the corresponding baker pool.
+     */
+    async getPoolInfo(
+        bakerId: v1.BakerId,
+        blockHash?: HexString
+    ): Promise<v1.BakerPoolStatus> {
+        const input: v2.PoolInfoRequest = {
+            blockHash: getBlockHashInput(blockHash),
+            baker: {
+                value: bakerId,
+            },
+        };
+        const response = await this.client.getPoolInfo(input).response;
+        return translate.bakerPoolInfo(response);
+    }
+
+    /**
+     * Retrieves information on the passive delegators.
+     * @param blockHash the block hash of the block to get the information from.
+     * @returns The status of the passive delegators.
+     */
+    async getPassiveDelegationInfo(
+        blockHash?: HexString
+    ): Promise<v1.PassiveDelegationStatus> {
+        const input = getBlockHashInput(blockHash);
+        const response = await this.client.getPassiveDelegationInfo(input)
+            .response;
+        return translate.passiveDelegationInfo(response);
+    }
+
+    /**
+     * Retrieves the reward status at the given blockHash
+     * @param blockHash optional block hash to get the reward status at, otherwise retrieves from last finalized block
+     * @returns the reward status at the given block, or undefined it the block does not exist.
+     */
+    async getTokenomicsInfo(blockHash?: HexString): Promise<v1.TokenomicsInfo> {
+        const blockHashInput = getBlockHashInput(blockHash);
+
+        const response = await this.client.getTokenomicsInfo(blockHashInput)
+            .response;
+        return translate.tokenomicsInfo(response);
+    }
+
+    /**
      * Gets a stream of finalized blocks.
      *
      * @param abortSignal an AbortSignal to close the stream. Note that the

@@ -21,6 +21,10 @@
     - `getAccountTransactionSignHash()`
     - `sendAccountTransaction()`
     - `sendCredentialDeploymentTransaction()`
+    - `getBlockChainParameters()`
+    - `getPoolInfo()`
+    - `getPassiveDelegationInfo()`
+    - `getTokenomicsInfo()`
 
 - Serialization:
     - `serializeAccountTransactionPayload()`

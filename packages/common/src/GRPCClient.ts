@@ -617,13 +617,13 @@ export default class ConcordiumNodeClient {
      * @param baker The BakerId of the pool owner
      * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
-     * @returns a stream of DelegatorInfo
+     * @returns a stream of DelegatorRewardPeriodInfo
      */
     getPoolDelegatorsRewardPeriod(
         baker: v1.BakerId,
         blockHash?: HexString,
         abortSignal?: AbortSignal
-    ): AsyncIterable<v1.DelegatorInfo> {
+    ): AsyncIterable<v1.DelegatorRewardPeriodInfo> {
         const opts = { abort: abortSignal };
         const request: v2.GetPoolDelegatorsRequest = {
             blockHash: getBlockHashInput(blockHash),
@@ -659,6 +659,40 @@ export default class ConcordiumNodeClient {
             opts
         ).responses;
         return mapAsyncIterable(delegatorInfo, translate.delegatorInfo);
+    }
+
+    /**
+     * Get the fixed passive delegators for the reward period of the given block.
+     * In contracts to the `GetPassiveDelegators` which returns delegators registered
+     * for the given block, this endpoint returns the fixed delegators contributing
+     * stake in the reward period containing the given block.
+     * The stream will end when all the delegators has been returned.
+     *
+     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns a stream of DelegatorRewardPeriodInfo
+     */
+    getPassiveDelegatorsRewardPeriod(
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<v1.DelegatorRewardPeriodInfo> {
+        const opts = { abort: abortSignal };
+        const blockHashInput = getBlockHashInput(blockHash);
+        const delegatorInfo = this.client.getPassiveDelegatorsRewardPeriod(
+            blockHashInput,
+            opts
+        ).responses;
+        return mapAsyncIterable(delegatorInfo, translate.delegatorInfo);
+    }
+
+    /**
+     * Get the current branches of blocks starting from and including the last finalized block.
+     *
+     * @returns a branch with a block hash and a list of branch-children
+     */
+    async getBranches() {
+        const branch = await this.client.getBranches(v2.Empty).response;
+        return translate.branch(branch);
     }
 }
 

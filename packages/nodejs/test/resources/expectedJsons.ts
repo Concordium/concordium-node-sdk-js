@@ -371,3 +371,14 @@ export const passiveDelegatorInfoList = [
         },
     },
 ];
+
+export const passiveDelegatorRewardInfoList = [
+    {
+        account: '4gCvJ91EeYzsTzwiC7Kr4AcFzSuDmf5wxev7FRzU3uw49WamBm',
+        stake: 1900000000n,
+    },
+    {
+        account: '4mQweXtq3zHwS7CtK5fjWkpJDUvtUSKycNa8xaEbe6kErGeXcL',
+        stake: 1000000000n,
+    },
+];

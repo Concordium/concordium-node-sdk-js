@@ -641,12 +641,36 @@ test.each([clientV2, clientWeb])(
 );
 test.each([clientV2, clientWeb])('getPassiveDelegators', async (client) => {
     const blocks = await client.getBlocksAtHeight(10000n);
-    console.log(blocks[0]);
-    const delegatorInfoStream = client.getPassiveDelegators(blocks[0]);
-    const delegatorInfoList = await asyncIterableToList(delegatorInfoStream);
+    const passiveDelegatorInfoStream = client.getPassiveDelegators(blocks[0]);
+    const passiveDelegatorInfoList = await asyncIterableToList(
+        passiveDelegatorInfoStream
+    );
 
-    console.log(delegatorInfoList);
-    expect(delegatorInfoList).toEqual(expected.passiveDelegatorInfoList);
+    expect(passiveDelegatorInfoList).toEqual(expected.passiveDelegatorInfoList);
+});
+
+test.each([clientV2, clientWeb])(
+    'getPassiveDelegatorsRewardPeriod',
+    async (client) => {
+        const blocks = await client.getBlocksAtHeight(10000n);
+        const passiveDelegatorRewardInfoStream =
+            client.getPassiveDelegatorsRewardPeriod(blocks[0]);
+        const passiveDelegatorRewardInfoList = await asyncIterableToList(
+            passiveDelegatorRewardInfoStream
+        );
+
+        expect(passiveDelegatorRewardInfoList).toEqual(
+            expected.passiveDelegatorRewardInfoList
+        );
+    }
+);
+
+test.each([clientV2, clientWeb])('getBranches', async (client) => {
+    const branch = await client.getBranches();
+
+    expect(branch).toBeDefined();
+    expect(branch.blockHash).toBeDefined();
+    expect(branch.children).toBeDefined();
 });
 
 // For tests that take a long time to run, is skipped by default

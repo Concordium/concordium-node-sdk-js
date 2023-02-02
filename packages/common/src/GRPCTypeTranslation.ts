@@ -1716,6 +1716,13 @@ export function delegatorInfo(
     };
 }
 
+export function branch(branchV2: v2.Branch): v1.Branch {
+    return {
+        blockHash: unwrapValToHex(branchV2.blockHash),
+        children: branchV2.children.map(branch),
+    };
+}
+
 // ---------------------------- //
 // --- V1 => V2 translation --- //
 // ---------------------------- //

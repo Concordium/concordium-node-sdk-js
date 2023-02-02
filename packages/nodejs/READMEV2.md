@@ -422,7 +422,6 @@ for await (const ar of ars) {
 ## getBlocksAtHeight
 Get a list of live blocks at a given height.
 
-If a blockhash is not supplied it will pick the latest finalized block. An optional abortsignal can also be provided that closes the stream.
 
 It can accept an absolute height:
 ```js
@@ -454,6 +453,8 @@ const transactionsCount = blockInfo.transactionCount;
 
 ## getBakerList
 Retrieves a stream of ID's for registered bakers on the network at a specific block.
+
+If a blockhash is not supplied it will pick the latest finalized block. An optional abort signal can also be provided that closes the stream.
 ```js
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
 const bakerIds = await client.getBakerList(blockHash);

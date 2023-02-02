@@ -186,6 +186,13 @@ pub fn create_credential_v1_ext(raw_input: &str) -> String {
     }
 }
 
+#[wasm_bindgen(js_name = createUnsignedCredentialV1)]
+pub fn create_unsigned_credential_v1_ext(input: &str) -> String {
+    error_to_string(create_unsigned_credential_v1_aux(
+        serde_json::from_str(input).unwrap(),
+    ))
+}
+
 #[wasm_bindgen(js_name = createIdProof)]
 pub fn create_id_proof_ext(raw_input: &str) -> String {
     match serde_json::from_str(raw_input) {

@@ -75,7 +75,24 @@ const transactionStatus = await client.getBlockItemStatus(transactionHash);
 ```
 
 ## Create a new account
-**TODO**
+To create a new account the following is needed:
+-    idObject: Identity object for the identity that should be used to create the credential
+-    ipInfo: The information of the identity provider used for the identity. (See `getIdentityProviders`)
+-    globalContext: The cryptographic parameters for the block chain (See `getCryptographicParameters`)
+-    arsInfos: The information of all the anonymity revokers used for the identity (See `getAnonymityRevokers`) 
+-    revealedAttributes: A list of attributes that should be revealed. Note that this can be left empty.
+-    credNumber: The index of the credential for the identity. This is used to create the credential id, and cannot be reused for the same identity.
+
+If you can provide the seedPhrase used for the identity, use `createCredentialTransactionV1`, which uses that and the identity index and network identitfier.
+Otherwise you can use `createCredentialTransactionV1NoSeed`, which requires the:
+  -  idCredSec
+  -  prfKey
+  -  signature retrievel randomness
+  -  credential public keys
+  -  list of attribute randomness
+All of which should be generated from the seedPhrase. Note that the purpose of this alternative is to support cases where the seed phrase is not directly available.
+
+The credentialDeployment can be signed with the `signCredentialTransaction` function if the signing key is available, otherwise the digest can be retrieved by using the `getCredentialDeploymentSignDigest` function.
 
 ## getAccountInfo
 Retrieves information about an account. The function must be provided an account address or a credential registration id.

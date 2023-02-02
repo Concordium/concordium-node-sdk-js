@@ -12,6 +12,7 @@ import {
     IdentityObjectV1,
     SignedCredentialDeploymentDetails,
     Network,
+    CredentialPublicKeys,
 } from './types';
 import * as wasm from '@concordium/rust-bindings';
 import { TransactionExpiry } from './types/transactionExpiry';
@@ -19,6 +20,11 @@ import { AccountAddress } from './types/accountAddress';
 import { sha256 } from './hash';
 import * as bs58check from 'bs58check';
 import { Buffer } from 'buffer/';
+import { ConcordiumHdWallet } from './HdWallet';
+import { AttributesKeys, CredentialDeploymentDetails, HexString } from '.';
+import { filterRecord, mapRecord } from './util';
+import { getCredentialDeploymentSignDigest } from './serialization';
+import * as ed from '@noble/ed25519';
 
 /**
  * Generates the unsigned credential information that has to be signed when
@@ -83,6 +89,7 @@ function createUnsignedCredentialInfo(
 /**
  * Create a credential deployment transaction, which is the transaction used
  * when deploying a new account.
+ * @deprecated This function doesn't use allow supplying the randomness. {@link createCredentialTransactionV1 } or { @link createCredentialTransactionV1NoSeed } should be used instead.
  * @param identity the identity to create a credential for
  * @param cryptographicParameters the global cryptographic parameters from the chain
  * @param threshold the signature threshold for the credential, has to be less than number of public keys
@@ -184,24 +191,27 @@ export function getAccountAddress(credId: string): AccountAddress {
     return accountAddress;
 }
 
-export type CredentialInputV1 = {
+type CredentialInputV1Common = {
     ipInfo: IpInfo;
     globalContext: CryptographicParameters;
     arsInfos: Record<string, ArInfo>;
     idObject: IdentityObjectV1;
     revealedAttributes: AttributeKey[];
+    credNumber: number;
+};
+
+export type CredentialInputV1 = CredentialInputV1Common & {
     seedAsHex: string;
     net: Network;
     identityIndex: number;
-    credNumber: number;
-    expiry: number;
 };
 
 /**
  * Creates a credential for a new account, using the version 1 algorithm, which uses a seed to generate keys and commitments.
+ * @deprecated This function outputs the format used by the JSON-RPC client, createCredentialTransactionV1 should be used instead.
  */
 export function createCredentialV1(
-    input: CredentialInputV1
+    input: CredentialInputV1 & { expiry: number }
 ): SignedCredentialDeploymentDetails {
     const rawRequest = wasm.createCredentialV1(JSON.stringify(input));
     let info: CredentialDeploymentInfo;
@@ -214,4 +224,107 @@ export function createCredentialV1(
         expiry: TransactionExpiry.fromEpochSeconds(BigInt(input.expiry)),
         cdi: info,
     };
+}
+
+export type CredentialInputV1NoSeed = CredentialInputV1Common & {
+    idCredSec: HexString;
+    prfKey: HexString;
+    sigRetrievelRandomness: HexString;
+    credentialPublicKeys: CredentialPublicKeys;
+    attributeRandomness: Record<AttributesKeys, HexString>;
+};
+
+/**
+ * Creates an unsigned credential for a new account, using the version 1 algorithm, which uses a seed to generate keys and commitments.
+ */
+export function createCredentialTransactionV1(
+    input: CredentialInputV1,
+    expiry: TransactionExpiry
+): CredentialDeploymentTransaction {
+    const wallet = ConcordiumHdWallet.fromHex(input.seedAsHex, input.net);
+    const publicKey = wallet
+        .getAccountPublicKey(
+            input.ipInfo.ipIdentity,
+            input.identityIndex,
+            input.credNumber
+        )
+        .toString('hex');
+
+    const verifyKey = {
+        schemeId: 'Ed25519',
+        verifyKey: publicKey,
+    };
+    const credentialPublicKeys = {
+        keys: { 0: verifyKey },
+        threshold: 1,
+    };
+
+    const prfKey = wallet
+        .getPrfKey(input.ipInfo.ipIdentity, input.identityIndex)
+        .toString('hex');
+    const idCredSec = wallet
+        .getIdCredSec(input.ipInfo.ipIdentity, input.identityIndex)
+        .toString('hex');
+    const randomness = wallet
+        .getSignatureBlindingRandomness(
+            input.ipInfo.ipIdentity,
+            input.identityIndex
+        )
+        .toString('hex');
+
+    const attributeRandomness = mapRecord(
+        filterRecord(AttributesKeys, (k) => isNaN(Number(k))),
+        (x) =>
+            wallet
+                .getAttributeCommitmentRandomness(
+                    input.ipInfo.ipIdentity,
+                    input.identityIndex,
+                    input.credNumber,
+                    x
+                )
+                .toString('hex')
+    );
+
+    const noSeedInput: CredentialInputV1NoSeed = {
+        ipInfo: input.ipInfo,
+        globalContext: input.globalContext,
+        arsInfos: input.arsInfos,
+        idObject: input.idObject,
+        idCredSec,
+        prfKey,
+        sigRetrievelRandomness: randomness,
+        credentialPublicKeys,
+        attributeRandomness,
+        revealedAttributes: input.revealedAttributes,
+        credNumber: input.credNumber,
+    };
+    return createCredentialTransactionV1NoSeed(noSeedInput, expiry);
+}
+
+/**
+ * Creates an unsigned credential for a new account, using the version 1 algorithm, but without requiring the seed to be provided directly.
+ */
+export function createCredentialTransactionV1NoSeed(
+    input: CredentialInputV1NoSeed,
+    expiry: TransactionExpiry
+): CredentialDeploymentTransaction {
+    const rawRequest = wasm.createUnsignedCredentialV1(JSON.stringify(input));
+    let info: UnsignedCdiWithRandomness;
+    try {
+        info = JSON.parse(rawRequest);
+    } catch (e) {
+        throw new Error(rawRequest);
+    }
+    return {
+        expiry,
+        ...info,
+    };
+}
+
+export async function signCredentialTransaction(
+    credDeployment: CredentialDeploymentDetails,
+    signingKey: HexString
+): Promise<HexString> {
+    const digest = getCredentialDeploymentSignDigest(credDeployment);
+    return Buffer.from(await ed.sign(digest, signingKey)).toString('hex');
 }

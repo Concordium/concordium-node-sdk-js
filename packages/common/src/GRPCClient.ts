@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer/';
 import * as v1 from './types';
 import * as v2 from '../grpc/v2/concordium/types';
 import { HexString } from './types';

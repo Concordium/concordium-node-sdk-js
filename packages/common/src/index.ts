@@ -22,14 +22,7 @@ export { CcdAmount } from './types/ccdAmount';
 export { TransactionExpiry } from './types/transactionExpiry';
 export { DataBlob } from './types/DataBlob';
 export { ModuleReference } from './types/moduleReference';
-export {
-    createCredentialDeploymentTransaction,
-    createUnsignedCredentialForExistingAccount,
-    getAccountAddress,
-    buildSignedCredentialForExistingAccount,
-    createCredentialV1,
-    CredentialInputV1,
-} from './credentialDeploymentTransactions';
+export * from './credentialDeploymentTransactions';
 export { isAlias, getAlias } from './alias';
 export {
     deserializeContractState,

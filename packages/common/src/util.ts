@@ -189,3 +189,17 @@ export function mapAsyncIterable<A, B>(
         },
     };
 }
+
+/**
+ * Filters entries from a record
+ * @param rec the record, whose entries should be filtered.
+ * @param predicate predicate to test entries, only if this returns true does the entry remain
+ */
+export function filterRecord<A extends string | number | symbol, B>(
+    rec: Record<A, B>,
+    predicate: (k: A, v: B) => boolean
+): Record<A, B> {
+    return Object.fromEntries(
+        Object.entries(rec).filter(([k, v]) => predicate(k as A, v as B))
+    ) as Record<A, B>;
+}

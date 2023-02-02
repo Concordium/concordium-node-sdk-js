@@ -230,7 +230,7 @@ const source = await client.getModuleSource(moduleReference, blockHash);
 ```
 
 ## getBlocks
-Returns a stream of blocks that is iterable. The following code will recieved blocks
+Returns a stream of blocks that is iterable. The following code will receive blocks
 as long as there is a connection to the node:
 
 ```js

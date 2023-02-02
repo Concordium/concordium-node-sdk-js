@@ -170,11 +170,7 @@ export const blockItemStatusTransfer = {
             transfer: {
                 amount: 1000000n,
                 tag: 'Transferred',
-                to: {
-                    address:
-                        '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
-                    type: 'AddressAccount',
-                },
+                to: '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
             },
         },
     },

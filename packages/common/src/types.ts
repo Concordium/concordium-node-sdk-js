@@ -992,6 +992,12 @@ export interface ArInfo {
     arPublicKey: string;
 }
 
+export interface DelegatorInfo {
+    account: Base58String;
+    stake: Amount;
+    pendingChange?: StakePendingChange;
+}
+
 export enum BlockItemKind {
     AccountTransactionKind = 0,
     CredentialDeploymentKind = 1,

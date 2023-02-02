@@ -464,3 +464,17 @@ for await (const id of bakerIds) {
 }
 ...
 ```
+
+## getPoolDelegators
+Get the registered delegators of a given pool at the end of a given block.
+
+If a blockhash is not supplied it will pick the latest finalized block. An optional abort signal can also be provided that closes the stream.
+```js
+const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
+const delegatorInfoList = await client.getPoolDelegators(15n, blockHash);
+
+for await (const delegatorInfo of delegatorInfoList) {
+    console.log(delegatorInfo);
+}
+...
+```

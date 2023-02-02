@@ -13,6 +13,7 @@
     - `getBlocksAtHeight()`
     - `getBlockInfo()`
     - `getBakerList()`
+    - `getPoolDelegators()`
 
 ## 6.4.0
 

@@ -576,6 +576,30 @@ export default class ConcordiumNodeClient {
         const bakers = this.client.getBakerList(block, opts).responses;
         return mapAsyncIterable(bakers, (x) => x.value);
     }
+
+    /**
+     * Get the registered delegators of a given pool at the end of a given block.
+     * In contrast to the `GetPoolDelegatorsRewardPeriod` which returns delegators
+     * that are fixed for the reward period of the block, this endpoint returns the
+     * list of delegators that are registered in the block. Any changes to delegators
+     * are immediately visible in this list.
+     * The stream will end when all the delegators has been returned.
+     *
+     * @param baker The BakerId of the pool owner
+     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @returns a stream of DelegatorInfo
+     */
+    getPoolDelegators(
+        baker: v1.BakerId,
+        blockHash?: HexString
+    ): AsyncIterable<v1.DelegatorInfo> {
+        const request: v2.GetPoolDelegatorsRequest = {
+            blockHash: getBlockHashInput(blockHash),
+            baker: { value: baker },
+        };
+        const delegatorInfo = this.client.getPoolDelegators(request).responses;
+        return mapAsyncIterable(delegatorInfo, translate.delegatorInfo);
+    }
 }
 
 export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {

@@ -329,3 +329,26 @@ export const arList = [
             'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a791a28a6d3e7ca0857c0f996f94e65da78b8d9b5de5e32164e291e553ed103bf14d6fab1f21749d59664e34813afe77',
     },
 ];
+
+export const delegatorInfoList = [
+    {
+        account: '3uX8g2uzQwBjVSJ6ZDU5cQCKhgsET6kMuRoraQH2ANB9Xa84YR',
+        stake: 40000000000n,
+    },
+    {
+        account: '4mAs6xcFw26fb6u8odkJWoe3fAK8bCJ91BwScUc36DFhh3thwD',
+        stake: 10000000n,
+    },
+    {
+        account: '3NvUNvVm5puDT2EYbo7hCF3d5AwzzCqKE18Ms6BYkKY9UShdf3',
+        stake: 3000000000n,
+    },
+    {
+        account: '3ivPxmqdRk5TX5mKpFshKzrA44bYUW2tg6EwDPvALszNoBGTK9',
+        stake: 33000000n,
+    },
+    {
+        account: '37tU96v4MQSaEgVP68M3TBRHMwZpgYSGnMer3ta3FJ8wkXtjDQ',
+        stake: 94000000n,
+    },
+];

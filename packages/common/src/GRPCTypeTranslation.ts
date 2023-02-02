@@ -1704,6 +1704,18 @@ export function blockInfo(blockInfo: v2.BlockInfo): v1.BlockInfo {
     };
 }
 
+export function delegatorInfo(
+    delegatorInfo: v2.DelegatorInfo
+): v1.DelegatorInfo {
+    return {
+        account: unwrapToBase58(delegatorInfo.account),
+        stake: unwrap(delegatorInfo.stake?.value),
+        ...(delegatorInfo.pendingChange && {
+            pendingChange: trPendingChange(delegatorInfo.pendingChange),
+        }),
+    };
+}
+
 // ---------------------------- //
 // --- V1 => V2 translation --- //
 // ---------------------------- //

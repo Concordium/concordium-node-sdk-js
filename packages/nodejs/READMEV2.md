@@ -309,7 +309,7 @@ const blockHash = await client.waitForTransactionFinalization(
 ### getAccountList
 Retrieves the accounts that exists a the end of a given block as an async iterable.
 
-If a blockhash is not supplied it will pick the latest finalized block. An optional abortsignal can also be provided that closes the stream.
+If a blockhash is not supplied it will pick the latest finalized block. An optional abortSignal can also be provided that closes the stream.
 
 ```js
 const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
@@ -324,7 +324,7 @@ for await (const account of accounts) {
 ### getModuleList
 Retrieves all smart contract modules, as an async iterable, that exists in the state at the end of a given block.
 
-If a blockhash is not supplied it will pick the latest finalized block. An optional abortsignal can also be provided that closes the stream.
+If a blockhash is not supplied it will pick the latest finalized block. An optional abortSignal can also be provided that closes the stream.
 
 ```js
 const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
@@ -339,7 +339,7 @@ for await (const moduleRef of moduleRefs) {
 ### getAncestors
 Retrieves all smart contract modules that exists in the state at the end of a given block, as an async iterable of hex strings. A bigint representing the max number of ancestors to get must be provided.
 
-If a blockhash is not supplied it will pick the latest finalized block. An optional abortsignal can also be provided that closes the stream.
+If a blockhash is not supplied it will pick the latest finalized block. An optional abortSignal can also be provided that closes the stream.
 
 ```js
 const maxNumberOfAncestors = 100n;
@@ -355,7 +355,7 @@ for await (const ancestor of ancestors) {
 ### getInstanceState
 Get the exact state of a specific contract instance, streamed as a list of hex string key-value pairs.
 
-If a blockhash is not supplied it will pick the latest finalized block. An optional abortsignal can also be provided that closes the stream.
+If a blockhash is not supplied it will pick the latest finalized block. An optional abortSignal can also be provided that closes the stream.
 
 ```js
 const contractAddress = {
@@ -394,7 +394,7 @@ const state: HexString = await clientV2.instanceStateLookup(blockHash);
 ### getIdentityProviders
 Get the identity providers registered as of the end of a given block as a stream
 
-If a blockhash is not supplied it will pick the latest finalized block. An optional abortsignal can also be provided that closes the stream.
+If a blockhash is not supplied it will pick the latest finalized block. An optional abortSignal can also be provided that closes the stream.
 
 ```js
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
@@ -408,7 +408,7 @@ for await (const ip of ips) {
 ## getAnonymityRevokers
 Get the anonymity revokers registered as of the end of a given block as a stream.
 
-If a blockhash is not supplied it will pick the latest finalized block. An optional abortsignal can also be provided that closes the stream.
+If a blockhash is not supplied it will pick the latest finalized block. An optional abortSignal can also be provided that closes the stream.
 ```js
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
 const ars = await client.getAnonymityRevokers(blockHash);

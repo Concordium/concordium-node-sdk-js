@@ -986,26 +986,15 @@ function trUpdatePayload(
             };
         }
         case 'addAnonymityRevokerUpdate': {
-            const update = payload.payload.addAnonymityRevokerUpdate;
             return {
                 updateType: UpdateType.AddAnonymityRevoker,
-                update: {
-                    arDescription: unwrap(update.description),
-                    arIdentity: unwrap(update.identity?.value),
-                    arPublicKey: unwrapValToHex(update.publicKey),
-                },
+                update: arInfo(payload.payload.addAnonymityRevokerUpdate),
             };
         }
         case 'addIdentityProviderUpdate': {
-            const update = payload.payload.addIdentityProviderUpdate;
             return {
                 updateType: UpdateType.AddIdentityProvider,
-                update: {
-                    ipDescription: unwrap(update.description),
-                    ipIdentity: unwrap(update.identity?.value),
-                    ipVerifyKey: unwrapValToHex(update.verifyKey),
-                    ipCdiVerifyKey: unwrapValToHex(update.cdiVerifyKey),
-                },
+                update: ipInfo(payload.payload.addIdentityProviderUpdate),
             };
         }
         case 'cooldownParametersCpv1Update': {

@@ -625,6 +625,22 @@ test.each([clientV2, clientWeb])('getPoolDelegators', async (client) => {
     expect(delegatorInfoList).toEqual(expected.delegatorInfoList);
 });
 
+test.each([clientV2, clientWeb])(
+    'getPoolDelegatorsRewardPeriod',
+    async (client) => {
+        const delegatorInfoStream = client.getPoolDelegatorsRewardPeriod(
+            15n,
+            testBlockHash
+        );
+        const delegatorInfoList = await asyncIterableToList(
+            delegatorInfoStream
+        );
+
+        console.log(delegatorInfoList);
+        expect(delegatorInfoList).toEqual(expected.delegatorInfoList);
+    }
+);
+
 // For tests that take a long time to run, is skipped by default
 describe.skip('Long run-time test suite', () => {
     const longTestTime = 45000;

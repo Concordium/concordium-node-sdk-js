@@ -14,6 +14,7 @@
     - `getBlockInfo()`
     - `getBakerList()`
     - `getPoolDelegators()`
+    - `getPoolDelegatorsRewardPeriod()`
 
 ## 6.4.0
 

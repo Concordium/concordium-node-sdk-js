@@ -9,7 +9,7 @@ import {
     ContractContext,
     CryptographicParameters,
     InstanceInfo,
-    InvokeContractResult,
+    InvokeContractResultV1,
     NextAccountNonce,
     SignedCredentialDeploymentDetails,
     TransactionStatus,
@@ -354,7 +354,7 @@ export class JsonRpcClient {
     async invokeContract(
         contractContext: ContractContext,
         blockHash?: string
-    ): Promise<InvokeContractResult | undefined> {
+    ): Promise<InvokeContractResultV1 | undefined> {
         if (!blockHash) {
             const consensusStatus = await this.getConsensusStatus();
             blockHash = consensusStatus.lastFinalizedBlock;
@@ -380,7 +380,7 @@ export class JsonRpcClient {
         });
 
         const bigIntPropertyKeys = ['usedEnergy', 'index', 'subindex'];
-        const res = transformJsonResponse<InvokeContractResult>(
+        const res = transformJsonResponse<InvokeContractResultV1>(
             response,
             buildJsonResponseReviver([], bigIntPropertyKeys),
             intToStringTransformer(bigIntPropertyKeys)

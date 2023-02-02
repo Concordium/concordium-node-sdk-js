@@ -1,4 +1,5 @@
 import {
+    AccountTransferredEvent,
     AmountAddedByDecryptionEvent,
     BakerAddedEvent,
     BakerEvent,
@@ -17,7 +18,6 @@ import {
     MemoEvent,
     ModuleDeployedEvent,
     NewEncryptedAmountEvent,
-    TransferredEvent,
     TransferredWithScheduleEvent,
 } from './transactionEvent';
 import { UpdateInstructionPayload } from './chainUpdate';
@@ -70,12 +70,12 @@ export enum TransactionKindString {
 
 export interface TransferSummary {
     transactionType: TransactionKindString.Transfer;
-    transfer: TransferredEvent;
+    transfer: AccountTransferredEvent;
 }
 
 export interface TransferWithMemoSummary {
     transactionType: TransactionKindString.TransferWithMemo;
-    transfer: TransferredEvent;
+    transfer: AccountTransferredEvent;
     memo: MemoEvent;
 }
 

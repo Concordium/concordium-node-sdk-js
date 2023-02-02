@@ -5,7 +5,7 @@ import { DataBlob } from './types/DataBlob';
 import { TransactionExpiry } from './types/transactionExpiry';
 import { Buffer } from 'buffer/';
 import { ModuleReference } from './types/moduleReference';
-import { RejectReason } from './types/rejectReason';
+import { RejectReason, RejectReasonV1 } from './types/rejectReason';
 import {
     ContractTraceEvent,
     MemoEvent,
@@ -112,7 +112,7 @@ export type Address =
 
 interface RejectedEventResult {
     outcome: 'reject';
-    rejectReason: RejectReason;
+    rejectReason: RejectReasonV1;
 }
 
 interface SuccessfulEventResult {
@@ -605,7 +605,7 @@ export interface NextAccountNonce {
 
 export interface ReleaseSchedule {
     timestamp: Date;
-    amount: bigint;
+    amount: Amount;
 }
 
 export interface ReleaseScheduleWithTransactions extends ReleaseSchedule {
@@ -613,7 +613,7 @@ export interface ReleaseScheduleWithTransactions extends ReleaseSchedule {
 }
 
 export interface AccountReleaseSchedule {
-    total: bigint;
+    total: Amount;
     schedule: ReleaseScheduleWithTransactions[];
 }
 
@@ -1325,9 +1325,19 @@ export interface InvokeContractFailedResult {
     reason: RejectReason;
 }
 
+export interface InvokeContractFailedResultV1 {
+    tag: 'failure';
+    usedEnergy: bigint;
+    reason: RejectReasonV1;
+}
+
 export type InvokeContractResult =
     | InvokeContractSuccessResult
     | InvokeContractFailedResult;
+
+export type InvokeContractResultV1 =
+    | InvokeContractSuccessResult
+    | InvokeContractFailedResultV1;
 
 export interface CredentialDeploymentDetails {
     expiry: TransactionExpiry;

@@ -4,6 +4,8 @@ import {
     DigitString,
     HexString,
     ContractAddress,
+    Amount,
+    BakerId,
 } from '../types';
 
 /*
@@ -145,12 +147,17 @@ export interface StringRejectReason {
     tag: StringRejectReasonTag;
     contents: HexString | Base58String;
 }
-export type NumberRejectReasonTag =
+export type BakerIdRejectReasonTag =
     | RejectReasonTag.AlreadyABaker
     | RejectReasonTag.DelegationTargetNotABaker;
 
+export interface BakerIdRejectReason {
+    tag: BakerIdRejectReasonTag;
+    contents: BakerId;
+}
+
 export interface NumberRejectReason {
-    tag: NumberRejectReasonTag;
+    tag: BakerIdRejectReasonTag;
     contents: number;
 }
 
@@ -160,15 +167,39 @@ export interface SimpleRejectReason {
 
 export interface InvalidReceiveMethod {
     tag: RejectReasonTag.InvalidReceiveMethod;
+    contents: {
+        moduleRef: HexString;
+        receiveName: string;
+    };
+}
+
+export interface InvalidReceiveMethodV1 {
+    tag: RejectReasonTag.InvalidReceiveMethod;
     contents: [HexString, string]; // [moduleRef, receiveName]
 }
 
 export interface InvalidInitMethod {
     tag: RejectReasonTag.InvalidInitMethod;
+    contents: {
+        moduleRef: HexString;
+        initName: string; // [moduleRef, initName]
+    };
+}
+
+export interface InvalidInitMethodV1 {
+    tag: RejectReasonTag.InvalidInitMethod;
     contents: [HexString, string]; // [moduleRef, initName]
 }
 
 export interface AmountTooLarge {
+    tag: RejectReasonTag.AmountTooLarge;
+    contents: {
+        address: Address;
+        amount: Amount;
+    };
+}
+
+export interface AmountTooLargeV1 {
     tag: RejectReasonTag.AmountTooLarge;
     contents: [Address, DigitString]; // [address, amount]
 }
@@ -187,14 +218,24 @@ export interface CredIdsRejectReason {
     contents: string[];
 }
 
-export type RejectReason =
+type RejectReasonCommon =
     | SimpleRejectReason
-    | RejectedReceive
-    | RejectedInit
     | StringRejectReason
-    | NumberRejectReason
-    | InvalidReceiveMethod
-    | InvalidInitMethod
-    | AmountTooLarge
+    | RejectedInit
+    | RejectedReceive
     | InvalidContractAddress
     | CredIdsRejectReason;
+
+export type RejectReason =
+    | RejectReasonCommon
+    | BakerIdRejectReason
+    | InvalidReceiveMethod
+    | InvalidInitMethod
+    | AmountTooLarge;
+
+export type RejectReasonV1 =
+    | RejectReasonCommon
+    | NumberRejectReason
+    | InvalidReceiveMethodV1
+    | InvalidInitMethodV1
+    | AmountTooLargeV1;

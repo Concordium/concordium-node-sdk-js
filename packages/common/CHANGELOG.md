@@ -4,6 +4,19 @@
 
 ### Added
 
+- Added a GRPCv2 client starting with the following functions:
+    - `getAccountInfo()`
+    - `getNextAccountSequenceNumber()`
+    - `getCryptographicParameters()`
+    - `getBlockItemStatus()`
+    - `getConsensusInfo()`
+    - `getModuleSource()`
+    - `getInstanceInfo()`
+    - `invokeInstance()`
+    - `getAccountTransactionSignHash()`
+    - `sendAccountTransaction()`
+    - `sendCredentialDeploymentTransaction()`
+
 - Serialization:
     - `serializeAccountTransactionPayload()`
     - `serializeCredentialDeploymentPayload()`

@@ -14,6 +14,7 @@ import bs58check from 'bs58check';
 import { AccountAddress } from './types/accountAddress';
 import { ModuleReference } from './types/moduleReference';
 import {
+    AccountTransferredEvent,
     AmountAddedByDecryptionEvent,
     BakerAddedEvent,
     BakerEvent,
@@ -32,7 +33,6 @@ import {
     MemoEvent,
     ModuleDeployedEvent,
     NewEncryptedAmountEvent,
-    TransferredEvent,
     TransferredWithScheduleEvent,
 } from './types/transactionEvent';
 import { RejectReason, SimpleRejectReasonTag } from './types/rejectReason';
@@ -496,7 +496,7 @@ function trContractTraceElement(
     }
 }
 
-function trBakerEvent(bakerEvent: v2.BakerEvent): BakerEvent {
+function trBakerEvent(bakerEvent: v2.BakerEvent, account: string): BakerEvent {
     const event = bakerEvent.event;
     switch (event.oneofKind) {
         case 'bakerAdded': {
@@ -516,18 +516,21 @@ function trBakerEvent(bakerEvent: v2.BakerEvent): BakerEvent {
             return {
                 tag: TransactionEventTag.BakerRemoved,
                 bakerId: Number(unwrap(event.bakerRemoved.value)),
+                account,
             };
         case 'bakerStakeIncreased':
             return {
                 tag: TransactionEventTag.BakerStakeIncreased,
                 bakerId: Number(unwrap(event.bakerStakeIncreased.bakerId)),
                 newStake: unwrap(event.bakerStakeIncreased.newStake?.value),
+                account,
             };
         case 'bakerStakeDecreased':
             return {
                 tag: TransactionEventTag.BakerStakeDecreased,
                 bakerId: Number(unwrap(event.bakerStakeDecreased.bakerId)),
                 newStake: unwrap(event.bakerStakeDecreased.newStake?.value),
+                account,
             };
         case 'bakerRestakeEarningsUpdated': {
             const update = event.bakerRestakeEarningsUpdated;
@@ -535,6 +538,7 @@ function trBakerEvent(bakerEvent: v2.BakerEvent): BakerEvent {
                 tag: TransactionEventTag.BakerSetRestakeEarnings,
                 bakerId: Number(unwrap(update.bakerId?.value)),
                 restakeEarnings: unwrap(update.restakeEarnings),
+                account,
             };
         }
         case 'bakerKeysUpdated':
@@ -554,6 +558,7 @@ function trBakerEvent(bakerEvent: v2.BakerEvent): BakerEvent {
                 tag: TransactionEventTag.BakerSetOpenStatus,
                 bakerId: Number(unwrap(setOpenStatus.bakerId?.value)),
                 openStatus: trOpenStatus(setOpenStatus.openStatus),
+                account,
             };
         }
         case 'bakerSetMetadataUrl': {
@@ -562,6 +567,7 @@ function trBakerEvent(bakerEvent: v2.BakerEvent): BakerEvent {
                 tag: TransactionEventTag.BakerSetMetadataURL,
                 bakerId: Number(unwrap(setURL.bakerId?.value)),
                 metadataURL: setURL.url,
+                account,
             };
         }
         case 'bakerSetTransactionFeeCommission': {
@@ -571,6 +577,7 @@ function trBakerEvent(bakerEvent: v2.BakerEvent): BakerEvent {
                 tag: TransactionEventTag.BakerSetTransactionFeeCommission,
                 bakerId: Number(unwrap(transferFeeComm.bakerId?.value)),
                 transactionFeeCommission: trAmountFraction(amount),
+                account,
             };
         }
         case 'bakerSetBakingRewardCommission': {
@@ -589,6 +596,7 @@ function trBakerEvent(bakerEvent: v2.BakerEvent): BakerEvent {
                 tag: TransactionEventTag.BakerSetFinalizationRewardCommission,
                 bakerId: Number(unwrap(rewardComm.bakerId?.value)),
                 finalizationRewardCommission: trAmountFraction(amount),
+                account,
             };
         }
         case undefined:
@@ -763,18 +771,24 @@ function trRejectReason(
         case 'invalidInitMethod':
             return {
                 tag: Tag.InvalidInitMethod,
-                contents: [
-                    unwrapValToHex(reason.invalidInitMethod.moduleRef),
-                    unwrap(reason.invalidInitMethod.initName?.value),
-                ],
+                contents: {
+                    moduleRef: unwrapValToHex(
+                        reason.invalidInitMethod.moduleRef
+                    ),
+                    initName: unwrap(reason.invalidInitMethod.initName?.value),
+                },
             };
         case 'invalidReceiveMethod':
             return {
                 tag: Tag.InvalidReceiveMethod,
-                contents: [
-                    unwrapValToHex(reason.invalidReceiveMethod.moduleRef),
-                    unwrap(reason.invalidReceiveMethod.receiveName?.value),
-                ],
+                contents: {
+                    moduleRef: unwrapValToHex(
+                        reason.invalidReceiveMethod.moduleRef
+                    ),
+                    receiveName: unwrap(
+                        reason.invalidReceiveMethod.receiveName?.value
+                    ),
+                },
             };
         case 'invalidModuleReference':
             return {
@@ -789,10 +803,10 @@ function trRejectReason(
         case 'amountTooLarge':
             return {
                 tag: Tag.AmountTooLarge,
-                contents: [
-                    trAddress(reason.amountTooLarge.address),
-                    unwrap(String(reason.amountTooLarge.amount?.value)),
-                ],
+                contents: {
+                    address: trAddress(reason.amountTooLarge.address),
+                    amount: unwrap(reason.amountTooLarge.amount?.value),
+                },
             };
         case 'rejectedInit':
             return {
@@ -810,7 +824,7 @@ function trRejectReason(
         case 'alreadyABaker':
             return {
                 tag: Tag.AlreadyABaker,
-                contents: Number(unwrap(reason.alreadyABaker.value)),
+                contents: unwrap(reason.alreadyABaker.value),
             };
         case 'notABaker':
             return {
@@ -850,9 +864,7 @@ function trRejectReason(
         case 'delegationTargetNotABaker':
             return {
                 tag: Tag.DelegationTargetNotABaker,
-                contents: Number(
-                    unwrap(reason.delegationTargetNotABaker.value)
-                ),
+                contents: unwrap(reason.delegationTargetNotABaker.value),
             };
         case undefined:
             throw Error(
@@ -1275,10 +1287,10 @@ function trAccountTransactionSummary(
                 ),
             };
         case 'accountTransfer': {
-            const transfer: TransferredEvent = {
+            const transfer: AccountTransferredEvent = {
                 tag: TransactionEventTag.Transferred,
                 amount: unwrap(effect.accountTransfer.amount?.value),
-                to: trAccountAddress(effect.accountTransfer.receiver),
+                to: trAccountAddress(effect.accountTransfer.receiver).address,
             };
             if (effect.accountTransfer.memo) {
                 return {
@@ -1299,34 +1311,46 @@ function trAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: TransactionKindString.AddBaker,
-                bakerAdded: trBakerEvent({
-                    event: effect,
-                }) as BakerAddedEvent,
+                bakerAdded: trBakerEvent(
+                    {
+                        event: effect,
+                    },
+                    base.sender
+                ) as BakerAddedEvent,
             };
         case 'bakerRemoved':
             return {
                 ...base,
                 transactionType: TransactionKindString.RemoveBaker,
-                bakerRemoved: trBakerEvent({
-                    event: effect,
-                }) as BakerRemovedEvent,
+                bakerRemoved: trBakerEvent(
+                    {
+                        event: effect,
+                    },
+                    base.sender
+                ) as BakerRemovedEvent,
             };
         case 'bakerRestakeEarningsUpdated':
             return {
                 ...base,
                 transactionType:
                     TransactionKindString.UpdateBakerRestakeEarnings,
-                bakerRestakeEarningsUpdated: trBakerEvent({
-                    event: effect,
-                }) as BakerSetRestakeEarningsEvent,
+                bakerRestakeEarningsUpdated: trBakerEvent(
+                    {
+                        event: effect,
+                    },
+                    base.sender
+                ) as BakerSetRestakeEarningsEvent,
             };
         case 'bakerKeysUpdated':
             return {
                 ...base,
                 transactionType: TransactionKindString.UpdateBakerKeys,
-                bakerKeysUpdated: trBakerEvent({
-                    event: effect,
-                }) as BakerKeysUpdatedEvent,
+                bakerKeysUpdated: trBakerEvent(
+                    {
+                        event: effect,
+                    },
+                    base.sender
+                ) as BakerKeysUpdatedEvent,
             };
         case 'bakerStakeUpdated': {
             const increased = effect.bakerStakeUpdated.update?.increased;
@@ -1337,6 +1361,7 @@ function trAccountTransactionSummary(
                     : TransactionEventTag.BakerStakeDecreased,
                 bakerId: Number(unwrap(update?.bakerId)),
                 newStake: unwrap(update?.newStake?.value),
+                account: base.sender,
             };
             return {
                 ...base,
@@ -1475,7 +1500,9 @@ function trAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: TransactionKindString.ConfigureBaker,
-                events: effect.bakerConfigured.events.map(trBakerEvent),
+                events: effect.bakerConfigured.events.map((event) =>
+                    trBakerEvent(event, base.sender)
+                ),
             };
         case 'delegationConfigured':
             return {

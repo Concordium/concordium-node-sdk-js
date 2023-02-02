@@ -7,6 +7,7 @@ import type {
     Base58String,
     HexString,
     EventDelegationTarget,
+    Amount,
 } from '../types';
 import type { UpdateInstructionPayload } from './chainUpdate';
 import { ModuleReference } from './moduleReference';
@@ -103,7 +104,7 @@ export interface UpdatedEvent {
     tag: TransactionEventTag.Updated;
     address: ContractAddress;
     instigator: Address;
-    amount: bigint;
+    amount: Amount;
     contractVersion: ContractVersion;
     message: HexString;
     receiveName: string;
@@ -125,7 +126,7 @@ export interface DataRegisteredEvent {
 export interface ContractInitializedEvent {
     tag: TransactionEventTag.ContractInitialized;
     address: ContractAddress;
-    amount: bigint;
+    amount: Amount;
     contractName: string;
     events: HexString[];
     contractVersion?: ContractVersion;
@@ -139,9 +140,15 @@ export interface ModuleDeployedEvent {
 
 // Account and transfer Events
 
+export interface AccountTransferredEvent {
+    tag: TransactionEventTag.Transferred;
+    amount: Amount;
+    to: Base58String;
+}
+
 export interface TransferredEvent {
     tag: TransactionEventTag.Transferred;
-    amount: bigint;
+    amount: Amount;
     to: Address;
     from?: Address;
 }
@@ -166,13 +173,13 @@ export interface AccountCreatedEvent {
 export interface AmountAddedByDecryptionEvent {
     tag: TransactionEventTag.AmountAddedByDecryption;
     account?: Base58String;
-    amount: bigint;
+    amount: Amount;
 }
 
 export interface EncryptedSelfAmountAddedEvent {
     tag: TransactionEventTag.EncryptedSelfAmountAdded;
     account: Base58String;
-    amount: bigint;
+    amount: Amount;
     newAmount: string;
 }
 
@@ -259,7 +266,7 @@ export interface BakerAddedEvent {
 export interface BakerRemovedEvent {
     tag: TransactionEventTag.BakerRemoved;
     bakerId: number;
-    account?: Base58String;
+    account: Base58String;
 }
 
 export interface BakerStakeChangedEvent {
@@ -267,14 +274,14 @@ export interface BakerStakeChangedEvent {
         | TransactionEventTag.BakerStakeIncreased
         | TransactionEventTag.BakerStakeDecreased;
     bakerId: number;
-    account?: Base58String;
+    account: Base58String;
     newStake: bigint;
 }
 
 export interface BakerSetRestakeEarningsEvent {
     tag: TransactionEventTag.BakerSetRestakeEarnings;
     bakerId: number;
-    account?: Base58String;
+    account: Base58String;
     restakeEarnings: boolean;
 }
 
@@ -290,21 +297,21 @@ export interface BakerKeysUpdatedEvent {
 export interface BakerSetOpenStatusEvent {
     tag: TransactionEventTag.BakerSetOpenStatus;
     bakerId: number;
-    account?: Base58String;
+    account: Base58String;
     openStatus: OpenStatusText;
 }
 
 export interface BakerSetMetadataURLEvent {
     tag: TransactionEventTag.BakerSetMetadataURL;
     bakerId: number;
-    account?: Base58String;
+    account: Base58String;
     metadataURL: string;
 }
 
 export interface BakerSetFinalizationRewardCommissionEvent {
     tag: TransactionEventTag.BakerSetFinalizationRewardCommission;
     bakerId: number;
-    account?: Base58String;
+    account: Base58String;
     finalizationRewardCommission: number;
 }
 
@@ -318,13 +325,13 @@ export interface BakerSetBakingRewardCommissionEvent {
 export interface BakerSetTransactionFeeCommissionEvent {
     tag: TransactionEventTag.BakerSetTransactionFeeCommission;
     bakerId: number;
-    account?: Base58String;
+    account: Base58String;
     transactionFeeCommission: number;
 }
 
 export interface UpdateEnqueuedEvent {
     tag: TransactionEventTag.UpdateEnqueued;
-    effectiveTime: string;
+    effectiveTime: number;
     payload: UpdateInstructionPayload;
 }
 

@@ -63,7 +63,7 @@ import {
     PassiveDelegationStatus,
     PassiveDelegationStatusDetails,
     ContractContext,
-    InvokeContractResult,
+    InvokeContractResultV1,
     CcdAmount,
     ModuleReference,
     ReduceStakePendingChangeV1,
@@ -837,7 +837,7 @@ export default class ConcordiumNodeClient {
     async invokeContract(
         contractContext: ContractContext,
         blockHash: string
-    ): Promise<InvokeContractResult | undefined> {
+    ): Promise<InvokeContractResultV1 | undefined> {
         if (!isValidHash(blockHash)) {
             throw new Error('The input was not a valid hash: ' + blockHash);
         }
@@ -877,7 +877,7 @@ export default class ConcordiumNodeClient {
             'subindex',
             'amount',
         ];
-        return unwrapJsonResponse<InvokeContractResult>(
+        return unwrapJsonResponse<InvokeContractResultV1>(
             response,
             buildJsonResponseReviver([], bigIntPropertyKeys),
             intToStringTransformer(bigIntPropertyKeys)

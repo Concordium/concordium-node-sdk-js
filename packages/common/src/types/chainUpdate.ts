@@ -1,4 +1,10 @@
-import { AuthorizationsV0, AuthorizationsV1 } from '..';
+import {
+    Amount,
+    AuthorizationsV0,
+    AuthorizationsV1,
+    Base58String,
+    HexString,
+} from '..';
 import type {
     IpInfo,
     ArInfo,
@@ -141,14 +147,14 @@ export type AddIdentityProvider = IpInfo;
 export type AddAnonymityRevoker = ArInfo;
 
 export interface FoundationAccount {
-    address: string;
+    address: Base58String;
 }
 
 export interface ProtocolUpdateDetails {
     message: string;
     specificationUrl: string;
-    specificationHash: string;
-    specificationAuxiliaryData?: string;
+    specificationHash: HexString;
+    specificationAuxiliaryData: string;
 }
 
 export interface BakerStakeThreshold {
@@ -183,7 +189,7 @@ export interface CommissionRanges {
 export interface PoolParameters {
     passiveCommissions: CommissionRates;
     commissionBounds: CommissionRanges;
-    minimumEquityCapital: bigint;
+    minimumEquityCapital: Amount;
     capitalBound: number;
     leverageBound: Fraction;
 }

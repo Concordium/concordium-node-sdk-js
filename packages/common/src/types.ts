@@ -540,6 +540,14 @@ export interface BlockInfo {
     transactionEnergyCost: bigint;
 }
 
+export interface CommonBlockInfo {
+    hash: HexString;
+    height: bigint;
+}
+
+export type ArrivedBlockInfo = CommonBlockInfo;
+export type FinalizedBlockInfo = CommonBlockInfo;
+
 export interface ConsensusStatus {
     bestBlock: string;
     genesisBlock: string;

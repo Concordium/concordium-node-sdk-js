@@ -782,6 +782,7 @@ export default class ConcordiumNodeClient {
             'blocksBaked',
             'transactionFeesEarned',
             'effectiveStake',
+            'allPoolTotalCapital',
         ];
 
         const response = await this.sendRequest(this.client.getPoolStatus, req);

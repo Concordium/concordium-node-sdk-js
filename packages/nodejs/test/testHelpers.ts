@@ -36,12 +36,10 @@ export function getNodeClientV2(
     address = 'node.testnet.concordium.com',
     port = 20000
 ): ConcordiumNodeClientV2 {
-    const metadata = new Metadata();
     return createConcordiumClientV2(
         address,
         port,
         credentials.createInsecure(),
-        metadata,
         { timeout: 15000 }
     );
 }

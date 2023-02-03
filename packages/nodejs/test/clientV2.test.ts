@@ -24,7 +24,7 @@ import {
 import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons';
 import { serializeAccountTransaction } from '@concordium/common-sdk/lib/serialization';
-import { unwrap } from '@concordium/common-sdk/lib/util';
+import { mapAsyncIterable, unwrap } from '@concordium/common-sdk/lib/util';
 
 import { TextEncoder, TextDecoder } from 'util';
 import 'isomorphic-fetch';
@@ -679,6 +679,18 @@ test.each([clientV2, clientWeb])('electionInfoBaker', async (client) => {
 
     expect(electionInfo).toEqual(expected.electionInfoList);
 });
+
+test.each([clientV2, clientWeb])(
+    'getAccountNonFinalizedTransactions',
+    async (client) => {
+        const transactions = await client.getAccountNonFinalizedTransactions(
+            testAccount
+        );
+        const transactionsList = await asyncIterableToList(transactions);
+
+        expect(transactionsList).toBeDefined();
+    }
+);
 
 // For tests that take a long time to run, is skipped by default
 describe.skip('Long run-time test suite', () => {

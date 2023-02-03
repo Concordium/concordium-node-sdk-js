@@ -563,9 +563,24 @@ const electionInfo = await client.getElectionInfo(blockHash);
 
 console.log(electionInfo.electionDifficulty);
 console.log(electionInfo.electionNonce);
-for await (const bakerElectionInfo of electionInfo.bakerElectionInfo) {
+for (const bakerElectionInfo of electionInfo.bakerElectionInfo) {
     console.log(bakerElectionInfo.baker);
     console.log(bakerElectionInfo.account);
     console.log(bakerElectionInfo.lotteryPower);
+}
+```
+
+## getAccountNonFinalizedTransactions
+Get a list of non-finalized transaction hashes for a given account. This
+endpoint is not expected to return a large amount of data in most cases,
+but in bad network condtions it might. The stream will end when all the
+non-finalized transaction hashes have been returned.
+
+```js
+const accountAddress = new AccountAddress('3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G');
+const transactions = await client.getAccountNonFinalizedTransactions(accountAddress);
+
+for await (const transaction of transactions) {
+    console.log(transaction);
 }
 ```

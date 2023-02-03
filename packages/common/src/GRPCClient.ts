@@ -707,6 +707,26 @@ export default class ConcordiumNodeClient {
             .response;
         return translate.electionInfo(electionInfo);
     }
+
+    /**
+     * Get a list of non-finalized transaction hashes for a given account. This
+     * endpoint is not expected to return a large amount of data in most cases,
+     * but in bad network condtions it might. The stream will end when all the
+     * non-finalized transaction hashes have been returned.
+     *
+     * @param accountAddress The address of the account that you wish to query.
+     * @returns a stream of transaction hashes as hex strings.
+     */
+    getAccountNonFinalizedTransactions(
+        accountAddress: AccountAddress
+    ): AsyncIterable<HexString> {
+        const address: v2.AccountAddress = {
+            value: accountAddress.decodedAddress,
+        };
+        const transactions =
+            this.client.getAccountNonFinalizedTransactions(address).responses;
+        return mapAsyncIterable(transactions, translate.unwrapValToHex);
+    }
 }
 
 export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {

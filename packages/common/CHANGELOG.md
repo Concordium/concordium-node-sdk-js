@@ -19,6 +19,7 @@
     - `getPassiveDelegatorsRewardPeriod()`
     - `getBranches()`
     - `getElectionInfo()`
+    - `getAccountNonFinalizedTransactions()`
 
 ## 6.4.0
 

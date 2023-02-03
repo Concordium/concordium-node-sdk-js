@@ -1266,6 +1266,11 @@ export type InstanceInfoSerialized =
     | InstanceInfoSerializedV0
     | InstanceInfoSerializedV1;
 
+export interface InstanceStateKVPair {
+    key: HexString;
+    value: HexString;
+}
+
 export interface ContractContext {
     invoker?: ContractAddress | AccountAddress;
     contract: ContractAddress;

@@ -57,16 +57,16 @@ function unwrapToHex(bytes: Uint8Array | undefined): v1.HexString {
     return Buffer.from(unwrap(bytes)).toString('hex');
 }
 
-function unwrapToBase58(
+export function unwrapValToHex(x: { value: Uint8Array } | undefined): string {
+    return unwrapToHex(unwrap(x).value);
+}
+
+export function unwrapToBase58(
     address: v2.AccountAddress | undefined
 ): v1.Base58String {
     return bs58check.encode(
         Buffer.concat([Buffer.of(1), unwrap(address?.value)])
     );
-}
-
-function unwrapValToHex(x: { value: Uint8Array } | undefined): string {
-    return unwrapToHex(unwrap(x).value);
 }
 
 function trModuleRef(moduleRef: v2.ModuleRef | undefined): ModuleReference {
@@ -1925,6 +1925,15 @@ export function commonBlockInfo(
     return {
         hash: unwrapValToHex(blockInfo.hash),
         height: unwrap(blockInfo.height?.value),
+    };
+}
+
+export function instanceStateKVPair(
+    state: v2.InstanceStateKVPair
+): v1.InstanceStateKVPair {
+    return {
+        key: unwrapToHex(state.key),
+        value: unwrapToHex(state.value),
     };
 }
 

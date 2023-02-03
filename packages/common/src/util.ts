@@ -189,3 +189,14 @@ export function mapAsyncIterable<A, B>(
         },
     };
 }
+
+// Converts an async iterable to a list. Beware! this will not terminate if given an infinite stream.
+export async function asyncIterableToList<A>(
+    iterable: AsyncIterable<A>
+): Promise<A[]> {
+    const list: A[] = [];
+    for await (const iter of iterable) {
+        list.push(iter);
+    }
+    return list;
+}

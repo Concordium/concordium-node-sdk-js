@@ -29,6 +29,7 @@ import { serializeAccountTransaction } from '@concordium/common-sdk/lib/serializ
 import { TextEncoder, TextDecoder } from 'util';
 import 'isomorphic-fetch';
 import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
+import { asyncIterableToList } from '@concordium/common-sdk/src/util';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 global.TextEncoder = TextEncoder as any;
@@ -598,7 +599,54 @@ test.each([clientV2, clientWeb])('createAccount', async (client) => {
     ).rejects.toThrow('expired');
 });
 
-// Tests, which take a long time to run, are skipped by default
+test.each([clientV2, clientWeb])('getAccountList', async (client) => {
+    const blocks = await clientV1.getBlocksAtHeight(10n);
+    const accountIter = client.getAccountList(blocks[0]);
+    const accountList = await asyncIterableToList(accountIter);
+    expect(accountList).toEqual(expected.accountList);
+});
+
+test.each([clientV2, clientWeb])('getModuleList', async (client) => {
+    const blocks = await clientV1.getBlocksAtHeight(5000n);
+    const moduleIter = client.getModuleList(blocks[0]);
+    const moduleList = await asyncIterableToList(moduleIter);
+    expect(moduleList).toEqual(expected.moduleList);
+});
+
+test.each([clientV2, clientWeb])('getAncestors', async (client) => {
+    const ancestorsIter = client.getAncestors(3n, testBlockHash);
+    const ancestorsList = await asyncIterableToList(ancestorsIter);
+    expect(ancestorsList).toEqual(expected.ancestorList);
+});
+
+test.each([clientV2, clientWeb])('getInstanceState', async (client) => {
+    const contract = {
+        index: 602n,
+        subindex: 0n,
+    };
+    const instanceStateIter = client.getInstanceState(contract, testBlockHash);
+    const instanceStateList = await asyncIterableToList(instanceStateIter);
+
+    expect(instanceStateList).toEqual(expected.instanceStateList);
+});
+
+test.each([clientV2, clientWeb])('instanceStateLookup', async (client) => {
+    const key = '0000000000000000';
+    const expectedValue = '0800000000000000';
+    const contract = {
+        index: 601n,
+        subindex: 0n,
+    };
+    const value = await client.instanceStateLookup(
+        contract,
+        key,
+        testBlockHash
+    );
+
+    expect(value).toEqual(expectedValue);
+});
+
+// For tests that take a long time to run, is skipped by default
 describe.skip('Long run-time test suite', () => {
     const longTestTime = 45000;
 

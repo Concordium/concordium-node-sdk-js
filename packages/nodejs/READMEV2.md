@@ -348,3 +348,88 @@ const blockHash = await client.waitForTransactionFinalization(
     transactionHash
 );
 ```
+
+### getAccountList
+Retrieves the accounts that exists a the end of a given block as an async iterable.
+
+If a blockhash is not supplied it will pick the latest finalized block. An optional abortsignal can also be provided that closes the stream.
+
+```js
+const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
+const accounts: AsyncIterable<AccountAddress> = clientV2.getAccountList(blockHash);
+
+// Prints accounts
+for await (const account of accounts) {
+    console.log(account);
+}
+```
+
+### getModuleList
+Retrieves all smart contract modules, as an async iterable, that exists in the state at the end of a given block.
+
+If a blockhash is not supplied it will pick the latest finalized block. An optional abortsignal can also be provided that closes the stream.
+
+```js
+const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
+const moduleRefs: AsyncIterable<ModuleReference> = clientV2.getModuleList(blockHash);
+
+// Prints module references
+for await (const moduleRef of moduleRefs) {
+    console.log(moduleRef);
+}
+```
+
+### getAncestors
+Retrieves all smart contract modules that exists in the state at the end of a given block, as an async iterable of hex strings. A bigint representing the max number of ancestors to get must be provided.
+
+If a blockhash is not supplied it will pick the latest finalized block. An optional abortsignal can also be provided that closes the stream.
+
+```js
+const maxNumberOfAncestors = 100n;
+const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
+const ancestors: AsyncIterable<HexString> = clientV2.getAncestors(blockHash);
+
+// Prints ancestors
+for await (const ancestor of ancestors) {
+    console.log(ancestor);
+}
+```
+
+### getInstanceState
+Get the exact state of a specific contract instance, streamed as a list of hex string key-value pairs.
+
+If a blockhash is not supplied it will pick the latest finalized block. An optional abortsignal can also be provided that closes the stream.
+
+```js
+const contractAddress = {
+    index: 602n,
+    subindex: 0n,
+};
+const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
+const states: AsyncIterable<InstanceStateKVPair> = clientV2.getInstanceState(blockHash);
+
+// Prints instance state key-value pairs
+for await (const state of states) {
+    console.log('key:', state.key);
+    console.log('value:', state.value);
+}
+```
+
+### instanceStateLookup
+Get the value at a specific key of a contract state as a hex string.
+
+In contrast to `GetInstanceState` this is more efficient, but requires the user to know the specific key to look for.
+
+If a blockhash is not supplied it will pick the latest finalized block.
+
+```js
+const contract = {
+    index: 601n,
+    subindex: 0n,
+};
+const key = '0000000000000000';
+const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e'
+
+const state: HexString = await clientV2.instanceStateLookup(blockHash);
+...
+```

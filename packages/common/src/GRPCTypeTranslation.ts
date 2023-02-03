@@ -1508,7 +1508,9 @@ function trAccountTransactionSummary(
     }
 }
 
-function trBlockItemSummary(summary: v2.BlockItemSummary): BlockItemSummary {
+export function blockItemSummary(
+    summary: v2.BlockItemSummary
+): BlockItemSummary {
     const base = {
         index: unwrap(summary.index?.value),
         energyCost: unwrap(summary.energyCost?.value),
@@ -1548,7 +1550,7 @@ function trBlockItemSummaryInBlock(
 ): BlockItemSummaryInBlock {
     return {
         blockHash: unwrapValToHex(summary.blockHash),
-        summary: trBlockItemSummary(unwrap(summary.outcome)),
+        summary: blockItemSummary(unwrap(summary.outcome)),
     };
 }
 

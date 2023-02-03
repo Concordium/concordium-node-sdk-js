@@ -20,6 +20,7 @@
     - `getBranches()`
     - `getElectionInfo()`
     - `getAccountNonFinalizedTransactions()`
+    - `getBlockTransactionEvents()`
 
 ## 6.4.0
 

@@ -445,3 +445,20 @@ export const electionInfoList = {
         },
     ],
 };
+
+export const transactionEventList = [
+    {
+        type: 'updateTransaction',
+        index: 0n,
+        energyCost: 0n,
+        hash: '49d7b5c3234dc17bd904af0b63712dc0a6680b96ad556c5ac1103d8cdd128891',
+        effectiveTime: 0n,
+        payload: {
+            updateType: 'microGtuPerEuro',
+            update: {
+                denominator: 126230907181n,
+                numerator: 9397474320418127872n,
+            },
+        },
+    },
+];

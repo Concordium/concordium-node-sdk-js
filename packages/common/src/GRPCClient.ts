@@ -13,7 +13,7 @@ import {
     serializeAccountTransactionPayload,
     serializeCredentialDeploymentPayload,
 } from './serialization';
-import { BlockItemStatus } from './types/blockItemSummary';
+import { BlockItemStatus, BlockItemSummary } from './types/blockItemSummary';
 import { ModuleReference } from './types/moduleReference';
 
 /**
@@ -718,14 +718,31 @@ export default class ConcordiumNodeClient {
      * @returns a stream of transaction hashes as hex strings.
      */
     getAccountNonFinalizedTransactions(
-        accountAddress: AccountAddress
+        accountAddress: AccountAddress,
+        abortSignal?: AbortSignal
     ): AsyncIterable<HexString> {
+        const opts = { abort: abortSignal };
         const address: v2.AccountAddress = {
             value: accountAddress.decodedAddress,
         };
-        const transactions =
-            this.client.getAccountNonFinalizedTransactions(address).responses;
+        const transactions = this.client.getAccountNonFinalizedTransactions(
+            address,
+            opts
+        ).responses;
         return mapAsyncIterable(transactions, translate.unwrapValToHex);
+    }
+
+    getBlockTransactionEvents(
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<BlockItemSummary> {
+        const opts = { abort: abortSignal };
+        const blockHashInput = getBlockHashInput(blockHash);
+        const blockItemSummaries = this.client.getBlockTransactionEvents(
+            blockHashInput,
+            opts
+        ).responses;
+        return mapAsyncIterable(blockItemSummaries, translate.blockItemSummary);
     }
 }
 

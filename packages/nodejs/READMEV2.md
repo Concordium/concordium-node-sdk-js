@@ -576,11 +576,29 @@ endpoint is not expected to return a large amount of data in most cases,
 but in bad network condtions it might. The stream will end when all the
 non-finalized transaction hashes have been returned.
 
+An optional abort signal can also be provided that closes the stream.
+
 ```js
 const accountAddress = new AccountAddress('3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G');
 const transactions = await client.getAccountNonFinalizedTransactions(accountAddress);
 
 for await (const transaction of transactions) {
     console.log(transaction);
+}
+```
+
+## getBlockTransactionEvents
+
+Get a list of transaction events in a given block.
+The stream will end when all the transaction events for a given block have been returned.
+
+An optional abort signal can also be provided that closes the stream.
+
+```js
+const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
+const transactionEvents = await client.getBlockTransactionEvents(accountAddress);
+
+for await (const transactionEvent of transactionEvents) {
+    console.log(transactionEvent);
 }
 ```

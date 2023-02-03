@@ -24,7 +24,7 @@ import {
 import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons';
 import { serializeAccountTransaction } from '@concordium/common-sdk/lib/serialization';
-import { mapAsyncIterable, unwrap } from '@concordium/common-sdk/lib/util';
+import { unwrap } from '@concordium/common-sdk/lib/util';
 
 import { TextEncoder, TextDecoder } from 'util';
 import 'isomorphic-fetch';
@@ -689,6 +689,22 @@ test.each([clientV2, clientWeb])(
         const transactionsList = await asyncIterableToList(transactions);
 
         expect(transactionsList).toBeDefined();
+    }
+);
+
+test.each([clientV2, clientWeb])(
+    'getBlockTransactionEvents',
+    async (client) => {
+        const blockHash =
+            '8f3acabb19ef769db4d13ada858a305cc1a3d64adeb78fcbf3bb9f7583de6362';
+        const transactionEvents = await client.getBlockTransactionEvents(
+            blockHash
+        );
+        const transactionEventList = await asyncIterableToList(
+            transactionEvents
+        );
+
+        expect(transactionEventList).toEqual(expected.transactionEventList);
     }
 );
 

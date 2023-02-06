@@ -673,7 +673,7 @@ test.each([clientV2, clientWeb])('getBranches', async (client) => {
     expect(branch.children).toBeDefined();
 });
 
-test.each([clientV2, clientWeb])('electionInfoBaker', async (client) => {
+test.each([clientV2, clientWeb])('getElectionInfo', async (client) => {
     const blocks = await client.getBlocksAtHeight(10n);
     const electionInfo = await client.getElectionInfo(blocks[0]);
 
@@ -689,6 +689,25 @@ test.each([clientV2, clientWeb])(
         const transactionsList = await asyncIterableToList(transactions);
 
         expect(transactionsList).toBeDefined();
+        if (transactionsList[0]) {
+            expect(typeof transactionsList[0]).toEqual('string');
+        }
+    }
+);
+
+test.each([clientV2, clientWeb])(
+    'getBlockTransactionEvents',
+    async (client) => {
+        const blockHash =
+            '8f3acabb19ef769db4d13ada858a305cc1a3d64adeb78fcbf3bb9f7583de6362';
+        const transactionEvents = await client.getBlockTransactionEvents(
+            blockHash
+        );
+        const transactionEventList = await asyncIterableToList(
+            transactionEvents
+        );
+
+        expect(transactionEventList).toEqual(expected.transactionEventList);
     }
 );
 

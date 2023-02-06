@@ -382,24 +382,7 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<String> {
 
     let context = IpContext::new(&input.ip_info, &input.ars_infos, &input.global_context);
 
-    // And a policy.
-    let mut policy_vec = std::collections::BTreeMap::new();
-    for tag in input.revealed_attributes {
-        if let Some(att) = input.id_object.alist.alist.get(&tag) {
-            if policy_vec.insert(tag, att.clone()).is_some() {
-                bail!("Cannot reveal an attribute more than once.")
-            }
-        } else {
-            bail!("Cannot reveal an attribute which is not part of the attribute list.")
-        }
-    }
-
-    let policy = Policy {
-        valid_to: input.id_object.alist.valid_to,
-        created_at: input.id_object.alist.created_at,
-        policy_vec,
-        _phantom: Default::default(),
-    };
+    let policy = build_policy(&input.id_object.alist, input.revealed_attributes)?;
 
     let credential_context = CredentialContext {
         wallet,
@@ -434,7 +417,7 @@ pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
     let id_object: IdentityObject<constants::IpPairing, constants::ArCurve, AttributeKind> =
         try_get(&v, "identityObject")?;
 
-    let tags: Vec<AttributeTag> = try_get(&v, "revealedAttributes")?;
+    let revealed_attributes: Vec<AttributeTag> = try_get(&v, "revealedAttributes")?;
 
     let cred_num: u8 = try_get(&v, "credentialNumber")?;
 
@@ -463,23 +446,7 @@ pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
         randomness: randomness_wrapped.randomness,
     };
 
-    let mut policy_vec = std::collections::BTreeMap::new();
-    for tag in tags {
-        if let Some(att) = id_object.alist.alist.get(&tag) {
-            if policy_vec.insert(tag, att.clone()).is_some() {
-                bail!("Cannot reveal an attribute more than once.")
-            }
-        } else {
-            bail!("Cannot reveal an attribute which is not part of the attribute list.")
-        }
-    }
-
-    let policy = Policy {
-        valid_to: id_object.alist.valid_to,
-        created_at: id_object.alist.created_at,
-        policy_vec,
-        _phantom: Default::default(),
-    };
+    let policy = build_policy(&id_object.alist, revealed_attributes)?;
 
     let context = IpContext::new(&ip_info, &ars_infos, &global_context);
 
@@ -877,7 +844,7 @@ impl HasAttributeRandomness<ArCurve> for AttributeRandomness {
     }
 }
 
-pub fn create_unsigned_credential_v1_aux(input: UnsignedCredentialInput) -> Result<String> {
+pub fn create_unsigned_credential_v1_aux(input: UnsignedCredentialInput) -> Result<JsonString> {
     let chi = CredentialHolderInfo::<constants::ArCurve> {
         id_cred: IdCredentials {
             id_cred_sec: input.id_cred_sec,
@@ -901,24 +868,7 @@ pub fn create_unsigned_credential_v1_aux(input: UnsignedCredentialInput) -> Resu
 
     let context = IpContext::new(&input.ip_info, &input.ars_infos, &input.global_context);
 
-    // And a policy.
-    let mut policy_vec = std::collections::BTreeMap::new();
-    for tag in input.revealed_attributes {
-        if let Some(att) = input.id_object.alist.alist.get(&tag) {
-            if policy_vec.insert(tag, att.clone()).is_some() {
-                bail!("Cannot reveal an attribute more than once.")
-            }
-        } else {
-            bail!("Cannot reveal an attribute which is not part of the attribute list.")
-        }
-    }
-
-    let policy = Policy {
-        valid_to: input.id_object.alist.valid_to,
-        created_at: input.id_object.alist.created_at,
-        policy_vec,
-        _phantom: Default::default(),
-    };
+    let policy = build_policy(&input.id_object.alist, input.revealed_attributes)?;
 
     let (cdi, rand) = create_unsigned_credential(
         context,

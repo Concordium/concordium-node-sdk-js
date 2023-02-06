@@ -187,9 +187,9 @@ pub fn create_credential_v1_ext(raw_input: &str) -> String {
 }
 
 #[wasm_bindgen(js_name = createUnsignedCredentialV1)]
-pub fn create_unsigned_credential_v1_ext(input: &str) -> String {
+pub fn create_unsigned_credential_v1_ext(input: JsonString) -> JsonString {
     error_to_string(create_unsigned_credential_v1_aux(
-        serde_json::from_str(input).unwrap(),
+        serde_json::from_str(&input).unwrap(),
     ))
 }
 

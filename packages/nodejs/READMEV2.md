@@ -795,3 +795,9 @@ Get a list of banned peers.
 ```js
 const bannedPeers: IpAddressString[] = await this.client.bannedPeers();
 ```
+
+## peerDisconnect
+Bans a peer.
+```js
+await this.client.banPeer("127.0.0.1");
+```

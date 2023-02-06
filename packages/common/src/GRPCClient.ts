@@ -892,6 +892,21 @@ export default class ConcordiumNodeClient {
         const bannedPeers = await this.client.getBannedPeers(v2.Empty).response;
         return bannedPeers.peers.map((x) => unwrap(x.ipAddress?.value));
     }
+
+    /**
+     * Ban the given peer.
+     * Rejects if the action fails.
+     *
+     * @param ip The ip address of the peer to ban. Must be a valid ip address.
+     */
+    async banPeer(ip: v1.IpAddressString): Promise<void> {
+        assertValidIp(ip);
+
+        const request: v2.PeerToBan = {
+            ipAddress: { value: ip },
+        };
+        this.client.banPeer(request);
+    }
 }
 
 export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {

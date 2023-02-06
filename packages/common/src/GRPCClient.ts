@@ -587,7 +587,7 @@ export default class ConcordiumNodeClient {
      * The stream will end when all the delegators has been returned.
      *
      * @param baker The BakerId of the pool owner
-     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param blockHash an optional block hash to get the delegators at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns a stream of DelegatorInfo
      */
@@ -615,7 +615,7 @@ export default class ConcordiumNodeClient {
      * The stream will end when all the delegators has been returned.
      *
      * @param baker The BakerId of the pool owner
-     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param blockHash an optional block hash to get the delegators at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns a stream of DelegatorRewardPeriodInfo
      */
@@ -644,7 +644,7 @@ export default class ConcordiumNodeClient {
      * are immediately visible in this list.
      * The stream will end when all the delegators has been returned.
      *
-     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param blockHash an optional block hash to get the delegators at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns a stream of DelegatorInfo
      */
@@ -668,7 +668,7 @@ export default class ConcordiumNodeClient {
      * stake in the reward period containing the given block.
      * The stream will end when all the delegators has been returned.
      *
-     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param blockHash an optional block hash to get the delegators at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns a stream of DelegatorRewardPeriodInfo
      */

@@ -235,7 +235,7 @@ as long as there is a connection to the node:
 
 ```js
 // Create stream
-const blockStream = client.getBlocks();
+const blockStream: AsyncIterable<ArrivedBlockInfo> = client.getBlocks();
 
 // Prints blocks infinitely
 for await (const block of blockStream) {
@@ -249,7 +249,7 @@ function as it otherwise continues forever. An example of how to use `AbortSigna
 ```js
 // Create abort controller and block stream
 const ac = new AbortController();
-const blockStream = client.getBlocks(ac.signal);
+const blockStream: AsyncIterable<ArrivedBlockInfo> = client.getBlocks(ac.signal);
 
 // Only get one item then break
 for await (const block of blockStream) {
@@ -266,7 +266,7 @@ Works exactly like `getBlocks()` but only returns finalized blocks:
 
 ```js
 // Create stream
-const blockStream = client.getFinalizedBlocks();
+const blockStream: AsyncIterable<FinalizedBlockInfo> = client.getFinalizedBlocks();
 
 // Prints blocks infinitely
 for await (const block of blockStream) {
@@ -279,7 +279,7 @@ Likewise, you can also pass it an `AbortSignal`:
 ```js
 // Create abort controller and block stream
 const ac = new AbortController();
-const blockStream = client.getFinalizedBlocks(ac.signal);
+const blockStream: AsyncIterable<FinalizedBlockInfo>  = client.getFinalizedBlocks(ac.signal);
 
 // Only get one item then break
 for await (const block of blockStream) {
@@ -296,12 +296,12 @@ This function waits for the given transaction hash (given as a hex string) to fi
 the blockhash of the block that contains given transaction as a hex string.
 
 ```js
-const transactionHash = await client.sendAccountTransaction(
+const transactionHash: HexString = await client.sendAccountTransaction(
     someTransaction,
     signature
 );
 
-const blockHash = await client.waitForTransactionFinalization(
+const blockHash: HexString = await client.waitForTransactionFinalization(
     transactionHash
 );
 ```
@@ -313,7 +313,7 @@ If a blockhash is not supplied it will pick the latest finalized block. An optio
 
 ```js
 const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
-const accounts: AsyncIterable<AccountAddress> = clientV2.getAccountList(blockHash);
+const accounts: AsyncIterable<Base58String> = client.getAccountList(blockHash);
 
 // Prints accounts
 for await (const account of accounts) {
@@ -328,7 +328,7 @@ If a blockhash is not supplied it will pick the latest finalized block. An optio
 
 ```js
 const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
-const moduleRefs: AsyncIterable<ModuleReference> = clientV2.getModuleList(blockHash);
+const moduleRefs: AsyncIterable<HexString> = client.getModuleList(blockHash);
 
 // Prints module references
 for await (const moduleRef of moduleRefs) {
@@ -344,7 +344,7 @@ If a blockhash is not supplied it will pick the latest finalized block. An optio
 ```js
 const maxNumberOfAncestors = 100n;
 const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
-const ancestors: AsyncIterable<HexString> = clientV2.getAncestors(blockHash);
+const ancestors: AsyncIterable<HexString> = client.getAncestors(blockHash);
 
 // Prints ancestors
 for await (const ancestor of ancestors) {
@@ -363,7 +363,7 @@ const contractAddress = {
     subindex: 0n,
 };
 const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
-const states: AsyncIterable<InstanceStateKVPair> = clientV2.getInstanceState(blockHash);
+const states: AsyncIterable<InstanceStateKVPair> = client.getInstanceState(blockHash);
 
 // Prints instance state key-value pairs
 for await (const state of states) {
@@ -387,7 +387,7 @@ const contract = {
 const key = '0000000000000000';
 const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e'
 
-const state: HexString = await clientV2.instanceStateLookup(blockHash);
+const state: HexString = await client.instanceStateLookup(blockHash);
 ...
 ```
 
@@ -398,7 +398,7 @@ If a blockhash is not supplied it will pick the latest finalized block. An optio
 
 ```js
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
-const ips = await client.getIdentityProviders(blockHash);
+const ips: AsyncIterable<IpInfo> = client.getIdentityProviders(blockHash);
 
 for await (const ip of ips) {
     console.log(ip.ipDescription);
@@ -411,7 +411,7 @@ Get the anonymity revokers registered as of the end of a given block as a stream
 If a blockhash is not supplied it will pick the latest finalized block. An optional abortSignal can also be provided that closes the stream.
 ```js
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
-const ars = await client.getAnonymityRevokers(blockHash);
+const ars: AsyncIterable<IpInfo> = client.getAnonymityRevokers(blockHash);
 
 for await (const ar of ars) {
     console.log(ar.ipDescription);
@@ -425,7 +425,7 @@ Get a list of live blocks at a given height.
 
 It can accept an absolute height:
 ```js
-const blocks = await client.getBlocksAtHeight(100n);
+const blocks: HexString[] = await client.getBlocksAtHeight(100n);
 ...
 ```
 Or it can accept a relative height:
@@ -439,7 +439,7 @@ const request: BlocksAtHeightRequest = {
     // or allow results from more recent genesis indices as well (`false`).
     restrict: true;
 }
-const blocks = await client.getBlocksAtHeight(request);
+const blocks: HexString[] = await client.getBlocksAtHeight(request);
 ```
 
 ## getBlockInfo
@@ -460,7 +460,7 @@ Retrieves a stream of ID's for registered bakers on the network at a specific bl
 If a blockhash is not supplied it will pick the latest finalized block. An optional abort signal can also be provided that closes the stream.
 ```js
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
-const bakerIds = await client.getBakerList(blockHash);
+const bakerIds: AsyncIterable<BakerId> = client.getBakerList(blockHash);
 
 for await (const id of bakerIds) {
     console.log(id);
@@ -479,9 +479,9 @@ The stream will end when all the delegators has been returned.
 If a blockhash is not supplied it will pick the latest finalized block. An optional abort signal can also be provided that closes the stream.
 ```js
 const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
-const delegatorInfoList = await client.getPoolDelegators(15n, blockHash);
+const delegatorInfoStream: AsyncIterable<DelegatorInfo> = client.getPoolDelegators(15n, blockHash);
 
-for await (const delegatorInfo of delegatorInfoList) {
+for await (const delegatorInfo of delegatorInfoStream) {
     console.log(delegatorInfo);
 }
 ...
@@ -497,9 +497,9 @@ The stream will end when all the delegators has been returned.
 If a blockhash is not supplied it will pick the latest finalized block. An optional abort signal can also be provided that closes the stream.
 ```js
 const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
-const delegatorInfoList = await client.getPoolDelegatorsRewardPeriod(15n, blockHash);
+const delegatorInfoStream: AsyncIterable<DelegatorRewardPeriodInfo> = client.getPoolDelegatorsRewardPeriod(15n, blockHash);
 
-for await (const delegatorInfo of delegatorInfoList) {
+for await (const delegatorInfo of delegatorInfoStream) {
     console.log(delegatorInfo);
 }
 ...
@@ -516,9 +516,9 @@ The stream will end when all the delegators has been returned.
 If a blockhash is not supplied it will pick the latest finalized block. An optional abort signal can also be provided that closes the stream.
 ```js
 const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
-const delegatorInfoList = await client.getPassiveDelegators(blockHash);
+const delegatorInfoStream: AsyncIterable<DelegatorInfo> = client.getPassiveDelegators(blockHash);
 
-for await (const delegatorInfo of delegatorInfoList) {
+for await (const delegatorInfo of delegatorInfoStream) {
     console.log(delegatorInfo);
 }
 ...
@@ -534,9 +534,9 @@ The stream will end when all the delegators has been returned.
 If a blockhash is not supplied it will pick the latest finalized block. An optional abort signal can also be provided that closes the stream.
 ```js
 const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
-const delegatorInfoList = await client.getPassiveDelegatorsRewardPeriod(blockHash);
+const delegatorInfoStream: AsyncIterable<DelegatorRewardPeriodInfo> = client.getPassiveDelegatorsRewardPeriod(blockHash);
 
-for await (const delegatorInfo of delegatorInfoList) {
+for await (const delegatorInfo of delegatorInfoStream) {
     console.log(delegatorInfo);
 }
 ...
@@ -545,7 +545,7 @@ for await (const delegatorInfo of delegatorInfoList) {
 ## getBranches
 Get the current branches of blocks starting from and including the last finalized block.
 ```js
-const branch = await client.getBranches();
+const branch: Branch = await client.getBranches();
 
 console.log(branch.blockhash);
 console.log(branch.children);
@@ -559,7 +559,7 @@ If a blockhash is not supplied it will pick the latest finalized block.
 
 ```js
 const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
-const electionInfo = await client.getElectionInfo(blockHash);
+const electionInfo: ElectionInfo = await client.getElectionInfo(blockHash);
 
 console.log(electionInfo.electionDifficulty);
 console.log(electionInfo.electionNonce);
@@ -580,7 +580,7 @@ An optional abort signal can also be provided that closes the stream.
 
 ```js
 const accountAddress = new AccountAddress('3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G');
-const transactions = await client.getAccountNonFinalizedTransactions(accountAddress);
+const transactions: AsyncIterable<HexString> = client.getAccountNonFinalizedTransactions(accountAddress);
 
 for await (const transaction of transactions) {
     console.log(transaction);
@@ -596,7 +596,7 @@ An optional abort signal can also be provided that closes the stream.
 
 ```js
 const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
-const transactionEvents = await client.getBlockTransactionEvents(blockHash);
+const transactionEvents: AsyncIterable<BlockItemSummary> = client.getBlockTransactionEvents(blockHash);
 
 for await (const transactionEvent of transactionEvents) {
     console.log(transactionEvent);

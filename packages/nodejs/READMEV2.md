@@ -776,8 +776,17 @@ await this.client.shutdown();
 
 ## peerConnect
 Suggest to a peer to connect to the submitted peer details.
-This, if successful, adds the peer to the list of given addresses, otherwise an error is thrown.
+This, if successful, adds the peer to the list of given addresses, otherwise rejects.
 Note. The peer might not be connected to instantly, in that case the node will try to establish the connection in near future.
 ```js
-await this.client.shutdown();
+await this.client.peerConnect("127.0.0.1", 20000);
 ```
+
+## peerDisconnect
+Disconnect from the peer and remove them from the given addresses list
+if they are on it. Resolves if the request was processed successfully.
+Otherwise rejects.
+```js
+await this.client.peerDisonnect("127.0.0.1", 20000);
+```
+

@@ -1043,11 +1043,6 @@ export interface NextUpdateSequenceNumbers {
     timeParameters: bigint;
 }
 
-export interface IpSocketAddress {
-    ip: IpAddressString;
-    port: number;
-}
-
 export enum BlockItemKind {
     AccountTransactionKind = 0,
     CredentialDeploymentKind = 1,

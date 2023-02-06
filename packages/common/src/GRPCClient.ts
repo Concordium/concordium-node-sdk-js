@@ -16,6 +16,7 @@ import {
 } from './serialization';
 import { BlockItemStatus, BlockItemSummary } from './types/blockItemSummary';
 import { ModuleReference } from './types/moduleReference';
+import net = require('net');
 
 /**
  * A concordium-node specific gRPC client wrapper.
@@ -849,14 +850,37 @@ export default class ConcordiumNodeClient {
      * the node will try to establish the connection in near future. This
      * function returns a GRPC status 'Ok' in this case.
      *
-     * @param addres The ip and port to connect to.
+     * @param ip The ip address to connect to. Must be a valid ip address.
+     * @param port The port to connect to. Must be between 0 and 65535.
      */
     async peerConnect(ip: v1.IpAddressString, port: number): Promise<void> {
+        assertValidIp(ip);
+        assertValidPort(port);
+
         const request: v2.IpSocketAddress = {
             ip: { value: ip },
             port: { value: port },
         };
         this.client.peerConnect(request);
+    }
+
+    /**
+     * Disconnect from the peer and remove them from the given addresses list
+     * if they are on it. Return if the request was processed successfully.
+     * Otherwise return a GRPC error.
+     *
+     * @param ip The ip address to connect to. Must be a valid ip address.
+     * @param port The port to connect to. Must be between 0 and 65535.
+     */
+    async peerDisconnect(ip: v1.IpAddressString, port: number): Promise<void> {
+        assertValidIp(ip);
+        assertValidPort(port);
+
+        const request: v2.IpSocketAddress = {
+            ip: { value: ip },
+            port: { value: port },
+        };
+        this.client.peerDisconnect(request);
     }
 }
 
@@ -926,6 +950,21 @@ export function getInvokerInput(
         };
     } else {
         throw new Error('Unexpected input to build invoker');
+    }
+}
+
+function assertValidIp(ip: v1.IpAddressString): void {
+    if (net.isIP(ip)) {
+        throw new Error('The input was not a valid ip: ' + ip);
+    }
+}
+
+function assertValidPort(port: number): void {
+    if (port > 65535 || port < 0) {
+        throw new Error(
+            'The input was not a valid port, must be between 0 and 65535: ' +
+                port
+        );
     }
 }
 

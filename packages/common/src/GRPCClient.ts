@@ -56,7 +56,7 @@ export default class ConcordiumNodeClient {
      * Retrieves the consensus status information from the node. Note that the optional
      * fields will only be unavailable for a newly started node that has not processed
      * enough data yet.
-     * @param blockHash optional block hash to get the account info at, otherwise retrieves from last finalized block.
+     * @param blockHash optional block hash to get the cryptographic parameters at, otherwise retrieves from last finalized block.
      * @returns the global cryptographic parameters at the given block, or undefined it the block does not exist.
      */
     async getCryptographicParameters(
@@ -127,7 +127,7 @@ export default class ConcordiumNodeClient {
      * Retrieves the source of the given module at
      * the provided block.
      * @param moduleRef the module's reference, hash of the source represented as a bytearray.
-     * @param blockHash the block to get the module source at.
+     * @param blockHash optional block hash to get the module source at, otherwise retrieves from last finalized block
      * @returns the source of the module as raw bytes.
      */
     async getModuleSource(
@@ -153,7 +153,7 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieve information about a given smart contract instance.
      * @param contractAddress the address of the smart contract.
-     * @param blockHash the block hash to get the smart contact instances at.
+     * @param blockHash optional block hash to get the smart contact instances at, otherwise retrieves from last finalized block
      * @returns An object with information about the contract instance.
      */
     async getInstanceInfo(
@@ -304,6 +304,68 @@ export default class ConcordiumNodeClient {
         const response = await this.client.sendBlockItem(sendBlockItemRequest)
             .response;
         return Buffer.from(response.value).toString('hex');
+    }
+
+    /**
+     * Retrieves the status of the block chain parameters at the given blockHash.
+     * @param blockHash the block hash of the block to get the information from.
+     * @returns Info on all of the block chain parameters.
+     */
+    async getBlockChainParameters(
+        blockHash?: HexString
+    ): Promise<v1.ChainParameters> {
+        const blockHashInput = getBlockHashInput(blockHash);
+        const response = await this.client.getBlockChainParameters(
+            blockHashInput
+        ).response;
+        return translate.blockChainParameters(response);
+    }
+
+    /**
+     * Retrieves information on the baker pool of the given bakerId.
+     * @param blockHash the block hash of the block to get the information from.
+     * @param bakerId the ID of the baker to get the status for.
+     * @returns The status of the corresponding baker pool.
+     */
+    async getPoolInfo(
+        bakerId: v1.BakerId,
+        blockHash?: HexString
+    ): Promise<v1.BakerPoolStatus> {
+        const input: v2.PoolInfoRequest = {
+            blockHash: getBlockHashInput(blockHash),
+            baker: {
+                value: bakerId,
+            },
+        };
+        const response = await this.client.getPoolInfo(input).response;
+        return translate.bakerPoolInfo(response);
+    }
+
+    /**
+     * Retrieves information on the passive delegators.
+     * @param blockHash the block hash of the block to get the information from.
+     * @returns The status of the passive delegators.
+     */
+    async getPassiveDelegationInfo(
+        blockHash?: HexString
+    ): Promise<v1.PassiveDelegationStatus> {
+        const input = getBlockHashInput(blockHash);
+        const response = await this.client.getPassiveDelegationInfo(input)
+            .response;
+        return translate.passiveDelegationInfo(response);
+    }
+
+    /**
+     * Retrieves the reward status at the given blockHash
+     * @param blockHash optional block hash to get the reward status at, otherwise retrieves from last finalized block
+     * @returns the reward status at the given block, or undefined it the block does not exist.
+     */
+    async getTokenomicsInfo(blockHash?: HexString): Promise<v1.TokenomicsInfo> {
+        const blockHashInput = getBlockHashInput(blockHash);
+
+        const response = await this.client.getTokenomicsInfo(blockHashInput)
+            .response;
+        return translate.tokenomicsInfo(response);
     }
 
     /**
@@ -501,7 +563,7 @@ export default class ConcordiumNodeClient {
      * The stream will end when all the identity providers have been returned,
      * or an abort signal is called.
      *
-     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param blockHash an optional block hash to get the providers at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns an async iterable of identity provider info objects.
      */
@@ -520,7 +582,7 @@ export default class ConcordiumNodeClient {
      * The stream will end when all the anonymity revokers have been returned,
      * or an abort signal is called.
      *
-     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param blockHash an optional block hash to get the anonymity revokers at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns an async iterable of identity provider info objects.
      */
@@ -552,7 +614,7 @@ export default class ConcordiumNodeClient {
     /**
      * Get information, such as height, timings, and transaction counts for the given block.
      *
-     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param blockHash an optional block hash to get the info from, otherwise retrieves from last finalized block.
      * @returns information on a block.
      */
     async getBlockInfo(blockHash?: HexString): Promise<v1.BlockInfo> {
@@ -564,7 +626,7 @@ export default class ConcordiumNodeClient {
     /**
      * Get all the bakers at the end of the given block.
      *
-     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param blockHash an optional block hash to get the baker list at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns an async iterable of BakerIds.
      */
@@ -587,7 +649,7 @@ export default class ConcordiumNodeClient {
      * The stream will end when all the delegators has been returned.
      *
      * @param baker The BakerId of the pool owner
-     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param blockHash an optional block hash to get the delegators at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns a stream of DelegatorInfo
      */
@@ -615,7 +677,7 @@ export default class ConcordiumNodeClient {
      * The stream will end when all the delegators has been returned.
      *
      * @param baker The BakerId of the pool owner
-     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param blockHash an optional block hash to get the delegators at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns a stream of DelegatorRewardPeriodInfo
      */
@@ -644,7 +706,7 @@ export default class ConcordiumNodeClient {
      * are immediately visible in this list.
      * The stream will end when all the delegators has been returned.
      *
-     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param blockHash an optional block hash to get the delegators at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns a stream of DelegatorInfo
      */
@@ -668,7 +730,7 @@ export default class ConcordiumNodeClient {
      * stake in the reward period containing the given block.
      * The stream will end when all the delegators has been returned.
      *
-     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param blockHash an optional block hash to get the delegators at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns a stream of DelegatorRewardPeriodInfo
      */

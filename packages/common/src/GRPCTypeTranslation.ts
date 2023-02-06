@@ -3,6 +3,8 @@ import * as v2 from '../grpc/v2/concordium/types';
 import { mapRecord, unwrap } from './util';
 import { Buffer } from 'buffer/';
 import {
+    BakerPoolPendingChangeType,
+    PoolStatusType,
     AuthorizationKeysUpdateType,
     HigherLevelKeyUpdateType,
     RejectReasonTag,
@@ -132,6 +134,16 @@ function trCredKeys(
 function trChainArData(chainArData: v2.ChainArData): v1.ChainArData {
     return {
         encIdCredPubShare: unwrapToHex(chainArData.encIdCredPubShare),
+    };
+}
+
+function trCommissionRates(
+    rates: v2.CommissionRates | undefined
+): v1.CommissionRates {
+    return {
+        transactionCommission: trAmountFraction(rates?.transaction),
+        bakingCommission: trAmountFraction(rates?.baking),
+        finalizationCommission: trAmountFraction(rates?.finalization),
     };
 }
 
@@ -267,16 +279,10 @@ function trOpenStatus(
 
 function trBaker(baker: v2.AccountStakingInfo_Baker): v1.AccountBakerDetails {
     const bakerInfo = baker.bakerInfo;
-    const rates = baker.poolInfo?.commissionRates;
-    const commissionRates: v1.CommissionRates = {
-        transactionCommission: trAmountFraction(rates?.transaction),
-        bakingCommission: trAmountFraction(rates?.baking),
-        finalizationCommission: trAmountFraction(rates?.finalization),
-    };
     const bakerPoolInfo: v1.BakerPoolInfo = {
         openStatus: trOpenStatus(baker.poolInfo?.openStatus),
         metadataUrl: unwrap(baker.poolInfo?.url),
-        commissionRates: commissionRates,
+        commissionRates: trCommissionRates(baker.poolInfo?.commissionRates),
     };
     return {
         restakeEarnings: baker.restakeEarnings,
@@ -293,8 +299,104 @@ function trBaker(baker: v2.AccountStakingInfo_Baker): v1.AccountBakerDetails {
     };
 }
 
+function translateChainParametersCommon(
+    params: v2.ChainParametersV1 | v2.ChainParametersV0
+): v1.ChainParametersCommon {
+    return {
+        electionDifficulty: trAmountFraction(params.electionDifficulty?.value),
+        euroPerEnergy: unwrap(params.euroPerEnergy?.value),
+        microGTUPerEuro: unwrap(params.microCcdPerEuro?.value),
+        accountCreationLimit: unwrap(params.accountCreationLimit?.value),
+        foundationAccount: unwrapToBase58(params.foundationAccount),
+    };
+}
+
+function translateCommissionRange(
+    range: v2.InclusiveRangeAmountFraction | undefined
+): v1.InclusiveRange<number> {
+    return {
+        min: trAmountFraction(range?.min),
+        max: trAmountFraction(range?.max),
+    };
+}
+
+function translateRewardParametersCommon(
+    params: v2.ChainParametersV1 | v2.ChainParametersV0
+): v1.RewardParametersCommon {
+    const feeDistribution = params.transactionFeeDistribution;
+    const gasRewards = params.gasRewards;
+    return {
+        transactionFeeDistribution: {
+            baker: trAmountFraction(feeDistribution?.baker),
+            gasAccount: trAmountFraction(feeDistribution?.gasAccount),
+        },
+        gASRewards: {
+            baker: trAmountFraction(gasRewards?.baker),
+            finalizationProof: trAmountFraction(gasRewards?.finalizationProof),
+            accountCreation: trAmountFraction(gasRewards?.accountCreation),
+            chainUpdate: trAmountFraction(gasRewards?.chainUpdate),
+        },
+    };
+}
+
+function translateMintRate(mintRate: v2.MintRate | undefined): number {
+    return unwrap(mintRate?.mantissa) * 10 ** (-1 * unwrap(mintRate?.exponent));
+}
+
+function transPoolPendingChange(
+    change: v2.PoolPendingChange | undefined
+): v1.BakerPoolPendingChange {
+    switch (change?.change?.oneofKind) {
+        case 'reduce': {
+            return {
+                pendingChangeType:
+                    BakerPoolPendingChangeType.ReduceBakerCapital,
+                // TODO ensure units are aligned
+                effectiveTime: trTimestamp(change.change.reduce.effectiveTime),
+                bakerEquityCapital: unwrap(
+                    change.change.reduce.reducedEquityCapital?.value
+                ),
+            };
+        }
+        case 'remove': {
+            return {
+                pendingChangeType: BakerPoolPendingChangeType.RemovePool,
+                effectiveTime: trTimestamp(change.change.remove.effectiveTime),
+            };
+        }
+        default:
+            return {
+                pendingChangeType: BakerPoolPendingChangeType.NoChange,
+            };
+    }
+}
+
+function transPoolInfo(info: v2.BakerPoolInfo): v1.BakerPoolInfo {
+    return {
+        openStatus: trOpenStatus(info.openStatus),
+        metadataUrl: info.url,
+        commissionRates: trCommissionRates(info.commissionRates),
+    };
+}
+
+function transPaydayStatus(
+    status: v2.PoolCurrentPaydayInfo | undefined
+): v1.CurrentPaydayBakerPoolStatus | null {
+    if (!status) {
+        return null;
+    }
+    return {
+        blocksBaked: status.blocksBaked,
+        finalizationLive: status.finalizationLive,
+        transactionFeesEarned: unwrap(status.transactionFeesEarned?.value),
+        effectiveStake: unwrap(status.effectiveStake?.value),
+        lotteryPower: status.lotteryPower,
+        bakerEquityCapital: unwrap(status.bakerEquityCapital?.value),
+        delegatedCapital: unwrap(status.delegatedCapital?.value),
+    };
+}
+
 export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
-    const accAdrRaw = Buffer.from(unwrap(acc.address?.value));
     const aggAmount = acc.encryptedBalance?.aggregatedAmount?.value;
     const numAggregated = acc.encryptedBalance?.numAggregated;
 
@@ -313,7 +415,7 @@ export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
         schedule: unwrap(acc.schedule?.schedules).map(trRelease),
     };
     const accInfoCommon: v1.AccountInfoSimple = {
-        accountAddress: AccountAddress.fromBytes(accAdrRaw).address,
+        accountAddress: unwrapToBase58(acc.address),
         accountNonce: unwrap(acc.sequenceNumber?.value),
         accountAmount: unwrap(acc.amount?.value),
         accountIndex: unwrap(acc.index?.value),
@@ -356,6 +458,170 @@ export function cryptographicParameters(
         bulletproofGenerators: unwrapToHex(cp.bulletproofGenerators),
         genesisString: cp.genesisString,
     };
+}
+
+export function blockChainParameters(
+    params: v2.ChainParameters
+): v1.ChainParameters {
+    switch (params.parameters.oneofKind) {
+        case 'v1': {
+            const common = translateChainParametersCommon(params.parameters.v1);
+            const v1 = params.parameters.v1;
+            const commonRewardParameters = translateRewardParametersCommon(v1);
+            return {
+                ...common,
+                rewardPeriodLength: unwrap(
+                    v1.timeParameters?.rewardPeriodLength?.value?.value
+                ),
+                mintPerPayday: translateMintRate(
+                    v1.timeParameters?.mintPerPayday
+                ),
+                delegatorCooldown: unwrap(
+                    v1.cooldownParameters?.delegatorCooldown?.value
+                ),
+                poolOwnerCooldown: unwrap(
+                    v1.cooldownParameters?.poolOwnerCooldown?.value
+                ),
+                passiveFinalizationCommission: trAmountFraction(
+                    v1.poolParameters?.passiveFinalizationCommission
+                ),
+                passiveBakingCommission: trAmountFraction(
+                    v1.poolParameters?.passiveBakingCommission
+                ),
+                passiveTransactionCommission: trAmountFraction(
+                    v1.poolParameters?.passiveTransactionCommission
+                ),
+                finalizationCommissionRange: translateCommissionRange(
+                    v1.poolParameters?.commissionBounds?.finalization
+                ),
+                bakingCommissionRange: translateCommissionRange(
+                    v1.poolParameters?.commissionBounds?.baking
+                ),
+                transactionCommissionRange: translateCommissionRange(
+                    v1.poolParameters?.commissionBounds?.transaction
+                ),
+                minimumEquityCapital: unwrap(
+                    v1.poolParameters?.minimumEquityCapital?.value
+                ),
+                capitalBound: trAmountFraction(
+                    v1.poolParameters?.capitalBound?.value
+                ),
+                leverageBound: unwrap(v1.poolParameters?.leverageBound?.value),
+                rewardParameters: {
+                    ...commonRewardParameters,
+                    mintDistribution: {
+                        bakingReward: trAmountFraction(
+                            v1.mintDistribution?.bakingReward
+                        ),
+                        finalizationReward: trAmountFraction(
+                            v1.mintDistribution?.finalizationReward
+                        ),
+                    },
+                },
+            };
+        }
+        case 'v0': {
+            const common = translateChainParametersCommon(params.parameters.v0);
+            const v0 = params.parameters.v0;
+            const commonRewardParameters = translateRewardParametersCommon(v0);
+            return {
+                ...common,
+                bakerCooldownEpochs: unwrap(v0.bakerCooldownEpochs?.value),
+                minimumThresholdForBaking: unwrap(
+                    v0.minimumThresholdForBaking?.value
+                ),
+                rewardParameters: {
+                    ...commonRewardParameters,
+                    mintDistribution: {
+                        bakingReward: trAmountFraction(
+                            v0.mintDistribution?.bakingReward
+                        ),
+                        finalizationReward: trAmountFraction(
+                            v0.mintDistribution?.finalizationReward
+                        ),
+                        mintPerSlot: translateMintRate(
+                            v0.mintDistribution?.mintPerSlot
+                        ),
+                    },
+                },
+            };
+        }
+        default:
+            throw new Error('Missing chain parameters');
+    }
+}
+
+export function bakerPoolInfo(info: v2.PoolInfoResponse): v1.BakerPoolStatus {
+    return {
+        poolType: PoolStatusType.BakerPool,
+        bakerId: unwrap(info.baker?.value),
+        bakerAddress: unwrapToBase58(info.address),
+        bakerEquityCapital: unwrap(info.equityCapital?.value),
+        delegatedCapital: unwrap(info.delegatedCapital?.value),
+        delegatedCapitalCap: unwrap(info.delegatedCapitalCap?.value),
+        poolInfo: transPoolInfo(unwrap(info?.poolInfo)),
+        bakerStakePendingChange: transPoolPendingChange(
+            info.equityPendingChange
+        ),
+        currentPaydayStatus: transPaydayStatus(info.currentPaydayInfo),
+        allPoolTotalCapital: unwrap(info.allPoolTotalCapital?.value),
+    };
+}
+
+export function passiveDelegationInfo(
+    info: v2.PassiveDelegationInfo
+): v1.PassiveDelegationStatus {
+    return {
+        poolType: PoolStatusType.PassiveDelegation,
+        delegatedCapital: unwrap(info.delegatedCapital?.value),
+        commissionRates: trCommissionRates(info.commissionRates),
+        currentPaydayTransactionFeesEarned: unwrap(
+            info.currentPaydayTransactionFeesEarned?.value
+        ),
+        currentPaydayDelegatedCapital: unwrap(
+            info.currentPaydayDelegatedCapital?.value
+        ),
+        allPoolTotalCapital: unwrap(info.allPoolTotalCapital?.value),
+    };
+}
+
+export function tokenomicsInfo(info: v2.TokenomicsInfo): v1.RewardStatus {
+    switch (info.tokenomics.oneofKind) {
+        case 'v0': {
+            const v0 = info.tokenomics.v0;
+            return {
+                protocolVersion: BigInt(v0.protocolVersion),
+                totalAmount: unwrap(v0.totalAmount?.value),
+                totalEncryptedAmount: unwrap(v0.totalEncryptedAmount?.value),
+                bakingRewardAccount: unwrap(v0.bakingRewardAccount?.value),
+                finalizationRewardAccount: unwrap(
+                    v0.finalizationRewardAccount?.value
+                ),
+                gasAccount: unwrap(v0.gasAccount?.value),
+            };
+        }
+        case 'v1': {
+            const v1 = info.tokenomics.v1;
+            return {
+                protocolVersion: BigInt(v1.protocolVersion),
+                totalAmount: unwrap(v1.totalAmount?.value),
+                totalEncryptedAmount: unwrap(v1.totalEncryptedAmount?.value),
+                bakingRewardAccount: unwrap(v1.bakingRewardAccount?.value),
+                finalizationRewardAccount: unwrap(
+                    v1.finalizationRewardAccount?.value
+                ),
+                gasAccount: unwrap(v1.gasAccount?.value),
+                foundationTransactionRewards: unwrap(
+                    v1.foundationTransactionRewards?.value
+                ),
+                nextPaydayTime: trTimestamp(v1.nextPaydayTime),
+                nextPaydayMintRate: unwrap(v1.nextPaydayMintRate),
+                totalStakedCapital: unwrap(v1.totalStakedCapital?.value),
+            };
+        }
+        case undefined:
+            throw new Error('Missing tokenomics info');
+    }
 }
 
 export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {

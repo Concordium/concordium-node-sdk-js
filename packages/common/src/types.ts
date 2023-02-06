@@ -247,7 +247,7 @@ export interface GasRewards {
     chainUpdate: number;
 }
 
-interface RewardParametersCommon {
+export interface RewardParametersCommon {
     transactionFeeDistribution: TransactionFeeDistribution;
     gASRewards: GasRewards;
 }
@@ -301,12 +301,13 @@ export interface TimeParametersV1 {
     mintPerPayday: number;
 }
 
-interface ChainParametersCommon {
+export interface ChainParametersCommon {
     electionDifficulty: number;
     euroPerEnergy: ExchangeRate;
     microGTUPerEuro: ExchangeRate;
     accountCreationLimit: number;
-    foundationAccountIndex: bigint;
+    foundationAccountIndex?: bigint;
+    foundationAccount?: string;
 }
 
 /**
@@ -518,6 +519,7 @@ export interface RewardStatusV1 extends RewardStatusCommon {
 }
 
 export type RewardStatus = RewardStatusV0 | RewardStatusV1;
+export type TokenomicsInfo = RewardStatus;
 
 export interface BlockInfo {
     blockParent: HexString;
@@ -859,7 +861,8 @@ export interface BakerPoolStatusDetails {
     delegatedCapitalCap: Amount;
     poolInfo: BakerPoolInfo;
     bakerStakePendingChange: BakerPoolPendingChange;
-    currentPaydayStatus?: CurrentPaydayBakerPoolStatus;
+    currentPaydayStatus: CurrentPaydayBakerPoolStatus | null;
+    allPoolTotalCapital: Amount;
 }
 
 export type BakerPoolStatus = PoolStatusWrapper<
@@ -872,6 +875,7 @@ export interface PassiveDelegationStatusDetails {
     commissionRates: CommissionRates;
     currentPaydayTransactionFeesEarned: Amount;
     currentPaydayDelegatedCapital: Amount;
+    allPoolTotalCapital: Amount;
 }
 
 export type PassiveDelegationStatus = PoolStatusWrapper<

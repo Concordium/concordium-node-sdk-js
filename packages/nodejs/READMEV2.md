@@ -16,6 +16,10 @@ Wrappers for interacting with the Concordium node, using nodejs.
     - [getBlockItemStatus](#getblockitemstatus)
     - [getConsensusStatus](#getconsensusstatus)
     - [getCryptographicParameters](#getcryptographicparameters)
+    - [getBlockChainParameters](#getblockchainparameters)
+    - [getPoolInfo](#getpoolinfo)
+    - [getPassiveDelegationInfo](#getpassivedelegationinfo)
+    - [getTokenomicsInfo](#gettokenomicsinfo)
     - [getInstanceInfo](#getinstanceinfo)
     - [invokeContract](#invokecontract)
     - [getModuleSource](#getModuleSource)
@@ -170,6 +174,45 @@ const cryptographicParameters: CryptographicParameters = await client.getCryptog
 ...
 ```
 
+## getBlockChainParameters
+Retrieves the block chain update parameters, which can be chained by chain updates, at a specific block.
+```
+const blockHash = Buffer.from('7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749', 'hex')
+const cryptographicParameters: ChainParameters = await client.getBlockChainParameters(blockHash);
+```
+
+## getPoolInfo
+Retrives various information on the specified baker pool, at the end of the specified block.
+```
+const bakerId = 1n;
+const blockHash = Buffer.from('7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749', 'hex');
+const bakerPoolInfo: BakerPoolStatus = await client.getBlockChainParameters(bakerId, blockHash);
+```
+
+## getPassiveDelegationInfo
+Retrieves information about the passive delegators, at the end of the specified block.
+```
+const blockHash = Buffer.from('7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749', 'hex');
+const bakerPoolInfo: PassiveDelegationStatus = await client.getBlockChainParameters(blockHash);
+```
+
+## getTokenomicsInfo
+Retrieves the current amount of funds in the system at a specific block, and the state of the special accounts.
+```js
+const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
+
+const tokenomicsInfo = await client.getTokenomicsInfo(blockHash);
+```
+
+Protocol version 4 expanded the amount of information in the response, so one should check the type to access that.
+This information includes information about the payday and total amount of funds staked.
+```js
+if (isRewardStatusV1(tokenomicsInfo)) {
+    const nextPaydayTime = tokenomicsInfo.nextPaydayTime;
+    ...
+}
+```
+
 ## getInstanceInfo
 Used to get information about a specific contract instance, at a specific block.
 
@@ -230,7 +273,7 @@ const source = await client.getModuleSource(moduleReference, blockHash);
 ```
 
 ## getBlocks
-Returns a stream of blocks that is iterable. The following code will recieved blocks
+Returns a stream of blocks that is iterable. The following code will receive blocks
 as long as there is a connection to the node:
 
 ```js

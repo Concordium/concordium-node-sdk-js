@@ -754,6 +754,22 @@ export default class ConcordiumNodeClient {
         ).responses;
         return mapAsyncIterable(blockItemSummaries, translate.blockItemSummary);
     }
+
+    /**
+     * Get next available sequence numbers for updating chain parameters after a given block.
+     *
+     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @return a NextUpdateSequenceNumbers object
+     */
+    async getNextUpdateSequenceNumbers(
+        blockHash?: HexString
+    ): Promise<v1.NextUpdateSequenceNumbers> {
+        const blockHashInput = getBlockHashInput(blockHash);
+        const sequenceNumbers = await this.client.getNextUpdateSequenceNumbers(
+            blockHashInput
+        ).response;
+        return translate.nextUpdateSequenceNumbers(sequenceNumbers);
+    }
 }
 
 export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {

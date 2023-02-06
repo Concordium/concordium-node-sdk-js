@@ -1746,6 +1746,31 @@ export function electionInfo(electionInfo: v2.ElectionInfo): v1.ElectionInfo {
     };
 }
 
+export function nextUpdateSequenceNumbers(
+    nextNums: v2.NextUpdateSequenceNumbers
+): v1.NextUpdateSequenceNumbers {
+    return {
+        rootKeys: unwrap(nextNums.rootKeys?.value),
+        level1Keys: unwrap(nextNums.level1Keys?.value),
+        level2Keys: unwrap(nextNums.level2Keys?.value),
+        protocol: unwrap(nextNums.protocol?.value),
+        electionDifficulty: unwrap(nextNums.electionDifficulty?.value),
+        euroPerEnergy: unwrap(nextNums.euroPerEnergy?.value),
+        microCcdPerEuro: unwrap(nextNums.microCcdPerEuro?.value),
+        foundationAccount: unwrap(nextNums.foundationAccount?.value),
+        mintDistribution: unwrap(nextNums.mintDistribution?.value),
+        transactionFeeDistribution: unwrap(
+            nextNums.transactionFeeDistribution?.value
+        ),
+        gasRewards: unwrap(nextNums.gasRewards?.value),
+        poolParameters: unwrap(nextNums.poolParameters?.value),
+        addAnonymityRevoker: unwrap(nextNums.addAnonymityRevoker?.value),
+        addIdentityProvider: unwrap(nextNums.addIdentityProvider?.value),
+        cooldownParameters: unwrap(nextNums.cooldownParameters?.value),
+        timeParameters: unwrap(nextNums.timeParameters?.value),
+    };
+}
+
 // ---------------------------- //
 // --- V1 => V2 translation --- //
 // ---------------------------- //

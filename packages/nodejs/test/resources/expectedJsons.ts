@@ -462,3 +462,21 @@ export const transactionEventList = [
         },
     },
 ];
+export const seqNums = {
+    rootKeys: 1n,
+    level1Keys: 1n,
+    level2Keys: 1n,
+    protocol: 2n,
+    electionDifficulty: 1n,
+    euroPerEnergy: 1n,
+    microCcdPerEuro: 7053n,
+    foundationAccount: 1n,
+    mintDistribution: 1n,
+    transactionFeeDistribution: 1n,
+    gasRewards: 1n,
+    poolParameters: 1n,
+    addAnonymityRevoker: 1n,
+    addIdentityProvider: 1n,
+    cooldownParameters: 1n,
+    timeParameters: 1n,
+};

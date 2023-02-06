@@ -21,6 +21,7 @@
     - `getElectionInfo()`
     - `getAccountNonFinalizedTransactions()`
     - `getBlockTransactionEvents()`
+    - `getNextUpdateSequenceNumbers()`
 
 ## 6.4.0
 

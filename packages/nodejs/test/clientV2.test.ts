@@ -727,6 +727,17 @@ test.each([clientV2, clientWeb])(
     }
 );
 
+test.each([clientV2, clientWeb])(
+    'getNextUpdateSequenceNumbers',
+    async (client) => {
+        const seqNums = await client.getNextUpdateSequenceNumbers(
+            testBlockHash
+        );
+
+        expect(seqNums).toEqual(expected.seqNums);
+    }
+);
+
 // For tests that take a long time to run, is skipped by default
 describe.skip('Long run-time test suite', () => {
     const longTestTime = 45000;

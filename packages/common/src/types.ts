@@ -1019,6 +1019,25 @@ export interface ElectionInfo {
     bakerElectionInfo: BakerElectionInfo[];
 }
 
+export interface NextUpdateSequenceNumbers {
+    rootKeys: bigint;
+    level1Keys: bigint;
+    level2Keys: bigint;
+    protocol: bigint;
+    electionDifficulty: bigint;
+    euroPerEnergy: bigint;
+    microCcdPerEuro: bigint;
+    foundationAccount: bigint;
+    mintDistribution: bigint;
+    transactionFeeDistribution: bigint;
+    gasRewards: bigint;
+    poolParameters: bigint;
+    addAnonymityRevoker: bigint;
+    addIdentityProvider: bigint;
+    cooldownParameters: bigint;
+    timeParameters: bigint;
+}
+
 export enum BlockItemKind {
     AccountTransactionKind = 0,
     CredentialDeploymentKind = 1,

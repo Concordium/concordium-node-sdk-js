@@ -9,7 +9,7 @@ import * as translate from './GRPCTypeTranslation';
 import { AccountAddress } from './types/accountAddress';
 import { getAccountTransactionHandler } from './accountTransactions';
 import { calculateEnergyCost } from './energyCost';
-import { countSignatures, mapAsyncIterable } from './util';
+import { countSignatures, mapAsyncIterable, unwrap } from './util';
 import {
     serializeAccountTransactionPayload,
     serializeCredentialDeploymentPayload,
@@ -881,6 +881,16 @@ export default class ConcordiumNodeClient {
             port: { value: port },
         };
         this.client.peerDisconnect(request);
+    }
+
+    /**
+     * Get a list of banned peers.
+     *
+     * @return A list of the ip's of banned peers.
+     */
+    async getBannedPeers(): Promise<v1.IpAddressString[]> {
+        const bannedPeers = await this.client.getBannedPeers(v2.Empty).response;
+        return bannedPeers.peers.map((x) => unwrap(x.ipAddress?.value));
     }
 }
 

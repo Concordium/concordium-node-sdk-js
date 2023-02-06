@@ -790,3 +790,8 @@ Otherwise rejects.
 await this.client.peerDisonnect("127.0.0.1", 20000);
 ```
 
+## getBannedPeers
+Get a list of banned peers.
+```js
+const bannedPeers: IpAddressString[] = await this.client.bannedPeers();
+```

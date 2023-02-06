@@ -773,3 +773,11 @@ Shuts down the node.
 ```js
 await this.client.shutdown();
 ```
+
+## peerConnect
+Suggest to a peer to connect to the submitted peer details.
+This, if successful, adds the peer to the list of given addresses, otherwise an error is thrown.
+Note. The peer might not be connected to instantly, in that case the node will try to establish the connection in near future.
+```js
+await this.client.shutdown();
+```

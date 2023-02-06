@@ -22,6 +22,8 @@
     - `getAccountNonFinalizedTransactions()`
     - `getBlockTransactionEvents()`
     - `getNextUpdateSequenceNumbers()`
+    - `shutdown()`
+    - `peerConnect()`
 
 ## 6.4.0
 

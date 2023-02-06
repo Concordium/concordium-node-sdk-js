@@ -840,6 +840,24 @@ export default class ConcordiumNodeClient {
     async shutdown(): Promise<void> {
         this.client.shutdown(v2.Empty);
     }
+
+    /**
+     * Suggest to a peer to connect to the submitted peer details.
+     * This, if successful, adds the peer to the list of given addresses.
+     * Otherwise return a GRPC error.
+     * Note. The peer might not be connected to instantly, in that case
+     * the node will try to establish the connection in near future. This
+     * function returns a GRPC status 'Ok' in this case.
+     *
+     * @param addres The ip and port to connect to.
+     */
+    async peerConnect(ip: v1.IpAddressString, port: number): Promise<void> {
+        const request: v2.IpSocketAddress = {
+            ip: { value: ip },
+            port: { value: port },
+        };
+        this.client.peerConnect(request);
+    }
 }
 
 export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {

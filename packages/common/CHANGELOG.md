@@ -27,6 +27,7 @@
     - `peerDisconnect()`
     - `getBannedPeers()`
     - `banPeer()`
+    - `unbanPeer()`
 ## 6.4.0
 
 - Added `getFinalizedBlocks()` & `getBlocks()` GRPCv2 functions.

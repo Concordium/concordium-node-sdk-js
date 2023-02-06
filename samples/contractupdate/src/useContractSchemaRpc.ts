@@ -40,7 +40,7 @@ export function useContractSchemaRpc(connection: WalletConnection, contract: Inf
     useEffect(() => {
         ResultAsync.fromPromise(
             withJsonRpcClient(connection, (rpc) => rpc.getModuleSource(new ModuleReference(contract.moduleRef))),
-            (e) => errorString(e)
+            errorString
         )
             .andThen((r) => {
                 if (!r || r.length < 12) {
@@ -49,7 +49,7 @@ export function useContractSchemaRpc(connection: WalletConnection, contract: Inf
                 if (r.length < 12) {
                     return err('module source is too short');
                 }
-                return ResultAsync.fromPromise(WebAssembly.compile(r.slice(12)), (e) => errorString(e));
+                return ResultAsync.fromPromise(WebAssembly.compile(r.slice(12)), errorString);
             })
             .andThen(findSchema)
             .then(setResult);

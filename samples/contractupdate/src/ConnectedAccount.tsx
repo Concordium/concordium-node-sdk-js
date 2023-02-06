@@ -5,21 +5,21 @@ import { Alert } from 'react-bootstrap';
 
 interface Props {
     network: Network;
-    activeConnection: WalletConnection | undefined;
-    activeConnectedAccount: string | undefined;
+    connection: WalletConnection | undefined;
+    account: string | undefined;
 }
 
 function ccdScanUrl(network: Network, activeConnectedAccount: string | undefined) {
     return `${network.ccdScanBaseUrl}/?dcount=1&dentity=account&daddress=${activeConnectedAccount}`;
 }
 
-export function ConnectedAccount({ activeConnection, activeConnectedAccount, network }: Props) {
+export function ConnectedAccount({ connection, account, network }: Props) {
     const [info, setInfo] = useState<AccountInfo>();
     const [infoError, setInfoError] = useState('');
     useEffect(() => {
-        if (activeConnection && activeConnectedAccount) {
+        if (connection && account) {
             setInfo(undefined);
-            withJsonRpcClient(activeConnection, (rpc) => rpc.getAccountInfo(activeConnectedAccount))
+            withJsonRpcClient(connection, (rpc) => rpc.getAccountInfo(account))
                 .then((res) => {
                     setInfo(res);
                     setInfoError('');
@@ -29,15 +29,15 @@ export function ConnectedAccount({ activeConnection, activeConnectedAccount, net
                     setInfoError(err);
                 });
         }
-    }, [activeConnection, activeConnectedAccount]);
+    }, [connection, account]);
     return (
         <>
             {infoError && <Alert variant="danger">Error querying account info: {infoError}</Alert>}
-            {activeConnectedAccount && (
+            {account && (
                 <>
                     Connected to account{' '}
-                    <a target="_blank" rel="noreferrer" href={ccdScanUrl(network, activeConnectedAccount)}>
-                        <code>{activeConnectedAccount}</code>
+                    <a target="_blank" rel="noreferrer" href={ccdScanUrl(network, account)}>
+                        <code>{account}</code>
                     </a>{' '}
                     on <b>{network.name}</b>.{info && <Details account={info} />}
                 </>

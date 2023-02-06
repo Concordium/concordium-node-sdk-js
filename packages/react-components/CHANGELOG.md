@@ -7,12 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+-   Hooks `useConnection` and `useConnect` for managing connections.
+
 ### Changed
 
 -   `WithWalletConnector`: Decouple component from concrete connector implementations by constructing instances from the application.
     This also introduces the ability for applications to control the activation/deactivation lifecycle of the connectors.
 -   `WithWalletConnector`: Removed method `connectActive` (and child prop `isConnecting`).
     Use the `connect` method directly on `WalletConnector` instead.
+-   `WithWalletConnector`: Removed the exposed fields `activeConnection`, `activeConnectedAccount`, `activeConnectionGenesisHash`,
+    and `setActiveConnection` (use the new hook `useConnection` instead).
+    This gives applications much tighter control on how connections are managed, including the ability to have multiple active connections.
+-   `WithWalletConnector`: The field `connectedAccounts` now maps connections to the empty string if they don't have an associated account.
+    This means that the key set of this field matches the set of live connections exactly.
 
 ## [0.1.0] - 2023-01-17
 

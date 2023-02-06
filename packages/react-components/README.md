@@ -54,12 +54,28 @@ export const WALLET_CONNECT = ephemeralConnectorType(WalletConnectConnector.crea
 ```
 
 Initiate a connection by invoking `connect` on a connector.
-Set the resulting connection is "active" by passing it to `props.setActiveConnection`:
+This is most easily done using the hooks `useConnection` and `useConnect`:
 
 ```typescript
-const {activeConnector, setActiveConnection} = props;
-activeConnector.connect().then(setActiveConnection).catch(...);
+const { activeConnector, network, connectedAccounts, genesisHashes, ... } = props;
+const { connection, setConnection, account, genesisHash } = useConnection(activeConnector, connectedAccounts, genesisHashes);
+const { connect, isConnecting, connectionError } = useConnect(activeConnector, setConnection);
 ```
+
+The app uses the function `connect` to initiate a new connection from `activeConnector`.
+The fields `isConnecting` and `connectionError` are used to render the connection status.
+Once established, the connection and its state are exposed in the following fields:
+
+-   `connection`: The `WalletConnection` object that the app uses to interact with the wallet.
+    Is `undefined` if there is no established connection.
+-   `account`: The account that `connection` is associated with in the wallet
+    or the empty string if the connection isn't associated with an account.
+-   `genesisHash`: The hash of the genesis block for the chain that `account` lives on
+    if this value has been reported by the wallet or `undefined` otherwise.
+    This may for instance be used to check that `account` lives on the expected network.
+    Use with care as some wallets don't provide this value reliably.
+
+All the fields hold the value `undefined` until the connection has been established and again after it's been disconnected.
 
 See [the sample dApp](../../samples/contractupdate/src/Root.tsx) for a complete example.
 
@@ -67,7 +83,7 @@ See [the sample dApp](../../samples/contractupdate/src/Root.tsx) for a complete 
 
 ### [`useWalletConnectorSelector`](./src/useWalletConnectorSelector.ts)
 
-Hook for managing a connector selector; connecting/disconnecting when clicked and computing its selected/connected/disabled state.
+Helper hook for computing the selected/connected/disabled state of a given connector type.
 
 _Example: Create a button for toggling a connector_
 

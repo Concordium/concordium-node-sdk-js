@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { ConnectorType, WalletConnectionProps } from './WithWalletConnector';
+import { WalletConnection } from '@concordium/wallet-connectors';
 
 /**
  * The state of the a {@link useWalletConnectorSelector} instance.
@@ -28,8 +29,9 @@ export interface WalletConnectorSelector {
      */
     select: () => void;
 }
+
 /**
- * React hook for managing a connector selector (usually a button in the UI).
+ * Hook for managing a connector selector (usually a button in the UI).
  *
  * More precisely, the hook computes the derived state {@link WalletConnectorSelector} from {@link props} as follows:
  * - The selector is {@link WalletConnectorSelector.isSelected selected} if the active connector's type is {@link connectorType}.
@@ -40,20 +42,22 @@ export interface WalletConnectorSelector {
  * when the selector is invoked.
  *
  * @param connectorType The connector type controlled by this selector.
+ * @param connection The connection that, if present and originating from the selected connector, causes that connector to be considered "connected".
  * @param props The props exposed by {@link WithWalletConnector} to its child component.
  * @return The resolved state.
  */
 export function useWalletConnectorSelector(
     connectorType: ConnectorType,
+    connection: WalletConnection | undefined,
     props: WalletConnectionProps
 ): WalletConnectorSelector {
-    const { activeConnectorType, activeConnector, activeConnection, setActiveConnectorType } = props;
+    const { activeConnectorType, activeConnector, setActiveConnectorType } = props;
     const isSelected = activeConnectorType === connectorType;
     const select = useCallback(
         () => setActiveConnectorType(isSelected ? undefined : connectorType),
         [isSelected, connectorType]
     );
-    const isConnected = Boolean(isSelected && activeConnection && activeConnection.getConnector() === activeConnector);
-    const isDisabled = Boolean(!isSelected && activeConnectorType && activeConnection);
+    const isConnected = Boolean(isSelected && connection && connection.getConnector() === activeConnector);
+    const isDisabled = Boolean(!isSelected && activeConnectorType && connection);
     return { isSelected, isConnected, isDisabled, select };
 }

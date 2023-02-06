@@ -1,15 +1,25 @@
 import React from 'react';
 import { Button } from 'react-bootstrap';
-import { ConnectorType, useWalletConnectorSelector, WalletConnectionProps } from '@concordium/react-components';
+import {
+    ConnectorType,
+    useWalletConnectorSelector,
+    WalletConnection,
+    WalletConnectionProps,
+} from '@concordium/react-components';
 
 interface Props extends WalletConnectionProps {
+    connection: WalletConnection | undefined;
     connectorType: ConnectorType;
     connectorName: string;
 }
 
 export function WalletConnectorButton(props: Props) {
-    const { connectorType, connectorName } = props;
-    const { isSelected, isConnected, isDisabled, select } = useWalletConnectorSelector(connectorType, props);
+    const { connection, connectorType, connectorName } = props;
+    const { isSelected, isConnected, isDisabled, select } = useWalletConnectorSelector(
+        connectorType,
+        connection,
+        props
+    );
 
     const verb = isConnected ? 'Disconnect' : isSelected ? 'Using' : 'Use';
     return (

@@ -52,15 +52,9 @@ export function persistentConnectorType(create: (c: WithWalletConnector, n: Netw
             connectorPromises.set(component, delegateConnectorPromises);
             const connectorPromise = delegateConnectorPromises.get(network) || create(component, network);
             delegateConnectorPromises.set(network, connectorPromise);
-            connectorPromise
-                .then((connector) => connector.getConnections())
-                .then((connections) => {
-                    // If the connector already has a connection, set it as active.
-                    component.setActiveConnection(connections.length ? connections[0] : undefined);
-                });
             return connectorPromise;
         },
-        deactivate: async (component: WithWalletConnector) => component.setActiveConnection(undefined),
+        deactivate: async () => undefined,
     };
 }
 
@@ -97,16 +91,8 @@ interface State {
     activeConnectorError: string;
 
     /**
-     * The currently active connection.
-     *
-     * As explained in {@link activeConnector},
-     * this connection generally might not originate from {@link activeConnector}.
-     */
-    activeConnection: WalletConnection | undefined;
-
-    /**
-     * A map from open connections to their selected accounts.
-     * Connections without a selected account will not have an entry in this map.
+     * A map from open connections to their selected accounts or the empty string
+     * if the connection doesn't have an associated account.
      */
     connectedAccounts: Map<WalletConnection, string>;
 
@@ -166,16 +152,6 @@ export interface WalletConnectionProps extends State {
     network: Network;
 
     /**
-     * The selected account of {@link activeConnection}.
-     */
-    activeConnectedAccount: string | undefined;
-
-    /**
-     * The hash of the genesis block for the chain that {@link activeConnectedAccount} lives on.
-     */
-    activeConnectionGenesisHash: string | undefined;
-
-    /**
      * Function for setting or resetting {@link State.activeConnectorType activeConnectorType}.
      *
      * Any existing connector type value is deactivated and any new one is activated.
@@ -183,15 +159,6 @@ export interface WalletConnectionProps extends State {
      * @param type The new connector type or undefined to reset the value.
      */
     setActiveConnectorType: (type: ConnectorType | undefined) => void;
-
-    /**
-     * Function for setting or resetting {@link State.activeConnection activeConnection}.
-     * For reasons explained in the documentation of that field,
-     * calling this function does not cause {@link State.activeConnectorType activeConnector type}
-     * nor {@link State.activeConnector activeConnector} to change.
-     * @param connection The wallet connection.
-     */
-    setActiveConnection: (connection: WalletConnection | undefined) => void;
 }
 
 /**
@@ -218,7 +185,6 @@ export class WithWalletConnector extends Component<Props, State> implements Wall
             activeConnectorType: undefined,
             activeConnector: undefined,
             activeConnectorError: '',
-            activeConnection: undefined,
             genesisHashes: new Map(),
             connectedAccounts: new Map(),
         };
@@ -266,21 +232,11 @@ export class WithWalletConnector extends Component<Props, State> implements Wall
         }
     };
 
-    /**
-     * @see WalletConnectionProps.setActiveConnection
-     */
-    setActiveConnection = (connection: WalletConnection | undefined) => {
-        console.debug("WithWalletConnector: calling 'setActiveConnection'", { connection, state: this.state });
-        // NOTE As described in the docstring of `State.activeConnection`,
-        //      setting the active connection doesn't imply that the active connector should be set as well.
-        this.setState({ activeConnection: connection });
-    };
-
     onAccountChanged = (connection: WalletConnection, address: string | undefined) => {
         console.debug("WithWalletConnector: calling 'onAccountChanged'", { connection, address, state: this.state });
         this.setState((state) => ({
             ...state,
-            connectedAccounts: updateMapEntry(state.connectedAccounts, connection, address),
+            connectedAccounts: updateMapEntry(state.connectedAccounts, connection, address || ''),
         }));
     };
 
@@ -301,22 +257,13 @@ export class WithWalletConnector extends Component<Props, State> implements Wall
         console.debug("WithWalletConnector: calling 'onDisconnected'", { connection, state: this.state });
         this.setState((state) => ({
             ...state,
-            activeConnection: connection === state.activeConnection ? undefined : state.activeConnection,
             connectedAccounts: updateMapEntry(state.connectedAccounts, connection, undefined),
         }));
     };
 
     render() {
         const { children, network } = this.props;
-        const { connectedAccounts, genesisHashes, activeConnection } = this.state;
-        return children({
-            ...this.state,
-            network,
-            activeConnectedAccount: activeConnection && connectedAccounts.get(activeConnection),
-            activeConnectionGenesisHash: activeConnection && genesisHashes.get(activeConnection),
-            setActiveConnectorType: this.setActiveConnectorType,
-            setActiveConnection: this.setActiveConnection,
-        });
+        return children({ ...this.state, network, setActiveConnectorType: this.setActiveConnectorType });
     }
 
     componentDidUpdate(prevProps: Props) {
@@ -324,7 +271,6 @@ export class WithWalletConnector extends Component<Props, State> implements Wall
             // Reset active connector and connection when user changes network.
             // In the future there may be a mechanism for negotiating with the wallet.
             this.setActiveConnectorType(undefined);
-            this.setActiveConnection(undefined);
         }
     }
 

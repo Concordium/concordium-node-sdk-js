@@ -99,7 +99,7 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
                             params,
                             schema.schema
                         ),
-                        (e) => errorString(e)
+                        errorString
                     )
                 )
                 .then((r) => {

@@ -522,13 +522,13 @@ export type RewardStatus = RewardStatusV0 | RewardStatusV1;
 export type TokenomicsInfo = RewardStatus;
 
 export interface BlockInfo {
-    blockParent: string;
-    blockHash: string;
-    blockStateHash: string;
-    blockLastFinalized: string;
+    blockParent: HexString;
+    blockHash: HexString;
+    blockStateHash: HexString;
+    blockLastFinalized: HexString;
 
     blockHeight: bigint;
-    blockBaker: bigint;
+    blockBaker: BakerId;
     blockSlot: bigint;
 
     blockArriveTime: Date;
@@ -540,6 +540,9 @@ export interface BlockInfo {
     transactionCount: bigint;
     transactionsSize: bigint;
     transactionEnergyCost: bigint;
+
+    genesisIndex: number;
+    eraBlockHeight: number;
 }
 
 export interface CommonBlockInfo {
@@ -549,6 +552,17 @@ export interface CommonBlockInfo {
 
 export type ArrivedBlockInfo = CommonBlockInfo;
 export type FinalizedBlockInfo = CommonBlockInfo;
+
+export type AbsoluteBlocksAtHeightRequest = bigint;
+export interface RelativeBlocksAtHeightRequest {
+    genesisIndex: number;
+    height: bigint;
+    restrict: boolean;
+}
+
+export type BlocksAtHeightRequest =
+    | AbsoluteBlocksAtHeightRequest
+    | RelativeBlocksAtHeightRequest;
 
 export interface ConsensusStatus {
     bestBlock: string;

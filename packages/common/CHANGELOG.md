@@ -1,6 +1,6 @@
 # Changelog
 
-## 6.5.0
+## Unreleased
 
 - Added the following GRPCv2 functions:
     - `getAccountList()`
@@ -8,6 +8,11 @@
     - `getAncestors()`
     - `getInstanceState()`
     - `instanceStateLookup()`
+    - `getIdentityProviders()`
+    - `getAnonymityRevokers()`
+    - `getBlocksAtHeight()`
+    - `getBlockInfo()`
+    - `getBakerList()`
 
 ## 6.4.0
 

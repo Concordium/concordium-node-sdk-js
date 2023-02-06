@@ -56,7 +56,7 @@ export default class ConcordiumNodeClient {
      * Retrieves the consensus status information from the node. Note that the optional
      * fields will only be unavailable for a newly started node that has not processed
      * enough data yet.
-     * @param blockHash optional block hash to get the account info at, otherwise retrieves from last finalized block.
+     * @param blockHash optional block hash to get the cryptographic parameters at, otherwise retrieves from last finalized block.
      * @returns the global cryptographic parameters at the given block, or undefined it the block does not exist.
      */
     async getCryptographicParameters(
@@ -127,7 +127,7 @@ export default class ConcordiumNodeClient {
      * Retrieves the source of the given module at
      * the provided block.
      * @param moduleRef the module's reference, hash of the source represented as a bytearray.
-     * @param blockHash the block to get the module source at.
+     * @param blockHash optional block hash to get the module source at, otherwise retrieves from last finalized block
      * @returns the source of the module as raw bytes.
      */
     async getModuleSource(
@@ -153,7 +153,7 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieve information about a given smart contract instance.
      * @param contractAddress the address of the smart contract.
-     * @param blockHash the block hash to get the smart contact instances at.
+     * @param blockHash optional block hash to get the smart contact instances at, otherwise retrieves from last finalized block
      * @returns An object with information about the contract instance.
      */
     async getInstanceInfo(
@@ -556,6 +556,87 @@ export default class ConcordiumNodeClient {
         const response = await this.client.instanceStateLookup(request)
             .response;
         return translate.unwrapValToHex(response);
+    }
+
+    /**
+     * Get the identity providers registered as of the end of a given block.
+     * The stream will end when all the identity providers have been returned,
+     * or an abort signal is called.
+     *
+     * @param blockHash an optional block hash to get the providers at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns an async iterable of identity provider info objects.
+     */
+    getIdentityProviders(
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<v1.IpInfo> {
+        const opts = { abort: abortSignal };
+        const block = getBlockHashInput(blockHash);
+        const ips = this.client.getIdentityProviders(block, opts).responses;
+        return mapAsyncIterable(ips, translate.ipInfo);
+    }
+
+    /**
+     * Get the anonymity revokers registered as of the end of a given block.
+     * The stream will end when all the anonymity revokers have been returned,
+     * or an abort signal is called.
+     *
+     * @param blockHash an optional block hash to get the anonymity revokers at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns an async iterable of identity provider info objects.
+     */
+    getAnonymityRevokers(
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<v1.ArInfo> {
+        const opts = { abort: abortSignal };
+        const block = getBlockHashInput(blockHash);
+        const ars = this.client.getAnonymityRevokers(block, opts).responses;
+        return mapAsyncIterable(ars, translate.arInfo);
+    }
+
+    /**
+     * Get a list of live blocks at a given height.
+     *
+     * @param blockHeightRequest Either an absolute block height request or a relative block height request
+     * @returns A lsit of block hashes as hex strings
+     */
+    async getBlocksAtHeight(
+        blockHeightRequest: v1.BlocksAtHeightRequest
+    ): Promise<HexString[]> {
+        const requestV2 =
+            translate.BlocksAtHeightRequestToV2(blockHeightRequest);
+        const blocks = await this.client.getBlocksAtHeight(requestV2).response;
+        return translate.blocksAtHeightResponse(blocks);
+    }
+
+    /**
+     * Get information, such as height, timings, and transaction counts for the given block.
+     *
+     * @param blockHash an optional block hash to get the info from, otherwise retrieves from last finalized block.
+     * @returns information on a block.
+     */
+    async getBlockInfo(blockHash?: HexString): Promise<v1.BlockInfo> {
+        const block = getBlockHashInput(blockHash);
+        const blockInfo = await this.client.getBlockInfo(block).response;
+        return translate.blockInfo(blockInfo);
+    }
+
+    /**
+     * Get all the bakers at the end of the given block.
+     *
+     * @param blockHash an optional block hash to get the baker list at, otherwise retrieves from last finalized block.
+     * @returns an async iterable of BakerIds.
+     */
+    getBakerList(
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<v1.BakerId> {
+        const opts = { abort: abortSignal };
+        const block = getBlockHashInput(blockHash);
+        const bakers = this.client.getBakerList(block, opts).responses;
+        return mapAsyncIterable(bakers, (x) => x.value);
     }
 }
 

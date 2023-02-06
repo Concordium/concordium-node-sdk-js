@@ -3,7 +3,7 @@ import {
     buildBasicAccountSigner,
     signTransaction,
 } from '@concordium/common-sdk';
-import { getNodeClientV2 } from '../src/util';
+import { getNodeClientV2 } from '../test/testHelpers';
 
 const clientV2 = getNodeClientV2();
 

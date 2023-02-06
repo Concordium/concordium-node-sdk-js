@@ -83,8 +83,8 @@ To create a new account the following is needed:
 -    revealedAttributes: A list of attributes that should be revealed. Note that this can be left empty.
 -    credNumber: The index of the credential for the identity. This is used to create the credential id, and cannot be reused for the same identity.
 
-If you can provide the seedPhrase used for the identity, use `createCredentialTransactionV1`, which uses that and the identity index and network identitfier.
-Otherwise you can use `createCredentialTransactionV1NoSeed`, which requires the:
+If you can provide the seedPhrase used for the identity, use `createCredentialTransaction`, which uses that and the identity index and network identitfier.
+Otherwise you can use `createCredentialTransactionNoSeed`, which requires the:
   -  idCredSec
   -  prfKey
   -  signature retrievel randomness

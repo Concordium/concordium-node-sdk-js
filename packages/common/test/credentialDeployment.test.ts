@@ -1,7 +1,7 @@
 import {
-    createCredentialTransactionV1,
+    createCredentialTransaction,
     createCredentialV1,
-    CredentialInputV1,
+    CredentialInput,
 } from '../src/credentialDeploymentTransactions';
 import fs from 'fs';
 import { AttributeKey } from '../src/types';
@@ -9,7 +9,7 @@ import { TransactionExpiry } from '../src';
 
 export function createCredentialInput(
     revealedAttributes: AttributeKey[]
-): CredentialInputV1 {
+): CredentialInput {
     const ipInfo = JSON.parse(
         fs.readFileSync('./test/resources/ip_info.json').toString()
     ).value;
@@ -69,10 +69,10 @@ test('Test createCredentialV1', () => {
     expect(output.expiry.expiryEpochSeconds).toEqual(BigInt(expiry));
 });
 
-test('Test createCredentialTransactionV1', () => {
+test('Test createCredentialTransaction', () => {
     const expiry = BigInt(Math.floor(Date.now() / 1000)) + BigInt(720);
     const revealedAttributes: AttributeKey[] = ['firstName'];
-    const output = createCredentialTransactionV1(
+    const output = createCredentialTransaction(
         createCredentialInput(revealedAttributes),
         TransactionExpiry.fromEpochSeconds(expiry)
     );

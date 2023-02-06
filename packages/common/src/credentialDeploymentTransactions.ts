@@ -191,7 +191,7 @@ export function getAccountAddress(credId: string): AccountAddress {
     return accountAddress;
 }
 
-type CredentialInputV1Common = {
+type CredentialInputCommon = {
     ipInfo: IpInfo;
     globalContext: CryptographicParameters;
     arsInfos: Record<string, ArInfo>;
@@ -200,7 +200,7 @@ type CredentialInputV1Common = {
     credNumber: number;
 };
 
-export type CredentialInputV1 = CredentialInputV1Common & {
+export type CredentialInput = CredentialInputCommon & {
     seedAsHex: string;
     net: Network;
     identityIndex: number;
@@ -208,10 +208,10 @@ export type CredentialInputV1 = CredentialInputV1Common & {
 
 /**
  * Creates a credential for a new account, using the version 1 algorithm, which uses a seed to generate keys and commitments.
- * @deprecated This function outputs the format used by the JSON-RPC client, createCredentialTransactionV1 should be used instead.
+ * @deprecated This function outputs the format used by the JSON-RPC client, createCredentialTransaction should be used instead.
  */
 export function createCredentialV1(
-    input: CredentialInputV1 & { expiry: number }
+    input: CredentialInput & { expiry: number }
 ): SignedCredentialDeploymentDetails {
     const rawRequest = wasm.createCredentialV1(JSON.stringify(input));
     let info: CredentialDeploymentInfo;
@@ -226,7 +226,7 @@ export function createCredentialV1(
     };
 }
 
-export type CredentialInputV1NoSeed = CredentialInputV1Common & {
+export type CredentialInputNoSeed = CredentialInputCommon & {
     idCredSec: HexString;
     prfKey: HexString;
     sigRetrievelRandomness: HexString;
@@ -237,8 +237,8 @@ export type CredentialInputV1NoSeed = CredentialInputV1Common & {
 /**
  * Creates an unsigned credential for a new account, using the version 1 algorithm, which uses a seed to generate keys and commitments.
  */
-export function createCredentialTransactionV1(
-    input: CredentialInputV1,
+export function createCredentialTransaction(
+    input: CredentialInput,
     expiry: TransactionExpiry
 ): CredentialDeploymentTransaction {
     const wallet = ConcordiumHdWallet.fromHex(input.seedAsHex, input.net);
@@ -285,7 +285,7 @@ export function createCredentialTransactionV1(
                 .toString('hex')
     );
 
-    const noSeedInput: CredentialInputV1NoSeed = {
+    const noSeedInput: CredentialInputNoSeed = {
         ipInfo: input.ipInfo,
         globalContext: input.globalContext,
         arsInfos: input.arsInfos,
@@ -298,14 +298,14 @@ export function createCredentialTransactionV1(
         revealedAttributes: input.revealedAttributes,
         credNumber: input.credNumber,
     };
-    return createCredentialTransactionV1NoSeed(noSeedInput, expiry);
+    return createCredentialTransactionNoSeed(noSeedInput, expiry);
 }
 
 /**
  * Creates an unsigned credential for a new account, using the version 1 algorithm, but without requiring the seed to be provided directly.
  */
-export function createCredentialTransactionV1NoSeed(
-    input: CredentialInputV1NoSeed,
+export function createCredentialTransactionNoSeed(
+    input: CredentialInputNoSeed,
     expiry: TransactionExpiry
 ): CredentialDeploymentTransaction {
     const rawRequest = wasm.createUnsignedCredentialV1(JSON.stringify(input));

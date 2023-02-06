@@ -45,6 +45,7 @@ Wrappers for interacting with the Concordium node, using nodejs.
   - [getAccountNonFinalizedTransactions](#getaccountnonfinalizedtransactions)
   - [getBlockTransactionEvents](#getblocktransactionevents)
   - [getNextUpdateSequenceNumbers](#getnextupdatesequencenumbers)
+  - [shutdown](#shutdown)
 
 # ConcordiumNodeClient
 
@@ -764,5 +765,11 @@ for await (const transactionEvent of transactionEvents) {
 Get next available sequence numbers for updating chain parameters after a given block.
 ```js
 const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
-const seqNums: NextUpdateSequenceNumbers = await client.NextUpdateSequenceNumbers(accountAddress);
+const seqNums: NextUpdateSequenceNumbers = await client.getNextUpdateSequenceNumbers(accountAddress);
+```
+
+## shutdown
+Shuts down the node.
+```js
+await this.client.shutdown();
 ```

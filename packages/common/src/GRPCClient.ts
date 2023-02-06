@@ -833,6 +833,13 @@ export default class ConcordiumNodeClient {
         ).response;
         return translate.nextUpdateSequenceNumbers(sequenceNumbers);
     }
+    /**
+     * Shut down the node.
+     * Return a GRPC error if the shutdown failed.
+     */
+    async shutdown(): Promise<void> {
+        this.client.shutdown(v2.Empty);
+    }
 }
 
 export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {

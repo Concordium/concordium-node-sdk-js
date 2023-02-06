@@ -1970,6 +1970,25 @@ export function blockInfo(blockInfo: v2.BlockInfo): v1.BlockInfo {
     };
 }
 
+export function delegatorInfo(
+    delegatorInfo: v2.DelegatorInfo
+): v1.DelegatorInfo {
+    return {
+        account: unwrapToBase58(delegatorInfo.account),
+        stake: unwrap(delegatorInfo.stake?.value),
+        ...(delegatorInfo.pendingChange && {
+            pendingChange: trPendingChange(delegatorInfo.pendingChange),
+        }),
+    };
+}
+
+export function branch(branchV2: v2.Branch): v1.Branch {
+    return {
+        blockHash: unwrapValToHex(branchV2.blockHash),
+        children: branchV2.children.map(branch),
+    };
+}
+
 // ---------------------------- //
 // --- V1 => V2 translation --- //
 // ---------------------------- //

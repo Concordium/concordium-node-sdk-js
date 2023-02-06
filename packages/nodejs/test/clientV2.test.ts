@@ -700,6 +700,61 @@ test.each([clientV2, clientWeb])('getBakerList', async (client) => {
     expect(bakersV2).toEqual(bakersV1);
 });
 
+test.each([clientV2, clientWeb])('getPoolDelegators', async (client) => {
+    const delegatorInfoStream = client.getPoolDelegators(15n, testBlockHash);
+    const delegatorInfoList = await asyncIterableToList(delegatorInfoStream);
+
+    expect(delegatorInfoList).toEqual(expected.delegatorInfoList);
+});
+
+test.each([clientV2, clientWeb])(
+    'getPoolDelegatorsRewardPeriod',
+    async (client) => {
+        const delegatorInfoStream = client.getPoolDelegatorsRewardPeriod(
+            15n,
+            testBlockHash
+        );
+        const delegatorInfoList = await asyncIterableToList(
+            delegatorInfoStream
+        );
+
+        expect(delegatorInfoList).toEqual(expected.delegatorInfoList);
+    }
+);
+test.each([clientV2, clientWeb])('getPassiveDelegators', async (client) => {
+    const blocks = await client.getBlocksAtHeight(10000n);
+    const passiveDelegatorInfoStream = client.getPassiveDelegators(blocks[0]);
+    const passiveDelegatorInfoList = await asyncIterableToList(
+        passiveDelegatorInfoStream
+    );
+
+    expect(passiveDelegatorInfoList).toEqual(expected.passiveDelegatorInfoList);
+});
+
+test.each([clientV2, clientWeb])(
+    'getPassiveDelegatorsRewardPeriod',
+    async (client) => {
+        const blocks = await client.getBlocksAtHeight(10000n);
+        const passiveDelegatorRewardInfoStream =
+            client.getPassiveDelegatorsRewardPeriod(blocks[0]);
+        const passiveDelegatorRewardInfoList = await asyncIterableToList(
+            passiveDelegatorRewardInfoStream
+        );
+
+        expect(passiveDelegatorRewardInfoList).toEqual(
+            expected.passiveDelegatorRewardInfoList
+        );
+    }
+);
+
+test.each([clientV2, clientWeb])('getBranches', async (client) => {
+    const branch = await client.getBranches();
+
+    expect(branch).toBeDefined();
+    expect(branch.blockHash).toBeDefined();
+    expect(branch.children).toBeDefined();
+});
+
 // For tests that take a long time to run, is skipped by default
 describe.skip('Long run-time test suite', () => {
     const longTestTime = 45000;

@@ -996,6 +996,21 @@ export interface ArInfo {
     arPublicKey: string;
 }
 
+interface DelegatorInfoCommon {
+    account: Base58String;
+    stake: Amount;
+}
+export interface DelegatorInfo extends DelegatorInfoCommon {
+    pendingChange?: StakePendingChange;
+}
+
+export type DelegatorRewardPeriodInfo = DelegatorInfoCommon;
+
+export interface Branch {
+    blockHash: HexString;
+    children: Branch[];
+}
+
 export enum BlockItemKind {
     AccountTransactionKind = 0,
     CredentialDeploymentKind = 1,

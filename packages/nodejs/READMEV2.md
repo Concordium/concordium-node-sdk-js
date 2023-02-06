@@ -809,3 +809,22 @@ Rejects if the action fails.
 ```js
 await this.client.unbanPeer("127.0.0.1");
 ```
+
+## dumpStart
+Start dumping packages into the specified file.
+Only enabled if the node was built with the `network_dump` feature.
+Rejects if the network dump failed to start.
+
+The first argument specifies which file to dump the packages into. The second parameter specifies whether the node should dump raw packages.
+
+```js
+await this.client.dumpStart("/some/file/path", true);
+```
+
+## dumpStop
+Stop dumping packages.
+Only enabled if the node was built with the `network_dump` feature.
+Rejects if the network dump failed to be stopped.
+```js
+await this.client.dumpStop();
+```

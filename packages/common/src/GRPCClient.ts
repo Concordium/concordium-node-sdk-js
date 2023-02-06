@@ -922,6 +922,31 @@ export default class ConcordiumNodeClient {
         };
         this.client.banPeer(request);
     }
+
+    /**
+     * Start dumping packages into the specified file.
+     * Only enabled if the node was built with the `network_dump` feature.
+     * Rejects if the network dump failed to start.
+     *
+     * @param filePath Which file to dump the packages into. Requires a valid path.
+     * @param raw Whether the node should dump raw packages.
+     */
+    async dumpStart(filePath: string, raw: boolean): Promise<void> {
+        const request: v2.DumpRequest = {
+            file: filePath,
+            raw: raw,
+        };
+        this.client.dumpStart(request);
+    }
+
+    /**
+     * Stop dumping packages.
+     * Only enabled if the node was built with the `network_dump` feature.
+     * Rejects if the network dump failed to be stopped.
+     */
+    async dumpStop(): Promise<void> {
+        this.client.dumpStop(v2.Empty);
+    }
 }
 
 export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {

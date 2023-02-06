@@ -1,5 +1,24 @@
 # Changelog
 
+## Unreleased
+
+- Added the following GRPCv2 functions:
+    - `getAccountList()`
+    - `getModuleList()`
+    - `getAncestors()`
+    - `getInstanceState()`
+    - `instanceStateLookup()`
+    - `getIdentityProviders()`
+    - `getAnonymityRevokers()`
+    - `getBlocksAtHeight()`
+    - `getBlockInfo()`
+    - `getBakerList()`
+    - `getPoolDelegators()`
+    - `getPoolDelegatorsRewardPeriod()`
+    - `getPassiveDelegators()`
+    - `getPassiveDelegatorsRewardPeriod()`
+    - `getBranches()`
+
 ## 6.4.0
 
 - Added `getFinalizedBlocks()` & `getBlocks()` GRPCv2 functions.

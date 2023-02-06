@@ -170,11 +170,7 @@ export const blockItemStatusTransfer = {
             transfer: {
                 amount: 1000000n,
                 tag: 'Transferred',
-                to: {
-                    address:
-                        '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
-                    type: 'AddressAccount',
-                },
+                to: '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
             },
         },
     },
@@ -216,3 +212,173 @@ export const invokeInstanceResponseV0 = {
         },
     ],
 };
+
+export const accountList = [
+    '3QK1rxUXV7GRk4Ng7Bs7qnbkdjyBdjzCytpTrSQN7BaJkiEfgZ',
+    '3U4sfVSqGG6XK8g6eho2qRYtnHc4MWJBG1dfxdtPGbfHwFxini',
+    '3gGBYDSpx2zWL3YMcqD48U5jVXYG4pJBDZqeY5CbMMKpxVBbc3',
+    '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
+    '3ntvNGT6tDuLYiSb5gMJSQAZfLPUJnzoizcFiVRWqLoctuXxpK',
+    '3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV',
+    '3y9DtDUL8xpf8i2yj9k44zMVkf4H1hkpBEQcXbJhrgcwYSGg41',
+    '42tFTDWvTmBd7hEacohuCfGFa9TsBKhsmXKeViQ7q7NoY7UadV',
+    '44Axe5eHnMkBinX7GKvUm5w6mX83JGdasijhvsMv5ZW2Wmgphg',
+    '48XGRnvQoG92T1AwETvW5pnJ1aRSPMKsWtGdKhTqyiNZzMk3Qn',
+    '4AnukgcopMC4crxfL1L9fUYw9MAkoo1yKLvH7eA1NAX7SxgyRY',
+    '4BTFaHx8CioLi8Xe7YiimpAK1oQMkbx5Wj6B8N7d7NXgmLvEZs',
+    '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L',
+];
+
+export const moduleList = [
+    '67d568433bd72e4326241f262213d77f446db8ba03dfba351ae35c1b2e7e5109',
+    '6f0524700ed808a8fe0d7e23014c5138e4fac1fd8ec85c5e3591096f48609206',
+    'ceb018e4cd3456c0ccc0bca14285a69fd55f4cb09c322195d49c5c22f85930fe',
+];
+
+export const ancestorList = [
+    'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e',
+    '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf',
+    'abc98d4866e92b0ac4722d523aee96cafcdd127694d565c532e149616dbad96c',
+];
+
+export const instanceStateList = [
+    {
+        key: '',
+        value: '3b00000068747470733a2f2f72656c617965722d746573746e65742e746f6e692e73797374656d732f746f6b656e2f6d657461646174612f4d4f434b2e657402000000000000000300000000000000',
+    },
+    {
+        key: '0000000000000000',
+        value: '0500000000000000',
+    },
+    {
+        key: '0300000000000000008ffbe4209190c92b68b4f9d59cfb64305337a9cad018ac71156cc8f6e41f9fa5',
+        value: '0400000000000000',
+    },
+    {
+        key: '040000000000000000',
+        value: '',
+    },
+];
+
+export const ipList = [
+    {
+        ipIdentity: 0,
+        ipDescription: {
+            name: 'Concordium testnet IP',
+            url: '',
+            description: 'Concordium testnet identity provider',
+        },
+        ipVerifyKey: '',
+        ipCdiVerifyKey:
+            '2e1cff3988174c379432c1fad7ccfc385c897c4477c06617262cec7193226eca',
+    },
+    {
+        ipIdentity: 1,
+        ipDescription: {
+            name: 'Notabene (Staging)',
+            url: 'https://notabene.studio',
+            description: 'Notabene Identity Issuer (Staging Service)',
+        },
+        ipVerifyKey: '',
+        ipCdiVerifyKey:
+            '4810d66439a25d9b345cf5c7ac11f9e512548c278542d9b24dc73541626d6197',
+    },
+    {
+        ipIdentity: 3,
+        ipDescription: {
+            name: 'Digital Trust Solutions TestNet',
+            url: 'https://www.digitaltrustsolutions.nl',
+            description:
+                'Identity verified by Digital Trust Solutions on behalf of Concordium',
+        },
+        ipVerifyKey: '',
+        ipCdiVerifyKey:
+            '534858c8990f225b34be324c74c03ce8745080d5d5ea4fde2468157b4892b690',
+    },
+];
+
+export const arList = [
+    {
+        arIdentity: 1,
+        arDescription: {
+            name: 'Testnet AR 1',
+            url: '',
+            description: 'Testnet anonymity revoker 1',
+        },
+        arPublicKey:
+            'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c58ed5281b5d117cb74068a5deef28f027c9055dd424b07043568ac040a4e51f3307f268a77eaebc36bd4bf7cdbbe238b8',
+    },
+    {
+        arIdentity: 2,
+        arDescription: {
+            name: 'Testnet AR 2',
+            url: '',
+            description: 'Testnet anonymity revoker 2',
+        },
+        arPublicKey:
+            'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5aefb2334688a2ecc95e7c49e9ccbc7218b5c9e151ac22462d064f564ffa56bb8b3685fcdc8d7d8cb43f43d608e7e8515',
+    },
+    {
+        arIdentity: 3,
+        arDescription: {
+            name: 'Testnet AR 3',
+            url: '',
+            description: 'Testnet anonymity revoker 3',
+        },
+        arPublicKey:
+            'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a791a28a6d3e7ca0857c0f996f94e65da78b8d9b5de5e32164e291e553ed103bf14d6fab1f21749d59664e34813afe77',
+    },
+];
+
+export const delegatorInfoList = [
+    {
+        account: '3uX8g2uzQwBjVSJ6ZDU5cQCKhgsET6kMuRoraQH2ANB9Xa84YR',
+        stake: 40000000000n,
+    },
+    {
+        account: '4mAs6xcFw26fb6u8odkJWoe3fAK8bCJ91BwScUc36DFhh3thwD',
+        stake: 10000000n,
+    },
+    {
+        account: '3NvUNvVm5puDT2EYbo7hCF3d5AwzzCqKE18Ms6BYkKY9UShdf3',
+        stake: 3000000000n,
+    },
+    {
+        account: '3ivPxmqdRk5TX5mKpFshKzrA44bYUW2tg6EwDPvALszNoBGTK9',
+        stake: 33000000n,
+    },
+    {
+        account: '37tU96v4MQSaEgVP68M3TBRHMwZpgYSGnMer3ta3FJ8wkXtjDQ',
+        stake: 94000000n,
+    },
+];
+
+export const passiveDelegatorInfoList = [
+    {
+        account: '4gCvJ91EeYzsTzwiC7Kr4AcFzSuDmf5wxev7FRzU3uw49WamBm',
+        stake: 1900000000n,
+    },
+    {
+        account: '4mQweXtq3zHwS7CtK5fjWkpJDUvtUSKycNa8xaEbe6kErGeXcL',
+        stake: 1000000000n,
+    },
+    {
+        account: '3irV7FF3BZbz9ejGTm7EHLUi6CQHdJUELDfyhwkHcLqXmQyUfR',
+        stake: 100000000n,
+        pendingChange: {
+            effectiveTime: new Date('2022-06-28T11:47:37.750Z'),
+            change: 'RemoveStake',
+        },
+    },
+];
+
+export const passiveDelegatorRewardInfoList = [
+    {
+        account: '4gCvJ91EeYzsTzwiC7Kr4AcFzSuDmf5wxev7FRzU3uw49WamBm',
+        stake: 1900000000n,
+    },
+    {
+        account: '4mQweXtq3zHwS7CtK5fjWkpJDUvtUSKycNa8xaEbe6kErGeXcL',
+        stake: 1000000000n,
+    },
+];

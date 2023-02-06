@@ -57,16 +57,16 @@ function unwrapToHex(bytes: Uint8Array | undefined): v1.HexString {
     return Buffer.from(unwrap(bytes)).toString('hex');
 }
 
-function unwrapToBase58(
+export function unwrapValToHex(x: { value: Uint8Array } | undefined): string {
+    return unwrapToHex(unwrap(x).value);
+}
+
+export function unwrapToBase58(
     address: v2.AccountAddress | undefined
 ): v1.Base58String {
     return bs58check.encode(
         Buffer.concat([Buffer.of(1), unwrap(address?.value)])
     );
-}
-
-function unwrapValToHex(x: { value: Uint8Array } | undefined): string {
-    return unwrapToHex(unwrap(x).value);
 }
 
 function trModuleRef(moduleRef: v2.ModuleRef | undefined): ModuleReference {
@@ -1252,26 +1252,15 @@ function trUpdatePayload(
             };
         }
         case 'addAnonymityRevokerUpdate': {
-            const update = payload.payload.addAnonymityRevokerUpdate;
             return {
                 updateType: UpdateType.AddAnonymityRevoker,
-                update: {
-                    arDescription: unwrap(update.description),
-                    arIdentity: unwrap(update.identity?.value),
-                    arPublicKey: unwrapValToHex(update.publicKey),
-                },
+                update: arInfo(payload.payload.addAnonymityRevokerUpdate),
             };
         }
         case 'addIdentityProviderUpdate': {
-            const update = payload.payload.addIdentityProviderUpdate;
             return {
                 updateType: UpdateType.AddIdentityProvider,
-                update: {
-                    ipDescription: unwrap(update.description),
-                    ipIdentity: unwrap(update.identity?.value),
-                    ipVerifyKey: unwrapValToHex(update.verifyKey),
-                    ipCdiVerifyKey: unwrapValToHex(update.cdiVerifyKey),
-                },
+                update: ipInfo(payload.payload.addIdentityProviderUpdate),
             };
         }
         case 'cooldownParametersCpv1Update': {
@@ -1928,6 +1917,78 @@ export function commonBlockInfo(
     };
 }
 
+export function instanceStateKVPair(
+    state: v2.InstanceStateKVPair
+): v1.InstanceStateKVPair {
+    return {
+        key: unwrapToHex(state.key),
+        value: unwrapToHex(state.value),
+    };
+}
+
+export function ipInfo(ip: v2.IpInfo): v1.IpInfo {
+    return {
+        ipIdentity: unwrap(ip.identity?.value),
+        ipDescription: unwrap(ip.description),
+        ipVerifyKey: unwrapValToHex(ip.verifyKey),
+        ipCdiVerifyKey: unwrapValToHex(ip.cdiVerifyKey),
+    };
+}
+
+export function arInfo(ar: v2.ArInfo): v1.ArInfo {
+    return {
+        arIdentity: unwrap(ar.identity?.value),
+        arDescription: unwrap(ar.description),
+        arPublicKey: unwrapValToHex(ar.publicKey),
+    };
+}
+
+export function blocksAtHeightResponse(
+    blocks: v2.BlocksAtHeightResponse
+): v1.HexString[] {
+    return blocks.blocks.map(unwrapValToHex);
+}
+
+export function blockInfo(blockInfo: v2.BlockInfo): v1.BlockInfo {
+    return {
+        blockParent: unwrapValToHex(blockInfo.parentBlock),
+        blockHash: unwrapValToHex(blockInfo.hash),
+        blockStateHash: unwrapValToHex(blockInfo.stateHash),
+        blockLastFinalized: unwrapValToHex(blockInfo.lastFinalizedBlock),
+        blockHeight: unwrap(blockInfo.height?.value),
+        blockBaker: unwrap(blockInfo.baker?.value),
+        blockSlot: unwrap(blockInfo.slotNumber?.value),
+        blockArriveTime: trTimestamp(blockInfo.arriveTime),
+        blockReceiveTime: trTimestamp(blockInfo.receiveTime),
+        blockSlotTime: trTimestamp(blockInfo.slotTime),
+        finalized: blockInfo.finalized,
+        transactionCount: BigInt(blockInfo.transactionCount),
+        transactionsSize: BigInt(blockInfo.transactionsSize),
+        transactionEnergyCost: unwrap(blockInfo.transactionsEnergyCost?.value),
+        genesisIndex: unwrap(blockInfo.genesisIndex?.value),
+        eraBlockHeight: Number(unwrap(blockInfo.eraBlockHeight?.value)),
+    };
+}
+
+export function delegatorInfo(
+    delegatorInfo: v2.DelegatorInfo
+): v1.DelegatorInfo {
+    return {
+        account: unwrapToBase58(delegatorInfo.account),
+        stake: unwrap(delegatorInfo.stake?.value),
+        ...(delegatorInfo.pendingChange && {
+            pendingChange: trPendingChange(delegatorInfo.pendingChange),
+        }),
+    };
+}
+
+export function branch(branchV2: v2.Branch): v1.Branch {
+    return {
+        blockHash: unwrapValToHex(branchV2.blockHash),
+        children: branchV2.children.map(branch),
+    };
+}
+
 // ---------------------------- //
 // --- V1 => V2 translation --- //
 // ---------------------------- //
@@ -1943,4 +2004,28 @@ export function accountTransactionSignatureToV2(
     }
 
     return { signatures: mapRecord(signature, trCredSig) };
+}
+
+export function BlocksAtHeightRequestToV2(
+    request: v1.BlocksAtHeightRequest
+): v2.BlocksAtHeightRequest {
+    if (typeof request === 'bigint') {
+        return {
+            blocksAtHeight: {
+                oneofKind: 'absolute',
+                absolute: { height: { value: request } },
+            },
+        };
+    } else {
+        return {
+            blocksAtHeight: {
+                oneofKind: 'relative',
+                relative: {
+                    genesisIndex: { value: request.genesisIndex },
+                    height: { value: request.height },
+                    restrict: request.restrict,
+                },
+            },
+        };
+    }
 }

@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer/';
 import * as v1 from './types';
 import * as v2 from '../grpc/v2/concordium/types';
-import { HexString } from './types';
+import { Base58String, HexString } from './types';
 import { QueriesClient } from '../grpc/v2/concordium/service.client';
 import type { RpcTransport } from '@protobuf-ts/runtime-rpc';
 import { CredentialRegistrationId } from './types/CredentialRegistrationId';
@@ -57,7 +57,7 @@ export default class ConcordiumNodeClient {
      * Retrieves the consensus status information from the node. Note that the optional
      * fields will only be unavailable for a newly started node that has not processed
      * enough data yet.
-     * @param blockHash optional block hash to get the account info at, otherwise retrieves from last finalized block.
+     * @param blockHash optional block hash to get the cryptographic parameters at, otherwise retrieves from last finalized block.
      * @returns the global cryptographic parameters at the given block, or undefined it the block does not exist.
      */
     async getCryptographicParameters(
@@ -128,7 +128,7 @@ export default class ConcordiumNodeClient {
      * Retrieves the source of the given module at
      * the provided block.
      * @param moduleRef the module's reference, hash of the source represented as a bytearray.
-     * @param blockHash the block to get the module source at.
+     * @param blockHash optional block hash to get the module source at, otherwise retrieves from last finalized block
      * @returns the source of the module as raw bytes.
      */
     async getModuleSource(
@@ -154,7 +154,7 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieve information about a given smart contract instance.
      * @param contractAddress the address of the smart contract.
-     * @param blockHash the block hash to get the smart contact instances at.
+     * @param blockHash optional block hash to get the smart contact instances at, otherwise retrieves from last finalized block
      * @returns An object with information about the contract instance.
      */
     async getInstanceInfo(
@@ -449,6 +449,313 @@ export default class ConcordiumNodeClient {
                 return reject(error);
             }
         });
+    }
+
+    /**
+     * Retrieve a stream of accounts that exist at the end of the given block.
+     *
+     * @param blockHash an optional block hash to get the accounts at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns an async iterable of account addresses represented as Base58 encoded strings.
+     */
+    getAccountList(
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<Base58String> {
+        const opts = { abort: abortSignal };
+        const hash = getBlockHashInput(blockHash);
+        const asyncIter = this.client.getAccountList(hash, opts).responses;
+        return mapAsyncIterable(asyncIter, translate.unwrapToBase58);
+    }
+
+    /**
+     * Get a stream of all smart contract modules' references. The stream will end
+     * when all modules that exist in the state at the end of the given
+     * block have been returned.
+     *
+     * @param blockHash an optional block hash to get the contract modules at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns an async iterable of contract module references, represented as hex strings.
+     */
+    getModuleList(
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<HexString> {
+        const opts = { abort: abortSignal };
+        const hash = getBlockHashInput(blockHash);
+        const asyncIter = this.client.getModuleList(hash, opts).responses;
+        return mapAsyncIterable(asyncIter, translate.unwrapValToHex);
+    }
+
+    /**
+     * Get a stream of ancestors for the provided block.
+     * Starting with the provided block itself, moving backwards until no more
+     * ancestors or the requested number of ancestors has been returned.
+     *
+     * @param maxAmountOfAncestors the maximum amount of ancestors as a bigint.
+     * @param blockHash a optional block hash to get the ancestors at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns an async iterable of ancestors' block hashes as hex strings.
+     */
+    getAncestors(
+        maxAmountOfAncestors: bigint,
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<HexString> {
+        const opts = { abort: abortSignal };
+        const request: v2.AncestorsRequest = {
+            blockHash: getBlockHashInput(blockHash),
+            amount: maxAmountOfAncestors,
+        };
+        const asyncIter = this.client.getAncestors(request, opts).responses;
+        return mapAsyncIterable(asyncIter, translate.unwrapValToHex);
+    }
+
+    /**
+     * Get the exact state of a specific contract instance, streamed as a list of
+     * key-value pairs. The list is streamed in lexicographic order of keys.
+     *
+     * @param contractAddress the contract to get the state of.
+     * @param blockHash a optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns an async iterable of instance states as key-value pairs of hex strings.
+     */
+    getInstanceState(
+        contractAddress: v1.ContractAddress,
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<v1.InstanceStateKVPair> {
+        const opts = { abort: abortSignal };
+        const request: v2.InstanceInfoRequest = {
+            blockHash: getBlockHashInput(blockHash),
+            address: contractAddress,
+        };
+        const asyncIter = this.client.getInstanceState(request, opts).responses;
+        return mapAsyncIterable(asyncIter, translate.instanceStateKVPair);
+    }
+
+    /**
+     * Get the value at a specific key of a contract state. In contrast to
+     * `GetInstanceState` this is more efficient, but requires the user to know
+     * the specific key to look for.
+     *
+     * @param contractAddress the contract to get the state of.
+     * @param key the key of the desired contract state.
+     * @param blockHash a optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @returns the state of the contract at the given key as a hex string.
+     */
+    async instanceStateLookup(
+        contractAddress: v1.ContractAddress,
+        key: HexString,
+        blockHash?: HexString
+    ): Promise<HexString> {
+        const request: v2.InstanceStateLookupRequest = {
+            address: contractAddress,
+            key: Buffer.from(key, 'hex'),
+            blockHash: getBlockHashInput(blockHash),
+        };
+        const response = await this.client.instanceStateLookup(request)
+            .response;
+        return translate.unwrapValToHex(response);
+    }
+
+    /**
+     * Get the identity providers registered as of the end of a given block.
+     * The stream will end when all the identity providers have been returned,
+     * or an abort signal is called.
+     *
+     * @param blockHash an optional block hash to get the providers at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns an async iterable of identity provider info objects.
+     */
+    getIdentityProviders(
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<v1.IpInfo> {
+        const opts = { abort: abortSignal };
+        const block = getBlockHashInput(blockHash);
+        const ips = this.client.getIdentityProviders(block, opts).responses;
+        return mapAsyncIterable(ips, translate.ipInfo);
+    }
+
+    /**
+     * Get the anonymity revokers registered as of the end of a given block.
+     * The stream will end when all the anonymity revokers have been returned,
+     * or an abort signal is called.
+     *
+     * @param blockHash an optional block hash to get the anonymity revokers at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns an async iterable of identity provider info objects.
+     */
+    getAnonymityRevokers(
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<v1.ArInfo> {
+        const opts = { abort: abortSignal };
+        const block = getBlockHashInput(blockHash);
+        const ars = this.client.getAnonymityRevokers(block, opts).responses;
+        return mapAsyncIterable(ars, translate.arInfo);
+    }
+
+    /**
+     * Get a list of live blocks at a given height.
+     *
+     * @param blockHeightRequest Either an absolute block height request or a relative block height request
+     * @returns A lsit of block hashes as hex strings
+     */
+    async getBlocksAtHeight(
+        blockHeightRequest: v1.BlocksAtHeightRequest
+    ): Promise<HexString[]> {
+        const requestV2 =
+            translate.BlocksAtHeightRequestToV2(blockHeightRequest);
+        const blocks = await this.client.getBlocksAtHeight(requestV2).response;
+        return translate.blocksAtHeightResponse(blocks);
+    }
+
+    /**
+     * Get information, such as height, timings, and transaction counts for the given block.
+     *
+     * @param blockHash an optional block hash to get the info from, otherwise retrieves from last finalized block.
+     * @returns information on a block.
+     */
+    async getBlockInfo(blockHash?: HexString): Promise<v1.BlockInfo> {
+        const block = getBlockHashInput(blockHash);
+        const blockInfo = await this.client.getBlockInfo(block).response;
+        return translate.blockInfo(blockInfo);
+    }
+
+    /**
+     * Get all the bakers at the end of the given block.
+     *
+     * @param blockHash an optional block hash to get the baker list at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns an async iterable of BakerIds.
+     */
+    getBakerList(
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<v1.BakerId> {
+        const opts = { abort: abortSignal };
+        const block = getBlockHashInput(blockHash);
+        const bakers = this.client.getBakerList(block, opts).responses;
+        return mapAsyncIterable(bakers, (x) => x.value);
+    }
+
+    /**
+     * Get the registered delegators of a given pool at the end of a given block.
+     * In contrast to the `GetPoolDelegatorsRewardPeriod` which returns delegators
+     * that are fixed for the reward period of the block, this endpoint returns the
+     * list of delegators that are registered in the block. Any changes to delegators
+     * are immediately visible in this list.
+     * The stream will end when all the delegators has been returned.
+     *
+     * @param baker The BakerId of the pool owner
+     * @param blockHash an optional block hash to get the delegators at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns a stream of DelegatorInfo
+     */
+    getPoolDelegators(
+        baker: v1.BakerId,
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<v1.DelegatorInfo> {
+        const opts = { abort: abortSignal };
+        const request: v2.GetPoolDelegatorsRequest = {
+            blockHash: getBlockHashInput(blockHash),
+            baker: { value: baker },
+        };
+        const delegatorInfo = this.client.getPoolDelegators(
+            request,
+            opts
+        ).responses;
+        return mapAsyncIterable(delegatorInfo, translate.delegatorInfo);
+    }
+    /**
+     * Get the fixed delegators of a given pool for the reward period of the given block.
+     * In contracts to the `GetPoolDelegators` which returns delegators registered
+     * for the given block, this endpoint returns the fixed delegators contributing
+     * stake in the reward period containing the given block.
+     * The stream will end when all the delegators has been returned.
+     *
+     * @param baker The BakerId of the pool owner
+     * @param blockHash an optional block hash to get the delegators at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns a stream of DelegatorRewardPeriodInfo
+     */
+    getPoolDelegatorsRewardPeriod(
+        baker: v1.BakerId,
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<v1.DelegatorRewardPeriodInfo> {
+        const opts = { abort: abortSignal };
+        const request: v2.GetPoolDelegatorsRequest = {
+            blockHash: getBlockHashInput(blockHash),
+            baker: { value: baker },
+        };
+        const delegatorInfo = this.client.getPoolDelegatorsRewardPeriod(
+            request,
+            opts
+        ).responses;
+        return mapAsyncIterable(delegatorInfo, translate.delegatorInfo);
+    }
+
+    /**
+     * Get the registered passive delegators at the end of a given block.
+     * In contrast to the `GetPassiveDelegatorsRewardPeriod` which returns delegators
+     * that are fixed for the reward period of the block, this endpoint returns the
+     * list of delegators that are registered in the block. Any changes to delegators
+     * are immediately visible in this list.
+     * The stream will end when all the delegators has been returned.
+     *
+     * @param blockHash an optional block hash to get the delegators at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns a stream of DelegatorInfo
+     */
+    getPassiveDelegators(
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<v1.DelegatorInfo> {
+        const opts = { abort: abortSignal };
+        const blockHashInput = getBlockHashInput(blockHash);
+        const delegatorInfo = this.client.getPassiveDelegators(
+            blockHashInput,
+            opts
+        ).responses;
+        return mapAsyncIterable(delegatorInfo, translate.delegatorInfo);
+    }
+
+    /**
+     * Get the fixed passive delegators for the reward period of the given block.
+     * In contracts to the `GetPassiveDelegators` which returns delegators registered
+     * for the given block, this endpoint returns the fixed delegators contributing
+     * stake in the reward period containing the given block.
+     * The stream will end when all the delegators has been returned.
+     *
+     * @param blockHash an optional block hash to get the delegators at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns a stream of DelegatorRewardPeriodInfo
+     */
+    getPassiveDelegatorsRewardPeriod(
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<v1.DelegatorRewardPeriodInfo> {
+        const opts = { abort: abortSignal };
+        const blockHashInput = getBlockHashInput(blockHash);
+        const delegatorInfo = this.client.getPassiveDelegatorsRewardPeriod(
+            blockHashInput,
+            opts
+        ).responses;
+        return mapAsyncIterable(delegatorInfo, translate.delegatorInfo);
+    }
+
+    /**
+     * Get the current branches of blocks starting from and including the last finalized block.
+     *
+     * @returns a branch with a block hash and a list of branch-children
+     */
+    async getBranches(): Promise<v1.Branch> {
+        const branch = await this.client.getBranches(v2.Empty).response;
+        return translate.branch(branch);
     }
 }
 

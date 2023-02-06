@@ -28,3 +28,15 @@ The response has the same structure.
 The `getTransactionStatus` has been replaced with the `getBlockItemStatus`.
 
 The `GetBlockItemStatus` endpoints has the same information, but has a simpler structure, with better typing.
+
+## getIdentityProviders
+
+Returns a stream of identity providers instead of a list.
+
+## getAnonymityRevokers
+
+Returns a stream of anonymity revokers instead of a list.
+
+## getBakerList
+
+Returns a stream of BakerIds instead of a list.

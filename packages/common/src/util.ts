@@ -203,3 +203,14 @@ export function filterRecord<A extends string | number | symbol, B>(
         Object.entries(rec).filter(([k, v]) => predicate(k as A, v as B))
     ) as Record<A, B>;
 }
+
+// Converts an async iterable to a list. Beware! this will not terminate if given an infinite stream.
+export async function asyncIterableToList<A>(
+    iterable: AsyncIterable<A>
+): Promise<A[]> {
+    const list: A[] = [];
+    for await (const iter of iterable) {
+        list.push(iter);
+    }
+    return list;
+}

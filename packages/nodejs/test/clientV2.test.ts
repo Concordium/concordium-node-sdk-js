@@ -29,6 +29,7 @@ import { serializeAccountTransaction } from '@concordium/common-sdk/lib/serializ
 import { TextEncoder, TextDecoder } from 'util';
 import 'isomorphic-fetch';
 import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
+import { asyncIterableToList } from '@concordium/common-sdk/src/util';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 global.TextEncoder = TextEncoder as any;
@@ -598,7 +599,163 @@ test.each([clientV2, clientWeb])('createAccount', async (client) => {
     ).rejects.toThrow('expired');
 });
 
-// Tests, which take a long time to run, are skipped by default
+test.each([clientV2, clientWeb])('getAccountList', async (client) => {
+    const blocks = await client.getBlocksAtHeight(10n);
+    const accountIter = client.getAccountList(blocks[0]);
+    const accountList = await asyncIterableToList(accountIter);
+    expect(accountList).toEqual(expected.accountList);
+});
+
+test.each([clientV2, clientWeb])('getModuleList', async (client) => {
+    const blocks = await client.getBlocksAtHeight(5000n);
+    const moduleIter = client.getModuleList(blocks[0]);
+    const moduleList = await asyncIterableToList(moduleIter);
+    expect(moduleList).toEqual(expected.moduleList);
+});
+
+test.each([clientV2, clientWeb])('getAncestors', async (client) => {
+    const ancestorsIter = client.getAncestors(3n, testBlockHash);
+    const ancestorsList = await asyncIterableToList(ancestorsIter);
+    expect(ancestorsList).toEqual(expected.ancestorList);
+});
+
+test.each([clientV2, clientWeb])('getInstanceState', async (client) => {
+    const contract = {
+        index: 602n,
+        subindex: 0n,
+    };
+    const instanceStateIter = client.getInstanceState(contract, testBlockHash);
+    const instanceStateList = await asyncIterableToList(instanceStateIter);
+
+    expect(instanceStateList).toEqual(expected.instanceStateList);
+});
+
+test.each([clientV2, clientWeb])('instanceStateLookup', async (client) => {
+    const key = '0000000000000000';
+    const expectedValue = '0800000000000000';
+    const contract = {
+        index: 601n,
+        subindex: 0n,
+    };
+    const value = await client.instanceStateLookup(
+        contract,
+        key,
+        testBlockHash
+    );
+
+    expect(value).toEqual(expectedValue);
+});
+
+test.each([clientV2, clientWeb])('getIdentityProviders', async (client) => {
+    const earlyBlock = await client.getBlocksAtHeight(1n);
+    const ips = client.getIdentityProviders(earlyBlock[0]);
+    const ipList = await asyncIterableToList(ips);
+    ipList.forEach((ip) => (ip.ipVerifyKey = ''));
+
+    expect(ipList).toEqual(expected.ipList);
+});
+
+test.each([clientV2, clientWeb])('getAnonymityRevokers', async (client) => {
+    const earlyBlock = await client.getBlocksAtHeight(1n);
+    const ars = client.getAnonymityRevokers(earlyBlock[0]);
+    const arList = await asyncIterableToList(ars);
+
+    expect(arList).toEqual(expected.arList);
+});
+
+test.each([clientV2, clientWeb])('getBlocksAtHeight', async (client) => {
+    const blocksV1 = await clientV1.getBlocksAtHeight(1n);
+    const blocksV2 = await client.getBlocksAtHeight(1n);
+
+    expect(blocksV1[0]).toEqual(blocksV2[0]);
+});
+
+test.each([clientV2, clientWeb])(
+    'getBlocksAtHeight different request',
+    async (client) => {
+        const request: v1.BlocksAtHeightRequest = {
+            genesisIndex: 1,
+            height: 100n,
+            restrict: true,
+        };
+        const expectedBlock =
+            '956c3bc5c9d10449e13686a4cc69e8bc7dee450608866242075a6ce37331187c';
+        const blocks = await client.getBlocksAtHeight(request);
+        expect(blocks[0]).toEqual(expectedBlock);
+    }
+);
+
+test.each([clientV2, clientWeb])('getBlockInfo', async (client) => {
+    const blockInfoV1 = await clientV1.getBlockInfo(testBlockHash);
+    const blockInfoV2 = await client.getBlockInfo(testBlockHash);
+
+    expect(blockInfoV2).toEqual(blockInfoV1);
+});
+
+test.each([clientV2, clientWeb])('getBakerList', async (client) => {
+    const bakerAsyncIterable = client.getBakerList(testBlockHash);
+    const bakersV2 = await asyncIterableToList(bakerAsyncIterable);
+    const bakersV1 = await clientV1.getBakerList(testBlockHash);
+
+    expect(bakersV2).toEqual(bakersV1);
+});
+
+test.each([clientV2, clientWeb])('getPoolDelegators', async (client) => {
+    const delegatorInfoStream = client.getPoolDelegators(15n, testBlockHash);
+    const delegatorInfoList = await asyncIterableToList(delegatorInfoStream);
+
+    expect(delegatorInfoList).toEqual(expected.delegatorInfoList);
+});
+
+test.each([clientV2, clientWeb])(
+    'getPoolDelegatorsRewardPeriod',
+    async (client) => {
+        const delegatorInfoStream = client.getPoolDelegatorsRewardPeriod(
+            15n,
+            testBlockHash
+        );
+        const delegatorInfoList = await asyncIterableToList(
+            delegatorInfoStream
+        );
+
+        expect(delegatorInfoList).toEqual(expected.delegatorInfoList);
+    }
+);
+test.each([clientV2, clientWeb])('getPassiveDelegators', async (client) => {
+    const blocks = await client.getBlocksAtHeight(10000n);
+    const passiveDelegatorInfoStream = client.getPassiveDelegators(blocks[0]);
+    const passiveDelegatorInfoList = await asyncIterableToList(
+        passiveDelegatorInfoStream
+    );
+
+    expect(passiveDelegatorInfoList).toEqual(expected.passiveDelegatorInfoList);
+});
+
+test.each([clientV2, clientWeb])(
+    'getPassiveDelegatorsRewardPeriod',
+    async (client) => {
+        const blocks = await client.getBlocksAtHeight(10000n);
+        const passiveDelegatorRewardInfoStream =
+            client.getPassiveDelegatorsRewardPeriod(blocks[0]);
+        const passiveDelegatorRewardInfoList = await asyncIterableToList(
+            passiveDelegatorRewardInfoStream
+        );
+
+        expect(passiveDelegatorRewardInfoList).toEqual(
+            expected.passiveDelegatorRewardInfoList
+        );
+    }
+);
+
+test.each([clientV2, clientWeb])('getBranches', async (client) => {
+    const branch = await client.getBranches();
+
+    expect(branch).toBeDefined();
+    expect(branch.blockHash).toBeDefined();
+    expect(branch.children).toBeDefined();
+});
+
+// For tests that take a long time to run, is skipped by default
 describe.skip('Long run-time test suite', () => {
     const longTestTime = 45000;
 

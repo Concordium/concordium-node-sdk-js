@@ -49,6 +49,11 @@
     - `serializeAccountTransactionPayload()`
     - `serializeCredentialDeploymentPayload()`
 
+- Credential deployment helpers:
+  - `createCredentialTransaction`
+  - `createCredentialTransactionNoSeed`
+  - `signCredentialTransaction`
+
 ## 6.2.0 2023-01-04
 
 ### Added

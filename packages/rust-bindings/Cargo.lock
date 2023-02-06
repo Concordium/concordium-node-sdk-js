@@ -212,6 +212,7 @@ dependencies = [
  "key_derivation",
  "serde",
  "serde_json",
+ "thiserror",
  "wasm-bindgen",
 ]
 

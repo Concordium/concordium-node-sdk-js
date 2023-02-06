@@ -539,6 +539,9 @@ export function serializeTypeValue(
     }
 }
 
+/**
+ * @deprecated the SignedCredentialDeploymentDetails is only used with JSON-RPC
+ */
 function serializeSignedCredentialDeploymentDetails(
     credentialDetails: SignedCredentialDeploymentDetails
 ): Buffer {
@@ -560,6 +563,9 @@ function serializeSignedCredentialDeploymentDetails(
     ]);
 }
 
+/**
+ * @deprecated the SignedCredentialDeploymentDetails is only used with JSON-RPC
+ */
 export function serializeSignedCredentialDeploymentDetailsForSubmission(
     credentialDetails: SignedCredentialDeploymentDetails
 ): Buffer {
@@ -569,6 +575,9 @@ export function serializeSignedCredentialDeploymentDetailsForSubmission(
     return Buffer.concat([serializedVersion, serializedDetails]);
 }
 
+/**
+ * @deprecated the SignedCredentialDeploymentDetails is only used with JSON-RPC
+ */
 export function getSignedCredentialDeploymentTransactionHash(
     credentialDetails: SignedCredentialDeploymentDetails
 ): string {

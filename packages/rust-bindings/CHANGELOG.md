@@ -5,6 +5,7 @@
 ### Added
 
 - `serialize_credential_deployment_payload()`
+- `create_unsigned_credential_v1()`
 
 ## 0.9.0 2023-1-4
 

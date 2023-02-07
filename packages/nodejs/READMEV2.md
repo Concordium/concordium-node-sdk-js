@@ -730,7 +730,7 @@ for (const bakerElectionInfo of electionInfo.bakerElectionInfo) {
 ## getAccountNonFinalizedTransactions
 Get a list of non-finalized transaction hashes for a given account. This
 endpoint is not expected to return a large amount of data in most cases,
-but in bad network condtions it might. The stream will end when all the
+but in bad network conditions it might. The stream will end when all the
 non-finalized transaction hashes have been returned.
 
 An optional abort signal can also be provided that closes the stream.

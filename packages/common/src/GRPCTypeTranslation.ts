@@ -6,6 +6,7 @@ import {
     BakerPoolPendingChangeType,
     PoolStatusType,
     AuthorizationKeysUpdateType,
+    BakerConsensusInfoStatus,
     HigherLevelKeyUpdateType,
     RejectReasonTag,
     TransactionEventTag,
@@ -2034,6 +2035,108 @@ export function nextUpdateSequenceNumbers(
         addIdentityProvider: unwrap(nextNums.addIdentityProvider?.value),
         cooldownParameters: unwrap(nextNums.cooldownParameters?.value),
         timeParameters: unwrap(nextNums.timeParameters?.value),
+    };
+}
+
+function trPassiveCommitteeInfo(
+    passiveCommitteeInfo: v2.NodeInfo_BakerConsensusInfo_PassiveCommitteeInfo
+): v1.PassiveCommitteeInfo {
+    const passiveCommitteeInfoV2 =
+        v2.NodeInfo_BakerConsensusInfo_PassiveCommitteeInfo;
+    switch (passiveCommitteeInfo) {
+        case passiveCommitteeInfoV2.NOT_IN_COMMITTEE:
+            return v1.PassiveCommitteeInfo.NotInCommittee;
+        case passiveCommitteeInfoV2.ADDED_BUT_NOT_ACTIVE_IN_COMMITTEE:
+            return v1.PassiveCommitteeInfo.AddedButNotActiveInCommittee;
+        case passiveCommitteeInfoV2.ADDED_BUT_WRONG_KEYS:
+            return v1.PassiveCommitteeInfo.AddedButWrongKeys;
+    }
+}
+
+function trBakerConsensusInfoStatus(
+    consensusInfo: v2.NodeInfo_BakerConsensusInfo
+): v1.BakerConsensusInfoStatus {
+    if (consensusInfo.status.oneofKind === 'passiveCommitteeInfo') {
+        return {
+            tag: 'passiveCommitteeInfo',
+            passiveCommitteeInfo: trPassiveCommitteeInfo(
+                consensusInfo.status.passiveCommitteeInfo
+            ),
+        };
+    } else if (consensusInfo.status.oneofKind === 'activeBakerCommitteeInfo') {
+        return {
+            tag: 'activeBakerCommitteeInfo',
+        };
+    } else if (
+        consensusInfo.status.oneofKind === 'activeFinalizerCommitteeInfo'
+    ) {
+        return {
+            tag: 'activeFinalizerCommitteeInfo',
+        };
+    } else {
+        throw Error(
+            'Error translating NodeInfoConsensusStatus: unexpected undefined'
+        );
+    }
+}
+
+function trNetworkInfo(
+    networkInfo: v2.NodeInfo_NetworkInfo | undefined
+): v1.NodeNetworkInfo {
+    return {
+        nodeId: unwrap(networkInfo?.nodeId?.value),
+        peerTotalSent: unwrap(networkInfo?.peerTotalSent),
+        peerTotalReceived: unwrap(networkInfo?.peerTotalReceived),
+        avgBpsIn: unwrap(networkInfo?.avgBpsIn),
+        avgBpsOut: unwrap(networkInfo?.avgBpsOut),
+    };
+}
+
+export function trNodeInfo_Node(
+    node: v2.NodeInfo_Node
+): v1.NodeInfoConsensusStatus {
+    const status = node.consensusStatus;
+    switch (status.oneofKind) {
+        case 'active':
+            return {
+                tag: 'active',
+                bakerId: unwrap(status.active.bakerId?.value),
+                status: trBakerConsensusInfoStatus(status.active),
+            };
+        case 'notRunning':
+            return {
+                tag: 'notRunning',
+            };
+        case 'passive':
+            return {
+                tag: 'passive',
+            };
+        case undefined:
+            throw Error('Error translating nodeinfo: unexpected undefined');
+    }
+}
+
+export function nodeInfo(nodeInfo: v2.NodeInfo): v1.NodeInfo {
+    let details = {};
+    if (nodeInfo.details.oneofKind === 'bootstrapper') {
+        details = {
+            tag: 'bootstrapper',
+        };
+    } else if (nodeInfo.details.oneofKind === 'node') {
+        details = {
+            tag: 'node',
+            consensusStatus: trNodeInfo_Node(nodeInfo.details.node),
+        };
+    } else {
+        throw Error('Invalid nodeinfo');
+    }
+
+    return {
+        peerVersion: nodeInfo.peerVersion,
+        localTime: unwrap(nodeInfo.localTime?.value),
+        peerUptime: unwrap(nodeInfo.peerUptime?.value),
+        networkInfo: trNetworkInfo(nodeInfo.networkInfo),
+        details: details as v1.NodeInfoDetails,
     };
 }
 

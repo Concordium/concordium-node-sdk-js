@@ -53,6 +53,8 @@ Wrappers for interacting with the Concordium node, using nodejs.
   - [unbanPeer](#unbanpeer)
   - [dumpStart](#dumpstart)
   - [dumpStop](#dumpstop)
+  - [getNodeInfo](#getnodeinfo)
+
 
 # ConcordiumNodeClient
 
@@ -834,4 +836,18 @@ Only enabled if the node was built with the `network_dump` feature.
 Rejects if the network dump failed to be stopped.
 ```js
 await this.client.dumpStop();
+```
+
+## getNodeInfo
+Get information about the node.
+
+The `NodeInfo` includes information of:
+ - **Meta information** such as the, version of the node, type of the node, uptime and the local time of the node.
+ - **NetworkInfo**, which yields data such as the node id, packets sent/received,
+  average bytes per second sent/received.
+ - **ConsensusInfo**. The `ConsensusInfo` returned depends on if the node supports
+  the protocol on chain and whether the node is configured as a baker or not.
+
+```js
+const nodeInfo: NodeInfo = await this.client.getNodeInfo();
 ```

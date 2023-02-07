@@ -14,6 +14,7 @@ import {
 } from './types/transactionEvent';
 
 export * from './types/NodeInfo';
+export * from './types/PeerInfo';
 
 export type HexString = string;
 export type Base58String = string;

@@ -54,7 +54,7 @@ Wrappers for interacting with the Concordium node, using nodejs.
   - [dumpStart](#dumpstart)
   - [dumpStop](#dumpstop)
   - [getNodeInfo](#getnodeinfo)
-
+  - [getPeersInfo](#getpeersinfo)
 
 # ConcordiumNodeClient
 
@@ -850,4 +850,11 @@ The `NodeInfo` includes information of:
 
 ```js
 const nodeInfo: NodeInfo = await this.client.getNodeInfo();
+```
+
+## getPeersInfo
+Get a list of the peers that the node is connected to and assoicated network related information for each peer.
+
+```js
+const peerInfo: PeerInfo[] = await this.client.getPeersInfo();
 ```

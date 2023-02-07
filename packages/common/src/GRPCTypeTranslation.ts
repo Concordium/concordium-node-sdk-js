@@ -2140,6 +2140,55 @@ export function nodeInfo(nodeInfo: v2.NodeInfo): v1.NodeInfo {
     };
 }
 
+function trCatchupStatus(
+    catchupStatus: v2.PeersInfo_Peer_CatchupStatus
+): v1.NodeCatchupStatus {
+    const CatchupStatus = v2.PeersInfo_Peer_CatchupStatus;
+    switch (catchupStatus) {
+        case CatchupStatus.CATCHINGUP:
+            return v1.NodeCatchupStatus.CatchingUp;
+        case CatchupStatus.PENDING:
+            return v1.NodeCatchupStatus.Pending;
+        case CatchupStatus.UPTODATE:
+            return v1.NodeCatchupStatus.UpToDate;
+    }
+}
+
+function trPeerNetworkStats(
+    networkStats: v2.PeersInfo_Peer_NetworkStats | undefined
+): v1.PeerNetworkStats {
+    return {
+        packetsSent: unwrap(networkStats?.packetsSent),
+        packetsReceived: unwrap(networkStats?.packetsReceived),
+        latency: unwrap(networkStats?.latency),
+    };
+}
+
+export function peerInfo(peerInfo: v2.PeersInfo_Peer): v1.PeerInfo {
+    let consensusInfo = {};
+    if (peerInfo.consensusInfo.oneofKind === 'bootstrapper') {
+        consensusInfo = {
+            tag: 'bootstrapper',
+        };
+    } else if (peerInfo.consensusInfo.oneofKind === 'nodeCatchupStatus') {
+        consensusInfo = {
+            tag: 'nodeCatchupStatus',
+            catchupStatus: trCatchupStatus(
+                peerInfo.consensusInfo.nodeCatchupStatus
+            ),
+        };
+    } else {
+        throw Error('Error translating peerInfo: unexpected undefined');
+    }
+    return {
+        peerId: unwrap(peerInfo.peerId?.value),
+        ip: unwrap(peerInfo.socketAddress?.ip?.value),
+        port: unwrap(peerInfo.socketAddress?.port?.value),
+        networkStats: trPeerNetworkStats(peerInfo.networkStats),
+        consensusInfo: consensusInfo as v1.PeerConsensusInfo,
+    };
+}
+
 // ---------------------------- //
 // --- V1 => V2 translation --- //
 // ---------------------------- //

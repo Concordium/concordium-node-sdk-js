@@ -30,7 +30,9 @@
     - `unbanPeer()`
     - `dumpStart()`
     - `dumpStop()`
-    - `nodeInfo()`
+    - `getNodeInfo()`
+    - `getPeersInfo()`
+
 
 ## 6.4.0
 

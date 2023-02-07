@@ -965,11 +965,22 @@ export default class ConcordiumNodeClient {
      * * ConsensusInfo. The `ConsensusInfo` returned depends on if the node supports
      *   the protocol on chain and whether the node is configured as a baker or not.
      *
-     *  @returns Info about the node
+     * @returns Info about the node
      */
     async getNodeInfo(): Promise<v1.NodeInfo> {
         const nodeInfo = await this.client.getNodeInfo(v2.Empty).response;
         return translate.nodeInfo(nodeInfo);
+    }
+
+    /**
+     * Get a list of the peers that the node is connected to
+     * and assoicated network related information for each peer.
+     *
+     * @returns a list containing info on each peer of the node.
+     */
+    async getPeersInfo(): Promise<v1.PeerInfo[]> {
+        const peersInfo = await this.client.getPeersInfo(v2.Empty).response;
+        return peersInfo.peers.map(translate.peerInfo);
     }
 }
 

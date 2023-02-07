@@ -7,14 +7,15 @@ use concordium_base::{
         Cursor,
     },
     id::dodis_yampolskiy_prf as prf,
-    transactions::Payload,
+    transactions::{Payload, ConfigureBakerKeysPayload},
+    base::BakerKeyPairs
 };
 use hex;
 use key_derivation::{ConcordiumHdWallet, Net};
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use serde_json::{from_str, Value as SerdeValue};
 use std::{collections::BTreeMap, convert::TryInto};
-
+use rand::thread_rng;
 pub type JsonString = String;
 pub type HexString = String;
 
@@ -884,4 +885,10 @@ pub fn create_unsigned_credential_v1_aux(input: UnsignedCredentialInput) -> Resu
     let response = json!({"unsignedCdi": cdi, "randomness": rand});
 
     Ok(response.to_string())
+}
+
+pub fn generate_baker_keys(sender: AccountAddress) -> Result<JsonString> {
+    let mut csprng = thread_rng();
+    let keys = BakerKeyPairs::generate(&mut csprng);
+    Ok(json!(ConfigureBakerKeysPayload::new(&keys, sender, &mut csprng)).to_string())
 }

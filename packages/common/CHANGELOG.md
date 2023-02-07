@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Added
+
+- Function to generate baker keys: `generateBakerKeys`.
+
+## Unreleased
+
 - Added the following GRPCv2 functions:
     - `getAccountList()`
     - `getModuleList()`

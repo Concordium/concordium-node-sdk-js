@@ -266,6 +266,10 @@ export class ConfigureBakerHandler
     serialize(payload: ConfigureBakerPayload): Buffer {
         return serializeConfigureDelegationPayload(payload);
     }
+
+    deserialize(): ConfigureBakerPayload {
+        throw new Error('deserialize not supported');
+    }
 }
 
 export class ConfigureDelegationHandler

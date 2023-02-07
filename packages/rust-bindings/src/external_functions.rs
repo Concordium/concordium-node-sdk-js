@@ -330,3 +330,14 @@ pub fn serialize_credential_deployment_payload_ext(
     serialize_credential_deployment_payload_aux(signatures_vec, unsigned_info)
         .map_err(|e| format!("Unable to get credential deployment payload due to: {}", e))
 }
+
+#[wasm_bindgen(js_name = generateBakerKeys)]
+pub fn generate_baker_keys_ext(
+    sender: &str
+) -> String {
+    let sender = match sender.parse() {
+        Ok(sender) => sender,
+        Err(e) => return format!("unable to parse sender account address: {}.", e)
+    };
+    error_to_string(generate_baker_keys(sender))
+}

@@ -613,11 +613,11 @@ function encodeHexString(s: string): Buffer {
 
 const serializeVerifyKeys = serializeFromSpec<BakerKeysWithProofs>({
     electionVerifyKey: encodeHexString,
-    electionKeyProof: encodeHexString,
+    proofElection: encodeHexString,
     signatureVerifyKey: encodeHexString,
-    signatureKeyProof: encodeHexString,
+    proofSig: encodeHexString,
     aggregationVerifyKey: encodeHexString,
-    aggregationKeyProof: encodeHexString,
+    proofAggregation: encodeHexString,
 });
 
 const serializeUrl = (url: string) => {
@@ -628,7 +628,7 @@ const serializeUrl = (url: string) => {
 
 const configureBakerSerializationSpec: SerializationSpec<ConfigureBakerPayload> =
     {
-        stake: orUndefined((v) => encodeWord64(v.microGtuAmount)),
+        stake: orUndefined((v) => encodeWord64(v.microCcdAmount)),
         restakeEarnings: orUndefined(encodeBool),
         openForDelegation: orUndefined(encodeWord8),
         keys: orUndefined(serializeVerifyKeys),

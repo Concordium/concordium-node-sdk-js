@@ -2,23 +2,45 @@
 
 This document describes the different endpoints for the concordium gRPC V2 client. 
 
-**Table of Contents**
+- [Concordium Nodejs SDK](#concordium-nodejs-sdk)
 - [ConcordiumNodeClient](#concordiumnodeclient)
-    - [Creating a client](#creating-a-client)
-    - [Send Account Transaction](#send-account-transaction)
-    - [Create a new account](#create-a-new-account)
-    - [getAccountInfo](#getaccountinfo)
-    - [getNextAccountSequenceNumber](#getnextaccountsequencenumber)
-    - [getBlockItemStatus](#getblockitemstatus)
-    - [getConsensusStatus](#getconsensusstatus)
-    - [getCryptographicParameters](#getcryptographicparameters)
-    - [getBlockChainParameters](#getblockchainparameters)
-    - [getPoolInfo](#getpoolinfo)
-    - [getPassiveDelegationInfo](#getpassivedelegationinfo)
-    - [getTokenomicsInfo](#gettokenomicsinfo)
-    - [getInstanceInfo](#getinstanceinfo)
-    - [invokeContract](#invokecontract)
-    - [getModuleSource](#getModuleSource)
+  - [Creating a client](#creating-a-client)
+  - [Send Account Transaction](#send-account-transaction)
+  - [Create a new account](#create-a-new-account)
+  - [getAccountInfo](#getaccountinfo)
+  - [getNextAccountSequenceNumber](#getnextaccountsequencenumber)
+  - [getBlockItemStatus](#getblockitemstatus)
+  - [getConsensusStatus](#getconsensusstatus)
+  - [getCryptographicParameters](#getcryptographicparameters)
+  - [getBlockChainParameters](#getblockchainparameters)
+  - [getPoolInfo](#getpoolinfo)
+  - [getPassiveDelegationInfo](#getpassivedelegationinfo)
+  - [getTokenomicsInfo](#gettokenomicsinfo)
+  - [getInstanceInfo](#getinstanceinfo)
+  - [invokeContract](#invokecontract)
+  - [getModuleSource](#getmodulesource)
+  - [getBlocks](#getblocks)
+  - [getFinalizedBlocks](#getfinalizedblocks)
+  - [waitForTransactionFinalization](#waitfortransactionfinalization)
+  - [getAccountList](#getaccountlist)
+  - [getModuleList](#getmodulelist)
+  - [getAncestors](#getancestors)
+  - [getInstanceState](#getinstancestate)
+  - [instanceStateLookup](#instancestatelookup)
+  - [getIdentityProviders](#getidentityproviders)
+  - [getAnonymityRevokers](#getanonymityrevokers)
+  - [getBlocksAtHeight](#getblocksatheight)
+  - [getBlockInfo](#getblockinfo)
+  - [getBakerList](#getbakerlist)
+  - [getPoolDelegators](#getpooldelegators)
+  - [getPoolDelegatorsRewardPeriod](#getpooldelegatorsrewardperiod)
+  - [getPassiveDelegators](#getpassivedelegators)
+  - [getPassiveDelegatorsRewardPeriod](#getpassivedelegatorsrewardperiod)
+  - [getBranches](#getbranches)
+  - [getElectionInfo](#getelectioninfo)
+  - [getAccountNonFinalizedTransactions](#getaccountnonfinalizedtransactions)
+  - [getBlockTransactionEvents](#getblocktransactionevents)
+  - [getNextUpdateSequenceNumbers](#getnextupdatesequencenumbers)
 
 # ConcordiumNodeClient
 
@@ -368,7 +390,7 @@ as long as there is a connection to the node:
 
 ```js
 // Create stream
-const blockStream = client.getBlocks();
+const blockStream: AsyncIterable<ArrivedBlockInfo> = client.getBlocks();
 
 // Prints blocks infinitely
 for await (const block of blockStream) {
@@ -382,7 +404,7 @@ function as it otherwise continues forever. An example of how to use `AbortSigna
 ```js
 // Create abort controller and block stream
 const ac = new AbortController();
-const blockStream = client.getBlocks(ac.signal);
+const blockStream: AsyncIterable<ArrivedBlockInfo> = client.getBlocks(ac.signal);
 
 // Only get one item then break
 for await (const block of blockStream) {
@@ -399,7 +421,7 @@ Works exactly like `getBlocks()` but only returns finalized blocks:
 
 ```js
 // Create stream
-const blockStream = client.getFinalizedBlocks();
+const blockStream: AsyncIterable<FinalizedBlockInfo> = client.getFinalizedBlocks();
 
 // Prints blocks infinitely
 for await (const block of blockStream) {
@@ -412,7 +434,7 @@ Likewise, you can also pass it an `AbortSignal`:
 ```js
 // Create abort controller and block stream
 const ac = new AbortController();
-const blockStream = client.getFinalizedBlocks(ac.signal);
+const blockStream: AsyncIterable<FinalizedBlockInfo>  = client.getFinalizedBlocks(ac.signal);
 
 // Only get one item then break
 for await (const block of blockStream) {
@@ -424,29 +446,29 @@ for await (const block of blockStream) {
 ac.abort();
 ```
 
-### waitForTransactionFinalization
+## waitForTransactionFinalization
 This function waits for the given transaction hash (given as a hex string) to finalize and then returns
 the blockhash of the block that contains given transaction as a hex string.
 
 ```js
-const transactionHash = await client.sendAccountTransaction(
+const transactionHash: HexString = await client.sendAccountTransaction(
     someTransaction,
     signature
 );
 
-const blockHash = await client.waitForTransactionFinalization(
+const blockHash: HexString = await client.waitForTransactionFinalization(
     transactionHash
 );
 ```
 
-### getAccountList
+## getAccountList
 Retrieves the accounts that exists a the end of a given block as an async iterable.
 
 If a blockhash is not supplied it will pick the latest finalized block. An optional abortSignal can also be provided that closes the stream.
 
 ```js
 const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
-const accounts: AsyncIterable<AccountAddress> = clientV2.getAccountList(blockHash);
+const accounts: AsyncIterable<Base58String> = client.getAccountList(blockHash);
 
 // Prints accounts
 for await (const account of accounts) {
@@ -454,14 +476,14 @@ for await (const account of accounts) {
 }
 ```
 
-### getModuleList
+## getModuleList
 Retrieves all smart contract modules, as an async iterable, that exists in the state at the end of a given block.
 
 If a blockhash is not supplied it will pick the latest finalized block. An optional abortSignal can also be provided that closes the stream.
 
 ```js
 const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
-const moduleRefs: AsyncIterable<ModuleReference> = clientV2.getModuleList(blockHash);
+const moduleRefs: AsyncIterable<HexString> = client.getModuleList(blockHash);
 
 // Prints module references
 for await (const moduleRef of moduleRefs) {
@@ -469,7 +491,7 @@ for await (const moduleRef of moduleRefs) {
 }
 ```
 
-### getAncestors
+## getAncestors
 Retrieves all smart contract modules that exists in the state at the end of a given block, as an async iterable of hex strings. A bigint representing the max number of ancestors to get must be provided.
 
 If a blockhash is not supplied it will pick the latest finalized block. An optional abortSignal can also be provided that closes the stream.
@@ -477,7 +499,7 @@ If a blockhash is not supplied it will pick the latest finalized block. An optio
 ```js
 const maxNumberOfAncestors = 100n;
 const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
-const ancestors: AsyncIterable<HexString> = clientV2.getAncestors(blockHash);
+const ancestors: AsyncIterable<HexString> = client.getAncestors(blockHash);
 
 // Prints ancestors
 for await (const ancestor of ancestors) {
@@ -485,7 +507,7 @@ for await (const ancestor of ancestors) {
 }
 ```
 
-### getInstanceState
+## getInstanceState
 Get the exact state of a specific contract instance, streamed as a list of hex string key-value pairs.
 
 If a blockhash is not supplied it will pick the latest finalized block. An optional abortSignal can also be provided that closes the stream.
@@ -496,7 +518,7 @@ const contractAddress = {
     subindex: 0n,
 };
 const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
-const states: AsyncIterable<InstanceStateKVPair> = clientV2.getInstanceState(blockHash);
+const states: AsyncIterable<InstanceStateKVPair> = client.getInstanceState(blockHash);
 
 // Prints instance state key-value pairs
 for await (const state of states) {
@@ -505,7 +527,7 @@ for await (const state of states) {
 }
 ```
 
-### instanceStateLookup
+## instanceStateLookup
 Get the value at a specific key of a contract state as a hex string.
 
 In contrast to `GetInstanceState` this is more efficient, but requires the user to know the specific key to look for.
@@ -520,18 +542,18 @@ const contract = {
 const key = '0000000000000000';
 const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e'
 
-const state: HexString = await clientV2.instanceStateLookup(blockHash);
+const state: HexString = await client.instanceStateLookup(blockHash);
 ...
 ```
 
-### getIdentityProviders
+## getIdentityProviders
 Get the identity providers registered as of the end of a given block as a stream
 
 If a blockhash is not supplied it will pick the latest finalized block. An optional abortSignal can also be provided that closes the stream.
 
 ```js
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
-const ips = await client.getIdentityProviders(blockHash);
+const ips: AsyncIterable<IpInfo> = client.getIdentityProviders(blockHash);
 
 for await (const ip of ips) {
     console.log(ip.ipDescription);
@@ -544,7 +566,7 @@ Get the anonymity revokers registered as of the end of a given block as a stream
 If a blockhash is not supplied it will pick the latest finalized block. An optional abortSignal can also be provided that closes the stream.
 ```js
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
-const ars = await client.getAnonymityRevokers(blockHash);
+const ars: AsyncIterable<IpInfo> = client.getAnonymityRevokers(blockHash);
 
 for await (const ar of ars) {
     console.log(ar.ipDescription);
@@ -558,7 +580,7 @@ Get a list of live blocks at a given height.
 
 It can accept an absolute height:
 ```js
-const blocks = await client.getBlocksAtHeight(100n);
+const blocks: HexString[] = await client.getBlocksAtHeight(100n);
 ...
 ```
 Or it can accept a relative height:
@@ -572,11 +594,14 @@ const request: BlocksAtHeightRequest = {
     // or allow results from more recent genesis indices as well (`false`).
     restrict: true;
 }
-const blocks = await client.getBlocksAtHeight(request);
+const blocks: HexString[] = await client.getBlocksAtHeight(request);
 ```
 
 ## getBlockInfo
 Retrieves information about a specific block.
+
+If a blockhash is not supplied it will pick the latest finalized block.
+
 ```js
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749";
 const blockInfo: BlockInfo = await client.getBlockInfo(blockHash);
@@ -590,7 +615,7 @@ Retrieves a stream of ID's for registered bakers on the network at a specific bl
 If a blockhash is not supplied it will pick the latest finalized block. An optional abort signal can also be provided that closes the stream.
 ```js
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
-const bakerIds = await client.getBakerList(blockHash);
+const bakerIds: AsyncIterable<BakerId> = client.getBakerList(blockHash);
 
 for await (const id of bakerIds) {
     console.log(id);
@@ -609,9 +634,9 @@ The stream will end when all the delegators has been returned.
 If a blockhash is not supplied it will pick the latest finalized block. An optional abort signal can also be provided that closes the stream.
 ```js
 const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
-const delegatorInfoList = await client.getPoolDelegators(15n, blockHash);
+const delegatorInfoStream: AsyncIterable<DelegatorInfo> = client.getPoolDelegators(15n, blockHash);
 
-for await (const delegatorInfo of delegatorInfoList) {
+for await (const delegatorInfo of delegatorInfoStream) {
     console.log(delegatorInfo);
 }
 ...
@@ -627,9 +652,9 @@ The stream will end when all the delegators has been returned.
 If a blockhash is not supplied it will pick the latest finalized block. An optional abort signal can also be provided that closes the stream.
 ```js
 const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
-const delegatorInfoList = await client.getPoolDelegatorsRewardPeriod(15n, blockHash);
+const delegatorInfoStream: AsyncIterable<DelegatorRewardPeriodInfo> = client.getPoolDelegatorsRewardPeriod(15n, blockHash);
 
-for await (const delegatorInfo of delegatorInfoList) {
+for await (const delegatorInfo of delegatorInfoStream) {
     console.log(delegatorInfo);
 }
 ...
@@ -646,9 +671,9 @@ The stream will end when all the delegators has been returned.
 If a blockhash is not supplied it will pick the latest finalized block. An optional abort signal can also be provided that closes the stream.
 ```js
 const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
-const delegatorInfoList = await client.getPassiveDelegators(blockHash);
+const delegatorInfoStream: AsyncIterable<DelegatorInfo> = client.getPassiveDelegators(blockHash);
 
-for await (const delegatorInfo of delegatorInfoList) {
+for await (const delegatorInfo of delegatorInfoStream) {
     console.log(delegatorInfo);
 }
 ...
@@ -664,9 +689,9 @@ The stream will end when all the delegators has been returned.
 If a blockhash is not supplied it will pick the latest finalized block. An optional abort signal can also be provided that closes the stream.
 ```js
 const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
-const delegatorInfoList = await client.getPassiveDelegatorsRewardPeriod(blockHash);
+const delegatorInfoStream: AsyncIterable<DelegatorRewardPeriodInfo> = client.getPassiveDelegatorsRewardPeriod(blockHash);
 
-for await (const delegatorInfo of delegatorInfoList) {
+for await (const delegatorInfo of delegatorInfoStream) {
     console.log(delegatorInfo);
 }
 ...
@@ -675,9 +700,67 @@ for await (const delegatorInfo of delegatorInfoList) {
 ## getBranches
 Get the current branches of blocks starting from and including the last finalized block.
 ```js
-const branch = await client.getBranches();
+const branch: Branch = await client.getBranches();
 
 console.log(branch.blockhash);
 console.log(branch.children);
 ...
+```
+
+## getElectionInfo
+Get information related to the baker election for a particular block.
+
+If a blockhash is not supplied it will pick the latest finalized block.
+
+```js
+const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
+const electionInfo: ElectionInfo = await client.getElectionInfo(blockHash);
+
+console.log(electionInfo.electionDifficulty);
+console.log(electionInfo.electionNonce);
+for (const bakerElectionInfo of electionInfo.bakerElectionInfo) {
+    console.log(bakerElectionInfo.baker);
+    console.log(bakerElectionInfo.account);
+    console.log(bakerElectionInfo.lotteryPower);
+}
+```
+
+## getAccountNonFinalizedTransactions
+Get a list of non-finalized transaction hashes for a given account. This
+endpoint is not expected to return a large amount of data in most cases,
+but in bad network conditions it might. The stream will end when all the
+non-finalized transaction hashes have been returned.
+
+An optional abort signal can also be provided that closes the stream.
+
+```js
+const accountAddress = new AccountAddress('3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G');
+const transactions: AsyncIterable<HexString> = client.getAccountNonFinalizedTransactions(accountAddress);
+
+for await (const transaction of transactions) {
+    console.log(transaction);
+}
+```
+
+## getBlockTransactionEvents
+
+Get a list of transaction events in a given block.
+The stream will end when all the transaction events for a given block have been returned.
+
+An optional abort signal can also be provided that closes the stream.
+
+```js
+const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
+const transactionEvents: AsyncIterable<BlockItemSummary> = client.getBlockTransactionEvents(blockHash);
+
+for await (const transactionEvent of transactionEvents) {
+    console.log(transactionEvent);
+}
+```
+
+## getNextUpdateSequenceNumbers
+Get next available sequence numbers for updating chain parameters after a given block.
+```js
+const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
+const seqNums: NextUpdateSequenceNumbers = await client.NextUpdateSequenceNumbers(accountAddress);
 ```

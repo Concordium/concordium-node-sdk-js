@@ -23,6 +23,7 @@ import {
 } from './testHelpers';
 import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons';
+import { Buffer } from 'buffer/';
 
 import { serializeAccountTransaction } from '@concordium/common-sdk/lib/serialization';
 
@@ -754,6 +755,71 @@ test.each([clientV2, clientWeb])('getBranches', async (client) => {
     expect(branch.blockHash).toBeDefined();
     expect(branch.children).toBeDefined();
 });
+
+test.each([clientV2, clientWeb])('getElectionInfo', async (client) => {
+    const blocks = await client.getBlocksAtHeight(10n);
+    const electionInfo = await client.getElectionInfo(blocks[0]);
+
+    expect(electionInfo).toEqual(expected.electionInfoList);
+});
+
+test.each([clientV2, clientWeb])(
+    'getAccountNonFinalizedTransactions',
+    async (client) => {
+        const transactions = await client.getAccountNonFinalizedTransactions(
+            testAccount
+        );
+        const transactionsList = await asyncIterableToList(transactions);
+
+        expect(transactionsList).toBeDefined();
+        if (transactionsList[0]) {
+            expect(typeof transactionsList[0]).toEqual('string');
+        }
+    }
+);
+
+test.each([clientV2, clientWeb])(
+    'getBlockTransactionEvents',
+    async (client) => {
+        const blockHash =
+            '8f3acabb19ef769db4d13ada858a305cc1a3d64adeb78fcbf3bb9f7583de6362';
+        const transactionEvents = await client.getBlockTransactionEvents(
+            blockHash
+        );
+        const transactionEventList = await asyncIterableToList(
+            transactionEvents
+        );
+
+        expect(transactionEventList).toEqual(expected.transactionEventList);
+    }
+);
+
+test.each([clientV2, clientWeb])(
+    'getBlockTransactionEvents',
+    async (client) => {
+        const blockHash =
+            '8f3acabb19ef769db4d13ada858a305cc1a3d64adeb78fcbf3bb9f7583de6362';
+        const transactionEvents = await client.getBlockTransactionEvents(
+            blockHash
+        );
+        const transactionEventList = await asyncIterableToList(
+            transactionEvents
+        );
+
+        expect(transactionEventList).toEqual(expected.transactionEventList);
+    }
+);
+
+test.each([clientV2, clientWeb])(
+    'getNextUpdateSequenceNumbers',
+    async (client) => {
+        const seqNums = await client.getNextUpdateSequenceNumbers(
+            testBlockHash
+        );
+
+        expect(seqNums).toEqual(expected.seqNums);
+    }
+);
 
 // For tests that take a long time to run, is skipped by default
 describe.skip('Long run-time test suite', () => {

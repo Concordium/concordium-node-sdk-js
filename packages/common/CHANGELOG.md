@@ -38,7 +38,11 @@
     - `getFinalizedBlocks()`
     - `getBlocks()`
     - helper function `waitForTransactionFinalization` that returns a promise that resolves when the transaction finalizes
-    
+    - `getElectionInfo()`
+    - `getAccountNonFinalizedTransactions()`
+    - `getBlockTransactionEvents()`
+    - `getNextUpdateSequenceNumbers()`
+
 - Serialization:
     - `serializeAccountTransactionPayload()`
     - `serializeCredentialDeploymentPayload()`

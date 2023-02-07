@@ -382,3 +382,101 @@ export const passiveDelegatorRewardInfoList = [
         stake: 1000000000n,
     },
 ];
+
+export const electionInfoList = {
+    electionDifficulty: 0.025,
+    electionNonce:
+        '0bb2121015ddd9026d0c31a8b33499ce6049daf5696fe4e2cd94cff83ad331f2',
+    bakerElectionInfo: [
+        {
+            baker: 0n,
+            account: '48XGRnvQoG92T1AwETvW5pnJ1aRSPMKsWtGdKhTqyiNZzMk3Qn',
+            lotteryPower: 0.09090909090909091,
+        },
+        {
+            baker: 1n,
+            account: '3U4sfVSqGG6XK8g6eho2qRYtnHc4MWJBG1dfxdtPGbfHwFxini',
+            lotteryPower: 0.09090909090909091,
+        },
+        {
+            baker: 2n,
+            account: '3QK1rxUXV7GRk4Ng7Bs7qnbkdjyBdjzCytpTrSQN7BaJkiEfgZ',
+            lotteryPower: 0.09090909090909091,
+        },
+        {
+            baker: 3n,
+            account: '3gGBYDSpx2zWL3YMcqD48U5jVXYG4pJBDZqeY5CbMMKpxVBbc3',
+            lotteryPower: 0.09090909090909091,
+        },
+        {
+            baker: 4n,
+            account: '44Axe5eHnMkBinX7GKvUm5w6mX83JGdasijhvsMv5ZW2Wmgphg',
+            lotteryPower: 0.09090909090909091,
+        },
+        {
+            baker: 5n,
+            account: '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L',
+            lotteryPower: 0.09090909090909091,
+        },
+        {
+            baker: 6n,
+            account: '3ntvNGT6tDuLYiSb5gMJSQAZfLPUJnzoizcFiVRWqLoctuXxpK',
+            lotteryPower: 0.09090909090909091,
+        },
+        {
+            baker: 7n,
+            account: '4BTFaHx8CioLi8Xe7YiimpAK1oQMkbx5Wj6B8N7d7NXgmLvEZs',
+            lotteryPower: 0.09090909090909091,
+        },
+        {
+            baker: 8n,
+            account: '4AnukgcopMC4crxfL1L9fUYw9MAkoo1yKLvH7eA1NAX7SxgyRY',
+            lotteryPower: 0.09090909090909091,
+        },
+        {
+            baker: 9n,
+            account: '3y9DtDUL8xpf8i2yj9k44zMVkf4H1hkpBEQcXbJhrgcwYSGg41',
+            lotteryPower: 0.09090909090909091,
+        },
+        {
+            baker: 10n,
+            account: '42tFTDWvTmBd7hEacohuCfGFa9TsBKhsmXKeViQ7q7NoY7UadV',
+            lotteryPower: 0.09090909090909091,
+        },
+    ],
+};
+
+export const transactionEventList = [
+    {
+        type: 'updateTransaction',
+        index: 0n,
+        energyCost: 0n,
+        hash: '49d7b5c3234dc17bd904af0b63712dc0a6680b96ad556c5ac1103d8cdd128891',
+        effectiveTime: 0n,
+        payload: {
+            updateType: 'microGtuPerEuro',
+            update: {
+                denominator: 126230907181n,
+                numerator: 9397474320418127872n,
+            },
+        },
+    },
+];
+export const seqNums = {
+    rootKeys: 1n,
+    level1Keys: 1n,
+    level2Keys: 1n,
+    protocol: 2n,
+    electionDifficulty: 1n,
+    euroPerEnergy: 1n,
+    microCcdPerEuro: 7053n,
+    foundationAccount: 1n,
+    mintDistribution: 1n,
+    transactionFeeDistribution: 1n,
+    gasRewards: 1n,
+    poolParameters: 1n,
+    addAnonymityRevoker: 1n,
+    addIdentityProvider: 1n,
+    cooldownParameters: 1n,
+    timeParameters: 1n,
+};

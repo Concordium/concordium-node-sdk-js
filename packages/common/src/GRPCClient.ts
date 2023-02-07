@@ -847,7 +847,7 @@ export default class ConcordiumNodeClient {
      * Return a GRPC error if the shutdown failed.
      */
     async shutdown(): Promise<void> {
-        this.client.shutdown(v2.Empty);
+        await this.client.shutdown(v2.Empty);
     }
 
     /**
@@ -869,7 +869,7 @@ export default class ConcordiumNodeClient {
             ip: { value: ip },
             port: { value: port },
         };
-        this.client.peerConnect(request);
+        await this.client.peerConnect(request);
     }
 
     /**
@@ -888,7 +888,7 @@ export default class ConcordiumNodeClient {
             ip: { value: ip },
             port: { value: port },
         };
-        this.client.peerDisconnect(request);
+        await this.client.peerDisconnect(request);
     }
 
     /**
@@ -913,7 +913,7 @@ export default class ConcordiumNodeClient {
         const request: v2.PeerToBan = {
             ipAddress: { value: ip },
         };
-        this.client.banPeer(request);
+        await this.client.banPeer(request);
     }
 
     /**
@@ -928,7 +928,7 @@ export default class ConcordiumNodeClient {
         const request: v2.BannedPeer = {
             ipAddress: { value: ip },
         };
-        this.client.banPeer(request);
+        await this.client.banPeer(request);
     }
 
     /**
@@ -944,7 +944,7 @@ export default class ConcordiumNodeClient {
             file: filePath,
             raw: raw,
         };
-        this.client.dumpStart(request);
+        await this.client.dumpStart(request);
     }
 
     /**
@@ -953,7 +953,7 @@ export default class ConcordiumNodeClient {
      * Rejects if the network dump failed to be stopped.
      */
     async dumpStop(): Promise<void> {
-        this.client.dumpStop(v2.Empty);
+        await this.client.dumpStop(v2.Empty);
     }
 }
 

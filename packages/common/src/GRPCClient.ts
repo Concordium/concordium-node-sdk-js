@@ -9,14 +9,20 @@ import * as translate from './GRPCTypeTranslation';
 import { AccountAddress } from './types/accountAddress';
 import { getAccountTransactionHandler } from './accountTransactions';
 import { calculateEnergyCost } from './energyCost';
-import { countSignatures, mapAsyncIterable, unwrap } from './util';
+import {
+    countSignatures,
+    isHex,
+    isValidHash,
+    isValidIp,
+    mapAsyncIterable,
+    unwrap,
+} from './util';
 import {
     serializeAccountTransactionPayload,
     serializeCredentialDeploymentPayload,
 } from './serialization';
 import { BlockItemStatus, BlockItemSummary } from './types/blockItemSummary';
 import { ModuleReference } from './types/moduleReference';
-import net = require('net');
 
 /**
  * A concordium-node specific gRPC client wrapper.
@@ -412,6 +418,7 @@ export default class ConcordiumNodeClient {
         transactionHash: HexString,
         timeoutTime?: number
     ): Promise<HexString> {
+        assertValidHash(transactionHash);
         return new Promise(async (resolve, reject) => {
             const abortController = new AbortController();
             if (timeoutTime) {
@@ -550,6 +557,7 @@ export default class ConcordiumNodeClient {
         key: HexString,
         blockHash?: HexString
     ): Promise<HexString> {
+        assertValidHex(key);
         const request: v2.InstanceStateLookupRequest = {
             address: contractAddress,
             key: Buffer.from(key, 'hex'),
@@ -1019,7 +1027,7 @@ export function getInvokerInput(
 }
 
 function assertValidIp(ip: v1.IpAddressString): void {
-    if (net.isIP(ip)) {
+    if (!isValidIp(ip)) {
         throw new Error('The input was not a valid ip: ' + ip);
     }
 }
@@ -1033,8 +1041,14 @@ function assertValidPort(port: number): void {
     }
 }
 
+function assertValidHex(hex: HexString): void {
+    if (!isHex(hex)) {
+        throw new Error('The input was not a valid hex: ' + hex);
+    }
+}
+
 function assertValidHash(hash: HexString): void {
-    if (hash.length !== 64) {
+    if (!isValidHash(hash)) {
         throw new Error(
             'The input was not a valid hash, must be 32 bytes: ' + hash
         );

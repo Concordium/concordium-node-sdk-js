@@ -761,7 +761,7 @@ export default class ConcordiumNodeClient {
     /**
      * Get information related to the baker election for a particular block.
      *
-     * @param blockHash an optional block hash to get the instance states at, otherwise retrieves from last finalized block.
+     * @param blockHash an optional block hash to get the election info at, otherwise retrieves from last finalized block.
      * @returns election info for the given block
      */
     async getElectionInfo(blockHash?: HexString): Promise<v1.ElectionInfo> {

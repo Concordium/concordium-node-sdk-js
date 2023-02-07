@@ -6,23 +6,45 @@ Wrappers for interacting with the Concordium node, using nodejs.
 
 [Note that this package contains and exports the functions from the common-sdk, check the readme of that package for an overview of those](../common/README.md).
 
-**Table of Contents**
+- [Concordium Nodejs SDK](#concordium-nodejs-sdk)
 - [ConcordiumNodeClient](#concordiumnodeclient)
-    - [Creating a client](#creating-a-client)
-    - [Send Account Transaction](#send-account-transaction)
-    - [Create a new account](#create-a-new-account)
-    - [getAccountInfo](#getaccountinfo)
-    - [getNextAccountSequenceNumber](#getnextaccountsequencenumber)
-    - [getBlockItemStatus](#getblockitemstatus)
-    - [getConsensusStatus](#getconsensusstatus)
-    - [getCryptographicParameters](#getcryptographicparameters)
-    - [getBlockChainParameters](#getblockchainparameters)
-    - [getPoolInfo](#getpoolinfo)
-    - [getPassiveDelegationInfo](#getpassivedelegationinfo)
-    - [getTokenomicsInfo](#gettokenomicsinfo)
-    - [getInstanceInfo](#getinstanceinfo)
-    - [invokeContract](#invokecontract)
-    - [getModuleSource](#getModuleSource)
+  - [Creating a client](#creating-a-client)
+  - [Send Account Transaction](#send-account-transaction)
+  - [Create a new account](#create-a-new-account)
+  - [getAccountInfo](#getaccountinfo)
+  - [getNextAccountSequenceNumber](#getnextaccountsequencenumber)
+  - [getBlockItemStatus](#getblockitemstatus)
+  - [getConsensusStatus](#getconsensusstatus)
+  - [getCryptographicParameters](#getcryptographicparameters)
+  - [getBlockChainParameters](#getblockchainparameters)
+  - [getPoolInfo](#getpoolinfo)
+  - [getPassiveDelegationInfo](#getpassivedelegationinfo)
+  - [getTokenomicsInfo](#gettokenomicsinfo)
+  - [getInstanceInfo](#getinstanceinfo)
+  - [invokeContract](#invokecontract)
+  - [getModuleSource](#getmodulesource)
+  - [getBlocks](#getblocks)
+  - [getFinalizedBlocks](#getfinalizedblocks)
+  - [waitForTransactionFinalization](#waitfortransactionfinalization)
+  - [getAccountList](#getaccountlist)
+  - [getModuleList](#getmodulelist)
+  - [getAncestors](#getancestors)
+  - [getInstanceState](#getinstancestate)
+  - [instanceStateLookup](#instancestatelookup)
+  - [getIdentityProviders](#getidentityproviders)
+  - [getAnonymityRevokers](#getanonymityrevokers)
+  - [getBlocksAtHeight](#getblocksatheight)
+  - [getBlockInfo](#getblockinfo)
+  - [getBakerList](#getbakerlist)
+  - [getPoolDelegators](#getpooldelegators)
+  - [getPoolDelegatorsRewardPeriod](#getpooldelegatorsrewardperiod)
+  - [getPassiveDelegators](#getpassivedelegators)
+  - [getPassiveDelegatorsRewardPeriod](#getpassivedelegatorsrewardperiod)
+  - [getBranches](#getbranches)
+  - [getElectionInfo](#getelectioninfo)
+  - [getAccountNonFinalizedTransactions](#getaccountnonfinalizedtransactions)
+  - [getBlockTransactionEvents](#getblocktransactionevents)
+  - [getNextUpdateSequenceNumbers](#getnextupdatesequencenumbers)
 
 # ConcordiumNodeClient
 
@@ -334,7 +356,7 @@ for await (const block of blockStream) {
 ac.abort();
 ```
 
-### waitForTransactionFinalization
+## waitForTransactionFinalization
 This function waits for the given transaction hash (given as a hex string) to finalize and then returns
 the blockhash of the block that contains given transaction as a hex string.
 
@@ -349,7 +371,7 @@ const blockHash: HexString = await client.waitForTransactionFinalization(
 );
 ```
 
-### getAccountList
+## getAccountList
 Retrieves the accounts that exists a the end of a given block as an async iterable.
 
 If a blockhash is not supplied it will pick the latest finalized block. An optional abortSignal can also be provided that closes the stream.
@@ -364,7 +386,7 @@ for await (const account of accounts) {
 }
 ```
 
-### getModuleList
+## getModuleList
 Retrieves all smart contract modules, as an async iterable, that exists in the state at the end of a given block.
 
 If a blockhash is not supplied it will pick the latest finalized block. An optional abortSignal can also be provided that closes the stream.
@@ -379,7 +401,7 @@ for await (const moduleRef of moduleRefs) {
 }
 ```
 
-### getAncestors
+## getAncestors
 Retrieves all smart contract modules that exists in the state at the end of a given block, as an async iterable of hex strings. A bigint representing the max number of ancestors to get must be provided.
 
 If a blockhash is not supplied it will pick the latest finalized block. An optional abortSignal can also be provided that closes the stream.
@@ -395,7 +417,7 @@ for await (const ancestor of ancestors) {
 }
 ```
 
-### getInstanceState
+## getInstanceState
 Get the exact state of a specific contract instance, streamed as a list of hex string key-value pairs.
 
 If a blockhash is not supplied it will pick the latest finalized block. An optional abortSignal can also be provided that closes the stream.
@@ -415,7 +437,7 @@ for await (const state of states) {
 }
 ```
 
-### instanceStateLookup
+## instanceStateLookup
 Get the value at a specific key of a contract state as a hex string.
 
 In contrast to `GetInstanceState` this is more efficient, but requires the user to know the specific key to look for.
@@ -434,7 +456,7 @@ const state: HexString = await client.instanceStateLookup(blockHash);
 ...
 ```
 
-### getIdentityProviders
+## getIdentityProviders
 Get the identity providers registered as of the end of a given block as a stream
 
 If a blockhash is not supplied it will pick the latest finalized block. An optional abortSignal can also be provided that closes the stream.

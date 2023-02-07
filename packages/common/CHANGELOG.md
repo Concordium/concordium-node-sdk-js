@@ -1,8 +1,25 @@
 # Changelog
 
-## Unreleased
+## 6.3.0 2023-02-07
 
-- Added the following GRPCv2 functions:
+### Added
+
+- Added a gRPC v2 client starting with the following functions:
+- `getAccountInfo()`
+    - `getNextAccountSequenceNumber()`
+    - `getCryptographicParameters()`
+    - `getBlockItemStatus()`
+    - `getConsensusInfo()`
+    - `getModuleSource()`
+    - `getInstanceInfo()`
+    - `invokeInstance()`
+    - `getAccountTransactionSignHash()`
+    - `sendAccountTransaction()`
+    - `sendCredentialDeploymentTransaction()`
+    - `getBlockChainParameters()`
+    - `getPoolInfo()`
+    - `getPassiveDelegationInfo()`
+    - `getTokenomicsInfo()`
     - `getAccountList()`
     - `getModuleList()`
     - `getAncestors()`
@@ -18,33 +35,10 @@
     - `getPassiveDelegators()`
     - `getPassiveDelegatorsRewardPeriod()`
     - `getBranches()`
-
-## 6.4.0
-
-- Added `getFinalizedBlocks()` & `getBlocks()` GRPCv2 functions.
-- Added public helper function `waitForTransactionFinalization()` to client
-
-## 6.3.0
-
-### Added
-
-- Added a GRPCv2 client starting with the following functions:
-    - `getAccountInfo()`
-    - `getNextAccountSequenceNumber()`
-    - `getCryptographicParameters()`
-    - `getBlockItemStatus()`
-    - `getConsensusInfo()`
-    - `getModuleSource()`
-    - `getInstanceInfo()`
-    - `invokeInstance()`
-    - `getAccountTransactionSignHash()`
-    - `sendAccountTransaction()`
-    - `sendCredentialDeploymentTransaction()`
-    - `getBlockChainParameters()`
-    - `getPoolInfo()`
-    - `getPassiveDelegationInfo()`
-    - `getTokenomicsInfo()`
-
+    - `getFinalizedBlocks()`
+    - `getBlocks()`
+    - helper function `waitForTransactionFinalization` that returns a promise that resolves when the transaction finalizes
+    
 - Serialization:
     - `serializeAccountTransactionPayload()`
     - `serializeCredentialDeploymentPayload()`

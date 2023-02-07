@@ -40,7 +40,7 @@ export function getNodeClientV2(
         address,
         port,
         credentials.createInsecure(),
-        { timeout: 1 }
+        { timeout: 15000 }
     );
 }
 

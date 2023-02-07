@@ -46,6 +46,13 @@ Wrappers for interacting with the Concordium node, using nodejs.
   - [getBlockTransactionEvents](#getblocktransactionevents)
   - [getNextUpdateSequenceNumbers](#getnextupdatesequencenumbers)
   - [shutdown](#shutdown)
+  - [peerConnect](#peerconnect)
+  - [peerDisconnect](#peerdisconnect)
+  - [getBannedPeers](#getbannedpeers)
+  - [banPeer](#banpeer)
+  - [unbanPeer](#unbanpeer)
+  - [dumpStart](#dumpstart)
+  - [dumpStop](#dumpstop)
 
 # ConcordiumNodeClient
 

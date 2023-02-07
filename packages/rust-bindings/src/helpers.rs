@@ -1,7 +1,7 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use concordium_base::{
     common::{base16_decode_string, types::KeyIndex},
-    id::types::*,
+    id::{constants, types::*},
 };
 use serde_json::{from_value, Value as SerdeValue};
 use std::{collections::BTreeMap, convert::TryInto};
@@ -24,6 +24,28 @@ pub fn build_signature_map(signatures: &[String]) -> BTreeMap<KeyIndex, AccountO
             )
         })
         .collect()
+}
+
+pub fn build_policy(
+    attributes: &AttributeList<constants::BaseField, constants::AttributeKind>,
+    revealed_attributes: Vec<AttributeTag>,
+) -> Result<Policy<constants::ArCurve, constants::AttributeKind>> {
+    let mut policy_vec = std::collections::BTreeMap::new();
+    for tag in revealed_attributes {
+        if let Some(att) = attributes.alist.get(&tag) {
+            if policy_vec.insert(tag, att.clone()).is_some() {
+                bail!("Cannot reveal an attribute more than once.")
+            }
+        } else {
+            bail!("Cannot reveal an attribute which is not part of the attribute list.")
+        }
+    }
+    Ok(Policy {
+        valid_to: attributes.valid_to,
+        created_at: attributes.created_at,
+        policy_vec,
+        _phantom: Default::default(),
+    })
 }
 
 /// Try to extract a field with a given name from the JSON value.

@@ -40,6 +40,7 @@ use concordium_base::{
 use ed25519_hd_key_derivation::DeriveError;
 use either::Either::Left;
 use serde_json::to_string;
+use thiserror::Error;
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
 pub struct CredId {
@@ -381,24 +382,7 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<String> {
 
     let context = IpContext::new(&input.ip_info, &input.ars_infos, &input.global_context);
 
-    // And a policy.
-    let mut policy_vec = std::collections::BTreeMap::new();
-    for tag in input.revealed_attributes {
-        if let Some(att) = input.id_object.alist.alist.get(&tag) {
-            if policy_vec.insert(tag, att.clone()).is_some() {
-                bail!("Cannot reveal an attribute more than once.")
-            }
-        } else {
-            bail!("Cannot reveal an attribute which is not part of the attribute list.")
-        }
-    }
-
-    let policy = Policy {
-        valid_to: input.id_object.alist.valid_to,
-        created_at: input.id_object.alist.created_at,
-        policy_vec,
-        _phantom: Default::default(),
-    };
+    let policy = build_policy(&input.id_object.alist, input.revealed_attributes)?;
 
     let credential_context = CredentialContext {
         wallet,
@@ -433,7 +417,7 @@ pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
     let id_object: IdentityObject<constants::IpPairing, constants::ArCurve, AttributeKind> =
         try_get(&v, "identityObject")?;
 
-    let tags: Vec<AttributeTag> = try_get(&v, "revealedAttributes")?;
+    let revealed_attributes: Vec<AttributeTag> = try_get(&v, "revealedAttributes")?;
 
     let cred_num: u8 = try_get(&v, "credentialNumber")?;
 
@@ -462,23 +446,7 @@ pub fn generate_unsigned_credential_aux(input: &str) -> Result<String> {
         randomness: randomness_wrapped.randomness,
     };
 
-    let mut policy_vec = std::collections::BTreeMap::new();
-    for tag in tags {
-        if let Some(att) = id_object.alist.alist.get(&tag) {
-            if policy_vec.insert(tag, att.clone()).is_some() {
-                bail!("Cannot reveal an attribute more than once.")
-            }
-        } else {
-            bail!("Cannot reveal an attribute which is not part of the attribute list.")
-        }
-    }
-
-    let policy = Policy {
-        valid_to: id_object.alist.valid_to,
-        created_at: id_object.alist.created_at,
-        policy_vec,
-        _phantom: Default::default(),
-    };
+    let policy = build_policy(&id_object.alist, revealed_attributes)?;
 
     let context = IpContext::new(&ip_info, &ars_infos, &global_context);
 
@@ -836,4 +804,84 @@ pub fn serialize_credential_deployment_payload_aux(
     acc_cred.serial(&mut acc_cred_ser);
 
     Ok(acc_cred_ser)
+}
+
+#[derive(SerdeSerialize, SerdeDeserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UnsignedCredentialInput {
+    ip_info:                  IpInfo<constants::IpPairing>,
+    global_context:           GlobalContext<constants::ArCurve>,
+    ars_infos:                BTreeMap<ArIdentity, ArInfo<constants::ArCurve>>,
+    id_object: IdentityObjectV1<constants::IpPairing, constants::ArCurve, AttributeKind>,
+    id_cred_sec:              PedersenValue<ArCurve>,
+    prf_key:                  prf::SecretKey<ArCurve>,
+    sig_retrievel_randomness: String,
+    credential_public_keys:   CredentialPublicKeys,
+    attribute_randomness:     BTreeMap<AttributeTag, PedersenRandomness<ArCurve>>,
+    revealed_attributes:      Vec<AttributeTag>,
+    cred_number:              u8,
+}
+
+struct AttributeRandomness(BTreeMap<AttributeTag, PedersenRandomness<ArCurve>>);
+
+#[derive(Debug, Error)]
+pub enum AttributeError {
+    #[error("Missing randomness for given attribute tag.")]
+    NotFound,
+}
+
+impl HasAttributeRandomness<ArCurve> for AttributeRandomness {
+    type ErrorType = AttributeError;
+
+    fn get_attribute_commitment_randomness(
+        &self,
+        attribute_tag: AttributeTag,
+    ) -> Result<PedersenRandomness<ArCurve>, Self::ErrorType> {
+        match self.0.get(&attribute_tag) {
+            Some(v) => Ok(v.clone()),
+            None => Err(AttributeError::NotFound),
+        }
+    }
+}
+
+pub fn create_unsigned_credential_v1_aux(input: UnsignedCredentialInput) -> Result<JsonString> {
+    let chi = CredentialHolderInfo::<constants::ArCurve> {
+        id_cred: IdCredentials {
+            id_cred_sec: input.id_cred_sec,
+        },
+    };
+    let aci = AccCredentialInfo {
+        cred_holder_info: chi,
+        prf_key:          input.prf_key,
+    };
+
+    let blinding_randomness: Value<constants::ArCurve> = concordium_base::common::from_bytes(
+        &mut hex::decode(&input.sig_retrievel_randomness)?.as_slice(),
+    )?;
+    let id_use_data = IdObjectUseData {
+        aci,
+        randomness:
+            concordium_base::id::ps_sig::SigRetrievalRandomness::<constants::IpPairing>::new(
+                *blinding_randomness,
+            ),
+    };
+
+    let context = IpContext::new(&input.ip_info, &input.ars_infos, &input.global_context);
+
+    let policy = build_policy(&input.id_object.alist, input.revealed_attributes)?;
+
+    let (cdi, rand) = create_unsigned_credential(
+        context,
+        &input.id_object,
+        &id_use_data,
+        input.cred_number,
+        policy,
+        input.credential_public_keys,
+        None,
+        &AttributeRandomness(input.attribute_randomness),
+    )?;
+
+    let response = json!({"unsignedCdi": cdi, "randomness": rand});
+
+    Ok(response.to_string())
 }

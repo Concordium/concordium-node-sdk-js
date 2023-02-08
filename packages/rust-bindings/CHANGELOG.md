@@ -1,17 +1,12 @@
 # Changelog
 
-## Unreleased
-
-### Added
-
-- `generateBakerKeys`
-
 ## 0.10.0
 
 ### Added
 
-- `serialize_credential_deployment_payload()`
-- `create_unsigned_credential_v1()`
+- `serialize_credential_deployment_payload`
+- `create_unsigned_credential_v1`
+- `generateBakerKeys`
 
 ## 0.9.0 2023-1-4
 

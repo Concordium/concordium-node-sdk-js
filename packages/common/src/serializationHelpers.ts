@@ -600,11 +600,11 @@ export function serializeConfigureDelegationPayload(
     payload: ConfigureDelegationPayload
 ): Buffer {
     const bitmap = getSerializedConfigureDelegationBitmap(payload);
-    const sPayload = serializeFromSpec(configureDelegationSerializationSpec)(
-        payload
-    );
+    const serializedPayload = serializeFromSpec(
+        configureDelegationSerializationSpec
+    )(payload);
 
-    return Buffer.concat([bitmap, sPayload]);
+    return Buffer.concat([bitmap, serializedPayload]);
 }
 
 function encodeHexString(s: string): Buffer {
@@ -654,9 +654,9 @@ export function serializeConfigureBakerPayload(
     payload: ConfigureBakerPayload
 ): Buffer {
     const bitmap = getSerializedConfigureBakerBitmap(payload);
-    const sPayload = serializeFromSpec(configureBakerSerializationSpec)(
-        payload
-    );
+    const serializedPayload = serializeFromSpec(
+        configureBakerSerializationSpec
+    )(payload);
 
-    return Buffer.concat([bitmap, sPayload]);
+    return Buffer.concat([bitmap, serializedPayload]);
 }

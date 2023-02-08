@@ -50,7 +50,6 @@ export * from './types/chainUpdate';
 export * from './types/transactionEvent';
 export * from './types/blockItemSummary';
 export { default as ConcordiumGRPCClient } from './GRPCClient';
-export * from './bakerHelpers';
 
 export { getAccountTransactionHandler } from './accountTransactions';
 export { calculateEnergyCost } from './energyCost';

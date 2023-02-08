@@ -2,12 +2,6 @@
 
 ## Unreleased
 
-### Added
-
-- Function to generate baker keys: `generateBakerKeys`.
-
-## Unreleased
-
 - Added the following GRPCv2 functions:
     - `getAccountList()`
     - `getModuleList()`
@@ -28,6 +22,8 @@
     - `getAccountNonFinalizedTransactions()`
     - `getBlockTransactionEvents()`
     - `getNextUpdateSequenceNumbers()`
+
+- Function to generate baker keys: `generateBakerKeys`.
 
 ## 6.4.0
 

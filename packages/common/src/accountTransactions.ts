@@ -9,6 +9,7 @@ import {
     serializeList,
     encodeWord8,
     serializeConfigureDelegationPayload,
+    serializeConfigureBakerPayload,
 } from './serializationHelpers';
 import {
     AccountTransactionType,
@@ -264,7 +265,7 @@ export class ConfigureBakerHandler
     }
 
     serialize(payload: ConfigureBakerPayload): Buffer {
-        return serializeConfigureDelegationPayload(payload);
+        return serializeConfigureBakerPayload(payload);
     }
 
     deserialize(): ConfigureBakerPayload {

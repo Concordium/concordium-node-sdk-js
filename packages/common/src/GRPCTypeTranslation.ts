@@ -2148,6 +2148,137 @@ export function peerInfo(peerInfo: v2.PeersInfo_Peer): v1.PeerInfo {
     };
 }
 
+function trAccountAmount(
+    accountAmount: v2.BlockSpecialEvent_AccountAmounts_Entry
+): v1.BlockSpecialEvent_AccountAmount {
+    return {
+        account: unwrapToBase58(accountAmount.account),
+        amount: unwrap(accountAmount.amount?.value),
+    };
+}
+
+export function blockSpecialEvent(
+    specialEvent: v2.BlockSpecialEvent
+): v1.BlockSpecialEvent {
+    const event = specialEvent.event;
+    switch (event.oneofKind) {
+        case 'bakingRewards': {
+            return {
+                tag: 'bakingRewards',
+                bakingRewards: unwrap(
+                    event.bakingRewards.bakerRewards
+                ).entries.map(trAccountAmount),
+                remainder: unwrap(event.bakingRewards.remainder?.value),
+            };
+        }
+        case 'mint': {
+            return {
+                tag: 'mint',
+                mintBakingReward: unwrap(event.mint.mintBakingReward?.value),
+                mintFinalizationReward: unwrap(
+                    event.mint.mintFinalizationReward?.value
+                ),
+                mintPlatformDevelopmentCharge: unwrap(
+                    event.mint.mintPlatformDevelopmentCharge?.value
+                ),
+                foundationAccount: unwrapToBase58(event.mint.foundationAccount),
+            };
+        }
+        case 'finalizationRewards': {
+            return {
+                tag: 'finalizationRewards',
+                finalizationRewards:
+                    event.finalizationRewards.finalizationRewards?.entries.map(
+                        trAccountAmount
+                    ),
+                remainder: unwrap(event.finalizationRewards.remainder?.value),
+            };
+        }
+        case 'blockReward': {
+            return {
+                tag: 'blockReward',
+                transactionFees: unwrap(
+                    event.blockReward.transactionFees?.value
+                ),
+                oldGasAccount: unwrap(event.blockReward.oldGasAccount?.value),
+                newGasAccount: unwrap(event.blockReward.newGasAccount?.value),
+                bakerReward: unwrap(event.blockReward.bakerReward?.value),
+                foundationCharge: unwrap(
+                    event.blockReward.foundationCharge?.value
+                ),
+                baker: unwrapToBase58(event.blockReward.baker),
+                foundationAccount: unwrapToBase58(event.blockReward.baker),
+            };
+        }
+        case 'paydayFoundationReward': {
+            return {
+                tag: 'paydayFoundationReward',
+                foundationAccount: unwrapToBase58(
+                    event.paydayFoundationReward.foundationAccount
+                ),
+                developmentCharge: unwrap(
+                    event.paydayFoundationReward.developmentCharge?.value
+                ),
+            };
+        }
+        case 'paydayAccountReward': {
+            return {
+                tag: 'paydayAccountReward',
+                account: unwrapToBase58(event.paydayAccountReward.account),
+                transactionFees: unwrap(
+                    event.paydayAccountReward.transactionFees?.value
+                ),
+                bakerReward: unwrap(
+                    event.paydayAccountReward.bakerReward?.value
+                ),
+                finalizationReward: unwrap(
+                    event.paydayAccountReward.finalizationReward?.value
+                ),
+            };
+        }
+        case 'blockAccrueReward': {
+            return {
+                tag: 'blockAccrueReward',
+                transactionFees: unwrap(
+                    event.blockAccrueReward.transactionFees?.value
+                ),
+                oldGasAccount: unwrap(
+                    event.blockAccrueReward.oldGasAccount?.value
+                ),
+                newGasAccount: unwrap(
+                    event.blockAccrueReward.newGasAccount?.value
+                ),
+                bakerReward: unwrap(event.blockAccrueReward.bakerReward?.value),
+                passiveReward: unwrap(
+                    event.blockAccrueReward.passiveReward?.value
+                ),
+                foundationCharge: unwrap(
+                    event.blockAccrueReward.foundationCharge?.value
+                ),
+                baker: unwrap(event.blockAccrueReward.baker?.value),
+            };
+        }
+        case 'paydayPoolReward': {
+            return {
+                tag: 'paydayPoolReward',
+                poolOwner: unwrap(event.paydayPoolReward.poolOwner?.value),
+                transactionFees: unwrap(
+                    event.paydayPoolReward.transactionFees?.value
+                ),
+                bakerReward: unwrap(event.paydayPoolReward.bakerReward?.value),
+                finalizationReward: unwrap(
+                    event.paydayPoolReward.finalizationReward?.value
+                ),
+            };
+        }
+        case undefined: {
+            throw Error(
+                'Error translating BlockSpecialEvent: unexpected undefined'
+            );
+        }
+    }
+}
+
 // ---------------------------- //
 // --- V1 => V2 translation --- //
 // ---------------------------- //

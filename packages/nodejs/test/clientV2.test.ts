@@ -821,6 +821,13 @@ test.each([clientV2, clientWeb])(
     }
 );
 
+test.each([clientV2, clientWeb])('getBlockSpecialEvents', async (client) => {
+    const specialEventStream = client.getBlockSpecialEvents(testBlockHash);
+    const specialEventList = await asyncIterableToList(specialEventStream);
+
+    expect(specialEventList).toEqual(expected.specialEventList);
+});
+
 // For tests that take a long time to run, is skipped by default
 describe.skip('Long run-time test suite', () => {
     const longTestTime = 45000;

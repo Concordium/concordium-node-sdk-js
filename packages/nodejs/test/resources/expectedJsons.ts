@@ -480,3 +480,16 @@ export const seqNums = {
     cooldownParameters: 1n,
     timeParameters: 1n,
 };
+
+export const specialEventList = [
+    {
+        tag: 'blockAccrueReward',
+        transactionFees: 0n,
+        oldGasAccount: 293604n,
+        newGasAccount: 219102n,
+        bakerReward: 74502n,
+        passiveReward: 0n,
+        foundationCharge: 0n,
+        baker: 4n,
+    },
+];

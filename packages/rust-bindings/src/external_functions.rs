@@ -332,12 +332,10 @@ pub fn serialize_credential_deployment_payload_ext(
 }
 
 #[wasm_bindgen(js_name = generateBakerKeys)]
-pub fn generate_baker_keys_ext(
-    sender: &str
-) -> String {
+pub fn generate_baker_keys_ext(sender: &str) -> String {
     let sender = match sender.parse() {
         Ok(sender) => sender,
-        Err(e) => return format!("unable to parse sender account address: {}.", e)
+        Err(e) => return format!("unable to parse sender account address: {}.", e),
     };
     error_to_string(generate_baker_keys(sender))
 }

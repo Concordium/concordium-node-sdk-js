@@ -1,5 +1,6 @@
 use crate::{helpers::*, types::*};
 use concordium_base::{
+    base::BakerKeyPairs,
     common::{types::TransactionTime, *},
     contracts_common::{
         from_bytes,
@@ -7,15 +8,14 @@ use concordium_base::{
         Cursor,
     },
     id::dodis_yampolskiy_prf as prf,
-    transactions::{Payload, ConfigureBakerKeysPayload},
-    base::BakerKeyPairs
+    transactions::{ConfigureBakerKeysPayload, Payload},
 };
 use hex;
 use key_derivation::{ConcordiumHdWallet, Net};
+use rand::thread_rng;
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use serde_json::{from_str, Value as SerdeValue};
 use std::{collections::BTreeMap, convert::TryInto};
-use rand::thread_rng;
 pub type JsonString = String;
 pub type HexString = String;
 

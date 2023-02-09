@@ -61,29 +61,33 @@ describe.skip('Manual test suite', () => {
 
     // Requires a node that allows performing banPeer/unbanPeer/getBannedPeers
     test('Ban/Unban peer is reflected in ban list', async () => {
-        const randomIp = "229.249.155.177";
+        const randomIp = '229.249.155.177';
         await clientV2.banPeer(randomIp);
-        let peers = await clientV2.getBannedPeers()
+        let peers = await clientV2.getBannedPeers();
         expect(peers).toContainEqual(randomIp);
         await clientV2.unbanPeer(randomIp);
-        peers = await clientV2.getBannedPeers()
+        peers = await clientV2.getBannedPeers();
         expect(peers).not.toContainEqual(randomIp);
-    }, 750000)
+    }, 750000);
 
     // Requires a node that allows performing peerConnect/peerDisconnect/getPeersInfo
     test('Connecting/disconnecting peer is reflected in Peers info list', async () => {
-        const peer = (await clientV2.client.getPeersInfo(v2.Empty).response).peers[0].socketAddress;
+        const peer = (await clientV2.client.getPeersInfo(v2.Empty).response)
+            .peers[0].socketAddress;
         if (!peer || !peer.ip || !peer.port) {
             throw new Error('missing peer');
         }
         await clientV2.peerDisconnect(peer.ip.value, peer.port.value);
-        await new Promise(r => setTimeout(r, 10000));
-        let updatedPeers = (await clientV2.client.getPeersInfo(v2.Empty).response).peers.map((x) => x.socketAddress);
+        await new Promise((r) => setTimeout(r, 10000));
+        let updatedPeers = (
+            await clientV2.client.getPeersInfo(v2.Empty).response
+        ).peers.map((x) => x.socketAddress);
         expect(updatedPeers).not.toContainEqual(peer);
         await clientV2.peerConnect(peer.ip.value, peer.port.value);
-        await new Promise(r => setTimeout(r, 10000));
-        updatedPeers = (await clientV2.client.getPeersInfo(v2.Empty).response).peers.map((x) => x.socketAddress);
+        await new Promise((r) => setTimeout(r, 10000));
+        updatedPeers = (
+            await clientV2.client.getPeersInfo(v2.Empty).response
+        ).peers.map((x) => x.socketAddress);
         expect(updatedPeers).toContainEqual(peer);
-    }, 750000)
-
+    }, 750000);
 });

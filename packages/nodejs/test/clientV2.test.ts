@@ -828,6 +828,17 @@ test.each([clientV2, clientWeb])('getBlockSpecialEvents', async (client) => {
     expect(specialEventList).toEqual(expected.specialEventList);
 });
 
+test.each([clientV2, clientWeb])('getBlockPendingUpdates', async (client) => {
+    const pendingUpdateBlock =
+        '39122a9c720cae643b999d93dd7bf09bcf50e99bb716767dd35c39690390db54';
+    const pendingUpdateStream =
+        client.getBlockPendingUpdates(pendingUpdateBlock);
+    const pendingUpdateList = await asyncIterableToList(pendingUpdateStream);
+
+    console.log(pendingUpdateList);
+    expect(pendingUpdateList).toEqual(expected.pendingUpdateList);
+});
+
 // For tests that take a long time to run, is skipped by default
 describe.skip('Long run-time test suite', () => {
     const longTestTime = 45000;

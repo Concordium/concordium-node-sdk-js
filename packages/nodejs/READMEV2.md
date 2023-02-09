@@ -56,6 +56,7 @@ Wrappers for interacting with the Concordium node, using nodejs.
   - [getNodeInfo](#getnodeinfo)
   - [getPeersInfo](#getpeersinfo)
   - [getBlockSpecialEvents](#getblockspecialevents)
+  - [getBlockPendingUpdates](#getblockpendingupdates)
 
 # ConcordiumNodeClient
 
@@ -873,5 +874,20 @@ const blockSpecialEvents: AsyncIterable<BlockSpecialEvent> = this.client.getBloc
 
 for await (const blockSpecialEvent of blockSpecialEvents) {
     console.log(blockSpecialEvent);
+}
+```
+
+## getBlockPendingUpdates
+Get the pending updates to chain parameters at the end of a given block.
+The stream will end when all the pending updates for a given block have been returned.
+
+If a blockhash is not supplied it will pick the latest finalized block. An optional abort signal can also be provided that closes the stream.
+
+```js
+const blockHash = "39122a9c720cae643b999d93dd7bf09bcf50e99bb716767dd35c39690390db54";
+const pendingUpdates: AsyncIterable<PendingUpdate> = this.client.getBlockSpecialEvents(blockHash);
+
+for await (const pendingUpdate of pendingUpdates) {
+    console.log(pendingUpdate);
 }
 ```

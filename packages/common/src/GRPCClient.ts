@@ -998,6 +998,26 @@ export default class ConcordiumNodeClient {
             translate.blockSpecialEvent
         );
     }
+
+    /**
+     * Get the pending updates to chain parameters at the end of a given block.
+     * The stream will end when all the pending updates for a given block have been returned.
+     *
+     * @param blockHash an optional block hash to get the pending updates at, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
+     * @returns a stream of pending updates
+     */
+    getBlockPendingUpdates(
+        blockHash?: HexString,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<v1.PendingUpdate> {
+        const pendingUpdates = this.client.getBlockPendingUpdates(
+            getBlockHashInput(blockHash),
+            { abort: abortSignal }
+        ).responses;
+
+        return mapAsyncIterable(pendingUpdates, translate.pendingUpdate);
+    }
 }
 
 export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {

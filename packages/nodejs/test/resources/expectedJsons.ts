@@ -493,3 +493,17 @@ export const specialEventList = [
         baker: 4n,
     },
 ];
+
+export const pendingUpdateList = [
+    {
+        updateType: 'protocol',
+        update: {
+            message: 'Enable protocol version 5',
+            specificationHash:
+                'af5684e70c1438e442066d017e4410af6da2b53bfa651a07d81efa2aa668db20',
+            specificationUrl:
+                'https://github.com/Concordium/concordium-update-proposals/blob/main/updates/P5.txt',
+            specificationAuxiliaryData: '',
+        },
+    },
+];

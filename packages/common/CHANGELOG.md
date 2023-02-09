@@ -32,7 +32,7 @@
     - `dumpStop()`
     - `getNodeInfo()`
     - `getPeersInfo()`
-
+    - `getBlockPendingUpdates()`
 
 ## 6.4.0
 

@@ -1057,6 +1057,32 @@ export interface NextUpdateSequenceNumbers {
     timeParameters: bigint;
 }
 
+export type BlockFinalizationSummary =
+    | BlockFinalizationSummary_None
+    | BlockFinalizationSummary_Record;
+
+export interface BlockFinalizationSummary_None {
+    tag: 'none';
+}
+
+export interface BlockFinalizationSummary_Record {
+    tag: 'record';
+    record: FinalizationSummary;
+}
+
+export interface FinalizationSummary {
+    block: HexString;
+    index: bigint;
+    delay: bigint;
+    finalizers: FinalizationSummaryParty[];
+}
+
+export interface FinalizationSummaryParty {
+    baker: BakerId;
+    weight: bigint;
+    signed: boolean;
+}
+
 export enum BlockItemKind {
     AccountTransactionKind = 0,
     CredentialDeploymentKind = 1,

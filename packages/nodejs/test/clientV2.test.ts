@@ -839,6 +839,17 @@ test.each([clientV2, clientWeb])('getBlockPendingUpdates', async (client) => {
     expect(pendingUpdateList).toEqual(expected.pendingUpdateList);
 });
 
+test.each([clientV2, clientWeb])(
+    'getBlockFinalizationSummary',
+    async (client) => {
+        const finalizationSummary = await client.getBlockFinalizationSummary(
+            testBlockHash
+        );
+
+        expect(finalizationSummary).toEqual(expected.blockFinalizationSummary);
+    }
+);
+
 // For tests that take a long time to run, is skipped by default
 describe.skip('Long run-time test suite', () => {
     const longTestTime = 45000;

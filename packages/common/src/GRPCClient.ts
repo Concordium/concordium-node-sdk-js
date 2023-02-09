@@ -1018,6 +1018,23 @@ export default class ConcordiumNodeClient {
 
         return mapAsyncIterable(pendingUpdates, translate.pendingUpdate);
     }
+
+    /**
+     * Get the summary of the finalization data in a given block.
+     *
+     * @param blockHash an optional block hash to get the finalization summaries at, otherwise retrieves from last finalized block.
+     * @returns a finalization summary
+     */
+    async getBlockFinalizationSummary(
+        blockHash?: HexString
+    ): Promise<v1.BlockFinalizationSummary> {
+        const finalizationSummary =
+            await this.client.getBlockFinalizationSummary(
+                getBlockHashInput(blockHash)
+            ).response;
+
+        return translate.blockFinalizationSummary(finalizationSummary);
+    }
 }
 
 export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {

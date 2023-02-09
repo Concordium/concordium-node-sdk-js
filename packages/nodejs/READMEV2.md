@@ -57,6 +57,7 @@ Wrappers for interacting with the Concordium node, using nodejs.
   - [getPeersInfo](#getpeersinfo)
   - [getBlockSpecialEvents](#getblockspecialevents)
   - [getBlockPendingUpdates](#getblockpendingupdates)
+  - [getBlockFinalizationSummary](#getblockfinalizationsummary)
 
 # ConcordiumNodeClient
 
@@ -890,4 +891,14 @@ const pendingUpdates: AsyncIterable<PendingUpdate> = this.client.getBlockSpecial
 for await (const pendingUpdate of pendingUpdates) {
     console.log(pendingUpdate);
 }
+```
+
+## getBlockFinalizationSummary
+Get the summary of the finalization data in a given block.
+
+If a blockhash is not supplied it will pick the latest finalized block.
+
+```js
+const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
+const pendingUpdates: BlockFinalizationSummary = await this.client.getBlockSpecialEvents(blockHash);
 ```

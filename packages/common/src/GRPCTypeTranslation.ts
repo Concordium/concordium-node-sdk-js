@@ -2422,6 +2422,47 @@ export function blockSpecialEvent(
     }
 }
 
+function trFinalizationSummaryParty(
+    party: v2.FinalizationSummaryParty
+): v1.FinalizationSummaryParty {
+    return {
+        baker: unwrap(party.baker?.value),
+        weight: party.weight,
+        signed: party.signed,
+    };
+}
+
+function trFinalizationSummary(
+    summary: v2.FinalizationSummary
+): v1.FinalizationSummary {
+    return {
+        block: unwrapValToHex(summary.block),
+        index: unwrap(summary.index?.value),
+        delay: unwrap(summary.delay?.value),
+        finalizers: summary.finalizers.map(trFinalizationSummaryParty),
+    };
+}
+
+export function blockFinalizationSummary(
+    finalizationSummary: v2.BlockFinalizationSummary
+): v1.BlockFinalizationSummary {
+    const summary = finalizationSummary.summary;
+    if (summary.oneofKind === 'none') {
+        return {
+            tag: 'none',
+        };
+    } else if (summary.oneofKind === 'record') {
+        return {
+            tag: 'record',
+            record: trFinalizationSummary(summary.record),
+        };
+    } else {
+        throw Error(
+            'Error translating BlockFinalizationSummary: unexpected undefined'
+        );
+    }
+}
+
 // ---------------------------- //
 // --- V1 => V2 translation --- //
 // ---------------------------- //

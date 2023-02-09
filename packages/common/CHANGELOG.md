@@ -33,6 +33,7 @@
     - `getNodeInfo()`
     - `getPeersInfo()`
     - `getBlockPendingUpdates()`
+    - `getBlockFinalizationSummary()`
 
 ## 6.4.0
 

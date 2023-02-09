@@ -507,3 +507,24 @@ export const pendingUpdateList = [
         },
     },
 ];
+
+export const blockFinalizationSummary = {
+    tag: 'record',
+    record: {
+        block: '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf',
+        index: 1131614n,
+        delay: 0n,
+        finalizers: [
+            { baker: 1n, weight: 4605214437901336n, signed: true },
+            { baker: 3n, weight: 4605214437901336n, signed: true },
+            { baker: 4n, weight: 4605214437901336n, signed: true },
+            { baker: 5n, weight: 4605214437901336n, signed: true },
+            { baker: 6n, weight: 4605214437901336n, signed: true },
+            { baker: 8n, weight: 4605214437901336n, signed: true },
+            { baker: 1004n, weight: 507612256350096n, signed: true },
+            { baker: 1010n, weight: 507901387892080n, signed: true },
+            { baker: 1016n, weight: 507513359855434n, signed: true },
+            { baker: 1370n, weight: 450114678242347n, signed: false },
+        ],
+    },
+};

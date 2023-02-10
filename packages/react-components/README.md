@@ -11,7 +11,7 @@ on the expected network while taking into account that the user may decide to sw
 ### [`WithWalletConnector`](./src/WithWalletConnector.ts)
 
 Component that bridges [`@concordium/wallet-connectors`](../wallet-connectors) into a React context by
-managing active connector, connection, connected account, network information, errors, etc. in its internal state.
+managing connection state and network information.
 This component significantly reduces the complexity of integrating with wallets,
 even if one only need to support a single protocol and network.
 
@@ -50,7 +50,7 @@ Connector types for the Browser Wallet and WalletConnect connectors are usually 
 
 ```typescript
 export const BROWSER_WALLET = ephemeralConnectorType(BrowserWalletConnector.create);
-export const WALLET_CONNECT = ephemeralConnectorType(WalletConnectConnector.create.bind(this, WALLET_CONNECT_OPTS));
+export const WALLET_CONNECT = ephemeralConnectorType(WalletConnectConnector.create.bind(undefined, WALLET_CONNECT_OPTS));
 ```
 
 Initiate a connection by invoking `connect` on a connector.
@@ -59,11 +59,11 @@ This is most easily done using the hooks `useConnection` and `useConnect`:
 ```typescript
 const { activeConnector, network, connectedAccounts, genesisHashes, ... } = props;
 const { connection, setConnection, account, genesisHash } = useConnection(activeConnector, connectedAccounts, genesisHashes);
-const { connect, isConnecting, connectionError } = useConnect(activeConnector, setConnection);
+const { connect, isConnecting, connectError } = useConnect(activeConnector, setConnection);
 ```
 
 The app uses the function `connect` to initiate a new connection from `activeConnector`.
-The fields `isConnecting` and `connectionError` are used to render the connection status.
+The fields `isConnecting` and `connectError` are used to render the connection status.
 Once established, the connection and its state are exposed in the following fields:
 
 -   `connection`: The `WalletConnection` object that the app uses to interact with the wallet.

@@ -60,7 +60,11 @@ class MyDelegate implements WalletConnectionDelegate {
         this.chains.set(connection, genesisHash);
     };
 
-    onDisconnect = (connection: WalletConnection) => {
+    onConnected = (connection: WalletConnection, address: string | undefined) => {
+        this.onAccountChanged(connection, address);
+    };
+    
+    onDisconnected = (connection: WalletConnection) => {
         this.accounts.delete(connection);
         this.chains.delete(connection);
     };

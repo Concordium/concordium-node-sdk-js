@@ -804,7 +804,7 @@ const bannedPeers: IpAddressString[] = await this.client.bannedPeers();
 ```
 
 ## banPeer
-Bans a peer.
+Bans the specified peer.
 Rejects if the action fails.
 ```js
 await this.client.banPeer("127.0.0.1");

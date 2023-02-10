@@ -26,7 +26,7 @@ function Main(props: WalletConnectionProps) {
     const { activeConnectorType, activeConnector, activeConnectorError, network, connectedAccounts, genesisHashes } =
         props;
     const { connection, setConnection, account, genesisHash } = useConnection(connectedAccounts, genesisHashes);
-    const { connect, isConnecting, connectionError } = useConnect(activeConnector, setConnection);
+    const { connect, isConnecting, connectError } = useConnect(activeConnector, setConnection);
 
     const [rpcGenesisHash, setRpcGenesisHash] = useState<string>();
     const [rpcError, setRpcError] = useState('');
@@ -71,7 +71,7 @@ function Main(props: WalletConnectionProps) {
                 <Col>
                     {activeConnectorError && <Alert variant="danger">Connector error: {activeConnectorError}.</Alert>}
                     {!activeConnectorError && activeConnectorType && !activeConnector && <Spinner />}
-                    {connectionError && <Alert variant="danger">Connection error: {connectionError}.</Alert>}
+                    {connectError && <Alert variant="danger">Connection error: {connectError}.</Alert>}
                     {activeConnector && !account && (
                         <Button type="button" onClick={connect} disabled={isConnecting}>
                             {isConnecting && 'Connecting...'}

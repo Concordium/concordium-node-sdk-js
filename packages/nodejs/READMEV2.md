@@ -782,7 +782,7 @@ await this.client.shutdown();
 ```
 
 ## peerConnect
-Suggest to a peer to connect to the submitted peer details.
+Suggest to connect the specified address as a peer.
 This, if successful, adds the peer to the list of given addresses, otherwise rejects.
 Note. The peer might not be connected to instantly, in that case the node will try to establish the connection in near future.
 ```js
@@ -811,7 +811,7 @@ await this.client.banPeer("127.0.0.1");
 ```
 
 ## unbanPeer
-unbans a peer.
+Unbans the specified peer.
 Rejects if the action fails.
 ```js
 await this.client.unbanPeer("127.0.0.1");

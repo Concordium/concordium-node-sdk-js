@@ -920,7 +920,7 @@ export default class ConcordiumNodeClient {
      * Unbans the given peer.
      * Rejects if the action fails.
      *
-     * @param ip The ip address of the peer to ban. Must be a valid ip address.
+     * @param ip The ip address of the peer to unban. Must be a valid ip address.
      */
     async unbanPeer(ip: v1.IpAddressString): Promise<void> {
         assertValidIp(ip);
@@ -928,7 +928,7 @@ export default class ConcordiumNodeClient {
         const request: v2.BannedPeer = {
             ipAddress: { value: ip },
         };
-        await this.client.banPeer(request);
+        await this.client.unbanPeer(request);
     }
 
     /**

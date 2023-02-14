@@ -9,7 +9,14 @@ import * as translate from './GRPCTypeTranslation';
 import { AccountAddress } from './types/accountAddress';
 import { getAccountTransactionHandler } from './accountTransactions';
 import { calculateEnergyCost } from './energyCost';
-import { countSignatures, mapAsyncIterable } from './util';
+import {
+    countSignatures,
+    isHex,
+    isValidHash,
+    isValidIp,
+    mapAsyncIterable,
+    unwrap,
+} from './util';
 import {
     serializeAccountTransactionPayload,
     serializeCredentialDeploymentPayload,
@@ -411,6 +418,7 @@ export default class ConcordiumNodeClient {
         transactionHash: HexString,
         timeoutTime?: number
     ): Promise<HexString> {
+        assertValidHash(transactionHash);
         return new Promise(async (resolve, reject) => {
             const abortController = new AbortController();
             if (timeoutTime) {
@@ -549,6 +557,7 @@ export default class ConcordiumNodeClient {
         key: HexString,
         blockHash?: HexString
     ): Promise<HexString> {
+        assertValidHex(key);
         const request: v2.InstanceStateLookupRequest = {
             address: contractAddress,
             key: Buffer.from(key, 'hex'),
@@ -833,6 +842,119 @@ export default class ConcordiumNodeClient {
         ).response;
         return translate.nextUpdateSequenceNumbers(sequenceNumbers);
     }
+    /**
+     * Shut down the node.
+     * Return a GRPC error if the shutdown failed.
+     */
+    async shutdown(): Promise<void> {
+        await this.client.shutdown(v2.Empty);
+    }
+
+    /**
+     * Suggest to a peer to connect to the submitted peer details.
+     * This, if successful, adds the peer to the list of given addresses.
+     * Otherwise return a GRPC error.
+     * Note. The peer might not be connected to instantly, in that case
+     * the node will try to establish the connection in near future. This
+     * function returns a GRPC status 'Ok' in this case.
+     *
+     * @param ip The ip address to connect to. Must be a valid ip address.
+     * @param port The port to connect to. Must be between 0 and 65535.
+     */
+    async peerConnect(ip: v1.IpAddressString, port: number): Promise<void> {
+        assertValidIp(ip);
+        assertValidPort(port);
+
+        const request: v2.IpSocketAddress = {
+            ip: { value: ip },
+            port: { value: port },
+        };
+        await this.client.peerConnect(request);
+    }
+
+    /**
+     * Disconnect from the peer and remove them from the given addresses list
+     * if they are on it. Return if the request was processed successfully.
+     * Otherwise return a GRPC error.
+     *
+     * @param ip The ip address to connect to. Must be a valid ip address.
+     * @param port The port to connect to. Must be between 0 and 65535.
+     */
+    async peerDisconnect(ip: v1.IpAddressString, port: number): Promise<void> {
+        assertValidIp(ip);
+        assertValidPort(port);
+
+        const request: v2.IpSocketAddress = {
+            ip: { value: ip },
+            port: { value: port },
+        };
+        await this.client.peerDisconnect(request);
+    }
+
+    /**
+     * Get a list of banned peers.
+     *
+     * @return A list of the ip's of banned peers.
+     */
+    async getBannedPeers(): Promise<v1.IpAddressString[]> {
+        const bannedPeers = await this.client.getBannedPeers(v2.Empty).response;
+        return bannedPeers.peers.map((x) => unwrap(x.ipAddress?.value));
+    }
+
+    /**
+     * Ban the given peer.
+     * Rejects if the action fails.
+     *
+     * @param ip The ip address of the peer to ban. Must be a valid ip address.
+     */
+    async banPeer(ip: v1.IpAddressString): Promise<void> {
+        assertValidIp(ip);
+
+        const request: v2.PeerToBan = {
+            ipAddress: { value: ip },
+        };
+        await this.client.banPeer(request);
+    }
+
+    /**
+     * Unbans the given peer.
+     * Rejects if the action fails.
+     *
+     * @param ip The ip address of the peer to unban. Must be a valid ip address.
+     */
+    async unbanPeer(ip: v1.IpAddressString): Promise<void> {
+        assertValidIp(ip);
+
+        const request: v2.BannedPeer = {
+            ipAddress: { value: ip },
+        };
+        await this.client.unbanPeer(request);
+    }
+
+    /**
+     * Start dumping packages into the specified file.
+     * Only enabled if the node was built with the `network_dump` feature.
+     * Rejects if the network dump failed to start.
+     *
+     * @param filePath Which file to dump the packages into. Requires a valid path.
+     * @param raw Whether the node should dump raw packages.
+     */
+    async dumpStart(filePath: string, raw: boolean): Promise<void> {
+        const request: v2.DumpRequest = {
+            file: filePath,
+            raw: raw,
+        };
+        await this.client.dumpStart(request);
+    }
+
+    /**
+     * Stop dumping packages.
+     * Only enabled if the node was built with the `network_dump` feature.
+     * Rejects if the network dump failed to be stopped.
+     */
+    async dumpStop(): Promise<void> {
+        await this.client.dumpStop(v2.Empty);
+    }
 }
 
 export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {
@@ -904,8 +1026,29 @@ export function getInvokerInput(
     }
 }
 
+function assertValidIp(ip: v1.IpAddressString): void {
+    if (!isValidIp(ip)) {
+        throw new Error('The input was not a valid ip: ' + ip);
+    }
+}
+
+function assertValidPort(port: number): void {
+    if (port > 65535 || port < 0) {
+        throw new Error(
+            'The input was not a valid port, must be between 0 and 65535: ' +
+                port
+        );
+    }
+}
+
+function assertValidHex(hex: HexString): void {
+    if (!isHex(hex)) {
+        throw new Error('The input was not a valid hex: ' + hex);
+    }
+}
+
 function assertValidHash(hash: HexString): void {
-    if (hash.length !== 64) {
+    if (!isValidHash(hash)) {
         throw new Error(
             'The input was not a valid hash, must be 32 bytes: ' + hash
         );

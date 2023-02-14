@@ -22,7 +22,14 @@
     - `getAccountNonFinalizedTransactions()`
     - `getBlockTransactionEvents()`
     - `getNextUpdateSequenceNumbers()`
-
+    - `shutdown()`
+    - `peerConnect()`
+    - `peerDisconnect()`
+    - `getBannedPeers()`
+    - `banPeer()`
+    - `unbanPeer()`
+    - `dumpStart()`
+    - `dumpStop()`
 ## 6.4.0
 
 - Added `getFinalizedBlocks()` & `getBlocks()` GRPCv2 functions.

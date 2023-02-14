@@ -45,6 +45,14 @@ Wrappers for interacting with the Concordium node, using nodejs.
   - [getAccountNonFinalizedTransactions](#getaccountnonfinalizedtransactions)
   - [getBlockTransactionEvents](#getblocktransactionevents)
   - [getNextUpdateSequenceNumbers](#getnextupdatesequencenumbers)
+  - [shutdown](#shutdown)
+  - [peerConnect](#peerconnect)
+  - [peerDisconnect](#peerdisconnect)
+  - [getBannedPeers](#getbannedpeers)
+  - [banPeer](#banpeer)
+  - [unbanPeer](#unbanpeer)
+  - [dumpStart](#dumpstart)
+  - [dumpStop](#dumpstop)
 
 # ConcordiumNodeClient
 
@@ -764,5 +772,66 @@ for await (const transactionEvent of transactionEvents) {
 Get next available sequence numbers for updating chain parameters after a given block.
 ```js
 const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
-const seqNums: NextUpdateSequenceNumbers = await client.NextUpdateSequenceNumbers(accountAddress);
+const seqNums: NextUpdateSequenceNumbers = await client.getNextUpdateSequenceNumbers(accountAddress);
+```
+
+## shutdown
+Shuts down the node.
+```js
+await this.client.shutdown();
+```
+
+## peerConnect
+Suggest to connect the specified address as a peer.
+This, if successful, adds the peer to the list of given addresses, otherwise rejects.
+Note. The peer might not be connected to instantly, in that case the node will try to establish the connection in near future.
+```js
+await this.client.peerConnect("127.0.0.1", 20000);
+```
+
+## peerDisconnect
+Disconnect from the peer and remove them from the given addresses list
+if they are on it. Resolves if the request was processed successfully.
+Otherwise rejects.
+```js
+await this.client.peerDisonnect("127.0.0.1", 20000);
+```
+
+## getBannedPeers
+Get a list of banned peers.
+```js
+const bannedPeers: IpAddressString[] = await this.client.bannedPeers();
+```
+
+## banPeer
+Bans the specified peer.
+Rejects if the action fails.
+```js
+await this.client.banPeer("127.0.0.1");
+```
+
+## unbanPeer
+Unbans the specified peer.
+Rejects if the action fails.
+```js
+await this.client.unbanPeer("127.0.0.1");
+```
+
+## dumpStart
+Start dumping packages into the specified file.
+Only enabled if the node was built with the `network_dump` feature.
+Rejects if the network dump failed to start.
+
+The first argument specifies which file to dump the packages into. The second parameter specifies whether the node should dump raw packages.
+
+```js
+await this.client.dumpStart("/some/file/path", true);
+```
+
+## dumpStop
+Stop dumping packages.
+Only enabled if the node was built with the `network_dump` feature.
+Rejects if the network dump failed to be stopped.
+```js
+await this.client.dumpStop();
 ```

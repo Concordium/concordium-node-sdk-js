@@ -16,6 +16,7 @@ import {
 export type HexString = string;
 export type Base58String = string;
 export type DigitString = string;
+export type IpAddressString = string;
 
 /**
  * Returns a union of all keys of type T with values matching type V.

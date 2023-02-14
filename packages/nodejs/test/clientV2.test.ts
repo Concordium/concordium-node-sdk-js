@@ -835,7 +835,6 @@ test.each([clientV2, clientWeb])('getBlockPendingUpdates', async (client) => {
         client.getBlockPendingUpdates(pendingUpdateBlock);
     const pendingUpdateList = await asyncIterableToList(pendingUpdateStream);
 
-    console.log(pendingUpdateList);
     expect(pendingUpdateList).toEqual(expected.pendingUpdateList);
 });
 

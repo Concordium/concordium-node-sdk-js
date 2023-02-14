@@ -20,7 +20,6 @@ export * from './types/chainUpdate';
 export * from './types/rejectReason';
 export * from './types/transactionEvent';
 export * from './types/BlockSpecialEvents';
-export * from './types/chainUpdate';
 
 export type HexString = string;
 export type Base58String = string;

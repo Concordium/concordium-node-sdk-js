@@ -1,25 +1,25 @@
 import { Amount, BakerId, Base58String } from '../types';
 
 export type BlockSpecialEvent =
-    | BlockSpecialEvent_BakingRewards
-    | BlockSpecialEvent_Mint
-    | BlockSpecialEvent_FinalizationRewards
-    | BlockSpecialEvent_BlockReward
-    | BlockSpecialEvent_PaydayFoundationReward
-    | BlockSpecialEvent_PaydayAccountReward
-    | BlockSpecialEvent_BlockAccrueReward
-    | BlockSpecialEvent_PaydayPoolReward
-    | BlockSpecialEvent_AccountAmount;
+    | BlockSpecialEventBakingRewards
+    | BlockSpecialEventMint
+    | BlockSpecialEventFinalizationRewards
+    | BlockSpecialEventBlockReward
+    | BlockSpecialEventPaydayFoundationReward
+    | BlockSpecialEventPaydayAccountReward
+    | BlockSpecialEventBlockAccrueReward
+    | BlockSpecialEventPaydayPoolReward
+    | BlockSpecialEventAccountAmount;
 
-export interface BlockSpecialEvent_BakingRewards {
+export interface BlockSpecialEventBakingRewards {
     tag: 'bakingRewards';
     // The amount awarded to each baker.
-    bakingRewards: BlockSpecialEvent_AccountAmount[];
+    bakingRewards: BlockSpecialEventAccountAmount[];
     // The remaining balance of the baker reward account.
     remainder: Amount;
 }
 
-export interface BlockSpecialEvent_Mint {
+export interface BlockSpecialEventMint {
     tag: 'mint';
     // The amount allocated to the banking reward account.
     mintBakingReward: Amount;
@@ -31,15 +31,15 @@ export interface BlockSpecialEvent_Mint {
     foundationAccount: Base58String;
 }
 
-export interface BlockSpecialEvent_FinalizationRewards {
+export interface BlockSpecialEventFinalizationRewards {
     tag: 'finalizationRewards';
     // The amount awarded to each finalizer.
-    finalizationRewards?: BlockSpecialEvent_AccountAmount[];
+    finalizationRewards?: BlockSpecialEventAccountAmount[];
     // The remaining balance of the finalization reward account.
     remainder?: Amount;
 }
 
-export interface BlockSpecialEvent_BlockReward {
+export interface BlockSpecialEventBlockReward {
     tag: 'blockReward';
     // The total fees paid for transactions in the block.
     transactionFees: Amount;
@@ -57,7 +57,7 @@ export interface BlockSpecialEvent_BlockReward {
     foundationAccount: Base58String;
 }
 
-export interface BlockSpecialEvent_PaydayFoundationReward {
+export interface BlockSpecialEventPaydayFoundationReward {
     tag: 'paydayFoundationReward';
     // The account that got rewarded.
     foundationAccount: Base58String;
@@ -65,7 +65,7 @@ export interface BlockSpecialEvent_PaydayFoundationReward {
     developmentCharge: Amount;
 }
 
-export interface BlockSpecialEvent_PaydayAccountReward {
+export interface BlockSpecialEventPaydayAccountReward {
     tag: 'paydayAccountReward';
     // The account that got rewarded.
     account: Base58String;
@@ -77,7 +77,7 @@ export interface BlockSpecialEvent_PaydayAccountReward {
     finalizationReward: Amount;
 }
 
-export interface BlockSpecialEvent_BlockAccrueReward {
+export interface BlockSpecialEventBlockAccrueReward {
     tag: 'blockAccrueReward';
     // The total fees paid for transactions in the block.
     transactionFees: Amount;
@@ -95,7 +95,7 @@ export interface BlockSpecialEvent_BlockAccrueReward {
     baker: BakerId;
 }
 
-export interface BlockSpecialEvent_PaydayPoolReward {
+export interface BlockSpecialEventPaydayPoolReward {
     tag: 'paydayPoolReward';
     // The pool owner (passive delegators when not present).
     poolOwner: BakerId;
@@ -107,7 +107,7 @@ export interface BlockSpecialEvent_PaydayPoolReward {
     finalizationReward: Amount;
 }
 
-export interface BlockSpecialEvent_AccountAmount {
+export interface BlockSpecialEventAccountAmount {
     // The key type
     account: Base58String;
     // The value type

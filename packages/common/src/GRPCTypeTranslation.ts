@@ -1097,7 +1097,7 @@ function trMintRate(mintRate: v2.MintRate | undefined): number {
 
 function trProtocolUpdate(update: v2.ProtocolUpdate): v1.ProtocolUpdate {
     return {
-        updateType: UpdateType.Protocol,
+        updateType: v1.UpdateType.Protocol,
         update: {
             message: update.message,
             specificationHash: unwrapValToHex(update.specificationHash),
@@ -1112,7 +1112,7 @@ function trElectionDifficultyUpdate(
     elecDiff: v2.ElectionDifficulty
 ): v1.ElectionDifficultyUpdate {
     return {
-        updateType: UpdateType.ElectionDifficulty,
+        updateType: v1.UpdateType.ElectionDifficulty,
         update: {
             electionDifficulty: trAmountFraction(elecDiff.value),
         },
@@ -1122,7 +1122,7 @@ function trEuroPerEnergyUpdate(
     exchangeRate: v2.ExchangeRate
 ): v1.EuroPerEnergyUpdate {
     return {
-        updateType: UpdateType.EuroPerEnergy,
+        updateType: v1.UpdateType.EuroPerEnergy,
         update: unwrap(exchangeRate.value),
     };
 }
@@ -1130,7 +1130,7 @@ function trMicroCcdPerEuroUpdate(
     exchangeRate: v2.ExchangeRate
 ): v1.MicroGtuPerEuroUpdate {
     return {
-        updateType: UpdateType.MicroGtuPerEuro,
+        updateType: v1.UpdateType.MicroGtuPerEuro,
         update: unwrap(exchangeRate.value),
     };
 }
@@ -1138,7 +1138,7 @@ function trFoundationAccountUpdate(
     account: v2.AccountAddress
 ): v1.FoundationAccountUpdate {
     return {
-        updateType: UpdateType.FoundationAccount,
+        updateType: v1.UpdateType.FoundationAccount,
         update: {
             address: unwrapToBase58(account),
         },
@@ -1149,7 +1149,7 @@ function trTransactionFeeDistributionUpdate(
     transFeeDist: v2.TransactionFeeDistribution
 ): v1.TransactionFeeDistributionUpdate {
     return {
-        updateType: UpdateType.TransactionFeeDistribution,
+        updateType: v1.UpdateType.TransactionFeeDistribution,
         update: {
             baker: trAmountFraction(transFeeDist.baker),
             gasAccount: trAmountFraction(transFeeDist.gasAccount),
@@ -1159,7 +1159,7 @@ function trTransactionFeeDistributionUpdate(
 
 function trGasRewardsUpdate(gasRewards: v2.GasRewards): v1.GasRewardsUpdate {
     return {
-        updateType: UpdateType.GasRewards,
+        updateType: v1.UpdateType.GasRewards,
         update: {
             baker: trAmountFraction(gasRewards.baker),
             finalizationProof: trAmountFraction(gasRewards.finalizationProof),
@@ -1173,7 +1173,7 @@ function trBakerStakeThresholdUpdate(
     bakerStakeThreshold: v2.BakerStakeThreshold
 ): v1.BakerStakeThresholdUpdate {
     return {
-        updateType: UpdateType.BakerStakeThreshold,
+        updateType: v1.UpdateType.BakerStakeThreshold,
         update: {
             threshold: unwrap(bakerStakeThreshold.bakerStakeThreshold?.value),
         },
@@ -1184,7 +1184,7 @@ function trPoolParametersCpv1Update(
     poolParams: v2.PoolParametersCpv1
 ): v1.PoolParametersUpdate {
     return {
-        updateType: UpdateType.PoolParameters,
+        updateType: v1.UpdateType.PoolParameters,
         update: {
             passiveCommissions: {
                 transactionCommission: trAmountFraction(
@@ -1221,7 +1221,7 @@ function trAddAnonymityRevokerUpdate(
     ar: v2.ArInfo
 ): v1.AddAnonymityRevokerUpdate {
     return {
-        updateType: UpdateType.AddAnonymityRevoker,
+        updateType: v1.UpdateType.AddAnonymityRevoker,
         update: arInfo(ar),
     };
 }
@@ -1229,7 +1229,7 @@ function trAddIdentityProviderUpdate(
     ip: v2.IpInfo
 ): v1.AddIdentityProviderUpdate {
     return {
-        updateType: UpdateType.AddIdentityProvider,
+        updateType: v1.UpdateType.AddIdentityProvider,
         update: ipInfo(ip),
     };
 }
@@ -1238,7 +1238,7 @@ function trCooldownParametersCpv1Update(
     cooldownParams: v2.CooldownParametersCpv1
 ): v1.CooldownParametersUpdate {
     return {
-        updateType: UpdateType.CooldownParameters,
+        updateType: v1.UpdateType.CooldownParameters,
         update: {
             poolOwnerCooldown: unwrap(cooldownParams.poolOwnerCooldown?.value),
             delegatorCooldown: unwrap(cooldownParams.delegatorCooldown?.value),
@@ -1250,7 +1250,7 @@ function trTimeParametersCpv1Update(
     timeParams: v2.TimeParametersCpv1
 ): v1.TimeParametersUpdate {
     return {
-        updateType: UpdateType.TimeParameters,
+        updateType: v1.UpdateType.TimeParameters,
         update: {
             rewardPeriodLength: unwrap(
                 timeParams.rewardPeriodLength?.value?.value
@@ -1263,7 +1263,7 @@ function trMintDistributionCpv0Update(
     mintDist: v2.MintDistributionCpv0
 ): v1.MintDistributionUpdate {
     return {
-        updateType: UpdateType.MintDistribution,
+        updateType: v1.UpdateType.MintDistribution,
         update: {
             bakingReward: trAmountFraction(mintDist.bakingReward),
             finalizationReward: trAmountFraction(mintDist.finalizationReward),
@@ -1276,7 +1276,7 @@ function trMintDistributionCpv1Update(
     mintDist: v2.MintDistributionCpv1
 ): v1.MintDistributionUpdate {
     return {
-        updateType: UpdateType.MintDistribution,
+        updateType: v1.UpdateType.MintDistribution,
         update: {
             bakingReward: trAmountFraction(mintDist.bakingReward),
             finalizationReward: trAmountFraction(mintDist.finalizationReward),
@@ -1323,36 +1323,37 @@ export function pendingUpdate(
             return trMintDistributionCpv1Update(effect.mintDistributionCpv1);
         case 'rootKeys':
             return {
-                updateType: UpdateType.HigherLevelKeyUpdate,
+                updateType: v1.UpdateType.HigherLevelKeyUpdate,
                 update: {
-                    typeOfUpdate: HigherLevelKeyUpdateType.RootKeysUpdate,
+                    typeOfUpdate: v1.HigherLevelKeyUpdateType.RootKeysUpdate,
                     updateKeys: effect.rootKeys.keys.map(trUpdatePublicKey),
                     threshold: unwrap(effect.rootKeys.threshold?.value),
                 },
             };
         case 'level1Keys':
             return {
-                updateType: UpdateType.HigherLevelKeyUpdate,
+                updateType: v1.UpdateType.HigherLevelKeyUpdate,
                 update: {
-                    typeOfUpdate: HigherLevelKeyUpdateType.Level1KeysUpdate,
+                    typeOfUpdate: v1.HigherLevelKeyUpdateType.Level1KeysUpdate,
                     updateKeys: effect.level1Keys.keys.map(trUpdatePublicKey),
                     threshold: unwrap(effect.level1Keys.threshold?.value),
                 },
             };
         case 'level2KeysCpv0':
             return {
-                updateType: UpdateType.AuthorizationKeysUpdate,
+                updateType: v1.UpdateType.AuthorizationKeysUpdate,
                 update: {
-                    typeOfUpdate: AuthorizationKeysUpdateType.Level2KeysUpdate,
+                    typeOfUpdate:
+                        v1.AuthorizationKeysUpdateType.Level2KeysUpdate,
                     updatePayload: trAuthorizationsV0(effect.level2KeysCpv0),
                 },
             };
         case 'level2KeysCpv1':
             return {
-                updateType: UpdateType.AuthorizationKeysUpdate,
+                updateType: v1.UpdateType.AuthorizationKeysUpdate,
                 update: {
                     typeOfUpdate:
-                        AuthorizationKeysUpdateType.Level2KeysUpdateV1,
+                        v1.AuthorizationKeysUpdateType.Level2KeysUpdateV1,
                     updatePayload: trAuthorizationsV1(effect.level2KeysCpv1),
                 },
             };
@@ -1363,7 +1364,7 @@ export function pendingUpdate(
 
 function trUpdatePayload(
     updatePayload: v2.UpdatePayload | undefined
-): UpdateInstructionPayload {
+): v1.UpdateInstructionPayload {
     const payload = updatePayload?.payload;
     switch (payload?.oneofKind) {
         case 'protocolUpdate':
@@ -2293,7 +2294,7 @@ export function peerInfo(peerInfo: v2.PeersInfo_Peer): v1.PeerInfo {
 
 function trAccountAmount(
     accountAmount: v2.BlockSpecialEvent_AccountAmounts_Entry
-): v1.BlockSpecialEvent_AccountAmount {
+): v1.BlockSpecialEventAccountAmount {
     return {
         account: unwrapToBase58(accountAmount.account),
         amount: unwrap(accountAmount.amount?.value),

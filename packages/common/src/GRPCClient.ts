@@ -974,7 +974,7 @@ export default class ConcordiumNodeClient {
 
     /**
      * Get a list of the peers that the node is connected to
-     * and assoicated network related information for each peer.
+     * and associated network related information for each peer.
      *
      * @returns a list containing info on each peer of the node.
      */

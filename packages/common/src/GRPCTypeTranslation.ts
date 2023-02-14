@@ -2117,7 +2117,7 @@ export function trNodeInfo_Node(
 }
 
 export function nodeInfo(nodeInfo: v2.NodeInfo): v1.NodeInfo {
-    let details = {};
+    let details: v1.NodeInfoDetails;
     if (nodeInfo.details.oneofKind === 'bootstrapper') {
         details = {
             tag: 'bootstrapper',
@@ -2136,7 +2136,7 @@ export function nodeInfo(nodeInfo: v2.NodeInfo): v1.NodeInfo {
         localTime: unwrap(nodeInfo.localTime?.value),
         peerUptime: unwrap(nodeInfo.peerUptime?.value),
         networkInfo: trNetworkInfo(nodeInfo.networkInfo),
-        details: details as v1.NodeInfoDetails,
+        details,
     };
 }
 
@@ -2165,7 +2165,7 @@ function trPeerNetworkStats(
 }
 
 export function peerInfo(peerInfo: v2.PeersInfo_Peer): v1.PeerInfo {
-    let consensusInfo = {};
+    let consensusInfo: v1.PeerConsensusInfo;
     if (peerInfo.consensusInfo.oneofKind === 'bootstrapper') {
         consensusInfo = {
             tag: 'bootstrapper',
@@ -2185,7 +2185,7 @@ export function peerInfo(peerInfo: v2.PeersInfo_Peer): v1.PeerInfo {
         ip: unwrap(peerInfo.socketAddress?.ip?.value),
         port: unwrap(peerInfo.socketAddress?.port?.value),
         networkStats: trPeerNetworkStats(peerInfo.networkStats),
-        consensusInfo: consensusInfo as v1.PeerConsensusInfo,
+        consensusInfo,
     };
 }
 

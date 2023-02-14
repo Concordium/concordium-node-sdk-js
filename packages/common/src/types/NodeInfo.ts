@@ -1,6 +1,6 @@
 import { BakerId, Duration, Timestamp } from '../types';
 
-export type PeerId = string;
+export type PeerId = HexString;
 
 export interface NodeInfo {
     peerVersion: string;

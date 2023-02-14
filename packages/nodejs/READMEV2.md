@@ -853,7 +853,7 @@ const nodeInfo: NodeInfo = await this.client.getNodeInfo();
 ```
 
 ## getPeersInfo
-Get a list of the peers that the node is connected to and assoicated network related information for each peer.
+Get a list of the peers that the node is connected to and associated network related information for each peer.
 
 ```js
 const peerInfo: PeerInfo[] = await this.client.getPeersInfo();

@@ -1,7 +1,7 @@
-import { IpAddressString, PeerId } from '..';
+import { HexString, IpAddressString } from '..';
 
 export interface PeerInfo {
-    peerId: PeerId;
+    peerId: HexString;
     ip: IpAddressString;
     port: number;
     networkStats?: PeerNetworkStats;
@@ -15,14 +15,14 @@ export interface PeerNetworkStats {
 }
 
 export type PeerConsensusInfo =
-    | PeerConsensusInfo_Bootstrapper
-    | PeerConsensusInfo_CatchupStatus;
+    | PeerConsensusInfoBootstrapper
+    | PeerConsensusInfoCatchupStatus;
 
-export interface PeerConsensusInfo_Bootstrapper {
+export interface PeerConsensusInfoBootstrapper {
     tag: 'bootstrapper';
 }
 
-export interface PeerConsensusInfo_CatchupStatus {
+export interface PeerConsensusInfoCatchupStatus {
     tag: 'nodeCatchupStatus';
     catchupStatus: NodeCatchupStatus;
 }

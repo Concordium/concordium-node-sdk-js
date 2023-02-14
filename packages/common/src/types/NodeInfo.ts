@@ -1,6 +1,4 @@
-import { BakerId, Duration, Timestamp } from '../types';
-
-export type PeerId = HexString;
+import { BakerId, Duration, HexString, Timestamp } from '../types';
 
 export interface NodeInfo {
     peerVersion: string;
@@ -11,7 +9,7 @@ export interface NodeInfo {
 }
 
 export interface NodeNetworkInfo {
-    nodeId: PeerId;
+    nodeId: HexString;
     peerTotalSent: bigint;
     peerTotalReceived: bigint;
     avgBpsIn: bigint;
@@ -32,28 +30,28 @@ export interface NodeInfoDetails_Node {
 }
 
 export type NodeInfoConsensusStatus =
-    | NodeInfoConsensusStatus_Generic
-    | NodeInfoConsensusStatus_Active;
+    | NodeInfoConsensusStatusGeneric
+    | NodeInfoConsensusStatusActive;
 
-export interface NodeInfoConsensusStatus_Generic {
+export interface NodeInfoConsensusStatusGeneric {
     tag: 'notRunning' | 'passive';
 }
 
-export interface NodeInfoConsensusStatus_Active {
-    tag: 'notRunning' | 'passive' | 'active';
+export interface NodeInfoConsensusStatusActive {
+    tag: 'active';
     bakerId: BakerId;
     status: BakerConsensusInfoStatus;
 }
 
 export type BakerConsensusInfoStatus =
-    | BakerConsensusInfoStatus_Generic
-    | BakerConsensusInfoStatus_PassiveCommitteeInfo;
+    | BakerConsensusInfoStatusGeneric
+    | BakerConsensusInfoStatusPassiveCommitteeInfo;
 
-export interface BakerConsensusInfoStatus_Generic {
+export interface BakerConsensusInfoStatusGeneric {
     tag: 'activeBakerCommitteeInfo' | 'activeFinalizerCommitteeInfo';
 }
 
-export interface BakerConsensusInfoStatus_PassiveCommitteeInfo {
+export interface BakerConsensusInfoStatusPassiveCommitteeInfo {
     tag: 'passiveCommitteeInfo';
     passiveCommitteeInfo: PassiveCommitteeInfo;
 }

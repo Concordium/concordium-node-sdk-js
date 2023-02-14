@@ -15,6 +15,10 @@ import {
 
 export * from './types/NodeInfo';
 export * from './types/PeerInfo';
+export * from './types/blockItemSummary';
+export * from './types/chainUpdate';
+export * from './types/rejectReason';
+export * from './types/transactionEvent';
 
 export type HexString = string;
 export type Base58String = string;

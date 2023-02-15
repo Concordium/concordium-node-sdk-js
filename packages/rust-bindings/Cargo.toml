@@ -4,9 +4,6 @@ version = "0.1.0"
 authors = ["Concordium AG <developers@concordium.com>"]
 edition = "2018"
 
-[package.metadata.wasm-pack.profile.release]
-wasm-opt = false
-
 [profile.dev]
 opt-level = 3
 

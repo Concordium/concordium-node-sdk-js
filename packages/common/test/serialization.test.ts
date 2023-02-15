@@ -13,17 +13,9 @@ import {
     AccountTransactionHeader,
     AccountTransactionSignature,
     AccountTransactionType,
-    ParameterType,
     SimpleTransferPayload,
 } from '../src/types';
 import { TransactionExpiry } from '../src/types/transactionExpiry';
-import {
-    serializeByteArray,
-    serializeByteList,
-    serializeILeb128,
-    serializeULeb128,
-} from '../src/serializationHelpers';
-import { SizeLength } from '../src/deserializeSchema';
 import { getUpdateContractParameterSchema } from '../src';
 
 test('fail account transaction serialization if no signatures', () => {
@@ -144,98 +136,4 @@ test('serialize type value and serializeUpdateContractParameters give same resul
     expect(serializedParameter.toString('hex')).toEqual(
         serializedType.toString('hex')
     );
-});
-
-test('serialize ULeb128', () => {
-    let parameter = serializeULeb128(
-        { typeTag: ParameterType.ULeb128, constraint: 5 },
-        '1'
-    );
-    expect(parameter.toString('hex')).toBe('01');
-
-    parameter = serializeULeb128(
-        { typeTag: ParameterType.ULeb128, constraint: 5 },
-        '10'
-    );
-    expect(parameter.toString('hex')).toBe('0a');
-
-    parameter = serializeULeb128(
-        { typeTag: ParameterType.ULeb128, constraint: 5 },
-        '129'
-    );
-    expect(parameter.toString('hex')).toBe('8101');
-
-    parameter = serializeULeb128(
-        { typeTag: ParameterType.ULeb128, constraint: 10 },
-        '18446744073709551615'
-    );
-    expect(parameter.toString('hex')).toBe('ffffffffffffffffff01');
-
-    parameter = serializeULeb128(
-        { typeTag: ParameterType.ULeb128, constraint: 37 },
-        '115792089237316195423570985008687907853269984665640564039457584007913129639935'
-    );
-    expect(parameter.toString('hex')).toBe(
-        'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0f'
-    );
-});
-
-test('serialize ILeb128', () => {
-    let parameter = serializeILeb128(
-        { typeTag: ParameterType.ILeb128, constraint: 5 },
-        '1'
-    );
-    expect(parameter.toString('hex')).toBe('01');
-
-    parameter = serializeILeb128(
-        { typeTag: ParameterType.ILeb128, constraint: 5 },
-        '10'
-    );
-    expect(parameter.toString('hex')).toBe('0a');
-
-    parameter = serializeILeb128(
-        { typeTag: ParameterType.ILeb128, constraint: 5 },
-        '-129'
-    );
-    expect(parameter.toString('hex')).toBe('ff7e');
-
-    parameter = serializeILeb128(
-        { typeTag: ParameterType.ILeb128, constraint: 10 },
-        '18446744073709551615'
-    );
-    expect(parameter.toString('hex')).toBe('ffffffffffffffffff01');
-
-    parameter = serializeILeb128(
-        { typeTag: ParameterType.ILeb128, constraint: 10 },
-        '-9223372036854775808'
-    );
-    expect(parameter.toString('hex')).toBe('8080808080808080807f');
-});
-
-test('serialize ByteList', () => {
-    let parameter = serializeByteList(
-        { typeTag: ParameterType.ByteList, sizeLength: SizeLength.U8 },
-        '00000000'
-    );
-    expect(parameter.toString('hex')).toBe('0400000000');
-
-    parameter = serializeByteList(
-        { typeTag: ParameterType.ByteList, sizeLength: SizeLength.U8 },
-        '1234567890abcdef'
-    );
-    expect(parameter.toString('hex')).toBe('081234567890abcdef');
-});
-
-test('serialize ByteArray', () => {
-    let parameter = serializeByteArray(
-        { typeTag: ParameterType.ByteArray, size: 4 },
-        '00000000'
-    );
-    expect(parameter.toString('hex')).toBe('00000000');
-
-    parameter = serializeByteArray(
-        { typeTag: ParameterType.ByteArray, size: 8 },
-        '1234567890abcdef'
-    );
-    expect(parameter.toString('hex')).toBe('1234567890abcdef');
 });

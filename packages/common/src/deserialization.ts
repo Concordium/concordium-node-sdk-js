@@ -12,7 +12,16 @@ import {
 import { AccountAddress } from './types/accountAddress';
 import { TransactionExpiry } from './types/transactionExpiry';
 import { PassThrough, Readable } from 'stream';
-import { deserialUint8 } from './deserializeSchema';
+
+/**
+ * Reads an unsigned 8-bit integer from the given {@link Readable}.
+ *
+ * @param source input stream
+ * @returns number from 0 to 255
+ */
+export function deserializeUint8(source: Readable): number {
+    return source.read(1).readUInt8(0);
+}
 
 /**
  * Given a contract's raw state, its name and its schema, return the state as a JSON object.
@@ -64,14 +73,14 @@ function deserializeAccountTransactionSignature(
     const decodeCredentialSignatures = (serialized: Readable) =>
         deserializeMap(
             serialized,
-            deserialUint8,
-            deserialUint8,
+            deserializeUint8,
+            deserializeUint8,
             decodeSignature
         );
     return deserializeMap(
         signatures,
-        deserialUint8,
-        deserialUint8,
+        deserializeUint8,
+        deserializeUint8,
         decodeCredentialSignatures
     );
 }
@@ -109,7 +118,7 @@ function deserializeAccountTransaction(serializedTransaction: Readable): {
 
     const header = deserializeTransactionHeader(serializedTransaction);
 
-    const transactionType = deserialUint8(serializedTransaction);
+    const transactionType = deserializeUint8(serializedTransaction);
     if (!isAccountTransactionType(transactionType)) {
         throw new Error(
             'TransactionType is not a valid value: ' + transactionType
@@ -174,7 +183,7 @@ export function deserializeTransaction(
     const bufferStream = new PassThrough();
     bufferStream.end(serializedTransaction);
 
-    const version = deserialUint8(bufferStream);
+    const version = deserializeUint8(bufferStream);
     if (version !== 0) {
         throw new Error(
             'Supplied version ' +
@@ -182,7 +191,7 @@ export function deserializeTransaction(
                 ' is not valid. Only transactions with version 0 format are supported'
         );
     }
-    const blockItemKind = deserialUint8(bufferStream);
+    const blockItemKind = deserializeUint8(bufferStream);
     switch (blockItemKind) {
         case BlockItemKind.AccountTransactionKind:
             return {

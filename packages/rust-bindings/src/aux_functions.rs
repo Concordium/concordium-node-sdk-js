@@ -523,13 +523,14 @@ pub fn get_credential_deployment_details_aux(
         message_expiry: TransactionTime { seconds: expiry },
     };
 
+    let block_item = concordium_base::transactions::BlockItem::<Payload>::from(credential_message);
+
     let hex = {
-        let versioned = Versioned::new(VERSION_0, &credential_message);
+        let versioned = Versioned::new(VERSION_0, &block_item);
         let versioned_as_bytes = &to_bytes(&versioned);
         hex::encode(versioned_as_bytes)
     };
 
-    let block_item = concordium_base::transactions::BlockItem::<Payload>::from(credential_message);
     let hash = block_item.hash();
 
     let response = json!({

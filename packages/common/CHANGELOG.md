@@ -22,6 +22,17 @@
     - `getAccountNonFinalizedTransactions()`
     - `getBlockTransactionEvents()`
     - `getNextUpdateSequenceNumbers()`
+    - `shutdown()`
+    - `peerConnect()`
+    - `peerDisconnect()`
+    - `getBannedPeers()`
+    - `banPeer()`
+    - `unbanPeer()`
+    - `dumpStart()`
+    - `dumpStop()`
+    - `getNodeInfo()`
+    - `getPeersInfo()`
+
 
 - Function to generate baker keys: `generateBakerKeys`.
 

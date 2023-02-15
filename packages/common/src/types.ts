@@ -16,6 +16,7 @@ import {
 export type HexString = string;
 export type Base58String = string;
 export type DigitString = string;
+export type UrlString = string;
 
 /**
  * Returns a union of all keys of type T with values matching type V.
@@ -780,7 +781,7 @@ export type BakerId = bigint;
 
 export interface BakerPoolInfo {
     openStatus: OpenStatusText;
-    metadataUrl: string;
+    metadataUrl: UrlString;
     commissionRates: CommissionRates;
 }
 
@@ -979,7 +980,7 @@ export type AccountInfo =
 
 export interface Description {
     name: string;
-    url: string;
+    url: UrlString;
     description: string;
 }
 
@@ -1186,12 +1187,12 @@ export interface UpdateCredentialsPayload {
 }
 
 export interface BakerKeysWithProofs {
-    signatureVerifyKey: string;
-    electionVerifyKey: string;
-    aggregationVerifyKey: string;
-    proofAggregation: string;
-    proofSig: string;
-    proofElection: string;
+    signatureVerifyKey: HexString;
+    electionVerifyKey: HexString;
+    aggregationVerifyKey: HexString;
+    proofAggregation: HexString;
+    proofSig: HexString;
+    proofElection: HexString;
 }
 
 export interface ConfigureBakerPayload {
@@ -1201,7 +1202,7 @@ export interface ConfigureBakerPayload {
     restakeEarnings?: boolean;
     openForDelegation?: OpenStatus;
     keys?: BakerKeysWithProofs;
-    metadataUrl?: string;
+    metadataUrl?: UrlString;
     transactionFeeCommission?: number;
     bakingRewardCommission?: number;
     finalizationRewardCommission?: number;

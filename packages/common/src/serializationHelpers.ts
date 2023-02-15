@@ -1,6 +1,9 @@
 import { Buffer } from 'buffer/';
-import { BakerKeysWithProofs, ConfigureBakerPayload, VerifyKey } from '.';
 import {
+    BakerKeysWithProofs,
+    ConfigureBakerPayload,
+    UrlString,
+    VerifyKey,
     ConfigureDelegationPayload,
     DelegationTarget,
     DelegationTargetType,
@@ -290,6 +293,15 @@ export function encodeStringToByteArray(str: string): Buffer {
     const buffer = new Buffer(str, 'utf8');
     const length = encodeWord16(buffer.length);
     return Buffer.concat([length, buffer]);
+}
+
+/**
+ * Convert a hex string to a Buffer
+ * @param str hex-encoded string
+ * @returns Buffer
+ */
+export function encodeHexString(s: string): Buffer {
+    return Buffer.from(s, 'hex');
 }
 
 enum SchemeId {
@@ -607,10 +619,6 @@ export function serializeConfigureDelegationPayload(
     return Buffer.concat([bitmap, serializedPayload]);
 }
 
-function encodeHexString(s: string): Buffer {
-    return Buffer.from(s, 'hex');
-}
-
 const serializeVerifyKeys = serializeFromSpec<BakerKeysWithProofs>({
     electionVerifyKey: encodeHexString,
     proofElection: encodeHexString,
@@ -620,7 +628,7 @@ const serializeVerifyKeys = serializeFromSpec<BakerKeysWithProofs>({
     proofAggregation: encodeHexString,
 });
 
-const serializeUrl = (url: string) => {
+const serializeUrl = (url: UrlString) => {
     const data = Buffer.from(new TextEncoder().encode(url));
     const length = encodeWord16(data.length);
     return Buffer.concat([length, data]);

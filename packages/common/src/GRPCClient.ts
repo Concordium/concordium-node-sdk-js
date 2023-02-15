@@ -955,6 +955,33 @@ export default class ConcordiumNodeClient {
     async dumpStop(): Promise<void> {
         await this.client.dumpStop(v2.Empty);
     }
+
+    /**
+     * Get information about the node.
+     * The `NodeInfo` includes information of
+     * * Meta information such as the, version of the node, type of the node, uptime and the local time of the node.
+     * * NetworkInfo which yields data such as the node id, packets sent/received,
+     *   average bytes per second sent/received.
+     * * ConsensusInfo. The `ConsensusInfo` returned depends on if the node supports
+     *   the protocol on chain and whether the node is configured as a baker or not.
+     *
+     * @returns Info about the node
+     */
+    async getNodeInfo(): Promise<v1.NodeInfo> {
+        const nodeInfo = await this.client.getNodeInfo(v2.Empty).response;
+        return translate.nodeInfo(nodeInfo);
+    }
+
+    /**
+     * Get a list of the peers that the node is connected to
+     * and associated network related information for each peer.
+     *
+     * @returns a list containing info on each peer of the node.
+     */
+    async getPeersInfo(): Promise<v1.PeerInfo[]> {
+        const peersInfo = await this.client.getPeersInfo(v2.Empty).response;
+        return peersInfo.peers.map(translate.peerInfo);
+    }
 }
 
 export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {

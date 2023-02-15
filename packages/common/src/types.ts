@@ -13,10 +13,22 @@ import {
     TransferredEvent,
 } from './types/transactionEvent';
 
+export * from './types/NodeInfo';
+export * from './types/PeerInfo';
+export * from './types/blockItemSummary';
+export * from './types/chainUpdate';
+export * from './types/rejectReason';
+export * from './types/transactionEvent';
+
 export type HexString = string;
 export type Base58String = string;
 export type DigitString = string;
 export type IpAddressString = string;
+
+// A number of milliseconds
+export type Duration = bigint;
+// Unix timestamp in milliseconds
+export type Timestamp = bigint;
 
 /**
  * Returns a union of all keys of type T with values matching type V.
@@ -1518,7 +1530,7 @@ export interface IdObjectRequestV1 {
 
 export interface IdRecoveryRequest {
     idCredPub: string;
-    timestamp: bigint;
+    timestamp: Timestamp;
     proof: string;
 }
 

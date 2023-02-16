@@ -8,7 +8,6 @@ import {
     DelegationTarget,
     DelegationTargetType,
 } from './types';
-const MAX_UINT_64 = 18446744073709551615n; // 2^64 - 1
 import { DataBlob } from './types/DataBlob';
 
 export function serializeMap<K extends string | number | symbol, T>(

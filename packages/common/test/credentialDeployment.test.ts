@@ -1,13 +1,11 @@
 import {
     createCredentialTransaction,
     CredentialInput,
-    createCredentialV1
+    createCredentialV1,
 } from '../src/credentialDeploymentTransactions';
 import fs from 'fs';
+import { AttributeKey } from '../src/types';
 import { TransactionExpiry } from '../src';
-import {
-    AttributeKey,
-} from '../src/types';
 
 export function createCredentialInput(
     revealedAttributes: AttributeKey[]

@@ -480,3 +480,51 @@ export const seqNums = {
     cooldownParameters: 1n,
     timeParameters: 1n,
 };
+
+export const specialEventList = [
+    {
+        tag: 'blockAccrueReward',
+        transactionFees: 0n,
+        oldGasAccount: 293604n,
+        newGasAccount: 219102n,
+        bakerReward: 74502n,
+        passiveReward: 0n,
+        foundationCharge: 0n,
+        baker: 4n,
+    },
+];
+
+export const pendingUpdateList = [
+    {
+        updateType: 'protocol',
+        update: {
+            message: 'Enable protocol version 5',
+            specificationHash:
+                'af5684e70c1438e442066d017e4410af6da2b53bfa651a07d81efa2aa668db20',
+            specificationUrl:
+                'https://github.com/Concordium/concordium-update-proposals/blob/main/updates/P5.txt',
+            specificationAuxiliaryData: '',
+        },
+    },
+];
+
+export const blockFinalizationSummary = {
+    tag: 'record',
+    record: {
+        block: '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf',
+        index: 1131614n,
+        delay: 0n,
+        finalizers: [
+            { baker: 1n, weight: 4605214437901336n, signed: true },
+            { baker: 3n, weight: 4605214437901336n, signed: true },
+            { baker: 4n, weight: 4605214437901336n, signed: true },
+            { baker: 5n, weight: 4605214437901336n, signed: true },
+            { baker: 6n, weight: 4605214437901336n, signed: true },
+            { baker: 8n, weight: 4605214437901336n, signed: true },
+            { baker: 1004n, weight: 507612256350096n, signed: true },
+            { baker: 1010n, weight: 507901387892080n, signed: true },
+            { baker: 1016n, weight: 507513359855434n, signed: true },
+            { baker: 1370n, weight: 450114678242347n, signed: false },
+        ],
+    },
+};

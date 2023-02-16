@@ -19,6 +19,7 @@ export * from './types/blockItemSummary';
 export * from './types/chainUpdate';
 export * from './types/rejectReason';
 export * from './types/transactionEvent';
+export * from './types/BlockSpecialEvents';
 
 export type HexString = string;
 export type Base58String = string;
@@ -1053,6 +1054,32 @@ export interface NextUpdateSequenceNumbers {
     addIdentityProvider: bigint;
     cooldownParameters: bigint;
     timeParameters: bigint;
+}
+
+export type BlockFinalizationSummary =
+    | BlockFinalizationSummary_None
+    | BlockFinalizationSummary_Record;
+
+export interface BlockFinalizationSummary_None {
+    tag: 'none';
+}
+
+export interface BlockFinalizationSummary_Record {
+    tag: 'record';
+    record: FinalizationSummary;
+}
+
+export interface FinalizationSummary {
+    block: HexString;
+    index: bigint;
+    delay: bigint;
+    finalizers: FinalizationSummaryParty[];
+}
+
+export interface FinalizationSummaryParty {
+    baker: BakerId;
+    weight: bigint;
+    signed: boolean;
 }
 
 export enum BlockItemKind {

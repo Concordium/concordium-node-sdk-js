@@ -32,7 +32,8 @@
     - `dumpStop()`
     - `getNodeInfo()`
     - `getPeersInfo()`
-
+    - `getBlockPendingUpdates()`
+    - `getBlockFinalizationSummary()`
 
 - Function to generate baker keys: `generateBakerKeys`.
 

@@ -791,6 +791,8 @@ export enum OpenStatusText {
 
 export type Amount = bigint;
 export type BakerId = bigint;
+// TODO: Change this to bigint when GrpcV1 is removed.
+export type DelegatorId = number;
 
 export interface BakerPoolInfo {
     openStatus: OpenStatusText;

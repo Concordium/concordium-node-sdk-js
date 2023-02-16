@@ -528,3 +528,298 @@ export const blockFinalizationSummary = {
         ],
     },
 };
+
+export const accountCreationEvent = {
+    type: 'accountCreation',
+    index: 0n,
+    energyCost: 54100n,
+    hash: '9931f541e166d86916354fc98759fcad604d447041142c0897f473093aaafdb5',
+    credentialType: 'normal',
+    address: '32YGU1j7Z3xwA5URGYFrMamKj7JtfGvXFiXH4p3gAKdrpJcdg2',
+    regId: '9015cfd6c1bd06f0e0355fc5355a0c18fe0cb37632d469b07d6fbfa9c05facc271c975466d8dfe3144c683f44fd0af71',
+};
+
+export const transferToPublicEvent = [
+    {
+        tag: 'EncryptedAmountsRemoved',
+        account: '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
+        inputAmount:
+            'b74e0a607e30eefc5e9323befdbebae158f66c0f6767d3c3f3ff4b1a9d5b9f0e5e565d734141bd82bfca4bcf32e2bec182e895b7afde650cd2e51c2d704d58965b0c462ffef2fca87204ac5248b111290b699dfe84887aa11ab357dab4b2ba00b3301a5e0fbc6cd3f9ac58bbf19abcc9a56ecc83a16738508fb9ec60da2818d5360dbf66839c6a4037e37c2a4a64956ab5c30c0bf1ed90713838dd8a6cce803111698f9c0e145cae6be38e4136ebdc6205ac4ca2f43852dac7e7f6d37fc55cdc',
+        newAmount:
+            '82b3675ff0e54bcd646df7d80c50d82da17bcd91fba1ed08e2577711cf5cc00fab65cecc6d7ed62bd9f9c07c68512e2bb871bb789eaef79797724bc17b036966ba88a6e2e83e4685ed6a10b78009faff42a5ed991825a67bc58762c09e9b5779b4b32bee19e9828d4b4bf1c5096afe4fa20c995356e9e34d3657f66ac5d96c051770ba3cfce01aaba3dcadc771e1787aa5cfa1d522fb3be9135f0906a77233fe7c98023b45c76cde3a37be3972377933618c7f7f36bcbac71ce14053171700da',
+        upToIndex: 0,
+    },
+    {
+        tag: 'AmountAddedByDecryption',
+        account: '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
+        amount: 1000000n,
+    },
+];
+
+export const configureBaker = [
+    {
+        tag: 'BakerAdded',
+        account: '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS',
+        aggregationKey:
+            '802f086e91d71a4d8e1437229b4b7f39c2f45ee1a075e4b786f60af7ec278fa0052318f3f65989cd0cdd0e9ef17b865710b59ef9b894f1f4fb6a58ebbef7b07a04a503421cfa37229c66a9fe8e943be47fba7b15eb263227224e35e0ff088fda',
+        bakerId: 2561n,
+        electionKey:
+            'fc8ed2131072701dd78707c3414b410fe222957dceb04e3ff7483e5211ac312b',
+        restakeEarnings: true,
+        signKey:
+            '0055703a2615746700b58e312aa428e5526993d6d3f3f109db92436115d63818',
+        stake: '15000000000',
+    },
+    {
+        tag: 'BakerSetRestakeEarnings',
+        account: '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS',
+        bakerId: 2561n,
+        restakeEarnings: true,
+    },
+    {
+        tag: 'BakerSetOpenStatus',
+        account: '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS',
+        bakerId: 2561n,
+        openStatus: 'openForAll',
+    },
+    {
+        tag: 'BakerSetMetadataURL',
+        account: '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS',
+        bakerId: 2561n,
+        metadataURL: '',
+    },
+    {
+        tag: 'BakerSetTransactionFeeCommission',
+        account: '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS',
+        bakerId: 2561n,
+        transactionFeeCommission: 0.1,
+    },
+    {
+        tag: 'BakerSetBakingRewardCommission',
+        account: '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS',
+        bakerId: 2561n,
+        bakingRewardCommission: 0.1,
+    },
+    {
+        tag: 'BakerSetFinalizationRewardCommission',
+        account: '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS',
+        bakerId: 2561n,
+        finalizationRewardCommission: 1,
+    },
+];
+
+export const bakerRemoved = {
+    tag: 'BakerRemoved',
+    bakerId: 1879n,
+    account: '4aCoaW3qkQRnY3fUGThQcEMGSPLUEQ7XL9Yagx2UR91QpvtoAe',
+};
+
+export const configureDelegation = [
+    {
+        account: '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
+        delegatorId: 2059,
+        tag: 'DelegationAdded',
+    },
+    {
+        account: '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
+        delegationTarget: { delegateType: 'Passive' },
+        delegatorId: 2059,
+        tag: 'DelegationSetDelegationTarget',
+    },
+    {
+        account: '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
+        delegatorId: 2059,
+        restakeEarnings: true,
+        tag: 'DelegationSetRestakeEarnings',
+    },
+    {
+        account: '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
+        delegatorId: 2059,
+        newStake: 1000000n,
+        tag: 'DelegationStakeIncreased',
+    },
+];
+
+export const updatedEvent = [
+    {
+        address: { index: 866n, subindex: 0n },
+        events: [],
+        tag: 'Interrupted',
+    },
+    {
+        address: { index: 865n, subindex: 0n },
+        events: [],
+        tag: 'Interrupted',
+    },
+    {
+        address: { index: 864n, subindex: 0n },
+        amount: 0n,
+        contractVersion: 1,
+        events: [],
+        instigator: {
+            address: { index: 865n, subindex: 0n },
+            type: 'AddressContract',
+        },
+        message: '0000',
+        receiveName: 'CIS2-wCCD-State.getPaused',
+        tag: 'Updated',
+    },
+    {
+        address: { index: 865n, subindex: 0n },
+        success: true,
+        tag: 'Resumed',
+    },
+    {
+        address: { index: 865n, subindex: 0n },
+        events: [],
+        tag: 'Interrupted',
+    },
+    {
+        address: { index: 864n, subindex: 0n },
+        amount: 0n,
+        contractVersion: 1,
+        events: [],
+        instigator: {
+            address: { index: 865n, subindex: 0n },
+            type: 'AddressContract',
+        },
+        message:
+            '00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be00083',
+        receiveName: 'CIS2-wCCD-State.getBalance',
+        tag: 'Updated',
+    },
+    {
+        address: { index: 865n, subindex: 0n },
+        success: true,
+        tag: 'Resumed',
+    },
+    {
+        address: { index: 865n, subindex: 0n },
+        events: [],
+        tag: 'Interrupted',
+    },
+    {
+        address: { index: 864n, subindex: 0n },
+        amount: 0n,
+        contractVersion: 1,
+        events: [],
+        instigator: {
+            address: { index: 865n, subindex: 0n },
+            type: 'AddressContract',
+        },
+        message:
+            '00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be00083c0843d00',
+        receiveName: 'CIS2-wCCD-State.setBalance',
+        tag: 'Updated',
+    },
+    {
+        address: { index: 865n, subindex: 0n },
+        success: true,
+        tag: 'Resumed',
+    },
+    {
+        address: { index: 865n, subindex: 0n },
+        events: [],
+        tag: 'Interrupted',
+    },
+    {
+        address: { index: 866n, subindex: 0n },
+        events: [],
+        tag: 'Interrupted',
+    },
+    {
+        amount: 1000000n,
+        from: {
+            address: { index: 866n, subindex: 0n },
+            type: 'AddressContract',
+        },
+        tag: 'Transferred',
+        to: {
+            address: '4inf4g36xDEQmjxDbbkqeHD2HNg9v7dohXUDH5S9en4Th53kxm',
+            type: 'AddressAccount',
+        },
+    },
+    {
+        address: { index: 866n, subindex: 0n },
+        success: true,
+        tag: 'Resumed',
+    },
+    {
+        address: { index: 866n, subindex: 0n },
+        amount: 0n,
+        contractVersion: 1,
+        events: [],
+        instigator: {
+            address: { index: 865n, subindex: 0n },
+            type: 'AddressContract',
+        },
+        message:
+            'c0843d00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be000830000',
+        receiveName: 'CIS2-wCCD-Proxy.transferCCD',
+        tag: 'Updated',
+    },
+    {
+        address: { index: 865n, subindex: 0n },
+        success: true,
+        tag: 'Resumed',
+    },
+    {
+        address: { index: 865n, subindex: 0n },
+        events: [],
+        tag: 'Interrupted',
+    },
+    {
+        address: { index: 866n, subindex: 0n },
+        amount: 0n,
+        contractVersion: 1,
+        events: [
+            'fd00c0843d00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be00083',
+        ],
+        instigator: {
+            address: { index: 865n, subindex: 0n },
+            type: 'AddressContract',
+        },
+        message:
+            'fd00c0843d00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be00083',
+        receiveName: 'CIS2-wCCD-Proxy.logEvent',
+        tag: 'Updated',
+    },
+    {
+        address: { index: 865n, subindex: 0n },
+        success: true,
+        tag: 'Resumed',
+    },
+    {
+        address: { index: 865n, subindex: 0n },
+        amount: 0n,
+        contractVersion: 1,
+        events: [],
+        instigator: {
+            address: { index: 866n, subindex: 0n },
+            type: 'AddressContract',
+        },
+        message:
+            'c0843d00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be0008300e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be00083000000e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be00083',
+        receiveName: 'CIS2-wCCD.unwrap',
+        tag: 'Updated',
+    },
+    {
+        address: { index: 866n, subindex: 0n },
+        success: true,
+        tag: 'Resumed',
+    },
+    {
+        address: { index: 866n, subindex: 0n },
+        amount: 0n,
+        contractVersion: 1,
+        events: [],
+        instigator: {
+            address: '4inf4g36xDEQmjxDbbkqeHD2HNg9v7dohXUDH5S9en4Th53kxm',
+            type: 'AddressAccount',
+        },
+        message:
+            'c0843d00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be0008300e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be000830000',
+        receiveName: 'CIS2-wCCD-Proxy.unwrap',
+        tag: 'Updated',
+    },
+];

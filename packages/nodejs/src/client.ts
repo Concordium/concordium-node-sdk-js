@@ -68,6 +68,7 @@ import {
     ModuleReference,
     ReduceStakePendingChangeV1,
     buildInvoker,
+    DelegationStakeChangedEvent,
 } from '@concordium/common-sdk';
 import {
     buildJsonResponseReviver,
@@ -353,8 +354,10 @@ export default class ConcordiumNodeClient {
             | keyof KeysWithThreshold
             | keyof TransferredEvent
             | keyof ContractAddress
+            | keyof DelegationStakeChangedEvent
         )[] = [
             'bakerId',
+            'newStake',
             'weight',
             'finalizationIndex',
             'finalizationDelay',

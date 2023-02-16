@@ -821,6 +821,34 @@ test.each([clientV2, clientWeb])(
     }
 );
 
+test.each([clientV2, clientWeb])('getBlockSpecialEvents', async (client) => {
+    const specialEventStream = client.getBlockSpecialEvents(testBlockHash);
+    const specialEventList = await asyncIterableToList(specialEventStream);
+
+    expect(specialEventList).toEqual(expected.specialEventList);
+});
+
+test.each([clientV2, clientWeb])('getBlockPendingUpdates', async (client) => {
+    const pendingUpdateBlock =
+        '39122a9c720cae643b999d93dd7bf09bcf50e99bb716767dd35c39690390db54';
+    const pendingUpdateStream =
+        client.getBlockPendingUpdates(pendingUpdateBlock);
+    const pendingUpdateList = await asyncIterableToList(pendingUpdateStream);
+
+    expect(pendingUpdateList).toEqual(expected.pendingUpdateList);
+});
+
+test.each([clientV2, clientWeb])(
+    'getBlockFinalizationSummary',
+    async (client) => {
+        const finalizationSummary = await client.getBlockFinalizationSummary(
+            testBlockHash
+        );
+
+        expect(finalizationSummary).toEqual(expected.blockFinalizationSummary);
+    }
+);
+
 // For tests that take a long time to run, is skipped by default
 describe.skip('Long run-time test suite', () => {
     const longTestTime = 45000;

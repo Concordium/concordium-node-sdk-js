@@ -119,6 +119,46 @@ const configureDelegationAccountTransaction: AccountTransaction = {
 };
 ```
 
+## Create a configure baker transaction
+The following example demonstrates how a configure baker transaction can be created.
+Note that although all the fields are optional, they are all required, when registering as a baker.
+```js
+const account = new AccountAddress("4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M");
+
+const header: AccountTransactionHeader = {
+    expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+    nonce: 1n,              // the next nonce for this account, can be found using getNextAccountNonce
+    sender: account,
+};
+
+const bakerKeys = generateBakerKeys(account);
+
+const configureBakerPayload: ConfigureBakerPayload = {
+    stake: new CcdAmount(1000000000n),
+    restakeEarnings: true,
+    openForDelegation: OpenStatus.OpenForAll,
+    keys: bakerKeys,
+    metadataUrl: "www.url.for.metadata",
+    transactionFeeCommission: 10000,
+    bakingRewardCommission: 10000,
+    finalizationRewardCommission: 100000,
+};
+
+const configureBakerAccountTransaction: AccountTransaction = {
+    header: header,
+    payload: configureBakerPayload,
+    type: AccountTransactionType.ConfigureBaker,
+};
+```
+
+The open for delegation field determines the baker pools status and can have three different values:
+- `OpenForAll`: new delegators can join the pool.
+- `ClosedForAll`: new delegators won't be able to join the pool, but the current delegators won't be moved to passive delegation. 
+- `ClosedForNew`: new delegators won't be able to join the pool, and the current delegators will be moved to passive delegation.
+
+The three commission rates should specified in parts per hundred thousand, i.e. 100% is 100000 and 1% 1000. Additionally they value should be within the allowed range.
+The allowed ranges are part of the chain parameters.
+
 ## Create a credential for an existing account
 The following example demonstrates how to create a credential for an existing account. This
 credential can then be deployed onto the account by the account owner with an update

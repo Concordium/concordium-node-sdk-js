@@ -13,9 +13,24 @@ import {
     TransferredEvent,
 } from './types/transactionEvent';
 
+export * from './types/NodeInfo';
+export * from './types/PeerInfo';
+export * from './types/blockItemSummary';
+export * from './types/chainUpdate';
+export * from './types/rejectReason';
+export * from './types/transactionEvent';
+export * from './types/BlockSpecialEvents';
+
 export type HexString = string;
 export type Base58String = string;
 export type DigitString = string;
+export type UrlString = string;
+export type IpAddressString = string;
+
+// A number of milliseconds
+export type Duration = bigint;
+// Unix timestamp in milliseconds
+export type Timestamp = bigint;
 
 /**
  * Returns a union of all keys of type T with values matching type V.
@@ -780,7 +795,7 @@ export type BakerId = bigint;
 
 export interface BakerPoolInfo {
     openStatus: OpenStatusText;
-    metadataUrl: string;
+    metadataUrl: UrlString;
     commissionRates: CommissionRates;
 }
 
@@ -979,7 +994,7 @@ export type AccountInfo =
 
 export interface Description {
     name: string;
-    url: string;
+    url: UrlString;
     description: string;
 }
 
@@ -1040,6 +1055,32 @@ export interface NextUpdateSequenceNumbers {
     addIdentityProvider: bigint;
     cooldownParameters: bigint;
     timeParameters: bigint;
+}
+
+export type BlockFinalizationSummary =
+    | BlockFinalizationSummary_None
+    | BlockFinalizationSummary_Record;
+
+export interface BlockFinalizationSummary_None {
+    tag: 'none';
+}
+
+export interface BlockFinalizationSummary_Record {
+    tag: 'record';
+    record: FinalizationSummary;
+}
+
+export interface FinalizationSummary {
+    block: HexString;
+    index: bigint;
+    delay: bigint;
+    finalizers: FinalizationSummaryParty[];
+}
+
+export interface FinalizationSummaryParty {
+    baker: BakerId;
+    weight: bigint;
+    signed: boolean;
 }
 
 export enum BlockItemKind {
@@ -1185,6 +1226,28 @@ export interface UpdateCredentialsPayload {
     currentNumberOfCredentials: bigint;
 }
 
+export interface BakerKeysWithProofs {
+    signatureVerifyKey: HexString;
+    electionVerifyKey: HexString;
+    aggregationVerifyKey: HexString;
+    proofAggregation: HexString;
+    proofSig: HexString;
+    proofElection: HexString;
+}
+
+export interface ConfigureBakerPayload {
+    /* stake to bake. if set to 0, this removes the account as a baker */
+    stake?: CcdAmount;
+    /* should earnings from baking be added to staked amount  */
+    restakeEarnings?: boolean;
+    openForDelegation?: OpenStatus;
+    keys?: BakerKeysWithProofs;
+    metadataUrl?: UrlString;
+    transactionFeeCommission?: number;
+    bakingRewardCommission?: number;
+    finalizationRewardCommission?: number;
+}
+
 export interface ConfigureDelegationPayload {
     /* stake to delegate. if set to 0, this removes the account as a delegator */
     stake?: CcdAmount;
@@ -1202,6 +1265,7 @@ export type AccountTransactionPayload =
     | InitContractPayload
     | UpdateContractPayload
     | UpdateCredentialsPayload
+    | ConfigureBakerPayload
     | ConfigureDelegationPayload;
 
 export interface AccountTransaction {
@@ -1517,7 +1581,7 @@ export interface IdObjectRequestV1 {
 
 export interface IdRecoveryRequest {
     idCredPub: string;
-    timestamp: bigint;
+    timestamp: Timestamp;
     proof: string;
 }
 

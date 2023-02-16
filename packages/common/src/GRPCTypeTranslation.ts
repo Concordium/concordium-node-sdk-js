@@ -2,55 +2,9 @@ import * as v1 from './types';
 import * as v2 from '../grpc/v2/concordium/types';
 import { mapRecord, unwrap } from './util';
 import { Buffer } from 'buffer/';
-import {
-    BakerPoolPendingChangeType,
-    PoolStatusType,
-    AuthorizationKeysUpdateType,
-    HigherLevelKeyUpdateType,
-    RejectReasonTag,
-    TransactionEventTag,
-    TransactionKindString,
-    TransactionStatusEnum,
-} from '.';
 import bs58check from 'bs58check';
 import { AccountAddress } from './types/accountAddress';
 import { ModuleReference } from './types/moduleReference';
-import {
-    AccountTransferredEvent,
-    AmountAddedByDecryptionEvent,
-    BakerAddedEvent,
-    BakerEvent,
-    BakerKeysUpdatedEvent,
-    BakerRemovedEvent,
-    BakerSetRestakeEarningsEvent,
-    BakerStakeChangedEvent,
-    ContractInitializedEvent,
-    ContractTraceEvent,
-    CredentialKeysUpdatedEvent,
-    CredentialsUpdatedEvent,
-    DataRegisteredEvent,
-    DelegationEvent,
-    EncryptedAmountsRemovedEvent,
-    EncryptedSelfAmountAddedEvent,
-    MemoEvent,
-    ModuleDeployedEvent,
-    NewEncryptedAmountEvent,
-    TransferredWithScheduleEvent,
-} from './types/transactionEvent';
-import { RejectReason, SimpleRejectReasonTag } from './types/rejectReason';
-import {
-    KeyUpdate,
-    UpdateInstructionPayload,
-    UpdateType,
-} from './types/chainUpdate';
-import {
-    AccountTransactionSummary,
-    BaseAccountTransactionSummary,
-    BaseBlockItemSummary,
-    BlockItemStatus,
-    BlockItemSummary,
-    BlockItemSummaryInBlock,
-} from './types/blockItemSummary';
 import { CcdAmount } from './types/ccdAmount';
 
 function unwrapToHex(bytes: Uint8Array | undefined): v1.HexString {
@@ -339,10 +293,6 @@ function translateRewardParametersCommon(
     };
 }
 
-function translateMintRate(mintRate: v2.MintRate | undefined): number {
-    return unwrap(mintRate?.mantissa) * 10 ** (-1 * unwrap(mintRate?.exponent));
-}
-
 function transPoolPendingChange(
     change: v2.PoolPendingChange | undefined
 ): v1.BakerPoolPendingChange {
@@ -350,7 +300,7 @@ function transPoolPendingChange(
         case 'reduce': {
             return {
                 pendingChangeType:
-                    BakerPoolPendingChangeType.ReduceBakerCapital,
+                    v1.BakerPoolPendingChangeType.ReduceBakerCapital,
                 // TODO ensure units are aligned
                 effectiveTime: trTimestamp(change.change.reduce.effectiveTime),
                 bakerEquityCapital: unwrap(
@@ -360,13 +310,13 @@ function transPoolPendingChange(
         }
         case 'remove': {
             return {
-                pendingChangeType: BakerPoolPendingChangeType.RemovePool,
+                pendingChangeType: v1.BakerPoolPendingChangeType.RemovePool,
                 effectiveTime: trTimestamp(change.change.remove.effectiveTime),
             };
         }
         default:
             return {
-                pendingChangeType: BakerPoolPendingChangeType.NoChange,
+                pendingChangeType: v1.BakerPoolPendingChangeType.NoChange,
             };
     }
 }
@@ -473,9 +423,7 @@ export function blockChainParameters(
                 rewardPeriodLength: unwrap(
                     v1.timeParameters?.rewardPeriodLength?.value?.value
                 ),
-                mintPerPayday: translateMintRate(
-                    v1.timeParameters?.mintPerPayday
-                ),
+                mintPerPayday: trMintRate(v1.timeParameters?.mintPerPayday),
                 delegatorCooldown: unwrap(
                     v1.cooldownParameters?.delegatorCooldown?.value
                 ),
@@ -539,7 +487,7 @@ export function blockChainParameters(
                         finalizationReward: trAmountFraction(
                             v0.mintDistribution?.finalizationReward
                         ),
-                        mintPerSlot: translateMintRate(
+                        mintPerSlot: trMintRate(
                             v0.mintDistribution?.mintPerSlot
                         ),
                     },
@@ -553,7 +501,7 @@ export function blockChainParameters(
 
 export function bakerPoolInfo(info: v2.PoolInfoResponse): v1.BakerPoolStatus {
     return {
-        poolType: PoolStatusType.BakerPool,
+        poolType: v1.PoolStatusType.BakerPool,
         bakerId: unwrap(info.baker?.value),
         bakerAddress: unwrapToBase58(info.address),
         bakerEquityCapital: unwrap(info.equityCapital?.value),
@@ -572,7 +520,7 @@ export function passiveDelegationInfo(
     info: v2.PassiveDelegationInfo
 ): v1.PassiveDelegationStatus {
     return {
-        poolType: PoolStatusType.PassiveDelegation,
+        poolType: v1.PoolStatusType.PassiveDelegation,
         delegatedCapital: unwrap(info.delegatedCapital?.value),
         commissionRates: trCommissionRates(info.commissionRates),
         currentPaydayTransactionFeesEarned: unwrap(
@@ -715,12 +663,12 @@ function trAddress(
 
 function trContractTraceElement(
     contractTraceElement: v2.ContractTraceElement
-): ContractTraceEvent {
+): v1.ContractTraceEvent {
     const element = contractTraceElement.element;
     switch (element.oneofKind) {
         case 'updated':
             return {
-                tag: TransactionEventTag.Updated,
+                tag: v1.TransactionEventTag.Updated,
                 contractVersion: element.updated.contractVersion,
                 address: unwrap(element.updated.address),
                 instigator: trAddress(element.updated.instigator),
@@ -731,26 +679,26 @@ function trContractTraceElement(
             };
         case 'transferred':
             return {
-                tag: TransactionEventTag.Transferred,
+                tag: v1.TransactionEventTag.Transferred,
                 from: trAddress(element.transferred.sender),
                 amount: unwrap(element.transferred.amount?.value),
                 to: trAddress(element.transferred.receiver),
             };
         case 'interrupted':
             return {
-                tag: TransactionEventTag.Interrupted,
+                tag: v1.TransactionEventTag.Interrupted,
                 address: unwrap(element.interrupted.address),
                 events: element.interrupted.events.map(unwrapValToHex),
             };
         case 'resumed':
             return {
-                tag: TransactionEventTag.Resumed,
+                tag: v1.TransactionEventTag.Resumed,
                 address: unwrap(element.resumed.address),
                 success: unwrap(element.resumed.success),
             };
         case 'upgraded':
             return {
-                tag: TransactionEventTag.Upgraded,
+                tag: v1.TransactionEventTag.Upgraded,
                 address: unwrap(element.upgraded.address),
                 from: trModuleRef(element.upgraded.from),
                 to: trModuleRef(element.upgraded.to),
@@ -762,13 +710,16 @@ function trContractTraceElement(
     }
 }
 
-function trBakerEvent(bakerEvent: v2.BakerEvent, account: string): BakerEvent {
+function trBakerEvent(
+    bakerEvent: v2.BakerEvent,
+    account: string
+): v1.BakerEvent {
     const event = bakerEvent.event;
     switch (event.oneofKind) {
         case 'bakerAdded': {
             const keysEvent = event.bakerAdded.keysEvent;
             return {
-                tag: TransactionEventTag.BakerAdded,
+                tag: v1.TransactionEventTag.BakerAdded,
                 bakerId: Number(unwrap(keysEvent?.bakerId?.value)),
                 account: unwrapToBase58(keysEvent?.account),
                 signKey: unwrapValToHex(keysEvent?.signKey),
@@ -780,20 +731,20 @@ function trBakerEvent(bakerEvent: v2.BakerEvent, account: string): BakerEvent {
         }
         case 'bakerRemoved':
             return {
-                tag: TransactionEventTag.BakerRemoved,
+                tag: v1.TransactionEventTag.BakerRemoved,
                 bakerId: Number(unwrap(event.bakerRemoved.value)),
                 account,
             };
         case 'bakerStakeIncreased':
             return {
-                tag: TransactionEventTag.BakerStakeIncreased,
+                tag: v1.TransactionEventTag.BakerStakeIncreased,
                 bakerId: Number(unwrap(event.bakerStakeIncreased.bakerId)),
                 newStake: unwrap(event.bakerStakeIncreased.newStake?.value),
                 account,
             };
         case 'bakerStakeDecreased':
             return {
-                tag: TransactionEventTag.BakerStakeDecreased,
+                tag: v1.TransactionEventTag.BakerStakeDecreased,
                 bakerId: Number(unwrap(event.bakerStakeDecreased.bakerId)),
                 newStake: unwrap(event.bakerStakeDecreased.newStake?.value),
                 account,
@@ -801,7 +752,7 @@ function trBakerEvent(bakerEvent: v2.BakerEvent, account: string): BakerEvent {
         case 'bakerRestakeEarningsUpdated': {
             const update = event.bakerRestakeEarningsUpdated;
             return {
-                tag: TransactionEventTag.BakerSetRestakeEarnings,
+                tag: v1.TransactionEventTag.BakerSetRestakeEarnings,
                 bakerId: Number(unwrap(update.bakerId?.value)),
                 restakeEarnings: unwrap(update.restakeEarnings),
                 account,
@@ -809,7 +760,7 @@ function trBakerEvent(bakerEvent: v2.BakerEvent, account: string): BakerEvent {
         }
         case 'bakerKeysUpdated':
             return {
-                tag: TransactionEventTag.BakerKeysUpdated,
+                tag: v1.TransactionEventTag.BakerKeysUpdated,
                 bakerId: Number(unwrap(event.bakerKeysUpdated.bakerId?.value)),
                 account: unwrapToBase58(event.bakerKeysUpdated.account),
                 signKey: unwrapValToHex(event.bakerKeysUpdated.signKey),
@@ -821,7 +772,7 @@ function trBakerEvent(bakerEvent: v2.BakerEvent, account: string): BakerEvent {
         case 'bakerSetOpenStatus': {
             const setOpenStatus = event.bakerSetOpenStatus;
             return {
-                tag: TransactionEventTag.BakerSetOpenStatus,
+                tag: v1.TransactionEventTag.BakerSetOpenStatus,
                 bakerId: Number(unwrap(setOpenStatus.bakerId?.value)),
                 openStatus: trOpenStatus(setOpenStatus.openStatus),
                 account,
@@ -830,7 +781,7 @@ function trBakerEvent(bakerEvent: v2.BakerEvent, account: string): BakerEvent {
         case 'bakerSetMetadataUrl': {
             const setURL = event.bakerSetMetadataUrl;
             return {
-                tag: TransactionEventTag.BakerSetMetadataURL,
+                tag: v1.TransactionEventTag.BakerSetMetadataURL,
                 bakerId: Number(unwrap(setURL.bakerId?.value)),
                 metadataURL: setURL.url,
                 account,
@@ -840,7 +791,7 @@ function trBakerEvent(bakerEvent: v2.BakerEvent, account: string): BakerEvent {
             const transferFeeComm = event.bakerSetTransactionFeeCommission;
             const amount = transferFeeComm.transactionFeeCommission;
             return {
-                tag: TransactionEventTag.BakerSetTransactionFeeCommission,
+                tag: v1.TransactionEventTag.BakerSetTransactionFeeCommission,
                 bakerId: Number(unwrap(transferFeeComm.bakerId?.value)),
                 transactionFeeCommission: trAmountFraction(amount),
                 account,
@@ -850,7 +801,7 @@ function trBakerEvent(bakerEvent: v2.BakerEvent, account: string): BakerEvent {
             const rewardComm = event.bakerSetBakingRewardCommission;
             const amount = rewardComm.bakingRewardCommission;
             return {
-                tag: TransactionEventTag.BakerSetBakingRewardCommission,
+                tag: v1.TransactionEventTag.BakerSetBakingRewardCommission,
                 bakerId: Number(unwrap(rewardComm.bakerId?.value)),
                 bakingRewardCommission: trAmountFraction(amount),
             };
@@ -859,7 +810,8 @@ function trBakerEvent(bakerEvent: v2.BakerEvent, account: string): BakerEvent {
             const rewardComm = event.bakerSetFinalizationRewardCommission;
             const amount = rewardComm.finalizationRewardCommission;
             return {
-                tag: TransactionEventTag.BakerSetFinalizationRewardCommission,
+                tag: v1.TransactionEventTag
+                    .BakerSetFinalizationRewardCommission,
                 bakerId: Number(unwrap(rewardComm.bakerId?.value)),
                 finalizationRewardCommission: trAmountFraction(amount),
                 account,
@@ -890,13 +842,13 @@ function trDelegTarget(
 
 function trDelegationEvent(
     delegationEvent: v2.DelegationEvent
-): DelegationEvent {
+): v1.DelegationEvent {
     const event = delegationEvent.event;
     switch (event.oneofKind) {
         case 'delegationStakeIncreased': {
             const stakeIncr = event.delegationStakeIncreased;
             return {
-                tag: TransactionEventTag.DelegationStakeIncreased,
+                tag: v1.TransactionEventTag.DelegationStakeIncreased,
                 delegatorId: Number(unwrap(stakeIncr.delegatorId?.id?.value)),
                 newStake: unwrap(stakeIncr.newStake?.value),
             };
@@ -904,7 +856,7 @@ function trDelegationEvent(
         case 'delegationStakeDecreased': {
             const stakeDecr = event.delegationStakeDecreased;
             return {
-                tag: TransactionEventTag.DelegationStakeIncreased,
+                tag: v1.TransactionEventTag.DelegationStakeIncreased,
                 delegatorId: Number(unwrap(stakeDecr.delegatorId?.id?.value)),
                 newStake: unwrap(stakeDecr.newStake?.value),
             };
@@ -912,7 +864,7 @@ function trDelegationEvent(
         case 'delegationSetRestakeEarnings': {
             const restake = event.delegationSetRestakeEarnings;
             return {
-                tag: TransactionEventTag.DelegationSetRestakeEarnings,
+                tag: v1.TransactionEventTag.DelegationSetRestakeEarnings,
                 delegatorId: Number(unwrap(restake.delegatorId?.id?.value)),
                 restakeEarnings: unwrap(restake.restakeEarnings),
             };
@@ -920,19 +872,19 @@ function trDelegationEvent(
         case 'delegationSetDelegationTarget': {
             const target = event.delegationSetDelegationTarget;
             return {
-                tag: TransactionEventTag.DelegationSetDelegationTarget,
+                tag: v1.TransactionEventTag.DelegationSetDelegationTarget,
                 delegatorId: Number(unwrap(target.delegatorId?.id?.value)),
                 delegationTarget: trDelegTarget(target.delegationTarget),
             };
         }
         case 'delegationAdded':
             return {
-                tag: TransactionEventTag.DelegationAdded,
+                tag: v1.TransactionEventTag.DelegationAdded,
                 delegatorId: Number(unwrap(event.delegationAdded.id?.value)),
             };
         case 'delegationRemoved':
             return {
-                tag: TransactionEventTag.DelegationAdded,
+                tag: v1.TransactionEventTag.DelegationAdded,
                 delegatorId: Number(unwrap(event.delegationRemoved.id?.value)),
             };
         default:
@@ -942,15 +894,15 @@ function trDelegationEvent(
 
 function trRejectReason(
     rejectReason: v2.RejectReason | undefined
-): RejectReason {
-    function simpleReason(tag: SimpleRejectReasonTag): RejectReason {
+): v1.RejectReason {
+    function simpleReason(tag: v1.SimpleRejectReasonTag): v1.RejectReason {
         return {
-            tag: RejectReasonTag[tag],
+            tag: v1.RejectReasonTag[tag],
         };
     }
 
     const reason = unwrap(rejectReason?.reason);
-    const Tag = RejectReasonTag;
+    const Tag = v1.RejectReasonTag;
     switch (reason.oneofKind) {
         case 'moduleNotWf':
             return simpleReason(Tag.ModuleNotWF);
@@ -1143,194 +1095,336 @@ function trMintRate(mintRate: v2.MintRate | undefined): number {
     return unwrap(mintRate?.mantissa) * 10 ** (-1 * unwrap(mintRate?.exponent));
 }
 
+function trProtocolUpdate(update: v2.ProtocolUpdate): v1.ProtocolUpdate {
+    return {
+        updateType: v1.UpdateType.Protocol,
+        update: {
+            message: update.message,
+            specificationHash: unwrapValToHex(update.specificationHash),
+            specificationUrl: update.specificationUrl,
+            specificationAuxiliaryData: unwrapToHex(
+                update.specificationAuxiliaryData
+            ),
+        },
+    };
+}
+function trElectionDifficultyUpdate(
+    elecDiff: v2.ElectionDifficulty
+): v1.ElectionDifficultyUpdate {
+    return {
+        updateType: v1.UpdateType.ElectionDifficulty,
+        update: {
+            electionDifficulty: trAmountFraction(elecDiff.value),
+        },
+    };
+}
+function trEuroPerEnergyUpdate(
+    exchangeRate: v2.ExchangeRate
+): v1.EuroPerEnergyUpdate {
+    return {
+        updateType: v1.UpdateType.EuroPerEnergy,
+        update: unwrap(exchangeRate.value),
+    };
+}
+function trMicroCcdPerEuroUpdate(
+    exchangeRate: v2.ExchangeRate
+): v1.MicroGtuPerEuroUpdate {
+    return {
+        updateType: v1.UpdateType.MicroGtuPerEuro,
+        update: unwrap(exchangeRate.value),
+    };
+}
+function trFoundationAccountUpdate(
+    account: v2.AccountAddress
+): v1.FoundationAccountUpdate {
+    return {
+        updateType: v1.UpdateType.FoundationAccount,
+        update: {
+            address: unwrapToBase58(account),
+        },
+    };
+}
+
+function trTransactionFeeDistributionUpdate(
+    transFeeDist: v2.TransactionFeeDistribution
+): v1.TransactionFeeDistributionUpdate {
+    return {
+        updateType: v1.UpdateType.TransactionFeeDistribution,
+        update: {
+            baker: trAmountFraction(transFeeDist.baker),
+            gasAccount: trAmountFraction(transFeeDist.gasAccount),
+        },
+    };
+}
+
+function trGasRewardsUpdate(gasRewards: v2.GasRewards): v1.GasRewardsUpdate {
+    return {
+        updateType: v1.UpdateType.GasRewards,
+        update: {
+            baker: trAmountFraction(gasRewards.baker),
+            finalizationProof: trAmountFraction(gasRewards.finalizationProof),
+            accountCreation: trAmountFraction(gasRewards.accountCreation),
+            chainUpdate: trAmountFraction(gasRewards.accountCreation),
+        },
+    };
+}
+
+function trBakerStakeThresholdUpdate(
+    bakerStakeThreshold: v2.BakerStakeThreshold
+): v1.BakerStakeThresholdUpdate {
+    return {
+        updateType: v1.UpdateType.BakerStakeThreshold,
+        update: {
+            threshold: unwrap(bakerStakeThreshold.bakerStakeThreshold?.value),
+        },
+    };
+}
+
+function trPoolParametersCpv1Update(
+    poolParams: v2.PoolParametersCpv1
+): v1.PoolParametersUpdate {
+    return {
+        updateType: v1.UpdateType.PoolParameters,
+        update: {
+            passiveCommissions: {
+                transactionCommission: trAmountFraction(
+                    poolParams.passiveTransactionCommission
+                ),
+                bakingCommission: trAmountFraction(
+                    poolParams.passiveBakingCommission
+                ),
+                finalizationCommission: trAmountFraction(
+                    poolParams.passiveFinalizationCommission
+                ),
+            },
+            commissionBounds: {
+                transactionFeeCommission: trCommissionRange(
+                    poolParams.commissionBounds?.transaction
+                ),
+                bakingRewardCommission: trCommissionRange(
+                    poolParams.commissionBounds?.baking
+                ),
+                finalizationRewardCommission: trCommissionRange(
+                    poolParams.commissionBounds?.finalization
+                ),
+            },
+            minimumEquityCapital: unwrap(
+                poolParams.minimumEquityCapital?.value
+            ),
+            capitalBound: trAmountFraction(poolParams.capitalBound?.value),
+            leverageBound: unwrap(poolParams.leverageBound?.value),
+        },
+    };
+}
+
+function trAddAnonymityRevokerUpdate(
+    ar: v2.ArInfo
+): v1.AddAnonymityRevokerUpdate {
+    return {
+        updateType: v1.UpdateType.AddAnonymityRevoker,
+        update: arInfo(ar),
+    };
+}
+function trAddIdentityProviderUpdate(
+    ip: v2.IpInfo
+): v1.AddIdentityProviderUpdate {
+    return {
+        updateType: v1.UpdateType.AddIdentityProvider,
+        update: ipInfo(ip),
+    };
+}
+
+function trCooldownParametersCpv1Update(
+    cooldownParams: v2.CooldownParametersCpv1
+): v1.CooldownParametersUpdate {
+    return {
+        updateType: v1.UpdateType.CooldownParameters,
+        update: {
+            poolOwnerCooldown: unwrap(cooldownParams.poolOwnerCooldown?.value),
+            delegatorCooldown: unwrap(cooldownParams.delegatorCooldown?.value),
+        },
+    };
+}
+
+function trTimeParametersCpv1Update(
+    timeParams: v2.TimeParametersCpv1
+): v1.TimeParametersUpdate {
+    return {
+        updateType: v1.UpdateType.TimeParameters,
+        update: {
+            rewardPeriodLength: unwrap(
+                timeParams.rewardPeriodLength?.value?.value
+            ),
+            mintRatePerPayday: unwrap(timeParams.mintPerPayday),
+        },
+    };
+}
+function trMintDistributionCpv0Update(
+    mintDist: v2.MintDistributionCpv0
+): v1.MintDistributionUpdate {
+    return {
+        updateType: v1.UpdateType.MintDistribution,
+        update: {
+            bakingReward: trAmountFraction(mintDist.bakingReward),
+            finalizationReward: trAmountFraction(mintDist.finalizationReward),
+            mintPerSlot: trMintRate(mintDist.mintPerSlot),
+        },
+    };
+}
+
+function trMintDistributionCpv1Update(
+    mintDist: v2.MintDistributionCpv1
+): v1.MintDistributionUpdate {
+    return {
+        updateType: v1.UpdateType.MintDistribution,
+        update: {
+            bakingReward: trAmountFraction(mintDist.bakingReward),
+            finalizationReward: trAmountFraction(mintDist.finalizationReward),
+        },
+    };
+}
+
+export function pendingUpdate(
+    pendingUpdate: v2.PendingUpdate
+): v1.PendingUpdate {
+    const effect = pendingUpdate.effect;
+    switch (effect.oneofKind) {
+        case 'protocol':
+            return trProtocolUpdate(effect.protocol);
+        case 'electionDifficulty':
+            return trElectionDifficultyUpdate(effect.electionDifficulty);
+        case 'euroPerEnergy':
+            return trEuroPerEnergyUpdate(effect.euroPerEnergy);
+        case 'microCcdPerEuro':
+            return trMicroCcdPerEuroUpdate(effect.microCcdPerEuro);
+        case 'foundationAccount':
+            return trFoundationAccountUpdate(effect.foundationAccount);
+        case 'transactionFeeDistribution':
+            return trTransactionFeeDistributionUpdate(
+                effect.transactionFeeDistribution
+            );
+        case 'gasRewards':
+            return trGasRewardsUpdate(effect.gasRewards);
+        case 'poolParametersCpv0':
+            return trBakerStakeThresholdUpdate(effect.poolParametersCpv0);
+        case 'poolParametersCpv1':
+            return trPoolParametersCpv1Update(effect.poolParametersCpv1);
+        case 'addAnonymityRevoker':
+            return trAddAnonymityRevokerUpdate(effect.addAnonymityRevoker);
+        case 'addIdentityProvider':
+            return trAddIdentityProviderUpdate(effect.addIdentityProvider);
+        case 'cooldownParameters':
+            return trCooldownParametersCpv1Update(effect.cooldownParameters);
+        case 'timeParameters':
+            return trTimeParametersCpv1Update(effect.timeParameters);
+        case 'mintDistributionCpv0':
+            return trMintDistributionCpv0Update(effect.mintDistributionCpv0);
+        case 'mintDistributionCpv1':
+            return trMintDistributionCpv1Update(effect.mintDistributionCpv1);
+        case 'rootKeys':
+            return {
+                updateType: v1.UpdateType.HigherLevelKeyUpdate,
+                update: {
+                    typeOfUpdate: v1.HigherLevelKeyUpdateType.RootKeysUpdate,
+                    updateKeys: effect.rootKeys.keys.map(trUpdatePublicKey),
+                    threshold: unwrap(effect.rootKeys.threshold?.value),
+                },
+            };
+        case 'level1Keys':
+            return {
+                updateType: v1.UpdateType.HigherLevelKeyUpdate,
+                update: {
+                    typeOfUpdate: v1.HigherLevelKeyUpdateType.Level1KeysUpdate,
+                    updateKeys: effect.level1Keys.keys.map(trUpdatePublicKey),
+                    threshold: unwrap(effect.level1Keys.threshold?.value),
+                },
+            };
+        case 'level2KeysCpv0':
+            return {
+                updateType: v1.UpdateType.AuthorizationKeysUpdate,
+                update: {
+                    typeOfUpdate:
+                        v1.AuthorizationKeysUpdateType.Level2KeysUpdate,
+                    updatePayload: trAuthorizationsV0(effect.level2KeysCpv0),
+                },
+            };
+        case 'level2KeysCpv1':
+            return {
+                updateType: v1.UpdateType.AuthorizationKeysUpdate,
+                update: {
+                    typeOfUpdate:
+                        v1.AuthorizationKeysUpdateType.Level2KeysUpdateV1,
+                    updatePayload: trAuthorizationsV1(effect.level2KeysCpv1),
+                },
+            };
+        case undefined:
+            throw Error('Unexpected missing pending update');
+    }
+}
+
 function trUpdatePayload(
-    payload: v2.UpdatePayload | undefined
-): UpdateInstructionPayload {
-    switch (payload?.payload?.oneofKind) {
-        case 'protocolUpdate': {
-            const update = payload.payload.protocolUpdate;
-            return {
-                updateType: UpdateType.Protocol,
-                update: {
-                    message: update.message,
-                    specificationHash: unwrapValToHex(update.specificationHash),
-                    specificationUrl: update.specificationUrl,
-                    specificationAuxiliaryData: unwrapToHex(
-                        update.specificationAuxiliaryData
-                    ),
-                },
-            };
-        }
+    updatePayload: v2.UpdatePayload | undefined
+): v1.UpdateInstructionPayload {
+    const payload = updatePayload?.payload;
+    switch (payload?.oneofKind) {
+        case 'protocolUpdate':
+            return trProtocolUpdate(payload.protocolUpdate);
         case 'electionDifficultyUpdate':
-            return {
-                updateType: UpdateType.ElectionDifficulty,
-                update: {
-                    electionDifficulty: trAmountFraction(
-                        payload.payload.electionDifficultyUpdate.value
-                    ),
-                },
-            };
+            return trElectionDifficultyUpdate(payload.electionDifficultyUpdate);
         case 'euroPerEnergyUpdate':
-            return {
-                updateType: UpdateType.EuroPerEnergy,
-                update: unwrap(payload.payload.euroPerEnergyUpdate.value),
-            };
+            return trEuroPerEnergyUpdate(payload.euroPerEnergyUpdate);
         case 'microCcdPerEuroUpdate':
-            return {
-                updateType: UpdateType.MicroGtuPerEuro,
-                update: unwrap(payload.payload.microCcdPerEuroUpdate.value),
-            };
+            return trMicroCcdPerEuroUpdate(payload.microCcdPerEuroUpdate);
         case 'foundationAccountUpdate':
-            return {
-                updateType: UpdateType.FoundationAccount,
-                update: {
-                    address: unwrapValToHex(
-                        payload.payload.foundationAccountUpdate
-                    ),
-                },
-            };
-        case 'mintDistributionUpdate': {
-            const update = payload.payload.mintDistributionUpdate;
-            return {
-                updateType: UpdateType.MintDistribution,
-                update: {
-                    bakingReward: trAmountFraction(update.bakingReward),
-                    finalizationReward: trAmountFraction(
-                        update.finalizationReward
-                    ),
-                    mintPerSlot: trMintRate(update.mintPerSlot),
-                },
-            };
-        }
-        case 'transactionFeeDistributionUpdate': {
-            const update = payload.payload.transactionFeeDistributionUpdate;
-            return {
-                updateType: UpdateType.TransactionFeeDistribution,
-                update: {
-                    baker: trAmountFraction(update.baker),
-                    gasAccount: trAmountFraction(update.gasAccount),
-                },
-            };
-        }
-        case 'gasRewardsUpdate': {
-            const update = payload.payload.gasRewardsUpdate;
-            return {
-                updateType: UpdateType.GasRewards,
-                update: {
-                    baker: trAmountFraction(update.baker),
-                    finalizationProof: trAmountFraction(
-                        update.finalizationProof
-                    ),
-                    accountCreation: trAmountFraction(update.accountCreation),
-                    chainUpdate: trAmountFraction(update.accountCreation),
-                },
-            };
-        }
-        case 'bakerStakeThresholdUpdate': {
-            const update = payload.payload.bakerStakeThresholdUpdate;
-            return {
-                updateType: UpdateType.BakerStakeThreshold,
-                update: {
-                    threshold: unwrap(update.bakerStakeThreshold?.value),
-                },
-            };
-        }
+            return trFoundationAccountUpdate(payload.foundationAccountUpdate);
+        case 'mintDistributionUpdate':
+            return trMintDistributionCpv1Update(payload.mintDistributionUpdate);
+        case 'transactionFeeDistributionUpdate':
+            return trTransactionFeeDistributionUpdate(
+                payload.transactionFeeDistributionUpdate
+            );
+        case 'gasRewardsUpdate':
+            return trGasRewardsUpdate(payload.gasRewardsUpdate);
+        case 'bakerStakeThresholdUpdate':
+            return trBakerStakeThresholdUpdate(
+                payload.bakerStakeThresholdUpdate
+            );
+        case 'addAnonymityRevokerUpdate':
+            return trAddAnonymityRevokerUpdate(
+                payload.addAnonymityRevokerUpdate
+            );
+        case 'addIdentityProviderUpdate':
+            return trAddIdentityProviderUpdate(
+                payload.addIdentityProviderUpdate
+            );
+        case 'cooldownParametersCpv1Update':
+            return trCooldownParametersCpv1Update(
+                payload.cooldownParametersCpv1Update
+            );
+        case 'poolParametersCpv1Update':
+            return trPoolParametersCpv1Update(payload.poolParametersCpv1Update);
+        case 'timeParametersCpv1Update':
+            return trTimeParametersCpv1Update(payload.timeParametersCpv1Update);
+        case 'mintDistributionCpv1Update':
+            return trMintDistributionCpv1Update(
+                payload.mintDistributionCpv1Update
+            );
         case 'rootUpdate': {
-            const rootUpdate = payload.payload.rootUpdate;
+            const rootUpdate = payload.rootUpdate;
             const keyUpdate = trKeyUpdate(rootUpdate);
             return {
-                updateType: UpdateType.Root,
+                updateType: v1.UpdateType.Root,
                 update: keyUpdate,
             };
         }
         case 'level1Update': {
-            const lvl1Update = payload.payload.level1Update;
+            const lvl1Update = payload.level1Update;
             const keyUpdate = trKeyUpdate(lvl1Update);
             return {
-                updateType: UpdateType.Level1,
+                updateType: v1.UpdateType.Level1,
                 update: keyUpdate,
             };
         }
-        case 'addAnonymityRevokerUpdate': {
-            return {
-                updateType: UpdateType.AddAnonymityRevoker,
-                update: arInfo(payload.payload.addAnonymityRevokerUpdate),
-            };
-        }
-        case 'addIdentityProviderUpdate': {
-            return {
-                updateType: UpdateType.AddIdentityProvider,
-                update: ipInfo(payload.payload.addIdentityProviderUpdate),
-            };
-        }
-        case 'cooldownParametersCpv1Update': {
-            const update = payload.payload.cooldownParametersCpv1Update;
-            return {
-                updateType: UpdateType.CooldownParameters,
-                update: {
-                    poolOwnerCooldown: unwrap(update.poolOwnerCooldown?.value),
-                    delegatorCooldown: unwrap(update.delegatorCooldown?.value),
-                },
-            };
-        }
-        case 'poolParametersCpv1Update': {
-            const update = payload.payload.poolParametersCpv1Update;
-            return {
-                updateType: UpdateType.PoolParameters,
-                update: {
-                    passiveCommissions: {
-                        transactionCommission: trAmountFraction(
-                            update.passiveTransactionCommission
-                        ),
-                        bakingCommission: trAmountFraction(
-                            update.passiveBakingCommission
-                        ),
-                        finalizationCommission: trAmountFraction(
-                            update.passiveFinalizationCommission
-                        ),
-                    },
-                    commissionBounds: {
-                        transactionFeeCommission: trCommissionRange(
-                            update.commissionBounds?.transaction
-                        ),
-                        bakingRewardCommission: trCommissionRange(
-                            update.commissionBounds?.baking
-                        ),
-                        finalizationRewardCommission: trCommissionRange(
-                            update.commissionBounds?.finalization
-                        ),
-                    },
-                    minimumEquityCapital: unwrap(
-                        update.minimumEquityCapital?.value
-                    ),
-                    capitalBound: trAmountFraction(update.capitalBound?.value),
-                    leverageBound: unwrap(update.leverageBound?.value),
-                },
-            };
-        }
-        case 'timeParametersCpv1Update': {
-            const update = payload.payload.timeParametersCpv1Update;
-            return {
-                updateType: UpdateType.TimeParameters,
-                update: {
-                    rewardPeriodLength: unwrap(
-                        update.rewardPeriodLength?.value?.value
-                    ),
-                    mintRatePerPayday: unwrap(update.mintPerPayday),
-                },
-            };
-        }
-        case 'mintDistributionCpv1Update':
-            const update = payload.payload.mintDistributionCpv1Update;
-            return {
-                updateType: UpdateType.MintDistribution,
-                update: {
-                    bakingReward: trAmountFraction(update.bakingReward),
-                    finalizationReward: trAmountFraction(
-                        update.finalizationReward
-                    ),
-                },
-            };
         case undefined:
             throw new Error('Unexpected missing update payload');
     }
@@ -1360,12 +1454,12 @@ function trAccessStructure(
     };
 }
 
-function trKeyUpdate(keyUpdate: v2.RootUpdate | v2.Level1Update): KeyUpdate {
+function trKeyUpdate(keyUpdate: v2.RootUpdate | v2.Level1Update): v1.KeyUpdate {
     switch (keyUpdate.updateType.oneofKind) {
         case 'rootKeysUpdate': {
             const update = keyUpdate.updateType.rootKeysUpdate;
             return {
-                typeOfUpdate: HigherLevelKeyUpdateType.RootKeysUpdate,
+                typeOfUpdate: v1.HigherLevelKeyUpdateType.RootKeysUpdate,
                 updateKeys: update.keys.map(trUpdatePublicKey),
                 threshold: unwrap(update.threshold?.value),
             };
@@ -1373,7 +1467,7 @@ function trKeyUpdate(keyUpdate: v2.RootUpdate | v2.Level1Update): KeyUpdate {
         case 'level1KeysUpdate': {
             const update = keyUpdate.updateType.level1KeysUpdate;
             return {
-                typeOfUpdate: HigherLevelKeyUpdateType.Level1KeysUpdate,
+                typeOfUpdate: v1.HigherLevelKeyUpdateType.Level1KeysUpdate,
                 updateKeys: update.keys.map(trUpdatePublicKey),
                 threshold: unwrap(update.threshold?.value),
             };
@@ -1381,7 +1475,7 @@ function trKeyUpdate(keyUpdate: v2.RootUpdate | v2.Level1Update): KeyUpdate {
         case 'level2KeysUpdateV0': {
             const update = keyUpdate.updateType.level2KeysUpdateV0;
             return {
-                typeOfUpdate: AuthorizationKeysUpdateType.Level2KeysUpdate,
+                typeOfUpdate: v1.AuthorizationKeysUpdateType.Level2KeysUpdate,
                 updatePayload: trAuthorizationsV0(update),
             };
         }
@@ -1389,7 +1483,7 @@ function trKeyUpdate(keyUpdate: v2.RootUpdate | v2.Level1Update): KeyUpdate {
             const update = keyUpdate.updateType.level2KeysUpdateV1;
             const v0 = unwrap(update.v0);
             return {
-                typeOfUpdate: AuthorizationKeysUpdateType.Level2KeysUpdateV1,
+                typeOfUpdate: v1.AuthorizationKeysUpdateType.Level2KeysUpdateV1,
                 updatePayload: {
                     ...trAuthorizationsV0(v0),
                     cooldownParameters: trAccessStructure(
@@ -1426,59 +1520,67 @@ function trAuthorizationsV0(auths: v2.AuthorizationsV0): v1.AuthorizationsV0 {
     };
 }
 
-function trMemoEvent(memo: v2.Memo): MemoEvent {
+function trAuthorizationsV1(auths: v2.AuthorizationsV1): v1.AuthorizationsV1 {
     return {
-        tag: TransactionEventTag.TransferMemo,
+        ...trAuthorizationsV0(unwrap(auths.v0)),
+        cooldownParameters: trAccessStructure(auths.parameterCooldown),
+        timeParameters: trAccessStructure(auths.parameterTime),
+    };
+}
+
+function trMemoEvent(memo: v2.Memo): v1.MemoEvent {
+    return {
+        tag: v1.TransactionEventTag.TransferMemo,
         memo: unwrapValToHex(memo),
     };
 }
 
 function trTransactionType(
     type: v2.TransactionType | undefined
-): TransactionKindString {
+): v1.TransactionKindString {
     switch (type) {
         case v2.TransactionType.DEPLOY_MODULE:
-            return TransactionKindString.DeployModule;
+            return v1.TransactionKindString.DeployModule;
         case v2.TransactionType.INIT_CONTRACT:
-            return TransactionKindString.InitContract;
+            return v1.TransactionKindString.InitContract;
         case v2.TransactionType.UPDATE:
-            return TransactionKindString.Update;
+            return v1.TransactionKindString.Update;
         case v2.TransactionType.TRANSFER:
-            return TransactionKindString.Transfer;
+            return v1.TransactionKindString.Transfer;
         case v2.TransactionType.ADD_BAKER:
-            return TransactionKindString.AddBaker;
+            return v1.TransactionKindString.AddBaker;
         case v2.TransactionType.REMOVE_BAKER:
-            return TransactionKindString.RemoveBaker;
+            return v1.TransactionKindString.RemoveBaker;
         case v2.TransactionType.UPDATE_BAKER_STAKE:
-            return TransactionKindString.UpdateBakerStake;
+            return v1.TransactionKindString.UpdateBakerStake;
         case v2.TransactionType.UPDATE_BAKER_RESTAKE_EARNINGS:
-            return TransactionKindString.UpdateBakerRestakeEarnings;
+            return v1.TransactionKindString.UpdateBakerRestakeEarnings;
         case v2.TransactionType.UPDATE_BAKER_KEYS:
-            return TransactionKindString.UpdateBakerKeys;
+            return v1.TransactionKindString.UpdateBakerKeys;
         case v2.TransactionType.UPDATE_CREDENTIAL_KEYS:
-            return TransactionKindString.UpdateCredentialKeys;
+            return v1.TransactionKindString.UpdateCredentialKeys;
         case v2.TransactionType.ENCRYPTED_AMOUNT_TRANSFER:
-            return TransactionKindString.EncryptedAmountTransfer;
+            return v1.TransactionKindString.EncryptedAmountTransfer;
         case v2.TransactionType.TRANSFER_TO_ENCRYPTED:
-            return TransactionKindString.TransferToEncrypted;
+            return v1.TransactionKindString.TransferToEncrypted;
         case v2.TransactionType.TRANSFER_TO_PUBLIC:
-            return TransactionKindString.TransferToPublic;
+            return v1.TransactionKindString.TransferToPublic;
         case v2.TransactionType.TRANSFER_WITH_SCHEDULE:
-            return TransactionKindString.TransferWithSchedule;
+            return v1.TransactionKindString.TransferWithSchedule;
         case v2.TransactionType.UPDATE_CREDENTIALS:
-            return TransactionKindString.UpdateCredentials;
+            return v1.TransactionKindString.UpdateCredentials;
         case v2.TransactionType.REGISTER_DATA:
-            return TransactionKindString.RegisterData;
+            return v1.TransactionKindString.RegisterData;
         case v2.TransactionType.TRANSFER_WITH_MEMO:
-            return TransactionKindString.TransferWithMemo;
+            return v1.TransactionKindString.TransferWithMemo;
         case v2.TransactionType.ENCRYPTED_AMOUNT_TRANSFER_WITH_MEMO:
-            return TransactionKindString.EncryptedAmountTransferWithMemo;
+            return v1.TransactionKindString.EncryptedAmountTransferWithMemo;
         case v2.TransactionType.TRANSFER_WITH_SCHEDULE_AND_MEMO:
-            return TransactionKindString.TransferWithScheduleAndMemo;
+            return v1.TransactionKindString.TransferWithScheduleAndMemo;
         case v2.TransactionType.CONFIGURE_BAKER:
-            return TransactionKindString.ConfigureBaker;
+            return v1.TransactionKindString.ConfigureBaker;
         case v2.TransactionType.CONFIGURE_DELEGATION:
-            return TransactionKindString.ConfigureDelegation;
+            return v1.TransactionKindString.ConfigureDelegation;
         case undefined:
             throw new Error('Unexpected missing transaction type');
     }
@@ -1486,9 +1588,9 @@ function trTransactionType(
 
 function trAccountTransactionSummary(
     details: v2.AccountTransactionDetails,
-    baseBlockItemSummary: BaseBlockItemSummary
-): AccountTransactionSummary {
-    const base: BaseAccountTransactionSummary = {
+    baseBlockItemSummary: v1.BaseBlockItemSummary
+): v1.AccountTransactionSummary {
+    const base: v1.BaseAccountTransactionSummary = {
         ...baseBlockItemSummary,
         type: v1.TransactionSummaryType.AccountTransaction,
         cost: unwrap(details.cost?.value),
@@ -1506,20 +1608,20 @@ function trAccountTransactionSummary(
                 rejectReason: trRejectReason(effect.none.rejectReason),
             };
         case 'moduleDeployed': {
-            const event: ModuleDeployedEvent = {
-                tag: TransactionEventTag.ModuleDeployed,
+            const event: v1.ModuleDeployedEvent = {
+                tag: v1.TransactionEventTag.ModuleDeployed,
                 contents: trModuleRef(effect.moduleDeployed),
             };
             return {
                 ...base,
-                transactionType: TransactionKindString.DeployModule,
+                transactionType: v1.TransactionKindString.DeployModule,
                 moduleDeployed: event,
             };
         }
         case 'contractInitialized': {
             const contractInit = effect.contractInitialized;
-            const event: ContractInitializedEvent = {
-                tag: TransactionEventTag.ContractInitialized,
+            const event: v1.ContractInitializedEvent = {
+                tag: v1.TransactionEventTag.ContractInitialized,
                 address: unwrap(contractInit.address),
                 amount: unwrap(contractInit.amount?.value),
                 contractName: unwrap(contractInit.initName?.value),
@@ -1529,35 +1631,35 @@ function trAccountTransactionSummary(
             };
             return {
                 ...base,
-                transactionType: TransactionKindString.InitContract,
+                transactionType: v1.TransactionKindString.InitContract,
                 contractInitialized: event,
             };
         }
         case 'contractUpdateIssued':
             return {
                 ...base,
-                transactionType: TransactionKindString.Update,
+                transactionType: v1.TransactionKindString.Update,
                 events: effect.contractUpdateIssued.effects.map(
                     trContractTraceElement
                 ),
             };
         case 'accountTransfer': {
-            const transfer: AccountTransferredEvent = {
-                tag: TransactionEventTag.Transferred,
+            const transfer: v1.AccountTransferredEvent = {
+                tag: v1.TransactionEventTag.Transferred,
                 amount: unwrap(effect.accountTransfer.amount?.value),
                 to: trAccountAddress(effect.accountTransfer.receiver).address,
             };
             if (effect.accountTransfer.memo) {
                 return {
                     ...base,
-                    transactionType: TransactionKindString.TransferWithMemo,
+                    transactionType: v1.TransactionKindString.TransferWithMemo,
                     transfer,
                     memo: trMemoEvent(effect.accountTransfer.memo),
                 };
             } else {
                 return {
                     ...base,
-                    transactionType: TransactionKindString.Transfer,
+                    transactionType: v1.TransactionKindString.Transfer,
                     transfer,
                 };
             }
@@ -1565,75 +1667,75 @@ function trAccountTransactionSummary(
         case 'bakerAdded':
             return {
                 ...base,
-                transactionType: TransactionKindString.AddBaker,
+                transactionType: v1.TransactionKindString.AddBaker,
                 bakerAdded: trBakerEvent(
                     {
                         event: effect,
                     },
                     base.sender
-                ) as BakerAddedEvent,
+                ) as v1.BakerAddedEvent,
             };
         case 'bakerRemoved':
             return {
                 ...base,
-                transactionType: TransactionKindString.RemoveBaker,
+                transactionType: v1.TransactionKindString.RemoveBaker,
                 bakerRemoved: trBakerEvent(
                     {
                         event: effect,
                     },
                     base.sender
-                ) as BakerRemovedEvent,
+                ) as v1.BakerRemovedEvent,
             };
         case 'bakerRestakeEarningsUpdated':
             return {
                 ...base,
                 transactionType:
-                    TransactionKindString.UpdateBakerRestakeEarnings,
+                    v1.TransactionKindString.UpdateBakerRestakeEarnings,
                 bakerRestakeEarningsUpdated: trBakerEvent(
                     {
                         event: effect,
                     },
                     base.sender
-                ) as BakerSetRestakeEarningsEvent,
+                ) as v1.BakerSetRestakeEarningsEvent,
             };
         case 'bakerKeysUpdated':
             return {
                 ...base,
-                transactionType: TransactionKindString.UpdateBakerKeys,
+                transactionType: v1.TransactionKindString.UpdateBakerKeys,
                 bakerKeysUpdated: trBakerEvent(
                     {
                         event: effect,
                     },
                     base.sender
-                ) as BakerKeysUpdatedEvent,
+                ) as v1.BakerKeysUpdatedEvent,
             };
         case 'bakerStakeUpdated': {
             const increased = effect.bakerStakeUpdated.update?.increased;
             const update = effect.bakerStakeUpdated.update;
-            const event: BakerStakeChangedEvent = {
+            const event: v1.BakerStakeChangedEvent = {
                 tag: increased
-                    ? TransactionEventTag.BakerStakeIncreased
-                    : TransactionEventTag.BakerStakeDecreased,
+                    ? v1.TransactionEventTag.BakerStakeIncreased
+                    : v1.TransactionEventTag.BakerStakeDecreased,
                 bakerId: Number(unwrap(update?.bakerId)),
                 newStake: unwrap(update?.newStake?.value),
                 account: base.sender,
             };
             return {
                 ...base,
-                transactionType: TransactionKindString.UpdateBakerStake,
+                transactionType: v1.TransactionKindString.UpdateBakerStake,
                 bakerStakeChanged: event,
             };
         }
         case 'encryptedAmountTransferred': {
             const transfer = effect.encryptedAmountTransferred;
-            const removed: EncryptedAmountsRemovedEvent = {
-                tag: TransactionEventTag.EncryptedAmountsRemoved,
+            const removed: v1.EncryptedAmountsRemovedEvent = {
+                tag: v1.TransactionEventTag.EncryptedAmountsRemoved,
                 inputAmount: unwrapValToHex(transfer.removed?.inputAmount),
                 newAmount: unwrapValToHex(transfer.removed?.newAmount),
                 upToindex: Number(unwrap(transfer.removed?.upToIndex)),
             };
-            const added: NewEncryptedAmountEvent = {
-                tag: TransactionEventTag.NewEncryptedAmount,
+            const added: v1.NewEncryptedAmountEvent = {
+                tag: v1.TransactionEventTag.NewEncryptedAmount,
                 account: unwrapToBase58(transfer.added?.receiver),
                 newIndex: Number(unwrap(transfer.added?.newIndex)),
                 encryptedAmount: unwrapValToHex(
@@ -1644,7 +1746,8 @@ function trAccountTransactionSummary(
                 return {
                     ...base,
                     transactionType:
-                        TransactionKindString.EncryptedAmountTransferWithMemo,
+                        v1.TransactionKindString
+                            .EncryptedAmountTransferWithMemo,
                     removed,
                     added,
                     memo: trMemoEvent(transfer.memo),
@@ -1653,7 +1756,7 @@ function trAccountTransactionSummary(
                 return {
                     ...base,
                     transactionType:
-                        TransactionKindString.EncryptedAmountTransfer,
+                        v1.TransactionKindString.EncryptedAmountTransfer,
                     removed,
                     added,
                 };
@@ -1661,41 +1764,41 @@ function trAccountTransactionSummary(
         }
         case 'transferredToEncrypted': {
             const transfer = effect.transferredToEncrypted;
-            const added: EncryptedSelfAmountAddedEvent = {
-                tag: TransactionEventTag.EncryptedSelfAmountAdded,
+            const added: v1.EncryptedSelfAmountAddedEvent = {
+                tag: v1.TransactionEventTag.EncryptedSelfAmountAdded,
                 account: unwrapToBase58(transfer.account),
                 amount: unwrap(transfer.amount?.value),
                 newAmount: unwrapValToHex(transfer.newAmount),
             };
             return {
                 ...base,
-                transactionType: TransactionKindString.TransferToEncrypted,
+                transactionType: v1.TransactionKindString.TransferToEncrypted,
                 added,
             };
         }
         case 'transferredToPublic': {
             const transfer = effect.transferredToPublic;
-            const removed: EncryptedAmountsRemovedEvent = {
-                tag: TransactionEventTag.EncryptedAmountsRemoved,
+            const removed: v1.EncryptedAmountsRemovedEvent = {
+                tag: v1.TransactionEventTag.EncryptedAmountsRemoved,
                 inputAmount: unwrapValToHex(transfer.removed?.inputAmount),
                 newAmount: unwrapValToHex(transfer.removed?.newAmount),
                 upToindex: Number(unwrap(transfer.removed?.upToIndex)),
             };
-            const added: AmountAddedByDecryptionEvent = {
-                tag: TransactionEventTag.AmountAddedByDecryption,
+            const added: v1.AmountAddedByDecryptionEvent = {
+                tag: v1.TransactionEventTag.AmountAddedByDecryption,
                 amount: unwrap(transfer.amount?.value),
             };
             return {
                 ...base,
-                transactionType: TransactionKindString.TransferToPublic,
+                transactionType: v1.TransactionKindString.TransferToPublic,
                 removed,
                 added,
             };
         }
         case 'transferredWithSchedule': {
             const transfer = effect.transferredWithSchedule;
-            const event: TransferredWithScheduleEvent = {
-                tag: TransactionEventTag.TransferredWithSchedule,
+            const event: v1.TransferredWithScheduleEvent = {
+                tag: v1.TransactionEventTag.TransferredWithSchedule,
                 to: unwrapToBase58(transfer.receiver),
                 amount: transfer.amount.map(trNewRelease),
             };
@@ -1703,58 +1806,59 @@ function trAccountTransactionSummary(
                 return {
                     ...base,
                     transactionType:
-                        TransactionKindString.TransferWithScheduleAndMemo,
+                        v1.TransactionKindString.TransferWithScheduleAndMemo,
                     transfer: event,
                     memo: trMemoEvent(transfer.memo),
                 };
             } else {
                 return {
                     ...base,
-                    transactionType: TransactionKindString.TransferWithSchedule,
+                    transactionType:
+                        v1.TransactionKindString.TransferWithSchedule,
                     event,
                 };
             }
         }
         case 'credentialKeysUpdated': {
-            const event: CredentialKeysUpdatedEvent = {
-                tag: TransactionEventTag.CredentialKeysUpdated,
+            const event: v1.CredentialKeysUpdatedEvent = {
+                tag: v1.TransactionEventTag.CredentialKeysUpdated,
                 credId: unwrapValToHex(effect.credentialKeysUpdated),
             };
             return {
                 ...base,
-                transactionType: TransactionKindString.UpdateCredentialKeys,
+                transactionType: v1.TransactionKindString.UpdateCredentialKeys,
                 keysUpdated: event,
             };
         }
         case 'credentialsUpdated': {
             const update = effect.credentialsUpdated;
-            const event: CredentialsUpdatedEvent = {
-                tag: TransactionEventTag.CredentialsUpdated,
+            const event: v1.CredentialsUpdatedEvent = {
+                tag: v1.TransactionEventTag.CredentialsUpdated,
                 newCredIds: update.newCredIds.map(unwrapValToHex),
                 removedCredIDs: update.removedCredIds.map(unwrapValToHex),
                 newThreshold: unwrap(update.newThreshold?.value),
             };
             return {
                 ...base,
-                transactionType: TransactionKindString.UpdateCredentials,
+                transactionType: v1.TransactionKindString.UpdateCredentials,
                 credentialsUpdated: event,
             };
         }
         case 'dataRegistered': {
-            const event: DataRegisteredEvent = {
-                tag: TransactionEventTag.DataRegistered,
+            const event: v1.DataRegisteredEvent = {
+                tag: v1.TransactionEventTag.DataRegistered,
                 data: unwrapValToHex(effect.dataRegistered),
             };
             return {
                 ...base,
-                transactionType: TransactionKindString.RegisterData,
+                transactionType: v1.TransactionKindString.RegisterData,
                 dataRegistered: event,
             };
         }
         case 'bakerConfigured':
             return {
                 ...base,
-                transactionType: TransactionKindString.ConfigureBaker,
+                transactionType: v1.TransactionKindString.ConfigureBaker,
                 events: effect.bakerConfigured.events.map((event) =>
                     trBakerEvent(event, base.sender)
                 ),
@@ -1762,7 +1866,7 @@ function trAccountTransactionSummary(
         case 'delegationConfigured':
             return {
                 ...base,
-                transactionType: TransactionKindString.ConfigureDelegation,
+                transactionType: v1.TransactionKindString.ConfigureDelegation,
                 events: effect.delegationConfigured.events.map(
                     trDelegationEvent
                 ),
@@ -1776,7 +1880,7 @@ function trAccountTransactionSummary(
 
 export function blockItemSummary(
     summary: v2.BlockItemSummary
-): BlockItemSummary {
+): v1.BlockItemSummary {
     const base = {
         index: unwrap(summary.index?.value),
         energyCost: unwrap(summary.energyCost?.value),
@@ -1813,7 +1917,7 @@ export function blockItemSummary(
 
 function trBlockItemSummaryInBlock(
     summary: v2.BlockItemSummaryInBlock
-): BlockItemSummaryInBlock {
+): v1.BlockItemSummaryInBlock {
     return {
         blockHash: unwrapValToHex(summary.blockHash),
         summary: blockItemSummary(unwrap(summary.outcome)),
@@ -1822,22 +1926,22 @@ function trBlockItemSummaryInBlock(
 
 export function blockItemStatus(
     itemStatus: v2.BlockItemStatus
-): BlockItemStatus {
+): v1.BlockItemStatus {
     switch (itemStatus.status.oneofKind) {
         case 'received':
             return {
-                status: TransactionStatusEnum.Received,
+                status: v1.TransactionStatusEnum.Received,
             };
         case 'committed':
             return {
-                status: TransactionStatusEnum.Committed,
+                status: v1.TransactionStatusEnum.Committed,
                 outcomes: itemStatus.status.committed.outcomes.map(
                     trBlockItemSummaryInBlock
                 ),
             };
         case 'finalized':
             return {
-                status: TransactionStatusEnum.Finalized,
+                status: v1.TransactionStatusEnum.Finalized,
                 outcome: trBlockItemSummaryInBlock(
                     unwrap(itemStatus.status.finalized.outcome)
                 ),
@@ -2035,6 +2139,329 @@ export function nextUpdateSequenceNumbers(
         cooldownParameters: unwrap(nextNums.cooldownParameters?.value),
         timeParameters: unwrap(nextNums.timeParameters?.value),
     };
+}
+
+function trPassiveCommitteeInfo(
+    passiveCommitteeInfo: v2.NodeInfo_BakerConsensusInfo_PassiveCommitteeInfo
+): v1.PassiveCommitteeInfo {
+    const passiveCommitteeInfoV2 =
+        v2.NodeInfo_BakerConsensusInfo_PassiveCommitteeInfo;
+    switch (passiveCommitteeInfo) {
+        case passiveCommitteeInfoV2.NOT_IN_COMMITTEE:
+            return v1.PassiveCommitteeInfo.NotInCommittee;
+        case passiveCommitteeInfoV2.ADDED_BUT_NOT_ACTIVE_IN_COMMITTEE:
+            return v1.PassiveCommitteeInfo.AddedButNotActiveInCommittee;
+        case passiveCommitteeInfoV2.ADDED_BUT_WRONG_KEYS:
+            return v1.PassiveCommitteeInfo.AddedButWrongKeys;
+    }
+}
+
+function trBakerConsensusInfoStatus(
+    consensusInfo: v2.NodeInfo_BakerConsensusInfo
+): v1.BakerConsensusInfoStatus {
+    if (consensusInfo.status.oneofKind === 'passiveCommitteeInfo') {
+        return {
+            tag: 'passiveCommitteeInfo',
+            passiveCommitteeInfo: trPassiveCommitteeInfo(
+                consensusInfo.status.passiveCommitteeInfo
+            ),
+        };
+    } else if (consensusInfo.status.oneofKind === 'activeBakerCommitteeInfo') {
+        return {
+            tag: 'activeBakerCommitteeInfo',
+        };
+    } else if (
+        consensusInfo.status.oneofKind === 'activeFinalizerCommitteeInfo'
+    ) {
+        return {
+            tag: 'activeFinalizerCommitteeInfo',
+        };
+    } else {
+        throw Error(
+            'Error translating NodeInfoConsensusStatus: unexpected undefined'
+        );
+    }
+}
+
+function trNetworkInfo(
+    networkInfo: v2.NodeInfo_NetworkInfo | undefined
+): v1.NodeNetworkInfo {
+    return {
+        nodeId: unwrap(networkInfo?.nodeId?.value),
+        peerTotalSent: unwrap(networkInfo?.peerTotalSent),
+        peerTotalReceived: unwrap(networkInfo?.peerTotalReceived),
+        avgBpsIn: unwrap(networkInfo?.avgBpsIn),
+        avgBpsOut: unwrap(networkInfo?.avgBpsOut),
+    };
+}
+
+export function trNodeInfo_Node(
+    node: v2.NodeInfo_Node
+): v1.NodeInfoConsensusStatus {
+    const status = node.consensusStatus;
+    switch (status.oneofKind) {
+        case 'active':
+            return {
+                tag: 'active',
+                bakerId: unwrap(status.active.bakerId?.value),
+                status: trBakerConsensusInfoStatus(status.active),
+            };
+        case 'notRunning':
+            return {
+                tag: 'notRunning',
+            };
+        case 'passive':
+            return {
+                tag: 'passive',
+            };
+        case undefined:
+            throw Error('Error translating nodeinfo: unexpected undefined');
+    }
+}
+
+export function nodeInfo(nodeInfo: v2.NodeInfo): v1.NodeInfo {
+    let details: v1.NodeInfoDetails;
+    if (nodeInfo.details.oneofKind === 'bootstrapper') {
+        details = {
+            tag: 'bootstrapper',
+        };
+    } else if (nodeInfo.details.oneofKind === 'node') {
+        details = {
+            tag: 'node',
+            consensusStatus: trNodeInfo_Node(nodeInfo.details.node),
+        };
+    } else {
+        throw Error('Invalid nodeinfo');
+    }
+
+    return {
+        peerVersion: nodeInfo.peerVersion,
+        localTime: unwrap(nodeInfo.localTime?.value),
+        peerUptime: unwrap(nodeInfo.peerUptime?.value),
+        networkInfo: trNetworkInfo(nodeInfo.networkInfo),
+        details,
+    };
+}
+
+function trCatchupStatus(
+    catchupStatus: v2.PeersInfo_Peer_CatchupStatus
+): v1.NodeCatchupStatus {
+    const CatchupStatus = v2.PeersInfo_Peer_CatchupStatus;
+    switch (catchupStatus) {
+        case CatchupStatus.CATCHINGUP:
+            return v1.NodeCatchupStatus.CatchingUp;
+        case CatchupStatus.PENDING:
+            return v1.NodeCatchupStatus.Pending;
+        case CatchupStatus.UPTODATE:
+            return v1.NodeCatchupStatus.UpToDate;
+    }
+}
+
+function trPeerNetworkStats(
+    networkStats: v2.PeersInfo_Peer_NetworkStats | undefined
+): v1.PeerNetworkStats {
+    return {
+        packetsSent: unwrap(networkStats?.packetsSent),
+        packetsReceived: unwrap(networkStats?.packetsReceived),
+        latency: unwrap(networkStats?.latency),
+    };
+}
+
+export function peerInfo(peerInfo: v2.PeersInfo_Peer): v1.PeerInfo {
+    let consensusInfo: v1.PeerConsensusInfo;
+    if (peerInfo.consensusInfo.oneofKind === 'bootstrapper') {
+        consensusInfo = {
+            tag: 'bootstrapper',
+        };
+    } else if (peerInfo.consensusInfo.oneofKind === 'nodeCatchupStatus') {
+        consensusInfo = {
+            tag: 'nodeCatchupStatus',
+            catchupStatus: trCatchupStatus(
+                peerInfo.consensusInfo.nodeCatchupStatus
+            ),
+        };
+    } else {
+        throw Error('Error translating peerInfo: unexpected undefined');
+    }
+    return {
+        peerId: unwrap(peerInfo.peerId?.value),
+        ip: unwrap(peerInfo.socketAddress?.ip?.value),
+        port: unwrap(peerInfo.socketAddress?.port?.value),
+        networkStats: trPeerNetworkStats(peerInfo.networkStats),
+        consensusInfo,
+    };
+}
+
+function trAccountAmount(
+    accountAmount: v2.BlockSpecialEvent_AccountAmounts_Entry
+): v1.BlockSpecialEventAccountAmount {
+    return {
+        account: unwrapToBase58(accountAmount.account),
+        amount: unwrap(accountAmount.amount?.value),
+    };
+}
+
+export function blockSpecialEvent(
+    specialEvent: v2.BlockSpecialEvent
+): v1.BlockSpecialEvent {
+    const event = specialEvent.event;
+    switch (event.oneofKind) {
+        case 'bakingRewards': {
+            return {
+                tag: 'bakingRewards',
+                bakingRewards: unwrap(
+                    event.bakingRewards.bakerRewards
+                ).entries.map(trAccountAmount),
+                remainder: unwrap(event.bakingRewards.remainder?.value),
+            };
+        }
+        case 'mint': {
+            return {
+                tag: 'mint',
+                mintBakingReward: unwrap(event.mint.mintBakingReward?.value),
+                mintFinalizationReward: unwrap(
+                    event.mint.mintFinalizationReward?.value
+                ),
+                mintPlatformDevelopmentCharge: unwrap(
+                    event.mint.mintPlatformDevelopmentCharge?.value
+                ),
+                foundationAccount: unwrapToBase58(event.mint.foundationAccount),
+            };
+        }
+        case 'finalizationRewards': {
+            return {
+                tag: 'finalizationRewards',
+                finalizationRewards:
+                    event.finalizationRewards.finalizationRewards?.entries.map(
+                        trAccountAmount
+                    ),
+                remainder: unwrap(event.finalizationRewards.remainder?.value),
+            };
+        }
+        case 'blockReward': {
+            return {
+                tag: 'blockReward',
+                transactionFees: unwrap(
+                    event.blockReward.transactionFees?.value
+                ),
+                oldGasAccount: unwrap(event.blockReward.oldGasAccount?.value),
+                newGasAccount: unwrap(event.blockReward.newGasAccount?.value),
+                bakerReward: unwrap(event.blockReward.bakerReward?.value),
+                foundationCharge: unwrap(
+                    event.blockReward.foundationCharge?.value
+                ),
+                baker: unwrapToBase58(event.blockReward.baker),
+                foundationAccount: unwrapToBase58(event.blockReward.baker),
+            };
+        }
+        case 'paydayFoundationReward': {
+            return {
+                tag: 'paydayFoundationReward',
+                foundationAccount: unwrapToBase58(
+                    event.paydayFoundationReward.foundationAccount
+                ),
+                developmentCharge: unwrap(
+                    event.paydayFoundationReward.developmentCharge?.value
+                ),
+            };
+        }
+        case 'paydayAccountReward': {
+            return {
+                tag: 'paydayAccountReward',
+                account: unwrapToBase58(event.paydayAccountReward.account),
+                transactionFees: unwrap(
+                    event.paydayAccountReward.transactionFees?.value
+                ),
+                bakerReward: unwrap(
+                    event.paydayAccountReward.bakerReward?.value
+                ),
+                finalizationReward: unwrap(
+                    event.paydayAccountReward.finalizationReward?.value
+                ),
+            };
+        }
+        case 'blockAccrueReward': {
+            return {
+                tag: 'blockAccrueReward',
+                transactionFees: unwrap(
+                    event.blockAccrueReward.transactionFees?.value
+                ),
+                oldGasAccount: unwrap(
+                    event.blockAccrueReward.oldGasAccount?.value
+                ),
+                newGasAccount: unwrap(
+                    event.blockAccrueReward.newGasAccount?.value
+                ),
+                bakerReward: unwrap(event.blockAccrueReward.bakerReward?.value),
+                passiveReward: unwrap(
+                    event.blockAccrueReward.passiveReward?.value
+                ),
+                foundationCharge: unwrap(
+                    event.blockAccrueReward.foundationCharge?.value
+                ),
+                baker: unwrap(event.blockAccrueReward.baker?.value),
+            };
+        }
+        case 'paydayPoolReward': {
+            return {
+                tag: 'paydayPoolReward',
+                poolOwner: unwrap(event.paydayPoolReward.poolOwner?.value),
+                transactionFees: unwrap(
+                    event.paydayPoolReward.transactionFees?.value
+                ),
+                bakerReward: unwrap(event.paydayPoolReward.bakerReward?.value),
+                finalizationReward: unwrap(
+                    event.paydayPoolReward.finalizationReward?.value
+                ),
+            };
+        }
+        case undefined: {
+            throw Error(
+                'Error translating BlockSpecialEvent: unexpected undefined'
+            );
+        }
+    }
+}
+
+function trFinalizationSummaryParty(
+    party: v2.FinalizationSummaryParty
+): v1.FinalizationSummaryParty {
+    return {
+        baker: unwrap(party.baker?.value),
+        weight: party.weight,
+        signed: party.signed,
+    };
+}
+
+function trFinalizationSummary(
+    summary: v2.FinalizationSummary
+): v1.FinalizationSummary {
+    return {
+        block: unwrapValToHex(summary.block),
+        index: unwrap(summary.index?.value),
+        delay: unwrap(summary.delay?.value),
+        finalizers: summary.finalizers.map(trFinalizationSummaryParty),
+    };
+}
+
+export function blockFinalizationSummary(
+    finalizationSummary: v2.BlockFinalizationSummary
+): v1.BlockFinalizationSummary {
+    const summary = finalizationSummary.summary;
+    if (summary.oneofKind === 'none') {
+        return {
+            tag: 'none',
+        };
+    } else if (summary.oneofKind === 'record') {
+        return {
+            tag: 'record',
+            record: trFinalizationSummary(summary.record),
+        };
+    } else {
+        throw Error(
+            'Error translating BlockFinalizationSummary: unexpected undefined'
+        );
+    }
 }
 
 // ---------------------------- //

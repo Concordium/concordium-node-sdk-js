@@ -13,3 +13,7 @@ pub struct RandomnessWrapper<P: Pairing> {
     )]
     pub randomness: SigRetrievalRandomness<P>,
 }
+
+pub type JsonString = String;
+pub type HexString = String;
+pub type Base58String = String;

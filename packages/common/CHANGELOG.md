@@ -42,6 +42,20 @@
     - `getAccountNonFinalizedTransactions()`
     - `getBlockTransactionEvents()`
     - `getNextUpdateSequenceNumbers()`
+    - `shutdown()`
+    - `peerConnect()`
+    - `peerDisconnect()`
+    - `getBannedPeers()`
+    - `banPeer()`
+    - `unbanPeer()`
+    - `dumpStart()`
+    - `dumpStop()`
+    - `getNodeInfo()`
+    - `getPeersInfo()`
+    - `getBlockPendingUpdates()`
+    - `getBlockFinalizationSummary()`
+
+- Function to generate baker keys: `generateBakerKeys`.
 
 - Serialization:
     - `serializeAccountTransactionPayload()`

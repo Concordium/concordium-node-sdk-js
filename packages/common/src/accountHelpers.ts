@@ -1,16 +1,17 @@
+import * as wasm from '@concordium/rust-bindings';
+import { AccountAddress } from './types/accountAddress';
 import {
     ReduceStakePendingChange,
     RemovalPendingChange,
     StakePendingChange,
     StakePendingChangeV1,
-} from '.';
-import {
     AccountInfo,
     AccountInfoBaker,
     AccountInfoBakerV0,
     AccountInfoBakerV1,
     AccountInfoDelegator,
     StakePendingChangeV0,
+    BakerKeysWithProofs,
 } from './types';
 
 export const isDelegatorAccount = (
@@ -45,3 +46,19 @@ export const isReduceStakePendingChange = (
 export const isRemovalPendingChange = (
     spc: ReduceStakePendingChange | RemovalPendingChange
 ): spc is RemovalPendingChange => !isReduceStakePendingChange(spc);
+
+/**
+ * Generates random baker keys for the specified account, that can be used with the configureBaker transaction
+ * @param account the address of the account that the keys should be added to.
+ * @returns baker keys and their associated proofs
+ */
+export function generateBakerKeys(
+    account: AccountAddress
+): BakerKeysWithProofs {
+    const rawKeys = wasm.generateBakerKeys(account.address);
+    try {
+        return JSON.parse(rawKeys);
+    } catch (e) {
+        throw new Error(rawKeys);
+    }
+}

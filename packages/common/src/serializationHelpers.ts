@@ -1,6 +1,9 @@
 import { Buffer } from 'buffer/';
-import { VerifyKey } from '.';
 import {
+    BakerKeysWithProofs,
+    ConfigureBakerPayload,
+    UrlString,
+    VerifyKey,
     ConfigureDelegationPayload,
     DelegationTarget,
     DelegationTargetType,
@@ -180,7 +183,7 @@ export function encodeWord16FromString(
 
 /**
  * Encodes a Datablob.
- * @param data Datablob containing data bytes.
+ * @param blob Datablob containing data bytes.
  * @returns Buffer containing the length of the data and the data bytes.
  */
 export function encodeDataBlob(blob: DataBlob): Buffer {
@@ -210,6 +213,15 @@ export function packBufferWithWord32Length(
 export function packBufferWithWord16Length(buffer: Buffer): Buffer {
     const length = encodeWord16(buffer.length);
     return Buffer.concat([length, buffer]);
+}
+
+/**
+ * Convert a hex string to a Buffer
+ * @param str hex-encoded string
+ * @returns Buffer
+ */
+export function encodeHexString(s: string): Buffer {
+    return Buffer.from(s, 'hex');
 }
 
 enum SchemeId {
@@ -343,9 +355,59 @@ export function serializeConfigureDelegationPayload(
     payload: ConfigureDelegationPayload
 ): Buffer {
     const bitmap = getSerializedConfigureDelegationBitmap(payload);
-    const sPayload = serializeFromSpec(configureDelegationSerializationSpec)(
-        payload
+    const serializedPayload = serializeFromSpec(
+        configureDelegationSerializationSpec
+    )(payload);
+
+    return Buffer.concat([bitmap, serializedPayload]);
+}
+
+const serializeVerifyKeys = serializeFromSpec<BakerKeysWithProofs>({
+    electionVerifyKey: encodeHexString,
+    proofElection: encodeHexString,
+    signatureVerifyKey: encodeHexString,
+    proofSig: encodeHexString,
+    aggregationVerifyKey: encodeHexString,
+    proofAggregation: encodeHexString,
+});
+
+const serializeUrl = (url: UrlString) => {
+    const data = Buffer.from(new TextEncoder().encode(url));
+    const length = encodeWord16(data.length);
+    return Buffer.concat([length, data]);
+};
+
+const configureBakerSerializationSpec: SerializationSpec<ConfigureBakerPayload> =
+    {
+        stake: orUndefined((v) => encodeWord64(v.microCcdAmount)),
+        restakeEarnings: orUndefined(encodeBool),
+        openForDelegation: orUndefined(encodeWord8),
+        keys: orUndefined(serializeVerifyKeys),
+        metadataUrl: orUndefined(serializeUrl),
+        transactionFeeCommission: orUndefined(encodeWord32),
+        bakingRewardCommission: orUndefined(encodeWord32),
+        finalizationRewardCommission: orUndefined(encodeWord32),
+    };
+
+const getSerializedConfigureBakerBitmap = (
+    payload: ConfigureBakerPayload
+): Buffer =>
+    encodeWord16(
+        getPayloadBitmap(
+            payload,
+            Object.keys(configureBakerSerializationSpec) as Array<
+                keyof ConfigureBakerPayload
+            >
+        )
     );
 
-    return Buffer.concat([bitmap, sPayload]);
+export function serializeConfigureBakerPayload(
+    payload: ConfigureBakerPayload
+): Buffer {
+    const bitmap = getSerializedConfigureBakerBitmap(payload);
+    const serializedPayload = serializeFromSpec(
+        configureBakerSerializationSpec
+    )(payload);
+
+    return Buffer.concat([bitmap, serializedPayload]);
 }

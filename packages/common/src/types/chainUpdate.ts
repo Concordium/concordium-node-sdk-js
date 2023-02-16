@@ -97,7 +97,17 @@ export interface RootUpdate {
     update: KeyUpdate;
 }
 
-export type UpdateInstructionPayload =
+export interface PendingHigherLevelKeyUpdate {
+    updateType: UpdateType.HigherLevelKeyUpdate;
+    update: HigherLevelKeyUpdate;
+}
+
+export interface PendingAuthorizationKeysUpdate {
+    updateType: UpdateType.AuthorizationKeysUpdate;
+    update: AuthorizationKeysUpdate;
+}
+
+export type CommonUpdate =
     | MicroGtuPerEuroUpdate
     | EuroPerEnergyUpdate
     | TransactionFeeDistributionUpdate
@@ -111,13 +121,20 @@ export type UpdateInstructionPayload =
     | AddIdentityProviderUpdate
     | CooldownParametersUpdate
     | PoolParametersUpdate
-    | TimeParametersUpdate
-    | RootUpdate
-    | Level1Update;
+    | TimeParametersUpdate;
+
+export type UpdateInstructionPayload = CommonUpdate | RootUpdate | Level1Update;
+
+export type PendingUpdate =
+    | CommonUpdate
+    | PendingHigherLevelKeyUpdate
+    | PendingAuthorizationKeysUpdate;
 
 export enum UpdateType {
     Root = 'root',
     Level1 = 'level1',
+    HigherLevelKeyUpdate = 'higherLevelKeyUpdate',
+    AuthorizationKeysUpdate = 'AuthorizationKeysUpdate',
     Protocol = 'protocol',
     ElectionDifficulty = 'electionDifficulty',
     EuroPerEnergy = 'euroPerEnergy',

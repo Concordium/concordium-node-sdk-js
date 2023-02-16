@@ -293,10 +293,6 @@ function translateRewardParametersCommon(
     };
 }
 
-function translateMintRate(mintRate: v2.MintRate | undefined): number {
-    return unwrap(mintRate?.mantissa) * 10 ** (-1 * unwrap(mintRate?.exponent));
-}
-
 function transPoolPendingChange(
     change: v2.PoolPendingChange | undefined
 ): v1.BakerPoolPendingChange {
@@ -427,9 +423,7 @@ export function blockChainParameters(
                 rewardPeriodLength: unwrap(
                     v1.timeParameters?.rewardPeriodLength?.value?.value
                 ),
-                mintPerPayday: translateMintRate(
-                    v1.timeParameters?.mintPerPayday
-                ),
+                mintPerPayday: trMintRate(v1.timeParameters?.mintPerPayday),
                 delegatorCooldown: unwrap(
                     v1.cooldownParameters?.delegatorCooldown?.value
                 ),
@@ -493,7 +487,7 @@ export function blockChainParameters(
                         finalizationReward: trAmountFraction(
                             v0.mintDistribution?.finalizationReward
                         ),
-                        mintPerSlot: translateMintRate(
+                        mintPerSlot: trMintRate(
                             v0.mintDistribution?.mintPerSlot
                         ),
                     },
@@ -1101,100 +1095,322 @@ function trMintRate(mintRate: v2.MintRate | undefined): number {
     return unwrap(mintRate?.mantissa) * 10 ** (-1 * unwrap(mintRate?.exponent));
 }
 
+function trProtocolUpdate(update: v2.ProtocolUpdate): v1.ProtocolUpdate {
+    return {
+        updateType: v1.UpdateType.Protocol,
+        update: {
+            message: update.message,
+            specificationHash: unwrapValToHex(update.specificationHash),
+            specificationUrl: update.specificationUrl,
+            specificationAuxiliaryData: unwrapToHex(
+                update.specificationAuxiliaryData
+            ),
+        },
+    };
+}
+function trElectionDifficultyUpdate(
+    elecDiff: v2.ElectionDifficulty
+): v1.ElectionDifficultyUpdate {
+    return {
+        updateType: v1.UpdateType.ElectionDifficulty,
+        update: {
+            electionDifficulty: trAmountFraction(elecDiff.value),
+        },
+    };
+}
+function trEuroPerEnergyUpdate(
+    exchangeRate: v2.ExchangeRate
+): v1.EuroPerEnergyUpdate {
+    return {
+        updateType: v1.UpdateType.EuroPerEnergy,
+        update: unwrap(exchangeRate.value),
+    };
+}
+function trMicroCcdPerEuroUpdate(
+    exchangeRate: v2.ExchangeRate
+): v1.MicroGtuPerEuroUpdate {
+    return {
+        updateType: v1.UpdateType.MicroGtuPerEuro,
+        update: unwrap(exchangeRate.value),
+    };
+}
+function trFoundationAccountUpdate(
+    account: v2.AccountAddress
+): v1.FoundationAccountUpdate {
+    return {
+        updateType: v1.UpdateType.FoundationAccount,
+        update: {
+            address: unwrapToBase58(account),
+        },
+    };
+}
+
+function trTransactionFeeDistributionUpdate(
+    transFeeDist: v2.TransactionFeeDistribution
+): v1.TransactionFeeDistributionUpdate {
+    return {
+        updateType: v1.UpdateType.TransactionFeeDistribution,
+        update: {
+            baker: trAmountFraction(transFeeDist.baker),
+            gasAccount: trAmountFraction(transFeeDist.gasAccount),
+        },
+    };
+}
+
+function trGasRewardsUpdate(gasRewards: v2.GasRewards): v1.GasRewardsUpdate {
+    return {
+        updateType: v1.UpdateType.GasRewards,
+        update: {
+            baker: trAmountFraction(gasRewards.baker),
+            finalizationProof: trAmountFraction(gasRewards.finalizationProof),
+            accountCreation: trAmountFraction(gasRewards.accountCreation),
+            chainUpdate: trAmountFraction(gasRewards.accountCreation),
+        },
+    };
+}
+
+function trBakerStakeThresholdUpdate(
+    bakerStakeThreshold: v2.BakerStakeThreshold
+): v1.BakerStakeThresholdUpdate {
+    return {
+        updateType: v1.UpdateType.BakerStakeThreshold,
+        update: {
+            threshold: unwrap(bakerStakeThreshold.bakerStakeThreshold?.value),
+        },
+    };
+}
+
+function trPoolParametersCpv1Update(
+    poolParams: v2.PoolParametersCpv1
+): v1.PoolParametersUpdate {
+    return {
+        updateType: v1.UpdateType.PoolParameters,
+        update: {
+            passiveCommissions: {
+                transactionCommission: trAmountFraction(
+                    poolParams.passiveTransactionCommission
+                ),
+                bakingCommission: trAmountFraction(
+                    poolParams.passiveBakingCommission
+                ),
+                finalizationCommission: trAmountFraction(
+                    poolParams.passiveFinalizationCommission
+                ),
+            },
+            commissionBounds: {
+                transactionFeeCommission: trCommissionRange(
+                    poolParams.commissionBounds?.transaction
+                ),
+                bakingRewardCommission: trCommissionRange(
+                    poolParams.commissionBounds?.baking
+                ),
+                finalizationRewardCommission: trCommissionRange(
+                    poolParams.commissionBounds?.finalization
+                ),
+            },
+            minimumEquityCapital: unwrap(
+                poolParams.minimumEquityCapital?.value
+            ),
+            capitalBound: trAmountFraction(poolParams.capitalBound?.value),
+            leverageBound: unwrap(poolParams.leverageBound?.value),
+        },
+    };
+}
+
+function trAddAnonymityRevokerUpdate(
+    ar: v2.ArInfo
+): v1.AddAnonymityRevokerUpdate {
+    return {
+        updateType: v1.UpdateType.AddAnonymityRevoker,
+        update: arInfo(ar),
+    };
+}
+function trAddIdentityProviderUpdate(
+    ip: v2.IpInfo
+): v1.AddIdentityProviderUpdate {
+    return {
+        updateType: v1.UpdateType.AddIdentityProvider,
+        update: ipInfo(ip),
+    };
+}
+
+function trCooldownParametersCpv1Update(
+    cooldownParams: v2.CooldownParametersCpv1
+): v1.CooldownParametersUpdate {
+    return {
+        updateType: v1.UpdateType.CooldownParameters,
+        update: {
+            poolOwnerCooldown: unwrap(cooldownParams.poolOwnerCooldown?.value),
+            delegatorCooldown: unwrap(cooldownParams.delegatorCooldown?.value),
+        },
+    };
+}
+
+function trTimeParametersCpv1Update(
+    timeParams: v2.TimeParametersCpv1
+): v1.TimeParametersUpdate {
+    return {
+        updateType: v1.UpdateType.TimeParameters,
+        update: {
+            rewardPeriodLength: unwrap(
+                timeParams.rewardPeriodLength?.value?.value
+            ),
+            mintRatePerPayday: unwrap(timeParams.mintPerPayday),
+        },
+    };
+}
+function trMintDistributionCpv0Update(
+    mintDist: v2.MintDistributionCpv0
+): v1.MintDistributionUpdate {
+    return {
+        updateType: v1.UpdateType.MintDistribution,
+        update: {
+            bakingReward: trAmountFraction(mintDist.bakingReward),
+            finalizationReward: trAmountFraction(mintDist.finalizationReward),
+            mintPerSlot: trMintRate(mintDist.mintPerSlot),
+        },
+    };
+}
+
+function trMintDistributionCpv1Update(
+    mintDist: v2.MintDistributionCpv1
+): v1.MintDistributionUpdate {
+    return {
+        updateType: v1.UpdateType.MintDistribution,
+        update: {
+            bakingReward: trAmountFraction(mintDist.bakingReward),
+            finalizationReward: trAmountFraction(mintDist.finalizationReward),
+        },
+    };
+}
+
+export function pendingUpdate(
+    pendingUpdate: v2.PendingUpdate
+): v1.PendingUpdate {
+    const effect = pendingUpdate.effect;
+    switch (effect.oneofKind) {
+        case 'protocol':
+            return trProtocolUpdate(effect.protocol);
+        case 'electionDifficulty':
+            return trElectionDifficultyUpdate(effect.electionDifficulty);
+        case 'euroPerEnergy':
+            return trEuroPerEnergyUpdate(effect.euroPerEnergy);
+        case 'microCcdPerEuro':
+            return trMicroCcdPerEuroUpdate(effect.microCcdPerEuro);
+        case 'foundationAccount':
+            return trFoundationAccountUpdate(effect.foundationAccount);
+        case 'transactionFeeDistribution':
+            return trTransactionFeeDistributionUpdate(
+                effect.transactionFeeDistribution
+            );
+        case 'gasRewards':
+            return trGasRewardsUpdate(effect.gasRewards);
+        case 'poolParametersCpv0':
+            return trBakerStakeThresholdUpdate(effect.poolParametersCpv0);
+        case 'poolParametersCpv1':
+            return trPoolParametersCpv1Update(effect.poolParametersCpv1);
+        case 'addAnonymityRevoker':
+            return trAddAnonymityRevokerUpdate(effect.addAnonymityRevoker);
+        case 'addIdentityProvider':
+            return trAddIdentityProviderUpdate(effect.addIdentityProvider);
+        case 'cooldownParameters':
+            return trCooldownParametersCpv1Update(effect.cooldownParameters);
+        case 'timeParameters':
+            return trTimeParametersCpv1Update(effect.timeParameters);
+        case 'mintDistributionCpv0':
+            return trMintDistributionCpv0Update(effect.mintDistributionCpv0);
+        case 'mintDistributionCpv1':
+            return trMintDistributionCpv1Update(effect.mintDistributionCpv1);
+        case 'rootKeys':
+            return {
+                updateType: v1.UpdateType.HigherLevelKeyUpdate,
+                update: {
+                    typeOfUpdate: v1.HigherLevelKeyUpdateType.RootKeysUpdate,
+                    updateKeys: effect.rootKeys.keys.map(trUpdatePublicKey),
+                    threshold: unwrap(effect.rootKeys.threshold?.value),
+                },
+            };
+        case 'level1Keys':
+            return {
+                updateType: v1.UpdateType.HigherLevelKeyUpdate,
+                update: {
+                    typeOfUpdate: v1.HigherLevelKeyUpdateType.Level1KeysUpdate,
+                    updateKeys: effect.level1Keys.keys.map(trUpdatePublicKey),
+                    threshold: unwrap(effect.level1Keys.threshold?.value),
+                },
+            };
+        case 'level2KeysCpv0':
+            return {
+                updateType: v1.UpdateType.AuthorizationKeysUpdate,
+                update: {
+                    typeOfUpdate:
+                        v1.AuthorizationKeysUpdateType.Level2KeysUpdate,
+                    updatePayload: trAuthorizationsV0(effect.level2KeysCpv0),
+                },
+            };
+        case 'level2KeysCpv1':
+            return {
+                updateType: v1.UpdateType.AuthorizationKeysUpdate,
+                update: {
+                    typeOfUpdate:
+                        v1.AuthorizationKeysUpdateType.Level2KeysUpdateV1,
+                    updatePayload: trAuthorizationsV1(effect.level2KeysCpv1),
+                },
+            };
+        case undefined:
+            throw Error('Unexpected missing pending update');
+    }
+}
+
 function trUpdatePayload(
-    payload: v2.UpdatePayload | undefined
+    updatePayload: v2.UpdatePayload | undefined
 ): v1.UpdateInstructionPayload {
-    switch (payload?.payload?.oneofKind) {
-        case 'protocolUpdate': {
-            const update = payload.payload.protocolUpdate;
-            return {
-                updateType: v1.UpdateType.Protocol,
-                update: {
-                    message: update.message,
-                    specificationHash: unwrapValToHex(update.specificationHash),
-                    specificationUrl: update.specificationUrl,
-                    specificationAuxiliaryData: unwrapToHex(
-                        update.specificationAuxiliaryData
-                    ),
-                },
-            };
-        }
+    const payload = updatePayload?.payload;
+    switch (payload?.oneofKind) {
+        case 'protocolUpdate':
+            return trProtocolUpdate(payload.protocolUpdate);
         case 'electionDifficultyUpdate':
-            return {
-                updateType: v1.UpdateType.ElectionDifficulty,
-                update: {
-                    electionDifficulty: trAmountFraction(
-                        payload.payload.electionDifficultyUpdate.value
-                    ),
-                },
-            };
+            return trElectionDifficultyUpdate(payload.electionDifficultyUpdate);
         case 'euroPerEnergyUpdate':
-            return {
-                updateType: v1.UpdateType.EuroPerEnergy,
-                update: unwrap(payload.payload.euroPerEnergyUpdate.value),
-            };
+            return trEuroPerEnergyUpdate(payload.euroPerEnergyUpdate);
         case 'microCcdPerEuroUpdate':
-            return {
-                updateType: v1.UpdateType.MicroGtuPerEuro,
-                update: unwrap(payload.payload.microCcdPerEuroUpdate.value),
-            };
+            return trMicroCcdPerEuroUpdate(payload.microCcdPerEuroUpdate);
         case 'foundationAccountUpdate':
-            return {
-                updateType: v1.UpdateType.FoundationAccount,
-                update: {
-                    address: unwrapValToHex(
-                        payload.payload.foundationAccountUpdate
-                    ),
-                },
-            };
-        case 'mintDistributionUpdate': {
-            const update = payload.payload.mintDistributionUpdate;
-            return {
-                updateType: v1.UpdateType.MintDistribution,
-                update: {
-                    bakingReward: trAmountFraction(update.bakingReward),
-                    finalizationReward: trAmountFraction(
-                        update.finalizationReward
-                    ),
-                    mintPerSlot: trMintRate(update.mintPerSlot),
-                },
-            };
-        }
-        case 'transactionFeeDistributionUpdate': {
-            const update = payload.payload.transactionFeeDistributionUpdate;
-            return {
-                updateType: v1.UpdateType.TransactionFeeDistribution,
-                update: {
-                    baker: trAmountFraction(update.baker),
-                    gasAccount: trAmountFraction(update.gasAccount),
-                },
-            };
-        }
-        case 'gasRewardsUpdate': {
-            const update = payload.payload.gasRewardsUpdate;
-            return {
-                updateType: v1.UpdateType.GasRewards,
-                update: {
-                    baker: trAmountFraction(update.baker),
-                    finalizationProof: trAmountFraction(
-                        update.finalizationProof
-                    ),
-                    accountCreation: trAmountFraction(update.accountCreation),
-                    chainUpdate: trAmountFraction(update.accountCreation),
-                },
-            };
-        }
-        case 'bakerStakeThresholdUpdate': {
-            const update = payload.payload.bakerStakeThresholdUpdate;
-            return {
-                updateType: v1.UpdateType.BakerStakeThreshold,
-                update: {
-                    threshold: unwrap(update.bakerStakeThreshold?.value),
-                },
-            };
-        }
+            return trFoundationAccountUpdate(payload.foundationAccountUpdate);
+        case 'mintDistributionUpdate':
+            return trMintDistributionCpv1Update(payload.mintDistributionUpdate);
+        case 'transactionFeeDistributionUpdate':
+            return trTransactionFeeDistributionUpdate(
+                payload.transactionFeeDistributionUpdate
+            );
+        case 'gasRewardsUpdate':
+            return trGasRewardsUpdate(payload.gasRewardsUpdate);
+        case 'bakerStakeThresholdUpdate':
+            return trBakerStakeThresholdUpdate(
+                payload.bakerStakeThresholdUpdate
+            );
+        case 'addAnonymityRevokerUpdate':
+            return trAddAnonymityRevokerUpdate(
+                payload.addAnonymityRevokerUpdate
+            );
+        case 'addIdentityProviderUpdate':
+            return trAddIdentityProviderUpdate(
+                payload.addIdentityProviderUpdate
+            );
+        case 'cooldownParametersCpv1Update':
+            return trCooldownParametersCpv1Update(
+                payload.cooldownParametersCpv1Update
+            );
+        case 'poolParametersCpv1Update':
+            return trPoolParametersCpv1Update(payload.poolParametersCpv1Update);
+        case 'timeParametersCpv1Update':
+            return trTimeParametersCpv1Update(payload.timeParametersCpv1Update);
+        case 'mintDistributionCpv1Update':
+            return trMintDistributionCpv1Update(
+                payload.mintDistributionCpv1Update
+            );
         case 'rootUpdate': {
-            const rootUpdate = payload.payload.rootUpdate;
+            const rootUpdate = payload.rootUpdate;
             const keyUpdate = trKeyUpdate(rootUpdate);
             return {
                 updateType: v1.UpdateType.Root,
@@ -1202,93 +1418,13 @@ function trUpdatePayload(
             };
         }
         case 'level1Update': {
-            const lvl1Update = payload.payload.level1Update;
+            const lvl1Update = payload.level1Update;
             const keyUpdate = trKeyUpdate(lvl1Update);
             return {
                 updateType: v1.UpdateType.Level1,
                 update: keyUpdate,
             };
         }
-        case 'addAnonymityRevokerUpdate': {
-            return {
-                updateType: v1.UpdateType.AddAnonymityRevoker,
-                update: arInfo(payload.payload.addAnonymityRevokerUpdate),
-            };
-        }
-        case 'addIdentityProviderUpdate': {
-            return {
-                updateType: v1.UpdateType.AddIdentityProvider,
-                update: ipInfo(payload.payload.addIdentityProviderUpdate),
-            };
-        }
-        case 'cooldownParametersCpv1Update': {
-            const update = payload.payload.cooldownParametersCpv1Update;
-            return {
-                updateType: v1.UpdateType.CooldownParameters,
-                update: {
-                    poolOwnerCooldown: unwrap(update.poolOwnerCooldown?.value),
-                    delegatorCooldown: unwrap(update.delegatorCooldown?.value),
-                },
-            };
-        }
-        case 'poolParametersCpv1Update': {
-            const update = payload.payload.poolParametersCpv1Update;
-            return {
-                updateType: v1.UpdateType.PoolParameters,
-                update: {
-                    passiveCommissions: {
-                        transactionCommission: trAmountFraction(
-                            update.passiveTransactionCommission
-                        ),
-                        bakingCommission: trAmountFraction(
-                            update.passiveBakingCommission
-                        ),
-                        finalizationCommission: trAmountFraction(
-                            update.passiveFinalizationCommission
-                        ),
-                    },
-                    commissionBounds: {
-                        transactionFeeCommission: trCommissionRange(
-                            update.commissionBounds?.transaction
-                        ),
-                        bakingRewardCommission: trCommissionRange(
-                            update.commissionBounds?.baking
-                        ),
-                        finalizationRewardCommission: trCommissionRange(
-                            update.commissionBounds?.finalization
-                        ),
-                    },
-                    minimumEquityCapital: unwrap(
-                        update.minimumEquityCapital?.value
-                    ),
-                    capitalBound: trAmountFraction(update.capitalBound?.value),
-                    leverageBound: unwrap(update.leverageBound?.value),
-                },
-            };
-        }
-        case 'timeParametersCpv1Update': {
-            const update = payload.payload.timeParametersCpv1Update;
-            return {
-                updateType: v1.UpdateType.TimeParameters,
-                update: {
-                    rewardPeriodLength: unwrap(
-                        update.rewardPeriodLength?.value?.value
-                    ),
-                    mintRatePerPayday: unwrap(update.mintPerPayday),
-                },
-            };
-        }
-        case 'mintDistributionCpv1Update':
-            const update = payload.payload.mintDistributionCpv1Update;
-            return {
-                updateType: v1.UpdateType.MintDistribution,
-                update: {
-                    bakingReward: trAmountFraction(update.bakingReward),
-                    finalizationReward: trAmountFraction(
-                        update.finalizationReward
-                    ),
-                },
-            };
         case undefined:
             throw new Error('Unexpected missing update payload');
     }
@@ -1381,6 +1517,14 @@ function trAuthorizationsV0(auths: v2.AuthorizationsV0): v1.AuthorizationsV0 {
         ),
         poolParameters: trAccessStructure(auths.poolParameters),
         protocol: trAccessStructure(auths.protocol),
+    };
+}
+
+function trAuthorizationsV1(auths: v2.AuthorizationsV1): v1.AuthorizationsV1 {
+    return {
+        ...trAuthorizationsV0(unwrap(auths.v0)),
+        cooldownParameters: trAccessStructure(auths.parameterCooldown),
+        timeParameters: trAccessStructure(auths.parameterTime),
     };
 }
 
@@ -2146,6 +2290,178 @@ export function peerInfo(peerInfo: v2.PeersInfo_Peer): v1.PeerInfo {
         networkStats: trPeerNetworkStats(peerInfo.networkStats),
         consensusInfo,
     };
+}
+
+function trAccountAmount(
+    accountAmount: v2.BlockSpecialEvent_AccountAmounts_Entry
+): v1.BlockSpecialEventAccountAmount {
+    return {
+        account: unwrapToBase58(accountAmount.account),
+        amount: unwrap(accountAmount.amount?.value),
+    };
+}
+
+export function blockSpecialEvent(
+    specialEvent: v2.BlockSpecialEvent
+): v1.BlockSpecialEvent {
+    const event = specialEvent.event;
+    switch (event.oneofKind) {
+        case 'bakingRewards': {
+            return {
+                tag: 'bakingRewards',
+                bakingRewards: unwrap(
+                    event.bakingRewards.bakerRewards
+                ).entries.map(trAccountAmount),
+                remainder: unwrap(event.bakingRewards.remainder?.value),
+            };
+        }
+        case 'mint': {
+            return {
+                tag: 'mint',
+                mintBakingReward: unwrap(event.mint.mintBakingReward?.value),
+                mintFinalizationReward: unwrap(
+                    event.mint.mintFinalizationReward?.value
+                ),
+                mintPlatformDevelopmentCharge: unwrap(
+                    event.mint.mintPlatformDevelopmentCharge?.value
+                ),
+                foundationAccount: unwrapToBase58(event.mint.foundationAccount),
+            };
+        }
+        case 'finalizationRewards': {
+            return {
+                tag: 'finalizationRewards',
+                finalizationRewards:
+                    event.finalizationRewards.finalizationRewards?.entries.map(
+                        trAccountAmount
+                    ),
+                remainder: unwrap(event.finalizationRewards.remainder?.value),
+            };
+        }
+        case 'blockReward': {
+            return {
+                tag: 'blockReward',
+                transactionFees: unwrap(
+                    event.blockReward.transactionFees?.value
+                ),
+                oldGasAccount: unwrap(event.blockReward.oldGasAccount?.value),
+                newGasAccount: unwrap(event.blockReward.newGasAccount?.value),
+                bakerReward: unwrap(event.blockReward.bakerReward?.value),
+                foundationCharge: unwrap(
+                    event.blockReward.foundationCharge?.value
+                ),
+                baker: unwrapToBase58(event.blockReward.baker),
+                foundationAccount: unwrapToBase58(event.blockReward.baker),
+            };
+        }
+        case 'paydayFoundationReward': {
+            return {
+                tag: 'paydayFoundationReward',
+                foundationAccount: unwrapToBase58(
+                    event.paydayFoundationReward.foundationAccount
+                ),
+                developmentCharge: unwrap(
+                    event.paydayFoundationReward.developmentCharge?.value
+                ),
+            };
+        }
+        case 'paydayAccountReward': {
+            return {
+                tag: 'paydayAccountReward',
+                account: unwrapToBase58(event.paydayAccountReward.account),
+                transactionFees: unwrap(
+                    event.paydayAccountReward.transactionFees?.value
+                ),
+                bakerReward: unwrap(
+                    event.paydayAccountReward.bakerReward?.value
+                ),
+                finalizationReward: unwrap(
+                    event.paydayAccountReward.finalizationReward?.value
+                ),
+            };
+        }
+        case 'blockAccrueReward': {
+            return {
+                tag: 'blockAccrueReward',
+                transactionFees: unwrap(
+                    event.blockAccrueReward.transactionFees?.value
+                ),
+                oldGasAccount: unwrap(
+                    event.blockAccrueReward.oldGasAccount?.value
+                ),
+                newGasAccount: unwrap(
+                    event.blockAccrueReward.newGasAccount?.value
+                ),
+                bakerReward: unwrap(event.blockAccrueReward.bakerReward?.value),
+                passiveReward: unwrap(
+                    event.blockAccrueReward.passiveReward?.value
+                ),
+                foundationCharge: unwrap(
+                    event.blockAccrueReward.foundationCharge?.value
+                ),
+                baker: unwrap(event.blockAccrueReward.baker?.value),
+            };
+        }
+        case 'paydayPoolReward': {
+            return {
+                tag: 'paydayPoolReward',
+                poolOwner: unwrap(event.paydayPoolReward.poolOwner?.value),
+                transactionFees: unwrap(
+                    event.paydayPoolReward.transactionFees?.value
+                ),
+                bakerReward: unwrap(event.paydayPoolReward.bakerReward?.value),
+                finalizationReward: unwrap(
+                    event.paydayPoolReward.finalizationReward?.value
+                ),
+            };
+        }
+        case undefined: {
+            throw Error(
+                'Error translating BlockSpecialEvent: unexpected undefined'
+            );
+        }
+    }
+}
+
+function trFinalizationSummaryParty(
+    party: v2.FinalizationSummaryParty
+): v1.FinalizationSummaryParty {
+    return {
+        baker: unwrap(party.baker?.value),
+        weight: party.weight,
+        signed: party.signed,
+    };
+}
+
+function trFinalizationSummary(
+    summary: v2.FinalizationSummary
+): v1.FinalizationSummary {
+    return {
+        block: unwrapValToHex(summary.block),
+        index: unwrap(summary.index?.value),
+        delay: unwrap(summary.delay?.value),
+        finalizers: summary.finalizers.map(trFinalizationSummaryParty),
+    };
+}
+
+export function blockFinalizationSummary(
+    finalizationSummary: v2.BlockFinalizationSummary
+): v1.BlockFinalizationSummary {
+    const summary = finalizationSummary.summary;
+    if (summary.oneofKind === 'none') {
+        return {
+            tag: 'none',
+        };
+    } else if (summary.oneofKind === 'record') {
+        return {
+            tag: 'record',
+            record: trFinalizationSummary(summary.record),
+        };
+    } else {
+        throw Error(
+            'Error translating BlockFinalizationSummary: unexpected undefined'
+        );
+    }
 }
 
 // ---------------------------- //

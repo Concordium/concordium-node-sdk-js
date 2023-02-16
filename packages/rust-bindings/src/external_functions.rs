@@ -1,8 +1,8 @@
-use crate::aux_functions::*;
+use crate::{aux_functions::*, types::*};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(js_name = generateUnsignedCredential)]
-pub fn generate_unsigned_credential_ext(input: &str) -> String {
+pub fn generate_unsigned_credential_ext(input: &str) -> JsonString {
     match generate_unsigned_credential_aux(input) {
         Ok(s) => s,
         Err(e) => format!("Unable to generate an unsigned credential due to: {}", e),
@@ -15,7 +15,7 @@ pub fn get_credential_deployment_details_ext(
     signatures: &JsValue,
     unsigned_info: &str,
     expiry: u64,
-) -> String {
+) -> JsonString {
     let signatures_vec: Vec<String> = signatures.into_serde().unwrap();
     match get_credential_deployment_details_aux(signatures_vec, unsigned_info, expiry) {
         Ok(s) => s,
@@ -24,7 +24,7 @@ pub fn get_credential_deployment_details_ext(
 }
 
 #[wasm_bindgen(js_name = getDeploymentInfo)]
-pub fn get_credential_deployment_info_ext(signatures: &JsValue, unsigned_info: &str) -> String {
+pub fn get_credential_deployment_info_ext(signatures: &JsValue, unsigned_info: &str) -> JsonString {
     let signatures_vec: Vec<String> = signatures.into_serde().unwrap();
     match get_credential_deployment_info_aux(signatures_vec, unsigned_info) {
         Ok(s) => s,
@@ -33,7 +33,11 @@ pub fn get_credential_deployment_info_ext(signatures: &JsValue, unsigned_info: &
 }
 
 #[wasm_bindgen(js_name = deserializeState)]
-pub fn deserialize_state(contract_name: &str, state_bytes: String, schema: String) -> String {
+pub fn deserialize_state(
+    contract_name: &str,
+    state_bytes: HexString,
+    schema: String,
+) -> JsonString {
     match deserialize_state_aux(contract_name, state_bytes, schema) {
         Ok(s) => s,
         Err(e) => format!("{}", e),
@@ -41,8 +45,8 @@ pub fn deserialize_state(contract_name: &str, state_bytes: String, schema: Strin
 }
 
 #[wasm_bindgen(js_name = deserializeCredentialDeployment)]
-pub fn deserialize_credential_deployment_ext(serialized: &str) -> String {
-    match deserialize_credential_deployment_aux(serialized) {
+pub fn deserialize_credential_deployment_ext(serialized: JsonString) -> JsonString {
+    match deserialize_credential_deployment_aux(&serialized) {
         Ok(s) => s,
         Err(e) => format!("{}", e),
     }
@@ -50,12 +54,12 @@ pub fn deserialize_credential_deployment_ext(serialized: &str) -> String {
 
 #[wasm_bindgen(js_name = deserializeReceiveReturnValue)]
 pub fn deserialize_receive_return_value(
-    return_value_bytes: String,
-    module_schema: String,
+    return_value_bytes: HexString,
+    module_schema: HexString,
     contract_name: &str,
     function_name: &str,
     schema_version: Option<u8>,
-) -> String {
+) -> JsonString {
     match deserialize_receive_return_value_aux(
         return_value_bytes,
         module_schema,
@@ -100,7 +104,7 @@ pub fn serialize_receive_contract_parameters(
     contract_name: &str,
     function_name: &str,
     schema_version: Option<u8>,
-) -> String {
+) -> HexString {
     match serialize_receive_contract_parameters_aux(
         parameters,
         schema,
@@ -119,7 +123,7 @@ pub fn serialize_init_contract_parameters(
     schema: HexString,
     contract_name: &str,
     schema_version: Option<u8>,
-) -> String {
+) -> HexString {
     match serialize_init_contract_parameters_aux(parameters, schema, contract_name, schema_version)
     {
         Ok(s) => s,
@@ -133,7 +137,7 @@ pub fn get_receive_contract_parameter_schema_ext(
     contract_name: &str,
     function_name: &str,
     schema_version: Option<u8>,
-) -> String {
+) -> HexString {
     error_to_string(get_receive_contract_parameter_schema_aux(
         schema,
         contract_name,
@@ -147,7 +151,7 @@ pub fn get_init_contract_parameter_schema_ext(
     schema: HexString,
     contract_name: &str,
     schema_version: Option<u8>,
-) -> String {
+) -> HexString {
     error_to_string(get_init_contract_parameter_schema_aux(
         schema,
         contract_name,
@@ -156,28 +160,28 @@ pub fn get_init_contract_parameter_schema_ext(
 }
 
 #[wasm_bindgen(js_name = serializeTypeValue)]
-pub fn serialize_type_value_ext(value: JsonString, value_type: HexString) -> String {
+pub fn serialize_type_value_ext(value: JsonString, value_type: HexString) -> HexString {
     error_to_string(serialize_type_value_aux(value, value_type))
 }
 
 #[wasm_bindgen(js_name = createIdRequestV1)]
-pub fn create_id_request_v1_ext(input: &str) -> String {
-    match create_id_request_v1_aux(serde_json::from_str(input).unwrap()) {
+pub fn create_id_request_v1_ext(input: JsonString) -> JsonString {
+    match create_id_request_v1_aux(serde_json::from_str(&input).unwrap()) {
         Ok(s) => s,
         Err(e) => format!("{}", e),
     }
 }
 
 #[wasm_bindgen(js_name = createIdentityRecoveryRequest)]
-pub fn create_identity_recovery_request_ext(input: &str) -> String {
+pub fn create_identity_recovery_request_ext(input: JsonString) -> JsonString {
     error_to_string(create_identity_recovery_request_aux(
-        serde_json::from_str(input).unwrap(),
+        serde_json::from_str(&input).unwrap(),
     ))
 }
 
 #[wasm_bindgen(js_name = createCredentialV1)]
-pub fn create_credential_v1_ext(raw_input: &str) -> String {
-    match serde_json::from_str(raw_input) {
+pub fn create_credential_v1_ext(raw_input: JsonString) -> JsonString {
+    match serde_json::from_str(&raw_input) {
         Ok(input) => match create_credential_v1_aux(input) {
             Ok(s) => s,
             Err(e) => format!("{}", e),
@@ -194,8 +198,8 @@ pub fn create_unsigned_credential_v1_ext(input: JsonString) -> JsonString {
 }
 
 #[wasm_bindgen(js_name = createIdProof)]
-pub fn create_id_proof_ext(raw_input: &str) -> String {
-    match serde_json::from_str(raw_input) {
+pub fn create_id_proof_ext(raw_input: JsonString) -> JsonString {
+    match serde_json::from_str(&raw_input) {
         Ok(input) => match create_id_proof_aux(input) {
             Ok(s) => s,
             Err(e) => format!("{}", e),
@@ -206,12 +210,12 @@ pub fn create_id_proof_ext(raw_input: &str) -> String {
 
 #[wasm_bindgen(js_name = getAccountSigningKey)]
 pub fn get_account_signing_key_ext(
-    seed_as_hex: &str,
+    seed_as_hex: HexString,
     raw_net: &str,
     identity_provider_index: u32,
     identity_index: u32,
     credential_counter: u32,
-) -> String {
+) -> HexString {
     error_to_string(get_account_signing_key_aux(
         seed_as_hex,
         raw_net,
@@ -223,12 +227,12 @@ pub fn get_account_signing_key_ext(
 
 #[wasm_bindgen(js_name = getAccountPublicKey)]
 pub fn get_account_public_key_ext(
-    seed_as_hex: &str,
+    seed_as_hex: HexString,
     raw_net: &str,
     identity_provider_index: u32,
     identity_index: u32,
     credential_counter: u32,
-) -> String {
+) -> HexString {
     error_to_string(get_account_public_key_aux(
         seed_as_hex,
         raw_net,
@@ -240,13 +244,13 @@ pub fn get_account_public_key_ext(
 
 #[wasm_bindgen(js_name = getCredentialId)]
 pub fn get_credential_id_ext(
-    seed_as_hex: &str,
+    seed_as_hex: HexString,
     raw_net: &str,
     identity_provider_index: u32,
     identity_index: u32,
     credential_counter: u8,
     raw_on_chain_commitment_key: &str,
-) -> String {
+) -> HexString {
     error_to_string(get_credential_id_aux(
         seed_as_hex,
         raw_net,
@@ -259,11 +263,11 @@ pub fn get_credential_id_ext(
 
 #[wasm_bindgen(js_name = getPrfKey)]
 pub fn get_prf_key_ext(
-    seed_as_hex: &str,
+    seed_as_hex: HexString,
     raw_net: &str,
     identity_provider_index: u32,
     identity_index: u32,
-) -> String {
+) -> HexString {
     error_to_string(get_prf_key_aux(
         seed_as_hex,
         raw_net,
@@ -274,11 +278,11 @@ pub fn get_prf_key_ext(
 
 #[wasm_bindgen(js_name = getIdCredSec)]
 pub fn get_id_cred_sec_ext(
-    seed_as_hex: &str,
+    seed_as_hex: HexString,
     raw_net: &str,
     identity_provider_index: u32,
     identity_index: u32,
-) -> String {
+) -> HexString {
     error_to_string(get_id_cred_sec_aux(
         seed_as_hex,
         raw_net,
@@ -289,11 +293,11 @@ pub fn get_id_cred_sec_ext(
 
 #[wasm_bindgen(js_name = getSignatureBlindingRandomness)]
 pub fn get_signature_blinding_randomness_ext(
-    seed_as_hex: &str,
+    seed_as_hex: HexString,
     raw_net: &str,
     identity_provider_index: u32,
     identity_index: u32,
-) -> String {
+) -> HexString {
     error_to_string(get_signature_blinding_randomness_aux(
         seed_as_hex,
         raw_net,
@@ -304,13 +308,13 @@ pub fn get_signature_blinding_randomness_ext(
 
 #[wasm_bindgen(js_name = getAttributeCommitmentRandomness)]
 pub fn get_attribute_commitment_randomness_ext(
-    seed_as_hex: &str,
+    seed_as_hex: HexString,
     raw_net: &str,
     identity_provider_index: u32,
     identity_index: u32,
     credential_counter: u32,
     attribute: u8,
-) -> String {
+) -> HexString {
     error_to_string(get_attribute_commitment_randomness_aux(
         seed_as_hex,
         raw_net,
@@ -329,4 +333,13 @@ pub fn serialize_credential_deployment_payload_ext(
     let signatures_vec: Vec<HexString> = signatures.into_serde().unwrap();
     serialize_credential_deployment_payload_aux(signatures_vec, unsigned_info)
         .map_err(|e| format!("Unable to get credential deployment payload due to: {}", e))
+}
+
+#[wasm_bindgen(js_name = generateBakerKeys)]
+pub fn generate_baker_keys_ext(sender: Base58String) -> JsonString {
+    let sender = match sender.parse() {
+        Ok(sender) => sender,
+        Err(e) => return format!("unable to parse sender account address: {}.", e),
+    };
+    error_to_string(generate_baker_keys(sender))
 }

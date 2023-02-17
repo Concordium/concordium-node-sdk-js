@@ -56,7 +56,8 @@
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
-        "build": "rm -rf grpc; mkdir -p grpc; yarn generate && tsc"
+        "build": "rm -rf grpc; mkdir -p grpc; yarn generate && tsc",
+        "build-dev": "tsc"
     },
     "dependencies": {
         "@concordium/common-sdk": "6.3.0",

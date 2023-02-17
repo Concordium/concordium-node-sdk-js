@@ -27,6 +27,8 @@ export type DigitString = string;
 export type UrlString = string;
 export type IpAddressString = string;
 
+export type ModuleRef = HexString;
+
 // A number of milliseconds
 export type Duration = bigint;
 // Unix timestamp in milliseconds

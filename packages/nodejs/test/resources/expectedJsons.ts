@@ -823,3 +823,75 @@ export const updateEvent = [
         tag: 'Updated',
     },
 ];
+
+export const encryptedSelfAmountAddedEvent = {
+    account: '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
+    amount: 10000000n,
+    newAmount:
+        'c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000098c71824023d5fb1bca5accb3ac010551e4af7e9988cd0ef309ee37149ef7843af6f294e79b8fcbda9b4f4ed094d66cbc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+    tag: 'EncryptedSelfAmountAdded',
+};
+
+export const updateEnqueuedEvent = {
+    type: 'updateTransaction',
+    index: 0n,
+    energyCost: 0n,
+    hash: 'f296a32603fc14aa679001c49a4db1b2133787ae37743536938ec51382fb8392',
+    effectiveTime: 1669115100n,
+    payload: {
+        updateType: 'protocol',
+        update: {
+            message: 'Enable protocol version 5',
+            specificationHash:
+                'af5684e70c1438e442066d017e4410af6da2b53bfa651a07d81efa2aa668db20',
+            specificationUrl:
+                'https://github.com/Concordium/concordium-update-proposals/blob/main/updates/P5.txt',
+            specificationAuxiliaryData: '',
+        },
+    },
+};
+export const transferWithScheduleEvent = {
+    index: 0n,
+    energyCost: 954n,
+    hash: '2ab476a902868f47408ca16e167013ed0b5e995dc99271657e0e74549b426290',
+    type: 'accountTransaction',
+    cost: 2819356n,
+    sender: '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
+    transactionType: 'transferWithSchedule',
+    event: {
+        tag: 'TransferredWithSchedule',
+        to: '3ySdbNTPogmvUBD5g42FaZqYht78jQZ2jose9yZFkCj8zyCGWt',
+        amount: [
+            {
+                timestamp: new Date('2023-01-10T12:00:00.919Z'),
+                amount: 500000n,
+            },
+            {
+                timestamp: new Date('2023-02-10T12:00:00.919Z'),
+                amount: 500000n,
+            },
+        ],
+    },
+};
+
+export const contractInitializedEvent = {
+    tag: 'ContractInitialized',
+    address: { index: 3132n, subindex: 0n },
+    amount: 0n,
+    contractVersion: 1,
+    events: [],
+    initName: 'init_CIS2-Fractionalizer',
+    ref: 'e80161061e5074e850dd1fabbabbf80008fc5d3ffae554744aedc4704ee7b412',
+};
+
+export const moduleDeployedEvent = {
+    tag: 'ModuleDeployed',
+    contents:
+        '3c532ed32dcb3b9f49afb442457a63465987994e400fd5023c8471c26a858ab4',
+};
+
+export const delegationRemoved = {
+    tag: 'DelegationRemoved',
+    account: '4nvFUvdF3Ki7M6Xc2vHejX7iQW5Gtu7UBu6RaPRZV7LorLToPG',
+    delegatorId: 4002,
+};

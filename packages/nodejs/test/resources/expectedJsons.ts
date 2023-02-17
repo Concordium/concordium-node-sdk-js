@@ -568,7 +568,7 @@ export const configureBaker = [
         restakeEarnings: true,
         signKey:
             '0055703a2615746700b58e312aa428e5526993d6d3f3f109db92436115d63818',
-        stake: '15000000000',
+        stake: 15000000000n,
     },
     {
         tag: 'BakerSetRestakeEarnings',
@@ -640,7 +640,7 @@ export const configureDelegation = [
     },
 ];
 
-export const updatedEvent = [
+export const updateEvent = [
     {
         address: { index: 866n, subindex: 0n },
         events: [],

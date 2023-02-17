@@ -805,6 +805,7 @@ function trBakerEvent(
                 tag: v1.TransactionEventTag.BakerSetBakingRewardCommission,
                 bakerId: unwrap(rewardComm.bakerId?.value),
                 bakingRewardCommission: trAmountFraction(amount),
+                account
             };
         }
         case 'bakerSetFinalizationRewardCommission': {
@@ -1742,6 +1743,7 @@ function trAccountTransactionSummary(
                 inputAmount: unwrapValToHex(transfer.removed?.inputAmount),
                 newAmount: unwrapValToHex(transfer.removed?.newAmount),
                 upToIndex: Number(unwrap(transfer.removed?.upToIndex)),
+                account: base.sender,
             };
             const added: v1.NewEncryptedAmountEvent = {
                 tag: v1.TransactionEventTag.NewEncryptedAmount,
@@ -1848,6 +1850,7 @@ function trAccountTransactionSummary(
                 newCredIds: update.newCredIds.map(unwrapValToHex),
                 removedCredIDs: update.removedCredIds.map(unwrapValToHex),
                 newThreshold: unwrap(update.newThreshold?.value),
+                account: base.sender,
             };
             return {
                 ...base,

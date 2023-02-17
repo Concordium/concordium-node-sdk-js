@@ -174,7 +174,7 @@ export interface AccountCreatedEvent {
 
 export interface AmountAddedByDecryptionEvent {
     tag: TransactionEventTag.AmountAddedByDecryption;
-    account?: Base58String;
+    account: Base58String;
     amount: Amount;
 }
 
@@ -187,7 +187,7 @@ export interface EncryptedSelfAmountAddedEvent {
 
 export interface EncryptedAmountsRemovedEvent {
     tag: TransactionEventTag.EncryptedAmountsRemoved;
-    account?: Base58String;
+    account: Base58String;
     inputAmount: HexString;
     newAmount: HexString;
     upToIndex: number;
@@ -213,7 +213,7 @@ export interface CredentialKeysUpdatedEvent {
 
 export interface CredentialsUpdatedEvent {
     tag: TransactionEventTag.CredentialsUpdated;
-    account?: Base58String;
+    account: Base58String;
     newCredIds: HexString[];
     removedCredIDs: HexString[];
     newThreshold: number;
@@ -320,7 +320,7 @@ export interface BakerSetFinalizationRewardCommissionEvent {
 export interface BakerSetBakingRewardCommissionEvent {
     tag: TransactionEventTag.BakerSetBakingRewardCommission;
     bakerId: BakerId;
-    account?: Base58String;
+    account: Base58String;
     bakingRewardCommission: number;
 }
 

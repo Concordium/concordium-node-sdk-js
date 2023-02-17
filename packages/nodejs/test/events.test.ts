@@ -20,11 +20,13 @@ test('transferToPublic', async () => {
         'e59ba7559e2de14e1bd4c05ddbfca808dd5b870cd89eec3942ae29f842906262';
     const eventStream = client.getBlockTransactionEvents(blockHash);
     const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
     if (
-        events[0].type === 'accountTransaction' &&
-        events[0].transactionType === 'transferToPublic'
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'transferToPublic'
     ) {
-        const transferToPublicEvent = [events[0].removed, events[0].added];
+        const transferToPublicEvent = [event.removed, event.added];
         expect(transferToPublicEvent).toEqual(expected.transferToPublicEvent);
     } else {
         throw Error('Wrong event.');
@@ -39,11 +41,13 @@ test('configureBaker: Add baker', async () => {
         '04d24b3d44e4ec4681c279424bd276215809a6af64e57fd20cd907a08d998f09';
     const eventStream = client.getBlockTransactionEvents(blockHash);
     const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
     if (
-        events[0].type === 'accountTransaction' &&
-        events[0].transactionType === 'configureBaker'
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'configureBaker'
     ) {
-        expect(expected.configureBaker).toEqual(expected.configureBaker);
+        expect(event.events).toEqual(expected.configureBaker);
     } else {
         throw Error('Wrong event.');
     }
@@ -55,11 +59,13 @@ test('configureBaker: Remove baker', async () => {
         '2aa7c4a54ad403a9f9b48de2469e5f13a64c95f2cf7a8e72c0f9f7ae0718f642';
     const eventStream = client.getBlockTransactionEvents(blockHash);
     const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
     if (
-        events[0].type === 'accountTransaction' &&
-        events[0].transactionType === 'configureBaker'
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'configureBaker'
     ) {
-        expect(events[0].events[0]).toEqual(expected.bakerRemoved);
+        expect(event.events[0]).toEqual(expected.bakerRemoved);
     } else {
         throw Error('Wrong event.');
     }
@@ -72,11 +78,13 @@ test('configureDelegation', async () => {
         '9cf7f3ba97e027f08bc3dc779e6eb4aadaecee0899a532224846196f646921f3';
     const eventStream = client.getBlockTransactionEvents(blockHash);
     const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
     if (
-        events[0].type === 'accountTransaction' &&
-        events[0].transactionType === 'configureDelegation'
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'configureDelegation'
     ) {
-        expect(events[0].events).toEqual(expected.configureDelegation);
+        expect(event.events).toEqual(expected.configureDelegation);
     } else {
         throw Error('Wrong event.');
     }
@@ -88,11 +96,13 @@ test('update', async () => {
         'a74a3914143eb596132c74685fac1314f6d5e8bb393e3372e83726f0c4654de2';
     const eventStream = client.getBlockTransactionEvents(blockHash);
     const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
     if (
-        events[0].type === 'accountTransaction' &&
-        events[0].transactionType === 'update'
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'update'
     ) {
-        expect(events[0].events).toEqual(expected.updatedEvent);
+        expect(event.events).toEqual(expected.updateEvent);
     } else {
         throw Error('Wrong event.');
     }

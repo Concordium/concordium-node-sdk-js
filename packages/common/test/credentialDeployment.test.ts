@@ -1,7 +1,7 @@
 import {
     createCredentialTransaction,
-    createCredentialV1,
     CredentialInput,
+    createCredentialV1,
 } from '../src/credentialDeploymentTransactions';
 import fs from 'fs';
 import { AttributeKey } from '../src/types';

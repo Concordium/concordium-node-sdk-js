@@ -81,7 +81,7 @@ jobs:
                 with:
                     version: 'latest'
               - name: build rust-bindings
-                run: yarn build:rust-bindings
+                run: yarn build:rust-bindings --dev
               - name: generate grpc
                 run: mkdir grpc; yarn generate
               - name: test

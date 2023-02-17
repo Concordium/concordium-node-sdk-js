@@ -14,7 +14,7 @@ export { getModuleBuffer } from '../src/util';
  * used for automatic tests.
  */
 export function getNodeClient(
-    address = '127.0.0.1',
+    address = 'node.testnet.concordium.com',
     port = 10000
 ): ConcordiumNodeClient {
     const metadata = new Metadata();

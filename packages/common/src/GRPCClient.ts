@@ -23,6 +23,7 @@ import {
 } from './serialization';
 import { BlockItemStatus, BlockItemSummary } from './types/blockItemSummary';
 import { ModuleReference } from './types/moduleReference';
+import { DEFAULT_INVOKE_ENERGY } from './constants';
 
 /**
  * A concordium-node specific gRPC client wrapper.
@@ -208,7 +209,7 @@ export default class ConcordiumNodeClient {
             amount: { value: context.amount?.microCcdAmount || 0n },
             entrypoint: { value: context.method },
             parameter: { value: context.parameter || Buffer.alloc(0) },
-            energy: { value: context.energy || 0n },
+            energy: { value: context.energy || DEFAULT_INVOKE_ENERGY },
         };
 
         const response = await this.client.invokeInstance(invokeInstanceRequest)

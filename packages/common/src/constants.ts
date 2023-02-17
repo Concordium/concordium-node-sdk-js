@@ -1,0 +1,1 @@
+export const DEFAULT_INVOKE_ENERGY = 10000000n;

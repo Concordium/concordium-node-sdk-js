@@ -890,8 +890,33 @@ export const moduleDeployedEvent = {
         '3c532ed32dcb3b9f49afb442457a63465987994e400fd5023c8471c26a858ab4',
 };
 
-export const delegationRemoved = {
+export const delegationRemovedEvent = {
     tag: 'DelegationRemoved',
     account: '4nvFUvdF3Ki7M6Xc2vHejX7iQW5Gtu7UBu6RaPRZV7LorLToPG',
     delegatorId: 4002,
 };
+
+export const transferWithMemoEvent = {
+        index: 0n,
+        energyCost: 508n,
+        hash: '8bfd6c5d3006ea005531d90e88af1075c1a5d0bce1f2befa7abb3ec8b3fb60b5',
+        type: 'accountTransaction',
+        cost: 879395n,
+        sender: '4nJU5pCM49KmrYQ1tsUTEBNBJVxs3X2qo8nKj8CQYsgBmUACHG',
+        transactionType: 'transferWithMemo',
+        transfer: {
+          tag: 'Transferred',
+          amount: 250000000n,
+          to: '4fxkFceRT3XyUpb4yW3C2c9RnEBhunyNrKprYarr7htKmMvztG'
+        },
+        memo: { tag: 'TransferMemo', memo: '6474657374' }
+      }
+
+export const upgradedEvent = {
+    address: { index: 3143n, subindex: 0n },
+    from: '7371d1039a0e4587a54b8959eaabf11da83fad24650ee6af380357849648f477',
+    tag: 'Upgraded',
+    to: '7371d1039a0e4587a54b8959eaabf11da83fad24650ee6af380357849648f477'
+}
+
+export const dataRegisteredEvent = { data: '6b68656c6c6f20776f726c64', tag: 'DataRegistered' }

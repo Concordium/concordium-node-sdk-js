@@ -186,7 +186,61 @@ test('DelegationRemoved', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'configureDelegation'
     ) {
-        expect(event.events[0]).toEqual(expected.delegationRemoved);
+        expect(event.events[0]).toEqual(expected.delegationRemovedEvent);
+    } else {
+        throw Error('Wrong event:');
+    }
+});
+
+// TransferMemo
+test('TransferMemo', async () => {
+    const blockHash =
+        'df96a12cc515bc863ed7021154494c8747e321565ff8b788066f0308c2963ece';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[0]
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'transferWithMemo'
+    ) {
+        expect(event).toEqual(expected.transferWithMemoEvent);
+    } else {
+        throw Error('Wrong event:');
+    }
+});
+
+// Upgraded
+test('Upgraded', async () => {
+    const blockHash =
+        '77ffdf2e8e4144a9a39b20ea7211a4aee0a23847778dcc1963c7a85f32b4f27d';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[0]
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'update'
+    ) {
+        expect(event.events[1]).toEqual(expected.upgradedEvent);
+    } else {
+        throw Error('Wrong event:');
+    }
+});
+
+// DataRegistered
+test('DataRegistered', async () => {
+    const blockHash =
+        'ac4e60f4a014d823e3bf03859abdb2f9d2317b988dedc9c9621e3b7f5dcffb06';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[0]
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'registerData'
+    ) {
+        expect(event.dataRegistered).toEqual(expected.dataRegisteredEvent);
     } else {
         throw Error('Wrong event:');
     }

@@ -474,13 +474,7 @@ export function serializeInitContractParameters(
         contractName,
         schemaVersion
     );
-    try {
-        return Buffer.from(serializedParameters, 'hex');
-    } catch (e) {
-        throw new Error(
-            'unable to deserialize parameters, due to: ' + serializedParameters
-        ); // In this case serializedParameters is the error message from the rust module
-    }
+    return Buffer.from(serializedParameters, 'hex');
 }
 
 /**
@@ -506,13 +500,7 @@ export function serializeUpdateContractParameters(
         receiveFunctionName,
         schemaVersion
     );
-    try {
-        return Buffer.from(serializedParameters, 'hex');
-    } catch (e) {
-        throw new Error(
-            'unable to deserialize parameters, due to: ' + serializedParameters
-        ); // In this case serializedParameters is the error message from the rust module
-    }
+    return Buffer.from(serializedParameters, 'hex');
 }
 
 /**

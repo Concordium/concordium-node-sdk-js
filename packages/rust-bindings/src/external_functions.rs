@@ -104,7 +104,7 @@ pub fn serialize_receive_contract_parameters(
     contract_name: &str,
     function_name: &str,
     schema_version: Option<u8>,
-) -> HexString {
+) -> Result<HexString, String> {
     match serialize_receive_contract_parameters_aux(
         parameters,
         schema,
@@ -112,8 +112,8 @@ pub fn serialize_receive_contract_parameters(
         function_name,
         schema_version,
     ) {
-        Ok(s) => s,
-        Err(e) => format!("{}", e),
+        Ok(s) => Ok(s),
+        Err(e) => Err(format!("unable to deserialize parameters, due to: {}", e)),
     }
 }
 
@@ -123,11 +123,11 @@ pub fn serialize_init_contract_parameters(
     schema: HexString,
     contract_name: &str,
     schema_version: Option<u8>,
-) -> HexString {
+) -> Result<HexString, String> {
     match serialize_init_contract_parameters_aux(parameters, schema, contract_name, schema_version)
     {
-        Ok(s) => s,
-        Err(e) => format!("{}", e),
+        Ok(s) => Ok(s),
+        Err(e) => Err(format!("unable to deserialize parameters, due to: {}", e)),
     }
 }
 

@@ -37,6 +37,10 @@
 
 - Function to generate baker keys: `generateBakerKeys`.
 
+- `serializeInitContractParameters` and `serializeUpdateContractParameters` now
+  report an error when called with invalid data, such as a receive function with
+  missing schema, or a schema that cannot be parsed.
+
 ## 6.4.0
 
 - Added `getFinalizedBlocks()` & `getBlocks()` GRPCv2 functions.

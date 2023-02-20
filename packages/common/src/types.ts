@@ -24,6 +24,7 @@ export * from './types/BlockSpecialEvents';
 export type HexString = string;
 export type Base58String = string;
 export type DigitString = string;
+export type UrlString = string;
 export type IpAddressString = string;
 
 // A number of milliseconds
@@ -796,7 +797,7 @@ export type DelegatorId = number;
 
 export interface BakerPoolInfo {
     openStatus: OpenStatusText;
-    metadataUrl: string;
+    metadataUrl: UrlString;
     commissionRates: CommissionRates;
 }
 
@@ -995,7 +996,7 @@ export type AccountInfo =
 
 export interface Description {
     name: string;
-    url: string;
+    url: UrlString;
     description: string;
 }
 
@@ -1227,6 +1228,28 @@ export interface UpdateCredentialsPayload {
     currentNumberOfCredentials: bigint;
 }
 
+export interface BakerKeysWithProofs {
+    signatureVerifyKey: HexString;
+    electionVerifyKey: HexString;
+    aggregationVerifyKey: HexString;
+    proofAggregation: HexString;
+    proofSig: HexString;
+    proofElection: HexString;
+}
+
+export interface ConfigureBakerPayload {
+    /* stake to bake. if set to 0, this removes the account as a baker */
+    stake?: CcdAmount;
+    /* should earnings from baking be added to staked amount  */
+    restakeEarnings?: boolean;
+    openForDelegation?: OpenStatus;
+    keys?: BakerKeysWithProofs;
+    metadataUrl?: UrlString;
+    transactionFeeCommission?: number;
+    bakingRewardCommission?: number;
+    finalizationRewardCommission?: number;
+}
+
 export interface ConfigureDelegationPayload {
     /* stake to delegate. if set to 0, this removes the account as a delegator */
     stake?: CcdAmount;
@@ -1244,6 +1267,7 @@ export type AccountTransactionPayload =
     | InitContractPayload
     | UpdateContractPayload
     | UpdateCredentialsPayload
+    | ConfigureBakerPayload
     | ConfigureDelegationPayload;
 
 export interface AccountTransaction {

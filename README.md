@@ -36,6 +36,14 @@ yarn build
 This will build all the subprojects.
 Note that you must have [wasm-pack](https://rustwasm.github.io/wasm-pack/) installed to build the project.
 
+## Building for development
+To build the project quickly during development run
+```
+yarn build:dev
+```
+This will build all the subprojects.
+Note that this skips generating the grpc API and optimizing the wasm modules.
+
 ## Making a new release
 The following describes the requirements for creating  a new release for each of the packages contained in this repository.
 ### common

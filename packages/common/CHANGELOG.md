@@ -35,6 +35,8 @@
     - `getBlockPendingUpdates()`
     - `getBlockFinalizationSummary()`
 
+- Function to generate baker keys: `generateBakerKeys`.
+
 ## 6.4.0
 
 - Added `getFinalizedBlocks()` & `getBlocks()` GRPCv2 functions.

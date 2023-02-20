@@ -386,7 +386,7 @@ if (result.tag === 'failure') {
 
 Note that some of the parts of the context are optional:
  - blockHash: defaults to last finalized block
- - energy: defaults to 10,000,000 NRG.
+ - energy: defaults to 1,000,000 NRG.
 
 ## getModuleSource
 This commands gets the source of a module on the chain.

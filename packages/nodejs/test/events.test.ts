@@ -180,7 +180,7 @@ test('DelegationRemoved', async () => {
         '65ad6b6a4c9eaccb99a01e2661fcc588a411beb0ed91d39ac692359d5a666631';
     const eventStream = client.getBlockTransactionEvents(blockHash);
     const events = await asyncIterableToList(eventStream);
-    const event = events[1]
+    const event = events[1];
 
     if (
         event.type === 'accountTransaction' &&
@@ -198,7 +198,7 @@ test('TransferMemo', async () => {
         'df96a12cc515bc863ed7021154494c8747e321565ff8b788066f0308c2963ece';
     const eventStream = client.getBlockTransactionEvents(blockHash);
     const events = await asyncIterableToList(eventStream);
-    const event = events[0]
+    const event = events[0];
 
     if (
         event.type === 'accountTransaction' &&
@@ -216,7 +216,7 @@ test('Upgraded', async () => {
         '77ffdf2e8e4144a9a39b20ea7211a4aee0a23847778dcc1963c7a85f32b4f27d';
     const eventStream = client.getBlockTransactionEvents(blockHash);
     const events = await asyncIterableToList(eventStream);
-    const event = events[0]
+    const event = events[0];
 
     if (
         event.type === 'accountTransaction' &&
@@ -234,13 +234,31 @@ test('DataRegistered', async () => {
         'ac4e60f4a014d823e3bf03859abdb2f9d2317b988dedc9c9621e3b7f5dcffb06';
     const eventStream = client.getBlockTransactionEvents(blockHash);
     const events = await asyncIterableToList(eventStream);
-    const event = events[0]
+    const event = events[0];
 
     if (
         event.type === 'accountTransaction' &&
         event.transactionType === 'registerData'
     ) {
         expect(event.dataRegistered).toEqual(expected.dataRegisteredEvent);
+    } else {
+        throw Error('Wrong event:');
+    }
+});
+
+// NewEncryptedAmountEvent
+test('NewEncryptedAmountEvent', async () => {
+    const blockHash =
+        '4eec1470e133340859dd9cd39187ad5f32c5b59ca3c7277d44f9b30e7a563388';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'encryptedAmountTransfer'
+    ) {
+        expect(event.added).toEqual(expected.newEncryptedAmountEvent);
     } else {
         throw Error('Wrong event:');
     }

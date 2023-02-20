@@ -897,26 +897,37 @@ export const delegationRemovedEvent = {
 };
 
 export const transferWithMemoEvent = {
-        index: 0n,
-        energyCost: 508n,
-        hash: '8bfd6c5d3006ea005531d90e88af1075c1a5d0bce1f2befa7abb3ec8b3fb60b5',
-        type: 'accountTransaction',
-        cost: 879395n,
-        sender: '4nJU5pCM49KmrYQ1tsUTEBNBJVxs3X2qo8nKj8CQYsgBmUACHG',
-        transactionType: 'transferWithMemo',
-        transfer: {
-          tag: 'Transferred',
-          amount: 250000000n,
-          to: '4fxkFceRT3XyUpb4yW3C2c9RnEBhunyNrKprYarr7htKmMvztG'
-        },
-        memo: { tag: 'TransferMemo', memo: '6474657374' }
-      }
+    index: 0n,
+    energyCost: 508n,
+    hash: '8bfd6c5d3006ea005531d90e88af1075c1a5d0bce1f2befa7abb3ec8b3fb60b5',
+    type: 'accountTransaction',
+    cost: 879395n,
+    sender: '4nJU5pCM49KmrYQ1tsUTEBNBJVxs3X2qo8nKj8CQYsgBmUACHG',
+    transactionType: 'transferWithMemo',
+    transfer: {
+        tag: 'Transferred',
+        amount: 250000000n,
+        to: '4fxkFceRT3XyUpb4yW3C2c9RnEBhunyNrKprYarr7htKmMvztG',
+    },
+    memo: { tag: 'TransferMemo', memo: '6474657374' },
+};
 
 export const upgradedEvent = {
     address: { index: 3143n, subindex: 0n },
     from: '7371d1039a0e4587a54b8959eaabf11da83fad24650ee6af380357849648f477',
     tag: 'Upgraded',
-    to: '7371d1039a0e4587a54b8959eaabf11da83fad24650ee6af380357849648f477'
-}
+    to: '7371d1039a0e4587a54b8959eaabf11da83fad24650ee6af380357849648f477',
+};
 
-export const dataRegisteredEvent = { data: '6b68656c6c6f20776f726c64', tag: 'DataRegistered' }
+export const dataRegisteredEvent = {
+    data: '6b68656c6c6f20776f726c64',
+    tag: 'DataRegistered',
+};
+
+export const newEncryptedAmountEvent = {
+    account: '2za2yAXbFiaB151oYqTteZfqiBzibHXizwjNbpdU8hodq9SfEk',
+    encryptedAmount:
+        '8695a917b4404bfa7cb787297662f610f08758f73bc73028a0ec004626b28e28bb82a69e86b9b985e36c588ff2b36089ab40ecae0a199c53f088e6c75012c1c116600dbd22dc33285a22ad63b0a99e5b8b6bad012d1d88568eaddcbac8bf03938762267b06a3353659e436cad83ac2f2b6961ccbf4a77cffaa20757f69f2ef3a2d2c7e9a4bf7c7373e50fbd5da02c46c9565146ac5b56c1a9eb7ae0b9614ed9475e26d4cfc2cb03014f70a4ba82f1aae131b735eec2dcc5ddafe5fac1ab0dbf4',
+    newIndex: 1,
+    tag: 'NewEncryptedAmount',
+};

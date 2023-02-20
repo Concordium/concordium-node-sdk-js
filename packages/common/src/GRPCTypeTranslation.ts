@@ -805,7 +805,7 @@ function trBakerEvent(
                 tag: v1.TransactionEventTag.BakerSetBakingRewardCommission,
                 bakerId: unwrap(rewardComm.bakerId?.value),
                 bakingRewardCommission: trAmountFraction(amount),
-                account
+                account,
             };
         }
         case 'bakerSetFinalizationRewardCommission': {

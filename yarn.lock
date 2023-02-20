@@ -2046,15 +2046,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rauschma/stringio@npm:^1.4.0":
-  version: 1.4.0
-  resolution: "@rauschma/stringio@npm:1.4.0"
-  dependencies:
-    "@types/node": ^10.0.3
-  checksum: 0c6fae0519dc9db378966924894c37cfc854a19fc10b6867c5a2f362025c7d9e4f7cf65c120453036bb7503cdee3d7cc43ae9485f47dac3aad315bc83d93a24c
-  languageName: node
-  linkType: hard
-
 "@scure/base@npm:~1.1.0":
   version: 1.1.1
   resolution: "@scure/base@npm:1.1.1"
@@ -2299,20 +2290,6 @@ __metadata:
   version: 18.0.1
   resolution: "@types/node@npm:18.0.1"
   checksum: be14b251c54cc2b4ca78ac6eadf2fe5e831e487f2e17848f21d576295945b538271dcc674d0bba582b3f8d95b84f6826e99b6ba4710c76f165a8bdd4d4f0618e
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:^10.0.3":
-  version: 10.17.60
-  resolution: "@types/node@npm:10.17.60"
-  checksum: 2cdb3a77d071ba8513e5e8306fa64bf50e3c3302390feeaeff1fd325dd25c8441369715dfc8e3701011a72fed5958c7dfa94eb9239a81b3c286caa4d97db6eef
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:^16.4.13":
-  version: 16.18.12
-  resolution: "@types/node@npm:16.18.12"
-  checksum: fc3271182414f8593018ef8f00b4718116a92f463f619081bd399d9460e7861e1dd7eebc7cf94c23567e418ff397babed077011711aae8d47171b5a81c5bd71d
   languageName: node
   linkType: hard
 
@@ -6571,16 +6548,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-ts@npm:^5.1.2":
-  version: 5.1.2
-  resolution: "node-ts@npm:5.1.2"
-  dependencies:
-    "@rauschma/stringio": ^1.4.0
-    "@types/node": ^16.4.13
-  checksum: 1e6e990ab3616f79566fbbce2ec6c70c9add16e333fdc24f2ed4cb3785d0d69e87f43e63b2747c055acc8e0ab2d7fc086ce082e4da7648295aaaab9084510e99
-  languageName: node
-  linkType: hard
-
 "nopt@npm:^5.0.0":
   version: 5.0.0
   resolution: "nopt@npm:5.0.0"
@@ -7350,7 +7317,6 @@ __metadata:
     husky: ^4.2.5
     jest: ^27.0.6
     lint-staged: ^12.0.2
-    node-ts: ^5.1.2
     prettier: ^2.3.2
     stream-browserify: ^3.0.0
     ts-jest: ^27.0.3

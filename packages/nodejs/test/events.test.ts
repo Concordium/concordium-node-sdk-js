@@ -263,3 +263,21 @@ test('NewEncryptedAmountEvent', async () => {
         throw Error('Wrong event:');
     }
 });
+
+// TransferWithScheduleEvent
+test('TransferWithScheduleEvent', async () => {
+    const blockHash =
+        '7696ce3b5e3c5165572984abb250f8ac7c8f42cdc5ca3e1c1f1c387bb878fc94';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'transferWithSchedule'
+    ) {
+        expect(event.event).toEqual(expected.transferWithScheduleEvent);
+    } else {
+        throw Error('Wrong event:');
+    }
+});

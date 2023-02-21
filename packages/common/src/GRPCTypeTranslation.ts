@@ -856,7 +856,7 @@ function trDelegationEvent(
         case 'delegationStakeDecreased': {
             const stakeDecr = event.delegationStakeDecreased;
             return {
-                tag: v1.TransactionEventTag.DelegationStakeIncreased,
+                tag: v1.TransactionEventTag.DelegationStakeDecreased,
                 delegatorId: Number(unwrap(stakeDecr.delegatorId?.id?.value)),
                 newStake: unwrap(stakeDecr.newStake?.value),
                 account,
@@ -1541,8 +1541,8 @@ function trMemoEvent(memo: v2.Memo): v1.MemoEvent {
 }
 
 function trTransactionType(
-    type: v2.TransactionType | undefined
-): v1.TransactionKindString {
+    type?: v2.TransactionType,
+): v1.TransactionKindString | undefined {
     switch (type) {
         case v2.TransactionType.DEPLOY_MODULE:
             return v1.TransactionKindString.DeployModule;
@@ -1587,7 +1587,7 @@ function trTransactionType(
         case v2.TransactionType.CONFIGURE_DELEGATION:
             return v1.TransactionKindString.ConfigureDelegation;
         case undefined:
-            throw new Error('Unexpected missing transaction type');
+            return undefined;
     }
 }
 
@@ -1609,7 +1609,7 @@ function trAccountTransactionSummary(
                 ...base,
                 transactionType: v1.TransactionKindString.Failed,
                 failedTransactionType: trTransactionType(
-                    effect.none.transactionType
+                    effect.none.transactionType,
                 ),
                 rejectReason: trRejectReason(effect.none.rejectReason),
             };

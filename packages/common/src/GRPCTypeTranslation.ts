@@ -2413,9 +2413,9 @@ export function blockSpecialEvent(
             };
         }
         case 'paydayPoolReward': {
+            const poolOwner = event.paydayPoolReward.poolOwner?.value;
             return {
                 tag: 'paydayPoolReward',
-                poolOwner: unwrap(event.paydayPoolReward.poolOwner?.value),
                 transactionFees: unwrap(
                     event.paydayPoolReward.transactionFees?.value
                 ),
@@ -2423,6 +2423,7 @@ export function blockSpecialEvent(
                 finalizationReward: unwrap(
                     event.paydayPoolReward.finalizationReward?.value
                 ),
+                ...(poolOwner && { poolOwner }),
             };
         }
         case undefined: {

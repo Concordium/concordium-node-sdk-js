@@ -281,3 +281,21 @@ test('TransferWithScheduleEvent', async () => {
         throw Error('Wrong event.');
     }
 });
+
+// BakerKeysUpdated
+test('BakerKeysUpdated', async () => {
+    const blockHash =
+        'ec886543ea454845ce09dcc064d7bc79f7da5a8c74c8f7cce9783681028a47de';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[1];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'configureBaker'
+    ) {
+        expect(event.events[0]).toEqual(expected.bakerKeysUpdatedEvent);
+    } else {
+        throw Error('Wrong event:');
+    }
+});

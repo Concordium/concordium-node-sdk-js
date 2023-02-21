@@ -931,3 +931,12 @@ export const newEncryptedAmountEvent = {
     newIndex: 1,
     tag: 'NewEncryptedAmount',
 };
+
+export const bakerKeysUpdatedEvent = {
+    account: '4Kmo9keJQaiyAuRM2pRh2xK4e75ph7hp4CzxdFAcRDeQRHfaHT',
+    aggregationKey: '8cf3c6fe9bebc45e9c9bb34442c5baf7bb612adc193525173d6fe36355be29ad69affeb3937f2b819976ecefeb14c3ae04d9c44d0117eda8c7968602f08f266960226c5fe2014c1bda1794b7fdbd5b5f9d31deb2c053d5f9f3734452e1dcb4b8',
+    bakerId: 15n,
+    electionKey: 'b40185d794485eeb099bdfb7df58fc64fd303847f2a947884648e535b023fe23',
+    signKey: '5cbc1c8ab56047360ff37229760302e03844d48299f4fb1f1247832778f980c0',
+    tag: 'BakerKeysUpdated'
+}

@@ -6,6 +6,7 @@ import bs58check from 'bs58check';
 import { AccountAddress } from './types/accountAddress';
 import { ModuleReference } from './types/moduleReference';
 import { CcdAmount } from './types/ccdAmount';
+import { Base58String } from './types';
 
 function unwrapToHex(bytes: Uint8Array | undefined): v1.HexString {
     return Buffer.from(unwrap(bytes)).toString('hex');
@@ -712,7 +713,7 @@ function trContractTraceElement(
 
 function trBakerEvent(
     bakerEvent: v2.BakerEvent,
-    account: string
+    account: Base58String
 ): v1.BakerEvent {
     const event = bakerEvent.event;
     switch (event.oneofKind) {
@@ -720,7 +721,7 @@ function trBakerEvent(
             const keysEvent = event.bakerAdded.keysEvent;
             return {
                 tag: v1.TransactionEventTag.BakerAdded,
-                bakerId: Number(unwrap(keysEvent?.bakerId?.value)),
+                bakerId: unwrap(keysEvent?.bakerId?.value),
                 account: unwrapToBase58(keysEvent?.account),
                 signKey: unwrapValToHex(keysEvent?.signKey),
                 electionKey: unwrapValToHex(keysEvent?.electionKey),
@@ -732,20 +733,20 @@ function trBakerEvent(
         case 'bakerRemoved':
             return {
                 tag: v1.TransactionEventTag.BakerRemoved,
-                bakerId: Number(unwrap(event.bakerRemoved.value)),
+                bakerId: unwrap(event.bakerRemoved.value),
                 account,
             };
         case 'bakerStakeIncreased':
             return {
                 tag: v1.TransactionEventTag.BakerStakeIncreased,
-                bakerId: Number(unwrap(event.bakerStakeIncreased.bakerId)),
+                bakerId: unwrap(event.bakerStakeIncreased.bakerId?.value),
                 newStake: unwrap(event.bakerStakeIncreased.newStake?.value),
                 account,
             };
         case 'bakerStakeDecreased':
             return {
                 tag: v1.TransactionEventTag.BakerStakeDecreased,
-                bakerId: Number(unwrap(event.bakerStakeDecreased.bakerId)),
+                bakerId: unwrap(event.bakerStakeDecreased.bakerId?.value),
                 newStake: unwrap(event.bakerStakeDecreased.newStake?.value),
                 account,
             };
@@ -753,7 +754,7 @@ function trBakerEvent(
             const update = event.bakerRestakeEarningsUpdated;
             return {
                 tag: v1.TransactionEventTag.BakerSetRestakeEarnings,
-                bakerId: Number(unwrap(update.bakerId?.value)),
+                bakerId: unwrap(update.bakerId?.value),
                 restakeEarnings: unwrap(update.restakeEarnings),
                 account,
             };
@@ -761,7 +762,7 @@ function trBakerEvent(
         case 'bakerKeysUpdated':
             return {
                 tag: v1.TransactionEventTag.BakerKeysUpdated,
-                bakerId: Number(unwrap(event.bakerKeysUpdated.bakerId?.value)),
+                bakerId: unwrap(event.bakerKeysUpdated.bakerId?.value),
                 account: unwrapToBase58(event.bakerKeysUpdated.account),
                 signKey: unwrapValToHex(event.bakerKeysUpdated.signKey),
                 electionKey: unwrapValToHex(event.bakerKeysUpdated.electionKey),
@@ -773,7 +774,7 @@ function trBakerEvent(
             const setOpenStatus = event.bakerSetOpenStatus;
             return {
                 tag: v1.TransactionEventTag.BakerSetOpenStatus,
-                bakerId: Number(unwrap(setOpenStatus.bakerId?.value)),
+                bakerId: unwrap(setOpenStatus.bakerId?.value),
                 openStatus: trOpenStatus(setOpenStatus.openStatus),
                 account,
             };
@@ -782,7 +783,7 @@ function trBakerEvent(
             const setURL = event.bakerSetMetadataUrl;
             return {
                 tag: v1.TransactionEventTag.BakerSetMetadataURL,
-                bakerId: Number(unwrap(setURL.bakerId?.value)),
+                bakerId: unwrap(setURL.bakerId?.value),
                 metadataURL: setURL.url,
                 account,
             };
@@ -792,7 +793,7 @@ function trBakerEvent(
             const amount = transferFeeComm.transactionFeeCommission;
             return {
                 tag: v1.TransactionEventTag.BakerSetTransactionFeeCommission,
-                bakerId: Number(unwrap(transferFeeComm.bakerId?.value)),
+                bakerId: unwrap(transferFeeComm.bakerId?.value),
                 transactionFeeCommission: trAmountFraction(amount),
                 account,
             };
@@ -802,8 +803,9 @@ function trBakerEvent(
             const amount = rewardComm.bakingRewardCommission;
             return {
                 tag: v1.TransactionEventTag.BakerSetBakingRewardCommission,
-                bakerId: Number(unwrap(rewardComm.bakerId?.value)),
+                bakerId: unwrap(rewardComm.bakerId?.value),
                 bakingRewardCommission: trAmountFraction(amount),
+                account,
             };
         }
         case 'bakerSetFinalizationRewardCommission': {
@@ -812,7 +814,7 @@ function trBakerEvent(
             return {
                 tag: v1.TransactionEventTag
                     .BakerSetFinalizationRewardCommission,
-                bakerId: Number(unwrap(rewardComm.bakerId?.value)),
+                bakerId: unwrap(rewardComm.bakerId?.value),
                 finalizationRewardCommission: trAmountFraction(amount),
                 account,
             };
@@ -841,7 +843,8 @@ function trDelegTarget(
 }
 
 function trDelegationEvent(
-    delegationEvent: v2.DelegationEvent
+    delegationEvent: v2.DelegationEvent,
+    account: Base58String
 ): v1.DelegationEvent {
     const event = delegationEvent.event;
     switch (event.oneofKind) {
@@ -851,6 +854,7 @@ function trDelegationEvent(
                 tag: v1.TransactionEventTag.DelegationStakeIncreased,
                 delegatorId: Number(unwrap(stakeIncr.delegatorId?.id?.value)),
                 newStake: unwrap(stakeIncr.newStake?.value),
+                account,
             };
         }
         case 'delegationStakeDecreased': {
@@ -859,6 +863,7 @@ function trDelegationEvent(
                 tag: v1.TransactionEventTag.DelegationStakeIncreased,
                 delegatorId: Number(unwrap(stakeDecr.delegatorId?.id?.value)),
                 newStake: unwrap(stakeDecr.newStake?.value),
+                account,
             };
         }
         case 'delegationSetRestakeEarnings': {
@@ -867,6 +872,7 @@ function trDelegationEvent(
                 tag: v1.TransactionEventTag.DelegationSetRestakeEarnings,
                 delegatorId: Number(unwrap(restake.delegatorId?.id?.value)),
                 restakeEarnings: unwrap(restake.restakeEarnings),
+                account,
             };
         }
         case 'delegationSetDelegationTarget': {
@@ -875,17 +881,20 @@ function trDelegationEvent(
                 tag: v1.TransactionEventTag.DelegationSetDelegationTarget,
                 delegatorId: Number(unwrap(target.delegatorId?.id?.value)),
                 delegationTarget: trDelegTarget(target.delegationTarget),
+                account,
             };
         }
         case 'delegationAdded':
             return {
                 tag: v1.TransactionEventTag.DelegationAdded,
                 delegatorId: Number(unwrap(event.delegationAdded.id?.value)),
+                account,
             };
         case 'delegationRemoved':
             return {
                 tag: v1.TransactionEventTag.DelegationAdded,
                 delegatorId: Number(unwrap(event.delegationRemoved.id?.value)),
+                account,
             };
         default:
             throw Error('Unrecognized event type. This should be impossible.');
@@ -1602,6 +1611,7 @@ function trAccountTransactionSummary(
         case 'none':
             return {
                 ...base,
+                transactionType: v1.TransactionKindString.Failed,
                 failedTransactionType: trTransactionType(
                     effect.none.transactionType
                 ),
@@ -1716,7 +1726,7 @@ function trAccountTransactionSummary(
                 tag: increased
                     ? v1.TransactionEventTag.BakerStakeIncreased
                     : v1.TransactionEventTag.BakerStakeDecreased,
-                bakerId: Number(unwrap(update?.bakerId)),
+                bakerId: unwrap(update?.bakerId?.value),
                 newStake: unwrap(update?.newStake?.value),
                 account: base.sender,
             };
@@ -1732,7 +1742,8 @@ function trAccountTransactionSummary(
                 tag: v1.TransactionEventTag.EncryptedAmountsRemoved,
                 inputAmount: unwrapValToHex(transfer.removed?.inputAmount),
                 newAmount: unwrapValToHex(transfer.removed?.newAmount),
-                upToindex: Number(unwrap(transfer.removed?.upToIndex)),
+                upToIndex: Number(unwrap(transfer.removed?.upToIndex)),
+                account: base.sender,
             };
             const added: v1.NewEncryptedAmountEvent = {
                 tag: v1.TransactionEventTag.NewEncryptedAmount,
@@ -1780,12 +1791,14 @@ function trAccountTransactionSummary(
             const transfer = effect.transferredToPublic;
             const removed: v1.EncryptedAmountsRemovedEvent = {
                 tag: v1.TransactionEventTag.EncryptedAmountsRemoved,
+                account: base.sender,
                 inputAmount: unwrapValToHex(transfer.removed?.inputAmount),
                 newAmount: unwrapValToHex(transfer.removed?.newAmount),
-                upToindex: Number(unwrap(transfer.removed?.upToIndex)),
+                upToIndex: Number(unwrap(transfer.removed?.upToIndex)),
             };
             const added: v1.AmountAddedByDecryptionEvent = {
                 tag: v1.TransactionEventTag.AmountAddedByDecryption,
+                account: base.sender,
                 amount: unwrap(transfer.amount?.value),
             };
             return {
@@ -1837,6 +1850,7 @@ function trAccountTransactionSummary(
                 newCredIds: update.newCredIds.map(unwrapValToHex),
                 removedCredIDs: update.removedCredIds.map(unwrapValToHex),
                 newThreshold: unwrap(update.newThreshold?.value),
+                account: base.sender,
             };
             return {
                 ...base,
@@ -1867,8 +1881,8 @@ function trAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: v1.TransactionKindString.ConfigureDelegation,
-                events: effect.delegationConfigured.events.map(
-                    trDelegationEvent
+                events: effect.delegationConfigured.events.map((x) =>
+                    trDelegationEvent(x, base.sender)
                 ),
             };
         case undefined:

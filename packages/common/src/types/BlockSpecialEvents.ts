@@ -8,8 +8,7 @@ export type BlockSpecialEvent =
     | BlockSpecialEventPaydayFoundationReward
     | BlockSpecialEventPaydayAccountReward
     | BlockSpecialEventBlockAccrueReward
-    | BlockSpecialEventPaydayPoolReward
-    | BlockSpecialEventAccountAmount;
+    | BlockSpecialEventPaydayPoolReward;
 
 export interface BlockSpecialEventBakingRewards {
     tag: 'bakingRewards';

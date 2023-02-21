@@ -940,3 +940,10 @@ export const bakerKeysUpdatedEvent = {
     signKey: '5cbc1c8ab56047360ff37229760302e03844d48299f4fb1f1247832778f980c0',
     tag: 'BakerKeysUpdated'
 }
+
+export const bakerStakeIncreased =      {
+    account: '4JzAXhzJKwG3DGoAbgGhZNnRQqeFdp9zbxv6WUjDbVbyKEie8e',
+    bakerId: 525n,
+    newStake: 14001000000n,
+    tag: 'BakerStakeIncreased'
+  }

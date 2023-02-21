@@ -312,7 +312,25 @@ test('BakerStakeIncreased', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'configureBaker'
     ) {
-        expect(event.events[0]).toEqual(expected.bakerStakeIncreased);
+        expect(event.events[0]).toEqual(expected.bakerStakeIncreasedEvent);
+    } else {
+        throw Error('Wrong event:');
+    }
+});
+
+// CredentialKeysUpdated
+test('CredentialKeysUpdated', async () => {
+    const blockHash =
+        '387a2f5812b16e4f6543e51007f20b514909de4d7ea39785b83bcd6f1cde9af4';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'updateCredentialKeys'
+    ) {
+        expect(event.keysUpdated).toEqual(expected.credentialKeysUpdatedEvent);
     } else {
         throw Error('Wrong event:');
     }

@@ -941,9 +941,14 @@ export const bakerKeysUpdatedEvent = {
     tag: 'BakerKeysUpdated'
 }
 
-export const bakerStakeIncreased =      {
+export const bakerStakeIncreasedEvent =      {
     account: '4JzAXhzJKwG3DGoAbgGhZNnRQqeFdp9zbxv6WUjDbVbyKEie8e',
     bakerId: 525n,
     newStake: 14001000000n,
     tag: 'BakerStakeIncreased'
   }
+
+export const credentialKeysUpdatedEvent = {
+    credId: 'a643d6082a8f80460fff27f3ff27fedbfdc60039527402b8188fc845a849428b5484c82a1589cab7604c1a2be978c39c',
+    tag: 'CredentialKeysUpdated'
+}

@@ -1541,7 +1541,7 @@ function trMemoEvent(memo: v2.Memo): v1.MemoEvent {
 }
 
 function trTransactionType(
-    type?: v2.TransactionType,
+    type?: v2.TransactionType
 ): v1.TransactionKindString | undefined {
     switch (type) {
         case v2.TransactionType.DEPLOY_MODULE:
@@ -1609,7 +1609,7 @@ function trAccountTransactionSummary(
                 ...base,
                 transactionType: v1.TransactionKindString.Failed,
                 failedTransactionType: trTransactionType(
-                    effect.none.transactionType,
+                    effect.none.transactionType
                 ),
                 rejectReason: trRejectReason(effect.none.rejectReason),
             };

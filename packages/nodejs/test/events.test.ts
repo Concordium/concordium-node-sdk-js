@@ -91,7 +91,7 @@ test('configureDelegation', async () => {
 });
 
 // Interrupted, Resumed, Transferred, Updated
-test('update', async () => {
+test('contract update', async () => {
     const blockHash =
         'a74a3914143eb596132c74685fac1314f6d5e8bb393e3372e83726f0c4654de2';
     const eventStream = client.getBlockTransactionEvents(blockHash);

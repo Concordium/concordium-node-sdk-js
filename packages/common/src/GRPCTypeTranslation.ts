@@ -2423,7 +2423,7 @@ export function blockSpecialEvent(
                 finalizationReward: unwrap(
                     event.paydayPoolReward.finalizationReward?.value
                 ),
-                ...(poolOwner && { poolOwner }),
+                ...(poolOwner !== undefined && { poolOwner }),
             };
         }
         case undefined: {

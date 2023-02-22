@@ -1844,7 +1844,7 @@ function trAccountTransactionSummary(
             const event: v1.CredentialsUpdatedEvent = {
                 tag: v1.TransactionEventTag.CredentialsUpdated,
                 newCredIds: update.newCredIds.map(unwrapValToHex),
-                removedCredIDs: update.removedCredIds.map(unwrapValToHex),
+                removedCredIds: update.removedCredIds.map(unwrapValToHex),
                 newThreshold: unwrap(update.newThreshold?.value),
                 account: base.sender,
             };

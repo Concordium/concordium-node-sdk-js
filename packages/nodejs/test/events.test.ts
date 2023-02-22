@@ -335,3 +335,23 @@ test('CredentialKeysUpdated', async () => {
         throw Error('Wrong event:');
     }
 });
+
+// CredentialsUpdated
+test('CredentialsUpdated', async () => {
+    const blockHash =
+        '6ce268765af0f59e147a0935980ae3014b9e90b9a43a2d9cf785f19641a9bf64';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'updateCredentials'
+    ) {
+        expect(event.credentialsUpdated).toEqual(
+            expected.credentialsUpdatedEvent
+        );
+    } else {
+        throw Error('Wrong event:');
+    }
+});

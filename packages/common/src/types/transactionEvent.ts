@@ -215,7 +215,7 @@ export interface CredentialsUpdatedEvent {
     tag: TransactionEventTag.CredentialsUpdated;
     account: Base58String;
     newCredIds: HexString[];
-    removedCredIDs: HexString[];
+    removedCredIds: HexString[];
     newThreshold: number;
 }
 

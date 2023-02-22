@@ -954,3 +954,11 @@ export const credentialKeysUpdatedEvent = {
     credId: 'a643d6082a8f80460fff27f3ff27fedbfdc60039527402b8188fc845a849428b5484c82a1589cab7604c1a2be978c39c',
     tag: 'CredentialKeysUpdated',
 };
+
+export const credentialsUpdatedEvent = {
+    account: '3irV7FF3BZbz9ejGTm7EHLUi6CQHdJUELDfyhwkHcLqXmQyUfR',
+    newCredIds: [],
+    newThreshold: 1,
+    removedCredIds: [],
+    tag: 'CredentialsUpdated',
+};

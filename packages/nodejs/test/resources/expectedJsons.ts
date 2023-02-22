@@ -968,6 +968,159 @@ export const delegationStakeDecreasedEvent = {
     newStake: 10000000n,
 };
 
+export const mintSpecialEvent = {
+    tag: 'mint',
+    mintBakingReward: 12708081798618n,
+    mintFinalizationReward: 6354040899309n,
+    mintPlatformDevelopmentCharge: 2118013633103n,
+    foundationAccount: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
+};
+
+export const paydayFoundationRewardSpecialEvent = {
+    tag: 'paydayFoundationReward',
+    foundationAccount: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
+    developmentCharge: 103517862n,
+};
+
+export const paydayPoolRewardSpecialEvent = {
+    tag: 'paydayPoolReward',
+    transactionFees: 0n,
+    bakerReward: 0n,
+    finalizationReward: 0n,
+};
+
+export const paydayAccountRewardSpecialEvent = {
+    tag: 'paydayAccountReward',
+    account: '48XGRnvQoG92T1AwETvW5pnJ1aRSPMKsWtGdKhTqyiNZzMk3Qn',
+    transactionFees: 128913265n,
+    bakerReward: 1139222197711n,
+    finalizationReward: 577640081755n,
+};
+
+export const blockAccrueRewardSpecialEvent = {
+    tag: 'blockAccrueReward',
+    transactionFees: 0n,
+    oldGasAccount: 3n,
+    newGasAccount: 3n,
+    bakerReward: 0n,
+    passiveReward: 0n,
+    foundationCharge: 0n,
+    baker: 6n,
+};
+
+export const bakingRewardsSpecialEvent = {
+    tag: 'bakingRewards',
+    bakingRewards: [
+        {
+            account: '3QK1rxUXV7GRk4Ng7Bs7qnbkdjyBdjzCytpTrSQN7BaJkiEfgZ',
+            amount: 56740641000n,
+        },
+        {
+            account: '3U4sfVSqGG6XK8g6eho2qRYtnHc4MWJBG1dfxdtPGbfHwFxini',
+            amount: 32625868575n,
+        },
+        {
+            account: '3gGBYDSpx2zWL3YMcqD48U5jVXYG4pJBDZqeY5CbMMKpxVBbc3',
+            amount: 39718448700n,
+        },
+        {
+            account: '3ntvNGT6tDuLYiSb5gMJSQAZfLPUJnzoizcFiVRWqLoctuXxpK',
+            amount: 41136964725n,
+        },
+        {
+            account: '3y9DtDUL8xpf8i2yj9k44zMVkf4H1hkpBEQcXbJhrgcwYSGg41',
+            amount: 35462900625n,
+        },
+        {
+            account: '42tFTDWvTmBd7hEacohuCfGFa9TsBKhsmXKeViQ7q7NoY7UadV',
+            amount: 49648060875n,
+        },
+        {
+            account: '44Axe5eHnMkBinX7GKvUm5w6mX83JGdasijhvsMv5ZW2Wmgphg',
+            amount: 51066576900n,
+        },
+        {
+            account: '48XGRnvQoG92T1AwETvW5pnJ1aRSPMKsWtGdKhTqyiNZzMk3Qn',
+            amount: 35462900625n,
+        },
+        {
+            account: '4AnukgcopMC4crxfL1L9fUYw9MAkoo1yKLvH7eA1NAX7SxgyRY',
+            amount: 56740641000n,
+        },
+        {
+            account: '4BTFaHx8CioLi8Xe7YiimpAK1oQMkbx5Wj6B8N7d7NXgmLvEZs',
+            amount: 66670253175n,
+        },
+        {
+            account: '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L',
+            amount: 60996189075n,
+        },
+    ],
+    remainder: 290n,
+};
+
+export const finalizationRewardsSpecialEvent = {
+    tag: 'finalizationRewards',
+    finalizationRewards: [
+        {
+            account: '3QK1rxUXV7GRk4Ng7Bs7qnbkdjyBdjzCytpTrSQN7BaJkiEfgZ',
+            amount: 359306692n,
+        },
+        {
+            account: '3U4sfVSqGG6XK8g6eho2qRYtnHc4MWJBG1dfxdtPGbfHwFxini',
+            amount: 359306692n,
+        },
+        {
+            account: '3gGBYDSpx2zWL3YMcqD48U5jVXYG4pJBDZqeY5CbMMKpxVBbc3',
+            amount: 359306692n,
+        },
+        {
+            account: '3ntvNGT6tDuLYiSb5gMJSQAZfLPUJnzoizcFiVRWqLoctuXxpK',
+            amount: 359306692n,
+        },
+        {
+            account: '3y9DtDUL8xpf8i2yj9k44zMVkf4H1hkpBEQcXbJhrgcwYSGg41',
+            amount: 359306692n,
+        },
+        {
+            account: '42tFTDWvTmBd7hEacohuCfGFa9TsBKhsmXKeViQ7q7NoY7UadV',
+            amount: 359306692n,
+        },
+        {
+            account: '44Axe5eHnMkBinX7GKvUm5w6mX83JGdasijhvsMv5ZW2Wmgphg',
+            amount: 359306692n,
+        },
+        {
+            account: '48XGRnvQoG92T1AwETvW5pnJ1aRSPMKsWtGdKhTqyiNZzMk3Qn',
+            amount: 359306692n,
+        },
+        {
+            account: '4AnukgcopMC4crxfL1L9fUYw9MAkoo1yKLvH7eA1NAX7SxgyRY',
+            amount: 359306692n,
+        },
+        {
+            account: '4BTFaHx8CioLi8Xe7YiimpAK1oQMkbx5Wj6B8N7d7NXgmLvEZs',
+            amount: 359306692n,
+        },
+        {
+            account: '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L',
+            amount: 359306692n,
+        },
+    ],
+    remainder: 4n,
+};
+
+export const blockRewardSpecialEvent = {
+    tag: 'blockReward',
+    transactionFees: 0n,
+    oldGasAccount: 0n,
+    newGasAccount: 0n,
+    bakerReward: 0n,
+    foundationCharge: 0n,
+    baker: '44Axe5eHnMkBinX7GKvUm5w6mX83JGdasijhvsMv5ZW2Wmgphg',
+    foundationAccount: '44Axe5eHnMkBinX7GKvUm5w6mX83JGdasijhvsMv5ZW2Wmgphg',
+};
+
 export const insufficientBalanceForDelegationStakeRejectReason = {
     tag: 'InsufficientBalanceForDelegationStake',
 };

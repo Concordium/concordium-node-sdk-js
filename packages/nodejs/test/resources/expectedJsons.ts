@@ -964,8 +964,15 @@ export const credentialsUpdatedEvent = {
 };
 
 export const bakerStakeDecreasedEvent = {
+    tag: 'BakerStakeDecreased',
     account: '4Kmo9keJQaiyAuRM2pRh2xK4e75ph7hp4CzxdFAcRDeQRHfaHT',
     bakerId: 15n,
     newStake: 950000000000n,
-    tag: 'BakerStakeDecreased',
+};
+
+export const delegationStakeDecreasedEvent = {
+    tag: 'DelegationStakeDecreased',
+    account: '4mAs6xcFw26fb6u8odkJWoe3fAK8bCJ91BwScUc36DFhh3thwD',
+    delegatorId: 57,
+    newStake: 10000000n,
 };

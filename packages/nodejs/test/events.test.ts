@@ -373,3 +373,21 @@ test('BakerStakeDecreased', async () => {
         throw Error('Wrong event:');
     }
 });
+
+// DelegationStakeDecreased
+test('DelegationStakeDecreased', async () => {
+    const blockHash =
+        'f0426a8937438551692bbd777ac61f309fa2adee2dc50c82d6bd6ff151f5ce0a';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'configureDelegation'
+    ) {
+        expect(event.events[2]).toEqual(expected.delegationStakeDecreasedEvent);
+    } else {
+        throw Error('Wrong event:');
+    }
+});

@@ -962,3 +962,10 @@ export const credentialsUpdatedEvent = {
     removedCredIds: [],
     tag: 'CredentialsUpdated',
 };
+
+export const bakerStakeDecreasedEvent = {
+    account: '4Kmo9keJQaiyAuRM2pRh2xK4e75ph7hp4CzxdFAcRDeQRHfaHT',
+    bakerId: 15n,
+    newStake: 950000000000n,
+    tag: 'BakerStakeDecreased',
+};

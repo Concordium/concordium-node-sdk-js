@@ -281,3 +281,113 @@ test('TransferWithScheduleEvent', async () => {
         throw Error('Wrong event.');
     }
 });
+
+// BakerKeysUpdated
+test('BakerKeysUpdated', async () => {
+    const blockHash =
+        'ec886543ea454845ce09dcc064d7bc79f7da5a8c74c8f7cce9783681028a47de';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[1];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'configureBaker'
+    ) {
+        expect(event.events[0]).toEqual(expected.bakerKeysUpdatedEvent);
+    } else {
+        throw Error('Wrong event:');
+    }
+});
+
+// BakerStakeIncreased
+test('BakerStakeIncreased', async () => {
+    const blockHash =
+        '29c4caa0de1d9fc9da9513635e876aa0db0c6ab37fc30e7d2d7883af51659273';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[1];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'configureBaker'
+    ) {
+        expect(event.events[0]).toEqual(expected.bakerStakeIncreasedEvent);
+    } else {
+        throw Error('Wrong event:');
+    }
+});
+
+// CredentialKeysUpdated
+test('CredentialKeysUpdated', async () => {
+    const blockHash =
+        '387a2f5812b16e4f6543e51007f20b514909de4d7ea39785b83bcd6f1cde9af4';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'updateCredentialKeys'
+    ) {
+        expect(event.keysUpdated).toEqual(expected.credentialKeysUpdatedEvent);
+    } else {
+        throw Error('Wrong event:');
+    }
+});
+
+// CredentialsUpdated
+test('CredentialsUpdated', async () => {
+    const blockHash =
+        '6ce268765af0f59e147a0935980ae3014b9e90b9a43a2d9cf785f19641a9bf64';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'updateCredentials'
+    ) {
+        expect(event.credentialsUpdated).toEqual(
+            expected.credentialsUpdatedEvent
+        );
+    } else {
+        throw Error('Wrong event:');
+    }
+});
+
+// BakerStakeDecreased
+test('BakerStakeDecreased', async () => {
+    const blockHash =
+        '2103b8c6f1e0608790f241b1ca5d19df16f00abe54e5885d72e60985959826ae';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'configureBaker'
+    ) {
+        expect(event.events[0]).toEqual(expected.bakerStakeDecreasedEvent);
+    } else {
+        throw Error('Wrong event:');
+    }
+});
+
+// DelegationStakeDecreased
+test('DelegationStakeDecreased', async () => {
+    const blockHash =
+        'f0426a8937438551692bbd777ac61f309fa2adee2dc50c82d6bd6ff151f5ce0a';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'configureDelegation'
+    ) {
+        expect(event.events[2]).toEqual(expected.delegationStakeDecreasedEvent);
+    } else {
+        throw Error('Wrong event:');
+    }
+});

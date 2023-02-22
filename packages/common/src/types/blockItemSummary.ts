@@ -181,7 +181,7 @@ export interface UpdateCredentialsSummary {
 }
 export interface FailedTransactionSummary {
     transactionType: TransactionKindString.Failed;
-    failedTransactionType: TransactionKindString;
+    failedTransactionType?: TransactionKindString;
     rejectReason: RejectReason;
 }
 

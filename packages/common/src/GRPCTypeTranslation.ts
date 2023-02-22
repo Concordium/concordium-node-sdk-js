@@ -856,7 +856,7 @@ function trDelegationEvent(
         case 'delegationStakeDecreased': {
             const stakeDecr = event.delegationStakeDecreased;
             return {
-                tag: v1.TransactionEventTag.DelegationStakeIncreased,
+                tag: v1.TransactionEventTag.DelegationStakeDecreased,
                 delegatorId: Number(unwrap(stakeDecr.delegatorId?.id?.value)),
                 newStake: unwrap(stakeDecr.newStake?.value),
                 account,
@@ -1541,8 +1541,8 @@ function trMemoEvent(memo: v2.Memo): v1.MemoEvent {
 }
 
 function trTransactionType(
-    type: v2.TransactionType | undefined
-): v1.TransactionKindString {
+    type?: v2.TransactionType
+): v1.TransactionKindString | undefined {
     switch (type) {
         case v2.TransactionType.DEPLOY_MODULE:
             return v1.TransactionKindString.DeployModule;
@@ -1587,7 +1587,7 @@ function trTransactionType(
         case v2.TransactionType.CONFIGURE_DELEGATION:
             return v1.TransactionKindString.ConfigureDelegation;
         case undefined:
-            throw new Error('Unexpected missing transaction type');
+            return undefined;
     }
 }
 
@@ -1844,7 +1844,7 @@ function trAccountTransactionSummary(
             const event: v1.CredentialsUpdatedEvent = {
                 tag: v1.TransactionEventTag.CredentialsUpdated,
                 newCredIds: update.newCredIds.map(unwrapValToHex),
-                removedCredIDs: update.removedCredIds.map(unwrapValToHex),
+                removedCredIds: update.removedCredIds.map(unwrapValToHex),
                 newThreshold: unwrap(update.newThreshold?.value),
                 account: base.sender,
             };
@@ -2413,9 +2413,9 @@ export function blockSpecialEvent(
             };
         }
         case 'paydayPoolReward': {
+            const poolOwner = event.paydayPoolReward.poolOwner?.value;
             return {
                 tag: 'paydayPoolReward',
-                poolOwner: unwrap(event.paydayPoolReward.poolOwner?.value),
                 transactionFees: unwrap(
                     event.paydayPoolReward.transactionFees?.value
                 ),
@@ -2423,6 +2423,7 @@ export function blockSpecialEvent(
                 finalizationReward: unwrap(
                     event.paydayPoolReward.finalizationReward?.value
                 ),
+                ...(poolOwner !== undefined && { poolOwner }),
             };
         }
         case undefined: {

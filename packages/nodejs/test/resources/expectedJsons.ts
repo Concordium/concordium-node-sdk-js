@@ -851,27 +851,18 @@ export const updateEnqueuedEvent = {
     },
 };
 export const transferWithScheduleEvent = {
-    index: 0n,
-    energyCost: 954n,
-    hash: '2ab476a902868f47408ca16e167013ed0b5e995dc99271657e0e74549b426290',
-    type: 'accountTransaction',
-    cost: 2819356n,
-    sender: '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
-    transactionType: 'transferWithSchedule',
-    event: {
-        tag: 'TransferredWithSchedule',
-        to: '3ySdbNTPogmvUBD5g42FaZqYht78jQZ2jose9yZFkCj8zyCGWt',
-        amount: [
-            {
-                timestamp: new Date('2023-01-10T12:00:00.919Z'),
-                amount: 500000n,
-            },
-            {
-                timestamp: new Date('2023-02-10T12:00:00.919Z'),
-                amount: 500000n,
-            },
-        ],
-    },
+    tag: 'TransferredWithSchedule',
+    to: '3ySdbNTPogmvUBD5g42FaZqYht78jQZ2jose9yZFkCj8zyCGWt',
+    amount: [
+        {
+            timestamp: new Date('2023-01-10T12:00:00.919Z'),
+            amount: 500000n,
+        },
+        {
+            timestamp: new Date('2023-02-10T12:00:00.919Z'),
+            amount: 500000n,
+        },
+    ],
 };
 
 export const contractInitializedEvent = {

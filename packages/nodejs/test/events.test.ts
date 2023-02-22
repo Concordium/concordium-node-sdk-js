@@ -188,7 +188,7 @@ test('DelegationRemoved', async () => {
     ) {
         expect(event.events[0]).toEqual(expected.delegationRemovedEvent);
     } else {
-        throw Error('Wrong event:');
+        throw Error('Wrong event.');
     }
 });
 
@@ -204,9 +204,9 @@ test('TransferMemo', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'transferWithMemo'
     ) {
-        expect(event).toEqual(expected.transferWithMemoEvent);
+        expect(event).toEqual(expected.transferWithMemoSummary);
     } else {
-        throw Error('Wrong event:');
+        throw Error('Wrong event.');
     }
 });
 
@@ -224,7 +224,7 @@ test('Upgraded', async () => {
     ) {
         expect(event.events[1]).toEqual(expected.upgradedEvent);
     } else {
-        throw Error('Wrong event:');
+        throw Error('Wrong event.');
     }
 });
 
@@ -242,7 +242,7 @@ test('DataRegistered', async () => {
     ) {
         expect(event.dataRegistered).toEqual(expected.dataRegisteredEvent);
     } else {
-        throw Error('Wrong event:');
+        throw Error('Wrong event.');
     }
 });
 
@@ -260,7 +260,7 @@ test('NewEncryptedAmountEvent', async () => {
     ) {
         expect(event.added).toEqual(expected.newEncryptedAmountEvent);
     } else {
-        throw Error('Wrong event:');
+        throw Error('Wrong event.');
     }
 });
 
@@ -278,6 +278,6 @@ test('TransferWithScheduleEvent', async () => {
     ) {
         expect(event.event).toEqual(expected.transferWithScheduleEvent);
     } else {
-        throw Error('Wrong event:');
+        throw Error('Wrong event.');
     }
 });

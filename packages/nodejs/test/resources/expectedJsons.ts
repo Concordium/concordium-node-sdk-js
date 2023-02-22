@@ -887,7 +887,7 @@ export const delegationRemovedEvent = {
     delegatorId: 4002,
 };
 
-export const transferWithMemoEvent = {
+export const transferWithMemoSummary = {
     index: 0n,
     energyCost: 508n,
     hash: '8bfd6c5d3006ea005531d90e88af1075c1a5d0bce1f2befa7abb3ec8b3fb60b5',

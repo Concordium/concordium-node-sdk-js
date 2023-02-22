@@ -24,10 +24,6 @@ export function unwrapToBase58(
     );
 }
 
-function trModuleRef(moduleRef: v2.ModuleRef | undefined): ModuleReference {
-    return new ModuleReference(unwrapValToHex(moduleRef));
-}
-
 function trRelease(release: v2.Release): v1.ReleaseScheduleWithTransactions {
     return {
         timestamp: trTimestamp(release.timestamp),
@@ -701,8 +697,8 @@ function trContractTraceElement(
             return {
                 tag: v1.TransactionEventTag.Upgraded,
                 address: unwrap(element.upgraded.address),
-                from: trModuleRef(element.upgraded.from),
-                to: trModuleRef(element.upgraded.to),
+                from: unwrapValToHex(element.upgraded.from),
+                to: unwrapValToHex(element.upgraded.to),
             };
         default:
             throw Error(
@@ -892,7 +888,7 @@ function trDelegationEvent(
             };
         case 'delegationRemoved':
             return {
-                tag: v1.TransactionEventTag.DelegationAdded,
+                tag: v1.TransactionEventTag.DelegationRemoved,
                 delegatorId: Number(unwrap(event.delegationRemoved.id?.value)),
                 account,
             };
@@ -1620,7 +1616,7 @@ function trAccountTransactionSummary(
         case 'moduleDeployed': {
             const event: v1.ModuleDeployedEvent = {
                 tag: v1.TransactionEventTag.ModuleDeployed,
-                contents: trModuleRef(effect.moduleDeployed),
+                contents: unwrapValToHex(effect.moduleDeployed),
             };
             return {
                 ...base,
@@ -1634,10 +1630,10 @@ function trAccountTransactionSummary(
                 tag: v1.TransactionEventTag.ContractInitialized,
                 address: unwrap(contractInit.address),
                 amount: unwrap(contractInit.amount?.value),
-                contractName: unwrap(contractInit.initName?.value),
+                initName: unwrap(contractInit.initName?.value),
                 events: unwrap(contractInit.events.map(unwrapValToHex)),
                 contractVersion: unwrap(contractInit.contractVersion),
-                originRef: trModuleRef(contractInit.originRef),
+                ref: unwrapValToHex(contractInit.originRef),
             };
             return {
                 ...base,

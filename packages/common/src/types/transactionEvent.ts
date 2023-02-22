@@ -5,6 +5,7 @@ import type {
     ContractVersion,
     Address,
     Base58String,
+    ModuleRef,
     HexString,
     EventDelegationTarget,
     Amount,
@@ -12,7 +13,6 @@ import type {
     DelegatorId,
 } from '../types';
 import type { UpdateInstructionPayload } from './chainUpdate';
-import { ModuleReference } from './moduleReference';
 
 export enum TransactionEventTag {
     ModuleDeployed = 'ModuleDeployed',
@@ -116,8 +116,8 @@ export interface UpdatedEvent {
 export interface UpgradedEvent {
     tag: TransactionEventTag.Upgraded;
     address: ContractAddress;
-    from: ModuleReference;
-    to: ModuleReference;
+    from: ModuleRef;
+    to: ModuleRef;
 }
 
 export interface DataRegisteredEvent {
@@ -129,15 +129,15 @@ export interface ContractInitializedEvent {
     tag: TransactionEventTag.ContractInitialized;
     address: ContractAddress;
     amount: Amount;
-    contractName: string;
+    initName: string;
     events: HexString[];
-    contractVersion?: ContractVersion;
-    originRef?: ModuleReference;
+    contractVersion: ContractVersion;
+    ref: ModuleRef;
 }
 
 export interface ModuleDeployedEvent {
     tag: TransactionEventTag.ModuleDeployed;
-    contents: ModuleReference;
+    contents: ModuleRef;
 }
 
 // Account and transfer Events
@@ -226,20 +226,20 @@ export interface DelegatorEvent {
         | TransactionEventTag.DelegationAdded
         | TransactionEventTag.DelegationRemoved;
     delegatorId: DelegatorId;
-    account?: Base58String;
+    account: Base58String;
 }
 
 export interface DelegationSetDelegationTargetEvent {
     tag: TransactionEventTag.DelegationSetDelegationTarget;
     delegatorId: DelegatorId;
-    account?: Base58String;
+    account: Base58String;
     delegationTarget: EventDelegationTarget;
 }
 
 export interface DelegationSetRestakeEarningsEvent {
     tag: TransactionEventTag.DelegationSetRestakeEarnings;
     delegatorId: DelegatorId;
-    account?: Base58String;
+    account: Base58String;
     restakeEarnings: boolean;
 }
 
@@ -248,7 +248,7 @@ export interface DelegationStakeChangedEvent {
         | TransactionEventTag.DelegationStakeDecreased
         | TransactionEventTag.DelegationStakeIncreased;
     delegatorId: DelegatorId;
-    account?: Base58String;
+    account: Base58String;
     newStake: bigint;
 }
 

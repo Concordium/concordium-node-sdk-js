@@ -107,3 +107,177 @@ test('contract update', async () => {
         throw Error('Wrong event.');
     }
 });
+
+// EncryptedSelfAmountAdded
+test('transferToEncrypted', async () => {
+    const blockHash =
+        '0254312274ccd192288ca49923c6571ae64d7d0ef57923a68d4c1b055e2ca757';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'transferToEncrypted'
+    ) {
+        expect(event.added).toEqual(expected.encryptedSelfAmountAddedEvent);
+    } else {
+        throw Error('Wrong event.');
+    }
+});
+
+// UpdateEnqueued
+test('UpdateEnqueued', async () => {
+    const blockHash =
+        '39122a9c720cae643b999d93dd7bf09bcf50e99bb716767dd35c39690390db54';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+
+    expect(events[0]).toEqual(expected.updateEnqueuedEvent);
+});
+
+// ContractInitialized
+test('ContractInitialized', async () => {
+    const blockHash =
+        '70dbb294060878220505e928d616dde2d90cf5eeee0a92d3fdc1268334ace89e';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'initContract'
+    ) {
+        expect(event.contractInitialized).toEqual(
+            expected.contractInitializedEvent
+        );
+    } else {
+        throw Error('Wrong event.');
+    }
+});
+
+// ModuleDeployed
+test('ModuleDeployed', async () => {
+    const blockHash =
+        'c7fd8efa319942d54336ccdfe8460a0591a2a4b3a6bac65fe552198d530105d1';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'deployModule'
+    ) {
+        expect(event.moduleDeployed).toEqual(expected.moduleDeployedEvent);
+    } else {
+        throw Error('Wrong event.');
+    }
+});
+
+// DelegationRemoved
+test('DelegationRemoved', async () => {
+    const blockHash =
+        '65ad6b6a4c9eaccb99a01e2661fcc588a411beb0ed91d39ac692359d5a666631';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[1];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'configureDelegation'
+    ) {
+        expect(event.events[0]).toEqual(expected.delegationRemovedEvent);
+    } else {
+        throw Error('Wrong event.');
+    }
+});
+
+// TransferMemo
+test('TransferMemo', async () => {
+    const blockHash =
+        'df96a12cc515bc863ed7021154494c8747e321565ff8b788066f0308c2963ece';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'transferWithMemo'
+    ) {
+        expect(event).toEqual(expected.transferWithMemoSummary);
+    } else {
+        throw Error('Wrong event.');
+    }
+});
+
+// Upgraded
+test('Upgraded', async () => {
+    const blockHash =
+        '77ffdf2e8e4144a9a39b20ea7211a4aee0a23847778dcc1963c7a85f32b4f27d';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'update'
+    ) {
+        expect(event.events[1]).toEqual(expected.upgradedEvent);
+    } else {
+        throw Error('Wrong event.');
+    }
+});
+
+// DataRegistered
+test('DataRegistered', async () => {
+    const blockHash =
+        'ac4e60f4a014d823e3bf03859abdb2f9d2317b988dedc9c9621e3b7f5dcffb06';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'registerData'
+    ) {
+        expect(event.dataRegistered).toEqual(expected.dataRegisteredEvent);
+    } else {
+        throw Error('Wrong event.');
+    }
+});
+
+// NewEncryptedAmountEvent
+test('NewEncryptedAmountEvent', async () => {
+    const blockHash =
+        '4eec1470e133340859dd9cd39187ad5f32c5b59ca3c7277d44f9b30e7a563388';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'encryptedAmountTransfer'
+    ) {
+        expect(event.added).toEqual(expected.newEncryptedAmountEvent);
+    } else {
+        throw Error('Wrong event.');
+    }
+});
+
+// TransferWithScheduleEvent
+test('TransferWithScheduleEvent', async () => {
+    const blockHash =
+        '7696ce3b5e3c5165572984abb250f8ac7c8f42cdc5ca3e1c1f1c387bb878fc94';
+    const eventStream = client.getBlockTransactionEvents(blockHash);
+    const events = await asyncIterableToList(eventStream);
+    const event = events[0];
+
+    if (
+        event.type === 'accountTransaction' &&
+        event.transactionType === 'transferWithSchedule'
+    ) {
+        expect(event.event).toEqual(expected.transferWithScheduleEvent);
+    } else {
+        throw Error('Wrong event.');
+    }
+});

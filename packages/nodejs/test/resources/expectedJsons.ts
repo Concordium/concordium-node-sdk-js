@@ -967,3 +967,147 @@ export const delegationStakeDecreasedEvent = {
     delegatorId: 57,
     newStake: 10000000n,
 };
+
+export const insufficientBalanceForDelegationStakeRejectReason = {
+    tag: 'InsufficientBalanceForDelegationStake',
+};
+
+export const delegationTargetNotABakerRejectReason = {
+    contents: 123n,
+    tag: 'DelegationTargetNotABaker',
+};
+
+export const alreadyABakerRejectReason = {
+    contents: 742n,
+    tag: 'AlreadyABaker',
+};
+
+export const amountTooLargeRejectReason = {
+    tag: 'AmountTooLarge',
+    contents: {
+        address: {
+            type: 'AddressAccount',
+            address: '4Qod7UHWmkyz2ahPrWFH1kCqv1cvhT7NtEFbXG7G2soxXSYuMH',
+        },
+        amount: 2000000000n,
+    },
+};
+
+export const scheduledSelfTransferRejectReason = {
+    contents: '48x2Uo8xCMMxwGuSQnwbqjzKtVqK5MaUud4vG7QEUgDmYkV85e',
+    tag: 'ScheduledSelfTransfer',
+};
+
+export const encryptedAmountSelfTransferRejectReason = {
+    contents: '48x2Uo8xCMMxwGuSQnwbqjzKtVqK5MaUud4vG7QEUgDmYkV85e',
+    tag: 'EncryptedAmountSelfTransfer',
+};
+
+export const bakerInCooldownRejectReason = { tag: 'BakerInCooldown' };
+
+export const moduleHashAlreadyExistsRejectReason = {
+    contents:
+        '283fd346d23c6982ad6cf4d90508c304f88a8054ec6e345d60c2e8f1338e8424',
+    tag: 'ModuleHashAlreadyExists',
+};
+
+export const stakeOverMaximumThresholdForPoolRejectReason = {
+    tag: 'StakeOverMaximumThresholdForPool',
+};
+
+export const invalidEncryptedAmountTransferProofRejectReason = {
+    tag: 'InvalidEncryptedAmountTransferProof',
+};
+
+export const insufficientBalanceForBakerStakeRejectReason = {
+    tag: 'InsufficientBalanceForBakerStake',
+};
+
+export const outOfEnergyRejectReason = { tag: 'OutOfEnergy' };
+
+export const invalidInitMethodRejectReason = {
+    contents: {
+        moduleRef:
+            'c2ddbce88a7acae8bd610abf46afbdcf6264c8777163b345468b8e6f2ff8660f',
+        initName: 'init_cis2_nft',
+    },
+    tag: 'InvalidInitMethod',
+};
+
+export const runtimeFailureRejectReason = { tag: 'RuntimeFailure' };
+
+export const rejectedReceiveRejectReason = {
+    contractAddress: { index: 2372n, subindex: 0n },
+    parameter: '',
+    receiveName: 'auction.finalize',
+    rejectReason: -1,
+    tag: 'RejectedReceive',
+};
+
+export const poolClosedRejectReason = { tag: 'PoolClosed' };
+
+export const invalidReceiveMethodRejectReason = {
+    contents: {
+        moduleRef:
+            '4065819567755d7d2269acce2a8b0b510cdf30e36f5fb3303be16f8724e9b8b7',
+        receiveName: 'CIS2-TOKEN.mint',
+    },
+    tag: 'InvalidReceiveMethod',
+};
+
+export const transactionFeeCommissionNotInRangeRejectReason = {
+    tag: 'TransactionFeeCommissionNotInRange',
+};
+
+export const invalidModuleReferenceRejectReason = {
+    contents:
+        '32aa289796759a6612858d543931923c404f9d33d6f49473ad135590fd7acbb3',
+    tag: 'InvalidModuleReference',
+};
+
+export const moduleNotWFRejectReason = { tag: 'ModuleNotWF' };
+
+export const nonExistentCredentialIDRejectReason = {
+    tag: 'NonExistentCredentialID',
+};
+
+export const serializationFailureRejectReason = { tag: 'SerializationFailure' };
+
+export const stakeUnderMinimumThresholdForBakingRejectReason = {
+    tag: 'StakeUnderMinimumThresholdForBaking',
+};
+
+export const rejectedInitRejectReason = {
+    rejectReason: -16,
+    tag: 'RejectedInit',
+};
+
+export const finalizationRewardCommissionNotInRangeRejectReason = {
+    tag: 'FinalizationRewardCommissionNotInRange',
+};
+
+export const invalidAccountReferenceRejectReason = {
+    contents: '4ATy8qJ5rEAVE8h2sufiW8W6MW9wRHSduczo2Zs7XT9DUQMaVT',
+    tag: 'InvalidAccountReference',
+};
+
+export const firstScheduledReleaseExpiredRejectReason = {
+    tag: 'FirstScheduledReleaseExpired',
+};
+
+export const invalidContractAddressRejectReason = {
+    contents: { index: 2339n, subindex: 0n },
+    tag: 'InvalidContractAddress',
+};
+
+export const missingBakerAddParametersRejectReason = {
+    tag: 'MissingBakerAddParameters',
+};
+
+export const invalidTransferToPublicProofRejectReason = {
+    tag: 'InvalidTransferToPublicProof',
+};
+
+export const poolWouldBecomeOverDelegatedRejectReason = {
+    tag: 'PoolWouldBecomeOverDelegated',
+};

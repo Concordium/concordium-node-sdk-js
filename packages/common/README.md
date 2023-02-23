@@ -805,6 +805,16 @@ const proof = getIdProof({
 })
 ```
 
+# ConcordiumNodeClient
+The SDK provides a gRPC client, which can interact with the [Concordium Node](https://github.com/Concordium/concordium-node)
+
+For an overview of the endpoints, [check here](../../docs/gRPC.md).
+
+To create a client, the helper functions in the node or web sdk should be used as they use the appropriate transport.
+The [nodejs SDK uses a regular gRPC transport](../nodejs#ConcordiumNodeClient), while the [web SDK uses a gRPC-web transport](../web#ConcordiumNodeClient).
+
 # JSON-RPC client
-The SDK also provides a JSON-RPC client, but it is primarily used for web, [so it has been documented in the web-sdk package instead](../web#JSON-RPC-client).
-The nodejs SDK also provides a [gRPC client, which can interact directly with a node](../nodejs#ConcordiumNodeClient).
+
+> :warning: **The JSON-RPC client has been deprecated**: the gRPC client should be used instead to communicate directly with a node
+
+The SDK also provides a JSON-RPC client, [check here for the documentation](../../docs/JSON-RPC.md).

@@ -21,27 +21,29 @@ Wrappers for interacting with the Concordium node, for the web environment.
     - [Building for a release](#building-for-a-release)
     - [Publishing a release](#publishing-a-release)
 
-# JSON-RPC client
-The SDK provides a JSON-RPC client, which can interact with the [Concordium JSON-RPC server](https://github.com/Concordium/concordium-json-rpc)
+# ConcordiumNodeClient
+The SDK provides a gRPC client, which can interact with the [Concordium Node](https://github.com/Concordium/concordium-node) using gRPC-web.
 
-## Creating a client
-To create a client, one needs a provider, which handles sending and receiving over a specific protocol. Currently the only one available is the HTTP provider.
-The HTTP provider needs the URL to the JSON-RPC server. The following example demonstrates how to create a client that connects to a local server on port 9095:
+For an overview of the endpoints, [check here](../../docs/gRPC.md).
+
+To create a client, the function `createConcordiumClient` can be used. It requires the address and port of the concordium node. 
 ```js
-const client = new JsonRpcClient(new HttpProvider("http://localhost:9095"));
+...
+return createConcordiumClient(
+    address,
+    port,
+    { timeout: 15000 }
+);
 ```
 
-## API Entrypoints
-Currently the client only supports the following entrypoints, with the same interface as the node client:
+The third argument is additional options. In the example above we sat the timeout for a call to the node to 15 seconds. The options allowed here are those allowed by the [grpcweb-transport](https://www.npmjs.com/package/@protobuf-ts/grpcweb-transport).
 
-- [sendTransaction](../nodejs#send-account-transaction)
-- [getTransactionStatus](../nodejs#gettransactionstatus)
-- [getInstanceInfo](../nodejs#getInstanceInfo)
-- [getConsensusStatus](../nodejs#getconsensusstatus)
-- [getAccountInfo](../nodejs#getAccountInfo)
-- [getCryptographicParameters](../nodejs#getcryptographicparameters)
-- [invokeContract](../nodejs#invokecontract)
-- [getModuleSource](../nodejs#getModuleSource)
+
+# JSON-RPC client
+> :warning: **The JSON-RPC client has been deprecated**: the gRPC client should be used instead to communicate directly with a node
+> To migrate, the migration guide from the v1 client to the v2 client [can be found here](../../docs/grpc-migration.md), as the JSON-RPC's endpoints shares interface with the equivalents in the v1 gRPC cient 
+
+The SDK also provides a JSON-RPC client, [check here for the documentation](../../docs/JSON-RPC.md).
 
 # Creating buffers
 Some of the functions in the SDK expects buffers as input.

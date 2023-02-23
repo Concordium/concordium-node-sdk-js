@@ -1,14 +1,14 @@
 # Changelog
 
-## Unreleased
+## 6.2.0 2023-2-23
 
 ### Added
 
-- Added a `createConcordiumClient` function to create the GRPC v2 client.
+- Added a `createConcordiumClient` function to create the gRPC v2 client.
 
 ### Changed
 
-- Bumped @concordium/common-sdk to 6.1.0. (adds support for id statements and proofs)
+- Bumped @concordium/common-sdk to 6.3.0. (Adds the gRPC v2 client)
 
 ### Fixed
 

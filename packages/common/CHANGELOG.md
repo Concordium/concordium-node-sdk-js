@@ -1,81 +1,29 @@
 # Changelog
 
-## Unreleased
-
-- Added the following GRPCv2 functions:
-    - `getAccountList()`
-    - `getModuleList()`
-    - `getAncestors()`
-    - `getInstanceState()`
-    - `instanceStateLookup()`
-    - `getIdentityProviders()`
-    - `getAnonymityRevokers()`
-    - `getBlocksAtHeight()`
-    - `getBlockInfo()`
-    - `getBakerList()`
-    - `getPoolDelegators()`
-    - `getPoolDelegatorsRewardPeriod()`
-    - `getPassiveDelegators()`
-    - `getPassiveDelegatorsRewardPeriod()`
-    - `getBranches()`
-    - `getElectionInfo()`
-    - `getAccountNonFinalizedTransactions()`
-    - `getBlockTransactionEvents()`
-    - `getNextUpdateSequenceNumbers()`
-    - `shutdown()`
-    - `peerConnect()`
-    - `peerDisconnect()`
-    - `getBannedPeers()`
-    - `banPeer()`
-    - `unbanPeer()`
-    - `dumpStart()`
-    - `dumpStop()`
-    - `getNodeInfo()`
-    - `getPeersInfo()`
-    - `getBlockPendingUpdates()`
-    - `getBlockFinalizationSummary()`
-
-- Function to generate baker keys: `generateBakerKeys`.
-
-- `getInitContractParameterSchema`, `getUpdateContractParameterSchema`,
-  `serializeInitContractParameters` and `serializeUpdateContractParameters` now
-  report an error when called with invalid data, such as a receive function with
-  missing schema, or a schema that cannot be parsed.
-
-## 6.4.0
-
-- Added `getFinalizedBlocks()` & `getBlocks()` GRPCv2 functions.
-- Added public helper function `waitForTransactionFinalization()` to client
-
-## 6.3.0
+## 6.3.0 2023-02-23
 
 ### Added
 
-- Added a GRPCv2 client starting with the following functions:
-    - `getAccountInfo()`
-    - `getNextAccountSequenceNumber()`
-    - `getCryptographicParameters()`
-    - `getBlockItemStatus()`
-    - `getConsensusInfo()`
-    - `getModuleSource()`
-    - `getInstanceInfo()`
-    - `invokeInstance()`
-    - `getAccountTransactionSignHash()`
-    - `sendAccountTransaction()`
-    - `sendCredentialDeploymentTransaction()`
-    - `getBlockChainParameters()`
-    - `getPoolInfo()`
-    - `getPassiveDelegationInfo()`
-    - `getTokenomicsInfo()`
+- Added a client for version 2 of the Concordium gRPC API to communicate with a Concordium node. 
+    - including helper function `waitForTransactionFinalization` that returns a promise that resolves when the transaction finalizes.
 
 - Serialization:
-    - `serializeAccountTransactionPayload()`
-    - `serializeCredentialDeploymentPayload()`
+    - `serializeAccountTransactionPayload`
+    - `serializeCredentialDeploymentPayload`
 
 - Credential deployment helpers:
   - `createCredentialTransaction`
   - `createCredentialTransactionNoSeed`
   - `signCredentialTransaction`
+
+- Function to generate baker keys: `generateBakerKeys`.
+
+### Fixed
+
+- `getInitContractParameterSchema`, `getUpdateContractParameterSchema`,
+  `serializeInitContractParameters` and `serializeUpdateContractParameters` now
+  report an error when called with invalid data, such as a receive function with
+  missing schema, or a schema that cannot be parsed.
 
 ## 6.2.0 2023-01-04
 

@@ -1,10 +1,6 @@
-# Concordium Nodejs SDK
+# Concordium gRPC client
 
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](https://github.com/Concordium/.github/blob/main/.github/CODE_OF_CONDUCT.md)
-
-Wrappers for interacting with the Concordium node, using nodejs.
-
-[Note that this package contains and exports the functions from the common-sdk, check the readme of that package for an overview of those](../common/README.md).
+This document describes the different endpoints for the concordium gRPC V2 client. 
 
 - [Concordium Nodejs SDK](#concordium-nodejs-sdk)
 - [ConcordiumNodeClient](#concordiumnodeclient)
@@ -85,11 +81,13 @@ const client = new ConcordiumNodeClient(
 
 The access is controlled by the credentials and the metadata. If the node does not support TLS an insecure connection can be established using `credentials.createInsecure()` instead of `credentials.createSsl()`.
 
+Note that the web-sdk and node-sdk each exposes a helper function `createConcordiumClient` that creates a client using the appropriate transport (gRPC-web for web and regular gRPC for nodeJS).
+
 ## Send Account Transaction
 The following example demonstrates how to send any account transaction.
 
-See the Constructing transactions section for the [common package](../common#constructing-transactions) for how to create an account transaction.
-See the signing a transaction section for the [common package](../common#sign-an-account-transaction) for how to sign an account transaction.
+See the Constructing transactions section for the [common package](./#constructing-transactions) for how to create an account transaction.
+See the signing a transaction section for the [common package](./#sign-an-account-transaction) for how to sign an account transaction.
 
 ```js
 
@@ -388,6 +386,7 @@ if (result.tag === 'failure') {
 
 Note that some of the parts of the context are optional:
  - blockHash: defaults to last finalized block
+ - energy: defaults to 1,000,000 NRG.
 
 ## getModuleSource
 This commands gets the source of a module on the chain.

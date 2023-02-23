@@ -1264,3 +1264,540 @@ export const invalidTransferToPublicProofRejectReason = {
 export const poolWouldBecomeOverDelegatedRejectReason = {
     tag: 'PoolWouldBecomeOverDelegated',
 };
+export const bakerAccountInfo = {
+    accountNonce: 1n,
+    accountAmount: 7449646704751788n,
+    accountReleaseSchedule: { total: 0n, schedule: [] },
+    accountCredentials: {
+        '0': {
+            v: 0,
+            value: {
+                contents: {
+                    arData: {
+                        '1': {
+                            encIdCredPubShare:
+                                'b0e74e3509bcbceeb27853f6d65ffeb6de9d8ea2c79b6f80e6b24ed519946749feb169319d466893de43272e4e53465f90524b5e6507ced97f2ae4c536c77dcff02383e9a935e6462842874c91bf734b207dcbeb64a6a5432f0e8c050cce8563',
+                        },
+                    },
+                    commitments: {
+                        cmmAttributes: {},
+                        cmmCredCounter:
+                            '80e04147024fd25dcab36e535f990d7678fc22d95d3c8b1456e48b8b208289cc00aae180e718d3800d9efb196dccfa7a',
+                        cmmIdCredSecSharingCoeff: [
+                            '8fbe8f40b171bc4690c0ccac260265773fd1dffaa134a04743704a1d4ed8f1252ade3c6144535d3ecbff427c0cb7eb94',
+                        ],
+                        cmmMaxAccounts:
+                            'a1ef21f3eee719eff465781c779f3371820873308782f1818b30e83fd5600df45a7340b18af61d8b5958ae002f26012a',
+                        cmmPrf: 'af57f51b16e999814e11e5eef8f0abff86395fc7c51cdf9fc506e8ef23d20ce7b58d8d9a82151bda0bf9787e376c622f',
+                    },
+                    credId: 'a33426f86d431f2312b19213ced9df3cc97da9111a312aa1abdecef9327388d4936bc61ef6b1f7f0064b6dfc0630bbed',
+                    credentialPublicKeys: {
+                        keys: {
+                            '0': {
+                                schemeId: 'Ed25519',
+                                verifyKey:
+                                    'b8b4c92d59570a6c9376b72779768cd5cd6f0ee31cf118c2825b10f91987917d',
+                            },
+                            '1': {
+                                schemeId: 'Ed25519',
+                                verifyKey:
+                                    'e75b3149b6649cecf805f8231d5f596e8f2148bfeaff7fca063cffc2423e8f72',
+                            },
+                            '2': {
+                                schemeId: 'Ed25519',
+                                verifyKey:
+                                    '936dff63b4d178ba28fbfef5e15d5edabad28eb6a2282b6fc56e64480f3e390c',
+                            },
+                        },
+                        threshold: 2,
+                    },
+                    ipIdentity: 0,
+                    policy: {
+                        createdAt: '202206',
+                        revealedAttributes: {},
+                        validTo: '202306',
+                    },
+                    revocationThreshold: 1,
+                },
+                type: 'normal',
+            },
+        },
+    },
+    accountThreshold: 1,
+    accountEncryptedAmount: {
+        incomingAmounts: [],
+        selfAmount:
+            'c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+        startIndex: 0n,
+    },
+    accountEncryptionKey:
+        'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a33426f86d431f2312b19213ced9df3cc97da9111a312aa1abdecef9327388d4936bc61ef6b1f7f0064b6dfc0630bbed',
+    accountIndex: 5n,
+    accountAddress: '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L',
+    accountBaker: {
+        bakerAggregationVerifyKey:
+            'b18a02de74826e55f6eadc0f31d0d9a6edfb2993d030e65136f1e1256a69ba523acb40fa4d304d0668aa307c19257a0a10726e70149c904e1ef29aedb2679c825997e3f14edd303bf276f2c0b0c5a4c4870fff0c043150be06b715466be564c4',
+        bakerElectionVerifyKey:
+            'a090681ec7b35ef3a771ed43ebb6728fd95e4b267abedfa95f1dc17720193dcb',
+        bakerId: 5n,
+        bakerPoolInfo: {
+            commissionRates: {
+                bakingCommission: 0.1,
+                finalizationCommission: 1,
+                transactionCommission: 0.1,
+            },
+            metadataUrl: '',
+            openStatus: 'closedForAll',
+        },
+        bakerSignatureVerifyKey:
+            'c385ccb5c8a0710a162f2c107123744650ff35f00040bfa262d974bfb3c3f8f1',
+        restakeEarnings: true,
+        stakedAmount: 7349646704751788n,
+    },
+};
+
+export const delegatorAccountInfo = {
+    accountNonce: 11n,
+    accountAmount: 620948501142n,
+    accountReleaseSchedule: { total: 0n, schedule: [] },
+    accountCredentials: {
+        '0': {
+            v: 0,
+            value: {
+                contents: {
+                    arData: {
+                        '1': {
+                            encIdCredPubShare:
+                                'a4fe79653506f7e57b1da167940e514c65498ef0cc9c2c3a5b4bc610a8ad83483257aa8633b5217fdcafb4afac009eb2a67d26a67df3ed9e9dfcc6d6056b1f2ab3815ca348f9f1f6260dd97f2efa85e5a4657dc829b095fdff4faff31cdc5fad',
+                        },
+                        '2': {
+                            encIdCredPubShare:
+                                'aabc3f8cc3579ef17363282436f44e11a86644e18cb186bb82c21fb0d02dc969d8a4ff31522d67bbb9d38200e9fb491ab7fbe8f489508ad265f03af04813d65f7c99b4cc63546e7ea04eeacbe757429b7ce0adbe83b7d738f8168dc9ed5b231f',
+                        },
+                        '3': {
+                            encIdCredPubShare:
+                                '83b0f99fd17d81c0ad31b8bc938b45efb56abb7d0acf93aca7dadda40b83cd975f025e683ec5ad8f8a87e35da87dc251a1f8ef7fbf71a41b5c13d3df8a882d02397595f2963e01f179208850c663ee7afaad4849c77ce1ed36b6ea0b5c31d21d',
+                        },
+                    },
+                    commitments: {
+                        cmmAttributes: {
+                            countryOfResidence:
+                                'a67a033cd6f733c865a48f3af6614023ef088f45336fc48aa7dac2308184d4db6a36901308bd19fe734e00734431b9e9',
+                            dob: '87bb3611ef2957fbee68bc0ffdfb848f3a8605c4575cce7c0f088e6f860bbfb8856cfb9b61e76d1c452be744fd3d43d2',
+                            firstName:
+                                'b5b0738ea7723ec58fa660f48c2b0a9434243e792671baf738371da5ff198c0b0a8d163b2b9320a8794476a788ff43c0',
+                            idDocExpiresAt:
+                                'a806aee9d9363f33311f028b6ea54ae12952bb5db0c960f45790273e00e51e16db7e5b7c222de10c09481bbc70c3110e',
+                            idDocIssuedAt:
+                                '8e0d2d9b6fe376c91db56b5c527f6e3a0819fae45c3eb4e0689a354027680da959eef743367f56f179356f63834ea4fe',
+                            idDocIssuer:
+                                '989381f31507df15dbc6ee216e472249c5145f78de235d82a44608b3e17f17a2c89ffe946ce5826018eec058b8328466',
+                            idDocNo:
+                                'b72417df1454c11ee33a10dcf75827d2ae1ff0743f677565d9ffa28f585a5740eae8b9035cbaeed48e64349be76b79d5',
+                            idDocType:
+                                '8f25812690d899c9cba173997050dbd0cf1b945b74a1e867762ecf39157b60d5b4deb2364cee0c4acc3d0b3bec9b5516',
+                            lastName:
+                                '9884a707ba237490e69d036f5e25ec25ec16e66aa1c81f0d34eb13f63460618c04e767780363509add1572b73a4c30db',
+                            nationalIdNo:
+                                'a798741053123d8c284b8ab4a9db25b3a510a03f98105005e70490360f66e5ad998051eee182e4a2cc159fdd1e793311',
+                            nationality:
+                                '827d7a6553567da9492c35aa1a0be1463aa3c63b27a37d2512776726ec7af15cb2ecbd6efb4845e6169d2ad964e31521',
+                            sex: 'a325c5922568c54eaed8984ac0a24617dbcf6606acc85b66221e1e6390625e7d0d5a9007736fee77f1ad8d1eb46ec754',
+                            taxIdNo:
+                                '98c3ec5be784b80fbd1f92eb736ff8f13957d94b8b6a8a00c4abcba7d0707d70832021d5253a46aa8125fa902c83ee7f',
+                        },
+                        cmmCredCounter:
+                            'a6447ad504e9f480b0df9dd8f7097152fc8c31d131d777157da4b17467ea8c4f8e58ed6e4f510cc9b76d81a215ff9795',
+                        cmmIdCredSecSharingCoeff: [
+                            '966fbe0c8e83c23a9819eae914a19237cd33a6750390f1075e29f7cc5f676616391a409a064ff553710f00be7dbb7ba8',
+                            'aad9744e39d20e8b7bf9d85cc008d193b0433c5cdb4a6a11af49dd268c6a0eb35674f10ce66e2b062c994cb0060ccedd',
+                        ],
+                        cmmMaxAccounts:
+                            'ae1b56823ddf63bde790607c0d671361f3a52bd3fd0a4d6c21ce1c7e8349260e723439410cc8137d9ca2d327383bdea5',
+                        cmmPrf: '8e8d3c50a497445d3d92f62fca9909940d91bb3bad4f68528e94e90a273a8af47ad8ea74bc32cb88ad9a984431fbc6fb',
+                    },
+                    credId: 'af9816eae1ab8c733e26e790a7d88c5688472dcd8b536668b0d2182e406321499695ae80c8363505a479ffd89daf5fbb',
+                    credentialPublicKeys: {
+                        keys: {
+                            '0': {
+                                schemeId: 'Ed25519',
+                                verifyKey:
+                                    '15d5f1668d46971d08d8ddfe42f900385c92211cc4f8f3f2dd9596cbc37851d9',
+                            },
+                        },
+                        threshold: 1,
+                    },
+                    ipIdentity: 0,
+                    policy: {
+                        createdAt: '202206',
+                        revealedAttributes: {},
+                        validTo: '202306',
+                    },
+                    revocationThreshold: 2,
+                },
+                type: 'normal',
+            },
+        },
+    },
+    accountThreshold: 1,
+    accountEncryptedAmount: {
+        incomingAmounts: [],
+        selfAmount:
+            'c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+        startIndex: 0n,
+    },
+    accountEncryptionKey:
+        'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5af9816eae1ab8c733e26e790a7d88c5688472dcd8b536668b0d2182e406321499695ae80c8363505a479ffd89daf5fbb',
+    accountIndex: 276n,
+    accountAddress: '3bFo43GiPnkk5MmaSdsRVboaX2DNSKaRkLseQbyB3WPW1osPwh',
+    accountDelegation: {
+        delegationTarget: { delegateType: 'Passive' },
+        restakeEarnings: true,
+        stakedAmount: 620942412516n,
+    },
+};
+
+export const credIdAccountInfo = {
+    accountNonce: 19n,
+    accountAmount: 35495453082577742n,
+    accountReleaseSchedule: { total: 0n, schedule: [] },
+    accountCredentials: {
+        '0': {
+            v: 0,
+            value: {
+                contents: {
+                    arData: {
+                        '1': {
+                            encIdCredPubShare:
+                                'a91e570e54b9ee7c304570bc3a066ea75dd833086c683a421c11e565482de01ffc2fb742408cf1dbd6c744cdde8835469120ce6a0e0c12fbfd53e9be81656900a95109f80418e7cbba510c457f15a0cb347bdc3f5508d46cec87a9214686a61d',
+                        },
+                    },
+                    commitments: {
+                        cmmAttributes: {},
+                        cmmCredCounter:
+                            'b0aa65f420a9f3fab61d3f875eebcc221e43154bfaf1b6365dace99bff20778de7003437631222e845fd9917c8d2874b',
+                        cmmIdCredSecSharingCoeff: [
+                            '8bac440a2e46ccbfbfa768c6ad99f2abf25f8b327a795ecf23b2b804c327022f06d0aced0b5eed65899a3ef3029804ec',
+                        ],
+                        cmmMaxAccounts:
+                            '869e2bddb2c60703ecd512b55b772baf75691f81bbc45362f88e5abcdab85a23714a92d46fe40457364d506abc2202a3',
+                        cmmPrf: 'b8930e48976902f67f0cbb50b8c2911fcc0646fbccf4bfb6a442ef7d40a8351f48ae7206ee8083e28d357be808803f82',
+                    },
+                    credId: 'aa730045bcd20bb5c24349db29d949f767e72f7cce459dc163c4b93c780a7d7f65801dda8ff7e4fc06fdf1a1b246276f',
+                    credentialPublicKeys: {
+                        keys: {
+                            '0': {
+                                schemeId: 'Ed25519',
+                                verifyKey:
+                                    '9e975c838d037136cff54f7f5b741922dd9bc31e5dd3c9eb793a026b7d1f5125',
+                            },
+                            '1': {
+                                schemeId: 'Ed25519',
+                                verifyKey:
+                                    '2d322b8744fa5d01823adce3f6a13bbebdd7b8503c08ccc3d8497e6c46021976',
+                            },
+                            '2': {
+                                schemeId: 'Ed25519',
+                                verifyKey:
+                                    '9a77df3f869206a7c085bc1ab821f1e248762a22bb37471b3cefcb83740764c9',
+                            },
+                        },
+                        threshold: 2,
+                    },
+                    ipIdentity: 0,
+                    policy: {
+                        createdAt: '202206',
+                        revealedAttributes: {},
+                        validTo: '202306',
+                    },
+                    revocationThreshold: 1,
+                },
+                type: 'normal',
+            },
+        },
+    },
+    accountThreshold: 1,
+    accountEncryptedAmount: {
+        incomingAmounts: [],
+        selfAmount:
+            'c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+        startIndex: 0n,
+    },
+    accountEncryptionKey:
+        'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5aa730045bcd20bb5c24349db29d949f767e72f7cce459dc163c4b93c780a7d7f65801dda8ff7e4fc06fdf1a1b246276f',
+    accountIndex: 11n,
+    accountAddress: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
+};
+
+export const regularAccountInfo = {
+    accountNonce: 19n,
+    accountAmount: 35495453082577742n,
+    accountReleaseSchedule: { total: 0n, schedule: [] },
+    accountCredentials: {
+        '0': {
+            v: 0,
+            value: {
+                contents: {
+                    arData: {
+                        '1': {
+                            encIdCredPubShare:
+                                'a91e570e54b9ee7c304570bc3a066ea75dd833086c683a421c11e565482de01ffc2fb742408cf1dbd6c744cdde8835469120ce6a0e0c12fbfd53e9be81656900a95109f80418e7cbba510c457f15a0cb347bdc3f5508d46cec87a9214686a61d',
+                        },
+                    },
+                    commitments: {
+                        cmmAttributes: {},
+                        cmmCredCounter:
+                            'b0aa65f420a9f3fab61d3f875eebcc221e43154bfaf1b6365dace99bff20778de7003437631222e845fd9917c8d2874b',
+                        cmmIdCredSecSharingCoeff: [
+                            '8bac440a2e46ccbfbfa768c6ad99f2abf25f8b327a795ecf23b2b804c327022f06d0aced0b5eed65899a3ef3029804ec',
+                        ],
+                        cmmMaxAccounts:
+                            '869e2bddb2c60703ecd512b55b772baf75691f81bbc45362f88e5abcdab85a23714a92d46fe40457364d506abc2202a3',
+                        cmmPrf: 'b8930e48976902f67f0cbb50b8c2911fcc0646fbccf4bfb6a442ef7d40a8351f48ae7206ee8083e28d357be808803f82',
+                    },
+                    credId: 'aa730045bcd20bb5c24349db29d949f767e72f7cce459dc163c4b93c780a7d7f65801dda8ff7e4fc06fdf1a1b246276f',
+                    credentialPublicKeys: {
+                        keys: {
+                            '0': {
+                                schemeId: 'Ed25519',
+                                verifyKey:
+                                    '9e975c838d037136cff54f7f5b741922dd9bc31e5dd3c9eb793a026b7d1f5125',
+                            },
+                            '1': {
+                                schemeId: 'Ed25519',
+                                verifyKey:
+                                    '2d322b8744fa5d01823adce3f6a13bbebdd7b8503c08ccc3d8497e6c46021976',
+                            },
+                            '2': {
+                                schemeId: 'Ed25519',
+                                verifyKey:
+                                    '9a77df3f869206a7c085bc1ab821f1e248762a22bb37471b3cefcb83740764c9',
+                            },
+                        },
+                        threshold: 2,
+                    },
+                    ipIdentity: 0,
+                    policy: {
+                        createdAt: '202206',
+                        revealedAttributes: {},
+                        validTo: '202306',
+                    },
+                    revocationThreshold: 1,
+                },
+                type: 'normal',
+            },
+        },
+    },
+    accountThreshold: 1,
+    accountEncryptedAmount: {
+        incomingAmounts: [],
+        selfAmount:
+            'c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+        startIndex: 0n,
+    },
+    accountEncryptionKey:
+        'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5aa730045bcd20bb5c24349db29d949f767e72f7cce459dc163c4b93c780a7d7f65801dda8ff7e4fc06fdf1a1b246276f',
+    accountIndex: 11n,
+    accountAddress: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
+};
+
+export const chainParameters = {
+    electionDifficulty: 0.025,
+    euroPerEnergy: { numerator: 1n, denominator: 50000n },
+    microGTUPerEuro: {
+        numerator: 697170112016908288n,
+        denominator: 7989497115n,
+    },
+    accountCreationLimit: 10,
+    foundationAccount: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
+    rewardPeriodLength: 24n,
+    mintPerPayday: 0.000261157877,
+    delegatorCooldown: 1209600n,
+    poolOwnerCooldown: 1814400n,
+    passiveFinalizationCommission: 1,
+    passiveBakingCommission: 0.12,
+    passiveTransactionCommission: 0.12,
+    finalizationCommissionRange: { min: 1, max: 1 },
+    bakingCommissionRange: { min: 0.1, max: 0.1 },
+    transactionCommissionRange: { min: 0.1, max: 0.1 },
+    minimumEquityCapital: 14000000000n,
+    capitalBound: 0.1,
+    leverageBound: { numerator: 3n, denominator: 1n },
+    rewardParameters: {
+        transactionFeeDistribution: { baker: 0.45, gasAccount: 0.45 },
+        gASRewards: {
+            baker: 0.25,
+            finalizationProof: 0.005,
+            accountCreation: 0.02,
+            chainUpdate: 0.005,
+        },
+        mintDistribution: { bakingReward: 0.6, finalizationReward: 0.3 },
+    },
+};
+
+export const oldChainParameters = {
+    electionDifficulty: 0.025,
+    euroPerEnergy: { numerator: 1n, denominator: 50000n },
+    microGTUPerEuro: { numerator: 50000000n, denominator: 1n },
+    accountCreationLimit: 10,
+    foundationAccount: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
+    bakerCooldownEpochs: 166n,
+    minimumThresholdForBaking: 15000000000n,
+    rewardParameters: {
+        transactionFeeDistribution: { baker: 0.45, gasAccount: 0.45 },
+        gASRewards: {
+            baker: 0.25,
+            finalizationProof: 0.005,
+            accountCreation: 0.02,
+            chainUpdate: 0.005,
+        },
+        mintDistribution: {
+            bakingReward: 0.6,
+            finalizationReward: 0.3,
+            mintPerSlot: 7.555665e-10,
+        },
+    },
+};
+
+export const bakerPoolStatus = {
+    poolType: 'BakerPool',
+    bakerId: 1n,
+    bakerAddress: '3U4sfVSqGG6XK8g6eho2qRYtnHc4MWJBG1dfxdtPGbfHwFxini',
+    bakerEquityCapital: 7347853372468927n,
+    delegatedCapital: 0n,
+    delegatedCapitalCap: 0n,
+    poolInfo: {
+        openStatus: 'openForAll',
+        metadataUrl: '',
+        commissionRates: {
+            transactionCommission: 0.1,
+            bakingCommission: 0.1,
+            finalizationCommission: 1,
+        },
+    },
+    bakerStakePendingChange: { pendingChangeType: 'NoChange' },
+    currentPaydayStatus: {
+        blocksBaked: 1329n,
+        finalizationLive: true,
+        transactionFeesEarned: 105169976n,
+        effectiveStake: 4605214437901336n,
+        lotteryPower: 0.15552531374613243,
+        bakerEquityCapital: 7344771840225046n,
+        delegatedCapital: 0n,
+    },
+    allPoolTotalCapital: 46071942529284135n,
+};
+
+export const passiveDelegationStatus = {
+    poolType: 'PassiveDelegation',
+    delegatedCapital: 698892529615n,
+    commissionRates: {
+        transactionCommission: 0.12,
+        bakingCommission: 0.12,
+        finalizationCommission: 1,
+    },
+    currentPaydayTransactionFeesEarned: 24070n,
+    currentPaydayDelegatedCapital: 698618484955n,
+    allPoolTotalCapital: 46071942529284135n,
+};
+
+export const bakerPoolStatusWithPendingChange = {
+    poolType: 'BakerPool',
+    bakerId: 1879n,
+    bakerAddress: '4aCoaW3qkQRnY3fUGThQcEMGSPLUEQ7XL9Yagx2UR91QpvtoAe',
+    bakerEquityCapital: 19999999999n,
+    delegatedCapital: 0n,
+    delegatedCapitalCap: 39999999998n,
+    poolInfo: {
+        openStatus: 'openForAll',
+        metadataUrl: 'b',
+        commissionRates: {
+            transactionCommission: 0.1,
+            bakingCommission: 0.1,
+            finalizationCommission: 1,
+        },
+    },
+    bakerStakePendingChange: {
+        pendingChangeType: 'RemovePool',
+        effectiveTime: new Date('2022-12-08T07:54:00.000Z'),
+    },
+    currentPaydayStatus: null,
+    allPoolTotalCapital: 46470271917743628n,
+};
+
+export const invokeContractResult = {
+    tag: 'success',
+    usedEnergy: 502n,
+    returnValue: '000f17697d00000000',
+    events: [
+        {
+            tag: 'Updated',
+            contractVersion: 1,
+            address: { index: 81n, subindex: 0n },
+            instigator: {
+                type: 'AddressAccount',
+                address: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
+            },
+            amount: 0n,
+            message: '',
+            receiveName: 'PiggyBank.view',
+            events: [],
+        },
+    ],
+};
+
+export const blocksAtHeight = [
+    '99ceb0dfcd36714d9c141fde08e85da1d0d624994e95b35114f14193c811b76e',
+];
+
+export const blockInfo = {
+    blockParent:
+        '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf',
+    blockHash:
+        'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e',
+    blockStateHash:
+        '6e602157d76677fc4b630b2701571d2b0166e2b08e0afe8ab92356e4d0b88a6a',
+    blockLastFinalized:
+        '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf',
+    blockHeight: 1259179n,
+    blockBaker: 4n,
+    blockSlot: 50801674n,
+    blockArriveTime: new Date('2022-11-07T10:54:10.899Z'),
+    blockReceiveTime: new Date('2022-11-07T10:54:10.892Z'),
+    blockSlotTime: new Date('2022-11-07T10:54:10.750Z'),
+    finalized: true,
+    transactionCount: 0n,
+    transactionsSize: 0n,
+    transactionEnergyCost: 0n,
+    genesisIndex: 1,
+    eraBlockHeight: 1258806,
+};
+
+export const bakers = [
+    1n,
+    3n,
+    4n,
+    5n,
+    6n,
+    8n,
+    15n,
+    20n,
+    48n,
+    56n,
+    58n,
+    331n,
+    385n,
+    387n,
+    525n,
+    587n,
+    841n,
+    886n,
+    912n,
+    1004n,
+    1010n,
+    1016n,
+    1303n,
+    1370n,
+    1601n,
+    1614n,
+];

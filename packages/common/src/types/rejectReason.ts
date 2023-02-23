@@ -140,7 +140,6 @@ export type AccountAddressRejectReasonTag =
 export type StringRejectReasonTag =
     | ModuleRefRejectReasonTag
     | AccountAddressRejectReasonTag
-    | RejectReasonTag.NonExistentCredentialID
     | RejectReasonTag.DuplicateAggregationKey;
 
 export interface StringRejectReason {

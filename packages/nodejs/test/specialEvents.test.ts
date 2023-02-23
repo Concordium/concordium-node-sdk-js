@@ -1,8 +1,8 @@
 import * as expected from './resources/expectedJsons';
 import { asyncIterableToList } from '@concordium/common-sdk/src/util';
-import { getNodeClientV2 } from './testHelpers';
+import { getNodeClient } from './testHelpers';
 
-const client = getNodeClientV2();
+const client = getNodeClient();
 
 test('mint', async () => {
     const blockHash =

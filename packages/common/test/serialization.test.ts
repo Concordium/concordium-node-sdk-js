@@ -94,6 +94,38 @@ test('serialize UpdateContractParameters using CIS2 contract', () => {
     );
 });
 
+test('serialize UpdateContractParameters using CIS2 contract and incorrect name', () => {
+    const parameter = function () {
+        serializeUpdateContractParameters(
+            'CIS2-NFT',
+            'non-existent',
+            [
+                {
+                    token_id: [],
+                    amount: [200, 0],
+                    from: {
+                        Account: [
+                            '4RgTGQhg1Y8DAUkC2TpZsKmXdicArDqY9gcgJmBDECg4kkYNg4',
+                        ],
+                    },
+                    to: {
+                        Account: [
+                            '3UiNwnmZ64YR423uamgZyY8RnRkD88tfn6SYtKzvWZCkyFdN94',
+                        ],
+                    },
+                    data: [],
+                },
+            ],
+            Buffer.from(
+                fs.readFileSync('./test/resources/cis2-nft-schema.bin')
+            ),
+            1
+        );
+    };
+
+    expect(parameter).toThrow();
+});
+
 test('serialize type value and serializeUpdateContractParameters give same result', () => {
     const parameters = [
         {

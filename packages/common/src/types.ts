@@ -27,6 +27,8 @@ export type DigitString = string;
 export type UrlString = string;
 export type IpAddressString = string;
 
+export type ModuleRef = HexString;
+
 // A number of milliseconds
 export type Duration = bigint;
 // Unix timestamp in milliseconds
@@ -792,6 +794,8 @@ export enum OpenStatusText {
 
 export type Amount = bigint;
 export type BakerId = bigint;
+// TODO: Change this to bigint when GrpcV1 is removed.
+export type DelegatorId = number;
 
 export interface BakerPoolInfo {
     openStatus: OpenStatusText;

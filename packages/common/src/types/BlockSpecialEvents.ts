@@ -8,8 +8,7 @@ export type BlockSpecialEvent =
     | BlockSpecialEventPaydayFoundationReward
     | BlockSpecialEventPaydayAccountReward
     | BlockSpecialEventBlockAccrueReward
-    | BlockSpecialEventPaydayPoolReward
-    | BlockSpecialEventAccountAmount;
+    | BlockSpecialEventPaydayPoolReward;
 
 export interface BlockSpecialEventBakingRewards {
     tag: 'bakingRewards';
@@ -98,7 +97,7 @@ export interface BlockSpecialEventBlockAccrueReward {
 export interface BlockSpecialEventPaydayPoolReward {
     tag: 'paydayPoolReward';
     // The pool owner (passive delegators when not present).
-    poolOwner: BakerId;
+    poolOwner?: BakerId;
     // Accrued transaction fees for pool.
     transactionFees: Amount;
     // Accrued baking rewards for pool.

@@ -66,6 +66,7 @@ export enum TransactionKindString {
     ConfigureBaker = 'configureBaker',
     ConfigureDelegation = 'configureDelegation',
     StakingReward = 'paydayAccountReward',
+    Failed = 'failed',
 }
 
 export interface TransferSummary {
@@ -179,7 +180,8 @@ export interface UpdateCredentialsSummary {
     credentialsUpdated: CredentialsUpdatedEvent;
 }
 export interface FailedTransactionSummary {
-    failedTransactionType: TransactionKindString;
+    transactionType: TransactionKindString.Failed;
+    failedTransactionType?: TransactionKindString;
     rejectReason: RejectReason;
 }
 

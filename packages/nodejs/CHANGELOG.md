@@ -1,6 +1,6 @@
 # Changelog
 
-## 6.2.0 2023-2-7
+## 6.2.0 2023-2-23
 
 ### Added
 
@@ -8,7 +8,7 @@
 
 ### Changed
 
-- Bumped @concordium/common-sdk to 6.3.0. (Adds the initial version of gRPC v2 client)
+- Bumped @concordium/common-sdk to 6.3.0. (Adds the gRPC v2 client)
 
 ### Fixed
 

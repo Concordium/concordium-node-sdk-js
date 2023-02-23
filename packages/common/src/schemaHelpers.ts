@@ -18,13 +18,7 @@ export function getInitContractParameterSchema(
         contractName,
         schemaVersion
     );
-    try {
-        return Buffer.from(parameterSchema, 'hex');
-    } catch (e) {
-        throw new Error(
-            'unable to get parameter schema, due to: ' + parameterSchema
-        ); // In this case parameterSchema is the error message from the rust module
-    }
+    return Buffer.from(parameterSchema, 'hex');
 }
 
 /**
@@ -46,11 +40,5 @@ export function getUpdateContractParameterSchema(
         receiveFunctionName,
         schemaVersion
     );
-    try {
-        return Buffer.from(parameterSchema, 'hex');
-    } catch (e) {
-        throw new Error(
-            'unable to get parameter schema, due to: ' + parameterSchema
-        ); // In this case parameterSchema is the error message from the rust module
-    }
+    return Buffer.from(parameterSchema, 'hex');
 }

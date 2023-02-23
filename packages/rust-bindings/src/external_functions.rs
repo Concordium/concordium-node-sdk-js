@@ -104,7 +104,7 @@ pub fn serialize_receive_contract_parameters(
     contract_name: &str,
     function_name: &str,
     schema_version: Option<u8>,
-) -> HexString {
+) -> Result<HexString, String> {
     match serialize_receive_contract_parameters_aux(
         parameters,
         schema,
@@ -112,8 +112,8 @@ pub fn serialize_receive_contract_parameters(
         function_name,
         schema_version,
     ) {
-        Ok(s) => s,
-        Err(e) => format!("{}", e),
+        Ok(s) => Ok(s),
+        Err(e) => Err(format!("unable to deserialize parameters, due to: {}", e)),
     }
 }
 
@@ -123,11 +123,11 @@ pub fn serialize_init_contract_parameters(
     schema: HexString,
     contract_name: &str,
     schema_version: Option<u8>,
-) -> HexString {
+) -> Result<HexString, String> {
     match serialize_init_contract_parameters_aux(parameters, schema, contract_name, schema_version)
     {
-        Ok(s) => s,
-        Err(e) => format!("{}", e),
+        Ok(s) => Ok(s),
+        Err(e) => Err(format!("unable to deserialize parameters, due to: {}", e)),
     }
 }
 
@@ -137,13 +137,16 @@ pub fn get_receive_contract_parameter_schema_ext(
     contract_name: &str,
     function_name: &str,
     schema_version: Option<u8>,
-) -> HexString {
-    error_to_string(get_receive_contract_parameter_schema_aux(
+) -> Result<HexString, String> {
+    match get_receive_contract_parameter_schema_aux(
         schema,
         contract_name,
         function_name,
         schema_version,
-    ))
+    ) {
+        Ok(v) => Ok(v),
+        Err(e) => Err(format!("unable to get parameter schema, due to: {}", e)),
+    }
 }
 
 #[wasm_bindgen(js_name = getInitContractParameterSchema)]
@@ -151,12 +154,11 @@ pub fn get_init_contract_parameter_schema_ext(
     schema: HexString,
     contract_name: &str,
     schema_version: Option<u8>,
-) -> HexString {
-    error_to_string(get_init_contract_parameter_schema_aux(
-        schema,
-        contract_name,
-        schema_version,
-    ))
+) -> Result<HexString, String> {
+    match get_init_contract_parameter_schema_aux(schema, contract_name, schema_version) {
+        Ok(v) => Ok(v),
+        Err(e) => Err(format!("unable to get parameter schema, due to: {}", e)),
+    }
 }
 
 #[wasm_bindgen(js_name = serializeTypeValue)]

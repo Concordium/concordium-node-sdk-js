@@ -6,6 +6,7 @@ import bs58check from 'bs58check';
 import { AccountAddress } from './types/accountAddress';
 import { ModuleReference } from './types/moduleReference';
 import { CcdAmount } from './types/ccdAmount';
+import { Base58String } from './types';
 
 function unwrapToHex(bytes: Uint8Array | undefined): v1.HexString {
     return Buffer.from(unwrap(bytes)).toString('hex');
@@ -21,10 +22,6 @@ export function unwrapToBase58(
     return bs58check.encode(
         Buffer.concat([Buffer.of(1), unwrap(address?.value)])
     );
-}
-
-function trModuleRef(moduleRef: v2.ModuleRef | undefined): ModuleReference {
-    return new ModuleReference(unwrapValToHex(moduleRef));
 }
 
 function trRelease(release: v2.Release): v1.ReleaseScheduleWithTransactions {
@@ -700,8 +697,8 @@ function trContractTraceElement(
             return {
                 tag: v1.TransactionEventTag.Upgraded,
                 address: unwrap(element.upgraded.address),
-                from: trModuleRef(element.upgraded.from),
-                to: trModuleRef(element.upgraded.to),
+                from: unwrapValToHex(element.upgraded.from),
+                to: unwrapValToHex(element.upgraded.to),
             };
         default:
             throw Error(
@@ -712,7 +709,7 @@ function trContractTraceElement(
 
 function trBakerEvent(
     bakerEvent: v2.BakerEvent,
-    account: string
+    account: Base58String
 ): v1.BakerEvent {
     const event = bakerEvent.event;
     switch (event.oneofKind) {
@@ -720,7 +717,7 @@ function trBakerEvent(
             const keysEvent = event.bakerAdded.keysEvent;
             return {
                 tag: v1.TransactionEventTag.BakerAdded,
-                bakerId: Number(unwrap(keysEvent?.bakerId?.value)),
+                bakerId: unwrap(keysEvent?.bakerId?.value),
                 account: unwrapToBase58(keysEvent?.account),
                 signKey: unwrapValToHex(keysEvent?.signKey),
                 electionKey: unwrapValToHex(keysEvent?.electionKey),
@@ -732,20 +729,20 @@ function trBakerEvent(
         case 'bakerRemoved':
             return {
                 tag: v1.TransactionEventTag.BakerRemoved,
-                bakerId: Number(unwrap(event.bakerRemoved.value)),
+                bakerId: unwrap(event.bakerRemoved.value),
                 account,
             };
         case 'bakerStakeIncreased':
             return {
                 tag: v1.TransactionEventTag.BakerStakeIncreased,
-                bakerId: Number(unwrap(event.bakerStakeIncreased.bakerId)),
+                bakerId: unwrap(event.bakerStakeIncreased.bakerId?.value),
                 newStake: unwrap(event.bakerStakeIncreased.newStake?.value),
                 account,
             };
         case 'bakerStakeDecreased':
             return {
                 tag: v1.TransactionEventTag.BakerStakeDecreased,
-                bakerId: Number(unwrap(event.bakerStakeDecreased.bakerId)),
+                bakerId: unwrap(event.bakerStakeDecreased.bakerId?.value),
                 newStake: unwrap(event.bakerStakeDecreased.newStake?.value),
                 account,
             };
@@ -753,7 +750,7 @@ function trBakerEvent(
             const update = event.bakerRestakeEarningsUpdated;
             return {
                 tag: v1.TransactionEventTag.BakerSetRestakeEarnings,
-                bakerId: Number(unwrap(update.bakerId?.value)),
+                bakerId: unwrap(update.bakerId?.value),
                 restakeEarnings: unwrap(update.restakeEarnings),
                 account,
             };
@@ -761,7 +758,7 @@ function trBakerEvent(
         case 'bakerKeysUpdated':
             return {
                 tag: v1.TransactionEventTag.BakerKeysUpdated,
-                bakerId: Number(unwrap(event.bakerKeysUpdated.bakerId?.value)),
+                bakerId: unwrap(event.bakerKeysUpdated.bakerId?.value),
                 account: unwrapToBase58(event.bakerKeysUpdated.account),
                 signKey: unwrapValToHex(event.bakerKeysUpdated.signKey),
                 electionKey: unwrapValToHex(event.bakerKeysUpdated.electionKey),
@@ -773,7 +770,7 @@ function trBakerEvent(
             const setOpenStatus = event.bakerSetOpenStatus;
             return {
                 tag: v1.TransactionEventTag.BakerSetOpenStatus,
-                bakerId: Number(unwrap(setOpenStatus.bakerId?.value)),
+                bakerId: unwrap(setOpenStatus.bakerId?.value),
                 openStatus: trOpenStatus(setOpenStatus.openStatus),
                 account,
             };
@@ -782,7 +779,7 @@ function trBakerEvent(
             const setURL = event.bakerSetMetadataUrl;
             return {
                 tag: v1.TransactionEventTag.BakerSetMetadataURL,
-                bakerId: Number(unwrap(setURL.bakerId?.value)),
+                bakerId: unwrap(setURL.bakerId?.value),
                 metadataURL: setURL.url,
                 account,
             };
@@ -792,7 +789,7 @@ function trBakerEvent(
             const amount = transferFeeComm.transactionFeeCommission;
             return {
                 tag: v1.TransactionEventTag.BakerSetTransactionFeeCommission,
-                bakerId: Number(unwrap(transferFeeComm.bakerId?.value)),
+                bakerId: unwrap(transferFeeComm.bakerId?.value),
                 transactionFeeCommission: trAmountFraction(amount),
                 account,
             };
@@ -802,8 +799,9 @@ function trBakerEvent(
             const amount = rewardComm.bakingRewardCommission;
             return {
                 tag: v1.TransactionEventTag.BakerSetBakingRewardCommission,
-                bakerId: Number(unwrap(rewardComm.bakerId?.value)),
+                bakerId: unwrap(rewardComm.bakerId?.value),
                 bakingRewardCommission: trAmountFraction(amount),
+                account,
             };
         }
         case 'bakerSetFinalizationRewardCommission': {
@@ -812,7 +810,7 @@ function trBakerEvent(
             return {
                 tag: v1.TransactionEventTag
                     .BakerSetFinalizationRewardCommission,
-                bakerId: Number(unwrap(rewardComm.bakerId?.value)),
+                bakerId: unwrap(rewardComm.bakerId?.value),
                 finalizationRewardCommission: trAmountFraction(amount),
                 account,
             };
@@ -841,7 +839,8 @@ function trDelegTarget(
 }
 
 function trDelegationEvent(
-    delegationEvent: v2.DelegationEvent
+    delegationEvent: v2.DelegationEvent,
+    account: Base58String
 ): v1.DelegationEvent {
     const event = delegationEvent.event;
     switch (event.oneofKind) {
@@ -851,14 +850,16 @@ function trDelegationEvent(
                 tag: v1.TransactionEventTag.DelegationStakeIncreased,
                 delegatorId: Number(unwrap(stakeIncr.delegatorId?.id?.value)),
                 newStake: unwrap(stakeIncr.newStake?.value),
+                account,
             };
         }
         case 'delegationStakeDecreased': {
             const stakeDecr = event.delegationStakeDecreased;
             return {
-                tag: v1.TransactionEventTag.DelegationStakeIncreased,
+                tag: v1.TransactionEventTag.DelegationStakeDecreased,
                 delegatorId: Number(unwrap(stakeDecr.delegatorId?.id?.value)),
                 newStake: unwrap(stakeDecr.newStake?.value),
+                account,
             };
         }
         case 'delegationSetRestakeEarnings': {
@@ -867,6 +868,7 @@ function trDelegationEvent(
                 tag: v1.TransactionEventTag.DelegationSetRestakeEarnings,
                 delegatorId: Number(unwrap(restake.delegatorId?.id?.value)),
                 restakeEarnings: unwrap(restake.restakeEarnings),
+                account,
             };
         }
         case 'delegationSetDelegationTarget': {
@@ -875,17 +877,20 @@ function trDelegationEvent(
                 tag: v1.TransactionEventTag.DelegationSetDelegationTarget,
                 delegatorId: Number(unwrap(target.delegatorId?.id?.value)),
                 delegationTarget: trDelegTarget(target.delegationTarget),
+                account,
             };
         }
         case 'delegationAdded':
             return {
                 tag: v1.TransactionEventTag.DelegationAdded,
                 delegatorId: Number(unwrap(event.delegationAdded.id?.value)),
+                account,
             };
         case 'delegationRemoved':
             return {
-                tag: v1.TransactionEventTag.DelegationAdded,
+                tag: v1.TransactionEventTag.DelegationRemoved,
                 delegatorId: Number(unwrap(event.delegationRemoved.id?.value)),
+                account,
             };
         default:
             throw Error('Unrecognized event type. This should be impossible.');
@@ -1536,8 +1541,8 @@ function trMemoEvent(memo: v2.Memo): v1.MemoEvent {
 }
 
 function trTransactionType(
-    type: v2.TransactionType | undefined
-): v1.TransactionKindString {
+    type?: v2.TransactionType
+): v1.TransactionKindString | undefined {
     switch (type) {
         case v2.TransactionType.DEPLOY_MODULE:
             return v1.TransactionKindString.DeployModule;
@@ -1582,7 +1587,7 @@ function trTransactionType(
         case v2.TransactionType.CONFIGURE_DELEGATION:
             return v1.TransactionKindString.ConfigureDelegation;
         case undefined:
-            throw new Error('Unexpected missing transaction type');
+            return undefined;
     }
 }
 
@@ -1602,6 +1607,7 @@ function trAccountTransactionSummary(
         case 'none':
             return {
                 ...base,
+                transactionType: v1.TransactionKindString.Failed,
                 failedTransactionType: trTransactionType(
                     effect.none.transactionType
                 ),
@@ -1610,7 +1616,7 @@ function trAccountTransactionSummary(
         case 'moduleDeployed': {
             const event: v1.ModuleDeployedEvent = {
                 tag: v1.TransactionEventTag.ModuleDeployed,
-                contents: trModuleRef(effect.moduleDeployed),
+                contents: unwrapValToHex(effect.moduleDeployed),
             };
             return {
                 ...base,
@@ -1624,10 +1630,10 @@ function trAccountTransactionSummary(
                 tag: v1.TransactionEventTag.ContractInitialized,
                 address: unwrap(contractInit.address),
                 amount: unwrap(contractInit.amount?.value),
-                contractName: unwrap(contractInit.initName?.value),
+                initName: unwrap(contractInit.initName?.value),
                 events: unwrap(contractInit.events.map(unwrapValToHex)),
                 contractVersion: unwrap(contractInit.contractVersion),
-                originRef: trModuleRef(contractInit.originRef),
+                ref: unwrapValToHex(contractInit.originRef),
             };
             return {
                 ...base,
@@ -1716,7 +1722,7 @@ function trAccountTransactionSummary(
                 tag: increased
                     ? v1.TransactionEventTag.BakerStakeIncreased
                     : v1.TransactionEventTag.BakerStakeDecreased,
-                bakerId: Number(unwrap(update?.bakerId)),
+                bakerId: unwrap(update?.bakerId?.value),
                 newStake: unwrap(update?.newStake?.value),
                 account: base.sender,
             };
@@ -1732,7 +1738,8 @@ function trAccountTransactionSummary(
                 tag: v1.TransactionEventTag.EncryptedAmountsRemoved,
                 inputAmount: unwrapValToHex(transfer.removed?.inputAmount),
                 newAmount: unwrapValToHex(transfer.removed?.newAmount),
-                upToindex: Number(unwrap(transfer.removed?.upToIndex)),
+                upToIndex: Number(unwrap(transfer.removed?.upToIndex)),
+                account: base.sender,
             };
             const added: v1.NewEncryptedAmountEvent = {
                 tag: v1.TransactionEventTag.NewEncryptedAmount,
@@ -1780,12 +1787,14 @@ function trAccountTransactionSummary(
             const transfer = effect.transferredToPublic;
             const removed: v1.EncryptedAmountsRemovedEvent = {
                 tag: v1.TransactionEventTag.EncryptedAmountsRemoved,
+                account: base.sender,
                 inputAmount: unwrapValToHex(transfer.removed?.inputAmount),
                 newAmount: unwrapValToHex(transfer.removed?.newAmount),
-                upToindex: Number(unwrap(transfer.removed?.upToIndex)),
+                upToIndex: Number(unwrap(transfer.removed?.upToIndex)),
             };
             const added: v1.AmountAddedByDecryptionEvent = {
                 tag: v1.TransactionEventTag.AmountAddedByDecryption,
+                account: base.sender,
                 amount: unwrap(transfer.amount?.value),
             };
             return {
@@ -1835,8 +1844,9 @@ function trAccountTransactionSummary(
             const event: v1.CredentialsUpdatedEvent = {
                 tag: v1.TransactionEventTag.CredentialsUpdated,
                 newCredIds: update.newCredIds.map(unwrapValToHex),
-                removedCredIDs: update.removedCredIds.map(unwrapValToHex),
+                removedCredIds: update.removedCredIds.map(unwrapValToHex),
                 newThreshold: unwrap(update.newThreshold?.value),
+                account: base.sender,
             };
             return {
                 ...base,
@@ -1867,8 +1877,8 @@ function trAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: v1.TransactionKindString.ConfigureDelegation,
-                events: effect.delegationConfigured.events.map(
-                    trDelegationEvent
+                events: effect.delegationConfigured.events.map((x) =>
+                    trDelegationEvent(x, base.sender)
                 ),
             };
         case undefined:
@@ -2403,9 +2413,9 @@ export function blockSpecialEvent(
             };
         }
         case 'paydayPoolReward': {
+            const poolOwner = event.paydayPoolReward.poolOwner?.value;
             return {
                 tag: 'paydayPoolReward',
-                poolOwner: unwrap(event.paydayPoolReward.poolOwner?.value),
                 transactionFees: unwrap(
                     event.paydayPoolReward.transactionFees?.value
                 ),
@@ -2413,6 +2423,7 @@ export function blockSpecialEvent(
                 finalizationReward: unwrap(
                     event.paydayPoolReward.finalizationReward?.value
                 ),
+                ...(poolOwner !== undefined && { poolOwner }),
             };
         }
         case undefined: {

@@ -9,7 +9,7 @@ import ConcordiumGRPCClient from '@concordium/common-sdk/lib/GRPCClient';
  * @param credentials channel credentials for communicating with the node
  * @param options optional options for the grpc transport
  */
-export default function createConcordiumClient(
+export function createConcordiumClient(
     address: string,
     port: number,
     credentials: ChannelCredentials,

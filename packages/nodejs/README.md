@@ -24,8 +24,9 @@ It also requires credentials to be specified. These can be used for create eithe
 
 ```js
 import { credentials } from '@grpc/grpc-js/';
+import { createConcordiumClient } from '@concordium/node-sdk';
 ...
-return createConcordiumClientV2(
+return createConcordiumClient(
     address,
     port,
     credentials.createSsl(),

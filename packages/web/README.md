@@ -28,6 +28,7 @@ For an overview of the endpoints, [check here](../../docs/gRPC.md).
 
 To create a client, the function `createConcordiumClient` can be used. It requires the address and port of the concordium node. 
 ```js
+import { createConcordiumClient } from '@concordium/web-sdk';
 ...
 return createConcordiumClient(
     address,
@@ -38,10 +39,9 @@ return createConcordiumClient(
 
 The third argument is additional options. In the example above we sat the timeout for a call to the node to 15 seconds. The options allowed here are those allowed by the [grpcweb-transport](https://www.npmjs.com/package/@protobuf-ts/grpcweb-transport).
 
-
 # JSON-RPC client
 > :warning: **The JSON-RPC client has been deprecated**: the gRPC client should be used instead to communicate directly with a node
-> To migrate, the migration guide from the v1 client to the v2 client [can be found here](../../docs/grpc-migration.md), as the JSON-RPC's endpoints shares interface with the equivalents in the v1 gRPC cient 
+> To migrate, the migration guide from the v1 client to the v2 client [can be found here](../../docs/grpc-migration.md), as the JSON-RPC's endpoints shares interface with the equivalent endpoints in the v1 gRPC client 
 
 The SDK also provides a JSON-RPC client, [check here for the documentation](../../docs/JSON-RPC.md).
 
@@ -83,7 +83,6 @@ An example of getting the info of a given account using a JSON-RPC server.
 
 ## GetModuleSource.html
 An example of getting the source of a model on the chain using a JSON-RPC server.
-
 
 # Build
 

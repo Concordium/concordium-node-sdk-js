@@ -10,6 +10,10 @@
 
 - Bumped @concordium/common-sdk to 6.3.0. (Adds the gRPC v2 client)
 
+### Deprecated
+
+- The JSON-RPC client (from common-sdk) has been deprecated in favor of the new gRPC v2 client.
+
 ## 3.2.0 2022-1-4
 
 ### Changed

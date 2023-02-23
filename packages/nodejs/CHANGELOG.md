@@ -14,6 +14,10 @@
 
 - The value of amount fields in the GRPCv1 client's invokeContract's events has been changed to bigint (instead of string) as the type specifies.
 
+### Deprecated
+
+- The old gRPC client has been deprecated in favor of the new gRPC v2 client.
+
 ## 6.1.0 2022-11-30
 
 ### Changed

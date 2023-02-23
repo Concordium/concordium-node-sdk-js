@@ -18,7 +18,7 @@ import { serializeAccountTransactionPayload } from '@concordium/common-sdk/src';
 import {
     getModuleBuffer,
     getIdentityInput,
-    getNodeClientV2,
+    getNodeClient,
 } from './testHelpers';
 import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons';
@@ -48,7 +48,7 @@ export function getNodeClientWeb(
     return new v1.ConcordiumGRPCClient(transport);
 }
 
-const clientV2 = getNodeClientV2();
+const clientV2 = getNodeClient();
 const clientWeb = getNodeClientWeb();
 
 const testAccount = new v1.AccountAddress(

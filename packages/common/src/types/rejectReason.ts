@@ -155,6 +155,9 @@ export interface BakerIdRejectReason {
     contents: BakerId;
 }
 
+/**
+ * @deprecated This is type for describing return types for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
+ */
 export interface NumberRejectReason {
     tag: BakerIdRejectReasonTag;
     contents: number;
@@ -172,6 +175,9 @@ export interface InvalidReceiveMethod {
     };
 }
 
+/**
+ * @deprecated This is type for describing return types for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
+ */
 export interface InvalidReceiveMethodV1 {
     tag: RejectReasonTag.InvalidReceiveMethod;
     contents: [HexString, string]; // [moduleRef, receiveName]
@@ -185,6 +191,9 @@ export interface InvalidInitMethod {
     };
 }
 
+/**
+ * @deprecated This is type for describing return types for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
+ */
 export interface InvalidInitMethodV1 {
     tag: RejectReasonTag.InvalidInitMethod;
     contents: [HexString, string]; // [moduleRef, initName]
@@ -198,6 +207,9 @@ export interface AmountTooLarge {
     };
 }
 
+/**
+ * @deprecated This is type for describing return types for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
+ */
 export interface AmountTooLargeV1 {
     tag: RejectReasonTag.AmountTooLarge;
     contents: [Address, DigitString]; // [address, amount]
@@ -232,6 +244,9 @@ export type RejectReason =
     | InvalidInitMethod
     | AmountTooLarge;
 
+/**
+ * @deprecated This is type for describing return types for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
+ */
 export type RejectReasonV1 =
     | RejectReasonCommon
     | NumberRejectReason

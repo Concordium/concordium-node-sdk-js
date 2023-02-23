@@ -53,6 +53,7 @@ export function stringToInt(jsonStruct: string, keys: string[]): string {
  * @param json the json to transform
  * @param bigIntPropertyKeys the keys in the json that must be converted to strings
  * @returns the transformed json where numbers have been replaced with strings
+ * @deprecated This is helper intented for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export function intToStringTransformer(
     bigIntPropertyKeys: string[]
@@ -65,6 +66,7 @@ export function intToStringTransformer(
  * @param datePropertyKeys the JSON keys that must be parsed as dates
  * @param bigIntPropertyKeys the JSON keys that must be parsed as big integers
  * @returns a reviver function that handles dates and big integers
+ * @deprecated This is helper intented for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export function buildJsonResponseReviver<T>(
     datePropertyKeys: (keyof T)[],

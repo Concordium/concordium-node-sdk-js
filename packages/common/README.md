@@ -9,6 +9,7 @@ This package is the shared library for the nodejs and web SDK's.
     - [Create a simple transfer with a memo](#create-a-simple-transfer-with-a-memo)
     - [Create a Register data transaction](#create-a-register-data-transaction)
     - [Create a configure delegation transaction](#create-a-configure-delegation-transaction)
+    - [Create a configure baker transaction](#create-a-configure-baker-transaction)
     - [Create a credential for an existing account](#create-a-credential-for-an-existing-account)
     - [Create an update credentials transaction](#create-an-update-credentials-transaction)
     - [Deploy module](#deploy-module)
@@ -35,6 +36,7 @@ This package is the shared library for the nodejs and web SDK's.
         - [Non membership statement](#non-membership-statement)
     - [Verify Statement (verifyIdstatement)](#verify-statement-verifyidstatement)
     - [Prove Statement (getIdProof)](#prove-statement-getidproof)
+- [ConcordiumNodeClient](#concordiumnodeclient)
 - [JSON-RPC client](#json-rpc-client)
 
 # Constructing transactions

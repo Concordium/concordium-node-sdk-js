@@ -7,9 +7,8 @@ Wrappers for interacting with the Concordium node, for the web environment.
 [Note that this package contains and exports the functions from the common-sdk, check the readme of that package for an overview of those](../common/README.md).
 
 **Table of Contents**
+- [ConcordiumNodeClient](#concordiumnodeclient)
 - [JSON-RPC client](#json-rpc-client)
-    - [Creating a client](#creating-a-client)
-    - [API Entrypoints](#api-entrypoints)
 - [Creating buffers](#creating-buffers)
 - [Examples](#examples)
     - [SendTransaction.html](#sendtransactionhtml)
@@ -17,6 +16,10 @@ Wrappers for interacting with the Concordium node, for the web environment.
     - [Alias.html](#aliashtml)
     - [GetTransactionStatus.html](#gettransactionstatushtml)
     - [GetNonce.html](#getnoncehtml)
+    - [InvokeContract.html](#invokecontracthtml)
+    - [GetCryptographicParameters.html](#getcryptographicparametershtml)
+    - [GetAccountInfo.html](#getaccountinfohtml)
+    - [GetModuleSource.html](#getmodulesourcehtml)
 - [Build](#build)
     - [Building for a release](#building-for-a-release)
     - [Publishing a release](#publishing-a-release)

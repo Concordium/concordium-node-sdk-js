@@ -63,7 +63,7 @@ a concordium-node.
 
 ## Creating a client
 The client requires an appropriate transport. However the web-sdk and node-sdk each exposes a helper function `createConcordiumClient` that creates a client using the appropriate transport (gRPC-web for web and regular gRPC for nodeJS).
-Please refer the the node-sdk or web-sdk's README's to see how to use those functions.
+Please refer the the [node-sdk](../packages/nodejs/README.md#concordiumnodeclient) or [web-sdk's](../packages/web/README.md#concordiumnodeclient)  README's to see how to use those functions.
 
 ## Send Account Transaction
 The following example demonstrates how to send any account transaction.

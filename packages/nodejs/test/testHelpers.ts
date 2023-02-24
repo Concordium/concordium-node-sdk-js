@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { credentials, Metadata } from '@grpc/grpc-js/';
+import { credentials } from '@grpc/grpc-js/';
 import { IdentityInput } from '@concordium/common-sdk';
 import { decryptMobileWalletExport, EncryptedData } from '../src/wallet/crypto';
 import { MobileWalletExport } from '../src/wallet/types';

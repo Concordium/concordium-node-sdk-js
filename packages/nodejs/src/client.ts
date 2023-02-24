@@ -88,6 +88,7 @@ import {
  * @example
  * import ConcordiumNodeClient from "..."
  * const client = new ConcordiumNodeClient('127.0.0.1', 10000, credentials, metadata, 15000);
+ * @deprecated This has been succeeded by the new V2 client, check {@link createConcordiumClient}
  */
 export default class ConcordiumNodeClient {
     client: P2PClient;

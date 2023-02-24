@@ -3,7 +3,7 @@ import { credentials, Metadata } from '@grpc/grpc-js/';
 import { IdentityInput } from '@concordium/common-sdk';
 import { decryptMobileWalletExport, EncryptedData } from '../src/wallet/crypto';
 import { MobileWalletExport } from '../src/wallet/types';
-import createConcordiumClientV2 from '../src/clientV2';
+import { createConcordiumClient } from '../src/clientV2';
 import ConcordiumNodeClientV2 from '@concordium/common-sdk/lib/GRPCClient';
 
 export { getModuleBuffer } from '../src/util';
@@ -16,12 +16,9 @@ export function getNodeClient(
     address = 'node.testnet.concordium.com',
     port = 20000
 ): ConcordiumNodeClientV2 {
-    return createConcordiumClientV2(
-        address,
-        port,
-        credentials.createInsecure(),
-        { timeout: 15000 }
-    );
+    return createConcordiumClient(address, port, credentials.createInsecure(), {
+        timeout: 15000,
+    });
 }
 
 export function isValidDate(date: Date): boolean {

@@ -44,6 +44,9 @@ function transformJsonResponse<Result>(
     return JSON.parse(jsonString, reviver);
 }
 
+/**
+ * @deprecated This has been deprecated in favor of the {@link ConcordiumNodeClient} that uses version 2 of the concordium gRPC API
+ */
 export class JsonRpcClient {
     provider: Provider;
 

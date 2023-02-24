@@ -1,14 +1,18 @@
 # Changelog
 
-## Unreleased
+## 3.3.0 2023-2-23
 
 ### Added
 
-- Added a `createConcordiumClient` function to create the GRPCv2 client.
+- Added a `createConcordiumClient` function to create the gRPC v2 client.
 
 ### Changed
 
-- Bumped @concordium/common-sdk to 6.3.0. (Adds the initial version of GRPCv2 client)
+- Bumped @concordium/common-sdk to 6.3.0. (Adds the gRPC v2 client)
+
+### Deprecated
+
+- The JSON-RPC client (from common-sdk) has been deprecated in favor of the new gRPC v2 client.
 
 ## 3.2.0 2022-1-4
 

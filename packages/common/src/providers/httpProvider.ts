@@ -3,6 +3,9 @@ import fetch from 'cross-fetch';
 import JSONBig from 'json-bigint';
 import { v4 as uuidv4 } from 'uuid';
 
+/**
+ * @deprecated This is only used by the JSON-RPC client, which has been deprecated
+ */
 export class HttpProvider implements Provider {
     request: JsonRpcRequest;
     cookie?: string;

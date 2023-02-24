@@ -172,26 +172,41 @@ export interface BaseTransactionSummary {
     index: bigint;
 }
 
+/**
+ * @deprecated This is type for describing return types from the V1 gRPC client, which has been deprecated
+ */
 interface GenericTransactionSummary extends BaseTransactionSummary {
     type: GenericTransactionSummaryType;
     result: EventResult;
 }
 
+/**
+ * @deprecated This is type for describing return types from the V1 gRPC client, which has been deprecated
+ */
 interface TransferWithMemoEventResult {
     outcome: 'success';
     events: [TransferredEvent, MemoEvent];
 }
 
+/**
+ * @deprecated This is type for describing return types from the V1 gRPC client, which has been deprecated
+ */
 export interface TransferWithMemoTransactionSummary
     extends BaseTransactionSummary {
     type: TransferWithMemoSummaryType;
     result: TransferWithMemoEventResult;
 }
 
+/**
+ * @deprecated This is helper intented for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
+ */
 export type TransactionSummary =
     | GenericTransactionSummary
     | TransferWithMemoTransactionSummary;
 
+/**
+ * @deprecated This is helper for type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
+ */
 export function instanceOfTransferWithMemoTransactionSummary(
     object: TransactionSummary
 ): object is TransferWithMemoTransactionSummary {
@@ -200,17 +215,26 @@ export function instanceOfTransferWithMemoTransactionSummary(
     );
 }
 
+/**
+ * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
+ */
 export interface TransactionStatus {
     status: TransactionStatusEnum;
     outcomes?: Record<string, TransactionSummary>;
 }
 
+/**
+ * @deprecated This is type describing return types from the V1 gRPC client, which has been deprecated
+ */
 export interface PartyInfo {
     bakerId: bigint;
     weight: bigint;
     signed: boolean;
 }
 
+/**
+ * @deprecated This is type describing return types from the V1 gRPC client, which has been deprecated
+ */
 export interface FinalizationData {
     finalizationIndex: bigint;
     finalizationDelay: bigint;
@@ -475,6 +499,7 @@ interface UpdatesCommon {
 
 /**
  * Used from protocol version 1-3
+ * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export interface UpdatesV0 extends UpdatesCommon {
     chainParameters: ChainParametersV0;
@@ -484,6 +509,7 @@ export interface UpdatesV0 extends UpdatesCommon {
 
 /**
  * Used from protocol version 4
+ * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export interface UpdatesV1 extends UpdatesCommon {
     chainParameters: ChainParametersV1;
@@ -491,8 +517,14 @@ export interface UpdatesV1 extends UpdatesCommon {
     keys: KeysV1;
 }
 
+/**
+ * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
+ */
 export type Updates = UpdatesV0 | UpdatesV1;
 
+/**
+ * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
+ */
 interface BlockSummaryCommon {
     protocolVersion?: bigint;
     finalizationData: FinalizationData;
@@ -501,6 +533,7 @@ interface BlockSummaryCommon {
 
 /**
  * Used from protocol version 1-3
+ * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export interface BlockSummaryV0 extends BlockSummaryCommon {
     updates: UpdatesV0;
@@ -508,12 +541,16 @@ export interface BlockSummaryV0 extends BlockSummaryCommon {
 
 /**
  * Used from protocol version 4
+ * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export interface BlockSummaryV1 extends BlockSummaryCommon {
     updates: UpdatesV1;
     protocolVersion: bigint;
 }
 
+/**
+ * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
+ */
 export type BlockSummary = BlockSummaryV0 | BlockSummaryV1;
 
 interface RewardStatusCommon {
@@ -1278,6 +1315,9 @@ export interface AccountTransaction {
     payload: AccountTransactionPayload;
 }
 
+/**
+ * @deprecated This type was for serialization code, which has been moved to rust-bindings
+ */
 export enum ParameterType {
     /** Nothing. */
     Unit = 0,
@@ -1410,6 +1450,7 @@ export interface ContractContext {
 
 /**
  * Format of invoker expected by the node for the invokeContract entrypoint.
+ * @deprecated This is type used by the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export type Invoker =
     | {
@@ -1428,6 +1469,7 @@ export type Invoker =
 /**
  * Takes an accountAddress or ContractAddress and transforms it into the specific format used for
  * InvokeContract's invoker parameter.
+ * @deprecated This is helper intented for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export function buildInvoker(
     invoker?: AccountAddress | ContractAddress
@@ -1466,6 +1508,9 @@ export interface InvokeContractFailedResult {
     reason: RejectReason;
 }
 
+/**
+ * @deprecated This is type for describing return types for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
+ */
 export interface InvokeContractFailedResultV1 {
     tag: 'failure';
     usedEnergy: bigint;
@@ -1476,6 +1521,9 @@ export type InvokeContractResult =
     | InvokeContractSuccessResult
     | InvokeContractFailedResult;
 
+/**
+ * @deprecated This is helper intented for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
+ */
 export type InvokeContractResultV1 =
     | InvokeContractSuccessResult
     | InvokeContractFailedResultV1;

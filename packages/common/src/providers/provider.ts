@@ -6,6 +6,9 @@ interface JsonRpcResponseBase {
     id: string | null;
 }
 
+/**
+ * @deprecated This is only used by the JSON-RPC client, which has been deprecated
+ */
 export interface JsonRpcResponseError extends JsonRpcResponseBase {
     error: {
         code: number;
@@ -15,15 +18,24 @@ export interface JsonRpcResponseError extends JsonRpcResponseBase {
     result?: never;
 }
 
+/**
+ * @deprecated This is only used by the JSON-RPC client, which has been deprecated
+ */
 export interface JsonRpcResponseSuccess<Result> extends JsonRpcResponseBase {
     error?: never;
     result: Result;
 }
 
+/**
+ * @deprecated This is only used by the JSON-RPC client, which has been deprecated
+ */
 export type JsonRpcResponse<Result> =
     | JsonRpcResponseError
     | JsonRpcResponseSuccess<Result>;
 
+/**
+ * @deprecated This is only used by the JSON-RPC client, which has been deprecated
+ */
 export type JsonRpcRequest = (
     ...args:
         | ['getNextAccountNonce', { address: string }]
@@ -53,6 +65,9 @@ export type JsonRpcRequest = (
           ]
 ) => Promise<string>;
 
+/**
+ * @deprecated This is only used by the JSON-RPC client, which has been deprecated
+ */
 export default interface Provider {
     request: JsonRpcRequest;
 }

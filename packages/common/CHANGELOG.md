@@ -25,6 +25,11 @@
   report an error when called with invalid data, such as a receive function with
   missing schema, or a schema that cannot be parsed.
 
+### Deprecated
+
+- The JSON-RPC client has been deprecated in favor of the new gRPC v2 client.
+- Various types and helper functions used by the JSON-RPC client (and the v1 gRPC client) have also been deprecated.
+
 ## 6.2.0 2023-01-04
 
 ### Added

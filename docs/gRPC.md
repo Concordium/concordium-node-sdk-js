@@ -2,58 +2,59 @@
 
 This document describes the different endpoints for the concordium gRPC V2 client. 
 
-- [Concordium Nodejs SDK](#concordium-nodejs-sdk)
+**Table of Contents**
+
 - [ConcordiumNodeClient](#concordiumnodeclient)
-  - [Creating a client](#creating-a-client)
-  - [Send Account Transaction](#send-account-transaction)
-  - [Create a new account](#create-a-new-account)
-  - [getAccountInfo](#getaccountinfo)
-  - [getNextAccountSequenceNumber](#getnextaccountsequencenumber)
-  - [getBlockItemStatus](#getblockitemstatus)
-  - [getConsensusStatus](#getconsensusstatus)
-  - [getCryptographicParameters](#getcryptographicparameters)
-  - [getBlockChainParameters](#getblockchainparameters)
-  - [getPoolInfo](#getpoolinfo)
-  - [getPassiveDelegationInfo](#getpassivedelegationinfo)
-  - [getTokenomicsInfo](#gettokenomicsinfo)
-  - [getInstanceInfo](#getinstanceinfo)
-  - [invokeContract](#invokecontract)
-  - [getModuleSource](#getmodulesource)
-  - [getBlocks](#getblocks)
-  - [getFinalizedBlocks](#getfinalizedblocks)
-  - [waitForTransactionFinalization](#waitfortransactionfinalization)
-  - [getAccountList](#getaccountlist)
-  - [getModuleList](#getmodulelist)
-  - [getAncestors](#getancestors)
-  - [getInstanceState](#getinstancestate)
-  - [instanceStateLookup](#instancestatelookup)
-  - [getIdentityProviders](#getidentityproviders)
-  - [getAnonymityRevokers](#getanonymityrevokers)
-  - [getBlocksAtHeight](#getblocksatheight)
-  - [getBlockInfo](#getblockinfo)
-  - [getBakerList](#getbakerlist)
-  - [getPoolDelegators](#getpooldelegators)
-  - [getPoolDelegatorsRewardPeriod](#getpooldelegatorsrewardperiod)
-  - [getPassiveDelegators](#getpassivedelegators)
-  - [getPassiveDelegatorsRewardPeriod](#getpassivedelegatorsrewardperiod)
-  - [getBranches](#getbranches)
-  - [getElectionInfo](#getelectioninfo)
-  - [getAccountNonFinalizedTransactions](#getaccountnonfinalizedtransactions)
-  - [getBlockTransactionEvents](#getblocktransactionevents)
-  - [getNextUpdateSequenceNumbers](#getnextupdatesequencenumbers)
-  - [shutdown](#shutdown)
-  - [peerConnect](#peerconnect)
-  - [peerDisconnect](#peerdisconnect)
-  - [getBannedPeers](#getbannedpeers)
-  - [banPeer](#banpeer)
-  - [unbanPeer](#unbanpeer)
-  - [dumpStart](#dumpstart)
-  - [dumpStop](#dumpstop)
-  - [getNodeInfo](#getnodeinfo)
-  - [getPeersInfo](#getpeersinfo)
-  - [getBlockSpecialEvents](#getblockspecialevents)
-  - [getBlockPendingUpdates](#getblockpendingupdates)
-  - [getBlockFinalizationSummary](#getblockfinalizationsummary)
+    - [Creating a client](#creating-a-client)
+    - [Send Account Transaction](#send-account-transaction)
+    - [Create a new account](#create-a-new-account)
+    - [getAccountInfo](#getaccountinfo)
+    - [getNextAccountSequenceNumber](#getnextaccountsequencenumber)
+    - [getBlockItemStatus](#getblockitemstatus)
+    - [getConsensusStatus](#getconsensusstatus)
+    - [getCryptographicParameters](#getcryptographicparameters)
+    - [getBlockChainParameters](#getblockchainparameters)
+    - [getPoolInfo](#getpoolinfo)
+    - [getPassiveDelegationInfo](#getpassivedelegationinfo)
+    - [getTokenomicsInfo](#gettokenomicsinfo)
+    - [getInstanceInfo](#getinstanceinfo)
+    - [invokeContract](#invokecontract)
+    - [getModuleSource](#getmodulesource)
+    - [getBlocks](#getblocks)
+    - [getFinalizedBlocks](#getfinalizedblocks)
+    - [waitForTransactionFinalization](#waitfortransactionfinalization)
+    - [getAccountList](#getaccountlist)
+    - [getModuleList](#getmodulelist)
+    - [getAncestors](#getancestors)
+    - [getInstanceState](#getinstancestate)
+    - [instanceStateLookup](#instancestatelookup)
+    - [getIdentityProviders](#getidentityproviders)
+    - [getAnonymityRevokers](#getanonymityrevokers)
+    - [getBlocksAtHeight](#getblocksatheight)
+    - [getBlockInfo](#getblockinfo)
+    - [getBakerList](#getbakerlist)
+    - [getPoolDelegators](#getpooldelegators)
+    - [getPoolDelegatorsRewardPeriod](#getpooldelegatorsrewardperiod)
+    - [getPassiveDelegators](#getpassivedelegators)
+    - [getPassiveDelegatorsRewardPeriod](#getpassivedelegatorsrewardperiod)
+    - [getBranches](#getbranches)
+    - [getElectionInfo](#getelectioninfo)
+    - [getAccountNonFinalizedTransactions](#getaccountnonfinalizedtransactions)
+    - [getBlockTransactionEvents](#getblocktransactionevents)
+    - [getNextUpdateSequenceNumbers](#getnextupdatesequencenumbers)
+    - [shutdown](#shutdown)
+    - [peerConnect](#peerconnect)
+    - [peerDisconnect](#peerdisconnect)
+    - [getBannedPeers](#getbannedpeers)
+    - [banPeer](#banpeer)
+    - [unbanPeer](#unbanpeer)
+    - [dumpStart](#dumpstart)
+    - [dumpStop](#dumpstop)
+    - [getNodeInfo](#getnodeinfo)
+    - [getPeersInfo](#getpeersinfo)
+    - [getBlockSpecialEvents](#getblockspecialevents)
+    - [getBlockPendingUpdates](#getblockpendingupdates)
+    - [getBlockFinalizationSummary](#getblockfinalizationsummary)
 
 # ConcordiumNodeClient
 
@@ -61,33 +62,14 @@ The ConcordiumNodeClient defines the interface to be used to send and receive da
 a concordium-node.
 
 ## Creating a client
-Connection to a node can be done using either an insecure connection or a TLS connection. If the node that you are trying to connect to supports TLS, you can create a TLS connection in the following way:
-
-```js
-import { credentials, Metadata } from "@grpc/grpc-js";
-import { ConcordiumNodeClient } from "@concordium/node-sdk";
-
-const metadata = new Metadata();
-metadata.add("authentication", "rpcadmin");
-
-const client = new ConcordiumNodeClient(
-    "127.0.0.1",    // ip address
-    10000,          // port
-    credentials.createSsl(),
-    metadata,
-    15000           // timeout in ms
-);
-```
-
-The access is controlled by the credentials and the metadata. If the node does not support TLS an insecure connection can be established using `credentials.createInsecure()` instead of `credentials.createSsl()`.
-
-Note that the web-sdk and node-sdk each exposes a helper function `createConcordiumClient` that creates a client using the appropriate transport (gRPC-web for web and regular gRPC for nodeJS).
+The client requires an appropriate transport. However the web-sdk and node-sdk each exposes a helper function `createConcordiumClient` that creates a client using the appropriate transport (gRPC-web for web and regular gRPC for nodeJS).
+Please refer the the [node-sdk](../packages/nodejs/README.md#concordiumnodeclient) or [web-sdk's](../packages/web/README.md#concordiumnodeclient)  README's to see how to use those functions.
 
 ## Send Account Transaction
 The following example demonstrates how to send any account transaction.
 
-See the Constructing transactions section for the [common package](./#constructing-transactions) for how to create an account transaction.
-See the signing a transaction section for the [common package](./#sign-an-account-transaction) for how to sign an account transaction.
+See the Constructing transactions section for the [common package](../packages/common/README.md#constructing-transactions) for how to create an account transaction.
+See the signing a transaction section for the [common package](../packages/common/README.md#sign-an-account-transaction) for how to sign an account transaction.
 
 ```js
 

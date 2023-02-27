@@ -4,9 +4,9 @@ import {
     buildBasicAccountSigner,
     signTransaction,
 } from '@concordium/common-sdk';
-import { getNodeClientV2 } from '../test/testHelpers';
+import { getNodeClient } from '../test/testHelpers';
 
-const clientV2 = getNodeClientV2();
+const client = getNodeClient();
 
 const testAccount = new v1.AccountAddress(
     '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'
@@ -20,7 +20,7 @@ const senderAccountPrivateKey =
 
 describe.skip('Manual test suite', () => {
     test('waitForTransactionFinalization', async () => {
-        const nonce = (await clientV2.getNextAccountNonce(senderAccount)).nonce;
+        const nonce = (await client.getNextAccountNonce(senderAccount)).nonce;
 
         // Create local transaction
         const header: v1.AccountTransactionHeader = {
@@ -45,12 +45,12 @@ describe.skip('Manual test suite', () => {
             signer
         );
 
-        const transactionHash = await clientV2.sendAccountTransaction(
+        const transactionHash = await client.sendAccountTransaction(
             accountTransaction,
             signature
         );
 
-        const blockHash = await clientV2.waitForTransactionFinalization(
+        const blockHash = await client.waitForTransactionFinalization(
             transactionHash,
             undefined
         );
@@ -62,31 +62,31 @@ describe.skip('Manual test suite', () => {
     // Requires a node that allows performing banPeer/unbanPeer/getBannedPeers
     test('Ban/Unban peer is reflected in ban list', async () => {
         const randomIp = '229.249.155.177';
-        await clientV2.banPeer(randomIp);
-        let peers = await clientV2.getBannedPeers();
+        await client.banPeer(randomIp);
+        let peers = await client.getBannedPeers();
         expect(peers).toContainEqual(randomIp);
-        await clientV2.unbanPeer(randomIp);
-        peers = await clientV2.getBannedPeers();
+        await client.unbanPeer(randomIp);
+        peers = await client.getBannedPeers();
         expect(peers).not.toContainEqual(randomIp);
     }, 750000);
 
     // Requires a node that allows performing peerConnect/peerDisconnect/getPeersInfo
     test('Connecting/disconnecting peer is reflected in Peers info list', async () => {
-        const peer = (await clientV2.client.getPeersInfo(v2.Empty).response)
+        const peer = (await client.client.getPeersInfo(v2.Empty).response)
             .peers[0].socketAddress;
         if (!peer || !peer.ip || !peer.port) {
             throw new Error('missing peer');
         }
-        await clientV2.peerDisconnect(peer.ip.value, peer.port.value);
+        await client.peerDisconnect(peer.ip.value, peer.port.value);
         await new Promise((r) => setTimeout(r, 10000));
         let updatedPeers = (
-            await clientV2.client.getPeersInfo(v2.Empty).response
+            await client.client.getPeersInfo(v2.Empty).response
         ).peers.map((x) => x.socketAddress);
         expect(updatedPeers).not.toContainEqual(peer);
-        await clientV2.peerConnect(peer.ip.value, peer.port.value);
+        await client.peerConnect(peer.ip.value, peer.port.value);
         await new Promise((r) => setTimeout(r, 10000));
         updatedPeers = (
-            await clientV2.client.getPeersInfo(v2.Empty).response
+            await client.client.getPeersInfo(v2.Empty).response
         ).peers.map((x) => x.socketAddress);
         expect(updatedPeers).toContainEqual(peer);
     }, 750000);

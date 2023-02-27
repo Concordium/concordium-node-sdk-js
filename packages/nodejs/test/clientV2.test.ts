@@ -18,8 +18,7 @@ import { serializeAccountTransactionPayload } from '@concordium/common-sdk/src';
 import {
     getModuleBuffer,
     getIdentityInput,
-    getNodeClient as getNodeClientV1,
-    getNodeClientV2,
+    getNodeClient,
 } from './testHelpers';
 import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons';
@@ -49,8 +48,7 @@ export function getNodeClientWeb(
     return new v1.ConcordiumGRPCClient(transport);
 }
 
-const clientV1 = getNodeClientV1('node.testnet.concordium.com', 10000);
-const clientV2 = getNodeClientV2();
+const clientV2 = getNodeClient();
 const clientWeb = getNodeClientWeb();
 
 const testAccount = new v1.AccountAddress(
@@ -174,66 +172,26 @@ test.each([clientV2, clientWeb])(
 test.each([clientV2, clientWeb])(
     'accountInfo implementations is the same',
     async (client) => {
-        const oldReg = await clientV1.getAccountInfo(
-            testAccount,
-            testBlockHash
-        );
-        const newReg = await client.getAccountInfo(testAccount, testBlockHash);
+        const regular = await client.getAccountInfo(testAccount, testBlockHash);
+        const credId = await client.getAccountInfo(testCredId, testBlockHash);
+        const baker = await client.getAccountInfo(testAccBaker, testBlockHash);
+        const deleg = await client.getAccountInfo(testAccDeleg, testBlockHash);
 
-        const oldCredId = await clientV1.getAccountInfo(
-            testCredId,
-            testBlockHash
-        );
-        const newCredId = await client.getAccountInfo(
-            testCredId,
-            testBlockHash
-        );
-
-        const oldBaker = await clientV1.getAccountInfo(
-            testAccBaker,
-            testBlockHash
-        );
-        const newBaker = await client.getAccountInfo(
-            testAccBaker,
-            testBlockHash
-        );
-
-        const oldDeleg = await clientV1.getAccountInfo(
-            testAccDeleg,
-            testBlockHash
-        );
-        const newDeleg = await client.getAccountInfo(
-            testAccDeleg,
-            testBlockHash
-        );
-
-        expect(oldReg).toEqual(newReg);
-        expect(oldCredId).toEqual(newCredId);
-        expect(oldDeleg).toEqual(newDeleg);
-        expect(oldBaker).toEqual(newBaker);
+        expect(regular).toEqual(expected.regularAccountInfo);
+        expect(credId).toEqual(expected.credIdAccountInfo);
+        expect(baker).toEqual(expected.bakerAccountInfo);
+        expect(deleg).toEqual(expected.delegatorAccountInfo);
     }
 );
 
 test.each([clientV2, clientWeb])(
     'getChainParameters corresponds to GetBlockSummary subset',
     async (client) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const blockSummary: any = await clientV1.getBlockSummary(testBlockHash);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const chainParameters: any = await client.getBlockChainParameters(
+        const chainParameters = await client.getBlockChainParameters(
             testBlockHash
         );
 
-        const foundationAccount = (
-            await client.getAccountInfo(
-                blockSummary.updates.chainParameters.foundationAccountIndex
-            )
-        ).accountAddress;
-        expect(chainParameters.foundationAccount).toEqual(foundationAccount);
-        blockSummary.updates.chainParameters.foundationAccountIndex = undefined;
-        chainParameters.foundationAccount = undefined;
-
-        expect(blockSummary.updates.chainParameters).toEqual(chainParameters);
+        expect(chainParameters).toEqual(expected.chainParameters);
     }
 );
 
@@ -242,43 +200,29 @@ test.each([clientV2, clientWeb])(
     async (client) => {
         const oldBlockHash =
             'ed2507c4d05108038741e87757ab1c3acdeeb3327027cd2972666807c9c4a20d';
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const blockSummary: any = await clientV1.getBlockSummary(oldBlockHash);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const chainParameters: any = await client.getBlockChainParameters(
+        const oldChainParameters = await client.getBlockChainParameters(
             oldBlockHash
         );
 
-        const foundationAccount = (
-            await client.getAccountInfo(
-                blockSummary.updates.chainParameters.foundationAccountIndex
-            )
-        ).accountAddress;
-        expect(chainParameters.foundationAccount).toEqual(foundationAccount);
-        blockSummary.updates.chainParameters.foundationAccountIndex = undefined;
-        chainParameters.foundationAccount = undefined;
-
-        expect(blockSummary.updates.chainParameters).toEqual(chainParameters);
+        expect(oldChainParameters).toEqual(expected.oldChainParameters);
     }
 );
 
 test.each([clientV2, clientWeb])(
     'getPoolInfo corresponds to getPoolStatus with a bakerId',
     async (client) => {
-        const oldStatus = await clientV1.getPoolStatus(testBlockHash, 1n);
-        const newStatus = await client.getPoolInfo(1n, testBlockHash);
+        const bakerPoolStatus = await client.getPoolInfo(1n, testBlockHash);
 
-        expect(oldStatus).toEqual(newStatus);
+        expect(bakerPoolStatus).toEqual(expected.bakerPoolStatus);
     }
 );
 
 test.each([clientV2, clientWeb])(
     'getPassiveDelegationInfo corresponds to getPoolStatus with no bakerId',
     async (client) => {
-        const oldStatus = await clientV1.getPoolStatus(testBlockHash);
-        const newStatus = await client.getPassiveDelegationInfo(testBlockHash);
+        const status = await client.getPassiveDelegationInfo(testBlockHash);
 
-        expect(oldStatus).toEqual(newStatus);
+        expect(status).toEqual(expected.passiveDelegationStatus);
     }
 );
 test.each([clientV2, clientWeb])(
@@ -287,13 +231,10 @@ test.each([clientV2, clientWeb])(
         const changeHash =
             '2aa7c4a54ad403a9f9b48de2469e5f13a64c95f2cf7a8e72c0f9f7ae0718f642';
         const changedAccount = 1879n;
-        const oldStatus = await clientV1.getPoolStatus(
-            changeHash,
-            changedAccount
-        );
-        const newStatus = await client.getPoolInfo(changedAccount, changeHash);
 
-        expect(oldStatus).toEqual(newStatus);
+        const poolStatus = await client.getPoolInfo(changedAccount, changeHash);
+
+        expect(poolStatus).toEqual(expected.bakerPoolStatusWithPendingChange);
     }
 );
 
@@ -396,10 +337,9 @@ test.each([clientV2, clientWeb])(
             parameter: undefined,
             energy: 30000n,
         };
-        const resultV1 = await clientV1.invokeContract(context, testBlockHash);
-        const resultV2 = await client.invokeContract(context, testBlockHash);
+        const result = await client.invokeContract(context, testBlockHash);
 
-        expect(resultV2).toEqual(resultV1);
+        expect(result).toEqual(expected.invokeContractResult);
     }
 );
 
@@ -665,10 +605,9 @@ test.each([clientV2, clientWeb])('getAnonymityRevokers', async (client) => {
 });
 
 test.each([clientV2, clientWeb])('getBlocksAtHeight', async (client) => {
-    const blocksV1 = await clientV1.getBlocksAtHeight(1n);
-    const blocksV2 = await client.getBlocksAtHeight(1n);
+    const blocks = await client.getBlocksAtHeight(1n);
 
-    expect(blocksV1[0]).toEqual(blocksV2[0]);
+    expect(blocks).toEqual(expected.blocksAtHeight);
 });
 
 test.each([clientV2, clientWeb])(
@@ -682,23 +621,22 @@ test.each([clientV2, clientWeb])(
         const expectedBlock =
             '956c3bc5c9d10449e13686a4cc69e8bc7dee450608866242075a6ce37331187c';
         const blocks = await client.getBlocksAtHeight(request);
+
         expect(blocks[0]).toEqual(expectedBlock);
     }
 );
 
 test.each([clientV2, clientWeb])('getBlockInfo', async (client) => {
-    const blockInfoV1 = await clientV1.getBlockInfo(testBlockHash);
-    const blockInfoV2 = await client.getBlockInfo(testBlockHash);
+    const blockInfo = await client.getBlockInfo(testBlockHash);
 
-    expect(blockInfoV2).toEqual(blockInfoV1);
+    expect(blockInfo).toEqual(expected.blockInfo);
 });
 
 test.each([clientV2, clientWeb])('getBakerList', async (client) => {
     const bakerAsyncIterable = client.getBakerList(testBlockHash);
-    const bakersV2 = await asyncIterableToList(bakerAsyncIterable);
-    const bakersV1 = await clientV1.getBakerList(testBlockHash);
+    const bakers = await asyncIterableToList(bakerAsyncIterable);
 
-    expect(bakersV2).toEqual(bakersV1);
+    expect(bakers).toEqual(expected.bakers);
 });
 
 test.each([clientV2, clientWeb])('getPoolDelegators', async (client) => {

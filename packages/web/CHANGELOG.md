@@ -1,6 +1,12 @@
 # Changelog
 
-## 3.3.0 2023-2-23
+## 3.3.1 2023-2-27
+
+### Fixed
+
+- Updated rules in package.json to include missing files.
+
+## 3.3.0 2023-2-27
 
 ### Added
 

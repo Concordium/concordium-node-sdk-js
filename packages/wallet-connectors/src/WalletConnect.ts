@@ -23,7 +23,7 @@ async function connect(client: ISignClient, chainId: string, cancel: () => void)
         const { uri, approval } = await client.connect({
             requiredNamespaces: {
                 ccd: {
-                    methods: ['sign_and_send_transaction'],
+                    methods: ['sign_and_send_transaction', 'sign_message'],
                     chains: [chainId],
                     events: ['chain_changed', 'accounts_changed'],
                 },

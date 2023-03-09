@@ -48,4 +48,4 @@ export * from './identity';
 export { default as ConcordiumGRPCClient } from './GRPCClient';
 
 export { getAccountTransactionHandler } from './accountTransactions';
-export { calculateEnergyCost } from './energyCost';
+export * from './energyCost';

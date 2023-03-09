@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Helpers for calculating energy cost for a transaction and microCCD cost from energy cost. 
+  - `getEnergyCost`
+  - `getExchangeRate`
+  - `convertEnergyToMicroCcd`
+
 ## 6.3.0 2023-02-27
 
 ### Added

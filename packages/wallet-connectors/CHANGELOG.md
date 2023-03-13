@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2023-03-13
+
 ### Changed
--   `WalletConnect`: Add `sign_message` to `requiredNamespaces` when `connect`.
+
+-   `WalletConnect`: Add `sign_message` to `requiredNamespaces` in the call to `connect`.
 
 ## [0.2.0] - 2023-02-06
 

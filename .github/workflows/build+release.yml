@@ -1,0 +1,66 @@
+name: Build and upload release
+
+on:
+    workflow_dispatch: # trigger manually
+        inputs:
+            tag_override:
+                description: "Tag"
+                type: string
+                required: false
+            release_notes:
+                description: "Release notes"
+                type: string
+                required: true
+
+env:
+    node_version: "16.x"
+
+jobs:
+    build-and-upload-release:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Apply tag override and parse ref
+              uses: bisgardo/github-action-parse-ref@v1
+              id: ref
+              with:
+                  ref: "${{github.event.inputs.tag_override || github.ref}}"
+                  default-ref-type: tags
+            - name: Fail if ref is not a tag
+              if: "steps.ref.outputs.ref-type != 'tags'"
+              run: exit 1
+            - name: Parse tag name
+              uses: bisgardo/github-action-regex-parse@v1
+              id: tag
+              with:
+                  pattern: "(?<name>(?<package>.*?)/(?<version>.*))"
+                  input: "${{steps.ref.outputs.ref-name}}"
+            - name: Checkout subproject
+              # Clone repository into temp directory and copy the subproject into the workspace
+              # (cannot use 'actions/checkout' because that doesn't allow checkout out the repo outside the workspace dir;
+              # see 'https://github.com/actions/checkout/issues/327' - alternatively we could use a temp dir inside the workspace).
+              run: |
+                  git clone --branch="${{steps.tag.outputs.name}}" "${{github.server_url}}/${{github.repository}}" "${{runner.temp}}/repo"
+                  cp -rT "${{runner.temp}}/repo/packages/${{steps.tag.outputs.package}}" .
+            - name: Check that version matches 'package.json' up to build version
+              run: |
+                  v="$(npm pkg get version | xargs)" # piping through 'xargs' removes quotes
+                  [[ "${{steps.tag.outputs.version}}" = ${v}-* ]]
+            - name: Setup Node
+              uses: actions/setup-node@v3
+              with:
+                  node-version: "${{env.node_version}}"
+            - name: Install dependencies
+              run: yarn install --immutable --check-cache
+            - name: Build and archive
+              run: |
+                  yarn build
+                  zip dist.zip ./dist/*
+            # TODO Read release notes from appropriate section of the changelog.
+            - name: Upload package as GitHub release
+              uses: softprops/action-gh-release@v1
+              with:
+                  tag_name: "${{steps.tag.outputs.name}}"
+                  body: "${{github.event.inputs.release_notes}}"
+                  files: "./dist.zip"
+                  name: "${{steps.tag.outputs.package}}: ${{steps.tag.outputs.version}}"
+                  generate_release_notes: false # automatic mechanism doesn't limit changes to the target project

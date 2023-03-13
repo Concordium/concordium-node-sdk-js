@@ -1566,7 +1566,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@concordium/wallet-connectors@0.2.0, @concordium/wallet-connectors@workspace:packages/wallet-connectors":
+"@concordium/wallet-connectors@npm:0.2.0":
+  version: 0.2.0
+  resolution: "@concordium/wallet-connectors@npm:0.2.0"
+  dependencies:
+    "@concordium/browser-wallet-api-helpers": ^2.0.0
+    "@walletconnect/qrcode-modal": ^1.8.0
+    "@walletconnect/sign-client": ^2.1.4
+  checksum: 262af06d5d09e452d307022c66a1d303d8aad1c21f6bfeb6bc24acb4f102bc5deb492de7e093612b05a6f67a9031f6801089f6aec671d0ae7eb26d7ead9cf528
+  languageName: node
+  linkType: hard
+
+"@concordium/wallet-connectors@workspace:packages/wallet-connectors":
   version: 0.0.0-use.local
   resolution: "@concordium/wallet-connectors@workspace:packages/wallet-connectors"
   dependencies:

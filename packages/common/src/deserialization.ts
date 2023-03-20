@@ -7,6 +7,7 @@ import {
     AccountTransactionSignature,
     BlockItemKind,
     isAccountTransactionType,
+    SmartContractTypeValues,
     TypedCredentialDeployment,
 } from './types';
 import { AccountAddress } from './types/accountAddress';
@@ -301,4 +302,22 @@ export function deserializeInitError(
                 deserializedError
         ); // In this case deserializedError is the error message from the rust module
     }
+}
+
+/**
+ * Given a value for a smart contract type, and the raw schema for that type, serialize the value into binary format.
+ * @param value the value that should be serialized. Should correspond to the JSON representation
+ * @param rawSchema the schema for the type that the given value should be serialized as
+ * @returns serialized buffer of the value
+ */
+export function deserializeTypeValue(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+    value: Buffer,
+    rawSchema: Buffer
+): SmartContractTypeValues {
+    const deserializedValue = wasm.deserializeTypeValue(
+        value.toString('hex'),
+        rawSchema.toString('hex')
+    );
+    return JSON.parse(deserializedValue);
 }

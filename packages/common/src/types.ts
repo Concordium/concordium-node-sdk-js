@@ -1651,3 +1651,10 @@ export type IdentityObjectV1 = {
 };
 
 export type Network = 'Testnet' | 'Mainnet';
+
+export type SmartContractTypeValues =
+    | { [key: string]: SmartContractTypeValues }
+    | SmartContractTypeValues[]
+    | number
+    | string
+    | boolean;

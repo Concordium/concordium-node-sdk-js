@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- General function for deserializing smart contract values `deserializeTypeValue`.
+
 ## 6.3.0 2023-02-27
 
 ### Added

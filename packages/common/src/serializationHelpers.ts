@@ -388,7 +388,7 @@ const configureBakerSerializationSpec: SerializationSpec<ConfigureBakerPayload> 
         finalizationRewardCommission: orUndefined(encodeWord32),
     };
 
-const getSerializedConfigureBakerBitmap = (
+export const getSerializedConfigureBakerBitmap = (
     payload: ConfigureBakerPayload
 ): Buffer =>
     encodeWord16(

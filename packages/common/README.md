@@ -670,6 +670,14 @@ if (!verifyMessageSignature(message, signature, accountInfo)) {
 }
 ```
 
+## Deserialize smart contract types with only the specific type's schema
+In the previous sections the schema used was assumed to be the schema for an entire module. In some cases one might want to use a schema containing only the specific type of the parameter, return value, event or error.
+
+For this, the function `deserializeTypeValue` can used.
+```
+const userInput = deserializeTypeValue(serializedValue, rawTypeSchema);
+```
+
 # Identity proofs
 ## Build Statement
 The SDK contains a helper to create statements about identities, which can then be proven.

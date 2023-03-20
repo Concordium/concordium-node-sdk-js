@@ -50,7 +50,9 @@ Connector types for the Browser Wallet and WalletConnect connectors are usually 
 
 ```typescript
 export const BROWSER_WALLET = ephemeralConnectorType(BrowserWalletConnector.create);
-export const WALLET_CONNECT = ephemeralConnectorType(WalletConnectConnector.create.bind(undefined, WALLET_CONNECT_OPTS));
+export const WALLET_CONNECT = ephemeralConnectorType(
+    WalletConnectConnector.create.bind(undefined, WALLET_CONNECT_OPTS)
+);
 ```
 
 Initiate a connection by invoking `connect` on a connector.

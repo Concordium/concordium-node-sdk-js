@@ -7,21 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+-   Added exported constant `CONCORDIUM_WALLET_CONNECT_PROJECT_ID` that dApps may use when connecting to a Concordium mobile wallet.
+
 ### Changed
 
--   `WalletConnect`: Remove incorrect stringification of `signMessage` result.
+-   `WalletConnect`: Removed incorrect stringification of `signMessage` result.
 
 ## [0.2.1] - 2023-03-13
 
 ### Changed
 
--   `WalletConnect`: Add `sign_message` to `requiredNamespaces` in the call to `connect`.
+-   `WalletConnect`: Added `sign_message` to `requiredNamespaces` in the call to `connect`.
 
 ## [0.2.0] - 2023-02-06
 
 ### Added
 
--   `WalletConnection`: Add method for pinging the remote end of the connection.
+-   `WalletConnection`: Added method for pinging the remote end of the connection.
 
 ### Changed
 

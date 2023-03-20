@@ -1,6 +1,7 @@
 import { SignClientTypes } from '@walletconnect/types';
 import {
     BrowserWalletConnector,
+    CONCORDIUM_WALLET_CONNECT_PROJECT_ID,
     Network,
     ephemeralConnectorType,
     WalletConnectConnector,
@@ -22,9 +23,8 @@ export const MAINNET: Network = {
     ccdScanBaseUrl: 'https://ccdscan.io',
 };
 
-const WALLET_CONNECT_PROJECT_ID = '76324905a70fe5c388bab46d3e0564dc';
 const WALLET_CONNECT_OPTS: SignClientTypes.Options = {
-    projectId: WALLET_CONNECT_PROJECT_ID,
+    projectId: CONCORDIUM_WALLET_CONNECT_PROJECT_ID,
     metadata: {
         name: 'Sign Message',
         description: 'Example dApp for signing an arbitrary message.',

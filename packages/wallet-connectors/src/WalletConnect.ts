@@ -329,6 +329,8 @@ export class WalletConnectConnector implements WalletConnector {
      * Convenience function for creating a new instance from WalletConnection configuration instead of an already initialized client.
      *
      * @param signClientInitOpts WalletConnect configuration.
+     * The constant {@link CONCORDIUM_WALLET_CONNECT_PROJECT_ID} exported by this library may be used as {@link SignClientTypes.Options.projectId projectID}
+     * if the dApp doesn't have its own {@link https://cloud.walletconnect.com WalletConnect Cloud} project.
      * @param delegate The object to receive events emitted by the client.
      * @param network The network/chain that connected accounts must live on.
      */

@@ -244,7 +244,7 @@ export class WalletConnectConnection implements WalletConnection {
             },
             chainId: this.chainId,
         });
-        return JSON.stringify(signature) as AccountTransactionSignature;
+        return signature as AccountTransactionSignature;
     }
 
     async disconnect() {

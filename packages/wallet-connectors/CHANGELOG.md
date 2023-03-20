@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+-   `WalletConnect`: Remove incorrect stringification of `signMessage` result.
+
 ## [0.2.1] - 2023-03-13
 
 ### Changed

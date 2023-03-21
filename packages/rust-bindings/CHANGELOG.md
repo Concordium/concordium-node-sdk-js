@@ -6,6 +6,10 @@
 
 - `deserializeTypeValue`
 
+### Fixed
+
+- Updated dependencies from concordium-base. (Which includes a bugfix for serialization of negative integers in contracts)
+
 ## 0.10.0 2023-2-27
 
 ### Added

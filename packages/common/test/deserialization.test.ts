@@ -21,6 +21,7 @@ import {
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
     TransactionExpiry,
+    deserializeTypeValue,
 } from '../src';
 import * as fs from 'fs';
 
@@ -138,6 +139,14 @@ test('Receive return value can be deserialized', () => {
     expect(returnValue).toEqual('82000000');
 });
 
+test('Receive return value can be deserialized using deserializeTypeValue', () => {
+    const returnValue = deserializeTypeValue(
+        Buffer.from('80f18c27', 'hex'),
+        Buffer.from('GyUAAAA', 'base64')
+    );
+    expect(returnValue).toEqual('82000000');
+});
+
 test('Return value can be deserialized - auction', () => {
     const returnValue = deserializeReceiveReturnValue(
         Buffer.from(
@@ -171,6 +180,14 @@ test('Receive error can be deserialized', () => {
     expect(error).toEqual(-1);
 });
 
+test('Receive error can be deserialized using deserializeTypeValue', () => {
+    const error = deserializeTypeValue(
+        Buffer.from('ffff', 'hex'),
+        Buffer.from('Bw', 'base64')
+    );
+    expect(error).toEqual(-1);
+});
+
 test('Init error can be deserialized', () => {
     const error = deserializeInitError(
         Buffer.from('0100', 'hex'),
@@ -181,5 +198,13 @@ test('Init error can be deserialized', () => {
         'TestContract'
     );
 
+    expect(error).toEqual(1);
+});
+
+test('Init error can be deserialized using deserializeTypeValue', () => {
+    const error = deserializeTypeValue(
+        Buffer.from('0100', 'hex'),
+        Buffer.from('Aw', 'base64')
+    );
     expect(error).toEqual(1);
 });

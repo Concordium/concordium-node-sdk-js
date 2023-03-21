@@ -714,7 +714,10 @@ fn serialize_type_value(raw_value: JsonString, value_type: Type) -> Result<HexSt
     Ok(hex::encode(buf))
 }
 
-pub fn deserialize_type_value_aux(serialized_value: HexString, schema: HexString) -> Result<JsonString> {
+pub fn deserialize_type_value_aux(
+    serialized_value: HexString,
+    schema: HexString,
+) -> Result<JsonString> {
     let value_type: Type = from_bytes(&hex::decode(schema)?)?;
     let mut cursor = Cursor::new(hex::decode(serialized_value)?);
     match value_type.to_json(&mut cursor) {

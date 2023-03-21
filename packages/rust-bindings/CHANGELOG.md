@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `deserializeTypeValue`
+
 ## 0.10.0 2023-2-27
 
 ### Added

@@ -348,8 +348,8 @@ pub fn generate_baker_keys_ext(sender: Base58String) -> JsonString {
 
 #[wasm_bindgen(js_name = deserializeTypeValue)]
 pub fn deserialize_type_value_ext(
-    serialized_value: JsonString,
-    value_type: HexString
-) -> Result<String, String> {
-    deserialize_type_value_aux(serialized_value, value_type).map_err(|e| format!("Unable to deserialize value due to: {}", e))
+    serialized_value: HexString,
+    schema: HexString
+) -> Result<JsonString, String> {
+    deserialize_type_value_aux(serialized_value, schema).map_err(|e| format!("Unable to deserialize value due to: {}", e))
 }

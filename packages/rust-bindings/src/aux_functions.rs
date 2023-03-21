@@ -714,16 +714,12 @@ fn serialize_type_value(raw_value: JsonString, value_type: Type) -> Result<HexSt
     Ok(hex::encode(buf))
 }
 
-pub fn deserialize_type_value_aux(serialized_value: HexString, schema: HexString) -> Result<HexString> {
-    let parameter_type: Type = from_bytes(&hex::decode(schema)?)?;
-    deserialize_type_value(serialized_value, parameter_type)
-}
-
-fn deserialize_type_value(serialized_value: HexString, value_type: Type) -> Result<HexString> {
+pub fn deserialize_type_value_aux(serialized_value: HexString, schema: HexString) -> Result<JsonString> {
+    let value_type: Type = from_bytes(&hex::decode(schema)?)?;
     let mut cursor = Cursor::new(hex::decode(serialized_value)?);
     match value_type.to_json(&mut cursor) {
-        Ok(e) => Ok(e.to_string()),
-        Err(_) => Err(anyhow!("Unable to parse error value to json.")),
+        Ok(v) => Ok(v.to_string()),
+        Err(_) => Err(anyhow!("Unable to parse value to json.")),
     }
 }
 

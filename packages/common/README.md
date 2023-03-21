@@ -671,12 +671,13 @@ if (!verifyMessageSignature(message, signature, accountInfo)) {
 ```
 
 ## Deserialize smart contract types with only the specific type's schema
-In the previous sections the schema used was assumed to be the schema for an entire module. In some cases one might want to use a schema containing only the specific type of the parameter, return value, event or error.
+The SDK exposes a general function to deserialize smart contract values from binary format to their JSON representation. In the previous sections the schema used was assumed to be the schema for an entire module, this function can be used with the schema containing only the specific type of the parameter, return value, event or error.
 
-For this, the function `deserializeTypeValue` can used.
 ```
-const userInput = deserializeTypeValue(serializedValue, rawTypeSchema);
+const deserializedValue = deserializeTypeValue(serializedValue, rawTypeSchema);
 ```
+
+Note that the specific schema can be obtained using [cargo-concordium](https://developer.concordium.software/en/mainnet/smart-contracts/guides/setup-tools.html#cargo-concordium)'s  `schema-json` command, and specifically for parameters, this SDK exposes functions for that, check [the serialize parameters with only the specific types schema section](serialize-parameters-with-only-the-specific-types-schema) for those.
 
 # Identity proofs
 ## Build Statement

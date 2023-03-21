@@ -305,13 +305,12 @@ export function deserializeInitError(
 }
 
 /**
- * Given a value for a smart contract type, and the raw schema for that type, serialize the value into binary format.
- * @param value the value that should be serialized. Should correspond to the JSON representation
- * @param rawSchema the schema for the type that the given value should be serialized as
- * @returns serialized buffer of the value
+ * Given a binary value for a smart contract type, and the raw schema for that type, deserialize the value into the JSON representation.
+ * @param value the value that should be deserialized.
+ * @param rawSchema the schema for the type that the given value should be deserialized as
+ * @returns the deserialized value
  */
 export function deserializeTypeValue(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     value: Buffer,
     rawSchema: Buffer
 ): SmartContractTypeValues {

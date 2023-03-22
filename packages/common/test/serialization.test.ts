@@ -169,3 +169,7 @@ test('serialize type value and serializeUpdateContractParameters give same resul
         serializedType.toString('hex')
     );
 });
+
+test('serializeTypeValue throws an error if unable to serialize', () => {
+    expect(() => serializeTypeValue('test', Buffer.alloc(0))).toThrow();
+});

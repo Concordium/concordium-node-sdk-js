@@ -9,6 +9,7 @@
 ### Changed
 
 - Bumped @concordium/rust-bindings to 0.11.0. (Includes a fix to serialization of negative numbers for smart contract values)
+- `signMessage` and `verifyMessageSignature` can now handle the message being a buffer/Uint8Array instead of only a utf8 string.
 
 ## 6.3.0 2023-02-27
 

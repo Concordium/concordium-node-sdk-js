@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.4.0 2023-3-22
+
+### Changed
+
+- Bumped @concordium/common-sdk to 6.4.0. (Adds `deserializeTypeValue`)
+
 ## 3.3.1 2023-2-27
 
 ### Fixed

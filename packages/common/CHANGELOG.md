@@ -1,5 +1,15 @@
 # Changelog
 
+## 6.4.0 2023-03-22
+
+### Added
+
+- General function for deserializing smart contract values `deserializeTypeValue`.
+
+### Changed
+
+- Bumped @concordium/rust-bindings to 0.11.0. (Includes a fix to serialization of negative numbers for smart contract values)
+
 ## 6.3.0 2023-02-27
 
 ### Added

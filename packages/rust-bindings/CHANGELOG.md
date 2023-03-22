@@ -1,10 +1,14 @@
 # Changelog
 
-## Unreleased
+## 0.11.0 2023-3-22
+
+### Added
+
+- `deserializeTypeValue`
 
 ### Fixed
 
-- Updated dependencies from concordium-base. (Which includes a bugfix for serialization of negative integers in contracts)
+- Updated dependencies from concordium-base. (Which includes a bugfix for serialization of negative integers in contract values)
 
 ## 0.10.0 2023-2-27
 

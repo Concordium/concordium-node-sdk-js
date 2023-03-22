@@ -30,6 +30,7 @@ export {
     deserializeReceiveReturnValue,
     deserializeReceiveError,
     deserializeInitError,
+    deserializeTypeValue,
 } from './deserialization';
 export * from './idProofs';
 export * from './idProofTypes';

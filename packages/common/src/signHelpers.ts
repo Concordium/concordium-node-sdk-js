@@ -69,7 +69,7 @@ function getMessageDigest(
 
 /**
  * Helper function to sign a message.
- * Note that this function prepends 8 zero-bytes to ensure that the message is not a transaction.
+ * Note that this function prepends the account address (32 bytes) and 8 zero-bytes to ensure that the message is not a transaction.
  * Note that the current prepend is temporary and will later be replaced.
  * @param message the message to sign, assumed to be utf8 encoded string or a Uint8Array/buffer.
  * @param signer An object that handles the keys of the account, and performs the actual signing.

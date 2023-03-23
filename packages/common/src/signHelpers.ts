@@ -55,24 +55,28 @@ export function signTransaction(
 
 /**
  * @param account the address of the account that will sign this message.
- * @param message the message to sign, assumed to be utf8 encoded.
+ * @param message the message to sign, assumed to be utf8 encoded string or a Uint8Array/buffer.
  */
-function getMessageDigest(account: AccountAddress, message: string): Buffer {
+function getMessageDigest(
+    account: AccountAddress,
+    message: string | Uint8Array
+): Buffer {
     const prepend = Buffer.alloc(8, 0);
-    const rawMessage = Buffer.from(message, 'utf8');
+    const rawMessage =
+        typeof message === 'string' ? Buffer.from(message, 'utf8') : message;
     return sha256([account.decodedAddress, prepend, rawMessage]);
 }
 
 /**
  * Helper function to sign a message.
- * Note that this function prepends the string "MyGoodPrepend" to ensure that the message is not a transaction.
+ * Note that this function prepends the account address (32 bytes) and 8 zero-bytes to ensure that the message is not a transaction.
  * Note that the current prepend is temporary and will later be replaced.
- * @param message the message to sign, assumed to be utf8 encoded.
+ * @param message the message to sign, assumed to be utf8 encoded string or a Uint8Array/buffer.
  * @param signer An object that handles the keys of the account, and performs the actual signing.
  */
 export function signMessage(
     account: AccountAddress,
-    message: string,
+    message: string | Uint8Array,
     signer: AccountSigner
 ): Promise<AccountTransactionSignature> {
     return signer.sign(getMessageDigest(account, message));
@@ -80,12 +84,12 @@ export function signMessage(
 
 /**
  * Helper function to verify a signed message.
- * @param message the message to sign, assumed to be utf8 encoded.
+ * @param message the message to sign, assumed to be utf8 encoded string or a Uint8Array/buffer.
  * @param signature the signature of a message, from a specific account.
  * @param accountInfo the address and credentials of the account
  */
 export async function verifyMessageSignature(
-    message: string,
+    message: string | Uint8Array,
     signature: AccountTransactionSignature,
     accountInfo: Pick<
         AccountInfo,

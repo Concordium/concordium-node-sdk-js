@@ -24,11 +24,12 @@ const TEST_CREDENTIALS = {
     },
 };
 
-test('test signMessage', async () => {
+const testEachMessageType = test.each(['test', Buffer.from('test', 'utf8')]);
+
+testEachMessageType('[%o] test signMessage', async (message) => {
     const account = new AccountAddress(
         '3eP94feEdmhYiPC1333F9VoV31KGMswonuHk5tqmZrzf761zK5'
     );
-    const message = 'test';
     const signature = await signMessage(
         account,
         message,
@@ -41,24 +42,26 @@ test('test signMessage', async () => {
     );
 });
 
-test('verifyMessageSignature returns true on the correct address/signature', async () => {
-    const message = 'test';
-    const signature = await verifyMessageSignature(
-        message,
-        {
-            0: {
-                0: '445197d79ca90d8cc8440328dac9f307932ade0c03cc7aa575b59b746e26e5f1bca13ade5ff7a56e918ba5a32450fdf52b034cd2580929b21213263e81f7f809',
+testEachMessageType(
+    '[%o] verifyMessageSignature returns true on the correct address/signature',
+    async (message) => {
+        const signature = await verifyMessageSignature(
+            message,
+            {
+                0: {
+                    0: '445197d79ca90d8cc8440328dac9f307932ade0c03cc7aa575b59b746e26e5f1bca13ade5ff7a56e918ba5a32450fdf52b034cd2580929b21213263e81f7f809',
+                },
             },
-        },
-        {
-            accountAddress:
-                '3eP94feEdmhYiPC1333F9VoV31KGMswonuHk5tqmZrzf761zK5',
-            accountThreshold: 1,
-            accountCredentials: TEST_CREDENTIALS,
-        } as unknown as AccountInfo
-    );
-    expect(signature).toBeTruthy();
-});
+            {
+                accountAddress:
+                    '3eP94feEdmhYiPC1333F9VoV31KGMswonuHk5tqmZrzf761zK5',
+                accountThreshold: 1,
+                accountCredentials: TEST_CREDENTIALS,
+            } as unknown as AccountInfo
+        );
+        expect(signature).toBeTruthy();
+    }
+);
 
 test('verifyMessageSignature returns false on the incorrect address', async () => {
     const message = 'test';

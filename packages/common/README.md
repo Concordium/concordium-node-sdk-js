@@ -670,6 +670,8 @@ if (!verifyMessageSignature(message, signature, accountInfo)) {
 }
 ```
 
+The message can either be a utf8 encoded string or a Uint8Array directly containing the message bytes.
+
 ## Deserialize smart contract types with only the specific type's schema
 The SDK exposes a general function to deserialize smart contract values from binary format to their JSON representation. In the previous sections the schema used was assumed to be the schema for an entire module, this function can be used with the schema containing only the specific type of the parameter, return value, event or error.
 

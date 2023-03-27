@@ -7,10 +7,6 @@ on:
                 description: "Tag"
                 type: string
                 required: false
-            release_notes:
-                description: "Release notes"
-                type: string
-                required: true
 
 env:
     node_version: "16.x"
@@ -34,33 +30,54 @@ jobs:
               with:
                   pattern: "(?<name>(?<package>.*?)/(?<version>.*))"
                   input: "${{steps.ref.outputs.ref-name}}"
-            - name: Checkout subproject
-              # Clone repository into temp directory and copy the subproject into the workspace
-              # (cannot use 'actions/checkout' because that doesn't allow checkout out the repo outside the workspace dir;
-              # see 'https://github.com/actions/checkout/issues/327' - alternatively we could use a temp dir inside the workspace).
+            - name: Checkout project
+              uses: actions/checkout@v3
+              with:
+                ref: "${{steps.ref.outputs.ref}}"
+            - name: Extract tag message
+              id: tag-msg
               run: |
-                  git clone --branch="${{steps.tag.outputs.name}}" "${{github.server_url}}/${{github.repository}}" "${{runner.temp}}/repo"
-                  cp -rT "${{runner.temp}}/repo/packages/${{steps.tag.outputs.package}}" .
+                  msg="$(git for-each-ref "${{steps.ref.outputs.ref}}" --format='%(contents)')"
+                  echo "msg<<EOT
+                  ${msg}
+                  EOT" >> "${GITHUB_OUTPUT}"
+            - name: Fail if tag is not "annotated" or its message is empty
+              if: "steps.tag-msg.outputs.msg == ''"
+              run: exit 1
             - name: Check that version matches 'package.json' up to build version
               run: |
-                  v="$(npm pkg get version | xargs)" # piping through 'xargs' removes quotes
+                  v="$(npm pkg get version -ws | jq -r '.["@concordium/${{steps.tag.outputs.package}}"]')"
                   [[ "${{steps.tag.outputs.version}}" = ${v}-* ]]
             - name: Setup Node
               uses: actions/setup-node@v3
               with:
                   node-version: "${{env.node_version}}"
-            - name: Install dependencies
-              run: yarn install --immutable --check-cache
-            - name: Build and archive
-              run: |
-                  yarn build
-                  zip dist.zip ./dist/*
-            # TODO Read release notes from appropriate section of the changelog.
+                  cache: yarn
+            - name: Run yarn install
+              run: yarn install --immutable
+            # TODO Find a way to force target lib to not build against local build of dependent lib, but always against published build.
+            - name: Build all libraries
+              run: yarn build
+            - name: Archive target library
+              run: zip ./dist.zip "./packages/${{steps.tag.outputs.package}}"/*
+            - name: Extract changelog entries
+              uses: concordium/github-action-changelog-extract@v1
+              id: changelog
+              with:
+                  file: "./packages/${{steps.tag.outputs.package}}/CHANGELOG.md"
+                  version: "${{steps.tag.outputs.version}}"
             - name: Upload package as GitHub release
               uses: softprops/action-gh-release@v1
               with:
                   tag_name: "${{steps.tag.outputs.name}}"
-                  body: "${{github.event.inputs.release_notes}}"
+                  # Release body is the message of the annotated tag followed by the changelog entries for the version.
+                  body: |
+                      ${{steps.tag-msg.outputs.msg}}
+                      
+                      # Changelog
+                      
+                      ${{steps.changelog.outputs.section}}
                   files: "./dist.zip"
                   name: "${{steps.tag.outputs.package}}: ${{steps.tag.outputs.version}}"
-                  generate_release_notes: false # automatic mechanism doesn't limit changes to the target project
+                  # The method for auto-generating release notes just lists all commits, also those irrelevant to the subproject.
+                  generate_release_notes: false

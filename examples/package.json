@@ -1,0 +1,7 @@
+{
+  "type": "module",
+  "devDependencies": {
+    "meow": "11.0",
+    "ts-node": "10.9"
+  }
+}

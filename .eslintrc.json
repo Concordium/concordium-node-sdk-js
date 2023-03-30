@@ -13,7 +13,7 @@
     "parserOptions": {
         "ecmaVersion": 2020,
         "sourceType": "module",
-        "project": [ "./packages/**/tsconfig.eslint.json", "./tsconfig.eslint.json"]
+        "project": [ "./packages/**/tsconfig.eslint.json", "./tsconfig.eslint.json", "./examples/tsconfig.eslint.json"]
     },
     "plugins": [
         "@typescript-eslint",
@@ -21,7 +21,7 @@
     ],
     "rules": {
         "quotes": [2, "single", { "avoidEscape": true }],
-        "import/no-unresolved": [2, { "ignore": ["@concordium/rust-bindings", "@concordium/common-sdk", "grpc"]}],
+        "import/no-unresolved": [2, { "ignore": ["@concordium/rust-bindings", "@concordium/common-sdk", "@concordium/node-sdk", "grpc"]}],
         "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*.test.ts", "**/*.test.tsx", "**/*.config.js"]}],
         "@typescript-eslint/no-unused-vars": ["warn", { "ignoreRestSiblings": true }]
     },

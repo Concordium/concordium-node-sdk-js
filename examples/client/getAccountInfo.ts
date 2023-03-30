@@ -47,7 +47,7 @@ const client = createConcordiumClient(
 );
 
 if (cli.flags.h) {
-  cli.showHelp();
+    cli.showHelp();
 }
 
 /// Retrieves information about an account. The function must be provided an account address or a credential registration id.

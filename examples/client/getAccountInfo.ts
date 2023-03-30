@@ -10,6 +10,7 @@ const cli = meow(
     $ yarn example getAccountInfo
 
   Options
+    --help,      -h  Displays this message
     --endpoint,  -e  Specify endpoint of the form "address:port"
     --account,   -a  An account address to get info from
     --blockhash, -b  A blockhash to query the info from
@@ -44,6 +45,10 @@ const client = createConcordiumClient(
     credentials.createInsecure(),
     { timeout: 15000 }
 );
+
+if (cli.flags.h) {
+  cli.showHelp();
+}
 
 /// Retrieves information about an account. The function must be provided an account address or a credential registration id.
 /// If a credential registration id is provided, then the node returns the information of the account,

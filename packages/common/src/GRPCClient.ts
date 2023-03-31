@@ -435,7 +435,7 @@ export default class ConcordiumNodeClient {
             if (response.status === 'finalized') {
                 // Simply doing `abortController.abort()` causes an error.
                 // See: https://github.com/grpc/grpc-node/issues/1652
-                setImmediate(() => abortController.abort());
+                setTimeout(() => abortController.abort(), 0);
                 return resolve(response.outcome.blockHash);
             }
 
@@ -446,7 +446,7 @@ export default class ConcordiumNodeClient {
                         transactionHash
                     );
                     if (response.status === 'finalized') {
-                        setImmediate(() => abortController.abort());
+                        setTimeout(() => abortController.abort(), 0);
                         return resolve(response.outcome.blockHash);
                     }
                 }

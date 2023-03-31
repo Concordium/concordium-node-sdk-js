@@ -1,5 +1,10 @@
 # Changelog
 
+## 6.4.1 2023-03-31
+
+- Replace use of `setImmediate` with `setTimeout` since the former is not
+  supported in browsers.
+
 ## 6.4.0 2023-03-22
 
 ### Added

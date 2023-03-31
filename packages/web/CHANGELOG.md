@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.4.1 2023-3-31
+
+### Changed
+
+- Bumped @concordium/common-sdk to 6.4.1. (Fixes `waitForTransactionFinalization`)
+
 ## 3.4.0 2023-3-22
 
 ### Changed

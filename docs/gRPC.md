@@ -867,7 +867,7 @@ If a blockhash is not supplied it will pick the latest finalized block. An optio
 
 ```js
 const blockHash = "39122a9c720cae643b999d93dd7bf09bcf50e99bb716767dd35c39690390db54";
-const pendingUpdates: AsyncIterable<PendingUpdate> = this.client.getBlockSpecialEvents(blockHash);
+const pendingUpdates: AsyncIterable<PendingUpdate> = this.client.getBlockPendingUpdates(blockHash);
 
 for await (const pendingUpdate of pendingUpdates) {
     console.log(pendingUpdate);
@@ -875,11 +875,18 @@ for await (const pendingUpdate of pendingUpdates) {
 ```
 
 ## getBlockFinalizationSummary
-Get the summary of the finalization data in a given block.
+Get the summary of the finalization data in a given block. Only finalized blocks will return a finalization summary, if the summary is requested for a non-finalized block, this will return an object with only the tag field, with value "none".
 
 If a blockhash is not supplied it will pick the latest finalized block.
 
 ```js
 const blockHash = "fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e";
-const pendingUpdates: BlockFinalizationSummary = await this.client.getBlockSpecialEvents(blockHash);
+const blockFinalizationSummary: BlockFinalizationSummary = await this.client.getBlockFinalizationSummary(blockHash);
+
+if (blockFinalizationSummary.tag === "record") {
+    // Response contains finalization summary for the given block:
+    const { block, index, delay, finalizers} = blockFinalizationSummary.record;
+} else {
+    // Given block has not been finalized.
+}
 ```

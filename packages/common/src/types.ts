@@ -1099,14 +1099,14 @@ export interface NextUpdateSequenceNumbers {
 }
 
 export type BlockFinalizationSummary =
-    | BlockFinalizationSummaryNone
-    | BlockFinalizationSummaryRecord;
+    | BlockFinalizationSummary_None
+    | BlockFinalizationSummary_Record;
 
-export interface BlockFinalizationSummaryNone {
+export interface BlockFinalizationSummary_None {
     tag: 'none';
 }
 
-export interface BlockFinalizationSummaryRecord {
+export interface BlockFinalizationSummary_Record {
     tag: 'record';
     record: FinalizationSummary;
 }

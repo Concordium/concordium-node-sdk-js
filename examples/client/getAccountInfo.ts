@@ -7,32 +7,33 @@ import meow from 'meow';
 const cli = meow(
     `
   Usage
-    $ yarn example getAccountInfo
+    $ yarn ts-node <path-to-this-file> [options]
+
+  Required
+    --account,   -a  An account address to get info from
 
   Options
     --help,      -h  Displays this message
-    --endpoint,  -e  Specify endpoint of the form "address:port"
-    --account,   -a  An account address to get info from
-    --blockhash, -b  A blockhash to query the info from
+    --endpoint,  -e  Specify endpoint of the form "address:port", defaults to localhost
+    --blockhash, -b  A blockhash to query the info from, defaults to last final block
 `,
     {
         importMeta: import.meta,
         flags: {
             endpoint: {
                 type: 'string',
-                shortFlag: 'e',
-                default: 'node.testnet.concordium.com:20000',
+                alias: 'e',
+                default: 'localhost:20000',
             },
             account: {
                 type: 'string',
-                short: 'a',
-                default: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
+                alias: 'a',
+                isRequired: true,
             },
             blockhash: {
                 type: 'string',
-                short: 'b',
-                default:
-                    'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e',
+                alias: 'b',
+                default: '', // This defaults to LastFinal
             },
         },
     }

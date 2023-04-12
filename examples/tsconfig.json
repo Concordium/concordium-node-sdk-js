@@ -8,9 +8,7 @@
     "esModuleInterop": true,
     "outDir": "./lib",
     "lib": [
-      "dom",
-      "esnext",
-      "webworker"
+      "esnext"
     ],
     "baseUrl": ".",
     "module": "es2020",

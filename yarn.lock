@@ -1350,6 +1350,26 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@concordium/common-sdk@npm:6.4.0":
+  version: 6.4.0
+  resolution: "@concordium/common-sdk@npm:6.4.0"
+  dependencies:
+    "@concordium/rust-bindings": 0.11.0
+    "@grpc/grpc-js": ^1.3.4
+    "@noble/ed25519": ^1.7.1
+    "@protobuf-ts/runtime-rpc": ^2.8.2
+    "@scure/bip39": ^1.1.0
+    bs58check: ^2.1.2
+    buffer: ^6.0.3
+    cross-fetch: 3.1.5
+    hash.js: ^1.1.7
+    iso-3166-1: ^2.1.1
+    json-bigint: ^1.0.0
+    uuid: ^8.3.2
+  checksum: d4d8fcd1961cfbe6939958afec90eeff05cc88c83cbb5bd6e1dcf5f887324e15b2c175e4e0dced4cf2860cdc06dcb945b94c88a7790f087028d4f1dcd9b40f86
+  languageName: node
+  linkType: hard
+
 "@concordium/node-sdk@6.3.0, @concordium/node-sdk@workspace:packages/nodejs":
   version: 0.0.0-use.local
   resolution: "@concordium/node-sdk@workspace:packages/nodejs"

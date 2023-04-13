@@ -1,4 +1,4 @@
-import { AccountAddress, AccountInfo } from '@concordium/common-sdk';
+import { ArInfo } from '@concordium/common-sdk';
 import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -10,7 +10,7 @@ const cli = meow(
     $ yarn ts-node <path-to-this-file> [options]
 
   Required
-    --account, -a  An account address to get info from
+    --account, -a  The account to get transactions from
 
   Options
     --help,     -h  Displays this message
@@ -51,20 +51,16 @@ if (cli.flags.h) {
     cli.showHelp();
 }
 
-/// Retrieves information about an account. The function must be provided an
-/// account address or a credential registration id.  If a credential registration
-/// id is provided, then the node returns the information of the account, which
-/// the corresponding credential is (or was) deployed to.
-
-/// If there is no account that matches the address or credential id at the
-/// provided block, then undefined will be returned.
+/// Get the anonymity revokers registered as of the end of a given block as
+/// a stream.  If a blockhash is not supplied it will pick the latest finalized
+/// block. An optional abortSignal can also be provided that closes the stream.
 
 (async () => {
-    const accountAddress = new AccountAddress(cli.flags.account);
-    const accountInfo: AccountInfo = await client.getAccountInfo(
-        accountAddress,
+    const ars: AsyncIterable<ArInfo> = client.getAnonymityRevokers(
         cli.flags.block
     );
 
-    console.dir(accountInfo, { depth: null, colors: true });
+    for await (const ar of ars) {
+        console.dir(ar, { depth: null, colors: true });
+    }
 })();

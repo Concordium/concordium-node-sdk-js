@@ -1,4 +1,4 @@
-import { AccountAddress, AccountInfo } from '@concordium/common-sdk';
+import { AccountAddress, HexString } from '@concordium/common-sdk';
 import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -10,11 +10,10 @@ const cli = meow(
     $ yarn ts-node <path-to-this-file> [options]
 
   Required
-    --account, -a  An account address to get info from
+    --account, -a  The account to get transactions from
 
   Options
     --help,     -h  Displays this message
-    --block,    -b  A block to query from, defaults to last final block
     --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost
 `,
     {
@@ -29,11 +28,6 @@ const cli = meow(
                 type: 'string',
                 alias: 'a',
                 isRequired: true,
-            },
-            block: {
-                type: 'string',
-                alias: 'b',
-                default: '', // This defaults to LastFinal
             },
         },
     }
@@ -51,20 +45,19 @@ if (cli.flags.h) {
     cli.showHelp();
 }
 
-/// Retrieves information about an account. The function must be provided an
-/// account address or a credential registration id.  If a credential registration
-/// id is provided, then the node returns the information of the account, which
-/// the corresponding credential is (or was) deployed to.
+/// Get a list of non-finalized transaction hashes for a given account. This
+/// endpoint is not expected to return a large amount of data in most cases,
+/// but in bad network conditions it might. The stream will end when all the
+/// non-finalized transaction hashes have been returned.
 
-/// If there is no account that matches the address or credential id at the
-/// provided block, then undefined will be returned.
+/// An optional abort signal can also be provided that closes the stream.
 
 (async () => {
     const accountAddress = new AccountAddress(cli.flags.account);
-    const accountInfo: AccountInfo = await client.getAccountInfo(
-        accountAddress,
-        cli.flags.block
-    );
+    const transactions: AsyncIterable<HexString> =
+        client.getAccountNonFinalizedTransactions(accountAddress);
 
-    console.dir(accountInfo, { depth: null, colors: true });
+    for await (const transaction of transactions) {
+        console.dir(transaction, { depth: null, colors: true });
+    }
 })();

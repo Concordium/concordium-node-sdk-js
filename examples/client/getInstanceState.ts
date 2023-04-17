@@ -1,10 +1,4 @@
-import {
-    ContractAddress,
-    InstanceInfo,
-    InstanceStateKVPair,
-    PendingUpdate,
-    streamToList,
-} from '@concordium/common-sdk';
+import { InstanceStateKVPair } from '@concordium/common-sdk';
 import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -21,7 +15,7 @@ const cli = meow(
   Options
     --help,     -h  Displays this message
     --block,    -b  A block to query from, defaults to last final block
-    --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost
+    --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
 `,
     {
         importMeta: import.meta,

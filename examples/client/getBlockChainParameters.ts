@@ -50,12 +50,14 @@ if (cli.flags.h) {
     cli.showHelp();
 }
 
-/// Retrieves the block chain update parameters, which can be chained by chain
-/// updates, at a specific block.
+/// Retrieves the values of the chain parameters in effect at a specific block.
 
 (async () => {
     const chainParameters: ChainParameters =
         await client.getBlockChainParameters(cli.flags.blockhash);
 
     console.dir(chainParameters, { depth: null, colors: true });
+
+    // The chainParameters contain information that can then be extracted:
+    chainParameters.electionDifficulty;
 })();

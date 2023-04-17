@@ -180,7 +180,7 @@ export function mapRecord<
  * Maps an infinite stream of type A to an infinite stream of type B
  * @param mapper: function used to map each element from type A to B.
  */
-export function mapAsyncIterable<A, B>(
+export function mapStream<A, B>(
     stream: AsyncIterable<A>,
     mapper: (x: A) => B
 ): AsyncIterable<B> {
@@ -218,8 +218,8 @@ export function filterRecord<A extends string | number | symbol, B>(
     ) as Record<A, B>;
 }
 
-// Converts an async iterable to a list. Beware! this will not terminate if given an infinite stream.
-export async function asyncIterableToList<A>(
+// Converts an async iterable to a list. Beware! This will not terminate if given an infinite stream.
+export async function streamToList<A>(
     iterable: AsyncIterable<A>
 ): Promise<A[]> {
     const list: A[] = [];

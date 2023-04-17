@@ -59,5 +59,5 @@ if (cli.flags.h) {
     console.dir(chainParameters, { depth: null, colors: true });
 
     // The chainParameters contain information that can then be extracted:
-    chainParameters.electionDifficulty;
+    const elecDiff: number = chainParameters.electionDifficulty;
 })();

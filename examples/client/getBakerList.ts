@@ -57,5 +57,5 @@ if (cli.flags.h) {
     }
 
     // Can also be collected to a list with:
-    await streamToList(bakerIds);
+    const bakerIdList: BakerId[] = await streamToList(bakerIds);
 })();

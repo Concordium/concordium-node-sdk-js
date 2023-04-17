@@ -65,5 +65,5 @@ if (cli.flags.h) {
     }
 
     // Can also be collected to a list with:
-    await streamToList(ars);
+    const arList: ArInfo[] = await streamToList(ars);
 })();

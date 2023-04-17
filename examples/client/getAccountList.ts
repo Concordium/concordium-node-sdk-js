@@ -57,5 +57,5 @@ if (cli.flags.h) {
     }
 
     // Can also be collected to a list with:
-    await streamToList(accounts);
+    const accountList: Base58String[] = await streamToList(accounts);
 })();

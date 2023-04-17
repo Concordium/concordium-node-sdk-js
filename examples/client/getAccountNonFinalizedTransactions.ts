@@ -66,5 +66,5 @@ if (cli.flags.h) {
     }
 
     // Can also be collected to a list with:
-    await streamToList(transactions);
+    const transactionList: HexString[] = await streamToList(transactions);
 })();

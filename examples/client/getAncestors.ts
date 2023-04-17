@@ -68,5 +68,5 @@ if (cli.flags.h) {
     }
 
     // Can also be collected to a list with:
-    await streamToList(ancestors);
+    const ancestorList: HexString[] = await streamToList(ancestors);
 })();

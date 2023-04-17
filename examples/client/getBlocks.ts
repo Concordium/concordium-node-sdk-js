@@ -50,5 +50,5 @@ if (cli.flags.h) {
     }
 
     // Can also be collected to a list with:
-    const blockList: ArrivedBlockInfo[] = streamToList(blocks);
+    const blockList: ArrivedBlockInfo[] = await streamToList(blocks);
 })();

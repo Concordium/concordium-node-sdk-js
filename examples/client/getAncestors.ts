@@ -1,4 +1,4 @@
-import { HexString } from '@concordium/common-sdk';
+import { HexString, streamToList } from '@concordium/common-sdk';
 import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -66,4 +66,7 @@ if (cli.flags.h) {
     for await (const ancestor of ancestors) {
         console.dir(ancestor, { depth: null, colors: true });
     }
+
+    // Can also be collected to a list with:
+    await streamToList(ancestors);
 })();

@@ -1,4 +1,4 @@
-import { Base58String } from '@concordium/common-sdk';
+import { Base58String, streamToList } from '@concordium/common-sdk';
 import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -55,4 +55,7 @@ if (cli.flags.h) {
     for await (const account of accounts) {
         console.dir(account, { depth: null, colors: true });
     }
+
+    // Can also be collected to a list with:
+    await streamToList(accounts);
 })();

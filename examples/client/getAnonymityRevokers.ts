@@ -1,4 +1,4 @@
-import { ArInfo } from '@concordium/common-sdk';
+import { ArInfo, streamToList } from '@concordium/common-sdk';
 import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -63,4 +63,7 @@ if (cli.flags.h) {
     for await (const ar of ars) {
         console.dir(ar, { depth: null, colors: true });
     }
+
+    // Can also be collected to a list with:
+    await streamToList(ars);
 })();

@@ -1,4 +1,8 @@
-import { AccountAddress, HexString } from '@concordium/common-sdk';
+import {
+    AccountAddress,
+    HexString,
+    streamToList,
+} from '@concordium/common-sdk';
 import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -60,4 +64,7 @@ if (cli.flags.h) {
     for await (const transaction of transactions) {
         console.dir(transaction, { depth: null, colors: true });
     }
+
+    // Can also be collected to a list with:
+    await streamToList(transactions);
 })();

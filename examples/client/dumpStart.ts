@@ -13,7 +13,7 @@ const cli = meow(
 
   Options
     --help,     -h  Displays this message
-    --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost
+    --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20001
     --dump-raw, -d  Specifies whether the node should dump raw packages
 `,
     {

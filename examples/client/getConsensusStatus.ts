@@ -1,4 +1,4 @@
-import { ConsensusStatus } from '@concordium/common-sdk';
+import { ConsensusStatus, HexString } from '@concordium/common-sdk';
 import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -43,4 +43,7 @@ if (cli.flags.h) {
     const consensusStatus: ConsensusStatus = await client.getConsensusStatus();
 
     console.dir(consensusStatus, { depth: null, colors: true });
+
+    // The consensusStatus contain information that can then be extracted:
+    const bestBlock: HexString = consensusStatus.bestBlock;
 })();

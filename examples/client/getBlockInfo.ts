@@ -50,4 +50,7 @@ if (cli.flags.h) {
     const blockInfo: BlockInfo = await client.getBlockInfo(cli.flags.block);
 
     console.dir(blockInfo, { depth: null, colors: true });
+
+    // The blockInfo contain information that can then be extracted:
+    const isFinalized: boolean = blockInfo.finalized;
 })();

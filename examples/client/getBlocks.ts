@@ -1,4 +1,4 @@
-import { ArrivedBlockInfo } from '@concordium/common-sdk';
+import { ArrivedBlockInfo, streamToList } from '@concordium/common-sdk';
 import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -48,4 +48,7 @@ if (cli.flags.h) {
     for await (const block of blocks) {
         console.dir(block, { depth: null, colors: true });
     }
+
+    // Can also be collected to a list with:
+    const blockList: ArrivedBlockInfo[] = streamToList(blocks);
 })();

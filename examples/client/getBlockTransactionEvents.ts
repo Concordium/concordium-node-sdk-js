@@ -1,4 +1,4 @@
-import { BlockItemSummary } from '@concordium/common-sdk';
+import { BlockItemSummary, streamToList } from '@concordium/common-sdk';
 import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -56,4 +56,7 @@ if (cli.flags.h) {
     for await (const event of events) {
         console.dir(event, { depth: null, colors: true });
     }
+
+    // Can also be collected to a list with:
+    const eventList: BlockItemSummary[] = await streamToList(events);
 })();

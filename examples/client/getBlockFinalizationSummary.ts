@@ -1,4 +1,4 @@
-import { BlockSpecialEvent } from '@concordium/common-sdk';
+import { PendingUpdate, streamToList } from '@concordium/common-sdk';
 import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -47,8 +47,13 @@ if (cli.flags.h) {
 /// If a blockhash is not supplied it will pick the latest finalized block.
 
 (async () => {
-    const pendingUpdates: AsyncIterable<BlockSpecialEvent> =
-        client.getBlockSpecialEvents(cli.flags.block);
+    const pendingUpdates: AsyncIterable<PendingUpdate> =
+        client.getBlockPendingUpdates(cli.flags.block);
 
     console.dir(pendingUpdates, { depth: null, colors: true });
+
+    // Can also be collected to a list with:
+    const pendingUpdateList: PendingUpdate[] = await streamToList(
+        pendingUpdates
+    );
 })();

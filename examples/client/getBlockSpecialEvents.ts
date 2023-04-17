@@ -58,4 +58,7 @@ if (cli.flags.h) {
     for await (const event of events) {
         console.dir(event, { depth: null, colors: true });
     }
+
+    // Can also be collected to a list with:
+    const eventList: BlockSpecialEvent[] = streamToList(events);
 })();

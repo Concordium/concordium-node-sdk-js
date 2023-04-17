@@ -1,4 +1,4 @@
-import { PendingUpdate } from '@concordium/common-sdk';
+import { PendingUpdate, streamToList } from '@concordium/common-sdk';
 import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -57,4 +57,9 @@ if (cli.flags.h) {
     for await (const pendingUpdate of pendingUpdates) {
         console.dir(pendingUpdate, { depth: null, colors: true });
     }
+
+    // Can also be collected to a list with:
+    const pendingUpdateList: PendingUpdate[] = await streamToList(
+        pendingUpdates
+    );
 })();

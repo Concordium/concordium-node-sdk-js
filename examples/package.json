@@ -19,7 +19,7 @@
   "scripts": {
     "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
     "lint-fix": "yarn lint --fix; exit 0",
-    "build": "tsc",
-    "build-dev": "tsc"
+    "typecheck": "tsc --no-emit"
   }
 }
+

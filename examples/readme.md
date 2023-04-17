@@ -2,7 +2,7 @@
 
 This is a collection of scripts/examples that utilizes the SDK. There are
 two directories with examples `client`, containing examples that utilize the
-client, and `common`, that use various general functions from the library. To
+client to interact with a Concordium node, and `common`, that use various general functions from the library. To
 run an example call:
 
 ```shell

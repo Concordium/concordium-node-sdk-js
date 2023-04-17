@@ -59,4 +59,5 @@ if (cli.flags.h) {
 
 (async () => {
     await client.dumpStart(cli.flags.filepath, cli.flags.dumpRaw);
+    console.log('Dump successfully started');
 })();

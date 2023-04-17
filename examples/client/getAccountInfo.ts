@@ -54,7 +54,8 @@ if (cli.flags.h) {
 /// Retrieves information about an account. The function must be provided an
 /// account address or a credential registration id.  If a credential registration
 /// id is provided, then the node returns the information of the account, which
-/// the corresponding credential is (or was) deployed to.
+/// the corresponding credential is (or was) deployed to. An account index as a
+/// bigint can also be provided.
 
 /// If there is no account that matches the address or credential id at the
 /// provided block, then undefined will be returned.

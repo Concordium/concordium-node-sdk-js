@@ -49,4 +49,5 @@ if (cli.flags.h) {
 
 (async () => {
     await client.banPeer(cli.flags.peer);
+    console.log('Specified peer successfully banned');
 })();

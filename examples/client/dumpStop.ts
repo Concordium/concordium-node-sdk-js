@@ -41,4 +41,5 @@ if (cli.flags.h) {
 
 (async () => {
     await client.dumpStop();
+    console.log('Dump successfully stopped');
 })();

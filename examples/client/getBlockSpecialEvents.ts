@@ -1,4 +1,4 @@
-import { BlockSpecialEvent } from '@concordium/common-sdk';
+import { BlockSpecialEvent, streamToList } from '@concordium/common-sdk';
 import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -60,5 +60,5 @@ if (cli.flags.h) {
     }
 
     // Can also be collected to a list with:
-    const eventList: BlockSpecialEvent[] = streamToList(events);
+    const eventList: BlockSpecialEvent[] = await streamToList(events);
 })();

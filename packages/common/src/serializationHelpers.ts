@@ -215,6 +215,16 @@ export function packBufferWithWord16Length(buffer: Buffer): Buffer {
 }
 
 /**
+ * Packing a buffer along the with offset of 8 bit length
+ * @param buffer containing the buffer
+ * @returns Buffer containing the length of the buffer of 8 bit and buffer.
+ */
+export function packBufferWithWord8Length(buffer: Buffer): Buffer {
+    const length = encodeWord8(buffer.length);
+    return Buffer.concat([length, buffer]);
+}
+
+/**
  * Convert a hex string to a Buffer
  * @param str hex-encoded string
  * @returns Buffer

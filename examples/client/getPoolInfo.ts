@@ -1,9 +1,4 @@
-import {
-    Amount,
-    BakerPoolStatus,
-    DelegatorRewardPeriodInfo,
-    streamToList,
-} from '@concordium/common-sdk';
+import { Amount, BakerPoolStatus } from '@concordium/common-sdk';
 import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -58,13 +53,13 @@ if (cli.flags.h) {
 
 /// Retrives various information on the specified baker pool, at the end of the specified block.
 (async () => {
-    const bakerPoolInfo: BakerPoolStatus = await client.getPoolInfo(
+    const bakerPool: BakerPoolStatus = await client.getPoolInfo(
         BigInt(cli.flags.poolOwner),
         cli.flags.block
     );
 
-    console.dir(bakerPoolInfo, { depth: null, colors: true });
+    console.dir(bakerPool, { depth: null, colors: true });
 
-    // Can also be collected to a list with:
-    const totalCapital: Amount = bakerPoolInfo.allPoolTotalCapital;
+    // Further information can be extracted from the bakerPool:
+    const totalCapital: Amount = bakerPool.allPoolTotalCapital;
 })();

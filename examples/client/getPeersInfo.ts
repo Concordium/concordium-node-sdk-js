@@ -21,11 +21,6 @@ const cli = meow(
                 alias: 'e',
                 default: 'localhost:20000',
             },
-            block: {
-                type: 'string',
-                alias: 'b',
-                default: '', // This defaults to LastFinal
-            },
         },
     }
 );

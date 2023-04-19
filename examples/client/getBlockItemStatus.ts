@@ -72,11 +72,13 @@ if (cli.flags.h) {
         /// `accountTransaction`, `accountCreation` or `UpdateTransaction`,
         /// which is denoted by the type field.
         const { summary } = blockItemStatus.outcome;
+
         if (summary.type === 'accountTransaction') {
             // The block item is an account transaction
             switch (summary.transactionType) {
                 case 'transfer':
                     // The transaction is a simple transfer
+                    const { amount, to } = summary.transfer;
                     break;
                 case 'failed':
                     // The transaction was rejected, in which case the transaction
@@ -84,17 +86,17 @@ if (cli.flags.h) {
                     const { failedTransactionType, rejectReason } = summary;
                     break;
                 default:
-                    console.log(
-                        'Another transaction kind encountered: ',
-                        summary.transactionType
-                    );
+                    // Another transaction kind encountered
+                    const otherType = summary.transactionType;
             }
         } else if (summary.type === 'updateTransaction') {
             // The block item is a chain update
-            console.dir(summary, { depth: null, colors: true });
-        } else {
-            // The block item is an account creation
-            console.dir(summary, { depth: null, colors: true });
+            const { effectiveTime, payload } = summary;
+        } else if (summary.type === 'accountCreation') {
+            // The block item is an account creation.
+            const { type, regId, address } = summary;
         }
+
+        console.dir(blockItemStatus.outcome, { depth: null, colors: true });
     }
 })();

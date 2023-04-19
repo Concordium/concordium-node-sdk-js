@@ -2,7 +2,6 @@ import { Buffer } from 'buffer/';
 import {
     AccountTransaction,
     AccountTransactionType,
-    Address,
     ContractAddress,
     HexString,
     InvokeContractResult,
@@ -17,15 +16,19 @@ import {
     serializeCIS2OperatorUpdates,
     serializeCIS2Transfers,
     makeSerializeDynamic,
+    CIS2BalanceOfQuery,
+    serializeCIS2BalanceOfQueries,
+    deserializeCIS2BalanceOfResponse,
+    Address,
+    isContractAddress,
+    getPrintableContractAddress,
 } from './util';
 import { AccountAddress } from '../types/accountAddress';
 import { CcdAmount } from '../types/ccdAmount';
 import { TransactionExpiry } from '../types/transactionExpiry';
 
 const getInvoker = (address: Address): ContractAddress | AccountAddress =>
-    address.type === 'AddressContract'
-        ? address.address
-        : new AccountAddress(address.address);
+    isContractAddress(address) ? address : new AccountAddress(address);
 
 const getDefaultExpiryDate = (): Date => {
     const future5Minutes = Date.now() + 5 * 60 * 1000;
@@ -63,7 +66,6 @@ class CIS2DryRun {
         return await this.grpcClient.invokeContract(
             {
                 contract: this.contractAddress,
-                amount: undefined,
                 parameter,
                 invoker: getInvoker(sender),
                 method: `${this.contractName}.transfer`,
@@ -93,7 +95,6 @@ class CIS2DryRun {
         return await this.grpcClient.invokeContract(
             {
                 contract: this.contractAddress,
-                amount: undefined,
                 parameter,
                 invoker: getInvoker(owner),
                 method: `${this.contractName}.updateOperator`,
@@ -116,6 +117,24 @@ export class CIS2Contract {
             contractAddress,
             contractName
         );
+    }
+
+    static async create(
+        grpcClient: ConcordiumNodeClient,
+        contractAddress: ContractAddress
+    ): Promise<CIS2Contract> {
+        const instanceInfo = await grpcClient.getInstanceInfo(contractAddress);
+
+        if (instanceInfo === undefined) {
+            throw new Error(
+                `Could not get contract instance info for contract at address ${JSON.stringify(
+                    getPrintableContractAddress(contractAddress)
+                )}`
+            );
+        }
+
+        const contractName = instanceInfo.name.substring(5);
+        return new CIS2Contract(grpcClient, contractAddress, contractName);
     }
 
     transfer(
@@ -166,8 +185,54 @@ export class CIS2Contract {
         );
     }
 
-    balanceOf(): void {
-        throw new Error('Not yet implemented');
+    balanceOf(
+        query: CIS2BalanceOfQuery,
+        blockHash?: HexString
+    ): Promise<bigint>;
+    balanceOf(
+        queries: CIS2BalanceOfQuery[],
+        blockHash?: HexString
+    ): Promise<bigint[]>;
+    async balanceOf(
+        queries: CIS2BalanceOfQuery | CIS2BalanceOfQuery[],
+        blockHash?: HexString
+    ): Promise<bigint | bigint[]> {
+        const parameter = makeSerializeDynamic(serializeCIS2BalanceOfQueries)(
+            queries
+        );
+        const response = await this.grpcClient.invokeContract(
+            {
+                contract: this.contractAddress,
+                parameter,
+                method: `${this.contractName}.balanceOf`,
+            },
+            blockHash
+        );
+        if (
+            response === undefined ||
+            response.tag === 'failure' ||
+            response.returnValue === undefined
+        ) {
+            throw new Error(
+                `Failed to retrieve balances for contract at ${JSON.stringify(
+                    this.contractAddress
+                )}`
+            );
+        }
+
+        const amounts = deserializeCIS2BalanceOfResponse(response.returnValue);
+        const expectedAmounts = Array.isArray(queries) ? queries.length : 1;
+        if (amounts.length !== expectedAmounts) {
+            throw new Error(
+                'Mismatch between length of requested tokens and token amounts in response.'
+            );
+        }
+
+        if (Array.isArray(queries)) {
+            return amounts;
+        } else {
+            return amounts[0];
+        }
     }
 
     operatorOf(): void {

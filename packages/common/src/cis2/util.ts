@@ -6,7 +6,7 @@ import {
     packBufferWithWord8Length,
 } from '../serializationHelpers';
 import {
-    Address,
+    Base58String,
     ContractAddress,
     HexString,
     Receiver,
@@ -62,6 +62,25 @@ export type CIS2TransactionMetadata = {
     energy: bigint;
 };
 
+export type CIS2BalanceOfQuery = {
+    tokenId: HexString;
+    address: Address;
+};
+
+export type Address = ContractAddress | Base58String;
+
+export const isContractAddress = (
+    address: Address
+): address is ContractAddress => typeof address !== 'string';
+
+export const getPrintableContractAddress = ({
+    index,
+    subindex,
+}: ContractAddress): { index: string; subindex: string } => ({
+    index: index.toString(),
+    subindex: subindex.toString(),
+});
+
 function serializeTokenId(tokenId: HexString): Buffer {
     const serialized = Buffer.from(tokenId, 'hex');
 
@@ -97,11 +116,11 @@ function serializeContractAddress(address: ContractAddress): Buffer {
 }
 
 function serializeAddress(address: Address): Buffer {
-    const type = encodeWord8(address.type === 'AddressAccount' ? 0 : 1);
-    const serializedAddress =
-        address.type === 'AddressAccount'
-            ? serializeAccountAddress(address.address)
-            : serializeContractAddress(address.address);
+    const isContract = isContractAddress(address);
+    const type = encodeWord8(isContract ? 1 : 0);
+    const serializedAddress = !isContract
+        ? serializeAccountAddress(address)
+        : serializeContractAddress(address);
 
     return Buffer.concat([type, serializedAddress]);
 }
@@ -165,8 +184,8 @@ function serializeCIS2Transfer(transfer: CIS2Transfer): Buffer {
  * const transfers = [{
     tokenId: '';
     tokenAmount: 100n;
-    from: 3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi;
-    to: 3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi;
+    from: '3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi',
+    to: '3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi',
     data: '48656c6c6f20776f726c6421';
 }];
  * const bytes = serializeCIS2Transfers(transfers);
@@ -185,12 +204,61 @@ function serializeCIS2OperatorUpdate(update: CIS2UpdateOperator): Buffer {
  * @param {CIS2UpdateOperator[]} updates - A list of {@link CIS2UpdateOperator} objects
  *
  * @example
- * const updates = [{type: 'add', address: "3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi"}];
+ * const updates = [{
+*       type: 'add',
+*       address: '3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi'
+    }];
  * const bytes = serializeCIS2OperatorUpdates(updates);
  */
 export const serializeCIS2OperatorUpdates = makeSerializeList(
     serializeCIS2OperatorUpdate
 );
+
+/**
+ * Serializes {@link CIS2BalanceOfQuery} data objects according to CIS-2 standard.
+ */
+function serializeCIS2BalanceOfQuery(query: CIS2BalanceOfQuery): Buffer {
+    const token = packBufferWithWord8Length(Buffer.from(query.tokenId, 'hex'));
+    const address = serializeAddress(query.address);
+    return Buffer.concat([token, address]);
+}
+
+/**
+ * Serializes a list of {@link CIS2BalanceOfQuery} data objects according to the CIS-2 standard.
+ *
+ * @param {CIS2BalanceOfQuery[]} updates - A list of {@link CIS2BalanceOfQuery} objects
+ *
+ * @example
+ * const updates = [{tokenId: '', address: '3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi'}];
+ * const bytes = serializeCIS2BalanceOfQueries(updates);
+ */
+export const serializeCIS2BalanceOfQueries = makeSerializeList(
+    serializeCIS2BalanceOfQuery
+);
+
+/**
+ * Deserializes response of CIS-2 balanceOf query according to CIS-2 standard.
+ */
+export const deserializeCIS2BalanceOfResponse = (value: string): bigint[] => {
+    const buf = Buffer.from(value, 'hex');
+    const n = buf.readUInt16LE(0);
+    let cursor = 2; // First 2 bytes hold number of token amounts included in response.
+    const amounts: bigint[] = [];
+
+    // eslint-disable-next-line no-plusplus
+    for (let i = 0; i < n; i++) {
+        const end = buf.subarray(cursor).findIndex((b) => b < 2 ** 7) + 1; // Find the first byte with most significant bit not set, signaling the last byte in the leb128 slice.
+
+        const amount = uleb128.decode(
+            Buffer.from(buf.subarray(cursor, cursor + end))
+        );
+        amounts.push(BigInt(amount));
+
+        cursor += end;
+    }
+
+    return amounts;
+};
 
 /**
  * Creates a function that serializes either a `T` or `T[]` from a function that serializes `T[]`.
@@ -202,7 +270,9 @@ export const serializeCIS2OperatorUpdates = makeSerializeList(
  * const transfer = {
     tokenId: '';
     tokenAmount: 100n;
-    from: 3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi;
+    from: {
+address: "3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi"
+};
     to: 3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi;
     data: '48656c6c6f20776f726c6421';
 };

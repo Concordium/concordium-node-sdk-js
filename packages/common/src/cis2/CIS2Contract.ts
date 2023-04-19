@@ -1,7 +1,15 @@
-import { Address, ContractAddress, HexString } from '../types';
+import {
+    Address,
+    ContractAddress,
+    HexString,
+    InvokeContractResult,
+} from '../types';
 import ConcordiumNodeClient from '../GRPCClient';
 import { AccountSigner } from '../signHelpers';
-import { CIS2Transfer } from './util';
+import { CIS2Transfer, serializeCIS2Transfers } from './util';
+import { AccountAddress } from '../types/accountAddress';
+
+const DEFAULT_EXECUTION_ENERGY = 10000000n;
 
 // - Ensure parameter size doesn't exceed 1024 bytes
 // - Make dry-run versions of all methods
@@ -17,18 +25,36 @@ class CIS2DryRun {
         sender: Address,
         transfer: CIS2Transfer,
         blockHash?: HexString
-    ): Promise<bigint>;
+    ): Promise<InvokeContractResult>;
     transfer(
         sender: Address,
         transfers: CIS2Transfer[],
         blockHash?: HexString
-    ): Promise<bigint>;
+    ): Promise<InvokeContractResult>;
     async transfer(
         sender: Address,
         transfers: CIS2Transfer | CIS2Transfer[],
         blockHash?: HexString
-    ): Promise<bigint> {
-        throw new Error('Not yet implemented');
+    ): Promise<InvokeContractResult> {
+        const parameter = serializeCIS2Transfers(
+            Array.isArray(transfers) ? transfers : [transfers]
+        );
+        const invoker =
+            sender.type === 'AddressContract'
+                ? sender.address
+                : new AccountAddress(sender.address);
+        const method = `${this.contractName}.transfer`;
+        return await this.grpcClient.invokeContract(
+            {
+                contract: this.contractAddress,
+                amount: undefined,
+                parameter,
+                invoker: invoker,
+                method,
+                energy: DEFAULT_EXECUTION_ENERGY,
+            },
+            blockHash
+        );
     }
 }
 

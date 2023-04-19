@@ -1,4 +1,4 @@
-import { PendingUpdate, streamToList } from '@concordium/common-sdk';
+import { BlockFinalizationSummary } from '@concordium/common-sdk';
 import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -43,17 +43,22 @@ if (cli.flags.h) {
     cli.showHelp();
 }
 
-/// Get the summary of the finalization data in a given block.
-/// If a blockhash is not supplied it will pick the latest finalized block.
+/// Get the summary of the finalization data in a given block. Only finalized
+/// blocks will return a finalization summary, if the summary is requested for
+/// a non-finalized block, this will return an object with only the tag field,
+/// with value "none".  If a blockhash is not supplied it will pick the latest
+/// finalized block.
 
 (async () => {
-    const pendingUpdates: AsyncIterable<PendingUpdate> =
-        client.getBlockPendingUpdates(cli.flags.block);
+    const summary: BlockFinalizationSummary =
+        await client.getBlockFinalizationSummary(cli.flags.block);
 
-    console.dir(pendingUpdates, { depth: null, colors: true });
+    if (summary.tag === 'record') {
+        // Response contains finalization summary for the given block:
+        const { block, index, delay, finalizers } = summary.record;
+    } else {
+        // Given block has not been finalized, and no information can be gotten
+    }
 
-    // Can also be collected to a list with:
-    const pendingUpdateList: PendingUpdate[] = await streamToList(
-        pendingUpdates
-    );
+    console.dir(summary, { depth: null, colors: true });
 })();

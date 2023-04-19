@@ -13,7 +13,8 @@ const cli = meow(
     --height,        -h  Height starting from the genesis block at the genesis index.
     --restrict,      -r  Whether to return results only from the specified genesis index (true),
                          or allow results from more recent genesis indices as well (false).
-    --genesis-index, -g  Genesis index to start from. 
+    --genesis-index, -g  The index of a (re)genesis block. The initial genesis block has index 0 
+                         and each subsequent regenesis has an incrementally higher index. 
 
   Options
     --help,     -h  Displays this message.
@@ -62,7 +63,7 @@ if (cli.flags.h) {
 
 (async () => {
     const request: BlocksAtHeightRequest = {
-        genesisIndex: 1,
+        genesisIndex: cli.flags.genesisIndex,
         height: BigInt(cli.flags.height),
         restrict: cli.flags.restrict,
     };

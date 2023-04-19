@@ -22,11 +22,6 @@ const cli = meow(
                 alias: 'e',
                 default: 'localhost:20000',
             },
-            account: {
-                type: 'string',
-                alias: 'a',
-                isRequired: true,
-            },
             blockhash: {
                 type: 'string',
                 alias: 'b',

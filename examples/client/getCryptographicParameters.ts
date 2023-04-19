@@ -43,7 +43,8 @@ if (cli.flags.h) {
     cli.showHelp();
 }
 
-/// Retrieves the current consensus info from the node.
+/// Retrieves the global cryptographic parameters for the blockchain at a specific
+/// block. These are a required input for e.g. creating credentials.
 
 (async () => {
     const parameters: CryptographicParameters =

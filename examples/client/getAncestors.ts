@@ -51,11 +51,11 @@ if (cli.flags.h) {
     cli.showHelp();
 }
 
-/// Retrieves all smart contract modules that exists in the state at the end of
-/// a given block, as an async iterable of hex strings. A bigint representing
-/// the max number of ancestors to get must be provided.  If a blockhash is not
-/// supplied it will pick the latest finalized block. An optional abortSignal
-/// can also be provided that closes the stream.
+/// Retrieves all ancestors that exists in the state at the end of a given block,
+/// as an async iterable of hex strings. A bigint representing the max number
+/// of ancestors to get must be provided. If a blockhash is not supplied it
+/// will pick the latest finalized block. An optional abortSignal can also be
+/// provided that closes the stream.
 
 (async () => {
     const ancestors: AsyncIterable<HexString> = client.getAncestors(

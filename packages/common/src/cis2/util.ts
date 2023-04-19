@@ -50,14 +50,14 @@ export type CIS2UpdateOperator = {
  * Metadata necessary for CIS-2 transactions
  */
 export type CIS2TransactionMetadata = {
-    /** Amount (in microCCD) to inlude in the transaction */
-    amont: bigint;
+    /** Amount (in microCCD) to inlude in the transaction. Defaults to 0n */
+    amount?: bigint;
     /** The sender address of the transaction */
     senderAddress: HexString;
     /** Account nonce to use for the transaction */
     nonce: bigint;
-    /** Expiry date of the transaction */
-    expiry: Date;
+    /** Expiry date of the transaction. Defaults to 5 minutes in the future */
+    expiry?: Date;
     /** Max energy to be used for the transaction */
     energy: bigint;
 };
@@ -191,3 +191,25 @@ function serializeCIS2OperatorUpdate(update: CIS2UpdateOperator): Buffer {
 export const serializeCIS2OperatorUpdates = makeSerializeList(
     serializeCIS2OperatorUpdate
 );
+
+/**
+ * Creates a function that serializes either a `T` or `T[]` from a function that serializes `T[]`.
+ *
+ * @param {(input: T[]) => Buffer} serializer - A serialization function that takes `T[]`
+ *
+ * @example
+ * const serializer = makeSerializeDynamic(serializeCIS2Transfers);
+ * const transfer = {
+    tokenId: '';
+    tokenAmount: 100n;
+    from: 3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi;
+    to: 3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi;
+    data: '48656c6c6f20776f726c6421';
+};
+ * const bytesSingle = serializer(transfer);
+ * const bytesMulti = serializer([transfer, transfer]);
+ */
+export const makeSerializeDynamic =
+    <T>(serializer: (a: T[]) => Buffer) =>
+    (input: T | T[]): Buffer =>
+        serializer(Array.isArray(input) ? input : [input]);

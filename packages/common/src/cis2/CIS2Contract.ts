@@ -1,29 +1,36 @@
 import { Buffer } from 'buffer/';
 import {
+    AccountTransaction,
+    AccountTransactionType,
     Address,
     ContractAddress,
     HexString,
     InvokeContractResult,
+    UpdateContractPayload,
 } from '../types';
 import ConcordiumNodeClient from '../GRPCClient';
-import { AccountSigner } from '../signHelpers';
+import { AccountSigner, signTransaction } from '../signHelpers';
 import {
+    CIS2TransactionMetadata,
     CIS2Transfer,
     CIS2UpdateOperator,
     serializeCIS2OperatorUpdates,
     serializeCIS2Transfers,
+    makeSerializeDynamic,
 } from './util';
 import { AccountAddress } from '../types/accountAddress';
-
-const DEFAULT_EXECUTION_ENERGY = 10000000n;
+import { CcdAmount } from '../types/ccdAmount';
+import { TransactionExpiry } from '../types/transactionExpiry';
 
 const getInvoker = (address: Address): ContractAddress | AccountAddress =>
     address.type === 'AddressContract'
         ? address.address
         : new AccountAddress(address.address);
 
-const serializeDynamic = <T>(serializer: (a: T[]) => Buffer, input: T | T[]) =>
-    serializer(Array.isArray(input) ? input : [input]);
+const getDefaultExpiryDate = (): Date => {
+    const future5Minutes = Date.now() + 5 * 60 * 1000;
+    return new Date(future5Minutes);
+};
 
 // - Ensure parameter size doesn't exceed 1024 bytes
 // - Make dry-run versions of all methods
@@ -50,7 +57,9 @@ class CIS2DryRun {
         transfers: CIS2Transfer | CIS2Transfer[],
         blockHash?: HexString
     ): Promise<InvokeContractResult> {
-        const parameter = serializeDynamic(serializeCIS2Transfers, transfers);
+        const parameter = makeSerializeDynamic(serializeCIS2Transfers)(
+            transfers
+        );
         return await this.grpcClient.invokeContract(
             {
                 contract: this.contractAddress,
@@ -58,7 +67,6 @@ class CIS2DryRun {
                 parameter,
                 invoker: getInvoker(sender),
                 method: `${this.contractName}.transfer`,
-                energy: DEFAULT_EXECUTION_ENERGY,
             },
             blockHash
         );
@@ -79,8 +87,7 @@ class CIS2DryRun {
         updates: CIS2UpdateOperator | CIS2UpdateOperator[],
         blockHash?: HexString
     ): Promise<InvokeContractResult> {
-        const parameter = serializeDynamic(
-            serializeCIS2OperatorUpdates,
+        const parameter = makeSerializeDynamic(serializeCIS2OperatorUpdates)(
             updates
         );
         return await this.grpcClient.invokeContract(
@@ -90,7 +97,6 @@ class CIS2DryRun {
                 parameter,
                 invoker: getInvoker(owner),
                 method: `${this.contractName}.updateOperator`,
-                energy: DEFAULT_EXECUTION_ENERGY,
             },
             blockHash
         );
@@ -112,20 +118,52 @@ export class CIS2Contract {
         );
     }
 
-    transfer(signer: AccountSigner, transfer: CIS2Transfer): Promise<HexString>;
     transfer(
         signer: AccountSigner,
+        metadata: CIS2TransactionMetadata,
+        transfer: CIS2Transfer
+    ): Promise<HexString>;
+    transfer(
+        signer: AccountSigner,
+        metadata: CIS2TransactionMetadata,
         transfers: CIS2Transfer[]
     ): Promise<HexString>;
     async transfer(
         signer: AccountSigner,
+        metadata: CIS2TransactionMetadata,
         transfers: CIS2Transfer | CIS2Transfer[]
     ): Promise<HexString> {
-        throw new Error('Not yet implemented');
+        return this.invokeReceive(
+            'transfer',
+            makeSerializeDynamic(serializeCIS2Transfers),
+            signer,
+            metadata,
+            transfers
+        );
     }
 
-    updateOperator(): void {
-        throw new Error('Not yet implemented');
+    updateOperator(
+        signer: AccountSigner,
+        metadata: CIS2TransactionMetadata,
+        update: CIS2UpdateOperator
+    ): Promise<HexString>;
+    updateOperator(
+        signer: AccountSigner,
+        metadata: CIS2TransactionMetadata,
+        updates: CIS2UpdateOperator[]
+    ): Promise<HexString>;
+    async updateOperator(
+        signer: AccountSigner,
+        metadata: CIS2TransactionMetadata,
+        updates: CIS2UpdateOperator | CIS2UpdateOperator[]
+    ): Promise<HexString> {
+        return this.invokeReceive(
+            'updateOperator',
+            makeSerializeDynamic(serializeCIS2OperatorUpdates),
+            signer,
+            metadata,
+            updates
+        );
     }
 
     balanceOf(): void {
@@ -142,5 +180,39 @@ export class CIS2Contract {
 
     get dryRun(): CIS2DryRun {
         return this.dryRunInstance;
+    }
+
+    private async invokeReceive<T>(
+        entrypoint: string,
+        serializer: (input: T) => Buffer,
+        signer: AccountSigner,
+        {
+            amount = 0n,
+            senderAddress,
+            nonce,
+            energy,
+            expiry = getDefaultExpiryDate(),
+        }: CIS2TransactionMetadata,
+        input: T
+    ): Promise<HexString> {
+        const parameter = serializer(input);
+        const payload: UpdateContractPayload = {
+            amount: new CcdAmount(amount),
+            address: this.contractAddress,
+            receiveName: `${this.contractName}.${entrypoint}`,
+            maxContractExecutionEnergy: energy,
+            message: parameter,
+        };
+        const transaction: AccountTransaction = {
+            type: AccountTransactionType.Update,
+            header: {
+                expiry: new TransactionExpiry(expiry),
+                nonce,
+                sender: new AccountAddress(senderAddress),
+            },
+            payload,
+        };
+        const signature = await signTransaction(transaction, signer);
+        return this.grpcClient.sendAccountTransaction(transaction, signature);
     }
 }

@@ -41,6 +41,9 @@ const getDefaultExpiryDate = (): Date => {
     return new Date(future5Minutes);
 };
 
+/**
+ * Contains methods for performing dry-run invocations of update instructions on CIS-2 smart contracts.
+ */
 class CIS2DryRun {
     constructor(
         private grpcClient: ConcordiumNodeClient,
@@ -48,6 +51,15 @@ class CIS2DryRun {
         private contractName: string
     ) {}
 
+    /**
+     * Performs a dry-run invocation of "transfer" on a corresponding {@link CIS2Contract} instance
+     *
+     * @param {Address} sender - Address of the sender of the transfer.
+     * @param {CIS2Transfer | CIS2Transfer[]} transfer(s) - The transfer object(s).
+     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
+     *
+     * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
+     */
     transfer(
         sender: Address,
         transfer: CIS2Transfer,
@@ -72,6 +84,15 @@ class CIS2DryRun {
         );
     }
 
+    /**
+     * Performs a dry-run invocation of "updateOperator" on a corresponding {@link CIS2Contract} instance
+     *
+     * @param {Address} owner - Address of the owner of the address to perform the update on.
+     * @param {CIS2UpdateOperator | CIS2UpdateOperator[]} update(s) - The update object(s).
+     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
+     *
+     * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
+     */
     updateOperator(
         owner: Address,
         update: CIS2UpdateOperator,
@@ -96,6 +117,17 @@ class CIS2DryRun {
         );
     }
 
+    /**
+     * Helper function for invoking a contract function.
+     *
+     * @param {string} entrypoint - The name of the receive function to invoke.
+     * @param {ContractAddress | AccountAddress} invoker - The address of the invoker.
+     * @param {Function} serializer - A function for serializing the input to bytes.
+     * @param {T | T[]} input - Input for for contract function.
+     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
+     *
+     * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
+     */
     private invokeMethod<T>(
         entrypoint: string,
         invoker: ContractAddress | AccountAddress,
@@ -246,7 +278,7 @@ export class CIS2Contract {
      * Invokes CIS-2 "balanceOf" with a single query.
      *
      * @param {CIS2BalanceOfQuery} query - The query object specifying the details of the query.
-     * @param {HexString} [blockHash] - The hash of the block to perform the query at.
+     * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
      * @returns {bigint} The balance corresponding to the query.
      */
@@ -258,7 +290,7 @@ export class CIS2Contract {
      * Invokes CIS-2 "balanceOf" with a list of queries.
      *
      * @param {CIS2BalanceOfQuery[]} queries - A list of query objects, each specifying the details of a query.
-     * @param {HexString} [blockHash] - The hash of the block to perform the query at.
+     * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
      * @returns {bigint[]} A list of balances corresponding to and ordered by the list of queries.
      */
@@ -283,7 +315,7 @@ export class CIS2Contract {
      * Invokes CIS-2 "operatorOf" with a single query.
      *
      * @param {CIS2OperatorOfQuery} query - The query object specifying the details of the query.
-     * @param {HexString} [blockHash] - The hash of the block to perform the query at.
+     * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
      * @returns {boolean} Whether the specified address is an operator of the specified owner.
      */
@@ -295,7 +327,7 @@ export class CIS2Contract {
      * Invokes CIS-2 "operatorOf" with a list of queries.
      *
      * @param {CIS2OperatorOfQuery[]} queries - A list of query objects, each specifying the details of a query.
-     * @param {HexString} [blockHash] - The hash of the block to perform the query at.
+     * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
      * @returns {boolean[]} As list of boolean results, each detailing whether the specified address is an operator of the specified owner for the corresponding query.
      * The list is ordered by the corresponding query.
@@ -321,7 +353,7 @@ export class CIS2Contract {
      * Invokes CIS-2 "tokenMetadata" with a single token ID.
      *
      * @param {HexString} tokenId - The ID of the token to get the metadata URL for.
-     * @param {HexString} [blockHash] - The hash of the block to perform the query at.
+     * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
      * @returns {CIS2MetadataUrl} An object containing the URL of the token metadata.
      */
@@ -333,7 +365,7 @@ export class CIS2Contract {
      * Invokes CIS-2 "tokenMetadata" with a list of token ID's.
      *
      * @param {HexString[]} tokenIds - A list of ID's of the tokens to get metadata URL's for.
-     * @param {HexString} [blockHash] - The hash of the block to perform the query at.
+     * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
      * @returns {CIS2MetadataUrl[]} A list of objects containing URL's for token metadata for the corresponding token.
      * The list is ordered by the token ID's given by `tokenIds` input parameter.

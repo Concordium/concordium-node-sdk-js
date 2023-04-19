@@ -9,8 +9,6 @@ const cli = meow(
   Usage
     $ yarn ts-node <path-to-this-file> [options]
 
-  Required
-    --account, -a  The account to get transactions from
 
   Options
     --help,     -h  Displays this message

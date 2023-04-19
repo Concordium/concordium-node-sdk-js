@@ -20,6 +20,8 @@ const TOKEN_ID_MAX_LENGTH = 256;
 const TOKEN_AMOUNT_MAX_LENGTH = 37;
 const TOKEN_RECEIVE_HOOK_MAX_LENGTH = 100;
 
+export type Address = ContractAddress | Base58String;
+
 /**
  * Data needed to perform a transfer invocation according to the CIS-2 standard.
  */
@@ -67,7 +69,10 @@ export type CIS2BalanceOfQuery = {
     address: Address;
 };
 
-export type Address = ContractAddress | Base58String;
+export type CIS2MetadataUrl = {
+    url: string;
+    hash?: HexString;
+};
 
 export const isContractAddress = (
     address: Address
@@ -259,6 +264,49 @@ export const deserializeCIS2BalanceOfResponse = (value: string): bigint[] => {
 
     return amounts;
 };
+
+export const serializeTokenIds = makeSerializeList(serializeTokenId);
+
+export function deserializeCIS2TokenMetadataResponse(
+    value: string
+): CIS2MetadataUrl[] {
+    const buf = Buffer.from(value, 'hex');
+    const n = buf.readUInt16LE(0);
+    let cursor = 2; // First 2 bytes hold number of token amounts included in response.
+    const urls: CIS2MetadataUrl[] = [];
+
+    // eslint-disable-next-line no-plusplus
+    for (let i = 0; i < n; i++) {
+        const length = buf.readUInt16LE(cursor);
+        const urlStart = cursor + 2;
+        const urlEnd = urlStart + length;
+
+        const url = Buffer.from(buf.subarray(urlStart, urlEnd)).toString(
+            'utf8'
+        );
+
+        cursor = urlEnd;
+
+        const hasChecksum = buf.readUInt8(cursor);
+        cursor += 1;
+
+        if (hasChecksum === 1) {
+            const hash = Buffer.from(
+                buf.subarray(cursor, cursor + 32)
+            ).toString('hex');
+            cursor += 32;
+            urls.push({ url, hash });
+        } else if (hasChecksum === 0) {
+            urls.push({ url });
+        } else {
+            throw new Error(
+                'Deserialization failed: boolean value had an unexpected value'
+            );
+        }
+    }
+
+    return urls;
+}
 
 /**
  * Creates a function that serializes either a `T` or `T[]` from a function that serializes `T[]`.

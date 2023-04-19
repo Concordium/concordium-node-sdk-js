@@ -22,6 +22,9 @@ import {
     Address,
     isContractAddress,
     getPrintableContractAddress,
+    serializeTokenIds,
+    deserializeCIS2TokenMetadataResponse,
+    CIS2MetadataUrl,
 } from './util';
 import { AccountAddress } from '../types/accountAddress';
 import { CcdAmount } from '../types/ccdAmount';
@@ -147,7 +150,7 @@ export class CIS2Contract {
         metadata: CIS2TransactionMetadata,
         transfers: CIS2Transfer[]
     ): Promise<HexString>;
-    async transfer(
+    transfer(
         signer: AccountSigner,
         metadata: CIS2TransactionMetadata,
         transfers: CIS2Transfer | CIS2Transfer[]
@@ -171,7 +174,7 @@ export class CIS2Contract {
         metadata: CIS2TransactionMetadata,
         updates: CIS2UpdateOperator[]
     ): Promise<HexString>;
-    async updateOperator(
+    updateOperator(
         signer: AccountSigner,
         metadata: CIS2TransactionMetadata,
         updates: CIS2UpdateOperator | CIS2UpdateOperator[]
@@ -197,50 +200,38 @@ export class CIS2Contract {
         queries: CIS2BalanceOfQuery | CIS2BalanceOfQuery[],
         blockHash?: HexString
     ): Promise<bigint | bigint[]> {
-        const parameter = makeSerializeDynamic(serializeCIS2BalanceOfQueries)(
-            queries
-        );
-        const response = await this.grpcClient.invokeContract(
-            {
-                contract: this.contractAddress,
-                parameter,
-                method: `${this.contractName}.balanceOf`,
-            },
+        return this.invokeView(
+            'balanceOf',
+            makeSerializeDynamic(serializeCIS2BalanceOfQueries),
+            deserializeCIS2BalanceOfResponse,
+            queries,
             blockHash
         );
-        if (
-            response === undefined ||
-            response.tag === 'failure' ||
-            response.returnValue === undefined
-        ) {
-            throw new Error(
-                `Failed to retrieve balances for contract at ${JSON.stringify(
-                    this.contractAddress
-                )}`
-            );
-        }
-
-        const amounts = deserializeCIS2BalanceOfResponse(response.returnValue);
-        const expectedAmounts = Array.isArray(queries) ? queries.length : 1;
-        if (amounts.length !== expectedAmounts) {
-            throw new Error(
-                'Mismatch between length of requested tokens and token amounts in response.'
-            );
-        }
-
-        if (Array.isArray(queries)) {
-            return amounts;
-        } else {
-            return amounts[0];
-        }
     }
 
     operatorOf(): void {
         throw new Error('Not yet implemented');
     }
 
-    tokenMetadata(): void {
-        throw new Error('Not yet implemented');
+    tokenMetadata(
+        tokenId: HexString,
+        blockHash?: HexString
+    ): Promise<CIS2MetadataUrl>;
+    tokenMetadata(
+        tokenIds: HexString[],
+        blockHash?: HexString
+    ): Promise<CIS2MetadataUrl[]>;
+    tokenMetadata(
+        tokenIds: HexString | HexString[],
+        blockHash?: HexString
+    ): Promise<CIS2MetadataUrl | CIS2MetadataUrl[]> {
+        return this.invokeView(
+            'tokenMetadata',
+            makeSerializeDynamic(serializeTokenIds),
+            deserializeCIS2TokenMetadataResponse,
+            tokenIds,
+            blockHash
+        );
     }
 
     get dryRun(): CIS2DryRun {
@@ -279,5 +270,50 @@ export class CIS2Contract {
         };
         const signature = await signTransaction(transaction, signer);
         return this.grpcClient.sendAccountTransaction(transaction, signature);
+    }
+
+    private async invokeView<T, R>(
+        entrypoint: string,
+        serializer: (input: T | T[]) => Buffer,
+        deserializer: (input: HexString) => R[],
+        input: T | T[],
+        blockHash?: HexString
+    ): Promise<R | R[]> {
+        const parameter = serializer(input);
+        const response = await this.grpcClient.invokeContract(
+            {
+                contract: this.contractAddress,
+                parameter,
+                method: `${this.contractName}.${entrypoint}`,
+            },
+            blockHash
+        );
+        if (
+            response === undefined ||
+            response.tag === 'failure' ||
+            response.returnValue === undefined
+        ) {
+            throw new Error(
+                `Failed to invoke view ${entrypoint} for contract at ${JSON.stringify(
+                    this.contractAddress
+                )}`
+            );
+        }
+
+        const values = deserializer(response.returnValue);
+        const isListInput = Array.isArray(input);
+        const expectedValuesLength = isListInput ? input.length : 1;
+
+        if (values.length !== expectedValuesLength) {
+            throw new Error(
+                'Mismatch between length of queries in request and values in response.'
+            );
+        }
+
+        if (isListInput) {
+            return values;
+        } else {
+            return values[0];
+        }
     }
 }

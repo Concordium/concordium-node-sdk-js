@@ -51,7 +51,7 @@ if (cli.flags.h) {
     cli.showHelp();
 }
 
-/// This commands gets the source of a module on the chain.
+/// Gets the source of a module on the chain.
 /// Note that this returns the raw bytes of the source, as a HexString.
 
 (async () => {

@@ -1,4 +1,4 @@
-import { InstanceStateKVPair } from '@concordium/common-sdk';
+import { InstanceStateKVPair, streamToList } from '@concordium/common-sdk';
 import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -66,5 +66,10 @@ if (cli.flags.h) {
         cli.flags.block
     );
 
-    console.dir(states, { depth: null, colors: true });
+    for await (const state of states) {
+        console.dir(state, { depth: null, colors: true });
+    }
+
+    // Can also be collected to a list with:
+    const stateList: InstanceStateKVPair[] = await streamToList(states);
 })();

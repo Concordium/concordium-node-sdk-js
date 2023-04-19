@@ -50,11 +50,11 @@ if (cli.flags.h) {
     cli.showHelp();
 }
 
-/// Retrieves the next account sequence number, i.e. the number that must be set
-/// in the account transaction header for the next transaction submitted by that
-/// account. Along with the sequence number there is a boolean that indicates
-/// whether all transactions are finalized. If this is true, then the sequence
-/// number is reliable, if not then the next sequence number might be off.
+/// Retrieves the next account sequence number (nonce), i.e. the number that must
+/// be set in the account transaction header for the next transaction submitted
+/// by that account. Along with the sequence number there is a boolean that
+/// indicates whether all transactions are finalized. If this is true, then the
+/// sequence number is reliable, if not then the next sequence number might be off.
 
 (async () => {
     const account = new AccountAddress(cli.flags.account);

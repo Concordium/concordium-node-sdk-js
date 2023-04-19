@@ -28,6 +28,11 @@ export type CIS2Transfer = {
     data: HexString;
 };
 
+export type CIS2UpdateOperator = {
+    type: 'add' | 'remove';
+    address: Address;
+};
+
 function serializeTokenId(tokenId: HexString): Buffer {
     const serialized = Buffer.from(tokenId, 'hex');
 
@@ -105,6 +110,13 @@ function serializeAdditionalData(data: HexString): Buffer {
     return packBufferWithWord16Length(serialized);
 }
 
+const makeSerializeList =
+    <T>(serialize: (input: T) => Buffer) =>
+    (input: T[]): Buffer => {
+        const n = encodeWord16(input.length);
+        return Buffer.concat([n, ...input.map(serialize)]);
+    };
+
 function serializeCIS2Transfer(transfer: CIS2Transfer): Buffer {
     const id = serializeTokenId(transfer.tokenId);
     const amount = serializeTokenAmount(transfer.tokenAmount);
@@ -115,7 +127,14 @@ function serializeCIS2Transfer(transfer: CIS2Transfer): Buffer {
     return Buffer.concat([id, amount, from, to, data]);
 }
 
-export function serializeCIS2Transfers(transfers: CIS2Transfer[]): Buffer {
-    const n = encodeWord16(transfers.length);
-    return Buffer.concat([n, ...transfers.map(serializeCIS2Transfer)]);
+export const serializeCIS2Transfers = makeSerializeList(serializeCIS2Transfer);
+
+function serializeCIS2OperatorUpdate(update: CIS2UpdateOperator): Buffer {
+    const type = encodeWord8(update.type === 'add' ? 1 : 0);
+    const address = serializeAddress(update.address);
+    return Buffer.concat([type, address]);
 }
+
+export const serializeCIS2OperatorUpdates = makeSerializeList(
+    serializeCIS2OperatorUpdate
+);

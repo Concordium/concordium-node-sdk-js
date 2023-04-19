@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer/';
 import {
     Address,
     ContractAddress,
@@ -6,10 +7,23 @@ import {
 } from '../types';
 import ConcordiumNodeClient from '../GRPCClient';
 import { AccountSigner } from '../signHelpers';
-import { CIS2Transfer, serializeCIS2Transfers } from './util';
+import {
+    CIS2Transfer,
+    CIS2UpdateOperator,
+    serializeCIS2OperatorUpdates,
+    serializeCIS2Transfers,
+} from './util';
 import { AccountAddress } from '../types/accountAddress';
 
 const DEFAULT_EXECUTION_ENERGY = 10000000n;
+
+const getInvoker = (address: Address): ContractAddress | AccountAddress =>
+    address.type === 'AddressContract'
+        ? address.address
+        : new AccountAddress(address.address);
+
+const serializeDynamic = <T>(serializer: (a: T[]) => Buffer, input: T | T[]) =>
+    serializer(Array.isArray(input) ? input : [input]);
 
 // - Ensure parameter size doesn't exceed 1024 bytes
 // - Make dry-run versions of all methods
@@ -36,21 +50,46 @@ class CIS2DryRun {
         transfers: CIS2Transfer | CIS2Transfer[],
         blockHash?: HexString
     ): Promise<InvokeContractResult> {
-        const parameter = serializeCIS2Transfers(
-            Array.isArray(transfers) ? transfers : [transfers]
-        );
-        const invoker =
-            sender.type === 'AddressContract'
-                ? sender.address
-                : new AccountAddress(sender.address);
-        const method = `${this.contractName}.transfer`;
+        const parameter = serializeDynamic(serializeCIS2Transfers, transfers);
         return await this.grpcClient.invokeContract(
             {
                 contract: this.contractAddress,
                 amount: undefined,
                 parameter,
-                invoker: invoker,
-                method,
+                invoker: getInvoker(sender),
+                method: `${this.contractName}.transfer`,
+                energy: DEFAULT_EXECUTION_ENERGY,
+            },
+            blockHash
+        );
+    }
+
+    updateOperator(
+        owner: Address,
+        update: CIS2UpdateOperator,
+        blockHash?: HexString
+    ): Promise<InvokeContractResult>;
+    updateOperator(
+        owner: Address,
+        updates: CIS2UpdateOperator[],
+        blockHash?: HexString
+    ): Promise<InvokeContractResult>;
+    async updateOperator(
+        owner: Address,
+        updates: CIS2UpdateOperator | CIS2UpdateOperator[],
+        blockHash?: HexString
+    ): Promise<InvokeContractResult> {
+        const parameter = serializeDynamic(
+            serializeCIS2OperatorUpdates,
+            updates
+        );
+        return await this.grpcClient.invokeContract(
+            {
+                contract: this.contractAddress,
+                amount: undefined,
+                parameter,
+                invoker: getInvoker(owner),
+                method: `${this.contractName}.updateOperator`,
                 energy: DEFAULT_EXECUTION_ENERGY,
             },
             blockHash

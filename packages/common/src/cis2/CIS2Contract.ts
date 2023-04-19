@@ -22,9 +22,12 @@ import {
     Address,
     isContractAddress,
     getPrintableContractAddress,
-    serializeTokenIds,
+    serializeCIS2TokenIds,
     deserializeCIS2TokenMetadataResponse,
     CIS2MetadataUrl,
+    CIS2OperatorOfQuery,
+    serializeCIS2OperatorOfQueries,
+    deserializeCIS2OperatorOfResponse,
 } from './util';
 import { AccountAddress } from '../types/accountAddress';
 import { CcdAmount } from '../types/ccdAmount';
@@ -37,9 +40,6 @@ const getDefaultExpiryDate = (): Date => {
     const future5Minutes = Date.now() + 5 * 60 * 1000;
     return new Date(future5Minutes);
 };
-
-// - Ensure parameter size doesn't exceed 1024 bytes
-// - Make dry-run versions of all methods
 
 class CIS2DryRun {
     constructor(
@@ -58,21 +58,16 @@ class CIS2DryRun {
         transfers: CIS2Transfer[],
         blockHash?: HexString
     ): Promise<InvokeContractResult>;
-    async transfer(
+    transfer(
         sender: Address,
         transfers: CIS2Transfer | CIS2Transfer[],
         blockHash?: HexString
     ): Promise<InvokeContractResult> {
-        const parameter = makeSerializeDynamic(serializeCIS2Transfers)(
-            transfers
-        );
-        return await this.grpcClient.invokeContract(
-            {
-                contract: this.contractAddress,
-                parameter,
-                invoker: getInvoker(sender),
-                method: `${this.contractName}.transfer`,
-            },
+        return this.invokeMethod(
+            'transfer',
+            getInvoker(sender),
+            serializeCIS2Transfers,
+            transfers,
             blockHash
         );
     }
@@ -87,20 +82,34 @@ class CIS2DryRun {
         updates: CIS2UpdateOperator[],
         blockHash?: HexString
     ): Promise<InvokeContractResult>;
-    async updateOperator(
+    updateOperator(
         owner: Address,
         updates: CIS2UpdateOperator | CIS2UpdateOperator[],
         blockHash?: HexString
     ): Promise<InvokeContractResult> {
-        const parameter = makeSerializeDynamic(serializeCIS2OperatorUpdates)(
-            updates
+        return this.invokeMethod(
+            'updateOperator',
+            getInvoker(owner),
+            serializeCIS2OperatorUpdates,
+            updates,
+            blockHash
         );
-        return await this.grpcClient.invokeContract(
+    }
+
+    private invokeMethod<T>(
+        entrypoint: string,
+        invoker: ContractAddress | AccountAddress,
+        serializer: (input: T[]) => Buffer,
+        input: T | T[],
+        blockHash?: HexString
+    ): Promise<InvokeContractResult> {
+        const parameter = makeSerializeDynamic(serializer)(input);
+        return this.grpcClient.invokeContract(
             {
                 contract: this.contractAddress,
                 parameter,
-                invoker: getInvoker(owner),
-                method: `${this.contractName}.updateOperator`,
+                invoker,
+                method: `${this.contractName}.${entrypoint}`,
             },
             blockHash
         );
@@ -157,7 +166,7 @@ export class CIS2Contract {
     ): Promise<HexString> {
         return this.invokeReceive(
             'transfer',
-            makeSerializeDynamic(serializeCIS2Transfers),
+            serializeCIS2Transfers,
             signer,
             metadata,
             transfers
@@ -181,7 +190,7 @@ export class CIS2Contract {
     ): Promise<HexString> {
         return this.invokeReceive(
             'updateOperator',
-            makeSerializeDynamic(serializeCIS2OperatorUpdates),
+            serializeCIS2OperatorUpdates,
             signer,
             metadata,
             updates
@@ -202,15 +211,32 @@ export class CIS2Contract {
     ): Promise<bigint | bigint[]> {
         return this.invokeView(
             'balanceOf',
-            makeSerializeDynamic(serializeCIS2BalanceOfQueries),
+            serializeCIS2BalanceOfQueries,
             deserializeCIS2BalanceOfResponse,
             queries,
             blockHash
         );
     }
 
-    operatorOf(): void {
-        throw new Error('Not yet implemented');
+    operatorOf(
+        queries: CIS2OperatorOfQuery,
+        blockHash?: HexString
+    ): Promise<boolean>;
+    operatorOf(
+        queries: CIS2OperatorOfQuery[],
+        blockHash?: HexString
+    ): Promise<boolean[]>;
+    operatorOf(
+        queries: CIS2OperatorOfQuery | CIS2OperatorOfQuery[],
+        blockHash?: HexString
+    ): Promise<boolean | boolean[]> {
+        return this.invokeView(
+            'operatorOf',
+            serializeCIS2OperatorOfQueries,
+            deserializeCIS2OperatorOfResponse,
+            queries,
+            blockHash
+        );
     }
 
     tokenMetadata(
@@ -227,7 +253,7 @@ export class CIS2Contract {
     ): Promise<CIS2MetadataUrl | CIS2MetadataUrl[]> {
         return this.invokeView(
             'tokenMetadata',
-            makeSerializeDynamic(serializeTokenIds),
+            serializeCIS2TokenIds,
             deserializeCIS2TokenMetadataResponse,
             tokenIds,
             blockHash
@@ -240,7 +266,7 @@ export class CIS2Contract {
 
     private async invokeReceive<T>(
         entrypoint: string,
-        serializer: (input: T) => Buffer,
+        serializer: (input: T[]) => Buffer,
         signer: AccountSigner,
         {
             amount = 0n,
@@ -249,9 +275,9 @@ export class CIS2Contract {
             energy,
             expiry = getDefaultExpiryDate(),
         }: CIS2TransactionMetadata,
-        input: T
+        input: T | T[]
     ): Promise<HexString> {
-        const parameter = serializer(input);
+        const parameter = makeSerializeDynamic(serializer)(input);
         const payload: UpdateContractPayload = {
             amount: new CcdAmount(amount),
             address: this.contractAddress,
@@ -274,12 +300,12 @@ export class CIS2Contract {
 
     private async invokeView<T, R>(
         entrypoint: string,
-        serializer: (input: T | T[]) => Buffer,
+        serializer: (input: T[]) => Buffer,
         deserializer: (input: HexString) => R[],
         input: T | T[],
         blockHash?: HexString
     ): Promise<R | R[]> {
-        const parameter = serializer(input);
+        const parameter = makeSerializeDynamic(serializer)(input);
         const response = await this.grpcClient.invokeContract(
             {
                 contract: this.contractAddress,

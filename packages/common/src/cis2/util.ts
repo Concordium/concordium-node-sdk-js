@@ -74,6 +74,11 @@ export type CIS2MetadataUrl = {
     hash?: HexString;
 };
 
+export type CIS2OperatorOfQuery = {
+    owner: Address;
+    address: Address;
+};
+
 export const isContractAddress = (
     address: Address
 ): address is ContractAddress => typeof address !== 'string';
@@ -86,7 +91,7 @@ export const getPrintableContractAddress = ({
     subindex: subindex.toString(),
 });
 
-function serializeTokenId(tokenId: HexString): Buffer {
+function serializeCIS2TokenId(tokenId: HexString): Buffer {
     const serialized = Buffer.from(tokenId, 'hex');
 
     if (serialized.length < TOKEN_ID_MAX_LENGTH) {
@@ -171,7 +176,7 @@ const makeSerializeList =
     };
 
 function serializeCIS2Transfer(transfer: CIS2Transfer): Buffer {
-    const id = serializeTokenId(transfer.tokenId);
+    const id = serializeCIS2TokenId(transfer.tokenId);
     const amount = serializeTokenAmount(transfer.tokenAmount);
     const from = serializeAddress(transfer.from);
     const to = serializeReceiver(transfer.to);
@@ -223,7 +228,7 @@ export const serializeCIS2OperatorUpdates = makeSerializeList(
  * Serializes {@link CIS2BalanceOfQuery} data objects according to CIS-2 standard.
  */
 function serializeCIS2BalanceOfQuery(query: CIS2BalanceOfQuery): Buffer {
-    const token = packBufferWithWord8Length(Buffer.from(query.tokenId, 'hex'));
+    const token = serializeCIS2TokenId(query.tokenId);
     const address = serializeAddress(query.address);
     return Buffer.concat([token, address]);
 }
@@ -241,72 +246,94 @@ export const serializeCIS2BalanceOfQueries = makeSerializeList(
     serializeCIS2BalanceOfQuery
 );
 
+const makeDeserializeListResponse =
+    <R>(deserializer: (buffer: Buffer) => { value: R; bytesRead: number }) =>
+    (value: HexString): R[] => {
+        const buf = Buffer.from(value, 'hex');
+        const n = buf.readUInt16LE(0);
+        let cursor = 2; // First 2 bytes hold number of token amounts included in response.
+        const values: R[] = [];
+
+        for (let i = 0; i < n; i++) {
+            const { value, bytesRead } = deserializer(
+                Buffer.from(buf.subarray(cursor))
+            );
+            values.push(value);
+
+            cursor += bytesRead;
+        }
+
+        return values;
+    };
+
 /**
  * Deserializes response of CIS-2 balanceOf query according to CIS-2 standard.
  */
-export const deserializeCIS2BalanceOfResponse = (value: string): bigint[] => {
-    const buf = Buffer.from(value, 'hex');
-    const n = buf.readUInt16LE(0);
-    let cursor = 2; // First 2 bytes hold number of token amounts included in response.
-    const amounts: bigint[] = [];
-
-    // eslint-disable-next-line no-plusplus
-    for (let i = 0; i < n; i++) {
-        const end = buf.subarray(cursor).findIndex((b) => b < 2 ** 7) + 1; // Find the first byte with most significant bit not set, signaling the last byte in the leb128 slice.
-
-        const amount = uleb128.decode(
-            Buffer.from(buf.subarray(cursor, cursor + end))
-        );
-        amounts.push(BigInt(amount));
-
-        cursor += end;
+export const deserializeCIS2BalanceOfResponse = makeDeserializeListResponse(
+    (buf) => {
+        const end = buf.subarray(0).findIndex((b) => b < 2 ** 7) + 1; // Find the first byte with most significant bit not set, signaling the last byte in the leb128 slice.
+        const amount = uleb128.decode(Buffer.from(buf.subarray(0, end)));
+        return { value: BigInt(amount), bytesRead: end };
     }
+);
 
-    return amounts;
-};
+export const serializeCIS2TokenIds = makeSerializeList(serializeCIS2TokenId);
 
-export const serializeTokenIds = makeSerializeList(serializeTokenId);
-
-export function deserializeCIS2TokenMetadataResponse(
-    value: string
-): CIS2MetadataUrl[] {
-    const buf = Buffer.from(value, 'hex');
-    const n = buf.readUInt16LE(0);
-    let cursor = 2; // First 2 bytes hold number of token amounts included in response.
-    const urls: CIS2MetadataUrl[] = [];
-
-    // eslint-disable-next-line no-plusplus
-    for (let i = 0; i < n; i++) {
-        const length = buf.readUInt16LE(cursor);
-        const urlStart = cursor + 2;
+/**
+ * Deserializes response of CIS-2 tokenMetadata query according to CIS-2 standard.
+ */
+export const deserializeCIS2TokenMetadataResponse =
+    makeDeserializeListResponse<CIS2MetadataUrl>((buf) => {
+        const length = buf.readUInt16LE(0);
+        const urlStart = 2;
         const urlEnd = urlStart + length;
 
         const url = Buffer.from(buf.subarray(urlStart, urlEnd)).toString(
             'utf8'
         );
 
-        cursor = urlEnd;
+        let cursor = urlEnd;
 
         const hasChecksum = buf.readUInt8(cursor);
         cursor += 1;
 
+        let metadataUrl: CIS2MetadataUrl;
         if (hasChecksum === 1) {
             const hash = Buffer.from(
                 buf.subarray(cursor, cursor + 32)
             ).toString('hex');
             cursor += 32;
-            urls.push({ url, hash });
+            metadataUrl = { url, hash };
         } else if (hasChecksum === 0) {
-            urls.push({ url });
+            metadataUrl = { url };
         } else {
             throw new Error(
                 'Deserialization failed: boolean value had an unexpected value'
             );
         }
-    }
 
-    return urls;
+        return { value: metadataUrl, bytesRead: cursor };
+    });
+
+function serializeCIS2OperatorOfQuery(query: CIS2OperatorOfQuery): Buffer {
+    const owner = serializeAddress(query.owner);
+    const address = serializeAddress(query.address);
+    return Buffer.concat([owner, address]);
 }
+
+export const serializeCIS2OperatorOfQueries = makeSerializeList(
+    serializeCIS2OperatorOfQuery
+);
+
+/**
+ * Deserializes response of CIS-2 operatorOf query according to CIS-2 standard.
+ */
+export const deserializeCIS2OperatorOfResponse = makeDeserializeListResponse(
+    (buf) => {
+        const value = Boolean(buf.readUInt8(0));
+        return { value, bytesRead: 1 };
+    }
+);
 
 /**
  * Creates a function that serializes either a `T` or `T[]` from a function that serializes `T[]`.

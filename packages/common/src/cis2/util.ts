@@ -20,10 +20,13 @@ const TOKEN_ID_MAX_LENGTH = 256;
 const TOKEN_AMOUNT_MAX_LENGTH = 37;
 const TOKEN_RECEIVE_HOOK_MAX_LENGTH = 100;
 
+/**
+ * Union between `ContractAddress` and an account address represented by a `Base58String`.
+ */
 export type Address = ContractAddress | Base58String;
 
 /**
- * Data needed to perform a transfer invocation according to the CIS-2 standard.
+ * Data needed to perform a "transfer" invocation according to the CIS-2 standard.
  */
 export type CIS2Transfer = {
     /** The ID of the token to transfer */
@@ -39,7 +42,7 @@ export type CIS2Transfer = {
 };
 
 /**
- * Data needed to perform an update operator invocation according to the CIS-2 standard.
+ * Data needed to perform an "updateOperator" invocation according to the CIS-2 standard.
  */
 export type CIS2UpdateOperator = {
     /** The type of the update */
@@ -64,26 +67,47 @@ export type CIS2TransactionMetadata = {
     energy: bigint;
 };
 
+/**
+ * Data needed for CIS-2 "balanceOf" query.
+ */
 export type CIS2BalanceOfQuery = {
+    /** The ID of the token to query */
     tokenId: HexString;
+    /** The address to query balance for */
     address: Address;
 };
 
+/**
+ * Structure for holding metadata URL reponse from tokenMetadata query.
+ */
 export type CIS2MetadataUrl = {
+    /** The URL of the metadata */
     url: string;
+    /** An optional checksum for the URL */
     hash?: HexString;
 };
 
+/**
+ * Data needed for CIS-2 "operatorOf" query.
+ */
 export type CIS2OperatorOfQuery = {
+    /** The owner address for the query */
     owner: Address;
+    /** The address to check whether it is an operator of `owner` */
     address: Address;
 };
 
+/**
+ * Checks whether an `Address` is a `ContractAddress`
+ */
 export const isContractAddress = (
     address: Address
 ): address is ContractAddress => typeof address !== 'string';
 
-export const getPrintableContractAddress = ({
+/**
+ * Creates a serializable `ContractAddress`
+ */
+export const getSerializableContractAddress = ({
     index,
     subindex,
 }: ContractAddress): { index: string; subindex: string } => ({
@@ -188,7 +212,7 @@ function serializeCIS2Transfer(transfer: CIS2Transfer): Buffer {
 /**
  * Serializes a list of {@link CIS2Transfer} data objects according to the CIS-2 standard.
  *
- * @param {CIS2Transfer[]} updates - A list of {@link CIS2Transfer} objects
+ * @param {CIS2Transfer[]} transfers - A list of {@link CIS2Transfer} objects
  *
  * @example
  * const transfers = [{
@@ -236,16 +260,25 @@ function serializeCIS2BalanceOfQuery(query: CIS2BalanceOfQuery): Buffer {
 /**
  * Serializes a list of {@link CIS2BalanceOfQuery} data objects according to the CIS-2 standard.
  *
- * @param {CIS2BalanceOfQuery[]} updates - A list of {@link CIS2BalanceOfQuery} objects
+ * @param {CIS2BalanceOfQuery[]} queries - A list of {@link CIS2BalanceOfQuery} objects
  *
  * @example
- * const updates = [{tokenId: '', address: '3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi'}];
- * const bytes = serializeCIS2BalanceOfQueries(updates);
+ * const queries = [{tokenId: '', address: '3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi'}];
+ * const bytes = serializeCIS2BalanceOfQueries(queries);
  */
 export const serializeCIS2BalanceOfQueries = makeSerializeList(
     serializeCIS2BalanceOfQuery
 );
 
+/**
+ * Helper function to create a function that deserializes a `HexString` value into a list of dynamic type values
+ * determined by the deserialization logic defined in the callback function.
+ *
+ * @param {Function} deserializer - A callback function invoked with a `Buffer` containing the remaining slice of the full value given by the `input`
+ * The callback function is expected to return the deserialized value  of type `R` along with the number of bytes processed in the format of {value: R, bytesRead: number}
+ *
+ * @returns {Function} A function taking a single `HexString` input, returning a list of dynamic type values deserialized according to the `deserializer` function.
+ */
 const makeDeserializeListResponse =
     <R>(deserializer: (buffer: Buffer) => { value: R; bytesRead: number }) =>
     (value: HexString): R[] => {
@@ -268,6 +301,10 @@ const makeDeserializeListResponse =
 
 /**
  * Deserializes response of CIS-2 balanceOf query according to CIS-2 standard.
+ *
+ * @param {HexString} value - The hex string value to deserialize
+ *
+ * @returns {bigint[]} A list of token balances.
  */
 export const deserializeCIS2BalanceOfResponse = makeDeserializeListResponse(
     (buf) => {
@@ -277,10 +314,23 @@ export const deserializeCIS2BalanceOfResponse = makeDeserializeListResponse(
     }
 );
 
+/**
+ * Serializes a list of {@link HexString} token ID's according to the CIS-2 standard.
+ *
+ * @param {HexString[]} tokenIds - A list of {@link HexString} values
+ *
+ * @example
+ * const tokenIds = ['', '01', 'e2'];
+ * const bytes = serializeCIS2TokenIds(tokenIds);
+ */
 export const serializeCIS2TokenIds = makeSerializeList(serializeCIS2TokenId);
 
 /**
  * Deserializes response of CIS-2 tokenMetadata query according to CIS-2 standard.
+ *
+ * @param {HexString} value - The hex string value to deserialize
+ *
+ * @returns {CIS2MetadataUrl[]} A list of metadata URL objects.
  */
 export const deserializeCIS2TokenMetadataResponse =
     makeDeserializeListResponse<CIS2MetadataUrl>((buf) => {
@@ -321,12 +371,25 @@ function serializeCIS2OperatorOfQuery(query: CIS2OperatorOfQuery): Buffer {
     return Buffer.concat([owner, address]);
 }
 
+/**
+ * Serializes a list of {@link CIS2OperatorOfQuery} queries according to the CIS-2 standard.
+ *
+ * @param {CIS2OperatorOfQuery[]} queries - A list of {@link CIS2OperatorOfQuery} objects
+ *
+ * @example
+ * const queries = [{owner: "3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi", address: {index: 123n, subindex: 0n}}];
+ * const bytes = serializeCIS2OperatorOfQueries(tokenIds);
+ */
 export const serializeCIS2OperatorOfQueries = makeSerializeList(
     serializeCIS2OperatorOfQuery
 );
 
 /**
  * Deserializes response of CIS-2 operatorOf query according to CIS-2 standard.
+ *
+ * @param {HexString} value - The hex string value to deserialize
+ *
+ * @returns {boolean[]} A list of boolean values.
  */
 export const deserializeCIS2OperatorOfResponse = makeDeserializeListResponse(
     (buf) => {

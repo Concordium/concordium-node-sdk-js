@@ -21,7 +21,7 @@ import {
     deserializeCIS2BalanceOfResponse,
     Address,
     isContractAddress,
-    getPrintableContractAddress,
+    getSerializableContractAddress,
     serializeCIS2TokenIds,
     deserializeCIS2TokenMetadataResponse,
     CIS2MetadataUrl,
@@ -181,7 +181,7 @@ export class CIS2Contract {
         if (instanceInfo === undefined) {
             throw new Error(
                 `Could not get contract instance info for contract at address ${JSON.stringify(
-                    getPrintableContractAddress(contractAddress)
+                    getSerializableContractAddress(contractAddress)
                 )}`
             );
         }

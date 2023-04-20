@@ -53,8 +53,7 @@ const [address, port] = cli.flags.endpoint.split(':');
 const client = createConcordiumClient(
     address,
     Number(port),
-    credentials.createInsecure(),
-    { timeout: 15000 }
+    credentials.createInsecure()
 );
 
 if (cli.flags.h) {

@@ -1,7 +1,9 @@
+import { AccountAddress } from '@concordium/common-sdk';
 import {
     createConcordiumClient,
     CIS2,
     CIS2Contract,
+    buildBasicAccountSigner,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
@@ -14,6 +16,7 @@ const cli = meow(
 
   Required
     --index,            -i  The index of the smart contract
+    --privateKey,       -k  The private key for the 'from' account
     --from,                 Account address to transfer tokens from.
     --to,                   Address to transfer tokens to. Base58 string for account address, string in the format <index>,<subindex> (f.x. 123,0) for contract address.
     --amount,               Amount of tokens to transfer. Should be specified in non-fractional units, i.e. 1 token of a token with 6 decimals would be 1000000.
@@ -41,6 +44,11 @@ const cli = meow(
             subindex: {
                 type: 'number',
                 default: 0,
+            },
+            privateKey: {
+                type: 'string',
+                alias: 'k',
+                isRequired: true,
             },
             from: {
                 type: 'string',
@@ -83,7 +91,11 @@ if (cli.flags.h) {
         subindex: BigInt(cli.flags.subindex),
     });
 
+    const signer = buildBasicAccountSigner(cli.flags.privateKey);
     const from = cli.flags.from;
+    const { nonce } = await client.getNextAccountNonce(
+        new AccountAddress(from)
+    );
     const toAddress = parseAddress(cli.flags.to);
     const to: CIS2.Receiver =
         typeof toAddress === 'string'
@@ -93,12 +105,34 @@ if (cli.flags.h) {
                   hookName: cli.flags.receiveHookName ?? '',
               };
 
-    const result = await contract.dryRun.transfer(from, {
-        from,
-        to,
-        tokenAmount: BigInt(cli.flags.amount),
-        tokenId: '',
-    });
+    const txHash = await contract.transfer(
+        signer,
+        {
+            senderAddress: from,
+            energy: 10000n,
+            nonce,
+        },
+        {
+            from,
+            to,
+            tokenAmount: BigInt(cli.flags.amount),
+            tokenId: '',
+        }
+    );
 
-    console.log(result);
+    console.log('Submitted transaction with hash:', txHash);
+    process.stdout.write('Waiting for transaction finalization');
+
+    const interval = setInterval(() => {
+        process.stdout.write('.');
+    }, 1000);
+
+    const blockHash = await client.waitForTransactionFinalization(
+        txHash,
+        60000
+    );
+    process.stdout.write('\n');
+
+    clearInterval(interval);
+    console.log('Transaction finalized in block with hash:', blockHash);
 })();

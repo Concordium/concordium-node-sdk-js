@@ -1,7 +1,8 @@
+import { AccountAddress } from '@concordium/common-sdk';
 import {
     createConcordiumClient,
-    CIS2,
     CIS2Contract,
+    buildBasicAccountSigner,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
@@ -14,16 +15,15 @@ const cli = meow(
 
   Required
     --index,            -i  The index of the smart contract
-    --from,                 Account address to transfer tokens from.
-    --to,                   Address to transfer tokens to. Base58 string for account address, string in the format <index>,<subindex> (f.x. 123,0) for contract address.
-    --amount,               Amount of tokens to transfer. Should be specified in non-fractional units, i.e. 1 token of a token with 6 decimals would be 1000000.
+    --privateKey,       -k  The private key for the 'from' account
+    --owner,                Account address of the owner account.
+    --address,              Address to add as operator. Base58 string for account address, string in the format <index>,<subindex> (f.x. 123,0) for contract address.
 
   Options
     --help,             -h  Displays this message
     --endpoint,         -e  Specify endpoint of a grpc2 interface of a Concordium node in the format "address:port". Defaults to 'localhost:20000'
     --subindex,             The subindex of the smart contract. Defaults to 0
-    --tokenId,          -t  The token ID to query a balance for. Defaults to '', which represents the smallest token ID possible, commonly used for single token contract instances.
-    --receiveHookName,      The name of the receive hook on a receiving contract. This is only necessary (and required), if 'to' argument is a contract address.
+    --updateType,           The type of the update. Can be either 'add' or 'remove'. Defaults to 'add'
 `,
     {
         importMeta: import.meta,
@@ -42,25 +42,23 @@ const cli = meow(
                 type: 'number',
                 default: 0,
             },
-            from: {
+            privateKey: {
+                type: 'string',
+                alias: 'k',
+                isRequired: true,
+            },
+            updateType: {
+                type: 'string',
+                choices: ['add', 'remove'],
+                default: 'add',
+            },
+            owner: {
                 type: 'string',
                 isRequired: true,
             },
-            to: {
+            address: {
                 type: 'string',
                 isRequired: true,
-            },
-            amount: {
-                type: 'string',
-                isRequired: true,
-            },
-            tokenId: {
-                type: 'string',
-                alias: 't',
-                default: '',
-            },
-            receiveHookName: {
-                type: 'string',
             },
         },
     }
@@ -83,22 +81,39 @@ if (cli.flags.h) {
         subindex: BigInt(cli.flags.subindex),
     });
 
-    const from = cli.flags.from;
-    const toAddress = parseAddress(cli.flags.to);
-    const to: CIS2.Receiver =
-        typeof toAddress === 'string'
-            ? toAddress
-            : {
-                  address: toAddress,
-                  hookName: cli.flags.receiveHookName ?? '',
-              };
+    const signer = buildBasicAccountSigner(cli.flags.privateKey);
+    const owner = cli.flags.owner;
+    const { nonce } = await client.getNextAccountNonce(
+        new AccountAddress(owner)
+    );
+    const address = parseAddress(cli.flags.address);
 
-    const result = await contract.dryRun.transfer(from, {
-        from,
-        to,
-        tokenAmount: BigInt(cli.flags.amount),
-        tokenId: '',
-    });
+    const txHash = await contract.updateOperator(
+        signer,
+        {
+            senderAddress: owner,
+            energy: 10000n,
+            nonce,
+        },
+        {
+            type: cli.flags.updateType as 'add' | 'remove',
+            address,
+        }
+    );
 
-    console.log(result);
+    console.log('Submitted transaction with hash:', txHash);
+    process.stdout.write('Waiting for transaction finalization');
+
+    const interval = setInterval(() => {
+        process.stdout.write('.');
+    }, 1000);
+
+    const blockHash = await client.waitForTransactionFinalization(
+        txHash,
+        60000
+    );
+    process.stdout.write('\n');
+
+    clearInterval(interval);
+    console.log('Transaction finalized in block with hash:', blockHash);
 })();

@@ -21,7 +21,6 @@ import {
     deserializeCIS2BalanceOfResponse,
     Address,
     isContractAddress,
-    getSerializableContractAddress,
     serializeCIS2TokenIds,
     deserializeCIS2TokenMetadataResponse,
     CIS2MetadataUrl,
@@ -32,6 +31,7 @@ import {
 import { AccountAddress } from '../types/accountAddress';
 import { CcdAmount } from '../types/ccdAmount';
 import { TransactionExpiry } from '../types/transactionExpiry';
+import { stringify } from 'json-bigint';
 
 const getInvoker = (address: Address): ContractAddress | AccountAddress =>
     isContractAddress(address) ? address : new AccountAddress(address);
@@ -180,8 +180,8 @@ export class CIS2Contract {
 
         if (instanceInfo === undefined) {
             throw new Error(
-                `Could not get contract instance info for contract at address ${JSON.stringify(
-                    getSerializableContractAddress(contractAddress)
+                `Could not get contract instance info for contract at address ${stringify(
+                    contractAddress
                 )}`
             );
         }
@@ -471,9 +471,12 @@ export class CIS2Contract {
             response.returnValue === undefined
         ) {
             throw new Error(
-                `Failed to invoke view ${entrypoint} for contract at ${JSON.stringify(
+                `Failed to invoke view ${entrypoint} for contract at ${stringify(
                     this.contractAddress
-                )}`
+                )}${
+                    response.tag === 'failure' &&
+                    ` with error ${stringify(response.reason)}`
+                }`
             );
         }
 

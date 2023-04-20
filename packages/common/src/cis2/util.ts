@@ -104,21 +104,10 @@ export const isContractAddress = (
     address: Address
 ): address is ContractAddress => typeof address !== 'string';
 
-/**
- * Creates a serializable `ContractAddress`
- */
-export const getSerializableContractAddress = ({
-    index,
-    subindex,
-}: ContractAddress): { index: string; subindex: string } => ({
-    index: index.toString(),
-    subindex: subindex.toString(),
-});
-
 function serializeCIS2TokenId(tokenId: HexString): Buffer {
     const serialized = Buffer.from(tokenId, 'hex');
 
-    if (serialized.length < TOKEN_ID_MAX_LENGTH) {
+    if (serialized.length > TOKEN_ID_MAX_LENGTH) {
         throw new Error(
             `Token ID exceeds maximum size of ${TOKEN_ID_MAX_LENGTH} bytes`
         );
@@ -130,7 +119,7 @@ function serializeCIS2TokenId(tokenId: HexString): Buffer {
 function serializeTokenAmount(amount: bigint): Buffer {
     const serialized = uleb128.encode(amount.toString());
 
-    if (serialized.length < TOKEN_AMOUNT_MAX_LENGTH) {
+    if (serialized.length > TOKEN_AMOUNT_MAX_LENGTH) {
         throw new Error(
             `Token amount exceeds maximum size of ${TOKEN_AMOUNT_MAX_LENGTH} bytes`
         );
@@ -162,7 +151,7 @@ function serializeAddress(address: Address): Buffer {
 function serializeReceiveHookName(hook: string): Buffer {
     const serialized = Buffer.from(hook, 'ascii');
 
-    if (serialized.length < TOKEN_RECEIVE_HOOK_MAX_LENGTH) {
+    if (serialized.length > TOKEN_RECEIVE_HOOK_MAX_LENGTH) {
         throw new Error(
             `Token receive hook name exceeds maximum size of ${TOKEN_RECEIVE_HOOK_MAX_LENGTH} bytes`
         );
@@ -195,7 +184,7 @@ function serializeAdditionalData(data: HexString): Buffer {
 const makeSerializeList =
     <T>(serialize: (input: T) => Buffer) =>
     (input: T[]): Buffer => {
-        const n = encodeWord16(input.length);
+        const n = encodeWord16(input.length, true);
         return Buffer.concat([n, ...input.map(serialize)]);
     };
 

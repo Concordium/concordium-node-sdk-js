@@ -1,7 +1,7 @@
 {
   "include": [
     "client/**/*",
+    "cis2/**/*",
     "common/**/*",
   ]
 }
-

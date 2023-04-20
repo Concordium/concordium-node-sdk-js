@@ -4379,9 +4379,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"examples-1f5c57@workspace:examples":
+"examples@workspace:examples":
   version: 0.0.0-use.local
-  resolution: "examples-1f5c57@workspace:examples"
+  resolution: "examples@workspace:examples"
   dependencies:
     "@concordium/common-sdk": 6.4.0
     "@concordium/node-sdk": 6.3.0

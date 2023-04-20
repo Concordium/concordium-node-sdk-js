@@ -1,18 +1,17 @@
 {
-  "extends": "ts-node/node12/tsconfig.json",
-  "ts-node": {
-    "files": true,
-    "esm": true
-  },
-  "compilerOptions": {
-    "esModuleInterop": true,
-    "outDir": "./lib",
-    "lib": [
-      "esnext"
-    ],
-    "baseUrl": ".",
-    "module": "es2020",
-    "target": "es2020"
-  }
+    "extends": "ts-node/node12/tsconfig.json",
+    "ts-node": {
+        "files": true,
+        "esm": true
+    },
+    "compilerOptions": {
+        "esModuleInterop": true,
+        "outDir": "./lib",
+        "lib": [
+            "esnext"
+        ],
+        "baseUrl": ".",
+        "module": "es2020",
+        "target": "es2020"
+    }
 }
-

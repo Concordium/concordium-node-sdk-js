@@ -60,6 +60,7 @@
         "lint": "FORCE_COLOR=true yarn workspaces foreach --no-private run lint",
         "lint-fix": "eslint --cache . --fix",
         "build": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build",
-        "build:dev": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build-dev"
+        "build:dev": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build-dev",
+        "run-example": "yarn workspace examples run run-example"
     }
 }

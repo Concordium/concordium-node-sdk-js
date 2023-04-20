@@ -9,14 +9,14 @@ const cli = meow(
     $ yarn ts-node <path-to-this-file> [options]
 
   Required
-    --address,   -a  An address to get balance for. Base58 string for account address, string in the format <index>,<subindex> (f.x. 123,0) for contract address.
     --index,     -i  The index of the smart contract
+    --owner,     -o  Owner address. Base58 string for account address, string in the format <index>,<subindex> (f.x. 123,0) for contract address.
+    --address,   -a  Address to check for operator of owner. Base58 string for account address, string in the format <index>,<subindex> (f.x. 123,0) for contract address.
 
   Options
     --help,      -h  Displays this message
     --endpoint,  -e  Specify endpoint of a grpc2 interface of a Concordium node in the format "address:port". Defaults to 'localhost:20000'
     --subindex,      The subindex of the smart contract. Defaults to 0
-    --tokenId,   -t  The token ID to query a balance for. Defaults to '', which represents the smallest token ID possible, commonly used for single token contract instances.
 `,
     {
         importMeta: import.meta,
@@ -35,15 +35,15 @@ const cli = meow(
                 type: 'number',
                 default: 0,
             },
+            owner: {
+                type: 'string',
+                isRequired: true,
+                alias: 'o',
+            },
             address: {
                 type: 'string',
                 isRequired: true,
                 alias: 'a',
-            },
-            tokenId: {
-                type: 'string',
-                alias: 't',
-                default: '',
             },
         },
     }
@@ -67,10 +67,13 @@ if (cli.flags.h) {
         subindex: BigInt(cli.flags.subindex),
     });
 
-    const accountBalance = await contract.balanceOf({
-        address: parseAddress(cli.flags.address),
-        tokenId: cli.flags.tokenId,
+    const owner = parseAddress(cli.flags.owner);
+    const address = parseAddress(cli.flags.address);
+
+    const isOperator = await contract.operatorOf({
+        owner,
+        address,
     });
 
-    console.log(accountBalance);
+    console.log(isOperator);
 })();

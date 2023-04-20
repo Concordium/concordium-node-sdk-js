@@ -12,7 +12,6 @@ import { AccountSigner, signTransaction } from '../signHelpers';
 import {
     serializeCIS2OperatorUpdates,
     serializeCIS2Transfers,
-    makeSerializeDynamic,
     serializeCIS2BalanceOfQueries,
     deserializeCIS2BalanceOfResponse,
     isContractAddress,
@@ -26,6 +25,7 @@ import { AccountAddress } from '../types/accountAddress';
 import { CcdAmount } from '../types/ccdAmount';
 import { TransactionExpiry } from '../types/transactionExpiry';
 import { stringify } from 'json-bigint';
+import { makeSerializeDynamic } from '../serializationHelpers';
 
 const getInvoker = (address: CIS2.Address): ContractAddress | AccountAddress =>
     isContractAddress(address) ? address : new AccountAddress(address);

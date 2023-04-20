@@ -10,30 +10,24 @@ import {
 import ConcordiumNodeClient from '../GRPCClient';
 import { AccountSigner, signTransaction } from '../signHelpers';
 import {
-    CIS2TransactionMetadata,
-    CIS2Transfer,
-    CIS2UpdateOperator,
     serializeCIS2OperatorUpdates,
     serializeCIS2Transfers,
     makeSerializeDynamic,
-    CIS2BalanceOfQuery,
     serializeCIS2BalanceOfQueries,
     deserializeCIS2BalanceOfResponse,
-    Address,
     isContractAddress,
     serializeCIS2TokenIds,
     deserializeCIS2TokenMetadataResponse,
-    CIS2MetadataUrl,
-    CIS2OperatorOfQuery,
     serializeCIS2OperatorOfQueries,
     deserializeCIS2OperatorOfResponse,
 } from './util';
+import type { CIS2 } from './util';
 import { AccountAddress } from '../types/accountAddress';
 import { CcdAmount } from '../types/ccdAmount';
 import { TransactionExpiry } from '../types/transactionExpiry';
 import { stringify } from 'json-bigint';
 
-const getInvoker = (address: Address): ContractAddress | AccountAddress =>
+const getInvoker = (address: CIS2.Address): ContractAddress | AccountAddress =>
     isContractAddress(address) ? address : new AccountAddress(address);
 
 const getDefaultExpiryDate = (): Date => {
@@ -54,25 +48,25 @@ class CIS2DryRun {
     /**
      * Performs a dry-run invocation of "transfer" on a corresponding {@link CIS2Contract} instance
      *
-     * @param {Address} sender - Address of the sender of the transfer.
-     * @param {CIS2Transfer | CIS2Transfer[]} transfer(s) - The transfer object(s).
+     * @param {CIS2.Address} sender - Address of the sender of the transfer.
+     * @param {CIS2.Transfer | CIS2.Transfer[]} transfer(s) - The transfer object(s).
      * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
      *
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */
     transfer(
-        sender: Address,
-        transfer: CIS2Transfer,
+        sender: CIS2.Address,
+        transfer: CIS2.Transfer,
         blockHash?: HexString
     ): Promise<InvokeContractResult>;
     transfer(
-        sender: Address,
-        transfers: CIS2Transfer[],
+        sender: CIS2.Address,
+        transfers: CIS2.Transfer[],
         blockHash?: HexString
     ): Promise<InvokeContractResult>;
     transfer(
-        sender: Address,
-        transfers: CIS2Transfer | CIS2Transfer[],
+        sender: CIS2.Address,
+        transfers: CIS2.Transfer | CIS2.Transfer[],
         blockHash?: HexString
     ): Promise<InvokeContractResult> {
         return this.invokeMethod(
@@ -87,25 +81,25 @@ class CIS2DryRun {
     /**
      * Performs a dry-run invocation of "updateOperator" on a corresponding {@link CIS2Contract} instance
      *
-     * @param {Address} owner - Address of the owner of the address to perform the update on.
-     * @param {CIS2UpdateOperator | CIS2UpdateOperator[]} update(s) - The update object(s).
+     * @param {CIS2.Address} owner - Address of the owner of the address to perform the update on.
+     * @param {CIS2.UpdateOperator | CIS2.UpdateOperator[]} update(s) - The update object(s).
      * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
      *
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */
     updateOperator(
-        owner: Address,
-        update: CIS2UpdateOperator,
+        owner: CIS2.Address,
+        update: CIS2.UpdateOperator,
         blockHash?: HexString
     ): Promise<InvokeContractResult>;
     updateOperator(
-        owner: Address,
-        updates: CIS2UpdateOperator[],
+        owner: CIS2.Address,
+        updates: CIS2.UpdateOperator[],
         blockHash?: HexString
     ): Promise<InvokeContractResult>;
     updateOperator(
-        owner: Address,
-        updates: CIS2UpdateOperator | CIS2UpdateOperator[],
+        owner: CIS2.Address,
+        updates: CIS2.UpdateOperator | CIS2.UpdateOperator[],
         blockHash?: HexString
     ): Promise<InvokeContractResult> {
         return this.invokeMethod(
@@ -194,34 +188,34 @@ export class CIS2Contract {
      * Sends a CIS-2 "transfer" update transaction containing a single transfer.
      *
      * @param {AccountSigner} signer - To be used for signing the transaction sent to the node.
-     * @param {CIS2TransactionMetadata} metadata - Metadata needed for the transaction.
-     * @param {CIS2Transfer} transfer - The transfer object specifying the details of the transfer.
+     * @param {CIS2.TransactionMetadata} metadata - Metadata needed for the transaction.
+     * @param {CIS2.Transfer} transfer - The transfer object specifying the details of the transfer.
      *
      * @returns {HexString} The transaction hash of the update transaction
      */
     transfer(
         signer: AccountSigner,
-        metadata: CIS2TransactionMetadata,
-        transfer: CIS2Transfer
+        metadata: CIS2.TransactionMetadata,
+        transfer: CIS2.Transfer
     ): Promise<HexString>;
     /**
      * Sends a CIS-2 "transfer" update transaction containing a list transfers.
      *
      * @param {AccountSigner} signer - To be used for signing the transaction sent to the node.
-     * @param {CIS2TransactionMetadata} metadata - Metadata needed for the transaction.
-     * @param {CIS2Transfer[]} transfers - A list of transfer objects, each specifying the details of a transfer.
+     * @param {CIS2.TransactionMetadata} metadata - Metadata needed for the transaction.
+     * @param {CIS2.Transfer[]} transfers - A list of transfer objects, each specifying the details of a transfer.
      *
      * @returns {HexString} The transaction hash of the update transaction
      */
     transfer(
         signer: AccountSigner,
-        metadata: CIS2TransactionMetadata,
-        transfers: CIS2Transfer[]
+        metadata: CIS2.TransactionMetadata,
+        transfers: CIS2.Transfer[]
     ): Promise<HexString>;
     transfer(
         signer: AccountSigner,
-        metadata: CIS2TransactionMetadata,
-        transfers: CIS2Transfer | CIS2Transfer[]
+        metadata: CIS2.TransactionMetadata,
+        transfers: CIS2.Transfer | CIS2.Transfer[]
     ): Promise<HexString> {
         return this.sendUpdateTransaction(
             'transfer',
@@ -236,34 +230,34 @@ export class CIS2Contract {
      * Sends a CIS-2 "operatorOf" update transaction containing a single operator update instruction.
      *
      * @param {AccountSigner} signer - To be used for signing the transaction sent to the node.
-     * @param {CIS2TransactionMetadata} metadata - Metadata needed for the transaction.
-     * @param {CIS2UpdateOperator} update - The update instruction object specifying the details of the update.
+     * @param {CIS2.TransactionMetadata} metadata - Metadata needed for the transaction.
+     * @param {CIS2.UpdateOperator} update - The update instruction object specifying the details of the update.
      *
      * @returns {HexString} The transaction hash of the update transaction
      */
     updateOperator(
         signer: AccountSigner,
-        metadata: CIS2TransactionMetadata,
-        update: CIS2UpdateOperator
+        metadata: CIS2.TransactionMetadata,
+        update: CIS2.UpdateOperator
     ): Promise<HexString>;
     /**
      * Sends a CIS-2 "operatorOf" update transaction containing a list of operator update instructions.
      *
      * @param {AccountSigner} signer - To be used for signing the transaction sent to the node.
-     * @param {CIS2TransactionMetadata} metadata - Metadata needed for the transaction.
-     * @param {CIS2UpdateOperator[]} updates - A list of update instruction objects, each specifying the details of an update.
+     * @param {CIS2.TransactionMetadata} metadata - Metadata needed for the transaction.
+     * @param {CIS2.UpdateOperator[]} updates - A list of update instruction objects, each specifying the details of an update.
      *
      * @returns {HexString} The transaction hash of the update transaction
      */
     updateOperator(
         signer: AccountSigner,
-        metadata: CIS2TransactionMetadata,
-        updates: CIS2UpdateOperator[]
+        metadata: CIS2.TransactionMetadata,
+        updates: CIS2.UpdateOperator[]
     ): Promise<HexString>;
     updateOperator(
         signer: AccountSigner,
-        metadata: CIS2TransactionMetadata,
-        updates: CIS2UpdateOperator | CIS2UpdateOperator[]
+        metadata: CIS2.TransactionMetadata,
+        updates: CIS2.UpdateOperator | CIS2.UpdateOperator[]
     ): Promise<HexString> {
         return this.sendUpdateTransaction(
             'updateOperator',
@@ -277,29 +271,29 @@ export class CIS2Contract {
     /**
      * Invokes CIS-2 "balanceOf" with a single query.
      *
-     * @param {CIS2BalanceOfQuery} query - The query object specifying the details of the query.
+     * @param {CIS2.BalanceOfQuery} query - The query object specifying the details of the query.
      * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
      * @returns {bigint} The balance corresponding to the query.
      */
     balanceOf(
-        query: CIS2BalanceOfQuery,
+        query: CIS2.BalanceOfQuery,
         blockHash?: HexString
     ): Promise<bigint>;
     /**
      * Invokes CIS-2 "balanceOf" with a list of queries.
      *
-     * @param {CIS2BalanceOfQuery[]} queries - A list of query objects, each specifying the details of a query.
+     * @param {CIS2.BalanceOfQuery[]} queries - A list of query objects, each specifying the details of a query.
      * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
      * @returns {bigint[]} A list of balances corresponding to and ordered by the list of queries.
      */
     balanceOf(
-        queries: CIS2BalanceOfQuery[],
+        queries: CIS2.BalanceOfQuery[],
         blockHash?: HexString
     ): Promise<bigint[]>;
     async balanceOf(
-        queries: CIS2BalanceOfQuery | CIS2BalanceOfQuery[],
+        queries: CIS2.BalanceOfQuery | CIS2.BalanceOfQuery[],
         blockHash?: HexString
     ): Promise<bigint | bigint[]> {
         return this.invokeView(
@@ -314,30 +308,30 @@ export class CIS2Contract {
     /**
      * Invokes CIS-2 "operatorOf" with a single query.
      *
-     * @param {CIS2OperatorOfQuery} query - The query object specifying the details of the query.
+     * @param {CIS2.OperatorOfQuery} query - The query object specifying the details of the query.
      * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
      * @returns {boolean} Whether the specified address is an operator of the specified owner.
      */
     operatorOf(
-        query: CIS2OperatorOfQuery,
+        query: CIS2.OperatorOfQuery,
         blockHash?: HexString
     ): Promise<boolean>;
     /**
      * Invokes CIS-2 "operatorOf" with a list of queries.
      *
-     * @param {CIS2OperatorOfQuery[]} queries - A list of query objects, each specifying the details of a query.
+     * @param {CIS2.OperatorOfQuery[]} queries - A list of query objects, each specifying the details of a query.
      * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
      * @returns {boolean[]} As list of boolean results, each detailing whether the specified address is an operator of the specified owner for the corresponding query.
      * The list is ordered by the corresponding query.
      */
     operatorOf(
-        queries: CIS2OperatorOfQuery[],
+        queries: CIS2.OperatorOfQuery[],
         blockHash?: HexString
     ): Promise<boolean[]>;
     operatorOf(
-        queries: CIS2OperatorOfQuery | CIS2OperatorOfQuery[],
+        queries: CIS2.OperatorOfQuery | CIS2.OperatorOfQuery[],
         blockHash?: HexString
     ): Promise<boolean | boolean[]> {
         return this.invokeView(
@@ -355,29 +349,29 @@ export class CIS2Contract {
      * @param {HexString} tokenId - The ID of the token to get the metadata URL for.
      * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
-     * @returns {CIS2MetadataUrl} An object containing the URL of the token metadata.
+     * @returns {CIS2.MetadataUrl} An object containing the URL of the token metadata.
      */
     tokenMetadata(
         tokenId: HexString,
         blockHash?: HexString
-    ): Promise<CIS2MetadataUrl>;
+    ): Promise<CIS2.MetadataUrl>;
     /**
      * Invokes CIS-2 "tokenMetadata" with a list of token ID's.
      *
      * @param {HexString[]} tokenIds - A list of ID's of the tokens to get metadata URL's for.
      * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
-     * @returns {CIS2MetadataUrl[]} A list of objects containing URL's for token metadata for the corresponding token.
+     * @returns {CIS2.MetadataUrl[]} A list of objects containing URL's for token metadata for the corresponding token.
      * The list is ordered by the token ID's given by `tokenIds` input parameter.
      */
     tokenMetadata(
         tokenIds: HexString[],
         blockHash?: HexString
-    ): Promise<CIS2MetadataUrl[]>;
+    ): Promise<CIS2.MetadataUrl[]>;
     tokenMetadata(
         tokenIds: HexString | HexString[],
         blockHash?: HexString
-    ): Promise<CIS2MetadataUrl | CIS2MetadataUrl[]> {
+    ): Promise<CIS2.MetadataUrl | CIS2.MetadataUrl[]> {
         return this.invokeView(
             'tokenMetadata',
             serializeCIS2TokenIds,
@@ -400,7 +394,7 @@ export class CIS2Contract {
      * @param {string} entrypoint - The name of the receive function to invoke.
      * @param {Function} serializer - A function to serialize the `input` to bytes.
      * @param {AccountSigner} signer - An object to use for signing the transaction.
-     * @param {CIS2TransactionMetadata} metadata - Metadata to be used for the transaction (with defaults).
+     * @param {CIS2.TransactionMetadata} metadata - Metadata to be used for the transaction (with defaults).
      * @param {T | T[]} input - Input for for contract function.
      *
      * @returns {HexString} The transaction hash of the update transaction
@@ -415,7 +409,7 @@ export class CIS2Contract {
             nonce,
             energy,
             expiry = getDefaultExpiryDate(),
-        }: CIS2TransactionMetadata,
+        }: CIS2.TransactionMetadata,
         input: T | T[]
     ): Promise<HexString> {
         const parameter = makeSerializeDynamic(serializer)(input);

@@ -1,7 +1,7 @@
 import {
     createConcordiumClient,
+    CIS2,
     CIS2Contract,
-    Receiver,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
@@ -86,16 +86,12 @@ if (cli.flags.h) {
 
     const from = cli.flags.from;
     const toAddress = parseAddress(cli.flags.to);
-    const to: Receiver =
+    const to: CIS2.Receiver =
         typeof toAddress === 'string'
-            ? {
-                  type: 'AddressAccount',
-                  address: toAddress,
-              }
+            ? toAddress
             : {
-                  type: 'AddressContract',
                   address: toAddress,
-                  hook: cli.flags.receiveHookName ?? '',
+                  hookName: cli.flags.receiveHookName ?? '',
               };
 
     const result = await contract.dryRun.transfer(from, {

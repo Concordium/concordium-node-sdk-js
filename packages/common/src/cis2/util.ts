@@ -5,13 +5,7 @@ import {
     packBufferWithWord16Length,
     packBufferWithWord8Length,
 } from '../serializationHelpers';
-import {
-    Base58String,
-    ContractAddress,
-    HexString,
-    Receiver,
-    ReceiverContract,
-} from '../types';
+import { Base58String, ContractAddress, HexString } from '../types';
 import uleb128 from 'leb128/unsigned';
 import { Buffer } from 'buffer/';
 import { AccountAddress } from '../types/accountAddress';
@@ -20,88 +14,104 @@ const TOKEN_ID_MAX_LENGTH = 256;
 const TOKEN_AMOUNT_MAX_LENGTH = 37;
 const TOKEN_RECEIVE_HOOK_MAX_LENGTH = 100;
 
-/**
- * Union between `ContractAddress` and an account address represented by a `Base58String`.
- */
-export type Address = ContractAddress | Base58String;
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace CIS2 {
+    /**
+     * Union between `ContractAddress` and an account address represented by a `Base58String`.
+     */
+    export type Address = ContractAddress | Base58String;
 
-/**
- * Data needed to perform a "transfer" invocation according to the CIS-2 standard.
- */
-export type CIS2Transfer = {
-    /** The ID of the token to transfer */
-    tokenId: HexString;
-    /** The amount of tokens to transfer */
-    tokenAmount: bigint;
-    /** The address to transfer from */
-    from: Address;
-    /** The receiver of the transfer */
-    to: Receiver;
-    /** Optional additional data to include in the transaction */
-    data?: HexString;
-};
+    /**
+     * A contract address along with the name of the hook to be triggered when receiving a CIS-2 transfer.
+     */
+    export type ContractReceiver = {
+        address: ContractAddress;
+        hookName: string;
+    };
 
-/**
- * Data needed to perform an "updateOperator" invocation according to the CIS-2 standard.
- */
-export type CIS2UpdateOperator = {
-    /** The type of the update */
-    type: 'add' | 'remove';
-    /** The address be used for the operator update */
-    address: Address;
-};
+    /**
+     * Union between an account address represented by a `Base58String` and a `ContractReceiver`.
+     */
+    export type Receiver = Base58String | ContractReceiver;
 
-/**
- * Metadata necessary for CIS-2 transactions
- */
-export type CIS2TransactionMetadata = {
-    /** Amount (in microCCD) to inlude in the transaction. Defaults to 0n */
-    amount?: bigint;
-    /** The sender address of the transaction */
-    senderAddress: HexString;
-    /** Account nonce to use for the transaction */
-    nonce: bigint;
-    /** Expiry date of the transaction. Defaults to 5 minutes in the future */
-    expiry?: Date;
-    /** Max energy to be used for the transaction */
-    energy: bigint;
-};
+    /**
+     * Data needed to perform a "transfer" invocation according to the CIS-2 standard.
+     */
+    export type Transfer = {
+        /** The ID of the token to transfer */
+        tokenId: HexString;
+        /** The amount of tokens to transfer */
+        tokenAmount: bigint;
+        /** The address to transfer from */
+        from: Address;
+        /** The receiver of the transfer */
+        to: Receiver;
+        /** Optional additional data to include in the transaction */
+        data?: HexString;
+    };
 
-/**
- * Data needed for CIS-2 "balanceOf" query.
- */
-export type CIS2BalanceOfQuery = {
-    /** The ID of the token to query */
-    tokenId: HexString;
-    /** The address to query balance for */
-    address: Address;
-};
+    /**
+     * Data needed to perform an "updateOperator" invocation according to the CIS-2 standard.
+     */
+    export type UpdateOperator = {
+        /** The type of the update */
+        type: 'add' | 'remove';
+        /** The address be used for the operator update */
+        address: Address;
+    };
 
-/**
- * Structure for holding metadata URL reponse from tokenMetadata query.
- */
-export type CIS2MetadataUrl = {
-    /** The URL of the metadata */
-    url: string;
-    /** An optional checksum for the URL */
-    hash?: HexString;
-};
+    /**
+     * Metadata necessary for CIS-2 transactions
+     */
+    export type TransactionMetadata = {
+        /** Amount (in microCCD) to inlude in the transaction. Defaults to 0n */
+        amount?: bigint;
+        /** The sender address of the transaction */
+        senderAddress: HexString;
+        /** Account nonce to use for the transaction */
+        nonce: bigint;
+        /** Expiry date of the transaction. Defaults to 5 minutes in the future */
+        expiry?: Date;
+        /** Max energy to be used for the transaction */
+        energy: bigint;
+    };
 
-/**
- * Data needed for CIS-2 "operatorOf" query.
- */
-export type CIS2OperatorOfQuery = {
-    /** The owner address for the query */
-    owner: Address;
-    /** The address to check whether it is an operator of `owner` */
-    address: Address;
-};
+    /**
+     * Data needed for CIS-2 "balanceOf" query.
+     */
+    export type BalanceOfQuery = {
+        /** The ID of the token to query */
+        tokenId: HexString;
+        /** The address to query balance for */
+        address: Address;
+    };
+
+    /**
+     * Structure for holding metadata URL reponse from tokenMetadata query.
+     */
+    export type MetadataUrl = {
+        /** The URL of the metadata */
+        url: string;
+        /** An optional checksum for the URL */
+        hash?: HexString;
+    };
+
+    /**
+     * Data needed for CIS-2 "operatorOf" query.
+     */
+    export type OperatorOfQuery = {
+        /** The owner address for the query */
+        owner: Address;
+        /** The address to check whether it is an operator of `owner` */
+        address: Address;
+    };
+}
 
 /**
  * Checks whether an `Address` is a `ContractAddress`
  */
 export const isContractAddress = (
-    address: Address
+    address: CIS2.Address
 ): address is ContractAddress => typeof address !== 'string';
 
 function serializeCIS2TokenId(tokenId: HexString): Buffer {
@@ -138,7 +148,7 @@ function serializeContractAddress(address: ContractAddress): Buffer {
     return Buffer.concat([index, subindex]);
 }
 
-function serializeAddress(address: Address): Buffer {
+function serializeAddress(address: CIS2.Address): Buffer {
     const isContract = isContractAddress(address);
     const type = encodeWord8(isContract ? 1 : 0);
     const serializedAddress = !isContract
@@ -160,18 +170,18 @@ function serializeReceiveHookName(hook: string): Buffer {
     return packBufferWithWord16Length(serialized);
 }
 
-function serializeContractReceiver(receiver: ReceiverContract): Buffer {
+function serializeContractReceiver(receiver: CIS2.ContractReceiver): Buffer {
     const address = serializeContractAddress(receiver.address);
-    const hook = serializeReceiveHookName(receiver.hook);
+    const hook = serializeReceiveHookName(receiver.hookName);
     return Buffer.concat([address, hook]);
 }
 
-function serializeReceiver(receiver: Receiver): Buffer {
-    const type = encodeWord8(receiver.type === 'AddressAccount' ? 0 : 1);
-    const serializedAddress =
-        receiver.type === 'AddressAccount'
-            ? serializeAccountAddress(receiver.address)
-            : serializeContractReceiver(receiver);
+function serializeReceiver(receiver: CIS2.Receiver): Buffer {
+    const isAccount = typeof receiver === 'string';
+    const type = encodeWord8(isAccount ? 0 : 1);
+    const serializedAddress = isAccount
+        ? serializeAccountAddress(receiver)
+        : serializeContractReceiver(receiver);
 
     return Buffer.concat([type, serializedAddress]);
 }
@@ -188,7 +198,7 @@ const makeSerializeList =
         return Buffer.concat([n, ...input.map(serialize)]);
     };
 
-function serializeCIS2Transfer(transfer: CIS2Transfer): Buffer {
+function serializeCIS2Transfer(transfer: CIS2.Transfer): Buffer {
     const id = serializeCIS2TokenId(transfer.tokenId);
     const amount = serializeTokenAmount(transfer.tokenAmount);
     const from = serializeAddress(transfer.from);
@@ -199,9 +209,9 @@ function serializeCIS2Transfer(transfer: CIS2Transfer): Buffer {
 }
 
 /**
- * Serializes a list of {@link CIS2Transfer} data objects according to the CIS-2 standard.
+ * Serializes a list of {@link CIS2.Transfer} data objects according to the CIS-2 standard.
  *
- * @param {CIS2Transfer[]} transfers - A list of {@link CIS2Transfer} objects
+ * @param {CIS2.Transfer[]} transfers - A list of {@link CIS2.Transfer} objects
  *
  * @example
  * const transfers = [{
@@ -215,16 +225,16 @@ function serializeCIS2Transfer(transfer: CIS2Transfer): Buffer {
  */
 export const serializeCIS2Transfers = makeSerializeList(serializeCIS2Transfer);
 
-function serializeCIS2OperatorUpdate(update: CIS2UpdateOperator): Buffer {
+function serializeCIS2OperatorUpdate(update: CIS2.UpdateOperator): Buffer {
     const type = encodeWord8(update.type === 'add' ? 1 : 0);
     const address = serializeAddress(update.address);
     return Buffer.concat([type, address]);
 }
 
 /**
- * Serializes a list of {@link CIS2UpdateOperator} data objects according to the CIS-2 standard.
+ * Serializes a list of {@link CIS2.UpdateOperator} data objects according to the CIS-2 standard.
  *
- * @param {CIS2UpdateOperator[]} updates - A list of {@link CIS2UpdateOperator} objects
+ * @param {CIS2.UpdateOperator[]} updates - A list of {@link CIS2.UpdateOperator} objects
  *
  * @example
  * const updates = [{
@@ -240,16 +250,16 @@ export const serializeCIS2OperatorUpdates = makeSerializeList(
 /**
  * Serializes {@link CIS2BalanceOfQuery} data objects according to CIS-2 standard.
  */
-function serializeCIS2BalanceOfQuery(query: CIS2BalanceOfQuery): Buffer {
+function serializeCIS2BalanceOfQuery(query: CIS2.BalanceOfQuery): Buffer {
     const token = serializeCIS2TokenId(query.tokenId);
     const address = serializeAddress(query.address);
     return Buffer.concat([token, address]);
 }
 
 /**
- * Serializes a list of {@link CIS2BalanceOfQuery} data objects according to the CIS-2 standard.
+ * Serializes a list of {@link CIS2.BalanceOfQuery} data objects according to the CIS-2 standard.
  *
- * @param {CIS2BalanceOfQuery[]} queries - A list of {@link CIS2BalanceOfQuery} objects
+ * @param {CIS2.BalanceOfQuery[]} queries - A list of {@link CIS2.BalanceOfQuery} objects
  *
  * @example
  * const queries = [{tokenId: '', address: '3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi'}];
@@ -322,7 +332,7 @@ export const serializeCIS2TokenIds = makeSerializeList(serializeCIS2TokenId);
  * @returns {CIS2MetadataUrl[]} A list of metadata URL objects.
  */
 export const deserializeCIS2TokenMetadataResponse =
-    makeDeserializeListResponse<CIS2MetadataUrl>((buf) => {
+    makeDeserializeListResponse<CIS2.MetadataUrl>((buf) => {
         const length = buf.readUInt16LE(0);
         const urlStart = 2;
         const urlEnd = urlStart + length;
@@ -336,7 +346,7 @@ export const deserializeCIS2TokenMetadataResponse =
         const hasChecksum = buf.readUInt8(cursor);
         cursor += 1;
 
-        let metadataUrl: CIS2MetadataUrl;
+        let metadataUrl: CIS2.MetadataUrl;
         if (hasChecksum === 1) {
             const hash = Buffer.from(
                 buf.subarray(cursor, cursor + 32)
@@ -354,16 +364,16 @@ export const deserializeCIS2TokenMetadataResponse =
         return { value: metadataUrl, bytesRead: cursor };
     });
 
-function serializeCIS2OperatorOfQuery(query: CIS2OperatorOfQuery): Buffer {
+function serializeCIS2OperatorOfQuery(query: CIS2.OperatorOfQuery): Buffer {
     const owner = serializeAddress(query.owner);
     const address = serializeAddress(query.address);
     return Buffer.concat([owner, address]);
 }
 
 /**
- * Serializes a list of {@link CIS2OperatorOfQuery} queries according to the CIS-2 standard.
+ * Serializes a list of {@link CIS2.OperatorOfQuery} queries according to the CIS-2 standard.
  *
- * @param {CIS2OperatorOfQuery[]} queries - A list of {@link CIS2OperatorOfQuery} objects
+ * @param {CIS2.OperatorOfQuery[]} queries - A list of {@link CIS2.OperatorOfQuery} objects
  *
  * @example
  * const queries = [{owner: "3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi", address: {index: 123n, subindex: 0n}}];

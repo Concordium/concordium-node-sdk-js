@@ -110,15 +110,6 @@ export interface AddressAccount {
     address: Base58String;
 }
 
-export interface AddressContract {
-    type: 'AddressContract';
-    address: ContractAddress;
-}
-
-export interface ReceiverContract extends AddressContract {
-    hook: string;
-}
-
 export interface ContractAddress {
     index: bigint;
     subindex: bigint;
@@ -129,8 +120,12 @@ export type AccountIdentifierInput =
     | CredentialRegistrationId
     | bigint;
 
-export type Address = AddressContract | AddressAccount;
-export type Receiver = AddressAccount | ReceiverContract;
+export type Address =
+    | {
+          type: 'AddressContract';
+          address: ContractAddress;
+      }
+    | AddressAccount;
 
 interface RejectedEventResult {
     outcome: 'reject';

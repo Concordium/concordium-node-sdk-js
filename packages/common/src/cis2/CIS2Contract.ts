@@ -185,87 +185,145 @@ export class CIS2Contract {
     }
 
     /**
-     * Sends a CIS-2 "transfer" update transaction containing a single transfer.
+     * Creates a CIS-2 "transfer" update transaction containing a single transfer.
      *
-     * @param {AccountSigner} signer - To be used for signing the transaction sent to the node.
      * @param {CIS2.TransactionMetadata} metadata - Metadata needed for the transaction.
      * @param {CIS2.Transfer} transfer - The transfer object specifying the details of the transfer.
      *
-     * @returns {HexString} The transaction hash of the update transaction
+     * @returns {AccountTransaction} An update transaction corresponding to the supplied `transfer` parameter.
      */
     transfer(
-        signer: AccountSigner,
         metadata: CIS2.TransactionMetadata,
         transfer: CIS2.Transfer
+    ): AccountTransaction;
+    /**
+     * Creates a CIS-2 "transfer" update transaction containing a list transfers.
+     *
+     * @param {CIS2.TransactionMetadata} metadata - Metadata needed for the transaction.
+     * @param {CIS2.Transfer[]} transfers - A list of transfer objects, each specifying the details of a transfer.
+     *
+     * @returns {AccountTransaction} An update transaction corresponding to the supplied `transfers` parameter.
+     */
+    transfer(
+        metadata: CIS2.TransactionMetadata,
+        transfers: CIS2.Transfer[]
+    ): AccountTransaction;
+    /**
+     * Sends a CIS-2 "transfer" update transaction containing a single transfer.
+     *
+     * @param {CIS2.TransactionMetadata} metadata - Metadata needed for the transaction.
+     * @param {CIS2.Transfer} transfer - The transfer object specifying the details of the transfer.
+     * @param {AccountSigner} signer - To be used for signing the transaction sent to the node.
+     *
+     * @returns {Promise<HexString>} The transaction hash of the update transaction
+     */
+    transfer(
+        metadata: CIS2.TransactionMetadata,
+        transfer: CIS2.Transfer,
+        signer: AccountSigner
     ): Promise<HexString>;
     /**
      * Sends a CIS-2 "transfer" update transaction containing a list transfers.
      *
-     * @param {AccountSigner} signer - To be used for signing the transaction sent to the node.
      * @param {CIS2.TransactionMetadata} metadata - Metadata needed for the transaction.
      * @param {CIS2.Transfer[]} transfers - A list of transfer objects, each specifying the details of a transfer.
+     * @param {AccountSigner} signer - To be used for signing the transaction sent to the node.
      *
-     * @returns {HexString} The transaction hash of the update transaction
+     * @returns {Promise<HexString>} The transaction hash of the update transaction
      */
     transfer(
-        signer: AccountSigner,
         metadata: CIS2.TransactionMetadata,
-        transfers: CIS2.Transfer[]
+        transfers: CIS2.Transfer[],
+        signer: AccountSigner
     ): Promise<HexString>;
     transfer(
-        signer: AccountSigner,
         metadata: CIS2.TransactionMetadata,
-        transfers: CIS2.Transfer | CIS2.Transfer[]
-    ): Promise<HexString> {
-        return this.sendUpdateTransaction(
+        transfers: CIS2.Transfer | CIS2.Transfer[],
+        signer?: AccountSigner
+    ): AccountTransaction | Promise<HexString> {
+        const transaction = this.createUpdateTransaction(
             'transfer',
             serializeCIS2Transfers,
-            signer,
             metadata,
             transfers
         );
+
+        if (signer === undefined) {
+            return transaction;
+        }
+
+        return this.sendUpdateTransaction(transaction, signer);
     }
 
     /**
-     * Sends a CIS-2 "operatorOf" update transaction containing a single operator update instruction.
+     * Creates a CIS-2 "operatorOf" update transaction containing a single operator update instruction.
      *
-     * @param {AccountSigner} signer - To be used for signing the transaction sent to the node.
      * @param {CIS2.TransactionMetadata} metadata - Metadata needed for the transaction.
      * @param {CIS2.UpdateOperator} update - The update instruction object specifying the details of the update.
      *
-     * @returns {HexString} The transaction hash of the update transaction
+     * @returns {AccountTransaction} An update transaction corresponding to the supplied `update` parameter.
      */
     updateOperator(
-        signer: AccountSigner,
         metadata: CIS2.TransactionMetadata,
         update: CIS2.UpdateOperator
+    ): AccountTransaction;
+    /**
+     * Creates a CIS-2 "operatorOf" update transaction containing a list of operator update instructions.
+     *
+     * @param {CIS2.TransactionMetadata} metadata - Metadata needed for the transaction.
+     * @param {CIS2.UpdateOperator[]} updates - A list of update instruction objects, each specifying the details of an update.
+     *
+     * @returns {AccountTransaction} An update transaction corresponding to the supplied `updates` parameter.
+     */
+    updateOperator(
+        metadata: CIS2.TransactionMetadata,
+        updates: CIS2.UpdateOperator[]
+    ): AccountTransaction;
+    /**
+     * Sends a CIS-2 "operatorOf" update transaction containing a single operator update instruction.
+     *
+     * @param {CIS2.TransactionMetadata} metadata - Metadata needed for the transaction.
+     * @param {CIS2.UpdateOperator} update - The update instruction object specifying the details of the update.
+     * @param {AccountSigner} signer - To be used for signing the transaction sent to the node.
+     *
+     * @returns {Promise<HexString>} The transaction hash of the update transaction
+     */
+    updateOperator(
+        metadata: CIS2.TransactionMetadata,
+        update: CIS2.UpdateOperator,
+        signer: AccountSigner
     ): Promise<HexString>;
     /**
      * Sends a CIS-2 "operatorOf" update transaction containing a list of operator update instructions.
      *
-     * @param {AccountSigner} signer - To be used for signing the transaction sent to the node.
      * @param {CIS2.TransactionMetadata} metadata - Metadata needed for the transaction.
      * @param {CIS2.UpdateOperator[]} updates - A list of update instruction objects, each specifying the details of an update.
+     * @param {AccountSigner} signer - To be used for signing the transaction sent to the node.
      *
-     * @returns {HexString} The transaction hash of the update transaction
+     * @returns {Promise<HexString>} The transaction hash of the update transaction
      */
     updateOperator(
-        signer: AccountSigner,
         metadata: CIS2.TransactionMetadata,
-        updates: CIS2.UpdateOperator[]
+        updates: CIS2.UpdateOperator[],
+        signer: AccountSigner
     ): Promise<HexString>;
     updateOperator(
-        signer: AccountSigner,
         metadata: CIS2.TransactionMetadata,
-        updates: CIS2.UpdateOperator | CIS2.UpdateOperator[]
-    ): Promise<HexString> {
-        return this.sendUpdateTransaction(
+        updates: CIS2.UpdateOperator | CIS2.UpdateOperator[],
+        signer?: AccountSigner
+    ): AccountTransaction | Promise<HexString> {
+        const transaction = this.createUpdateTransaction(
             'updateOperator',
             serializeCIS2OperatorUpdates,
-            signer,
             metadata,
             updates
         );
+
+        if (signer === undefined) {
+            return transaction;
+        }
+
+        return this.sendUpdateTransaction(transaction, signer);
     }
 
     /**
@@ -393,16 +451,14 @@ export class CIS2Contract {
      *
      * @param {string} entrypoint - The name of the receive function to invoke.
      * @param {Function} serializer - A function to serialize the `input` to bytes.
-     * @param {AccountSigner} signer - An object to use for signing the transaction.
      * @param {CIS2.TransactionMetadata} metadata - Metadata to be used for the transaction (with defaults).
      * @param {T | T[]} input - Input for for contract function.
      *
      * @returns {HexString} The transaction hash of the update transaction
      */
-    private async sendUpdateTransaction<T>(
+    private createUpdateTransaction<T>(
         entrypoint: string,
         serializer: (input: T[]) => Buffer,
-        signer: AccountSigner,
         {
             amount = 0n,
             senderAddress,
@@ -411,7 +467,7 @@ export class CIS2Contract {
             expiry = getDefaultExpiryDate(),
         }: CIS2.TransactionMetadata,
         input: T | T[]
-    ): Promise<HexString> {
+    ): AccountTransaction {
         const parameter = makeSerializeDynamic(serializer)(input);
         const payload: UpdateContractPayload = {
             amount: new CcdAmount(amount),
@@ -420,7 +476,7 @@ export class CIS2Contract {
             maxContractExecutionEnergy: energy,
             message: parameter,
         };
-        const transaction: AccountTransaction = {
+        return {
             type: AccountTransactionType.Update,
             header: {
                 expiry: new TransactionExpiry(expiry),
@@ -429,6 +485,20 @@ export class CIS2Contract {
             },
             payload,
         };
+    }
+
+    /**
+     * Helper function for sending update transactions.
+     *
+     * @param {AccountTransaction} transaction - The transaction to send.
+     * @param {AccountSigner} signer - An object to use for signing the transaction.
+     *
+     * @returns {HexString} The transaction hash of the update transaction
+     */
+    private async sendUpdateTransaction(
+        transaction: AccountTransaction,
+        signer: AccountSigner
+    ): Promise<HexString> {
         const signature = await signTransaction(transaction, signer);
         return this.grpcClient.sendAccountTransaction(transaction, signature);
     }

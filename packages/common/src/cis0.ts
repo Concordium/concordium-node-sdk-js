@@ -9,20 +9,34 @@ import {
 } from './serializationHelpers';
 import { stringify } from 'json-bigint';
 
+/** Namespace with types for CIS-0 standard contracts */
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace CIS0 {
-    export type StandardIdentifier = string;
+    /** Identifier to query for support, f.x. 'CIS-2' */
+    export type StandardIdentifier = 'CIS-0' | 'CIS-1' | 'CIS-2' | string;
+    /** Possible response types for a query */
     export enum SupportType {
+        /** The standard is not supported */
         NoSupport,
+        /** The standard is supported */
         Support,
+        /** The standard is supported by another contract */
         SupportBy,
     }
-    export type NoSupport = { type: SupportType.NoSupport };
-    export type Support = { type: SupportType.Support };
-    export type SupportBy = {
-        type: SupportType.SupportBy;
+    type SupportResponse<T extends SupportType> = {
+        /** The {@link SupportType} of the support response */
+        type: T;
+    };
+    /** The standard is not supported */
+    export type NoSupport = SupportResponse<SupportType.NoSupport>;
+    /** The standard is supported */
+    export type Support = SupportResponse<SupportType.Support>;
+    /** The standard is supported by another contract located at `address` */
+    export type SupportBy = SupportResponse<SupportType.SupportBy> & {
+        /** The address supporting the standard queried */
         address: ContractAddress;
     };
+    /** Union of the different possible support query results. */
     export type SupportResult = NoSupport | Support | SupportBy;
 }
 
@@ -38,21 +52,20 @@ function serializeSupportIdentifiers(ids: CIS0.StandardIdentifier[]): Buffer {
 
 const deserializeSupportResult =
     makeDeserializeListResponse<CIS0.SupportResult>((buffer: Buffer) => {
-        const type = buffer.readUInt8(0);
+        const rawType = buffer.readUInt8(0);
         let cursor = 1;
 
-        if (type > 2) {
+        if (rawType > 2) {
             throw new Error('Unsupported support result type');
         }
 
         let value: CIS0.SupportResult;
-        if (type !== 2) {
-            value = {
-                type:
-                    type === 0
-                        ? CIS0.SupportType.NoSupport
-                        : CIS0.SupportType.Support,
-            };
+        if (rawType !== 2) {
+            const type =
+                rawType === 0
+                    ? CIS0.SupportType.NoSupport
+                    : CIS0.SupportType.Support;
+            value = { type };
         } else {
             const index = buffer.readBigUInt64LE(cursor) as bigint;
             cursor += 8;
@@ -61,22 +74,39 @@ const deserializeSupportResult =
 
             value = {
                 type: CIS0.SupportType.SupportBy,
-                address: {
-                    index,
-                    subindex,
-                },
+                address: { index, subindex },
             };
         }
 
         return { value, bytesRead: cursor };
     });
 
+/**
+ * Queries a CIS-0 contract for support for a {@link CIS0.StandardIdentifier}.
+ *
+ * @param {ConcordiumNodeClient} grpcClient - The client to be used for the query.
+ * @param {ContractAddress} contractAddress - The address of the contract to query.
+ * @param {CIS0.StandardIdentifier} id - The standard identifier to query for support in contract.
+ * @param {HexString} [blockHash] - The hash of the block to query at.
+ *
+ * @returns {CIS0.SupportResult} The support result of the query.
+ */
 export function supports(
     grpcClient: ConcordiumNodeClient,
     contractAddress: ContractAddress,
     id: CIS0.StandardIdentifier,
     blockHash?: HexString
 ): Promise<CIS0.SupportResult>;
+/**
+ * Queries a CIS-0 contract for support for a {@link CIS0.StandardIdentifier}.
+ *
+ * @param {ConcordiumNodeClient} grpcClient - The client to be used for the query.
+ * @param {ContractAddress} contractAddress - The address of the contract to query.
+ * @param {CIS0.StandardIdentifier[]} ids - The standard identifiers to query for support in contract.
+ * @param {HexString} [blockHash] - The hash of the block to query at.
+ *
+ * @returns {CIS0.SupportResult[]} The support results of the query. These are ordered by the ID's supplied by the `ids` param.
+ */
 export function supports(
     grpcClient: ConcordiumNodeClient,
     contractAddress: ContractAddress,

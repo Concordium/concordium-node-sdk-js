@@ -1267,14 +1267,29 @@ export interface UpdateCredentialsPayload {
     currentNumberOfCredentials: bigint;
 }
 
-export interface BakerKeysWithProofs {
+export interface PublicBakerKeys {
     signatureVerifyKey: HexString;
     electionVerifyKey: HexString;
     aggregationVerifyKey: HexString;
+}
+
+export interface PrivateBakerKeys {
+    aggregationSignKey: HexString;
+    signatureSignKey: HexString;
+    electionPrivateKey: HexString;
+}
+
+export interface BakerKeyProofs {
     proofAggregation: HexString;
     proofSig: HexString;
     proofElection: HexString;
 }
+
+export type BakerKeysWithProofs = PublicBakerKeys & BakerKeyProofs;
+
+export type GenerateBakerKeysOutput = PublicBakerKeys &
+    PrivateBakerKeys &
+    BakerKeyProofs;
 
 export interface ConfigureBakerPayload {
     /* stake to bake. if set to 0, this removes the account as a baker */

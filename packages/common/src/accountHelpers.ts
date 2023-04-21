@@ -11,7 +11,7 @@ import {
     AccountInfoBakerV1,
     AccountInfoDelegator,
     StakePendingChangeV0,
-    BakerKeysWithProofs,
+    GenerateBakerKeysOutput,
 } from './types';
 
 export const isDelegatorAccount = (
@@ -50,11 +50,11 @@ export const isRemovalPendingChange = (
 /**
  * Generates random baker keys for the specified account, that can be used with the configureBaker transaction
  * @param account the address of the account that the keys should be added to.
- * @returns baker keys and their associated proofs
+ * @returns an object containing the public baker keys, their associated proofs and their associated private keys.
  */
 export function generateBakerKeys(
     account: AccountAddress
-): BakerKeysWithProofs {
+): GenerateBakerKeysOutput {
     const rawKeys = wasm.generateBakerKeys(account.address);
     try {
         return JSON.parse(rawKeys);

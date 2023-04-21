@@ -6,7 +6,13 @@ import {
     packBufferWithWord16Length,
     packBufferWithWord8Length,
 } from '../serializationHelpers';
-import { Base58String, ContractAddress, HexString } from '../types';
+import {
+    AccountTransactionType,
+    Base58String,
+    ContractAddress,
+    HexString,
+    UpdateContractPayload,
+} from '../types';
 import uleb128 from 'leb128/unsigned';
 import { Buffer } from 'buffer/';
 import { AccountAddress } from '../types/accountAddress';
@@ -78,6 +84,14 @@ export namespace CIS2 {
     };
 
     /**
+     * Metadata necessary for creating a {@link UpdateTransaction}
+     */
+    export type CreateTransactionMetadata = Pick<
+        TransactionMetadata,
+        'amount' | 'energy'
+    >;
+
+    /**
      * Data needed for CIS-2 "balanceOf" query.
      */
     export type BalanceOfQuery = {
@@ -106,6 +120,21 @@ export namespace CIS2 {
         /** The address to check whether it is an operator of `owner` */
         address: Address;
     };
+
+    /**
+     * An update transaction without header. This is useful for sending through a wallet, which supplies the header information.
+     */
+    export type UpdateTransaction = {
+        /** The type of the transaction, which will always be of type {@link AccountTransactionType.Update} */
+        type: AccountTransactionType.Update;
+        /** The payload of the transaction, which will always be of type {@link UpdateContractPayload} */
+        payload: UpdateContractPayload;
+    };
+
+    /**
+     * A function processing a {@link UpdateTransaction}
+     */
+    export type SignAndSendFunction<R> = (transaction: UpdateTransaction) => R;
 }
 
 /**

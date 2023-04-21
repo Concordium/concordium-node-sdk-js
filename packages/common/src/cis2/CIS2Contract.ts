@@ -1,6 +1,5 @@
 import { Buffer } from 'buffer/';
 import {
-    AccountTransaction,
     AccountTransactionType,
     ContractAddress,
     HexString,
@@ -186,28 +185,34 @@ export class CIS2Contract {
 
     /**
      * Creates a CIS-2 "transfer" update transaction containing a single transfer.
+     * This is particularly useful if you need the parts required for a wallet to submit the transaction.
      *
-     * @param {CIS2.TransactionMetadata} metadata - Metadata needed for the transaction.
+     * @param {CIS2.CreateTransactionMetadata} metadata - Metadata needed for the transaction creation.
      * @param {CIS2.Transfer} transfer - The transfer object specifying the details of the transfer.
+     * @param {Function} signer - Function to be used for signing and sending the transaction.
      *
-     * @returns {AccountTransaction} An update transaction corresponding to the supplied `transfer` parameter.
+     * @returns {R} A type corresponding to the return type of the supplied `signer` param.
      */
-    transfer(
-        metadata: CIS2.TransactionMetadata,
-        transfer: CIS2.Transfer
-    ): AccountTransaction;
+    transfer<R>(
+        metadata: CIS2.CreateTransactionMetadata,
+        transfer: CIS2.Transfer,
+        signer: CIS2.SignAndSendFunction<R>
+    ): R;
     /**
      * Creates a CIS-2 "transfer" update transaction containing a list transfers.
+     * This is particularly useful if you need the parts required for a wallet to submit the transaction.
      *
-     * @param {CIS2.TransactionMetadata} metadata - Metadata needed for the transaction.
+     * @param {CIS2.CreateTransactionMetadata} metadata - Metadata needed for the transaction creation.
      * @param {CIS2.Transfer[]} transfers - A list of transfer objects, each specifying the details of a transfer.
+     * @param {Function} signer - Function to be used for signing and sending the transaction.
      *
-     * @returns {AccountTransaction} An update transaction corresponding to the supplied `transfers` parameter.
+     * @returns {R} A type corresponding to the return type of the supplied `signer` param.
      */
-    transfer(
-        metadata: CIS2.TransactionMetadata,
-        transfers: CIS2.Transfer[]
-    ): AccountTransaction;
+    transfer<R>(
+        metadata: CIS2.CreateTransactionMetadata,
+        transfers: CIS2.Transfer[],
+        signer: CIS2.SignAndSendFunction<R>
+    ): R;
     /**
      * Sends a CIS-2 "transfer" update transaction containing a single transfer.
      *
@@ -236,11 +241,11 @@ export class CIS2Contract {
         transfers: CIS2.Transfer[],
         signer: AccountSigner
     ): Promise<HexString>;
-    transfer(
-        metadata: CIS2.TransactionMetadata,
+    transfer<R>(
+        metadata: CIS2.TransactionMetadata | CIS2.CreateTransactionMetadata,
         transfers: CIS2.Transfer | CIS2.Transfer[],
-        signer?: AccountSigner
-    ): AccountTransaction | Promise<HexString> {
+        signer: AccountSigner | CIS2.SignAndSendFunction<R>
+    ): R | Promise<HexString> {
         const transaction = this.createUpdateTransaction(
             'transfer',
             serializeCIS2Transfers,
@@ -248,37 +253,47 @@ export class CIS2Contract {
             transfers
         );
 
-        if (signer === undefined) {
-            return transaction;
+        if (typeof signer === 'function') {
+            return signer(transaction);
         }
 
-        return this.sendUpdateTransaction(transaction, signer);
+        return this.sendUpdateTransaction(
+            transaction,
+            metadata as CIS2.TransactionMetadata,
+            signer
+        );
     }
 
     /**
      * Creates a CIS-2 "operatorOf" update transaction containing a single operator update instruction.
+     * This is particularly useful if you need the parts required for a wallet to submit the transaction.
      *
-     * @param {CIS2.TransactionMetadata} metadata - Metadata needed for the transaction.
+     * @param {CIS2.CreateTransactionMetadata} metadata - Metadata needed for the transaction creation.
      * @param {CIS2.UpdateOperator} update - The update instruction object specifying the details of the update.
+     * @param {Function} signer - Function to be used for signing and sending the transaction.
      *
-     * @returns {AccountTransaction} An update transaction corresponding to the supplied `update` parameter.
+     * @returns {R} A type corresponding to the return type of the supplied `signer` param.
      */
-    updateOperator(
-        metadata: CIS2.TransactionMetadata,
-        update: CIS2.UpdateOperator
-    ): AccountTransaction;
+    updateOperator<R>(
+        metadata: CIS2.CreateTransactionMetadata,
+        update: CIS2.UpdateOperator,
+        signer: CIS2.SignAndSendFunction<R>
+    ): R;
     /**
      * Creates a CIS-2 "operatorOf" update transaction containing a list of operator update instructions.
+     * This is particularly useful if you need the parts required for a wallet to submit the transaction.
      *
-     * @param {CIS2.TransactionMetadata} metadata - Metadata needed for the transaction.
+     * @param {CIS2.CreateTransactionMetadata} metadata - Metadata needed for the transaction creation.
      * @param {CIS2.UpdateOperator[]} updates - A list of update instruction objects, each specifying the details of an update.
+     * @param {Function} signer - Function to be used for signing and sending the transaction.
      *
-     * @returns {AccountTransaction} An update transaction corresponding to the supplied `updates` parameter.
+     * @returns {R} A type corresponding to the return type of the supplied `signer` param.
      */
-    updateOperator(
-        metadata: CIS2.TransactionMetadata,
-        updates: CIS2.UpdateOperator[]
-    ): AccountTransaction;
+    updateOperator<R>(
+        metadata: CIS2.CreateTransactionMetadata,
+        updates: CIS2.UpdateOperator[],
+        signer: CIS2.SignAndSendFunction<R>
+    ): R;
     /**
      * Sends a CIS-2 "operatorOf" update transaction containing a single operator update instruction.
      *
@@ -307,11 +322,11 @@ export class CIS2Contract {
         updates: CIS2.UpdateOperator[],
         signer: AccountSigner
     ): Promise<HexString>;
-    updateOperator(
-        metadata: CIS2.TransactionMetadata,
+    updateOperator<R>(
+        metadata: CIS2.TransactionMetadata | CIS2.CreateTransactionMetadata,
         updates: CIS2.UpdateOperator | CIS2.UpdateOperator[],
-        signer?: AccountSigner
-    ): AccountTransaction | Promise<HexString> {
+        signer: AccountSigner | CIS2.SignAndSendFunction<R>
+    ): R | Promise<HexString> {
         const transaction = this.createUpdateTransaction(
             'updateOperator',
             serializeCIS2OperatorUpdates,
@@ -319,11 +334,15 @@ export class CIS2Contract {
             updates
         );
 
-        if (signer === undefined) {
-            return transaction;
+        if (typeof signer === 'function') {
+            return signer(transaction);
         }
 
-        return this.sendUpdateTransaction(transaction, signer);
+        return this.sendUpdateTransaction(
+            transaction,
+            metadata as CIS2.TransactionMetadata,
+            signer
+        );
     }
 
     /**
@@ -451,7 +470,7 @@ export class CIS2Contract {
      *
      * @param {string} entrypoint - The name of the receive function to invoke.
      * @param {Function} serializer - A function to serialize the `input` to bytes.
-     * @param {CIS2.TransactionMetadata} metadata - Metadata to be used for the transaction (with defaults).
+     * @param {CIS2.CreateTransactionMetadata} metadata - Metadata to be used for the transaction creation (with defaults).
      * @param {T | T[]} input - Input for for contract function.
      *
      * @returns {HexString} The transaction hash of the update transaction
@@ -459,15 +478,9 @@ export class CIS2Contract {
     private createUpdateTransaction<T>(
         entrypoint: string,
         serializer: (input: T[]) => Buffer,
-        {
-            amount = 0n,
-            senderAddress,
-            nonce,
-            energy,
-            expiry = getDefaultExpiryDate(),
-        }: CIS2.TransactionMetadata,
+        { amount = 0n, energy }: CIS2.CreateTransactionMetadata,
         input: T | T[]
-    ): AccountTransaction {
+    ): CIS2.UpdateTransaction {
         const parameter = makeSerializeDynamic(serializer)(input);
         const payload: UpdateContractPayload = {
             amount: new CcdAmount(amount),
@@ -478,11 +491,6 @@ export class CIS2Contract {
         };
         return {
             type: AccountTransactionType.Update,
-            header: {
-                expiry: new TransactionExpiry(expiry),
-                nonce,
-                sender: new AccountAddress(senderAddress),
-            },
             payload,
         };
     }
@@ -490,15 +498,31 @@ export class CIS2Contract {
     /**
      * Helper function for sending update transactions.
      *
-     * @param {AccountTransaction} transaction - The transaction to send.
+     * @param {CIS2.UpdateTransaction} transaction - The transaction to send.
+     * @param {CIS2.TransactionMetadata} metadata - Metadata to be used for the transaction (with defaults).
      * @param {AccountSigner} signer - An object to use for signing the transaction.
      *
      * @returns {HexString} The transaction hash of the update transaction
      */
     private async sendUpdateTransaction(
-        transaction: AccountTransaction,
+        { type, payload }: CIS2.UpdateTransaction,
+        {
+            senderAddress,
+            nonce,
+            expiry = getDefaultExpiryDate(),
+        }: CIS2.TransactionMetadata,
         signer: AccountSigner
     ): Promise<HexString> {
+        const header = {
+            expiry: new TransactionExpiry(expiry),
+            nonce,
+            sender: new AccountAddress(senderAddress),
+        };
+        const transaction = {
+            type,
+            header,
+            payload,
+        };
         const signature = await signTransaction(transaction, signer);
         return this.grpcClient.sendAccountTransaction(transaction, signature);
     }

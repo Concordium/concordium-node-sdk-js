@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <script src="../lib/concordium.min.js"></script>
+    <script type="module">
+        const client = concordiumSDK.createConcordiumClient("http://node.testnet.concordium.com", 20000);
+
+        const send = async function () {
+            // The better approach here though, would be to install "@concordium/browser-wallet-api-helpers" and use the supplied `detectConcordiumProvider` function.
+            const walletApi = window.concordium;
+            if (walletApi === undefined) {
+                throw new Error('This example needs the concordium browser wallet to work.');
+            }
+
+            const connectedAccount = await walletApi.connect();
+
+            if (connectedAccount === undefined) {
+                throw new Error('No account connected in wallet');
+            }
+
+            const address = {index: BigInt(index.value), subindex: BigInt(0)};
+            const contract = await concordiumSDK.CIS2Contract.create(client, {index: BigInt(index.value), subindex: BigInt(0)});
+
+            const transfer = {tokenId: '', from: connectedAccount, to: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB', tokenAmount: BigInt(amount.value)};
+            const txHash = await contract.transfer({amount: 0n, energy: 10000n}, transfer, async ({type, payload}) => walletApi.sendTransaction(connectedAccount, type, payload));
+
+            if (txHash) {
+                const blockHash = client.waitForTransactionFinalization(txHash);
+            }
+        };
+        document.getElementById('button').onclick = send;
+    </script>
+</head>
+
+<body>
+    Contract index: <input type="number" id="index" />
+    <br />
+    Amount: <input type="number" id="amount" />
+    <br />
+    <button id="button">
+        Click
+    </button>
+    <br />
+    <div>
+        <label id="result">
+    </div>
+    <div id="errorBox" hidden={true}>
+        Error: <label id="error" />
+    </div>
+</body>
+
+</html>

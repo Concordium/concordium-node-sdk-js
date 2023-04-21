@@ -89,7 +89,6 @@ if (cli.flags.h) {
     const address = parseAddress(cli.flags.address);
 
     const txHash = await contract.updateOperator(
-        signer,
         {
             senderAddress: owner,
             energy: 10000n,
@@ -98,7 +97,8 @@ if (cli.flags.h) {
         {
             type: cli.flags.updateType as 'add' | 'remove',
             address,
-        }
+        },
+        signer
     );
 
     console.log('Submitted transaction with hash:', txHash);

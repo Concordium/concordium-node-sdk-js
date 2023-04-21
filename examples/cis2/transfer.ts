@@ -106,7 +106,6 @@ if (cli.flags.h) {
               };
 
     const txHash = await contract.transfer(
-        signer,
         {
             senderAddress: from,
             energy: 10000n,
@@ -117,7 +116,8 @@ if (cli.flags.h) {
             to,
             tokenAmount: BigInt(cli.flags.amount),
             tokenId: '',
-        }
+        },
+        signer
     );
 
     console.log('Submitted transaction with hash:', txHash);

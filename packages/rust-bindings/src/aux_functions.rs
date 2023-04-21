@@ -1,7 +1,7 @@
 use crate::{helpers::*, types::*};
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use concordium_base::{
-    base::{BakerKeyPairs, BakerSignatureSignKey, BakerElectionSignKey, BakerAggregationSignKey},
+    base::{BakerAggregationSignKey, BakerElectionSignKey, BakerKeyPairs, BakerSignatureSignKey},
     common::{
         types::{KeyIndex, KeyPair, TransactionTime},
         *,
@@ -889,15 +889,14 @@ pub fn create_unsigned_credential_v1_aux(input: UnsignedCredentialInput) -> Resu
 #[serde(rename_all = "camelCase")]
 pub struct BakerKeys {
     #[serde(flatten)]
-    keys_payload: ConfigureBakerKeysPayload,
+    keys_payload:         ConfigureBakerKeysPayload,
     #[serde(serialize_with = "base16_encode", rename = "electionPrivateKey")]
     election_private_key: BakerElectionSignKey,
-    #[serde(serialize_with = "base16_encode", rename = "signatureSignKey" )]
-    signature_sign_key: BakerSignatureSignKey,
+    #[serde(serialize_with = "base16_encode", rename = "signatureSignKey")]
+    signature_sign_key:   BakerSignatureSignKey,
     #[serde(serialize_with = "base16_encode", rename = "aggregationSignKey")]
     aggregation_sign_key: BakerAggregationSignKey,
 }
-
 
 pub fn generate_baker_keys(sender: AccountAddress) -> Result<JsonString> {
     let mut csprng = thread_rng();

@@ -53,6 +53,6 @@ if (cli.flags.h) {
 
     console.dir(electionInfo, { depth: null, colors: true });
 
-    // The electionInfo contain information that can then be extracted:
+    // The electionInfo contains information that can then be extracted:
     const difficulty: number = electionInfo.electionDifficulty;
 })();

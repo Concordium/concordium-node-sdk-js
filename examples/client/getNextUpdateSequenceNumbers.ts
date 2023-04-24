@@ -17,11 +17,6 @@ const cli = meow(
     {
         importMeta: import.meta,
         flags: {
-            account: {
-                type: 'string',
-                alias: 'a',
-                isRequired: true,
-            },
             endpoint: {
                 type: 'string',
                 alias: 'e',

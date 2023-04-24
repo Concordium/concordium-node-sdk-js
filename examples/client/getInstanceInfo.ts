@@ -67,6 +67,6 @@ if (cli.flags.h) {
 
     console.dir(instanceInfo, { depth: null, colors: true });
 
-    // The instanceInfo contain information that can then be extracted:
+    // The instanceInfo contains information that can then be extracted:
     const name: string = instanceInfo.name;
 })();

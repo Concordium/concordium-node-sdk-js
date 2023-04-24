@@ -150,6 +150,28 @@ export namespace CIS2 {
     export type ProcessTransactionFunction<R> = (
         transaction: UpdateTransaction
     ) => R;
+
+    export type AddressParamJson =
+        | { Account: [Base58String] }
+        | { Contract: [{ index: number; subindex: number }] };
+    export type ReceiveParamJson =
+        | { Account: [Base58String] }
+        | { Contract: [{ index: number; subindex: number }, string] };
+
+    export type TransferParamJson = {
+        token_id: HexString;
+        amount: string;
+        from: AddressParamJson;
+        to: ReceiveParamJson;
+        data: HexString;
+    };
+
+    export type UpdateOperatorParamJson = {
+        update:
+            | { Add: Record<string, never> }
+            | { Remove: Record<string, never> };
+        operator: AddressParamJson;
+    };
 }
 
 /**
@@ -414,7 +436,9 @@ export const deserializeCIS2OperatorOfResponse = makeDeserializeListResponse(
 );
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const formatCIS2UpdateOperator = (input: CIS2.UpdateOperator) => ({
+export const formatCIS2UpdateOperator = (
+    input: CIS2.UpdateOperator
+): CIS2.UpdateOperatorParamJson => ({
     update: input.type === 'add' ? { Add: {} } : { Remove: {} },
     operator: isContractAddress(input.address)
         ? {
@@ -429,8 +453,10 @@ export const formatCIS2UpdateOperator = (input: CIS2.UpdateOperator) => ({
 });
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const formatCIS2Transfer = (input: CIS2.Transfer) => {
-    const from = isContractAddress(input.from)
+export const formatCIS2Transfer = (
+    input: CIS2.Transfer
+): CIS2.TransferParamJson => {
+    const from: CIS2.AddressParamJson = isContractAddress(input.from)
         ? {
               Contract: [
                   {
@@ -440,24 +466,22 @@ export const formatCIS2Transfer = (input: CIS2.Transfer) => {
               ],
           }
         : { Account: [input.from] };
-    let to;
+    let to: CIS2.ReceiveParamJson;
     if (typeof input.to === 'string') {
         to = { Account: [input.to] };
     } else {
-        const [contract, func] = input.to.hookName.split('.');
-        if (func === undefined) {
+        if (!input.to.hookName.includes('.')) {
             throw new Error(
                 'Receive hook function needs both contract name and function name specified'
             );
         }
-        const hook = { contract, func };
         to = {
             Contract: [
                 {
                     index: Number(input.to.address.index),
                     subindex: Number(input.to.address.subindex),
                 },
-                hook,
+                input.to.hookName,
             ],
         };
     }

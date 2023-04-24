@@ -20,12 +20,21 @@
             if (connectedAccount === undefined) {
                 throw new Error('No account connected in wallet');
             }
+            if (index.value === '' || index.value == undefined) {
+                throw new Error('Please specify a contract index');
+            }
+            if (!receiver.value) {
+                throw new Error('Specify receiver account');
+            }
 
-            const address = {index: BigInt(index.value), subindex: BigInt(0)};
-            const contract = await concordiumSDK.CIS2Contract.create(client, {index: BigInt(index.value), subindex: BigInt(0)});
+            const address = {index: BigInt(index.value), subindex: 0n};
+            const contract = await concordiumSDK.CIS2Contract.create(client, address);
 
-            const transfer = {tokenId: '', from: connectedAccount, to: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB', tokenAmount: BigInt(amount.value)};
+            const transfer = {tokenId: tokenId.value ?? '', from: connectedAccount, to: receiver.value, tokenAmount: BigInt(amount.value ?? 0)};
+            //const transfer = {tokenId: '', from: connectedAccount, to: {address, hookName: 'some-name.receive-func-example'}, tokenAmount: BigInt(amount.value)};
             const txHash = await contract.transfer({amount: 0n, energy: 10000n}, transfer, async ({type, payload, parameter: {json}, schema, schemaVersion}) => walletApi.sendTransaction(connectedAccount, type, payload, json, schema, schemaVersion));
+            //const transfer = {type: 'add', address};
+            //const txHash = await contract.updateOperator({amount: 0n, energy: 10000n}, transfer, async ({type, payload, parameter: {json}, schema, schemaVersion}) => walletApi.sendTransaction(connectedAccount, type, payload, json, schema, schemaVersion));
 
             if (txHash) {
                 const blockHash = client.waitForTransactionFinalization(txHash);
@@ -38,7 +47,11 @@
 <body>
     Contract index: <input type="number" id="index" />
     <br />
+    Token ID: <input type="text" id="tokenId" />
+    <br />
     Amount: <input type="number" id="amount" />
+    <br />
+    Receiver account: <input type="text" id="receiver" />
     <br />
     <button id="button">
         Click

@@ -44,6 +44,6 @@ if (cli.flags.h) {
 
     console.dir(consensusStatus, { depth: null, colors: true });
 
-    // The consensusStatus contain information that can then be extracted:
+    // The consensusStatus contains information that can then be extracted:
     const bestBlock: HexString = consensusStatus.bestBlock;
 })();

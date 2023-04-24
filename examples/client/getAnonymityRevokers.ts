@@ -9,9 +9,6 @@ const cli = meow(
   Usage
     $ yarn ts-node <path-to-this-file> [options]
 
-  Required
-    --account, -a  The account to get transactions from
-
   Options
     --help,     -h  Displays this message
     --block,    -b  A block to query from, defaults to last final block
@@ -24,11 +21,6 @@ const cli = meow(
                 type: 'string',
                 alias: 'e',
                 default: 'localhost:20000',
-            },
-            account: {
-                type: 'string',
-                alias: 'a',
-                isRequired: true,
             },
             block: {
                 type: 'string',

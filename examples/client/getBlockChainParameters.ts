@@ -9,8 +9,6 @@ const cli = meow(
   Usage
     $ yarn ts-node <path-to-this-file> [options]
 
-  Required
-    --account, -a  The account to get transactions from
 
   Options
     --help,     -h  Displays this message
@@ -23,11 +21,6 @@ const cli = meow(
                 type: 'string',
                 alias: 'e',
                 default: 'localhost:20000',
-            },
-            account: {
-                type: 'string',
-                alias: 'a',
-                isRequired: true,
             },
             blockhash: {
                 type: 'string',

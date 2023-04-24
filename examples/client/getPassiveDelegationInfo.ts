@@ -43,10 +43,10 @@ if (cli.flags.h) {
     cli.showHelp();
 }
 
-/// Retrieves information about the passive delegators, at the end of the specified block.
+/// Retrieves information about the passive delegation, including the total capital delegation and the current commission rates for passive delegation, at the end of the specified block.
 (async () => {
-    const bakerPoolInfo: PassiveDelegationStatus =
+    const passiveDelegationInfo: PassiveDelegationStatus =
         await client.getPassiveDelegationInfo(cli.flags.block);
 
-    console.dir(bakerPoolInfo, { depth: null, colors: true });
+    console.dir(passiveDelegationInfo, { depth: null, colors: true });
 })();

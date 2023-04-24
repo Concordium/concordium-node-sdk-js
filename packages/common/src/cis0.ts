@@ -91,7 +91,7 @@ const deserializeSupportResult =
  *
  * @returns {CIS0.SupportResult} The support result of the query.
  */
-export function supports(
+export function cis0Supports(
     grpcClient: ConcordiumNodeClient,
     contractAddress: ContractAddress,
     id: CIS0.StandardIdentifier,
@@ -107,13 +107,13 @@ export function supports(
  *
  * @returns {CIS0.SupportResult[]} The support results of the query. These are ordered by the ID's supplied by the `ids` param.
  */
-export function supports(
+export function cis0Supports(
     grpcClient: ConcordiumNodeClient,
     contractAddress: ContractAddress,
     ids: CIS0.StandardIdentifier[],
     blockHash?: HexString
 ): Promise<CIS0.SupportResult[]>;
-export async function supports(
+export async function cis0Supports(
     grpcClient: ConcordiumNodeClient,
     contractAddress: ContractAddress,
     ids: CIS0.StandardIdentifier | CIS0.StandardIdentifier[],

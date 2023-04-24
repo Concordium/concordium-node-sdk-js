@@ -9,7 +9,7 @@ const cli = meow(
   Usage
     $ yarn ts-node <path-to-this-file> [options]
 
-  Requiered
+  Required
     --max-ancestors, -m  Maximum amount of ancestors to get
 
   Options

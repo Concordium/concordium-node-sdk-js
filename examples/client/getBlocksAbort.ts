@@ -1,5 +1,4 @@
-import { ChainParameters } from '@concordium/common-sdk';
-import { createConcordiumClient } from '@concordium/node-sdk';
+import { createConcordiumClient, ArrivedBlockInfo } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -8,7 +7,6 @@ const cli = meow(
     `
   Usage
     $ yarn ts-node <path-to-this-file> [options]
-
 
   Options
     --help,     -h  Displays this message
@@ -22,11 +20,6 @@ const cli = meow(
                 alias: 'e',
                 default: 'localhost:20000',
             },
-            blockhash: {
-                type: 'string',
-                alias: 'b',
-                default: '', // This defaults to LastFinal
-            },
         },
     }
 );
@@ -39,18 +32,22 @@ const client = createConcordiumClient(
     { timeout: 15000 }
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
-
-/// Retrieves the values of the chain parameters in effect at a specific block.
+/// Returns a stream of blocks that is iterable. The following code will receive
+/// a single block and then abort:
 
 (async () => {
-    const chainParameters: ChainParameters =
-        await client.getBlockChainParameters(cli.flags.blockhash);
+    // Create abort controller and block stream
+    const ac = new AbortController();
+    const blockStream: AsyncIterable<ArrivedBlockInfo> = client.getBlocks(
+        ac.signal
+    );
 
-    console.dir(chainParameters, { depth: null, colors: true });
+    // Only get one item then break
+    for await (const block of blockStream) {
+        console.dir(block, { depth: null, colors: true });
+        break;
+    }
 
-    // The chainParameters contain information that can then be extracted:
-    const elecDiff: number = chainParameters.electionDifficulty;
+    // Closes the stream
+    ac.abort();
 })();

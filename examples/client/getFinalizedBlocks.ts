@@ -37,23 +37,16 @@ if (cli.flags.h) {
     cli.showHelp();
 }
 
-/// Returns a stream of finalized blocks that is iterable. Works exactly like
-/// `getBlocks()` but only returns finalized blocks.  Likewise, you can also
-/// pass it an `AbortSignal`, which is optional, but the stream will continue
-/// forever if you don't provide it:
+/// Returns a stream of finalized blocks that is iterable. The following code will receive
+/// blocks as long as there is a connection to the node:
 
 (async () => {
-    // Create abort controller and block stream
-    const ac = new AbortController();
+    // Get block stream
     const blockStream: AsyncIterable<FinalizedBlockInfo> =
-        client.getFinalizedBlocks(ac.signal);
+        client.getFinalizedBlocks();
 
-    // Only get one item then break
+    // Prints blocks infinitely
     for await (const block of blockStream) {
         console.dir(block, { depth: null, colors: true });
-        break;
     }
-
-    // Closes the stream
-    ac.abort();
 })();

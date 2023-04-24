@@ -1,4 +1,4 @@
-import { AccountAddress, AccountInfo } from '@concordium/common-sdk';
+import { BakerId, streamToList } from '@concordium/common-sdk';
 import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -8,9 +8,6 @@ const cli = meow(
     `
   Usage
     $ yarn ts-node <path-to-this-file> [options]
-
-  Required
-    --account, -a  An account address to get info from
 
   Options
     --help,     -h  Displays this message
@@ -24,11 +21,6 @@ const cli = meow(
                 type: 'string',
                 alias: 'e',
                 default: 'localhost:20000',
-            },
-            account: {
-                type: 'string',
-                alias: 'a',
-                isRequired: true,
             },
             block: {
                 type: 'string',
@@ -51,21 +43,19 @@ if (cli.flags.h) {
     cli.showHelp();
 }
 
-/// Retrieves information about an account. The function must be provided an
-/// account address or a credential registration id.  If a credential registration
-/// id is provided, then the node returns the information of the account, which
-/// the corresponding credential is (or was) deployed to. An account index as a
-/// bigint can also be provided.
-
-/// If there is no account that matches the address or credential id at the
-/// provided block, then undefined will be returned.
+/// Retrieves a stream of ID's for registered bakers on the network at a specific
+/// block.  If a blockhash is not supplied it will pick the latest finalized
+/// block. An optional abort signal can also be provided that closes the stream.
 
 (async () => {
-    const accountAddress = new AccountAddress(cli.flags.account);
-    const accountInfo: AccountInfo = await client.getAccountInfo(
-        accountAddress,
+    const bakerIds: AsyncIterable<BakerId> = client.getBakerList(
         cli.flags.block
     );
 
-    console.dir(accountInfo, { depth: null, colors: true });
+    for await (const bakerId of bakerIds) {
+        console.dir(bakerId, { depth: null, colors: true });
+    }
+
+    // Can also be collected to a list with:
+    const bakerIdList: BakerId[] = await streamToList(bakerIds);
 })();

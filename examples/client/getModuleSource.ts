@@ -1,6 +1,7 @@
 import { ModuleReference } from '@concordium/common-sdk';
 import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
+import fs from 'fs';
 
 import meow from 'meow';
 
@@ -10,7 +11,8 @@ const cli = meow(
     $ yarn ts-node <path-to-this-file> [options]
 
   Required:
-    --module, -m  The module reference of the module that you want the source for
+    --module,   -m  The module reference of the module that you want the source for
+    --out-path, -o  The path to write the module source to
 
   Options
     --help,     -h  Displays this message
@@ -23,6 +25,11 @@ const cli = meow(
             module: {
                 type: 'string',
                 alias: 'm',
+                isRequired: true,
+            },
+            outPath: {
+                type: 'string',
+                alias: 'o',
                 isRequired: true,
             },
             endpoint: {
@@ -58,5 +65,7 @@ if (cli.flags.h) {
     const ref = new ModuleReference(cli.flags.module);
     const source = await client.getModuleSource(ref, cli.flags.block);
 
-    console.log(source);
+    fs.writeFileSync(cli.flags.outPath, source);
+
+    console.log('Written module source to:', cli.flags.outPath);
 })();

@@ -1,5 +1,4 @@
-import { FinalizedBlockInfo } from '@concordium/common-sdk';
-import { createConcordiumClient } from '@concordium/node-sdk';
+import { createConcordiumClient, ArrivedBlockInfo } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -33,20 +32,22 @@ const client = createConcordiumClient(
     { timeout: 15000 }
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
-
-/// Returns a stream of finalized blocks that is iterable. The following code will receive
-/// blocks as long as there is a connection to the node:
+/// Returns a stream of blocks that is iterable. The following code will receive
+/// a single block and then abort:
 
 (async () => {
-    // Get block stream
-    const blockStream: AsyncIterable<FinalizedBlockInfo> =
-        client.getFinalizedBlocks();
+    // Create abort controller and block stream
+    const ac = new AbortController();
+    const blockStream: AsyncIterable<ArrivedBlockInfo> = client.getBlocks(
+        ac.signal
+    );
 
-    // Prints blocks infinitely
+    // Only get one item then break
     for await (const block of blockStream) {
         console.dir(block, { depth: null, colors: true });
+        break;
     }
+
+    // Closes the stream
+    ac.abort();
 })();

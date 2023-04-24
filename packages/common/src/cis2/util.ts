@@ -9,6 +9,7 @@ import {
 import {
     AccountTransactionType,
     Base58String,
+    Base64String,
     ContractAddress,
     HexString,
     UpdateContractPayload,
@@ -32,7 +33,9 @@ export namespace CIS2 {
      * A contract address along with the name of the hook to be triggered when receiving a CIS-2 transfer.
      */
     export type ContractReceiver = {
+        /** Contract address to receive tokens */
         address: ContractAddress;
+        /** Hook to be called on receiver contract. This must include the contract name, in the format of `"<contractName>.<receiveFuncName>"` */
         hookName: string;
     };
 
@@ -129,12 +132,24 @@ export namespace CIS2 {
         type: AccountTransactionType.Update;
         /** The payload of the transaction, which will always be of type {@link UpdateContractPayload} */
         payload: UpdateContractPayload;
+        parameter: {
+            hex: HexString;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            json: any;
+        };
+        schema: {
+            value: Base64String;
+            type: 'parameter';
+        };
+        schemaVersion: number;
     };
 
     /**
      * A function processing a {@link UpdateTransaction}
      */
-    export type SignAndSendFunction<R> = (transaction: UpdateTransaction) => R;
+    export type ProcessTransactionFunction<R> = (
+        transaction: UpdateTransaction
+    ) => R;
 }
 
 /**
@@ -397,3 +412,60 @@ export const deserializeCIS2OperatorOfResponse = makeDeserializeListResponse(
         return { value, bytesRead: 1 };
     }
 );
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export const formatCIS2UpdateOperator = (input: CIS2.UpdateOperator) => ({
+    update: input.type === 'add' ? { Add: {} } : { Remove: {} },
+    operator: isContractAddress(input.address)
+        ? {
+              Contract: [
+                  {
+                      index: Number(input.address.index),
+                      subindex: Number(input.address.subindex),
+                  },
+              ],
+          }
+        : { Account: [input.address] },
+});
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export const formatCIS2Transfer = (input: CIS2.Transfer) => {
+    const from = isContractAddress(input.from)
+        ? {
+              Contract: [
+                  {
+                      index: Number(input.from.index),
+                      subindex: Number(input.from.subindex),
+                  },
+              ],
+          }
+        : { Account: [input.from] };
+    let to;
+    if (typeof input.to === 'string') {
+        to = { Account: [input.to] };
+    } else {
+        const [contract, func] = input.to.hookName.split('.');
+        if (func === undefined) {
+            throw new Error(
+                'Receive hook function needs both contract name and function name specified'
+            );
+        }
+        const hook = { contract, func };
+        to = {
+            Contract: [
+                {
+                    index: Number(input.to.address.index),
+                    subindex: Number(input.to.address.subindex),
+                },
+                hook,
+            ],
+        };
+    }
+    return {
+        token_id: input.tokenId,
+        amount: input.tokenAmount.toString(),
+        from,
+        to,
+        data: input.data ?? '',
+    };
+};

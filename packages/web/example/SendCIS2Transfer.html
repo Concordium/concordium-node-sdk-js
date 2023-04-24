@@ -25,7 +25,7 @@
             const contract = await concordiumSDK.CIS2Contract.create(client, {index: BigInt(index.value), subindex: BigInt(0)});
 
             const transfer = {tokenId: '', from: connectedAccount, to: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB', tokenAmount: BigInt(amount.value)};
-            const txHash = await contract.transfer({amount: 0n, energy: 10000n}, transfer, async ({type, payload}) => walletApi.sendTransaction(connectedAccount, type, payload));
+            const txHash = await contract.transfer({amount: 0n, energy: 10000n}, transfer, async ({type, payload, parameter: {json}, schema, schemaVersion}) => walletApi.sendTransaction(connectedAccount, type, payload, json, schema, schemaVersion));
 
             if (txHash) {
                 const blockHash = client.waitForTransactionFinalization(txHash);

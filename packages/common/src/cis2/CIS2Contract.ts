@@ -18,6 +18,8 @@ import {
     deserializeCIS2TokenMetadataResponse,
     serializeCIS2OperatorOfQueries,
     deserializeCIS2OperatorOfResponse,
+    formatCIS2UpdateOperator,
+    formatCIS2Transfer,
 } from './util';
 import type { CIS2 } from './util';
 import { AccountAddress } from '../types/accountAddress';
@@ -32,6 +34,13 @@ const getInvoker = (address: CIS2.Address): ContractAddress | AccountAddress =>
 const getDefaultExpiryDate = (): Date => {
     const future5Minutes = Date.now() + 5 * 60 * 1000;
     return new Date(future5Minutes);
+};
+
+const schemas = {
+    transfer:
+        'EAEUAAUAAAAIAAAAdG9rZW5faWQdAAYAAABhbW91bnQbJQAAAAQAAABmcm9tFQIAAAAHAAAAQWNjb3VudAEBAAAACwgAAABDb250cmFjdAEBAAAADAIAAAB0bxUCAAAABwAAAEFjY291bnQBAQAAAAsIAAAAQ29udHJhY3QBAgAAAAwWAQQAAABkYXRhHQE',
+    updateOperator:
+        'EAEUAAIAAAAGAAAAdXBkYXRlFQIAAAAGAAAAUmVtb3ZlAgMAAABBZGQCCAAAAG9wZXJhdG9yFQIAAAAHAAAAQWNjb3VudAEBAAAACwgAAABDb250cmFjdAEBAAAADA',
 };
 
 /**
@@ -196,7 +205,7 @@ export class CIS2Contract {
     transfer<R>(
         metadata: CIS2.CreateTransactionMetadata,
         transfer: CIS2.Transfer,
-        signer: CIS2.SignAndSendFunction<R>
+        signer: CIS2.ProcessTransactionFunction<R>
     ): R;
     /**
      * Creates a CIS-2 "transfer" update transaction containing a list transfers.
@@ -211,7 +220,7 @@ export class CIS2Contract {
     transfer<R>(
         metadata: CIS2.CreateTransactionMetadata,
         transfers: CIS2.Transfer[],
-        signer: CIS2.SignAndSendFunction<R>
+        signer: CIS2.ProcessTransactionFunction<R>
     ): R;
     /**
      * Sends a CIS-2 "transfer" update transaction containing a single transfer.
@@ -244,11 +253,12 @@ export class CIS2Contract {
     transfer<R>(
         metadata: CIS2.TransactionMetadata | CIS2.CreateTransactionMetadata,
         transfers: CIS2.Transfer | CIS2.Transfer[],
-        signer: AccountSigner | CIS2.SignAndSendFunction<R>
+        signer: AccountSigner | CIS2.ProcessTransactionFunction<R>
     ): R | Promise<HexString> {
         const transaction = this.createUpdateTransaction(
             'transfer',
             serializeCIS2Transfers,
+            formatCIS2Transfer,
             metadata,
             transfers
         );
@@ -277,7 +287,7 @@ export class CIS2Contract {
     updateOperator<R>(
         metadata: CIS2.CreateTransactionMetadata,
         update: CIS2.UpdateOperator,
-        signer: CIS2.SignAndSendFunction<R>
+        signer: CIS2.ProcessTransactionFunction<R>
     ): R;
     /**
      * Creates a CIS-2 "operatorOf" update transaction containing a list of operator update instructions.
@@ -292,7 +302,7 @@ export class CIS2Contract {
     updateOperator<R>(
         metadata: CIS2.CreateTransactionMetadata,
         updates: CIS2.UpdateOperator[],
-        signer: CIS2.SignAndSendFunction<R>
+        signer: CIS2.ProcessTransactionFunction<R>
     ): R;
     /**
      * Sends a CIS-2 "operatorOf" update transaction containing a single operator update instruction.
@@ -325,11 +335,12 @@ export class CIS2Contract {
     updateOperator<R>(
         metadata: CIS2.TransactionMetadata | CIS2.CreateTransactionMetadata,
         updates: CIS2.UpdateOperator | CIS2.UpdateOperator[],
-        signer: AccountSigner | CIS2.SignAndSendFunction<R>
+        signer: AccountSigner | CIS2.ProcessTransactionFunction<R>
     ): R | Promise<HexString> {
         const transaction = this.createUpdateTransaction(
             'updateOperator',
             serializeCIS2OperatorUpdates,
+            formatCIS2UpdateOperator,
             metadata,
             updates
         );
@@ -470,18 +481,24 @@ export class CIS2Contract {
      *
      * @param {string} entrypoint - The name of the receive function to invoke.
      * @param {Function} serializer - A function to serialize the `input` to bytes.
+     * @param {Function} jsonFormatter - A function to format the `input` as JSON format serializable by the contract schema.
      * @param {CIS2.CreateTransactionMetadata} metadata - Metadata to be used for the transaction creation (with defaults).
      * @param {T | T[]} input - Input for for contract function.
      *
      * @returns {HexString} The transaction hash of the update transaction
      */
     private createUpdateTransaction<T>(
-        entrypoint: string,
+        entrypoint: keyof typeof schemas,
         serializer: (input: T[]) => Buffer,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        jsonFormatter: (input: T) => any,
         { amount = 0n, energy }: CIS2.CreateTransactionMetadata,
         input: T | T[]
     ): CIS2.UpdateTransaction {
         const parameter = makeSerializeDynamic(serializer)(input);
+        const jsonParameter = Array.isArray(input)
+            ? input.map(jsonFormatter)
+            : [jsonFormatter(input)];
         const payload: UpdateContractPayload = {
             amount: new CcdAmount(amount),
             address: this.contractAddress,
@@ -492,6 +509,15 @@ export class CIS2Contract {
         return {
             type: AccountTransactionType.Update,
             payload,
+            parameter: {
+                hex: parameter.toString('hex'),
+                json: jsonParameter,
+            },
+            schema: {
+                value: schemas[entrypoint],
+                type: 'parameter',
+            },
+            schemaVersion: 2,
         };
     }
 

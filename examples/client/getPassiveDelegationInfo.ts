@@ -49,4 +49,7 @@ if (cli.flags.h) {
         await client.getPassiveDelegationInfo(cli.flags.block);
 
     console.dir(passiveDelegationInfo, { depth: null, colors: true });
+
+    // The delegation info contain information that can then be extracted:
+    const totalCapital: bigint = passiveDelegationInfo.allPoolTotalCapital;
 })();

@@ -23,16 +23,17 @@
             if (index.value === '' || index.value == undefined) {
                 throw new Error('Please specify a contract index');
             }
-            if (!receiver.value) {
-                throw new Error('Specify receiver account');
+            if (!operator.value) {
+                throw new Error('Specify operator account');
             }
 
             const address = {index: BigInt(index.value), subindex: 0n};
             const contract = await concordiumSDK.CIS2Contract.create(client, address);
 
-            const transfer = {tokenId: tokenId.value ?? '', from: connectedAccount, to: receiver.value, tokenAmount: BigInt(amount.value ?? 0)};
-            //const transfer = {tokenId: '', from: connectedAccount, to: {address, hookName: 'some-name.receive-func-example'}, tokenAmount: BigInt(amount.value)}; // Example of using a contract receiver.
-            const txHash = await contract.transfer({amount: 0n, energy: 10000n}, transfer, async ({type, payload, parameter: {json}, schema, schemaVersion}) => walletApi.sendTransaction(connectedAccount, type, payload, json, schema, schemaVersion));
+            const checkedType = Object.values(type).find(field => field.checked).value;
+            const transfer = {type: checkedType, address: operator.value};
+            //const transfer = {type: checkedType, address}; // Example with contract address, using same address as used to instantiate the contract class
+            const txHash = await contract.updateOperator({amount: 0n, energy: 10000n}, transfer, async ({type, payload, parameter: {json}, schema, schemaVersion}) => walletApi.sendTransaction(connectedAccount, type, payload, json, schema, schemaVersion));
 
             if (txHash) {
                 const blockHash = client.waitForTransactionFinalization(txHash);
@@ -45,11 +46,17 @@
 <body>
     Contract index: <input type="number" id="index" />
     <br />
-    Token ID: <input type="text" id="tokenId" />
+    Operator account: <input type="text" id="operator" />
     <br />
-    Amount: <input type="number" id="amount" />
-    <br />
-    Receiver account: <input type="text" id="receiver" />
+    <fieldset style="width: 200px;">
+        <legend>
+            Update type:
+        </legend>
+        <input type="radio" name="type" id="type" value="add" checked /> Add
+        <br />
+        <input type="radio" name="type" id="type" value="remove" /> Remove
+        <br />
+    </fieldset>
     <br />
     <button id="button">
         Click

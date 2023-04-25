@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.11.1 2023-4-21
+
+### Changes
+
+- `generateBakerKeys` now also returns the private keys.
+
 ## 0.11.0 2023-3-22
 
 ### Added

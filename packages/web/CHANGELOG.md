@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.4.2 2023-4-21
+
+### Changed
+
+- Bumped @concordium/common-sdk to 6.4.2. (`generateBakerKeys` include private baker keys in output)
+
 ## 3.4.1 2023-3-31
 
 ### Changed

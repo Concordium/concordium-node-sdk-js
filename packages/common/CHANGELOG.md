@@ -1,9 +1,18 @@
 # Changelog
 
 ## Unreleased
+
 - Made the `streamToList()` function public.
 
+## 6.4.2 2023-04-21
+
+### Changed
+
+- `generateBakerKeys` now also returns the private baker keys.
+
 ## 6.4.1 2023-03-31
+
+### Changed
 
 - Replace use of `setImmediate` with `setTimeout` since the former is not
   supported in browsers.

@@ -89,6 +89,8 @@ const deserializeSupportResult =
  * @param {CIS0.StandardIdentifier} id - The standard identifier to query for support in contract.
  * @param {HexString} [blockHash] - The hash of the block to query at.
  *
+ * @throws If the query could not be invoked successfully.
+ *
  * @returns {CIS0.SupportResult} The support result of the query.
  */
 export function cis0Supports(
@@ -104,6 +106,8 @@ export function cis0Supports(
  * @param {ContractAddress} contractAddress - The address of the contract to query.
  * @param {CIS0.StandardIdentifier[]} ids - The standard identifiers to query for support in contract.
  * @param {HexString} [blockHash] - The hash of the block to query at.
+ *
+ * @throws If the query could not be invoked successfully.
  *
  * @returns {CIS0.SupportResult[]} The support results of the query. These are ordered by the ID's supplied by the `ids` param.
  */
@@ -126,6 +130,14 @@ export async function cis0Supports(
             `Could not get contract instance info for contract at address ${stringify(
                 contractAddress
             )}`
+        );
+    }
+
+    if (!instanceInfo.methods.includes('supports')) {
+        throw new Error(
+            `Contract at address ${stringify(
+                contractAddress
+            )} does not support the CIS-0 standard.`
         );
     }
 

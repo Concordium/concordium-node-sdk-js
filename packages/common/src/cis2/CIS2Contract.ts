@@ -27,6 +27,7 @@ import { CcdAmount } from '../types/ccdAmount';
 import { TransactionExpiry } from '../types/transactionExpiry';
 import { stringify } from 'json-bigint';
 import { makeSerializeDynamic } from '../serializationHelpers';
+import { CIS0, cis0Supports } from '../cis0';
 
 const getInvoker = (address: CIS2.Address): ContractAddress | AccountAddress =>
     isContractAddress(address) ? address : new AccountAddress(address);
@@ -173,6 +174,8 @@ export class CIS2Contract {
      *
      * @param {ConcordiumNodeClient} grpcClient - The client used for contract invocations and updates.
      * @param {ContractAddress} contractAddress - Address of the contract instance.
+     *
+     * @throws If `InstanceInfo` could not be received for the contract or if the contract does not support the CIS-2 standard.
      */
     static async create(
         grpcClient: ConcordiumNodeClient,
@@ -183,6 +186,20 @@ export class CIS2Contract {
         if (instanceInfo === undefined) {
             throw new Error(
                 `Could not get contract instance info for contract at address ${stringify(
+                    contractAddress
+                )}`
+            );
+        }
+
+        const { type } = await cis0Supports(
+            grpcClient,
+            contractAddress,
+            'CIS-2'
+        );
+
+        if (type !== CIS0.SupportType.Support) {
+            throw new Error(
+                `The CIS-2 standard is not supported by the contract at address ${stringify(
                     contractAddress
                 )}`
             );
@@ -200,6 +217,8 @@ export class CIS2Contract {
      * @param {CIS2.Transfer} transfer - The transfer object specifying the details of the transfer.
      * @param {Function} signer - Function to be used for signing and sending the transaction.
      *
+     * @throws If the update could not be invoked successfully.
+     *
      * @returns {R} A type corresponding to the return type of the supplied `signer` param.
      */
     transfer<R>(
@@ -215,6 +234,8 @@ export class CIS2Contract {
      * @param {CIS2.Transfer[]} transfers - A list of transfer objects, each specifying the details of a transfer.
      * @param {Function} signer - Function to be used for signing and sending the transaction.
      *
+     * @throws If the update could not be invoked successfully.
+     *
      * @returns {R} A type corresponding to the return type of the supplied `signer` param.
      */
     transfer<R>(
@@ -229,6 +250,8 @@ export class CIS2Contract {
      * @param {CIS2.Transfer} transfer - The transfer object specifying the details of the transfer.
      * @param {AccountSigner} signer - To be used for signing the transaction sent to the node.
      *
+     * @throws If the update could not be invoked successfully.
+     *
      * @returns {Promise<HexString>} The transaction hash of the update transaction
      */
     transfer(
@@ -242,6 +265,8 @@ export class CIS2Contract {
      * @param {CIS2.TransactionMetadata} metadata - Metadata needed for the transaction.
      * @param {CIS2.Transfer[]} transfers - A list of transfer objects, each specifying the details of a transfer.
      * @param {AccountSigner} signer - To be used for signing the transaction sent to the node.
+     *
+     * @throws If the update could not be invoked successfully.
      *
      * @returns {Promise<HexString>} The transaction hash of the update transaction
      */
@@ -282,6 +307,8 @@ export class CIS2Contract {
      * @param {CIS2.UpdateOperator} update - The update instruction object specifying the details of the update.
      * @param {Function} signer - Function to be used for signing and sending the transaction.
      *
+     * @throws If the update could not be invoked successfully.
+     *
      * @returns {R} A type corresponding to the return type of the supplied `signer` param.
      */
     updateOperator<R>(
@@ -297,6 +324,8 @@ export class CIS2Contract {
      * @param {CIS2.UpdateOperator[]} updates - A list of update instruction objects, each specifying the details of an update.
      * @param {Function} signer - Function to be used for signing and sending the transaction.
      *
+     * @throws If the update could not be invoked successfully.
+     *
      * @returns {R} A type corresponding to the return type of the supplied `signer` param.
      */
     updateOperator<R>(
@@ -311,6 +340,8 @@ export class CIS2Contract {
      * @param {CIS2.UpdateOperator} update - The update instruction object specifying the details of the update.
      * @param {AccountSigner} signer - To be used for signing the transaction sent to the node.
      *
+     * @throws If the update could not be invoked successfully.
+     *
      * @returns {Promise<HexString>} The transaction hash of the update transaction
      */
     updateOperator(
@@ -324,6 +355,8 @@ export class CIS2Contract {
      * @param {CIS2.TransactionMetadata} metadata - Metadata needed for the transaction.
      * @param {CIS2.UpdateOperator[]} updates - A list of update instruction objects, each specifying the details of an update.
      * @param {AccountSigner} signer - To be used for signing the transaction sent to the node.
+     *
+     * @throws If the update could not be invoked successfully.
      *
      * @returns {Promise<HexString>} The transaction hash of the update transaction
      */
@@ -362,6 +395,8 @@ export class CIS2Contract {
      * @param {CIS2.BalanceOfQuery} query - The query object specifying the details of the query.
      * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
+     * @throws If the query could not be invoked successfully.
+     *
      * @returns {bigint} The balance corresponding to the query.
      */
     balanceOf(
@@ -373,6 +408,8 @@ export class CIS2Contract {
      *
      * @param {CIS2.BalanceOfQuery[]} queries - A list of query objects, each specifying the details of a query.
      * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
+     *
+     * @throws If the query could not be invoked successfully.
      *
      * @returns {bigint[]} A list of balances corresponding to and ordered by the list of queries.
      */
@@ -399,6 +436,8 @@ export class CIS2Contract {
      * @param {CIS2.OperatorOfQuery} query - The query object specifying the details of the query.
      * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
+     * @throws If the query could not be invoked successfully.
+     *
      * @returns {boolean} Whether the specified address is an operator of the specified owner.
      */
     operatorOf(
@@ -410,6 +449,8 @@ export class CIS2Contract {
      *
      * @param {CIS2.OperatorOfQuery[]} queries - A list of query objects, each specifying the details of a query.
      * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
+     *
+     * @throws If the query could not be invoked successfully.
      *
      * @returns {boolean[]} As list of boolean results, each detailing whether the specified address is an operator of the specified owner for the corresponding query.
      * The list is ordered by the corresponding query.
@@ -437,6 +478,8 @@ export class CIS2Contract {
      * @param {HexString} tokenId - The ID of the token to get the metadata URL for.
      * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
+     * @throws If the query could not be invoked successfully.
+     *
      * @returns {CIS2.MetadataUrl} An object containing the URL of the token metadata.
      */
     tokenMetadata(
@@ -448,6 +491,8 @@ export class CIS2Contract {
      *
      * @param {HexString[]} tokenIds - A list of ID's of the tokens to get metadata URL's for.
      * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
+     *
+     * @throws If the query could not be invoked successfully.
      *
      * @returns {CIS2.MetadataUrl[]} A list of objects containing URL's for token metadata for the corresponding token.
      * The list is ordered by the token ID's given by `tokenIds` input parameter.
@@ -484,6 +529,8 @@ export class CIS2Contract {
      * @param {Function} jsonFormatter - A function to format the `input` as JSON format serializable by the contract schema.
      * @param {CIS2.CreateTransactionMetadata} metadata - Metadata to be used for the transaction creation (with defaults).
      * @param {T | T[]} input - Input for for contract function.
+     *
+     * @throws If the query could not be invoked successfully.
      *
      * @returns {HexString} The transaction hash of the update transaction
      */
@@ -528,6 +575,8 @@ export class CIS2Contract {
      * @param {CIS2.TransactionMetadata} metadata - Metadata to be used for the transaction (with defaults).
      * @param {AccountSigner} signer - An object to use for signing the transaction.
      *
+     * @throws If the query could not be invoked successfully.
+     *
      * @returns {HexString} The transaction hash of the update transaction
      */
     private async sendUpdateTransaction(
@@ -560,6 +609,8 @@ export class CIS2Contract {
      * @param {Function} serializer - A function to serialize the `input` to bytes.
      * @param {Function} deserializer - A function to deserialize the value returned from the view invocation.
      * @param {T | T[]} input - Input for for contract function.
+     *
+     * @throws If the query could not be invoked successfully.
      *
      * @returns {HexString} The transaction hash of the update transaction
      */

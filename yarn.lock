@@ -1312,11 +1312,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@concordium/common-sdk@6.4.1, @concordium/common-sdk@workspace:packages/common":
+"@concordium/common-sdk@6.4.2, @concordium/common-sdk@workspace:packages/common":
   version: 0.0.0-use.local
   resolution: "@concordium/common-sdk@workspace:packages/common"
   dependencies:
-    "@concordium/rust-bindings": 0.11.0
+    "@concordium/rust-bindings": 0.11.1
     "@grpc/grpc-js": ^1.3.4
     "@noble/ed25519": ^1.7.1
     "@protobuf-ts/plugin": 2.8.1
@@ -1349,6 +1349,46 @@ __metadata:
     uuid: ^8.3.2
   languageName: unknown
   linkType: soft
+
+"@concordium/common-sdk@npm:6.4.0":
+  version: 6.4.0
+  resolution: "@concordium/common-sdk@npm:6.4.0"
+  dependencies:
+    "@concordium/rust-bindings": 0.11.0
+    "@grpc/grpc-js": ^1.3.4
+    "@noble/ed25519": ^1.7.1
+    "@protobuf-ts/runtime-rpc": ^2.8.2
+    "@scure/bip39": ^1.1.0
+    bs58check: ^2.1.2
+    buffer: ^6.0.3
+    cross-fetch: 3.1.5
+    hash.js: ^1.1.7
+    iso-3166-1: ^2.1.1
+    json-bigint: ^1.0.0
+    uuid: ^8.3.2
+  checksum: d4d8fcd1961cfbe6939958afec90eeff05cc88c83cbb5bd6e1dcf5f887324e15b2c175e4e0dced4cf2860cdc06dcb945b94c88a7790f087028d4f1dcd9b40f86
+  languageName: node
+  linkType: hard
+
+"@concordium/common-sdk@npm:6.4.1":
+  version: 6.4.1
+  resolution: "@concordium/common-sdk@npm:6.4.1"
+  dependencies:
+    "@concordium/rust-bindings": 0.11.0
+    "@grpc/grpc-js": ^1.3.4
+    "@noble/ed25519": ^1.7.1
+    "@protobuf-ts/runtime-rpc": ^2.8.2
+    "@scure/bip39": ^1.1.0
+    bs58check: ^2.1.2
+    buffer: ^6.0.3
+    cross-fetch: 3.1.5
+    hash.js: ^1.1.7
+    iso-3166-1: ^2.1.1
+    json-bigint: ^1.0.0
+    uuid: ^8.3.2
+  checksum: 26cce68b496f9799359666d7ddf430c659c0250e16a96c8bfe1956162f737517896a9ab9e0c9a7a3a17117ee6d763a91cbcde20891c76d87444f67299a37c8c6
+  languageName: node
+  linkType: hard
 
 "@concordium/node-sdk@6.3.0, @concordium/node-sdk@workspace:packages/nodejs":
   version: 0.0.0-use.local
@@ -1383,18 +1423,25 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@concordium/rust-bindings@0.11.0, @concordium/rust-bindings@workspace:packages/rust-bindings":
+"@concordium/rust-bindings@0.11.1, @concordium/rust-bindings@workspace:packages/rust-bindings":
   version: 0.0.0-use.local
   resolution: "@concordium/rust-bindings@workspace:packages/rust-bindings"
   languageName: unknown
   linkType: soft
 
+"@concordium/rust-bindings@npm:0.11.0":
+  version: 0.11.0
+  resolution: "@concordium/rust-bindings@npm:0.11.0"
+  checksum: a6c437cb782b7b2e9f217215dd4dbed9ffb8b3ef46fa307952aca3ae8f166cb96687de64efd18490aec7e86d58712dccb7d1a8bf63c151e3ed2a0170f066cd6d
+  languageName: node
+  linkType: hard
+
 "@concordium/web-sdk@workspace:packages/web":
   version: 0.0.0-use.local
   resolution: "@concordium/web-sdk@workspace:packages/web"
   dependencies:
-    "@concordium/common-sdk": 6.4.1
-    "@concordium/rust-bindings": 0.11.0
+    "@concordium/common-sdk": 6.4.2
+    "@concordium/rust-bindings": 0.11.1
     "@grpc/grpc-js": ^1.3.4
     "@protobuf-ts/grpcweb-transport": ^2.8.2
     "@typescript-eslint/eslint-plugin": ^4.28.1

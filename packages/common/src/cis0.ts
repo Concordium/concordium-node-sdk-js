@@ -86,7 +86,7 @@ const deserializeSupportResult =
  *
  * @param {ConcordiumNodeClient} grpcClient - The client to be used for the query.
  * @param {ContractAddress} contractAddress - The address of the contract to query.
- * @param {CIS0.StandardIdentifier} id - The standard identifier to query for support in contract.
+ * @param {CIS0.StandardIdentifier} standardId - The standard identifier to query for support in contract.
  * @param {HexString} [blockHash] - The hash of the block to query at.
  *
  * @throws If the query could not be invoked successfully.
@@ -96,7 +96,7 @@ const deserializeSupportResult =
 export function cis0Supports(
     grpcClient: ConcordiumNodeClient,
     contractAddress: ContractAddress,
-    id: CIS0.StandardIdentifier,
+    standardId: CIS0.StandardIdentifier,
     blockHash?: HexString
 ): Promise<CIS0.SupportResult>;
 /**
@@ -104,7 +104,7 @@ export function cis0Supports(
  *
  * @param {ConcordiumNodeClient} grpcClient - The client to be used for the query.
  * @param {ContractAddress} contractAddress - The address of the contract to query.
- * @param {CIS0.StandardIdentifier[]} ids - The standard identifiers to query for support in contract.
+ * @param {CIS0.StandardIdentifier[]} standardIds - The standard identifiers to query for support in contract.
  * @param {HexString} [blockHash] - The hash of the block to query at.
  *
  * @throws If the query could not be invoked successfully.
@@ -114,13 +114,13 @@ export function cis0Supports(
 export function cis0Supports(
     grpcClient: ConcordiumNodeClient,
     contractAddress: ContractAddress,
-    ids: CIS0.StandardIdentifier[],
+    standardIds: CIS0.StandardIdentifier[],
     blockHash?: HexString
 ): Promise<CIS0.SupportResult[]>;
 export async function cis0Supports(
     grpcClient: ConcordiumNodeClient,
     contractAddress: ContractAddress,
-    ids: CIS0.StandardIdentifier | CIS0.StandardIdentifier[],
+    standardIds: CIS0.StandardIdentifier | CIS0.StandardIdentifier[],
     blockHash?: HexString
 ): Promise<CIS0.SupportResult | CIS0.SupportResult[]> {
     const instanceInfo = await grpcClient.getInstanceInfo(contractAddress);
@@ -133,7 +133,9 @@ export async function cis0Supports(
         );
     }
 
-    if (!instanceInfo.methods.includes('supports')) {
+    const contractName = instanceInfo.name.substring(5);
+
+    if (!instanceInfo.methods.includes(`${contractName}.supports`)) {
         throw new Error(
             `Contract at address ${stringify(
                 contractAddress
@@ -141,8 +143,9 @@ export async function cis0Supports(
         );
     }
 
-    const contractName = instanceInfo.name.substring(5);
-    const parameter = makeSerializeDynamic(serializeSupportIdentifiers)(ids);
+    const parameter = makeSerializeDynamic(serializeSupportIdentifiers)(
+        standardIds
+    );
 
     const response = await grpcClient.invokeContract(
         {
@@ -168,8 +171,8 @@ export async function cis0Supports(
         );
     }
     const results = deserializeSupportResult(response.returnValue);
-    const isListInput = Array.isArray(ids);
-    const expectedValuesLength = isListInput ? ids.length : 1;
+    const isListInput = Array.isArray(standardIds);
+    const expectedValuesLength = isListInput ? standardIds.length : 1;
 
     if (results.length !== expectedValuesLength) {
         throw new Error(

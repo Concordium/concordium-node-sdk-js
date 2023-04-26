@@ -29,19 +29,21 @@ import { stringify } from 'json-bigint';
 import { makeSerializeDynamic } from '../serializationHelpers';
 import { CIS0, cis0Supports } from '../cis0';
 
+const schemas = {
+    /** Base64 encoded schema for CIS-2.transfer parameter */
+    transfer:
+        'EAEUAAUAAAAIAAAAdG9rZW5faWQdAAYAAABhbW91bnQbJQAAAAQAAABmcm9tFQIAAAAHAAAAQWNjb3VudAEBAAAACwgAAABDb250cmFjdAEBAAAADAIAAAB0bxUCAAAABwAAAEFjY291bnQBAQAAAAsIAAAAQ29udHJhY3QBAgAAAAwWAQQAAABkYXRhHQE',
+    /** Base64 encoded schema for CIS-2.updateOperator parameter */
+    updateOperator:
+        'EAEUAAIAAAAGAAAAdXBkYXRlFQIAAAAGAAAAUmVtb3ZlAgMAAABBZGQCCAAAAG9wZXJhdG9yFQIAAAAHAAAAQWNjb3VudAEBAAAACwgAAABDb250cmFjdAEBAAAADA',
+};
+
 const getInvoker = (address: CIS2.Address): ContractAddress | AccountAddress =>
     isContractAddress(address) ? address : new AccountAddress(address);
 
 const getDefaultExpiryDate = (): Date => {
     const future5Minutes = Date.now() + 5 * 60 * 1000;
     return new Date(future5Minutes);
-};
-
-const schemas = {
-    transfer:
-        'EAEUAAUAAAAIAAAAdG9rZW5faWQdAAYAAABhbW91bnQbJQAAAAQAAABmcm9tFQIAAAAHAAAAQWNjb3VudAEBAAAACwgAAABDb250cmFjdAEBAAAADAIAAAB0bxUCAAAABwAAAEFjY291bnQBAQAAAAsIAAAAQ29udHJhY3QBAgAAAAwWAQQAAABkYXRhHQE',
-    updateOperator:
-        'EAEUAAIAAAAGAAAAdXBkYXRlFQIAAAAGAAAAUmVtb3ZlAgMAAABBZGQCCAAAAG9wZXJhdG9yFQIAAAAHAAAAQWNjb3VudAEBAAAACwgAAABDb250cmFjdAEBAAAADA',
 };
 
 /**
@@ -564,7 +566,6 @@ export class CIS2Contract {
                 value: schemas[entrypoint],
                 type: 'parameter',
             },
-            schemaVersion: 2,
         };
     }
 

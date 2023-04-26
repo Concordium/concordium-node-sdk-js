@@ -210,8 +210,11 @@ export function packBufferWithWord32Length(
  * @param buffer containing the buffer
  * @returns Buffer containing the length of the buffer of 16 bit and buffer.
  */
-export function packBufferWithWord16Length(buffer: Buffer): Buffer {
-    const length = encodeWord16(buffer.length);
+export function packBufferWithWord16Length(
+    buffer: Buffer,
+    useLittleEndian = false
+): Buffer {
+    const length = encodeWord16(buffer.length, useLittleEndian);
     return Buffer.concat([length, buffer]);
 }
 

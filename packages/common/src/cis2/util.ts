@@ -35,7 +35,7 @@ export namespace CIS2 {
     export type ContractReceiver = {
         /** Contract address to receive tokens */
         address: ContractAddress;
-        /** Hook to be called on receiver contract. This must include the contract name, in the format of `"<contractName>.<receiveFuncName>"` */
+        /** Name of the entrypoint to be called on receiver contract. This is only the name of the function, NOT including the contract name */
         hookName: string;
     };
 
@@ -133,15 +133,18 @@ export namespace CIS2 {
         /** The payload of the transaction, which will always be of type {@link UpdateContractPayload} */
         payload: UpdateContractPayload;
         parameter: {
+            /** Hex encoded parameter for the update */
             hex: HexString;
+            /** JSON representation of the parameter to be used with the corresponding contract schema */
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             json: any;
         };
         schema: {
+            /** Base64 encoded schema for the parameter type */
             value: Base64String;
+            /** Type of the schema. This is always of type "parameter" */
             type: 'parameter';
         };
-        schemaVersion: number;
     };
 
     /**
@@ -234,7 +237,7 @@ function serializeReceiveHookName(hook: string): Buffer {
         );
     }
 
-    return packBufferWithWord16Length(serialized);
+    return packBufferWithWord16Length(serialized, true);
 }
 
 function serializeContractReceiver(receiver: CIS2.ContractReceiver): Buffer {
@@ -255,7 +258,7 @@ function serializeReceiver(receiver: CIS2.Receiver): Buffer {
 
 function serializeAdditionalData(data: HexString): Buffer {
     const serialized = Buffer.from(data, 'hex');
-    return packBufferWithWord16Length(serialized);
+    return packBufferWithWord16Length(serialized, true);
 }
 
 const makeSerializeList =
@@ -470,11 +473,6 @@ export const formatCIS2Transfer = (
     if (typeof input.to === 'string') {
         to = { Account: [input.to] };
     } else {
-        if (!input.to.hookName.includes('.')) {
-            throw new Error(
-                'Receive hook function needs both contract name and function name specified'
-            );
-        }
         to = {
             Contract: [
                 {

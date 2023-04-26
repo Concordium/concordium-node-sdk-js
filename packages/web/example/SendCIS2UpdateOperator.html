@@ -33,7 +33,7 @@
             const checkedType = Object.values(type).find(field => field.checked).value;
             const transfer = {type: checkedType, address: operator.value};
             //const transfer = {type: checkedType, address}; // Example with contract address, using same address as used to instantiate the contract class
-            const txHash = await contract.updateOperator({amount: 0n, energy: 10000n}, transfer, async ({type, payload, parameter: {json}, schema, schemaVersion}) => walletApi.sendTransaction(connectedAccount, type, payload, json, schema, schemaVersion));
+            const txHash = await contract.updateOperator({amount: 0n, energy: 10000n}, transfer, async ({type, payload, parameter: {json}, schema}) => walletApi.sendTransaction(connectedAccount, type, payload, json, schema));
 
             if (txHash) {
                 const blockHash = client.waitForTransactionFinalization(txHash);

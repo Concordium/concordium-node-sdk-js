@@ -1,7 +1,11 @@
+import { Buffer } from 'buffer/';
 import {
+    AccountAddress,
     AccountTransactionType,
     CIS2Contract,
     ContractAddress,
+    serializeTypeValue,
+    serializeUpdateContractParameters,
     TransactionEventTag,
 } from '@concordium/common-sdk';
 import { getNodeClient } from './testHelpers';
@@ -143,63 +147,20 @@ test('dryRun.transfer', async () => {
             resultMulti.events[0].events.length
     ).toEqual(2);
 
-    // TODO: This is supposed to test that transfer is successfully run with a contract receiver..
     const resultContractReceiver = await cis2.dryRun.transfer(
         TEST_ACCOUNT,
         {
             tokenId: '',
             from: TEST_ACCOUNT,
             to: {
-                address: { index: 3494n, subindex: 0n },
-                hookName: 'name.function',
+                address: { index: 4416n, subindex: 0n },
+                hookName: 'onReceivingCIS2',
             },
-            tokenAmount: 100n,
+            tokenAmount: 0n,
         },
-        TEST_BLOCK
+        'a03ca5112f2bf38bbb4f4d524432ff3a060226d823a3a868aa23b7d0d628e112'
     );
-    expect(resultContractReceiver.tag).toEqual('failure'); // TODO: change to 'success' when the parameter given to invocation above is fixed.
-});
-
-test('dryRun.updateOperator', async () => {
-    const cis2 = await getCIS2Single();
-    const result = await cis2.dryRun.updateOperator(
-        TEST_ACCOUNT,
-        {
-            type: 'add',
-            address: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
-        },
-        TEST_BLOCK
-    );
-    expect(result.usedEnergy).toEqual(2735n);
-    // Results in 1 transfer event
-    expect(
-        result.tag === 'success' &&
-            result.events[0].tag === TransactionEventTag.Updated &&
-            result.events[0].events.length
-    ).toEqual(1);
-
-    const resultMulti = await cis2.dryRun.updateOperator(
-        TEST_ACCOUNT,
-        [
-            {
-                type: 'add',
-                address: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
-            },
-            {
-                type: 'remove',
-                address: { index: 3494n, subindex: 0n },
-            },
-        ],
-        TEST_BLOCK
-    );
-
-    expect(resultMulti.usedEnergy).toEqual(2960n);
-    // Results in 2 transfer events
-    expect(
-        resultMulti.tag === 'success' &&
-            resultMulti.events[0].tag === TransactionEventTag.Updated &&
-            resultMulti.events[0].events.length
-    ).toEqual(2);
+    expect(resultContractReceiver.tag).toEqual('success');
 });
 
 test('transfer', async () => {
@@ -246,7 +207,7 @@ test('transfer', async () => {
     );
 
     cis2.transfer(
-        { energy: 1000000n },
+        { energy: 10000n },
         [
             {
                 tokenId: '',
@@ -256,14 +217,17 @@ test('transfer', async () => {
             },
             {
                 tokenId: '',
-                to: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
                 from: TEST_ACCOUNT,
-                tokenAmount: 100n,
+                to: {
+                    address: { index: 4416n, subindex: 0n },
+                    hookName: 'onReceivingCIS2',
+                },
+                tokenAmount: 0n,
             },
         ],
-        ({ parameter }) => {
+        ({ parameter, schema }) => {
             const expectedParameterHex =
-                '0200006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb490000006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb490000';
+                '0200006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb490000000000c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f01401100000000000000000000000000000f006f6e526563656976696e67434953320000';
             // Parameter is formatted and serialized as expected
             expect(parameter.hex).toEqual(expectedParameterHex);
             expect(parameter.json).toEqual([
@@ -280,18 +244,68 @@ test('transfer', async () => {
                 },
                 {
                     token_id: '',
-                    amount: '100',
+                    amount: '0',
                     from: { Account: [TEST_ACCOUNT] },
                     to: {
-                        Account: [
-                            '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
+                        Contract: [
+                            { index: 4416, subindex: 0 },
+                            'onReceivingCIS2',
                         ],
                     },
                     data: '',
                 },
             ]);
+            const schemaSerialized = serializeTypeValue(
+                parameter.json,
+                Buffer.from(schema.value, 'base64')
+            );
+            expect(schemaSerialized.toString('hex')).toEqual(
+                expectedParameterHex
+            );
         }
     );
+});
+
+test('dryRun.updateOperator', async () => {
+    const cis2 = await getCIS2Single();
+    const result = await cis2.dryRun.updateOperator(
+        TEST_ACCOUNT,
+        {
+            type: 'add',
+            address: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
+        },
+        TEST_BLOCK
+    );
+    expect(result.usedEnergy).toEqual(2735n);
+    // Results in 1 transfer event
+    expect(
+        result.tag === 'success' &&
+            result.events[0].tag === TransactionEventTag.Updated &&
+            result.events[0].events.length
+    ).toEqual(1);
+
+    const resultMulti = await cis2.dryRun.updateOperator(
+        TEST_ACCOUNT,
+        [
+            {
+                type: 'add',
+                address: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
+            },
+            {
+                type: 'remove',
+                address: { index: 3494n, subindex: 0n },
+            },
+        ],
+        TEST_BLOCK
+    );
+
+    expect(resultMulti.usedEnergy).toEqual(2960n);
+    // Results in 2 transfer events
+    expect(
+        resultMulti.tag === 'success' &&
+            resultMulti.events[0].tag === TransactionEventTag.Updated &&
+            resultMulti.events[0].events.length
+    ).toEqual(2);
 });
 
 test('updateOperator', async () => {

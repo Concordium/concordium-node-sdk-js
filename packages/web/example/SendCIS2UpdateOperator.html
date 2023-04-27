@@ -36,7 +36,9 @@
             const txHash = await contract.updateOperator({amount: 0n, energy: 10000n}, transfer, async ({type, payload, parameter: {json}, schema}) => walletApi.sendTransaction(connectedAccount, type, payload, json, schema));
 
             if (txHash) {
-                const blockHash = client.waitForTransactionFinalization(txHash);
+                console.log('Waiting for finalization');
+                const blockHash = await client.waitForTransactionFinalization(txHash);
+                console.log('Transaction included in block', blockHash);
             }
         };
         document.getElementById('button').onclick = send;

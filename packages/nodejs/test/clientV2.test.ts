@@ -8,13 +8,14 @@ import ConcordiumNodeClientV2, {
 import {
     buildBasicAccountSigner,
     calculateEnergyCost,
-    createCredentialDeploymentTransaction,
     getAccountTransactionHandler,
     getCredentialDeploymentSignDigest,
     serializeAccountTransactionPayload,
     sha256,
     signTransaction,
     streamToList,
+    deserializeReceiveReturnValue,
+    createCredentialDeploymentTransaction,
 } from '@concordium/common-sdk';
 import {
     getModuleBuffer,
@@ -702,10 +703,16 @@ test.each([clientV2, clientWeb])('getElectionInfo', async (client) => {
 test.each([clientV2, clientWeb])(
     'getAccountNonFinalizedTransactions',
     async (client) => {
+<<<<<<< HEAD
         const transactions = await client.getAccountNonFinalizedTransactions(
             testAccount
         );
         const transactionsList = await streamToList(transactions);
+=======
+        const transactions =
+            client.getAccountNonFinalizedTransactions(testAccount);
+        const transactionsList = await asyncIterableToList(transactions);
+>>>>>>> 67bba76 (Added getEmbeddedSchema, updated `common` dependency and small fixups)
 
         expect(transactionsList).toBeDefined();
         if (transactionsList[0]) {
@@ -719,10 +726,17 @@ test.each([clientV2, clientWeb])(
     async (client) => {
         const blockHash =
             '8f3acabb19ef769db4d13ada858a305cc1a3d64adeb78fcbf3bb9f7583de6362';
+<<<<<<< HEAD
         const transactionEvents = await client.getBlockTransactionEvents(
             blockHash
         );
         const transactionEventList = await streamToList(transactionEvents);
+=======
+        const transactionEvents = client.getBlockTransactionEvents(blockHash);
+        const transactionEventList = await asyncIterableToList(
+            transactionEvents
+        );
+>>>>>>> 67bba76 (Added getEmbeddedSchema, updated `common` dependency and small fixups)
 
         expect(transactionEventList).toEqual(expected.transactionEventList);
     }
@@ -733,10 +747,17 @@ test.each([clientV2, clientWeb])(
     async (client) => {
         const blockHash =
             '8f3acabb19ef769db4d13ada858a305cc1a3d64adeb78fcbf3bb9f7583de6362';
+<<<<<<< HEAD
         const transactionEvents = await client.getBlockTransactionEvents(
             blockHash
         );
         const transactionEventList = await streamToList(transactionEvents);
+=======
+        const transactionEvents = client.getBlockTransactionEvents(blockHash);
+        const transactionEventList = await asyncIterableToList(
+            transactionEvents
+        );
+>>>>>>> 67bba76 (Added getEmbeddedSchema, updated `common` dependency and small fixups)
 
         expect(transactionEventList).toEqual(expected.transactionEventList);
     }
@@ -780,6 +801,29 @@ test.each([clientV2, clientWeb])(
         expect(finalizationSummary).toEqual(expected.blockFinalizationSummary);
     }
 );
+
+test.each([clientV2, clientWeb])('getModuleSchema', async (client) => {
+    const contract = { index: 4422n, subindex: 0n };
+    const moduleRef = new v1.ModuleReference(
+        '44434352ddba724930d6b1b09cd58bd1fba6ad9714cf519566d5fe72d80da0d1'
+    );
+
+    const schema = await client.getEmbeddedSchema(moduleRef);
+
+    const context = { contract, method: 'weather.get' };
+    const invoked = await client.invokeContract(context);
+
+    if (invoked.tag === 'success' && invoked.returnValue) {
+        const rawReturnValue = Buffer.from(invoked.returnValue, 'hex');
+        const returnValue = deserializeReceiveReturnValue(
+            rawReturnValue,
+            schema,
+            'weather',
+            'get'
+        );
+        expect(returnValue).toEqual({ Sunny: [] });
+    }
+});
 
 // For tests that take a long time to run, is skipped by default
 describe.skip('Long run-time test suite', () => {

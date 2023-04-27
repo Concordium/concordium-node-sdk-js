@@ -3,6 +3,8 @@
 ## Unreleased
 
 - Made the `streamToList()` function public.
+- Added `wasmToSchema` utility function.
+- Added `getEmbeddedSchema` to client.
 
 ## 6.4.2 2023-04-21
 

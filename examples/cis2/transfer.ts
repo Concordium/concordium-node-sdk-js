@@ -1,4 +1,3 @@
-import { AccountAddress } from '@concordium/common-sdk';
 import {
     createConcordiumClient,
     CIS2,
@@ -92,10 +91,8 @@ if (cli.flags.h) {
     });
 
     const signer = buildBasicAccountSigner(cli.flags.privateKey);
+    const tokenId = cli.flags.tokenId;
     const from = cli.flags.from;
-    const { nonce } = await client.getNextAccountNonce(
-        new AccountAddress(from)
-    );
     const toAddress = parseAddress(cli.flags.to);
     const to: CIS2.Receiver =
         typeof toAddress === 'string'
@@ -109,13 +106,12 @@ if (cli.flags.h) {
         {
             senderAddress: from,
             energy: 10000n,
-            nonce,
         },
         {
             from,
             to,
             tokenAmount: BigInt(cli.flags.amount),
-            tokenId: '',
+            tokenId,
         },
         signer
     );

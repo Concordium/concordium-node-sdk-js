@@ -1,11 +1,9 @@
 import { Buffer } from 'buffer/';
 import {
-    AccountAddress,
     AccountTransactionType,
     CIS2Contract,
     ContractAddress,
     serializeTypeValue,
-    serializeUpdateContractParameters,
     TransactionEventTag,
 } from '@concordium/common-sdk';
 import { getNodeClient } from './testHelpers';

@@ -586,15 +586,16 @@ export class CIS2Contract {
         { type, payload }: CIS2.UpdateTransaction,
         {
             senderAddress,
-            nonce,
             expiry = getDefaultExpiryDate(),
         }: CIS2.TransactionMetadata,
         signer: AccountSigner
     ): Promise<HexString> {
+        const sender = new AccountAddress(senderAddress);
+        const { nonce } = await this.grpcClient.getNextAccountNonce(sender);
         const header = {
             expiry: new TransactionExpiry(expiry),
-            nonce,
-            sender: new AccountAddress(senderAddress),
+            nonce: nonce,
+            sender,
         };
         const transaction = {
             type,

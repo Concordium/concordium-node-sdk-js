@@ -78,8 +78,6 @@ export namespace CIS2 {
         amount?: bigint;
         /** The sender address of the transaction */
         senderAddress: HexString;
-        /** Account nonce to use for the transaction */
-        nonce: bigint;
         /** Expiry date of the transaction. Defaults to 5 minutes in the future */
         expiry?: Date;
         /** Max energy to be used for the transaction */

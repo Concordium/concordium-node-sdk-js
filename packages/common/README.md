@@ -38,6 +38,7 @@ This package is the shared library for the nodejs and web SDK's.
     - [Prove Statement (getIdProof)](#prove-statement-getidproof)
 - [ConcordiumNodeClient](#concordiumnodeclient)
 - [JSON-RPC client](#json-rpc-client)
+- [CIS-2 Contract](#cis-2-contract)
 
 # Constructing transactions
 
@@ -831,3 +832,8 @@ The [nodejs SDK uses a regular gRPC transport](../nodejs#ConcordiumNodeClient), 
 > :warning: **The JSON-RPC client has been deprecated**: the gRPC client should be used instead to communicate directly with a node
 
 The SDK also provides a JSON-RPC client, [check here for the documentation](../../docs/JSON-RPC.md).
+
+# CIS-2 contract
+The SDK provides a class for interacting with smart contracts adhering to the [CIS-2 standard](https://proposals.concordium.software/CIS/cis-2.html).
+
+For an overview of the class, [check here](../../docs/CIS2Contract.md).

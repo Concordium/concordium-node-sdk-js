@@ -83,6 +83,7 @@ if (cli.flags.h) {
         subindex: BigInt(cli.flags.subindex),
     });
 
+    const tokenId = cli.flags.tokenId;
     const from = cli.flags.from;
     const toAddress = parseAddress(cli.flags.to);
     const to: CIS2.Receiver =
@@ -97,7 +98,7 @@ if (cli.flags.h) {
         from,
         to,
         tokenAmount: BigInt(cli.flags.amount),
-        tokenId: '',
+        tokenId,
     });
 
     console.log(result);

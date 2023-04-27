@@ -1,4 +1,3 @@
-import { AccountAddress } from '@concordium/common-sdk';
 import {
     createConcordiumClient,
     CIS2Contract,
@@ -83,16 +82,12 @@ if (cli.flags.h) {
 
     const signer = buildBasicAccountSigner(cli.flags.privateKey);
     const owner = cli.flags.owner;
-    const { nonce } = await client.getNextAccountNonce(
-        new AccountAddress(owner)
-    );
     const address = parseAddress(cli.flags.address);
 
     const txHash = await contract.updateOperator(
         {
             senderAddress: owner,
             energy: 10000n,
-            nonce,
         },
         {
             type: cli.flags.updateType as 'add' | 'remove',

@@ -28,6 +28,7 @@ import { TransactionExpiry } from '../types/transactionExpiry';
 import { stringify } from 'json-bigint';
 import { makeSerializeDynamic } from '../serializationHelpers';
 import { CIS0, cis0Supports } from '../cis0';
+import { getContractName } from '../contractHelpers';
 
 const schemas = {
     /** Base64 encoded schema for CIS-2.transfer parameter */
@@ -177,7 +178,8 @@ export class CIS2Contract {
      * @param {ConcordiumNodeClient} grpcClient - The client used for contract invocations and updates.
      * @param {ContractAddress} contractAddress - Address of the contract instance.
      *
-     * @throws If `InstanceInfo` could not be received for the contract or if the contract does not support the CIS-2 standard.
+     * @throws If `InstanceInfo` could not be received for the contract, if the contract does not support the CIS-2 standard,
+     * or if the contract name could not be parsed from the information received from the node.
      */
     static async create(
         grpcClient: ConcordiumNodeClient,
@@ -207,7 +209,7 @@ export class CIS2Contract {
             );
         }
 
-        const contractName = instanceInfo.name.substring(5);
+        const contractName = getContractName(instanceInfo);
         return new CIS2Contract(grpcClient, contractAddress, contractName);
     }
 

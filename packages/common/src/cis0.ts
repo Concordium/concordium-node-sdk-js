@@ -8,6 +8,7 @@ import {
     packBufferWithWord8Length,
 } from './serializationHelpers';
 import { stringify } from 'json-bigint';
+import { getContractName } from './contractHelpers';
 
 /** Namespace with types for CIS-0 standard contracts */
 // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -133,7 +134,7 @@ export async function cis0Supports(
         );
     }
 
-    const contractName = instanceInfo.name.substring(5);
+    const contractName = getContractName(instanceInfo);
 
     if (!instanceInfo.methods.includes(`${contractName}.supports`)) {
         throw new Error(

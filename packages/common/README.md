@@ -26,6 +26,7 @@ This package is the shared library for the nodejs and web SDK's.
     - [Deserialize a transaction](#deserialize-a-transaction)
     - [Sign an account transaction](#sign-an-account-transaction)
     - [Sign a message](#sign-a-message)
+    - [Check smart contract for support for standards](#check-smart-contract-for-support-for-standards)
 - [Identity proofs](#identity-proofs)
     - [Build Statement](#build-statement)
         - [Minimum Age](#minimum-age)
@@ -681,6 +682,20 @@ const deserializedValue = deserializeTypeValue(serializedValue, rawTypeSchema);
 ```
 
 Note that the specific schema can be obtained using [cargo-concordium](https://developer.concordium.software/en/mainnet/smart-contracts/guides/setup-tools.html#cargo-concordium)'s  `schema-json` command, and specifically for parameters, this SDK exposes functions for that, check [the serialize parameters with only the specific types schema section](serialize-parameters-with-only-the-specific-types-schema) for those.
+
+## Check smart contract for support for standards
+To check if a smart contract supports a certain standard (according to [CIS-0 standard detection](https://proposals.concordium.software/CIS/cis-0.html)), the utility function `cis0Supports` can be used:
+
+This requires a `ConcordiumNodeClient`.
+
+```js
+const client = ...; // `ConcordiumNodeClient`
+const address = {index: 1234n, subindex: 0n}; // Contract to check for support.
+const standardId = 'CIS-2';
+// const standardIds = ['CIS-1', 'CIS-2']; // Example of a list of standards to check for.
+
+const supportResult = await cis0Supports(client, address, 'CIS-2');
+```
 
 # Identity proofs
 ## Build Statement

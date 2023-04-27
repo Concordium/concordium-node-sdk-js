@@ -152,21 +152,34 @@ export namespace CIS2 {
         transaction: UpdateTransaction
     ) => R;
 
+    /**
+     * Structure of JSON formatted address parameter
+     */
     export type AddressParamJson =
         | { Account: [Base58String] }
         | { Contract: [{ index: number; subindex: number }] };
-    export type ReceiveParamJson =
+
+    /**
+     * Structure of JSON formatted receiver parameter
+     */
+    export type ReceiverParamJson =
         | { Account: [Base58String] }
         | { Contract: [{ index: number; subindex: number }, string] };
 
+    /**
+     * Structure of JSON formatted parameter used for CIS-2 "transfer" transactions
+     */
     export type TransferParamJson = {
         token_id: HexString;
         amount: string;
         from: AddressParamJson;
-        to: ReceiveParamJson;
+        to: ReceiverParamJson;
         data: HexString;
     };
 
+    /**
+     * Structure of JSON formatted parameter used for CIS-2 "updateOperator" transactions
+     */
     export type UpdateOperatorParamJson = {
         update:
             | { Add: Record<string, never> }
@@ -467,7 +480,7 @@ export const formatCIS2Transfer = (
               ],
           }
         : { Account: [input.from] };
-    let to: CIS2.ReceiveParamJson;
+    let to: CIS2.ReceiverParamJson;
     if (typeof input.to === 'string') {
         to = { Account: [input.to] };
     } else {

@@ -706,9 +706,39 @@ export interface VerifyKey {
     verifyKey: string;
 }
 
+export interface KeyPair {
+    signKey: string;
+    verifyKey: string;
+}
+
 export interface CredentialPublicKeys {
     keys: Record<number, VerifyKey>;
     threshold: number;
+}
+
+export interface CredentialKeys {
+    keys: Record<number, KeyPair>;
+    threshold: number;
+}
+
+export interface AccountKeys {
+    keys: Record<number, CredentialKeys>;
+    threshold: number;
+}
+
+export interface WithAccountKeys {
+    accountKeys: AccountKeys;
+}
+
+export interface WalletExportFormat {
+    type: string;
+    v: number;
+    environment: string;
+    value: {
+        accountKeys: AccountKeys;
+        address: Base58String;
+        credentials: Record<number, string>;
+    };
 }
 
 export interface ChainArData {

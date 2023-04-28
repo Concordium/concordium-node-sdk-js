@@ -7,7 +7,7 @@ import {
     AccountAddress,
     AccountInfo,
     buildAccountSigner,
-    WithAccountKeys,
+    SimpleAccountKeys,
 } from '../src';
 
 const TEST_ACCOUNT_SINGLE =
@@ -16,34 +16,11 @@ const TEST_ACCOUNT_MULTI = '4hTGW1Uz6u2hUgEtwWjJUdZQncVpHGWZPgGdRpgL1VNn5NzyHd';
 
 const TEST_KEY_SINGLE =
     'e1cf504954663e49f4fe884c7c35415b09632cccd82d3d2a62ab2825e67d785d';
-const TEST_KEYS_MULTI: WithAccountKeys = {
-    accountKeys: {
-        keys: {
-            0: {
-                keys: {
-                    0: {
-                        signKey:
-                            '671eb13486ea747a1c27984aca67778508dcf54bdac00a32fd138ef69ad2e5b5',
-                        verifyKey:
-                            '008739a5c6708b25c359d45179fefda7ef1345099c0ad8e9b66ed253d968098d',
-                    },
-                    1: {
-                        signKey:
-                            '76cc8d4202810aa60109435d83357751f3108d00d27d0d6cae07ab536cf6731d',
-                        verifyKey:
-                            '45b55ad7438cb72c06489be231443cb3b7708f9b3f770729e2092f78ea9e2d9d',
-                    },
-                    2: {
-                        signKey:
-                            '131a05cab3b2b18a867ae3e245881cb0f2cf2924ae33a9fa948d1451c2bd8707',
-                        verifyKey:
-                            'ed2f710f6edbf65806eaee6d643a12124332a6dc687be099b63fd0150294168d',
-                    },
-                },
-                threshold: 3,
-            },
-        },
-        threshold: 1,
+const TEST_KEYS_MULTI: SimpleAccountKeys = {
+    0: {
+        0: '671eb13486ea747a1c27984aca67778508dcf54bdac00a32fd138ef69ad2e5b5',
+        1: '76cc8d4202810aa60109435d83357751f3108d00d27d0d6cae07ab536cf6731d',
+        2: '131a05cab3b2b18a867ae3e245881cb0f2cf2924ae33a9fa948d1451c2bd8707',
     },
 };
 

@@ -1,12 +1,11 @@
 import { getAccountTransactionSignDigest } from './serialization';
 import {
     AccountInfo,
-    AccountKeys,
     AccountTransaction,
     AccountTransactionSignature,
-    CredentialKeys,
     CredentialSignature,
     HexString,
+    SimpleAccountKeys,
     WalletExportFormat,
     WithAccountKeys,
 } from './types';
@@ -43,7 +42,7 @@ const getSignature = async (
  * Creates an `AccountSigner` for an account which uses the first credential's first keypair.
  * Note that if the account has a threshold > 1 or the first credentials has a threshold > 1, the transaction signed using this will fail.
  *
- * @param privateKey the ed25519 private key in HEX format. (First credential's first keypair's private key)
+ * @param {HexString} privateKey - the ed25519 private key in HEX format. (First credential's first keypair's private key)
  *
  * @returns {AccountSigner} an `AccountSigner` which creates a signature using the first credentials first keypair
  */
@@ -67,13 +66,41 @@ const isWalletExport = <T extends WithAccountKeys>(
 ): value is WalletExportFormat =>
     (value as WalletExportFormat).value?.accountKeys !== undefined;
 
+const isSimpleAccountKeys = <T extends WithAccountKeys>(
+    value: T | WalletExportFormat | SimpleAccountKeys
+): value is SimpleAccountKeys =>
+    (value as WalletExportFormat).value?.accountKeys === undefined &&
+    (value as T).accountKeys === undefined;
+
+const getKeys = <T extends WithAccountKeys>(
+    value: T | WalletExportFormat | SimpleAccountKeys
+): SimpleAccountKeys => {
+    if (isSimpleAccountKeys(value)) {
+        return value;
+    }
+    const { keys } = isWalletExport(value)
+        ? value.value.accountKeys
+        : value.accountKeys;
+
+    return Object.entries(keys).reduce(
+        (acc, [k, v]) => ({
+            ...acc,
+            [k]: Object.entries(v.keys).reduce(
+                (a, e) => ({ ...a, [e[0]]: e[1].signKey }),
+                {}
+            ),
+        }),
+        {}
+    );
+};
+
 const getCredentialSignature = async (
     digest: Buffer,
-    { keys }: CredentialKeys
+    keys: Record<number, HexString>
 ): Promise<CredentialSignature> => {
     const sig: CredentialSignature = {};
     for (const key in keys) {
-        sig[key] = await getSignature(digest, keys[key].signKey);
+        sig[key] = await getSignature(digest, keys[key]);
     }
     return sig;
 };
@@ -84,33 +111,53 @@ const getCredentialSignature = async (
  *
  * @param {WalletExportFormat} walletExport - The wallet export object.
  *
- * @returns {AccountSigner} an `AccountSigner` which creates signatures using all keys for all credentials
+ * @returns {AccountSigner} An `AccountSigner` which creates signatures using all keys for all credentials
  */
 export function buildAccountSigner(
     walletExport: WalletExportFormat
 ): AccountSigner;
 /**
- * Creates a signer for an arbitrary format extending the {@link WithAccountKeys} type.
+ * Creates an `AccountSigner` for an arbitrary format extending the {@link WithAccountKeys} type.
  * Creating signatures using the `AccountSigner` will hold signatures for all credentials and all their respective keys included.
  *
  * @param {AccountKeys} value.accountKeys - Account keys of type {@link AccountKeys} to use for creating signatures
  *
- * @returns {AccountSigner} an `AccountSigner` which creates signatures using all keys for all credentials
+ * @returns {AccountSigner} An `AccountSigner` which creates signatures using all keys for all credentials
  */
 export function buildAccountSigner<T extends WithAccountKeys>(
     value: T
 ): AccountSigner;
+/**
+ * Creates an `AccountSigner` for the {@link SimpleAccountKeys} type.
+ * Creating signatures using the `AccountSigner` will hold signatures for all credentials and all their respective keys included.
+ *
+ * @param {SimpleAccountKeys} keys - Account keys to use for creating signatures
+ *
+ * @returns {AccountSigner} An `AccountSigner` which creates signatures using all keys for all credentials
+ */
+export function buildAccountSigner(keys: SimpleAccountKeys): AccountSigner;
+/**
+ * Creates an `AccountSigner` for an account which uses the first credential's first keypair.
+ * Note that if the account has a threshold > 1 or the first credentials has a threshold > 1, the transaction signed using this will fail.
+ *
+ * @param {HexString} key - The ed25519 private key in HEX format. (First credential's first keypair's private key)
+ *
+ * @returns {AccountSigner} An `AccountSigner` which creates a signature using the first credentials first keypair
+ */
+export function buildAccountSigner(key: HexString): AccountSigner;
 export function buildAccountSigner<T extends WithAccountKeys>(
-    value: T | WalletExportFormat
+    value: T | WalletExportFormat | SimpleAccountKeys | string
 ): AccountSigner {
-    const { keys }: AccountKeys = isWalletExport(value)
-        ? value.value.accountKeys
-        : value.accountKeys;
+    if (typeof value === 'string') {
+        return buildBasicAccountSigner(value);
+    }
 
+    const keys = getKeys<T>(value);
     const numKeys = Object.values(keys).reduce(
         (acc, credKeys) => acc + BigInt(Object.keys(credKeys).length),
         0n
     );
+
     return {
         getSignatureCount() {
             return numKeys;

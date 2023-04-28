@@ -703,12 +703,12 @@ export interface AccountEncryptedAmount {
 
 export interface VerifyKey {
     schemeId: string;
-    verifyKey: string;
+    verifyKey: HexString;
 }
 
 export interface KeyPair {
-    signKey: string;
-    verifyKey: string;
+    signKey: HexString;
+    verifyKey: HexString;
 }
 
 export interface CredentialPublicKeys {
@@ -725,6 +725,8 @@ export interface AccountKeys {
     keys: Record<number, CredentialKeys>;
     threshold: number;
 }
+
+export type SimpleAccountKeys = Record<number, Record<number, HexString>>;
 
 export interface WithAccountKeys {
     accountKeys: AccountKeys;

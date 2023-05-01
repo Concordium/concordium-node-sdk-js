@@ -1,5 +1,4 @@
-import { HexString, streamToList } from '@concordium/common-sdk';
-import { createConcordiumClient } from '@concordium/node-sdk';
+import { createConcordiumClient, HexString } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -13,18 +12,13 @@ const cli = meow(
     --max-ancestors, -m  Maximum amount of ancestors to get
 
   Options
-    --help,     -h  Displays this message
+    --help,         Displays this message
     --block,    -b  A block to query from, defaults to last final block
     --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
 `,
     {
         importMeta: import.meta,
         flags: {
-            endpoint: {
-                type: 'string',
-                alias: 'e',
-                default: 'localhost:20000',
-            },
             maxAncestors: {
                 type: 'number',
                 alias: 'm',
@@ -35,6 +29,11 @@ const cli = meow(
                 alias: 'b',
                 default: '', // This defaults to LastFinal
             },
+            endpoint: {
+                type: 'string',
+                alias: 'e',
+                default: 'localhost:20000',
+            },
         },
     }
 );
@@ -43,19 +42,18 @@ const [address, port] = cli.flags.endpoint.split(':');
 const client = createConcordiumClient(
     address,
     Number(port),
-    credentials.createInsecure(),
-    { timeout: 15000 }
+    credentials.createInsecure()
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
+/**
+ * Retrieves all ancestors that exists in the state at the end of a given block,
+ * as an async iterable of hex strings. A bigint representing the max number
+ * of ancestors to get must be provided. If a blockhash is not supplied it
+ * will pick the latest finalized block. An optional abortSignal can also be
+ * provided that closes the stream.
 
-/// Retrieves all ancestors that exists in the state at the end of a given block,
-/// as an async iterable of hex strings. A bigint representing the max number
-/// of ancestors to get must be provided. If a blockhash is not supplied it
-/// will pick the latest finalized block. An optional abortSignal can also be
-/// provided that closes the stream.
+ * Note: A stream can be collected to a list with the streamToList function.
+ */
 
 (async () => {
     const ancestors: AsyncIterable<HexString> = client.getAncestors(
@@ -64,9 +62,6 @@ if (cli.flags.h) {
     );
 
     for await (const ancestor of ancestors) {
-        console.dir(ancestor, { depth: null, colors: true });
+        console.log(ancestor);
     }
-
-    // Can also be collected to a list with:
-    const ancestorList: HexString[] = await streamToList(ancestors);
 })();

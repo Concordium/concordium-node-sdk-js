@@ -9,7 +9,7 @@ const cli = meow(
     $ yarn ts-node <path-to-this-file> [options]
 
   Options
-    --help,     -h  Displays this message
+    --help,         Displays this message
     --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
 `,
     {
@@ -28,16 +28,13 @@ const [address, port] = cli.flags.endpoint.split(':');
 const client = createConcordiumClient(
     address,
     Number(port),
-    credentials.createInsecure(),
-    { timeout: 15000 }
+    credentials.createInsecure()
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
-
-/// Stop dumping packages. Only enabled if the node was built with the
-/// `network_dump` feature. Rejects if the network dump failed to be stopped.
+/**
+ * Stop dumping packages. Only enabled if the node was built with the
+ * `network_dump` feature. Rejects if the network dump failed to be stopped.
+ */
 
 (async () => {
     await client.dumpStop();

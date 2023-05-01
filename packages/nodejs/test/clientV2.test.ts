@@ -802,7 +802,7 @@ test.each([clientV2, clientWeb])(
     }
 );
 
-test.each([clientV2, clientWeb])('getModuleSchema', async (client) => {
+test.each([clientV2, clientWeb])('getEmbeddedSchema', async (client) => {
     const contract = { index: 4422n, subindex: 0n };
     const moduleRef = new v1.ModuleReference(
         '44434352ddba724930d6b1b09cd58bd1fba6ad9714cf519566d5fe72d80da0d1'
@@ -822,6 +822,8 @@ test.each([clientV2, clientWeb])('getModuleSchema', async (client) => {
             'get'
         );
         expect(returnValue).toEqual({ Sunny: [] });
+    } else {
+        throw Error('Could not deserialize correctly with schema.');
     }
 });
 

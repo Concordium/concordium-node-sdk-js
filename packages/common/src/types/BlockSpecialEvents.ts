@@ -112,3 +112,35 @@ export interface BlockSpecialEventAccountAmount {
     // The value type
     amount: Amount;
 }
+
+export function specialEventAffectedAccounts(
+    event:
+        | BlockSpecialEventBlockAccrueReward
+        | BlockSpecialEventPaydayPoolReward
+): never[];
+export function specialEventAffectedAccounts(
+    event: BlockSpecialEvent
+): Base58String[];
+export function specialEventAffectedAccounts(
+    event: BlockSpecialEvent
+): Base58String[] {
+    switch (event.tag) {
+        case 'bakingRewards':
+            return event.bakingRewards.map((br) => br.account);
+        case 'finalizationRewards':
+            return event.finalizationRewards?.map((fr) => fr.account) ?? [];
+        case 'mint':
+        case 'paydayFoundationReward':
+            return [event.foundationAccount];
+        case 'paydayAccountReward':
+            return [event.account];
+        case 'blockReward': {
+            if (event.baker === event.foundationAccount) {
+                return [event.baker];
+            }
+            return [event.baker, event.foundationAccount];
+        }
+        default:
+            return [];
+    }
+}

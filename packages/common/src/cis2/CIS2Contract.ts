@@ -530,7 +530,7 @@ export class CIS2Contract {
      * @param {Function} serializer - A function to serialize the `input` to bytes.
      * @param {Function} jsonFormatter - A function to format the `input` as JSON format serializable by the contract schema.
      * @param {CIS2.CreateTransactionMetadata} metadata - Metadata to be used for the transaction creation (with defaults).
-     * @param {T | T[]} input - Input for for contract function.
+     * @param {T | T[]} input - Input for the contract function.
      *
      * @throws If the query could not be invoked successfully.
      *

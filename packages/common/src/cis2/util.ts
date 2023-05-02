@@ -74,7 +74,7 @@ export namespace CIS2 {
      * Metadata necessary for CIS-2 transactions
      */
     export type TransactionMetadata = {
-        /** Amount (in microCCD) to inlude in the transaction. Defaults to 0n */
+        /** Amount (in microCCD) to include in the transaction. Defaults to 0n */
         amount?: bigint;
         /** The sender address of the transaction */
         senderAddress: HexString;
@@ -103,7 +103,7 @@ export namespace CIS2 {
     };
 
     /**
-     * Structure for holding metadata URL reponse from tokenMetadata query.
+     * Structure for holding metadata URL response from "tokenMetadata" query.
      */
     export type MetadataUrl = {
         /** The URL of the metadata */
@@ -153,7 +153,7 @@ export namespace CIS2 {
     ) => R;
 
     /**
-     * Structure of JSON formatted address parameter
+     * Structure of a JSON-formatted address parameter.
      */
     export type AddressParamJson =
         | { Account: [Base58String] }

@@ -1,5 +1,8 @@
-import { ChainParameters } from '@concordium/common-sdk';
-import { createConcordiumClient } from '@concordium/node-sdk';
+import {
+    ChainParameters,
+    createConcordiumClient,
+    isChainParametersV1,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -11,21 +14,22 @@ const cli = meow(
 
 
   Options
-    --help,     -h  Displays this message
+    --help,         Displays this message
+    --block,    -b  A block to query from, defaults to last final block
     --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
 `,
     {
         importMeta: import.meta,
         flags: {
+            block: {
+                type: 'string',
+                alias: 'b',
+                default: '', // This defaults to LastFinal
+            },
             endpoint: {
                 type: 'string',
                 alias: 'e',
                 default: 'localhost:20000',
-            },
-            blockhash: {
-                type: 'string',
-                alias: 'b',
-                default: '', // This defaults to LastFinal
             },
         },
     }
@@ -35,22 +39,30 @@ const [address, port] = cli.flags.endpoint.split(':');
 const client = createConcordiumClient(
     address,
     Number(port),
-    credentials.createInsecure(),
-    { timeout: 15000 }
+    credentials.createInsecure()
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
-
-/// Retrieves the values of the chain parameters in effect at a specific block.
+/**
+ * Retrieves the values of the chain parameters in effect at a specific block.
+ */
 
 (async () => {
-    const chainParameters: ChainParameters =
-        await client.getBlockChainParameters(cli.flags.blockhash);
+    const cp: ChainParameters = await client.getBlockChainParameters(
+        cli.flags.block
+    );
 
-    console.dir(chainParameters, { depth: null, colors: true });
+    console.dir(cp, { depth: null, colors: true });
 
-    // The chainParameters contain information that can then be extracted:
-    const elecDiff: number = chainParameters.electionDifficulty;
+    console.log('Election difficulty:', cp.electionDifficulty);
+    console.log('Account creation limit:', cp.accountCreationLimit);
+    console.log('Euro per Energy:', cp.euroPerEnergy);
+
+    // Check if the ChainParameters is V1, which it will be for all newer blocks
+    if (isChainParametersV1(cp)) {
+        console.log('Minimum equity capital:', cp.minimumEquityCapital);
+    } else {
+        console.log(
+            'Chain parameters is V0 and does not contain information on minimum equity capital'
+        );
+    }
 })();

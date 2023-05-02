@@ -10,11 +10,12 @@ import {
     calculateEnergyCost,
     createCredentialDeploymentTransaction,
     getAccountTransactionHandler,
-    sha256,
     getCredentialDeploymentSignDigest,
+    serializeAccountTransactionPayload,
+    sha256,
     signTransaction,
+    streamToList,
 } from '@concordium/common-sdk';
-import { serializeAccountTransactionPayload } from '@concordium/common-sdk/src';
 import {
     getModuleBuffer,
     getIdentityInput,
@@ -29,7 +30,6 @@ import { serializeAccountTransaction } from '@concordium/common-sdk/lib/serializ
 import { TextEncoder, TextDecoder } from 'util';
 import 'isomorphic-fetch';
 import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
-import { streamToList } from '@concordium/common-sdk/src/util';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 global.TextEncoder = TextEncoder as any;

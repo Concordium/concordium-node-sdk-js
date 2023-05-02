@@ -60,7 +60,7 @@
         "build-dev": "tsc"
     },
     "dependencies": {
-        "@concordium/common-sdk": "6.4.1",
+        "@concordium/common-sdk": "6.4.2",
         "@grpc/grpc-js": "^1.3.4",
         "@protobuf-ts/grpc-transport": "^2.8.2",
         "buffer": "^6.0.3",

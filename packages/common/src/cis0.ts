@@ -35,7 +35,7 @@ export namespace CIS0 {
     /** The standard is supported by another contract located at `address` */
     export type SupportBy = SupportResponse<SupportType.SupportBy> & {
         /** The address supporting the standard queried */
-        address: ContractAddress;
+        addresses: ContractAddress[];
     };
     /** Union of the different possible support query results. */
     export type SupportResult = NoSupport | Support | SupportBy;
@@ -68,14 +68,22 @@ const deserializeSupportResult =
                     : CIS0.SupportType.Support;
             value = { type };
         } else {
-            const index = buffer.readBigUInt64LE(cursor) as bigint;
-            cursor += 8;
-            const subindex = buffer.readBigUInt64LE(cursor) as bigint;
-            cursor += 8;
+            const numAddresses = buffer.readUInt8(cursor);
+            cursor += 1;
+            const addresses: ContractAddress[] = [];
+
+            for (let i = 0; i < numAddresses; i++) {
+                const index = buffer.readBigUInt64LE(cursor) as bigint;
+                cursor += 8;
+                const subindex = buffer.readBigUInt64LE(cursor) as bigint;
+                cursor += 8;
+
+                addresses.push({ index, subindex });
+            }
 
             value = {
                 type: CIS0.SupportType.SupportBy,
-                address: { index, subindex },
+                addresses,
             };
         }
 

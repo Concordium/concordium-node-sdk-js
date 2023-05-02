@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Made the `streamToList()` function public.
+
 ## 6.4.2 2023-04-21
 
 ### Changed

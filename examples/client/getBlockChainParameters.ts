@@ -1,8 +1,7 @@
 import {
-    AccountAddress,
-    AccountInfo,
+    ChainParameters,
     createConcordiumClient,
-    isDelegatorAccount,
+    isChainParametersV1,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -13,8 +12,6 @@ const cli = meow(
   Usage
     $ yarn ts-node <path-to-this-file> [options]
 
-  Required
-    --account, -a  An account address to get info from
 
   Options
     --help,         Displays this message
@@ -24,11 +21,6 @@ const cli = meow(
     {
         importMeta: import.meta,
         flags: {
-            account: {
-                type: 'string',
-                alias: 'a',
-                isRequired: true,
-            },
             block: {
                 type: 'string',
                 alias: 'b',
@@ -51,27 +43,26 @@ const client = createConcordiumClient(
 );
 
 /**
- * Retrieves information about an account. The function must be provided an
- * account address or a credential registration id. If a credential registration
- * id is provided, then the node returns the information of the account, which
- * the corresponding credential is (or was) deployed to. An account index as a
- * bigint can also be provided.
+ * Retrieves the values of the chain parameters in effect at a specific block.
  */
 
 (async () => {
-    const accountAddress = new AccountAddress(cli.flags.account);
-    const accountInfo: AccountInfo = await client.getAccountInfo(
-        accountAddress,
+    const cp: ChainParameters = await client.getBlockChainParameters(
         cli.flags.block
     );
 
-    console.log('Account balance:', accountInfo.accountAmount);
+    console.dir(cp, { depth: null, colors: true });
 
-    // If the account is a delegator print delegator information
-    if (isDelegatorAccount(accountInfo)) {
+    console.log('Election difficulty:', cp.electionDifficulty);
+    console.log('Account creation limit:', cp.accountCreationLimit);
+    console.log('Euro per Energy:', cp.euroPerEnergy);
+
+    // Check if the ChainParameters is V1, which it will be for all newer blocks
+    if (isChainParametersV1(cp)) {
+        console.log('Minimum equity capital:', cp.minimumEquityCapital);
+    } else {
         console.log(
-            'Delegated stake amount:',
-            accountInfo.accountDelegation.stakedAmount
+            'Chain parameters is V0 and does not contain information on minimum equity capital'
         );
     }
 })();

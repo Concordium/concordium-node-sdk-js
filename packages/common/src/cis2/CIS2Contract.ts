@@ -26,9 +26,9 @@ import { AccountAddress } from '../types/accountAddress';
 import { CcdAmount } from '../types/ccdAmount';
 import { TransactionExpiry } from '../types/transactionExpiry';
 import { stringify } from 'json-bigint';
-import { makeSerializeDynamic } from '../serializationHelpers';
 import { CIS0, cis0Supports } from '../cis0';
-import { getContractName } from '../contractHelpers';
+import { checkParameterLength, getContractName } from '../contractHelpers';
+import { makeDynamicFunction } from '../util';
 
 const schemas = {
     /** Base64 encoded schema for CIS-2.transfer parameter */
@@ -141,7 +141,9 @@ class CIS2DryRun {
         input: T | T[],
         blockHash?: HexString
     ): Promise<InvokeContractResult> {
-        const parameter = makeSerializeDynamic(serializer)(input);
+        const parameter = makeDynamicFunction(serializer)(input);
+        checkParameterLength(parameter);
+
         return this.grpcClient.invokeContract(
             {
                 contract: this.contractAddress,
@@ -542,7 +544,9 @@ export class CIS2Contract {
         { amount = 0n, energy }: CIS2.CreateTransactionMetadata,
         input: T | T[]
     ): CIS2.UpdateTransaction {
-        const parameter = makeSerializeDynamic(serializer)(input);
+        const parameter = makeDynamicFunction(serializer)(input);
+        checkParameterLength(parameter);
+
         const jsonParameter = Array.isArray(input)
             ? input.map(jsonFormatter)
             : [jsonFormatter(input)];
@@ -553,6 +557,7 @@ export class CIS2Contract {
             maxContractExecutionEnergy: energy,
             message: parameter,
         };
+
         return {
             type: AccountTransactionType.Update,
             payload,
@@ -621,7 +626,9 @@ export class CIS2Contract {
         input: T | T[],
         blockHash?: HexString
     ): Promise<R | R[]> {
-        const parameter = makeSerializeDynamic(serializer)(input);
+        const parameter = makeDynamicFunction(serializer)(input);
+        checkParameterLength(parameter);
+
         const response = await this.grpcClient.invokeContract(
             {
                 contract: this.contractAddress,

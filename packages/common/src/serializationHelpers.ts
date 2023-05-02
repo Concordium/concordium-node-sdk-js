@@ -426,30 +426,6 @@ export function serializeConfigureBakerPayload(
 }
 
 /**
- * Creates a function that serializes either a `T` or `T[]` from a function that serializes `T[]`.
- *
- * @param {(input: T[]) => Buffer} serializer - A serialization function that takes `T[]`
- *
- * @example
- * const serializer = makeSerializeDynamic(serialize);
- * const exampleStruct = {
-    tokenId: '';
-    tokenAmount: 100n;
-    from: {
-address: "3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi"
-};
-    to: 3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi;
-    data: '48656c6c6f20776f726c6421';
-};
- * const bytesSingle = serializer(exampleStruct);
- * const bytesMulti = serializer([exampleStruct, exampleStruct]);
- */
-export const makeSerializeDynamic =
-    <T>(serializer: (a: T[]) => Buffer) =>
-    (input: T | T[]): Buffer =>
-        serializer(Array.isArray(input) ? input : [input]);
-
-/**
  * Helper function to create a function that deserializes a `HexString` value into a list of dynamic type values
  * determined by the deserialization logic defined in the callback function.
  *

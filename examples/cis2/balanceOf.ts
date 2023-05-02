@@ -6,7 +6,7 @@ import { parseAddress } from '../shared/util';
 const cli = meow(
     `
   Usage
-    $ yarn ts-node <path-to-this-file> [options]
+    $ yarn run-example <path-to-this-file> [options]
 
   Required
     --address,   -a  An address to get balance for. Base58 string for account address, string in the format <index>,<subindex> (f.x. 123,0) for contract address.

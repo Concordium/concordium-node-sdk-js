@@ -4,11 +4,11 @@ import ConcordiumNodeClient from './GRPCClient';
 import {
     encodeWord16,
     makeDeserializeListResponse,
-    makeSerializeDynamic,
     packBufferWithWord8Length,
 } from './serializationHelpers';
 import { stringify } from 'json-bigint';
 import { getContractName } from './contractHelpers';
+import { makeDynamicFunction } from './util';
 
 /** Namespace with types for CIS-0 standard contracts */
 // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -105,7 +105,7 @@ const deserializeSupportResult =
  *
  * @throws If the query could not be invoked successfully.
  *
- * @returns {CIS0.SupportResult} The support result of the query, or undefined if the contract does not support CIS-0.
+ * @returns {CIS0.SupportResult} The support result of the query, or `undefined` if the contract does not support CIS-0.
  */
 export function cis0Supports(
     grpcClient: ConcordiumNodeClient,
@@ -123,7 +123,7 @@ export function cis0Supports(
  *
  * @throws If the query could not be invoked successfully.
  *
- * @returns {CIS0.SupportResult[]} The support results of the query ordered by the ID's supplied by the `ids` param, or undefined if the contract does not support CIS-0.
+ * @returns {CIS0.SupportResult[]} The support results of the query ordered by the ID's supplied by the `ids` param, or `undefined` if the contract does not support CIS-0.
  */
 export function cis0Supports(
     grpcClient: ConcordiumNodeClient,
@@ -153,7 +153,7 @@ export async function cis0Supports(
         return undefined;
     }
 
-    const parameter = makeSerializeDynamic(serializeSupportIdentifiers)(
+    const parameter = makeDynamicFunction(serializeSupportIdentifiers)(
         standardIds
     );
 

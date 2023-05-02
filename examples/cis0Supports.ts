@@ -9,7 +9,7 @@ import meow from 'meow';
 const cli = meow(
     `
   Usage
-    $ yarn ts-node <path-to-this-file> [options]
+    $ yarn run-example <path-to-this-file> [options]
 
   Required
     --index,                -i  The index of the smart contract

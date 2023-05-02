@@ -25,7 +25,7 @@ const contractAddress = {index: 1234n, subindex: 0n};
 const contract = await CIS2Contract.create(nodeClient, contractAddress); // Implied that you already have a `ConcordiumNodeClient` instance of some form.
 ```
 
-This gets the relevant contract information from the node and checks that the contract is in fact a CIS-2 contract, hence why it is async. You can also instantiate using the `new` keyword, circumventing standard checks:
+This gets the relevant contract information from the node and checks that the contract is in fact a CIS-2 contract (through the [CIS-0 supports function](../packages/common/README.md#check-smart-contract-for-support-for-standards)), hence why it is async. You can also instantiate using the `new` keyword, circumventing standard checks:
 
 ```js
 const contract = new CIS2Contract(nodeClient, contractAddress, 'my_contract_name');

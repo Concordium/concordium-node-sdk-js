@@ -684,9 +684,9 @@ const deserializedValue = deserializeTypeValue(serializedValue, rawTypeSchema);
 Note that the specific schema can be obtained using [cargo-concordium](https://developer.concordium.software/en/mainnet/smart-contracts/guides/setup-tools.html#cargo-concordium)'s  `schema-json` command, and specifically for parameters, this SDK exposes functions for that, check [the serialize parameters with only the specific types schema section](serialize-parameters-with-only-the-specific-types-schema) for those.
 
 ## Check smart contract for support for standards
-To check if a smart contract supports a certain standard (according to [CIS-0 standard detection](https://proposals.concordium.software/CIS/cis-0.html)), the utility function `cis0Supports` can be used:
+To check if a smart contract supports a certain standard (according to [CIS-0 standard detection](https://proposals.concordium.software/CIS/cis-0.html)), the utility function `cis0Supports` can be used. It should be noted, that the support of the contract is purely based on the claims of the contract and does not give any guarantees for whether the contract adheres to the standard it claims to implement. The function returns `undefined` if the contract does not support CIS-0.
 
-This requires a `ConcordiumNodeClient`.
+This requires a [`ConcordiumNodeClient`](../../docs/gRPC.md).
 
 ```js
 const client = ...; // `ConcordiumNodeClient`

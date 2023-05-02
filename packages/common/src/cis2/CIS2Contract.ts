@@ -195,13 +195,9 @@ export class CIS2Contract {
             );
         }
 
-        const { type } = await cis0Supports(
-            grpcClient,
-            contractAddress,
-            'CIS-2'
-        );
+        const result = await cis0Supports(grpcClient, contractAddress, 'CIS-2');
 
-        if (type !== CIS0.SupportType.Support) {
+        if (result?.type !== CIS0.SupportType.Support) {
             throw new Error(
                 `The CIS-2 standard is not supported by the contract at address ${stringify(
                     contractAddress

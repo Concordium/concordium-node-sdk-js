@@ -9,7 +9,7 @@ test('cis0Supports', async () => {
         { index: 3496n, subindex: 0n },
         'CIS-0'
     );
-    expect(result.type).toEqual(CIS0.SupportType.Support);
+    expect(result?.type).toEqual(CIS0.SupportType.Support);
 
     const resultMulti = await cis0Supports(
         client,
@@ -18,7 +18,7 @@ test('cis0Supports', async () => {
     );
 
     resultMulti
-        .map((r) => expect(r.type))
+        ?.map((r) => expect(r.type))
         .forEach((e) => e.toEqual(CIS0.SupportType.Support));
 
     const resultCIS1 = await cis0Supports(
@@ -26,21 +26,21 @@ test('cis0Supports', async () => {
         { index: 3496n, subindex: 0n },
         'CIS-1'
     );
-    expect(resultCIS1.type).toEqual(CIS0.SupportType.NoSupport);
+    expect(resultCIS1?.type).toEqual(CIS0.SupportType.NoSupport);
 
     const resultArb = await cis0Supports(
         client,
         { index: 3496n, subindex: 0n },
         'NON-STANDARD-ID-123'
     );
-    expect(resultArb.type).toEqual(CIS0.SupportType.NoSupport);
+    expect(resultArb?.type).toEqual(CIS0.SupportType.NoSupport);
 });
 
 test('cis0Supports throws on non cis-0', async () => {
-    const promise = cis0Supports(
+    const result = await cis0Supports(
         client,
         { index: 3494n, subindex: 0n },
         'CIS-0'
     );
-    expect(promise).rejects.toThrow();
+    expect(result).toBe(undefined);
 });

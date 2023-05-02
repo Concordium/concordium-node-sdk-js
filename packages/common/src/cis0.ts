@@ -14,7 +14,12 @@ import { getContractName } from './contractHelpers';
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace CIS0 {
     /** Identifier to query for support, f.x. 'CIS-2' */
-    export type StandardIdentifier = 'CIS-0' | 'CIS-1' | 'CIS-2' | string;
+    export type StandardIdentifier =
+        | 'CIS-0'
+        | 'CIS-1'
+        | 'CIS-2'
+        | 'CIS-3'
+        | string;
     /** Possible response types for a query */
     export enum SupportType {
         /** The standard is not supported */
@@ -100,14 +105,14 @@ const deserializeSupportResult =
  *
  * @throws If the query could not be invoked successfully.
  *
- * @returns {CIS0.SupportResult} The support result of the query.
+ * @returns {CIS0.SupportResult} The support result of the query, or undefined if the contract does not support CIS-0.
  */
 export function cis0Supports(
     grpcClient: ConcordiumNodeClient,
     contractAddress: ContractAddress,
     standardId: CIS0.StandardIdentifier,
     blockHash?: HexString
-): Promise<CIS0.SupportResult>;
+): Promise<CIS0.SupportResult | undefined>;
 /**
  * Queries a CIS-0 contract for support for a {@link CIS0.StandardIdentifier}.
  *
@@ -118,20 +123,20 @@ export function cis0Supports(
  *
  * @throws If the query could not be invoked successfully.
  *
- * @returns {CIS0.SupportResult[]} The support results of the query. These are ordered by the ID's supplied by the `ids` param.
+ * @returns {CIS0.SupportResult[]} The support results of the query ordered by the ID's supplied by the `ids` param, or undefined if the contract does not support CIS-0.
  */
 export function cis0Supports(
     grpcClient: ConcordiumNodeClient,
     contractAddress: ContractAddress,
     standardIds: CIS0.StandardIdentifier[],
     blockHash?: HexString
-): Promise<CIS0.SupportResult[]>;
+): Promise<CIS0.SupportResult[] | undefined>;
 export async function cis0Supports(
     grpcClient: ConcordiumNodeClient,
     contractAddress: ContractAddress,
     standardIds: CIS0.StandardIdentifier | CIS0.StandardIdentifier[],
     blockHash?: HexString
-): Promise<CIS0.SupportResult | CIS0.SupportResult[]> {
+): Promise<CIS0.SupportResult | CIS0.SupportResult[] | undefined> {
     const instanceInfo = await grpcClient.getInstanceInfo(contractAddress);
 
     if (instanceInfo === undefined) {
@@ -145,11 +150,7 @@ export async function cis0Supports(
     const contractName = getContractName(instanceInfo);
 
     if (!instanceInfo.methods.includes(`${contractName}.supports`)) {
-        throw new Error(
-            `Contract at address ${stringify(
-                contractAddress
-            )} does not support the CIS-0 standard.`
-        );
+        return undefined;
     }
 
     const parameter = makeSerializeDynamic(serializeSupportIdentifiers)(

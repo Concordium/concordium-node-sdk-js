@@ -1,5 +1,7 @@
-import { CryptographicParameters, HexString } from '@concordium/common-sdk';
-import { createConcordiumClient } from '@concordium/node-sdk';
+import {
+    createConcordiumClient,
+    CryptographicParameters,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -17,15 +19,15 @@ const cli = meow(
     {
         importMeta: import.meta,
         flags: {
-            endpoint: {
-                type: 'string',
-                alias: 'e',
-                default: 'localhost:20000',
-            },
             block: {
                 type: 'string',
                 alias: 'b',
                 default: '', // This defaults to LastFinal
+            },
+            endpoint: {
+                type: 'string',
+                alias: 'e',
+                default: 'localhost:20000',
             },
         },
     }
@@ -35,22 +37,18 @@ const [address, port] = cli.flags.endpoint.split(':');
 const client = createConcordiumClient(
     address,
     Number(port),
-    credentials.createInsecure(),
-    { timeout: 15000 }
+    credentials.createInsecure()
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
-
-/// Retrieves the global cryptographic parameters for the blockchain at a specific
-/// block. These are a required input for e.g. creating credentials.
+/**
+ * Retrieves the global cryptographic parameters for the blockchain at a specific
+ * block. These are a required input for e.g. creating credentials.
+ */
 
 (async () => {
     const parameters: CryptographicParameters =
         await client.getCryptographicParameters(cli.flags.block);
 
-    console.dir(parameters, { depth: null, colors: true });
-
-    const commitmentKey: HexString = parameters.onChainCommitmentKey;
+    console.log('Genesis string:', parameters.genesisString);
+    console.log('On-chain commitment key:', parameters.onChainCommitmentKey);
 })();

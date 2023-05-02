@@ -1,5 +1,7 @@
-import { FinalizedBlockInfo } from '@concordium/common-sdk';
-import { createConcordiumClient } from '@concordium/node-sdk';
+import {
+    createConcordiumClient,
+    FinalizedBlockInfo,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -29,16 +31,13 @@ const [address, port] = cli.flags.endpoint.split(':');
 const client = createConcordiumClient(
     address,
     Number(port),
-    credentials.createInsecure(),
-    { timeout: 15000 }
+    credentials.createInsecure()
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
-
-/// Returns a stream of finalized blocks that is iterable. The following code will receive
-/// blocks as long as there is a connection to the node:
+/*
+ * Returns a stream of finalized blocks that is iterable. The following code will receive
+ * blocks as long as there is a connection to the node:
+ */
 
 (async () => {
     // Get block stream

@@ -1,5 +1,8 @@
-import { ContractAddress, InstanceInfo } from '@concordium/common-sdk';
-import { createConcordiumClient } from '@concordium/node-sdk';
+import {
+    ContractAddress,
+    createConcordiumClient,
+    InstanceInfo,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -25,15 +28,15 @@ const cli = meow(
                 alias: 'c',
                 isRequired: true,
             },
-            endpoint: {
-                type: 'string',
-                alias: 'e',
-                default: 'localhost:20000',
-            },
             block: {
                 type: 'string',
                 alias: 'b',
                 default: '', // This defaults to LastFinal
+            },
+            endpoint: {
+                type: 'string',
+                alias: 'e',
+                default: 'localhost:20000',
             },
         },
     }
@@ -43,16 +46,13 @@ const [address, port] = cli.flags.endpoint.split(':');
 const client = createConcordiumClient(
     address,
     Number(port),
-    credentials.createInsecure(),
-    { timeout: 15000 }
+    credentials.createInsecure()
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
-
-/// Used to get information about a specific contract instance, at a specific
-/// block.
+/**
+ * Used to get information about a specific contract instance, at a specific
+ * block.
+ */
 
 (async () => {
     const contractAddress: ContractAddress = {
@@ -65,8 +65,10 @@ if (cli.flags.h) {
         cli.flags.block
     );
 
-    console.dir(instanceInfo, { depth: null, colors: true });
-
-    // The instanceInfo contains information that can then be extracted:
-    const name: string = instanceInfo.name;
+    console.log('Name:', instanceInfo.name);
+    console.log('Amount:', instanceInfo.amount.microCcdAmount);
+    console.log('Version:', instanceInfo.version);
+    console.log('Owner:', instanceInfo.owner.address);
+    console.log('Module Reference:', instanceInfo.sourceModule.moduleRef);
+    console.log('Methods:', instanceInfo.methods);
 })();

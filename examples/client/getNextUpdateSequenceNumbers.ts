@@ -1,5 +1,7 @@
-import { NextUpdateSequenceNumbers } from '@concordium/common-sdk';
-import { createConcordiumClient } from '@concordium/node-sdk';
+import {
+    createConcordiumClient,
+    NextUpdateSequenceNumbers,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -17,15 +19,15 @@ const cli = meow(
     {
         importMeta: import.meta,
         flags: {
-            endpoint: {
-                type: 'string',
-                alias: 'e',
-                default: 'localhost:20000',
-            },
             block: {
                 type: 'string',
                 alias: 'b',
                 default: '', // This defaults to LastFinal
+            },
+            endpoint: {
+                type: 'string',
+                alias: 'e',
+                default: 'localhost:20000',
             },
         },
     }
@@ -35,16 +37,13 @@ const [address, port] = cli.flags.endpoint.split(':');
 const client = createConcordiumClient(
     address,
     Number(port),
-    credentials.createInsecure(),
-    { timeout: 15000 }
+    credentials.createInsecure()
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
-
-/// Get next available sequence numbers for updating chain parameters after a
-/// given block.
+/**
+ * Get next available sequence numbers for updating chain parameters after a
+ * given block.
+ */
 
 (async () => {
     const updateSeqNums: NextUpdateSequenceNumbers =

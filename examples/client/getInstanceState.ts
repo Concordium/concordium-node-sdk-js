@@ -1,5 +1,7 @@
-import { InstanceStateKVPair, streamToList } from '@concordium/common-sdk';
-import { createConcordiumClient } from '@concordium/node-sdk';
+import {
+    createConcordiumClient,
+    InstanceStateKVPair,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -25,15 +27,15 @@ const cli = meow(
                 alias: 'c',
                 isRequired: true,
             },
-            endpoint: {
-                type: 'string',
-                alias: 'e',
-                default: 'localhost:20000',
-            },
             block: {
                 type: 'string',
                 alias: 'b',
                 default: '', // This defaults to LastFinal
+            },
+            endpoint: {
+                type: 'string',
+                alias: 'e',
+                default: 'localhost:20000',
             },
         },
     }
@@ -43,18 +45,17 @@ const [address, port] = cli.flags.endpoint.split(':');
 const client = createConcordiumClient(
     address,
     Number(port),
-    credentials.createInsecure(),
-    { timeout: 15000 }
+    credentials.createInsecure()
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
+/**
+ * Get the exact state of a specific contract instance, streamed as a list of
+ * hex string key-value pairs. If a blockhash is not supplied it will pick the
+ * latest finalized block. An optional abortSignal can also be provided that
+ * closes the stream.
 
-/// Get the exact state of a specific contract instance, streamed as a list of
-/// hex string key-value pairs. If a blockhash is not supplied it will pick the
-/// latest finalized block. An optional abortSignal can also be provided that
-/// closes the stream.
+ * Note: A stream can be collected to a list with the streamToList function.
+ */
 
 (async () => {
     const contractAddress = {
@@ -69,7 +70,4 @@ if (cli.flags.h) {
     for await (const state of states) {
         console.dir(state, { depth: null, colors: true });
     }
-
-    // Can also be collected to a list with:
-    const stateList: InstanceStateKVPair[] = await streamToList(states);
 })();

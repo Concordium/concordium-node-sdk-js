@@ -28,12 +28,13 @@ const [address, port] = cli.flags.endpoint.split(':');
 const client = createConcordiumClient(
     address,
     Number(port),
-    credentials.createInsecure(),
-    { timeout: 15000 }
+    credentials.createInsecure()
 );
 
-/// Returns a stream of blocks that is iterable. The following code will receive
-/// a single block and then abort:
+/**
+ * Returns a stream of blocks that is iterable. The following code will receive
+ * a single block and then abort:
+ */
 
 (async () => {
     // Create abort controller and block stream

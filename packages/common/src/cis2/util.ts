@@ -357,7 +357,10 @@ export const serializeCIS2BalanceOfQueries = makeSerializeList(
  */
 export const deserializeCIS2BalanceOfResponse = makeDeserializeListResponse(
     (buf) => {
-        const end = buf.subarray(0).findIndex((b) => b < 2 ** 7) + 1; // Find the first byte with most significant bit not set, signaling the last byte in the leb128 slice.
+        const end = buf.findIndex((b) => b < 2 ** 7) + 1; // Find the first byte with most significant bit not set, signaling the last byte in the leb128 slice.
+        if (end === -1) {
+            throw new Error('Could not find leb128 end');
+        }
         const value = uleb128Decode(Buffer.from(buf.subarray(0, end)));
         return { value, bytesRead: end };
     }

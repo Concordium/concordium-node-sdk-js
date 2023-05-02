@@ -161,52 +161,51 @@ test('dryRun.transfer', async () => {
     expect(resultContractReceiver.tag).toEqual('success');
 });
 
-test('transfer', async () => {
-    const cis2 = await getCIS2Single();
-    cis2.transfer(
-        { energy: 1000000n },
-        {
-            tokenId: '',
-            to: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
-            from: TEST_ACCOUNT,
-            tokenAmount: 100n,
-        },
-        ({ type, parameter, payload }) => {
-            const expectedParameterHex =
-                '0100006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb490000';
-            // Gives the correct transaction type
-            expect(type).toEqual(AccountTransactionType.Update);
+describe('createTransfer', () => {
+    test('single update', async () => {
+        const cis2 = await getCIS2Single();
+        const { type, parameter, payload } = cis2.createTransfer(
+            { energy: 1000000n },
+            {
+                tokenId: '',
+                to: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
+                from: TEST_ACCOUNT,
+                tokenAmount: 100n,
+            }
+        );
 
-            // Parameter is formatted and serialized as expected
-            expect(parameter.hex).toEqual(expectedParameterHex);
-            expect(parameter.json).toEqual([
-                {
-                    token_id: '',
-                    amount: '100',
-                    from: { Account: [TEST_ACCOUNT] },
-                    to: {
-                        Account: [
-                            '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
-                        ],
-                    },
-                    data: '',
+        const expectedParameterHex =
+            '0100006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb490000';
+        // Gives the correct transaction type
+        expect(type).toEqual(AccountTransactionType.Update);
+
+        // Parameter is formatted and serialized as expected
+        expect(parameter.hex).toEqual(expectedParameterHex);
+        expect(parameter.json).toEqual([
+            {
+                token_id: '',
+                amount: '100',
+                from: { Account: [TEST_ACCOUNT] },
+                to: {
+                    Account: [
+                        '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
+                    ],
                 },
-            ]);
+                data: '',
+            },
+        ]);
 
-            // Checks that payload contains the expected values
-            expect(payload.amount.microCcdAmount).toEqual(0n);
-            expect(payload.address).toEqual({ index: 3496n, subindex: 0n });
-            expect(payload.message.toString('hex')).toEqual(
-                expectedParameterHex
-            );
-            expect(payload.receiveName).toEqual('cis2-bridgeable.transfer');
-            expect(payload.maxContractExecutionEnergy).toEqual(1000000n);
-        }
-    );
+        // Checks that payload contains the expected values
+        expect(payload.amount.microCcdAmount).toEqual(0n);
+        expect(payload.address).toEqual({ index: 3496n, subindex: 0n });
+        expect(payload.message.toString('hex')).toEqual(expectedParameterHex);
+        expect(payload.receiveName).toEqual('cis2-bridgeable.transfer');
+        expect(payload.maxContractExecutionEnergy).toEqual(1000000n);
+    });
 
-    cis2.transfer(
-        { energy: 10000n },
-        [
+    test('multiple transfers', async () => {
+        const cis2 = await getCIS2Single();
+        const { parameter, schema } = cis2.createTransfer({ energy: 10000n }, [
             {
                 tokenId: '',
                 to: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
@@ -222,46 +221,39 @@ test('transfer', async () => {
                 },
                 tokenAmount: 0n,
             },
-        ],
-        ({ parameter, schema }) => {
-            const expectedParameterHex =
-                '0200006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb490000000000c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f01401100000000000000000000000000000f006f6e526563656976696e67434953320000';
-            // Parameter is formatted and serialized as expected
-            expect(parameter.hex).toEqual(expectedParameterHex);
-            expect(parameter.json).toEqual([
-                {
-                    token_id: '',
-                    amount: '100',
-                    from: { Account: [TEST_ACCOUNT] },
-                    to: {
-                        Account: [
-                            '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
-                        ],
-                    },
-                    data: '',
+        ]);
+        const expectedParameterHex =
+            '0200006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb490000000000c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f01401100000000000000000000000000000f006f6e526563656976696e67434953320000';
+        // Parameter is formatted and serialized as expected
+        expect(parameter.hex).toEqual(expectedParameterHex);
+        expect(parameter.json).toEqual([
+            {
+                token_id: '',
+                amount: '100',
+                from: { Account: [TEST_ACCOUNT] },
+                to: {
+                    Account: [
+                        '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
+                    ],
                 },
-                {
-                    token_id: '',
-                    amount: '0',
-                    from: { Account: [TEST_ACCOUNT] },
-                    to: {
-                        Contract: [
-                            { index: 4416, subindex: 0 },
-                            'onReceivingCIS2',
-                        ],
-                    },
-                    data: '',
+                data: '',
+            },
+            {
+                token_id: '',
+                amount: '0',
+                from: { Account: [TEST_ACCOUNT] },
+                to: {
+                    Contract: [{ index: 4416, subindex: 0 }, 'onReceivingCIS2'],
                 },
-            ]);
-            const schemaSerialized = serializeTypeValue(
-                parameter.json,
-                Buffer.from(schema.value, 'base64')
-            );
-            expect(schemaSerialized.toString('hex')).toEqual(
-                expectedParameterHex
-            );
-        }
-    );
+                data: '',
+            },
+        ]);
+        const schemaSerialized = serializeTypeValue(
+            parameter.json,
+            Buffer.from(schema.value, 'base64')
+        );
+        expect(schemaSerialized.toString('hex')).toEqual(expectedParameterHex);
+    });
 });
 
 test('dryRun.updateOperator', async () => {
@@ -306,49 +298,46 @@ test('dryRun.updateOperator', async () => {
     ).toEqual(2);
 });
 
-test('updateOperator', async () => {
-    const cis2 = await getCIS2Single();
-    cis2.updateOperator(
-        { energy: 1000000n },
-        {
-            type: 'add',
-            address: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
-        },
-        ({ type, parameter, payload }) => {
-            const expectedParameterHex =
-                '0100010087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb49';
-            // Gives the correct transaction type
-            expect(type).toEqual(AccountTransactionType.Update);
+describe('createUpdateOperator', () => {
+    test('single update', async () => {
+        const cis2 = await getCIS2Single();
+        const { type, parameter, payload } = cis2.createUpdateOperator(
+            { energy: 1000000n },
+            {
+                type: 'add',
+                address: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
+            }
+        );
 
-            // Parameter is formatted and serialized as expected
-            expect(parameter.hex).toEqual(expectedParameterHex);
-            expect(parameter.json).toEqual([
-                {
-                    update: { Add: {} },
-                    operator: {
-                        Account: [
-                            '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
-                        ],
-                    },
+        const expectedParameterHex =
+            '0100010087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb49';
+        // Gives the correct transaction type
+        expect(type).toEqual(AccountTransactionType.Update);
+
+        // Parameter is formatted and serialized as expected
+        expect(parameter.hex).toEqual(expectedParameterHex);
+        expect(parameter.json).toEqual([
+            {
+                update: { Add: {} },
+                operator: {
+                    Account: [
+                        '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
+                    ],
                 },
-            ]);
+            },
+        ]);
 
-            // Checks that payload contains the expected values
-            expect(payload.amount.microCcdAmount).toEqual(0n);
-            expect(payload.address).toEqual({ index: 3496n, subindex: 0n });
-            expect(payload.message.toString('hex')).toEqual(
-                expectedParameterHex
-            );
-            expect(payload.receiveName).toEqual(
-                'cis2-bridgeable.updateOperator'
-            );
-            expect(payload.maxContractExecutionEnergy).toEqual(1000000n);
-        }
-    );
+        // Checks that payload contains the expected values
+        expect(payload.amount.microCcdAmount).toEqual(0n);
+        expect(payload.address).toEqual({ index: 3496n, subindex: 0n });
+        expect(payload.message.toString('hex')).toEqual(expectedParameterHex);
+        expect(payload.receiveName).toEqual('cis2-bridgeable.updateOperator');
+        expect(payload.maxContractExecutionEnergy).toEqual(1000000n);
+    });
 
-    cis2.updateOperator(
-        { energy: 1000000n },
-        [
+    test('multiple updates', async () => {
+        const cis2 = await getCIS2Single();
+        const { parameter } = cis2.createUpdateOperator({ energy: 1000000n }, [
             {
                 type: 'add',
                 address: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
@@ -357,28 +346,26 @@ test('updateOperator', async () => {
                 type: 'remove',
                 address: { index: 3494n, subindex: 0n },
             },
-        ],
-        ({ parameter }) => {
-            const expectedParameterHex =
-                '0200010087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb490001a60d0000000000000000000000000000';
-            // Parameter is formatted and serialized as expected
-            expect(parameter.hex).toEqual(expectedParameterHex);
-            expect(parameter.json).toEqual([
-                {
-                    update: { Add: {} },
-                    operator: {
-                        Account: [
-                            '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
-                        ],
-                    },
+        ]);
+        const expectedParameterHex =
+            '0200010087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb490001a60d0000000000000000000000000000';
+        // Parameter is formatted and serialized as expected
+        expect(parameter.hex).toEqual(expectedParameterHex);
+        expect(parameter.json).toEqual([
+            {
+                update: { Add: {} },
+                operator: {
+                    Account: [
+                        '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
+                    ],
                 },
-                {
-                    update: { Remove: {} },
-                    operator: {
-                        Contract: [{ index: 3494, subindex: 0 }],
-                    },
+            },
+            {
+                update: { Remove: {} },
+                operator: {
+                    Contract: [{ index: 3494, subindex: 0 }],
                 },
-            ]);
-        }
-    );
+            },
+        ]);
+    });
 });

@@ -12,6 +12,7 @@ import {
     Base64String,
     ContractAddress,
     HexString,
+    SmartContractTypeValues,
     UpdateContractPayload,
 } from '../types';
 import { Buffer } from 'buffer/';
@@ -135,7 +136,7 @@ export namespace CIS2 {
             hex: HexString;
             /** JSON representation of the parameter to be used with the corresponding contract schema */
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            json: any;
+            json: SmartContractTypeValues;
         };
         schema: {
             /** Base64 encoded schema for the parameter type */
@@ -144,13 +145,6 @@ export namespace CIS2 {
             type: 'parameter';
         };
     };
-
-    /**
-     * A function processing a {@link UpdateTransaction}
-     */
-    export type ProcessTransactionFunction<R> = (
-        transaction: UpdateTransaction
-    ) => R;
 
     /**
      * Structure of a JSON-formatted address parameter.
@@ -208,6 +202,10 @@ function serializeCIS2TokenId(tokenId: HexString): Buffer {
 }
 
 function serializeTokenAmount(amount: bigint): Buffer {
+    if (amount < 0) {
+        throw new Error('Negative token amount is not allowed');
+    }
+
     const serialized = uleb128Encode(amount);
 
     if (serialized.length > TOKEN_AMOUNT_MAX_LENGTH) {
@@ -306,7 +304,7 @@ function serializeCIS2Transfer(transfer: CIS2.Transfer): Buffer {
  */
 export const serializeCIS2Transfers = makeSerializeList(serializeCIS2Transfer);
 
-function serializeCIS2OperatorUpdate(update: CIS2.UpdateOperator): Buffer {
+function serializeCIS2UpdateOperator(update: CIS2.UpdateOperator): Buffer {
     const type = encodeWord8(update.type === 'add' ? 1 : 0);
     const address = serializeAddress(update.address);
     return Buffer.concat([type, address]);
@@ -322,10 +320,10 @@ function serializeCIS2OperatorUpdate(update: CIS2.UpdateOperator): Buffer {
 *       type: 'add',
 *       address: '3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi'
     }];
- * const bytes = serializeCIS2OperatorUpdates(updates);
+ * const bytes = serializeCIS2UpdateOperators(updates);
  */
-export const serializeCIS2OperatorUpdates = makeSerializeList(
-    serializeCIS2OperatorUpdate
+export const serializeCIS2UpdateOperators = makeSerializeList(
+    serializeCIS2UpdateOperator
 );
 
 /**

@@ -1,9 +1,14 @@
-import { Info } from '@concordium/react-components';
-import isBase64 from 'is-base64';
+import {
+    Info,
+    moduleSchemaFromBase64,
+    Network,
+    parameterSchemaFromBase64,
+    Schema,
+    WalletConnection,
+} from '@concordium/react-components';
 import React, { ChangeEvent, Dispatch, useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Button, Col, Dropdown, Form, Row } from 'react-bootstrap';
-import { Network, WalletConnection } from '@concordium/react-components';
-import { AccountAddress, AccountTransactionType, CcdAmount } from '@concordium/web-sdk';
+import { Alert, Button, Col, Dropdown, DropdownButton, Form, InputGroup, Row } from 'react-bootstrap';
+import { AccountAddress, AccountTransactionType, CcdAmount, SchemaVersion } from '@concordium/web-sdk';
 import { err, ok, Result, ResultAsync } from 'neverthrow';
 import { useContractSchemaRpc } from './useContractSchemaRpc';
 import { errorString } from './util';
@@ -18,6 +23,56 @@ interface ContractInvokerProps {
     connection: WalletConnection;
     connectedAccount: string | undefined;
     contract: Info;
+}
+
+enum SchemaType {
+    Parameter = 'Parameter',
+    Module = 'Module (auto)',
+    ModuleV2 = 'Module (v2)',
+    ModuleV1 = 'Module (v1)',
+    ModuleV0 = 'Module (v0)',
+}
+
+function schemaTypeFromSchema(schemaFromRpc: Schema | undefined, inputSchemaType: SchemaType) {
+    if (!schemaFromRpc) {
+        return inputSchemaType;
+    }
+    switch (schemaFromRpc.type) {
+        case 'ModuleSchema':
+            switch (schemaFromRpc.version) {
+                case undefined:
+                    return SchemaType.Module;
+                case SchemaVersion.V0:
+                    return SchemaType.ModuleV0;
+                case SchemaVersion.V1:
+                    return SchemaType.ModuleV1;
+                case SchemaVersion.V2:
+                    return SchemaType.ModuleV2;
+                default:
+                    throw new Error(`unexpected schema version "${schemaFromRpc.version}"`);
+            }
+        case 'ParameterSchema':
+            return SchemaType.Parameter;
+    }
+}
+
+const DEFAULT_SCHEMA_TYPE = SchemaType.Module;
+
+function schemaOfType(type: SchemaType, schemaBase64: string): Schema {
+    switch (type) {
+        case SchemaType.Module:
+            return moduleSchemaFromBase64(schemaBase64);
+        case SchemaType.ModuleV0:
+            return moduleSchemaFromBase64(schemaBase64, SchemaVersion.V0);
+        case SchemaType.ModuleV1:
+            return moduleSchemaFromBase64(schemaBase64, SchemaVersion.V1);
+        case SchemaType.ModuleV2:
+            return moduleSchemaFromBase64(schemaBase64, SchemaVersion.V2);
+        case SchemaType.Parameter:
+            return parameterSchemaFromBase64(schemaBase64);
+        default:
+            throw new Error(`unsupported schema type "${type}"`);
+    }
 }
 
 function parseParamValue(v: string) {
@@ -45,6 +100,8 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
 
     const schemaRpcResult = useContractSchemaRpc(connection, contract);
 
+    const [schemaTypeInput, setSchemaTypeInput] = useState<SchemaType>(DEFAULT_SCHEMA_TYPE);
+
     const [contractParams, setContractParams] = useState<Array<ContractParamEntry>>([]);
     const [contractAmountInput, setContractAmountInput] = useState('');
     const onSchemaChange = useCallback((e: ChangeEvent<HTMLInputElement>) => setSchemaInput(e.target.value), []);
@@ -60,13 +117,17 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
     const schemaResult = useMemo(() => {
         let input = schemaInput.trim();
         if (input) {
-            return isBase64(input) ? ok({ fromRpc: false, schema: input }) : err('schema must be valid base64');
+            try {
+                return ok({ fromRpc: false, schema: schemaOfType(schemaTypeInput, schemaInput) });
+            } catch (e) {
+                return err('schema is not valid base64');
+            }
         }
         return (
-            schemaRpcResult?.map((r) => ({ fromRpc: true, schema: r ? r.schema : '' })) ||
-            ok({ fromRpc: false, schema: '' })
+            schemaRpcResult?.map((r) => ({ fromRpc: true, schema: r?.schema })) ||
+            ok({ fromRpc: false, schema: undefined })
         );
-    }, [schemaInput, schemaRpcResult]);
+    }, [schemaInput, schemaTypeInput, schemaRpcResult]);
     const amountResult = useMemo(() => {
         try {
             return ok(BigInt(Math.round(Number(contractAmountInput) * 1e6)));
@@ -85,7 +146,7 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
         if (connectedAccount) {
             setIsAwaitingApproval(true);
             inputResult
-                .asyncAndThen(([params, schema, amount]) =>
+                .asyncAndThen(([parameters, { schema }, amount]) =>
                     ResultAsync.fromPromise(
                         connection.signAndSendTransaction(
                             connectedAccount,
@@ -96,8 +157,7 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
                                 receiveName: contract.methods[selectedMethodIndex],
                                 maxContractExecutionEnergy: BigInt(30000),
                             },
-                            params,
-                            schema.schema
+                            schema && { parameters, schema }
                         ),
                         errorString
                     )
@@ -137,35 +197,66 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
                         Schema (base64):
                     </Form.Label>
                     <Col sm={10}>
-                        <Form.Control
-                            value={schemaInput}
-                            onChange={onSchemaChange}
-                            isValid={schemaResult.match(
-                                ({ fromRpc }) => fromRpc,
-                                () => false
-                            )}
-                            isInvalid={schemaResult.isErr()}
-                            placeholder={schemaRpcResult?.match(
-                                (v) => v && v.schema,
-                                () => undefined
-                            )}
-                        />
-                        {schemaResult.match(
-                            () =>
-                                schemaRpcResult?.match(
-                                    (v) =>
-                                        v && (
-                                            <Form.Control.Feedback>
-                                                Using schema from section <code>{v.sectionName}</code> of the contract's
-                                                module.
-                                            </Form.Control.Feedback>
-                                        ),
+                        <InputGroup hasValidation={true}>
+                            <Form.Control
+                                value={schemaInput}
+                                onChange={onSchemaChange}
+                                isValid={schemaResult.match(
+                                    ({ fromRpc }) => fromRpc,
+                                    () => false
+                                )}
+                                isInvalid={schemaResult.isErr()}
+                                placeholder={schemaRpcResult?.match(
+                                    (v) => v && v.schema.value.toString('base64'),
                                     () => undefined
-                                ),
-                            (e) => (
-                                <Form.Control.Feedback type="invalid">{e}</Form.Control.Feedback>
-                            )
-                        )}
+                                )}
+                            />
+                            <DropdownButton
+                                title={schemaTypeFromSchema(
+                                    schemaResult.match(
+                                        ({ schema }) => schema,
+                                        () => undefined
+                                    ),
+                                    schemaTypeInput
+                                )}
+                                disabled={schemaResult.match(
+                                    ({ fromRpc, schema }) => fromRpc && Boolean(schema),
+                                    () => false
+                                )}
+                            >
+                                <Dropdown.Item onClick={() => setSchemaTypeInput(SchemaType.Parameter)}>
+                                    Parameter schema
+                                </Dropdown.Item>
+                                <Dropdown.Item onClick={() => setSchemaTypeInput(SchemaType.Module)}>
+                                    Module schema (auto)
+                                </Dropdown.Item>
+                                <Dropdown.Item onClick={() => setSchemaTypeInput(SchemaType.ModuleV2)}>
+                                    Module schema (v2)
+                                </Dropdown.Item>
+                                <Dropdown.Item onClick={() => setSchemaTypeInput(SchemaType.ModuleV1)}>
+                                    Module schema (v1)
+                                </Dropdown.Item>
+                                <Dropdown.Item onClick={() => setSchemaTypeInput(SchemaType.ModuleV0)}>
+                                    Module schema (v0)
+                                </Dropdown.Item>
+                            </DropdownButton>
+                            {schemaResult.match(
+                                () =>
+                                    schemaRpcResult?.match(
+                                        (v) =>
+                                            v && (
+                                                <Form.Control.Feedback>
+                                                    Using schema from section <code>{v.sectionName}</code> of the
+                                                    contract's module.
+                                                </Form.Control.Feedback>
+                                            ),
+                                        () => undefined
+                                    ),
+                                (e) => (
+                                    <Form.Control.Feedback type="invalid">{e}</Form.Control.Feedback>
+                                )
+                            )}
+                        </InputGroup>
                     </Col>
                 </Form.Group>
                 <Form.Group as={Row} className="mb-3">

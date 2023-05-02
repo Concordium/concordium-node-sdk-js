@@ -1,18 +1,85 @@
 import {
-    AccountTransactionPayload,
     AccountTransactionSignature,
     AccountTransactionType,
-    InitContractPayload,
     JsonRpcClient,
     SchemaVersion,
-    UpdateContractPayload,
+    toBuffer,
 } from '@concordium/web-sdk';
+import { Buffer } from 'buffer/';
+import { SendTransactionPayload, SmartContractParameters } from '@concordium/browser-wallet-api-helpers';
 
-// Copied from 'wallet-api-types.ts' in 'browser-wallet-api-helpers' as it isn't exported.
-type SendTransactionPayload =
-    | Exclude<AccountTransactionPayload, UpdateContractPayload | InitContractPayload>
-    | Omit<UpdateContractPayload, 'message'>
-    | Omit<InitContractPayload, 'param'>;
+export type ModuleSchema = {
+    type: 'ModuleSchema';
+    value: Buffer;
+    version?: SchemaVersion;
+};
+export type ParameterSchema = {
+    type: 'ParameterSchema';
+    value: Buffer;
+};
+
+/**
+ * Discriminated union type for contract invocation schemas.
+ * Is used to select the correct method for encoding the invocation parameters using the schema.
+ */
+export type Schema = ModuleSchema | ParameterSchema;
+
+/**
+ * {@link Schema} constructor for a module schema.
+ * @param schemaBase64 The raw module schema in base64 encoding.
+ * @param version The schema spec version. Omit if the version is embedded into the schema.
+ * @throws Error if {@link schemaBase64} is not valid base64.
+ */
+export function moduleSchemaFromBase64(schemaBase64: string, version?: SchemaVersion): ModuleSchema {
+    return moduleSchema(schemaAsBuffer(schemaBase64), version);
+}
+
+/**
+ * {@link Schema} constructor for a module schema.
+ * @param schema The raw module schema in binary.
+ * @param version The schema spec version. Omit if the version is embedded into the schema.
+ */
+export function moduleSchema(schema: Buffer, version?: SchemaVersion): ModuleSchema {
+    return {
+        type: 'ModuleSchema',
+        value: schema,
+        version: version,
+    };
+}
+
+/**
+ * {@link Schema} constructor for a parameter schema.
+ * @param schemaBase64 The raw parameter schema in base64 encoding.
+ * @throws Error if {@link schemaBase64} is not valid base64.
+ */
+export function parameterSchemaFromBase64(schemaBase64: string): ParameterSchema {
+    return parameterSchema(schemaAsBuffer(schemaBase64));
+}
+
+/**
+ * {@link Schema} constructor for a parameter schema.
+ * @param schema The raw parameter schema in binary.
+ */
+export function parameterSchema(schema: Buffer): ParameterSchema {
+    return {
+        type: 'ParameterSchema',
+        value: schema,
+    };
+}
+
+function schemaAsBuffer(schemaBase64: string) {
+    const res = toBuffer(schemaBase64, 'base64');
+    // Check round-trip. This requires the provided schema to be properly padded.
+    if (res.toString('base64') !== schemaBase64) {
+        throw new Error(`provided schema '${schemaBase64}' is not valid base64`);
+    }
+    return res;
+}
+
+export type TypedSmartContractParameters = {
+    parameters: SmartContractParameters;
+    schema: Schema;
+};
 
 /**
  * Interface for interacting with a wallet backend through a connection that's already been established.
@@ -51,46 +118,26 @@ export interface WalletConnection {
     getJsonRpcClient(): JsonRpcClient;
 
     /**
-     * Assembles a contract init/update transaction and sends it off to the wallet for approval and submission.
+     * Assembles a transaction and sends it off to the wallet for approval and submission.
      *
      * The returned promise resolves to the hash of the transaction once the request is approved in the wallet and successfully submitted.
      * If this doesn't happen, the promise rejects with an explanatory error message.
      *
-     * The parameters of the contract invocation must be provided in the {@link parameters} field, *not* {@link payload}.
+     * If the transaction is a contract init/update, then any contract parameters and a corresponding schema
+     * must be provided in {@link typedParams} and parameters must be omitted from {@link payload}.
+     * It's an error to provide {@link typedParams} for non-contract transactions and for contract transactions with empty parameters.
+     *
      * @param accountAddress The account whose keys are used to sign the transaction.
      * @param type Type of the transaction (i.e. {@link AccountTransactionType.InitContract} or {@link AccountTransactionType.Update}.
      * @param payload The payload of the transaction *not* including the parameters of the contract invocation.
-     * @param parameters The parameters of the contract invocation, given as a non-encoded, structured JavaScript object.
-     * @param schema Schema for the contract invocation parameters.
-     * @param schemaVersion Version of the provided schema.
-     * @return A promise for the hash of the submitted transaction.
-     */
-    signAndSendTransaction(
-        accountAddress: string,
-        type: AccountTransactionType.Update | AccountTransactionType.InitContract,
-        payload: SendTransactionPayload,
-        parameters: Record<string, unknown>,
-        schema: string,
-        schemaVersion?: SchemaVersion
-    ): Promise<string>;
-
-    /**
-     * Assembles a transaction which is not a contract init/update (with parameters)
-     * and sends it off to the wallet for approval and submission.
-     *
-     * The returned promise resolves to the hash of the transaction once the request is approved in the wallet and successfully submitted.
-     * If this doesn't happen, the promise rejects with an explanatory error message.
-     *
-     * The parameters of the contract invocation must be provided in the {@link parameters} field, *not* {@link payload}.
-     * @param accountAddress The account whose keys are used to sign the transaction.
-     * @param type Type of the transaction.
-     * @param payload The payload of the transaction.
+     * @param typedParams The parameters of the contract invocation and a schema describing how to serialize them. The parameters must be given as a plain JavaScript object.
      * @return A promise for the hash of the submitted transaction.
      */
     signAndSendTransaction(
         accountAddress: string,
         type: AccountTransactionType,
-        payload: SendTransactionPayload
+        payload: SendTransactionPayload,
+        typedParams?: TypedSmartContractParameters
     ): Promise<string>;
 
     /**

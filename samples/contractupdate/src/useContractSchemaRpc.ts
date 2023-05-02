@@ -1,38 +1,38 @@
 import { err, ok, Result, ResultAsync } from 'neverthrow';
 import { Buffer } from 'buffer/';
-import { WalletConnection, withJsonRpcClient } from '@concordium/react-components';
-import { Info } from '@concordium/react-components';
+import { Info, moduleSchema, Schema, WalletConnection, withJsonRpcClient } from '@concordium/react-components';
 import { useEffect, useState } from 'react';
 import { errorString } from './util';
-import { ModuleReference } from '@concordium/web-sdk';
+import { ModuleReference, SchemaVersion } from '@concordium/web-sdk';
 
 export interface SchemaRpcResult {
     sectionName: string;
-    schema: string;
+    schema: Schema;
 }
 
-function findCustomSection(m: WebAssembly.Module) {
-    function getCustomSection(name: string): [string, ArrayBuffer[]] | undefined {
-        const s = WebAssembly.Module.customSections(m, name);
-        return s.length === 0 ? undefined : [name, s];
+function findCustomSections(m: WebAssembly.Module) {
+    function getCustomSections(sectionName: string, schemaVersion: SchemaVersion | undefined) {
+        const s = WebAssembly.Module.customSections(m, sectionName);
+        return s.length === 0 ? undefined : { sectionName, schemaVersion, contents: s };
     }
+    // First look for embedded version, then v1, then v0. The "v"s being off by 1 is not an error.
     return (
-        getCustomSection('concordium-schema-v1') ||
-        getCustomSection('concordium-schema-v2') ||
-        getCustomSection('concordium-schema')
+        getCustomSections('concordium-schema', undefined) ||
+        getCustomSections('concordium-schema-v2', SchemaVersion.V1) ||
+        getCustomSections('concordium-schema-v1', SchemaVersion.V0)
     );
 }
 
 function findSchema(m: WebAssembly.Module): Result<SchemaRpcResult | undefined, string> {
-    const section = findCustomSection(m);
-    if (!section) {
+    const sections = findCustomSections(m);
+    if (!sections) {
         return ok(undefined);
     }
-    const [name, schema] = section;
-    if (schema.length !== 1) {
-        return err(`unexpected size of custom section "${name}"`);
+    const { sectionName, schemaVersion, contents } = sections;
+    if (contents.length !== 1) {
+        return err(`unexpected size of custom section "${sectionName}"`);
     }
-    return ok({ sectionName: name, schema: Buffer.from(schema[0]).toString('base64') });
+    return ok({ sectionName, schema: moduleSchema(Buffer.from(contents[0]), schemaVersion) });
 }
 
 export function useContractSchemaRpc(connection: WalletConnection, contract: Info) {
@@ -43,13 +43,14 @@ export function useContractSchemaRpc(connection: WalletConnection, contract: Inf
             errorString
         )
             .andThen((r) => {
-                if (!r || r.length < 12) {
+                if (!r) {
                     return err('module source is empty');
                 }
-                if (r.length < 12) {
-                    return err('module source is too short');
+                // Skip 8-byte header (module version and length).
+                if (r.length < 8) {
+                    return err(`module source is ${r.length} bytes which is not enough to fit an 8-byte header`);
                 }
-                return ResultAsync.fromPromise(WebAssembly.compile(r.slice(12)), errorString);
+                return ResultAsync.fromPromise(WebAssembly.compile(r.slice(8)), errorString);
             })
             .andThen(findSchema)
             .then(setResult);

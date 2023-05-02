@@ -1,5 +1,4 @@
-import { HexString, streamToList } from '@concordium/common-sdk';
-import { createConcordiumClient } from '@concordium/node-sdk';
+import { createConcordiumClient, HexString } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -17,15 +16,15 @@ const cli = meow(
     {
         importMeta: import.meta,
         flags: {
-            endpoint: {
-                type: 'string',
-                alias: 'e',
-                default: 'localhost:20000',
-            },
             block: {
                 type: 'string',
                 alias: 'b',
                 default: '', // This defaults to LastFinal
+            },
+            endpoint: {
+                type: 'string',
+                alias: 'e',
+                default: 'localhost:20000',
             },
         },
     }
@@ -35,18 +34,17 @@ const [address, port] = cli.flags.endpoint.split(':');
 const client = createConcordiumClient(
     address,
     Number(port),
-    credentials.createInsecure(),
-    { timeout: 15000 }
+    credentials.createInsecure()
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
+/**
+ * Retrieves all smart contract modules, as an async iterable, that exists in
+ * the state at the end of a given block. If a blockhash is not supplied it
+ * will pick the latest finalized block. An optional abortSignal can also be
+ * provided that closes the stream.
 
-/// Retrieves all smart contract modules, as an async iterable, that exists in
-/// the state at the end of a given block. If a blockhash is not supplied it
-/// will pick the latest finalized block. An optional abortSignal can also be
-/// provided that closes the stream.
+ * Note: A stream can be collected to a list with the streamToList function.
+ */
 
 (async () => {
     const moduleRefs: AsyncIterable<HexString> = client.getModuleList(
@@ -55,9 +53,6 @@ if (cli.flags.h) {
 
     // Prints module references
     for await (const moduleRef of moduleRefs) {
-        console.dir(moduleRef, { depth: null, colors: true });
+        console.log(moduleRef);
     }
-
-    // Can also be collected to a list with:
-    const moduleRefList: HexString[] = await streamToList(moduleRefs);
 })();

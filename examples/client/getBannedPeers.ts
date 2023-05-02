@@ -1,5 +1,4 @@
-import { IpAddressString } from '@concordium/common-sdk';
-import { createConcordiumClient } from '@concordium/node-sdk';
+import { createConcordiumClient, IpAddressString } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -11,7 +10,7 @@ const cli = meow(
 
 
   Options
-    --help,     -h  Displays this message
+    --help,         Displays this message
     --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
 `,
     {
@@ -22,11 +21,6 @@ const cli = meow(
                 alias: 'e',
                 default: 'localhost:20000',
             },
-            blockhash: {
-                type: 'string',
-                alias: 'b',
-                default: '', // This defaults to LastFinal
-            },
         },
     }
 );
@@ -35,18 +29,16 @@ const [address, port] = cli.flags.endpoint.split(':');
 const client = createConcordiumClient(
     address,
     Number(port),
-    credentials.createInsecure(),
-    { timeout: 15000 }
+    credentials.createInsecure()
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
-
-/// Get a list of banned peers.
+/**
+ * Get a list of banned peers.
+ */
 
 (async () => {
     const bannedPeers: IpAddressString[] = await client.getBannedPeers();
 
+    console.log('Banned peers:');
     console.dir(bannedPeers, { depth: null, colors: true });
 })();

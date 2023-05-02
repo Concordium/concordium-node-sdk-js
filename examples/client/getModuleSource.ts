@@ -1,5 +1,4 @@
-import { ModuleReference } from '@concordium/common-sdk';
-import { createConcordiumClient } from '@concordium/node-sdk';
+import { createConcordiumClient, ModuleReference } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import fs from 'fs';
 
@@ -32,15 +31,15 @@ const cli = meow(
                 alias: 'o',
                 isRequired: true,
             },
-            endpoint: {
-                type: 'string',
-                alias: 'e',
-                default: 'localhost:20000',
-            },
             block: {
                 type: 'string',
                 alias: 'b',
                 default: '', // This defaults to LastFinal
+            },
+            endpoint: {
+                type: 'string',
+                alias: 'e',
+                default: 'localhost:20000',
             },
         },
     }
@@ -50,16 +49,13 @@ const [address, port] = cli.flags.endpoint.split(':');
 const client = createConcordiumClient(
     address,
     Number(port),
-    credentials.createInsecure(),
-    { timeout: 15000 }
+    credentials.createInsecure()
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
-
-/// Gets the source of a module on the chain.
-/// Note that this returns the raw bytes of the source, as a HexString.
+/**
+ * Gets the source of a module on the chain.
+ * Note that this returns the raw bytes of the source, as a HexString.
+ */
 
 (async () => {
     const ref = new ModuleReference(cli.flags.module);

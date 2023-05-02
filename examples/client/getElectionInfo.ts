@@ -1,5 +1,4 @@
-import { ElectionInfo } from '@concordium/common-sdk';
-import { createConcordiumClient } from '@concordium/node-sdk';
+import { createConcordiumClient, ElectionInfo } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -17,15 +16,15 @@ const cli = meow(
     {
         importMeta: import.meta,
         flags: {
-            endpoint: {
-                type: 'string',
-                alias: 'e',
-                default: 'localhost:20000',
-            },
             block: {
                 type: 'string',
                 alias: 'b',
                 default: '', // This defaults to LastFinal
+            },
+            endpoint: {
+                type: 'string',
+                alias: 'e',
+                default: 'localhost:20000',
             },
         },
     }
@@ -35,24 +34,27 @@ const [address, port] = cli.flags.endpoint.split(':');
 const client = createConcordiumClient(
     address,
     Number(port),
-    credentials.createInsecure(),
-    { timeout: 15000 }
+    credentials.createInsecure()
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
-
-/// Get information related to the baker election for a particular block.
-/// If a blockhash is not supplied it will pick the latest finalized block.
+/**
+ * Get information related to the baker election for a particular block.
+ * If a blockhash is not supplied it will pick the latest finalized block.
+ */
 
 (async () => {
     const electionInfo: ElectionInfo = await client.getElectionInfo(
         cli.flags.block
     );
 
-    console.dir(electionInfo, { depth: null, colors: true });
+    // Discard address, convert to tuple:
+    const bakers: [bigint, number][] = electionInfo.bakerElectionInfo.map(
+        (info) => [info.baker, info.lotteryPower]
+    );
+    // Sort bakers by lottery power:
+    const sortedBakers = bakers.sort((xs, ys) => ys[1] - xs[1]);
 
-    // The electionInfo contains information that can then be extracted:
-    const difficulty: number = electionInfo.electionDifficulty;
+    console.log('Bakers sorted by lottery power:', sortedBakers);
+    console.log('Election difficulty:', electionInfo.electionDifficulty);
+    console.log('Election nonce:', electionInfo.electionNonce);
 })();

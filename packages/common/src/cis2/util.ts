@@ -447,27 +447,33 @@ export const deserializeCIS2OperatorOfResponse = makeDeserializeListResponse(
     }
 );
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const formatCIS2UpdateOperator = (
+/**
+ * Format {@link CIS2.UpdateOperator} as JSON compatible with serialization wtih corresponding schema.
+ */
+export function formatCIS2UpdateOperator(
     input: CIS2.UpdateOperator
-): CIS2.UpdateOperatorParamJson => ({
-    update: input.type === 'add' ? { Add: {} } : { Remove: {} },
-    operator: isContractAddress(input.address)
-        ? {
-              Contract: [
-                  {
-                      index: Number(input.address.index),
-                      subindex: Number(input.address.subindex),
-                  },
-              ],
-          }
-        : { Account: [input.address] },
-});
+): CIS2.UpdateOperatorParamJson {
+    return {
+        update: input.type === 'add' ? { Add: {} } : { Remove: {} },
+        operator: isContractAddress(input.address)
+            ? {
+                  Contract: [
+                      {
+                          index: Number(input.address.index),
+                          subindex: Number(input.address.subindex),
+                      },
+                  ],
+              }
+            : { Account: [input.address] },
+    };
+}
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const formatCIS2Transfer = (
+/**
+ * Format {@link CIS2.Transfer} as JSON compatible with serialization wtih corresponding schema.
+ */
+export function formatCIS2Transfer(
     input: CIS2.Transfer
-): CIS2.TransferParamJson => {
+): CIS2.TransferParamJson {
     const from: CIS2.AddressParamJson = isContractAddress(input.from)
         ? {
               Contract: [
@@ -499,4 +505,4 @@ export const formatCIS2Transfer = (
         to,
         data: input.data ?? '',
     };
-};
+}

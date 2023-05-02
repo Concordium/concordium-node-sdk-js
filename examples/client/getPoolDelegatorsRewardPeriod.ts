@@ -1,8 +1,7 @@
 import {
+    createConcordiumClient,
     DelegatorRewardPeriodInfo,
-    streamToList,
-} from '@concordium/common-sdk';
-import { createConcordiumClient } from '@concordium/node-sdk';
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -28,15 +27,15 @@ const cli = meow(
                 alias: 'p',
                 isRequired: true,
             },
-            endpoint: {
-                type: 'string',
-                alias: 'e',
-                default: 'localhost:20000',
-            },
             block: {
                 type: 'string',
                 alias: 'b',
                 default: '', // This defaults to LastFinal
+            },
+            endpoint: {
+                type: 'string',
+                alias: 'e',
+                default: 'localhost:20000',
             },
         },
     }
@@ -46,22 +45,21 @@ const [address, port] = cli.flags.endpoint.split(':');
 const client = createConcordiumClient(
     address,
     Number(port),
-    credentials.createInsecure(),
-    { timeout: 15000 }
+    credentials.createInsecure()
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
+/**
+ * Get the fixed delegators of a given pool for the reward period of the given
+ * block. In contrast to the `GetPoolDelegators` which returns delegators
+ * registered for the given block, this endpoint returns the fixed delegators
+ * contributing stake in the reward period containing the given block.
+ * The stream will end when all the delegators has been returned.
 
-/// Get the fixed delegators of a given pool for the reward period of the given
-/// block.  In contracts to the `GetPoolDelegators` which returns delegators
-/// registered for the given block, this endpoint returns the fixed delegators
-/// contributing stake in the reward period containing the given block.
-/// The stream will end when all the delegators has been returned.
+ * If a blockhash is not supplied it will pick the latest finalized block.
+ * An optional abort signal can also be provided that closes the stream.
 
-/// If a blockhash is not supplied it will pick the latest finalized block.
-/// An optional abort signal can also be provided that closes the stream.
+ * Note: A stream can be collected to a list with the streamToList function.
+ */
 
 (async () => {
     const delegators: AsyncIterable<DelegatorRewardPeriodInfo> =
@@ -70,12 +68,8 @@ if (cli.flags.h) {
             cli.flags.block
         );
 
+    console.log('Each staking account and the amount of stake they have:\n');
     for await (const delegatorInfo of delegators) {
-        console.dir(delegatorInfo, { depth: null, colors: true });
+        console.log(delegatorInfo.account, delegatorInfo.stake);
     }
-
-    // Can also be collected to a list with:
-    const delegatorList: DelegatorRewardPeriodInfo[] = await streamToList(
-        delegators
-    );
 })();

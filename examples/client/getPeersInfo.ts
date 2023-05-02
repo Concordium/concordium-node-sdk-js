@@ -1,5 +1,4 @@
-import { PeerInfo } from '@concordium/common-sdk';
-import { createConcordiumClient } from '@concordium/node-sdk';
+import { createConcordiumClient, PeerInfo } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -29,16 +28,13 @@ const [address, port] = cli.flags.endpoint.split(':');
 const client = createConcordiumClient(
     address,
     Number(port),
-    credentials.createInsecure(),
-    { timeout: 15000 }
+    credentials.createInsecure()
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
-
-/// Get a list of the peers that the node is connected to and associated network
-/// related information for each peer.
+/**
+ * Get a list of the peers that the node is connected to and associated network
+ * related information for each peer.
+ */
 
 (async () => {
     const peerInfo: PeerInfo[] = await client.getPeersInfo();

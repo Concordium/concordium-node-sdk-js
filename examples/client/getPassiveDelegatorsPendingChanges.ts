@@ -1,7 +1,4 @@
-import {
-    createConcordiumClient,
-    DelegatorRewardPeriodInfo,
-} from '@concordium/node-sdk';
+import { createConcordiumClient, DelegatorInfo } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -41,11 +38,12 @@ const client = createConcordiumClient(
 );
 
 /**
- * Get the fixed passive delegators for the reward period of the given block.
- * In contracts to the `GetPassiveDelegators` which returns delegators registered
- * for the given block, this endpoint returns the fixed delegators contributing
- * stake in the reward period containing the given block.
- * The stream will end when all the delegators has been returned.
+ * Get the registered passive delegators at the end of a given block. In
+ * contrast to the `GetPassiveDelegatorsRewardPeriod` which returns delegators
+ * that are fixed for the reward period of the block, this endpoint returns
+ * the list of delegators that are registered in the block. Any changes to
+ * delegators are immediately visible in this list. The stream will end when
+ * all the delegators has been returned.
 
  * If a blockhash is not supplied it will pick the latest finalized block.
  * An optional abort signal can also be provided that closes the stream.
@@ -54,11 +52,14 @@ const client = createConcordiumClient(
  */
 
 (async () => {
-    const delegators: AsyncIterable<DelegatorRewardPeriodInfo> =
-        client.getPassiveDelegatorsRewardPeriod(cli.flags.block);
+    const delegators: AsyncIterable<DelegatorInfo> =
+        client.getPassiveDelegators(cli.flags.block);
 
     console.log('Each staking account and the amount of stake they have:\n');
     for await (const delegatorInfo of delegators) {
-        console.log(delegatorInfo.account, delegatorInfo.stake);
+        if (delegatorInfo.pendingChange) {
+            console.log('Account:', delegatorInfo.account);
+            console.log('Pending Change:', delegatorInfo.pendingChange, '\n');
+        }
     }
 })();

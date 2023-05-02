@@ -1,5 +1,4 @@
-import { Amount, BakerPoolStatus } from '@concordium/common-sdk';
-import { createConcordiumClient } from '@concordium/node-sdk';
+import { BakerPoolStatus, createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -25,15 +24,15 @@ const cli = meow(
                 alias: 'p',
                 isRequired: true,
             },
-            endpoint: {
-                type: 'string',
-                alias: 'e',
-                default: 'localhost:20000',
-            },
             block: {
                 type: 'string',
                 alias: 'b',
                 default: '', // This defaults to LastFinal
+            },
+            endpoint: {
+                type: 'string',
+                alias: 'e',
+                default: 'localhost:20000',
             },
         },
     }
@@ -43,23 +42,33 @@ const [address, port] = cli.flags.endpoint.split(':');
 const client = createConcordiumClient(
     address,
     Number(port),
-    credentials.createInsecure(),
-    { timeout: 15000 }
+    credentials.createInsecure()
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
+/**
+ * Retrives various information on the specified baker pool, at the end of the
+ * specified block.
+ */
 
-/// Retrives various information on the specified baker pool, at the end of the specified block.
 (async () => {
     const bakerPool: BakerPoolStatus = await client.getPoolInfo(
         BigInt(cli.flags.poolOwner),
         cli.flags.block
     );
 
-    console.dir(bakerPool, { depth: null, colors: true });
-
-    // Further information can be extracted from the bakerPool:
-    const totalCapital: Amount = bakerPool.allPoolTotalCapital;
+    console.log('Open status:', bakerPool.poolInfo.openStatus);
+    console.log('Baker address:', bakerPool.bakerAddress);
+    console.log(
+        'CCD provided by the baker to the pool:',
+        bakerPool.bakerEquityCapital / 1000000n
+    );
+    console.log(
+        'CCD provided by the delegators to the pool:',
+        bakerPool.delegatedCapital / 1000000n
+    );
+    console.log(
+        'Total capital in CCD of ALL pools:',
+        bakerPool.allPoolTotalCapital / 1000000n
+    );
+    console.log('Pool commision rates:', bakerPool.poolInfo.commissionRates);
 })();

@@ -1,5 +1,7 @@
-import { PassiveDelegationStatus } from '@concordium/common-sdk';
-import { createConcordiumClient } from '@concordium/node-sdk';
+import {
+    createConcordiumClient,
+    PassiveDelegationStatus,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -17,15 +19,15 @@ const cli = meow(
     {
         importMeta: import.meta,
         flags: {
-            endpoint: {
-                type: 'string',
-                alias: 'e',
-                default: 'localhost:20000',
-            },
             block: {
                 type: 'string',
                 alias: 'b',
                 default: '', // This defaults to LastFinal
+            },
+            endpoint: {
+                type: 'string',
+                alias: 'e',
+                default: 'localhost:20000',
             },
         },
     }
@@ -35,21 +37,28 @@ const [address, port] = cli.flags.endpoint.split(':');
 const client = createConcordiumClient(
     address,
     Number(port),
-    credentials.createInsecure(),
-    { timeout: 15000 }
+    credentials.createInsecure()
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
+/**
+ * Retrieves information about the passive delegation, including the total
+ * capital delegation and the current commission rates for passive delegation,
+ * at the end of the specified block.
+ */
 
-/// Retrieves information about the passive delegation, including the total capital delegation and the current commission rates for passive delegation, at the end of the specified block.
 (async () => {
     const passiveDelegationInfo: PassiveDelegationStatus =
         await client.getPassiveDelegationInfo(cli.flags.block);
 
-    console.dir(passiveDelegationInfo, { depth: null, colors: true });
+    //console.dir(passiveDelegationInfo, { depth: null, colors: true });
 
-    // The delegation info contain information that can then be extracted:
-    const totalCapital: bigint = passiveDelegationInfo.allPoolTotalCapital;
+    console.log(
+        'CCD provided by the delegators to the pool:',
+        passiveDelegationInfo.delegatedCapital / 1000000n
+    );
+    console.log(
+        'Total capital in CCD of ALL pools:',
+        passiveDelegationInfo.allPoolTotalCapital / 1000000n
+    );
+    console.log('Pool commision rates:', passiveDelegationInfo.commissionRates);
 })();

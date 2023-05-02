@@ -27,14 +27,14 @@ export interface AccountSigner {
      */
     sign(digest: Buffer): Promise<AccountTransactionSignature>;
     /**
-     * Amount of signatures created
+     * Returns the amount of signatures that the signer produces
      */
     getSignatureCount(): bigint;
 }
 
 const getSignature = async (
     digest: Buffer,
-    privateKey: string
+    privateKey: HexString
 ): Promise<HexString> =>
     Buffer.from(await ed.sign(digest, privateKey)).toString('hex');
 
@@ -46,7 +46,7 @@ const getSignature = async (
  *
  * @returns {AccountSigner} an `AccountSigner` which creates a signature using the first credentials first keypair
  */
-export function buildBasicAccountSigner(privateKey: string): AccountSigner {
+export function buildBasicAccountSigner(privateKey: HexString): AccountSigner {
     return {
         getSignatureCount() {
             return 1n;

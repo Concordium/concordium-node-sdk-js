@@ -13,7 +13,7 @@ const cli = meow(
     $ yarn ts-node <path-to-this-file> [options]
 
   Required
-    --keyFile,   -f  A file containing the private key(s) of an account, which must be a supported format (f.x. a private key export from a Concordium wallet)
+    --keyFile,   -f  A file containing the private key(s) of an account, which must be a supported format (e.g. a private key export from a Concordium wallet)
 
   Options
     --help,      -h  Displays this message

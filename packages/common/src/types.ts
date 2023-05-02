@@ -739,7 +739,7 @@ export interface WalletExportFormat {
     value: {
         accountKeys: AccountKeys;
         address: Base58String;
-        credentials: Record<number, string>;
+        credentials: Record<number, HexString>;
     };
 }
 

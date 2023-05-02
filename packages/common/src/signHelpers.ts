@@ -13,6 +13,7 @@ import * as ed from '@noble/ed25519';
 import { Buffer } from 'buffer/';
 import { AccountAddress } from './types/accountAddress';
 import { sha256 } from './hash';
+import { mapRecord } from './util';
 
 /**
  * A structure to use for creating signatures on a given digest.
@@ -82,15 +83,8 @@ const getKeys = <T extends WithAccountKeys>(
         ? value.value.accountKeys
         : value.accountKeys;
 
-    return Object.entries(keys).reduce(
-        (acc, [k, v]) => ({
-            ...acc,
-            [k]: Object.entries(v.keys).reduce(
-                (a, e) => ({ ...a, [e[0]]: e[1].signKey }),
-                {}
-            ),
-        }),
-        {}
+    return mapRecord(keys, (credKeys) =>
+        mapRecord(credKeys.keys, (keyPair) => keyPair.signKey)
     );
 };
 

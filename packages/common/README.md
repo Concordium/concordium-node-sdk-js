@@ -24,6 +24,7 @@ This package is the shared library for the nodejs and web SDK's.
     - [Deserialize a receive function's return value](#deserialize-a-receive-functions-return-value)
     - [Deserialize a function's error](#deserialize-a-functions-error)
     - [Deserialize a transaction](#deserialize-a-transaction)
+    - [Creating an AccountSigner](#creating-an-accountsigner)
     - [Sign an account transaction](#sign-an-account-transaction)
     - [Sign a message](#sign-a-message)
 - [Identity proofs](#identity-proofs)

@@ -171,7 +171,7 @@ test('verifyMessageSignature returns false on the incorrect signature', async ()
 });
 
 testEachMessageType(
-    '[%o] verifyMessageSignature returns false on not enough signatures',
+    '[%o] verifyMessageSignature returns false on not enough signatures on specific credential',
     async (message) => {
         const signature = await verifyMessageSignature(
             message,

@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Added
+- Utility functions `uleb128Decode` and `uleb128Encode` functions for decoding and encoding as unsigned leb128 respectively.
 - `CIS2Contract` class for interacting with smart contracts adhering to the CIS-2 standard.
 - `cis0Supports` function for checking standard support in smart contracts.
 

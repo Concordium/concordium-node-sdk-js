@@ -106,11 +106,11 @@ test('dryRun.transfer', async () => {
             tokenId: '',
             to: TEST_ACCOUNT,
             from: TEST_ACCOUNT,
-            tokenAmount: 100n,
+            tokenAmount: 1800n,
         },
         TEST_BLOCK
     );
-    expect(result.usedEnergy).toEqual(2796n);
+    expect(result.usedEnergy).toEqual(2803n);
     // Results in 1 transfer event
     expect(
         result.tag === 'success' &&

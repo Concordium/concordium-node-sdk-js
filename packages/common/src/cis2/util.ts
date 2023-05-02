@@ -14,9 +14,9 @@ import {
     HexString,
     UpdateContractPayload,
 } from '../types';
-import uleb128 from 'leb128/unsigned';
 import { Buffer } from 'buffer/';
 import { AccountAddress } from '../types/accountAddress';
+import { uleb128Decode, uleb128Encode } from '../uleb128';
 
 const TOKEN_ID_MAX_LENGTH = 256;
 const TOKEN_AMOUNT_MAX_LENGTH = 37;
@@ -208,7 +208,7 @@ function serializeCIS2TokenId(tokenId: HexString): Buffer {
 }
 
 function serializeTokenAmount(amount: bigint): Buffer {
-    const serialized = uleb128.encode(amount.toString());
+    const serialized = uleb128Encode(amount);
 
     if (serialized.length > TOKEN_AMOUNT_MAX_LENGTH) {
         throw new Error(
@@ -360,8 +360,8 @@ export const serializeCIS2BalanceOfQueries = makeSerializeList(
 export const deserializeCIS2BalanceOfResponse = makeDeserializeListResponse(
     (buf) => {
         const end = buf.subarray(0).findIndex((b) => b < 2 ** 7) + 1; // Find the first byte with most significant bit not set, signaling the last byte in the leb128 slice.
-        const amount = uleb128.decode(Buffer.from(buf.subarray(0, end)));
-        return { value: BigInt(amount), bytesRead: end };
+        const value = uleb128Decode(Buffer.from(buf.subarray(0, end)));
+        return { value, bytesRead: end };
     }
 );
 

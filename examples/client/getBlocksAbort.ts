@@ -45,7 +45,8 @@ const client = createConcordiumClient(
 
     // Only get one item then break
     for await (const block of blockStream) {
-        console.dir(block, { depth: null, colors: true });
+        console.log('Arrived block height:', block.height);
+        console.log('Arrived block hash:', block.hash, '\n');
         break;
     }
 

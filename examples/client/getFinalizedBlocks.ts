@@ -46,6 +46,7 @@ const client = createConcordiumClient(
 
     // Prints blocks infinitely
     for await (const block of blockStream) {
-        console.dir(block, { depth: null, colors: true });
+        console.log('Arrived block height:', block.height);
+        console.log('Arrived block hash:', block.hash, '\n');
     }
 })();

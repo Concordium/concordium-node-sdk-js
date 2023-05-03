@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 6.5.0 2023-5-03
 
 ### Added
 - Utility functions `uleb128Decode` and `uleb128Encode` functions for decoding and encoding as unsigned leb128 respectively.

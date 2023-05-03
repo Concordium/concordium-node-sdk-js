@@ -6,7 +6,6 @@
     },
     "compilerOptions": {
         "esModuleInterop": true,
-        "outDir": "./lib",
         "lib": [
             "esnext"
         ],

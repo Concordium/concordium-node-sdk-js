@@ -10,10 +10,11 @@ import {
     calculateEnergyCost,
     createCredentialDeploymentTransaction,
     getAccountTransactionHandler,
-    sha256,
     getCredentialDeploymentSignDigest,
+    sha256,
     signTransaction,
     serializeAccountTransactionPayload,
+    streamToList,
 } from '@concordium/common-sdk';
 import {
     getModuleBuffer,
@@ -28,7 +29,6 @@ import { Buffer } from 'buffer/';
 import { serializeAccountTransaction } from '@concordium/common-sdk/lib/serialization';
 
 import { TextEncoder, TextDecoder } from 'util';
-import { asyncIterableToList } from '@concordium/common-sdk/lib/util';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 global.TextEncoder = TextEncoder as any;
@@ -530,20 +530,20 @@ test.each([clientV2, clientWeb])('createAccount', async (client) => {
 test.each([clientV2, clientWeb])('getAccountList', async (client) => {
     const blocks = await client.getBlocksAtHeight(10n);
     const accountIter = client.getAccountList(blocks[0]);
-    const accountList = await asyncIterableToList(accountIter);
+    const accountList = await streamToList(accountIter);
     expect(accountList).toEqual(expected.accountList);
 });
 
 test.each([clientV2, clientWeb])('getModuleList', async (client) => {
     const blocks = await client.getBlocksAtHeight(5000n);
     const moduleIter = client.getModuleList(blocks[0]);
-    const moduleList = await asyncIterableToList(moduleIter);
+    const moduleList = await streamToList(moduleIter);
     expect(moduleList).toEqual(expected.moduleList);
 });
 
 test.each([clientV2, clientWeb])('getAncestors', async (client) => {
     const ancestorsIter = client.getAncestors(3n, testBlockHash);
-    const ancestorsList = await asyncIterableToList(ancestorsIter);
+    const ancestorsList = await streamToList(ancestorsIter);
     expect(ancestorsList).toEqual(expected.ancestorList);
 });
 
@@ -553,7 +553,7 @@ test.each([clientV2, clientWeb])('getInstanceState', async (client) => {
         subindex: 0n,
     };
     const instanceStateIter = client.getInstanceState(contract, testBlockHash);
-    const instanceStateList = await asyncIterableToList(instanceStateIter);
+    const instanceStateList = await streamToList(instanceStateIter);
 
     expect(instanceStateList).toEqual(expected.instanceStateList);
 });
@@ -577,7 +577,7 @@ test.each([clientV2, clientWeb])('instanceStateLookup', async (client) => {
 test.each([clientV2, clientWeb])('getIdentityProviders', async (client) => {
     const earlyBlock = await client.getBlocksAtHeight(1n);
     const ips = client.getIdentityProviders(earlyBlock[0]);
-    const ipList = await asyncIterableToList(ips);
+    const ipList = await streamToList(ips);
     ipList.forEach((ip) => (ip.ipVerifyKey = ''));
 
     expect(ipList).toEqual(expected.ipList);
@@ -586,7 +586,7 @@ test.each([clientV2, clientWeb])('getIdentityProviders', async (client) => {
 test.each([clientV2, clientWeb])('getAnonymityRevokers', async (client) => {
     const earlyBlock = await client.getBlocksAtHeight(1n);
     const ars = client.getAnonymityRevokers(earlyBlock[0]);
-    const arList = await asyncIterableToList(ars);
+    const arList = await streamToList(ars);
 
     expect(arList).toEqual(expected.arList);
 });
@@ -621,14 +621,14 @@ test.each([clientV2, clientWeb])('getBlockInfo', async (client) => {
 
 test.each([clientV2, clientWeb])('getBakerList', async (client) => {
     const bakerAsyncIterable = client.getBakerList(testBlockHash);
-    const bakers = await asyncIterableToList(bakerAsyncIterable);
+    const bakers = await streamToList(bakerAsyncIterable);
 
     expect(bakers).toEqual(expected.bakers);
 });
 
 test.each([clientV2, clientWeb])('getPoolDelegators', async (client) => {
     const delegatorInfoStream = client.getPoolDelegators(15n, testBlockHash);
-    const delegatorInfoList = await asyncIterableToList(delegatorInfoStream);
+    const delegatorInfoList = await streamToList(delegatorInfoStream);
 
     expect(delegatorInfoList).toEqual(expected.delegatorInfoList);
 });
@@ -640,9 +640,7 @@ test.each([clientV2, clientWeb])(
             15n,
             testBlockHash
         );
-        const delegatorInfoList = await asyncIterableToList(
-            delegatorInfoStream
-        );
+        const delegatorInfoList = await streamToList(delegatorInfoStream);
 
         expect(delegatorInfoList).toEqual(expected.delegatorInfoList);
     }
@@ -650,7 +648,7 @@ test.each([clientV2, clientWeb])(
 test.each([clientV2, clientWeb])('getPassiveDelegators', async (client) => {
     const blocks = await client.getBlocksAtHeight(10000n);
     const passiveDelegatorInfoStream = client.getPassiveDelegators(blocks[0]);
-    const passiveDelegatorInfoList = await asyncIterableToList(
+    const passiveDelegatorInfoList = await streamToList(
         passiveDelegatorInfoStream
     );
 
@@ -663,7 +661,7 @@ test.each([clientV2, clientWeb])(
         const blocks = await client.getBlocksAtHeight(10000n);
         const passiveDelegatorRewardInfoStream =
             client.getPassiveDelegatorsRewardPeriod(blocks[0]);
-        const passiveDelegatorRewardInfoList = await asyncIterableToList(
+        const passiveDelegatorRewardInfoList = await streamToList(
             passiveDelegatorRewardInfoStream
         );
 
@@ -694,7 +692,7 @@ test.each([clientV2, clientWeb])(
         const transactions = await client.getAccountNonFinalizedTransactions(
             testAccount
         );
-        const transactionsList = await asyncIterableToList(transactions);
+        const transactionsList = await streamToList(transactions);
 
         expect(transactionsList).toBeDefined();
         if (transactionsList[0]) {
@@ -711,9 +709,7 @@ test.each([clientV2, clientWeb])(
         const transactionEvents = await client.getBlockTransactionEvents(
             blockHash
         );
-        const transactionEventList = await asyncIterableToList(
-            transactionEvents
-        );
+        const transactionEventList = await streamToList(transactionEvents);
 
         expect(transactionEventList).toEqual(expected.transactionEventList);
     }
@@ -727,9 +723,7 @@ test.each([clientV2, clientWeb])(
         const transactionEvents = await client.getBlockTransactionEvents(
             blockHash
         );
-        const transactionEventList = await asyncIterableToList(
-            transactionEvents
-        );
+        const transactionEventList = await streamToList(transactionEvents);
 
         expect(transactionEventList).toEqual(expected.transactionEventList);
     }
@@ -748,7 +742,7 @@ test.each([clientV2, clientWeb])(
 
 test.each([clientV2, clientWeb])('getBlockSpecialEvents', async (client) => {
     const specialEventStream = client.getBlockSpecialEvents(testBlockHash);
-    const specialEventList = await asyncIterableToList(specialEventStream);
+    const specialEventList = await streamToList(specialEventStream);
 
     expect(specialEventList).toEqual(expected.specialEventList);
 });
@@ -758,7 +752,7 @@ test.each([clientV2, clientWeb])('getBlockPendingUpdates', async (client) => {
         '39122a9c720cae643b999d93dd7bf09bcf50e99bb716767dd35c39690390db54';
     const pendingUpdateStream =
         client.getBlockPendingUpdates(pendingUpdateBlock);
-    const pendingUpdateList = await asyncIterableToList(pendingUpdateStream);
+    const pendingUpdateList = await streamToList(pendingUpdateStream);
 
     expect(pendingUpdateList).toEqual(expected.pendingUpdateList);
 });

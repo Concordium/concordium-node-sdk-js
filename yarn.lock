@@ -1350,9 +1350,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@concordium/common-sdk@npm:6.4.0":
-  version: 6.4.0
-  resolution: "@concordium/common-sdk@npm:6.4.0"
+"@concordium/common-sdk@npm:6.4.1":
+  version: 6.4.1
+  resolution: "@concordium/common-sdk@npm:6.4.1"
   dependencies:
     "@concordium/rust-bindings": 0.11.0
     "@grpc/grpc-js": ^1.3.4
@@ -1366,7 +1366,7 @@ __metadata:
     iso-3166-1: ^2.1.1
     json-bigint: ^1.0.0
     uuid: ^8.3.2
-  checksum: d4d8fcd1961cfbe6939958afec90eeff05cc88c83cbb5bd6e1dcf5f887324e15b2c175e4e0dced4cf2860cdc06dcb945b94c88a7790f087028d4f1dcd9b40f86
+  checksum: 26cce68b496f9799359666d7ddf430c659c0250e16a96c8bfe1956162f737517896a9ab9e0c9a7a3a17117ee6d763a91cbcde20891c76d87444f67299a37c8c6
   languageName: node
   linkType: hard
 
@@ -4369,11 +4369,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"examples@workspace:examples":
+"examples-1f5c57@workspace:examples":
   version: 0.0.0-use.local
-  resolution: "examples@workspace:examples"
+  resolution: "examples-1f5c57@workspace:examples"
   dependencies:
-    "@concordium/common-sdk": 6.4.0
+    "@concordium/common-sdk": 6.4.1
     "@concordium/node-sdk": 6.3.0
     "@grpc/grpc-js": ^1.3.4
     "@typescript-eslint/eslint-plugin": ^4.28.1

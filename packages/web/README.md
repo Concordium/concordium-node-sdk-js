@@ -90,10 +90,10 @@ An example of getting the info of a given account using a JSON-RPC server.
 An example of getting the source of a model on the chain using a JSON-RPC server.
 
 ## SendCIS2Transfer.html
-An example of sending a CIS2 "transfer" transaction by utilizing the `CIS2Contract` class. Please note that this example requires the Concordium Browser Wallet to be installed to work.
+An example of sending a CIS2 "transfer" transaction by utilizing the `CIS2Contract` class. Please note that this example requires the [Concordium Wallet for Web](https://chrome.google.com/webstore/detail/concordium-wallet/mnnkpffndmickbiakofclnpoiajlegmg) to be installed to work.
 
 ## SendCIS2UpdateOperator.html
-An example of sending a CIS2 "updateOperator" transaction by utilizing the `CIS2Contract` class. Please note that this example requires the Concordium Browser Wallet to be installed to work.
+An example of sending a CIS2 "updateOperator" transaction by utilizing the `CIS2Contract` class. Please note that this example requires the [Concordium Wallet for Web](https://chrome.google.com/webstore/detail/concordium-wallet/mnnkpffndmickbiakofclnpoiajlegmg) to be installed to work.
 
 # Build
 

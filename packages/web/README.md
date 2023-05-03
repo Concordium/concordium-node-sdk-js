@@ -20,6 +20,8 @@ Wrappers for interacting with the Concordium node, for the web environment.
     - [GetCryptographicParameters.html](#getcryptographicparametershtml)
     - [GetAccountInfo.html](#getaccountinfohtml)
     - [GetModuleSource.html](#getmodulesourcehtml)
+    - [SendCIS2Transfer.html](#sendcis2transferhtml)
+    - [SendCIS2UpdateOperator.html](#sendcis2updateoperatorhtml)
 - [Build](#build)
     - [Building for a release](#building-for-a-release)
     - [Publishing a release](#publishing-a-release)
@@ -86,6 +88,12 @@ An example of getting the info of a given account using a JSON-RPC server.
 
 ## GetModuleSource.html
 An example of getting the source of a model on the chain using a JSON-RPC server.
+
+## SendCIS2Transfer.html
+An example of sending a CIS2 "transfer" transaction by utilizing the `CIS2Contract` class. Please note that this example requires the Concordium Browser Wallet to be installed to work.
+
+## SendCIS2UpdateOperator.html
+An example of sending a CIS2 "updateOperator" transaction by utilizing the `CIS2Contract` class. Please note that this example requires the Concordium Browser Wallet to be installed to work.
 
 # Build
 

@@ -7,6 +7,7 @@ import {
     ConfigureDelegationPayload,
     DelegationTarget,
     DelegationTargetType,
+    HexString,
 } from './types';
 import { DataBlob } from './types/DataBlob';
 
@@ -209,8 +210,21 @@ export function packBufferWithWord32Length(
  * @param buffer containing the buffer
  * @returns Buffer containing the length of the buffer of 16 bit and buffer.
  */
-export function packBufferWithWord16Length(buffer: Buffer): Buffer {
-    const length = encodeWord16(buffer.length);
+export function packBufferWithWord16Length(
+    buffer: Buffer,
+    useLittleEndian = false
+): Buffer {
+    const length = encodeWord16(buffer.length, useLittleEndian);
+    return Buffer.concat([length, buffer]);
+}
+
+/**
+ * Packing a buffer along the with offset of 8 bit length
+ * @param buffer containing the buffer
+ * @returns Buffer containing the length of the buffer of 8 bit and buffer.
+ */
+export function packBufferWithWord8Length(buffer: Buffer): Buffer {
+    const length = encodeWord8(buffer.length);
     return Buffer.concat([length, buffer]);
 }
 
@@ -410,3 +424,32 @@ export function serializeConfigureBakerPayload(
 
     return Buffer.concat([bitmap, serializedPayload]);
 }
+
+/**
+ * Helper function to create a function that deserializes a `HexString` value into a list of dynamic type values
+ * determined by the deserialization logic defined in the callback function.
+ *
+ * @param {Function} deserializer - A callback function invoked with a `Buffer` containing the remaining slice of the full value given by the `input`
+ * The callback function is expected to return the deserialized value  of type `R` along with the number of bytes processed in the format of {value: R, bytesRead: number}
+ *
+ * @returns {Function} A function taking a single `HexString` input, returning a list of dynamic type values deserialized according to the `deserializer` function.
+ */
+export const makeDeserializeListResponse =
+    <R>(deserializer: (buffer: Buffer) => { value: R; bytesRead: number }) =>
+    (value: HexString): R[] => {
+        const buf = Buffer.from(value, 'hex');
+        const n = buf.readUInt16LE(0);
+        let cursor = 2; // First 2 bytes hold number of token amounts included in response.
+        const values: R[] = [];
+
+        for (let i = 0; i < n; i++) {
+            const { value, bytesRead } = deserializer(
+                Buffer.from(buf.subarray(cursor))
+            );
+            values.push(value);
+
+            cursor += bytesRead;
+        }
+
+        return values;
+    };

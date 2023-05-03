@@ -32,12 +32,10 @@ const contract = new CIS2Contract(nodeClient, contractAddress, 'my_contract_name
 ```
 
 ## Transfer token(s)
-The following example demonstrates how to send either a single/list of CIS-2 "transfer" transactions using a `CIS2Contract` instance. There are two different approaches to this. Which one suits you better, will likely depend on your runtime environment as one is most suited for use on a server, while the other is most suited for use in a client.
+The following example demonstrates how to send either a single/list of CIS-2 "transfer" transactions using a `CIS2Contract` instance.
+This relies on using private keys for the sender account to sign the transaction before submitting to the node.
 
 See the signing a transaction section for the [common package](../packages/common/README.md#sign-an-account-transaction) for create an `AccountSigner`.
-
-### Using an `AccountSigner`.
-This relies on using private keys for the sender account to sign the transaction before submitting to the node.
 
 ```js
 const tokenId = ''; // HEX string representing a token ID defined in the contract.
@@ -60,8 +58,8 @@ const txHash = await contract.transfer(
 );
 ```
 
-### Using a function for processing the transaction.
-This delegates processing the transaction to a callback function. Typically, this function would submit the transaction through a Concordium compatible wallet, which handles signing and submitting.
+### Create transfer transaction
+This creates a CIS-2 "transfer" transaction, that can then be submitted the transaction through a Concordium compatible wallet, which handles signing and submitting.
 
 ```js
 const tokenId = ''; // HEX string representing a token ID defined in the contract.
@@ -70,36 +68,31 @@ const to = '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'; // An account r
 // const to = {address: {index: 1234n, subindex: 0n}, hookName: 'someReceiveHookName'} // A contract receiver can be specified as such.
 const tokenAmount = 100n;
 
-const update = { from, to, tokenAmount, tokenId };
-// const update [{ from, to, tokenAmount, tokenId }, { from, to, tokenAmount, tokenId }] // Example of batch update.
+const transfer = { from, to, tokenAmount, tokenId };
+// const transfer [{ from, to, tokenAmount, tokenId }, { from, to, tokenAmount, tokenId }] // Example of batch update.
 
-const txHash = await contract.transfer(
-    { energy: 10000n },
-    update,
-    ({
-        type, // The transaction type.
-        payload, // The transaction payload
-        parameter: {
-            json, // The parameter to be supplied to the contract receive function in JSON format.
-            hex, // The parameter to be supplied to the contract receive function as a hex encoded string
-        },
-        schema: {
-            value, // The contract schema for the parameter. This is needed to translate the JSON format to a byte array.
-            type, // The type of the schema. This is always 'parameter', meaning it can be used for the JSON formatted parameter only.
-        }
-    }) => {
-        // Do something with the transaction details
+const {
+    type, // The transaction type.
+    payload, // The transaction payload
+    parameter: {
+        json, // The parameter to be supplied to the contract receive function in JSON format.
+        hex, // The parameter to be supplied to the contract receive function as a hex encoded string
+    },
+    schema: {
+        value, // The contract schema for the parameter. This is needed to translate the JSON format to a byte array.
+        type, // The type of the schema. This is always 'parameter', meaning it can be used for the JSON formatted parameter only.
     }
+} = contract.createTransfer(
+    { energy: 10000n },
+    transfer
 );
 ```
 
 ## Operator update(s)
-The following example demonstrates how to send either a single/list of CIS-2 "updateOperator" transactions using a `CIS2Contract` instance. There are two different approaches to this. Which one suits you better, will likely depend on your runtime environment as one is most suited for use on a server, while the other is most suited for use in a client.
+The following example demonstrates how to send either a single/list of CIS-2 "updateOperator" transactions using a `CIS2Contract` instance.
+This relies on using private keys for the sender account to sign the transaction before submitting to the node.
 
 See the signing a transaction section for the [common package](../packages/common/README.md#sign-an-account-transaction) for create an `AccountSigner`.
-
-### Using an `AccountSigner`.
-This relies on using private keys for the sender account to sign the transaction before submitting to the node.
 
 ```js
 const owner = '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd';
@@ -121,8 +114,8 @@ const txHash = await contract.updateOperator(
 );
 ```
 
-### Using a function for processing the transaction.
-This delegates processing the transaction to a callback function. Typically, this function would submit the transaction through a Concordium compatible wallet, which handles signing and submitting.
+### Create update operator transaction
+This creates a CIS-2 "updateOperator" transaction, that can then be submitted the transaction through a Concordium compatible wallet, which handles signing and submitting.
 
 ```js
 const owner = '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd';
@@ -133,23 +126,20 @@ const address = '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'; // Address
 const update = { type, address };
 // const update [{type, address}, {type, address}] // Example of batch update.
 
-const txHash = await contract.updateOperator(
-    { energy: 10000n },
-    update,
-    ({
-        type, // The transaction type.
-        payload, // The transaction payload
-        parameter: {
-            json, // The parameter to be supplied to the contract receive function in JSON format.
-            hex, // The parameter to be supplied to the contract receive function as a hex encoded string
-        },
-        schema: {
-            value, // The contract schema for the parameter. This is needed to translate the JSON format to a byte array.
-            type, // The type of the schema. This is always 'parameter', meaning it can be used for the JSON formatted parameter only.
-        }
-    }) => {
-        // Do something with the transaction details
+const {
+    type, // The transaction type.
+    payload, // The transaction payload
+    parameter: {
+        json, // The parameter to be supplied to the contract receive function in JSON format.
+        hex, // The parameter to be supplied to the contract receive function as a hex encoded string
+    },
+    schema: {
+        value, // The contract schema for the parameter. This is needed to translate the JSON format to a byte array.
+        type, // The type of the schema. This is always 'parameter', meaning it can be used for the JSON formatted parameter only.
     }
+} = contract.createUpdateOperator(
+    { energy: 10000n },
+    update
 );
 ```
 

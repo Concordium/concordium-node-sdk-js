@@ -704,12 +704,44 @@ export interface AccountEncryptedAmount {
 
 export interface VerifyKey {
     schemeId: string;
-    verifyKey: string;
+    verifyKey: HexString;
+}
+
+export interface KeyPair {
+    signKey: HexString;
+    verifyKey: HexString;
 }
 
 export interface CredentialPublicKeys {
     keys: Record<number, VerifyKey>;
     threshold: number;
+}
+
+export interface CredentialKeys {
+    keys: Record<number, KeyPair>;
+    threshold: number;
+}
+
+export interface AccountKeys {
+    keys: Record<number, CredentialKeys>;
+    threshold: number;
+}
+
+export type SimpleAccountKeys = Record<number, Record<number, HexString>>;
+
+export interface WithAccountKeys {
+    accountKeys: AccountKeys;
+}
+
+export interface WalletExportFormat {
+    type: string;
+    v: number;
+    environment: string;
+    value: {
+        accountKeys: AccountKeys;
+        address: Base58String;
+        credentials: Record<number, HexString>;
+    };
 }
 
 export interface ChainArData {

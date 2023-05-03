@@ -6,7 +6,7 @@ client to interact with a Concordium node, `cis2`  containing examples that help
 run an example call:
 
 ```shell
-yarn ts-node /path/to/example.ts [opts]
+yarn run-example /path/to/example.ts [opts]
 ```
 
 Where opts are any arguments that the example script takes.

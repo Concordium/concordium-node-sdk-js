@@ -23,6 +23,7 @@ export * from './types/BlockSpecialEvents';
 
 export type HexString = string;
 export type Base58String = string;
+export type Base64String = string;
 export type DigitString = string;
 export type UrlString = string;
 export type IpAddressString = string;

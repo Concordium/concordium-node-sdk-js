@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-- Made the `streamToList()` function public.
+- Made the `streamToList` function public.
+- Made the `unwrap` function public.
 - Added `wasmToSchema` utility function.
 - Added `getEmbeddedSchema` to client.
 

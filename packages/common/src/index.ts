@@ -41,7 +41,7 @@ export * from './rewardStatusHelpers';
 export * from './HdWallet';
 export * from './schemaHelpers';
 
-export { isHex, streamToList, wasmToSchema } from './util';
+export { isHex, streamToList, wasmToSchema, unwrap } from './util';
 
 export { HttpProvider } from './providers/httpProvider';
 export { JsonRpcClient } from './JsonRpcClient';

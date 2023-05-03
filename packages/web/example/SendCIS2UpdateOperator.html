@@ -30,7 +30,7 @@
             const address = {index: BigInt(index.value), subindex: 0n};
             const contract = await concordiumSDK.CIS2Contract.create(client, address);
 
-            const checkedType = Object.values(type).find(field => field.checked).value;
+            const checkedType = Object.values(updateType).find(field => field.checked).value;
             const update = {type: checkedType, address: operator.value};
             //const update = {type: checkedType, address}; // Example with contract address, using same address as used to instantiate the contract class
 
@@ -56,9 +56,9 @@
         <legend>
             Update type:
         </legend>
-        <input type="radio" name="type" id="type" value="add" checked /> Add
+        <input type="radio" name="type" id="updateType" value="add" checked /> Add
         <br />
-        <input type="radio" name="type" id="type" value="remove" /> Remove
+        <input type="radio" name="type" id="updateType" value="remove" /> Remove
         <br />
     </fieldset>
     <br />

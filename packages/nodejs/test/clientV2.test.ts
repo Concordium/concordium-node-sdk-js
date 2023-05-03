@@ -11,15 +11,16 @@ import {
     createCredentialDeploymentTransaction,
     getAccountTransactionHandler,
     getCredentialDeploymentSignDigest,
-    serializeAccountTransactionPayload,
     sha256,
     signTransaction,
+    serializeAccountTransactionPayload,
     streamToList,
 } from '@concordium/common-sdk';
 import {
     getModuleBuffer,
     getIdentityInput,
     getNodeClient,
+    getNodeClientWeb,
 } from './testHelpers';
 import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons';
@@ -28,25 +29,11 @@ import { Buffer } from 'buffer/';
 import { serializeAccountTransaction } from '@concordium/common-sdk/lib/serialization';
 
 import { TextEncoder, TextDecoder } from 'util';
-import 'isomorphic-fetch';
-import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 global.TextEncoder = TextEncoder as any;
 global.TextDecoder = TextDecoder as any;
 /* eslint-enable @typescript-eslint/no-explicit-any */
-
-// TODO find nice way to move this to web/common
-export function getNodeClientWeb(
-    address = 'http://node.testnet.concordium.com',
-    port = 20000
-): ConcordiumNodeClientV2 {
-    const transport = new GrpcWebFetchTransport({
-        baseUrl: `${address}:${port}`,
-        timeout: 15000,
-    });
-    return new v1.ConcordiumGRPCClient(transport);
-}
 
 const clientV2 = getNodeClient();
 const clientWeb = getNodeClientWeb();

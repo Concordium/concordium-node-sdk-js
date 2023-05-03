@@ -26,6 +26,7 @@ This package is the shared library for the nodejs and web SDK's.
     - [Deserialize a transaction](#deserialize-a-transaction)
     - [Sign an account transaction](#sign-an-account-transaction)
     - [Sign a message](#sign-a-message)
+    - [Check smart contract for support for standards](#check-smart-contract-for-support-for-standards)
 - [Identity proofs](#identity-proofs)
     - [Build Statement](#build-statement)
         - [Minimum Age](#minimum-age)
@@ -38,6 +39,7 @@ This package is the shared library for the nodejs and web SDK's.
     - [Prove Statement (getIdProof)](#prove-statement-getidproof)
 - [ConcordiumNodeClient](#concordiumnodeclient)
 - [JSON-RPC client](#json-rpc-client)
+- [CIS-2 Contract](#cis-2-contract)
 
 # Constructing transactions
 
@@ -681,6 +683,20 @@ const deserializedValue = deserializeTypeValue(serializedValue, rawTypeSchema);
 
 Note that the specific schema can be obtained using [cargo-concordium](https://developer.concordium.software/en/mainnet/smart-contracts/guides/setup-tools.html#cargo-concordium)'s  `schema-json` command, and specifically for parameters, this SDK exposes functions for that, check [the serialize parameters with only the specific types schema section](serialize-parameters-with-only-the-specific-types-schema) for those.
 
+## Check smart contract for support for standards
+To check if a smart contract supports a certain standard (according to [CIS-0 standard detection](https://proposals.concordium.software/CIS/cis-0.html)), the utility function `cis0Supports` can be used. It should be noted, that the support of the contract is purely based on the claims of the contract and does not give any guarantees for whether the contract adheres to the standard it claims to implement. The function returns `undefined` if the contract does not support CIS-0.
+
+This requires a [`ConcordiumNodeClient`](../../docs/gRPC.md).
+
+```js
+const client = ...; // `ConcordiumNodeClient`
+const address = {index: 1234n, subindex: 0n}; // Contract to check for support.
+const standardId = 'CIS-2';
+// const standardIds = ['CIS-1', 'CIS-2']; // Example of a list of standards to check for.
+
+const supportResult = await cis0Supports(client, address, 'CIS-2');
+```
+
 # Identity proofs
 ## Build Statement
 The SDK contains a helper to create statements about identities, which can then be proven.
@@ -831,3 +847,8 @@ The [nodejs SDK uses a regular gRPC transport](../nodejs#ConcordiumNodeClient), 
 > :warning: **The JSON-RPC client has been deprecated**: the gRPC client should be used instead to communicate directly with a node
 
 The SDK also provides a JSON-RPC client, [check here for the documentation](../../docs/JSON-RPC.md).
+
+# CIS-2 contract
+The SDK provides a class for interacting with smart contracts adhering to the [CIS-2 standard](https://proposals.concordium.software/CIS/cis-2.html).
+
+For an overview of the class, [check here](../../docs/CIS2Contract.md).

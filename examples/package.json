@@ -19,6 +19,7 @@
   "scripts": {
     "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
     "lint-fix": "yarn lint --fix; exit 0",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "run-example": "node --experimental-specifier-resolution=node --loader ts-node/esm"
   }
 }

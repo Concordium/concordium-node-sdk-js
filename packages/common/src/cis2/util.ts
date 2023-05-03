@@ -358,10 +358,18 @@ export const serializeCIS2BalanceOfQueries = makeSerializeList(
 export const deserializeCIS2BalanceOfResponse = makeDeserializeListResponse(
     (buf) => {
         const end = buf.findIndex((b) => b < 2 ** 7) + 1; // Find the first byte with most significant bit not set, signaling the last byte in the leb128 slice.
-        if (end === -1) {
+        if (end === 0) {
             throw new Error('Could not find leb128 end');
         }
-        const value = uleb128Decode(Buffer.from(buf.subarray(0, end)));
+
+        const leb128Slice = buf.subarray(0, end);
+        if (leb128Slice.length > TOKEN_AMOUNT_MAX_LENGTH) {
+            throw new Error(
+                `Found token amount with size exceeding the maximum allowed of ${TOKEN_AMOUNT_MAX_LENGTH}`
+            );
+        }
+
+        const value = uleb128Decode(Buffer.from(leb128Slice));
         return { value, bytesRead: end };
     }
 );

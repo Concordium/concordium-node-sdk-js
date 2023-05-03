@@ -50,5 +50,4 @@ const client = createConcordiumClient(
         await client.getCryptographicParameters(cli.flags.block);
 
     console.log('Genesis string:', parameters.genesisString);
-    console.log('On-chain commitment key:', parameters.onChainCommitmentKey);
 })();

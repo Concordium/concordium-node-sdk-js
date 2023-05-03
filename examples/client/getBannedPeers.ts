@@ -40,5 +40,5 @@ const client = createConcordiumClient(
     const bannedPeers: IpAddressString[] = await client.getBannedPeers();
 
     console.log('Banned peers:');
-    console.dir(bannedPeers, { depth: null, colors: true });
+    console.log(bannedPeers);
 })();

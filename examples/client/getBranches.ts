@@ -2,6 +2,7 @@ import { Branch, createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
+import chalk from 'chalk';
 
 const cli = meow(
     `
@@ -39,7 +40,7 @@ const client = createConcordiumClient(
 (async () => {
     const branch: Branch = await client.getBranches();
 
-    console.log('Root hash:', branch.blockHash);
+    console.log('Root hash:', chalk.blue(branch.blockHash));
     console.log("Root's children:");
     console.dir(branch.children, { depth: null, colors: true });
 })();

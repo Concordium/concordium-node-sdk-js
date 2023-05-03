@@ -7,6 +7,7 @@ import {
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
+import chalk from 'chalk';
 
 const cli = meow(
     `
@@ -66,6 +67,7 @@ const client = createConcordiumClient(
     );
 
     console.log('Account balance:', accountInfo.accountAmount);
+    console.log('Account address:', chalk.green(accountInfo.accountAddress));
 
     // If the account is a delegator print delegator information
     if (isDelegatorAccount(accountInfo)) {

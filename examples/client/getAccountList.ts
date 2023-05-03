@@ -2,6 +2,7 @@ import { createConcordiumClient, Base58String } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
+import chalk from 'chalk';
 
 const cli = meow(
     `
@@ -50,7 +51,8 @@ const client = createConcordiumClient(
         cli.flags.block
     );
 
+    console.log('Accounts that exists at the end of the given block:');
     for await (const account of accounts) {
-        console.dir(account, { depth: null, colors: true });
+        console.log(chalk.green(account));
     }
 })();

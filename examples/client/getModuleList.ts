@@ -2,6 +2,7 @@ import { createConcordiumClient, HexString } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
+import chalk from 'chalk';
 
 const cli = meow(
     `
@@ -53,6 +54,6 @@ const client = createConcordiumClient(
 
     // Prints module references
     for await (const moduleRef of moduleRefs) {
-        console.log(moduleRef);
+        console.log(chalk.cyan(moduleRef));
     }
 })();

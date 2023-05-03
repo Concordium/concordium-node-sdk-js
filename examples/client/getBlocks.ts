@@ -2,6 +2,7 @@ import { ArrivedBlockInfo, createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
+import chalk from 'chalk';
 
 const cli = meow(
     `
@@ -43,6 +44,6 @@ const client = createConcordiumClient(
     // Prints blocks infinitely
     for await (const block of blocks) {
         console.log('Arrived block height:', block.height);
-        console.log('Arrived block hash:', block.hash, '\n');
+        console.log('Arrived block hash:', chalk.blue(block.hash), '\n');
     }
 })();

@@ -2,6 +2,7 @@ import { createConcordiumClient, IpInfo } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
+import chalk from 'chalk';
 
 const cli = meow(
     `
@@ -52,6 +53,10 @@ const client = createConcordiumClient(
 
     for await (const ip of ips) {
         console.log('Identity Provider ID:', ip.ipIdentity);
-        console.log('Identity Provider Description:', ip.ipDescription, '\n');
+        console.log(
+            'Identity Provider Description:',
+            chalk.italic(ip.ipDescription),
+            '\n'
+        );
     }
 })();

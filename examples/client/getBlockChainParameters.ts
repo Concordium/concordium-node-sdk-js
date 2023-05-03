@@ -6,6 +6,7 @@ import {
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
+import chalk from 'chalk';
 
 const cli = meow(
     `
@@ -51,11 +52,13 @@ const client = createConcordiumClient(
         cli.flags.block
     );
 
-    console.dir(cp, { depth: null, colors: true });
+    const euroPerEnergy = chalk.yellow(
+        cp.euroPerEnergy.numerator + '/' + cp.euroPerEnergy.denominator
+    );
 
     console.log('Election difficulty:', cp.electionDifficulty);
     console.log('Account creation limit:', cp.accountCreationLimit);
-    console.log('Euro per Energy:', cp.euroPerEnergy);
+    console.log('Euro per Energy:', euroPerEnergy);
 
     // Check if the ChainParameters is V1, which it will be for all newer blocks
     if (isChainParametersV1(cp)) {

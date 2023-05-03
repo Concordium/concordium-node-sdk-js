@@ -6,6 +6,7 @@ import {
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
+import chalk from 'chalk';
 
 const cli = meow(
     `
@@ -69,5 +70,7 @@ const client = createConcordiumClient(
     };
     const blocks: HexString[] = await client.getBlocksAtHeight(request);
 
-    console.dir(blocks, { depth: null, colors: true });
+    for (const block of blocks) {
+        console.log(chalk.blue(block));
+    }
 })();

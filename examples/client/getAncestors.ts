@@ -2,6 +2,7 @@ import { createConcordiumClient, HexString } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
+import chalk from 'chalk';
 
 const cli = meow(
     `
@@ -61,7 +62,8 @@ const client = createConcordiumClient(
         cli.flags.block
     );
 
+    console.log('Block hashes of ancestors of input block:');
     for await (const ancestor of ancestors) {
-        console.log(ancestor);
+        console.log(chalk.blue(ancestor));
     }
 })();

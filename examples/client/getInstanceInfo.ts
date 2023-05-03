@@ -6,6 +6,7 @@ import {
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
+import chalk from 'chalk';
 
 const cli = meow(
     `
@@ -65,10 +66,19 @@ const client = createConcordiumClient(
         cli.flags.block
     );
 
-    console.log('Name:', instanceInfo.name);
-    console.log('Amount:', instanceInfo.amount.microCcdAmount);
+    console.log('Name:', chalk.italic(instanceInfo.name));
+    console.log(
+        'Amount in CCD:',
+        Number(instanceInfo.amount.microCcdAmount / 1000000n)
+    );
     console.log('Version:', instanceInfo.version);
-    console.log('Owner:', instanceInfo.owner.address);
-    console.log('Module Reference:', instanceInfo.sourceModule.moduleRef);
-    console.log('Methods:', instanceInfo.methods);
+    console.log('Owner:', chalk.green(instanceInfo.owner.address));
+    console.log(
+        'Module Reference:',
+        chalk.cyan(instanceInfo.sourceModule.moduleRef)
+    );
+    console.log('Methods:');
+    for (const method of instanceInfo.methods) {
+        console.log('    ' + chalk.italic(method));
+    }
 })();

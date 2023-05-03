@@ -1,8 +1,8 @@
-import { BlockItemStatus } from '@concordium/common-sdk';
-import { createConcordiumClient } from '@concordium/node-sdk';
+import { BlockItemStatus, createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
+import chalk from 'chalk';
 
 const cli = meow(
     `
@@ -37,66 +37,87 @@ const [address, port] = cli.flags.endpoint.split(':');
 const client = createConcordiumClient(
     address,
     Number(port),
-    credentials.createInsecure(),
-    { timeout: 15000 }
+    credentials.createInsecure()
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
+/**
+ * Retrieves status information about a block item (transaction).
 
-/// Retrieves status information about a block item (transaction).
+ * The outcome contains the blockHash and the summary of
+ * the block item. The summary can be of three different types,
+ * `accountTransaction`, `accountCreation` or `UpdateTransaction`,
+ * which is denoted by the type field.
+ */
 
 (async () => {
     const blockItemStatus: BlockItemStatus = await client.getBlockItemStatus(
         cli.flags.transaction
     );
 
-    console.log('Status of the transaction');
+    console.log(
+        'Status of the transaction:',
+        chalk.magenta(cli.flags.transaction),
+        '\n'
+    );
     // Note that there will be no outcomes for a transaction that has only been received:
     if (blockItemStatus.status === 'received') {
-        // blockItemStatus will have no "status" field
-        console.dir(blockItemStatus, { depth: null, colors: true });
+        console.log(
+            'blockItemStatus is "received" and therefore has no "status" field'
+        );
     }
     // If the transaction has only been committed, then there is a list of outcomes:
     if (blockItemStatus.status === 'committed') {
-        // Potentially multiple outcomes
-        console.dir(blockItemStatus.outcomes, { depth: null, colors: true });
+        console.log(
+            'blockItemStatus is "committed" and therefore there are potentially multiple outcomes'
+        );
     }
     // If the transaction has been finalized, then there is exactly one outcome:
     if (blockItemStatus.status === 'finalized') {
-        // Only one outcome
+        console.log(
+            'blockItemStatus is "finalized" and therefore there is exactly one outcome \n'
+        );
 
-        /// The outcome is contains the blockHash and the summary of
-        /// the block item. The summary can be of three different types,
-        /// `accountTransaction`, `accountCreation` or `UpdateTransaction`,
-        /// which is denoted by the type field.
         const { summary } = blockItemStatus.outcome;
 
         if (summary.type === 'accountTransaction') {
-            // The block item is an account transaction
+            console.log('The block item is an account transaction');
+
             switch (summary.transactionType) {
                 case 'transfer':
                     // The transaction is a simple transfer
                     const { amount, to } = summary.transfer;
+                    const ccdAmount = Number(amount / 1000000n);
+                    console.log(ccdAmount, 'CCD sent to', chalk.green(to));
                     break;
                 case 'failed':
                     // The transaction was rejected, in which case the transaction
                     // type is still available under the failedTransactionType field
                     const { failedTransactionType, rejectReason } = summary;
+                    console.log(
+                        'Transaction of type "' +
+                            chalk.blue(failedTransactionType) +
+                            '" failed because:',
+                        chalk.red(rejectReason.tag)
+                    );
                     break;
                 default:
                     // Another transaction kind encountered
                     const otherType = summary.transactionType;
+                    console.log('The transaction is of type:', otherType);
             }
         } else if (summary.type === 'updateTransaction') {
-            // The block item is a chain update
-            const { effectiveTime, payload } = summary;
-        } else if (summary.type === 'accountCreation') {
-            // The block item is an account creation.
-            const { type, regId, address } = summary;
-        }
+            console.log('The block item is a chain update');
 
-        console.dir(blockItemStatus.outcome, { depth: null, colors: true });
+            const { effectiveTime, payload } = summary;
+            console.log('EffectiveTime:', effectiveTime);
+            console.log('Payload:', payload);
+            console;
+        } else if (summary.type === 'accountCreation') {
+            console.log('The block item is an account creation');
+            console.log(
+                'Account created with address:',
+                chalk.green(summary.address)
+            );
+        }
     }
 })();

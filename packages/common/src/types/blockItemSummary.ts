@@ -257,18 +257,39 @@ export type BlockItemStatus =
     | FinalizedBlockItem
     | PendingBlockItem;
 
+/**
+ * Type predicate for {@link InitContractSummary}.
+ *
+ * @param {BlockItemSummary} summary - The block item summary to check.
+ *
+ * @returns {boolean} whether summary is of type `InitContractSummary`.
+ */
 export const isInitContractSummary = (
     summary: BlockItemSummary
 ): summary is BaseAccountTransactionSummary & InitContractSummary =>
     summary.type === TransactionSummaryType.AccountTransaction &&
     summary.transactionType === TransactionKindString.InitContract;
 
+/**
+ * Type predicate for {@link UpdateContractSummary}.
+ *
+ * @param {BlockItemSummary} summary - The block item summary to check.
+ *
+ * @returns {boolean} whether summary is of type `UpdateContractSummary`.
+ */
 export const isUpdateContractSummary = (
     summary: BlockItemSummary
 ): summary is BaseAccountTransactionSummary & UpdateContractSummary =>
     summary.type === TransactionSummaryType.AccountTransaction &&
     summary.transactionType === TransactionKindString.Update;
 
+/**
+ * Type predicate for transfer-like transactions.
+ *
+ * @param {BlockItemSummary} summary - The block item summary to check.
+ *
+ * @returns {boolean} whether summary is of type `TransferSummary` or `TransferWithMemoSummary`.
+ */
 export const isTransferLikeSummary = (
     summary: BlockItemSummary
 ): summary is BaseAccountTransactionSummary &
@@ -277,6 +298,13 @@ export const isTransferLikeSummary = (
     (summary.transactionType === TransactionKindString.Transfer ||
         summary.transactionType === TransactionKindString.TransferWithMemo);
 
+/**
+ * Type predicate for transfer-with-schedule-like transactions.
+ *
+ * @param {BlockItemSummary} summary - The block item summary to check.
+ *
+ * @returns {boolean} whether summary is of type `TransferWithScheduleSummary` or `TransferWithScheduleAndMemoSummary`.
+ */
 export const isTransferWithScheduleLikeSummary = (
     summary: BlockItemSummary
 ): summary is BaseAccountTransactionSummary &
@@ -286,16 +314,43 @@ export const isTransferWithScheduleLikeSummary = (
         summary.transactionType ===
             TransactionKindString.TransferWithScheduleAndMemo);
 
-export const isSuccessTransaction = (summary: BlockItemSummary): boolean => {
-    if (summary.type !== TransactionSummaryType.AccountTransaction) {
-        return true;
-    }
+/**
+ * Type predicate for {@link FailedTransactionSummary}.
+ *
+ * @param {BlockItemSummary} summary - The block item summary to check.
+ *
+ * @returns {boolean} whether transaction was rejected.
+ */
+export const isRejectTransaction = (
+    summary: BlockItemSummary
+): summary is BaseAccountTransactionSummary & FailedTransactionSummary =>
+    summary.type === TransactionSummaryType.AccountTransaction &&
+    summary.transactionType === TransactionKindString.Failed;
+/**
+ * Helper function to determine whether a transaction was successful (inverse of {@link isRejectTransaction}).
+ *
+ * @param {BlockItemSummary} summary - The block item summary to check.
+ *
+ * @returns {boolean} whether transaction was successful.
+ */
+export const isSuccessTransaction = (summary: BlockItemSummary): boolean =>
+    !isRejectTransaction(summary);
 
-    return summary.transactionType !== TransactionKindString.Failed;
-};
-
+/**
+ * Gets the {@link RejectReason} for rejected transction.
+ *
+ * @param {BlockItemSummary} summary - The block item summary to check.
+ *
+ * @returns {RejectReason | undfined} Reject reason if `summary` is a rejected transaction. Otherwise returns undefined.
+ */
+export function getTransactionRejectReason<T extends FailedTransactionSummary>(
+    summary: T
+): RejectReason;
 export function getTransactionRejectReason(
     summary: AccountCreationSummary | UpdateSummary
+): undefined;
+export function getTransactionRejectReason(
+    summary: Exclude<AccountTransactionSummary, FailedTransactionSummary>
 ): undefined;
 export function getTransactionRejectReason(
     summary: BlockItemSummary
@@ -310,17 +365,24 @@ export function getTransactionRejectReason(
     return summary.rejectReason;
 }
 
-export const isRejectTransaction = (
-    summary: BlockItemSummary
-): summary is BaseAccountTransactionSummary & FailedTransactionSummary =>
-    summary.type === TransactionSummaryType.AccountTransaction &&
-    summary.transactionType === TransactionKindString.Failed;
-
 const isEqualContract =
     (a: ContractAddress) =>
     (b: ContractAddress): boolean =>
         a.index === b.index && a.subindex === b.subindex;
 
+/**
+ * Gets a list of  {@link ContractAddress} affected by the transaction.
+ *
+ * @param {BlockItemSummary} summary - The block item summary to check.
+ *
+ * @returns {ContractAddress[]} List of contract addresses affected by the transaction.
+ */
+export function affectedContracts(
+    summary: Exclude<
+        AccountTransactionSummary,
+        InitContractSummary | UpdateContractSummary
+    >
+): never[];
 export function affectedContracts(
     summary: AccountCreationSummary | UpdateSummary
 ): never[];
@@ -357,6 +419,13 @@ export function affectedContracts(
     }
 }
 
+export function getReceiverAccount<
+    T extends
+        | TransferSummary
+        | TransferWithMemoSummary
+        | TransferWithScheduleSummary
+        | TransferWithScheduleAndMemoSummary
+>(summary: T): Base58String;
 export function getReceiverAccount(
     summary: AccountCreationSummary | UpdateSummary
 ): undefined;
@@ -398,16 +467,19 @@ export function affectedAccounts(summary: BlockItemSummary): Base58String[] {
         case TransactionKindString.TransferToPublic:
             return [summary.removed.account];
         case TransactionKindString.Update: {
-            return summary.events.reduce((addresses: Base58String[], event) => {
-                if (
-                    event.tag === TransactionEventTag.Transferred &&
-                    event.to.type === 'AddressAccount' &&
-                    !addresses.includes(event.to.address)
-                ) {
-                    return [...addresses, event.to.address];
-                }
-                return addresses;
-            }, []);
+            return summary.events.reduce(
+                (addresses: Base58String[], event) => {
+                    if (
+                        event.tag === TransactionEventTag.Transferred &&
+                        event.to.type === 'AddressAccount' &&
+                        !addresses.includes(event.to.address)
+                    ) {
+                        return [...addresses, event.to.address];
+                    }
+                    return addresses;
+                },
+                [summary.sender]
+            );
         }
         default: {
             const receiver = getReceiverAccount(summary);
@@ -428,6 +500,9 @@ export type SummaryContractUpdateLog = {
 
 export function getSummaryContractUpdateLogs(
     summary: AccountCreationSummary | UpdateSummary
+): never[];
+export function getSummaryContractUpdateLogs(
+    summary: Exclude<AccountTransactionSummary, UpdateContractSummary>
 ): never[];
 export function getSummaryContractUpdateLogs(
     summary: BlockItemSummary

@@ -1,8 +1,7 @@
 {
   "type": "module",
   "dependencies": {
-    "@concordium/common-sdk": "6.4.2",
-    "@concordium/node-sdk": "6.3.0",
+    "@concordium/node-sdk": "workspace:^",
     "@grpc/grpc-js": "^1.3.4",
     "@typescript-eslint/eslint-plugin": "^4.28.1",
     "@typescript-eslint/parser": "^4.28.1",
@@ -19,6 +18,7 @@
   "scripts": {
     "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
     "lint-fix": "yarn lint --fix; exit 0",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "run-example": "node --experimental-specifier-resolution=node --loader ts-node/esm"
   }
 }

@@ -33,7 +33,7 @@ const cli = meow(
 
   Options
     --help,         Displays this message
-    --memo      -m  A hex-encoded memo to be included in the transaction, by default there is no memo
+    --memo,     -m  A hex-encoded memo to be included in the transaction, by default there is no memo
     --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
 `,
     {

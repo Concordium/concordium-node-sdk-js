@@ -1,4 +1,8 @@
-import { BakerId, createConcordiumClient } from '@concordium/node-sdk';
+import {
+    BakerId,
+    createConcordiumClient,
+    streamToList,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -38,11 +42,8 @@ const client = createConcordiumClient(
 );
 
 /**
- * Retrieves a stream of ID's for registered bakers on the network at a specific
- * block.  If a blockhash is not supplied it will pick the latest finalized
- * block. An optional abort signal can also be provided that closes the stream.
-
- * Note: A stream can be collected to a list with the streamToList function.
+ * This example shows how the streamToList function can be used. Note that if
+ * used on an infinite stream (like getBlocks), then it will never terminate.
  */
 
 (async () => {
@@ -50,7 +51,7 @@ const client = createConcordiumClient(
         cli.flags.block
     );
 
-    for await (const bakerId of bakerIds) {
-        console.log(bakerId);
-    }
+    const bakerList = await streamToList(bakerIds);
+
+    console.log(bakerList[3]);
 })();

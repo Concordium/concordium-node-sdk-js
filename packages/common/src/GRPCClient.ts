@@ -16,6 +16,7 @@ import {
     isValidIp,
     mapStream,
     unwrap,
+    wasmToSchema,
 } from './util';
 import {
     serializeAccountTransactionPayload,
@@ -133,9 +134,8 @@ export default class ConcordiumNodeClient {
     }
 
     /**
-     * Retrieves the source of the given module at
-     * the provided block.
-     * @param moduleRef the module's reference, hash of the source represented as a bytearray.
+     * Retrieves the source of the given module at the provided block.
+     * @param moduleRef the module's reference, represented by the ModuleReference class.
      * @param blockHash optional block hash to get the module source at, otherwise retrieves from last finalized block
      * @returns the source of the module as raw bytes.
      */
@@ -157,6 +157,20 @@ export default class ConcordiumNodeClient {
         } else {
             throw Error('Invalid ModuleSource response received!');
         }
+    }
+
+    /**
+     * Retrieves the embedded schema of the given module at the provided block.
+     * @param moduleRef the module's reference, represented by the ModuleReference class.
+     * @param blockHash optional block hash to get the module embedded schema at, otherwise retrieves from last finalized block
+     * @returns the module schema as a buffer.
+     */
+    async getEmbeddedSchema(
+        moduleRef: ModuleReference,
+        blockHash?: HexString
+    ): Promise<Buffer> {
+        const source = await this.getModuleSource(moduleRef, blockHash);
+        return wasmToSchema(source);
     }
 
     /**

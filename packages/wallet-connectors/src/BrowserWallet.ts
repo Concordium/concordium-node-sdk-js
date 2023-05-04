@@ -1,6 +1,7 @@
 import { detectConcordiumProvider, WalletApi, SchemaType } from '@concordium/browser-wallet-api-helpers';
 import { AccountTransactionPayload, AccountTransactionSignature, AccountTransactionType } from '@concordium/web-sdk';
 import {
+    SignableMessage,
     WalletConnectionDelegate,
     WalletConnection,
     WalletConnector,
@@ -126,7 +127,7 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
                         },
                         schema.version
                     );
-                case 'ParameterSchema':
+                case 'TypeSchema':
                     return this.client.sendTransaction(accountAddress, type, payload, parameters, {
                         type: SchemaType.Parameter,
                         value: schema.value.toString('base64'),
@@ -141,7 +142,17 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
         return this.client.sendTransaction(accountAddress, type, payload);
     }
 
-    async signMessage(accountAddress: string, message: string): Promise<AccountTransactionSignature> {
-        return this.client.signMessage(accountAddress, message);
+    async signMessage(accountAddress: string, msg: SignableMessage): Promise<AccountTransactionSignature> {
+        switch (msg.type) {
+            case 'StringMessage':
+                return this.client.signMessage(accountAddress, msg.value);
+            case 'BinaryMessage':
+                return this.client.signMessage(accountAddress, {
+                    schema: msg.schema.value.toString('base64'),
+                    data: msg.value.toString('hex'),
+                });
+            default:
+                throw new UnreachableCaseError('message', msg);
+        }
     }
 }

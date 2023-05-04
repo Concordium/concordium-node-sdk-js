@@ -2,7 +2,7 @@ import {
     Info,
     moduleSchemaFromBase64,
     Network,
-    parameterSchemaFromBase64,
+    typeSchemaFromBase64,
     Schema,
     WalletConnection,
 } from '@concordium/react-components';
@@ -26,7 +26,7 @@ interface ContractInvokerProps {
 }
 
 enum SchemaType {
-    Parameter = 'Parameter',
+    Type = 'Type',
     Module = 'Module (auto)',
     ModuleV2 = 'Module (v2)',
     ModuleV1 = 'Module (v1)',
@@ -51,8 +51,8 @@ function schemaTypeFromSchema(schemaFromRpc: Schema | undefined, inputSchemaType
                 default:
                     throw new Error(`unexpected schema version "${schemaFromRpc.version}"`);
             }
-        case 'ParameterSchema':
-            return SchemaType.Parameter;
+        case 'TypeSchema':
+            return SchemaType.Type;
     }
 }
 
@@ -68,8 +68,8 @@ function schemaOfType(type: SchemaType, schemaBase64: string): Schema {
             return moduleSchemaFromBase64(schemaBase64, SchemaVersion.V1);
         case SchemaType.ModuleV2:
             return moduleSchemaFromBase64(schemaBase64, SchemaVersion.V2);
-        case SchemaType.Parameter:
-            return parameterSchemaFromBase64(schemaBase64);
+        case SchemaType.Type:
+            return typeSchemaFromBase64(schemaBase64);
         default:
             throw new Error(`unsupported schema type "${type}"`);
     }
@@ -100,7 +100,7 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
 
     const schemaRpcResult = useContractSchemaRpc(connection, contract);
 
-    const [schemaTypeInput, setSchemaTypeInput] = useState<SchemaType>(DEFAULT_SCHEMA_TYPE);
+    const [schemaTypeInput, setSchemaTypeInput] = useState(DEFAULT_SCHEMA_TYPE);
 
     const [contractParams, setContractParams] = useState<Array<ContractParamEntry>>([]);
     const [contractAmountInput, setContractAmountInput] = useState('');
@@ -197,7 +197,7 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
                         Schema (base64):
                     </Form.Label>
                     <Col sm={10}>
-                        <InputGroup hasValidation={true}>
+                        <InputGroup hasValidation>
                             <Form.Control
                                 value={schemaInput}
                                 onChange={onSchemaChange}
@@ -224,8 +224,8 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
                                     () => false
                                 )}
                             >
-                                <Dropdown.Item onClick={() => setSchemaTypeInput(SchemaType.Parameter)}>
-                                    Parameter schema
+                                <Dropdown.Item onClick={() => setSchemaTypeInput(SchemaType.Type)}>
+                                    Type schema
                                 </Dropdown.Item>
                                 <Dropdown.Item onClick={() => setSchemaTypeInput(SchemaType.Module)}>
                                     Module schema (auto)

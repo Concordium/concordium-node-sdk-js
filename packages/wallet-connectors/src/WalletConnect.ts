@@ -15,6 +15,7 @@ import {
     UpdateContractPayload,
 } from '@concordium/web-sdk';
 import {
+    SignableMessage,
     Network,
     TypedSmartContractParameters,
     WalletConnection,
@@ -86,7 +87,7 @@ function serializeInitContractParam(initName: string, typedParams: TypedSmartCon
     switch (schema.type) {
         case 'ModuleSchema':
             return serializeInitContractParameters(initName, parameters, schema.value, schema.version);
-        case 'ParameterSchema':
+        case 'TypeSchema':
             return serializeTypeValue(parameters, schema.value);
         default:
             throw new UnreachableCaseError('schema', schema);
@@ -111,7 +112,7 @@ function serializeUpdateContractMessage(
                 schema.value,
                 schema.version
             );
-        case 'ParameterSchema':
+        case 'TypeSchema':
             return serializeTypeValue(parameters, schema.value);
         default:
             throw new UnreachableCaseError('schema', schema);
@@ -233,7 +234,7 @@ export class WalletConnectConnection implements WalletConnection {
                     params,
                 },
                 chainId: this.chainId,
-            })) as SignAndSendTransactionResult;
+            })) as SignAndSendTransactionResult; // TODO do proper type check
             return hash;
         } catch (e) {
             if (isSignAndSendTransactionError(e) && e.code === 500) {
@@ -243,17 +244,25 @@ export class WalletConnectConnection implements WalletConnection {
         }
     }
 
-    async signMessage(accountAddress: string, message: string) {
-        const params = { message };
-        const signature = await this.connector.client.request({
-            topic: this.session.topic,
-            request: {
-                method: 'sign_message',
-                params,
-            },
-            chainId: this.chainId,
-        });
-        return signature as AccountTransactionSignature;
+    async signMessage(accountAddress: string, msg: SignableMessage) {
+        switch (msg.type) {
+            case 'StringMessage': {
+                const params = { message: msg.value };
+                const signature = await this.connector.client.request({
+                    topic: this.session.topic,
+                    request: {
+                        method: 'sign_message',
+                        params,
+                    },
+                    chainId: this.chainId,
+                });
+                return signature as AccountTransactionSignature; // TODO do proper type check
+            }
+            case 'BinaryMessage':
+                throw new Error(`signing 'BinaryMessage' is not yet supported by the mobile wallets`);
+            default:
+                throw new UnreachableCaseError('message', msg);
+        }
     }
 
     async disconnect() {

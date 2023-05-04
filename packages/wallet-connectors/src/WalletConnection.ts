@@ -13,8 +13,8 @@ export type ModuleSchema = {
     value: Buffer;
     version?: SchemaVersion;
 };
-export type ParameterSchema = {
-    type: 'ParameterSchema';
+export type TypeSchema = {
+    type: 'TypeSchema';
     value: Buffer;
 };
 
@@ -22,7 +22,7 @@ export type ParameterSchema = {
  * Discriminated union type for contract invocation schemas.
  * Is used to select the correct method for encoding the invocation parameters using the schema.
  */
-export type Schema = ModuleSchema | ParameterSchema;
+export type Schema = ModuleSchema | TypeSchema;
 
 /**
  * {@link Schema} constructor for a module schema.
@@ -48,21 +48,21 @@ export function moduleSchema(schema: Buffer, version?: SchemaVersion): ModuleSch
 }
 
 /**
- * {@link Schema} constructor for a parameter schema.
+ * {@link Schema} constructor for a type schema.
  * @param schemaBase64 The raw parameter schema in base64 encoding.
  * @throws Error if {@link schemaBase64} is not valid base64.
  */
-export function parameterSchemaFromBase64(schemaBase64: string): ParameterSchema {
-    return parameterSchema(schemaAsBuffer(schemaBase64));
+export function typeSchemaFromBase64(schemaBase64: string): TypeSchema {
+    return typeSchema(schemaAsBuffer(schemaBase64));
 }
 
 /**
- * {@link Schema} constructor for a parameter schema.
+ * {@link Schema} constructor for a type schema.
  * @param schema The raw parameter schema in binary.
  */
-export function parameterSchema(schema: Buffer): ParameterSchema {
+export function typeSchema(schema: Buffer): TypeSchema {
     return {
-        type: 'ParameterSchema',
+        type: 'TypeSchema',
         value: schema,
     };
 }
@@ -80,6 +80,54 @@ export type TypedSmartContractParameters = {
     parameters: SmartContractParameters;
     schema: Schema;
 };
+
+export type StringMessage = {
+    type: 'StringMessage';
+    value: string;
+};
+export type BinaryMessage = {
+    type: 'BinaryMessage';
+    value: Buffer;
+    schema: TypeSchema;
+};
+
+/**
+ * Discriminated union type for signable messages.
+ */
+export type SignableMessage = StringMessage | BinaryMessage;
+
+/**
+ * {@link SignableMessage} constructor for a string message.
+ * @param msg The message as a plain string.
+ */
+export function stringMessage(msg: string): StringMessage {
+    return {
+        type: 'StringMessage',
+        value: msg,
+    };
+}
+
+/**
+ * {@link SignableMessage} constructor for binary message.
+ * @param msgHex The message represented in hexadecimal notation.
+ * @param schema The schema describing the type of the binary message.
+ */
+export function binaryMessageFromHex(msgHex: string, schema: TypeSchema): BinaryMessage {
+    return {
+        type: 'BinaryMessage',
+        value: messageAsBuffer(msgHex),
+        schema,
+    };
+}
+
+function messageAsBuffer(msgHex: string) {
+    const res = toBuffer(msgHex, 'hex');
+    // Check round-trip.
+    if (res.toString('hex') !== msgHex) {
+        throw new Error(`provided message '${msgHex}' is not valid hex`);
+    }
+    return res;
+}
 
 /**
  * Interface for interacting with a wallet backend through a connection that's already been established.
@@ -147,10 +195,10 @@ export interface WalletConnection {
      * If this doesn't happen, the promise rejects with an explanatory error message.
      *
      * @param accountAddress The account whose keys are used to sign the message.
-     * @param message The message to sign.
+     * @param msg The message to sign.
      * @return A promise for the signatures of the message.
      */
-    signMessage(accountAddress: string, message: string): Promise<AccountTransactionSignature>;
+    signMessage(accountAddress: string, msg: SignableMessage): Promise<AccountTransactionSignature>;
 
     /**
      * Close the connection and clean up relevant resources.

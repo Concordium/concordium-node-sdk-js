@@ -1,10 +1,20 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
+import { ResultAsync, ok, err } from 'neverthrow';
 import { TESTNET } from './config';
-import { useConnect, useConnection, WalletConnectionProps, WithWalletConnector } from '@concordium/react-components';
+import {
+    useConnect,
+    useConnection,
+    WalletConnectionProps,
+    WithWalletConnector,
+    binaryMessageFromHex,
+    stringMessage,
+    typeSchemaFromBase64,
+} from '@concordium/react-components';
 import { Alert, Button, Col, Container, Form, InputGroup, Row, Spinner } from 'react-bootstrap';
 import { WalletConnectorButton } from './WalletConnectorButton';
 import { BROWSER_WALLET, WALLET_CONNECT } from './config';
 import { AccountTransactionSignature } from '@concordium/web-sdk';
+import { errorString } from './util';
 
 export default function App() {
     return (
@@ -20,23 +30,58 @@ function Main(props: WalletConnectionProps) {
     const { connection, setConnection, account } = useConnection(connectedAccounts, genesisHashes);
     const { connect, isConnecting, connectError } = useConnect(activeConnector, setConnection);
 
-    const [message, setMessage] = useState('');
+    const [messageInput, setMessageInput] = useState('');
+    const [schemaInput, setSchemaInput] = useState('');
+
+    const schemaResult = useMemo(() => {
+        if (!schemaInput) {
+            return undefined;
+        }
+        try {
+            return ok(typeSchemaFromBase64(schemaInput));
+        } catch (e) {
+            return err(errorString(e));
+        }
+    }, [schemaInput]);
+
+    const messageResult = useMemo(() => {
+        if (!messageInput) {
+            return undefined;
+        }
+        if (!schemaResult) {
+            // Empty schema implies string message.
+            return ok(stringMessage(messageInput));
+        }
+        try {
+            // Map schema result to message with input.
+            // Return undefined if schema result is an error to avoid double reporting it.
+            return schemaResult.match(
+                (s) => ok(binaryMessageFromHex(messageInput, s)),
+                () => undefined
+            );
+        } catch (e) {
+            return err(errorString(e));
+        }
+    }, [messageInput, schemaResult]);
+
     const [signature, setSignature] = useState<AccountTransactionSignature>('');
     const [error, setError] = useState('');
     const [isWaiting, setIsWaiting] = useState(false);
 
-    const handleInput = useCallback((e: any) => setMessage(e.target.value), []);
+    const handleMessageInput = useCallback((e: any) => setMessageInput(e.target.value), []);
+    const handleSchemaInput = useCallback((e: any) => setSchemaInput(e.target.value), []);
     const handleSubmit = useCallback(() => {
-        if (connection && account && message) {
-            setError('');
-            setIsWaiting(true);
-            connection
-                .signMessage(account, message)
-                .then((m) => setSignature(m))
-                .catch((e) => setError((e as Error).message || e))
+        if (connection && account && messageResult) {
+            messageResult
+                .asyncAndThen((msg) => {
+                    setError('');
+                    setIsWaiting(true);
+                    return ResultAsync.fromPromise(connection.signMessage(account, msg), errorString);
+                })
+                .match(setSignature, setError)
                 .finally(() => setIsWaiting(false));
         }
-    }, [connection, account, message]);
+    }, [connection, account, messageResult]);
     return (
         <>
             <Row className="mt-3 mb-3">
@@ -78,37 +123,72 @@ function Main(props: WalletConnectionProps) {
                     </Col>
                 </Row>
             )}
-            <Form.Group as={Row} className="mb-3" controlId="contract">
+            <Form.Group as={Row} className="mb-3">
+                <Form.Label column sm={3}>
+                    Schema (if binary):
+                </Form.Label>
+                <Col sm={9}>
+                    <InputGroup hasValidation={schemaResult?.isErr()}>
+                        <Form.Control
+                            type="text"
+                            value={schemaInput}
+                            onChange={handleSchemaInput}
+                            placeholder="Leave empty for string message"
+                            isInvalid={schemaResult?.isErr()}
+                            autoFocus
+                        />
+                        <InputGroup.Text>Base64</InputGroup.Text>
+                        {schemaResult?.match(
+                            () => undefined,
+                            (e) => (
+                                <Form.Control.Feedback type="invalid">{e}</Form.Control.Feedback>
+                            )
+                        )}
+                    </InputGroup>
+                </Col>
+            </Form.Group>
+            <Form.Group as={Row} className="mb-3">
                 <Form.Label column sm={3}>
                     Message to sign:
                 </Form.Label>
                 <Col sm={9}>
-                    <InputGroup>
+                    <InputGroup hasValidation={messageResult?.isErr()}>
                         <Form.Control
                             type="text"
-                            value={message}
-                            onChange={handleInput}
-                            disabled={!connection}
-                            placeholder={connection ? undefined : 'Connect wallet to sign message'}
+                            value={messageInput}
+                            onChange={handleMessageInput}
+                            isInvalid={messageResult?.isErr()}
                             autoFocus
                         />
-                        <Button
-                            variant="primary"
-                            onClick={handleSubmit}
-                            disabled={!connection || !message || isWaiting}
-                        >
-                            {isWaiting ? 'Signing...' : 'Sign'}
-                        </Button>
+                        <InputGroup.Text>{schemaInput ? 'Hex' : 'String'}</InputGroup.Text>
+                        {messageResult?.match(
+                            () => undefined,
+                            (e) => (
+                                <Form.Control.Feedback type="invalid">{e}</Form.Control.Feedback>
+                            )
+                        )}
                     </InputGroup>
                 </Col>
             </Form.Group>
+            <Form.Group as={Row} className="mb-3">
+                <Form.Label column sm={3} />
+                <Col sm={9}>
+                    <Button
+                        variant="primary"
+                        onClick={handleSubmit}
+                        disabled={!connection || !messageInput || isWaiting || !messageResult?.isOk()}
+                    >
+                        {isWaiting ? 'Signing...' : schemaInput ? 'Sign binary message' : 'Sign string message'}
+                    </Button>
+                </Col>
+            </Form.Group>
             <Row>
-                {error && <Alert variant="danger"></Alert>}
+                {error && <Alert variant="danger">{error}</Alert>}
                 {signature && (
                     <>
                         <Col sm={3}>Signature:</Col>
                         <Col sm={9}>
-                            <pre title={`Message: ${message}`}>{JSON.stringify(signature, null, 2)}</pre>
+                            <pre title={`Message: ${messageInput}`}>{JSON.stringify(signature, null, 2)}</pre>
                         </Col>
                     </>
                 )}

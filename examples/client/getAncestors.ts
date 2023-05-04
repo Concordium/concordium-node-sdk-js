@@ -61,6 +61,7 @@ const client = createConcordiumClient(
         cli.flags.block
     );
 
+    console.log('Block hashes of ancestors of input block:');
     for await (const ancestor of ancestors) {
         console.log(ancestor);
     }

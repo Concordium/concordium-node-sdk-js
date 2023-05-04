@@ -39,7 +39,7 @@ const client = createConcordiumClient(
 
 /**
  * Retrieves a stream of ID's for registered bakers on the network at a specific
- * block.  If a blockhash is not supplied it will pick the latest finalized
+ * block. If a blockhash is not supplied it will pick the latest finalized
  * block. An optional abort signal can also be provided that closes the stream.
 
  * Note: A stream can be collected to a list with the streamToList function.
@@ -50,6 +50,7 @@ const client = createConcordiumClient(
         cli.flags.block
     );
 
+    console.log('List of BakerID at the specified block:');
     for await (const bakerId of bakerIds) {
         console.log(bakerId);
     }

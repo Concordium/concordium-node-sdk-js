@@ -10,14 +10,14 @@ import meow from 'meow';
 const cli = meow(
     `
   Usage
-    $ yarn ts-node <path-to-this-file> [options]
+    $ yarn run-example <path-to-this-file> [options]
 
   Required
     --height,            Height starting from the genesis block at the genesis index.
     --restrict,      -r  Whether to return results only from the specified genesis index (true),
                          or allow results from more recent genesis indices as well (false).
-    --genesis-index, -g  The index of a (re)genesis block. The initial genesis block has index 0 
-                         and each subsequent regenesis has an incrementally higher index. 
+    --genesis-index, -g  The index of a (re)genesis block. The initial genesis block has index 0
+                         and each subsequent regenesis has an incrementally higher index.
 
   Options
     --help,         Displays this message.

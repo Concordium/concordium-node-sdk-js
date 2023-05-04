@@ -6,7 +6,7 @@ import meow from 'meow';
 const cli = meow(
     `
   Usage
-    $ yarn ts-node <path-to-this-file> [options]
+    $ yarn run-example <path-to-this-file> [options]
 
   Required
     --peer, -p  The ip of the peer to ban.

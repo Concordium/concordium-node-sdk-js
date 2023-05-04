@@ -41,7 +41,8 @@ export * from './rewardStatusHelpers';
 export * from './HdWallet';
 export * from './schemaHelpers';
 
-export { isHex, streamToList } from './util';
+export { getContractName } from './contractHelpers';
+export { isHex, streamToList, wasmToSchema, unwrap } from './util';
 
 export { HttpProvider } from './providers/httpProvider';
 export { JsonRpcClient } from './JsonRpcClient';
@@ -50,3 +51,7 @@ export { default as ConcordiumGRPCClient } from './GRPCClient';
 
 export { getAccountTransactionHandler } from './accountTransactions';
 export { calculateEnergyCost } from './energyCost';
+
+export * from './uleb128';
+export * from './cis2';
+export * from './cis0';

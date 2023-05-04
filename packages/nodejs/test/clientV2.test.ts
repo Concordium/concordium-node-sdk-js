@@ -8,18 +8,20 @@ import ConcordiumNodeClientV2, {
 import {
     buildBasicAccountSigner,
     calculateEnergyCost,
-    createCredentialDeploymentTransaction,
     getAccountTransactionHandler,
     getCredentialDeploymentSignDigest,
-    serializeAccountTransactionPayload,
     sha256,
     signTransaction,
+    serializeAccountTransactionPayload,
     streamToList,
+    deserializeReceiveReturnValue,
+    createCredentialDeploymentTransaction,
 } from '@concordium/common-sdk';
 import {
     getModuleBuffer,
     getIdentityInput,
     getNodeClient,
+    getNodeClientWeb,
 } from './testHelpers';
 import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons';
@@ -28,25 +30,11 @@ import { Buffer } from 'buffer/';
 import { serializeAccountTransaction } from '@concordium/common-sdk/lib/serialization';
 
 import { TextEncoder, TextDecoder } from 'util';
-import 'isomorphic-fetch';
-import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 global.TextEncoder = TextEncoder as any;
 global.TextDecoder = TextDecoder as any;
 /* eslint-enable @typescript-eslint/no-explicit-any */
-
-// TODO find nice way to move this to web/common
-export function getNodeClientWeb(
-    address = 'http://node.testnet.concordium.com',
-    port = 20000
-): ConcordiumNodeClientV2 {
-    const transport = new GrpcWebFetchTransport({
-        baseUrl: `${address}:${port}`,
-        timeout: 15000,
-    });
-    return new v1.ConcordiumGRPCClient(transport);
-}
 
 const clientV2 = getNodeClient();
 const clientWeb = getNodeClientWeb();
@@ -702,9 +690,8 @@ test.each([clientV2, clientWeb])('getElectionInfo', async (client) => {
 test.each([clientV2, clientWeb])(
     'getAccountNonFinalizedTransactions',
     async (client) => {
-        const transactions = await client.getAccountNonFinalizedTransactions(
-            testAccount
-        );
+        const transactions =
+            client.getAccountNonFinalizedTransactions(testAccount);
         const transactionsList = await streamToList(transactions);
 
         expect(transactionsList).toBeDefined();
@@ -719,9 +706,7 @@ test.each([clientV2, clientWeb])(
     async (client) => {
         const blockHash =
             '8f3acabb19ef769db4d13ada858a305cc1a3d64adeb78fcbf3bb9f7583de6362';
-        const transactionEvents = await client.getBlockTransactionEvents(
-            blockHash
-        );
+        const transactionEvents = client.getBlockTransactionEvents(blockHash);
         const transactionEventList = await streamToList(transactionEvents);
 
         expect(transactionEventList).toEqual(expected.transactionEventList);
@@ -733,9 +718,7 @@ test.each([clientV2, clientWeb])(
     async (client) => {
         const blockHash =
             '8f3acabb19ef769db4d13ada858a305cc1a3d64adeb78fcbf3bb9f7583de6362';
-        const transactionEvents = await client.getBlockTransactionEvents(
-            blockHash
-        );
+        const transactionEvents = client.getBlockTransactionEvents(blockHash);
         const transactionEventList = await streamToList(transactionEvents);
 
         expect(transactionEventList).toEqual(expected.transactionEventList);
@@ -780,6 +763,31 @@ test.each([clientV2, clientWeb])(
         expect(finalizationSummary).toEqual(expected.blockFinalizationSummary);
     }
 );
+
+test.each([clientV2, clientWeb])('getEmbeddedSchema', async (client) => {
+    const contract = { index: 4422n, subindex: 0n };
+    const moduleRef = new v1.ModuleReference(
+        '44434352ddba724930d6b1b09cd58bd1fba6ad9714cf519566d5fe72d80da0d1'
+    );
+
+    const schema = await client.getEmbeddedSchema(moduleRef);
+
+    const context = { contract, method: 'weather.get' };
+    const invoked = await client.invokeContract(context);
+
+    if (invoked.tag === 'success' && invoked.returnValue) {
+        const rawReturnValue = Buffer.from(invoked.returnValue, 'hex');
+        const returnValue = deserializeReceiveReturnValue(
+            rawReturnValue,
+            schema,
+            'weather',
+            'get'
+        );
+        expect(returnValue).toEqual({ Sunny: [] });
+    } else {
+        throw Error('Could not deserialize correctly with schema.');
+    }
+});
 
 // For tests that take a long time to run, is skipped by default
 describe.skip('Long run-time test suite', () => {

@@ -11,7 +11,7 @@ import meow from 'meow';
 const cli = meow(
     `
   Usage
-    $ yarn ts-node <path-to-this-file> [options]
+    $ yarn run-example <path-to-this-file> [options]
 
   Required
     --account, -a  An account address to get info from

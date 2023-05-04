@@ -1,8 +1,7 @@
 import {
     AccountAddress,
-    AccountInfo,
     createConcordiumClient,
-    isDelegatorAccount,
+    isRpcError,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -51,31 +50,58 @@ const client = createConcordiumClient(
 );
 
 /**
- * Retrieves information about an account. The function must be provided an
- * account address or a credential registration id. If a credential registration
- * id is provided, then the node returns the information of the account, which
- * the corresponding credential is (or was) deployed to. An account index as a
- * bigint can also be provided.
+ * Find account creation time, block and transaction.
  */
 
 (async () => {
-    const accountAddress = new AccountAddress(cli.flags.account);
-    const blockInfo = await client.getBlockInfo();
+    const account = new AccountAddress(cli.flags.account);
 
-    const start = 0n;
-    const end = blockInfo.blockHeight;
+    let start = 0n;
+    let end = (await client.getBlockInfo()).blockHeight;
 
-    while (true) {
+    // Binary search for account creation block
+    while (start < end) {
         const mid = (start + end) / 2n;
         const block = (await client.getBlocksAtHeight(mid))[0];
 
         console.log('processing block at height:', mid);
 
         try {
-            await client.getAccountInfo(accountAddress, block);
+            await client.getAccountInfo(account, block);
+            end = mid;
         } catch (e) {
-            throw e;
-            //console.log(e.code === 'NOT_FOUND')
+            if (isRpcError(e) && e.code == 'NOT_FOUND') {
+                start = mid + 1n;
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    const accBlock = (await client.getBlocksAtHeight(start))[0];
+
+    // Is the account actually in the block? Will throw otherwise
+    try {
+        await client.getAccountInfo(account, accBlock);
+    } catch (e) {
+        if (isRpcError(e) && e.code === 'NOT_FOUND') {
+            console.log('Account does not exist on chain');
+        }
+    }
+
+    const blockInfo = await client.getBlockInfo(accBlock);
+    const summaries = client.getBlockTransactionEvents(accBlock);
+    for await (const summary of summaries) {
+        if (
+            summary.type === 'accountCreation' &&
+            summary.address === account.address
+        ) {
+            console.log('\nAccount created in block:', accBlock);
+            console.log('Timestamp of block:', blockInfo.blockSlotTime);
+            console.log(
+                'Account created at transaction with hash:',
+                summary.hash
+            );
         }
     }
 })();

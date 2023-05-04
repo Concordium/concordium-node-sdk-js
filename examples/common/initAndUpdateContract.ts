@@ -1,0 +1,235 @@
+import {
+    AccountAddress,
+    AccountTransaction,
+    AccountTransactionHeader,
+    AccountTransactionType,
+    buildBasicAccountSigner,
+    CcdAmount,
+    ContractContext,
+    createConcordiumClient,
+    deserializeReceiveReturnValue,
+    InitContractPayload,
+    ModuleReference,
+    serializeInitContractParameters,
+    serializeUpdateContractParameters,
+    signTransaction,
+    TransactionExpiry,
+    UpdateContractPayload,
+    unwrap,
+    HexString,
+} from '@concordium/node-sdk';
+import { credentials } from '@grpc/grpc-js';
+import { readFileSync } from 'node:fs';
+import { Buffer } from 'buffer/index.js';
+
+import meow from 'meow';
+
+const cli = meow(
+    `
+  Usage
+    $ yarn ts-node <path-to-this-file> [options]
+
+  Required
+    --wallet-file, -w  The filepath to the sender's private key
+
+  Options
+    --help,     -h  Displays this message
+    --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
+`,
+    {
+        importMeta: import.meta,
+        flags: {
+            walletFile: {
+                type: 'string',
+                alias: 'w',
+                isRequired: true,
+            },
+            endpoint: {
+                type: 'string',
+                alias: 'e',
+                default: 'localhost:20000',
+            },
+        },
+    }
+);
+
+const [address, port] = cli.flags.endpoint.split(':');
+const client = createConcordiumClient(
+    address,
+    Number(port),
+    credentials.createInsecure()
+);
+
+/**
+ * The following example demonstrates how a simple transfer can be created.
+ */
+
+(async () => {
+    const sunnyWeather = { Sunny: [] };
+    const rainyWeather = { Rainy: [] };
+
+    const walletFile = JSON.parse(readFileSync(cli.flags.walletFile, 'utf8'));
+    const sender = new AccountAddress(unwrap(walletFile.value.address));
+    const senderPrivateKey: HexString = unwrap(
+        walletFile.value.accountKeys.keys[0].keys[0].signKey
+    );
+    const signer = buildBasicAccountSigner(senderPrivateKey);
+
+    const moduleRef = new ModuleReference(
+        '44434352ddba724930d6b1b09cd58bd1fba6ad9714cf519566d5fe72d80da0d1'
+    );
+    const maxCost = 30000n;
+    const contractName = 'weather';
+    const receiveName = 'weather.set';
+    const schema = await client.getEmbeddedSchema(moduleRef);
+
+    // --- Initialize Contract --- //
+
+    console.log('\n## Initializing weather contract with sunny weather\n');
+
+    const initHeader: AccountTransactionHeader = {
+        expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+        nonce: (await client.getNextAccountNonce(sender)).nonce,
+        sender,
+    };
+
+    const initParams = serializeInitContractParameters(
+        contractName,
+        sunnyWeather,
+        schema
+    );
+
+    const initPayload: InitContractPayload = {
+        amount: new CcdAmount(0n),
+        moduleRef: moduleRef,
+        initName: contractName,
+        param: initParams,
+        maxContractExecutionEnergy: maxCost,
+    };
+
+    const initTransaction: AccountTransaction = {
+        header: initHeader,
+        payload: initPayload,
+        type: AccountTransactionType.InitContract,
+    };
+
+    const initSignature = await signTransaction(initTransaction, signer);
+    const initTrxHash = await client.sendAccountTransaction(
+        initTransaction,
+        initSignature
+    );
+
+    console.log('Transaction submitted, waiting for finalization...');
+    await client.waitForTransactionFinalization(initTrxHash);
+
+    console.log('Transaction finalized, getting outcome...\n');
+    let contractAddress = undefined;
+    const initTrxStatus = await client.getBlockItemStatus(initTrxHash);
+    if (initTrxStatus.status === 'finalized') {
+        console.dir(initTrxStatus.outcome, { depth: null, colors: true });
+
+        const summary = initTrxStatus.outcome.summary;
+        if (
+            summary.type == 'accountTransaction' &&
+            summary.transactionType === 'initContract'
+        ) {
+            contractAddress = summary.contractInitialized.address;
+        }
+    }
+
+    // --- Checking weather --- //
+
+    const contextPostInit: ContractContext = {
+        contract: unwrap(contractAddress),
+        invoker: sender,
+        method: 'weather.get',
+    };
+
+    const invokedPostInit = await client.invokeContract(contextPostInit);
+    if (invokedPostInit.tag === 'success') {
+        const rawReturnValue = Buffer.from(
+            unwrap(invokedPostInit.returnValue),
+            'hex'
+        );
+        const returnValue = deserializeReceiveReturnValue(
+            rawReturnValue,
+            schema,
+            contractName,
+            'get'
+        );
+        console.log('\nThe weather is now:');
+        console.dir(returnValue, { depth: null, colors: true });
+        console.log('');
+    }
+
+    // --- Calling receive function --- //
+
+    console.log('## Making it rain with weather.set\n');
+
+    const updateHeader: AccountTransactionHeader = {
+        expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+        nonce: (await client.getNextAccountNonce(sender)).nonce,
+        sender,
+    };
+
+    const updateParams = serializeUpdateContractParameters(
+        contractName,
+        'set',
+        rainyWeather,
+        schema
+    );
+
+    const updatePayload: UpdateContractPayload = {
+        amount: new CcdAmount(0n),
+        address: unwrap(contractAddress),
+        receiveName,
+        message: updateParams,
+        maxContractExecutionEnergy: maxCost,
+    };
+
+    const updateTransaction: AccountTransaction = {
+        header: updateHeader,
+        payload: updatePayload,
+        type: AccountTransactionType.Update,
+    };
+
+    const updateSignature = await signTransaction(updateTransaction, signer);
+    const updateTrxHash = await client.sendAccountTransaction(
+        updateTransaction,
+        updateSignature
+    );
+
+    console.log('Transaction submitted, waiting for finalization...');
+    await client.waitForTransactionFinalization(updateTrxHash);
+
+    console.log('Transaction finalized, getting outcome...\n');
+    const trxStatus = await client.getBlockItemStatus(updateTrxHash);
+    if (trxStatus.status === 'finalized') {
+        console.dir(trxStatus.outcome, { depth: null, colors: true });
+    }
+
+    // --- Checking Weather --- //
+
+    const contextPostUpdate: ContractContext = {
+        contract: unwrap(contractAddress),
+        invoker: sender,
+        method: 'weather.get',
+    };
+
+    const invokedPostUpdate = await client.invokeContract(contextPostUpdate);
+    if (invokedPostUpdate.tag === 'success') {
+        const rawReturnValue = Buffer.from(
+            unwrap(invokedPostUpdate.returnValue),
+            'hex'
+        );
+        const returnValue = deserializeReceiveReturnValue(
+            rawReturnValue,
+            schema,
+            contractName,
+            'get'
+        );
+        console.log('\nThe weather is now:');
+        console.dir(returnValue, { depth: null, colors: true });
+        console.log('');
+    }
+})();

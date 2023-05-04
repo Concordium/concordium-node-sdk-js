@@ -1364,6 +1364,9 @@ export function pendingUpdate(
             };
         case undefined:
             throw Error('Unexpected missing pending update');
+        default:
+            // TODO support new updates
+            throw Error('Unsupported update: ' + effect.oneofKind);
     }
 }
 
@@ -1432,6 +1435,11 @@ function trUpdatePayload(
         }
         case undefined:
             throw new Error('Unexpected missing update payload');
+        default:
+            // TODO support new updates
+            throw Error(
+                'Unsupported update payload type: ' + payload?.oneofKind
+            );
     }
 }
 
@@ -1509,9 +1517,7 @@ function trAuthorizationsV0(auths: v2.AuthorizationsV0): v1.AuthorizationsV0 {
         addIdentityProvider: trAccessStructure(auths.addIdentityProvider),
         addAnonymityRevoker: trAccessStructure(auths.addAnonymityRevoker),
         emergency: trAccessStructure(auths.emergency),
-        electionDifficulty: trAccessStructure(
-            auths.parameterElectionDifficulty
-        ),
+        electionDifficulty: trAccessStructure(auths.parameterConsensus),
         euroPerEnergy: trAccessStructure(auths.parameterEuroPerEnergy),
         foundationAccount: trAccessStructure(auths.parameterFoundationAccount),
         microGTUPerEuro: trAccessStructure(auths.parameterMicroCCDPerEuro),

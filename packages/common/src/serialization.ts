@@ -518,13 +518,7 @@ export function serializeTypeValue(
         JSON.stringify(value),
         rawSchema.toString('hex')
     );
-    try {
-        return Buffer.from(serializedValue, 'hex');
-    } catch (e) {
-        throw new Error(
-            'unable to deserialize value, due to: ' + serializedValue
-        ); // In this case serializedValue is the error message from the rust module
-    }
+    return Buffer.from(serializedValue, 'hex');
 }
 
 /**

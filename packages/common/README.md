@@ -24,8 +24,10 @@ This package is the shared library for the nodejs and web SDK's.
     - [Deserialize a receive function's return value](#deserialize-a-receive-functions-return-value)
     - [Deserialize a function's error](#deserialize-a-functions-error)
     - [Deserialize a transaction](#deserialize-a-transaction)
+    - [Creating an AccountSigner](#creating-an-accountsigner)
     - [Sign an account transaction](#sign-an-account-transaction)
     - [Sign a message](#sign-a-message)
+    - [Check smart contract for support for standards](#check-smart-contract-for-support-for-standards)
 - [Identity proofs](#identity-proofs)
     - [Build Statement](#build-statement)
         - [Minimum Age](#minimum-age)
@@ -38,6 +40,7 @@ This package is the shared library for the nodejs and web SDK's.
     - [Prove Statement (getIdProof)](#prove-statement-getidproof)
 - [ConcordiumNodeClient](#concordiumnodeclient)
 - [JSON-RPC client](#json-rpc-client)
+- [CIS-2 Contract](#cis-2-contract)
 
 # Constructing transactions
 
@@ -607,6 +610,28 @@ if (deserialized.kind === BlockItemKind.AccountTransactionKind) {
 
 Note that currently the only supported account transaction kinds are `Transfer`, `TransferWithMemo` and `RegisterData`. If attempting to deserialize other transaction kinds, the function will throw an error;
 
+## Creating an `AccountSigner`
+It is possible to build an `AccountSigner` in a variety of ways by utilizing the function `buildAccountSigner`. For a simple account, with a single credential and one keypair in the credential, one can supply a single private key, like so:
+
+```js
+const privateKey = '...'; // Private key of an account as hex string
+const signer: AccountSigner = buildAccountSigner(privateKey);
+```
+
+For a more complex account with one or more credentials, each with one or more keypairs, `buildAccountSigner` is also compatible with the format created by the chain genesis tool, Concordium wallet exports, along with a map of type `SimpleAccountKeys`.
+
+```js
+const keys: SimpleAccountKeys = {
+    0: {
+        0: '...', // Private key of an account as hex string
+        1: '...',
+        ...
+    },
+    ...
+};
+const signer: AccountSigner = buildAccountSigner(keys);
+```
+
 ## Sign an account transaction
 The following example demonstrates how to use the `signTransaction` helper function to sign a account transaction:
 
@@ -620,9 +645,6 @@ const transactionSignature: AccountTransactionSignature = signTransaction(accoun
 ...
 sendTransaction(accountTransaction, transactionSignature);
 ```
-
-For a simple account, with a single credential and one keypair in the credential, one can use the `buildBasicAccountSigner` to get the signer. Otherwise one needs to implement the AccountSigner interface themselves, for now.
-The `buildBasicAccountSigner` function take the account's private key as a hex string.
 
 The following is an example of how to sign an account transaction without using the `signTransaction` helper function:
 ```js
@@ -668,6 +690,31 @@ const accountInfo = ...; // the getAccountInfo node entrypoint can be used for t
 if (!verifyMessageSignature(message, signature, accountInfo)) {
    // the signature is incorrect
 }
+```
+
+The message can either be a utf8 encoded string or a Uint8Array directly containing the message bytes.
+
+## Deserialize smart contract types with only the specific type's schema
+The SDK exposes a general function to deserialize smart contract values from binary format to their JSON representation. In the previous sections the schema used was assumed to be the schema for an entire module, this function can be used with the schema containing only the specific type of the parameter, return value, event or error.
+
+```
+const deserializedValue = deserializeTypeValue(serializedValue, rawTypeSchema);
+```
+
+Note that the specific schema can be obtained using [cargo-concordium](https://developer.concordium.software/en/mainnet/smart-contracts/guides/setup-tools.html#cargo-concordium)'s  `schema-json` command, and specifically for parameters, this SDK exposes functions for that, check [the serialize parameters with only the specific types schema section](serialize-parameters-with-only-the-specific-types-schema) for those.
+
+## Check smart contract for support for standards
+To check if a smart contract supports a certain standard (according to [CIS-0 standard detection](https://proposals.concordium.software/CIS/cis-0.html)), the utility function `cis0Supports` can be used. It should be noted, that the support of the contract is purely based on the claims of the contract and does not give any guarantees for whether the contract adheres to the standard it claims to implement. The function returns `undefined` if the contract does not support CIS-0.
+
+This requires a [`ConcordiumNodeClient`](../../docs/gRPC.md).
+
+```js
+const client = ...; // `ConcordiumNodeClient`
+const address = {index: 1234n, subindex: 0n}; // Contract to check for support.
+const standardId = 'CIS-2';
+// const standardIds = ['CIS-1', 'CIS-2']; // Example of a list of standards to check for.
+
+const supportResult = await cis0Supports(client, address, 'CIS-2');
 ```
 
 # Identity proofs
@@ -820,3 +867,8 @@ The [nodejs SDK uses a regular gRPC transport](../nodejs#ConcordiumNodeClient), 
 > :warning: **The JSON-RPC client has been deprecated**: the gRPC client should be used instead to communicate directly with a node
 
 The SDK also provides a JSON-RPC client, [check here for the documentation](../../docs/JSON-RPC.md).
+
+# CIS-2 contract
+The SDK provides a class for interacting with smart contracts adhering to the [CIS-2 standard](https://proposals.concordium.software/CIS/cis-2.html).
+
+For an overview of the class, [check here](../../docs/CIS2Contract.md).

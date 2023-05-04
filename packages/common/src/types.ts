@@ -23,6 +23,7 @@ export * from './types/BlockSpecialEvents';
 
 export type HexString = string;
 export type Base58String = string;
+export type Base64String = string;
 export type DigitString = string;
 export type UrlString = string;
 export type IpAddressString = string;
@@ -703,12 +704,44 @@ export interface AccountEncryptedAmount {
 
 export interface VerifyKey {
     schemeId: string;
-    verifyKey: string;
+    verifyKey: HexString;
+}
+
+export interface KeyPair {
+    signKey: HexString;
+    verifyKey: HexString;
 }
 
 export interface CredentialPublicKeys {
     keys: Record<number, VerifyKey>;
     threshold: number;
+}
+
+export interface CredentialKeys {
+    keys: Record<number, KeyPair>;
+    threshold: number;
+}
+
+export interface AccountKeys {
+    keys: Record<number, CredentialKeys>;
+    threshold: number;
+}
+
+export type SimpleAccountKeys = Record<number, Record<number, HexString>>;
+
+export interface WithAccountKeys {
+    accountKeys: AccountKeys;
+}
+
+export interface WalletExportFormat {
+    type: string;
+    v: number;
+    environment: string;
+    value: {
+        accountKeys: AccountKeys;
+        address: Base58String;
+        credentials: Record<number, HexString>;
+    };
 }
 
 export interface ChainArData {
@@ -1267,14 +1300,29 @@ export interface UpdateCredentialsPayload {
     currentNumberOfCredentials: bigint;
 }
 
-export interface BakerKeysWithProofs {
+export interface PublicBakerKeys {
     signatureVerifyKey: HexString;
     electionVerifyKey: HexString;
     aggregationVerifyKey: HexString;
+}
+
+export interface PrivateBakerKeys {
+    aggregationSignKey: HexString;
+    signatureSignKey: HexString;
+    electionPrivateKey: HexString;
+}
+
+export interface BakerKeyProofs {
     proofAggregation: HexString;
     proofSig: HexString;
     proofElection: HexString;
 }
+
+export type BakerKeysWithProofs = PublicBakerKeys & BakerKeyProofs;
+
+export type GenerateBakerKeysOutput = PublicBakerKeys &
+    PrivateBakerKeys &
+    BakerKeyProofs;
 
 export interface ConfigureBakerPayload {
     /* stake to bake. if set to 0, this removes the account as a baker */
@@ -1651,3 +1699,10 @@ export type IdentityObjectV1 = {
 };
 
 export type Network = 'Testnet' | 'Mainnet';
+
+export type SmartContractTypeValues =
+    | { [key: string]: SmartContractTypeValues }
+    | SmartContractTypeValues[]
+    | number
+    | string
+    | boolean;

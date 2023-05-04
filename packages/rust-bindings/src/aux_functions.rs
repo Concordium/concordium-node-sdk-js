@@ -1,7 +1,7 @@
 use crate::{helpers::*, types::*};
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use concordium_base::{
-    base::BakerKeyPairs,
+    base::{BakerAggregationSignKey, BakerElectionSignKey, BakerKeyPairs, BakerSignatureSignKey},
     common::{
         types::{KeyIndex, KeyPair, TransactionTime},
         *,
@@ -572,7 +572,6 @@ pub fn deserialize_state_aux(
         Ok(o) => o,
         Err(e) => return Err(anyhow!("unable to parse schema: {:#?}", e)),
     };
-    let mut state_cursor = Cursor::new(hex::decode(state_bytes)?);
     let contract_schema = module_schema
         .contracts
         .get(contract_name)
@@ -581,10 +580,8 @@ pub fn deserialize_state_aux(
         .state
         .as_ref()
         .ok_or_else(|| anyhow!("Unable to get state schema: not included in contract schema"))?;
-    match state_schema.to_json(&mut state_cursor) {
-        Ok(schema) => Ok(schema.to_string()),
-        Err(e) => Err(anyhow!("Unable to parse state to json: {:?}", e)),
-    }
+
+    deserialize_type_value(state_bytes, state_schema)
 }
 
 /// Given the bytes of a receive function's return value, deserialize them to a
@@ -600,11 +597,7 @@ pub fn deserialize_receive_return_value_aux(
     let return_value_schema =
         module_schema.get_receive_return_value_schema(contract_name, function_name)?;
 
-    let mut rv_cursor = Cursor::new(hex::decode(return_value_bytes)?);
-    match return_value_schema.to_json(&mut rv_cursor) {
-        Ok(rv) => Ok(rv.to_string()),
-        Err(_) => Err(anyhow!("Unable to parse return value to json.")),
-    }
+    deserialize_type_value(return_value_bytes, &return_value_schema)
 }
 
 /// Given the bytes of a receive function's error, deserialize them to a json
@@ -618,11 +611,7 @@ pub fn deserialize_receive_error_aux(
     let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &None)?;
     let error_schema = module_schema.get_receive_error_schema(contract_name, function_name)?;
 
-    let mut error_cursor = Cursor::new(hex::decode(error_bytes)?);
-    match error_schema.to_json(&mut error_cursor) {
-        Ok(e) => Ok(e.to_string()),
-        Err(_) => Err(anyhow!("Unable to parse error value to json.")),
-    }
+    deserialize_type_value(error_bytes, &error_schema)
 }
 
 /// Given the bytes of an init function's error, deserialize them to a json
@@ -635,11 +624,7 @@ pub fn deserialize_init_error_aux(
     let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &None)?;
     let error_schema = module_schema.get_init_error_schema(contract_name)?;
 
-    let mut error_cursor = Cursor::new(hex::decode(error_bytes)?);
-    match error_schema.to_json(&mut error_cursor) {
-        Ok(e) => Ok(e.to_string()),
-        Err(_) => Err(anyhow!("Unable to parse error value to json.")),
-    }
+    deserialize_type_value(error_bytes, &error_schema)
 }
 
 /// Given parameters to a receive function as a stringified json, serialize them
@@ -712,6 +697,22 @@ fn serialize_type_value(raw_value: JsonString, value_type: Type) -> Result<HexSt
 
     let buf = value_type.serial_value(&value)?;
     Ok(hex::encode(buf))
+}
+
+pub fn deserialize_type_value_aux(
+    serialized_value: HexString,
+    schema: HexString,
+) -> Result<JsonString> {
+    let value_type: Type = from_bytes(&hex::decode(schema)?)?;
+    deserialize_type_value(serialized_value, &value_type)
+}
+
+fn deserialize_type_value(serialized_value: HexString, value_type: &Type) -> Result<JsonString> {
+    let mut cursor = Cursor::new(hex::decode(serialized_value)?);
+    match value_type.to_json(&mut cursor) {
+        Ok(v) => Ok(to_string(&v)?),
+        Err(_) => Err(anyhow!("Unable to parse value to json.")),
+    }
 }
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
@@ -884,8 +885,28 @@ pub fn create_unsigned_credential_v1_aux(input: UnsignedCredentialInput) -> Resu
     Ok(response.to_string())
 }
 
+#[derive(SerdeSerialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BakerKeys {
+    #[serde(flatten)]
+    keys_payload:         ConfigureBakerKeysPayload,
+    #[serde(serialize_with = "base16_encode", rename = "electionPrivateKey")]
+    election_private_key: BakerElectionSignKey,
+    #[serde(serialize_with = "base16_encode", rename = "signatureSignKey")]
+    signature_sign_key:   BakerSignatureSignKey,
+    #[serde(serialize_with = "base16_encode", rename = "aggregationSignKey")]
+    aggregation_sign_key: BakerAggregationSignKey,
+}
+
 pub fn generate_baker_keys(sender: AccountAddress) -> Result<JsonString> {
     let mut csprng = thread_rng();
     let keys = BakerKeyPairs::generate(&mut csprng);
-    Ok(json!(ConfigureBakerKeysPayload::new(&keys, sender, &mut csprng)).to_string())
+    let keys_payload = ConfigureBakerKeysPayload::new(&keys, sender, &mut csprng);
+    let output = BakerKeys {
+        keys_payload,
+        election_private_key: keys.election_sign,
+        signature_sign_key: keys.signature_sign,
+        aggregation_sign_key: keys.aggregation_sign,
+    };
+    Ok(serde_json::to_string(&output)?)
 }

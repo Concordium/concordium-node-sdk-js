@@ -14,7 +14,7 @@ import {
     isHex,
     isValidHash,
     isValidIp,
-    mapAsyncIterable,
+    mapStream,
     unwrap,
 } from './util';
 import {
@@ -390,7 +390,7 @@ export default class ConcordiumNodeClient {
     ): AsyncIterable<v1.FinalizedBlockInfo> {
         const opts = { abort: abortSignal };
         const blocks = this.client.getFinalizedBlocks(v2.Empty, opts).responses;
-        return mapAsyncIterable(blocks, translate.commonBlockInfo);
+        return mapStream(blocks, translate.commonBlockInfo);
     }
 
     /**
@@ -405,7 +405,7 @@ export default class ConcordiumNodeClient {
     getBlocks(abortSignal?: AbortSignal): AsyncIterable<v1.ArrivedBlockInfo> {
         const opts = { abort: abortSignal };
         const blocks = this.client.getBlocks(v2.Empty, opts).responses;
-        return mapAsyncIterable(blocks, translate.commonBlockInfo);
+        return mapStream(blocks, translate.commonBlockInfo);
     }
 
     /**
@@ -435,7 +435,7 @@ export default class ConcordiumNodeClient {
             if (response.status === 'finalized') {
                 // Simply doing `abortController.abort()` causes an error.
                 // See: https://github.com/grpc/grpc-node/issues/1652
-                setImmediate(() => abortController.abort());
+                setTimeout(() => abortController.abort(), 0);
                 return resolve(response.outcome.blockHash);
             }
 
@@ -446,7 +446,7 @@ export default class ConcordiumNodeClient {
                         transactionHash
                     );
                     if (response.status === 'finalized') {
-                        setImmediate(() => abortController.abort());
+                        setTimeout(() => abortController.abort(), 0);
                         return resolve(response.outcome.blockHash);
                     }
                 }
@@ -474,7 +474,7 @@ export default class ConcordiumNodeClient {
         const opts = { abort: abortSignal };
         const hash = getBlockHashInput(blockHash);
         const asyncIter = this.client.getAccountList(hash, opts).responses;
-        return mapAsyncIterable(asyncIter, translate.unwrapToBase58);
+        return mapStream(asyncIter, translate.unwrapToBase58);
     }
 
     /**
@@ -493,7 +493,7 @@ export default class ConcordiumNodeClient {
         const opts = { abort: abortSignal };
         const hash = getBlockHashInput(blockHash);
         const asyncIter = this.client.getModuleList(hash, opts).responses;
-        return mapAsyncIterable(asyncIter, translate.unwrapValToHex);
+        return mapStream(asyncIter, translate.unwrapValToHex);
     }
 
     /**
@@ -517,7 +517,7 @@ export default class ConcordiumNodeClient {
             amount: maxAmountOfAncestors,
         };
         const asyncIter = this.client.getAncestors(request, opts).responses;
-        return mapAsyncIterable(asyncIter, translate.unwrapValToHex);
+        return mapStream(asyncIter, translate.unwrapValToHex);
     }
 
     /**
@@ -540,7 +540,7 @@ export default class ConcordiumNodeClient {
             address: contractAddress,
         };
         const asyncIter = this.client.getInstanceState(request, opts).responses;
-        return mapAsyncIterable(asyncIter, translate.instanceStateKVPair);
+        return mapStream(asyncIter, translate.instanceStateKVPair);
     }
 
     /**
@@ -585,7 +585,7 @@ export default class ConcordiumNodeClient {
         const opts = { abort: abortSignal };
         const block = getBlockHashInput(blockHash);
         const ips = this.client.getIdentityProviders(block, opts).responses;
-        return mapAsyncIterable(ips, translate.ipInfo);
+        return mapStream(ips, translate.ipInfo);
     }
 
     /**
@@ -604,14 +604,14 @@ export default class ConcordiumNodeClient {
         const opts = { abort: abortSignal };
         const block = getBlockHashInput(blockHash);
         const ars = this.client.getAnonymityRevokers(block, opts).responses;
-        return mapAsyncIterable(ars, translate.arInfo);
+        return mapStream(ars, translate.arInfo);
     }
 
     /**
      * Get a list of live blocks at a given height.
      *
      * @param blockHeightRequest Either an absolute block height request or a relative block height request
-     * @returns A lsit of block hashes as hex strings
+     * @returns A list of block hashes as hex strings
      */
     async getBlocksAtHeight(
         blockHeightRequest: v1.BlocksAtHeightRequest
@@ -648,7 +648,7 @@ export default class ConcordiumNodeClient {
         const opts = { abort: abortSignal };
         const block = getBlockHashInput(blockHash);
         const bakers = this.client.getBakerList(block, opts).responses;
-        return mapAsyncIterable(bakers, (x) => x.value);
+        return mapStream(bakers, (x) => x.value);
     }
 
     /**
@@ -677,7 +677,7 @@ export default class ConcordiumNodeClient {
             abort: abortSignal,
         }).responses;
 
-        return mapAsyncIterable(delegatorInfo, translate.delegatorInfo);
+        return mapStream(delegatorInfo, translate.delegatorInfo);
     }
     /**
      * Get the fixed delegators of a given pool for the reward period of the given block.
@@ -705,7 +705,7 @@ export default class ConcordiumNodeClient {
             { abort: abortSignal }
         ).responses;
 
-        return mapAsyncIterable(delegatorInfo, translate.delegatorInfo);
+        return mapStream(delegatorInfo, translate.delegatorInfo);
     }
 
     /**
@@ -729,7 +729,7 @@ export default class ConcordiumNodeClient {
             { abort: abortSignal }
         ).responses;
 
-        return mapAsyncIterable(delegatorInfo, translate.delegatorInfo);
+        return mapStream(delegatorInfo, translate.delegatorInfo);
     }
 
     /**
@@ -752,7 +752,7 @@ export default class ConcordiumNodeClient {
             { abort: abortSignal }
         ).responses;
 
-        return mapAsyncIterable(delegatorInfo, translate.delegatorInfo);
+        return mapStream(delegatorInfo, translate.delegatorInfo);
     }
 
     /**
@@ -796,7 +796,7 @@ export default class ConcordiumNodeClient {
             { abort: abortSignal }
         ).responses;
 
-        return mapAsyncIterable(transactions, translate.unwrapValToHex);
+        return mapStream(transactions, translate.unwrapValToHex);
     }
 
     /**
@@ -816,7 +816,7 @@ export default class ConcordiumNodeClient {
             { abort: abortSignal }
         ).responses;
 
-        return mapAsyncIterable(blockItemSummaries, translate.blockItemSummary);
+        return mapStream(blockItemSummaries, translate.blockItemSummary);
     }
 
     /**
@@ -994,10 +994,7 @@ export default class ConcordiumNodeClient {
             { abort: abortSignal }
         ).responses;
 
-        return mapAsyncIterable(
-            blockSpecialEvents,
-            translate.blockSpecialEvent
-        );
+        return mapStream(blockSpecialEvents, translate.blockSpecialEvent);
     }
 
     /**
@@ -1017,7 +1014,7 @@ export default class ConcordiumNodeClient {
             { abort: abortSignal }
         ).responses;
 
-        return mapAsyncIterable(pendingUpdates, translate.pendingUpdate);
+        return mapStream(pendingUpdates, translate.pendingUpdate);
     }
 
     /**

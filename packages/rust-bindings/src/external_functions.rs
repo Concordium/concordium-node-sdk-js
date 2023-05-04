@@ -162,8 +162,9 @@ pub fn get_init_contract_parameter_schema_ext(
 }
 
 #[wasm_bindgen(js_name = serializeTypeValue)]
-pub fn serialize_type_value_ext(value: JsonString, value_type: HexString) -> HexString {
-    error_to_string(serialize_type_value_aux(value, value_type))
+pub fn serialize_type_value_ext(value: JsonString, schema: HexString) -> Result<HexString, String> {
+    serialize_type_value_aux(value, schema)
+        .map_err(|e| format!("Unable to serialize value due to: {}", e))
 }
 
 #[wasm_bindgen(js_name = createIdRequestV1)]
@@ -344,4 +345,13 @@ pub fn generate_baker_keys_ext(sender: Base58String) -> JsonString {
         Err(e) => return format!("unable to parse sender account address: {}.", e),
     };
     error_to_string(generate_baker_keys(sender))
+}
+
+#[wasm_bindgen(js_name = deserializeTypeValue)]
+pub fn deserialize_type_value_ext(
+    serialized_value: HexString,
+    schema: HexString,
+) -> Result<JsonString, String> {
+    deserialize_type_value_aux(serialized_value, schema)
+        .map_err(|e| format!("Unable to deserialize value due to: {}", e))
 }

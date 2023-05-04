@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.5.0 2023-5-03
+
+### Changed
+
+- Bumped @concordium/common-sdk to 6.5.0. (Adds `CIS2Contract`)
+
+## 3.4.2 2023-4-21
+
+### Changed
+
+- Bumped @concordium/common-sdk to 6.4.2. (`generateBakerKeys` include private baker keys in output)
+
+## 3.4.1 2023-3-31
+
+### Changed
+
+- Bumped @concordium/common-sdk to 6.4.1. (Fixes `waitForTransactionFinalization`)
+
+## 3.4.0 2023-3-22
+
+### Changed
+
+- Bumped @concordium/common-sdk to 6.4.0. (Adds `deserializeTypeValue`)
+
 ## 3.3.1 2023-2-27
 
 ### Fixed

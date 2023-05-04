@@ -5,7 +5,8 @@
             "./packages/rust-bindings",
             "./packages/common",
             "./packages/nodejs",
-            "./packages/web"
+            "./packages/web",
+            "./examples"
         ]
     },
     "husky": {

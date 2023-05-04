@@ -9,6 +9,43 @@
   - `getExchangeRate`
   - `convertEnergyToMicroCcd`
 
+## 6.5.0 2023-5-03
+
+### Added
+- Utility functions `uleb128Decode` and `uleb128Encode` functions for decoding and encoding as unsigned leb128 respectively.
+- `CIS2Contract` class for interacting with smart contracts adhering to the CIS-2 standard.
+- `cis0Supports` function for checking standard support in smart contracts.
+- Made the `streamToList()` function public.
+- Build function `buildAccountSigner` for creating `AccountSigner` objects from genesis format, wallet export format, and a simple representation of credentials with keys.
+
+## 6.4.2 2023-04-21
+
+### Changed
+
+- `generateBakerKeys` now also returns the private baker keys.
+
+## 6.4.1 2023-03-31
+
+### Changed
+
+- Replace use of `setImmediate` with `setTimeout` since the former is not
+  supported in browsers.
+
+## 6.4.0 2023-03-22
+
+### Added
+
+- General function for deserializing smart contract values `deserializeTypeValue`.
+
+### Changed
+
+- Bumped @concordium/rust-bindings to 0.11.0. (Includes a fix to serialization of negative numbers for smart contract values)
+- `signMessage` and `verifyMessageSignature` can now handle the message being a buffer/Uint8Array instead of only a utf8 string.
+
+### Fixed
+
+- `serializeTypeValue` now reports an error when called with invalid data, such as a receive function with missing schema, or a schema that cannot be parsed.
+
 ## 6.3.0 2023-02-27
 
 ### Added

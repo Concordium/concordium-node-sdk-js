@@ -6,7 +6,10 @@
 - Utility functions `uleb128Decode` and `uleb128Encode` functions for decoding and encoding as unsigned leb128 respectively.
 - `CIS2Contract` class for interacting with smart contracts adhering to the CIS-2 standard.
 - `cis0Supports` function for checking standard support in smart contracts.
-- Made the `streamToList()` function public.
+- Made the `streamToList` function public.
+- Made the `unwrap` function public.
+- Added `wasmToSchema` utility function.
+- Added `getEmbeddedSchema` to client.>>>>>>> main
 - Build function `buildAccountSigner` for creating `AccountSigner` objects from genesis format, wallet export format, and a simple representation of credentials with keys.
 
 ## 6.4.2 2023-04-21

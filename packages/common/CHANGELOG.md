@@ -9,7 +9,8 @@
 - Made the `streamToList` function public.
 - Made the `unwrap` function public.
 - Added `wasmToSchema` utility function.
-- Added `getEmbeddedSchema` to client.>>>>>>> main
+- Added `getEmbeddedSchema` to client.
+- Exposed `RpcError` type and created helper `isRpcError`.
 - Build function `buildAccountSigner` for creating `AccountSigner` objects from genesis format, wallet export format, and a simple representation of credentials with keys.
 
 ## 6.4.2 2023-04-21

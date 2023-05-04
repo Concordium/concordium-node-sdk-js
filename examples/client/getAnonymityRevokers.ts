@@ -2,7 +2,6 @@ import { ArInfo, createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
-import chalk from 'chalk';
 
 const cli = meow(
     `
@@ -53,13 +52,10 @@ const client = createConcordiumClient(
 
     for await (const ar of ars) {
         console.log('Anonymity Revoker ID:', ar.arIdentity);
-        console.log(
-            'Anonymity Revoker name:',
-            chalk.italic(ar.arDescription.name)
-        );
+        console.log('Anonymity Revoker name:', ar.arDescription.name);
         console.log(
             'Anonymity Revoker description:',
-            chalk.italic(ar.arDescription.description),
+            ar.arDescription.description,
             '\n'
         );
     }

@@ -6,7 +6,6 @@ import {
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
-import chalk from 'chalk';
 
 const cli = meow(
     `
@@ -60,6 +59,6 @@ const client = createConcordiumClient(
         client.getAccountNonFinalizedTransactions(accountAddress);
 
     for await (const transaction of transactions) {
-        console.log(chalk.magenta(transaction));
+        console.log(transaction);
     }
 })();

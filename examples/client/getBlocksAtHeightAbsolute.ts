@@ -2,7 +2,6 @@ import { createConcordiumClient, HexString } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
-import chalk from 'chalk';
 
 const cli = meow(
     `
@@ -50,6 +49,6 @@ const client = createConcordiumClient(
     );
 
     for (const block of blocks) {
-        console.log(chalk.blue(block));
+        console.log(block);
     }
 })();

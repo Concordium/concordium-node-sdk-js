@@ -2,7 +2,6 @@ import { BakerPoolStatus, createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
-import chalk from 'chalk';
 
 const cli = meow(
     `
@@ -57,8 +56,8 @@ const client = createConcordiumClient(
         cli.flags.block
     );
 
-    console.log('Open status:', chalk.italic(bakerPool.poolInfo.openStatus));
-    console.log('Baker address:', chalk.green(bakerPool.bakerAddress));
+    console.log('Open status:', bakerPool.poolInfo.openStatus);
+    console.log('Baker address:', bakerPool.bakerAddress);
     console.log(
         'CCD provided by the baker to the pool:',
         bakerPool.bakerEquityCapital / 1000000n

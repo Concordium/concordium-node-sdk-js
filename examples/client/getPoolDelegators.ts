@@ -2,7 +2,6 @@ import { createConcordiumClient, DelegatorInfo } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
-import chalk from 'chalk';
 
 const cli = meow(
     `
@@ -68,6 +67,6 @@ const client = createConcordiumClient(
 
     console.log('Each staking account and the amount of stake they have:\n');
     for await (const delegatorInfo of delegators) {
-        console.log(chalk.green(delegatorInfo.account), delegatorInfo.stake);
+        console.log(delegatorInfo.account, delegatorInfo.stake);
     }
 })();

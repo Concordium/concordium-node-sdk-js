@@ -2,7 +2,6 @@ import { BlockItemStatus, createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
-import chalk from 'chalk';
 
 const cli = meow(
     `
@@ -54,11 +53,7 @@ const client = createConcordiumClient(
         cli.flags.transaction
     );
 
-    console.log(
-        'Status of the transaction:',
-        chalk.magenta(cli.flags.transaction),
-        '\n'
-    );
+    console.log('Status of the transaction:', cli.flags.transaction, '\n');
     // Note that there will be no outcomes for a transaction that has only been received:
     if (blockItemStatus.status === 'received') {
         console.log(
@@ -87,7 +82,7 @@ const client = createConcordiumClient(
                     // The transaction is a simple transfer
                     const { amount, to } = summary.transfer;
                     const ccdAmount = Number(amount / 1000000n);
-                    console.log(ccdAmount, 'CCD sent to', chalk.green(to));
+                    console.log(ccdAmount, 'CCD sent to', to);
                     break;
                 case 'failed':
                     // The transaction was rejected, in which case the transaction
@@ -95,9 +90,9 @@ const client = createConcordiumClient(
                     const { failedTransactionType, rejectReason } = summary;
                     console.log(
                         'Transaction of type "' +
-                            chalk.blue(failedTransactionType) +
+                            failedTransactionType +
                             '" failed because:',
-                        chalk.red(rejectReason.tag)
+                        rejectReason.tag
                     );
                     break;
                 default:
@@ -114,10 +109,7 @@ const client = createConcordiumClient(
             console;
         } else if (summary.type === 'accountCreation') {
             console.log('The block item is an account creation');
-            console.log(
-                'Account created with address:',
-                chalk.green(summary.address)
-            );
+            console.log('Account created with address:', summary.address);
         }
     }
 })();

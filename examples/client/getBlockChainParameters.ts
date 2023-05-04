@@ -6,7 +6,6 @@ import {
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
-import chalk from 'chalk';
 
 const cli = meow(
     `
@@ -52,10 +51,8 @@ const client = createConcordiumClient(
         cli.flags.block
     );
 
-    const euroPerEnergy = chalk.yellow(
-        cp.euroPerEnergy.numerator + '/' + cp.euroPerEnergy.denominator
-    );
-
+    const euroPerEnergy =
+        cp.euroPerEnergy.numerator + '/' + cp.euroPerEnergy.denominator;
     console.log('Election difficulty:', cp.electionDifficulty);
     console.log('Account creation limit:', cp.accountCreationLimit);
     console.log('Euro per Energy:', euroPerEnergy);

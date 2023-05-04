@@ -5,7 +5,6 @@ import {
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
-import chalk from 'chalk';
 
 const cli = meow(
     `
@@ -55,7 +54,7 @@ const client = createConcordiumClient(
 
     if (summary.tag === 'record') {
         // Response contains finalization summary for the given block:
-        console.log('block:', chalk.blue(summary.record.block));
+        console.log('block:', summary.record.block);
         console.log('index:', summary.record.index);
         console.log('delay:', summary.record.delay);
         console.log('Amount of finalizers:', summary.record.finalizers.length);

@@ -69,5 +69,7 @@ const client = createConcordiumClient(
     };
     const blocks: HexString[] = await client.getBlocksAtHeight(request);
 
-    console.dir(blocks, { depth: null, colors: true });
+    for (const block of blocks) {
+        console.log(block);
+    }
 })();

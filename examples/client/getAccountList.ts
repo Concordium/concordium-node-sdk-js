@@ -50,7 +50,8 @@ const client = createConcordiumClient(
         cli.flags.block
     );
 
+    console.log('Accounts that exists at the end of the given block:');
     for await (const account of accounts) {
-        console.dir(account, { depth: null, colors: true });
+        console.log(account);
     }
 })();

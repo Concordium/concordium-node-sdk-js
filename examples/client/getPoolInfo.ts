@@ -1,8 +1,4 @@
-import {
-    ContractAddress,
-    createConcordiumClient,
-    InstanceInfo,
-} from '@concordium/node-sdk';
+import { BakerPoolStatus, createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -13,7 +9,7 @@ const cli = meow(
     $ yarn ts-node <path-to-this-file> [options]
 
   Required:
-    --contract, -c  The index of the contract to query info about
+    --pool-owner, -p  The BakerId of the pool owner 
 
   Options
     --help,     -h  Displays this message
@@ -23,9 +19,9 @@ const cli = meow(
     {
         importMeta: import.meta,
         flags: {
-            contract: {
+            poolOwner: {
                 type: 'number',
-                alias: 'c',
+                alias: 'p',
                 isRequired: true,
             },
             block: {
@@ -50,31 +46,29 @@ const client = createConcordiumClient(
 );
 
 /**
- * Used to get information about a specific contract instance, at a specific
- * block.
+ * Retrives various information on the specified baker pool, at the end of the
+ * specified block.
  */
 
 (async () => {
-    const contractAddress: ContractAddress = {
-        index: BigInt(cli.flags.contract),
-        subindex: 0n,
-    };
-
-    const instanceInfo: InstanceInfo = await client.getInstanceInfo(
-        contractAddress,
+    const bakerPool: BakerPoolStatus = await client.getPoolInfo(
+        BigInt(cli.flags.poolOwner),
         cli.flags.block
     );
 
-    console.log('Name:', instanceInfo.name);
+    console.log('Open status:', bakerPool.poolInfo.openStatus);
+    console.log('Baker address:', bakerPool.bakerAddress);
     console.log(
-        'Amount in CCD:',
-        Number(instanceInfo.amount.microCcdAmount / 1000000n)
+        'CCD provided by the baker to the pool:',
+        bakerPool.bakerEquityCapital / 1000000n
     );
-    console.log('Version:', instanceInfo.version);
-    console.log('Owner:', instanceInfo.owner.address);
-    console.log('Module Reference:', instanceInfo.sourceModule.moduleRef);
-    console.log('Methods:');
-    for (const method of instanceInfo.methods) {
-        console.log('    ' + method);
-    }
+    console.log(
+        'CCD provided by the delegators to the pool:',
+        bakerPool.delegatedCapital / 1000000n
+    );
+    console.log(
+        'Total capital in CCD of ALL pools:',
+        bakerPool.allPoolTotalCapital / 1000000n
+    );
+    console.log('Pool commision rates:', bakerPool.poolInfo.commissionRates);
 })();

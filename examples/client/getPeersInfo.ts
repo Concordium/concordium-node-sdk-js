@@ -1,7 +1,4 @@
-import {
-    createConcordiumClient,
-    CryptographicParameters,
-} from '@concordium/node-sdk';
+import { createConcordiumClient, PeerInfo } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -13,17 +10,11 @@ const cli = meow(
 
   Options
     --help,     -h  Displays this message
-    --block,    -b  A block to query from, defaults to last final block
     --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
 `,
     {
         importMeta: import.meta,
         flags: {
-            block: {
-                type: 'string',
-                alias: 'b',
-                default: '', // This defaults to LastFinal
-            },
             endpoint: {
                 type: 'string',
                 alias: 'e',
@@ -41,13 +32,12 @@ const client = createConcordiumClient(
 );
 
 /**
- * Retrieves the global cryptographic parameters for the blockchain at a specific
- * block. These are a required input for e.g. creating credentials.
+ * Get a list of the peers that the node is connected to and associated network
+ * related information for each peer.
  */
 
 (async () => {
-    const parameters: CryptographicParameters =
-        await client.getCryptographicParameters(cli.flags.block);
+    const peerInfo: PeerInfo[] = await client.getPeersInfo();
 
-    console.log('Genesis string:', parameters.genesisString);
+    console.dir(peerInfo, { depth: null, colors: true });
 })();

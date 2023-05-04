@@ -1,6 +1,6 @@
 import {
     createConcordiumClient,
-    CryptographicParameters,
+    PassiveDelegationStatus,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -41,13 +41,22 @@ const client = createConcordiumClient(
 );
 
 /**
- * Retrieves the global cryptographic parameters for the blockchain at a specific
- * block. These are a required input for e.g. creating credentials.
+ * Retrieves information about the passive delegation, including the total
+ * capital delegation and the current commission rates for passive delegation,
+ * at the end of the specified block.
  */
 
 (async () => {
-    const parameters: CryptographicParameters =
-        await client.getCryptographicParameters(cli.flags.block);
+    const passiveDelegationInfo: PassiveDelegationStatus =
+        await client.getPassiveDelegationInfo(cli.flags.block);
 
-    console.log('Genesis string:', parameters.genesisString);
+    console.log(
+        'CCD provided by the delegators to the pool:',
+        passiveDelegationInfo.delegatedCapital / 1000000n
+    );
+    console.log(
+        'Total capital in CCD of ALL pools:',
+        passiveDelegationInfo.allPoolTotalCapital / 1000000n
+    );
+    console.log('Pool commision rates:', passiveDelegationInfo.commissionRates);
 })();

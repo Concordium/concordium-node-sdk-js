@@ -66,6 +66,7 @@ const client = createConcordiumClient(
     );
 
     console.log('Account balance:', accountInfo.accountAmount);
+    console.log('Account address:', accountInfo.accountAddress);
 
     // If the account is a delegator print delegator information
     if (isDelegatorAccount(accountInfo)) {

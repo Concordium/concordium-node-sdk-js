@@ -48,5 +48,7 @@ const client = createConcordiumClient(
         BigInt(cli.flags.height)
     );
 
-    console.dir(blocks, { depth: null, colors: true });
+    for (const block of blocks) {
+        console.log(block);
+    }
 })();

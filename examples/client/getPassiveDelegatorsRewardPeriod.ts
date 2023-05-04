@@ -1,6 +1,6 @@
 import {
     createConcordiumClient,
-    CryptographicParameters,
+    DelegatorRewardPeriodInfo,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -41,13 +41,24 @@ const client = createConcordiumClient(
 );
 
 /**
- * Retrieves the global cryptographic parameters for the blockchain at a specific
- * block. These are a required input for e.g. creating credentials.
+ * Get the fixed passive delegators for the reward period of the given block.
+ * In contracts to the `GetPassiveDelegators` which returns delegators registered
+ * for the given block, this endpoint returns the fixed delegators contributing
+ * stake in the reward period containing the given block.
+ * The stream will end when all the delegators has been returned.
+
+ * If a blockhash is not supplied it will pick the latest finalized block.
+ * An optional abort signal can also be provided that closes the stream.
+
+ * Note: A stream can be collected to a list with the streamToList function.
  */
 
 (async () => {
-    const parameters: CryptographicParameters =
-        await client.getCryptographicParameters(cli.flags.block);
+    const delegators: AsyncIterable<DelegatorRewardPeriodInfo> =
+        client.getPassiveDelegatorsRewardPeriod(cli.flags.block);
 
-    console.log('Genesis string:', parameters.genesisString);
+    console.log('Each staking account and the amount of stake they have:\n');
+    for await (const delegatorInfo of delegators) {
+        console.log(delegatorInfo.account, delegatorInfo.stake);
+    }
 })();

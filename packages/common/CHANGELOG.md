@@ -13,6 +13,9 @@
 - Exposed `RpcError` type and created helper `isRpcError`.
 - Build function `buildAccountSigner` for creating `AccountSigner` objects from genesis format, wallet export format, and a simple representation of credentials with keys.
 
+### Changed
+- Fixed bug where `AccountCreationSummary` type did not have fields: `index`, `energyCost`, `hash`
+
 ## 6.4.2 2023-04-21
 
 ### Changed

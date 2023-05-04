@@ -113,6 +113,19 @@ export interface BlockSpecialEventAccountAmount {
     amount: Amount;
 }
 
+/**
+ * Gets a list of {@link Base58String} account addresses affected the {@link BlockSpecialEvent}.
+ *
+ * @param {BlockSpecialEvent} event - The block special event to check.
+ *
+ * @returns {Base58String[]} List of account addresses affected by the event.
+ */
+export function specialEventAffectedAccounts(
+    event: Exclude<
+        BlockSpecialEvent,
+        BlockSpecialEventBlockAccrueReward | BlockSpecialEventPaydayPoolReward
+    >
+): Base58String[];
 export function specialEventAffectedAccounts(
     event:
         | BlockSpecialEventBlockAccrueReward

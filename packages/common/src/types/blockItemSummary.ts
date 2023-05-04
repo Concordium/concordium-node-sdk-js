@@ -371,12 +371,15 @@ const isEqualContract =
         a.index === b.index && a.subindex === b.subindex;
 
 /**
- * Gets a list of  {@link ContractAddress} affected by the transaction.
+ * Gets a list of {@link ContractAddress} contract addresses affected by the transaction.
  *
  * @param {BlockItemSummary} summary - The block item summary to check.
  *
  * @returns {ContractAddress[]} List of contract addresses affected by the transaction.
  */
+export function affectedContracts<
+    T extends InitContractSummary | UpdateContractSummary
+>(summary: T): ContractAddress[];
 export function affectedContracts(
     summary: Exclude<
         AccountTransactionSummary,
@@ -419,6 +422,13 @@ export function affectedContracts(
     }
 }
 
+/**
+ * Gets the receiver account of a transaction, if the transaction is a transfer transaction (excluding encrypted transfers).
+ *
+ * @param {BlockItemSummary} summary - The block item summary to check.
+ *
+ * @returns {Base58String | undefined} The receiver account for transfer transactions. Otherwise returns undefined.
+ */
 export function getReceiverAccount<
     T extends
         | TransferSummary
@@ -426,6 +436,15 @@ export function getReceiverAccount<
         | TransferWithScheduleSummary
         | TransferWithScheduleAndMemoSummary
 >(summary: T): Base58String;
+export function getReceiverAccount(
+    summary: Exclude<
+        AccountTransactionSummary,
+        | TransferSummary
+        | TransferWithMemoSummary
+        | TransferWithScheduleSummary
+        | TransferWithScheduleAndMemoSummary
+    >
+): undefined;
 export function getReceiverAccount(
     summary: AccountCreationSummary | UpdateSummary
 ): undefined;
@@ -449,6 +468,16 @@ export function getReceiverAccount(
     }
 }
 
+/**
+ * Gets a list of {@link Base58String} account addresses affected by the transaction.
+ *
+ * @param {BlockItemSummary} summary - The block item summary to check.
+ *
+ * @returns {Base58String[]} List of account addresses affected by the transaction.
+ */
+export function affectedAccounts(
+    summary: AccountTransactionSummary
+): Base58String[];
 export function affectedAccounts(
     summary: AccountCreationSummary | UpdateSummary
 ): never[];
@@ -498,6 +527,17 @@ export type SummaryContractUpdateLog = {
     events: HexString[];
 };
 
+/**
+ * Gets a list of update logs, each consisting of a {@link ContractAddress} and a list of {@link HexString} events.
+ * The list will be empty for any transaction type but {@link UpdateContractSummary} contract updates.
+ *
+ * @param {BlockItemSummary} summary - The block item summary to check.
+ *
+ * @returns {SummaryContractUpdateLog[]} List of update logs corresponding to the transaction.
+ */
+export function getSummaryContractUpdateLogs<T extends UpdateContractSummary>(
+    summary: T
+): SummaryContractUpdateLog[];
 export function getSummaryContractUpdateLogs(
     summary: AccountCreationSummary | UpdateSummary
 ): never[];

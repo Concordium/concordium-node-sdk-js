@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 6.5.0 2023-5-03
 
 ### Added
 - Utility functions `uleb128Decode` and `uleb128Encode` functions for decoding and encoding as unsigned leb128 respectively.
@@ -10,6 +10,7 @@
 - Made the `unwrap` function public.
 - Added `wasmToSchema` utility function.
 - Added `getEmbeddedSchema` to client.>>>>>>> main
+- Build function `buildAccountSigner` for creating `AccountSigner` objects from genesis format, wallet export format, and a simple representation of credentials with keys.
 
 ## 6.4.2 2023-04-21
 

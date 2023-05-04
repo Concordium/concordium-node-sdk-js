@@ -24,6 +24,7 @@ This package is the shared library for the nodejs and web SDK's.
     - [Deserialize a receive function's return value](#deserialize-a-receive-functions-return-value)
     - [Deserialize a function's error](#deserialize-a-functions-error)
     - [Deserialize a transaction](#deserialize-a-transaction)
+    - [Creating an AccountSigner](#creating-an-accountsigner)
     - [Sign an account transaction](#sign-an-account-transaction)
     - [Sign a message](#sign-a-message)
     - [Check smart contract for support for standards](#check-smart-contract-for-support-for-standards)
@@ -609,6 +610,28 @@ if (deserialized.kind === BlockItemKind.AccountTransactionKind) {
 
 Note that currently the only supported account transaction kinds are `Transfer`, `TransferWithMemo` and `RegisterData`. If attempting to deserialize other transaction kinds, the function will throw an error;
 
+## Creating an `AccountSigner`
+It is possible to build an `AccountSigner` in a variety of ways by utilizing the function `buildAccountSigner`. For a simple account, with a single credential and one keypair in the credential, one can supply a single private key, like so:
+
+```js
+const privateKey = '...'; // Private key of an account as hex string
+const signer: AccountSigner = buildAccountSigner(privateKey);
+```
+
+For a more complex account with one or more credentials, each with one or more keypairs, `buildAccountSigner` is also compatible with the format created by the chain genesis tool, Concordium wallet exports, along with a map of type `SimpleAccountKeys`.
+
+```js
+const keys: SimpleAccountKeys = {
+    0: {
+        0: '...', // Private key of an account as hex string
+        1: '...',
+        ...
+    },
+    ...
+};
+const signer: AccountSigner = buildAccountSigner(keys);
+```
+
 ## Sign an account transaction
 The following example demonstrates how to use the `signTransaction` helper function to sign a account transaction:
 
@@ -622,9 +645,6 @@ const transactionSignature: AccountTransactionSignature = signTransaction(accoun
 ...
 sendTransaction(accountTransaction, transactionSignature);
 ```
-
-For a simple account, with a single credential and one keypair in the credential, one can use the `buildBasicAccountSigner` to get the signer. Otherwise one needs to implement the AccountSigner interface themselves, for now.
-The `buildBasicAccountSigner` function take the account's private key as a hex string.
 
 The following is an example of how to sign an account transaction without using the `signTransaction` helper function:
 ```js

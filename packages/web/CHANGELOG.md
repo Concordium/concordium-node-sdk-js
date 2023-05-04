@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.5.0 2023-5-03
+
+### Changed
+
+- Bumped @concordium/common-sdk to 6.5.0. (Adds `CIS2Contract`)
+
 ## 3.4.2 2023-4-21
 
 ### Changed

@@ -253,7 +253,7 @@ export async function streamToList<A>(
 /**
  * Creates a function that takes either a `T` or `T[]` from a function that takes `T[]`.
  *
- * @param {(input: T[]) => Buffer} fun - A function that takes `T[]`
+ * @param {(input: T[]) => R} fun - A function that takes `T[]`
  *
  * @example
  * const serializer = makeDynamicFunction(serialize);

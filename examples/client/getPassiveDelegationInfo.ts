@@ -50,8 +50,6 @@ const client = createConcordiumClient(
     const passiveDelegationInfo: PassiveDelegationStatus =
         await client.getPassiveDelegationInfo(cli.flags.block);
 
-    //console.dir(passiveDelegationInfo, { depth: null, colors: true });
-
     console.log(
         'CCD provided by the delegators to the pool:',
         passiveDelegationInfo.delegatedCapital / 1000000n

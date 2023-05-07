@@ -1,6 +1,3 @@
-import SignClient from '@walletconnect/sign-client';
-import QRCodeModal from '@walletconnect/qrcode-modal';
-import { ISignClient, SessionTypes, SignClientTypes } from '@walletconnect/types';
 import {
     AccountTransactionPayload,
     AccountTransactionSignature,
@@ -8,15 +5,18 @@ import {
     HttpProvider,
     InitContractPayload,
     JsonRpcClient,
+    UpdateContractPayload,
     serializeInitContractParameters,
     serializeTypeValue,
     serializeUpdateContractParameters,
     toBuffer,
-    UpdateContractPayload,
 } from '@concordium/web-sdk';
+import QRCodeModal from '@walletconnect/qrcode-modal';
+import SignClient from '@walletconnect/sign-client';
+import { ISignClient, SessionTypes, SignClientTypes } from '@walletconnect/types';
 import {
-    SignableMessage,
     Network,
+    SignableMessage,
     TypedSmartContractParameters,
     WalletConnection,
     WalletConnectionDelegate,

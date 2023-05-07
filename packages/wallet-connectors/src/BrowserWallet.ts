@@ -1,11 +1,11 @@
-import { detectConcordiumProvider, WalletApi, SchemaType } from '@concordium/browser-wallet-api-helpers';
+import { SchemaType, WalletApi, detectConcordiumProvider } from '@concordium/browser-wallet-api-helpers';
 import { AccountTransactionPayload, AccountTransactionSignature, AccountTransactionType } from '@concordium/web-sdk';
 import {
     SignableMessage,
-    WalletConnectionDelegate,
-    WalletConnection,
-    WalletConnector,
     TypedSmartContractParameters,
+    WalletConnection,
+    WalletConnectionDelegate,
+    WalletConnector,
 } from './WalletConnection';
 import { UnreachableCaseError } from './error';
 

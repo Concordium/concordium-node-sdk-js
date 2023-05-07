@@ -1,15 +1,15 @@
-import {
-    Info,
-    moduleSchemaFromBase64,
-    Network,
-    typeSchemaFromBase64,
-    Schema,
-    WalletConnection,
-} from '@concordium/react-components';
+import { Result, ResultAsync, err, ok } from 'neverthrow';
 import React, { ChangeEvent, Dispatch, useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Button, Col, Dropdown, DropdownButton, Form, InputGroup, Row } from 'react-bootstrap';
+import {
+    Info,
+    Network,
+    Schema,
+    WalletConnection,
+    moduleSchemaFromBase64,
+    typeSchemaFromBase64,
+} from '@concordium/react-components';
 import { AccountAddress, AccountTransactionType, CcdAmount, SchemaVersion } from '@concordium/web-sdk';
-import { err, ok, Result, ResultAsync } from 'neverthrow';
 import { useContractSchemaRpc } from './useContractSchemaRpc';
 import { errorString } from './util';
 

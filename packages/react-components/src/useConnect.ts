@@ -1,5 +1,5 @@
-import { WalletConnection, WalletConnector } from '@concordium/wallet-connectors';
 import { useCallback, useState } from 'react';
+import { WalletConnection, WalletConnector } from '@concordium/wallet-connectors';
 import { errorString } from './error';
 
 /**

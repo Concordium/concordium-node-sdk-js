@@ -1,19 +1,19 @@
+import { ResultAsync, err, ok } from 'neverthrow';
 import React, { useCallback, useMemo, useState } from 'react';
-import { ResultAsync, ok, err } from 'neverthrow';
-import { TESTNET } from './config';
+import { Alert, Button, Col, Container, Form, InputGroup, Row, Spinner } from 'react-bootstrap';
 import {
-    useConnect,
-    useConnection,
     WalletConnectionProps,
     WithWalletConnector,
     binaryMessageFromHex,
     stringMessage,
     typeSchemaFromBase64,
+    useConnect,
+    useConnection,
 } from '@concordium/react-components';
-import { Alert, Button, Col, Container, Form, InputGroup, Row, Spinner } from 'react-bootstrap';
-import { WalletConnectorButton } from './WalletConnectorButton';
-import { BROWSER_WALLET, WALLET_CONNECT } from './config';
 import { AccountTransactionSignature } from '@concordium/web-sdk';
+import { WalletConnectorButton } from './WalletConnectorButton';
+import { TESTNET } from './config';
+import { BROWSER_WALLET, WALLET_CONNECT } from './config';
 import { errorString } from './util';
 
 export default function App() {

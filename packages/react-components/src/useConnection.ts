@@ -1,5 +1,5 @@
-import { WalletConnection } from '@concordium/wallet-connectors';
 import { useEffect, useState } from 'react';
+import { WalletConnection } from '@concordium/wallet-connectors';
 
 /**
  * The state of the a {@link useConnection} instance.

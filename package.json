@@ -21,6 +21,7 @@
         ]
     },
     "devDependencies": {
+        "@trivago/prettier-plugin-sort-imports": "^4.1.1",
         "@typescript-eslint/eslint-plugin": "latest",
         "@typescript-eslint/parser": "latest",
         "eslint": "latest",

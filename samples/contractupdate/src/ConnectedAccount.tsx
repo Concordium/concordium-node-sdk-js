@@ -1,7 +1,7 @@
-import { Network, WalletConnection, withJsonRpcClient } from '@concordium/react-components';
 import { useEffect, useState } from 'react';
-import { AccountInfo } from '@concordium/web-sdk';
 import { Alert } from 'react-bootstrap';
+import { Network, WalletConnection, withJsonRpcClient } from '@concordium/react-components';
+import { AccountInfo } from '@concordium/web-sdk';
 
 interface Props {
     network: Network;

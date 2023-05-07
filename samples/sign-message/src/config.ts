@@ -1,11 +1,11 @@
-import { SignClientTypes } from '@walletconnect/types';
 import {
     BrowserWalletConnector,
     CONCORDIUM_WALLET_CONNECT_PROJECT_ID,
     Network,
-    ephemeralConnectorType,
     WalletConnectConnector,
+    ephemeralConnectorType,
 } from '@concordium/react-components';
+import { SignClientTypes } from '@walletconnect/types';
 
 const TESTNET_GENESIS_BLOCK_HASH = '4221332d34e1694168c2a0c0b3fd0f273809612cb13d000d5c2e00e85f50f796';
 const MAINNET_GENESIS_BLOCK_HASH = '9dd9ca4d19e9393877d2c44b70f89acbfc0883c2243e5eeaecc0d1cd0503f478';

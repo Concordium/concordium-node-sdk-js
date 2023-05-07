@@ -1,3 +1,5 @@
+import { Buffer } from 'buffer/';
+import { SendTransactionPayload, SmartContractParameters } from '@concordium/browser-wallet-api-helpers';
 import {
     AccountTransactionSignature,
     AccountTransactionType,
@@ -5,8 +7,6 @@ import {
     SchemaVersion,
     toBuffer,
 } from '@concordium/web-sdk';
-import { Buffer } from 'buffer/';
-import { SendTransactionPayload, SmartContractParameters } from '@concordium/browser-wallet-api-helpers';
 
 export type ModuleSchema = {
     type: 'ModuleSchema';

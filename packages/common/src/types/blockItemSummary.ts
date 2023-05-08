@@ -211,7 +211,7 @@ export type AccountTransactionSummary = BaseAccountTransactionSummary &
         | UpdateCredentialsSummary
     );
 
-export interface AccountCreationSummary {
+export interface AccountCreationSummary extends BaseBlockItemSummary {
     type: TransactionSummaryType.AccountCreation;
     credentialType: 'initial' | 'normal';
     address: string;

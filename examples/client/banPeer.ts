@@ -9,7 +9,7 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> [options]
 
   Required
-    --peer, -p  The ip of the peer to ban.
+    --ip, -i  The ip of the peer to ban.
 
   Options
     --help,         Displays this message
@@ -18,9 +18,9 @@ const cli = meow(
     {
         importMeta: import.meta,
         flags: {
-            peer: {
+            ip: {
                 type: 'string',
-                alias: 'p',
+                alias: 'i',
                 isRequired: true,
             },
             endpoint: {
@@ -45,6 +45,6 @@ const client = createConcordiumClient(
  */
 
 (async () => {
-    await client.banPeer(cli.flags.peer);
+    await client.banPeer(cli.flags.ip);
     console.log('Specified peer successfully banned');
 })();

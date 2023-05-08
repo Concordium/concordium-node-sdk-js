@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- Utility functions for extracting information from `BlockItemSummary`.
+    - `isInitContractSummary`
+    - `isUpdateContractSummary`
+    - `isTransferLikeSummary`
+    - `isRejectTransaction`
+    - `isSuccessTransaction`
+    - `getTransactionRejectReason`
+    - `getReceiverAccount`
+    - `affectedContracts`
+    - `affectedAccounts`
+- Utility functions for extracting information from `BlockSpecialEvent`.
+    - `specialEventAffectedAccounts`
+
 ## 6.5.0 2023-5-03
 
 ### Added

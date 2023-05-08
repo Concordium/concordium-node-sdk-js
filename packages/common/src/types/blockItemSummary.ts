@@ -357,6 +357,52 @@ const isEqualContract =
         a.index === b.index && a.subindex === b.subindex;
 
 /**
+ * Gets the receiver account of a transaction, if the transaction is a transfer transaction (excluding encrypted transfers).
+ *
+ * @param {BlockItemSummary} summary - The block item summary to check.
+ *
+ * @returns {Base58String | undefined} The receiver account for transfer transactions. Otherwise returns undefined.
+ */
+export function getReceiverAccount<
+    T extends
+        | TransferSummary
+        | TransferWithMemoSummary
+        | TransferWithScheduleSummary
+        | TransferWithScheduleAndMemoSummary
+>(summary: T): Base58String;
+export function getReceiverAccount(
+    summary: Exclude<
+        AccountTransactionSummary,
+        | TransferSummary
+        | TransferWithMemoSummary
+        | TransferWithScheduleSummary
+        | TransferWithScheduleAndMemoSummary
+    >
+): undefined;
+export function getReceiverAccount(
+    summary: AccountCreationSummary | UpdateSummary
+): undefined;
+export function getReceiverAccount(
+    summary: BlockItemSummary
+): Base58String | undefined;
+export function getReceiverAccount(
+    summary: BlockItemSummary
+): Base58String | undefined {
+    if (summary.type !== TransactionSummaryType.AccountTransaction) {
+        return undefined;
+    }
+
+    switch (summary.transactionType) {
+        case TransactionKindString.Transfer:
+        case TransactionKindString.TransferWithMemo:
+        case TransactionKindString.TransferWithScheduleAndMemo:
+            return summary.transfer.to;
+        case TransactionKindString.TransferWithSchedule:
+            return summary.event.to;
+    }
+}
+
+/**
  * Gets a list of {@link ContractAddress} contract addresses affected by the transaction.
  *
  * @param {BlockItemSummary} summary - The block item summary to check.
@@ -405,52 +451,6 @@ export function affectedContracts(
         default: {
             return [];
         }
-    }
-}
-
-/**
- * Gets the receiver account of a transaction, if the transaction is a transfer transaction (excluding encrypted transfers).
- *
- * @param {BlockItemSummary} summary - The block item summary to check.
- *
- * @returns {Base58String | undefined} The receiver account for transfer transactions. Otherwise returns undefined.
- */
-export function getReceiverAccount<
-    T extends
-        | TransferSummary
-        | TransferWithMemoSummary
-        | TransferWithScheduleSummary
-        | TransferWithScheduleAndMemoSummary
->(summary: T): Base58String;
-export function getReceiverAccount(
-    summary: Exclude<
-        AccountTransactionSummary,
-        | TransferSummary
-        | TransferWithMemoSummary
-        | TransferWithScheduleSummary
-        | TransferWithScheduleAndMemoSummary
-    >
-): undefined;
-export function getReceiverAccount(
-    summary: AccountCreationSummary | UpdateSummary
-): undefined;
-export function getReceiverAccount(
-    summary: BlockItemSummary
-): Base58String | undefined;
-export function getReceiverAccount(
-    summary: BlockItemSummary
-): Base58String | undefined {
-    if (summary.type !== TransactionSummaryType.AccountTransaction) {
-        return undefined;
-    }
-
-    switch (summary.transactionType) {
-        case TransactionKindString.Transfer:
-        case TransactionKindString.TransferWithMemo:
-        case TransactionKindString.TransferWithScheduleAndMemo:
-            return summary.transfer.to;
-        case TransactionKindString.TransferWithSchedule:
-            return summary.event.to;
     }
 }
 

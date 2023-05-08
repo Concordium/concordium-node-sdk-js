@@ -138,12 +138,8 @@ export namespace CIS2 {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             json: SmartContractTypeValues;
         };
-        schema: {
-            /** Base64 encoded schema for the parameter type */
-            value: Base64String;
-            /** Type of the schema. This is always of type "parameter" */
-            type: 'parameter';
-        };
+        /** Base64 encoded schema for the parameter type */
+        parameterSchema: Base64String;
     };
 
     /**

@@ -560,10 +560,7 @@ export class CIS2Contract {
                 hex: parameter.toString('hex'),
                 json: jsonParameter,
             },
-            schema: {
-                value: schemas[entrypoint],
-                type: 'parameter',
-            },
+            parameterSchema: schemas[entrypoint],
         };
     }
 

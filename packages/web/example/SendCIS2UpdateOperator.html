@@ -34,8 +34,8 @@
             const update = {type: checkedType, address: operator.value};
             //const update = {type: checkedType, address}; // Example with contract address, using same address as used to instantiate the contract class
 
-            const {type, payload, parameter: {json}, schema} = contract.createUpdateOperator({energy: 10000n}, update);
-            const txHash = await walletApi.sendTransaction(connectedAccount, type, payload, json, schema)
+            const {type, payload, parameter: {json}, parameterSchema} = contract.createUpdateOperator({energy: 10000n}, update);
+            const txHash = await walletApi.sendTransaction(connectedAccount, type, payload, json, {type: 'parameter', value: parameterSchema});
 
             if (txHash) {
                 console.log('Waiting for finalization');

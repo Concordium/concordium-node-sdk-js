@@ -1,5 +1,10 @@
 # Changelog
 
+## 6.5.1 2023-5-08
+
+### Changed
+- Schema returned from `CIS2Contract.createTransfer` and `CIS2Contract.createUpdateOperator` to not be wrapped in object compatible with the Concordium browser wallet, which caused type error.
+
 ## 6.5.0 2023-5-03
 
 ### Added

@@ -33,8 +33,8 @@
             const transfer = {tokenId: tokenId.value ?? '', from: connectedAccount, to: receiver.value, tokenAmount: BigInt(amount.value ?? 0)};
             //const transfer = {tokenId: '', from: connectedAccount, to: {address: {index: 4416n, subindex: 0n}, hookName: 'onReceivingCIS2'}, tokenAmount: BigInt(amount.value)}; // Example of using a contract receiver.
 
-            const {type, payload, parameter: {json}, schema} = contract.createTransfer({energy: 10000n}, transfer);
-            const txHash = await walletApi.sendTransaction(connectedAccount, type, payload, json, schema)
+            const {type, payload, parameter: {json}, parameterSchema} = contract.createTransfer({energy: 10000n}, transfer);
+            const txHash = await walletApi.sendTransaction(connectedAccount, type, payload, json, {type: 'parameter', value: parameterSchema});
 
             if (txHash) {
                 console.log('Waiting for finalization');

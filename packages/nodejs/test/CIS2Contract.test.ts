@@ -205,23 +205,26 @@ describe('createTransfer', () => {
 
     test('multiple transfers', async () => {
         const cis2 = await getCIS2Single();
-        const { parameter, schema } = cis2.createTransfer({ energy: 10000n }, [
-            {
-                tokenId: '',
-                to: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
-                from: TEST_ACCOUNT,
-                tokenAmount: 100n,
-            },
-            {
-                tokenId: '',
-                from: TEST_ACCOUNT,
-                to: {
-                    address: { index: 4416n, subindex: 0n },
-                    hookName: 'onReceivingCIS2',
+        const { parameter, parameterSchema } = cis2.createTransfer(
+            { energy: 10000n },
+            [
+                {
+                    tokenId: '',
+                    to: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
+                    from: TEST_ACCOUNT,
+                    tokenAmount: 100n,
                 },
-                tokenAmount: 0n,
-            },
-        ]);
+                {
+                    tokenId: '',
+                    from: TEST_ACCOUNT,
+                    to: {
+                        address: { index: 4416n, subindex: 0n },
+                        hookName: 'onReceivingCIS2',
+                    },
+                    tokenAmount: 0n,
+                },
+            ]
+        );
         const expectedParameterHex =
             '0200006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb490000000000c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f01401100000000000000000000000000000f006f6e526563656976696e67434953320000';
         // Parameter is formatted and serialized as expected
@@ -250,7 +253,7 @@ describe('createTransfer', () => {
         ]);
         const schemaSerialized = serializeTypeValue(
             parameter.json,
-            Buffer.from(schema.value, 'base64')
+            Buffer.from(parameterSchema, 'base64')
         );
         expect(schemaSerialized.toString('hex')).toEqual(expectedParameterHex);
     });

@@ -299,22 +299,6 @@ export const isTransferLikeSummary = (
         summary.transactionType === TransactionKindString.TransferWithMemo);
 
 /**
- * Type predicate for transfer-with-schedule-like transactions.
- *
- * @param {BlockItemSummary} summary - The block item summary to check.
- *
- * @returns {boolean} whether summary is of type `TransferWithScheduleSummary` or `TransferWithScheduleAndMemoSummary`.
- */
-export const isTransferWithScheduleLikeSummary = (
-    summary: BlockItemSummary
-): summary is BaseAccountTransactionSummary &
-    (TransferWithScheduleSummary | TransferWithScheduleAndMemoSummary) =>
-    summary.type === TransactionSummaryType.AccountTransaction &&
-    (summary.transactionType === TransactionKindString.TransferWithSchedule ||
-        summary.transactionType ===
-            TransactionKindString.TransferWithScheduleAndMemo);
-
-/**
  * Type predicate for {@link FailedTransactionSummary}.
  *
  * @param {BlockItemSummary} summary - The block item summary to check.
@@ -333,7 +317,9 @@ export const isRejectTransaction = (
  *
  * @returns {boolean} whether transaction was successful.
  */
-export const isSuccessTransaction = (summary: BlockItemSummary): boolean =>
+export const isSuccessTransaction = (
+    summary: BlockItemSummary
+): summary is Exclude<BlockItemSummary, FailedTransactionSummary> =>
     !isRejectTransaction(summary);
 
 /**

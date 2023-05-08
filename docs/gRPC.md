@@ -55,6 +55,7 @@ This document describes the different endpoints for the concordium gRPC V2 clien
     - [getBlockSpecialEvents](#getblockspecialevents)
     - [getBlockPendingUpdates](#getblockpendingupdates)
     - [getBlockFinalizationSummary](#getblockfinalizationsummary)
+- [BlockItemSummary](#blockitemsummary)
 
 # ConcordiumNodeClient
 
@@ -754,6 +755,8 @@ for await (const transactionEvent of transactionEvents) {
 }
 ```
 
+To access the information included in a `BlockItemSummary`, refer to the section on the topic [here](#blockitemsummary).
+
 ## getNextUpdateSequenceNumbers
 Get next available sequence numbers for updating chain parameters after a given block.
 ```js
@@ -889,4 +892,107 @@ if (blockFinalizationSummary.tag === "record") {
 } else {
     // Given block has not been finalized.
 }
+```
+
+# BlockItemSummary
+The `BlockItemSummary` type holds the data of the block item, which can be one of many types. To make it easier to access general data which might be found in different places for different summary types, a number of helper functions can be utilized.
+
+## isInitContractSummary
+Can be used to check whether a `BlockItemSummary` is an `InitContractSummary`.
+
+```ts
+const bis: BlockItemSummary = ...;
+if (isInitContractSummary(bis)) {
+    // bis type is InitContractSummary
+    const { contractInitialized } = bis;
+}
+```
+
+## isUpdateContractSummary
+Can be used to check whether a `BlockItemSummary` is an `UpdateContractSummary`.
+
+```ts
+const bis: BlockItemSummary = ...;
+if (isUpdateContractSummary(bis)) {
+    // bis type is UpdateContractSummary
+    const { events } = bis;
+}
+```
+
+## isTransferLikeSummary
+Can be used to check whether a `BlockItemSummary` is a `TransferSummary` or `TransferWithMemoSummary`.
+
+```ts
+const bis: BlockItemSummary = ...;
+if (isTransferLikeSummary(bis)) {
+    // bis type is TransferSummary | TransferWithMemoSummary
+    const { transfer } = bis;
+}
+```
+
+## isRejectTransaction
+Can be used to check whether a `BlockItemSummary` is a transaction which has been rejected by the node, i.e. it is of type `FailedTransactionSummary`.
+
+```ts
+const bis: BlockItemSummary = ...;
+if (isRejectTransaction(bis)) {
+    // bis type is FailedTransactionSummary
+    const { rejectReason, failedTransactionType } = bis;
+}
+```
+
+## isSuccessTransaction
+Can be used to check if the transaction was accepted by the node.
+
+```ts
+const bis: BlockItemSummary = ...;
+if (isSuccessTransaction(bis)) {
+    // bis type is NOT FailedTransactionSummary
+}
+```
+
+## getTransactionRejectReason
+Gets the reject reason of a transaction, if there is any. This will return undefined for anything but `FailedTransactionSummary` types.
+
+```ts
+const bis: BlockItemSummary = ...;
+const rejectReason = getTransactionRejectReason(bis);
+```
+
+## affectedContracts
+Gets a list of contract addresses for contracts which were affected by the transaction (i.e. part of an event of a smart contract transaction).
+This returns an empty list for anything but `InitContractSummary` or `UpdateContractSummary`.
+
+```ts
+const bis: BlockItemSummary = ...;
+const contractAddresses = affectedContracts(bis);
+```
+
+## affectedAccounts
+Gets a list of account addresses for accounts which were affected by the transaction (i.e. had its balance changed as a result of the transaction).
+
+```ts
+const bis: BlockItemSummary = ...;
+const accountAddresses = affectedAccounts(bis);
+```
+
+## getReceiverAccount
+Gets a the receiver for account transfer-like transactions, i.e. of type `TransferSummary | TransferWithMemoSummary | TransferWithScheduleSummary | TransferWithMemoAndScheduleSummary`. For any transactions not of the afforementioned type, undefined is returned.
+
+```ts
+const bis: BlockItemSummary = ...;
+const receiverAccount = getReceiverAccount(bis);
+```
+
+## getSummaryContractUpdateLogs
+Gets a list of update logs, each consisting of a contract address and a list of hex encoded events. The list will be empty for any transaction type but `UpdateContractSummary` transactions.
+
+```ts
+const MODULE_SCHEMA: Base64String = ...; // The schema 
+const bis: BlockItemSummary = ...;
+const logs = getSummaryContractUpdateLogs(bis);
+
+logs.forEach((log) => {
+    const {address, events} = log;
+});
 ```

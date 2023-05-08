@@ -3,7 +3,6 @@ import {
     CcdAmount,
     ContractContext,
     ContractTraceEvent,
-    RejectReason,
     createConcordiumClient,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';

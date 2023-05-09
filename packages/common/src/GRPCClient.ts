@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer/';
 import * as v1 from './types';
 import * as v2 from '../grpc/v2/concordium/types';
-import { Base58String, HexString } from './types';
+import { Base58String, HexString, isRpcError } from './types';
 import { QueriesClient } from '../grpc/v2/concordium/service.client';
 import type { RpcTransport } from '@protobuf-ts/runtime-rpc';
 import { CredentialRegistrationId } from './types/CredentialRegistrationId';
@@ -25,6 +25,12 @@ import {
 import { BlockItemStatus, BlockItemSummary } from './types/blockItemSummary';
 import { ModuleReference } from './types/moduleReference';
 import { DEFAULT_INVOKE_ENERGY } from './constants';
+
+export type FindInstanceCreationReponse = {
+    hash: HexString;
+    height: bigint;
+    instanceInfo: v1.InstanceInfo;
+};
 
 /**
  * A concordium-node specific gRPC client wrapper.
@@ -1153,6 +1159,47 @@ export default class ConcordiumNodeClient {
         }
 
         return result;
+    }
+
+    async findInstanceCreation(
+        address: v1.ContractAddress,
+        from?: v1.AbsoluteBlocksAtHeightRequest,
+        to?: v1.AbsoluteBlocksAtHeightRequest
+    ): Promise<FindInstanceCreationReponse | undefined> {
+        return this.findEarliestFinalized(
+            async ({ hash, height }) => {
+                try {
+                    const instanceInfo = await this.getInstanceInfo(
+                        address,
+                        hash
+                    );
+                    return { hash, height, instanceInfo };
+                } catch (e) {
+                    if (isRpcError(e) && e.code === 'NOT_FOUND') {
+                        return undefined;
+                    }
+
+                    throw e;
+                }
+            },
+            from,
+            to
+        );
+    }
+
+    async findFirstFinalizedBlockNoLaterThan(
+        time: Date,
+        from?: v1.AbsoluteBlocksAtHeightRequest,
+        to?: v1.AbsoluteBlocksAtHeightRequest
+    ): Promise<v1.BlockInfo | undefined> {
+        return this.findEarliestFinalized(
+            async ({ hash }) => {
+                const bi = await this.getBlockInfo(hash);
+                return bi.blockSlotTime >= time ? bi : undefined;
+            },
+            from,
+            to
+        );
     }
 
     private async getConsensusHeight() {

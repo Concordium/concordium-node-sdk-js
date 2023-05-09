@@ -1142,9 +1142,10 @@ export default class ConcordiumNodeClient {
         while (start < end) {
             const mid = start + (end - start) / 2n;
             const [hash] = await this.getBlocksAtHeight(mid);
-            result = await predicate({ hash, height: mid });
+            const res = await predicate({ hash, height: mid });
 
-            if (result !== undefined) {
+            if (res !== undefined) {
+                result = res;
                 end = mid;
             } else {
                 start = mid + 1n;

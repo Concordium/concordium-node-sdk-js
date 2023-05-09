@@ -1053,9 +1053,7 @@ export default class ConcordiumNodeClient {
         abortSignal?: AbortSignal
     ): Promise<AsyncIterable<v1.FinalizedBlockInfo>> {
         let height = startHeight;
-        const getConsensusHeight = async () =>
-            (await this.getConsensusStatus()).lastFinalizedBlockHeight;
-        let finHeight = await getConsensusHeight();
+        let finHeight = await this.getConsensusHeight();
         const newBlocks = this.getFinalizedBlocks(abortSignal);
         const endSignal: IteratorReturnResult<undefined> = {
             done: true,
@@ -1068,7 +1066,7 @@ export default class ConcordiumNodeClient {
         > => {
             // Refresh latest finalized height from consensus
             if (height > finHeight) {
-                finHeight = await getConsensusHeight();
+                finHeight = await this.getConsensusHeight();
             }
             // As long as height is lower than latest finalized height, query blocks at height
             if (height > finHeight) {
@@ -1124,6 +1122,40 @@ export default class ConcordiumNodeClient {
         return {
             [Symbol.asyncIterator]: () => ({ next }),
         };
+    }
+
+    async findEarliestFinalized<R>(
+        predicate: (bi: v1.FinalizedBlockInfo) => Promise<R | undefined>,
+        from: v1.AbsoluteBlocksAtHeightRequest = 0n,
+        to?: v1.AbsoluteBlocksAtHeightRequest
+    ): Promise<R | undefined> {
+        let start = from;
+        let end = to ?? (await this.getConsensusHeight());
+
+        if (start > end) {
+            throw new Error(
+                'Please specify a "to" value greater than the specified "from" value'
+            );
+        }
+
+        let result: R | undefined;
+        while (start < end) {
+            const mid = start + (end - start) / 2n;
+            const [hash] = await this.getBlocksAtHeight(mid);
+            result = await predicate({ hash, height: mid });
+
+            if (result !== undefined) {
+                end = mid;
+            } else {
+                start = mid + 1n;
+            }
+        }
+
+        return result;
+    }
+
+    private async getConsensusHeight() {
+        return (await this.getConsensusStatus()).lastFinalizedBlockHeight;
     }
 }
 

@@ -34,3 +34,6 @@ package-lock.json
 
 #tsc build files
 *.tsbuildinfo
+
+# MacOS
+.DS_Store

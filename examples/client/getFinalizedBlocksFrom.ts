@@ -9,11 +9,12 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> [options]
 
   Required
-    --height,     The block height to get blocks from
+    --height,           The block height to get blocks from
 
   Options
-    --help,         Displays this message
-    --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
+    --help,             Displays this message
+    --endpoint,     -e  Specify endpoint of the form "address:port", defaults to localhost:20000
+    --numBlocks,    -n  The number of blocks to process
 `,
     {
         importMeta: import.meta,
@@ -22,6 +23,10 @@ const cli = meow(
                 type: 'number',
                 alias: 'h',
                 isRequired: true,
+            },
+            numBlocks: {
+                type: 'number',
+                alias: 'n',
             },
             endpoint: {
                 type: 'string',
@@ -44,9 +49,22 @@ const client = createConcordiumClient(
  */
 
 (async () => {
-    const bis = await client.getFinalizedBlocksFrom(BigInt(cli.flags.height));
+    const ac = new AbortController();
+    const bis = await client.getFinalizedBlocksFrom(
+        BigInt(cli.flags.height),
+        ac.signal
+    );
+
+    let i = 0;
+    const n = cli.flags.numBlocks;
 
     for await (const bi of bis) {
         console.log(bi);
+
+        i++;
+        if (n !== undefined && i > n - 1) {
+            ac.abort();
+            break;
+        }
     }
 })();

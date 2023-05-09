@@ -1047,6 +1047,84 @@ export default class ConcordiumNodeClient {
 
         return translate.blockFinalizationSummary(finalizationSummary);
     }
+
+    async getFinalizedBlocksFrom(
+        startHeight: v1.AbsoluteBlocksAtHeightRequest = 0n,
+        abortSignal?: AbortSignal
+    ): Promise<AsyncIterable<v1.FinalizedBlockInfo>> {
+        let height = startHeight;
+        const getConsensusHeight = async () =>
+            (await this.getConsensusStatus()).lastFinalizedBlockHeight;
+        let finHeight = await getConsensusHeight();
+        const newBlocks = this.getFinalizedBlocks(abortSignal);
+        const endSignal: IteratorReturnResult<undefined> = {
+            done: true,
+            value: undefined,
+        };
+        let searchKnown = true;
+
+        const nextKnown = async (): Promise<
+            v1.FinalizedBlockInfo | undefined
+        > => {
+            // Refresh latest finalized height from consensus
+            if (height > finHeight) {
+                finHeight = await getConsensusHeight();
+            }
+            // As long as height is lower than latest finalized height, query blocks at height
+            if (height > finHeight) {
+                searchKnown = false;
+                return undefined;
+            }
+
+            const [hash] = (await this.getBlocksAtHeight(height)).reverse();
+            const bi: v1.FinalizedBlockInfo = { hash, height };
+            height += 1n;
+
+            return bi;
+        };
+
+        const nextNew = async (): Promise<
+            v1.FinalizedBlockInfo | undefined
+        > => {
+            // At this point, we've found all blocks already finalized on chain. Start streaming new blocks.
+            for await (const block of newBlocks) {
+                if (block.height < height) {
+                    // Skip blocks already found.
+                    continue;
+                }
+
+                return block;
+            }
+        };
+
+        const next = async (): Promise<
+            IteratorResult<v1.FinalizedBlockInfo>
+        > => {
+            if (abortSignal?.aborted) {
+                return endSignal;
+            }
+
+            let bi: v1.FinalizedBlockInfo | undefined;
+            if (searchKnown) {
+                bi = (await nextKnown()) ?? (await nextNew());
+            } else {
+                bi = await nextNew();
+            }
+
+            if (bi === undefined) {
+                return endSignal;
+            }
+
+            return {
+                done: false,
+                value: bi,
+            };
+        };
+
+        return {
+            [Symbol.asyncIterator]: () => ({ next }),
+        };
+    }
 }
 
 export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {

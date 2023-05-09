@@ -45,7 +45,7 @@ const client = createConcordiumClient(
 );
 
 /**
- * Get a stream of finalized blocks from `cli.flags.endpoint`, starting from `cli.flags.height`.
+ * Get a stream of finalized blocks from "--endpoint", starting from "--height".
  */
 
 (async () => {

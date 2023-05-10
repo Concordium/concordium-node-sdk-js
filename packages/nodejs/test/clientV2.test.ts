@@ -341,9 +341,12 @@ test.each([clientV2, clientWeb])('getModuleSource', async (client) => {
     );
 
     const localModuleHex = Buffer.from(localModuleBytes);
-    const moduleSource = await client.getModuleSource(moduleRef, testBlockHash);
+    const versionedModuleSource = await client.getModuleSource(
+        moduleRef,
+        testBlockHash
+    );
 
-    expect(localModuleHex).toEqual(moduleSource);
+    expect(localModuleHex).toEqual(versionedModuleSource.source);
 });
 
 test.each([clientV2, clientWeb])('getConsensusStatus', async (client) => {

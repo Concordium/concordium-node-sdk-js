@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Breaking changes
+- Fixed bug in `getModuleSchema`. It now returns a schema with version.
+
 ## 6.5.0 2023-5-03
 
 ### Added

@@ -1207,6 +1207,11 @@ export interface DeployModulePayload {
     source: Buffer;
 }
 
+export interface VersionedModuleSource {
+    version: 0 | 1;
+    source: Buffer;
+}
+
 export interface InitContractPayload {
     /** µCCD amount to transfer */
     amount: CcdAmount;

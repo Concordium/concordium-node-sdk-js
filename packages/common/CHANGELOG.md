@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Breaking changes
+- `waitForTransactionFinalization` now returns a `BlockItemSummary`
+
 ## 6.5.0 2023-5-03
 
 ### Added

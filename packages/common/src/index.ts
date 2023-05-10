@@ -32,8 +32,11 @@ export {
     deserializeInitError,
     deserializeTypeValue,
 } from './deserialization';
+
 export * from './idProofs';
 export * from './idProofTypes';
+export * from './web3Proofs';
+
 export * from './signHelpers';
 export * from './versionedTypeHelpers';
 export * from './accountHelpers';

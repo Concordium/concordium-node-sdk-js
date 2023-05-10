@@ -4,9 +4,12 @@ import {
     attributesWithRange,
     attributesWithSet,
     RangeStatement,
+    IdStatementV2,
+    IDENTITY_SUBJECT_SCHEMA,
 } from '../src/idProofTypes';
 import { getIdProof, IdStatementBuilder } from '../src/idProofs';
 import fs from 'fs';
+import { Web3StatementBuilder } from '../src';
 
 test('Creating a statement with multiple atomic statements on the same attribute fails', () => {
     const builder = new IdStatementBuilder(true);
@@ -194,3 +197,82 @@ test('Age between 1 and 1 gives 1 - 1.9999 range', () => {
     expect(statement.upper).toBe('20190102');
     expect(statement.lower).toBe('20180103');
 });
+
+test('Generate V2 statement', () => {
+    const builder = new Web3StatementBuilder();
+    const statement = builder
+        .addForVerifiableCredentials(
+            [
+                { index: 2101n, subindex: 0n },
+                { index: 1337n, subindex: 42n },
+            ],
+            (b) =>
+                b.addRange(17, 80n, 1237n).addMembership(23, ['aa', 'ff', 'zz'])
+        )
+        .addForVerifiableCredentials([{ index: 1338n, subindex: 0n }], (b) =>
+            b.addRange(0, 80n, 1237n).addNonMembership(1, ['aa', 'ff', 'zz'])
+        )
+        .addForIdentityCredentials([0, 1, 2], (b) => b.revealAttribute(0))
+        .getStatements();
+    expect(statement).toStrictEqual(expectedStatementV2.statements);
+});
+
+const expectedStatementV2: { challenge: string; statements: IdStatementV2 } = {
+    challenge:
+        '44803def478a9a554f39eb8ae24f75ba9905f90a337c69743379c08c9a26cec0',
+    statements: [
+        {
+            id: {
+                type: 'sci',
+                issuers: [
+                    { index: 2101n, subindex: 0n },
+                    { index: 1337n, subindex: 42n },
+                ],
+            },
+            statement: [
+                {
+                    attributeTag: 17,
+                    lower: 80n,
+                    type: 'AttributeInRange',
+                    upper: 1237n,
+                },
+                {
+                    attributeTag: 23,
+                    set: ['aa', 'ff', 'zz'],
+                    type: 'AttributeInSet',
+                },
+            ],
+        },
+        {
+            id: {
+                type: 'sci',
+                issuers: [{ index: 1338n, subindex: 0n }],
+            },
+            statement: [
+                {
+                    attributeTag: 0,
+                    lower: 80n,
+                    type: 'AttributeInRange',
+                    upper: 1237n,
+                },
+                {
+                    attributeTag: 1,
+                    set: ['aa', 'ff', 'zz'],
+                    type: 'AttributeNotInSet',
+                },
+            ],
+        },
+        {
+            id: {
+                type: 'cred',
+                issuers: [0, 1, 2],
+            },
+            statement: [
+                {
+                    attributeTag: 0,
+                    type: 'RevealAttribute',
+                },
+            ],
+        },
+    ],
+};

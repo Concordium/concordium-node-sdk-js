@@ -432,7 +432,7 @@ export default class ConcordiumNodeClient {
     async waitForTransactionFinalization(
         transactionHash: HexString,
         timeoutTime?: number
-    ): Promise<v1.BlockItemSummary> {
+    ): Promise<v1.BlockItemSummaryInBlock> {
         assertValidHash(transactionHash);
         return new Promise(async (resolve, reject) => {
             const abortController = new AbortController();
@@ -450,7 +450,7 @@ export default class ConcordiumNodeClient {
                 // Simply doing `abortController.abort()` causes an error.
                 // See: https://github.com/grpc/grpc-node/issues/1652
                 setTimeout(() => abortController.abort(), 0);
-                return resolve(response.outcome.summary);
+                return resolve(response.outcome);
             }
 
             try {
@@ -461,7 +461,7 @@ export default class ConcordiumNodeClient {
                     );
                     if (response.status === 'finalized') {
                         setTimeout(() => abortController.abort(), 0);
-                        return resolve(response.outcome.summary);
+                        return resolve(response.outcome);
                     }
                 }
 

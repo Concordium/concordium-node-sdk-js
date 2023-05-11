@@ -273,3 +273,7 @@ export const makeDynamicFunction =
     <T, R>(fun: (a: T[]) => R) =>
     (input: T | T[]): R =>
         fun(Array.isArray(input) ? input : [input]);
+
+export function isDefined<T>(v?: T): v is T {
+    return v !== undefined;
+}

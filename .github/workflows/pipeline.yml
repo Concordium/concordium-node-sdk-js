@@ -19,7 +19,7 @@ env:
 jobs:
   build:
     if: github.event.pull_request.draft == false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
         with: 
@@ -73,6 +73,8 @@ jobs:
       - name: Build GRPC bindings
         if: steps.cache-grpc.outputs.cache-hit != 'true'
         run: |
+          mkdir -p packages/common/grpc
+          mkdir -p packages/nodejs/grpc
           yarn workspace @concordium/common-sdk generate
           yarn workspace @concordium/node-sdk generate
 
@@ -80,7 +82,7 @@ jobs:
         run: yarn build:dev
 
   typecheck-examples:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: build
     if: github.event.pull_request.draft == false
     steps:
@@ -115,11 +117,11 @@ jobs:
       - name: Get dependencies
         run: yarn install --immutable
 
-      - name: typecheck (examples-1f5c57?)
-        run: yarn workspace examples-1f5c57 typecheck
+      - name: Typecheck examples
+        run: yarn workspace @concordium/examples typecheck
 
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: github.event.pull_request.draft == false
     steps:
       - uses: actions/checkout@v3
@@ -138,7 +140,7 @@ jobs:
         run: yarn lint
 
   common_test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: build
     if: github.event.pull_request.draft == false
     defaults:
@@ -162,7 +164,7 @@ jobs:
             ./packages/rust-bindings/pkg
             ./packages/common/lib
             ./packages/nodejs/lib
-          key: ${{ runner.os }}-build_output-${{ hashFiles('**/yarn.lock', '.git/modules/deps/concordium-base/HEAD', './packages/rust-bindings/Cargo.lock', '.packages/rust-bindings/src/*.rs') }}
+          key: ${{ runner.os }}-build_output-${{ hashFiles('**/*.ts', '**/yarn.lock', '.git/modules/deps/concordium-base/HEAD', './packages/rust-bindings/Cargo.lock', '.packages/rust-bindings/src/*.rs') }}
 
       - name: Cache GRPC
         id: cache-grpc
@@ -180,7 +182,7 @@ jobs:
         run: yarn test
 
   rust_lint_fmt:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: github.event.pull_request.draft == false
     defaults:
       run:
@@ -198,7 +200,7 @@ jobs:
         run: cargo fmt -- --color=always --check
 
   rust_lint_clippy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: rust_lint_fmt
     if: github.event.pull_request.draft == false
     defaults:

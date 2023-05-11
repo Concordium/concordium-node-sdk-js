@@ -51,6 +51,12 @@ const client = createConcordiumClient(
     );
 
     for await (const ar of ars) {
-        console.dir(ar, { depth: null, colors: true });
+        console.log('Anonymity Revoker ID:', ar.arIdentity);
+        console.log('Anonymity Revoker name:', ar.arDescription.name);
+        console.log(
+            'Anonymity Revoker description:',
+            ar.arDescription.description,
+            '\n'
+        );
     }
 })();

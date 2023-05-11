@@ -1,4 +1,7 @@
-import { createConcordiumClient, HexString } from '@concordium/node-sdk';
+import {
+    createConcordiumClient,
+    FinalizedBlockInfo,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -8,21 +11,13 @@ const cli = meow(
   Usage
     $ yarn ts-node <path-to-this-file> [options]
 
-  Required
-    --height,     The block height to get blocks from
-
   Options
-    --help,         Displays this message
+    --help,     -h  Displays this message
     --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
 `,
     {
         importMeta: import.meta,
         flags: {
-            height: {
-                type: 'number',
-                alias: 'h',
-                isRequired: true,
-            },
             endpoint: {
                 type: 'string',
                 alias: 'e',
@@ -39,16 +34,19 @@ const client = createConcordiumClient(
     credentials.createInsecure()
 );
 
-/**
- * Get a list of live blocks at a given absolute height.
+/*
+ * Returns a stream of finalized blocks that is iterable. The following code will receive
+ * blocks as long as there is a connection to the node:
  */
 
 (async () => {
-    const blocks: HexString[] = await client.getBlocksAtHeight(
-        BigInt(cli.flags.height)
-    );
+    // Get block stream
+    const blockStream: AsyncIterable<FinalizedBlockInfo> =
+        client.getFinalizedBlocks();
 
-    for (const block of blocks) {
-        console.log(block);
+    // Prints blocks infinitely
+    for await (const block of blockStream) {
+        console.log('Arrived block height:', block.height);
+        console.log('Arrived block hash:', block.hash, '\n');
     }
 })();

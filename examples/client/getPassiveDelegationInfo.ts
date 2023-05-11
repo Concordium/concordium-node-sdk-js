@@ -1,4 +1,7 @@
-import { BakerId, createConcordiumClient } from '@concordium/node-sdk';
+import {
+    createConcordiumClient,
+    PassiveDelegationStatus,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -6,10 +9,10 @@ import meow from 'meow';
 const cli = meow(
     `
   Usage
-    $ yarn run-example <path-to-this-file> [options]
+    $ yarn ts-node <path-to-this-file> [options]
 
   Options
-    --help,         Displays this message
+    --help,     -h  Displays this message
     --block,    -b  A block to query from, defaults to last final block
     --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
 `,
@@ -38,20 +41,22 @@ const client = createConcordiumClient(
 );
 
 /**
- * Retrieves a stream of ID's for registered bakers on the network at a specific
- * block. If a blockhash is not supplied it will pick the latest finalized
- * block. An optional abort signal can also be provided that closes the stream.
-
- * Note: A stream can be collected to a list with the streamToList function.
+ * Retrieves information about the passive delegation, including the total
+ * capital delegation and the current commission rates for passive delegation,
+ * at the end of the specified block.
  */
 
 (async () => {
-    const bakerIds: AsyncIterable<BakerId> = client.getBakerList(
-        cli.flags.block
-    );
+    const passiveDelegationInfo: PassiveDelegationStatus =
+        await client.getPassiveDelegationInfo(cli.flags.block);
 
-    console.log('List of BakerID at the specified block:');
-    for await (const bakerId of bakerIds) {
-        console.log(bakerId);
-    }
+    console.log(
+        'CCD provided by the delegators to the pool:',
+        passiveDelegationInfo.delegatedCapital / 1000000n
+    );
+    console.log(
+        'Total capital in CCD of ALL pools:',
+        passiveDelegationInfo.allPoolTotalCapital / 1000000n
+    );
+    console.log('Pool commision rates:', passiveDelegationInfo.commissionRates);
 })();

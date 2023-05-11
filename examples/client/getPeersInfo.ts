@@ -1,4 +1,4 @@
-import { createConcordiumClient, IpAddressString } from '@concordium/node-sdk';
+import { createConcordiumClient, PeerInfo } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -6,10 +6,10 @@ import meow from 'meow';
 const cli = meow(
     `
   Usage
-    $ yarn run-example <path-to-this-file> [options]
+    $ yarn ts-node <path-to-this-file> [options]
 
   Options
-    --help,         Displays this message
+    --help,     -h  Displays this message
     --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
 `,
     {
@@ -32,12 +32,12 @@ const client = createConcordiumClient(
 );
 
 /**
- * Get a list of banned peers.
+ * Get a list of the peers that the node is connected to and associated network
+ * related information for each peer.
  */
 
 (async () => {
-    const bannedPeers: IpAddressString[] = await client.getBannedPeers();
+    const peerInfo: PeerInfo[] = await client.getPeersInfo();
 
-    console.log('Banned peers:');
-    console.log(bannedPeers);
+    console.dir(peerInfo, { depth: null, colors: true });
 })();

@@ -1,4 +1,4 @@
-import { BakerId, createConcordiumClient } from '@concordium/node-sdk';
+import { createConcordiumClient, ElectionInfo } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -6,10 +6,10 @@ import meow from 'meow';
 const cli = meow(
     `
   Usage
-    $ yarn run-example <path-to-this-file> [options]
+    $ yarn ts-node <path-to-this-file> [options]
 
   Options
-    --help,         Displays this message
+    --help,     -h  Displays this message
     --block,    -b  A block to query from, defaults to last final block
     --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
 `,
@@ -38,20 +38,23 @@ const client = createConcordiumClient(
 );
 
 /**
- * Retrieves a stream of ID's for registered bakers on the network at a specific
- * block. If a blockhash is not supplied it will pick the latest finalized
- * block. An optional abort signal can also be provided that closes the stream.
-
- * Note: A stream can be collected to a list with the streamToList function.
+ * Get information related to the baker election for a particular block.
+ * If a blockhash is not supplied it will pick the latest finalized block.
  */
 
 (async () => {
-    const bakerIds: AsyncIterable<BakerId> = client.getBakerList(
+    const electionInfo: ElectionInfo = await client.getElectionInfo(
         cli.flags.block
     );
 
-    console.log('List of BakerID at the specified block:');
-    for await (const bakerId of bakerIds) {
-        console.log(bakerId);
-    }
+    // Discard address, convert to tuple:
+    const bakers: [bigint, number][] = electionInfo.bakerElectionInfo.map(
+        (info) => [info.baker, info.lotteryPower]
+    );
+    // Sort bakers by lottery power:
+    const sortedBakers = bakers.sort((xs, ys) => ys[1] - xs[1]);
+
+    console.log('Bakers sorted by lottery power:', sortedBakers);
+    console.log('Election difficulty:', electionInfo.electionDifficulty);
+    console.log('Election nonce:', electionInfo.electionNonce);
 })();

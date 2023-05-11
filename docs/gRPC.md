@@ -956,7 +956,7 @@ Gets the reject reason of a transaction, if there is any. This will return undef
 
 ```ts
 const bis: BlockItemSummary = ...;
-const rejectReason = getTransactionRejectReason(bis);
+const rejectReason: RejectReason | undefined = getTransactionRejectReason(bis);
 ```
 
 ## affectedContracts
@@ -965,7 +965,7 @@ This returns an empty list for anything but `InitContractSummary` or `UpdateCont
 
 ```ts
 const bis: BlockItemSummary = ...;
-const contractAddresses = affectedContracts(bis);
+const contractAddresses: ContractAddress[] = affectedContracts(bis);
 ```
 
 ## affectedAccounts
@@ -973,7 +973,7 @@ Gets a list of account addresses for accounts which were affected by the transac
 
 ```ts
 const bis: BlockItemSummary = ...;
-const accountAddresses = affectedAccounts(bis);
+const accountAddresses: Base58String[] = affectedAccounts(bis);
 ```
 
 ## getReceiverAccount
@@ -981,7 +981,7 @@ Gets a the receiver for account transfer-like transactions, i.e. of type `Transf
 
 ```ts
 const bis: BlockItemSummary = ...;
-const receiverAccount = getReceiverAccount(bis);
+const receiverAccount: Base58String | undefined = getReceiverAccount(bis);
 ```
 
 ## getSummaryContractUpdateLogs
@@ -990,7 +990,7 @@ Gets a list of update logs, each consisting of a contract address and a list of 
 ```ts
 const MODULE_SCHEMA: Base64String = ...; // The schema 
 const bis: BlockItemSummary = ...;
-const logs = getSummaryContractUpdateLogs(bis);
+const logs: SummaryContractUpdateLog[] = getSummaryContractUpdateLogs(bis);
 
 logs.forEach((log) => {
     const {address, events} = log;

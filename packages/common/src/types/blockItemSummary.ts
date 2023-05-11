@@ -30,7 +30,8 @@ import {
     Base58String,
 } from '../types';
 import { RejectReason } from './rejectReason';
-import { isDefined } from '../serializationHelpers';
+import { isDefined } from '../util';
+import { isEqualContractAddress } from '../contractHelpers';
 
 export interface BaseBlockItemSummary {
     index: bigint;
@@ -351,11 +352,6 @@ export function getTransactionRejectReason(
     return summary.rejectReason;
 }
 
-const isEqualContract =
-    (a: ContractAddress) =>
-    (b: ContractAddress): boolean =>
-        a.index === b.index && a.subindex === b.subindex;
-
 /**
  * Gets the receiver account of a transaction, if the transaction is a transfer transaction (excluding encrypted transfers).
  *
@@ -438,7 +434,7 @@ export function affectedContracts(
                 (addresses: ContractAddress[], event) => {
                     if (
                         event.tag !== TransactionEventTag.Updated ||
-                        addresses.some(isEqualContract(event.address))
+                        addresses.some(isEqualContractAddress(event.address))
                     ) {
                         return addresses;
                     }

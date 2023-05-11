@@ -18,6 +18,7 @@ node_modules
 lib
 target
 dist
+doc
 
 # Auto generate files from the gRPC proto file
 grpc

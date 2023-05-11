@@ -70,6 +70,7 @@ const client = createConcordiumClient(
     const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
     const wallet = parseWallet(walletFile);
     const sender = new AccountAddress(wallet.value.address);
+    const signer = buildAccountSigner(wallet);
 
     const header: AccountTransactionHeader = {
         expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
@@ -97,7 +98,6 @@ const client = createConcordiumClient(
     };
 
     // Sign transaction
-    const signer = buildAccountSigner(wallet);
     const signature = await signTransaction(
         configureBakerAccountTransaction,
         signer
@@ -110,13 +110,6 @@ const client = createConcordiumClient(
 
     console.log('Transaction submitted, waiting for finalization...');
 
-    await client.waitForTransactionFinalization(transactionHash);
-
-    console.log('Transaction finalized, getting outcome...\n');
-
-    const transactionStatus = await client.getBlockItemStatus(transactionHash);
-
-    if (transactionStatus.status === 'finalized') {
-        console.dir(transactionStatus.outcome, { depth: null, colors: true });
-    }
+    const status = await client.waitForTransactionFinalization(transactionHash);
+    console.dir(status, { depth: null, colors: true });
 })();

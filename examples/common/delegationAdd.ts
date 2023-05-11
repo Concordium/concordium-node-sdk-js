@@ -12,6 +12,8 @@ import {
     DelegationTargetType,
     unwrap,
     HexString,
+    parseWallet,
+    buildAccountSigner,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import { readFileSync } from 'node:fs';
@@ -73,11 +75,10 @@ const client = createConcordiumClient(
 
 (async () => {
     // Read wallet-file
-    const walletFile = JSON.parse(readFileSync(cli.flags.walletFile, 'utf8'));
-    const sender = new AccountAddress(unwrap(walletFile.value.address));
-    const senderPrivateKey: HexString = unwrap(
-        walletFile.value.accountKeys.keys[0].keys[0].signKey
-    );
+    const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
+    const wallet = parseWallet(walletFile);
+    const sender = new AccountAddress(wallet.value.address);
+    const signer = buildAccountSigner(wallet);
 
     const header: AccountTransactionHeader = {
         expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
@@ -100,7 +101,6 @@ const client = createConcordiumClient(
     };
 
     // Sign transaction
-    const signer = buildBasicAccountSigner(senderPrivateKey);
     const signature = await signTransaction(
         configureDelegationTransaction,
         signer
@@ -112,13 +112,7 @@ const client = createConcordiumClient(
     );
 
     console.log('Transaction submitted, waiting for finalization...');
-    await client.waitForTransactionFinalization(transactionHash);
 
-    console.log('Transaction finalized, getting outcome...\n');
-
-    const transactionStatus = await client.getBlockItemStatus(transactionHash);
-
-    if (transactionStatus.status === 'finalized') {
-        console.dir(transactionStatus.outcome, { depth: null, colors: true });
-    }
+    const status = await client.waitForTransactionFinalization(transactionHash);
+    console.dir(status, { depth: null, colors: true });
 })();

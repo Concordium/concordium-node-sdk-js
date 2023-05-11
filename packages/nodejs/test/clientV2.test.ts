@@ -346,6 +346,7 @@ test.each([clientV2, clientWeb])('getModuleSource', async (client) => {
         testBlockHash
     );
 
+    expect(versionedModuleSource.version).toEqual(0);
     expect(localModuleHex).toEqual(versionedModuleSource.source);
 });
 

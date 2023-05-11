@@ -53,5 +53,5 @@ const client = createConcordiumClient(
 
     const bakerList = await streamToList(bakerIds);
 
-    console.log(bakerList[3]);
+    console.log(bakerList[0]);
 })();

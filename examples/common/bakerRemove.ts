@@ -11,6 +11,8 @@ import {
     unwrap,
     HexString,
     ConfigureBakerPayload,
+    parseWallet,
+    buildAccountSigner,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import { readFileSync } from 'node:fs';
@@ -60,11 +62,9 @@ const client = createConcordiumClient(
 
 (async () => {
     // Read wallet-file
-    const walletFile = JSON.parse(readFileSync(cli.flags.walletFile, 'utf8'));
-    const sender = new AccountAddress(unwrap(walletFile.value.address));
-    const senderPrivateKey: HexString = unwrap(
-        walletFile.value.accountKeys.keys[0].keys[0].signKey
-    );
+    const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
+    const wallet = parseWallet(walletFile);
+    const sender = new AccountAddress(wallet.value.address);
 
     const header: AccountTransactionHeader = {
         expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
@@ -83,7 +83,7 @@ const client = createConcordiumClient(
     };
 
     // Sign transaction
-    const signer = buildBasicAccountSigner(senderPrivateKey);
+    const signer = buildAccountSigner(wallet);
     const signature = await signTransaction(
         configureBakerAccountTransaction,
         signer

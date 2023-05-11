@@ -17,6 +17,8 @@ import {
     UpdateContractPayload,
     unwrap,
     HexString,
+    parseWallet,
+    buildAccountSigner,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import { readFileSync } from 'node:fs';
@@ -68,12 +70,10 @@ const client = createConcordiumClient(
     const sunnyWeather = { Sunny: [] };
     const rainyWeather = { Rainy: [] };
 
-    const walletFile = JSON.parse(readFileSync(cli.flags.walletFile, 'utf8'));
-    const sender = new AccountAddress(unwrap(walletFile.value.address));
-    const senderPrivateKey: HexString = unwrap(
-        walletFile.value.accountKeys.keys[0].keys[0].signKey
-    );
-    const signer = buildBasicAccountSigner(senderPrivateKey);
+    const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
+    const wallet = parseWallet(walletFile);
+    const sender = new AccountAddress(wallet.value.address);
+    const signer = buildAccountSigner(wallet);
 
     const moduleRef = new ModuleReference(
         '44434352ddba724930d6b1b09cd58bd1fba6ad9714cf519566d5fe72d80da0d1'
@@ -146,6 +146,7 @@ const client = createConcordiumClient(
     };
 
     const invokedPostInit = await client.invokeContract(contextPostInit);
+
     if (invokedPostInit.tag === 'success') {
         const rawReturnValue = Buffer.from(
             unwrap(invokedPostInit.returnValue),

@@ -5,15 +5,14 @@ import {
     AccountTransactionSignature,
     AccountTransactionType,
     BlockItemStatus,
-    buildBasicAccountSigner,
     CcdAmount,
     DataBlob,
     NextAccountNonce,
     signTransaction,
     TransactionExpiry,
     createConcordiumClient,
-    unwrap,
-    HexString,
+    parseWallet,
+    buildAccountSigner,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import { readFileSync } from 'node:fs';
@@ -80,11 +79,9 @@ const client = createConcordiumClient(
  */
 
 (async () => {
-    const walletFile = JSON.parse(readFileSync(cli.flags.walletFile, 'utf8'));
-    const sender = new AccountAddress(unwrap(walletFile.value.address));
-    const senderPrivateKey: HexString = unwrap(
-        walletFile.value.accountKeys.keys[0].keys[0].signKey
-    );
+    const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
+    const wallet = parseWallet(walletFile);
+    const sender = new AccountAddress(wallet.value.address);
 
     const toAddress = new AccountAddress(cli.flags.receiver);
     const nextNonce: NextAccountNonce = await client.getNextAccountNonce(
@@ -118,7 +115,7 @@ const client = createConcordiumClient(
     };
 
     // Sign transaction
-    const signer = buildBasicAccountSigner(senderPrivateKey);
+    const signer = buildAccountSigner(wallet);
     const signature: AccountTransactionSignature = await signTransaction(
         accountTransaction,
         signer
@@ -128,8 +125,6 @@ const client = createConcordiumClient(
         accountTransaction,
         signature
     );
-
-    console.log('Transaction submitted, waiting for finalization...');
 
     await client.waitForTransactionFinalization(transactionHash);
 

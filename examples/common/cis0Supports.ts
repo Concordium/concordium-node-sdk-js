@@ -18,7 +18,7 @@ const cli = meow(
   Options
     --help,                 -h  Displays this message
     --endpoint,             -e  Specify endpoint of a grpc2 interface of a Concordium node in the format "address:port". Defaults to 'localhost:20000'
-    --subindex,                 The subindex of the smart contract. Defaults to 0
+    --subindex,             -s  The subindex of the smart contract. Defaults to 0
 `,
     {
         importMeta: import.meta,
@@ -35,6 +35,7 @@ const cli = meow(
             },
             subindex: {
                 type: 'number',
+                alias: 's',
                 default: 0,
             },
             supportsQuery: {
@@ -53,10 +54,6 @@ const client = createConcordiumClient(
     Number(port),
     credentials.createInsecure()
 );
-
-if (cli.flags.h) {
-    cli.showHelp();
-}
 
 (async () => {
     const contractAddress: ContractAddress = {

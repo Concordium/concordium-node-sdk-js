@@ -11,6 +11,8 @@ import {
     createConcordiumClient,
     unwrap,
     HexString,
+    parseWallet,
+    buildAccountSigner,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import { readFileSync } from 'node:fs';
@@ -65,11 +67,9 @@ const client = createConcordiumClient(
  */
 
 (async () => {
-    const walletFile = JSON.parse(readFileSync(cli.flags.walletFile, 'utf8'));
-    const sender = new AccountAddress(unwrap(walletFile.value.address));
-    const senderPrivateKey: HexString = unwrap(
-        walletFile.value.accountKeys.keys[0].keys[0].signKey
-    );
+    const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
+    const wallet = parseWallet(walletFile);
+    const sender = new AccountAddress(wallet.value.address);
 
     // Get the wasm file as a buffer.
     const wasmModule = Buffer.from(readFileSync(cli.flags.moduleFile));
@@ -95,7 +95,7 @@ const client = createConcordiumClient(
     };
 
     // Sign transaction
-    const signer = buildBasicAccountSigner(senderPrivateKey);
+    const signer = buildAccountSigner(wallet);
     const signature: AccountTransactionSignature = await signTransaction(
         deployModuleTransaction,
         signer

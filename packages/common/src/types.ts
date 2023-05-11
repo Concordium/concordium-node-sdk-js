@@ -12,6 +12,7 @@ import {
     TransactionEvent,
     TransferredEvent,
 } from './types/transactionEvent';
+import { isHex } from './util';
 
 export * from './types/NodeInfo';
 export * from './types/PeerInfo';
@@ -28,6 +29,7 @@ export type Base64String = string;
 export type DigitString = string;
 export type UrlString = string;
 export type IpAddressString = string;
+export type JsonString = string;
 
 export type ModuleRef = HexString;
 
@@ -743,6 +745,22 @@ export interface WalletExportFormat {
         address: Base58String;
         credentials: Record<number, HexString>;
     };
+}
+
+export function parseWallet(walletString: JsonString): WalletExportFormat {
+    const wallet = JSON.parse(walletString);
+    if (
+        typeof wallet.type === 'string' &&
+        typeof wallet.v === 'number' &&
+        typeof wallet.environment === 'string' &&
+        typeof wallet.value.address === 'string' &&
+        wallet.value.accountKeys !== undefined &&
+        wallet.credentials !== undefined
+    ) {
+        return wallet;
+    } else {
+        throw Error('The provided wallet is invalid.');
+    }
 }
 
 export interface ChainArData {

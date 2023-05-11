@@ -95,13 +95,7 @@ const client = createConcordiumClient(
     );
 
     console.log('Transaction submitted, waiting for finalization...');
-    await client.waitForTransactionFinalization(transactionHash);
 
-    console.log('Transaction finalized, getting outcome...\n');
-
-    const transactionStatus = await client.getBlockItemStatus(transactionHash);
-
-    if (transactionStatus.status === 'finalized') {
-        console.dir(transactionStatus.outcome, { depth: null, colors: true });
-    }
+    const status = await client.waitForTransactionFinalization(transactionHash);
+    console.dir(status, { depth: null, colors: true });
 })();

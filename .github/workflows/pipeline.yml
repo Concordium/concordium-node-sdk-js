@@ -40,16 +40,6 @@ jobs:
             ./packages/nodejs/lib
           key: ${{ runner.os }}-build_output-${{ hashFiles('**/*.ts', '**/yarn.lock', '.git/modules/deps/concordium-base/HEAD', './packages/rust-bindings/Cargo.lock', '.packages/rust-bindings/src/*.rs') }}
 
-      - name: Cache rust
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            ./packages/rust-bindings/target/
-          key: ${{ runner.os }}-rust-${{ hashFiles('**/Cargo.lock') }}
-
       - name: Cache GRPC
         id: cache-grpc
         uses: actions/cache@v3
@@ -64,6 +54,10 @@ jobs:
 
       - name: Install rust
         run: rustup default ${{ env.RUST_VERSION }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "packages/rust-bindings"
 
       - name: Get wasm-pack
         uses: jetli/wasm-pack-action@v0.4.0
@@ -212,22 +206,16 @@ jobs:
         with:
           submodules: "recursive"
 
-      - name: Cache clippy
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            ./packages/rust-bindings/target/
-          key: ${{ runner.os }}-clippy-${{ hashFiles('**/Cargo.lock') }}
-
       - name: Install clippy
         run: |
           rustup default ${{ env.RUST_VERSION }}
           rustup component add clippy
 
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "packages/rust-bindings"
+
       - name: Clippy
         run: |
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
           cargo clippy --color=always --tests --benches -- -Dclippy::all
+

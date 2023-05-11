@@ -53,7 +53,9 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieves the next account nonce for the given account. The account nonce is
      * used in all account transactions as part of their header.
+     *
      * @param accountAddress base58 account address to get the next account nonce for.
+     *
      * @returns the next account nonce, and a boolean indicating if the nonce is reliable.
      */
     async getNextAccountNonce(
@@ -93,9 +95,12 @@ export default class ConcordiumNodeClient {
      * A credential registration id can also be provided, instead of an address. In this case
      * the node will return the account info of the account, which the corresponding credential
      * is (or was) deployed to. An account index can also be provided.
+     *
      * @param accountIdentifier base58 account address, or a credential registration id or account index to get the account info for
      * @param blockHash optional block hash to get the account info at, otherwise retrieves from last finalized block
-     * @returns the account info for the provided account address, throws if the account does not exist
+     *
+     * @returns the account info for the provided account address.
+     * @throws An error of type `RpcError` if not found in the block.
      */
     async getAccountInfo(
         accountIdentifier: v1.AccountIdentifierInput,
@@ -113,7 +118,9 @@ export default class ConcordiumNodeClient {
 
     /**
      * Retrieves a status for the given transaction/block item.
+     *
      * @param transactionHash the transaction/block item to get a status for.
+     *
      * @returns the status for the given transaction/block item, or undefined if it does not exist.
      */
     async getBlockItemStatus(
@@ -141,9 +148,12 @@ export default class ConcordiumNodeClient {
 
     /**
      * Retrieves the source of the given module at the provided block.
+     *
      * @param moduleRef the module's reference, represented by the ModuleReference class.
      * @param blockHash optional block hash to get the module source at, otherwise retrieves from last finalized block
+     *
      * @returns the source of the module as raw bytes.
+     * @throws An error of type `RpcError` if not found in the block.
      */
     async getModuleSource(
         moduleRef: ModuleReference,
@@ -167,9 +177,12 @@ export default class ConcordiumNodeClient {
 
     /**
      * Retrieves the embedded schema of the given module at the provided block.
+     *
      * @param moduleRef the module's reference, represented by the ModuleReference class.
      * @param blockHash optional block hash to get the module embedded schema at, otherwise retrieves from last finalized block
+     *
      * @returns the module schema as a buffer.
+     * @throws An error of type `RpcError` if not found in the block.
      */
     async getEmbeddedSchema(
         moduleRef: ModuleReference,
@@ -181,9 +194,12 @@ export default class ConcordiumNodeClient {
 
     /**
      * Retrieve information about a given smart contract instance.
+     *
      * @param contractAddress the address of the smart contract.
      * @param blockHash optional block hash to get the smart contact instances at, otherwise retrieves from last finalized block
+     *
      * @returns An object with information about the contract instance.
+     * @throws An error of type `RpcError` if not found in the block.
      */
     async getInstanceInfo(
         contractAddress: v1.ContractAddress,
@@ -201,6 +217,7 @@ export default class ConcordiumNodeClient {
 
     /**
      * Invokes a smart contract.
+     *
      * @param context.contract The address of the smart contract that shall be evoked.
      * @param context.amount The amount of microCCD to invoke the contract with.
      * @param context.method The entrypoint (receive function) that shall be invoked.
@@ -208,6 +225,7 @@ export default class ConcordiumNodeClient {
      * @param context.energy The maximum amount of energy to allow for execution.
      * @param context.invoker The address of the invoker, if undefined uses the zero account address.
      * @param blockHash the block hash at which the contract should be invoked at. The contract is invoked in the state at the end of this block.
+     *
      * @returns If the node was able to invoke, then a object describing the outcome is returned.
      * The outcome is determined by the `tag` field, which is either `success` or `failure`.
      * The `usedEnergy` field will always be present, and is the amount of NRG was used during the execution.
@@ -1059,14 +1077,14 @@ export default class ConcordiumNodeClient {
      *
      * @param {bigint} [startHeight=0n] - An optional height to start streaming blocks from. Defaults to 0n.
      * @param {AbortSignal} [abortSignal] - An optional abort signal, which will end the stream. If this is not specified, the stream continues indefinitely.
-     * @returns {Promise<AsyncIterable<v1.FinalizedBlockInfo>>} A Promise resolving with a stream of {@link v1.FinalizedBlockInfo}.
+     * @returns {AsyncIterable<v1.FinalizedBlockInfo>} A stream of {@link v1.FinalizedBlockInfo}.
      */
-    async getFinalizedBlocksFrom(
+    getFinalizedBlocksFrom(
         startHeight: v1.AbsoluteBlocksAtHeightRequest = 0n,
         abortSignal?: AbortSignal
-    ): Promise<AsyncIterable<v1.FinalizedBlockInfo>> {
+    ): AsyncIterable<v1.FinalizedBlockInfo> {
         let height = startHeight;
-        let finHeight = await this.getConsensusHeight();
+        let finHeight: bigint;
         const newBlocks = this.getFinalizedBlocks(abortSignal);
         const endSignal: IteratorReturnResult<undefined> = {
             done: true,
@@ -1115,6 +1133,10 @@ export default class ConcordiumNodeClient {
                 return endSignal;
             }
 
+            if (finHeight === undefined) {
+                finHeight = await this.getConsensusHeight();
+            }
+
             let bi: v1.FinalizedBlockInfo | undefined;
             if (searchKnown) {
                 bi = (await nextKnown()) ?? (await nextNew());
@@ -1143,8 +1165,8 @@ export default class ConcordiumNodeClient {
      * @template R
      * @param {(bi: v1.FinalizedBlockInfo) => Promise<R | undefined>} predicate - A predicate function resolving with value of type {@link R} if the predicate holds, and undefined if not.
      * The precondition for this method is that the `test` method is monotone, i.e., if block at height `h` satisfies the test then also a block at height `h+1` does. If this precondition does not hold then the return value from this method is unspecified.
-     * @param {bigint} [from=0n] - An optional lower bound of the range of blocks to search. Defaults to 0n.
-     * @param {bigint} [to] - An optional upper bound of the range of blocks to search. Defaults to latest finalized block.
+     * @param {bigint} [from=0n] - An optional (inclusive) lower bound of the range of blocks to search. Defaults to 0n.
+     * @param {bigint} [to] - An optional (inclusive) upper bound of the range of blocks to search. Defaults to latest finalized block.
      *
      * @returns {Promise<R | undefined>} The value returned from `predicate` at the lowest block (in terms of height) where the predicate holds.
      */
@@ -1153,26 +1175,26 @@ export default class ConcordiumNodeClient {
         from: v1.AbsoluteBlocksAtHeightRequest = 0n,
         to?: v1.AbsoluteBlocksAtHeightRequest
     ): Promise<R | undefined> {
-        let start = from;
-        let end = to ?? (await this.getConsensusHeight());
+        let lower = from;
+        let upper = to ?? (await this.getConsensusHeight());
 
-        if (start > end) {
+        if (lower > upper) {
             throw new Error(
                 'Please specify a "to" value greater than the specified "from" value'
             );
         }
 
         let result: R | undefined;
-        while (start < end) {
-            const mid = start + (end - start) / 2n;
+        while (lower <= upper) {
+            const mid = lower + (upper - lower) / 2n;
             const [hash] = await this.getBlocksAtHeight(mid);
             const res = await predicate({ hash, height: mid });
 
             if (res !== undefined) {
                 result = res;
-                end = mid;
+                upper = mid;
             } else {
-                start = mid + 1n;
+                lower = mid + 1n;
             }
         }
 
@@ -1183,8 +1205,8 @@ export default class ConcordiumNodeClient {
      * Find the block where a smart contract instance was created. This is a specialized form of {@link findEarliestFinalized}.
      *
      * @param {ContractAddress} address - The contract address to search for.
-     * @param {bigint} [from=0n] - An optional lower bound of the range of blocks to search. Defaults to 0n.
-     * @param {bigint} [to] - An optional upper bound of the range of blocks to search. Defaults to latest finalized block.
+     * @param {bigint} [from=0n] - An optional (inclusive) lower bound of the range of blocks to search. Defaults to 0n.
+     * @param {bigint} [to] - An optional (inclusive) upper bound of the range of blocks to search. Defaults to latest finalized block.
      *
      * @returns {FindInstanceCreationReponse} Information about the block and the contract instance, or undefined if not found.
      */
@@ -1218,8 +1240,8 @@ export default class ConcordiumNodeClient {
      * Find the first block finalized after a given time.
      *
      * @param {Date} time - The time to find first block after
-     * @param {bigint} [from=0n] - An optional lower bound of the range of blocks to search. Defaults to 0n.
-     * @param {bigint} [to] - An optional upper bound of the range of blocks to search. Defaults to latest finalized block.
+     * @param {bigint} [from=0n] - An optional (inclusive) lower bound of the range of blocks to search. Defaults to 0n.
+     * @param {bigint} [to] - An optional (inclusive) upper bound of the range of blocks to search. Defaults to latest finalized block.
      *
      * @returns {v1.BlockInfo} Information about the block found, or undefined if no block was found.
      */

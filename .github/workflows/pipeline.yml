@@ -215,7 +215,6 @@ jobs:
         with:
           workspaces: "packages/rust-bindings"
 
-      - name: Clippy
-        run: |
-          cargo clippy --color=always --tests --benches -- -Dclippy::all
+      - name: Run clippy
+        run: cargo clippy --color=always --tests --benches -- -Dclippy::all
 

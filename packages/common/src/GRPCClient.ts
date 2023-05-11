@@ -1054,6 +1054,13 @@ export default class ConcordiumNodeClient {
         return translate.blockFinalizationSummary(finalizationSummary);
     }
 
+    /**
+     * Gets a stream of finalized blocks from specified `startHeight`.
+     *
+     * @param {bigint} [startHeight=0n] - An optional height to start streaming blocks from. Defaults to 0n.
+     * @param {AbortSignal} [abortSignal] - An optional abort signal, which will end the stream. If this is not specified, the stream continues indefinitely.
+     * @returns {Promise<AsyncIterable<v1.FinalizedBlockInfo>>} A Promise resolving with a stream of {@link v1.FinalizedBlockInfo}.
+     */
     async getFinalizedBlocksFrom(
         startHeight: v1.AbsoluteBlocksAtHeightRequest = 0n,
         abortSignal?: AbortSignal
@@ -1130,6 +1137,17 @@ export default class ConcordiumNodeClient {
         };
     }
 
+    /**
+     * Find a block with lowest possible height where the predicate holds.
+     *
+     * @template R
+     * @param {(bi: v1.FinalizedBlockInfo) => Promise<R | undefined>} predicate - A predicate function resolving with value of type {@link R} if the predicate holds, and undefined if not.
+     * The precondition for this method is that the `test` method is monotone, i.e., if block at height `h` satisfies the test then also a block at height `h+1` does. If this precondition does not hold then the return value from this method is unspecified.
+     * @param {bigint} [from=0n] - An optional lower bound of the range of blocks to search. Defaults to 0n.
+     * @param {bigint} [to] - An optional upper bound of the range of blocks to search. Defaults to latest finalized block.
+     *
+     * @returns {Promise<R | undefined>} The value returned from `predicate` at the lowest block (in terms of height) where the predicate holds.
+     */
     async findEarliestFinalized<R>(
         predicate: (bi: v1.FinalizedBlockInfo) => Promise<R | undefined>,
         from: v1.AbsoluteBlocksAtHeightRequest = 0n,
@@ -1161,6 +1179,15 @@ export default class ConcordiumNodeClient {
         return result;
     }
 
+    /**
+     * Find the block where a smart contract instance was created. This is a specialized form of {@link findEarliestFinalized}.
+     *
+     * @param {ContractAddress} address - The contract address to search for.
+     * @param {bigint} [from=0n] - An optional lower bound of the range of blocks to search. Defaults to 0n.
+     * @param {bigint} [to] - An optional upper bound of the range of blocks to search. Defaults to latest finalized block.
+     *
+     * @returns {FindInstanceCreationReponse} Information about the block and the contract instance, or undefined if not found.
+     */
     async findInstanceCreation(
         address: v1.ContractAddress,
         from?: v1.AbsoluteBlocksAtHeightRequest,
@@ -1187,6 +1214,15 @@ export default class ConcordiumNodeClient {
         );
     }
 
+    /**
+     * Find the first block finalized after a given time.
+     *
+     * @param {Date} time - The time to find first block after
+     * @param {bigint} [from=0n] - An optional lower bound of the range of blocks to search. Defaults to 0n.
+     * @param {bigint} [to] - An optional upper bound of the range of blocks to search. Defaults to latest finalized block.
+     *
+     * @returns {v1.BlockInfo} Information about the block found, or undefined if no block was found.
+     */
     async findFirstFinalizedBlockNoLaterThan(
         time: Date,
         from?: v1.AbsoluteBlocksAtHeightRequest,

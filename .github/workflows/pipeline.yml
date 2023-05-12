@@ -14,7 +14,7 @@ on:
 env:
   NODE_VERSION: 18.16.0
   RUST_VERSION: 1.62
-  RUST_FMT: nightly-2022-06-09-x86_64-unknown-linux-gnu
+  RUST_FMT: nightly-2023-04-01-x86_64-unknown-linux-gnu
 
 jobs:
   build:

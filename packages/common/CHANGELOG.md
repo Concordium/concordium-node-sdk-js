@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Unreleased (6.6.0 tentatively)
 
 ### Added
 - Utility functions for extracting information from `BlockItemSummary`.
@@ -15,6 +15,11 @@
     - `affectedAccounts`
 - Utility functions for extracting information from `BlockSpecialEvent`.
     - `specialEventAffectedAccounts`
+    - Extended HdWallet with support for verifiable credential key deriviation.
+
+### Changed
+
+- Bumped @concordium/rust-bindings to 0.12.0. (Adds key derivation for verifiable credentials)
 
 ## 6.5.0 2023-5-03
 

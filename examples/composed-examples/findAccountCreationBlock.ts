@@ -1,6 +1,7 @@
 import {
     AccountAddress,
     createConcordiumClient,
+    FinalizedBlockInfo,
     isRpcError,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
@@ -56,48 +57,36 @@ const client = createConcordiumClient(
 (async () => {
     const account = new AccountAddress(cli.flags.account);
 
-    let start = 0n;
-    let end = (await client.getBlockInfo()).blockHeight;
-
-    // Binary search for account creation block
-    while (start < end) {
-        const mid = (start + end) / 2n;
-        const block = (await client.getBlocksAtHeight(mid))[0];
-
-        console.log('processing block at height:', mid);
-
+    const accBlock = await client.findEarliestFinalized(async (bi) => {
         try {
-            await client.getAccountInfo(account, block);
-            end = mid;
+            console.log('Processing block at:', bi.height);
+            await client.getAccountInfo(account, bi.hash);
+            return bi.hash;
         } catch (e) {
             if (isRpcError(e) && e.code == 'NOT_FOUND') {
-                start = mid + 1n;
+                //return undefined
             } else {
                 throw e;
             }
         }
-    }
+    });
 
-    const accBlock = (await client.getBlocksAtHeight(start))[0];
-
-    // Is the account actually in the block? Will throw otherwise
-    try {
-        await client.getAccountInfo(account, accBlock);
-    } catch (e) {
-        if (isRpcError(e) && e.code === 'NOT_FOUND') {
-            console.log('Account does not exist on chain');
-        }
+    if (accBlock === undefined) {
+        throw Error('Account not found!');
     }
 
     const blockInfo = await client.getBlockInfo(accBlock);
     const summaries = client.getBlockTransactionEvents(accBlock);
+
+    console.log('\nAccount created in block:', accBlock);
+    console.log('Timestamp of block:', blockInfo.blockSlotTime);
+
+    // If account is not a genesis account print account creation transaction hash
     for await (const summary of summaries) {
         if (
             summary.type === 'accountCreation' &&
             summary.address === account.address
         ) {
-            console.log('\nAccount created in block:', accBlock);
-            console.log('Timestamp of block:', blockInfo.blockSlotTime);
             console.log(
                 'Account created at transaction with hash:',
                 summary.hash

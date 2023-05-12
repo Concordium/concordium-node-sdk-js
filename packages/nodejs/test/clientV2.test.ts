@@ -893,16 +893,32 @@ test.each([clientV2, clientWeb])('findInstanceCreation', async (client) => {
     expect(blockFirstContract?.height).toBe(2589n);
 });
 
-test.each([clientV2, clientWeb])(
-    'findFirstFinalizedBlockNoLaterThan',
-    async (client) => {
-        const time = new Date('11/5/2022');
-        const bi = await client.findFirstFinalizedBlockNoLaterThan(
-            time,
-            1000000n,
-            1500000n
-        );
+describe('findFirstFinalizedBlockNoLaterThan', () => {
+    test.each([clientV2, clientWeb])(
+        'Returns lowest block in range on date earlier than genesis',
+        async (client) => {
+            const time = new Date('11/5/2000');
+            const bi = await client.findFirstFinalizedBlockNoLaterThan(
+                time,
+                10n,
+                1500n
+            );
 
-        expect(bi?.blockHeight).toBe(1238080n);
-    }
-);
+            expect(bi?.blockHeight).toBe(10n);
+        }
+    );
+
+    test.each([clientV2, clientWeb])(
+        'Returns undefined on future date',
+        async (client) => {
+            const time = new Date(Date.now() + 10000);
+            const bi = await client.findFirstFinalizedBlockNoLaterThan(
+                time,
+                1000000n,
+                1500000n
+            );
+
+            expect(bi).toBe(undefined);
+        }
+    );
+});

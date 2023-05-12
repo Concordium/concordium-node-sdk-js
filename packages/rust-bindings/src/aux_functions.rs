@@ -200,9 +200,7 @@ pub fn get_verifiable_credential_signing_key_aux(
     verifiable_credential_index: u32,
 ) -> Result<HexString> {
     let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_verifiable_credential_signing_key(
-        verifiable_credential_index,
-    )?;
+    let key = wallet.get_verifiable_credential_signing_key(verifiable_credential_index)?;
     Ok(hex::encode(key.as_bytes()))
 }
 
@@ -212,9 +210,7 @@ pub fn get_verifiable_credential_public_key_aux(
     verifiable_credential_index: u32,
 ) -> Result<HexString> {
     let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_verifiable_credential_public_key(
-        verifiable_credential_index,
-    )?;
+    let key = wallet.get_verifiable_credential_public_key(verifiable_credential_index)?;
     Ok(hex::encode(key.as_bytes()))
 }
 
@@ -224,9 +220,7 @@ pub fn get_verifiable_credential_encryption_key_aux(
     verifiable_credential_index: u32,
 ) -> Result<HexString> {
     let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_verifiable_credential_encryption_key(
-        verifiable_credential_index,
-    )?;
+    let key = wallet.get_verifiable_credential_encryption_key(verifiable_credential_index)?;
     Ok(hex::encode(key))
 }
 

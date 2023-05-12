@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer/';
-import { InstanceInfo } from './types';
+import { ContractAddress, InstanceInfo } from './types';
 
 const CONTRACT_PARAM_MAX_LENGTH = 1024;
 
@@ -32,3 +32,8 @@ export const checkParameterLength = (buffer: Buffer): void => {
         );
     }
 };
+
+export const isEqualContractAddress =
+    (a: ContractAddress) =>
+    (b: ContractAddress): boolean =>
+        a.index === b.index && a.subindex === b.subindex;

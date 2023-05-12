@@ -113,7 +113,7 @@ pub fn serialize_receive_contract_parameters(
         schema_version,
     ) {
         Ok(s) => Ok(s),
-        Err(e) => Err(format!("unable to deserialize parameters, due to: {}", e)),
+        Err(e) => Err(format!("unable to serialize parameters, due to: {}", e)),
     }
 }
 
@@ -127,7 +127,7 @@ pub fn serialize_init_contract_parameters(
     match serialize_init_contract_parameters_aux(parameters, schema, contract_name, schema_version)
     {
         Ok(s) => Ok(s),
-        Err(e) => Err(format!("unable to deserialize parameters, due to: {}", e)),
+        Err(e) => Err(format!("unable to serialize parameters, due to: {}", e)),
     }
 }
 

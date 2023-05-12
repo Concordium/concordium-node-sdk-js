@@ -31,7 +31,7 @@ const cli = meow(
     $ yarn ts-node <path-to-this-file> [options]
 
   Required
-    --wallet-file, -w  The filepath to the sender's private key
+    --wallet-export, -w  The filepath to the sender's wallet export
 
   Options
     --help,     -h  Displays this message
@@ -40,7 +40,7 @@ const cli = meow(
     {
         importMeta: import.meta,
         flags: {
-            walletFile: {
+            walletExport: {
                 type: 'string',
                 alias: 'w',
                 isRequired: true,
@@ -69,7 +69,7 @@ const client = createConcordiumClient(
     const sunnyWeather = { Sunny: [] };
     const rainyWeather = { Rainy: [] };
 
-    const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
+    const walletFile = readFileSync(cli.flags.walletExport, 'utf8');
     const wallet = parseWallet(walletFile);
     const sender = new AccountAddress(wallet.value.address);
     const signer = buildAccountSigner(wallet);

@@ -1166,8 +1166,8 @@ export default class ConcordiumNodeClient {
      * @param {(bi: v1.FinalizedBlockInfo) => Promise<R | undefined>} predicate - A predicate function resolving with value of type {@link R} if the predicate holds, and undefined if not.
      * The precondition for this method is that the function is monotone, i.e., if block at height `h` satisfies the test then also a block at height `h+1` does.
      * If this precondition does not hold then the return value from this method is unspecified.
-     * @param {bigint} [from=0n] - An optional (inclusive) lower bound of the range of blocks to search. Defaults to 0n.
-     * @param {bigint} [to] - An optional (inclusive) upper bound of the range of blocks to search. Defaults to latest finalized block.
+     * @param {bigint} [from=0n] - An optional lower bound of the range of blocks to search. Defaults to 0n.
+     * @param {bigint} [to] - An optional upper bound of the range of blocks to search. Defaults to latest finalized block.
      *
      * @returns {Promise<R | undefined>} The value returned from `predicate` at the lowest block (in terms of height) where the predicate holds.
      */
@@ -1186,7 +1186,7 @@ export default class ConcordiumNodeClient {
         }
 
         let result: R | undefined;
-        while (lower <= upper) {
+        while (lower < upper) {
             const mid = lower + (upper - lower) / 2n;
             const [hash] = await this.getBlocksAtHeight(mid);
             const res = await predicate({ hash, height: mid });
@@ -1206,8 +1206,8 @@ export default class ConcordiumNodeClient {
      * Find the block where a smart contract instance was created. This is a specialized form of {@link findEarliestFinalized}.
      *
      * @param {ContractAddress} address - The contract address to search for.
-     * @param {bigint} [from=0n] - An optional (inclusive) lower bound of the range of blocks to search. Defaults to 0n.
-     * @param {bigint} [to] - An optional (inclusive) upper bound of the range of blocks to search. Defaults to latest finalized block.
+     * @param {bigint} [from=0n] - An optional lower bound of the range of blocks to search. Defaults to 0n.
+     * @param {bigint} [to] - An optional upper bound of the range of blocks to search. Defaults to latest finalized block.
      *
      * @returns {FindInstanceCreationReponse} Information about the block and the contract instance, or undefined if not found.
      */
@@ -1241,8 +1241,8 @@ export default class ConcordiumNodeClient {
      * Find the first block finalized after a given time.
      *
      * @param {Date} time - The time to find first block after
-     * @param {bigint} [from=0n] - An optional (inclusive) lower bound of the range of blocks to search. Defaults to 0n.
-     * @param {bigint} [to] - An optional (inclusive) upper bound of the range of blocks to search. Defaults to latest finalized block.
+     * @param {bigint} [from=0n] - An optional lower bound of the range of blocks to search. Defaults to 0n.
+     * @param {bigint} [to] - An optional upper bound of the range of blocks to search. Defaults to latest finalized block.
      *
      * @returns {v1.BlockInfo} Information about the block found, or undefined if no block was found.
      */

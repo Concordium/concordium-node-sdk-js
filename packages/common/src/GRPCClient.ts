@@ -45,10 +45,10 @@ export type FindInstanceCreationReponse = {
  * A concordium-node specific gRPC client wrapper.
  *
  * @example
- * import ConcordiumNodeClient from "..."
- * const client = new ConcordiumNodeClient('127.0.0.1', 20000, credentials, metadata, 15000);
+ * import { ConcordiumGRPCClient } from "..."
+ * const client = new ConcordiumGRPCClient('127.0.0.1', 20000, credentials, metadata, 15000);
  */
-export default class ConcordiumNodeClient {
+export class ConcordiumGRPCClient {
     client: QueriesClient;
 
     /**

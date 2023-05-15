@@ -1,8 +1,6 @@
 import {
     createConcordiumClient,
-    isAccountTransactionType,
     isTransferLikeSummary,
-    streamToList,
     unwrap,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
@@ -15,12 +13,11 @@ const cli = meow(
     $ yarn ts-node <path-to-this-file> [options]
 
   Required
-    --from, -f  From some time
-    --to,   -t  To some time
+    --from, -f  From some time, defaults to genesis time
+    --to,   -t  To some time, defaults to the timestamp for the last finalized block
 
   Options
     --help,         Displays this message
-    --block,    -b  A block to query from, defaults to last final block
     --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
 `,
     {
@@ -57,17 +54,21 @@ const client = createConcordiumClient(
  */
 
 (async () => {
-    const from = new Date(cli.flags.from);
-    const ac = new AbortController();
+    const cs = await client.getConsensusStatus();
+    const lastFinal = await client.getBlockInfo(cs.lastFinalizedBlock);
 
-    const fromBlockMaybe = await client.findFirstFinalizedBlockNoLaterThan(
-        from
-    );
-    const fromHeight = unwrap(fromBlockMaybe).blockHeight; // Throw if fromBlockMaybe is undefined
-    const toHeight = (await client.getConsensusStatus())
-        .lastFinalizedBlockHeight;
+    const from = cli.flags.from ? new Date(cli.flags.from) : cs.genesisTime;
+    const to = cli.flags.to ? new Date(cli.flags.to) : lastFinal.blockSlotTime;
 
-    const blockStream = client.getFinalizedBlocksFrom(fromHeight);
+    // Unwrap throws error if findFirstFinalizedBlockNoLaterThan returns undefined
+    const fromHeight = unwrap(
+        await client.findFirstFinalizedBlockNoLaterThan(from)
+    ).blockHeight;
+    const toHeight = unwrap(
+        await client.findFirstFinalizedBlockNoLaterThan(to)
+    ).blockHeight;
+
+    const blockStream = client.getFinalizedBlocksFrom(fromHeight, toHeight);
 
     // Return dictionary
     const dict: Record<string, number> = {};
@@ -79,12 +80,6 @@ const client = createConcordiumClient(
     //Iterate over all blocks
     console.log('processing blocks...');
     for await (const block of blockStream) {
-        // Stop stream when all known blocks are processed
-        if (block.height > toHeight) {
-            ac.abort();
-            break;
-        }
-
         progress =
             ((block.height - fromHeight) * 100n) / (toHeight - fromHeight);
 

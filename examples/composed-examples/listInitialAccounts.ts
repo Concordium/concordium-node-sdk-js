@@ -1,10 +1,4 @@
-import {
-    createConcordiumClient,
-    isAccountTransactionType,
-    isTransferLikeSummary,
-    streamToList,
-    unwrap,
-} from '@concordium/node-sdk';
+import { createConcordiumClient, unwrap } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -15,12 +9,11 @@ const cli = meow(
     $ yarn ts-node <path-to-this-file> [options]
 
   Required
-    --from, -f  From some time
-    --to,   -t  To some time
+    --from, -f  From some time, defaults to genesis time
+    --to,   -t  To some time, defaults to the timestamp for the last finalized block
 
   Options
     --help,         Displays this message
-    --block,    -b  A block to query from, defaults to last final block
     --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
 `,
     {
@@ -57,21 +50,18 @@ const client = createConcordiumClient(
 (async () => {
     const cs = await client.getConsensusStatus();
     const lastFinal = await client.getBlockInfo(cs.lastFinalizedBlock);
+
     const from = cli.flags.from ? new Date(cli.flags.from) : cs.genesisTime;
     const to = cli.flags.to ? new Date(cli.flags.to) : lastFinal.blockSlotTime;
-    const ac = new AbortController();
 
-    console.log(to);
+    const fromHeight = unwrap(
+        await client.findFirstFinalizedBlockNoLaterThan(from)
+    ).blockHeight;
+    const toHeight = unwrap(
+        await client.findFirstFinalizedBlockNoLaterThan(to)
+    ).blockHeight;
 
-    const fromBlockMaybe = await client.findFirstFinalizedBlockNoLaterThan(
-        from
-    );
-    const fromHeight = unwrap(fromBlockMaybe).blockHeight; // Throw if fromBlockMaybe is undefined
-
-    const toBlockMaybe = await client.findFirstFinalizedBlockNoLaterThan(to);
-    const toHeight = unwrap(toBlockMaybe).blockHeight;
-
-    const blockStream = client.getFinalizedBlocksFrom(fromHeight);
+    const blockStream = client.getFinalizedBlocksFrom(fromHeight, toHeight);
 
     // Log progress every 5 seconds
     let progress = 0n;
@@ -82,12 +72,6 @@ const client = createConcordiumClient(
     //Iterate over all blocks
     console.log('Processing blocks...');
     for await (const block of blockStream) {
-        // Stop stream when all known blocks are processed
-        if (block.height > toHeight) {
-            ac.abort();
-            break;
-        }
-
         progress =
             ((block.height - fromHeight) * 100n) / (toHeight - fromHeight);
 

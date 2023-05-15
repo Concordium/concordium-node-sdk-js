@@ -13,12 +13,11 @@ const cli = meow(
     $ yarn ts-node <path-to-this-file> [options]
 
   Required
-    --from, -f  From some time
-    --to,   -t  To some time
+    --from, -f  From some time, defaults to genesis time
+    --to,   -t  To some time, defaults to the timestamp for the last finalized block
 
   Options
     --help,         Displays this message
-    --block,    -b  A block to query from, defaults to last final block
     --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
 `,
     {
@@ -55,13 +54,11 @@ const client = createConcordiumClient(
  */
 
 (async () => {
-    const time = new Date('11/5/2000');
-    console.log(time);
-    const bi = await client.findFirstFinalizedBlockNoLaterThan(time);
-    console.log(bi);
+    const cs = await client.getConsensusStatus();
+    const lastFinal = await client.getBlockInfo(cs.lastFinalizedBlock);
 
-    const from = new Date(cli.flags.from);
-    const to = new Date(cli.flags.to);
+    const from = cli.flags.from ? new Date(cli.flags.from) : cs.genesisTime;
+    const to = cli.flags.to ? new Date(cli.flags.to) : lastFinal.blockSlotTime;
 
     // Unwrap throws error if findFirstFinalizedBlockNoLaterThan returns undefined
     const fromBlock = unwrap(

@@ -827,12 +827,6 @@ describe.skip('Long run-time test suite', () => {
 });
 
 test.each([clientV2, clientWeb])('getFinalizedBlocksFrom', async (client) => {
-    const NUM_ITERATIONS = 3;
-
-    const ac = new AbortController();
-    const biStream = client.getFinalizedBlocksFrom(123n, ac.signal);
-
-    let i = 0;
     const expectedValues = [
         {
             height: 123n,
@@ -848,38 +842,59 @@ test.each([clientV2, clientWeb])('getFinalizedBlocksFrom', async (client) => {
         },
     ];
 
-    for await (const bi of biStream) {
+    const bis = await streamToList(client.getFinalizedBlocksFrom(123n, 125n));
+
+    expect(bis.length).toBe(3);
+    bis.forEach((bi, i) => {
         expect(bi.height).toBe(expectedValues[i].height);
         expect(bi.hash).toBe(expectedValues[i].hash);
-
-        if (i === NUM_ITERATIONS - 1) {
-            ac.abort();
-            break;
-        }
-        i++;
-    }
+    });
 });
 
-test.each([clientV2, clientWeb])('findEarliestFinalized', async (client) => {
-    const [genesisBlockHash] = await client.getBlocksAtHeight(0n);
-    const genesisAccounts = await streamToList(
-        client.getAccountList(genesisBlockHash)
+describe('findEarliestFinalized', () => {
+    test.each([clientV2, clientWeb])(
+        'Finds expected result',
+        async (client) => {
+            const [genesisBlockHash] = await client.getBlocksAtHeight(0n);
+            const genesisAccounts = await streamToList(
+                client.getAccountList(genesisBlockHash)
+            );
+
+            const firstAccount = await client.findEarliestFinalized(
+                async (bi) => {
+                    const accounts = await streamToList(
+                        client.getAccountList(bi.hash)
+                    );
+
+                    if (accounts.length > genesisAccounts.length) {
+                        return accounts.filter(
+                            (a) => !genesisAccounts.includes(a)
+                        )[0];
+                    }
+                },
+                0n,
+                10000n
+            );
+
+            expect(firstAccount).toBe(
+                '3sPayiQEQHrJUpwYUAnYCLWUTkk3JvEW5x6Vn6mD4raBgPAuSp'
+            );
+        }
     );
 
-    const firstAccount = await client.findEarliestFinalized(
-        async (bi) => {
-            const accounts = await streamToList(client.getAccountList(bi.hash));
+    test.each([clientV2, clientWeb])(
+        'Works on single block range',
+        async (client) => {
+            const firstAccount = await client.findEarliestFinalized(
+                async (bi) => bi.hash,
+                10000n,
+                10000n
+            );
 
-            if (accounts.length > genesisAccounts.length) {
-                return accounts.filter((a) => !genesisAccounts.includes(a))[0];
-            }
-        },
-        0n,
-        10000n
-    );
-
-    expect(firstAccount).toBe(
-        '3sPayiQEQHrJUpwYUAnYCLWUTkk3JvEW5x6Vn6mD4raBgPAuSp'
+            expect(firstAccount).toBe(
+                'e4f7f5512e55183f56efe31c1a9da6e5c7f93f24d5b746180e3b5076e54811c1'
+            );
+        }
     );
 });
 
@@ -893,16 +908,32 @@ test.each([clientV2, clientWeb])('findInstanceCreation', async (client) => {
     expect(blockFirstContract?.height).toBe(2589n);
 });
 
-test.each([clientV2, clientWeb])(
-    'findFirstFinalizedBlockNoLaterThan',
-    async (client) => {
-        const time = new Date('11/5/2022');
-        const bi = await client.findFirstFinalizedBlockNoLaterThan(
-            time,
-            1000000n,
-            1500000n
-        );
+describe('findFirstFinalizedBlockNoLaterThan', () => {
+    test.each([clientV2, clientWeb])(
+        'Returns lowest block in range on date earlier than genesis',
+        async (client) => {
+            const time = new Date('11/5/2000');
+            const bi = await client.findFirstFinalizedBlockNoLaterThan(
+                time,
+                10n,
+                1500n
+            );
 
-        expect(bi?.blockHeight).toBe(1238080n);
-    }
-);
+            expect(bi?.blockHeight).toBe(10n);
+        }
+    );
+
+    test.each([clientV2, clientWeb])(
+        'Returns undefined on future date',
+        async (client) => {
+            const time = new Date(Date.now() + 10000);
+            const bi = await client.findFirstFinalizedBlockNoLaterThan(
+                time,
+                1000000n,
+                1500000n
+            );
+
+            expect(bi).toBe(undefined);
+        }
+    );
+});

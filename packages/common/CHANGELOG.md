@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 7.0.0 2023-05-15 
 
 ### Breaking changes
 - Updated `blockInfo` so that the `bakerId` field is optional, since it will be undefined for genesis blocks.

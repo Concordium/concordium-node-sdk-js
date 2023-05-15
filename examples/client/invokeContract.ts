@@ -45,22 +45,18 @@ const cli = meow(
             block: {
                 type: 'string',
                 alias: 'b',
-                default: '', // This defaults to LastFinal
             },
             amount: {
                 type: 'number',
                 alias: 'a',
-                default: NaN,
             },
             energy: {
                 type: 'number',
                 alias: 'n',
-                default: NaN,
             },
             invoker: {
                 type: 'string',
                 alias: 'i',
-                default: '',
             },
             endpoint: {
                 type: 'string',
@@ -70,7 +66,6 @@ const cli = meow(
             parameter: {
                 type: 'string',
                 alias: 'p',
-                default: '',
             },
         },
     }

@@ -22,7 +22,6 @@ const cli = meow(
             block: {
                 type: 'string',
                 alias: 'b',
-                default: '', // This defaults to LastFinal
             },
             endpoint: {
                 type: 'string',

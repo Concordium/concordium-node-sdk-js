@@ -20,14 +20,14 @@ The CIS2Contract class wraps the [ConcordiumNodeClient]('./gRPC.md'), defining a
 ## Creating a CIS2Contract
 The contract relies on a `ConcordiumNodeClient` instance to communicate with the node along with a contract address of the CIS-2 contract to invoke functions on.
 
-```js
+```ts
 const contractAddress = {index: 1234n, subindex: 0n};
 const contract = await CIS2Contract.create(nodeClient, contractAddress); // Implied that you already have a `ConcordiumNodeClient` instance of some form.
 ```
 
 This gets the relevant contract information from the node and checks that the contract is in fact a CIS-2 contract (through the [CIS-0 supports function](../packages/common/README.md#check-smart-contract-for-support-for-standards)), hence why it is async. You can also instantiate using the `new` keyword, circumventing standard checks:
 
-```js
+```ts
 const contract = new CIS2Contract(nodeClient, contractAddress, 'my_contract_name');
 ```
 
@@ -37,7 +37,7 @@ This relies on using private keys for the sender account to sign the transaction
 
 See the signing a transaction section for the [common package](../packages/common/README.md#sign-an-account-transaction) for create an `AccountSigner`.
 
-```js
+```ts
 const tokenId = ''; // HEX string representing a token ID defined in the contract.
 const from = '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd';
 const to = '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'; // An account receiver.
@@ -61,7 +61,7 @@ const txHash = await contract.transfer(
 ### Create transfer transaction
 This creates a CIS-2 "transfer" transaction, that can then be submitted the transaction through a Concordium compatible wallet, which handles signing and submitting.
 
-```js
+```ts
 const tokenId = ''; // HEX string representing a token ID defined in the contract.
 const from = '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd';
 const to = '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'; // An account receiver.
@@ -94,7 +94,7 @@ This relies on using private keys for the sender account to sign the transaction
 
 See the signing a transaction section for the [common package](../packages/common/README.md#sign-an-account-transaction) for create an `AccountSigner`.
 
-```js
+```ts
 const owner = '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd';
 const type = 'add'; // or 'remove';
 const address = '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'; // Address to add as operator of owner
@@ -117,7 +117,7 @@ const txHash = await contract.updateOperator(
 ### Create update operator transaction
 This creates a CIS-2 "updateOperator" transaction, that can then be submitted the transaction through a Concordium compatible wallet, which handles signing and submitting.
 
-```js
+```ts
 const owner = '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd';
 const type = 'add'; // or 'remove';
 const address = '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'; // Address to add as operator of owner
@@ -146,7 +146,7 @@ const {
 ## Querying for balance of token(s)
 The following example demonstrates how to send either a single/list of CIS-2 "balanceOf" queries using a `CIS2Contract` instance. The response for the query will be either a single/list of bigint balances corresponding to the queries.
 
-```js
+```ts
 const tokenId = ''; // HEX string representing a token ID defined in the contract.
 const address = '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd';
 
@@ -164,7 +164,7 @@ const [balance1, balance2, balance3] = await contract.balanceOf([query1, query2,
 ## Querying for operator of
 The following example demonstrates how to send either a single/list of CIS-2 "operatorOf" queries using a `CIS2Contract` instance. The response for the query will be either a single/list of boolean values corresponding to the queries, each signaling whether the specified `address` is an operator of the specified `owner`.
 
-```js
+```ts
 const owner = '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd';
 const address = '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'; // Address to check if operator of owner
 // const address = {index: 1234n, 0n}; // Example of contract address operator.
@@ -186,7 +186,7 @@ The following example demonstrates how to send either a single/list of CIS-2 "to
 
 To get the actual metadata JSON for the contract, a subsequent request to the URL returned would have to be made.
 
-```js
+```ts
 const tokenId = ''; // HEX string representing a token ID defined in the contract.
 const metadataUrl = await contract.tokenMetadata(tokenId);
 
@@ -205,7 +205,7 @@ One common use case is to check the energy needed to execute the update which ca
 ### Token transfer(s) dry-run
 The following example demonstrates how to perform a dry-run of CIS-2 "transfer" with either a single/list of transfers using a `CIS2Contract` instance. The response will be an object containing information about the function invocation.
 
-```js
+```ts
 const tokenId = ''; // HEX string representing a token ID defined in the contract.
 const from = '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd';
 const to = '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'; // An account receiver.
@@ -222,7 +222,7 @@ const result = await contract.dryRun.transfer(from, update);
 ### Operator updates(s) dry-run
 The following example demonstrates how to perform a dry-run of CIS-2 "updateOperator" with either a single/list of updates using a `CIS2Contract` instance. The response will be an object containing information about the function invocation.
 
-```js
+```ts
 const owner = '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd';
 const type = 'add'; // or 'remove';
 const address = '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'; // Address to add as operator of owner

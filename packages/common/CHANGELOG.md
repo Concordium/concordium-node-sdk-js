@@ -4,6 +4,7 @@
 
 ### Breaking changes
 - `waitForTransactionFinalization` now returns a `BlockItemSummaryInBlock`
+- Added missing version return type in `getModuleSchema`. It now returns an object containing the schema source and version.
 
 ## 6.5.0 2023-5-03
 

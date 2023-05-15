@@ -1080,11 +1080,29 @@ export default class ConcordiumNodeClient {
      * @returns {AsyncIterable<v1.FinalizedBlockInfo>} A stream of {@link v1.FinalizedBlockInfo}.
      */
     getFinalizedBlocksFrom(
-        startHeight: v1.AbsoluteBlocksAtHeightRequest = 0n,
+        startHeight: v1.AbsoluteBlocksAtHeightRequest,
         abortSignal?: AbortSignal
+    ): AsyncIterable<v1.FinalizedBlockInfo>;
+    /**
+     * Gets a stream of finalized blocks from specified `startHeight`.
+     *
+     * @param {bigint} [startHeight=0n] - An optional height to start streaming blocks from. Defaults to 0n.
+     * @param {bigint} [endHeight] - An optional height to stop streaming at. If this is not specified, the stream continues indefinitely.
+     * @returns {AsyncIterable<v1.FinalizedBlockInfo>} A stream of {@link v1.FinalizedBlockInfo}.
+     */
+    getFinalizedBlocksFrom(
+        startHeight: v1.AbsoluteBlocksAtHeightRequest,
+        endHeight?: v1.AbsoluteBlocksAtHeightRequest
+    ): AsyncIterable<v1.FinalizedBlockInfo>;
+    getFinalizedBlocksFrom(
+        startHeight: v1.AbsoluteBlocksAtHeightRequest = 0n,
+        end?: AbortSignal | v1.AbsoluteBlocksAtHeightRequest
     ): AsyncIterable<v1.FinalizedBlockInfo> {
         let height = startHeight;
         let finHeight: bigint;
+        const abortController = new AbortController();
+        const abortSignal =
+            end instanceof AbortSignal ? end : abortController.signal;
         const newBlocks = this.getFinalizedBlocks(abortSignal);
         const endSignal: IteratorReturnResult<undefined> = {
             done: true,
@@ -1129,7 +1147,7 @@ export default class ConcordiumNodeClient {
         const next = async (): Promise<
             IteratorResult<v1.FinalizedBlockInfo>
         > => {
-            if (abortSignal?.aborted) {
+            if (abortSignal.aborted) {
                 return endSignal;
             }
 
@@ -1146,6 +1164,10 @@ export default class ConcordiumNodeClient {
 
             if (bi === undefined) {
                 return endSignal;
+            }
+
+            if (typeof end === 'bigint' && bi.height >= end) {
+                abortController.abort();
             }
 
             return {

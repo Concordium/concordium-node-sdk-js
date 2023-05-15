@@ -827,12 +827,6 @@ describe.skip('Long run-time test suite', () => {
 });
 
 test.each([clientV2, clientWeb])('getFinalizedBlocksFrom', async (client) => {
-    const NUM_ITERATIONS = 3;
-
-    const ac = new AbortController();
-    const biStream = client.getFinalizedBlocksFrom(123n, ac.signal);
-
-    let i = 0;
     const expectedValues = [
         {
             height: 123n,
@@ -848,16 +842,13 @@ test.each([clientV2, clientWeb])('getFinalizedBlocksFrom', async (client) => {
         },
     ];
 
-    for await (const bi of biStream) {
+    const bis = await streamToList(client.getFinalizedBlocksFrom(123n, 125n));
+
+    expect(bis.length).toBe(3);
+    bis.forEach((bi, i) => {
         expect(bi.height).toBe(expectedValues[i].height);
         expect(bi.hash).toBe(expectedValues[i].hash);
-
-        if (i === NUM_ITERATIONS - 1) {
-            ac.abort();
-            break;
-        }
-        i++;
-    }
+    });
 });
 
 describe('findEarliestFinalized', () => {

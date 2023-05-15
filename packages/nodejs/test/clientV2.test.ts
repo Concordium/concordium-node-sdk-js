@@ -860,26 +860,50 @@ test.each([clientV2, clientWeb])('getFinalizedBlocksFrom', async (client) => {
     }
 });
 
-test.each([clientV2, clientWeb])('findEarliestFinalized', async (client) => {
-    const [genesisBlockHash] = await client.getBlocksAtHeight(0n);
-    const genesisAccounts = await streamToList(
-        client.getAccountList(genesisBlockHash)
+describe('findEarliestFinalized', () => {
+    test.each([clientV2, clientWeb])(
+        'Finds expected result',
+        async (client) => {
+            const [genesisBlockHash] = await client.getBlocksAtHeight(0n);
+            const genesisAccounts = await streamToList(
+                client.getAccountList(genesisBlockHash)
+            );
+
+            const firstAccount = await client.findEarliestFinalized(
+                async (bi) => {
+                    const accounts = await streamToList(
+                        client.getAccountList(bi.hash)
+                    );
+
+                    if (accounts.length > genesisAccounts.length) {
+                        return accounts.filter(
+                            (a) => !genesisAccounts.includes(a)
+                        )[0];
+                    }
+                },
+                0n,
+                10000n
+            );
+
+            expect(firstAccount).toBe(
+                '3sPayiQEQHrJUpwYUAnYCLWUTkk3JvEW5x6Vn6mD4raBgPAuSp'
+            );
+        }
     );
 
-    const firstAccount = await client.findEarliestFinalized(
-        async (bi) => {
-            const accounts = await streamToList(client.getAccountList(bi.hash));
+    test.each([clientV2, clientWeb])(
+        'Works on single block range',
+        async (client) => {
+            const firstAccount = await client.findEarliestFinalized(
+                async (bi) => bi.hash,
+                10000n,
+                10000n
+            );
 
-            if (accounts.length > genesisAccounts.length) {
-                return accounts.filter((a) => !genesisAccounts.includes(a))[0];
-            }
-        },
-        0n,
-        10000n
-    );
-
-    expect(firstAccount).toBe(
-        '3sPayiQEQHrJUpwYUAnYCLWUTkk3JvEW5x6Vn6mD4raBgPAuSp'
+            expect(firstAccount).toBe(
+                'e4f7f5512e55183f56efe31c1a9da6e5c7f93f24d5b746180e3b5076e54811c1'
+            );
+        }
     );
 });
 

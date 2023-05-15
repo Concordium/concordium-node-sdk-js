@@ -1186,12 +1186,15 @@ export default class ConcordiumNodeClient {
         }
 
         let result: R | undefined;
-        while (lower < upper) {
+        while (lower <= upper) {
             const mid = lower + (upper - lower) / 2n;
             const [hash] = await this.getBlocksAtHeight(mid);
             const res = await predicate({ hash, height: mid });
 
-            if (res !== undefined) {
+            if (upper === mid) {
+                result = res;
+                break;
+            } else if (res !== undefined) {
                 result = res;
                 upper = mid;
             } else {

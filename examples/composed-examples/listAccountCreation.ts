@@ -26,12 +26,10 @@ const cli = meow(
             from: {
                 type: 'string',
                 alias: 'f',
-                isRequired: true,
             },
             to: {
                 type: 'string',
                 alias: 't',
-                isRequired: true,
             },
             endpoint: {
                 type: 'string',

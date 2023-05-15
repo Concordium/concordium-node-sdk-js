@@ -1,5 +1,7 @@
 import {
+    AccountAddress,
     createConcordiumClient,
+    isAlias,
     isTransferLikeSummary,
     unwrap,
 } from '@concordium/node-sdk';
@@ -26,12 +28,10 @@ const cli = meow(
             from: {
                 type: 'string',
                 alias: 'f',
-                isRequired: true,
             },
             to: {
                 type: 'string',
                 alias: 't',
-                isRequired: true,
             },
             endpoint: {
                 type: 'string',
@@ -77,7 +77,7 @@ const client = createConcordiumClient(
     let progress = 0n;
     setInterval(() => console.log(Number(progress), '%'), 5000);
 
-    //Iterate over all blocks
+    // Iterate over all blocks
     console.log('processing blocks...');
     for await (const block of blockStream) {
         progress =
@@ -85,13 +85,24 @@ const client = createConcordiumClient(
 
         // Get transactions for block
         const trxStream = client.getBlockTransactionEvents(block.hash);
-        for await (const trx of trxStream) {
+
+        // For each transaction in the block:
+        trxLoop: for await (const trx of trxStream) {
             if (isTransferLikeSummary(trx)) {
-                if (!dict[trx.sender]) {
-                    dict[trx.sender] = 1;
-                } else {
-                    dict[trx.sender]++;
+                const trxAcc = new AccountAddress(trx.sender);
+
+                // Loop over account dictionary entries to check if account
+                // is already in dictionary:
+                for (const [addr, trxSent] of Object.entries(dict)) {
+                    const acc = new AccountAddress(addr);
+                    if (isAlias(acc, trxAcc)) {
+                        dict[addr] = trxSent + 1;
+                        break trxLoop;
+                    }
                 }
+
+                // If account is not in dictionary, then add it:
+                dict[trx.sender] = 1;
             }
         }
     }

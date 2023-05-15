@@ -2078,7 +2078,7 @@ export function blockInfo(blockInfo: v2.BlockInfo): v1.BlockInfo {
         blockStateHash: unwrapValToHex(blockInfo.stateHash),
         blockLastFinalized: unwrapValToHex(blockInfo.lastFinalizedBlock),
         blockHeight: unwrap(blockInfo.height?.value),
-        blockBaker: unwrap(blockInfo.baker?.value),
+        blockBaker: blockInfo.baker?.value,
         blockSlot: unwrap(blockInfo.slotNumber?.value),
         blockArriveTime: trTimestamp(blockInfo.arriveTime),
         blockReceiveTime: trTimestamp(blockInfo.receiveTime),

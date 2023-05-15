@@ -584,7 +584,7 @@ export interface BlockInfo {
     blockLastFinalized: HexString;
 
     blockHeight: bigint;
-    blockBaker: BakerId;
+    blockBaker?: BakerId;
     blockSlot: bigint;
 
     blockArriveTime: Date;

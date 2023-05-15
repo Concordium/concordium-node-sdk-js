@@ -1,4 +1,6 @@
-import { intToStringTransformer, stringToInt } from '../src/util';
+import { intToStringTransformer, stringToInt, wasmToSchema } from '../src/util';
+import { readFileSync } from 'fs';
+import { Buffer } from 'buffer/';
 
 test('intToStringTransformer transform chosen field, but not others', () => {
     const keysToTransform = ['a'];
@@ -75,4 +77,19 @@ test('intToStringTransformer is inverse of stringToInt (with same chosen keys, a
         stringToInt(input, keysToTransform)
     );
     expect(transformed).toEqual(input);
+});
+
+test('Embedded schema is the same as a seperate schema file', () => {
+    const versionedWasmModule = new Buffer(
+        readFileSync('test/resources/icecream-with-schema.wasm')
+    );
+    // Strip module version information
+    const wasmModule = versionedWasmModule.slice(8);
+
+    const seperateSchema = new Buffer(
+        readFileSync('test/resources/icecream-schema.bin')
+    );
+    const embeddedSchema = wasmToSchema(wasmModule);
+
+    expect(seperateSchema).toEqual(embeddedSchema);
 });

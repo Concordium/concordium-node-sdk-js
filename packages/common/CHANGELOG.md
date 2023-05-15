@@ -9,14 +9,36 @@
   - `getExchangeRate`
   - `convertEnergyToMicroCcd`
 
+- Utility functions for extracting information from `BlockItemSummary`.
+    - `isInitContractSummary`
+    - `isUpdateContractSummary`
+    - `isTransferLikeSummary`
+    - `isRejectTransaction`
+    - `isSuccessTransaction`
+    - `getTransactionRejectReason`
+    - `getReceiverAccount`
+    - `affectedContracts`
+    - `affectedAccounts`
+
+- Utility functions for extracting information from `BlockSpecialEvent`.
+    - `specialEventAffectedAccounts`
+
+
 ## 6.5.0 2023-5-03
 
 ### Added
 - Utility functions `uleb128Decode` and `uleb128Encode` functions for decoding and encoding as unsigned leb128 respectively.
 - `CIS2Contract` class for interacting with smart contracts adhering to the CIS-2 standard.
 - `cis0Supports` function for checking standard support in smart contracts.
-- Made the `streamToList()` function public.
+- Made the `streamToList` function public.
+- Made the `unwrap` function public.
+- Added `wasmToSchema` utility function.
+- Added `getEmbeddedSchema` to client.
+- Exposed `RpcError` type and created helper `isRpcError`.
 - Build function `buildAccountSigner` for creating `AccountSigner` objects from genesis format, wallet export format, and a simple representation of credentials with keys.
+
+### Changed
+- Fixed bug where `AccountCreationSummary` type did not have fields: `index`, `energyCost`, `hash`
 
 ## 6.4.2 2023-04-21
 

@@ -59,6 +59,6 @@ const client = createConcordiumClient(
         client.getAccountNonFinalizedTransactions(accountAddress);
 
     for await (const transaction of transactions) {
-        console.dir(transaction, { depth: null, colors: true });
+        console.log(transaction);
     }
 })();

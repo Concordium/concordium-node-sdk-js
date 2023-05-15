@@ -42,7 +42,7 @@ export * from './HdWallet';
 export * from './schemaHelpers';
 
 export { getContractName } from './contractHelpers';
-export { isHex, streamToList } from './util';
+export { isHex, streamToList, wasmToSchema, unwrap } from './util';
 
 export { HttpProvider } from './providers/httpProvider';
 export { JsonRpcClient } from './JsonRpcClient';

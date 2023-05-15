@@ -3,6 +3,11 @@
 ## Unreleased
 
 ### Added
+
+- Helpers for calculating energy cost for a transaction and microCCD cost from energy cost:
+  - `getEnergyCost`
+  - `getExchangeRate`
+  - `convertEnergyToMicroCcd`
 - Utility functions for extracting information from `BlockItemSummary`:
     - `isInitContractSummary`
     - `isUpdateContractSummary`
@@ -20,6 +25,7 @@
     - `findEarliestFinalized`
     - `findInstanceCreation`
     - `findFirstFinalizedBlockNoLaterThan`
+
 
 ## 6.5.0 2023-5-03
 

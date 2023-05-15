@@ -20,6 +20,7 @@ export * from './types/chainUpdate';
 export * from './types/rejectReason';
 export * from './types/transactionEvent';
 export * from './types/BlockSpecialEvents';
+export * from './types/errors';
 
 export type HexString = string;
 export type Base58String = string;
@@ -1203,6 +1204,11 @@ export interface DeployModulePayload {
     version?: number;
 
     /** Wasm module to be deployed */
+    source: Buffer;
+}
+
+export interface VersionedModuleSource {
+    version: 0 | 1;
     source: Buffer;
 }
 

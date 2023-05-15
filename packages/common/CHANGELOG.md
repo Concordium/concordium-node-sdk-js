@@ -4,6 +4,8 @@
 
 ### Breaking changes
 - Updated `blockInfo` so that the `bakerId` field is optional, since it will be undefined for genesis blocks.
+- `waitForTransactionFinalization` now returns a `BlockItemSummaryInBlock`
+- Added missing version return type in `getModuleSchema`. It now returns an object containing the schema source and version.
 
 ## 6.5.0 2023-5-03
 
@@ -14,8 +16,12 @@
 - Made the `streamToList` function public.
 - Made the `unwrap` function public.
 - Added `wasmToSchema` utility function.
-- Added `getEmbeddedSchema` to client.>>>>>>> main
+- Added `getEmbeddedSchema` to client.
+- Exposed `RpcError` type and created helper `isRpcError`.
 - Build function `buildAccountSigner` for creating `AccountSigner` objects from genesis format, wallet export format, and a simple representation of credentials with keys.
+
+### Changed
+- Fixed bug where `AccountCreationSummary` type did not have fields: `index`, `energyCost`, `hash`
 
 ## 6.4.2 2023-04-21
 

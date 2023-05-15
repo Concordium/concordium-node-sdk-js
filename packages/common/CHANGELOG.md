@@ -3,7 +3,7 @@
 ## Unreleased
 
 ### Breaking changes
-- Fixed bug in `getModuleSchema`. It now returns a schema with version.
+- Added missing version return type in `getModuleSchema`. It now returns an object containing the schema source and version.
 
 ## 6.5.0 2023-5-03
 

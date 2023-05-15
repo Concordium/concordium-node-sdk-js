@@ -3,7 +3,7 @@
 ## Unreleased
 
 ### Breaking changes
-- `waitForTransactionFinalization` now returns a `BlockItemSummary`
+- `waitForTransactionFinalization` now returns a `BlockItemSummaryInBlock`
 
 ## 6.5.0 2023-5-03
 

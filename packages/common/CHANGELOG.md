@@ -7,6 +7,27 @@
 - `waitForTransactionFinalization` now returns a `BlockItemSummaryInBlock`
 - Added missing version return type in `getModuleSchema`. It now returns an object containing the schema source and version.
 
+### Added
+
+- Helpers for calculating energy cost for a transaction and microCCD cost from energy cost. 
+  - `getEnergyCost`
+  - `getExchangeRate`
+  - `convertEnergyToMicroCcd`
+
+- Utility functions for extracting information from `BlockItemSummary`.
+    - `isInitContractSummary`
+    - `isUpdateContractSummary`
+    - `isTransferLikeSummary`
+    - `isRejectTransaction`
+    - `isSuccessTransaction`
+    - `getTransactionRejectReason`
+    - `getReceiverAccount`
+    - `affectedContracts`
+    - `affectedAccounts`
+
+- Utility functions for extracting information from `BlockSpecialEvent`.
+    - `specialEventAffectedAccounts`
+
 ## 6.5.0 2023-5-03
 
 ### Added

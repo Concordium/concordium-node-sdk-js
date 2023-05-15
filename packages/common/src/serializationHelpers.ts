@@ -10,6 +10,7 @@ import {
     HexString,
 } from './types';
 import { DataBlob } from './types/DataBlob';
+import { isDefined } from './util';
 
 export function serializeMap<K extends string | number | symbol, T>(
     map: Record<K, T>,
@@ -304,10 +305,6 @@ export type NotOptional<T> = {
 type SerializationSpec<T> = NotOptional<{
     [P in keyof T]: (v: T[P]) => Buffer | undefined;
 }>;
-
-export function isDefined<T>(v?: T): v is T {
-    return v !== undefined;
-}
 
 /**
  * Given a specification describing how to serialize the fields of a payload of type T, this function produces a function

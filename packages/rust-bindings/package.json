@@ -17,6 +17,8 @@
         "/pkg/**/concordium_rust_bindings*"
     ],
     "scripts": {
+        "fmt": "cargo +nightly-2023-04-01-x86_64-unknown-linux-gnu fmt -- --color=always --check",
+        "clippy": "cargo +1.62 clippy --color=always --tests --benches -- -Dclippy::all",
         "build": "wasm-pack build --target web --out-dir pkg/bundler \"$@\" && wasm-pack build --target nodejs --out-dir pkg/node \"$@\"",
         "build-dev": "yarn build --dev",
         "build:rust-bindings": "yarn build"

@@ -38,7 +38,7 @@ jobs:
             ./packages/rust-bindings/pkg
             ./packages/common/lib
             ./packages/nodejs/lib
-          key: ${{ runner.os }}-build_output-${{ hashFiles('**/*.ts', '**/yarn.lock', '.git/modules/deps/concordium-base/HEAD', './packages/rust-bindings/Cargo.lock', '.packages/rust-bindings/src/*.rs') }}
+          key: ${{ runner.os }}-build_output-${{ hashFiles('.git/refs') }}
 
       - name: Cache GRPC
         id: cache-grpc
@@ -97,7 +97,7 @@ jobs:
             ./packages/rust-bindings/pkg
             ./packages/common/lib
             ./packages/nodejs/lib
-          key: ${{ runner.os }}-build_output-${{ hashFiles('**/*.ts', '**/yarn.lock', '.git/modules/deps/concordium-base/HEAD', './packages/rust-bindings/Cargo.lock', '.packages/rust-bindings/src/*.rs') }}
+          key: ${{ runner.os }}-build_output-${{ hashFiles('.git/refs') }}
 
       - name: Cache GRPC
         id: cache-grpc
@@ -158,7 +158,7 @@ jobs:
             ./packages/rust-bindings/pkg
             ./packages/common/lib
             ./packages/nodejs/lib
-          key: ${{ runner.os }}-build_output-${{ hashFiles('**/*.ts', '**/yarn.lock', '.git/modules/deps/concordium-base/HEAD', './packages/rust-bindings/Cargo.lock', '.packages/rust-bindings/src/*.rs') }}
+          key: ${{ runner.os }}-build_output-${{ hashFiles('.git/refs') }}
 
       - name: Cache GRPC
         id: cache-grpc

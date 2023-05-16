@@ -62,9 +62,9 @@ const client = createConcordiumClient(
 
 (async () => {
     const ref = new ModuleReference(cli.flags.module);
-    const source = await client.getModuleSource(ref, cli.flags.block);
+    const versionedSource = await client.getModuleSource(ref, cli.flags.block);
 
-    fs.writeFileSync(cli.flags.outPath, source);
+    fs.writeFileSync(cli.flags.outPath, versionedSource.source);
 
     console.log('Written module source to:', cli.flags.outPath);
 })();

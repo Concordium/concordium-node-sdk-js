@@ -151,4 +151,43 @@ export class ConcordiumHdWallet {
             'hex'
         );
     }
+
+    getVerifiableCredentialSigningKey(
+        verifiableCredentialIndex: number
+    ): Buffer {
+        return Buffer.from(
+            wasm.getVerifiableCredentialSigningKey(
+                this.seedAsHex,
+                this.network,
+                verifiableCredentialIndex
+            ),
+            'hex'
+        );
+    }
+
+    getVerifiableCredentialPublicKey(
+        verifiableCredentialIndex: number
+    ): Buffer {
+        return Buffer.from(
+            wasm.getVerifiableCredentialPublicKey(
+                this.seedAsHex,
+                this.network,
+                verifiableCredentialIndex
+            ),
+            'hex'
+        );
+    }
+
+    getVerifiableCredentialEncryptionKey(
+        verifiableCredentialIndex: number
+    ): Buffer {
+        return Buffer.from(
+            wasm.getVerifiableCredentialEncryptionKey(
+                this.seedAsHex,
+                this.network,
+                verifiableCredentialIndex
+            ),
+            'hex'
+        );
+    }
 }

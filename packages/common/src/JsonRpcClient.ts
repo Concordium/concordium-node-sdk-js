@@ -47,7 +47,7 @@ function transformJsonResponse<Result>(
 }
 
 /**
- * @deprecated This has been deprecated in favor of the {@link ConcordiumNodeClient} that uses version 2 of the concordium gRPC API
+ * @deprecated This has been deprecated in favor of the {@link ConcordiumGRPCClient} that uses version 2 of the concordium gRPC API
  */
 export class JsonRpcClient {
     provider: Provider;

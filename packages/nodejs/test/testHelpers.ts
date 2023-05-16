@@ -5,7 +5,6 @@ import { ConcordiumGRPCClient, IdentityInput } from '@concordium/common-sdk';
 import { decryptMobileWalletExport, EncryptedData } from '../src/wallet/crypto';
 import { MobileWalletExport } from '../src/wallet/types';
 import { createConcordiumClient } from '../src/clientV2';
-import ConcordiumNodeClientV2 from '@concordium/common-sdk/lib/GRPCClient';
 import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
 
 // This makes sure the necessary types are added to `globalThis`
@@ -20,7 +19,7 @@ export { getModuleBuffer } from '../src/util';
 export function getNodeClient(
     address = 'node.testnet.concordium.com',
     port = 20000
-): ConcordiumNodeClientV2 {
+): ConcordiumGRPCClient {
     return createConcordiumClient(address, port, credentials.createInsecure(), {
         timeout: 15000,
     });
@@ -29,7 +28,7 @@ export function getNodeClient(
 export function getNodeClientWeb(
     address = 'http://node.testnet.concordium.com',
     port = 20000
-): ConcordiumNodeClientV2 {
+): ConcordiumGRPCClient {
     const transport = new GrpcWebFetchTransport({
         baseUrl: `${address}:${port}`,
         timeout: 15000,

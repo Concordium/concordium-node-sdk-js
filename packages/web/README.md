@@ -12,7 +12,7 @@ for more information
 
 <!--toc:start-->
 - [concordium-web-sdk](#concordium-web-sdk)
-  - [ConcordiumNodeClient](#concordiumnodeclient)
+  - [ConcordiumGRPCClient](#concordiumgrpcclient)
   - [JSON-RPC client](#json-rpc-client)
   - [Creating buffers](#creating-buffers)
   - [Examples](#examples)

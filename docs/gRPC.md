@@ -920,8 +920,8 @@ if (blockFinalizationSummary.tag === "record") {
 Gets a stream of finalized blocks from the specified block height. The stream continues indefinitely unless receiving an abort signal.
 
 ```ts
-const bis = await client.getFinalizedBlocksFrom(123n);
-for await (const bi of bis) {
+const blockInfoStream = await client.getFinalizedBlocksFrom(123n);
+for await (const blockInfo of blockInfoStream) {
     // Do something with the block.
 }
 ```

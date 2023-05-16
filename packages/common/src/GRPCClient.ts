@@ -1192,6 +1192,7 @@ export default class ConcordiumNodeClient {
 
     /**
      * Find a block with lowest possible height where the predicate holds.
+     * Note that this function uses binary search and is only intended to work for monotone predicates.
      *
      * @template R
      * @param {(bi: v1.FinalizedBlockInfo) => Promise<R | undefined>} predicate - A predicate function resolving with value of type {@link R} if the predicate holds, and undefined if not.

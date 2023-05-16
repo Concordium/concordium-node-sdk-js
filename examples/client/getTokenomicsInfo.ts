@@ -67,5 +67,5 @@ const client = createConcordiumClient(
         'The amount in the baking reward account:',
         tokenomics.bakingRewardAccount
     );
-    console.log('Total amount in existance:', tokenomics.totalAmount);
+    console.log('Total amount in existence:', tokenomics.totalAmount);
 })();

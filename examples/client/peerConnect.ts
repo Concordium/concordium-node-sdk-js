@@ -49,7 +49,7 @@ const client = createConcordiumClient(
  * Suggest to connect the specified address as a peer. This, if successful,
  * adds the peer to the list of given addresses, otherwise rejects. Note that
  * the peer might not be connected to instantly, in that case the node will
- * try to establish the connection in near future.
+ * try to establish the connection in the near future.
  */
 
 (async () => {

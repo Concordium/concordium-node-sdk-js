@@ -158,7 +158,7 @@ export default class ConcordiumNodeClient {
     async getModuleSource(
         moduleRef: ModuleReference,
         blockHash?: HexString
-    ): Promise<Buffer> {
+    ): Promise<v1.VersionedModuleSource> {
         const moduleSourceRequest: v2.ModuleSourceRequest = {
             blockHash: getBlockHashInput(blockHash),
             moduleRef: { value: moduleRef.decodedModuleRef },
@@ -167,9 +167,15 @@ export default class ConcordiumNodeClient {
         const response = await this.client.getModuleSource(moduleSourceRequest)
             .response;
         if (response.module.oneofKind === 'v0') {
-            return Buffer.from(response.module.v0.value);
+            return {
+                version: 0,
+                source: Buffer.from(response.module.v0.value),
+            };
         } else if (response.module.oneofKind === 'v1') {
-            return Buffer.from(response.module.v1.value);
+            return {
+                version: 1,
+                source: Buffer.from(response.module.v1.value),
+            };
         } else {
             throw Error('Invalid ModuleSource response received!');
         }
@@ -188,8 +194,11 @@ export default class ConcordiumNodeClient {
         moduleRef: ModuleReference,
         blockHash?: HexString
     ): Promise<Buffer> {
-        const source = await this.getModuleSource(moduleRef, blockHash);
-        return wasmToSchema(source);
+        const versionedSource = await this.getModuleSource(
+            moduleRef,
+            blockHash
+        );
+        return wasmToSchema(versionedSource.source);
     }
 
     /**
@@ -1080,11 +1089,29 @@ export default class ConcordiumNodeClient {
      * @returns {AsyncIterable<v1.FinalizedBlockInfo>} A stream of {@link v1.FinalizedBlockInfo}.
      */
     getFinalizedBlocksFrom(
-        startHeight: v1.AbsoluteBlocksAtHeightRequest = 0n,
+        startHeight: v1.AbsoluteBlocksAtHeightRequest,
         abortSignal?: AbortSignal
+    ): AsyncIterable<v1.FinalizedBlockInfo>;
+    /**
+     * Gets a stream of finalized blocks from specified `startHeight`.
+     *
+     * @param {bigint} [startHeight=0n] - An optional height to start streaming blocks from. Defaults to 0n.
+     * @param {bigint} [endHeight] - An optional height to stop streaming at. If this is not specified, the stream continues indefinitely.
+     * @returns {AsyncIterable<v1.FinalizedBlockInfo>} A stream of {@link v1.FinalizedBlockInfo}.
+     */
+    getFinalizedBlocksFrom(
+        startHeight: v1.AbsoluteBlocksAtHeightRequest,
+        endHeight?: v1.AbsoluteBlocksAtHeightRequest
+    ): AsyncIterable<v1.FinalizedBlockInfo>;
+    getFinalizedBlocksFrom(
+        startHeight: v1.AbsoluteBlocksAtHeightRequest = 0n,
+        end?: AbortSignal | v1.AbsoluteBlocksAtHeightRequest
     ): AsyncIterable<v1.FinalizedBlockInfo> {
         let height = startHeight;
         let finHeight: bigint;
+        const abortController = new AbortController();
+        const abortSignal =
+            end instanceof AbortSignal ? end : abortController.signal;
         const newBlocks = this.getFinalizedBlocks(abortSignal);
         const endSignal: IteratorReturnResult<undefined> = {
             done: true,
@@ -1129,7 +1156,7 @@ export default class ConcordiumNodeClient {
         const next = async (): Promise<
             IteratorResult<v1.FinalizedBlockInfo>
         > => {
-            if (abortSignal?.aborted) {
+            if (abortSignal.aborted) {
                 return endSignal;
             }
 
@@ -1148,6 +1175,10 @@ export default class ConcordiumNodeClient {
                 return endSignal;
             }
 
+            if (typeof end === 'bigint' && bi.height >= end) {
+                abortController.abort();
+            }
+
             return {
                 done: false,
                 value: bi,
@@ -1161,13 +1192,14 @@ export default class ConcordiumNodeClient {
 
     /**
      * Find a block with lowest possible height where the predicate holds.
+     * Note that this function uses binary search and is only intended to work for monotone predicates.
      *
      * @template R
      * @param {(bi: v1.FinalizedBlockInfo) => Promise<R | undefined>} predicate - A predicate function resolving with value of type {@link R} if the predicate holds, and undefined if not.
      * The precondition for this method is that the function is monotone, i.e., if block at height `h` satisfies the test then also a block at height `h+1` does.
      * If this precondition does not hold then the return value from this method is unspecified.
-     * @param {bigint} [from=0n] - An optional (inclusive) lower bound of the range of blocks to search. Defaults to 0n.
-     * @param {bigint} [to] - An optional (inclusive) upper bound of the range of blocks to search. Defaults to latest finalized block.
+     * @param {bigint} [from=0n] - An optional lower bound of the range of blocks to search. Defaults to 0n.
+     * @param {bigint} [to] - An optional upper bound of the range of blocks to search. Defaults to latest finalized block.
      *
      * @returns {Promise<R | undefined>} The value returned from `predicate` at the lowest block (in terms of height) where the predicate holds.
      */
@@ -1191,7 +1223,10 @@ export default class ConcordiumNodeClient {
             const [hash] = await this.getBlocksAtHeight(mid);
             const res = await predicate({ hash, height: mid });
 
-            if (res !== undefined) {
+            if (upper === mid) {
+                result = res;
+                break;
+            } else if (res !== undefined) {
                 result = res;
                 upper = mid;
             } else {
@@ -1206,8 +1241,8 @@ export default class ConcordiumNodeClient {
      * Find the block where a smart contract instance was created. This is a specialized form of {@link findEarliestFinalized}.
      *
      * @param {ContractAddress} address - The contract address to search for.
-     * @param {bigint} [from=0n] - An optional (inclusive) lower bound of the range of blocks to search. Defaults to 0n.
-     * @param {bigint} [to] - An optional (inclusive) upper bound of the range of blocks to search. Defaults to latest finalized block.
+     * @param {bigint} [from=0n] - An optional lower bound of the range of blocks to search. Defaults to 0n.
+     * @param {bigint} [to] - An optional upper bound of the range of blocks to search. Defaults to latest finalized block.
      *
      * @returns {FindInstanceCreationReponse} Information about the block and the contract instance, or undefined if not found.
      */
@@ -1241,8 +1276,8 @@ export default class ConcordiumNodeClient {
      * Find the first block finalized after a given time.
      *
      * @param {Date} time - The time to find first block after
-     * @param {bigint} [from=0n] - An optional (inclusive) lower bound of the range of blocks to search. Defaults to 0n.
-     * @param {bigint} [to] - An optional (inclusive) upper bound of the range of blocks to search. Defaults to latest finalized block.
+     * @param {bigint} [from=0n] - An optional lower bound of the range of blocks to search. Defaults to 0n.
+     * @param {bigint} [to] - An optional upper bound of the range of blocks to search. Defaults to latest finalized block.
      *
      * @returns {v1.BlockInfo} Information about the block found, or undefined if no block was found.
      */

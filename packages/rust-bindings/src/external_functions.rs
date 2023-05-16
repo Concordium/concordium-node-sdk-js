@@ -328,6 +328,45 @@ pub fn get_attribute_commitment_randomness_ext(
     ))
 }
 
+#[wasm_bindgen(js_name = getVerifiableCredentialSigningKey)]
+pub fn get_verifiable_credential_signing_key_ext(
+    seed_as_hex: HexString,
+    raw_net: &str,
+    verifiable_credential_index: u32,
+) -> HexString {
+    error_to_string(get_verifiable_credential_signing_key_aux(
+        seed_as_hex,
+        raw_net,
+        verifiable_credential_index,
+    ))
+}
+
+#[wasm_bindgen(js_name = getVerifiableCredentialPublicKey)]
+pub fn get_verifiable_credential_public_key_ext(
+    seed_as_hex: HexString,
+    raw_net: &str,
+    verifiable_credential_index: u32,
+) -> HexString {
+    error_to_string(get_verifiable_credential_public_key_aux(
+        seed_as_hex,
+        raw_net,
+        verifiable_credential_index,
+    ))
+}
+
+#[wasm_bindgen(js_name = getVerifiableCredentialEncryptionKey)]
+pub fn get_verifiable_credential_encryption_key_ext(
+    seed_as_hex: HexString,
+    raw_net: &str,
+    verifiable_credential_index: u32,
+) -> HexString {
+    error_to_string(get_verifiable_credential_encryption_key_aux(
+        seed_as_hex,
+        raw_net,
+        verifiable_credential_index,
+    ))
+}
+
 #[wasm_bindgen(js_name = serializeCredentialDeploymentPayload)]
 pub fn serialize_credential_deployment_payload_ext(
     signatures: &JsValue,

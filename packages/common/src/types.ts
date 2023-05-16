@@ -586,7 +586,7 @@ export interface BlockInfo {
     blockLastFinalized: HexString;
 
     blockHeight: bigint;
-    blockBaker: BakerId;
+    blockBaker?: BakerId;
     blockSlot: bigint;
 
     blockArriveTime: Date;
@@ -1222,6 +1222,11 @@ export interface DeployModulePayload {
     version?: number;
 
     /** Wasm module to be deployed */
+    source: Buffer;
+}
+
+export interface VersionedModuleSource {
+    version: 0 | 1;
     source: Buffer;
 }
 

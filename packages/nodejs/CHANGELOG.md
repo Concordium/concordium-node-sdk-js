@@ -1,5 +1,11 @@
 # Changelog
 
+## 6.5.0
+
+### Changed
+
+- Bumped @concordium/common-sdk to 6.6.0.
+
 ## 6.4.0 2023-5-03
 
 ### Changed

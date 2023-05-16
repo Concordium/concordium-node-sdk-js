@@ -1,15 +1,14 @@
 # Changelog
 
-## Unreleased
+## Unreleased (6.6.0 tentatively)
 
 ### Added
 
-- Helpers for calculating energy cost for a transaction and microCCD cost from energy cost. 
+- Helpers for calculating energy cost for a transaction and microCCD cost from energy cost:
   - `getEnergyCost`
   - `getExchangeRate`
   - `convertEnergyToMicroCcd`
-
-- Utility functions for extracting information from `BlockItemSummary`.
+- Utility functions for extracting information from `BlockItemSummary`:
     - `isInitContractSummary`
     - `isUpdateContractSummary`
     - `isTransferLikeSummary`
@@ -19,10 +18,18 @@
     - `getReceiverAccount`
     - `affectedContracts`
     - `affectedAccounts`
-
-- Utility functions for extracting information from `BlockSpecialEvent`.
+- Utility functions for extracting information from `BlockSpecialEvent`:
     - `specialEventAffectedAccounts`
+- Helper methods on `GRPCClient` for chain traversal: 
+    - `getFinalizedBlocksFrom`
+    - `findEarliestFinalized`
+    - `findInstanceCreation`
+    - `findFirstFinalizedBlockNoLaterThan`
+- Extended HdWallet with support for verifiable credential key deriviation.
 
+### Changed
+
+- Bumped @concordium/rust-bindings to 0.12.0. (Adds key derivation for verifiable credentials)
 
 ## 6.5.0 2023-5-03
 

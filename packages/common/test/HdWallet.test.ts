@@ -187,3 +187,63 @@ test('Testnet CredId matches credDeployment test', () => {
         })
     ).toEqual(Buffer.from(expectedCredId, 'hex'));
 });
+
+test('Mainnet verifiable credential signing key', () => {
+    const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Mainnet');
+    expect(wallet.getVerifiableCredentialSigningKey(1)).toEqual(
+        Buffer.from(
+            '875df27dc69b0ebcb3b362b00fdc95ad50353819087fa75d39ef0aa3f9a8104a',
+            'hex'
+        )
+    );
+});
+
+test('Mainnet verifiable credential public key', () => {
+    const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Mainnet');
+    expect(wallet.getVerifiableCredentialPublicKey(341)).toEqual(
+        Buffer.from(
+            '49efcf3adcfc87864cba5095dbf669fd9fa4529bba3fcecb3b1c0c12285530c8',
+            'hex'
+        )
+    );
+});
+
+test('Mainnet verifiable credential encryption key', () => {
+    const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Mainnet');
+    expect(wallet.getVerifiableCredentialEncryptionKey(97)).toEqual(
+        Buffer.from(
+            '30be8892d89599867fca90dcd841ac62cc07ea0ea521e8708eb8ae143c093210',
+            'hex'
+        )
+    );
+});
+
+test('Testnet verifiable credential signing key', () => {
+    const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
+    expect(wallet.getVerifiableCredentialSigningKey(1)).toEqual(
+        Buffer.from(
+            'c53e2259d321b55637952951ea56bcae336404765b85c3ba78ca22a9d06bb40f',
+            'hex'
+        )
+    );
+});
+
+test('Testnet verifiable credential public key', () => {
+    const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
+    expect(wallet.getVerifiableCredentialPublicKey(341)).toEqual(
+        Buffer.from(
+            '20a5ce34364e1f1ce619fdfb12daa806e5e86ef44971f3c9cf1ec6b8b58e27d3',
+            'hex'
+        )
+    );
+});
+
+test('Testnet verifiable credential encryption key', () => {
+    const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
+    expect(wallet.getVerifiableCredentialEncryptionKey(97)).toEqual(
+        Buffer.from(
+            'f263c915c8000b5164e3fc1d84ce80a451eef2b32f9749a4d0d390844bb1673e',
+            'hex'
+        )
+    );
+});

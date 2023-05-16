@@ -396,11 +396,11 @@ Note that some of the parts of the context are optional:
 ## getModuleSource
 This commands gets the source of a module on the chain.
 
-Note that this returns the raw bytes of the source, as a Uint8Array.
 ```ts
-const blockHash = 'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
-const moduleRef = '7e8398adc406a97db4d869c3fd7adc813a3183667a3a7db078ebae6f7dce5f64';
-const source = await client.getModuleSource(moduleReference, blockHash);
+const versionedSource = await client.getModuleSource(moduleReference, blockHash);
+
+const version: 0 | 1 = versionedSource.version
+const rawSource: Buffer = versionedSource.source
 ```
 
 ## getBlocks
@@ -920,8 +920,8 @@ if (blockFinalizationSummary.tag === "record") {
 Gets a stream of finalized blocks from the specified block height. The stream continues indefinitely unless receiving an abort signal.
 
 ```ts
-const bis = await client.getFinalizedBlocksFrom(123n);
-for await (const bi of bis) {
+const blockInfoStream = await client.getFinalizedBlocksFrom(123n);
+for await (const blockInfo of blockInfoStream) {
     // Do something with the block.
 }
 ```

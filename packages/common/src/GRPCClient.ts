@@ -158,7 +158,7 @@ export default class ConcordiumNodeClient {
     async getModuleSource(
         moduleRef: ModuleReference,
         blockHash?: HexString
-    ): Promise<Buffer> {
+    ): Promise<v1.VersionedModuleSource> {
         const moduleSourceRequest: v2.ModuleSourceRequest = {
             blockHash: getBlockHashInput(blockHash),
             moduleRef: { value: moduleRef.decodedModuleRef },
@@ -167,9 +167,15 @@ export default class ConcordiumNodeClient {
         const response = await this.client.getModuleSource(moduleSourceRequest)
             .response;
         if (response.module.oneofKind === 'v0') {
-            return Buffer.from(response.module.v0.value);
+            return {
+                version: 0,
+                source: Buffer.from(response.module.v0.value),
+            };
         } else if (response.module.oneofKind === 'v1') {
-            return Buffer.from(response.module.v1.value);
+            return {
+                version: 1,
+                source: Buffer.from(response.module.v1.value),
+            };
         } else {
             throw Error('Invalid ModuleSource response received!');
         }
@@ -188,8 +194,11 @@ export default class ConcordiumNodeClient {
         moduleRef: ModuleReference,
         blockHash?: HexString
     ): Promise<Buffer> {
-        const source = await this.getModuleSource(moduleRef, blockHash);
-        return wasmToSchema(source);
+        const versionedSource = await this.getModuleSource(
+            moduleRef,
+            blockHash
+        );
+        return wasmToSchema(versionedSource.source);
     }
 
     /**
@@ -1183,6 +1192,7 @@ export default class ConcordiumNodeClient {
 
     /**
      * Find a block with lowest possible height where the predicate holds.
+     * Note that this function uses binary search and is only intended to work for monotone predicates.
      *
      * @template R
      * @param {(bi: v1.FinalizedBlockInfo) => Promise<R | undefined>} predicate - A predicate function resolving with value of type {@link R} if the predicate holds, and undefined if not.

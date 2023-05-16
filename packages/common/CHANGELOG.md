@@ -1,6 +1,12 @@
 # Changelog
 
-## Unreleased (6.6.0 tentatively)
+## 7.0.0 2023-05-15 
+
+### Breaking changes
+
+- Updated `blockInfo` so that the `bakerId` field is optional, since it will be undefined for genesis blocks.
+- `waitForTransactionFinalization` now returns a `BlockItemSummaryInBlock`
+- Added missing version return type in `getModuleSchema`. It now returns an object containing the schema source and version.
 
 ### Added
 

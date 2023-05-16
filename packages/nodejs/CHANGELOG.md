@@ -1,10 +1,13 @@
 # Changelog
 
-## 6.5.0
+## 7.0.0 2023-05-15
 
-### Changed
+### Breaking Changes
 
-- Bumped @concordium/common-sdk to 6.6.0.
+- Bumped @concordium/common-sdk to 7.0.0:
+  - Updated `blockInfo` so that the `bakerId` field is optional, since it will be undefined for genesis blocks.
+  - `waitForTransactionFinalization` now returns a `BlockItemSummaryInBlock`
+  - Added missing version return type in `getModuleSchema`. It now returns an object containing the schema source and version.
 
 ## 6.4.0 2023-5-03
 

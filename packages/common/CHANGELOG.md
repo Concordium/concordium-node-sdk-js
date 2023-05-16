@@ -3,7 +3,12 @@
 ## Unreleased (6.6.0 tentatively)
 
 ### Added
-- Utility functions for extracting information from `BlockItemSummary`.
+
+- Helpers for calculating energy cost for a transaction and microCCD cost from energy cost:
+  - `getEnergyCost`
+  - `getExchangeRate`
+  - `convertEnergyToMicroCcd`
+- Utility functions for extracting information from `BlockItemSummary`:
     - `isInitContractSummary`
     - `isUpdateContractSummary`
     - `isTransferLikeSummary`
@@ -13,9 +18,14 @@
     - `getReceiverAccount`
     - `affectedContracts`
     - `affectedAccounts`
-- Utility functions for extracting information from `BlockSpecialEvent`.
+- Utility functions for extracting information from `BlockSpecialEvent`:
     - `specialEventAffectedAccounts`
-    - Extended HdWallet with support for verifiable credential key deriviation.
+- Helper methods on `GRPCClient` for chain traversal: 
+    - `getFinalizedBlocksFrom`
+    - `findEarliestFinalized`
+    - `findInstanceCreation`
+    - `findFirstFinalizedBlockNoLaterThan`
+- Extended HdWallet with support for verifiable credential key deriviation.
 
 ### Changed
 

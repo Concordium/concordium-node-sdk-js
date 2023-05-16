@@ -56,6 +56,10 @@ This document describes the different endpoints for the concordium gRPC V2 clien
     - [getBlockSpecialEvents](#getblockspecialevents)
     - [getBlockPendingUpdates](#getblockpendingupdates)
     - [getBlockFinalizationSummary](#getblockfinalizationsummary)
+    - [getFinalizedBlocksFrom](#getfinalizedblocksfrom)
+    - [findEarliestFinalized](#findearliestfinalized)
+    - [findInstanceCreation](#findinstancecreation)
+    - [findFirstFinalizedBlockNoLaterThan](#findfirstfinalizedblocknolaterthan)
 - [BlockItemSummary](#blockitemsummary)
 
 # ConcordiumNodeClient
@@ -910,6 +914,59 @@ if (blockFinalizationSummary.tag === "record") {
 } else {
     // Given block has not been finalized.
 }
+```
+
+## getFinalizedBlocksFrom
+Gets a stream of finalized blocks from the specified block height. The stream continues indefinitely unless receiving an abort signal.
+
+```ts
+const bis = await client.getFinalizedBlocksFrom(123n);
+for await (const bi of bis) {
+    // Do something with the block.
+}
+```
+
+## findEarliestFinalized
+Find a block with lowest possible height where the specified predicate holds. The `predicate` function should return some value if the predicate holds, or `undefined` if it does not.
+The precondition for this method is that the `predicate` function is monotone, i.e., if block at height `h` satisfies the test then also a block at height `h+1` does. If this precondition does not hold then the return value from this method is unspecified.
+
+It's possible to define an optional range to search in, by specifying `from` and `to` values. These default to 0 (i.e. chain genesis block) and the latest finalized block.
+
+The example below shows how this could be used to find the first account (non-genesis) created.
+
+```ts
+const [genesisBlockHash] = await client.getBlocksAtHeight(0n);
+const genesisAccounts = await streamToList(
+    client.getAccountList(genesisBlockHash)
+);
+
+const firstAccount = await client.findEarliestFinalized(
+    async (bi) => {
+        const accounts = await streamToList(client.getAccountList(bi.hash));
+
+        if (accounts.length > genesisAccounts.length) {
+            return accounts.filter((a) => !genesisAccounts.includes(a))[0];
+        }
+    }
+);
+```
+
+## findInstanceCreation
+Find the block where an instance was created. This is a specialized version of [findEarliestFinalized](#findearliestfinalized). As with its generic form, it's possible to specify a range in which to search.
+
+The function returns information about the block in which the contract was created, along with information about the contract itself. If the contract is not found within the specified range, the returned promise rejects.
+
+```ts
+const address: ContractAddress = {index: 123n, subindex: 0n};
+const { hash, height, instanceInfo } = await client.findInstanceCreation(address);
+```
+
+## findFirstFinalizedBlockNoLaterThan
+Find the first block finalized after a given time. This is a specialized version of [findEarliestFinalized](#findearliestfinalized). As with its generic form, it's possible to specify a range in which to search.
+
+```ts
+const time = new Date('1/1/2023');
+const blockInfo: BlockInfo = await client.findFirstFinalizedBlockNoLaterThan(time);
 ```
 
 # BlockItemSummary

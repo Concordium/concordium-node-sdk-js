@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer/';
 import * as v1 from './types';
 import * as v2 from '../grpc/v2/concordium/types';
-import { Base58String, HexString } from './types';
+import { Base58String, HexString, isRpcError } from './types';
 import { QueriesClient } from '../grpc/v2/concordium/service.client';
 import type { RpcTransport } from '@protobuf-ts/runtime-rpc';
 import { CredentialRegistrationId } from './types/CredentialRegistrationId';
@@ -26,6 +26,12 @@ import { BlockItemStatus, BlockItemSummary } from './types/blockItemSummary';
 import { ModuleReference } from './types/moduleReference';
 import { DEFAULT_INVOKE_ENERGY } from './constants';
 
+export type FindInstanceCreationReponse = {
+    hash: HexString;
+    height: bigint;
+    instanceInfo: v1.InstanceInfo;
+};
+
 /**
  * A concordium-node specific gRPC client wrapper.
  *
@@ -47,7 +53,9 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieves the next account nonce for the given account. The account nonce is
      * used in all account transactions as part of their header.
+     *
      * @param accountAddress base58 account address to get the next account nonce for.
+     *
      * @returns the next account nonce, and a boolean indicating if the nonce is reliable.
      */
     async getNextAccountNonce(
@@ -87,9 +95,12 @@ export default class ConcordiumNodeClient {
      * A credential registration id can also be provided, instead of an address. In this case
      * the node will return the account info of the account, which the corresponding credential
      * is (or was) deployed to. An account index can also be provided.
+     *
      * @param accountIdentifier base58 account address, or a credential registration id or account index to get the account info for
      * @param blockHash optional block hash to get the account info at, otherwise retrieves from last finalized block
-     * @returns the account info for the provided account address, throws if the account does not exist
+     *
+     * @returns the account info for the provided account address.
+     * @throws An error of type `RpcError` if not found in the block.
      */
     async getAccountInfo(
         accountIdentifier: v1.AccountIdentifierInput,
@@ -107,7 +118,9 @@ export default class ConcordiumNodeClient {
 
     /**
      * Retrieves a status for the given transaction/block item.
+     *
      * @param transactionHash the transaction/block item to get a status for.
+     *
      * @returns the status for the given transaction/block item, or undefined if it does not exist.
      */
     async getBlockItemStatus(
@@ -135,9 +148,12 @@ export default class ConcordiumNodeClient {
 
     /**
      * Retrieves the source of the given module at the provided block.
+     *
      * @param moduleRef the module's reference, represented by the ModuleReference class.
      * @param blockHash optional block hash to get the module source at, otherwise retrieves from last finalized block
+     *
      * @returns the source of the module as raw bytes.
+     * @throws An error of type `RpcError` if not found in the block.
      */
     async getModuleSource(
         moduleRef: ModuleReference,
@@ -161,9 +177,12 @@ export default class ConcordiumNodeClient {
 
     /**
      * Retrieves the embedded schema of the given module at the provided block.
+     *
      * @param moduleRef the module's reference, represented by the ModuleReference class.
      * @param blockHash optional block hash to get the module embedded schema at, otherwise retrieves from last finalized block
+     *
      * @returns the module schema as a buffer.
+     * @throws An error of type `RpcError` if not found in the block.
      */
     async getEmbeddedSchema(
         moduleRef: ModuleReference,
@@ -175,9 +194,12 @@ export default class ConcordiumNodeClient {
 
     /**
      * Retrieve information about a given smart contract instance.
+     *
      * @param contractAddress the address of the smart contract.
      * @param blockHash optional block hash to get the smart contact instances at, otherwise retrieves from last finalized block
+     *
      * @returns An object with information about the contract instance.
+     * @throws An error of type `RpcError` if not found in the block.
      */
     async getInstanceInfo(
         contractAddress: v1.ContractAddress,
@@ -195,6 +217,7 @@ export default class ConcordiumNodeClient {
 
     /**
      * Invokes a smart contract.
+     *
      * @param context.contract The address of the smart contract that shall be evoked.
      * @param context.amount The amount of microCCD to invoke the contract with.
      * @param context.method The entrypoint (receive function) that shall be invoked.
@@ -202,6 +225,7 @@ export default class ConcordiumNodeClient {
      * @param context.energy The maximum amount of energy to allow for execution.
      * @param context.invoker The address of the invoker, if undefined uses the zero account address.
      * @param blockHash the block hash at which the contract should be invoked at. The contract is invoked in the state at the end of this block.
+     *
      * @returns If the node was able to invoke, then a object describing the outcome is returned.
      * The outcome is determined by the `tag` field, which is either `success` or `failure`.
      * The `usedEnergy` field will always be present, and is the amount of NRG was used during the execution.
@@ -1046,6 +1070,224 @@ export default class ConcordiumNodeClient {
             ).response;
 
         return translate.blockFinalizationSummary(finalizationSummary);
+    }
+
+    /**
+     * Gets a stream of finalized blocks from specified `startHeight`.
+     *
+     * @param {bigint} [startHeight=0n] - An optional height to start streaming blocks from. Defaults to 0n.
+     * @param {AbortSignal} [abortSignal] - An optional abort signal, which will end the stream. If this is not specified, the stream continues indefinitely.
+     * @returns {AsyncIterable<v1.FinalizedBlockInfo>} A stream of {@link v1.FinalizedBlockInfo}.
+     */
+    getFinalizedBlocksFrom(
+        startHeight: v1.AbsoluteBlocksAtHeightRequest,
+        abortSignal?: AbortSignal
+    ): AsyncIterable<v1.FinalizedBlockInfo>;
+    /**
+     * Gets a stream of finalized blocks from specified `startHeight`.
+     *
+     * @param {bigint} [startHeight=0n] - An optional height to start streaming blocks from. Defaults to 0n.
+     * @param {bigint} [endHeight] - An optional height to stop streaming at. If this is not specified, the stream continues indefinitely.
+     * @returns {AsyncIterable<v1.FinalizedBlockInfo>} A stream of {@link v1.FinalizedBlockInfo}.
+     */
+    getFinalizedBlocksFrom(
+        startHeight: v1.AbsoluteBlocksAtHeightRequest,
+        endHeight?: v1.AbsoluteBlocksAtHeightRequest
+    ): AsyncIterable<v1.FinalizedBlockInfo>;
+    getFinalizedBlocksFrom(
+        startHeight: v1.AbsoluteBlocksAtHeightRequest = 0n,
+        end?: AbortSignal | v1.AbsoluteBlocksAtHeightRequest
+    ): AsyncIterable<v1.FinalizedBlockInfo> {
+        let height = startHeight;
+        let finHeight: bigint;
+        const abortController = new AbortController();
+        const abortSignal =
+            end instanceof AbortSignal ? end : abortController.signal;
+        const newBlocks = this.getFinalizedBlocks(abortSignal);
+        const endSignal: IteratorReturnResult<undefined> = {
+            done: true,
+            value: undefined,
+        };
+        let searchKnown = true;
+
+        const nextKnown = async (): Promise<
+            v1.FinalizedBlockInfo | undefined
+        > => {
+            // Refresh latest finalized height from consensus
+            if (height > finHeight) {
+                finHeight = await this.getConsensusHeight();
+            }
+            // As long as height is lower than latest finalized height, query blocks at height
+            if (height > finHeight) {
+                searchKnown = false;
+                return undefined;
+            }
+
+            const [hash] = (await this.getBlocksAtHeight(height)).reverse();
+            const bi: v1.FinalizedBlockInfo = { hash, height };
+            height += 1n;
+
+            return bi;
+        };
+
+        const nextNew = async (): Promise<
+            v1.FinalizedBlockInfo | undefined
+        > => {
+            // At this point, we've found all blocks already finalized on chain. Start streaming new blocks.
+            for await (const block of newBlocks) {
+                if (block.height < height) {
+                    // Skip blocks already found.
+                    continue;
+                }
+
+                return block;
+            }
+        };
+
+        const next = async (): Promise<
+            IteratorResult<v1.FinalizedBlockInfo>
+        > => {
+            if (abortSignal.aborted) {
+                return endSignal;
+            }
+
+            if (finHeight === undefined) {
+                finHeight = await this.getConsensusHeight();
+            }
+
+            let bi: v1.FinalizedBlockInfo | undefined;
+            if (searchKnown) {
+                bi = (await nextKnown()) ?? (await nextNew());
+            } else {
+                bi = await nextNew();
+            }
+
+            if (bi === undefined) {
+                return endSignal;
+            }
+
+            if (typeof end === 'bigint' && bi.height >= end) {
+                abortController.abort();
+            }
+
+            return {
+                done: false,
+                value: bi,
+            };
+        };
+
+        return {
+            [Symbol.asyncIterator]: () => ({ next }),
+        };
+    }
+
+    /**
+     * Find a block with lowest possible height where the predicate holds.
+     *
+     * @template R
+     * @param {(bi: v1.FinalizedBlockInfo) => Promise<R | undefined>} predicate - A predicate function resolving with value of type {@link R} if the predicate holds, and undefined if not.
+     * The precondition for this method is that the function is monotone, i.e., if block at height `h` satisfies the test then also a block at height `h+1` does.
+     * If this precondition does not hold then the return value from this method is unspecified.
+     * @param {bigint} [from=0n] - An optional lower bound of the range of blocks to search. Defaults to 0n.
+     * @param {bigint} [to] - An optional upper bound of the range of blocks to search. Defaults to latest finalized block.
+     *
+     * @returns {Promise<R | undefined>} The value returned from `predicate` at the lowest block (in terms of height) where the predicate holds.
+     */
+    async findEarliestFinalized<R>(
+        predicate: (bi: v1.FinalizedBlockInfo) => Promise<R | undefined>,
+        from: v1.AbsoluteBlocksAtHeightRequest = 0n,
+        to?: v1.AbsoluteBlocksAtHeightRequest
+    ): Promise<R | undefined> {
+        let lower = from;
+        let upper = to ?? (await this.getConsensusHeight());
+
+        if (lower > upper) {
+            throw new Error(
+                'Please specify a "to" value greater than the specified "from" value'
+            );
+        }
+
+        let result: R | undefined;
+        while (lower <= upper) {
+            const mid = lower + (upper - lower) / 2n;
+            const [hash] = await this.getBlocksAtHeight(mid);
+            const res = await predicate({ hash, height: mid });
+
+            if (upper === mid) {
+                result = res;
+                break;
+            } else if (res !== undefined) {
+                result = res;
+                upper = mid;
+            } else {
+                lower = mid + 1n;
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Find the block where a smart contract instance was created. This is a specialized form of {@link findEarliestFinalized}.
+     *
+     * @param {ContractAddress} address - The contract address to search for.
+     * @param {bigint} [from=0n] - An optional lower bound of the range of blocks to search. Defaults to 0n.
+     * @param {bigint} [to] - An optional upper bound of the range of blocks to search. Defaults to latest finalized block.
+     *
+     * @returns {FindInstanceCreationReponse} Information about the block and the contract instance, or undefined if not found.
+     */
+    async findInstanceCreation(
+        address: v1.ContractAddress,
+        from?: v1.AbsoluteBlocksAtHeightRequest,
+        to?: v1.AbsoluteBlocksAtHeightRequest
+    ): Promise<FindInstanceCreationReponse | undefined> {
+        return this.findEarliestFinalized(
+            async ({ hash, height }) => {
+                try {
+                    const instanceInfo = await this.getInstanceInfo(
+                        address,
+                        hash
+                    );
+                    return { hash, height, instanceInfo };
+                } catch (e) {
+                    if (isRpcError(e) && e.code === 'NOT_FOUND') {
+                        return undefined;
+                    }
+
+                    throw e;
+                }
+            },
+            from,
+            to
+        );
+    }
+
+    /**
+     * Find the first block finalized after a given time.
+     *
+     * @param {Date} time - The time to find first block after
+     * @param {bigint} [from=0n] - An optional lower bound of the range of blocks to search. Defaults to 0n.
+     * @param {bigint} [to] - An optional upper bound of the range of blocks to search. Defaults to latest finalized block.
+     *
+     * @returns {v1.BlockInfo} Information about the block found, or undefined if no block was found.
+     */
+    async findFirstFinalizedBlockNoLaterThan(
+        time: Date,
+        from?: v1.AbsoluteBlocksAtHeightRequest,
+        to?: v1.AbsoluteBlocksAtHeightRequest
+    ): Promise<v1.BlockInfo | undefined> {
+        return this.findEarliestFinalized(
+            async ({ hash }) => {
+                const bi = await this.getBlockInfo(hash);
+                return bi.blockSlotTime >= time ? bi : undefined;
+            },
+            from,
+            to
+        );
+    }
+
+    private async getConsensusHeight() {
+        return (await this.getConsensusStatus()).lastFinalizedBlockHeight;
     }
 }
 

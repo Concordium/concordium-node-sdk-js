@@ -125,7 +125,7 @@ const client = createConcordiumClient(
 
         const returnValue: string | undefined = result.returnValue; // If the invoked method has return value
         if (returnValue) {
-            console.log('The return value of the invoked method:');
+            console.log('The return value of the invoked method:', returnValue);
         }
 
         const events: ContractTraceEvent[] = result.events;

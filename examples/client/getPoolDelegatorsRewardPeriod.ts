@@ -30,7 +30,6 @@ const cli = meow(
             block: {
                 type: 'string',
                 alias: 'b',
-                default: '', // This defaults to LastFinal
             },
             endpoint: {
                 type: 'string',
@@ -41,7 +40,11 @@ const cli = meow(
     }
 );
 
-const [address, port] = cli.flags.endpoint.split(':');
+// Split endpoint on last colon
+const lastColonIndex = cli.flags.endpoint.lastIndexOf(':');
+const address = cli.flags.endpoint.substring(0, lastColonIndex);
+const port = cli.flags.endpoint.substring(lastColonIndex + 1);
+
 const client = createConcordiumClient(
     address,
     Number(port),

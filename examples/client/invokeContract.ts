@@ -45,22 +45,18 @@ const cli = meow(
             block: {
                 type: 'string',
                 alias: 'b',
-                default: '', // This defaults to LastFinal
             },
             amount: {
                 type: 'number',
                 alias: 'a',
-                default: NaN,
             },
             energy: {
                 type: 'number',
                 alias: 'n',
-                default: NaN,
             },
             invoker: {
                 type: 'string',
                 alias: 'i',
-                default: '',
             },
             endpoint: {
                 type: 'string',
@@ -70,13 +66,16 @@ const cli = meow(
             parameter: {
                 type: 'string',
                 alias: 'p',
-                default: '',
             },
         },
     }
 );
 
-const [address, port] = cli.flags.endpoint.split(':');
+// Split endpoint on last colon
+const lastColonIndex = cli.flags.endpoint.lastIndexOf(':');
+const address = cli.flags.endpoint.substring(0, lastColonIndex);
+const port = cli.flags.endpoint.substring(lastColonIndex + 1);
+
 const client = createConcordiumClient(
     address,
     Number(port),
@@ -130,7 +129,7 @@ const client = createConcordiumClient(
 
         const returnValue: string | undefined = result.returnValue; // If the invoked method has return value
         if (returnValue) {
-            console.log('The return value of the invoked method:');
+            console.log('The return value of the invoked method:', returnValue);
         }
 
         const events: ContractTraceEvent[] = result.events;

@@ -1,4 +1,5 @@
 {
+  "name": "@concordium/examples",
   "type": "module",
   "dependencies": {
     "@concordium/node-sdk": "workspace:^",

@@ -38,7 +38,11 @@ const cli = meow(
     }
 );
 
-const [address, port] = cli.flags.endpoint.split(':');
+// Split endpoint on last colon
+const lastColonIndex = cli.flags.endpoint.lastIndexOf(':');
+const address = cli.flags.endpoint.substring(0, lastColonIndex);
+const port = cli.flags.endpoint.substring(lastColonIndex + 1);
+
 const client = createConcordiumClient(
     address,
     Number(port),
@@ -49,7 +53,7 @@ const client = createConcordiumClient(
  * Suggest to connect the specified address as a peer. This, if successful,
  * adds the peer to the list of given addresses, otherwise rejects. Note that
  * the peer might not be connected to instantly, in that case the node will
- * try to establish the connection in near future.
+ * try to establish the connection in the near future.
  */
 
 (async () => {

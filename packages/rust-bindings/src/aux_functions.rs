@@ -194,6 +194,36 @@ pub fn get_attribute_commitment_randomness_aux(
     Ok(hex::encode(to_bytes(&key)))
 }
 
+pub fn get_verifiable_credential_signing_key_aux(
+    seed_as_hex: HexString,
+    raw_net: &str,
+    verifiable_credential_index: u32,
+) -> Result<HexString> {
+    let wallet = get_wallet(seed_as_hex, raw_net)?;
+    let key = wallet.get_verifiable_credential_signing_key(verifiable_credential_index)?;
+    Ok(hex::encode(key.as_bytes()))
+}
+
+pub fn get_verifiable_credential_public_key_aux(
+    seed_as_hex: HexString,
+    raw_net: &str,
+    verifiable_credential_index: u32,
+) -> Result<HexString> {
+    let wallet = get_wallet(seed_as_hex, raw_net)?;
+    let key = wallet.get_verifiable_credential_public_key(verifiable_credential_index)?;
+    Ok(hex::encode(key.as_bytes()))
+}
+
+pub fn get_verifiable_credential_encryption_key_aux(
+    seed_as_hex: HexString,
+    raw_net: &str,
+    verifiable_credential_index: u32,
+) -> Result<HexString> {
+    let wallet = get_wallet(seed_as_hex, raw_net)?;
+    let key = wallet.get_verifiable_credential_encryption_key(verifiable_credential_index)?;
+    Ok(hex::encode(key))
+}
+
 pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<JsonString> {
     let seed_decoded = hex::decode(&input.seed)?;
     let seed: [u8; 64] = match seed_decoded.try_into() {

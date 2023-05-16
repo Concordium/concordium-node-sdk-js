@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.6.0
+
+- Bumped @concordium/common-sdk to 6.6.0.
+- Bumped @concordium/rust-bindings to 0.12.0. (Adds key derivation for verifiable credentials)
+
 ## 3.5.0 2023-5-03
 
 ### Changed

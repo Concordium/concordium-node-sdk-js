@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Unreleased (6.6.0 tentatively)
 
 ### Added
 
@@ -25,7 +25,11 @@
     - `findEarliestFinalized`
     - `findInstanceCreation`
     - `findFirstFinalizedBlockNoLaterThan`
+- Extended HdWallet with support for verifiable credential key deriviation.
 
+### Changed
+
+- Bumped @concordium/rust-bindings to 0.12.0. (Adds key derivation for verifiable credentials)
 
 ## 6.5.0 2023-5-03
 

@@ -1350,6 +1350,26 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@concordium/examples@workspace:examples":
+  version: 0.0.0-use.local
+  resolution: "@concordium/examples@workspace:examples"
+  dependencies:
+    "@concordium/node-sdk": "workspace:^"
+    "@grpc/grpc-js": ^1.3.4
+    "@typescript-eslint/eslint-plugin": ^4.28.1
+    "@typescript-eslint/parser": ^4.28.1
+    eslint: ^7.29.0
+    eslint-config-prettier: ^8.3.0
+    eslint-plugin-import: ^2.23.4
+    eslint-plugin-prettier: ^3.4.0
+    lint-staged: ^12.0.2
+    meow: 11.0
+    prettier: ^2.3.2
+    ts-node: 10.9
+    typescript: ^4.3.5
+  languageName: unknown
+  linkType: soft
+
 "@concordium/node-sdk@workspace:^, @concordium/node-sdk@workspace:packages/nodejs":
   version: 0.0.0-use.local
   resolution: "@concordium/node-sdk@workspace:packages/nodejs"
@@ -4341,26 +4361,6 @@ __metadata:
   checksum: f6f487ad2198aa41d878fa31452f1a3c00958f46e9019286ff4787c84aac329332ab45c9cdc8c445928fc6d7ded294b9e005a7fce9426488518017831b272780
   languageName: node
   linkType: hard
-
-"examples-1f5c57@workspace:examples":
-  version: 0.0.0-use.local
-  resolution: "examples-1f5c57@workspace:examples"
-  dependencies:
-    "@concordium/node-sdk": "workspace:^"
-    "@grpc/grpc-js": ^1.3.4
-    "@typescript-eslint/eslint-plugin": ^4.28.1
-    "@typescript-eslint/parser": ^4.28.1
-    eslint: ^7.29.0
-    eslint-config-prettier: ^8.3.0
-    eslint-plugin-import: ^2.23.4
-    eslint-plugin-prettier: ^3.4.0
-    lint-staged: ^12.0.2
-    meow: 11.0
-    prettier: ^2.3.2
-    ts-node: 10.9
-    typescript: ^4.3.5
-  languageName: unknown
-  linkType: soft
 
 "execa@npm:^5.0.0, execa@npm:^5.1.1":
   version: 5.1.1

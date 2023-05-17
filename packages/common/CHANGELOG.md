@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- A `parseWallet` function to parse wallet export files
+
 ## 7.0.0 2023-05-15 
 
 ### Breaking changes

@@ -1,3 +1,4 @@
+import { parseEndpoint } from '../shared/util';
 import {
     ContractAddress,
     createConcordiumClient,
@@ -41,10 +42,7 @@ const cli = meow(
     }
 );
 
-// Split endpoint on last colon
-const lastColonIndex = cli.flags.endpoint.lastIndexOf(':');
-const address = cli.flags.endpoint.substring(0, lastColonIndex);
-const port = cli.flags.endpoint.substring(lastColonIndex + 1);
+const [address, port] = parseEndpoint(cli.flags.endpoint);
 
 const client = createConcordiumClient(
     address,

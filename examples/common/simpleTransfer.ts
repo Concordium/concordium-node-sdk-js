@@ -17,13 +17,14 @@ import {
 import { credentials } from '@grpc/grpc-js';
 import { readFileSync } from 'node:fs';
 import { Buffer } from 'buffer/index.js';
+import { parseEndpoint } from '../shared/util';
 
 import meow from 'meow';
 
 const cli = meow(
     `
   Usage
-    $ yarn ts-node <path-to-this-file> [options]
+    $ yarn run-example <path-to-this-file> [options]
 
   Required
     --amount,      -a  The amount to send
@@ -67,11 +68,7 @@ const cli = meow(
     }
 );
 
-// Split endpoint on last colon
-const lastColonIndex = cli.flags.endpoint.lastIndexOf(':');
-const address = cli.flags.endpoint.substring(0, lastColonIndex);
-const port = cli.flags.endpoint.substring(lastColonIndex + 1);
-
+const [address, port] = parseEndpoint(cli.flags.endpoint);
 const client = createConcordiumClient(
     address,
     Number(port),

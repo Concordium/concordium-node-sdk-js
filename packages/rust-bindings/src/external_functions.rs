@@ -5,7 +5,7 @@ use wasm_bindgen::prelude::*;
 pub fn generate_unsigned_credential_ext(input: &str) -> JsonString {
     match generate_unsigned_credential_aux(input) {
         Ok(s) => s,
-        Err(e) => format!("Unable to generate an unsigned credential due to: {}", e),
+        Err(e) => format!("unable to generate an unsigned credential: {}", e),
     }
 }
 
@@ -19,7 +19,7 @@ pub fn get_credential_deployment_details_ext(
     let signatures_vec: Vec<String> = signatures.into_serde().unwrap();
     match get_credential_deployment_details_aux(signatures_vec, unsigned_info, expiry) {
         Ok(s) => s,
-        Err(e) => format!("Unable to get credential deployment details due to: {}", e),
+        Err(e) => format!("unable to get credential deployment details: {}", e),
     }
 }
 
@@ -28,7 +28,7 @@ pub fn get_credential_deployment_info_ext(signatures: &JsValue, unsigned_info: &
     let signatures_vec: Vec<String> = signatures.into_serde().unwrap();
     match get_credential_deployment_info_aux(signatures_vec, unsigned_info) {
         Ok(s) => s,
-        Err(e) => format!("unable to get credential due to: {}", e),
+        Err(e) => format!("unable to get credential: {}", e),
     }
 }
 
@@ -113,7 +113,7 @@ pub fn serialize_receive_contract_parameters(
         schema_version,
     ) {
         Ok(s) => Ok(s),
-        Err(e) => Err(format!("unable to deserialize parameters, due to: {}", e)),
+        Err(e) => Err(format!("unable to serialize parameters: {}", e)),
     }
 }
 
@@ -127,7 +127,7 @@ pub fn serialize_init_contract_parameters(
     match serialize_init_contract_parameters_aux(parameters, schema, contract_name, schema_version)
     {
         Ok(s) => Ok(s),
-        Err(e) => Err(format!("unable to deserialize parameters, due to: {}", e)),
+        Err(e) => Err(format!("unable to serialize parameters: {}", e)),
     }
 }
 
@@ -145,7 +145,7 @@ pub fn get_receive_contract_parameter_schema_ext(
         schema_version,
     ) {
         Ok(v) => Ok(v),
-        Err(e) => Err(format!("unable to get parameter schema, due to: {}", e)),
+        Err(e) => Err(format!("unable to get parameter schema: {}", e)),
     }
 }
 
@@ -157,14 +157,13 @@ pub fn get_init_contract_parameter_schema_ext(
 ) -> Result<HexString, String> {
     match get_init_contract_parameter_schema_aux(schema, contract_name, schema_version) {
         Ok(v) => Ok(v),
-        Err(e) => Err(format!("unable to get parameter schema, due to: {}", e)),
+        Err(e) => Err(format!("unable to get parameter schema: {}", e)),
     }
 }
 
 #[wasm_bindgen(js_name = serializeTypeValue)]
 pub fn serialize_type_value_ext(value: JsonString, schema: HexString) -> Result<HexString, String> {
-    serialize_type_value_aux(value, schema)
-        .map_err(|e| format!("Unable to serialize value due to: {}", e))
+    serialize_type_value_aux(value, schema).map_err(|e| format!("unable to serialize value: {}", e))
 }
 
 #[wasm_bindgen(js_name = createIdRequestV1)]
@@ -374,7 +373,7 @@ pub fn serialize_credential_deployment_payload_ext(
 ) -> Result<Vec<u8>, String> {
     let signatures_vec: Vec<HexString> = signatures.into_serde().unwrap();
     serialize_credential_deployment_payload_aux(signatures_vec, unsigned_info)
-        .map_err(|e| format!("Unable to get credential deployment payload due to: {}", e))
+        .map_err(|e| format!("unable to get credential deployment payload: {}", e))
 }
 
 #[wasm_bindgen(js_name = generateBakerKeys)]
@@ -392,5 +391,5 @@ pub fn deserialize_type_value_ext(
     schema: HexString,
 ) -> Result<JsonString, String> {
     deserialize_type_value_aux(serialized_value, schema)
-        .map_err(|e| format!("Unable to deserialize value due to: {}", e))
+        .map_err(|e| format!("unable to deserialize value: {}", e))
 }

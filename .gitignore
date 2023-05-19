@@ -23,6 +23,9 @@ doc
 # Auto generate files from the gRPC proto file
 grpc
 
+# Webpack cache
+.webpack-cache
+
 # WASM files are generated with wasm-pack
 pkg
 

@@ -48,7 +48,9 @@ export default class ConcordiumNodeClient {
      * Retrieves the next account nonce for the given account. The account nonce is
      * used in all account transactions as part of their header.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getNextAccountNonce.ts
+     * Example: git:/examples/client/getNextAccountSequenceNumber.ts#33,44
+     *
+     * test: GH-100
      *
      * @param accountAddress base58 account address to get the next account nonce for.
      * @returns the next account nonce, and a boolean indicating if the nonce is reliable.
@@ -264,7 +266,7 @@ export default class ConcordiumNodeClient {
      * Note that a transaction can still fail even if it was accepted by the node.
      * To keep track of the transaction use getTransactionStatus.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/sendAccountTransaction.ts
+     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/common/simpleTransfer.ts
      *
      * @param transaction the transaction to send to the node
      * @param signature the signatures on the signing digest of the transaction
@@ -323,8 +325,8 @@ export default class ConcordiumNodeClient {
      *
      * Note that a transaction can still fail even if it was accepted by the node.
      * To keep track of the transaction use getTransactionStatus.
-     *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/sendCredentialDeploymentTransaction.ts
+     * 
+     * See [this](/doc/account-creation.md) document for how this function can be used.
      *
      * @param credentialDeploymentTransaction the credential deployment transaction to send to the node
      * @param signatures the signatures on the hash of the serialized unsigned credential deployment information, in order

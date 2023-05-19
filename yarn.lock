@@ -7659,6 +7659,7 @@ __metadata:
     stream-browserify: ^3.0.0
     ts-jest: ^27.0.3
     typedoc: ^0.24
+    typedoc-plugin-replace-text: 2.3.0-beta.0
     typescript: ^4.3.5
     webpack: ^5.72.0
     webpack-cli: ^4.9.2
@@ -8574,6 +8575,15 @@ __metadata:
   dependencies:
     is-typedarray: ^1.0.0
   checksum: 99c11aaa8f45189fcfba6b8a4825fd684a321caa9bd7a76a27cf0c7732c174d198b99f449c52c3818107430b5f41c0ccbbfb75cb2ee3ca4a9451710986d61a60
+  languageName: node
+  linkType: hard
+
+"typedoc-plugin-replace-text@npm:2.3.0-beta.0":
+  version: 2.3.0-beta.0
+  resolution: "typedoc-plugin-replace-text@npm:2.3.0-beta.0"
+  peerDependencies:
+    typedoc: 0.23.x || 0.24.x
+  checksum: 492334a46849b3691eb3ff28ddeb03aae920ae701a6e86e5d0ac94da84df57d68ec17ad66d0ddfc9d0335c51619c337d4e78824ea0106615b4577ae95c16bf03
   languageName: node
   linkType: hard
 

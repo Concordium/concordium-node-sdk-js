@@ -26,6 +26,9 @@ grpc
 # Webpack cache
 .webpack-cache
 
+# Generated documentation by typedoc
+typedoc
+
 # WASM files are generated with wasm-pack
 pkg
 

@@ -48,9 +48,7 @@ export default class ConcordiumNodeClient {
      * Retrieves the next account nonce for the given account. The account nonce is
      * used in all account transactions as part of their header.
      *
-     * Example: git:/examples/client/getNextAccountSequenceNumber.ts#33,44
-     *
-     * test: GH-100
+     * git:/examples/client/getNextAccountSequenceNumber.ts#54,62
      *
      * @param accountAddress base58 account address to get the next account nonce for.
      * @returns the next account nonce, and a boolean indicating if the nonce is reliable.
@@ -72,7 +70,7 @@ export default class ConcordiumNodeClient {
      * fields will only be unavailable for a newly started node that has not processed
      * enough data yet.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getCryptographicParameters.ts
+     * example:client/getCryptographicParameters.ts#48,53
      *
      * @param blockHash optional block hash to get the cryptographic parameters at, otherwise retrieves from last finalized block.
      * @returns the global cryptographic parameters at the given block, or undefined it the block does not exist.
@@ -96,7 +94,7 @@ export default class ConcordiumNodeClient {
      * the node will return the account info of the account, which the corresponding credential
      * is (or was) deployed to. An account index can also be provided.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getAccountInfo.ts
+     * example:client/getAccountInfo.ts#61,78
      *
      * @param accountIdentifier base58 account address, or a credential registration id or account index to get the account info for
      * @param blockHash optional block hash to get the account info at, otherwise retrieves from last finalized block
@@ -119,7 +117,7 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieves a status for the given transaction/block item.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getBlockItemStatus.ts
+     * example:client/getBlockItemStatus.ts
      *
      * @param transactionHash the transaction/block item to get a status for.
      * @returns the status for the given transaction/block item, or undefined if it does not exist.
@@ -142,7 +140,7 @@ export default class ConcordiumNodeClient {
      * fields will only be unavailable for a newly started node that has not processed
      * enough data yet.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getConsensusStatus.ts
+     * example:client/getConsensusStatus.ts
      */
     async getConsensusStatus(): Promise<v1.ConsensusStatus> {
         const response = await this.client.getConsensusInfo(v2.Empty).response;
@@ -152,7 +150,7 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieves the source of the given module at the provided block.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getModuleSource.ts
+     * example:client/getModuleSource.ts
      *
      * @param moduleRef the module's reference, represented by the ModuleReference class.
      * @param blockHash optional block hash to get the module source at, otherwise retrieves from last finalized block
@@ -181,7 +179,7 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieves the embedded schema of the given module at the provided block.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getEmbeddedSchema.ts
+     * example:client/getEmbeddedSchema.ts
      *
      * @param moduleRef the module's reference, represented by the ModuleReference class.
      * @param blockHash optional block hash to get the module embedded schema at, otherwise retrieves from last finalized block
@@ -198,7 +196,7 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieve information about a given smart contract instance.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getInstanceInfo.ts
+     * example:client/getInstanceInfo.ts
      *
      * @param contractAddress the address of the smart contract.
      * @param blockHash optional block hash to get the smart contact instances at, otherwise retrieves from last finalized block
@@ -221,7 +219,7 @@ export default class ConcordiumNodeClient {
     /**
      * Invokes a smart contract.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/invokeContract.ts
+     * example:client/invokeContract.ts
      *
      * @param context.contract The address of the smart contract that shall be evoked.
      * @param context.amount The amount of microCCD to invoke the contract with.
@@ -266,7 +264,7 @@ export default class ConcordiumNodeClient {
      * Note that a transaction can still fail even if it was accepted by the node.
      * To keep track of the transaction use getTransactionStatus.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/common/simpleTransfer.ts
+     * example:common/simpleTransfer.ts
      *
      * @param transaction the transaction to send to the node
      * @param signature the signatures on the signing digest of the transaction
@@ -326,7 +324,7 @@ export default class ConcordiumNodeClient {
      * Note that a transaction can still fail even if it was accepted by the node.
      * To keep track of the transaction use getTransactionStatus.
      * 
-     * See [this](/doc/account-creation.md) document for how this function can be used.
+     * See [this](git:docs/account-creation.md) document for how this function can be used.
      *
      * @param credentialDeploymentTransaction the credential deployment transaction to send to the node
      * @param signatures the signatures on the hash of the serialized unsigned credential deployment information, in order
@@ -366,7 +364,7 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieves the status of the block chain parameters at the given blockHash.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getBlockChainParameters.ts
+     * example:client/getBlockChainParameters.ts
      *
      * @param blockHash the block hash of the block to get the information from.
      * @returns Info on all of the block chain parameters.
@@ -384,7 +382,7 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieves information on the baker pool of the given bakerId.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getPoolInfo.ts
+     * example:client/getPoolInfo.ts
      *
      * @param blockHash the block hash of the block to get the information from.
      * @param bakerId the ID of the baker to get the status for.
@@ -407,7 +405,7 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieves information on the passive delegators.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getPassiveDelegationInfo.ts
+     * example:client/getPassiveDelegationInfo.ts
      *
      * @param blockHash the block hash of the block to get the information from.
      * @returns The status of the passive delegators.
@@ -424,7 +422,7 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieves the reward status at the given blockHash
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getTokenomicsInfo.ts
+     * example:client/getTokenomicsInfo.ts
      *
      * @param blockHash optional block hash to get the reward status at, otherwise retrieves from last finalized block
      * @returns the reward status at the given block, or undefined it the block does not exist.
@@ -440,7 +438,7 @@ export default class ConcordiumNodeClient {
     /**
      * Gets a stream of finalized blocks.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getFinalizedBlocks.ts
+     * example:client/getFinalizedBlocks.ts
      *
      * @param abortSignal an AbortSignal to close the stream. Note that the
      * stream does not close itself as it is infinite, so usually you'd want
@@ -459,7 +457,7 @@ export default class ConcordiumNodeClient {
      * Gets a stream of blocks. To get a stream of only finalized blocks
      * use `getFinalizedBlocks()` instead.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getBlocks.ts
+     * example:client/getBlocks.ts
      *
      * @param abortSignal an AbortSignal to close the stream. Note that the
      * stream does not close itself as it is infinite, so usually you'd want
@@ -475,7 +473,7 @@ export default class ConcordiumNodeClient {
     /**
      * Waits until given transaction is finalized.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/waitForTransactionFinalization.ts
+     * example:client/waitForTransactionFinalization.ts
      *
      * @param transactionHash a transaction hash as a bytearray.
      * @param timeoutTime the number of milliseconds until the function throws error.
@@ -529,7 +527,7 @@ export default class ConcordiumNodeClient {
     /**
      * Retrieve a stream of accounts that exist at the end of the given block.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getAccountList.ts
+     * example:client/getAccountList.ts
      *
      * @param blockHash an optional block hash to get the accounts at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -550,7 +548,7 @@ export default class ConcordiumNodeClient {
      * when all modules that exist in the state at the end of the given
      * block have been returned.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getModuleList.ts
+     * example:client/getModuleList.ts
      *
      * @param blockHash an optional block hash to get the contract modules at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -571,7 +569,7 @@ export default class ConcordiumNodeClient {
      * Starting with the provided block itself, moving backwards until no more
      * ancestors or the requested number of ancestors has been returned.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getAncestors.ts
+     * example:client/getAncestors.ts
      *
      * @param maxAmountOfAncestors the maximum amount of ancestors as a bigint.
      * @param blockHash a optional block hash to get the ancestors at, otherwise retrieves from last finalized block.
@@ -596,7 +594,7 @@ export default class ConcordiumNodeClient {
      * Get the exact state of a specific contract instance, streamed as a list of
      * key-value pairs. The list is streamed in lexicographic order of keys.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getInstanceState.ts
+     * example:client/getInstanceState.ts
      *
      * @param contractAddress the contract to get the state of.
      * @param blockHash a optional block hash to get the instance states at, otherwise retrieves from last finalized block.
@@ -622,7 +620,7 @@ export default class ConcordiumNodeClient {
      * `GetInstanceState` this is more efficient, but requires the user to know
      * the specific key to look for.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/instanceStateLookup.ts
+     * example:client/instanceStateLookup.ts
      *
      * @param contractAddress the contract to get the state of.
      * @param key the key of the desired contract state.
@@ -650,7 +648,7 @@ export default class ConcordiumNodeClient {
      * The stream will end when all the identity providers have been returned,
      * or an abort signal is called.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getIdentityProviders.ts
+     * example:client/getIdentityProviders.ts
      *
      * @param blockHash an optional block hash to get the providers at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -671,7 +669,7 @@ export default class ConcordiumNodeClient {
      * The stream will end when all the anonymity revokers have been returned,
      * or an abort signal is called.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getAnonymityRevokers.ts
+     * example:client/getAnonymityRevokers.ts
      *
      * @param blockHash an optional block hash to get the anonymity revokers at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -690,7 +688,7 @@ export default class ConcordiumNodeClient {
     /**
      * Get a list of live blocks at a given height.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getBlocksAtHeight.ts
+     * example:client/getBlocksAtHeight.ts
      *
      * @param blockHeightRequest Either an absolute block height request or a relative block height request
      * @returns A list of block hashes as hex strings
@@ -707,7 +705,7 @@ export default class ConcordiumNodeClient {
     /**
      * Get information, such as height, timings, and transaction counts for the given block.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getBlockInfo.ts
+     * example:client/getBlockInfo.ts
      *
      * @param blockHash an optional block hash to get the info from, otherwise retrieves from last finalized block.
      * @returns information on a block.
@@ -721,7 +719,7 @@ export default class ConcordiumNodeClient {
     /**
      * Get all the bakers at the end of the given block.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getBakerList.ts
+     * example:client/getBakerList.ts
      *
      * @param blockHash an optional block hash to get the baker list at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -745,7 +743,7 @@ export default class ConcordiumNodeClient {
      * are immediately visible in this list.
      * The stream will end when all the delegators has been returned.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getPoolDelegators.ts
+     * example:client/getPoolDelegators.ts
      *
      * @param baker The BakerId of the pool owner
      * @param blockHash an optional block hash to get the delegators at, otherwise retrieves from last finalized block.
@@ -774,7 +772,7 @@ export default class ConcordiumNodeClient {
      * stake in the reward period containing the given block.
      * The stream will end when all the delegators has been returned.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getPoolDelegatorsRewardPeriod.ts
+     * example:client/getPoolDelegatorsRewardPeriod.ts
      *
      * @param baker The BakerId of the pool owner
      * @param blockHash an optional block hash to get the delegators at, otherwise retrieves from last finalized block.
@@ -806,7 +804,7 @@ export default class ConcordiumNodeClient {
      * are immediately visible in this list.
      * The stream will end when all the delegators has been returned.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getPassiveDelegators.ts
+     * example:client/getPassiveDelegators.ts
      *
      * @param blockHash an optional block hash to get the delegators at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -831,7 +829,7 @@ export default class ConcordiumNodeClient {
      * stake in the reward period containing the given block.
      * The stream will end when all the delegators has been returned.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getPassiveDelegatorsRewardPeriod.ts
+     * example:client/getPassiveDelegatorsRewardPeriod.ts
      *
      * @param blockHash an optional block hash to get the delegators at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -852,7 +850,7 @@ export default class ConcordiumNodeClient {
     /**
      * Get the current branches of blocks starting from and including the last finalized block.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getBranches.ts
+     * example:client/getBranches.ts
      *
      * @returns a branch with a block hash and a list of branch-children
      */
@@ -880,7 +878,7 @@ export default class ConcordiumNodeClient {
      * but in bad network conditions it might. The stream will end when all the
      * non-finalized transaction hashes have been returned.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getAccountNonFinalizedTransactions.ts
+     * example:client/getAccountNonFinalizedTransactions.ts
      *
      * @param accountAddress The address of the account that you wish to query.
      * @returns a stream of transaction hashes as hex strings.
@@ -901,7 +899,7 @@ export default class ConcordiumNodeClient {
      * Get a list of transaction events in a given block.
      * The stream will end when all the transaction events for a given block have been returned.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getBlockTransactionEvents.ts
+     * example:client/getBlockTransactionEvents.ts
      *
      * @param blockHash an optional block hash to get the transaction events at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -922,7 +920,7 @@ export default class ConcordiumNodeClient {
     /**
      * Get next available sequence numbers for updating chain parameters after a given block.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getNextUpdateSequenceNumbers.ts
+     * example:client/getNextUpdateSequenceNumbers.ts
      *
      * @param blockHash an optional block hash to get the sequence numbers at, otherwise retrieves from last finalized block.
      * @return a NextUpdateSequenceNumbers object
@@ -940,7 +938,7 @@ export default class ConcordiumNodeClient {
      * Shut down the node.
      * Return a GRPC error if the shutdown failed.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/shutdown.ts
+     * example:client/shutdown.ts
      */
     async shutdown(): Promise<void> {
         await this.client.shutdown(v2.Empty);
@@ -954,7 +952,7 @@ export default class ConcordiumNodeClient {
      * the node will try to establish the connection in near future. This
      * function returns a GRPC status 'Ok' in this case.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/peerConnect.ts
+     * example:client/peerConnect.ts
      *
      * @param ip The ip address to connect to. Must be a valid ip address.
      * @param port The port to connect to. Must be between 0 and 65535.
@@ -975,7 +973,7 @@ export default class ConcordiumNodeClient {
      * if they are on it. Return if the request was processed successfully.
      * Otherwise return a GRPC error.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/peerDisconnect.ts
+     * example:client/peerDisconnect.ts
      *
      * @param ip The ip address to connect to. Must be a valid ip address.
      * @param port The port to connect to. Must be between 0 and 65535.
@@ -994,7 +992,7 @@ export default class ConcordiumNodeClient {
     /**
      * Get a list of banned peers.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getBannedPeers.ts
+     * example:client/getBannedPeers.ts
      *
      * @return A list of the ip's of banned peers.
      */
@@ -1007,7 +1005,7 @@ export default class ConcordiumNodeClient {
      * Ban the given peer.
      * Rejects if the action fails.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/banPeer.ts
+     * git:examples/client/banPeer.ts#47,50
      *
      * @param ip The ip address of the peer to ban. Must be a valid ip address.
      */
@@ -1024,7 +1022,7 @@ export default class ConcordiumNodeClient {
      * Unbans the given peer.
      * Rejects if the action fails.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/unbanPeer.ts
+     * example:client/unbanPeer.ts
      *
      * @param ip The ip address of the peer to unban. Must be a valid ip address.
      */
@@ -1042,7 +1040,7 @@ export default class ConcordiumNodeClient {
      * Only enabled if the node was built with the `network_dump` feature.
      * Rejects if the network dump failed to start.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/dumpStart.ts
+     * example:client/dumpStart.ts
      *
      * @param filePath Which file to dump the packages into. Requires a valid path.
      * @param raw Whether the node should dump raw packages.
@@ -1060,7 +1058,7 @@ export default class ConcordiumNodeClient {
      * Only enabled if the node was built with the `network_dump` feature.
      * Rejects if the network dump failed to be stopped.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/dumpStop.ts
+     * example:client/dumpStop.ts
      */
     async dumpStop(): Promise<void> {
         await this.client.dumpStop(v2.Empty);
@@ -1075,7 +1073,7 @@ export default class ConcordiumNodeClient {
      * * ConsensusInfo. The `ConsensusInfo` returned depends on if the node supports
      *   the protocol on chain and whether the node is configured as a baker or not.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getNodeInfo.ts
+     * example:client/getNodeInfo.ts
      *
      * @returns Info about the node
      */
@@ -1088,7 +1086,7 @@ export default class ConcordiumNodeClient {
      * Get a list of the peers that the node is connected to
      * and associated network related information for each peer.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getPeersInfo.ts
+     * example:client/getPeersInfo.ts
      *
      * @returns a list containing info on each peer of the node.
      */
@@ -1103,7 +1101,7 @@ export default class ConcordiumNodeClient {
      * generated by any transaction. The stream will end when all the special
      * events for a given block have been returned.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getBlockSpecialEvents.ts
+     * example:client/getBlockSpecialEvents.ts
      *
      * @param blockHash an optional block hash to get the special events at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -1125,7 +1123,7 @@ export default class ConcordiumNodeClient {
      * Get the pending updates to chain parameters at the end of a given block.
      * The stream will end when all the pending updates for a given block have been returned.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getBlockPendingUpdates.ts
+     * example:client/getBlockPendingUpdates.ts
      *
      * @param blockHash an optional block hash to get the pending updates at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -1146,7 +1144,7 @@ export default class ConcordiumNodeClient {
     /**
      * Get the summary of the finalization data in a given block.
      *
-     * Example: https://github.com/Concordium/concordium-node-sdk-js/blob/main/examples/client/getBlockFinalizationSummary.ts
+     * example:client/getBlockFinalizationSummary.ts
      *
      * @param blockHash an optional block hash to get the finalization summaries at, otherwise retrieves from last finalized block.
      * @returns a finalization summary

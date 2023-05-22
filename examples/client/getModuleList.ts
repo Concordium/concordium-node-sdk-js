@@ -48,6 +48,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const moduleRefs: AsyncIterable<HexString> = client.getModuleList(
         cli.flags.block
     );
@@ -56,4 +57,5 @@ const client = createConcordiumClient(
     for await (const moduleRef of moduleRefs) {
         console.log(moduleRef);
     }
+    // #endregion documentation-snippet
 })();

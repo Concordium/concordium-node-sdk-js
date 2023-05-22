@@ -57,6 +57,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const ancestors: AsyncIterable<HexString> = client.getAncestors(
         BigInt(cli.flags.maxAncestors),
         cli.flags.block
@@ -66,4 +67,5 @@ const client = createConcordiumClient(
     for await (const ancestor of ancestors) {
         console.log(ancestor);
     }
+    // #endregion documentation-snippet
 })();

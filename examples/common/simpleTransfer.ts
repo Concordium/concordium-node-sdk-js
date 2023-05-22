@@ -80,6 +80,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
     const wallet = parseWallet(walletFile);
     const sender = new AccountAddress(wallet.value.address);
@@ -95,6 +96,7 @@ const client = createConcordiumClient(
         sender,
     };
 
+    // Include memo if it is given otherwise don't
     let simpleTransfer = undefined;
     if (cli.flags.memo) {
         simpleTransfer = {
@@ -138,4 +140,5 @@ const client = createConcordiumClient(
     if (transactionStatus.status === 'finalized') {
         console.dir(transactionStatus.outcome, { depth: null, colors: true });
     }
+    // #endregion documentation-snippet
 })();

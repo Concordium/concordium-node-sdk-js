@@ -47,6 +47,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const bakerIds: AsyncIterable<BakerId> = client.getBakerList(
         cli.flags.block
     );
@@ -55,4 +56,5 @@ const client = createConcordiumClient(
     for await (const bakerId of bakerIds) {
         console.log(bakerId);
     }
+    // #endregion documentation-snippet
 })();

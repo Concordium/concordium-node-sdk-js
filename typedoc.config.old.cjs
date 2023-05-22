@@ -38,7 +38,7 @@ module.exports = {
     entryPoints: ["packages/web/src/index.ts", "packages/nodejs/src/index.ts"],
     tsconfig: "tsconfig.json",
     //readme: "MAIN.md",
-    plugin: ["typedoc-plugin-replace-text"],
+    plugin: ["typedoc-plugin-replace-text", "typedoc", "@knodes/typedoc-plugin-code-blocks"],
     replaceText: {
         inCodeCommentText: true,
         inCodeCommentTags: true,

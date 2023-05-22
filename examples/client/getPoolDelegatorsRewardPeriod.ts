@@ -63,6 +63,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const delegators: AsyncIterable<DelegatorRewardPeriodInfo> =
         client.getPoolDelegatorsRewardPeriod(
             BigInt(cli.flags.poolOwner),
@@ -73,4 +74,5 @@ const client = createConcordiumClient(
     for await (const delegatorInfo of delegators) {
         console.log(delegatorInfo.account, delegatorInfo.stake);
     }
+    // #endregion documentation-snippet
 })();

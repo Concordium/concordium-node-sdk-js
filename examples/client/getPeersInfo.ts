@@ -39,7 +39,9 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const peerInfo: PeerInfo[] = await client.getPeersInfo();
 
     console.dir(peerInfo, { depth: null, colors: true });
+    // #endregion documentation-snippet
 })();

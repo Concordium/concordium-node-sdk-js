@@ -47,6 +47,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const ips: AsyncIterable<IpInfo> = client.getIdentityProviders(
         cli.flags.block
     );
@@ -55,4 +56,5 @@ const client = createConcordiumClient(
         console.log('Identity Provider ID:', ip.ipIdentity);
         console.log('Identity Provider Description:', ip.ipDescription, '\n');
     }
+    // #endregion documentation-snippet
 })();

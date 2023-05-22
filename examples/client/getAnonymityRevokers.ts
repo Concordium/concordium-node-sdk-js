@@ -47,6 +47,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const ars: AsyncIterable<ArInfo> = client.getAnonymityRevokers(
         cli.flags.block
     );
@@ -60,4 +61,5 @@ const client = createConcordiumClient(
             '\n'
         );
     }
+    // #endregion documentation-snippet
 })();

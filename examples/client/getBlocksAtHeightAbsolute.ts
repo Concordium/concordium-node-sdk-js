@@ -46,6 +46,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const blocks: HexString[] = await client.getBlocksAtHeight(
         BigInt(cli.flags.height)
     );
@@ -53,4 +54,5 @@ const client = createConcordiumClient(
     for (const block of blocks) {
         console.log(block);
     }
+    // #endregion documentation-snippet
 })();

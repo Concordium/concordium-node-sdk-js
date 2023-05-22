@@ -627,6 +627,10 @@ pub fn deserialize_init_error_aux(
     deserialize_type_value(error_bytes, &error_schema)
 }
 
+#[derive(thiserror::Error, Debug)]
+#[error("{0}")]
+pub struct SerialError(String);
+
 /// Given parameters to a receive function as a stringified json, serialize them
 /// using the provided schema.
 pub fn serialize_receive_contract_parameters_aux(
@@ -635,12 +639,15 @@ pub fn serialize_receive_contract_parameters_aux(
     contract_name: &str,
     function_name: &str,
     schema_version: Option<u8>,
+    verbose_error_message: bool,
 ) -> Result<HexString> {
     let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &schema_version)?;
     let parameter_type = module_schema.get_receive_param_schema(contract_name, function_name)?;
     let value: SerdeValue = serde_json::from_str(&parameters)?;
 
-    let buf = parameter_type.serial_value(&value)?;
+    let buf = parameter_type
+        .serial_value(&value)
+        .map_err(|e| SerialError(format!("{}", e.print(verbose_error_message))))?;
 
     Ok(hex::encode(buf))
 }
@@ -652,12 +659,15 @@ pub fn serialize_init_contract_parameters_aux(
     schema: HexString,
     contract_name: &str,
     schema_version: Option<u8>,
+    verbose_error_message: bool,
 ) -> Result<HexString> {
     let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &schema_version)?;
     let parameter_type = module_schema.get_init_param_schema(contract_name)?;
     let value: SerdeValue = serde_json::from_str(&parameters)?;
 
-    let buf = parameter_type.serial_value(&value)?;
+    let buf = parameter_type
+        .serial_value(&value)
+        .map_err(|e| SerialError(format!("{}", e.print(verbose_error_message))))?;
 
     Ok(hex::encode(buf))
 }
@@ -687,15 +697,25 @@ pub fn get_init_contract_parameter_schema_aux(
     )))
 }
 
-pub fn serialize_type_value_aux(parameters: JsonString, schema: HexString) -> Result<HexString> {
+pub fn serialize_type_value_aux(
+    parameters: JsonString,
+    schema: HexString,
+    verbose_error_message: bool,
+) -> Result<HexString> {
     let parameter_type: Type = from_bytes(&hex::decode(schema)?)?;
-    serialize_type_value(parameters, parameter_type)
+    serialize_type_value(parameters, parameter_type, verbose_error_message)
 }
 
-fn serialize_type_value(raw_value: JsonString, value_type: Type) -> Result<HexString> {
+fn serialize_type_value(
+    raw_value: JsonString,
+    value_type: Type,
+    verbose_error_message: bool,
+) -> Result<HexString> {
     let value: SerdeValue = serde_json::from_str(&raw_value)?;
 
-    let buf = value_type.serial_value(&value)?;
+    let buf = value_type
+        .serial_value(&value)
+        .map_err(|e| SerialError(format!("{}", e.print(verbose_error_message))))?;
     Ok(hex::encode(buf))
 }
 
@@ -711,7 +731,7 @@ fn deserialize_type_value(serialized_value: HexString, value_type: &Type) -> Res
     let mut cursor = Cursor::new(hex::decode(serialized_value)?);
     match value_type.to_json(&mut cursor) {
         Ok(v) => Ok(to_string(&v)?),
-        Err(_) => Err(anyhow!("Unable to parse value to json.")),
+        Err(_) => Err(anyhow!("Unable to parse value to json")),
     }
 }
 
@@ -781,7 +801,7 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<JsonString> {
         &attribute_list,
         &credential_context,
     )
-    .context("Unable to generate proof.")?;
+    .context("Unable to generate proof")?;
 
     let out = IdProofOutput {
         credential: base16_encode_string(&credential),

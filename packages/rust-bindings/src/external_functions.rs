@@ -104,6 +104,7 @@ pub fn serialize_receive_contract_parameters(
     contract_name: &str,
     function_name: &str,
     schema_version: Option<u8>,
+    verbose_error_message: Option<bool>,
 ) -> Result<HexString, String> {
     match serialize_receive_contract_parameters_aux(
         parameters,
@@ -111,6 +112,7 @@ pub fn serialize_receive_contract_parameters(
         contract_name,
         function_name,
         schema_version,
+        verbose_error_message.unwrap_or(false),
     ) {
         Ok(s) => Ok(s),
         Err(e) => Err(format!("unable to serialize parameters, due to: {}", e)),
@@ -123,9 +125,15 @@ pub fn serialize_init_contract_parameters(
     schema: HexString,
     contract_name: &str,
     schema_version: Option<u8>,
+    verbose_error_message: Option<bool>,
 ) -> Result<HexString, String> {
-    match serialize_init_contract_parameters_aux(parameters, schema, contract_name, schema_version)
-    {
+    match serialize_init_contract_parameters_aux(
+        parameters,
+        schema,
+        contract_name,
+        schema_version,
+        verbose_error_message.unwrap_or(false),
+    ) {
         Ok(s) => Ok(s),
         Err(e) => Err(format!("unable to serialize parameters, due to: {}", e)),
     }
@@ -162,8 +170,12 @@ pub fn get_init_contract_parameter_schema_ext(
 }
 
 #[wasm_bindgen(js_name = serializeTypeValue)]
-pub fn serialize_type_value_ext(value: JsonString, schema: HexString) -> Result<HexString, String> {
-    serialize_type_value_aux(value, schema)
+pub fn serialize_type_value_ext(
+    value: JsonString,
+    schema: HexString,
+    verbose_error_message: Option<bool>,
+) -> Result<HexString, String> {
+    serialize_type_value_aux(value, schema, verbose_error_message.unwrap_or(false))
         .map_err(|e| format!("Unable to serialize value due to: {}", e))
 }
 

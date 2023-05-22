@@ -466,13 +466,15 @@ export function serializeInitContractParameters(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     parameters: any,
     rawSchema: Buffer,
-    schemaVersion?: SchemaVersion
+    schemaVersion?: SchemaVersion,
+    verboseErrorMessage = false
 ): Buffer {
     const serializedParameters = wasm.serializeInitContractParameters(
         JSON.stringify(parameters),
         rawSchema.toString('hex'),
         contractName,
-        schemaVersion
+        schemaVersion,
+        verboseErrorMessage
     );
     return Buffer.from(serializedParameters, 'hex');
 }
@@ -491,14 +493,16 @@ export function serializeUpdateContractParameters(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     parameters: any,
     rawSchema: Buffer,
-    schemaVersion?: SchemaVersion
+    schemaVersion?: SchemaVersion,
+    verboseErrorMessage = false
 ): Buffer {
     const serializedParameters = wasm.serializeReceiveContractParameters(
         JSON.stringify(parameters),
         rawSchema.toString('hex'),
         contractName,
         receiveFunctionName,
-        schemaVersion
+        schemaVersion,
+        verboseErrorMessage
     );
     return Buffer.from(serializedParameters, 'hex');
 }
@@ -512,11 +516,13 @@ export function serializeUpdateContractParameters(
 export function serializeTypeValue(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     value: any,
-    rawSchema: Buffer
+    rawSchema: Buffer,
+    verboseErrorMessage = false
 ): Buffer {
     const serializedValue = wasm.serializeTypeValue(
         JSON.stringify(value),
-        rawSchema.toString('hex')
+        rawSchema.toString('hex'),
+        verboseErrorMessage
     );
     return Buffer.from(serializedValue, 'hex');
 }

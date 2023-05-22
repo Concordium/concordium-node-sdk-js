@@ -37,5 +37,5 @@ for (let i = 0; i < aliases.length; i++) {
 
 // Of course, using isAlias() on a completely seperate account returns false
 if (isAlias(accountAddress, anotherAccount)) {
-    throw Error('Two seperate accounts is claimed to be aliases!');
+    throw Error('Two seperate accounts are claimed to be aliases!');
 }

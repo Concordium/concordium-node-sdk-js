@@ -1,5 +1,5 @@
 import { parseEndpoint } from '../shared/util';
-import { BakerId, createConcordiumClient } from '@concordium/node-sdk';
+import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -9,17 +9,20 @@ const cli = meow(
   Usage
     $ yarn run-example <path-to-this-file> [options]
 
+  Required
+    --ip, -i  The ip of the peer to connect to.
+
   Options
     --help,         Displays this message
-    --block,    -b  A block to query from, defaults to last final block
     --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
 `,
     {
         importMeta: import.meta,
         flags: {
-            block: {
+            ip: {
                 type: 'string',
-                alias: 'b',
+                alias: 'i',
+                isRequired: true,
             },
             endpoint: {
                 type: 'string',
@@ -39,20 +42,12 @@ const client = createConcordiumClient(
 );
 
 /**
- * Retrieves a stream of ID's for registered bakers on the network at a specific
- * block. If a blockhash is not supplied it will pick the latest finalized
- * block. An optional abort signal can also be provided that closes the stream.
-
- * Note: A stream can be collected to a list with the streamToList function.
+ * Unbans the specified peer.
+ * Rejects if the action fails.
  */
 
 (async () => {
-    const bakerIds: AsyncIterable<BakerId> = client.getBakerList(
-        cli.flags.block
-    );
+    await client.unbanPeer(cli.flags.ip);
 
-    console.log('List of BakerID at the specified block:');
-    for await (const bakerId of bakerIds) {
-        console.log(bakerId);
-    }
+    console.log('Successfully unbanned peer');
 })();

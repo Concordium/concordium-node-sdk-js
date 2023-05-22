@@ -1,5 +1,5 @@
 import { parseEndpoint } from '../shared/util';
-import { BakerId, createConcordiumClient } from '@concordium/node-sdk';
+import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -9,17 +9,26 @@ const cli = meow(
   Usage
     $ yarn run-example <path-to-this-file> [options]
 
+  Required
+    --ip,   -i  The ip of the peer to connect to.
+    --port, -p  The port of the peer to connect to.
+
   Options
     --help,         Displays this message
-    --block,    -b  A block to query from, defaults to last final block
     --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
 `,
     {
         importMeta: import.meta,
         flags: {
-            block: {
+            ip: {
                 type: 'string',
-                alias: 'b',
+                alias: 'i',
+                isRequired: true,
+            },
+            port: {
+                type: 'number',
+                alias: 'p',
+                isRequired: true,
             },
             endpoint: {
                 type: 'string',
@@ -39,20 +48,14 @@ const client = createConcordiumClient(
 );
 
 /**
- * Retrieves a stream of ID's for registered bakers on the network at a specific
- * block. If a blockhash is not supplied it will pick the latest finalized
- * block. An optional abort signal can also be provided that closes the stream.
-
- * Note: A stream can be collected to a list with the streamToList function.
+ * Suggest to connect the specified address as a peer. This, if successful,
+ * adds the peer to the list of given addresses, otherwise rejects. Note that
+ * the peer might not be connected to instantly, in that case the node will
+ * try to establish the connection in the near future.
  */
 
 (async () => {
-    const bakerIds: AsyncIterable<BakerId> = client.getBakerList(
-        cli.flags.block
-    );
+    await client.peerConnect(cli.flags.ip, cli.flags.port);
 
-    console.log('List of BakerID at the specified block:');
-    for await (const bakerId of bakerIds) {
-        console.log(bakerId);
-    }
+    console.log('Successfully connected to peer');
 })();

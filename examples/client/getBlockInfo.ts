@@ -1,3 +1,4 @@
+import { parseEndpoint } from '../shared/util';
 import { BlockInfo, createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -24,16 +25,16 @@ const cli = meow(
             block: {
                 type: 'string',
                 alias: 'b',
-                default: '', // This defaults to LastFinal
             },
         },
     }
 );
 
-const [address, port] = cli.flags.endpoint.split(':');
+const [address, port] = parseEndpoint(cli.flags.endpoint);
+
 const client = createConcordiumClient(
     address,
-    Number(port),
+    port,
     credentials.createInsecure()
 );
 

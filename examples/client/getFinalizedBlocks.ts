@@ -1,3 +1,4 @@
+import { parseEndpoint } from '../shared/util';
 import {
     createConcordiumClient,
     FinalizedBlockInfo,
@@ -9,7 +10,7 @@ import meow from 'meow';
 const cli = meow(
     `
   Usage
-    $ yarn ts-node <path-to-this-file> [options]
+    $ yarn run-example <path-to-this-file> [options]
 
   Options
     --help,     -h  Displays this message
@@ -27,7 +28,8 @@ const cli = meow(
     }
 );
 
-const [address, port] = cli.flags.endpoint.split(':');
+const [address, port] = parseEndpoint(cli.flags.endpoint);
+
 const client = createConcordiumClient(
     address,
     Number(port),

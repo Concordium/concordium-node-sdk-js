@@ -1,6 +1,7 @@
 import { parseEndpoint } from '../shared/util';
 import {
-    BlockFinalizationSummary,
+    ContractAddress,
+    HexString,
     createConcordiumClient,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
@@ -12,6 +13,10 @@ const cli = meow(
   Usage
     $ yarn run-example <path-to-this-file> [options]
 
+  Required:
+    --key,      -k  The key from which to get the value from the contract state
+    --contract, -c  The index of the contract to query info about
+
   Options
     --help,         Displays this message
     --block,    -b  A block to query from, defaults to last final block
@@ -20,6 +25,16 @@ const cli = meow(
     {
         importMeta: import.meta,
         flags: {
+            key: {
+                type: 'string',
+                alias: 'k',
+                isRequired: true,
+            },
+            contract: {
+                type: 'number',
+                alias: 'c',
+                isRequired: true,
+            },
             block: {
                 type: 'string',
                 alias: 'b',
@@ -42,26 +57,23 @@ const client = createConcordiumClient(
 );
 
 /**
- * Get the summary of the finalization data in a given block. Only finalized
- * blocks will return a finalization summary, if the summary is requested for
- * a non-finalized block, this will return an object with only the tag field,
- * with value "none".  If a blockhash is not supplied it will pick the latest
- * finalized block.
+ * Get the value at a specific key of a contract state as a hex string.
+ * In contrast to `GetInstanceState` this is more efficient, but requires the
+ * user to know the specific key to look for. If a blockhash is not supplied
+ * it will pick the latest finalized block.
  */
 
 (async () => {
-    const summary: BlockFinalizationSummary =
-        await client.getBlockFinalizationSummary(cli.flags.block);
+    const contract: ContractAddress = {
+        index: BigInt(cli.flags.contract),
+        subindex: 0n,
+    };
 
-    if (summary.tag === 'record') {
-        // Response contains finalization summary for the given block:
-        console.log('block:', summary.record.block);
-        console.log('index:', summary.record.index);
-        console.log('delay:', summary.record.delay);
-        console.log('Amount of finalizers:', summary.record.finalizers.length);
-    } else {
-        console.log(
-            'Given block has not been finalized, and no information can be gotten'
-        );
-    }
+    const state: HexString = await client.instanceStateLookup(
+        contract,
+        cli.flags.key,
+        cli.flags.block
+    );
+
+    console.log(state);
 })();

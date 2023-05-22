@@ -1,5 +1,5 @@
 import { parseEndpoint } from '../shared/util';
-import { BakerPoolStatus, createConcordiumClient } from '@concordium/node-sdk';
+import { isRewardStatusV1, createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -13,7 +13,7 @@ const cli = meow(
     --pool-owner, -p  The BakerId of the pool owner 
 
   Options
-    --help,     -h  Displays this message
+    --help,         Displays this message
     --block,    -b  A block to query from, defaults to last final block
     --endpoint, -e  Specify endpoint of the form "address:port", defaults to localhost:20000
 `,
@@ -47,29 +47,27 @@ const client = createConcordiumClient(
 );
 
 /**
- * Retrives various information on the specified baker pool, at the end of the
- * specified block.
+ * Retrieves the current amount of funds in the system at a specific block,
+ * and the state of the special accounts.
  */
 
 (async () => {
-    const bakerPool: BakerPoolStatus = await client.getPoolInfo(
-        BigInt(cli.flags.poolOwner),
-        cli.flags.block
-    );
+    const tokenomics = await client.getTokenomicsInfo(cli.flags.block);
 
-    console.log('Open status:', bakerPool.poolInfo.openStatus);
-    console.log('Baker address:', bakerPool.bakerAddress);
+    // Protocol version 4 expanded the amount of information in the response, so one should check the type to access that.
+    // This information includes information about the payday and total amount of funds staked.
+    if (isRewardStatusV1(tokenomics)) {
+        console.log('Next payday time:', tokenomics.nextPaydayTime);
+        console.log(
+            'Total staked amount by bakers and delegators',
+            tokenomics.totalStakedCapital
+        );
+    }
+
+    // While other information is in both V1 and V0
     console.log(
-        'CCD provided by the baker to the pool:',
-        bakerPool.bakerEquityCapital / 1000000n
+        'The amount in the baking reward account:',
+        tokenomics.bakingRewardAccount
     );
-    console.log(
-        'CCD provided by the delegators to the pool:',
-        bakerPool.delegatedCapital / 1000000n
-    );
-    console.log(
-        'Total capital in CCD of ALL pools:',
-        bakerPool.allPoolTotalCapital / 1000000n
-    );
-    console.log('Pool commision rates:', bakerPool.poolInfo.commissionRates);
+    console.log('Total amount in existence:', tokenomics.totalAmount);
 })();

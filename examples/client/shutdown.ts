@@ -1,5 +1,5 @@
 import { parseEndpoint } from '../shared/util';
-import { Branch, createConcordiumClient } from '@concordium/node-sdk';
+import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -34,14 +34,11 @@ const client = createConcordiumClient(
 );
 
 /**
- * Get the current branches of blocks starting from and including the last
- * finalized block.
+ * Shuts down the node.
  */
 
 (async () => {
-    const branch: Branch = await client.getBranches();
+    await client.shutdown();
 
-    console.log('Root hash:', branch.blockHash);
-    console.log("Root's children:");
-    console.dir(branch.children, { depth: null, colors: true });
+    console.log('Node succesfully shut down');
 })();

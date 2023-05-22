@@ -30,10 +30,6 @@ const cli = meow(
     }
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
-
 const file = fs.readFileSync(path.resolve(process.cwd(), cli.flags.keyFile));
 const contents = JSON.parse(file.toString('utf8'));
 

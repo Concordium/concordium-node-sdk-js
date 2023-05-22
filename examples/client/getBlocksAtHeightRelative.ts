@@ -1,3 +1,4 @@
+import { parseEndpoint } from '../shared/util';
 import {
     BlocksAtHeightRequest,
     createConcordiumClient,
@@ -50,7 +51,8 @@ const cli = meow(
     }
 );
 
-const [address, port] = cli.flags.endpoint.split(':');
+const [address, port] = parseEndpoint(cli.flags.endpoint);
+
 const client = createConcordiumClient(
     address,
     Number(port),

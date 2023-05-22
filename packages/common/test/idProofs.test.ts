@@ -4,12 +4,11 @@ import {
     attributesWithRange,
     attributesWithSet,
     RangeStatement,
-    IdStatementV2,
-    IDENTITY_SUBJECT_SCHEMA,
 } from '../src/idProofTypes';
 import { getIdProof, IdStatementBuilder } from '../src/idProofs';
 import fs from 'fs';
 import { Web3StatementBuilder } from '../src';
+import { expectedStatementMixed } from './resources/expectedStatements';
 
 test('Creating a statement with multiple atomic statements on the same attribute fails', () => {
     const builder = new IdStatementBuilder(true);
@@ -214,65 +213,5 @@ test('Generate V2 statement', () => {
         )
         .addForIdentityCredentials([0, 1, 2], (b) => b.revealAttribute(0))
         .getStatements();
-    expect(statement).toStrictEqual(expectedStatementV2.statements);
+    expect(statement).toStrictEqual(expectedStatementMixed);
 });
-
-const expectedStatementV2: { challenge: string; statements: IdStatementV2 } = {
-    challenge:
-        '44803def478a9a554f39eb8ae24f75ba9905f90a337c69743379c08c9a26cec0',
-    statements: [
-        {
-            id: {
-                type: 'sci',
-                issuers: [
-                    { index: 2101n, subindex: 0n },
-                    { index: 1337n, subindex: 42n },
-                ],
-            },
-            statement: [
-                {
-                    attributeTag: 17,
-                    lower: 80n,
-                    type: 'AttributeInRange',
-                    upper: 1237n,
-                },
-                {
-                    attributeTag: 23,
-                    set: ['aa', 'ff', 'zz'],
-                    type: 'AttributeInSet',
-                },
-            ],
-        },
-        {
-            id: {
-                type: 'sci',
-                issuers: [{ index: 1338n, subindex: 0n }],
-            },
-            statement: [
-                {
-                    attributeTag: 0,
-                    lower: 80n,
-                    type: 'AttributeInRange',
-                    upper: 1237n,
-                },
-                {
-                    attributeTag: 1,
-                    set: ['aa', 'ff', 'zz'],
-                    type: 'AttributeNotInSet',
-                },
-            ],
-        },
-        {
-            id: {
-                type: 'cred',
-                issuers: [0, 1, 2],
-            },
-            statement: [
-                {
-                    attributeTag: 0,
-                    type: 'RevealAttribute',
-                },
-            ],
-        },
-    ],
-};

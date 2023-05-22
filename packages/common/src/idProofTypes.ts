@@ -146,7 +146,7 @@ type DiscriminatedStatement = {
     statement: AtomicStatementV2[];
 };
 
-export type IdStatementV2 = DiscriminatedStatement[];
+export type CredentialStatements = DiscriminatedStatement[];
 
 export interface StatementBuilder<
     ValueType,

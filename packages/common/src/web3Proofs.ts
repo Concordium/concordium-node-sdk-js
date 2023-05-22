@@ -4,7 +4,7 @@ import {
     EU_MEMBERS,
     IdentityQualifier,
     IDENTITY_SUBJECT_SCHEMA,
-    IdStatementV2,
+    CredentialStatements,
     MAX_DATE,
     MembershipStatementV2,
     MIN_DATE,
@@ -33,18 +33,29 @@ function verifyRangeStatement(
         if (typeof statement.lower != 'string') {
             throw new Error(
                 properties.title +
-                    ' is a string property and such the lower end of a range statements must be a string'
+                    ' is a string property and therefore the lower end of a range statement must be a string'
             );
         }
         if (typeof statement.upper != 'string') {
             throw new Error(
                 properties.title +
-                    ' is a string property and such the upper end of a range statements must be a string'
+                    ' is a string property and therefore the upper end of a range statement must be a string'
+            );
+        }
+    } else if (properties.type === 'integer') {
+        if (typeof statement.lower != 'bigint') {
+            throw new Error(
+                properties.title +
+                    ' is a integer property and therefore the lower end of a range statement must be a bigint'
+            );
+        }
+        if (typeof statement.upper != 'bigint') {
+            throw new Error(
+                properties.title +
+                    ' is a integer property and therefore the upper end of a range statement must be a bigint'
             );
         }
     }
-    // TODO Check in case of number values
-
     if (statement.upper < statement.lower) {
         throw new Error('Upper bound must be greater than lower bound');
     }
@@ -68,10 +79,18 @@ function verifySetStatement(
     ) {
         throw new Error(
             properties.title +
-                ' is a string property and such the lower end of a range statements must be a string'
+                ' is a string property and therefore the members of a set statement must be strings'
         );
     }
-    // TODO Check in case of number values
+    if (
+        properties.type === 'integer' &&
+        !statement.set.every((value) => typeof value == 'bigint')
+    ) {
+        throw new Error(
+            properties.title +
+                ' is a integer property and therefore the members of a set statement must be bigints'
+        );
+    }
 }
 
 function verifyAtomicStatement(
@@ -331,7 +350,7 @@ export class IdentityStatementBuild extends AtomicStatementBuilder {
 
 type InternalBuilder = StatementBuilder<string | bigint, number>;
 export class Web3StatementBuilder {
-    private statements: IdStatementV2 = [];
+    private statements: CredentialStatements = [];
 
     private add(
         id: StatementProverQualifier,
@@ -367,7 +386,7 @@ export class Web3StatementBuilder {
         );
     }
 
-    getStatements(): IdStatementV2 {
+    getStatements(): CredentialStatements {
         return this.statements;
     }
 }

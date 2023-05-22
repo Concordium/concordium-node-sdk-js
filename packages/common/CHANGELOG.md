@@ -3,7 +3,23 @@
 ## Unreleased
 
 ### Added
-- Utility functions for extracting information from `BlockItemSummary`.
+- A `parseWallet` function to parse wallet export files
+
+## 7.0.0 2023-05-15 
+
+### Breaking changes
+
+- Updated `blockInfo` so that the `bakerId` field is optional, since it will be undefined for genesis blocks.
+- `waitForTransactionFinalization` now returns a `BlockItemSummaryInBlock`
+- Added missing version return type in `getModuleSchema`. It now returns an object containing the schema source and version.
+
+### Added
+
+- Helpers for calculating energy cost for a transaction and microCCD cost from energy cost:
+  - `getEnergyCost`
+  - `getExchangeRate`
+  - `convertEnergyToMicroCcd`
+- Utility functions for extracting information from `BlockItemSummary`:
     - `isInitContractSummary`
     - `isUpdateContractSummary`
     - `isTransferLikeSummary`
@@ -13,8 +29,18 @@
     - `getReceiverAccount`
     - `affectedContracts`
     - `affectedAccounts`
-- Utility functions for extracting information from `BlockSpecialEvent`.
+- Utility functions for extracting information from `BlockSpecialEvent`:
     - `specialEventAffectedAccounts`
+- Helper methods on `GRPCClient` for chain traversal: 
+    - `getFinalizedBlocksFrom`
+    - `findEarliestFinalized`
+    - `findInstanceCreation`
+    - `findFirstFinalizedBlockNoLaterThan`
+- Extended HdWallet with support for verifiable credential key deriviation.
+
+### Changed
+
+- Bumped @concordium/rust-bindings to 0.12.0. (Adds key derivation for verifiable credentials)
 
 ## 6.5.0 2023-5-03
 

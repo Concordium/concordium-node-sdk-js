@@ -14,7 +14,7 @@ on:
 env:
   NODE_VERSION: 18.16.0
   RUST_VERSION: 1.62
-  RUST_FMT: nightly-2022-06-09-x86_64-unknown-linux-gnu
+  RUST_FMT: nightly-2023-04-01-x86_64-unknown-linux-gnu
 
 jobs:
   build:
@@ -38,7 +38,7 @@ jobs:
             ./packages/rust-bindings/pkg
             ./packages/common/lib
             ./packages/nodejs/lib
-          key: ${{ runner.os }}-build_output-${{ hashFiles('**/*.ts', '**/yarn.lock', '.git/modules/deps/concordium-base/HEAD', './packages/rust-bindings/Cargo.lock', '.packages/rust-bindings/src/*.rs') }}
+          key: ${{ runner.os }}-build_output-${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Cache GRPC
         id: cache-grpc
@@ -47,7 +47,7 @@ jobs:
           path: |
             ./packages/common/grpc
             ./packages/nodejs/grpc
-          key: ${{ runner.os }}-grpc-${{ hashFiles('.git/modules/deps/concordium-base/HEAD') }}
+          key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}
 
       - name: Get dependencies
         run: yarn install --immutable
@@ -57,7 +57,9 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: "packages/rust-bindings"
+          workspaces: |
+            packages/rust-bindings
+            deps/concordium-deps
 
       - name: Get wasm-pack
         uses: jetli/wasm-pack-action@v0.4.0
@@ -97,7 +99,7 @@ jobs:
             ./packages/rust-bindings/pkg
             ./packages/common/lib
             ./packages/nodejs/lib
-          key: ${{ runner.os }}-build_output-${{ hashFiles('**/*.ts', '**/yarn.lock', '.git/modules/deps/concordium-base/HEAD', './packages/rust-bindings/Cargo.lock', '.packages/rust-bindings/src/*.rs') }}
+          key: ${{ runner.os }}-build_output-${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Cache GRPC
         id: cache-grpc
@@ -106,7 +108,7 @@ jobs:
           path: |
             ./packages/common/grpc
             ./packages/nodejs/grpc
-          key: ${{ runner.os }}-grpc-${{ hashFiles('.git/modules/deps/concordium-base/HEAD') }}
+          key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}
 
       - name: Get dependencies
         run: yarn install --immutable
@@ -158,7 +160,7 @@ jobs:
             ./packages/rust-bindings/pkg
             ./packages/common/lib
             ./packages/nodejs/lib
-          key: ${{ runner.os }}-build_output-${{ hashFiles('**/*.ts', '**/yarn.lock', '.git/modules/deps/concordium-base/HEAD', './packages/rust-bindings/Cargo.lock', '.packages/rust-bindings/src/*.rs') }}
+          key: ${{ runner.os }}-build_output-${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Cache GRPC
         id: cache-grpc
@@ -167,7 +169,7 @@ jobs:
           path: |
             ./packages/common/grpc
             ./packages/nodejs/grpc
-          key: ${{ runner.os }}-grpc-${{ hashFiles('.git/modules/deps/concordium-base/HEAD') }}
+          key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}
 
       - name: Get dependencies
         run: yarn install --immutable
@@ -213,7 +215,9 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: "packages/rust-bindings"
+          workspaces: |
+            packages/rust-bindings
+            deps/concordium-deps
 
       - name: Run clippy
         run: cargo clippy --color=always --tests --benches -- -Dclippy::all

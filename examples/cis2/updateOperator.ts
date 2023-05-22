@@ -5,7 +5,7 @@ import {
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
-import { parseAddress } from '../shared/util';
+import { parseAddress, parseEndpoint } from '../shared/util';
 
 const cli = meow(
     `
@@ -63,16 +63,12 @@ const cli = meow(
     }
 );
 
-const [nodeAddress, port] = cli.flags.endpoint.split(':');
+const [address, port] = parseEndpoint(cli.flags.endpoint);
 const client = createConcordiumClient(
-    nodeAddress,
+    address,
     Number(port),
     credentials.createInsecure()
 );
-
-if (cli.flags.h) {
-    cli.showHelp();
-}
 
 (async () => {
     const contract = await CIS2Contract.create(client, {

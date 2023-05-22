@@ -35,7 +35,7 @@ a concordium-node.
 ## Creating a client
 The current node setup only allows for insecure connections, which can be set up in the following way.
 The access is controlled by the credentials and the metadata.
-```js
+```ts
 import { credentials, Metadata } from "@grpc/grpc-js";
 import { ConcordiumNodeClient } from "@concordium/node-sdk";
 
@@ -58,7 +58,7 @@ The following example demonstrates how to send any account transaction.
 See the Constructing transactions section for the [common package](../common#constructing-transactions) for how to create an account transaction.
 See the signing a transaction section for the [common package](../common#sign-an-account-transaction) for how to sign an account transaction.
 
-```js
+```ts
 
 let accountTransaction: AccountTransaction;
 // Create the transaction
@@ -87,7 +87,7 @@ const transactionStatus = await client.getTransactionStatus(transactionHash);
 The following example demonstrates how to create a new account on an existing
 identity. The `credentialIndex` should be the next unused credential index for that identity, and keeping track of that index is done off-chain. Note that index `0` is used by the initial account that was created together with the identity.
 See [Construct IdentityInput](#Construct-identityInput-for-creating-credentials) for how to construct an IdentityInput.
-```js
+```ts
 const lastFinalizedBlockHash = (await client.getConsensusStatus()).lastFinalizedBlock;
 const cryptographicParameters = await client.getCryptographicParameters(lastFinalizedBlockHash);
 if (!cryptographicParameters) {
@@ -180,7 +180,7 @@ To create accounts/credentials on that identity, this SDK expects an "IdentityIn
 
 Below is an example of how to construct the identityInput, with a plaintext id-use-data.json from the [user-cli guide](https://github.com/Concordium/concordium-base/blob/main/rust-bins/docs/user-cli.md#generate-a-request-for-the-identity-object), and an id-object file.
 
-```js
+```ts
 // First we load the files. We assume here that they are available as local files.
 const rawIdUseData = fs.readFileSync(
     'path/to/id-use-data.json',
@@ -212,7 +212,7 @@ const identityInput: IdentityInput = {
 
 The following is an example of how to construct the identityInput for the _i_-th identity from a mobile wallet export:
 
-```js
+```ts
 // We assume the export is available as a local file:
 const rawData = fs.readFileSync(
     'path/to/export.concordiumwallet',
@@ -239,7 +239,7 @@ If a credential registration id is provided, then the node returns the informati
 which the corresponding credential is (or was) deployed to.
 If there is no account that matches the address or credential id at the provided
 block, then undefined will be returned.
-```js
+```ts
 const accountAddress = new AccountAddress("3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU");
 const blockHash = "6b01f2043d5621192480f4223644ef659dd5cda1e54a78fc64ad642587c73def";
 const accountInfo: AccountInfo = await client.getAccountInfo(accountAddress, blockHash);
@@ -250,7 +250,7 @@ const nationality: string = accountInfo.accountCredentials[0].value.contents.pol
 ```
 
 To check if the account is a baker or a delegator, one can use the functions `isDelegatorAccount` and `isBakerAccount`.
-```js
+```ts
 ...
 const accountInfo: AccountInfo = await client.getAccountInfo(accountAddress, blockHash);
 if (isDelegatorAccount(accountInfo)) {
@@ -266,7 +266,7 @@ if (isDelegatorAccount(accountInfo)) {
 Furthermore there are different versions, based on Protocol version, of a baker's accountInfo.
 In protocol version 4 the concept of baker pools was introduced, so to get baker pool information one should confirm the version with `isBakerAccountV0` or `isBakerAccountV1`.
 
-```js
+```ts
 ...
 const accountInfo: AccountInfo = await client.getAccountInfo(accountAddress, blockHash);
 if (isBakerAccountV1(accountInfo)) {
@@ -283,7 +283,7 @@ Retrieves the next account nonce, i.e. the nonce that must be set in the account
 header for the next transaction submitted by that account. Along with the nonce there is a boolean
 that indicates whether all transactions are finalized. If this is true, then the nonce is reliable, 
 if not then the next nonce might be off.
-```js
+```ts
 const accountAddress = new AccountAddress("3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt");
 const nextAccountNonce: NextAccountNonce = await client.getNextAccountNonce(accountAddress);
 const nonce: bigint = nextAccountNonce.nonce;
@@ -295,28 +295,28 @@ if (allFinal) {
 
 ## getTransactionStatus
 Retrieves status information about a transaction.
-```js
+```ts
 const transactionHash = "f1f5f966e36b95d5474e6b85b85c273c81bac347c38621a0d8fefe68b69a430f";
 const transactionStatus: TransactionStatus = await client.getTransactionStatus(transactionHash);
 const isFinalized = transactionStatus.status === TransactionStatusEnum.Finalized;
 ...
 ```
 Note that there will be no outcomes for a transaction that has only been received:
-```js
+```ts
 if (transactionStatus.status === TransactionStatusEnum.Received) {
     const outcomes = Object.values(transactionStatus.outcomes);
     // outcomes.length === 0.
 }
 ```
 If the transaction has been finalized, then there is exactly one outcome:
-```js
+```ts
 if (transactionStatus.status === TransactionStatusEnum.Finalized) {
     const outcomes = Object.values(transactionStatus.outcomes);
     // outcomes.length === 1.
 }
 ```
 A transaction was successful if it is finalized and it has a successful outcome:
-```js
+```ts
 if (transactionStatus.status === TransactionStatusEnum.Finalized) {
     const event = Object.values(response.outcomes)[0];
     if (event.result.outcome === "success") {
@@ -329,7 +329,7 @@ if (transactionStatus.status === TransactionStatusEnum.Finalized) {
 Retrives a summary for a specific block. The summary contains information about finalization, the
 current chain parameters, a list of the governance keys, information about any queued chain parameter
 updates and a summary of any transactions within the block.
-```js
+```ts
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749";
 const blockSummary: BlockSummary = await client.getBlockSummary(blockHash);
 const numberOfFinalizers = blockSummary.finalizationData.finalizers.length;
@@ -339,7 +339,7 @@ const numberOfFinalizers = blockSummary.finalizationData.finalizers.length;
 Blocks before protocol version 4 have a different type than those from higher protocol versions.
 To determine the version, use `isBlockSummaryV1` and `isBlockSummaryV0`:
 
-```js
+```ts
 ...
 const blockSummary: BlockSummary = await client.getBlockSummary(blockHash);
 if (isBlockSummaryV0(blockSummary)) {
@@ -357,7 +357,7 @@ There are also type checks for specific fields in the summary, which can be foun
 
 ## getBlockInfo
 Retrieves information about a specific block.
-```js
+```ts
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749";
 const blockInfo: BlockInfo = await client.getBlockInfo(blockHash);
 const transactionsCount = blockInfo.transactionCount;
@@ -366,14 +366,14 @@ const transactionsCount = blockInfo.transactionCount;
 
 ## getBlocksAtHeight
 Retrieves the hashes of blocks at a specific height.
-```js
+```ts
 const blockHeight: bigint = 5310n;
 const blocksAtHeight: string[] = await client.getBlocksAtHeight(blockHeight);
 ```
 
 ## getConsensusStatus
 Retrieves the current consensus status from the node.
-```js
+```ts
 const consensusStatus: ConsensusStatus = await client.getConsensusStatus();
 const bestBlock = consensusStatus.bestBlock;
 ...
@@ -382,7 +382,7 @@ const bestBlock = consensusStatus.bestBlock;
 ## getCryptographicParameters
 Retrieves the global cryptographic parameters for the blockchain at a specific block.
 These are a required input for e.g. creating credentials.
-```js
+```ts
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8761d08554756f42bf268a42749"
 const cryptographicParameters = await client.getCryptographicParameters(blockHash);
 ...
@@ -390,7 +390,7 @@ const cryptographicParameters = await client.getCryptographicParameters(blockHas
 
 ## getIdentityProviders
 Retrieves the list of identity providers at a specific block.
-```js
+```ts
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
 const identityProviders = await client.getIdentityProviders(blockHash);
 ...
@@ -398,7 +398,7 @@ const identityProviders = await client.getIdentityProviders(blockHash);
 
 ## getAnonymityRevokers
 Retrieves the list of anonymity revokers at a specific block.
-```js
+```ts
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
 const identityProviders = await client.getAnonymityRevokers(blockHash);
 ...
@@ -408,7 +408,7 @@ const identityProviders = await client.getAnonymityRevokers(blockHash);
 Retrieves the list of peers that the node is connected to, including some
 connection information about them. A boolean parameter determines if this 
 should include bootstrapper nodes or not.
-```js
+```ts
 const peerListResponse = await client.getPeerList(false);
 const peersList = peerListResponse.getPeersList();
 ...
@@ -416,7 +416,7 @@ const peersList = peerListResponse.getPeersList();
 
 ## getBakerList
 Retrieves the list of ID's for registered bakers on the network at a specific block.
-```js
+```ts
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
 const bakerIds = await client.getBakerList(blockHash);
 ...
@@ -425,7 +425,7 @@ const bakerIds = await client.getBakerList(blockHash);
 ## getPoolStatus
 Retrieves the status of a pool (either a specific baker or passive delegation) at a specific block.
 If a baker ID is specified, the status of that baker is returned. To get the status of passive delegation, baker ID should be left undefined.
-```js
+```ts
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
 const bakerId = BigInt(1);
 
@@ -436,7 +436,7 @@ const passiveDelegationStatus = await client.getPoolStatus(blockHash);
 
 ## getRewardStatus
 Retrieves the current amount of funds in the system at a specific block, and the state of the special accounts. 
-```js
+```ts
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
 
 const rewardStatus = await client.getRewardStatus(blockHash);
@@ -444,7 +444,7 @@ const rewardStatus = await client.getRewardStatus(blockHash);
 
 Protocol version 4 expanded the amount of information in the response, so one should check the type to access that.
 This information includes information about the payday and total amount of funds staked.
-```js
+```ts
 if (isRewardStatusV1(rewardStatus)) {
     const nextPaydayTime = rewardStatus.nextPaydayTime; 
     ...
@@ -454,7 +454,7 @@ if (isRewardStatusV1(rewardStatus)) {
 ## Check block for transfers with memo
 The following example demonstrates how to check and parse a block 
 for transfers with a memo.
-```js
+```ts
 const blockHash = "b49bb1c06c697b7d6539c987082c5a0dc6d86d91208874517ab17da752472edf";
 const blockSummary = await client.getBlockSummary(blockHash);
 const transactionSummaries = blockSummary.transactionSummaries;
@@ -476,7 +476,7 @@ for (const transactionSummary of transactionSummaries) {
 
 ## getInstances
 Used to get the full list of contract instances on the chain at a specific block.
-```js
+```ts
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
 
 const instances = await client.getInstances(blockHash);
@@ -486,7 +486,7 @@ const instances = await client.getInstances(blockHash);
 ## getInstanceInfo
 Used to get information about a specific contract instance, at a specific block.
 
-```js
+```ts
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
 const contractAddress = { index: 1n, subindex: 0n };
 
@@ -500,7 +500,7 @@ Note that only version 0 contracts returns the model. (use `isInstanceInfoV0`/`i
 ## invokeContract
 Used to simulate a contract update, and to trigger view functions.
 
-```js
+```ts
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
 const contractAddress = { index: 1n, subindex: 0n };
 const invoker = new AccountAddress('3tXiu8d4CWeuC12irAB7YVb1hzp3YxsmmmNzzkdujCPqQ9EjDm');
@@ -541,7 +541,7 @@ Note that some of the parts of the context are optional:
 This commands gets the source of a module on the chain.
 
 Note that this returns the raw bytes of the source, as a buffer.
-```js
+```ts
 const blockHash = "7f7409679e53875567e2ae812c9fcefe90ced8961d08554756f42bf268a42749";
 const moduleReference = "c0e51cd55ccbff4fa8da9bb76c9917e83ae8286d86b47647104bf715b4821c1a";
 const source = await client.getModuleSource(moduleReference, blockHash);

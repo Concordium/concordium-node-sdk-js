@@ -5,48 +5,48 @@ import {
     AccountAddress,
     signMessage,
     buildAccountSigner,
+    parseWallet,
 } from '@concordium/node-sdk';
 
 const cli = meow(
     `
   Usage
-    $ yarn ts-node <path-to-this-file> [options]
+    $ yarn run-example <path-to-this-file> [options]
 
   Required
-    --keyFile,   -f  A file containing the private key(s) of an account, which must be a supported format (e.g. a private key export from a Concordium wallet)
+    --walletFile, -w  A file containing the private key(s) of an account, which must be a supported format (e.g. a private key export from a Concordium wallet)
 
   Options
-    --help,      -h  Displays this message
+    --help,     Displays this message
 `,
     {
         importMeta: import.meta,
         flags: {
-            keyFile: {
+            walletFile: {
                 type: 'string',
-                alias: 'f',
+                alias: 'w',
                 isRequired: true,
             },
         },
     }
 );
 
-if (cli.flags.h) {
-    cli.showHelp();
-}
+/**
+ * Shows how to build an account signer
+ */
 
-const file = fs.readFileSync(path.resolve(process.cwd(), cli.flags.keyFile));
-const contents = JSON.parse(file.toString('utf8'));
+const walletFile = fs.readFileSync(
+    path.resolve(process.cwd(), cli.flags.walletFile),
+    'utf8'
+);
+const wallet = parseWallet(walletFile);
 
 try {
-    const signer = buildAccountSigner(contents);
+    const signer = buildAccountSigner(wallet);
 
-    signMessage(
-        new AccountAddress(
-            '3eP94feEdmhYiPC1333F9VoV31KGMswonuHk5tqmZrzf761zK5'
-        ),
-        'test',
-        signer
-    ).then(console.log);
+    signMessage(new AccountAddress(wallet.value.address), 'test', signer).then(
+        console.log
+    );
 } catch {
     console.error('File passed does not conform to a supported JSON format');
 }

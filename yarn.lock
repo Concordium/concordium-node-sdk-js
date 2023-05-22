@@ -1312,11 +1312,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@concordium/common-sdk@6.5.0, @concordium/common-sdk@workspace:packages/common":
+"@concordium/common-sdk@7.0.0, @concordium/common-sdk@workspace:packages/common":
   version: 0.0.0-use.local
   resolution: "@concordium/common-sdk@workspace:packages/common"
   dependencies:
-    "@concordium/rust-bindings": 0.11.1
+    "@concordium/rust-bindings": 0.12.0
     "@grpc/grpc-js": ^1.3.4
     "@noble/ed25519": ^1.7.1
     "@protobuf-ts/plugin": 2.8.1
@@ -1358,6 +1358,7 @@ __metadata:
     "@grpc/grpc-js": ^1.3.4
     "@typescript-eslint/eslint-plugin": ^4.28.1
     "@typescript-eslint/parser": ^4.28.1
+    buffer: ^6.0.3
     eslint: ^7.29.0
     eslint-config-prettier: ^8.3.0
     eslint-plugin-import: ^2.23.4
@@ -1374,7 +1375,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@concordium/node-sdk@workspace:packages/nodejs"
   dependencies:
-    "@concordium/common-sdk": 6.5.0
+    "@concordium/common-sdk": 7.0.0
     "@grpc/grpc-js": ^1.3.4
     "@noble/ed25519": ^1.7.1
     "@protobuf-ts/grpc-transport": ^2.8.2
@@ -1403,7 +1404,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@concordium/rust-bindings@0.11.1, @concordium/rust-bindings@workspace:packages/rust-bindings":
+"@concordium/rust-bindings@0.12.0, @concordium/rust-bindings@workspace:packages/rust-bindings":
   version: 0.0.0-use.local
   resolution: "@concordium/rust-bindings@workspace:packages/rust-bindings"
   languageName: unknown
@@ -1413,8 +1414,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@concordium/web-sdk@workspace:packages/web"
   dependencies:
-    "@concordium/common-sdk": 6.5.0
-    "@concordium/rust-bindings": 0.11.1
+    "@concordium/common-sdk": 7.0.0
+    "@concordium/rust-bindings": 0.12.0
     "@grpc/grpc-js": ^1.3.4
     "@protobuf-ts/grpcweb-transport": ^2.8.2
     "@typescript-eslint/eslint-plugin": ^4.28.1
@@ -1821,6 +1822,46 @@ __metadata:
     "@jridgewell/resolve-uri": ^3.0.3
     "@jridgewell/sourcemap-codec": ^1.4.10
   checksum: b9537b9630ffb631aef9651a085fe361881cde1772cd482c257fe3c78c8fd5388d681f504a9c9fe1081b1c05e8f75edf55ee10fdb58d92bbaa8dbf6a7bd6b18c
+  languageName: node
+  linkType: hard
+
+"@knodes/typedoc-plugin-code-blocks@npm:^0.23.0":
+  version: 0.23.4
+  resolution: "@knodes/typedoc-plugin-code-blocks@npm:0.23.4"
+  dependencies:
+    "@knodes/typedoc-pluginutils": ~0.23.4
+    lodash: ^4.17.21
+  peerDependencies:
+    minimatch: ^5.1.0 || ^8.0.0
+    typedoc: ^0.23.0
+  checksum: 1a03a594b2d133ff467fc0c921d90c9ea38ac52250a0721992d78be0ede1e9731f882a74bb0a345b5ce5a1b4b27e1fccdbd53894c3afc874ae14d52fa2d3c2de
+  languageName: node
+  linkType: hard
+
+"@knodes/typedoc-plugin-pages@npm:^0.23.0":
+  version: 0.23.4
+  resolution: "@knodes/typedoc-plugin-pages@npm:0.23.4"
+  dependencies:
+    "@knodes/typedoc-pluginutils": ~0.23.4
+    lodash: ^4.17.21
+  peerDependencies:
+    lunr: ^2.3.0
+    typedoc: ^0.23.0
+  checksum: 9f7d675b37a19450036aa218610053e964c074021be2547ffc40f38f8b6cd325c343586d15dc2f4bcf46077c2d5cf32e33695d8c272e1584808f47066e5df4b0
+  languageName: node
+  linkType: hard
+
+"@knodes/typedoc-pluginutils@npm:~0.23.4":
+  version: 0.23.4
+  resolution: "@knodes/typedoc-pluginutils@npm:0.23.4"
+  dependencies:
+    fastest-levenshtein: ^1.0.16
+    lodash: ^4.17.21
+    pkg-up: ^3.1.0
+    semver: ^7.3.5
+  peerDependencies:
+    typedoc: ^0.23.0
+  checksum: 9e0dfeadda4b85f7d515ed04441ff0aabe33bd305c184ebac6df1c20e636ef44eef83eef381c10cb4958823f8a31dc6f4de14b8ba7cb5bd2bac7315303b9e26a
   languageName: node
   linkType: hard
 
@@ -4453,6 +4494,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fastest-levenshtein@npm:^1.0.16":
+  version: 1.0.16
+  resolution: "fastest-levenshtein@npm:1.0.16"
+  checksum: a78d44285c9e2ae2c25f3ef0f8a73f332c1247b7ea7fb4a191e6bb51aa6ee1ef0dfb3ed113616dcdc7023e18e35a8db41f61c8d88988e877cf510df8edafbc71
+  languageName: node
+  linkType: hard
+
 "fastq@npm:^1.6.0":
   version: 1.13.0
   resolution: "fastq@npm:1.13.0"
@@ -4506,6 +4554,15 @@ __metadata:
   dependencies:
     locate-path: ^2.0.0
   checksum: 43284fe4da09f89011f08e3c32cd38401e786b19226ea440b75386c1b12a4cb738c94969808d53a84f564ede22f732c8409e3cfc3f7fb5b5c32378ad0bbf28bd
+  languageName: node
+  linkType: hard
+
+"find-up@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "find-up@npm:3.0.0"
+  dependencies:
+    locate-path: ^3.0.0
+  checksum: 38eba3fe7a66e4bc7f0f5a1366dc25508b7cfc349f852640e3678d26ad9a6d7e2c43eff0a472287de4a9753ef58f066a0ea892a256fa3636ad51b3fe1e17fae9
   languageName: node
   linkType: hard
 
@@ -6270,6 +6327,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"locate-path@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "locate-path@npm:3.0.0"
+  dependencies:
+    p-locate: ^3.0.0
+    path-exists: ^3.0.0
+  checksum: 53db3996672f21f8b0bf2a2c645ae2c13ffdae1eeecfcd399a583bce8516c0b88dcb4222ca6efbbbeb6949df7e46860895be2c02e8d3219abd373ace3bfb4e11
+  languageName: node
+  linkType: hard
+
 "locate-path@npm:^5.0.0":
   version: 5.0.0
   resolution: "locate-path@npm:5.0.0"
@@ -6332,7 +6399,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash@npm:^4.7.0":
+"lodash@npm:^4.17.21, lodash@npm:^4.7.0":
   version: 4.17.21
   resolution: "lodash@npm:4.17.21"
   checksum: eb835a2e51d381e561e508ce932ea50a8e5a68f4ebdd771ea240d3048244a8d13658acbd502cd4829768c56f2e16bdd4340b9ea141297d472517b83868e677f7
@@ -6987,7 +7054,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"p-limit@npm:^2.2.0":
+"p-limit@npm:^2.0.0, p-limit@npm:^2.2.0":
   version: 2.3.0
   resolution: "p-limit@npm:2.3.0"
   dependencies:
@@ -7020,6 +7087,15 @@ __metadata:
   dependencies:
     p-limit: ^1.1.0
   checksum: e2dceb9b49b96d5513d90f715780f6f4972f46987dc32a0e18bc6c3fc74a1a5d73ec5f81b1398af5e58b99ea1ad03fd41e9181c01fa81b4af2833958696e3081
+  languageName: node
+  linkType: hard
+
+"p-locate@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "p-locate@npm:3.0.0"
+  dependencies:
+    p-limit: ^2.0.0
+  checksum: 83991734a9854a05fe9dbb29f707ea8a0599391f52daac32b86f08e21415e857ffa60f0e120bfe7ce0cc4faf9274a50239c7895fc0d0579d08411e513b83a4ae
   languageName: node
   linkType: hard
 
@@ -7195,6 +7271,15 @@ __metadata:
   dependencies:
     find-up: ^5.0.0
   checksum: b167bb8dac7bbf22b1d5e30ec223e6b064b84b63010c9d49384619a36734caf95ed23ad23d4f9bd975e8e8082b60a83395f43a89bb192df53a7c25a38ecb57d9
+  languageName: node
+  linkType: hard
+
+"pkg-up@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "pkg-up@npm:3.1.0"
+  dependencies:
+    find-up: ^3.0.0
+  checksum: 5bac346b7c7c903613c057ae3ab722f320716199d753f4a7d053d38f2b5955460f3e6ab73b4762c62fd3e947f58e04f1343e92089e7bb6091c90877406fcd8c8
   languageName: node
   linkType: hard
 
@@ -7643,6 +7728,8 @@ __metadata:
     "@babel/plugin-transform-modules-commonjs": ^7.12.1
     "@babel/plugin-transform-runtime": ^7.12.1
     "@babel/preset-env": ^7.12.1
+    "@knodes/typedoc-plugin-code-blocks": ^0.23.0
+    "@knodes/typedoc-plugin-pages": ^0.23.0
     "@typescript-eslint/eslint-plugin": ^4.28.1
     "@typescript-eslint/parser": ^4.28.1
     babel-jest: ^27.0.6

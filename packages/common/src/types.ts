@@ -12,7 +12,6 @@ import {
     TransactionEvent,
     TransferredEvent,
 } from './types/transactionEvent';
-import { isHex } from './util';
 
 export * from './types/NodeInfo';
 export * from './types/PeerInfo';

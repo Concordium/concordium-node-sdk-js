@@ -747,6 +747,10 @@ export interface WalletExportFormat {
     };
 }
 
+/**
+ * Parses a wallet export file into a WalletExportFormat. The wallet export
+ * file is exported from a concordium wallet.
+ */
 export function parseWallet(walletString: JsonString): WalletExportFormat {
     const wallet = JSON.parse(walletString);
     if (

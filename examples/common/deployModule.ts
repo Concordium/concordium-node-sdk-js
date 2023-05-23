@@ -24,7 +24,7 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> [options]
 
   Required
-    --wallet-file, -w  The filepath to the sender's private key
+    --wallet-file, -w  A path to a wallet export file from a Concordium wallet
     --module-file, -m  The filepath to the smart contract module
 
   Options
@@ -61,7 +61,7 @@ const client = createConcordiumClient(
 );
 
 /**
- * The following example demonstrates how a simple transfer can be created.
+ * The following example demonstrates how a module can be deployed.
  */
 
 (async () => {

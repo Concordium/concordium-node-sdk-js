@@ -4,7 +4,6 @@ import {
     AccountTransactionHeader,
     AccountTransactionSignature,
     AccountTransactionType,
-    BlockItemStatus,
     CcdAmount,
     DataBlob,
     NextAccountNonce,
@@ -29,7 +28,7 @@ const cli = meow(
   Required
     --amount,      -a  The amount to send
     --receiver,    -r  The receivnig account address
-    --wallet-file, -w  The filepath to the sender's private key
+    --wallet-file, -w  A path to a wallet export file from a Concordium wallet
 
   Options
     --help,         Displays this message
@@ -127,15 +126,6 @@ const client = createConcordiumClient(
         signature
     );
 
-    await client.waitForTransactionFinalization(transactionHash);
-
-    console.log('Transaction finalized, getting outcome...\n');
-
-    const transactionStatus: BlockItemStatus = await client.getBlockItemStatus(
-        transactionHash
-    );
-
-    if (transactionStatus.status === 'finalized') {
-        console.dir(transactionStatus.outcome, { depth: null, colors: true });
-    }
+    const status = await client.waitForTransactionFinalization(transactionHash);
+    console.dir(status, { depth: null, colors: true });
 })();

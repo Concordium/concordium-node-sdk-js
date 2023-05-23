@@ -14,7 +14,7 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> [options]
 
   Required
-    --walletFile, -w  A private key export from a Concordium wallet
+    --wallet-file, -w  A path to a wallet export file from a Concordium wallet
 
   Options
     --help,     Displays this message

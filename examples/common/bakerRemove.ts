@@ -23,7 +23,7 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> [options]
 
   Required
-    --wallet-file, -w  The filepath to the sender's private key
+    --wallet-file, -w  A path to a wallet export file from a Concordium wallet
 
   Options
     --help,     -h  Displays this message
@@ -54,8 +54,8 @@ const client = createConcordiumClient(
 );
 
 /**
- * The following example demonstrates how a configure delegation transaction can be created.
- * Note that although all the fields are optional, they are all required, when becoming a delegator.
+ * The following example demonstrates how an account can be configured to
+ * not be a baker anymore.
  */
 
 (async () => {

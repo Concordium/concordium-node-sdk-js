@@ -14,7 +14,7 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> [options]
 
   Required
-    --walletFile, -w  A file containing the private key(s) of an account, which must be a supported format (e.g. a private key export from a Concordium wallet)
+    --walletFile, -w  A private key export from a Concordium wallet
 
   Options
     --help,     Displays this message

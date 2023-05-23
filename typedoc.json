@@ -1,8 +1,23 @@
 {
+    "name":"Concordium nodejs SDK",
     "out": "typedoc",
     "entryPointStrategy": "expand",
     "entryPoints": ["packages/web/src/index.ts", "packages/nodejs/src/index.ts"],
     "tsconfig": "tsconfig.json",
-    "readme": "README.md",
+    "readme": "pages/documentation.md",
     "plugin": [ "@knodes/typedoc-plugin-code-blocks", "@knodes/typedoc-plugin-pages"],
+
+    "pluginPages": {
+        "pages": [ 
+            { 
+                "name": "Concordium nodejs SDK", 
+                "moduleRoot": true,
+                "children": [
+                    { "name": "Transactions", "source": "transactions.md" },
+                    { "name": "CIS2-Contracts", "source": "cis2-contracts.md" },
+                    { "name": "Account Creation", "source": "account-creation.md" },
+                ]
+            },
+        ]
+    }
 }

@@ -141,12 +141,12 @@ export type StatementProverQualifier =
     | VerifiableCredentialQualifier
     | IdentityQualifier;
 
-type DiscriminatedStatement = {
-    id: StatementProverQualifier;
+export type CredentialStatement = {
+    idQualifier: StatementProverQualifier;
     statement: AtomicStatementV2[];
 };
 
-export type CredentialStatements = DiscriminatedStatement[];
+export type CredentialStatements = CredentialStatement[];
 
 export interface StatementBuilder<
     ValueType,
@@ -297,4 +297,35 @@ export const IDENTITY_SUBJECT_SCHEMA: VerifiableCredentialSubject = {
         },
     },
     required: [],
+};
+
+type DIDString = string;
+
+export type ConcordiumWeakLinkingProofV1 = {
+    created: string;
+    proofValue: string[];
+    type: 'ConcordiumWeakLinkingProofV1';
+};
+
+export type CredentialSubjectProof = {
+    statement: AtomicStatementV2[];
+};
+
+export type VerifiableCredentialProof = {
+    credentialSubject: CredentialSubjectProof;
+    id: DIDString;
+    issuanceDate: string;
+    issuer: DIDString;
+    type: [
+        'VerifiableCredential',
+        'ConcordiumVerifiableCredential',
+        ...string[]
+    ];
+};
+
+export type VerifiablePresentation = {
+    presentationContext: string;
+    proof: ConcordiumWeakLinkingProofV1;
+    type: string;
+    verifiableCredential: VerifiableCredentialProof[];
 };

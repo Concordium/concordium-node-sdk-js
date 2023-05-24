@@ -1,8 +1,8 @@
-import { CredentialStatements } from '../../src/idProofTypes';
+import { CredentialStatement } from '../../src/idProofTypes';
 
-export const expectedStatementMixed: CredentialStatements = [
+export const expectedStatementMixed: CredentialStatement[] = [
     {
-        id: {
+        idQualifier: {
             type: 'sci',
             issuers: [
                 { index: 2101n, subindex: 0n },
@@ -24,7 +24,7 @@ export const expectedStatementMixed: CredentialStatements = [
         ],
     },
     {
-        id: {
+        idQualifier: {
             type: 'sci',
             issuers: [{ index: 1338n, subindex: 0n }],
         },
@@ -43,7 +43,7 @@ export const expectedStatementMixed: CredentialStatements = [
         ],
     },
     {
-        id: {
+        idQualifier: {
             type: 'cred',
             issuers: [0, 1, 2],
         },

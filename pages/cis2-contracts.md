@@ -20,7 +20,7 @@ This document describes the helper class for working with CIS-2 contracts
 
 ## CIS2Contract
 
-The CIS2Contract class wraps the [ConcordiumNodeClient]('./gRPC.md'),
+The CIS2Contract class wraps the [ConcordiumNodeClient]('../nonexistant/test.md'),
 defining an interface matching the [CIS-2
 standard](https://proposals.concordium.software/CIS/cis-2.html).
 

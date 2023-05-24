@@ -82,8 +82,8 @@ const client = createConcordiumClient(
 (async () => {
     // #region documentation-snippet
     const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
-    const wallet = parseWallet(walletFile);
-    const sender = new AccountAddress(wallet.value.address);
+    const walletExport = parseWallet(walletFile);
+    const sender = new AccountAddress(walletExport.value.address);
 
     const toAddress = new AccountAddress(cli.flags.receiver);
     const nextNonce: NextAccountNonce = await client.getNextAccountNonce(
@@ -111,6 +111,7 @@ const client = createConcordiumClient(
         };
     }
 
+    // #region documentation-snippet-sign-transaction
     const accountTransaction: AccountTransaction = {
         header: header,
         payload: simpleTransfer,
@@ -118,7 +119,7 @@ const client = createConcordiumClient(
     };
 
     // Sign transaction
-    const signer = buildAccountSigner(wallet);
+    const signer = buildAccountSigner(walletExport);
     const signature: AccountTransactionSignature = await signTransaction(
         accountTransaction,
         signer
@@ -128,6 +129,7 @@ const client = createConcordiumClient(
         accountTransaction,
         signature
     );
+    // #endregion documentation-snippet-sign-transaction
 
     await client.waitForTransactionFinalization(transactionHash);
 

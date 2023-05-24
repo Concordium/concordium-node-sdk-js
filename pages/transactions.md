@@ -13,9 +13,9 @@ Nodejs and Web SDK's.
   - [Create a credential for an existing account](#create-a-credential-for-an-existing-account)
   - [Create an update credentials transaction](#create-an-update-credentials-transaction)
   - [Deploy module](#deploy-module)
-  - [Init Contract (parameterless smart contract)](#init-contract-parameterless-smart-contract)
-  - [Update Contract (parameterless smart contract)](#update-contract-parameterless-smart-contract)
-  - [Smart contract with parameters](#smart-contract-with-parameters)
+  - [Init Contract](#init-contract)
+  - [Update Contract](#update-contract)
+  - [Smart contract parameters](#smart-contract-parameters)
   - [Serialize parameters with only the specific type's schema](#serialize-parameters-with-only-the-specific-types-schema)
 <!--toc:end-->
 
@@ -202,100 +202,44 @@ transaction, which is used to deploy a smart contract module.
 
 {@codeblock ~~:common/deployModule.ts#documentation-snippet}
 
-### Init Contract (parameterless smart contract)
+### Init Contract
 
 The following example demonstrates how to initialize a smart contract from
-a module, which has already been deployed. The name of the contract "INDBank".
+a module, which has already been deployed. The name of the contract `"weather"`.
 
-In this example, the contract does not take any parameters, so we can leave
-parameters as an empty buffer.
+{@codeblock ~~/composed-examples/initAndUpdateContract.ts #documentation-snippet-init-contract}
 
-```ts
-const contractName = 'INDBank';
-const params = Buffer.from([]);
-//The amount of energy that can be used for contract execution.
-const maxContractExecutionEnergy = 300000n;
-```
-
-Create init contract transaction
-
-```ts
-const initModule: InitContractPayload = {
-    amount: new CcdAmount(0n), // Amount to send to the contract. If the smart contract is not payable, set the amount to 0.
-    moduleRef: new ModuleReference('a225a5aeb0a5cf9bbc59209e15df030e8cc2c17b8dba08c4bf59f80edaedd8b1'), // Module reference
-    initName: contractName,
-    params: params,
-    maxContractExecutionEnergy: maxContractExecutionEnergy
-};
-const initContractTransaction: AccountTransaction = {
-    header: header,
-    payload: initModule,
-    type: AccountTransactionType.InitContract,
-};
-```
-
-Finally, to actually initialize the contract on the chain,
-send the constructed `initContractTransaction` to the chain using
-`sendAccountTransaction`. (See [Create a simple transfer with or without
-memo](#create-a-simple-transfer-with-or-without-memo) for how to do this)
-
-### Update Contract (parameterless smart contract)
+### Update Contract
 
 The following example demonstrates how to update a smart contract.
 
-To update a smart contract we create a 'updateContractTransaction'.  To do
-this we need to specify the name of the receive function, which should contain
-the contract name as a prefix (So if the contract has the name "INDBank"
-and the receive function has the name "insertAmount" then the receiveName
-should be "INDBank.insertAmount").
+To update a smart contract we create a 'updateContractTransaction'. To do this
+we need to specify the name of the receive function, which should contain
+the contract name as a prefix (So if the contract has the name `"weather"`
+and the receive function has the name `"set"` then the receiveName should be
+`"weather.set")`.
 
 We also need to supply the contract address of the contract instance. This
 consists of an index and a subindex.
 
-In this example, the contract does not take any parameters, so we can leave
-the parameters/message as an empty buffer.
+{@codeblock ~~/composed-examples/initAndUpdateContract.ts #documentation-snippet-update-contract}
 
-```ts
-const receiveName = 'INDBank.insertAmount';
-const message = Buffer.from([]);
-const contractAddress = { index: BigInt(83), subindex: BigInt(0) } as ContractAddress;
-//The amount of energy that can be used for contract execution.
-const maxContractExecutionEnergy = 30000n;
-```
+### Smart contract parameters
 
-Create update contract transaction
-
-```ts
-const updateModule: UpdateContractPayload =
-{
-    amount: new CcdAmount(1000n),
-    address: contractAddress,
-    receiveName: receiveName,
-    message: message,
-    maxContractExecutionEnergy: maxContractExecutionEnergy
-};
-const updateContractTransaction: AccountTransaction = {
-    header: header,
-    payload: updateModule,
-    type: AccountTransactionType.Update,
-};
-```
-
-Finally, to actually update the contract on the chain, send the constructed
-`updateContractTransaction` to the chain using `sendAccountTransaction`. (See
-[Create a simple transfer with or without
-memo](#create-a-simple-transfer-with-or-without-memo) for how to do this)
-
-### Smart contract with parameters
-
-In the previous sections we have seen how to initialize and update
-contracts without parameters. In this section we will describe
-how to initialize and update contracts with parameters. The user
-should provide the input in the JSON format specified in [our
+In this section we will describe how to provide contracts with parameters. The
+user should provide the input in the JSON format specified in [our
 documentation](https://developer.concordium.software/en/mainnet/smart-contracts/references/schema-json.html).
 
-Let us consider the following example where the contract's initialization
-parameter is the following structure:
+If the called smart contract function does not take any parameters, you can
+simply pass an empty buffer as the parameters:
+
+```ts
+    const params = Buffer.from([]);
+```
+
+If the function does take parameters, however, then you will need to construct
+them correctly. Let's consider the following example where the contract's
+initialization parameter is the following structure:
 
 ```rust
     #[derive(SchemaType, Serialize)]
@@ -341,8 +285,16 @@ Then the following would be a valid input:
       };
 ```
 
-Then the user needs to provide the schema for the module. Here we load the
-schema from a file:
+Then the user needs to provide the schema for the module.
+
+We can get the schema from the smart contract itself if it is embedded
+the contract:
+
+```ts
+    const schema = await client.getEmbeddedSchema(moduleRef);
+```
+
+We can also load the schema from a file:
 
 ```ts
     const rawModuleSchema = Buffer.from(fs.readFileSync(
@@ -365,88 +317,6 @@ For V0 contracts the schemaVersion should be `SchemaVersion.V0`. For V1
 contracts it should currently be `SchemaVersion.V1`, unless the contract have
 been built using cargo-concordium >=2.0.0, which are internally versioned,
 and then the version does not need to be provided.
-
-Then the payload and transaction can be constructed, in the same way as the
-parameterless example:
-
-```ts
-    const initModule: InitContractPayload = {
-            amount: new CcdAmount(0n),
-            moduleRef: new ModuleReference(
-                '6cabee5b2d9d5013216eef3e5745288dcade77a4b1cd0d7a8951262476d564a0'
-            ),
-            contractName: contractName,
-            params: inputParams,
-            maxContractExecutionEnergy: baseEnergy,
-        };
-    const initContractTransaction: AccountTransaction = {
-        header: header,
-        payload: initModule,
-        type: AccountTransactionType.InitContract,
-    };
-```
-
-Finally, to actually initialize the contract on the chain, send the constructed
-`initContractTransaction` to the chain using `sendAccountTransaction`. (See
-[Create a simple transfer with or without
-memo](#create-a-simple-transfer-with-or-without-memo) for how to do this)
-
-To update a contract with parameters, consider the example where the input
-is an i64 value, like -2000000.
-
-```ts
-    const userInput = -2000000;
-    const contractName = "my-contract-name";
-    const receiveFunctionName = "my-receive-function-name";
-    const receiveName = contractName + '.' + receiveFunctionName;
-```
-
-Then the user need to provide the schema. Here we load the schema from a file:
-
-```ts
-    const rawModuleSchema = Buffer.from(fs.readFileSync(
-        'SCHEMA-FILE-PATH'
-    ));
-```
-
-Then the parameters can be serialized into bytes:
-
-```ts
-    const inputParams = serializeUpdateContractParameters(
-            contractName,
-            receiveFunctionName,
-            userInput,
-            rawModuleSchema,
-            schemaVersion
-    );
-```
-
-For V0 contracts the schema version should be `SchemaVersion.V0`. For V1
-contracts it should currently be `SchemaVersion.V1`, unless the contract have
-been built using cargo-concordium >=2.0.0, which are internally versioned,
-and then the version does not need to be provided.
-
-Then we will construct the update payload with parameters obtained
-
-```ts
-    const updateModule: UpdateContractPayload = {
-            amount: new CcdAmount(1000n),
-            address: contractAddress,
-            receiveName: receiveName,
-            message: inputParams,
-            maxContractExecutionEnergy: baseEnergy,
-    } as UpdateContractPayload;
-    const updateContractTransaction: AccountTransaction = {
-            header: header,
-            payload: updateModule,
-            type: AccountTransactionType.Update,
-    };
-```
-
-Finally, to actually update the contract on the chain, send
-the constructed `updateContractTransaction` to the chain using
-`sendAccountTransaction`. (See [Create a simple transfer with or without
-memo](#create-a-simple-transfer-with-or-without-memo) for how to do this)
 
 ### Serialize parameters with only the specific type's schema
 

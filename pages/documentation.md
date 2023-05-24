@@ -1,15 +1,34 @@
-## Main
+This is the documentation for the Concordium Javascript SDK. Here we cover
+the JS wrappers for interacting with the Concordium nodes.
 
-Some overall documentation goes here
+Most functionality is provideded by the {@page grpc.md GRPC-Client} however
+there exists additional helper functions, for example to help with creating
+{@page transactions.md transactions}, or {@page identity-proofs.md creating
+identity proof statements}, or {@page utility-functions.md general utility
+functions}.
 
-You can check out this page for information on transactions:
+To create a GRPC-Client in NodeJS-SDK:
 
-{@page transactions.md}
+```ts
+import { credentials } from '@grpc/grpc-js/';
+import { createConcordiumClient } from '@concordium/node-sdk';
+...
+return createConcordiumClient(
+    address,
+    port,
+    credentials.createSsl(),
+    { timeout: 15000 }
+);
+```
 
-You can check out this page for information on CIS2 contracts:
+To create a GRPC-Client in the Web-SDK:
 
-{@page cis2-contracts.md}
-
-You can check out this page for information on account creation:
-
-{@page account-creation.md}
+```ts
+import { createConcordiumClient } from '@concordium/web-sdk';
+...
+return createConcordiumClient(
+    address,
+    port,
+    { timeout: 15000 }
+);
+```

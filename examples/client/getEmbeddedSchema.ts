@@ -2,7 +2,7 @@ import { createConcordiumClient, ModuleReference } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
-import fs from 'fs'
+import fs from 'fs';
 
 const cli = meow(
     `

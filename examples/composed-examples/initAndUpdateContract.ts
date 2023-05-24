@@ -87,6 +87,8 @@ const client = createConcordiumClient(
 
     console.log('\n## Initializing weather contract with sunny weather\n');
 
+    // #region documentation-snippet-init-contract
+
     const initHeader: AccountTransactionHeader = {
         expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
@@ -122,9 +124,11 @@ const client = createConcordiumClient(
     console.log('Transaction submitted, waiting for finalization...');
     const initStatus = await client.waitForTransactionFinalization(initTrxHash);
 
-    const contractAddress = affectedContracts(initStatus.summary)[0];
+    // #endregion documentation-snippet-init-contract
 
     // --- Checking weather --- //
+
+    const contractAddress = affectedContracts(initStatus.summary)[0];
 
     const contextPostInit: ContractContext = {
         contract: unwrap(contractAddress),
@@ -153,6 +157,8 @@ const client = createConcordiumClient(
     // --- Calling receive function --- //
 
     console.log('## Making it rain with weather.set\n');
+
+    // #region documentation-snippet-update-contract
 
     const updateHeader: AccountTransactionHeader = {
         expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
@@ -193,6 +199,8 @@ const client = createConcordiumClient(
         updateTrxHash
     );
     console.dir(updateStatus, { depth: null, colors: true });
+
+    // #region documentation-snippet-update-contract
 
     // --- Checking Weather --- //
 

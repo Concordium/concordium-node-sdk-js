@@ -349,7 +349,7 @@ export default class ConcordiumNodeClient {
      *
      * Note that a transaction can still fail even if it was accepted by the node.
      * To keep track of the transaction use getTransactionStatus.
-     * 
+     *
      * See [this](git:docs/account-creation.md) document for how this function can be used.
      *
      * @param credentialDeploymentTransaction the credential deployment transaction to send to the node

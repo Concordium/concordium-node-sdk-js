@@ -13,9 +13,17 @@
                 "name": "Concordium nodejs SDK", 
                 "moduleRoot": true,
                 "children": [
-                    { "name": "Transactions", "source": "transactions.md" },
-                    { "name": "CIS2-Contracts", "source": "cis2-contracts.md" },
                     { "name": "Account Creation", "source": "account-creation.md" },
+                    { "name": "CIS2-Contracts", "source": "cis2-contracts.md" },
+                    { "name": "GRPC-Client", "source": "grpc.md" },
+                    { "name": "Identity Proofs", "source": "identity-proofs.md" },
+                    { "name": "Transactions", "source": "transactions.md" },
+                    { "name": "Utility Functions", "source": "utility-functions.md" },
+                    { "name": "Miscellaneous Pages", "childrenDir": "misc-pages", "children": [
+                        { "name": "Upgrade Guide", "source": "upgrade-guide.md" },
+                        { "name": "Old GRPC-Client", "source": "grpc-v1.md" },
+                        { "name": "GRPCv1 to GRPCv2 Migration Guide", "source": "grpc-migration.md" },
+                    ] },
                 ]
             },
         ]

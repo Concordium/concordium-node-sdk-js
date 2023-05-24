@@ -1,3 +1,4 @@
+
 To create a new account the following is needed:
 
 - `idObject`:

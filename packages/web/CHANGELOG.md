@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.0.1 2023-05-25
+
+### Changed
+
+- Bumped @concordium/common-sdk to 7.0.1. (Fixes `deployModule` cost)
+
 ## 4.0.0 2023-05-15
 
 ### Breaking Changes

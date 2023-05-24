@@ -4,6 +4,10 @@ import {
     AttributesKeys,
 } from '@concordium/node-sdk';
 
+/**
+ * The following example shows how a proof statement can be built up.
+ */
+
 const statementBuilder = new IdStatementBuilder();
 
 (async () => {

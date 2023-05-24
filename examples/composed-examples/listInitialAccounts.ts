@@ -45,7 +45,7 @@ const client = createConcordiumClient(
 );
 
 /**
- * List all account creations in a given time span.
+ * List all initial account creations in a given time span.
  */
 
 (async () => {

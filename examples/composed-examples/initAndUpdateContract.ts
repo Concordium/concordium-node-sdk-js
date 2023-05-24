@@ -32,7 +32,7 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> [options]
 
   Required
-    --wallet-export, -w  The filepath to the sender's wallet export
+    --wallet-file, -w  A path to a wallet export file from a Concordium wallet
 
   Options
     --help,     -h  Displays this message
@@ -41,7 +41,7 @@ const cli = meow(
     {
         importMeta: import.meta,
         flags: {
-            walletExport: {
+            walletFile: {
                 type: 'string',
                 alias: 'w',
                 isRequired: true,
@@ -63,7 +63,8 @@ const client = createConcordiumClient(
 );
 
 /**
- * The following example demonstrates how a simple transfer can be created.
+ * The following example demonstrates how a smart contract can be initialized
+ * and updated.
  */
 
 (async () => {
@@ -154,7 +155,7 @@ const client = createConcordiumClient(
         console.log('');
     }
 
-    // --- Calling receive function --- //
+    // --- Update smart contract --- //
 
     console.log('## Making it rain with weather.set\n');
 

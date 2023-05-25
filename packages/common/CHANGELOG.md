@@ -1,5 +1,11 @@
 # Changelog
 
+## 7.0.1 2023-05-25
+
+### Fixed
+
+- Cost calculation for `deployModule` transaction.
+
 ## 7.0.0 2023-05-15 
 
 ### Breaking changes

@@ -10,7 +10,10 @@ import { stringify } from 'json-bigint';
 import { getContractName } from './contractHelpers';
 import { makeDynamicFunction } from './util';
 
-/** Namespace with types for CIS-0 standard contracts */
+/**
+ * Namespace with types for CIS-0 standard contracts
+ * @hidden
+ */
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace CIS0 {
     /** Identifier to query for support, f.x. 'CIS-2' */

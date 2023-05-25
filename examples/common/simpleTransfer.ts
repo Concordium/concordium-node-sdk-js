@@ -79,9 +79,10 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
-    const wallet = parseWallet(walletFile);
-    const sender = new AccountAddress(wallet.value.address);
+    const walletExport = parseWallet(walletFile);
+    const sender = new AccountAddress(walletExport.value.address);
 
     const toAddress = new AccountAddress(cli.flags.receiver);
     const nextNonce: NextAccountNonce = await client.getNextAccountNonce(
@@ -94,6 +95,7 @@ const client = createConcordiumClient(
         sender,
     };
 
+    // Include memo if it is given otherwise don't
     let simpleTransfer = undefined;
     if (cli.flags.memo) {
         simpleTransfer = {
@@ -108,6 +110,7 @@ const client = createConcordiumClient(
         };
     }
 
+    // #region documentation-snippet-sign-transaction
     const accountTransaction: AccountTransaction = {
         header: header,
         payload: simpleTransfer,
@@ -115,7 +118,7 @@ const client = createConcordiumClient(
     };
 
     // Sign transaction
-    const signer = buildAccountSigner(wallet);
+    const signer = buildAccountSigner(walletExport);
     const signature: AccountTransactionSignature = await signTransaction(
         accountTransaction,
         signer
@@ -125,7 +128,9 @@ const client = createConcordiumClient(
         accountTransaction,
         signature
     );
+    // #endregion documentation-snippet-sign-transaction
 
     const status = await client.waitForTransactionFinalization(transactionHash);
     console.dir(status, { depth: null, colors: true });
+    // #endregion documentation-snippet
 })();

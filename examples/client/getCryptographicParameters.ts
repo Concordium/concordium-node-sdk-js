@@ -47,8 +47,10 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const parameters: CryptographicParameters =
         await client.getCryptographicParameters(cli.flags.block);
 
     console.log('Genesis string:', parameters.genesisString);
+    // #endregion documentation-snippet
 })();

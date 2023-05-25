@@ -39,6 +39,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     // Create abort controller and block stream
     const ac = new AbortController();
     const blockStream: AsyncIterable<ArrivedBlockInfo> = client.getBlocks(
@@ -54,4 +55,5 @@ const client = createConcordiumClient(
 
     // Closes the stream
     ac.abort();
+    // #endregion documentation-snippet
 })();

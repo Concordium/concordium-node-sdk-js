@@ -72,6 +72,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     // Read wallet-file
     const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
     const wallet = parseWallet(walletFile);
@@ -113,4 +114,5 @@ const client = createConcordiumClient(
 
     const status = await client.waitForTransactionFinalization(transactionHash);
     console.dir(status, { depth: null, colors: true });
+    // #endregion documentation-snippet
 })();

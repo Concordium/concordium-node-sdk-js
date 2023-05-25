@@ -23,6 +23,9 @@ const TOKEN_ID_MAX_LENGTH = 256;
 const TOKEN_AMOUNT_MAX_LENGTH = 37;
 const TOKEN_RECEIVE_HOOK_MAX_LENGTH = 100;
 
+/**
+ * @hidden
+ */
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace CIS2 {
     /**

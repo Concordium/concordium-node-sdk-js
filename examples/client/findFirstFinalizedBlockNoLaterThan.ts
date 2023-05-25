@@ -53,6 +53,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const from =
         cli.flags.from !== undefined ? BigInt(cli.flags.from) : undefined;
     const to =
@@ -65,4 +66,5 @@ const client = createConcordiumClient(
     );
 
     console.log(blockInfo);
+    // #endregion documentation-snippet
 })();

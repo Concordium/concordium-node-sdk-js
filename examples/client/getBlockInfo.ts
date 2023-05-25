@@ -44,7 +44,9 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const blockInfo: BlockInfo = await client.getBlockInfo(cli.flags.block);
 
     console.dir(blockInfo, { depth: null, colors: true });
+    // #endregion documentation-snippet
 })();

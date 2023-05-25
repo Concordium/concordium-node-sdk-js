@@ -54,7 +54,9 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     await client.peerDisconnect(cli.flags.ip, cli.flags.port);
 
     console.log('Successfully disconnected from peer');
+    // #endregion documentation-snippet
 })();

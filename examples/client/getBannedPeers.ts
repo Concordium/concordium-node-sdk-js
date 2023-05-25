@@ -38,8 +38,10 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const bannedPeers: IpAddressString[] = await client.getBannedPeers();
 
     console.log('Banned peers:');
     console.log(bannedPeers);
+    // #endregion documentation-snippet
 })();

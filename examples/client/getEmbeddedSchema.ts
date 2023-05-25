@@ -1,8 +1,8 @@
-import { parseEndpoint } from '../shared/util';
-import { createConcordiumClient } from '@concordium/node-sdk';
+import { createConcordiumClient, ModuleReference } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
+import fs from 'fs';
 
 const cli = meow(
     `
@@ -10,8 +10,8 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> [options]
 
   Required
-    --ip,   -i  The ip of the peer to connect to.
-    --port, -p  The port of the peer to connect to.
+    --module,   -m  The module reference of the module from which we wish to get the schema
+    --out-path, -o  The path to write the module schema to
 
   Options
     --help,         Displays this message
@@ -20,14 +20,14 @@ const cli = meow(
     {
         importMeta: import.meta,
         flags: {
-            ip: {
+            module: {
                 type: 'string',
-                alias: 'i',
+                alias: 'm',
                 isRequired: true,
             },
-            port: {
-                type: 'number',
-                alias: 'p',
+            outPath: {
+                type: 'string',
+                alias: 'o',
                 isRequired: true,
             },
             endpoint: {
@@ -39,8 +39,7 @@ const cli = meow(
     }
 );
 
-const [address, port] = parseEndpoint(cli.flags.endpoint);
-
+const [address, port] = cli.flags.endpoint.split(':');
 const client = createConcordiumClient(
     address,
     Number(port),
@@ -48,16 +47,16 @@ const client = createConcordiumClient(
 );
 
 /**
- * Suggest to connect the specified address as a peer. This, if successful,
- * adds the peer to the list of given addresses, otherwise rejects. Note that
- * the peer might not be connected to instantly, in that case the node will
- * try to establish the connection in the near future.
+ * Gets an embedded schema from a provided module.
  */
 
 (async () => {
     // #region documentation-snippet
-    await client.peerConnect(cli.flags.ip, cli.flags.port);
+    const moduleRef = new ModuleReference(cli.flags.module);
+    const schema = await client.getEmbeddedSchema(moduleRef);
 
-    console.log('Successfully connected to peer');
+    fs.writeFileSync(cli.flags.outPath, schema);
+
+    console.log('Wrote schema to file: ', cli.flags.outPath);
     // #endregion documentation-snippet
 })();

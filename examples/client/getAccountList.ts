@@ -47,6 +47,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const accounts: AsyncIterable<Base58String> = client.getAccountList(
         cli.flags.block
     );
@@ -55,4 +56,5 @@ const client = createConcordiumClient(
     for await (const account of accounts) {
         console.log(account);
     }
+    // #endregion documentation-snippet
 })();

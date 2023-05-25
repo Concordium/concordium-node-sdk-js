@@ -71,7 +71,7 @@ const client = createConcordiumClient(
     const sunnyWeather = { Sunny: [] };
     const rainyWeather = { Rainy: [] };
 
-    const walletFile = readFileSync(cli.flags.walletExport, 'utf8');
+    const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
     const wallet = parseWallet(walletFile);
     const sender = new AccountAddress(wallet.value.address);
     const signer = buildAccountSigner(wallet);
@@ -87,6 +87,8 @@ const client = createConcordiumClient(
     // --- Initialize Contract --- //
 
     console.log('\n## Initializing weather contract with sunny weather\n');
+
+    // #region documentation-snippet-init-contract
 
     const initHeader: AccountTransactionHeader = {
         expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
@@ -123,9 +125,11 @@ const client = createConcordiumClient(
     console.log('Transaction submitted, waiting for finalization...');
     const initStatus = await client.waitForTransactionFinalization(initTrxHash);
 
-    const contractAddress = affectedContracts(initStatus.summary)[0];
+    // #endregion documentation-snippet-init-contract
 
     // --- Checking weather --- //
+
+    const contractAddress = affectedContracts(initStatus.summary)[0];
 
     const contextPostInit: ContractContext = {
         contract: unwrap(contractAddress),
@@ -154,6 +158,8 @@ const client = createConcordiumClient(
     // --- Update smart contract --- //
 
     console.log('## Making it rain with weather.set\n');
+
+    // #region documentation-snippet-update-contract
 
     const updateHeader: AccountTransactionHeader = {
         expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
@@ -194,6 +200,8 @@ const client = createConcordiumClient(
         updateTrxHash
     );
     console.dir(updateStatus, { depth: null, colors: true });
+
+    // #region documentation-snippet-update-contract
 
     // --- Checking Weather --- //
 

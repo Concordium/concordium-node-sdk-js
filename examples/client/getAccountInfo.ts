@@ -60,6 +60,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const accountAddress = new AccountAddress(cli.flags.account);
     const accountInfo: AccountInfo = await client.getAccountInfo(
         accountAddress,
@@ -76,4 +77,5 @@ const client = createConcordiumClient(
             accountInfo.accountDelegation.stakedAmount
         );
     }
+    // #endregion documentation-snippet
 })();

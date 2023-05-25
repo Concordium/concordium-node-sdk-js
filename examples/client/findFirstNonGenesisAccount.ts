@@ -41,7 +41,9 @@ const client = createConcordiumClient(
 );
 
 /**
- * Find the first account which is not a genesis account on the network the node specified by "--endpoint" is a member of, within the range defined by "--from" - "--to"
+ * Find the first account which is not a genesis account on the network the
+ * node specified by "--endpoint" is a member of, within the range defined by
+ * the flags: "--from" and "--to"
  */
 
 (async () => {

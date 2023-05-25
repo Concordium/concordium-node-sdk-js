@@ -64,6 +64,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const request: BlocksAtHeightRequest = {
         genesisIndex: cli.flags.genesisIndex,
         height: BigInt(cli.flags.height),
@@ -74,4 +75,5 @@ const client = createConcordiumClient(
     for (const block of blocks) {
         console.log(block);
     }
+    // #endregion documentation-snippet
 })();

@@ -1,5 +1,5 @@
 > :warning: **This explains behaviour of the deprecated v1 concordium client**:
-check out [the documentation the v2 client](../grpc.md)
+check out [the documentation the v2 client](../../modules/Common_GRPC_Client.html)
 
 This describes the JSON-RPC client, which can interact with the [Concordium
 JSON-RPC server](https://github.com/Concordium/concordium-json-rpc)
@@ -410,9 +410,6 @@ protocol versions.  To determine the version, use `isBlockSummaryV1` and
         // Must be a future version of a blockSummary (or the given object is not a blockSummary)
     }
 ```
-
-There are also type checks for specific fields in the summary, which can be
-found in [blockSummaryHelpers](../common/src/blockSummaryHelpers.ts).
 
 ### getBlockInfo
 

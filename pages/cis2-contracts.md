@@ -20,7 +20,8 @@ This document describes the helper class for working with CIS-2 contracts
 
 ## CIS2Contract
 
-The CIS2Contract class wraps the [ConcordiumNodeClient]('../nonexistant/test.md'),
+The CIS2Contract class wraps the
+[ConcordiumNodeClient](../modules/Common_GRPC_Client.html),
 defining an interface matching the [CIS-2
 standard](https://proposals.concordium.software/CIS/cis-2.html).
 
@@ -36,10 +37,9 @@ functions on.
 ```
 
 This gets the relevant contract information from the node and checks
-that the contract is in fact a CIS-2 contract (through the [CIS-0 supports
-function](../non-existant/README.md#check-smart-contract-for-support-for-standards)),
-hence why it is async. You can also instantiate using the `new` keyword,
-circumventing standard checks:
+that the contract is in fact a CIS-2 contract (through the {@page
+utility-functions.md}), hence why it is async. You can also instantiate
+using the `new` keyword, circumventing standard checks:
 
 ```ts
     const contract = new CIS2Contract(nodeClient, contractAddress, 'my_contract_name');
@@ -48,13 +48,12 @@ circumventing standard checks:
 ### Transfer token(s)
 
 The following example demonstrates how to send either a single/list of CIS-2
-"transfer" transactions using a `CIS2Contract` instance.  This relies on
+"transfer" transactions using a `CIS2Contract` instance. This relies on
 using private keys for the sender account to sign the transaction before
 submitting to the node.
 
-See the signing a transaction section for the [common
-package](../non-existant/README.md#sign-an-account-transaction) for create
-an `AccountSigner`.
+Refer to the {page transactions.md transactions page} to see how to create an
+`AccountSigner`.
 
 ```ts
     const tokenId = ''; // HEX string representing a token ID defined in the contract.
@@ -117,8 +116,7 @@ The following example demonstrates how to send either a single/list of CIS-2
 on using private keys for the sender account to sign the transaction before
 submitting to the node.
 
-See the signing a transaction section for the [common
-package](../non-existant/README.md#sign-an-account-transaction) for create an
+Refer to the {page transactions.md transactions page} to see how to create an
 `AccountSigner`.
 
 ```ts

@@ -5,9 +5,7 @@
 MD001: true
 
 # MD002/first-heading-h1/first-header-h1 - First heading should be a top-level heading
-MD002:
-  # Heading level
-  level: 2
+MD002: false
 
 # MD003/heading-style/header-style - Heading style
 MD003:
@@ -158,7 +156,7 @@ MD032: true
 # MD033/no-inline-html - Inline HTML
 MD033:
   # Allowed elements
-  allowed_elements: [a]
+  allowed_elements: []
 
 # MD034/no-bare-urls - Bare URL used
 MD034: true

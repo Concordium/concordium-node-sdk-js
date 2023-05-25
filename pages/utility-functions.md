@@ -219,8 +219,8 @@ the parameter, return value, event or error.
 Note that the specific schema can be obtained using
 [cargo-concordium](https://developer.concordium.software/en/mainnet/smart-contracts/guides/setup-tools.html#cargo-concordium)'s
 `schema-json` command, and specifically for parameters, this SDK exposes
-functions for that, check [the serialize parameters with only the specific
-types schema section](serialize-parameters-with-only-the-specific-types-schema)
+functions for that, check the "serialize parameters with only the specific
+types schema" section on the {@page transactions.md transactions page}
 for those.
 
 ## Check smart contract for support for standards
@@ -233,7 +233,7 @@ and does not give any guarantees for whether the contract adheres to the
 standard it claims to implement. The function returns `undefined` if the
 contract does not support CIS-0.
 
-This requires a [`ConcordiumNodeClient`](../../docs/gRPC.md).
+This requires a [`ConcordiumNodeClient`](../modules/Common_GRPC_Client.html).
 
 ```ts
     const client = ...; // `ConcordiumNodeClient`

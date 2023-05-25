@@ -1,0 +1,7 @@
+{
+  "ignorePatterns": [
+    {
+      "pattern": "modules/Common_GRPC_Client.html"
+    }
+  ]
+}

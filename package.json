@@ -50,6 +50,7 @@
         "husky": "^4.2.5",
         "jest": "^27.0.6",
         "lint-staged": "^12.0.2",
+        "markdown-link-check": "^3.1.4",
         "markdownlint-cli": "^0.34.0",
         "prettier": "^2.3.2",
         "stream-browserify": "^3.0.0",
@@ -65,8 +66,9 @@
         "test": "FORCE_COLOR=true yarn workspaces foreach --no-private run test --passWithNoTests",
         "lint": "FORCE_COLOR=true yarn workspaces foreach --no-private run lint",
         "lint-fix": "eslint --cache . --fix",
-        "markdown:lint": "yarn markdownlint pages/**/*.md",
-        "markdown:lint-fix": "yarn markdownlint --fix pages/**/*.md",
+        "markdown:lint": "yarn markdownlint pages/**/*.md packages/*/README.md README.md",
+        "markdown:lint-fix": "yarn markdownlint --fix pages/**/*.md packages/*/README.md README.md",
+        "markdown:linkcheck": "yarn markdown-link-check --config .markdown-linkcheck.json pages/**/*.md packages/*/README.md README.md",
         "build": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build",
         "build:dev": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build-dev"
     }

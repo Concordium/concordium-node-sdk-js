@@ -173,7 +173,7 @@ jobs:
       - name: Lint
         run: yarn lint
 
-  lint-markdown:
+  markdown-lint:
     runs-on: ubuntu-22.04
     if: github.event.pull_request.draft == false
     steps:
@@ -189,6 +189,23 @@ jobs:
 
       - name: Lint markdown
         run: yarn markdown:lint
+
+  markdown-linkcheck:
+    runs-on: ubuntu-22.04
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Lint markdown
+        run: yarn markdown:linkcheck
 
   rust_lint_fmt:
     runs-on: ubuntu-22.04

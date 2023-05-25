@@ -1,9 +1,9 @@
 This is the documentation for the Concordium Javascript SDK. Here we cover
 the JS wrappers for interacting with the Concordium nodes.
 
-Most functionality is provideded by the <a
-href="modules/Common_GRPC_Client.html">GRPC-Client</a> however there
-exists additional helper functions, for example to help with creating {@page
+Most functionality is provideded by the
+[GRPC-Client](../modules/Common_GRPC_Client.html) however there exists
+additional helper functions, for example to help with creating {@page
 transactions.md transactions}, or {@page identity-proofs.md creating identity
 proof statements}, or {@page utility-functions.md general utility functions}.
 

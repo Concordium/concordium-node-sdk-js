@@ -7,7 +7,7 @@ import meow from 'meow';
 const cli = meow(
     `
   Usage
-    $ yarn ts-node <path-to-this-file> [options]
+    $ yarn run-example <path-to-this-file> [options]
 
   Required:
     --pool-owner, -p  The BakerId of the pool owner 

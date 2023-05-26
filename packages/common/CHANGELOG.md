@@ -1,8 +1,11 @@
 # Changelog
 
-## Unreleased
+### Fixed
+
+- Cost calculation for `deployModule` transaction.
 
 ### Added
+
 - A `parseWallet` function to parse wallet export files
 
 ## 7.0.0 2023-05-15 

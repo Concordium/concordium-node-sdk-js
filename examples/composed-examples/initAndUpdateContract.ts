@@ -18,7 +18,6 @@ import {
     parseWallet,
     buildAccountSigner,
     affectedContracts,
-    ContractAddress,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import { readFileSync } from 'node:fs';

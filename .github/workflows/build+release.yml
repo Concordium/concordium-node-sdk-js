@@ -28,26 +28,39 @@ jobs:
               uses: bisgardo/github-action-regex-parse@v1
               id: tag
               with:
-                  pattern: "(?<name>(?<package>.*?)/(?<version>.*))"
+                  pattern: "(?<name>(?<package>.*?)/(?<version>.*))" # exports 'name', 'package', and 'version'
                   input: "${{steps.ref.outputs.ref-name}}"
             - name: Checkout project
               uses: actions/checkout@v3
               with:
                 ref: "${{steps.ref.outputs.ref}}"
             - name: Extract tag message
+              uses: bisgardo/github-action-echo@v1
               id: tag-msg
-              run: |
-                  msg="$(git for-each-ref "${{steps.ref.outputs.ref}}" --format='%(contents)')"
-                  echo "msg<<EOT
-                  ${msg}
-                  EOT" >> "${GITHUB_OUTPUT}"
+              with:
+                  msg: '$(git for-each-ref "${{steps.ref.outputs.ref}}" --format="%(contents)")'
             - name: Fail if tag is not "annotated" or its message is empty
               if: "steps.tag-msg.outputs.msg == ''"
               run: exit 1
-            - name: Check that version matches 'package.json' up to build version
+            - name: Collect package data
+              uses: bisgardo/github-action-echo@v1
+              id: package
+              with:
+                  name: "${{steps.tag.outputs.package}}"
+                  workspace: "@concordium/${name}"
+                  version: '$(npm pkg get version --workspaces | jq -r ".[\"${workspace}\"]")'
+                  path: "./packages/${name}"
+            - name: Collect release data
+              uses: bisgardo/github-action-echo@v1
+              id: release
+              with:
+                  _name: "${{steps.package.outputs.name}}"
+                  version: "${{steps.tag.outputs.version}}"
+                  npm-pack-file: "concordium-${_name}-${{steps.package.outputs.version}}.tgz"
+                  github-release-name: "${_name}: ${version}"
+            - name: Check that tag version matches 'package.json' up to build version
               run: |
-                  v="$(npm pkg get version -ws | jq -r '.["@concordium/${{steps.tag.outputs.package}}"]')"
-                  [[ "${{steps.tag.outputs.version}}" = ${v}-* ]]
+                  [[ "${{steps.tag.outputs.version}}" = "${{steps.package.outputs.version}}"-* ]]
             - name: Setup Node
               uses: actions/setup-node@v3
               with:
@@ -59,13 +72,15 @@ jobs:
             - name: Build all libraries
               run: yarn build
             - name: Archive target library
-              run: zip ./dist.zip "./packages/${{steps.tag.outputs.package}}"/*
+              run: npm pack --workspace="${{steps.package.outputs.workspace}}"
+            - name: Publish library to npm [dry run]
+              run: npm publish --dry-run "${{steps.release.outputs.npm-pack-file}}"
             - name: Extract changelog entries
               uses: concordium/github-action-changelog-extract@v1
               id: changelog
               with:
-                  file: "./packages/${{steps.tag.outputs.package}}/CHANGELOG.md"
-                  version: "${{steps.tag.outputs.version}}"
+                  file: "${{steps.package.outputs.path}}/CHANGELOG.md"
+                  version: "${{steps.package.outputs.version}}"
             - name: Upload package as GitHub release
               uses: softprops/action-gh-release@v1
               with:
@@ -77,7 +92,7 @@ jobs:
                       # Changelog
                       
                       ${{steps.changelog.outputs.section}}
-                  files: "./dist.zip"
-                  name: "${{steps.tag.outputs.package}}: ${{steps.tag.outputs.version}}"
-                  # The method for auto-generating release notes just lists all commits, also those irrelevant to the subproject.
+                  files: "${{steps.release.outputs.npm-pack-file}}"
+                  name: "${{steps.release.outputs.github-release-name}}"
+                  # The method for auto-generating release notes just lists all commits (including those not relevant to the subproject).
                   generate_release_notes: false

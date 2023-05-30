@@ -647,7 +647,7 @@ pub fn serialize_receive_contract_parameters_aux(
 
     let buf = parameter_type
         .serial_value(&value)
-        .map_err(|e| SerialError(format!("{}", e.print(verbose_error_message))))?;
+        .map_err(|e| SerialError(format!("{}", e.display(verbose_error_message))))?;
 
     Ok(hex::encode(buf))
 }
@@ -667,7 +667,7 @@ pub fn serialize_init_contract_parameters_aux(
 
     let buf = parameter_type
         .serial_value(&value)
-        .map_err(|e| SerialError(format!("{}", e.print(verbose_error_message))))?;
+        .map_err(|e| SerialError(format!("{}", e.display(verbose_error_message))))?;
 
     Ok(hex::encode(buf))
 }
@@ -715,7 +715,7 @@ fn serialize_type_value(
 
     let buf = value_type
         .serial_value(&value)
-        .map_err(|e| SerialError(format!("{}", e.print(verbose_error_message))))?;
+        .map_err(|e| SerialError(format!("{}", e.display(verbose_error_message))))?;
     Ok(hex::encode(buf))
 }
 

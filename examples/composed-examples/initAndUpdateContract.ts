@@ -18,6 +18,7 @@ import {
     parseWallet,
     buildAccountSigner,
     affectedContracts,
+    ContractAddress,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import { readFileSync } from 'node:fs';
@@ -71,7 +72,7 @@ const client = createConcordiumClient(
     const sunnyWeather = { Sunny: [] };
     const rainyWeather = { Rainy: [] };
 
-    const walletFile = readFileSync(cli.flags.walletExport, 'utf8');
+    const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
     const wallet = parseWallet(walletFile);
     const sender = new AccountAddress(wallet.value.address);
     const signer = buildAccountSigner(wallet);
@@ -123,33 +124,13 @@ const client = createConcordiumClient(
     console.log('Transaction submitted, waiting for finalization...');
     const initStatus = await client.waitForTransactionFinalization(initTrxHash);
 
+    console.dir(initStatus, { depth: null, colors: true });
+
     const contractAddress = affectedContracts(initStatus.summary)[0];
 
     // --- Checking weather --- //
 
-    const contextPostInit: ContractContext = {
-        contract: unwrap(contractAddress),
-        invoker: sender,
-        method: 'weather.get',
-    };
-
-    const invokedPostInit = await client.invokeContract(contextPostInit);
-
-    if (invokedPostInit.tag === 'success') {
-        const rawReturnValue = Buffer.from(
-            unwrap(invokedPostInit.returnValue),
-            'hex'
-        );
-        const returnValue = deserializeReceiveReturnValue(
-            rawReturnValue,
-            schema,
-            contractName,
-            'get'
-        );
-        console.log('\nThe weather is now:');
-        console.dir(returnValue, { depth: null, colors: true });
-        console.log('');
-    }
+    await checkWeather();
 
     // --- Update smart contract --- //
 
@@ -197,26 +178,32 @@ const client = createConcordiumClient(
 
     // --- Checking Weather --- //
 
-    const contextPostUpdate: ContractContext = {
-        contract: unwrap(contractAddress),
-        invoker: sender,
-        method: 'weather.get',
-    };
+    await checkWeather();
 
-    const invokedPostUpdate = await client.invokeContract(contextPostUpdate);
-    if (invokedPostUpdate.tag === 'success') {
-        const rawReturnValue = Buffer.from(
-            unwrap(invokedPostUpdate.returnValue),
-            'hex'
-        );
-        const returnValue = deserializeReceiveReturnValue(
-            rawReturnValue,
-            schema,
-            contractName,
-            'get'
-        );
-        console.log('\nThe weather is now:');
-        console.dir(returnValue, { depth: null, colors: true });
-        console.log('');
+    // Helper function for checking weather
+    async function checkWeather() {
+        const contextPostInit: ContractContext = {
+            contract: unwrap(contractAddress),
+            invoker: sender,
+            method: 'weather.get',
+        };
+
+        const invokedPostInit = await client.invokeContract(contextPostInit);
+
+        if (invokedPostInit.tag === 'success') {
+            const rawReturnValue = Buffer.from(
+                unwrap(invokedPostInit.returnValue),
+                'hex'
+            );
+            const returnValue = deserializeReceiveReturnValue(
+                rawReturnValue,
+                schema,
+                'weather',
+                'get'
+            );
+            console.log('\nThe weather is now:');
+            console.dir(returnValue, { depth: null, colors: true });
+            console.log('');
+        }
     }
 })();

@@ -87,7 +87,7 @@ const client = createConcordiumClient(
             summary.address === account.address
         ) {
             console.log(
-                'Account created at transaction with hash:',
+                'Hash of transaction that created the account:',
                 summary.hash
             );
         }

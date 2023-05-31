@@ -5,7 +5,9 @@ use wasm_bindgen::prelude::*;
 
 type JsResult<T = JsonString> = Result<T, JsError>;
 
-fn to_js_error(error: impl Display) -> JsError { JsError::new(&format!("{}", error)) }
+fn to_js_error(error: impl Display) -> JsError {
+    JsError::new(&format!("{}", error))
+}
 
 #[wasm_bindgen(js_name = generateUnsignedCredential)]
 pub fn generate_unsigned_credential_ext(input: &str) -> JsResult {
@@ -41,8 +43,19 @@ pub fn get_credential_deployment_info_ext(signatures: &JsValue, unsigned_info: &
 }
 
 #[wasm_bindgen(js_name = deserializeState)]
-pub fn deserialize_state(contract_name: &str, state_bytes: HexString, schema: String) -> JsResult {
-    deserialize_state_aux(contract_name, state_bytes, schema).map_err(to_js_error)
+pub fn deserialize_state(
+    contract_name: &str,
+    state_bytes: HexString,
+    schema: String,
+    verbose_error_message: Option<bool>,
+) -> JsResult {
+    deserialize_state_aux(
+        contract_name,
+        state_bytes,
+        schema,
+        verbose_error_message.unwrap_or(false),
+    )
+    .map_err(to_js_error)
 }
 
 #[wasm_bindgen(js_name = deserializeCredentialDeployment)]
@@ -57,6 +70,7 @@ pub fn deserialize_receive_return_value(
     contract_name: &str,
     function_name: &str,
     schema_version: Option<u8>,
+    verbose_error_message: Option<bool>,
 ) -> JsResult {
     deserialize_receive_return_value_aux(
         return_value_bytes,
@@ -64,6 +78,7 @@ pub fn deserialize_receive_return_value(
         contract_name,
         function_name,
         schema_version,
+        verbose_error_message.unwrap_or(false),
     )
     .map_err(to_js_error)
 }
@@ -74,9 +89,16 @@ pub fn deserialize_receive_error(
     schema: HexString,
     contract_name: &str,
     function_name: &str,
+    verbose_error_message: Option<bool>,
 ) -> JsResult {
-    deserialize_receive_error_aux(error_bytes, schema, contract_name, function_name)
-        .map_err(to_js_error)
+    deserialize_receive_error_aux(
+        error_bytes,
+        schema,
+        contract_name,
+        function_name,
+        verbose_error_message.unwrap_or(false),
+    )
+    .map_err(to_js_error)
 }
 
 #[wasm_bindgen(js_name = deserializeInitError)]
@@ -84,8 +106,15 @@ pub fn deserialize_init_error(
     error_bytes: HexString,
     schema: HexString,
     contract_name: &str,
+    verbose_error_message: Option<bool>,
 ) -> JsResult {
-    deserialize_init_error_aux(error_bytes, schema, contract_name).map_err(to_js_error)
+    deserialize_init_error_aux(
+        error_bytes,
+        schema,
+        contract_name,
+        verbose_error_message.unwrap_or(false),
+    )
+    .map_err(to_js_error)
 }
 
 #[wasm_bindgen(js_name = serializeReceiveContractParameters)]
@@ -331,7 +360,15 @@ pub fn generate_baker_keys_ext(sender: Base58String) -> JsResult {
 }
 
 #[wasm_bindgen(js_name = deserializeTypeValue)]
-pub fn deserialize_type_value_ext(serialized_value: HexString, schema: HexString) -> JsResult {
-    deserialize_type_value_aux(serialized_value, schema)
-        .map_err(|e| JsError::new(&format!("Unable to deserialize value due to: {}", e)))
+pub fn deserialize_type_value_ext(
+    serialized_value: HexString,
+    schema: HexString,
+    verbose_error_message: Option<bool>,
+) -> JsResult {
+    deserialize_type_value_aux(
+        serialized_value,
+        schema,
+        verbose_error_message.unwrap_or(false),
+    )
+    .map_err(|e| JsError::new(&format!("Unable to deserialize value due to: {}", e)))
 }

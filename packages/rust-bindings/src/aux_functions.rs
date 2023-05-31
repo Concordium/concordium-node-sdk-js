@@ -52,13 +52,13 @@ pub struct CredId {
 #[derive(SerdeSerialize, SerdeDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IdRequestInput {
-    ip_info:        IpInfo<constants::IpPairing>,
+    ip_info: IpInfo<constants::IpPairing>,
     global_context: GlobalContext<constants::ArCurve>,
-    ars_infos:      BTreeMap<ArIdentity, ArInfo<constants::ArCurve>>,
-    seed:           String,
-    net:            String,
+    ars_infos: BTreeMap<ArIdentity, ArInfo<constants::ArCurve>>,
+    seed: String,
+    net: String,
     identity_index: u32,
-    ar_threshold:   u8,
+    ar_threshold: u8,
 }
 
 pub fn error_to_string(result: Result<String>) -> String {
@@ -254,12 +254,12 @@ pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<JsonString> {
 #[derive(SerdeSerialize, SerdeDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IdRecoveryRequestInput {
-    ip_info:        IpInfo<constants::IpPairing>,
+    ip_info: IpInfo<constants::IpPairing>,
     global_context: GlobalContext<constants::ArCurve>,
-    seed_as_hex:    HexString,
-    net:            String,
+    seed_as_hex: HexString,
+    net: String,
     identity_index: u32,
-    timestamp:      u64,
+    timestamp: u64,
 }
 
 pub fn create_identity_recovery_request_aux(input: IdRecoveryRequestInput) -> Result<JsonString> {
@@ -282,16 +282,16 @@ pub fn create_identity_recovery_request_aux(input: IdRecoveryRequestInput) -> Re
 #[derive(SerdeSerialize, SerdeDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CredentialInput {
-    ip_info:             IpInfo<constants::IpPairing>,
-    global_context:      GlobalContext<constants::ArCurve>,
-    ars_infos:           BTreeMap<ArIdentity, ArInfo<constants::ArCurve>>,
-    id_object:           IdentityObjectV1<constants::IpPairing, constants::ArCurve, AttributeKind>,
+    ip_info: IpInfo<constants::IpPairing>,
+    global_context: GlobalContext<constants::ArCurve>,
+    ars_infos: BTreeMap<ArIdentity, ArInfo<constants::ArCurve>>,
+    id_object: IdentityObjectV1<constants::IpPairing, constants::ArCurve, AttributeKind>,
     revealed_attributes: Vec<AttributeTag>,
-    seed_as_hex:         HexString,
-    net:                 String,
-    identity_index:      u32,
-    cred_number:         u8,
-    expiry:              TransactionTime,
+    seed_as_hex: HexString,
+    net: String,
+    identity_index: u32,
+    cred_number: u8,
+    expiry: TransactionTime,
 }
 
 /// A ConcordiumHdWallet together with an identity index and credential index
@@ -299,10 +299,10 @@ pub struct CredentialInput {
 /// the `create_credential` function due to the implementation of
 /// `HasAttributeRandomness` below.
 struct CredentialContext {
-    wallet:                  ConcordiumHdWallet,
+    wallet: ConcordiumHdWallet,
     identity_provider_index: u32,
-    identity_index:          u32,
-    credential_index:        u32,
+    identity_index: u32,
+    credential_index: u32,
 }
 
 impl HasAttributeRandomness<ArCurve> for CredentialContext {
@@ -420,7 +420,7 @@ pub fn generate_unsigned_credential_aux(input: &str) -> Result<JsonString> {
 
     let public_keys: Vec<VerifyKey> = try_get(&v, "publicKeys")?;
     let cred_key_info = CredentialPublicKeys {
-        keys:      build_key_map(&public_keys),
+        keys: build_key_map(&public_keys),
         threshold: try_get(&v, "threshold")?,
     };
 
@@ -516,7 +516,7 @@ pub fn get_credential_deployment_details_aux(
     let acc_cred = AccountCredential::Normal { cdi };
 
     let credential_message = AccountCredentialMessage {
-        credential:     acc_cred,
+        credential: acc_cred,
         message_expiry: TransactionTime { seconds: expiry },
     };
 
@@ -567,6 +567,7 @@ pub fn deserialize_state_aux(
     contract_name: &str,
     state_bytes: HexString,
     schema: HexString,
+    verbose_error_message: bool,
 ) -> Result<JsonString> {
     let module_schema: ModuleV0 = match from_bytes(&hex::decode(schema)?) {
         Ok(o) => o,
@@ -581,7 +582,7 @@ pub fn deserialize_state_aux(
         .as_ref()
         .ok_or_else(|| anyhow!("Unable to get state schema: not included in contract schema"))?;
 
-    deserialize_type_value(state_bytes, state_schema)
+    deserialize_type_value(state_bytes, state_schema, verbose_error_message)
 }
 
 /// Given the bytes of a receive function's return value, deserialize them to a
@@ -592,12 +593,17 @@ pub fn deserialize_receive_return_value_aux(
     contract_name: &str,
     function_name: &str,
     schema_version: Option<u8>,
+    verbose_error_message: bool,
 ) -> Result<JsonString> {
     let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &schema_version)?;
     let return_value_schema =
         module_schema.get_receive_return_value_schema(contract_name, function_name)?;
 
-    deserialize_type_value(return_value_bytes, &return_value_schema)
+    deserialize_type_value(
+        return_value_bytes,
+        &return_value_schema,
+        verbose_error_message,
+    )
 }
 
 /// Given the bytes of a receive function's error, deserialize them to a json
@@ -607,11 +613,12 @@ pub fn deserialize_receive_error_aux(
     schema: HexString,
     contract_name: &str,
     function_name: &str,
+    verbose_error_message: bool,
 ) -> Result<JsonString> {
     let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &None)?;
     let error_schema = module_schema.get_receive_error_schema(contract_name, function_name)?;
 
-    deserialize_type_value(error_bytes, &error_schema)
+    deserialize_type_value(error_bytes, &error_schema, verbose_error_message)
 }
 
 /// Given the bytes of an init function's error, deserialize them to a json
@@ -620,11 +627,12 @@ pub fn deserialize_init_error_aux(
     error_bytes: HexString,
     schema: HexString,
     contract_name: &str,
+    verbose_error_message: bool,
 ) -> Result<JsonString> {
     let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &None)?;
     let error_schema = module_schema.get_init_error_schema(contract_name)?;
 
-    deserialize_type_value(error_bytes, &error_schema)
+    deserialize_type_value(error_bytes, &error_schema, verbose_error_message)
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -722,16 +730,21 @@ fn serialize_type_value(
 pub fn deserialize_type_value_aux(
     serialized_value: HexString,
     schema: HexString,
+    verbose_error_message: bool,
 ) -> Result<JsonString> {
     let value_type: Type = from_bytes(&hex::decode(schema)?)?;
-    deserialize_type_value(serialized_value, &value_type)
+    deserialize_type_value(serialized_value, &value_type, verbose_error_message)
 }
 
-fn deserialize_type_value(serialized_value: HexString, value_type: &Type) -> Result<JsonString> {
+fn deserialize_type_value(
+    serialized_value: HexString,
+    value_type: &Type,
+    verbose_error_message: bool,
+) -> Result<JsonString> {
     let mut cursor = Cursor::new(hex::decode(serialized_value)?);
     match value_type.to_json(&mut cursor) {
         Ok(v) => Ok(to_string(&v)?),
-        Err(_) => Err(anyhow!("Unable to parse value to json")),
+        Err(e) => Err(anyhow!("{}", e.display(verbose_error_message))),
     }
 }
 
@@ -739,20 +752,20 @@ fn deserialize_type_value(serialized_value: HexString, value_type: &Type) -> Res
 #[serde(rename_all = "camelCase")]
 pub struct IdProofInput {
     id_object: IdentityObjectV1<constants::IpPairing, constants::ArCurve, AttributeKind>,
-    global_context:          GlobalContext<constants::ArCurve>,
-    seed_as_hex:             String,
-    net:                     String,
+    global_context: GlobalContext<constants::ArCurve>,
+    seed_as_hex: String,
+    net: String,
     identity_provider_index: u32,
-    identity_index:          u32,
-    cred_number:             u8,
-    statement:               Statement<constants::ArCurve, AttributeKind>,
-    challenge:               String,
+    identity_index: u32,
+    cred_number: u8,
+    statement: Statement<constants::ArCurve, AttributeKind>,
+    challenge: String,
 }
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
 struct IdProofOutput {
     credential: String,
-    proof:      Versioned<Proof<constants::ArCurve, AttributeKind>>,
+    proof: Versioned<Proof<constants::ArCurve, AttributeKind>>,
 }
 
 pub fn create_id_proof_aux(input: IdProofInput) -> Result<JsonString> {
@@ -805,7 +818,7 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<JsonString> {
 
     let out = IdProofOutput {
         credential: base16_encode_string(&credential),
-        proof:      Versioned::new(VERSION_0, proof),
+        proof: Versioned::new(VERSION_0, proof),
     };
 
     Ok(json!(out).to_string())
@@ -828,17 +841,17 @@ pub fn serialize_credential_deployment_payload_aux(
 #[derive(SerdeSerialize, SerdeDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UnsignedCredentialInput {
-    ip_info:                  IpInfo<constants::IpPairing>,
-    global_context:           GlobalContext<constants::ArCurve>,
-    ars_infos:                BTreeMap<ArIdentity, ArInfo<constants::ArCurve>>,
+    ip_info: IpInfo<constants::IpPairing>,
+    global_context: GlobalContext<constants::ArCurve>,
+    ars_infos: BTreeMap<ArIdentity, ArInfo<constants::ArCurve>>,
     id_object: IdentityObjectV1<constants::IpPairing, constants::ArCurve, AttributeKind>,
-    id_cred_sec:              PedersenValue<ArCurve>,
-    prf_key:                  prf::SecretKey<ArCurve>,
+    id_cred_sec: PedersenValue<ArCurve>,
+    prf_key: prf::SecretKey<ArCurve>,
     sig_retrievel_randomness: String,
-    credential_public_keys:   CredentialPublicKeys,
-    attribute_randomness:     BTreeMap<AttributeTag, PedersenRandomness<ArCurve>>,
-    revealed_attributes:      Vec<AttributeTag>,
-    cred_number:              u8,
+    credential_public_keys: CredentialPublicKeys,
+    attribute_randomness: BTreeMap<AttributeTag, PedersenRandomness<ArCurve>>,
+    revealed_attributes: Vec<AttributeTag>,
+    cred_number: u8,
 }
 
 struct AttributeRandomness(BTreeMap<AttributeTag, PedersenRandomness<ArCurve>>);
@@ -871,7 +884,7 @@ pub fn create_unsigned_credential_v1_aux(input: UnsignedCredentialInput) -> Resu
     };
     let aci = AccCredentialInfo {
         cred_holder_info: chi,
-        prf_key:          input.prf_key,
+        prf_key: input.prf_key,
     };
 
     let blinding_randomness: Value<constants::ArCurve> = concordium_base::common::from_bytes(
@@ -909,11 +922,11 @@ pub fn create_unsigned_credential_v1_aux(input: UnsignedCredentialInput) -> Resu
 #[serde(rename_all = "camelCase")]
 pub struct BakerKeys {
     #[serde(flatten)]
-    keys_payload:         ConfigureBakerKeysPayload,
+    keys_payload: ConfigureBakerKeysPayload,
     #[serde(serialize_with = "base16_encode", rename = "electionPrivateKey")]
     election_private_key: BakerElectionSignKey,
     #[serde(serialize_with = "base16_encode", rename = "signatureSignKey")]
-    signature_sign_key:   BakerSignatureSignKey,
+    signature_sign_key: BakerSignatureSignKey,
     #[serde(serialize_with = "base16_encode", rename = "aggregationSignKey")]
     aggregation_sign_key: BakerAggregationSignKey,
 }

@@ -23,6 +23,7 @@ import {
     AccountCommitmentInput,
     Web3IssuerCommitmentInput,
     VerifiablePresentation,
+    CredentialStatement,
 } from './web3ProofTypes';
 import { getPastDate } from './idProofs';
 import {
@@ -569,5 +570,45 @@ export function createWeb3CommitmentInputWithHdWallet(
         keyPair,
         attributes,
         randomness
+    );
+}
+
+/**
+ * Given an atomic statement and an identity's attributes, determine whether the identity fulfills the statement.
+ */
+export function canProveAtomicStatement(
+    statement: AtomicStatementV2,
+    attributeList: AttributeList
+): boolean {
+    const attribute =
+        attributeList.chosenAttributes[
+            AttributesKeys[statement.attributeTag] as AttributeKey
+        ];
+
+    switch (statement.type) {
+        case StatementTypes.AttributeInSet:
+            return statement.set.includes(attribute);
+        case StatementTypes.AttributeNotInSet:
+            return !statement.set.includes(attribute);
+        case StatementTypes.AttributeInRange:
+            return statement.upper > attribute && attribute >= statement.lower;
+        case StatementTypes.RevealAttribute:
+            return attribute !== undefined;
+        default:
+            throw new Error(
+                'Statement type of ' + statement.type + ' is not supported'
+            );
+    }
+}
+
+/**
+ * Given a credential statement and an identity's attributes, determine whether the identity fulfills the statement.
+ */
+export function canProveCredentialStatement(
+    credentialStatement: CredentialStatement,
+    attributeList: AttributeList
+): boolean {
+    return credentialStatement.statement.every((statement) =>
+        canProveAtomicStatement(statement, attributeList)
     );
 }

@@ -1,23 +1,39 @@
-import { AttributesKeys, ContractAddress } from './types';
+import * as wasm from '@concordium/rust-bindings';
+import {
+    AttributeKey,
+    AttributeList,
+    AttributesKeys,
+    ContractAddress,
+    KeyPair,
+    Network,
+} from './types';
 import {
     AtomicStatementV2,
-    EU_MEMBERS,
     IdentityQualifier,
     IDENTITY_SUBJECT_SCHEMA,
     CredentialStatements,
-    MAX_DATE,
     MembershipStatementV2,
-    MIN_DATE,
     NonMembershipStatementV2,
     PropertyDetails,
     RangeStatementV2,
     StatementProverQualifier,
-    StatementTypes,
     VerifiableCredentialQualifier,
     VerifiableCredentialSubject,
-    StatementBuilder,
-} from './idProofTypes';
+    Web3IdProofInput,
+    AccountCommitmentInput,
+    Web3IssuerCommitmentInput,
+    VerifiablePresentation,
+} from './web3ProofTypes';
 import { getPastDate } from './idProofs';
+import {
+    StatementTypes,
+    StatementBuilder,
+    MIN_DATE,
+    MAX_DATE,
+    EU_MEMBERS,
+} from './CommonProofTypes';
+import { ConcordiumHdWallet } from './HdWallet';
+import { stringify } from 'json-bigint';
 
 function verifyRangeStatement(
     statement: RangeStatementV2,
@@ -353,13 +369,16 @@ export class Web3StatementBuilder {
     private statements: CredentialStatements = [];
 
     private add(
-        id: StatementProverQualifier,
+        idQualifier: StatementProverQualifier,
         builderCallback: (builder: InternalBuilder) => void,
         schema?: VerifiableCredentialSubject
     ): this {
         const builder = new AtomicStatementBuilder(schema);
         builderCallback(builder);
-        this.statements.push({ id, statement: builder.getStatement() });
+        this.statements.push({
+            idQualifier,
+            statement: builder.getStatement(),
+        });
         return this;
     }
 
@@ -389,4 +408,166 @@ export class Web3StatementBuilder {
     getStatements(): CredentialStatements {
         return this.statements;
     }
+}
+
+/**
+ * Given a statement about an identity and the inputs necessary to prove the statement, produces a proof that the associated identity fulfills the statement.
+ */
+export function getVerifiablePresentation(
+    input: Web3IdProofInput
+): VerifiablePresentation {
+    try {
+        // Use json-bigint stringify to ensure we can handle bigints
+        const s: VerifiablePresentation = JSON.parse(
+            wasm.createWeb3IdProof(stringify(input))
+        );
+        // TODO Fix statements to have "correct type"
+        // s.verifiableCredential.map((proof) => proof.credentialSubject.statement.map())
+        return s;
+    } catch (e) {
+        throw new Error(e as string);
+    }
+}
+
+/**
+ * Create a DID string for a web3id credential. Used to build a request for a verifiable credential.
+ */
+export function createWeb3IdDID(
+    network: Network,
+    publicKey: string,
+    index: bigint,
+    subindex: bigint
+): string {
+    return (
+        'did:ccd:' +
+        network.toLowerCase() +
+        ':sci:' +
+        index.toString() +
+        ':' +
+        subindex.toString() +
+        '/credentialEntry/' +
+        publicKey
+    );
+}
+
+/**
+ * Create a DID string for a web3id credential. Used to build a request for a verifiable credential.
+ */
+export function createAccountDID(network: Network, credId: string): string {
+    return 'did:ccd:' + network.toLowerCase() + ':cred:' + credId;
+}
+
+/**
+ * Converts a YYYYMM string to a rfc3339 string. It uses the earliest possible time/day.
+ */
+function convertYearMonthToRfc3339(yearMonth: string): string {
+    const year = yearMonth.substring(0, 4);
+    const month = yearMonth.substring(4, 6);
+    return year + '-' + month + '-01T00:00:00.00Z';
+}
+
+/**
+ * Create the commitment input required to create a proof for the given statements, using an account credential.
+ */
+export function createAccountCommitmentInput(
+    statements: AtomicStatementV2[],
+    identityProvider: number,
+    attributes: AttributeList,
+    randomness: Record<number, string>
+): AccountCommitmentInput {
+    return {
+        type: 'account',
+        issuanceDate: convertYearMonthToRfc3339(attributes.createdAt),
+        issuer: identityProvider,
+        values: statements.reduce<Record<number, string>>((acc, x) => {
+            acc[x.attributeTag] =
+                attributes.chosenAttributes[
+                    AttributesKeys[x.attributeTag] as AttributeKey
+                ];
+            return acc;
+        }, {}),
+        randomness,
+    };
+}
+
+/**
+ * Create the commitment input required to create a proof for the given statements, using an account credential.
+ * Uses a ConcordiumHdWallet to get randomness needed.
+ */
+export function createAccountCommitmentInputWithHdWallet(
+    statements: AtomicStatementV2[],
+    identityProvider: number,
+    attributes: AttributeList,
+    wallet: ConcordiumHdWallet,
+    identityIndex: number,
+    credIndex: number
+) {
+    const randomness = statements.reduce<Record<number, string>>((acc, x) => {
+        acc[x.attributeTag] = wallet
+            .getAttributeCommitmentRandomness(
+                identityProvider,
+                identityIndex,
+                credIndex,
+                x.attributeTag
+            )
+            .toString('hex');
+        return acc;
+    }, {});
+    return createAccountCommitmentInput(
+        statements,
+        identityProvider,
+        attributes,
+        randomness
+    );
+}
+
+/**
+ * Create the commitment input required to create a proof for the given statements, using an web3Id credential.
+ */
+export function createWeb3CommitmentInput(
+    statements: AtomicStatementV2[],
+    signer: KeyPair,
+    attributes: AttributeList,
+    randomness: string
+): Web3IssuerCommitmentInput {
+    return {
+        type: 'web3Issuer',
+        issuanceDate: convertYearMonthToRfc3339(attributes.createdAt),
+        signer: signer.signKey + signer.verifyKey,
+        values: statements.reduce<Record<number, string>>((acc, x) => {
+            acc[x.attributeTag] =
+                attributes.chosenAttributes[
+                    AttributesKeys[x.attributeTag] as AttributeKey
+                ];
+            return acc;
+        }, {}),
+        randomness,
+    };
+}
+
+/**
+ * Create the commitment input required to create a proof for the given statements, using an web3Id credential.
+ * Uses a ConcordiumHdWallet to supply the public key and the signing key of the credential.
+ */
+export function createWeb3CommitmentInputWithHdWallet(
+    statements: AtomicStatementV2[],
+    attributes: AttributeList,
+    wallet: ConcordiumHdWallet,
+    credentialIndex: number,
+    randomness: string
+) {
+    const keyPair = {
+        signKey: wallet
+            .getVerifiableCredentialPublicKey(credentialIndex)
+            .toString('hex'),
+        verifyKey: wallet
+            .getVerifiableCredentialSigningKey(credentialIndex)
+            .toString('hex'),
+    };
+    return createWeb3CommitmentInput(
+        statements,
+        keyPair,
+        attributes,
+        randomness
+    );
 }

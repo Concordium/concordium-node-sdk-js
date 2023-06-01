@@ -409,3 +409,12 @@ pub fn display_type_schema_template(schema: HexString) -> JsResult {
     display_type_schema_template_aux(schema)
         .map_err(|e| JsError::new(&format!("Unable to get template of schema: {}", e)))
 }
+
+#[wasm_bindgen(js_name = createWeb3IdProof)]
+pub fn create_web3_id_proof_ext(raw_input: JsonString) -> Result<JsonString, String> {
+    console_error_panic_hook::set_once();
+    match serde_json::from_str(&raw_input) {
+        Ok(input) => create_web3_id_proof_aux(input).map_err(|e| format!("Unable to create proof: {}", e)),
+        Err(e) => Err(format!("Unable to parse input for proof: {}", e)),
+    }
+}

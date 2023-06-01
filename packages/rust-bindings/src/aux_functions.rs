@@ -27,6 +27,7 @@ use concordium_base::{
         secret_sharing::Threshold,
         types::*,
     },
+    web3id::{Request, CommitmentInputs, Web3IdAttribute},
     transactions::{ConfigureBakerKeysPayload, Payload},
 };
 use ed25519_hd_key_derivation::DeriveError;
@@ -854,6 +855,76 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<JsonString> {
     };
 
     Ok(json!(out).to_string())
+}
+
+#[derive(SerdeDeserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Web3IdProofInput {
+    request: Request<constants::ArCurve, Web3IdAttribute>,
+    global_context: GlobalContext<constants::ArCurve>,
+    commitment_inputs: Vec<DeserializableCommitmentInputs>,
+}
+
+#[serde_with::serde_as]
+#[derive(SerdeDeserialize)]
+#[serde(rename_all = "camelCase", tag = "type")]
+pub enum DeserializableCommitmentInputs {
+    #[serde(rename_all = "camelCase")]
+    Account {
+        /// Issuance date of the credential that the proof is about.
+        /// This is an unfortunate name to conform to the standard, but the
+        /// meaning here really is `validFrom` for the credential.
+        issuance_date: String,
+        issuer:        IpIdentity,
+        /// The values that are committed to and are required in the proofs.
+        #[serde_as(as = "BTreeMap<serde_with::DisplayFromStr, _>")]
+        values:        BTreeMap<u8, Web3IdAttribute>,
+        /// The randomness to go along with commitments in `values`.
+        #[serde_as(as = "BTreeMap<serde_with::DisplayFromStr, _>")]
+        randomness:    BTreeMap<u8, PedersenRandomness<constants::ArCurve>>,
+    },
+    /// Inputs are for a credential issued by Web3ID issuer.
+    #[serde(rename_all = "camelCase")]
+    Web3Issuer {
+        /// Issuance date of the credential that the proof is about.
+        /// This is an unfortunate name to conform to the standard, but the
+        /// meaning here really is `validFrom` for the credential.
+        issuance_date: String,
+        #[serde(deserialize_with = "base16_decode")]
+        /// The signer that will sign the presentation.
+        signer: ed25519_dalek::Keypair,
+        /// Values that are committed to.
+        #[serde_as(as = "BTreeMap<serde_with::DisplayFromStr, _>")]
+        values:        BTreeMap<u8, Web3IdAttribute>,
+        /// The randomness for the vector commitment.
+        randomness:    PedersenRandomness<constants::ArCurve>,
+    },
+}
+
+pub fn create_web3_id_proof_aux(input: Web3IdProofInput) -> Result<JsonString> {
+    let mut commitment_inputs: Vec<CommitmentInputs<'_, constants::ArCurve, Web3IdAttribute, ed25519_dalek::Keypair>> = Vec::new();
+    for ref inp in input.commitment_inputs.iter() {
+        commitment_inputs.push(match inp {
+            DeserializableCommitmentInputs::Account{ issuance_date, issuer, values, randomness} => {
+                CommitmentInputs::Account{
+                    issuance_date: chrono::DateTime::parse_from_rfc3339(&issuance_date).unwrap().with_timezone(&chrono::Utc),
+                    issuer: *issuer,
+                    values,
+                    randomness,
+                }
+            },
+            DeserializableCommitmentInputs::Web3Issuer{ issuance_date, signer, values, randomness} => {
+                CommitmentInputs::Web3Issuer{
+                    issuance_date: chrono::DateTime::parse_from_rfc3339(&issuance_date).unwrap().with_timezone(&chrono::Utc),
+                    signer,
+                    values,
+                    randomness: randomness.clone(),
+                }
+            }
+        });
+    }
+    let presentation = input.request.prove(&input.global_context, commitment_inputs.into_iter());
+    Ok(json!(presentation.unwrap()).to_string())
 }
 
 pub fn serialize_credential_deployment_payload_aux(

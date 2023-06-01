@@ -33,8 +33,10 @@ export {
     deserializeTypeValue,
 } from './deserialization';
 
-export * from './idProofs';
+export { StatementTypes } from './CommonProofTypes';
 export * from './idProofTypes';
+export * from './idProofs';
+export * from './web3ProofTypes';
 export * from './web3Proofs';
 
 export * from './signHelpers';

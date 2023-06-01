@@ -1,44 +1,18 @@
 import {
     AttributeKey,
-    ContractAddress,
     CryptographicParameters,
     IdentityObjectV1,
     Network,
     Versioned,
 } from '.';
-
-export enum StatementTypes {
-    RevealAttribute = 'RevealAttribute',
-    AttributeInSet = 'AttributeInSet',
-    AttributeNotInSet = 'AttributeNotInSet',
-    AttributeInRange = 'AttributeInRange',
-}
-
-type LaxStringEnum<E extends string> = `${E}`;
-
-type GenericRevealStatement<TagType> = {
-    type: LaxStringEnum<StatementTypes.RevealAttribute>;
-    attributeTag: TagType;
-};
-
-type GenericMembershipStatement<TagType, ValueType> = {
-    type: LaxStringEnum<StatementTypes.AttributeInSet>;
-    attributeTag: TagType;
-    set: ValueType[];
-};
-
-type GenericNonMembershipStatement<TagType, ValueType> = {
-    type: LaxStringEnum<StatementTypes.AttributeNotInSet>;
-    attributeTag: TagType;
-    set: ValueType[];
-};
-
-type GenericRangeStatement<TagType, ValueType> = {
-    type: LaxStringEnum<StatementTypes.AttributeInRange>;
-    attributeTag: TagType;
-    lower: ValueType;
-    upper: ValueType;
-};
+import {
+    GenericAtomicStatement,
+    GenericMembershipStatement,
+    GenericNonMembershipStatement,
+    GenericRangeStatement,
+    GenericRevealStatement,
+    StatementTypes,
+} from './CommonProofTypes';
 
 export type RangeStatement = GenericRangeStatement<AttributeKey, string>;
 export type NonMembershipStatement = GenericNonMembershipStatement<
@@ -51,26 +25,7 @@ export type MembershipStatement = GenericMembershipStatement<
 >;
 export type RevealStatement = GenericRevealStatement<AttributeKey>;
 
-export type RangeStatementV2 = GenericRangeStatement<number, string | bigint>;
-export type NonMembershipStatementV2 = GenericNonMembershipStatement<
-    number,
-    string | bigint
->;
-export type MembershipStatementV2 = GenericMembershipStatement<
-    number,
-    string | bigint
->;
-export type RevealStatementV2 = GenericRevealStatement<number>;
-
-type GenericAtomicStatement<TagType, ValueType> =
-    | GenericRevealStatement<TagType>
-    | GenericMembershipStatement<TagType, ValueType>
-    | GenericNonMembershipStatement<TagType, ValueType>
-    | GenericRangeStatement<TagType, ValueType>;
-
 export type AtomicStatement = GenericAtomicStatement<AttributeKey, string>;
-export type AtomicStatementV2 = GenericAtomicStatement<number, string | bigint>;
-
 export type IdStatement = AtomicStatement[];
 
 export type IdProofInput = {
@@ -126,28 +81,6 @@ export const attributesWithSet: AttributeKey[] = [
     'idDocIssuer',
 ];
 
-export type VerifiableCredentialQualifier = {
-    type: 'sci';
-    issuers: ContractAddress[];
-};
-
-type IdentityProviderIndex = number;
-
-export type IdentityQualifier = {
-    type: 'cred';
-    issuers: IdentityProviderIndex[];
-};
-export type StatementProverQualifier =
-    | VerifiableCredentialQualifier
-    | IdentityQualifier;
-
-export type CredentialStatement = {
-    idQualifier: StatementProverQualifier;
-    statement: AtomicStatementV2[];
-};
-
-export type CredentialStatements = CredentialStatement[];
-
 export interface StatementBuilder<
     ValueType,
     AttributeType extends number,
@@ -197,135 +130,3 @@ export const EU_MEMBERS = [
     'SE',
     'HR',
 ];
-
-export type PropertyDetails = {
-    index: string;
-    title: string;
-    description?: string;
-    type: string;
-    format?: string;
-};
-
-type IndexDetails = {
-    title: 'id';
-    description?: string;
-    type: 'string';
-};
-
-export type VerifiableCredentialSubject = {
-    type: 'object';
-    properties:
-        | {
-              id: IndexDetails;
-          }
-        | Record<string, PropertyDetails>;
-    required: string[];
-};
-
-export const IDENTITY_SUBJECT_SCHEMA: VerifiableCredentialSubject = {
-    type: 'object',
-    properties: {
-        id: {
-            title: 'id',
-            type: 'string',
-            description: 'Credential subject identifier',
-        },
-        firstName: {
-            title: 'first name',
-            type: 'string',
-            index: '0',
-        },
-        lastName: {
-            title: 'last name',
-            type: 'string',
-            index: '1',
-        },
-        sex: {
-            title: 'sex',
-            type: 'string',
-            index: '2',
-        },
-        dob: {
-            title: 'date of birth',
-            type: 'string',
-            index: '3',
-        },
-        countryOfResidence: {
-            title: 'last name',
-            type: 'string',
-            index: '4',
-        },
-        nationality: {
-            title: 'last name',
-            type: 'string',
-            index: '5',
-        },
-        idDocType: {
-            title: 'last name',
-            type: 'string',
-            index: '6',
-        },
-        idDocNo: {
-            title: 'last name',
-            type: 'string',
-            index: '7',
-        },
-        idDocIssuer: {
-            title: 'last name',
-            type: 'string',
-            index: '8',
-        },
-        idDocIssuedAt: {
-            title: 'last name',
-            type: 'string',
-            index: '9',
-        },
-        idDocExpiresAt: {
-            title: 'last name',
-            type: 'string',
-            index: '10',
-        },
-        nationalIdNo: {
-            title: 'last name',
-            type: 'string',
-            index: '11',
-        },
-        taxIdNo: {
-            title: 'last name',
-            type: 'string',
-            index: '12',
-        },
-    },
-    required: [],
-};
-
-type DIDString = string;
-
-export type ConcordiumWeakLinkingProofV1 = {
-    created: string;
-    proofValue: string[];
-    type: 'ConcordiumWeakLinkingProofV1';
-};
-
-export type CredentialSubjectProof = {
-    statement: AtomicStatementV2[];
-};
-
-export type VerifiableCredentialProof = {
-    credentialSubject: CredentialSubjectProof;
-    id: DIDString;
-    issuanceDate: string;
-    issuer: DIDString;
-    type: [
-        'VerifiableCredential',
-        'ConcordiumVerifiableCredential',
-        ...string[]
-    ];
-};
-
-export type VerifiablePresentation = {
-    presentationContext: string;
-    proof: ConcordiumWeakLinkingProofV1;
-    type: string;
-    verifiableCredential: VerifiableCredentialProof[];
-};

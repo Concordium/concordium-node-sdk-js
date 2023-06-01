@@ -1,14 +1,12 @@
 import { AttributeKeyString, AttributesKeys, IdDocType } from '../src/types';
+import { StatementTypes } from '../src/CommonProofTypes';
 import {
-    StatementTypes,
     attributesWithRange,
     attributesWithSet,
     RangeStatement,
 } from '../src/idProofTypes';
 import { getIdProof, IdStatementBuilder } from '../src/idProofs';
 import fs from 'fs';
-import { Web3StatementBuilder } from '../src';
-import { expectedStatementMixed } from './resources/expectedStatements';
 
 test('Creating a statement with multiple atomic statements on the same attribute fails', () => {
     const builder = new IdStatementBuilder(true);
@@ -195,23 +193,4 @@ test('Age between 1 and 1 gives 1 - 1.9999 range', () => {
         .getStatement()[0] as RangeStatement;
     expect(statement.upper).toBe('20190102');
     expect(statement.lower).toBe('20180103');
-});
-
-test('Generate V2 statement', () => {
-    const builder = new Web3StatementBuilder();
-    const statement = builder
-        .addForVerifiableCredentials(
-            [
-                { index: 2101n, subindex: 0n },
-                { index: 1337n, subindex: 42n },
-            ],
-            (b) =>
-                b.addRange(17, 80n, 1237n).addMembership(23, ['aa', 'ff', 'zz'])
-        )
-        .addForVerifiableCredentials([{ index: 1338n, subindex: 0n }], (b) =>
-            b.addRange(0, 80n, 1237n).addNonMembership(1, ['aa', 'ff', 'zz'])
-        )
-        .addForIdentityCredentials([0, 1, 2], (b) => b.revealAttribute(0))
-        .getStatements();
-    expect(statement).toStrictEqual(expectedStatementMixed);
 });

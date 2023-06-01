@@ -7,17 +7,19 @@ import {
 } from './types';
 import {
     AtomicStatement,
-    EU_MEMBERS,
     IdProofInput,
     IdProofOutput,
     IdStatement,
-    MAX_DATE,
     MembershipStatement,
-    MIN_DATE,
     NonMembershipStatement,
     RangeStatement,
-    StatementTypes,
 } from './idProofTypes';
+import {
+    EU_MEMBERS,
+    MAX_DATE,
+    MIN_DATE,
+    StatementTypes,
+} from './CommonProofTypes';
 import { whereAlpha2 } from 'iso-3166-1';
 
 /**

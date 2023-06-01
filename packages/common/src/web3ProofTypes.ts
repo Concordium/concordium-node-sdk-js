@@ -4,7 +4,7 @@ import {
     GenericMembershipStatement,
     GenericNonMembershipStatement,
     GenericRangeStatement,
-} from './CommonProofTypes';
+} from './commonProofTypes';
 import { ContractAddress, CryptographicParameters } from './types';
 
 export type AccountCommitmentInput = {

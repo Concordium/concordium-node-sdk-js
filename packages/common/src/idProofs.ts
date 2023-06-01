@@ -19,7 +19,7 @@ import {
     MAX_DATE,
     MIN_DATE,
     StatementTypes,
-} from './CommonProofTypes';
+} from './commonProofTypes';
 import { whereAlpha2 } from 'iso-3166-1';
 
 /**
@@ -186,9 +186,6 @@ function verifySetStatement(
     }
 }
 
-/**
- * @deprecated
- */
 function verifyAtomicStatement(
     statement: AtomicStatement,
     existingStatements: IdStatement

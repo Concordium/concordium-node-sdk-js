@@ -33,7 +33,13 @@ export {
     deserializeTypeValue,
 } from './deserialization';
 
-export { StatementTypes } from './CommonProofTypes';
+export {
+    StatementTypes,
+    StatementBuilder,
+    MIN_DATE,
+    MAX_DATE,
+    EU_MEMBERS,
+} from './commonProofTypes';
 export * from './idProofTypes';
 export * from './idProofs';
 export * from './web3ProofTypes';

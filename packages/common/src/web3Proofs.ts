@@ -31,7 +31,7 @@ import {
     MIN_DATE,
     MAX_DATE,
     EU_MEMBERS,
-} from './CommonProofTypes';
+} from './commonProofTypes';
 import { ConcordiumHdWallet } from './HdWallet';
 import { stringify } from 'json-bigint';
 
@@ -176,7 +176,7 @@ export function verifyAtomicStatements(
     return true;
 }
 
-function getVerifiableCredentialQualifier(
+function getWeb3IdCredentialQualifier(
     validContractAddresses: ContractAddress[]
 ): VerifiableCredentialQualifier {
     return {
@@ -185,7 +185,7 @@ function getVerifiableCredentialQualifier(
     };
 }
 
-function getIdentityQualifiervalidIdentityProviders(
+function getAccountCredentilQualifier(
     validIdentityProviders: number[]
 ): IdentityQualifier {
     return {
@@ -290,7 +290,7 @@ export class AtomicStatementBuilder implements InternalBuilder {
     }
 }
 
-export class IdentityStatementBuild extends AtomicStatementBuilder {
+export class AccountStatementBuild extends AtomicStatementBuilder {
     /**
      * Add to the statement that the age is at minimum the given value.
      * This adds a range statement that the date of birth is between 1st of january 1800 and <age> years ago.
@@ -388,7 +388,7 @@ export class Web3StatementBuilder {
         schema?: VerifiableCredentialSubject
     ): this {
         return this.add(
-            getVerifiableCredentialQualifier(validContractAddresses),
+            getWeb3IdCredentialQualifier(validContractAddresses),
             builderCallback,
             schema
         );
@@ -399,7 +399,7 @@ export class Web3StatementBuilder {
         builderCallback: (builder: InternalBuilder) => void
     ): this {
         return this.add(
-            getIdentityQualifiervalidIdentityProviders(validIdentityProviders),
+            getAccountCredentilQualifier(validIdentityProviders),
             builderCallback,
             IDENTITY_SUBJECT_SCHEMA
         );

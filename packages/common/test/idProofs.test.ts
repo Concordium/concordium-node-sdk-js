@@ -1,5 +1,5 @@
 import { AttributeKeyString, AttributesKeys, IdDocType } from '../src/types';
-import { StatementTypes } from '../src/CommonProofTypes';
+import { StatementTypes } from '../src/commonProofTypes';
 import {
     attributesWithRange,
     attributesWithSet,

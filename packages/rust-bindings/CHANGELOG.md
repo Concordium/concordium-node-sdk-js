@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Breaking changes
+
+- Errors returned from entrypoints in `external_functions.rs` are now proper JS errors.
+
+### Changes
+
+- Added an additional parameter to contract schema serialization/deserializtion entrypoints, making it possible to receive errors in a verbose format with added detail.
+
 ## 0.12.0
 
 ### Added

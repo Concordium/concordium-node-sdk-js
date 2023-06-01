@@ -459,6 +459,7 @@ export function serializeCredentialDeploymentTransactionForSubmission(
  * @param parameters the parameters to be serialized. Should correspond to the JSON representation.
  * @param rawSchema buffer for the schema of a module that contains the contract
  * @param schemaVersion the version of the schema provided
+ * @param verboseErrorMessage Whether errors are in a verbose format or not. Defaults to `false`.
  * @returns serialized buffer of init contract parameters
  */
 export function serializeInitContractParameters(
@@ -485,6 +486,7 @@ export function serializeInitContractParameters(
  * @param parameters the parameters to be serialized. Should correspond to the JSON representation.
  * @param rawSchema buffer for the schema of a module that contains the contract
  * @param schemaVersion the version of the schema provided
+ * @param verboseErrorMessage Whether errors are in a verbose format or not. Defaults to `false`.
  * @returns serialized buffer of update contract parameters
  */
 export function serializeUpdateContractParameters(
@@ -511,6 +513,7 @@ export function serializeUpdateContractParameters(
  * Given a value for a smart contract type, and the raw schema for that type, serialize the value into binary format.
  * @param value the value that should be serialized. Should correspond to the JSON representation
  * @param rawSchema the schema for the type that the given value should be serialized as
+ * @param verboseErrorMessage Whether errors are in a verbose format or not. Defaults to `false`.
  * @returns serialized buffer of the value
  */
 export function serializeTypeValue(

@@ -8,6 +8,17 @@
 
 - A `parseWallet` function to parse wallet export files
 
+### Changed
+- The following functions now all have an additional parameter controlling whether errors are in a verbose format or not:
+    - `deserializeContractState`
+    - `deserializeReceiveReturnValue`
+    - `deserializeReceiveError`
+    - `deserializeInitError`
+    - `deserializeTypeValue`
+    - `serializeInitContractParameters`
+    - `serializeUpdateContractParameters`
+    - `serializeTypeValue`
+
 ## 7.0.0 2023-05-15 
 
 ### Breaking changes

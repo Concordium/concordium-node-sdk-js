@@ -221,8 +221,8 @@ export function deserializeTransaction(
  * @param moduleSchema The raw module schema as a buffer.
  * @param contractName The name of the contract where the receive function is located.
  * @param functionName The name of the receive function which return value you want to deserialize.
- * @param schemaVersion The schema version as a number. This parameter is optional,
- * if you provide a serialized versioned schema this argument won't be needed.
+ * @param schemaVersion The schema version as a number. This parameter is optional, if you provide a serialized versioned schema this argument won't be needed.
+ * @param verboseErrorMessage Whether errors are in a verbose format or not. Defaults to `false`.
  */
 export function deserializeReceiveReturnValue(
     returnValueBytes: Buffer,
@@ -257,6 +257,7 @@ export function deserializeReceiveReturnValue(
  * @param moduleSchema The raw module schema as a buffer.
  * @param contractName The name of the contract where the receive function is located.
  * @param functionName The name of the receive function which error you want to deserialize.
+ * @param verboseErrorMessage Whether errors are in a verbose format or not. Defaults to `false`.
  */
 export function deserializeReceiveError(
     errorBytes: Buffer,
@@ -285,9 +286,10 @@ export function deserializeReceiveError(
 
 /**
  * Deserializes an init function's error from a sequence of bytes into a json object.
- * @param returnValueBytes A buffer containing the error as raw bytes.
+ * @param errorBytes A buffer containing the error as raw bytes.
  * @param moduleSchema The raw module schema as a buffer.
  * @param contractName The name of the init function which error you want to deserialize.
+ * @param verboseErrorMessage Whether errors are in a verbose format or not. Defaults to `false`.
  */
 export function deserializeInitError(
     errorBytes: Buffer,
@@ -316,6 +318,7 @@ export function deserializeInitError(
  * Given a binary value for a smart contract type, and the raw schema for that type, deserialize the value into the JSON representation.
  * @param value the value that should be deserialized.
  * @param rawSchema the schema for the type that the given value should be deserialized as
+ * @param verboseErrorMessage Whether errors are in a verbose format or not. Defaults to `false`.
  * @returns the deserialized value
  */
 export function deserializeTypeValue(

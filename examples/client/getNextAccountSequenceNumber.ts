@@ -1,3 +1,4 @@
+import { parseEndpoint } from '../shared/util';
 import {
     AccountAddress,
     createConcordiumClient,
@@ -10,7 +11,7 @@ import meow from 'meow';
 const cli = meow(
     `
   Usage
-    $ yarn ts-node <path-to-this-file> [options]
+    $ yarn run-example <path-to-this-file> [options]
 
   Required:
     --account, -a  The account to get the next nonce for
@@ -36,7 +37,8 @@ const cli = meow(
     }
 );
 
-const [address, port] = cli.flags.endpoint.split(':');
+const [address, port] = parseEndpoint(cli.flags.endpoint);
+
 const client = createConcordiumClient(
     address,
     Number(port),

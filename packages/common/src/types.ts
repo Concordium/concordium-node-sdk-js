@@ -28,6 +28,7 @@ export type Base64String = string;
 export type DigitString = string;
 export type UrlString = string;
 export type IpAddressString = string;
+export type JsonString = string;
 
 export type ModuleRef = HexString;
 
@@ -584,7 +585,7 @@ export interface BlockInfo {
     blockLastFinalized: HexString;
 
     blockHeight: bigint;
-    blockBaker: BakerId;
+    blockBaker?: BakerId;
     blockSlot: bigint;
 
     blockArriveTime: Date;
@@ -743,6 +744,26 @@ export interface WalletExportFormat {
         address: Base58String;
         credentials: Record<number, HexString>;
     };
+}
+
+/**
+ * Parses a wallet export file into a WalletExportFormat. The wallet export
+ * file is exported from a concordium wallet.
+ */
+export function parseWallet(walletString: JsonString): WalletExportFormat {
+    const wallet = JSON.parse(walletString);
+    if (
+        typeof wallet.type === 'string' &&
+        typeof wallet.v === 'number' &&
+        typeof wallet.environment === 'string' &&
+        typeof wallet.value.address === 'string' &&
+        wallet.value.accountKeys !== undefined &&
+        wallet.credentials !== undefined
+    ) {
+        return wallet;
+    } else {
+        throw Error('The provided wallet is invalid.');
+    }
 }
 
 export interface ChainArData {
@@ -1204,6 +1225,11 @@ export interface DeployModulePayload {
     version?: number;
 
     /** Wasm module to be deployed */
+    source: Buffer;
+}
+
+export interface VersionedModuleSource {
+    version: 0 | 1;
     source: Buffer;
 }
 

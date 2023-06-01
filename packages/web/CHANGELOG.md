@@ -1,5 +1,21 @@
 # Changelog
 
+## 4.0.1 2023-05-25
+
+### Changed
+
+- Bumped @concordium/common-sdk to 7.0.1. (Fixes `deployModule` cost)
+
+## 4.0.0 2023-05-15
+
+### Breaking Changes
+
+- Bumped @concordium/common-sdk to 7.0.0:
+- Bumped @concordium/rust-bindings to 0.12.0. (Adds key derivation for verifiable credentials)
+  - Updated `blockInfo` so that the `bakerId` field is optional, since it will be undefined for genesis blocks.
+  - `waitForTransactionFinalization` now returns a `BlockItemSummaryInBlock`
+  - Added missing version return type in `getModuleSchema`. It now returns an object containing the schema source and version.
+
 ## 3.5.0 2023-5-03
 
 ### Changed

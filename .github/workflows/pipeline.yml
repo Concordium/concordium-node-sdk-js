@@ -1,136 +1,224 @@
-name: Build and lint
-
+name: Build, lint and typecheck examples
+ 
 on:
     # Triggers the workflow on push or pull request events but only for the main branch
     push:
         branches: [main, release**]
     pull_request:
         branches: [main, release**]
-
+        # Don't run on draft PR's, see: https://github.com/orgs/community/discussions/25722#discussioncomment-3248917
+        types: [opened, synchronize, reopened, ready_for_review]
     # Allows us to run the workflow manually from the Actions tab
     workflow_dispatch:
 
 env:
-  RUST_FMT: nightly-2022-06-09-x86_64-unknown-linux-gnu
-  RUST_CLIPPY: 1.62
+  NODE_VERSION: 18.16.0
+  RUST_VERSION: 1.62
+  RUST_FMT: nightly-2023-04-01-x86_64-unknown-linux-gnu
 
 jobs:
-    build:
-        runs-on: ubuntu-20.04
+  build:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with: 
+          submodules: "recursive"
 
-        steps:
-            - uses: actions/checkout@v2
-              with:
-                  submodules: "recursive"
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
 
-            - uses: actions/setup-node@v2
-              with:
-                  node-version: "14.16.0"
+      - name: Cache build-output
+        uses: actions/cache@v3
+        with:
+          path: |
+            ./node_modules/@concordium
+            ./packages/rust-bindings/pkg
+            ./packages/common/lib
+            ./packages/nodejs/lib
+          key: ${{ runner.os }}-build_output-${{ github.event.pull_request.head.sha || github.sha }}
 
-            - name: Get dependencies
-              run: yarn
+      - name: Cache GRPC
+        id: cache-grpc
+        uses: actions/cache@v3
+        with:
+          path: |
+            ./packages/common/grpc
+            ./packages/nodejs/grpc
+          key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}
 
-            - name: Install rust
-              run: rustup default 1.62
+      - name: Get dependencies
+        run: yarn install --immutable
 
-            - name: Get wasm-pack
-              uses: jetli/wasm-pack-action@v0.3.0
-              with:
-                  version: 'latest'
+      - name: Install rust
+        run: rustup default ${{ env.RUST_VERSION }}
 
-            - name: Build
-              run: yarn build
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            packages/rust-bindings
+            deps/concordium-deps
 
+      - name: Get wasm-pack
+        uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          version: 'latest'
 
-    lint:
-        runs-on: ubuntu-20.04
+      - name: Build GRPC bindings
+        if: steps.cache-grpc.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p packages/common/grpc
+          mkdir -p packages/nodejs/grpc
+          yarn workspace @concordium/common-sdk generate
+          yarn workspace @concordium/node-sdk generate
 
-        steps:
-            - uses: actions/checkout@v2
-              with:
-                  submodules: "recursive"
-            - uses: actions/setup-node@v2
-              with:
-                  node-version: "14.16.0"
+      - name: Build
+        run: yarn build:dev
 
-            - name: Get dependencies
-              run: yarn
+  typecheck-examples:
+    runs-on: ubuntu-22.04
+    needs: build
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
 
-            - name: Lint
-              run: yarn lint
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
 
+      - name: Cache build-output
+        uses: actions/cache@v3
+        with:
+          path: |
+            ./node_modules/@concordium
+            ./packages/rust-bindings/pkg
+            ./packages/common/lib
+            ./packages/nodejs/lib
+          key: ${{ runner.os }}-build_output-${{ github.event.pull_request.head.sha || github.sha }}
 
-    common_test:
-            runs-on: ubuntu-20.04
-            defaults:
-              run:
-                working-directory: packages/common
-            steps:
-              - uses: actions/checkout@v2
-                with:
-                  submodules: "recursive"
-              - uses: actions/setup-node@v2
-                with:
-                  node-version: "14.16.0"
-              - name: Get dependencies
-                run: yarn
-              - name: Install rust
-                run: rustup default 1.62
-              - name: Get wasm-pack
-                uses: jetli/wasm-pack-action@v0.3.0
-                with:
-                    version: 'latest'
-              - name: build rust-bindings
-                run: yarn build:rust-bindings --dev
-              - name: generate grpc
-                run: mkdir grpc; yarn generate
-              - name: test
-                run: yarn test
+      - name: Cache GRPC
+        id: cache-grpc
+        uses: actions/cache@v3
+        with:
+          path: |
+            ./packages/common/grpc
+            ./packages/nodejs/grpc
+          key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}
 
-    rust_lint_fmt:
-      name: rust:lint:fmt
-      # Don't run on draft pull requests
-      if: ${{ !github.event.pull_request.draft }}
-      runs-on: ubuntu-latest
-      defaults:
-        run:
-          working-directory: packages/rust-bindings
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v2
-        - name: Install Rust
-          uses: actions-rs/toolchain@v1
-          with:
-            profile: minimal
-            toolchain: ${{ env.RUST_FMT }}
-            override: true
-            components: rustfmt
-        - name: Format
-          run: |
-            cargo fmt -- --color=always --check
-    rust_lint_clippy:
-      name: rust:lint:clippy
-      needs: "rust_lint_fmt"
-      # Don't run on draft pull requests
-      if: ${{ !github.event.pull_request.draft }}
-      runs-on: ubuntu-latest
-      defaults:
-        run:
-          working-directory: packages/rust-bindings
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v2
-          with:
-            submodules: recursive
-        - name: Install Rust
-          uses: actions-rs/toolchain@v1
-          with:
-            profile: minimal
-            toolchain: ${{ env.RUST_CLIPPY }}
-            override: true
-            target: ${{ env.TARGET }}
-            components: rustfmt, clippy
-        - name: Clippy
-          run: |
-            git config --global url."https://github.com/".insteadOf "git@github.com:"
-            cargo clippy --color=always --tests --benches -- -Dclippy::all
+      - name: Get dependencies
+        run: yarn install --immutable
+
+      - name: Typecheck examples
+        run: yarn workspace @concordium/examples typecheck
+
+  lint:
+    runs-on: ubuntu-22.04
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Lint
+        run: yarn lint
+
+  common_test:
+    runs-on: ubuntu-22.04
+    needs: build
+    if: github.event.pull_request.draft == false
+    defaults:
+      run:
+        working-directory: packages/common
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - name: Cache build-output
+        uses: actions/cache@v3
+        with:
+          path: |
+            ./node_modules/@concordium
+            ./packages/rust-bindings/pkg
+            ./packages/common/lib
+            ./packages/nodejs/lib
+          key: ${{ runner.os }}-build_output-${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Cache GRPC
+        id: cache-grpc
+        uses: actions/cache@v3
+        with:
+          path: |
+            ./packages/common/grpc
+            ./packages/nodejs/grpc
+          key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}
+
+      - name: Get dependencies
+        run: yarn install --immutable
+
+      - name: Run Tests
+        run: yarn test
+
+  rust_lint_fmt:
+    runs-on: ubuntu-22.04
+    if: github.event.pull_request.draft == false
+    defaults:
+      run:
+        working-directory: packages/rust-bindings
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install formatter
+        run: |
+          rustup default ${{ env.RUST_FMT }}
+          rustup component add rustfmt
+
+      - name: Format
+        run: cargo fmt -- --color=always --check
+
+  rust_lint_clippy:
+    runs-on: ubuntu-22.04
+    needs: rust_lint_fmt
+    if: github.event.pull_request.draft == false
+    defaults:
+      run:
+        working-directory: packages/rust-bindings
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: "recursive"
+
+      - name: Install clippy
+        run: |
+          rustup default ${{ env.RUST_VERSION }}
+          rustup component add clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            packages/rust-bindings
+            deps/concordium-deps
+
+      - name: Run clippy
+        run: cargo clippy --color=always --tests --benches -- -Dclippy::all
+

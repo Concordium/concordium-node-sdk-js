@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.12.0
+
+### Added
+
+- Methods for deriving verifiable credentials keys from a seed phrase.
+
 ## 0.11.1 2023-4-21
 
 ### Changes

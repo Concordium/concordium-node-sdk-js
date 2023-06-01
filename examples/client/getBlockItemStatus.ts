@@ -1,3 +1,4 @@
+import { parseEndpoint } from '../shared/util';
 import { BlockItemStatus, createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -6,7 +7,7 @@ import meow from 'meow';
 const cli = meow(
     `
   Usage
-    $ yarn ts-node <path-to-this-file> [options]
+    $ yarn run-example <path-to-this-file> [options]
 
   Required
     --transaction, -t  A transaction to get status from
@@ -32,7 +33,8 @@ const cli = meow(
     }
 );
 
-const [address, port] = cli.flags.endpoint.split(':');
+const [address, port] = parseEndpoint(cli.flags.endpoint);
+
 const client = createConcordiumClient(
     address,
     Number(port),

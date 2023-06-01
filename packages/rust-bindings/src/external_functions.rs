@@ -26,7 +26,8 @@ pub fn get_credential_deployment_details_ext(
     unsigned_info: &str,
     expiry: u64,
 ) -> JsResult {
-    let signatures_vec: Vec<String> = signatures.into_serde().unwrap();
+    let signatures_vec: Vec<HexString> =
+        serde_wasm_bindgen::from_value(signatures.clone()).unwrap();
     get_credential_deployment_details_aux(signatures_vec, unsigned_info, expiry).map_err(|e| {
         JsError::new(&format!(
             "Unable to get credential deployment details due to: {}",
@@ -37,7 +38,8 @@ pub fn get_credential_deployment_details_ext(
 
 #[wasm_bindgen(js_name = getDeploymentInfo)]
 pub fn get_credential_deployment_info_ext(signatures: &JsValue, unsigned_info: &str) -> JsResult {
-    let signatures_vec: Vec<String> = signatures.into_serde().unwrap();
+    let signatures_vec: Vec<HexString> =
+        serde_wasm_bindgen::from_value(signatures.clone()).unwrap();
     get_credential_deployment_info_aux(signatures_vec, unsigned_info)
         .map_err(|e| JsError::new(&format!("Unable to get credential due to: {}", e)))
 }
@@ -163,7 +165,7 @@ pub fn get_receive_contract_parameter_schema_ext(
     schema_version: Option<u8>,
 ) -> JsResult<HexString> {
     get_receive_contract_parameter_schema_aux(schema, contract_name, function_name, schema_version)
-        .map_err(|e| JsError::new(&format!("unable to get parameter schema, due to: {}", e)))
+        .map_err(|e| JsError::new(&format!("Unable to get parameter schema, due to: {}", e)))
 }
 
 #[wasm_bindgen(js_name = getInitContractParameterSchema)]
@@ -337,12 +339,52 @@ pub fn get_attribute_commitment_randomness_ext(
     .map_err(to_js_error)
 }
 
+#[wasm_bindgen(js_name = getVerifiableCredentialSigningKey)]
+pub fn get_verifiable_credential_signing_key_ext(
+    seed_as_hex: HexString,
+    raw_net: &str,
+    verifiable_credential_index: u32,
+) -> HexString {
+    error_to_string(get_verifiable_credential_signing_key_aux(
+        seed_as_hex,
+        raw_net,
+        verifiable_credential_index,
+    ))
+}
+
+#[wasm_bindgen(js_name = getVerifiableCredentialPublicKey)]
+pub fn get_verifiable_credential_public_key_ext(
+    seed_as_hex: HexString,
+    raw_net: &str,
+    verifiable_credential_index: u32,
+) -> HexString {
+    error_to_string(get_verifiable_credential_public_key_aux(
+        seed_as_hex,
+        raw_net,
+        verifiable_credential_index,
+    ))
+}
+
+#[wasm_bindgen(js_name = getVerifiableCredentialEncryptionKey)]
+pub fn get_verifiable_credential_encryption_key_ext(
+    seed_as_hex: HexString,
+    raw_net: &str,
+    verifiable_credential_index: u32,
+) -> HexString {
+    error_to_string(get_verifiable_credential_encryption_key_aux(
+        seed_as_hex,
+        raw_net,
+        verifiable_credential_index,
+    ))
+}
+
 #[wasm_bindgen(js_name = serializeCredentialDeploymentPayload)]
 pub fn serialize_credential_deployment_payload_ext(
     signatures: &JsValue,
     unsigned_info: &str,
 ) -> JsResult<Vec<u8>> {
-    let signatures_vec: Vec<HexString> = signatures.into_serde().unwrap();
+    let signatures_vec: Vec<HexString> =
+        serde_wasm_bindgen::from_value(signatures.clone()).unwrap();
     serialize_credential_deployment_payload_aux(signatures_vec, unsigned_info).map_err(|e| {
         JsError::new(&format!(
             "Unable to get credential deployment payload due to: {}",

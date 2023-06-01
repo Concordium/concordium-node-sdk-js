@@ -1,3 +1,4 @@
+import { parseEndpoint } from '../shared/util';
 import { createConcordiumClient, ModuleReference } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import fs from 'fs';
@@ -7,7 +8,7 @@ import meow from 'meow';
 const cli = meow(
     `
   Usage
-    $ yarn ts-node <path-to-this-file> [options]
+    $ yarn run-example <path-to-this-file> [options]
 
   Required:
     --module,   -m  The module reference of the module that you want the source for
@@ -34,7 +35,6 @@ const cli = meow(
             block: {
                 type: 'string',
                 alias: 'b',
-                default: '', // This defaults to LastFinal
             },
             endpoint: {
                 type: 'string',
@@ -45,7 +45,8 @@ const cli = meow(
     }
 );
 
-const [address, port] = cli.flags.endpoint.split(':');
+const [address, port] = parseEndpoint(cli.flags.endpoint);
+
 const client = createConcordiumClient(
     address,
     Number(port),
@@ -59,9 +60,9 @@ const client = createConcordiumClient(
 
 (async () => {
     const ref = new ModuleReference(cli.flags.module);
-    const source = await client.getModuleSource(ref, cli.flags.block);
+    const versionedSource = await client.getModuleSource(ref, cli.flags.block);
 
-    fs.writeFileSync(cli.flags.outPath, source);
+    fs.writeFileSync(cli.flags.outPath, versionedSource.source);
 
     console.log('Written module source to:', cli.flags.outPath);
 })();

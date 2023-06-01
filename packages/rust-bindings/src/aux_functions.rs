@@ -665,10 +665,6 @@ pub fn deserialize_init_error_aux(
     deserialize_type_value(error_bytes, &error_schema, verbose_error_message)
 }
 
-#[derive(thiserror::Error, Debug)]
-#[error("{0}")]
-pub struct SerialError(String);
-
 /// Given parameters to a receive function as a stringified json, serialize them
 /// using the provided schema.
 pub fn serialize_receive_contract_parameters_aux(
@@ -685,7 +681,7 @@ pub fn serialize_receive_contract_parameters_aux(
 
     let buf = parameter_type
         .serial_value(&value)
-        .map_err(|e| SerialError(format!("{}", e.display(verbose_error_message))))?;
+        .map_err(|e| anyhow!("{}", e.display(verbose_error_message)))?;
 
     Ok(hex::encode(buf))
 }
@@ -705,7 +701,7 @@ pub fn serialize_init_contract_parameters_aux(
 
     let buf = parameter_type
         .serial_value(&value)
-        .map_err(|e| SerialError(format!("{}", e.display(verbose_error_message))))?;
+        .map_err(|e| anyhow!("{}", e.display(verbose_error_message)))?;
 
     Ok(hex::encode(buf))
 }
@@ -753,7 +749,7 @@ fn serialize_type_value(
 
     let buf = value_type
         .serial_value(&value)
-        .map_err(|e| SerialError(format!("{}", e.display(verbose_error_message))))?;
+        .map_err(|e| anyhow!("{}", e.display(verbose_error_message)))?;
     Ok(hex::encode(buf))
 }
 

@@ -31,13 +31,15 @@ export function deserializeUint8(source: Readable): number {
 export function deserializeContractState(
     contractName: string,
     schema: Buffer,
-    state: Buffer
+    state: Buffer,
+    verboseErrorMessage = false
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
     const serializedState = wasm.deserializeState(
         contractName,
         state.toString('hex'),
-        schema.toString('hex')
+        schema.toString('hex'),
+        verboseErrorMessage
     );
     try {
         return JSON.parse(serializedState);

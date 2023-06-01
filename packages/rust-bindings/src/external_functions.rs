@@ -5,7 +5,9 @@ use wasm_bindgen::prelude::*;
 
 type JsResult<T = JsonString> = Result<T, JsError>;
 
-fn to_js_error(error: impl Display) -> JsError { JsError::new(&format!("{}", error)) }
+fn to_js_error(error: impl Display) -> JsError {
+    JsError::new(&format!("{}", error))
+}
 
 #[wasm_bindgen(js_name = generateUnsignedCredential)]
 pub fn generate_unsigned_credential_ext(input: &str) -> JsResult {
@@ -342,12 +344,9 @@ pub fn get_verifiable_credential_signing_key_ext(
     seed_as_hex: HexString,
     raw_net: &str,
     verifiable_credential_index: u32,
-) -> HexString {
-    error_to_string(get_verifiable_credential_signing_key_aux(
-        seed_as_hex,
-        raw_net,
-        verifiable_credential_index,
-    ))
+) -> JsResult<HexString> {
+    get_verifiable_credential_signing_key_aux(seed_as_hex, raw_net, verifiable_credential_index)
+        .map_err(to_js_error)
 }
 
 #[wasm_bindgen(js_name = getVerifiableCredentialPublicKey)]
@@ -355,12 +354,9 @@ pub fn get_verifiable_credential_public_key_ext(
     seed_as_hex: HexString,
     raw_net: &str,
     verifiable_credential_index: u32,
-) -> HexString {
-    error_to_string(get_verifiable_credential_public_key_aux(
-        seed_as_hex,
-        raw_net,
-        verifiable_credential_index,
-    ))
+) -> JsResult<HexString> {
+    get_verifiable_credential_public_key_aux(seed_as_hex, raw_net, verifiable_credential_index)
+        .map_err(to_js_error)
 }
 
 #[wasm_bindgen(js_name = getVerifiableCredentialEncryptionKey)]
@@ -368,12 +364,9 @@ pub fn get_verifiable_credential_encryption_key_ext(
     seed_as_hex: HexString,
     raw_net: &str,
     verifiable_credential_index: u32,
-) -> HexString {
-    error_to_string(get_verifiable_credential_encryption_key_aux(
-        seed_as_hex,
-        raw_net,
-        verifiable_credential_index,
-    ))
+) -> JsResult<HexString> {
+    get_verifiable_credential_encryption_key_aux(seed_as_hex, raw_net, verifiable_credential_index)
+        .map_err(to_js_error)
 }
 
 #[wasm_bindgen(js_name = serializeCredentialDeploymentPayload)]

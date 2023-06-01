@@ -5,9 +5,7 @@ use wasm_bindgen::prelude::*;
 
 type JsResult<T = JsonString> = Result<T, JsError>;
 
-fn to_js_error(error: impl Display) -> JsError {
-    JsError::new(&format!("{}", error))
-}
+fn to_js_error(error: impl Display) -> JsError { JsError::new(&format!("{}", error)) }
 
 #[wasm_bindgen(js_name = generateUnsignedCredential)]
 pub fn generate_unsigned_credential_ext(input: &str) -> JsResult {

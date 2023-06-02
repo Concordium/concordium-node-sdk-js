@@ -6,12 +6,12 @@ import {
     Versioned,
 } from '.';
 import {
+    AtomicProof,
     GenericAtomicStatement,
     GenericMembershipStatement,
     GenericNonMembershipStatement,
     GenericRangeStatement,
     GenericRevealStatement,
-    StatementTypes,
 } from './commonProofTypes';
 
 export type RangeStatement = GenericRangeStatement<AttributeKey, string>;
@@ -40,21 +40,8 @@ export type IdProofInput = {
     challenge: string; // Hex
 };
 
-export type RevealProof = {
-    type: StatementTypes.RevealAttribute;
-    proof: string;
-    attribute: string;
-};
-
-// Type for proofs that do not have additional fields
-export type GenericAtomicProof = {
-    type: Exclude<StatementTypes, StatementTypes.RevealAttribute>;
-    proof: string;
-};
-
-export type AtomicProof = RevealProof | GenericAtomicProof;
 export type IdProof = {
-    proofs: AtomicProof[];
+    proofs: AtomicProof<string>[];
 };
 
 export type IdProofOutput = {

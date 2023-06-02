@@ -4,8 +4,10 @@ import {
     GenericMembershipStatement,
     GenericNonMembershipStatement,
     GenericRangeStatement,
+    AtomicProof,
 } from './commonProofTypes';
 import { ContractAddress, CryptographicParameters } from './types';
+import JSONBigInt from 'json-bigint';
 
 export type AccountCommitmentInput = {
     type: 'account';
@@ -147,13 +149,22 @@ export type ConcordiumWeakLinkingProofV1 = {
     type: 'ConcordiumWeakLinkingProofV1';
 };
 
+export type AtomicProofV2 = AtomicProof<string | bigint>;
+
+export type StatementProof = {
+    created: string;
+    proofValue: AtomicProofV2[];
+    type: 'ConcordiumZKProofV3';
+};
+
 export type CredentialSubjectProof = {
+    id: DIDString;
+    proof: StatementProof;
     statement: AtomicStatementV2[];
 };
 
 export type VerifiableCredentialProof = {
     credentialSubject: CredentialSubjectProof;
-    id: DIDString;
     issuanceDate: string;
     issuer: DIDString;
     type: [
@@ -163,12 +174,63 @@ export type VerifiableCredentialProof = {
     ];
 };
 
-export type VerifiablePresentation = {
+export class VerifiablePresentation {
     presentationContext: string;
     proof: ConcordiumWeakLinkingProofV1;
     type: string;
     verifiableCredential: VerifiableCredentialProof[];
-};
+
+    constructor(
+        presentationContext: string,
+        proof: ConcordiumWeakLinkingProofV1,
+        type: string,
+        verifiableCredential: VerifiableCredentialProof[]
+    ) {
+        this.presentationContext = presentationContext;
+        this.proof = proof;
+        this.type = type;
+        this.verifiableCredential = verifiableCredential;
+    }
+
+    toString() {
+        return JSONBigInt({
+            alwaysParseAsBig: true,
+            useNativeBigInt: true,
+        }).stringify(this);
+    }
+
+    static fromString(json: string): VerifiablePresentation {
+        // We allow all numbers to be parsed as bigints to avoid lossy conversion of attribute values. The only other numbers in the structure are the attributeTags.
+        const parsed: VerifiablePresentation = JSONBigInt({
+            alwaysParseAsBig: true,
+            useNativeBigInt: true,
+        }).parse(json);
+        // Convert the attributeTags back to numbers
+        const verifiableCredential = parsed.verifiableCredential.map(
+            ({
+                credentialSubject: { statement, ...credentialSubject },
+                ...proof
+            }) => ({
+                ...proof,
+                credentialSubject: {
+                    ...credentialSubject,
+                    statement: statement.map(
+                        ({ attributeTag, ...statement }) => ({
+                            ...statement,
+                            attributeTag: Number(attributeTag),
+                        })
+                    ),
+                },
+            })
+        );
+        return new VerifiablePresentation(
+            parsed.presentationContext,
+            parsed.proof,
+            parsed.type,
+            verifiableCredential
+        );
+    }
+}
 
 export type RangeStatementV2 = GenericRangeStatement<number, string | bigint>;
 export type NonMembershipStatementV2 = GenericNonMembershipStatement<

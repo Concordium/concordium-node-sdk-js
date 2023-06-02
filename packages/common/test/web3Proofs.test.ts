@@ -7,8 +7,12 @@ import {
     RequestStatement,
     Web3StatementBuilder,
 } from '../src';
+import {
+    expectedAccountCredentialPresentation,
+    expectedWeb3IdCredentialPresentation,
+} from './resources/expectedPresentation';
 import { expectedStatementMixed } from './resources/expectedStatements';
-import { CommitmentInput } from '../src/web3ProofTypes';
+import { CommitmentInput, VerifiablePresentation } from '../src/web3ProofTypes';
 import { TEST_SEED_1 } from './HdWallet.test';
 import fs from 'fs';
 
@@ -53,9 +57,9 @@ test('create Web3Id proof with account credentials', () => {
             statement: [
                 {
                     attributeTag: 17,
-                    lower: '80',
+                    lower: '81',
                     type: 'AttributeInRange',
-                    upper: '1237',
+                    upper: '1231',
                 },
                 {
                     attributeTag: 0,
@@ -88,10 +92,32 @@ test('create Web3Id proof with account credentials', () => {
         commitmentInputs,
     });
 
-    // TODO Check more
-    expect(presentation.presentationContext).toBe(
-        '94d3e85bbc8ff0091e562ad8ef6c30d57f29b19f17c98ce155df2a30100daaaa'
+    const expected = VerifiablePresentation.fromString(
+        expectedAccountCredentialPresentation
     );
+    expect(presentation.presentationContext).toBe(expected.presentationContext);
+    expect(presentation.type).toBe(expected.type);
+    expect(presentation.proof.type).toBe(expected.proof.type);
+    // TODO is this date check even valid?
+    expect(new Date(presentation.proof.created)).not.toBeNaN();
+    expect(presentation.verifiableCredential[0].issuanceDate).toBe(
+        expected.verifiableCredential[0].issuanceDate
+    );
+    expect(presentation.verifiableCredential[0].type).toEqual(
+        expected.verifiableCredential[0].type
+    );
+    expect(presentation.verifiableCredential[0].issuer).toBe(
+        expected.verifiableCredential[0].issuer
+    );
+    expect(presentation.verifiableCredential[0].credentialSubject.id).toBe(
+        expected.verifiableCredential[0].credentialSubject.id
+    );
+    expect(
+        presentation.verifiableCredential[0].credentialSubject.proof.type
+    ).toBe(expected.verifiableCredential[0].credentialSubject.proof.type);
+    expect(
+        presentation.verifiableCredential[0].credentialSubject.statement
+    ).toEqual(expected.verifiableCredential[0].credentialSubject.statement);
 });
 
 test('create Web3Id proof with Web3Id Credentials', () => {
@@ -99,8 +125,8 @@ test('create Web3Id proof with Web3Id Credentials', () => {
         fs.readFileSync('./test/resources/global.json').toString()
     ).value;
 
-    const values: Record<number, bigint | number> = {};
-    values[0] = 0;
+    const values: Record<number, bigint | string> = {};
+    values[0] = 18446744073709551615n;
     values[17] = 2n;
 
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
@@ -150,8 +176,30 @@ test('create Web3Id proof with Web3Id Credentials', () => {
         commitmentInputs,
     });
 
-    // TODO Check more
-    expect(presentation.presentationContext).toBe(
-        '94d3e85bbc8ff0091e562ad8ef6c30d57f29b19f17c98ce155df2a30100daaaa'
+    const expected = VerifiablePresentation.fromString(
+        expectedWeb3IdCredentialPresentation
     );
+    expect(presentation.presentationContext).toBe(expected.presentationContext);
+    expect(presentation.type).toBe(expected.type);
+    expect(presentation.proof.type).toBe(expected.proof.type);
+    // TODO is this date check even valid?
+    expect(new Date(presentation.proof.created)).not.toBeNaN();
+    expect(presentation.verifiableCredential[0].issuanceDate).toBe(
+        expected.verifiableCredential[0].issuanceDate
+    );
+    expect(presentation.verifiableCredential[0].type).toEqual(
+        expected.verifiableCredential[0].type
+    );
+    expect(presentation.verifiableCredential[0].issuer).toBe(
+        expected.verifiableCredential[0].issuer
+    );
+    expect(presentation.verifiableCredential[0].credentialSubject.id).toBe(
+        expected.verifiableCredential[0].credentialSubject.id
+    );
+    expect(
+        presentation.verifiableCredential[0].credentialSubject.proof.type
+    ).toBe(expected.verifiableCredential[0].credentialSubject.proof.type);
+    expect(
+        presentation.verifiableCredential[0].credentialSubject.statement
+    ).toEqual(expected.verifiableCredential[0].credentialSubject.statement);
 });

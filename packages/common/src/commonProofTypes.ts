@@ -86,3 +86,19 @@ export type GenericAtomicStatement<TagType, ValueType> =
     | GenericMembershipStatement<TagType, ValueType>
     | GenericNonMembershipStatement<TagType, ValueType>
     | GenericRangeStatement<TagType, ValueType>;
+
+export type RevealProof<ValueType> = {
+    type: StatementTypes.RevealAttribute;
+    proof: string;
+    attribute: ValueType;
+};
+
+// Type for proofs that do not have additional fields
+export type GenericAtomicProof = {
+    type: Exclude<StatementTypes, StatementTypes.RevealAttribute>;
+    proof: string;
+};
+
+export type AtomicProof<ValueType> =
+    | RevealProof<ValueType>
+    | GenericAtomicProof;

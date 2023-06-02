@@ -418,12 +418,10 @@ export function getVerifiablePresentation(
     input: Web3IdProofInput
 ): VerifiablePresentation {
     try {
-        // Use json-bigint stringify to ensure we can handle bigints
-        const s: VerifiablePresentation = JSON.parse(
+        const s: VerifiablePresentation = VerifiablePresentation.fromString(
+            // Use json-bigint stringify to ensure we can handle bigints
             wasm.createWeb3IdProof(stringify(input))
         );
-        // TODO Fix statements to have "correct type"
-        // s.verifiableCredential.map((proof) => proof.credentialSubject.statement.map())
         return s;
     } catch (e) {
         throw new Error(e as string);

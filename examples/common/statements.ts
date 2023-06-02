@@ -26,7 +26,7 @@ const statementBuilder = new IdStatementBuilder();
     // Our proof statement:
     const statement = statementBuilder.getStatement();
 
-    // Test that the proof statement is well formed (validly constructed).
+    // Test that the statement is well formed (validly constructed).
     // Will throw otherwise.
     verifyIdstatement(statement);
 

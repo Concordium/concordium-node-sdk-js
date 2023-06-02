@@ -30,7 +30,7 @@ const statementBuilder = new IdStatementBuilder();
     // Will throw otherwise.
     verifyIdstatement(statement);
 
-    console.log('Succesfully constructed proof statement \n');
+    console.log('Succesfully constructed statement \n');
 
     console.dir(statement, { depth: null, colors: true });
     // #endregion documentation-snippet

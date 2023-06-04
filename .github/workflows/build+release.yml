@@ -4,12 +4,12 @@ on:
     workflow_dispatch: # trigger manually
         inputs:
             tag_override:
-                description: "Tag"
+                description: 'Tag'
                 type: string
                 required: false
 
 env:
-    node_version: "16.x"
+    node_version: '16.x'
 
 jobs:
     build-and-upload-release:
@@ -19,7 +19,7 @@ jobs:
               uses: bisgardo/github-action-parse-ref@v1
               id: ref
               with:
-                  ref: "${{github.event.inputs.tag_override || github.ref}}"
+                  ref: '${{github.event.inputs.tag_override || github.ref}}'
                   default-ref-type: tags
             - name: Fail if ref is not a tag
               if: "steps.ref.outputs.ref-type != 'tags'"
@@ -28,12 +28,12 @@ jobs:
               uses: bisgardo/github-action-regex-parse@v1
               id: tag
               with:
-                  pattern: "(?<name>(?<package>.*?)/(?<version>.*))" # exports 'name', 'package', and 'version'
-                  input: "${{steps.ref.outputs.ref-name}}"
+                  pattern: '(?<name>(?<package>.*?)/(?<version>.*))' # exports 'name', 'package', and 'version'
+                  input: '${{steps.ref.outputs.ref-name}}'
             - name: Checkout project
               uses: actions/checkout@v3
               with:
-                ref: "${{steps.ref.outputs.ref}}"
+                  ref: '${{steps.ref.outputs.ref}}'
             - name: Extract tag message
               uses: bisgardo/github-action-echo@v1
               id: tag-msg
@@ -46,25 +46,25 @@ jobs:
               uses: bisgardo/github-action-echo@v1
               id: package
               with:
-                  name: "${{steps.tag.outputs.package}}"
-                  workspace: "@concordium/${name}"
+                  name: '${{steps.tag.outputs.package}}'
+                  workspace: '@concordium/${name}'
                   version: '$(npm pkg get version --workspaces | jq -r ".[\"${workspace}\"]")'
-                  path: "./packages/${name}"
+                  path: './packages/${name}'
             - name: Collect release data
               uses: bisgardo/github-action-echo@v1
               id: release
               with:
-                  _name: "${{steps.package.outputs.name}}"
-                  version: "${{steps.tag.outputs.version}}"
-                  npm-pack-file: "concordium-${_name}-${{steps.package.outputs.version}}.tgz"
-                  github-release-name: "${_name}: ${version}"
+                  _name: '${{steps.package.outputs.name}}'
+                  version: '${{steps.tag.outputs.version}}'
+                  npm-pack-file: 'concordium-${_name}-${{steps.package.outputs.version}}.tgz'
+                  github-release-name: '${_name}: ${version}'
             - name: Check that tag version matches 'package.json' up to build version
               run: |
                   [[ "${{steps.tag.outputs.version}}" = "${{steps.package.outputs.version}}"-* ]]
             - name: Setup Node
               uses: actions/setup-node@v3
               with:
-                  node-version: "${{env.node_version}}"
+                  node-version: '${{env.node_version}}'
                   cache: yarn
             - name: Run yarn install
               run: yarn install --immutable
@@ -79,20 +79,20 @@ jobs:
               uses: concordium/github-action-changelog-extract@v1
               id: changelog
               with:
-                  file: "${{steps.package.outputs.path}}/CHANGELOG.md"
-                  version: "${{steps.package.outputs.version}}"
+                  file: '${{steps.package.outputs.path}}/CHANGELOG.md'
+                  version: '${{steps.package.outputs.version}}'
             - name: Upload package as GitHub release
               uses: softprops/action-gh-release@v1
               with:
-                  tag_name: "${{steps.tag.outputs.name}}"
+                  tag_name: '${{steps.tag.outputs.name}}'
                   # Release body is the message of the annotated tag followed by the changelog entries for the version.
                   body: |
                       ${{steps.tag-msg.outputs.msg}}
-                      
+
                       # Changelog
-                      
+
                       ${{steps.changelog.outputs.section}}
-                  files: "${{steps.release.outputs.npm-pack-file}}"
-                  name: "${{steps.release.outputs.github-release-name}}"
+                  files: '${{steps.release.outputs.npm-pack-file}}'
+                  name: '${{steps.release.outputs.github-release-name}}'
                   # The method for auto-generating release notes just lists all commits (including those not relevant to the subproject).
                   generate_release_notes: false

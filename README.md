@@ -14,13 +14,13 @@ The higher ones provide components that are ready for use with supported framewo
 
 The project currently includes the following libraries:
 
-- [`@concordium/wallet-connectors`](./packages/wallet-connectors):
-  Interfaces for interacting with wallets along with implementations for Browser Wallet and WalletConnect (v2).
-  The library has no dependencies to any UI framework.
+-   [`@concordium/wallet-connectors`](./packages/wallet-connectors):
+    Interfaces for interacting with wallets along with implementations for Browser Wallet and WalletConnect (v2).
+    The library has no dependencies to any UI framework.
 
-- [`@concordium/react-components`](./packages/react-components):
-  React components and hooks for implementing features commonly needed by dApps.
-  The components only manage React state and pass data to application components - no actual HTML is being rendered.
+-   [`@concordium/react-components`](./packages/react-components):
+    React components and hooks for implementing features commonly needed by dApps.
+    The components only manage React state and pass data to application components - no actual HTML is being rendered.
 
 The project also includes a sample dApp [`concordium-dapp-contractupdate`](./samples/contractupdate) as an example
 of how to integrate the libraries.

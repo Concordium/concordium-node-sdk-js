@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2023-06-04
+
 ### Added
 
 -   Standard values of `Network` for testnet and mainnet, exposed as constants `TESTNET` and `MAINNET`.

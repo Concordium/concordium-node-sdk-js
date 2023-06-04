@@ -1683,7 +1683,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@concordium/browser-wallet-api-helpers@npm:^2.0.0, @concordium/browser-wallet-api-helpers@npm:^2.5.0":
+"@concordium/browser-wallet-api-helpers@npm:^2.5.0":
   version: 2.5.0
   resolution: "@concordium/browser-wallet-api-helpers@npm:2.5.0"
   dependencies:
@@ -1716,7 +1716,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@concordium/react-components@workspace:packages/react-components"
   dependencies:
-    "@concordium/wallet-connectors": ^0.2.3
+    "@concordium/wallet-connectors": ^0.3.1
     "@tsconfig/recommended": ^1.0.1
     "@types/node": ^18.11.17
     "@types/react": ^18
@@ -1734,18 +1734,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@concordium/wallet-connectors@npm:^0.2.3":
-  version: 0.2.3
-  resolution: "@concordium/wallet-connectors@npm:0.2.3"
-  dependencies:
-    "@concordium/browser-wallet-api-helpers": ^2.0.0
-    "@walletconnect/qrcode-modal": ^1.8.0
-    "@walletconnect/sign-client": ^2.1.4
-  checksum: 414103c34e19b6cec7d21662d2a6a5995d22522b1a4728411f5bac61165f274517b12b1fc44568f7a65adb074c6ca6c95baacf639435791604800f953e9e8fe0
-  languageName: node
-  linkType: hard
-
-"@concordium/wallet-connectors@workspace:packages/wallet-connectors":
+"@concordium/wallet-connectors@^0.3.1, @concordium/wallet-connectors@workspace:packages/wallet-connectors":
   version: 0.0.0-use.local
   resolution: "@concordium/wallet-connectors@workspace:packages/wallet-connectors"
   dependencies:

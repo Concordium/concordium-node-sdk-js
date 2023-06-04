@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-bootstrap';
-import { Network, WalletConnection, withJsonRpcClient } from '@concordium/react-components';
-import { AccountInfo } from '@concordium/web-sdk';
+import { Network } from '@concordium/react-components';
+import { AccountAddress, AccountInfo, ConcordiumGRPCClient } from '@concordium/web-sdk';
+import { errorString } from './util';
 
 interface Props {
     network: Network;
-    connection: WalletConnection | undefined;
+    rpc: ConcordiumGRPCClient | undefined;
     account: string | undefined;
 }
 
@@ -13,23 +14,23 @@ function ccdScanUrl(network: Network, activeConnectedAccount: string | undefined
     return `${network.ccdScanBaseUrl}/?dcount=1&dentity=account&daddress=${activeConnectedAccount}`;
 }
 
-export function ConnectedAccount({ connection, account, network }: Props) {
+export function ConnectedAccount({ network, rpc, account }: Props) {
     const [info, setInfo] = useState<AccountInfo>();
     const [infoError, setInfoError] = useState('');
     useEffect(() => {
-        if (connection && account) {
+        if (rpc && account) {
             setInfo(undefined);
-            withJsonRpcClient(connection, (rpc) => rpc.getAccountInfo(account))
+            rpc.getAccountInfo(new AccountAddress(account))
                 .then((res) => {
                     setInfo(res);
                     setInfoError('');
                 })
                 .catch((err) => {
                     setInfo(undefined);
-                    setInfoError(err);
+                    setInfoError(errorString(err));
                 });
         }
-    }, [connection, account]);
+    }, [rpc, account]);
     return (
         <>
             {infoError && <Alert variant="danger">Error querying account info: {infoError}</Alert>}

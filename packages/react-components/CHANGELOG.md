@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+-   Hook `useGrpcClient` for obtaining a gRPC Web client `ConcordiumGRPCClient` that connects to the appropriate network.
+
 ## [0.2.1] - 2023-03-17
 
 ### Changed

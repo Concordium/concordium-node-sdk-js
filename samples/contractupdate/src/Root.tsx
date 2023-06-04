@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Button, Col, Container, Row, Spinner } from 'react-bootstrap';
-import { withJsonRpcClient } from '@concordium/react-components';
-import { WalletConnectionProps, WithWalletConnector } from '@concordium/react-components';
-import { useConnection } from '@concordium/react-components';
-import { useConnect } from '@concordium/react-components';
+import { MAINNET, TESTNET, WalletConnectionProps, WithWalletConnector } from '@concordium/react-components';
+import { useConnect, useConnection, useGrpcClient } from '@concordium/react-components';
 import { App } from './App';
 import { ConnectedAccount } from './ConnectedAccount';
 import { NetworkSelector } from './NetworkSelector';
 import { WalletConnectorButton } from './WalletConnectorButton';
-import { BROWSER_WALLET, MAINNET, TESTNET, WALLET_CONNECT } from './config';
+import { BROWSER_WALLET, WALLET_CONNECT } from './config';
 import { errorString } from './util';
 
 export default function Root() {
@@ -30,13 +28,12 @@ function Main(props: WalletConnectionProps) {
 
     const [rpcGenesisHash, setRpcGenesisHash] = useState<string>();
     const [rpcError, setRpcError] = useState('');
+    const rpc = useGrpcClient(network);
     useEffect(() => {
-        if (connection) {
+        if (rpc) {
             setRpcGenesisHash(undefined);
-            withJsonRpcClient(connection, async (rpc) => {
-                const status = await rpc.getConsensusStatus();
-                return status.genesisBlock;
-            })
+            rpc.getConsensusStatus()
+                .then((status) => status.genesisBlock)
                 .then((hash) => {
                     setRpcGenesisHash(hash);
                     setRpcError('');
@@ -46,7 +43,7 @@ function Main(props: WalletConnectionProps) {
                     setRpcError(errorString(err));
                 });
         }
-    }, [connection, genesisHash, network]);
+    }, [rpc]);
     return (
         <>
             <Row className="mt-3 mb-3">
@@ -83,7 +80,7 @@ function Main(props: WalletConnectionProps) {
             </Row>
             <Row className="mt-3 mb-3">
                 <Col>
-                    <ConnectedAccount connection={connection} account={account} network={network} />
+                    <ConnectedAccount network={network} rpc={rpc} account={account} />
                 </Col>
             </Row>
             <Row className="mt-3 mb-3">
@@ -96,7 +93,7 @@ function Main(props: WalletConnectionProps) {
                         />
                     )}
                     {rpcError && <Alert variant="warning">RPC error: {rpcError}</Alert>}
-                    <App network={network} connection={connection} connectedAccount={account} />
+                    <App network={network} rpc={rpc} connection={connection} connectedAccount={account} />
                 </Col>
             </Row>
         </>

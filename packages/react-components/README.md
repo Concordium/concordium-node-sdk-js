@@ -122,16 +122,15 @@ _Example: Look up the info of a smart contract by its index specified in an inpu
 ```typescript jsx
 import React, { useState } from 'react';
 import { Network, useContractSelector, WalletConnection } from '@concordium/react-components';
+import { ConcordiumGRPCClient } from '@concordium/web-sdk';
 
 interface Props {
-    network: Network;
-    connection: WalletConnection | undefined;
-    connectedAccount: string | undefined;
+    rpc: ConcordiumGRPCClient | undefined;
 }
 
-export function ContractStuff({ connection }: Props) {
+export function ContractStuff({ rpc }: Props) {
     const [input, setInput] = useState('');
-    const { selected, isLoading, validationError } = useContractSelector(connection?.getJsonRpcClient(), input);
+    const { selected, isLoading, validationError } = useContractSelector(rpc, input);
     return (
         // TODO Render a text input using `input`/`setInput`.
         // TODO Render the selected contract, if present.
@@ -139,7 +138,32 @@ export function ContractStuff({ connection }: Props) {
 }
 ```
 
+Use the hook [`useGrpcClient`](#usegrpcclient) below to obtain a `ConcordiumGRPCClient` instance.
 See [the sample dApp](../../samples/contractupdate/src/App.tsx) for a complete example.
+
+### [`useGrpcClient`](./src/useGrpcClient.ts)
+
+React hook that obtains a gRPC Web client for interacting with a node on the appropriate network.
+
+_Example: Periodically fetch height of "best block"_
+
+```typescript
+const rpc = useGrpcClient(network);
+const [height, setHeight] = useState<bigint>();
+useEffect(() => {
+    const t = setInterval(() => {
+        if (rpc) {
+            rpc.getConsensusStatus()
+                .then((s) => s.bestBlockHeight)
+                .then(setHeight)
+                .catch(console.error);
+        }
+    }, intervalMs);
+    return () => clearTimeout(t);
+}, [rpc]);
+```
+
+The client is also used as an input to the hook [`useContractSelector`](#usecontractselector) above.
 
 ## Build
 

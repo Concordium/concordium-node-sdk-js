@@ -2,18 +2,20 @@ import React, { useState } from 'react';
 import { Col, Form, Row, Spinner } from 'react-bootstrap';
 import { Network, WalletConnection } from '@concordium/react-components';
 import { useContractSelector } from '@concordium/react-components';
+import { ConcordiumGRPCClient } from '@concordium/web-sdk';
 import { ContractDetails } from './ContractDetails';
 import { ContractInvoker } from './ContractInvoker';
 
 interface Props {
     network: Network;
+    rpc: ConcordiumGRPCClient | undefined;
     connection: WalletConnection | undefined;
     connectedAccount: string | undefined;
 }
 
-export function App({ network, connection, connectedAccount }: Props) {
+export function App({ network, rpc, connection, connectedAccount }: Props) {
     const [input, setInput] = useState('');
-    const contract = useContractSelector(connection?.getJsonRpcClient(), input);
+    const contract = useContractSelector(rpc, input);
     return (
         <>
             {connection && (

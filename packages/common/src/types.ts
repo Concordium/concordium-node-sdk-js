@@ -752,18 +752,46 @@ export interface WalletExportFormat {
  */
 export function parseWallet(walletString: JsonString): WalletExportFormat {
     const wallet = JSON.parse(walletString);
-    if (
-        typeof wallet.type === 'string' &&
-        typeof wallet.v === 'number' &&
-        typeof wallet.environment === 'string' &&
-        typeof wallet.value.address === 'string' &&
-        wallet.value.accountKeys !== undefined &&
-        wallet.credentials !== undefined
-    ) {
-        return wallet;
-    } else {
-        throw Error('The provided wallet is invalid.');
+    console.log(typeof wallet.type);
+    if (typeof wallet.type !== 'string') {
+        throw Error(
+            'Expected field "type" to be of type "string" but was of type "' +
+                typeof wallet.type +
+                '"'
+        );
     }
+    if (typeof wallet.v !== 'number') {
+        throw Error(
+            'Expected field "v" to be of type "number" but was of type "' +
+                typeof wallet.v +
+                '"'
+        );
+    }
+    if (typeof wallet.environment !== 'string') {
+        throw Error(
+            'Expected field "environment" to be of type "string" but was of type "' +
+                typeof wallet.environment +
+                '"'
+        );
+    }
+    if (typeof wallet.value.address !== 'string') {
+        throw Error(
+            'Expected field "value.address" to be of type "string" but was of type "' +
+                typeof wallet.value.address +
+                '"'
+        );
+    }
+    if (wallet.value.accountKeys === undefined) {
+        throw Error(
+            'Expected field "value.accountKeys" to be defined, but was not'
+        );
+    }
+    if (wallet.value.credentials === undefined) {
+        throw Error(
+            'Expected field "value.credentials" to be defined, but was not'
+        );
+    }
+    return wallet;
 }
 
 export interface ChainArData {

@@ -1,3 +1,4 @@
+import bs58check from 'bs58check';
 import {
     encodeWord16,
     encodeWord64,
@@ -17,7 +18,11 @@ import {
 } from '../types';
 import { Buffer } from 'buffer/';
 import { AccountAddress } from '../types/accountAddress';
-import { uleb128Decode, uleb128Encode } from '../uleb128';
+import {
+    uleb128Decode,
+    uleb128DecodeWithIndex,
+    uleb128Encode,
+} from '../uleb128';
 
 const TOKEN_ID_MAX_LENGTH = 256;
 const TOKEN_AMOUNT_MAX_LENGTH = 37;
@@ -29,6 +34,19 @@ export namespace CIS2 {
      * Union between `ContractAddress` and an account address represented by a `Base58String`.
      */
     export type Address = ContractAddress | Base58String;
+
+    /**
+     * A Token ID
+     */
+    export type TokenId = HexString;
+
+    /**
+     * A Token Address
+     */
+    export type TokenAddress = {
+        contract: ContractAddress;
+        id: TokenId;
+    };
 
     /**
      * A contract address along with the name of the hook to be triggered when receiving a CIS-2 transfer.
@@ -429,6 +447,40 @@ function serializeCIS2OperatorOfQuery(query: CIS2.OperatorOfQuery): Buffer {
     const owner = serializeAddress(query.owner);
     const address = serializeAddress(query.address);
     return Buffer.concat([owner, address]);
+}
+
+export function tokenAddressFromBase58(str: Base58String): CIS2.TokenAddress {
+    const bytes = new Buffer(bs58check.decode(str));
+
+    const firstBit = bytes[0];
+    const [a, i] = uleb128DecodeWithIndex(bytes, 1);
+    const [b, j] = uleb128DecodeWithIndex(bytes, i);
+    const tokenBytes = bytes.subarray(j);
+
+    if (firstBit !== 2) {
+        throw Error('First byte must be set to 2!');
+    }
+
+    const contract = {
+        index: a,
+        subindex: b,
+    };
+
+    const id = tokenIdFromBuffer(new Buffer(tokenBytes));
+
+    console.log('bytes:', bytes.toString('hex'), contract, id, i, j);
+
+    return {
+        contract,
+        id,
+    };
+}
+
+function tokenIdFromBuffer(buffer: Buffer): CIS2.TokenId {
+    if (buffer.length > 255) {
+        throw Error('Invalid TokenId: Must not be longer than 255 bytes');
+    }
+    return buffer.toString('hex');
 }
 
 /**

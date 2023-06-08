@@ -1,18 +1,55 @@
 import { Buffer } from 'buffer/';
+import { unwrap } from './util';
 
 /**
- * Decodes an unsigned leb128 encoded value to bigint.
+ * Decodes an unsigned leb128 encoded value to bigint. Note that if buffer
+ * that is provided does not _only_ contain the uleb128 encoded number an
+ * error will be thrown.
  *
  * @param {Buffer} buffer - The buffer to decode
  *
  * @returns {bigint} the decoded bigint value.
  */
 export const uleb128Decode = (buffer: Buffer): bigint => {
-    return buffer.reduce(
-        (result, byte, i) => result | (BigInt(byte & 0x7f) << BigInt(7 * i)), // For each byte, get the value of the 7 least significant bits (byte & 0x7f) and add this to the accumulator (<< 7 * i)
-        0n
-    );
+    const [bigint, index] = uleb128DecodeWithIndex(buffer);
+    if (index !== buffer.length + 1) {
+        throw 'The provided buffer did not contain just a single ULEB128 encoded number';
+    }
+    return bigint;
 };
+
+/**
+ * Decodes an unsigned leb128 encoded value to bigint and returns it along
+ * with the index of the end of the encoded uleb128 number + 1.
+ *
+ * @param {Buffer} bytes - The buffer to decode
+ * @param {number} index - The index where to decode at, defaults to 0
+ *
+ * @returns {bigint} the decoded bigint value.
+ */
+export function uleb128DecodeWithIndex(
+    bytes: Buffer,
+    index = 0
+): [bigint, number] {
+    let acc = 0n;
+    let nextIndex = index;
+
+    // For each byte, get the value of the 7 least significant bits (byte & 0x7f) and add this to the accumulator (<< 7 * i)
+    for (let i = index; i < bytes.length; i++) {
+        nextIndex += 1;
+        const byte = unwrap(bytes.at(i));
+
+        const c = BigInt(byte & 0x7f) << BigInt(7 * (i - index));
+        acc += c;
+
+        if ((byte & 0x80) === 0x00) {
+            console.log(byte);
+            break;
+        }
+    }
+
+    return [acc, nextIndex];
+}
 
 /**
  * Encodes a bigint value as unsigned leb128.

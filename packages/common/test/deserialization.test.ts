@@ -22,6 +22,7 @@ import {
     SimpleTransferWithMemoPayload,
     TransactionExpiry,
     deserializeTypeValue,
+    tokenAddressFromBase58,
 } from '../src';
 import * as fs from 'fs';
 import {
@@ -235,4 +236,56 @@ test('Init error can be deserialized using deserializeTypeValue', () => {
         Buffer.from(TEST_CONTRACT_INIT_ERROR_SCHEMA, 'base64')
     );
     expect(error).toEqual(1);
+});
+
+test('Test parsing of Token Addresses', () => {
+    let address = tokenAddressFromBase58('5Pxr5EUtU');
+    let expected = {
+        contract: {
+            index: 0n,
+            subindex: 0n,
+        },
+        id: '',
+    };
+    expect(address).toEqual(expected);
+
+    address = tokenAddressFromBase58('LQMMu3bAg7');
+    expected = {
+        contract: {
+            index: 0n,
+            subindex: 0n,
+        },
+        id: 'aa',
+    };
+    expect(address).toEqual(expected);
+
+    address = tokenAddressFromBase58('5QTdu98KF');
+    expected = {
+        contract: {
+            index: 1n,
+            subindex: 0n,
+        },
+        id: '',
+    };
+    expect(address).toEqual(expected);
+
+    address = tokenAddressFromBase58('LSYqgoQcb6');
+    expected = {
+        contract: {
+            index: 1n,
+            subindex: 0n,
+        },
+        id: 'aa',
+    };
+    expect(address).toEqual(expected);
+
+    address = tokenAddressFromBase58('LSYXivPSWP');
+    expected = {
+        contract: {
+            index: 1n,
+            subindex: 0n,
+        },
+        id: '0a',
+    };
+    expect(address).toEqual(expected);
 });

@@ -1,13 +1,14 @@
 # Changelog
 
-## Unreleased
+## 1.0.0
 
 ### Breaking changes
 
-- Errors returned from entrypoints in `external_functions.rs` are now proper javascript `Error`s.
+- Errors thrown from entrypoints in `external_functions.rs` are now proper javascript `Error`s.
 
 ### Changes
 
+- Updated reference to concordium-base, which improves error messages when serializing/deserializing using smart contract schemas.
 - Added an additional parameter to contract schema serialization/deserializtion entrypoints, making it possible to receive errors in a verbose format with added detail.
 
 ## 0.12.0

@@ -1,5 +1,11 @@
 # Changelog
 
+## 8.0.0
+
+### Breaking changes
+
+- Bumped @concordium/rust-bindings to 1.0.0. (Throws proper `Error`s when execution fails for any WASM entrypoint, with improved error messages)
+
 ### Fixed
 
 - Cost calculation for `deployModule` transaction.
@@ -9,6 +15,7 @@
 - A `parseWallet` function to parse wallet export files
 
 ### Changed
+
 - The following functions now all have an additional parameter controlling whether errors are in a verbose format or not:
     - `deserializeContractState`
     - `deserializeReceiveReturnValue`

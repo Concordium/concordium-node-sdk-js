@@ -4,7 +4,7 @@
 
 ### Breaking changes
 
-- Errors returned from entrypoints in `external_functions.rs` are now proper JS errors.
+- Errors returned from entrypoints in `external_functions.rs` are now proper javascript `Error`s.
 
 ### Changes
 

@@ -1,8 +1,6 @@
 # Changelog
 
-### Fixed
-
-- Cost calculation for `deployModule` transaction.
+## Unreleased
 
 ### Changes
 - Function `uleb128Decode` now correctly throws an error if the given input contains more than a single ULEB128 encoded number
@@ -12,6 +10,12 @@
 - A `parseWallet` function to parse wallet export files
 - Function `uleb128DecodeWithIndex` that can also parse more than a single ULEB128 bigint
 - Added `parseTokenAddress` to CIS2
+
+## 7.0.1 2023-05-25
+
+### Fixed
+
+- Cost calculation for `deployModule` transaction.
 
 ## 7.0.0 2023-05-15 
 

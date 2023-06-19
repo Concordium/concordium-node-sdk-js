@@ -39,23 +39,25 @@ Contains the different packages for the JS-SDKs.
 
 ### Nodejs package
 
-The [Nodejs package](./packages/nodejs) contains the Nodejs SDK, particularly the client that wraps the GRPC calls
-to the node, is located here.
+The [Nodejs package](./packages/nodejs) contains the Nodejs SDK, particularly
+the client that wraps the GRPC calls to the node, is located here.
 
 ### Web package
 
-The [Web package](./packages/web) contains the Web SDK, which can used in a web environment.
+The [Web package](./packages/web) contains the Web SDK, which can used in
+a web environment.
 
 ### Common package
 
-The [common package](./packages/common) contains the shared library for the Nodejs and Web SDK's. The GRPC-client, all serialization
-and most utility functions are located in this package.
+The [common package](./packages/common) contains the shared library for the
+Nodejs and Web SDK's. The GRPC-client, all serialization and most utility
+functions are located in this package.
 
 ### Rust-bindings package
 
-The [common package](./packages/common) contains bindings for Rust code, which is used by the common package. This
-package is a utility package that should not be used directly, only through
-the usage of the common package.
+The [common package](./packages/common) contains bindings for Rust code,
+which is used by the common package. This package is a utility package that
+should not be used directly, only through the usage of the common package.
 
 ## Install/updating dependencies
 

@@ -10,8 +10,8 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> [options]
 
   Required
-    --from, -f  From some time, defaults to genesis time
-    --to,   -t  To some time, defaults to the timestamp for the last finalized block
+    --from, -f  A timestamp of the form "YYYY-MM-DD", defaults to genesis time
+    --to,   -t  A timestamp of the form "YYYY-MM-DD", defaults to the timestamp for the last finalized block
 
   Options
     --help,         Displays this message

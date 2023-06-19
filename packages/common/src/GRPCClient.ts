@@ -724,8 +724,6 @@ export default class ConcordiumNodeClient {
      *
      * {@codeblock ~~:client/getBlocksAtHeightAbsolute.ts#documentation-snippet}
      *
-     * {@codeblock ~~:client/getBlocksAtHeightRelative.ts#documentation-snippet}
-     *
      * @param blockHeightRequest Either an absolute block height request or a relative block height request
      * @returns A list of block hashes as hex strings
      */

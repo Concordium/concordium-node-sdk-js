@@ -12,7 +12,6 @@ import { makeDynamicFunction } from './util';
 
 /**
  * Namespace with types for CIS-0 standard contracts
- * @hidden
  */
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace CIS0 {

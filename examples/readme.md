@@ -13,3 +13,9 @@ yarn run-example /path/to/example.ts [opts]
 ```
 
 Where opts are any arguments that the example script takes.
+
+Note that you must first build the project using:
+
+```shell
+    yarn build:dev
+```

@@ -1,5 +1,6 @@
 There is a collection of runnable examples that utilizes the SDK. These are
-located in the examples folder of the repo. To run an example call:
+located in the examples folder of the repo. To run an example call, navigate
+to the examples directory from the repo and run your example:
 
 ```shell
     yarn run-example /path/to/example.ts [opts]
@@ -7,7 +8,14 @@ located in the examples folder of the repo. To run an example call:
 
 Where opts are any arguments that the example script takes.
 
-For example, from the repo root, navigate to the `examples` directory and run:
+Note that you must first build the project using:
+
+```shell
+    yarn build:dev
+```
+
+For example, after building, navigate to the `examples` directory from the
+repo root and run:
 
 ```shell
     yarn run-example client/getBlockInfo.ts

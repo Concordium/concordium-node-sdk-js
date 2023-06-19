@@ -62,10 +62,10 @@ const client = createConcordiumClient(
         BigInt(cli.flags.maxAncestors),
         cli.flags.block
     );
+    // #endregion documentation-snippet
 
     console.log('Block hashes of ancestors of input block:');
     for await (const ancestor of ancestors) {
         console.log(ancestor);
     }
-    // #endregion documentation-snippet
 })();

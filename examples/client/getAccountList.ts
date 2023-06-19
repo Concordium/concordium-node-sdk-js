@@ -51,10 +51,10 @@ const client = createConcordiumClient(
     const accounts: AsyncIterable<Base58String> = client.getAccountList(
         cli.flags.block
     );
+    // #endregion documentation-snippet
 
     console.log('Accounts that exists at the end of the given block:');
     for await (const account of accounts) {
         console.log(account);
     }
-    // #endregion documentation-snippet
 })();

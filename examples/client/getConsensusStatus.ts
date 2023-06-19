@@ -40,7 +40,7 @@ const client = createConcordiumClient(
 (async () => {
     // #region documentation-snippet
     const consensusStatus: ConsensusStatus = await client.getConsensusStatus();
+    // #endregion documentation-snippet
 
     console.dir(consensusStatus, { depth: null, colors: true });
-    // #endregion documentation-snippet
 })();

@@ -68,9 +68,9 @@ const client = createConcordiumClient(
         contractAddress,
         cli.flags.block
     );
+    // #endregion documentation-snippet
 
     for await (const state of states) {
         console.dir(state, { depth: null, colors: true });
     }
-    // #endregion documentation-snippet
 })();

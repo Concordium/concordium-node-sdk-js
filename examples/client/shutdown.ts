@@ -40,7 +40,6 @@ const client = createConcordiumClient(
 (async () => {
     // #region documentation-snippet
     await client.shutdown();
-
     console.log('Node succesfully shut down');
     // #endregion documentation-snippet
 })();

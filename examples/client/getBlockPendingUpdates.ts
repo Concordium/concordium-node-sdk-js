@@ -53,9 +53,9 @@ const client = createConcordiumClient(
     // #region documentation-snippet
     const pendingUpdates: AsyncIterable<PendingUpdate> =
         client.getBlockPendingUpdates(cli.flags.block);
+    // #endregion documentation-snippet
 
     for await (const pendingUpdate of pendingUpdates) {
         console.dir(pendingUpdate, { depth: null, colors: true });
     }
-    // #endregion documentation-snippet
 })();

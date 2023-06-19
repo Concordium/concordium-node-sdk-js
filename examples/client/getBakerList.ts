@@ -51,10 +51,10 @@ const client = createConcordiumClient(
     const bakerIds: AsyncIterable<BakerId> = client.getBakerList(
         cli.flags.block
     );
+    // #endregion documentation-snippet
 
     console.log('List of BakerID at the specified block:');
     for await (const bakerId of bakerIds) {
         console.log(bakerId);
     }
-    // #endregion documentation-snippet
 })();

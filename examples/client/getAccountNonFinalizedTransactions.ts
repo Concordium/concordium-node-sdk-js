@@ -60,9 +60,9 @@ const client = createConcordiumClient(
     const accountAddress = new AccountAddress(cli.flags.account);
     const transactions: AsyncIterable<HexString> =
         client.getAccountNonFinalizedTransactions(accountAddress);
+    // #endregion documentation-snippet
 
     for await (const transaction of transactions) {
         console.log(transaction);
     }
-    // #endregion documentation-snippet
 })();

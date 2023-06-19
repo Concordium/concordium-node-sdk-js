@@ -75,7 +75,7 @@ const client = createConcordiumClient(
         cli.flags.key,
         cli.flags.block
     );
+    // #endregion documentation-snippet
 
     console.log(state);
-    // #endregion documentation-snippet
 })();

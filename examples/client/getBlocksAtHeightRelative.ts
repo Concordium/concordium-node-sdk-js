@@ -71,9 +71,9 @@ const client = createConcordiumClient(
         restrict: cli.flags.restrict,
     };
     const blocks: HexString[] = await client.getBlocksAtHeight(request);
+    // #endregion documentation-snippet
 
     for (const block of blocks) {
         console.log(block);
     }
-    // #endregion documentation-snippet
 })();

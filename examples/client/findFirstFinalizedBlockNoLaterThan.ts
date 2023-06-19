@@ -64,7 +64,7 @@ const client = createConcordiumClient(
         from,
         to
     );
+    // #endregion documentation-snippet
 
     console.log(blockInfo);
-    // #endregion documentation-snippet
 })();

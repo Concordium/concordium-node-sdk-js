@@ -57,7 +57,6 @@ const client = createConcordiumClient(
 (async () => {
     // #region documentation-snippet
     await client.peerConnect(cli.flags.ip, cli.flags.port);
-
     console.log('Successfully connected to peer');
     // #endregion documentation-snippet
 })();

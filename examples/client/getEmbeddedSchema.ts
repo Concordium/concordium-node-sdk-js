@@ -54,9 +54,9 @@ const client = createConcordiumClient(
     // #region documentation-snippet
     const moduleRef = new ModuleReference(cli.flags.module);
     const schema = await client.getEmbeddedSchema(moduleRef);
+    // #endregion documentation-snippet
 
     fs.writeFileSync(cli.flags.outPath, schema);
 
     console.log('Wrote schema to file: ', cli.flags.outPath);
-    // #endregion documentation-snippet
 })();

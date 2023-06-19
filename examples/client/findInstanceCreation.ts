@@ -72,7 +72,7 @@ const client = createConcordiumClient(
         from,
         to
     );
+    // #endregion documentation-snippet
 
     console.log(instanceCreation);
-    // #endregion documentation-snippet
 })();

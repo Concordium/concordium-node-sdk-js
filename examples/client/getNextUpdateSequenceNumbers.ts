@@ -50,7 +50,7 @@ const client = createConcordiumClient(
     // #region documentation-snippet
     const updateSeqNums: NextUpdateSequenceNumbers =
         await client.getNextUpdateSequenceNumbers(cli.flags.block);
+    // #endregion documentation-snippet
 
     console.dir(updateSeqNums, { depth: null, colors: true });
-    // #endregion documentation-snippet
 })();

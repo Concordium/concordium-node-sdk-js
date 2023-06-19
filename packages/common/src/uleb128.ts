@@ -25,7 +25,8 @@ export const uleb128Decode = (buffer: Buffer): bigint => {
  * @param {Buffer} bytes - The buffer to decode
  * @param {number} index - The index where to decode at, defaults to 0
  *
- * @returns {bigint} the decoded bigint value.
+ * @returns {[bigint, number]} the decoded bigint value and the index of
+ * the end of the encoded uleb128 number + 1.
  */
 export function uleb128DecodeWithIndex(
     bytes: Buffer,

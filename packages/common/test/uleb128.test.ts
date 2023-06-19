@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer/';
-import { decodeLEB128, uleb128Decode, uleb128Encode } from '../src/uleb128';
+import { uleb128Decode, uleb128Encode } from '../src/uleb128';
 
 test('uleb128 encodes value as expected', () => {
     let value = 0n;

@@ -13,7 +13,7 @@ import { unwrap } from './util';
 export const uleb128Decode = (buffer: Buffer): bigint => {
     const [bigint, index] = uleb128DecodeWithIndex(buffer);
     if (index !== buffer.length) {
-        throw 'The provided buffer did not contain just a single ULEB128 encoded number';
+        throw Error('The provided buffer did not contain just a single ULEB128 encoded number');
     }
     return bigint;
 };

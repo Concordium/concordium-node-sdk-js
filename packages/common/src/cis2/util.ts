@@ -468,8 +468,6 @@ export function tokenAddressFromBase58(str: Base58String): CIS2.TokenAddress {
 
     const id = tokenIdFromBuffer(new Buffer(tokenBytes));
 
-    console.log('bytes:', bytes.toString('hex'), contract, id, i, j);
-
     return {
         contract,
         id,

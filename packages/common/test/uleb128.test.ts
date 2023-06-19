@@ -1,5 +1,9 @@
 import { Buffer } from 'buffer/';
-import { uleb128Decode, uleb128Encode } from '../src/uleb128';
+import {
+    uleb128Decode,
+    uleb128DecodeWithIndex,
+    uleb128Encode,
+} from '../src/uleb128';
 
 test('uleb128 encodes value as expected', () => {
     let value = 0n;
@@ -36,7 +40,7 @@ test('uleb128 decodes value as expected', () => {
     decoded = uleb128Decode(buf);
     expect(decoded.toString()).toBe('100');
 
-    buf = Buffer.from('ff092209', 'hex');
+    buf = Buffer.from('ff89a209', 'hex');
     decoded = uleb128Decode(buf);
     expect(decoded.toString()).toBe('19432703');
 
@@ -47,40 +51,40 @@ test('uleb128 decodes value as expected', () => {
 
 test('uleb128 decodes value as expected', () => {
     let buf = Buffer.from('00', 'hex');
-    let decoded = decodeLEB128(buf);
+    let decoded = uleb128DecodeWithIndex(buf);
     expect(decoded.toString()).toBe('0,1');
 
     buf = Buffer.from('0000aa', 'hex');
-    decoded = decodeLEB128(buf);
+    decoded = uleb128DecodeWithIndex(buf);
     expect(decoded.toString()).toBe('0,1');
 
     buf = Buffer.from('64', 'hex');
-    decoded = decodeLEB128(buf);
+    decoded = uleb128DecodeWithIndex(buf);
     expect(decoded.toString()).toBe('100,1');
 
     buf = Buffer.from('01', 'hex');
-    decoded = decodeLEB128(buf);
+    decoded = uleb128DecodeWithIndex(buf);
     expect(decoded.toString()).toBe('1,1');
 
     buf = Buffer.from('0100', 'hex');
-    decoded = decodeLEB128(buf);
+    decoded = uleb128DecodeWithIndex(buf);
     expect(decoded.toString()).toBe('1,1');
 
     buf = Buffer.from('ff092209', 'hex');
-    decoded = decodeLEB128(buf);
-    expect(decoded.toString()).toBe('19432703,4');
+    decoded = uleb128DecodeWithIndex(buf);
+    expect(decoded.toString()).toBe('1279,2');
 
     buf = Buffer.from('fa80808080808010', 'hex');
-    decoded = decodeLEB128(buf);
+    decoded = uleb128DecodeWithIndex(buf);
     expect(decoded.toString()).toBe('9007199254741114,8');
 
     // Testing indexing
 
     buf = Buffer.from('aa01', 'hex');
-    decoded = decodeLEB128(buf, 1);
+    decoded = uleb128DecodeWithIndex(buf, 1);
     expect(decoded.toString()).toBe('1,2');
 
     buf = Buffer.from('0100aa', 'hex');
-    decoded = decodeLEB128(buf, 1);
+    decoded = uleb128DecodeWithIndex(buf, 1);
     expect(decoded.toString()).toBe('0,2');
 });

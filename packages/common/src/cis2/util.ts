@@ -461,9 +461,9 @@ export function tokenAddressFromBase58(str: Base58String): CIS2.TokenAddress {
     const bytes = new Buffer(bs58check.decode(str));
 
     const firstByte = bytes[0];
-    const [a, i] = uleb128DecodeWithIndex(new Buffer(bytes.subarray(1)));
-    const [b, j] = uleb128DecodeWithIndex(new Buffer(bytes.subarray(i)));
-    const tokenBytes = bytes.subarray(j);
+    const [index, i] = uleb128DecodeWithIndex(bytes, 1);
+    const [subindex, j] = uleb128DecodeWithIndex(bytes, i);
+    const tokenIdBytes = new Buffer(bytes.subarray(j));
 
     if (firstByte !== 2) {
         throw Error(
@@ -472,16 +472,39 @@ export function tokenAddressFromBase58(str: Base58String): CIS2.TokenAddress {
     }
 
     const contract = {
-        index: a,
-        subindex: b,
+        index,
+        subindex,
     };
 
-    const id = tokenIdFromBuffer(new Buffer(tokenBytes));
+    const id = tokenIdFromBuffer(tokenIdBytes);
 
     return {
         contract,
         id,
     };
+}
+
+/**
+ * Returns the Base58-encoding of the given CIS2 Token Address.
+ *
+ * @param tokenAddress A token address to convert into the base58-string format
+ * @returns The base58-formatted string
+ */
+export function tokenAddressToBase58(
+    tokenAddress: CIS2.TokenAddress
+): Base58String {
+    const firstByte = Buffer.from('02', 'hex');
+    const indexBytes = uleb128Encode(tokenAddress.contract.index);
+    const subindexBytes = uleb128Encode(tokenAddress.contract.subindex);
+    const tokenBytes = Buffer.from(tokenAddress.id, 'hex');
+    const bytes = Buffer.concat([
+        firstByte,
+        indexBytes,
+        subindexBytes,
+        tokenBytes,
+    ]);
+
+    return bs58check.encode(bytes);
 }
 
 function tokenIdFromBuffer(buffer: Buffer): CIS2.TokenId {

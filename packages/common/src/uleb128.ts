@@ -24,20 +24,24 @@ export const uleb128Decode = (buffer: Buffer): bigint => {
  * with the index of the end of the encoded uleb128 number + 1.
  *
  * @param {Buffer} bytes - The buffer to decode
+ * @param {number} index - A non-negative index to decode at, defaults to 0
  *
  * @returns {[bigint, number]} the decoded bigint value and the index of
  * the end of the encoded uleb128 number + 1.
  */
-export function uleb128DecodeWithIndex(bytes: Buffer): [bigint, number] {
+export function uleb128DecodeWithIndex(
+    bytes: Buffer,
+    index = 0
+): [bigint, number] {
     let acc = 0n;
-    let nextIndex = 0;
+    let nextIndex = index;
 
     // For each byte, get the value of the 7 least significant bits (byte & 0x7f) and add this to the accumulator (<< 7 * i)
-    for (let i = 0; i < bytes.length; i++) {
-        nextIndex = i;
+    for (let i = index; i < bytes.length; i++) {
+        nextIndex += 1;
         const byte = bytes[i];
 
-        const c = BigInt(byte & 0x7f) << BigInt(7 * i);
+        const c = BigInt(byte & 0x7f) << BigInt(7 * (i - index));
         acc += c;
 
         if ((byte & 0x80) === 0x00) {

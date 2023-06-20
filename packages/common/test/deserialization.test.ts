@@ -23,6 +23,7 @@ import {
     TransactionExpiry,
     deserializeTypeValue,
     tokenAddressFromBase58,
+    tokenAddressToBase58,
 } from '../src';
 import * as fs from 'fs';
 import {
@@ -239,53 +240,68 @@ test('Init error can be deserialized using deserializeTypeValue', () => {
 });
 
 test('Test parsing of Token Addresses', () => {
-    let address = tokenAddressFromBase58('5Pxr5EUtU').toString();
-    let expected = {
+    let base58 = '5Pxr5EUtU';
+    let address = tokenAddressFromBase58(base58);
+    let rebase58 = tokenAddressToBase58(address);
+    let expectedAddress = {
         contract: {
             index: 0n,
             subindex: 0n,
         },
         id: '',
-    }.toString();
-    expect(address).toEqual(expected);
+    };
+    expect(address).toEqual(expectedAddress);
+    expect(rebase58).toEqual(base58);
 
-    address = tokenAddressFromBase58('LQMMu3bAg7').toString();
-    expected = {
+    base58 = 'LQMMu3bAg7';
+    address = tokenAddressFromBase58(base58);
+    rebase58 = tokenAddressToBase58(address);
+    expectedAddress = {
         contract: {
             index: 0n,
             subindex: 0n,
         },
         id: 'aa',
-    }.toString();
-    expect(address).toEqual(expected);
+    };
+    expect(address).toEqual(expectedAddress);
+    expect(rebase58).toEqual(base58);
 
-    address = tokenAddressFromBase58('5QTdu98KF').toString();
-    expected = {
+    base58 = '5QTdu98KF';
+    address = tokenAddressFromBase58(base58);
+    rebase58 = tokenAddressToBase58(address);
+    const expectedAddress2 = {
         contract: {
             index: 1n,
             subindex: 0n,
         },
         id: '',
-    }.toString();
-    expect(address).toEqual(expected);
+    };
+    expect(address).toEqual(expectedAddress2);
+    expect(rebase58).toEqual(base58);
 
-    address = tokenAddressFromBase58('LSYqgoQcb6').toString();
-    expected = {
+    base58 = 'LSYqgoQcb6';
+    address = tokenAddressFromBase58(base58);
+    rebase58 = tokenAddressToBase58(address);
+    expectedAddress = {
         contract: {
             index: 1n,
             subindex: 0n,
         },
         id: 'aa',
-    }.toString();
-    expect(address).toEqual(expected);
+    };
+    expect(address).toEqual(expectedAddress);
+    expect(rebase58).toEqual(base58);
 
-    address = tokenAddressFromBase58('LSYXivPSWP').toString();
-    expected = {
+    base58 = 'LSYXivPSWP';
+    address = tokenAddressFromBase58(base58);
+    rebase58 = tokenAddressToBase58(address);
+    expectedAddress = {
         contract: {
             index: 1n,
             subindex: 0n,
         },
         id: '0a',
-    }.toString();
-    expect(address).toEqual(expected);
+    };
+    expect(address).toEqual(expectedAddress);
+    expect(rebase58).toEqual(base58);
 });

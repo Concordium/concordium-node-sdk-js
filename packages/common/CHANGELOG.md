@@ -3,13 +3,14 @@
 ## Unreleased
 
 ### Changes
+
 - Function `uleb128Decode` now parses correctly and throws an error if the given input contains more than a single ULEB128 encoded number.
 
 ### Added
 
 - A `parseWallet` function to parse wallet export files
 - Function `uleb128DecodeWithIndex` that can also parse more than a single ULEB128 bigint
-- Added `parseTokenAddress` to CIS2
+- Added `tokenAddressFromBase58` and `tokenAddressToBase58` to CIS2
 
 ## 7.0.1 2023-05-25
 

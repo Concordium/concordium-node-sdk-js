@@ -36,7 +36,7 @@ export namespace CIS2 {
     export type Address = ContractAddress | Base58String;
 
     /**
-     * A Token ID
+     * A Token ID that uniquely identifies the CIS-2 Token
      */
     export type TokenId = HexString;
 

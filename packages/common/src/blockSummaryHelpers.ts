@@ -7,6 +7,7 @@ import {
     ChainParameters,
     ChainParametersV0,
     ChainParametersV1,
+    ChainParametersV2,
     Keys,
     KeysV0,
     KeysV1,
@@ -24,12 +25,18 @@ export const isAuthorizationsV1 = (a: Authorizations): a is AuthorizationsV1 =>
 export const isChainParametersV1 = (
     cp: ChainParameters
 ): cp is ChainParametersV1 =>
-    (cp as ChainParametersV1).mintPerPayday !== undefined;
+    (cp as ChainParametersV1).timeParameters !== undefined &&
+    !isChainParametersV2(cp);
 
 export const isChainParametersV0 = (
     cp: ChainParameters
 ): cp is ChainParametersV0 =>
     (cp as ChainParametersV0).minimumThresholdForBaking !== undefined;
+
+export const isChainParametersV2 = (
+    cp: ChainParameters
+): cp is ChainParametersV2 =>
+    (cp as ChainParametersV2).consensusParameters !== undefined;
 
 export const isKeysV1 = (k: Keys): k is KeysV1 =>
     isAuthorizationsV1(k.level2Keys);

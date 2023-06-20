@@ -3,7 +3,12 @@ import {
     AuthorizationsV0,
     AuthorizationsV1,
     Base58String,
+    Duration,
+    FinalizationCommitteeParameters,
+    GasRewardsV0,
+    GasRewardsV1,
     HexString,
+    TimeoutParameters,
 } from '..';
 import type {
     IpInfo,
@@ -12,7 +17,6 @@ import type {
     ExchangeRate,
     TransactionFeeDistribution,
     MintDistribution,
-    GasRewards,
     MintRate,
     CommissionRates,
 } from '../types';
@@ -47,9 +51,14 @@ export interface TransactionFeeDistributionUpdate {
     update: TransactionFeeDistribution;
 }
 
-export interface GasRewardsUpdate {
+export interface GasRewardsV0Update {
     updateType: UpdateType.GasRewards;
-    update: GasRewards;
+    update: GasRewardsV0;
+}
+
+export interface GasRewardsV1Update {
+    updateType: UpdateType.GasRewardsCpv2;
+    update: GasRewardsV1;
 }
 
 export interface AddAnonymityRevokerUpdate {
@@ -87,6 +96,26 @@ export interface BakerStakeThresholdUpdate {
     update: BakerStakeThreshold;
 }
 
+export interface TimeoutParametersUpdate {
+    updateType: UpdateType.TimeoutParameters;
+    update: TimeoutParameters;
+}
+
+export interface MinBlockTimeUpdate {
+    updateType: UpdateType.MinBlockTime;
+    update: Duration;
+}
+
+export interface BlockEnergyLimitUpdate {
+    updateType: UpdateType.BlockEnergyLimit;
+    update: bigint;
+}
+
+export interface FinalizationCommitteeParametersUpdate {
+    updateType: UpdateType.FinalizationCommitteeParameters;
+    update: FinalizationCommitteeParameters;
+}
+
 export interface Level1Update {
     updateType: UpdateType.Level1;
     update: KeyUpdate;
@@ -114,14 +143,19 @@ export type CommonUpdate =
     | FoundationAccountUpdate
     | MintDistributionUpdate
     | ProtocolUpdate
-    | GasRewardsUpdate
+    | GasRewardsV0Update
     | BakerStakeThresholdUpdate
     | ElectionDifficultyUpdate
     | AddAnonymityRevokerUpdate
     | AddIdentityProviderUpdate
     | CooldownParametersUpdate
     | PoolParametersUpdate
-    | TimeParametersUpdate;
+    | TimeParametersUpdate
+    | GasRewardsV1Update
+    | TimeoutParametersUpdate
+    | MinBlockTimeUpdate
+    | BlockEnergyLimitUpdate
+    | FinalizationCommitteeParametersUpdate;
 
 export type UpdateInstructionPayload = CommonUpdate | RootUpdate | Level1Update;
 
@@ -151,6 +185,11 @@ export enum UpdateType {
     ProtocolUpdate = 'protocolUpdate',
     BakerStakeThreshold = 'bakerStakeThreshold',
     Emergency = 'emergency',
+    GasRewardsCpv2 = 'gasRewardsCpv2',
+    TimeoutParameters = 'timeoutParameters',
+    MinBlockTime = 'minBlockTime',
+    BlockEnergyLimit = 'blockEnergyLimit',
+    FinalizationCommitteeParameters = 'finalizationCommitteeParameters',
 }
 
 export type KeyUpdate = HigherLevelKeyUpdate | AuthorizationKeysUpdate;

@@ -284,16 +284,20 @@ export type MintDistributionV1 = MintDistributionCommon;
 
 export type MintDistribution = MintDistributionV0 | MintDistributionV1;
 
-export interface GasRewards {
+export interface GasRewardsCommon {
     baker: number;
-    finalizationProof: number;
     accountCreation: number;
     chainUpdate: number;
 }
 
+export interface GasRewardsV0 extends GasRewardsCommon {
+    finalizationProof: number;
+}
+
+export type GasRewardsV1 = GasRewardsCommon;
+
 export interface RewardParametersCommon {
     transactionFeeDistribution: TransactionFeeDistribution;
-    gASRewards: GasRewards;
 }
 
 /**
@@ -301,6 +305,7 @@ export interface RewardParametersCommon {
  */
 export interface RewardParametersV0 extends RewardParametersCommon {
     mintDistribution: MintDistributionV0;
+    gasRewards: GasRewardsV0;
 }
 
 /**
@@ -308,9 +313,13 @@ export interface RewardParametersV0 extends RewardParametersCommon {
  */
 export interface RewardParametersV1 extends RewardParametersCommon {
     mintDistribution: MintDistributionV1;
+    gasRewards: GasRewardsV0;
 }
 
-export type RewardParameters = RewardParametersV0 | RewardParametersV1;
+export interface RewardParametersV2 extends RewardParametersCommon {
+    mintDistribution: MintDistributionV1;
+    gasRewards: GasRewardsV1;
+}
 
 export interface CooldownParametersV0 {
     bakerCooldownEpochs: Epoch;
@@ -345,37 +354,71 @@ export interface TimeParametersV1 {
     mintPerPayday: number;
 }
 
+export interface TimeoutParameters {
+    /**
+     * In milliseconds.
+     */
+    timeoutBase: Duration;
+    timeoutIncrease: Ratio;
+    timeoutDecrease: Ratio;
+}
+
+export interface ConsensusParameters {
+    timeoutParameters: TimeoutParameters;
+    minBlockTime: Duration;
+    blockEnergyLimit: bigint;
+}
+
+export interface FinalizationCommitteeParameters {
+    minimumFinalizers: number;
+    maximumFinalizers: number;
+    finalizerRelativeStakeThreshold: number;
+}
+
 export interface ChainParametersCommon {
-    electionDifficulty: number;
     euroPerEnergy: ExchangeRate;
     microGTUPerEuro: ExchangeRate;
     accountCreationLimit: number;
-    foundationAccountIndex?: bigint;
-    foundationAccount?: string;
+    foundationAccount: string;
 }
 
 /**
  * Used from protocol version 1-3
  */
-export interface ChainParametersV0
-    extends ChainParametersCommon,
-        CooldownParametersV0,
-        PoolParametersV0 {
-    rewardParameters: RewardParametersV0;
-}
+export type ChainParametersV0 = ChainParametersCommon &
+    CooldownParametersV0 &
+    PoolParametersV0 &
+    RewardParametersV0 & {
+        electionDifficulty: number;
+    };
 
 /**
- * Used from protocol version 4
+ * Used from protocol version 4-5
  */
-export interface ChainParametersV1
-    extends ChainParametersCommon,
-        CooldownParametersV1,
-        PoolParametersV1,
-        TimeParametersV1 {
-    rewardParameters: RewardParametersV1;
-}
+export type ChainParametersV1 = ChainParametersCommon &
+    RewardParametersV1 & {
+        cooldownParameters: CooldownParametersV1;
+        timeParameters: TimeParametersV1;
+        poolParameters: PoolParametersV1;
+        electionDifficulty: number;
+    };
 
-export type ChainParameters = ChainParametersV0 | ChainParametersV1;
+/**
+ * Used from protocol version 6
+ */
+export type ChainParametersV2 = ChainParametersCommon &
+    RewardParametersV2 & {
+        consensusParameters: ConsensusParameters;
+        cooldownParameters: CooldownParametersV1;
+        timeParameters: TimeParametersV1;
+        poolParameters: PoolParametersV1;
+        finalizationCommiteeParameters: FinalizationCommitteeParameters;
+    };
+
+export type ChainParameters =
+    | ChainParametersV0
+    | ChainParametersV1
+    | ChainParametersV2;
 
 export interface Authorization {
     threshold: number;
@@ -395,7 +438,7 @@ interface AuthorizationsCommon {
      * For protocol version 3 and earlier, this controls the authorization of the bakerStakeThreshold update.
      */
     poolParameters: Authorization;
-    electionDifficulty: Authorization;
+    consensus: Authorization;
     addAnonymityRevoker: Authorization;
     addIdentityProvider: Authorization;
     keys: VerifyKey[];
@@ -578,7 +621,7 @@ export interface RewardStatusV1 extends RewardStatusCommon {
 export type RewardStatus = RewardStatusV0 | RewardStatusV1;
 export type TokenomicsInfo = RewardStatus;
 
-export interface BlockInfo {
+export interface BlockInfoCommon {
     blockParent: HexString;
     blockHash: HexString;
     blockStateHash: HexString;
@@ -586,7 +629,6 @@ export interface BlockInfo {
 
     blockHeight: bigint;
     blockBaker?: BakerId;
-    blockSlot: bigint;
 
     blockArriveTime: Date;
     blockReceiveTime: Date;
@@ -600,7 +642,21 @@ export interface BlockInfo {
 
     genesisIndex: number;
     eraBlockHeight: number;
+    protocolVersion: bigint;
 }
+
+/** Used for protocol version 1-5 */
+export interface BlockInfoV0 extends BlockInfoCommon {
+    blockSlot: bigint;
+}
+
+/** Used from protocol version 6 */
+export interface BlockInfoV1 extends BlockInfoCommon {
+    round: bigint;
+    epoch: bigint;
+}
+
+export type BlockInfo = BlockInfoV0 | BlockInfoV1;
 
 export interface CommonBlockInfo {
     hash: HexString;
@@ -621,7 +677,7 @@ export type BlocksAtHeightRequest =
     | AbsoluteBlocksAtHeightRequest
     | RelativeBlocksAtHeightRequest;
 
-export interface ConsensusStatus {
+export interface ConsensusStatusCommon {
     bestBlock: string;
     genesisBlock: string;
     currentEraGenesisBlock: string;
@@ -631,10 +687,6 @@ export interface ConsensusStatus {
      * In milliseconds
      */
     epochDuration: bigint;
-    /**
-     * In milliseconds
-     */
-    slotDuration: bigint;
     bestBlockHeight: bigint;
     lastFinalizedBlockHeight: bigint;
 
@@ -670,6 +722,30 @@ export interface ConsensusStatus {
 
     protocolVersion: bigint;
 }
+
+/**
+ * Used for protocol version 1-5
+ */
+export interface ConsensusStatusV0 extends ConsensusStatusCommon {
+    /**
+     * In milliseconds
+     */
+    slotDuration: bigint;
+}
+
+export interface ConcordiumBFTStatus {
+    currentTimeoutDuration: bigint;
+    currentRound: bigint;
+    currentEpoch: bigint;
+    triggerBlockTime: Date;
+}
+
+/**
+ * Used from protocol version 6
+ */
+export type ConsensusStatusV1 = ConsensusStatusCommon & ConcordiumBFTStatus;
+
+export type ConsensusStatus = ConsensusStatusV0 | ConsensusStatusV1;
 
 export interface CryptographicParameters {
     onChainCommitmentKey: string;
@@ -1156,11 +1232,18 @@ export interface BakerElectionInfo {
     lotteryPower: number;
 }
 
-export interface ElectionInfo {
-    electionDifficulty: number;
+export interface ElectionInfoCommon {
     electionNonce: HexString;
     bakerElectionInfo: BakerElectionInfo[];
 }
+
+export interface ElectionInfoV0 extends ElectionInfoCommon {
+    electionDifficulty: number;
+}
+
+export type ElectionInfoV1 = ElectionInfoCommon;
+
+export type ElectionInfo = ElectionInfoV0 | ElectionInfoV1;
 
 export interface NextUpdateSequenceNumbers {
     rootKeys: bigint;
@@ -1179,6 +1262,10 @@ export interface NextUpdateSequenceNumbers {
     addIdentityProvider: bigint;
     cooldownParameters: bigint;
     timeParameters: bigint;
+    timeoutParameters: bigint;
+    minBlockTime: bigint;
+    blockEnergyLimit: bigint;
+    finalizationCommiteeParameters: bigint;
 }
 
 export type BlockFinalizationSummary =

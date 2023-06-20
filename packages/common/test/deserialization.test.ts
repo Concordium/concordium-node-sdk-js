@@ -239,53 +239,53 @@ test('Init error can be deserialized using deserializeTypeValue', () => {
 });
 
 test('Test parsing of Token Addresses', () => {
-    let address = tokenAddressFromBase58('5Pxr5EUtU');
+    let address = tokenAddressFromBase58('5Pxr5EUtU').toString();
     let expected = {
         contract: {
             index: 0n,
             subindex: 0n,
         },
         id: '',
-    };
+    }.toString();
     expect(address).toEqual(expected);
 
-    address = tokenAddressFromBase58('LQMMu3bAg7');
+    address = tokenAddressFromBase58('LQMMu3bAg7').toString();
     expected = {
         contract: {
             index: 0n,
             subindex: 0n,
         },
         id: 'aa',
-    };
+    }.toString();
     expect(address).toEqual(expected);
 
-    address = tokenAddressFromBase58('5QTdu98KF');
+    address = tokenAddressFromBase58('5QTdu98KF').toString();
     expected = {
         contract: {
             index: 1n,
             subindex: 0n,
         },
         id: '',
-    };
+    }.toString();
     expect(address).toEqual(expected);
 
-    address = tokenAddressFromBase58('LSYqgoQcb6');
+    address = tokenAddressFromBase58('LSYqgoQcb6').toString();
     expected = {
         contract: {
             index: 1n,
             subindex: 0n,
         },
         id: 'aa',
-    };
+    }.toString();
     expect(address).toEqual(expected);
 
-    address = tokenAddressFromBase58('LSYXivPSWP');
+    address = tokenAddressFromBase58('LSYXivPSWP').toString();
     expected = {
         contract: {
             index: 1n,
             subindex: 0n,
         },
         id: '0a',
-    };
+    }.toString();
     expect(address).toEqual(expected);
 });

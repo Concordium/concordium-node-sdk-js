@@ -41,7 +41,8 @@ export namespace CIS2 {
     export type TokenId = HexString;
 
     /**
-     * A Token Address
+     * A Token Address, that contains both a Contract Address and the unique
+     * CIS-2 Token ID.
      */
     export type TokenAddress = {
         contract: ContractAddress;
@@ -449,16 +450,25 @@ function serializeCIS2OperatorOfQuery(query: CIS2.OperatorOfQuery): Buffer {
     return Buffer.concat([owner, address]);
 }
 
+/**
+ * Parses a token address from a Base58-string. Will throw if the Base58
+ * encoding is not a valid token address.
+ *
+ * @param str A Base58 encoded token address
+ * @returns A parsed token address
+ */
 export function tokenAddressFromBase58(str: Base58String): CIS2.TokenAddress {
     const bytes = new Buffer(bs58check.decode(str));
 
-    const firstBit = bytes[0];
-    const [a, i] = uleb128DecodeWithIndex(bytes, 1);
-    const [b, j] = uleb128DecodeWithIndex(bytes, i);
+    const firstByte = bytes[0];
+    const [a, i] = uleb128DecodeWithIndex(new Buffer(bytes.subarray(1)));
+    const [b, j] = uleb128DecodeWithIndex(new Buffer(bytes.subarray(i)));
     const tokenBytes = bytes.subarray(j);
 
-    if (firstBit !== 2) {
-        throw Error('First byte must be set to 2!');
+    if (firstByte !== 2) {
+        throw Error(
+            'Invalid token address: The Base58Check version byte is expected to be 2'
+        );
     }
 
     const contract = {

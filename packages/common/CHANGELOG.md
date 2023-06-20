@@ -3,7 +3,7 @@
 ## Unreleased
 
 ### Changes
-- Function `uleb128Decode` now correctly throws an error if the given input contains more than a single ULEB128 encoded number
+- Function `uleb128Decode` now parses correctly and throws an error if the given input contains more than a single ULEB128 encoded number.
 
 ### Added
 

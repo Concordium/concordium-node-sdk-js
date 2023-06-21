@@ -49,7 +49,7 @@ test('uleb128 decodes value as expected', () => {
     expect(decoded.toString()).toBe('9007199254741114');
 });
 
-test('uleb128 decodes value as expected', () => {
+test('uleb128 decodes value as expected with indexing', () => {
     let buf = Buffer.from('00', 'hex');
     let decoded = uleb128DecodeWithIndex(buf);
     expect(decoded.toString()).toBe('0,1');
@@ -77,6 +77,16 @@ test('uleb128 decodes value as expected', () => {
     buf = Buffer.from('fa80808080808010', 'hex');
     decoded = uleb128DecodeWithIndex(buf);
     expect(decoded.toString()).toBe('9007199254741114,8');
+
+    buf = Buffer.from('', 'hex');
+    expect(() => uleb128DecodeWithIndex(buf)).toThrowError(
+        'The ULEB128 encoding was not valid: The passed bytes must at least contain a single byte'
+    );
+
+    buf = Buffer.from('ffff', 'hex');
+    expect(() => uleb128DecodeWithIndex(buf)).toThrowError(
+        'The ULEB128 encoding was not valid: Could not find end of number'
+    );
 
     // Testing indexing
 

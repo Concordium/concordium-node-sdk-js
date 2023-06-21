@@ -24,7 +24,7 @@ import {
     uleb128Encode,
 } from '../uleb128';
 
-const TOKEN_ID_MAX_LENGTH = 256;
+const TOKEN_ID_MAX_LENGTH = 255;
 const TOKEN_AMOUNT_MAX_LENGTH = 37;
 const TOKEN_RECEIVE_HOOK_MAX_LENGTH = 100;
 
@@ -208,7 +208,7 @@ export const isContractAddress = (
     address: CIS2.Address
 ): address is ContractAddress => typeof address !== 'string';
 
-function serializeCIS2TokenId(tokenId: HexString): Buffer {
+function serializeCIS2TokenId(tokenId: CIS2.TokenId): Buffer {
     const serialized = Buffer.from(tokenId, 'hex');
 
     if (serialized.length > TOKEN_ID_MAX_LENGTH) {
@@ -218,6 +218,15 @@ function serializeCIS2TokenId(tokenId: HexString): Buffer {
     }
 
     return packBufferWithWord8Length(serialized);
+}
+
+function deserializeCIS2TokenId(buffer: Buffer): CIS2.TokenId {
+    if (buffer.length > TOKEN_ID_MAX_LENGTH) {
+        throw Error(
+            `Token ID exceeds maximum size of ${TOKEN_ID_MAX_LENGTH} bytes`
+        );
+    }
+    return buffer.toString('hex');
 }
 
 function serializeTokenAmount(amount: bigint): Buffer {
@@ -476,7 +485,7 @@ export function tokenAddressFromBase58(str: Base58String): CIS2.TokenAddress {
         subindex,
     };
 
-    const id = tokenIdFromBuffer(tokenIdBytes);
+    const id = deserializeCIS2TokenId(tokenIdBytes);
 
     return {
         contract,
@@ -505,13 +514,6 @@ export function tokenAddressToBase58(
     ]);
 
     return bs58check.encode(bytes);
-}
-
-function tokenIdFromBuffer(buffer: Buffer): CIS2.TokenId {
-    if (buffer.length > TOKEN_ID_MAX_LENGTH) {
-        throw Error('Invalid TokenId: Must not be longer than 255 bytes');
-    }
-    return buffer.toString('hex');
 }
 
 /**

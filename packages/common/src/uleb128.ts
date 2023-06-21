@@ -33,6 +33,12 @@ export function uleb128DecodeWithIndex(
     bytes: Buffer,
     index = 0
 ): [bigint, number] {
+    if (bytes.length === 0) {
+        throw Error(
+            'The ULEB128 encoding was not valid: The passed bytes must at least contain a single byte'
+        );
+    }
+
     let acc = 0n;
     let nextIndex = index;
 
@@ -45,11 +51,13 @@ export function uleb128DecodeWithIndex(
         acc += c;
 
         if ((byte & 0x80) === 0x00) {
-            break;
+            return [acc, nextIndex];
         }
     }
 
-    return [acc, nextIndex];
+    throw Error(
+        'The ULEB128 encoding was not valid: Could not find end of number'
+    );
 }
 
 /**

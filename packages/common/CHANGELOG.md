@@ -7,6 +7,7 @@
 - Bumped @concordium/rust-bindings to 1.0.0. (Throws proper `Error`s when execution fails for any WASM entrypoint, with improved error messages)
 - Updated `types.ts` to conform to updated GRPC API, which includes adding more variants to existing types (all new variants take effect from protocol version 6):
   - `ChainParametersV2` added to `ChainParameters`
+  - `ChainParameters` field `microGTUPerEuro` is now called `microCCDPerEuro`.
   - The following parameters on `ChainParametersV1` have been moved into objects to align with GRPC api:
     - `passiveFinalizationCommission`, `passiveBakingCommission`, `passiveTransactionCommission`, `finalizationCommissionRange`, `bakingCommissionRange`, `transactionCommissionRange`, `minimumEquityCapital`, `capitalBound`, `leverageBound` have been moved to `poolParameters`
     - `poolOwnerCooldown`, `delegatorCooldown` have been moved to `cooldownParameters` 

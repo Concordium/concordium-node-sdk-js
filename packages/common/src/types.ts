@@ -288,140 +288,212 @@ export type MintDistributionV1 = MintDistributionCommon;
 
 export type MintDistribution = MintDistributionV0 | MintDistributionV1;
 
+/** Common gas rewards properties across all protocol versions */
 export interface GasRewardsCommon {
+    /** The fractional amount paid to the baker */
     baker: number;
+    /** The fractional amount paid for an account creation */
     accountCreation: number;
+    /** The fractional amount paid for a chain update */
     chainUpdate: number;
 }
 
+/** Gas rewards properties for protocol version 1-5 ({@link ChainParametersV0} and {@link ChainParametersV1}). */
 export interface GasRewardsV0 extends GasRewardsCommon {
+    /** The fractional amount paid for including a finalization proof */
     finalizationProof: number;
 }
 
+/** Gas rewards properties from protocol version 6 ({@link ChainParametersV2}). */
 export type GasRewardsV1 = GasRewardsCommon;
 
+/** Common reward parameters used across all protocol versions */
 export interface RewardParametersCommon {
+    /** The current transaction fee distribution */
     transactionFeeDistribution: TransactionFeeDistribution;
 }
 
-/**
- * Used from protocol version 1-3
- */
+/** Reward parameters used from protocol version 1-3 ({@link ChainParametersV0}). */
 export interface RewardParametersV0 extends RewardParametersCommon {
+    /** The current mint distribution */
     mintDistribution: MintDistributionV0;
+    /** The current gas rewards parameters */
     gasRewards: GasRewardsV0;
 }
 
-/**
- * Used in protocol versions 4 and 5
- */
+/** Reward parameters used in protocol versions 4 and 5 ({@link ChainParametersV1}). */
 export interface RewardParametersV1 extends RewardParametersCommon {
+    /** The current mint distribution */
     mintDistribution: MintDistributionV1;
+    /** The current gas rewards parameters */
     gasRewards: GasRewardsV0;
 }
 
-/**
- * Used from protocol version 6
- */
+/** Reward parameters used from protocol version 6 ({@link ChainParametersV2}). */
 export interface RewardParametersV2 extends RewardParametersCommon {
+    /** The current mint distribution */
     mintDistribution: MintDistributionV1;
+    /** The current gas rewards parameters */
     gasRewards: GasRewardsV1;
 }
 
+/** Cooldown parameters used from protocol version 1-3 */
 export interface CooldownParametersV0 {
+    /** The baker cooldown period in {@link Epoch} epochs */
     bakerCooldownEpochs: Epoch;
 }
 
+/** Cooldown parameters used from protocol version 4 */
 export interface CooldownParametersV1 {
+    /** The pool owner (baker) cooldown period in seconds */
     poolOwnerCooldown: DurationSeconds;
+    /** The delegator cooldown period in seconds */
     delegatorCooldown: DurationSeconds;
 }
 
+/** Pool parameters used from protocol version 1-3 */
 export interface PoolParametersV0 {
+    /** The minimum threshold to stake to become a baker. */
     minimumThresholdForBaking: Amount;
 }
 
+/** Pool parameters used from protocol version 4 */
 export interface PoolParametersV1 {
+    /** Fraction of finalization rewards charged by the passive delegation. */
     passiveFinalizationCommission: number;
+    /** Fraction of baking rewards charged by the passive delegation.*/
     passiveBakingCommission: number;
+    /* Fraction of transaction rewards charged by the L-pool.*/
     passiveTransactionCommission: number;
+    /** Fraction of finalization rewards charged by the pool owner. */
     finalizationCommissionRange: InclusiveRange<number>;
+    /** Fraction of baking rewards charged by the pool owner. */
     bakingCommissionRange: InclusiveRange<number>;
+    /** Fraction of transaction rewards charged by the pool owner. */
     transactionCommissionRange: InclusiveRange<number>;
+    /** Minimum equity capital required for a new baker.*/
     minimumEquityCapital: Amount;
+    /**
+     * Maximum fraction of the total staked capital of that a new baker can
+     * have.
+     */
     capitalBound: number;
+    /**
+     * The maximum leverage that a baker can have as a ratio of total stake
+     * to equity capital.
+     */
     leverageBound: Ratio;
 }
 
+/**
+ * Time parameters used from protocol version 4
+ * These consist of the reward period length and the mint rate per payday. These are coupled as
+ * a change to either affects the overall rate of minting.
+ */
 export interface TimeParametersV1 {
-    /**
-     * In epochs
-     */
+    /** The length of a reward period, in {@link Epoch} epochs. */
     rewardPeriodLength: Epoch;
+    /** The rate at which CCD is minted per payday. */
     mintPerPayday: number;
 }
 
+/** Parameters that determine timeouts in the consensus protocol used from protocol version 6. */
 export interface TimeoutParameters {
-    /**
-     * In milliseconds.
-     */
+    /** The base value for triggering a timeout, in milliseconds. */
     timeoutBase: Duration;
+    /** Factor for increasing the timeout. Must be greater than 1. */
     timeoutIncrease: Ratio;
+    /** Factor for decreasing the timeout. Must be between 0 and 1. */
     timeoutDecrease: Ratio;
 }
 
+/** Consensus parameters, used from protocol version 6 */
 export interface ConsensusParameters {
+    /** Parameters controlling round timeouts. */
     timeoutParameters: TimeoutParameters;
+    /** Minimum time interval between blocks. */
     minBlockTime: Duration;
+    /** Maximum energy allowed per block. */
     blockEnergyLimit: Energy;
 }
 
+/**
+ * Finalization committee parameters, used from protocol version 6
+ */
 export interface FinalizationCommitteeParameters {
+    /** The minimum size of a finalization committee before `finalizer_relative_stake_threshold` takes effect. */
     minimumFinalizers: number;
+    /** The maximum size of a finalization committee. */
     maximumFinalizers: number;
+    /**
+     * The threshold for determining the stake required for being eligible the finalization committee.
+     * The amount is given by `total stake in pools * finalizer_relative_stake_threshold`
+     */
     finalizerRelativeStakeThreshold: number;
 }
 
+/** Common chain parameters across all protocol versions */
 export interface ChainParametersCommon {
+    /** Rate of euros per energy */
     euroPerEnergy: ExchangeRate;
-    microGTUPerEuro: ExchangeRate;
+    /** Rate of micro CCD per euro */
+    microCCDPerEuro: ExchangeRate;
+    /** Limit for the number of account creations in a block */
     accountCreationLimit: number;
+    /** The chain foundation account */
     foundationAccount: Base58String;
 }
 
-/**
- * Used from protocol version 1-3
- */
+/** Chain parameters used from protocol version 1-3 */
 export type ChainParametersV0 = ChainParametersCommon &
     CooldownParametersV0 &
     PoolParametersV0 &
     RewardParametersV0 & {
+        /** The election difficulty for consensus lottery */
         electionDifficulty: number;
     };
 
-/**
- * Used in protocol versions 4 and 5
- */
+/** Chain parameters used in protocol versions 4 and 5 */
 export type ChainParametersV1 = ChainParametersCommon &
     RewardParametersV1 & {
+        /**
+         * The extra number of epochs before reduction in stake
+         * or baker deregistration is completed.
+         */
         cooldownParameters: CooldownParametersV1;
+        /**
+         * The time parameters, indicating the mint rate and
+         * the reward period length, i.e. the tiem between paydays
+         */
         timeParameters: TimeParametersV1;
+        /** Parameters governing baking pools and their commissions. */
         poolParameters: PoolParametersV1;
+        /** The election difficulty for consensus lottery */
         electionDifficulty: number;
     };
 
-/**
- * Used from protocol version 6
- */
+/** Chain parameters used from protocol version 6 */
 export type ChainParametersV2 = ChainParametersCommon &
     RewardParametersV2 & {
+        /** The consensus parameters. */
         consensusParameters: ConsensusParameters;
+        /**
+         * The extra number of epochs before reduction in stake
+         * or baker deregistration is completed.
+         */
         cooldownParameters: CooldownParametersV1;
+        /**
+         * The time parameters, indicating the mint rate and
+         * the reward period length, i.e. the tiem between paydays
+         */
         timeParameters: TimeParametersV1;
+        /** Parameters governing baking pools and their commissions. */
         poolParameters: PoolParametersV1;
+        /** The finalization committee parameters */
         finalizationCommiteeParameters: FinalizationCommitteeParameters;
     };
 
+/** Union of all chain parameters across all protocol versions */
 export type ChainParameters =
     | ChainParametersV0
     | ChainParametersV1
@@ -628,6 +700,9 @@ export interface RewardStatusV1 extends RewardStatusCommon {
 export type RewardStatus = RewardStatusV0 | RewardStatusV1;
 export type TokenomicsInfo = RewardStatus;
 
+/**
+ * Common properties for block info across all protocol versions
+ */
 export interface BlockInfoCommon {
     blockParent: HexString;
     blockHash: HexString;
@@ -652,17 +727,24 @@ export interface BlockInfoCommon {
     protocolVersion: bigint;
 }
 
-/** Used for protocol version 1-5 */
+/**
+ * Block info used for protocol version 1-5
+ */
 export interface BlockInfoV0 extends BlockInfoCommon {
     blockSlot: bigint;
 }
 
-/** Used from protocol version 6 */
+/**
+ * Block info used for protocol version 6
+ */
 export interface BlockInfoV1 extends BlockInfoCommon {
     round: Round;
     epoch: Epoch;
 }
 
+/**
+ * Union of all block info versions
+ */
 export type BlockInfo = BlockInfoV0 | BlockInfoV1;
 
 export interface CommonBlockInfo {

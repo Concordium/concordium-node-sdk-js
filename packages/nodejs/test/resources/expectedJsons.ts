@@ -1613,7 +1613,7 @@ export const regularAccountInfo = {
 export const chainParameters: ChainParametersV1 = {
     electionDifficulty: 0.025,
     euroPerEnergy: { numerator: 1n, denominator: 50000n },
-    microGTUPerEuro: {
+    microCCDPerEuro: {
         numerator: 697170112016908288n,
         denominator: 7989497115n,
     },
@@ -1651,7 +1651,7 @@ export const chainParameters: ChainParametersV1 = {
 export const oldChainParameters: ChainParametersV0 = {
     electionDifficulty: 0.025,
     euroPerEnergy: { numerator: 1n, denominator: 50000n },
-    microGTUPerEuro: { numerator: 50000000n, denominator: 1n },
+    microCCDPerEuro: { numerator: 50000000n, denominator: 1n },
     accountCreationLimit: 10,
     foundationAccount: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
     bakerCooldownEpochs: 166n,

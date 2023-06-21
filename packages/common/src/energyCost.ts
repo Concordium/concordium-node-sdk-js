@@ -64,7 +64,7 @@ export function getEnergyCost(
  */
 export function getExchangeRate({
     euroPerEnergy,
-    microGTUPerEuro,
+    microCCDPerEuro: microGTUPerEuro,
 }: ChainParameters): Ratio {
     const denominator = BigInt(
         euroPerEnergy.denominator * microGTUPerEuro.denominator

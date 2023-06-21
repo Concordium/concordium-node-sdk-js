@@ -255,7 +255,7 @@ function translateChainParametersCommon(
 ): v1.ChainParametersCommon {
     return {
         euroPerEnergy: unwrap(params.euroPerEnergy?.value),
-        microGTUPerEuro: unwrap(params.microCcdPerEuro?.value),
+        microCCDPerEuro: unwrap(params.microCcdPerEuro?.value),
         accountCreationLimit: unwrap(params.accountCreationLimit?.value),
         foundationAccount: unwrapToBase58(params.foundationAccount),
     };

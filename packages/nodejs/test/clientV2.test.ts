@@ -213,6 +213,7 @@ test.each([clientV2, clientWeb])(
         expect(status).toEqual(expected.passiveDelegationStatus);
     }
 );
+
 test.each([clientV2, clientWeb])(
     'getPoolInfo corresponds to getPoolStatus with bakerId (with pending change)',
     async (client) => {

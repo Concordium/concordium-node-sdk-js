@@ -1,5 +1,13 @@
 # Changelog
 
+### Breaking changes
+
+- Updated `types.ts` to conform to updated GRPC API, which includes adding more variants to existing types (all new variants take effect from protocol version 6):
+  - `ChainParametersV2` added to `ChainParameters`
+  - `BlockInfo` changed to `BlockInfoV0 | BlockInfoV1`
+  - `ConsensusStatus` changed to `ConsensusStatusV0 | ConsensusStatusV1`
+  - `ElectionInfo` changed to `ElectionInfoV0 | ElectionInfoV1`
+
 ### Fixed
 
 - Cost calculation for `deployModule` transaction.
@@ -7,6 +15,8 @@
 ### Added
 
 - A `parseWallet` function to parse wallet export files
+- Helper functions to determine version of versioned types mentioned in "Breaking Changes" have been added.
+- Support for new chain update types.
 
 ## 7.0.0 2023-05-15 
 

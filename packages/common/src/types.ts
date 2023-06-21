@@ -309,13 +309,16 @@ export interface RewardParametersV0 extends RewardParametersCommon {
 }
 
 /**
- * Used from protocol version 4
+ * Used from protocol version 4-5
  */
 export interface RewardParametersV1 extends RewardParametersCommon {
     mintDistribution: MintDistributionV1;
     gasRewards: GasRewardsV0;
 }
 
+/**
+ * Used from protocol version 6
+ */
 export interface RewardParametersV2 extends RewardParametersCommon {
     mintDistribution: MintDistributionV1;
     gasRewards: GasRewardsV1;

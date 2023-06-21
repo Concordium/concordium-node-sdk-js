@@ -4,7 +4,9 @@ import {
     AccountTransaction,
     AccountTransactionSignature,
     buildInvoker,
+    ConsensusStatus,
     ConsensusStatusV0,
+    ConsensusStatusV1,
     ContractAddress,
     ContractContext,
     CryptographicParameters,
@@ -130,18 +132,19 @@ export class JsonRpcClient {
         return this.sendRawTransaction(serializedDetails.toString('base64'));
     }
 
-    async getConsensusStatus(): Promise<ConsensusStatusV0> {
+    async getConsensusStatus(): Promise<ConsensusStatus> {
         const response = await this.provider.request('getConsensusStatus');
+        type CS = ConsensusStatusV0 & ConsensusStatusV1;
 
         // TODO Avoid code duplication with nodejs client
-        const datePropertyKeys: (keyof ConsensusStatusV0)[] = [
+        const datePropertyKeys: (keyof CS)[] = [
             'blockLastReceivedTime',
             'blockLastArrivedTime',
             'genesisTime',
             'currentEraGenesisTime',
             'lastFinalizedTime',
         ];
-        const bigIntPropertyKeys: (keyof ConsensusStatusV0)[] = [
+        const bigIntPropertyKeys: (keyof CS)[] = [
             'epochDuration',
             'slotDuration',
             'bestBlockHeight',
@@ -150,9 +153,13 @@ export class JsonRpcClient {
             'blocksVerifiedCount',
             'blocksReceivedCount',
             'protocolVersion',
+            'currentTimeoutDuration',
+            'currentRound',
+            'currentEpoch',
+            'triggerBlockTime',
         ];
 
-        const res = transformJsonResponse<ConsensusStatusV0>(
+        const res = transformJsonResponse<ConsensusStatus>(
             response,
             buildJsonResponseReviver(datePropertyKeys, bigIntPropertyKeys),
             intToStringTransformer(bigIntPropertyKeys)

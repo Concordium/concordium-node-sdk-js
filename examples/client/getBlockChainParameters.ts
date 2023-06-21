@@ -3,6 +3,7 @@ import {
     ChainParameters,
     createConcordiumClient,
     isChainParametersV1,
+    isChainParametersV2,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -53,13 +54,17 @@ const client = createConcordiumClient(
 
     const euroPerEnergy =
         cp.euroPerEnergy.numerator + '/' + cp.euroPerEnergy.denominator;
-    console.log('Election difficulty:', cp.electionDifficulty);
     console.log('Account creation limit:', cp.accountCreationLimit);
     console.log('Euro per Energy:', euroPerEnergy);
 
-    // Check if the ChainParameters is V1, which it will be for all newer blocks
-    if (isChainParametersV1(cp)) {
-        console.log('Minimum equity capital:', cp.minimumEquityCapital);
+    // Check version of chain parameters
+    if (isChainParametersV2(cp)) {
+        console.log('Minimum block time', cp.consensusParameters.minBlockTime);
+    } else if (isChainParametersV1(cp)) {
+        console.log(
+            'Minimum equity capital:',
+            cp.poolParameters.minimumEquityCapital
+        );
     } else {
         console.log(
             'Chain parameters is V0 and does not contain information on minimum equity capital'

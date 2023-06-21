@@ -21,7 +21,7 @@ This document describes the helper class for working with CIS-2 contracts
 ## CIS2Contract
 
 The CIS2Contract class wraps the
-[ConcordiumNodeClient](../modules/Common_GRPC_Client.html),
+[ConcordiumNodeClient](../classes/Common_GRPC_Client.ConcordiumNodeClient.html),
 defining an interface matching the [CIS-2
 standard](https://proposals.concordium.software/CIS/cis-2.html).
 
@@ -52,7 +52,7 @@ The following example demonstrates how to send either a single/list of CIS-2
 using private keys for the sender account to sign the transaction before
 submitting to the node.
 
-Refer to the {page transactions.md transactions page} to see how to create an
+Refer to the {@page transactions.md transactions page} to see how to create an
 `AccountSigner`.
 
 ```ts
@@ -116,7 +116,7 @@ The following example demonstrates how to send either a single/list of CIS-2
 on using private keys for the sender account to sign the transaction before
 submitting to the node.
 
-Refer to the {page transactions.md transactions page} to see how to create an
+Refer to the {@page transactions.md transactions page} to see how to create an
 `AccountSigner`.
 
 ```ts

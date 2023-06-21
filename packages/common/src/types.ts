@@ -309,7 +309,7 @@ export interface RewardParametersV0 extends RewardParametersCommon {
 }
 
 /**
- * Used from protocol version 4-5
+ * Used in protocol versions 4 and 5
  */
 export interface RewardParametersV1 extends RewardParametersCommon {
     mintDistribution: MintDistributionV1;
@@ -396,7 +396,7 @@ export type ChainParametersV0 = ChainParametersCommon &
     };
 
 /**
- * Used from protocol version 4-5
+ * Used in protocol versions 4 and 5
  */
 export type ChainParametersV1 = ChainParametersCommon &
     RewardParametersV1 & {

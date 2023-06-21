@@ -508,7 +508,7 @@ export function tokenAddressToBase58(
 }
 
 function tokenIdFromBuffer(buffer: Buffer): CIS2.TokenId {
-    if (buffer.length > 255) {
+    if (buffer.length > TOKEN_ID_MAX_LENGTH) {
         throw Error('Invalid TokenId: Must not be longer than 255 bytes');
     }
     return buffer.toString('hex');

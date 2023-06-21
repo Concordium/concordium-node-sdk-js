@@ -32,10 +32,14 @@ export type JsonString = string;
 
 export type ModuleRef = HexString;
 
-// A number of milliseconds
+/** A number of milliseconds */
 export type Duration = bigint;
-// Unix timestamp in milliseconds
+/** Unix timestamp in milliseconds */
 export type Timestamp = bigint;
+/** A consensus round */
+export type Round = bigint;
+/** An amount of energy */
+export type Energy = bigint;
 
 /**
  * Returns a union of all keys of type T with values matching type V.
@@ -369,7 +373,7 @@ export interface TimeoutParameters {
 export interface ConsensusParameters {
     timeoutParameters: TimeoutParameters;
     minBlockTime: Duration;
-    blockEnergyLimit: bigint;
+    blockEnergyLimit: Energy;
 }
 
 export interface FinalizationCommitteeParameters {
@@ -382,7 +386,7 @@ export interface ChainParametersCommon {
     euroPerEnergy: ExchangeRate;
     microGTUPerEuro: ExchangeRate;
     accountCreationLimit: number;
-    foundationAccount: string;
+    foundationAccount: Base58String;
 }
 
 /**
@@ -655,8 +659,8 @@ export interface BlockInfoV0 extends BlockInfoCommon {
 
 /** Used from protocol version 6 */
 export interface BlockInfoV1 extends BlockInfoCommon {
-    round: bigint;
-    epoch: bigint;
+    round: Round;
+    epoch: Epoch;
 }
 
 export type BlockInfo = BlockInfoV0 | BlockInfoV1;
@@ -681,15 +685,15 @@ export type BlocksAtHeightRequest =
     | RelativeBlocksAtHeightRequest;
 
 export interface ConsensusStatusCommon {
-    bestBlock: string;
-    genesisBlock: string;
-    currentEraGenesisBlock: string;
-    lastFinalizedBlock: string;
+    bestBlock: HexString;
+    genesisBlock: HexString;
+    currentEraGenesisBlock: HexString;
+    lastFinalizedBlock: HexString;
 
     /**
      * In milliseconds
      */
-    epochDuration: bigint;
+    epochDuration: Duration;
     bestBlockHeight: bigint;
     lastFinalizedBlockHeight: bigint;
 
@@ -733,13 +737,16 @@ export interface ConsensusStatusV0 extends ConsensusStatusCommon {
     /**
      * In milliseconds
      */
-    slotDuration: bigint;
+    slotDuration: Duration;
 }
 
 export interface ConcordiumBFTStatus {
-    currentTimeoutDuration: bigint;
-    currentRound: bigint;
-    currentEpoch: bigint;
+    /**
+     * In milliseconds
+     */
+    currentTimeoutDuration: Duration;
+    currentRound: Round;
+    currentEpoch: Epoch;
     triggerBlockTime: Date;
 }
 

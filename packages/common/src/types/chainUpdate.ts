@@ -4,6 +4,7 @@ import {
     AuthorizationsV1,
     Base58String,
     Duration,
+    Energy,
     FinalizationCommitteeParameters,
     GasRewardsV0,
     GasRewardsV1,
@@ -108,7 +109,7 @@ export interface MinBlockTimeUpdate {
 
 export interface BlockEnergyLimitUpdate {
     updateType: UpdateType.BlockEnergyLimit;
-    update: bigint;
+    update: Energy;
 }
 
 export interface FinalizationCommitteeParametersUpdate {

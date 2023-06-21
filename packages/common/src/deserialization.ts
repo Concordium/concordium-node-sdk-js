@@ -31,13 +31,15 @@ export function deserializeUint8(source: Readable): number {
 export function deserializeContractState(
     contractName: string,
     schema: Buffer,
-    state: Buffer
+    state: Buffer,
+    verboseErrorMessage = false
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
     const serializedState = wasm.deserializeState(
         contractName,
         state.toString('hex'),
-        schema.toString('hex')
+        schema.toString('hex'),
+        verboseErrorMessage
     );
     try {
         return JSON.parse(serializedState);
@@ -219,15 +221,16 @@ export function deserializeTransaction(
  * @param moduleSchema The raw module schema as a buffer.
  * @param contractName The name of the contract where the receive function is located.
  * @param functionName The name of the receive function which return value you want to deserialize.
- * @param schemaVersion The schema version as a number. This parameter is optional,
- * if you provide a serialized versioned schema this argument won't be needed.
+ * @param schemaVersion The schema version as a number. This parameter is optional, if you provide a serialized versioned schema this argument won't be needed.
+ * @param verboseErrorMessage Whether errors are in a verbose format or not. Defaults to `false`.
  */
 export function deserializeReceiveReturnValue(
     returnValueBytes: Buffer,
     moduleSchema: Buffer,
     contractName: string,
     functionName: string,
-    schemaVersion?: number
+    schemaVersion?: number,
+    verboseErrorMessage = false
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
     const deserializedReturnValue = wasm.deserializeReceiveReturnValue(
@@ -235,7 +238,8 @@ export function deserializeReceiveReturnValue(
         moduleSchema.toString('hex'),
         contractName,
         functionName,
-        schemaVersion
+        schemaVersion,
+        verboseErrorMessage
     );
     try {
         return JSON.parse(deserializedReturnValue);
@@ -253,19 +257,22 @@ export function deserializeReceiveReturnValue(
  * @param moduleSchema The raw module schema as a buffer.
  * @param contractName The name of the contract where the receive function is located.
  * @param functionName The name of the receive function which error you want to deserialize.
+ * @param verboseErrorMessage Whether errors are in a verbose format or not. Defaults to `false`.
  */
 export function deserializeReceiveError(
     errorBytes: Buffer,
     moduleSchema: Buffer,
     contractName: string,
-    functionName: string
+    functionName: string,
+    verboseErrorMessage = false
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
     const deserializedError = wasm.deserializeReceiveError(
         errorBytes.toString('hex'),
         moduleSchema.toString('hex'),
         contractName,
-        functionName
+        functionName,
+        verboseErrorMessage
     );
     try {
         return JSON.parse(deserializedError);
@@ -279,20 +286,23 @@ export function deserializeReceiveError(
 
 /**
  * Deserializes an init function's error from a sequence of bytes into a json object.
- * @param returnValueBytes A buffer containing the error as raw bytes.
+ * @param errorBytes A buffer containing the error as raw bytes.
  * @param moduleSchema The raw module schema as a buffer.
  * @param contractName The name of the init function which error you want to deserialize.
+ * @param verboseErrorMessage Whether errors are in a verbose format or not. Defaults to `false`.
  */
 export function deserializeInitError(
     errorBytes: Buffer,
     moduleSchema: Buffer,
-    contractName: string
+    contractName: string,
+    verboseErrorMessage = false
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
     const deserializedError = wasm.deserializeInitError(
         errorBytes.toString('hex'),
         moduleSchema.toString('hex'),
-        contractName
+        contractName,
+        verboseErrorMessage
     );
     try {
         return JSON.parse(deserializedError);
@@ -308,15 +318,18 @@ export function deserializeInitError(
  * Given a binary value for a smart contract type, and the raw schema for that type, deserialize the value into the JSON representation.
  * @param value the value that should be deserialized.
  * @param rawSchema the schema for the type that the given value should be deserialized as
+ * @param verboseErrorMessage Whether errors are in a verbose format or not. Defaults to `false`.
  * @returns the deserialized value
  */
 export function deserializeTypeValue(
     value: Buffer,
-    rawSchema: Buffer
+    rawSchema: Buffer,
+    verboseErrorMessage = false
 ): SmartContractTypeValues {
     const deserializedValue = wasm.deserializeTypeValue(
         value.toString('hex'),
-        rawSchema.toString('hex')
+        rawSchema.toString('hex'),
+        verboseErrorMessage
     );
     return JSON.parse(deserializedValue);
 }

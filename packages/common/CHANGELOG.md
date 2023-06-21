@@ -1,7 +1,10 @@
 # Changelog
 
+## 8.0.0
+
 ### Breaking changes
 
+- Bumped @concordium/rust-bindings to 1.0.0. (Throws proper `Error`s when execution fails for any WASM entrypoint, with improved error messages)
 - Updated `types.ts` to conform to updated GRPC API, which includes adding more variants to existing types (all new variants take effect from protocol version 6):
   - `ChainParametersV2` added to `ChainParameters`
   - `BlockInfo` changed to `BlockInfoV0 | BlockInfoV1`
@@ -17,6 +20,24 @@
 - A `parseWallet` function to parse wallet export files
 - Helper functions to determine version of versioned types mentioned in "Breaking Changes" have been added.
 - Support for new chain update types.
+
+### Changed
+
+- The following functions now all have an additional parameter controlling whether errors are in a verbose format or not:
+    - `deserializeContractState`
+    - `deserializeReceiveReturnValue`
+    - `deserializeReceiveError`
+    - `deserializeInitError`
+    - `deserializeTypeValue`
+    - `serializeInitContractParameters`
+    - `serializeUpdateContractParameters`
+    - `serializeTypeValue`
+
+## 7.0.1 2023-05-25
+
+### Fixed
+
+- Cost calculation for `deployModule` transaction.
 
 ## 7.0.0 2023-05-15 
 

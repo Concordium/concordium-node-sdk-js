@@ -597,6 +597,7 @@ pub fn deserialize_state_aux(
     contract_name: &str,
     state_bytes: HexString,
     schema: HexString,
+    verbose_error_message: bool,
 ) -> Result<JsonString> {
     let module_schema: ModuleV0 = match from_bytes(&hex::decode(schema)?) {
         Ok(o) => o,
@@ -611,7 +612,7 @@ pub fn deserialize_state_aux(
         .as_ref()
         .ok_or_else(|| anyhow!("Unable to get state schema: not included in contract schema"))?;
 
-    deserialize_type_value(state_bytes, state_schema)
+    deserialize_type_value(state_bytes, state_schema, verbose_error_message)
 }
 
 /// Given the bytes of a receive function's return value, deserialize them to a
@@ -622,12 +623,17 @@ pub fn deserialize_receive_return_value_aux(
     contract_name: &str,
     function_name: &str,
     schema_version: Option<u8>,
+    verbose_error_message: bool,
 ) -> Result<JsonString> {
     let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &schema_version)?;
     let return_value_schema =
         module_schema.get_receive_return_value_schema(contract_name, function_name)?;
 
-    deserialize_type_value(return_value_bytes, &return_value_schema)
+    deserialize_type_value(
+        return_value_bytes,
+        &return_value_schema,
+        verbose_error_message,
+    )
 }
 
 /// Given the bytes of a receive function's error, deserialize them to a json
@@ -637,11 +643,12 @@ pub fn deserialize_receive_error_aux(
     schema: HexString,
     contract_name: &str,
     function_name: &str,
+    verbose_error_message: bool,
 ) -> Result<JsonString> {
     let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &None)?;
     let error_schema = module_schema.get_receive_error_schema(contract_name, function_name)?;
 
-    deserialize_type_value(error_bytes, &error_schema)
+    deserialize_type_value(error_bytes, &error_schema, verbose_error_message)
 }
 
 /// Given the bytes of an init function's error, deserialize them to a json
@@ -650,11 +657,12 @@ pub fn deserialize_init_error_aux(
     error_bytes: HexString,
     schema: HexString,
     contract_name: &str,
+    verbose_error_message: bool,
 ) -> Result<JsonString> {
     let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &None)?;
     let error_schema = module_schema.get_init_error_schema(contract_name)?;
 
-    deserialize_type_value(error_bytes, &error_schema)
+    deserialize_type_value(error_bytes, &error_schema, verbose_error_message)
 }
 
 /// Given parameters to a receive function as a stringified json, serialize them
@@ -665,12 +673,15 @@ pub fn serialize_receive_contract_parameters_aux(
     contract_name: &str,
     function_name: &str,
     schema_version: Option<u8>,
+    verbose_error_message: bool,
 ) -> Result<HexString> {
     let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &schema_version)?;
     let parameter_type = module_schema.get_receive_param_schema(contract_name, function_name)?;
     let value: SerdeValue = serde_json::from_str(&parameters)?;
 
-    let buf = parameter_type.serial_value(&value)?;
+    let buf = parameter_type
+        .serial_value(&value)
+        .map_err(|e| anyhow!("{}", e.display(verbose_error_message)))?;
 
     Ok(hex::encode(buf))
 }
@@ -682,12 +693,15 @@ pub fn serialize_init_contract_parameters_aux(
     schema: HexString,
     contract_name: &str,
     schema_version: Option<u8>,
+    verbose_error_message: bool,
 ) -> Result<HexString> {
     let module_schema = VersionedModuleSchema::new(&hex::decode(schema)?, &schema_version)?;
     let parameter_type = module_schema.get_init_param_schema(contract_name)?;
     let value: SerdeValue = serde_json::from_str(&parameters)?;
 
-    let buf = parameter_type.serial_value(&value)?;
+    let buf = parameter_type
+        .serial_value(&value)
+        .map_err(|e| anyhow!("{}", e.display(verbose_error_message)))?;
 
     Ok(hex::encode(buf))
 }
@@ -717,31 +731,46 @@ pub fn get_init_contract_parameter_schema_aux(
     )))
 }
 
-pub fn serialize_type_value_aux(parameters: JsonString, schema: HexString) -> Result<HexString> {
+pub fn serialize_type_value_aux(
+    parameters: JsonString,
+    schema: HexString,
+    verbose_error_message: bool,
+) -> Result<HexString> {
     let parameter_type: Type = from_bytes(&hex::decode(schema)?)?;
-    serialize_type_value(parameters, parameter_type)
+    serialize_type_value(parameters, parameter_type, verbose_error_message)
 }
 
-fn serialize_type_value(raw_value: JsonString, value_type: Type) -> Result<HexString> {
+fn serialize_type_value(
+    raw_value: JsonString,
+    value_type: Type,
+    verbose_error_message: bool,
+) -> Result<HexString> {
     let value: SerdeValue = serde_json::from_str(&raw_value)?;
 
-    let buf = value_type.serial_value(&value)?;
+    let buf = value_type
+        .serial_value(&value)
+        .map_err(|e| anyhow!("{}", e.display(verbose_error_message)))?;
     Ok(hex::encode(buf))
 }
 
 pub fn deserialize_type_value_aux(
     serialized_value: HexString,
     schema: HexString,
+    verbose_error_message: bool,
 ) -> Result<JsonString> {
     let value_type: Type = from_bytes(&hex::decode(schema)?)?;
-    deserialize_type_value(serialized_value, &value_type)
+    deserialize_type_value(serialized_value, &value_type, verbose_error_message)
 }
 
-fn deserialize_type_value(serialized_value: HexString, value_type: &Type) -> Result<JsonString> {
+fn deserialize_type_value(
+    serialized_value: HexString,
+    value_type: &Type,
+    verbose_error_message: bool,
+) -> Result<JsonString> {
     let mut cursor = Cursor::new(hex::decode(serialized_value)?);
     match value_type.to_json(&mut cursor) {
         Ok(v) => Ok(to_string(&v)?),
-        Err(_) => Err(anyhow!("Unable to parse value to json.")),
+        Err(e) => Err(anyhow!("{}", e.display(verbose_error_message))),
     }
 }
 
@@ -811,7 +840,7 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<JsonString> {
         &attribute_list,
         &credential_context,
     )
-    .context("Unable to generate proof.")?;
+    .context("Unable to generate proof")?;
 
     let out = IdProofOutput {
         credential: base16_encode_string(&credential),

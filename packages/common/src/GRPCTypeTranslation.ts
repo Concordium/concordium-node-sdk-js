@@ -651,12 +651,16 @@ export function passiveDelegationInfo(
     };
 }
 
+function translateProtocolVersion(pv: v2.ProtocolVersion): v1.ProtocolVersion {
+    return pv as number;
+}
+
 export function tokenomicsInfo(info: v2.TokenomicsInfo): v1.RewardStatus {
     switch (info.tokenomics.oneofKind) {
         case 'v0': {
             const v0 = info.tokenomics.v0;
             return {
-                protocolVersion: BigInt(v0.protocolVersion),
+                protocolVersion: translateProtocolVersion(v0.protocolVersion),
                 totalAmount: unwrap(v0.totalAmount?.value),
                 totalEncryptedAmount: unwrap(v0.totalEncryptedAmount?.value),
                 bakingRewardAccount: unwrap(v0.bakingRewardAccount?.value),
@@ -669,7 +673,7 @@ export function tokenomicsInfo(info: v2.TokenomicsInfo): v1.RewardStatus {
         case 'v1': {
             const v1 = info.tokenomics.v1;
             return {
-                protocolVersion: BigInt(v1.protocolVersion),
+                protocolVersion: translateProtocolVersion(v1.protocolVersion),
                 totalAmount: unwrap(v1.totalAmount?.value),
                 totalEncryptedAmount: unwrap(v1.totalEncryptedAmount?.value),
                 bakingRewardAccount: unwrap(v1.bakingRewardAccount?.value),
@@ -711,7 +715,7 @@ export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
         genesisTime: trTimestamp(ci.genesisTime),
         currentEraGenesisTime: trTimestamp(ci.currentEraGenesisTime),
         genesisIndex: unwrap(ci.genesisIndex?.value),
-        protocolVersion: BigInt(unwrap(ci.protocolVersion)),
+        protocolVersion: translateProtocolVersion(unwrap(ci.protocolVersion)),
         // Only include the following if they are not undefined
         ...(ci.blockReceivePeriodEma && {
             blockReceivePeriodEMA: ci.blockReceivePeriodEma,
@@ -2305,7 +2309,7 @@ export function blockInfo(blockInfo: v2.BlockInfo): v1.BlockInfo {
         transactionEnergyCost: unwrap(blockInfo.transactionsEnergyCost?.value),
         genesisIndex: unwrap(blockInfo.genesisIndex?.value),
         eraBlockHeight: Number(unwrap(blockInfo.eraBlockHeight?.value)),
-        protocolVersion: BigInt(blockInfo.protocolVersion),
+        protocolVersion: translateProtocolVersion(blockInfo.protocolVersion),
     };
 
     if (blockInfo.protocolVersion < v2.ProtocolVersion.PROTOCOL_VERSION_6) {

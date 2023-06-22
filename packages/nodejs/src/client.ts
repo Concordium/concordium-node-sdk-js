@@ -504,7 +504,6 @@ export default class ConcordiumNodeClient {
             'finalizationCount',
             'blocksVerifiedCount',
             'blocksReceivedCount',
-            'protocolVersion',
             'currentTimeoutDuration',
             'currentRound',
             'currentEpoch',
@@ -701,7 +700,6 @@ export default class ConcordiumNodeClient {
 
         const dates: DateKey[] = ['nextPaydayTime'];
         const bigInts: BigIntKey[] = [
-            'protocolVersion',
             'gasAccount',
             'totalAmount',
             'totalStakedCapital',

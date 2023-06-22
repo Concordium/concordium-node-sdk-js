@@ -58,6 +58,15 @@ export interface Versioned<T> {
     value: T;
 }
 
+export enum ProtocolVersion {
+    PV1,
+    PV2,
+    PV3,
+    PV4,
+    PV5,
+    PV6,
+}
+
 export enum AttributesKeys {
     firstName,
     lastName,
@@ -684,7 +693,7 @@ export interface BlockSummaryV1 extends BlockSummaryCommon {
 export type BlockSummary = BlockSummaryV0 | BlockSummaryV1;
 
 interface RewardStatusCommon {
-    protocolVersion?: bigint;
+    protocolVersion?: ProtocolVersion;
     totalAmount: Amount;
     totalEncryptedAmount: Amount;
     bakingRewardAccount: Amount;
@@ -699,7 +708,7 @@ export interface RewardStatusV1 extends RewardStatusCommon {
     nextPaydayTime: Date;
     nextPaydayMintRate: MintRate;
     totalStakedCapital: Amount;
-    protocolVersion: bigint;
+    protocolVersion: ProtocolVersion;
 }
 
 export type RewardStatus = RewardStatusV0 | RewardStatusV1;
@@ -749,7 +758,7 @@ export interface BlockInfoCommon {
     /** The height of this block relative to the (re)genesis block of its era */
     eraBlockHeight: number;
     /** The protocol version the block belongs to */
-    protocolVersion: bigint;
+    protocolVersion: ProtocolVersion;
 }
 
 /** Block info used for protocol version 1-5 */
@@ -863,7 +872,7 @@ export interface ConsensusStatusCommon {
     genesisIndex: number;
 
     /** Currently active protocol version. */
-    protocolVersion: bigint;
+    protocolVersion: ProtocolVersion;
 }
 
 /** Consensus status used for protocol version 1-5 */

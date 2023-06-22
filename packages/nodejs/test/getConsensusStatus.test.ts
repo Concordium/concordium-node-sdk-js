@@ -61,7 +61,7 @@ test('retrieves the consensus status from the node with correct types', async ()
             typeof consensusStatus.lastFinalizedBlockHeight === 'bigint'
         ).toBeTruthy(),
         expect(
-            typeof consensusStatus.protocolVersion === 'bigint'
+            typeof consensusStatus.protocolVersion === 'number'
         ).toBeTruthy(),
     ]);
 });

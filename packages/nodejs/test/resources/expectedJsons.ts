@@ -7,6 +7,7 @@ import {
     ElectionInfoV0,
     ModuleReference,
     NextUpdateSequenceNumbers,
+    ProtocolVersion,
 } from '@concordium/common-sdk';
 
 export const accountInfo = {
@@ -1782,7 +1783,7 @@ export const blockInfo: BlockInfoV0 = {
     transactionEnergyCost: 0n,
     genesisIndex: 1,
     eraBlockHeight: 1258806,
-    protocolVersion: 3n,
+    protocolVersion: ProtocolVersion.PV4,
 };
 
 export const bakers = [

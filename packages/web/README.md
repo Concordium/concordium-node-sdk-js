@@ -5,7 +5,7 @@
 Wrappers for interacting with the Concordium node, for the web environment.
 
 Please see the
-[documentation](https://rasmus-kirk.github.io/concordium-node-sdk-js/index.html)
+[documentation](https://developer.concordium.software/concordium-node-sdk-js/index.html)
 for more information
 
 **Table of Contents:**
@@ -35,7 +35,7 @@ The SDK provides a gRPC client, which can interact with the [Concordium
 Node](https://github.com/Concordium/concordium-node) using gRPC-web.
 
 For an overview of the endpoints, [click
-here](https://rasmus-kirk.github.io/concordium-node-sdk-js/modules/Common_GRPC_Client.html).
+here](https://developer.concordium.software/concordium-node-sdk-js/modules/Common_GRPC_Client.html).
 
 To create a client, the function `createConcordiumClient` can be used. It
 requires the address and port of the concordium node.
@@ -61,12 +61,12 @@ seconds. The options allowed here are those allowed by the
   should be used instead to communicate directly with a node
 > To migrate,the migration guide from the v1 client to the v2 client [can
   be found
-  here](https://rasmus-kirk.github.io/concordium-node-sdk-js/pages/misc-pages/grpc-migration.html),
+  here](https://developer.concordium.software/concordium-node-sdk-js/pages/misc-pages/grpc-migration.html),
   as the JSON-RPC's endpoints shares interface with the equivalent endpoints
   in the v1 gRPC client
 
 The SDK also provides a JSON-RPC client, [check here for the
-documentation](https://rasmus-kirk.github.io/concordium-node-sdk-js/pages/misc-pages/grpc-v1.html).
+documentation](https://developer.concordium.software/concordium-node-sdk-js/pages/misc-pages/grpc-v1.html).
 
 ## Creating buffers
 

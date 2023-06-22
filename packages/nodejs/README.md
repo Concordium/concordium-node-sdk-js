@@ -5,7 +5,7 @@
 Wrappers for interacting with the Concordium node, using nodejs.
 
 Please see the
-[documentation](https://rasmus-kirk.github.io/concordium-node-sdk-js/index.html)
+[documentation](https://developer.concordium.software/concordium-node-sdk-js/index.html)
 for more information
 
 ## ConcordiumNodeClient
@@ -14,7 +14,7 @@ The SDK provides a gRPC client, which can interact with the [Concordium
 Node](https://github.com/Concordium/concordium-node)
 
 For an overview of the endpoints, [click
-here](https://rasmus-kirk.github.io/concordium-node-sdk-js/modules/Common_GRPC_Client.html).
+here](https://developer.concordium.software/concordium-node-sdk-js/modules/Common_GRPC_Client.html).
 
 To create a client, the function `createConcordiumClient` can be used. It
 requires the address and port of the node.  It also requires credentials to
@@ -45,6 +45,6 @@ TLS, for a TLS connection to work. Otherwise an insecure connection can be
 created by using `credentials.createInsecure()` instead.
 
 To see the documentation for the deprecated v1 client, [click
-here](https://rasmus-kirk.github.io/concordium-node-sdk-js/pages/misc-pages/grpc-v1.html).
+here](https://developer.concordium.software/concordium-node-sdk-js/pages/misc-pages/grpc-v1.html).
 For an overview of how to migrate from the v1 client to the v2 client, [click
-here](https://rasmus-kirk.github.io/concordium-node-sdk-js/pages/misc-pages/grpc-migration.html).
+here](https://developer.concordium.software/concordium-node-sdk-js/pages/misc-pages/grpc-migration.html).

@@ -421,13 +421,14 @@ export interface ConsensusParameters {
  * Finalization committee parameters, used from protocol version 6
  */
 export interface FinalizationCommitteeParameters {
-    /** The minimum size of a finalization committee before `finalizer_relative_stake_threshold` takes effect. */
+    /** The minimum size of a finalization committee before `finalizerRelativeStakeThreshold` takes effect. */
     minimumFinalizers: number;
     /** The maximum size of a finalization committee. */
     maximumFinalizers: number;
     /**
      * The threshold for determining the stake required for being eligible the finalization committee.
-     * The amount is given by `total stake in pools * finalizer_relative_stake_threshold`
+     * The amount is given by `total stake in pools * finalizerRelativeStakeThreshold`.
+     * Subsequently, this will alwas be a number between 0 and 1.
      */
     finalizerRelativeStakeThreshold: number;
 }

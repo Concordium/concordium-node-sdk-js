@@ -3,7 +3,13 @@ import {
     AuthorizationsV0,
     AuthorizationsV1,
     Base58String,
+    Duration,
+    Energy,
+    FinalizationCommitteeParameters,
+    GasRewardsV0,
+    GasRewardsV1,
     HexString,
+    TimeoutParameters,
 } from '..';
 import type {
     IpInfo,
@@ -12,124 +18,178 @@ import type {
     ExchangeRate,
     TransactionFeeDistribution,
     MintDistribution,
-    GasRewards,
     MintRate,
     CommissionRates,
 } from '../types';
 
-export interface MintDistributionUpdate {
-    updateType: UpdateType.MintDistribution;
-    update: MintDistribution;
-}
+type ChainUpdate<UpdateType, T> = {
+    /** The type of the update */
+    updateType: UpdateType;
+    /** The parameters used for the update */
+    update: T;
+};
 
-export interface FoundationAccountUpdate {
-    updateType: UpdateType.FoundationAccount;
-    update: FoundationAccount;
-}
+/** An update to mint distribution parameters */
+export type MintDistributionUpdate = ChainUpdate<
+    UpdateType.MintDistribution,
+    MintDistribution
+>;
 
-export interface ElectionDifficultyUpdate {
-    updateType: UpdateType.ElectionDifficulty;
-    update: ElectionDifficulty;
-}
+/** An update to the foundation account */
+export type FoundationAccountUpdate = ChainUpdate<
+    UpdateType.FoundationAccount,
+    FoundationAccount
+>;
 
-export interface EuroPerEnergyUpdate {
-    updateType: UpdateType.EuroPerEnergy;
-    update: ExchangeRate;
-}
+/** An update to election difficulty parameters */
+export type ElectionDifficultyUpdate = ChainUpdate<
+    UpdateType.ElectionDifficulty,
+    ElectionDifficulty
+>;
 
-export interface MicroGtuPerEuroUpdate {
-    updateType: UpdateType.MicroGtuPerEuro;
-    update: ExchangeRate;
-}
+/** An update to the euro per energy exchange rate */
+export type EuroPerEnergyUpdate = ChainUpdate<
+    UpdateType.EuroPerEnergy,
+    ExchangeRate
+>;
 
-export interface TransactionFeeDistributionUpdate {
-    updateType: UpdateType.TransactionFeeDistribution;
-    update: TransactionFeeDistribution;
-}
+/** An update to the micro CCD per euro exchange rate */
+export type MicroCCDPerEuroUpdate = ChainUpdate<
+    UpdateType.MicroCCDPerEuro,
+    ExchangeRate
+>;
 
-export interface GasRewardsUpdate {
-    updateType: UpdateType.GasRewards;
-    update: GasRewards;
-}
+/** An update to transaction fee distribution parameters */
+export type TransactionFeeDistributionUpdate = ChainUpdate<
+    UpdateType.TransactionFeeDistribution,
+    TransactionFeeDistribution
+>;
 
-export interface AddAnonymityRevokerUpdate {
-    updateType: UpdateType.AddAnonymityRevoker;
-    update: AddAnonymityRevoker;
-}
+/** An update to gas reward parameters for protocol version 1-5 */
+export type GasRewardsV0Update = ChainUpdate<
+    UpdateType.GasRewards,
+    GasRewardsV0
+>;
 
-export interface AddIdentityProviderUpdate {
-    updateType: UpdateType.AddIdentityProvider;
-    update: AddIdentityProvider;
-}
+/** An update to gas reward parameters from protocol version 6 */
+export type GasRewardsV1Update = ChainUpdate<
+    UpdateType.GasRewardsCpv2,
+    GasRewardsV1
+>;
 
-export interface CooldownParametersUpdate {
-    updateType: UpdateType.CooldownParameters;
-    update: CooldownParameters;
-}
+/** An update to add an anonymity revoker */
+export type AddAnonymityRevokerUpdate = ChainUpdate<
+    UpdateType.AddAnonymityRevoker,
+    AddAnonymityRevoker
+>;
 
-export interface TimeParametersUpdate {
-    updateType: UpdateType.TimeParameters;
-    update: TimeParameters;
-}
+/** An update to add an identity provider */
+export type AddIdentityProviderUpdate = ChainUpdate<
+    UpdateType.AddIdentityProvider,
+    AddIdentityProvider
+>;
 
-export interface ProtocolUpdate {
-    updateType: UpdateType.Protocol;
-    update: ProtocolUpdateDetails;
-}
+/** An update to staking cooldown parameters */
+export type CooldownParametersUpdate = ChainUpdate<
+    UpdateType.CooldownParameters,
+    CooldownParameters
+>;
 
-export interface PoolParametersUpdate {
-    updateType: UpdateType.PoolParameters;
-    update: PoolParameters;
-}
+/** An update to time parameters */
+export type TimeParametersUpdate = ChainUpdate<
+    UpdateType.TimeParameters,
+    TimeParameters
+>;
 
-export interface BakerStakeThresholdUpdate {
-    updateType: UpdateType.BakerStakeThreshold;
-    update: BakerStakeThreshold;
-}
+/** An update holding a protocol update */
+export type ProtocolUpdate = ChainUpdate<
+    UpdateType.Protocol,
+    ProtocolUpdateDetails
+>;
 
-export interface Level1Update {
-    updateType: UpdateType.Level1;
-    update: KeyUpdate;
-}
+/** An update to baker pool parameters */
+export type PoolParametersUpdate = ChainUpdate<
+    UpdateType.PoolParameters,
+    PoolParameters
+>;
 
-export interface RootUpdate {
-    updateType: UpdateType.Root;
-    update: KeyUpdate;
-}
+/** An update to baker stake threshold parameters */
+export type BakerStakeThresholdUpdate = ChainUpdate<
+    UpdateType.BakerStakeThreshold,
+    BakerStakeThreshold
+>;
 
-export interface PendingHigherLevelKeyUpdate {
-    updateType: UpdateType.HigherLevelKeyUpdate;
-    update: HigherLevelKeyUpdate;
-}
+/** An update to timeout parameters, used from protocol version 6 */
+export type TimeoutParametersUpdate = ChainUpdate<
+    UpdateType.TimeoutParameters,
+    TimeoutParameters
+>;
 
-export interface PendingAuthorizationKeysUpdate {
-    updateType: UpdateType.AuthorizationKeysUpdate;
-    update: AuthorizationKeysUpdate;
-}
+/** An update to mininum time between blocks, used from protocol version 6 */
+export type MinBlockTimeUpdate = ChainUpdate<UpdateType.MinBlockTime, Duration>;
 
+/** An update to maximum amount of energy per block, used from protocol version 6 */
+export type BlockEnergyLimitUpdate = ChainUpdate<
+    UpdateType.BlockEnergyLimit,
+    Energy
+>;
+
+/** An update to finalization committee parameters, used from protocol version 6 */
+export type FinalizationCommitteeParametersUpdate = ChainUpdate<
+    UpdateType.FinalizationCommitteeParameters,
+    FinalizationCommitteeParameters
+>;
+
+/** An update to level 1 key */
+export type Level1Update = ChainUpdate<UpdateType.Level1, KeyUpdate>;
+
+/** An update to root key */
+export type RootUpdate = ChainUpdate<UpdateType.Root, KeyUpdate>;
+
+/** A pending update to higher level keys */
+export type PendingHigherLevelKeyUpdate = ChainUpdate<
+    UpdateType.HigherLevelKeyUpdate,
+    HigherLevelKeyUpdate
+>;
+
+/** A pending update to authorization keys */
+export type PendingAuthorizationKeysUpdate = ChainUpdate<
+    UpdateType.AuthorizationKeysUpdate,
+    AuthorizationKeysUpdate
+>;
+
+/** A union of chain updates, barring key updates */
 export type CommonUpdate =
-    | MicroGtuPerEuroUpdate
+    | MicroCCDPerEuroUpdate
     | EuroPerEnergyUpdate
     | TransactionFeeDistributionUpdate
     | FoundationAccountUpdate
     | MintDistributionUpdate
     | ProtocolUpdate
-    | GasRewardsUpdate
+    | GasRewardsV0Update
     | BakerStakeThresholdUpdate
     | ElectionDifficultyUpdate
     | AddAnonymityRevokerUpdate
     | AddIdentityProviderUpdate
     | CooldownParametersUpdate
     | PoolParametersUpdate
-    | TimeParametersUpdate;
+    | TimeParametersUpdate
+    | GasRewardsV1Update
+    | TimeoutParametersUpdate
+    | MinBlockTimeUpdate
+    | BlockEnergyLimitUpdate
+    | FinalizationCommitteeParametersUpdate;
 
+/** A union of chain updates */
 export type UpdateInstructionPayload = CommonUpdate | RootUpdate | Level1Update;
 
+/** A union of possible pending updates */
 export type PendingUpdate =
     | CommonUpdate
     | PendingHigherLevelKeyUpdate
     | PendingAuthorizationKeysUpdate;
 
+/** Chain update types */
 export enum UpdateType {
     Root = 'root',
     Level1 = 'level1',
@@ -138,7 +198,7 @@ export enum UpdateType {
     Protocol = 'protocol',
     ElectionDifficulty = 'electionDifficulty',
     EuroPerEnergy = 'euroPerEnergy',
-    MicroGtuPerEuro = 'microGtuPerEuro',
+    MicroCCDPerEuro = 'microCCDPerEuro',
     FoundationAccount = 'foundationAccount',
     MintDistribution = 'mintDistribution',
     TransactionFeeDistribution = 'transactionFeeDistribution',
@@ -151,6 +211,11 @@ export enum UpdateType {
     ProtocolUpdate = 'protocolUpdate',
     BakerStakeThreshold = 'bakerStakeThreshold',
     Emergency = 'emergency',
+    GasRewardsCpv2 = 'gasRewardsCpv2',
+    TimeoutParameters = 'timeoutParameters',
+    MinBlockTime = 'minBlockTime',
+    BlockEnergyLimit = 'blockEnergyLimit',
+    FinalizationCommitteeParameters = 'finalizationCommitteeParameters',
 }
 
 export type KeyUpdate = HigherLevelKeyUpdate | AuthorizationKeysUpdate;

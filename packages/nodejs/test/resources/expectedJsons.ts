@@ -1,7 +1,12 @@
 import {
     AccountAddress,
+    BlockInfoV0,
     CcdAmount,
+    ChainParametersV0,
+    ChainParametersV1,
+    ElectionInfoV0,
     ModuleReference,
+    NextUpdateSequenceNumbers,
 } from '@concordium/common-sdk';
 
 export const accountInfo = {
@@ -144,7 +149,7 @@ export const blockItemStatusUpdate = {
             type: 'updateTransaction',
             effectiveTime: 0n,
             payload: {
-                updateType: 'microGtuPerEuro',
+                updateType: 'microCCDPerEuro',
                 update: {
                     numerator: 17592435270983729152n,
                     denominator: 163844642115n,
@@ -383,7 +388,7 @@ export const passiveDelegatorRewardInfoList = [
     },
 ];
 
-export const electionInfoList = {
+export const electionInfoList: ElectionInfoV0 = {
     electionDifficulty: 0.025,
     electionNonce:
         '0bb2121015ddd9026d0c31a8b33499ce6049daf5696fe4e2cd94cff83ad331f2',
@@ -454,7 +459,7 @@ export const transactionEventList = [
         hash: '49d7b5c3234dc17bd904af0b63712dc0a6680b96ad556c5ac1103d8cdd128891',
         effectiveTime: 0n,
         payload: {
-            updateType: 'microGtuPerEuro',
+            updateType: 'microCCDPerEuro',
             update: {
                 denominator: 126230907181n,
                 numerator: 9397474320418127872n,
@@ -462,7 +467,7 @@ export const transactionEventList = [
         },
     },
 ];
-export const seqNums = {
+export const seqNums: NextUpdateSequenceNumbers = {
     rootKeys: 1n,
     level1Keys: 1n,
     level2Keys: 1n,
@@ -479,6 +484,10 @@ export const seqNums = {
     addIdentityProvider: 1n,
     cooldownParameters: 1n,
     timeParameters: 1n,
+    timeoutParameters: 1n,
+    blockEnergyLimit: 1n,
+    minBlockTime: 1n,
+    finalizationCommiteeParameters: 1n,
 };
 
 export const specialEventList = [
@@ -1601,61 +1610,63 @@ export const regularAccountInfo = {
     accountAddress: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
 };
 
-export const chainParameters = {
+export const chainParameters: ChainParametersV1 = {
     electionDifficulty: 0.025,
     euroPerEnergy: { numerator: 1n, denominator: 50000n },
-    microGTUPerEuro: {
+    microCCDPerEuro: {
         numerator: 697170112016908288n,
         denominator: 7989497115n,
     },
     accountCreationLimit: 10,
     foundationAccount: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
-    rewardPeriodLength: 24n,
-    mintPerPayday: 0.000261157877,
-    delegatorCooldown: 1209600n,
-    poolOwnerCooldown: 1814400n,
-    passiveFinalizationCommission: 1,
-    passiveBakingCommission: 0.12,
-    passiveTransactionCommission: 0.12,
-    finalizationCommissionRange: { min: 1, max: 1 },
-    bakingCommissionRange: { min: 0.1, max: 0.1 },
-    transactionCommissionRange: { min: 0.1, max: 0.1 },
-    minimumEquityCapital: 14000000000n,
-    capitalBound: 0.1,
-    leverageBound: { numerator: 3n, denominator: 1n },
-    rewardParameters: {
-        transactionFeeDistribution: { baker: 0.45, gasAccount: 0.45 },
-        gASRewards: {
-            baker: 0.25,
-            finalizationProof: 0.005,
-            accountCreation: 0.02,
-            chainUpdate: 0.005,
-        },
-        mintDistribution: { bakingReward: 0.6, finalizationReward: 0.3 },
+    timeParameters: {
+        mintPerPayday: 0.000261157877,
+        rewardPeriodLength: 24n,
     },
+    cooldownParameters: {
+        delegatorCooldown: 1209600n,
+        poolOwnerCooldown: 1814400n,
+    },
+    poolParameters: {
+        passiveFinalizationCommission: 1,
+        passiveBakingCommission: 0.12,
+        passiveTransactionCommission: 0.12,
+        finalizationCommissionRange: { min: 1, max: 1 },
+        bakingCommissionRange: { min: 0.1, max: 0.1 },
+        transactionCommissionRange: { min: 0.1, max: 0.1 },
+        minimumEquityCapital: 14000000000n,
+        capitalBound: 0.1,
+        leverageBound: { numerator: 3n, denominator: 1n },
+    },
+    transactionFeeDistribution: { baker: 0.45, gasAccount: 0.45 },
+    gasRewards: {
+        baker: 0.25,
+        finalizationProof: 0.005,
+        accountCreation: 0.02,
+        chainUpdate: 0.005,
+    },
+    mintDistribution: { bakingReward: 0.6, finalizationReward: 0.3 },
 };
 
-export const oldChainParameters = {
+export const oldChainParameters: ChainParametersV0 = {
     electionDifficulty: 0.025,
     euroPerEnergy: { numerator: 1n, denominator: 50000n },
-    microGTUPerEuro: { numerator: 50000000n, denominator: 1n },
+    microCCDPerEuro: { numerator: 50000000n, denominator: 1n },
     accountCreationLimit: 10,
     foundationAccount: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
     bakerCooldownEpochs: 166n,
     minimumThresholdForBaking: 15000000000n,
-    rewardParameters: {
-        transactionFeeDistribution: { baker: 0.45, gasAccount: 0.45 },
-        gASRewards: {
-            baker: 0.25,
-            finalizationProof: 0.005,
-            accountCreation: 0.02,
-            chainUpdate: 0.005,
-        },
-        mintDistribution: {
-            bakingReward: 0.6,
-            finalizationReward: 0.3,
-            mintPerSlot: 7.555665e-10,
-        },
+    transactionFeeDistribution: { baker: 0.45, gasAccount: 0.45 },
+    gasRewards: {
+        baker: 0.25,
+        finalizationProof: 0.005,
+        accountCreation: 0.02,
+        chainUpdate: 0.005,
+    },
+    mintDistribution: {
+        bakingReward: 0.6,
+        finalizationReward: 0.3,
+        mintPerSlot: 7.555665e-10,
     },
 };
 
@@ -1750,7 +1761,7 @@ export const blocksAtHeight = [
     '99ceb0dfcd36714d9c141fde08e85da1d0d624994e95b35114f14193c811b76e',
 ];
 
-export const blockInfo = {
+export const blockInfo: BlockInfoV0 = {
     blockParent:
         '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf',
     blockHash:
@@ -1771,6 +1782,7 @@ export const blockInfo = {
     transactionEnergyCost: 0n,
     genesisIndex: 1,
     eraBlockHeight: 1258806,
+    protocolVersion: 3n,
 };
 
 export const bakers = [

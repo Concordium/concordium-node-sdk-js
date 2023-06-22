@@ -35,6 +35,7 @@ export {
 export * from './idProofs';
 export * from './idProofTypes';
 export * from './signHelpers';
+export * from './versionedTypeHelpers';
 export * from './accountHelpers';
 export * from './blockSummaryHelpers';
 export * from './rewardStatusHelpers';

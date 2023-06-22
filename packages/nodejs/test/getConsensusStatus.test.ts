@@ -54,7 +54,6 @@ test('retrieves the consensus status from the node with correct types', async ()
         expect(Number.isNaN(consensusStatus.genesisIndex)).toBeFalsy(),
 
         expect(typeof consensusStatus.epochDuration === 'bigint').toBeTruthy(),
-        expect(typeof consensusStatus.slotDuration === 'bigint').toBeTruthy(),
         expect(
             typeof consensusStatus.bestBlockHeight === 'bigint'
         ).toBeTruthy(),

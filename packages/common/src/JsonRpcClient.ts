@@ -5,6 +5,8 @@ import {
     AccountTransactionSignature,
     buildInvoker,
     ConsensusStatus,
+    ConsensusStatusV0,
+    ConsensusStatusV1,
     ContractAddress,
     ContractContext,
     CryptographicParameters,
@@ -132,16 +134,17 @@ export class JsonRpcClient {
 
     async getConsensusStatus(): Promise<ConsensusStatus> {
         const response = await this.provider.request('getConsensusStatus');
+        type CS = ConsensusStatusV0 & ConsensusStatusV1;
 
         // TODO Avoid code duplication with nodejs client
-        const datePropertyKeys: (keyof ConsensusStatus)[] = [
+        const datePropertyKeys: (keyof CS)[] = [
             'blockLastReceivedTime',
             'blockLastArrivedTime',
             'genesisTime',
             'currentEraGenesisTime',
             'lastFinalizedTime',
         ];
-        const bigIntPropertyKeys: (keyof ConsensusStatus)[] = [
+        const bigIntPropertyKeys: (keyof CS)[] = [
             'epochDuration',
             'slotDuration',
             'bestBlockHeight',
@@ -150,6 +153,10 @@ export class JsonRpcClient {
             'blocksVerifiedCount',
             'blocksReceivedCount',
             'protocolVersion',
+            'currentTimeoutDuration',
+            'currentRound',
+            'currentEpoch',
+            'triggerBlockTime',
         ];
 
         const res = transformJsonResponse<ConsensusStatus>(

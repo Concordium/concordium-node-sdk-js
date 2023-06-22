@@ -69,6 +69,17 @@ import {
     ReduceStakePendingChangeV1,
     buildInvoker,
     DelegationStakeChangedEvent,
+    CooldownParametersV1,
+    TimeParametersV1,
+    PoolParametersV1,
+    BlockInfoV0,
+    BlockInfoV1,
+    ConsensusStatusV0,
+    ConsensusStatusV1,
+    ChainParametersV2,
+    ConsensusParameters,
+    TimeoutParameters,
+    Ratio,
 } from '@concordium/common-sdk';
 import {
     buildJsonResponseReviver,
@@ -349,13 +360,19 @@ export default class ConcordiumNodeClient {
             | keyof PartyInfo
             | keyof FinalizationData
             | keyof TransactionSummary
-            | keyof (ChainParametersV0 & ChainParametersV1)
+            | keyof (ChainParametersV0 & ChainParametersV1 & ChainParametersV2)
+            | keyof PoolParametersV1
+            | keyof CooldownParametersV1
+            | keyof TimeParametersV1
             | keyof ExchangeRate
             | keyof UpdateQueue
             | keyof KeysWithThreshold
             | keyof TransferredEvent
             | keyof ContractAddress
             | keyof DelegationStakeChangedEvent
+            | keyof ConsensusParameters
+            | keyof TimeoutParameters
+            | keyof Ratio
         )[] = [
             'bakerId',
             'newStake',
@@ -365,7 +382,6 @@ export default class ConcordiumNodeClient {
             'cost',
             'energyCost',
             'index',
-            'foundationAccountIndex',
             'numerator',
             'denominator',
             'nextSequenceNumber',
@@ -382,6 +398,13 @@ export default class ConcordiumNodeClient {
             'minimumEquityCapital',
             'poolOwnerCooldown',
             'delegatorCooldown',
+
+            // v2 keys
+            'timeoutBase',
+            'denominator',
+            'numerator',
+            'minBlockTime',
+            'blockEnergyLimit',
         ];
 
         return unwrapJsonResponse<BlockSummary>(
@@ -412,7 +435,7 @@ export default class ConcordiumNodeClient {
             'blockReceiveTime',
             'blockSlotTime',
         ];
-        const bigIntPropertyKeys: (keyof BlockInfo)[] = [
+        const bigIntPropertyKeys: (keyof (BlockInfoV0 & BlockInfoV1))[] = [
             'blockHeight',
             'blockBaker',
             'blockSlot',
@@ -460,19 +483,20 @@ export default class ConcordiumNodeClient {
      * enough data yet.
      */
     async getConsensusStatus(): Promise<ConsensusStatus> {
+        type CS = ConsensusStatusV0 & ConsensusStatusV1;
         const response = await this.sendRequest(
             this.client.getConsensusStatus,
             new Empty()
         );
 
-        const datePropertyKeys: (keyof ConsensusStatus)[] = [
+        const datePropertyKeys: (keyof CS)[] = [
             'blockLastReceivedTime',
             'blockLastArrivedTime',
             'genesisTime',
             'currentEraGenesisTime',
             'lastFinalizedTime',
         ];
-        const bigIntPropertyKeys: (keyof ConsensusStatus)[] = [
+        const bigIntPropertyKeys: (keyof CS)[] = [
             'epochDuration',
             'slotDuration',
             'bestBlockHeight',
@@ -481,6 +505,10 @@ export default class ConcordiumNodeClient {
             'blocksVerifiedCount',
             'blocksReceivedCount',
             'protocolVersion',
+            'currentTimeoutDuration',
+            'currentRound',
+            'currentEpoch',
+            'triggerBlockTime',
         ];
 
         const consensusStatus = unwrapJsonResponse<ConsensusStatus>(

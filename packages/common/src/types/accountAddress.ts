@@ -1,4 +1,4 @@
-import * as bs58check from 'bs58check';
+import bs58check from 'bs58check';
 import { Buffer } from 'buffer/';
 
 /**
@@ -21,7 +21,7 @@ export class AccountAddress {
         }
         try {
             this.decodedAddress = Buffer.from(
-                bs58check.decode(address).slice(1)
+                bs58check.decode(address).subarray(1)
             );
             this.address = address;
         } catch (error) {

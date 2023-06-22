@@ -1,5 +1,9 @@
 import { Buffer } from 'buffer/';
-import { uleb128Decode, uleb128Encode } from '../src/uleb128';
+import {
+    uleb128Decode,
+    uleb128DecodeWithIndex,
+    uleb128Encode,
+} from '../src/uleb128';
 
 test('uleb128 encodes value as expected', () => {
     let value = 0n;
@@ -36,11 +40,61 @@ test('uleb128 decodes value as expected', () => {
     decoded = uleb128Decode(buf);
     expect(decoded.toString()).toBe('100');
 
-    buf = Buffer.from('ff092209', 'hex');
+    buf = Buffer.from('ff89a209', 'hex');
     decoded = uleb128Decode(buf);
     expect(decoded.toString()).toBe('19432703');
 
     buf = Buffer.from('fa80808080808010', 'hex');
     decoded = uleb128Decode(buf);
     expect(decoded.toString()).toBe('9007199254741114');
+});
+
+test('uleb128 decodes value as expected with indexing', () => {
+    let buf = Buffer.from('00', 'hex');
+    let decoded = uleb128DecodeWithIndex(buf);
+    expect(decoded.toString()).toBe('0,1');
+
+    buf = Buffer.from('0000aa', 'hex');
+    decoded = uleb128DecodeWithIndex(buf);
+    expect(decoded.toString()).toBe('0,1');
+
+    buf = Buffer.from('64', 'hex');
+    decoded = uleb128DecodeWithIndex(buf);
+    expect(decoded.toString()).toBe('100,1');
+
+    buf = Buffer.from('01', 'hex');
+    decoded = uleb128DecodeWithIndex(buf);
+    expect(decoded.toString()).toBe('1,1');
+
+    buf = Buffer.from('0100', 'hex');
+    decoded = uleb128DecodeWithIndex(buf);
+    expect(decoded.toString()).toBe('1,1');
+
+    buf = Buffer.from('ff092209', 'hex');
+    decoded = uleb128DecodeWithIndex(buf);
+    expect(decoded.toString()).toBe('1279,2');
+
+    buf = Buffer.from('fa80808080808010', 'hex');
+    decoded = uleb128DecodeWithIndex(buf);
+    expect(decoded.toString()).toBe('9007199254741114,8');
+
+    buf = Buffer.from('', 'hex');
+    expect(() => uleb128DecodeWithIndex(buf)).toThrowError(
+        'The ULEB128 encoding was not valid: The passed bytes must at least contain a single byte'
+    );
+
+    buf = Buffer.from('ffff', 'hex');
+    expect(() => uleb128DecodeWithIndex(buf)).toThrowError(
+        'The ULEB128 encoding was not valid: Could not find end of number'
+    );
+
+    // Testing indexing
+
+    buf = Buffer.from('aa01', 'hex');
+    decoded = uleb128DecodeWithIndex(buf, 1);
+    expect(decoded.toString()).toBe('1,2');
+
+    buf = Buffer.from('0100aa', 'hex');
+    decoded = uleb128DecodeWithIndex(buf, 1);
+    expect(decoded.toString()).toBe('0,2');
 });

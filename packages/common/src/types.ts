@@ -784,77 +784,106 @@ export type BlocksAtHeightRequest =
     | AbsoluteBlocksAtHeightRequest
     | RelativeBlocksAtHeightRequest;
 
+/** Common properties for  consensus status types used across all protocol versions */
 export interface ConsensusStatusCommon {
+    /** Hash of the current best block */
     bestBlock: HexString;
+    /** Hash of the initial genesis block */
     genesisBlock: HexString;
+    /** Hash of the genesis block of the current era, i.e. since the last protocol update. */
     currentEraGenesisBlock: HexString;
+    /** Hash of the last finalized block */
     lastFinalizedBlock: HexString;
 
-    /**
-     * In milliseconds
-     */
+    /** Current epoch duration, in milliseconds */
     epochDuration: Duration;
+    /** Absolute height of the best block */
     bestBlockHeight: bigint;
+    /** Absolute height of the last finalized block */
     lastFinalizedBlockHeight: bigint;
 
+    /** Number of finalizations */
     finalizationCount: bigint;
+    /** Total number of blocks received and verified */
     blocksVerifiedCount: bigint;
+    /** Total number of blocks received */
     blocksReceivedCount: bigint;
 
+    /** Exponential moving average latency between a block's slot time and its arrival. */
     blockArriveLatencyEMA: number;
+    /** Standard deviation of exponential moving average latency between a block's slot time and its arrival. */
     blockArriveLatencyEMSD: number;
 
+    /** Exponential moving average latency between a block's slot time and received time. */
     blockReceiveLatencyEMA: number;
+    /** Standard deviation of exponential moving average latency between a block's slot time and received time. */
     blockReceiveLatencyEMSD: number;
 
+    /** Exponential moving average number of transactions per block. */
     transactionsPerBlockEMA: number;
+    /** Standard deviation of exponential moving average number of transactions per block. */
     transactionsPerBlockEMSD: number;
 
+    /** Exponential moving average time between receiving blocks. */
     blockReceivePeriodEMA?: number;
+    /** Standard deviation of exponential moving average time between receiving blocks. */
     blockReceivePeriodEMSD?: number;
 
+    /** Exponential moving average time between block arrivals. */
     blockArrivePeriodEMA?: number;
+    /** Standard deviation of exponential moving average time between block arrivals. */
     blockArrivePeriodEMSD?: number;
 
+    /** Exponential moving average time between finalizations. */
     finalizationPeriodEMA?: number;
+    /** Standard deviation of exponential moving average time between finalizations. */
     finalizationPeriodEMSD?: number;
 
+    /** Time of the (original) genesis block. */
     genesisTime: Date;
+    /** Time when the current era started. */
     currentEraGenesisTime: Date;
+    /** The last time a block was received. */
     blockLastReceivedTime?: Date;
+    /** The last time a block was verified (added to the tree). */
     blockLastArrivedTime?: Date;
+    /** Time of last verified finalization. */
     lastFinalizedTime?: Date;
 
+    /**
+     * The number of chain restarts via a protocol update. A completed
+     * protocol update instruction might not change the protocol version
+     * specified in the previous field, but it always increments the genesis
+     * index.
+     */
     genesisIndex: number;
 
+    /** Currently active protocol version. */
     protocolVersion: bigint;
 }
 
-/**
- * Used for protocol version 1-5
- */
+/** Consensus status used for protocol version 1-5 */
 export interface ConsensusStatusV0 extends ConsensusStatusCommon {
-    /**
-     * In milliseconds
-     */
+    /** (Current) slot duration in milliseconds */
     slotDuration: Duration;
 }
 
-export interface ConcordiumBFTStatus {
-    /**
-     * In milliseconds
-     */
+/** Consensus status used from protocol version 6 */
+export type ConsensusStatusV1 = ConsensusStatusCommon & {
+    /** Current duration before a round times out, in milliseconds */
     currentTimeoutDuration: Duration;
+    /** Current round */
     currentRound: Round;
+    /** Current epoch */
     currentEpoch: Epoch;
+    /**
+     * The first block in the epoch with timestamp at least this is considered to be
+     * the trigger block for the epoch transition.
+     */
     triggerBlockTime: Date;
-}
+};
 
-/**
- * Used from protocol version 6
- */
-export type ConsensusStatusV1 = ConsensusStatusCommon & ConcordiumBFTStatus;
-
+/** Union of consensus status types used across all protocol versions */
 export type ConsensusStatus = ConsensusStatusV0 | ConsensusStatusV1;
 
 export interface CryptographicParameters {

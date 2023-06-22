@@ -1371,17 +1371,24 @@ export interface BakerElectionInfo {
     lotteryPower: number;
 }
 
+/** Common properties for election info across all protocol versions */
 export interface ElectionInfoCommon {
     electionNonce: HexString;
     bakerElectionInfo: BakerElectionInfo[];
 }
 
+/** Election info used for protocol version 1-5 */
 export interface ElectionInfoV0 extends ElectionInfoCommon {
     electionDifficulty: number;
 }
 
+/** Election info used from protocol version 6 */
 export type ElectionInfoV1 = ElectionInfoCommon;
 
+/**
+ * Union of different versions of election info across all protocol versions.
+ * Contains information related to baker election for a particular block
+ */
 export type ElectionInfo = ElectionInfoV0 | ElectionInfoV1;
 
 export interface NextUpdateSequenceNumbers {

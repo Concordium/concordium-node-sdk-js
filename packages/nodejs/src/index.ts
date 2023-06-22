@@ -1,3 +1,10 @@
+/**
+ * A concordium-node specific gRPC client wrapper.
+ *
+ * @module NodeJS-SDK
+ *
+ */
+
 import ConcordiumNodeClient from './client';
 export * from './clientV2';
 

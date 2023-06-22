@@ -39,6 +39,8 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     await client.dumpStop();
     console.log('Dump successfully stopped');
+    // #endregion documentation-snippet
 })();

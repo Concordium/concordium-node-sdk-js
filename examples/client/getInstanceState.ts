@@ -59,6 +59,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const contractAddress = {
         index: BigInt(cli.flags.contract),
         subindex: 0n,
@@ -67,6 +68,7 @@ const client = createConcordiumClient(
         contractAddress,
         cli.flags.block
     );
+    // #endregion documentation-snippet
 
     for await (const state of states) {
         console.dir(state, { depth: null, colors: true });

@@ -7,6 +7,7 @@ import { AccountAddress, getAlias, isAlias } from '@concordium/node-sdk';
  * (0 <= counter < 2^24) to determine which alias to return.
  */
 
+// #region documentation-snippet
 const accountAddress = new AccountAddress(
     '3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU'
 );
@@ -29,3 +30,4 @@ if (!isAlias(alias, accountAddress)) {
 if (isAlias(accountAddress, seperateAccount)) {
     throw Error('Two seperate accounts are claimed to be aliases!');
 }
+// #endregion documentation-snippet

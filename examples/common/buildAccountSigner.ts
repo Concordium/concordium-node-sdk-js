@@ -35,6 +35,7 @@ const cli = meow(
  * Shows how to build an account signer
  */
 
+// #region documentation-snippet
 const walletFile = fs.readFileSync(
     path.resolve(process.cwd(), cli.flags.walletFile),
     'utf8'
@@ -50,3 +51,4 @@ try {
 } catch {
     console.error('File passed does not conform to a supported JSON format');
 }
+// #endregion documentation-snippet

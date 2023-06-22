@@ -89,6 +89,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     // Handle the optional arguments
     const invoker = cli.flags.invoker
         ? new AccountAddress(cli.flags.invoker)
@@ -134,4 +135,5 @@ const client = createConcordiumClient(
         console.log('A list of effects that the update would have:');
         console.dir(events, { depth: null, colors: true });
     }
+    // #endregion documentation-snippet
 })();

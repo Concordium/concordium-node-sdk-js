@@ -30,16 +30,6 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
 
-      - name: Cache build-output
-        uses: actions/cache@v3
-        with:
-          path: |
-            ./node_modules/@concordium
-            ./packages/rust-bindings/pkg
-            ./packages/common/lib
-            ./packages/nodejs/lib
-          key: ${{ runner.os }}-build_output-${{ github.event.pull_request.head.sha || github.sha }}
-
       - name: Cache GRPC
         id: cache-grpc
         uses: actions/cache@v3
@@ -48,6 +38,14 @@ jobs:
             ./packages/common/grpc
             ./packages/nodejs/grpc
           key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}
+
+      - name: Cache WebPack
+        uses: actions/cache@v3
+        with:
+          path: ./packages/web/.webpack-cache
+          # These two lines ensure that a fresh cache is generated after each run
+          key: ${{ runner.os }}-webpack-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-webpack
 
       - name: Get dependencies
         run: yarn install --immutable
@@ -77,38 +75,33 @@ jobs:
       - name: Build
         run: yarn build:dev
 
+      - name: Store build-debug
+        uses: ./.github/actions/upload-artifact
+        with:
+          name: build-debug
+          path: |
+            ./node_modules/@concordium
+            ./packages/rust-bindings/pkg
+            ./packages/common/lib
+            ./packages/nodejs/lib
+            ./packages/common/grpc
+            ./packages/nodejs/grpc
+
   typecheck-examples:
     runs-on: ubuntu-22.04
     needs: build
-    if: github.event.pull_request.draft == false
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: "recursive"
 
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
 
-      - name: Cache build-output
-        uses: actions/cache@v3
+      - name: Get build-debug
+        uses: ./.github/actions/download-artifact
         with:
-          path: |
-            ./node_modules/@concordium
-            ./packages/rust-bindings/pkg
-            ./packages/common/lib
-            ./packages/nodejs/lib
-          key: ${{ runner.os }}-build_output-${{ github.event.pull_request.head.sha || github.sha }}
-
-      - name: Cache GRPC
-        id: cache-grpc
-        uses: actions/cache@v3
-        with:
-          path: |
-            ./packages/common/grpc
-            ./packages/nodejs/grpc
-          key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}
+          name: build-debug
 
       - name: Get dependencies
         run: yarn install --immutable
@@ -116,13 +109,58 @@ jobs:
       - name: Typecheck examples
         run: yarn workspace @concordium/examples typecheck
 
+  common-tests:
+    runs-on: ubuntu-22.04
+    needs: build
+    defaults:
+      run:
+        working-directory: packages/common
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - name: Get build-debug
+        uses: ./.github/actions/download-artifact
+        with:
+          name: build-debug
+
+      - name: Get dependencies
+        run: yarn install --immutable
+
+      - name: Run Tests
+        run: yarn test
+
+  typedoc:
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - name: Get build-debug
+        uses: ./.github/actions/download-artifact
+        with:
+          name: build-debug
+
+      - name: Get dependencies
+        run: yarn install --immutable
+
+      - name: Build typedoc
+        run: yarn typedoc
+
   lint:
     runs-on: ubuntu-22.04
     if: github.event.pull_request.draft == false
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: "recursive"
 
       - uses: actions/setup-node@v3
         with:
@@ -135,47 +173,39 @@ jobs:
       - name: Lint
         run: yarn lint
 
-  common_test:
+  markdown-lint:
     runs-on: ubuntu-22.04
-    needs: build
     if: github.event.pull_request.draft == false
-    defaults:
-      run:
-        working-directory: packages/common
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: "recursive"
 
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
 
-      - name: Cache build-output
-        uses: actions/cache@v3
-        with:
-          path: |
-            ./node_modules/@concordium
-            ./packages/rust-bindings/pkg
-            ./packages/common/lib
-            ./packages/nodejs/lib
-          key: ${{ runner.os }}-build_output-${{ github.event.pull_request.head.sha || github.sha }}
-
-      - name: Cache GRPC
-        id: cache-grpc
-        uses: actions/cache@v3
-        with:
-          path: |
-            ./packages/common/grpc
-            ./packages/nodejs/grpc
-          key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}
-
-      - name: Get dependencies
+      - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Run Tests
-        run: yarn test
+      - name: Lint markdown
+        run: yarn markdown:lint
+
+  markdown-linkcheck:
+    runs-on: ubuntu-22.04
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Lint markdown
+        run: yarn markdown:linkcheck
 
   rust_lint_fmt:
     runs-on: ubuntu-22.04
@@ -221,4 +251,3 @@ jobs:
 
       - name: Run clippy
         run: cargo clippy --color=always --tests --benches -- -Dclippy::all
-

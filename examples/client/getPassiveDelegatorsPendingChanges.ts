@@ -53,6 +53,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const delegators: AsyncIterable<DelegatorInfo> =
         client.getPassiveDelegators(cli.flags.block);
 
@@ -63,4 +64,5 @@ const client = createConcordiumClient(
             console.log('Pending Change:', delegatorInfo.pendingChange, '\n');
         }
     }
+    // #endregion documentation-snippet
 })();

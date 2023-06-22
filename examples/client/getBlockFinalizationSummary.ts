@@ -50,6 +50,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const summary: BlockFinalizationSummary =
         await client.getBlockFinalizationSummary(cli.flags.block);
 
@@ -64,4 +65,5 @@ const client = createConcordiumClient(
             'Given block has not been finalized, and no information can be gotten'
         );
     }
+    // #endregion documentation-snippet
 })();

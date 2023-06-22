@@ -51,6 +51,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const blockItemStatus: BlockItemStatus = await client.getBlockItemStatus(
         cli.flags.transaction
     );
@@ -114,4 +115,5 @@ const client = createConcordiumClient(
             console.log('Account created with address:', summary.address);
         }
     }
+    // #endregion documentation-snippet
 })();

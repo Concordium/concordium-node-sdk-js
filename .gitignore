@@ -18,9 +18,16 @@ node_modules
 lib
 target
 dist
+doc
 
 # Auto generate files from the gRPC proto file
 grpc
+
+# Webpack cache
+.webpack-cache
+
+# Generated documentation by typedoc
+typedoc
 
 # WASM files are generated with wasm-pack
 pkg

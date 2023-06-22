@@ -1,3 +1,7 @@
+/**
+ * @module Common GRPC-Client
+ */
+
 import { AccountAddress } from './types/accountAddress';
 import { CredentialRegistrationId } from './types/CredentialRegistrationId';
 import { CcdAmount } from './types/ccdAmount';

@@ -48,6 +48,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const passiveDelegationInfo: PassiveDelegationStatus =
         await client.getPassiveDelegationInfo(cli.flags.block);
 
@@ -60,4 +61,5 @@ const client = createConcordiumClient(
         passiveDelegationInfo.allPoolTotalCapital / 1000000n
     );
     console.log('Pool commision rates:', passiveDelegationInfo.commissionRates);
+    // #endregion documentation-snippet
 })();

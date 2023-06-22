@@ -39,9 +39,11 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const branch: Branch = await client.getBranches();
 
     console.log('Root hash:', branch.blockHash);
     console.log("Root's children:");
     console.dir(branch.children, { depth: null, colors: true });
+    // #endregion documentation-snippet
 })();

@@ -4,18 +4,6 @@
 
 Bindings for the Rust functions that are used by the SDK.
 
-## Building for a release
-To build the package run
-```
-yarn build
-```
-
-This compiles the Rust code into wasm with Javascript wrappers.
-
-## Publishing a release
-Before publishing a new release it is essential that it has been built first. So make sure that 
-you have just built the up-to-date code you want to publish. To publish the release run
-```
-yarn npm publish
-```
-and step through the steps precented to you.
+Please see the
+[documentation](https://developer.concordium.software/concordium-node-sdk-js/index.html)
+for more information

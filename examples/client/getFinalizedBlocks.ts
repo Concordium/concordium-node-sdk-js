@@ -42,6 +42,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     // Get block stream
     const blockStream: AsyncIterable<FinalizedBlockInfo> =
         client.getFinalizedBlocks();
@@ -51,4 +52,5 @@ const client = createConcordiumClient(
         console.log('Arrived block height:', block.height);
         console.log('Arrived block hash:', block.hash, '\n');
     }
+    // #endregion documentation-snippet
 })();

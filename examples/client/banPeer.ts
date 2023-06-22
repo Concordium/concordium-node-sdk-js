@@ -47,6 +47,8 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     await client.banPeer(cli.flags.ip);
     console.log('Specified peer successfully banned');
+    // #endregion documentation-snippet
 })();

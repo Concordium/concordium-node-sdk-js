@@ -5,5 +5,5 @@
 Bindings for the Rust functions that are used by the SDK.
 
 Please see the
-[documentation](https://rasmus-kirk.github.io/concordium-node-sdk-js/index.html)
+[documentation](https://developer.concordium.software/concordium-node-sdk-js/index.html)
 for more information

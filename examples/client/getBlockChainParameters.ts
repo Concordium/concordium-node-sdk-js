@@ -48,6 +48,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const cp: ChainParameters = await client.getBlockChainParameters(
         cli.flags.block
     );
@@ -70,4 +71,5 @@ const client = createConcordiumClient(
             'Chain parameters is V0 and does not contain information on minimum equity capital'
         );
     }
+    // #endregion documentation-snippet
 })();

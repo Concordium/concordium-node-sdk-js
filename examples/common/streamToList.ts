@@ -47,7 +47,7 @@ const client = createConcordiumClient(
  * used on an infinite stream (like getBlocks), then it will never terminate.
  */
 
-(async () => {
+async () => {
     const bakerIds: AsyncIterable<BakerId> = client.getBakerList(
         cli.flags.block
     );
@@ -55,4 +55,4 @@ const client = createConcordiumClient(
     const bakerList = await streamToList(bakerIds);
 
     console.log(bakerList[0]);
-})();
+};

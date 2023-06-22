@@ -48,6 +48,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const electionInfo: ElectionInfo = await client.getElectionInfo(
         cli.flags.block
     );
@@ -65,4 +66,5 @@ const client = createConcordiumClient(
     if (isElectionInfoV0(electionInfo)) {
         console.log('Election difficulty:', electionInfo.electionDifficulty);
     }
+    // #endregion documentation-snippet
 })();

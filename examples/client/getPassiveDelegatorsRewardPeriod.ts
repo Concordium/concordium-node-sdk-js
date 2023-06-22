@@ -55,6 +55,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const delegators: AsyncIterable<DelegatorRewardPeriodInfo> =
         client.getPassiveDelegatorsRewardPeriod(cli.flags.block);
 
@@ -62,4 +63,5 @@ const client = createConcordiumClient(
     for await (const delegatorInfo of delegators) {
         console.log(delegatorInfo.account, delegatorInfo.stake);
     }
+    // #endregion documentation-snippet
 })();

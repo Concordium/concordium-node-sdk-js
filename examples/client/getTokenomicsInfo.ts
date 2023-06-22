@@ -52,6 +52,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const tokenomics = await client.getTokenomicsInfo(cli.flags.block);
 
     // Protocol version 4 expanded the amount of information in the response, so one should check the type to access that.
@@ -70,4 +71,5 @@ const client = createConcordiumClient(
         tokenomics.bakingRewardAccount
     );
     console.log('Total amount in existence:', tokenomics.totalAmount);
+    // #endregion documentation-snippet
 })();

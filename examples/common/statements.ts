@@ -10,6 +10,7 @@ import {
 
 const statementBuilder = new IdStatementBuilder();
 
+// #region documentation-snippet
 // Prover's age must be over 18:
 statementBuilder.addMinimumAge(18);
 
@@ -27,13 +28,14 @@ statementBuilder.addEUResidency();
 // We also reveal the type of documentation of the prover.
 statementBuilder.revealAttribute(AttributesKeys.idDocType);
 
-// Our proof statement:
+// The statement we wish to prove:
 const statement = statementBuilder.getStatement();
 
-// Test that the proof statement is well formed (validly constructed).
+// Test that the statement is well formed (validly constructed).
 // Will throw otherwise.
 verifyIdstatement(statement);
 
-console.log('Succesfully constructed proof statement \n');
+console.log('Succesfully constructed statement \n');
+// #endregion documentation-snippet
 
 console.dir(statement, { depth: null, colors: true });

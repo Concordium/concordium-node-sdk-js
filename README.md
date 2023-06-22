@@ -30,7 +30,7 @@ Wrappers for interacting with the Concordium node.
 ## Documentation
 
 Please see the
-[documentation](https://rasmus-kirk.github.io/concordium-node-sdk-js/index.html)
+[documentation](https://developer.concordium.software/concordium-node-sdk-js/index.html)
 for more information
 
 ## Packages

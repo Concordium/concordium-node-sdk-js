@@ -149,7 +149,7 @@ export const blockItemStatusUpdate = {
             type: 'updateTransaction',
             effectiveTime: 0n,
             payload: {
-                updateType: 'microGtuPerEuro',
+                updateType: 'microCCDPerEuro',
                 update: {
                     numerator: 17592435270983729152n,
                     denominator: 163844642115n,
@@ -459,7 +459,7 @@ export const transactionEventList = [
         hash: '49d7b5c3234dc17bd904af0b63712dc0a6680b96ad556c5ac1103d8cdd128891',
         effectiveTime: 0n,
         payload: {
-            updateType: 'microGtuPerEuro',
+            updateType: 'microCCDPerEuro',
             update: {
                 denominator: 126230907181n,
                 numerator: 9397474320418127872n,

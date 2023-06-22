@@ -15,6 +15,8 @@
   - `BlockInfo` changed to `BlockInfoV0 | BlockInfoV1`
   - `ConsensusStatus` changed to `ConsensusStatusV0 | ConsensusStatusV1`
   - `ElectionInfo` changed to `ElectionInfoV0 | ElectionInfoV1`
+- Renamed type `MicroGtuPerEuroUpdate` to `MicroCCDPerEuroUpdate`
+- Renamed enum member `UpdateType.MicroGtuPerEuro` to `UpdateType.MicroCCDPerEuro`, along with it's corresponding string value from `"microGtuPerEuro"` to `"microCCDPerEuro"`.
 
 ### Fixed
 

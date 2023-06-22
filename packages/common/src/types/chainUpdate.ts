@@ -42,8 +42,8 @@ export interface EuroPerEnergyUpdate {
     update: ExchangeRate;
 }
 
-export interface MicroGtuPerEuroUpdate {
-    updateType: UpdateType.MicroGtuPerEuro;
+export interface MicroCCDPerEuroUpdate {
+    updateType: UpdateType.MicroCCDPerEuro;
     update: ExchangeRate;
 }
 
@@ -138,7 +138,7 @@ export interface PendingAuthorizationKeysUpdate {
 }
 
 export type CommonUpdate =
-    | MicroGtuPerEuroUpdate
+    | MicroCCDPerEuroUpdate
     | EuroPerEnergyUpdate
     | TransactionFeeDistributionUpdate
     | FoundationAccountUpdate
@@ -173,7 +173,7 @@ export enum UpdateType {
     Protocol = 'protocol',
     ElectionDifficulty = 'electionDifficulty',
     EuroPerEnergy = 'euroPerEnergy',
-    MicroGtuPerEuro = 'microGtuPerEuro',
+    MicroCCDPerEuro = 'microCCDPerEuro',
     FoundationAccount = 'foundationAccount',
     MintDistribution = 'mintDistribution',
     TransactionFeeDistribution = 'transactionFeeDistribution',

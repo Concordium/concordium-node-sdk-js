@@ -506,7 +506,7 @@ export interface Authorization {
 
 interface AuthorizationsCommon {
     emergency: Authorization;
-    microGTUPerEuro: Authorization;
+    microCCDPerEuro: Authorization;
     euroPerEnergy: Authorization;
     transactionFeeDistribution: Authorization;
     foundationAccount: Authorization;
@@ -578,7 +578,7 @@ export interface UpdateQueue {
 }
 
 interface UpdateQueuesCommon {
-    microGTUPerEuro: UpdateQueue;
+    microCCDPerEuro: UpdateQueue;
     euroPerEnergy: UpdateQueue;
     transactionFeeDistribution: UpdateQueue;
     foundationAccount: UpdateQueue;
@@ -700,51 +700,68 @@ export interface RewardStatusV1 extends RewardStatusCommon {
 export type RewardStatus = RewardStatusV0 | RewardStatusV1;
 export type TokenomicsInfo = RewardStatus;
 
-/**
- * Common properties for block info across all protocol versions
- */
+/** Common properties for block info across all protocol versions */
 export interface BlockInfoCommon {
+    /**
+     * Hash of parent block. For the initial genesis block (i.e. not re-genesis)
+     * this will be the hash of the block itself
+     */
     blockParent: HexString;
+    /** Hash of block */
     blockHash: HexString;
+    /** Hash of block state */
     blockStateHash: HexString;
+    /** Hash of last finalized block when this block was baked */
     blockLastFinalized: HexString;
 
+    /** The absolute height of this (i.e. relative to the initial genesis block) */
     blockHeight: bigint;
+    /** The baker ID of the baker for this block. Not available for a genesis block */
     blockBaker?: BakerId;
 
+    /** The time the block was verified */
     blockArriveTime: Date;
+    /** The time the block was received */
     blockReceiveTime: Date;
+    /** The time of the slot in which the block was baked */
     blockSlotTime: Date;
 
+    /** Whether the block is finalized */
     finalized: boolean;
 
+    /** The number of transactions in the block */
     transactionCount: bigint;
+    /** The total byte size of all transactions in the block */
     transactionsSize: bigint;
-    transactionEnergyCost: bigint;
+    /** The energy cost of the transactions in the block */
+    transactionEnergyCost: Energy;
 
+    /**
+     * The genesis index for the block. This counst the number of protocol updates that have
+     * preceeded this block, and defines the era of the block.
+     */
     genesisIndex: number;
+    /** The height of this block relative to the (re)genesis block of its era */
     eraBlockHeight: number;
+    /** The protocol version the block belongs to */
     protocolVersion: bigint;
 }
 
-/**
- * Block info used for protocol version 1-5
- */
+/** Block info used for protocol version 1-5 */
 export interface BlockInfoV0 extends BlockInfoCommon {
+    /** The slot number in which the block was baked. */
     blockSlot: bigint;
 }
 
-/**
- * Block info used for protocol version 6
- */
+/** Block info used from protocol version 6 */
 export interface BlockInfoV1 extends BlockInfoCommon {
+    /** The block round */
     round: Round;
+    /** The block epoch */
     epoch: Epoch;
 }
 
-/**
- * Union of all block info versions
- */
+/** Union of all block info versions */
 export type BlockInfo = BlockInfoV0 | BlockInfoV1;
 
 export interface CommonBlockInfo {
@@ -1621,7 +1638,7 @@ export enum ParameterType {
     I32,
     /** Signed 64-bit integer. */
     I64,
-    /** Token amount in microCCD (10^-6 GTU). */
+    /** Token amount in microCCD (10^-6 CCD). */
     Amount,
     /** Sender account address. */
     AccountAddress,

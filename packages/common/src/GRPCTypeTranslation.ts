@@ -1272,9 +1272,9 @@ function trEuroPerEnergyUpdate(
 }
 function trMicroCcdPerEuroUpdate(
     exchangeRate: v2.ExchangeRate
-): v1.MicroGtuPerEuroUpdate {
+): v1.MicroCCDPerEuroUpdate {
     return {
-        updateType: v1.UpdateType.MicroGtuPerEuro,
+        updateType: v1.UpdateType.MicroCCDPerEuro,
         update: unwrap(exchangeRate.value),
     };
 }
@@ -1737,7 +1737,7 @@ function trAuthorizationsV0(auths: v2.AuthorizationsV0): v1.AuthorizationsV0 {
         consensus: trAccessStructure(auths.parameterConsensus),
         euroPerEnergy: trAccessStructure(auths.parameterEuroPerEnergy),
         foundationAccount: trAccessStructure(auths.parameterFoundationAccount),
-        microGTUPerEuro: trAccessStructure(auths.parameterMicroCCDPerEuro),
+        microCCDPerEuro: trAccessStructure(auths.parameterMicroCCDPerEuro),
         paramGASRewards: trAccessStructure(auths.parameterGasRewards),
         mintDistribution: trAccessStructure(auths.parameterMintDistribution),
         transactionFeeDistribution: trAccessStructure(

@@ -54,8 +54,10 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const events: AsyncIterable<BlockSpecialEvent> =
         client.getBlockSpecialEvents(cli.flags.block);
+    // #endregion documentation-snippet
 
     for await (const event of events) {
         console.dir(event, { depth: null, colors: true });

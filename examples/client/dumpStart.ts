@@ -57,6 +57,8 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     await client.dumpStart(cli.flags.filepath, cli.flags.dumpRaw);
     console.log('Dump successfully started');
+    // #endregion documentation-snippet
 })();

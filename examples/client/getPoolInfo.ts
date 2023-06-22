@@ -52,6 +52,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const bakerPool: BakerPoolStatus = await client.getPoolInfo(
         BigInt(cli.flags.poolOwner),
         cli.flags.block
@@ -72,4 +73,5 @@ const client = createConcordiumClient(
         bakerPool.allPoolTotalCapital / 1000000n
     );
     console.log('Pool commision rates:', bakerPool.poolInfo.commissionRates);
+    // #endregion documentation-snippet
 })();

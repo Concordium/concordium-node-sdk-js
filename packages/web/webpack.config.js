@@ -3,6 +3,10 @@ const webpack = require('webpack');
 
 module.exports = {
     mode: 'production',
+    cache: {
+        type: 'filesystem',
+        cacheDirectory: path.resolve(__dirname, '.webpack-cache'),
+    },
     entry: {
         concordium: './lib/index.js',
     },

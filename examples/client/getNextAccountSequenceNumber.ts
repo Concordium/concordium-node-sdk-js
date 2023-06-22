@@ -54,6 +54,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const account = new AccountAddress(cli.flags.account);
     const nextNonce: NextAccountNonce = await client.getNextAccountNonce(
         account
@@ -61,4 +62,5 @@ const client = createConcordiumClient(
 
     console.log('Next Nonce:', nextNonce.nonce);
     console.log('Nonce is reliable:', nextNonce.allFinal);
+    // #endregion documentation-snippet
 })();

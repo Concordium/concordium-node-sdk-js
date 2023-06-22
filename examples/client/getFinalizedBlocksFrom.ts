@@ -50,8 +50,9 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const ac = new AbortController();
-    const bis = await client.getFinalizedBlocksFrom(
+    const bis = client.getFinalizedBlocksFrom(
         BigInt(cli.flags.height),
         ac.signal
     );
@@ -68,4 +69,5 @@ const client = createConcordiumClient(
             break;
         }
     }
+    // #endregion documentation-snippet
 })();

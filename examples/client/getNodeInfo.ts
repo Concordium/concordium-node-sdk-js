@@ -51,7 +51,9 @@ const client = createConcordiumClient(
  */
 
 (async () => {
+    // #region documentation-snippet
     const nodeInfo: NodeInfo = await client.getNodeInfo();
+    // #endregion documentation-snippet
 
     console.dir(nodeInfo, { depth: null, colors: true });
 })();

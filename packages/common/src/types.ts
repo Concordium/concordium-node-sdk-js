@@ -648,7 +648,7 @@ export interface UpdatesV0 extends UpdatesCommon {
 }
 
 /**
- * Used from protocol version 4
+ * Used in protocol version 4 and 5
  * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export interface UpdatesV1 extends UpdatesCommon {
@@ -658,7 +658,7 @@ export interface UpdatesV1 extends UpdatesCommon {
 }
 
 /**
- * Used from protocol version 4
+ * Used from protocol version 6
  * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export interface UpdatesV2 extends UpdatesCommon {

@@ -6,6 +6,7 @@
 
 - Bumped @concordium/common-sdk to 8.0.0:
   - Properly formed errors thrown by functions wrapping WASM execution (from @concordium/rust-bindings) with more helpful error messages.
+  - Types adapted to changes in protocol version 6.
   - and [more](../common/CHANGELOG.md)
 
 ## 7.0.0 2023-05-15

@@ -24,6 +24,8 @@ import {
     Web3IssuerCommitmentInput,
     VerifiablePresentation,
     CredentialStatement,
+    VerifiableCredentialSchemaSchema,
+    CredentialSubject,
 } from './web3ProofTypes';
 import { getPastDate } from './idProofs';
 import {
@@ -520,26 +522,47 @@ export function createAccountCommitmentInputWithHdWallet(
     );
 }
 
+function extractAttributesFromCredentialSubject(
+    statements: AtomicStatementV2[],
+    credentialSubject: CredentialSubject,
+    schema: VerifiableCredentialSchemaSchema
+): Record<number, string | bigint> {
+    return statements.reduce<Record<number, string | bigint>>(
+        (acc, { attributeTag }) => {
+            const schemaEntry = Object.entries(schema.properties).find(
+                ([_, s]) => Number(s.index) == attributeTag
+            );
+            if (!schemaEntry) {
+                throw new Error('Missing attribute in schema: ' + attributeTag);
+            }
+            const [attributeName] = schemaEntry;
+            acc[attributeTag] = credentialSubject[attributeName];
+            return acc;
+        },
+        {}
+    );
+}
+
 /**
  * Create the commitment input required to create a proof for the given statements, using an web3Id credential.
  */
 export function createWeb3CommitmentInput(
     statements: AtomicStatementV2[],
     signer: KeyPair,
-    attributes: AttributeList,
+    issuanceDate: string,
+    credentialSubject: CredentialSubject,
+    schema: VerifiableCredentialSchemaSchema,
     randomness: string
 ): Web3IssuerCommitmentInput {
     return {
         type: 'web3Issuer',
-        issuanceDate: convertYearMonthToRfc3339(attributes.createdAt),
+        issuanceDate,
         signer: signer.signKey + signer.verifyKey,
-        values: statements.reduce<Record<number, string>>((acc, x) => {
-            acc[x.attributeTag] =
-                attributes.chosenAttributes[
-                    AttributesKeys[x.attributeTag] as AttributeKey
-                ];
-            return acc;
-        }, {}),
+        values: extractAttributesFromCredentialSubject(
+            statements,
+            credentialSubject,
+            schema
+        ),
         randomness,
     };
 }
@@ -550,9 +573,11 @@ export function createWeb3CommitmentInput(
  */
 export function createWeb3CommitmentInputWithHdWallet(
     statements: AtomicStatementV2[],
-    attributes: AttributeList,
     wallet: ConcordiumHdWallet,
     credentialIndex: number,
+    issuanceDate: string,
+    credentialSubject: CredentialSubject,
+    schema: VerifiableCredentialSchemaSchema,
     randomness: string
 ) {
     const keyPair = {
@@ -566,7 +591,9 @@ export function createWeb3CommitmentInputWithHdWallet(
     return createWeb3CommitmentInput(
         statements,
         keyPair,
-        attributes,
+        issuanceDate,
+        credentialSubject,
+        schema,
         randomness
     );
 }
@@ -582,7 +609,6 @@ export function canProveAtomicStatement(
         attributeList.chosenAttributes[
             AttributesKeys[statement.attributeTag] as AttributeKey
         ];
-
     switch (statement.type) {
         case StatementTypes.AttributeInSet:
             return statement.set.includes(attribute);

@@ -272,3 +272,57 @@ export type RequestStatement = {
 };
 
 export type CredentialStatements = CredentialStatement[];
+
+interface CredentialSchema {
+    id: string;
+    type: string;
+}
+
+export type CredentialSubject = { id: string } & Record<
+    string,
+    string | bigint
+>;
+
+export interface VerifiableCredential {
+    context: string[];
+    id: string;
+    type: string[];
+    issuer: string;
+    issuanceDate: string;
+    credentialSubject: CredentialSubject;
+    credentialSchema: CredentialSchema;
+}
+
+interface CredentialSchemaProperty {
+    title: string;
+    type: 'string' | 'number';
+    description: string;
+    index: string;
+}
+
+interface CredentialSchemaSubject {
+    properties: { id: CredentialSchemaProperty } & Record<
+        string,
+        CredentialSchemaProperty
+    >;
+}
+
+export interface SchemaProperties {
+    credentialSubject: CredentialSchemaSubject;
+}
+
+export interface VerifiableCredentialSchemaSchema {
+    // credentialSubject: CredentialSchemaSubject;
+    properties: SchemaProperties;
+}
+
+export interface VerifiableCredentialSchema {
+    type: string;
+    version: string;
+    id: string;
+    name: string;
+    author: string;
+    authored: string;
+    schema: VerifiableCredentialSchemaSchema;
+    proof: string;
+}

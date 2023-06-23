@@ -22,6 +22,8 @@ import {
     SimpleTransferWithMemoPayload,
     TransactionExpiry,
     deserializeTypeValue,
+    tokenAddressFromBase58,
+    tokenAddressToBase58,
 } from '../src';
 import * as fs from 'fs';
 import {
@@ -235,4 +237,71 @@ test('Init error can be deserialized using deserializeTypeValue', () => {
         Buffer.from(TEST_CONTRACT_INIT_ERROR_SCHEMA, 'base64')
     );
     expect(error).toEqual(1);
+});
+
+test('Test parsing of Token Addresses', () => {
+    let base58 = '5Pxr5EUtU';
+    let address = tokenAddressFromBase58(base58);
+    let rebase58 = tokenAddressToBase58(address);
+    let expectedAddress = {
+        contract: {
+            index: 0n,
+            subindex: 0n,
+        },
+        id: '',
+    };
+    expect(address).toEqual(expectedAddress);
+    expect(rebase58).toEqual(base58);
+
+    base58 = 'LQMMu3bAg7';
+    address = tokenAddressFromBase58(base58);
+    rebase58 = tokenAddressToBase58(address);
+    expectedAddress = {
+        contract: {
+            index: 0n,
+            subindex: 0n,
+        },
+        id: 'aa',
+    };
+    expect(address).toEqual(expectedAddress);
+    expect(rebase58).toEqual(base58);
+
+    base58 = '5QTdu98KF';
+    address = tokenAddressFromBase58(base58);
+    rebase58 = tokenAddressToBase58(address);
+    const expectedAddress2 = {
+        contract: {
+            index: 1n,
+            subindex: 0n,
+        },
+        id: '',
+    };
+    expect(address).toEqual(expectedAddress2);
+    expect(rebase58).toEqual(base58);
+
+    base58 = 'LSYqgoQcb6';
+    address = tokenAddressFromBase58(base58);
+    rebase58 = tokenAddressToBase58(address);
+    expectedAddress = {
+        contract: {
+            index: 1n,
+            subindex: 0n,
+        },
+        id: 'aa',
+    };
+    expect(address).toEqual(expectedAddress);
+    expect(rebase58).toEqual(base58);
+
+    base58 = 'LSYXivPSWP';
+    address = tokenAddressFromBase58(base58);
+    rebase58 = tokenAddressToBase58(address);
+    expectedAddress = {
+        contract: {
+            index: 1n,
+            subindex: 0n,
+        },
+        id: '0a',
+    };
+    expect(address).toEqual(expectedAddress);
+    expect(rebase58).toEqual(base58);
 });

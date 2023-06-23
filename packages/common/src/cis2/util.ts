@@ -1,3 +1,4 @@
+import bs58check from 'bs58check';
 import {
     encodeWord16,
     encodeWord64,
@@ -17,9 +18,13 @@ import {
 } from '../types';
 import { Buffer } from 'buffer/';
 import { AccountAddress } from '../types/accountAddress';
-import { uleb128Decode, uleb128Encode } from '../uleb128';
+import {
+    uleb128Decode,
+    uleb128DecodeWithIndex,
+    uleb128Encode,
+} from '../uleb128';
 
-const TOKEN_ID_MAX_LENGTH = 256;
+const TOKEN_ID_MAX_LENGTH = 255;
 const TOKEN_AMOUNT_MAX_LENGTH = 37;
 const TOKEN_RECEIVE_HOOK_MAX_LENGTH = 100;
 
@@ -29,6 +34,20 @@ export namespace CIS2 {
      * Union between `ContractAddress` and an account address represented by a `Base58String`.
      */
     export type Address = ContractAddress | Base58String;
+
+    /**
+     * A Token ID that uniquely identifies the CIS-2 Token
+     */
+    export type TokenId = HexString;
+
+    /**
+     * A Token Address, that contains both a Contract Address and the unique
+     * CIS-2 Token ID.
+     */
+    export type TokenAddress = {
+        contract: ContractAddress;
+        id: TokenId;
+    };
 
     /**
      * A contract address along with the name of the hook to be triggered when receiving a CIS-2 transfer.
@@ -189,7 +208,7 @@ export const isContractAddress = (
     address: CIS2.Address
 ): address is ContractAddress => typeof address !== 'string';
 
-function serializeCIS2TokenId(tokenId: HexString): Buffer {
+function serializeCIS2TokenId(tokenId: CIS2.TokenId): Buffer {
     const serialized = Buffer.from(tokenId, 'hex');
 
     if (serialized.length > TOKEN_ID_MAX_LENGTH) {
@@ -199,6 +218,15 @@ function serializeCIS2TokenId(tokenId: HexString): Buffer {
     }
 
     return packBufferWithWord8Length(serialized);
+}
+
+function deserializeCIS2TokenId(buffer: Buffer): CIS2.TokenId {
+    if (buffer.length > TOKEN_ID_MAX_LENGTH) {
+        throw Error(
+            `Token ID exceeds maximum size of ${TOKEN_ID_MAX_LENGTH} bytes`
+        );
+    }
+    return buffer.toString('hex');
 }
 
 function serializeTokenAmount(amount: bigint): Buffer {
@@ -429,6 +457,63 @@ function serializeCIS2OperatorOfQuery(query: CIS2.OperatorOfQuery): Buffer {
     const owner = serializeAddress(query.owner);
     const address = serializeAddress(query.address);
     return Buffer.concat([owner, address]);
+}
+
+/**
+ * Parses a token address from a Base58-string. Will throw if the Base58
+ * encoding is not a valid token address.
+ *
+ * @param str A Base58 encoded token address
+ * @returns A parsed token address
+ */
+export function tokenAddressFromBase58(str: Base58String): CIS2.TokenAddress {
+    const bytes = new Buffer(bs58check.decode(str));
+
+    const firstByte = bytes[0];
+    const [index, i] = uleb128DecodeWithIndex(bytes, 1);
+    const [subindex, j] = uleb128DecodeWithIndex(bytes, i);
+    const tokenIdBytes = new Buffer(bytes.subarray(j));
+
+    if (firstByte !== 2) {
+        throw Error(
+            'Invalid token address: The Base58Check version byte is expected to be 2'
+        );
+    }
+
+    const contract = {
+        index,
+        subindex,
+    };
+
+    const id = deserializeCIS2TokenId(tokenIdBytes);
+
+    return {
+        contract,
+        id,
+    };
+}
+
+/**
+ * Returns the Base58-encoding of the given CIS2 Token Address.
+ *
+ * @param tokenAddress A token address to convert into the base58-string format
+ * @returns The base58-formatted string
+ */
+export function tokenAddressToBase58(
+    tokenAddress: CIS2.TokenAddress
+): Base58String {
+    const firstByte = Buffer.from('02', 'hex');
+    const indexBytes = uleb128Encode(tokenAddress.contract.index);
+    const subindexBytes = uleb128Encode(tokenAddress.contract.subindex);
+    const tokenBytes = Buffer.from(tokenAddress.id, 'hex');
+    const bytes = Buffer.concat([
+        firstByte,
+        indexBytes,
+        subindexBytes,
+        tokenBytes,
+    ]);
+
+    return bs58check.encode(bytes);
 }
 
 /**

@@ -23,11 +23,17 @@
 - Cost calculation for `deployModule` transaction.
 - Fixed a bug where protocol version was different (i.e. 1 less than what it should be) when using the gRPCv2 API (compared to what is returned by the gRPCv1 API).
 
+### Changes
+
+- Function `uleb128Decode` now parses correctly and throws an error if the given input contains more than a single ULEB128 encoded number.
+
 ### Added
 
 - A `parseWallet` function to parse wallet export files
 - Helper functions to determine version of versioned types mentioned in "Breaking Changes" have been added.
 - Support for new chain update types.
+- Function `uleb128DecodeWithIndex` that can also parse more than a single ULEB128 bigint
+- Added `tokenAddressFromBase58` and `tokenAddressToBase58` to CIS2
 
 ### Changed
 

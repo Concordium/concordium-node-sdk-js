@@ -1,6 +1,6 @@
 /**
  * This is the GRPC-Client used by both the Web-SDK and the NodeJS-SDK. Check
- * out the {@link ConcordiumNodeClient}
+ * out the {@link ConcordiumGRPCClient}
  *
  * @module Common GRPC-Client
  */

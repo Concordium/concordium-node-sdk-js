@@ -80,7 +80,7 @@ test('uleb128 decodes value as expected with indexing', () => {
 
     buf = Buffer.from('', 'hex');
     expect(() => uleb128DecodeWithIndex(buf)).toThrowError(
-        'The ULEB128 encoding was not valid: The passed bytes must at least contain a single byte'
+        'The ULEB128 encoding was not valid: The passed bytes from index 0 must at least contain a single byte'
     );
 
     buf = Buffer.from('ffff', 'hex');

@@ -8,7 +8,7 @@ Please see the
 [documentation](https://developer.concordium.software/concordium-node-sdk-js/index.html)
 for more information
 
-## ConcordiumNodeClient
+## ConcordiumGRPCClient
 
 The SDK provides a gRPC client, which can interact with the [Concordium
 Node](https://github.com/Concordium/concordium-node)

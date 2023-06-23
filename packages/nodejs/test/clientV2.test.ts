@@ -1,7 +1,8 @@
 import * as v1 from '@concordium/common-sdk';
 import * as v2 from '../../common/grpc/v2/concordium/types';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
-import ConcordiumNodeClientV2, {
+import {
+    ConcordiumGRPCClient,
     getAccountIdentifierInput,
     getBlockHashInput,
 } from '@concordium/common-sdk/lib/GRPCClient';
@@ -56,7 +57,7 @@ const testBlockHash =
 
 // Retrieves the account info for the given account in the GRPCv2 type format.
 function getAccountInfoV2(
-    client: ConcordiumNodeClientV2,
+    client: ConcordiumGRPCClient,
     accountIdentifier: v1.AccountIdentifierInput
 ): Promise<v2.AccountInfo> {
     const accountInfoRequest = {

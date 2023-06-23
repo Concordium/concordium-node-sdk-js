@@ -651,8 +651,8 @@ export function passiveDelegationInfo(
     };
 }
 
-function translateProtocolVersion(pv: v2.ProtocolVersion): v1.ProtocolVersion {
-    return pv as number;
+function translateProtocolVersion(pv: v2.ProtocolVersion): bigint {
+    return BigInt(pv + 1); // Protocol version enum indexes from 0, i.e. pv.PROTOCOL_VERSION_1 = 0.
 }
 
 export function tokenomicsInfo(info: v2.TokenomicsInfo): v1.RewardStatus {

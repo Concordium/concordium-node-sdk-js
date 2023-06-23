@@ -23,9 +23,6 @@ import {
     StakePendingChange,
     StakePendingChangeV0,
     StakePendingChangeV1,
-    UpdateQueues,
-    UpdateQueuesV0,
-    UpdateQueuesV1,
 } from './types';
 
 /** Whether {@link AccountInfo} parameter given is of type {@link AccountInfoBakerV0} */
@@ -80,14 +77,6 @@ export const isKeysV0 = (ks: Keys): ks is KeysV0 =>
 /** Whether {@link Keys} parameter given is of type {@link KeysV1} */
 export const isKeysV1 = (ks: Keys): ks is KeysV1 =>
     isAuthorizationsV1(ks.level2Keys);
-
-/** Whether {@link UpdateQueues} parameter given is of type {@link UpdateQueuesV0} */
-export const isUpdateQueuesV0 = (uq: UpdateQueues): uq is UpdateQueuesV0 =>
-    (uq as UpdateQueuesV0).bakerStakeThreshold !== undefined;
-
-/** Whether {@link UpdateQueues} parameter given is of type {@link UpdateQueuesV1} */
-export const isUpdateQueuesV1 = (uq: UpdateQueues): uq is UpdateQueuesV1 =>
-    (uq as UpdateQueuesV1).timeParameters !== undefined;
 
 /** Whether {@link BlockInfo} parameter given is of type {@link BlockInfoV0} */
 export const isBlockInfoV0 = (bi: BlockInfo): bi is BlockInfoV0 =>

@@ -17,11 +17,11 @@
   - `ElectionInfo` changed to `ElectionInfoV0 | ElectionInfoV1`
 - Renamed type `MicroGtuPerEuroUpdate` to `MicroCCDPerEuroUpdate`
 - Renamed enum member `UpdateType.MicroGtuPerEuro` to `UpdateType.MicroCCDPerEuro`, along with it's corresponding string value from `"microGtuPerEuro"` to `"microCCDPerEuro"`.
-- Changed type of `protocolVersion` on `BlockInfo`, `RewardStatus`, and `ConsensusStatus` from `bigint` to `ProtocolVersion` to avoid confusion when translating from the GRPC enum type.
 
 ### Fixed
 
 - Cost calculation for `deployModule` transaction.
+- Fixed a bug where protocol version was different (i.e. 1 less than what it should be) when using the gRPCv2 API (compared to what is returned by the gRPCv1 API).
 
 ### Added
 

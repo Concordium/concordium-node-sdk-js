@@ -361,6 +361,7 @@ export default class ConcordiumNodeClient {
             | keyof FinalizationData
             | keyof TransactionSummary
             | keyof (ChainParametersV0 & ChainParametersV1 & ChainParametersV2)
+            | keyof BlockSummary
             | keyof PoolParametersV1
             | keyof CooldownParametersV1
             | keyof TimeParametersV1
@@ -388,6 +389,7 @@ export default class ConcordiumNodeClient {
             'amount',
             'index',
             'subindex',
+            'protocolVersion',
 
             // v0 keys
             'bakerCooldownEpochs',
@@ -504,6 +506,7 @@ export default class ConcordiumNodeClient {
             'finalizationCount',
             'blocksVerifiedCount',
             'blocksReceivedCount',
+            'protocolVersion',
             'currentTimeoutDuration',
             'currentRound',
             'currentEpoch',
@@ -700,6 +703,7 @@ export default class ConcordiumNodeClient {
 
         const dates: DateKey[] = ['nextPaydayTime'];
         const bigInts: BigIntKey[] = [
+            'protocolVersion',
             'gasAccount',
             'totalAmount',
             'totalStakedCapital',

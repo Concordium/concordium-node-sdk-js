@@ -58,15 +58,6 @@ export interface Versioned<T> {
     value: T;
 }
 
-export enum ProtocolVersion {
-    PV1,
-    PV2,
-    PV3,
-    PV4,
-    PV5,
-    PV6,
-}
-
 export enum AttributesKeys {
     firstName,
     lastName,
@@ -615,7 +606,7 @@ export interface UpdateQueuesV0 extends UpdateQueuesCommon {
 }
 
 /**
- * Used from protocol version 4
+ * Used in protocol version 4 and 5
  */
 export interface UpdateQueuesV1 extends UpdateQueuesCommon {
     cooldownParameters: UpdateQueue;
@@ -623,7 +614,17 @@ export interface UpdateQueuesV1 extends UpdateQueuesCommon {
     poolParameters: UpdateQueue;
 }
 
-export type UpdateQueues = UpdateQueuesV0 | UpdateQueuesV1;
+/**
+ * Used from protocol version 6
+ */
+export interface UpdateQueuesV2 extends UpdateQueuesV1 {
+    timeoutParameters: UpdateQueue;
+    minBlockTime: UpdateQueue;
+    blockEnergyLimit: UpdateQueue;
+    finalizationCommiteeParameters: UpdateQueue;
+}
+
+export type UpdateQueues = UpdateQueuesV0 | UpdateQueuesV1 | UpdateQueuesV2;
 
 interface ProtocolUpdate {
     message: string;
@@ -657,9 +658,19 @@ export interface UpdatesV1 extends UpdatesCommon {
 }
 
 /**
+ * Used from protocol version 4
  * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
-export type Updates = UpdatesV0 | UpdatesV1;
+export interface UpdatesV2 extends UpdatesCommon {
+    chainParameters: ChainParametersV2;
+    updateQueues: UpdateQueuesV2;
+    keys: KeysV1;
+}
+
+/**
+ * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
+ */
+export type Updates = UpdatesV0 | UpdatesV1 | UpdatesV2;
 
 /**
  * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
@@ -679,7 +690,7 @@ export interface BlockSummaryV0 extends BlockSummaryCommon {
 }
 
 /**
- * Used from protocol version 4
+ * Used in protocol version 4 and 5
  * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export interface BlockSummaryV1 extends BlockSummaryCommon {
@@ -688,12 +699,21 @@ export interface BlockSummaryV1 extends BlockSummaryCommon {
 }
 
 /**
+ * Used from protocol version 6
  * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
-export type BlockSummary = BlockSummaryV0 | BlockSummaryV1;
+export interface BlockSummaryV2 extends BlockSummaryCommon {
+    updates: UpdatesV2;
+    protocolVersion: bigint;
+}
+
+/**
+ * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
+ */
+export type BlockSummary = BlockSummaryV0 | BlockSummaryV1 | BlockSummaryV2;
 
 interface RewardStatusCommon {
-    protocolVersion?: ProtocolVersion;
+    protocolVersion?: bigint;
     totalAmount: Amount;
     totalEncryptedAmount: Amount;
     bakingRewardAccount: Amount;
@@ -708,7 +728,7 @@ export interface RewardStatusV1 extends RewardStatusCommon {
     nextPaydayTime: Date;
     nextPaydayMintRate: MintRate;
     totalStakedCapital: Amount;
-    protocolVersion: ProtocolVersion;
+    protocolVersion: bigint;
 }
 
 export type RewardStatus = RewardStatusV0 | RewardStatusV1;
@@ -758,7 +778,7 @@ export interface BlockInfoCommon {
     /** The height of this block relative to the (re)genesis block of its era */
     eraBlockHeight: number;
     /** The protocol version the block belongs to */
-    protocolVersion: ProtocolVersion;
+    protocolVersion: bigint;
 }
 
 /** Block info used for protocol version 1-5 */
@@ -872,7 +892,7 @@ export interface ConsensusStatusCommon {
     genesisIndex: number;
 
     /** Currently active protocol version. */
-    protocolVersion: ProtocolVersion;
+    protocolVersion: bigint;
 }
 
 /** Consensus status used for protocol version 1-5 */

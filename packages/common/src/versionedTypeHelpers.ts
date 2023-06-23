@@ -61,14 +61,14 @@ export const isChainParametersV0 = (
 export const isChainParametersV1 = (
     cp: ChainParameters
 ): cp is ChainParametersV1 =>
-    (cp as ChainParametersV1).timeParameters !== undefined &&
+    (cp as ChainParametersV1).mintPerPayday !== undefined &&
     !isChainParametersV2(cp);
 
 /** Whether {@link ChainParameters} parameter given is of type {@link ChainParametersV2} */
 export const isChainParametersV2 = (
     cp: ChainParameters
 ): cp is ChainParametersV2 =>
-    (cp as ChainParametersV2).consensusParameters !== undefined;
+    (cp as ChainParametersV2).maximumFinalizers !== undefined;
 
 /** Whether {@link Keys} parameter given is of type {@link KeysV0} */
 export const isKeysV0 = (ks: Keys): ks is KeysV0 =>
@@ -89,14 +89,13 @@ export const isBlockInfoV1 = (bi: BlockInfo): bi is BlockInfoV1 =>
 /** Whether {@link ConensusStatus} parameter given is of type {@link ConsensusStatusV0} */
 export const isConsensusStatusV0 = (
     cs: ConsensusStatus
-): cs is ConsensusStatusV0 =>
-    (cs as ConsensusStatusV0).slotDuration !== undefined;
+): cs is ConsensusStatusV0 => (cs as ConsensusStatusV0).slotDuration != null;
 
 /** Whether {@link ConensusStatus} parameter given is of type {@link ConsensusStatusV1} */
 export const isConsensusStatusV1 = (
     cs: ConsensusStatus
 ): cs is ConsensusStatusV1 =>
-    (cs as ConsensusStatusV1).currentRound !== undefined;
+    (cs as ConsensusStatusV1).concordiumBFTStatus !== undefined;
 
 /** Whether {@link ElectionInfo} parameter given is of type {@link ElectionInfoV0} */
 export const isElectionInfoV0 = (ei: ElectionInfo): ei is ElectionInfoV0 =>

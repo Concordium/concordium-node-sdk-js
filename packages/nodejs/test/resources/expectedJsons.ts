@@ -149,7 +149,7 @@ export const blockItemStatusUpdate = {
             type: 'updateTransaction',
             effectiveTime: 0n,
             payload: {
-                updateType: 'microCCDPerEuro',
+                updateType: 'microGtuPerEuro',
                 update: {
                     numerator: 17592435270983729152n,
                     denominator: 163844642115n,
@@ -459,7 +459,7 @@ export const transactionEventList = [
         hash: '49d7b5c3234dc17bd904af0b63712dc0a6680b96ad556c5ac1103d8cdd128891',
         effectiveTime: 0n,
         payload: {
-            updateType: 'microCCDPerEuro',
+            updateType: 'microGtuPerEuro',
             update: {
                 denominator: 126230907181n,
                 numerator: 9397474320418127872n,
@@ -1613,60 +1613,58 @@ export const regularAccountInfo = {
 export const chainParameters: ChainParametersV1 = {
     electionDifficulty: 0.025,
     euroPerEnergy: { numerator: 1n, denominator: 50000n },
-    microCCDPerEuro: {
+    microGTUPerEuro: {
         numerator: 697170112016908288n,
         denominator: 7989497115n,
     },
     accountCreationLimit: 10,
     foundationAccount: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
-    timeParameters: {
-        mintPerPayday: 0.000261157877,
-        rewardPeriodLength: 24n,
+    mintPerPayday: 0.000261157877,
+    rewardPeriodLength: 24n,
+    delegatorCooldown: 1209600n,
+    poolOwnerCooldown: 1814400n,
+    passiveFinalizationCommission: 1,
+    passiveBakingCommission: 0.12,
+    passiveTransactionCommission: 0.12,
+    finalizationCommissionRange: { min: 1, max: 1 },
+    bakingCommissionRange: { min: 0.1, max: 0.1 },
+    transactionCommissionRange: { min: 0.1, max: 0.1 },
+    minimumEquityCapital: 14000000000n,
+    capitalBound: 0.1,
+    leverageBound: { numerator: 3n, denominator: 1n },
+    rewardParameters: {
+        transactionFeeDistribution: { baker: 0.45, gasAccount: 0.45 },
+        gASRewards: {
+            baker: 0.25,
+            finalizationProof: 0.005,
+            accountCreation: 0.02,
+            chainUpdate: 0.005,
+        },
+        mintDistribution: { bakingReward: 0.6, finalizationReward: 0.3 },
     },
-    cooldownParameters: {
-        delegatorCooldown: 1209600n,
-        poolOwnerCooldown: 1814400n,
-    },
-    poolParameters: {
-        passiveFinalizationCommission: 1,
-        passiveBakingCommission: 0.12,
-        passiveTransactionCommission: 0.12,
-        finalizationCommissionRange: { min: 1, max: 1 },
-        bakingCommissionRange: { min: 0.1, max: 0.1 },
-        transactionCommissionRange: { min: 0.1, max: 0.1 },
-        minimumEquityCapital: 14000000000n,
-        capitalBound: 0.1,
-        leverageBound: { numerator: 3n, denominator: 1n },
-    },
-    transactionFeeDistribution: { baker: 0.45, gasAccount: 0.45 },
-    gasRewards: {
-        baker: 0.25,
-        finalizationProof: 0.005,
-        accountCreation: 0.02,
-        chainUpdate: 0.005,
-    },
-    mintDistribution: { bakingReward: 0.6, finalizationReward: 0.3 },
 };
 
 export const oldChainParameters: ChainParametersV0 = {
     electionDifficulty: 0.025,
     euroPerEnergy: { numerator: 1n, denominator: 50000n },
-    microCCDPerEuro: { numerator: 50000000n, denominator: 1n },
+    microGTUPerEuro: { numerator: 50000000n, denominator: 1n },
     accountCreationLimit: 10,
     foundationAccount: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
     bakerCooldownEpochs: 166n,
     minimumThresholdForBaking: 15000000000n,
-    transactionFeeDistribution: { baker: 0.45, gasAccount: 0.45 },
-    gasRewards: {
-        baker: 0.25,
-        finalizationProof: 0.005,
-        accountCreation: 0.02,
-        chainUpdate: 0.005,
-    },
-    mintDistribution: {
-        bakingReward: 0.6,
-        finalizationReward: 0.3,
-        mintPerSlot: 7.555665e-10,
+    rewardParameters: {
+        transactionFeeDistribution: { baker: 0.45, gasAccount: 0.45 },
+        gASRewards: {
+            baker: 0.25,
+            finalizationProof: 0.005,
+            accountCreation: 0.02,
+            chainUpdate: 0.005,
+        },
+        mintDistribution: {
+            bakingReward: 0.6,
+            finalizationReward: 0.3,
+            mintPerSlot: 7.555665e-10,
+        },
     },
 };
 

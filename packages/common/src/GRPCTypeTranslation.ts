@@ -255,7 +255,7 @@ function translateChainParametersCommon(
 ): v1.ChainParametersCommon {
     return {
         euroPerEnergy: unwrap(params.euroPerEnergy?.value),
-        microCCDPerEuro: unwrap(params.microCcdPerEuro?.value),
+        microGTUPerEuro: unwrap(params.microCcdPerEuro?.value),
         accountCreationLimit: unwrap(params.accountCreationLimit?.value),
         foundationAccount: unwrapToBase58(params.foundationAccount),
     };
@@ -404,24 +404,30 @@ function trChainParametersV0(v0: v2.ChainParametersV0): v1.ChainParametersV0 {
     const commonRewardParameters = translateRewardParametersCommon(v0);
     return {
         ...common,
-        ...commonRewardParameters,
         electionDifficulty: trAmountFraction(v0.electionDifficulty?.value),
         bakerCooldownEpochs: unwrap(v0.bakerCooldownEpochs?.value),
         minimumThresholdForBaking: unwrap(v0.minimumThresholdForBaking?.value),
-        gasRewards: {
-            baker: trAmountFraction(v0.gasRewards?.baker),
-            finalizationProof: trAmountFraction(
-                v0.gasRewards?.finalizationProof
-            ),
-            accountCreation: trAmountFraction(v0.gasRewards?.accountCreation),
-            chainUpdate: trAmountFraction(v0.gasRewards?.chainUpdate),
-        },
-        mintDistribution: {
-            bakingReward: trAmountFraction(v0.mintDistribution?.bakingReward),
-            finalizationReward: trAmountFraction(
-                v0.mintDistribution?.finalizationReward
-            ),
-            mintPerSlot: trMintRate(v0.mintDistribution?.mintPerSlot),
+        rewardParameters: {
+            ...commonRewardParameters,
+            gASRewards: {
+                baker: trAmountFraction(v0.gasRewards?.baker),
+                finalizationProof: trAmountFraction(
+                    v0.gasRewards?.finalizationProof
+                ),
+                accountCreation: trAmountFraction(
+                    v0.gasRewards?.accountCreation
+                ),
+                chainUpdate: trAmountFraction(v0.gasRewards?.chainUpdate),
+            },
+            mintDistribution: {
+                bakingReward: trAmountFraction(
+                    v0.mintDistribution?.bakingReward
+                ),
+                finalizationReward: trAmountFraction(
+                    v0.mintDistribution?.finalizationReward
+                ),
+                mintPerSlot: trMintRate(v0.mintDistribution?.mintPerSlot),
+            },
         },
     };
 }
@@ -433,66 +439,62 @@ function trChainParametersV1(
     const commonRewardParameters = translateRewardParametersCommon(params);
     return {
         ...common,
-        ...commonRewardParameters,
         electionDifficulty: trAmountFraction(params.electionDifficulty?.value),
-        timeParameters: {
-            rewardPeriodLength: unwrap(
-                params.timeParameters?.rewardPeriodLength?.value?.value
-            ),
-            mintPerPayday: trMintRate(params.timeParameters?.mintPerPayday),
-        },
-        cooldownParameters: {
-            delegatorCooldown: unwrap(
-                params.cooldownParameters?.delegatorCooldown?.value
-            ),
-            poolOwnerCooldown: unwrap(
-                params.cooldownParameters?.poolOwnerCooldown?.value
-            ),
-        },
-        poolParameters: {
-            passiveFinalizationCommission: trAmountFraction(
-                params.poolParameters?.passiveFinalizationCommission
-            ),
-            passiveBakingCommission: trAmountFraction(
-                params.poolParameters?.passiveBakingCommission
-            ),
-            passiveTransactionCommission: trAmountFraction(
-                params.poolParameters?.passiveTransactionCommission
-            ),
-            finalizationCommissionRange: translateCommissionRange(
-                params.poolParameters?.commissionBounds?.finalization
-            ),
-            bakingCommissionRange: translateCommissionRange(
-                params.poolParameters?.commissionBounds?.baking
-            ),
-            transactionCommissionRange: translateCommissionRange(
-                params.poolParameters?.commissionBounds?.transaction
-            ),
-            minimumEquityCapital: unwrap(
-                params.poolParameters?.minimumEquityCapital?.value
-            ),
-            capitalBound: trAmountFraction(
-                params.poolParameters?.capitalBound?.value
-            ),
-            leverageBound: unwrap(params.poolParameters?.leverageBound?.value),
-        },
-        gasRewards: {
-            baker: trAmountFraction(params.gasRewards?.baker),
-            finalizationProof: trAmountFraction(
-                params.gasRewards?.finalizationProof
-            ),
-            accountCreation: trAmountFraction(
-                params.gasRewards?.accountCreation
-            ),
-            chainUpdate: trAmountFraction(params.gasRewards?.chainUpdate),
-        },
-        mintDistribution: {
-            bakingReward: trAmountFraction(
-                params.mintDistribution?.bakingReward
-            ),
-            finalizationReward: trAmountFraction(
-                params.mintDistribution?.finalizationReward
-            ),
+        rewardPeriodLength: unwrap(
+            params.timeParameters?.rewardPeriodLength?.value?.value
+        ),
+        mintPerPayday: trMintRate(params.timeParameters?.mintPerPayday),
+        delegatorCooldown: unwrap(
+            params.cooldownParameters?.delegatorCooldown?.value
+        ),
+        poolOwnerCooldown: unwrap(
+            params.cooldownParameters?.poolOwnerCooldown?.value
+        ),
+        passiveFinalizationCommission: trAmountFraction(
+            params.poolParameters?.passiveFinalizationCommission
+        ),
+        passiveBakingCommission: trAmountFraction(
+            params.poolParameters?.passiveBakingCommission
+        ),
+        passiveTransactionCommission: trAmountFraction(
+            params.poolParameters?.passiveTransactionCommission
+        ),
+        finalizationCommissionRange: translateCommissionRange(
+            params.poolParameters?.commissionBounds?.finalization
+        ),
+        bakingCommissionRange: translateCommissionRange(
+            params.poolParameters?.commissionBounds?.baking
+        ),
+        transactionCommissionRange: translateCommissionRange(
+            params.poolParameters?.commissionBounds?.transaction
+        ),
+        minimumEquityCapital: unwrap(
+            params.poolParameters?.minimumEquityCapital?.value
+        ),
+        capitalBound: trAmountFraction(
+            params.poolParameters?.capitalBound?.value
+        ),
+        leverageBound: unwrap(params.poolParameters?.leverageBound?.value),
+        rewardParameters: {
+            ...commonRewardParameters,
+            gASRewards: {
+                baker: trAmountFraction(params.gasRewards?.baker),
+                finalizationProof: trAmountFraction(
+                    params.gasRewards?.finalizationProof
+                ),
+                accountCreation: trAmountFraction(
+                    params.gasRewards?.accountCreation
+                ),
+                chainUpdate: trAmountFraction(params.gasRewards?.chainUpdate),
+            },
+            mintDistribution: {
+                bakingReward: trAmountFraction(
+                    params.mintDistribution?.bakingReward
+                ),
+                finalizationReward: trAmountFraction(
+                    params.mintDistribution?.finalizationReward
+                ),
+            },
         },
     };
 }
@@ -505,97 +507,82 @@ function trChainParametersV2(
 
     return {
         ...common,
-        ...commonRewardParameters,
-        timeParameters: {
-            rewardPeriodLength: unwrap(
-                params.timeParameters?.rewardPeriodLength?.value?.value
-            ),
-            mintPerPayday: trMintRate(params.timeParameters?.mintPerPayday),
-        },
-        cooldownParameters: {
-            delegatorCooldown: unwrap(
-                params.cooldownParameters?.delegatorCooldown?.value
-            ),
-            poolOwnerCooldown: unwrap(
-                params.cooldownParameters?.poolOwnerCooldown?.value
-            ),
-        },
-        poolParameters: {
-            passiveFinalizationCommission: trAmountFraction(
-                params.poolParameters?.passiveFinalizationCommission
-            ),
-            passiveBakingCommission: trAmountFraction(
-                params.poolParameters?.passiveBakingCommission
-            ),
-            passiveTransactionCommission: trAmountFraction(
-                params.poolParameters?.passiveTransactionCommission
-            ),
-            finalizationCommissionRange: translateCommissionRange(
-                params.poolParameters?.commissionBounds?.finalization
-            ),
-            bakingCommissionRange: translateCommissionRange(
-                params.poolParameters?.commissionBounds?.baking
-            ),
-            transactionCommissionRange: translateCommissionRange(
-                params.poolParameters?.commissionBounds?.transaction
-            ),
-            minimumEquityCapital: unwrap(
-                params.poolParameters?.minimumEquityCapital?.value
-            ),
-            capitalBound: trAmountFraction(
-                params.poolParameters?.capitalBound?.value
-            ),
-            leverageBound: unwrap(params.poolParameters?.leverageBound?.value),
-        },
-        gasRewards: {
-            baker: trAmountFraction(params.gasRewards?.baker),
-            accountCreation: trAmountFraction(
-                params.gasRewards?.accountCreation
-            ),
-            chainUpdate: trAmountFraction(params.gasRewards?.chainUpdate),
-        },
-        mintDistribution: {
-            bakingReward: trAmountFraction(
-                params.mintDistribution?.bakingReward
-            ),
-            finalizationReward: trAmountFraction(
-                params.mintDistribution?.finalizationReward
-            ),
-        },
-        consensusParameters: {
-            timeoutParameters: {
-                timeoutBase: unwrap(
-                    params.consensusParameters?.timeoutParameters?.timeoutBase
-                        ?.value
+        rewardPeriodLength: unwrap(
+            params.timeParameters?.rewardPeriodLength?.value?.value
+        ),
+        mintPerPayday: trMintRate(params.timeParameters?.mintPerPayday),
+        delegatorCooldown: unwrap(
+            params.cooldownParameters?.delegatorCooldown?.value
+        ),
+        poolOwnerCooldown: unwrap(
+            params.cooldownParameters?.poolOwnerCooldown?.value
+        ),
+        passiveFinalizationCommission: trAmountFraction(
+            params.poolParameters?.passiveFinalizationCommission
+        ),
+        passiveBakingCommission: trAmountFraction(
+            params.poolParameters?.passiveBakingCommission
+        ),
+        passiveTransactionCommission: trAmountFraction(
+            params.poolParameters?.passiveTransactionCommission
+        ),
+        finalizationCommissionRange: translateCommissionRange(
+            params.poolParameters?.commissionBounds?.finalization
+        ),
+        bakingCommissionRange: translateCommissionRange(
+            params.poolParameters?.commissionBounds?.baking
+        ),
+        transactionCommissionRange: translateCommissionRange(
+            params.poolParameters?.commissionBounds?.transaction
+        ),
+        minimumEquityCapital: unwrap(
+            params.poolParameters?.minimumEquityCapital?.value
+        ),
+        capitalBound: trAmountFraction(
+            params.poolParameters?.capitalBound?.value
+        ),
+        leverageBound: unwrap(params.poolParameters?.leverageBound?.value),
+        rewardParameters: {
+            ...commonRewardParameters,
+            gASRewards: {
+                baker: trAmountFraction(params.gasRewards?.baker),
+                accountCreation: trAmountFraction(
+                    params.gasRewards?.accountCreation
                 ),
-                timeoutDecrease: unwrap(
-                    params.consensusParameters?.timeoutParameters
-                        ?.timeoutDecrease
+                chainUpdate: trAmountFraction(params.gasRewards?.chainUpdate),
+            },
+            mintDistribution: {
+                bakingReward: trAmountFraction(
+                    params.mintDistribution?.bakingReward
                 ),
-                timeoutIncrease: unwrap(
-                    params.consensusParameters?.timeoutParameters
-                        ?.timeoutIncrease
+                finalizationReward: trAmountFraction(
+                    params.mintDistribution?.finalizationReward
                 ),
             },
-            minBlockTime: unwrap(
-                params.consensusParameters?.minBlockTime?.value
-            ),
-            blockEnergyLimit: unwrap(
-                params.consensusParameters?.blockEnergyLimit?.value
-            ),
         },
-        finalizationCommiteeParameters: {
-            finalizerRelativeStakeThreshold: trAmountFraction(
-                params.finalizationCommitteeParameters
-                    ?.finalizerRelativeStakeThreshold
-            ),
-            minimumFinalizers: unwrap(
-                params.finalizationCommitteeParameters?.minimumFinalizers
-            ),
-            maximumFinalizers: unwrap(
-                params.finalizationCommitteeParameters?.maximumFinalizers
-            ),
-        },
+        timeoutBase: unwrap(
+            params.consensusParameters?.timeoutParameters?.timeoutBase?.value
+        ),
+        timeoutDecrease: unwrap(
+            params.consensusParameters?.timeoutParameters?.timeoutDecrease
+        ),
+        timeoutIncrease: unwrap(
+            params.consensusParameters?.timeoutParameters?.timeoutIncrease
+        ),
+        minBlockTime: unwrap(params.consensusParameters?.minBlockTime?.value),
+        blockEnergyLimit: unwrap(
+            params.consensusParameters?.blockEnergyLimit?.value
+        ),
+        finalizerRelativeStakeThreshold: trAmountFraction(
+            params.finalizationCommitteeParameters
+                ?.finalizerRelativeStakeThreshold
+        ),
+        minimumFinalizers: unwrap(
+            params.finalizationCommitteeParameters?.minimumFinalizers
+        ),
+        maximumFinalizers: unwrap(
+            params.finalizationCommitteeParameters?.maximumFinalizers
+        ),
     };
 }
 
@@ -757,10 +744,12 @@ export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
 
     const ci1: v1.ConsensusStatusV1 = {
         ...common,
-        currentTimeoutDuration: unwrap(ci.currentTimeoutDuration?.value),
-        currentRound: unwrap(ci.currentRound?.value),
-        currentEpoch: unwrap(ci.currentEpoch?.value),
-        triggerBlockTime: trTimestamp(ci.triggerBlockTime),
+        concordiumBFTStatus: {
+            currentTimeoutDuration: unwrap(ci.currentTimeoutDuration?.value),
+            currentRound: unwrap(ci.currentRound?.value),
+            currentEpoch: unwrap(ci.currentEpoch?.value),
+            triggerBlockTime: trTimestamp(ci.triggerBlockTime),
+        },
     };
 
     return ci1;
@@ -1276,9 +1265,9 @@ function trEuroPerEnergyUpdate(
 }
 function trMicroCcdPerEuroUpdate(
     exchangeRate: v2.ExchangeRate
-): v1.MicroCCDPerEuroUpdate {
+): v1.MicroGtuPerEuroUpdate {
     return {
-        updateType: v1.UpdateType.MicroCCDPerEuro,
+        updateType: v1.UpdateType.MicroGtuPerEuro,
         update: unwrap(exchangeRate.value),
     };
 }
@@ -1738,10 +1727,10 @@ function trAuthorizationsV0(auths: v2.AuthorizationsV0): v1.AuthorizationsV0 {
         addIdentityProvider: trAccessStructure(auths.addIdentityProvider),
         addAnonymityRevoker: trAccessStructure(auths.addAnonymityRevoker),
         emergency: trAccessStructure(auths.emergency),
-        consensus: trAccessStructure(auths.parameterConsensus),
+        electionDifficulty: trAccessStructure(auths.parameterConsensus),
         euroPerEnergy: trAccessStructure(auths.parameterEuroPerEnergy),
         foundationAccount: trAccessStructure(auths.parameterFoundationAccount),
-        microCCDPerEuro: trAccessStructure(auths.parameterMicroCCDPerEuro),
+        microGTUPerEuro: trAccessStructure(auths.parameterMicroCCDPerEuro),
         paramGASRewards: trAccessStructure(auths.parameterGasRewards),
         mintDistribution: trAccessStructure(auths.parameterMintDistribution),
         transactionFeeDistribution: trAccessStructure(

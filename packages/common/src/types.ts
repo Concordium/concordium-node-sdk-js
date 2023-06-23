@@ -322,7 +322,7 @@ export interface RewardParametersV0 extends RewardParametersCommon {
     /** The current mint distribution */
     mintDistribution: MintDistributionV0;
     /** The current gas rewards parameters */
-    gasRewards: GasRewardsV0;
+    gASRewards: GasRewardsV0;
 }
 
 /** Reward parameters used in protocol versions 4 and 5 ({@link ChainParametersV1}). */
@@ -330,7 +330,7 @@ export interface RewardParametersV1 extends RewardParametersCommon {
     /** The current mint distribution */
     mintDistribution: MintDistributionV1;
     /** The current gas rewards parameters */
-    gasRewards: GasRewardsV0;
+    gASRewards: GasRewardsV0;
 }
 
 /** Reward parameters used from protocol version 6 ({@link ChainParametersV2}). */
@@ -338,7 +338,7 @@ export interface RewardParametersV2 extends RewardParametersCommon {
     /** The current mint distribution */
     mintDistribution: MintDistributionV1;
     /** The current gas rewards parameters */
-    gasRewards: GasRewardsV1;
+    gASRewards: GasRewardsV1;
 }
 
 /** Cooldown parameters used from protocol version 1-3 */
@@ -413,8 +413,6 @@ export interface TimeoutParameters {
 
 /** Consensus parameters, used from protocol version 6 */
 export interface ConsensusParameters {
-    /** Parameters controlling round timeouts. */
-    timeoutParameters: TimeoutParameters;
     /** Minimum time interval between blocks. */
     minBlockTime: Duration;
     /** Maximum energy allowed per block. */
@@ -442,60 +440,46 @@ export interface ChainParametersCommon {
     /** Rate of euros per energy */
     euroPerEnergy: ExchangeRate;
     /** Rate of micro CCD per euro */
-    microCCDPerEuro: ExchangeRate;
+    microGTUPerEuro: ExchangeRate;
     /** Limit for the number of account creations in a block */
     accountCreationLimit: number;
     /** The chain foundation account */
     foundationAccount: Base58String;
+    /** The chain foundation account index */
+    foundationAccountIndex?: bigint;
 }
 
 /** Chain parameters used from protocol version 1-3 */
 export type ChainParametersV0 = ChainParametersCommon &
     CooldownParametersV0 &
-    PoolParametersV0 &
-    RewardParametersV0 & {
+    PoolParametersV0 & {
         /** The election difficulty for consensus lottery */
         electionDifficulty: number;
+        /** The election difficulty for consensus lottery */
+        rewardParameters: RewardParametersV0;
     };
 
 /** Chain parameters used in protocol versions 4 and 5 */
 export type ChainParametersV1 = ChainParametersCommon &
-    RewardParametersV1 & {
-        /**
-         * The extra number of epochs before reduction in stake
-         * or baker deregistration is completed.
-         */
-        cooldownParameters: CooldownParametersV1;
-        /**
-         * The time parameters, indicating the mint rate and
-         * the reward period length, i.e. the tiem between paydays
-         */
-        timeParameters: TimeParametersV1;
-        /** Parameters governing baking pools and their commissions. */
-        poolParameters: PoolParametersV1;
+    CooldownParametersV1 &
+    TimeParametersV1 &
+    PoolParametersV1 & {
         /** The election difficulty for consensus lottery */
         electionDifficulty: number;
+        /** The election difficulty for consensus lottery */
+        rewardParameters: RewardParametersV1;
     };
 
 /** Chain parameters used from protocol version 6 */
 export type ChainParametersV2 = ChainParametersCommon &
-    RewardParametersV2 & {
-        /** The consensus parameters. */
-        consensusParameters: ConsensusParameters;
-        /**
-         * The extra number of epochs before reduction in stake
-         * or baker deregistration is completed.
-         */
-        cooldownParameters: CooldownParametersV1;
-        /**
-         * The time parameters, indicating the mint rate and
-         * the reward period length, i.e. the tiem between paydays
-         */
-        timeParameters: TimeParametersV1;
-        /** Parameters governing baking pools and their commissions. */
-        poolParameters: PoolParametersV1;
-        /** The finalization committee parameters */
-        finalizationCommiteeParameters: FinalizationCommitteeParameters;
+    CooldownParametersV1 &
+    TimeParametersV1 &
+    PoolParametersV1 &
+    FinalizationCommitteeParameters &
+    TimeoutParameters &
+    ConsensusParameters & {
+        /** The election difficulty for consensus lottery */
+        rewardParameters: RewardParametersV2;
     };
 
 /** Union of all chain parameters across all protocol versions */
@@ -511,7 +495,7 @@ export interface Authorization {
 
 interface AuthorizationsCommon {
     emergency: Authorization;
-    microCCDPerEuro: Authorization;
+    microGTUPerEuro: Authorization;
     euroPerEnergy: Authorization;
     transactionFeeDistribution: Authorization;
     foundationAccount: Authorization;
@@ -522,7 +506,10 @@ interface AuthorizationsCommon {
      * For protocol version 3 and earlier, this controls the authorization of the bakerStakeThreshold update.
      */
     poolParameters: Authorization;
-    consensus: Authorization;
+    /**
+     * For protocol version 6 and later, this controls the authorization of consensus related updates.
+     */
+    electionDifficulty: Authorization;
     addAnonymityRevoker: Authorization;
     addIdentityProvider: Authorization;
     keys: VerifyKey[];
@@ -579,15 +566,14 @@ export interface UpdateQueueQueue {
 
 export interface UpdateQueue {
     nextSequenceNumber: bigint;
-    queue: UpdateQueueQueue;
+    queue: UpdateQueueQueue[];
 }
 
 interface UpdateQueuesCommon {
-    microCCDPerEuro: UpdateQueue;
+    microGTUPerEuro: UpdateQueue;
     euroPerEnergy: UpdateQueue;
     transactionFeeDistribution: UpdateQueue;
     foundationAccount: UpdateQueue;
-    electionDifficulty: UpdateQueue;
     mintDistribution: UpdateQueue;
     protocol: UpdateQueue;
     gasRewards: UpdateQueue;
@@ -602,6 +588,7 @@ interface UpdateQueuesCommon {
  * Used from protocol version 1-3
  */
 export interface UpdateQueuesV0 extends UpdateQueuesCommon {
+    electionDifficulty: UpdateQueue;
     bakerStakeThreshold: UpdateQueue;
 }
 
@@ -609,6 +596,7 @@ export interface UpdateQueuesV0 extends UpdateQueuesCommon {
  * Used in protocol version 4 and 5
  */
 export interface UpdateQueuesV1 extends UpdateQueuesCommon {
+    electionDifficulty: UpdateQueue;
     cooldownParameters: UpdateQueue;
     timeParameters: UpdateQueue;
     poolParameters: UpdateQueue;
@@ -618,10 +606,7 @@ export interface UpdateQueuesV1 extends UpdateQueuesCommon {
  * Used from protocol version 6
  */
 export interface UpdateQueuesV2 extends UpdateQueuesV1 {
-    timeoutParameters: UpdateQueue;
-    minBlockTime: UpdateQueue;
-    blockEnergyLimit: UpdateQueue;
-    finalizationCommiteeParameters: UpdateQueue;
+    consensus2TimingParameters: UpdateQueue;
 }
 
 export type UpdateQueues = UpdateQueuesV0 | UpdateQueuesV1 | UpdateQueuesV2;
@@ -901,8 +886,7 @@ export interface ConsensusStatusV0 extends ConsensusStatusCommon {
     slotDuration: Duration;
 }
 
-/** Consensus status used from protocol version 6 */
-export type ConsensusStatusV1 = ConsensusStatusCommon & {
+export interface ConcordiumBftStatus {
     /** Current duration before a round times out, in milliseconds */
     currentTimeoutDuration: Duration;
     /** Current round */
@@ -914,6 +898,11 @@ export type ConsensusStatusV1 = ConsensusStatusCommon & {
      * the trigger block for the epoch transition.
      */
     triggerBlockTime: Date;
+}
+
+/** Consensus status used from protocol version 6 */
+export type ConsensusStatusV1 = ConsensusStatusCommon & {
+    concordiumBFTStatus: ConcordiumBftStatus;
 };
 
 /** Union of consensus status types used across all protocol versions */

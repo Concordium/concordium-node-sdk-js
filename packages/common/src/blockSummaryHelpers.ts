@@ -23,7 +23,7 @@ export const isUpdateQueuesV1 = (uq: UpdateQueues): uq is UpdateQueuesV1 =>
 
 /** Whether {@link UpdateQueues} parameter given is of type {@link UpdateQueuesV2} */
 export const isUpdateQueuesV2 = (uq: UpdateQueues): uq is UpdateQueuesV2 =>
-    (uq as UpdateQueuesV2).timeoutParameters !== undefined;
+    (uq as UpdateQueuesV2).consensus2TimingParameters !== undefined;
 
 export const isUpdatesV0 = (u: Updates): u is UpdatesV0 =>
     isUpdateQueuesV0(u.updateQueues);
@@ -38,7 +38,9 @@ export const isBlockSummaryV0 = (bs: BlockSummary): bs is BlockSummaryV0 =>
     bs.protocolVersion === undefined || bs.protocolVersion <= 3n;
 
 export const isBlockSummaryV1 = (bs: BlockSummary): bs is BlockSummaryV1 =>
-    bs.protocolVersion !== undefined && bs.protocolVersion > 3n;
+    bs.protocolVersion !== undefined &&
+    bs.protocolVersion > 3n &&
+    bs.protocolVersion <= 5n;
 
 export const isBlockSummaryV2 = (bs: BlockSummary): bs is BlockSummaryV2 =>
     bs.protocolVersion !== undefined && bs.protocolVersion > 5n;

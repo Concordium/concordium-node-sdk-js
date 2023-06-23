@@ -1,6 +1,6 @@
 import * as expected from './resources/expectedJsons';
 import { streamToList } from '@concordium/common-sdk';
-import { getNodeClient } from './testHelpers';
+import { getNodeClientV2 as getNodeClient } from './testHelpers';
 
 const client = getNodeClient();
 

@@ -80,6 +80,7 @@ import {
     ConsensusParameters,
     TimeoutParameters,
     Ratio,
+    ConcordiumBftStatus,
 } from '@concordium/common-sdk';
 import {
     buildJsonResponseReviver,
@@ -390,6 +391,7 @@ export default class ConcordiumNodeClient {
             'index',
             'subindex',
             'protocolVersion',
+            'foundationAccountIndex',
 
             // v0 keys
             'bakerCooldownEpochs',
@@ -491,14 +493,17 @@ export default class ConcordiumNodeClient {
             new Empty()
         );
 
-        const datePropertyKeys: (keyof CS)[] = [
+        const datePropertyKeys: (keyof CS | keyof ConcordiumBftStatus)[] = [
             'blockLastReceivedTime',
             'blockLastArrivedTime',
             'genesisTime',
             'currentEraGenesisTime',
             'lastFinalizedTime',
+
+            //v1
+            'triggerBlockTime',
         ];
-        const bigIntPropertyKeys: (keyof CS)[] = [
+        const bigIntPropertyKeys: (keyof CS | keyof ConcordiumBftStatus)[] = [
             'epochDuration',
             'slotDuration',
             'bestBlockHeight',
@@ -507,10 +512,11 @@ export default class ConcordiumNodeClient {
             'blocksVerifiedCount',
             'blocksReceivedCount',
             'protocolVersion',
+
+            // v1
             'currentTimeoutDuration',
             'currentRound',
             'currentEpoch',
-            'triggerBlockTime',
         ];
 
         const consensusStatus = unwrapJsonResponse<ConsensusStatus>(

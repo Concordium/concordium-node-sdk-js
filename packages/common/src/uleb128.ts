@@ -33,7 +33,7 @@ export function uleb128DecodeWithIndex(
     bytes: Buffer,
     index = 0
 ): [bigint, number] {
-    if (bytes.length === 0) {
+    if (bytes[index] === undefined || bytes.subarray(0).length === 0) {
         throw Error(
             'The ULEB128 encoding was not valid: The passed bytes must at least contain a single byte'
         );

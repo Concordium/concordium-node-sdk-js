@@ -30,6 +30,7 @@ for more information
 <!--toc:end-->
 
 ## ConcordiumGRPCClient
+
 The SDK provides a gRPC client, which can interact with the [Concordium
 Node](https://github.com/Concordium/concordium-node) using gRPC-web.
 

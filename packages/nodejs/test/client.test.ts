@@ -49,8 +49,6 @@ test.each([CHAIN_GENESIS_BLOCK, PV1_BLOCK, PV4_BLOCK, PV6_BLOCK])(
             throw new Error('could not find block');
         }
 
-        console.log(bs.protocolVersion);
-
         // BlockSummary
         expect(typeof bs.protocolVersion).toEqual('bigint');
 

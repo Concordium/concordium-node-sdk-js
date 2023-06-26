@@ -12,7 +12,7 @@ for more information
 
 <!--toc:start-->
 - [concordium-web-sdk](#concordium-web-sdk)
-  - [ConcordiumNodeClient](#concordiumnodeclient)
+  - [ConcordiumGRPCClient](#concordiumgrpcclient)
   - [JSON-RPC client](#json-rpc-client)
   - [Creating buffers](#creating-buffers)
   - [Examples](#examples)
@@ -29,8 +29,7 @@ for more information
     - [SendCIS2UpdateOperator.html](#sendcis2updateoperatorhtml)
 <!--toc:end-->
 
-## ConcordiumNodeClient
-
+## ConcordiumGRPCClient
 The SDK provides a gRPC client, which can interact with the [Concordium
 Node](https://github.com/Concordium/concordium-node) using gRPC-web.
 

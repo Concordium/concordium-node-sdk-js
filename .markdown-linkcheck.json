@@ -1,7 +1,7 @@
 {
   "ignorePatterns": [
     {
-      "pattern": "classes/Common_GRPC_Client.ConcordiumNodeClient.html"
+      "pattern": "classes/Common_GRPC_Client.ConcordiumGRPCClient.html"
     }
   ]
 }

@@ -13,24 +13,21 @@ import { getNodeClient } from './testHelpers';
  * remove the v1 API entirely.
  */
 
-const address = 'concordiumwalletnode.com';
-const port = 10000;
-
-const client = getNodeClient(address, port);
+const client = getNodeClient();
 
 // eslint-disable-next-line prefer-const
 let CHAIN_GENESIS_BLOCK: string | undefined = undefined;
 // eslint-disable-next-line prefer-const
-let PV4_BLOCK: string | undefined = undefined;
+let PV5_BLOCK: string | undefined = undefined;
 // eslint-disable-next-line prefer-const
 let PV6_BLOCK: string | undefined = undefined;
 
-// Mainnet blocks.
+// Testnet blocks.
 CHAIN_GENESIS_BLOCK =
-    '9dd9ca4d19e9393877d2c44b70f89acbfc0883c2243e5eeaecc0d1cd0503f478';
-PV4_BLOCK = '568589c9f5b3a3989c24d4c916bc2417a64c6dff6ec987595349c551a829d332';
+    '4221332d34e1694168c2a0c0b3fd0f273809612cb13d000d5c2e00e85f50f796';
+PV5_BLOCK = '58daebb41ca195442593e10c1a67279bb839a8195c8ea7442ea7116d87114fbb';
 
-test.each([CHAIN_GENESIS_BLOCK, PV4_BLOCK, PV6_BLOCK])(
+test.each([CHAIN_GENESIS_BLOCK, PV5_BLOCK, PV6_BLOCK])(
     'blockSummary format as expected',
     async (block) => {
         if (block === undefined) {

@@ -13,13 +13,17 @@ import 'isomorphic-fetch';
 
 export { getModuleBuffer } from '../src/util';
 
+const TESTNET_NODE = 'node.testnet.concordium.com';
+const GRPCV1_PORT = 10000;
+const GRPCV2_PORT = 20000;
+
 /**
  * Creates a gRPC v1 client (for nodeJS) to communicate with a local concordium-node
  * used for automatic tests.
  */
 export function getNodeClient(
-    address = '127.0.0.1',
-    port = 10000
+    address = TESTNET_NODE,
+    port = GRPCV1_PORT
 ): ConcordiumNodeClient {
     const metadata = new Metadata();
     metadata.add('authentication', 'rpcadmin');
@@ -37,8 +41,8 @@ export function getNodeClient(
  * used for automatic tests.
  */
 export function getNodeClientV2(
-    address = 'node.testnet.concordium.com',
-    port = 20000
+    address = TESTNET_NODE,
+    port = GRPCV2_PORT
 ): ConcordiumGRPCClient {
     return createConcordiumClient(address, port, credentials.createInsecure(), {
         timeout: 15000,
@@ -52,7 +56,7 @@ export function getNodeClientV2(
  */
 export function getNodeClientWeb(
     address = 'http://node.testnet.concordium.com',
-    port = 20000
+    port = GRPCV2_PORT
 ): ConcordiumGRPCClient {
     const transport = new GrpcWebFetchTransport({
         baseUrl: `${address}:${port}`,

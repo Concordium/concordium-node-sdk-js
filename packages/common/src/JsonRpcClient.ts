@@ -4,6 +4,7 @@ import {
     AccountTransaction,
     AccountTransactionSignature,
     buildInvoker,
+    ConcordiumBftStatus,
     ConsensusStatus,
     ConsensusStatusV0,
     ConsensusStatusV1,
@@ -137,14 +138,17 @@ export class JsonRpcClient {
         type CS = ConsensusStatusV0 & ConsensusStatusV1;
 
         // TODO Avoid code duplication with nodejs client
-        const datePropertyKeys: (keyof CS)[] = [
+        const datePropertyKeys: (keyof CS | keyof ConcordiumBftStatus)[] = [
             'blockLastReceivedTime',
             'blockLastArrivedTime',
             'genesisTime',
             'currentEraGenesisTime',
             'lastFinalizedTime',
+
+            // v1
+            'triggerBlockTime',
         ];
-        const bigIntPropertyKeys: (keyof CS)[] = [
+        const bigIntPropertyKeys: (keyof CS | keyof ConcordiumBftStatus)[] = [
             'epochDuration',
             'slotDuration',
             'bestBlockHeight',
@@ -153,10 +157,11 @@ export class JsonRpcClient {
             'blocksVerifiedCount',
             'blocksReceivedCount',
             'protocolVersion',
+
+            // v1
             'currentTimeoutDuration',
             'currentRound',
             'currentEpoch',
-            'triggerBlockTime',
         ];
 
         const res = transformJsonResponse<ConsensusStatus>(

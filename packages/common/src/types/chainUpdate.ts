@@ -54,8 +54,8 @@ export type EuroPerEnergyUpdate = ChainUpdate<
 >;
 
 /** An update to the micro CCD per euro exchange rate */
-export type MicroCCDPerEuroUpdate = ChainUpdate<
-    UpdateType.MicroCCDPerEuro,
+export type MicroGtuPerEuroUpdate = ChainUpdate<
+    UpdateType.MicroGtuPerEuro,
     ExchangeRate
 >;
 
@@ -160,7 +160,7 @@ export type PendingAuthorizationKeysUpdate = ChainUpdate<
 
 /** A union of chain updates, barring key updates */
 export type CommonUpdate =
-    | MicroCCDPerEuroUpdate
+    | MicroGtuPerEuroUpdate
     | EuroPerEnergyUpdate
     | TransactionFeeDistributionUpdate
     | FoundationAccountUpdate
@@ -198,7 +198,7 @@ export enum UpdateType {
     Protocol = 'protocol',
     ElectionDifficulty = 'electionDifficulty',
     EuroPerEnergy = 'euroPerEnergy',
-    MicroCCDPerEuro = 'microCCDPerEuro',
+    MicroGtuPerEuro = 'microGtuPerEuro',
     FoundationAccount = 'foundationAccount',
     MintDistribution = 'mintDistribution',
     TransactionFeeDistribution = 'transactionFeeDistribution',

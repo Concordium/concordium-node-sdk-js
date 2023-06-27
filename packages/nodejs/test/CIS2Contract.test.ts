@@ -6,7 +6,7 @@ import {
     serializeTypeValue,
     TransactionEventTag,
 } from '@concordium/common-sdk';
-import { getNodeClient } from './testHelpers';
+import { getNodeClientV2 as getNodeClient } from './testHelpers';
 
 const CIS2_FT_ADDRESS: ContractAddress = {
     index: 3496n,

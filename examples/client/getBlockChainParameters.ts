@@ -60,12 +60,9 @@ const client = createConcordiumClient(
 
     // Check version of chain parameters
     if (isChainParametersV2(cp)) {
-        console.log('Minimum block time', cp.consensusParameters.minBlockTime);
+        console.log('Minimum block time', cp.minBlockTime);
     } else if (isChainParametersV1(cp)) {
-        console.log(
-            'Minimum equity capital:',
-            cp.poolParameters.minimumEquityCapital
-        );
+        console.log('Minimum equity capital:', cp.minimumEquityCapital);
     } else {
         console.log(
             'Chain parameters is V0 and does not contain information on minimum equity capital'

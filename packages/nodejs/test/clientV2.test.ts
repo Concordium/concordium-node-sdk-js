@@ -21,7 +21,7 @@ import {
 import {
     getModuleBuffer,
     getIdentityInput,
-    getNodeClient,
+    getNodeClientV2,
     getNodeClientWeb,
 } from './testHelpers';
 import * as ed from '@noble/ed25519';
@@ -37,7 +37,7 @@ global.TextEncoder = TextEncoder as any;
 global.TextDecoder = TextDecoder as any;
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-const clientV2 = getNodeClient();
+const clientV2 = getNodeClientV2();
 const clientWeb = getNodeClientWeb();
 
 const testAccount = new v1.AccountAddress(

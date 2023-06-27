@@ -4,7 +4,7 @@ import {
     buildBasicAccountSigner,
     signTransaction,
 } from '@concordium/common-sdk';
-import { getNodeClient } from '../test/testHelpers';
+import { getNodeClientV2 as getNodeClient } from '../test/testHelpers';
 
 const client = getNodeClient();
 

@@ -9,7 +9,13 @@ import {
     moduleSchemaFromBase64,
     typeSchemaFromBase64,
 } from '@concordium/react-components';
-import { AccountAddress, AccountTransactionType, CcdAmount, SchemaVersion } from '@concordium/web-sdk';
+import {
+    AccountAddress,
+    AccountTransactionType,
+    CcdAmount,
+    ConcordiumGRPCClient,
+    SchemaVersion,
+} from '@concordium/web-sdk';
 import { useContractSchemaRpc } from './useContractSchemaRpc';
 import { errorString } from './util';
 
@@ -19,8 +25,9 @@ interface ContractParamEntry {
 }
 
 interface ContractInvokerProps {
+    rpc: ConcordiumGRPCClient;
     network: Network;
-    connection: WalletConnection;
+    connection: WalletConnection | undefined;
     connectedAccount: string | undefined;
     contract: Info;
 }
@@ -89,7 +96,7 @@ function ccdScanUrl(network: Network, txHash: string | undefined) {
     return `${network.ccdScanBaseUrl}/?dcount=1&dentity=transaction&dhash=${txHash}`;
 }
 
-export function ContractInvoker({ network, connection, connectedAccount, contract }: ContractInvokerProps) {
+export function ContractInvoker({ rpc, network, connection, connectedAccount, contract }: ContractInvokerProps) {
     const [selectedMethodIndex, setSelectedMethodIndex] = useState(0);
     const [schemaInput, setSchemaInput] = useState('');
     // Reset selected method and schema input on contract change.
@@ -98,8 +105,7 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
         setSchemaInput('');
     }, [contract]);
 
-    const schemaRpcResult = useContractSchemaRpc(connection, contract);
-
+    const schemaRpcResult = useContractSchemaRpc(rpc, contract);
     const [schemaTypeInput, setSchemaTypeInput] = useState(DEFAULT_SCHEMA_TYPE);
 
     const [contractParams, setContractParams] = useState<Array<ContractParamEntry>>([]);
@@ -143,7 +149,7 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
     const [isAwaitingApproval, setIsAwaitingApproval] = useState(false);
     const [submittedTxHash, setSubmittedTxHash] = useState<Result<string, string>>();
     const submit = useCallback(() => {
-        if (connectedAccount) {
+        if (connection && connectedAccount) {
             setIsAwaitingApproval(true);
             inputResult
                 .asyncAndThen(([parameters, { schema }, amount]) =>
@@ -304,10 +310,13 @@ export function ContractInvoker({ network, connection, connectedAccount, contrac
                 </Form.Group>
                 <Row>
                     <Col>
-                        <Button onClick={submit} disabled={isAwaitingApproval || inputResult.isErr()}>
-                            {isAwaitingApproval && 'Waiting for approval...'}
-                            {!isAwaitingApproval && 'Submit'}
-                        </Button>
+                        {!connection && <Button disabled={true}>Connect wallet to submit</Button>}
+                        {connection && (
+                            <Button onClick={submit} disabled={isAwaitingApproval || inputResult.isErr()}>
+                                {isAwaitingApproval && 'Waiting for approval...'}
+                                {!isAwaitingApproval && 'Submit'}
+                            </Button>
+                        )}
                     </Col>
                 </Row>
                 <Row>

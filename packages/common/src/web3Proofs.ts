@@ -24,8 +24,8 @@ import {
     Web3IssuerCommitmentInput,
     VerifiablePresentation,
     CredentialStatement,
-    VerifiableCredentialSchemaSchema,
     CredentialSubject,
+    CredentialSchemaSubject,
 } from './web3ProofTypes';
 import { getPastDate } from './idProofs';
 import {
@@ -502,7 +502,7 @@ export function createAccountCommitmentInputWithHdWallet(
     wallet: ConcordiumHdWallet,
     identityIndex: number,
     credIndex: number
-) {
+): AccountCommitmentInput {
     const randomness = statements.reduce<Record<number, string>>((acc, x) => {
         acc[x.attributeTag] = wallet
             .getAttributeCommitmentRandomness(
@@ -525,12 +525,12 @@ export function createAccountCommitmentInputWithHdWallet(
 function extractAttributesFromCredentialSubject(
     statements: AtomicStatementV2[],
     credentialSubject: CredentialSubject,
-    schema: VerifiableCredentialSchemaSchema
+    schema: CredentialSchemaSubject
 ): Record<number, string | bigint> {
     return statements.reduce<Record<number, string | bigint>>(
         (acc, { attributeTag }) => {
             const schemaEntry = Object.entries(schema.properties).find(
-                ([_, s]) => Number(s.index) == attributeTag
+                ([, s]) => Number(s.index) == attributeTag
             );
             if (!schemaEntry) {
                 throw new Error('Missing attribute in schema: ' + attributeTag);
@@ -551,7 +551,7 @@ export function createWeb3CommitmentInput(
     signer: KeyPair,
     issuanceDate: string,
     credentialSubject: CredentialSubject,
-    schema: VerifiableCredentialSchemaSchema,
+    schema: CredentialSchemaSubject,
     randomness: string
 ): Web3IssuerCommitmentInput {
     return {
@@ -577,9 +577,9 @@ export function createWeb3CommitmentInputWithHdWallet(
     credentialIndex: number,
     issuanceDate: string,
     credentialSubject: CredentialSubject,
-    schema: VerifiableCredentialSchemaSchema,
+    schema: CredentialSchemaSubject,
     randomness: string
-) {
+): Web3IssuerCommitmentInput {
     const keyPair = {
         signKey: wallet
             .getVerifiableCredentialPublicKey(credentialIndex)

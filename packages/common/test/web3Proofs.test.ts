@@ -1,4 +1,3 @@
-import { AttributeKeyString, AttributesKeys, IdDocType } from '../src/types';
 import {
     ConcordiumHdWallet,
     createAccountDID,
@@ -43,10 +42,6 @@ test('create Web3Id proof with account credentials', () => {
     const values: Record<number, string> = {};
     values[0] = '0';
     values[17] = 'a';
-
-    const idObject = JSON.parse(
-        fs.readFileSync('./test/resources/identity-object.json').toString()
-    ).value;
 
     const credentialStatements: RequestStatement[] = [
         {

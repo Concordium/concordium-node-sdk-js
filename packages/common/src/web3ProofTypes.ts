@@ -192,7 +192,7 @@ export class VerifiablePresentation {
         this.verifiableCredential = verifiableCredential;
     }
 
-    toString() {
+    toString(): string {
         return JSONBigInt({
             alwaysParseAsBig: true,
             useNativeBigInt: true,
@@ -316,14 +316,14 @@ export interface VerifiableCredential {
     credentialSchema: CredentialSchema;
 }
 
-interface CredentialSchemaProperty {
+export interface CredentialSchemaProperty {
     title: string;
     type: 'string' | 'number';
     description: string;
     index: string;
 }
 
-interface CredentialSchemaSubject {
+export interface CredentialSchemaSubject {
     properties: { id: CredentialSchemaProperty } & Record<
         string,
         CredentialSchemaProperty

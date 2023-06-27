@@ -13,7 +13,7 @@ import { getNodeClient } from './testHelpers';
  * remove the v1 API entirely.
  */
 
-const address = '127.0.0.1';
+const address = 'concordiumwalletnode.com';
 const port = 10000;
 
 const client = getNodeClient(address, port);
@@ -21,22 +21,16 @@ const client = getNodeClient(address, port);
 // eslint-disable-next-line prefer-const
 let CHAIN_GENESIS_BLOCK: string | undefined = undefined;
 // eslint-disable-next-line prefer-const
-let PV1_BLOCK: string | undefined = undefined;
-// eslint-disable-next-line prefer-const
 let PV4_BLOCK: string | undefined = undefined;
 // eslint-disable-next-line prefer-const
 let PV6_BLOCK: string | undefined = undefined;
-
-// Stagenet blocks.
-// PV4_BLOCK = 'f97d975f0e92297c51e24c3b0d8fd39dfe8e1b148d993eba6e9389d4083f7a64';
-// PV6_BLOCK = 'a3e46b2cf01d611c7507a2c2a3597da681f7b7b503b7a1f1372e661e040790f3';
 
 // Mainnet blocks.
 CHAIN_GENESIS_BLOCK =
     '9dd9ca4d19e9393877d2c44b70f89acbfc0883c2243e5eeaecc0d1cd0503f478';
 PV4_BLOCK = '568589c9f5b3a3989c24d4c916bc2417a64c6dff6ec987595349c551a829d332';
 
-test.each([CHAIN_GENESIS_BLOCK, PV1_BLOCK, PV4_BLOCK, PV6_BLOCK])(
+test.each([CHAIN_GENESIS_BLOCK, PV4_BLOCK, PV6_BLOCK])(
     'blockSummary format as expected',
     async (block) => {
         if (block === undefined) {
@@ -164,7 +158,7 @@ test.each([CHAIN_GENESIS_BLOCK, PV1_BLOCK, PV4_BLOCK, PV6_BLOCK])(
                 .finalizationReward
         ).toBeDefined();
         expect(bs.updates.chainParameters.euroPerEnergy).toBeDefined();
-        // expect(bs.updates.chainParameters.foundationAccountIndex).toBeDefined();
+        expect(bs.updates.chainParameters.foundationAccountIndex).toBeDefined();
         expect(bs.updates.chainParameters.accountCreationLimit).toBeDefined();
 
         if (isBlockSummaryV0(bs)) {

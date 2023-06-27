@@ -1,4 +1,23 @@
-name: Build and upload release
+# Release/publish workflow to run on all pushed commits.
+
+# The commit to be released is selected by ref using the input 'tag_override' and defaults to the ref that triggered the workflow.
+# The ref must be an annotated tag with a specific format and a message consisting of the release notes.
+# The format of the tag must match the pattern '<package>/<version>', where '@concordium/<package>' is a workspace within
+# the project (located at './packages/<package>') and '<version>' must start with the value of the "version" field of
+# the 'package.json' file for that package.
+#
+# The workflow builds all packages in the project but publishes only '<package>'.
+# The release is uploaded as a GitHub release with the release notes fetched from the annotated tag
+# followed by the changelog entries for the version.
+# The release includes the build artifact assembled using 'npm pack'.
+#
+# The workflow fails without uploading if the ref doesn't satisfy some of the requirements above or if any package fails to build.
+#
+# In addition to uploading a GitHub release, the workflow is intended to also publish the package to NPM registry in the future.
+# For now, the process of publishing is to download the pack file from the GitHub release to a box that is logged into the organization
+# (using 'npm login') and then publish it using the command 'npm publish <pack-file>'.
+
+name: Build and publish release
 
 on:
     workflow_dispatch: # trigger manually

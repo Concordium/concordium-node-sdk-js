@@ -8,6 +8,7 @@
     "scripts": {
         "fmt": "yarn workspaces foreach -v run prettier --write .",
         "build": "yarn workspaces foreach -tv --no-private run build",
+        "test": "yarn workspaces foreach -tv --no-private run test",
         "postinstall": "husky install",
         "prepack": "pinst --disable",
         "postpack": "pinst --enable"

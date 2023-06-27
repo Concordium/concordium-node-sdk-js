@@ -256,9 +256,32 @@ export type IdentityQualifier = {
     type: 'cred';
     issuers: IdentityProviderIndex[];
 };
+
 export type StatementProverQualifier =
     | VerifiableCredentialQualifier
     | IdentityQualifier;
+
+export function isAccountCredentialStatement(
+    statement: CredentialStatement
+): statement is AccountCredentialStatement {
+    return statement.idQualifier.type === 'cred';
+}
+
+export function isVerifiableCredentialStatement(
+    statement: CredentialStatement
+): statement is VerifiableCredentialStatement {
+    return statement.idQualifier.type === 'sci';
+}
+
+export interface AccountCredentialStatement extends CredentialStatement {
+    idQualifier: IdentityQualifier;
+    statement: AtomicStatementV2[];
+}
+
+export interface VerifiableCredentialStatement extends CredentialStatement {
+    idQualifier: VerifiableCredentialQualifier;
+    statement: AtomicStatementV2[];
+}
 
 export type CredentialStatement = {
     idQualifier: StatementProverQualifier;

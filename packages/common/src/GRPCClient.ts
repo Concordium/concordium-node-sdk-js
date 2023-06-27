@@ -1,6 +1,6 @@
 /**
  * This is the GRPC-Client used by both the Web-SDK and the NodeJS-SDK. Check
- * out the {@link ConcordiumNodeClient}
+ * out the {@link ConcordiumGRPCClient}
  *
  * @module Common GRPC-Client
  */
@@ -45,10 +45,10 @@ export type FindInstanceCreationReponse = {
  * A concordium-node specific gRPC client wrapper.
  *
  * @example
- * import ConcordiumNodeClient from "..."
- * const client = new ConcordiumNodeClient('127.0.0.1', 20000, credentials, metadata, 15000);
+ * import { ConcordiumGRPCClient } from "..."
+ * const client = new ConcordiumGRPCClient('127.0.0.1', 20000, credentials, metadata, 15000);
  */
-export default class ConcordiumNodeClient {
+export class ConcordiumGRPCClient {
     client: QueriesClient;
 
     /**

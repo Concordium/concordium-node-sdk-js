@@ -1,5 +1,15 @@
 # Changelog
 
+## 5.0.0
+
+### Breaking changes
+
+- Bumped @concordium/rust-bindings to 1.0.0. (Throws proper `Error`s when execution fails for any WASM entrypoint, with improved error messages)
+- Bumped @concordium/common-sdk to 8.0.0:
+  - Properly formed errors thrown by functions wrapping WASM execution (from @concordium/rust-bindings) with more helpful error messages.
+  - Types adapted to changes in protocol version 6.
+  - and [more](../common/CHANGELOG.md)
+
 ## 4.0.1 2023-05-25
 
 ### Changed
@@ -10,8 +20,8 @@
 
 ### Breaking Changes
 
-- Bumped @concordium/common-sdk to 7.0.0:
 - Bumped @concordium/rust-bindings to 0.12.0. (Adds key derivation for verifiable credentials)
+- Bumped @concordium/common-sdk to 7.0.0:
   - Updated `blockInfo` so that the `bakerId` field is optional, since it will be undefined for genesis blocks.
   - `waitForTransactionFinalization` now returns a `BlockItemSummaryInBlock`
   - Added missing version return type in `getModuleSchema`. It now returns an object containing the schema source and version.

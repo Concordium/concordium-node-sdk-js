@@ -35,6 +35,7 @@ export {
 export * from './idProofs';
 export * from './idProofTypes';
 export * from './signHelpers';
+export * from './versionedTypeHelpers';
 export * from './accountHelpers';
 export * from './blockSummaryHelpers';
 export * from './rewardStatusHelpers';
@@ -47,7 +48,7 @@ export { isHex, streamToList, wasmToSchema, unwrap } from './util';
 export { HttpProvider } from './providers/httpProvider';
 export { JsonRpcClient } from './JsonRpcClient';
 export * from './identity';
-export { default as ConcordiumGRPCClient } from './GRPCClient';
+export { ConcordiumGRPCClient } from './GRPCClient';
 
 export { getAccountTransactionHandler } from './accountTransactions';
 export * from './energyCost';

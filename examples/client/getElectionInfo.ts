@@ -1,5 +1,9 @@
 import { parseEndpoint } from '../shared/util';
-import { createConcordiumClient, ElectionInfo } from '@concordium/node-sdk';
+import {
+    createConcordiumClient,
+    ElectionInfo,
+    isElectionInfoV0,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -57,7 +61,10 @@ const client = createConcordiumClient(
     const sortedBakers = bakers.sort((xs, ys) => ys[1] - xs[1]);
 
     console.log('Bakers sorted by lottery power:', sortedBakers);
-    console.log('Election difficulty:', electionInfo.electionDifficulty);
     console.log('Election nonce:', electionInfo.electionNonce);
+
+    if (isElectionInfoV0(electionInfo)) {
+        console.log('Election difficulty:', electionInfo.electionDifficulty);
+    }
     // #endregion documentation-snippet
 })();

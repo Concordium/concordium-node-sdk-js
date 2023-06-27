@@ -21,19 +21,19 @@ This document describes the helper class for working with CIS-2 contracts
 ## CIS2Contract
 
 The CIS2Contract class wraps the
-[ConcordiumNodeClient](../classes/Common_GRPC_Client.ConcordiumNodeClient.html),
+[ConcordiumGRPCClient](../classes/Common_GRPC_Client.ConcordiumGRPCClient.html),
 defining an interface matching the [CIS-2
 standard](https://proposals.concordium.software/CIS/cis-2.html).
 
 ### Creating a CIS2Contract
 
-The contract relies on a `ConcordiumNodeClient` instance to communicate
+The contract relies on a `ConcordiumGRPCClient` instance to communicate
 with the node along with a contract address of the CIS-2 contract to invoke
 functions on.
 
 ```ts
     const contractAddress = {index: 1234n, subindex: 0n};
-    const contract = await CIS2Contract.create(nodeClient, contractAddress); // Implied that you already have a `ConcordiumNodeClient` instance of some form.
+    const contract = await CIS2Contract.create(nodeClient, contractAddress); // Implied that you already have a `ConcordiumGRPCClient` instance of some form.
 ```
 
 This gets the relevant contract information from the node and checks

@@ -4,7 +4,10 @@ import {
     AccountTransaction,
     AccountTransactionSignature,
     buildInvoker,
+    ConcordiumBftStatus,
     ConsensusStatus,
+    ConsensusStatusV0,
+    ConsensusStatusV1,
     ContractAddress,
     ContractContext,
     CryptographicParameters,
@@ -45,7 +48,7 @@ function transformJsonResponse<Result>(
 }
 
 /**
- * @deprecated This has been deprecated in favor of the {@link ConcordiumNodeClient} that uses version 2 of the concordium gRPC API
+ * @deprecated This has been deprecated in favor of the {@link ConcordiumGRPCClient} that uses version 2 of the concordium gRPC API
  */
 export class JsonRpcClient {
     provider: Provider;
@@ -132,16 +135,20 @@ export class JsonRpcClient {
 
     async getConsensusStatus(): Promise<ConsensusStatus> {
         const response = await this.provider.request('getConsensusStatus');
+        type CS = ConsensusStatusV0 & ConsensusStatusV1;
 
         // TODO Avoid code duplication with nodejs client
-        const datePropertyKeys: (keyof ConsensusStatus)[] = [
+        const datePropertyKeys: (keyof CS | keyof ConcordiumBftStatus)[] = [
             'blockLastReceivedTime',
             'blockLastArrivedTime',
             'genesisTime',
             'currentEraGenesisTime',
             'lastFinalizedTime',
+
+            // v1
+            'triggerBlockTime',
         ];
-        const bigIntPropertyKeys: (keyof ConsensusStatus)[] = [
+        const bigIntPropertyKeys: (keyof CS | keyof ConcordiumBftStatus)[] = [
             'epochDuration',
             'slotDuration',
             'bestBlockHeight',
@@ -150,6 +157,11 @@ export class JsonRpcClient {
             'blocksVerifiedCount',
             'blocksReceivedCount',
             'protocolVersion',
+
+            // v1
+            'currentTimeoutDuration',
+            'currentRound',
+            'currentEpoch',
         ];
 
         const res = transformJsonResponse<ConsensusStatus>(

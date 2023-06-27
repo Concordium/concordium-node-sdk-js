@@ -254,7 +254,6 @@ function translateChainParametersCommon(
     params: v2.ChainParametersV1 | v2.ChainParametersV0
 ): v1.ChainParametersCommon {
     return {
-        electionDifficulty: trAmountFraction(params.electionDifficulty?.value),
         euroPerEnergy: unwrap(params.euroPerEnergy?.value),
         microGTUPerEuro: unwrap(params.microCcdPerEuro?.value),
         accountCreationLimit: unwrap(params.accountCreationLimit?.value),
@@ -275,17 +274,10 @@ function translateRewardParametersCommon(
     params: v2.ChainParametersV1 | v2.ChainParametersV0
 ): v1.RewardParametersCommon {
     const feeDistribution = params.transactionFeeDistribution;
-    const gasRewards = params.gasRewards;
     return {
         transactionFeeDistribution: {
             baker: trAmountFraction(feeDistribution?.baker),
             gasAccount: trAmountFraction(feeDistribution?.gasAccount),
-        },
-        gASRewards: {
-            baker: trAmountFraction(gasRewards?.baker),
-            finalizationProof: trAmountFraction(gasRewards?.finalizationProof),
-            accountCreation: trAmountFraction(gasRewards?.accountCreation),
-            chainUpdate: trAmountFraction(gasRewards?.chainUpdate),
         },
     };
 }
@@ -407,89 +399,205 @@ export function cryptographicParameters(
     };
 }
 
+function trChainParametersV0(v0: v2.ChainParametersV0): v1.ChainParametersV0 {
+    const common = translateChainParametersCommon(v0);
+    const commonRewardParameters = translateRewardParametersCommon(v0);
+    return {
+        ...common,
+        electionDifficulty: trAmountFraction(v0.electionDifficulty?.value),
+        bakerCooldownEpochs: unwrap(v0.bakerCooldownEpochs?.value),
+        minimumThresholdForBaking: unwrap(v0.minimumThresholdForBaking?.value),
+        rewardParameters: {
+            ...commonRewardParameters,
+            gASRewards: {
+                baker: trAmountFraction(v0.gasRewards?.baker),
+                finalizationProof: trAmountFraction(
+                    v0.gasRewards?.finalizationProof
+                ),
+                accountCreation: trAmountFraction(
+                    v0.gasRewards?.accountCreation
+                ),
+                chainUpdate: trAmountFraction(v0.gasRewards?.chainUpdate),
+            },
+            mintDistribution: {
+                bakingReward: trAmountFraction(
+                    v0.mintDistribution?.bakingReward
+                ),
+                finalizationReward: trAmountFraction(
+                    v0.mintDistribution?.finalizationReward
+                ),
+                mintPerSlot: trMintRate(v0.mintDistribution?.mintPerSlot),
+            },
+        },
+    };
+}
+
+function trChainParametersV1(
+    params: v2.ChainParametersV1
+): v1.ChainParametersV1 {
+    const common = translateChainParametersCommon(params);
+    const commonRewardParameters = translateRewardParametersCommon(params);
+    return {
+        ...common,
+        electionDifficulty: trAmountFraction(params.electionDifficulty?.value),
+        rewardPeriodLength: unwrap(
+            params.timeParameters?.rewardPeriodLength?.value?.value
+        ),
+        mintPerPayday: trMintRate(params.timeParameters?.mintPerPayday),
+        delegatorCooldown: unwrap(
+            params.cooldownParameters?.delegatorCooldown?.value
+        ),
+        poolOwnerCooldown: unwrap(
+            params.cooldownParameters?.poolOwnerCooldown?.value
+        ),
+        passiveFinalizationCommission: trAmountFraction(
+            params.poolParameters?.passiveFinalizationCommission
+        ),
+        passiveBakingCommission: trAmountFraction(
+            params.poolParameters?.passiveBakingCommission
+        ),
+        passiveTransactionCommission: trAmountFraction(
+            params.poolParameters?.passiveTransactionCommission
+        ),
+        finalizationCommissionRange: translateCommissionRange(
+            params.poolParameters?.commissionBounds?.finalization
+        ),
+        bakingCommissionRange: translateCommissionRange(
+            params.poolParameters?.commissionBounds?.baking
+        ),
+        transactionCommissionRange: translateCommissionRange(
+            params.poolParameters?.commissionBounds?.transaction
+        ),
+        minimumEquityCapital: unwrap(
+            params.poolParameters?.minimumEquityCapital?.value
+        ),
+        capitalBound: trAmountFraction(
+            params.poolParameters?.capitalBound?.value
+        ),
+        leverageBound: unwrap(params.poolParameters?.leverageBound?.value),
+        rewardParameters: {
+            ...commonRewardParameters,
+            gASRewards: {
+                baker: trAmountFraction(params.gasRewards?.baker),
+                finalizationProof: trAmountFraction(
+                    params.gasRewards?.finalizationProof
+                ),
+                accountCreation: trAmountFraction(
+                    params.gasRewards?.accountCreation
+                ),
+                chainUpdate: trAmountFraction(params.gasRewards?.chainUpdate),
+            },
+            mintDistribution: {
+                bakingReward: trAmountFraction(
+                    params.mintDistribution?.bakingReward
+                ),
+                finalizationReward: trAmountFraction(
+                    params.mintDistribution?.finalizationReward
+                ),
+            },
+        },
+    };
+}
+
+function trChainParametersV2(
+    params: v2.ChainParametersV2
+): v1.ChainParametersV2 {
+    const common = translateChainParametersCommon(params);
+    const commonRewardParameters = translateRewardParametersCommon(params);
+
+    return {
+        ...common,
+        rewardPeriodLength: unwrap(
+            params.timeParameters?.rewardPeriodLength?.value?.value
+        ),
+        mintPerPayday: trMintRate(params.timeParameters?.mintPerPayday),
+        delegatorCooldown: unwrap(
+            params.cooldownParameters?.delegatorCooldown?.value
+        ),
+        poolOwnerCooldown: unwrap(
+            params.cooldownParameters?.poolOwnerCooldown?.value
+        ),
+        passiveFinalizationCommission: trAmountFraction(
+            params.poolParameters?.passiveFinalizationCommission
+        ),
+        passiveBakingCommission: trAmountFraction(
+            params.poolParameters?.passiveBakingCommission
+        ),
+        passiveTransactionCommission: trAmountFraction(
+            params.poolParameters?.passiveTransactionCommission
+        ),
+        finalizationCommissionRange: translateCommissionRange(
+            params.poolParameters?.commissionBounds?.finalization
+        ),
+        bakingCommissionRange: translateCommissionRange(
+            params.poolParameters?.commissionBounds?.baking
+        ),
+        transactionCommissionRange: translateCommissionRange(
+            params.poolParameters?.commissionBounds?.transaction
+        ),
+        minimumEquityCapital: unwrap(
+            params.poolParameters?.minimumEquityCapital?.value
+        ),
+        capitalBound: trAmountFraction(
+            params.poolParameters?.capitalBound?.value
+        ),
+        leverageBound: unwrap(params.poolParameters?.leverageBound?.value),
+        rewardParameters: {
+            ...commonRewardParameters,
+            gASRewards: {
+                baker: trAmountFraction(params.gasRewards?.baker),
+                accountCreation: trAmountFraction(
+                    params.gasRewards?.accountCreation
+                ),
+                chainUpdate: trAmountFraction(params.gasRewards?.chainUpdate),
+            },
+            mintDistribution: {
+                bakingReward: trAmountFraction(
+                    params.mintDistribution?.bakingReward
+                ),
+                finalizationReward: trAmountFraction(
+                    params.mintDistribution?.finalizationReward
+                ),
+            },
+        },
+        timeoutBase: unwrap(
+            params.consensusParameters?.timeoutParameters?.timeoutBase?.value
+        ),
+        timeoutDecrease: unwrap(
+            params.consensusParameters?.timeoutParameters?.timeoutDecrease
+        ),
+        timeoutIncrease: unwrap(
+            params.consensusParameters?.timeoutParameters?.timeoutIncrease
+        ),
+        minBlockTime: unwrap(params.consensusParameters?.minBlockTime?.value),
+        blockEnergyLimit: unwrap(
+            params.consensusParameters?.blockEnergyLimit?.value
+        ),
+        finalizerRelativeStakeThreshold: trAmountFraction(
+            params.finalizationCommitteeParameters
+                ?.finalizerRelativeStakeThreshold
+        ),
+        minimumFinalizers: unwrap(
+            params.finalizationCommitteeParameters?.minimumFinalizers
+        ),
+        maximumFinalizers: unwrap(
+            params.finalizationCommitteeParameters?.maximumFinalizers
+        ),
+    };
+}
+
 export function blockChainParameters(
     params: v2.ChainParameters
 ): v1.ChainParameters {
     switch (params.parameters.oneofKind) {
+        case 'v2': {
+            return trChainParametersV2(params.parameters.v2);
+        }
         case 'v1': {
-            const common = translateChainParametersCommon(params.parameters.v1);
-            const v1 = params.parameters.v1;
-            const commonRewardParameters = translateRewardParametersCommon(v1);
-            return {
-                ...common,
-                rewardPeriodLength: unwrap(
-                    v1.timeParameters?.rewardPeriodLength?.value?.value
-                ),
-                mintPerPayday: trMintRate(v1.timeParameters?.mintPerPayday),
-                delegatorCooldown: unwrap(
-                    v1.cooldownParameters?.delegatorCooldown?.value
-                ),
-                poolOwnerCooldown: unwrap(
-                    v1.cooldownParameters?.poolOwnerCooldown?.value
-                ),
-                passiveFinalizationCommission: trAmountFraction(
-                    v1.poolParameters?.passiveFinalizationCommission
-                ),
-                passiveBakingCommission: trAmountFraction(
-                    v1.poolParameters?.passiveBakingCommission
-                ),
-                passiveTransactionCommission: trAmountFraction(
-                    v1.poolParameters?.passiveTransactionCommission
-                ),
-                finalizationCommissionRange: translateCommissionRange(
-                    v1.poolParameters?.commissionBounds?.finalization
-                ),
-                bakingCommissionRange: translateCommissionRange(
-                    v1.poolParameters?.commissionBounds?.baking
-                ),
-                transactionCommissionRange: translateCommissionRange(
-                    v1.poolParameters?.commissionBounds?.transaction
-                ),
-                minimumEquityCapital: unwrap(
-                    v1.poolParameters?.minimumEquityCapital?.value
-                ),
-                capitalBound: trAmountFraction(
-                    v1.poolParameters?.capitalBound?.value
-                ),
-                leverageBound: unwrap(v1.poolParameters?.leverageBound?.value),
-                rewardParameters: {
-                    ...commonRewardParameters,
-                    mintDistribution: {
-                        bakingReward: trAmountFraction(
-                            v1.mintDistribution?.bakingReward
-                        ),
-                        finalizationReward: trAmountFraction(
-                            v1.mintDistribution?.finalizationReward
-                        ),
-                    },
-                },
-            };
+            return trChainParametersV1(params.parameters.v1);
         }
         case 'v0': {
-            const common = translateChainParametersCommon(params.parameters.v0);
-            const v0 = params.parameters.v0;
-            const commonRewardParameters = translateRewardParametersCommon(v0);
-            return {
-                ...common,
-                bakerCooldownEpochs: unwrap(v0.bakerCooldownEpochs?.value),
-                minimumThresholdForBaking: unwrap(
-                    v0.minimumThresholdForBaking?.value
-                ),
-                rewardParameters: {
-                    ...commonRewardParameters,
-                    mintDistribution: {
-                        bakingReward: trAmountFraction(
-                            v0.mintDistribution?.bakingReward
-                        ),
-                        finalizationReward: trAmountFraction(
-                            v0.mintDistribution?.finalizationReward
-                        ),
-                        mintPerSlot: trMintRate(
-                            v0.mintDistribution?.mintPerSlot
-                        ),
-                    },
-                },
-            };
+            return trChainParametersV0(params.parameters.v0);
         }
         default:
             throw new Error('Missing chain parameters');
@@ -530,12 +638,16 @@ export function passiveDelegationInfo(
     };
 }
 
+function translateProtocolVersion(pv: v2.ProtocolVersion): bigint {
+    return BigInt(pv + 1); // Protocol version enum indexes from 0, i.e. pv.PROTOCOL_VERSION_1 = 0.
+}
+
 export function tokenomicsInfo(info: v2.TokenomicsInfo): v1.RewardStatus {
     switch (info.tokenomics.oneofKind) {
         case 'v0': {
             const v0 = info.tokenomics.v0;
             return {
-                protocolVersion: BigInt(v0.protocolVersion),
+                protocolVersion: translateProtocolVersion(v0.protocolVersion),
                 totalAmount: unwrap(v0.totalAmount?.value),
                 totalEncryptedAmount: unwrap(v0.totalEncryptedAmount?.value),
                 bakingRewardAccount: unwrap(v0.bakingRewardAccount?.value),
@@ -548,7 +660,7 @@ export function tokenomicsInfo(info: v2.TokenomicsInfo): v1.RewardStatus {
         case 'v1': {
             const v1 = info.tokenomics.v1;
             return {
-                protocolVersion: BigInt(v1.protocolVersion),
+                protocolVersion: translateProtocolVersion(v1.protocolVersion),
                 totalAmount: unwrap(v1.totalAmount?.value),
                 totalEncryptedAmount: unwrap(v1.totalEncryptedAmount?.value),
                 bakingRewardAccount: unwrap(v1.bakingRewardAccount?.value),
@@ -570,13 +682,12 @@ export function tokenomicsInfo(info: v2.TokenomicsInfo): v1.RewardStatus {
 }
 
 export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
-    return {
+    const common: v1.ConsensusStatusCommon = {
         bestBlock: unwrapValToHex(ci.bestBlock),
         genesisBlock: unwrapValToHex(ci.genesisBlock),
         currentEraGenesisBlock: unwrapValToHex(ci.currentEraGenesisBlock),
         lastFinalizedBlock: unwrapValToHex(ci.lastFinalizedBlock),
         epochDuration: unwrap(ci.epochDuration?.value),
-        slotDuration: unwrap(ci.slotDuration?.value),
         bestBlockHeight: unwrap(ci.bestBlockHeight?.value),
         lastFinalizedBlockHeight: unwrap(ci.lastFinalizedBlockHeight?.value),
         finalizationCount: BigInt(unwrap(ci.finalizationCount)),
@@ -591,7 +702,7 @@ export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
         genesisTime: trTimestamp(ci.genesisTime),
         currentEraGenesisTime: trTimestamp(ci.currentEraGenesisTime),
         genesisIndex: unwrap(ci.genesisIndex?.value),
-        protocolVersion: BigInt(unwrap(ci.protocolVersion)),
+        protocolVersion: translateProtocolVersion(unwrap(ci.protocolVersion)),
         // Only include the following if they are not undefined
         ...(ci.blockReceivePeriodEma && {
             blockReceivePeriodEMA: ci.blockReceivePeriodEma,
@@ -621,6 +732,27 @@ export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
             lastFinalizedTime: trTimestamp(ci.lastFinalizedTime),
         }),
     };
+
+    if (ci.protocolVersion < v2.ProtocolVersion.PROTOCOL_VERSION_6) {
+        const ci0: v1.ConsensusStatusV0 = {
+            ...common,
+            slotDuration: unwrap(ci.slotDuration?.value),
+        };
+
+        return ci0;
+    }
+
+    const ci1: v1.ConsensusStatusV1 = {
+        ...common,
+        concordiumBFTStatus: {
+            currentTimeoutDuration: unwrap(ci.currentTimeoutDuration?.value),
+            currentRound: unwrap(ci.currentRound?.value),
+            currentEpoch: unwrap(ci.currentEpoch?.value),
+            triggerBlockTime: trTimestamp(ci.triggerBlockTime),
+        },
+    };
+
+    return ci1;
 }
 
 function trAccountAddress(
@@ -1162,12 +1294,25 @@ function trTransactionFeeDistributionUpdate(
     };
 }
 
-function trGasRewardsUpdate(gasRewards: v2.GasRewards): v1.GasRewardsUpdate {
+function trGasRewardsUpdate(gasRewards: v2.GasRewards): v1.GasRewardsV0Update {
     return {
         updateType: v1.UpdateType.GasRewards,
         update: {
             baker: trAmountFraction(gasRewards.baker),
+            accountCreation: trAmountFraction(gasRewards.accountCreation),
+            chainUpdate: trAmountFraction(gasRewards.accountCreation),
             finalizationProof: trAmountFraction(gasRewards.finalizationProof),
+        },
+    };
+}
+
+function trGasRewardsCpv2Update(
+    gasRewards: v2.GasRewardsCpv2
+): v1.GasRewardsV1Update {
+    return {
+        updateType: v1.UpdateType.GasRewardsCpv2,
+        update: {
+            baker: trAmountFraction(gasRewards.baker),
             accountCreation: trAmountFraction(gasRewards.accountCreation),
             chainUpdate: trAmountFraction(gasRewards.accountCreation),
         },
@@ -1264,6 +1409,51 @@ function trTimeParametersCpv1Update(
         },
     };
 }
+
+function trTimeoutParameteresUpdate(
+    timeout: v2.TimeoutParameters
+): v1.TimeoutParametersUpdate {
+    return {
+        updateType: v1.UpdateType.TimeoutParameters,
+        update: {
+            timeoutBase: unwrap(timeout.timeoutBase?.value),
+            timeoutDecrease: unwrap(timeout.timeoutDecrease),
+            timeoutIncrease: unwrap(timeout.timeoutIncrease),
+        },
+    };
+}
+
+function trMinBlockTimeUpdate(duration: v2.Duration): v1.MinBlockTimeUpdate {
+    return {
+        updateType: v1.UpdateType.MinBlockTime,
+        update: unwrap(duration.value),
+    };
+}
+
+function trBlockEnergyLimitUpdate(
+    energy: v2.Energy
+): v1.BlockEnergyLimitUpdate {
+    return {
+        updateType: v1.UpdateType.BlockEnergyLimit,
+        update: unwrap(energy.value),
+    };
+}
+
+function trFinalizationCommitteeParametersUpdate(
+    params: v2.FinalizationCommitteeParameters
+): v1.FinalizationCommitteeParametersUpdate {
+    return {
+        updateType: v1.UpdateType.FinalizationCommitteeParameters,
+        update: {
+            finalizerRelativeStakeThreshold: trAmountFraction(
+                params.finalizerRelativeStakeThreshold
+            ),
+            minimumFinalizers: params.minimumFinalizers,
+            maximumFinalizers: params.maximumFinalizers,
+        },
+    };
+}
+
 function trMintDistributionCpv0Update(
     mintDist: v2.MintDistributionCpv0
 ): v1.MintDistributionUpdate {
@@ -1326,6 +1516,18 @@ export function pendingUpdate(
             return trMintDistributionCpv0Update(effect.mintDistributionCpv0);
         case 'mintDistributionCpv1':
             return trMintDistributionCpv1Update(effect.mintDistributionCpv1);
+        case 'gasRewardsCpv2':
+            return trGasRewardsCpv2Update(effect.gasRewardsCpv2);
+        case 'timeoutParameters':
+            return trTimeoutParameteresUpdate(effect.timeoutParameters);
+        case 'minBlockTime':
+            return trMinBlockTimeUpdate(effect.minBlockTime);
+        case 'blockEnergyLimit':
+            return trBlockEnergyLimitUpdate(effect.blockEnergyLimit);
+        case 'finalizationCommitteeParameters':
+            return trFinalizationCommitteeParametersUpdate(
+                effect.finalizationCommitteeParameters
+            );
         case 'rootKeys':
             return {
                 updateType: v1.UpdateType.HigherLevelKeyUpdate,
@@ -1365,8 +1567,7 @@ export function pendingUpdate(
         case undefined:
             throw Error('Unexpected missing pending update');
         default:
-            // TODO support new updates
-            throw Error('Unsupported update: ' + effect.oneofKind);
+            throw Error(`Unsupported update: ${effect}`);
     }
 }
 
@@ -1417,6 +1618,18 @@ function trUpdatePayload(
             return trMintDistributionCpv1Update(
                 payload.mintDistributionCpv1Update
             );
+        case 'gasRewardsCpv2Update':
+            return trGasRewardsCpv2Update(payload.gasRewardsCpv2Update);
+        case 'timeoutParametersUpdate':
+            return trTimeoutParameteresUpdate(payload.timeoutParametersUpdate);
+        case 'minBlockTimeUpdate':
+            return trMinBlockTimeUpdate(payload.minBlockTimeUpdate);
+        case 'blockEnergyLimitUpdate':
+            return trBlockEnergyLimitUpdate(payload.blockEnergyLimitUpdate);
+        case 'finalizationCommitteeParametersUpdate':
+            return trFinalizationCommitteeParametersUpdate(
+                payload.finalizationCommitteeParametersUpdate
+            );
         case 'rootUpdate': {
             const rootUpdate = payload.rootUpdate;
             const keyUpdate = trKeyUpdate(rootUpdate);
@@ -1436,10 +1649,7 @@ function trUpdatePayload(
         case undefined:
             throw new Error('Unexpected missing update payload');
         default:
-            // TODO support new updates
-            throw Error(
-                'Unsupported update payload type: ' + payload?.oneofKind
-            );
+            throw Error(`Unsupported update payload type: ${payload}`);
     }
 }
 
@@ -2072,14 +2282,13 @@ export function blocksAtHeightResponse(
 }
 
 export function blockInfo(blockInfo: v2.BlockInfo): v1.BlockInfo {
-    return {
+    const common: v1.BlockInfoCommon = {
         blockParent: unwrapValToHex(blockInfo.parentBlock),
         blockHash: unwrapValToHex(blockInfo.hash),
         blockStateHash: unwrapValToHex(blockInfo.stateHash),
         blockLastFinalized: unwrapValToHex(blockInfo.lastFinalizedBlock),
         blockHeight: unwrap(blockInfo.height?.value),
         blockBaker: blockInfo.baker?.value,
-        blockSlot: unwrap(blockInfo.slotNumber?.value),
         blockArriveTime: trTimestamp(blockInfo.arriveTime),
         blockReceiveTime: trTimestamp(blockInfo.receiveTime),
         blockSlotTime: trTimestamp(blockInfo.slotTime),
@@ -2089,7 +2298,25 @@ export function blockInfo(blockInfo: v2.BlockInfo): v1.BlockInfo {
         transactionEnergyCost: unwrap(blockInfo.transactionsEnergyCost?.value),
         genesisIndex: unwrap(blockInfo.genesisIndex?.value),
         eraBlockHeight: Number(unwrap(blockInfo.eraBlockHeight?.value)),
+        protocolVersion: translateProtocolVersion(blockInfo.protocolVersion),
     };
+
+    if (blockInfo.protocolVersion < v2.ProtocolVersion.PROTOCOL_VERSION_6) {
+        const bi0: v1.BlockInfoV0 = {
+            ...common,
+            blockSlot: unwrap(blockInfo.slotNumber?.value),
+        };
+
+        return bi0;
+    }
+
+    const bi1: v1.BlockInfoV1 = {
+        ...common,
+        round: unwrap(blockInfo.round?.value),
+        epoch: unwrap(blockInfo.epoch?.value),
+    };
+
+    return bi1;
 }
 
 export function delegatorInfo(
@@ -2122,13 +2349,22 @@ function trBakerElectionInfo(
 }
 
 export function electionInfo(electionInfo: v2.ElectionInfo): v1.ElectionInfo {
-    return {
-        electionDifficulty: trAmountFraction(
-            electionInfo.electionDifficulty?.value
-        ),
+    const common: v1.ElectionInfoCommon = {
         electionNonce: unwrapValToHex(electionInfo.electionNonce),
         bakerElectionInfo:
             electionInfo.bakerElectionInfo.map(trBakerElectionInfo),
+    };
+
+    if (electionInfo.electionDifficulty === undefined) {
+        // election difficulty removed in protocol version 6.
+        return common;
+    }
+
+    return {
+        ...common,
+        electionDifficulty: trAmountFraction(
+            electionInfo.electionDifficulty?.value
+        ),
     };
 }
 
@@ -2154,6 +2390,12 @@ export function nextUpdateSequenceNumbers(
         addIdentityProvider: unwrap(nextNums.addIdentityProvider?.value),
         cooldownParameters: unwrap(nextNums.cooldownParameters?.value),
         timeParameters: unwrap(nextNums.timeParameters?.value),
+        timeoutParameters: unwrap(nextNums.timeoutParameters?.value),
+        minBlockTime: unwrap(nextNums.minBlockTime?.value),
+        blockEnergyLimit: unwrap(nextNums.blockEnergyLimit?.value),
+        finalizationCommiteeParameters: unwrap(
+            nextNums.finalizationCommitteeParameters?.value
+        ),
     };
 }
 

@@ -3,46 +3,29 @@ import { AccountAddress } from './types/accountAddress';
 import {
     ReduceStakePendingChange,
     RemovalPendingChange,
-    StakePendingChange,
-    StakePendingChangeV1,
     AccountInfo,
     AccountInfoBaker,
-    AccountInfoBakerV0,
-    AccountInfoBakerV1,
     AccountInfoDelegator,
-    StakePendingChangeV0,
     GenerateBakerKeysOutput,
 } from './types';
 
+/** Whether {@link AccountInfo} parameter given is of type {@link AccountInfoDelegator}, i.e. the account is a delegator */
 export const isDelegatorAccount = (
     ai: AccountInfo
 ): ai is AccountInfoDelegator =>
     (ai as AccountInfoDelegator).accountDelegation !== undefined;
 
+/** Whether {@link AccountInfo} parameter given is of type {@link AccountInfoBaker}, i.e. the account is a baker. */
 export const isBakerAccount = (ai: AccountInfo): ai is AccountInfoBaker =>
     (ai as AccountInfoBaker).accountBaker !== undefined;
 
-export const isBakerAccountV1 = (ai: AccountInfo): ai is AccountInfoBakerV1 =>
-    (ai as AccountInfoBakerV1).accountBaker?.bakerPoolInfo !== undefined;
-
-export const isBakerAccountV0 = (ai: AccountInfo): ai is AccountInfoBakerV0 =>
-    (ai as AccountInfoBakerV1).accountBaker?.bakerPoolInfo === undefined;
-
-export const isStakePendingChangeV1 = (
-    spc: StakePendingChange
-): spc is StakePendingChangeV1 =>
-    (spc as StakePendingChangeV1).effectiveTime !== undefined;
-
-export const isStakePendingChangeV0 = (
-    spc: StakePendingChange
-): spc is StakePendingChangeV0 =>
-    (spc as StakePendingChangeV0).epoch !== undefined;
-
+/** Whether the pending change given is of type {@link ReduceStakePendingChange} */
 export const isReduceStakePendingChange = (
     spc: ReduceStakePendingChange | RemovalPendingChange
 ): spc is ReduceStakePendingChange =>
     (spc as ReduceStakePendingChange).newStake !== undefined;
 
+/** Whether the pending change given is of type {@link RemovalPendingChange} */
 export const isRemovalPendingChange = (
     spc: ReduceStakePendingChange | RemovalPendingChange
 ): spc is RemovalPendingChange => !isReduceStakePendingChange(spc);

@@ -33,6 +33,9 @@ export const checkParameterLength = (buffer: Buffer): void => {
     }
 };
 
+/**
+ * Whether two {@link ContractAddress} contract addresses are equal.
+ */
 export const isEqualContractAddress =
     (a: ContractAddress) =>
     (b: ContractAddress): boolean =>

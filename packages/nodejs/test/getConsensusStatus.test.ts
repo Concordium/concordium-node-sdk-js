@@ -1,5 +1,5 @@
 import { ConsensusStatus, isHex } from '@concordium/common-sdk';
-import { getNodeClient } from './testHelpers';
+import { getNodeClientV2 as getNodeClient } from './testHelpers';
 
 const client = getNodeClient();
 test('retrieves the consensus status from the node with correct types', async () => {
@@ -54,7 +54,6 @@ test('retrieves the consensus status from the node with correct types', async ()
         expect(Number.isNaN(consensusStatus.genesisIndex)).toBeFalsy(),
 
         expect(typeof consensusStatus.epochDuration === 'bigint').toBeTruthy(),
-        expect(typeof consensusStatus.slotDuration === 'bigint').toBeTruthy(),
         expect(
             typeof consensusStatus.bestBlockHeight === 'bigint'
         ).toBeTruthy(),

@@ -1,7 +1,8 @@
 import * as v1 from '@concordium/common-sdk';
 import * as v2 from '../../common/grpc/v2/concordium/types';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
-import ConcordiumNodeClientV2, {
+import {
+    ConcordiumGRPCClient,
     getAccountIdentifierInput,
     getBlockHashInput,
 } from '@concordium/common-sdk/lib/GRPCClient';
@@ -20,7 +21,7 @@ import {
 import {
     getModuleBuffer,
     getIdentityInput,
-    getNodeClient,
+    getNodeClientV2,
     getNodeClientWeb,
 } from './testHelpers';
 import * as ed from '@noble/ed25519';
@@ -36,7 +37,7 @@ global.TextEncoder = TextEncoder as any;
 global.TextDecoder = TextDecoder as any;
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-const clientV2 = getNodeClient();
+const clientV2 = getNodeClientV2();
 const clientWeb = getNodeClientWeb();
 
 const testAccount = new v1.AccountAddress(
@@ -56,7 +57,7 @@ const testBlockHash =
 
 // Retrieves the account info for the given account in the GRPCv2 type format.
 function getAccountInfoV2(
-    client: ConcordiumNodeClientV2,
+    client: ConcordiumGRPCClient,
     accountIdentifier: v1.AccountIdentifierInput
 ): Promise<v2.AccountInfo> {
     const accountInfoRequest = {
@@ -213,6 +214,7 @@ test.each([clientV2, clientWeb])(
         expect(status).toEqual(expected.passiveDelegationStatus);
     }
 );
+
 test.each([clientV2, clientWeb])(
     'getPoolInfo corresponds to getPoolStatus with bakerId (with pending change)',
     async (client) => {

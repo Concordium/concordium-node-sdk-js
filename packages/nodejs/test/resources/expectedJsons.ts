@@ -1,7 +1,12 @@
 import {
     AccountAddress,
+    BlockInfoV0,
     CcdAmount,
+    ChainParametersV0,
+    ChainParametersV1,
+    ElectionInfoV0,
     ModuleReference,
+    NextUpdateSequenceNumbers,
 } from '@concordium/common-sdk';
 
 export const accountInfo = {
@@ -383,7 +388,7 @@ export const passiveDelegatorRewardInfoList = [
     },
 ];
 
-export const electionInfoList = {
+export const electionInfoList: ElectionInfoV0 = {
     electionDifficulty: 0.025,
     electionNonce:
         '0bb2121015ddd9026d0c31a8b33499ce6049daf5696fe4e2cd94cff83ad331f2',
@@ -462,7 +467,7 @@ export const transactionEventList = [
         },
     },
 ];
-export const seqNums = {
+export const seqNums: NextUpdateSequenceNumbers = {
     rootKeys: 1n,
     level1Keys: 1n,
     level2Keys: 1n,
@@ -479,6 +484,10 @@ export const seqNums = {
     addIdentityProvider: 1n,
     cooldownParameters: 1n,
     timeParameters: 1n,
+    timeoutParameters: 1n,
+    blockEnergyLimit: 1n,
+    minBlockTime: 1n,
+    finalizationCommiteeParameters: 1n,
 };
 
 export const specialEventList = [
@@ -1601,7 +1610,7 @@ export const regularAccountInfo = {
     accountAddress: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
 };
 
-export const chainParameters = {
+export const chainParameters: ChainParametersV1 = {
     electionDifficulty: 0.025,
     euroPerEnergy: { numerator: 1n, denominator: 50000n },
     microGTUPerEuro: {
@@ -1610,8 +1619,8 @@ export const chainParameters = {
     },
     accountCreationLimit: 10,
     foundationAccount: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
-    rewardPeriodLength: 24n,
     mintPerPayday: 0.000261157877,
+    rewardPeriodLength: 24n,
     delegatorCooldown: 1209600n,
     poolOwnerCooldown: 1814400n,
     passiveFinalizationCommission: 1,
@@ -1635,7 +1644,7 @@ export const chainParameters = {
     },
 };
 
-export const oldChainParameters = {
+export const oldChainParameters: ChainParametersV0 = {
     electionDifficulty: 0.025,
     euroPerEnergy: { numerator: 1n, denominator: 50000n },
     microGTUPerEuro: { numerator: 50000000n, denominator: 1n },
@@ -1750,7 +1759,7 @@ export const blocksAtHeight = [
     '99ceb0dfcd36714d9c141fde08e85da1d0d624994e95b35114f14193c811b76e',
 ];
 
-export const blockInfo = {
+export const blockInfo: BlockInfoV0 = {
     blockParent:
         '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf',
     blockHash:
@@ -1771,6 +1780,7 @@ export const blockInfo = {
     transactionEnergyCost: 0n,
     genesisIndex: 1,
     eraBlockHeight: 1258806,
+    protocolVersion: 4n,
 };
 
 export const bakers = [

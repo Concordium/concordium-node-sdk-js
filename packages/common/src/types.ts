@@ -36,10 +36,14 @@ export type JsonString = string;
 
 export type ModuleRef = HexString;
 
-// A number of milliseconds
+/** A number of milliseconds */
 export type Duration = bigint;
-// Unix timestamp in milliseconds
+/** Unix timestamp in milliseconds */
 export type Timestamp = bigint;
+/** A consensus round */
+export type Round = bigint;
+/** An amount of energy */
+export type Energy = bigint;
 
 /**
  * Returns a union of all keys of type T with values matching type V.
@@ -288,98 +292,201 @@ export type MintDistributionV1 = MintDistributionCommon;
 
 export type MintDistribution = MintDistributionV0 | MintDistributionV1;
 
-export interface GasRewards {
+/** Common gas rewards properties across all protocol versions */
+export interface GasRewardsCommon {
+    /** The fractional amount paid to the baker */
     baker: number;
-    finalizationProof: number;
+    /** The fractional amount paid for an account creation */
     accountCreation: number;
+    /** The fractional amount paid for a chain update */
     chainUpdate: number;
 }
 
+/** Gas rewards properties for protocol version 1-5 ({@link ChainParametersV0} and {@link ChainParametersV1}). */
+export interface GasRewardsV0 extends GasRewardsCommon {
+    /** The fractional amount paid for including a finalization proof */
+    finalizationProof: number;
+}
+
+/** Gas rewards properties from protocol version 6 ({@link ChainParametersV2}). */
+export type GasRewardsV1 = GasRewardsCommon;
+
+/** Common reward parameters used across all protocol versions */
 export interface RewardParametersCommon {
+    /** The current transaction fee distribution */
     transactionFeeDistribution: TransactionFeeDistribution;
-    gASRewards: GasRewards;
 }
 
-/**
- * Used from protocol version 1-3
- */
+/** Reward parameters used from protocol version 1-3 ({@link ChainParametersV0}). */
 export interface RewardParametersV0 extends RewardParametersCommon {
+    /** The current mint distribution */
     mintDistribution: MintDistributionV0;
+    /** The current gas rewards parameters */
+    gASRewards: GasRewardsV0;
 }
 
-/**
- * Used from protocol version 4
- */
+/** Reward parameters used in protocol versions 4 and 5 ({@link ChainParametersV1}). */
 export interface RewardParametersV1 extends RewardParametersCommon {
+    /** The current mint distribution */
     mintDistribution: MintDistributionV1;
+    /** The current gas rewards parameters */
+    gASRewards: GasRewardsV0;
 }
 
-export type RewardParameters = RewardParametersV0 | RewardParametersV1;
+/** Reward parameters used from protocol version 6 ({@link ChainParametersV2}). */
+export interface RewardParametersV2 extends RewardParametersCommon {
+    /** The current mint distribution */
+    mintDistribution: MintDistributionV1;
+    /** The current gas rewards parameters */
+    gASRewards: GasRewardsV1;
+}
 
+/** Cooldown parameters used from protocol version 1-3 */
 export interface CooldownParametersV0 {
+    /** The baker cooldown period in {@link Epoch} epochs */
     bakerCooldownEpochs: Epoch;
 }
 
+/** Cooldown parameters used from protocol version 4 */
 export interface CooldownParametersV1 {
+    /** The pool owner (baker) cooldown period in seconds */
     poolOwnerCooldown: DurationSeconds;
+    /** The delegator cooldown period in seconds */
     delegatorCooldown: DurationSeconds;
 }
 
+/** Pool parameters used from protocol version 1-3 */
 export interface PoolParametersV0 {
+    /** The minimum threshold to stake to become a baker. */
     minimumThresholdForBaking: Amount;
 }
 
+/** Pool parameters used from protocol version 4 */
 export interface PoolParametersV1 {
+    /** Fraction of finalization rewards charged by the passive delegation. */
     passiveFinalizationCommission: number;
+    /** Fraction of baking rewards charged by the passive delegation.*/
     passiveBakingCommission: number;
+    /* Fraction of transaction rewards charged by the L-pool.*/
     passiveTransactionCommission: number;
+    /** Fraction of finalization rewards charged by the pool owner. */
     finalizationCommissionRange: InclusiveRange<number>;
+    /** Fraction of baking rewards charged by the pool owner. */
     bakingCommissionRange: InclusiveRange<number>;
+    /** Fraction of transaction rewards charged by the pool owner. */
     transactionCommissionRange: InclusiveRange<number>;
+    /** Minimum equity capital required for a new baker.*/
     minimumEquityCapital: Amount;
+    /**
+     * Maximum fraction of the total staked capital of that a new baker can
+     * have.
+     */
     capitalBound: number;
+    /**
+     * The maximum leverage that a baker can have as a ratio of total stake
+     * to equity capital.
+     */
     leverageBound: Ratio;
 }
 
+/**
+ * Time parameters used from protocol version 4
+ * These consist of the reward period length and the mint rate per payday. These are coupled as
+ * a change to either affects the overall rate of minting.
+ */
 export interface TimeParametersV1 {
-    /**
-     * In epochs
-     */
+    /** The length of a reward period, in {@link Epoch} epochs. */
     rewardPeriodLength: Epoch;
+    /** The rate at which CCD is minted per payday. */
     mintPerPayday: number;
 }
 
+/** Parameters that determine timeouts in the consensus protocol used from protocol version 6. */
+export interface TimeoutParameters {
+    /** The base value for triggering a timeout, in milliseconds. */
+    timeoutBase: Duration;
+    /** Factor for increasing the timeout. Must be greater than 1. */
+    timeoutIncrease: Ratio;
+    /** Factor for decreasing the timeout. Must be between 0 and 1. */
+    timeoutDecrease: Ratio;
+}
+
+/** Consensus parameters, used from protocol version 6 */
+export interface ConsensusParameters {
+    /** Minimum time interval between blocks. */
+    minBlockTime: Duration;
+    /** Maximum energy allowed per block. */
+    blockEnergyLimit: Energy;
+}
+
+/**
+ * Finalization committee parameters, used from protocol version 6
+ */
+export interface FinalizationCommitteeParameters {
+    /** The minimum size of a finalization committee before `finalizerRelativeStakeThreshold` takes effect. */
+    minimumFinalizers: number;
+    /** The maximum size of a finalization committee. */
+    maximumFinalizers: number;
+    /**
+     * The threshold for determining the stake required for being eligible the finalization committee.
+     * The amount is given by `total stake in pools * finalizerRelativeStakeThreshold`.
+     * Subsequently, this will alwas be a number between 0 and 1.
+     */
+    finalizerRelativeStakeThreshold: number;
+}
+
+/** Common chain parameters across all protocol versions */
 export interface ChainParametersCommon {
-    electionDifficulty: number;
+    /** Rate of euros per energy */
     euroPerEnergy: ExchangeRate;
+    /** Rate of micro CCD per euro */
     microGTUPerEuro: ExchangeRate;
+    /** Limit for the number of account creations in a block */
     accountCreationLimit: number;
+    /** The chain foundation account */
+    foundationAccount: Base58String;
+    /** The chain foundation account index */
     foundationAccountIndex?: bigint;
-    foundationAccount?: string;
 }
 
-/**
- * Used from protocol version 1-3
- */
-export interface ChainParametersV0
-    extends ChainParametersCommon,
-        CooldownParametersV0,
-        PoolParametersV0 {
-    rewardParameters: RewardParametersV0;
-}
+/** Chain parameters used from protocol version 1-3 */
+export type ChainParametersV0 = ChainParametersCommon &
+    CooldownParametersV0 &
+    PoolParametersV0 & {
+        /** The election difficulty for consensus lottery */
+        electionDifficulty: number;
+        /** The election difficulty for consensus lottery */
+        rewardParameters: RewardParametersV0;
+    };
 
-/**
- * Used from protocol version 4
- */
-export interface ChainParametersV1
-    extends ChainParametersCommon,
-        CooldownParametersV1,
-        PoolParametersV1,
-        TimeParametersV1 {
-    rewardParameters: RewardParametersV1;
-}
+/** Chain parameters used in protocol versions 4 and 5 */
+export type ChainParametersV1 = ChainParametersCommon &
+    CooldownParametersV1 &
+    TimeParametersV1 &
+    PoolParametersV1 & {
+        /** The election difficulty for consensus lottery */
+        electionDifficulty: number;
+        /** The election difficulty for consensus lottery */
+        rewardParameters: RewardParametersV1;
+    };
 
-export type ChainParameters = ChainParametersV0 | ChainParametersV1;
+/** Chain parameters used from protocol version 6 */
+export type ChainParametersV2 = ChainParametersCommon &
+    CooldownParametersV1 &
+    TimeParametersV1 &
+    PoolParametersV1 &
+    FinalizationCommitteeParameters &
+    TimeoutParameters &
+    ConsensusParameters & {
+        /** The election difficulty for consensus lottery */
+        rewardParameters: RewardParametersV2;
+    };
+
+/** Union of all chain parameters across all protocol versions */
+export type ChainParameters =
+    | ChainParametersV0
+    | ChainParametersV1
+    | ChainParametersV2;
 
 export interface Authorization {
     threshold: number;
@@ -399,6 +506,9 @@ interface AuthorizationsCommon {
      * For protocol version 3 and earlier, this controls the authorization of the bakerStakeThreshold update.
      */
     poolParameters: Authorization;
+    /**
+     * For protocol version 6 and later, this controls the authorization of consensus related updates.
+     */
     electionDifficulty: Authorization;
     addAnonymityRevoker: Authorization;
     addIdentityProvider: Authorization;
@@ -456,7 +566,7 @@ export interface UpdateQueueQueue {
 
 export interface UpdateQueue {
     nextSequenceNumber: bigint;
-    queue: UpdateQueueQueue;
+    queue: UpdateQueueQueue[];
 }
 
 interface UpdateQueuesCommon {
@@ -464,7 +574,6 @@ interface UpdateQueuesCommon {
     euroPerEnergy: UpdateQueue;
     transactionFeeDistribution: UpdateQueue;
     foundationAccount: UpdateQueue;
-    electionDifficulty: UpdateQueue;
     mintDistribution: UpdateQueue;
     protocol: UpdateQueue;
     gasRewards: UpdateQueue;
@@ -479,19 +588,28 @@ interface UpdateQueuesCommon {
  * Used from protocol version 1-3
  */
 export interface UpdateQueuesV0 extends UpdateQueuesCommon {
+    electionDifficulty: UpdateQueue;
     bakerStakeThreshold: UpdateQueue;
 }
 
 /**
- * Used from protocol version 4
+ * Used in protocol version 4 and 5
  */
 export interface UpdateQueuesV1 extends UpdateQueuesCommon {
+    electionDifficulty: UpdateQueue;
     cooldownParameters: UpdateQueue;
     timeParameters: UpdateQueue;
     poolParameters: UpdateQueue;
 }
 
-export type UpdateQueues = UpdateQueuesV0 | UpdateQueuesV1;
+/**
+ * Used from protocol version 6
+ */
+export interface UpdateQueuesV2 extends UpdateQueuesV1 {
+    consensus2TimingParameters: UpdateQueue;
+}
+
+export type UpdateQueues = UpdateQueuesV0 | UpdateQueuesV1 | UpdateQueuesV2;
 
 interface ProtocolUpdate {
     message: string;
@@ -515,7 +633,7 @@ export interface UpdatesV0 extends UpdatesCommon {
 }
 
 /**
- * Used from protocol version 4
+ * Used in protocol version 4 and 5
  * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export interface UpdatesV1 extends UpdatesCommon {
@@ -525,9 +643,19 @@ export interface UpdatesV1 extends UpdatesCommon {
 }
 
 /**
+ * Used from protocol version 6
  * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
-export type Updates = UpdatesV0 | UpdatesV1;
+export interface UpdatesV2 extends UpdatesCommon {
+    chainParameters: ChainParametersV2;
+    updateQueues: UpdateQueuesV2;
+    keys: KeysV1;
+}
+
+/**
+ * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
+ */
+export type Updates = UpdatesV0 | UpdatesV1 | UpdatesV2;
 
 /**
  * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
@@ -547,7 +675,7 @@ export interface BlockSummaryV0 extends BlockSummaryCommon {
 }
 
 /**
- * Used from protocol version 4
+ * Used in protocol version 4 and 5
  * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export interface BlockSummaryV1 extends BlockSummaryCommon {
@@ -556,9 +684,18 @@ export interface BlockSummaryV1 extends BlockSummaryCommon {
 }
 
 /**
+ * Used from protocol version 6
  * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
-export type BlockSummary = BlockSummaryV0 | BlockSummaryV1;
+export interface BlockSummaryV2 extends BlockSummaryCommon {
+    updates: UpdatesV2;
+    protocolVersion: bigint;
+}
+
+/**
+ * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
+ */
+export type BlockSummary = BlockSummaryV0 | BlockSummaryV1 | BlockSummaryV2;
 
 interface RewardStatusCommon {
     protocolVersion?: bigint;
@@ -582,29 +719,69 @@ export interface RewardStatusV1 extends RewardStatusCommon {
 export type RewardStatus = RewardStatusV0 | RewardStatusV1;
 export type TokenomicsInfo = RewardStatus;
 
-export interface BlockInfo {
+/** Common properties for block info across all protocol versions */
+export interface BlockInfoCommon {
+    /**
+     * Hash of parent block. For the initial genesis block (i.e. not re-genesis)
+     * this will be the hash of the block itself
+     */
     blockParent: HexString;
+    /** Hash of block */
     blockHash: HexString;
+    /** Hash of block state */
     blockStateHash: HexString;
+    /** Hash of last finalized block when this block was baked */
     blockLastFinalized: HexString;
 
+    /** The absolute height of this (i.e. relative to the initial genesis block) */
     blockHeight: bigint;
+    /** The baker ID of the baker for this block. Not available for a genesis block */
     blockBaker?: BakerId;
-    blockSlot: bigint;
 
+    /** The time the block was verified */
     blockArriveTime: Date;
+    /** The time the block was received */
     blockReceiveTime: Date;
+    /** The time of the slot in which the block was baked */
     blockSlotTime: Date;
 
+    /** Whether the block is finalized */
     finalized: boolean;
 
+    /** The number of transactions in the block */
     transactionCount: bigint;
+    /** The total byte size of all transactions in the block */
     transactionsSize: bigint;
-    transactionEnergyCost: bigint;
+    /** The energy cost of the transactions in the block */
+    transactionEnergyCost: Energy;
 
+    /**
+     * The genesis index for the block. This counst the number of protocol updates that have
+     * preceeded this block, and defines the era of the block.
+     */
     genesisIndex: number;
+    /** The height of this block relative to the (re)genesis block of its era */
     eraBlockHeight: number;
+    /** The protocol version the block belongs to */
+    protocolVersion: bigint;
 }
+
+/** Block info used for protocol version 1-5 */
+export interface BlockInfoV0 extends BlockInfoCommon {
+    /** The slot number in which the block was baked. */
+    blockSlot: bigint;
+}
+
+/** Block info used from protocol version 6 */
+export interface BlockInfoV1 extends BlockInfoCommon {
+    /** The block round */
+    round: Round;
+    /** The block epoch */
+    epoch: Epoch;
+}
+
+/** Union of all block info versions */
+export type BlockInfo = BlockInfoV0 | BlockInfoV1;
 
 export interface CommonBlockInfo {
     hash: HexString;
@@ -625,55 +802,111 @@ export type BlocksAtHeightRequest =
     | AbsoluteBlocksAtHeightRequest
     | RelativeBlocksAtHeightRequest;
 
-export interface ConsensusStatus {
-    bestBlock: string;
-    genesisBlock: string;
-    currentEraGenesisBlock: string;
-    lastFinalizedBlock: string;
+/** Common properties for  consensus status types used across all protocol versions */
+export interface ConsensusStatusCommon {
+    /** Hash of the current best block */
+    bestBlock: HexString;
+    /** Hash of the initial genesis block */
+    genesisBlock: HexString;
+    /** Hash of the genesis block of the current era, i.e. since the last protocol update. */
+    currentEraGenesisBlock: HexString;
+    /** Hash of the last finalized block */
+    lastFinalizedBlock: HexString;
 
-    /**
-     * In milliseconds
-     */
-    epochDuration: bigint;
-    /**
-     * In milliseconds
-     */
-    slotDuration: bigint;
+    /** Current epoch duration, in milliseconds */
+    epochDuration: Duration;
+    /** Absolute height of the best block */
     bestBlockHeight: bigint;
+    /** Absolute height of the last finalized block */
     lastFinalizedBlockHeight: bigint;
 
+    /** Number of finalizations */
     finalizationCount: bigint;
+    /** Total number of blocks received and verified */
     blocksVerifiedCount: bigint;
+    /** Total number of blocks received */
     blocksReceivedCount: bigint;
 
+    /** Exponential moving average latency between a block's slot time and its arrival. */
     blockArriveLatencyEMA: number;
+    /** Standard deviation of exponential moving average latency between a block's slot time and its arrival. */
     blockArriveLatencyEMSD: number;
 
+    /** Exponential moving average latency between a block's slot time and received time. */
     blockReceiveLatencyEMA: number;
+    /** Standard deviation of exponential moving average latency between a block's slot time and received time. */
     blockReceiveLatencyEMSD: number;
 
+    /** Exponential moving average number of transactions per block. */
     transactionsPerBlockEMA: number;
+    /** Standard deviation of exponential moving average number of transactions per block. */
     transactionsPerBlockEMSD: number;
 
+    /** Exponential moving average time between receiving blocks. */
     blockReceivePeriodEMA?: number;
+    /** Standard deviation of exponential moving average time between receiving blocks. */
     blockReceivePeriodEMSD?: number;
 
+    /** Exponential moving average time between block arrivals. */
     blockArrivePeriodEMA?: number;
+    /** Standard deviation of exponential moving average time between block arrivals. */
     blockArrivePeriodEMSD?: number;
 
+    /** Exponential moving average time between finalizations. */
     finalizationPeriodEMA?: number;
+    /** Standard deviation of exponential moving average time between finalizations. */
     finalizationPeriodEMSD?: number;
 
+    /** Time of the (original) genesis block. */
     genesisTime: Date;
+    /** Time when the current era started. */
     currentEraGenesisTime: Date;
+    /** The last time a block was received. */
     blockLastReceivedTime?: Date;
+    /** The last time a block was verified (added to the tree). */
     blockLastArrivedTime?: Date;
+    /** Time of last verified finalization. */
     lastFinalizedTime?: Date;
 
+    /**
+     * The number of chain restarts via a protocol update. A completed
+     * protocol update instruction might not change the protocol version
+     * specified in the previous field, but it always increments the genesis
+     * index.
+     */
     genesisIndex: number;
 
+    /** Currently active protocol version. */
     protocolVersion: bigint;
 }
+
+/** Consensus status used for protocol version 1-5 */
+export interface ConsensusStatusV0 extends ConsensusStatusCommon {
+    /** (Current) slot duration in milliseconds */
+    slotDuration: Duration;
+}
+
+export interface ConcordiumBftStatus {
+    /** Current duration before a round times out, in milliseconds */
+    currentTimeoutDuration: Duration;
+    /** Current round */
+    currentRound: Round;
+    /** Current epoch */
+    currentEpoch: Epoch;
+    /**
+     * The first block in the epoch with timestamp at least this is considered to be
+     * the trigger block for the epoch transition.
+     */
+    triggerBlockTime: Date;
+}
+
+/** Consensus status used from protocol version 6 */
+export type ConsensusStatusV1 = ConsensusStatusCommon & {
+    concordiumBFTStatus: ConcordiumBftStatus;
+};
+
+/** Union of consensus status types used across all protocol versions */
+export type ConsensusStatus = ConsensusStatusV0 | ConsensusStatusV1;
 
 export interface CryptographicParameters {
     onChainCommitmentKey: string;
@@ -1160,11 +1393,25 @@ export interface BakerElectionInfo {
     lotteryPower: number;
 }
 
-export interface ElectionInfo {
-    electionDifficulty: number;
+/** Common properties for election info across all protocol versions */
+export interface ElectionInfoCommon {
     electionNonce: HexString;
     bakerElectionInfo: BakerElectionInfo[];
 }
+
+/** Election info used for protocol version 1-5 */
+export interface ElectionInfoV0 extends ElectionInfoCommon {
+    electionDifficulty: number;
+}
+
+/** Election info used from protocol version 6 */
+export type ElectionInfoV1 = ElectionInfoCommon;
+
+/**
+ * Union of different versions of election info across all protocol versions.
+ * Contains information related to baker election for a particular block
+ */
+export type ElectionInfo = ElectionInfoV0 | ElectionInfoV1;
 
 export interface NextUpdateSequenceNumbers {
     rootKeys: bigint;
@@ -1183,6 +1430,10 @@ export interface NextUpdateSequenceNumbers {
     addIdentityProvider: bigint;
     cooldownParameters: bigint;
     timeParameters: bigint;
+    timeoutParameters: bigint;
+    minBlockTime: bigint;
+    blockEnergyLimit: bigint;
+    finalizationCommiteeParameters: bigint;
 }
 
 export type BlockFinalizationSummary =
@@ -1446,7 +1697,7 @@ export enum ParameterType {
     I32,
     /** Signed 64-bit integer. */
     I64,
-    /** Token amount in microCCD (10^-6 GTU). */
+    /** Token amount in microCCD (10^-6 CCD). */
     Amount,
     /** Sender account address. */
     AccountAddress,

@@ -1,6 +1,20 @@
 # Changelog
 
-## Unreleased
+## 8.0.0
+
+### Breaking changes
+
+- Bumped @concordium/rust-bindings to 1.0.0. (Throws proper `Error`s when execution fails for any WASM entrypoint, with improved error messages)
+- Updated `types.ts` to conform to updated GRPC API, which includes adding more variants to existing types (all new variants take effect from protocol version 6):
+  - `ChainParametersV2` added to `ChainParameters`
+  - `BlockInfo` changed to `BlockInfoV0 | BlockInfoV1`
+  - `ConsensusStatus` changed to `ConsensusStatusV0 | ConsensusStatusV1`
+  - `ElectionInfo` changed to `ElectionInfoV0 | ElectionInfoV1`
+
+### Fixed
+
+- Cost calculation for `deployModule` transaction.
+- Fixed a bug where protocol version was different (i.e. 1 less than what it should be) when using the gRPCv2 API (compared to what is returned by the gRPCv1 API).
 
 ### Changes
 
@@ -9,8 +23,22 @@
 ### Added
 
 - A `parseWallet` function to parse wallet export files
+- Helper functions to determine version of versioned types mentioned in "Breaking Changes" have been added.
+- Support for new chain update types.
 - Function `uleb128DecodeWithIndex` that can also parse more than a single ULEB128 bigint
 - Added `tokenAddressFromBase58` and `tokenAddressToBase58` to CIS2
+
+### Changed
+
+- The following functions now all have an additional parameter controlling whether errors are in a verbose format or not:
+    - `deserializeContractState`
+    - `deserializeReceiveReturnValue`
+    - `deserializeReceiveError`
+    - `deserializeInitError`
+    - `deserializeTypeValue`
+    - `serializeInitContractParameters`
+    - `serializeUpdateContractParameters`
+    - `serializeTypeValue`
 
 ## 7.0.1 2023-05-25
 

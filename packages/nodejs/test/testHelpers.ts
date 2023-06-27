@@ -1,11 +1,11 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import * as fs from 'fs';
-import { credentials } from '@grpc/grpc-js/';
+import { credentials, Metadata } from '@grpc/grpc-js/';
 import { ConcordiumGRPCClient, IdentityInput } from '@concordium/common-sdk';
 import { decryptMobileWalletExport, EncryptedData } from '../src/wallet/crypto';
 import { MobileWalletExport } from '../src/wallet/types';
 import { createConcordiumClient } from '../src/clientV2';
-import ConcordiumNodeClientV2 from '@concordium/common-sdk/lib/GRPCClient';
+import ConcordiumNodeClient from '../src/client';
 import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
 
 // This makes sure the necessary types are added to `globalThis`
@@ -13,23 +13,51 @@ import 'isomorphic-fetch';
 
 export { getModuleBuffer } from '../src/util';
 
+const TESTNET_NODE = 'node.testnet.concordium.com';
+const GRPCV1_PORT = 10000;
+const GRPCV2_PORT = 20000;
+
 /**
- * Creates a client to communicate with a local concordium-node
+ * Creates a gRPC v1 client (for nodeJS) to communicate with a local concordium-node
  * used for automatic tests.
  */
 export function getNodeClient(
-    address = 'node.testnet.concordium.com',
-    port = 20000
-): ConcordiumNodeClientV2 {
+    address = TESTNET_NODE,
+    port = GRPCV1_PORT
+): ConcordiumNodeClient {
+    const metadata = new Metadata();
+    metadata.add('authentication', 'rpcadmin');
+    return new ConcordiumNodeClient(
+        address,
+        port,
+        credentials.createInsecure(),
+        metadata,
+        15000
+    );
+}
+
+/**
+ * Creates a gRPC v2 client (for nodeJS) to communicate with a local concordium-node
+ * used for automatic tests.
+ */
+export function getNodeClientV2(
+    address = TESTNET_NODE,
+    port = GRPCV2_PORT
+): ConcordiumGRPCClient {
     return createConcordiumClient(address, port, credentials.createInsecure(), {
         timeout: 15000,
     });
 }
+
 // TODO find nice way to move this to web/common
+/**
+ * Creates a gRPC v2 client (for web) to communicate with a local concordium-node
+ * used for automatic tests.
+ */
 export function getNodeClientWeb(
     address = 'http://node.testnet.concordium.com',
-    port = 20000
-): ConcordiumNodeClientV2 {
+    port = GRPCV2_PORT
+): ConcordiumGRPCClient {
     const transport = new GrpcWebFetchTransport({
         baseUrl: `${address}:${port}`,
         timeout: 15000,

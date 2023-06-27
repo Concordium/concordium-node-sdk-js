@@ -6,7 +6,7 @@ import {
     InvokeContractResult,
     UpdateContractPayload,
 } from '../types';
-import ConcordiumNodeClient from '../GRPCClient';
+import { ConcordiumGRPCClient } from '../GRPCClient';
 import { AccountSigner, signTransaction } from '../signHelpers';
 import {
     serializeCIS2Transfers,
@@ -52,7 +52,7 @@ const getDefaultExpiryDate = (): Date => {
  */
 class CIS2DryRun {
     constructor(
-        private grpcClient: ConcordiumNodeClient,
+        private grpcClient: ConcordiumGRPCClient,
         private contractAddress: ContractAddress,
         private contractName: string
     ) {}
@@ -163,7 +163,7 @@ export class CIS2Contract {
     private dryRunInstance: CIS2DryRun;
 
     constructor(
-        private grpcClient: ConcordiumNodeClient,
+        private grpcClient: ConcordiumGRPCClient,
         private contractAddress: ContractAddress,
         private contractName: string
     ) {
@@ -177,14 +177,14 @@ export class CIS2Contract {
     /**
      * Creates a new `CIS2Contract` instance by querying the node for the necessary information through the supplied `grpcClient`.
      *
-     * @param {ConcordiumNodeClient} grpcClient - The client used for contract invocations and updates.
+     * @param {ConcordiumGRPCClient} grpcClient - The client used for contract invocations and updates.
      * @param {ContractAddress} contractAddress - Address of the contract instance.
      *
      * @throws If `InstanceInfo` could not be received for the contract, if the contract does not support the CIS-2 standard,
      * or if the contract name could not be parsed from the information received from the node.
      */
     static async create(
-        grpcClient: ConcordiumNodeClient,
+        grpcClient: ConcordiumGRPCClient,
         contractAddress: ContractAddress
     ): Promise<CIS2Contract> {
         const instanceInfo = await grpcClient.getInstanceInfo(contractAddress);

@@ -56,12 +56,20 @@ jobs:
         with:
           name: build-release
           path: |
-            ./node_modules/@concordium
             ./packages/rust-bindings/pkg
+            ./packages/rust-bindings/package.json
+            ./packages/rust-bindings/README.md
             ./packages/common/lib
-            ./packages/nodejs/lib
             ./packages/common/grpc
+            ./packages/common/package.json
+            ./packages/common/README.md
+            ./packages/nodejs/lib
             ./packages/nodejs/grpc
+            ./packages/nodejs/package.json
+            ./packages/nodejs/README.md
+            ./packages/web/lib
+            ./packages/web/package.json
+            ./packages/web/README.md
 
   build-typedoc:
     runs-on: ubuntu-22.04

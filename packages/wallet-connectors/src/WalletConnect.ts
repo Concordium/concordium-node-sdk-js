@@ -16,6 +16,7 @@ import SignClient from '@walletconnect/sign-client';
 import { ISignClient, SessionTypes, SignClientTypes } from '@walletconnect/types';
 import {
     Network,
+    Schema,
     SignableMessage,
     TypedSmartContractParameters,
     WalletConnection,
@@ -114,6 +115,31 @@ function serializeUpdateContractMessage(
             );
         case 'TypeSchema':
             return serializeTypeValue(parameters, schema.value);
+        default:
+            throw new UnreachableCaseError('schema', schema);
+    }
+}
+
+/**
+ * Convert schema into the object format expected by the Mobile crypto library.
+ * @param schema The schema object.
+ */
+function convertSchemaFormat(schema: Schema | undefined) {
+    if (!schema) {
+        return null;
+    }
+    switch (schema.type) {
+        case 'ModuleSchema':
+            return {
+                type: 'module',
+                value: schema.value.toString('base64'),
+                version: schema.version,
+            };
+        case 'TypeSchema':
+            return {
+                type: 'parameter',
+                value: schema.value.toString('base64'),
+            };
         default:
             throw new UnreachableCaseError('schema', schema);
     }
@@ -227,7 +253,7 @@ export class WalletConnectConnection implements WalletConnection {
             type: AccountTransactionType[type],
             sender: accountAddress,
             payload: accountTransactionPayloadToJson(serializePayloadParameters(type, payload, typedParams)),
-            schema: typedParams?.schema,
+            schema: convertSchemaFormat(typedParams?.schema),
         };
         try {
             const { hash } = (await this.connector.client.request({

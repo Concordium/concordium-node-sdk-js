@@ -42,3 +42,15 @@ export function getUpdateContractParameterSchema(
     );
     return Buffer.from(parameterSchema, 'hex');
 }
+
+/**
+ * @param rawSchema the schema for the type
+ * @returns JSON template of the schema
+ */
+export function displayTypeSchemaTemplate(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+    rawSchema: Buffer
+): string {
+    const value = wasm.displayTypeSchemaTemplate(rawSchema.toString('hex'));
+    return value;
+}

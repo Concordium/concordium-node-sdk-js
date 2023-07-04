@@ -17,6 +17,7 @@
     "lint-staged": {
         "*.ts": "yarn lint-fix"
     },
+    "packageManager": "yarn@3.2.1",
     "repository": {
         "type": "git",
         "url": "https://github.com/Concordium/concordium-node-sdk-js"

@@ -28,6 +28,7 @@ import {
     TransactionStatusEnum,
     ContractAddress,
     Base58String,
+    AccountTransactionType,
 } from '../types';
 import { RejectReason } from './rejectReason';
 import { isDefined } from '../util';
@@ -72,6 +73,15 @@ export enum TransactionKindString {
     ConfigureDelegation = 'configureDelegation',
     StakingReward = 'paydayAccountReward',
     Failed = 'failed',
+}
+
+/**
+ * Given an AccountTransactionType number value, return the corresponding TransactionKindString value
+ */
+export function getTransactionKindString(type: AccountTransactionType) {
+    return TransactionKindString[
+        AccountTransactionType[type] as keyof typeof AccountTransactionType
+    ];
 }
 
 export interface TransferSummary {

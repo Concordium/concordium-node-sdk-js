@@ -1,6 +1,10 @@
 # Changelog
 
-## 8.1.0
+## 9.0.0
+
+### Breaking changes
+
+- Renamed `AccountTransactionType.TransferWithScheduleWithMemo` to `AccountTransactionType.TransferWithScheduleAndMemo`.
 
 ### Changed
 
@@ -8,7 +12,8 @@
 
 ### Added
 
-- `displayTypeSchemaTemplate` function
+- `getTransactionKindString` function.
+- `displayTypeSchemaTemplate` function.
 
 ## 8.0.0
 

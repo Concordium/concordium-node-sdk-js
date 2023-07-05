@@ -1,10 +1,10 @@
 # Changelog
 
-## 8.1.0
+## 9.0.0
 
-### Changed
+### Breaking changes
 
-- Bumped @concordium/common-sdk to 8.1.0. (adds `display_type_schema_template` function)
+- Bumped @concordium/common-sdk to 9.0.0. (adds `displayTypeSchemaTemplate` and renames `AccountTransactionType.TransferWithScheduleWithMemo`)
 
 ## 8.0.0
 

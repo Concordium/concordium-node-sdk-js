@@ -1,5 +1,11 @@
 # Changelog
 
+## 8.1.0
+
+### Changed
+
+- Bumped @concordium/common-sdk to 8.1.0. (adds `display_type_schema_template` function)
+
 ## 8.0.0
 
 ### Breaking changes

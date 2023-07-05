@@ -2,9 +2,9 @@
 
 ## 5.1.0
 
-### Added
+### Changed
 
-- `display_type_schema_template` function
+- Bumped @concordium/rust-bindings to 1.1.0 and @concordium/common-sdk to 8.1.0. (adds `display_type_schema_template` function)
 
 ## 5.0.0
 

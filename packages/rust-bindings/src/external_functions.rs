@@ -403,3 +403,9 @@ pub fn deserialize_type_value_ext(
     )
     .map_err(|e| JsError::new(&format!("Unable to deserialize value due to: {}", e)))
 }
+
+#[wasm_bindgen(js_name = displayTypeSchemaTemplate)]
+pub fn display_type_schema_template(schema: HexString) -> JsResult {
+    display_type_schema_template_aux(schema)
+        .map_err(|e| JsError::new(&format!("Unable to get template of schema: {}", e)))
+}

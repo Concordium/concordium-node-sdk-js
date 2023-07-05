@@ -1,5 +1,11 @@
 # Changelog
 
+## 5.1.0
+
+### Added
+
+- `display_type_schema_template` function
+
 ## 5.0.0
 
 ### Breaking changes

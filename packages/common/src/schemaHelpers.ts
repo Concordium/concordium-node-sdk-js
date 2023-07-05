@@ -42,3 +42,11 @@ export function getUpdateContractParameterSchema(
     );
     return Buffer.from(parameterSchema, 'hex');
 }
+
+/**
+ * @param rawSchema the schema for the type
+ * @returns JSON template of the schema
+ */
+export function displayTypeSchemaTemplate(rawSchema: Buffer): string {
+    return wasm.displayTypeSchemaTemplate(rawSchema.toString('hex'));
+}

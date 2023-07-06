@@ -78,7 +78,9 @@ export enum TransactionKindString {
 /**
  * Given an AccountTransactionType number value, return the corresponding TransactionKindString value
  */
-export function getTransactionKindString(type: AccountTransactionType) {
+export function getTransactionKindString(
+    type: AccountTransactionType
+): TransactionKindString {
     return TransactionKindString[
         AccountTransactionType[type] as keyof typeof AccountTransactionType
     ];

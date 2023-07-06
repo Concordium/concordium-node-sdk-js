@@ -441,7 +441,6 @@ export class WalletConnectConnection implements WalletConnection {
             chainId: this.chainId,
         });
         return signature as AccountTransactionSignature; // TODO do proper type check
-
     }
 
     async requestVerifiablePresentation(

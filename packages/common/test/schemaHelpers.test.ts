@@ -5,7 +5,7 @@ import {
     getUpdateContractParameterSchema,
 } from '../src/schemaHelpers';
 
-test('generate baker keys', () => {
+test('schema template display', () => {
     const fullSchema = Buffer.from(
         fs.readFileSync('./test/resources/cis2-nft-schema.bin')
     );

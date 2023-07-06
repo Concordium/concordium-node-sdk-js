@@ -4,7 +4,7 @@
 
 ### Breaking changes
 
-- Bumped @concordium/rust-bindings to 1.1.0 and @concordium/common-sdk to 9.0.0. (adds `displayTypeSchemaTemplate` and renames `AccountTransactionType.TransferWithScheduleWithMemo`)
+- Bumped @concordium/rust-bindings to 1.1.0 and @concordium/common-sdk to 9.0.0. (adds `displayTypeSchemaTemplate/getTransactionKindString` and renames `AccountTransactionType.TransferWithScheduleWithMemo`)
 
 ## 5.0.0
 

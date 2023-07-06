@@ -343,6 +343,24 @@ function serializePayloadParameters(
 }
 
 /**
+ * Convert {@link SignableMessage} into the object format expected by the Mobile Wallets.
+ * As of this writing, the Android wallet only supports the {@link StringMessage} variant.
+ * @param msg The message to be signed.
+ */
+function convertSignableMessageFormat(msg: SignableMessage) {
+    switch (msg.type) {
+        case 'StringMessage': {
+            return { message: msg.value };
+        }
+        case 'BinaryMessage': {
+            return { message: msg.value.toString('hex'), schema: msg.schema.value.toString('base64') };
+        }
+        default:
+            throw new UnreachableCaseError('message', msg);
+    }
+}
+
+/**
  * Implementation of {@link WalletConnection} for WalletConnect v2.
  *
  * While WalletConnect doesn't set any restrictions on the amount of accounts and networks/chains
@@ -413,24 +431,17 @@ export class WalletConnectConnection implements WalletConnection {
     }
 
     async signMessage(accountAddress: string, msg: SignableMessage) {
-        switch (msg.type) {
-            case 'StringMessage': {
-                const params = { message: msg.value };
-                const signature = await this.connector.client.request({
-                    topic: this.session.topic,
-                    request: {
-                        method: 'sign_message',
-                        params,
-                    },
-                    chainId: this.chainId,
-                });
-                return signature as AccountTransactionSignature; // TODO do proper type check
-            }
-            case 'BinaryMessage':
-                throw new Error(`signing 'BinaryMessage' is not yet supported by the mobile wallets`);
-            default:
-                throw new UnreachableCaseError('message', msg);
-        }
+        const params = convertSignableMessageFormat(msg);
+        const signature = await this.connector.client.request({
+            topic: this.session.topic,
+            request: {
+                method: 'sign_message',
+                params,
+            },
+            chainId: this.chainId,
+        });
+        return signature as AccountTransactionSignature; // TODO do proper type check
+
     }
 
     async requestVerifiablePresentation(

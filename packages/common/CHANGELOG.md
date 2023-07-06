@@ -1,10 +1,19 @@
 # Changelog
 
-## 8.1.0
+## 9.0.0
+
+### Breaking changes
+
+- Renamed `AccountTransactionType.TransferWithScheduleWithMemo` to `AccountTransactionType.TransferWithScheduleAndMemo`.
+
+### Changed
+
+- Bumped @concordium/rust-bindings to 1.1.0 (adds `display_type_schema_template` function)
 
 ### Added
 
-- `display_type_schema_template` function
+- `getTransactionKindString` function.
+- `displayTypeSchemaTemplate` function.
 
 ## 8.0.0
 

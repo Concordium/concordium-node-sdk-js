@@ -25,7 +25,7 @@ import {
     VerifiablePresentation,
     CredentialStatement,
     CredentialSubject,
-    CredentialSchemaSubject,
+    VerifiableCredentialSchema,
 } from './web3ProofTypes';
 import { getPastDate } from './idProofs';
 import {
@@ -525,13 +525,13 @@ export function createAccountCommitmentInputWithHdWallet(
 function extractAttributesFromCredentialSubject(
     statements: AtomicStatementV2[],
     credentialSubject: CredentialSubject,
-    schema: CredentialSchemaSubject
+    schema: VerifiableCredentialSchema
 ): Record<number, string | bigint> {
     return statements.reduce<Record<number, string | bigint>>(
         (acc, { attributeTag }) => {
-            const schemaEntry = Object.entries(schema.properties).find(
-                ([, s]) => Number(s.index) == attributeTag
-            );
+            const schemaEntry = Object.entries(
+                schema.properties.credentialSubject.properties
+            ).find(([, s]) => Number(s.index) == attributeTag);
             if (!schemaEntry) {
                 throw new Error('Missing attribute in schema: ' + attributeTag);
             }
@@ -551,7 +551,7 @@ export function createWeb3CommitmentInput(
     signer: KeyPair,
     issuanceDate: string,
     credentialSubject: CredentialSubject,
-    schema: CredentialSchemaSubject,
+    schema: VerifiableCredentialSchema,
     randomness: string
 ): Web3IssuerCommitmentInput {
     return {
@@ -577,7 +577,7 @@ export function createWeb3CommitmentInputWithHdWallet(
     credentialIndex: number,
     issuanceDate: string,
     credentialSubject: CredentialSubject,
-    schema: CredentialSchemaSubject,
+    schema: VerifiableCredentialSchema,
     randomness: string
 ): Web3IssuerCommitmentInput {
     const keyPair = {

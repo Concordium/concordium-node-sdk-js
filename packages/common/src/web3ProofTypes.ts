@@ -307,8 +307,8 @@ export type CredentialSubject = { id: string } & Record<
 >;
 
 export interface VerifiableCredential {
-    context: string[];
     id: string;
+    $schema: string;
     type: string[];
     issuer: string;
     issuanceDate: string;
@@ -323,29 +323,23 @@ export interface CredentialSchemaProperty {
     index: string;
 }
 
-export interface CredentialSchemaSubject {
+export interface CredentialSubjectSchema {
+    type: 'object';
     properties: { id: CredentialSchemaProperty } & Record<
         string,
         CredentialSchemaProperty
     >;
-}
-
-export interface SchemaProperties {
-    credentialSubject: CredentialSchemaSubject;
-}
-
-export interface VerifiableCredentialSchemaSchema {
-    // credentialSubject: CredentialSchemaSubject;
-    properties: SchemaProperties;
+    required: string[];
 }
 
 export interface VerifiableCredentialSchema {
-    type: string;
-    version: string;
-    id: string;
+    $id: string;
+    $schema: string;
     name: string;
-    author: string;
-    authored: string;
-    schema: VerifiableCredentialSchemaSchema;
-    proof: string;
+    description: string;
+    type: 'object';
+    required: ['credentialSubject'];
+    properties: {
+        credentialSubject: CredentialSubjectSchema;
+    };
 }

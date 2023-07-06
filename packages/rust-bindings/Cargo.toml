@@ -19,6 +19,7 @@ rand = { version = "=0.7", features = [ "wasm-bindgen" ] }
 ed25519-dalek = { version = "=1.0" }
 chrono = "0.4.24"
 serde_with = "3.0.0"
+serde-wasm-bindgen = "0.5"
 
 [dependencies.concordium_base]
 path = "../../deps/concordium-base/rust-src/concordium_base"

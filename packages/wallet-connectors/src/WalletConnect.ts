@@ -426,12 +426,14 @@ export class WalletConnectConnection implements WalletConnection {
             if (isSignAndSendTransactionError(e) && e.code === 500) {
                 throw new Error('transaction rejected in wallet');
             }
+            // TODO Re-throw non-Error as a proper Error.
             throw e;
         }
     }
 
     async signMessage(accountAddress: string, msg: SignableMessage) {
         const params = convertSignableMessageFormat(msg);
+        // TODO Catch thrown non-Error and rethrow it as a proper Error.
         const signature = await this.connector.client.request({
             topic: this.session.topic,
             request: {

@@ -2028,3 +2028,14 @@ export type SmartContractTypeValues =
     | number
     | string
     | boolean;
+
+export type UpdateInstructionHeader = {
+    sequenceNumber: bigint;
+    effectiveTime: bigint;
+    timeout: bigint;
+};
+
+export type UpdateInstruction = {
+    header: UpdateInstructionHeader;
+    payload: HexString;
+};

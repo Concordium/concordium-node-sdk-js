@@ -1579,6 +1579,27 @@ export interface SimpleTransferWithMemoPayload extends SimpleTransferPayload {
     memo: DataBlob;
 }
 
+export interface SchedulePoint {
+    /** The time that the point happens */
+    timestamp: Date;
+    /** µCCD amount to transfer at the given point */
+    amount: CcdAmount;
+}
+
+export interface TransferWithSchedulePayload {
+    /** Schedule */
+    schedule: SchedulePoint[];
+
+    /** the recipient of the transfer*/
+    toAddress: AccountAddress;
+}
+
+export interface TransferWithScheduleAndMemoPayload
+    extends TransferWithSchedulePayload {
+    /** The byte representation of the memo of the transaction  */
+    memo: DataBlob;
+}
+
 export interface RegisterDataPayload {
     /** The byte representation of the data to be registered  */
     data: DataBlob;
@@ -1665,6 +1686,8 @@ export type AccountTransactionPayload =
     | UpdateContractPayload
     | UpdateCredentialsPayload
     | ConfigureBakerPayload
+    | TransferWithSchedulePayload
+    | TransferWithScheduleAndMemoPayload
     | ConfigureDelegationPayload;
 
 export interface AccountTransaction {

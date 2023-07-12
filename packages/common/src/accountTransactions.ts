@@ -23,6 +23,7 @@ import {
     RegisterDataPayload,
     ConfigureDelegationPayload,
     ConfigureBakerPayload,
+    TransferToEncryptedPayload,
 } from './types';
 import { AccountAddress } from './types/accountAddress';
 import { DataBlob } from './types/DataBlob';
@@ -294,6 +295,27 @@ export class ConfigureDelegationHandler
     }
 }
 
+export class TransferToEncryptedHandler
+    implements AccountTransactionHandler<TransferToEncryptedPayload>
+{
+    getBaseEnergyCost(): bigint {
+        return 600n;
+    }
+
+    serialize(transfer: TransferToEncryptedPayload): Buffer {
+        return encodeWord64(transfer.amount.microCcdAmount);
+    }
+
+    deserialize(serializedPayload: Readable): TransferToEncryptedPayload {
+        const amount = new CcdAmount(
+            serializedPayload.read(8).readBigUInt64BE(0)
+        );
+        return {
+            amount,
+        };
+    }
+}
+
 export function getAccountTransactionHandler(
     type: AccountTransactionType
 ): AccountTransactionHandler;
@@ -303,6 +325,9 @@ export function getAccountTransactionHandler(
 export function getAccountTransactionHandler(
     type: AccountTransactionType.TransferWithMemo
 ): SimpleTransferWithMemoHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.TransferToEncrypted
+): TransferToEncryptedHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType.UpdateCredentials
 ): UpdateCredentialsHandler;
@@ -347,6 +372,8 @@ export function getAccountTransactionHandler(
             return new ConfigureDelegationHandler();
         case AccountTransactionType.ConfigureBaker:
             return new ConfigureBakerHandler();
+        case AccountTransactionType.TransferToEncrypted:
+            return new TransferToEncryptedHandler();
         default:
             throw new Error(
                 'The provided type does not have a handler: ' + type

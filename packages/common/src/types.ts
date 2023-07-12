@@ -1656,6 +1656,11 @@ export interface ConfigureDelegationPayload {
     delegationTarget?: DelegationTarget;
 }
 
+export interface TransferToEncryptedPayload {
+    /** µCCD amount to transfer */
+    amount: CcdAmount;
+}
+
 export type AccountTransactionPayload =
     | SimpleTransferPayload
     | SimpleTransferWithMemoPayload
@@ -1665,7 +1670,8 @@ export type AccountTransactionPayload =
     | UpdateContractPayload
     | UpdateCredentialsPayload
     | ConfigureBakerPayload
-    | ConfigureDelegationPayload;
+    | ConfigureDelegationPayload
+    | TransferToEncryptedPayload;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

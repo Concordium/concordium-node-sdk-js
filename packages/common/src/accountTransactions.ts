@@ -23,6 +23,7 @@ import {
     RegisterDataPayload,
     ConfigureDelegationPayload,
     ConfigureBakerPayload,
+    TransferToPublicPayload,
 } from './types';
 import { AccountAddress } from './types/accountAddress';
 import { DataBlob } from './types/DataBlob';
@@ -95,6 +96,37 @@ export class SimpleTransferWithMemoHandler
             memo,
             amount,
         };
+    }
+}
+
+export class TransferToPublicHandler
+    implements AccountTransactionHandler<TransferToPublicPayload>
+{
+    getBaseEnergyCost(): bigint {
+        return 14850n;
+    }
+
+    serialize(transferToPublic: TransferToPublicPayload): Buffer {
+        const serializedRemainingAmount = Buffer.from(
+            transferToPublic.remainingAmount,
+            'hex'
+        );
+        const serializedAmount = encodeWord64(
+            transferToPublic.transferAmount.microCcdAmount
+        );
+        const serializedIndex = encodeWord64(transferToPublic.index);
+        const serializedProof = Buffer.from(transferToPublic.proof, 'hex');
+
+        return Buffer.concat([
+            serializedRemainingAmount,
+            serializedAmount,
+            serializedIndex,
+            serializedProof,
+        ]);
+    }
+
+    deserialize(): TransferToPublicPayload {
+        throw new Error('deserialize not supported');
     }
 }
 
@@ -307,6 +339,9 @@ export function getAccountTransactionHandler(
     type: AccountTransactionType.UpdateCredentials
 ): UpdateCredentialsHandler;
 export function getAccountTransactionHandler(
+    type: AccountTransactionType.TransferToPublic
+): TransferToPublicHandler;
+export function getAccountTransactionHandler(
     type: AccountTransactionType.DeployModule
 ): DeployModuleHandler;
 export function getAccountTransactionHandler(
@@ -347,6 +382,8 @@ export function getAccountTransactionHandler(
             return new ConfigureDelegationHandler();
         case AccountTransactionType.ConfigureBaker:
             return new ConfigureBakerHandler();
+        case AccountTransactionType.TransferToPublic:
+            return new TransferToPublicHandler();
         default:
             throw new Error(
                 'The provided type does not have a handler: ' + type

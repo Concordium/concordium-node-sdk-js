@@ -1579,6 +1579,17 @@ export interface SimpleTransferWithMemoPayload extends SimpleTransferPayload {
     memo: DataBlob;
 }
 
+export interface TransferToPublicPayload {
+    /** µCCD amount to transfer to public balance */
+    transferAmount: CcdAmount;
+    /** encrypted µCCD amount remaining in shielded balance */
+    remainingAmount: string;
+
+    index: bigint;
+    /** Proof string for the transaction, expected to be HEX encoded */
+    proof: string;
+}
+
 export interface RegisterDataPayload {
     /** The byte representation of the data to be registered  */
     data: DataBlob;
@@ -1659,6 +1670,7 @@ export interface ConfigureDelegationPayload {
 export type AccountTransactionPayload =
     | SimpleTransferPayload
     | SimpleTransferWithMemoPayload
+    | TransferToPublicPayload
     | RegisterDataPayload
     | DeployModulePayload
     | InitContractPayload

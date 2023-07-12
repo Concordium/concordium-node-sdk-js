@@ -459,6 +459,10 @@ export interface ChainParametersCommon {
     foundationAccount: Base58String;
     /** The chain foundation account index */
     foundationAccountIndex?: bigint;
+    /** Keys allowed to do level1 updates */
+    level1Keys: KeysWithThreshold;
+    /** Keys allowed to do root updates */
+    rootKeys: KeysWithThreshold;
 }
 
 /** Chain parameters used from protocol version 1-3 */
@@ -469,6 +473,8 @@ export type ChainParametersV0 = ChainParametersCommon &
         electionDifficulty: number;
         /** The election difficulty for consensus lottery */
         rewardParameters: RewardParametersV0;
+        /** Keys allowed to do parameter updates */
+        level2Keys: AuthorizationsV0;
     };
 
 /** Chain parameters used in protocol versions 4 and 5 */
@@ -480,6 +486,8 @@ export type ChainParametersV1 = ChainParametersCommon &
         electionDifficulty: number;
         /** The election difficulty for consensus lottery */
         rewardParameters: RewardParametersV1;
+        /** Keys allowed to do parameter updates */
+        level2Keys: AuthorizationsV1;
     };
 
 /** Chain parameters used from protocol version 6 */
@@ -492,6 +500,8 @@ export type ChainParametersV2 = ChainParametersCommon &
     ConsensusParameters & {
         /** The election difficulty for consensus lottery */
         rewardParameters: RewardParametersV2;
+        /** Keys allowed to do parameter updates */
+        level2Keys: AuthorizationsV1;
     };
 
 /** Union of all chain parameters across all protocol versions */

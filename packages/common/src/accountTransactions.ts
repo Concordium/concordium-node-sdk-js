@@ -10,6 +10,7 @@ import {
     encodeWord8,
     serializeConfigureDelegationPayload,
     serializeConfigureBakerPayload,
+    serializeEncryptedData,
 } from './serializationHelpers';
 import {
     AccountTransactionType,
@@ -23,6 +24,8 @@ import {
     RegisterDataPayload,
     ConfigureDelegationPayload,
     ConfigureBakerPayload,
+    EncryptedAmountTransferPayload,
+    EncryptedTransferAmountWithMemoPayload,
 } from './types';
 import { AccountAddress } from './types/accountAddress';
 import { DataBlob } from './types/DataBlob';
@@ -239,6 +242,51 @@ export class UpdateCredentialsHandler
     }
 }
 
+export class EncryptedAmountTransferHandler
+    implements AccountTransactionHandler<EncryptedAmountTransferPayload>
+{
+    getBaseEnergyCost(): bigint {
+        return 27000n;
+    }
+
+    serialize(encryptedTransfer: EncryptedAmountTransferPayload): Buffer {
+        const serializedToAddress = encryptedTransfer.toAddress.decodedAddress;
+        const serializedEncryptedData =
+            serializeEncryptedData(encryptedTransfer);
+
+        return Buffer.concat([serializedToAddress, serializedEncryptedData]);
+    }
+
+    deserialize(): EncryptedAmountTransferPayload {
+        throw new Error('deserialize not supported');
+    }
+}
+
+export class EncryptedAmountTransferWithMemoHandler
+    extends EncryptedAmountTransferHandler
+    implements
+        AccountTransactionHandler<EncryptedTransferAmountWithMemoPayload>
+{
+    serialize(
+        encryptedTransfer: EncryptedTransferAmountWithMemoPayload
+    ): Buffer {
+        const serializedToAddress = encryptedTransfer.toAddress.decodedAddress;
+        const serializedMemo = encodeDataBlob(encryptedTransfer.memo);
+        const serializedEncryptedData =
+            serializeEncryptedData(encryptedTransfer);
+
+        return Buffer.concat([
+            serializedToAddress,
+            serializedMemo,
+            serializedEncryptedData,
+        ]);
+    }
+
+    deserialize(): EncryptedTransferAmountWithMemoPayload {
+        throw new Error('deserialize not supported');
+    }
+}
+
 export class RegisterDataHandler
     implements AccountTransactionHandler<RegisterDataPayload>
 {
@@ -325,6 +373,13 @@ export function getAccountTransactionHandler(
     type: AccountTransactionType.ConfigureBaker
 ): ConfigureBakerHandler;
 export function getAccountTransactionHandler(
+    type: AccountTransactionType.EncryptedAmountTransfer
+): EncryptedAmountTransferHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType.EncryptedAmountTransferWithMemo
+): EncryptedAmountTransferWithMemoHandler;
+
+export function getAccountTransactionHandler(
     type: AccountTransactionType
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
@@ -341,6 +396,10 @@ export function getAccountTransactionHandler(
             return new UpdateContractHandler();
         case AccountTransactionType.UpdateCredentials:
             return new UpdateCredentialsHandler();
+        case AccountTransactionType.EncryptedAmountTransfer:
+            return new EncryptedAmountTransferHandler();
+        case AccountTransactionType.EncryptedAmountTransferWithMemo:
+            return new EncryptedAmountTransferWithMemoHandler();
         case AccountTransactionType.RegisterData:
             return new RegisterDataHandler();
         case AccountTransactionType.ConfigureDelegation:

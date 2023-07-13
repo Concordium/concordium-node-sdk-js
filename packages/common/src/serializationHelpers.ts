@@ -8,6 +8,7 @@ import {
     DelegationTarget,
     DelegationTargetType,
     HexString,
+    EncryptedAmountTransferPayload,
 } from './types';
 import { DataBlob } from './types/DataBlob';
 import { isDefined } from './util';
@@ -420,6 +421,34 @@ export function serializeConfigureBakerPayload(
     )(payload);
 
     return Buffer.concat([bitmap, serializedPayload]);
+}
+
+/**
+ *
+ * Serializes the fields of an encryptedAmountTransfer, which is related to the encrypted amount, which is everything except the receiver address.
+ * @param encryptedTransfer transfer which fields should be serialized.
+ * @returns the serialization of remainingEncryptedAmount, transferAmount, index and proof.
+ */
+export function serializeEncryptedData(
+    encryptedTransfer: EncryptedAmountTransferPayload
+): Buffer {
+    const serializedRemainingAmount = Buffer.from(
+        encryptedTransfer.remainingAmount,
+        'hex'
+    );
+    const serializedTransferAmount = Buffer.from(
+        encryptedTransfer.transferAmount,
+        'hex'
+    );
+    const serializedIndex = encodeWord64(encryptedTransfer.index);
+    const serializedProof = Buffer.from(encryptedTransfer.proof, 'hex');
+
+    return Buffer.concat([
+        serializedRemainingAmount,
+        serializedTransferAmount,
+        serializedIndex,
+        serializedProof,
+    ]);
 }
 
 /**

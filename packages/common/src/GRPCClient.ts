@@ -309,35 +309,68 @@ export class ConcordiumGRPCClient {
         transaction: v1.AccountTransaction,
         signature: v1.AccountTransactionSignature
     ): Promise<HexString> {
-        const rawPayload = serializeAccountTransactionPayload(transaction);
-        const transactionSignature: v2.AccountTransactionSignature =
-            translate.accountTransactionSignatureToV2(signature);
-
-        // Energy cost
         const accountTransactionHandler = getAccountTransactionHandler(
             transaction.type
         );
+
+        const rawPayload = serializeAccountTransactionPayload(transaction);
+
+        // Energy cost
         const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(
             transaction.payload
         );
+
         const energyCost = calculateEnergyCost(
             countSignatures(signature),
             BigInt(rawPayload.length),
             baseEnergyCost
         );
 
+        return this.sendRawAccountTransaction(
+            transaction.header,
+            energyCost,
+            rawPayload,
+            signature
+        );
+    }
+
+    /**
+     * Sends an account transaction, with an already serialized payload, to the node to be
+     * put in a block on the chain.
+     *
+     * Note that a transaction can still fail even if it was accepted by the node.
+     * To keep track of the transaction use getTransactionStatus.
+     *
+     * Note that { @link ConcordiumGRPCClient.sendAccountTransaction } is the recommended
+     * method to send account transactions, as this requires the caller to serialize the payload themselves.
+     *
+     * @param header the transactionheader to send to the node
+     * @param energyAmount the amount of energy allotted for the transaction
+     * @param payload the payload serialized to a buffer
+     * @param signature the signatures on the signing digest of the transaction
+     * @returns The transaction hash as a byte array
+     */
+    async sendRawAccountTransaction(
+        header: v1.AccountTransactionHeader,
+        energyAmount: bigint,
+        payload: Buffer,
+        signature: v1.AccountTransactionSignature
+    ): Promise<HexString> {
+        const transactionSignature: v2.AccountTransactionSignature =
+            translate.accountTransactionSignatureToV2(signature);
+
         // Put together sendBlockItemRequest
-        const header: v2.AccountTransactionHeader = {
-            sender: { value: transaction.header.sender.decodedAddress },
-            sequenceNumber: { value: transaction.header.nonce },
-            energyAmount: { value: energyCost },
-            expiry: { value: transaction.header.expiry.expiryEpochSeconds },
+        const convertedHeader: v2.AccountTransactionHeader = {
+            sender: { value: header.sender.decodedAddress },
+            sequenceNumber: { value: header.nonce },
+            energyAmount: { value: energyAmount },
+            expiry: { value: header.expiry.expiryEpochSeconds },
         };
         const accountTransaction: v2.AccountTransaction = {
             signature: transactionSignature,
-            header: header,
+            header: convertedHeader,
             payload: {
-                payload: { oneofKind: 'rawPayload', rawPayload: rawPayload },
+                payload: { oneofKind: 'rawPayload', rawPayload: payload },
             },
         };
         const sendBlockItemRequest: v2.SendBlockItemRequest = {

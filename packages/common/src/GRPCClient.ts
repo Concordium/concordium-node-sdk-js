@@ -9,6 +9,7 @@ import * as v1 from './types';
 import * as v2 from '../grpc/v2/concordium/types';
 import { Base58String, HexString, isRpcError } from './types';
 import { QueriesClient } from '../grpc/v2/concordium/service.client';
+import { HealthClient } from '../grpc/v2/concordium/health.client';
 import type { RpcTransport } from '@protobuf-ts/runtime-rpc';
 import { CredentialRegistrationId } from './types/CredentialRegistrationId';
 import * as translate from './GRPCTypeTranslation';
@@ -50,6 +51,7 @@ export type FindInstanceCreationReponse = {
  */
 export class ConcordiumGRPCClient {
     client: QueriesClient;
+    healthClient: HealthClient;
 
     /**
      * Initialize a gRPC client for a specific concordium node.
@@ -57,6 +59,7 @@ export class ConcordiumGRPCClient {
      */
     constructor(transport: RpcTransport) {
         this.client = new QueriesClient(transport);
+        this.healthClient = new HealthClient(transport);
     }
 
     /**
@@ -1448,6 +1451,22 @@ export class ConcordiumGRPCClient {
 
     private async getConsensusHeight() {
         return (await this.getConsensusStatus()).lastFinalizedBlockHeight;
+    }
+
+    /**
+     * Queries the node to check its health
+     *
+     * {@codeblock ~~:client/healthCheck.ts#documentation-snippet}
+     *
+     * @returns a boolean indicating whether the node is healthy or not.
+     */
+    async healthCheck(): Promise<boolean> {
+        try {
+            await this.healthClient.check({});
+            return true;
+        } catch (e) {
+            return false;
+        }
     }
 }
 

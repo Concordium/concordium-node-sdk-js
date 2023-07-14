@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- `healthCheck` to the gRPC Client.
+
 ## 9.3.0
 
 ### Added

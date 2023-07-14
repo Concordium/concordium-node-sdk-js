@@ -442,7 +442,7 @@ export class ConcordiumGRPCClient {
     async sendUpdateInstruction(
         updateInstructionTransaction: v1.UpdateInstruction,
         signatures: Record<number, HexString>
-    ) {
+    ): Promise<HexString> {
         const header = updateInstructionTransaction.header;
         const updateInstruction: v2.UpdateInstruction = {
             header: {

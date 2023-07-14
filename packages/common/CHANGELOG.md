@@ -2,8 +2,12 @@
 
 ## Unreleased
 
+### Fixed
+- Added missing fields to `getBlockChainParameters` response. (rootKeys, level1Keys, level2Keys)
+
 ### Added
 
+- `sendUpdateInstruction` to the gRPC Client.
 - `sendRawAccountTransaction` to the gRPC Client.
 
 ## 9.2.1

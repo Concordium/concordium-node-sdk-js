@@ -123,11 +123,16 @@ test('create Web3Id proof with Web3Id Credentials', () => {
     const values: Record<number, bigint | string> = {};
     values[0] = 18446744073709551615n;
     values[17] = 2n;
+    const randomness: Record<number, string> = {};
+    randomness[0] =
+        '575851a4e0558d589a57544a4a9f5ad1bd8467126c1b6767d32f633ea03380e6';
+    randomness[17] =
+        '575851a4e0558d589a57544a4a9f5ad1bd8467126c1b6767d32f633ea03380e6';
 
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
 
     const publicKey = wallet
-        .getVerifiableCredentialPublicKey(0)
+        .getVerifiableCredentialPublicKey({ index: 0n, subindex: 0n }, 0)
         .toString('hex');
 
     const credentialStatements: RequestStatement[] = [
@@ -153,11 +158,16 @@ test('create Web3Id proof with Web3Id Credentials', () => {
             type: 'web3Issuer',
             issuanceDate: '2019-10-12T07:20:50.52Z',
             signer:
-                wallet.getVerifiableCredentialSigningKey(1).toString('hex') +
-                publicKey,
+                wallet
+                    .getVerifiableCredentialSigningKey(
+                        { index: 1n, subindex: 0n },
+                        1
+                    )
+                    .toString('hex') + publicKey,
             values,
-            randomness:
-                '575851a4e0558d589a57544a4a9f5ad1bd8467126c1b6767d32f633ea03380e6',
+            randomness,
+            signature:
+                '575851a4e0558d589a57544a4a9f5ad1bd8467126c1b6767d32f633ea03380e6575851a4e0558d589a57544a4a9f5ad1bd8467126c1b6767d32f633ea03380e6',
         },
     ];
 

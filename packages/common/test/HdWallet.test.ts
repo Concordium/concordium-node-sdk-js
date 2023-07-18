@@ -190,9 +190,11 @@ test('Testnet CredId matches credDeployment test', () => {
 
 test('Mainnet verifiable credential signing key', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Mainnet');
-    expect(wallet.getVerifiableCredentialSigningKey(1)).toEqual(
+    expect(
+        wallet.getVerifiableCredentialSigningKey({ index: 1n, subindex: 2n }, 1)
+    ).toEqual(
         Buffer.from(
-            '875df27dc69b0ebcb3b362b00fdc95ad50353819087fa75d39ef0aa3f9a8104a',
+            '670d904509ce09372deb784e702d4951d4e24437ad3879188d71ae6db51f3301',
             'hex'
         )
     );
@@ -200,19 +202,14 @@ test('Mainnet verifiable credential signing key', () => {
 
 test('Mainnet verifiable credential public key', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Mainnet');
-    expect(wallet.getVerifiableCredentialPublicKey(341)).toEqual(
-        Buffer.from(
-            '49efcf3adcfc87864cba5095dbf669fd9fa4529bba3fcecb3b1c0c12285530c8',
-            'hex'
+    expect(
+        wallet.getVerifiableCredentialPublicKey(
+            { index: 3n, subindex: 1232n },
+            341
         )
-    );
-});
-
-test('Mainnet verifiable credential encryption key', () => {
-    const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Mainnet');
-    expect(wallet.getVerifiableCredentialEncryptionKey(97)).toEqual(
+    ).toEqual(
         Buffer.from(
-            '30be8892d89599867fca90dcd841ac62cc07ea0ea521e8708eb8ae143c093210',
+            '16afdb3cb3568b5ad8f9a0fa3c741b065642de8c53e58f7920bf449e63ff2bf9',
             'hex'
         )
     );
@@ -220,9 +217,14 @@ test('Mainnet verifiable credential encryption key', () => {
 
 test('Testnet verifiable credential signing key', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
-    expect(wallet.getVerifiableCredentialSigningKey(1)).toEqual(
+    expect(
+        wallet.getVerifiableCredentialSigningKey(
+            { index: 13n, subindex: 0n },
+            1
+        )
+    ).toEqual(
         Buffer.from(
-            'c53e2259d321b55637952951ea56bcae336404765b85c3ba78ca22a9d06bb40f',
+            'c75a161b97a1e204d9f31202308958e541e14f0b14903bd220df883bd06702bb',
             'hex'
         )
     );
@@ -230,19 +232,14 @@ test('Testnet verifiable credential signing key', () => {
 
 test('Testnet verifiable credential public key', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
-    expect(wallet.getVerifiableCredentialPublicKey(341)).toEqual(
-        Buffer.from(
-            '20a5ce34364e1f1ce619fdfb12daa806e5e86ef44971f3c9cf1ec6b8b58e27d3',
-            'hex'
+    expect(
+        wallet.getVerifiableCredentialPublicKey(
+            { index: 17n, subindex: 0n },
+            341
         )
-    );
-});
-
-test('Testnet verifiable credential encryption key', () => {
-    const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
-    expect(wallet.getVerifiableCredentialEncryptionKey(97)).toEqual(
+    ).toEqual(
         Buffer.from(
-            'f263c915c8000b5164e3fc1d84ce80a451eef2b32f9749a4d0d390844bb1673e',
+            'c52a30475bac88da9e65471cf9cf59f99dcce22ce31de580b3066597746b394a',
             'hex'
         )
     );

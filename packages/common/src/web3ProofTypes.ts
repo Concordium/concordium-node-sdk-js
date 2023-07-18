@@ -19,10 +19,11 @@ export type AccountCommitmentInput = {
 
 export type Web3IssuerCommitmentInput = {
     type: 'web3Issuer';
+    signature: string;
     issuanceDate: string;
     signer: string;
     values: Record<number, string | bigint | number>;
-    randomness: string;
+    randomness: Record<number, string>;
 };
 
 export type CommitmentInput =

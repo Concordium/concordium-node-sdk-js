@@ -341,9 +341,11 @@ pub fn get_attribute_commitment_randomness_ext(
 pub fn get_verifiable_credential_signing_key_ext(
     seed_as_hex: HexString,
     raw_net: &str,
+    issuer_index: u64,
+    issuer_subindex: u64,
     verifiable_credential_index: u32,
 ) -> JsResult<HexString> {
-    get_verifiable_credential_signing_key_aux(seed_as_hex, raw_net, verifiable_credential_index)
+    get_verifiable_credential_signing_key_aux(seed_as_hex, raw_net, issuer_index, issuer_subindex, verifiable_credential_index)
         .map_err(to_js_error)
 }
 
@@ -351,19 +353,11 @@ pub fn get_verifiable_credential_signing_key_ext(
 pub fn get_verifiable_credential_public_key_ext(
     seed_as_hex: HexString,
     raw_net: &str,
+    issuer_index: u64,
+    issuer_subindex: u64,
     verifiable_credential_index: u32,
 ) -> JsResult<HexString> {
-    get_verifiable_credential_public_key_aux(seed_as_hex, raw_net, verifiable_credential_index)
-        .map_err(to_js_error)
-}
-
-#[wasm_bindgen(js_name = getVerifiableCredentialEncryptionKey)]
-pub fn get_verifiable_credential_encryption_key_ext(
-    seed_as_hex: HexString,
-    raw_net: &str,
-    verifiable_credential_index: u32,
-) -> JsResult<HexString> {
-    get_verifiable_credential_encryption_key_aux(seed_as_hex, raw_net, verifiable_credential_index)
+    get_verifiable_credential_public_key_aux(seed_as_hex, raw_net, issuer_index, issuer_subindex, verifiable_credential_index)
         .map_err(to_js_error)
 }
 
@@ -410,8 +404,11 @@ pub fn display_type_schema_template(schema: HexString) -> JsResult {
         .map_err(|e| JsError::new(&format!("Unable to get template of schema: {}", e)))
 }
 
+extern crate console_error_panic_hook;
+
 #[wasm_bindgen(js_name = createWeb3IdProof)]
 pub fn create_web3_id_proof_ext(raw_input: JsonString) -> Result<JsonString, String> {
+    console_error_panic_hook::set_once();
     match serde_json::from_str(&raw_input) {
         Ok(input) => create_web3_id_proof_aux(input).map_err(|e| format!("Unable to create proof: {}", e)),
         Err(e) => Err(format!("Unable to parse input for proof: {}", e)),

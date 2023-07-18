@@ -9,6 +9,7 @@ use concordium_base::{
     contracts_common::{
         from_bytes,
         schema::{ModuleV0, Type, VersionedModuleSchema},
+        ContractAddress,
         Cursor,
     },
     id::{
@@ -198,31 +199,27 @@ pub fn get_attribute_commitment_randomness_aux(
 pub fn get_verifiable_credential_signing_key_aux(
     seed_as_hex: HexString,
     raw_net: &str,
+    issuer_index: u64,
+    issuer_subindex: u64,
     verifiable_credential_index: u32,
 ) -> Result<HexString> {
+    let issuer: ContractAddress = ContractAddress::new(issuer_index, issuer_subindex);
     let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_verifiable_credential_signing_key(verifiable_credential_index)?;
+    let key = wallet.get_verifiable_credential_signing_key(issuer, verifiable_credential_index)?;
     Ok(hex::encode(key.as_bytes()))
 }
 
 pub fn get_verifiable_credential_public_key_aux(
     seed_as_hex: HexString,
     raw_net: &str,
+    issuer_index: u64,
+    issuer_subindex: u64,
     verifiable_credential_index: u32,
 ) -> Result<HexString> {
+    let issuer: ContractAddress = ContractAddress::new(issuer_index, issuer_subindex);
     let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_verifiable_credential_public_key(verifiable_credential_index)?;
+    let key = wallet.get_verifiable_credential_public_key(issuer, verifiable_credential_index)?;
     Ok(hex::encode(key.as_bytes()))
-}
-
-pub fn get_verifiable_credential_encryption_key_aux(
-    seed_as_hex: HexString,
-    raw_net: &str,
-    verifiable_credential_index: u32,
-) -> Result<HexString> {
-    let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_verifiable_credential_encryption_key(verifiable_credential_index)?;
-    Ok(hex::encode(key))
 }
 
 pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<JsonString> {
@@ -404,7 +401,7 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<JsonString> {
 
         CredentialData {
             keys,
-            threshold: SignatureThreshold(1),
+            threshold: SignatureThreshold::ONE,
         }
     };
 

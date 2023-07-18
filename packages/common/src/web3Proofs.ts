@@ -552,7 +552,8 @@ export function createWeb3CommitmentInput(
     issuanceDate: string,
     credentialSubject: CredentialSubject,
     schema: VerifiableCredentialSchema,
-    randomness: string
+    randomness: Record<string, string>,
+    signature: string
 ): Web3IssuerCommitmentInput {
     return {
         type: 'web3Issuer',
@@ -564,6 +565,7 @@ export function createWeb3CommitmentInput(
             schema
         ),
         randomness,
+        signature,
     };
 }
 
@@ -574,18 +576,20 @@ export function createWeb3CommitmentInput(
 export function createWeb3CommitmentInputWithHdWallet(
     statements: AtomicStatementV2[],
     wallet: ConcordiumHdWallet,
+    issuer: ContractAddress,
     credentialIndex: number,
     issuanceDate: string,
     credentialSubject: CredentialSubject,
     schema: VerifiableCredentialSchema,
-    randomness: string
+    randomness: Record<string, string>,
+    signature: string
 ): Web3IssuerCommitmentInput {
     const keyPair = {
         signKey: wallet
-            .getVerifiableCredentialPublicKey(credentialIndex)
+            .getVerifiableCredentialPublicKey(issuer, credentialIndex)
             .toString('hex'),
         verifyKey: wallet
-            .getVerifiableCredentialSigningKey(credentialIndex)
+            .getVerifiableCredentialSigningKey(issuer, credentialIndex)
             .toString('hex'),
     };
     return createWeb3CommitmentInput(
@@ -594,7 +598,8 @@ export function createWeb3CommitmentInputWithHdWallet(
         issuanceDate,
         credentialSubject,
         schema,
-        randomness
+        randomness,
+        signature
     );
 }
 

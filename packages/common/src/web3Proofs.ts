@@ -4,7 +4,7 @@ import {
     AttributeList,
     AttributesKeys,
     ContractAddress,
-    KeyPair,
+    HexString,
     Network,
 } from './types';
 import {
@@ -37,6 +37,7 @@ import {
 } from './commonProofTypes';
 import { ConcordiumHdWallet } from './HdWallet';
 import { stringify } from 'json-bigint';
+import { mapRecord } from './util';
 
 function verifyRangeStatement(
     statement: RangeStatementV2,
@@ -522,24 +523,23 @@ export function createAccountCommitmentInputWithHdWallet(
     );
 }
 
-function extractAttributesFromCredentialSubject(
-    statements: AtomicStatementV2[],
+export function extractAttributesFromCredentialSubject(
     credentialSubject: CredentialSubject,
     schema: VerifiableCredentialSchema
 ): Record<number, string | bigint> {
-    return statements.reduce<Record<number, string | bigint>>(
-        (acc, { attributeTag }) => {
+    const { id, ...rest } = credentialSubject;
+    return mapRecord(
+        rest,
+        (val) => val,
+        (key) => {
             const schemaEntry = Object.entries(
                 schema.properties.credentialSubject.properties
-            ).find(([, s]) => Number(s.index) == attributeTag);
+            ).find(([k]) => k == key);
             if (!schemaEntry) {
-                throw new Error('Missing attribute in schema: ' + attributeTag);
+                throw new Error('Missing attribute in schema: ' + key);
             }
-            const [attributeName] = schemaEntry;
-            acc[attributeTag] = credentialSubject[attributeName];
-            return acc;
-        },
-        {}
+            return Number(schemaEntry[1].index);
+        }
     );
 }
 
@@ -547,8 +547,7 @@ function extractAttributesFromCredentialSubject(
  * Create the commitment input required to create a proof for the given statements, using an web3Id credential.
  */
 export function createWeb3CommitmentInput(
-    statements: AtomicStatementV2[],
-    signer: KeyPair,
+    verifiableCredentialPrivateKey: HexString,
     issuanceDate: string,
     credentialSubject: CredentialSubject,
     schema: VerifiableCredentialSchema,
@@ -558,9 +557,8 @@ export function createWeb3CommitmentInput(
     return {
         type: 'web3Issuer',
         issuanceDate,
-        signer: signer.signKey + signer.verifyKey,
+        signer: verifiableCredentialPrivateKey,
         values: extractAttributesFromCredentialSubject(
-            statements,
             credentialSubject,
             schema
         ),
@@ -574,7 +572,6 @@ export function createWeb3CommitmentInput(
  * Uses a ConcordiumHdWallet to supply the public key and the signing key of the credential.
  */
 export function createWeb3CommitmentInputWithHdWallet(
-    statements: AtomicStatementV2[],
     wallet: ConcordiumHdWallet,
     issuer: ContractAddress,
     credentialIndex: number,
@@ -584,17 +581,10 @@ export function createWeb3CommitmentInputWithHdWallet(
     randomness: Record<string, string>,
     signature: string
 ): Web3IssuerCommitmentInput {
-    const keyPair = {
-        signKey: wallet
-            .getVerifiableCredentialPublicKey(issuer, credentialIndex)
-            .toString('hex'),
-        verifyKey: wallet
+    return createWeb3CommitmentInput(
+        wallet
             .getVerifiableCredentialSigningKey(issuer, credentialIndex)
             .toString('hex'),
-    };
-    return createWeb3CommitmentInput(
-        statements,
-        keyPair,
         issuanceDate,
         credentialSubject,
         schema,

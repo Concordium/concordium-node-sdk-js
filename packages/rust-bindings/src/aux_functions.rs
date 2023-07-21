@@ -857,7 +857,7 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<JsonString> {
 #[derive(SerdeDeserialize)]
 struct Web3SecretKey (
     #[serde(deserialize_with = "base16_decode")]
-    ed25519_dalek::Keypair
+    ed25519_dalek::SecretKey
 );
 
 impl Web3IdSigner for Web3SecretKey {

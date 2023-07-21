@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+
+### Added
+
+- `create_web3_id_proof_ext` function.
+
 ## 1.1.0
 
 ### Added

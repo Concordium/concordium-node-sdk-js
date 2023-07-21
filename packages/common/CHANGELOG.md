@@ -1,5 +1,13 @@
 # Changelog
 
+## 9.1.0
+
+### Added
+
+- `Web3StatementBuilder` function.
+- `getVerifiablePresentation` function.
+- Various helper methods for web3Id statements and verifiable presentations.
+
 ## 9.0.0
 
 ### Breaking changes

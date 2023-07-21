@@ -266,7 +266,6 @@ dependencies = [
  "anyhow",
  "chrono",
  "concordium_base",
- "console_error_panic_hook",
  "ed25519-dalek",
  "ed25519_hd_key_derivation",
  "either",
@@ -327,16 +326,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.23",
-]
-
-[[package]]
-name = "console_error_panic_hook"
-version = "0.1.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a06aeb73f470f66dcdbf7223caeebb85984942f22f1adb2a088cf9668146bbbc"
-dependencies = [
- "cfg-if",
- "wasm-bindgen",
 ]
 
 [[package]]

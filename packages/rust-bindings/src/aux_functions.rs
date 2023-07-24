@@ -774,6 +774,12 @@ fn deserialize_type_value(
     }
 }
 
+pub fn display_type_schema_template_aux(schema: HexString) -> Result<JsonString> {
+    let value_type: Type = from_bytes(&hex::decode(schema)?)?;
+    let v = value_type.to_json_template();
+    Ok(to_string(&v)?)
+}
+
 #[derive(SerdeSerialize, SerdeDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct IdProofInput {

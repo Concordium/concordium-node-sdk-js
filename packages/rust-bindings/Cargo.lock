@@ -234,6 +234,7 @@ dependencies = [
 name = "concordium-contracts-common"
 version = "7.0.0"
 dependencies = [
+ "base64",
  "bs58",
  "chrono",
  "concordium-contracts-common-derive",

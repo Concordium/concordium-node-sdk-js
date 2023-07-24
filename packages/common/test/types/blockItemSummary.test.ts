@@ -18,6 +18,8 @@ import {
     ConfigureDelegationSummary,
     DelegationTargetType,
     getSummaryContractUpdateLogs,
+    getTransactionKindString,
+    AccountTransactionType,
 } from '../../src';
 
 const chainUpdate: UpdateSummary = {
@@ -347,4 +349,76 @@ describe('getSummaryContractUpdateLogs', () => {
             },
         ]);
     });
+});
+
+test('getTransactionKindString', () => {
+    expect(getTransactionKindString(AccountTransactionType.DeployModule)).toBe(
+        TransactionKindString.DeployModule
+    );
+    expect(getTransactionKindString(AccountTransactionType.InitContract)).toBe(
+        TransactionKindString.InitContract
+    );
+    expect(getTransactionKindString(AccountTransactionType.Update)).toBe(
+        TransactionKindString.Update
+    );
+    expect(getTransactionKindString(AccountTransactionType.Transfer)).toBe(
+        TransactionKindString.Transfer
+    );
+    expect(getTransactionKindString(AccountTransactionType.AddBaker)).toBe(
+        TransactionKindString.AddBaker
+    );
+    expect(getTransactionKindString(AccountTransactionType.RemoveBaker)).toBe(
+        TransactionKindString.RemoveBaker
+    );
+    expect(
+        getTransactionKindString(AccountTransactionType.UpdateBakerStake)
+    ).toBe(TransactionKindString.UpdateBakerStake);
+    expect(
+        getTransactionKindString(
+            AccountTransactionType.UpdateBakerRestakeEarnings
+        )
+    ).toBe(TransactionKindString.UpdateBakerRestakeEarnings);
+    expect(
+        getTransactionKindString(AccountTransactionType.UpdateBakerKeys)
+    ).toBe(TransactionKindString.UpdateBakerKeys);
+    expect(
+        getTransactionKindString(AccountTransactionType.UpdateCredentialKeys)
+    ).toBe(TransactionKindString.UpdateCredentialKeys);
+    expect(
+        getTransactionKindString(AccountTransactionType.EncryptedAmountTransfer)
+    ).toBe(TransactionKindString.EncryptedAmountTransfer);
+    expect(
+        getTransactionKindString(AccountTransactionType.TransferToEncrypted)
+    ).toBe(TransactionKindString.TransferToEncrypted);
+    expect(
+        getTransactionKindString(AccountTransactionType.TransferToPublic)
+    ).toBe(TransactionKindString.TransferToPublic);
+    expect(
+        getTransactionKindString(AccountTransactionType.TransferWithSchedule)
+    ).toBe(TransactionKindString.TransferWithSchedule);
+    expect(
+        getTransactionKindString(AccountTransactionType.UpdateCredentials)
+    ).toBe(TransactionKindString.UpdateCredentials);
+    expect(getTransactionKindString(AccountTransactionType.RegisterData)).toBe(
+        TransactionKindString.RegisterData
+    );
+    expect(
+        getTransactionKindString(AccountTransactionType.TransferWithMemo)
+    ).toBe(TransactionKindString.TransferWithMemo);
+    expect(
+        getTransactionKindString(
+            AccountTransactionType.EncryptedAmountTransferWithMemo
+        )
+    ).toBe(TransactionKindString.EncryptedAmountTransferWithMemo);
+    expect(
+        getTransactionKindString(
+            AccountTransactionType.TransferWithScheduleAndMemo
+        )
+    ).toBe(TransactionKindString.TransferWithScheduleAndMemo);
+    expect(
+        getTransactionKindString(AccountTransactionType.ConfigureBaker)
+    ).toBe(TransactionKindString.ConfigureBaker);
+    expect(
+        getTransactionKindString(AccountTransactionType.ConfigureDelegation)
+    ).toBe(TransactionKindString.ConfigureDelegation);
 });

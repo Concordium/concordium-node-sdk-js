@@ -1,13 +1,6 @@
-import { Buffer } from 'buffer/';
-import {
-    AccountTransactionType,
-    ContractAddress,
-    HexString,
-    InvokeContractResult,
-    UpdateContractPayload,
-} from '../types';
+import { ContractAddress, HexString, InvokeContractResult } from '../types';
 import { ConcordiumGRPCClient } from '../GRPCClient';
-import { AccountSigner, signTransaction } from '../signHelpers';
+import { AccountSigner } from '../signHelpers';
 import {
     serializeCIS2Transfers,
     serializeCIS2BalanceOfQueries,
@@ -23,40 +16,18 @@ import {
 } from './util';
 import type { CIS2 } from './util';
 import { AccountAddress } from '../types/accountAddress';
-import { CcdAmount } from '../types/ccdAmount';
-import { TransactionExpiry } from '../types/transactionExpiry';
 import { stringify } from 'json-bigint';
 import { CIS0, cis0Supports } from '../cis0';
-import { checkParameterLength, getContractName } from '../contractHelpers';
-import { makeDynamicFunction } from '../util';
-
-const schemas = {
-    /** Base64 encoded schema for CIS-2.transfer parameter */
-    transfer:
-        'EAEUAAUAAAAIAAAAdG9rZW5faWQdAAYAAABhbW91bnQbJQAAAAQAAABmcm9tFQIAAAAHAAAAQWNjb3VudAEBAAAACwgAAABDb250cmFjdAEBAAAADAIAAAB0bxUCAAAABwAAAEFjY291bnQBAQAAAAsIAAAAQ29udHJhY3QBAgAAAAwWAQQAAABkYXRhHQE',
-    /** Base64 encoded schema for CIS-2.updateOperator parameter */
-    updateOperator:
-        'EAEUAAIAAAAGAAAAdXBkYXRlFQIAAAAGAAAAUmVtb3ZlAgMAAABBZGQCCAAAAG9wZXJhdG9yFQIAAAAHAAAAQWNjb3VudAEBAAAACwgAAABDb250cmFjdAEBAAAADA',
-};
+import { getContractName } from '../contractHelpers';
+import { GenericContract, GenericContractDryRun } from '../GenericContract';
 
 const getInvoker = (address: CIS2.Address): ContractAddress | AccountAddress =>
     isContractAddress(address) ? address : new AccountAddress(address);
 
-const getDefaultExpiryDate = (): Date => {
-    const future5Minutes = Date.now() + 5 * 60 * 1000;
-    return new Date(future5Minutes);
-};
-
 /**
  * Contains methods for performing dry-run invocations of update instructions on CIS-2 smart contracts.
  */
-class CIS2DryRun {
-    constructor(
-        private grpcClient: ConcordiumGRPCClient,
-        private contractAddress: ContractAddress,
-        private contractName: string
-    ) {}
-
+class CIS2DryRun extends GenericContractDryRun {
     /**
      * Performs a dry-run invocation of "transfer" on a corresponding {@link CIS2Contract} instance
      *
@@ -122,58 +93,30 @@ class CIS2DryRun {
             blockHash
         );
     }
-
-    /**
-     * Helper function for invoking a contract function.
-     *
-     * @param {string} entrypoint - The name of the receive function to invoke.
-     * @param {ContractAddress | AccountAddress} invoker - The address of the invoker.
-     * @param {Function} serializer - A function for serializing the input to bytes.
-     * @param {T | T[]} input - Input for for contract function.
-     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
-     *
-     * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
-     */
-    private invokeMethod<T>(
-        entrypoint: string,
-        invoker: ContractAddress | AccountAddress,
-        serializer: (input: T[]) => Buffer,
-        input: T | T[],
-        blockHash?: HexString
-    ): Promise<InvokeContractResult> {
-        const parameter = makeDynamicFunction(serializer)(input);
-        checkParameterLength(parameter);
-
-        return this.grpcClient.invokeContract(
-            {
-                contract: this.contractAddress,
-                parameter,
-                invoker,
-                method: `${this.contractName}.${entrypoint}`,
-            },
-            blockHash
-        );
-    }
 }
 
 /**
  * Contains methods for performing operations on CIS-2 smart contracts.
  */
-export class CIS2Contract {
-    private dryRunInstance: CIS2DryRun;
-
-    constructor(
-        private grpcClient: ConcordiumGRPCClient,
-        private contractAddress: ContractAddress,
-        private contractName: string
-    ) {
-        this.dryRunInstance = new CIS2DryRun(
-            grpcClient,
-            contractAddress,
-            contractName
-        );
+export class CIS2Contract extends GenericContract<
+    CIS2DryRun,
+    'transfer' | 'updateOperator'
+> {
+    schemas: Record<'transfer' | 'updateOperator', string> = {
+        /** Base64 encoded schema for CIS-2.transfer parameter */
+        transfer:
+            'EAEUAAUAAAAIAAAAdG9rZW5faWQdAAYAAABhbW91bnQbJQAAAAQAAABmcm9tFQIAAAAHAAAAQWNjb3VudAEBAAAACwgAAABDb250cmFjdAEBAAAADAIAAAB0bxUCAAAABwAAAEFjY291bnQBAQAAAAsIAAAAQ29udHJhY3QBAgAAAAwWAQQAAABkYXRhHQE',
+        /** Base64 encoded schema for CIS-2.updateOperator parameter */
+        updateOperator:
+            'EAEUAAIAAAAGAAAAdXBkYXRlFQIAAAAGAAAAUmVtb3ZlAgMAAABBZGQCCAAAAG9wZXJhdG9yFQIAAAAHAAAAQWNjb3VudAEBAAAACwgAAABDb250cmFjdAEBAAAADA',
+    };
+    protected makeDryRunInstance(
+        grpcClient: ConcordiumGRPCClient,
+        contractAddress: ContractAddress,
+        contractName: string
+    ): CIS2DryRun {
+        return new CIS2DryRun(grpcClient, contractAddress, contractName);
     }
-
     /**
      * Creates a new `CIS2Contract` instance by querying the node for the necessary information through the supplied `grpcClient`.
      *
@@ -509,158 +452,5 @@ export class CIS2Contract {
             tokenIds,
             blockHash
         );
-    }
-
-    /**
-     * A dry-run instance, providing access to methods for performing dry-run invocations of update instructions.
-     */
-    get dryRun(): CIS2DryRun {
-        return this.dryRunInstance;
-    }
-
-    /**
-     * Helper function for sending update transactions.
-     *
-     * @param {string} entrypoint - The name of the receive function to invoke.
-     * @param {Function} serializer - A function to serialize the `input` to bytes.
-     * @param {Function} jsonFormatter - A function to format the `input` as JSON format serializable by the contract schema.
-     * @param {CIS2.CreateTransactionMetadata} metadata - Metadata to be used for the transaction creation (with defaults).
-     * @param {T | T[]} input - Input for for contract function.
-     *
-     * @throws If the query could not be invoked successfully.
-     *
-     * @returns {HexString} The transaction hash of the update transaction
-     */
-    private createUpdateTransaction<T>(
-        entrypoint: keyof typeof schemas,
-        serializer: (input: T[]) => Buffer,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        jsonFormatter: (input: T) => any,
-        { amount = 0n, energy }: CIS2.CreateTransactionMetadata,
-        input: T | T[]
-    ): CIS2.UpdateTransaction {
-        const parameter = makeDynamicFunction(serializer)(input);
-        checkParameterLength(parameter);
-
-        const jsonParameter = Array.isArray(input)
-            ? input.map(jsonFormatter)
-            : [jsonFormatter(input)];
-        const payload: UpdateContractPayload = {
-            amount: new CcdAmount(amount),
-            address: this.contractAddress,
-            receiveName: `${this.contractName}.${entrypoint}`,
-            maxContractExecutionEnergy: energy,
-            message: parameter,
-        };
-
-        return {
-            type: AccountTransactionType.Update,
-            payload,
-            parameter: {
-                hex: parameter.toString('hex'),
-                json: jsonParameter,
-            },
-            schema: {
-                value: schemas[entrypoint],
-                type: 'parameter',
-            },
-        };
-    }
-
-    /**
-     * Helper function for sending update transactions.
-     *
-     * @param {CIS2.UpdateTransaction} transaction - The transaction to send.
-     * @param {CIS2.TransactionMetadata} metadata - Metadata to be used for the transaction (with defaults).
-     * @param {AccountSigner} signer - An object to use for signing the transaction.
-     *
-     * @throws If the query could not be invoked successfully.
-     *
-     * @returns {HexString} The transaction hash of the update transaction
-     */
-    private async sendUpdateTransaction(
-        { type, payload }: CIS2.UpdateTransaction,
-        {
-            senderAddress,
-            expiry = getDefaultExpiryDate(),
-        }: CIS2.TransactionMetadata,
-        signer: AccountSigner
-    ): Promise<HexString> {
-        const sender = new AccountAddress(senderAddress);
-        const { nonce } = await this.grpcClient.getNextAccountNonce(sender);
-        const header = {
-            expiry: new TransactionExpiry(expiry),
-            nonce: nonce,
-            sender,
-        };
-        const transaction = {
-            type,
-            header,
-            payload,
-        };
-        const signature = await signTransaction(transaction, signer);
-        return this.grpcClient.sendAccountTransaction(transaction, signature);
-    }
-
-    /**
-     * Helper function for invoking a contract view function.
-     *
-     * @param {string} entrypoint - The name of the view function to invoke.
-     * @param {Function} serializer - A function to serialize the `input` to bytes.
-     * @param {Function} deserializer - A function to deserialize the value returned from the view invocation.
-     * @param {T | T[]} input - Input for for contract function.
-     *
-     * @throws If the query could not be invoked successfully.
-     *
-     * @returns {HexString} The transaction hash of the update transaction
-     */
-    private async invokeView<T, R>(
-        entrypoint: string,
-        serializer: (input: T[]) => Buffer,
-        deserializer: (value: HexString) => R[],
-        input: T | T[],
-        blockHash?: HexString
-    ): Promise<R | R[]> {
-        const parameter = makeDynamicFunction(serializer)(input);
-        checkParameterLength(parameter);
-
-        const response = await this.grpcClient.invokeContract(
-            {
-                contract: this.contractAddress,
-                parameter,
-                method: `${this.contractName}.${entrypoint}`,
-            },
-            blockHash
-        );
-        if (
-            response === undefined ||
-            response.tag === 'failure' ||
-            response.returnValue === undefined
-        ) {
-            throw new Error(
-                `Failed to invoke view ${entrypoint} for contract at ${stringify(
-                    this.contractAddress
-                )}${
-                    response.tag === 'failure' &&
-                    ` with error ${stringify(response.reason)}`
-                }`
-            );
-        }
-
-        const values = deserializer(response.returnValue);
-        const isListInput = Array.isArray(input);
-        const expectedValuesLength = isListInput ? input.length : 1;
-
-        if (values.length !== expectedValuesLength) {
-            throw new Error(
-                'Mismatch between length of queries in request and values in response.'
-            );
-        }
-
-        if (isListInput) {
-            return values;
-        } else {
-            return values[0];
-        }
     }
 }

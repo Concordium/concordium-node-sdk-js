@@ -7,15 +7,7 @@ import {
     packBufferWithWord16Length,
     packBufferWithWord8Length,
 } from '../serializationHelpers';
-import {
-    AccountTransactionType,
-    Base58String,
-    Base64String,
-    ContractAddress,
-    HexString,
-    SmartContractTypeValues,
-    UpdateContractPayload,
-} from '../types';
+import { Base58String, ContractAddress, HexString } from '../types';
 import { Buffer } from 'buffer/';
 import { AccountAddress } from '../types/accountAddress';
 import {
@@ -23,6 +15,11 @@ import {
     uleb128DecodeWithIndex,
     uleb128Encode,
 } from '../uleb128';
+import {
+    ContractTransactionMetadata,
+    ContractUpdateTransaction,
+    CreateContractTransactionMetadata,
+} from '../GenericContract';
 
 const TOKEN_ID_MAX_LENGTH = 255;
 const TOKEN_AMOUNT_MAX_LENGTH = 37;
@@ -93,24 +90,12 @@ export namespace CIS2 {
     /**
      * Metadata necessary for CIS-2 transactions
      */
-    export type TransactionMetadata = {
-        /** Amount (in microCCD) to include in the transaction. Defaults to 0n */
-        amount?: bigint;
-        /** The sender address of the transaction */
-        senderAddress: HexString;
-        /** Expiry date of the transaction. Defaults to 5 minutes in the future */
-        expiry?: Date;
-        /** Max energy to be used for the transaction */
-        energy: bigint;
-    };
+    export type TransactionMetadata = ContractTransactionMetadata;
 
     /**
      * Metadata necessary for creating a {@link UpdateTransaction}
      */
-    export type CreateTransactionMetadata = Pick<
-        TransactionMetadata,
-        'amount' | 'energy'
-    >;
+    export type CreateTransactionMetadata = CreateContractTransactionMetadata;
 
     /**
      * Data needed for CIS-2 "balanceOf" query.
@@ -145,25 +130,7 @@ export namespace CIS2 {
     /**
      * An update transaction without header. This is useful for sending through a wallet, which supplies the header information.
      */
-    export type UpdateTransaction = {
-        /** The type of the transaction, which will always be of type {@link AccountTransactionType.Update} */
-        type: AccountTransactionType.Update;
-        /** The payload of the transaction, which will always be of type {@link UpdateContractPayload} */
-        payload: UpdateContractPayload;
-        parameter: {
-            /** Hex encoded parameter for the update */
-            hex: HexString;
-            /** JSON representation of the parameter to be used with the corresponding contract schema */
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            json: SmartContractTypeValues;
-        };
-        schema: {
-            /** Base64 encoded schema for the parameter type */
-            value: Base64String;
-            /** Type of the schema. This is always of type "parameter" */
-            type: 'parameter';
-        };
-    };
+    export type UpdateTransaction = ContractUpdateTransaction;
 
     /**
      * Structure of a JSON-formatted address parameter.

@@ -37,17 +37,17 @@ class CIS2DryRun extends GenericContractDryRun {
      *
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */
-    transfer(
+    public transfer(
         sender: CIS2.Address,
         transfer: CIS2.Transfer,
         blockHash?: HexString
     ): Promise<InvokeContractResult>;
-    transfer(
+    public transfer(
         sender: CIS2.Address,
         transfers: CIS2.Transfer[],
         blockHash?: HexString
     ): Promise<InvokeContractResult>;
-    transfer(
+    public transfer(
         sender: CIS2.Address,
         transfers: CIS2.Transfer | CIS2.Transfer[],
         blockHash?: HexString
@@ -70,17 +70,17 @@ class CIS2DryRun extends GenericContractDryRun {
      *
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */
-    updateOperator(
+    public updateOperator(
         owner: CIS2.Address,
         update: CIS2.UpdateOperator,
         blockHash?: HexString
     ): Promise<InvokeContractResult>;
-    updateOperator(
+    public updateOperator(
         owner: CIS2.Address,
         updates: CIS2.UpdateOperator[],
         blockHash?: HexString
     ): Promise<InvokeContractResult>;
-    updateOperator(
+    public updateOperator(
         owner: CIS2.Address,
         updates: CIS2.UpdateOperator | CIS2.UpdateOperator[],
         blockHash?: HexString
@@ -102,7 +102,7 @@ export class CIS2Contract extends GenericContract<
     CIS2DryRun,
     'transfer' | 'updateOperator'
 > {
-    schemas: Record<'transfer' | 'updateOperator', string> = {
+    public schemas: Record<'transfer' | 'updateOperator', string> = {
         /** Base64 encoded schema for CIS-2.transfer parameter */
         transfer:
             'EAEUAAUAAAAIAAAAdG9rZW5faWQdAAYAAABhbW91bnQbJQAAAAQAAABmcm9tFQIAAAAHAAAAQWNjb3VudAEBAAAACwgAAABDb250cmFjdAEBAAAADAIAAAB0bxUCAAAABwAAAEFjY291bnQBAQAAAAsIAAAAQ29udHJhY3QBAgAAAAwWAQQAAABkYXRhHQE',
@@ -126,7 +126,7 @@ export class CIS2Contract extends GenericContract<
      * @throws If `InstanceInfo` could not be received for the contract, if the contract does not support the CIS-2 standard,
      * or if the contract name could not be parsed from the information received from the node.
      */
-    static async create(
+    public static async create(
         grpcClient: ConcordiumGRPCClient,
         contractAddress: ContractAddress
     ): Promise<CIS2Contract> {
@@ -165,7 +165,7 @@ export class CIS2Contract extends GenericContract<
      *
      * @returns {CIS2.UpdateTransaction} An object containing the parts of the transaction needed for submission.
      */
-    createTransfer(
+    public createTransfer(
         metadata: CIS2.CreateTransactionMetadata,
         transfer: CIS2.Transfer
     ): CIS2.UpdateTransaction;
@@ -180,15 +180,15 @@ export class CIS2Contract extends GenericContract<
      *
      * @returns {CIS2.UpdateTransaction} An object containing the parts of the transaction needed for submission.
      */
-    createTransfer(
+    public createTransfer(
         metadata: CIS2.CreateTransactionMetadata,
         transfers: CIS2.Transfer[]
     ): CIS2.UpdateTransaction;
-    createTransfer(
+    public createTransfer(
         metadata: CIS2.CreateTransactionMetadata,
         transfers: CIS2.Transfer | CIS2.Transfer[]
     ): CIS2.UpdateTransaction;
-    createTransfer(
+    public createTransfer(
         metadata: CIS2.CreateTransactionMetadata,
         transfers: CIS2.Transfer | CIS2.Transfer[]
     ): CIS2.UpdateTransaction {
@@ -211,7 +211,7 @@ export class CIS2Contract extends GenericContract<
      *
      * @returns {Promise<HexString>} The transaction hash of the update transaction
      */
-    transfer(
+    public transfer(
         metadata: CIS2.TransactionMetadata,
         transfer: CIS2.Transfer,
         signer: AccountSigner
@@ -227,12 +227,12 @@ export class CIS2Contract extends GenericContract<
      *
      * @returns {Promise<HexString>} The transaction hash of the update transaction
      */
-    transfer(
+    public transfer(
         metadata: CIS2.TransactionMetadata,
         transfers: CIS2.Transfer[],
         signer: AccountSigner
     ): Promise<HexString>;
-    transfer(
+    public transfer(
         metadata: CIS2.TransactionMetadata,
         transfers: CIS2.Transfer | CIS2.Transfer[],
         signer: AccountSigner
@@ -252,7 +252,7 @@ export class CIS2Contract extends GenericContract<
      *
      * @returns {CIS2.UpdateTransaction} An object containing the parts of the transaction needed for submission.
      */
-    createUpdateOperator(
+    public createUpdateOperator(
         metadata: CIS2.CreateTransactionMetadata,
         update: CIS2.UpdateOperator
     ): CIS2.UpdateTransaction;
@@ -267,15 +267,15 @@ export class CIS2Contract extends GenericContract<
      *
      * @returns {CIS2.UpdateTransaction} An object containing the parts of the transaction needed for submission.
      */
-    createUpdateOperator(
+    public createUpdateOperator(
         metadata: CIS2.CreateTransactionMetadata,
         updates: CIS2.UpdateOperator[]
     ): CIS2.UpdateTransaction;
-    createUpdateOperator(
+    public createUpdateOperator(
         metadata: CIS2.CreateTransactionMetadata,
         updates: CIS2.UpdateOperator | CIS2.UpdateOperator[]
     ): CIS2.UpdateTransaction;
-    createUpdateOperator(
+    public createUpdateOperator(
         metadata: CIS2.CreateTransactionMetadata,
         updates: CIS2.UpdateOperator | CIS2.UpdateOperator[]
     ): CIS2.UpdateTransaction {
@@ -299,7 +299,7 @@ export class CIS2Contract extends GenericContract<
      *
      * @returns {Promise<HexString>} The transaction hash of the update transaction
      */
-    updateOperator(
+    public updateOperator(
         metadata: CIS2.TransactionMetadata,
         update: CIS2.UpdateOperator,
         signer: AccountSigner
@@ -315,12 +315,12 @@ export class CIS2Contract extends GenericContract<
      *
      * @returns {Promise<HexString>} The transaction hash of the update transaction
      */
-    updateOperator(
+    public updateOperator(
         metadata: CIS2.TransactionMetadata,
         updates: CIS2.UpdateOperator[],
         signer: AccountSigner
     ): Promise<HexString>;
-    updateOperator(
+    public updateOperator(
         metadata: CIS2.TransactionMetadata,
         updates: CIS2.UpdateOperator | CIS2.UpdateOperator[],
         signer: AccountSigner
@@ -339,7 +339,7 @@ export class CIS2Contract extends GenericContract<
      *
      * @returns {bigint} The balance corresponding to the query.
      */
-    balanceOf(
+    public balanceOf(
         query: CIS2.BalanceOfQuery,
         blockHash?: HexString
     ): Promise<bigint>;
@@ -353,11 +353,11 @@ export class CIS2Contract extends GenericContract<
      *
      * @returns {bigint[]} A list of balances corresponding to and ordered by the list of queries.
      */
-    balanceOf(
+    public balanceOf(
         queries: CIS2.BalanceOfQuery[],
         blockHash?: HexString
     ): Promise<bigint[]>;
-    async balanceOf(
+    public async balanceOf(
         queries: CIS2.BalanceOfQuery | CIS2.BalanceOfQuery[],
         blockHash?: HexString
     ): Promise<bigint | bigint[]> {
@@ -380,7 +380,7 @@ export class CIS2Contract extends GenericContract<
      *
      * @returns {boolean} Whether the specified address is an operator of the specified owner.
      */
-    operatorOf(
+    public operatorOf(
         query: CIS2.OperatorOfQuery,
         blockHash?: HexString
     ): Promise<boolean>;
@@ -395,11 +395,11 @@ export class CIS2Contract extends GenericContract<
      * @returns {boolean[]} As list of boolean results, each detailing whether the specified address is an operator of the specified owner for the corresponding query.
      * The list is ordered by the corresponding query.
      */
-    operatorOf(
+    public operatorOf(
         queries: CIS2.OperatorOfQuery[],
         blockHash?: HexString
     ): Promise<boolean[]>;
-    operatorOf(
+    public operatorOf(
         queries: CIS2.OperatorOfQuery | CIS2.OperatorOfQuery[],
         blockHash?: HexString
     ): Promise<boolean | boolean[]> {
@@ -422,7 +422,7 @@ export class CIS2Contract extends GenericContract<
      *
      * @returns {CIS2.MetadataUrl} An object containing the URL of the token metadata.
      */
-    tokenMetadata(
+    public tokenMetadata(
         tokenId: HexString,
         blockHash?: HexString
     ): Promise<CIS2.MetadataUrl>;
@@ -437,11 +437,11 @@ export class CIS2Contract extends GenericContract<
      * @returns {CIS2.MetadataUrl[]} A list of objects containing URL's for token metadata for the corresponding token.
      * The list is ordered by the token ID's given by `tokenIds` input parameter.
      */
-    tokenMetadata(
+    public tokenMetadata(
         tokenIds: HexString[],
         blockHash?: HexString
     ): Promise<CIS2.MetadataUrl[]>;
-    tokenMetadata(
+    public tokenMetadata(
         tokenIds: HexString | HexString[],
         blockHash?: HexString
     ): Promise<CIS2.MetadataUrl | CIS2.MetadataUrl[]> {

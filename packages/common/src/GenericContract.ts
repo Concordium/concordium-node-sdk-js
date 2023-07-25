@@ -113,7 +113,7 @@ export abstract class GenericContract<
     E extends string
 > {
     private dryRunInstance: D;
-    abstract schemas: Record<E, Base64String>;
+    public abstract schemas: Record<E, Base64String>;
 
     constructor(
         private grpcClient: ConcordiumGRPCClient,
@@ -136,7 +136,7 @@ export abstract class GenericContract<
     /**
      * A dry-run instance, providing access to methods for performing dry-run invocations of update instructions.
      */
-    get dryRun(): D {
+    public get dryRun(): D {
         return this.dryRunInstance;
     }
 

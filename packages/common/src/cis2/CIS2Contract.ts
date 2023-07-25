@@ -1,3 +1,6 @@
+import { Buffer } from 'buffer/';
+import { stringify } from 'json-bigint';
+
 import { ContractAddress, HexString, InvokeContractResult } from '../types';
 import { ConcordiumGRPCClient } from '../GRPCClient';
 import { AccountSigner } from '../signHelpers';
@@ -16,10 +19,10 @@ import {
 } from './util';
 import type { CIS2 } from './util';
 import { AccountAddress } from '../types/accountAddress';
-import { stringify } from 'json-bigint';
 import { CIS0, cis0Supports } from '../cis0';
 import { getContractName } from '../contractHelpers';
 import { GenericContract, GenericContractDryRun } from '../GenericContract';
+import { makeDynamicFunction } from '../util';
 
 const getInvoker = (address: CIS2.Address): ContractAddress | AccountAddress =>
     isContractAddress(address) ? address : new AccountAddress(address);
@@ -361,7 +364,7 @@ export class CIS2Contract extends GenericContract<
         queries: CIS2.BalanceOfQuery | CIS2.BalanceOfQuery[],
         blockHash?: HexString
     ): Promise<bigint | bigint[]> {
-        return this.invokeView(
+        return this.invokeViewDynamic(
             'balanceOf',
             serializeCIS2BalanceOfQueries,
             deserializeCIS2BalanceOfResponse,
@@ -403,7 +406,7 @@ export class CIS2Contract extends GenericContract<
         queries: CIS2.OperatorOfQuery | CIS2.OperatorOfQuery[],
         blockHash?: HexString
     ): Promise<boolean | boolean[]> {
-        return this.invokeView(
+        return this.invokeViewDynamic(
             'operatorOf',
             serializeCIS2OperatorOfQueries,
             deserializeCIS2OperatorOfResponse,
@@ -445,12 +448,55 @@ export class CIS2Contract extends GenericContract<
         tokenIds: HexString | HexString[],
         blockHash?: HexString
     ): Promise<CIS2.MetadataUrl | CIS2.MetadataUrl[]> {
-        return this.invokeView(
+        return this.invokeViewDynamic(
             'tokenMetadata',
             serializeCIS2TokenIds,
             deserializeCIS2TokenMetadataResponse,
             tokenIds,
             blockHash
         );
+    }
+
+    /**
+     * Helper function for invoking a contract view function.
+     *
+     * @param {string} entrypoint - The name of the view function to invoke.
+     * @param {Function} serializer - A function to serialize the `input` to bytes.
+     * @param {Function} deserializer - A function to deserialize the value returned from the view invocation.
+     * @param {T | T[]} input - Input for for contract function.
+     *
+     * @throws If the query could not be invoked successfully.
+     *
+     * @returns {HexString} The transaction hash of the update transaction
+     */
+    private async invokeViewDynamic<T, R>(
+        entrypoint: string,
+        serializer: (input: T[]) => Buffer,
+        deserializer: (value: HexString) => R[],
+        input: T | T[],
+        blockHash?: HexString
+    ): Promise<R | R[]> {
+        const values = await this.invokeView(
+            entrypoint,
+            makeDynamicFunction(serializer),
+            deserializer,
+            input,
+            blockHash
+        );
+
+        const isListInput = Array.isArray(input);
+        const expectedValuesLength = isListInput ? input.length : 1;
+
+        if (values.length !== expectedValuesLength) {
+            throw new Error(
+                'Mismatch between length of queries in request and values in response.'
+            );
+        }
+
+        if (isListInput) {
+            return values;
+        } else {
+            return values[0];
+        }
     }
 }

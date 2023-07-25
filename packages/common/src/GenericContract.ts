@@ -116,7 +116,7 @@ export abstract class GenericContract<
     public abstract schemas: Record<E, Base64String>;
 
     constructor(
-        private grpcClient: ConcordiumGRPCClient,
+        protected grpcClient: ConcordiumGRPCClient,
         private contractAddress: ContractAddress,
         private contractName: string
     ) {
@@ -238,12 +238,12 @@ export abstract class GenericContract<
      */
     protected async invokeView<T, R>(
         entrypoint: string,
-        serializer: (input: T[]) => Buffer,
-        deserializer: (value: HexString) => R[],
-        input: T | T[],
+        serializer: (input: T) => Buffer,
+        deserializer: (value: HexString) => R,
+        input: T,
         blockHash?: HexString
-    ): Promise<R | R[]> {
-        const parameter = makeDynamicFunction(serializer)(input);
+    ): Promise<R> {
+        const parameter = serializer(input);
         checkParameterLength(parameter);
 
         const response = await this.grpcClient.invokeContract(
@@ -269,20 +269,7 @@ export abstract class GenericContract<
             );
         }
 
-        const values = deserializer(response.returnValue);
-        const isListInput = Array.isArray(input);
-        const expectedValuesLength = isListInput ? input.length : 1;
-
-        if (values.length !== expectedValuesLength) {
-            throw new Error(
-                'Mismatch between length of queries in request and values in response.'
-            );
-        }
-
-        if (isListInput) {
-            return values;
-        } else {
-            return values[0];
-        }
+        const value = deserializer(response.returnValue);
+        return value;
     }
 }

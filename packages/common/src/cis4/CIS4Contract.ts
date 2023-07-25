@@ -1,6 +1,7 @@
 import { Buffer } from 'buffer/';
 
-import { ConcordiumGRPCClient, HexString } from '..';
+import { AccountAddress, ConcordiumGRPCClient, HexString } from '..';
+import { deserializeCIS2MetadataUrl } from '../cis2/util';
 import { GenericContract, GenericContractDryRun } from '../GenericContract';
 import { ContractAddress } from '../types';
 import {
@@ -80,7 +81,7 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
      *
      * @param {HexString} [blockHash] block to perform query at.
      *
-     * @returns {CIS4.RevocationKeyWithNonce[]} a corresponding credential status.
+     * @returns {CIS4.RevocationKeyWithNonce[]} the revocation keys wityh corresponding nonces.
      */
     public revocationKeys(
         blockHash?: HexString
@@ -89,6 +90,40 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
             'revocationKeys',
             () => Buffer.alloc(0),
             deserializeCIS4RevocationKeys,
+            undefined,
+            blockHash
+        );
+    }
+
+    /**
+     * Get the {@link CIS4.MetadataUrl} URL for the issuer metadata.
+     *
+     * @param {HexString} [blockHash] block to perform query at.
+     *
+     * @returns {CIS4.MetadataUrl} a metadata URL.
+     */
+    public issuerMetadata(blockHash?: HexString): Promise<CIS4.MetadataUrl> {
+        return this.invokeView(
+            'issuerMetadata',
+            () => Buffer.alloc(0),
+            deserializeCIS2MetadataUrl,
+            undefined,
+            blockHash
+        );
+    }
+
+    /**
+     * Get the {@link AccountAddress} account address of the issuer.
+     *
+     * @param {HexString} [blockHash] block to perform query at.
+     *
+     * @returns {AccountAddress} an account address.
+     */
+    public issuerAddress(blockHash?: HexString): Promise<AccountAddress> {
+        return this.invokeView(
+            'issuer',
+            () => Buffer.alloc(0),
+            (value) => AccountAddress.fromBytes(Buffer.from(value, 'hex')),
             undefined,
             blockHash
         );

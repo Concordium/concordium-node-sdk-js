@@ -351,13 +351,13 @@ export const serializeCIS2BalanceOfQueries = makeSerializeList(
  * @returns {bigint[]} A list of token balances.
  */
 export const deserializeCIS2BalanceOfResponse = makeDeserializeListResponse(
-    (buf) => {
-        const end = buf.remainingBytes.findIndex((b) => b < 2 ** 7) + 1; // Find the first byte with most significant bit not set, signaling the last byte in the leb128 slice.
+    (cursor) => {
+        const end = cursor.remainingBytes.findIndex((b) => b < 2 ** 7) + 1; // Find the first byte with most significant bit not set, signaling the last byte in the leb128 slice.
         if (end === 0) {
             throw new Error('Could not find leb128 end');
         }
 
-        const leb128Slice = buf.read(end);
+        const leb128Slice = cursor.read(end);
         if (leb128Slice.length > TOKEN_AMOUNT_MAX_LENGTH) {
             throw new Error(
                 `Found token amount with size exceeding the maximum allowed of ${TOKEN_AMOUNT_MAX_LENGTH}`
@@ -380,16 +380,19 @@ export const deserializeCIS2BalanceOfResponse = makeDeserializeListResponse(
  */
 export const serializeCIS2TokenIds = makeSerializeList(serializeCIS2TokenId);
 
-export function deserializeCIS2MetadataUrl(buf: Cursor): CIS2.MetadataUrl {
-    const length = buf.read(2).readUInt16LE(0);
+export function deserializeCIS2MetadataUrl(
+    value: Cursor | HexString
+): CIS2.MetadataUrl {
+    const cursor = typeof value === 'string' ? Cursor.fromHex(value) : value;
+    const length = cursor.read(2).readUInt16LE(0);
 
-    const url = buf.read(length).toString('utf8');
+    const url = cursor.read(length).toString('utf8');
 
-    const hasChecksum = buf.read(1).readUInt8(0);
+    const hasChecksum = cursor.read(1).readUInt8(0);
 
     let metadataUrl: CIS2.MetadataUrl;
     if (hasChecksum === 1) {
-        const hash = buf.read(32).toString('hex');
+        const hash = cursor.read(32).toString('hex');
         metadataUrl = { url, hash };
     } else if (hasChecksum === 0) {
         metadataUrl = { url };
@@ -496,8 +499,8 @@ export const serializeCIS2OperatorOfQueries = makeSerializeList(
  * @returns {boolean[]} A list of boolean values.
  */
 export const deserializeCIS2OperatorOfResponse = makeDeserializeListResponse(
-    (buf) => {
-        const value = Boolean(buf.read(1).readUInt8(0));
+    (cursor) => {
+        const value = Boolean(cursor.read(1).readUInt8(0));
         return value;
     }
 );

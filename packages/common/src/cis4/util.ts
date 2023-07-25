@@ -40,6 +40,13 @@ export namespace CIS4 {
          */
         revocationNonce: bigint;
     };
+
+    export enum CredentialStatus {
+        Active,
+        Revoked,
+        Expired,
+        NotActivated,
+    }
 }
 
 function deserializeCredentialType(cursor: Cursor): string {
@@ -48,7 +55,7 @@ function deserializeCredentialType(cursor: Cursor): string {
 }
 
 function deserializeDate(cursor: Cursor): Date {
-    const value = cursor.read(20).toString('utf8'); // Asuming a fixed length of 20 is used.
+    const value = cursor.read(20).toString('utf8'); // TODO: Asuming a fixed length of 20 is used?
     return new Date(value);
 }
 
@@ -92,4 +99,11 @@ export function deserializeCIS4CredentialEntry(
         schemaRef,
         revocationNonce,
     };
+}
+
+export function deserializeCIS4CredentialStatus(
+    value: HexString
+): CIS4.CredentialStatus {
+    const b = Buffer.from(value, 'hex');
+    return b.readUInt8(0); // TODO: Assumes the status is represented as a uint8?
 }

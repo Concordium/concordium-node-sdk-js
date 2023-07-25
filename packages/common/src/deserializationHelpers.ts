@@ -6,6 +6,10 @@ export class Cursor {
 
     constructor(private data: Buffer) {}
 
+    public static fromHex(data: HexString): Cursor {
+        return new Cursor(Buffer.from(data, 'hex'));
+    }
+
     /** Read a number of bytes from the cursor */
     public read(numBytes: number): Buffer {
         const data = Buffer.from(
@@ -33,7 +37,7 @@ export class Cursor {
 export const makeDeserializeListResponse =
     <R>(deserializer: (value: Cursor) => R) =>
     (value: HexString): R[] => {
-        const cursor = new Cursor(Buffer.from(value, 'hex'));
+        const cursor = Cursor.fromHex(value);
         const n = cursor.read(2).readUInt16LE(0);
         const values: R[] = [];
 

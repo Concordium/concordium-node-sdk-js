@@ -3,7 +3,7 @@ import { Buffer } from 'buffer/';
 import type { HexString } from '../types';
 import type { CIS2 } from '../cis2';
 import { deserializeCIS2MetadataUrl } from '../cis2/util';
-import { Cursor } from '../deserializationHelpers';
+import { Cursor, makeDeserializeListResponse } from '../deserializationHelpers';
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace CIS4 {
@@ -47,6 +47,11 @@ export namespace CIS4 {
         Expired,
         NotActivated,
     }
+
+    export type RevocationKeyWithNonce = {
+        key: HexString;
+        nonce: bigint;
+    };
 }
 
 function deserializeCredentialType(cursor: Cursor): string {
@@ -65,8 +70,12 @@ function deserializePedersenCommitment(cursor: Cursor): HexString {
     return value;
 }
 
+function deserializeEd25519PublicKey(cursor: Cursor): HexString {
+    return cursor.read(32).toString('hex');
+}
+
 function deserializeCredentialInfo(cursor: Cursor): CIS4.CredentialInfo {
-    const holderPubKey = cursor.read(32).toString('hex');
+    const holderPubKey = deserializeEd25519PublicKey(cursor);
     const holderRevocable = cursor.read(1).readUInt8(0) === 1;
     const commitment = deserializePedersenCommitment(cursor);
     const validFrom = deserializeDate(cursor);
@@ -88,7 +97,7 @@ function deserializeCredentialInfo(cursor: Cursor): CIS4.CredentialInfo {
 export function deserializeCIS4CredentialEntry(
     value: HexString
 ): CIS4.CredentialEntry {
-    const cursor = new Cursor(Buffer.from(value, 'hex'));
+    const cursor = Cursor.fromHex(value);
 
     const credentialInfo = deserializeCredentialInfo(cursor);
     const schemaRef = deserializeCIS2MetadataUrl(cursor);
@@ -107,3 +116,19 @@ export function deserializeCIS4CredentialStatus(
     const b = Buffer.from(value, 'hex');
     return b.readUInt8(0); // TODO: Assumes the status is represented as a uint8?
 }
+
+function deserializeCIS4RevocationKey(
+    cursor: Cursor
+): CIS4.RevocationKeyWithNonce {
+    const key = deserializeEd25519PublicKey(cursor);
+    const nonce = cursor.read(8).readBigInt64LE(0).valueOf();
+
+    return {
+        key,
+        nonce,
+    };
+}
+
+export const deserializeCIS4RevocationKeys = makeDeserializeListResponse(
+    deserializeCIS4RevocationKey
+);

@@ -1,14 +1,30 @@
 import { Buffer } from 'buffer/';
 
-import { AccountAddress, ConcordiumGRPCClient, HexString } from '..';
+import {
+    AccountAddress,
+    AccountSigner,
+    Base58String,
+    ConcordiumGRPCClient,
+    HexString,
+    InvokeContractResult,
+} from '..';
 import { deserializeCIS2MetadataUrl } from '../cis2/util';
-import { GenericContract, GenericContractDryRun } from '../GenericContract';
+import {
+    ContractTransactionMetadata,
+    ContractUpdateTransaction,
+    CreateContractTransactionMetadata,
+    GenericContract,
+    GenericContractDryRun,
+    getInvoker,
+} from '../GenericContract';
 import { ContractAddress } from '../types';
 import {
     CIS4,
     deserializeCIS4CredentialEntry,
     deserializeCIS4CredentialStatus,
     deserializeCIS4RevocationKeys,
+    formatCIS4RegisterCredential,
+    serializeCIS4RegisterCredentialParam,
 } from './util';
 
 type Updates =
@@ -16,7 +32,22 @@ type Updates =
     | 'revokeCredentialIssuer'
     | 'revokeCredentialHolder';
 
-class CIS4DryRun extends GenericContractDryRun {}
+class CIS4DryRun extends GenericContractDryRun {
+    public registerCredential(
+        sender: Base58String | ContractAddress,
+        credInfo: CIS4.CredentialInfo,
+        additionalData: HexString = '',
+        blockHash?: HexString
+    ): Promise<InvokeContractResult> {
+        return this.invokeMethod(
+            'registerCredential',
+            getInvoker(sender),
+            serializeCIS4RegisterCredentialParam,
+            { credInfo, additionalData },
+            blockHash
+        );
+    }
+}
 
 export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
     public schemas: Record<Updates, string> = {
@@ -30,15 +61,15 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
         grpcClient: ConcordiumGRPCClient,
         contractAddress: ContractAddress,
         contractName: string
-    ): GenericContractDryRun {
+    ): CIS4DryRun {
         return new CIS4DryRun(grpcClient, contractAddress, contractName);
     }
 
     /**
      * Look up an entry in the registry by the public key of its holder.
      *
-     * @param {HexString} credHolderPubKey public key identifying the credential holder
-     * @param {HexString} [blockHash] block to perform query at.
+     * @param {HexString} credHolderPubKey - public key identifying the credential holder
+     * @param {HexString} [blockHash] - block to perform query at.
      *
      * @returns {CIS4.CredentialEntry} a corresponding credential entry.
      */
@@ -58,8 +89,8 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
     /**
      * Look up the status of a credential by the public key of its holder.
      *
-     * @param {HexString} credHolderPubKey public key identifying the credential holder
-     * @param {HexString} [blockHash] block to perform query at.
+     * @param {HexString} credHolderPubKey - public key identifying the credential holder
+     * @param {HexString} [blockHash] - block to perform query at.
      *
      * @returns {CIS4.CredentialStatus} a corresponding credential status.
      */
@@ -79,7 +110,7 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
     /**
      * Get list of all revocation keys and their corresponding nonces.
      *
-     * @param {HexString} [blockHash] block to perform query at.
+     * @param {HexString} [blockHash] - block to perform query at.
      *
      * @returns {CIS4.RevocationKeyWithNonce[]} the revocation keys wityh corresponding nonces.
      */
@@ -98,7 +129,7 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
     /**
      * Get the {@link CIS4.MetadataUrl} URL for the issuer metadata.
      *
-     * @param {HexString} [blockHash] block to perform query at.
+     * @param {HexString} [blockHash] - block to perform query at.
      *
      * @returns {CIS4.MetadataUrl} a metadata URL.
      */
@@ -115,7 +146,7 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
     /**
      * Get the {@link AccountAddress} account address of the issuer.
      *
-     * @param {HexString} [blockHash] block to perform query at.
+     * @param {HexString} [blockHash] - block to perform query at.
      *
      * @returns {AccountAddress} an account address.
      */
@@ -127,5 +158,54 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
             undefined,
             blockHash
         );
+    }
+
+    /**
+     * Create the details necessary to submit a CIS4.registerCredential update transaction.
+     *
+     * @param {CreateContractTransactionMetadata} metadata - transaction metadata
+     * @param {CIS4.CredentialInfo} credInfo - the credential info to register
+     * @param {HexString} [additionalData] - any additional data to include
+     *
+     * @returns {ContractUpdateTransaction} Transaction data for a CIS4.registerCredential update.
+     */
+    public createRegisterCredential(
+        metadata: CreateContractTransactionMetadata,
+        credInfo: CIS4.CredentialInfo,
+        additionalData: HexString = ''
+    ): ContractUpdateTransaction {
+        return this.createUpdateTransaction(
+            'registerCredential',
+            serializeCIS4RegisterCredentialParam,
+            formatCIS4RegisterCredential,
+            metadata,
+            { credInfo, additionalData }
+        );
+    }
+
+    /**
+     * Submit CIS4.registerCredentail update transaction.
+     *
+     * @param {AccountSigner} signer - to be used for signing the transaction sent to the node.
+     * @param {ContractTransactionMetadata} metadata - transaction metadata
+     * @param {CIS4.CredentialInfo} credInfo - the credential info to register
+     * @param {HexString} [additionalData] - any additional data to include
+     *
+     * @returns {ContractUpdateTransaction} Transaction data for a register credential update.
+     */
+    public registerCredential(
+        signer: AccountSigner,
+        metadata: ContractTransactionMetadata,
+        credInfo: CIS4.CredentialInfo,
+        additionalData: HexString = ''
+    ): Promise<HexString> {
+        const transaction = this.createUpdateTransaction(
+            'registerCredential',
+            serializeCIS4RegisterCredentialParam,
+            formatCIS4RegisterCredential,
+            metadata,
+            { credInfo, additionalData }
+        );
+        return this.sendUpdateTransaction(transaction, metadata, signer);
     }
 }

@@ -6,6 +6,7 @@ import { ConcordiumGRPCClient } from './GRPCClient';
 import { AccountSigner, signTransaction } from './signHelpers';
 import {
     AccountTransactionType,
+    Base58String,
     Base64String,
     ContractAddress,
     HexString,
@@ -16,7 +17,6 @@ import {
 import { AccountAddress } from './types/accountAddress';
 import { CcdAmount } from './types/ccdAmount';
 import { TransactionExpiry } from './types/transactionExpiry';
-import { makeDynamicFunction } from './util';
 
 /**
  * Metadata necessary for smart contract transactions
@@ -68,6 +68,11 @@ function getDefaultExpiryDate(): Date {
     return new Date(future5Minutes);
 }
 
+export const getInvoker = (
+    address: Base58String | ContractAddress
+): ContractAddress | AccountAddress =>
+    typeof address !== 'string' ? address : new AccountAddress(address);
+
 export class GenericContractDryRun {
     constructor(
         private grpcClient: ConcordiumGRPCClient,
@@ -81,7 +86,7 @@ export class GenericContractDryRun {
      * @param {string} entrypoint - The name of the receive function to invoke.
      * @param {ContractAddress | AccountAddress} invoker - The address of the invoker.
      * @param {Function} serializer - A function for serializing the input to bytes.
-     * @param {T | T[]} input - Input for for contract function.
+     * @param {T} input - Input for for contract function.
      * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
      *
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
@@ -89,11 +94,11 @@ export class GenericContractDryRun {
     protected invokeMethod<T>(
         entrypoint: string,
         invoker: ContractAddress | AccountAddress,
-        serializer: (input: T[]) => Buffer,
-        input: T | T[],
+        serializer: (input: T) => Buffer,
+        input: T,
         blockHash?: HexString
     ): Promise<InvokeContractResult> {
-        const parameter = makeDynamicFunction(serializer)(input);
+        const parameter = serializer(input);
         checkParameterLength(parameter);
 
         return this.grpcClient.invokeContract(
@@ -147,7 +152,7 @@ export abstract class GenericContract<
      * @param {Function} serializer - A function to serialize the `input` to bytes.
      * @param {Function} jsonFormatter - A function to format the `input` as JSON format serializable by the contract schema.
      * @param {CIS2.CreateTransactionMetadata} metadata - Metadata to be used for the transaction creation (with defaults).
-     * @param {T | T[]} input - Input for for contract function.
+     * @param {T} input - Input for for contract function.
      *
      * @throws If the query could not be invoked successfully.
      *
@@ -155,18 +160,16 @@ export abstract class GenericContract<
      */
     protected createUpdateTransaction<T>(
         entrypoint: E,
-        serializer: (input: T[]) => Buffer,
+        serializer: (input: T) => Buffer,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         jsonFormatter: (input: T) => any,
         { amount = 0n, energy }: CreateContractTransactionMetadata,
-        input: T | T[]
+        input: T
     ): ContractUpdateTransaction {
-        const parameter = makeDynamicFunction(serializer)(input);
+        const parameter = serializer(input);
         checkParameterLength(parameter);
 
-        const jsonParameter = Array.isArray(input)
-            ? input.map(jsonFormatter)
-            : [jsonFormatter(input)];
+        const jsonParameter = jsonFormatter(input);
         const payload: UpdateContractPayload = {
             amount: new CcdAmount(amount),
             address: this.contractAddress,

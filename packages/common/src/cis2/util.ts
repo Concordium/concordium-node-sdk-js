@@ -3,6 +3,7 @@ import {
     encodeWord16,
     encodeWord64,
     encodeWord8,
+    makeSerializeOptional,
     packBufferWithWord16Length,
     packBufferWithWord8Length,
 } from '../serializationHelpers';
@@ -379,6 +380,18 @@ export const deserializeCIS2BalanceOfResponse = makeDeserializeListResponse(
  * const bytes = serializeCIS2TokenIds(tokenIds);
  */
 export const serializeCIS2TokenIds = makeSerializeList(serializeCIS2TokenId);
+
+export function serializeCIS2MetadataUrl({
+    url,
+    hash,
+}: CIS2.MetadataUrl): Buffer {
+    const bUrl = packBufferWithWord16Length(Buffer.from(url, 'utf8'));
+    const bHash = makeSerializeOptional<HexString>((h) =>
+        Buffer.from(h, 'hex')
+    )(hash);
+
+    return Buffer.concat([bUrl, bHash]);
+}
 
 export function deserializeCIS2MetadataUrl(
     value: Cursor | HexString

@@ -420,3 +420,13 @@ export function serializeConfigureBakerPayload(
 
     return Buffer.concat([bitmap, serializedPayload]);
 }
+
+export const makeSerializeOptional =
+    <T>(fun: (value: T) => Buffer): ((value: T | undefined) => Buffer) =>
+    (value) => {
+        if (value === undefined) {
+            return encodeBool(false);
+        }
+
+        return Buffer.concat([encodeBool(true), fun(value)]);
+    };

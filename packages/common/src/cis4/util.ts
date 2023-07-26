@@ -64,7 +64,12 @@ export namespace CIS4 {
         additionalData: HexString;
     };
 
-    /** schema serializable JSON representation of parameter for the "registerCredential entrypoint"*/
+    export type RevokeCredentialIssuerParam = {
+        credHolderPubKey: HexString;
+        reason?: string;
+    };
+
+    /** schema serializable JSON representation of parameter for the "registerCredential" entrypoint*/
     export type RegisterCredentialParamJson = {
         credential_info: {
             holder_id: HexString;
@@ -80,6 +85,12 @@ export namespace CIS4 {
         };
         /** Additional data to include, hex encoded */
         auxiliary_data: HexString;
+    };
+
+    /** schema serializable JSON representation of parameter for the "revokeCredentialIssuer" entrypoint*/
+    export type RevokeCredentialIssuerParamJson = {
+        cred_holder_id: HexString;
+        reason: OptionJson<string>;
     };
 }
 
@@ -198,5 +209,29 @@ export function formatCIS4RegisterCredential({
             },
         },
         auxiliary_data: additionalData,
+    };
+}
+
+export function serializeCIS4RevokeCredentialIssuerParam(
+    param: CIS4.RevokeCredentialIssuerParam
+): Buffer {
+    const credHolderPubKey = Buffer.from(param.credHolderPubKey, 'hex');
+    const reason = makeSerializeOptional<string>((r) => Buffer.from(r, 'utf8'))(
+        param.reason
+    );
+
+    return Buffer.concat([credHolderPubKey, reason]);
+}
+
+/**
+ * Format {@link CIS4.RevokeCredentialIssuerParam} as JSON compatible with serialization wtih corresponding schema.
+ */
+export function formatCIS4RevokeCredentialIssuer({
+    credHolderPubKey,
+    reason,
+}: CIS4.RevokeCredentialIssuerParam): CIS4.RevokeCredentialIssuerParamJson {
+    return {
+        cred_holder_id: credHolderPubKey,
+        reason: toOptionJson(reason),
     };
 }

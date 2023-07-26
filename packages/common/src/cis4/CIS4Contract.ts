@@ -24,15 +24,28 @@ import {
     deserializeCIS4CredentialStatus,
     deserializeCIS4RevocationKeys,
     formatCIS4RegisterCredential,
+    formatCIS4RevokeCredentialIssuer,
     serializeCIS4RegisterCredentialParam,
+    serializeCIS4RevokeCredentialIssuerParam,
 } from './util';
 
 type Updates =
     | 'registerCredential'
     | 'revokeCredentialIssuer'
-    | 'revokeCredentialHolder';
+    | 'revokeCredentialHolder'
+    | 'revokeCredentialRevoker';
 
 class CIS4DryRun extends GenericContractDryRun {
+    /**
+     * Performs a dry-run invocation of "CIS4.registerCredential"
+     *
+     * @param {Base58String | ContractAddress} sender - Address of the sender of the transfer.
+     * @param {CIS4.CredentialInfo} credInfo - the credential info to register
+     * @param {HexString} [additionalData] - any additional data to include
+     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
+     *
+     * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
+     */
     public registerCredential(
         sender: Base58String | ContractAddress,
         credInfo: CIS4.CredentialInfo,
@@ -47,6 +60,31 @@ class CIS4DryRun extends GenericContractDryRun {
             blockHash
         );
     }
+
+    /**
+     * Performs a dry-run invocation of "CIS4.revokeCredentialIssuer"
+     *
+     * @param {Base58String | ContractAddress} sender - Address of the sender of the transfer.
+     * @param {HexString} credHolderPubKey - the public key of the credential holder (hex encoded)
+     * @param {string} [reason] - the reason for the revocation
+     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
+     *
+     * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
+     */
+    public revokeCredentialAsIssuer(
+        sender: Base58String | ContractAddress,
+        credHolderPubKey: HexString,
+        reason?: string,
+        blockHash?: HexString
+    ): Promise<InvokeContractResult> {
+        return this.invokeMethod(
+            'revokeCredentialIssuer',
+            getInvoker(sender),
+            serializeCIS4RevokeCredentialIssuerParam,
+            { credHolderPubKey, reason },
+            blockHash
+        );
+    }
 }
 
 export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
@@ -55,6 +93,7 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
         registerCredential: '',
         revokeCredentialHolder: '',
         revokeCredentialIssuer: '',
+        revokeCredentialRevoker: '',
     };
 
     protected makeDryRunInstance(
@@ -184,14 +223,14 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
     }
 
     /**
-     * Submit CIS4.registerCredentail update transaction.
+     * Submit CIS4.registerCredential update transaction.
      *
      * @param {AccountSigner} signer - to be used for signing the transaction sent to the node.
      * @param {ContractTransactionMetadata} metadata - transaction metadata
      * @param {CIS4.CredentialInfo} credInfo - the credential info to register
      * @param {HexString} [additionalData] - any additional data to include
      *
-     * @returns {ContractUpdateTransaction} Transaction data for a register credential update.
+     * @returns {HexString} The hash of the submitted transaction
      */
     public registerCredential(
         signer: AccountSigner,
@@ -199,12 +238,57 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
         credInfo: CIS4.CredentialInfo,
         additionalData: HexString = ''
     ): Promise<HexString> {
-        const transaction = this.createUpdateTransaction(
-            'registerCredential',
-            serializeCIS4RegisterCredentialParam,
-            formatCIS4RegisterCredential,
+        const transaction = this.createRegisterCredential(
             metadata,
-            { credInfo, additionalData }
+            credInfo,
+            additionalData
+        );
+        return this.sendUpdateTransaction(transaction, metadata, signer);
+    }
+
+    /**
+     * Create the details necessary to submit a CIS4.revokeCredentialIssuer update transaction.
+     *
+     * @param {CreateContractTransactionMetadata} metadata - transaction metadata
+     * @param {HexString} credHolderPubKey - the public key of the credential holder (hex encoded)
+     * @param {string} [reason] - the reason for the revocation
+     *
+     * @returns {ContractUpdateTransaction} Transaction data for a CIS4.revokeCredentialIssuer update.
+     */
+    public createRevokeCredentialAsIssuer(
+        metadata: CreateContractTransactionMetadata,
+        credHolderPubKey: HexString,
+        reason?: string
+    ): ContractUpdateTransaction {
+        return this.createUpdateTransaction(
+            'revokeCredentialIssuer',
+            serializeCIS4RevokeCredentialIssuerParam,
+            formatCIS4RevokeCredentialIssuer,
+            metadata,
+            { credHolderPubKey, reason }
+        );
+    }
+
+    /**
+     * Submit CIS4.revokeCredentialIssuer update transaction.
+     *
+     * @param {AccountSigner} signer - to be used for signing the transaction sent to the node.
+     * @param {ContractTransactionMetadata} metadata - transaction metadata
+     * @param {HexString} credHolderPubKey - the public key of the credential holder (hex encoded)
+     * @param {string} [reason] - the reason for the revocation
+     *
+     * @returns {HexString} The hash of the submitted transaction
+     */
+    public revokeCredentialAsIssuer(
+        signer: AccountSigner,
+        metadata: ContractTransactionMetadata,
+        credHolderPubKey: HexString,
+        reason?: string
+    ): Promise<HexString> {
+        const transaction = this.createRevokeCredentialAsIssuer(
+            metadata,
+            credHolderPubKey,
+            reason
         );
         return this.sendUpdateTransaction(transaction, metadata, signer);
     }

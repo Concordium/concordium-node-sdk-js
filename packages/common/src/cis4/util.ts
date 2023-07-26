@@ -1,14 +1,16 @@
 import { Buffer } from 'buffer/';
 
-import type { HexString } from '../types';
+import type { ContractAddress, HexString } from '../types';
 import type { CIS2 } from '../cis2';
 import {
     deserializeCIS2MetadataUrl,
     serializeCIS2MetadataUrl,
+    serializeContractAddress,
 } from '../cis2/util';
 import { Cursor, makeDeserializeListResponse } from '../deserializationHelpers';
 import {
     encodeBool,
+    encodeWord64,
     makeSerializeOptional,
     packBufferWithWord16Length,
 } from '../serializationHelpers';
@@ -69,7 +71,25 @@ export namespace CIS4 {
         reason?: string;
     };
 
-    /** schema serializable JSON representation of parameter for the "registerCredential" entrypoint*/
+    export type SigningData = {
+        contractAddress: ContractAddress;
+        entryPoint: string; // TODO: this seems to be missing or not taken into account in the implementation in the rust SDK?
+        nonce: bigint;
+        timestamp: Date;
+    };
+
+    export type RevocationDataHolder = {
+        credentialPubKey: HexString;
+        signingData: SigningData;
+        reason?: string;
+    };
+
+    export type RevokeCredentialHolderParam = {
+        signature: HexString;
+        data: RevocationDataHolder;
+    };
+
+    /** schema serializable JSON representation of parameter for the "registerCredential" entrypoint */
     export type RegisterCredentialParamJson = {
         credential_info: {
             holder_id: HexString;
@@ -87,19 +107,44 @@ export namespace CIS4 {
         auxiliary_data: HexString;
     };
 
-    /** schema serializable JSON representation of parameter for the "revokeCredentialIssuer" entrypoint*/
+    /** schema serializable JSON representation of parameter for the "revokeCredentialIssuer" entrypoint */
     export type RevokeCredentialIssuerParamJson = {
         cred_holder_id: HexString;
         reason: OptionJson<string>;
     };
+
+    /** schema serializable JSON representation of parameter for the "revokeCredentialHolder" entrypoint */
+    export type RevokeCredentialHolderParamJson = {
+        signature: HexString;
+        data: {
+            credential_id: HexString;
+            signing_data: {
+                contract_address: {
+                    index: number;
+                    subindex: number;
+                };
+                entry_point: string;
+                nonce: number;
+                timestamp: number;
+            };
+            reason: OptionJson<string>;
+        };
+    };
+
+    export interface Web3IdSigner {
+        pubKey: HexString;
+        sign(message: Buffer): HexString;
+    }
 }
+
+export const REVOKE_DOMAIN = Buffer.from('WEB3ID:REVOKE', 'utf8');
 
 function serializeDate(date: Date): Buffer {
     return Buffer.from(date.toISOString(), 'utf8');
 }
 
 function deserializeDate(cursor: Cursor): Date {
-    const value = cursor.read(20).toString('utf8'); // TODO: Asuming a fixed length of 20 is used?
+    const value = cursor.read(20).toString('utf8'); // TODO: Assuming a fixed length of 20 is used?
     return new Date(value);
 }
 
@@ -233,5 +278,56 @@ export function formatCIS4RevokeCredentialIssuer({
     return {
         cred_holder_id: credHolderPubKey,
         reason: toOptionJson(reason),
+    };
+}
+
+export function serializeCIS4RevocationDataHolder(
+    data: CIS4.RevocationDataHolder
+): Buffer {
+    const credentialPubKey = Buffer.from(data.credentialPubKey, 'hex');
+    const contractAddress = serializeContractAddress(
+        data.signingData.contractAddress
+    );
+    // const entrypoint = Buffer.from(data.signingData.entryPoint, 'ascii'); // TODO: this doesn't seem to be used in the version in the rust SDK?
+    const nonce = encodeWord64(data.signingData.nonce);
+    const timestamp = encodeWord64(
+        BigInt(data.signingData.timestamp.getTime())
+    );
+    const reason = makeSerializeOptional<string>((r) => Buffer.from(r, 'utf8'))(
+        data.reason
+    );
+
+    return Buffer.concat([
+        credentialPubKey,
+        contractAddress,
+        /* entrypoint, */
+        nonce,
+        timestamp,
+        reason,
+    ]);
+}
+
+/**
+ * Format {@link CIS4.RevokeCredentialHolderParam} as JSON compatible with serialization wtih corresponding schema.
+ */
+export function formatCIS4RevokeCredentialHolder({
+    signature,
+    data,
+}: CIS4.RevokeCredentialHolderParam): CIS4.RevokeCredentialHolderParamJson {
+    return {
+        signature: signature,
+        data: {
+            credential_id: data.credentialPubKey,
+            signing_data: {
+                contract_address: {
+                    index: Number(data.signingData.contractAddress.index),
+                    subindex: Number(data.signingData.contractAddress.subindex),
+                },
+                entry_point: data.signingData.entryPoint,
+                nonce: Number(data.signingData.nonce),
+                timestamp: data.signingData.timestamp.getTime(),
+            },
+            reason: toOptionJson(data.reason),
+        },
     };
 }

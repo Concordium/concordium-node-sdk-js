@@ -15,6 +15,7 @@ import {
     CreateContractTransactionMetadata,
     GenericContract,
     GenericContractDryRun,
+    getDefaultExpiryDate,
     getInvoker,
 } from '../GenericContract';
 import { ContractAddress } from '../types';
@@ -24,8 +25,11 @@ import {
     deserializeCIS4CredentialStatus,
     deserializeCIS4RevocationKeys,
     formatCIS4RegisterCredential,
+    formatCIS4RevokeCredentialHolder,
     formatCIS4RevokeCredentialIssuer,
+    REVOKE_DOMAIN,
     serializeCIS4RegisterCredentialParam,
+    serializeCIS4RevocationDataHolder,
     serializeCIS4RevokeCredentialIssuerParam,
 } from './util';
 
@@ -82,6 +86,54 @@ class CIS4DryRun extends GenericContractDryRun {
             getInvoker(sender),
             serializeCIS4RevokeCredentialIssuerParam,
             { credHolderPubKey, reason },
+            blockHash
+        );
+    }
+
+    /**
+     * Performs a dry-run invocation of "CIS4.revokeCredentialHolder"
+     *
+     * @param {Base58String | ContractAddress} sender - Address of the sender of the transfer.
+     * @param {CIS4.Web3IdSigner} web3IdSigner - A signer structure for the credential holder
+     * @param {bigint} nonce - the nonce of the owner inside the contract
+     * @param {Date} expiry - Expiry time of the revocation message
+     * @param {string} [reason] - the reason for the revocation
+     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
+     *
+     * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
+     */
+    public revokeCredentialAsHolder(
+        sender: Base58String | ContractAddress,
+        web3IdSigner: CIS4.Web3IdSigner,
+        nonce: bigint,
+        expiry: Date,
+        reason?: string,
+        blockHash?: HexString
+    ): Promise<InvokeContractResult> {
+        const credentialPubKey = web3IdSigner.pubKey;
+        const signingData: CIS4.SigningData = {
+            contractAddress: this.contractAddress,
+            entryPoint: '', // TODO: where do we get this from? Is it even used?
+            nonce,
+            timestamp: expiry,
+        };
+        const serializedData = serializeCIS4RevocationDataHolder({
+            credentialPubKey,
+            signingData,
+            reason,
+        });
+        const digest = Buffer.concat([REVOKE_DOMAIN, serializedData]);
+        const signature = web3IdSigner.sign(digest);
+
+        return this.invokeMethod(
+            'revokeCredentialHolder',
+            getInvoker(sender),
+            () =>
+                Buffer.concat([Buffer.from(signature, 'hex'), serializedData]), // Reuse existing serialization
+            {
+                signature,
+                data: { credentialPubKey, signingData, reason },
+            },
             blockHash
         );
     }
@@ -288,6 +340,81 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
         const transaction = this.createRevokeCredentialAsIssuer(
             metadata,
             credHolderPubKey,
+            reason
+        );
+        return this.sendUpdateTransaction(transaction, metadata, signer);
+    }
+
+    /**
+     * Create the details necessary to submit a CIS4.revokeCredentialHolder update transaction.
+     *
+     * @param {CreateContractTransactionMetadata} metadata - transaction metadata
+     * @param {CIS4.Web3IdSigner} web3IdSigner - A signer structure for the credential holder
+     * @param {bigint} nonce - the nonce of the owner inside the contract
+     * @param {Date} expiry - Expiry time of the revocation message
+     * @param {string} [reason] - the reason for the revocation
+     *
+     * @returns {ContractUpdateTransaction} Transaction data for a CIS4.revokeCredentialHolder update.
+     */
+    public createRevokeCredentialAsHolder(
+        metadata: CreateContractTransactionMetadata,
+        web3IdSigner: CIS4.Web3IdSigner,
+        nonce: bigint,
+        expiry: Date,
+        reason?: string
+    ): ContractUpdateTransaction {
+        const credentialPubKey = web3IdSigner.pubKey;
+        const signingData: CIS4.SigningData = {
+            contractAddress: this.contractAddress,
+            entryPoint: '', // TODO: where do we get this from? Is it even used?
+            nonce,
+            timestamp: expiry,
+        };
+        const serializedData = serializeCIS4RevocationDataHolder({
+            credentialPubKey,
+            signingData,
+            reason,
+        });
+        const digest = Buffer.concat([REVOKE_DOMAIN, serializedData]);
+        const signature = web3IdSigner.sign(digest);
+
+        return this.createUpdateTransaction<CIS4.RevokeCredentialHolderParam>(
+            'revokeCredentialHolder',
+            () =>
+                Buffer.concat([Buffer.from(signature, 'hex'), serializedData]), // Reuse existing serialization
+            formatCIS4RevokeCredentialHolder,
+            metadata,
+            {
+                signature,
+                data: { credentialPubKey, signingData, reason },
+            }
+        );
+    }
+
+    /**
+     * Submit CIS4.revokeCredentialHolder update transaction.
+     * The revocation message is set to expire at the same time as the transaction (from `metadata.expiry`)
+     *
+     * @param {AccountSigner} signer - to be used for signing the transaction sent to the node.
+     * @param {ContractTransactionMetadata} metadata - transaction metadata
+     * @param {CIS4.Web3IdSigner} web3IdSigner - A signer structure for the credential holder
+     * @param {bigint} nonce - the nonce of the owner inside the contract
+     * @param {string} [reason] - the reason for the revocation
+     *
+     * @returns {HexString} The hash of the submitted transaction
+     */
+    public revokeCredentialAsHolder(
+        signer: AccountSigner,
+        metadata: ContractTransactionMetadata,
+        web3IdSigner: CIS4.Web3IdSigner,
+        nonce: bigint,
+        reason?: string
+    ): Promise<HexString> {
+        const transaction = this.createRevokeCredentialAsHolder(
+            metadata,
+            web3IdSigner,
+            nonce,
+            metadata.expiry ?? getDefaultExpiryDate(),
             reason
         );
         return this.sendUpdateTransaction(transaction, metadata, signer);

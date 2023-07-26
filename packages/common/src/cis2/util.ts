@@ -217,7 +217,7 @@ function serializeAccountAddress(address: HexString): Buffer {
     return new AccountAddress(address).decodedAddress;
 }
 
-function serializeContractAddress(address: ContractAddress): Buffer {
+export function serializeContractAddress(address: ContractAddress): Buffer {
     const index = encodeWord64(address.index, true);
     const subindex = encodeWord64(address.subindex, true);
     return Buffer.concat([index, subindex]);

@@ -63,7 +63,7 @@ export type ContractUpdateTransaction = {
     };
 };
 
-function getDefaultExpiryDate(): Date {
+export function getDefaultExpiryDate(): Date {
     const future5Minutes = Date.now() + 5 * 60 * 1000;
     return new Date(future5Minutes);
 }
@@ -75,9 +75,9 @@ export const getInvoker = (
 
 export class GenericContractDryRun {
     constructor(
-        private grpcClient: ConcordiumGRPCClient,
-        private contractAddress: ContractAddress,
-        private contractName: string
+        protected grpcClient: ConcordiumGRPCClient,
+        protected contractAddress: ContractAddress,
+        protected contractName: string
     ) {}
 
     /**
@@ -122,8 +122,8 @@ export abstract class GenericContract<
 
     constructor(
         protected grpcClient: ConcordiumGRPCClient,
-        private contractAddress: ContractAddress,
-        private contractName: string
+        protected contractAddress: ContractAddress,
+        protected contractName: string
     ) {
         this.dryRunInstance = this.makeDryRunInstance(
             grpcClient,

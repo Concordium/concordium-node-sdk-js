@@ -11,7 +11,6 @@ import {
     encodeBool,
     makeSerializeOptional,
     packBufferWithWord16Length,
-    packBufferWithWord8Length,
 } from '../serializationHelpers';
 import { OptionJson, toOptionJson } from '../schemaTypes';
 
@@ -26,14 +25,10 @@ export namespace CIS4 {
         holderPubKey: HexString;
         /** Whether holder can revoke or not */
         holderRevocable: boolean;
-        /** Pedersen commitment to the attributes of the verifiable credential represented as hex string */
-        commitment: HexString;
         /** Time the credential is valid from */
         validFrom: Date;
         /** Time the credential is valid until */
         validUntil?: Date;
-        /** The type of the credential, which is used to identify which schema the credential is based on */
-        credentialType: string;
         /** Metadata url of the credential */
         metadataUrl: MetadataUrl;
     };
@@ -74,12 +69,10 @@ export namespace CIS4 {
         credential_info: {
             holder_id: HexString;
             holder_revocable: boolean;
-            commitment: HexString;
             /** Time (as ms since unix epoch) the credential is valid from */
             valid_from: number;
             /** Time (as ms since unix epoch) the credential is valid until */
             valid_until: OptionJson<number>;
-            credential_type: string;
             metadata_url: {
                 url: string;
                 hash: OptionJson<HexString>;
@@ -88,16 +81,6 @@ export namespace CIS4 {
         /** Additional data to include, hex encoded */
         auxiliary_data: HexString;
     };
-}
-
-function serializeCredentialType(type: string): Buffer {
-    const b = Buffer.from(type, 'utf8');
-    return packBufferWithWord8Length(b);
-}
-
-function deserializeCredentialType(cursor: Cursor): string {
-    const length = cursor.read(1).readUInt8(0);
-    return cursor.read(length).toString();
 }
 
 function serializeDate(date: Date): Buffer {
@@ -109,17 +92,6 @@ function deserializeDate(cursor: Cursor): Date {
     return new Date(value);
 }
 
-function serializePedersenCommitment(value: HexString): Buffer {
-    const b = Buffer.from(value, 'hex');
-    return packBufferWithWord16Length(b);
-}
-
-function deserializePedersenCommitment(cursor: Cursor): HexString {
-    const length = cursor.read(2).readUInt16LE(0);
-    const value = cursor.read(length).toString('hex');
-    return value;
-}
-
 function deserializeEd25519PublicKey(cursor: Cursor): HexString {
     return cursor.read(32).toString('hex');
 }
@@ -127,21 +99,17 @@ function deserializeEd25519PublicKey(cursor: Cursor): HexString {
 function serializeCIS4CredentialInfo(credInfo: CIS4.CredentialInfo): Buffer {
     const holderPubKey = Buffer.from(credInfo.holderPubKey, 'hex');
     const holderRevocable = encodeBool(credInfo.holderRevocable);
-    const commitment = serializePedersenCommitment(credInfo.commitment);
     const validFrom = serializeDate(credInfo.validFrom);
     const validUntil = makeSerializeOptional(serializeDate)(
         credInfo.validUntil
     );
-    const credentialType = serializeCredentialType(credInfo.credentialType);
     const metadataUrl = serializeCIS2MetadataUrl(credInfo.metadataUrl);
 
     return Buffer.concat([
         holderPubKey,
         holderRevocable,
-        commitment,
         validFrom,
         validUntil,
-        credentialType,
         metadataUrl,
     ]);
 }
@@ -159,19 +127,15 @@ export function serializeCIS4RegisterCredentialParam(
 function deserializeCIS4CredentialInfo(cursor: Cursor): CIS4.CredentialInfo {
     const holderPubKey = deserializeEd25519PublicKey(cursor);
     const holderRevocable = cursor.read(1).readUInt8(0) === 1;
-    const commitment = deserializePedersenCommitment(cursor);
     const validFrom = deserializeDate(cursor);
     const validUntil = deserializeDate(cursor);
-    const credentialType = deserializeCredentialType(cursor);
     const metadataUrl = deserializeCIS2MetadataUrl(cursor);
 
     return {
         holderPubKey,
         holderRevocable,
-        commitment,
         validFrom,
         validUntil,
-        credentialType,
         metadataUrl,
     };
 }
@@ -216,7 +180,7 @@ export const deserializeCIS4RevocationKeys = makeDeserializeListResponse(
 );
 
 /**
- * Format {@link CIS2.UpdateOperator} as JSON compatible with serialization wtih corresponding schema.
+ * Format {@link CIS4.RegisterCredentialParam} as JSON compatible with serialization wtih corresponding schema.
  */
 export function formatCIS4RegisterCredential({
     credInfo,
@@ -226,10 +190,8 @@ export function formatCIS4RegisterCredential({
         credential_info: {
             holder_id: credInfo.holderPubKey,
             holder_revocable: credInfo.holderRevocable,
-            commitment: credInfo.commitment,
             valid_from: credInfo.validFrom.getTime(),
             valid_until: toOptionJson(credInfo.validUntil?.getTime()),
-            credential_type: credInfo.credentialType,
             metadata_url: {
                 url: credInfo.metadataUrl.url,
                 hash: toOptionJson(credInfo.metadataUrl.hash),

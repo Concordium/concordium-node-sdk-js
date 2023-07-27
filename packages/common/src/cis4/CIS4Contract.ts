@@ -27,9 +27,11 @@ import {
     formatCIS4RegisterCredential,
     formatCIS4RevokeCredentialHolder,
     formatCIS4RevokeCredentialIssuer,
+    formatCIS4RevokeCredentialOther,
     REVOKE_DOMAIN,
     serializeCIS4RegisterCredentialParam,
     serializeCIS4RevocationDataHolder,
+    serializeCIS4RevocationDataOther,
     serializeCIS4RevokeCredentialIssuerParam,
 } from './util';
 
@@ -37,7 +39,7 @@ type Updates =
     | 'registerCredential'
     | 'revokeCredentialIssuer'
     | 'revokeCredentialHolder'
-    | 'revokeCredentialRevoker';
+    | 'revokeCredentialOther';
 
 class CIS4DryRun extends GenericContractDryRun {
     /**
@@ -94,7 +96,7 @@ class CIS4DryRun extends GenericContractDryRun {
      * Performs a dry-run invocation of "CIS4.revokeCredentialHolder"
      *
      * @param {Base58String | ContractAddress} sender - Address of the sender of the transfer.
-     * @param {CIS4.Web3IdSigner} web3IdSigner - A signer structure for the credential holder
+     * @param {CIS4.Web3IdSigner} credHolderSigner - A signer structure for the credential holder
      * @param {bigint} nonce - the nonce of the owner inside the contract
      * @param {Date} expiry - Expiry time of the revocation message
      * @param {string} [reason] - the reason for the revocation
@@ -104,13 +106,13 @@ class CIS4DryRun extends GenericContractDryRun {
      */
     public revokeCredentialAsHolder(
         sender: Base58String | ContractAddress,
-        web3IdSigner: CIS4.Web3IdSigner,
+        credHolderSigner: CIS4.Web3IdSigner,
         nonce: bigint,
         expiry: Date,
         reason?: string,
         blockHash?: HexString
     ): Promise<InvokeContractResult> {
-        const credentialPubKey = web3IdSigner.pubKey;
+        const credentialPubKey = credHolderSigner.pubKey;
         const signingData: CIS4.SigningData = {
             contractAddress: this.contractAddress,
             entryPoint: '', // TODO: where do we get this from? Is it even used?
@@ -123,17 +125,62 @@ class CIS4DryRun extends GenericContractDryRun {
             reason,
         });
         const digest = Buffer.concat([REVOKE_DOMAIN, serializedData]);
-        const signature = web3IdSigner.sign(digest);
+        const signature = credHolderSigner.sign(digest);
 
         return this.invokeMethod(
             'revokeCredentialHolder',
             getInvoker(sender),
             () =>
                 Buffer.concat([Buffer.from(signature, 'hex'), serializedData]), // Reuse existing serialization
-            {
-                signature,
-                data: { credentialPubKey, signingData, reason },
-            },
+            undefined,
+            blockHash
+        );
+    }
+
+    /**
+     * Performs a dry-run invocation of "CIS4.revokeCredentialOther"
+     *
+     * @param {Base58String | ContractAddress} sender - Address of the sender of the transfer.
+     * @param {CIS4.Web3IdSigner} revokerSigner - A signer structure for the credential holder
+     * @param {HexString} credentialPubKey - the public key (hex encoded) for the credential to revoke
+     * @param {bigint} nonce - the nonce of the owner inside the contract
+     * @param {Date} expiry - Expiry time of the revocation message
+     * @param {string} [reason] - the reason for the revocation
+     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
+     *
+     * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
+     */
+    public revokeCredentialAsOther(
+        sender: Base58String | ContractAddress,
+        revokerSigner: CIS4.Web3IdSigner,
+        credentialPubKey: HexString,
+        nonce: bigint,
+        expiry: Date,
+        reason?: string,
+        blockHash?: HexString
+    ): Promise<InvokeContractResult> {
+        const revocationPubKey = revokerSigner.pubKey;
+        const signingData: CIS4.SigningData = {
+            contractAddress: this.contractAddress,
+            entryPoint: '', // TODO: where do we get this from? Is it even used?
+            nonce,
+            timestamp: expiry,
+        };
+        const serializedData = serializeCIS4RevocationDataOther({
+            credentialPubKey,
+            signingData,
+            revocationPubKey,
+            reason,
+        });
+        const digest = Buffer.concat([REVOKE_DOMAIN, serializedData]);
+        const signature = revokerSigner.sign(digest);
+
+        return this.invokeMethod(
+            'revokeCredentialOther',
+            getInvoker(sender),
+            () =>
+                Buffer.concat([Buffer.from(signature, 'hex'), serializedData]), // Reuse existing serialization
+            undefined,
             blockHash
         );
     }
@@ -145,7 +192,7 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
         registerCredential: '',
         revokeCredentialHolder: '',
         revokeCredentialIssuer: '',
-        revokeCredentialRevoker: '',
+        revokeCredentialOther: '',
     };
 
     protected makeDryRunInstance(
@@ -349,7 +396,7 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
      * Create the details necessary to submit a CIS4.revokeCredentialHolder update transaction.
      *
      * @param {CreateContractTransactionMetadata} metadata - transaction metadata
-     * @param {CIS4.Web3IdSigner} web3IdSigner - A signer structure for the credential holder
+     * @param {CIS4.Web3IdSigner} credHolderSigner - A signer structure for the credential holder
      * @param {bigint} nonce - the nonce of the owner inside the contract
      * @param {Date} expiry - Expiry time of the revocation message
      * @param {string} [reason] - the reason for the revocation
@@ -358,12 +405,12 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
      */
     public createRevokeCredentialAsHolder(
         metadata: CreateContractTransactionMetadata,
-        web3IdSigner: CIS4.Web3IdSigner,
+        credHolderSigner: CIS4.Web3IdSigner,
         nonce: bigint,
         expiry: Date,
         reason?: string
     ): ContractUpdateTransaction {
-        const credentialPubKey = web3IdSigner.pubKey;
+        const credentialPubKey = credHolderSigner.pubKey;
         const signingData: CIS4.SigningData = {
             contractAddress: this.contractAddress,
             entryPoint: '', // TODO: where do we get this from? Is it even used?
@@ -376,7 +423,7 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
             reason,
         });
         const digest = Buffer.concat([REVOKE_DOMAIN, serializedData]);
-        const signature = web3IdSigner.sign(digest);
+        const signature = credHolderSigner.sign(digest);
 
         return this.createUpdateTransaction<CIS4.RevokeCredentialHolderParam>(
             'revokeCredentialHolder',
@@ -397,7 +444,7 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
      *
      * @param {AccountSigner} signer - to be used for signing the transaction sent to the node.
      * @param {ContractTransactionMetadata} metadata - transaction metadata
-     * @param {CIS4.Web3IdSigner} web3IdSigner - A signer structure for the credential holder
+     * @param {CIS4.Web3IdSigner} credHolderSigner - A signer structure for the credential holder
      * @param {bigint} nonce - the nonce of the owner inside the contract
      * @param {string} [reason] - the reason for the revocation
      *
@@ -406,13 +453,99 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
     public revokeCredentialAsHolder(
         signer: AccountSigner,
         metadata: ContractTransactionMetadata,
-        web3IdSigner: CIS4.Web3IdSigner,
+        credHolderSigner: CIS4.Web3IdSigner,
         nonce: bigint,
         reason?: string
     ): Promise<HexString> {
         const transaction = this.createRevokeCredentialAsHolder(
             metadata,
-            web3IdSigner,
+            credHolderSigner,
+            nonce,
+            metadata.expiry ?? getDefaultExpiryDate(),
+            reason
+        );
+        return this.sendUpdateTransaction(transaction, metadata, signer);
+    }
+
+    /**
+     * Create the details necessary to submit a CIS4.revokeCredentialOther update transaction.
+     *
+     * @param {CreateContractTransactionMetadata} metadata - transaction metadata
+     * @param {CIS4.Web3IdSigner} revokerSigner - A signer structure for the revoker
+     * @param {HexString} credentialPubKey - the public key (hex encoded) for the credential to revoke
+     * @param {bigint} nonce - the nonce of the owner inside the contract
+     * @param {Date} expiry - Expiry time of the revocation message
+     * @param {string} [reason] - the reason for the revocation
+     *
+     * @returns {ContractUpdateTransaction} Transaction data for a CIS4.revokeCredentialOther update.
+     */
+    public createRevokeCredentialAsOther(
+        metadata: CreateContractTransactionMetadata,
+        revokerSigner: CIS4.Web3IdSigner,
+        credentialPubKey: HexString,
+        nonce: bigint,
+        expiry: Date,
+        reason?: string
+    ): ContractUpdateTransaction {
+        const revocationPubKey = revokerSigner.pubKey;
+        const signingData: CIS4.SigningData = {
+            contractAddress: this.contractAddress,
+            entryPoint: '', // TODO: where do we get this from? Is it even used?
+            nonce,
+            timestamp: expiry,
+        };
+        const serializedData = serializeCIS4RevocationDataOther({
+            credentialPubKey,
+            revocationPubKey,
+            signingData,
+            reason,
+        });
+        const digest = Buffer.concat([REVOKE_DOMAIN, serializedData]);
+        const signature = revokerSigner.sign(digest);
+
+        return this.createUpdateTransaction<CIS4.RevokeCredentialOtherParam>(
+            'revokeCredentialOther',
+            () =>
+                Buffer.concat([Buffer.from(signature, 'hex'), serializedData]), // Reuse existing serialization
+            formatCIS4RevokeCredentialOther,
+            metadata,
+            {
+                signature,
+                data: {
+                    credentialPubKey,
+                    signingData,
+                    revocationPubKey,
+                    reason,
+                },
+            }
+        );
+    }
+
+    /**
+     * Submit CIS4.revokeCredentialOther update transaction.
+     * The revocation message is set to expire at the same time as the transaction (from `metadata.expiry`)
+     *
+     * @param {AccountSigner} signer - to be used for signing the transaction sent to the node.
+     * @param {ContractTransactionMetadata} metadata - transaction metadata
+     * @param {CIS4.Web3IdSigner} revokerSigner - A signer structure for the credential holder
+     * @param {HexString} credentialPubKey - the public key (hex encoded) for the credential to revoke
+     * @param {bigint} nonce - the nonce of the owner inside the contract
+     * @param {string} [reason] - the reason for the revocation
+     *
+     * @returns {HexString} The hash of the submitted transaction
+     */
+    public revokeCredentialAsOther(
+        signer: AccountSigner,
+        metadata: ContractTransactionMetadata,
+        revokerSigner: CIS4.Web3IdSigner,
+        credentialPubKey: HexString,
+        nonce: bigint,
+        reason?: string
+    ): Promise<HexString> {
+        const transaction = this.createRevokeCredentialAsOther(
+            metadata,
+            revokerSigner,
+            credentialPubKey,
             nonce,
             metadata.expiry ?? getDefaultExpiryDate(),
             reason

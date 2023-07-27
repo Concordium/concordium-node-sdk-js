@@ -89,6 +89,18 @@ export namespace CIS4 {
         data: RevocationDataHolder;
     };
 
+    export type RevocationDataOther = {
+        credentialPubKey: HexString;
+        signingData: SigningData;
+        revocationPubKey: HexString;
+        reason?: string;
+    };
+
+    export type RevokeCredentialOtherParam = {
+        signature: HexString;
+        data: RevocationDataOther;
+    };
+
     /** schema serializable JSON representation of parameter for the "registerCredential" entrypoint */
     export type RegisterCredentialParamJson = {
         credential_info: {
@@ -127,6 +139,25 @@ export namespace CIS4 {
                 nonce: number;
                 timestamp: number;
             };
+            reason: OptionJson<string>;
+        };
+    };
+
+    /** schema serializable JSON representation of parameter for the "revokeCredentialOther" entrypoint */
+    export type RevokeCredentialOtherParamJson = {
+        signature: HexString;
+        data: {
+            credential_id: HexString;
+            signing_data: {
+                contract_address: {
+                    index: number;
+                    subindex: number;
+                };
+                entry_point: string;
+                nonce: number;
+                timestamp: number;
+            };
+            revocation_key: HexString;
             reason: OptionJson<string>;
         };
     };
@@ -327,6 +358,60 @@ export function formatCIS4RevokeCredentialHolder({
                 nonce: Number(data.signingData.nonce),
                 timestamp: data.signingData.timestamp.getTime(),
             },
+            reason: toOptionJson(data.reason),
+        },
+    };
+}
+
+export function serializeCIS4RevocationDataOther(
+    data: CIS4.RevocationDataOther
+): Buffer {
+    const credentialPubKey = Buffer.from(data.credentialPubKey, 'hex');
+    const contractAddress = serializeContractAddress(
+        data.signingData.contractAddress
+    );
+    // const entrypoint = Buffer.from(data.signingData.entryPoint, 'ascii'); // TODO: this doesn't seem to be used in the version in the rust SDK?
+    const nonce = encodeWord64(data.signingData.nonce);
+    const timestamp = encodeWord64(
+        BigInt(data.signingData.timestamp.getTime())
+    );
+    const revocationPubKey = Buffer.from(data.revocationPubKey, 'hex');
+    const reason = makeSerializeOptional<string>((r) => Buffer.from(r, 'utf8'))(
+        data.reason
+    );
+
+    return Buffer.concat([
+        credentialPubKey,
+        contractAddress,
+        /* entrypoint, */
+        nonce,
+        timestamp,
+        revocationPubKey,
+        reason,
+    ]);
+}
+
+/**
+ * Format {@link CIS4.RevokeCredentialOtherParam} as JSON compatible with serialization wtih corresponding schema.
+ */
+export function formatCIS4RevokeCredentialOther({
+    signature,
+    data,
+}: CIS4.RevokeCredentialOtherParam): CIS4.RevokeCredentialOtherParamJson {
+    return {
+        signature: signature,
+        data: {
+            credential_id: data.credentialPubKey,
+            signing_data: {
+                contract_address: {
+                    index: Number(data.signingData.contractAddress.index),
+                    subindex: Number(data.signingData.contractAddress.subindex),
+                },
+                entry_point: data.signingData.entryPoint,
+                nonce: Number(data.signingData.nonce),
+                timestamp: data.signingData.timestamp.getTime(),
+            },
+            revocation_key: data.revocationPubKey,
             reason: toOptionJson(data.reason),
         },
     };

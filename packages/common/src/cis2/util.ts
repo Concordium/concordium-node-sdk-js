@@ -7,7 +7,12 @@ import {
     packBufferWithWord16Length,
     packBufferWithWord8Length,
 } from '../serializationHelpers';
-import type { Base58String, ContractAddress, HexString } from '../types';
+import type {
+    Base58String,
+    ContractAddress,
+    HexString,
+    SmartContractTypeValues,
+} from '../types';
 import { Buffer } from 'buffer/';
 import { AccountAddress } from '../types/accountAddress';
 import {
@@ -17,7 +22,7 @@ import {
 } from '../uleb128';
 import {
     ContractTransactionMetadata,
-    ContractUpdateTransaction,
+    ContractUpdateTransactionWithSchema,
     CreateContractTransactionMetadata,
 } from '../GenericContract';
 import { Cursor, makeDeserializeListResponse } from '../deserializationHelpers';
@@ -131,7 +136,8 @@ export namespace CIS2 {
     /**
      * An update transaction without header. This is useful for sending through a wallet, which supplies the header information.
      */
-    export type UpdateTransaction = ContractUpdateTransaction;
+    export type UpdateTransaction<J extends SmartContractTypeValues> =
+        ContractUpdateTransactionWithSchema<J>;
 
     /**
      * Structure of a JSON-formatted address parameter.

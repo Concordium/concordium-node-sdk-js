@@ -7,6 +7,7 @@ import {
     ConfigureDelegationPayload,
     DelegationTarget,
     DelegationTargetType,
+    NotOptional,
 } from './types';
 import { DataBlob } from './types/DataBlob';
 import { isDefined } from './util';
@@ -292,11 +293,6 @@ function getPayloadBitmap<T>(payload: T, fieldOrder: Array<keyof T>) {
             0
         );
 }
-
-// Makes all properties of type T non-optional.
-export type NotOptional<T> = {
-    [P in keyof T]-?: T[P];
-};
 
 /**
  * Makes a type with keys from Object and values being functions that take values with types of respective original values, returning a Buffer or undefined.

@@ -1,14 +1,15 @@
 import { Buffer } from 'buffer/';
+import { stringify } from 'json-bigint';
+
 import { ContractAddress, HexString } from './types';
 import { ConcordiumGRPCClient } from './GRPCClient';
 import {
     encodeWord16,
-    makeDeserializeListResponse,
     packBufferWithWord8Length,
 } from './serializationHelpers';
-import { stringify } from 'json-bigint';
 import { getContractName } from './contractHelpers';
 import { makeDynamicFunction } from './util';
+import { makeDeserializeListResponse } from './deserializationHelpers';
 
 /**
  * Namespace with types for CIS-0 standard contracts
@@ -59,9 +60,8 @@ function serializeSupportIdentifiers(ids: CIS0.StandardIdentifier[]): Buffer {
 }
 
 const deserializeSupportResult =
-    makeDeserializeListResponse<CIS0.SupportResult>((buffer: Buffer) => {
-        const rawType = buffer.readUInt8(0);
-        let cursor = 1;
+    makeDeserializeListResponse<CIS0.SupportResult>((cursor) => {
+        const rawType = cursor.read(1).readUInt8(0);
 
         if (rawType > 2) {
             throw new Error('Unsupported support result type');
@@ -75,15 +75,12 @@ const deserializeSupportResult =
                     : CIS0.SupportType.Support;
             value = { type };
         } else {
-            const numAddresses = buffer.readUInt8(cursor);
-            cursor += 1;
+            const numAddresses = cursor.read(1).readUInt8(0);
             const addresses: ContractAddress[] = [];
 
             for (let i = 0; i < numAddresses; i++) {
-                const index = buffer.readBigUInt64LE(cursor) as bigint;
-                cursor += 8;
-                const subindex = buffer.readBigUInt64LE(cursor) as bigint;
-                cursor += 8;
+                const index = cursor.read(8).readBigUInt64LE(0) as bigint;
+                const subindex = cursor.read(8).readBigUInt64LE(0) as bigint;
 
                 addresses.push({ index, subindex });
             }
@@ -94,7 +91,7 @@ const deserializeSupportResult =
             };
         }
 
-        return { value, bytesRead: cursor };
+        return value;
     });
 
 /**

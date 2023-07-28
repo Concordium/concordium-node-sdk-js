@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer/';
 import { stringify } from 'json-bigint';
 
 import { ContractAddress, HexString, InvokeContractResult } from '../types';
@@ -19,18 +18,35 @@ import {
 import type { CIS2 } from './util';
 import { CIS0, cis0Supports } from '../cis0';
 import { getContractName } from '../contractHelpers';
-import {
-    GenericContract,
-    GenericContractDryRun,
-    getInvoker,
-} from '../GenericContract';
+import { CISContract, ContractDryRun, getInvoker } from '../GenericContract';
 import { makeDynamicFunction } from '../util';
-import { AccountAddress } from '../types/accountAddress';
+
+type Updates = 'transfer' | 'updateOperator';
+
+const ensureMatchesInput =
+    <T, R>(input: T, deserializer: (value: HexString) => R[]) =>
+    (value: HexString): R[] | R => {
+        const result = deserializer(value);
+        const expectList = Array.isArray(input);
+        const expectLength = expectList ? input.length : 1;
+
+        if (result.length !== expectLength) {
+            throw new Error(
+                `Expected list with length ${expectLength} when deserializing response, received list with length ${result.length}`
+            );
+        }
+
+        if (Array.isArray(input)) {
+            return result;
+        }
+
+        return result[0];
+    };
 
 /**
  * Contains methods for performing dry-run invocations of update instructions on CIS-2 smart contracts.
  */
-class CIS2DryRun extends GenericContractDryRun {
+class CIS2DryRun extends ContractDryRun<Updates> {
     /**
      * Performs a dry-run invocation of "transfer" on a corresponding {@link CIS2Contract} instance
      *
@@ -55,10 +71,11 @@ class CIS2DryRun extends GenericContractDryRun {
         transfers: CIS2.Transfer | CIS2.Transfer[],
         blockHash?: HexString
     ): Promise<InvokeContractResult> {
-        return this.invokeMethodDynamic(
+        const serialize = makeDynamicFunction(serializeCIS2Transfers);
+        return this.invokeMethod(
             'transfer',
             getInvoker(sender),
-            serializeCIS2Transfers,
+            serialize,
             transfers,
             blockHash
         );
@@ -88,38 +105,12 @@ class CIS2DryRun extends GenericContractDryRun {
         updates: CIS2.UpdateOperator | CIS2.UpdateOperator[],
         blockHash?: HexString
     ): Promise<InvokeContractResult> {
-        return this.invokeMethodDynamic(
+        const serialize = makeDynamicFunction(serializeCIS2UpdateOperators);
+        return this.invokeMethod(
             'updateOperator',
             getInvoker(owner),
-            serializeCIS2UpdateOperators,
+            serialize,
             updates,
-            blockHash
-        );
-    }
-
-    /**
-     * Helper function for invoking a contract function.
-     *
-     * @param {string} entrypoint - The name of the receive function to invoke.
-     * @param {ContractAddress | AccountAddress} invoker - The address of the invoker.
-     * @param {Function} serializer - A function for serializing the input to bytes.
-     * @param {T | T[]} input - Input for for contract function.
-     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
-     *
-     * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
-     */
-    private invokeMethodDynamic<T>(
-        entrypoint: string,
-        invoker: ContractAddress | AccountAddress,
-        serializer: (input: T[]) => Buffer,
-        input: T | T[],
-        blockHash?: HexString
-    ): Promise<InvokeContractResult> {
-        return this.invokeMethod(
-            entrypoint,
-            invoker,
-            makeDynamicFunction(serializer),
-            input,
             blockHash
         );
     }
@@ -128,11 +119,11 @@ class CIS2DryRun extends GenericContractDryRun {
 /**
  * Contains methods for performing operations on CIS-2 smart contracts.
  */
-export class CIS2Contract extends GenericContract<
-    CIS2DryRun,
-    'transfer' | 'updateOperator'
+export class CIS2Contract extends CISContract<
+    'transfer' | 'updateOperator',
+    CIS2DryRun
 > {
-    public schemas: Record<'transfer' | 'updateOperator', string> = {
+    public schema: Record<'transfer' | 'updateOperator', string> = {
         /** Base64 encoded schema for CIS-2.transfer parameter */
         transfer:
             'EAEUAAUAAAAIAAAAdG9rZW5faWQdAAYAAABhbW91bnQbJQAAAAQAAABmcm9tFQIAAAAHAAAAQWNjb3VudAEBAAAACwgAAABDb250cmFjdAEBAAAADAIAAAB0bxUCAAAABwAAAEFjY291bnQBAQAAAAsIAAAAQ29udHJhY3QBAgAAAAwWAQQAAABkYXRhHQE',
@@ -198,7 +189,7 @@ export class CIS2Contract extends GenericContract<
     public createTransfer(
         metadata: CIS2.CreateTransactionMetadata,
         transfer: CIS2.Transfer
-    ): CIS2.UpdateTransaction;
+    ): CIS2.UpdateTransaction<CIS2.TransferParamJson[]>;
     /**
      * Creates a CIS-2 "transfer" update transaction containing a list transfers.
      * This is particularly useful if you need the parts required for a wallet to submit the transaction.
@@ -213,22 +204,27 @@ export class CIS2Contract extends GenericContract<
     public createTransfer(
         metadata: CIS2.CreateTransactionMetadata,
         transfers: CIS2.Transfer[]
-    ): CIS2.UpdateTransaction;
+    ): CIS2.UpdateTransaction<CIS2.TransferParamJson[]>;
     public createTransfer(
         metadata: CIS2.CreateTransactionMetadata,
         transfers: CIS2.Transfer | CIS2.Transfer[]
-    ): CIS2.UpdateTransaction;
+    ): CIS2.UpdateTransaction<CIS2.TransferParamJson[]>;
     public createTransfer(
         metadata: CIS2.CreateTransactionMetadata,
         transfers: CIS2.Transfer | CIS2.Transfer[]
-    ): CIS2.UpdateTransaction {
-        return this.createUpdateTransactionDynamic(
-            'transfer',
-            serializeCIS2Transfers,
-            (ts) => ts.map(formatCIS2Transfer),
-            metadata,
-            transfers
+    ): CIS2.UpdateTransaction<CIS2.TransferParamJson[]> {
+        const serialize = makeDynamicFunction(serializeCIS2Transfers);
+        const format = makeDynamicFunction((us: CIS2.Transfer[]) =>
+            us.map(formatCIS2Transfer)
         );
+
+        return this.createUpdateTransaction(
+            'transfer',
+            serialize,
+            metadata,
+            transfers,
+            format
+        ) as CIS2.UpdateTransaction<CIS2.TransferParamJson[]>;
     }
     /**
      * Sends a CIS-2 "transfer" update transaction containing a single transfer.
@@ -285,7 +281,7 @@ export class CIS2Contract extends GenericContract<
     public createUpdateOperator(
         metadata: CIS2.CreateTransactionMetadata,
         update: CIS2.UpdateOperator
-    ): CIS2.UpdateTransaction;
+    ): CIS2.UpdateTransaction<CIS2.UpdateOperatorParamJson[]>;
     /**
      * Creates a CIS-2 "operatorOf" update transaction containing a list of operator update instructions.
      * This is particularly useful if you need the parts required for a wallet to submit the transaction.
@@ -300,22 +296,27 @@ export class CIS2Contract extends GenericContract<
     public createUpdateOperator(
         metadata: CIS2.CreateTransactionMetadata,
         updates: CIS2.UpdateOperator[]
-    ): CIS2.UpdateTransaction;
+    ): CIS2.UpdateTransaction<CIS2.UpdateOperatorParamJson[]>;
     public createUpdateOperator(
         metadata: CIS2.CreateTransactionMetadata,
         updates: CIS2.UpdateOperator | CIS2.UpdateOperator[]
-    ): CIS2.UpdateTransaction;
+    ): CIS2.UpdateTransaction<CIS2.UpdateOperatorParamJson[]>;
     public createUpdateOperator(
         metadata: CIS2.CreateTransactionMetadata,
         updates: CIS2.UpdateOperator | CIS2.UpdateOperator[]
-    ): CIS2.UpdateTransaction {
-        return this.createUpdateTransactionDynamic(
-            'updateOperator',
-            serializeCIS2UpdateOperators,
-            (us) => us.map(formatCIS2UpdateOperator),
-            metadata,
-            updates
+    ): CIS2.UpdateTransaction<CIS2.UpdateOperatorParamJson[]> {
+        const serialize = makeDynamicFunction(serializeCIS2UpdateOperators);
+        const format = makeDynamicFunction((us: CIS2.UpdateOperator[]) =>
+            us.map(formatCIS2UpdateOperator)
         );
+
+        return this.createUpdateTransaction(
+            'updateOperator',
+            serialize,
+            metadata,
+            updates,
+            format
+        ) as CIS2.UpdateTransaction<CIS2.UpdateOperatorParamJson[]>;
     }
 
     /**
@@ -391,10 +392,15 @@ export class CIS2Contract extends GenericContract<
         queries: CIS2.BalanceOfQuery | CIS2.BalanceOfQuery[],
         blockHash?: HexString
     ): Promise<bigint | bigint[]> {
-        return this.invokeViewDynamic(
+        const serialize = makeDynamicFunction(serializeCIS2BalanceOfQueries);
+        const deserialize = ensureMatchesInput(
+            queries,
+            deserializeCIS2BalanceOfResponse
+        );
+        return this.invokeView(
             'balanceOf',
-            serializeCIS2BalanceOfQueries,
-            deserializeCIS2BalanceOfResponse,
+            serialize,
+            deserialize,
             queries,
             blockHash
         );
@@ -433,10 +439,15 @@ export class CIS2Contract extends GenericContract<
         queries: CIS2.OperatorOfQuery | CIS2.OperatorOfQuery[],
         blockHash?: HexString
     ): Promise<boolean | boolean[]> {
-        return this.invokeViewDynamic(
+        const serialize = makeDynamicFunction(serializeCIS2OperatorOfQueries);
+        const deserialize = ensureMatchesInput(
+            queries,
+            deserializeCIS2OperatorOfResponse
+        );
+        return this.invokeView(
             'operatorOf',
-            serializeCIS2OperatorOfQueries,
-            deserializeCIS2OperatorOfResponse,
+            serialize,
+            deserialize,
             queries,
             blockHash
         );
@@ -475,85 +486,17 @@ export class CIS2Contract extends GenericContract<
         tokenIds: HexString | HexString[],
         blockHash?: HexString
     ): Promise<CIS2.MetadataUrl | CIS2.MetadataUrl[]> {
-        return this.invokeViewDynamic(
+        const serialize = makeDynamicFunction(serializeCIS2TokenIds);
+        const deserialize = ensureMatchesInput(
+            tokenIds,
+            deserializeCIS2TokenMetadataResponse
+        );
+        return this.invokeView(
             'tokenMetadata',
-            serializeCIS2TokenIds,
-            deserializeCIS2TokenMetadataResponse,
+            serialize,
+            deserialize,
             tokenIds,
             blockHash
         );
-    }
-
-    /**
-     * Helper function for sending update transactions.
-     *
-     * @param {string} entrypoint - The name of the receive function to invoke.
-     * @param {Function} serializer - A function to serialize the `input` to bytes.
-     * @param {Function} jsonFormatter - A function to format the `input` as JSON format serializable by the contract schema.
-     * @param {CIS2.CreateTransactionMetadata} metadata - Metadata to be used for the transaction creation (with defaults).
-     * @param {T | T[]} input - Input for for contract function.
-     *
-     * @throws If the query could not be invoked successfully.
-     *
-     * @returns {HexString} The transaction hash of the update transaction
-     */
-    private createUpdateTransactionDynamic<T>(
-        entrypoint: keyof typeof this.schemas,
-        serializer: (input: T[]) => Buffer,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        jsonFormatter: (input: T[]) => any,
-        metadata: CIS2.CreateTransactionMetadata,
-        input: T | T[]
-    ): CIS2.UpdateTransaction {
-        return this.createUpdateTransaction(
-            entrypoint,
-            makeDynamicFunction(serializer),
-            makeDynamicFunction(jsonFormatter),
-            metadata,
-            input
-        );
-    }
-
-    /**
-     * Helper function for invoking a contract view function.
-     *
-     * @param {string} entrypoint - The name of the view function to invoke.
-     * @param {Function} serializer - A function to serialize the `input` to bytes.
-     * @param {Function} deserializer - A function to deserialize the value returned from the view invocation.
-     * @param {T | T[]} input - Input for for contract function.
-     *
-     * @throws If the query could not be invoked successfully.
-     *
-     * @returns {HexString} The transaction hash of the update transaction
-     */
-    private async invokeViewDynamic<T, R>(
-        entrypoint: string,
-        serializer: (input: T[]) => Buffer,
-        deserializer: (value: HexString) => R[],
-        input: T | T[],
-        blockHash?: HexString
-    ): Promise<R | R[]> {
-        const values = await this.invokeView(
-            entrypoint,
-            makeDynamicFunction(serializer),
-            deserializer,
-            input,
-            blockHash
-        );
-
-        const isListInput = Array.isArray(input);
-        const expectedValuesLength = isListInput ? input.length : 1;
-
-        if (values.length !== expectedValuesLength) {
-            throw new Error(
-                'Mismatch between length of queries in request and values in response.'
-            );
-        }
-
-        if (isListInput) {
-            return values;
-        } else {
-            return values[0];
-        }
     }
 }

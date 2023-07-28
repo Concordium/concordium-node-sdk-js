@@ -11,6 +11,7 @@ import {
     ContractAddress,
     HexString,
     InvokeContractResult,
+    MakeOptional,
     SmartContractTypeValues,
     UpdateContractPayload,
 } from './types';
@@ -40,27 +41,37 @@ export type CreateContractTransactionMetadata = Pick<
     'amount' | 'energy'
 >;
 
+export type ContractSchema = {
+    /** Base64 encoded schema for the parameter type */
+    value: Base64String;
+    /** Type of the schema */
+    type: 'parameter' | 'module';
+};
+
 /**
- * An update transaction without header. This is useful for sending through a wallet, which supplies the header information.
+ * An update transaction without header.
  */
 export type ContractUpdateTransaction = {
     /** The type of the transaction, which will always be of type {@link AccountTransactionType.Update} */
     type: AccountTransactionType.Update;
     /** The payload of the transaction, which will always be of type {@link UpdateContractPayload} */
     payload: UpdateContractPayload;
+};
+
+/**
+ * An update transaction without header, including schema information.
+ * This is useful for sending through a wallet, which supplies the header information.
+ */
+export type ContractUpdateTransactionWithSchema<
+    J extends SmartContractTypeValues = SmartContractTypeValues
+> = ContractUpdateTransaction & {
     parameter: {
         /** Hex encoded parameter for the update */
         hex: HexString;
         /** JSON representation of the parameter to be used with the corresponding contract schema */
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        json: SmartContractTypeValues;
+        json: J;
     };
-    schema: {
-        /** Base64 encoded schema for the parameter type */
-        value: Base64String;
-        /** Type of the schema. This is always of type "parameter" */
-        type: 'parameter';
-    };
+    schema: ContractSchema;
 };
 
 export function getDefaultExpiryDate(): Date {
@@ -73,7 +84,7 @@ export const getInvoker = (
 ): ContractAddress | AccountAddress =>
     typeof address !== 'string' ? address : new AccountAddress(address);
 
-export class GenericContractDryRun {
+export class ContractDryRun<E extends string = string> {
     constructor(
         protected grpcClient: ConcordiumGRPCClient,
         protected contractAddress: ContractAddress,
@@ -81,7 +92,8 @@ export class GenericContractDryRun {
     ) {}
 
     /**
-     * Helper function for invoking a contract function.
+     * Performs a dry-run of a contract entrypoint invocation.
+     * Useful for getting an indication of the result of an invocation of the entrypoint (e.g. getting a cost estimate).
      *
      * @param {string} entrypoint - The name of the receive function to invoke.
      * @param {ContractAddress | AccountAddress} invoker - The address of the invoker.
@@ -91,8 +103,8 @@ export class GenericContractDryRun {
      *
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */
-    protected invokeMethod<T>(
-        entrypoint: string,
+    public invokeMethod<T>(
+        entrypoint: E,
         invoker: ContractAddress | AccountAddress,
         serializer: (input: T) => Buffer,
         input: T,
@@ -113,63 +125,82 @@ export class GenericContractDryRun {
     }
 }
 
-export abstract class GenericContract<
-    D extends GenericContractDryRun,
-    E extends string
-> {
-    private dryRunInstance: D;
-    public abstract schemas: Record<E, Base64String>;
+type Schema<E extends string = string> = Base64String | Record<E, Base64String>;
+
+export class Contract<E extends string = string> {
+    protected dryRunInstance: ContractDryRun<E>;
 
     constructor(
         protected grpcClient: ConcordiumGRPCClient,
         protected contractAddress: ContractAddress,
-        protected contractName: string
+        protected contractName: string,
+        protected schema?: Schema<E>
     ) {
-        this.dryRunInstance = this.makeDryRunInstance(
+        this.dryRunInstance = new ContractDryRun(
             grpcClient,
             contractAddress,
             contractName
         );
     }
 
-    protected abstract makeDryRunInstance(
-        grpcClient: ConcordiumGRPCClient,
-        contractAddress: ContractAddress,
-        contractName: string
-    ): D;
-
     /**
      * A dry-run instance, providing access to methods for performing dry-run invocations of update instructions.
      */
-    public get dryRun(): D {
+    public get dryRun(): ContractDryRun<E> {
         return this.dryRunInstance;
     }
 
     /**
-     * Helper function for sending update transactions.
+     * Creates a {@link ContractUpdateTransactionWithSchema} contract update transaction, holding the necessary parts to sign/submit to the chain.
      *
      * @param {string} entrypoint - The name of the receive function to invoke.
-     * @param {Function} serializer - A function to serialize the `input` to bytes.
-     * @param {Function} jsonFormatter - A function to format the `input` as JSON format serializable by the contract schema.
-     * @param {CIS2.CreateTransactionMetadata} metadata - Metadata to be used for the transaction creation (with defaults).
+     * @param {Function} serializeInput - A function to serialize the `input` to bytes.
+     * @param {ContractTransactionMetadata} metadata - Metadata to be used for the transaction creation (with defaults).
      * @param {T} input - Input for for contract function.
      *
      * @throws If the query could not be invoked successfully.
      *
-     * @returns {HexString} The transaction hash of the update transaction
+     * @returns {ContractUpdateTransaction} The transaction hash of the update transaction
      */
-    protected createUpdateTransaction<T>(
+    public createUpdateTransaction<T>(
         entrypoint: E,
-        serializer: (input: T) => Buffer,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        jsonFormatter: (input: T) => any,
-        { amount = 0n, energy }: CreateContractTransactionMetadata,
+        serializeInput: (input: T) => Buffer,
+        metadata: CreateContractTransactionMetadata,
         input: T
-    ): ContractUpdateTransaction {
-        const parameter = serializer(input);
+    ): ContractUpdateTransaction;
+
+    /**
+     * Creates a {@link ContractUpdateTransactionWithSchema} contract update transaction, holding the necessary parts to sign/submit to the chain.
+     *
+     * @param {string} entrypoint - The name of the receive function to invoke.
+     * @param {Function} serializeInput - A function to serialize the `input` to bytes.
+     * @param {ContractTransactionMetadata} metadata - Metadata to be used for the transaction creation (with defaults).
+     * @param {T} input - Input for for contract function.
+     * @param {Function} inputJsonFormatter - A function to format the `input` as JSON format serializable by the contract schema.
+     *
+     * @throws If the query could not be invoked successfully.
+     *
+     * @returns {ContractUpdateTransactionWithSchema} The transaction hash of the update transaction
+     */
+    public createUpdateTransaction<T, J extends SmartContractTypeValues>(
+        entrypoint: E,
+        serializeInput: (input: T) => Buffer,
+        metadata: CreateContractTransactionMetadata,
+        input: T,
+        inputJsonFormatter: (input: T) => J
+    ): MakeOptional<ContractUpdateTransactionWithSchema<J>, 'schema'>;
+    public createUpdateTransaction<T, J extends SmartContractTypeValues>(
+        entrypoint: E,
+        serializeInput: (input: T) => Buffer,
+        { amount = 0n, energy }: CreateContractTransactionMetadata,
+        input: T,
+        inputJsonFormatter?: (input: T) => J
+    ):
+        | ContractUpdateTransaction
+        | MakeOptional<ContractUpdateTransactionWithSchema<J>, 'schema'> {
+        const parameter = serializeInput(input);
         checkParameterLength(parameter);
 
-        const jsonParameter = jsonFormatter(input);
         const payload: UpdateContractPayload = {
             amount: new CcdAmount(amount),
             address: this.contractAddress,
@@ -177,26 +208,45 @@ export abstract class GenericContract<
             maxContractExecutionEnergy: energy,
             message: parameter,
         };
-
-        return {
+        const transaction: ContractUpdateTransaction = {
             type: AccountTransactionType.Update,
             payload,
+        };
+
+        if (inputJsonFormatter === undefined) {
+            return transaction;
+        }
+
+        const jsonParameter = inputJsonFormatter(input);
+
+        let schema: ContractSchema | undefined;
+        if (typeof this.schema === 'string') {
+            schema = {
+                value: this.schema,
+                type: 'module',
+            };
+        } else if (this.schema?.[entrypoint] !== undefined) {
+            schema = {
+                value: this.schema[entrypoint],
+                type: 'parameter',
+            };
+        }
+
+        return {
+            ...transaction,
             parameter: {
                 hex: parameter.toString('hex'),
                 json: jsonParameter,
             },
-            schema: {
-                value: this.schemas[entrypoint],
-                type: 'parameter',
-            },
+            schema,
         };
     }
 
     /**
-     * Helper function for sending update transactions.
+     * Submits a {@link ContractUpdateTransaction} contract update transaction.
      *
-     * @param {CIS2.UpdateTransaction} transaction - The transaction to send.
-     * @param {CIS2.TransactionMetadata} metadata - Metadata to be used for the transaction (with defaults).
+     * @param {ContractUpdateTransaction} transactionBase - The details of the transaction to send.
+     * @param {ContractTransactionMetadata} metadata - Metadata to be used for the transaction (with defaults).
      * @param {AccountSigner} signer - An object to use for signing the transaction.
      *
      * @throws If the query could not be invoked successfully.
@@ -204,7 +254,7 @@ export abstract class GenericContract<
      * @returns {HexString} The transaction hash of the update transaction
      */
     protected async sendUpdateTransaction(
-        { type, payload }: ContractUpdateTransaction,
+        transactionBase: ContractUpdateTransaction,
         {
             senderAddress,
             expiry = getDefaultExpiryDate(),
@@ -219,34 +269,62 @@ export abstract class GenericContract<
             sender,
         };
         const transaction = {
-            type,
+            ...transactionBase,
             header,
-            payload,
         };
         const signature = await signTransaction(transaction, signer);
         return this.grpcClient.sendAccountTransaction(transaction, signature);
     }
 
     /**
-     * Helper function for invoking a contract view function.
+     * Creates and sends a contract update transaction with parameter `input` to `entrypoint`.
+     *
+     * @param {string} entrypoint - The name of the receive function to invoke.
+     * @param {Function} serializeInput - A function to serialize the `input` to bytes.
+     * @param {CIS2.TransactionMetadata} metadata - Metadata to be used for the transaction (with defaults).
+     * @param {T} input - Input for for contract function.
+     * @param {AccountSigner} signer - An object to use for signing the transaction.
+     *
+     * @throws If the query could not be invoked successfully.
+     *
+     * @returns {HexString} The transaction hash of the update transaction
+     */
+    public async createAndSendUpdateTransaction<T>(
+        entrypoint: E,
+        serializeInput: (input: T) => Buffer,
+        metadata: ContractTransactionMetadata,
+        input: T,
+        signer: AccountSigner
+    ): Promise<HexString> {
+        const transactionBase = this.createUpdateTransaction(
+            entrypoint,
+            serializeInput,
+            metadata,
+            input
+        );
+        return this.sendUpdateTransaction(transactionBase, metadata, signer);
+    }
+
+    /**
+     * Invokes `entrypoint` view function on contract.
      *
      * @param {string} entrypoint - The name of the view function to invoke.
-     * @param {Function} serializer - A function to serialize the `input` to bytes.
-     * @param {Function} deserializer - A function to deserialize the value returned from the view invocation.
+     * @param {Function} serializeInput - A function to serialize the `input` to bytes.
+     * @param {Function} deserializeResponse - A function to deserialize the value returned from the view invocation.
      * @param {T | T[]} input - Input for for contract function.
      *
      * @throws If the query could not be invoked successfully.
      *
      * @returns {HexString} The transaction hash of the update transaction
      */
-    protected async invokeView<T, R>(
+    public async invokeView<T, R>(
         entrypoint: string,
-        serializer: (input: T) => Buffer,
-        deserializer: (value: HexString) => R,
+        serializeInput: (input: T) => Buffer,
+        deserializeResponse: (value: HexString) => R,
         input: T,
         blockHash?: HexString
     ): Promise<R> {
-        const parameter = serializer(input);
+        const parameter = serializeInput(input);
         checkParameterLength(parameter);
 
         const response = await this.grpcClient.invokeContract(
@@ -272,7 +350,117 @@ export abstract class GenericContract<
             );
         }
 
-        const value = deserializer(response.returnValue);
+        const value = deserializeResponse(response.returnValue);
         return value;
+    }
+}
+
+export abstract class CISContract<
+    E extends string,
+    D extends ContractDryRun<E>
+> extends Contract<E> {
+    protected abstract override schema: Record<E, Base64String>;
+    protected override dryRunInstance: D;
+
+    constructor(
+        protected grpcClient: ConcordiumGRPCClient,
+        protected contractAddress: ContractAddress,
+        protected contractName: string
+    ) {
+        super(grpcClient, contractAddress, contractName);
+
+        this.dryRunInstance = this.makeDryRunInstance(
+            grpcClient,
+            contractAddress,
+            contractName
+        );
+    }
+
+    protected abstract makeDryRunInstance(
+        grpcClient: ConcordiumGRPCClient,
+        contractAddress: ContractAddress,
+        contractName: string
+    ): D;
+
+    /**
+     * A dry-run instance, providing access to methods for performing dry-run invocations of update instructions.
+     */
+    public override get dryRun(): D {
+        return this.dryRunInstance;
+    }
+
+    /**
+     * Creates a {@link ContractUpdateTransactionWithSchema} contract update transaction, holding the necessary parts to sign/submit to the chain.
+     *
+     * @param {string} entrypoint - The name of the receive function to invoke.
+     * @param {Function} serializeInput - A function to serialize the `input` to bytes.
+     * @param {ContractTransactionMetadata} metadata - Metadata to be used for the transaction creation (with defaults).
+     * @param {T} input - Input for for contract function.
+     *
+     * @throws If the query could not be invoked successfully.
+     *
+     * @returns {ContractUpdateTransaction} The transaction hash of the update transaction
+     */
+    public createUpdateTransaction<T>(
+        entrypoint: E,
+        serializeInput: (input: T) => Buffer,
+        metadata: CreateContractTransactionMetadata,
+        input: T
+    ): ContractUpdateTransaction;
+
+    /**
+     * Creates a {@link ContractUpdateTransactionWithSchema} contract update transaction, holding the necessary parts to sign/submit to the chain.
+     *
+     * @param {string} entrypoint - The name of the receive function to invoke.
+     * @param {Function} serializeInput - A function to serialize the `input` to bytes.
+     * @param {ContractTransactionMetadata} metadata - Metadata to be used for the transaction creation (with defaults).
+     * @param {T} input - Input for for contract function.
+     * @param {Function} inputJsonFormatter - A function to format the `input` as JSON format serializable by the contract schema.
+     *
+     * @throws If the query could not be invoked successfully.
+     *
+     * @returns {ContractUpdateTransactionWithSchema} The transaction hash of the update transaction
+     */
+    public createUpdateTransaction<T, J extends SmartContractTypeValues>(
+        entrypoint: E,
+        serializeInput: (input: T) => Buffer,
+        metadata: CreateContractTransactionMetadata,
+        input: T,
+        inputJsonFormatter: (input: T) => J
+    ): ContractUpdateTransactionWithSchema<J>;
+    public override createUpdateTransaction<
+        T,
+        J extends SmartContractTypeValues
+    >(
+        entrypoint: E,
+        serializeInput: (input: T) => Buffer,
+        metadata: CreateContractTransactionMetadata,
+        input: T,
+        inputJsonFormatter?: (input: T) => J
+    ): ContractUpdateTransaction | ContractUpdateTransactionWithSchema<J> {
+        if (inputJsonFormatter === undefined) {
+            return super.createUpdateTransaction(
+                entrypoint,
+                serializeInput,
+                metadata,
+                input
+            );
+        }
+
+        const transaction = super.createUpdateTransaction(
+            entrypoint,
+            serializeInput,
+            metadata,
+            input,
+            inputJsonFormatter
+        );
+
+        if (transaction.schema === undefined) {
+            throw new Error(
+                `Could not find schema for entrypoint ${entrypoint}`
+            );
+        }
+
+        return transaction;
     }
 }

@@ -11,10 +11,10 @@ import {
 import { deserializeCIS2MetadataUrl } from '../cis2/util';
 import {
     ContractTransactionMetadata,
-    ContractUpdateTransaction,
+    ContractUpdateTransactionWithSchema,
     CreateContractTransactionMetadata,
-    GenericContract,
-    GenericContractDryRun,
+    CISContract,
+    ContractDryRun,
     getDefaultExpiryDate,
     getInvoker,
 } from '../GenericContract';
@@ -41,7 +41,7 @@ type Updates =
     | 'revokeCredentialHolder'
     | 'revokeCredentialOther';
 
-class CIS4DryRun extends GenericContractDryRun {
+class CIS4DryRun extends ContractDryRun<Updates> {
     /**
      * Performs a dry-run invocation of "CIS4.registerCredential"
      *
@@ -186,8 +186,8 @@ class CIS4DryRun extends GenericContractDryRun {
     }
 }
 
-export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
-    public schemas: Record<Updates, string> = {
+export class CIS4Contract extends CISContract<Updates, CIS4DryRun> {
+    public schema: Record<Updates, string> = {
         // FIXME: add schemas
         registerCredential: '',
         revokeCredentialHolder: '',
@@ -305,19 +305,19 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
      * @param {CIS4.CredentialInfo} credInfo - the credential info to register
      * @param {HexString} [additionalData] - any additional data to include
      *
-     * @returns {ContractUpdateTransaction} Transaction data for a CIS4.registerCredential update.
+     * @returns {ContractUpdateTransactionWithSchema} Transaction data for a CIS4.registerCredential update.
      */
     public createRegisterCredential(
         metadata: CreateContractTransactionMetadata,
         credInfo: CIS4.CredentialInfo,
         additionalData: HexString = ''
-    ): ContractUpdateTransaction {
+    ): ContractUpdateTransactionWithSchema {
         return this.createUpdateTransaction(
             'registerCredential',
             serializeCIS4RegisterCredentialParam,
-            formatCIS4RegisterCredential,
             metadata,
-            { credInfo, additionalData }
+            { credInfo, additionalData },
+            formatCIS4RegisterCredential
         );
     }
 
@@ -352,19 +352,19 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
      * @param {HexString} credHolderPubKey - the public key of the credential holder (hex encoded)
      * @param {string} [reason] - the reason for the revocation
      *
-     * @returns {ContractUpdateTransaction} Transaction data for a CIS4.revokeCredentialIssuer update.
+     * @returns {ContractUpdateTransactionWithSchema} Transaction data for a CIS4.revokeCredentialIssuer update.
      */
     public createRevokeCredentialAsIssuer(
         metadata: CreateContractTransactionMetadata,
         credHolderPubKey: HexString,
         reason?: string
-    ): ContractUpdateTransaction {
+    ): ContractUpdateTransactionWithSchema {
         return this.createUpdateTransaction(
             'revokeCredentialIssuer',
             serializeCIS4RevokeCredentialIssuerParam,
-            formatCIS4RevokeCredentialIssuer,
             metadata,
-            { credHolderPubKey, reason }
+            { credHolderPubKey, reason },
+            formatCIS4RevokeCredentialIssuer
         );
     }
 
@@ -401,7 +401,7 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
      * @param {Date} expiry - Expiry time of the revocation message
      * @param {string} [reason] - the reason for the revocation
      *
-     * @returns {ContractUpdateTransaction} Transaction data for a CIS4.revokeCredentialHolder update.
+     * @returns {ContractUpdateTransactionWithSchema} Transaction data for a CIS4.revokeCredentialHolder update.
      */
     public createRevokeCredentialAsHolder(
         metadata: CreateContractTransactionMetadata,
@@ -409,7 +409,7 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
         nonce: bigint,
         expiry: Date,
         reason?: string
-    ): ContractUpdateTransaction {
+    ): ContractUpdateTransactionWithSchema {
         const credentialPubKey = credHolderSigner.pubKey;
         const signingData: CIS4.SigningData = {
             contractAddress: this.contractAddress,
@@ -425,16 +425,19 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
         const digest = Buffer.concat([REVOKE_DOMAIN, serializedData]);
         const signature = credHolderSigner.sign(digest);
 
-        return this.createUpdateTransaction<CIS4.RevokeCredentialHolderParam>(
+        return this.createUpdateTransaction<
+            CIS4.RevokeCredentialHolderParam,
+            CIS4.RevokeCredentialHolderParamJson
+        >(
             'revokeCredentialHolder',
             () =>
                 Buffer.concat([Buffer.from(signature, 'hex'), serializedData]), // Reuse existing serialization
-            formatCIS4RevokeCredentialHolder,
             metadata,
             {
                 signature,
                 data: { credentialPubKey, signingData, reason },
-            }
+            },
+            formatCIS4RevokeCredentialHolder
         );
     }
 
@@ -477,7 +480,7 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
      * @param {Date} expiry - Expiry time of the revocation message
      * @param {string} [reason] - the reason for the revocation
      *
-     * @returns {ContractUpdateTransaction} Transaction data for a CIS4.revokeCredentialOther update.
+     * @returns {ContractUpdateTransactionWithSchema} Transaction data for a CIS4.revokeCredentialOther update.
      */
     public createRevokeCredentialAsOther(
         metadata: CreateContractTransactionMetadata,
@@ -486,7 +489,7 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
         nonce: bigint,
         expiry: Date,
         reason?: string
-    ): ContractUpdateTransaction {
+    ): ContractUpdateTransactionWithSchema {
         const revocationPubKey = revokerSigner.pubKey;
         const signingData: CIS4.SigningData = {
             contractAddress: this.contractAddress,
@@ -503,11 +506,13 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
         const digest = Buffer.concat([REVOKE_DOMAIN, serializedData]);
         const signature = revokerSigner.sign(digest);
 
-        return this.createUpdateTransaction<CIS4.RevokeCredentialOtherParam>(
+        return this.createUpdateTransaction<
+            CIS4.RevokeCredentialOtherParam,
+            CIS4.RevokeCredentialOtherParamJson
+        >(
             'revokeCredentialOther',
             () =>
                 Buffer.concat([Buffer.from(signature, 'hex'), serializedData]), // Reuse existing serialization
-            formatCIS4RevokeCredentialOther,
             metadata,
             {
                 signature,
@@ -517,7 +522,8 @@ export class CIS4Contract extends GenericContract<CIS4DryRun, Updates> {
                     revocationPubKey,
                     reason,
                 },
-            }
+            },
+            formatCIS4RevokeCredentialOther
         );
     }
 

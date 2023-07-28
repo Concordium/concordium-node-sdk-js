@@ -29,15 +29,21 @@ export interface AccountSigner {
     sign(digest: Buffer): Promise<AccountTransactionSignature>;
     /**
      * Returns the amount of signatures that the signer produces
-     */
-    getSignatureCount(): bigint;
+     */ getSignatureCount(): bigint;
 }
 
-const getSignature = async (
+/**
+ * Gets Ed25519 signature for `digest`.
+ *
+ * @param {Buffer} digest - the message to sign.
+ * @param {HexString} privateKey - the ed25519 private key in HEX format.
+ *
+ * @returns {Buffer} the signature.
+ */
+export const getSignature = async (
     digest: Buffer,
     privateKey: HexString
-): Promise<HexString> =>
-    Buffer.from(await ed.sign(digest, privateKey)).toString('hex');
+): Promise<Buffer> => Buffer.from(await ed.sign(digest, privateKey));
 
 /**
  * Creates an `AccountSigner` for an account which uses the first credential's first keypair.
@@ -53,9 +59,10 @@ export function buildBasicAccountSigner(privateKey: HexString): AccountSigner {
             return 1n;
         },
         async sign(digest: Buffer) {
+            const sig = await getSignature(digest, privateKey);
             return {
                 0: {
-                    0: await getSignature(digest, privateKey),
+                    0: sig.toString('hex'),
                 },
             };
         },
@@ -94,7 +101,8 @@ const getCredentialSignature = async (
 ): Promise<CredentialSignature> => {
     const sig: CredentialSignature = {};
     for (const key in keys) {
-        sig[key] = await getSignature(digest, keys[key]);
+        const signature = await getSignature(digest, keys[key]);
+        sig[key] = signature.toString('hex');
     }
     return sig;
 };

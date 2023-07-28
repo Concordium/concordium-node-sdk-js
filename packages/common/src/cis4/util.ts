@@ -15,6 +15,7 @@ import {
     packBufferWithWord16Length,
 } from '../serializationHelpers';
 import { OptionJson, toOptionJson } from '../schemaTypes';
+import { getSignature } from '../signHelpers';
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace CIS4 {
@@ -161,13 +162,40 @@ export namespace CIS4 {
             reason: OptionJson<string>;
         };
     };
+}
 
-    export interface Web3IdSigner {
-        pubKey: HexString;
-        sign(message: Buffer): HexString;
+/**
+ * A wrapper around an ed25519 keypair which is used by {@link CIS4Contract} methods for signing as various entities.
+ */
+export class Web3IdSigner {
+    /**
+     * Builds a `Web3IdSigner` from ed25519 keypair
+     *
+     * @param {HexString} privateKey - the ed25519 private key used for signing
+     * @param {HexString} publicKey - the ed25519 public key used for verifcation of signature
+     */
+    constructor(private privateKey: HexString, private publicKey: HexString) {}
+
+    /** Public key of signer */
+    public get pubKey(): HexString {
+        return this.publicKey;
+    }
+
+    /**
+     * Signs the message given
+     *
+     * @param {Buffer} message - the message to sign
+     *
+     * @returns {Buffer} the signature on `message`
+     */
+    public async sign(message: Buffer): Promise<Buffer> {
+        return getSignature(message, this.privateKey);
     }
 }
 
+/**
+ * Expected prefix of messages signed for CIS4 revocation entrypoints.
+ */
 export const REVOKE_DOMAIN = Buffer.from('WEB3ID:REVOKE', 'utf8');
 
 function serializeDate(date: Date): Buffer {

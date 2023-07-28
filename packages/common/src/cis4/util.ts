@@ -11,6 +11,7 @@ import {
 import { Cursor, makeDeserializeListResponse } from '../deserializationHelpers';
 import {
     encodeBool,
+    encodeWord16,
     encodeWord64,
     makeSerializeOptional,
     packBufferWithWord16Length,
@@ -443,4 +444,12 @@ export function formatCIS4RevokeCredentialOther({
             reason: toOptionJson(data.reason),
         },
     };
+}
+
+export function serializeCIS4UpdateRevocationKeysParam(
+    keys: HexString[]
+): Buffer {
+    const ks = keys.map((k) => Buffer.from(k, 'hex'));
+    const len = encodeWord16(ks.length, true);
+    return Buffer.concat([len, ...ks]);
 }

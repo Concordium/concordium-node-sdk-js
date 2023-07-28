@@ -33,14 +33,24 @@ import {
     serializeCIS4RevocationDataHolder,
     serializeCIS4RevocationDataOther,
     serializeCIS4RevokeCredentialIssuerParam,
+    serializeCIS4UpdateRevocationKeysParam,
     Web3IdSigner,
 } from './util';
+
+type Views =
+    | 'credentialEntry'
+    | 'credentialStatus'
+    | 'issuer'
+    | 'registryMetadata'
+    | 'revocationKeys';
 
 type Updates =
     | 'registerCredential'
     | 'revokeCredentialIssuer'
     | 'revokeCredentialHolder'
-    | 'revokeCredentialOther';
+    | 'revokeCredentialOther'
+    | 'registerRevocationKeys'
+    | 'removeRevocationKeys';
 
 class CIS4DryRun extends ContractDryRun<Updates> {
     /**
@@ -116,7 +126,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
         const credentialPubKey = credHolderSigner.pubKey;
         const signingData: CIS4.SigningData = {
             contractAddress: this.contractAddress,
-            entryPoint: '', // TODO: where do we get this from? Is it even used?
+            entryPoint: '', // TODO: where do we get this from?
             nonce,
             timestamp: expiry,
         };
@@ -162,7 +172,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
         const revocationPubKey = revokerSigner.pubKey;
         const signingData: CIS4.SigningData = {
             contractAddress: this.contractAddress,
-            entryPoint: '', // TODO: where do we get this from? Is it even used?
+            entryPoint: '', // TODO: where do we get this from?
             nonce,
             timestamp: expiry,
         };
@@ -183,15 +193,65 @@ class CIS4DryRun extends ContractDryRun<Updates> {
             blockHash
         );
     }
+
+    /**
+     * Performs a dry-run invocation of "CIS4.registerRevocationKeys"
+     *
+     * @param {Base58String | ContractAddress} sender - Address of the sender of the transfer.
+     * @param {HexString | HexString[]} keys - a single or list of hex encoded public keys to be used for revocation
+     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
+     *
+     * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
+     */
+    public registerRevocationKeys(
+        sender: Base58String | ContractAddress,
+        keys: HexString | HexString[],
+        blockHash?: HexString
+    ): Promise<InvokeContractResult> {
+        const ks = Array.isArray(keys) ? keys : [keys];
+        return this.invokeMethod(
+            'registerRevocationKeys',
+            getInvoker(sender),
+            serializeCIS4UpdateRevocationKeysParam,
+            ks,
+            blockHash
+        );
+    }
+
+    /**
+     * Performs a dry-run invocation of "CIS4.removeRevocationKeys"
+     *
+     * @param {Base58String | ContractAddress} sender - Address of the sender of the transfer.
+     * @param {HexString | HexString[]} keys - a single or list of hex encoded public keys to be removed
+     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
+     *
+     * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
+     */
+    public removeRevocationKeys(
+        sender: Base58String | ContractAddress,
+        keys: HexString | HexString[],
+        blockHash?: HexString
+    ): Promise<InvokeContractResult> {
+        const ks = Array.isArray(keys) ? keys : [keys];
+        return this.invokeMethod(
+            'removeRevocationKeys',
+            getInvoker(sender),
+            serializeCIS4UpdateRevocationKeysParam,
+            ks,
+            blockHash
+        );
+    }
 }
 
-export class CIS4Contract extends CISContract<Updates, CIS4DryRun> {
+export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
     public schema: Record<Updates, string> = {
         // FIXME: add schemas
         registerCredential: '',
         revokeCredentialHolder: '',
         revokeCredentialIssuer: '',
         revokeCredentialOther: '',
+        registerRevocationKeys: '',
+        removeRevocationKeys: '',
     };
 
     protected makeDryRunInstance(
@@ -272,7 +332,7 @@ export class CIS4Contract extends CISContract<Updates, CIS4DryRun> {
      */
     public issuerMetadata(blockHash?: HexString): Promise<CIS4.MetadataUrl> {
         return this.invokeView(
-            'issuerMetadata',
+            'issuer',
             () => Buffer.alloc(0),
             deserializeCIS2MetadataUrl,
             undefined,
@@ -287,7 +347,7 @@ export class CIS4Contract extends CISContract<Updates, CIS4DryRun> {
      *
      * @returns {AccountAddress} an account address.
      */
-    public issuerAddress(blockHash?: HexString): Promise<AccountAddress> {
+    public issuer(blockHash?: HexString): Promise<AccountAddress> {
         return this.invokeView(
             'issuer',
             () => Buffer.alloc(0),
@@ -412,7 +472,7 @@ export class CIS4Contract extends CISContract<Updates, CIS4DryRun> {
         const credentialPubKey = credHolderSigner.pubKey;
         const signingData: CIS4.SigningData = {
             contractAddress: this.contractAddress,
-            entryPoint: '', // TODO: where do we get this from? Is it even used?
+            entryPoint: '', // TODO: where do we get this from?
             nonce,
             timestamp: expiry,
         };
@@ -491,7 +551,7 @@ export class CIS4Contract extends CISContract<Updates, CIS4DryRun> {
         const revocationPubKey = revokerSigner.pubKey;
         const signingData: CIS4.SigningData = {
             contractAddress: this.contractAddress,
-            entryPoint: '', // TODO: where do we get this from? Is it even used?
+            entryPoint: '', // TODO: where do we get this from?
             nonce,
             timestamp: expiry,
         };
@@ -553,6 +613,86 @@ export class CIS4Contract extends CISContract<Updates, CIS4DryRun> {
             metadata.expiry ?? getDefaultExpiryDate(),
             reason
         );
+        return this.sendUpdateTransaction(transaction, metadata, signer);
+    }
+
+    /**
+     * Create the details necessary to submit a CIS4.registerRevicationKeys update transaction.
+     *
+     * @param {CreateContractTransactionMetadata} metadata - transaction metadata
+     * @param {HexString | HexString[]} keys - a single or list of hex encoded public keys to be used for revocation
+     *
+     * @returns {ContractUpdateTransactionWithSchema} Transaction data for a CIS4.registerRevicationKeys update.
+     */
+    public createRegisterRevocationKeys(
+        metadata: CreateContractTransactionMetadata,
+        keys: HexString | HexString[]
+    ): ContractUpdateTransactionWithSchema {
+        const ks = Array.isArray(keys) ? keys : [keys];
+        return this.createUpdateTransaction(
+            'registerRevocationKeys',
+            serializeCIS4UpdateRevocationKeysParam,
+            metadata,
+            ks,
+            () => ks // JSON representation is just a list of hex encoded keys
+        );
+    }
+
+    /**
+     * Submit CIS4.registerRevocationKeys update transaction.
+     *
+     * @param {AccountSigner} signer - to be used for signing the transaction sent to the node.
+     * @param {ContractTransactionMetadata} metadata - transaction metadata
+     * @param {HexString | HexString[]} keys - a single or list of hex encoded public keys to be used for revocation
+     *
+     * @returns {HexString} The hash of the submitted transaction
+     */
+    public registerRevocationKeys(
+        signer: AccountSigner,
+        metadata: ContractTransactionMetadata,
+        keys: HexString | HexString[]
+    ): Promise<HexString> {
+        const transaction = this.createRegisterRevocationKeys(metadata, keys);
+        return this.sendUpdateTransaction(transaction, metadata, signer);
+    }
+
+    /**
+     * Create the details necessary to submit a CIS4.removeRevicationKeys update transaction.
+     *
+     * @param {CreateContractTransactionMetadata} metadata - transaction metadata
+     * @param {HexString | HexString[]} keys - a single or list of hex encoded public keys to be removed
+     *
+     * @returns {ContractUpdateTransactionWithSchema} Transaction data for a CIS4.removeRevicationKeys update.
+     */
+    public createRemoveRevocationKeys(
+        metadata: CreateContractTransactionMetadata,
+        keys: HexString | HexString[]
+    ): ContractUpdateTransactionWithSchema {
+        const ks = Array.isArray(keys) ? keys : [keys];
+        return this.createUpdateTransaction(
+            'removeRevocationKeys',
+            serializeCIS4UpdateRevocationKeysParam,
+            metadata,
+            ks,
+            () => ks // JSON representation is just a list of hex encoded keys
+        );
+    }
+
+    /**
+     * Submit CIS4.removeRevocationKeys update transaction.
+     *
+     * @param {AccountSigner} signer - to be used for signing the transaction sent to the node.
+     * @param {ContractTransactionMetadata} metadata - transaction metadata
+     * @param {HexString | HexString[]} keys - a single or list of hex encoded public keys to be removed
+     *
+     * @returns {HexString} The hash of the submitted transaction
+     */
+    public removeRevocationKeys(
+        signer: AccountSigner,
+        metadata: ContractTransactionMetadata,
+        keys: HexString | HexString[]
+    ): Promise<HexString> {
+        const transaction = this.createRemoveRevocationKeys(metadata, keys);
         return this.sendUpdateTransaction(transaction, metadata, signer);
     }
 }

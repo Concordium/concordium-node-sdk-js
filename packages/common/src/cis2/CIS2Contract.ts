@@ -21,6 +21,7 @@ import { getContractName } from '../contractHelpers';
 import { CISContract, ContractDryRun, getInvoker } from '../GenericContract';
 import { makeDynamicFunction } from '../util';
 
+type Views = 'balanceOf' | 'operatorOf' | 'tokenMetadata';
 type Updates = 'transfer' | 'updateOperator';
 
 const ensureMatchesInput =
@@ -119,10 +120,7 @@ class CIS2DryRun extends ContractDryRun<Updates> {
 /**
  * Contains methods for performing operations on CIS-2 smart contracts.
  */
-export class CIS2Contract extends CISContract<
-    'transfer' | 'updateOperator',
-    CIS2DryRun
-> {
+export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
     public schema: Record<'transfer' | 'updateOperator', string> = {
         /** Base64 encoded schema for CIS-2.transfer parameter */
         transfer:

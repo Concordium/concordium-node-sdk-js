@@ -127,7 +127,7 @@ export class ContractDryRun<E extends string = string> {
 
 type Schema<E extends string = string> = Base64String | Record<E, Base64String>;
 
-export class Contract<E extends string = string> {
+export class Contract<E extends string = string, V extends string = string> {
     protected dryRunInstance: ContractDryRun<E>;
 
     constructor(
@@ -318,7 +318,7 @@ export class Contract<E extends string = string> {
      * @returns {HexString} The transaction hash of the update transaction
      */
     public async invokeView<T, R>(
-        entrypoint: string,
+        entrypoint: V,
         serializeInput: (input: T) => Buffer,
         deserializeResponse: (value: HexString) => R,
         input: T,
@@ -357,8 +357,9 @@ export class Contract<E extends string = string> {
 
 export abstract class CISContract<
     E extends string,
+    V extends string,
     D extends ContractDryRun<E>
-> extends Contract<E> {
+> extends Contract<E, V> {
     protected abstract override schema: Record<E, Base64String>;
     protected override dryRunInstance: D;
 

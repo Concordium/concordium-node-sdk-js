@@ -24,6 +24,13 @@ import { getSignature } from '../signHelpers';
 export namespace CIS4 {
     /** Structure holding an url pointing to some metadata, including an optional checksum */
     export type MetadataUrl = CIS2.MetadataUrl;
+    export type SchemaRef = MetadataUrl;
+
+    export type MetadataResponse = {
+        issuerMetadata: MetadataUrl;
+        credentialType: string;
+        credentialSchema: SchemaRef;
+    };
 
     /** Holds info pertaining to a credential. */
     export type CredentialInfo = {
@@ -44,7 +51,7 @@ export namespace CIS4 {
         /** Info for the credential entry */
         credentialInfo: CredentialInfo;
         /** A schema URL or DID address pointing to the JSON schema for a verifiable credential */
-        schemaRef: MetadataUrl;
+        schemaRef: SchemaRef;
         /**
          * The nonce is used to avoid replay attacks when checking the holder's
          * signature on a revocation message. This is the nonce that should be used
@@ -452,4 +459,20 @@ export function serializeCIS4UpdateRevocationKeysParam(
     const ks = keys.map((k) => Buffer.from(k, 'hex'));
     const len = encodeWord16(ks.length, true);
     return Buffer.concat([len, ...ks]);
+}
+
+function deserializeCredentialType(cursor: Cursor): string {
+    const len = cursor.read(1).readUInt8(0);
+    return cursor.read(len).toString('utf8');
+}
+
+export function deserializeCIS4MetadataResponse(
+    value: HexString
+): CIS4.MetadataResponse {
+    const cursor = Cursor.fromHex(value);
+    const issuerMetadata = deserializeCIS2MetadataUrl(cursor);
+    const credentialType = deserializeCredentialType(cursor);
+    const credentialSchema = deserializeCIS2MetadataUrl(cursor);
+
+    return { issuerMetadata, credentialType, credentialSchema };
 }

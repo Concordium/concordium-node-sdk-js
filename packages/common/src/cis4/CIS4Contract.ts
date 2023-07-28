@@ -23,6 +23,7 @@ import {
     CIS4,
     deserializeCIS4CredentialEntry,
     deserializeCIS4CredentialStatus,
+    deserializeCIS4MetadataResponse,
     deserializeCIS4RevocationKeys,
     formatCIS4RegisterCredential,
     formatCIS4RevokeCredentialHolder,
@@ -324,34 +325,36 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
     }
 
     /**
-     * Get the {@link CIS4.MetadataUrl} URL for the issuer metadata.
+     * Get the {@link CIS4.MetadataUrl} URL for the registry metadata.
      *
      * @param {HexString} [blockHash] - block to perform query at.
      *
      * @returns {CIS4.MetadataUrl} a metadata URL.
      */
-    public issuerMetadata(blockHash?: HexString): Promise<CIS4.MetadataUrl> {
+    public registryMetadata(
+        blockHash?: HexString
+    ): Promise<CIS4.MetadataResponse> {
         return this.invokeView(
-            'issuer',
+            'registryMetadata',
             () => Buffer.alloc(0),
-            deserializeCIS2MetadataUrl,
+            deserializeCIS4MetadataResponse,
             undefined,
             blockHash
         );
     }
 
     /**
-     * Get the {@link AccountAddress} account address of the issuer.
+     * Get the {@link AccountAddress} public key of the issuer.
      *
      * @param {HexString} [blockHash] - block to perform query at.
      *
-     * @returns {AccountAddress} an account address.
+     * @returns {HexString} a hex encoded public key.
      */
-    public issuer(blockHash?: HexString): Promise<AccountAddress> {
+    public issuer(blockHash?: HexString): Promise<HexString> {
         return this.invokeView(
             'issuer',
             () => Buffer.alloc(0),
-            (value) => AccountAddress.fromBytes(Buffer.from(value, 'hex')),
+            (value) => value,
             undefined,
             blockHash
         );

@@ -6,6 +6,7 @@ import {
     deserializeCIS2MetadataUrl,
     serializeCIS2MetadataUrl,
     serializeContractAddress,
+    serializeReceiveHookName,
 } from '../cis2/util';
 import { Cursor, makeDeserializeListResponse } from '../deserializationHelpers';
 import {
@@ -13,6 +14,7 @@ import {
     encodeWord64,
     makeSerializeOptional,
     packBufferWithWord16Length,
+    packBufferWithWord8Length,
 } from '../serializationHelpers';
 import { OptionJson, toOptionJson } from '../schemaTypes';
 import { getSignature } from '../signHelpers';
@@ -74,7 +76,7 @@ export namespace CIS4 {
 
     export type SigningData = {
         contractAddress: ContractAddress;
-        entryPoint: string; // TODO: this seems to be missing or not taken into account in the implementation in the rust SDK?
+        entryPoint: string;
         nonce: bigint;
         timestamp: Date;
     };
@@ -199,12 +201,12 @@ export class Web3IdSigner {
 export const REVOKE_DOMAIN = Buffer.from('WEB3ID:REVOKE', 'utf8');
 
 function serializeDate(date: Date): Buffer {
-    return Buffer.from(date.toISOString(), 'utf8');
+    return encodeWord64(BigInt(date.getTime()), true);
 }
 
 function deserializeDate(cursor: Cursor): Date {
-    const value = cursor.read(20).toString('utf8'); // TODO: Assuming a fixed length of 20 is used?
-    return new Date(value);
+    const value = cursor.read(8).readBigInt64LE(0);
+    return new Date(Number(value));
 }
 
 function deserializeEd25519PublicKey(cursor: Cursor): HexString {
@@ -234,7 +236,8 @@ export function serializeCIS4RegisterCredentialParam(
 ): Buffer {
     const credInfo = serializeCIS4CredentialInfo(param.credInfo);
     const additionalData = packBufferWithWord16Length(
-        Buffer.from(param.additionalData, 'hex')
+        Buffer.from(param.additionalData, 'hex'),
+        true
     );
     return Buffer.concat([credInfo, additionalData]);
 }
@@ -275,7 +278,7 @@ export function deserializeCIS4CredentialStatus(
     value: HexString
 ): CIS4.CredentialStatus {
     const b = Buffer.from(value, 'hex');
-    return b.readUInt8(0); // TODO: Assumes the status is represented as a uint8?
+    return b.readUInt8(0);
 }
 
 function deserializeCIS4RevocationKey(
@@ -316,13 +319,16 @@ export function formatCIS4RegisterCredential({
     };
 }
 
+function serializeReason(reason: string) {
+    const b = Buffer.from(reason);
+    return packBufferWithWord8Length(b);
+}
+
 export function serializeCIS4RevokeCredentialIssuerParam(
     param: CIS4.RevokeCredentialIssuerParam
 ): Buffer {
     const credHolderPubKey = Buffer.from(param.credHolderPubKey, 'hex');
-    const reason = makeSerializeOptional<string>((r) => Buffer.from(r, 'utf8'))(
-        param.reason
-    );
+    const reason = makeSerializeOptional<string>(serializeReason)(param.reason);
 
     return Buffer.concat([credHolderPubKey, reason]);
 }
@@ -347,19 +353,15 @@ export function serializeCIS4RevocationDataHolder(
     const contractAddress = serializeContractAddress(
         data.signingData.contractAddress
     );
-    // const entrypoint = Buffer.from(data.signingData.entryPoint, 'ascii'); // TODO: this doesn't seem to be used in the version in the rust SDK?
+    const entrypoint = serializeReceiveHookName(data.signingData.entryPoint);
     const nonce = encodeWord64(data.signingData.nonce);
-    const timestamp = encodeWord64(
-        BigInt(data.signingData.timestamp.getTime())
-    );
-    const reason = makeSerializeOptional<string>((r) => Buffer.from(r, 'utf8'))(
-        data.reason
-    );
+    const timestamp = serializeDate(data.signingData.timestamp);
+    const reason = makeSerializeOptional<string>(serializeReason)(data.reason);
 
     return Buffer.concat([
         credentialPubKey,
         contractAddress,
-        /* entrypoint, */
+        entrypoint,
         nonce,
         timestamp,
         reason,
@@ -398,20 +400,18 @@ export function serializeCIS4RevocationDataOther(
     const contractAddress = serializeContractAddress(
         data.signingData.contractAddress
     );
-    // const entrypoint = Buffer.from(data.signingData.entryPoint, 'ascii'); // TODO: this doesn't seem to be used in the version in the rust SDK?
+    const entrypoint = serializeReceiveHookName(data.signingData.entryPoint);
     const nonce = encodeWord64(data.signingData.nonce);
     const timestamp = encodeWord64(
         BigInt(data.signingData.timestamp.getTime())
     );
     const revocationPubKey = Buffer.from(data.revocationPubKey, 'hex');
-    const reason = makeSerializeOptional<string>((r) => Buffer.from(r, 'utf8'))(
-        data.reason
-    );
+    const reason = makeSerializeOptional<string>(serializeReason)(data.reason);
 
     return Buffer.concat([
         credentialPubKey,
         contractAddress,
-        /* entrypoint, */
+        entrypoint,
         nonce,
         timestamp,
         revocationPubKey,

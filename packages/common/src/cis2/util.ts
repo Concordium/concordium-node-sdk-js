@@ -239,7 +239,7 @@ function serializeAddress(address: CIS2.Address): Buffer {
     return Buffer.concat([type, serializedAddress]);
 }
 
-function serializeReceiveHookName(hook: string): Buffer {
+export function serializeReceiveHookName(hook: string): Buffer {
     const serialized = Buffer.from(hook, 'ascii');
 
     if (serialized.length > TOKEN_RECEIVE_HOOK_MAX_LENGTH) {

@@ -208,6 +208,18 @@ export class Web3IdSigner {
  */
 export const REVOKE_DOMAIN = Buffer.from('WEB3ID:REVOKE', 'utf8');
 
+const deserializeOptional = <T>(
+    cursor: Cursor,
+    fun: (c: Cursor) => T
+): T | undefined => {
+    const hasValue = cursor.read(1).readUInt8(0);
+    if (!hasValue) {
+        return undefined;
+    }
+
+    return fun(cursor);
+};
+
 function serializeDate(date: Date): Buffer {
     return encodeWord64(BigInt(date.getTime()), true);
 }
@@ -254,7 +266,7 @@ function deserializeCIS4CredentialInfo(cursor: Cursor): CIS4.CredentialInfo {
     const holderPubKey = deserializeEd25519PublicKey(cursor);
     const holderRevocable = cursor.read(1).readUInt8(0) === 1;
     const validFrom = deserializeDate(cursor);
-    const validUntil = deserializeDate(cursor);
+    const validUntil = deserializeOptional(cursor, deserializeDate);
     const metadataUrl = deserializeCIS2MetadataUrl(cursor);
 
     return {

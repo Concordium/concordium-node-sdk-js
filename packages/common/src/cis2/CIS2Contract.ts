@@ -136,6 +136,7 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
     ): CIS2DryRun {
         return new CIS2DryRun(grpcClient, contractAddress, contractName);
     }
+
     /**
      * Creates a new `CIS2Contract` instance by querying the node for the necessary information through the supplied `grpcClient`.
      *
@@ -149,18 +150,12 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
         grpcClient: ConcordiumGRPCClient,
         contractAddress: ContractAddress
     ): Promise<CIS2Contract> {
-        const instanceInfo = await grpcClient.getInstanceInfo(contractAddress);
-
-        if (instanceInfo === undefined) {
-            throw new Error(
-                `Could not get contract instance info for contract at address ${stringify(
-                    contractAddress
-                )}`
-            );
-        }
+        const contractName = await super.getContractName(
+            grpcClient,
+            contractAddress
+        );
 
         const result = await cis0Supports(grpcClient, contractAddress, 'CIS-2');
-
         if (result?.type !== CIS0.SupportType.Support) {
             throw new Error(
                 `The CIS-2 standard is not supported by the contract at address ${stringify(
@@ -169,7 +164,6 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
             );
         }
 
-        const contractName = getContractName(instanceInfo);
         return new CIS2Contract(grpcClient, contractAddress, contractName);
     }
 

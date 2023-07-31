@@ -1,14 +1,12 @@
 import { Buffer } from 'buffer/';
 
 import {
-    AccountAddress,
     AccountSigner,
     Base58String,
     ConcordiumGRPCClient,
     HexString,
     InvokeContractResult,
 } from '..';
-import { deserializeCIS2MetadataUrl } from '../cis2/util';
 import {
     ContractTransactionMetadata,
     ContractUpdateTransactionWithSchema,
@@ -254,6 +252,26 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         registerRevocationKeys: '',
         removeRevocationKeys: '',
     };
+
+    /**
+     * Creates a new `CIS4Contract` instance by querying the node for the necessary information through the supplied `grpcClient`.
+     *
+     * @param {ConcordiumGRPCClient} grpcClient - The client used for contract invocations and updates.
+     * @param {ContractAddress} contractAddress - Address of the contract instance.
+     *
+     * @throws If `InstanceInfo` could not be received for the contract,
+     * or if the contract name could not be parsed from the information received from the node.
+     */
+    public static async create(
+        grpcClient: ConcordiumGRPCClient,
+        contractAddress: ContractAddress
+    ): Promise<CIS4Contract> {
+        const contractName = await super.getContractName(
+            grpcClient,
+            contractAddress
+        );
+        return new CIS4Contract(grpcClient, contractAddress, contractName);
+    }
 
     protected makeDryRunInstance(
         grpcClient: ConcordiumGRPCClient,

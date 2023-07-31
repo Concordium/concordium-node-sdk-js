@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer/';
 import { stringify } from 'json-bigint';
 
-import { checkParameterLength } from './contractHelpers';
+import { checkParameterLength, getContractName } from './contractHelpers';
 import { ConcordiumGRPCClient } from './GRPCClient';
 import { AccountSigner, signTransaction } from './signHelpers';
 import {
@@ -10,6 +10,7 @@ import {
     Base64String,
     ContractAddress,
     HexString,
+    InstanceInfo,
     InvokeContractResult,
     MakeOptional,
     SmartContractTypeValues,
@@ -17,6 +18,7 @@ import {
 } from './types';
 import { AccountAddress } from './types/accountAddress';
 import { CcdAmount } from './types/ccdAmount';
+import { ModuleReference } from './types/moduleReference';
 import { TransactionExpiry } from './types/transactionExpiry';
 
 /**
@@ -127,7 +129,7 @@ export class ContractDryRun<E extends string = string> {
 
 type Schema<E extends string = string> = Base64String | Record<E, Base64String>;
 
-export class Contract<E extends string = string, V extends string = string> {
+class ContractBase<E extends string = string, V extends string = string> {
     protected dryRunInstance: ContractDryRun<E>;
 
     constructor(
@@ -141,6 +143,34 @@ export class Contract<E extends string = string, V extends string = string> {
             contractAddress,
             contractName
         );
+    }
+
+    protected static async getInstanceInfo(
+        grpcClient: ConcordiumGRPCClient,
+        contractAddress: ContractAddress
+    ): Promise<InstanceInfo> {
+        const instanceInfo = await grpcClient.getInstanceInfo(contractAddress);
+
+        if (instanceInfo === undefined) {
+            throw new Error(
+                `Could not get contract instance info for contract at address ${stringify(
+                    contractAddress
+                )}`
+            );
+        }
+
+        return instanceInfo;
+    }
+
+    protected static async getContractName(
+        grpcClient: ConcordiumGRPCClient,
+        contractAddress: ContractAddress
+    ): Promise<string> {
+        const instanceInfo = await this.getInstanceInfo(
+            grpcClient,
+            contractAddress
+        );
+        return getContractName(instanceInfo);
     }
 
     /**
@@ -355,11 +385,61 @@ export class Contract<E extends string = string, V extends string = string> {
     }
 }
 
+export class Contract<
+    E extends string = string,
+    V extends string = string
+> extends ContractBase<E, V> {
+    /**
+     * Creates a new `Contract` instance by querying the node for the necessary information through the supplied `grpcClient`.
+     *
+     * @param {ConcordiumGRPCClient} grpcClient - The client used for contract invocations and updates.
+     * @param {ContractAddress} contractAddress - Address of the contract instance.
+     * @param {Schema} [schema] - The schema of the contract, either defined as parameter schemas per entrypoint `E` or as a single module schema.
+     * If no schema is defined, an attempt to get an embedded schema from the contract is made.
+     *
+     * @throws If `InstanceInfo` could not be received for the contract,
+     * or if the contract name could not be parsed from the information received from the node.
+     */
+    public static async create<
+        E extends string = string,
+        V extends string = string
+    >(
+        grpcClient: ConcordiumGRPCClient,
+        contractAddress: ContractAddress,
+        schema?: Schema<E>
+    ): Promise<Contract<E, V>> {
+        const instanceInfo = await super.getInstanceInfo(
+            grpcClient,
+            contractAddress
+        );
+        const contractName = getContractName(instanceInfo);
+
+        let mSchema: string | undefined;
+        if (!schema) {
+            const raw = await grpcClient.getEmbeddedSchema(
+                new ModuleReference(instanceInfo.sourceModule.moduleRef)
+            );
+            const encoded = raw.toString('base64');
+
+            if (encoded) {
+                mSchema = encoded;
+            }
+        }
+
+        return new Contract(
+            grpcClient,
+            contractAddress,
+            contractName,
+            schema ?? mSchema
+        );
+    }
+}
+
 export abstract class CISContract<
     E extends string,
     V extends string,
     D extends ContractDryRun<E>
-> extends Contract<E, V> {
+> extends ContractBase<E, V> {
     protected abstract override schema: Record<E, Base64String>;
     protected override dryRunInstance: D;
 

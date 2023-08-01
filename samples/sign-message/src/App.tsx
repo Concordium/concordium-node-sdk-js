@@ -82,7 +82,7 @@ function Main(props: WalletConnectionProps) {
                 .asyncAndThen((msg) => {
                     setError(undefined);
                     setIsWaiting(true);
-                    return ResultAsync.fromPromise(connection.signMessage(account, msg), e => e);
+                    return ResultAsync.fromPromise(connection.signMessage(account, msg), (e) => e);
                 })
                 .match(setSignature, setError)
                 .finally(() => setIsWaiting(false));

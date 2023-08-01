@@ -417,7 +417,7 @@ export class Contract<
         let mSchema: string | undefined;
         if (!schema) {
             const raw = await grpcClient.getEmbeddedSchema(
-                new ModuleReference(instanceInfo.sourceModule.moduleRef)
+                instanceInfo.sourceModule
             );
             const encoded = raw.toString('base64');
 

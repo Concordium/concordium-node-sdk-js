@@ -244,13 +244,18 @@ class CIS4DryRun extends ContractDryRun<Updates> {
 
 export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
     public schema: Record<Updates, string> = {
-        // FIXME: add schemas
-        registerCredential: '',
-        revokeCredentialHolder: '',
-        revokeCredentialIssuer: '',
-        revokeCredentialOther: '',
-        registerRevocationKeys: '',
-        removeRevocationKeys: '',
+        registerCredential:
+            'FAACAAAADwAAAGNyZWRlbnRpYWxfaW5mbxQABQAAAAkAAABob2xkZXJfaWQeIAAAABAAAABob2xkZXJfcmV2b2NhYmxlAQoAAAB2YWxpZF9mcm9tDQsAAAB2YWxpZF91bnRpbBUCAAAABAAAAE5vbmUCBAAAAFNvbWUBAQAAAA0MAAAAbWV0YWRhdGFfdXJsFAACAAAAAwAAAHVybBYBBAAAAGhhc2gVAgAAAAQAAABOb25lAgQAAABTb21lAQEAAAAeIAAAAA4AAABhdXhpbGlhcnlfZGF0YRABAg',
+        revokeCredentialHolder:
+            'FAACAAAACQAAAHNpZ25hdHVyZR5AAAAABAAAAGRhdGEUAAMAAAANAAAAY3JlZGVudGlhbF9pZB4gAAAADAAAAHNpZ25pbmdfZGF0YRQABAAAABAAAABjb250cmFjdF9hZGRyZXNzDAsAAABlbnRyeV9wb2ludBYBBQAAAG5vbmNlBQkAAAB0aW1lc3RhbXANBgAAAHJlYXNvbhUCAAAABAAAAE5vbmUCBAAAAFNvbWUBAQAAABQAAQAAAAYAAAByZWFzb24WAA',
+        revokeCredentialIssuer:
+            'FAADAAAADQAAAGNyZWRlbnRpYWxfaWQeIAAAAAYAAAByZWFzb24VAgAAAAQAAABOb25lAgQAAABTb21lAQEAAAAUAAEAAAAGAAAAcmVhc29uFgAOAAAAYXV4aWxpYXJ5X2RhdGEQAQI',
+        revokeCredentialOther:
+            'FAACAAAACQAAAHNpZ25hdHVyZR5AAAAABAAAAGRhdGEUAAQAAAANAAAAY3JlZGVudGlhbF9pZB4gAAAADAAAAHNpZ25pbmdfZGF0YRQABAAAABAAAABjb250cmFjdF9hZGRyZXNzDAsAAABlbnRyeV9wb2ludBYBBQAAAG5vbmNlBQkAAAB0aW1lc3RhbXANDgAAAHJldm9jYXRpb25fa2V5HiAAAAAGAAAAcmVhc29uFQIAAAAEAAAATm9uZQIEAAAAU29tZQEBAAAAFAABAAAABgAAAHJlYXNvbhYA',
+        registerRevocationKeys:
+            'FAACAAAABAAAAGtleXMQAR4gAAAADgAAAGF1eGlsaWFyeV9kYXRhEAEC',
+        removeRevocationKeys:
+            'FAACAAAABAAAAGtleXMQAR4gAAAADgAAAGF1eGlsaWFyeV9kYXRhEAEC',
     };
 
     /**

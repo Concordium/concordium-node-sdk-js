@@ -127,7 +127,6 @@ export namespace CIS4 {
                 hash: OptionJson<HexString>;
             };
         };
-        /** Additional data to include, hex encoded */
         auxiliary_data: number[];
     };
 
@@ -135,7 +134,6 @@ export namespace CIS4 {
     export type RevokeCredentialIssuerParamJson = {
         cred_holder_id: HexString;
         reason: OptionJson<string>;
-        /** Additional data to include, hex encoded */
         auxiliary_data: number[];
     };
 
@@ -174,6 +172,17 @@ export namespace CIS4 {
             revocation_key: HexString;
             reason: OptionJson<string>;
         };
+    };
+
+    export type UpdateRevocationKeysParam = {
+        keys: HexString[];
+        additionalData: HexString;
+    };
+
+    /** schema serializable JSON representation of parameter for the "revokeCredentialIssuer" entrypoint */
+    export type UpdateRevocationKeysParamJson = {
+        keys: HexString[];
+        auxiliary_data: number[];
     };
 }
 
@@ -254,14 +263,15 @@ function serializeCIS4CredentialInfo(credInfo: CIS4.CredentialInfo): Buffer {
     ]);
 }
 
+function serializeAdditionalData(data: HexString): Buffer {
+    return packBufferWithWord16Length(Buffer.from(data, 'hex'), true);
+}
+
 export function serializeCIS4RegisterCredentialParam(
     param: CIS4.RegisterCredentialParam
 ): Buffer {
     const credInfo = serializeCIS4CredentialInfo(param.credInfo);
-    const additionalData = packBufferWithWord16Length(
-        Buffer.from(param.additionalData, 'hex'),
-        true
-    );
+    const additionalData = serializeAdditionalData(param.additionalData);
     return Buffer.concat([credInfo, additionalData]);
 }
 
@@ -320,6 +330,10 @@ export const deserializeCIS4RevocationKeys = makeDeserializeListResponse(
     deserializeCIS4RevocationKey
 );
 
+function formatAdditionalData(data: HexString): number[] {
+    return Buffer.from(data, 'hex').toJSON().data;
+}
+
 /**
  * Format {@link CIS4.RegisterCredentialParam} as JSON compatible with serialization wtih corresponding schema.
  */
@@ -338,7 +352,7 @@ export function formatCIS4RegisterCredential({
                 hash: toOptionJson(credInfo.metadataUrl.hash),
             },
         },
-        auxiliary_data: Buffer.from(additionalData, 'hex').toJSON().data,
+        auxiliary_data: formatAdditionalData(additionalData),
     };
 }
 
@@ -352,10 +366,7 @@ export function serializeCIS4RevokeCredentialIssuerParam(
 ): Buffer {
     const credHolderPubKey = Buffer.from(param.credHolderPubKey, 'hex');
     const reason = makeSerializeOptional<string>(serializeReason)(param.reason);
-    const additionalData = packBufferWithWord16Length(
-        Buffer.from(param.additionalData, 'hex'),
-        true
-    );
+    const additionalData = serializeAdditionalData(param.additionalData);
 
     return Buffer.concat([credHolderPubKey, reason, additionalData]);
 }
@@ -371,7 +382,7 @@ export function formatCIS4RevokeCredentialIssuer({
     return {
         cred_holder_id: credHolderPubKey,
         reason: toOptionJson(reason),
-        auxiliary_data: Buffer.from(additionalData, 'hex').toJSON().data,
+        auxiliary_data: formatAdditionalData(additionalData),
     };
 }
 
@@ -475,16 +486,25 @@ export function formatCIS4RevokeCredentialOther({
 }
 
 export function serializeCIS4UpdateRevocationKeysParam(
-    keys: HexString[]
+    param: CIS4.UpdateRevocationKeysParam
 ): Buffer {
-    const ks = keys.map((k) => Buffer.from(k, 'hex'));
-    const len = encodeWord16(ks.length, true);
-    return Buffer.concat([len, ...ks]);
+    const ks = param.keys.map((k) => Buffer.from(k, 'hex'));
+    const numKeys = encodeWord16(ks.length, true);
+    const additionalData = serializeAdditionalData(param.additionalData);
+
+    return Buffer.concat([numKeys, ...ks, additionalData]);
 }
 
 function deserializeCredentialType(cursor: Cursor): string {
     const len = cursor.read(1).readUInt8(0);
     return cursor.read(len).toString('utf8');
+}
+
+export function formatCIS4UpdateRevocationKeys({
+    keys,
+    additionalData,
+}: CIS4.UpdateRevocationKeysParam): CIS4.UpdateRevocationKeysParamJson {
+    return { keys, auxiliary_data: formatAdditionalData(additionalData) };
 }
 
 export function deserializeCIS4MetadataResponse(

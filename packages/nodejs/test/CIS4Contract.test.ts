@@ -6,12 +6,30 @@ import {
     serializeTypeValue,
 } from '@concordium/common-sdk';
 import { getNodeClientV2 as getNodeClient } from './testHelpers';
-import * as ed25519 from '@noble/ed25519';
+// import * as ed25519 from '@noble/ed25519';
 
 const TEST_ACCOUNT = '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd';
+
+// (async () => {
+//     const prv = ed25519.utils.randomPrivateKey();
+//     const pub = await ed25519.getPublicKey(prv);
+//     console.log(
+//         Buffer.from(prv).toString('hex'),
+//         Buffer.from(pub).toString('hex')
+//     );
+// })();
+
 const TEST_HOLDER_KEYPAIR = {
-    priv: '3a02247f30b3448438e648190bd08c86ab54743f90593ecd91c51e8e8464f6a5',
+    prv: '3a02247f30b3448438e648190bd08c86ab54743f90593ecd91c51e8e8464f6a5',
     pub: '6da02aced802eb2b5fdc8f180c6bf4adac422fd78ddcfbe177035a5b96157780',
+};
+const NEW_REVOKER_1_KEYPAIR = {
+    prv: '43ec8c08efb05eed2dce1dd3ee8d6974b83e077e03ca8abbcfdccd6d923210cb',
+    pub: 'a5bb0b16d22be9b8510c75ef80f808d65897095e6e5dd9335b01c0632c143c6a',
+};
+const NEW_REVOKER_2_KEYPAIR = {
+    prv: 'cbfa761a29b8d11c5a0b421f402dfc498703d40762007876550beae7727c68c2',
+    pub: 'b9372d7afffa99f7223c622aac78b5cb199c94f3b961feabd6f776d2d0a10b1c',
 };
 const WEB3ID_ADDRESS_CREDS: ContractAddress = {
     index: 5565n,
@@ -127,7 +145,7 @@ describe('dryRun.registerCredential', () => {
             TEST_BLOCK
         );
 
-        expect(res.tag === 'success');
+        expect(res.tag).toBe('success');
     });
 
     test('Manual serialization matches schema serialization', async () => {
@@ -147,6 +165,75 @@ describe('dryRun.registerCredential', () => {
             credential,
             auxData
         );
+
+        const schemaSerial = serializeTypeValue(
+            tx.parameter.json,
+            Buffer.from(tx.schema.value, 'base64'),
+            true
+        );
+        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+    });
+});
+
+describe('dryRun.registerRevocationKeys', () => {
+    test('Invokes successfully', async () => {
+        const cis4 = await getCIS4(WEB3ID_ADDRESS_REVOKE);
+        let res = await cis4.dryRun.registerRevocationKeys(
+            TEST_ACCOUNT,
+            NEW_REVOKER_1_KEYPAIR.pub,
+            TEST_BLOCK
+        );
+        expect(res.tag).toBe('success');
+
+        res = await cis4.dryRun.registerRevocationKeys(
+            TEST_ACCOUNT,
+            [NEW_REVOKER_1_KEYPAIR.pub, NEW_REVOKER_2_KEYPAIR.pub],
+            TEST_BLOCK
+        );
+        expect(res.tag).toBe('success');
+    });
+
+    test('Manual serialization matches schema serialization', async () => {
+        const cis4 = await getCIS4(WEB3ID_ADDRESS_REVOKE);
+        const tx = cis4.createRegisterRevocationKeys({ energy: 100000n }, [
+            NEW_REVOKER_1_KEYPAIR.pub,
+            NEW_REVOKER_2_KEYPAIR.pub,
+        ]);
+
+        const schemaSerial = serializeTypeValue(
+            tx.parameter.json,
+            Buffer.from(tx.schema.value, 'base64'),
+            true
+        );
+        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+    });
+});
+
+describe('dryRun.removeRevocationKeys', () => {
+    test('Invokes successfully', async () => {
+        const cis4 = await getCIS4(WEB3ID_ADDRESS_REVOKE);
+        let res = await cis4.dryRun.removeRevocationKeys(
+            TEST_ACCOUNT,
+            NEW_REVOKER_1_KEYPAIR.pub,
+            TEST_BLOCK
+        );
+        console.log(res);
+        expect(res.tag).toBe('success');
+
+        res = await cis4.dryRun.removeRevocationKeys(
+            TEST_ACCOUNT,
+            [NEW_REVOKER_1_KEYPAIR.pub, NEW_REVOKER_2_KEYPAIR.pub],
+            TEST_BLOCK
+        );
+        expect(res.tag).toBe('success');
+    });
+
+    test('Manual serialization matches schema serialization', async () => {
+        const cis4 = await getCIS4(WEB3ID_ADDRESS_REVOKE);
+        const tx = cis4.createRemoveRevocationKeys({ energy: 100000n }, [
+            NEW_REVOKER_1_KEYPAIR.pub,
+            NEW_REVOKER_2_KEYPAIR.pub,
+        ]);
 
         const schemaSerial = serializeTypeValue(
             tx.parameter.json,

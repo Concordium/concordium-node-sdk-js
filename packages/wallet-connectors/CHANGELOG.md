@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.1] - 2024-03-22
 
+### Added
+
+-   `WalletConnect`: `signMessage` now supports passing binary message including schema to the wallet.
+
 ### Fixed
 
 -   Fixed serialization of parameters in `requestVerifiablePresentation` and parsing of the result of the request.

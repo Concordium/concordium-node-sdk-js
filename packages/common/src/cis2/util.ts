@@ -391,7 +391,7 @@ export function serializeCIS2MetadataUrl({
     url,
     hash,
 }: CIS2.MetadataUrl): Buffer {
-    const bUrl = packBufferWithWord16Length(Buffer.from(url, 'utf8'));
+    const bUrl = packBufferWithWord16Length(Buffer.from(url, 'utf8'), true);
     const bHash = makeSerializeOptional<HexString>((h) =>
         Buffer.from(h, 'hex')
     )(hash);

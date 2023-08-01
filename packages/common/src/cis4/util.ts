@@ -117,17 +117,17 @@ export namespace CIS4 {
         credential_info: {
             holder_id: HexString;
             holder_revocable: boolean;
-            /** Time (as ms since unix epoch) the credential is valid from */
-            valid_from: number;
-            /** Time (as ms since unix epoch) the credential is valid until */
-            valid_until: OptionJson<number>;
+            /** Time (as ISO string) the credential is valid from */
+            valid_from: string;
+            /** (Optional) Time (as ISO string) the credential is valid until */
+            valid_until: OptionJson<string>;
             metadata_url: {
                 url: string;
                 hash: OptionJson<HexString>;
             };
         };
         /** Additional data to include, hex encoded */
-        auxiliary_data: HexString;
+        auxiliary_data: number[];
     };
 
     /** schema serializable JSON representation of parameter for the "revokeCredentialIssuer" entrypoint */
@@ -328,14 +328,14 @@ export function formatCIS4RegisterCredential({
         credential_info: {
             holder_id: credInfo.holderPubKey,
             holder_revocable: credInfo.holderRevocable,
-            valid_from: credInfo.validFrom.getTime(),
-            valid_until: toOptionJson(credInfo.validUntil?.getTime()),
+            valid_from: credInfo.validFrom.toISOString(),
+            valid_until: toOptionJson(credInfo.validUntil?.toISOString()),
             metadata_url: {
                 url: credInfo.metadataUrl.url,
                 hash: toOptionJson(credInfo.metadataUrl.hash),
             },
         },
-        auxiliary_data: additionalData,
+        auxiliary_data: Buffer.from(additionalData, 'hex').toJSON().data,
     };
 }
 

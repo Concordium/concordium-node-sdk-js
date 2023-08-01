@@ -23,6 +23,10 @@ const TEST_HOLDER_KEYPAIR = {
     prv: '3a02247f30b3448438e648190bd08c86ab54743f90593ecd91c51e8e8464f6a5',
     pub: '6da02aced802eb2b5fdc8f180c6bf4adac422fd78ddcfbe177035a5b96157780',
 };
+const REVOKER_KEYPAIR = {
+    prv: 'c678454d82655544bb12954620ce1b2d8d827347f1870a6ba7f43cabdee8361b',
+    pub: '8a2cb33d95335a51a3ce332b3ff3c9f9dd06b05c91b81f078211862e367ff59e',
+};
 const NEW_REVOKER_1_KEYPAIR = {
     prv: '43ec8c08efb05eed2dce1dd3ee8d6974b83e077e03ca8abbcfdccd6d923210cb',
     pub: 'a5bb0b16d22be9b8510c75ef80f808d65897095e6e5dd9335b01c0632c143c6a',
@@ -212,17 +216,9 @@ describe('dryRun.registerRevocationKeys', () => {
 describe('dryRun.removeRevocationKeys', () => {
     test('Invokes successfully', async () => {
         const cis4 = await getCIS4(WEB3ID_ADDRESS_REVOKE);
-        let res = await cis4.dryRun.removeRevocationKeys(
+        const res = await cis4.dryRun.removeRevocationKeys(
             TEST_ACCOUNT,
-            NEW_REVOKER_1_KEYPAIR.pub,
-            TEST_BLOCK
-        );
-        console.log(res);
-        expect(res.tag).toBe('success');
-
-        res = await cis4.dryRun.removeRevocationKeys(
-            TEST_ACCOUNT,
-            [NEW_REVOKER_1_KEYPAIR.pub, NEW_REVOKER_2_KEYPAIR.pub],
+            REVOKER_KEYPAIR.pub,
             TEST_BLOCK
         );
         expect(res.tag).toBe('success');

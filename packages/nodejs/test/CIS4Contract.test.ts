@@ -8,7 +8,9 @@ import {
 import { getNodeClientV2 as getNodeClient } from './testHelpers';
 // import * as ed25519 from '@noble/ed25519';
 
-const TEST_ACCOUNT = '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd';
+const ISSUER_ACCOUNT = '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd';
+const ISSUER_PUB_KEY =
+    '23e7b282e69f39f962fa587eb033ca201e09d59c9740f18d5666b390fea9d486';
 
 // (async () => {
 //     const prv = ed25519.utils.randomPrivateKey();
@@ -19,7 +21,11 @@ const TEST_ACCOUNT = '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd';
 //     );
 // })();
 
-const TEST_HOLDER_KEYPAIR = {
+const HOLDER_KEYPAIR = {
+    prv: 'ea7f032449ee98fa076369e14424d54aad28ec47b1a3f6e95c50d5b2fe63c38d',
+    pub: '67964cdcc3462f9dbf2e1b5aaaae402605432a9d577c3cbf7a9f2c4237c3a459',
+};
+const NEW_HOLDER_KEYPAIR = {
     prv: '3a02247f30b3448438e648190bd08c86ab54743f90593ecd91c51e8e8464f6a5',
     pub: '6da02aced802eb2b5fdc8f180c6bf4adac422fd78ddcfbe177035a5b96157780',
 };
@@ -35,43 +41,35 @@ const NEW_REVOKER_2_KEYPAIR = {
     prv: 'cbfa761a29b8d11c5a0b421f402dfc498703d40762007876550beae7727c68c2',
     pub: 'b9372d7afffa99f7223c622aac78b5cb199c94f3b961feabd6f776d2d0a10b1c',
 };
-const WEB3ID_ADDRESS_CREDS: ContractAddress = {
-    index: 5565n,
-    subindex: 0n,
-};
 const WEB3ID_ADDRESS_REVOKE: ContractAddress = {
     index: 5587n,
     subindex: 0n,
 };
 
 const TEST_BLOCK =
-    '1f506da8cc3661c37efae4d51c3b3e56deca2fa8580388c2d2b77b47fd1a853f';
+    'ae1abd765e17f9c450ff527097698ac7af9b630775ca8e79bf85579b65216b17';
 
-const getCIS4 = (add: ContractAddress) =>
-    CIS4Contract.create(getNodeClient(), add);
+const getCIS4 = () =>
+    CIS4Contract.create(getNodeClient(), WEB3ID_ADDRESS_REVOKE);
 
 describe('credentialEntry', () => {
     test('Deserializes correctly', async () => {
-        const cis4 = await getCIS4(WEB3ID_ADDRESS_CREDS);
+        const cis4 = await getCIS4();
         const credentialEntry = await cis4.credentialEntry(
-            '32bc71e7930dd4c00fabdf5f692d22375f4061b75a47504bdc35b5615f68edaa',
+            HOLDER_KEYPAIR.pub,
             TEST_BLOCK
         );
 
         const expected: CIS4.CredentialEntry = {
             credentialInfo: {
                 holderPubKey:
-                    '32bc71e7930dd4c00fabdf5f692d22375f4061b75a47504bdc35b5615f68edaa',
-                holderRevocable: true,
-                validFrom: new Date('2023-07-31T07:54:45.454Z'),
-                validUntil: undefined,
-                metadataUrl: {
-                    url: 'http://127.0.0.1/json-schemas/credential-metadata.json',
-                },
+                    '67964cdcc3462f9dbf2e1b5aaaae402605432a9d577c3cbf7a9f2c4237c3a459',
+                holderRevocable: false,
+                validFrom: new Date('2023-08-01T12:58:50.239Z'),
+                validUntil: new Date('2025-08-01T12:58:50.239Z'),
+                metadataUrl: { url: '' },
             },
-            schemaRef: {
-                url: 'http://127.0.0.1/json-schemas/JsonSchema2023-some.json',
-            },
+            schemaRef: { url: 'http://foo-schema-url.com' },
             revocationNonce: 0n,
         };
         expect(credentialEntry).toEqual(expected);
@@ -80,9 +78,9 @@ describe('credentialEntry', () => {
 
 describe('credentialStatus', () => {
     test('Deserializes correctly', async () => {
-        const cis4 = await getCIS4(WEB3ID_ADDRESS_CREDS);
+        const cis4 = await getCIS4();
         const credentialStatus = await cis4.credentialStatus(
-            '32bc71e7930dd4c00fabdf5f692d22375f4061b75a47504bdc35b5615f68edaa',
+            HOLDER_KEYPAIR.pub,
             TEST_BLOCK
         );
 
@@ -93,18 +91,17 @@ describe('credentialStatus', () => {
 
 describe('issuer', () => {
     test('Deserializes correctly', async () => {
-        const cis4 = await getCIS4(WEB3ID_ADDRESS_CREDS);
+        const cis4 = await getCIS4();
         const issuer = await cis4.issuer(TEST_BLOCK);
 
-        const expected =
-            '359b04cc54be6ff044522f4712ff0e4c90c45c7ca132900f2436b35b0c9bc2d7';
+        const expected = ISSUER_PUB_KEY;
         expect(issuer).toEqual(expected);
     });
 });
 
 describe('registryMetadata', () => {
     test('Deserializes correctly', async () => {
-        const cis4 = await getCIS4(WEB3ID_ADDRESS_REVOKE);
+        const cis4 = await getCIS4();
         const metadata = await cis4.registryMetadata(TEST_BLOCK);
 
         const expected = {
@@ -122,19 +119,24 @@ describe('registryMetadata', () => {
 
 describe('revocationKeys', () => {
     test('Deserializes correctly', async () => {
-        const cis4 = await getCIS4(WEB3ID_ADDRESS_REVOKE);
+        const cis4 = await getCIS4();
         const rKeys = await cis4.revocationKeys(TEST_BLOCK);
 
-        const expected: CIS4.RevocationKeyWithNonce[] = []; // TODO: deploy version with revocation keys...
+        const expected: CIS4.RevocationKeyWithNonce[] = [
+            {
+                key: '00008a2cb33d95335a51a3ce332b3ff3c9f9dd06b05c91b81f078211862e367f',
+                nonce: 40693n,
+            },
+        ];
         expect(rKeys).toEqual(expected);
     });
 });
 
-describe('dryRun.registerCredential', () => {
+describe('registerCredential', () => {
     test('Invokes successfully', async () => {
-        const cis4 = await getCIS4(WEB3ID_ADDRESS_REVOKE);
+        const cis4 = await getCIS4();
         const credential: CIS4.CredentialInfo = {
-            holderPubKey: TEST_HOLDER_KEYPAIR.pub,
+            holderPubKey: NEW_HOLDER_KEYPAIR.pub,
             holderRevocable: true,
             validFrom: new Date('1/1/2023'),
             metadataUrl: {
@@ -143,7 +145,7 @@ describe('dryRun.registerCredential', () => {
         };
         const auxData = Buffer.from('Hello world!').toString('hex');
         const res = await cis4.dryRun.registerCredential(
-            TEST_ACCOUNT,
+            ISSUER_ACCOUNT,
             credential,
             auxData,
             TEST_BLOCK
@@ -153,9 +155,9 @@ describe('dryRun.registerCredential', () => {
     });
 
     test('Manual serialization matches schema serialization', async () => {
-        const cis4 = await getCIS4(WEB3ID_ADDRESS_REVOKE);
+        const cis4 = await getCIS4();
         const credential: CIS4.CredentialInfo = {
-            holderPubKey: TEST_HOLDER_KEYPAIR.pub,
+            holderPubKey: NEW_HOLDER_KEYPAIR.pub,
             holderRevocable: true,
             validFrom: new Date('1/1/2023'),
             metadataUrl: {
@@ -179,18 +181,18 @@ describe('dryRun.registerCredential', () => {
     });
 });
 
-describe('dryRun.registerRevocationKeys', () => {
+describe('registerRevocationKeys', () => {
     test('Invokes successfully', async () => {
-        const cis4 = await getCIS4(WEB3ID_ADDRESS_REVOKE);
+        const cis4 = await getCIS4();
         let res = await cis4.dryRun.registerRevocationKeys(
-            TEST_ACCOUNT,
+            ISSUER_ACCOUNT,
             NEW_REVOKER_1_KEYPAIR.pub,
             TEST_BLOCK
         );
         expect(res.tag).toBe('success');
 
         res = await cis4.dryRun.registerRevocationKeys(
-            TEST_ACCOUNT,
+            ISSUER_ACCOUNT,
             [NEW_REVOKER_1_KEYPAIR.pub, NEW_REVOKER_2_KEYPAIR.pub],
             TEST_BLOCK
         );
@@ -198,7 +200,7 @@ describe('dryRun.registerRevocationKeys', () => {
     });
 
     test('Manual serialization matches schema serialization', async () => {
-        const cis4 = await getCIS4(WEB3ID_ADDRESS_REVOKE);
+        const cis4 = await getCIS4();
         const tx = cis4.createRegisterRevocationKeys({ energy: 100000n }, [
             NEW_REVOKER_1_KEYPAIR.pub,
             NEW_REVOKER_2_KEYPAIR.pub,
@@ -213,11 +215,11 @@ describe('dryRun.registerRevocationKeys', () => {
     });
 });
 
-describe('dryRun.removeRevocationKeys', () => {
+describe('removeRevocationKeys', () => {
     test('Invokes successfully', async () => {
-        const cis4 = await getCIS4(WEB3ID_ADDRESS_REVOKE);
+        const cis4 = await getCIS4();
         const res = await cis4.dryRun.removeRevocationKeys(
-            TEST_ACCOUNT,
+            ISSUER_ACCOUNT,
             REVOKER_KEYPAIR.pub,
             TEST_BLOCK
         );
@@ -225,7 +227,7 @@ describe('dryRun.removeRevocationKeys', () => {
     });
 
     test('Manual serialization matches schema serialization', async () => {
-        const cis4 = await getCIS4(WEB3ID_ADDRESS_REVOKE);
+        const cis4 = await getCIS4();
         const tx = cis4.createRemoveRevocationKeys({ energy: 100000n }, [
             NEW_REVOKER_1_KEYPAIR.pub,
             NEW_REVOKER_2_KEYPAIR.pub,

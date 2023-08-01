@@ -1,11 +1,12 @@
 import fs from 'fs';
 import path from 'path';
 import meow from 'meow';
-import * as ed25519 from '@noble/ed25519';
 import { credentials } from '@grpc/grpc-js';
+import * as ed25519 from '@noble/ed25519';
 
 import {
     buildAccountSigner,
+    CIS4,
     CIS4Contract,
     createConcordiumClient,
     HexString,
@@ -27,7 +28,10 @@ const cli = meow(
     --endpoint,         -e  Specify endpoint of a grpc2 interface of a Concordium node in the format "address:port". Defaults to 'localhost:20000'
     --subindex,             The subindex of the smart contract. Defaults to 0
     --data,                 Additional data to include (hex encoded)
-    --keys,                 Public keys to register (supports both single and multiple entries). If omitted, a generated keypair will be used (and printed to console)
+    --holder-pub-key,   -k  Public key (hex encoded) identifying the holder. If omitted, a random keypair will be generated and printed to the console.
+    --holder-revoke,        Whether holder can revoke credential or not. Defaults to false.
+    --metadata-url,     -m  Url pointing to metadata of the credential. Should be specified in a real use-case, but can be omitted for testing purposes.
+    --expires,              Sets credential to expire in 2 years.
 `,
     {
         importMeta: import.meta,
@@ -54,9 +58,20 @@ const cli = meow(
             data: {
                 type: 'string',
             },
-            keys: {
-                isMultiple: true,
+            holderPubKey: {
                 type: 'string',
+            },
+            holderRevocable: {
+                type: 'boolean',
+                default: false,
+            },
+            metadataUrl: {
+                type: 'string',
+                default: '',
+            },
+            expires: {
+                type: 'boolean',
+                default: false,
             },
         },
     }
@@ -82,8 +97,8 @@ const wallet = parseWallet(walletFile);
     });
     const signer = buildAccountSigner(wallet);
 
-    let keys: HexString[] = cli.flags.keys ?? [];
-    if (!cli.flags.keys) {
+    let holderPubKey: HexString;
+    if (!cli.flags.holderPubKey) {
         const prv = ed25519.utils.randomPrivateKey();
         const pub = Buffer.from(await ed25519.getPublicKey(prv)).toString(
             'hex'
@@ -93,16 +108,31 @@ const wallet = parseWallet(walletFile);
             privateKey: Buffer.from(prv).toString('hex'),
             publicKey: pub,
         });
-        keys = [pub];
+        holderPubKey = pub;
+    } else {
+        holderPubKey = cli.flags.holderPubKey;
     }
 
-    const txHash = await contract.registerRevocationKeys(
+    const validFrom = new Date();
+    const validUntil = cli.flags.expires
+        ? new Date(new Date().setFullYear(validFrom.getFullYear() + 2)) // 2 years in the future
+        : undefined;
+
+    const credential: CIS4.CredentialInfo = {
+        holderPubKey,
+        holderRevocable: cli.flags.holderRevocable,
+        validFrom,
+        validUntil,
+        metadataUrl: { url: cli.flags.metadataUrl },
+    };
+
+    const txHash = await contract.registerCredential(
         signer,
         {
             senderAddress: wallet.value.address,
             energy: 10000n,
         },
-        keys,
+        credential,
         cli.flags.data
     );
 

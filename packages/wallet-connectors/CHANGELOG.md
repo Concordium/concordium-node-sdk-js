@@ -77,11 +77,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   `WalletConnect`: Fix schema object format conversion in `signAndSendTransaction` in request payloads.
 -   `WalletConnect`: Use standard string identifiers for transaction type in request payload.
 
+### Changed
+
+-   `WalletConnect`: `signMessage` now requires the provided account address to match the connected account rather than silently ignoring it.
+
 ## [0.3.1] - 2023-06-04
 
 ### Added
 
--   Standard values of `Network` for testnet and mainnet, exposed as constants `TESTNET` and `MAINNET`.
+-   Standard values of `Network` for testnet and mainnet are exposed as constants `TESTNET` and `MAINNET`.
 
 ### Changed
 

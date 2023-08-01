@@ -130,10 +130,14 @@ export namespace CIS4 {
         auxiliary_data: number[];
     };
 
+    export type RevocationReasonJson = {
+        reason: string;
+    };
+
     /** schema serializable JSON representation of parameter for the "revokeCredentialIssuer" entrypoint */
     export type RevokeCredentialIssuerParamJson = {
-        cred_holder_id: HexString;
-        reason: OptionJson<string>;
+        credential_id: HexString;
+        reason: OptionJson<RevocationReasonJson>;
         auxiliary_data: number[];
     };
 
@@ -149,9 +153,9 @@ export namespace CIS4 {
                 };
                 entry_point: string;
                 nonce: number;
-                timestamp: number;
+                timestamp: string;
             };
-            reason: OptionJson<string>;
+            reason: OptionJson<RevocationReasonJson>;
         };
     };
 
@@ -167,10 +171,10 @@ export namespace CIS4 {
                 };
                 entry_point: string;
                 nonce: number;
-                timestamp: number;
+                timestamp: string;
             };
             revocation_key: HexString;
-            reason: OptionJson<string>;
+            reason: OptionJson<RevocationReasonJson>;
         };
     };
 
@@ -380,8 +384,8 @@ export function formatCIS4RevokeCredentialIssuer({
     additionalData,
 }: CIS4.RevokeCredentialIssuerParam): CIS4.RevokeCredentialIssuerParamJson {
     return {
-        cred_holder_id: credHolderPubKey,
-        reason: toOptionJson(reason),
+        credential_id: credHolderPubKey,
+        reason: toOptionJson(reason ? { reason } : undefined),
         auxiliary_data: formatAdditionalData(additionalData),
     };
 }
@@ -415,6 +419,7 @@ export function formatCIS4RevokeCredentialHolder({
     signature,
     data,
 }: CIS4.RevokeCredentialHolderParam): CIS4.RevokeCredentialHolderParamJson {
+    const reason = data.reason;
     return {
         signature: signature,
         data: {
@@ -426,9 +431,9 @@ export function formatCIS4RevokeCredentialHolder({
                 },
                 entry_point: data.signingData.entrypoint,
                 nonce: Number(data.signingData.nonce),
-                timestamp: data.signingData.timestamp.getTime(),
+                timestamp: data.signingData.timestamp.toISOString(),
             },
-            reason: toOptionJson(data.reason),
+            reason: toOptionJson(reason ? { reason } : undefined),
         },
     };
 }
@@ -442,9 +447,7 @@ export function serializeCIS4RevocationDataOther(
     );
     const entrypoint = serializeReceiveHookName(data.signingData.entrypoint);
     const nonce = encodeWord64(data.signingData.nonce);
-    const timestamp = encodeWord64(
-        BigInt(data.signingData.timestamp.getTime())
-    );
+    const timestamp = serializeDate(data.signingData.timestamp);
     const revocationPubKey = Buffer.from(data.revocationPubKey, 'hex');
     const reason = makeSerializeOptional<string>(serializeReason)(data.reason);
 
@@ -466,6 +469,7 @@ export function formatCIS4RevokeCredentialOther({
     signature,
     data,
 }: CIS4.RevokeCredentialOtherParam): CIS4.RevokeCredentialOtherParamJson {
+    const reason = data.reason;
     return {
         signature: signature,
         data: {
@@ -477,10 +481,10 @@ export function formatCIS4RevokeCredentialOther({
                 },
                 entry_point: data.signingData.entrypoint,
                 nonce: Number(data.signingData.nonce),
-                timestamp: data.signingData.timestamp.getTime(),
+                timestamp: data.signingData.timestamp.toISOString(),
             },
             revocation_key: data.revocationPubKey,
-            reason: toOptionJson(data.reason),
+            reason: toOptionJson(reason ? { reason } : undefined),
         },
     };
 }

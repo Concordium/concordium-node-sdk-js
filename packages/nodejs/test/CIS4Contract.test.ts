@@ -4,6 +4,7 @@ import {
     CIS4Contract,
     ContractAddress,
     serializeTypeValue,
+    Web3IdSigner,
 } from '@concordium/common-sdk';
 import { getNodeClientV2 as getNodeClient } from './testHelpers';
 // import * as ed25519 from '@noble/ed25519';
@@ -22,8 +23,8 @@ const ISSUER_PUB_KEY =
 // })();
 
 const HOLDER_KEYPAIR = {
-    prv: 'ea7f032449ee98fa076369e14424d54aad28ec47b1a3f6e95c50d5b2fe63c38d',
-    pub: '67964cdcc3462f9dbf2e1b5aaaae402605432a9d577c3cbf7a9f2c4237c3a459',
+    prv: 'df37c498bc038cedbb61b9c523f80d6bd4f8e13bddddc0be2d201cc08bb6b8ac',
+    pub: '6e8aef0cb3a4bf141e17025f1525367bb8ffd41c08e3ea09a675386baea4d0c9',
 };
 const NEW_HOLDER_KEYPAIR = {
     prv: '3a02247f30b3448438e648190bd08c86ab54743f90593ecd91c51e8e8464f6a5',
@@ -47,10 +48,12 @@ const WEB3ID_ADDRESS_REVOKE: ContractAddress = {
 };
 
 const TEST_BLOCK =
-    'ae1abd765e17f9c450ff527097698ac7af9b630775ca8e79bf85579b65216b17';
+    'bf956ef81bb6a22eda754d490bdb7a3085318b3a1fe9370f83f86649a5f7cb60';
 
 const getCIS4 = () =>
     CIS4Contract.create(getNodeClient(), WEB3ID_ADDRESS_REVOKE);
+
+const in5Minutes = () => new Date(Date.now() + 1000 * 60 * 5);
 
 describe('credentialEntry', () => {
     test('Deserializes correctly', async () => {
@@ -62,11 +65,10 @@ describe('credentialEntry', () => {
 
         const expected: CIS4.CredentialEntry = {
             credentialInfo: {
-                holderPubKey:
-                    '67964cdcc3462f9dbf2e1b5aaaae402605432a9d577c3cbf7a9f2c4237c3a459',
-                holderRevocable: false,
-                validFrom: new Date('2023-08-01T12:58:50.239Z'),
-                validUntil: new Date('2025-08-01T12:58:50.239Z'),
+                holderPubKey: HOLDER_KEYPAIR.pub,
+                holderRevocable: true,
+                validFrom: new Date('2023-08-01T13:47:02.260Z'),
+                validUntil: new Date('2025-08-01T13:47:02.260Z'),
                 metadataUrl: { url: '' },
             },
             schemaRef: { url: 'http://foo-schema-url.com' },
@@ -164,15 +166,38 @@ describe('registerCredential', () => {
                 url: 'http://issuer-metadata-url.com',
             },
         };
+
+        let tx = cis4.createRegisterCredential({ energy: 100000n }, credential);
+        let schemaSerial = serializeTypeValue(
+            tx.parameter.json,
+            Buffer.from(tx.schema.value, 'base64'),
+            true
+        );
+        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+
+        // With `validUntil` + !`holderRevocable`
+        credential.validUntil = new Date(
+            new Date().setFullYear(new Date().getFullYear() + 1)
+        );
+        credential.holderRevocable = false;
+
+        tx = cis4.createRegisterCredential({ energy: 100000n }, credential);
+        schemaSerial = serializeTypeValue(
+            tx.parameter.json,
+            Buffer.from(tx.schema.value, 'base64'),
+            true
+        );
+        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+
+        // With data
         const auxData = Buffer.from('Hello world!').toString('hex');
 
-        const tx = cis4.createRegisterCredential(
+        tx = cis4.createRegisterCredential(
             { energy: 100000n },
             credential,
             auxData
         );
-
-        const schemaSerial = serializeTypeValue(
+        schemaSerial = serializeTypeValue(
             tx.parameter.json,
             Buffer.from(tx.schema.value, 'base64'),
             true
@@ -184,16 +209,9 @@ describe('registerCredential', () => {
 describe('registerRevocationKeys', () => {
     test('Invokes successfully', async () => {
         const cis4 = await getCIS4();
-        let res = await cis4.dryRun.registerRevocationKeys(
+        const res = await cis4.dryRun.registerRevocationKeys(
             ISSUER_ACCOUNT,
             NEW_REVOKER_1_KEYPAIR.pub,
-            TEST_BLOCK
-        );
-        expect(res.tag).toBe('success');
-
-        res = await cis4.dryRun.registerRevocationKeys(
-            ISSUER_ACCOUNT,
-            [NEW_REVOKER_1_KEYPAIR.pub, NEW_REVOKER_2_KEYPAIR.pub],
             TEST_BLOCK
         );
         expect(res.tag).toBe('success');
@@ -201,12 +219,38 @@ describe('registerRevocationKeys', () => {
 
     test('Manual serialization matches schema serialization', async () => {
         const cis4 = await getCIS4();
-        const tx = cis4.createRegisterRevocationKeys({ energy: 100000n }, [
+
+        // Single key
+        let tx = cis4.createRegisterRevocationKeys(
+            { energy: 100000n },
+            NEW_REVOKER_1_KEYPAIR.pub
+        );
+        let schemaSerial = serializeTypeValue(
+            tx.parameter.json,
+            Buffer.from(tx.schema.value, 'base64'),
+            true
+        );
+        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+
+        // Multilple keys
+        tx = cis4.createRegisterRevocationKeys({ energy: 100000n }, [
             NEW_REVOKER_1_KEYPAIR.pub,
             NEW_REVOKER_2_KEYPAIR.pub,
         ]);
+        schemaSerial = serializeTypeValue(
+            tx.parameter.json,
+            Buffer.from(tx.schema.value, 'base64'),
+            true
+        );
+        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
 
-        const schemaSerial = serializeTypeValue(
+        // With data
+        tx = cis4.createRegisterRevocationKeys(
+            { energy: 100000n },
+            [NEW_REVOKER_1_KEYPAIR.pub, NEW_REVOKER_2_KEYPAIR.pub],
+            Buffer.from('Test').toString('hex')
+        );
+        schemaSerial = serializeTypeValue(
             tx.parameter.json,
             Buffer.from(tx.schema.value, 'base64'),
             true
@@ -228,12 +272,199 @@ describe('removeRevocationKeys', () => {
 
     test('Manual serialization matches schema serialization', async () => {
         const cis4 = await getCIS4();
-        const tx = cis4.createRemoveRevocationKeys({ energy: 100000n }, [
-            NEW_REVOKER_1_KEYPAIR.pub,
-            NEW_REVOKER_2_KEYPAIR.pub,
-        ]);
 
-        const schemaSerial = serializeTypeValue(
+        let tx = cis4.createRemoveRevocationKeys(
+            { energy: 100000n },
+            REVOKER_KEYPAIR.pub
+        );
+        let schemaSerial = serializeTypeValue(
+            tx.parameter.json,
+            Buffer.from(tx.schema.value, 'base64'),
+            true
+        );
+        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+
+        // Multiple keys
+        tx = cis4.createRemoveRevocationKeys({ energy: 100000n }, [
+            REVOKER_KEYPAIR.pub,
+            NEW_REVOKER_1_KEYPAIR.pub,
+        ]);
+        schemaSerial = serializeTypeValue(
+            tx.parameter.json,
+            Buffer.from(tx.schema.value, 'base64'),
+            true
+        );
+        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+
+        // With data
+        tx = cis4.createRemoveRevocationKeys(
+            { energy: 100000n },
+            [REVOKER_KEYPAIR.pub, NEW_REVOKER_1_KEYPAIR.pub],
+            Buffer.from('Test').toString('hex')
+        );
+        schemaSerial = serializeTypeValue(
+            tx.parameter.json,
+            Buffer.from(tx.schema.value, 'base64'),
+            true
+        );
+        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+    });
+});
+
+describe('revokeCredentialAsIssuer', () => {
+    test('Invokes successfully', async () => {
+        const cis4 = await getCIS4();
+        const res = await cis4.dryRun.revokeCredentialAsIssuer(
+            ISSUER_ACCOUNT,
+            HOLDER_KEYPAIR.pub,
+            undefined,
+            undefined,
+            TEST_BLOCK
+        );
+        expect(res.tag).toBe('success');
+    });
+
+    test('Manual serialization matches schema serialization', async () => {
+        const cis4 = await getCIS4();
+
+        let tx = cis4.createRevokeCredentialAsIssuer(
+            { energy: 100000n },
+            HOLDER_KEYPAIR.pub,
+            undefined,
+            undefined
+        );
+        let schemaSerial = serializeTypeValue(
+            tx.parameter.json,
+            Buffer.from(tx.schema.value, 'base64'),
+            true
+        );
+        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+
+        // With reason
+        tx = cis4.createRevokeCredentialAsIssuer(
+            { energy: 100000n },
+            HOLDER_KEYPAIR.pub,
+            'Because test...',
+            undefined
+        );
+        schemaSerial = serializeTypeValue(
+            tx.parameter.json,
+            Buffer.from(tx.schema.value, 'base64'),
+            true
+        );
+        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+
+        // With data
+        tx = cis4.createRevokeCredentialAsIssuer(
+            { energy: 100000n },
+            HOLDER_KEYPAIR.pub,
+            undefined,
+            Buffer.from('Is anyone watching?').toString('hex')
+        );
+        schemaSerial = serializeTypeValue(
+            tx.parameter.json,
+            Buffer.from(tx.schema.value, 'base64'),
+            true
+        );
+        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+    });
+});
+
+describe('revokeCredentialAsHolder', () => {
+    const signer = new Web3IdSigner(HOLDER_KEYPAIR.prv, HOLDER_KEYPAIR.pub);
+
+    test('Invokes successfully', async () => {
+        const cis4 = await getCIS4();
+        const res = await cis4.dryRun.revokeCredentialAsHolder(
+            ISSUER_ACCOUNT,
+            signer,
+            0n,
+            in5Minutes(),
+            undefined,
+            TEST_BLOCK
+        );
+        expect(res.tag).toBe('success');
+    });
+
+    test('Manual serialization matches schema serialization', async () => {
+        const cis4 = await getCIS4();
+
+        let tx = await cis4.createRevokeCredentialAsHolder(
+            { energy: 100000n },
+            signer,
+            0n,
+            in5Minutes(),
+            undefined
+        );
+        let schemaSerial = serializeTypeValue(
+            tx.parameter.json,
+            Buffer.from(tx.schema.value, 'base64'),
+            true
+        );
+        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+
+        // With reason
+        tx = await cis4.createRevokeCredentialAsHolder(
+            { energy: 100000n },
+            signer,
+            0n,
+            in5Minutes(),
+            'Because test...'
+        );
+        schemaSerial = serializeTypeValue(
+            tx.parameter.json,
+            Buffer.from(tx.schema.value, 'base64'),
+            true
+        );
+        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+    });
+});
+
+describe('revokeCredentialAsOther', () => {
+    const signer = new Web3IdSigner(REVOKER_KEYPAIR.prv, REVOKER_KEYPAIR.pub);
+
+    test('Invokes successfully', async () => {
+        const cis4 = await getCIS4();
+        const res = await cis4.dryRun.revokeCredentialAsOther(
+            ISSUER_ACCOUNT,
+            signer,
+            HOLDER_KEYPAIR.pub,
+            0n,
+            in5Minutes(),
+            undefined,
+            TEST_BLOCK
+        );
+        expect(res.tag).toBe('success');
+    });
+
+    test('Manual serialization matches schema serialization', async () => {
+        const cis4 = await getCIS4();
+
+        let tx = await cis4.createRevokeCredentialAsOther(
+            { energy: 100000n },
+            signer,
+            HOLDER_KEYPAIR.pub,
+            0n,
+            in5Minutes(),
+            undefined
+        );
+        let schemaSerial = serializeTypeValue(
+            tx.parameter.json,
+            Buffer.from(tx.schema.value, 'base64'),
+            true
+        );
+        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+
+        // With reason
+        tx = await cis4.createRevokeCredentialAsOther(
+            { energy: 100000n },
+            signer,
+            HOLDER_KEYPAIR.pub,
+            0n,
+            in5Minutes(),
+            'Because test...'
+        );
+        schemaSerial = serializeTypeValue(
             tx.parameter.json,
             Buffer.from(tx.schema.value, 'base64'),
             true

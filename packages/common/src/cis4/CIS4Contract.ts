@@ -590,7 +590,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         reason?: string
     ): Promise<ContractUpdateTransactionWithSchema> {
         const revocationPubKey = revokerSigner.pubKey;
-        const entrypoint = 'revokeCredentialHolder';
+        const entrypoint = 'revokeCredentialOther';
         const signingData: CIS4.SigningData = {
             contractAddress: this.contractAddress,
             entrypoint,

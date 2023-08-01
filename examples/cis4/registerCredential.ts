@@ -61,7 +61,7 @@ const cli = meow(
             holderPubKey: {
                 type: 'string',
             },
-            holderRevocable: {
+            holderRevoke: {
                 type: 'boolean',
                 default: false,
             },
@@ -120,7 +120,7 @@ const wallet = parseWallet(walletFile);
 
     const credential: CIS4.CredentialInfo = {
         holderPubKey,
-        holderRevocable: cli.flags.holderRevocable,
+        holderRevocable: cli.flags.holderRevoke,
         validFrom,
         validUntil,
         metadataUrl: { url: cli.flags.metadataUrl },

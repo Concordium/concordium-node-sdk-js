@@ -80,11 +80,12 @@ export namespace CIS4 {
     export type RevokeCredentialIssuerParam = {
         credHolderPubKey: HexString;
         reason?: string;
+        additionalData: HexString;
     };
 
     export type SigningData = {
         contractAddress: ContractAddress;
-        entryPoint: string;
+        entrypoint: string;
         nonce: bigint;
         timestamp: Date;
     };
@@ -134,6 +135,8 @@ export namespace CIS4 {
     export type RevokeCredentialIssuerParamJson = {
         cred_holder_id: HexString;
         reason: OptionJson<string>;
+        /** Additional data to include, hex encoded */
+        auxiliary_data: number[];
     };
 
     /** schema serializable JSON representation of parameter for the "revokeCredentialHolder" entrypoint */
@@ -349,8 +352,12 @@ export function serializeCIS4RevokeCredentialIssuerParam(
 ): Buffer {
     const credHolderPubKey = Buffer.from(param.credHolderPubKey, 'hex');
     const reason = makeSerializeOptional<string>(serializeReason)(param.reason);
+    const additionalData = packBufferWithWord16Length(
+        Buffer.from(param.additionalData, 'hex'),
+        true
+    );
 
-    return Buffer.concat([credHolderPubKey, reason]);
+    return Buffer.concat([credHolderPubKey, reason, additionalData]);
 }
 
 /**
@@ -359,10 +366,12 @@ export function serializeCIS4RevokeCredentialIssuerParam(
 export function formatCIS4RevokeCredentialIssuer({
     credHolderPubKey,
     reason,
+    additionalData,
 }: CIS4.RevokeCredentialIssuerParam): CIS4.RevokeCredentialIssuerParamJson {
     return {
         cred_holder_id: credHolderPubKey,
         reason: toOptionJson(reason),
+        auxiliary_data: Buffer.from(additionalData, 'hex').toJSON().data,
     };
 }
 
@@ -373,7 +382,7 @@ export function serializeCIS4RevocationDataHolder(
     const contractAddress = serializeContractAddress(
         data.signingData.contractAddress
     );
-    const entrypoint = serializeReceiveHookName(data.signingData.entryPoint);
+    const entrypoint = serializeReceiveHookName(data.signingData.entrypoint);
     const nonce = encodeWord64(data.signingData.nonce);
     const timestamp = serializeDate(data.signingData.timestamp);
     const reason = makeSerializeOptional<string>(serializeReason)(data.reason);
@@ -404,7 +413,7 @@ export function formatCIS4RevokeCredentialHolder({
                     index: Number(data.signingData.contractAddress.index),
                     subindex: Number(data.signingData.contractAddress.subindex),
                 },
-                entry_point: data.signingData.entryPoint,
+                entry_point: data.signingData.entrypoint,
                 nonce: Number(data.signingData.nonce),
                 timestamp: data.signingData.timestamp.getTime(),
             },
@@ -420,7 +429,7 @@ export function serializeCIS4RevocationDataOther(
     const contractAddress = serializeContractAddress(
         data.signingData.contractAddress
     );
-    const entrypoint = serializeReceiveHookName(data.signingData.entryPoint);
+    const entrypoint = serializeReceiveHookName(data.signingData.entrypoint);
     const nonce = encodeWord64(data.signingData.nonce);
     const timestamp = encodeWord64(
         BigInt(data.signingData.timestamp.getTime())
@@ -455,7 +464,7 @@ export function formatCIS4RevokeCredentialOther({
                     index: Number(data.signingData.contractAddress.index),
                     subindex: Number(data.signingData.contractAddress.subindex),
                 },
-                entry_point: data.signingData.entryPoint,
+                entry_point: data.signingData.entrypoint,
                 nonce: Number(data.signingData.nonce),
                 timestamp: data.signingData.timestamp.getTime(),
             },

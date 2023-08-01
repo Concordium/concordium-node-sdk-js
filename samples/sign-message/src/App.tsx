@@ -1,5 +1,5 @@
 import { ResultAsync, err, ok } from 'neverthrow';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, Button, Col, Container, Form, InputGroup, Row, Spinner } from 'react-bootstrap';
 import {
     TESTNET,
@@ -64,15 +64,9 @@ function Main(props: WalletConnectionProps) {
         }
     }, [messageInput, schemaResult]);
 
-    const [signature, setSignature] = useState<AccountTransactionSignature>();
-    const [error, setError] = useState<any>(); // WC throws objects; giving up on using strings for now
+    const [signature, setSignature] = useState<AccountTransactionSignature>('');
+    const [error, setError] = useState('');
     const [isWaiting, setIsWaiting] = useState(false);
-
-    // Reset 'error' and 'isWaiting' whenever connection changes.
-    useEffect(() => {
-        setError(undefined);
-        setIsWaiting(false);
-    }, [connection]);
 
     const handleMessageInput = useCallback((e: any) => setMessageInput(e.target.value), []);
     const handleSchemaInput = useCallback((e: any) => setSchemaInput(e.target.value), []);
@@ -80,9 +74,9 @@ function Main(props: WalletConnectionProps) {
         if (connection && account && messageResult) {
             messageResult
                 .asyncAndThen((msg) => {
-                    setError(undefined);
+                    setError('');
                     setIsWaiting(true);
-                    return ResultAsync.fromPromise(connection.signMessage(account, msg), (e) => e);
+                    return ResultAsync.fromPromise(connection.signMessage(account, msg), errorString);
                 })
                 .match(setSignature, setError)
                 .finally(() => setIsWaiting(false));
@@ -189,14 +183,12 @@ function Main(props: WalletConnectionProps) {
                 </Col>
             </Form.Group>
             <Row>
-                {error && <Alert variant="danger">{JSON.stringify(error)}</Alert>}
+                {error && <Alert variant="danger">{error}</Alert>}
                 {signature && (
                     <>
                         <Col sm={3}>Signature:</Col>
                         <Col sm={9}>
-                            <Alert variant="success" dismissible={true} onClose={() => setSignature(undefined)}>
-                                <pre title={`Message: ${messageInput}`}>{JSON.stringify(signature, null, 2)}</pre>
-                            </Alert>
+                            <pre title={`Message: ${messageInput}`}>{JSON.stringify(signature, null, 2)}</pre>
                         </Col>
                     </>
                 )}

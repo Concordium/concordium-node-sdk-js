@@ -3,8 +3,5 @@ export function setErrorString(setError: (err: string) => void) {
 }
 
 export function errorString(err: any): string {
-    if (err instanceof Error) {
-        return err.message;
-    }
-    return err.toString();
+    return (err as Error).message || (err as string);
 }

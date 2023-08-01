@@ -163,13 +163,6 @@ export function ContractInvoker({ rpc, network, connection, connectedAccount, co
 
     const [isAwaitingApproval, setIsAwaitingApproval] = useState(false);
     const [submittedTxHash, setSubmittedTxHash] = useState<Result<string, string>>();
-
-    // Reset 'isAwaitingApproval' and 'submittedTxHash' whenever connection changes.
-    useEffect(() => {
-        setSubmittedTxHash(undefined);
-        setIsAwaitingApproval(false);
-    }, [connection]);
-
     const submit = useCallback(() => {
         if (connection && connectedAccount) {
             setIsAwaitingApproval(true);

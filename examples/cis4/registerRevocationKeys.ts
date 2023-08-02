@@ -74,16 +74,16 @@ const walletFile = fs.readFileSync(
     'utf8'
 );
 const wallet = parseWallet(walletFile);
+const signer = buildAccountSigner(wallet);
 
 (async () => {
     const contract = await CIS4Contract.create(client, {
         index: BigInt(cli.flags.index),
         subindex: BigInt(cli.flags.subindex),
     });
-    const signer = buildAccountSigner(wallet);
 
     let keys: HexString[] = cli.flags.keys ?? [];
-    if (!cli.flags.keys) {
+    if (!cli.flags.keys?.length) {
         const prv = ed25519.utils.randomPrivateKey();
         const pub = Buffer.from(await ed25519.getPublicKey(prv)).toString(
             'hex'

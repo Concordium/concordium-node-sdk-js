@@ -17,7 +17,6 @@ import {
 } from './util';
 import type { CIS2 } from './util';
 import { CIS0, cis0Supports } from '../cis0';
-import { getContractName } from '../contractHelpers';
 import { CISContract, ContractDryRun, getInvoker } from '../GenericContract';
 import { makeDynamicFunction } from '../util';
 

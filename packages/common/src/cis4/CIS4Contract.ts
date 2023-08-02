@@ -374,7 +374,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
     }
 
     /**
-     * Get the {@link CIS4.MetadataUrl} URL for the registry metadata.
+     * Get the registry metadata.
      *
      * @param {HexString} [blockHash] - block to perform query at.
      *

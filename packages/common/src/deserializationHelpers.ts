@@ -1,11 +1,27 @@
 import { Buffer } from 'buffer/';
 import { HexString } from './types';
 
+/**
+ * A wrapper around some data, which enables reading from the data without
+ * having to keep track of what has already been read.
+ */
 export class Cursor {
     private cursor = 0;
 
+    /**
+     * Constructs a `Cursor`.
+     *
+     * @param {Buffer} data - the data
+     */
     constructor(private data: Buffer) {}
 
+    /**
+     * Constructs a `Cursor` from hex encoded data.
+     *
+     * @param {HexString} data - the (hex encoded) data
+     *
+     * @returns {Cursor} a Cursor wrapping the data
+     */
     public static fromHex(data: HexString): Cursor {
         return new Cursor(Buffer.from(data, 'hex'));
     }
@@ -20,6 +36,7 @@ export class Cursor {
         return data;
     }
 
+    /** The remaining bytes, i.e. not including the bytes already read. */
     public get remainingBytes(): Buffer {
         return Buffer.from(this.data.subarray(this.cursor));
     }

@@ -21,15 +21,21 @@ import {
 import { OptionJson, toOptionJson } from '../schemaTypes';
 import { getSignature } from '../signHelpers';
 
+/** Holds all types related to CIS4 */
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace CIS4 {
     /** Structure holding an url pointing to some metadata, including an optional checksum */
     export type MetadataUrl = CIS2.MetadataUrl;
+    /** Structure holding an url pointing to some metadata, including an optional checksum */
     export type SchemaRef = MetadataUrl;
 
+    /** Response type for `registryMetadata` query */
     export type MetadataResponse = {
+        /** URL for issuer metadata */
         issuerMetadata: MetadataUrl;
+        /** The credential type */
         credentialType: string;
+        /** URL for the credential schema */
         credentialSchema: SchemaRef;
     };
 
@@ -41,7 +47,7 @@ export namespace CIS4 {
         holderRevocable: boolean;
         /** Time the credential is valid from */
         validFrom: Date;
-        /** Time the credential is valid until */
+        /** (Optional) time the credential is valid until */
         validUntil?: Date;
         /** Metadata url of the credential */
         metadataUrl: MetadataUrl;
@@ -61,132 +67,195 @@ export namespace CIS4 {
         revocationNonce: bigint;
     };
 
+    /** Response type for `credentialStatus` query */
     export enum CredentialStatus {
+        /** The credential is active */
         Active,
+        /** The credential has been revoked */
         Revoked,
+        /** The credential has expired */
         Expired,
+        /** The credential has not been activated */
         NotActivated,
     }
 
+    /** A revocation key and its corresponding nonce */
     export type RevocationKeyWithNonce = {
+        /** The revocation key (hex encoded) */
         key: HexString;
+        /** The nonce of the revocation key */
         nonce: bigint;
     };
 
+    /** Data needed for the `registerCredential` update */
     export type RegisterCredentialParam = {
+        /** The credential info to register */
         credInfo: CredentialInfo;
+        /** Any additional data to include in the parameter (hex encoded) */
         additionalData: HexString;
-    };
-
-    export type RevokeCredentialIssuerParam = {
-        credHolderPubKey: HexString;
-        reason?: string;
-        additionalData: HexString;
-    };
-
-    export type SigningData = {
-        contractAddress: ContractAddress;
-        entrypoint: string;
-        nonce: bigint;
-        timestamp: Date;
-    };
-
-    export type RevocationDataHolder = {
-        credentialPubKey: HexString;
-        signingData: SigningData;
-        reason?: string;
-    };
-
-    export type RevokeCredentialHolderParam = {
-        signature: HexString;
-        data: RevocationDataHolder;
-    };
-
-    export type RevocationDataOther = {
-        credentialPubKey: HexString;
-        signingData: SigningData;
-        revocationPubKey: HexString;
-        reason?: string;
-    };
-
-    export type RevokeCredentialOtherParam = {
-        signature: HexString;
-        data: RevocationDataOther;
     };
 
     /** schema serializable JSON representation of parameter for the "registerCredential" entrypoint */
     export type RegisterCredentialParamJson = {
+        /** The credential info to register */
         credential_info: {
+            /** Ed25519 public key of credential holder (hex encoded) */
             holder_id: HexString;
+            /** Whether holder can revoke or not */
             holder_revocable: boolean;
             /** Time (as ISO string) the credential is valid from */
             valid_from: string;
             /** (Optional) Time (as ISO string) the credential is valid until */
             valid_until: OptionJson<string>;
+            /** Metadata url of the credential */
             metadata_url: {
+                /** The url */
                 url: string;
+                /** An optional checksum of the data at the URL destination */
                 hash: OptionJson<HexString>;
             };
         };
+        /** Any additional data to include in the parameter (hex encoded) */
         auxiliary_data: number[];
     };
 
+    /** Data needed for the `revokeCredentialIssuer` update */
+    export type RevokeCredentialIssuerParam = {
+        /** The public key of the credential holder (hex encoded) */
+        credHolderPubKey: HexString;
+        /** An optional reason for the revocation */
+        reason?: string;
+        /** Any additional data to include in the parameter (hex encoded) */
+        additionalData: HexString;
+    };
+
+    /** schema serializable JSON representation of a revocation reason */
     export type RevocationReasonJson = {
+        /** The reason for revocation */
         reason: string;
     };
 
     /** schema serializable JSON representation of parameter for the "revokeCredentialIssuer" entrypoint */
     export type RevokeCredentialIssuerParamJson = {
+        /** The public key of the credential holder (hex encoded) */
         credential_id: HexString;
+        /** An optional reason for the revocation */
         reason: OptionJson<RevocationReasonJson>;
+        /** Any additional data to include in the parameter (hex encoded) */
         auxiliary_data: number[];
+    };
+
+    /** Signing metadata for credential revocation */
+    export type SigningData = {
+        /** The contract address of the CIS4 contract */
+        contractAddress: ContractAddress;
+        /** The CIS4 entrypoint from which the revocation is done */
+        entrypoint: string;
+        /** The credential nonce */
+        nonce: bigint;
+        /** Timestamp at which the revocation should be invalidated */
+        timestamp: Date;
+    };
+
+    export type SigningDataJson = {
+        /** The contract address of the CIS4 contract */
+        contract_address: {
+            /** The contract index */
+            index: number;
+            /** The contract subindex */
+            subindex: number;
+        };
+        /** The CIS4 entrypoint from which the revocation is done */
+        entry_point: string;
+        /** The credential nonce */
+        nonce: number;
+        /** Timestamp at which the revocation should be invalidated */
+        timestamp: string;
+    };
+
+    /** Revocation data for revocations done by the credential holder */
+    export type RevocationDataHolder = {
+        /** The public key of the credential to revoke (hex encoded) */
+        credentialPubKey: HexString;
+        /** The signing metadata of the revocation */
+        signingData: SigningData;
+        /** An optional reason for the revocation */
+        reason?: string;
+    };
+
+    /** Data needed for the `revokeCredentialHolder` update */
+    export type RevokeCredentialHolderParam = {
+        /** Signature on the `data` (hex encoded) */
+        signature: HexString;
+        /** The revocation data */
+        data: RevocationDataHolder;
     };
 
     /** schema serializable JSON representation of parameter for the "revokeCredentialHolder" entrypoint */
     export type RevokeCredentialHolderParamJson = {
+        /** Signature on the `data` (hex encoded) */
         signature: HexString;
+        /** The revocation data */
         data: {
+            /** The public key of the credential to revoke (hex encoded) */
             credential_id: HexString;
-            signing_data: {
-                contract_address: {
-                    index: number;
-                    subindex: number;
-                };
-                entry_point: string;
-                nonce: number;
-                timestamp: string;
-            };
+            /** The signing metadata of the revocation */
+            signing_data: SigningDataJson;
+            /** An optional reason for the revocation */
             reason: OptionJson<RevocationReasonJson>;
         };
+    };
+
+    /** Revocation data for revocations done by other revocation entities */
+    export type RevocationDataOther = {
+        /** The public key of the credential to revoke (hex encoded) */
+        credentialPubKey: HexString;
+        /** The data signed */
+        signingData: SigningData;
+        /** The public key of the revoker (hex encoded) */
+        revocationPubKey: HexString;
+        /** An optional reason for the revocation */
+        reason?: string;
+    };
+
+    /** Data needed for the `revokeCredentialOther` update */
+    export type RevokeCredentialOtherParam = {
+        /** Signature on the `data` (hex encoded) */
+        signature: HexString;
+        /** The revocation data */
+        data: RevocationDataOther;
     };
 
     /** schema serializable JSON representation of parameter for the "revokeCredentialOther" entrypoint */
     export type RevokeCredentialOtherParamJson = {
+        /** Signature on the `data` (hex encoded) */
         signature: HexString;
+        /** The revocation data */
         data: {
+            /** The public key of the credential to revoke (hex encoded) */
             credential_id: HexString;
-            signing_data: {
-                contract_address: {
-                    index: number;
-                    subindex: number;
-                };
-                entry_point: string;
-                nonce: number;
-                timestamp: string;
-            };
+            /** The signing metadata of the revocation */
+            signing_data: SigningDataJson;
+            /** The public key of the revoker (hex encoded) */
             revocation_key: HexString;
+            /** An optional reason for the revocation */
             reason: OptionJson<RevocationReasonJson>;
         };
     };
 
+    /** Data needed for the `registerRevocationKeys` and `removeRevocationKeys` update */
     export type UpdateRevocationKeysParam = {
+        /** The keys to register/remove */
         keys: HexString[];
+        /** Any additional data to include in the parameter (hex encoded) */
         additionalData: HexString;
     };
 
     /** schema serializable JSON representation of parameter for the "revokeCredentialIssuer" entrypoint */
     export type UpdateRevocationKeysParamJson = {
+        /** The keys to register/remove */
         keys: HexString[];
+        /** Any additional data to include in the parameter (hex encoded) */
         auxiliary_data: number[];
     };
 }
@@ -286,6 +355,14 @@ function serializeAdditionalData(data: HexString): Buffer {
     return packBufferWithWord16Length(Buffer.from(data, 'hex'), true);
 }
 
+/**
+ * Serializes {@link CIS4.RegisterCredentialParam} into bytes which can be
+ * supplied as parameters to `registerCredential` entrypoints on CIS4 contracts
+ *
+ * @param {CIS4.RegisterCredentialParam} param - The parameters to serialize
+ *
+ * @returns {Buffer} the parameters serialized to bytes
+ */
 export function serializeCIS4RegisterCredentialParam(
     param: CIS4.RegisterCredentialParam
 ): Buffer {
@@ -310,6 +387,15 @@ function deserializeCIS4CredentialInfo(cursor: Cursor): CIS4.CredentialInfo {
     };
 }
 
+/**
+ * Attemps to deserializes a value into {@link CIS4.CredentialEntry}
+ *
+ * @param {HexString} value - The value (hex encoded) to deserialize
+ *
+ * @throws If deserialization fails
+ *
+ * @returns {CIS4.CredentialEntry} The credential entry
+ */
 export function deserializeCIS4CredentialEntry(
     value: HexString
 ): CIS4.CredentialEntry {
@@ -326,6 +412,15 @@ export function deserializeCIS4CredentialEntry(
     };
 }
 
+/**
+ * Attemps to deserializes a value into {@link CIS4.CredentialStatus}
+ *
+ * @param {HexString} value - The value (hex encoded) to deserialize
+ *
+ * @throws If deserialization fails
+ *
+ * @returns {CIS4.CredentialStatus} The credential status
+ */
 export function deserializeCIS4CredentialStatus(
     value: HexString
 ): CIS4.CredentialStatus {
@@ -345,6 +440,15 @@ function deserializeCIS4RevocationKey(
     };
 }
 
+/**
+ * Attemps to deserializes a value into a list of {@link CIS4.RevocationKeyWithNonce}
+ *
+ * @param {HexString} value - The value (hex encoded) to deserialize
+ *
+ * @throws If deserialization fails
+ *
+ * @returns {CIS4.RevocationKeyWithNonce[]} The revocation keys
+ */
 export const deserializeCIS4RevocationKeys = makeDeserializeListResponse(
     deserializeCIS4RevocationKey
 );
@@ -354,7 +458,7 @@ function formatAdditionalData(data: HexString): number[] {
 }
 
 /**
- * Format {@link CIS4.RegisterCredentialParam} as JSON compatible with serialization wtih corresponding schema.
+ * Format {@link CIS4.RegisterCredentialParam} as JSON compatible with serialization with corresponding schema.
  */
 export function formatCIS4RegisterCredential({
     credInfo,
@@ -380,6 +484,14 @@ function serializeReason(reason: string) {
     return packBufferWithWord8Length(b);
 }
 
+/**
+ * Serializes {@link CIS4.RevokeCredentialIssuerParam} into bytes which can be
+ * supplied as parameters to `revokeCredentialIssuer` entrypoints on CIS4 contracts
+ *
+ * @param {CIS4.RevokeCredentialIssuerParam} param - The parameters to serialize
+ *
+ * @returns {Buffer} the parameters serialized to bytes
+ */
 export function serializeCIS4RevokeCredentialIssuerParam(
     param: CIS4.RevokeCredentialIssuerParam
 ): Buffer {
@@ -391,7 +503,7 @@ export function serializeCIS4RevokeCredentialIssuerParam(
 }
 
 /**
- * Format {@link CIS4.RevokeCredentialIssuerParam} as JSON compatible with serialization wtih corresponding schema.
+ * Format {@link CIS4.RevokeCredentialIssuerParam} as JSON compatible with serialization with corresponding schema.
  */
 export function formatCIS4RevokeCredentialIssuer({
     credHolderPubKey,
@@ -405,6 +517,15 @@ export function formatCIS4RevokeCredentialIssuer({
     };
 }
 
+/**
+ * Serializes {@link CIS4.RevocationDataHolder} into bytes which can be
+ * supplied as parameters to `revokeCredentialHolder` entrypoints on CIS4 contracts prefixed
+ * with a signature on the data
+ *
+ * @param {CIS4.RevocationDataHolder} data - The data to serialize
+ *
+ * @returns {Buffer} the data serialized to bytes
+ */
 export function serializeCIS4RevocationDataHolder(
     data: CIS4.RevocationDataHolder
 ): Buffer {
@@ -428,7 +549,7 @@ export function serializeCIS4RevocationDataHolder(
 }
 
 /**
- * Format {@link CIS4.RevokeCredentialHolderParam} as JSON compatible with serialization wtih corresponding schema.
+ * Format {@link CIS4.RevokeCredentialHolderParam} as JSON compatible with serialization with corresponding schema.
  */
 export function formatCIS4RevokeCredentialHolder({
     signature,
@@ -453,6 +574,15 @@ export function formatCIS4RevokeCredentialHolder({
     };
 }
 
+/**
+ * Serializes {@link CIS4.RevocationDataOther} into bytes which can be
+ * supplied as parameters to `revokeCredentialOther` entrypoints on CIS4 contracts prefixed
+ * with a signature on the data
+ *
+ * @param {CIS4.RevocationDataOther} data - The data to serialize
+ *
+ * @returns {Buffer} the data serialized to bytes
+ */
 export function serializeCIS4RevocationDataOther(
     data: CIS4.RevocationDataOther
 ): Buffer {
@@ -478,7 +608,7 @@ export function serializeCIS4RevocationDataOther(
 }
 
 /**
- * Format {@link CIS4.RevokeCredentialOtherParam} as JSON compatible with serialization wtih corresponding schema.
+ * Format {@link CIS4.RevokeCredentialOtherParam} as JSON compatible with serialization with corresponding schema.
  */
 export function formatCIS4RevokeCredentialOther({
     signature,
@@ -504,6 +634,15 @@ export function formatCIS4RevokeCredentialOther({
     };
 }
 
+/**
+ * Serializes {@link CIS4.UpdateRevocationKeysParam} into bytes which can be
+ * supplied as parameters to `registerRevocationKeys` and `removeRevocationKeys`
+ * entrypoints on CIS4 contracts
+ *
+ * @param {CIS4.RevokeCredentialIssuerParam} param - The parameters to serialize
+ *
+ * @returns {Buffer} the parameters serialized to bytes
+ */
 export function serializeCIS4UpdateRevocationKeysParam(
     param: CIS4.UpdateRevocationKeysParam
 ): Buffer {
@@ -519,6 +658,9 @@ function deserializeCredentialType(cursor: Cursor): string {
     return cursor.read(len).toString('utf8');
 }
 
+/**
+ * Format {@link CIS4.UpdateRevocationKeysParam} as JSON compatible with serialization with corresponding schema.
+ */
 export function formatCIS4UpdateRevocationKeys({
     keys,
     additionalData,
@@ -526,6 +668,15 @@ export function formatCIS4UpdateRevocationKeys({
     return { keys, auxiliary_data: formatAdditionalData(additionalData) };
 }
 
+/**
+ * Attemps to deserializes a value into a list of {@link CIS4.MetadataResponse}
+ *
+ * @param {HexString} value - The value (hex encoded) to deserialize
+ *
+ * @throws If deserialization fails
+ *
+ * @returns {CIS4.MetadataResponse} The metadata
+ */
 export function deserializeCIS4MetadataResponse(
     value: HexString
 ): CIS4.MetadataResponse {

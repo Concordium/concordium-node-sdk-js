@@ -18,7 +18,6 @@ import {
 } from './types';
 import { AccountAddress } from './types/accountAddress';
 import { CcdAmount } from './types/ccdAmount';
-import { ModuleReference } from './types/moduleReference';
 import { TransactionExpiry } from './types/transactionExpiry';
 
 /**
@@ -43,6 +42,9 @@ export type CreateContractTransactionMetadata = Pick<
     'amount' | 'energy'
 >;
 
+/**
+ * Holds either a contract module schema, or the schema for a single parameters of a contract entrypoint
+ */
 export type ContractSchema = {
     /** Base64 encoded schema for the parameter type */
     value: Base64String;
@@ -67,25 +69,38 @@ export type ContractUpdateTransaction = {
 export type ContractUpdateTransactionWithSchema<
     J extends SmartContractTypeValues = SmartContractTypeValues
 > = ContractUpdateTransaction & {
+    /** Parameter of the update */
     parameter: {
         /** Hex encoded parameter for the update */
         hex: HexString;
         /** JSON representation of the parameter to be used with the corresponding contract schema */
         json: J;
     };
+    /** The schema needed to serialize the parameter */
     schema: ContractSchema;
 };
 
-export function getDefaultExpiryDate(): Date {
+/**
+ * Default expiry date used for contract update transactions.
+ */
+export function getContractUpdateDefaultExpiryDate(): Date {
     const future5Minutes = Date.now() + 5 * 60 * 1000;
     return new Date(future5Minutes);
 }
 
+/**
+ * Converts an address (either contract address or account address in its base58 form) to a contract update "invoker"
+ */
 export const getInvoker = (
     address: Base58String | ContractAddress
 ): ContractAddress | AccountAddress =>
     typeof address !== 'string' ? address : new AccountAddress(address);
 
+/**
+ * Defines methods for performing dry-run invocations of updates on a Contract with entrypoints `E`
+ *
+ * @template E - union of entrypoints
+ */
 export class ContractDryRun<E extends string = string> {
     constructor(
         protected grpcClient: ConcordiumGRPCClient,
@@ -96,6 +111,8 @@ export class ContractDryRun<E extends string = string> {
     /**
      * Performs a dry-run of a contract entrypoint invocation.
      * Useful for getting an indication of the result of an invocation of the entrypoint (e.g. getting a cost estimate).
+     *
+     * @template T - The type of the input given
      *
      * @param {string} entrypoint - The name of the receive function to invoke.
      * @param {ContractAddress | AccountAddress} invoker - The address of the invoker.
@@ -127,9 +144,22 @@ export class ContractDryRun<E extends string = string> {
     }
 }
 
-type Schema<E extends string = string> = Base64String | Record<E, Base64String>;
+/**
+ * Either a module schema, or a `Record` of parameter schemas per entrypoint `E`
+ *
+ * @template E - union of entrypoints
+ */
+export type Schema<E extends string = string> =
+    | Base64String
+    | Record<E, Base64String>;
 
+/**
+ * Defines methods for performing dry-run invocations of updates on a Contract with entrypoints `E`
+ *
+ * @template E - union of entrypoints
+ */
 class ContractBase<E extends string = string, V extends string = string> {
+    /** The dry-run instance, accessible through {@link ContractBase.dryRun} */
     protected dryRunInstance: ContractDryRun<E>;
 
     constructor(
@@ -145,6 +175,16 @@ class ContractBase<E extends string = string, V extends string = string> {
         );
     }
 
+    /**
+     * Helper function for getting the {@link InstanceInfo} of a contract
+     *
+     * @param {ConcordiumGRPCClient} grpcClient - The GRPC client for accessing a node.
+     * @param {ContractAddress} contractAddress - The address of the contract.
+     *
+     * @throws if the {@link InstanceInfo} of the contract could not be found.
+     *
+     * @returns {InstanceInfo} the instance info.
+     */
     protected static async getInstanceInfo(
         grpcClient: ConcordiumGRPCClient,
         contractAddress: ContractAddress
@@ -162,6 +202,16 @@ class ContractBase<E extends string = string, V extends string = string> {
         return instanceInfo;
     }
 
+    /**
+     * Helper function for getting the name of a contract
+     *
+     * @param {ConcordiumGRPCClient} grpcClient - The GRPC client for accessing a node.
+     * @param {ContractAddress} contractAddress - The address of the contract.
+     *
+     * @throws if the {@link InstanceInfo} of the contract could not be found.
+     *
+     * @returns {string} the name of the contract.
+     */
     protected static async getContractName(
         grpcClient: ConcordiumGRPCClient,
         contractAddress: ContractAddress
@@ -287,7 +337,7 @@ class ContractBase<E extends string = string, V extends string = string> {
         transactionBase: ContractUpdateTransaction,
         {
             senderAddress,
-            expiry = getDefaultExpiryDate(),
+            expiry = getContractUpdateDefaultExpiryDate(),
         }: ContractTransactionMetadata,
         signer: AccountSigner
     ): Promise<HexString> {
@@ -435,12 +485,18 @@ export class Contract<
     }
 }
 
+/**
+ * Abstract class for defining "clients" for enabling users to seemlessly interact with
+ * contracts adhering to standards (i.e. CIS contracts)
+ */
 export abstract class CISContract<
     E extends string,
     V extends string,
     D extends ContractDryRun<E>
 > extends ContractBase<E, V> {
+    /** Parameter schema for each entrypoint `E` */
     protected abstract override schema: Record<E, Base64String>;
+    /** The dry-run instance accessible through the {@link CISContract.dryRun} `dryRun` getter */
     protected override dryRunInstance: D;
 
     constructor(
@@ -457,6 +513,9 @@ export abstract class CISContract<
         );
     }
 
+    /**
+     * Function for creating the {@CISContract.dryRunInstance}.
+     */
     protected abstract makeDryRunInstance(
         grpcClient: ConcordiumGRPCClient,
         contractAddress: ContractAddress,

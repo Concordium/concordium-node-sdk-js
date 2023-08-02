@@ -417,6 +417,10 @@ export function serializeConfigureBakerPayload(
     return Buffer.concat([bitmap, serializedPayload]);
 }
 
+/**
+ * Takes a function which serializes a value, and returns a function that serializes an optional value
+ * Prefixed with a byte indicating if a value follows or not.
+ */
 export const makeSerializeOptional =
     <T>(fun: (value: T) => Buffer): ((value: T | undefined) => Buffer) =>
     (value) => {

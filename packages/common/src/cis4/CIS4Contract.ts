@@ -1,22 +1,21 @@
 import { Buffer } from 'buffer/';
 
-import {
-    AccountSigner,
-    Base58String,
-    ConcordiumGRPCClient,
-    HexString,
-    InvokeContractResult,
-} from '..';
+import { AccountSigner, ConcordiumGRPCClient } from '..';
 import {
     ContractTransactionMetadata,
     ContractUpdateTransactionWithSchema,
     CreateContractTransactionMetadata,
     CISContract,
     ContractDryRun,
-    getDefaultExpiryDate,
+    getContractUpdateDefaultExpiryDate,
     getInvoker,
 } from '../GenericContract';
-import { ContractAddress } from '../types';
+import type {
+    ContractAddress,
+    Base58String,
+    HexString,
+    InvokeContractResult,
+} from '../types';
 import {
     CIS4,
     deserializeCIS4CredentialEntry,
@@ -52,6 +51,10 @@ type Updates =
     | 'registerRevocationKeys'
     | 'removeRevocationKeys';
 
+/**
+ * Defines methods for performing dry-run invocations of CIS4 contract updates.
+ * Is accessible throught the `dryRun` property of a `CIS4Contract` instance.
+ */
 class CIS4DryRun extends ContractDryRun<Updates> {
     /**
      * Performs a dry-run invocation of "CIS4.registerCredential"
@@ -251,18 +254,32 @@ class CIS4DryRun extends ContractDryRun<Updates> {
     }
 }
 
+/**
+ * Defines methods for interacting with CIS4 contracts.
+ */
 export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
+    /**
+     * Parameter schemas for each CIS4 update entrypoint.
+     * These are returned individually when creating update transactions to be used for serializing
+     * a corresponding JSON representation of the parameter.
+     */
     public schema: Record<Updates, string> = {
+        /** Parameter schema for `registerCredential` entrypoint */
         registerCredential:
             'FAACAAAADwAAAGNyZWRlbnRpYWxfaW5mbxQABQAAAAkAAABob2xkZXJfaWQeIAAAABAAAABob2xkZXJfcmV2b2NhYmxlAQoAAAB2YWxpZF9mcm9tDQsAAAB2YWxpZF91bnRpbBUCAAAABAAAAE5vbmUCBAAAAFNvbWUBAQAAAA0MAAAAbWV0YWRhdGFfdXJsFAACAAAAAwAAAHVybBYBBAAAAGhhc2gVAgAAAAQAAABOb25lAgQAAABTb21lAQEAAAAeIAAAAA4AAABhdXhpbGlhcnlfZGF0YRABAg',
+        /** Parameter schema for `revokeCredentialHolder` entrypoint */
         revokeCredentialHolder:
             'FAACAAAACQAAAHNpZ25hdHVyZR5AAAAABAAAAGRhdGEUAAMAAAANAAAAY3JlZGVudGlhbF9pZB4gAAAADAAAAHNpZ25pbmdfZGF0YRQABAAAABAAAABjb250cmFjdF9hZGRyZXNzDAsAAABlbnRyeV9wb2ludBYBBQAAAG5vbmNlBQkAAAB0aW1lc3RhbXANBgAAAHJlYXNvbhUCAAAABAAAAE5vbmUCBAAAAFNvbWUBAQAAABQAAQAAAAYAAAByZWFzb24WAA',
+        /** Parameter schema for `revokeCredentialIssuer` entrypoint */
         revokeCredentialIssuer:
             'FAADAAAADQAAAGNyZWRlbnRpYWxfaWQeIAAAAAYAAAByZWFzb24VAgAAAAQAAABOb25lAgQAAABTb21lAQEAAAAUAAEAAAAGAAAAcmVhc29uFgAOAAAAYXV4aWxpYXJ5X2RhdGEQAQI',
+        /** Parameter schema for `revokeCredentialOther` entrypoint */
         revokeCredentialOther:
             'FAACAAAACQAAAHNpZ25hdHVyZR5AAAAABAAAAGRhdGEUAAQAAAANAAAAY3JlZGVudGlhbF9pZB4gAAAADAAAAHNpZ25pbmdfZGF0YRQABAAAABAAAABjb250cmFjdF9hZGRyZXNzDAsAAABlbnRyeV9wb2ludBYBBQAAAG5vbmNlBQkAAAB0aW1lc3RhbXANDgAAAHJldm9jYXRpb25fa2V5HiAAAAAGAAAAcmVhc29uFQIAAAAEAAAATm9uZQIEAAAAU29tZQEBAAAAFAABAAAABgAAAHJlYXNvbhYA',
+        /** Parameter schema for `registerRevocationKeys` entrypoint */
         registerRevocationKeys:
             'FAACAAAABAAAAGtleXMQAR4gAAAADgAAAGF1eGlsaWFyeV9kYXRhEAEC',
+        /** Parameter schema for `removeRevocationKeys` entrypoint */
         removeRevocationKeys:
             'FAACAAAABAAAAGtleXMQAR4gAAAADgAAAGF1eGlsaWFyeV9kYXRhEAEC',
     };
@@ -563,7 +580,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
             metadata,
             credHolderSigner,
             nonce,
-            metadata.expiry ?? getDefaultExpiryDate(),
+            metadata.expiry ?? getContractUpdateDefaultExpiryDate(),
             reason
         );
         return this.sendUpdateTransaction(transaction, metadata, signer);
@@ -652,7 +669,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
             revokerSigner,
             credentialPubKey,
             nonce,
-            metadata.expiry ?? getDefaultExpiryDate(),
+            metadata.expiry ?? getContractUpdateDefaultExpiryDate(),
             reason
         );
         return this.sendUpdateTransaction(transaction, metadata, signer);

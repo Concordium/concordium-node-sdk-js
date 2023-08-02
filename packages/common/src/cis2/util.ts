@@ -223,6 +223,13 @@ function serializeAccountAddress(address: HexString): Buffer {
     return new AccountAddress(address).decodedAddress;
 }
 
+/**
+ * Serializes {@link ContractAddress} into bytes
+ *
+ * @param {ContractAddress} address - The address to serialize
+ *
+ * @returns {Buffer} the address serialized to bytes
+ */
 export function serializeContractAddress(address: ContractAddress): Buffer {
     const index = encodeWord64(address.index, true);
     const subindex = encodeWord64(address.subindex, true);
@@ -239,6 +246,13 @@ function serializeAddress(address: CIS2.Address): Buffer {
     return Buffer.concat([type, serializedAddress]);
 }
 
+/**
+ * Serializes {@link string} contract entrypoint into bytes, prefixed by a 2-byte length
+ *
+ * @param {string} hook - the entrypoint to serialize
+ *
+ * @returns {Buffer} the entrypoint serialized to bytes
+ */
 export function serializeReceiveHookName(hook: string): Buffer {
     const serialized = Buffer.from(hook, 'ascii');
 
@@ -387,6 +401,13 @@ export const deserializeCIS2BalanceOfResponse = makeDeserializeListResponse(
  */
 export const serializeCIS2TokenIds = makeSerializeList(serializeCIS2TokenId);
 
+/**
+ * Serializes {@link CIS2.MetadataUrl} metadata URL into bytes
+ *
+ * @param {CIS2.MetadataUrl} metadataUrl - the metadata URL to serialize
+ *
+ * @returns {Buffer} the metadata URL serialized to bytes
+ */
 export function serializeCIS2MetadataUrl({
     url,
     hash,
@@ -399,6 +420,15 @@ export function serializeCIS2MetadataUrl({
     return Buffer.concat([bUrl, bHash]);
 }
 
+/**
+ * Attempts to deserialize some data into a {@link CIS2.MetadataUrl}
+ *
+ * @param {Cursor | HexString} value - the value to deserialize
+ *
+ * @throws if deserialization fails
+ *
+ * @returns {CIS2.MetadataUrl} the metadata URL
+ */
 export function deserializeCIS2MetadataUrl(
     value: Cursor | HexString
 ): CIS2.MetadataUrl {

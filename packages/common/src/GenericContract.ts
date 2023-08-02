@@ -154,7 +154,7 @@ export type Schema<E extends string = string> =
     | Record<E, Base64String>;
 
 /**
- * Defines methods for performing dry-run invocations of updates on a Contract with entrypoints `E`
+ * Base class for interacting with arbitrary contracts. Public version is {@link Contract}.
  *
  * @template E - union of entrypoints
  */
@@ -435,6 +435,12 @@ class ContractBase<E extends string = string, V extends string = string> {
     }
 }
 
+/**
+ * Base class for interacting with arbitrary contracts. Public version is {@link Contract}.
+ *
+ * @template E - union of update entrypoints
+ * @template V - union of view entrypoints
+ */
 export class Contract<
     E extends string = string,
     V extends string = string
@@ -488,6 +494,10 @@ export class Contract<
 /**
  * Abstract class for defining "clients" for enabling users to seemlessly interact with
  * contracts adhering to standards (i.e. CIS contracts)
+ *
+ * @template E - union of update entrypoints
+ * @template V - union of view entrypoints
+ * @template D - {@link ContractDryRun} extension
  */
 export abstract class CISContract<
     E extends string,

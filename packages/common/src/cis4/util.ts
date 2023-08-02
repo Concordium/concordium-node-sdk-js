@@ -1,4 +1,5 @@
 import { Buffer } from 'buffer/';
+import * as ed25519 from '@noble/ed25519';
 
 import type { ContractAddress, HexString } from '../types';
 import type { CIS2 } from '../cis2';
@@ -201,6 +202,20 @@ export class Web3IdSigner {
      * @param {HexString} publicKey - the ed25519 public key used for verifcation of signature
      */
     constructor(private privateKey: HexString, private publicKey: HexString) {}
+
+    /**
+     * Builds a `Web3IdSigner` from ed25519 private key
+     *
+     * @param {HexString} privateKey - the ed25519 private key used for signing
+     *
+     * @returns {Web3IdSigner} signer structure.
+     */
+    public static async from(privateKey: HexString): Promise<Web3IdSigner> {
+        const publicKey = Buffer.from(
+            await ed25519.getPublicKey(Buffer.from(privateKey, 'hex'))
+        ).toString('hex');
+        return new Web3IdSigner(privateKey, publicKey);
+    }
 
     /** Public key of signer */
     public get pubKey(): HexString {

@@ -7,20 +7,10 @@ import {
     Web3IdSigner,
 } from '@concordium/common-sdk';
 import { getNodeClientV2 as getNodeClient } from './testHelpers';
-// import * as ed25519 from '@noble/ed25519';
 
 const ISSUER_ACCOUNT = '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd';
 const ISSUER_PUB_KEY =
     '23e7b282e69f39f962fa587eb033ca201e09d59c9740f18d5666b390fea9d486';
-
-// (async () => {
-//     const prv = ed25519.utils.randomPrivateKey();
-//     const pub = await ed25519.getPublicKey(prv);
-//     console.log(
-//         Buffer.from(prv).toString('hex'),
-//         Buffer.from(pub).toString('hex')
-//     );
-// })();
 
 const HOLDER_KEYPAIR = {
     prv: 'df37c498bc038cedbb61b9c523f80d6bd4f8e13bddddc0be2d201cc08bb6b8ac',

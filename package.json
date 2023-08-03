@@ -70,6 +70,7 @@
         "markdown:lint-fix": "yarn markdownlint --fix pages/**/*.md packages/*/README.md README.md",
         "markdown:linkcheck": "yarn markdown-link-check --config .markdown-linkcheck.json pages/**/*.md packages/*/README.md README.md",
         "build": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build",
-        "build:dev": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build-dev"
+        "build:dev": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build-dev",
+        "clean": "FORCE_COLOR=true yarn workspaces foreach -p --no-private run clean"
     }
 }

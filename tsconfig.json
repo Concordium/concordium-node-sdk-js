@@ -4,12 +4,18 @@
         "resolveJsonModule": true,
         "composite": true,
         "strict": true,
-        "declaration": true,
+        "declaration": true
     },
     "files": [],
     "references": [
-        { "path": "./packages/common" },
-        { "path": "./packages/nodejs" },
-        { "path": "./packages/web" }
+        {
+            "path": "./packages/common"
+        },
+        {
+            "path": "./packages/nodejs"
+        },
+        {
+            "path": "./packages/web"
+        }
     ]
 }

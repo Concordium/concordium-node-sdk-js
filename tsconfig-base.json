@@ -1,12 +1,14 @@
 {
     "compilerOptions": {
         "strict": true,
-        "lib": ["ES2020"],
-        "module": "commonjs",
+        "lib": [
+            "ES2020"
+        ],
+        "module": "ES2020",
         "declaration": true,
         "moduleResolution": "Node",
         "target": "ES2020",
         "esModuleInterop": true,
-        "composite": true,
+        "composite": true
     }
 }

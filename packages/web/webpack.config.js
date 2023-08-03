@@ -1,14 +1,18 @@
-const path = require('path');
-const webpack = require('webpack');
+import path from 'path';
+import webpack from 'webpack';
+import { fileURLToPath } from 'url';
 
-module.exports = {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default {
     mode: 'production',
     cache: {
         type: 'filesystem',
         cacheDirectory: path.resolve(__dirname, '.webpack-cache'),
     },
     entry: {
-        concordium: './lib/index.js',
+        concordium: './lib/mjs/index.js',
     },
     plugins: [
         new webpack.SourceMapDevToolPlugin({
@@ -20,7 +24,7 @@ module.exports = {
     ],
     resolve: {
         fallback: {
-            stream: require.resolve('stream-browserify'),
+            stream: 'stream-browserify',
         },
     },
     module: {
@@ -60,7 +64,7 @@ module.exports = {
     },
     output: {
         filename: '[name].min.js',
-        path: path.resolve(__dirname, 'lib'),
+        path: path.resolve(__dirname, 'lib/umd'),
         library: 'concordiumSDK',
         libraryTarget: 'umd',
         publicPath: '',

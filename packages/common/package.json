@@ -10,6 +10,8 @@
         "url": "https://github.com/Concordium/concordium-node-sdk-js",
         "directory": "packages/common"
     },
+    "type": "module",
+    "sideEffects": false,
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
     "files": [
@@ -34,6 +36,7 @@
         "jest": "^27.0.6",
         "lint-staged": "^12.0.2",
         "prettier": "^2.3.2",
+        "rimraf": "^5.0.1",
         "ts-jest": "^27.0.3",
         "typescript": "^4.3.5"
     },
@@ -48,7 +51,8 @@
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
         "build": "rm -rf grpc; mkdir -p grpc; yarn generate && tsc",
-        "build-dev": "tsc"
+        "build-dev": "tsc",
+        "clean": "rimraf -- lib grpc tsconfig.tsbuildinfo"
     },
     "dependencies": {
         "@concordium/rust-bindings": "1.1.0",

@@ -21,6 +21,10 @@
         "clippy": "cargo +1.62 clippy --color=always --tests --benches -- -Dclippy::all",
         "build": "wasm-pack build --target web --out-dir pkg/bundler \"$@\" && wasm-pack build --target nodejs --out-dir pkg/node \"$@\"",
         "build-dev": "yarn build --dev",
-        "build:rust-bindings": "yarn build"
+        "build:rust-bindings": "yarn build",
+        "clean": "rimraf -- target pkg"
+    },
+    "devDependencies": {
+        "rimraf": "^5.0.1"
     }
 }

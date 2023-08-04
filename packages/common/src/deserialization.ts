@@ -1,6 +1,7 @@
 import * as wasm from '@concordium/rust-bindings';
 import { Buffer } from 'buffer/';
 import { getAccountTransactionHandler } from './accountTransactions';
+import { Cursor } from './deserializationHelpers';
 import {
     AccountTransaction,
     AccountTransactionHeader,
@@ -12,15 +13,14 @@ import {
 } from './types';
 import { AccountAddress } from './types/accountAddress';
 import { TransactionExpiry } from './types/transactionExpiry';
-import { PassThrough, Readable } from 'stream';
 
 /**
- * Reads an unsigned 8-bit integer from the given {@link Readable}.
+ * Reads an unsigned 8-bit integer from the given {@link Cursor}.
  *
  * @param source input stream
  * @returns number from 0 to 255
  */
-export function deserializeUint8(source: Readable): number {
+export function deserializeUint8(source: Cursor): number {
     return source.read(1).readUInt8(0);
 }
 
@@ -51,10 +51,10 @@ export function deserializeContractState(
 }
 
 function deserializeMap<K extends string | number | symbol, T>(
-    serialized: Readable,
-    decodeSize: (size: Readable) => number,
-    decodeKey: (k: Readable) => K,
-    decodeValue: (t: Readable) => T
+    serialized: Cursor,
+    decodeSize: (size: Cursor) => number,
+    decodeKey: (k: Cursor) => K,
+    decodeValue: (t: Cursor) => T
 ): Record<K, T> {
     const size = decodeSize(serialized);
     const result = {} as Record<K, T>;
@@ -67,13 +67,13 @@ function deserializeMap<K extends string | number | symbol, T>(
 }
 
 function deserializeAccountTransactionSignature(
-    signatures: Readable
+    signatures: Cursor
 ): AccountTransactionSignature {
-    const decodeSignature = (serialized: Readable) => {
+    const decodeSignature = (serialized: Cursor) => {
         const length = serialized.read(2).readUInt16BE(0);
         return serialized.read(length).toString('hex');
     };
-    const decodeCredentialSignatures = (serialized: Readable) =>
+    const decodeCredentialSignatures = (serialized: Cursor) =>
         deserializeMap(
             serialized,
             deserializeUint8,
@@ -89,7 +89,7 @@ function deserializeAccountTransactionSignature(
 }
 
 function deserializeTransactionHeader(
-    serializedHeader: Readable
+    serializedHeader: Cursor
 ): AccountTransactionHeader {
     const sender = AccountAddress.fromBytes(
         Buffer.from(serializedHeader.read(32))
@@ -111,7 +111,7 @@ function deserializeTransactionHeader(
     };
 }
 
-function deserializeAccountTransaction(serializedTransaction: Readable): {
+function deserializeAccountTransaction(serializedTransaction: Cursor): {
     accountTransaction: AccountTransaction;
     signatures: AccountTransactionSignature;
 } {
@@ -143,7 +143,7 @@ function deserializeAccountTransaction(serializedTransaction: Readable): {
     };
 }
 
-function deserializeCredentialDeployment(serializedDeployment: Readable) {
+function deserializeCredentialDeployment(serializedDeployment: Cursor) {
     const raw = wasm.deserializeCredentialDeployment(
         serializedDeployment.read().toString('hex')
     );
@@ -183,10 +183,9 @@ export type BlockItem =
 export function deserializeTransaction(
     serializedTransaction: Buffer
 ): BlockItem {
-    const bufferStream = new PassThrough();
-    bufferStream.end(serializedTransaction);
+    const cursor = new Cursor(serializedTransaction);
 
-    const version = deserializeUint8(bufferStream);
+    const version = deserializeUint8(cursor);
     if (version !== 0) {
         throw new Error(
             'Supplied version ' +
@@ -194,17 +193,17 @@ export function deserializeTransaction(
                 ' is not valid. Only transactions with version 0 format are supported'
         );
     }
-    const blockItemKind = deserializeUint8(bufferStream);
+    const blockItemKind = deserializeUint8(cursor);
     switch (blockItemKind) {
         case BlockItemKind.AccountTransactionKind:
             return {
                 kind: BlockItemKind.AccountTransactionKind,
-                transaction: deserializeAccountTransaction(bufferStream),
+                transaction: deserializeAccountTransaction(cursor),
             };
         case BlockItemKind.CredentialDeploymentKind:
             return {
                 kind: BlockItemKind.CredentialDeploymentKind,
-                transaction: deserializeCredentialDeployment(bufferStream),
+                transaction: deserializeCredentialDeployment(cursor),
             };
         case BlockItemKind.UpdateInstructionKind:
             throw new Error(

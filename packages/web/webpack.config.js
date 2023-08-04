@@ -22,11 +22,6 @@ export default {
             process: 'process/browser',
         }),
     ],
-    resolve: {
-        fallback: {
-            stream: 'stream-browserify',
-        },
-    },
     module: {
         rules: [
             {

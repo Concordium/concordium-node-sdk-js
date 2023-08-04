@@ -26,12 +26,17 @@ export class Cursor {
         return new Cursor(Buffer.from(data, 'hex'));
     }
 
-    /** Read a number of bytes from the cursor */
-    public read(numBytes: number): Buffer {
+    /**
+     * Read a number of bytes from the cursor
+     *
+     * @param {number} [numBytes] - Number of bytes to read. If not defined, the remaining data is read.
+     */
+    public read(numBytes?: number): Buffer {
+        const n = numBytes ?? this.remainingBytes.length;
         const data = Buffer.from(
-            this.data.subarray(this.cursor, this.cursor + numBytes)
+            this.data.subarray(this.cursor, this.cursor + n)
         );
-        this.cursor += numBytes;
+        this.cursor += n;
 
         return data;
     }

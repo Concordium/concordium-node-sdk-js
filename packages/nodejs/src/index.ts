@@ -5,10 +5,9 @@
  *
  */
 
-import ConcordiumNodeClient from './client';
 export * from './clientV2';
 
-export { ConcordiumNodeClient };
+export { default as ConcordiumNodeClient } from './client';
 export { decryptMobileWalletExport, EncryptedData } from './wallet/crypto';
 export { MobileWalletExport } from './wallet/types';
 export * from '@concordium/common-sdk';

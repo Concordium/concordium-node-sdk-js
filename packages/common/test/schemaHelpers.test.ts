@@ -3,7 +3,7 @@ import { Buffer } from 'buffer/';
 import {
     displayTypeSchemaTemplate,
     getUpdateContractParameterSchema,
-} from '../src/schemaHelpers';
+} from '../src/wasm/schemaHelpers';
 
 test('schema template display', () => {
     const fullSchema = Buffer.from(

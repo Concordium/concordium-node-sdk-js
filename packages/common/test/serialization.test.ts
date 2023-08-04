@@ -5,9 +5,11 @@ import { CcdAmount } from '../src/types/ccdAmount';
 import {
     serializeAccountTransactionForSubmission,
     serializeAccountTransactionSignature,
+} from '../src/serialization';
+import {
     serializeUpdateContractParameters,
     serializeTypeValue,
-} from '../src/serialization';
+} from '../src/wasm/serialization';
 import {
     AccountTransaction,
     AccountTransactionHeader,

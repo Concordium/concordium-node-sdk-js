@@ -4,7 +4,7 @@ import {
     deserializeReceiveReturnValue,
     deserializeReceiveError,
     deserializeInitError,
-} from '../src/deserialization';
+} from '../src/wasm/deserialization';
 import { Buffer } from 'buffer/';
 import { serializeAccountTransactionForSubmission } from '../src/serialization';
 import {

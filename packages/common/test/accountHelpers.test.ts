@@ -1,5 +1,5 @@
 import { AccountAddress } from '../src';
-import { generateBakerKeys } from '../src/accountHelpers';
+import { generateBakerKeys } from '../src/wasm/accountHelpers';
 
 test('generate baker keys', () => {
     const accountAddress = '3eP94feEdmhYiPC1333F9VoV31KGMswonuHk5tqmZrzf761zK5';

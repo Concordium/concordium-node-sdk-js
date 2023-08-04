@@ -18,13 +18,13 @@ import * as wasm from '@concordium/rust-bindings';
 import { TransactionExpiry } from './types/transactionExpiry';
 import { AccountAddress } from './types/accountAddress';
 import { sha256 } from './hash';
-import * as bs58check from 'bs58check';
+import { encode as bs58Encode } from 'bs58check';
 import { Buffer } from 'buffer/';
 import { ConcordiumHdWallet } from './HdWallet';
 import { AttributesKeys, CredentialDeploymentDetails, HexString } from '.';
 import { filterRecord, mapRecord } from './util';
 import { getCredentialDeploymentSignDigest } from './serialization';
-import * as ed from '@noble/ed25519';
+import { sign } from '@noble/ed25519';
 
 /**
  * Generates the unsigned credential information that has to be signed when
@@ -185,9 +185,7 @@ export function buildSignedCredentialForExistingAccount(
 export function getAccountAddress(credId: string): AccountAddress {
     const hashedCredId = sha256([Buffer.from(credId, 'hex')]);
     const prefixedWithVersion = Buffer.concat([Buffer.of(1), hashedCredId]);
-    const accountAddress = new AccountAddress(
-        bs58check.encode(prefixedWithVersion)
-    );
+    const accountAddress = new AccountAddress(bs58Encode(prefixedWithVersion));
     return accountAddress;
 }
 
@@ -326,5 +324,5 @@ export async function signCredentialTransaction(
     signingKey: HexString
 ): Promise<HexString> {
     const digest = getCredentialDeploymentSignDigest(credDeployment);
-    return Buffer.from(await ed.sign(digest, signingKey)).toString('hex');
+    return Buffer.from(await sign(digest, signingKey)).toString('hex');
 }

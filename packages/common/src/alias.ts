@@ -1,4 +1,4 @@
-import * as bs58check from 'bs58check';
+import { encode as bs58Encode } from 'bs58check';
 import { Buffer } from 'buffer/';
 import { AccountAddress } from './types/accountAddress';
 
@@ -53,5 +53,5 @@ export function getAlias(
         commonBytes,
         aliasBytes,
     ]);
-    return new AccountAddress(bs58check.encode(prefixedWithVersion));
+    return new AccountAddress(bs58Encode(prefixedWithVersion));
 }

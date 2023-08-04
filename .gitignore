@@ -22,6 +22,7 @@ doc
 
 # Auto generate files from the gRPC proto file
 grpc
+!packages/common/*/grpc
 
 # Webpack cache
 .webpack-cache

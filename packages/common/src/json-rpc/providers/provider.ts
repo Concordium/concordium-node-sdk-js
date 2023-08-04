@@ -1,4 +1,4 @@
-import { Invoker } from '../types';
+import { Invoker } from '../../types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 interface JsonRpcResponseBase {

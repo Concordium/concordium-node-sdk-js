@@ -2,7 +2,7 @@ import { Buffer } from 'buffer/';
 import { getPublicKey } from '@noble/ed25519';
 
 import type { ContractAddress, HexString } from '../types';
-import type { CIS2 } from '../cis2';
+import type { CIS2 } from '../cis2/util';
 import {
     deserializeCIS2MetadataUrl,
     serializeCIS2MetadataUrl,

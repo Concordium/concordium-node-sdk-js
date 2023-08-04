@@ -1,10 +1,10 @@
-import {
+import type {
     AttributeKey,
     CryptographicParameters,
     IdentityObjectV1,
     Network,
     Versioned,
-} from '.';
+} from '../types';
 
 export enum StatementTypes {
     RevealAttribute = 'RevealAttribute',

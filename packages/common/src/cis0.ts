@@ -2,7 +2,7 @@ import { Buffer } from 'buffer/';
 import { stringify } from 'json-bigint';
 
 import { ContractAddress, HexString } from './types';
-import { ConcordiumGRPCClient } from './GRPCClient';
+import { ConcordiumGRPCClient } from './grpc/GRPCClient';
 import {
     encodeWord16,
     packBufferWithWord8Length,

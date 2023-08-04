@@ -2,7 +2,7 @@ import { Buffer } from 'buffer/';
 import { stringify } from 'json-bigint';
 
 import { checkParameterLength, getContractName } from './contractHelpers';
-import { ConcordiumGRPCClient } from './GRPCClient';
+import { ConcordiumGRPCClient } from './grpc/GRPCClient';
 import { AccountSigner, signTransaction } from './signHelpers';
 import {
     AccountTransactionType,

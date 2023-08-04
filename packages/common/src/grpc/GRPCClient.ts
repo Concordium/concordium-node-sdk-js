@@ -5,16 +5,17 @@
  * @module Common GRPC-Client
  */
 import { Buffer } from 'buffer/';
-import * as v1 from './types';
-import * as v2 from '../grpc/v2/concordium/types';
-import { Base58String, HexString, isRpcError } from './types';
-import { QueriesClient } from '../grpc/v2/concordium/service.client';
 import type { RpcTransport } from '@protobuf-ts/runtime-rpc';
-import { CredentialRegistrationId } from './types/CredentialRegistrationId';
-import * as translate from './GRPCTypeTranslation';
-import { AccountAddress } from './types/accountAddress';
-import { getAccountTransactionHandler } from './accountTransactions';
-import { calculateEnergyCost } from './energyCost';
+
+import * as v1 from '../types';
+import * as v2 from '../../grpc/v2/concordium/types';
+import { Base58String, HexString, isRpcError } from '../types';
+import { QueriesClient } from '../../grpc/v2/concordium/service.client';
+import { CredentialRegistrationId } from '../types/CredentialRegistrationId';
+import * as translate from './translation';
+import { AccountAddress } from '../types/accountAddress';
+import { getAccountTransactionHandler } from '../accountTransactions';
+import { calculateEnergyCost } from '../energyCost';
 import {
     countSignatures,
     isHex,
@@ -23,14 +24,12 @@ import {
     mapStream,
     unwrap,
     wasmToSchema,
-} from './util';
-import {
-    serializeAccountTransactionPayload,
-    serializeCredentialDeploymentPayload,
-} from './serialization';
-import { BlockItemStatus, BlockItemSummary } from './types/blockItemSummary';
-import { ModuleReference } from './types/moduleReference';
-import { DEFAULT_INVOKE_ENERGY } from './constants';
+} from '../util';
+import { serializeAccountTransactionPayload } from '../serialization';
+import { BlockItemStatus, BlockItemSummary } from '../types/blockItemSummary';
+import { ModuleReference } from '../types/moduleReference';
+import { DEFAULT_INVOKE_ENERGY } from '../constants';
+import { serializeCredentialDeploymentPayload } from '../wasm/serialization'; // TODO: is this necessary??
 
 /**
  * @hidden

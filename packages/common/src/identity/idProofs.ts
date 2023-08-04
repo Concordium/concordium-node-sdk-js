@@ -4,7 +4,7 @@ import {
     AttributeKeyString,
     AttributesKeys,
     IdDocType,
-} from './types';
+} from '../types';
 import {
     AtomicStatement,
     IdProofInput,

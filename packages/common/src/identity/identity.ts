@@ -7,7 +7,7 @@ import {
     IpInfo,
     Network,
     Versioned,
-} from './types';
+} from '../types';
 
 export type IdentityRequestInput = {
     ipInfo: IpInfo;

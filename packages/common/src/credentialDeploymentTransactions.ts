@@ -20,7 +20,7 @@ import { AccountAddress } from './types/accountAddress';
 import { sha256 } from './hash';
 import { encode as bs58Encode } from 'bs58check';
 import { Buffer } from 'buffer/';
-import { ConcordiumHdWallet } from './HdWallet';
+import { ConcordiumHdWallet } from './wasm/HdWallet';
 import { AttributesKeys, CredentialDeploymentDetails, HexString } from '.';
 import { filterRecord, mapRecord } from './util';
 import { getCredentialDeploymentSignDigest } from './serialization';

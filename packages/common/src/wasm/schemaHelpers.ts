@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer/';
-import { SchemaVersion } from './types';
 import * as wasm from '@concordium/rust-bindings';
+import { SchemaVersion } from '../types';
 
 /**
  * @param moduleSchema buffer for the schema of a module that contains the contract

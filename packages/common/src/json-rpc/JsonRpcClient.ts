@@ -18,21 +18,21 @@ import {
     TransactionStatus,
     TransactionSummary,
     Versioned,
-} from './types';
-import { AccountAddress } from './types/accountAddress';
+} from '../types';
+import { AccountAddress } from '../types/accountAddress';
 import Provider, { JsonRpcResponse } from './providers/provider';
 import {
     serializeAccountTransactionForSubmission,
     serializeSignedCredentialDeploymentDetailsForSubmission,
-} from './serialization';
-import { CcdAmount } from './types/ccdAmount';
-import { ModuleReference } from './types/moduleReference';
+} from '../serialization';
+import { CcdAmount } from '../types/ccdAmount';
+import { ModuleReference } from '../types/moduleReference';
 import {
     buildJsonResponseReviver,
     intToStringTransformer,
     isValidHash,
-} from './util';
-import { CredentialRegistrationId } from './types/CredentialRegistrationId';
+} from '../util';
+import { CredentialRegistrationId } from '../types/CredentialRegistrationId';
 
 function transformJsonResponse<Result>(
     jsonString: string,

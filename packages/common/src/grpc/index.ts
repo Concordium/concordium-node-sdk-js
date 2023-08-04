@@ -1,0 +1,1 @@
+export { ConcordiumGRPCClient } from './GRPCClient';

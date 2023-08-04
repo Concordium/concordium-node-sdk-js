@@ -2,8 +2,8 @@ import * as wasm from '@concordium/rust-bindings';
 import { mnemonicToSeedSync, validateMnemonic } from '@scure/bip39';
 import { wordlist } from '@scure/bip39/wordlists/english';
 import { Buffer } from 'buffer/';
-import { AttributesKeys, Network, CryptographicParameters } from './types';
-import { isHex } from './util';
+import { AttributesKeys, Network, CryptographicParameters } from '../types';
+import { isHex } from '../util';
 
 /**
  * Class for Hierarchical Deterministic key derivation for Concordium identities and accounts.

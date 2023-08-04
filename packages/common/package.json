@@ -13,6 +13,15 @@
     "type": "module",
     "main": "lib/index.js",
     "types": "lib/index.d.ts",
+    "exports": {
+        "./wasm": "./lib/wasm/index.js",
+        "./cis0": "./lib/cis0.js",
+        "./cis2": "./lib/cis2/index.js",
+        "./cis4": "./lib/cis4/index.js",
+        "./identity": "./lib/identity/index.js",
+        "./grpc": "./lib/grpc/index.js",
+        "./json-rpc": "./lib/json-rpc/index.js"
+    },
     "files": [
         "/grpc/**/*",
         "/lib/**/*"

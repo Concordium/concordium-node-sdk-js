@@ -1,6 +1,6 @@
 import { ChannelCredentials, Metadata, ServiceError } from '@grpc/grpc-js';
 import { Buffer as BufferFormater } from 'buffer/';
-import { P2PClient } from '../grpc/concordium_p2p_rpc_grpc_pb';
+import { P2PClient } from '../grpc-api/concordium_p2p_rpc_grpc_pb';
 import {
     AccountAddress,
     BlockHash,
@@ -14,7 +14,7 @@ import {
     SendTransactionRequest,
     TransactionHash,
     InvokeContractRequest,
-} from '../grpc/concordium_p2p_rpc_pb';
+} from '../grpc-api/concordium_p2p_rpc_pb';
 import {
     serializeAccountTransactionForSubmission,
     serializeCredentialDeploymentTransactionForSubmission,
@@ -81,13 +81,11 @@ import {
     TimeoutParameters,
     Ratio,
     ConcordiumBftStatus,
-} from '@concordium/common-sdk';
-import {
     buildJsonResponseReviver,
     intToStringTransformer,
     isValidHash,
     stringToInt,
-} from '@concordium/common-sdk/lib/util';
+} from '@concordium/common-sdk';
 import {
     intListToStringList,
     unwrapBoolResponse,

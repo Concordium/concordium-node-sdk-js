@@ -5,7 +5,7 @@ module.exports = {
     moduleDirectories: ['node_modules'],
     globals: {
         'ts-jest': {
-            tsconfig: 'tsconfig.jest.json',
+            tsconfig: 'tsconfig.json',
         },
     },
 };

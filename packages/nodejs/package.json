@@ -51,15 +51,15 @@
         "tabWidth": 4
     },
     "scripts": {
-        "generate-js": "yarn run grpc_tools_node_protoc --js_out=import_style=commonjs,binary:grpc --grpc_out=grpc_js:grpc --plugin=protoc-gen-grpc=../../node_modules/.bin/grpc_tools_node_protoc_plugin -I ../../deps/concordium-base/concordium-grpc-api ../../deps/concordium-base/concordium-grpc-api/**/*.proto",
-        "generate-ts": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/grpc_tools_node_protoc_ts/bin/protoc-gen-ts --ts_out=grpc_js:grpc -I ../../deps/concordium-base/concordium-grpc-api ../../deps/concordium-base/concordium-grpc-api/concordium_p2p_rpc.proto",
+        "generate-js": "yarn run grpc_tools_node_protoc --js_out=import_style=commonjs,binary:grpc-api --grpc_out=grpc_js:grpc-api --plugin=protoc-gen-grpc=../../node_modules/.bin/grpc_tools_node_protoc_plugin -I ../../deps/concordium-base/concordium-grpc-api ../../deps/concordium-base/concordium-grpc-api/**/*.proto",
+        "generate-ts": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/grpc_tools_node_protoc_ts/bin/protoc-gen-ts --ts_out=grpc_js:grpc-api -I ../../deps/concordium-base/concordium-grpc-api ../../deps/concordium-base/concordium-grpc-api/concordium_p2p_rpc.proto",
         "generate": "([ -e \"../../deps/concordium-base/concordium-grpc-api\" ] && yarn generate-js && yarn generate-ts) || echo 'Please checkout submodules before building'",
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
-        "build": "rm -rf grpc; mkdir -p grpc; yarn generate && tsc",
+        "build": "rm -rf grpc-api; mkdir -p grpc-api; yarn generate && tsc",
         "build-dev": "tsc",
-        "clean": "rimraf -- lib grpc tsconfig.tsbuildinfo"
+        "clean": "rimraf -- lib grpc-api tsconfig.tsbuildinfo"
     },
     "dependencies": {
         "@concordium/common-sdk": "9.0.0",

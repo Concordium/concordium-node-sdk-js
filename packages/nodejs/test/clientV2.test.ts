@@ -1,11 +1,11 @@
 import * as v1 from '@concordium/common-sdk';
-import * as v2 from '../../common/grpc/v2/concordium/types';
+import * as v2 from '../../common/grpc-api/v2/concordium/types';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
 import {
     ConcordiumGRPCClient,
     getAccountIdentifierInput,
     getBlockHashInput,
-} from '@concordium/common-sdk/lib/GRPCClient';
+} from '@concordium/common-sdk/lib/cjs/grpc/GRPCClient';
 import {
     buildBasicAccountSigner,
     calculateEnergyCost,
@@ -28,7 +28,7 @@ import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons';
 import { Buffer } from 'buffer/';
 
-import { serializeAccountTransaction } from '@concordium/common-sdk/lib/serialization';
+import { serializeAccountTransaction } from '@concordium/common-sdk/lib/cjs/serialization';
 
 import { TextEncoder, TextDecoder } from 'util';
 

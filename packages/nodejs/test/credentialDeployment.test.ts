@@ -13,7 +13,7 @@ import {
 import fs from 'fs';
 import * as ed from '@noble/ed25519';
 import { Buffer } from 'buffer/';
-import { deserializeTransaction } from '@concordium/common-sdk/lib/deserialization';
+import { deserializeTransaction } from '@concordium/common-sdk/lib/cjs/wasm/deserialization';
 
 test('test deserialize credentialDeployment ', async () => {
     const identityInput: IdentityInput = getIdentityInput();

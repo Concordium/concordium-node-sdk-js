@@ -1,4 +1,4 @@
-import * as v2 from '../../common/grpc/v2/concordium/types';
+import * as v2 from '../../common/lib/grpc-api/v2/concordium/types';
 import * as v1 from '@concordium/common-sdk';
 import {
     buildBasicAccountSigner,

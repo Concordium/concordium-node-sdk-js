@@ -122,7 +122,8 @@ function serializeUpdateContractMessage(
 }
 
 /**
- * Convert schema into the object format expected by the Mobile crypto library.
+ * Convert schema into the object format expected by the Mobile crypto library (function 'parameter_to_json')
+ * which decodes the parameter before presenting it to the user for approval.
  * @param schema The schema object.
  */
 function convertSchemaFormat(schema: Schema | undefined) {

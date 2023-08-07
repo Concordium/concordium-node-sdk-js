@@ -1,4 +1,4 @@
-import { Big } from 'big.js/';
+import { Big } from 'big.js';
 
 /**
  * Representation of a CCD amount.

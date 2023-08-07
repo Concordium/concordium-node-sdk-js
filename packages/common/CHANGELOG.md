@@ -1,5 +1,11 @@
 # Changelog
 
+## 9.0.1
+
+### Added
+
+- `toCcd` and `fromCcd` functions to the CcdAmount class, which lets users parse and convert to ccd amounts as strings.
+
 ## 9.0.0
 
 ### Breaking changes

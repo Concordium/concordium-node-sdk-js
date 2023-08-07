@@ -17,7 +17,6 @@ import {
 } from '../grpc-api/concordium_p2p_rpc_pb';
 import {
     serializeAccountTransactionForSubmission,
-    serializeCredentialDeploymentTransactionForSubmission,
     AccountAddress as Address,
     CredentialRegistrationId,
     AccountBakerDetails,
@@ -81,16 +80,19 @@ import {
     TimeoutParameters,
     Ratio,
     ConcordiumBftStatus,
+} from '@concordium/common-sdk';
+import {
     buildJsonResponseReviver,
     intToStringTransformer,
     isValidHash,
     stringToInt,
-} from '@concordium/common-sdk';
+} from '@concordium/common-sdk/util';
 import {
     intListToStringList,
     unwrapBoolResponse,
     unwrapJsonResponse,
 } from './util';
+import { serializeCredentialDeploymentTransactionForSubmission } from '@concordium/common-sdk/wasm';
 
 /**
  * A concordium-node specific gRPC client wrapper.

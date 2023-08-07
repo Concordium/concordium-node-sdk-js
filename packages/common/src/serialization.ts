@@ -22,10 +22,8 @@ import {
     IdOwnershipProofs,
     UnsignedCredentialDeploymentInformation,
     CredentialDeploymentInfo,
-    SchemaVersion,
     CredentialDeploymentDetails,
     SignedCredentialDeploymentDetails,
-    CredentialDeploymentTransaction,
 } from './types';
 import { calculateEnergyCost } from './energyCost';
 import { countSignatures } from './util';

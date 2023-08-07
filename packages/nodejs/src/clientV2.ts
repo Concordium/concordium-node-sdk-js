@@ -1,6 +1,6 @@
 import { ChannelCredentials } from '@grpc/grpc-js';
 import { GrpcOptions, GrpcTransport } from '@protobuf-ts/grpc-transport';
-import { ConcordiumGRPCClient } from '@concordium/common-sdk';
+import { ConcordiumGRPCClient } from '@concordium/common-sdk/grpc';
 
 /**
  * Initialize a gRPC client for a specific concordium node.

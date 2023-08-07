@@ -6,7 +6,7 @@
         ],
         "module": "ES2020",
         "declaration": true,
-        "moduleResolution": "Node",
+        "moduleResolution": "Node16",
         "target": "ES2020",
         "esModuleInterop": true,
         "composite": true

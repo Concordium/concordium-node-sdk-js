@@ -34,4 +34,14 @@ describe('To and from ccd as strings', () => {
         const ccd = new CcdAmount(123456789n);
         expect(ccd.toCcd()).toEqual('123.456789');
     });
+
+    test('Test comma seperator toCcd', () => {
+        const ccd = new CcdAmount(123456789n);
+        expect(ccd.toCcd(true)).toEqual('123,456789');
+    });
+
+    test('Test comma seperator fromCcd', () => {
+        const ccd = CcdAmount.fromCcd('1,002', true);
+        expect(ccd.microCcdAmount).toEqual(1002000n);
+    });
 });

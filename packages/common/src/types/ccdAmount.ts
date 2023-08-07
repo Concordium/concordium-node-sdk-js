@@ -55,7 +55,7 @@ export class CcdAmount {
                 throw Error('More than one decimal seperator found!');
             }
 
-            ccd = ccd.replace('.', ',');
+            ccd = ccd.replace(',', '.');
         }
 
         const microCcd = Big(ccd).mul(Big(1000000));

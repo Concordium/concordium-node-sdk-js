@@ -6,6 +6,6 @@
     ],
     "compilerOptions": {
         "rootDir": "./src",
-        "outDir": "./lib"
+        "outDir": "./lib/mjs"
     }
 }

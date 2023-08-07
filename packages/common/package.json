@@ -10,22 +10,60 @@
         "url": "https://github.com/Concordium/concordium-node-sdk-js",
         "directory": "packages/common"
     },
-    "type": "module",
-    "main": "lib/index.js",
-    "types": "lib/index.d.ts",
+    "main": "lib/cjs/index.js",
+    "types": "lib/cjs/index.d.ts",
+    "module": "lib/mjs/index.js",
+    "browser": "lib/mjs/index.js",
     "exports": {
-        ".": "./lib/pub/index.js",
-        "./wasm": "./lib/pub/wasm.js",
-        "./cis0": "./lib/pub/cis0.js",
-        "./cis2": "./lib/pub/cis2.js",
-        "./cis4": "./lib/pub/cis4.js",
-        "./identity": "./lib/pub/identity.js",
-        "./grpc": "./lib/pub/grpc.js",
-        "./json-rpc": "./lib/pub/json-rpc.js"
+        ".": {
+            "types": "./lib/types/pub/index.d.ts",
+            "import": "./lib/mjs/pub/index.js",
+            "require": "./lib/cjs/pub/index.js"
+        },
+        "./wasm": {
+            "types": "./lib/types/pub/wasm.d.ts",
+            "import": "./lib/mjs/pub/wasm.js",
+            "require": "./lib/cjs/pub/wasm.js"
+        },
+        "./util": {
+            "types": "./lib/types/pub/util.d.ts",
+            "import": "./lib/mjs/pub/util.js",
+            "require": "./lib/cjs/pub/util.js"
+        },
+        "./cis0": {
+            "types": "./lib/types/pub/cis0.d.ts",
+            "import": "./lib/mjs/pub/cis0.js",
+            "require": "./lib/cjs/pub/cis0.js"
+        },
+        "./cis2": {
+            "types": "./lib/types/pub/cis2.d.ts",
+            "import": "./lib/mjs/pub/cis2.js",
+            "require": "./lib/cjs/pub/cis2.js"
+        },
+        "./cis4": {
+            "types": "./lib/types/pub/cis4.d.ts",
+            "import": "./lib/mjs/pub/cis4.js",
+            "require": "./lib/cjs/pub/cis4.js"
+        },
+        "./identity": {
+            "types": "./lib/types/pub/identity.d.ts",
+            "import": "./lib/mjs/pub/identity.js",
+            "require": "./lib/cjs/pub/identity.js"
+        },
+        "./grpc": {
+            "types": "./lib/types/pub/grpc.d.ts",
+            "import": "./lib/mjs/pub/grpc.js",
+            "require": "./lib/cjs/pub/grpc.js"
+        },
+        "./json-rpc": {
+            "types": "./lib/types/pub/json-rpc.d.ts",
+            "import": "./lib/mjs/pub/json-rpc.js",
+            "require": "./lib/cjs/pub/json-rpc.js"
+        }
     },
     "files": [
-        "/grpc/**/*",
-        "/lib/**/*"
+        "/lib/cjs/**/*",
+        "/lib/mjs/**/*"
     ],
     "devDependencies": {
         "@protobuf-ts/plugin": "2.8.1",
@@ -54,14 +92,16 @@
         "tabWidth": 4
     },
     "scripts": {
-        "generate-ts-v2": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/@protobuf-ts/plugin/bin/protoc-gen-ts --ts_opt 'optimize_code_size,output_legacy_commonjs,output_javascript' --ts_out=grpc -I ../../deps/concordium-base/concordium-grpc-api ../../deps/concordium-base/concordium-grpc-api/v2/concordium/*.proto",
+        "generate-ts-v2": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/@protobuf-ts/plugin/bin/protoc-gen-ts --ts_opt 'optimize_code_size,output_legacy_commonjs,output_javascript' --ts_out=grpc-api -I ../../deps/concordium-base/concordium-grpc-api ../../deps/concordium-base/concordium-grpc-api/v2/concordium/*.proto",
         "generate": "([ -e \"../../deps/concordium-base/concordium-grpc-api\" ] && yarn generate-ts-v2) || echo 'Please checkout submodules before building'",
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
-        "build": "rm -rf grpc; mkdir -p grpc; yarn generate && tsc",
+        "tsc:esm": "tsc",
+        "tsc:cjs": "tsc --outDir ./lib/cjs --module commonjs",
+        "build": "rm -rf grpc-api; mkdir -p grpc-api; yarn generate && yarn tsc:esm && yarn tsc:cjs && cp -R grpc-api lib",
         "build-dev": "tsc",
-        "clean": "rimraf -- lib grpc tsconfig.tsbuildinfo"
+        "clean": "rimraf -- lib grpc-api tsconfig.tsbuildinfo"
     },
     "dependencies": {
         "@concordium/rust-bindings": "1.1.0",

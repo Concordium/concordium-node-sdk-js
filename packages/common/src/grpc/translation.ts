@@ -2,7 +2,7 @@ import { Buffer } from 'buffer/';
 import bs58check from 'bs58check';
 
 import * as v1 from '../types';
-import * as v2 from '../../grpc/v2/concordium/types';
+import * as v2 from '../../grpc-api/v2/concordium/types';
 import { mapRecord, unwrap } from '../util';
 import { AccountAddress } from '../types/accountAddress';
 import { ModuleReference } from '../types/moduleReference';

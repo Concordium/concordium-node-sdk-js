@@ -1,4 +1,5 @@
 export * from './pub';
+export * from './pub/util';
 export * from './pub/wasm';
 export * from './pub/identity';
 export * from './pub/json-rpc';

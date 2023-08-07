@@ -26,7 +26,6 @@ export * from '../blockSummaryHelpers';
 export * from '../rewardStatusHelpers';
 
 export { getContractName } from '../contractHelpers';
-export { isHex, streamToList, wasmToSchema, unwrap } from '../util';
 
 export { getAccountTransactionHandler } from '../accountTransactions';
 export * from '../energyCost';

@@ -13,41 +13,91 @@
     "parserOptions": {
         "ecmaVersion": 2020,
         "sourceType": "module",
-        "project": [ "./packages/**/tsconfig.eslint.json", "./tsconfig.eslint.json", "./examples/tsconfig.eslint.json"]
+        "project": [
+            "./packages/**/tsconfig.eslint.json",
+            "./tsconfig.eslint.json",
+            "./examples/tsconfig.eslint.json"
+        ]
     },
     "plugins": [
         "@typescript-eslint",
         "import"
     ],
     "rules": {
-        "quotes": [2, "single", { "avoidEscape": true }],
-        "import/no-unresolved": [2, { "ignore": ["@concordium/rust-bindings", "@concordium/common-sdk", "@concordium/node-sdk", "grpc"]}],
-        "import/no-extraneous-dependencies": ["error", {"devDependencies": ["**/*.test.ts", "**/*.test.tsx", "**/*.config.js"]}],
-        "@typescript-eslint/no-unused-vars": ["warn", { "ignoreRestSiblings": true }]
+        "quotes": [
+            2,
+            "single",
+            {
+                "avoidEscape": true
+            }
+        ],
+        "import/no-unresolved": [
+            2,
+            {
+                "ignore": [
+                    "@concordium/rust-bindings",
+                    "@concordium/common-sdk",
+                    "@concordium/node-sdk",
+                    "grpc"
+                ]
+            }
+        ],
+        "import/no-extraneous-dependencies": [
+            "error",
+            {
+                "devDependencies": [
+                    "**/*.test.ts",
+                    "**/*.test.tsx",
+                    "**/*.config.js"
+                ]
+            }
+        ],
+        "@typescript-eslint/no-unused-vars": [
+            "warn",
+            {
+                "ignoreRestSiblings": true
+            }
+        ]
     },
     "overrides": [
         {
-            "files": ["*.config.js"],
+            "files": [
+                "*.config.js"
+            ],
             "rules": {
                 "@typescript-eslint/no-var-requires": "off",
                 "import/namespace": "off"
             }
         }
     ],
-    "ignorePatterns": ["**/pkg/**/", "**/lib/**/", "deps/**/*", "**/nodejs/grpc/*", "**/common/grpc/*", "typedoc/**"],
+    "ignorePatterns": [
+        "**/pkg/**/",
+        "**/lib/**/",
+        "deps/**/*",
+        "**/nodejs/grpc-api/*",
+        "**/common/grpc-api/*",
+        "typedoc/**"
+    ],
     "settings": {
         "import/ignore": [
             "bs58check"
         ],
         "import/parsers": {
-            "@typescript-eslint/parser": [".ts", ".tsx"]
+            "@typescript-eslint/parser": [
+                ".ts",
+                ".tsx"
+            ]
         },
         "import/resolver": {
             "typescript": {
-                "project": ["packages/*/tsconfig.json"]
+                "project": [
+                    "packages/*/tsconfig.json"
+                ]
             },
             "node": {
-                "project": ["packages/*/tsconfig.json"]
+                "project": [
+                    "packages/*/tsconfig.json"
+                ]
             }
         }
     }

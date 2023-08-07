@@ -8,9 +8,9 @@ import { Buffer } from 'buffer/';
 import type { RpcTransport } from '@protobuf-ts/runtime-rpc';
 
 import * as v1 from '../types';
-import * as v2 from '../../grpc/v2/concordium/types';
+import * as v2 from '../../grpc-api/v2/concordium/types';
 import { Base58String, HexString, isRpcError } from '../types';
-import { QueriesClient } from '../../grpc/v2/concordium/service.client';
+import { QueriesClient } from '../../grpc-api/v2/concordium/service.client';
 import { CredentialRegistrationId } from '../types/CredentialRegistrationId';
 import * as translate from './translation';
 import { AccountAddress } from '../types/accountAddress';

@@ -6,6 +6,6 @@
     ],
     "compilerOptions": {
         "rootDir": "./src",
-        "outDir": "./lib/mjs"
+        "outDir": "./lib/esm"
     }
 }

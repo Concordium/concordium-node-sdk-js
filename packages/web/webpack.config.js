@@ -12,7 +12,7 @@ export default {
         cacheDirectory: path.resolve(__dirname, '.webpack-cache'),
     },
     entry: {
-        concordium: './lib/mjs/index.js',
+        concordium: './lib/esm/index.js',
     },
     plugins: [
         new webpack.SourceMapDevToolPlugin({

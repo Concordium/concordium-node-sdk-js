@@ -12,58 +12,59 @@
     },
     "main": "lib/cjs/index.js",
     "types": "lib/cjs/index.d.ts",
-    "module": "lib/mjs/index.js",
-    "browser": "lib/mjs/index.js",
+    "module": "lib/esm/index.js",
+    "browser": "lib/esm/index.js",
     "exports": {
         ".": {
-            "types": "./lib/types/pub/index.d.ts",
-            "import": "./lib/mjs/pub/index.js",
+            "types": "./lib/cjs/pub/index.d.ts",
+            "import": "./lib/esm/pub/index.js",
             "require": "./lib/cjs/pub/index.js"
         },
         "./wasm": {
-            "types": "./lib/types/pub/wasm.d.ts",
-            "import": "./lib/mjs/pub/wasm.js",
+            "types": "./lib/cjs/pub/wasm.d.ts",
+            "import": "./lib/esm/pub/wasm.js",
             "require": "./lib/cjs/pub/wasm.js"
         },
         "./util": {
-            "types": "./lib/types/pub/util.d.ts",
-            "import": "./lib/mjs/pub/util.js",
+            "types": "./lib/cjs/pub/util.d.ts",
+            "import": "./lib/esm/pub/util.js",
             "require": "./lib/cjs/pub/util.js"
         },
         "./cis0": {
-            "types": "./lib/types/pub/cis0.d.ts",
-            "import": "./lib/mjs/pub/cis0.js",
+            "types": "./lib/cjs/pub/cis0.d.ts",
+            "import": "./lib/esm/pub/cis0.js",
             "require": "./lib/cjs/pub/cis0.js"
         },
         "./cis2": {
-            "types": "./lib/types/pub/cis2.d.ts",
-            "import": "./lib/mjs/pub/cis2.js",
+            "types": "./lib/cjs/pub/cis2.d.ts",
+            "import": "./lib/esm/pub/cis2.js",
             "require": "./lib/cjs/pub/cis2.js"
         },
         "./cis4": {
-            "types": "./lib/types/pub/cis4.d.ts",
-            "import": "./lib/mjs/pub/cis4.js",
+            "types": "./lib/cjs/pub/cis4.d.ts",
+            "import": "./lib/esm/pub/cis4.js",
             "require": "./lib/cjs/pub/cis4.js"
         },
         "./identity": {
-            "types": "./lib/types/pub/identity.d.ts",
-            "import": "./lib/mjs/pub/identity.js",
+            "types": "./lib/cjs/pub/identity.d.ts",
+            "import": "./lib/esm/pub/identity.js",
             "require": "./lib/cjs/pub/identity.js"
         },
         "./grpc": {
-            "types": "./lib/types/pub/grpc.d.ts",
-            "import": "./lib/mjs/pub/grpc.js",
+            "types": "./lib/cjs/pub/grpc.d.ts",
+            "import": "./lib/esm/pub/grpc.js",
             "require": "./lib/cjs/pub/grpc.js"
         },
         "./json-rpc": {
-            "types": "./lib/types/pub/json-rpc.d.ts",
-            "import": "./lib/mjs/pub/json-rpc.js",
+            "types": "./lib/cjs/pub/json-rpc.d.ts",
+            "import": "./lib/esm/pub/json-rpc.js",
             "require": "./lib/cjs/pub/json-rpc.js"
         }
     },
     "files": [
         "/lib/cjs/**/*",
-        "/lib/mjs/**/*"
+        "/lib/esm/**/*",
+        "/lib/grpc-api/**/*"
     ],
     "devDependencies": {
         "@protobuf-ts/plugin": "2.8.1",

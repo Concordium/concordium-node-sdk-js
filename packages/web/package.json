@@ -2,8 +2,8 @@
     "name": "@concordium/web-sdk",
     "version": "6.0.0",
     "license": "Apache-2.0",
-    "browser": "lib/mjs/index.js",
-    "types": "lib/types/index.d.ts",
+    "browser": "lib/esm/index.js",
+    "types": "lib/esm/index.d.ts",
     "files": [
         "lib/**/*"
     ],

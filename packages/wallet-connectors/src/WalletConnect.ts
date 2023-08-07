@@ -344,8 +344,10 @@ function serializePayloadParameters(
 
 /**
  * Convert {@link SignableMessage} into the object format expected by the Mobile Wallets.
- * As of this writing, the Android wallet only supports the {@link StringMessage} variant.
- * @param msg The message to be signed.
+ * As of this writing, the Android and iOS wallets only support the {@link StringMessage} variant.
+ * So if used with these application (which ignore the {@code schema} field), they will present (and sign)
+ * the hex string of the message rather than the actual bytes in the message.
+ * @param msg The binary or string message to be signed.
  */
 function convertSignableMessageFormat(msg: SignableMessage) {
     switch (msg.type) {

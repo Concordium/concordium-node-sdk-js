@@ -1322,6 +1322,7 @@ __metadata:
     "@protobuf-ts/plugin": 2.8.1
     "@protobuf-ts/runtime-rpc": ^2.8.2
     "@scure/bip39": ^1.1.0
+    "@types/big.js": ^6.2.0
     "@types/bs58check": ^2.1.0
     "@types/jest": ^26.0.23
     "@types/json-bigint": ^1.0.1
@@ -2243,6 +2244,13 @@ __metadata:
   dependencies:
     "@babel/types": ^7.3.0
   checksum: 8992d8c1eaaf1c793e9184b930767883446939d2744c40ea4e9591086e79b631189dc519931ed8864f1e016742a189703c217db59b800aca84870b865009d8b4
+  languageName: node
+  linkType: hard
+
+"@types/big.js@npm:^6.2.0":
+  version: 6.2.0
+  resolution: "@types/big.js@npm:6.2.0"
+  checksum: 69216051378559083453eb89ff63c70300928ebe3e5ccf2af98be39cdce1591d206a2206f1b3b97234b281646b54ded4c7bdf67fa4e383dccd278d129694af67
   languageName: node
   linkType: hard
 

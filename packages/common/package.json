@@ -56,6 +56,7 @@
         "@noble/ed25519": "^1.7.1",
         "@protobuf-ts/runtime-rpc": "^2.8.2",
         "@scure/bip39": "^1.1.0",
+        "@types/big.js": "^6.2.0",
         "bs58check": "^2.1.2",
         "buffer": "^6.0.3",
         "cross-fetch": "3.1.5",

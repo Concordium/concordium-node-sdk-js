@@ -43,7 +43,7 @@ export function useContractSchemaRpc(rpc: ConcordiumGRPCClient, contract: Info) 
                 if (!r) {
                     return err('module source is empty');
                 }
-                return ResultAsync.fromPromise(WebAssembly.compile(r), errorString);
+                return ResultAsync.fromPromise(WebAssembly.compile(r.source), errorString);
             })
             .andThen(findSchema)
             .then(setResult);

@@ -29,5 +29,8 @@
         "husky": "^8.0.0",
         "lint-staged": "^13.1.0",
         "pinst": "^3.0.0"
+    },
+    "resolutions": {
+        "@concordium/web-sdk": "^6.0.0"
     }
 }

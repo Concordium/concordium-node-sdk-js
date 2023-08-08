@@ -27,7 +27,7 @@ export class CcdAmount {
     /**
      * Returns the amount of CCD as a string.
      *
-     * @param useCommaDecimalSeperator Whether or not to use comma as a decimal seperator, defaults to false
+     * @param useCommaDecimalSeperator Whether or not to use a comma as a decimal separator instead of the dot, defaults to false
      * @returns The amount of CCD as a string
      */
     toCcd(useCommaDecimalSeperator = false): string {

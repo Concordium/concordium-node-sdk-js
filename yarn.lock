@@ -4667,6 +4667,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"eslint-import-resolver-exports@npm:^1.0.0-beta.5":
+  version: 1.0.0-beta.5
+  resolution: "eslint-import-resolver-exports@npm:1.0.0-beta.5"
+  dependencies:
+    resolve.exports: ^2.0.0
+  peerDependencies:
+    eslint: "*"
+    eslint-plugin-import: "*"
+  checksum: b7b7554442f2af2471f4af3a0e4e9e7a218105b1946d6b486f317bfa7f6f9cdc3b28fde8dd8324a255b1f36c6103664c79fa54d6a484c2bdec28b7e47aca5e87
+  languageName: node
+  linkType: hard
+
 "eslint-import-resolver-node@npm:^0.3.6":
   version: 0.3.6
   resolution: "eslint-import-resolver-node@npm:0.3.6"
@@ -8500,6 +8512,7 @@ __metadata:
     babel-loader: ^8.1.0
     eslint: ^7.29.0
     eslint-config-prettier: ^8.3.0
+    eslint-import-resolver-exports: ^1.0.0-beta.5
     eslint-import-resolver-typescript: ^2.7.1
     eslint-plugin-import: ^2.26.0
     eslint-plugin-prettier: ^3.4.0

@@ -11,52 +11,52 @@
         "directory": "packages/common"
     },
     "main": "lib/cjs/index.js",
-    "types": "lib/cjs/index.d.ts",
+    "types": "lib/esm/index.d.ts",
     "module": "lib/esm/index.js",
     "browser": "lib/esm/index.js",
     "exports": {
         ".": {
-            "types": "./lib/cjs/pub/index.d.ts",
+            "types": "./lib/esm/pub/index.d.ts",
             "import": "./lib/esm/pub/index.js",
             "require": "./lib/cjs/pub/index.js"
         },
         "./wasm": {
-            "types": "./lib/cjs/pub/wasm.d.ts",
+            "types": "./lib/esm/pub/wasm.d.ts",
             "import": "./lib/esm/pub/wasm.js",
             "require": "./lib/cjs/pub/wasm.js"
         },
         "./util": {
-            "types": "./lib/cjs/pub/util.d.ts",
+            "types": "./lib/esm/pub/util.d.ts",
             "import": "./lib/esm/pub/util.js",
             "require": "./lib/cjs/pub/util.js"
         },
         "./cis0": {
-            "types": "./lib/cjs/pub/cis0.d.ts",
+            "types": "./lib/esm/pub/cis0.d.ts",
             "import": "./lib/esm/pub/cis0.js",
             "require": "./lib/cjs/pub/cis0.js"
         },
         "./cis2": {
-            "types": "./lib/cjs/pub/cis2.d.ts",
+            "types": "./lib/esm/pub/cis2.d.ts",
             "import": "./lib/esm/pub/cis2.js",
             "require": "./lib/cjs/pub/cis2.js"
         },
         "./cis4": {
-            "types": "./lib/cjs/pub/cis4.d.ts",
+            "types": "./lib/esm/pub/cis4.d.ts",
             "import": "./lib/esm/pub/cis4.js",
             "require": "./lib/cjs/pub/cis4.js"
         },
         "./identity": {
-            "types": "./lib/cjs/pub/identity.d.ts",
+            "types": "./lib/esm/pub/identity.d.ts",
             "import": "./lib/esm/pub/identity.js",
             "require": "./lib/cjs/pub/identity.js"
         },
         "./grpc": {
-            "types": "./lib/cjs/pub/grpc.d.ts",
+            "types": "./lib/esm/pub/grpc.d.ts",
             "import": "./lib/esm/pub/grpc.js",
             "require": "./lib/cjs/pub/grpc.js"
         },
         "./json-rpc": {
-            "types": "./lib/cjs/pub/json-rpc.d.ts",
+            "types": "./lib/esm/pub/json-rpc.d.ts",
             "import": "./lib/esm/pub/json-rpc.js",
             "require": "./lib/cjs/pub/json-rpc.js"
         }
@@ -102,7 +102,7 @@
         "build-dev": "yarn tsc-esm && yarn tsc-cjs",
         "tsc-esm": "tsc -p tsconfig.build.json",
         "tsc-cjs": "tsc -p tsconfig.build.json --outDir ./lib/cjs --module commonjs",
-        "clean": "rimraf -- lib grpc-api tsconfig.tsbuildinfo"
+        "clean": "rimraf -- lib grpc-api"
     },
     "dependencies": {
         "@concordium/rust-bindings": "1.1.0",

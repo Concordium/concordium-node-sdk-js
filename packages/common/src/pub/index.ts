@@ -1,4 +1,4 @@
-import { sha256 } from '../hash';
+// Functionality revolving concordium domain types and utitlity for working with these types.
 export * from '../types';
 export {
     getAccountTransactionHash,
@@ -10,7 +10,7 @@ export {
     serializeAccountTransactionPayload,
     serializeAccountTransaction,
 } from '../serialization';
-export { sha256 };
+export { sha256 } from '../hash';
 export { CredentialRegistrationId } from '../types/CredentialRegistrationId';
 export { AccountAddress } from '../types/accountAddress';
 export { CcdAmount } from '../types/ccdAmount';

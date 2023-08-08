@@ -4,8 +4,47 @@
     "license": "Apache-2.0",
     "browser": "lib/esm/index.js",
     "types": "lib/esm/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./lib/esm/pub/index.d.ts",
+            "import": "./lib/esm/pub/index.js"
+        },
+        "./wasm": {
+            "types": "./lib/esm/pub/wasm.d.ts",
+            "import": "./lib/esm/pub/wasm.js"
+        },
+        "./util": {
+            "types": "./lib/esm/pub/util.d.ts",
+            "import": "./lib/esm/pub/util.js"
+        },
+        "./cis0": {
+            "types": "./lib/esm/pub/cis0.d.ts",
+            "import": "./lib/esm/pub/cis0.js"
+        },
+        "./cis2": {
+            "types": "./lib/esm/pub/cis2.d.ts",
+            "import": "./lib/esm/pub/cis2.js"
+        },
+        "./cis4": {
+            "types": "./lib/esm/pub/cis4.d.ts",
+            "import": "./lib/esm/pub/cis4.js"
+        },
+        "./identity": {
+            "types": "./lib/esm/pub/identity.d.ts",
+            "import": "./lib/esm/pub/identity.js"
+        },
+        "./grpc": {
+            "types": "./lib/esm/pub/grpc.d.ts",
+            "import": "./lib/esm/pub/grpc.js"
+        },
+        "./json-rpc": {
+            "types": "./lib/esm/pub/json-rpc.d.ts",
+            "import": "./lib/esm/pub/json-rpc.js"
+        }
+    },
     "files": [
-        "lib/**/*"
+        "lib/esm/**/*",
+        "lib/umd/**/*"
     ],
     "repository": {
         "type": "git",
@@ -58,7 +97,7 @@
     "scripts": {
         "build": "tsc && webpack",
         "build-dev": "yarn build",
-        "clean": "rimraf -- lib .webpack-cache tsconfig.tsbuildinfo",
+        "clean": "rimraf -- lib .webpack-cache",
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest"

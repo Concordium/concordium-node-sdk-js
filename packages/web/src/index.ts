@@ -1,21 +1,12 @@
 /**
  * @module Web-SDK
  */
-
-import { Buffer } from 'buffer/';
-
-import init from '@concordium/rust-bindings';
-
-export * from '@concordium/common-sdk';
-export * from '@concordium/common-sdk/util';
-export * from '@concordium/common-sdk/wasm';
-export * from '@concordium/common-sdk/cis0';
-export * from '@concordium/common-sdk/cis2';
-export * from '@concordium/common-sdk/cis4';
-export * from '@concordium/common-sdk/identity';
-
-init();
-
-export function toBuffer(s: string, encoding?: string): Buffer {
-    return Buffer.from(s, encoding);
-}
+export * from './pub/index';
+export * from './pub/util';
+export * from './pub/wasm';
+export * from './pub/identity';
+export * from './pub/grpc';
+export * from './pub/json-rpc';
+export * from './pub/cis0';
+export * from './pub/cis2';
+export * from './pub/cis4';

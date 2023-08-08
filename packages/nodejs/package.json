@@ -16,11 +16,60 @@
     "engines": {
         "node": ">=14.16.0"
     },
-    "main": "lib/index.js",
-    "types": "lib/index.d.ts",
+    "main": "lib/cjs/index.js",
+    "types": "lib/esm/index.d.ts",
+    "module": "lib/esm/indes.js",
+    "exports": {
+        ".": {
+            "types": "./lib/esm/pub/index.d.ts",
+            "import": "./lib/esm/pub/index.js",
+            "require": "./lib/cjs/pub/index.js"
+        },
+        "./wasm": {
+            "types": "./lib/esm/pub/wasm.d.ts",
+            "import": "./lib/esm/pub/wasm.js",
+            "require": "./lib/cjs/pub/wasm.js"
+        },
+        "./util": {
+            "types": "./lib/esm/pub/util.d.ts",
+            "import": "./lib/esm/pub/util.js",
+            "require": "./lib/cjs/pub/util.js"
+        },
+        "./cis0": {
+            "types": "./lib/esm/pub/cis0.d.ts",
+            "import": "./lib/esm/pub/cis0.js",
+            "require": "./lib/cjs/pub/cis0.js"
+        },
+        "./cis2": {
+            "types": "./lib/esm/pub/cis2.d.ts",
+            "import": "./lib/esm/pub/cis2.js",
+            "require": "./lib/cjs/pub/cis2.js"
+        },
+        "./cis4": {
+            "types": "./lib/esm/pub/cis4.d.ts",
+            "import": "./lib/esm/pub/cis4.js",
+            "require": "./lib/cjs/pub/cis4.js"
+        },
+        "./identity": {
+            "types": "./lib/esm/pub/identity.d.ts",
+            "import": "./lib/esm/pub/identity.js",
+            "require": "./lib/cjs/pub/identity.js"
+        },
+        "./client": {
+            "types": "./lib/esm/pub/client.d.ts",
+            "import": "./lib/esm/pub/client.js",
+            "require": "./lib/cjs/pub/client.js"
+        },
+        "./clientV2": {
+            "types": "./lib/esm/pub/clientV2.d.ts",
+            "import": "./lib/esm/pub/clientV2.js",
+            "require": "./lib/cjs/pub/clientV2.js"
+        }
+    },
     "files": [
-        "/grpc/*",
-        "/lib/**/*"
+        "/lib/cjs/**/*",
+        "/lib/esm/**/*",
+        "/lib/grpc-api/**/*"
     ],
     "devDependencies": {
         "@noble/ed25519": "^1.7.1",
@@ -57,9 +106,11 @@
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
-        "build": "rm -rf grpc-api; mkdir -p grpc-api; yarn generate && yarn build-dev",
-        "build-dev": "tsc -p tsconfig.build.json",
-        "clean": "rimraf -- lib grpc-api tsconfig.tsbuildinfo"
+        "build": "rm -rf grpc-api; mkdir -p grpc-api; yarn generate && yarn build-dev && cp -R grpc-api lib",
+        "build-dev": "yarn tsc-esm && yarn tsc-cjs",
+        "tsc-esm": "tsc -p tsconfig.build.json",
+        "tsc-cjs": "tsc -p tsconfig.build.json --outDir ./lib/cjs --module commonjs",
+        "clean": "rimraf -- lib grpc-api"
     },
     "dependencies": {
         "@concordium/common-sdk": "9.0.0",

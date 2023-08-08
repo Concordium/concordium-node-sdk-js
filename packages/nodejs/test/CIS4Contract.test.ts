@@ -1,11 +1,7 @@
 import { Buffer } from 'buffer/';
-import {
-    CIS4,
-    CIS4Contract,
-    ContractAddress,
-    serializeTypeValue,
-    Web3IdSigner,
-} from '@concordium/common-sdk';
+import { ContractAddress } from '@concordium/common-sdk';
+import { serializeTypeValue } from '@concordium/common-sdk/wasm';
+import { CIS4, CIS4Contract, Web3IdSigner } from '@concordium/common-sdk/cis4';
 import { getNodeClientV2 as getNodeClient } from './testHelpers';
 
 const ISSUER_ACCOUNT = '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd';

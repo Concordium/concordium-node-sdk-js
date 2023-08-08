@@ -8,6 +8,7 @@ export {
     serializeAccountTransactionForSubmission,
     getSignedCredentialDeploymentTransactionHash,
     serializeAccountTransactionPayload,
+    serializeAccountTransaction,
 } from '../serialization';
 export { sha256 };
 export { CredentialRegistrationId } from '../types/CredentialRegistrationId';

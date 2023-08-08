@@ -1,10 +1,8 @@
 import { getNodeClient } from './testHelpers';
-import {
-    deserializeContractState,
-    isInstanceInfoV0,
-} from '@concordium/common-sdk';
+import { isInstanceInfoV0 } from '@concordium/common-sdk';
 import { Buffer } from 'buffer/';
 import * as fs from 'fs';
+import { deserializeContractState } from '@concordium/common-sdk/wasm';
 
 const client = getNodeClient();
 

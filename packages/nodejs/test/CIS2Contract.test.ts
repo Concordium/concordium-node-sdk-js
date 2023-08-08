@@ -1,12 +1,12 @@
 import { Buffer } from 'buffer/';
 import {
     AccountTransactionType,
-    CIS2Contract,
     ContractAddress,
-    serializeTypeValue,
     TransactionEventTag,
 } from '@concordium/common-sdk';
 import { getNodeClientV2 as getNodeClient } from './testHelpers';
+import { CIS2Contract } from '@concordium/common-sdk/cis2';
+import { serializeTypeValue } from '@concordium/common-sdk/wasm';
 
 const CIS2_FT_ADDRESS: ContractAddress = {
     index: 3496n,

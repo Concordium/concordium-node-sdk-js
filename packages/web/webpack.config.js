@@ -1,11 +1,7 @@
-import path from 'path';
-import webpack from 'webpack';
-import { fileURLToPath } from 'url';
+const path = require('path');
+const webpack = require('webpack');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-export default {
+module.exports = {
     mode: 'production',
     cache: {
         type: 'filesystem',
@@ -22,6 +18,11 @@ export default {
             process: 'process/browser',
         }),
     ],
+    resolve: {
+        fallback: {
+            stream: require.resolve('stream-browserify'),
+        },
+    },
     module: {
         rules: [
             {

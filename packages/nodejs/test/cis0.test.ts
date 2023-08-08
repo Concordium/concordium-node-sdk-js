@@ -1,4 +1,4 @@
-import { CIS0, cis0Supports } from '@concordium/common-sdk';
+import { CIS0, cis0Supports } from '@concordium/common-sdk/cis0';
 import { getNodeClientV2 as getNodeClient } from './testHelpers';
 
 const client = getNodeClient();

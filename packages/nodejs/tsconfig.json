@@ -1,16 +1,12 @@
 {
     "extends": "../../tsconfig-base.json",
     "include": [
-        "src/**/*"
+        "src/**/*",
+        "test/**/*"
     ],
     "references": [
         {
             "path": "../common"
         }
-    ],
-    "compilerOptions": {
-        "rootDir": "src",
-        "outDir": "./lib",
-        "module": "CommonJS"
-    }
+    ]
 }

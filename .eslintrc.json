@@ -14,7 +14,9 @@
         "ecmaVersion": 2020,
         "sourceType": "module",
         "project": [
-            "./packages/**/tsconfig.eslint.json",
+            "./packages/common/tsconfig.json",
+            "./packages/web/tsconfig.json",
+            "./packages/nodejs/tsconfig.json",
             "./tsconfig.eslint.json",
             "./examples/tsconfig.eslint.json"
         ]

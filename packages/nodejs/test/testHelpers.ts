@@ -1,7 +1,8 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import * as fs from 'fs';
 import { credentials, Metadata } from '@grpc/grpc-js/';
-import { ConcordiumGRPCClient, IdentityInput } from '@concordium/common-sdk';
+import { IdentityInput } from '@concordium/common-sdk';
+import { ConcordiumGRPCClient } from '@concordium/common-sdk/grpc';
 import { decryptMobileWalletExport, EncryptedData } from '../src/wallet/crypto';
 import { MobileWalletExport } from '../src/wallet/types';
 import { createConcordiumClient } from '../src/clientV2';

@@ -2,7 +2,7 @@ import {
     GrpcWebFetchTransport,
     GrpcWebOptions,
 } from '@protobuf-ts/grpcweb-transport';
-import { ConcordiumGRPCClient } from '@concordium/common-sdk';
+import { ConcordiumGRPCClient } from '@concordium/common-sdk/grpc';
 
 /**
  * Initialize a gRPC client for a specific concordium node.

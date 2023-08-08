@@ -81,11 +81,11 @@
         "grpc-tools": "^1.11.2",
         "grpc_tools_node_protoc_ts": "5.3.0",
         "husky": "^4.2.5",
-        "jest": "^27.0.6",
+        "jest": "^29.6.2",
         "lint-staged": "^12.0.2",
         "prettier": "^2.3.2",
         "rimraf": "^5.0.1",
-        "ts-jest": "^27.0.3",
+        "ts-jest": "^29.1.1",
         "typescript": "^4.3.5"
     },
     "prettier": {
@@ -98,10 +98,10 @@
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
-        "tsc:esm": "tsc",
-        "tsc:cjs": "tsc --outDir ./lib/cjs --module commonjs",
-        "build": "rm -rf grpc-api; mkdir -p grpc-api; yarn generate && yarn tsc:esm && yarn tsc:cjs && cp -R grpc-api lib",
-        "build-dev": "tsc",
+        "build": "rm -rf grpc-api; mkdir -p grpc-api; yarn generate && yarn build-dev && cp -R grpc-api lib",
+        "build-dev": "yarn tsc-esm && yarn tsc-cjs",
+        "tsc-esm": "tsc -p tsconfig.build.json",
+        "tsc-cjs": "tsc -p tsconfig.build.json --outDir ./lib/cjs --module commonjs",
         "clean": "rimraf -- lib grpc-api tsconfig.tsbuildinfo"
     },
     "dependencies": {

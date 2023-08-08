@@ -2,11 +2,6 @@ import * as v1 from '@concordium/common-sdk';
 import * as v2 from '../../common/grpc-api/v2/concordium/types';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
 import {
-    ConcordiumGRPCClient,
-    getAccountIdentifierInput,
-    getBlockHashInput,
-} from '@concordium/common-sdk/lib/cjs/grpc/GRPCClient';
-import {
     buildBasicAccountSigner,
     calculateEnergyCost,
     getAccountTransactionHandler,
@@ -14,9 +9,8 @@ import {
     sha256,
     signTransaction,
     serializeAccountTransactionPayload,
-    streamToList,
-    deserializeReceiveReturnValue,
     createCredentialDeploymentTransaction,
+    serializeAccountTransaction,
 } from '@concordium/common-sdk';
 import {
     getModuleBuffer,
@@ -28,9 +22,14 @@ import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons';
 import { Buffer } from 'buffer/';
 
-import { serializeAccountTransaction } from '@concordium/common-sdk/lib/cjs/serialization';
-
 import { TextEncoder, TextDecoder } from 'util';
+import {
+    ConcordiumGRPCClient,
+    getAccountIdentifierInput,
+    getBlockHashInput,
+} from '@concordium/common-sdk/grpc';
+import { streamToList } from '@concordium/common-sdk/util';
+import { deserializeReceiveReturnValue } from '@concordium/common-sdk/wasm';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 global.TextEncoder = TextEncoder as any;

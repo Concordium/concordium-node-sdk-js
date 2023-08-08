@@ -1,1 +1,5 @@
-export { ConcordiumGRPCClient } from './GRPCClient';
+export {
+    ConcordiumGRPCClient,
+    getAccountIdentifierInput,
+    getBlockHashInput,
+} from './GRPCClient';

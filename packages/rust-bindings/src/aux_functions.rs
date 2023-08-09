@@ -2,6 +2,7 @@ use crate::{helpers::*, types::*};
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use concordium_base::{
     base::{BakerAggregationSignKey, BakerElectionSignKey, BakerKeyPairs, BakerSignatureSignKey},
+    cis4_types::IssuerKey,
     common::{
         types::{KeyIndex, KeyPair, TransactionTime},
         *,
@@ -9,8 +10,7 @@ use concordium_base::{
     contracts_common::{
         from_bytes,
         schema::{ModuleV0, Type, VersionedModuleSchema},
-        ContractAddress,
-        Cursor,
+        ContractAddress, Cursor,
     },
     id::{
         account_holder::{
@@ -20,7 +20,7 @@ use concordium_base::{
         constants,
         constants::{ArCurve, AttributeKind},
         dodis_yampolskiy_prf as prf,
-        id_proof_types::{Proof, Statement, StatementWithContext, ProofVersion},
+        id_proof_types::{Proof, ProofVersion, Statement, StatementWithContext},
         pedersen_commitment::{
             CommitmentKey as PedersenKey, Randomness as PedersenRandomness, Value as PedersenValue,
             Value,
@@ -28,13 +28,15 @@ use concordium_base::{
         secret_sharing::Threshold,
         types::*,
     },
-    cis4_types::IssuerKey,
-    web3id::{Request, Web3IdAttribute, OwnedCommitmentInputs, Web3IdSigner, SignedCommitments, CredentialHolderId },
     transactions::{ConfigureBakerKeysPayload, Payload},
+    web3id::{
+        CredentialHolderId, OwnedCommitmentInputs, Request, SignedCommitments, Web3IdAttribute,
+        Web3IdSigner,
+    },
 };
 use either::Either::Left;
 use hex;
-use key_derivation::{ConcordiumHdWallet, Net, CredentialContext};
+use key_derivation::{ConcordiumHdWallet, CredentialContext, Net};
 use rand::thread_rng;
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use serde_json::{from_str, to_string, Value as SerdeValue};
@@ -386,7 +388,7 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<JsonString> {
         wallet,
         identity_provider_index: identity_provider_index.into(),
         identity_index: input.identity_index,
-        credential_index: u8::from(input.cred_number),
+        credential_index: input.cred_number,
     };
 
     let (cdi, _) = create_credential(
@@ -794,7 +796,7 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<JsonString> {
     let credential_context = CredentialContext {
         wallet,
         identity_provider_index: input.identity_provider_index.into(),
-        credential_index: u8::from(input.cred_number),
+        credential_index: input.cred_number,
         identity_index: input.identity_index,
     };
 
@@ -829,28 +831,28 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<JsonString> {
 }
 
 #[derive(SerdeDeserialize)]
-struct Web3SecretKey (
-    #[serde(deserialize_with = "base16_decode")]
-    ed25519_dalek::SecretKey
-);
+struct Web3SecretKey(#[serde(deserialize_with = "base16_decode")] ed25519_dalek::SecretKey);
 
 impl Web3IdSigner for Web3SecretKey {
     fn id(&self) -> ed25519_dalek::PublicKey { self.0.id() }
-    fn sign(&self, msg: &impl AsRef<[u8]>) -> ed25519_dalek::Signature {
-        self.0.sign(msg)
-    }
+
+    fn sign(&self, msg: &impl AsRef<[u8]>) -> ed25519_dalek::Signature { self.0.sign(msg) }
 }
 
 #[derive(SerdeDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Web3IdProofInput {
-    request: Request<constants::ArCurve, Web3IdAttribute>,
-    global_context: GlobalContext<constants::ArCurve>,
-    commitment_inputs: Vec<OwnedCommitmentInputs<constants::ArCurve, Web3IdAttribute, Web3SecretKey>>,
+    request:           Request<constants::ArCurve, Web3IdAttribute>,
+    global_context:    GlobalContext<constants::ArCurve>,
+    commitment_inputs:
+        Vec<OwnedCommitmentInputs<constants::ArCurve, Web3IdAttribute, Web3SecretKey>>,
 }
 
 pub fn create_web3_id_proof_aux(input: Web3IdProofInput) -> Result<JsonString> {
-    let presentation = input.request.prove(&input.global_context, input.commitment_inputs.iter().map(Into::into));
+    let presentation = input.request.prove(
+        &input.global_context,
+        input.commitment_inputs.iter().map(Into::into),
+    );
     Ok(json!(presentation.unwrap()).to_string())
 }
 
@@ -977,20 +979,19 @@ pub fn generate_baker_keys(sender: AccountAddress) -> Result<JsonString> {
 #[derive(SerdeDeserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VerifyWeb3IdCredentialSignatureInput {
-    global_context: GlobalContext<constants::ArCurve>,
-    values:     BTreeMap<String, Web3IdAttribute>,
-    randomness: BTreeMap<String, PedersenRandomness<constants::ArCurve>>,
-    #[serde(
-        serialize_with = "base16_encode",
-        deserialize_with = "base16_decode"
-    )]
-    signature:  ed25519_dalek::Signature,
-    holder: CredentialHolderId,
+    global_context:    GlobalContext<constants::ArCurve>,
+    values:            BTreeMap<String, Web3IdAttribute>,
+    randomness:        BTreeMap<String, PedersenRandomness<constants::ArCurve>>,
+    #[serde(serialize_with = "base16_encode", deserialize_with = "base16_decode")]
+    signature:         ed25519_dalek::Signature,
+    holder:            CredentialHolderId,
     issuer_public_key: IssuerKey,
-    issuer_contract: ContractAddress,
+    issuer_contract:   ContractAddress,
 }
 
-pub fn verify_web3_id_credential_signature_aux(input: VerifyWeb3IdCredentialSignatureInput) -> Result<bool> {
+pub fn verify_web3_id_credential_signature_aux(
+    input: VerifyWeb3IdCredentialSignatureInput,
+) -> Result<bool> {
     let cmm_key = &input.global_context.on_chain_commitment_key;
     let mut commitments = BTreeMap::new();
     for ((vi, value), (ri, randomness)) in input.values.iter().zip(input.randomness.iter()) {
@@ -1005,5 +1006,13 @@ pub fn verify_web3_id_credential_signature_aux(input: VerifyWeb3IdCredentialSign
             ),
         );
     }
-    Ok(SignedCommitments{ signature: input.signature, commitments}.verify_signature(&input.holder,&input.issuer_public_key,input.issuer_contract))
+    Ok(SignedCommitments {
+        signature: input.signature,
+        commitments,
+    }
+    .verify_signature(
+        &input.holder,
+        &input.issuer_public_key,
+        input.issuer_contract,
+    ))
 }

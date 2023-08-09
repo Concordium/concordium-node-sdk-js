@@ -345,8 +345,14 @@ pub fn get_verifiable_credential_signing_key_ext(
     issuer_subindex: u64,
     verifiable_credential_index: u32,
 ) -> JsResult<HexString> {
-    get_verifiable_credential_signing_key_aux(seed_as_hex, raw_net, issuer_index, issuer_subindex, verifiable_credential_index)
-        .map_err(to_js_error)
+    get_verifiable_credential_signing_key_aux(
+        seed_as_hex,
+        raw_net,
+        issuer_index,
+        issuer_subindex,
+        verifiable_credential_index,
+    )
+    .map_err(to_js_error)
 }
 
 #[wasm_bindgen(js_name = getVerifiableCredentialPublicKey)]
@@ -357,8 +363,14 @@ pub fn get_verifiable_credential_public_key_ext(
     issuer_subindex: u64,
     verifiable_credential_index: u32,
 ) -> JsResult<HexString> {
-    get_verifiable_credential_public_key_aux(seed_as_hex, raw_net, issuer_index, issuer_subindex, verifiable_credential_index)
-        .map_err(to_js_error)
+    get_verifiable_credential_public_key_aux(
+        seed_as_hex,
+        raw_net,
+        issuer_index,
+        issuer_subindex,
+        verifiable_credential_index,
+    )
+    .map_err(to_js_error)
 }
 
 #[wasm_bindgen(js_name = serializeCredentialDeploymentPayload)]

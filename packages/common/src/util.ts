@@ -4,6 +4,7 @@ import {
     HexString,
     IpAddressString,
     ReleaseSchedule,
+    SchemaVersion,
 } from './types';
 import { Buffer } from 'buffer/';
 
@@ -138,24 +139,66 @@ export function countSignatures(
     return totalSignatureCount;
 }
 
-/**
- * Converts a wasm module to a smart contract schema.
- * @param wasm the wasm module as a Buffer
- * @returns the smart contract schema as a Buffer
- */
-export function wasmToSchema(wasm: Buffer): Buffer {
-    const wasmModule = new WebAssembly.Module(wasm);
-    const sections = WebAssembly.Module.customSections(
-        wasmModule,
-        'concordium-schema'
-    );
-    if (sections.length === 1) {
-        return Buffer.from(sections[0]);
-    } else if (sections.length === 0) {
-        throw Error('WASM-Module contains no schema!');
-    } else {
-        throw Error('Invalid WASM-Module retrieved!');
+export interface SchemaFromWasm {
+    schema: Buffer;
+    schemaVersion: SchemaVersion | undefined;
+    sectionName: string;
+}
+
+function findCustomSections(
+    m: WebAssembly.Module,
+    moduleVersion: number | undefined
+) {
+    function getCustomSections(
+        sectionName: string,
+        schemaVersion: SchemaVersion | undefined
+    ) {
+        const s = WebAssembly.Module.customSections(m, sectionName);
+        return s.length === 0
+            ? undefined
+            : { sectionName, schemaVersion, contents: s };
     }
+
+    // First look for section containing schema with embedded version, then "-v1" or "-v2" depending on the module version.
+    switch (moduleVersion) {
+        case 0:
+            return (
+                getCustomSections('concordium-schema', undefined) || // always v0
+                getCustomSections('concordium-schema-v1', SchemaVersion.V0) // v0 ("-v1" is not a typo)
+            );
+        case 1:
+            return (
+                getCustomSections('concordium-schema', undefined) || // v1, v2, or v3
+                getCustomSections('concordium-schema-v2', SchemaVersion.V1) // v1 ("-v2" is not a typo)
+            );
+    }
+    return getCustomSections('concordium-schema', undefined); // expecting to find this section in unknown/future module versions
+}
+
+/**
+ * Attempts to extract a smart contract schema from a given wasm module, optionally based on the module version.
+ * @param moduleSourceWasm the wasm module as a Buffer
+ * @param moduleVersion module version. If provided, we will attempt to find the schema in sections specific to that version. Otherwise, we'll only look in "concordium-schema".
+ * @returns the smart contract schema with version and name of custom section where it was found or undefined if no schema was found
+ */
+export function wasmToSchema(
+    moduleSourceWasm: Buffer,
+    moduleVersion?: number
+): SchemaFromWasm | undefined {
+    const sections = findCustomSections(
+        new WebAssembly.Module(moduleSourceWasm),
+        moduleVersion
+    );
+    if (!sections) {
+        return undefined;
+    }
+    const { sectionName, schemaVersion, contents } = sections;
+    if (contents.length !== 1) {
+        throw new Error(
+            `Unexpected size (${contents.length}) of custom section "${sectionName}": Expected to find at most one section`
+        );
+    }
+    return { schema: Buffer.from(contents[0]), schemaVersion, sectionName };
 }
 
 /**

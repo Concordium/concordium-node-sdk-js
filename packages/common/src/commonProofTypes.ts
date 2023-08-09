@@ -1,8 +1,4 @@
-export interface StatementBuilder<
-    ValueType,
-    AttributeType extends number,
-    TagType = AttributeType
-> {
+export interface StatementBuilder<ValueType, AttributeType> {
     addRange(
         attribute: AttributeType,
         lower: ValueType,
@@ -13,7 +9,7 @@ export interface StatementBuilder<
 
     addNonMembership(attribute: AttributeType, set: ValueType[]): this;
     revealAttribute(attribute: AttributeType): this;
-    getStatement(): GenericAtomicStatement<TagType, ValueType>[];
+    getStatement(): GenericAtomicStatement<AttributeType, ValueType>[];
 }
 
 export const MIN_DATE = '18000101';

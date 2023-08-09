@@ -1,4 +1,5 @@
 import {
+    AttributeKeyString,
     ConcordiumHdWallet,
     createAccountDID,
     createWeb3IdDID,
@@ -24,12 +25,18 @@ test('Generate V2 statement', () => {
                 { index: 1337n, subindex: 42n },
             ],
             (b) =>
-                b.addRange(17, 80n, 1237n).addMembership(23, ['aa', 'ff', 'zz'])
+                b
+                    .addRange('b', 80n, 1237n)
+                    .addMembership('c', ['aa', 'ff', 'zz'])
         )
         .addForVerifiableCredentials([{ index: 1338n, subindex: 0n }], (b) =>
-            b.addRange(0, 80n, 1237n).addNonMembership(1, ['aa', 'ff', 'zz'])
+            b
+                .addRange('a', 80n, 1237n)
+                .addNonMembership('d', ['aa', 'ff', 'zz'])
         )
-        .addForIdentityCredentials([0, 1, 2], (b) => b.revealAttribute(0))
+        .addForIdentityCredentials([0, 1, 2], (b) =>
+            b.revealAttribute(AttributeKeyString.firstName)
+        )
         .getStatements();
     expect(statement).toStrictEqual(expectedStatementMixed);
 });
@@ -39,9 +46,9 @@ test('create Web3Id proof with account credentials', () => {
         fs.readFileSync('./test/resources/global.json').toString()
     ).value;
 
-    const values: Record<number, string> = {};
-    values[0] = '0';
-    values[17] = 'a';
+    const values: Record<string, string> = {};
+    values.dob = '0';
+    values.firstName = 'a';
 
     const credentialStatements: RequestStatement[] = [
         {
@@ -51,13 +58,13 @@ test('create Web3Id proof with account credentials', () => {
             ),
             statement: [
                 {
-                    attributeTag: 17,
+                    attributeTag: AttributeKeyString.dob,
                     lower: '81',
                     type: 'AttributeInRange',
                     upper: '1231',
                 },
                 {
-                    attributeTag: 0,
+                    attributeTag: AttributeKeyString.firstName,
                     type: 'RevealAttribute',
                 },
             ],
@@ -67,12 +74,12 @@ test('create Web3Id proof with account credentials', () => {
     const commitmentInputs: CommitmentInput[] = [
         {
             type: 'account',
-            issuanceDate: '2019-10-12T07:20:50.52Z',
             issuer: 1,
             values,
             randomness: {
-                0: '575851a4e0558d589a57544a4a9f5ad1bd8467126c1b6767d32f633ea03380e6',
-                17: '575851a4e0558d589a57544a4a9f5ad1bd8467126c1b6767d32f633ea03380e6',
+                dob: '575851a4e0558d589a57544a4a9f5ad1bd8467126c1b6767d32f633ea03380e6',
+                firstName:
+                    '575851a4e0558d589a57544a4a9f5ad1bd8467126c1b6767d32f633ea03380e6',
             },
         },
     ];
@@ -95,9 +102,6 @@ test('create Web3Id proof with account credentials', () => {
     expect(presentation.proof.type).toBe(expected.proof.type);
     // TODO is this date check even valid?
     expect(new Date(presentation.proof.created)).not.toBeNaN();
-    expect(presentation.verifiableCredential[0].issuanceDate).toBe(
-        expected.verifiableCredential[0].issuanceDate
-    );
     expect(presentation.verifiableCredential[0].type).toEqual(
         expected.verifiableCredential[0].type
     );
@@ -120,33 +124,37 @@ test('create Web3Id proof with Web3Id Credentials', () => {
         fs.readFileSync('./test/resources/global.json').toString()
     ).value;
 
-    const values: Record<number, bigint | string> = {};
-    values[0] = 18446744073709551615n;
-    values[17] = 2n;
-    const randomness: Record<number, string> = {};
-    randomness[0] =
-        '575851a4e0558d589a57544a4a9f5ad1bd8467126c1b6767d32f633ea03380e6';
-    randomness[17] =
-        '575851a4e0558d589a57544a4a9f5ad1bd8467126c1b6767d32f633ea03380e6';
+    const randomness: Record<string, string> = {};
+    randomness.degreeType =
+        '53573aac0039a54affd939be0ad0c49df6e5a854ce448a73abb2b0534a0a62ba';
+    randomness.degreeName =
+        '3917917065f8178e99c954017886f83984247ca16a22b065286de89b54d04610';
+    randomness.graduationDate =
+        '0f5a299aeba0cdc16fbaa98f21cab57cfa6dd50f0a2b039393686df7c7ae1561';
 
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
 
     const publicKey = wallet
-        .getVerifiableCredentialPublicKey({ index: 0n, subindex: 0n }, 0)
+        .getVerifiableCredentialPublicKey({ index: 1n, subindex: 0n }, 1)
         .toString('hex');
+
+    const values: Record<string, bigint | string> = {
+        degreeName: 'Bachelor of Science and Arts',
+        degreeType: 'BachelorDegree',
+        graduationDate: '2010-06-01T00:00:00Z',
+    };
 
     const credentialStatements: RequestStatement[] = [
         {
             id: createWeb3IdDID('Testnet', publicKey, 1n, 0n),
             statement: [
                 {
-                    attributeTag: 17,
-                    lower: 80n,
-                    type: 'AttributeInRange',
-                    upper: 1237n,
+                    attributeTag: 'degreeType',
+                    type: 'AttributeInSet',
+                    set: ['BachelorDegree', 'MasterDegree'],
                 },
                 {
-                    attributeTag: 0,
+                    attributeTag: 'degreeName',
                     type: 'RevealAttribute',
                 },
             ],
@@ -156,18 +164,16 @@ test('create Web3Id proof with Web3Id Credentials', () => {
     const commitmentInputs: CommitmentInput[] = [
         {
             type: 'web3Issuer',
-            issuanceDate: '2019-10-12T07:20:50.52Z',
-            signer:
-                wallet
-                    .getVerifiableCredentialSigningKey(
-                        { index: 1n, subindex: 0n },
-                        1
-                    )
-                    .toString('hex') + publicKey,
+            signer: wallet
+                .getVerifiableCredentialSigningKey(
+                    { index: 1n, subindex: 0n },
+                    1
+                )
+                .toString('hex'),
             values,
             randomness,
             signature:
-                '575851a4e0558d589a57544a4a9f5ad1bd8467126c1b6767d32f633ea03380e6575851a4e0558d589a57544a4a9f5ad1bd8467126c1b6767d32f633ea03380e6',
+                '40ced1f01109c7a307fffabdbea7eb37ac015226939eddc05562b7e8a29d4a2cf32ab33b2f76dd879ce69fab7ff3752a73800c9ce41da6d38b189dccffa45906',
         },
     ];
 
@@ -189,9 +195,6 @@ test('create Web3Id proof with Web3Id Credentials', () => {
     expect(presentation.proof.type).toBe(expected.proof.type);
     // TODO is this date check even valid?
     expect(new Date(presentation.proof.created)).not.toBeNaN();
-    expect(presentation.verifiableCredential[0].issuanceDate).toBe(
-        expected.verifiableCredential[0].issuanceDate
-    );
     expect(presentation.verifiableCredential[0].type).toEqual(
         expected.verifiableCredential[0].type
     );

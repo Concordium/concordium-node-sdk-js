@@ -11,19 +11,17 @@ import JSONBigInt from 'json-bigint';
 
 export type AccountCommitmentInput = {
     type: 'account';
-    issuanceDate: string;
     issuer: number;
-    values: Record<number, string>;
-    randomness: Record<number, string>;
+    values: Record<string, string>;
+    randomness: Record<string, string>;
 };
 
 export type Web3IssuerCommitmentInput = {
     type: 'web3Issuer';
     signature: string;
-    issuanceDate: string;
     signer: string;
-    values: Record<number, string | bigint | number>;
-    randomness: Record<number, string>;
+    values: Record<string, string | bigint | number>;
+    randomness: Record<string, string>;
 };
 
 export type CommitmentInput =
@@ -42,7 +40,6 @@ export type Web3IdProofInput = {
 };
 
 export type PropertyDetails = {
-    index: string;
     title: string;
     description?: string;
     type: string;
@@ -76,67 +73,54 @@ export const IDENTITY_SUBJECT_SCHEMA: VerifiableCredentialSubject = {
         firstName: {
             title: 'first name',
             type: 'string',
-            index: '0',
         },
         lastName: {
             title: 'last name',
             type: 'string',
-            index: '1',
         },
         sex: {
             title: 'sex',
             type: 'string',
-            index: '2',
         },
         dob: {
             title: 'date of birth',
             type: 'string',
-            index: '3',
         },
         countryOfResidence: {
             title: 'last name',
             type: 'string',
-            index: '4',
         },
         nationality: {
             title: 'last name',
             type: 'string',
-            index: '5',
         },
         idDocType: {
             title: 'last name',
             type: 'string',
-            index: '6',
         },
         idDocNo: {
             title: 'last name',
             type: 'string',
-            index: '7',
         },
         idDocIssuer: {
             title: 'last name',
             type: 'string',
-            index: '8',
         },
         idDocIssuedAt: {
             title: 'last name',
             type: 'string',
-            index: '9',
         },
         idDocExpiresAt: {
             title: 'last name',
             type: 'string',
-            index: '10',
         },
         nationalIdNo: {
             title: 'last name',
             type: 'string',
-            index: '11',
         },
         taxIdNo: {
             title: 'last name',
             type: 'string',
-            index: '12',
         },
     },
     required: [],
@@ -166,7 +150,6 @@ export type CredentialSubjectProof = {
 
 export type VerifiableCredentialProof = {
     credentialSubject: CredentialSubjectProof;
-    issuanceDate: string;
     issuer: DIDString;
     type: [
         'VerifiableCredential',
@@ -207,44 +190,27 @@ export class VerifiablePresentation {
             useNativeBigInt: true,
         }).parse(json);
         // Convert the attributeTags back to numbers
-        const verifiableCredential = parsed.verifiableCredential.map(
-            ({
-                credentialSubject: { statement, ...credentialSubject },
-                ...proof
-            }) => ({
-                ...proof,
-                credentialSubject: {
-                    ...credentialSubject,
-                    statement: statement.map(
-                        ({ attributeTag, ...statement }) => ({
-                            ...statement,
-                            attributeTag: Number(attributeTag),
-                        })
-                    ),
-                },
-            })
-        );
         return new VerifiablePresentation(
             parsed.presentationContext,
             parsed.proof,
             parsed.type,
-            verifiableCredential
+            parsed.verifiableCredential
         );
     }
 }
 
-export type RangeStatementV2 = GenericRangeStatement<number, string | bigint>;
+export type RangeStatementV2 = GenericRangeStatement<string, string | bigint>;
 export type NonMembershipStatementV2 = GenericNonMembershipStatement<
-    number,
+    string,
     string | bigint
 >;
 export type MembershipStatementV2 = GenericMembershipStatement<
-    number,
+    string,
     string | bigint
 >;
-export type RevealStatementV2 = GenericRevealStatement<number>;
+export type RevealStatementV2 = GenericRevealStatement<string>;
 
-export type AtomicStatementV2 = GenericAtomicStatement<number, string | bigint>;
+export type AtomicStatementV2 = GenericAtomicStatement<string, string | bigint>;
 
 export type VerifiableCredentialQualifier = {
     type: 'sci';
@@ -297,50 +263,7 @@ export type RequestStatement = {
 
 export type CredentialStatements = CredentialStatement[];
 
-interface CredentialSchema {
+export type CredentialSubject = {
     id: string;
-    type: string;
-}
-
-export type CredentialSubject = { id: string } & Record<
-    string,
-    string | bigint
->;
-
-export interface VerifiableCredential {
-    id: string;
-    $schema: string;
-    type: string[];
-    issuer: string;
-    issuanceDate: string;
-    credentialSubject: CredentialSubject;
-    credentialSchema: CredentialSchema;
-}
-
-export interface CredentialSchemaProperty {
-    title: string;
-    type: 'string' | 'number';
-    description: string;
-    index: string;
-}
-
-export interface CredentialSubjectSchema {
-    type: 'object';
-    properties: { id: CredentialSchemaProperty } & Record<
-        string,
-        CredentialSchemaProperty
-    >;
-    required: string[];
-}
-
-export interface VerifiableCredentialSchema {
-    $id: string;
-    $schema: string;
-    name: string;
-    description: string;
-    type: 'object';
-    required: ['credentialSubject'];
-    properties: {
-        credentialSubject: CredentialSubjectSchema;
-    };
-}
+    attributes: Record<string, string | bigint>;
+};

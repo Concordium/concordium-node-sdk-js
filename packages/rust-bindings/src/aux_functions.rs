@@ -20,7 +20,7 @@ use concordium_base::{
         constants,
         constants::{ArCurve, AttributeKind},
         dodis_yampolskiy_prf as prf,
-        id_proof_types::{Proof, Statement, StatementWithContext},
+        id_proof_types::{Proof, Statement, StatementWithContext, ProofVersion},
         pedersen_commitment::{
             CommitmentKey as PedersenKey, Randomness as PedersenRandomness, Value as PedersenValue,
             Value,
@@ -31,10 +31,9 @@ use concordium_base::{
     web3id::{Request, Web3IdAttribute, OwnedCommitmentInputs, Web3IdSigner },
     transactions::{ConfigureBakerKeysPayload, Payload},
 };
-use ed25519_hd_key_derivation::DeriveError;
 use either::Either::Left;
 use hex;
-use key_derivation::{ConcordiumHdWallet, Net};
+use key_derivation::{ConcordiumHdWallet, Net, CredentialContext};
 use rand::thread_rng;
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use serde_json::{from_str, to_string, Value as SerdeValue};
@@ -322,33 +321,6 @@ pub struct CredentialInput {
     expiry:              TransactionTime,
 }
 
-/// A ConcordiumHdWallet together with an identity index and credential index
-/// for the credential to be created. A CredentialContext can then be parsed to
-/// the `create_credential` function due to the implementation of
-/// `HasAttributeRandomness` below.
-struct CredentialContext {
-    wallet:                  ConcordiumHdWallet,
-    identity_provider_index: u32,
-    identity_index:          u32,
-    credential_index:        u32,
-}
-
-impl HasAttributeRandomness<ArCurve> for CredentialContext {
-    type ErrorType = DeriveError;
-
-    fn get_attribute_commitment_randomness(
-        &self,
-        attribute_tag: AttributeTag,
-    ) -> Result<PedersenRandomness<ArCurve>, Self::ErrorType> {
-        self.wallet.get_attribute_commitment_randomness(
-            self.identity_provider_index,
-            self.identity_index,
-            self.credential_index,
-            attribute_tag,
-        )
-    }
-}
-
 pub fn create_credential_v1_aux(input: CredentialInput) -> Result<JsonString> {
     let seed_decoded = hex::decode(&input.seed_as_hex)?;
     let seed: [u8; 64] = match seed_decoded.try_into() {
@@ -411,9 +383,9 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<JsonString> {
 
     let credential_context = CredentialContext {
         wallet,
-        identity_provider_index,
+        identity_provider_index: identity_provider_index.into(),
         identity_index: input.identity_index,
-        credential_index: u32::from(input.cred_number),
+        credential_index: u8::from(input.cred_number),
     };
 
     let (cdi, _) = create_credential(
@@ -820,8 +792,8 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<JsonString> {
 
     let credential_context = CredentialContext {
         wallet,
-        identity_provider_index: input.identity_provider_index,
-        credential_index: u32::from(input.cred_number),
+        identity_provider_index: input.identity_provider_index.into(),
+        credential_index: u8::from(input.cred_number),
         identity_index: input.identity_index,
     };
 
@@ -839,6 +811,7 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<JsonString> {
         statement: input.statement,
     }
     .prove(
+        ProofVersion::Version1,
         &input.global_context,
         &challenge_decoded,
         &attribute_list,
@@ -923,9 +896,9 @@ impl HasAttributeRandomness<ArCurve> for AttributeRandomness {
 
     fn get_attribute_commitment_randomness(
         &self,
-        attribute_tag: AttributeTag,
+        attribute_tag: &AttributeTag,
     ) -> Result<PedersenRandomness<ArCurve>, Self::ErrorType> {
-        match self.0.get(&attribute_tag) {
+        match self.0.get(attribute_tag) {
             Some(v) => Ok(v.clone()),
             None => Err(AttributeError::NotFound),
         }

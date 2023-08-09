@@ -1,6 +1,7 @@
 import * as wasm from '@concordium/rust-bindings';
 import {
     AttributeKey,
+    AttributeKeyString,
     AttributeList,
     AttributesKeys,
     ContractAddress,
@@ -25,7 +26,6 @@ import {
     VerifiablePresentation,
     CredentialStatement,
     CredentialSubject,
-    VerifiableCredentialSchema,
 } from './web3ProofTypes';
 import { getPastDate } from './idProofs';
 import {
@@ -37,7 +37,6 @@ import {
 } from './commonProofTypes';
 import { ConcordiumHdWallet } from './HdWallet';
 import { stringify } from 'json-bigint';
-import { mapRecord } from './util';
 
 function verifyRangeStatement(
     statement: RangeStatementV2,
@@ -132,17 +131,17 @@ function verifyAtomicStatement(
         throw new Error('Only 1 statement is allowed for each attribute');
     }
 
-    if (
-        !Object.values(schema.properties).some(
-            (p) => Number(p.index) === statement.attributeTag
-        )
-    ) {
-        throw new Error('Unknown attributeTag: ' + statement.attributeTag);
+    if (statement.attributeTag === 'id') {
+        throw new Error('id is a reserved attribute name');
     }
 
-    const properties = Object.values(schema.properties).find(
-        (p) => Number(p.index) === statement.attributeTag
-    );
+    if (!Object.keys(schema.properties).includes(statement.attributeTag)) {
+        throw new Error('Unknown attributeTag: ' + statement.attributeTag);
+    }
+    // TODO Improve type to remove typecast?
+    const properties = (schema.properties as Record<string, PropertyDetails>)[
+        statement.attributeTag
+    ];
 
     switch (statement.type) {
         case StatementTypes.AttributeInRange:
@@ -231,7 +230,7 @@ export class AtomicStatementBuilder implements InternalBuilder {
      * @param upper: the upper end of the range, exclusive.
      * @returns the updated builder
      */
-    addRange(attribute: number, lower: string, upper: string): this {
+    addRange(attribute: string, lower: string, upper: string): this {
         const statement: AtomicStatementV2 = {
             type: StatementTypes.AttributeInRange,
             attributeTag: attribute,
@@ -249,7 +248,7 @@ export class AtomicStatementBuilder implements InternalBuilder {
      * @param set: the set of values that the attribute must be included in.
      * @returns the updated builder
      */
-    addMembership(attribute: number, set: string[]): this {
+    addMembership(attribute: string, set: string[]): this {
         const statement: AtomicStatementV2 = {
             type: StatementTypes.AttributeInSet,
             attributeTag: attribute,
@@ -266,7 +265,7 @@ export class AtomicStatementBuilder implements InternalBuilder {
      * @param set: the set of values that the attribute must be included in.
      * @returns the updated builder
      */
-    addNonMembership(attribute: number, set: string[]): this {
+    addNonMembership(attribute: string, set: string[]): this {
         const statement: AtomicStatementV2 = {
             type: StatementTypes.AttributeNotInSet,
             attributeTag: attribute,
@@ -283,7 +282,7 @@ export class AtomicStatementBuilder implements InternalBuilder {
      * @param attribute the attribute that should be revealed
      * @returns the updated builder
      */
-    revealAttribute(attribute: number): this {
+    revealAttribute(attribute: string): this {
         const statement: AtomicStatementV2 = {
             type: StatementTypes.RevealAttribute,
             attributeTag: attribute,
@@ -302,7 +301,11 @@ export class AccountStatementBuild extends AtomicStatementBuilder {
      * @returns the updated builder
      */
     addMinimumAge(age: number): AtomicStatementBuilder {
-        return this.addRange(AttributesKeys.dob, MIN_DATE, getPastDate(age));
+        return this.addRange(
+            AttributeKeyString.dob,
+            MIN_DATE,
+            getPastDate(age)
+        );
     }
 
     /**
@@ -313,7 +316,7 @@ export class AccountStatementBuild extends AtomicStatementBuilder {
      */
     addMaximumAge(age: number): AtomicStatementBuilder {
         return this.addRange(
-            AttributesKeys.dob,
+            AttributeKeyString.dob,
             getPastDate(age + 1, 1),
             MAX_DATE
         );
@@ -328,7 +331,7 @@ export class AccountStatementBuild extends AtomicStatementBuilder {
      */
     addAgeInRange(minAge: number, maxAge: number): AtomicStatementBuilder {
         return this.addRange(
-            AttributesKeys.dob,
+            AttributeKeyString.dob,
             getPastDate(maxAge + 1, 1),
             getPastDate(minAge)
         );
@@ -342,7 +345,7 @@ export class AccountStatementBuild extends AtomicStatementBuilder {
      */
     documentExpiryNoEarlierThan(earliestDate: string): AtomicStatementBuilder {
         return this.addRange(
-            AttributesKeys.idDocExpiresAt,
+            AttributeKeyString.idDocExpiresAt,
             earliestDate,
             MAX_DATE
         );
@@ -354,7 +357,7 @@ export class AccountStatementBuild extends AtomicStatementBuilder {
      */
     addEUResidency(): AtomicStatementBuilder {
         return this.addMembership(
-            AttributesKeys.countryOfResidence,
+            AttributeKeyString.countryOfResidence,
             EU_MEMBERS
         );
     }
@@ -364,11 +367,11 @@ export class AccountStatementBuild extends AtomicStatementBuilder {
      * @returns the updated builder
      */
     addEUNationality(): AtomicStatementBuilder {
-        return this.addMembership(AttributesKeys.nationality, EU_MEMBERS);
+        return this.addMembership(AttributeKeyString.nationality, EU_MEMBERS);
     }
 }
 
-type InternalBuilder = StatementBuilder<string | bigint, number>;
+type InternalBuilder = StatementBuilder<string | bigint, string>;
 export class Web3StatementBuilder {
     private statements: CredentialStatements = [];
 
@@ -460,15 +463,6 @@ export function createAccountDID(network: Network, credId: string): string {
 }
 
 /**
- * Converts a YYYYMM string to a rfc3339 string. It uses the earliest possible time/day.
- */
-function convertYearMonthToRfc3339(yearMonth: string): string {
-    const year = yearMonth.substring(0, 4);
-    const month = yearMonth.substring(4, 6);
-    return year + '-' + month + '-01T00:00:00.00Z';
-}
-
-/**
  * Create the commitment input required to create a proof for the given statements, using an account credential.
  */
 export function createAccountCommitmentInput(
@@ -479,13 +473,10 @@ export function createAccountCommitmentInput(
 ): AccountCommitmentInput {
     return {
         type: 'account',
-        issuanceDate: convertYearMonthToRfc3339(attributes.createdAt),
         issuer: identityProvider,
-        values: statements.reduce<Record<number, string>>((acc, x) => {
+        values: statements.reduce<Record<string, string>>((acc, x) => {
             acc[x.attributeTag] =
-                attributes.chosenAttributes[
-                    AttributesKeys[x.attributeTag] as AttributeKey
-                ];
+                attributes.chosenAttributes[x.attributeTag as AttributeKey];
             return acc;
         }, {}),
         randomness,
@@ -504,13 +495,13 @@ export function createAccountCommitmentInputWithHdWallet(
     identityIndex: number,
     credIndex: number
 ): AccountCommitmentInput {
-    const randomness = statements.reduce<Record<number, string>>((acc, x) => {
+    const randomness = statements.reduce<Record<string, string>>((acc, x) => {
         acc[x.attributeTag] = wallet
             .getAttributeCommitmentRandomness(
                 identityProvider,
                 identityIndex,
                 credIndex,
-                x.attributeTag
+                AttributesKeys[x.attributeTag as AttributeKey]
             )
             .toString('hex');
         return acc;
@@ -523,45 +514,19 @@ export function createAccountCommitmentInputWithHdWallet(
     );
 }
 
-export function extractAttributesFromCredentialSubject(
-    credentialSubject: CredentialSubject,
-    schema: VerifiableCredentialSchema
-): Record<number, string | bigint> {
-    const { id, ...rest } = credentialSubject;
-    return mapRecord(
-        rest,
-        (val) => val,
-        (key) => {
-            const schemaEntry = Object.entries(
-                schema.properties.credentialSubject.properties
-            ).find(([k]) => k == key);
-            if (!schemaEntry) {
-                throw new Error('Missing attribute in schema: ' + key);
-            }
-            return Number(schemaEntry[1].index);
-        }
-    );
-}
-
 /**
  * Create the commitment input required to create a proof for the given statements, using an web3Id credential.
  */
 export function createWeb3CommitmentInput(
     verifiableCredentialPrivateKey: HexString,
-    issuanceDate: string,
     credentialSubject: CredentialSubject,
-    schema: VerifiableCredentialSchema,
     randomness: Record<string, string>,
     signature: string
 ): Web3IssuerCommitmentInput {
     return {
         type: 'web3Issuer',
-        issuanceDate,
         signer: verifiableCredentialPrivateKey,
-        values: extractAttributesFromCredentialSubject(
-            credentialSubject,
-            schema
-        ),
+        values: credentialSubject.attributes,
         randomness,
         signature,
     };
@@ -575,9 +540,7 @@ export function createWeb3CommitmentInputWithHdWallet(
     wallet: ConcordiumHdWallet,
     issuer: ContractAddress,
     credentialIndex: number,
-    issuanceDate: string,
     credentialSubject: CredentialSubject,
-    schema: VerifiableCredentialSchema,
     randomness: Record<string, string>,
     signature: string
 ): Web3IssuerCommitmentInput {
@@ -585,9 +548,7 @@ export function createWeb3CommitmentInputWithHdWallet(
         wallet
             .getVerifiableCredentialSigningKey(issuer, credentialIndex)
             .toString('hex'),
-        issuanceDate,
         credentialSubject,
-        schema,
         randomness,
         signature
     );
@@ -601,9 +562,7 @@ export function canProveAtomicStatement(
     attributeList: AttributeList
 ): boolean {
     const attribute =
-        attributeList.chosenAttributes[
-            AttributesKeys[statement.attributeTag] as AttributeKey
-        ];
+        attributeList.chosenAttributes[statement.attributeTag as AttributeKey];
     switch (statement.type) {
         case StatementTypes.AttributeInSet:
             return statement.set.includes(attribute);
@@ -622,6 +581,7 @@ export function canProveAtomicStatement(
 
 /**
  * Given a credential statement and an identity's attributes, determine whether the identity fulfills the statement.
+ * TODO fix this
  */
 export function canProveCredentialStatement(
     credentialStatement: CredentialStatement,

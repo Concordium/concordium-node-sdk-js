@@ -11,13 +11,13 @@ export const expectedStatementMixed: CredentialStatement[] = [
         },
         statement: [
             {
-                attributeTag: 17,
+                attributeTag: 'b',
                 lower: 80n,
                 type: 'AttributeInRange',
                 upper: 1237n,
             },
             {
-                attributeTag: 23,
+                attributeTag: 'c',
                 set: ['aa', 'ff', 'zz'],
                 type: 'AttributeInSet',
             },
@@ -30,13 +30,13 @@ export const expectedStatementMixed: CredentialStatement[] = [
         },
         statement: [
             {
-                attributeTag: 0,
+                attributeTag: 'a',
                 lower: 80n,
                 type: 'AttributeInRange',
                 upper: 1237n,
             },
             {
-                attributeTag: 1,
+                attributeTag: 'd',
                 set: ['aa', 'ff', 'zz'],
                 type: 'AttributeNotInSet',
             },
@@ -49,7 +49,7 @@ export const expectedStatementMixed: CredentialStatement[] = [
         },
         statement: [
             {
-                attributeTag: 0,
+                attributeTag: 'firstName',
                 type: 'RevealAttribute',
             },
         ],

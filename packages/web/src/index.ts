@@ -2,7 +2,6 @@
  * @module Web-SDK
  */
 export * from './pub/index';
-export * from './pub/util';
 export * from './pub/wasm';
 export * from './pub/identity';
 export * from './pub/grpc';

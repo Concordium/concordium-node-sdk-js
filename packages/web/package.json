@@ -7,39 +7,13 @@
     "exports": {
         ".": {
             "types": "./lib/esm/pub/index.d.ts",
-            "import": "./lib/esm/pub/index.js"
+            "import": "./lib/esm/pub/index.js",
+            "browser": "./lib/esm/pub/index.js"
         },
-        "./wasm": {
-            "types": "./lib/esm/pub/wasm.d.ts",
-            "import": "./lib/esm/pub/wasm.js"
-        },
-        "./util": {
-            "types": "./lib/esm/pub/util.d.ts",
-            "import": "./lib/esm/pub/util.js"
-        },
-        "./cis0": {
-            "types": "./lib/esm/pub/cis0.d.ts",
-            "import": "./lib/esm/pub/cis0.js"
-        },
-        "./cis2": {
-            "types": "./lib/esm/pub/cis2.d.ts",
-            "import": "./lib/esm/pub/cis2.js"
-        },
-        "./cis4": {
-            "types": "./lib/esm/pub/cis4.d.ts",
-            "import": "./lib/esm/pub/cis4.js"
-        },
-        "./identity": {
-            "types": "./lib/esm/pub/identity.d.ts",
-            "import": "./lib/esm/pub/identity.js"
-        },
-        "./grpc": {
-            "types": "./lib/esm/pub/grpc.d.ts",
-            "import": "./lib/esm/pub/grpc.js"
-        },
-        "./json-rpc": {
-            "types": "./lib/esm/pub/json-rpc.d.ts",
-            "import": "./lib/esm/pub/json-rpc.js"
+        "./*": {
+            "types": "./lib/esm/pub/*.d.ts",
+            "import": "./lib/esm/pub/*.js",
+            "browser": "./lib/esm/pub/*.js"
         }
     },
     "files": [
@@ -92,7 +66,8 @@
         "@grpc/grpc-js": "^1.3.4",
         "@protobuf-ts/grpcweb-transport": "^2.8.2",
         "buffer": "^6.0.3",
-        "process": "^0.11.10"
+        "process": "^0.11.10",
+        "stream": "npm:stream-browserify@^3"
     },
     "scripts": {
         "build": "tsc && webpack",

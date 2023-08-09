@@ -25,45 +25,10 @@
             "import": "./lib/esm/pub/index.js",
             "require": "./lib/cjs/pub/index.js"
         },
-        "./wasm": {
-            "types": "./lib/esm/pub/wasm.d.ts",
-            "import": "./lib/esm/pub/wasm.js",
-            "require": "./lib/cjs/pub/wasm.js"
-        },
-        "./util": {
-            "types": "./lib/esm/pub/util.d.ts",
-            "import": "./lib/esm/pub/util.js",
-            "require": "./lib/cjs/pub/util.js"
-        },
-        "./cis0": {
-            "types": "./lib/esm/pub/cis0.d.ts",
-            "import": "./lib/esm/pub/cis0.js",
-            "require": "./lib/cjs/pub/cis0.js"
-        },
-        "./cis2": {
-            "types": "./lib/esm/pub/cis2.d.ts",
-            "import": "./lib/esm/pub/cis2.js",
-            "require": "./lib/cjs/pub/cis2.js"
-        },
-        "./cis4": {
-            "types": "./lib/esm/pub/cis4.d.ts",
-            "import": "./lib/esm/pub/cis4.js",
-            "require": "./lib/cjs/pub/cis4.js"
-        },
-        "./identity": {
-            "types": "./lib/esm/pub/identity.d.ts",
-            "import": "./lib/esm/pub/identity.js",
-            "require": "./lib/cjs/pub/identity.js"
-        },
-        "./client": {
-            "types": "./lib/esm/pub/client.d.ts",
-            "import": "./lib/esm/pub/client.js",
-            "require": "./lib/cjs/pub/client.js"
-        },
-        "./clientV2": {
-            "types": "./lib/esm/pub/clientV2.d.ts",
-            "import": "./lib/esm/pub/clientV2.js",
-            "require": "./lib/cjs/pub/clientV2.js"
+        "./*": {
+            "types": "./lib/esm/pub/*.d.ts",
+            "import": "./lib/esm/pub/*.js",
+            "require": "./lib/cjs/pub/*.js"
         }
     },
     "files": [

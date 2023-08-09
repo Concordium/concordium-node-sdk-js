@@ -1,2 +1,7 @@
 // Utility functions needed in web/nodejs packages
-export * from '../util';
+export {
+    buildJsonResponseReviver,
+    intToStringTransformer,
+    isValidHash,
+    stringToInt,
+} from '../util';

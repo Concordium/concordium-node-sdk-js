@@ -28,7 +28,8 @@ use concordium_base::{
         secret_sharing::Threshold,
         types::*,
     },
-    web3id::{Request, Web3IdAttribute, OwnedCommitmentInputs, Web3IdSigner },
+    cis4_types::IssuerKey,
+    web3id::{Request, Web3IdAttribute, OwnedCommitmentInputs, Web3IdSigner, SignedCommitments, CredentialHolderId },
     transactions::{ConfigureBakerKeysPayload, Payload},
 };
 use either::Either::Left;
@@ -971,4 +972,38 @@ pub fn generate_baker_keys(sender: AccountAddress) -> Result<JsonString> {
         aggregation_sign_key: keys.aggregation_sign,
     };
     Ok(serde_json::to_string(&output)?)
+}
+
+#[derive(SerdeDeserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VerifyWeb3IdCredentialSignatureInput {
+    global_context: GlobalContext<constants::ArCurve>,
+    values:     BTreeMap<String, Web3IdAttribute>,
+    randomness: BTreeMap<String, PedersenRandomness<constants::ArCurve>>,
+    #[serde(
+        serialize_with = "base16_encode",
+        deserialize_with = "base16_decode"
+    )]
+    signature:  ed25519_dalek::Signature,
+    holder: CredentialHolderId,
+    issuer_public_key: IssuerKey,
+    issuer_contract: ContractAddress,
+}
+
+pub fn verify_web3_id_credential_signature_aux(input: VerifyWeb3IdCredentialSignatureInput) -> Result<bool> {
+    let cmm_key = &input.global_context.on_chain_commitment_key;
+    let mut commitments = BTreeMap::new();
+    for ((vi, value), (ri, randomness)) in input.values.iter().zip(input.randomness.iter()) {
+        if vi != ri {
+            return Err(anyhow!("Values and randomness does not match"));
+        }
+        commitments.insert(
+            ri.clone(),
+            cmm_key.hide(
+                &Value::<constants::ArCurve>::new(value.to_field_element()),
+                randomness,
+            ),
+        );
+    }
+    Ok(SignedCommitments{ signature: input.signature, commitments}.verify_signature(&input.holder,&input.issuer_public_key,input.issuer_contract))
 }

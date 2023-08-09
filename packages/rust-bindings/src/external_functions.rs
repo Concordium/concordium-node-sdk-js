@@ -405,9 +405,13 @@ pub fn display_type_schema_template(schema: HexString) -> JsResult {
 }
 
 #[wasm_bindgen(js_name = createWeb3IdProof)]
-pub fn create_web3_id_proof_ext(raw_input: JsonString) -> Result<JsonString, String> {
-    match serde_json::from_str(&raw_input) {
-        Ok(input) => create_web3_id_proof_aux(input).map_err(|e| format!("Unable to create proof: {}", e)),
-        Err(e) => Err(format!("Unable to parse input for proof: {}", e)),
-    }
+pub fn create_web3_id_proof_ext(raw_input: JsonString) -> JsResult {
+    let input = serde_json::from_str(&raw_input)?;
+    create_web3_id_proof_aux(input).map_err(to_js_error)
+}
+
+#[wasm_bindgen(js_name = verifyWeb3IdCredentialSignature)]
+pub fn verify_web3_id_credential_signature_ext(raw_input: JsonString) -> JsResult<bool> {
+    let input = serde_json::from_str(&raw_input)?;
+    verify_web3_id_credential_signature_aux(input).map_err(to_js_error)
 }

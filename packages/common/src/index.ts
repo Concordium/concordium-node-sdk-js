@@ -52,6 +52,7 @@ export * from './blockSummaryHelpers';
 export * from './rewardStatusHelpers';
 export * from './HdWallet';
 export * from './schemaHelpers';
+export * from './web3IdHelpers';
 
 export { getContractName } from './contractHelpers';
 export { isHex, streamToList, wasmToSchema, unwrap } from './util';

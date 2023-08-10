@@ -1669,6 +1669,7 @@ __metadata:
     rimraf: ^5.0.1
     typescript: ^5.1.6
     wasm-pack: ^0.12.1
+    webpack: ^5.72.0
   languageName: unknown
   linkType: soft
 

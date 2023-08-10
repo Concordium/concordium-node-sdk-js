@@ -1,5 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { Configuration, SourceMapDevToolPlugin, ProvidePlugin } from 'webpack';
+import { Configuration, SourceMapDevToolPlugin } from 'webpack';
 import { resolve } from 'path';
 
 const config: Configuration = {
@@ -8,25 +8,14 @@ const config: Configuration = {
         type: 'filesystem',
         cacheDirectory: resolve(__dirname, '.webpack-cache'),
     },
-    entry: {
-        concordium: resolve(__dirname, 'src/index.ts'),
-    },
+    entry: resolve(__dirname, './ts-src/index.ts'),
     plugins: [
         new SourceMapDevToolPlugin({
             filename: '[file].map',
         }),
-        new ProvidePlugin({
-            process: 'process/browser',
-        }),
     ],
     resolve: {
         extensions: ['.tsx', '.ts', '.js'],
-        alias: {
-            '@concordium/rust-bindings': resolve(
-                __dirname,
-                '../rust-bindings/ts-src/index.ts'
-            ),
-        },
     },
     module: {
         rules: [
@@ -35,7 +24,6 @@ const config: Configuration = {
                 use: {
                     loader: 'ts-loader',
                     options: {
-                        transpileOnly: true,
                         configFile: resolve(__dirname, './tsconfig.build.json'),
                     },
                 },
@@ -48,9 +36,8 @@ const config: Configuration = {
         ],
     },
     output: {
-        filename: '[name].min.js',
-        path: resolve(__dirname, 'lib/umd'),
-        library: 'concordiumSDK',
+        filename: 'rust-bindings.min.js',
+        path: resolve(__dirname, 'lib/web'),
         libraryTarget: 'umd',
         publicPath: '',
     },

@@ -11,21 +11,35 @@
         "directory": "packages/rust-bindings"
     },
     "main": "./pkg/node/concordium_rust_bindings.js",
-    "browser": "./pkg/bundler/concordium_rust_bindings.js",
+    "browser": "./lib/web/rust-bindings.min.js",
+    "types": "./pkg/node/concordium_rust_bindings.d.ts",
+    "exports": {
+        ".": {
+            "require": "./pkg/node/concordium_rust_bindings.js",
+            "browser": "./lib/web/rust-bindings.min.js",
+            "types": "./pkg/node/concordium_rust_bindings.d.ts"
+        },
+        "./bundler": {
+            "browser": "./pkg/bundler/concordium_rust_bindings.js",
+            "types": "./pkg/bundler/concordium_rust_bindings.d.ts"
+        }
+    },
     "files": [
+        "./pkg/node/concordium_rust_bindings*",
         "./pkg/bundler/concordium_rust_bindings*",
-        "./pkg/node/concordium_rust_bindings*"
+        "./lib/web/esm/**/*",
+        "./lib/web/umd/**/*"
     ],
     "scripts": {
         "fmt": "cargo +nightly-2023-04-01-x86_64-unknown-linux-gnu fmt -- --color=always --check",
         "clippy": "cargo +1.62 clippy --color=always --tests --benches -- -Dclippy::all",
-        "build-web": "wasm-pack build --target web --out-dir pkg/web \"$@\"",
+        "build-web": "wasm-pack build --target web --out-dir pkg/web \"$@\" && webpack",
         "build-node": "wasm-pack build --target nodejs --out-dir pkg/node \"$@\"",
         "build-bundler": "wasm-pack build --target bundler --out-dir pkg/bundler \"$@\"",
-        "build": "yarn build-web \"$@\" && yarn build-node \"$@\" && yarn build-bundler \"$@\" && tsc",
+        "build": "yarn build-node \"$@\" && yarn build-bundler \"$@\" && yarn build-web \"$@\"",
         "build-dev": "yarn build --dev",
         "build:rust-bindings": "yarn build",
-        "clean": "rimraf -- target pkg dist"
+        "clean": "rimraf -- target pkg lib .webpack-cache"
     },
     "devDependencies": {
         "rimraf": "^5.0.1",
@@ -33,6 +47,7 @@
         "wasm-pack": "^0.12.1"
     },
     "dependencies": {
-        "buffer": "^6.0.3"
+        "buffer": "^6.0.3",
+        "webpack": "^5.72.0"
     }
 }

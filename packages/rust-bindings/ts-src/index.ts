@@ -1,11 +1,9 @@
 import { Buffer } from 'buffer/';
 import { initSync } from '../pkg/web';
-import wasm from '../pkg/web/concordium_rust_bindings_bg.wasm';
+import wasm from '../pkg/web/concordium_rust_bindings_bg.wasm'; // Expected to resolve to a base64 url string from webpack
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const bytes = Buffer.from((wasm as any).split(',')[1], 'base64').buffer;
-console.log('source type:', typeof wasm);
-console.log('bytes length:', bytes.byteLength);
+const base64 = (wasm as unknown as string).split(',')[1];
+const bytes = Buffer.from(base64, 'base64').buffer;
 initSync(bytes);
 
 export * from '../pkg/web';

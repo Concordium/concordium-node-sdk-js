@@ -68,6 +68,7 @@ module.exports = {
     ],
     ignorePatterns: [
         '**/pkg/**/',
+        '**/dist/**/',
         '**/lib/**/',
         'deps/**/*',
         '**/nodejs/grpc-api/*',

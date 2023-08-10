@@ -1,7 +1,8 @@
 {
     "extends": "../../tsconfig-base.json",
     "include": [
-        "src/**/*"
+        "src/**/*",
+        "webpack.config.ts"
     ],
     "references": [
         {
@@ -15,5 +16,10 @@
         ],
         "rootDir": "./src",
         "outDir": "./lib/esm"
+    },
+    "ts-node": {
+        "compilerOptions": {
+            "module": "CommonJS"
+        }
     }
 }

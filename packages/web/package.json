@@ -2,8 +2,9 @@
     "name": "@concordium/web-sdk",
     "version": "6.0.0",
     "license": "Apache-2.0",
-    "browser": "lib/esm/index.js",
-    "types": "lib/esm/index.d.ts",
+    "browser": "./lib/esm/index.js",
+    "module": "./lib/esm/index.js",
+    "types": "./lib/esm/index.d.ts",
     "exports": {
         ".": {
             "types": "./lib/esm/pub/index.d.ts",
@@ -14,6 +15,11 @@
             "types": "./lib/esm/pub/*.d.ts",
             "import": "./lib/esm/pub/*.js",
             "browser": "./lib/esm/pub/*.js"
+        },
+        "./umd": {
+            "types": "./lib/esm/index.d.ts",
+            "import": "./lib/umd/concordium.min.js",
+            "browser": "./lib/umd/concordium.min.js"
         }
     },
     "files": [
@@ -56,7 +62,7 @@
         "jest": "^29.6.2",
         "rimraf": "^5.0.1",
         "ts-jest": "^29.1.1",
-        "typescript": "^4.3.5",
+        "typescript": "^5.1.6",
         "webpack": "^5.72.0",
         "webpack-cli": "^4.9.2"
     },
@@ -70,7 +76,7 @@
         "stream": "npm:stream-browserify@^3"
     },
     "scripts": {
-        "build": "tsc && webpack",
+        "build": "tsc -p tsconfig.build.json && webpack",
         "build-dev": "yarn build",
         "clean": "rimraf -- lib .webpack-cache",
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",

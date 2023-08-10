@@ -47,9 +47,6 @@ const config: Configuration = {
             },
         ],
     },
-    experiments: {
-        asyncWebAssembly: true,
-    },
     output: {
         filename: '[name].min.js',
         path: resolve(__dirname, 'lib/umd'),

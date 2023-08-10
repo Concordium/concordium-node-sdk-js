@@ -13,7 +13,8 @@
     "main": "./pkg/node/concordium_rust_bindings.js",
     "browser": "./pkg/bundler/concordium_rust_bindings.js",
     "files": [
-        "./pkg/*/concordium_rust_bindings*"
+        "./pkg/bundler/concordium_rust_bindings*",
+        "./pkg/node/concordium_rust_bindings*"
     ],
     "scripts": {
         "fmt": "cargo +nightly-2023-04-01-x86_64-unknown-linux-gnu fmt -- --color=always --check",
@@ -30,5 +31,8 @@
         "rimraf": "^5.0.1",
         "typescript": "^5.1.6",
         "wasm-pack": "^0.12.1"
+    },
+    "dependencies": {
+        "buffer": "^6.0.3"
     }
 }

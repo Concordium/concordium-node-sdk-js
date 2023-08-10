@@ -1665,6 +1665,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@concordium/rust-bindings@workspace:packages/rust-bindings"
   dependencies:
+    buffer: ^6.0.3
     rimraf: ^5.0.1
     typescript: ^5.1.6
     wasm-pack: ^0.12.1

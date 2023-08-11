@@ -1,5 +1,4 @@
-import { ConsensusStatus } from '@concordium/common-sdk';
-import { isHex } from '@concordium/common-sdk/util';
+import { ConsensusStatus, isHex } from '@concordium/common-sdk';
 import { getNodeClientV2 as getNodeClient } from './testHelpers';
 
 const client = getNodeClient();

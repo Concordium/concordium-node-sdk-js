@@ -21,12 +21,6 @@ const config: Configuration = {
     ],
     resolve: {
         extensions: ['.tsx', '.ts', '.js'],
-        alias: {
-            '@concordium/rust-bindings': resolve(
-                __dirname,
-                '../rust-bindings/ts-src/index.ts'
-            ),
-        },
     },
     module: {
         rules: [
@@ -40,13 +34,6 @@ const config: Configuration = {
                     },
                 },
                 exclude: /node_modules/,
-            },
-            {
-                test: /\.wasm$/,
-                type: 'asset/inline',
-                generator: {
-                    dataUrl: (data: Buffer) => data.toString('base64'),
-                },
             },
         ],
     },

@@ -1,4 +1,4 @@
-import { streamToList } from '@concordium/common-sdk/util';
+import { streamToList } from '@concordium/common-sdk';
 import * as expected from './resources/expectedJsons';
 import { getNodeClientV2 as getNodeClient } from './testHelpers';
 

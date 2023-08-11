@@ -11,6 +11,7 @@ import {
     serializeAccountTransactionPayload,
     createCredentialDeploymentTransaction,
     serializeAccountTransaction,
+    streamToList,
 } from '@concordium/common-sdk';
 import {
     getModuleBuffer,
@@ -28,7 +29,6 @@ import {
     getAccountIdentifierInput,
     getBlockHashInput,
 } from '@concordium/common-sdk/grpc';
-import { streamToList } from '@concordium/common-sdk/util';
 import { deserializeReceiveReturnValue } from '@concordium/common-sdk/wasm';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

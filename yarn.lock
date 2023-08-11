@@ -1678,7 +1678,6 @@ __metadata:
   resolution: "@concordium/web-sdk@workspace:packages/web"
   dependencies:
     "@concordium/common-sdk": 9.0.0
-    "@concordium/rust-bindings": 1.1.0
     "@grpc/grpc-js": ^1.3.4
     "@protobuf-ts/grpcweb-transport": ^2.8.2
     "@typescript-eslint/eslint-plugin": ^4.28.1

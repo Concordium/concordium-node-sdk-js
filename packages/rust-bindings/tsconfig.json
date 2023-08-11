@@ -6,6 +6,7 @@
         "./webpack.config.ts"
     ],
     "compilerOptions": {
+        "composite": false,
         "lib": [
             "ES2020",
             "dom"

@@ -32,6 +32,9 @@ const config: Configuration = {
             {
                 test: /\.wasm$/,
                 type: 'asset/inline',
+                generator: {
+                    dataUrl: (data: Buffer) => data.toString('base64'),
+                },
             },
         ],
     },

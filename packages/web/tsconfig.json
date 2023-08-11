@@ -13,9 +13,7 @@
         "lib": [
             "ES2020",
             "dom"
-        ],
-        "rootDir": "./src",
-        "outDir": "./lib/esm"
+        ]
     },
     "ts-node": {
         "compilerOptions": {

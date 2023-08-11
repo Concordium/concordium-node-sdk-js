@@ -10,6 +10,10 @@
         "url": "https://github.com/Concordium/concordium-node-sdk-js",
         "directory": "packages/rust-bindings"
     },
+    "sideEffects": [
+        "./lib/web/rust-bindings.min.js",
+        "./pkg/bundler/concordium_rust_bindings.js"
+    ],
     "main": "./pkg/node/concordium_rust_bindings.js",
     "browser": "./lib/web/rust-bindings.min.js",
     "types": "./pkg/node/concordium_rust_bindings.d.ts",

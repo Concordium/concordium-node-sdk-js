@@ -2,15 +2,14 @@
     "extends": "../../tsconfig-base.json",
     "include": [
         "./ts-src/**/*",
+        "./build/**/*",
         "./webpack.config.ts"
     ],
     "compilerOptions": {
         "lib": [
             "ES2020",
             "dom"
-        ],
-        "rootDir": "./ts-src",
-        "outDir": "./lib/web"
+        ]
     },
     "ts-node": {
         "compilerOptions": {

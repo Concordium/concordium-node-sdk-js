@@ -29,7 +29,7 @@ import { serializeAccountTransactionPayload } from '../serialization';
 import { BlockItemStatus, BlockItemSummary } from '../types/blockItemSummary';
 import { ModuleReference } from '../types/moduleReference';
 import { DEFAULT_INVOKE_ENERGY } from '../constants';
-import { serializeCredentialDeploymentPayload } from '../wasm/serialization'; // TODO: is this necessary??
+import { TransactionExpiry } from '../types/transactionExpiry';
 
 /**
  * @hidden
@@ -360,27 +360,22 @@ export class ConcordiumGRPCClient {
      *
      * See [this](git:docs/account-creation.md) document for how this function can be used.
      *
-     * @param credentialDeploymentTransaction the credential deployment transaction to send to the node
-     * @param signatures the signatures on the hash of the serialized unsigned credential deployment information, in order
+     * @param rawPayload the serialized payload, consisting of the {@link v1.CredentialDeploymentTransaction}
+     * along with corresponding signatures. This can be serialized by utilizing the `serializeCredentialDeploymentPayload` function.
+     * @param expiry the expiry of the transaction
      * @returns The transaction hash as a hex string
      */
     async sendCredentialDeploymentTransaction(
-        credentialDeploymentTransaction: v1.CredentialDeploymentTransaction,
-        signatures: string[]
+        rawPayload: Buffer,
+        expiry: TransactionExpiry
     ): Promise<HexString> {
-        const payloadHex = serializeCredentialDeploymentPayload(
-            signatures,
-            credentialDeploymentTransaction
-        );
-
         const credentialDeployment: v2.CredentialDeployment = {
             messageExpiry: {
-                value: credentialDeploymentTransaction.expiry
-                    .expiryEpochSeconds,
+                value: expiry.expiryEpochSeconds,
             },
             payload: {
                 oneofKind: 'rawPayload',
-                rawPayload: payloadHex,
+                rawPayload,
             },
         };
         const sendBlockItemRequest: v2.SendBlockItemRequest = {

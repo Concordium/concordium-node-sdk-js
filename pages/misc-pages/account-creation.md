@@ -98,11 +98,12 @@ using a seed:
     // The address, that the account created by the transaction will get, can
     // be derived ahead of time.
     const accountAddress: AccountAddress = getAccountAddress(credentialDeploymentTransaction.unsignedCdi.credId);
+    const payload = serializeCredentialDeploymentPayload(signatures, credentialDeploymentTransaction);
     
     // Send the transaction to the node
     const success = await client.sendCredentialDeploymentTransaction(
-        credentialDeploymentTransaction,
-        signatures
+        payload,
+        expiry
     );
     if (success) {
         // The node accepted the transaction. This does not ensure that the transaction

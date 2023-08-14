@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Breaking changes
+
+-   `sendCredentialDeploymentTransaction` method of `ConcordiumGRPCClient` signature changed to take an already serialized payload. 
+
 ### Added
 
 -   `CIS4Contract` class for seemlessly interacting with contracts adhering to the CIS4 standard.

@@ -21,9 +21,9 @@
     "module": "lib/esm/indes.js",
     "exports": {
         ".": {
-            "types": "./lib/esm/pub/index.d.ts",
-            "import": "./lib/esm/pub/index.js",
-            "require": "./lib/cjs/pub/index.js"
+            "types": "./lib/esm/index.d.ts",
+            "import": "./lib/esm/index.js",
+            "require": "./lib/cjs/index.js"
         },
         "./*": {
             "types": "./lib/esm/pub/*.d.ts",

@@ -10,9 +10,9 @@
     "types": "./lib/esm/index.d.ts",
     "exports": {
         ".": {
-            "types": "./lib/esm/pub/index.d.ts",
-            "import": "./lib/esm/pub/index.js",
-            "browser": "./lib/esm/pub/index.js"
+            "types": "./lib/esm/index.d.ts",
+            "import": "./lib/esm/index.js",
+            "browser": "./lib/esm/index.js"
         },
         "./*": {
             "types": "./lib/esm/pub/*.d.ts",

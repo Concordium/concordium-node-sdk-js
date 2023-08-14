@@ -1,4 +1,4 @@
-export * from './pub/index';
+export * from './pub/types';
 export * from './pub/wasm';
 export * from './pub/identity';
 export * from './pub/client';

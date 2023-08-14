@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer/';
 
-export * from '@concordium/common-sdk';
+export * from '@concordium/common-sdk/types';
 
 export { Buffer };
 

@@ -1,0 +1,13 @@
+[package]
+name = "concordium_rust_bindings_common"
+authors.workspace = true
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+wasm-bindgen.workspace = true
+
+[lib]
+name = "concordium_rust_bindings_common"
+crate-type = ["lib"]
+path = "src/lib.rs"

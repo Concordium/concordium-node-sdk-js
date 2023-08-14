@@ -1,0 +1,27 @@
+[package]
+name = "concordium_rust_bindings_wallet"
+authors.workspace = true
+version = "0.1.0"
+edition.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+wasm-bindgen.workspace = true
+anyhow.workspace = true
+hex.workspace = true
+either.workspace = true
+thiserror.workspace = true
+rand.workspace = true
+serde-wasm-bindgen.workspace = true
+concordium_base.workspace = true
+ed25519_hd_key_derivation.workspace = true
+key_derivation.workspace = true
+concordium_rust_bindings_common.workspace = true
+
+[lib]
+name = "concordium_rust_bindings_wallet"
+crate-type = ["cdylib"]
+path = "src/lib.rs"

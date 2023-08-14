@@ -10,9 +10,7 @@
         "url": "https://github.com/Concordium/concordium-node-sdk-js",
         "directory": "packages/common"
     },
-    "sideEffects": [
-        "@concordium/rust-bindings"
-    ],
+    "sideEffects": false,
     "main": "lib/cjs/index.js",
     "types": "lib/esm/index.d.ts",
     "module": "lib/esm/index.js",

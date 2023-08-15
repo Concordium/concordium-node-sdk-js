@@ -1,5 +1,9 @@
+import {
+    getInitContractParameterSchema as getInitContractParameterSchemaWasm,
+    getReceiveContractParameterSchema as getReceiveContractParameterSchemaWasm,
+    displayTypeSchemaTemplate as displayTypeSchemaTemplateWasm,
+} from '@concordium/rust-bindings/dapp';
 import { Buffer } from 'buffer/';
-import * as wasm from '@concordium/rust-bindings';
 import { SchemaVersion } from '../types';
 
 /**
@@ -13,7 +17,7 @@ export function getInitContractParameterSchema(
     contractName: string,
     schemaVersion?: SchemaVersion
 ): Buffer {
-    const parameterSchema = wasm.getInitContractParameterSchema(
+    const parameterSchema = getInitContractParameterSchemaWasm(
         moduleSchema.toString('hex'),
         contractName,
         schemaVersion
@@ -34,7 +38,7 @@ export function getUpdateContractParameterSchema(
     receiveFunctionName: string,
     schemaVersion?: SchemaVersion
 ): Buffer {
-    const parameterSchema = wasm.getReceiveContractParameterSchema(
+    const parameterSchema = getReceiveContractParameterSchemaWasm(
         moduleSchema.toString('hex'),
         contractName,
         receiveFunctionName,
@@ -48,5 +52,5 @@ export function getUpdateContractParameterSchema(
  * @returns JSON template of the schema
  */
 export function displayTypeSchemaTemplate(rawSchema: Buffer): string {
-    return wasm.displayTypeSchemaTemplate(rawSchema.toString('hex'));
+    return displayTypeSchemaTemplateWasm(rawSchema.toString('hex'));
 }

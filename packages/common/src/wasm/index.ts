@@ -16,3 +16,4 @@ export {
 } from './deserialization';
 export * from './HdWallet';
 export * from './schemaHelpers';
+export * from './credentialDeploymentTransactions';

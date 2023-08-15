@@ -1,4 +1,7 @@
-import * as wasm from '@concordium/rust-bindings';
+import {
+    createIdRequestV1 as createIdRequestV1Wasm,
+    createIdentityRecoveryRequest as createIdentityRecoveryRequestWasm,
+} from '@concordium/rust-bindings/wallet';
 import {
     ArInfo,
     CryptographicParameters,
@@ -25,7 +28,7 @@ export type IdentityRequestInput = {
 export function createIdentityRequest(
     input: IdentityRequestInput
 ): Versioned<IdObjectRequestV1> {
-    const rawRequest = wasm.createIdRequestV1(JSON.stringify(input));
+    const rawRequest = createIdRequestV1Wasm(JSON.stringify(input));
     try {
         return JSON.parse(rawRequest).idObjectRequest;
     } catch (e) {
@@ -48,9 +51,7 @@ export type IdentityRecoveryRequestInput = {
 export function createIdentityRecoveryRequest(
     input: IdentityRecoveryRequestInput
 ): Versioned<IdRecoveryRequest> {
-    const rawRequest = wasm.createIdentityRecoveryRequest(
-        JSON.stringify(input)
-    );
+    const rawRequest = createIdentityRecoveryRequestWasm(JSON.stringify(input));
     try {
         return JSON.parse(rawRequest).idRecoveryRequest;
     } catch (e) {

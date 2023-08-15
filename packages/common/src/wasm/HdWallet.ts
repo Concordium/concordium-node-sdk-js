@@ -1,4 +1,15 @@
-import * as wasm from '@concordium/rust-bindings';
+import {
+    getAccountPublicKey,
+    getAccountSigningKey,
+    getAttributeCommitmentRandomness,
+    getCredentialId,
+    getIdCredSec,
+    getPrfKey,
+    getSignatureBlindingRandomness,
+    getVerifiableCredentialEncryptionKey,
+    getVerifiableCredentialPublicKey,
+    getVerifiableCredentialSigningKey,
+} from '@concordium/rust-bindings/wallet';
 import { mnemonicToSeedSync, validateMnemonic } from '@scure/bip39';
 import { wordlist } from '@scure/bip39/wordlists/english';
 import { Buffer } from 'buffer/';
@@ -47,7 +58,7 @@ export class ConcordiumHdWallet {
         credentialCounter: number
     ): Buffer {
         return Buffer.from(
-            wasm.getAccountSigningKey(
+            getAccountSigningKey(
                 this.seedAsHex,
                 this.network,
                 identityProviderIndex,
@@ -63,7 +74,7 @@ export class ConcordiumHdWallet {
         credentialCounter: number
     ): Buffer {
         return Buffer.from(
-            wasm.getAccountPublicKey(
+            getAccountPublicKey(
                 this.seedAsHex,
                 this.network,
                 identityProviderIndex,
@@ -83,7 +94,7 @@ export class ConcordiumHdWallet {
         }: Pick<CryptographicParameters, 'onChainCommitmentKey'>
     ): Buffer {
         return Buffer.from(
-            wasm.getCredentialId(
+            getCredentialId(
                 this.seedAsHex,
                 this.network,
                 identityProviderIndex,
@@ -97,7 +108,7 @@ export class ConcordiumHdWallet {
 
     getPrfKey(identityProviderIndex: number, identityIndex: number): Buffer {
         return Buffer.from(
-            wasm.getPrfKey(
+            getPrfKey(
                 this.seedAsHex,
                 this.network,
                 identityProviderIndex,
@@ -109,7 +120,7 @@ export class ConcordiumHdWallet {
 
     getIdCredSec(identityProviderIndex: number, identityIndex: number): Buffer {
         return Buffer.from(
-            wasm.getIdCredSec(
+            getIdCredSec(
                 this.seedAsHex,
                 this.network,
                 identityProviderIndex,
@@ -124,7 +135,7 @@ export class ConcordiumHdWallet {
         identityIndex: number
     ): Buffer {
         return Buffer.from(
-            wasm.getSignatureBlindingRandomness(
+            getSignatureBlindingRandomness(
                 this.seedAsHex,
                 this.network,
                 identityProviderIndex,
@@ -140,7 +151,7 @@ export class ConcordiumHdWallet {
         attribute: AttributesKeys
     ): Buffer {
         return Buffer.from(
-            wasm.getAttributeCommitmentRandomness(
+            getAttributeCommitmentRandomness(
                 this.seedAsHex,
                 this.network,
                 identityProviderIndex,
@@ -156,7 +167,7 @@ export class ConcordiumHdWallet {
         verifiableCredentialIndex: number
     ): Buffer {
         return Buffer.from(
-            wasm.getVerifiableCredentialSigningKey(
+            getVerifiableCredentialSigningKey(
                 this.seedAsHex,
                 this.network,
                 verifiableCredentialIndex
@@ -169,7 +180,7 @@ export class ConcordiumHdWallet {
         verifiableCredentialIndex: number
     ): Buffer {
         return Buffer.from(
-            wasm.getVerifiableCredentialPublicKey(
+            getVerifiableCredentialPublicKey(
                 this.seedAsHex,
                 this.network,
                 verifiableCredentialIndex
@@ -182,7 +193,7 @@ export class ConcordiumHdWallet {
         verifiableCredentialIndex: number
     ): Buffer {
         return Buffer.from(
-            wasm.getVerifiableCredentialEncryptionKey(
+            getVerifiableCredentialEncryptionKey(
                 this.seedAsHex,
                 this.network,
                 verifiableCredentialIndex

@@ -1,3 +1,7 @@
+import { encode as bs58Encode } from 'bs58check';
+import { Buffer } from 'buffer/';
+import { sign } from '@noble/ed25519';
+import * as wasm from '@concordium/rust-bindings/wallet';
 import {
     AttributeKey,
     CredentialDeploymentTransaction,
@@ -13,18 +17,16 @@ import {
     SignedCredentialDeploymentDetails,
     Network,
     CredentialPublicKeys,
-} from './types';
-import * as wasm from '@concordium/rust-bindings';
-import { TransactionExpiry } from './types/transactionExpiry';
-import { AccountAddress } from './types/accountAddress';
-import { sha256 } from './hash';
-import { encode as bs58Encode } from 'bs58check';
-import { Buffer } from 'buffer/';
-import { ConcordiumHdWallet } from './wasm/HdWallet';
-import { AttributesKeys, CredentialDeploymentDetails, HexString } from '.';
-import { filterRecord, mapRecord } from './util';
-import { getCredentialDeploymentSignDigest } from './serialization';
-import { sign } from '@noble/ed25519';
+    AttributesKeys,
+    CredentialDeploymentDetails,
+    HexString,
+} from '../types';
+import { TransactionExpiry } from '../types/transactionExpiry';
+import { AccountAddress } from '../types/accountAddress';
+import { sha256 } from '../hash';
+import { ConcordiumHdWallet } from './HdWallet';
+import { filterRecord, mapRecord } from '../util';
+import { getCredentialDeploymentSignDigest } from '../serialization';
 
 /**
  * Generates the unsigned credential information that has to be signed when

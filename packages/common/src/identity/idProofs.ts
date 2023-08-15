@@ -1,4 +1,4 @@
-import * as wasm from '@concordium/rust-bindings';
+import { createIdProof as createIdProofWasm } from '@concordium/rust-bindings/wallet';
 import {
     AttributeKey,
     AttributeKeyString,
@@ -449,7 +449,7 @@ export class IdStatementBuilder implements StatementBuilder {
  * Given a statement about an identity and the inputs necessary to prove the statement, produces a proof that the associated identity fulfills the statement.
  */
 export function getIdProof(input: IdProofInput): IdProofOutput {
-    const rawRequest = wasm.createIdProof(JSON.stringify(input));
+    const rawRequest = createIdProofWasm(JSON.stringify(input));
     let out: IdProofOutput;
     try {
         out = JSON.parse(rawRequest);

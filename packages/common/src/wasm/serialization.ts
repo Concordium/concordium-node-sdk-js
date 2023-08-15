@@ -1,4 +1,12 @@
-import * as wasm from '@concordium/rust-bindings';
+import {
+    getDeploymentDetails as getDeploymentDetailsWasm,
+    serializeCredentialDeploymentPayload as serializeCredentialDeploymentPayloadWasm,
+} from '@concordium/rust-bindings/wallet';
+import {
+    serializeInitContractParameters as serializeInitContractParametersWasm,
+    serializeReceiveContractParameters as serializeReceiveContractParametersWasm,
+    serializeTypeValue as serializeTypeValueWasm,
+} from '@concordium/rust-bindings/dapp';
 import { Buffer } from 'buffer/';
 import {
     CredentialDeploymentDetails,
@@ -24,7 +32,7 @@ export function getCredentialDeploymentTransactionHash(
     signatures: string[]
 ): string {
     const credentialDeploymentInfo: DeploymentDetailsResult = JSON.parse(
-        wasm.getDeploymentDetails(
+        getDeploymentDetailsWasm(
             signatures,
             JSON.stringify(credentialDeployment.unsignedCdi),
             credentialDeployment.expiry.expiryEpochSeconds
@@ -45,7 +53,7 @@ export function serializeCredentialDeploymentTransactionForSubmission(
     signatures: string[]
 ): Buffer {
     const credentialDeploymentInfo: DeploymentDetailsResult = JSON.parse(
-        wasm.getDeploymentDetails(
+        getDeploymentDetailsWasm(
             signatures,
             JSON.stringify(credentialDeployment.unsignedCdi),
             credentialDeployment.expiry.expiryEpochSeconds
@@ -70,7 +78,7 @@ export function serializeInitContractParameters(
     schemaVersion?: SchemaVersion,
     verboseErrorMessage = false
 ): Buffer {
-    const serializedParameters = wasm.serializeInitContractParameters(
+    const serializedParameters = serializeInitContractParametersWasm(
         JSON.stringify(parameters),
         rawSchema.toString('hex'),
         contractName,
@@ -98,7 +106,7 @@ export function serializeUpdateContractParameters(
     schemaVersion?: SchemaVersion,
     verboseErrorMessage = false
 ): Buffer {
-    const serializedParameters = wasm.serializeReceiveContractParameters(
+    const serializedParameters = serializeReceiveContractParametersWasm(
         JSON.stringify(parameters),
         rawSchema.toString('hex'),
         contractName,
@@ -122,7 +130,7 @@ export function serializeTypeValue(
     rawSchema: Buffer,
     verboseErrorMessage = false
 ): Buffer {
-    const serializedValue = wasm.serializeTypeValue(
+    const serializedValue = serializeTypeValueWasm(
         JSON.stringify(value),
         rawSchema.toString('hex'),
         verboseErrorMessage
@@ -134,7 +142,7 @@ export function serializeCredentialDeploymentPayload(
     signatures: string[],
     credentialDeploymentTransaction: CredentialDeploymentTransaction
 ): Buffer {
-    const payloadByteArray = wasm.serializeCredentialDeploymentPayload(
+    const payloadByteArray = serializeCredentialDeploymentPayloadWasm(
         signatures,
         JSON.stringify(credentialDeploymentTransaction.unsignedCdi)
     );

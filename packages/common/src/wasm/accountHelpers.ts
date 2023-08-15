@@ -1,4 +1,4 @@
-import * as wasm from '@concordium/rust-bindings';
+import { generateBakerKeys as generateBakerKeysWasm } from '@concordium/rust-bindings/wallet';
 import { GenerateBakerKeysOutput } from '../types';
 import { AccountAddress } from '../types/accountAddress';
 
@@ -10,7 +10,7 @@ import { AccountAddress } from '../types/accountAddress';
 export function generateBakerKeys(
     account: AccountAddress
 ): GenerateBakerKeysOutput {
-    const rawKeys = wasm.generateBakerKeys(account.address);
+    const rawKeys = generateBakerKeysWasm(account.address);
     try {
         return JSON.parse(rawKeys);
     } catch (e) {

@@ -18,11 +18,6 @@
     "browser": "./lib/rust-bindings-dapp.min.js",
     "types": "./pkg/node/index.d.ts",
     "exports": {
-        ".": {
-            "require": "./pkg/dapp/node/index.js",
-            "browser": "./lib/rust-bindings-dapp.min.js",
-            "types": "./pkg/dapp/node/index.d.ts"
-        },
         "./dapp": {
             "require": "./pkg/dapp/node/index.js",
             "browser": "./lib/rust-bindings-dapp.min.js",
@@ -38,8 +33,8 @@
             "types": "./pkg/dapp/bundler/index.d.ts"
         },
         "./wallet/bundler": {
-            "browser": "./pkg/dapp/bundler/index.js",
-            "types": "./pkg/dapp/bundler/index.d.ts"
+            "browser": "./pkg/wallet/bundler/index.js",
+            "types": "./pkg/wallet/bundler/index.d.ts"
         }
     },
     "files": [

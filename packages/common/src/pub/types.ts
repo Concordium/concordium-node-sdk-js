@@ -17,7 +17,6 @@ export { CcdAmount } from '../types/ccdAmount';
 export { TransactionExpiry } from '../types/transactionExpiry';
 export { DataBlob } from '../types/DataBlob';
 export { ModuleReference } from '../types/moduleReference';
-export * from '../credentialDeploymentTransactions';
 export { isAlias, getAlias } from '../alias';
 export { deserializeAccountTransaction } from '../deserialization';
 export * from '../signHelpers';

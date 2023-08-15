@@ -1,4 +1,11 @@
-import * as wasm from '@concordium/rust-bindings';
+import {
+    deserializeState as deserializeStateWasm,
+    deserializeReceiveReturnValue as deserializeReceiveReturnValueWasm,
+    deserializeReceiveError as deserializeReceiveErrorWasm,
+    deserializeInitError as deserializeInitErrorWasm,
+    deserializeTypeValue as deserializeTypeValueWasm,
+} from '@concordium/rust-bindings/dapp';
+import { deserializeCredentialDeployment as deserializeCredentialDeploymentWasm } from '@concordium/rust-bindings/wallet';
 import { Buffer } from 'buffer/';
 import {
     deserializeAccountTransaction,
@@ -24,7 +31,7 @@ export function deserializeContractState(
     verboseErrorMessage = false
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
-    const serializedState = wasm.deserializeState(
+    const serializedState = deserializeStateWasm(
         contractName,
         state.toString('hex'),
         schema.toString('hex'),
@@ -40,7 +47,7 @@ export function deserializeContractState(
 }
 
 function deserializeCredentialDeployment(serializedDeployment: Cursor) {
-    const raw = wasm.deserializeCredentialDeployment(
+    const raw = deserializeCredentialDeploymentWasm(
         serializedDeployment.read().toString('hex')
     );
     try {
@@ -128,7 +135,7 @@ export function deserializeReceiveReturnValue(
     verboseErrorMessage = false
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
-    const deserializedReturnValue = wasm.deserializeReceiveReturnValue(
+    const deserializedReturnValue = deserializeReceiveReturnValueWasm(
         returnValueBytes.toString('hex'),
         moduleSchema.toString('hex'),
         contractName,
@@ -162,7 +169,7 @@ export function deserializeReceiveError(
     verboseErrorMessage = false
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
-    const deserializedError = wasm.deserializeReceiveError(
+    const deserializedError = deserializeReceiveErrorWasm(
         errorBytes.toString('hex'),
         moduleSchema.toString('hex'),
         contractName,
@@ -193,7 +200,7 @@ export function deserializeInitError(
     verboseErrorMessage = false
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
-    const deserializedError = wasm.deserializeInitError(
+    const deserializedError = deserializeInitErrorWasm(
         errorBytes.toString('hex'),
         moduleSchema.toString('hex'),
         contractName,
@@ -221,7 +228,7 @@ export function deserializeTypeValue(
     rawSchema: Buffer,
     verboseErrorMessage = false
 ): SmartContractTypeValues {
-    const deserializedValue = wasm.deserializeTypeValue(
+    const deserializedValue = deserializeTypeValueWasm(
         value.toString('hex'),
         rawSchema.toString('hex'),
         verboseErrorMessage

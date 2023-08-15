@@ -54,11 +54,12 @@ type IndexDetails = {
 
 export type VerifiableCredentialSubject = {
     type: 'object';
-    properties:
-        | {
-              id: IndexDetails;
-          }
-        | Record<string, PropertyDetails>;
+    properties: {
+        id: IndexDetails;
+        attributes: {
+            properties: Record<string, PropertyDetails>;
+        };
+    };
     required: string[];
 };
 
@@ -70,57 +71,61 @@ export const IDENTITY_SUBJECT_SCHEMA: VerifiableCredentialSubject = {
             type: 'string',
             description: 'Credential subject identifier',
         },
-        firstName: {
-            title: 'first name',
-            type: 'string',
-        },
-        lastName: {
-            title: 'last name',
-            type: 'string',
-        },
-        sex: {
-            title: 'sex',
-            type: 'string',
-        },
-        dob: {
-            title: 'date of birth',
-            type: 'string',
-        },
-        countryOfResidence: {
-            title: 'last name',
-            type: 'string',
-        },
-        nationality: {
-            title: 'last name',
-            type: 'string',
-        },
-        idDocType: {
-            title: 'last name',
-            type: 'string',
-        },
-        idDocNo: {
-            title: 'last name',
-            type: 'string',
-        },
-        idDocIssuer: {
-            title: 'last name',
-            type: 'string',
-        },
-        idDocIssuedAt: {
-            title: 'last name',
-            type: 'string',
-        },
-        idDocExpiresAt: {
-            title: 'last name',
-            type: 'string',
-        },
-        nationalIdNo: {
-            title: 'last name',
-            type: 'string',
-        },
-        taxIdNo: {
-            title: 'last name',
-            type: 'string',
+        attributes: {
+            properties: {
+                firstName: {
+                    title: 'first name',
+                    type: 'string',
+                },
+                lastName: {
+                    title: 'last name',
+                    type: 'string',
+                },
+                sex: {
+                    title: 'sex',
+                    type: 'string',
+                },
+                dob: {
+                    title: 'date of birth',
+                    type: 'string',
+                },
+                countryOfResidence: {
+                    title: 'last name',
+                    type: 'string',
+                },
+                nationality: {
+                    title: 'last name',
+                    type: 'string',
+                },
+                idDocType: {
+                    title: 'last name',
+                    type: 'string',
+                },
+                idDocNo: {
+                    title: 'last name',
+                    type: 'string',
+                },
+                idDocIssuer: {
+                    title: 'last name',
+                    type: 'string',
+                },
+                idDocIssuedAt: {
+                    title: 'last name',
+                    type: 'string',
+                },
+                idDocExpiresAt: {
+                    title: 'last name',
+                    type: 'string',
+                },
+                nationalIdNo: {
+                    title: 'last name',
+                    type: 'string',
+                },
+                taxIdNo: {
+                    title: 'last name',
+                    type: 'string',
+                },
+            },
         },
     },
     required: [],

@@ -40,7 +40,7 @@ import { stringify } from 'json-bigint';
 
 function verifyRangeStatement(
     statement: RangeStatementV2,
-    properties: PropertyDetails
+    properties?: PropertyDetails
 ) {
     if (statement.lower === undefined) {
         throw new Error('Range statements must contain a lower field');
@@ -48,7 +48,7 @@ function verifyRangeStatement(
     if (statement.upper === undefined) {
         throw new Error('Range statements must contain an upper field');
     }
-    if (properties.type === 'string') {
+    if (properties?.type === 'string') {
         if (typeof statement.lower != 'string') {
             throw new Error(
                 properties.title +
@@ -61,7 +61,7 @@ function verifyRangeStatement(
                     ' is a string property and therefore the upper end of a range statement must be a string'
             );
         }
-    } else if (properties.type === 'integer') {
+    } else if (properties?.type === 'integer') {
         if (typeof statement.lower != 'bigint') {
             throw new Error(
                 properties.title +
@@ -83,7 +83,7 @@ function verifyRangeStatement(
 function verifySetStatement(
     statement: MembershipStatementV2 | NonMembershipStatementV2,
     typeName: string,
-    properties: PropertyDetails
+    properties?: PropertyDetails
 ) {
     if (statement.set === undefined) {
         throw new Error(typeName + 'statements must contain a lower field');
@@ -93,7 +93,7 @@ function verifySetStatement(
     }
 
     if (
-        properties.type === 'string' &&
+        properties?.type === 'string' &&
         !statement.set.every((value) => typeof value == 'string')
     ) {
         throw new Error(
@@ -102,7 +102,7 @@ function verifySetStatement(
         );
     }
     if (
-        properties.type === 'integer' &&
+        properties?.type === 'integer' &&
         !statement.set.every((value) => typeof value == 'bigint')
     ) {
         throw new Error(
@@ -115,7 +115,7 @@ function verifySetStatement(
 function verifyAtomicStatement(
     statement: AtomicStatementV2,
     existingStatements: AtomicStatementV2[],
-    schema: VerifiableCredentialSubject
+    schema?: VerifiableCredentialSubject
 ) {
     if (statement.type === undefined) {
         throw new Error('Statements must contain a type field');
@@ -135,21 +135,26 @@ function verifyAtomicStatement(
         throw new Error('id is a reserved attribute name');
     }
 
-    if (!Object.keys(schema.properties).includes(statement.attributeTag)) {
+    if (
+        schema &&
+        !Object.keys(schema.properties.attributes.properties).includes(
+            statement.attributeTag
+        )
+    ) {
         throw new Error('Unknown attributeTag: ' + statement.attributeTag);
     }
-    // TODO Improve type to remove typecast?
-    const properties = (schema.properties as Record<string, PropertyDetails>)[
-        statement.attributeTag
-    ];
+
+    const property =
+        schema &&
+        schema.properties.attributes.properties[statement.attributeTag];
 
     switch (statement.type) {
         case StatementTypes.AttributeInRange:
-            return verifyRangeStatement(statement, properties);
+            return verifyRangeStatement(statement, property);
         case StatementTypes.AttributeInSet:
-            return verifySetStatement(statement, 'membership', properties);
+            return verifySetStatement(statement, 'membership', property);
         case StatementTypes.AttributeNotInSet:
-            return verifySetStatement(statement, 'non-membership', properties);
+            return verifySetStatement(statement, 'non-membership', property);
         case StatementTypes.RevealAttribute:
             return;
         default:

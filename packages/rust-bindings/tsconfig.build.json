@@ -5,6 +5,7 @@
     ],
     "compilerOptions": {
         "rootDir": "./ts-src",
+        "declaration": false,
         "outDir": "./lib/web"
     }
 }

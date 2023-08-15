@@ -324,15 +324,9 @@ dependencies = [
  "anyhow",
  "concordium_base",
  "concordium_rust_bindings_common",
- "ed25519_hd_key_derivation",
- "either",
  "hex",
- "key_derivation",
- "rand 0.7.3",
- "serde",
  "serde-wasm-bindgen",
  "serde_json",
- "thiserror",
  "wasm-bindgen",
 ]
 

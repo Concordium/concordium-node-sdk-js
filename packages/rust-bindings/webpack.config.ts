@@ -8,7 +8,10 @@ const config: Configuration = {
         type: 'filesystem',
         cacheDirectory: resolve(__dirname, '.webpack-cache'),
     },
-    entry: resolve(__dirname, './ts-src/index.ts'),
+    entry: {
+        dapp: resolve(__dirname, './ts-src/dapp.ts'),
+        wallet: resolve(__dirname, './ts-src/wallet.ts'),
+    },
     plugins: [
         new SourceMapDevToolPlugin({
             filename: '[file].map',
@@ -39,8 +42,8 @@ const config: Configuration = {
         ],
     },
     output: {
-        filename: 'rust-bindings.min.js',
-        path: resolve(__dirname, 'lib/web'),
+        filename: 'rust-bindings-[name].min.js',
+        path: resolve(__dirname, 'lib'),
         libraryTarget: 'umd',
         publicPath: '',
     },

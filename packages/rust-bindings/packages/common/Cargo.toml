@@ -9,5 +9,5 @@ wasm-bindgen.workspace = true
 
 [lib]
 name = "concordium_rust_bindings_common"
-crate-type = ["lib"]
+# crate-type = ["lib"]
 path = "src/lib.rs"

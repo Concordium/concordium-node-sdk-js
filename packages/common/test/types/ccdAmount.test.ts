@@ -1,3 +1,4 @@
+import Big from 'big.js';
 import { CcdAmount } from '../../src';
 
 describe('To and from ccd as strings', () => {
@@ -12,7 +13,9 @@ describe('To and from ccd as strings', () => {
     });
 
     test('CCD amounts that specifies more decimals than 6 throws', () => {
-        expect(() => CcdAmount.fromCcd('0.1234567')).toThrow();
+        expect(() => CcdAmount.fromCcd('0.1234567')).toThrow(
+            Error('Can not create CcdAmount from a non-whole number!')
+        );
     });
 
     test('CCD amounts that specifies 6 or less decimals is valid, test 1', () => {
@@ -27,21 +30,33 @@ describe('To and from ccd as strings', () => {
 
     test('Returns correct amount of CCD, test 1', () => {
         const ccd = new CcdAmount(1000n);
-        expect(ccd.toCcd()).toEqual('0.001');
+        expect(ccd.toCcd()).toEqual(Big('0.001'));
     });
 
     test('Returns correct amount of CCD, test 2', () => {
         const ccd = new CcdAmount(123456789n);
-        expect(ccd.toCcd()).toEqual('123.456789');
+        expect(ccd.toCcd()).toEqual(Big('123.456789'));
     });
 
-    test('Test comma seperator toCcd', () => {
-        const ccd = new CcdAmount(123456789n);
-        expect(ccd.toCcd(true)).toEqual('123,456789');
+    test('FromCcd correctly takes comma as a decimal seperator', () => {
+        expect(CcdAmount.fromCcd('10,000').toCcd()).toEqual(Big('10'));
     });
 
-    test('Test comma seperator fromCcd', () => {
-        const ccd = CcdAmount.fromCcd('1,002', true);
-        expect(ccd.microCcdAmount).toEqual(1002000n);
+    test('CcdAmount constructor correctly rejects multiple comma seperators', () => {
+        expect(() => CcdAmount.fromCcd('10,000,000')).toThrow(
+            Error('More than one decimal seperator found!')
+        );
+    });
+
+    test('fromCcd is equal to ccdToMicroCcd', () => {
+        const microCcd1 = Big(CcdAmount.fromCcd('1').microCcdAmount.toString());
+        const microCcd2 = CcdAmount.ccdToMicroCcd('1');
+        expect(microCcd1).toEqual(microCcd2);
+    });
+
+    test('toCcd is equal to microCcdToCcd', () => {
+        const ccd1 = new CcdAmount('1').toCcd();
+        const ccd2 = CcdAmount.microCcdToCcd('1');
+        expect(ccd1).toEqual(ccd2);
     });
 });

@@ -263,8 +263,15 @@ export type CredentialStatement = {
 export type RequestStatement = {
     id: string;
     statement: AtomicStatementV2[];
+    /** The type field is present iff the request is for a verifiable credential */
     type?: string[];
 };
+
+export function isVerifiableCredentialRequestStatement(
+    statement: RequestStatement
+): boolean {
+    return Boolean(statement.type);
+}
 
 export type CredentialStatements = CredentialStatement[];
 

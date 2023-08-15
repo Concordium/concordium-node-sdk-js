@@ -560,14 +560,13 @@ export function createWeb3CommitmentInputWithHdWallet(
 }
 
 /**
- * Given an atomic statement and an identity's attributes, determine whether the identity fulfills the statement.
+ * Given an atomic statement and a prover's attributes, determine whether the statement is fulfilled.
  */
 export function canProveAtomicStatement(
     statement: AtomicStatementV2,
-    attributeList: AttributeList
+    attributes: Record<string, string | bigint>
 ): boolean {
-    const attribute =
-        attributeList.chosenAttributes[statement.attributeTag as AttributeKey];
+    const attribute = attributes[statement.attributeTag];
     switch (statement.type) {
         case StatementTypes.AttributeInSet:
             return statement.set.includes(attribute);
@@ -585,14 +584,13 @@ export function canProveAtomicStatement(
 }
 
 /**
- * Given a credential statement and an identity's attributes, determine whether the identity fulfills the statement.
- * TODO fix this
+ * Given a credential statement and a prover's attributes, determine whether the statements are fulfilled.
  */
 export function canProveCredentialStatement(
     credentialStatement: CredentialStatement,
-    attributeList: AttributeList
+    attributes: Record<string, string | bigint>
 ): boolean {
     return credentialStatement.statement.every((statement) =>
-        canProveAtomicStatement(statement, attributeList)
+        canProveAtomicStatement(statement, attributes)
     );
 }

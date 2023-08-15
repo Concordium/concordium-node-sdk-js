@@ -1,4 +1,5 @@
 export * from './pub/types';
+export * from './pub/schema';
 export * from './pub/wasm';
 export * from './pub/identity';
 export * from './pub/client';

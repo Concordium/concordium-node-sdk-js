@@ -42,7 +42,7 @@ const config: Configuration = {
         ],
     },
     output: {
-        filename: 'rust-bindings-[name].min.js',
+        filename: '[name]/web/index.min.js',
         path: resolve(__dirname, 'lib'),
         libraryTarget: 'umd',
         publicPath: '',

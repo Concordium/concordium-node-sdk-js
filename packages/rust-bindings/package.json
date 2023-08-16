@@ -11,43 +11,41 @@
         "directory": "packages/rust-bindings"
     },
     "sideEffects": [
-        "./lib/web/rust-bindings.min.js",
-        "./pkg/bundler/concordium_rust_bindings.js"
+        "./lib/*/web/index.min.js",
+        "./lib/*/bundler/index.js"
     ],
-    "main": "./pkg/node/index.js",
-    "browser": "./lib/rust-bindings-dapp.min.js",
-    "types": "./pkg/node/index.d.ts",
+    "main": "./lib/dapp/node/index.js",
+    "browser": "./lib/dapp/web/index.min.js",
+    "types": "./lib/dapp/node/index.d.ts",
     "exports": {
         "./dapp": {
-            "require": "./pkg/dapp/node/index.js",
-            "browser": "./lib/rust-bindings-dapp.min.js",
-            "types": "./pkg/dapp/node/index.d.ts"
+            "require": "./lib/dapp/node/index.js",
+            "browser": "./lib/dapp/web/index.min.js",
+            "types": "./lib/dapp/node/index.d.ts"
         },
         "./wallet": {
-            "require": "./pkg/wallet/node/index.js",
-            "browser": "./lib/rust-bindings-wallet.min.js",
-            "types": "./pkg/wallet/node/index.d.ts"
+            "require": "./lib/wallet/node/index.js",
+            "browser": "./lib/wallet/web/index.min.js",
+            "types": "./lib/wallet/node/index.d.ts"
         },
         "./dapp/bundler": {
-            "browser": "./pkg/dapp/bundler/index.js",
-            "types": "./pkg/dapp/bundler/index.d.ts"
+            "browser": "./lib/dapp/bundler/index.js",
+            "types": "./lib/dapp/bundler/index.d.ts"
         },
         "./wallet/bundler": {
-            "browser": "./pkg/wallet/bundler/index.js",
-            "types": "./pkg/wallet/bundler/index.d.ts"
+            "browser": "./lib/wallet/bundler/index.js",
+            "types": "./lib/wallet/bundler/index.d.ts"
         }
     },
     "files": [
-        "./pkg/*/node/concordium_rust_bindings*",
-        "./pkg/*/bundler/concordium_rust_bindings*",
-        "./lib/*"
+        "./lib/**/index*"
     ],
     "scripts": {
         "fmt": "cargo +nightly-2023-04-01-x86_64-unknown-linux-gnu fmt -- --color=always --check",
         "clippy": "cargo +1.62 clippy --color=always --tests --benches -- -Dclippy::all",
         "build-web": "wasm-pack build ./packages/dapp --target web --out-dir $INIT_CWD/pkg/dapp/web --out-name index \"$@\" && wasm-pack build ./packages/wallet --target web --out-dir $INIT_CWD/pkg/wallet/web --out-name index \"$@\" && webpack",
-        "build-node": "wasm-pack build ./packages/dapp --target nodejs --out-dir $INIT_CWD/pkg/dapp/node --out-name index \"$@\" && wasm-pack build ./packages/wallet --target nodejs --out-dir $INIT_CWD/pkg/wallet/node --out-name index \"$@\"",
-        "build-bundler": "wasm-pack build ./packages/dapp --target bundler --out-dir $INIT_CWD/pkg/dapp/bundler --out-name index \"$@\" && wasm-pack build ./packages/wallet --target bundler --out-dir $INIT_CWD/pkg/wallet/bundler --out-name index \"$@\"",
+        "build-node": "wasm-pack build ./packages/dapp --target nodejs --out-dir $INIT_CWD/lib/dapp/node --out-name index \"$@\" && wasm-pack build ./packages/wallet --target nodejs --out-dir $INIT_CWD/lib/wallet/node --out-name index \"$@\"",
+        "build-bundler": "wasm-pack build ./packages/dapp --target bundler --out-dir $INIT_CWD/lib/dapp/bundler --out-name index \"$@\" && wasm-pack build ./packages/wallet --target bundler --out-dir $INIT_CWD/lib/wallet/bundler --out-name index \"$@\"",
         "build": "yarn build-node \"$@\" && yarn build-bundler \"$@\" && yarn build-web \"$@\"",
         "build:rust-bindings": "yarn build",
         "clean": "rimraf -- target pkg lib .webpack-cache"

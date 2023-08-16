@@ -6,7 +6,7 @@ import {
 } from '@concordium/common-sdk';
 import { getNodeClientV2 as getNodeClient } from './testHelpers';
 import { CIS2Contract } from '@concordium/common-sdk/cis2';
-import { serializeTypeValue } from '@concordium/common-sdk/wasm';
+import { serializeTypeValue } from '@concordium/common-sdk/schema';
 
 const CIS2_FT_ADDRESS: ContractAddress = {
     index: 3496n,

@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer/';
 import { ContractAddress } from '@concordium/common-sdk';
-import { serializeTypeValue } from '@concordium/common-sdk/wasm';
+import { serializeTypeValue } from '@concordium/common-sdk/schema';
 import { CIS4, CIS4Contract, Web3IdSigner } from '@concordium/common-sdk/cis4';
 import { getNodeClientV2 as getNodeClient } from './testHelpers';
 

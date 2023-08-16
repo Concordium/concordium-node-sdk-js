@@ -29,7 +29,7 @@ import {
     getAccountIdentifierInput,
     getBlockHashInput,
 } from '@concordium/common-sdk/grpc';
-import { deserializeReceiveReturnValue } from '@concordium/common-sdk/wasm';
+import { deserializeReceiveReturnValue } from '@concordium/common-sdk/schema';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 global.TextEncoder = TextEncoder as any;
@@ -524,12 +524,13 @@ test.each([clientV2, clientWeb])('createAccount', async (client) => {
         await ed.sign(hashToSign, signingKey1)
     ).toString('hex');
     const signatures: string[] = [signature];
+    const payload = v1.serializeCredentialDeploymentPayload(
+        signatures,
+        credentialDeploymentTransaction
+    );
 
     expect(
-        client.sendCredentialDeploymentTransaction(
-            credentialDeploymentTransaction,
-            signatures
-        )
+        client.sendCredentialDeploymentTransaction(payload, expiry)
     ).rejects.toThrow('expired');
 });
 

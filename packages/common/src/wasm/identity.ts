@@ -1,8 +1,9 @@
 import {
     createIdRequestV1 as createIdRequestV1Wasm,
     createIdentityRecoveryRequest as createIdentityRecoveryRequestWasm,
+    createIdProof as createIdProofWasm,
 } from '@concordium/rust-bindings/wallet';
-import {
+import type {
     ArInfo,
     CryptographicParameters,
     IdObjectRequestV1,
@@ -11,6 +12,7 @@ import {
     Network,
     Versioned,
 } from '../types';
+import type { IdProofInput, IdProofOutput } from '../id';
 
 export type IdentityRequestInput = {
     ipInfo: IpInfo;
@@ -57,4 +59,18 @@ export function createIdentityRecoveryRequest(
     } catch (e) {
         throw new Error(rawRequest);
     }
+}
+
+/**
+ * Given a statement about an identity and the inputs necessary to prove the statement, produces a proof that the associated identity fulfills the statement.
+ */
+export function getIdProof(input: IdProofInput): IdProofOutput {
+    const rawRequest = createIdProofWasm(JSON.stringify(input));
+    let out: IdProofOutput;
+    try {
+        out = JSON.parse(rawRequest);
+    } catch (e) {
+        throw new Error(rawRequest);
+    }
+    return out;
 }

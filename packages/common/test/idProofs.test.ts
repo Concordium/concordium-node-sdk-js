@@ -4,8 +4,8 @@ import {
     attributesWithRange,
     attributesWithSet,
     RangeStatement,
-} from '../src/identity/idProofTypes';
-import { getIdProof, IdStatementBuilder } from '../src/identity/idProofs';
+} from '../src/id/idProofTypes';
+import { IdStatementBuilder } from '../src/id/idProofs';
 import fs from 'fs';
 
 test('Creating a statement with multiple atomic statements on the same attribute fails', () => {

@@ -3,7 +3,7 @@ import {
     serializeCredentialDeploymentPayload as serializeCredentialDeploymentPayloadWasm,
 } from '@concordium/rust-bindings/wallet';
 import { Buffer } from 'buffer/';
-import {
+import type {
     CredentialDeploymentDetails,
     CredentialDeploymentTransaction,
 } from '../types';

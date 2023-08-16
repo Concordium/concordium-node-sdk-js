@@ -1,4 +1,3 @@
-import { createIdProof as createIdProofWasm } from '@concordium/rust-bindings/wallet';
 import {
     AttributeKey,
     AttributeKeyString,
@@ -7,8 +6,6 @@ import {
 } from '../types';
 import {
     AtomicStatement,
-    IdProofInput,
-    IdProofOutput,
     IdStatement,
     MembershipStatement,
     NonMembershipStatement,
@@ -443,18 +440,4 @@ export class IdStatementBuilder implements StatementBuilder {
     addEUNationality(): IdStatementBuilder {
         return this.addMembership(AttributesKeys.nationality, EU_MEMBERS);
     }
-}
-
-/**
- * Given a statement about an identity and the inputs necessary to prove the statement, produces a proof that the associated identity fulfills the statement.
- */
-export function getIdProof(input: IdProofInput): IdProofOutput {
-    const rawRequest = createIdProofWasm(JSON.stringify(input));
-    let out: IdProofOutput;
-    try {
-        out = JSON.parse(rawRequest);
-    } catch (e) {
-        throw new Error(rawRequest);
-    }
-    return out;
 }

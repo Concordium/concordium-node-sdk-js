@@ -16,26 +16,12 @@
     "engines": {
         "node": ">=14.16.0"
     },
-    "main": "lib/cjs/index.js",
-    "types": "lib/esm/index.d.ts",
-    "module": "lib/esm/indes.js",
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
     "sideEffects": false,
-    "exports": {
-        ".": {
-            "types": "./lib/esm/index.d.ts",
-            "import": "./lib/esm/index.js",
-            "require": "./lib/cjs/index.js"
-        },
-        "./*": {
-            "types": "./lib/esm/pub/*.d.ts",
-            "import": "./lib/esm/pub/*.js",
-            "require": "./lib/cjs/pub/*.js"
-        }
-    },
     "files": [
-        "/lib/cjs/**/*",
-        "/lib/esm/**/*",
-        "/lib/grpc-api/**/*"
+        "/lib/**/*",
+        "/grpc-api/**/*"
     ],
     "devDependencies": {
         "@noble/ed25519": "^1.7.1",
@@ -72,10 +58,9 @@
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
-        "build": "rm -rf grpc-api; mkdir -p grpc-api; yarn generate && yarn build-dev && cp -R grpc-api lib",
-        "build-dev": "yarn tsc-esm && yarn tsc-cjs",
-        "tsc-esm": "tsc -p tsconfig.build.json",
-        "tsc-cjs": "tsc -p tsconfig.build.json --outDir ./lib/cjs --module commonjs",
+        "build": "rm -rf grpc-api; mkdir -p grpc-api; yarn generate && yarn build-dev",
+        "build-dev": "yarn tsc-cjs",
+        "tsc-cjs": "tsc -p tsconfig.build.json",
         "clean": "rimraf -- lib grpc-api"
     },
     "dependencies": {

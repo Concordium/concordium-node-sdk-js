@@ -18,6 +18,11 @@
     "browser": "./lib/dapp/web/index.min.js",
     "types": "./lib/dapp/node/index.d.ts",
     "exports": {
+        ".": {
+            "require": "./lib/dapp/node/index.js",
+            "browser": "./lib/dapp/web/index.min.js",
+            "types": "./lib/dapp/node/index.d.ts"
+        },
         "./dapp": {
             "require": "./lib/dapp/node/index.js",
             "browser": "./lib/dapp/web/index.min.js",
@@ -28,11 +33,15 @@
             "browser": "./lib/wallet/web/index.min.js",
             "types": "./lib/wallet/node/index.d.ts"
         },
-        "./dapp/bundler": {
+        "./bundler": {
             "browser": "./lib/dapp/bundler/index.js",
             "types": "./lib/dapp/bundler/index.d.ts"
         },
-        "./wallet/bundler": {
+        "./bundler/dapp": {
+            "browser": "./lib/dapp/bundler/index.js",
+            "types": "./lib/dapp/bundler/index.d.ts"
+        },
+        "./bundler/wallet": {
             "browser": "./lib/wallet/bundler/index.js",
             "types": "./lib/wallet/bundler/index.d.ts"
         }

@@ -4,6 +4,9 @@
         "src/**/*",
         "test/**/*"
     ],
+    "compilerOptions": {
+        "module": "CommonJS"
+    },
     "references": [
         {
             "path": "../common"

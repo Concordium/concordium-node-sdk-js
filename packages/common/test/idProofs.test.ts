@@ -7,6 +7,7 @@ import {
 } from '../src/id/idProofTypes';
 import { IdStatementBuilder } from '../src/id/idProofs';
 import fs from 'fs';
+import { getIdProof } from '../src/wasm';
 
 test('Creating a statement with multiple atomic statements on the same attribute fails', () => {
     const builder = new IdStatementBuilder(true);

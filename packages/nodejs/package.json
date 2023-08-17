@@ -61,7 +61,7 @@
         "build": "rm -rf grpc-api; mkdir -p grpc-api; yarn generate && yarn build-dev",
         "build-dev": "yarn tsc-cjs",
         "tsc-cjs": "tsc -p tsconfig.build.json",
-        "clean": "rimraf -- lib grpc-api"
+        "clean": "rimraf -- lib grpc-api tsconfig.build.tsbuildinfo"
     },
     "dependencies": {
         "@concordium/common-sdk": "9.0.0",

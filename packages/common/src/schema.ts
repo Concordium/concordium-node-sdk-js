@@ -10,7 +10,7 @@ import {
     deserializeReceiveError as deserializeReceiveErrorWasm,
     deserializeInitError as deserializeInitErrorWasm,
     deserializeTypeValue as deserializeTypeValueWasm,
-} from '@concordium/rust-bindings/dapp';
+} from '@concordium/rust-bindings';
 import { Buffer } from 'buffer/';
 import { SchemaVersion, SmartContractTypeValues } from './types';
 

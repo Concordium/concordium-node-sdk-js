@@ -522,17 +522,19 @@ export class ConcordiumGRPCClient {
                 }, timeoutTime);
             }
 
-            const blockStream = this.getFinalizedBlocks(abortController.signal);
-
-            const response = await this.getBlockItemStatus(transactionHash);
-            if (response.status === 'finalized') {
-                // Simply doing `abortController.abort()` causes an error.
-                // See: https://github.com/grpc/grpc-node/issues/1652
-                setTimeout(() => abortController.abort(), 0);
-                return resolve(response.outcome);
-            }
-
             try {
+                const blockStream = this.getFinalizedBlocks(
+                    abortController.signal
+                );
+
+                const response = await this.getBlockItemStatus(transactionHash);
+                if (response.status === 'finalized') {
+                    // Simply doing `abortController.abort()` causes an error.
+                    // See: https://github.com/grpc/grpc-node/issues/1652
+                    setTimeout(() => abortController.abort(), 0);
+                    return resolve(response.outcome);
+                }
+
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 for await (const _ of blockStream) {
                     const response = await this.getBlockItemStatus(

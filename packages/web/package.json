@@ -3,7 +3,8 @@
     "version": "6.0.0",
     "license": "Apache-2.0",
     "sideEffects": false,
-    "browser": "./lib/esm/index.js",
+    "browser": "./lib/umd/concordium.min.js",
+    "cdn": "./lib/umd/concordium.min.js",
     "module": "./lib/esm/index.js",
     "types": "./lib/esm/index.d.ts",
     "exports": {
@@ -16,11 +17,6 @@
             "types": "./lib/esm/pub/*.d.ts",
             "import": "./lib/esm/pub/*.js",
             "browser": "./lib/esm/pub/*.js"
-        },
-        "./umd": {
-            "types": "./lib/esm/index.d.ts",
-            "import": "./lib/umd/concordium.min.js",
-            "browser": "./lib/umd/concordium.min.js"
         }
     },
     "files": [

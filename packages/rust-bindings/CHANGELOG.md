@@ -6,7 +6,7 @@
 
 - `create_web3_id_proof_ext` function.
 - `verify_web3_id_credential_signature_ext` function.
-
+-  `get_verifiable_credential_backup_encryption_key_ext` function.
 
 ### Changed
 

@@ -188,4 +188,14 @@ export class ConcordiumHdWallet {
             'hex'
         );
     }
+
+    getVerifiableCredentialBackupEncryptionKey(): Buffer {
+        return Buffer.from(
+            wasm.getVerifiableCredentialBackupEncryptionKey(
+                this.seedAsHex,
+                this.network
+            ),
+            'hex'
+        );
+    }
 }

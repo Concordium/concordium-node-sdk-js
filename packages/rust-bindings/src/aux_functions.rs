@@ -224,6 +224,15 @@ pub fn get_verifiable_credential_public_key_aux(
     Ok(hex::encode(key.as_bytes()))
 }
 
+pub fn get_verifiable_credential_backup_encryption_key_aux(
+    seed_as_hex: HexString,
+    raw_net: &str,
+) -> Result<HexString> {
+    let wallet = get_wallet(seed_as_hex, raw_net)?;
+    let key = wallet.get_verifiable_credential_backup_encryption_key()?;
+    Ok(hex::encode(key.as_bytes()))
+}
+
 pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<JsonString> {
     let seed_decoded = hex::decode(&input.seed)?;
     let seed: [u8; 64] = match seed_decoded.try_into() {

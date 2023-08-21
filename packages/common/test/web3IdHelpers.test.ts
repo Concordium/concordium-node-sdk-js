@@ -40,12 +40,9 @@ test('verifyWeb3IdCredentialSignature', async () => {
     ).toBeTruthy();
 });
 
-test('verifyWeb3IdCredentialSignature can reject', async () => {
+test('verifyWeb3IdCredentialSignature can reject due to incorrect signature', async () => {
     const incorrectSignature =
         'facdb03a1d054a55808875864abc85cc41d2c32290929bbb361a710b0fda5e7f333ac33abdb1b5f0ebb5662335c34410b8e96ca6730df7eb100f814f223d0b07';
-    const incorrectIssuerContract = { index: 4463n, subindex: 0n };
-    const incorrectHolder =
-        '76ada0ebd1e8aa5a651a0c4ac1ad3b62d3040f693722f94d61efa4fdd6ee797d';
 
     expect(
         verifyWeb3IdCredentialSignature({
@@ -58,6 +55,10 @@ test('verifyWeb3IdCredentialSignature can reject', async () => {
             holder,
         })
     ).toBeFalsy();
+});
+
+test('verifyWeb3IdCredentialSignature can reject due to incorrect issuer contract', async () => {
+    const incorrectIssuerContract = { index: 4463n, subindex: 0n };
     expect(
         verifyWeb3IdCredentialSignature({
             globalContext,
@@ -69,6 +70,11 @@ test('verifyWeb3IdCredentialSignature can reject', async () => {
             holder,
         })
     ).toBeFalsy();
+});
+
+test('verifyWeb3IdCredentialSignature can reject due to incorrect holder', async () => {
+    const incorrectHolder =
+        '76ada0ebd1e8aa5a651a0c4ac1ad3b62d3040f693722f94d61efa4fdd6ee797d';
     expect(
         verifyWeb3IdCredentialSignature({
             globalContext,

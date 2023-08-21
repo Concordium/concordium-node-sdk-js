@@ -5,7 +5,7 @@ import { ContractAddress, CryptographicParameters } from './types';
 export type VerifyWeb3IdCredentialSignatureInput = {
     globalContext: CryptographicParameters;
     signature: string;
-    values: Record<string, string | bigint | number>;
+    values: Record<string, string | bigint>;
     randomness: Record<string, string>;
     holder: string;
     issuerPublicKey: string;

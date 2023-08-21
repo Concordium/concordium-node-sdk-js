@@ -38,6 +38,32 @@ import {
 import { ConcordiumHdWallet } from './HdWallet';
 import { stringify } from 'json-bigint';
 
+const throwRangeError = (
+    title: string,
+    property: string,
+    end: string,
+    mustBe: string
+) => {
+    throw new Error(
+        title +
+            ' is a ' +
+            property +
+            ' property and therefore the ' +
+            end +
+            ' end of a range statement must be a ' +
+            mustBe
+    );
+};
+const throwSetError = (title: string, property: string, mustBe: string) => {
+    throw new Error(
+        title +
+            ' is a ' +
+            property +
+            ' property and therefore the end members of a set statement must be ' +
+            mustBe
+    );
+};
+
 function verifyRangeStatement(
     statement: RangeStatementV2,
     properties?: PropertyDetails
@@ -48,73 +74,74 @@ function verifyRangeStatement(
     if (statement.upper === undefined) {
         throw new Error('Range statements must contain an upper field');
     }
-    if (properties?.type === 'string') {
-        if (typeof statement.lower != 'string') {
-            throw new Error(
-                properties.title +
-                    ' is a string property and therefore the lower end of a range statement must be a string'
-            );
+
+    const checkRange = (
+        typeName: string,
+        validate: (a: bigint | string) => boolean,
+        typeString: string
+    ) => {
+        if (properties?.type === typeName) {
+            if (!validate(statement.lower)) {
+                throwRangeError(
+                    properties.title,
+                    typeName,
+                    'lower',
+                    typeString
+                );
+            }
+            if (!validate(statement.upper)) {
+                throwRangeError(
+                    properties.title,
+                    typeName,
+                    'lower',
+                    typeString
+                );
+            }
         }
-        if (typeof statement.upper != 'string') {
-            throw new Error(
-                properties.title +
-                    ' is a string property and therefore the upper end of a range statement must be a string'
-            );
-        }
-    } else if (properties?.type === 'integer') {
-        if (typeof statement.lower != 'bigint') {
-            throw new Error(
-                properties.title +
-                    ' is a integer property and therefore the lower end of a range statement must be a bigint'
-            );
-        }
-        if (typeof statement.upper != 'bigint') {
-            throw new Error(
-                properties.title +
-                    ' is a integer property and therefore the upper end of a range statement must be a bigint'
-            );
-        }
-    }
-    if (statement.upper < statement.lower) {
+    };
+
+    checkRange('string', (end) => typeof end !== 'string', 'string');
+    checkRange('integer', (end) => typeof end !== 'bigint', 'bigint');
+
+    // TODO Add lower < upper validation for string attributes
+    // We only check for integer attributes, because strings must be converted into field elements.
+    if (properties?.type === 'integer' && statement.upper < statement.lower) {
         throw new Error('Upper bound must be greater than lower bound');
     }
 }
 
 function verifySetStatement(
     statement: MembershipStatementV2 | NonMembershipStatementV2,
-    typeName: string,
+    statementTypeName: string,
     properties?: PropertyDetails
 ) {
     if (statement.set === undefined) {
-        throw new Error(typeName + 'statements must contain a lower field');
+        throw new Error(
+            statementTypeName + 'statements must contain a set field'
+        );
     }
     if (statement.set.length === 0) {
-        throw new Error(typeName + ' statements may not use empty sets');
+        throw new Error(
+            statementTypeName + ' statements may not use empty sets'
+        );
     }
 
-    if (
-        properties?.type === 'string' &&
-        !statement.set.every((value) => typeof value == 'string')
-    ) {
-        throw new Error(
-            properties.title +
-                ' is a string property and therefore the members of a set statement must be strings'
-        );
-    }
-    if (
-        properties?.type === 'integer' &&
-        !statement.set.every((value) => typeof value == 'bigint')
-    ) {
-        throw new Error(
-            properties.title +
-                ' is a integer property and therefore the members of a set statement must be bigints'
-        );
-    }
+    const checkSet = (
+        typeName: string,
+        validate: (a: bigint | string) => boolean,
+        typeString: string
+    ) => {
+        if (properties?.type === typeName && !statement.set.every(validate)) {
+            throwSetError(properties.title, typeName, typeString);
+        }
+    };
+
+    checkSet('string', (value) => typeof value == 'string', 'strings');
+    checkSet('integer', (value) => typeof value == 'bigint', 'bigints');
 }
 
 function verifyAtomicStatement(
     statement: AtomicStatementV2,
-    existingStatements: AtomicStatementV2[],
     schema?: VerifiableCredentialSubject
 ) {
     if (statement.type === undefined) {
@@ -122,17 +149,6 @@ function verifyAtomicStatement(
     }
     if (statement.attributeTag === undefined) {
         throw new Error('Statements must contain an attributeTag field');
-    }
-    if (
-        existingStatements.some(
-            (v) => v.attributeTag === statement.attributeTag
-        )
-    ) {
-        throw new Error('Only 1 statement is allowed for each attribute');
-    }
-
-    if (statement.attributeTag === 'id') {
-        throw new Error('id is a reserved attribute name');
     }
 
     if (
@@ -166,8 +182,26 @@ function verifyAtomicStatement(
 }
 
 /**
- * Check that the Id statement is well formed and do not break any rules.
- * If it does not verify, this throw an error.
+ * Verify that the atomicStatement is valid, and check it doesn't break any "composite" rules in the context of the existing statements.
+ */
+function verifyAtomicStatementInContext(
+    statement: AtomicStatementV2,
+    existingStatements: AtomicStatementV2[],
+    schema: VerifiableCredentialSubject
+) {
+    verifyAtomicStatement(statement, schema);
+    if (
+        existingStatements.some(
+            (v) => v.attributeTag === statement.attributeTag
+        )
+    ) {
+        throw new Error('Only 1 statement is allowed for each attribute');
+    }
+}
+
+/**
+ * Check that the given atomic statements are well formed and do not break any rules.
+ * If they do not verify, this throw an error.
  */
 export function verifyAtomicStatements(
     statements: AtomicStatementV2[],
@@ -176,9 +210,9 @@ export function verifyAtomicStatements(
     if (statements.length === 0) {
         throw new Error('Empty statements are not allowed');
     }
-    const checkedStatements = [];
+    const checkedStatements: AtomicStatementV2[] = [];
     for (const s of statements) {
-        verifyAtomicStatement(s, checkedStatements, schema);
+        verifyAtomicStatementInContext(s, checkedStatements, schema);
         checkedStatements.push(s);
     }
     return true;
@@ -193,7 +227,7 @@ function getWeb3IdCredentialQualifier(
     };
 }
 
-function getAccountCredentilQualifier(
+function getAccountCredentialQualifier(
     validIdentityProviders: number[]
 ): IdentityQualifier {
     return {
@@ -224,7 +258,11 @@ export class AtomicStatementBuilder implements InternalBuilder {
      */
     private check(statement: AtomicStatementV2) {
         if (this.schema) {
-            verifyAtomicStatement(statement, this.statements, this.schema);
+            verifyAtomicStatementInContext(
+                statement,
+                this.statements,
+                this.schema
+            );
         }
     }
 
@@ -235,7 +273,11 @@ export class AtomicStatementBuilder implements InternalBuilder {
      * @param upper: the upper end of the range, exclusive.
      * @returns the updated builder
      */
-    addRange(attribute: string, lower: string, upper: string): this {
+    addRange(
+        attribute: string,
+        lower: string | bigint,
+        upper: string | bigint
+    ): this {
         const statement: AtomicStatementV2 = {
             type: StatementTypes.AttributeInRange,
             attributeTag: attribute,
@@ -253,7 +295,7 @@ export class AtomicStatementBuilder implements InternalBuilder {
      * @param set: the set of values that the attribute must be included in.
      * @returns the updated builder
      */
-    addMembership(attribute: string, set: string[]): this {
+    addMembership(attribute: string, set: string[] | bigint[]): this {
         const statement: AtomicStatementV2 = {
             type: StatementTypes.AttributeInSet,
             attributeTag: attribute,
@@ -265,12 +307,12 @@ export class AtomicStatementBuilder implements InternalBuilder {
     }
 
     /**
-     * Add to the statement, that the given attribute should be one of the values in the given set.
+     * Add to the statement, that the given attribute should _not_ be one of the values in the given set.
      * @param attribute the attribute that should be checked
      * @param set: the set of values that the attribute must be included in.
      * @returns the updated builder
      */
-    addNonMembership(attribute: string, set: string[]): this {
+    addNonMembership(attribute: string, set: string[] | bigint[]): this {
         const statement: AtomicStatementV2 = {
             type: StatementTypes.AttributeNotInSet,
             attributeTag: attribute,
@@ -411,7 +453,7 @@ export class Web3StatementBuilder {
         builderCallback: (builder: InternalBuilder) => void
     ): this {
         return this.add(
-            getAccountCredentilQualifier(validIdentityProviders),
+            getAccountCredentialQualifier(validIdentityProviders),
             builderCallback,
             IDENTITY_SUBJECT_SCHEMA
         );

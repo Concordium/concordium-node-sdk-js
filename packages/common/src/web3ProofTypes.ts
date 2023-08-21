@@ -20,7 +20,7 @@ export type Web3IssuerCommitmentInput = {
     type: 'web3Issuer';
     signature: string;
     signer: string;
-    values: Record<string, string | bigint | number>;
+    values: Record<string, string | bigint>;
     randomness: Record<string, string>;
 };
 
@@ -189,12 +189,11 @@ export class VerifiablePresentation {
     }
 
     static fromString(json: string): VerifiablePresentation {
-        // We allow all numbers to be parsed as bigints to avoid lossy conversion of attribute values. The only other numbers in the structure are the attributeTags.
+        // We allow all numbers to be parsed as bigints to avoid lossy conversion of attribute values. The structure does not contain any other numbers.
         const parsed: VerifiablePresentation = JSONBigInt({
             alwaysParseAsBig: true,
             useNativeBigInt: true,
         }).parse(json);
-        // Convert the attributeTags back to numbers
         return new VerifiablePresentation(
             parsed.presentationContext,
             parsed.proof,

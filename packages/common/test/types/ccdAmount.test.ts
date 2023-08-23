@@ -44,7 +44,7 @@ describe('To and from ccd as strings', () => {
 
     test('CcdAmount constructor correctly rejects multiple comma seperators', () => {
         expect(() => CcdAmount.fromCcd('10,000,000')).toThrow(
-            Error('More than one decimal seperator found!')
+            Error('[big.js] Invalid number')
         );
     });
 

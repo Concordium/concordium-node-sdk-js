@@ -15,7 +15,6 @@ export class CcdAmount {
      * It can accept a string as parameter with either a comma or a dot as the decimal separator.
      *
      * @param microCcdAmount The amount of micro CCD as a number, string, big, or bigint.
-     * @throws If the number of commas in the input string exceeds 1
      * @throws If a number is passed with several decimal seperators
      * @throws If a negative amount of micro CCD is passed
      * @throws If the micro CCD passed is greater than what can be contained in a 64-bit integer
@@ -64,15 +63,14 @@ export class CcdAmount {
      * @returns The amount of CCD as a Big
      */
     toCcd(): Big {
-        return this.toBig().div(Big(MICRO_CCD_PER_CCD));
+        return this.toMicroCcd().div(Big(MICRO_CCD_PER_CCD));
     }
 
     /**
      * Creates a CcdAmount from a number, string, big, or bigint.
      *
-     * @param ccd The amount of CCD
+     * @param ccd The amount of micro CCD as a number, string, big or bigint.
      * @returns The CcdAmount object derived from the ccd input parameter
-     * @throws If the number of commas in the input string exceeds 1
      * @throws If a number is passed with several decimal seperators
      * @throws If a negative amount of micro CCD is passed
      * @throws If the micro CCD passed is greater than what can be contained in a 64-bit integer
@@ -89,13 +87,14 @@ export class CcdAmount {
     /**
      * Converts an amount of CCD to micro CCD and asserts that the amount is a valid amount of CCD.
      *
-     * @param ccd The amount of CCD
+     * @param ccd The amount of CCD as a number, string, big or bigint.
      * @returns The amount of micro CCD as a Big
-     * @throws If the number of commas in the input string exceeds 1
      * @throws If a number is passed with several decimal seperators
+     * @throws If a negative amount of micro CCD is passed
+     * @throws If the micro CCD passed is greater than what can be contained in a 64-bit integer
      */
     static ccdToMicroCcd(ccd: BigSource | bigint): Big {
-        return CcdAmount.fromCcd(ccd).toBig();
+        return CcdAmount.fromCcd(ccd).toMicroCcd();
     }
 
     /**
@@ -103,7 +102,6 @@ export class CcdAmount {
      *
      * @param microCcd The amount of micro CCD as a number, string, big or bigint.
      * @returns The amount of CCD as a Big
-     * @throws If the number of commas in the input string exceeds 1
      * @throws If a number is passed with several decimal seperators
      * @throws If a negative amount of micro CCD is passed
      * @throws If the micro CCD passed is greater than what can be contained in a 64-bit integer

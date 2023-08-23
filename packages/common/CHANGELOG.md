@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+Added a functions that handle conversions between CCD and micro CCD. The CCD amounts are handled as `Big`'s:
+- `toMicroCcd` returns the amount of micro CCD as a `Big`.
+- `toCcd`: returns the amount of CCD as a `Big`.
+- `fromCcd`: constructs a `CcdAmount` from an amount of CCD passed as a `Big`
+- `ccdToMicroCcd`: Converts CCD to micro CCD, both as `Big`'s
+- `microCcdToCcd`: Converts micro CCD to CCD, both as `Big`'s
+- The `CcdAmount` class constructor now also accepts a `BigSource` letting users create them from `Big`'s and strings
+
+All function parameters now also accepts strings, these strings can use comma as a decimal seperator.
+
 ## 9.0.0
 
 ### Breaking changes

@@ -11,10 +11,10 @@ export class CcdAmount {
     microCcdAmount: bigint;
 
     /**
-     * Constructs a CcdAmount and checks that it is valid, can accept a number, string, big or bigint.
-     * Accepts strings with decimal seperators as both commas and decimals.
+     * Constructs a CcdAmount and checks that it is valid. It accepts a number, string, big, or bigint as parameter.
+     * It can accept a string as parameter with either a comma or a dot as the decimal separator.
      *
-     * @param microCcdAmount Theamount of micro CCD as a number, string, big or bigint.
+     * @param microCcdAmount The amount of micro CCD as a number, string, big, or bigint.
      * @throws If the number of commas in the input string exceeds 1
      * @throws If a number is passed with several decimal seperators
      * @throws If a negative amount of micro CCD is passed
@@ -54,7 +54,7 @@ export class CcdAmount {
      *
      * @returns The amount of micro CCD as a Big
      */
-    toBig(): Big {
+    toMicroCcd(): Big {
         return Big(this.microCcdAmount.toString());
     }
 
@@ -68,7 +68,7 @@ export class CcdAmount {
     }
 
     /**
-     * Creates a CcdAmount from a number, string, big or bigint.
+     * Creates a CcdAmount from a number, string, big, or bigint.
      *
      * @param ccd The amount of CCD
      * @returns The CcdAmount object derived from the ccd input parameter

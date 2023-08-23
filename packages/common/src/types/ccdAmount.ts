@@ -119,13 +119,7 @@ export class CcdAmount {
 
 function newBig(bigSource: BigSource): Big {
     if (typeof bigSource === 'string') {
-        const numberOfCommaSeperators = bigSource.split(',').length - 1;
-
-        if (numberOfCommaSeperators > 1) {
-            throw Error('More than one decimal seperator found!');
-        } else if (numberOfCommaSeperators === 1) {
-            return Big(bigSource.replace(',', '.'));
-        }
+        return Big(bigSource.replace(',', '.'));
     }
     return Big(bigSource);
 }

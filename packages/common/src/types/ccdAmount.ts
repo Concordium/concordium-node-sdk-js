@@ -15,9 +15,7 @@ export class CcdAmount {
      * It can accept a string as parameter with either a comma or a dot as the decimal separator.
      *
      * @param microCcdAmount The amount of micro CCD as a number, string, big, or bigint.
-     * @throws If a number is passed with several decimal seperators
-     * @throws If a negative amount of micro CCD is passed
-     * @throws If the micro CCD passed is greater than what can be contained in a 64-bit integer
+     * @throws If an invalid micro CCD amount is passed, i.e. any value which is not an unsigned 64-bit integer
      */
     constructor(microCcdAmount: bigint | BigSource) {
         // If the input is a "BigSource" assert that the number is whole

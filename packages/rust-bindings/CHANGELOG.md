@@ -7,10 +7,9 @@
 - `create_web3_id_proof_ext` function.
 - `verify_web3_id_credential_signature_ext` function.
 
-
 ### Changed
 
-- Add issuer contract index and subindex as arguments to `verify_web3_id_credential_signature_ext` and `get_verifiable_credential_public_key_ext`.
+- Add issuer contract index and subindex as arguments to `get_verifiable_credential_signing_key_aux` and `get_verifiable_credential_public_key_ext`.
 
 ### Removed
 

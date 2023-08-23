@@ -9,6 +9,8 @@ import {
 import { ContractAddress, CryptographicParameters } from './types';
 import JSONBigInt from 'json-bigint';
 
+export type AttributeType = string | bigint | Date;
+
 export type AccountCommitmentInput = {
     type: 'account';
     issuer: number;
@@ -20,7 +22,7 @@ export type Web3IssuerCommitmentInput = {
     type: 'web3Issuer';
     signature: string;
     signer: string;
-    values: Record<string, string | bigint>;
+    values: Record<string, AttributeType>;
     randomness: Record<string, string>;
 };
 
@@ -139,7 +141,7 @@ export type ConcordiumWeakLinkingProofV1 = {
     type: 'ConcordiumWeakLinkingProofV1';
 };
 
-export type AtomicProofV2 = AtomicProof<string | bigint>;
+export type AtomicProofV2 = AtomicProof<AttributeType>;
 
 export type StatementProof = {
     created: string;
@@ -150,7 +152,7 @@ export type StatementProof = {
 export type CredentialSubjectProof = {
     id: DIDString;
     proof: StatementProof;
-    statement: AtomicStatementV2[];
+    statement: GenericAtomicStatement<string, AttributeType>[];
 };
 
 export type VerifiableCredentialProof = {
@@ -162,6 +164,39 @@ export type VerifiableCredentialProof = {
         ...string[]
     ];
 };
+
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
+
+/**
+ * Replacer to ensure dates are stringified to the timestamp attribute format.
+ */
+export function replaceDateWithTimeStampAttribute(
+    this: any,
+    k: string,
+    value: any
+): any {
+    const rawValue = this[k];
+    if (rawValue instanceof Date) {
+        return { type: 'date-time', timestamp: rawValue.toISOString() };
+    }
+    return value;
+}
+
+/**
+ * Reviver to ensure dates are parsed from the timestamp attribute format.
+ */
+function reviveDateFromTimeStampAttribute(this: any, _key: string, value: any) {
+    if (
+        value.type === 'date-time' &&
+        typeof value.timestamp === 'string' &&
+        Object.keys(value).length === 2
+    ) {
+        return Date.parse(value.timestamp);
+    }
+    return value;
+}
+
+/* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 
 export class VerifiablePresentation {
     presentationContext: string;
@@ -185,7 +220,7 @@ export class VerifiablePresentation {
         return JSONBigInt({
             alwaysParseAsBig: true,
             useNativeBigInt: true,
-        }).stringify(this);
+        }).stringify(this, replaceDateWithTimeStampAttribute);
     }
 
     static fromString(json: string): VerifiablePresentation {
@@ -193,7 +228,7 @@ export class VerifiablePresentation {
         const parsed: VerifiablePresentation = JSONBigInt({
             alwaysParseAsBig: true,
             useNativeBigInt: true,
-        }).parse(json);
+        }).parse(json, reviveDateFromTimeStampAttribute);
         return new VerifiablePresentation(
             parsed.presentationContext,
             parsed.proof,
@@ -203,18 +238,18 @@ export class VerifiablePresentation {
     }
 }
 
-export type RangeStatementV2 = GenericRangeStatement<string, string | bigint>;
+export type RangeStatementV2 = GenericRangeStatement<string, AttributeType>;
 export type NonMembershipStatementV2 = GenericNonMembershipStatement<
     string,
-    string | bigint
+    AttributeType
 >;
 export type MembershipStatementV2 = GenericMembershipStatement<
     string,
-    string | bigint
+    AttributeType
 >;
 export type RevealStatementV2 = GenericRevealStatement<string>;
 
-export type AtomicStatementV2 = GenericAtomicStatement<string, string | bigint>;
+export type AtomicStatementV2 = GenericAtomicStatement<string, AttributeType>;
 
 export type VerifiableCredentialQualifier = {
     type: 'sci';
@@ -276,5 +311,5 @@ export type CredentialStatements = CredentialStatement[];
 
 export type CredentialSubject = {
     id: string;
-    attributes: Record<string, string | bigint>;
+    attributes: Record<string, AttributeType>;
 };

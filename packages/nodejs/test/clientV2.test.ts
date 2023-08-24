@@ -1010,3 +1010,23 @@ test.each([clientV2, clientWeb])(
         );
     }
 );
+
+test.each([clientV2, clientWeb])(
+    'getBakersRewardPeriod',
+    async (client) => {
+        const bakerRewardPeriodInfo = await streamToList(client.getBakersRewardPeriod());
+        const brpi = bakerRewardPeriodInfo[0];
+
+        expect(typeof brpi.baker.bakerId).toEqual('bigint');
+        expect(brpi.baker.electionKey.length).toEqual(64);
+        expect(brpi.baker.signatureKey.length).toEqual(64);
+        expect(brpi.baker.aggregationKey.length).toEqual(192);
+        expect(brpi.baker.aggregationKey.length).toEqual(192);
+        expect(typeof brpi.commissionRates.bakingCommission).toEqual('number');
+        expect(typeof brpi.commissionRates.finalizationCommission).toEqual('number');
+        expect(typeof brpi.commissionRates.transactionCommission).toEqual('number');
+        expect(typeof brpi.effectiveStake).toEqual('bigint');
+        expect(typeof brpi.equityCapital).toEqual('bigint');
+        expect(typeof brpi.isFinalizer).toEqual('boolean');
+    }
+);

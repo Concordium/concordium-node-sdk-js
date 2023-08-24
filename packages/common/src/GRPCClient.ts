@@ -1463,6 +1463,17 @@ export class ConcordiumGRPCClient {
         return translate.blockCertificates(blockCertificates);
     }
 
+    /**
+     * Get all bakers in the reward period of a block.
+     * This endpoint is only supported for protocol version 6 and onwards.
+     * If the protocol does not support the endpoint then an  'IllegalArgument' error is returned.
+     */
+    getBakersRewardPeriod(blockHash?: HexString): AsyncIterable<v1.BakerRewardPeriodInfo> {
+        const blockHashInput = getBlockHashInput(blockHash);
+        const bakersRewardPeriod = this.client.getBakersRewardPeriod(blockHashInput).responses;
+        return mapStream(bakersRewardPeriod, translate.bakerRewardPeriodInfo);
+    }
+
     private async getConsensusHeight() {
         return (await this.getConsensusStatus()).lastFinalizedBlockHeight;
     }

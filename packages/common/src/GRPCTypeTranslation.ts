@@ -2783,6 +2783,26 @@ export function finalizerRound(round: v2.FinalizerRound): v1.FinalizerRound {
     };
 }
 
+export function bakerRewardPeriodInfo(bakerRewardPeriod: v2.BakerRewardPeriodInfo): v1.BakerRewardPeriodInfo {
+    return {
+        baker: bakerInfo(unwrap(bakerRewardPeriod.baker)),
+        effectiveStake: unwrap(bakerRewardPeriod.effectiveStake?.value),
+        commissionRates: trCommissionRates(bakerRewardPeriod.commissionRates),
+        equityCapital: unwrap(bakerRewardPeriod.equityCapital?.value),
+        delegatedCapital: unwrap(bakerRewardPeriod.equityCapital?.value),
+        isFinalizer: unwrap(bakerRewardPeriod.isFinalizer),
+    }
+}
+
+export function bakerInfo(bakerInfo: v2.BakerInfo): v1.BakerInfo {
+    return {
+        bakerId: unwrap(bakerInfo.bakerId?.value),
+        electionKey: unwrapValToHex(bakerInfo.electionKey),
+        signatureKey: unwrapValToHex(bakerInfo.signatureKey),
+        aggregationKey: unwrapValToHex(bakerInfo.aggregationKey),
+    }
+}
+
 // ---------------------------- //
 // --- V1 => V2 translation --- //
 // ---------------------------- //

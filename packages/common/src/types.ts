@@ -48,6 +48,16 @@ export type TimeoutSignature = HexString;
  * The bytes have a fixed length of 32 bytes.
  */
 export type SuccessorProof = HexString;
+/** Baker's public key used to check whether they won the lottery or not. */
+export type BakerElectionVerifyKey = HexString
+/** Baker's public key used to check that they are indeed the ones who produced the block. */
+export type BakerSignatureVerifyKey = HexString
+/**
+ * Baker's public key used to check signatures on finalization records.
+ * This is only used if the baker has sufficient stake to participate in
+ * finalization.
+ */
+export type BakerAggregationVerifyKey = HexString
 
 /** A number of milliseconds */
 export type Duration = bigint;
@@ -2156,4 +2166,62 @@ export interface EpochFinalizationEntry {
      * successor of the finalized block.
      */
     successorProof: SuccessorProof;
+}
+
+/**
+ * Information about a particular baker with respect to
+ * the current reward period.
+ */
+export interface BakerRewardPeriodInfo {
+    /**
+     * The baker id and public keys for the baker.
+     */
+    baker: BakerInfo;
+    /**
+     * The effective stake of the baker for the consensus protocol.
+     * The returned amount accounts for delegation, capital bounds and leverage bounds.
+     */
+    effectiveStake: Amount;
+    /**
+     * The effective commission rate for the baker that applies for the reward period.
+     */
+    commissionRates: CommissionRates;
+    /**
+     * The amount staked by the baker itself.
+     */
+    equityCapital: Amount;
+    /**
+     * The total amount of capital delegated to this baker pool.
+     */
+    delegatedCapital: Amount;
+    /**
+     * Whether the baker is a finalizer or not.
+     */
+    isFinalizer: boolean;
+}
+
+/**
+ * Information about a baker.
+ */
+export interface BakerInfo {
+    /**
+     * Identity of the baker. This is actually the account index of
+     * the account controlling the baker.
+     */
+    bakerId: BakerId;
+    /**
+     * Baker's public key used to check whether they won the lottery or not.
+     */
+    electionKey: BakerElectionVerifyKey;
+    /**
+     * Baker's public key used to check that they are indeed the ones who
+     * produced the block.
+     */
+    signatureKey: BakerSignatureVerifyKey;
+    /**
+     * Baker's public key used to check signatures on finalization records.
+     * This is only used if the baker has sufficient stake to participate in
+     * finalization.
+     */
+    aggregationKey: BakerAggregationVerifyKey;
 }

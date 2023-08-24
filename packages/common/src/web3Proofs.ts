@@ -23,11 +23,9 @@ import {
     Web3IdProofInput,
     AccountCommitmentInput,
     Web3IssuerCommitmentInput,
-    VerifiablePresentation,
     CredentialStatement,
     CredentialSubject,
     AttributeType,
-    replaceDateWithTimeStampAttribute,
 } from './web3ProofTypes';
 import { getPastDate } from './idProofs';
 import {
@@ -39,6 +37,10 @@ import {
 } from './commonProofTypes';
 import { ConcordiumHdWallet } from './HdWallet';
 import { stringify } from 'json-bigint';
+import {
+    replaceDateWithTimeStampAttribute,
+    VerifiablePresentation,
+} from './types/VerifiablePresentation';
 
 const throwRangeError = (
     title: string,

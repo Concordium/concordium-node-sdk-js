@@ -943,3 +943,12 @@ describe('findFirstFinalizedBlockNoLaterThan', () => {
         }
     );
 });
+
+test.each([clientV2, clientWeb])('getBakerEarliestWinTime', async (client) => {
+    const bakers = await streamToList(client.getBakerList());
+    const earliestWinTime = await client.getBakerEarliestWinTime(bakers[0]);
+
+    // Arbitrary eraliestWinTime measured at the time of running the test.
+    // Every earliestWinTime measured after this point should be greater than this.
+    expect(earliestWinTime).toBeGreaterThan(1692792026500n);
+});

@@ -1350,26 +1350,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@concordium/common-sdk@npm:9.0.0":
-  version: 9.0.0
-  resolution: "@concordium/common-sdk@npm:9.0.0"
-  dependencies:
-    "@concordium/rust-bindings": 1.1.0
-    "@grpc/grpc-js": ^1.3.4
-    "@noble/ed25519": ^1.7.1
-    "@protobuf-ts/runtime-rpc": ^2.8.2
-    "@scure/bip39": ^1.1.0
-    bs58check: ^2.1.2
-    buffer: ^6.0.3
-    cross-fetch: 3.1.5
-    hash.js: ^1.1.7
-    iso-3166-1: ^2.1.1
-    json-bigint: ^1.0.0
-    uuid: ^8.3.2
-  checksum: b640846415dfb18b4bb549519ab7fa7825c6b5e84adf1cfaeeea89bb54341e5176e71f00b732ea9bb375aac938842434ab1d6d5ffe2a5f360efc236ea5b0ef4a
-  languageName: node
-  linkType: hard
-
 "@concordium/examples@workspace:examples":
   version: 0.0.0-use.local
   resolution: "@concordium/examples@workspace:examples"
@@ -1395,7 +1375,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@concordium/node-sdk@workspace:packages/nodejs"
   dependencies:
-    "@concordium/common-sdk": 9.0.0
+    "@concordium/common-sdk": 9.1.0-alpha.1
     "@grpc/grpc-js": ^1.3.4
     "@noble/ed25519": ^1.7.1
     "@protobuf-ts/grpc-transport": ^2.8.2
@@ -1429,13 +1409,6 @@ __metadata:
   resolution: "@concordium/rust-bindings@workspace:packages/rust-bindings"
   languageName: unknown
   linkType: soft
-
-"@concordium/rust-bindings@npm:1.1.0":
-  version: 1.1.0
-  resolution: "@concordium/rust-bindings@npm:1.1.0"
-  checksum: 4890306b5df5fb85012cc6c6a6daf15ec1d24c528ac487a4547e8758738a1205b2386a1d4b015dc45312811466d853819edff4b9921d3674afe13ade5cacc061
-  languageName: node
-  linkType: hard
 
 "@concordium/web-sdk@workspace:packages/web":
   version: 0.0.0-use.local

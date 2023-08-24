@@ -34,7 +34,20 @@ export type UrlString = string;
 export type IpAddressString = string;
 export type JsonString = string;
 
+/** A smart contract module reference. This is always 32 bytes long. */
 export type ModuleRef = HexString;
+/** The signature of a 'QuorumCertificate'. the bytes have a fixed length of 48 bytes. */
+export type QuorumSignature = HexString;
+/** The signature of a 'TimeoutCertificate'. the bytes have a fixed length of 48 bytes. */
+export type TimeoutSignature = HexString;
+/**
+ * A proof that establishes that the successor block of
+ * a 'EpochFinalizationEntry' is the immediate successor of
+ * the finalized block.
+ *
+ * The bytes have a fixed length of 32 bytes.
+ */
+export type SuccessorProof = HexString;
 
 /** A number of milliseconds */
 export type Duration = bigint;
@@ -2016,3 +2029,130 @@ export type SmartContractTypeValues =
     | number
     | string
     | boolean;
+
+/**
+ * Certificates for a block for protocols supporting
+ * ConcordiumBFT.
+ */
+export interface BlockCertificates {
+    /**
+     * The quorum certificate. Is present if and only if the block is
+     * not a genesis block.
+     */
+    quorumCertificate?: QuorumCertificate;
+    /**
+     * The timeout certificate. Is present only if the round prior to the
+     * round of the block timed out.
+     */
+    timeoutCertificate?: TimeoutCertificate;
+    /**
+     * The epoch finalization entry. Is present only if the block initiates
+     * a new epoch.
+     */
+    epochFinalizationEntry?: EpochFinalizationEntry;
+}
+
+/**
+ * A quorum certificate is the certificate that the
+ * finalization comittee issues in order to certify a block.
+ * A block must be certified before it will be part of the
+ * authorative part of the chain.
+ */
+export interface QuorumCertificate {
+    /**
+     * The hash of the block that the quorum certificate refers to.
+     */
+    blockHash: HexString;
+    /**
+     * The round of the block.
+     */
+    round: Round;
+    /**
+     * The epoch of the block.
+     */
+    epoch: Epoch;
+    /**
+     * The aggregated signature by the finalization committee on the block.
+     */
+    aggregateSignature: QuorumSignature;
+    /**
+     * A list of the finalizers that formed the quorum certificate
+     * i.e., the ones who have contributed to the 'aggregate_siganture'.
+     * The finalizers are identified by their baker id as this is stable
+     * across protocols and epochs.
+     */
+    signatories: BakerId[];
+}
+
+/**
+ * A timeout certificate is the certificate that the
+ * finalization committee issues when a round times out,
+ * thus making it possible for the protocol to proceed to the
+ * next round.
+ */
+export interface TimeoutCertificate {
+    /**
+     * The round that timed out.
+     */
+    round: Round;
+    /**
+     * The minimum epoch of which signatures are included
+     * in the 'aggregate_signature'.
+     */
+    minEpoch: Epoch;
+    /**
+     * The rounds of which finalizers have their best
+     * QCs in the 'min_epoch'.
+     */
+    qcRoundsFirstEpoch: FinalizerRound[];
+    /**
+     * The rounds of which finalizers have their best
+     * QCs in the epoch 'min_epoch' + 1.
+     */
+    qcRoundsSecondEpoch: FinalizerRound[];
+    /**
+     * The aggregated signature by the finalization committee that witnessed
+     * the 'round' timed out.
+     */
+    aggregateSignature: TimeoutSignature;
+}
+
+/**
+ * The finalizer round is a map from a 'Round'
+ * to the list of finalizers (identified by their 'BakerId') that signed
+ * off the round.
+ */
+export interface FinalizerRound {
+    /**
+     * The round that was signed off.
+     */
+    round: Round;
+    /**
+     * The finalizers (identified by their 'BakerId' that
+     * signed off the in 'round'.
+     */
+    finalizers: BakerId[];
+}
+
+/**
+ * The epoch finalization entry is the proof that
+ * makes the protocol able to advance to a new epoch.
+ * I.e. the 'EpochFinalizationEntry' is present if and only if
+ * the block is the first block of a new 'Epoch'.
+ */
+export interface EpochFinalizationEntry {
+    /**
+     * The quorum certificate for the finalized block.
+     */
+    finalizedQc: QuorumCertificate;
+    /**
+     * The quorum certificate for the block that finalizes
+     * the block that 'finalized_qc' points to.
+     */
+    successorQc: QuorumCertificate;
+    /**
+     * A proof that the successor block is an immediate
+     * successor of the finalized block.
+     */
+    successorProof: SuccessorProof;
+}

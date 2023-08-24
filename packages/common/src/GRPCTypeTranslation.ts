@@ -2723,6 +2723,65 @@ export function blockFinalizationSummary(
     }
 }
 
+export function blockCertificates(
+    certs: v2.BlockCertificates
+): v1.BlockCertificates {
+    return {
+        ...(certs.quorumCertificate !== undefined && {
+            quorumCertificate: quorumCertificate(certs.quorumCertificate),
+        }),
+        ...(certs.timeoutCertificate !== undefined && {
+            timeoutCertificate: timeoutCertificate(certs.timeoutCertificate),
+        }),
+        ...(certs.epochFinalizationEntry !== undefined && {
+            epochFinalizationEntry: epochFinalizationEntry(
+                certs.epochFinalizationEntry
+            ),
+        }),
+    };
+}
+
+export function quorumCertificate(
+    cert: v2.QuorumCertificate
+): v1.QuorumCertificate {
+    return {
+        blockHash: unwrapValToHex(cert.blockHash),
+        round: unwrap(cert.round?.value),
+        epoch: unwrap(cert.epoch?.value),
+        aggregateSignature: unwrapValToHex(cert.aggregateSignature),
+        signatories: cert.signatories.map((x) => unwrap(x.value)),
+    };
+}
+
+export function timeoutCertificate(
+    cert: v2.TimeoutCertificate
+): v1.TimeoutCertificate {
+    return {
+        round: unwrap(cert.round?.value),
+        minEpoch: unwrap(cert.minEpoch?.value),
+        qcRoundsFirstEpoch: cert.qcRoundsFirstEpoch.map(finalizerRound),
+        qcRoundsSecondEpoch: cert.qcRoundsSecondEpoch.map(finalizerRound),
+        aggregateSignature: unwrapValToHex(cert.aggregateSignature),
+    };
+}
+
+export function epochFinalizationEntry(
+    cert: v2.EpochFinalizationEntry
+): v1.EpochFinalizationEntry {
+    return {
+        finalizedQc: quorumCertificate(unwrap(cert.finalizedQc)),
+        successorQc: quorumCertificate(unwrap(cert.successorQc)),
+        successorProof: unwrapValToHex(cert.successorProof),
+    };
+}
+
+export function finalizerRound(round: v2.FinalizerRound): v1.FinalizerRound {
+    return {
+        round: unwrap(round.round?.value),
+        finalizers: round.finalizers.map((x) => x.value),
+    };
+}
+
 // ---------------------------- //
 // --- V1 => V2 translation --- //
 // ---------------------------- //

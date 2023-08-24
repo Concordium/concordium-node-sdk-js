@@ -952,3 +952,36 @@ test.each([clientV2, clientWeb])('getBakerEarliestWinTime', async (client) => {
     // Every earliestWinTime measured after this point should be greater than this.
     expect(earliestWinTime).toBeGreaterThan(1692792026500n);
 });
+
+test.each([clientV2, clientWeb])(
+    'getBlockCertificates: With timeout certificate',
+    async (client) => {
+        const blockWithTimeoutCert =
+            'ac94ab7628d44fd8b4edb3075ae156e4b85d4007f52f147df6936ff70083d1ef';
+        const blockCertificates = await client.getBlockCertificates(
+            blockWithTimeoutCert
+        );
+
+        expect(blockCertificates.timeoutCertificate).toEqual(
+            expected.timeoutCertificate
+        );
+    }
+);
+
+test.each([clientV2, clientWeb])(
+    'getBlockCertificates: With epoch finalization entry',
+    async (client) => {
+        const blockWithEpochFinalizationEntry =
+            '1ba4bcd28a6e014204f79a81a47bac7518066410acbeb7853f20b55e335b947a';
+        const blockCertificates = await client.getBlockCertificates(
+            blockWithEpochFinalizationEntry
+        );
+
+        expect(blockCertificates.quorumCertificate).toEqual(
+            expected.quorumCertificate
+        );
+        expect(blockCertificates.epochFinalizationEntry).toEqual(
+            expected.epochFinalizationEntry
+        );
+    }
+);

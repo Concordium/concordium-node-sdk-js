@@ -1440,6 +1440,29 @@ export class ConcordiumGRPCClient {
             .response;
         return winTime.value;
     }
+
+    /**
+     * For a non-genesis block, this returns the quorum certificate, a timeout
+     * certificate (if present) and epoch finalization entry (if present).
+     * Note that, if the block being pointed to is not a product of ConcordiumBFT,
+     * then the response will be a grpc error (invalid argument).
+     * If the endpoint is not enabled by the node, then an 'unimplemented' error
+     * will be returned.
+     *
+     * @param blockHash optional block hash to get the cryptographic parameters at, otherwise retrieves from last finalized block.
+     *
+     * @returns the requested block certificates.
+     */
+    async getBlockCertificates(
+        blockHash?: HexString
+    ): Promise<v1.BlockCertificates> {
+        const blockHashInput = getBlockHashInput(blockHash);
+        const blockCertificates = await this.client.getBlockCertificates(
+            blockHashInput
+        ).response;
+        return translate.blockCertificates(blockCertificates);
+    }
+
     private async getConsensusHeight() {
         return (await this.getConsensusStatus()).lastFinalizedBlockHeight;
     }

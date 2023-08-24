@@ -1767,30 +1767,6 @@ export const blocksAtHeight = [
     '99ceb0dfcd36714d9c141fde08e85da1d0d624994e95b35114f14193c811b76e',
 ];
 
-export const blockInfo: BlockInfoV0 = {
-    blockParent:
-        '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf',
-    blockHash:
-        'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e',
-    blockStateHash:
-        '6e602157d76677fc4b630b2701571d2b0166e2b08e0afe8ab92356e4d0b88a6a',
-    blockLastFinalized:
-        '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf',
-    blockHeight: 1259179n,
-    blockBaker: 4n,
-    blockSlot: 50801674n,
-    blockArriveTime: new Date('2022-11-07T10:54:10.899Z'),
-    blockReceiveTime: new Date('2022-11-07T10:54:10.892Z'),
-    blockSlotTime: new Date('2022-11-07T10:54:10.750Z'),
-    finalized: true,
-    transactionCount: 0n,
-    transactionsSize: 0n,
-    transactionEnergyCost: 0n,
-    genesisIndex: 1,
-    eraBlockHeight: 1258806,
-    protocolVersion: 4n,
-};
-
 export const bakers = [
     1n,
     3n,

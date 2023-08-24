@@ -623,7 +623,32 @@ test.each([clientV2, clientWeb])(
 test.each([clientV2, clientWeb])('getBlockInfo', async (client) => {
     const blockInfo = await client.getBlockInfo(testBlockHash);
 
-    expect(blockInfo).toEqual(expected.blockInfo);
+    expect(blockInfo.blockParent).toEqual(
+        '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf'
+    );
+    expect(blockInfo.blockHash).toEqual(
+        'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e'
+    );
+    expect(blockInfo.blockStateHash).toEqual(
+        '6e602157d76677fc4b630b2701571d2b0166e2b08e0afe8ab92356e4d0b88a6a'
+    );
+    expect(blockInfo.blockLastFinalized).toEqual(
+        '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf'
+    );
+    expect(blockInfo.blockHeight).toEqual(1259179n);
+    expect(blockInfo.blockBaker).toEqual(4n);
+    expect(blockInfo.blockArriveTime).toBeDefined();
+    expect(blockInfo.blockReceiveTime).toBeDefined();
+    expect(blockInfo.blockSlotTime).toEqual(
+        new Date('2022-11-07T10:54:10.750Z')
+    );
+    expect(blockInfo.finalized).toEqual(true);
+    expect(blockInfo.transactionCount).toEqual(0n);
+    expect(blockInfo.transactionsSize).toEqual(0n);
+    expect(blockInfo.transactionEnergyCost).toEqual(0n);
+    expect(blockInfo.genesisIndex).toEqual(1);
+    expect(blockInfo.eraBlockHeight).toEqual(1258806);
+    expect(blockInfo.protocolVersion).toEqual(4n);
 });
 
 test.each([clientV2, clientWeb])('getBakerList', async (client) => {

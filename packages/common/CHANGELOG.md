@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+
+### Added
+
+New consensus endpoints:
+- `getBakerEarliestWinTime`
+- `getBlockCertificates`
+- `getBakersRewardPeriod`
+
+### Breaking changes
+
+- `commissionRates` is now added to the `getPoolInfo` under `bakerPoolStatus.PoolInfo`
+
 ## 9.1.0
 
 ### Added

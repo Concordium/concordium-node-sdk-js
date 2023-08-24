@@ -1322,6 +1322,7 @@ __metadata:
     "@protobuf-ts/plugin": 2.8.1
     "@protobuf-ts/runtime-rpc": ^2.8.2
     "@scure/bip39": ^1.1.0
+    "@types/big.js": ^6.2.0
     "@types/bs58check": ^2.1.0
     "@types/jest": ^26.0.23
     "@types/json-bigint": ^1.0.1
@@ -1329,6 +1330,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^4.28.1
     "@typescript-eslint/parser": ^4.28.1
     babel-jest: ^27.0.6
+    big.js: ^6.2.0
     bs58check: ^2.1.2
     buffer: ^6.0.3
     cross-fetch: 3.1.5
@@ -2270,6 +2272,13 @@ __metadata:
   dependencies:
     "@babel/types": ^7.3.0
   checksum: 8992d8c1eaaf1c793e9184b930767883446939d2744c40ea4e9591086e79b631189dc519931ed8864f1e016742a189703c217db59b800aca84870b865009d8b4
+  languageName: node
+  linkType: hard
+
+"@types/big.js@npm:^6.2.0":
+  version: 6.2.0
+  resolution: "@types/big.js@npm:6.2.0"
+  checksum: 69216051378559083453eb89ff63c70300928ebe3e5ccf2af98be39cdce1591d206a2206f1b3b97234b281646b54ded4c7bdf67fa4e383dccd278d129694af67
   languageName: node
   linkType: hard
 
@@ -3264,6 +3273,13 @@ __metadata:
   version: 5.2.2
   resolution: "big.js@npm:5.2.2"
   checksum: b89b6e8419b097a8fb4ed2399a1931a68c612bce3cfd5ca8c214b2d017531191070f990598de2fc6f3f993d91c0f08aa82697717f6b3b8732c9731866d233c9e
+  languageName: node
+  linkType: hard
+
+"big.js@npm:^6.2.0":
+  version: 6.2.1
+  resolution: "big.js@npm:6.2.1"
+  checksum: 0b234a2fd56c52bed2798ed2020bcab6fef5e9523b99a05406ad071d1aed6ee97ada9fb8de9576092da74c68825c276e19015743b8d1baea269b60a5c666b0cd
   languageName: node
   linkType: hard
 

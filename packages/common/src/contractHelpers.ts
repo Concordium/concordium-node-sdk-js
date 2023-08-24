@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer/';
 import { ContractAddress, InstanceInfo } from './types';
 
-const CONTRACT_PARAM_MAX_LENGTH = 1024;
+const CONTRACT_PARAM_MAX_LENGTH = 65535;
 
 /**
  * Gets the contract name from an {@link InstanceInfo} object.

@@ -1187,6 +1187,7 @@ export interface CurrentPaydayBakerPoolStatus {
     lotteryPower: number;
     bakerEquityCapital: Amount;
     delegatedCapital: Amount;
+    commisionRates: CommissionRates;
 }
 
 export enum BakerPoolPendingChangeType {

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 9.1.0
 
 ### Added
 
@@ -13,6 +13,11 @@ Added a functions that handle conversions between CCD and micro CCD. The CCD amo
 - The `CcdAmount` class constructor now also accepts a `BigSource` letting users create them from `Big`'s and strings
 
 All function parameters now also accepts strings, these strings can use comma as a decimal seperator.
+
+
+- `Web3StatementBuilder` function.
+- `getVerifiablePresentation` function.
+- Various helper methods for web3Id statements and verifiable presentations.
 
 ## 9.0.0
 

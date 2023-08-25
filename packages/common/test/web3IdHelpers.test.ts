@@ -1,5 +1,6 @@
-import { verifyWeb3IdCredentialSignature } from '../src/web3IdHelpers';
+import { isStringAttributeInRange, verifyWeb3IdCredentialSignature } from '../src/web3IdHelpers';
 import fs from 'fs';
+import { compareStringAttributes } from '@concordium/rust-bindings';
 
 const globalContext = JSON.parse(
     fs.readFileSync('./test/resources/global.json').toString()
@@ -86,4 +87,21 @@ test('verifyWeb3IdCredentialSignature can reject due to incorrect holder', async
             holder: incorrectHolder,
         })
     ).toBeFalsy();
+});
+
+
+test('compareStringAttributes works with number strings', () => {
+    expect(compareStringAttributes("1", "0")).toBe(1);
+    expect(compareStringAttributes("1", "10")).toBe(-1);
+    expect(compareStringAttributes("1", "1")).toBe(0);
+});
+
+test('isStringAttributeInRange works with number strings', () => {
+    expect(isStringAttributeInRange("1", "0", "2")).toBeTruthy();
+    expect(isStringAttributeInRange("1", "5", "7")).toBeFalsy();
+});
+
+test('isStringAttributeInRange works with YearMonth strings', () => {
+    expect(isStringAttributeInRange("200204", "199910", "299910")).toBeTruthy();
+    expect(isStringAttributeInRange("299910", "200204", "199910")).toBeFalsy();
 });

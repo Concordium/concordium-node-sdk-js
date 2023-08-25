@@ -5,6 +5,8 @@
 ### Added
 
 -   `CIS4Contract` class for seemlessly interacting with contracts adhering to the CIS4 standard.
+-   `Module` class for functionality related to smart contract modules, such as parsing the WebAssembly and interface of the module.
+-   Smart contract types `ContractName`, `EntrypointName` and helper functions `isInitName`, `isReceiveName`, `getContractNameFromInit` and `getNamesFromReceive`.
 
 ## 9.0.0
 

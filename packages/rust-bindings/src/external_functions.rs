@@ -1,5 +1,4 @@
-use std::fmt::Display;
-use std::cmp::Ordering;
+use std::{cmp::Ordering, fmt::Display};
 
 use crate::{aux_functions::*, types::*};
 use wasm_bindgen::prelude::*;
@@ -440,8 +439,8 @@ pub fn verify_web3_id_credential_signature_ext(raw_input: JsonString) -> JsResul
 #[wasm_bindgen(js_name = compareStringAttributes)]
 pub fn compare_string_attributes_ext(attribute1: String, attribute2: String) -> i8 {
     match compare_string_attributes_aux(attribute1, attribute2) {
-            Ordering::Less => -1,
-            Ordering::Equal => 0,
-            Ordering::Greater => 1,
-        }
+        Ordering::Less => -1,
+        Ordering::Equal => 0,
+        Ordering::Greater => 1,
+    }
 }

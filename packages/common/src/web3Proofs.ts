@@ -80,7 +80,10 @@ function verifyRangeStatement(
         throw new Error('Range statements must contain an upper field');
     }
 
-    const isTimeStamp = (properties?: PropertyDetails) => properties && properties.type === 'string' && properties.format === 'date-time';
+    const isTimeStamp = (properties?: PropertyDetails) =>
+        properties &&
+        properties.type === 'string' &&
+        properties.format === 'date-time';
 
     if (properties) {
         const checkRange = (
@@ -116,9 +119,17 @@ function verifyRangeStatement(
     }
 
     // The assertions are safe, because we already validated that lower/upper has the correct types.
-    if ((properties?.type === 'integer' && statement.upper < statement.lower) ||
-        (isTimeStamp(properties) && (statement.upper as Date).getTime() < (statement.lower as Date).getTime()) ||
-        (properties?.type === 'string' && compareStringAttributes((statement.lower as string), (statement.upper as string)) > 0)) {
+    if (
+        (properties?.type === 'integer' && statement.upper < statement.lower) ||
+        (isTimeStamp(properties) &&
+            (statement.upper as Date).getTime() <
+                (statement.lower as Date).getTime()) ||
+        (properties?.type === 'string' &&
+            compareStringAttributes(
+                statement.lower as string,
+                statement.upper as string
+            ) > 0)
+    ) {
         throw new Error('Upper bound must be greater than lower bound');
     }
 }

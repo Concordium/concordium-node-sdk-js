@@ -1026,7 +1026,10 @@ pub fn verify_web3_id_credential_signature_aux(
     ))
 }
 
-pub fn compare_string_attributes_aux(attribute1: String, attribute2: String) -> core::cmp::Ordering {
+pub fn compare_string_attributes_aux(
+    attribute1: String,
+    attribute2: String,
+) -> core::cmp::Ordering {
     let e1 = Web3IdAttribute::String(AttributeKind(attribute1)).to_field_element();
     let e2 = Web3IdAttribute::String(AttributeKind(attribute2)).to_field_element();
     return e1.cmp(&e2).into();

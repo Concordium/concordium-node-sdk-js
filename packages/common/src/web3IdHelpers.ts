@@ -29,15 +29,19 @@ export function verifyWeb3IdCredentialSignature(
  * if a > b then compareStringAttributes(a,b) = 1;
  */
 export function compareStringAttributes(a: string, b: string): number {
-    return wasm.compareStringAttributes(a,b);
+    return wasm.compareStringAttributes(a, b);
 }
 
 /**
  * Given a string attribute value and a range [lower, upper[, return whether value is in the range, when converted into field elements.
  */
-export function isStringAttributeInRange(value: string, lower: string, upper: string): boolean {
+export function isStringAttributeInRange(
+    value: string,
+    lower: string,
+    upper: string
+): boolean {
     const lowCmp = compareStringAttributes(value, lower);
-    if (lowCmp < 0 ) {
+    if (lowCmp < 0) {
         return false;
     }
     const upCmp = compareStringAttributes(value, upper);

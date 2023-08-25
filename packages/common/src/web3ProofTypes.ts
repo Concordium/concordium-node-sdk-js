@@ -39,15 +39,32 @@ export type Web3IdProofInput = {
     commitmentInputs: CommitmentInput[];
 };
 
-export type PropertyDetails = {
+export type TimestampPropertyDetails = {
+    title: string;
+    type: 'object';
+    properties: {
+        type: {
+            type: 'string';
+            const: 'date-time';
+        };
+        timestamp: {
+            type: 'string';
+        };
+    };
+    description?: string;
+};
+
+export type SimplePropertyDetails = {
     title: string;
     description?: string;
-    type: string;
+    type: 'string' | 'integer';
     format?: string;
 };
 
+export type PropertyDetails = SimplePropertyDetails | TimestampPropertyDetails;
+
 type IndexDetails = {
-    title: 'id';
+    title: string;
     description?: string;
     type: 'string';
 };
@@ -57,7 +74,11 @@ export type VerifiableCredentialSubject = {
     properties: {
         id: IndexDetails;
         attributes: {
+            title?: string;
+            description?: string;
+            type: 'object';
             properties: Record<string, PropertyDetails>;
+            required?: string[];
         };
     };
     required: string[];
@@ -72,6 +93,7 @@ export const IDENTITY_SUBJECT_SCHEMA: VerifiableCredentialSubject = {
             description: 'Credential subject identifier',
         },
         attributes: {
+            type: 'object',
             properties: {
                 firstName: {
                     title: 'first name',

@@ -13,7 +13,10 @@ import {
     expectedWeb3IdCredentialPresentation,
 } from './resources/expectedPresentation';
 import { expectedStatementMixed } from './resources/expectedStatements';
-import { CommitmentInput } from '../src/web3ProofTypes';
+import {
+    CommitmentInput,
+    VerifiableCredentialSubject,
+} from '../src/web3ProofTypes';
 import { TEST_SEED_1 } from './HdWallet.test';
 import fs from 'fs';
 
@@ -211,4 +214,87 @@ test('create Web3Id proof with Web3Id Credentials', () => {
     expect(
         presentation.verifiableCredential[0].credentialSubject.statement
     ).toEqual(expected.verifiableCredential[0].credentialSubject.statement);
+});
+
+const schemaWithTimeStamp: VerifiableCredentialSubject = {
+    type: 'object',
+    properties: {
+        id: {
+            title: 'Credential subject id',
+            type: 'string',
+            description: 'Credential subject identifier',
+        },
+        attributes: {
+            title: 'Attributes',
+            description: 'Credential attributes',
+            type: 'object',
+            properties: {
+                degreeType: {
+                    title: 'Degree Type',
+                    type: 'string',
+                    description: 'Degree type',
+                },
+                degreeName: {
+                    title: 'Degree name',
+                    type: 'string',
+                    description: 'Degree name',
+                },
+                graduationDate: {
+                    title: 'Graduation date',
+                    type: 'object',
+                    properties: {
+                        type: {
+                            type: 'string',
+                            const: 'date-time',
+                        },
+                        timestamp: {
+                            type: 'string',
+                        },
+                    },
+                    description: 'Graduation date',
+                },
+            },
+            required: ['degreeType', 'degreeName', 'graduationDate'],
+        },
+    },
+    required: ['id', 'attributes'],
+};
+
+test('Generate statement with timestamp', () => {
+    const builder = new Web3StatementBuilder();
+
+    const lower = new Date();
+    const upper = new Date(new Date().getTime() + 24 * 60 * 60 * 10000);
+
+    const statement = builder
+        .addForVerifiableCredentials(
+            [{ index: 0n, subindex: 0n }],
+            (b) => b.addRange('graduationDate', lower, upper),
+            schemaWithTimeStamp
+        )
+        .getStatements();
+    const atomic = statement[0].statement[0];
+    expect(atomic.type).toBe('AttributeInRange');
+    if (atomic.type === 'AttributeInRange') {
+        expect(atomic.lower).toBe(lower);
+        expect(atomic.upper).toBe(upper);
+    }
+});
+
+test('Generate statement with timestamp fails if not timestamp attribute', () => {
+    const builder = new Web3StatementBuilder();
+
+    const lower = new Date();
+    const upper = new Date(new Date().getTime() + 24 * 60 * 60 * 10000);
+
+    expect(() =>
+        builder.addForVerifiableCredentials(
+            [{ index: 0n, subindex: 0n }],
+            (b) =>
+                b
+                    // Use degreeName, which is a string property, not timestamp
+                    .addRange('degreeName', lower, upper),
+            schemaWithTimeStamp
+        )
+    ).toThrowError('string property');
 });

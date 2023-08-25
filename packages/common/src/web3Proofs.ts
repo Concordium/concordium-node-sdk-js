@@ -69,6 +69,14 @@ const throwSetError = (title: string, property: string, mustBe: string) => {
     );
 };
 
+function isTimeStampAttribute(properties?: PropertyDetails) {
+    return (
+        properties &&
+        properties.type === 'object' &&
+        properties.properties.type.const === 'date-time'
+    );
+}
+
 function verifyRangeStatement(
     statement: RangeStatementV2,
     properties?: PropertyDetails
@@ -79,11 +87,6 @@ function verifyRangeStatement(
     if (statement.upper === undefined) {
         throw new Error('Range statements must contain an upper field');
     }
-
-    const isTimeStamp = (properties?: PropertyDetails) =>
-        properties &&
-        properties.type === 'string' &&
-        properties.format === 'date-time';
 
     if (properties) {
         const checkRange = (
@@ -109,8 +112,8 @@ function verifyRangeStatement(
             }
         };
 
-        if (isTimeStamp(properties)) {
-            checkRange('date-time', (end) => end instanceof Date, 'Date');
+        if (isTimeStampAttribute(properties)) {
+            checkRange('timestamp', (end) => end instanceof Date, 'Date');
         } else if (properties.type === 'string') {
             checkRange('string', (end) => typeof end === 'string', 'string');
         } else if (properties.type === 'integer') {
@@ -121,7 +124,7 @@ function verifyRangeStatement(
     // The assertions are safe, because we already validated that lower/upper has the correct types.
     if (
         (properties?.type === 'integer' && statement.upper < statement.lower) ||
-        (isTimeStamp(properties) &&
+        (isTimeStampAttribute(properties) &&
             (statement.upper as Date).getTime() <
                 (statement.lower as Date).getTime()) ||
         (properties?.type === 'string' &&
@@ -161,7 +164,7 @@ function verifySetStatement(
             }
         };
 
-        if (properties.type === 'string' && properties.format === 'date-time') {
+        if (isTimeStampAttribute(properties)) {
             checkSet('date-time', (value) => value instanceof Date, 'Date');
         } else if (properties.type === 'string') {
             checkSet('string', (value) => typeof value === 'string', 'string');

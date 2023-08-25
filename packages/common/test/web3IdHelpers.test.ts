@@ -107,3 +107,13 @@ test('isStringAttributeInRange works with YearMonth strings', () => {
     expect(isStringAttributeInRange('200204', '199910', '299910')).toBeTruthy();
     expect(isStringAttributeInRange('299910', '200204', '199910')).toBeFalsy();
 });
+
+test('isStringAttributeInRange handles value === lower correctly', () => {
+    expect(isStringAttributeInRange('1', '1', '2')).toBeTruthy();
+    expect(isStringAttributeInRange('199910', '199910', '299910')).toBeTruthy();
+});
+
+test('isStringAttributeInRange handles value === upper correctly', () => {
+    expect(isStringAttributeInRange('2', '1', '2')).toBeFalsy();
+    expect(isStringAttributeInRange('299910', '199910', '299910')).toBeTruthy();
+});

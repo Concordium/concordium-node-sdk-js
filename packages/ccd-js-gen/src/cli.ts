@@ -30,5 +30,5 @@ export async function main(): Promise<void> {
         )
         .parse(process.argv);
     const options = program.opts<Options>();
-    await lib.generateContractClients(options.module, options.outDir);
+    await lib.generateContractClientsFromFile(options.module, options.outDir);
 }

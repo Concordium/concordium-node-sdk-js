@@ -2,39 +2,75 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as tsm from 'ts-morph';
 import * as SDK from '@concordium/common-sdk';
+import { Buffer } from 'buffer/';
+
+/** Output options for the generated code */
+export type OutputOptions =
+    | 'Typescript'
+    | 'Javascript'
+    | 'TypedJavascript'
+    | 'Everything';
+
+/** Options for generating clients */
+export type GenerateContractClientsOptions = {
+    output?: OutputOptions;
+};
 
 /**
- * Generate smart contract client code for a given smart contract module.
+ * Generate smart contract client code for a given smart contract module file.
  * @param modulePath Path to the smart contract module.
  * @param outDirPath Path to the directory to use for the output.
+ * @param options Options for generating the clients.
  */
-export async function generateContractClients(
+export async function generateContractClientsFromFile(
     modulePath: string,
-    outDirPath: string
+    outDirPath: string,
+    options: GenerateContractClientsOptions = {}
 ): Promise<void> {
     // TODO catch if file does not exist and produce better error.
     const fileBytes = await fs.readFile(modulePath);
-    const module = SDK.Module.from(fileBytes);
-
-    const moduleInterface = await module.parseModuleInterface();
-
     const outputName = path.basename(modulePath, '.wasm.v1');
+    const module = SDK.Module.fromRawBytes(Buffer.from(fileBytes));
+    return generateContractClients(module, outputName, outDirPath, options);
+}
+
+/**
+ * Generate smart contract client code for a given smart contract module.
+ * @param s Buffer with bytes for the smart contract module.
+ * @param outName Name for the output file.
+ * @param outDirPath Path to the directory to use for the output.
+ * @param options Options for generating the clients.
+ */
+export async function generateContractClients(
+    scModule: SDK.Module,
+    outName: string,
+    outDirPath: string,
+    options: GenerateContractClientsOptions = {}
+): Promise<void> {
+    const outputOption = options.output ?? 'Everything';
+    const moduleInterface = await scModule.parseModuleInterface();
     const outputFilePath = path.format({
-        name: outputName,
         dir: outDirPath,
+        name: outName,
         ext: '.ts',
     });
 
     const compilerOptions: tsm.CompilerOptions = {
         outDir: outDirPath,
-        declaration: true,
+        declaration:
+            outputOption === 'Everything' || outputOption === 'TypedJavascript',
     };
     const project = new tsm.Project({ compilerOptions });
     const sourceFile = project.createSourceFile(outputFilePath, '', {
         overwrite: true,
     });
     addModuleClients(sourceFile, moduleInterface);
-    await Promise.all([project.save(), project.emit()]);
+    if (outputOption === 'Everything' || outputOption === 'Typescript') {
+        await project.save();
+    }
+    if (outputOption === 'Everything' || outputOption === 'Javascript') {
+        await project.emit();
+    }
 }
 
 /** Iterates a module interface adding code to the provided source file. */
@@ -128,7 +164,6 @@ this.${dryRunId} = new ${contractDryRunClassId}(this.${genericContractId});`
         });
 
         for (const entrypointName of contract.entrypointNames) {
-            const receiveName = `${contract.contractName}.${entrypointName}`;
             const transactionMetadataId = 'transactionMetadata';
             const parameterId = 'parameter';
             const signerId = 'signer';
@@ -157,7 +192,7 @@ this.${dryRunId} = new ${contractDryRunClassId}(this.${genericContractId});`
                 })
                 .setBodyText(
                     `return this.${genericContractId}.createAndSendUpdateTransaction(
-    '${receiveName}',
+    '${entrypointName}',
     SDK.encodeHexString,
     ${transactionMetadataId},
     ${parameterId},
@@ -187,7 +222,7 @@ this.${dryRunId} = new ${contractDryRunClassId}(this.${genericContractId});`
                 })
                 .setBodyText(
                     `return this.${genericContractId}.invokeView(
-    '${receiveName}',
+    '${entrypointName}',
     SDK.encodeHexString,
     (hex: SDK.HexString) => hex,
     ${parameterId},

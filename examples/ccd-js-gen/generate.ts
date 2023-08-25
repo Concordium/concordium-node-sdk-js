@@ -1,19 +1,20 @@
 import { credentials } from '@grpc/grpc-js';
 import * as SDK from '@concordium/node-sdk';
+import * as Gen from '@concordium/ccd-js-gen';
+import * as Path from 'node:path';
+import * as Url from 'node:url';
 import meow from 'meow';
 import { parseEndpoint } from '../shared/util';
 
-// Importing the generated smart contract module client.
-// eslint-disable-next-line import/no-unresolved
-import * as Module from './lib/module';
-
 const cli = meow(
     `
+  This example fetches the wCCD smart contract module source from the chain and generates a typescript client for interacting with such a smart contract.
+
   Usage
     $ yarn run-example <path-to-this-file> [options]
 
   Required
-    --index,     -i  The index of the smart contract
+    --index,     -i  The index of the smart contract. Defaults to 2059, which is wCCD on Testnet.
 
   Options
     --help,      -h  Displays this message
@@ -32,6 +33,7 @@ const cli = meow(
                 type: 'number',
                 alias: 'i',
                 isRequired: true,
+                default: 2059,
             },
             subindex: {
                 type: 'number',
@@ -53,6 +55,13 @@ const contractAddress: SDK.ContractAddress = {
     subindex: BigInt(cli.flags.subindex),
 };
 
-const contract = new Module.SmartContractTestBench(grpcClient, contractAddress);
-
-contract.dryRun.getAccountAddress('');
+(async () => {
+    const info = await grpcClient.getInstanceInfo(contractAddress);
+    const moduleSource = await grpcClient.getModuleSource(info.sourceModule);
+    const mod = SDK.Module.fromModuleSource(moduleSource);
+    const filePath = Url.fileURLToPath(import.meta.url);
+    const outDir = Path.join(Path.dirname(filePath), 'lib');
+    await Gen.generateContractClients(mod, 'wCCD', outDir, {
+        output: 'Typescript',
+    });
+})();

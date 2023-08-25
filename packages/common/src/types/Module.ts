@@ -1,6 +1,8 @@
 import { ModuleReference } from './moduleReference';
 import * as H from '../contractHelpers';
 import { sha256 } from '../hash';
+import { Buffer } from 'buffer/';
+import { VersionedModuleSource } from '../types';
 
 /** Interface of a smart contract containing the name of the contract and every entrypoint. */
 export type ContractInterface = {
@@ -17,22 +19,36 @@ export type ModuleInterface = Map<H.ContractName, ContractInterface>;
  * A versioned smart contract module.
  */
 export class Module {
-    /** The version of the smart contract module. */
-    public version: number;
     /** Cache of the parsed WebAssembly module. */
     private wasmModule: WebAssembly.Module | undefined;
     /** Cache of the module reference. */
     private moduleRef: ModuleReference | undefined;
 
-    private constructor(public moduleSource: Buffer) {
-        this.version = moduleSource.readInt32LE();
+    private constructor(
+        /** The version of the smart contract module. */
+        public version: number,
+        /** Bytes for the WebAssembly module. */
+        public moduleSource: Buffer
+    ) {}
+
+    /**
+     * Construct a smart contract module object from bytes, potentially read from a file.
+     * @param bytes Bytes encoding a versioned smart contract module.
+     */
+    public static fromRawBytes(bytes: Buffer): Module {
+        const version = bytes.readInt32LE(0);
+        const moduleSource = bytes.subarray(8);
+        return new Module(version, Buffer.from(moduleSource));
     }
 
     /**
-     * Construct a smart contract module from the module source.
+     * Contruct a smart contract module object from a versioned module source.
+     * @param versionedModule The versioned module.
      */
-    public static from(moduleSource: Buffer): Module {
-        return new Module(moduleSource);
+    public static fromModuleSource(
+        versionedModule: VersionedModuleSource
+    ): Module {
+        return new Module(versionedModule.version, versionedModule.source);
     }
 
     /** Calculate the module reference from the module source. The module reference is cached. */
@@ -48,7 +64,7 @@ export class Module {
     public getWasmModule(): Promise<WebAssembly.Module> {
         return this.wasmModule !== undefined
             ? Promise.resolve(this.wasmModule)
-            : WebAssembly.compile(this.moduleSource.subarray(8));
+            : WebAssembly.compile(this.moduleSource);
     }
 
     /**

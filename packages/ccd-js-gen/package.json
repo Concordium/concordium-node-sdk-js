@@ -3,8 +3,8 @@
     "version": "1.0.0",
     "description": "Generate JS clients for the Concordium Blockchain",
     "bin": "bin/ccd-js-gen.js",
-    "main": "dist/src/lib.js",
-    "typings": "dist/src/lib.d.ts",
+    "main": "lib/src/lib.js",
+    "typings": "lib/src/lib.d.ts",
     "scripts": {
         "build": "tsc",
         "clean": "rm -r lib",
@@ -29,6 +29,7 @@
     "license": "Apache-2.0",
     "dependencies": {
         "@concordium/common-sdk": "9.0.0",
+        "buffer": "^6.0.3",
         "commander": "^11.0.0",
         "ts-morph": "^19.0.0"
     },

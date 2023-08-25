@@ -4,10 +4,10 @@ import {
     GenericMembershipStatement,
     GenericNonMembershipStatement,
     GenericRangeStatement,
-    AtomicProof,
 } from './commonProofTypes';
 import { ContractAddress, CryptographicParameters } from './types';
-import JSONBigInt from 'json-bigint';
+
+export type AttributeType = string | bigint | Date;
 
 export type AccountCommitmentInput = {
     type: 'account';
@@ -20,7 +20,7 @@ export type Web3IssuerCommitmentInput = {
     type: 'web3Issuer';
     signature: string;
     signer: string;
-    values: Record<string, string | bigint>;
+    values: Record<string, AttributeType>;
     randomness: Record<string, string>;
 };
 
@@ -131,90 +131,18 @@ export const IDENTITY_SUBJECT_SCHEMA: VerifiableCredentialSubject = {
     required: [],
 };
 
-type DIDString = string;
-
-export type ConcordiumWeakLinkingProofV1 = {
-    created: string;
-    proofValue: string[];
-    type: 'ConcordiumWeakLinkingProofV1';
-};
-
-export type AtomicProofV2 = AtomicProof<string | bigint>;
-
-export type StatementProof = {
-    created: string;
-    proofValue: AtomicProofV2[];
-    type: 'ConcordiumZKProofV3';
-};
-
-export type CredentialSubjectProof = {
-    id: DIDString;
-    proof: StatementProof;
-    statement: AtomicStatementV2[];
-};
-
-export type VerifiableCredentialProof = {
-    credentialSubject: CredentialSubjectProof;
-    issuer: DIDString;
-    type: [
-        'VerifiableCredential',
-        'ConcordiumVerifiableCredential',
-        ...string[]
-    ];
-};
-
-export class VerifiablePresentation {
-    presentationContext: string;
-    proof: ConcordiumWeakLinkingProofV1;
-    type: string;
-    verifiableCredential: VerifiableCredentialProof[];
-
-    constructor(
-        presentationContext: string,
-        proof: ConcordiumWeakLinkingProofV1,
-        type: string,
-        verifiableCredential: VerifiableCredentialProof[]
-    ) {
-        this.presentationContext = presentationContext;
-        this.proof = proof;
-        this.type = type;
-        this.verifiableCredential = verifiableCredential;
-    }
-
-    toString(): string {
-        return JSONBigInt({
-            alwaysParseAsBig: true,
-            useNativeBigInt: true,
-        }).stringify(this);
-    }
-
-    static fromString(json: string): VerifiablePresentation {
-        // We allow all numbers to be parsed as bigints to avoid lossy conversion of attribute values. The structure does not contain any other numbers.
-        const parsed: VerifiablePresentation = JSONBigInt({
-            alwaysParseAsBig: true,
-            useNativeBigInt: true,
-        }).parse(json);
-        return new VerifiablePresentation(
-            parsed.presentationContext,
-            parsed.proof,
-            parsed.type,
-            parsed.verifiableCredential
-        );
-    }
-}
-
-export type RangeStatementV2 = GenericRangeStatement<string, string | bigint>;
+export type RangeStatementV2 = GenericRangeStatement<string, AttributeType>;
 export type NonMembershipStatementV2 = GenericNonMembershipStatement<
     string,
-    string | bigint
+    AttributeType
 >;
 export type MembershipStatementV2 = GenericMembershipStatement<
     string,
-    string | bigint
+    AttributeType
 >;
 export type RevealStatementV2 = GenericRevealStatement<string>;
 
-export type AtomicStatementV2 = GenericAtomicStatement<string, string | bigint>;
+export type AtomicStatementV2 = GenericAtomicStatement<string, AttributeType>;
 
 export type VerifiableCredentialQualifier = {
     type: 'sci';
@@ -276,5 +204,5 @@ export type CredentialStatements = CredentialStatement[];
 
 export type CredentialSubject = {
     id: string;
-    attributes: Record<string, string | bigint>;
+    attributes: Record<string, AttributeType>;
 };

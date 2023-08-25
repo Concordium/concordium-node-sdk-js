@@ -23,9 +23,9 @@ import {
     Web3IdProofInput,
     AccountCommitmentInput,
     Web3IssuerCommitmentInput,
-    VerifiablePresentation,
     CredentialStatement,
     CredentialSubject,
+    AttributeType,
 } from './web3ProofTypes';
 import { getPastDate } from './idProofs';
 import {
@@ -37,6 +37,10 @@ import {
 } from './commonProofTypes';
 import { ConcordiumHdWallet } from './HdWallet';
 import { stringify } from 'json-bigint';
+import {
+    replaceDateWithTimeStampAttribute,
+    VerifiablePresentation,
+} from './types/VerifiablePresentation';
 
 const throwRangeError = (
     title: string,
@@ -75,12 +79,12 @@ function verifyRangeStatement(
         throw new Error('Range statements must contain an upper field');
     }
 
-    const checkRange = (
-        typeName: string,
-        validate: (a: bigint | string) => boolean,
-        typeString: string
-    ) => {
-        if (properties?.type === typeName) {
+    if (properties) {
+        const checkRange = (
+            typeName: string,
+            validate: (a: AttributeType) => boolean,
+            typeString: string
+        ) => {
             if (!validate(statement.lower)) {
                 throwRangeError(
                     properties.title,
@@ -97,11 +101,16 @@ function verifyRangeStatement(
                     typeString
                 );
             }
-        }
-    };
+        };
 
-    checkRange('string', (end) => typeof end !== 'string', 'string');
-    checkRange('integer', (end) => typeof end !== 'bigint', 'bigint');
+        if (properties.type === 'string' && properties.format === 'date-time') {
+            checkRange('date-time', (end) => end instanceof Date, 'Date');
+        } else if (properties.type === 'string') {
+            checkRange('string', (end) => typeof end === 'string', 'string');
+        } else if (properties.type === 'integer') {
+            checkRange('integer', (end) => typeof end === 'bigint', 'bigint');
+        }
+    }
 
     // TODO Add lower < upper validation for string attributes
     // We only check for integer attributes, because strings must be converted into field elements.
@@ -126,18 +135,25 @@ function verifySetStatement(
         );
     }
 
-    const checkSet = (
-        typeName: string,
-        validate: (a: bigint | string) => boolean,
-        typeString: string
-    ) => {
-        if (properties?.type === typeName && !statement.set.every(validate)) {
-            throwSetError(properties.title, typeName, typeString);
-        }
-    };
+    if (properties) {
+        const checkSet = (
+            typeName: string,
+            validate: (a: AttributeType) => boolean,
+            typeString: string
+        ) => {
+            if (!statement.set.every(validate)) {
+                throwSetError(properties.title, typeName, typeString);
+            }
+        };
 
-    checkSet('string', (value) => typeof value == 'string', 'strings');
-    checkSet('integer', (value) => typeof value == 'bigint', 'bigints');
+        if (properties.type === 'string' && properties.format === 'date-time') {
+            checkSet('date-time', (value) => value instanceof Date, 'Date');
+        } else if (properties.type === 'string') {
+            checkSet('string', (value) => typeof value === 'string', 'string');
+        } else if (properties.type === 'integer') {
+            checkSet('integer', (value) => typeof value === 'bigint', 'bigint');
+        }
+    }
 }
 
 function verifyAtomicStatement(
@@ -275,8 +291,8 @@ export class AtomicStatementBuilder implements InternalBuilder {
      */
     addRange(
         attribute: string,
-        lower: string | bigint,
-        upper: string | bigint
+        lower: AttributeType,
+        upper: AttributeType
     ): this {
         const statement: AtomicStatementV2 = {
             type: StatementTypes.AttributeInRange,
@@ -295,7 +311,7 @@ export class AtomicStatementBuilder implements InternalBuilder {
      * @param set: the set of values that the attribute must be included in.
      * @returns the updated builder
      */
-    addMembership(attribute: string, set: string[] | bigint[]): this {
+    addMembership(attribute: string, set: AttributeType[]): this {
         const statement: AtomicStatementV2 = {
             type: StatementTypes.AttributeInSet,
             attributeTag: attribute,
@@ -312,7 +328,7 @@ export class AtomicStatementBuilder implements InternalBuilder {
      * @param set: the set of values that the attribute must be included in.
      * @returns the updated builder
      */
-    addNonMembership(attribute: string, set: string[] | bigint[]): this {
+    addNonMembership(attribute: string, set: AttributeType[]): this {
         const statement: AtomicStatementV2 = {
             type: StatementTypes.AttributeNotInSet,
             attributeTag: attribute,
@@ -418,7 +434,7 @@ export class AccountStatementBuild extends AtomicStatementBuilder {
     }
 }
 
-type InternalBuilder = StatementBuilder<string | bigint, string>;
+type InternalBuilder = StatementBuilder<AttributeType, string>;
 export class Web3StatementBuilder {
     private statements: CredentialStatements = [];
 
@@ -473,7 +489,9 @@ export function getVerifiablePresentation(
     try {
         const s: VerifiablePresentation = VerifiablePresentation.fromString(
             // Use json-bigint stringify to ensure we can handle bigints
-            wasm.createWeb3IdProof(stringify(input))
+            wasm.createWeb3IdProof(
+                stringify(input, replaceDateWithTimeStampAttribute)
+            )
         );
         return s;
     } catch (e) {
@@ -606,7 +624,7 @@ export function createWeb3CommitmentInputWithHdWallet(
  */
 export function canProveAtomicStatement(
     statement: AtomicStatementV2,
-    attributes: Record<string, string | bigint>
+    attributes: Record<string, AttributeType>
 ): boolean {
     const attribute = attributes[statement.attributeTag];
     switch (statement.type) {
@@ -630,7 +648,7 @@ export function canProveAtomicStatement(
  */
 export function canProveCredentialStatement(
     credentialStatement: CredentialStatement,
-    attributes: Record<string, string | bigint>
+    attributes: Record<string, AttributeType>
 ): boolean {
     return credentialStatement.statement.every((statement) =>
         canProveAtomicStatement(statement, attributes)

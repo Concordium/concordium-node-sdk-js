@@ -22,6 +22,7 @@ export { CcdAmount } from './types/ccdAmount';
 export { TransactionExpiry } from './types/transactionExpiry';
 export { DataBlob } from './types/DataBlob';
 export { ModuleReference } from './types/moduleReference';
+export { VerifiablePresentation } from './types/VerifiablePresentation';
 export * from './credentialDeploymentTransactions';
 export { isAlias, getAlias } from './alias';
 export {

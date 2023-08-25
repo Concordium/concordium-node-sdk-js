@@ -24,14 +24,17 @@ export function verifyWeb3IdCredentialSignature(
 
 /**
  * Compares a and b as field elements.
- * "a < b" => compareStringAttributes(a,b) = -1;
- * "a == b" => compareStringAttributes(a,b) = 0;
- * "a > b" => compareStringAttributes(a,b) = 1;
+ * if a < b then compareStringAttributes(a,b) = -1;
+ * if a == b then compareStringAttributes(a,b) = 0;
+ * if a > b then compareStringAttributes(a,b) = 1;
  */
 export function compareStringAttributes(a: string, b: string): number {
     return wasm.compareStringAttributes(a,b);
 }
 
+/**
+ * Given a string attribute value and a range [lower, upper[, return whether value is in the range, when converted into field elements.
+ */
 export function isStringAttributeInRange(value: string, lower: string, upper: string): boolean {
     const lowCmp = compareStringAttributes(value, lower);
     if (lowCmp < 0 ) {

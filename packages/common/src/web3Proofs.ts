@@ -41,6 +41,7 @@ import {
     replaceDateWithTimeStampAttribute,
     VerifiablePresentation,
 } from './types/VerifiablePresentation';
+import { compareStringAttributes } from './web3IdHelpers';
 
 const throwRangeError = (
     title: string,
@@ -79,6 +80,8 @@ function verifyRangeStatement(
         throw new Error('Range statements must contain an upper field');
     }
 
+    const isTimeStamp = (properties?: PropertyDetails) => properties && properties.type === 'string' && properties.format === 'date-time';
+
     if (properties) {
         const checkRange = (
             typeName: string,
@@ -103,7 +106,7 @@ function verifyRangeStatement(
             }
         };
 
-        if (properties.type === 'string' && properties.format === 'date-time') {
+        if (isTimeStamp(properties)) {
             checkRange('date-time', (end) => end instanceof Date, 'Date');
         } else if (properties.type === 'string') {
             checkRange('string', (end) => typeof end === 'string', 'string');
@@ -112,9 +115,10 @@ function verifyRangeStatement(
         }
     }
 
-    // TODO Add lower < upper validation for string attributes
-    // We only check for integer attributes, because strings must be converted into field elements.
-    if (properties?.type === 'integer' && statement.upper < statement.lower) {
+    // The assertions are safe, because we already validated that lower/upper has the correct types.
+    if ((properties?.type === 'integer' && statement.upper < statement.lower) ||
+        (isTimeStamp(properties) && (statement.upper as Date).getTime() < (statement.lower as Date).getTime()) ||
+        (properties?.type === 'string' && compareStringAttributes((statement.lower as string), (statement.upper as string)) > 0)) {
         throw new Error('Upper bound must be greater than lower bound');
     }
 }

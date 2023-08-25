@@ -5,6 +5,7 @@ import {
     createWeb3IdDID,
     getVerifiablePresentation,
     RequestStatement,
+    VerifiablePresentation,
     Web3StatementBuilder,
 } from '../src';
 import {
@@ -12,7 +13,7 @@ import {
     expectedWeb3IdCredentialPresentation,
 } from './resources/expectedPresentation';
 import { expectedStatementMixed } from './resources/expectedStatements';
-import { CommitmentInput, VerifiablePresentation } from '../src/web3ProofTypes';
+import { CommitmentInput } from '../src/web3ProofTypes';
 import { TEST_SEED_1 } from './HdWallet.test';
 import fs from 'fs';
 

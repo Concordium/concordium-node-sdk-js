@@ -1500,6 +1500,27 @@ export class ConcordiumGRPCClient {
         return mapStream(winningBakers, translate.winningBaker);
     }
 
+    /**
+     * Get the block hash of the first finalized block in a specified epoch.
+     *
+     * The following error cases are possible:
+     * @throw - `NOT_FOUND` if the query specifies an unknown block.
+     * @throw - `UNAVAILABLE` if the query is for an epoch that is not finalized in the current genesis index, or is for a future genesis index.
+     * @throw - `INVALID_ARGUMENT` if the query is for an epoch with no finalized blocks for a past genesis index.
+     * @throw - `INVALID_ARGUMENT` if the input `EpochRequest` is malformed.
+     * @throw - `UNAVAILABLE` if the endpoint is disabled on the node.
+     *
+     * @param {v1.HexString | v1.RelativeEpochRequest } epochRequest - consists of either a hex-encoded block hash or a relative epoch request consisting of a genesis index and an epoch. If none is passed, it queries the last finalized block.
+     *
+     * @returns {v1.HexString} The block hash as a hex encoded string.
+    */
+    async getFirstBlockEpoch(epochRequest?: HexString | v1.RelativeEpochRequest): Promise<HexString>{
+        const req = getEpochRequest(epochRequest);
+        const blockHash = await this.client.getFirstBlockEpoch(req).response;
+
+        return translate.unwrapValToHex(blockHash);
+    }
+
     private async getConsensusHeight() {
         return (await this.getConsensusStatus()).lastFinalizedBlockHeight;
     }

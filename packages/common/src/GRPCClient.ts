@@ -303,7 +303,7 @@ export class ConcordiumGRPCClient {
      *
      * @param transaction the transaction to send to the node
      * @param signature the signatures on the signing digest of the transaction
-     * @returns The transaction hash as a byte array
+     * @returns The transaction hash as a hex-encoded string
      */
     async sendAccountTransaction(
         transaction: v1.AccountTransaction,
@@ -1489,7 +1489,7 @@ export class ConcordiumGRPCClient {
      * @throw `INVALID_ARGUMENT` if the input `EpochRequest` is malformed.
      * @throw `UNAVAILABLE` if the endpoint is disabled on the node.
      *
-     * @param {v1.HexString | v1.RelativeEpochRequest } epochRequest - consists of either a hex-encoded block hash or a relative epoch request consisting of a genesis index and an epoch. If none is passed, it queries the last finalized block.
+     * @param {HexString | v1.RelativeEpochRequest } epochRequest - Consists of either a hex-encoded block hash or a relative epoch request consisting of a genesis index and an epoch. If none is passed, it queries the last finalized block.
      *
      * @returns {v1.Timestamp} The projected earliest time at which a particular baker will be required to bake a block, as a unix timestamp in milliseconds.
      */
@@ -1510,9 +1510,9 @@ export class ConcordiumGRPCClient {
      * @throw - `INVALID_ARGUMENT` if the input `EpochRequest` is malformed.
      * @throw - `UNAVAILABLE` if the endpoint is disabled on the node.
      *
-     * @param {v1.HexString | v1.RelativeEpochRequest } epochRequest - consists of either a hex-encoded block hash or a relative epoch request consisting of a genesis index and an epoch. If none is passed, it queries the last finalized block.
+     * @param {HexString | v1.RelativeEpochRequest } epochRequest - Consists of either a hex-encoded block hash or a relative epoch request consisting of a genesis index and an epoch. If none is passed, it queries the last finalized block.
      *
-     * @returns {v1.HexString} The block hash as a hex encoded string.
+     * @returns {HexString} The block hash as a hex encoded string.
     */
     async getFirstBlockEpoch(epochRequest?: HexString | v1.RelativeEpochRequest): Promise<HexString>{
         const req = getEpochRequest(epochRequest);

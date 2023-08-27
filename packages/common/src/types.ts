@@ -69,6 +69,14 @@ export type Round = bigint;
 export type Energy = bigint;
 
 /**
+ * The number of chain restarts via a protocol update. An effected
+ * protocol update instruction might not change the protocol version
+ * specified in the previous field, but it always increments the genesis
+ * index.
+ */
+export type GenesisIndex = number;
+
+/**
  * Returns a union of all keys of type T with values matching type V.
  */
 export type KeysMatching<T, V> = {
@@ -2224,4 +2232,38 @@ export interface BakerInfo {
      * finalization.
      */
     aggregationKey: BakerAggregationVerifyKey;
+}
+
+
+/**
+ * Request an epoch by number at a given genesis index.
+ */
+export interface RelativeEpochRequest {
+    /**
+     * The genesis index to query at. The query is restricted to this genesis index, and
+     * will not return results for other indices even if the epoch number is out of bounds.
+     */
+    genesisIndex: GenesisIndex;
+    /**
+     * The epoch number to query at.
+     */
+    epoch: Epoch;
+}
+
+/**
+ * Details of which baker won the lottery in a given round in consensus version 1.
+ */
+export interface WinningBaker {
+    /**
+     * The round number.
+     */
+    round: Round;
+    /**
+     * The baker that won the round.
+     */
+    winner: BakerId;
+    /**
+     * True if the baker produced a block in this round on the finalized chain, and False otherwise.
+     */
+    present: boolean;
 }

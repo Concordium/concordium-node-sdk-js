@@ -1474,6 +1474,32 @@ export class ConcordiumGRPCClient {
         return mapStream(bakersRewardPeriod, translate.bakerRewardPeriodInfo);
     }
 
+    /**
+     * Get the list of bakers that won the lottery in a particular historical epoch (i.e. the
+     * last finalized block is in a later epoch). This lists the winners for each round in the
+     * epoch, starting from the round after the last block in the previous epoch, running to
+     * the round before the first block in the next epoch. It also indicates if a block in each
+     * round was included in the finalized chain.
+     *
+     * The following error cases are possible:
+     * @throw `NOT_FOUND` if the query specifies an unknown block.
+     * @throw `UNAVAILABLE` if the query is for an epoch that is not finalized in the current genesis index, or is for a future genesis index.
+     * @throw `INVALID_ARGUMENT` if the query is for an epoch that is not finalized for a past genesis index.
+     * @throw `INVALID_ARGUMENT` if the query is for a genesis index at consensus version 0.
+     * @throw `INVALID_ARGUMENT` if the input `EpochRequest` is malformed.
+     * @throw `UNAVAILABLE` if the endpoint is disabled on the node.
+     *
+     * @param {v1.HexString | v1.RelativeEpochRequest } epochRequest - consists of either a hex-encoded block hash or a relative epoch request consisting of a genesis index and an epoch. If none is passed, it queries the last finalized block.
+     *
+     * @returns {v1.Timestamp} The projected earliest time at which a particular baker will be required to bake a block, as a unix timestamp in milliseconds.
+     */
+    getWinningBakersEpoch(epochRequest?: HexString | v1.RelativeEpochRequest ): AsyncIterable<v1.WinningBaker> {
+        const req = getEpochRequest(epochRequest);
+        const winningBakers = this.client.getWinningBakersEpoch(req).responses;
+
+        return mapStream(winningBakers, translate.winningBaker);
+    }
+
     private async getConsensusHeight() {
         return (await this.getConsensusStatus()).lastFinalizedBlockHeight;
     }
@@ -1554,6 +1580,27 @@ export function getInvokerInput(
         };
     } else {
         throw new Error('Unexpected input to build invoker');
+    }
+}
+
+function getEpochRequest(epochRequest?: HexString | v1.RelativeEpochRequest): v2.EpochRequest {
+    if (typeof epochRequest === 'string' || typeof epochRequest === 'undefined') {
+        return {
+            epochRequestInput: {
+                oneofKind: "blockHash",
+                blockHash: getBlockHashInput(epochRequest),
+            },
+        }
+    } else {
+        return {
+            epochRequestInput: {
+                oneofKind: "relativeEpoch",
+                relativeEpoch: {
+                    genesisIndex: { value: epochRequest.genesisIndex },
+                    epoch: { value: epochRequest.epoch },
+                },
+            },
+        }
     }
 }
 

@@ -1414,8 +1414,6 @@ export class ConcordiumGRPCClient {
 
     /**
      * Get the projected earliest time at which a particular baker will be required to bake a block.
-     * If the current consensus version is 0, this returns the status 'Unavailable', as the endpoint
-     * is only supported by consensus version 1.
      *
      * If the baker is not a baker for the current reward period, this returns a timestamp at the
      * start of the next reward period. If the baker is a baker for the current reward period, the
@@ -1427,6 +1425,8 @@ export class ConcordiumGRPCClient {
      * epoch. This is because the seed for the leader election is updated at the epoch boundary, and
      * so the winners cannot be predicted beyond that. Note that in some circumstances the returned
      * timestamp can be in the past, especially at the end of an epoch.
+     *
+     * @throws an `UNAVAILABLE` RPC error if the current consensus version is 0, as the endpoint is only supported by consensus version 1.
      *
      * @param {v1.BakerId} baker - The baker that should be queried for.
      *
@@ -1446,8 +1446,8 @@ export class ConcordiumGRPCClient {
      * certificate (if present) and epoch finalization entry (if present).
      * Note that, if the block being pointed to is not a product of ConcordiumBFT,
      * then the response will be a grpc error (invalid argument).
-     * If the endpoint is not enabled by the node, then an 'unimplemented' error
-     * will be returned.
+     *
+     * @throws an `UNIMPLEMENTED` RPC error if the endpoint is not enabled by the node.
      *
      * @param blockHash optional block hash to get the cryptographic parameters at, otherwise retrieves from last finalized block.
      *
@@ -1466,7 +1466,12 @@ export class ConcordiumGRPCClient {
     /**
      * Get all bakers in the reward period of a block.
      * This endpoint is only supported for protocol version 6 and onwards.
-     * If the protocol does not support the endpoint then an  'IllegalArgument' error is returned.
+     *
+     * @throws an `IllegalArgument` RPC error if the protocol does not support the endpoint.
+     *
+     * @param blockHash optional block hash to get the cryptographic parameters at, otherwise retrieves from last finalized block.
+     *
+     * @returns All bakers in the reward period of a block
      */
     getBakersRewardPeriod(blockHash?: HexString): AsyncIterable<v1.BakerRewardPeriodInfo> {
         const blockHashInput = getBlockHashInput(blockHash);

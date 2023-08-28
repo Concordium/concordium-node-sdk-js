@@ -117,3 +117,8 @@ test('isStringAttributeInRange handles value === upper correctly', () => {
     expect(isStringAttributeInRange('2', '1', '2')).toBeFalsy();
     expect(isStringAttributeInRange('299910', '199910', '299910')).toBeFalsy();
 });
+
+test('isStringAttributeInRange handles value === lower === upper correctly', () => {
+    expect(isStringAttributeInRange('2', '2', '2')).toBeFalsy();
+    expect(isStringAttributeInRange('299910', '299910', '299910')).toBeFalsy();
+});

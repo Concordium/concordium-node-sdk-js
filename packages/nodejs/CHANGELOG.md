@@ -1,5 +1,11 @@
 # Changelog
 
+## 9.1.0
+
+### Changed
+
+- Bumped @concordium/common-sdk to 9.1.0. (adds methods for creating verifiable presentation (proving statements about Web3Id Credentials))
+
 ## 9.0.0
 
 ### Breaking changes

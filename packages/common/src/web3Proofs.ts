@@ -221,7 +221,7 @@ function verifyAtomicStatement(
 function verifyAtomicStatementInContext(
     statement: AtomicStatementV2,
     existingStatements: AtomicStatementV2[],
-    schema: VerifiableCredentialSubject
+    schema?: VerifiableCredentialSubject
 ) {
     verifyAtomicStatement(statement, schema);
     if (
@@ -239,7 +239,7 @@ function verifyAtomicStatementInContext(
  */
 export function verifyAtomicStatements(
     statements: AtomicStatementV2[],
-    schema: VerifiableCredentialSubject
+    schema?: VerifiableCredentialSubject
 ): boolean {
     if (statements.length === 0) {
         throw new Error('Empty statements are not allowed');

@@ -3,6 +3,7 @@ import * as H from '../contractHelpers';
 import { sha256 } from '../hash';
 import { Buffer } from 'buffer/';
 import { VersionedModuleSource } from '../types';
+import { schemaBytesFromWasmModule } from '../util';
 
 /** Interface of a smart contract containing the name of the contract and every entrypoint. */
 export type ContractInterface = {
@@ -24,6 +25,7 @@ export class Module {
     /** Reference to the calculated module reference. Used to reuse an already calculated module ref. */
     private moduleRef: ModuleReference | undefined;
 
+    /** The constructor is private to enforce creating objects using a static method. */
     private constructor(
         /** The version of the smart contract module. */
         public version: 0 | 1,
@@ -116,6 +118,12 @@ export class Module {
             }
         }
         return map;
+    }
+
+    /** Extract the embedded smart contract schema bytes. Returns `null` if no schema is embedded */
+    public async getSchemaBytes(): Promise<Buffer | null> {
+        const wasmModule = await this.getWasmModule();
+        return schemaBytesFromWasmModule(wasmModule);
     }
 }
 

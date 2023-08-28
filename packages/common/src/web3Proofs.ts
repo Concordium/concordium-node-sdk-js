@@ -41,6 +41,7 @@ import {
     replaceDateWithTimeStampAttribute,
     VerifiablePresentation,
 } from './types/VerifiablePresentation';
+import { compareStringAttributes } from './web3IdHelpers';
 
 const throwRangeError = (
     title: string,
@@ -67,6 +68,14 @@ const throwSetError = (title: string, property: string, mustBe: string) => {
             mustBe
     );
 };
+
+function isTimeStampAttribute(properties?: PropertyDetails) {
+    return (
+        properties &&
+        properties.type === 'object' &&
+        properties.properties.type.const === 'date-time'
+    );
+}
 
 function verifyRangeStatement(
     statement: RangeStatementV2,
@@ -103,8 +112,8 @@ function verifyRangeStatement(
             }
         };
 
-        if (properties.type === 'string' && properties.format === 'date-time') {
-            checkRange('date-time', (end) => end instanceof Date, 'Date');
+        if (isTimeStampAttribute(properties)) {
+            checkRange('timestamp', (end) => end instanceof Date, 'Date');
         } else if (properties.type === 'string') {
             checkRange('string', (end) => typeof end === 'string', 'string');
         } else if (properties.type === 'integer') {
@@ -112,9 +121,18 @@ function verifyRangeStatement(
         }
     }
 
-    // TODO Add lower < upper validation for string attributes
-    // We only check for integer attributes, because strings must be converted into field elements.
-    if (properties?.type === 'integer' && statement.upper < statement.lower) {
+    // The assertions are safe, because we already validated that lower/upper has the correct types.
+    if (
+        (properties?.type === 'integer' && statement.upper < statement.lower) ||
+        (isTimeStampAttribute(properties) &&
+            (statement.upper as Date).getTime() <
+                (statement.lower as Date).getTime()) ||
+        (properties?.type === 'string' &&
+            compareStringAttributes(
+                statement.lower as string,
+                statement.upper as string
+            ) > 0)
+    ) {
         throw new Error('Upper bound must be greater than lower bound');
     }
 }
@@ -146,7 +164,7 @@ function verifySetStatement(
             }
         };
 
-        if (properties.type === 'string' && properties.format === 'date-time') {
+        if (isTimeStampAttribute(properties)) {
             checkSet('date-time', (value) => value instanceof Date, 'Date');
         } else if (properties.type === 'string') {
             checkSet('string', (value) => typeof value === 'string', 'string');

@@ -21,7 +21,9 @@ export function verifyWeb3IdCredentialSignature(
     input: VerifyWeb3IdCredentialSignatureInput
 ): boolean {
     // Use json-bigint stringify to ensure we can handle bigints
-    return wasm.verifyWeb3IdCredentialSignature(stringify(input, replaceDateWithTimeStampAttribute));
+    return wasm.verifyWeb3IdCredentialSignature(
+        stringify(input, replaceDateWithTimeStampAttribute)
+    );
 }
 
 /**

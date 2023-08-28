@@ -1,9 +1,9 @@
 import {
+    compareStringAttributes,
     isStringAttributeInRange,
     verifyWeb3IdCredentialSignature,
 } from '../src/web3IdHelpers';
 import fs from 'fs';
-import { compareStringAttributes } from '@concordium/rust-bindings';
 
 const globalContext = JSON.parse(
     fs.readFileSync('./test/resources/global.json').toString()
@@ -96,14 +96,17 @@ test('verifyWeb3IdCredentialSignature with timestamps', async () => {
     const signature =
         'ec36951aa2795b20b3dee5aa3ddc6b2ce0749bb8b15b1197682614ef2a168ebea38d62711caac54b5097b79fcebf3734c47045c3bf92ad8b2e7d3b4c859a4904';
     const randomness = {
-        degreeName: "6d89da997e8d6ebeb877413f447e2f6285dd1e885ef6570c0a2322aedb026f6c",
-        degreeType: "216ad9124a884d89b0f557abb03d4c5c1d639dd807a58972c0d21f47cff798cc",
-        graduationDate: "5e581a2c4ab96536b5d0918120cae2bb2f92642d4b9df4446890f5c519b2f3ca"
-}
+        degreeName:
+            '6d89da997e8d6ebeb877413f447e2f6285dd1e885ef6570c0a2322aedb026f6c',
+        degreeType:
+            '216ad9124a884d89b0f557abb03d4c5c1d639dd807a58972c0d21f47cff798cc',
+        graduationDate:
+            '5e581a2c4ab96536b5d0918120cae2bb2f92642d4b9df4446890f5c519b2f3ca',
+    };
     const values = {
         degreeName: 'Bachelor of Science and Arts',
         degreeType: 'BachelorDegree',
-        graduationDate: new Date("2023-08-28T00:00:00.000Z"),
+        graduationDate: new Date('2023-08-28T00:00:00.000Z'),
     };
 
     const holder =

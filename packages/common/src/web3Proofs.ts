@@ -41,7 +41,10 @@ import {
     replaceDateWithTimeStampAttribute,
     VerifiablePresentation,
 } from './types/VerifiablePresentation';
-import { compareStringAttributes, isStringAttributeInRange } from './web3IdHelpers';
+import {
+    compareStringAttributes,
+    isStringAttributeInRange,
+} from './web3IdHelpers';
 
 const throwRangeError = (
     title: string,
@@ -640,15 +643,34 @@ export function createWeb3CommitmentInputWithHdWallet(
 /**
  * Helper to check if an attribute value is in the given range.
  */
-function isInRange(value: AttributeType, lower: AttributeType, upper: AttributeType) {
-    if (typeof value === 'string' && typeof lower === 'string' && typeof upper === 'string') {
+function isInRange(
+    value: AttributeType,
+    lower: AttributeType,
+    upper: AttributeType
+) {
+    if (
+        typeof value === 'string' &&
+        typeof lower === 'string' &&
+        typeof upper === 'string'
+    ) {
         return isStringAttributeInRange(value, lower, upper);
     }
-    if (typeof value === 'bigint' && typeof lower === 'bigint' && typeof upper === 'bigint') {
+    if (
+        typeof value === 'bigint' &&
+        typeof lower === 'bigint' &&
+        typeof upper === 'bigint'
+    ) {
         return lower <= value && upper > value;
     }
-    if (value instanceof Date && lower instanceof Date && upper instanceof Date) {
-        return lower.getTime() <= value.getTime() && upper.getTime() > value.getTime();
+    if (
+        value instanceof Date &&
+        lower instanceof Date &&
+        upper instanceof Date
+    ) {
+        return (
+            lower.getTime() <= value.getTime() &&
+            upper.getTime() > value.getTime()
+        );
     }
     // Mismatch in types.
     return false;
@@ -662,7 +684,9 @@ function isInSet(value: AttributeType, set: AttributeType[]) {
         return set.includes(value);
     }
     if (value instanceof Date) {
-        return set.map((date) => date instanceof Date ? date.getTime() : undefined).includes(value.getTime());
+        return set
+            .map((date) => (date instanceof Date ? date.getTime() : undefined))
+            .includes(value.getTime());
     }
     return false;
 }

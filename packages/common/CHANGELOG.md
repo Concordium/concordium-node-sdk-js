@@ -1,10 +1,5 @@
 # Changelog
 
-### Fixes
-
-- The max smart contract parameter length was changed to 65535 bytes in protocol version 5 and onwards.
-  Functions which checks the parameter length will now reflect that.
-
 ## 9.1.0
 
 ### Added
@@ -23,6 +18,12 @@ All function parameters now also accepts strings, these strings can use comma as
 - `Web3StatementBuilder` function.
 - `getVerifiablePresentation` function.
 - Various helper methods for web3Id statements and verifiable presentations.
+
+### Fixes
+
+- The max smart contract parameter length was changed to 65535 bytes in protocol version 5 and onwards.
+  Functions which checks the parameter length will now reflect that.
+
 
 ## 9.0.0
 

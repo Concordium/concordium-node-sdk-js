@@ -20,6 +20,7 @@ import {
 import { AccountAddress } from './types/accountAddress';
 import { CcdAmount } from './types/ccdAmount';
 import { TransactionExpiry } from './types/transactionExpiry';
+import { ModuleReference } from './types/moduleReference';
 
 /**
  * Metadata necessary for smart contract transactions
@@ -147,6 +148,20 @@ export class ContractDryRun<E extends string = string> {
     }
 }
 
+/** Options for checking contract instance information on chain. */
+export type ContractCheckOnChainOptions = {
+    /**
+     * Hash of the block to check the information at.
+     * When not provided the last finalized block is used.
+     */
+    blockHash?: string;
+    /**
+     * The expected module reference to be used by the contract instance.
+     * When not provided no check is done against the module reference.
+     */
+    moduleReference?: ModuleReference;
+};
+
 /**
  * Either a module schema, or a `Record` of parameter schemas per entrypoint `E`
  *
@@ -223,6 +238,32 @@ class ContractBase<E extends string = string, V extends string = string> {
             contractAddress
         );
         return getContractName(instanceInfo);
+    }
+
+    /**
+     * Get information on this smart contract instance.
+     */
+    public async getInstanceInfo(blockHash?: string): Promise<InstanceInfo> {
+        return this.grpcClient.getInstanceInfo(this.contractAddress, blockHash);
+    }
+
+    /**
+     * Check if the smart contract instance exists on the blockchain.
+     * Optionally a module reference can be provided to check if the contract instance uses this module.
+     * @param {ContractCheckOnChainOptions} options Options for checking information on chain.
+     */
+    public async checkOnChain(
+        options: ContractCheckOnChainOptions = {}
+    ): Promise<void> {
+        const info = await this.getInstanceInfo(options.blockHash);
+        if (
+            options.moduleReference !== undefined &&
+            info.sourceModule.moduleRef !== options.moduleReference.moduleRef
+        ) {
+            throw new Error(
+                `Instance ${this.contractAddress} uses module with reference '${info.sourceModule.moduleRef}' expected '${options.moduleReference.moduleRef}'`
+            );
+        }
     }
 
     /**

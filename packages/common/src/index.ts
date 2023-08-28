@@ -77,3 +77,4 @@ export * from './cis2';
 export * from './cis0';
 export * from './cis4';
 export * from './GenericContract';
+export * from './DeployedModule';

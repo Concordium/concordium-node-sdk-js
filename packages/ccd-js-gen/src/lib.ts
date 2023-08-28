@@ -65,7 +65,6 @@ export async function generateContractClients(
     options: GenerateContractClientsOptions = {}
 ): Promise<void> {
     const outputOption = options.output ?? 'Everything';
-    const moduleInterface = await SDK.parseModuleInterface(moduleSource);
     const outputFilePath = path.format({
         dir: outDirPath,
         name: outName,
@@ -81,7 +80,7 @@ export async function generateContractClients(
     const sourceFile = project.createSourceFile(outputFilePath, '', {
         overwrite: true,
     });
-    addModuleClients(sourceFile, moduleInterface);
+    await addModuleClients(sourceFile, moduleSource);
     if (outputOption === 'Everything' || outputOption === 'TypeScript') {
         await project.save();
     }
@@ -95,44 +94,251 @@ export async function generateContractClients(
 }
 
 /** Iterates a module interface adding code to the provided source file. */
-function addModuleClients(
+async function addModuleClients(
     sourceFile: tsm.SourceFile,
-    moduleInterface: SDK.ModuleInterface
+    scModule: SDK.VersionedModuleSource
 ) {
+    const moduleInterface = await SDK.parseModuleInterface(scModule);
+    const moduleRef = await SDK.calculateModuleReference(scModule);
+    const grpcClientId = 'grpcClient';
+    const moduleRefId = 'moduleReference';
+    const moduleClientId = 'ModuleClient';
+    const deployedModuleId = 'deployedModule';
+
     sourceFile.addImportDeclaration({
         namespaceImport: 'SDK',
         moduleSpecifier: '@concordium/common-sdk',
     });
 
+    sourceFile.addVariableStatement({
+        isExported: true,
+        declarationKind: tsm.VariableDeclarationKind.Const,
+        declarations: [
+            {
+                type: 'SDK.ModuleReference',
+                initializer: `new SDK.ModuleReference('${moduleRef.moduleRef}')`,
+                name: moduleRefId,
+            },
+        ],
+    });
+
+    const moduleClassDecl = sourceFile.addClass({
+        docs: [
+            'Smart contract module client, can be used for instantiating new smart contract instance on chain.',
+        ],
+        isExported: true,
+        name: moduleClientId,
+        properties: [
+            {
+                docs: ['The reference of this module.'],
+                isStatic: true,
+                scope: tsm.Scope.Public,
+                name: moduleRefId,
+                initializer: moduleRefId,
+            },
+            {
+                docs: ['The gRPC connection used by this client.'],
+                scope: tsm.Scope.Public,
+                name: grpcClientId,
+                type: 'SDK.ConcordiumGRPCClient',
+            },
+            {
+                docs: ['Generic smart contract module used internally.'],
+                scope: tsm.Scope.Private,
+                name: deployedModuleId,
+                type: 'SDK.DeployedModule',
+            },
+        ],
+    });
+    moduleClassDecl.addConstructor({
+        docs: [
+            'Private constructor to enforce creating objects using a static method.',
+        ],
+        scope: tsm.Scope.Private,
+        parameters: [
+            {
+                name: grpcClientId,
+                type: 'SDK.ConcordiumGRPCClient',
+            },
+            {
+                name: deployedModuleId,
+                type: 'SDK.DeployedModule',
+            },
+        ],
+    }).setBodyText(`this.${grpcClientId} = ${grpcClientId};
+this.${deployedModuleId} = ${deployedModuleId};`);
+
+    moduleClassDecl
+        .addMethod({
+            docs: [
+                `Construct the \`${moduleClientId}\` for interacting with a module on chain.
+Checks and throws an error if the module is not deployed on chain.`,
+            ],
+            scope: tsm.Scope.Public,
+            isStatic: true,
+            isAsync: true,
+            name: 'create',
+            parameters: [
+                {
+                    name: grpcClientId,
+                    type: 'SDK.ConcordiumGRPCClient',
+                },
+            ],
+            returnType: `Promise<${moduleClientId}>`,
+        })
+        .setBodyText(
+            `return new ${moduleClientId}(
+    ${grpcClientId},
+    await SDK.DeployedModule.create(${grpcClientId}, ${moduleClientId}.${moduleRefId}),
+);`
+        );
+    moduleClassDecl
+        .addMethod({
+            docs: [
+                `Construct the \`${moduleClientId}\` for interacting with a module on chain.
+The caller must ensure the module is deployed on chain.`,
+            ],
+            scope: tsm.Scope.Public,
+            isStatic: true,
+            name: 'createUnchecked',
+            parameters: [
+                {
+                    name: grpcClientId,
+                    type: 'SDK.ConcordiumGRPCClient',
+                },
+            ],
+            returnType: moduleClientId,
+        })
+        .setBodyText(
+            `return new ${moduleClientId}(
+    ${grpcClientId},
+    SDK.DeployedModule.createUnchecked(${grpcClientId}, ${moduleClientId}.${moduleRefId}),
+);`
+        );
+
+    const blockHashId = 'blockHash';
+    moduleClassDecl
+        .addMethod({
+            docs: ['Check if this module is deployed to the chain'],
+            scope: tsm.Scope.Public,
+            name: 'checkOnChain',
+            parameters: [
+                {
+                    name: blockHashId,
+                    hasQuestionToken: true,
+                    type: 'string',
+                },
+            ],
+            returnType: 'Promise<void>',
+        })
+        .setBodyText(
+            `return this.${deployedModuleId}.checkOnChain(${blockHashId});`
+        );
+
+    moduleClassDecl
+        .addMethod({
+            docs: [
+                'Get the module source of the deployed smart contract module.',
+            ],
+            scope: tsm.Scope.Public,
+            name: 'getModuleSource',
+            parameters: [
+                {
+                    name: blockHashId,
+                    hasQuestionToken: true,
+                    type: 'string',
+                },
+            ],
+            returnType: 'Promise<SDK.VersionedModuleSource>',
+        })
+        .setBodyText(
+            `return this.${deployedModuleId}.getModuleSource(${blockHashId});`
+        );
+
     for (const contract of moduleInterface.values()) {
         const contractNameId = 'contractName';
         const genericContractId = 'genericContract';
-        const grpcClientId = 'grpcClient';
         const contractAddressId = 'contractAddress';
         const dryRunId = 'dryRun';
         const contractClassId = toPascalCase(contract.contractName);
         const contractDryRunClassId = `${contractClassId}DryRun`;
+        const initContractId = `init${contractClassId}`;
 
-        const classDecl = sourceFile.addClass({
+        const transactionMetadataId = 'transactionMetadata';
+        const parameterId = 'parameter';
+        const signerId = 'signer';
+
+        moduleClassDecl
+            .addMethod({
+                docs: [
+                    `Send transaction for instantiating a new '${contract.contractName}' smart contract instance.`,
+                ],
+                scope: tsm.Scope.Public,
+                name: initContractId,
+                parameters: [
+                    {
+                        name: transactionMetadataId,
+                        type: 'SDK.ContractTransactionMetadata',
+                    },
+                    {
+                        name: parameterId,
+                        type: 'SDK.HexString',
+                    },
+                    {
+                        name: signerId,
+                        type: 'SDK.AccountSigner',
+                    },
+                ],
+                returnType: 'Promise<SDK.HexString>',
+            })
+            .setBodyText(
+                `return this.${deployedModuleId}.createAndSendInitTransaction(
+    '${contract.contractName}',
+    SDK.encodeHexString,
+    ${transactionMetadataId},
+    ${parameterId},
+    ${signerId}
+);`
+            );
+
+        const contractClassDecl = sourceFile.addClass({
             docs: ['Smart contract client for a contract instance on chain.'],
             isExported: true,
             name: contractClassId,
             properties: [
                 {
                     docs: [
+                        'The reference of the module used by this contract.',
+                    ],
+                    isStatic: true,
+                    isReadonly: true,
+                    scope: tsm.Scope.Public,
+                    name: moduleRefId,
+                    initializer: moduleRefId,
+                },
+                {
+                    docs: [
                         'Name of the smart contract supported by this client.',
                     ],
                     scope: tsm.Scope.Public,
+                    isStatic: true,
                     isReadonly: true,
                     name: contractNameId,
                     type: 'string',
                     initializer: `'${contract.contractName}'`,
                 },
                 {
-                    docs: ['Generic contract client used internally.'],
-                    scope: tsm.Scope.Private,
-                    name: genericContractId,
-                    type: 'SDK.Contract',
+                    docs: ['The gRPC connection used by this client.'],
+                    scope: tsm.Scope.Public,
+                    name: grpcClientId,
+                    type: 'SDK.ConcordiumGRPCClient',
+                },
+                {
+                    docs: ['The contract address used by this client.'],
+                    scope: tsm.Scope.Public,
+                    isReadonly: true,
+                    name: contractAddressId,
+                    type: 'SDK.ContractAddress',
                 },
                 {
                     docs: ['Dry run entrypoints of the smart contract.'],
@@ -140,6 +346,13 @@ function addModuleClients(
                     isReadonly: true,
                     name: dryRunId,
                     type: contractDryRunClassId,
+                },
+                {
+                    docs: ['Generic contract client used internally.'],
+                    scope: tsm.Scope.Private,
+                    isReadonly: true,
+                    name: genericContractId,
+                    type: 'SDK.Contract',
                 },
             ],
         });
@@ -152,26 +365,99 @@ function addModuleClients(
             name: contractDryRunClassId,
         });
 
-        classDecl
+        contractClassDecl
             .addConstructor({
-                docs: ['Contruct a client for a contract instance on chain'],
+                docs: [
+                    'Private constructor to enforce creating objects using a static method.',
+                ],
+                scope: tsm.Scope.Private,
                 parameters: [
                     {
                         name: grpcClientId,
                         type: 'SDK.ConcordiumGRPCClient',
-                        scope: tsm.Scope.Public,
                     },
                     {
                         name: contractAddressId,
                         type: 'SDK.ContractAddress',
-                        isReadonly: true,
-                        scope: tsm.Scope.Public,
+                    },
+                    {
+                        name: genericContractId,
+                        type: 'SDK.Contract',
+                    },
+                    {
+                        name: dryRunId,
+                        type: contractDryRunClassId,
                     },
                 ],
             })
             .setBodyText(
-                `this.${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, '${contract.contractName}');
-this.${dryRunId} = new ${contractDryRunClassId}(this.${genericContractId});`
+                `this.${grpcClientId} = ${grpcClientId};
+this.${contractAddressId} = ${contractAddressId};
+this.${genericContractId} = ${genericContractId};
+this.${dryRunId} = ${dryRunId};`
+            );
+        contractClassDecl
+            .addMethod({
+                docs: [
+                    `Construct the \`${contractClassId}\` for interacting with a '${contract.contractName}' contract on chain.
+Checking the information instance on chain at the last finalized block.`,
+                ],
+                isStatic: true,
+                isAsync: true,
+                scope: tsm.Scope.Public,
+                name: 'create',
+                parameters: [
+                    {
+                        name: grpcClientId,
+                        type: 'SDK.ConcordiumGRPCClient',
+                    },
+                    {
+                        name: contractAddressId,
+                        type: 'SDK.ContractAddress',
+                    },
+                ],
+                returnType: `Promise<${contractClassId}>`,
+            })
+            .setBodyText(
+                `const ${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, ${contractClassId}.${contractNameId});
+await ${genericContractId}.checkOnChain({ moduleReference: ${moduleRefId} });
+return new ${contractClassId}(
+    ${grpcClientId},
+    ${contractAddressId},
+    ${genericContractId},
+    new ${contractDryRunClassId}(${genericContractId})
+);`
+            );
+
+        contractClassDecl
+            .addMethod({
+                docs: [
+                    `Construct the \`${contractClassId}\` for interacting with a '${contract.contractName}' contract on chain.
+Without checking the instance information on chain.`,
+                ],
+                isStatic: true,
+                scope: tsm.Scope.Public,
+                name: 'createUnchecked',
+                parameters: [
+                    {
+                        name: grpcClientId,
+                        type: 'SDK.ConcordiumGRPCClient',
+                    },
+                    {
+                        name: contractAddressId,
+                        type: 'SDK.ContractAddress',
+                    },
+                ],
+                returnType: contractClassId,
+            })
+            .setBodyText(
+                `const ${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, ${contractClassId}.${contractNameId});
+return new ${contractClassId}(
+    ${grpcClientId},
+    ${contractAddressId},
+    ${genericContractId},
+    new ${contractDryRunClassId}(${genericContractId})
+);`
             );
 
         dryRunClassDecl.addConstructor({
@@ -189,7 +475,7 @@ this.${dryRunId} = new ${contractDryRunClassId}(this.${genericContractId});`
             const transactionMetadataId = 'transactionMetadata';
             const parameterId = 'parameter';
             const signerId = 'signer';
-            classDecl
+            contractClassDecl
                 .addMethod({
                     docs: [
                         `Send an update-contract transaction to the '${entrypointName}' entrypoint of the '${contract.contractName}' contract.

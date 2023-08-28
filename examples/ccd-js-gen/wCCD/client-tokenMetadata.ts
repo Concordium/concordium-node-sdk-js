@@ -70,7 +70,10 @@ const contractAddress: SDK.ContractAddress = {
     });
 
     const parameter = '010000'; // First 2 bytes for number of tokens to query, 1 byte for the token ID.
-    const contract = new wCCDModule.Cis2WCCD(grpcClient, contractAddress);
+    const contract = await wCCDModule.Cis2WCCD.create(
+        grpcClient,
+        contractAddress
+    );
 
     const responseHex = await contract.dryRun.tokenMetadata(parameter);
     console.log({ responseHex });

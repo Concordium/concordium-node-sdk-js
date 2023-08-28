@@ -41,7 +41,7 @@ import {
     replaceDateWithTimeStampAttribute,
     VerifiablePresentation,
 } from './types/VerifiablePresentation';
-import { compareStringAttributes } from './web3IdHelpers';
+import { compareStringAttributes, isStringAttributeInRange } from './web3IdHelpers';
 
 const throwRangeError = (
     title: string,
@@ -638,6 +638,36 @@ export function createWeb3CommitmentInputWithHdWallet(
 }
 
 /**
+ * Helper to check if an attribute value is in the given range.
+ */
+function isInRange(value: AttributeType, lower: AttributeType, upper: AttributeType) {
+    if (typeof value === 'string' && typeof lower === 'string' && typeof upper === 'string') {
+        return isStringAttributeInRange(value, lower, upper);
+    }
+    if (typeof value === 'bigint' && typeof lower === 'bigint' && typeof upper === 'bigint') {
+        return lower <= value && upper > value;
+    }
+    if (value instanceof Date && lower instanceof Date && upper instanceof Date) {
+        return lower.getTime() <= value.getTime() && upper.getTime() > value.getTime();
+    }
+    // Mismatch in types.
+    return false;
+}
+
+/**
+ * Helper to check if an attribute value is in the given set.
+ */
+function isInSet(value: AttributeType, set: AttributeType[]) {
+    if (typeof value === 'string' || typeof value === 'bigint') {
+        return set.includes(value);
+    }
+    if (value instanceof Date) {
+        return set.map((date) => date instanceof Date ? date.getTime() : undefined).includes(value.getTime());
+    }
+    return false;
+}
+
+/**
  * Given an atomic statement and a prover's attributes, determine whether the statement is fulfilled.
  */
 export function canProveAtomicStatement(
@@ -645,13 +675,18 @@ export function canProveAtomicStatement(
     attributes: Record<string, AttributeType>
 ): boolean {
     const attribute = attributes[statement.attributeTag];
+
+    if (attribute === undefined) {
+        return false;
+    }
+
     switch (statement.type) {
-        case StatementTypes.AttributeInSet:
-            return statement.set.includes(attribute);
-        case StatementTypes.AttributeNotInSet:
-            return !statement.set.includes(attribute);
         case StatementTypes.AttributeInRange:
-            return statement.upper > attribute && attribute >= statement.lower;
+            return isInRange(attribute, statement.lower, statement.upper);
+        case StatementTypes.AttributeInSet:
+            return isInSet(attribute, statement.set);
+        case StatementTypes.AttributeNotInSet:
+            return !isInSet(attribute, statement.set);
         case StatementTypes.RevealAttribute:
             return attribute !== undefined;
         default:

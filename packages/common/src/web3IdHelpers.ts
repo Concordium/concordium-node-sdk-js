@@ -1,11 +1,13 @@
 import * as wasm from '@concordium/rust-bindings';
 import { stringify } from 'json-bigint';
 import { ContractAddress, CryptographicParameters } from './types';
+import { replaceDateWithTimeStampAttribute } from './types/VerifiablePresentation';
+import { AttributeType } from './web3ProofTypes';
 
 export type VerifyWeb3IdCredentialSignatureInput = {
     globalContext: CryptographicParameters;
     signature: string;
-    values: Record<string, string | bigint>;
+    values: Record<string, AttributeType>;
     randomness: Record<string, string>;
     holder: string;
     issuerPublicKey: string;
@@ -19,7 +21,7 @@ export function verifyWeb3IdCredentialSignature(
     input: VerifyWeb3IdCredentialSignatureInput
 ): boolean {
     // Use json-bigint stringify to ensure we can handle bigints
-    return wasm.verifyWeb3IdCredentialSignature(stringify(input));
+    return wasm.verifyWeb3IdCredentialSignature(stringify(input, replaceDateWithTimeStampAttribute));
 }
 
 /**

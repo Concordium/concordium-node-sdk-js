@@ -1,5 +1,11 @@
 # Changelog
 
+## 9.1.1
+
+### Fixes
+ - `verifyWeb3IdCredentialSignature` now supports dates/timestamp attributes.
+ - `canProveAtomicStatement` now supports timestamp attributes, handles undefined attribute value correctly and handles strings correctly for range statements.
+
 ## 9.1.0
 
 ### Added

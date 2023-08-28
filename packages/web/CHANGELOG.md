@@ -1,5 +1,11 @@
 # Changelog
 
+## 6.1.1
+
+### Changed
+
+- Bumped @concordium/common-sdk to 9.1.1. (includes fixes for `verifyWeb3IdCredentialSignature` and `canProveAtomicStatement`)
+
 ## 6.1.0
 
 ### Changed

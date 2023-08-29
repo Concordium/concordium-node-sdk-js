@@ -62,6 +62,6 @@ const contractAddress: SDK.ContractAddress = {
     const filePath = Url.fileURLToPath(import.meta.url);
     const outDir = Path.join(Path.dirname(filePath), 'lib');
     await Gen.generateContractClients(mod, 'wCCD', outDir, {
-        output: 'Typescript',
+        output: 'TypeScript',
     });
 })();

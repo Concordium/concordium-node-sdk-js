@@ -19,14 +19,14 @@ export type ModuleInterface = Map<H.ContractName, ContractInterface>;
  * A versioned smart contract module.
  */
 export class Module {
-    /** Cache of the parsed WebAssembly module. */
+    /** Reference to the parsed WebAssembly module. Used to reuse an already compiled wasm module. */
     private wasmModule: WebAssembly.Module | undefined;
-    /** Cache of the module reference. */
+    /** Reference to the calculated module reference. Used to reuse an already calculated module ref. */
     private moduleRef: ModuleReference | undefined;
 
     private constructor(
         /** The version of the smart contract module. */
-        public version: number,
+        public version: 0 | 1,
         /** Bytes for the WebAssembly module. */
         public moduleSource: Buffer
     ) {}
@@ -36,8 +36,17 @@ export class Module {
      * @param bytes Bytes encoding a versioned smart contract module.
      */
     public static fromRawBytes(bytes: Buffer): Module {
-        const version = bytes.readInt32LE(0);
-        const moduleSource = bytes.subarray(8);
+        const version = bytes.readUInt32BE(0);
+        const sourceLength = bytes.readUInt32BE(4);
+        const moduleSource = bytes.subarray(8, 8 + sourceLength);
+        if (moduleSource.length !== sourceLength) {
+            throw new Error('Insufficient bytes provided for module.');
+        }
+        if (version !== 0 && version !== 1) {
+            throw new Error(
+                `Unsupported module version ${version}, The only supported versions are 0 and 1.`
+            );
+        }
         return new Module(version, Buffer.from(moduleSource));
     }
 
@@ -51,20 +60,30 @@ export class Module {
         return new Module(versionedModule.version, versionedModule.source);
     }
 
-    /** Calculate the module reference from the module source. The module reference is cached. */
+    /**
+     * Calculate the module reference from the module source.
+     * A reference to the result is reused in future invocations of this method.
+     */
     public getModuleRef(): ModuleReference {
-        if (this.moduleRef !== undefined) {
-            return this.moduleRef;
+        if (this.moduleRef === undefined) {
+            const prefix = Buffer.alloc(8);
+            prefix.writeUInt32BE(this.version, 0);
+            prefix.writeUInt32BE(this.moduleSource.length, 4);
+            const hash = sha256([prefix, this.moduleSource]);
+            this.moduleRef = ModuleReference.fromBytes(hash);
         }
-        const hash = sha256([this.moduleSource]);
-        return ModuleReference.fromBytes(hash);
+        return this.moduleRef;
     }
 
-    /** Parse the WebAssembly module in the smart contract module. The parsed module is cached. */
-    public getWasmModule(): Promise<WebAssembly.Module> {
-        return this.wasmModule !== undefined
-            ? Promise.resolve(this.wasmModule)
-            : WebAssembly.compile(this.moduleSource);
+    /**
+     * Parse the WebAssembly module in the smart contract module. The parsed module is cached.
+     * A reference to the result is reused in future invocations of this method.
+     */
+    public async getWasmModule(): Promise<WebAssembly.Module> {
+        if (this.wasmModule === undefined) {
+            this.wasmModule = await WebAssembly.compile(this.moduleSource);
+        }
+        return this.wasmModule;
     }
 
     /**
@@ -73,9 +92,8 @@ export class Module {
      */
     public async parseModuleInterface(): Promise<ModuleInterface> {
         const map = new Map<string, ContractInterface>();
-        const wasmExports = WebAssembly.Module.exports(
-            await this.getWasmModule()
-        );
+        const wasmModule = await this.getWasmModule();
+        const wasmExports = WebAssembly.Module.exports(wasmModule);
 
         for (const exp of wasmExports) {
             if (exp.kind !== 'function') {
@@ -87,9 +105,7 @@ export class Module {
                     contractName: contractName,
                     entrypointNames: new Set(),
                 });
-                continue;
-            }
-            if (H.isReceiveName(exp.name)) {
+            } else if (H.isReceiveName(exp.name)) {
                 const parts = H.getNamesFromReceive(exp.name);
                 const entry = getOrInsert(map, parts.contractName, {
                     contractName: parts.contractName,

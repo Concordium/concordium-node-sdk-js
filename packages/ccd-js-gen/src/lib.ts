@@ -4,15 +4,22 @@ import * as tsm from 'ts-morph';
 import * as SDK from '@concordium/common-sdk';
 import { Buffer } from 'buffer/';
 
-/** Output options for the generated code */
+/**
+ * Output options for the generated code.
+ * - 'TypeScript' Only produce a module in TypeScript.
+ * - 'JavaScript' Only produce a module in JavaScript.
+ * - 'TypedJavaScript' Produce a JavaScript module and TypeScript declarations.
+ * - 'Everything' Produce all of the above.
+ */
 export type OutputOptions =
-    | 'Typescript'
-    | 'Javascript'
-    | 'TypedJavascript'
+    | 'TypeScript'
+    | 'JavaScript'
+    | 'TypedJavaScript'
     | 'Everything';
 
 /** Options for generating clients */
 export type GenerateContractClientsOptions = {
+    /** Options for the output */
     output?: OutputOptions;
 };
 
@@ -27,16 +34,20 @@ export async function generateContractClientsFromFile(
     outDirPath: string,
     options: GenerateContractClientsOptions = {}
 ): Promise<void> {
-    // TODO catch if file does not exist and produce better error.
-    const fileBytes = await fs.readFile(modulePath);
+    const fileBytes = await fs.readFile(modulePath).catch((e) => {
+        if ('code' in e && e.code === 'ENOENT') {
+            throw new Error(`No such module '${modulePath}'`);
+        }
+        throw e;
+    });
     const outputName = path.basename(modulePath, '.wasm.v1');
-    const module = SDK.Module.fromRawBytes(Buffer.from(fileBytes));
-    return generateContractClients(module, outputName, outDirPath, options);
+    const scModule = SDK.Module.fromRawBytes(Buffer.from(fileBytes));
+    return generateContractClients(scModule, outputName, outDirPath, options);
 }
 
 /**
  * Generate smart contract client code for a given smart contract module.
- * @param s Buffer with bytes for the smart contract module.
+ * @param scModule Buffer with bytes for the smart contract module.
  * @param outName Name for the output file.
  * @param outDirPath Path to the directory to use for the output.
  * @param options Options for generating the clients.
@@ -58,17 +69,17 @@ export async function generateContractClients(
     const compilerOptions: tsm.CompilerOptions = {
         outDir: outDirPath,
         declaration:
-            outputOption === 'Everything' || outputOption === 'TypedJavascript',
+            outputOption === 'Everything' || outputOption === 'TypedJavaScript',
     };
     const project = new tsm.Project({ compilerOptions });
     const sourceFile = project.createSourceFile(outputFilePath, '', {
         overwrite: true,
     });
     addModuleClients(sourceFile, moduleInterface);
-    if (outputOption === 'Everything' || outputOption === 'Typescript') {
+    if (outputOption === 'Everything' || outputOption === 'TypeScript') {
         await project.save();
     }
-    if (outputOption === 'Everything' || outputOption === 'Javascript') {
+    if (outputOption === 'Everything' || outputOption === 'JavaScript') {
         await project.emit();
     }
 }
@@ -238,7 +249,10 @@ function capitalize(str: string): string {
     return str.charAt(0).toUpperCase() + str.substring(1);
 }
 
-/** Convert a string in snake_case or kebab-case into camelCase. */
+/**
+ * Convert a string in snake_case or kebab-case into camelCase.
+ * This is used to transform entrypoint names in the smart contract to follow formatting javascript convention.
+ */
 function toCamelCase(str: string): string {
     return str
         .split(/[-_]/g)
@@ -246,7 +260,10 @@ function toCamelCase(str: string): string {
         .join('');
 }
 
-/** Convert a string in snake_case or kebab-case into PascalCase. */
+/**
+ * Convert a string in snake_case or kebab-case into PascalCase.
+ * This is used to transform contract names in the smart contract to follow formatting javascript convention.
+ */
 function toPascalCase(str: string): string {
     return str.split(/[-_]/g).map(capitalize).join('');
 }

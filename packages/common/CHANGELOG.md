@@ -2,13 +2,14 @@
 
 ## Unreleased
 
-
 ### Added
 
 New consensus endpoints:
 - `getBakerEarliestWinTime`
 - `getBlockCertificates`
 - `getBakersRewardPeriod`
+- `getWinningBakersEpoch`
+- `getFirstBlockEpoch`
 
 ### Breaking changes
 

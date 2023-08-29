@@ -2792,7 +2792,7 @@ export function bakerRewardPeriodInfo(
         commissionRates: trCommissionRates(bakerRewardPeriod.commissionRates),
         equityCapital: unwrap(bakerRewardPeriod.equityCapital?.value),
         delegatedCapital: unwrap(bakerRewardPeriod.equityCapital?.value),
-        isFinalizer: unwrap(bakerRewardPeriod.isFinalizer),
+        isFinalizer: bakerRewardPeriod.isFinalizer,
     };
 }
 

@@ -1011,22 +1011,60 @@ test.each([clientV2, clientWeb])(
     }
 );
 
-test.each([clientV2, clientWeb])(
-    'getBakersRewardPeriod',
-    async (client) => {
-        const bakerRewardPeriodInfo = await streamToList(client.getBakersRewardPeriod());
-        const brpi = bakerRewardPeriodInfo[0];
+test.each([clientV2, clientWeb])('getBakersRewardPeriod', async (client) => {
+    const bakerRewardPeriodInfo = await streamToList(
+        client.getBakersRewardPeriod()
+    );
+    const brpi = bakerRewardPeriodInfo[0];
 
-        expect(typeof brpi.baker.bakerId).toEqual('bigint');
-        expect(brpi.baker.electionKey.length).toEqual(64);
-        expect(brpi.baker.signatureKey.length).toEqual(64);
-        expect(brpi.baker.aggregationKey.length).toEqual(192);
-        expect(brpi.baker.aggregationKey.length).toEqual(192);
-        expect(typeof brpi.commissionRates.bakingCommission).toEqual('number');
-        expect(typeof brpi.commissionRates.finalizationCommission).toEqual('number');
-        expect(typeof brpi.commissionRates.transactionCommission).toEqual('number');
-        expect(typeof brpi.effectiveStake).toEqual('bigint');
-        expect(typeof brpi.equityCapital).toEqual('bigint');
-        expect(typeof brpi.isFinalizer).toEqual('boolean');
+    expect(typeof brpi.baker.bakerId).toEqual('bigint');
+    expect(brpi.baker.electionKey.length).toEqual(64);
+    expect(brpi.baker.signatureKey.length).toEqual(64);
+    expect(brpi.baker.aggregationKey.length).toEqual(192);
+    expect(brpi.baker.aggregationKey.length).toEqual(192);
+    expect(typeof brpi.commissionRates.bakingCommission).toEqual('number');
+    expect(typeof brpi.commissionRates.finalizationCommission).toEqual(
+        'number'
+    );
+    expect(typeof brpi.commissionRates.transactionCommission).toEqual('number');
+    expect(typeof brpi.effectiveStake).toEqual('bigint');
+    expect(typeof brpi.equityCapital).toEqual('bigint');
+    expect(typeof brpi.isFinalizer).toEqual('boolean');
+});
+
+test.each([clientV2, clientWeb])(
+    'getFirstBlockEpoch - block hash',
+    async (client) => {
+        const firstBlockEpoch = await client.getFirstBlockEpoch(testBlockHash);
+
+        expect(firstBlockEpoch).toEqual(
+            '1ffd2823aa0dff331cc1ec98cf8269cf22120b94e2087c107874c7e84190317b'
+        );
     }
 );
+
+test.each([clientV2, clientWeb])(
+    'getFirstBlockEpoch - relative epoch request',
+    async (client) => {
+        const req = {
+            genesisIndex: 1,
+            epoch: 5n,
+        };
+        const firstBlockEpoch = await client.getFirstBlockEpoch(req);
+
+        expect(firstBlockEpoch).toEqual(
+            'ea2a11db1d20658e9dc91f70116fe3f83a5fc49ac318d8ed1848295ae93c66fa'
+        );
+    }
+);
+
+test.each([clientV2, clientWeb])('getWinningBakersEpoch', async (client) => {
+    const blockHash =
+        'ae4a8e864bb71dc2b6043a31c429be4fc4a110955143753ab3963c6a829c8818';
+    const winningBakers = await streamToList(
+        client.getWinningBakersEpoch(blockHash)
+    );
+    const round = winningBakers.filter((x) => x.round === 296651n)[0];
+
+    expect(round).toEqual({ round: 296651n, winner: 5n, present: true });
+});

@@ -1473,9 +1473,12 @@ export class ConcordiumGRPCClient {
      *
      * @returns All bakers in the reward period of a block
      */
-    getBakersRewardPeriod(blockHash?: HexString): AsyncIterable<v1.BakerRewardPeriodInfo> {
+    getBakersRewardPeriod(
+        blockHash?: HexString
+    ): AsyncIterable<v1.BakerRewardPeriodInfo> {
         const blockHashInput = getBlockHashInput(blockHash);
-        const bakersRewardPeriod = this.client.getBakersRewardPeriod(blockHashInput).responses;
+        const bakersRewardPeriod =
+            this.client.getBakersRewardPeriod(blockHashInput).responses;
         return mapStream(bakersRewardPeriod, translate.bakerRewardPeriodInfo);
     }
 
@@ -1498,7 +1501,9 @@ export class ConcordiumGRPCClient {
      *
      * @returns {v1.Timestamp} The projected earliest time at which a particular baker will be required to bake a block, as a unix timestamp in milliseconds.
      */
-    getWinningBakersEpoch(epochRequest?: HexString | v1.RelativeEpochRequest ): AsyncIterable<v1.WinningBaker> {
+    getWinningBakersEpoch(
+        epochRequest?: HexString | v1.RelativeEpochRequest
+    ): AsyncIterable<v1.WinningBaker> {
         const req = getEpochRequest(epochRequest);
         const winningBakers = this.client.getWinningBakersEpoch(req).responses;
 
@@ -1518,8 +1523,10 @@ export class ConcordiumGRPCClient {
      * @param {HexString | v1.RelativeEpochRequest } epochRequest - Consists of either a hex-encoded block hash or a relative epoch request consisting of a genesis index and an epoch. If none is passed, it queries the last finalized block.
      *
      * @returns {HexString} The block hash as a hex encoded string.
-    */
-    async getFirstBlockEpoch(epochRequest?: HexString | v1.RelativeEpochRequest): Promise<HexString>{
+     */
+    async getFirstBlockEpoch(
+        epochRequest?: HexString | v1.RelativeEpochRequest
+    ): Promise<HexString> {
         const req = getEpochRequest(epochRequest);
         const blockHash = await this.client.getFirstBlockEpoch(req).response;
 
@@ -1609,24 +1616,29 @@ export function getInvokerInput(
     }
 }
 
-function getEpochRequest(epochRequest?: HexString | v1.RelativeEpochRequest): v2.EpochRequest {
-    if (typeof epochRequest === 'string' || typeof epochRequest === 'undefined') {
+function getEpochRequest(
+    epochRequest?: HexString | v1.RelativeEpochRequest
+): v2.EpochRequest {
+    if (
+        typeof epochRequest === 'string' ||
+        typeof epochRequest === 'undefined'
+    ) {
         return {
             epochRequestInput: {
-                oneofKind: "blockHash",
+                oneofKind: 'blockHash',
                 blockHash: getBlockHashInput(epochRequest),
             },
-        }
+        };
     } else {
         return {
             epochRequestInput: {
-                oneofKind: "relativeEpoch",
+                oneofKind: 'relativeEpoch',
                 relativeEpoch: {
                     genesisIndex: { value: epochRequest.genesisIndex },
                     epoch: { value: epochRequest.epoch },
                 },
             },
-        }
+        };
     }
 }
 

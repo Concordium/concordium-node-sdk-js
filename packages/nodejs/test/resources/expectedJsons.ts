@@ -1,6 +1,5 @@
 import {
     AccountAddress,
-    BlockInfoV0,
     CcdAmount,
     ChainParametersV0,
     ChainParametersV1,

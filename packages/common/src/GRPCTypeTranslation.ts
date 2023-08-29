@@ -2783,7 +2783,9 @@ export function finalizerRound(round: v2.FinalizerRound): v1.FinalizerRound {
     };
 }
 
-export function bakerRewardPeriodInfo(bakerRewardPeriod: v2.BakerRewardPeriodInfo): v1.BakerRewardPeriodInfo {
+export function bakerRewardPeriodInfo(
+    bakerRewardPeriod: v2.BakerRewardPeriodInfo
+): v1.BakerRewardPeriodInfo {
     return {
         baker: bakerInfo(unwrap(bakerRewardPeriod.baker)),
         effectiveStake: unwrap(bakerRewardPeriod.effectiveStake?.value),
@@ -2791,7 +2793,7 @@ export function bakerRewardPeriodInfo(bakerRewardPeriod: v2.BakerRewardPeriodInf
         equityCapital: unwrap(bakerRewardPeriod.equityCapital?.value),
         delegatedCapital: unwrap(bakerRewardPeriod.equityCapital?.value),
         isFinalizer: unwrap(bakerRewardPeriod.isFinalizer),
-    }
+    };
 }
 
 export function bakerInfo(bakerInfo: v2.BakerInfo): v1.BakerInfo {
@@ -2800,7 +2802,7 @@ export function bakerInfo(bakerInfo: v2.BakerInfo): v1.BakerInfo {
         electionKey: unwrapValToHex(bakerInfo.electionKey),
         signatureKey: unwrapValToHex(bakerInfo.signatureKey),
         aggregationKey: unwrapValToHex(bakerInfo.aggregationKey),
-    }
+    };
 }
 
 // ---------------------------- //

@@ -1473,9 +1473,12 @@ export class ConcordiumGRPCClient {
      *
      * @returns All bakers in the reward period of a block
      */
-    getBakersRewardPeriod(blockHash?: HexString): AsyncIterable<v1.BakerRewardPeriodInfo> {
+    getBakersRewardPeriod(
+        blockHash?: HexString
+    ): AsyncIterable<v1.BakerRewardPeriodInfo> {
         const blockHashInput = getBlockHashInput(blockHash);
-        const bakersRewardPeriod = this.client.getBakersRewardPeriod(blockHashInput).responses;
+        const bakersRewardPeriod =
+            this.client.getBakersRewardPeriod(blockHashInput).responses;
         return mapStream(bakersRewardPeriod, translate.bakerRewardPeriodInfo);
     }
 

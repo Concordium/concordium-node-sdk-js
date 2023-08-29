@@ -49,15 +49,15 @@ export type TimeoutSignature = HexString;
  */
 export type SuccessorProof = HexString;
 /** Baker's public key used to check whether they won the lottery or not. */
-export type BakerElectionVerifyKey = HexString
+export type BakerElectionVerifyKey = HexString;
 /** Baker's public key used to check that they are indeed the ones who produced the block. */
-export type BakerSignatureVerifyKey = HexString
+export type BakerSignatureVerifyKey = HexString;
 /**
  * Baker's public key used to check signatures on finalization records.
  * This is only used if the baker has sufficient stake to participate in
  * finalization.
  */
-export type BakerAggregationVerifyKey = HexString
+export type BakerAggregationVerifyKey = HexString;
 
 /** A number of milliseconds */
 export type Duration = bigint;

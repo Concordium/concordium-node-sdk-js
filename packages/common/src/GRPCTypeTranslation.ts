@@ -2809,7 +2809,7 @@ export function winningBaker(winningBaker: v2.WinningBaker): v1.WinningBaker {
     return {
         round: unwrap(winningBaker.round?.value),
         winner: unwrap(winningBaker.winner?.value),
-        present: unwrap(winningBaker.present),
+        present: winningBaker.present,
     };
 }
 

@@ -375,14 +375,10 @@ pub fn get_verifiable_credential_public_key_ext(
 
 #[wasm_bindgen(js_name = getVerifiableCredentialBackupEncryptionKey)]
 pub fn get_verifiable_credential_backup_encryption_key_ext(
-        seed_as_hex: HexString,
-        raw_net: &str,
+    seed_as_hex: HexString,
+    raw_net: &str,
 ) -> JsResult<HexString> {
-    get_verifiable_credential_backup_encryption_key_aux(
-            seed_as_hex,
-            raw_net,
-        )
-        .map_err(to_js_error)
+    get_verifiable_credential_backup_encryption_key_aux(seed_as_hex, raw_net).map_err(to_js_error)
 }
 
 #[wasm_bindgen(js_name = serializeCredentialDeploymentPayload)]

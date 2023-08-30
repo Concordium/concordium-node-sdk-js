@@ -7,6 +7,7 @@
 - `sendUpdateInstruction` to the gRPC Client.
 - `healthCheck` to the gRPC Client.
 -   `Module` class for functionality related to smart contract modules, such as parsing the WebAssembly and interface of the module.
+-   Add `DeployedModule` class for interaction with a smart contract module deployed on chain.
 -   Smart contract related types `ContractName`, `EntrypointName` and helper functions `isInitName`, `isReceiveName`, `getContractNameFromInit` and `getNamesFromReceive`.
 
 ### Fixed

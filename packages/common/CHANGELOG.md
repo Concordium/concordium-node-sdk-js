@@ -8,6 +8,7 @@
 - `healthCheck` to the gRPC Client.
 - Functions `calculateModuleReference` for getting the module reference and `parseModuleInterface` for getting the interface from the source of a smart contract module.
 - Smart contract related types `ContractName`, `EntrypointName` and helper functions `isInitName`, `isReceiveName`, `getContractNameFromInit` and `getNamesFromReceive`.
+- Add `DeployedModule` class for interaction with a smart contract module deployed on chain.
 
 ### Fixed
 - Added missing fields to `getBlockChainParameters` response. (rootKeys, level1Keys, level2Keys)

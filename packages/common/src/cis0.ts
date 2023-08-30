@@ -1,14 +1,15 @@
 import { Buffer } from 'buffer/';
+import { stringify } from 'json-bigint';
+
 import { ContractAddress, HexString } from './types';
 import { ConcordiumGRPCClient } from './GRPCClient';
 import {
     encodeWord16,
-    makeDeserializeListResponse,
     packBufferWithWord8Length,
 } from './serializationHelpers';
-import { stringify } from 'json-bigint';
 import { getContractName } from './contractHelpers';
 import { makeDynamicFunction } from './util';
+import { makeDeserializeListResponse } from './deserializationHelpers';
 
 /**
  * Namespace with types for CIS-0 standard contracts
@@ -59,42 +60,31 @@ function serializeSupportIdentifiers(ids: CIS0.StandardIdentifier[]): Buffer {
 }
 
 const deserializeSupportResult =
-    makeDeserializeListResponse<CIS0.SupportResult>((buffer: Buffer) => {
-        const rawType = buffer.readUInt8(0);
-        let cursor = 1;
+    makeDeserializeListResponse<CIS0.SupportResult>((cursor) => {
+        const type = cursor.read(1).readUInt8(0);
 
-        if (rawType > 2) {
+        if (type > 2) {
             throw new Error('Unsupported support result type');
         }
 
-        let value: CIS0.SupportResult;
-        if (rawType !== 2) {
-            const type =
-                rawType === 0
-                    ? CIS0.SupportType.NoSupport
-                    : CIS0.SupportType.Support;
-            value = { type };
-        } else {
-            const numAddresses = buffer.readUInt8(cursor);
-            cursor += 1;
-            const addresses: ContractAddress[] = [];
-
-            for (let i = 0; i < numAddresses; i++) {
-                const index = buffer.readBigUInt64LE(cursor) as bigint;
-                cursor += 8;
-                const subindex = buffer.readBigUInt64LE(cursor) as bigint;
-                cursor += 8;
-
-                addresses.push({ index, subindex });
-            }
-
-            value = {
-                type: CIS0.SupportType.SupportBy,
-                addresses,
-            };
+        if (type !== CIS0.SupportType.SupportBy) {
+            return { type };
         }
 
-        return { value, bytesRead: cursor };
+        const numAddresses = cursor.read(1).readUInt8(0);
+        const addresses: ContractAddress[] = [];
+
+        for (let i = 0; i < numAddresses; i++) {
+            const index = cursor.read(8).readBigUInt64LE(0) as bigint;
+            const subindex = cursor.read(8).readBigUInt64LE(0) as bigint;
+
+            addresses.push({ index, subindex });
+        }
+
+        return {
+            type,
+            addresses,
+        };
     });
 
 /**
@@ -139,15 +129,15 @@ export async function cis0Supports(
     standardIds: CIS0.StandardIdentifier | CIS0.StandardIdentifier[],
     blockHash?: HexString
 ): Promise<CIS0.SupportResult | CIS0.SupportResult[] | undefined> {
-    const instanceInfo = await grpcClient.getInstanceInfo(contractAddress);
-
-    if (instanceInfo === undefined) {
-        throw new Error(
-            `Could not get contract instance info for contract at address ${stringify(
-                contractAddress
-            )}`
-        );
-    }
+    const instanceInfo = await grpcClient
+        .getInstanceInfo(contractAddress)
+        .catch((e) => {
+            throw new Error(
+                `Could not get contract instance info for contract at address ${stringify(
+                    contractAddress
+                )}: ${e.message ?? e}`
+            );
+        });
 
     const contractName = getContractName(instanceInfo);
 

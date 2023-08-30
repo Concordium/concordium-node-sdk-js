@@ -3,18 +3,15 @@ import {
     encodeWord16,
     encodeWord64,
     encodeWord8,
-    makeDeserializeListResponse,
+    makeSerializeOptional,
     packBufferWithWord16Length,
     packBufferWithWord8Length,
 } from '../serializationHelpers';
-import {
-    AccountTransactionType,
+import type {
     Base58String,
-    Base64String,
     ContractAddress,
     HexString,
     SmartContractTypeValues,
-    UpdateContractPayload,
 } from '../types';
 import { Buffer } from 'buffer/';
 import { AccountAddress } from '../types/accountAddress';
@@ -23,6 +20,12 @@ import {
     uleb128DecodeWithIndex,
     uleb128Encode,
 } from '../uleb128';
+import {
+    ContractTransactionMetadata,
+    ContractUpdateTransactionWithSchema,
+    CreateContractTransactionMetadata,
+} from '../GenericContract';
+import { Cursor, makeDeserializeListResponse } from '../deserializationHelpers';
 
 const TOKEN_ID_MAX_LENGTH = 255;
 const TOKEN_AMOUNT_MAX_LENGTH = 37;
@@ -93,24 +96,12 @@ export namespace CIS2 {
     /**
      * Metadata necessary for CIS-2 transactions
      */
-    export type TransactionMetadata = {
-        /** Amount (in microCCD) to include in the transaction. Defaults to 0n */
-        amount?: bigint;
-        /** The sender address of the transaction */
-        senderAddress: HexString;
-        /** Expiry date of the transaction. Defaults to 5 minutes in the future */
-        expiry?: Date;
-        /** Max energy to be used for the transaction */
-        energy: bigint;
-    };
+    export type TransactionMetadata = ContractTransactionMetadata;
 
     /**
      * Metadata necessary for creating a {@link UpdateTransaction}
      */
-    export type CreateTransactionMetadata = Pick<
-        TransactionMetadata,
-        'amount' | 'energy'
-    >;
+    export type CreateTransactionMetadata = CreateContractTransactionMetadata;
 
     /**
      * Data needed for CIS-2 "balanceOf" query.
@@ -145,25 +136,8 @@ export namespace CIS2 {
     /**
      * An update transaction without header. This is useful for sending through a wallet, which supplies the header information.
      */
-    export type UpdateTransaction = {
-        /** The type of the transaction, which will always be of type {@link AccountTransactionType.Update} */
-        type: AccountTransactionType.Update;
-        /** The payload of the transaction, which will always be of type {@link UpdateContractPayload} */
-        payload: UpdateContractPayload;
-        parameter: {
-            /** Hex encoded parameter for the update */
-            hex: HexString;
-            /** JSON representation of the parameter to be used with the corresponding contract schema */
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            json: SmartContractTypeValues;
-        };
-        schema: {
-            /** Base64 encoded schema for the parameter type */
-            value: Base64String;
-            /** Type of the schema. This is always of type "parameter" */
-            type: 'parameter';
-        };
-    };
+    export type UpdateTransaction<J extends SmartContractTypeValues> =
+        ContractUpdateTransactionWithSchema<J>;
 
     /**
      * Structure of a JSON-formatted address parameter.
@@ -249,7 +223,14 @@ function serializeAccountAddress(address: HexString): Buffer {
     return new AccountAddress(address).decodedAddress;
 }
 
-function serializeContractAddress(address: ContractAddress): Buffer {
+/**
+ * Serializes {@link ContractAddress} into bytes compatible with smart contract parameter deserialization
+ *
+ * @param {ContractAddress} address - The address to serialize
+ *
+ * @returns {Buffer} the address serialized to bytes
+ */
+export function serializeContractAddress(address: ContractAddress): Buffer {
     const index = encodeWord64(address.index, true);
     const subindex = encodeWord64(address.subindex, true);
     return Buffer.concat([index, subindex]);
@@ -265,7 +246,14 @@ function serializeAddress(address: CIS2.Address): Buffer {
     return Buffer.concat([type, serializedAddress]);
 }
 
-function serializeReceiveHookName(hook: string): Buffer {
+/**
+ * Serializes {@link string} contract entrypoint into bytes, prefixed by a 2-byte length
+ *
+ * @param {string} hook - the entrypoint to serialize
+ *
+ * @returns {Buffer} the entrypoint serialized to bytes
+ */
+export function serializeReceiveHookName(hook: string): Buffer {
     const serialized = Buffer.from(hook, 'ascii');
 
     if (serialized.length > TOKEN_RECEIVE_HOOK_MAX_LENGTH) {
@@ -384,13 +372,13 @@ export const serializeCIS2BalanceOfQueries = makeSerializeList(
  * @returns {bigint[]} A list of token balances.
  */
 export const deserializeCIS2BalanceOfResponse = makeDeserializeListResponse(
-    (buf) => {
-        const end = buf.findIndex((b) => b < 2 ** 7) + 1; // Find the first byte with most significant bit not set, signaling the last byte in the leb128 slice.
+    (cursor) => {
+        const end = cursor.remainingBytes.findIndex((b) => b < 2 ** 7) + 1; // Find the first byte with most significant bit not set, signaling the last byte in the leb128 slice.
         if (end === 0) {
             throw new Error('Could not find leb128 end');
         }
 
-        const leb128Slice = buf.subarray(0, end);
+        const leb128Slice = cursor.read(end);
         if (leb128Slice.length > TOKEN_AMOUNT_MAX_LENGTH) {
             throw new Error(
                 `Found token amount with size exceeding the maximum allowed of ${TOKEN_AMOUNT_MAX_LENGTH}`
@@ -398,7 +386,7 @@ export const deserializeCIS2BalanceOfResponse = makeDeserializeListResponse(
         }
 
         const value = uleb128Decode(Buffer.from(leb128Slice));
-        return { value, bytesRead: end };
+        return value;
     }
 );
 
@@ -414,6 +402,59 @@ export const deserializeCIS2BalanceOfResponse = makeDeserializeListResponse(
 export const serializeCIS2TokenIds = makeSerializeList(serializeCIS2TokenId);
 
 /**
+ * Serializes {@link CIS2.MetadataUrl} metadata URL into bytes
+ *
+ * @param {CIS2.MetadataUrl} metadataUrl - the metadata URL to serialize
+ *
+ * @returns {Buffer} the metadata URL serialized to bytes
+ */
+export function serializeCIS2MetadataUrl({
+    url,
+    hash,
+}: CIS2.MetadataUrl): Buffer {
+    const bUrl = packBufferWithWord16Length(Buffer.from(url, 'utf8'), true);
+    const bHash = makeSerializeOptional<HexString>((h) =>
+        Buffer.from(h, 'hex')
+    )(hash);
+
+    return Buffer.concat([bUrl, bHash]);
+}
+
+/**
+ * Attempts to deserialize some data into a {@link CIS2.MetadataUrl}
+ *
+ * @param {Cursor | HexString} value - the value to deserialize
+ *
+ * @throws if deserialization fails
+ *
+ * @returns {CIS2.MetadataUrl} the metadata URL
+ */
+export function deserializeCIS2MetadataUrl(
+    value: Cursor | HexString
+): CIS2.MetadataUrl {
+    const cursor = typeof value === 'string' ? Cursor.fromHex(value) : value;
+    const length = cursor.read(2).readUInt16LE(0);
+
+    const url = cursor.read(length).toString('utf8');
+
+    const hasChecksum = cursor.read(1).readUInt8(0);
+
+    let metadataUrl: CIS2.MetadataUrl;
+    if (hasChecksum === 1) {
+        const hash = cursor.read(32).toString('hex');
+        metadataUrl = { url, hash };
+    } else if (hasChecksum === 0) {
+        metadataUrl = { url };
+    } else {
+        throw new Error(
+            'Deserialization failed: boolean value had an unexpected value'
+        );
+    }
+
+    return metadataUrl;
+}
+
+/**
  * Deserializes response of CIS-2 tokenMetadata query according to CIS-2 standard.
  *
  * @param {HexString} value - The hex string value to deserialize
@@ -421,37 +462,7 @@ export const serializeCIS2TokenIds = makeSerializeList(serializeCIS2TokenId);
  * @returns {CIS2MetadataUrl[]} A list of metadata URL objects.
  */
 export const deserializeCIS2TokenMetadataResponse =
-    makeDeserializeListResponse<CIS2.MetadataUrl>((buf) => {
-        const length = buf.readUInt16LE(0);
-        const urlStart = 2;
-        const urlEnd = urlStart + length;
-
-        const url = Buffer.from(buf.subarray(urlStart, urlEnd)).toString(
-            'utf8'
-        );
-
-        let cursor = urlEnd;
-
-        const hasChecksum = buf.readUInt8(cursor);
-        cursor += 1;
-
-        let metadataUrl: CIS2.MetadataUrl;
-        if (hasChecksum === 1) {
-            const hash = Buffer.from(
-                buf.subarray(cursor, cursor + 32)
-            ).toString('hex');
-            cursor += 32;
-            metadataUrl = { url, hash };
-        } else if (hasChecksum === 0) {
-            metadataUrl = { url };
-        } else {
-            throw new Error(
-                'Deserialization failed: boolean value had an unexpected value'
-            );
-        }
-
-        return { value: metadataUrl, bytesRead: cursor };
-    });
+    makeDeserializeListResponse<CIS2.MetadataUrl>(deserializeCIS2MetadataUrl);
 
 function serializeCIS2OperatorOfQuery(query: CIS2.OperatorOfQuery): Buffer {
     const owner = serializeAddress(query.owner);
@@ -537,9 +548,9 @@ export const serializeCIS2OperatorOfQueries = makeSerializeList(
  * @returns {boolean[]} A list of boolean values.
  */
 export const deserializeCIS2OperatorOfResponse = makeDeserializeListResponse(
-    (buf) => {
-        const value = Boolean(buf.readUInt8(0));
-        return { value, bytesRead: 1 };
+    (cursor) => {
+        const value = Boolean(cursor.read(1).readUInt8(0));
+        return value;
     }
 );
 

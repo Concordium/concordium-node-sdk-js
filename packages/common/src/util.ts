@@ -140,7 +140,12 @@ export function countSignatures(
 
 /**
  * Converts a wasm module to a smart contract schema.
+ *
  * @param wasm the wasm module as a Buffer
+ *
+ * @throws If WASM module contains no schema
+ * @throws If WASM module provided is invalid
+ *
  * @returns the smart contract schema as a Buffer
  */
 export function wasmToSchema(wasm: Buffer): Buffer {

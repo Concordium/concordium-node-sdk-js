@@ -213,6 +213,7 @@ export class ConcordiumGRPCClient {
      *
      * @returns the module schema as a buffer.
      * @throws An error of type `RpcError` if not found in the block.
+     * @throws If the module or schema cannot be parsed
      */
     async getEmbeddedSchema(
         moduleRef: ModuleReference,

@@ -6,6 +6,35 @@
 
 -   `CIS4Contract` class for seemlessly interacting with contracts adhering to the CIS4 standard.
 
+## 9.1.1
+
+### Fixes
+ - `verifyWeb3IdCredentialSignature` now supports dates/timestamp attributes.
+ - `canProveAtomicStatement` now supports timestamp attributes, handles undefined attribute value correctly and handles strings correctly for range statements.
+
+## 9.1.0
+
+### Added
+
+Added a functions that handle conversions between CCD and micro CCD. The CCD amounts are handled as `Big`'s:
+- `toMicroCcd` returns the amount of micro CCD as a `Big`.
+- `toCcd`: returns the amount of CCD as a `Big`.
+- `fromCcd`: constructs a `CcdAmount` from an amount of CCD passed as a `Big`
+- `ccdToMicroCcd`: Converts CCD to micro CCD, both as `Big`'s
+- `microCcdToCcd`: Converts micro CCD to CCD, both as `Big`'s
+- The `CcdAmount` class constructor now also accepts a `BigSource` letting users create them from `Big`'s and strings
+
+All function parameters now also accepts strings, these strings can use comma as a decimal seperator.
+
+- `Web3StatementBuilder` function.
+- `getVerifiablePresentation` function.
+- Various helper methods for web3Id statements and verifiable presentations.
+
+### Fixes
+
+- The max smart contract parameter length was changed to 65535 bytes in protocol version 5 and onwards.
+  Functions which checks the parameter length will now reflect that.
+
 ## 9.0.0
 
 ### Breaking changes

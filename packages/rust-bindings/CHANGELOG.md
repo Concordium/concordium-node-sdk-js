@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.2.0
+
+### Added
+
+- `create_web3_id_proof_ext` function.
+- `verify_web3_id_credential_signature_ext` function.
+- `get_verifiable_credential_backup_encryption_key_ext` function.
+
+### Changed
+
+- Add issuer contract index and subindex as arguments to `get_verifiable_credential_signing_key_aux` and `get_verifiable_credential_public_key_ext`.
+
+### Removed
+
+- `get_verifiable_credential_encryption_key_ext` function.
+
 ## 1.1.0
 
 ### Added

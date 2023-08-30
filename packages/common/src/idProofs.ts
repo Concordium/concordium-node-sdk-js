@@ -13,41 +13,14 @@ import {
     MembershipStatement,
     NonMembershipStatement,
     RangeStatement,
-    StatementTypes,
 } from './idProofTypes';
+import {
+    EU_MEMBERS,
+    MAX_DATE,
+    MIN_DATE,
+    StatementTypes,
+} from './commonProofTypes';
 import { whereAlpha2 } from 'iso-3166-1';
-
-export const MIN_DATE = '18000101';
-export const MAX_DATE = '99990101';
-export const EU_MEMBERS = [
-    'AT',
-    'BE',
-    'BG',
-    'CY',
-    'CZ',
-    'DK',
-    'EE',
-    'FI',
-    'FR',
-    'DE',
-    'GR',
-    'HU',
-    'IE',
-    'IT',
-    'LV',
-    'LT',
-    'LU',
-    'MT',
-    'NL',
-    'PL',
-    'PT',
-    'RO',
-    'SK',
-    'SI',
-    'ES',
-    'SE',
-    'HR',
-];
 
 /**
  * Given a number x, return the date string for x years ago.

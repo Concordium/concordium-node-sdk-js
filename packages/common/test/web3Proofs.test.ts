@@ -15,7 +15,7 @@ import {
 import { expectedStatementMixed } from './resources/expectedStatements';
 import {
     CommitmentInput,
-    VerifiableCredentialSubject,
+    CredentialSchemaSubject,
 } from '../src/web3ProofTypes';
 import { TEST_SEED_1 } from './HdWallet.test';
 import fs from 'fs';
@@ -216,7 +216,7 @@ test('create Web3Id proof with Web3Id Credentials', () => {
     ).toEqual(expected.verifiableCredential[0].credentialSubject.statement);
 });
 
-const schemaWithTimeStamp: VerifiableCredentialSubject = {
+const schemaWithTimeStamp: CredentialSchemaSubject = {
     type: 'object',
     properties: {
         id: {
@@ -251,6 +251,7 @@ const schemaWithTimeStamp: VerifiableCredentialSubject = {
                             type: 'string',
                         },
                     },
+                    required: ['type', 'timestamp'],
                     description: 'Graduation date',
                 },
             },

@@ -6,6 +6,10 @@
 
 -   `CIS4Contract` class for seemlessly interacting with contracts adhering to the CIS4 standard.
 
+### Fixed
+
+-   Aligned credential schema types with the tested types in the browser wallet.
+
 ## 9.1.1
 
 ### Fixes

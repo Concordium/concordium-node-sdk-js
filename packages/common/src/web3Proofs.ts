@@ -15,11 +15,11 @@ import {
     CredentialStatements,
     MembershipStatementV2,
     NonMembershipStatementV2,
-    PropertyDetails,
+    CredentialSchemaProperty,
     RangeStatementV2,
     StatementProverQualifier,
     VerifiableCredentialQualifier,
-    VerifiableCredentialSubject,
+    CredentialSchemaSubject,
     Web3IdProofInput,
     AccountCommitmentInput,
     Web3IssuerCommitmentInput,
@@ -72,7 +72,7 @@ const throwSetError = (title: string, property: string, mustBe: string) => {
     );
 };
 
-function isTimeStampAttribute(properties?: PropertyDetails) {
+function isTimeStampAttribute(properties?: CredentialSchemaProperty) {
     return (
         properties &&
         properties.type === 'object' &&
@@ -82,7 +82,7 @@ function isTimeStampAttribute(properties?: PropertyDetails) {
 
 function verifyRangeStatement(
     statement: RangeStatementV2,
-    properties?: PropertyDetails
+    properties?: CredentialSchemaProperty
 ) {
     if (statement.lower === undefined) {
         throw new Error('Range statements must contain a lower field');
@@ -143,7 +143,7 @@ function verifyRangeStatement(
 function verifySetStatement(
     statement: MembershipStatementV2 | NonMembershipStatementV2,
     statementTypeName: string,
-    properties?: PropertyDetails
+    properties?: CredentialSchemaProperty
 ) {
     if (statement.set === undefined) {
         throw new Error(
@@ -179,7 +179,7 @@ function verifySetStatement(
 
 function verifyAtomicStatement(
     statement: AtomicStatementV2,
-    schema?: VerifiableCredentialSubject
+    schema?: CredentialSchemaSubject
 ) {
     if (statement.type === undefined) {
         throw new Error('Statements must contain a type field');
@@ -224,7 +224,7 @@ function verifyAtomicStatement(
 function verifyAtomicStatementInContext(
     statement: AtomicStatementV2,
     existingStatements: AtomicStatementV2[],
-    schema?: VerifiableCredentialSubject
+    schema?: CredentialSchemaSubject
 ) {
     verifyAtomicStatement(statement, schema);
     if (
@@ -242,7 +242,7 @@ function verifyAtomicStatementInContext(
  */
 export function verifyAtomicStatements(
     statements: AtomicStatementV2[],
-    schema?: VerifiableCredentialSubject
+    schema?: CredentialSchemaSubject
 ): boolean {
     if (statements.length === 0) {
         throw new Error('Empty statements are not allowed');
@@ -275,9 +275,9 @@ function getAccountCredentialQualifier(
 
 export class AtomicStatementBuilder implements InternalBuilder {
     statements: AtomicStatementV2[];
-    schema: VerifiableCredentialSubject | undefined;
+    schema: CredentialSchemaSubject | undefined;
 
-    constructor(schema?: VerifiableCredentialSubject) {
+    constructor(schema?: CredentialSchemaSubject) {
         this.statements = [];
         this.schema = schema;
     }
@@ -462,7 +462,7 @@ export class Web3StatementBuilder {
     private add(
         idQualifier: StatementProverQualifier,
         builderCallback: (builder: InternalBuilder) => void,
-        schema?: VerifiableCredentialSubject
+        schema?: CredentialSchemaSubject
     ): this {
         const builder = new AtomicStatementBuilder(schema);
         builderCallback(builder);
@@ -476,7 +476,7 @@ export class Web3StatementBuilder {
     addForVerifiableCredentials(
         validContractAddresses: ContractAddress[],
         builderCallback: (builder: InternalBuilder) => void,
-        schema?: VerifiableCredentialSubject
+        schema?: CredentialSchemaSubject
     ): this {
         return this.add(
             getWeb3IdCredentialQualifier(validContractAddresses),

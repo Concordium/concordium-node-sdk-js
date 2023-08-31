@@ -5,6 +5,7 @@
 ### Added
 
 -   `CIS4Contract` class for seemlessly interacting with contracts adhering to the CIS4 standard.
+-   Exposed `replaceDateWithTimeStampAttribute` and `reviveDateFromTimeStampAttribute`.
 
 ## 9.1.1
 

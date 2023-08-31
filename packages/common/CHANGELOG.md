@@ -5,6 +5,7 @@
 ### Added
 
 -   `CIS4Contract` class for seemlessly interacting with contracts adhering to the CIS4 standard.
+-   Validation of type values when verifying statements.
 
 ## 9.1.1
 

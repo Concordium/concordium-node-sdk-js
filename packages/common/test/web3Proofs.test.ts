@@ -4,8 +4,13 @@ import {
     createAccountDID,
     createWeb3IdDID,
     getVerifiablePresentation,
+    MAX_DATE_TIMESTAMP,
+    MAX_U64,
+    MIN_DATE_TIMESTAMP,
     RequestStatement,
+    StatementTypes,
     VerifiablePresentation,
+    verifyAtomicStatements,
     Web3StatementBuilder,
 } from '../src';
 import {
@@ -19,6 +24,11 @@ import {
 } from '../src/web3ProofTypes';
 import { TEST_SEED_1 } from './HdWallet.test';
 import fs from 'fs';
+import {
+    GenericMembershipStatement,
+    GenericNonMembershipStatement,
+    GenericRangeStatement,
+} from '../src/commonProofTypes';
 
 test('Generate V2 statement', () => {
     const builder = new Web3StatementBuilder();
@@ -234,6 +244,11 @@ const schemaWithTimeStamp: CredentialSchemaSubject = {
                     type: 'string',
                     description: 'Degree type',
                 },
+                age: {
+                    title: 'Age',
+                    type: 'integer',
+                    description: 'Age',
+                },
                 degreeName: {
                     title: 'Degree name',
                     type: 'string',
@@ -298,4 +313,345 @@ test('Generate statement with timestamp fails if not timestamp attribute', () =>
             schemaWithTimeStamp
         )
     ).toThrowError('string property');
+});
+
+test('A bigint range statement with an out of bounds lower limit fails', () => {
+    const statement: GenericRangeStatement<string, bigint> = {
+        type: StatementTypes.AttributeInRange,
+        attributeTag: 'age',
+        lower: -1n,
+        upper: 10n,
+    };
+
+    expect(() =>
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toThrowError(
+        'Age is a integer property and therefore the lower end of a range statement must be a bigint in the range of 0 to 18446744073709551615'
+    );
+});
+
+test('A bigint range statement with an out of bounds upper limit fails', () => {
+    const statement: GenericRangeStatement<string, bigint> = {
+        type: StatementTypes.AttributeInRange,
+        attributeTag: 'age',
+        lower: 0n,
+        upper: 18446744073709551616n,
+    };
+
+    expect(() =>
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toThrowError(
+        'Age is a integer property and therefore the upper end of a range statement must be a bigint in the range of 0 to 18446744073709551615'
+    );
+});
+
+test('A bigint range statement with valid bounds succeed verification', () => {
+    const statement: GenericRangeStatement<string, bigint> = {
+        type: StatementTypes.AttributeInRange,
+        attributeTag: 'age',
+        lower: 0n,
+        upper: 18446744073709551615n,
+    };
+
+    expect(
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toBeTruthy();
+});
+
+test('A string range statement with an out of bounds lower limit fails', () => {
+    const statement: GenericRangeStatement<string, string> = {
+        type: StatementTypes.AttributeInRange,
+        attributeTag: 'degreeType',
+        lower: 'Concordium testing strings web33',
+        upper: 'Concordium testing strings web3',
+    };
+
+    expect(() =>
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toThrowError(
+        'Degree Type is a string property and therefore the lower end of a range statement must be a string in the range of 0 to 31 bytes as UTF-8'
+    );
+});
+
+test('A string range statement with an out of bounds upper limit fails', () => {
+    const statement: GenericRangeStatement<string, string> = {
+        type: StatementTypes.AttributeInRange,
+        attributeTag: 'degreeType',
+        lower: 'Concordium testing strings web3',
+        upper: 'Concordium testing strings web33',
+    };
+
+    expect(() =>
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toThrowError(
+        'Degree Type is a string property and therefore the upper end of a range statement must be a string in the range of 0 to 31 bytes as UTF-8'
+    );
+});
+
+test('A string range statement with valid bounds succeed verification', () => {
+    const statement: GenericRangeStatement<string, string> = {
+        type: StatementTypes.AttributeInRange,
+        attributeTag: 'degreeType',
+        lower: 'Concordium testing strings web3',
+        upper: 'Concordium testing strings web3',
+    };
+
+    expect(
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toBeTruthy();
+});
+
+test('A timestamp range statement with an out of bounds lower limit fails', () => {
+    const statement: GenericRangeStatement<string, Date> = {
+        type: StatementTypes.AttributeInRange,
+        attributeTag: 'graduationDate',
+        lower: new Date(MIN_DATE_TIMESTAMP - 1),
+        upper: new Date(MAX_DATE_TIMESTAMP),
+    };
+
+    expect(() =>
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toThrowError(
+        'Graduation date is a timestamp property and therefore the lower end of a range statement must be a Date in the range of -262144-01-01T00:00:00Zto +262143-12-31T23:59:59.999999999Z'
+    );
+});
+
+test('A timestamp range statement with an out of bounds upper limit fails', () => {
+    const statement: GenericRangeStatement<string, Date> = {
+        type: StatementTypes.AttributeInRange,
+        attributeTag: 'graduationDate',
+        lower: new Date(MIN_DATE_TIMESTAMP),
+        upper: new Date(MAX_DATE_TIMESTAMP + 1),
+    };
+
+    expect(() =>
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toThrowError(
+        'Graduation date is a timestamp property and therefore the upper end of a range statement must be a Date in the range of -262144-01-01T00:00:00Zto +262143-12-31T23:59:59.999999999Z'
+    );
+});
+
+test('A timestamp range statement with valid bounds succeed verification', () => {
+    const statement: GenericRangeStatement<string, Date> = {
+        type: StatementTypes.AttributeInRange,
+        attributeTag: 'graduationDate',
+        lower: new Date(MIN_DATE_TIMESTAMP),
+        upper: new Date(MAX_DATE_TIMESTAMP),
+    };
+
+    expect(
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toBeTruthy();
+});
+
+test('A bigint set statement with an out of bounds item fails', () => {
+    const statement: GenericMembershipStatement<string, bigint> = {
+        type: StatementTypes.AttributeInSet,
+        attributeTag: 'age',
+        set: [MAX_U64 + 1n],
+    };
+
+    expect(() =>
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toThrowError(
+        'Age is a integer property and therefore the members of a set statement must be bigint in the range of 0 to 18446744073709551615'
+    );
+});
+
+test('A bigint set statement with a negative number item fails', () => {
+    const statement: GenericMembershipStatement<string, bigint> = {
+        type: StatementTypes.AttributeInSet,
+        attributeTag: 'age',
+        set: [-1n],
+    };
+
+    expect(() =>
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toThrowError(
+        'Age is a integer property and therefore the members of a set statement must be bigint in the range of 0 to 18446744073709551615'
+    );
+});
+
+test('A bigint set statement with valid items succeeds', () => {
+    const statement: GenericMembershipStatement<string, bigint> = {
+        type: StatementTypes.AttributeInSet,
+        attributeTag: 'age',
+        set: [0n, MAX_U64],
+    };
+
+    expect(
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toBeTruthy();
+});
+
+test('A bigint not in set statement with an out of bounds item fails', () => {
+    const statement: GenericNonMembershipStatement<string, bigint> = {
+        type: StatementTypes.AttributeNotInSet,
+        attributeTag: 'age',
+        set: [MAX_U64 + 1n],
+    };
+
+    expect(() =>
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toThrowError(
+        'Age is a integer property and therefore the members of a set statement must be bigint in the range of 0 to 18446744073709551615'
+    );
+});
+
+test('A bigint not in set statement with a negative number item fails', () => {
+    const statement: GenericNonMembershipStatement<string, bigint> = {
+        type: StatementTypes.AttributeNotInSet,
+        attributeTag: 'age',
+        set: [-1n],
+    };
+
+    expect(() =>
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toThrowError(
+        'Age is a integer property and therefore the members of a set statement must be bigint in the range of 0 to 18446744073709551615'
+    );
+});
+
+test('A bigint not in set statement with valid items succeeds', () => {
+    const statement: GenericNonMembershipStatement<string, bigint> = {
+        type: StatementTypes.AttributeNotInSet,
+        attributeTag: 'age',
+        set: [0n, MAX_U64],
+    };
+
+    expect(
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toBeTruthy();
+});
+
+test('A string set statement with an out of bounds item fails', () => {
+    const statement: GenericMembershipStatement<string, string> = {
+        type: StatementTypes.AttributeInSet,
+        attributeTag: 'degreeType',
+        set: ['Concordium testing strings web33'],
+    };
+
+    expect(() =>
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toThrowError(
+        'Degree Type is a string property and therefore the members of a set statement must be string in the range of 0 to 31 bytes as UTF-8'
+    );
+});
+
+test('A string set statement with valid items succeeds', () => {
+    const statement: GenericMembershipStatement<string, string> = {
+        type: StatementTypes.AttributeInSet,
+        attributeTag: 'degreeType',
+        set: ['', 'Concordium testing strings web3'],
+    };
+
+    expect(
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toBeTruthy();
+});
+
+test('A string not in set statement with an out of bounds item fails', () => {
+    const statement: GenericNonMembershipStatement<string, string> = {
+        type: StatementTypes.AttributeNotInSet,
+        attributeTag: 'degreeType',
+        set: ['Concordium testing strings web33'],
+    };
+
+    expect(() =>
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toThrowError(
+        'Degree Type is a string property and therefore the members of a set statement must be string in the range of 0 to 31 bytes as UTF-8'
+    );
+});
+
+test('A string not in set statement with valid items succeeds', () => {
+    const statement: GenericNonMembershipStatement<string, string> = {
+        type: StatementTypes.AttributeNotInSet,
+        attributeTag: 'degreeType',
+        set: ['', 'Concordium testing strings web3'],
+    };
+
+    expect(
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toBeTruthy();
+});
+
+test('A timestamp set statement with an out of bounds item fails', () => {
+    const statement: GenericMembershipStatement<string, Date> = {
+        type: StatementTypes.AttributeInSet,
+        attributeTag: 'graduationDate',
+        set: [new Date(MAX_DATE_TIMESTAMP + 1)],
+    };
+
+    expect(() =>
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toThrowError(
+        'Graduation date is a date-time property and therefore the members of a set statement must be Date in the range of -262144-01-01T00:00:00Zto +262143-12-31T23:59:59.999999999Z'
+    );
+});
+
+test('A timestamp set statement with a lower out of bounds item fails', () => {
+    const statement: GenericMembershipStatement<string, Date> = {
+        type: StatementTypes.AttributeInSet,
+        attributeTag: 'graduationDate',
+        set: [new Date(MIN_DATE_TIMESTAMP - 1)],
+    };
+
+    expect(() =>
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toThrowError(
+        'Graduation date is a date-time property and therefore the members of a set statement must be Date in the range of -262144-01-01T00:00:00Zto +262143-12-31T23:59:59.999999999Z'
+    );
+});
+
+test('A timestamp set statement with valid items succeeds', () => {
+    const statement: GenericMembershipStatement<string, Date> = {
+        type: StatementTypes.AttributeInSet,
+        attributeTag: 'graduationDate',
+        set: [new Date(MIN_DATE_TIMESTAMP), new Date(MAX_DATE_TIMESTAMP)],
+    };
+
+    expect(
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toBeTruthy();
+});
+
+test('A timestamp not in set statement with an out of bounds item fails', () => {
+    const statement: GenericNonMembershipStatement<string, Date> = {
+        type: StatementTypes.AttributeNotInSet,
+        attributeTag: 'graduationDate',
+        set: [new Date(MAX_DATE_TIMESTAMP + 1)],
+    };
+
+    expect(() =>
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toThrowError(
+        'Graduation date is a date-time property and therefore the members of a set statement must be Date in the range of -262144-01-01T00:00:00Zto +262143-12-31T23:59:59.999999999Z'
+    );
+});
+
+test('A timestamp not in set statement with a lower out of bounds item fails', () => {
+    const statement: GenericNonMembershipStatement<string, Date> = {
+        type: StatementTypes.AttributeNotInSet,
+        attributeTag: 'graduationDate',
+        set: [new Date(MIN_DATE_TIMESTAMP - 1)],
+    };
+
+    expect(() =>
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toThrowError(
+        'Graduation date is a date-time property and therefore the members of a set statement must be Date in the range of -262144-01-01T00:00:00Zto +262143-12-31T23:59:59.999999999Z'
+    );
+});
+
+test('A timestamp not in set statement with valid items succeeds', () => {
+    const statement: GenericNonMembershipStatement<string, Date> = {
+        type: StatementTypes.AttributeNotInSet,
+        attributeTag: 'graduationDate',
+        set: [new Date(MIN_DATE_TIMESTAMP), new Date(MAX_DATE_TIMESTAMP)],
+    };
+
+    expect(
+        verifyAtomicStatements([statement], schemaWithTimeStamp)
+    ).toBeTruthy();
 });

@@ -478,7 +478,7 @@ export class AccountStatementBuild extends AtomicStatementBuilder {
         return this.addRange(
             AttributeKeyString.dob,
             MIN_DATE,
-            getPastDate(age)
+            getPastDate(age, 1)
         );
     }
 

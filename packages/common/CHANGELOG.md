@@ -8,6 +8,10 @@
 -   Validation of type values when verifying statements.
 -   Exposed `replaceDateWithTimeStampAttribute` and `reviveDateFromTimeStampAttribute`.
 
+### Fixed
+
+-   Aligned credential schema types with the tested types in the browser wallet.
+
 ## 9.1.1
 
 ### Fixes

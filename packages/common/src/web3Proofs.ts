@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer/';
 import * as wasm from '@concordium/rust-bindings';
 import {
     AttributeKey,

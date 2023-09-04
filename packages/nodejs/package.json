@@ -1,6 +1,6 @@
 {
     "name": "@concordium/node-sdk",
-    "version": "9.2.0",
+    "version": "9.3.0",
     "description": "Helpers for interacting with the Concordium node",
     "repository": {
         "type": "git",
@@ -60,7 +60,7 @@
         "build-dev": "tsc"
     },
     "dependencies": {
-        "@concordium/common-sdk": "9.2.0",
+        "@concordium/common-sdk": "9.3.0",
         "@grpc/grpc-js": "^1.3.4",
         "@protobuf-ts/grpc-transport": "^2.8.2",
         "buffer": "^6.0.3",

@@ -6,6 +6,11 @@
 
 - `sendRawAccountTransaction` to the gRPC Client.
 
+### Changed
+
+- Stopped using `replaceDateWithTimeStampAttribute` and `reviveDateFromTimeStampAttribute` for serializing and parsing verifiable presentation.
+- AttributeType no longer contains `Date`, but now instead has `TimestampAttribute`. The statement builders have their types extended to keep allowing for both `Date` and `TimestampAttribute`.
+
 ## 9.2.1
 
 ### Fixed

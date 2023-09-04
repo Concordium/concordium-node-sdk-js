@@ -7,7 +7,21 @@ import {
 } from './commonProofTypes';
 import { ContractAddress, CryptographicParameters } from './types';
 
-export type AttributeType = string | bigint | Date;
+export type TimestampAttribute = {
+    type: 'date-time';
+    timestamp: string;
+};
+export type AttributeType = string | bigint | TimestampAttribute;
+export type StatementAttributeType = AttributeType | Date;
+
+export function isTimestampAttribute(
+    attribute: AttributeType
+): attribute is TimestampAttribute {
+    return (
+        (attribute as TimestampAttribute).type === 'date-time' &&
+        typeof (attribute as TimestampAttribute).timestamp === 'string'
+    );
+}
 
 export type AccountCommitmentInput = {
     type: 'account';

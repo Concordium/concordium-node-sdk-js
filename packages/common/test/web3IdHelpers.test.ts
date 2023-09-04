@@ -1,6 +1,13 @@
 import {
+    AttributeType,
+    StatementAttributeType,
+    TimestampAttribute,
+    statementAttributeTypeToAttributeType,
+} from '../src';
+import {
     compareStringAttributes,
     isStringAttributeInRange,
+    timestampToDate,
     verifyWeb3IdCredentialSignature,
 } from '../src/web3IdHelpers';
 import fs from 'fs';
@@ -103,10 +110,13 @@ test('verifyWeb3IdCredentialSignature with timestamps', async () => {
         graduationDate:
             '5e581a2c4ab96536b5d0918120cae2bb2f92642d4b9df4446890f5c519b2f3ca',
     };
-    const values = {
+    const values: Record<string, AttributeType> = {
         degreeName: 'Bachelor of Science and Arts',
         degreeType: 'BachelorDegree',
-        graduationDate: new Date('2023-08-28T00:00:00.000Z'),
+        graduationDate: {
+            type: 'date-time',
+            timestamp: '2023-08-28T00:00:00.000Z',
+        },
     };
 
     const holder =
@@ -157,4 +167,31 @@ test('isStringAttributeInRange handles value === upper correctly', () => {
 test('isStringAttributeInRange handles value === lower === upper correctly', () => {
     expect(isStringAttributeInRange('2', '2', '2')).toBeFalsy();
     expect(isStringAttributeInRange('299910', '299910', '299910')).toBeFalsy();
+});
+
+test('mapping statement date attribute to timestamp attribute', () => {
+    const statementAttribute: StatementAttributeType = new Date(0);
+    expect(statementAttributeTypeToAttributeType(statementAttribute)).toEqual({
+        type: 'date-time',
+        timestamp: '1970-01-01T00:00:00.000Z',
+    });
+});
+
+test('mapping timestamp attribute to date', () => {
+    const timestampAttribute: TimestampAttribute = {
+        type: 'date-time',
+        timestamp: '1975-01-01T00:00:00.000Z',
+    };
+
+    expect(timestampToDate(timestampAttribute)).toEqual(new Date(157766400000));
+});
+
+test('mapping statement date attribute to timestamp attribute and back again', () => {
+    const statementAttribute: StatementAttributeType = new Date(50000);
+    const timestampAttribute =
+        statementAttributeTypeToAttributeType(statementAttribute);
+
+    expect(timestampToDate(timestampAttribute as TimestampAttribute)).toEqual(
+        statementAttribute
+    );
 });

@@ -93,7 +93,7 @@ export class VerifiablePresentation {
         return JSONBigInt({
             alwaysParseAsBig: true,
             useNativeBigInt: true,
-        }).stringify(this, replaceDateWithTimeStampAttribute);
+        }).stringify(this);
     }
 
     static fromString(json: string): VerifiablePresentation {
@@ -101,7 +101,7 @@ export class VerifiablePresentation {
         const parsed: VerifiablePresentation = JSONBigInt({
             alwaysParseAsBig: true,
             useNativeBigInt: true,
-        }).parse(json, reviveDateFromTimeStampAttribute);
+        }).parse(json);
         return new VerifiablePresentation(
             parsed.presentationContext,
             parsed.proof,

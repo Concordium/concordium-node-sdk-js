@@ -27,6 +27,8 @@ import {
     CredentialStatement,
     CredentialSubject,
     AttributeType,
+    isTimestampAttribute,
+    StatementAttributeType,
 } from './web3ProofTypes';
 import { getPastDate } from './idProofs';
 import {
@@ -38,13 +40,12 @@ import {
 } from './commonProofTypes';
 import { ConcordiumHdWallet } from './HdWallet';
 import { stringify } from 'json-bigint';
-import {
-    replaceDateWithTimeStampAttribute,
-    VerifiablePresentation,
-} from './types/VerifiablePresentation';
+import { VerifiablePresentation } from './types/VerifiablePresentation';
 import {
     compareStringAttributes,
     isStringAttributeInRange,
+    statementAttributeTypeToAttributeType,
+    timestampToDate,
 } from './web3IdHelpers';
 
 export const MAX_STRING_BYTE_LENGTH = 31;
@@ -95,7 +96,9 @@ const throwSetError = (
     );
 };
 
-function isTimeStampAttribute(properties?: CredentialSchemaProperty) {
+function isTimestampAttributeSchemaProperty(
+    properties?: CredentialSchemaProperty
+) {
     return (
         properties &&
         properties.type === 'object' &&
@@ -121,7 +124,10 @@ function isValidTimestampAttribute(attributeValue: Date) {
 }
 
 function validateTimestampAttribute(value: AttributeType) {
-    return value instanceof Date && isValidTimestampAttribute(value);
+    return (
+        isTimestampAttribute(value) &&
+        isValidTimestampAttribute(timestampToDate(value))
+    );
 }
 
 function validateStringAttribute(value: AttributeType) {
@@ -170,7 +176,7 @@ function verifyRangeStatement(
             }
         };
 
-        if (isTimeStampAttribute(properties)) {
+        if (isTimestampAttributeSchemaProperty(properties)) {
             checkRange(
                 'timestamp',
                 validateTimestampAttribute,
@@ -197,9 +203,11 @@ function verifyRangeStatement(
     // The assertions are safe, because we already validated that lower/upper has the correct types.
     if (
         (properties?.type === 'integer' && statement.upper < statement.lower) ||
-        (isTimeStampAttribute(properties) &&
-            (statement.upper as Date).getTime() <
-                (statement.lower as Date).getTime()) ||
+        (isTimestampAttributeSchemaProperty(properties) &&
+            isTimestampAttribute(statement.lower) &&
+            isTimestampAttribute(statement.upper) &&
+            timestampToDate(statement.upper).getTime() <
+                timestampToDate(statement.lower).getTime()) ||
         (properties?.type === 'string' &&
             compareStringAttributes(
                 statement.lower as string,
@@ -243,7 +251,7 @@ function verifySetStatement(
             }
         };
 
-        if (isTimeStampAttribute(properties)) {
+        if (isTimestampAttributeSchemaProperty(properties)) {
             checkSet(
                 'date-time',
                 validateTimestampAttribute,
@@ -381,7 +389,7 @@ export class AtomicStatementBuilder implements InternalBuilder {
     }
 
     /**
-     * If checkConstraints is true, this checks whether the given statement may be added to the statement being built.
+     * This checks whether the given statement may be added to the statement being built.
      * If the statement breaks any rules, this will throw an error.
      */
     private check(statement: AtomicStatementV2) {
@@ -403,14 +411,14 @@ export class AtomicStatementBuilder implements InternalBuilder {
      */
     addRange(
         attribute: string,
-        lower: AttributeType,
-        upper: AttributeType
+        lower: StatementAttributeType,
+        upper: StatementAttributeType
     ): this {
         const statement: AtomicStatementV2 = {
             type: StatementTypes.AttributeInRange,
             attributeTag: attribute,
-            lower,
-            upper,
+            lower: statementAttributeTypeToAttributeType(lower),
+            upper: statementAttributeTypeToAttributeType(upper),
         };
         this.check(statement);
         this.statements.push(statement);
@@ -423,11 +431,11 @@ export class AtomicStatementBuilder implements InternalBuilder {
      * @param set: the set of values that the attribute must be included in.
      * @returns the updated builder
      */
-    addMembership(attribute: string, set: AttributeType[]): this {
+    addMembership(attribute: string, set: StatementAttributeType[]): this {
         const statement: AtomicStatementV2 = {
             type: StatementTypes.AttributeInSet,
             attributeTag: attribute,
-            set,
+            set: set.map(statementAttributeTypeToAttributeType),
         };
         this.check(statement);
         this.statements.push(statement);
@@ -440,11 +448,11 @@ export class AtomicStatementBuilder implements InternalBuilder {
      * @param set: the set of values that the attribute must be included in.
      * @returns the updated builder
      */
-    addNonMembership(attribute: string, set: AttributeType[]): this {
+    addNonMembership(attribute: string, set: StatementAttributeType[]): this {
         const statement: AtomicStatementV2 = {
             type: StatementTypes.AttributeNotInSet,
             attributeTag: attribute,
-            set,
+            set: set.map(statementAttributeTypeToAttributeType),
         };
         this.check(statement);
         this.statements.push(statement);
@@ -546,7 +554,7 @@ export class AccountStatementBuild extends AtomicStatementBuilder {
     }
 }
 
-type InternalBuilder = StatementBuilder<AttributeType, string>;
+type InternalBuilder = StatementBuilder<StatementAttributeType, string>;
 export class Web3StatementBuilder {
     private statements: CredentialStatements = [];
 
@@ -601,9 +609,7 @@ export function getVerifiablePresentation(
     try {
         const s: VerifiablePresentation = VerifiablePresentation.fromString(
             // Use json-bigint stringify to ensure we can handle bigints
-            wasm.createWeb3IdProof(
-                stringify(input, replaceDateWithTimeStampAttribute)
-            )
+            wasm.createWeb3IdProof(stringify(input))
         );
         return s;
     } catch (e) {
@@ -754,13 +760,14 @@ function isInRange(
         return lower <= value && upper > value;
     }
     if (
-        value instanceof Date &&
-        lower instanceof Date &&
-        upper instanceof Date
+        isTimestampAttribute(value) &&
+        isTimestampAttribute(lower) &&
+        isTimestampAttribute(upper)
     ) {
         return (
-            lower.getTime() <= value.getTime() &&
-            upper.getTime() > value.getTime()
+            timestampToDate(lower).getTime() <=
+                timestampToDate(value).getTime() &&
+            timestampToDate(upper).getTime() > timestampToDate(value).getTime()
         );
     }
     // Mismatch in types.
@@ -774,10 +781,14 @@ function isInSet(value: AttributeType, set: AttributeType[]) {
     if (typeof value === 'string' || typeof value === 'bigint') {
         return set.includes(value);
     }
-    if (value instanceof Date) {
+    if (isTimestampAttribute(value)) {
         return set
-            .map((date) => (date instanceof Date ? date.getTime() : undefined))
-            .includes(value.getTime());
+            .map((timestamp) =>
+                isTimestampAttribute(timestamp)
+                    ? timestampToDate(timestamp).getTime()
+                    : undefined
+            )
+            .includes(timestampToDate(value).getTime());
     }
     return false;
 }

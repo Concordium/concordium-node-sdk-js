@@ -53,6 +53,42 @@ export class Cursor {
         return data;
     }
 
+    public readUInt8(): number {
+        const value = this.data.readUInt8(this.cursor);
+        this.cursor += 1;
+        return value;
+    }
+    public readUInt16LE(): number {
+        const value = this.data.readUInt16LE(this.cursor);
+        this.cursor += 2;
+        return value;
+    }
+    public readUInt32LE(): number {
+        const value = this.data.readUInt32LE(this.cursor);
+        this.cursor += 4;
+        return value;
+    }
+    public readBigUInt64LE(): bigint {
+        const value = this.data.readBigUInt64LE(this.cursor);
+        this.cursor += 8;
+        return value.valueOf();
+    }
+    public readUInt16BE(): number {
+        const value = this.data.readUInt16BE(this.cursor);
+        this.cursor += 2;
+        return value;
+    }
+    public readUInt32BE(): number {
+        const value = this.data.readUInt32BE(this.cursor);
+        this.cursor += 4;
+        return value;
+    }
+    public readBigUInt64BE(): BigInt {
+        const value = this.data.readBigUInt64BE(this.cursor);
+        this.cursor += 8;
+        return value;
+    }
+
     /** The remaining bytes, i.e. not including the bytes already read. */
     public get remainingBytes(): Buffer {
         return Buffer.from(this.data.subarray(this.cursor));

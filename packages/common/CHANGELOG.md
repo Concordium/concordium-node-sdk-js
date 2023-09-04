@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `sendRawAccountTransaction` to the gRPC Client.
+
 ## 9.2.1
 
 ### Fixed

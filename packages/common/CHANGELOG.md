@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 9.2.0
 
 ### Added
 
@@ -11,6 +11,7 @@
 ### Fixed
 
 -   Aligned credential schema types with the tested types in the browser wallet.
+-   `addMinimumAge` now creates the precise age statement instead of one day off.
 
 ## 9.1.1
 

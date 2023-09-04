@@ -1,5 +1,11 @@
 # Changelog
 
+## 9.2.1
+
+### Fixed
+
+- Missing buffer import causing issues in web.
+
 ## 9.2.0
 
 ### Added

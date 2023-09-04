@@ -404,6 +404,7 @@ class ContractBase<E extends string = string, V extends string = string> {
      * @param {Function} serializeInput - A function to serialize the `input` to bytes.
      * @param {Function} deserializeResponse - A function to deserialize the value returned from the view invocation.
      * @param {T | T[]} input - Input for for contract function.
+     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
      *
      * @throws If the query could not be invoked successfully.
      *

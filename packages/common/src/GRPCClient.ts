@@ -213,6 +213,7 @@ export class ConcordiumGRPCClient {
      *
      * @returns the module schema as a buffer.
      * @throws An error of type `RpcError` if not found in the block.
+     * @throws If the module or schema cannot be parsed
      */
     async getEmbeddedSchema(
         moduleRef: ModuleReference,
@@ -561,17 +562,19 @@ export class ConcordiumGRPCClient {
                 }, timeoutTime);
             }
 
-            const blockStream = this.getFinalizedBlocks(abortController.signal);
-
-            const response = await this.getBlockItemStatus(transactionHash);
-            if (response.status === 'finalized') {
-                // Simply doing `abortController.abort()` causes an error.
-                // See: https://github.com/grpc/grpc-node/issues/1652
-                setTimeout(() => abortController.abort(), 0);
-                return resolve(response.outcome);
-            }
-
             try {
+                const blockStream = this.getFinalizedBlocks(
+                    abortController.signal
+                );
+
+                const response = await this.getBlockItemStatus(transactionHash);
+                if (response.status === 'finalized') {
+                    // Simply doing `abortController.abort()` causes an error.
+                    // See: https://github.com/grpc/grpc-node/issues/1652
+                    setTimeout(() => abortController.abort(), 0);
+                    return resolve(response.outcome);
+                }
+
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 for await (const _ of blockStream) {
                     const response = await this.getBlockItemStatus(

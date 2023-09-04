@@ -22,6 +22,11 @@ export { CcdAmount } from './types/ccdAmount';
 export { TransactionExpiry } from './types/transactionExpiry';
 export { DataBlob } from './types/DataBlob';
 export { ModuleReference } from './types/moduleReference';
+export {
+    VerifiablePresentation,
+    reviveDateFromTimeStampAttribute,
+    replaceDateWithTimeStampAttribute,
+} from './types/VerifiablePresentation';
 export * from './credentialDeploymentTransactions';
 export { isAlias, getAlias } from './alias';
 export {
@@ -32,8 +37,19 @@ export {
     deserializeInitError,
     deserializeTypeValue,
 } from './deserialization';
-export * from './idProofs';
+
+export {
+    StatementTypes,
+    StatementBuilder,
+    MIN_DATE,
+    MAX_DATE,
+    EU_MEMBERS,
+} from './commonProofTypes';
 export * from './idProofTypes';
+export * from './idProofs';
+export * from './web3ProofTypes';
+export * from './web3Proofs';
+
 export * from './signHelpers';
 export * from './versionedTypeHelpers';
 export * from './accountHelpers';
@@ -41,6 +57,7 @@ export * from './blockSummaryHelpers';
 export * from './rewardStatusHelpers';
 export * from './HdWallet';
 export * from './schemaHelpers';
+export * from './web3IdHelpers';
 
 export { getContractName } from './contractHelpers';
 export { isHex, streamToList, wasmToSchema, unwrap } from './util';
@@ -56,3 +73,4 @@ export * from './energyCost';
 export * from './uleb128';
 export * from './cis2';
 export * from './cis0';
+export * from './cis4';

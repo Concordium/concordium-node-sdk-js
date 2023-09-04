@@ -1,5 +1,25 @@
 # Changelog
 
+## 6.2.1
+
+- Bumped @concordium/common-sdk to 9.2.1.
+
+## 6.2.0
+
+- Bumped @concordium/common-sdk to 9.2.0.
+
+## 6.1.1
+
+### Changed
+
+- Bumped @concordium/common-sdk to 9.1.1. (includes fixes for `verifyWeb3IdCredentialSignature` and `canProveAtomicStatement`)
+
+## 6.1.0
+
+### Changed
+
+- Bumped @concordium/rust-bindings to 1.2.0 and @concordium/common-sdk to 9.1.0. (adds methods for creating verifiable presentation (proving statements about Web3Id Credentials))
+
 ## 6.0.0
 
 ### Breaking changes

@@ -2,6 +2,7 @@ use crate::{helpers::*, types::*};
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use concordium_base::{
     base::{BakerAggregationSignKey, BakerElectionSignKey, BakerKeyPairs, BakerSignatureSignKey},
+    cis4_types::IssuerKey,
     common::{
         types::{KeyIndex, KeyPair, TransactionTime},
         *,
@@ -9,7 +10,7 @@ use concordium_base::{
     contracts_common::{
         from_bytes,
         schema::{ModuleV0, Type, VersionedModuleSchema},
-        Cursor,
+        ContractAddress, Cursor,
     },
     id::{
         account_holder::{
@@ -19,7 +20,7 @@ use concordium_base::{
         constants,
         constants::{ArCurve, AttributeKind},
         dodis_yampolskiy_prf as prf,
-        id_proof_types::{Proof, Statement, StatementWithContext},
+        id_proof_types::{Proof, ProofVersion, Statement, StatementWithContext},
         pedersen_commitment::{
             CommitmentKey as PedersenKey, Randomness as PedersenRandomness, Value as PedersenValue,
             Value,
@@ -28,11 +29,14 @@ use concordium_base::{
         types::*,
     },
     transactions::{ConfigureBakerKeysPayload, Payload},
+    web3id::{
+        CredentialHolderId, OwnedCommitmentInputs, Request, SignedCommitments, Web3IdAttribute,
+        Web3IdSigner,
+    },
 };
-use ed25519_hd_key_derivation::DeriveError;
 use either::Either::Left;
 use hex;
-use key_derivation::{ConcordiumHdWallet, Net};
+use key_derivation::{ConcordiumHdWallet, CredentialContext, Net};
 use rand::thread_rng;
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use serde_json::{from_str, to_string, Value as SerdeValue};
@@ -197,31 +201,36 @@ pub fn get_attribute_commitment_randomness_aux(
 pub fn get_verifiable_credential_signing_key_aux(
     seed_as_hex: HexString,
     raw_net: &str,
+    issuer_index: u64,
+    issuer_subindex: u64,
     verifiable_credential_index: u32,
 ) -> Result<HexString> {
+    let issuer: ContractAddress = ContractAddress::new(issuer_index, issuer_subindex);
     let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_verifiable_credential_signing_key(verifiable_credential_index)?;
+    let key = wallet.get_verifiable_credential_signing_key(issuer, verifiable_credential_index)?;
     Ok(hex::encode(key.as_bytes()))
 }
 
 pub fn get_verifiable_credential_public_key_aux(
     seed_as_hex: HexString,
     raw_net: &str,
+    issuer_index: u64,
+    issuer_subindex: u64,
     verifiable_credential_index: u32,
 ) -> Result<HexString> {
+    let issuer: ContractAddress = ContractAddress::new(issuer_index, issuer_subindex);
     let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_verifiable_credential_public_key(verifiable_credential_index)?;
+    let key = wallet.get_verifiable_credential_public_key(issuer, verifiable_credential_index)?;
     Ok(hex::encode(key.as_bytes()))
 }
 
-pub fn get_verifiable_credential_encryption_key_aux(
+pub fn get_verifiable_credential_backup_encryption_key_aux(
     seed_as_hex: HexString,
     raw_net: &str,
-    verifiable_credential_index: u32,
 ) -> Result<HexString> {
     let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_verifiable_credential_encryption_key(verifiable_credential_index)?;
-    Ok(hex::encode(key))
+    let key = wallet.get_verifiable_credential_backup_encryption_key()?;
+    Ok(hex::encode(key.as_bytes()))
 }
 
 pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<JsonString> {
@@ -324,33 +333,6 @@ pub struct CredentialInput {
     expiry:              TransactionTime,
 }
 
-/// A ConcordiumHdWallet together with an identity index and credential index
-/// for the credential to be created. A CredentialContext can then be parsed to
-/// the `create_credential` function due to the implementation of
-/// `HasAttributeRandomness` below.
-struct CredentialContext {
-    wallet:                  ConcordiumHdWallet,
-    identity_provider_index: u32,
-    identity_index:          u32,
-    credential_index:        u32,
-}
-
-impl HasAttributeRandomness<ArCurve> for CredentialContext {
-    type ErrorType = DeriveError;
-
-    fn get_attribute_commitment_randomness(
-        &self,
-        attribute_tag: AttributeTag,
-    ) -> Result<PedersenRandomness<ArCurve>, Self::ErrorType> {
-        self.wallet.get_attribute_commitment_randomness(
-            self.identity_provider_index,
-            self.identity_index,
-            self.credential_index,
-            attribute_tag,
-        )
-    }
-}
-
 pub fn create_credential_v1_aux(input: CredentialInput) -> Result<JsonString> {
     let seed_decoded = hex::decode(&input.seed_as_hex)?;
     let seed: [u8; 64] = match seed_decoded.try_into() {
@@ -403,7 +385,7 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<JsonString> {
 
         CredentialData {
             keys,
-            threshold: SignatureThreshold(1),
+            threshold: SignatureThreshold::ONE,
         }
     };
 
@@ -413,9 +395,9 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<JsonString> {
 
     let credential_context = CredentialContext {
         wallet,
-        identity_provider_index,
+        identity_provider_index: identity_provider_index.into(),
         identity_index: input.identity_index,
-        credential_index: u32::from(input.cred_number),
+        credential_index: input.cred_number,
     };
 
     let (cdi, _) = create_credential(
@@ -822,8 +804,8 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<JsonString> {
 
     let credential_context = CredentialContext {
         wallet,
-        identity_provider_index: input.identity_provider_index,
-        credential_index: u32::from(input.cred_number),
+        identity_provider_index: input.identity_provider_index.into(),
+        credential_index: input.cred_number,
         identity_index: input.identity_index,
     };
 
@@ -841,6 +823,7 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<JsonString> {
         statement: input.statement,
     }
     .prove(
+        ProofVersion::Version1,
         &input.global_context,
         &challenge_decoded,
         &attribute_list,
@@ -854,6 +837,32 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<JsonString> {
     };
 
     Ok(json!(out).to_string())
+}
+
+#[derive(SerdeDeserialize)]
+struct Web3SecretKey(#[serde(deserialize_with = "base16_decode")] ed25519_dalek::SecretKey);
+
+impl Web3IdSigner for Web3SecretKey {
+    fn id(&self) -> ed25519_dalek::PublicKey { self.0.id() }
+
+    fn sign(&self, msg: &impl AsRef<[u8]>) -> ed25519_dalek::Signature { self.0.sign(msg) }
+}
+
+#[derive(SerdeDeserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Web3IdProofInput {
+    request:           Request<constants::ArCurve, Web3IdAttribute>,
+    global_context:    GlobalContext<constants::ArCurve>,
+    commitment_inputs:
+        Vec<OwnedCommitmentInputs<constants::ArCurve, Web3IdAttribute, Web3SecretKey>>,
+}
+
+pub fn create_web3_id_proof_aux(input: Web3IdProofInput) -> Result<JsonString> {
+    let presentation = input.request.prove(
+        &input.global_context,
+        input.commitment_inputs.iter().map(Into::into),
+    );
+    Ok(json!(presentation.unwrap()).to_string())
 }
 
 pub fn serialize_credential_deployment_payload_aux(
@@ -899,9 +908,9 @@ impl HasAttributeRandomness<ArCurve> for AttributeRandomness {
 
     fn get_attribute_commitment_randomness(
         &self,
-        attribute_tag: AttributeTag,
+        attribute_tag: &AttributeTag,
     ) -> Result<PedersenRandomness<ArCurve>, Self::ErrorType> {
-        match self.0.get(&attribute_tag) {
+        match self.0.get(attribute_tag) {
             Some(v) => Ok(v.clone()),
             None => Err(AttributeError::NotFound),
         }
@@ -974,4 +983,54 @@ pub fn generate_baker_keys(sender: AccountAddress) -> Result<JsonString> {
         aggregation_sign_key: keys.aggregation_sign,
     };
     Ok(serde_json::to_string(&output)?)
+}
+
+#[derive(SerdeDeserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct VerifyWeb3IdCredentialSignatureInput {
+    global_context:    GlobalContext<constants::ArCurve>,
+    values:            BTreeMap<String, Web3IdAttribute>,
+    randomness:        BTreeMap<String, PedersenRandomness<constants::ArCurve>>,
+    #[serde(serialize_with = "base16_encode", deserialize_with = "base16_decode")]
+    signature:         ed25519_dalek::Signature,
+    holder:            CredentialHolderId,
+    issuer_public_key: IssuerKey,
+    issuer_contract:   ContractAddress,
+}
+
+pub fn verify_web3_id_credential_signature_aux(
+    input: VerifyWeb3IdCredentialSignatureInput,
+) -> Result<bool> {
+    let cmm_key = &input.global_context.on_chain_commitment_key;
+    let mut commitments = BTreeMap::new();
+    for ((vi, value), (ri, randomness)) in input.values.iter().zip(input.randomness.iter()) {
+        if vi != ri {
+            return Err(anyhow!("Values and randomness does not match"));
+        }
+        commitments.insert(
+            ri.clone(),
+            cmm_key.hide(
+                &Value::<constants::ArCurve>::new(value.to_field_element()),
+                randomness,
+            ),
+        );
+    }
+    Ok(SignedCommitments {
+        signature: input.signature,
+        commitments,
+    }
+    .verify_signature(
+        &input.holder,
+        &input.issuer_public_key,
+        input.issuer_contract,
+    ))
+}
+
+pub fn compare_string_attributes_aux(
+    attribute1: String,
+    attribute2: String,
+) -> core::cmp::Ordering {
+    let e1 = Web3IdAttribute::String(AttributeKind(attribute1)).to_field_element();
+    let e2 = Web3IdAttribute::String(AttributeKind(attribute2)).to_field_element();
+    e1.cmp(&e2)
 }

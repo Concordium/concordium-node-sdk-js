@@ -28,6 +28,7 @@ export type GenerateContractClientsOptions = {
  * @param modulePath Path to the smart contract module.
  * @param outDirPath Path to the directory to use for the output.
  * @param options Options for generating the clients.
+ * @throws If unable to: read provided file at `modulePath`, parse the provided smart contract module or write to provided directory `outDirPath`.
  */
 export async function generateContractClientsFromFile(
     modulePath: string,
@@ -51,6 +52,7 @@ export async function generateContractClientsFromFile(
  * @param outName Name for the output file.
  * @param outDirPath Path to the directory to use for the output.
  * @param options Options for generating the clients.
+ * @throws If unable to write to provided directory `outDirPath`.
  */
 export async function generateContractClients(
     scModule: SDK.Module,
@@ -79,7 +81,11 @@ export async function generateContractClients(
     if (outputOption === 'Everything' || outputOption === 'TypeScript') {
         await project.save();
     }
-    if (outputOption === 'Everything' || outputOption === 'JavaScript') {
+    if (
+        outputOption === 'Everything' ||
+        outputOption === 'JavaScript' ||
+        outputOption === 'TypedJavaScript'
+    ) {
         await project.emit();
     }
 }

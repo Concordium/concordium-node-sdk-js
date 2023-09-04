@@ -4,7 +4,7 @@ import * as Gen from '@concordium/ccd-js-gen';
 import * as Path from 'node:path';
 import * as Url from 'node:url';
 import meow from 'meow';
-import { parseEndpoint } from '../shared/util';
+import { parseEndpoint } from '../../shared/util';
 
 const cli = meow(
     `
@@ -56,12 +56,18 @@ const contractAddress: SDK.ContractAddress = {
 };
 
 (async () => {
+    console.info(`Fetching instance information for ${contractAddress.index}.`);
     const info = await grpcClient.getInstanceInfo(contractAddress);
+    console.info(
+        `Fetching smart contract module source with reference '${info.sourceModule.moduleRef}'.`
+    );
     const moduleSource = await grpcClient.getModuleSource(info.sourceModule);
     const mod = SDK.Module.fromModuleSource(moduleSource);
     const filePath = Url.fileURLToPath(import.meta.url);
     const outDir = Path.join(Path.dirname(filePath), 'lib');
+    console.info(`Generating smart contract module client at '${outDir}'.`);
     await Gen.generateContractClients(mod, 'wCCD', outDir, {
         output: 'TypeScript',
     });
+    console.info('Code generation was successful.');
 })();

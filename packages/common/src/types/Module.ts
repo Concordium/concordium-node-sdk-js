@@ -8,7 +8,7 @@ import { VersionedModuleSource } from '../types';
 export type ContractInterface = {
     /** The name of the smart contract. Note: This does _not_ including the 'init_' prefix. */
     contractName: H.ContractName;
-    /** A set of entrypoints exposed by the smart contract. Note: These does _not_ include the '<contractName>.' prefix. */
+    /** A set of entrypoints exposed by the smart contract. Note: These do _not_ include the '<contractName>.' prefix. */
     entrypointNames: Set<H.EntrypointName>;
 };
 
@@ -34,6 +34,7 @@ export class Module {
     /**
      * Construct a smart contract module object from bytes, potentially read from a file.
      * @param bytes Bytes encoding a versioned smart contract module.
+     * @throws When provided bytes fails to be parsed or are using an unknown smart contract module version.
      */
     public static fromRawBytes(bytes: Buffer): Module {
         const version = bytes.readUInt32BE(0);

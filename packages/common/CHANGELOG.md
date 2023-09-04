@@ -1,10 +1,17 @@
 # Changelog
 
-## Unreleased
+## 9.2.0
 
 ### Added
 
 -   `CIS4Contract` class for seemlessly interacting with contracts adhering to the CIS4 standard.
+-   Validation of type values when verifying statements.
+-   Exposed `replaceDateWithTimeStampAttribute` and `reviveDateFromTimeStampAttribute`.
+
+### Fixed
+
+-   Aligned credential schema types with the tested types in the browser wallet.
+-   `addMinimumAge` now creates the precise age statement instead of one day off.
 
 ## 9.1.1
 

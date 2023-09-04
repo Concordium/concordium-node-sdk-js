@@ -15,11 +15,11 @@ import {
     CredentialStatements,
     MembershipStatementV2,
     NonMembershipStatementV2,
-    PropertyDetails,
+    CredentialSchemaProperty,
     RangeStatementV2,
     StatementProverQualifier,
     VerifiableCredentialQualifier,
-    VerifiableCredentialSubject,
+    CredentialSchemaSubject,
     Web3IdProofInput,
     AccountCommitmentInput,
     Web3IssuerCommitmentInput,
@@ -46,11 +46,24 @@ import {
     isStringAttributeInRange,
 } from './web3IdHelpers';
 
+export const MAX_STRING_BYTE_LENGTH = 31;
+export const MAX_U64 = 2n ** 64n - 1n;
+export const MIN_DATE_ISO = '-262144-01-01T00:00:00Z';
+export const MAX_DATE_ISO = '+262143-12-31T23:59:59.999999999Z';
+export const MIN_DATE_TIMESTAMP = Date.parse(MIN_DATE_ISO);
+export const MAX_DATE_TIMESTAMP = Date.parse(MAX_DATE_ISO);
+
+const TIMESTAMP_VALID_VALUES = MIN_DATE_ISO + 'to ' + MAX_DATE_ISO;
+const STRING_VALID_VALUES =
+    '0 to ' + MAX_STRING_BYTE_LENGTH + ' bytes as UTF-8';
+const INTEGER_VALID_VALUES = '0 to ' + MAX_U64;
+
 const throwRangeError = (
     title: string,
     property: string,
     end: string,
-    mustBe: string
+    mustBe: string,
+    validRange: string
 ) => {
     throw new Error(
         title +
@@ -59,20 +72,29 @@ const throwRangeError = (
             ' property and therefore the ' +
             end +
             ' end of a range statement must be a ' +
-            mustBe
+            mustBe +
+            ' in the range of ' +
+            validRange
     );
 };
-const throwSetError = (title: string, property: string, mustBe: string) => {
+const throwSetError = (
+    title: string,
+    property: string,
+    mustBe: string,
+    validRange: string
+) => {
     throw new Error(
         title +
             ' is a ' +
             property +
-            ' property and therefore the end members of a set statement must be ' +
-            mustBe
+            ' property and therefore the members of a set statement must be ' +
+            mustBe +
+            ' in the range of ' +
+            validRange
     );
 };
 
-function isTimeStampAttribute(properties?: PropertyDetails) {
+function isTimeStampAttribute(properties?: CredentialSchemaProperty) {
     return (
         properties &&
         properties.type === 'object' &&
@@ -80,9 +102,38 @@ function isTimeStampAttribute(properties?: PropertyDetails) {
     );
 }
 
+function isValidStringAttribute(attributeValue: string): boolean {
+    return (
+        Buffer.from(attributeValue, 'utf-8').length <= MAX_STRING_BYTE_LENGTH
+    );
+}
+
+function isValidIntegerAttribute(attributeValue: bigint) {
+    return attributeValue >= 0 && attributeValue <= MAX_U64;
+}
+
+function isValidTimestampAttribute(attributeValue: Date) {
+    return (
+        attributeValue.getTime() >= MIN_DATE_TIMESTAMP &&
+        attributeValue.getTime() <= MAX_DATE_TIMESTAMP
+    );
+}
+
+function validateTimestampAttribute(value: AttributeType) {
+    return value instanceof Date && isValidTimestampAttribute(value);
+}
+
+function validateStringAttribute(value: AttributeType) {
+    return typeof value === 'string' && isValidStringAttribute(value);
+}
+
+function validateIntegerAttribute(value: AttributeType) {
+    return typeof value === 'bigint' && isValidIntegerAttribute(value);
+}
+
 function verifyRangeStatement(
     statement: RangeStatementV2,
-    properties?: PropertyDetails
+    properties?: CredentialSchemaProperty
 ) {
     if (statement.lower === undefined) {
         throw new Error('Range statements must contain a lower field');
@@ -95,32 +146,50 @@ function verifyRangeStatement(
         const checkRange = (
             typeName: string,
             validate: (a: AttributeType) => boolean,
-            typeString: string
+            typeString: string,
+            validRange: string
         ) => {
             if (!validate(statement.lower)) {
                 throwRangeError(
                     properties.title,
                     typeName,
                     'lower',
-                    typeString
+                    typeString,
+                    validRange
                 );
             }
             if (!validate(statement.upper)) {
                 throwRangeError(
                     properties.title,
                     typeName,
-                    'lower',
-                    typeString
+                    'upper',
+                    typeString,
+                    validRange
                 );
             }
         };
 
         if (isTimeStampAttribute(properties)) {
-            checkRange('timestamp', (end) => end instanceof Date, 'Date');
+            checkRange(
+                'timestamp',
+                validateTimestampAttribute,
+                'Date',
+                TIMESTAMP_VALID_VALUES
+            );
         } else if (properties.type === 'string') {
-            checkRange('string', (end) => typeof end === 'string', 'string');
+            checkRange(
+                'string',
+                validateStringAttribute,
+                'string',
+                STRING_VALID_VALUES
+            );
         } else if (properties.type === 'integer') {
-            checkRange('integer', (end) => typeof end === 'bigint', 'bigint');
+            checkRange(
+                'integer',
+                validateIntegerAttribute,
+                'bigint',
+                INTEGER_VALID_VALUES
+            );
         }
     }
 
@@ -143,7 +212,7 @@ function verifyRangeStatement(
 function verifySetStatement(
     statement: MembershipStatementV2 | NonMembershipStatementV2,
     statementTypeName: string,
-    properties?: PropertyDetails
+    properties?: CredentialSchemaProperty
 ) {
     if (statement.set === undefined) {
         throw new Error(
@@ -160,26 +229,47 @@ function verifySetStatement(
         const checkSet = (
             typeName: string,
             validate: (a: AttributeType) => boolean,
-            typeString: string
+            typeString: string,
+            validValues: string
         ) => {
             if (!statement.set.every(validate)) {
-                throwSetError(properties.title, typeName, typeString);
+                throwSetError(
+                    properties.title,
+                    typeName,
+                    typeString,
+                    validValues
+                );
             }
         };
 
         if (isTimeStampAttribute(properties)) {
-            checkSet('date-time', (value) => value instanceof Date, 'Date');
+            checkSet(
+                'date-time',
+                validateTimestampAttribute,
+                'Date',
+                TIMESTAMP_VALID_VALUES
+            );
         } else if (properties.type === 'string') {
-            checkSet('string', (value) => typeof value === 'string', 'string');
+            checkSet(
+                'string',
+                validateStringAttribute,
+                'string',
+                STRING_VALID_VALUES
+            );
         } else if (properties.type === 'integer') {
-            checkSet('integer', (value) => typeof value === 'bigint', 'bigint');
+            checkSet(
+                'integer',
+                validateIntegerAttribute,
+                'bigint',
+                INTEGER_VALID_VALUES
+            );
         }
     }
 }
 
 function verifyAtomicStatement(
     statement: AtomicStatementV2,
-    schema?: VerifiableCredentialSubject
+    schema?: CredentialSchemaSubject
 ) {
     if (statement.type === undefined) {
         throw new Error('Statements must contain a type field');
@@ -224,7 +314,7 @@ function verifyAtomicStatement(
 function verifyAtomicStatementInContext(
     statement: AtomicStatementV2,
     existingStatements: AtomicStatementV2[],
-    schema?: VerifiableCredentialSubject
+    schema?: CredentialSchemaSubject
 ) {
     verifyAtomicStatement(statement, schema);
     if (
@@ -242,7 +332,7 @@ function verifyAtomicStatementInContext(
  */
 export function verifyAtomicStatements(
     statements: AtomicStatementV2[],
-    schema?: VerifiableCredentialSubject
+    schema?: CredentialSchemaSubject
 ): boolean {
     if (statements.length === 0) {
         throw new Error('Empty statements are not allowed');
@@ -275,9 +365,9 @@ function getAccountCredentialQualifier(
 
 export class AtomicStatementBuilder implements InternalBuilder {
     statements: AtomicStatementV2[];
-    schema: VerifiableCredentialSubject | undefined;
+    schema: CredentialSchemaSubject | undefined;
 
-    constructor(schema?: VerifiableCredentialSubject) {
+    constructor(schema?: CredentialSchemaSubject) {
         this.statements = [];
         this.schema = schema;
     }
@@ -388,7 +478,7 @@ export class AccountStatementBuild extends AtomicStatementBuilder {
         return this.addRange(
             AttributeKeyString.dob,
             MIN_DATE,
-            getPastDate(age)
+            getPastDate(age, 1)
         );
     }
 
@@ -462,7 +552,7 @@ export class Web3StatementBuilder {
     private add(
         idQualifier: StatementProverQualifier,
         builderCallback: (builder: InternalBuilder) => void,
-        schema?: VerifiableCredentialSubject
+        schema?: CredentialSchemaSubject
     ): this {
         const builder = new AtomicStatementBuilder(schema);
         builderCallback(builder);
@@ -476,7 +566,7 @@ export class Web3StatementBuilder {
     addForVerifiableCredentials(
         validContractAddresses: ContractAddress[],
         builderCallback: (builder: InternalBuilder) => void,
-        schema?: VerifiableCredentialSubject
+        schema?: CredentialSchemaSubject
     ): this {
         return this.add(
             getWeb3IdCredentialQualifier(validContractAddresses),

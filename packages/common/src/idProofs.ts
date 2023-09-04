@@ -352,7 +352,7 @@ export class IdStatementBuilder implements StatementBuilder {
      * @returns the updated builder
      */
     addMinimumAge(age: number): IdStatementBuilder {
-        return this.addRange(AttributesKeys.dob, MIN_DATE, getPastDate(age));
+        return this.addRange(AttributesKeys.dob, MIN_DATE, getPastDate(age, 1));
     }
 
     /**

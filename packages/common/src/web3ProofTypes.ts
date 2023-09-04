@@ -39,7 +39,7 @@ export type Web3IdProofInput = {
     commitmentInputs: CommitmentInput[];
 };
 
-export type TimestampPropertyDetails = {
+export type TimestampProperty = {
     title: string;
     type: 'object';
     properties: {
@@ -49,42 +49,46 @@ export type TimestampPropertyDetails = {
         };
         timestamp: {
             type: 'string';
+            format?: 'date-time';
         };
     };
+    required: ['type', 'timestamp'];
     description?: string;
 };
 
-export type SimplePropertyDetails = {
+export type SimpleProperty = {
     title: string;
     description?: string;
     type: 'string' | 'integer';
     format?: string;
 };
 
-export type PropertyDetails = SimplePropertyDetails | TimestampPropertyDetails;
+export type CredentialSchemaProperty = SimpleProperty | TimestampProperty;
 
-type IndexDetails = {
+type IdDetails = {
     title: string;
     description?: string;
     type: 'string';
 };
 
-export type VerifiableCredentialSubject = {
+type CredentialSchemaAttributes = {
+    title?: string;
+    description?: string;
+    type: 'object';
+    properties: Record<string, CredentialSchemaProperty | TimestampProperty>;
+    required: string[];
+};
+
+export type CredentialSchemaSubject = {
     type: 'object';
     properties: {
-        id: IndexDetails;
-        attributes: {
-            title?: string;
-            description?: string;
-            type: 'object';
-            properties: Record<string, PropertyDetails>;
-            required?: string[];
-        };
+        id: IdDetails;
+        attributes: CredentialSchemaAttributes;
     };
     required: string[];
 };
 
-export const IDENTITY_SUBJECT_SCHEMA: VerifiableCredentialSubject = {
+export const IDENTITY_SUBJECT_SCHEMA: CredentialSchemaSubject = {
     type: 'object',
     properties: {
         id: {
@@ -96,58 +100,59 @@ export const IDENTITY_SUBJECT_SCHEMA: VerifiableCredentialSubject = {
             type: 'object',
             properties: {
                 firstName: {
-                    title: 'first name',
+                    title: 'First name',
                     type: 'string',
                 },
                 lastName: {
-                    title: 'last name',
+                    title: 'Last name',
                     type: 'string',
                 },
                 sex: {
-                    title: 'sex',
+                    title: 'Sex',
                     type: 'string',
                 },
                 dob: {
-                    title: 'date of birth',
+                    title: 'Date of birth',
                     type: 'string',
                 },
                 countryOfResidence: {
-                    title: 'last name',
+                    title: 'Country of residence',
                     type: 'string',
                 },
                 nationality: {
-                    title: 'last name',
+                    title: 'Nationality',
                     type: 'string',
                 },
                 idDocType: {
-                    title: 'last name',
+                    title: 'ID Document Type',
                     type: 'string',
                 },
                 idDocNo: {
-                    title: 'last name',
+                    title: 'ID Document Number',
                     type: 'string',
                 },
                 idDocIssuer: {
-                    title: 'last name',
+                    title: 'ID Document Issuer',
                     type: 'string',
                 },
                 idDocIssuedAt: {
-                    title: 'last name',
+                    title: 'ID Document Issued At',
                     type: 'string',
                 },
                 idDocExpiresAt: {
-                    title: 'last name',
+                    title: 'ID Document Expires At',
                     type: 'string',
                 },
                 nationalIdNo: {
-                    title: 'last name',
+                    title: 'National ID Number',
                     type: 'string',
                 },
                 taxIdNo: {
-                    title: 'last name',
+                    title: 'Tax ID Number',
                     type: 'string',
                 },
             },
+            required: [],
         },
     },
     required: [],

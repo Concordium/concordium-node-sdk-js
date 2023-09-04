@@ -341,8 +341,8 @@ export class ConcordiumGRPCClient {
      * Note that a transaction can still fail even if it was accepted by the node.
      * To keep track of the transaction use getTransactionStatus.
      *
-     * Note that { @link ConcordiumGRPCClient.sendAccountTransaction } is the recommended
-     * method to send account transactions, as this requires the caller to serialize the payload themselves.
+     * In general, { @link ConcordiumGRPCClient.sendAccountTransaction } is the recommended
+     * method to send account transactions, as this does not require the caller to serialize the payload themselves.
      *
      * @param header the transactionheader to send to the node
      * @param energyAmount the amount of energy allotted for the transaction

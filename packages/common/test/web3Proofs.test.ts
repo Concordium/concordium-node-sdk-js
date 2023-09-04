@@ -3,6 +3,7 @@ import {
     ConcordiumHdWallet,
     createAccountDID,
     createWeb3IdDID,
+    dateToTimestampAttribute,
     getVerifiablePresentation,
     MAX_DATE_TIMESTAMP,
     MAX_U64,
@@ -21,6 +22,7 @@ import { expectedStatementMixed } from './resources/expectedStatements';
 import {
     CommitmentInput,
     CredentialSchemaSubject,
+    TimestampAttribute,
 } from '../src/web3ProofTypes';
 import { TEST_SEED_1 } from './HdWallet.test';
 import fs from 'fs';
@@ -292,8 +294,8 @@ test('Generate statement with timestamp', () => {
     const atomic = statement[0].statement[0];
     expect(atomic.type).toBe('AttributeInRange');
     if (atomic.type === 'AttributeInRange') {
-        expect(atomic.lower).toBe(lower);
-        expect(atomic.upper).toBe(upper);
+        expect(atomic.lower).toEqual(dateToTimestampAttribute(lower));
+        expect(atomic.upper).toEqual(dateToTimestampAttribute(upper));
     }
 });
 
@@ -402,11 +404,11 @@ test('A string range statement with valid bounds succeed verification', () => {
 });
 
 test('A timestamp range statement with an out of bounds lower limit fails', () => {
-    const statement: GenericRangeStatement<string, Date> = {
+    const statement: GenericRangeStatement<string, TimestampAttribute> = {
         type: StatementTypes.AttributeInRange,
         attributeTag: 'graduationDate',
-        lower: new Date(MIN_DATE_TIMESTAMP - 1),
-        upper: new Date(MAX_DATE_TIMESTAMP),
+        lower: dateToTimestampAttribute(new Date(MIN_DATE_TIMESTAMP - 1)),
+        upper: dateToTimestampAttribute(new Date(MAX_DATE_TIMESTAMP)),
     };
 
     expect(() =>
@@ -417,11 +419,11 @@ test('A timestamp range statement with an out of bounds lower limit fails', () =
 });
 
 test('A timestamp range statement with an out of bounds upper limit fails', () => {
-    const statement: GenericRangeStatement<string, Date> = {
+    const statement: GenericRangeStatement<string, TimestampAttribute> = {
         type: StatementTypes.AttributeInRange,
         attributeTag: 'graduationDate',
-        lower: new Date(MIN_DATE_TIMESTAMP),
-        upper: new Date(MAX_DATE_TIMESTAMP + 1),
+        lower: dateToTimestampAttribute(new Date(MIN_DATE_TIMESTAMP)),
+        upper: dateToTimestampAttribute(new Date(MAX_DATE_TIMESTAMP + 1)),
     };
 
     expect(() =>
@@ -432,11 +434,11 @@ test('A timestamp range statement with an out of bounds upper limit fails', () =
 });
 
 test('A timestamp range statement with valid bounds succeed verification', () => {
-    const statement: GenericRangeStatement<string, Date> = {
+    const statement: GenericRangeStatement<string, TimestampAttribute> = {
         type: StatementTypes.AttributeInRange,
         attributeTag: 'graduationDate',
-        lower: new Date(MIN_DATE_TIMESTAMP),
-        upper: new Date(MAX_DATE_TIMESTAMP),
+        lower: dateToTimestampAttribute(new Date(MIN_DATE_TIMESTAMP)),
+        upper: dateToTimestampAttribute(new Date(MAX_DATE_TIMESTAMP)),
     };
 
     expect(
@@ -577,10 +579,10 @@ test('A string not in set statement with valid items succeeds', () => {
 });
 
 test('A timestamp set statement with an out of bounds item fails', () => {
-    const statement: GenericMembershipStatement<string, Date> = {
+    const statement: GenericMembershipStatement<string, TimestampAttribute> = {
         type: StatementTypes.AttributeInSet,
         attributeTag: 'graduationDate',
-        set: [new Date(MAX_DATE_TIMESTAMP + 1)],
+        set: [dateToTimestampAttribute(new Date(MAX_DATE_TIMESTAMP + 1))],
     };
 
     expect(() =>
@@ -591,10 +593,10 @@ test('A timestamp set statement with an out of bounds item fails', () => {
 });
 
 test('A timestamp set statement with a lower out of bounds item fails', () => {
-    const statement: GenericMembershipStatement<string, Date> = {
+    const statement: GenericMembershipStatement<string, TimestampAttribute> = {
         type: StatementTypes.AttributeInSet,
         attributeTag: 'graduationDate',
-        set: [new Date(MIN_DATE_TIMESTAMP - 1)],
+        set: [dateToTimestampAttribute(new Date(MIN_DATE_TIMESTAMP - 1))],
     };
 
     expect(() =>
@@ -605,10 +607,13 @@ test('A timestamp set statement with a lower out of bounds item fails', () => {
 });
 
 test('A timestamp set statement with valid items succeeds', () => {
-    const statement: GenericMembershipStatement<string, Date> = {
+    const statement: GenericMembershipStatement<string, TimestampAttribute> = {
         type: StatementTypes.AttributeInSet,
         attributeTag: 'graduationDate',
-        set: [new Date(MIN_DATE_TIMESTAMP), new Date(MAX_DATE_TIMESTAMP)],
+        set: [
+            dateToTimestampAttribute(new Date(MIN_DATE_TIMESTAMP)),
+            dateToTimestampAttribute(new Date(MAX_DATE_TIMESTAMP)),
+        ],
     };
 
     expect(
@@ -617,11 +622,12 @@ test('A timestamp set statement with valid items succeeds', () => {
 });
 
 test('A timestamp not in set statement with an out of bounds item fails', () => {
-    const statement: GenericNonMembershipStatement<string, Date> = {
-        type: StatementTypes.AttributeNotInSet,
-        attributeTag: 'graduationDate',
-        set: [new Date(MAX_DATE_TIMESTAMP + 1)],
-    };
+    const statement: GenericNonMembershipStatement<string, TimestampAttribute> =
+        {
+            type: StatementTypes.AttributeNotInSet,
+            attributeTag: 'graduationDate',
+            set: [dateToTimestampAttribute(new Date(MAX_DATE_TIMESTAMP + 1))],
+        };
 
     expect(() =>
         verifyAtomicStatements([statement], schemaWithTimeStamp)
@@ -631,11 +637,12 @@ test('A timestamp not in set statement with an out of bounds item fails', () => 
 });
 
 test('A timestamp not in set statement with a lower out of bounds item fails', () => {
-    const statement: GenericNonMembershipStatement<string, Date> = {
-        type: StatementTypes.AttributeNotInSet,
-        attributeTag: 'graduationDate',
-        set: [new Date(MIN_DATE_TIMESTAMP - 1)],
-    };
+    const statement: GenericNonMembershipStatement<string, TimestampAttribute> =
+        {
+            type: StatementTypes.AttributeNotInSet,
+            attributeTag: 'graduationDate',
+            set: [dateToTimestampAttribute(new Date(MIN_DATE_TIMESTAMP - 1))],
+        };
 
     expect(() =>
         verifyAtomicStatements([statement], schemaWithTimeStamp)
@@ -645,11 +652,15 @@ test('A timestamp not in set statement with a lower out of bounds item fails', (
 });
 
 test('A timestamp not in set statement with valid items succeeds', () => {
-    const statement: GenericNonMembershipStatement<string, Date> = {
-        type: StatementTypes.AttributeNotInSet,
-        attributeTag: 'graduationDate',
-        set: [new Date(MIN_DATE_TIMESTAMP), new Date(MAX_DATE_TIMESTAMP)],
-    };
+    const statement: GenericNonMembershipStatement<string, TimestampAttribute> =
+        {
+            type: StatementTypes.AttributeNotInSet,
+            attributeTag: 'graduationDate',
+            set: [
+                dateToTimestampAttribute(new Date(MIN_DATE_TIMESTAMP)),
+                dateToTimestampAttribute(new Date(MAX_DATE_TIMESTAMP)),
+            ],
+        };
 
     expect(
         verifyAtomicStatements([statement], schemaWithTimeStamp)

@@ -432,11 +432,11 @@ export class ConcordiumGRPCClient {
     }
 
     /**
-     * Sends an update instruction transaction, for updating a chain parameter,
+     * Sends an update instruction transaction for updating a chain parameter
      * to the node to be put in a block on the chain.
      *
      * @param updateInstructionTransaction the update instruction transaction to send to the node
-     * @param signatures map of the signatures on the hash of the serialized unsigned updat instruction, with the key index as map key
+     * @param signatures map of the signatures on the hash of the serialized unsigned update instruction, with the key index as map key
      * @returns The transaction hash as a hex string
      */
     async sendUpdateInstruction(

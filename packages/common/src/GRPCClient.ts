@@ -20,6 +20,7 @@ import {
     isHex,
     isValidHash,
     isValidIp,
+    mapRecord,
     mapStream,
     unwrap,
     wasmToSchema,
@@ -422,6 +423,59 @@ export class ConcordiumGRPCClient {
             blockItem: {
                 oneofKind: 'credentialDeployment',
                 credentialDeployment: credentialDeployment,
+            },
+        };
+
+        const response = await this.client.sendBlockItem(sendBlockItemRequest)
+            .response;
+        return Buffer.from(response.value).toString('hex');
+    }
+
+    /**
+     * Sends an update instruction transaction for updating a chain parameter
+     * to the node to be put in a block on the chain.
+     *
+     * @param updateInstructionTransaction the update instruction transaction to send to the node
+     * @param signatures map of the signatures on the hash of the serialized unsigned update instruction, with the key index as map key
+     * @returns The transaction hash as a hex string
+     */
+    async sendUpdateInstruction(
+        updateInstructionTransaction: v1.UpdateInstruction,
+        signatures: Record<number, HexString>
+    ): Promise<HexString> {
+        const header = updateInstructionTransaction.header;
+        const updateInstruction: v2.UpdateInstruction = {
+            header: {
+                sequenceNumber: {
+                    value: header.sequenceNumber,
+                },
+                effectiveTime: {
+                    value: header.effectiveTime,
+                },
+                timeout: {
+                    value: header.timeout,
+                },
+            },
+            payload: {
+                payload: {
+                    oneofKind: 'rawPayload',
+                    rawPayload: Buffer.from(
+                        updateInstructionTransaction.payload,
+                        'hex'
+                    ),
+                },
+            },
+            signatures: {
+                signatures: mapRecord(signatures, (x) => ({
+                    value: Buffer.from(x, 'hex'),
+                })),
+            },
+        };
+
+        const sendBlockItemRequest: v2.SendBlockItemRequest = {
+            blockItem: {
+                oneofKind: 'updateInstruction',
+                updateInstruction: updateInstruction,
             },
         };
 

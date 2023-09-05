@@ -1514,11 +1514,11 @@ export class ConcordiumGRPCClient {
      * Get the block hash of the first finalized block in a specified epoch.
      *
      * The following error cases are possible:
-     * @throw - a `NOT_FOUND` RPC error if the query specifies an unknown block.
-     * @throw - an `UNAVAILABLE` RPC error if the query is for an epoch that is not finalized in the current genesis index, or is for a future genesis index.
-     * @throw - an `INVALID_ARGUMENT` RPC error if the query is for an epoch with no finalized blocks for a past genesis index.
-     * @throw - an `INVALID_ARGUMENT` RPC error if the input `EpochRequest` is malformed.
-     * @throw - an `UNAVAILABLE` RPC error if the endpoint is disabled on the node.
+     * @throws - a `NOT_FOUND` RPC error if the query specifies an unknown block.
+     * @throws - an `UNAVAILABLE` RPC error if the query is for an epoch that is not finalized in the current genesis index, or is for a future genesis index.
+     * @throws - an `INVALID_ARGUMENT` RPC error if the query is for an epoch with no finalized blocks for a past genesis index.
+     * @throws - an `INVALID_ARGUMENT` RPC error if the input `EpochRequest` is malformed.
+     * @throws - an `UNAVAILABLE` RPC error if the endpoint is disabled on the node.
      *
      * @param {HexString | v1.RelativeEpochRequest } epochRequest - Consists of either a hex-encoded block hash or a relative epoch request consisting of a genesis index and an epoch. If none is passed, it queries the last finalized block.
      *

@@ -1444,10 +1444,9 @@ export class ConcordiumGRPCClient {
     /**
      * For a non-genesis block, this returns the quorum certificate, a timeout
      * certificate (if present) and epoch finalization entry (if present).
-     * Note that, if the block being pointed to is not a product of ConcordiumBFT,
-     * then the response will be a grpc error (invalid argument).
      *
      * @throws an `UNIMPLEMENTED` RPC error if the endpoint is not enabled by the node.
+     * @throws an `INVALID_ARGUMENT` if the block being pointed to is not a product of ConcordiumBFT
      *
      * @param blockHash optional block hash to get the cryptographic parameters at, otherwise retrieves from last finalized block.
      *

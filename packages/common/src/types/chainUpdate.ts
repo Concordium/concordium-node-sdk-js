@@ -312,3 +312,14 @@ export type AuthorizationKeysUpdate =
           typeOfUpdate: AuthorizationKeysUpdateType.Level2KeysUpdateV1;
           updatePayload: AuthorizationsV1;
       };
+
+export type UpdateInstructionHeader = {
+    sequenceNumber: bigint;
+    effectiveTime: bigint;
+    timeout: bigint;
+};
+
+export type UpdateInstruction = {
+    header: UpdateInstructionHeader;
+    payload: HexString;
+};

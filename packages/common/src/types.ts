@@ -2028,3 +2028,12 @@ export type SmartContractTypeValues =
     | number
     | string
     | boolean;
+
+export type HealthCheckResponse =
+    | {
+          isHealthy: true;
+      }
+    | {
+          isHealthy: false;
+          message?: string;
+      };

@@ -38,11 +38,12 @@ const client = createConcordiumClient(
  */
 (async () => {
     // #region documentation-snippet
-    const isHealthy = await client.healthCheck();
-    if (isHealthy) {
+    const check = await client.healthCheck();
+    if (check.isHealthy) {
         console.log('The node is healthy!');
     } else {
         console.log('The node is not healthy');
+        console.log('Message: ' + check.message);
     }
     // #endregion documentation-snippet
 })();

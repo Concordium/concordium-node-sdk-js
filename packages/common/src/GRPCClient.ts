@@ -10,7 +10,7 @@ import * as v2 from '../grpc/v2/concordium/types';
 import { Base58String, HexString, isRpcError } from './types';
 import { QueriesClient } from '../grpc/v2/concordium/service.client';
 import { HealthClient } from '../grpc/v2/concordium/health.client';
-import type { RpcTransport } from '@protobuf-ts/runtime-rpc';
+import type { RpcError, RpcTransport } from '@protobuf-ts/runtime-rpc';
 import { CredentialRegistrationId } from './types/CredentialRegistrationId';
 import * as translate from './GRPCTypeTranslation';
 import { AccountAddress } from './types/accountAddress';
@@ -1458,14 +1458,14 @@ export class ConcordiumGRPCClient {
      *
      * {@codeblock ~~:client/healthCheck.ts#documentation-snippet}
      *
-     * @returns a boolean indicating whether the node is healthy or not.
+     * @returns a HealthCheck indicating whether the node is healthy or not and provides the message from the client, if not healthy.
      */
-    async healthCheck(): Promise<boolean> {
+    async healthCheck(): Promise<v1.HealthCheckResponse> {
         try {
             await this.healthClient.check({});
-            return true;
+            return { isHealthy: true };
         } catch (e) {
-            return false;
+            return { isHealthy: false, message: (e as RpcError).message };
         }
     }
 }

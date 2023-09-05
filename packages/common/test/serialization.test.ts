@@ -17,6 +17,9 @@ import {
 } from '../src/types';
 import { TransactionExpiry } from '../src/types/transactionExpiry';
 import { getUpdateContractParameterSchema } from '../src';
+import {
+    CIS2_WCCD_STATE_SCHEMA, V0_PIGGYBANK_SCHEMA,
+} from './resources/schema';
 
 test('fail account transaction serialization if no signatures', () => {
     const simpleTransferPayload: SimpleTransferPayload = {
@@ -91,6 +94,16 @@ test('serialize UpdateContractParameters using CIS2 contract', () => {
 
     expect(parameter.toString('hex')).toBe(
         '010000c80000c320b41f1997accd5d21c6bf4992370948ed711435e0e2c9302def62afd1295f004651a37c65c8461540decd511e7440d1ff6d4191b7e2133b7239b2485be1a4860000'
+    );
+});
+
+test('test', () => {
+    const parameter = serializeUpdateContractParameters(
+        'PiggyBank',
+        'insert',
+        6000,
+        Buffer.from(V0_PIGGYBANK_SCHEMA, 'hex'),
+        0
     );
 });
 

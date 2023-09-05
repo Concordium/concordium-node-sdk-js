@@ -1426,7 +1426,7 @@ export class ConcordiumGRPCClient {
      * so the winners cannot be predicted beyond that. Note that in some circumstances the returned
      * timestamp can be in the past, especially at the end of an epoch.
      *
-     * @throws an `UNAVAILABLE` RPC error if the current consensus version is 0, as the endpoint is only supported by consensus version 1.
+     * @throws an `UNAVAILABLE` RPC error if the current consensus version is 0 (prior to protocol version 6), as the endpoint is only supported from consensus version 1 (from protocol version 6).
      *
      * @param {v1.BakerId} baker - The baker that should be queried for.
      *

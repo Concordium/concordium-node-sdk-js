@@ -2,12 +2,13 @@
 
 ## Unreleased
 
-### Fixed
-- Added missing fields to `getBlockChainParameters` response. (rootKeys, level1Keys, level2Keys)
-
 ### Added
 
 - `sendUpdateInstruction` to the gRPC Client.
+- `healthCheck` to the gRPC Client.
+
+### Fixed
+- Added missing fields to `getBlockChainParameters` response. (rootKeys, level1Keys, level2Keys)
 
 ## 9.3.0
 

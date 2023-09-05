@@ -10,9 +10,6 @@ New consensus endpoints:
 - `getBakersRewardPeriod`
 - `getWinningBakersEpoch`
 - `getFirstBlockEpoch`
-
-### Breaking changes
-
 - `commissionRates` is now added to the `getPoolInfo` under `bakerPoolStatus.PoolInfo`
 
 ## 9.1.0

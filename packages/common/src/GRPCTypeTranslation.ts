@@ -332,7 +332,7 @@ function transPaydayStatus(
         lotteryPower: status.lotteryPower,
         bakerEquityCapital: unwrap(status.bakerEquityCapital?.value),
         delegatedCapital: unwrap(status.delegatedCapital?.value),
-        commisionRates: trCommissionRates(status.commissionRates),
+        commissionRates: trCommissionRates(status.commissionRates),
     };
 }
 

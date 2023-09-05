@@ -9,6 +9,7 @@ import {
     Base58String,
     Base64String,
     ContractAddress,
+    Energy,
     HexString,
     InstanceInfo,
     InvokeContractResult,
@@ -31,7 +32,7 @@ export type ContractTransactionMetadata = {
     /** Expiry date of the transaction. Defaults to 5 minutes in the future */
     expiry?: Date;
     /** Max energy to be used for the transaction */
-    energy: bigint;
+    energy: Energy;
 };
 
 /**
@@ -65,6 +66,8 @@ export type ContractUpdateTransaction = {
 /**
  * An update transaction without header, including schema information.
  * This is useful for sending through a wallet, which supplies the header information.
+ *
+ * @template J - The type of the parameter formatted as JSON compatible with the corresponding contract schema
  */
 export type ContractUpdateTransactionWithSchema<
     J extends SmartContractTypeValues = SmartContractTypeValues
@@ -156,7 +159,8 @@ export type Schema<E extends string = string> =
 /**
  * Base class for interacting with arbitrary contracts. Public version is {@link Contract}.
  *
- * @template E - union of entrypoints
+ * @template E - union of update entrypoints
+ * @template V - union of view entrypoints
  */
 class ContractBase<E extends string = string, V extends string = string> {
     /** The dry-run instance, accessible through {@link ContractBase.dryRun} */
@@ -189,17 +193,15 @@ class ContractBase<E extends string = string, V extends string = string> {
         grpcClient: ConcordiumGRPCClient,
         contractAddress: ContractAddress
     ): Promise<InstanceInfo> {
-        const instanceInfo = await grpcClient.getInstanceInfo(contractAddress);
-
-        if (instanceInfo === undefined) {
+        try {
+            return await grpcClient.getInstanceInfo(contractAddress);
+        } catch (e) {
             throw new Error(
                 `Could not get contract instance info for contract at address ${stringify(
                     contractAddress
-                )}`
+                )}: ${(e as Error).message ?? e}`
             );
         }
-
-        return instanceInfo;
     }
 
     /**
@@ -233,6 +235,8 @@ class ContractBase<E extends string = string, V extends string = string> {
     /**
      * Creates a {@link ContractUpdateTransactionWithSchema} contract update transaction, holding the necessary parts to sign/submit to the chain.
      *
+     * @template T - The type of the input
+     *
      * @param {string} entrypoint - The name of the receive function to invoke.
      * @param {Function} serializeInput - A function to serialize the `input` to bytes.
      * @param {ContractTransactionMetadata} metadata - Metadata to be used for the transaction creation (with defaults).
@@ -240,7 +244,7 @@ class ContractBase<E extends string = string, V extends string = string> {
      *
      * @throws If the query could not be invoked successfully.
      *
-     * @returns {ContractUpdateTransaction} The transaction hash of the update transaction
+     * @returns {ContractUpdateTransaction} Details necesary for submitting the contract update transaction.
      */
     public createUpdateTransaction<T>(
         entrypoint: E,
@@ -252,6 +256,9 @@ class ContractBase<E extends string = string, V extends string = string> {
     /**
      * Creates a {@link ContractUpdateTransactionWithSchema} contract update transaction, holding the necessary parts to sign/submit to the chain.
      *
+     * @template T - The type of the input
+     * @template J - The type of the input formatted as JSON compatible with the corresponding contract schema
+     *
      * @param {string} entrypoint - The name of the receive function to invoke.
      * @param {Function} serializeInput - A function to serialize the `input` to bytes.
      * @param {ContractTransactionMetadata} metadata - Metadata to be used for the transaction creation (with defaults).
@@ -260,7 +267,7 @@ class ContractBase<E extends string = string, V extends string = string> {
      *
      * @throws If the query could not be invoked successfully.
      *
-     * @returns {ContractUpdateTransactionWithSchema} The transaction hash of the update transaction
+     * @returns {ContractUpdateTransactionWithSchema} Details necessary for submitting the contract update transaction (with JSON to be serialized with corresponding schema)
      */
     public createUpdateTransaction<T, J extends SmartContractTypeValues>(
         entrypoint: E,
@@ -359,6 +366,8 @@ class ContractBase<E extends string = string, V extends string = string> {
     /**
      * Creates and sends a contract update transaction with parameter `input` to `entrypoint`.
      *
+     * @template T - The type of the input
+     *
      * @param {string} entrypoint - The name of the receive function to invoke.
      * @param {Function} serializeInput - A function to serialize the `input` to bytes.
      * @param {CIS2.TransactionMetadata} metadata - Metadata to be used for the transaction (with defaults).
@@ -388,14 +397,18 @@ class ContractBase<E extends string = string, V extends string = string> {
     /**
      * Invokes `entrypoint` view function on contract.
      *
+     * @template T - The type of the input
+     * @template R - The type the invocation response should be deserialized into.
+     *
      * @param {string} entrypoint - The name of the view function to invoke.
      * @param {Function} serializeInput - A function to serialize the `input` to bytes.
      * @param {Function} deserializeResponse - A function to deserialize the value returned from the view invocation.
      * @param {T | T[]} input - Input for for contract function.
+     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
      *
      * @throws If the query could not be invoked successfully.
      *
-     * @returns {HexString} The transaction hash of the update transaction
+     * @returns {R} The transaction hash of the update transaction
      */
     public async invokeView<T, R>(
         entrypoint: V,
@@ -430,8 +443,7 @@ class ContractBase<E extends string = string, V extends string = string> {
             );
         }
 
-        const value = deserializeResponse(response.returnValue);
-        return value;
+        return deserializeResponse(response.returnValue);
     }
 }
 
@@ -454,6 +466,7 @@ export class Contract<
      * If no schema is defined, an attempt to get an embedded schema from the contract is made.
      *
      * @throws If `InstanceInfo` could not be received for the contract,
+     *
      * or if the contract name could not be parsed from the information received from the node.
      */
     public static async create<
@@ -472,13 +485,17 @@ export class Contract<
 
         let mSchema: string | undefined;
         if (!schema) {
-            const raw = await grpcClient.getEmbeddedSchema(
-                instanceInfo.sourceModule
-            );
-            const encoded = raw.toString('base64');
+            try {
+                const raw = await grpcClient.getEmbeddedSchema(
+                    instanceInfo.sourceModule
+                );
+                const encoded = raw.toString('base64');
 
-            if (encoded) {
-                mSchema = encoded;
+                if (encoded) {
+                    mSchema = encoded;
+                }
+            } catch {
+                // Do nothing.
             }
         }
 

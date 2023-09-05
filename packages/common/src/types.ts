@@ -45,11 +45,6 @@ export type Round = bigint;
 /** An amount of energy */
 export type Energy = bigint;
 
-/** Makes all properties of type T non-optional. */
-export type NotOptional<T> = {
-    [P in keyof T]-?: T[P];
-};
-
 /**
  * Makes keys of type optional
  *
@@ -60,7 +55,7 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> &
     Partial<Pick<T, K>>;
 
 /** Makes keys of type required (i.e. non-optional) */
-export type MakeRequired<T, K extends keyof T> = NotOptional<Pick<T, K>> &
+export type MakeRequired<T, K extends keyof T> = Required<Pick<T, K>> &
     Omit<T, K>;
 /**
  * Returns a union of all keys of type T with values matching type V.

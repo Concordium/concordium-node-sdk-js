@@ -36,7 +36,7 @@ const ensureMatchesInput =
             );
         }
 
-        if (Array.isArray(input)) {
+        if (expectList) {
             return result;
         }
 

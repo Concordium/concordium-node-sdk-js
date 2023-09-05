@@ -58,9 +58,10 @@ const contractAddress: SDK.ContractAddress = {
 
 (async () => {
     // Importing the generated smart contract module client.
-    // eslint-disable-next-line import/no-unresolved, @typescript-eslint/ban-ts-comment
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const wCCDModule = await import('./lib/wCCD').catch((e) => {
+    // prettier-ignore
+    const wCCDModule = await import('./lib/wCCD').catch((e) => {// eslint-disable-line import/no-unresolved
         console.error(
             '\nFailed to load the generated wCCD module, did you run the `generate` script?\n'
         );

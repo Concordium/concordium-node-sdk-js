@@ -1,12 +1,70 @@
 # Changelog
 
-## Unreleased
+### Added
+
+-   `Module` class for functionality related to smart contract modules, such as parsing the WebAssembly and interface of the module.
+-   Smart contract related types `ContractName`, `EntrypointName` and helper functions `isInitName`, `isReceiveName`, `getContractNameFromInit` and `getNamesFromReceive`.
+
+
+## 9.3.0
+
+
+### Added
+
+- `sendRawAccountTransaction` to the gRPC Client.
+
+### Changed
+
+- Stopped using `replaceDateWithTimeStampAttribute` and `reviveDateFromTimeStampAttribute` for serializing and parsing verifiable presentation.
+- AttributeType no longer contains `Date`, but now instead has `TimestampAttribute`. The statement builders have their types extended to keep allowing for both `Date` and `TimestampAttribute`.
+
+## 9.2.1
+
+### Fixed
+
+- Missing buffer import causing issues in web.
+
+## 9.2.0
 
 ### Added
 
 -   `CIS4Contract` class for seemlessly interacting with contracts adhering to the CIS4 standard.
--   `Module` class for functionality related to smart contract modules, such as parsing the WebAssembly and interface of the module.
--   Smart contract related types `ContractName`, `EntrypointName` and helper functions `isInitName`, `isReceiveName`, `getContractNameFromInit` and `getNamesFromReceive`.
+-   Validation of type values when verifying statements.
+-   Exposed `replaceDateWithTimeStampAttribute` and `reviveDateFromTimeStampAttribute`.
+
+### Fixed
+
+-   Aligned credential schema types with the tested types in the browser wallet.
+-   `addMinimumAge` now creates the precise age statement instead of one day off.
+
+## 9.1.1
+
+### Fixes
+ - `verifyWeb3IdCredentialSignature` now supports dates/timestamp attributes.
+ - `canProveAtomicStatement` now supports timestamp attributes, handles undefined attribute value correctly and handles strings correctly for range statements.
+
+## 9.1.0
+
+### Added
+
+Added a functions that handle conversions between CCD and micro CCD. The CCD amounts are handled as `Big`'s:
+- `toMicroCcd` returns the amount of micro CCD as a `Big`.
+- `toCcd`: returns the amount of CCD as a `Big`.
+- `fromCcd`: constructs a `CcdAmount` from an amount of CCD passed as a `Big`
+- `ccdToMicroCcd`: Converts CCD to micro CCD, both as `Big`'s
+- `microCcdToCcd`: Converts micro CCD to CCD, both as `Big`'s
+- The `CcdAmount` class constructor now also accepts a `BigSource` letting users create them from `Big`'s and strings
+
+All function parameters now also accepts strings, these strings can use comma as a decimal seperator.
+
+- `Web3StatementBuilder` function.
+- `getVerifiablePresentation` function.
+- Various helper methods for web3Id statements and verifiable presentations.
+
+### Fixes
+
+- The max smart contract parameter length was changed to 65535 bytes in protocol version 5 and onwards.
+  Functions which checks the parameter length will now reflect that.
 
 ## 9.0.0
 

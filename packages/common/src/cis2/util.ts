@@ -224,7 +224,7 @@ function serializeAccountAddress(address: HexString): Buffer {
 }
 
 /**
- * Serializes {@link ContractAddress} into bytes
+ * Serializes {@link ContractAddress} into bytes compatible with smart contract parameter deserialization
  *
  * @param {ContractAddress} address - The address to serialize
  *

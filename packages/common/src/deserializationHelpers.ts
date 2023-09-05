@@ -13,7 +13,7 @@ export class Cursor {
      *
      * @param {Buffer} data - the data
      */
-    constructor(private data: Buffer) {}
+    private constructor(private data: Buffer) {}
 
     /**
      * Constructs a `Cursor` from hex encoded data.
@@ -43,7 +43,7 @@ export class Cursor {
 }
 
 /**
- * Helper function to create a function that deserializes a `HexString` value into a list of dynamic type values
+ * Helper function to create a function that deserializes a `HexString` value received in a smart contract response into a list of dynamic type values
  * determined by the deserialization logic defined in the callback function.
  *
  * @param {Function} deserializer - A callback function invoked with a {@link Cursor} pointing to the remaining slice of the full value given by the `input`

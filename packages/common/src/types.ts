@@ -649,7 +649,10 @@ interface UpdatesCommon {
  * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export interface UpdatesV0 extends UpdatesCommon {
-    chainParameters: ChainParametersV0;
+    chainParameters: Omit<
+        ChainParametersV0,
+        'level1Keys' | 'level2Keys' | 'rootKeys'
+    >;
     updateQueues: UpdateQueuesV0;
     keys: KeysV0;
 }
@@ -659,7 +662,10 @@ export interface UpdatesV0 extends UpdatesCommon {
  * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export interface UpdatesV1 extends UpdatesCommon {
-    chainParameters: ChainParametersV1;
+    chainParameters: Omit<
+        ChainParametersV1,
+        'level1Keys' | 'level2Keys' | 'rootKeys'
+    >;
     updateQueues: UpdateQueuesV1;
     keys: KeysV1;
 }
@@ -669,7 +675,10 @@ export interface UpdatesV1 extends UpdatesCommon {
  * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export interface UpdatesV2 extends UpdatesCommon {
-    chainParameters: ChainParametersV2;
+    chainParameters: Omit<
+        ChainParametersV2,
+        'level1Keys' | 'level2Keys' | 'rootKeys'
+    >;
     updateQueues: UpdateQueuesV2;
     keys: KeysV1;
 }

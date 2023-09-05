@@ -1,8 +1,11 @@
 import * as wasm from '@concordium/rust-bindings';
 import { stringify } from 'json-bigint';
 import { ContractAddress, CryptographicParameters } from './types';
-import { replaceDateWithTimeStampAttribute } from './types/VerifiablePresentation';
-import { AttributeType } from './web3ProofTypes';
+import {
+    AttributeType,
+    StatementAttributeType,
+    TimestampAttribute,
+} from './web3ProofTypes';
 
 export type VerifyWeb3IdCredentialSignatureInput = {
     globalContext: CryptographicParameters;
@@ -21,9 +24,7 @@ export function verifyWeb3IdCredentialSignature(
     input: VerifyWeb3IdCredentialSignatureInput
 ): boolean {
     // Use json-bigint stringify to ensure we can handle bigints
-    return wasm.verifyWeb3IdCredentialSignature(
-        stringify(input, replaceDateWithTimeStampAttribute)
-    );
+    return wasm.verifyWeb3IdCredentialSignature(stringify(input));
 }
 
 /**
@@ -50,4 +51,41 @@ export function isStringAttributeInRange(
     }
     const upCmp = compareStringAttributes(value, upper);
     return upCmp < 0;
+}
+
+/**
+ * Converts a timestamp attribute to a Date.
+ * @param attribute the timestamp attribute
+ * @returns a Date representing the timestamp
+ */
+export function timestampToDate(attribute: TimestampAttribute): Date {
+    return new Date(Date.parse(attribute.timestamp));
+}
+
+/**
+ * Converts a Date to a timestamp attribute.
+ * @param value the date to convert to an attribute
+ * @returns the timestamp attribute for the provided date
+ */
+export function dateToTimestampAttribute(value: Date): TimestampAttribute {
+    return {
+        type: 'date-time',
+        timestamp: value.toISOString(),
+    };
+}
+
+/**
+ * Converts a statement attribute to an attribute. Statement attributes allow
+ * for Date which are mapped into timestamp attributes. All other attribute
+ * types are mapped one-to-one.
+ * @param statementAttribute the statement attribute to map
+ * @returns the mapped attribute type
+ */
+export function statementAttributeTypeToAttributeType(
+    statementAttribute: StatementAttributeType
+): AttributeType {
+    if (statementAttribute instanceof Date) {
+        return dateToTimestampAttribute(statementAttribute);
+    }
+    return statementAttribute;
 }

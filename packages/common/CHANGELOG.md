@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 9.3.0
 
 ### Fixed
 - Added missing fields to `getBlockChainParameters` response. (rootKeys, level1Keys, level2Keys)
@@ -9,6 +9,11 @@
 
 - `sendUpdateInstruction` to the gRPC Client.
 - `sendRawAccountTransaction` to the gRPC Client.
+
+### Changed
+
+- Stopped using `replaceDateWithTimeStampAttribute` and `reviveDateFromTimeStampAttribute` for serializing and parsing verifiable presentation.
+- AttributeType no longer contains `Date`, but now instead has `TimestampAttribute`. The statement builders have their types extended to keep allowing for both `Date` and `TimestampAttribute`.
 
 ## 9.2.1
 

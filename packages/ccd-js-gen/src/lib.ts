@@ -133,6 +133,7 @@ function addModuleClients(
                 {
                     docs: ['Dry run entrypoints of the smart contract.'],
                     scope: tsm.Scope.Public,
+                    isReadonly: true,
                     name: dryRunId,
                     type: contractDryRunClassId,
                 },

@@ -86,7 +86,6 @@ export class DeployedModule<C extends string = string> {
      * @param {string} [blockHash] Hash of the block to check information at. When not provided the last finalized block is used.
      *
      * @throws {RpcError} If failing to communicate with the concordium node or module is not deployed on chain.
-     * @returns {boolean} Indicating whether the module is deployed on chain.
      */
     public async checkOnChain(blockHash?: string): Promise<void> {
         await this.getModuleSource(blockHash);

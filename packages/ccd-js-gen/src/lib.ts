@@ -187,7 +187,15 @@ this.${dryRunId} = new ${contractDryRunClassId}(this.${genericContractId});`
             classDecl
                 .addMethod({
                     docs: [
-                        `Send a message to the '${entrypointName}' entrypoint of the '${contract.contractName}' contract.`,
+                        `Send an update-contract transaction to the '${entrypointName}' entrypoint of the '${contract.contractName}' contract.
+
+@param {SDK.ContractTransactionMetadata} ${transactionMetadataId} - Hex encoded parameter for entrypoint
+@param {SDK.HexString} ${parameterId} - Hex encoded parameter for entrypoint
+@param {SDK.AccountSigner} ${signerId} - The signer of the update contract transaction.
+
+@throws If the entrypoint is not successfully invoked.
+
+@returns {SDK.HexString} Transaction hash`,
                     ],
                     scope: tsm.Scope.Public,
                     name: toCamelCase(entrypointName),
@@ -220,7 +228,14 @@ this.${dryRunId} = new ${contractDryRunClassId}(this.${genericContractId});`
             dryRunClassDecl
                 .addMethod({
                     docs: [
-                        `Dry run a message to the '${entrypointName}' entrypoint of the '${contract.contractName}' contract`,
+                        `Dry run an update-contract transaction to the '${entrypointName}' entrypoint of the '${contract.contractName}' contract.
+
+@param {SDK.HexString} ${parameterId} - Hex encoded parameter for entrypoint
+@param {SDK.HexString} [${blockHashId}] - Block hash of the block to invoke entrypoint at
+
+@throws If the entrypoint is not successfully invoked.
+
+returns {SDK.HexString} Hex encoded response`,
                     ],
                     scope: tsm.Scope.Public,
                     name: toCamelCase(entrypointName),

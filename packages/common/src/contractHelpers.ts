@@ -43,7 +43,10 @@ export const isEqualContractAddress =
 
 /** The name of a smart contract. Note: This does _not_ including the 'init_' prefix. */
 export type ContractName = string;
-
+/** The name of a receive function exposed in a smart contract module. Note: This is of the form '<contractName>.<entrypointName>'. */
+export type ReceiveName = string;
+/** The name of an init function exposed in a smart contract module. Note: This is of the form 'init_<contractName>'. */
+export type InitName = string;
 /** The name of an entrypoint exposed by a smart contract. Note: This does _not_ include the '<contractName>.' prefix. */
 export type EntrypointName = string;
 
@@ -69,7 +72,7 @@ function isAsciiAlphaNumericPunctuation(string: string) {
 }
 
 /** Check if a string is a valid smart contract init name. */
-export function isInitName(string: string): boolean {
+export function isInitName(string: string): string is InitName {
     return (
         string.length <= 100 &&
         string.startsWith('init_') &&
@@ -79,12 +82,12 @@ export function isInitName(string: string): boolean {
 }
 
 /** Get the contract name from a string. Assumes the string is a valid init name. */
-export function getContractNameFromInit(initName: string): ContractName {
+export function getContractNameFromInit(initName: InitName): ContractName {
     return initName.substring(5);
 }
 
 /** Check if a string is a valid smart contract receive name. */
-export function isReceiveName(string: string): boolean {
+export function isReceiveName(string: string): string is ReceiveName {
     return (
         string.length <= 100 &&
         string.includes('.') &&
@@ -93,7 +96,7 @@ export function isReceiveName(string: string): boolean {
 }
 
 /** Get the contract name and entrypoint name from a string. Assumes the string is a valid receive name. */
-export function getNamesFromReceive(receiveName: string): {
+export function getNamesFromReceive(receiveName: ReceiveName): {
     contractName: ContractName;
     entrypointName: EntrypointName;
 } {

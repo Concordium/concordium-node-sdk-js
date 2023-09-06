@@ -7,6 +7,7 @@
     "typings": "lib/src/lib.d.ts",
     "scripts": {
         "build": "tsc",
+        "build-dev": "yarn build",
         "clean": "rm -r lib",
         "lint": "eslint src/** bin/** --cache --ext .ts,.js --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",

@@ -1,7 +1,11 @@
 import { Buffer } from 'buffer/';
 import { stringify } from 'json-bigint';
 
-import { checkParameterLength, getContractName } from './contractHelpers';
+import {
+    checkParameterLength,
+    getContractName,
+    getContractNameFromInit,
+} from './contractHelpers';
 import { ConcordiumGRPCClient } from './GRPCClient';
 import { AccountSigner, signTransaction } from './signHelpers';
 import {
@@ -242,20 +246,37 @@ class ContractBase<E extends string = string, V extends string = string> {
 
     /**
      * Get information on this smart contract instance.
+     *
+     * @param {string} [blockHash] Hash of the block to check information at. When not provided the last finalized block is used.
+
+     * @throws if the {@link InstanceInfo} of the contract could not be found.
+
+     * @returns {InstanceInfo} The instance info.
      */
     public async getInstanceInfo(blockHash?: string): Promise<InstanceInfo> {
         return this.grpcClient.getInstanceInfo(this.contractAddress, blockHash);
     }
 
     /**
-     * Check if the smart contract instance exists on the blockchain.
+     * Check if the smart contract instance exists on the blockchain and whether it uses a matching contract name.
      * Optionally a module reference can be provided to check if the contract instance uses this module.
-     * @param {ContractCheckOnChainOptions} options Options for checking information on chain.
+     *
+     * @param {ContractCheckOnChainOptions} [options] Options for checking information on chain.
+     *
+     * @throws {RpcError} If failing to communicate with the concordium node or if the instance does not exist on chain or fails the checks.
      */
     public async checkOnChain(
         options: ContractCheckOnChainOptions = {}
     ): Promise<void> {
         const info = await this.getInstanceInfo(options.blockHash);
+
+        const contractNameOnChain = getContractNameFromInit(info.name);
+        if (contractNameOnChain !== this.contractName) {
+            throw new Error(
+                `Instance ${this.contractAddress} have contract name '${contractNameOnChain}' on chain. The client expected: '${this.contractName}'.`
+            );
+        }
+
         if (
             options.moduleReference !== undefined &&
             info.sourceModule.moduleRef !== options.moduleReference.moduleRef

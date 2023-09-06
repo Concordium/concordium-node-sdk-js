@@ -171,7 +171,14 @@ this.${deployedModuleId} = ${deployedModuleId};`);
         .addMethod({
             docs: [
                 `Construct the \`${moduleClientId}\` for interacting with a module on chain.
-Checks and throws an error if the module is not deployed on chain.`,
+Checks and throws an error if the module is not deployed on chain.
+
+@param {ConcordiumGRPCClient} ${grpcClientId} - The GRPC client for accessing a node.
+@param {ModuleReference} ${moduleRefId} - The reference of the deployed smart contract module.
+
+@throws If failing to communicate with the concordium node or module reference does not correspond to a module on chain.
+
+@returns {${moduleClientId}}`,
             ],
             scope: tsm.Scope.Public,
             isStatic: true,
@@ -195,7 +202,14 @@ Checks and throws an error if the module is not deployed on chain.`,
         .addMethod({
             docs: [
                 `Construct the \`${moduleClientId}\` for interacting with a module on chain.
-The caller must ensure the module is deployed on chain.`,
+The caller must ensure the module is deployed on chain.
+
+@param {ConcordiumGRPCClient} ${grpcClientId} - The GRPC client for accessing a node.
+@param {ModuleReference} ${moduleRefId} - The reference of the deployed smart contract module.
+
+@throws If failing to communicate with the concordium node or module reference does not correspond to a module on chain.
+
+@returns {${moduleClientId}}`,
             ],
             scope: tsm.Scope.Public,
             isStatic: true,
@@ -218,7 +232,13 @@ The caller must ensure the module is deployed on chain.`,
     const blockHashId = 'blockHash';
     moduleClassDecl
         .addMethod({
-            docs: ['Check if this module is deployed to the chain'],
+            docs: [
+                `Check if this module is deployed to the chain.
+
+@param {string} [${blockHashId}] Hash of the block to check information at. When not provided the last finalized block is used.
+
+@throws {RpcError} If failing to communicate with the concordium node.`,
+            ],
             scope: tsm.Scope.Public,
             name: 'checkOnChain',
             parameters: [
@@ -237,7 +257,13 @@ The caller must ensure the module is deployed on chain.`,
     moduleClassDecl
         .addMethod({
             docs: [
-                'Get the module source of the deployed smart contract module.',
+                `Get the module source of the deployed smart contract module.
+
+@param {string} [${blockHashId}] Hash of the block to check information at. When not provided the last finalized block is used.
+
+@throws {RpcError} If failing to communicate with the concordium node or module not found.
+
+@returns {SDK.VersionedModuleSource} Module source of the deployed smart contract module.`,
             ],
             scope: tsm.Scope.Public,
             name: 'getModuleSource',
@@ -270,7 +296,15 @@ The caller must ensure the module is deployed on chain.`,
         moduleClassDecl
             .addMethod({
                 docs: [
-                    `Send transaction for instantiating a new '${contract.contractName}' smart contract instance.`,
+                    `Send transaction for instantiating a new '${contract.contractName}' smart contract instance.
+
+@param {SDK.ContractTransactionMetadata} ${transactionMetadataId} - Metadata to be used for the transaction (with defaults).
+@param {SDK.HexString} ${parameterId} - Input for for contract function.
+@param {SDK.AccountSigner} ${signerId} - An object to use for signing the transaction.
+
+@throws If the query could not be invoked successfully.
+
+@returns {SDK.HexString} The transaction hash of the update transaction.`,
                 ],
                 scope: tsm.Scope.Public,
                 name: initContractId,
@@ -399,8 +433,17 @@ this.${dryRunId} = ${dryRunId};`
         contractClassDecl
             .addMethod({
                 docs: [
-                    `Construct the \`${contractClassId}\` for interacting with a '${contract.contractName}' contract on chain.
-Checking the information instance on chain at the last finalized block.`,
+                    `Construct an instance of \`${contractClassId}\` for interacting with a '${contract.contractName}' contract on chain.
+Checking the information instance on chain.
+
+@param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The client used for contract invocations and updates.
+@param {SDK.ContractAddress} ${contractAddressId} - Address of the contract instance.
+@param {string} [${blockHashId}] - Hash of the block to check the information at. When not provided the last finalized block is used.
+
+@throws If failing to communicate with the concordium node or if any of the checks fails.
+
+@returns {${contractClassId}}
+`,
                 ],
                 isStatic: true,
                 isAsync: true,
@@ -415,12 +458,17 @@ Checking the information instance on chain at the last finalized block.`,
                         name: contractAddressId,
                         type: 'SDK.ContractAddress',
                     },
+                    {
+                        name: blockHashId,
+                        hasQuestionToken: true,
+                        type: 'string',
+                    },
                 ],
                 returnType: `Promise<${contractClassId}>`,
             })
             .setBodyText(
                 `const ${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, ${contractClassId}.${contractNameId});
-await ${genericContractId}.checkOnChain({ moduleReference: ${moduleRefId} });
+await ${genericContractId}.checkOnChain({ moduleReference: ${moduleRefId}, blockHash: ${blockHashId} });
 return new ${contractClassId}(
     ${grpcClientId},
     ${contractAddressId},
@@ -433,7 +481,13 @@ return new ${contractClassId}(
             .addMethod({
                 docs: [
                     `Construct the \`${contractClassId}\` for interacting with a '${contract.contractName}' contract on chain.
-Without checking the instance information on chain.`,
+Without checking the instance information on chain.
+
+@param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The client used for contract invocations and updates.
+@param {SDK.ContractAddress} ${contractAddressId} - Address of the contract instance.
+
+@returns {${contractClassId}}
+`,
                 ],
                 isStatic: true,
                 scope: tsm.Scope.Public,

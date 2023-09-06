@@ -16,6 +16,7 @@ import {
     TransactionEvent,
     TransferredEvent,
 } from './types/transactionEvent';
+import { InitName, ReceiveName } from './contractHelpers';
 
 export * from './types/NodeInfo';
 export * from './types/PeerInfo';
@@ -1773,12 +1774,18 @@ export enum ParameterType {
 }
 
 export interface InstanceInfoCommon {
+    /** Version of the smart contract module. */
     version: number;
+    /** Total balance of CCD hold by this instance. */
     amount: CcdAmount;
+    /** Module reference of the current module being used by this instance. */
     sourceModule: ModuleReference;
+    /** Account used to instantiate this smart contract instance. */
     owner: AccountAddress;
-    methods: string[];
-    name: string;
+    /** List of receive functions currently exposed by this smart contract. These are of the form '<contractName>.<entrypointName>'. */
+    methods: ReceiveName[];
+    /** Name of the smart contract. This is of the form 'init_<contractName>'. */
+    name: InitName;
 }
 
 export interface InstanceInfoV0 extends InstanceInfoCommon {

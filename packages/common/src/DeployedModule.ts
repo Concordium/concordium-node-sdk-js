@@ -26,7 +26,11 @@ export type ContractInitTransaction = {
     payload: InitContractPayload;
 };
 
-/** Type representing a smart contract module deployed on chain. */
+/**
+ * Type representing a smart contract module deployed on chain.
+ *
+ * @template C - Union of contract names in the smart contract module.
+ */
 export class DeployedModule<C extends string = string> {
     /** Private constructor to enforce creating objects using a static method. */
     private constructor(
@@ -36,38 +40,74 @@ export class DeployedModule<C extends string = string> {
         public moduleReference: ModuleReference
     ) {}
 
-    /** Create a new `GenericModule` instance for interacting with a smart contract module on chain.
-     * This function ensures the module is already deployed on chain otherwise produces an error. */
-    public static async create(
+    /**
+     * Create a new `GenericModule` instance for interacting with a smart contract module on chain.
+     * This function ensures the module is already deployed on chain otherwise produces an error.
+     *
+     * @template C - Union of contract names in the smart contract module.
+     *
+     * @param {ConcordiumGRPCClient} grpcClient - The GRPC client for accessing a node.
+     * @param {ModuleReference} moduleReference - The reference of the deployed smart contract module.
+     *
+     * @throws If failing to communicate with the concordium node or module reference does not correspond to a module on chain.
+     *
+     * @returns {DeployedModule<C>}
+     */
+    public static async create<C extends string = string>(
         grpcClient: ConcordiumGRPCClient,
         moduleReference: ModuleReference
-    ): Promise<DeployedModule> {
-        const mod = new DeployedModule(grpcClient, moduleReference);
+    ): Promise<DeployedModule<C>> {
+        const mod = new DeployedModule<C>(grpcClient, moduleReference);
         await mod.checkOnChain();
         return mod;
     }
 
-    /** Create a new `GenericModule` instance for interacting with a smart contract module on chain.
-     * The caller must ensure that the smart contract module is already deployed on chain. */
-    public static createUnchecked(
+    /**
+     * Create a new `GenericModule` instance for interacting with a smart contract module on chain.
+     * The caller must ensure that the smart contract module is already deployed on chain.
+     *
+     * @template C - Union of contract names in the smart contract module.
+     *
+     * @param {ConcordiumGRPCClient} grpcClient - The GRPC client for accessing a node.
+     * @param {ModuleReference} moduleReference - The reference of the deployed smart contract module.
+     *
+     * @returns {DeployedModule<C>}
+     */
+    public static createUnchecked<C extends string = string>(
         grpcClient: ConcordiumGRPCClient,
         moduleReference: ModuleReference
-    ): DeployedModule {
-        return new DeployedModule(grpcClient, moduleReference);
+    ): DeployedModule<C> {
+        return new DeployedModule<C>(grpcClient, moduleReference);
     }
 
-    /** Check if this module is deployed to the chain. */
+    /**
+     * Check if this module is deployed to the chain.
+     *
+     * @param {string} [blockHash] Hash of the block to check information at. When not provided the last finalized block is used.
+     *
+     * @throws {RpcError} If failing to communicate with the concordium node or module is not deployed on chain.
+     * @returns {boolean} Indicating whether the module is deployed on chain.
+     */
     public async checkOnChain(blockHash?: string): Promise<void> {
         await this.getModuleSource(blockHash);
     }
 
-    /** Get the module source of the deployed smart contract module. */
+    /**
+     * Get the module source of the deployed smart contract module.
+     *
+     * @param {string} [blockHash] Hash of the block to check information at. When not provided the last finalized block is used.
+     *
+     * @throws {RpcError} If failing to communicate with the concordium node or module not found.
+     * @returns {VersionedModuleSource} Module source of the deployed smart contract module.
+     */
     public getModuleSource(blockHash?: string): Promise<VersionedModuleSource> {
         return this.grpcClient.getModuleSource(this.moduleReference, blockHash);
     }
 
     /**
      * Creates and sends transaction for initializing a smart contract `contractName` with parameter `input`.
+     *
+     * @template T - The type of the input.
      *
      * @param {string} contractName - The name of the smart contract to instantiate (this is without the `init_` prefix).
      * @param {Function} serializeInput - A function to serialize the `input` to bytes.

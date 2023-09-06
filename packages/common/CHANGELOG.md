@@ -1,10 +1,16 @@
 # Changelog
 
+## Unreleased
+
 ### Added
 
+- `sendUpdateInstruction` to the gRPC Client.
+- `healthCheck` to the gRPC Client.
 -   `Module` class for functionality related to smart contract modules, such as parsing the WebAssembly and interface of the module.
 -   Smart contract related types `ContractName`, `EntrypointName` and helper functions `isInitName`, `isReceiveName`, `getContractNameFromInit` and `getNamesFromReceive`.
 
+### Fixed
+- Added missing fields to `getBlockChainParameters` response. (rootKeys, level1Keys, level2Keys)
 
 ## 9.3.0
 

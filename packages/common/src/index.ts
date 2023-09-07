@@ -59,6 +59,7 @@ export * from './blockSummaryHelpers';
 export * from './rewardStatusHelpers';
 export * from './HdWallet';
 export * from './schemaHelpers';
+export * from './schemaTypes';
 export * from './web3IdHelpers';
 
 export { getContractName } from './contractHelpers';

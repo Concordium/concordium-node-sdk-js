@@ -427,7 +427,7 @@ export function getCredentialDeploymentTransactionHash(
     const credentialDeploymentInfo: DeploymentDetailsResult = JSON.parse(
         wasm.getDeploymentDetails(
             signatures,
-            JSON.stringify(credentialDeployment.unsignedCdi),
+            JSONbig.stringify(credentialDeployment.unsignedCdi),
             credentialDeployment.expiry.expiryEpochSeconds
         )
     );
@@ -448,7 +448,7 @@ export function serializeCredentialDeploymentTransactionForSubmission(
     const credentialDeploymentInfo: DeploymentDetailsResult = JSON.parse(
         wasm.getDeploymentDetails(
             signatures,
-            JSON.stringify(credentialDeployment.unsignedCdi),
+            JSONbig.stringify(credentialDeployment.unsignedCdi),
             credentialDeployment.expiry.expiryEpochSeconds
         )
     );
@@ -524,7 +524,7 @@ export function serializeTypeValue(
     verboseErrorMessage = false
 ): Buffer {
     const serializedValue = wasm.serializeTypeValue(
-        JSON.stringify(value),
+        JSONbig.stringify(value),
         rawSchema.toString('hex'),
         verboseErrorMessage
     );
@@ -584,7 +584,7 @@ export function serializeCredentialDeploymentPayload(
 ): Buffer {
     const payloadByteArray = wasm.serializeCredentialDeploymentPayload(
         signatures,
-        JSON.stringify(credentialDeploymentTransaction.unsignedCdi)
+        JSONbig.stringify(credentialDeploymentTransaction.unsignedCdi)
     );
     return Buffer.from(payloadByteArray);
 }

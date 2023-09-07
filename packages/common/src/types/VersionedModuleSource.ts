@@ -3,6 +3,8 @@ import * as H from '../contractHelpers';
 import { sha256 } from '../hash';
 import { Buffer } from 'buffer/';
 import { VersionedModuleSource } from '../types';
+import { schemaBytesFromWasmModule } from '../util';
+import { RawModuleSchema } from '../schemaTypes';
 import { Cursor, deserializeUInt32BE } from '../deserializationHelpers';
 
 /** Interface of a smart contract containing the name of the contract and every entrypoint. */
@@ -87,6 +89,19 @@ export async function parseModuleInterface(
         }
     }
     return map;
+}
+
+/**
+ * Extract the embedded smart contract schema bytes. Returns `null` if no schema is embedded.
+ * @param {VersionedModuleSource} moduleSource The smart contract module source.
+ * @returns {RawModuleSchema | null} The raw module schema if found.
+ */
+export async function getEmbeddedModuleSchema(
+    moduleSource: VersionedModuleSource
+): Promise<RawModuleSchema | null> {
+    const wasmModule = await WebAssembly.compile(moduleSource.source);
+    const buffer = schemaBytesFromWasmModule(wasmModule);
+    return buffer === null ? null : { type: 'versioned', buffer };
 }
 
 /**

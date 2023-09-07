@@ -32,6 +32,7 @@ import { countSignatures } from './util';
 import { AccountAddress } from './types/accountAddress';
 import { sha256 } from './hash';
 import * as wasm from '@concordium/rust-bindings';
+import JSONbig from 'json-bigint/';
 
 function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
     return Buffer.from(Uint8Array.of(type));
@@ -471,7 +472,7 @@ export function serializeInitContractParameters(
     verboseErrorMessage = false
 ): Buffer {
     const serializedParameters = wasm.serializeInitContractParameters(
-        JSON.stringify(parameters),
+        JSONbig.stringify(parameters),
         rawSchema.toString('hex'),
         contractName,
         schemaVersion,
@@ -499,7 +500,7 @@ export function serializeUpdateContractParameters(
     verboseErrorMessage = false
 ): Buffer {
     const serializedParameters = wasm.serializeReceiveContractParameters(
-        JSON.stringify(parameters),
+        JSONbig.stringify(parameters),
         rawSchema.toString('hex'),
         contractName,
         receiveFunctionName,

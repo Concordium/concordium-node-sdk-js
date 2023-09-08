@@ -62,11 +62,10 @@ const contractAddress: SDK.ContractAddress = {
         `Fetching smart contract module source with reference '${info.sourceModule.moduleRef}'.`
     );
     const moduleSource = await grpcClient.getModuleSource(info.sourceModule);
-    const mod = SDK.Module.fromModuleSource(moduleSource);
     const filePath = Url.fileURLToPath(import.meta.url);
     const outDir = Path.join(Path.dirname(filePath), 'lib');
     console.info(`Generating smart contract module client at '${outDir}'.`);
-    await Gen.generateContractClients(mod, 'wCCD', outDir, {
+    await Gen.generateContractClients(moduleSource, 'wCCD', outDir, {
         output: 'TypeScript',
     });
     console.info('Code generation was successful.');

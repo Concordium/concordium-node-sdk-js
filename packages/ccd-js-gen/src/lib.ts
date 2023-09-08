@@ -2,7 +2,6 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as tsm from 'ts-morph';
 import * as SDK from '@concordium/common-sdk';
-import { Buffer } from 'buffer/';
 
 /**
  * Output options for the generated code.
@@ -42,26 +41,31 @@ export async function generateContractClientsFromFile(
         throw e;
     });
     const outputName = path.basename(modulePath, '.wasm.v1');
-    const scModule = SDK.Module.fromRawBytes(Buffer.from(fileBytes));
-    return generateContractClients(scModule, outputName, outDirPath, options);
+    const moduleSource = SDK.versionedModuleSourceFromBuffer(fileBytes);
+    return generateContractClients(
+        moduleSource,
+        outputName,
+        outDirPath,
+        options
+    );
 }
 
 /**
  * Generate smart contract client code for a given smart contract module.
- * @param scModule Buffer with bytes for the smart contract module.
+ * @param moduleSource Buffer with bytes for the smart contract module.
  * @param outName Name for the output file.
  * @param outDirPath Path to the directory to use for the output.
  * @param options Options for generating the clients.
  * @throws If unable to write to provided directory `outDirPath`.
  */
 export async function generateContractClients(
-    scModule: SDK.Module,
+    moduleSource: SDK.VersionedModuleSource,
     outName: string,
     outDirPath: string,
     options: GenerateContractClientsOptions = {}
 ): Promise<void> {
     const outputOption = options.output ?? 'Everything';
-    const moduleInterface = await scModule.parseModuleInterface();
+    const moduleInterface = await SDK.parseModuleInterface(moduleSource);
     const outputFilePath = path.format({
         dir: outDirPath,
         name: outName,

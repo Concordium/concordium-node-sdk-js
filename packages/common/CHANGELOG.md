@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 9.4.0
 
 ### Added
 
@@ -11,6 +11,7 @@
 
 ### Fixed
 - Added missing fields to `getBlockChainParameters` response. (rootKeys, level1Keys, level2Keys)
+- Use of bigint exponentiation causing issues in web.
 
 ## 9.3.0
 

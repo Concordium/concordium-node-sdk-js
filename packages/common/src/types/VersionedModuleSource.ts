@@ -100,8 +100,28 @@ export async function getEmbeddedModuleSchema(
     moduleSource: VersionedModuleSource
 ): Promise<RawModuleSchema | null> {
     const wasmModule = await WebAssembly.compile(moduleSource.source);
-    const buffer = schemaBytesFromWasmModule(wasmModule);
-    return buffer === null ? null : { type: 'versioned', buffer };
+    const versionedSchema = schemaBytesFromWasmModule(
+        wasmModule,
+        'concordium-schema'
+    );
+    if (versionedSchema !== null) {
+        return { type: 'versioned', buffer: versionedSchema };
+    }
+    const unversionedSchemaV0 = schemaBytesFromWasmModule(
+        wasmModule,
+        'concordium-schema-v1'
+    );
+    if (unversionedSchemaV0 !== null) {
+        return { type: 'unversioned', version: 0, buffer: unversionedSchemaV0 };
+    }
+    const unversionedSchemaV1 = schemaBytesFromWasmModule(
+        wasmModule,
+        'concordium-schema-v2'
+    );
+    if (unversionedSchemaV1 !== null) {
+        return { type: 'unversioned', version: 1, buffer: unversionedSchemaV1 };
+    }
+    return null;
 }
 
 /**

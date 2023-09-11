@@ -6,9 +6,19 @@
 
 - `sendUpdateInstruction` to the gRPC Client.
 - `healthCheck` to the gRPC Client.
-- Functions `calculateModuleReference` for getting the module reference and `parseModuleInterface` for getting the interface from the source of a smart contract module.
+- Function `calculateModuleReference` for getting the module reference.
+- Function `parseModuleInterface` for getting the interface from the source of a smart contract module.
+- Function `getEmbeddedModuleSchema` for getting the module schema embedded into a smart contract module source.
 - Smart contract related types `ContractName`, `EntrypointName` and helper functions `isInitName`, `isReceiveName`, `getContractNameFromInit` and `getNamesFromReceive`.
-- Add `DeployedModule` class for interaction with a smart contract module deployed on chain.
+- Add `ModuleClient` module and type for interaction with a smart contract module deployed on chain.
+- Add `Energy` module with helpers for transaction energy.
+- Add `BlockHash` module with helpers for block hashes.
+- Add `TransactionHash` module with helpers for transaction hashes.
+- Add `InitName` module with helpers for smart contract init-function names.
+- Add `ContractName` module with helpers for smart contract names.
+- Add `Parameter` module with helpers for smart contract parameters.
+- Add `AccountSequenceNumber` module with helpers for account sequence numbers (formerly referred to as nonce).
+- Add methods `getInstanceInfo` and `checkOnChain` on the generic contract client `Contract`.
 
 ### Fixed
 - Added missing fields to `getBlockChainParameters` response. (rootKeys, level1Keys, level2Keys)

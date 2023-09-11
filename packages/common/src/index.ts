@@ -78,4 +78,12 @@ export * from './cis2';
 export * from './cis0';
 export * from './cis4';
 export * from './GenericContract';
-export * from './DeployedModule';
+
+export * as ModuleClient from './ModuleClient';
+export * as Parameter from './Parameter';
+export * as AccountSequenceNumber from './AccountSequenceNumber';
+export * as Energy from './Energy';
+export * as TransactionHash from './TransactionHash';
+export * as BlockHash from './BlockHash';
+export * as ContractName from './ContractName';
+export * as InitName from './InitName';

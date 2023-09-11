@@ -16,7 +16,6 @@ import {
     TransactionEvent,
     TransferredEvent,
 } from './types/transactionEvent';
-import { InitName, ReceiveName } from './contractHelpers';
 
 export * from './types/NodeInfo';
 export * from './types/PeerInfo';
@@ -1783,9 +1782,9 @@ export interface InstanceInfoCommon {
     /** Account used to instantiate this smart contract instance. */
     owner: AccountAddress;
     /** List of receive functions currently exposed by this smart contract. These are of the form '<contractName>.<entrypointName>'. */
-    methods: ReceiveName[];
+    methods: string[];
     /** Name of the smart contract. This is of the form 'init_<contractName>'. */
-    name: InitName;
+    name: string;
 }
 
 export interface InstanceInfoV0 extends InstanceInfoCommon {

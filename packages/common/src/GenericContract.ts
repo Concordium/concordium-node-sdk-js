@@ -25,6 +25,7 @@ import { AccountAddress } from './types/accountAddress';
 import { CcdAmount } from './types/ccdAmount';
 import { TransactionExpiry } from './types/transactionExpiry';
 import { ModuleReference } from './types/moduleReference';
+import * as BlockHash from './BlockHash';
 
 /**
  * Metadata necessary for smart contract transactions
@@ -158,7 +159,7 @@ export type ContractCheckOnChainOptions = {
      * Hash of the block to check the information at.
      * When not provided the last finalized block is used.
      */
-    blockHash?: string;
+    blockHash?: BlockHash.Type;
     /**
      * The expected module reference to be used by the contract instance.
      * When not provided no check is done against the module reference.
@@ -247,14 +248,23 @@ class ContractBase<E extends string = string, V extends string = string> {
     /**
      * Get information on this smart contract instance.
      *
-     * @param {string} [blockHash] Hash of the block to check information at. When not provided the last finalized block is used.
+     * @param {BlockHash.Type} [blockHash] Hash of the block to check information at. When not provided the last finalized block is used.
 
      * @throws if the {@link InstanceInfo} of the contract could not be found.
 
      * @returns {InstanceInfo} The instance info.
      */
-    public async getInstanceInfo(blockHash?: string): Promise<InstanceInfo> {
-        return this.grpcClient.getInstanceInfo(this.contractAddress, blockHash);
+    public async getInstanceInfo(
+        blockHash?: BlockHash.Type
+    ): Promise<InstanceInfo> {
+        const blockHashHex =
+            blockHash === undefined
+                ? undefined
+                : BlockHash.toHexString(blockHash);
+        return this.grpcClient.getInstanceInfo(
+            this.contractAddress,
+            blockHashHex
+        );
     }
 
     /**

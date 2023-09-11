@@ -20,6 +20,9 @@ concordium_base.workspace = true
 ed25519_hd_key_derivation.workspace = true
 key_derivation.workspace = true
 concordium_rust_bindings_common.workspace = true
+ed25519-dalek = { version = "=1.0" }
+chrono = "0.4.24"
+serde_with = "3.0.0"
 
 [lib]
 name = "concordium_rust_bindings_wallet"

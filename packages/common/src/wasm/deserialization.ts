@@ -52,7 +52,7 @@ export type BlockItem =
 export function deserializeTransaction(
     serializedTransaction: Buffer
 ): BlockItem {
-    const cursor = new Cursor(serializedTransaction);
+    const cursor = Cursor.fromBuffer(serializedTransaction);
 
     const version = deserializeUint8(cursor);
     if (version !== 0) {

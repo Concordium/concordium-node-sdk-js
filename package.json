@@ -6,6 +6,7 @@
             "./packages/common",
             "./packages/nodejs",
             "./packages/web",
+            "./packages/ccd-js-gen",
             "./examples"
         ]
     },

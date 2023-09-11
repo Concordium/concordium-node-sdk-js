@@ -5,43 +5,27 @@ import type {
     Network,
     Versioned,
 } from '../types';
+import type {
+    AtomicProof,
+    GenericAtomicStatement,
+    GenericMembershipStatement,
+    GenericNonMembershipStatement,
+    GenericRangeStatement,
+    GenericRevealStatement,
+} from '../commonProofTypes';
 
-export enum StatementTypes {
-    RevealAttribute = 'RevealAttribute',
-    AttributeInSet = 'AttributeInSet',
-    AttributeNotInSet = 'AttributeNotInSet',
-    AttributeInRange = 'AttributeInRange',
-}
+export type RangeStatement = GenericRangeStatement<AttributeKey, string>;
+export type NonMembershipStatement = GenericNonMembershipStatement<
+    AttributeKey,
+    string
+>;
+export type MembershipStatement = GenericMembershipStatement<
+    AttributeKey,
+    string
+>;
+export type RevealStatement = GenericRevealStatement<AttributeKey>;
 
-export type RevealStatement = {
-    type: StatementTypes.RevealAttribute;
-    attributeTag: AttributeKey;
-};
-
-export type MembershipStatement = {
-    type: StatementTypes.AttributeInSet;
-    attributeTag: AttributeKey;
-    set: string[];
-};
-
-export type NonMembershipStatement = {
-    type: StatementTypes.AttributeNotInSet;
-    attributeTag: AttributeKey;
-    set: string[];
-};
-
-export type RangeStatement = {
-    type: StatementTypes.AttributeInRange;
-    attributeTag: AttributeKey;
-    lower: string;
-    upper: string;
-};
-
-export type AtomicStatement =
-    | RevealStatement
-    | MembershipStatement
-    | NonMembershipStatement
-    | RangeStatement;
+export type AtomicStatement = GenericAtomicStatement<AttributeKey, string>;
 export type IdStatement = AtomicStatement[];
 
 export type IdProofInput = {
@@ -56,21 +40,8 @@ export type IdProofInput = {
     challenge: string; // Hex
 };
 
-export type RevealProof = {
-    type: StatementTypes.RevealAttribute;
-    proof: string;
-    attribute: string;
-};
-
-// Type for proofs that do not have additional fields
-export type GenericAtomicProof = {
-    type: Exclude<StatementTypes, StatementTypes.RevealAttribute>;
-    proof: string;
-};
-
-export type AtomicProof = RevealProof | GenericAtomicProof;
 export type IdProof = {
-    proofs: AtomicProof[];
+    proofs: AtomicProof<string>[];
 };
 
 export type IdProofOutput = {

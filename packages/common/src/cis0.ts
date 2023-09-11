@@ -61,37 +61,30 @@ function serializeSupportIdentifiers(ids: CIS0.StandardIdentifier[]): Buffer {
 
 const deserializeSupportResult =
     makeDeserializeListResponse<CIS0.SupportResult>((cursor) => {
-        const rawType = cursor.read(1).readUInt8(0);
+        const type = cursor.read(1).readUInt8(0);
 
-        if (rawType > 2) {
+        if (type > 2) {
             throw new Error('Unsupported support result type');
         }
 
-        let value: CIS0.SupportResult;
-        if (rawType !== 2) {
-            const type =
-                rawType === 0
-                    ? CIS0.SupportType.NoSupport
-                    : CIS0.SupportType.Support;
-            value = { type };
-        } else {
-            const numAddresses = cursor.read(1).readUInt8(0);
-            const addresses: ContractAddress[] = [];
-
-            for (let i = 0; i < numAddresses; i++) {
-                const index = cursor.read(8).readBigUInt64LE(0) as bigint;
-                const subindex = cursor.read(8).readBigUInt64LE(0) as bigint;
-
-                addresses.push({ index, subindex });
-            }
-
-            value = {
-                type: CIS0.SupportType.SupportBy,
-                addresses,
-            };
+        if (type !== CIS0.SupportType.SupportBy) {
+            return { type };
         }
 
-        return value;
+        const numAddresses = cursor.read(1).readUInt8(0);
+        const addresses: ContractAddress[] = [];
+
+        for (let i = 0; i < numAddresses; i++) {
+            const index = cursor.read(8).readBigUInt64LE(0) as bigint;
+            const subindex = cursor.read(8).readBigUInt64LE(0) as bigint;
+
+            addresses.push({ index, subindex });
+        }
+
+        return {
+            type,
+            addresses,
+        };
     });
 
 /**
@@ -136,15 +129,15 @@ export async function cis0Supports(
     standardIds: CIS0.StandardIdentifier | CIS0.StandardIdentifier[],
     blockHash?: HexString
 ): Promise<CIS0.SupportResult | CIS0.SupportResult[] | undefined> {
-    const instanceInfo = await grpcClient.getInstanceInfo(contractAddress);
-
-    if (instanceInfo === undefined) {
-        throw new Error(
-            `Could not get contract instance info for contract at address ${stringify(
-                contractAddress
-            )}`
-        );
-    }
+    const instanceInfo = await grpcClient
+        .getInstanceInfo(contractAddress)
+        .catch((e) => {
+            throw new Error(
+                `Could not get contract instance info for contract at address ${stringify(
+                    contractAddress
+                )}: ${e.message ?? e}`
+            );
+        });
 
     const contractName = getContractName(instanceInfo);
 

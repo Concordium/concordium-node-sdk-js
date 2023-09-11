@@ -1610,6 +1610,128 @@ export const regularAccountInfo = {
     accountAddress: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
 };
 
+const rootKeys = {
+    keys: [
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                'f4c9fb9da8d2b00cb6e1fd241b6271a0c4afcb3784e7e6c323bda7ed0b80a478',
+        },
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                'fb33c5e41da199869d2c841a368afc81ea44c35d099c424a61d4ddc443d24e9e',
+        },
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                'aaf42b7dac02066b6d0850ba9aa0ecd9d91b7c7a31e560e2e045dcf15c2c13b9',
+        },
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                '6bda0894ad593c6abce19d05427b60f6e8fdf63ca1b6c45d0887f141a52feba3',
+        },
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                '66e1fd747994bf551a67b5e0f63b0c781a56fce210b01e9b4fd1df02eb8663d7',
+        },
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                '85e281c689809a29dca12cc2d27314074dc49c3882a0e73fdb05709653b7f101',
+        },
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                'dd123b22281402437f9aa3d550d106b45b9b963735f6d4591ed9d15eea003b0e',
+        },
+    ],
+    threshold: 5,
+};
+
+const level1Keys = {
+    keys: [
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                '55721372d942742db382c3680737a424fe3234cf82a80d42da008d6b47179500',
+        },
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                '99b17b4de2e5793e63ec0c9672cca3b4c029d1d958acebd440d46c5851713faf',
+        },
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                '7cc3e70a4631942123ab7beb219ef442cfb2239b8181bef0454ede3249f8fe9f',
+        },
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                'cd8d12dc61a56ab19d881296fdde24caff8a41521ff06ef0a374691e0130bbaa',
+        },
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                '25117967859fabb264ac525d0d4a5a19a119f4b6cf8f3be791544f75b71f2bf3',
+        },
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                '0d2190f445402eebb17460fd4d7992f9b016f1e88b165d6853971012dfc3286f',
+        },
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                '40392e3c2d155a0cac4dd82b9f775851c2e267b069ab586780121fe6e07b1053',
+        },
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                'a0a02204ca7cc252c76df1592439c2c144e68ffe8dacfd56826d115d61772a0a',
+        },
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                '54854dc24f53c0f71f6cfd2c94cf1b92b7018f67b450e334d0d526d74f6b16ec',
+        },
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                'd5a10ff8a0d4cd7077064c0475fab3740f41dc9a1b33c6d025b83f99bd2242be',
+        },
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                '512f0c4a7db3b920b1de13a8083b85ac757f927cf3920027cc874e7a49735296',
+        },
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                '8b6834f6db50423eb0566621a49ab5cc0b3aec363acb403bd6c2970ece77e532',
+        },
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                '9528818668372088533186a6113463e3d7c38c101edf5eb9f59e1fa6f9a9b917',
+        },
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                '5d2d7afd2549e7072216bc21b3ac3ce02eebd5ea5073f147568fa30072f0b59c',
+        },
+        {
+            schemeId: 'Ed25519',
+            verifyKey:
+                '9d40193ed95936475bdbe6c2595ab0bc948ee40dad3fb10b0aa1a823f5fc9bcc',
+        },
+    ],
+    threshold: 7,
+};
+
 export const chainParameters: ChainParametersV1 = {
     electionDifficulty: 0.025,
     euroPerEnergy: { numerator: 1n, denominator: 50000n },
@@ -1642,7 +1764,147 @@ export const chainParameters: ChainParametersV1 = {
         },
         mintDistribution: { bakingReward: 0.6, finalizationReward: 0.3 },
     },
+    level1Keys,
+    level2Keys: {
+        addAnonymityRevoker: {
+            authorizedKeys: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+            threshold: 7,
+        },
+        addIdentityProvider: {
+            authorizedKeys: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+            threshold: 7,
+        },
+        cooldownParameters: {
+            authorizedKeys: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+            threshold: 7,
+        },
+        electionDifficulty: {
+            authorizedKeys: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+            threshold: 7,
+        },
+        emergency: {
+            authorizedKeys: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+            threshold: 7,
+        },
+        euroPerEnergy: {
+            authorizedKeys: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+            threshold: 7,
+        },
+        foundationAccount: {
+            authorizedKeys: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+            threshold: 7,
+        },
+        keys: [
+            {
+                schemeId: 'Ed25519',
+                verifyKey:
+                    'b8ddf4505a37eee2c046671f634b74cf3630f3958ad70a04f39dc843041965be',
+            },
+            {
+                schemeId: 'Ed25519',
+                verifyKey:
+                    '6f39b453a1f2d04be8e1d34822d4819af1bae7bd10bd0d1f05cbdbfc0907886f',
+            },
+            {
+                schemeId: 'Ed25519',
+                verifyKey:
+                    'bf1dbf2070a9af3f469f829817c929ca98349bf383180abf53fa5d349c2ae72f',
+            },
+            {
+                schemeId: 'Ed25519',
+                verifyKey:
+                    '691dea8d3aeb620e08130d0cddb68156809e894f603763990a2b21af5b17d916',
+            },
+            {
+                schemeId: 'Ed25519',
+                verifyKey:
+                    'd6e2ec35c642f52681921b313e4563fda16ab893b8597417778ffd57748a4f30',
+            },
+            {
+                schemeId: 'Ed25519',
+                verifyKey:
+                    '4fefb5ee8f8f46ecb86accbf44218e7699eb4937122a284d349db9f8e70a9794',
+            },
+            {
+                schemeId: 'Ed25519',
+                verifyKey:
+                    'b43e41e008c520c421df2229ea2af816d907d2f085b82b3cadc156165d49ed2a',
+            },
+            {
+                schemeId: 'Ed25519',
+                verifyKey:
+                    '7386b8a50d01797f95e594112ca1734d2dc2984235c58c9cf5c18a07f7cef98c',
+            },
+            {
+                schemeId: 'Ed25519',
+                verifyKey:
+                    '56a75f4399a0671fd8a11d88b59c33be00ffb9328a31a41467ce98ddd932dcb1',
+            },
+            {
+                schemeId: 'Ed25519',
+                verifyKey:
+                    '9974b5868241dd1eee38edda8ad64cfb23722e280ef09286c8a1c7a3c3ba1f40',
+            },
+            {
+                schemeId: 'Ed25519',
+                verifyKey:
+                    'fd363dfd04f319848c3d766bc617a5f88f0044f1813cc4a2140a6d28e9b62cce',
+            },
+            {
+                schemeId: 'Ed25519',
+                verifyKey:
+                    '528281d04d8d74dba67fac53460fa3e2ff2f171f16363d80f679877821b538d2',
+            },
+            {
+                schemeId: 'Ed25519',
+                verifyKey:
+                    '8ebab6f84c237b331d54a2f611ea8fceeba5b9e0ffff7a096a172f034257999f',
+            },
+            {
+                schemeId: 'Ed25519',
+                verifyKey:
+                    '616fe3f0441f87e2ba32194faf6c3ea658cac5d31353303a45ca3d1d4164a4f1',
+            },
+            {
+                schemeId: 'Ed25519',
+                verifyKey:
+                    'e1f1c6971705da9c2a50be7967609c092fe295a88c71fbf18dd90cc6d81508f2',
+            },
+        ],
+        microGTUPerEuro: {
+            authorizedKeys: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+            threshold: 2,
+        },
+        mintDistribution: {
+            authorizedKeys: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+            threshold: 7,
+        },
+        paramGASRewards: {
+            authorizedKeys: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+            threshold: 7,
+        },
+        poolParameters: {
+            authorizedKeys: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+            threshold: 7,
+        },
+        protocol: {
+            authorizedKeys: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+            threshold: 7,
+        },
+        timeParameters: {
+            authorizedKeys: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+            threshold: 7,
+        },
+        transactionFeeDistribution: {
+            authorizedKeys: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+            threshold: 7,
+        },
+    },
+    rootKeys,
 };
+
+const { cooldownParameters, timeParameters, ...oldLevel2Keys } =
+    chainParameters.level2Keys;
 
 export const oldChainParameters: ChainParametersV0 = {
     electionDifficulty: 0.025,
@@ -1666,6 +1928,9 @@ export const oldChainParameters: ChainParametersV0 = {
             mintPerSlot: 7.555665e-10,
         },
     },
+    level1Keys,
+    level2Keys: oldLevel2Keys,
+    rootKeys,
 };
 
 export const bakerPoolStatus = {

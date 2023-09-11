@@ -1,20 +1,14 @@
-import {
-    getAccountPublicKey,
-    getAccountSigningKey,
-    getAttributeCommitmentRandomness,
-    getCredentialId,
-    getIdCredSec,
-    getPrfKey,
-    getSignatureBlindingRandomness,
-    getVerifiableCredentialEncryptionKey,
-    getVerifiableCredentialPublicKey,
-    getVerifiableCredentialSigningKey,
-} from '@concordium/rust-bindings/wallet';
+import * as wasm from '@concordium/rust-bindings/wallet';
 import { mnemonicToSeedSync, validateMnemonic } from '@scure/bip39';
 import { wordlist } from '@scure/bip39/wordlists/english';
 import { Buffer } from 'buffer/';
-import { AttributesKeys, Network, CryptographicParameters } from '../types';
 import { isHex } from '../util';
+import {
+    AttributesKeys,
+    Network,
+    CryptographicParameters,
+    ContractAddress,
+} from '../types';
 
 /**
  * Class for Hierarchical Deterministic key derivation for Concordium identities and accounts.
@@ -58,7 +52,7 @@ export class ConcordiumHdWallet {
         credentialCounter: number
     ): Buffer {
         return Buffer.from(
-            getAccountSigningKey(
+            wasm.getAccountSigningKey(
                 this.seedAsHex,
                 this.network,
                 identityProviderIndex,
@@ -74,7 +68,7 @@ export class ConcordiumHdWallet {
         credentialCounter: number
     ): Buffer {
         return Buffer.from(
-            getAccountPublicKey(
+            wasm.getAccountPublicKey(
                 this.seedAsHex,
                 this.network,
                 identityProviderIndex,
@@ -94,7 +88,7 @@ export class ConcordiumHdWallet {
         }: Pick<CryptographicParameters, 'onChainCommitmentKey'>
     ): Buffer {
         return Buffer.from(
-            getCredentialId(
+            wasm.getCredentialId(
                 this.seedAsHex,
                 this.network,
                 identityProviderIndex,
@@ -108,7 +102,7 @@ export class ConcordiumHdWallet {
 
     getPrfKey(identityProviderIndex: number, identityIndex: number): Buffer {
         return Buffer.from(
-            getPrfKey(
+            wasm.getPrfKey(
                 this.seedAsHex,
                 this.network,
                 identityProviderIndex,
@@ -120,7 +114,7 @@ export class ConcordiumHdWallet {
 
     getIdCredSec(identityProviderIndex: number, identityIndex: number): Buffer {
         return Buffer.from(
-            getIdCredSec(
+            wasm.getIdCredSec(
                 this.seedAsHex,
                 this.network,
                 identityProviderIndex,
@@ -135,7 +129,7 @@ export class ConcordiumHdWallet {
         identityIndex: number
     ): Buffer {
         return Buffer.from(
-            getSignatureBlindingRandomness(
+            wasm.getSignatureBlindingRandomness(
                 this.seedAsHex,
                 this.network,
                 identityProviderIndex,
@@ -151,7 +145,7 @@ export class ConcordiumHdWallet {
         attribute: AttributesKeys
     ): Buffer {
         return Buffer.from(
-            getAttributeCommitmentRandomness(
+            wasm.getAttributeCommitmentRandomness(
                 this.seedAsHex,
                 this.network,
                 identityProviderIndex,
@@ -164,12 +158,15 @@ export class ConcordiumHdWallet {
     }
 
     getVerifiableCredentialSigningKey(
+        issuer: ContractAddress,
         verifiableCredentialIndex: number
     ): Buffer {
         return Buffer.from(
-            getVerifiableCredentialSigningKey(
+            wasm.getVerifiableCredentialSigningKey(
                 this.seedAsHex,
                 this.network,
+                issuer.index,
+                issuer.subindex,
                 verifiableCredentialIndex
             ),
             'hex'
@@ -177,26 +174,26 @@ export class ConcordiumHdWallet {
     }
 
     getVerifiableCredentialPublicKey(
+        issuer: ContractAddress,
         verifiableCredentialIndex: number
     ): Buffer {
         return Buffer.from(
-            getVerifiableCredentialPublicKey(
+            wasm.getVerifiableCredentialPublicKey(
                 this.seedAsHex,
                 this.network,
+                issuer.index,
+                issuer.subindex,
                 verifiableCredentialIndex
             ),
             'hex'
         );
     }
 
-    getVerifiableCredentialEncryptionKey(
-        verifiableCredentialIndex: number
-    ): Buffer {
+    getVerifiableCredentialBackupEncryptionKey(): Buffer {
         return Buffer.from(
-            getVerifiableCredentialEncryptionKey(
+            wasm.getVerifiableCredentialBackupEncryptionKey(
                 this.seedAsHex,
-                this.network,
-                verifiableCredentialIndex
+                this.network
             ),
             'hex'
         );

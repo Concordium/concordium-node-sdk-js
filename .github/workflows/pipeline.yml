@@ -86,6 +86,7 @@ jobs:
             ./packages/nodejs/lib
             ./packages/common/grpc
             ./packages/nodejs/grpc
+            ./packages/ccd-js-gen/lib
 
   typecheck-examples:
     runs-on: ubuntu-22.04
@@ -158,6 +159,7 @@ jobs:
 
   lint:
     runs-on: ubuntu-22.04
+    needs: build
     if: github.event.pull_request.draft == false
     steps:
       - uses: actions/checkout@v3
@@ -166,6 +168,11 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
+
+      - name: Get build-debug
+        uses: ./.github/actions/download-artifact
+        with:
+          name: build-debug
 
       - name: Install dependencies
         run: yarn install --immutable

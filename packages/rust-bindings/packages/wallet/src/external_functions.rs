@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use crate::aux_functions::*;
 use concordium_rust_bindings_common::{
     helpers::{to_js_error, JsResult},
@@ -200,30 +202,44 @@ pub fn get_attribute_commitment_randomness_ext(
 pub fn get_verifiable_credential_signing_key_ext(
     seed_as_hex: HexString,
     raw_net: &str,
+    issuer_index: u64,
+    issuer_subindex: u64,
     verifiable_credential_index: u32,
 ) -> JsResult<HexString> {
-    get_verifiable_credential_signing_key_aux(seed_as_hex, raw_net, verifiable_credential_index)
-        .map_err(to_js_error)
+    get_verifiable_credential_signing_key_aux(
+        seed_as_hex,
+        raw_net,
+        issuer_index,
+        issuer_subindex,
+        verifiable_credential_index,
+    )
+    .map_err(to_js_error)
 }
 
 #[wasm_bindgen(js_name = getVerifiableCredentialPublicKey)]
 pub fn get_verifiable_credential_public_key_ext(
     seed_as_hex: HexString,
     raw_net: &str,
+    issuer_index: u64,
+    issuer_subindex: u64,
     verifiable_credential_index: u32,
 ) -> JsResult<HexString> {
-    get_verifiable_credential_public_key_aux(seed_as_hex, raw_net, verifiable_credential_index)
-        .map_err(to_js_error)
+    get_verifiable_credential_public_key_aux(
+        seed_as_hex,
+        raw_net,
+        issuer_index,
+        issuer_subindex,
+        verifiable_credential_index,
+    )
+    .map_err(to_js_error)
 }
 
-#[wasm_bindgen(js_name = getVerifiableCredentialEncryptionKey)]
-pub fn get_verifiable_credential_encryption_key_ext(
+#[wasm_bindgen(js_name = getVerifiableCredentialBackupEncryptionKey)]
+pub fn get_verifiable_credential_backup_encryption_key_ext(
     seed_as_hex: HexString,
     raw_net: &str,
-    verifiable_credential_index: u32,
 ) -> JsResult<HexString> {
-    get_verifiable_credential_encryption_key_aux(seed_as_hex, raw_net, verifiable_credential_index)
-        .map_err(to_js_error)
+    get_verifiable_credential_backup_encryption_key_aux(seed_as_hex, raw_net).map_err(to_js_error)
 }
 
 #[wasm_bindgen(js_name = serializeCredentialDeploymentPayload)]
@@ -247,4 +263,25 @@ pub fn generate_baker_keys_ext(sender: Base58String) -> JsResult {
         .parse()
         .map_err(|e| JsError::new(&format!("Unable to parse sender account address: {}", e)))?;
     generate_baker_keys(sender).map_err(to_js_error)
+}
+
+#[wasm_bindgen(js_name = createWeb3IdProof)]
+pub fn create_web3_id_proof_ext(raw_input: JsonString) -> JsResult {
+    let input = serde_json::from_str(&raw_input)?;
+    create_web3_id_proof_aux(input).map_err(to_js_error)
+}
+
+#[wasm_bindgen(js_name = verifyWeb3IdCredentialSignature)]
+pub fn verify_web3_id_credential_signature_ext(raw_input: JsonString) -> JsResult<bool> {
+    let input = serde_json::from_str(&raw_input)?;
+    verify_web3_id_credential_signature_aux(input).map_err(to_js_error)
+}
+
+#[wasm_bindgen(js_name = compareStringAttributes)]
+pub fn compare_string_attributes_ext(attribute1: String, attribute2: String) -> i8 {
+    match compare_string_attributes_aux(attribute1, attribute2) {
+        Ordering::Less => -1,
+        Ordering::Equal => 0,
+        Ordering::Greater => 1,
+    }
 }

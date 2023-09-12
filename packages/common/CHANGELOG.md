@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 9.4.0
 
 ### Breaking changes
 
@@ -15,11 +15,12 @@
 - All JSON serialization in `serialization.ts` is now handled by `json-bigint` meaning that all functions now correctly handles bigint inputs
 - `sendUpdateInstruction` to the gRPC Client.
 - `healthCheck` to the gRPC Client.
--   `Module` class for functionality related to smart contract modules, such as parsing the WebAssembly and interface of the module.
--   Smart contract related types `ContractName`, `EntrypointName` and helper functions `isInitName`, `isReceiveName`, `getContractNameFromInit` and `getNamesFromReceive`.
+- Functions `calculateModuleReference` for getting the module reference and `parseModuleInterface` for getting the interface from the source of a smart contract module.
+- Smart contract related types `ContractName`, `EntrypointName` and helper functions `isInitName`, `isReceiveName`, `getContractNameFromInit` and `getNamesFromReceive`.
 
 ### Fixed
 - Added missing fields to `getBlockChainParameters` response. (rootKeys, level1Keys, level2Keys)
+- Use of bigint exponentiation causing issues in web.
 
 ## 9.3.0
 

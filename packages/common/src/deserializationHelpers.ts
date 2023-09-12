@@ -26,13 +26,30 @@ export class Cursor {
         return new Cursor(Buffer.from(data, 'hex'));
     }
 
-    /** Read a number of bytes from the cursor */
-    public read(numBytes: number): Buffer {
-        const data = Buffer.from(
-            this.data.subarray(this.cursor, this.cursor + numBytes)
-        );
-        this.cursor += numBytes;
+    /**
+     * Constructs a `Cursor` from a buffer of bytes.
+     *
+     * @param {ArrayBuffer} buffer - the buffer containing bytes.
+     *
+     * @returns {Cursor} a Cursor wrapping the data.
+     */
+    public static fromBuffer(buffer: ArrayBuffer): Cursor {
+        return new Cursor(Buffer.from(buffer));
+    }
 
+    /**
+     * Read a number of bytes from the cursor.
+     * @throws If the buffer contains fewer bytes than being read.
+     */
+    public read(numBytes: number): Buffer {
+        const end = this.cursor + numBytes;
+        if (this.data.length < end) {
+            throw new Error(
+                `Failed to read ${numBytes} bytes from the cursor.`
+            );
+        }
+        const data = Buffer.from(this.data.subarray(this.cursor, end));
+        this.cursor += numBytes;
         return data;
     }
 
@@ -40,6 +57,79 @@ export class Cursor {
     public get remainingBytes(): Buffer {
         return Buffer.from(this.data.subarray(this.cursor));
     }
+}
+
+/**
+ * Represents function for deserilizing some value from a {@link Cursor}.
+ * @template A The value to deserialize.
+ */
+export interface Deserializer<A> {
+    (cursor: Cursor): A;
+}
+
+/**
+ * Deserialize a single byte from the cursor.
+ * @param {Cursor} cursor Cursor over the data to deserialize from.
+ * @returns {number} The value of the single byte.
+ * @throws If the buffer contains fewer bytes than being read.
+ */
+export function deserializeUInt8(cursor: Cursor): number {
+    return cursor.read(1).readUInt8(0);
+}
+/**
+ * Deserialize a u16 little endian from the cursor.
+ * @param {Cursor} cursor Cursor over the data to deserialize from.
+ * @returns {number} The deserialized value.
+ * @throws If the buffer contains fewer bytes than being read.
+ */
+export function deserializeUInt16LE(cursor: Cursor): number {
+    return cursor.read(2).readUInt16LE(0);
+}
+/**
+ * Deserialize a u32 little endian from the cursor.
+ * @param {Cursor} cursor Cursor over the data to deserialize from.
+ * @returns {number} The deserialized value.
+ * @throws If the buffer contains fewer bytes than being read.
+ */
+export function deserializeUInt32LE(cursor: Cursor): number {
+    return cursor.read(4).readUInt32LE(0);
+}
+/**
+ * Deserialize a u64 little endian from the cursor.
+ * @param {Cursor} cursor Cursor over the data to deserialize from.
+ * @returns {bigint} The deserialized value.
+ * @throws If the buffer contains fewer bytes than being read.
+ */
+export function deserializeBigUInt64LE(cursor: Cursor): bigint {
+    return cursor.read(8).readBigInt64LE(0).valueOf();
+}
+
+/**
+ * Deserialize a u16 big endian from the cursor.
+ * @param {Cursor} cursor Cursor over the data to deserialize from.
+ * @returns {number} The deserialized value.
+ * @throws If the buffer contains fewer bytes than being read.
+ */
+export function deserializeUInt16BE(cursor: Cursor): number {
+    return cursor.read(2).readUInt16BE(0);
+}
+/**
+ * Deserialize a u32 big endian from the cursor.
+ * @param {Cursor} cursor Cursor over the data to deserialize from.
+ * @returns {number} The deserialized value.
+ * @throws If the buffer contains fewer bytes than being read.
+ */
+export function deserializeUInt32BE(cursor: Cursor): number {
+    return cursor.read(4).readUInt32BE(0);
+}
+/**
+ * Deserialize a u64 big endian from the cursor.
+ * @param {Cursor} cursor Cursor over the data to deserialize from.
+ * @returns {bigint} The deserialized value.
+ * @throws If the buffer contains fewer bytes than being read.
+ */
+export function deserializeBigUInt64BE(cursor: Cursor): bigint {
+    return cursor.read(8).readBigInt64BE(0).valueOf();
 }
 
 /**

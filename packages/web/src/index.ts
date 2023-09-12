@@ -10,3 +10,4 @@ export * from './pub/json-rpc';
 export * from './pub/cis0';
 export * from './pub/cis2';
 export * from './pub/cis4';
+export * from './pub/web3-id';

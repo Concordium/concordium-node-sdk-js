@@ -1,5 +1,28 @@
 # Changelog
 
+## Unreleased
+
+### Breaking changes
+
+- The package has been split into several entrypoints to decrease the size of bundles produced for applications using only part of the functionality provided.
+  - `@concordium/common-sdk` exposes the full API of the SDK.
+  - `@concordium/common-sdk/cis0` entrypoint exposes functionality for working with contracts adhering to the [CIS-0](https://proposals.concordium.software/CIS/cis-0.html) standard.
+  - `@concordium/common-sdk/cis2` entrypoint exposes functionality for working with contracts adhering to the [CIS-2](https://proposals.concordium.software/CIS/cis-2.html) standard.
+  - `@concordium/common-sdk/cis4` entrypoint exposes functionality for working with contracts adhering to the [CIS-4](https://proposals.concordium.software/CIS/cis-4.html) standard.
+  - `@concordium/common-sdk/grpc` entrypoint exposes the grpc client for interacting with a nodes GRPCv2 interface.
+  - `@concordium/common-sdk/id` entrypoint exposes functionality for working with ID proofs.
+  - `@concordium/common-sdk/json-rpc` entrypoint exposes the **(deprecated)** json-rpc client for interacting with a nodes GPRCv1 interface.
+  - `@concordium/common-sdk/schema` entrypoint exposes functionality for working with smart contract schemas, i.e.(de)serializing types using a smart contract schema.
+    - This uses the wasm entrypoint at `@concordium/rust-bindings/dapp`.
+  - `@concordium/common-sdk/types` entrypoint exposes functionality for working with concordium domain types.
+  - `@concordium/common-sdk/wasm` entrypoint exposes a variety of functionality for working with concordium domain types, which requires WASM.
+    - This uses the wasm entrypoint at `@concorodium/rust-bindings/wallet`.
+  - `@concordium/common-sdk/web3-id` entrypoint exposes functionality for working with web3-id proofs.
+  - This change makes the library **incompatible** with node versions <16 and requires bundlers to respect the `exports` field of `package.json`.
+  - For TypeScript projects the minimum required version of typescript is:
+    - NodeJS: 4.7, `"moduleResolution": "node16" // or "nodenext"`
+    - Bundled applications (webpack, esbuild, rollup, etc...): 5.0, `"moduleResolution": "bundler"`
+
 ## 6.4.0
 
 - Bumped @concordium/common-sdk to 9.4.0.

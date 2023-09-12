@@ -70,7 +70,7 @@ jobs:
                       packages/nodejs/lib
                       packages/web/lib
                       packages/rust-bindings/lib/**/index*
-                      packages/*/grpc
+                      packages/*/grpc-api
                       packages/*/package.json
                       packages/*/README.md
 

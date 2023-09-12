@@ -1,5 +1,4 @@
 import { Buffer } from 'buffer/';
-import * as wasm from '@concordium/rust-bindings/wallet';
 import {
     AttributeKey,
     AttributeKeyString,
@@ -21,7 +20,6 @@ import {
     StatementProverQualifier,
     VerifiableCredentialQualifier,
     CredentialSchemaSubject,
-    Web3IdProofInput,
     AccountCommitmentInput,
     Web3IssuerCommitmentInput,
     CredentialStatement,
@@ -39,8 +37,6 @@ import {
     EU_MEMBERS,
 } from '../commonProofTypes';
 import { ConcordiumHdWallet } from '../wasm/HdWallet';
-import { stringify } from 'json-bigint';
-import { VerifiablePresentation } from '../types/VerifiablePresentation';
 import {
     compareStringAttributes,
     isStringAttributeInRange,
@@ -597,23 +593,6 @@ export class Web3StatementBuilder {
 
     getStatements(): CredentialStatements {
         return this.statements;
-    }
-}
-
-/**
- * Given a statement about an identity and the inputs necessary to prove the statement, produces a proof that the associated identity fulfills the statement.
- */
-export function getVerifiablePresentation(
-    input: Web3IdProofInput
-): VerifiablePresentation {
-    try {
-        const s: VerifiablePresentation = VerifiablePresentation.fromString(
-            // Use json-bigint stringify to ensure we can handle bigints
-            wasm.createWeb3IdProof(stringify(input))
-        );
-        return s;
-    } catch (e) {
-        throw new Error(e as string);
     }
 }
 

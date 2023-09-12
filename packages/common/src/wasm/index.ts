@@ -8,3 +8,4 @@ export { generateBakerKeys } from './accountHelpers';
 export * from './HdWallet';
 export * from './identity';
 export * from './credentialDeploymentTransactions';
+export * from './web3Id';

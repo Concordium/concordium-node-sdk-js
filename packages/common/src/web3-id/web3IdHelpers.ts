@@ -1,5 +1,3 @@
-import * as wasm from '@concordium/rust-bindings/wallet';
-import { stringify } from 'json-bigint';
 import { ContractAddress, CryptographicParameters } from '../types';
 import {
     AttributeType,
@@ -18,23 +16,27 @@ export type VerifyWeb3IdCredentialSignatureInput = {
 };
 
 /**
- * Verifies that the given signature is correct for the given values/randomness/holder/issuerPublicKey/issuerContract
- */
-export function verifyWeb3IdCredentialSignature(
-    input: VerifyWeb3IdCredentialSignatureInput
-): boolean {
-    // Use json-bigint stringify to ensure we can handle bigints
-    return wasm.verifyWeb3IdCredentialSignature(stringify(input));
-}
-
-/**
  * Compares a and b as field elements.
  * if a < b then compareStringAttributes(a,b) = -1;
  * if a == b then compareStringAttributes(a,b) = 0;
  * if a > b then compareStringAttributes(a,b) = 1;
  */
 export function compareStringAttributes(a: string, b: string): number {
-    return wasm.compareStringAttributes(a, b);
+    const encoder = new TextEncoder();
+    const aBytes = encoder.encode(a);
+    const bBytes = encoder.encode(b);
+
+    if (aBytes.length < bBytes.length) return -1;
+    if (aBytes.length > bBytes.length) return 1;
+
+    for (const [i, aByte] of aBytes.entries()) {
+        const bByte = bBytes[i];
+
+        if (aByte === bBytes[i]) continue;
+        return aByte < bByte ? -1 : 1;
+    }
+
+    return 0;
 }
 
 /**

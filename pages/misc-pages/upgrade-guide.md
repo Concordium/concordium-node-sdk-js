@@ -1,15 +1,16 @@
-## Common SDK version 10 (Web 6) (Node 10)
+## Common SDK version 10 (Web 7) (Node 10)
 
 ### Web
 
 The `@concordium/web-sdk` now requires bundlers to respect `exports` field of `package.json` of a module. This is due to relying on entrypoints declared in the `exports` field of `@concordium/common-sdk`
 and correspondingly `@concordium/rust-bindings` to make it possible to select only parts of the SDK to include in your application.
+Furthermore, the SDK is now published as an ES module, making it possible to eliminate dead code.
 
 For **TypeScript** users, at least typescript version 5 is required along with the setting `compilerOptions.moduleResultion` to `"bundler"` to match the resolution strategy of modern bundlers.
 
 The following entrypoints are made available for consumers of `@concordium/web-sdk`:
 
-- `@concordium/web-sdk` exposes the full API of the SDK.
+- `@concordium/web-sdk` exposes the full API of the SDK. This can safely be used by projects built with ES modules.
 - `@concordium/web-sdk/cis0` entrypoint exposes functionality for working with contracts adhering to the [CIS-0](https://proposals.concordium.software/CIS/cis-0.html) standard.
 - `@concordium/web-sdk/cis2` entrypoint exposes functionality for working with contracts adhering to the [CIS-2](https://proposals.concordium.software/CIS/cis-2.html) standard.
 - `@concordium/web-sdk/cis4` entrypoint exposes functionality for working with contracts adhering to the [CIS-4](https://proposals.concordium.software/CIS/cis-4.html) standard.
@@ -64,7 +65,7 @@ const config: Configuration = {
     },
     experiments: {
         asyncWebAssembly: true // Needed to handle bundler-specific wasm entrypoint
-    },
+    }
 };
 
 export default config;

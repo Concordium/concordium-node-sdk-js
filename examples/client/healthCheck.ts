@@ -1,4 +1,4 @@
-import { parseEndpoint } from '../shared/util';
+import { parseEndpoint } from '../shared/util.js';
 import { createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 

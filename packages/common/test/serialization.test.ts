@@ -105,12 +105,12 @@ test('Parameter serialization works for U64_MAX', () => {
         'test',
         'receive',
         U64_MAX,
-        Buffer.from(TEST_CONTRACT_U64, 'base64'),
+        Buffer.from(TEST_CONTRACT_U64, 'base64')
     );
     const initParam = serializeInitContractParameters(
         'test',
         U64_MAX,
-        Buffer.from(TEST_CONTRACT_U64, 'base64'),
+        Buffer.from(TEST_CONTRACT_U64, 'base64')
     );
     expect(updateParam.toString('hex')).toEqual('ffffffffffffffff');
     expect(initParam.toString('hex')).toEqual('ffffffffffffffff');
@@ -124,13 +124,13 @@ test('Parameter serialization errors on (U64_MAX + 1)', () => {
             'test',
             'receive',
             U64_MAX + 1n,
-            Buffer.from(TEST_CONTRACT_U64, 'base64'),
+            Buffer.from(TEST_CONTRACT_U64, 'base64')
         );
     const initParam = () =>
         serializeInitContractParameters(
             'test',
             U64_MAX + 1n,
-            Buffer.from(TEST_CONTRACT_U64, 'base64'),
+            Buffer.from(TEST_CONTRACT_U64, 'base64')
         );
     expect(updateParam).toThrow(errMsg);
     expect(initParam).toThrow(errMsg);

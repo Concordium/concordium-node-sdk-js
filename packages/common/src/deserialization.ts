@@ -342,7 +342,7 @@ export function deserializeTypeValue(
         verboseErrorMessage
     );
     return JSONbig({
-            alwaysParseAsBig: true,
-            useNativeBigInt: true,
-        }).parse(deserializedValue);
+        alwaysParseAsBig: true,
+        useNativeBigInt: true,
+    }).parse(deserializedValue);
 }

@@ -1,8 +1,4 @@
-import {
-    createIdRequestV1 as createIdRequestV1Wasm,
-    createIdentityRecoveryRequest as createIdentityRecoveryRequestWasm,
-    createIdProof as createIdProofWasm,
-} from '@concordium/rust-bindings/wallet';
+import * as wasm from '@concordium/rust-bindings/wallet';
 import type {
     ArInfo,
     CryptographicParameters,
@@ -30,7 +26,7 @@ export type IdentityRequestInput = {
 export function createIdentityRequest(
     input: IdentityRequestInput
 ): Versioned<IdObjectRequestV1> {
-    const rawRequest = createIdRequestV1Wasm(JSON.stringify(input));
+    const rawRequest = wasm.createIdRequestV1(JSON.stringify(input));
     try {
         return JSON.parse(rawRequest).idObjectRequest;
     } catch (e) {
@@ -53,7 +49,9 @@ export type IdentityRecoveryRequestInput = {
 export function createIdentityRecoveryRequest(
     input: IdentityRecoveryRequestInput
 ): Versioned<IdRecoveryRequest> {
-    const rawRequest = createIdentityRecoveryRequestWasm(JSON.stringify(input));
+    const rawRequest = wasm.createIdentityRecoveryRequest(
+        JSON.stringify(input)
+    );
     try {
         return JSON.parse(rawRequest).idRecoveryRequest;
     } catch (e) {
@@ -65,7 +63,7 @@ export function createIdentityRecoveryRequest(
  * Given a statement about an identity and the inputs necessary to prove the statement, produces a proof that the associated identity fulfills the statement.
  */
 export function getIdProof(input: IdProofInput): IdProofOutput {
-    const rawRequest = createIdProofWasm(JSON.stringify(input));
+    const rawRequest = wasm.createIdProof(JSON.stringify(input));
     let out: IdProofOutput;
     try {
         out = JSON.parse(rawRequest);

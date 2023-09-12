@@ -1,7 +1,4 @@
-import {
-    getDeploymentDetails as getDeploymentDetailsWasm,
-    serializeCredentialDeploymentPayload as serializeCredentialDeploymentPayloadWasm,
-} from '@concordium/rust-bindings/wallet';
+import * as wasm from '@concordium/rust-bindings/wallet';
 import { Buffer } from 'buffer/';
 import type {
     CredentialDeploymentDetails,
@@ -26,7 +23,7 @@ export function getCredentialDeploymentTransactionHash(
     signatures: string[]
 ): string {
     const credentialDeploymentInfo: DeploymentDetailsResult = JSON.parse(
-        getDeploymentDetailsWasm(
+        wasm.getDeploymentDetails(
             signatures,
             JSON.stringify(credentialDeployment.unsignedCdi),
             credentialDeployment.expiry.expiryEpochSeconds
@@ -47,7 +44,7 @@ export function serializeCredentialDeploymentTransactionForSubmission(
     signatures: string[]
 ): Buffer {
     const credentialDeploymentInfo: DeploymentDetailsResult = JSON.parse(
-        getDeploymentDetailsWasm(
+        wasm.getDeploymentDetails(
             signatures,
             JSON.stringify(credentialDeployment.unsignedCdi),
             credentialDeployment.expiry.expiryEpochSeconds
@@ -60,7 +57,7 @@ export function serializeCredentialDeploymentPayload(
     signatures: string[],
     credentialDeploymentTransaction: CredentialDeploymentTransaction
 ): Buffer {
-    const payloadByteArray = serializeCredentialDeploymentPayloadWasm(
+    const payloadByteArray = wasm.serializeCredentialDeploymentPayload(
         signatures,
         JSON.stringify(credentialDeploymentTransaction.unsignedCdi)
     );

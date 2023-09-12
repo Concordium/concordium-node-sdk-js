@@ -1,4 +1,4 @@
-import { deserializeCredentialDeployment as deserializeCredentialDeploymentWasm } from '@concordium/rust-bindings/wallet';
+import * as wasm from '@concordium/rust-bindings/wallet';
 import { Buffer } from 'buffer/';
 import {
     deserializeAccountTransaction,
@@ -13,7 +13,7 @@ import {
 } from '../types';
 
 function deserializeCredentialDeployment(serializedDeployment: Cursor) {
-    const raw = deserializeCredentialDeploymentWasm(
+    const raw = wasm.deserializeCredentialDeployment(
         serializedDeployment.read().toString('hex')
     );
     try {

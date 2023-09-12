@@ -1,16 +1,4 @@
-import {
-    getInitContractParameterSchema as getInitContractParameterSchemaWasm,
-    getReceiveContractParameterSchema as getReceiveContractParameterSchemaWasm,
-    displayTypeSchemaTemplate as displayTypeSchemaTemplateWasm,
-    serializeInitContractParameters as serializeInitContractParametersWasm,
-    serializeReceiveContractParameters as serializeReceiveContractParametersWasm,
-    serializeTypeValue as serializeTypeValueWasm,
-    deserializeState as deserializeStateWasm,
-    deserializeReceiveReturnValue as deserializeReceiveReturnValueWasm,
-    deserializeReceiveError as deserializeReceiveErrorWasm,
-    deserializeInitError as deserializeInitErrorWasm,
-    deserializeTypeValue as deserializeTypeValueWasm,
-} from '@concordium/rust-bindings';
+import * as wasm from '@concordium/rust-bindings';
 import { Buffer } from 'buffer/';
 import { SchemaVersion, SmartContractTypeValues } from './types';
 
@@ -25,7 +13,7 @@ export function getInitContractParameterSchema(
     contractName: string,
     schemaVersion?: SchemaVersion
 ): Buffer {
-    const parameterSchema = getInitContractParameterSchemaWasm(
+    const parameterSchema = wasm.getInitContractParameterSchema(
         moduleSchema.toString('hex'),
         contractName,
         schemaVersion
@@ -46,7 +34,7 @@ export function getUpdateContractParameterSchema(
     receiveFunctionName: string,
     schemaVersion?: SchemaVersion
 ): Buffer {
-    const parameterSchema = getReceiveContractParameterSchemaWasm(
+    const parameterSchema = wasm.getReceiveContractParameterSchema(
         moduleSchema.toString('hex'),
         contractName,
         receiveFunctionName,
@@ -60,7 +48,7 @@ export function getUpdateContractParameterSchema(
  * @returns JSON template of the schema
  */
 export function displayTypeSchemaTemplate(rawSchema: Buffer): string {
-    return displayTypeSchemaTemplateWasm(rawSchema.toString('hex'));
+    return wasm.displayTypeSchemaTemplate(rawSchema.toString('hex'));
 }
 
 /**
@@ -79,7 +67,7 @@ export function serializeInitContractParameters(
     schemaVersion?: SchemaVersion,
     verboseErrorMessage = false
 ): Buffer {
-    const serializedParameters = serializeInitContractParametersWasm(
+    const serializedParameters = wasm.serializeInitContractParameters(
         JSON.stringify(parameters),
         rawSchema.toString('hex'),
         contractName,
@@ -107,7 +95,7 @@ export function serializeUpdateContractParameters(
     schemaVersion?: SchemaVersion,
     verboseErrorMessage = false
 ): Buffer {
-    const serializedParameters = serializeReceiveContractParametersWasm(
+    const serializedParameters = wasm.serializeReceiveContractParameters(
         JSON.stringify(parameters),
         rawSchema.toString('hex'),
         contractName,
@@ -131,7 +119,7 @@ export function serializeTypeValue(
     rawSchema: Buffer,
     verboseErrorMessage = false
 ): Buffer {
-    const serializedValue = serializeTypeValueWasm(
+    const serializedValue = wasm.serializeTypeValue(
         JSON.stringify(value),
         rawSchema.toString('hex'),
         verboseErrorMessage
@@ -150,7 +138,7 @@ export function deserializeContractState(
     verboseErrorMessage = false
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
-    const serializedState = deserializeStateWasm(
+    const serializedState = wasm.deserializeState(
         contractName,
         state.toString('hex'),
         schema.toString('hex'),
@@ -183,7 +171,7 @@ export function deserializeReceiveReturnValue(
     verboseErrorMessage = false
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
-    const deserializedReturnValue = deserializeReceiveReturnValueWasm(
+    const deserializedReturnValue = wasm.deserializeReceiveReturnValue(
         returnValueBytes.toString('hex'),
         moduleSchema.toString('hex'),
         contractName,
@@ -217,7 +205,7 @@ export function deserializeReceiveError(
     verboseErrorMessage = false
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
-    const deserializedError = deserializeReceiveErrorWasm(
+    const deserializedError = wasm.deserializeReceiveError(
         errorBytes.toString('hex'),
         moduleSchema.toString('hex'),
         contractName,
@@ -248,7 +236,7 @@ export function deserializeInitError(
     verboseErrorMessage = false
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
-    const deserializedError = deserializeInitErrorWasm(
+    const deserializedError = wasm.deserializeInitError(
         errorBytes.toString('hex'),
         moduleSchema.toString('hex'),
         contractName,
@@ -276,7 +264,7 @@ export function deserializeTypeValue(
     rawSchema: Buffer,
     verboseErrorMessage = false
 ): SmartContractTypeValues {
-    const deserializedValue = deserializeTypeValueWasm(
+    const deserializedValue = wasm.deserializeTypeValue(
         value.toString('hex'),
         rawSchema.toString('hex'),
         verboseErrorMessage

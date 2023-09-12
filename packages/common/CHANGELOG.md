@@ -2,8 +2,17 @@
 
 ## Unreleased
 
+### Breaking changes
+
+- The following functions now parse using `json-bigint` meaning that they return bigints instead of numbers _for all numbers no matter size_
+    - `deserializeReceiveReturnValue`
+    - `deserializeReceiveError`
+    - `deserializeInitError`
+    - `deserializeTypeValue`
+
 ### Added
 
+- All JSON serialization in `serialization.ts` is now handled by `json-bigint` meaning that all functions now correctly handles bigint inputs
 - `sendUpdateInstruction` to the gRPC Client.
 - `healthCheck` to the gRPC Client.
 -   `Module` class for functionality related to smart contract modules, such as parsing the WebAssembly and interface of the module.

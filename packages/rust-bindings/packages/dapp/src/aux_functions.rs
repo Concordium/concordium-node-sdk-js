@@ -5,7 +5,6 @@ use concordium_base::contracts_common::{
     Cursor,
 };
 use concordium_rust_bindings_common::types::{HexString, JsonString};
-use hex;
 use serde_json::{to_string, Value as SerdeValue};
 
 /// Given the bytes of a contract's state, deserialize them to a json object,

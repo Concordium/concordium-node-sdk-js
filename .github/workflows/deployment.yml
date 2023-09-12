@@ -59,7 +59,7 @@ jobs:
               run: yarn install --immutable
 
             - name: Build release
-              run: yarn build
+              run: yarn build:rust-bindings && yarn build:dev
 
             - name: Store build-release
               uses: ./.github/actions/upload-artifact
@@ -70,7 +70,7 @@ jobs:
                       packages/nodejs/lib
                       packages/web/lib
                       packages/rust-bindings/lib/**/index*
-                      packages/*/grpc-api
+                      packages/nodejs/grpc-api
                       packages/*/package.json
                       packages/*/README.md
 

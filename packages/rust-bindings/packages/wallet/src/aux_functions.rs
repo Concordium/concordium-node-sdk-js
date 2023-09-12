@@ -33,7 +33,6 @@ use concordium_base::{
 };
 use concordium_rust_bindings_common::types::{HexString, JsonString};
 use either::Either::Left;
-use hex;
 use key_derivation::{ConcordiumHdWallet, CredentialContext, Net};
 use rand::thread_rng;
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};

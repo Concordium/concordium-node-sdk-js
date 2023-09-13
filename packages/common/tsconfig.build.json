@@ -6,6 +6,7 @@
     ],
     "compilerOptions": {
         "rootDir": "./src",
-        "outDir": "./lib/esm"
+        "outDir": "./lib/esm",
+        "allowJs": true
     }
 }

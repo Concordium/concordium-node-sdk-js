@@ -37,7 +37,7 @@ module.exports = {
                     '@concordium/rust-bindings',
                     '@concordium/common-sdk',
                     '@concordium/node-sdk',
-                    'grpc',
+                    'grpc-api',
                 ],
             },
         ],
@@ -73,7 +73,7 @@ module.exports = {
         '**/lib/**/',
         'deps/**/*',
         '**/nodejs/grpc-api/*',
-        '**/common/grpc-api/*',
+        '**/common/src/grpc-api/*',
         'typedoc/**',
     ],
     settings: {

@@ -8,10 +8,10 @@ import { Buffer } from 'buffer/';
 import type { RpcError, RpcTransport } from '@protobuf-ts/runtime-rpc';
 
 import * as v1 from '../types';
-import * as v2 from '../../grpc-api/v2/concordium/types';
+import * as v2 from '../grpc-api/v2/concordium/types';
 import { Base58String, HexString, isRpcError } from '../types';
-import { QueriesClient } from '../../grpc-api/v2/concordium/service.client';
-import { HealthClient } from '../../grpc-api/v2/concordium/health.client';
+import { QueriesClient } from '../grpc-api/v2/concordium/service.client';
+import { HealthClient } from '../grpc-api/v2/concordium/health.client';
 import { CredentialRegistrationId } from '../types/CredentialRegistrationId';
 import * as translate from './translation';
 import { AccountAddress } from '../types/accountAddress';

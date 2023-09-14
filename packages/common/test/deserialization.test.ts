@@ -199,7 +199,7 @@ test('Return value can be deserialized - auction  using deserializeTypeValue', (
     expectAuctionReturnValue(returnValue);
 });
 
-test('U64_MAX can be desirialized', () => {
+test('U64_MAX can be deserialized', () => {
     const returnVal = deserializeReceiveReturnValue(
         Buffer.from('ffffffffffffffff', 'hex'),
         Buffer.from(TEST_CONTRACT_U64, 'base64'),

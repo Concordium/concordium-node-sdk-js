@@ -1,262 +1,337 @@
 name: Build, lint and typecheck examples
 
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
-  push:
-    branches: [ main, release** ]
-  pull_request:
-    branches: [ main, release** ]
-    # Don't run on draft PR's, see: https://github.com/orgs/community/discussions/25722#discussioncomment-3248917
-    types: [ opened, synchronize, reopened, ready_for_review ]
-  # Allows us to run the workflow manually from the Actions tab
-  workflow_dispatch:
+    # Triggers the workflow on push or pull request events but only for the main branch
+    push:
+        branches: [ main, release** ]
+    pull_request:
+        branches: [ main, release** ]
+        # Don't run on draft PR's, see: https://github.com/orgs/community/discussions/25722#discussioncomment-3248917
+        types: [ opened, synchronize, reopened, ready_for_review ]
+    # Allows us to run the workflow manually from the Actions tab
+    workflow_dispatch:
 
 
 env:
-  NODE_VERSION: 18.16.0
-  RUST_VERSION: 1.65
-  RUST_FMT: nightly-2023-04-01-x86_64-unknown-linux-gnu
+    NODE_VERSION: 18.16.0
+    RUST_VERSION: 1.65
+    RUST_FMT: nightly-2023-04-01-x86_64-unknown-linux-gnu
 
 jobs:
-  build:
-    if: github.event.pull_request.draft == false
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: "recursive"
+    build:
+        if: github.event.pull_request.draft == false
+        runs-on: ubuntu-22.04
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  submodules: "recursive"
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: yarn
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: yarn
 
-      - name: Cache GRPC
-        id: cache-grpc
-        uses: actions/cache@v3
-        with:
-          path: |
-            ./packages/common/grpc-api
-            ./packages/nodejs/grpc-api
-          key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}
+            - name: Cache GRPC
+              id: cache-grpc
+              uses: actions/cache@v3
+              with:
+                  path: |
+                      ./packages/common/src/grpc-api
+                      ./packages/nodejs/src/grpc-api
+                  key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}
+                  restore-key: ${{ runner.os }}-grpc
 
-      - name: Cache WebPack
-        uses: actions/cache@v3
-        with:
-          path: ./packages/web/.webpack-cache
-          # These two lines ensure that a fresh cache is generated after each run
-          key: ${{ runner.os }}-webpack-${{ github.run_id }}
-          restore-keys: ${{ runner.os }}-webpack
+            - name: Cache dependencies
+              id: yarn-cache
+              uses: actions/cache@v3
+              with:
+                  path: node_modules
+                  key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
-      - name: Get dependencies
-        run: yarn install --immutable
+            - name: Cache WebPack
+              uses: actions/cache@v3
+              with:
+                  path: ./packages/web/.webpack-cache
+                  # These two lines ensure that a fresh cache is generated after each run
+                  key: ${{ runner.os }}-webpack-${{ github.run_id }}
+                  restore-keys: ${{ runner.os }}-webpack
 
-      - name: Install rust
-        run: rustup default ${{ env.RUST_VERSION }}
+            - name: Get dependencies
+              run: yarn install --immutable
 
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: |
-            packages/rust-bindings
-            deps/concordium-deps
+            - name: Install rust
+              run: rustup default ${{ env.RUST_VERSION }}
 
-      - name: Get wasm-pack
-        uses: jetli/wasm-pack-action@v0.4.0
-        with:
-          version: 'latest'
+            - uses: Swatinem/rust-cache@v2
+              with:
+                  workspaces: |
+                      packages/rust-bindings
+                      deps/concordium-deps
 
-      - name: Build GRPC bindings
-        if: steps.cache-grpc.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p packages/common/grpc-api
-          mkdir -p packages/nodejs/grpc-api
-          yarn workspace @concordium/common-sdk generate
-          yarn workspace @concordium/node-sdk generate
+            - name: Get wasm-pack
+              uses: jetli/wasm-pack-action@v0.4.0
+              with:
+                  version: 'latest'
 
-      - name: Build
-        run: yarn build:rust-bindings && yarn build:dev
+            - name: Build GRPC bindings
+              if: steps.cache-grpc.outputs.cache-hit != 'true'
+              run: |
+                  mkdir -p packages/common/src/grpc-api
+                  mkdir -p packages/nodejs/src/grpc-api
+                  yarn workspace @concordium/common-sdk generate
+                  yarn workspace @concordium/node-sdk generate
 
-      - name: Store build-debug
-        uses: ./.github/actions/upload-artifact
-        with:
-          name: build-debug
-          path: |
-            ./node_modules/@concordium
-            ./packages/rust-bindings/lib
-            ./packages/common/lib
-            ./packages/nodejs/lib
-            ./packages/*/grpc-api
-            ./packages/ccd-js-gen/lib
+            - name: Build
+              run: yarn build:rust-bindings && yarn build:dev
 
-  typecheck-examples:
-    runs-on: ubuntu-22.04
-    needs: build
-    steps:
-      - uses: actions/checkout@v3
+            - name: Store build-debug
+              uses: ./.github/actions/upload-artifact
+              with:
+                  name: build-debug
+                  path: |
+                      ./packages/rust-bindings/lib
+                      ./packages/common/lib
+                      ./packages/web/lib
+                      ./packages/nodejs/lib
+                      ./packages/ccd-js-gen/lib
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: yarn
+    typecheck-examples:
+        runs-on: ubuntu-22.04
+        needs: build
+        steps:
+            - uses: actions/checkout@v3
 
-      - name: Get build-debug
-        uses: ./.github/actions/download-artifact
-        with:
-          name: build-debug
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: yarn
 
-      - name: Get dependencies
-        run: yarn install --immutable
+            - name: Restore dependencies
+              uses: actions/cache/restore@v3
+              with:
+                  path: node_modules
+                  key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
-      - name: Typecheck examples
-        run: yarn workspace @concordium/examples typecheck
+            - name: Restore grpc
+              uses: actions/cache/restore@v3
+              with:
+                  path: |
+                      ./packages/common/src/grpc-api
+                      ./packages/nodejs/src/grpc-api
+                  key: ${{ runner.os }}-grpc
 
-  common-tests:
-    runs-on: ubuntu-22.04
-    needs: build
-    defaults:
-      run:
-        working-directory: packages/common
-    steps:
-      - uses: actions/checkout@v3
+            - name: Get build-debug
+              uses: ./.github/actions/download-artifact
+              with:
+                  name: build-debug
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: yarn
+            - name: Typecheck examples
+              run: yarn workspace @concordium/examples typecheck
 
-      - name: Get build-debug
-        uses: ./.github/actions/download-artifact
-        with:
-          name: build-debug
+    common-tests:
+        runs-on: ubuntu-22.04
+        needs: build
+        defaults:
+            run:
+                working-directory: packages/common
+        steps:
+            - uses: actions/checkout@v3
 
-      - name: Get dependencies
-        run: yarn install --immutable
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: yarn
 
-      - name: Run Tests
-        run: yarn test
+            - name: Restore dependencies
+              uses: actions/cache/restore@v3
+              with:
+                  path: node_modules
+                  key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
-  typedoc:
-    runs-on: ubuntu-22.04
-    needs: build
-    steps:
-      - uses: actions/checkout@v3
+            - name: Restore grpc
+              uses: actions/cache/restore@v3
+              with:
+                  path: |
+                      ./packages/common/src/grpc-api
+                      ./packages/nodejs/src/grpc-api
+                  key: ${{ runner.os }}-grpc
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: yarn
+            - name: Get build-debug
+              uses: ./.github/actions/download-artifact
+              with:
+                  name: build-debug
 
-      - name: Get build-debug
-        uses: ./.github/actions/download-artifact
-        with:
-          name: build-debug
+            - name: Run Tests
+              run: yarn test
 
-      - name: Get dependencies
-        run: yarn install --immutable
+    typedoc:
+        runs-on: ubuntu-22.04
+        needs: build
+        steps:
+            - uses: actions/checkout@v3
 
-      - name: Build typedoc
-        run: yarn typedoc
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: yarn
 
-  lint:
-    runs-on: ubuntu-22.04
-    needs: build
-    if: github.event.pull_request.draft == false
-    steps:
-      - uses: actions/checkout@v3
+            - name: Restore dependencies
+              uses: actions/cache/restore@v3
+              with:
+                  path: node_modules
+                  key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: yarn
+            - name: Restore grpc
+              uses: actions/cache/restore@v3
+              with:
+                  path: |
+                      ./packages/common/src/grpc-api
+                      ./packages/nodejs/src/grpc-api
+                  key: ${{ runner.os }}-grpc
 
-      - name: Get build-debug
-        uses: ./.github/actions/download-artifact
-        with:
-          name: build-debug
+            - name: Get build-debug
+              uses: ./.github/actions/download-artifact
+              with:
+                  name: build-debug
 
-      - name: Install dependencies
-        run: yarn install --immutable
+            - name: Build typedoc
+              run: yarn typedoc
 
-      - name: Lint
-        run: yarn lint
+    lint:
+        runs-on: ubuntu-22.04
+        needs: build
+        if: github.event.pull_request.draft == false
+        steps:
+            - uses: actions/checkout@v3
 
-  markdown-lint:
-    runs-on: ubuntu-22.04
-    if: github.event.pull_request.draft == false
-    steps:
-      - uses: actions/checkout@v3
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: yarn
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: yarn
+            - name: Restore dependencies
+              uses: actions/cache/restore@v3
+              with:
+                  path: node_modules
+                  key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
-      - name: Install dependencies
-        run: yarn install --immutable
+            - name: Restore grpc
+              uses: actions/cache/restore@v3
+              with:
+                  path: |
+                      ./packages/common/src/grpc-api
+                      ./packages/nodejs/src/grpc-api
+                  key: ${{ runner.os }}-grpc
 
-      - name: Lint markdown
-        run: yarn markdown:lint
+            - name: Get build-debug
+              uses: ./.github/actions/download-artifact
+              with:
+                  name: build-debug
 
-  markdown-linkcheck:
-    runs-on: ubuntu-22.04
-    if: github.event.pull_request.draft == false
-    steps:
-      - uses: actions/checkout@v3
+            - name: Lint
+              run: yarn lint
 
-      - uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: yarn
+    markdown-lint:
+        runs-on: ubuntu-22.04
+        if: github.event.pull_request.draft == false
+        steps:
+            - uses: actions/checkout@v3
 
-      - name: Install dependencies
-        run: yarn install --immutable
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: yarn
 
-      - name: Lint markdown
-        run: yarn markdown:linkcheck
+            - name: Restore dependencies
+              uses: actions/cache/restore@v3
+              with:
+                  path: node_modules
+                  key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
-  rust_lint_fmt:
-    runs-on: ubuntu-22.04
-    if: github.event.pull_request.draft == false
-    defaults:
-      run:
-        working-directory: packages/rust-bindings
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: "recursive"
+            - name: Restore grpc
+              uses: actions/cache/restore@v3
+              with:
+                  path: |
+                      ./packages/common/src/grpc-api
+                      ./packages/nodejs/src/grpc-api
+                  key: ${{ runner.os }}-grpc
 
-      - name: Install formatter
-        run: |
-          rustup default ${{ env.RUST_FMT }}
-          rustup component add rustfmt
+            - name: Lint markdown
+              run: yarn markdown:lint
 
-      - name: Format
-        run: cargo fmt -- --color=always --check
+    markdown-linkcheck:
+        runs-on: ubuntu-22.04
+        if: github.event.pull_request.draft == false
+        steps:
+            - uses: actions/checkout@v3
 
-  rust_lint_clippy:
-    runs-on: ubuntu-22.04
-    needs: rust_lint_fmt
-    if: github.event.pull_request.draft == false
-    defaults:
-      run:
-        working-directory: packages/rust-bindings
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: "recursive"
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: yarn
 
-      - name: Install clippy
-        run: |
-          rustup default ${{ env.RUST_VERSION }}
-          rustup component add clippy
+            - name: Restore dependencies
+              uses: actions/cache/restore@v3
+              with:
+                  path: node_modules
+                  key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: |
-            packages/rust-bindings
-            deps/concordium-deps
+            - name: Restore grpc
+              uses: actions/cache/restore@v3
+              with:
+                  path: |
+                      ./packages/common/src/grpc-api
+                      ./packages/nodejs/src/grpc-api
+                  key: ${{ runner.os }}-grpc
 
-      - name: Run clippy
-        run: cargo clippy --color=always --tests --benches -- -Dclippy::all
+            - name: Lint markdown
+              run: yarn markdown:linkcheck
+
+    rust_lint_fmt:
+        runs-on: ubuntu-22.04
+        if: github.event.pull_request.draft == false
+        defaults:
+            run:
+                working-directory: packages/rust-bindings
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+              with:
+                  submodules: "recursive"
+
+            - name: Install formatter
+              run: |
+                  rustup default ${{ env.RUST_FMT }}
+                  rustup component add rustfmt
+
+            - name: Format
+              run: cargo fmt -- --color=always --check
+
+    rust_lint_clippy:
+        runs-on: ubuntu-22.04
+        needs: rust_lint_fmt
+        if: github.event.pull_request.draft == false
+        defaults:
+            run:
+                working-directory: packages/rust-bindings
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+              with:
+                  submodules: "recursive"
+
+            - name: Install clippy
+              run: |
+                  rustup default ${{ env.RUST_VERSION }}
+                  rustup component add clippy
+
+            - uses: Swatinem/rust-cache@v2
+              with:
+                  workspaces: |
+                      packages/rust-bindings
+                      deps/concordium-deps
+
+            - name: Run clippy
+              run: cargo clippy --color=always --tests --benches -- -Dclippy::all

@@ -72,8 +72,7 @@ module.exports = {
         '**/dist/**/',
         '**/lib/**/',
         'deps/**/*',
-        '**/nodejs/grpc-api/*',
-        '**/common/src/grpc-api/*',
+        '**/src/grpc-api/*',
         'typedoc/**',
     ],
     settings: {

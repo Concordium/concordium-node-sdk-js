@@ -18,7 +18,7 @@ env:
     RUST_FMT: nightly-2023-04-01-x86_64-unknown-linux-gnu
 
 jobs:
-    build:
+    deps:
         if: github.event.pull_request.draft == false
         runs-on: ubuntu-22.04
         steps:
@@ -39,7 +39,7 @@ jobs:
                       ./packages/common/src/grpc-api
                       ./packages/nodejs/src/grpc-api
                   key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}
-                  restore-key: ${{ runner.os }}-grpc
+                  restore-keys: ${{ runner.os }}-grpc
 
             - name: Cache dependencies
               id: yarn-cache
@@ -50,6 +50,31 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-yarn
 
+            - name: Get dependencies
+              run: yarn install --immutable
+
+            - name: Build GRPC bindings
+              if: steps.cache-grpc.outputs.cache-hit != 'true'
+              run: |
+                  mkdir -p packages/common/src/grpc-api
+                  mkdir -p packages/nodejs/src/grpc-api
+                  yarn workspace @concordium/common-sdk generate
+                  yarn workspace @concordium/node-sdk generate
+
+    build:
+        if: github.event.pull_request.draft == false
+        runs-on: ubuntu-22.04
+        needs: deps
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  submodules: "recursive"
+
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: yarn
+
             - name: Cache WebPack
               uses: actions/cache@v3
               with:
@@ -58,8 +83,11 @@ jobs:
                   key: ${{ runner.os }}-webpack-${{ github.run_id }}
                   restore-keys: ${{ runner.os }}-webpack
 
-            - name: Get dependencies
-              run: yarn install --immutable
+            - name: Restore dependencies
+              uses: actions/cache/restore@v3
+              with:
+                  path: node_modules
+                  key: ${{ runner.os }}-yarn
 
             - name: Install rust
               run: rustup default ${{ env.RUST_VERSION }}
@@ -75,13 +103,13 @@ jobs:
               with:
                   version: 'latest'
 
-            - name: Build GRPC bindings
-              if: steps.cache-grpc.outputs.cache-hit != 'true'
-              run: |
-                  mkdir -p packages/common/src/grpc-api
-                  mkdir -p packages/nodejs/src/grpc-api
-                  yarn workspace @concordium/common-sdk generate
-                  yarn workspace @concordium/node-sdk generate
+            - name: Restore grpc
+              uses: actions/cache/restore@v3
+              with:
+                  path: |
+                      ./packages/common/src/grpc-api
+                      ./packages/nodejs/src/grpc-api
+                  key: ${{ runner.os }}-grpc
 
             - name: Build
               run: yarn build:rust-bindings && yarn build:dev
@@ -113,14 +141,6 @@ jobs:
               with:
                   path: node_modules
                   key: ${{ runner.os }}-yarn
-
-            - name: Restore grpc
-              uses: actions/cache/restore@v3
-              with:
-                  path: |
-                      ./packages/common/src/grpc-api
-                      ./packages/nodejs/src/grpc-api
-                  key: ${{ runner.os }}-grpc
 
             - name: Get build-debug
               uses: ./.github/actions/download-artifact
@@ -155,7 +175,6 @@ jobs:
               with:
                   path: |
                       ./packages/common/src/grpc-api
-                      ./packages/nodejs/src/grpc-api
                   key: ${{ runner.os }}-grpc
 
             - name: Get build-debug
@@ -236,6 +255,7 @@ jobs:
     markdown-lint:
         runs-on: ubuntu-22.04
         if: github.event.pull_request.draft == false
+        needs: deps
         steps:
             - uses: actions/checkout@v3
 
@@ -250,19 +270,12 @@ jobs:
                   path: node_modules
                   key: ${{ runner.os }}-yarn
 
-            - name: Restore grpc
-              uses: actions/cache/restore@v3
-              with:
-                  path: |
-                      ./packages/common/src/grpc-api
-                      ./packages/nodejs/src/grpc-api
-                  key: ${{ runner.os }}-grpc
-
             - name: Lint markdown
               run: yarn markdown:lint
 
     markdown-linkcheck:
         runs-on: ubuntu-22.04
+        needs: deps
         if: github.event.pull_request.draft == false
         steps:
             - uses: actions/checkout@v3
@@ -277,14 +290,6 @@ jobs:
               with:
                   path: node_modules
                   key: ${{ runner.os }}-yarn
-
-            - name: Restore grpc
-              uses: actions/cache/restore@v3
-              with:
-                  path: |
-                      ./packages/common/src/grpc-api
-                      ./packages/nodejs/src/grpc-api
-                  key: ${{ runner.os }}-grpc
 
             - name: Lint markdown
               run: yarn markdown:linkcheck

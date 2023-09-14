@@ -55,7 +55,7 @@
         "prettier": "^2.3.2",
         "rimraf": "^5.0.1",
         "ts-jest": "^29.1.1",
-        "typescript": "^5.1.6"
+        "typescript": "^5.2.2"
     },
     "prettier": {
         "singleQuote": true,
@@ -71,7 +71,7 @@
         "build": "rm -rf src/grpc-api; mkdir -p src/grpc-api; yarn generate && yarn build-dev",
         "build-dev": "yarn tsc-esm && yarn tsc-cjs && cp -R src/grpc-api lib/esm && rm -rf lib/cjs/grpc-api && mkdir -p lib/cjs/grpc-api && yarn generate-ts-v2-cjs",
         "tsc-esm": "tsc -p tsconfig.build.json",
-        "tsc-cjs": "tsc -p tsconfig.build.json --outDir ./lib/cjs --module commonjs",
+        "tsc-cjs": "tsc -p tsconfig.build.json --outDir ./lib/cjs --module node16 --moduleResolution node16",
         "clean": "rimraf -- lib src/grpc-api"
     },
     "dependencies": {

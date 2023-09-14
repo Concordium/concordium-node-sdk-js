@@ -5,7 +5,8 @@
         "test/**/*"
     ],
     "compilerOptions": {
-        "module": "CommonJS"
+        "module": "Node16",
+        "moduleResolution": "Node16"
     },
     "references": [
         {

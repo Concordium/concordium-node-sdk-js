@@ -45,10 +45,7 @@ jobs:
               id: yarn-cache
               uses: actions/cache@v3
               with:
-                  path: |
-                      ./node_modules
-                      ./packages/ccd-js-gen/node_modules
-                      ./examples/node_modules
+                  path: node_modules
                   key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
                   restore-keys: |
                       ${{ runner.os }}-yarn
@@ -89,9 +86,7 @@ jobs:
             - name: Restore dependencies
               uses: actions/cache/restore@v3
               with:
-                  path: |
-                      ./node_modules
-                      ./packages/ccd-js-gen/node_modules
+                  path: node_modules
                   key: ${{ runner.os }}-yarn
 
             - name: Install rust
@@ -179,8 +174,7 @@ jobs:
             - name: Restore grpc
               uses: actions/cache/restore@v3
               with:
-                  path: |
-                      ./packages/common/src/grpc-api
+                  path: ./packages/common/src/grpc-api
                   key: ${{ runner.os }}-grpc
 
             - name: Get build-debug

@@ -1,5 +1,5 @@
 import * as v1 from '@concordium/common-sdk';
-import * as v2 from '../../common/grpc-api/v2/concordium/types';
+import * as v2 from '../../common/lib/cjs/grpc-api/v2/concordium/types';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
 import {
     buildBasicAccountSigner,

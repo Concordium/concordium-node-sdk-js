@@ -10,5 +10,11 @@ module.exports = {
                 tsconfig: 'tsconfig.json',
             },
         ],
+        '^.*src/grpc-api/.+\\.js$': [
+            'ts-jest',
+            {
+                tsconfig: 'tsconfig.json',
+            },
+        ],
     },
 };

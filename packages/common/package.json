@@ -62,12 +62,13 @@
         "tabWidth": 4
     },
     "scripts": {
-        "generate-ts-v2": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/@protobuf-ts/plugin/bin/protoc-gen-ts --ts_opt 'optimize_code_size,output_javascript' --ts_out=src/grpc-api -I ../../deps/concordium-base/concordium-grpc-api ../../deps/concordium-base/concordium-grpc-api/v2/concordium/*.proto",
-        "generate": "([ -e \"../../deps/concordium-base/concordium-grpc-api\" ] && yarn generate-ts-v2) || echo 'Please checkout submodules before building'",
+        "generate-ts-v2-cjs": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/@protobuf-ts/plugin/bin/protoc-gen-ts --ts_opt 'optimize_code_size,output_legacy_commonjs,output_javascript' --ts_out=lib/cjs/grpc-api -I ../../deps/concordium-base/concordium-grpc-api ../../deps/concordium-base/concordium-grpc-api/v2/concordium/*.proto",
+        "generate-ts-v2": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/@protobuf-ts/plugin/bin/protoc-gen-ts --ts_opt 'optimize_code_size,output_javascript' --ts_out=lib/esm/grpc-api -I ../../deps/concordium-base/concordium-grpc-api ../../deps/concordium-base/concordium-grpc-api/v2/concordium/*.proto",
+        "generate": "([ -e \"../../deps/concordium-base/concordium-grpc-api\" ] && yarn generate-ts-v2 && yarn generate-ts-v2-cjs && cp -R lib/esm/grpc-api src) || echo 'Please checkout submodules before building'",
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
-        "build": "rm -rf src/grpc-api; mkdir -p src/grpc-api; yarn generate && yarn build-dev",
+        "build": "rm -rf src/grpc-api lib/esm/grpc-api lib/cjs/grpc-api; mkdir -p src/grpc-api lib/esm/grpc-api lib/cjs/grpc-api; yarn generate && yarn build-dev",
         "build-dev": "yarn tsc-esm && yarn tsc-cjs",
         "tsc-esm": "tsc -p tsconfig.build.json",
         "tsc-cjs": "tsc -p tsconfig.build.json --outDir ./lib/cjs --module commonjs",

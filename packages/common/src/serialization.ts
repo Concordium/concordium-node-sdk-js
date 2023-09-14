@@ -32,6 +32,7 @@ import { countSignatures } from './util';
 import { AccountAddress } from './types/accountAddress';
 import { sha256 } from './hash';
 import * as wasm from '@concordium/rust-bindings';
+import JSONbig from 'json-bigint/';
 
 function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
     return Buffer.from(Uint8Array.of(type));
@@ -426,7 +427,7 @@ export function getCredentialDeploymentTransactionHash(
     const credentialDeploymentInfo: DeploymentDetailsResult = JSON.parse(
         wasm.getDeploymentDetails(
             signatures,
-            JSON.stringify(credentialDeployment.unsignedCdi),
+            JSONbig.stringify(credentialDeployment.unsignedCdi),
             credentialDeployment.expiry.expiryEpochSeconds
         )
     );
@@ -447,7 +448,7 @@ export function serializeCredentialDeploymentTransactionForSubmission(
     const credentialDeploymentInfo: DeploymentDetailsResult = JSON.parse(
         wasm.getDeploymentDetails(
             signatures,
-            JSON.stringify(credentialDeployment.unsignedCdi),
+            JSONbig.stringify(credentialDeployment.unsignedCdi),
             credentialDeployment.expiry.expiryEpochSeconds
         )
     );
@@ -471,7 +472,7 @@ export function serializeInitContractParameters(
     verboseErrorMessage = false
 ): Buffer {
     const serializedParameters = wasm.serializeInitContractParameters(
-        JSON.stringify(parameters),
+        JSONbig.stringify(parameters),
         rawSchema.toString('hex'),
         contractName,
         schemaVersion,
@@ -499,7 +500,7 @@ export function serializeUpdateContractParameters(
     verboseErrorMessage = false
 ): Buffer {
     const serializedParameters = wasm.serializeReceiveContractParameters(
-        JSON.stringify(parameters),
+        JSONbig.stringify(parameters),
         rawSchema.toString('hex'),
         contractName,
         receiveFunctionName,
@@ -523,7 +524,7 @@ export function serializeTypeValue(
     verboseErrorMessage = false
 ): Buffer {
     const serializedValue = wasm.serializeTypeValue(
-        JSON.stringify(value),
+        JSONbig.stringify(value),
         rawSchema.toString('hex'),
         verboseErrorMessage
     );
@@ -583,7 +584,7 @@ export function serializeCredentialDeploymentPayload(
 ): Buffer {
     const payloadByteArray = wasm.serializeCredentialDeploymentPayload(
         signatures,
-        JSON.stringify(credentialDeploymentTransaction.unsignedCdi)
+        JSONbig.stringify(credentialDeploymentTransaction.unsignedCdi)
     );
     return Buffer.from(payloadByteArray);
 }

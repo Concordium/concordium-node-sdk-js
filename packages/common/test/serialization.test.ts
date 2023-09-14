@@ -16,7 +16,13 @@ import {
     SimpleTransferPayload,
 } from '../src/types';
 import { TransactionExpiry } from '../src/types/transactionExpiry';
-import { getUpdateContractParameterSchema } from '../src';
+import {
+    getUpdateContractParameterSchema,
+    serializeInitContractParameters,
+} from '../src';
+import { TEST_CONTRACT_U64 } from './resources/schema';
+
+const U64_MAX = 18446744073709551615n;
 
 test('fail account transaction serialization if no signatures', () => {
     const simpleTransferPayload: SimpleTransferPayload = {
@@ -92,6 +98,42 @@ test('serialize UpdateContractParameters using CIS2 contract', () => {
     expect(parameter.toString('hex')).toBe(
         '010000c80000c320b41f1997accd5d21c6bf4992370948ed711435e0e2c9302def62afd1295f004651a37c65c8461540decd511e7440d1ff6d4191b7e2133b7239b2485be1a4860000'
     );
+});
+
+test('Parameter serialization works for U64_MAX', () => {
+    const updateParam = serializeUpdateContractParameters(
+        'test',
+        'receive',
+        U64_MAX,
+        Buffer.from(TEST_CONTRACT_U64, 'base64')
+    );
+    const initParam = serializeInitContractParameters(
+        'test',
+        U64_MAX,
+        Buffer.from(TEST_CONTRACT_U64, 'base64')
+    );
+    expect(updateParam.toString('hex')).toEqual('ffffffffffffffff');
+    expect(initParam.toString('hex')).toEqual('ffffffffffffffff');
+});
+
+test('Parameter serialization errors on (U64_MAX + 1)', () => {
+    const errMsg =
+        'Unable to serialize parameters, due to: Unsigned integer required';
+    const updateParam = () =>
+        serializeUpdateContractParameters(
+            'test',
+            'receive',
+            U64_MAX + 1n,
+            Buffer.from(TEST_CONTRACT_U64, 'base64')
+        );
+    const initParam = () =>
+        serializeInitContractParameters(
+            'test',
+            U64_MAX + 1n,
+            Buffer.from(TEST_CONTRACT_U64, 'base64')
+        );
+    expect(updateParam).toThrow(errMsg);
+    expect(initParam).toThrow(errMsg);
 });
 
 test('serialize UpdateContractParameters using CIS2 contract and incorrect name', () => {

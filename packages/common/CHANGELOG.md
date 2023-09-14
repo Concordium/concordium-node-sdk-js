@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Breaking changes
+
+- The following functions now parse using `json-bigint` meaning that they return bigints instead of numbers _for all numbers no matter size_
+    - `deserializeReceiveReturnValue`
+    - `deserializeReceiveError`
+    - `deserializeInitError`
+    - `deserializeTypeValue`
+
+### Added
+
+- All JSON serialization in `serialization.ts` is now handled by `json-bigint` meaning that all functions now correctly handles bigint inputs
+
 ## 9.4.0
 
 ### Added

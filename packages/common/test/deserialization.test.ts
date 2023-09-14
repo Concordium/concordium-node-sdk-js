@@ -34,7 +34,10 @@ import {
     TEST_CONTRACT_SCHEMA,
     TEST_CONTRACT_RECEIVE_ERROR_SCHEMA,
     AUCTION_WITH_ERRORS_VIEW_RETURN_VALUE_SCHEMA,
+    TEST_CONTRACT_U64,
 } from './resources/schema';
+
+const U64_MAX = 18446744073709551615n;
 
 test('test that deserializeContractState works', () => {
     const state = deserializeContractState(
@@ -196,6 +199,17 @@ test('Return value can be deserialized - auction  using deserializeTypeValue', (
     expectAuctionReturnValue(returnValue);
 });
 
+test('U64_MAX can be deserialized', () => {
+    const returnVal = deserializeReceiveReturnValue(
+        Buffer.from('ffffffffffffffff', 'hex'),
+        Buffer.from(TEST_CONTRACT_U64, 'base64'),
+        'test',
+        'receive'
+    );
+
+    expect(returnVal).toEqual(U64_MAX);
+});
+
 test('Receive error can be deserialized', () => {
     const error = deserializeReceiveError(
         Buffer.from('ffff', 'hex'),
@@ -204,7 +218,7 @@ test('Receive error can be deserialized', () => {
         'receive_function'
     );
 
-    expect(error).toEqual(-1);
+    expect(error).toEqual(-1n);
 });
 
 /**
@@ -215,7 +229,7 @@ test('Receive error can be deserialized using deserializeTypeValue', () => {
         Buffer.from('ffff', 'hex'),
         Buffer.from(TEST_CONTRACT_RECEIVE_ERROR_SCHEMA, 'base64')
     );
-    expect(error).toEqual(-1);
+    expect(error).toEqual(-1n);
 });
 
 test('Init error can be deserialized', () => {
@@ -225,7 +239,7 @@ test('Init error can be deserialized', () => {
         'TestContract'
     );
 
-    expect(error).toEqual(1);
+    expect(error).toEqual(1n);
 });
 
 /**
@@ -236,7 +250,7 @@ test('Init error can be deserialized using deserializeTypeValue', () => {
         Buffer.from('0100', 'hex'),
         Buffer.from(TEST_CONTRACT_INIT_ERROR_SCHEMA, 'base64')
     );
-    expect(error).toEqual(1);
+    expect(error).toEqual(1n);
 });
 
 test('Test parsing of Token Addresses', () => {

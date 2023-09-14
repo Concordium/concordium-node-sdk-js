@@ -13,6 +13,7 @@ import {
 import { AccountAddress } from './types/accountAddress';
 import { TransactionExpiry } from './types/transactionExpiry';
 import { PassThrough, Readable } from 'stream';
+import JSONbig from 'json-bigint/';
 
 /**
  * Reads an unsigned 8-bit integer from the given {@link Readable}.
@@ -242,7 +243,10 @@ export function deserializeReceiveReturnValue(
         verboseErrorMessage
     );
     try {
-        return JSON.parse(deserializedReturnValue);
+        return JSONbig({
+            alwaysParseAsBig: true,
+            useNativeBigInt: true,
+        }).parse(deserializedReturnValue);
     } catch (e) {
         throw new Error(
             'unable to deserialize the return value, due to: ' +
@@ -275,7 +279,10 @@ export function deserializeReceiveError(
         verboseErrorMessage
     );
     try {
-        return JSON.parse(deserializedError);
+        return JSONbig({
+            alwaysParseAsBig: true,
+            useNativeBigInt: true,
+        }).parse(deserializedError);
     } catch (e) {
         throw new Error(
             'unable to deserialize the error value, due to: ' +
@@ -305,7 +312,10 @@ export function deserializeInitError(
         verboseErrorMessage
     );
     try {
-        return JSON.parse(deserializedError);
+        return JSONbig({
+            alwaysParseAsBig: true,
+            useNativeBigInt: true,
+        }).parse(deserializedError);
     } catch (e) {
         throw new Error(
             'unable to deserialize the error value, due to: ' +
@@ -331,5 +341,8 @@ export function deserializeTypeValue(
         rawSchema.toString('hex'),
         verboseErrorMessage
     );
-    return JSON.parse(deserializedValue);
+    return JSONbig({
+        alwaysParseAsBig: true,
+        useNativeBigInt: true,
+    }).parse(deserializedValue);
 }

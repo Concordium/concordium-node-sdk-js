@@ -1,6 +1,6 @@
 # Changelog
 
-## 9.4.0
+## Unreleased
 
 ### Breaking changes
 
@@ -13,6 +13,11 @@
 ### Added
 
 - All JSON serialization in `serialization.ts` is now handled by `json-bigint` meaning that all functions now correctly handles bigint inputs
+
+## 9.4.0
+
+### Added
+
 - `sendUpdateInstruction` to the gRPC Client.
 - `healthCheck` to the gRPC Client.
 - Functions `calculateModuleReference` for getting the module reference and `parseModuleInterface` for getting the interface from the source of a smart contract module.

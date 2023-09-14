@@ -96,7 +96,8 @@ jobs:
               with:
                   workspaces: |
                       packages/rust-bindings
-                      deps/concordium-deps
+                      deps/concordium-base/rust-src
+                      deps/concordium-base/concordium-contracts-common
 
             - name: Get wasm-pack
               uses: jetli/wasm-pack-action@v0.4.0
@@ -336,7 +337,8 @@ jobs:
               with:
                   workspaces: |
                       packages/rust-bindings
-                      deps/concordium-deps
+                      deps/concordium-base/rust-src
+                      deps/concordium-base/concordium-contracts-common
 
             - name: Run clippy
               run: cargo clippy --color=always --tests --benches -- -Dclippy::all

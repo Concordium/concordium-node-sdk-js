@@ -1,4 +1,5 @@
 import * as wasm from '@concordium/rust-bindings/wallet';
+import JSONbig from 'json-bigint';
 import { Buffer } from 'buffer/';
 import type {
     CredentialDeploymentDetails,
@@ -25,7 +26,7 @@ export function getCredentialDeploymentTransactionHash(
     const credentialDeploymentInfo: DeploymentDetailsResult = JSON.parse(
         wasm.getDeploymentDetails(
             signatures,
-            JSON.stringify(credentialDeployment.unsignedCdi),
+            JSONbig.stringify(credentialDeployment.unsignedCdi),
             credentialDeployment.expiry.expiryEpochSeconds
         )
     );
@@ -46,7 +47,7 @@ export function serializeCredentialDeploymentTransactionForSubmission(
     const credentialDeploymentInfo: DeploymentDetailsResult = JSON.parse(
         wasm.getDeploymentDetails(
             signatures,
-            JSON.stringify(credentialDeployment.unsignedCdi),
+            JSONbig.stringify(credentialDeployment.unsignedCdi),
             credentialDeployment.expiry.expiryEpochSeconds
         )
     );
@@ -59,7 +60,7 @@ export function serializeCredentialDeploymentPayload(
 ): Buffer {
     const payloadByteArray = wasm.serializeCredentialDeploymentPayload(
         signatures,
-        JSON.stringify(credentialDeploymentTransaction.unsignedCdi)
+        JSONbig.stringify(credentialDeploymentTransaction.unsignedCdi)
     );
     return Buffer.from(payloadByteArray);
 }

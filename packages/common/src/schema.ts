@@ -1,5 +1,6 @@
 import * as wasm from '@concordium/rust-bindings';
 import { Buffer } from 'buffer/';
+import JSONbig from 'json-bigint';
 import { SchemaVersion, SmartContractTypeValues } from './types';
 
 /**
@@ -68,7 +69,7 @@ export function serializeInitContractParameters(
     verboseErrorMessage = false
 ): Buffer {
     const serializedParameters = wasm.serializeInitContractParameters(
-        JSON.stringify(parameters),
+        JSONbig.stringify(parameters),
         rawSchema.toString('hex'),
         contractName,
         schemaVersion,
@@ -96,7 +97,7 @@ export function serializeUpdateContractParameters(
     verboseErrorMessage = false
 ): Buffer {
     const serializedParameters = wasm.serializeReceiveContractParameters(
-        JSON.stringify(parameters),
+        JSONbig.stringify(parameters),
         rawSchema.toString('hex'),
         contractName,
         receiveFunctionName,
@@ -120,7 +121,7 @@ export function serializeTypeValue(
     verboseErrorMessage = false
 ): Buffer {
     const serializedValue = wasm.serializeTypeValue(
-        JSON.stringify(value),
+        JSONbig.stringify(value),
         rawSchema.toString('hex'),
         verboseErrorMessage
     );
@@ -145,7 +146,10 @@ export function deserializeContractState(
         verboseErrorMessage
     );
     try {
-        return JSON.parse(serializedState);
+        return JSONbig({
+            alwaysParseAsBig: true,
+            useNativeBigInt: true,
+        }).parse(serializedState);
     } catch (e) {
         throw new Error(
             'unable to deserialize state, due to: ' + serializedState
@@ -180,7 +184,10 @@ export function deserializeReceiveReturnValue(
         verboseErrorMessage
     );
     try {
-        return JSON.parse(deserializedReturnValue);
+        return JSONbig({
+            alwaysParseAsBig: true,
+            useNativeBigInt: true,
+        }).parse(deserializedReturnValue);
     } catch (e) {
         throw new Error(
             'unable to deserialize the return value, due to: ' +
@@ -213,7 +220,10 @@ export function deserializeReceiveError(
         verboseErrorMessage
     );
     try {
-        return JSON.parse(deserializedError);
+        return JSONbig({
+            alwaysParseAsBig: true,
+            useNativeBigInt: true,
+        }).parse(deserializedError);
     } catch (e) {
         throw new Error(
             'unable to deserialize the error value, due to: ' +
@@ -243,7 +253,10 @@ export function deserializeInitError(
         verboseErrorMessage
     );
     try {
-        return JSON.parse(deserializedError);
+        return JSONbig({
+            alwaysParseAsBig: true,
+            useNativeBigInt: true,
+        }).parse(deserializedError);
     } catch (e) {
         throw new Error(
             'unable to deserialize the error value, due to: ' +
@@ -269,5 +282,8 @@ export function deserializeTypeValue(
         rawSchema.toString('hex'),
         verboseErrorMessage
     );
-    return JSON.parse(deserializedValue);
+    return JSONbig({
+        alwaysParseAsBig: true,
+        useNativeBigInt: true,
+    }).parse(deserializedValue);
 }

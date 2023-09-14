@@ -10,6 +10,7 @@ import {
     deserializeTypeValue,
     serializeUpdateContractParameters,
     serializeTypeValue,
+    serializeInitContractParameters,
 } from '../src/schema';
 import {
     CIS2_WCCD_STATE_SCHEMA,
@@ -19,7 +20,21 @@ import {
     TEST_CONTRACT_SCHEMA,
     TEST_CONTRACT_RECEIVE_ERROR_SCHEMA,
     AUCTION_WITH_ERRORS_VIEW_RETURN_VALUE_SCHEMA,
+    TEST_CONTRACT_U64,
 } from './resources/schema';
+
+const U64_MAX = 18446744073709551615n;
+
+test('U64_MAX can be deserialized', () => {
+    const returnVal = deserializeReceiveReturnValue(
+        Buffer.from('ffffffffffffffff', 'hex'),
+        Buffer.from(TEST_CONTRACT_U64, 'base64'),
+        'test',
+        'receive'
+    );
+
+    expect(returnVal).toEqual(U64_MAX);
+});
 
 test('schema template display', () => {
     const fullSchema = Buffer.from(
@@ -122,7 +137,7 @@ test('Receive error can be deserialized', () => {
         'receive_function'
     );
 
-    expect(error).toEqual(-1);
+    expect(error).toEqual(-1n);
 });
 
 /**
@@ -133,7 +148,7 @@ test('Receive error can be deserialized using deserializeTypeValue', () => {
         Buffer.from('ffff', 'hex'),
         Buffer.from(TEST_CONTRACT_RECEIVE_ERROR_SCHEMA, 'base64')
     );
-    expect(error).toEqual(-1);
+    expect(error).toEqual(-1n);
 });
 
 test('Init error can be deserialized', () => {
@@ -143,7 +158,7 @@ test('Init error can be deserialized', () => {
         'TestContract'
     );
 
-    expect(error).toEqual(1);
+    expect(error).toEqual(1n);
 });
 
 /**
@@ -154,7 +169,7 @@ test('Init error can be deserialized using deserializeTypeValue', () => {
         Buffer.from('0100', 'hex'),
         Buffer.from(TEST_CONTRACT_INIT_ERROR_SCHEMA, 'base64')
     );
-    expect(error).toEqual(1);
+    expect(error).toEqual(1n);
 });
 
 test('serialize UpdateContractParameters using CIS2 contract', () => {
@@ -267,4 +282,40 @@ test('serializeTypeValue throws an error if unable to serialize', () => {
     expect(() => serializeTypeValue('test', Buffer.alloc(0))).toThrowError(
         Error
     );
+});
+
+test('Parameter serialization works for U64_MAX', () => {
+    const updateParam = serializeUpdateContractParameters(
+        'test',
+        'receive',
+        U64_MAX,
+        Buffer.from(TEST_CONTRACT_U64, 'base64')
+    );
+    const initParam = serializeInitContractParameters(
+        'test',
+        U64_MAX,
+        Buffer.from(TEST_CONTRACT_U64, 'base64')
+    );
+    expect(updateParam.toString('hex')).toEqual('ffffffffffffffff');
+    expect(initParam.toString('hex')).toEqual('ffffffffffffffff');
+});
+
+test('Parameter serialization errors on (U64_MAX + 1)', () => {
+    const errMsg =
+        'Unable to serialize parameters, due to: Unsigned integer required';
+    const updateParam = () =>
+        serializeUpdateContractParameters(
+            'test',
+            'receive',
+            U64_MAX + 1n,
+            Buffer.from(TEST_CONTRACT_U64, 'base64')
+        );
+    const initParam = () =>
+        serializeInitContractParameters(
+            'test',
+            U64_MAX + 1n,
+            Buffer.from(TEST_CONTRACT_U64, 'base64')
+        );
+    expect(updateParam).toThrow(errMsg);
+    expect(initParam).toThrow(errMsg);
 });

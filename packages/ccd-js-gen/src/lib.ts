@@ -1,7 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as tsm from 'ts-morph';
-import * as SDK from '@concordium/common-sdk';
+import * as SDK from '@concordium/node-sdk';
 
 /**
  * Output options for the generated code.
@@ -96,6 +96,11 @@ async function addModuleClient(
 ) {
     const moduleInterface = await SDK.parseModuleInterface(moduleSource);
     const moduleRef = await SDK.calculateModuleReference(moduleSource);
+    const rawModuleSchema = await SDK.getEmbeddedModuleSchema(moduleSource);
+    const moduleSchema =
+        rawModuleSchema === null
+            ? null
+            : SDK.parseRawModuleSchema(rawModuleSchema);
 
     const outputFilePath = path.format({
         dir: outDirPath,
@@ -288,14 +293,30 @@ This function ensures the smart contract module is deployed on chain.
     const signerId = 'signer';
 
     for (const contract of moduleInterface.values()) {
+        const contractSchema = moduleSchema?.module.contracts.get(
+            contract.contractName
+        );
+        const initParameter = constructType(
+            parameterId,
+            contractSchema?.init?.parameter
+        );
+
         moduleSourceFile
             .addFunction({
                 docs: [
-                    `Send transaction for instantiating a new '${contract.contractName}' smart contract instance.
+                    `Send transaction for instantiating a new '${
+                        contract.contractName
+                    }' smart contract instance.
 
-@param {${moduleClientType}} ${moduleClientId} - The client of the on-chain smart contract module with referecence '${moduleRef.moduleRef}'.
+@param {${moduleClientType}} ${moduleClientId} - The client of the on-chain smart contract module with referecence '${
+                        moduleRef.moduleRef
+                    }'.
 @param {SDK.ContractTransactionMetadata} ${transactionMetadataId} - Metadata related to constructing a transaction for a smart contract module.
-@param {SDK.Parameter.Type} ${parameterId} - Parameter to provide as part of the transaction for the instantiation of a new smart contract contract.
+${
+    initParameter === undefined
+        ? ''
+        : `@param {${initParameter.type}} ${parameterId} - Parameter to provide as part of the transaction for the instantiation of a new smart contract contract.`
+}
 @param {SDK.AccountSigner} ${signerId} - The signer of the update contract transaction.
 
 @throws If failing to communicate with the concordium node.
@@ -313,10 +334,14 @@ This function ensures the smart contract module is deployed on chain.
                         name: transactionMetadataId,
                         type: 'SDK.ContractTransactionMetadata',
                     },
-                    {
-                        name: parameterId,
-                        type: 'SDK.Parameter.Type',
-                    },
+                    ...(initParameter === undefined
+                        ? []
+                        : [
+                              {
+                                  name: parameterId,
+                                  type: initParameter.type,
+                              },
+                          ]),
                     {
                         name: signerId,
                         type: 'SDK.AccountSigner',
@@ -329,7 +354,7 @@ This function ensures the smart contract module is deployed on chain.
     ${moduleClientId}.${internalModuleClientId},
     SDK.ContractName.fromStringUnchecked('${contract.contractName}'),
     ${transactionMetadataId},
-    ${parameterId},
+    ${initParameter?.tokens ?? 'SDK.Parameter.empty()'},
     ${signerId}
 );`
             );
@@ -414,7 +439,7 @@ This function ensures the smart contract module is deployed on chain.
                     scope: tsm.Scope.Public,
                     isReadonly: true,
                     name: contractAddressId,
-                    type: 'SDK.ContractAddress',
+                    type: 'SDK.ContractAddress.Type',
                 },
 
                 {
@@ -431,7 +456,10 @@ This function ensures the smart contract module is deployed on chain.
             .addConstructor({
                 parameters: [
                     { name: grpcClientId, type: 'SDK.ConcordiumGRPCClient' },
-                    { name: contractAddressId, type: 'SDK.ContractAddress' },
+                    {
+                        name: contractAddressId,
+                        type: 'SDK.ContractAddress.Type',
+                    },
                     { name: genericContractId, type: 'SDK.Contract' },
                 ],
             })
@@ -455,7 +483,7 @@ This function ensures the smart contract module is deployed on chain.
 Checking the information instance on chain.
 
 @param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The client used for contract invocations and updates.
-@param {SDK.ContractAddress} ${contractAddressId} - Address of the contract instance.
+@param {SDK.ContractAddress.Type} ${contractAddressId} - Address of the contract instance.
 @param {string} [${blockHashId}] - Hash of the block to check the information at. When not provided the last finalized block is used.
 
 @throws If failing to communicate with the concordium node or if any of the checks fails.
@@ -472,7 +500,7 @@ Checking the information instance on chain.
                     },
                     {
                         name: contractAddressId,
-                        type: 'SDK.ContractAddress',
+                        type: 'SDK.ContractAddress.Type',
                     },
                     {
                         name: blockHashId,
@@ -499,7 +527,7 @@ return new ${contractClientType}(
 Without checking the instance information on chain.
 
 @param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The client used for contract invocations and updates.
-@param {SDK.ContractAddress} ${contractAddressId} - Address of the contract instance.
+@param {SDK.ContractAddress.Type} ${contractAddressId} - Address of the contract instance.
 
 @returns {${contractClientType}}`,
                 ],
@@ -512,7 +540,7 @@ Without checking the instance information on chain.
                     },
                     {
                         name: contractAddressId,
-                        type: 'SDK.ContractAddress',
+                        type: 'SDK.ContractAddress.Type',
                     },
                 ],
                 returnType: contractClientType,
@@ -559,14 +587,63 @@ Without checking the instance information on chain.
         const invokerId = 'invoker';
 
         for (const entrypointName of contract.entrypointNames) {
+            const receiveParameter = constructType(
+                parameterId,
+                contractSchema?.receive.get(entrypointName)?.parameter
+            );
+
+            const receiveParameterTypeId = `${toPascalCase(
+                entrypointName
+            )}Parameter`;
+
+            const createReceiveParameterFnId = `create${toPascalCase(
+                entrypointName
+            )}Parameter`;
+
+            if (receiveParameter !== undefined) {
+                contractSourceFile.addTypeAlias({
+                    docs: [
+                        `Parameter type for update transaction for '${entrypointName}' entrypoint of the '${contract.contractName}' contract.`,
+                    ],
+                    isExported: true,
+                    name: receiveParameterTypeId,
+                    type: receiveParameter.type,
+                });
+
+                contractSourceFile
+                    .addFunction({
+                        docs: [
+                            `Construct Parameter for update transactions for '${entrypointName}' entrypoint of the '${contract.contractName}' contract.`,
+                        ],
+                        isExported: true,
+                        name: createReceiveParameterFnId,
+                        parameters: [
+                            {
+                                type: receiveParameterTypeId,
+                                name: parameterId,
+                            },
+                        ],
+                        returnType: 'SDK.Parameter.Type',
+                    })
+                    .setBodyText(`return ${receiveParameter.tokens}`);
+            }
+
             contractSourceFile
                 .addFunction({
                     docs: [
-                        `Send an update-contract transaction to the '${entrypointName}' entrypoint of the '${contract.contractName}' contract.
+                        `Send an update-contract transaction to the '${entrypointName}' entrypoint of the '${
+                            contract.contractName
+                        }' contract.
 
-@param {${contractClientType}} ${contractClientId} The client for a '${contract.contractName}' smart contract instance on chain.
+@param {${contractClientType}} ${contractClientId} The client for a '${
+                            contract.contractName
+                        }' smart contract instance on chain.
 @param {SDK.ContractTransactionMetadata} ${transactionMetadataId} - Metadata related to constructing a transaction for a smart contract.
-@param {SDK.Parameter.Type} ${parameterId} - Parameter to provide the smart contract entrypoint as part of the transaction.
+${
+    receiveParameter === undefined
+        ? ''
+        : `@param {${receiveParameterTypeId}} ${parameterId} - Parameter to provide the smart contract entrypoint as part of the transaction.`
+}
 @param {SDK.AccountSigner} ${signerId} - The signer of the update contract transaction.
 
 @throws If the entrypoint is not successfully invoked.
@@ -584,10 +661,14 @@ Without checking the instance information on chain.
                             name: transactionMetadataId,
                             type: 'SDK.ContractTransactionMetadata',
                         },
-                        {
-                            name: parameterId,
-                            type: 'SDK.Parameter.Type',
-                        },
+                        ...(receiveParameter === undefined
+                            ? []
+                            : [
+                                  {
+                                      name: parameterId,
+                                      type: receiveParameterTypeId,
+                                  },
+                              ]),
                         {
                             name: signerId,
                             type: 'SDK.AccountSigner',
@@ -600,7 +681,11 @@ Without checking the instance information on chain.
     '${entrypointName}',
     SDK.encodeHexString,
     ${transactionMetadataId},
-    SDK.Parameter.toHexString(${parameterId}),
+    ${
+        receiveParameter === undefined
+            ? ''
+            : `SDK.Parameter.toHexString(${createReceiveParameterFnId}(${parameterId}))`
+    },
     ${signerId}
 ).then(SDK.TransactionHash.fromHexString);`
                 );
@@ -608,12 +693,19 @@ Without checking the instance information on chain.
             contractSourceFile
                 .addFunction({
                     docs: [
-                        `Dry-run an update-contract transaction to the '${entrypointName}' entrypoint of the '${contract.contractName}' contract.
+                        `Dry-run an update-contract transaction to the '${entrypointName}' entrypoint of the '${
+                            contract.contractName
+                        }' contract.
 
-@param {${contractClientType}} ${contractClientId} The client for a '${contract.contractName}' smart contract instance on chain.
-@param {SDK.ContractAddress | SDK.AccountAddress} ${invokerId} - The address of the account or contract which is invoking this transaction.
-@param {SDK.Parameter.Type} ${parameterId} - Parameter to include in the transaction for the smart contract entrypoint.
-@param {SDK.BlockHash.Type} [${blockHashId}] - Optional block hash allowing for dry-running the transaction at the end of a specific block.
+@param {${contractClientType}} ${contractClientId} The client for a '${
+                            contract.contractName
+                        }' smart contract instance on chain.
+@param {SDK.ContractAddress.Type | SDK.AccountAddress.Type} ${invokerId} - The address of the account or contract which is invoking this transaction.
+${
+    receiveParameter === undefined
+        ? ''
+        : `@param {${receiveParameterTypeId}} ${parameterId} - Parameter to provide the smart contract entrypoint as part of the transaction.`
+}@param {SDK.BlockHash.Type} [${blockHashId}] - Optional block hash allowing for dry-running the transaction at the end of a specific block.
 
 @throws {SDK.RpcError} If failing to communicate with the concordium node or if any of the checks fails.
 
@@ -628,12 +720,16 @@ Without checking the instance information on chain.
                         },
                         {
                             name: invokerId,
-                            type: 'SDK.ContractAddress | SDK.AccountAddress',
+                            type: 'SDK.ContractAddress.Type | SDK.AccountAddress.Type',
                         },
-                        {
-                            name: parameterId,
-                            type: 'SDK.Parameter.Type',
-                        },
+                        ...(receiveParameter === undefined
+                            ? []
+                            : [
+                                  {
+                                      name: parameterId,
+                                      type: receiveParameterTypeId,
+                                  },
+                              ]),
                         {
                             name: blockHashId,
                             hasQuestionToken: true,
@@ -647,7 +743,11 @@ Without checking the instance information on chain.
     '${entrypointName}',
     ${invokerId},
     SDK.encodeHexString,
-    SDK.Parameter.toHexString(${parameterId}),
+    ${
+        receiveParameter === undefined
+            ? ''
+            : `SDK.Parameter.toHexString(${createReceiveParameterFnId}(${parameterId}))`
+    },
     ${blockHashId} === undefined ? undefined : SDK.BlockHash.toHexString(${blockHashId})
 );`
                 );
@@ -666,4 +766,305 @@ function capitalize(str: string): string {
  */
 function toPascalCase(str: string): string {
     return str.split(/[-_]/g).map(capitalize).join('');
+}
+
+/** Type information from the schema. */
+type SchemaTypeAndMapper = {
+    /** The type to provide for a given schema type. */
+    type: string;
+    /** Provided the identifier for the input (of the above type), this generates tokens for converting it into Schema JSON format. */
+    mapper: (id: string) => string;
+};
+
+function schemaToTypeAndMapper(
+    schemaType: SDK.SchemaType
+): SchemaTypeAndMapper | undefined {
+    switch (schemaType.type) {
+        case 'Unit':
+            return undefined;
+        case 'Bool':
+            return {
+                type: 'boolean',
+                mapper(id) {
+                    return id;
+                },
+            };
+        case 'U8':
+        case 'U16':
+        case 'U32':
+        case 'I8':
+        case 'I16':
+        case 'I32':
+            return {
+                type: 'number',
+                mapper(id) {
+                    return id;
+                },
+            };
+        case 'U64':
+        case 'I64':
+        case 'U128':
+        case 'I128':
+            return {
+                type: 'number | bigint',
+                mapper(id) {
+                    return `BigInt(${id}).toString()`; // TODO: check that the schema JSON actually use a string here.
+                },
+            };
+        case 'Amount':
+            return {
+                type: 'SDK.Amount.Type',
+                mapper(id) {
+                    return `SDK.Amount.toSchemaValue(${id})`;
+                },
+            };
+        case 'AccountAddress':
+            return {
+                type: 'SDK.AccountAddress.Type',
+                mapper(id) {
+                    return `SDK.AccountAddress.toSchemaValue(${id})`;
+                },
+            };
+        case 'ContractAddress':
+            return {
+                type: 'SDK.ContractAddress.Type',
+                mapper(id) {
+                    return `SDK.ContractAddress.toSchemaValue(${id})`;
+                },
+            };
+        case 'Timestamp':
+            return {
+                type: 'SDK.Timestamp.Type',
+                mapper(id) {
+                    return `SDK.Timestamp.toSchemaValue(${id})`;
+                },
+            };
+        case 'Duration':
+            return {
+                type: 'SDK.Duration.Type',
+                mapper(id) {
+                    return `SDK.Duration.toSchemaValue(${id})`;
+                },
+            };
+        case 'Pair':
+            const first = schemaToTypeAndMapper(schemaType.first);
+            const second = schemaToTypeAndMapper(schemaType.second);
+
+            return {
+                type: `[${first?.type}, ${second?.type}]`,
+                mapper(id) {
+                    return `[${first?.mapper(`${id}[0]`)}, ${second?.mapper(
+                        `${id}[1]`
+                    )}]`;
+                },
+            };
+        case 'List': {
+            const item = schemaToTypeAndMapper(schemaType.item);
+            return {
+                type: `Array<${item?.type}>`,
+                mapper(id) {
+                    return `${id}.map((item) => (${item?.mapper('item')}))`;
+                },
+            };
+        }
+        case 'Set': {
+            const item = schemaToTypeAndMapper(schemaType.item);
+            return {
+                type: `Set<${item?.type}>`,
+                mapper(id) {
+                    return `[...${id}.values()].map((value) => (${item?.mapper(
+                        'value'
+                    )}))`;
+                },
+            };
+        }
+        case 'Map': {
+            const key = schemaToTypeAndMapper(schemaType.key);
+            const value = schemaToTypeAndMapper(schemaType.value);
+            return {
+                type: `Map<${key?.type}, ${value?.type}>`,
+                mapper(id) {
+                    return `[...${id}.entries()].map(([key, value]) => [${key?.mapper(
+                        'key'
+                    )}, ${value?.mapper('value')}])`;
+                },
+            };
+        }
+        case 'Array': {
+            const item = schemaToTypeAndMapper(schemaType.item);
+            return {
+                type: `Array<${item?.type}>`,
+                mapper(id) {
+                    return `${id}.map((item) => (${item?.mapper('item')}))`;
+                },
+            };
+        }
+        case 'Struct':
+            return fieldToTypeAndMapper(schemaType.fields);
+
+        case 'Enum':
+        case 'TaggedEnum': {
+            const variants =
+                schemaType.type === 'Enum'
+                    ? schemaType.variants
+                    : [...schemaType.variants.values()];
+
+            const variantSchemas = variants.map((variant) => ({
+                name: variant.name,
+                ...fieldToTypeAndMapper(variant.fields),
+            }));
+
+            const variantTypes = variantSchemas.map(
+                (variantSchema) =>
+                    `{ type: '${variantSchema.name}'${
+                        variantSchema.type === undefined
+                            ? ''
+                            : `, content: ${variantSchema.type}`
+                    } }`
+            );
+
+            return {
+                type: variantTypes.join(' | '),
+                mapper(id) {
+                    const variantCases = variantSchemas.map(
+                        (variantSchema) => `    case '${variantSchema.name}': {
+        return { '${variantSchema.name}': ${
+                            variantSchema.mapper?.(`${id}.content`) ?? '[]'
+                        }};
+    }`
+                    );
+                    return `(() => { switch (${id}.type) {\n${variantCases.join(
+                        '\n'
+                    )}\n}})()`;
+                },
+            };
+        }
+        case 'String':
+            return {
+                type: 'string',
+                mapper(id) {
+                    return id;
+                },
+            };
+        case 'ContractName':
+            return {
+                type: 'SDK.ContractName.Type',
+                mapper(id) {
+                    return `SDK.ContractName.toSchemaValue(${id})`;
+                },
+            };
+        case 'ReceiveName':
+            return {
+                type: 'SDK.ReceiveName.Type',
+                mapper(id) {
+                    return `SDK.ReceiveName.toSchemaValue(${id})`;
+                },
+            };
+        case 'ULeb128':
+        case 'ILeb128':
+            return {
+                type: 'number | bigint',
+                mapper(id) {
+                    return `BigInt(${id}).toString()`;
+                },
+            };
+        case 'ByteList':
+        case 'ByteArray':
+            return {
+                type: 'SDK.HexString',
+                mapper(id) {
+                    return id;
+                },
+            };
+    }
+}
+
+function fieldToTypeAndMapper(
+    fields: SDK.SchemaFields
+): SchemaTypeAndMapper | undefined {
+    switch (fields.type) {
+        case 'Named': {
+            const schemas = fields.fields.flatMap((named) => {
+                const schema = schemaToTypeAndMapper(named.field);
+                return schema === undefined
+                    ? []
+                    : [
+                          {
+                              name: named.name,
+                              ...schema,
+                          },
+                      ];
+            });
+
+            const objectFieldTypes = schemas.flatMap(
+                (s) => `    '${s.name}': ${s.type},`
+            );
+
+            return {
+                type: `{\n${objectFieldTypes.join('\n')}\n}`,
+                mapper(id) {
+                    const objectFields = schemas.map(
+                        (s) =>
+                            `   '${s.name}': ${s.mapper?.(
+                                `${id}['${s.name}']`
+                            )},`
+                    );
+                    return `{\n${objectFields.join('\n')}\n}`;
+                },
+            };
+        }
+        case 'Unnamed': {
+            const schemas = fields.fields.flatMap((f) => {
+                const schema = schemaToTypeAndMapper(f);
+                return schema === undefined ? [] : [schema];
+            });
+            if (schemas.length === 1) {
+                const schema = schemas[0];
+                return {
+                    type: schema.type,
+                    mapper(id) {
+                        return `[${schema.mapper(id)}]`;
+                    },
+                };
+            } else {
+                return {
+                    type: `[${schemas.map((s) => s?.type).join(', ')}]`,
+                    mapper(id) {
+                        const mapped = schemas.map((schema, index) =>
+                            schema.mapper(`${id}[${index}]`)
+                        );
+                        return `[${mapped.join(', ')}]`;
+                    },
+                };
+            }
+        }
+        case 'None':
+            return undefined;
+    }
+}
+
+function constructType(parameterId: string, schemaType?: SDK.SchemaType) {
+    // No schema type is present so fallback to plain parameter.
+    if (schemaType === undefined) {
+        return { type: 'SDK.Parameter.Type', tokens: parameterId };
+    }
+
+    const typeAndMapper = schemaToTypeAndMapper(schemaType);
+    if (typeAndMapper === undefined) {
+        // No parameter is needed according to the schema.
+        return undefined;
+    }
+
+    const base64Schema = Buffer.from(
+        SDK.serializeSchemaType(schemaType)
+    ).toString('base64');
+
+    const mappedParameter =
+        typeAndMapper.mapper === undefined
+            ? parameterId
+            : typeAndMapper.mapper(parameterId);
+    return {
+        type: typeAndMapper.type,
+        tokens: `SDK.Parameter.fromBase64SchemaType('${base64Schema}', ${mappedParameter})`,
+    };
 }

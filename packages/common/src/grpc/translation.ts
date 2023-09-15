@@ -4,10 +4,10 @@ import bs58check from 'bs58check';
 import * as v1 from '../types.js';
 import * as v2 from '../grpc-api/v2/concordium/types.js';
 import { mapRecord, unwrap } from '../util.js';
-import { AccountAddress } from '../types/accountAddress.js';
 import { ModuleReference } from '../types/moduleReference.js';
 import { CcdAmount } from '../types/ccdAmount.js';
 import { Base58String } from '../types.js';
+import * as AccountAddress from '../types/AccountAddress.js';
 
 function unwrapToHex(bytes: Uint8Array | undefined): v1.HexString {
     return Buffer.from(unwrap(bytes)).toString('hex');
@@ -2228,7 +2228,7 @@ function trInstanceInfoCommon(
         sourceModule: ModuleReference.fromBytes(
             Buffer.from(unwrap(info.sourceModule?.value))
         ),
-        owner: AccountAddress.fromBytes(Buffer.from(unwrap(info.owner?.value))),
+        owner: AccountAddress.fromBuffer(unwrap(info.owner?.value)),
         methods: info.methods.map((name) => name.value),
         name: unwrap(info.name?.value),
     };

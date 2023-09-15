@@ -65,10 +65,7 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const contract: ContractAddress = {
-        index: BigInt(cli.flags.contract),
-        subindex: 0n,
-    };
+    const contract = ContractAddress.create(cli.flags.contract);
 
     const state: HexString = await client.instanceStateLookup(
         contract,

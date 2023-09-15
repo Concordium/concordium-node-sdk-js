@@ -8,6 +8,7 @@ import * as BlockHash from './BlockHash.js';
 import * as Parameter from './Parameter.js';
 import * as TransactionHash from './TransactionHash.js';
 import * as ContractName from './ContractName.js';
+import * as AccountAddress from './AccountAddress.js';
 import {
     AccountTransactionType,
     InitContractPayload,
@@ -16,7 +17,6 @@ import {
 import { ConcordiumGRPCClient } from '../grpc/index.js';
 import { AccountSigner, signTransaction } from '../signHelpers.js';
 import { CcdAmount } from './ccdAmount.js';
-import { AccountAddress } from './accountAddress.js';
 import { TransactionExpiry } from './transactionExpiry.js';
 
 /**
@@ -150,7 +150,7 @@ export async function createAndSendInitTransaction(
         maxContractExecutionEnergy: metadata.energy,
         param: Buffer.from(parameter.buffer),
     };
-    const sender = new AccountAddress(metadata.senderAddress);
+    const sender = AccountAddress.fromBase58(metadata.senderAddress);
     const { nonce } = await moduleClient.grpcClient.getNextAccountNonce(sender);
     const header = {
         expiry: new TransactionExpiry(

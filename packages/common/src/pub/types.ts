@@ -13,8 +13,6 @@ export {
 export { encodeHexString } from '../serializationHelpers.js';
 export { sha256 } from '../hash.js';
 
-export { CredentialRegistrationId } from '../types/CredentialRegistrationId.js';
-export { AccountAddress } from '../types/accountAddress.js';
 export { CcdAmount } from '../types/ccdAmount.js';
 export { TransactionExpiry } from '../types/transactionExpiry.js';
 export { DataBlob } from '../types/DataBlob.js';
@@ -26,7 +24,6 @@ export {
     replaceDateWithTimeStampAttribute,
 } from '../types/VerifiablePresentation.js';
 
-export { isAlias, getAlias } from '../alias.js';
 export { deserializeAccountTransaction } from '../deserialization.js';
 export * from '../signHelpers.js';
 export * from '../versionedTypeHelpers.js';
@@ -61,3 +58,7 @@ export * as TransactionHash from '../types/TransactionHash.js';
 export * as BlockHash from '../types/BlockHash.js';
 export * as ContractName from '../types/ContractName.js';
 export * as InitName from '../types/InitName.js';
+export * as CredentialRegistrationId from '../types/CredentialRegistrationId.js';
+export * as AccountAddress from '../types/AccountAddress.js';
+export * as ContractAddress from '../types/ContractAddress.js';
+export * as EntrypointName from '../types/EntrypointName.js';

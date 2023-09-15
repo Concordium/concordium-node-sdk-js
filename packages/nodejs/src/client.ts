@@ -222,7 +222,7 @@ export default class ConcordiumNodeClient {
      * @returns the account info for the provided account address, undefined is the account does not exist
      */
     async getAccountInfo(
-        accountAddress: string | Address | CredentialRegistrationId,
+        accountAddress: string | Address.Type | CredentialRegistrationId.Type,
         blockHash: string
     ): Promise<AccountInfo | undefined> {
         if (!isValidHash(blockHash)) {
@@ -285,7 +285,7 @@ export default class ConcordiumNodeClient {
      * @returns the next account nonce, and a boolean indicating if the nonce is reliable
      */
     async getNextAccountNonce(
-        accountAddress: Address
+        accountAddress: Address.Type
     ): Promise<NextAccountNonce | undefined> {
         const input: AccountAddress = {
             accountAddress: accountAddress.address,
@@ -364,7 +364,7 @@ export default class ConcordiumNodeClient {
             | keyof UpdateQueue
             | keyof KeysWithThreshold
             | keyof TransferredEvent
-            | keyof ContractAddress
+            | keyof ContractAddress.Type
             | keyof DelegationStakeChangedEvent
             | keyof ConsensusParameters
             | keyof TimeoutParameters
@@ -591,19 +591,18 @@ export default class ConcordiumNodeClient {
      */
     async getInstances(
         blockHash: string
-    ): Promise<ContractAddress[] | undefined> {
+    ): Promise<ContractAddress.Type[] | undefined> {
         if (!isValidHash(blockHash)) {
             throw new Error('The input was not a valid hash: ' + blockHash);
         }
         const input: BlockHash = { blockHash };
-        const { value } = await this.client.getAnonymityRevokers(input)
-            .response;
-        const bigIntPropertyKeys: (keyof ContractAddress)[] = [
+        const { value } = await this.client.getInstances(input).response;
+        const bigIntPropertyKeys: (keyof ContractAddress.Type)[] = [
             'index',
             'subindex',
         ];
 
-        return convertJsonResponse<ContractAddress[]>(
+        return convertJsonResponse<ContractAddress.Type[]>(
             value,
             buildJsonResponseReviver([], bigIntPropertyKeys),
             intToStringTransformer(bigIntPropertyKeys)
@@ -617,7 +616,7 @@ export default class ConcordiumNodeClient {
      * @returns A JSON object with information about the contract instance
      */
     async getInstanceInfo(
-        address: ContractAddress,
+        address: ContractAddress.Type,
         blockHash: string
     ): Promise<InstanceInfo | undefined> {
         if (!isValidHash(blockHash)) {
@@ -634,7 +633,7 @@ export default class ConcordiumNodeClient {
             const common = {
                 amount: new CcdAmount(BigInt(result.amount)),
                 sourceModule: new ModuleReference(result.sourceModule),
-                owner: new Address(result.owner),
+                owner: Address.fromBase58(result.owner),
                 methods: result.methods,
                 name: result.name,
             };

@@ -2,8 +2,8 @@
  * @module Common GRPC-Client
  */
 
-import { AccountAddress } from './types/accountAddress.js';
-import { CredentialRegistrationId } from './types/CredentialRegistrationId.js';
+import * as AccountAddress from './types/AccountAddress.js';
+import * as CredentialRegistrationId from './types/CredentialRegistrationId.js';
 import { CcdAmount } from './types/ccdAmount.js';
 import { DataBlob } from './types/DataBlob.js';
 import { TransactionExpiry } from './types/transactionExpiry.js';
@@ -139,8 +139,8 @@ export interface ContractAddress {
 }
 
 export type AccountIdentifierInput =
-    | AccountAddress
-    | CredentialRegistrationId
+    | AccountAddress.Type
+    | CredentialRegistrationId.Type
     | bigint;
 
 export type Address =
@@ -1585,7 +1585,7 @@ export interface UpdateContractPayload {
 
 export interface AccountTransactionHeader {
     /** account address that is source of this transaction */
-    sender: AccountAddress;
+    sender: AccountAddress.Type;
 
     /**
      * the nonce for the transaction, usually acquired by
@@ -1602,7 +1602,7 @@ export interface SimpleTransferPayload {
     amount: CcdAmount;
 
     /** the recipient of the transfer */
-    toAddress: AccountAddress;
+    toAddress: AccountAddress.Type;
 }
 
 export interface SimpleTransferWithMemoPayload extends SimpleTransferPayload {
@@ -1780,7 +1780,7 @@ export interface InstanceInfoCommon {
     /** Module reference of the current module being used by this instance. */
     sourceModule: ModuleReference;
     /** Account used to instantiate this smart contract instance. */
-    owner: AccountAddress;
+    owner: AccountAddress.Type;
     /** List of receive functions currently exposed by this smart contract. These are of the form '<contractName>.<entrypointName>'. */
     methods: string[];
     /** Name of the smart contract. This is of the form 'init_<contractName>'. */
@@ -1835,7 +1835,7 @@ export interface InstanceStateKVPair {
 }
 
 export interface ContractContext {
-    invoker?: ContractAddress | AccountAddress;
+    invoker?: ContractAddress | AccountAddress.Type;
     contract: ContractAddress;
     amount?: CcdAmount;
     method: string;
@@ -1867,14 +1867,14 @@ export type Invoker =
  * @deprecated This is helper intented for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export function buildInvoker(
-    invoker?: AccountAddress | ContractAddress
+    invoker?: AccountAddress.Type | ContractAddress
 ): Invoker {
     if (!invoker) {
         return null;
-    } else if ((invoker as AccountAddress).address) {
+    } else if (AccountAddress.isAccountAddress(invoker)) {
         return {
             type: 'AddressAccount',
-            address: (invoker as AccountAddress).address,
+            address: AccountAddress.toBase58(invoker),
         };
     } else if ((invoker as ContractAddress).index !== undefined) {
         const invokerContract = invoker as ContractAddress;

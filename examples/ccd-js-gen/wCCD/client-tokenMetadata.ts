@@ -6,7 +6,7 @@ import { parseEndpoint } from '../../shared/util.js';
 // The generated module could be imported directly like below,
 // but for this example it is imported dynamicly to improve
 // the error message when not generated.
-// import * as wCCDModule from './lib/wCCD';
+// import * as wCCDContractClient from './lib/cis2_wCCD';
 
 const cli = meow(
     `
@@ -51,10 +51,10 @@ const grpcClient = SDK.createConcordiumClient(
     scheme === 'https' ? credentials.createSsl() : credentials.createInsecure()
 );
 
-const contractAddress: SDK.ContractAddress = {
-    index: BigInt(cli.flags.index),
-    subindex: BigInt(cli.flags.subindex),
-};
+const contractAddress = SDK.ContractAddress.create(
+    cli.flags.index,
+    cli.flags.subindex
+);
 
 (async () => {
     // Importing the generated smart contract module client.
@@ -69,7 +69,8 @@ const contractAddress: SDK.ContractAddress = {
         throw e;
     });
 
-    const parameter = SDK.Parameter.fromHexString('010000'); // First 2 bytes for number of tokens to query, 1 byte for the token ID.
+    const wCCDTokenId = '';
+    const parameter = [wCCDTokenId];
     const contract = await wCCDContractClient.create(
         grpcClient,
         contractAddress
@@ -77,7 +78,7 @@ const contractAddress: SDK.ContractAddress = {
 
     const result = await wCCDContractClient.dryRunTokenMetadata(
         contract,
-        new SDK.AccountAddress(
+        SDK.AccountAddress.fromBase58(
             '357EYHqrmMiJBmUZTVG5FuaMq4soAhgtgz6XNEAJaXHW3NHaUf'
         ),
         parameter

@@ -11,7 +11,7 @@ import {
 } from './types.js';
 import { sign, verify } from '@noble/ed25519';
 import { Buffer } from 'buffer/index.js';
-import { AccountAddress } from './types/accountAddress.js';
+import * as AccountAddress from './types/AccountAddress.js';
 import { sha256 } from './hash.js';
 import { mapRecord } from './util.js';
 
@@ -195,13 +195,13 @@ export function signTransaction(
  * @param message the message to sign, assumed to be utf8 encoded string or a Uint8Array/buffer.
  */
 function getMessageDigest(
-    account: AccountAddress,
+    account: AccountAddress.Type,
     message: string | Uint8Array
 ): Buffer {
     const prepend = Buffer.alloc(8, 0);
     const rawMessage =
         typeof message === 'string' ? Buffer.from(message, 'utf8') : message;
-    return sha256([account.decodedAddress, prepend, rawMessage]);
+    return sha256([AccountAddress.toBuffer(account), prepend, rawMessage]);
 }
 
 /**
@@ -212,7 +212,7 @@ function getMessageDigest(
  * @param signer An object that handles the keys of the account, and performs the actual signing.
  */
 export function signMessage(
-    account: AccountAddress,
+    account: AccountAddress.Type,
     message: string | Uint8Array,
     signer: AccountSigner
 ): Promise<AccountTransactionSignature> {
@@ -239,7 +239,7 @@ export async function verifyMessageSignature(
     }
 
     const digest = getMessageDigest(
-        new AccountAddress(accountInfo.accountAddress),
+        AccountAddress.fromBase58(accountInfo.accountAddress),
         message
     );
 

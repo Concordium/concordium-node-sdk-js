@@ -24,7 +24,7 @@ import {
     ConfigureDelegationPayload,
     ConfigureBakerPayload,
 } from './types.js';
-import { AccountAddress } from './types/accountAddress.js';
+import * as AccountAddress from './types/AccountAddress.js';
 import { DataBlob } from './types/DataBlob.js';
 import { CcdAmount } from './types/ccdAmount.js';
 import { Cursor } from './deserializationHelpers.js';
@@ -51,7 +51,7 @@ export class SimpleTransferHandler
     }
 
     deserialize(serializedPayload: Cursor): SimpleTransferPayload {
-        const toAddress = AccountAddress.fromBytes(
+        const toAddress = AccountAddress.fromBuffer(
             Buffer.from(serializedPayload.read(32))
         );
         const amount = new CcdAmount(
@@ -80,7 +80,7 @@ export class SimpleTransferWithMemoHandler
     }
 
     deserialize(serializedPayload: Cursor): SimpleTransferWithMemoPayload {
-        const toAddress = AccountAddress.fromBytes(
+        const toAddress = AccountAddress.fromBuffer(
             Buffer.from(serializedPayload.read(32))
         );
         const memoLength = serializedPayload.read(2).readUInt16BE(0);

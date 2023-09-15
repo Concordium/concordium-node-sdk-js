@@ -56,3 +56,12 @@ export function fromStringUnchecked(value: string): InitName {
 export function fromContractName(contractName: ContractName.Type): InitName {
     return fromStringUnchecked('init_' + contractName.value);
 }
+
+/**
+ * Get the string representation of the smart contract init-function name.
+ * @param {InitName} initName The init-function name of the smart contract.
+ * @returns {string} a string.
+ */
+export function toString(initName: InitName): string {
+    return initName.value;
+}

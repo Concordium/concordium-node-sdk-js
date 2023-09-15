@@ -7,7 +7,7 @@ import {
     AccountTransactionSignature,
     isAccountTransactionType,
 } from './types.js';
-import { AccountAddress } from './types/accountAddress.js';
+import * as AccountAddress from './types/AccountAddress.js';
 import { TransactionExpiry } from './types/transactionExpiry.js';
 
 /**
@@ -61,7 +61,7 @@ function deserializeAccountTransactionSignature(
 function deserializeTransactionHeader(
     serializedHeader: Cursor
 ): AccountTransactionHeader {
-    const sender = AccountAddress.fromBytes(
+    const sender = AccountAddress.fromBuffer(
         Buffer.from(serializedHeader.read(32))
     );
     const nonce = serializedHeader.read(8).readBigUInt64BE(0);

@@ -8,6 +8,12 @@ import {
     deserializeUInt8,
 } from './deserializationHelpers.js';
 import { Buffer } from 'buffer/index.js';
+import {
+    encodeWord16,
+    encodeWord32,
+    encodeWord64,
+    encodeWord8,
+} from './serializationHelpers.js';
 /**
  * The JSON schema representation of a rust Option
  *
@@ -817,4 +823,287 @@ function deserializeSchemaModuleV3(cursor: Cursor): SchemaModuleV3 {
             cursor
         ),
     };
+}
+
+/**
+ * Serialize a schema type.
+ * @param {SchemaType} schemaType The schema type to serialize
+ * @returns {Uint8Array} The buffer containing the serialized schema type.
+ */
+export function serializeSchemaType(schemaType: SchemaType): Uint8Array {
+    switch (schemaType.type) {
+        case 'Unit':
+            return Uint8Array.of(0);
+        case 'Bool':
+            return Uint8Array.of(1);
+        case 'U8':
+            return Uint8Array.of(2);
+        case 'U16':
+            return Uint8Array.of(3);
+        case 'U32':
+            return Uint8Array.of(4);
+        case 'U64':
+            return Uint8Array.of(5);
+        case 'I8':
+            return Uint8Array.of(6);
+        case 'I16':
+            return Uint8Array.of(7);
+        case 'I32':
+            return Uint8Array.of(8);
+        case 'I64':
+            return Uint8Array.of(9);
+        case 'Amount':
+            return Uint8Array.of(10);
+        case 'AccountAddress':
+            return Uint8Array.of(11);
+        case 'ContractAddress':
+            return Uint8Array.of(12);
+        case 'Timestamp':
+            return Uint8Array.of(13);
+        case 'Duration':
+            return Uint8Array.of(14);
+        case 'Pair':
+            return Buffer.concat([
+                Uint8Array.of(15),
+                serializeSchemaType(schemaType.first),
+                serializeSchemaType(schemaType.second),
+            ]);
+        case 'List':
+            return Buffer.concat([
+                Uint8Array.of(16),
+                serialSizeLength(schemaType.sizeLength),
+                serializeSchemaType(schemaType.item),
+            ]);
+        case 'Set':
+            return Buffer.concat([
+                Uint8Array.of(17),
+                serialSizeLength(schemaType.sizeLength),
+                serializeSchemaType(schemaType.item),
+            ]);
+        case 'Map':
+            return Buffer.concat([
+                Uint8Array.of(18),
+                serialSizeLength(schemaType.sizeLength),
+                serializeSchemaType(schemaType.key),
+                serializeSchemaType(schemaType.value),
+            ]);
+        case 'Array':
+            return Buffer.concat([
+                Uint8Array.of(19),
+                encodeWord32(schemaType.size, true),
+                serializeSchemaType(schemaType.item),
+            ]);
+        case 'Struct':
+            return Buffer.concat([
+                Uint8Array.of(20),
+                serialFields(schemaType.fields),
+            ]);
+        case 'Enum':
+            return Buffer.concat([
+                Uint8Array.of(21),
+                serializeList('U32', serializeEnumVariant, schemaType.variants),
+            ]);
+        case 'String':
+            return Buffer.concat([
+                Uint8Array.of(22),
+                serialSizeLength(schemaType.sizeLength),
+            ]);
+        case 'U128':
+            return Uint8Array.of(23);
+        case 'I128':
+            return Uint8Array.of(24);
+        case 'ContractName':
+            return Buffer.concat([
+                Uint8Array.of(25),
+                serialSizeLength(schemaType.sizeLength),
+            ]);
+        case 'ReceiveName':
+            return Buffer.concat([
+                Uint8Array.of(26),
+                serialSizeLength(schemaType.sizeLength),
+            ]);
+        case 'ULeb128':
+            return Buffer.concat([
+                Uint8Array.of(27),
+                encodeWord32(schemaType.maxByteSize, true),
+            ]);
+        case 'ILeb128':
+            return Buffer.concat([
+                Uint8Array.of(28),
+                encodeWord32(schemaType.maxByteSize, true),
+            ]);
+        case 'ByteList':
+            return Buffer.concat([
+                Uint8Array.of(29),
+                serialSizeLength(schemaType.sizeLength),
+            ]);
+        case 'ByteArray':
+            return Buffer.concat([
+                Uint8Array.of(30),
+                encodeWord32(schemaType.size, true),
+            ]);
+        case 'TaggedEnum':
+            return Buffer.concat([
+                Uint8Array.of(31),
+                serializeMap(
+                    'U32',
+                    encodeWord8,
+                    serializeEnumVariant,
+                    schemaType.variants
+                ),
+            ]);
+        default:
+            throw new Error(
+                'Deserialization failed: Unexpected tag for SchemaType: '
+            );
+    }
+}
+
+/**
+ * Serialize the size length itself.
+ * @param {SchemaSizeLength} sizeLength Size length to serialize.
+ * @returns {Uint8Array} Buffer with serialization.
+ */
+function serialSizeLength(sizeLength: SchemaSizeLength): Uint8Array {
+    switch (sizeLength) {
+        case 'U8':
+            return new Uint8Array([0]);
+        case 'U16':
+            return new Uint8Array([1]);
+        case 'U32':
+            return new Uint8Array([2]);
+        case 'U64':
+            return new Uint8Array([3]);
+    }
+}
+
+/**
+ * Serialize the size of some collection using the size length.
+ * @param {SchemaSizeLength} sizeLength Size length to use when serializing the size.
+ * @param {bigint | number} size Size to serialize.
+ * @returns {Uint8Array} Buffer with serialization.
+ */
+function serialSize(
+    sizeLength: SchemaSizeLength,
+    size: bigint | number
+): Uint8Array {
+    switch (sizeLength) {
+        case 'U8':
+            return encodeWord8(Number(size));
+        case 'U16':
+            return encodeWord16(Number(size), true);
+        case 'U32':
+            return encodeWord32(Number(size), true);
+        case 'U64':
+            return encodeWord64(BigInt(size), true);
+    }
+}
+
+/**
+ * Serialize fields for schema type struct or enum variant.
+ * @param {SchemaFields} fields Fields for a struct or enum variant.
+ * @returns {Uint8Array} Buffer with serialization.
+ */
+function serialFields(fields: SchemaFields): Uint8Array {
+    switch (fields.type) {
+        case 'Named':
+            return Buffer.from([
+                Uint8Array.of(0),
+                serializeList('U32', serialNamedField, fields.fields),
+            ]);
+        case 'Unnamed':
+            return Buffer.from([
+                Uint8Array.of(1),
+                serializeList('U32', serializeSchemaType, fields.fields),
+            ]);
+        case 'None':
+            return Uint8Array.of(2);
+    }
+}
+
+/**
+ * Serialize named field for schema fields.
+ * @param {SchemaNamedField} named The named field to serialize.
+ * @returns {Uint8Array} Buffer with serialization.
+ */
+function serialNamedField(named: SchemaNamedField): Uint8Array {
+    return Buffer.from([
+        serializeString('U32', named.name),
+        serializeSchemaType(named.field),
+    ]);
+}
+
+/**
+ * Serialize an enum variant.
+ * @param {SchemaEnumVariant} variant The enum variant to serialize.
+ * @returns {Uint8Array} Buffer with serialization.
+ */
+function serializeEnumVariant(variant: SchemaEnumVariant): Uint8Array {
+    return Buffer.from([
+        serializeString('U32', variant.name),
+        serialFields(variant.fields),
+    ]);
+}
+
+/**
+ * Represent a function for serializing a type A.
+ * @template A Item to be serialized.
+ */
+type Serializer<A> = (a: A) => Uint8Array;
+
+/**
+ * Serialize a list of items.
+ * @template A Type of a list item.
+ * @param {SchemaSizeLength} sizeLength The size length to use for serializing the size.
+ * @param {Serializer<A>} serialItem Function for serializing each item.
+ * @param {A[]} list List of items to serialize.
+ * @returns {Uint8Array} Buffer with serialization.
+ */
+function serializeList<A>(
+    sizeLength: SchemaSizeLength,
+    serialItem: Serializer<A>,
+    list: A[]
+): Uint8Array {
+    return Buffer.from([
+        serialSize(sizeLength, list.length),
+        ...list.map(serialItem),
+    ]);
+}
+
+/**
+ * Serialize a string.
+ * @param {SchemaSizeLength} sizeLength The size length to use for serializing the size.
+ * @returns {Uint8Array} Buffer with serialization.
+ */
+function serializeString(
+    sizeLength: SchemaSizeLength,
+    value: string
+): Uint8Array {
+    return Buffer.from([
+        serialSize(sizeLength, value.length),
+        Buffer.from(value, 'utf8'),
+    ]);
+}
+
+/**
+ * Serialize a map.
+ * @template K Type for keys used in the map.
+ * @template V Type for values used in the map.
+ * @param {SchemaSizeLength} sizeLength The size length to use for serializing the size.
+ * @param {Serializer<K>} serialKey Function for serializing a key.
+ * @param {Serializer<v>} serialValue Function for serializing a value.
+ * @param {Map<K, V>} map The map to serialize.
+ * @returns {Uint8Array} Buffer with serialization.
+ */
+function serializeMap<K, V>(
+    sizeLength: SchemaSizeLength,
+    serialKey: Serializer<K>,
+    serialValue: Serializer<V>,
+    map: Map<K, V>
+): Uint8Array {
+    const buffers: Uint8Array[] = [serialSize(sizeLength, map.size)];
+    for (const [k, v] of map.entries()) {
+        buffers.push(serialKey(k), serialValue(v));
+    }
+    return Buffer.from(buffers);
 }

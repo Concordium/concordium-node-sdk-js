@@ -27,7 +27,7 @@ import {
 } from './types.js';
 import { calculateEnergyCost } from './energyCost.js';
 import { countSignatures } from './util.js';
-import { AccountAddress } from './types/accountAddress.js';
+import * as AccountAddress from './types/AccountAddress.js';
 import { sha256 } from './hash.js';
 
 function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
@@ -363,7 +363,7 @@ export function serializeCredentialDeploymentInfo(
  */
 export function getCredentialForExistingAccountSignDigest(
     unsignedCredentialDeploymentInfo: UnsignedCredentialDeploymentInformation,
-    address: AccountAddress
+    address: AccountAddress.Type
 ): Buffer {
     const serializedCredentialValues = serializeCredentialDeploymentValues(
         unsignedCredentialDeploymentInfo
@@ -376,7 +376,7 @@ export function getCredentialForExistingAccountSignDigest(
         serializedCredentialValues,
         serializedIdOwnershipProofs,
         existingAccountByte,
-        address.decodedAddress,
+        AccountAddress.toBuffer(address),
     ]);
 }
 

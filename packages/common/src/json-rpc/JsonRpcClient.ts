@@ -18,8 +18,8 @@ import {
     TransactionStatus,
     TransactionSummary,
     Versioned,
-} from '../types.js';
-import { AccountAddress } from '../types/accountAddress.js';
+} from '../pub/types.js';
+import * as AccountAddress from '../types/AccountAddress.js';
 import Provider, { JsonRpcResponse } from './providers/provider.js';
 import {
     serializeAccountTransactionForSubmission,
@@ -32,7 +32,7 @@ import {
     intToStringTransformer,
     isValidHash,
 } from '../util.js';
-import { CredentialRegistrationId } from '../types/CredentialRegistrationId.js';
+import * as CredentialRegistrationId from '../types/CredentialRegistrationId.js';
 
 function transformJsonResponse<Result>(
     jsonString: string,
@@ -58,7 +58,7 @@ export class JsonRpcClient {
     }
 
     async getNextAccountNonce(
-        accountAddress: AccountAddress
+        accountAddress: AccountAddress.Type
     ): Promise<NextAccountNonce | undefined> {
         const response = await this.provider.request('getNextAccountNonce', {
             address: accountAddress.address,
@@ -186,7 +186,7 @@ export class JsonRpcClient {
      * @returns A JSON object with information about the contract instance
      */
     async getInstanceInfo(
-        address: ContractAddress,
+        address: ContractAddress.Type,
         blockHash?: string
     ): Promise<InstanceInfo | undefined> {
         if (!blockHash) {
@@ -212,7 +212,7 @@ export class JsonRpcClient {
         const common = {
             amount: new CcdAmount(BigInt(result.amount)),
             sourceModule: new ModuleReference(result.sourceModule),
-            owner: new AccountAddress(result.owner),
+            owner: AccountAddress.fromBase58(result.owner),
             methods: result.methods,
             name: result.name,
         };
@@ -251,7 +251,10 @@ export class JsonRpcClient {
      * @returns the account info for the provided account address, undefined is the account does not exist
      */
     async getAccountInfo(
-        accountAddress: string | AccountAddress | CredentialRegistrationId,
+        accountAddress:
+            | string
+            | AccountAddress.Type
+            | CredentialRegistrationId.Type,
         blockHash?: string
     ): Promise<AccountInfo | undefined> {
         if (!blockHash) {

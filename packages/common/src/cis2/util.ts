@@ -9,12 +9,13 @@ import {
 } from '../serializationHelpers.js';
 import type {
     Base58String,
-    ContractAddress,
     HexString,
     SmartContractTypeValues,
 } from '../types.js';
+import * as ContractAddress from '../types/ContractAddress.js';
+import * as AccountAddress from '../types/AccountAddress.js';
+import * as EntrypointName from '../types/EntrypointName.js';
 import { Buffer } from 'buffer/index.js';
-import { AccountAddress } from '../types/accountAddress.js';
 import {
     uleb128Decode,
     uleb128DecodeWithIndex,
@@ -37,9 +38,9 @@ const TOKEN_RECEIVE_HOOK_MAX_LENGTH = 100;
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace CIS2 {
     /**
-     * Union between `ContractAddress` and an account address represented by a `Base58String`.
+     * Union between `ContractAddress` and an account address `AccountAddress`.
      */
-    export type Address = ContractAddress | Base58String;
+    export type Address = ContractAddress.Type | AccountAddress.Type;
 
     /**
      * A Token ID that uniquely identifies the CIS-2 Token
@@ -51,7 +52,7 @@ export namespace CIS2 {
      * CIS-2 Token ID.
      */
     export type TokenAddress = {
-        contract: ContractAddress;
+        contract: ContractAddress.Type;
         id: TokenId;
     };
 
@@ -60,15 +61,15 @@ export namespace CIS2 {
      */
     export type ContractReceiver = {
         /** Contract address to receive tokens */
-        address: ContractAddress;
+        address: ContractAddress.Type;
         /** Name of the entrypoint to be called on receiver contract. This is only the name of the function, NOT including the contract name */
-        hookName: string;
+        hookName: EntrypointName.Type;
     };
 
     /**
-     * Union between an account address represented by a `Base58String` and a `ContractReceiver`.
+     * Union between an account address represented by an `AccountAddress` and a `ContractReceiver`.
      */
-    export type Receiver = Base58String | ContractReceiver;
+    export type Receiver = AccountAddress.Type | ContractReceiver;
 
     /**
      * Data needed to perform a "transfer" invocation according to the CIS-2 standard.
@@ -76,7 +77,7 @@ export namespace CIS2 {
     export type Transfer = {
         /** The ID of the token to transfer */
         tokenId: HexString;
-        /** The amount of tokens to transfer */
+        /** The amount of tokens to transfer, cannot be negative. */
         tokenAmount: bigint;
         /** The address to transfer from */
         from: Address;
@@ -178,13 +179,6 @@ export namespace CIS2 {
     };
 }
 
-/**
- * Checks whether an `Address` is a `ContractAddress`
- */
-export const isContractAddress = (
-    address: CIS2.Address
-): address is ContractAddress => typeof address !== 'string';
-
 function serializeCIS2TokenId(tokenId: CIS2.TokenId): Buffer {
     const serialized = Buffer.from(tokenId, 'hex');
 
@@ -222,8 +216,8 @@ function serializeTokenAmount(amount: bigint): Buffer {
     return serialized;
 }
 
-function serializeAccountAddress(address: HexString): Buffer {
-    return new AccountAddress(address).decodedAddress;
+function serializeAccountAddress(address: AccountAddress.Type): Uint8Array {
+    return AccountAddress.toBuffer(address);
 }
 
 /**
@@ -233,31 +227,33 @@ function serializeAccountAddress(address: HexString): Buffer {
  *
  * @returns {Buffer} the address serialized to bytes
  */
-export function serializeContractAddress(address: ContractAddress): Buffer {
+export function serializeContractAddress(
+    address: ContractAddress.Type
+): Uint8Array {
     const index = encodeWord64(address.index, true);
     const subindex = encodeWord64(address.subindex, true);
     return Buffer.concat([index, subindex]);
 }
 
 function serializeAddress(address: CIS2.Address): Buffer {
-    const isContract = isContractAddress(address);
-    const type = encodeWord8(isContract ? 1 : 0);
-    const serializedAddress = !isContract
-        ? serializeAccountAddress(address)
-        : serializeContractAddress(address);
-
-    return Buffer.concat([type, serializedAddress]);
+    return Buffer.concat(
+        ContractAddress.isContractAddress(address)
+            ? [encodeWord8(1), serializeContractAddress(address)]
+            : [encodeWord8(0), serializeAccountAddress(address)]
+    );
 }
 
 /**
- * Serializes {@link string} contract entrypoint into bytes, prefixed by a 2-byte length
+ * Serializes {@link EntrypointName.Type} contract entrypoint into bytes, prefixed by a 2-byte length
  *
- * @param {string} hook - the entrypoint to serialize
+ * @param {EntrypointName.Type} hook - the entrypoint to serialize
  *
- * @returns {Buffer} the entrypoint serialized to bytes
+ * @returns {Uint8Array} the entrypoint serialized to bytes
  */
-export function serializeReceiveHookName(hook: string): Buffer {
-    const serialized = Buffer.from(hook, 'ascii');
+export function serializeReceiveHookName(
+    hook: EntrypointName.Type
+): Uint8Array {
+    const serialized = Buffer.from(EntrypointName.toString(hook), 'ascii');
 
     if (serialized.length > TOKEN_RECEIVE_HOOK_MAX_LENGTH) {
         throw new Error(
@@ -275,13 +271,11 @@ function serializeContractReceiver(receiver: CIS2.ContractReceiver): Buffer {
 }
 
 function serializeReceiver(receiver: CIS2.Receiver): Buffer {
-    const isAccount = typeof receiver === 'string';
-    const type = encodeWord8(isAccount ? 0 : 1);
-    const serializedAddress = isAccount
-        ? serializeAccountAddress(receiver)
-        : serializeContractReceiver(receiver);
-
-    return Buffer.concat([type, serializedAddress]);
+    return Buffer.concat(
+        AccountAddress.isAccountAddress(receiver)
+            ? [encodeWord8(0), AccountAddress.toBuffer(receiver)]
+            : [encodeWord8(1), serializeContractReceiver(receiver)]
+    );
 }
 
 function serializeAdditionalData(data: HexString): Buffer {
@@ -494,10 +488,7 @@ export function tokenAddressFromBase58(str: Base58String): CIS2.TokenAddress {
         );
     }
 
-    const contract = {
-        index,
-        subindex,
-    };
+    const contract = ContractAddress.create(index, subindex);
 
     const id = deserializeCIS2TokenId(tokenIdBytes);
 
@@ -565,7 +556,7 @@ export function formatCIS2UpdateOperator(
 ): CIS2.UpdateOperatorParamJson {
     return {
         update: input.type === 'add' ? { Add: {} } : { Remove: {} },
-        operator: isContractAddress(input.address)
+        operator: ContractAddress.isContractAddress(input.address)
             ? {
                   Contract: [
                       {
@@ -574,7 +565,7 @@ export function formatCIS2UpdateOperator(
                       },
                   ],
               }
-            : { Account: [input.address] },
+            : { Account: [AccountAddress.toBase58(input.address)] },
     };
 }
 
@@ -584,7 +575,9 @@ export function formatCIS2UpdateOperator(
 export function formatCIS2Transfer(
     input: CIS2.Transfer
 ): CIS2.TransferParamJson {
-    const from: CIS2.AddressParamJson = isContractAddress(input.from)
+    const from: CIS2.AddressParamJson = ContractAddress.isContractAddress(
+        input.from
+    )
         ? {
               Contract: [
                   {
@@ -593,10 +586,10 @@ export function formatCIS2Transfer(
                   },
               ],
           }
-        : { Account: [input.from] };
+        : { Account: [AccountAddress.toBase58(input.from)] };
     let to: CIS2.ReceiverParamJson;
-    if (typeof input.to === 'string') {
-        to = { Account: [input.to] };
+    if (AccountAddress.isAccountAddress(input.to)) {
+        to = { Account: [AccountAddress.toBase58(input.to)] };
     } else {
         to = {
             Contract: [
@@ -604,7 +597,7 @@ export function formatCIS2Transfer(
                     index: Number(input.to.address.index),
                     subindex: Number(input.to.address.subindex),
                 },
-                input.to.hookName,
+                EntrypointName.toString(input.to.hookName),
             ],
         };
     }

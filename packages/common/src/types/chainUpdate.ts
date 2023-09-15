@@ -3,7 +3,6 @@ import {
     AuthorizationsV0,
     AuthorizationsV1,
     Base58String,
-    Duration,
     FinalizationCommitteeParameters,
     GasRewardsV0,
     GasRewardsV1,
@@ -11,6 +10,7 @@ import {
     TimeoutParameters,
 } from '../types.js';
 import type {
+    Duration,
     Energy,
     IpInfo,
     ArInfo,

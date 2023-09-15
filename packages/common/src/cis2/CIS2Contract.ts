@@ -1,6 +1,9 @@
 import { stringify } from 'json-bigint';
 
-import { ContractAddress, HexString, InvokeContractResult } from '../types.js';
+import { HexString, InvokeContractResult } from '../types.js';
+import * as ContractAddress from '../types/ContractAddress.js';
+import * as ContractName from '../types/ContractName.js';
+import * as EntrypointName from '../types/EntrypointName.js';
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
 import { AccountSigner } from '../signHelpers.js';
 import {
@@ -14,10 +17,10 @@ import {
     formatCIS2UpdateOperator,
     formatCIS2Transfer,
     serializeCIS2UpdateOperators,
+    CIS2,
 } from './util.js';
-import type { CIS2 } from './util.js';
 import { CIS0, cis0Supports } from '../cis0.js';
-import { CISContract, ContractDryRun, getInvoker } from '../GenericContract.js';
+import { CISContract, ContractDryRun } from '../GenericContract.js';
 import { makeDynamicFunction } from '../util.js';
 
 type Views = 'balanceOf' | 'operatorOf' | 'tokenMetadata';
@@ -73,8 +76,8 @@ class CIS2DryRun extends ContractDryRun<Updates> {
     ): Promise<InvokeContractResult> {
         const serialize = makeDynamicFunction(serializeCIS2Transfers);
         return this.invokeMethod(
-            'transfer',
-            getInvoker(sender),
+            EntrypointName.fromStringUnchecked('transfer'),
+            sender,
             serialize,
             transfers,
             blockHash
@@ -107,8 +110,8 @@ class CIS2DryRun extends ContractDryRun<Updates> {
     ): Promise<InvokeContractResult> {
         const serialize = makeDynamicFunction(serializeCIS2UpdateOperators);
         return this.invokeMethod(
-            'updateOperator',
-            getInvoker(owner),
+            EntrypointName.fromStringUnchecked('updateOperator'),
+            owner,
             serialize,
             updates,
             blockHash
@@ -130,8 +133,8 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
     };
     protected makeDryRunInstance(
         grpcClient: ConcordiumGRPCClient,
-        contractAddress: ContractAddress,
-        contractName: string
+        contractAddress: ContractAddress.Type,
+        contractName: ContractName.Type
     ): CIS2DryRun {
         return new CIS2DryRun(grpcClient, contractAddress, contractName);
     }
@@ -140,14 +143,14 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
      * Creates a new `CIS2Contract` instance by querying the node for the necessary information through the supplied `grpcClient`.
      *
      * @param {ConcordiumGRPCClient} grpcClient - The client used for contract invocations and updates.
-     * @param {ContractAddress} contractAddress - Address of the contract instance.
+     * @param {ContractAddress.Type} contractAddress - Address of the contract instance.
      *
      * @throws If `InstanceInfo` could not be received for the contract, if the contract does not support the CIS-2 standard,
      * or if the contract name could not be parsed from the information received from the node.
      */
     public static async create(
         grpcClient: ConcordiumGRPCClient,
-        contractAddress: ContractAddress
+        contractAddress: ContractAddress.Type
     ): Promise<CIS2Contract> {
         const contractName = await super.getContractName(
             grpcClient,
@@ -210,7 +213,7 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
         );
 
         return this.createUpdateTransaction(
-            'transfer',
+            EntrypointName.fromStringUnchecked('transfer'),
             serialize,
             metadata,
             transfers,
@@ -302,7 +305,7 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
         );
 
         return this.createUpdateTransaction(
-            'updateOperator',
+            EntrypointName.fromStringUnchecked('updateOperator'),
             serialize,
             metadata,
             updates,

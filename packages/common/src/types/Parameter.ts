@@ -1,5 +1,7 @@
 import { checkParameterLength } from '../contractHelpers.js';
-import type { HexString } from '../types.js';
+import { SchemaType, serializeSchemaType } from '../schemaTypes.js';
+import { serializeTypeValue } from '../schema.js';
+import type { Base64String, HexString } from '../types.js';
 
 /** Parameter for a smart contract entrypoint. */
 class Parameter {
@@ -13,6 +15,14 @@ class Parameter {
 
 /** Parameter for a smart contract entrypoint. */
 export type Type = Parameter;
+
+/**
+ * Create an empty parameter.
+ * @returns {Parameter} An empty parameter.
+ */
+export function empty(): Parameter {
+    return new Parameter(new ArrayBuffer(0));
+}
 
 /**
  * Create a parameter for a smart contract entrypoint.
@@ -54,4 +64,32 @@ export function fromHexString(hex: HexString): Parameter {
  */
 export function toHexString(parameter: Parameter): HexString {
     return Buffer.from(parameter.buffer).toString('hex');
+}
+
+/**
+ * Create a parameter from a schema type and the corresponding schema value.
+ * @param {SchemaType} schemaType The schema type for some parameter.
+ * @param {unknown} value The parameter value fitting the schema type.
+ * @returns {Parameter} A parameter of the provided value encoded using the schema type.
+ */
+export function fromSchemaType(
+    schemaType: SchemaType,
+    value: unknown
+): Parameter {
+    const schemaBytes = serializeSchemaType(schemaType);
+    return fromBuffer(serializeTypeValue(value, schemaBytes));
+}
+
+/**
+ * Create a parameter from a schema type and the corresponding schema value.
+ * @param {Base64String} schemaBase64 The schema type for some parameter in base64.
+ * @param {unknown} value The parameter value fitting the schema type.
+ * @returns {Parameter} A parameter of the provided value encoded using the schema type.
+ */
+export function fromBase64SchemaType(
+    schemaBase64: Base64String,
+    value: unknown
+): Parameter {
+    const schemaBytes = Buffer.from(schemaBase64, 'base64');
+    return fromBuffer(serializeTypeValue(value, schemaBytes));
 }

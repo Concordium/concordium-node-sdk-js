@@ -117,12 +117,12 @@ export function serializeUpdateContractParameters(
 export function serializeTypeValue(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     value: any,
-    rawSchema: Buffer,
+    rawSchema: ArrayBuffer,
     verboseErrorMessage = false
 ): Buffer {
     const serializedValue = wasm.serializeTypeValue(
         JSONbig.stringify(value),
-        rawSchema.toString('hex'),
+        Buffer.from(rawSchema).toString('hex'),
         verboseErrorMessage
     );
     return Buffer.from(serializedValue, 'hex');

@@ -7,16 +7,15 @@ import {
     CISContract,
     ContractDryRun,
     getContractUpdateDefaultExpiryDate,
-    getInvoker,
 } from '../GenericContract.js';
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
 import { AccountSigner } from '../signHelpers.js';
-import type {
-    ContractAddress,
-    Base58String,
-    HexString,
-    InvokeContractResult,
-} from '../types.js';
+import type { HexString, InvokeContractResult } from '../types.js';
+import * as ContractAddress from '../types/ContractAddress.js';
+import * as AccountAddress from '../types/AccountAddress.js';
+import * as ContractName from '../types/ContractName.js';
+import * as EntrypointName from '../types/EntrypointName.js';
+import * as Timestamp from '../types/Timestamp.js';
 import {
     CIS4,
     deserializeCIS4CredentialEntry,
@@ -60,7 +59,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
     /**
      * Performs a dry-run invocation of "CIS4.registerCredential"
      *
-     * @param {Base58String | ContractAddress} sender - Address of the sender of the transfer.
+     * @param {AccountAddress.Type | ContractAddress.Type} sender - Address of the sender of the transfer.
      * @param {CIS4.CredentialInfo} credInfo - the credential info to register
      * @param {HexString} [additionalData] - any additional data to include
      * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
@@ -68,14 +67,14 @@ class CIS4DryRun extends ContractDryRun<Updates> {
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */
     public registerCredential(
-        sender: Base58String | ContractAddress,
+        sender: AccountAddress.Type | ContractAddress.Type,
         credInfo: CIS4.CredentialInfo,
         additionalData: HexString = '',
         blockHash?: HexString
     ): Promise<InvokeContractResult> {
         return this.invokeMethod(
-            'registerCredential',
-            getInvoker(sender),
+            EntrypointName.fromStringUnchecked('registerCredential'),
+            sender,
             serializeCIS4RegisterCredentialParam,
             { credInfo, additionalData },
             blockHash
@@ -85,7 +84,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
     /**
      * Performs a dry-run invocation of "CIS4.revokeCredentialIssuer"
      *
-     * @param {Base58String | ContractAddress} sender - Address of the sender of the transfer.
+     * @param {AccountAddress.Type | ContractAddress.Type} sender - Address of the sender of the transfer.
      * @param {HexString} credHolderPubKey - the public key of the credential holder (hex encoded)
      * @param {string} [reason] - the reason for the revocation
      * @param {HexString} [additionalData] - any additional data to include
@@ -94,15 +93,15 @@ class CIS4DryRun extends ContractDryRun<Updates> {
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */
     public revokeCredentialAsIssuer(
-        sender: Base58String | ContractAddress,
+        sender: AccountAddress.Type | ContractAddress.Type,
         credHolderPubKey: HexString,
         reason?: string,
         additionalData: HexString = '',
         blockHash?: HexString
     ): Promise<InvokeContractResult> {
         return this.invokeMethod(
-            'revokeCredentialIssuer',
-            getInvoker(sender),
+            EntrypointName.fromStringUnchecked('revokeCredentialIssuer'),
+            sender,
             serializeCIS4RevokeCredentialIssuerParam,
             { credHolderPubKey, reason, additionalData },
             blockHash
@@ -112,7 +111,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
     /**
      * Performs a dry-run invocation of "CIS4.revokeCredentialHolder"
      *
-     * @param {Base58String | ContractAddress} sender - Address of the sender of the transfer.
+     * @param {AccountAddress.Type | ContractAddress.Type} sender - Address of the sender of the transfer.
      * @param {Web3IdSigner} credHolderSigner - A signer structure for the credential holder
      * @param {bigint} nonce - the nonce of the owner inside the contract
      * @param {Date} expiry - Expiry time of the revocation message
@@ -122,7 +121,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */
     public async revokeCredentialAsHolder(
-        sender: Base58String | ContractAddress,
+        sender: AccountAddress.Type | ContractAddress.Type,
         credHolderSigner: Web3IdSigner,
         nonce: bigint,
         expiry: Date,
@@ -130,12 +129,14 @@ class CIS4DryRun extends ContractDryRun<Updates> {
         blockHash?: HexString
     ): Promise<InvokeContractResult> {
         const credentialPubKey = credHolderSigner.pubKey;
-        const entrypoint = 'revokeCredentialHolder';
+        const entrypoint = EntrypointName.fromStringUnchecked(
+            'revokeCredentialHolder'
+        );
         const signingData: CIS4.SigningData = {
             contractAddress: this.contractAddress,
             entrypoint,
             nonce,
-            timestamp: expiry,
+            timestamp: Timestamp.fromDate(expiry),
         };
         const serializedData = serializeCIS4RevocationDataHolder({
             credentialPubKey,
@@ -147,7 +148,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
 
         return this.invokeMethod(
             entrypoint,
-            getInvoker(sender),
+            sender,
             () => Buffer.concat([signature, serializedData]), // Reuse existing serialization
             undefined,
             blockHash
@@ -157,7 +158,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
     /**
      * Performs a dry-run invocation of "CIS4.revokeCredentialOther"
      *
-     * @param {Base58String | ContractAddress} sender - Address of the sender of the transfer.
+     * @param {AccountAddress.Type | ContractAddress.Type} sender - Address of the sender of the transfer.
      * @param {Web3IdSigner} revokerSigner - A signer structure for the credential holder
      * @param {HexString} credentialPubKey - the public key (hex encoded) for the credential to revoke
      * @param {bigint} nonce - the nonce of the owner inside the contract
@@ -168,7 +169,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */
     public async revokeCredentialAsOther(
-        sender: Base58String | ContractAddress,
+        sender: AccountAddress.Type | ContractAddress.Type,
         revokerSigner: Web3IdSigner,
         credentialPubKey: HexString,
         nonce: bigint,
@@ -177,12 +178,14 @@ class CIS4DryRun extends ContractDryRun<Updates> {
         blockHash?: HexString
     ): Promise<InvokeContractResult> {
         const revocationPubKey = revokerSigner.pubKey;
-        const entrypoint = 'revokeCredentialOther';
+        const entrypoint = EntrypointName.fromStringUnchecked(
+            'revokeCredentialOther'
+        );
         const signingData: CIS4.SigningData = {
             contractAddress: this.contractAddress,
             entrypoint,
             nonce,
-            timestamp: expiry,
+            timestamp: Timestamp.fromDate(expiry),
         };
         const serializedData = serializeCIS4RevocationDataOther({
             credentialPubKey,
@@ -195,7 +198,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
 
         return this.invokeMethod(
             entrypoint,
-            getInvoker(sender),
+            sender,
             () => Buffer.concat([signature, serializedData]), // Reuse existing serialization
             undefined,
             blockHash
@@ -205,7 +208,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
     /**
      * Performs a dry-run invocation of "CIS4.registerRevocationKeys"
      *
-     * @param {Base58String | ContractAddress} sender - Address of the sender of the transfer.
+     * @param {AccountAddress.Type | ContractAddress.Type} sender - Address of the sender of the transfer.
      * @param {HexString | HexString[]} keys - a single or list of hex encoded public keys to be used for revocation
      * @param {HexString} [additionalData] - any additional data to include
      * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
@@ -213,15 +216,15 @@ class CIS4DryRun extends ContractDryRun<Updates> {
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */
     public registerRevocationKeys(
-        sender: Base58String | ContractAddress,
+        sender: AccountAddress.Type | ContractAddress.Type,
         keys: HexString | HexString[],
         additionalData: HexString = '',
         blockHash?: HexString
     ): Promise<InvokeContractResult> {
         const ks = Array.isArray(keys) ? keys : [keys];
         return this.invokeMethod(
-            'registerRevocationKeys',
-            getInvoker(sender),
+            EntrypointName.fromStringUnchecked('registerRevocationKeys'),
+            sender,
             serializeCIS4UpdateRevocationKeysParam,
             { additionalData, keys: ks },
             blockHash
@@ -231,7 +234,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
     /**
      * Performs a dry-run invocation of "CIS4.removeRevocationKeys"
      *
-     * @param {Base58String | ContractAddress} sender - Address of the sender of the transfer.
+     * @param {AccountAddress.Type | ContractAddress.Type} sender - Address of the sender of the transfer.
      * @param {HexString | HexString[]} keys - a single or list of hex encoded public keys to be removed
      * @param {HexString} [additionalData] - any additional data to include
      * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
@@ -239,15 +242,15 @@ class CIS4DryRun extends ContractDryRun<Updates> {
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */
     public removeRevocationKeys(
-        sender: Base58String | ContractAddress,
+        sender: AccountAddress.Type | ContractAddress.Type,
         keys: HexString | HexString[],
         additionalData: HexString = '',
         blockHash?: HexString
     ): Promise<InvokeContractResult> {
         const ks = Array.isArray(keys) ? keys : [keys];
         return this.invokeMethod(
-            'removeRevocationKeys',
-            getInvoker(sender),
+            EntrypointName.fromStringUnchecked('removeRevocationKeys'),
+            sender,
             serializeCIS4UpdateRevocationKeysParam,
             { additionalData, keys: ks },
             blockHash
@@ -296,7 +299,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
      */
     public static async create(
         grpcClient: ConcordiumGRPCClient,
-        contractAddress: ContractAddress
+        contractAddress: ContractAddress.Type
     ): Promise<CIS4Contract> {
         const contractName = await super.getContractName(
             grpcClient,
@@ -307,8 +310,8 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
 
     protected makeDryRunInstance(
         grpcClient: ConcordiumGRPCClient,
-        contractAddress: ContractAddress,
-        contractName: string
+        contractAddress: ContractAddress.Type,
+        contractName: ContractName.Type
     ): CIS4DryRun {
         return new CIS4DryRun(grpcClient, contractAddress, contractName);
     }
@@ -425,7 +428,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         additionalData: HexString = ''
     ): ContractUpdateTransactionWithSchema {
         return this.createUpdateTransaction(
-            'registerCredential',
+            EntrypointName.fromStringUnchecked('registerCredential'),
             serializeCIS4RegisterCredentialParam,
             metadata,
             { credInfo, additionalData },
@@ -474,7 +477,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         additionalData: HexString = ''
     ): ContractUpdateTransactionWithSchema {
         return this.createUpdateTransaction(
-            'revokeCredentialIssuer',
+            EntrypointName.fromStringUnchecked('revokeCredentialIssuer'),
             serializeCIS4RevokeCredentialIssuerParam,
             metadata,
             { credHolderPubKey, reason, additionalData },
@@ -528,12 +531,14 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         reason?: string
     ): Promise<ContractUpdateTransactionWithSchema> {
         const credentialPubKey = credHolderSigner.pubKey;
-        const entrypoint = 'revokeCredentialHolder';
+        const entrypoint = EntrypointName.fromStringUnchecked(
+            'revokeCredentialHolder'
+        );
         const signingData: CIS4.SigningData = {
             contractAddress: this.contractAddress,
             entrypoint,
             nonce,
-            timestamp: expiry,
+            timestamp: Timestamp.fromDate(expiry),
         };
         const serializedData = serializeCIS4RevocationDataHolder({
             credentialPubKey,
@@ -608,12 +613,14 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         reason?: string
     ): Promise<ContractUpdateTransactionWithSchema> {
         const revocationPubKey = revokerSigner.pubKey;
-        const entrypoint = 'revokeCredentialOther';
+        const entrypoint = EntrypointName.fromStringUnchecked(
+            'revokeCredentialOther'
+        );
         const signingData: CIS4.SigningData = {
             contractAddress: this.contractAddress,
             entrypoint,
             nonce,
-            timestamp: expiry,
+            timestamp: Timestamp.fromDate(expiry),
         };
         const serializedData = serializeCIS4RevocationDataOther({
             credentialPubKey,
@@ -692,7 +699,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
     ): ContractUpdateTransactionWithSchema {
         const ks = Array.isArray(keys) ? keys : [keys];
         return this.createUpdateTransaction(
-            'registerRevocationKeys',
+            EntrypointName.fromStringUnchecked('registerRevocationKeys'),
             serializeCIS4UpdateRevocationKeysParam,
             metadata,
             { additionalData, keys: ks },
@@ -740,7 +747,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
     ): ContractUpdateTransactionWithSchema {
         const ks = Array.isArray(keys) ? keys : [keys];
         return this.createUpdateTransaction(
-            'removeRevocationKeys',
+            EntrypointName.fromStringUnchecked('removeRevocationKeys'),
             serializeCIS4UpdateRevocationKeysParam,
             metadata,
             { additionalData, keys: ks },

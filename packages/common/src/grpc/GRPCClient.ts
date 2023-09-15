@@ -12,9 +12,9 @@ import * as v2 from '../grpc-api/v2/concordium/types.js';
 import { Base58String, HexString, isRpcError } from '../types.js';
 import { QueriesClient } from '../grpc-api/v2/concordium/service.client.js';
 import { HealthClient } from '../grpc-api/v2/concordium/health.client.js';
-import { CredentialRegistrationId } from '../types/CredentialRegistrationId.js';
+import * as CredentialRegistrationId from '../types/CredentialRegistrationId.js';
 import * as translate from './translation.js';
-import { AccountAddress } from '../types/accountAddress.js';
+import * as AccountAddress from '../types/AccountAddress.js';
 import { getAccountTransactionHandler } from '../accountTransactions.js';
 import { calculateEnergyCost } from '../energyCost.js';
 import {
@@ -76,10 +76,10 @@ export class ConcordiumGRPCClient {
      * @returns the next account nonce, and a boolean indicating if the nonce is reliable.
      */
     async getNextAccountNonce(
-        accountAddress: AccountAddress
+        accountAddress: AccountAddress.Type
     ): Promise<v1.NextAccountNonce> {
         const address: v2.AccountAddress = {
-            value: new Uint8Array(accountAddress.decodedAddress),
+            value: AccountAddress.toBuffer(accountAddress),
         };
 
         const response = await this.client.getNextAccountSequenceNumber(address)
@@ -1009,11 +1009,11 @@ export class ConcordiumGRPCClient {
      * @returns a stream of transaction hashes as hex strings.
      */
     getAccountNonFinalizedTransactions(
-        accountAddress: AccountAddress,
+        accountAddress: AccountAddress.Type,
         abortSignal?: AbortSignal
     ): AsyncIterable<HexString> {
         const transactions = this.client.getAccountNonFinalizedTransactions(
-            { value: accountAddress.decodedAddress },
+            { value: AccountAddress.toBuffer(accountAddress) },
             { abort: abortSignal }
         ).responses;
 
@@ -1550,23 +1550,33 @@ export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {
 export function getAccountIdentifierInput(
     accountIdentifier: v1.AccountIdentifierInput
 ): v2.AccountIdentifierInput {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const returnIdentifier: any = {};
+    let returnIdentifier: v2.AccountIdentifierInput['accountIdentifierInput'];
 
-    if ((<AccountAddress>accountIdentifier).decodedAddress !== undefined) {
-        const address = (<AccountAddress>accountIdentifier).decodedAddress;
-        returnIdentifier.oneofKind = 'address';
-        returnIdentifier.address = { value: address };
+    if (AccountAddress.isAccountAddress(accountIdentifier)) {
+        returnIdentifier = {
+            oneofKind: 'address',
+            address: {
+                value: AccountAddress.toBuffer(accountIdentifier),
+            },
+        };
     } else if (
-        (<CredentialRegistrationId>accountIdentifier).credId !== undefined
+        CredentialRegistrationId.isCredentialRegistrationId(accountIdentifier)
     ) {
-        const credId = (<CredentialRegistrationId>accountIdentifier).credId;
-        const credIdBytes = Buffer.from(credId, 'hex');
-        returnIdentifier.oneofKind = 'credId';
-        returnIdentifier.credId = { value: credIdBytes };
+        returnIdentifier = {
+            oneofKind: 'credId',
+            credId: {
+                value: CredentialRegistrationId.toBuffer(accountIdentifier),
+            },
+        };
+    } else if (typeof accountIdentifier === 'bigint') {
+        returnIdentifier = {
+            oneofKind: 'accountIndex',
+            accountIndex: { value: accountIdentifier },
+        };
     } else {
-        returnIdentifier.oneofKind = 'accountIndex';
-        returnIdentifier.accountIndex = { value: accountIdentifier };
+        throw new Error(
+            `Unsupported account identifier: ${accountIdentifier}.`
+        );
     }
 
     return { accountIdentifierInput: returnIdentifier };
@@ -1576,15 +1586,15 @@ export function getAccountIdentifierInput(
  * @hidden
  */
 export function getInvokerInput(
-    invoker?: AccountAddress | v1.ContractAddress
+    invoker?: AccountAddress.Type | v1.ContractAddress
 ): v2.Address | undefined {
     if (!invoker) {
         return undefined;
-    } else if ((<AccountAddress>invoker).decodedAddress) {
+    } else if (AccountAddress.isAccountAddress(invoker)) {
         return {
             type: {
                 oneofKind: 'account',
-                account: { value: (<AccountAddress>invoker).decodedAddress },
+                account: { value: AccountAddress.toBuffer(invoker) },
             },
         };
     } else if ((<v1.ContractAddress>invoker).index) {

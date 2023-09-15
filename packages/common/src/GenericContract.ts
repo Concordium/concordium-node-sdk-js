@@ -3,16 +3,13 @@ import { stringify } from 'json-bigint';
 
 import {
     checkParameterLength,
-    getContractName,
     getContractNameFromInit,
 } from './contractHelpers.js';
 import { ConcordiumGRPCClient } from './grpc/GRPCClient.js';
 import { AccountSigner, signTransaction } from './signHelpers.js';
 import {
     AccountTransactionType,
-    Base58String,
     Base64String,
-    ContractAddress,
     Energy,
     HexString,
     InstanceInfo,
@@ -21,7 +18,12 @@ import {
     SmartContractTypeValues,
     UpdateContractPayload,
 } from './types.js';
-import { AccountAddress } from './types/accountAddress.js';
+import * as AccountAddress from './types/AccountAddress.js';
+import * as ContractAddress from './types/ContractAddress.js';
+import * as ContractName from './types/ContractName.js';
+import * as InitName from './types/InitName.js';
+import * as EntrypointName from './types/EntrypointName.js';
+import * as ReceiveName from './types/ReceiveName.js';
 import { CcdAmount } from './types/ccdAmount.js';
 import { TransactionExpiry } from './types/transactionExpiry.js';
 import { ModuleReference } from './types/moduleReference.js';
@@ -98,14 +100,6 @@ export function getContractUpdateDefaultExpiryDate(): Date {
 }
 
 /**
- * Converts an address (either contract address or account address in its base58 form) to a contract update "invoker"
- */
-export const getInvoker = (
-    address: Base58String | ContractAddress
-): ContractAddress | AccountAddress =>
-    typeof address !== 'string' ? address : new AccountAddress(address);
-
-/**
  * Defines methods for performing dry-run invocations of updates on a Contract with entrypoints `E`
  *
  * @template E - union of entrypoints
@@ -113,8 +107,8 @@ export const getInvoker = (
 export class ContractDryRun<E extends string = string> {
     constructor(
         protected grpcClient: ConcordiumGRPCClient,
-        protected contractAddress: ContractAddress,
-        protected contractName: string
+        protected contractAddress: ContractAddress.Type,
+        protected contractName: ContractName.Type
     ) {}
 
     /**
@@ -132,8 +126,8 @@ export class ContractDryRun<E extends string = string> {
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */
     public invokeMethod<T>(
-        entrypoint: E,
-        invoker: ContractAddress | AccountAddress,
+        entrypoint: EntrypointName.Type<E>,
+        invoker: ContractAddress.Type | AccountAddress.Type,
         serializer: (input: T) => Buffer,
         input: T,
         blockHash?: HexString
@@ -141,12 +135,14 @@ export class ContractDryRun<E extends string = string> {
         const parameter = serializer(input);
         checkParameterLength(parameter);
 
+        const method = ReceiveName.create(this.contractName, entrypoint);
+
         return this.grpcClient.invokeContract(
             {
                 contract: this.contractAddress,
                 parameter,
                 invoker,
-                method: `${this.contractName}.${entrypoint}`,
+                method: ReceiveName.toString(method),
             },
             blockHash
         );
@@ -188,8 +184,8 @@ class ContractBase<E extends string = string, V extends string = string> {
 
     constructor(
         protected grpcClient: ConcordiumGRPCClient,
-        protected contractAddress: ContractAddress,
-        protected contractName: string,
+        protected contractAddress: ContractAddress.Type,
+        protected contractName: ContractName.Type,
         protected schema?: Schema<E>
     ) {
         this.dryRunInstance = new ContractDryRun(
@@ -211,7 +207,7 @@ class ContractBase<E extends string = string, V extends string = string> {
      */
     protected static async getInstanceInfo(
         grpcClient: ConcordiumGRPCClient,
-        contractAddress: ContractAddress
+        contractAddress: ContractAddress.Type
     ): Promise<InstanceInfo> {
         try {
             return await grpcClient.getInstanceInfo(contractAddress);
@@ -236,13 +232,13 @@ class ContractBase<E extends string = string, V extends string = string> {
      */
     protected static async getContractName(
         grpcClient: ConcordiumGRPCClient,
-        contractAddress: ContractAddress
-    ): Promise<string> {
+        contractAddress: ContractAddress.Type
+    ): Promise<ContractName.Type> {
         const instanceInfo = await this.getInstanceInfo(
             grpcClient,
             contractAddress
         );
-        return getContractName(instanceInfo);
+        return ContractName.fromStringUnchecked(instanceInfo.name);
     }
 
     /**
@@ -280,8 +276,12 @@ class ContractBase<E extends string = string, V extends string = string> {
     ): Promise<void> {
         const info = await this.getInstanceInfo(options.blockHash);
 
+        const initNameString = InitName.toString(
+            InitName.fromContractName(this.contractName)
+        );
+
         const contractNameOnChain = getContractNameFromInit(info.name);
-        if (contractNameOnChain !== this.contractName) {
+        if (contractNameOnChain !== initNameString) {
             throw new Error(
                 `Instance ${this.contractAddress} have contract name '${contractNameOnChain}' on chain. The client expected: '${this.contractName}'.`
             );
@@ -319,7 +319,7 @@ class ContractBase<E extends string = string, V extends string = string> {
      * @returns {ContractUpdateTransaction} Details necesary for submitting the contract update transaction.
      */
     public createUpdateTransaction<T>(
-        entrypoint: E,
+        entrypoint: EntrypointName.Type<E>,
         serializeInput: (input: T) => Buffer,
         metadata: CreateContractTransactionMetadata,
         input: T
@@ -331,7 +331,7 @@ class ContractBase<E extends string = string, V extends string = string> {
      * @template T - The type of the input
      * @template J - The type of the input formatted as JSON compatible with the corresponding contract schema
      *
-     * @param {string} entrypoint - The name of the receive function to invoke.
+     * @param {EntrypointName} entrypoint - The name of the receive function to invoke.
      * @param {Function} serializeInput - A function to serialize the `input` to bytes.
      * @param {ContractTransactionMetadata} metadata - Metadata to be used for the transaction creation (with defaults).
      * @param {T} input - Input for for contract function.
@@ -342,14 +342,14 @@ class ContractBase<E extends string = string, V extends string = string> {
      * @returns {ContractUpdateTransactionWithSchema} Details necessary for submitting the contract update transaction (with JSON to be serialized with corresponding schema)
      */
     public createUpdateTransaction<T, J extends SmartContractTypeValues>(
-        entrypoint: E,
+        entrypoint: EntrypointName.Type<E>,
         serializeInput: (input: T) => Buffer,
         metadata: CreateContractTransactionMetadata,
         input: T,
         inputJsonFormatter: (input: T) => J
     ): MakeOptional<ContractUpdateTransactionWithSchema<J>, 'schema'>;
     public createUpdateTransaction<T, J extends SmartContractTypeValues>(
-        entrypoint: E,
+        entrypoint: EntrypointName.Type<E>,
         serializeInput: (input: T) => Buffer,
         { amount = 0n, energy }: CreateContractTransactionMetadata,
         input: T,
@@ -384,9 +384,11 @@ class ContractBase<E extends string = string, V extends string = string> {
                 value: this.schema,
                 type: 'module',
             };
-        } else if (this.schema?.[entrypoint] !== undefined) {
+        } else if (
+            this.schema?.[EntrypointName.toString(entrypoint)] !== undefined
+        ) {
             schema = {
-                value: this.schema[entrypoint],
+                value: this.schema[EntrypointName.toString(entrypoint)],
                 type: 'parameter',
             };
         }
@@ -420,7 +422,7 @@ class ContractBase<E extends string = string, V extends string = string> {
         }: ContractTransactionMetadata,
         signer: AccountSigner
     ): Promise<HexString> {
-        const sender = new AccountAddress(senderAddress);
+        const sender = AccountAddress.fromBase58(senderAddress);
         const { nonce } = await this.grpcClient.getNextAccountNonce(sender);
         const header = {
             expiry: new TransactionExpiry(expiry),
@@ -451,7 +453,7 @@ class ContractBase<E extends string = string, V extends string = string> {
      * @returns {HexString} The transaction hash of the update transaction
      */
     public async createAndSendUpdateTransaction<T>(
-        entrypoint: E,
+        entrypoint: EntrypointName.Type<E>,
         serializeInput: (input: T) => Buffer,
         metadata: ContractTransactionMetadata,
         input: T,
@@ -546,14 +548,17 @@ export class Contract<
         V extends string = string
     >(
         grpcClient: ConcordiumGRPCClient,
-        contractAddress: ContractAddress,
+        contractAddress: ContractAddress.Type,
         schema?: Schema<E>
     ): Promise<Contract<E, V>> {
         const instanceInfo = await super.getInstanceInfo(
             grpcClient,
             contractAddress
         );
-        const contractName = getContractName(instanceInfo);
+        // No reason to run checks, since this is from chain.
+        const contractName = ContractName.fromStringUnchecked(
+            instanceInfo.name
+        );
 
         let mSchema: string | undefined;
         if (!schema) {
@@ -600,8 +605,8 @@ export abstract class CISContract<
 
     constructor(
         protected grpcClient: ConcordiumGRPCClient,
-        protected contractAddress: ContractAddress,
-        protected contractName: string
+        protected contractAddress: ContractAddress.Type,
+        protected contractName: ContractName.Type
     ) {
         super(grpcClient, contractAddress, contractName);
 
@@ -617,8 +622,8 @@ export abstract class CISContract<
      */
     protected abstract makeDryRunInstance(
         grpcClient: ConcordiumGRPCClient,
-        contractAddress: ContractAddress,
-        contractName: string
+        contractAddress: ContractAddress.Type,
+        contractName: ContractName.Type
     ): D;
 
     /**
@@ -641,7 +646,7 @@ export abstract class CISContract<
      * @returns {ContractUpdateTransaction} The transaction hash of the update transaction
      */
     public createUpdateTransaction<T>(
-        entrypoint: E,
+        entrypoint: EntrypointName.Type<E>,
         serializeInput: (input: T) => Buffer,
         metadata: CreateContractTransactionMetadata,
         input: T
@@ -661,7 +666,7 @@ export abstract class CISContract<
      * @returns {ContractUpdateTransactionWithSchema} The transaction hash of the update transaction
      */
     public createUpdateTransaction<T, J extends SmartContractTypeValues>(
-        entrypoint: E,
+        entrypoint: EntrypointName.Type<E>,
         serializeInput: (input: T) => Buffer,
         metadata: CreateContractTransactionMetadata,
         input: T,
@@ -671,7 +676,7 @@ export abstract class CISContract<
         T,
         J extends SmartContractTypeValues
     >(
-        entrypoint: E,
+        entrypoint: EntrypointName.Type<E>,
         serializeInput: (input: T) => Buffer,
         metadata: CreateContractTransactionMetadata,
         input: T,

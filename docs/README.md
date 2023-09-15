@@ -6,5 +6,5 @@ with the version used in the rest of the workspace.
 
 ## Project structure
 
-Pages reside in the [`./pages`]('./pages') folder, and should be included by adding
+Pages reside in the `./pages` folder, and should be included by adding
 a corresponding entry in `typedoc.json`.

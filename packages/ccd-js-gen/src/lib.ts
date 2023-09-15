@@ -617,7 +617,7 @@ Without checking the instance information on chain.
                 returnType: 'Promise<void>',
             })
             .setBodyText(
-                `return ${contractClientId}.${genericContractId}.checkOnChain({moduleReference: ${moduleRefId}, blockHash: ${blockHashId} })`
+                `return ${contractClientId}.${genericContractId}.checkOnChain({moduleReference: ${moduleRefId}, blockHash: ${blockHashId} });`
             );
 
         const invokerId = 'invoker';

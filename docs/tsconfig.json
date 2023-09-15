@@ -1,0 +1,13 @@
+{
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext"
+    },
+    "include": [
+        "../packages/**/*"
+    ],
+    "exclude": [
+        "../packages/ccd-js-gen/**/*"
+    ]
+}

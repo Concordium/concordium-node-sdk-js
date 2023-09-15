@@ -7,7 +7,8 @@
             "./packages/nodejs",
             "./packages/web",
             "./packages/ccd-js-gen",
-            "./examples"
+            "./examples",
+            "./docs"
         ]
     },
     "husky": {
@@ -37,8 +38,6 @@
         "@babel/plugin-transform-modules-commonjs": "^7.12.1",
         "@babel/plugin-transform-runtime": "^7.12.1",
         "@babel/preset-env": "^7.12.1",
-        "@knodes/typedoc-plugin-code-blocks": "^0.23.0",
-        "@knodes/typedoc-plugin-pages": "^0.23.0",
         "@typescript-eslint/eslint-plugin": "^6.7.0",
         "@typescript-eslint/parser": "^6.7.0",
         "babel-jest": "^27.0.6",
@@ -69,9 +68,9 @@
         "test": "FORCE_COLOR=true yarn workspaces foreach --no-private run test --passWithNoTests",
         "lint": "FORCE_COLOR=true yarn workspaces foreach --no-private run lint",
         "lint-fix": "eslint --cache . --fix",
-        "markdown:lint": "yarn markdownlint pages/**/*.md packages/*/README.md README.md",
-        "markdown:lint-fix": "yarn markdownlint --fix pages/**/*.md packages/*/README.md README.md",
-        "markdown:linkcheck": "yarn markdown-link-check --config .markdown-linkcheck.json pages/**/*.md packages/*/README.md README.md",
+        "markdown:lint": "yarn markdownlint docs/**/*.md packages/*/README.md README.md",
+        "markdown:lint-fix": "yarn markdownlint --fix docs/**/*.md packages/*/README.md README.md",
+        "markdown:linkcheck": "yarn markdown-link-check --config .markdown-linkcheck.json docs/**/*.md packages/*/README.md README.md",
         "build": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build",
         "build:dev": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build-dev",
         "clean": "FORCE_COLOR=true yarn workspaces foreach -p --no-private run clean"

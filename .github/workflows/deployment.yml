@@ -38,7 +38,8 @@ jobs:
               with:
                   workspaces: |
                       packages/rust-bindings
-                      deps/concordium-deps
+                      deps/concordium-base/rust-src
+                      deps/concordium-base/concordium-contracts-common
 
             - name: Get wasm-pack
               uses: jetli/wasm-pack-action@v0.4.0
@@ -49,17 +50,29 @@ jobs:
               id: yarn-cache
               uses: actions/cache@v3
               with:
-                  path: node_modules
+                  path: |
+                      ./node_modules
+                      ./docs/node_modules
                   key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
                   restore-keys: |
                       ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+
+            - name: Cache GRPC
+              id: cache-grpc
+              uses: actions/cache@v3
+              with:
+                  path: |
+                      ./packages/common/src/grpc-api
+                      ./packages/nodejs/src/grpc-api
+                  key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}
+                  restore-keys: ${{ runner.os }}-grpc
 
             - name: Get dependencies
               if: steps.yarn-cache.outputs.cache-hit != 'true'
               run: yarn install --immutable
 
             - name: Build release
-              run: yarn build:rust-bindings && yarn build:dev
+              run: yarn build
 
             - name: Store build-release
               uses: ./.github/actions/upload-artifact
@@ -78,8 +91,6 @@ jobs:
         needs: build
         steps:
             - uses: actions/checkout@v3
-              with:
-                  submodules: "recursive"
 
             - uses: actions/setup-node@v3
               with:
@@ -91,14 +102,24 @@ jobs:
               with:
                   name: build-release
 
+            - name: Restore grpc
+              uses: actions/cache/restore@v3
+              with:
+                  path: |
+                      ./packages/common/src/grpc-api
+                      ./packages/nodejs/src/grpc-api
+                  key: ${{ runner.os }}-grpc
+
             - name: Restore cached dependencies
               uses: actions/cache/restore@v3
               with:
-                  path: node_modules
+                  path: |
+                      ./node_modules
+                      ./docs/node_modules
                   key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
             - name: Generate typedoc documentation
-              run: yarn typedoc
+              run: yarn build:docs
 
             - name: Store typedoc
               uses: ./.github/actions/upload-artifact

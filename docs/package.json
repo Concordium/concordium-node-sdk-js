@@ -1,0 +1,15 @@
+{
+    "name": "docs",
+    "packageManager": "yarn@3.2.1",
+    "scripts": {
+        "build:docs": "typedoc"
+    },
+    "devDependencies": {
+        "@knodes/typedoc-plugin-code-blocks": "^0.23.0",
+        "@knodes/typedoc-plugin-pages": "^0.23.0",
+        "typedoc": "^0.23",
+        "typedoc-plugin-merge-modules": "^4.0.1",
+        "typedoc-plugin-missing-exports": "^0.23",
+        "typescript": "5.0"
+    }
+}

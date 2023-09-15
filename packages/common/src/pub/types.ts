@@ -42,3 +42,13 @@ export * from '../energyCost';
 export * from '../commonProofTypes';
 
 export * from '../uleb128';
+export {
+    Schema,
+    Contract,
+    ContractDryRun,
+    ContractSchema,
+    ContractUpdateTransaction,
+    ContractTransactionMetadata,
+    CreateContractTransactionMetadata,
+    ContractUpdateTransactionWithSchema,
+} from '../GenericContract';

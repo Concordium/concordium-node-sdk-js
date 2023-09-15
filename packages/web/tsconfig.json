@@ -1,12 +1,23 @@
 {
     "extends": "../../tsconfig-base.json",
-    "include": ["src/**/*"],
+    "include": [
+        "src/**/*",
+        "webpack.config.ts"
+    ],
     "references": [
-        { "path": "../common"}
+        {
+            "path": "../common"
+        }
     ],
     "compilerOptions": {
-        "lib": ["ES2020", "dom"],
-        "rootDir": "./src",
-        "outDir": "./lib"
+        "lib": [
+            "ES2020",
+            "dom"
+        ]
+    },
+    "ts-node": {
+        "compilerOptions": {
+            "module": "CommonJS"
+        }
     }
 }

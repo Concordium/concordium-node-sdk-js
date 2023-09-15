@@ -1,10 +1,17 @@
 {
     "extends": "../../tsconfig-base.json",
-    "include": ["src/**/*", "package.json"],
+    "include": [
+        "src/**/*",
+        "package.json"
+    ],
     "compilerOptions": {
         "outDir": "./lib",
-        "lib": ["ES2020", "dom"], // "dom" is only added to get the typings for the global variable `WebAssembly`.
-        "target": "ES2020",
+        "lib": [
+            "ES2020",
+            "dom"
+        ], // "dom" is only added to get the typings for the global variable `WebAssembly`.
+        "module": "Node16",
+        "moduleResolution": "Node16",
         "resolveJsonModule": true
     }
 }

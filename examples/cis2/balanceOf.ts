@@ -1,7 +1,7 @@
 import { createConcordiumClient, CIS2Contract } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
-import { parseAddress, parseEndpoint } from '../shared/util';
+import { parseAddress, parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `

@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Breaking changes
+
+- The package has been split into two entrypoints to decrease the size of bundles produced for applications using only part of the functionality provided.
+  - `@concordium/rust-bindings` (and its alias `@concordium/rust-bindings/dapp`) entrypoints expose functionality commonly used by dApps. 
+  - `@concordium/rust-bindings/wallet` entrypoint exposes functionality commonly used by wallets and other applications requiring functionality used in wallets.
+  - This change makes the library **incompatible** with node versions <16 and requires bundlers to respect the `exports` field of `package.json`.
+  - For TypeScript projects the minimum required version of typescript is:
+    - NodeJS: 4.7, `"moduleResolution": "node16" // or "nodenext"`
+    - Bundled applications (webpack, esbuild, rollup, etc...): 5.0, `"moduleResolution": "bundler"`
+
 ## 1.2.0
 
 ### Added

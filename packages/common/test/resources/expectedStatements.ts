@@ -1,4 +1,4 @@
-import { CredentialStatement } from '../../src/web3ProofTypes';
+import { CredentialStatement } from '../../src/web3-id/web3IdProofTypes';
 
 export const expectedStatementMixed: CredentialStatement[] = [
     {

@@ -9,7 +9,7 @@ import {
     WalletExportFormat,
     WithAccountKeys,
 } from './types';
-import * as ed from '@noble/ed25519';
+import { sign, verify } from '@noble/ed25519';
 import { Buffer } from 'buffer/';
 import { AccountAddress } from './types/accountAddress';
 import { sha256 } from './hash';
@@ -43,7 +43,7 @@ export interface AccountSigner {
 export const getSignature = async (
     digest: Buffer,
     privateKey: HexString
-): Promise<Buffer> => Buffer.from(await ed.sign(digest, privateKey));
+): Promise<Buffer> => Buffer.from(await sign(digest, privateKey));
 
 /**
  * Creates an `AccountSigner` for an account which uses the first credential's first keypair.
@@ -268,7 +268,7 @@ export async function verifyMessageSignature(
                 );
             }
             if (
-                !(await ed.verify(
+                !(await verify(
                     credentialSignature[Number(keyIndex)],
                     digest,
                     credentialKeys.keys[Number(keyIndex)].verifyKey

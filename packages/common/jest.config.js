@@ -3,9 +3,18 @@ module.exports = {
     testEnvironment: 'node',
     moduleFileExtensions: ['js', 'ts', 'json'],
     moduleDirectories: ['node_modules'],
-    globals: {
-        'ts-jest': {
-            tsconfig: 'tsconfig.json',
-        },
+    transform: {
+        '^.+\\.tsx?$': [
+            'ts-jest',
+            {
+                tsconfig: 'tsconfig.json',
+            },
+        ],
+        '^.*src/grpc-api/.+\\.js$': [
+            'ts-jest',
+            {
+                tsconfig: 'tsconfig.json',
+            },
+        ],
     },
 };

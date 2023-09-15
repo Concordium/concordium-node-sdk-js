@@ -2,7 +2,7 @@ import {
     createCredentialTransaction,
     CredentialInput,
     createCredentialV1,
-} from '../src/credentialDeploymentTransactions';
+} from '../src/wasm/credentialDeploymentTransactions';
 import fs from 'fs';
 import { AttributeKey } from '../src/types';
 import { TransactionExpiry } from '../src';

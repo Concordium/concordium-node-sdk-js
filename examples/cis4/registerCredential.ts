@@ -12,7 +12,7 @@ import {
     HexString,
     parseWallet,
 } from '@concordium/node-sdk';
-import { parseEndpoint } from '../shared/util';
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `

@@ -1,11 +1,16 @@
 {
     "extends": "../../tsconfig-base.json",
-    "include": ["src/**/*"],
-    "references": [
-        { "path": "../common"}
+    "include": [
+        "src/**/*",
+        "test/**/*"
     ],
     "compilerOptions": {
-        "rootDir": "src",
-        "outDir": "./lib"
-    }
+        "module": "Node16",
+        "moduleResolution": "Node16"
+    },
+    "references": [
+        {
+            "path": "../common"
+        }
+    ]
 }

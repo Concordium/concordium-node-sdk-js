@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import { Buffer } from 'buffer/';
-import { BoolResponse, JsonResponse } from '../grpc/concordium_p2p_rpc_pb';
+import { BoolResponse, JsonResponse } from './grpc-api/concordium_p2p_rpc_pb';
 
 /**
  * @deprecated This is a helper function for the v1 gRPC client, which has been deprecated

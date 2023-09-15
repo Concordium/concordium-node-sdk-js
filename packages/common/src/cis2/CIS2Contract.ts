@@ -1,7 +1,7 @@
 import { stringify } from 'json-bigint';
 
 import { ContractAddress, HexString, InvokeContractResult } from '../types';
-import { ConcordiumGRPCClient } from '../GRPCClient';
+import { ConcordiumGRPCClient } from '../grpc/GRPCClient';
 import { AccountSigner } from '../signHelpers';
 import {
     serializeCIS2Transfers,

@@ -4,7 +4,7 @@ import * as Gen from '@concordium/ccd-js-gen';
 import * as Path from 'node:path';
 import * as Url from 'node:url';
 import meow from 'meow';
-import { parseEndpoint } from '../../shared/util';
+import { parseEndpoint } from '../../shared/util.js';
 
 const cli = meow(
     `

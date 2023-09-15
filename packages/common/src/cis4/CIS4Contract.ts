@@ -1,6 +1,5 @@
 import { Buffer } from 'buffer/';
 
-import { AccountSigner, ConcordiumGRPCClient } from '..';
 import {
     ContractTransactionMetadata,
     ContractUpdateTransactionWithSchema,
@@ -10,6 +9,8 @@ import {
     getContractUpdateDefaultExpiryDate,
     getInvoker,
 } from '../GenericContract';
+import { ConcordiumGRPCClient } from '../grpc/GRPCClient';
+import { AccountSigner } from '../signHelpers';
 import type {
     ContractAddress,
     Base58String,

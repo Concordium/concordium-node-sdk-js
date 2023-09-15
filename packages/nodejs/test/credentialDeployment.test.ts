@@ -6,14 +6,16 @@ import {
     IdentityInput,
     TransactionExpiry,
     getCredentialDeploymentSignDigest,
-    serializeCredentialDeploymentTransactionForSubmission,
     BlockItemKind,
     createCredentialDeploymentTransaction,
 } from '@concordium/common-sdk';
 import fs from 'fs';
 import * as ed from '@noble/ed25519';
 import { Buffer } from 'buffer/';
-import { deserializeTransaction } from '@concordium/common-sdk/lib/deserialization';
+import {
+    deserializeTransaction,
+    serializeCredentialDeploymentTransactionForSubmission,
+} from '@concordium/common-sdk/wasm';
 
 test('test deserialize credentialDeployment ', async () => {
     const identityInput: IdentityInput = getIdentityInput();

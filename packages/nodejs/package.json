@@ -57,7 +57,7 @@
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
-        "build": "rm -rf src/grpc-api; mkdir -p src/grpc-api; yarn generate && yarn build-dev",
+        "build": "yarn clean; mkdir -p src/grpc-api; yarn generate && yarn build-dev",
         "build-dev": "yarn tsc-cjs && cp -R src/grpc-api lib",
         "tsc-cjs": "tsc -p tsconfig.build.json",
         "clean": "rimraf -- lib src/grpc-api tsconfig.build.tsbuildinfo"

@@ -51,6 +51,10 @@
                                 "source": "account-creation.md"
                             },
                             {
+                                "name": "Optimizing bundled applications",
+                                "source": "bundler-optimizations.md"
+                            },
+                            {
                                 "name": "GRPCv1 to GRPCv2 Migration Guide",
                                 "source": "grpc-migration.md"
                             },

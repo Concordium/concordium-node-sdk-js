@@ -36,3 +36,22 @@ To create a GRPC-Client in the Web-SDK:
         { timeout: 15000 }
     );
 ```
+
+## Compatibility
+
+As of version 10 (node-sdk@10, web-sdk@7), the SDK's are compatible only with environments
+respecting the `exports` field of a modules `package.json`, i.e. taking this into
+account when resolving modules. This means
+
+- NodeJS versions **16** and later.
+- Bundlers resolving modules by `package.json` `exports`.
+
+### Typescript
+
+Typescript has support for resolving modules through `exports` of `package.json`
+from versions
+
+- NodeJS -> Typescript version **4.7** and later with
+`compilerOptions.moduleResolution: "node16" // Or "nodenext"`.
+- Bundlers -> Typescript version **5.0** and later with
+`compilerOptions.moduleResolution: "bundler"`.

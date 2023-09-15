@@ -88,34 +88,6 @@ working with concordium domain types, which requires WASM.
 - `@concordium/node-sdk/web3-id` entrypoint exposes functionality for working
 with web3-id proofs.
 
-### Optimizing bundle size (for bundled applications)
-
-The following example shows how to optimize the produced bundle of your
-application with **webpack 5**. This revolves around loading the WASM necessary
-for the SDK to work asynchronously instead of embedding it. Corresponding
-strategies also exist for other bundlers.
-
-```ts
-import { Configuration } from 'webpack';
-
-const config: Configuration = {
-    ..., // Other webpack configuration options.
-    resolve: {
-        ...,
-        alias: {
-             // Resolve bundler-specific wasm entrypoints.
-            '@concordium/rust-bindings': '@concordium/rust-bindings/bundler',
-        }
-    },
-    experiments: {
-         // Needed to handle bundler-specific wasm entrypoint
-        asyncWebAssembly: true
-    }
-};
-
-export default config;
-```
-
 ## Common SDK version 5 to 6 (Web 2->3) (Node 5->6)
 
 Some classes and types have been renamed or changed, and should be update if used.

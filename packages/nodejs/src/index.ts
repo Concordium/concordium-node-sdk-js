@@ -1,15 +1,10 @@
-/**
- * A concordium-node specific gRPC client wrapper.
- *
- * @module NodeJS-SDK
- *
- */
-
-import ConcordiumNodeClient from './client';
-export * from './clientV2';
-
-export { ConcordiumNodeClient };
-export { decryptMobileWalletExport, EncryptedData } from './wallet/crypto';
-export { MobileWalletExport } from './wallet/types';
-export * from '@concordium/common-sdk';
-export { getModuleBuffer } from './util';
+export * from './pub/types';
+export * from './pub/schema';
+export * from './pub/wasm';
+export * from './pub/id';
+export * from './pub/client';
+export * from './pub/grpc';
+export * from './pub/cis0';
+export * from './pub/cis2';
+export * from './pub/cis4';
+export * from './pub/web3-id';

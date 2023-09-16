@@ -27,13 +27,13 @@ import {
 import { AccountAddress } from './types/accountAddress';
 import { DataBlob } from './types/DataBlob';
 import { CcdAmount } from './types/ccdAmount';
-import { Readable } from 'stream';
+import { Cursor } from './deserializationHelpers';
 
 interface AccountTransactionHandler<
     PayloadType extends AccountTransactionPayload = AccountTransactionPayload
 > {
     serialize: (payload: PayloadType) => Buffer;
-    deserialize: (serializedPayload: Readable) => PayloadType;
+    deserialize: (serializedPayload: Cursor) => PayloadType;
     getBaseEnergyCost: (payload: PayloadType) => bigint;
 }
 
@@ -50,7 +50,7 @@ export class SimpleTransferHandler
         return Buffer.concat([serializedToAddress, serializedAmount]);
     }
 
-    deserialize(serializedPayload: Readable): SimpleTransferPayload {
+    deserialize(serializedPayload: Cursor): SimpleTransferPayload {
         const toAddress = AccountAddress.fromBytes(
             Buffer.from(serializedPayload.read(32))
         );
@@ -79,7 +79,7 @@ export class SimpleTransferWithMemoHandler
         ]);
     }
 
-    deserialize(serializedPayload: Readable): SimpleTransferWithMemoPayload {
+    deserialize(serializedPayload: Cursor): SimpleTransferWithMemoPayload {
         const toAddress = AccountAddress.fromBytes(
             Buffer.from(serializedPayload.read(32))
         );
@@ -250,7 +250,7 @@ export class RegisterDataHandler
         return encodeDataBlob(payload.data);
     }
 
-    deserialize(serializedPayload: Readable): RegisterDataPayload {
+    deserialize(serializedPayload: Cursor): RegisterDataPayload {
         const memoLength = serializedPayload.read(2).readUInt16BE(0);
         return {
             data: new DataBlob(Buffer.from(serializedPayload.read(memoLength))),

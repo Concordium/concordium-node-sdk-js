@@ -1,16 +1,14 @@
+import fs from 'fs';
 import {
     AttributeType,
     StatementAttributeType,
     TimestampAttribute,
     statementAttributeTypeToAttributeType,
-} from '../src';
-import {
     compareStringAttributes,
     isStringAttributeInRange,
     timestampToDate,
     verifyWeb3IdCredentialSignature,
-} from '../src/web3IdHelpers';
-import fs from 'fs';
+} from '../src';
 
 const globalContext = JSON.parse(
     fs.readFileSync('./test/resources/global.json').toString()

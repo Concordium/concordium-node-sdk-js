@@ -39,9 +39,14 @@ export class Cursor {
 
     /**
      * Read a number of bytes from the cursor.
+     *
+     * @param {number} [numBytes=this.remainingBytes.length] - The number of bytes to read. Defaults to the remaining bytes from the cursor position.
+     *
      * @throws If the buffer contains fewer bytes than being read.
+     *
+     * @returns {Buffer} A buffer containing the number of bytes specified from the cursor position
      */
-    public read(numBytes: number): Buffer {
+    public read(numBytes: number = this.remainingBytes.length): Buffer {
         const end = this.cursor + numBytes;
         if (this.data.length < end) {
             throw new Error(

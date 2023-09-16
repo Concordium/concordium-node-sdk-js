@@ -4,9 +4,10 @@ import {
     attributesWithRange,
     attributesWithSet,
     RangeStatement,
-} from '../src/idProofTypes';
-import { getIdProof, IdStatementBuilder } from '../src/idProofs';
+} from '../src/id/idProofTypes';
+import { IdStatementBuilder } from '../src/id/idProofs';
 import fs from 'fs';
+import { getIdProof } from '../src/wasm';
 
 test('Creating a statement with multiple atomic statements on the same attribute fails', () => {
     const builder = new IdStatementBuilder(true);
@@ -93,9 +94,15 @@ test('Upper bound must be greater than lower bound for attribute statement', () 
 
 test('Unknown attribute tags are rejected', () => {
     const builder = new IdStatementBuilder(true);
-    expect(() => builder.addMembership(-1, ['DK'])).toThrow();
-    expect(() => builder.addMembership(15, ['DK'])).toThrow();
-    expect(() => builder.addMembership(1000, ['DK'])).toThrow();
+    expect(() =>
+        builder.addMembership(-1 as unknown as AttributesKeys, ['DK'])
+    ).toThrow();
+    expect(() =>
+        builder.addMembership(15 as unknown as AttributesKeys, ['DK'])
+    ).toThrow();
+    expect(() =>
+        builder.addMembership(1000 as unknown as AttributesKeys, ['DK'])
+    ).toThrow();
 });
 
 test('Empty sets are rejected', () => {

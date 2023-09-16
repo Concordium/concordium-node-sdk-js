@@ -2,7 +2,9 @@
 
 This is a collection of scripts/examples that utilizes the SDK. There are
 three directories with examples:
-- `client` containing examples that utilize the client to interact with a Concordium node.
+
+- `client` containing examples that utilize the client to interact with
+a Concordium node.
 - `cis2`  containing examples that helps interact with CIS-2 compliant smart contracts.
 - `common` that use various general functions from the library.
 

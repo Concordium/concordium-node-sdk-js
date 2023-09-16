@@ -1,11 +1,6 @@
 import * as v1 from '@concordium/common-sdk';
-import * as v2 from '../../common/grpc/v2/concordium/types';
+import * as v2 from '../../common/lib/cjs/grpc-api/v2/concordium/types';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
-import {
-    ConcordiumGRPCClient,
-    getAccountIdentifierInput,
-    getBlockHashInput,
-} from '@concordium/common-sdk/lib/GRPCClient';
 import {
     buildBasicAccountSigner,
     calculateEnergyCost,
@@ -14,9 +9,9 @@ import {
     sha256,
     signTransaction,
     serializeAccountTransactionPayload,
-    streamToList,
-    deserializeReceiveReturnValue,
     createCredentialDeploymentTransaction,
+    serializeAccountTransaction,
+    streamToList,
 } from '@concordium/common-sdk';
 import {
     getModuleBuffer,
@@ -28,9 +23,13 @@ import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons';
 import { Buffer } from 'buffer/';
 
-import { serializeAccountTransaction } from '@concordium/common-sdk/lib/serialization';
-
 import { TextEncoder, TextDecoder } from 'util';
+import {
+    ConcordiumGRPCClient,
+    getAccountIdentifierInput,
+    getBlockHashInput,
+} from '@concordium/common-sdk/grpc';
+import { deserializeReceiveReturnValue } from '@concordium/common-sdk/schema';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 global.TextEncoder = TextEncoder as any;
@@ -525,12 +524,13 @@ test.each([clientV2, clientWeb])('createAccount', async (client) => {
         await ed.sign(hashToSign, signingKey1)
     ).toString('hex');
     const signatures: string[] = [signature];
+    const payload = v1.serializeCredentialDeploymentPayload(
+        signatures,
+        credentialDeploymentTransaction
+    );
 
     expect(
-        client.sendCredentialDeploymentTransaction(
-            credentialDeploymentTransaction,
-            signatures
-        )
+        client.sendCredentialDeploymentTransaction(payload, expiry)
     ).rejects.toThrow('expired');
 });
 

@@ -1,0 +1,75 @@
+{
+    "name": "Concordium JS-SDKs",
+    "out": "../typedoc",
+    "entryPointStrategy": "expand",
+    "entryPoints": [
+        "../packages/web/src/index.ts",
+        "../packages/nodejs/src/index.ts",
+        "../packages/common/src/GRPCClient.ts",
+        "../packages/common/src/types.ts"
+    ],
+    "tsconfig": "../tsconfig.json",
+    "readme": "./pages/documentation.md",
+    "plugin": [
+        "@knodes/typedoc-plugin-code-blocks",
+        "@knodes/typedoc-plugin-pages",
+        "typedoc-plugin-merge-modules"
+    ],
+    "mergeModulesMergeMode": "module",
+    "pluginPages": {
+        "source": "docs/pages",
+        "pages": [
+            {
+                "name": "Concordium JS-SDKs",
+                "children": [
+                    {
+                        "name": "CIS2-Contracts",
+                        "source": "cis2-contracts.md"
+                    },
+                    {
+                        "name": "Identity Proofs",
+                        "source": "identity-proofs.md"
+                    },
+                    {
+                        "name": "Runnable Examples",
+                        "source": "runnable-examples.md"
+                    },
+                    {
+                        "name": "Transactions",
+                        "source": "transactions.md"
+                    },
+                    {
+                        "name": "Utility Functions",
+                        "source": "utility-functions.md"
+                    },
+                    {
+                        "name": "Miscellaneous Pages",
+                        "childrenDir": "misc-pages",
+                        "children": [
+                            {
+                                "name": "Account Creation",
+                                "source": "account-creation.md"
+                            },
+                            {
+                                "name": "Optimizing bundled applications",
+                                "source": "bundler-optimizations.md"
+                            },
+                            {
+                                "name": "GRPCv1 to GRPCv2 Migration Guide",
+                                "source": "grpc-migration.md"
+                            },
+                            {
+                                "name": "Old GRPC-Client",
+                                "source": "grpc-v1.md"
+                            },
+                            {
+                                "name": "Upgrade Guide",
+                                "source": "upgrade-guide.md"
+                            },
+                        ]
+                    },
+                ]
+            },
+        ]
+    }
+}

@@ -23,7 +23,7 @@ import {
     CommitmentInput,
     CredentialSchemaSubject,
     TimestampAttribute,
-} from '../src/web3ProofTypes';
+} from '../src/web3-id/web3IdProofTypes';
 import { TEST_SEED_1 } from './HdWallet.test';
 import fs from 'fs';
 import {

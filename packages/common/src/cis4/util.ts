@@ -1,8 +1,8 @@
 import { Buffer } from 'buffer/';
-import * as ed25519 from '@noble/ed25519';
+import { getPublicKey } from '@noble/ed25519';
 
 import type { ContractAddress, HexString } from '../types';
-import type { CIS2 } from '../cis2';
+import type { CIS2 } from '../cis2/util';
 import {
     deserializeCIS2MetadataUrl,
     serializeCIS2MetadataUrl,
@@ -281,7 +281,7 @@ export class Web3IdSigner {
      */
     public static async from(privateKey: HexString): Promise<Web3IdSigner> {
         const publicKey = Buffer.from(
-            await ed25519.getPublicKey(Buffer.from(privateKey, 'hex'))
+            await getPublicKey(Buffer.from(privateKey, 'hex'))
         ).toString('hex');
         return new Web3IdSigner(privateKey, publicKey);
     }

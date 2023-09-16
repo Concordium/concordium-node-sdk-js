@@ -6,7 +6,7 @@ import {
     getContractName,
     getContractNameFromInit,
 } from './contractHelpers';
-import { ConcordiumGRPCClient } from './GRPCClient';
+import { ConcordiumGRPCClient } from './grpc/GRPCClient';
 import { AccountSigner, signTransaction } from './signHelpers';
 import {
     AccountTransactionType,
@@ -25,7 +25,7 @@ import { AccountAddress } from './types/accountAddress';
 import { CcdAmount } from './types/ccdAmount';
 import { TransactionExpiry } from './types/transactionExpiry';
 import { ModuleReference } from './types/moduleReference';
-import * as BlockHash from './BlockHash';
+import * as BlockHash from './types/BlockHash';
 
 /**
  * Metadata necessary for smart contract transactions

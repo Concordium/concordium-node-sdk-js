@@ -1,5 +1,5 @@
 import { AccountAddress } from '../src/types/accountAddress';
-import * as bs58check from 'bs58check';
+import bs58check from 'bs58check';
 import { getAlias, isAlias } from '../src/alias';
 import { Buffer } from 'buffer/';
 

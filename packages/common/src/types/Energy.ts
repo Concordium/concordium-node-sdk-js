@@ -4,7 +4,7 @@ class Energy {
     private __nominal = true;
     constructor(
         /** The internal value for representing the energy. */
-        public value: bigint
+        public readonly value: bigint
     ) {}
 }
 

@@ -7,7 +7,7 @@ class InitName {
     private __nominal = true;
     constructor(
         /** The internal string corresponding to the init-function. */
-        public value: string
+        public readonly value: string
     ) {}
 }
 

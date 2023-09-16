@@ -1,4 +1,4 @@
-import { HexString } from '..';
+import type { HexString } from '../types';
 
 /** Hash of a transaction. */
 class TransactionHash {
@@ -6,7 +6,7 @@ class TransactionHash {
     private __nominal = true;
     constructor(
         /** Internal buffer with the hash. */
-        public buffer: ArrayBuffer
+        public readonly buffer: ArrayBuffer
     ) {}
 }
 

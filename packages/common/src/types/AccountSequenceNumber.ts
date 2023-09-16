@@ -2,7 +2,10 @@
 class AccountSequenceNumber {
     /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
     private __nominal = true;
-    constructor(public value: bigint) {}
+    constructor(
+        /** Internal value representing the sequence number. */
+        public readonly value: bigint
+    ) {}
 }
 
 /** Account transaction sequence number. (Formerly refered as Nonce) */
@@ -11,6 +14,7 @@ export type Type = AccountSequenceNumber;
 /**
  * Construct an AccountSequenceNumber type.
  * @param {bigint | number} sequenceNumber The account sequence number.
+ * @throws If `sequenceNumber` is not at least 1.
  * @returns {AccountSequenceNumber}
  */
 export function create(sequenceNumber: bigint | number): AccountSequenceNumber {

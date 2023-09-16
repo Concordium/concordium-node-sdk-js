@@ -1,5 +1,5 @@
 import { checkParameterLength } from '../contractHelpers';
-import { HexString } from '../types';
+import type { HexString } from '../types';
 
 /** Parameter for a smart contract entrypoint. */
 class Parameter {
@@ -7,7 +7,7 @@ class Parameter {
     private __nominal = true;
     constructor(
         /** Internal buffer of bytes representing the parameter. */
-        public buffer: ArrayBuffer
+        public readonly buffer: ArrayBuffer
     ) {}
 }
 

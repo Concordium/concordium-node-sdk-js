@@ -1,4 +1,4 @@
-import { HexString } from '..';
+import type { HexString } from '../types';
 
 /**
  * Represents a hash of a block in the chain.
@@ -8,7 +8,7 @@ class BlockHash {
     private __nominal = true;
     constructor(
         /** The internal buffer of bytes representing the hash. */
-        public buffer: ArrayBuffer
+        public readonly buffer: ArrayBuffer
     ) {}
 }
 

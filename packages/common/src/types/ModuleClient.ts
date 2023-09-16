@@ -1,22 +1,23 @@
 import {
-    AccountAddress,
-    AccountSigner,
-    AccountTransactionType,
-    CcdAmount,
-    ConcordiumGRPCClient,
     ContractTransactionMetadata,
-    InitContractPayload,
-    TransactionExpiry,
-    VersionedModuleSource,
-    signTransaction,
-} from '..';
-import { getContractUpdateDefaultExpiryDate } from '../GenericContract';
+    getContractUpdateDefaultExpiryDate,
+} from '../GenericContract';
 import { ModuleReference } from './moduleReference';
 import { Buffer } from 'buffer/';
 import * as BlockHash from './BlockHash';
 import * as Parameter from './Parameter';
 import * as TransactionHash from './TransactionHash';
 import * as ContractName from './ContractName';
+import {
+    AccountTransactionType,
+    InitContractPayload,
+    VersionedModuleSource,
+} from '../types';
+import { ConcordiumGRPCClient } from '../grpc';
+import { AccountSigner, signTransaction } from '../signHelpers';
+import { CcdAmount } from './ccdAmount';
+import { AccountAddress } from './accountAddress';
+import { TransactionExpiry } from './transactionExpiry';
 
 /**
  * An update transaction without header.
@@ -39,9 +40,9 @@ class ModuleClient {
     private __nominal = true;
     constructor(
         /** The gRPC connection used by this object */
-        public grpcClient: ConcordiumGRPCClient,
+        public readonly grpcClient: ConcordiumGRPCClient,
         /** The reference for this module */
-        public moduleReference: ModuleReference
+        public readonly moduleReference: ModuleReference
     ) {}
 }
 

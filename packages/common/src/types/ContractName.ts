@@ -7,7 +7,7 @@ class ContractName {
     private __nominal = true;
     constructor(
         /** The internal string value of the contract name. */
-        public value: string
+        public readonly value: string
     ) {}
 }
 

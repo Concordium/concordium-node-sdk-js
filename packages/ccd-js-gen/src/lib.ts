@@ -327,7 +327,7 @@ This function ensures the smart contract module is deployed on chain.
             .setBodyText(
                 `return SDK.ModuleClient.createAndSendInitTransaction(
     ${moduleClientId}.${internalModuleClientId},
-    '${contract.contractName}',
+    SDK.ContractName.fromStringUnchecked('${contract.contractName}'),
     ${transactionMetadataId},
     ${parameterId},
     ${signerId}
@@ -361,15 +361,26 @@ This function ensures the smart contract module is deployed on chain.
             namespaceImport: 'SDK',
             moduleSpecifier: '@concordium/common-sdk',
         });
-        contractSourceFile.addImportDeclaration({
-            namedImports: [moduleRefId],
-            moduleSpecifier: `./${outModuleName}`,
+
+        contractSourceFile.addVariableStatement({
+            docs: [
+                'The reference of the smart contract module supported by the provided client.',
+            ],
+            isExported: true,
+            declarationKind: tsm.VariableDeclarationKind.Const,
+            declarations: [
+                {
+                    name: moduleRefId,
+                    type: 'SDK.ModuleReference',
+                    initializer: `new SDK.ModuleReference('${moduleRef.moduleRef}')`,
+                },
+            ],
         });
 
         contractSourceFile.addVariableStatement({
+            docs: ['Name of the smart contract supported by this client.'],
             isExported: true,
             declarationKind: tsm.VariableDeclarationKind.Const,
-            docs: ['Name of the smart contract supported by this client.'],
             declarations: [
                 {
                     name: contractNameId,
@@ -473,7 +484,7 @@ Checking the information instance on chain.
             })
             .setBodyText(
                 `const ${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, SDK.ContractName.toString(${contractNameId}));
-await ${genericContractId}.checkOnChain({ moduleReference: ${moduleRefId}, blockHash: ${blockHashId} === undefined ? undefined : SDK.BlockHash.toHexString(${blockHashId}) });
+await ${genericContractId}.checkOnChain({ moduleReference: ${moduleRefId}, blockHash: ${blockHashId} });
 return new ${contractClientType}(
     ${grpcClientId},
     ${contractAddressId},
@@ -542,7 +553,7 @@ Without checking the instance information on chain.
                 returnType: 'Promise<void>',
             })
             .setBodyText(
-                `return ${contractClientId}.${genericContractId}.checkOnChain({moduleReference: ${moduleRefId}, blockHash: ${blockHashId} === undefined ? undefined : SDK.BlockHash.toHexString(${blockHashId})})`
+                `return ${contractClientId}.${genericContractId}.checkOnChain({moduleReference: ${moduleRefId}, blockHash: ${blockHashId} })`
             );
 
         const invokerId = 'invoker';

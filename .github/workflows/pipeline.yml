@@ -3,14 +3,13 @@ name: Build, lint and typecheck examples
 on:
     # Triggers the workflow on push or pull request events but only for the main branch
     push:
-        branches: [ main, release** ]
+        branches: [main, release**]
     pull_request:
-        branches: [ main, release** ]
+        branches: [main, release**]
         # Don't run on draft PR's, see: https://github.com/orgs/community/discussions/25722#discussioncomment-3248917
-        types: [ opened, synchronize, reopened, ready_for_review ]
+        types: [opened, synchronize, reopened, ready_for_review]
     # Allows us to run the workflow manually from the Actions tab
     workflow_dispatch:
-
 
 env:
     NODE_VERSION: 18.16.0
@@ -24,7 +23,7 @@ jobs:
         steps:
             - uses: actions/checkout@v3
               with:
-                  submodules: "recursive"
+                  submodules: 'recursive'
 
             - uses: actions/setup-node@v3
               with:
@@ -52,7 +51,7 @@ jobs:
         steps:
             - uses: actions/checkout@v3
               with:
-                  submodules: "recursive"
+                  submodules: 'recursive'
 
             - uses: actions/setup-node@v3
               with:
@@ -148,7 +147,10 @@ jobs:
             run:
                 working-directory: packages/common
         steps:
-            - uses: actions/checkout@v3
+            - name: Checkout
+              uses: actions/checkout@v3
+              with:
+                  submodules: 'recursive'
 
             - uses: actions/setup-node@v3
               with:
@@ -306,7 +308,7 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v3
               with:
-                  submodules: "recursive"
+                  submodules: 'recursive'
 
             - name: Install formatter
               run: |
@@ -327,7 +329,7 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v3
               with:
-                  submodules: "recursive"
+                  submodules: 'recursive'
 
             - name: Install clippy
               run: |

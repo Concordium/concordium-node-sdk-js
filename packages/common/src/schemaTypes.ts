@@ -434,7 +434,7 @@ function deserializeList<A>(
  * The function will first deserialize a byte indicating whether a value is present or not, if present it will deserialize the value.
  *
  * @template A Type representing the optional value.
- * @param {Deserializer<A>} deserializeItem Function for deserializing the value.
+ * @param {Deserializer<A>} deserializeValue Function for deserializing the value.
  * @param {Cursor} cursor A cursor over the buffer to deserialize.
  * @returns {A | undefined} The deserialized optional item.
  */

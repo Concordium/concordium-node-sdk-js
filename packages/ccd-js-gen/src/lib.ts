@@ -301,6 +301,42 @@ This function ensures the smart contract module is deployed on chain.
             contractSchema?.init?.parameter
         );
 
+        const initParameterTypeId = `${toPascalCase(
+            contract.contractName
+        )}Parameter`;
+
+        const createInitParameterFnId = `create${toPascalCase(
+            contract.contractName
+        )}Parameter`;
+
+        if (initParameter !== undefined) {
+            moduleSourceFile.addTypeAlias({
+                docs: [
+                    `Parameter type transaction for instantiating a new '${contract.contractName}' smart contract instance`,
+                ],
+                isExported: true,
+                name: initParameterTypeId,
+                type: initParameter.type,
+            });
+
+            moduleSourceFile
+                .addFunction({
+                    docs: [
+                        `Construct Parameter type transaction for instantiating a new '${contract.contractName}' smart contract instance.`,
+                    ],
+                    isExported: true,
+                    name: createInitParameterFnId,
+                    parameters: [
+                        {
+                            type: initParameterTypeId,
+                            name: parameterId,
+                        },
+                    ],
+                    returnType: 'SDK.Parameter.Type',
+                })
+                .setBodyText(`return ${initParameter.tokens}`);
+        }
+
         moduleSourceFile
             .addFunction({
                 docs: [
@@ -315,7 +351,7 @@ This function ensures the smart contract module is deployed on chain.
 ${
     initParameter === undefined
         ? ''
-        : `@param {${initParameter.type}} ${parameterId} - Parameter to provide as part of the transaction for the instantiation of a new smart contract contract.`
+        : `@param {${initParameterTypeId}} ${parameterId} - Parameter to provide as part of the transaction for the instantiation of a new smart contract contract.`
 }
 @param {SDK.AccountSigner} ${signerId} - The signer of the update contract transaction.
 
@@ -339,7 +375,7 @@ ${
                         : [
                               {
                                   name: parameterId,
-                                  type: initParameter.type,
+                                  type: initParameterTypeId,
                               },
                           ]),
                     {

@@ -8,7 +8,6 @@ import * as BlockHash from './BlockHash.js';
 import * as Parameter from './Parameter.js';
 import * as TransactionHash from './TransactionHash.js';
 import * as ContractName from './ContractName.js';
-import * as AccountAddress from './AccountAddress.js';
 import {
     AccountTransactionType,
     InitContractPayload,

@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer/';
 import { ContractAddress, InstanceInfo } from './types';
 
 const CONTRACT_PARAM_MAX_LENGTH = 65535;
@@ -25,8 +24,8 @@ export const getContractName = ({ name }: InstanceInfo): string => {
  *
  * @throws If buffer exceeds max length allowed for smart contract parameters
  */
-export const checkParameterLength = (buffer: Buffer): void => {
-    if (buffer.length > CONTRACT_PARAM_MAX_LENGTH) {
+export const checkParameterLength = (buffer: ArrayBuffer): void => {
+    if (buffer.byteLength > CONTRACT_PARAM_MAX_LENGTH) {
         throw new Error(
             `Serialized parameter exceeds max length of smart contract parameter (${CONTRACT_PARAM_MAX_LENGTH} bytes)`
         );
@@ -43,12 +42,11 @@ export const isEqualContractAddress =
 
 /** The name of a smart contract. Note: This does _not_ including the 'init_' prefix. */
 export type ContractName = string;
-
 /** The name of an entrypoint exposed by a smart contract. Note: This does _not_ include the '<contractName>.' prefix. */
 export type EntrypointName = string;
 
 /** Check that every character is an Ascii alpha, numeric or punctuation. */
-function isAsciiAlphaNumericPunctuation(string: string) {
+export function isAsciiAlphaNumericPunctuation(string: string): boolean {
     for (let i = 0; i < string.length; i++) {
         const charCode = string.charCodeAt(i);
         if (

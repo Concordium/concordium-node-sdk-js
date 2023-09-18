@@ -1,7 +1,11 @@
 import { Buffer } from 'buffer/';
 import { stringify } from 'json-bigint';
 
-import { checkParameterLength, getContractName } from './contractHelpers';
+import {
+    checkParameterLength,
+    getContractName,
+    getContractNameFromInit,
+} from './contractHelpers';
 import { ConcordiumGRPCClient } from './grpc/GRPCClient';
 import { AccountSigner, signTransaction } from './signHelpers';
 import {
@@ -20,6 +24,8 @@ import {
 import { AccountAddress } from './types/accountAddress';
 import { CcdAmount } from './types/ccdAmount';
 import { TransactionExpiry } from './types/transactionExpiry';
+import { ModuleReference } from './types/moduleReference';
+import * as BlockHash from './types/BlockHash';
 
 /**
  * Metadata necessary for smart contract transactions
@@ -147,6 +153,20 @@ export class ContractDryRun<E extends string = string> {
     }
 }
 
+/** Options for checking contract instance information on chain. */
+export type ContractCheckOnChainOptions = {
+    /**
+     * Hash of the block to check the information at.
+     * When not provided the last finalized block is used.
+     */
+    blockHash?: BlockHash.Type;
+    /**
+     * The expected module reference to be used by the contract instance.
+     * When not provided no check is done against the module reference.
+     */
+    moduleReference?: ModuleReference;
+};
+
 /**
  * Either a module schema, or a `Record` of parameter schemas per entrypoint `E`
  *
@@ -223,6 +243,58 @@ class ContractBase<E extends string = string, V extends string = string> {
             contractAddress
         );
         return getContractName(instanceInfo);
+    }
+
+    /**
+     * Get information on this smart contract instance.
+     *
+     * @param {BlockHash.Type} [blockHash] Hash of the block to check information at. When not provided the last finalized block is used.
+
+     * @throws if the {@link InstanceInfo} of the contract could not be found.
+
+     * @returns {InstanceInfo} The instance info.
+     */
+    public async getInstanceInfo(
+        blockHash?: BlockHash.Type
+    ): Promise<InstanceInfo> {
+        const blockHashHex =
+            blockHash === undefined
+                ? undefined
+                : BlockHash.toHexString(blockHash);
+        return this.grpcClient.getInstanceInfo(
+            this.contractAddress,
+            blockHashHex
+        );
+    }
+
+    /**
+     * Check if the smart contract instance exists on the blockchain and whether it uses a matching contract name.
+     * Optionally a module reference can be provided to check if the contract instance uses this module.
+     *
+     * @param {ContractCheckOnChainOptions} [options] Options for checking information on chain.
+     *
+     * @throws {RpcError} If failing to communicate with the concordium node or if the instance does not exist on chain or fails the checks.
+     */
+    public async checkOnChain(
+        options: ContractCheckOnChainOptions = {}
+    ): Promise<void> {
+        const info = await this.getInstanceInfo(options.blockHash);
+
+        const contractNameOnChain = getContractNameFromInit(info.name);
+        if (contractNameOnChain !== this.contractName) {
+            throw new Error(
+                `Instance ${this.contractAddress} have contract name '${contractNameOnChain}' on chain. The client expected: '${this.contractName}'.`
+            );
+        }
+
+        if (
+            options.moduleReference !== undefined &&
+            info.sourceModule.moduleRef !== options.moduleReference.moduleRef
+        ) {
+            throw new Error(
+                `Instance ${this.contractAddress} uses module with reference '${info.sourceModule.moduleRef}' expected '${options.moduleReference.moduleRef}'`
+            );
+        }
     }
 
     /**

@@ -52,3 +52,12 @@ export {
     CreateContractTransactionMetadata,
     ContractUpdateTransactionWithSchema,
 } from '../GenericContract';
+
+export * as ModuleClient from '../types/ModuleClient';
+export * as Parameter from '../types/Parameter';
+export * as AccountSequenceNumber from '../types/AccountSequenceNumber';
+export * as Energy from '../types/Energy';
+export * as TransactionHash from '../types/TransactionHash';
+export * as BlockHash from '../types/BlockHash';
+export * as ContractName from '../types/ContractName';
+export * as InitName from '../types/InitName';

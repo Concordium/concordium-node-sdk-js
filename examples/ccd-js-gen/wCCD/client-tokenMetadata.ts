@@ -61,7 +61,7 @@ const contractAddress: SDK.ContractAddress = {
     /* eslint-disable import/no-unresolved */
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const wCCDModule = await import('./lib/wCCD').catch((e) => {
+    const wCCDContractClient = await import('./lib/cis2_wCCD').catch((e) => {
         /* eslint-enable import/no-unresolved */
         console.error(
             '\nFailed to load the generated wCCD module, did you run the `generate` script?\n'
@@ -69,9 +69,18 @@ const contractAddress: SDK.ContractAddress = {
         throw e;
     });
 
-    const parameter = '010000'; // First 2 bytes for number of tokens to query, 1 byte for the token ID.
-    const contract = new wCCDModule.Cis2WCCD(grpcClient, contractAddress);
+    const parameter = SDK.Parameter.fromHexString('010000'); // First 2 bytes for number of tokens to query, 1 byte for the token ID.
+    const contract = await wCCDContractClient.create(
+        grpcClient,
+        contractAddress
+    );
 
-    const responseHex = await contract.dryRun.tokenMetadata(parameter);
-    console.log({ responseHex });
+    const result = await wCCDContractClient.dryRunTokenMetadata(
+        contract,
+        new SDK.AccountAddress(
+            '357EYHqrmMiJBmUZTVG5FuaMq4soAhgtgz6XNEAJaXHW3NHaUf'
+        ),
+        parameter
+    );
+    console.log({ result });
 })();

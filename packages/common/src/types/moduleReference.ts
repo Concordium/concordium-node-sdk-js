@@ -27,8 +27,8 @@ export class ModuleReference {
         }
     }
 
-    static fromBytes(bytes: Buffer): ModuleReference {
-        return new ModuleReference(bytes.toString('hex'));
+    static fromBytes(bytes: ArrayBuffer): ModuleReference {
+        return new ModuleReference(Buffer.from(bytes).toString('hex'));
     }
 
     toJSON(): string {

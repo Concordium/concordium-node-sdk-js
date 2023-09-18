@@ -4,7 +4,6 @@ import {
     AuthorizationsV1,
     Base58String,
     Duration,
-    Energy,
     FinalizationCommitteeParameters,
     GasRewardsV0,
     GasRewardsV1,
@@ -12,6 +11,7 @@ import {
     TimeoutParameters,
 } from '..';
 import type {
+    Energy,
     IpInfo,
     ArInfo,
     VerifyKey,

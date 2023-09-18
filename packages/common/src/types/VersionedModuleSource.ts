@@ -3,6 +3,8 @@ import * as H from '../contractHelpers';
 import { sha256 } from '../hash';
 import { Buffer } from 'buffer/';
 import { VersionedModuleSource } from '../types';
+import { schemaBytesFromWasmModule } from '../util';
+import { RawModuleSchema } from '../schemaTypes';
 import { Cursor, deserializeUInt32BE } from '../deserializationHelpers';
 
 /** Interface of a smart contract containing the name of the contract and every entrypoint. */
@@ -87,6 +89,39 @@ export async function parseModuleInterface(
         }
     }
     return map;
+}
+
+/**
+ * Extract the embedded smart contract schema bytes. Returns `null` if no schema is embedded.
+ * @param {VersionedModuleSource} moduleSource The smart contract module source.
+ * @returns {RawModuleSchema | null} The raw module schema if found.
+ */
+export async function getEmbeddedModuleSchema(
+    moduleSource: VersionedModuleSource
+): Promise<RawModuleSchema | null> {
+    const wasmModule = await WebAssembly.compile(moduleSource.source);
+    const versionedSchema = schemaBytesFromWasmModule(
+        wasmModule,
+        'concordium-schema'
+    );
+    if (versionedSchema !== null) {
+        return { type: 'versioned', buffer: versionedSchema };
+    }
+    const unversionedSchemaV0 = schemaBytesFromWasmModule(
+        wasmModule,
+        'concordium-schema-v1'
+    );
+    if (unversionedSchemaV0 !== null) {
+        return { type: 'unversioned', version: 0, buffer: unversionedSchemaV0 };
+    }
+    const unversionedSchemaV1 = schemaBytesFromWasmModule(
+        wasmModule,
+        'concordium-schema-v2'
+    );
+    if (unversionedSchemaV1 !== null) {
+        return { type: 'unversioned', version: 1, buffer: unversionedSchemaV1 };
+    }
+    return null;
 }
 
 /**

@@ -139,7 +139,7 @@ export function countSignatures(
 }
 
 /**
- * Converts a wasm module to a smart contract schema.
+ * Compiles a wasm module and extracts the smart contract schema.
  *
  * @param wasm the wasm module as a Buffer
  *
@@ -150,14 +150,33 @@ export function countSignatures(
  */
 export function wasmToSchema(wasm: Buffer): Buffer {
     const wasmModule = new WebAssembly.Module(wasm);
-    const sections = WebAssembly.Module.customSections(
+    const schemaBytes = schemaBytesFromWasmModule(
         wasmModule,
         'concordium-schema'
     );
+    if (schemaBytes === null) {
+        throw Error('WASM-Module contains no schema!');
+    }
+    return schemaBytes;
+}
+
+/**
+ * Extracts custom-section containing the smart contract schema if present.
+ * @param wasmModule the WebAssembly module.
+ * @returns the smart contract schema as a Buffer or null if not present.
+ */
+export function schemaBytesFromWasmModule(
+    wasmModule: WebAssembly.Module,
+    sectionName:
+        | 'concordium-schema'
+        | 'concordium-schema-v1'
+        | 'concordium-schema-v2'
+): Buffer | null {
+    const sections = WebAssembly.Module.customSections(wasmModule, sectionName);
     if (sections.length === 1) {
         return Buffer.from(sections[0]);
     } else if (sections.length === 0) {
-        throw Error('WASM-Module contains no schema!');
+        return null;
     } else {
         throw Error('Invalid WASM-Module retrieved!');
     }

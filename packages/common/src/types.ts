@@ -1773,11 +1773,17 @@ export enum ParameterType {
 }
 
 export interface InstanceInfoCommon {
+    /** Version of the smart contract module. */
     version: number;
+    /** Total balance of CCD hold by this instance. */
     amount: CcdAmount;
+    /** Module reference of the current module being used by this instance. */
     sourceModule: ModuleReference;
+    /** Account used to instantiate this smart contract instance. */
     owner: AccountAddress;
+    /** List of receive functions currently exposed by this smart contract. These are of the form '<contractName>.<entrypointName>'. */
     methods: string[];
+    /** Name of the smart contract. This is of the form 'init_<contractName>'. */
     name: string;
 }
 

@@ -62,3 +62,4 @@ export * as CredentialRegistrationId from '../types/CredentialRegistrationId.js'
 export * as AccountAddress from '../types/AccountAddress.js';
 export * as ContractAddress from '../types/ContractAddress.js';
 export * as EntrypointName from '../types/EntrypointName.js';
+export * as Timestamp from '../types/Timestamp.js';

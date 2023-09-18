@@ -61,7 +61,7 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const accountAddress = new AccountAddress(cli.flags.account);
+    const accountAddress = AccountAddress.fromBase58(cli.flags.account);
     const accountInfo: AccountInfo = await client.getAccountInfo(
         accountAddress,
         cli.flags.block

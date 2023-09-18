@@ -92,7 +92,7 @@ const client = createConcordiumClient(
     // #region documentation-snippet
     // Handle the optional arguments
     const invoker = cli.flags.invoker
-        ? new AccountAddress(cli.flags.invoker)
+        ? AccountAddress.fromBase58(cli.flags.invoker)
         : undefined;
     const amount = cli.flags.amount
         ? new CcdAmount(BigInt(cli.flags.amount))

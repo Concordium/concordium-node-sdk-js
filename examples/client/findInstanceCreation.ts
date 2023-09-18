@@ -63,10 +63,7 @@ const client = createConcordiumClient(
         cli.flags.from !== undefined ? BigInt(cli.flags.from) : undefined;
     const to =
         cli.flags.from !== undefined ? BigInt(cli.flags.from) : undefined;
-    const address: ContractAddress = {
-        index: BigInt(cli.flags.index),
-        subindex: BigInt(cli.flags.subindex),
-    };
+    const address = ContractAddress.create(cli.flags.index, cli.flags.subindex);
     const instanceCreation = await client.findInstanceCreation(
         address,
         from,

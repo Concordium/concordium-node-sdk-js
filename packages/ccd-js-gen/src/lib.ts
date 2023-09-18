@@ -511,7 +511,7 @@ Checking the information instance on chain.
                 returnType: `Promise<${contractClientType}>`,
             })
             .setBodyText(
-                `const ${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, SDK.ContractName.toString(${contractNameId}));
+                `const ${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, ${contractNameId});
 await ${genericContractId}.checkOnChain({ moduleReference: ${moduleRefId}, blockHash: ${blockHashId} });
 return new ${contractClientType}(
     ${grpcClientId},
@@ -546,7 +546,7 @@ Without checking the instance information on chain.
                 returnType: contractClientType,
             })
             .setBodyText(
-                `const ${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, SDK.ContractName.toString(${contractNameId}));
+                `const ${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, ${contractNameId});
     return new ${contractClientType}(
         ${grpcClientId},
         ${contractAddressId},
@@ -678,7 +678,7 @@ ${
                 })
                 .setBodyText(
                     `return ${contractClientId}.${genericContractId}.createAndSendUpdateTransaction(
-    '${entrypointName}',
+    SDK.EntrypointName.fromStringUnchecked('${entrypointName}'),
     SDK.encodeHexString,
     ${transactionMetadataId},
     ${
@@ -740,7 +740,7 @@ ${
                 })
                 .setBodyText(
                     `return ${contractClientId}.${genericContractId}.dryRun.invokeMethod(
-    '${entrypointName}',
+    SDK.EntrypointName.fromStringUnchecked('${entrypointName}'),
     ${invokerId},
     SDK.encodeHexString,
     ${

@@ -3,6 +3,9 @@ import {
     CIS2,
     CIS2Contract,
     buildBasicAccountSigner,
+    ContractAddress,
+    AccountAddress,
+    EntrypointName,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
@@ -81,22 +84,23 @@ const client = createConcordiumClient(
 );
 
 (async () => {
-    const contract = await CIS2Contract.create(client, {
-        index: BigInt(cli.flags.index),
-        subindex: BigInt(cli.flags.subindex),
-    });
+    const contract = await CIS2Contract.create(
+        client,
+        ContractAddress.create(cli.flags.index, cli.flags.subindex)
+    );
 
     const signer = buildBasicAccountSigner(cli.flags.privateKey);
     const tokenId = cli.flags.tokenId;
-    const from = cli.flags.from;
+    const from = AccountAddress.fromBase58(cli.flags.from);
     const toAddress = parseAddress(cli.flags.to);
-    const to: CIS2.Receiver =
-        typeof toAddress === 'string'
-            ? toAddress
-            : {
-                  address: toAddress,
-                  hookName: cli.flags.receiveHookName ?? '',
-              };
+    const to: CIS2.Receiver = AccountAddress.isAccountAddress(toAddress)
+        ? toAddress
+        : {
+              address: toAddress,
+              hookName: EntrypointName.fromString(
+                  cli.flags.receiveHookName ?? ''
+              ),
+          };
 
     const txHash = await contract.transfer(
         {

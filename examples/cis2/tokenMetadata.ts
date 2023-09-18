@@ -1,4 +1,8 @@
-import { createConcordiumClient, CIS2Contract } from '@concordium/node-sdk';
+import {
+    createConcordiumClient,
+    CIS2Contract,
+    ContractAddress,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 
@@ -54,10 +58,10 @@ if (cli.flags.h) {
 }
 
 (async () => {
-    const contract = await CIS2Contract.create(client, {
-        index: BigInt(cli.flags.index),
-        subindex: BigInt(cli.flags.subindex),
-    });
+    const contract = await CIS2Contract.create(
+        client,
+        ContractAddress.create(cli.flags.index, cli.flags.subindex)
+    );
 
     const url = await contract.tokenMetadata(cli.flags.tokenId);
     console.log('url object:', url);

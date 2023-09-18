@@ -68,7 +68,7 @@ const client = createConcordiumClient(
     // #region documentation-snippet
     const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
     const wallet = parseWallet(walletFile);
-    const sender = new AccountAddress(wallet.value.address);
+    const sender = AccountAddress.fromBase58(wallet.value.address);
 
     // Get the wasm file as a buffer.
     const wasmModule = Buffer.from(readFileSync(cli.flags.moduleFile));

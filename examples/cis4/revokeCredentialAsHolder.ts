@@ -4,8 +4,10 @@ import meow from 'meow';
 import { credentials } from '@grpc/grpc-js';
 
 import {
+    AccountAddress,
     buildAccountSigner,
     CIS4Contract,
+    ContractAddress,
     createConcordiumClient,
     parseWallet,
     Web3IdSigner,
@@ -85,17 +87,17 @@ const wallet = parseWallet(walletFile);
 const signer = buildAccountSigner(wallet);
 
 (async () => {
-    const contract = await CIS4Contract.create(client, {
-        index: BigInt(cli.flags.index),
-        subindex: BigInt(cli.flags.subindex),
-    });
+    const contract = await CIS4Contract.create(
+        client,
+        ContractAddress.create(cli.flags.index, cli.flags.subindex)
+    );
     const hSigner = await Web3IdSigner.from(cli.flags.holderPrivateKey);
     const nonce = BigInt(cli.flags.nonce);
 
     const txHash = await contract.revokeCredentialAsHolder(
         signer,
         {
-            senderAddress: wallet.value.address,
+            senderAddress: AccountAddress.fromBase58(wallet.value.address),
             energy: 10000n,
         },
         hSigner,

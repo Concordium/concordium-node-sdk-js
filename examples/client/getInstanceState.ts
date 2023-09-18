@@ -1,5 +1,6 @@
 import { parseEndpoint } from '../shared/util.js';
 import {
+    ContractAddress,
     createConcordiumClient,
     InstanceStateKVPair,
 } from '@concordium/node-sdk';
@@ -60,10 +61,7 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const contractAddress = {
-        index: BigInt(cli.flags.contract),
-        subindex: 0n,
-    };
+    const contractAddress = ContractAddress.create(cli.flags.contract);
     const states: AsyncIterable<InstanceStateKVPair> = client.getInstanceState(
         contractAddress,
         cli.flags.block

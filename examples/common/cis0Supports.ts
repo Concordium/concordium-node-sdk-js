@@ -57,10 +57,10 @@ const client = createConcordiumClient(
 );
 
 (async () => {
-    const contractAddress: ContractAddress = {
-        index: BigInt(cli.flags.index),
-        subindex: BigInt(cli.flags.subindex),
-    };
+    const contractAddress = ContractAddress.create(
+        cli.flags.index,
+        cli.flags.subindex
+    );
     const response = await cis0Supports(
         client,
         contractAddress,

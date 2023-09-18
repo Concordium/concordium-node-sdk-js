@@ -36,7 +36,7 @@ export type ContractTransactionMetadata = {
     /** Amount (in microCCD) to include in the transaction. Defaults to 0n */
     amount?: bigint;
     /** The sender address of the transaction */
-    senderAddress: HexString;
+    senderAddress: AccountAddress.Type;
     /** Expiry date of the transaction. Defaults to 5 minutes in the future */
     expiry?: Date;
     /** Max energy to be used for the transaction */
@@ -422,12 +422,13 @@ class ContractBase<E extends string = string, V extends string = string> {
         }: ContractTransactionMetadata,
         signer: AccountSigner
     ): Promise<HexString> {
-        const sender = AccountAddress.fromBase58(senderAddress);
-        const { nonce } = await this.grpcClient.getNextAccountNonce(sender);
+        const { nonce } = await this.grpcClient.getNextAccountNonce(
+            senderAddress
+        );
         const header = {
             expiry: new TransactionExpiry(expiry),
             nonce: nonce,
-            sender,
+            sender: senderAddress,
         };
         const transaction = {
             ...transactionBase,

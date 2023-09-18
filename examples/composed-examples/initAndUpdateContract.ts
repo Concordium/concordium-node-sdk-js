@@ -73,7 +73,7 @@ const client = createConcordiumClient(
 
     const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
     const wallet = parseWallet(walletFile);
-    const sender = new AccountAddress(wallet.value.address);
+    const sender = AccountAddress.fromBase58(wallet.value.address);
     const signer = buildAccountSigner(wallet);
 
     const moduleRef = new ModuleReference(

@@ -48,3 +48,12 @@ export function toSchemaValue(timestamp: Timestamp): SchemaValue {
     const date = new Date(timestamp.value);
     return date.toISOString();
 }
+
+/**
+ * Get timestamp as a Date.
+ * @param {Timestamp} timestamp The timestamp.
+ * @returns {Date} Date object.
+ */
+export function toDate(timestamp: Timestamp): Date {
+    return new Date(timestamp.value);
+}

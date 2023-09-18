@@ -54,7 +54,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
-    const account = new AccountAddress(cli.flags.account);
+    const account = AccountAddress.fromBase58(cli.flags.account);
 
     const accBlock = await client.findEarliestFinalized(async (bi) => {
         try {

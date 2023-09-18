@@ -150,14 +150,15 @@ export async function createAndSendInitTransaction(
         maxContractExecutionEnergy: metadata.energy,
         param: Buffer.from(parameter.buffer),
     };
-    const sender = AccountAddress.fromBase58(metadata.senderAddress);
-    const { nonce } = await moduleClient.grpcClient.getNextAccountNonce(sender);
+    const { nonce } = await moduleClient.grpcClient.getNextAccountNonce(
+        metadata.senderAddress
+    );
     const header = {
         expiry: new TransactionExpiry(
             metadata.expiry ?? getContractUpdateDefaultExpiryDate()
         ),
         nonce: nonce,
-        sender,
+        sender: metadata.senderAddress,
     };
     const transaction = {
         type: AccountTransactionType.InitContract,

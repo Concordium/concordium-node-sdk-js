@@ -1,11 +1,10 @@
-import { ChannelCredentials, Metadata, ServiceError } from '@grpc/grpc-js';
-import { Buffer as BufferFormater } from 'buffer/';
-import { P2PClient } from './grpc-api/concordium_p2p_rpc_grpc_pb';
+import { ChannelCredentials } from '@grpc/grpc-js';
+import { Buffer as BufferFormater } from 'buffer/index.js';
+import { P2PClient } from './grpc-api/concordium_p2p_rpc.client.js';
 import {
     AccountAddress,
     BlockHash,
     BlockHeight,
-    Empty,
     GetAddressInfoRequest,
     GetPoolStatusRequest,
     GetModuleSourceRequest,
@@ -14,7 +13,7 @@ import {
     SendTransactionRequest,
     TransactionHash,
     InvokeContractRequest,
-} from './grpc-api/concordium_p2p_rpc_pb';
+} from './grpc-api/concordium_p2p_rpc.js';
 import {
     serializeAccountTransactionForSubmission,
     AccountAddress as Address,
@@ -88,11 +87,13 @@ import {
     stringToInt,
 } from '@concordium/common-sdk/util';
 import {
+    convertJsonResponse,
     intListToStringList,
-    unwrapBoolResponse,
-    unwrapJsonResponse,
-} from './util';
+    // unwrapBoolResponse,
+    // unwrapJsonResponse,
+} from './util.js';
 import { serializeCredentialDeploymentTransactionForSubmission } from '@concordium/common-sdk/wasm';
+import { GrpcTransport } from '@protobuf-ts/grpc-transport';
 
 /**
  * A concordium-node specific gRPC client wrapper.
@@ -105,7 +106,7 @@ import { serializeCredentialDeploymentTransactionForSubmission } from '@concordi
 export default class ConcordiumNodeClient {
     client: P2PClient;
 
-    metadata: Metadata;
+    // metadata: Metadata;
 
     address: string;
 
@@ -125,7 +126,7 @@ export default class ConcordiumNodeClient {
         address: string,
         port: number,
         credentials: ChannelCredentials,
-        metadata: Metadata,
+        // metadata: Metadata,
         timeout: number,
         options?: Record<string, unknown>
     ) {
@@ -138,8 +139,13 @@ export default class ConcordiumNodeClient {
         this.address = address;
         this.port = port;
         this.timeout = timeout;
-        this.metadata = metadata;
-        this.client = new P2PClient(`${address}:${port}`, credentials, options);
+        // this.metadata = metadata;
+        const grpcTransport = new GrpcTransport({
+            host: `${address}:${port}`,
+            channelCredentials: credentials,
+            ...options,
+        });
+        this.client = new P2PClient(grpcTransport);
     }
 
     /**
@@ -156,24 +162,36 @@ export default class ConcordiumNodeClient {
         credentialDeploymentTransaction: CredentialDeploymentTransaction,
         signatures: string[]
     ): Promise<boolean> {
-        const serializedCredentialDeploymentTransaction: Buffer = Buffer.from(
+        const payload: Buffer = Buffer.from(
             serializeCredentialDeploymentTransactionForSubmission(
                 credentialDeploymentTransaction,
                 signatures
             )
         );
 
-        const sendTransactionRequest = new SendTransactionRequest();
-        sendTransactionRequest.setNetworkId(100);
-        sendTransactionRequest.setPayload(
-            serializedCredentialDeploymentTransaction
-        );
+        const sendTransactionRequest: SendTransactionRequest = {
+            networkId: 100,
+            payload,
+        };
 
-        const response = await this.sendRequest(
-            this.client.sendTransaction,
+        const { value } = await this.client.sendTransaction(
             sendTransactionRequest
-        );
-        return unwrapBoolResponse(response);
+        ).response;
+        return value;
+
+        // const sendTransactionRequest = new SendTransactionRequest();
+        // sendTransactionRequest.setNetworkId(100);
+        // sendTransactionRequest.setPayload(
+        //     serializedCredentialDeploymentTransaction
+        // );
+        //
+        //
+        //
+        // const response = await this.sendRequest(
+        //     this.client.sendTransaction,
+        //     sendTransactionRequest
+        // );
+        // return unwrapBoolResponse(response);
     }
 
     /**
@@ -190,22 +208,32 @@ export default class ConcordiumNodeClient {
         accountTransaction: AccountTransaction,
         signatures: AccountTransactionSignature
     ): Promise<boolean> {
-        const serializedAccountTransaction: Buffer = Buffer.from(
+        const payload: Buffer = Buffer.from(
             serializeAccountTransactionForSubmission(
                 accountTransaction,
                 signatures
             )
         );
 
-        const sendTransactionRequest = new SendTransactionRequest();
-        sendTransactionRequest.setNetworkId(100);
-        sendTransactionRequest.setPayload(serializedAccountTransaction);
+        const sendTransactionRequest: SendTransactionRequest = {
+            networkId: 100,
+            payload,
+        };
 
-        const response = await this.sendRequest(
-            this.client.sendTransaction,
+        const { value } = await this.client.sendTransaction(
             sendTransactionRequest
-        );
-        return unwrapBoolResponse(response);
+        ).response;
+        return value;
+
+        // const sendTransactionRequest = new SendTransactionRequest();
+        // sendTransactionRequest.setNetworkId(100);
+        // sendTransactionRequest.setPayload(serializedAccountTransaction);
+        //
+        // const response = await this.sendRequest(
+        //     this.client.sendTransaction,
+        //     sendTransactionRequest
+        // );
+        // return unwrapBoolResponse(response);
     }
 
     /**
@@ -227,24 +255,25 @@ export default class ConcordiumNodeClient {
             throw new Error('The input was not a valid hash: ' + blockHash);
         }
 
-        const getAddressInfoRequest = new GetAddressInfoRequest();
-
+        let address: string;
         if (typeof accountAddress === 'string') {
-            getAddressInfoRequest.setAddress(accountAddress);
+            address = accountAddress;
         } else if ('address' in accountAddress) {
-            getAddressInfoRequest.setAddress(accountAddress.address);
+            address = accountAddress.address;
         } else if ('credId' in accountAddress) {
-            getAddressInfoRequest.setAddress(accountAddress.credId);
+            address = accountAddress.credId;
         } else {
             throw new Error('Invalid accountAddress input');
         }
 
-        getAddressInfoRequest.setBlockHash(blockHash);
+        const getAddressInfoRequest: GetAddressInfoRequest = {
+            address,
+            blockHash,
+        };
 
-        const response = await this.sendRequest(
-            this.client.getAccountInfo,
+        const { value: res } = await this.client.getAccountInfo(
             getAddressInfoRequest
-        );
+        ).response;
         const datePropertyKeys: (
             | keyof ReleaseSchedule
             | keyof ReduceStakePendingChangeV1
@@ -268,11 +297,58 @@ export default class ConcordiumNodeClient {
             'newStake',
             'epoch',
         ];
-        return unwrapJsonResponse<AccountInfo>(
-            response,
+        return convertJsonResponse(
+            res,
             buildJsonResponseReviver(datePropertyKeys, bigIntPropertyKeys),
             intToStringTransformer(bigIntPropertyKeys)
         );
+
+        // const getAddressInfoRequest = new GetAddressInfoRequest();
+        //
+        // if (typeof accountAddress === 'string') {
+        //     getAddressInfoRequest.setAddress(accountAddress);
+        // } else if ('address' in accountAddress) {
+        //     getAddressInfoRequest.setAddress(accountAddress.address);
+        // } else if ('credId' in accountAddress) {
+        //     getAddressInfoRequest.setAddress(accountAddress.credId);
+        // } else {
+        //     throw new Error('Invalid accountAddress input');
+        // }
+        //
+        // getAddressInfoRequest.setBlockHash(blockHash);
+
+        // const response = await this.sendRequest(
+        //     this.client.getAccountInfo,
+        //     getAddressInfoRequest
+        // );
+        // const datePropertyKeys: (
+        //     | keyof ReleaseSchedule
+        //     | keyof ReduceStakePendingChangeV1
+        // )[] = ['timestamp', 'effectiveTime'];
+        // const bigIntPropertyKeys: (
+        //     | keyof AccountInfo
+        //     | keyof AccountEncryptedAmount
+        //     | keyof AccountReleaseSchedule
+        //     | keyof ReleaseSchedule
+        //     | keyof AccountBakerDetails
+        //     | keyof ReduceStakePendingChangeV0
+        // )[] = [
+        //         'accountAmount',
+        //         'accountNonce',
+        //         'accountIndex',
+        //         'startIndex',
+        //         'total',
+        //         'amount',
+        //         'stakedAmount',
+        //         'bakerId',
+        //         'newStake',
+        //         'epoch',
+        //     ];
+        // return unwrapJsonResponse<AccountInfo>(
+        //     response,
+        //     buildJsonResponseReviver(datePropertyKeys, bigIntPropertyKeys),
+        //     intToStringTransformer(bigIntPropertyKeys)
+        // );
     }
 
     /**
@@ -284,21 +360,33 @@ export default class ConcordiumNodeClient {
     async getNextAccountNonce(
         accountAddress: Address
     ): Promise<NextAccountNonce | undefined> {
-        const accountAddressObject = new AccountAddress();
-        accountAddressObject.setAccountAddress(accountAddress.address);
-
-        const response = await this.sendRequest(
-            this.client.getNextAccountNonce,
-            accountAddressObject
-        );
-
+        const input: AccountAddress = {
+            accountAddress: accountAddress.address,
+        };
+        const { value: response } = await this.client.getNextAccountNonce(input)
+            .response;
         const bigIntPropertyKeys: (keyof NextAccountNonce)[] = ['nonce'];
 
-        return unwrapJsonResponse<NextAccountNonce>(
+        return convertJsonResponse<NextAccountNonce>(
             response,
             buildJsonResponseReviver([], bigIntPropertyKeys),
             intToStringTransformer(bigIntPropertyKeys)
         );
+        // const accountAddressObject = new AccountAddress();
+        // accountAddressObject.setAccountAddress(accountAddress.address);
+        //
+        // const response = await this.sendRequest(
+        //     this.client.getNextAccountNonce,
+        //     accountAddressObject
+        // );
+        //
+        // const bigIntPropertyKeys: (keyof NextAccountNonce)[] = ['nonce'];
+        //
+        // return unwrapJsonResponse<NextAccountNonce>(
+        //     response,
+        //     buildJsonResponseReviver([], bigIntPropertyKeys),
+        //     intToStringTransformer(bigIntPropertyKeys)
+        // );
     }
 
     /**
@@ -321,13 +409,17 @@ export default class ConcordiumNodeClient {
             'index',
         ];
 
-        const transactionHashObject = new TransactionHash();
-        transactionHashObject.setTransactionHash(transactionHash);
-        const response = await this.sendRequest(
-            this.client.getTransactionStatus,
-            transactionHashObject
-        );
-        return unwrapJsonResponse<TransactionStatus>(
+        // const transactionHashObject = new TransactionHash();
+        // transactionHashObject.setTransactionHash(transactionHash);
+        // const response = await this.sendRequest(
+        //     this.client.getTransactionStatus,
+        //     transactionHashObject
+        // );
+        const input: TransactionHash = { transactionHash };
+        const { value: response } = await this.client.getTransactionStatus(
+            input
+        ).response;
+        return convertJsonResponse<TransactionStatus>(
             response,
             buildJsonResponseReviver([], bigIntPropertyKeys),
             intToStringTransformer(bigIntPropertyKeys)
@@ -349,13 +441,17 @@ export default class ConcordiumNodeClient {
             throw new Error('The input was not a valid hash: ' + blockHash);
         }
 
-        const blockHashObject = new BlockHash();
-        blockHashObject.setBlockHash(blockHash);
+        // const blockHashObject = new BlockHash();
+        // blockHashObject.setBlockHash(blockHash);
+        //
+        // const response = await this.sendRequest(
+        //     this.client.getBlockSummary,
+        //     blockHashObject
+        // );
 
-        const response = await this.sendRequest(
-            this.client.getBlockSummary,
-            blockHashObject
-        );
+        const input: BlockHash = { blockHash };
+        const { value: response } = await this.client.getBlockSummary(input)
+            .response;
 
         const bigIntPropertyKeys: (
             | keyof PartyInfo
@@ -411,7 +507,7 @@ export default class ConcordiumNodeClient {
             'blockEnergyLimit',
         ];
 
-        return unwrapJsonResponse<BlockSummary>(
+        return convertJsonResponse<BlockSummary>(
             response,
             buildJsonResponseReviver([], bigIntPropertyKeys)
         );
@@ -427,12 +523,16 @@ export default class ConcordiumNodeClient {
             throw new Error('The input was not a valid hash: ' + blockHash);
         }
 
-        const blockHashObject = new BlockHash();
-        blockHashObject.setBlockHash(blockHash);
-        const response = await this.sendRequest(
-            this.client.getBlockInfo,
-            blockHashObject
-        );
+        const input: BlockHash = { blockHash };
+        const { value: response } = await this.client.getBlockInfo(input)
+            .response;
+
+        // const blockHashObject = new BlockHash();
+        // blockHashObject.setBlockHash(blockHash);
+        // const response = await this.sendRequest(
+        //     this.client.getBlockInfo,
+        //     blockHashObject
+        // );
 
         const datePropertyKeys: (keyof BlockInfo)[] = [
             'blockArriveTime',
@@ -448,7 +548,7 @@ export default class ConcordiumNodeClient {
             'transactionsSize',
         ];
 
-        return unwrapJsonResponse<BlockInfo>(
+        return convertJsonResponse<BlockInfo>(
             response,
             buildJsonResponseReviver(datePropertyKeys, bigIntPropertyKeys),
             intToStringTransformer(bigIntPropertyKeys)
@@ -467,18 +567,25 @@ export default class ConcordiumNodeClient {
                     height
             );
         }
-        const blockHeight = new BlockHeight();
-        blockHeight.setBlockHeight(height.toString());
-        const response = await this.sendRequest(
-            this.client.getBlocksAtHeight,
-            blockHeight
-        );
+        const input: BlockHeight = {
+            blockHeight: height.toString(),
+            fromGenesisIndex: 0,
+            restrictToGenesisIndex: false,
+        };
+        const { value: response } = await this.client.getBlocksAtHeight(input)
+            .response;
 
-        const blocksAtHeight = unwrapJsonResponse<string[]>(response);
-        if (!blocksAtHeight) {
+        // const blockHeight = new BlockHeight();
+        // blockHeight.setBlockHeight(height.toString());
+        // const response = await this.sendRequest(
+        //     this.client.getBlocksAtHeight,
+        //     blockHeight
+        // );
+
+        if (!response) {
             return [];
         }
-        return blocksAtHeight;
+        return convertJsonResponse(response);
     }
 
     /**
@@ -488,10 +595,12 @@ export default class ConcordiumNodeClient {
      */
     async getConsensusStatus(): Promise<ConsensusStatus> {
         type CS = ConsensusStatusV0 & ConsensusStatusV1;
-        const response = await this.sendRequest(
-            this.client.getConsensusStatus,
-            new Empty()
-        );
+        // const response = await this.sendRequest(
+        //     this.client.getConsensusStatus,
+        //     new Empty()
+        // );
+        const { value: response } = await this.client.getConsensusStatus({})
+            .response;
 
         const datePropertyKeys: (keyof CS | keyof ConcordiumBftStatus)[] = [
             'blockLastReceivedTime',
@@ -519,7 +628,7 @@ export default class ConcordiumNodeClient {
             'currentEpoch',
         ];
 
-        const consensusStatus = unwrapJsonResponse<ConsensusStatus>(
+        const consensusStatus = convertJsonResponse<ConsensusStatus>(
             response,
             buildJsonResponseReviver(datePropertyKeys, bigIntPropertyKeys),
             intToStringTransformer(bigIntPropertyKeys)
@@ -547,16 +656,21 @@ export default class ConcordiumNodeClient {
             throw new Error('The input was not a valid hash: ' + blockHash);
         }
 
-        const blockHashObject = new BlockHash();
-        blockHashObject.setBlockHash(blockHash);
-        const response = await this.sendRequest(
-            this.client.getCryptographicParameters,
-            blockHashObject
-        );
+        const input: BlockHash = { blockHash };
+        const { value } = await this.client.getCryptographicParameters(input)
+            .response;
+        return convertJsonResponse(value);
 
-        return unwrapJsonResponse<
-            Versioned<CryptographicParameters> | undefined
-        >(response);
+        // const blockHashObject = new BlockHash();
+        // blockHashObject.setBlockHash(blockHash);
+        // const response = await this.sendRequest(
+        //     this.client.getCryptographicParameters,
+        //     blockHashObject
+        // );
+        //
+        // return unwrapJsonResponse<
+        //     Versioned<CryptographicParameters> | undefined
+        // >(response);
     }
 
     /**
@@ -567,13 +681,17 @@ export default class ConcordiumNodeClient {
     async getPeerList(
         includeBootstrappers: boolean
     ): Promise<PeerListResponse> {
-        const peersRequest = new PeersRequest();
-        peersRequest.setIncludeBootstrappers(includeBootstrappers);
-        const response = await this.sendRequest(
-            this.client.peerList,
-            peersRequest
-        );
-        return PeerListResponse.deserializeBinary(response);
+        // const peersRequest = new PeersRequest();
+        // peersRequest.setIncludeBootstrappers(includeBootstrappers);
+        // const response = await this.sendRequest(
+        //     this.client.peerList,
+        //     peersRequest
+        // );
+        // return PeerListResponse.deserializeBinary(response);
+        const input: PeersRequest = {
+            includeBootstrappers,
+        };
+        return this.client.peerList(input).response;
     }
 
     /**
@@ -584,13 +702,10 @@ export default class ConcordiumNodeClient {
     async getIdentityProviders(
         blockHash: string
     ): Promise<IpInfo[] | undefined> {
-        const blockHashObject = new BlockHash();
-        blockHashObject.setBlockHash(blockHash);
-        const response = await this.sendRequest(
-            this.client.getIdentityProviders,
-            blockHashObject
-        );
-        return unwrapJsonResponse<IpInfo[]>(response);
+        const input: BlockHash = { blockHash };
+        const { value } = await this.client.getIdentityProviders(input)
+            .response;
+        return convertJsonResponse(value);
     }
 
     /**
@@ -601,13 +716,10 @@ export default class ConcordiumNodeClient {
     async getAnonymityRevokers(
         blockHash: string
     ): Promise<ArInfo[] | undefined> {
-        const blockHashObject = new BlockHash();
-        blockHashObject.setBlockHash(blockHash);
-        const response = await this.sendRequest(
-            this.client.getAnonymityRevokers,
-            blockHashObject
-        );
-        return unwrapJsonResponse<ArInfo[]>(response);
+        const input: BlockHash = { blockHash };
+        const { value } = await this.client.getAnonymityRevokers(input)
+            .response;
+        return convertJsonResponse(value);
     }
 
     /**
@@ -621,20 +733,16 @@ export default class ConcordiumNodeClient {
         if (!isValidHash(blockHash)) {
             throw new Error('The input was not a valid hash: ' + blockHash);
         }
-        const blockHashObject = new BlockHash();
-        blockHashObject.setBlockHash(blockHash);
-
-        const response = await this.sendRequest(
-            this.client.getInstances,
-            blockHashObject
-        );
+        const input: BlockHash = { blockHash };
+        const { value } = await this.client.getAnonymityRevokers(input)
+            .response;
         const bigIntPropertyKeys: (keyof ContractAddress)[] = [
             'index',
             'subindex',
         ];
 
-        return unwrapJsonResponse<ContractAddress[]>(
-            response,
+        return convertJsonResponse<ContractAddress[]>(
+            value,
             buildJsonResponseReviver([], bigIntPropertyKeys),
             intToStringTransformer(bigIntPropertyKeys)
         );
@@ -653,18 +761,24 @@ export default class ConcordiumNodeClient {
         if (!isValidHash(blockHash)) {
             throw new Error('The input was not a valid hash: ' + blockHash);
         }
-        const getAddressInfoRequest = new GetAddressInfoRequest();
-        getAddressInfoRequest.setAddress(
-            `{"subindex":${address.subindex},"index":${address.index}}`
-        );
-        getAddressInfoRequest.setBlockHash(blockHash);
+        // const getAddressInfoRequest = new GetAddressInfoRequest();
+        // getAddressInfoRequest.setAddress(
+        //     `{"subindex":${address.subindex},"index":${address.index}}`
+        // );
+        // getAddressInfoRequest.setBlockHash(blockHash);
+        //
+        // const response = await this.sendRequest(
+        //     this.client.getInstanceInfo,
+        //     getAddressInfoRequest
+        // );
 
-        const response = await this.sendRequest(
-            this.client.getInstanceInfo,
-            getAddressInfoRequest
-        );
+        const input: GetAddressInfoRequest = {
+            address: `{"subindex":${address.subindex},"index":${address.index}}`,
+            blockHash,
+        };
+        const { value } = await this.client.getInstanceInfo(input).response;
 
-        const result = unwrapJsonResponse<InstanceInfoSerialized>(response);
+        const result = convertJsonResponse<InstanceInfoSerialized>(value);
         if (result !== undefined) {
             const common = {
                 amount: new CcdAmount(BigInt(result.amount)),
@@ -719,16 +833,11 @@ export default class ConcordiumNodeClient {
             'foundationTransactionRewards',
         ];
 
-        const bh = new BlockHash();
-        bh.setBlockHash(blockHash);
+        const input: BlockHash = { blockHash };
+        const { value } = await this.client.getRewardStatus(input).response;
 
-        const response = await this.sendRequest(
-            this.client.getRewardStatus,
-            bh
-        );
-
-        return unwrapJsonResponse<RewardStatus>(
-            response,
+        return convertJsonResponse<RewardStatus>(
+            value,
             buildJsonResponseReviver(dates, bigInts),
             intToStringTransformer(bigInts)
         );
@@ -744,13 +853,11 @@ export default class ConcordiumNodeClient {
             throw new Error('The input was not a valid hash: ' + blockHash);
         }
 
-        const bh = new BlockHash();
-        bh.setBlockHash(blockHash);
+        const input: BlockHash = { blockHash };
+        const { value } = await this.client.getBakerList(input).response;
 
-        const response = await this.sendRequest(this.client.getBakerList, bh);
-
-        return unwrapJsonResponse<BakerId[]>(
-            response,
+        return convertJsonResponse<BakerId[]>(
+            value,
             undefined,
             intListToStringList
         )?.map((v) => BigInt(v));
@@ -792,13 +899,20 @@ export default class ConcordiumNodeClient {
             throw new Error('The input was not a valid hash: ' + blockHash);
         }
 
-        const req = new GetPoolStatusRequest();
-        req.setBlockHash(blockHash);
-        req.setPassiveDelegation(bakerId === undefined);
+        // const req = new GetPoolStatusRequest();
+        // req.setBlockHash(blockHash);
+        // req.setPassiveDelegation(bakerId === undefined);
 
-        if (bakerId !== undefined) {
-            req.setBakerId(bakerId.toString());
-        }
+        // if (bakerId !== undefined) {
+        //     req.setBakerId(bakerId.toString());
+        // }
+
+        const input: GetPoolStatusRequest = {
+            blockHash,
+            passiveDelegation: bakerId === undefined,
+            bakerId: bakerId?.toString() ?? '',
+        };
+        const { value } = await this.client.getPoolStatus(input).response;
 
         type DateKey = KeysMatching<
             BakerPoolPendingChangeReduceBakerCapitalDetails,
@@ -825,10 +939,10 @@ export default class ConcordiumNodeClient {
             'allPoolTotalCapital',
         ];
 
-        const response = await this.sendRequest(this.client.getPoolStatus, req);
+        // const response = await this.sendRequest(this.client.getPoolStatus, req);
 
-        return unwrapJsonResponse<PoolStatus>(
-            response,
+        return convertJsonResponse<PoolStatus>(
+            value,
             buildJsonResponseReviver(dates, bigInts),
             intToStringTransformer(bigInts)
         );
@@ -848,19 +962,25 @@ export default class ConcordiumNodeClient {
         if (!isValidHash(blockHash)) {
             throw new Error('The input was not a valid hash: ' + blockHash);
         }
-        const requestObject = new GetModuleSourceRequest();
-        requestObject.setBlockHash(blockHash);
-        requestObject.setModuleRef(moduleReference.moduleRef);
+        // const requestObject = new GetModuleSourceRequest();
+        // requestObject.setBlockHash(blockHash);
+        // requestObject.setModuleRef(moduleReference.moduleRef);
+        //
+        // const response = await this.sendRequest(
+        //     this.client.getModuleSource,
+        //     requestObject
+        // );
 
-        const response = await this.sendRequest(
-            this.client.getModuleSource,
-            requestObject
-        );
+        const input: GetModuleSourceRequest = {
+            blockHash,
+            moduleRef: moduleReference.moduleRef,
+        };
+        const { value } = await this.client.getModuleSource(input).response;
 
-        if (response.length === 0) {
+        if (value.length === 0) {
             return undefined;
         }
-        return Buffer.from(response);
+        return Buffer.from(value);
     }
 
     /**
@@ -883,10 +1003,38 @@ export default class ConcordiumNodeClient {
             throw new Error('The input was not a valid hash: ' + blockHash);
         }
 
-        const requestObject = new InvokeContractRequest();
-        requestObject.setBlockHash(blockHash);
-        requestObject.setContext(
-            stringToInt(
+        // const requestObject = new InvokeContractRequest();
+        // requestObject.setBlockHash(blockHash);
+        // requestObject.setContext(
+        //     stringToInt(
+        //         JSON.stringify({
+        //             invoker: buildInvoker(contractContext.invoker),
+        //             contract: {
+        //                 subindex: contractContext.contract.subindex.toString(),
+        //                 index: contractContext.contract.index.toString(),
+        //             },
+        //             amount:
+        //                 contractContext.amount &&
+        //                 contractContext.amount.microCcdAmount.toString(),
+        //             method: contractContext.method,
+        //             parameter:
+        //                 contractContext.parameter &&
+        //                 contractContext.parameter.toString('hex'),
+        //             energy:
+        //                 contractContext.energy &&
+        //                 Number(contractContext.energy.toString()),
+        //         }),
+        //         ['index', 'subindex']
+        //     )
+        // );
+        //
+        // const response = await this.sendRequest(
+        //     this.client.invokeContract,
+        //     requestObject
+        // );
+        const input: InvokeContractRequest = {
+            blockHash,
+            context: stringToInt(
                 JSON.stringify({
                     invoker: buildInvoker(contractContext.invoker),
                     contract: {
@@ -905,47 +1053,19 @@ export default class ConcordiumNodeClient {
                         Number(contractContext.energy.toString()),
                 }),
                 ['index', 'subindex']
-            )
-        );
-
-        const response = await this.sendRequest(
-            this.client.invokeContract,
-            requestObject
-        );
+            ),
+        };
+        const { value } = await this.client.invokeContract(input).response;
         const bigIntPropertyKeys = [
             'usedEnergy',
             'index',
             'subindex',
             'amount',
         ];
-        return unwrapJsonResponse<InvokeContractResultV1>(
-            response,
+        return convertJsonResponse<InvokeContractResultV1>(
+            value,
             buildJsonResponseReviver([], bigIntPropertyKeys),
             intToStringTransformer(bigIntPropertyKeys)
         );
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-    sendRequest<T>(command: any, input: T): Promise<Uint8Array> {
-        const deadline = new Date(Date.now() + this.timeout);
-        return new Promise<Uint8Array>((resolve, reject) => {
-            this.client.waitForReady(deadline, (error) => {
-                if (error) {
-                    return reject(error);
-                }
-
-                return command.bind(this.client)(
-                    input,
-                    this.metadata,
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (err: ServiceError | null, response: any) => {
-                        if (err) {
-                            return reject(err);
-                        }
-                        return resolve(response.serializeBinary());
-                    }
-                );
-            });
-        });
     }
 }

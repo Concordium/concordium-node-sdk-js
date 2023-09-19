@@ -1,1 +1,1 @@
-export { default as ConcordiumNodeClient } from '../client';
+export { default as ConcordiumNodeClient } from '../client.js';

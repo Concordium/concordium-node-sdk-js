@@ -1,4 +1,4 @@
-import { isHex } from '../util';
+import { isHex } from '../util.js';
 
 /**
  * Representation of a credential registration id, which enforces that it:

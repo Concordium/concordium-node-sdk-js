@@ -1,4 +1,4 @@
-import type { HexString } from '../types';
+import type { HexString } from '../types.js';
 
 /**
  * Represents a hash of a block in the chain.

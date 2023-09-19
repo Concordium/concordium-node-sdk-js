@@ -11,8 +11,8 @@ import type {
     Amount,
     BakerId,
     DelegatorId,
-} from '../types';
-import type { UpdateInstructionPayload } from './chainUpdate';
+} from '../types.js';
+import type { UpdateInstructionPayload } from './chainUpdate.js';
 
 export enum TransactionEventTag {
     ModuleDeployed = 'ModuleDeployed',

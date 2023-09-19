@@ -1,11 +1,11 @@
-import { getAccountTransactionHandler } from './accountTransactions';
-import { collapseRatio, multiplyRatio } from './ratioHelpers';
+import { getAccountTransactionHandler } from './accountTransactions.js';
+import { collapseRatio, multiplyRatio } from './ratioHelpers.js';
 import {
     AccountTransactionPayload,
     AccountTransactionType,
     ChainParameters,
     Ratio,
-} from './types';
+} from './types.js';
 
 /**
  * These constants must be consistent with constA and constB in:

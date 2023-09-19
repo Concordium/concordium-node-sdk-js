@@ -1,5 +1,5 @@
 // Functionality revolving concordium domain types and utitlity for working with these types.
-export * from '../types';
+export * from '../types.js';
 export {
     getAccountTransactionHash,
     getAccountTransactionSignDigest,
@@ -9,39 +9,39 @@ export {
     getSignedCredentialDeploymentTransactionHash,
     serializeAccountTransactionPayload,
     serializeAccountTransaction,
-} from '../serialization';
-export { encodeHexString } from '../serializationHelpers';
-export { sha256 } from '../hash';
+} from '../serialization.js';
+export { encodeHexString } from '../serializationHelpers.js';
+export { sha256 } from '../hash.js';
 
-export { CredentialRegistrationId } from '../types/CredentialRegistrationId';
-export { AccountAddress } from '../types/accountAddress';
-export { CcdAmount } from '../types/ccdAmount';
-export { TransactionExpiry } from '../types/transactionExpiry';
-export { DataBlob } from '../types/DataBlob';
-export { ModuleReference } from '../types/moduleReference';
-export * from '../types/VersionedModuleSource';
+export { CredentialRegistrationId } from '../types/CredentialRegistrationId.js';
+export { AccountAddress } from '../types/accountAddress.js';
+export { CcdAmount } from '../types/ccdAmount.js';
+export { TransactionExpiry } from '../types/transactionExpiry.js';
+export { DataBlob } from '../types/DataBlob.js';
+export { ModuleReference } from '../types/moduleReference.js';
+export * from '../types/VersionedModuleSource.js';
 export {
     VerifiablePresentation,
     reviveDateFromTimeStampAttribute,
     replaceDateWithTimeStampAttribute,
-} from '../types/VerifiablePresentation';
+} from '../types/VerifiablePresentation.js';
 
-export { isAlias, getAlias } from '../alias';
-export { deserializeAccountTransaction } from '../deserialization';
-export * from '../signHelpers';
-export * from '../versionedTypeHelpers';
-export * from '../accountHelpers';
-export * from '../blockSummaryHelpers';
-export * from '../rewardStatusHelpers';
+export { isAlias, getAlias } from '../alias.js';
+export { deserializeAccountTransaction } from '../deserialization.js';
+export * from '../signHelpers.js';
+export * from '../versionedTypeHelpers.js';
+export * from '../accountHelpers.js';
+export * from '../blockSummaryHelpers.js';
+export * from '../rewardStatusHelpers.js';
 
-export { isHex, streamToList, wasmToSchema, unwrap } from '../util';
-export { getContractName } from '../contractHelpers';
+export { isHex, streamToList, wasmToSchema, unwrap } from '../util.js';
+export { getContractName } from '../contractHelpers.js';
 
-export { getAccountTransactionHandler } from '../accountTransactions';
-export * from '../energyCost';
-export * from '../commonProofTypes';
+export { getAccountTransactionHandler } from '../accountTransactions.js';
+export * from '../energyCost.js';
+export * from '../commonProofTypes.js';
 
-export * from '../uleb128';
+export * from '../uleb128.js';
 export {
     Schema,
     Contract,
@@ -51,13 +51,13 @@ export {
     ContractTransactionMetadata,
     CreateContractTransactionMetadata,
     ContractUpdateTransactionWithSchema,
-} from '../GenericContract';
+} from '../GenericContract.js';
 
-export * as ModuleClient from '../types/ModuleClient';
-export * as Parameter from '../types/Parameter';
-export * as AccountSequenceNumber from '../types/AccountSequenceNumber';
-export * as Energy from '../types/Energy';
-export * as TransactionHash from '../types/TransactionHash';
-export * as BlockHash from '../types/BlockHash';
-export * as ContractName from '../types/ContractName';
-export * as InitName from '../types/InitName';
+export * as ModuleClient from '../types/ModuleClient.js';
+export * as Parameter from '../types/Parameter.js';
+export * as AccountSequenceNumber from '../types/AccountSequenceNumber.js';
+export * as Energy from '../types/Energy.js';
+export * as TransactionHash from '../types/TransactionHash.js';
+export * as BlockHash from '../types/BlockHash.js';
+export * as ContractName from '../types/ContractName.js';
+export * as InitName from '../types/InitName.js';

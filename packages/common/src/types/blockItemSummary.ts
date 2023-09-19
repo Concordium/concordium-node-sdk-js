@@ -20,8 +20,8 @@ import {
     NewEncryptedAmountEvent,
     TransactionEventTag,
     TransferredWithScheduleEvent,
-} from './transactionEvent';
-import { UpdateInstructionPayload } from './chainUpdate';
+} from './transactionEvent.js';
+import { UpdateInstructionPayload } from './chainUpdate.js';
 import {
     HexString,
     TransactionSummaryType,
@@ -29,10 +29,10 @@ import {
     ContractAddress,
     Base58String,
     AccountTransactionType,
-} from '../types';
-import { RejectReason } from './rejectReason';
-import { isDefined } from '../util';
-import { isEqualContractAddress } from '../contractHelpers';
+} from '../types.js';
+import { RejectReason } from './rejectReason.js';
+import { isDefined } from '../util.js';
+import { isEqualContractAddress } from '../contractHelpers.js';
 
 export interface BaseBlockItemSummary {
     index: bigint;

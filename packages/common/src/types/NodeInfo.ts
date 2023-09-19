@@ -1,4 +1,4 @@
-import { BakerId, Duration, HexString, Timestamp } from '../types';
+import { BakerId, Duration, HexString, Timestamp } from '../types.js';
 
 export interface NodeInfo {
     peerVersion: string;

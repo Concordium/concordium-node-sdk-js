@@ -1,4 +1,4 @@
-import { Ratio } from './types';
+import { Ratio } from './types.js';
 
 /**
  * Collapses the Fraction into a single number.

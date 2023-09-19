@@ -6,26 +6,29 @@ import {
     makeSerializeOptional,
     packBufferWithWord16Length,
     packBufferWithWord8Length,
-} from '../serializationHelpers';
+} from '../serializationHelpers.js';
 import type {
     Base58String,
     ContractAddress,
     HexString,
     SmartContractTypeValues,
-} from '../types';
-import { Buffer } from 'buffer/';
-import { AccountAddress } from '../types/accountAddress';
+} from '../types.js';
+import { Buffer } from 'buffer/index.js';
+import { AccountAddress } from '../types/accountAddress.js';
 import {
     uleb128Decode,
     uleb128DecodeWithIndex,
     uleb128Encode,
-} from '../uleb128';
+} from '../uleb128.js';
 import {
     ContractTransactionMetadata,
     ContractUpdateTransactionWithSchema,
     CreateContractTransactionMetadata,
-} from '../GenericContract';
-import { Cursor, makeDeserializeListResponse } from '../deserializationHelpers';
+} from '../GenericContract.js';
+import {
+    Cursor,
+    makeDeserializeListResponse,
+} from '../deserializationHelpers.js';
 
 const TOKEN_ID_MAX_LENGTH = 255;
 const TOKEN_AMOUNT_MAX_LENGTH = 37;

@@ -1,10 +1,10 @@
 import * as wasm from '@concordium/rust-bindings/wallet';
 import JSONbig from 'json-bigint';
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 import type {
     CredentialDeploymentDetails,
     CredentialDeploymentTransaction,
-} from '../types';
+} from '../types.js';
 
 interface DeploymentDetailsResult {
     credInfo: string;

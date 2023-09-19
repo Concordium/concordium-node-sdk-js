@@ -1,14 +1,14 @@
-import { Buffer } from 'buffer/';
-import { getAccountTransactionHandler } from './accountTransactions';
-import { Cursor } from './deserializationHelpers';
+import { Buffer } from 'buffer/index.js';
+import { getAccountTransactionHandler } from './accountTransactions.js';
+import { Cursor } from './deserializationHelpers.js';
 import {
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionSignature,
     isAccountTransactionType,
-} from './types';
-import { AccountAddress } from './types/accountAddress';
-import { TransactionExpiry } from './types/transactionExpiry';
+} from './types.js';
+import { AccountAddress } from './types/accountAddress.js';
+import { TransactionExpiry } from './types/transactionExpiry.js';
 
 /**
  * Reads an unsigned 8-bit integer from the given {@link Cursor}.

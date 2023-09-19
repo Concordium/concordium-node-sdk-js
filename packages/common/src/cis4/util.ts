@@ -1,15 +1,18 @@
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 import { getPublicKey } from '@noble/ed25519';
 
-import type { ContractAddress, HexString } from '../types';
-import type { CIS2 } from '../cis2/util';
+import type { ContractAddress, HexString } from '../types.js';
+import type { CIS2 } from '../cis2/util.js';
 import {
     deserializeCIS2MetadataUrl,
     serializeCIS2MetadataUrl,
     serializeContractAddress,
     serializeReceiveHookName,
-} from '../cis2/util';
-import { Cursor, makeDeserializeListResponse } from '../deserializationHelpers';
+} from '../cis2/util.js';
+import {
+    Cursor,
+    makeDeserializeListResponse,
+} from '../deserializationHelpers.js';
 import {
     encodeBool,
     encodeWord16,
@@ -17,9 +20,9 @@ import {
     makeSerializeOptional,
     packBufferWithWord16Length,
     packBufferWithWord8Length,
-} from '../serializationHelpers';
-import { OptionJson, toOptionJson } from '../schemaTypes';
-import { getSignature } from '../signHelpers';
+} from '../serializationHelpers.js';
+import { OptionJson, toOptionJson } from '../schemaTypes.js';
+import { getSignature } from '../signHelpers.js';
 
 /** Holds all types related to CIS4 */
 // eslint-disable-next-line @typescript-eslint/no-namespace

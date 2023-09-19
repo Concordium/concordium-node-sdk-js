@@ -1,5 +1,5 @@
 import bs58check from 'bs58check';
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 
 /**
  * Representation of an account address, which enforces that it:

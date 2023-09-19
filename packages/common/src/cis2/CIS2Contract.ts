@@ -1,8 +1,8 @@
 import { stringify } from 'json-bigint';
 
-import { ContractAddress, HexString, InvokeContractResult } from '../types';
-import { ConcordiumGRPCClient } from '../grpc/GRPCClient';
-import { AccountSigner } from '../signHelpers';
+import { ContractAddress, HexString, InvokeContractResult } from '../types.js';
+import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
+import { AccountSigner } from '../signHelpers.js';
 import {
     serializeCIS2Transfers,
     serializeCIS2BalanceOfQueries,
@@ -14,11 +14,11 @@ import {
     formatCIS2UpdateOperator,
     formatCIS2Transfer,
     serializeCIS2UpdateOperators,
-} from './util';
-import type { CIS2 } from './util';
-import { CIS0, cis0Supports } from '../cis0';
-import { CISContract, ContractDryRun, getInvoker } from '../GenericContract';
-import { makeDynamicFunction } from '../util';
+} from './util.js';
+import type { CIS2 } from './util.js';
+import { CIS0, cis0Supports } from '../cis0.js';
+import { CISContract, ContractDryRun, getInvoker } from '../GenericContract.js';
+import { makeDynamicFunction } from '../util.js';
 
 type Views = 'balanceOf' | 'operatorOf' | 'tokenMetadata';
 type Updates = 'transfer' | 'updateOperator';

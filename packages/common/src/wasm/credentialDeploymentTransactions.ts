@@ -1,5 +1,5 @@
-import { encode as bs58Encode } from 'bs58check';
-import { Buffer } from 'buffer/';
+import bs58check from 'bs58check';
+import { Buffer } from 'buffer/index.js';
 import { sign } from '@noble/ed25519';
 import * as wasm from '@concordium/rust-bindings/wallet';
 import {
@@ -20,13 +20,13 @@ import {
     AttributesKeys,
     CredentialDeploymentDetails,
     HexString,
-} from '../types';
-import { TransactionExpiry } from '../types/transactionExpiry';
-import { AccountAddress } from '../types/accountAddress';
-import { sha256 } from '../hash';
-import { ConcordiumHdWallet } from './HdWallet';
-import { filterRecord, mapRecord } from '../util';
-import { getCredentialDeploymentSignDigest } from '../serialization';
+} from '../types.js';
+import { TransactionExpiry } from '../types/transactionExpiry.js';
+import { AccountAddress } from '../types/accountAddress.js';
+import { sha256 } from '../hash.js';
+import { ConcordiumHdWallet } from './HdWallet.js';
+import { filterRecord, mapRecord } from '../util.js';
+import { getCredentialDeploymentSignDigest } from '../serialization.js';
 
 /**
  * Generates the unsigned credential information that has to be signed when
@@ -187,7 +187,9 @@ export function buildSignedCredentialForExistingAccount(
 export function getAccountAddress(credId: string): AccountAddress {
     const hashedCredId = sha256([Buffer.from(credId, 'hex')]);
     const prefixedWithVersion = Buffer.concat([Buffer.of(1), hashedCredId]);
-    const accountAddress = new AccountAddress(bs58Encode(prefixedWithVersion));
+    const accountAddress = new AccountAddress(
+        bs58check.encode(prefixedWithVersion)
+    );
     return accountAddress;
 }
 

@@ -1,4 +1,4 @@
-import Provider, { JsonRpcRequest } from './provider';
+import Provider, { JsonRpcRequest } from './provider.js';
 import fetch from 'cross-fetch';
 import JSONBig from 'json-bigint';
 import { v4 as uuidv4 } from 'uuid';

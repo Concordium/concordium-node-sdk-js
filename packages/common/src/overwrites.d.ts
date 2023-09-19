@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 
-declare module 'buffer/' {
+declare module 'buffer/index.js' {
     export interface Buffer {
         readBigUInt64BE(offset: number): bigint;
     }

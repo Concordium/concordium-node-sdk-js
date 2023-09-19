@@ -1,6 +1,6 @@
 import { getNodeClient } from './testHelpers';
 import { isInstanceInfoV0 } from '@concordium/common-sdk';
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 import * as fs from 'fs';
 import { deserializeContractState } from '@concordium/common-sdk/schema';
 

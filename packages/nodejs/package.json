@@ -16,17 +16,17 @@
     "engines": {
         "node": ">=14.16.0"
     },
-    "main": "lib/cjs/index.js",
+    "main": "lib/esm/index.js",
     "type": "module",
-    "types": "lib/cjs/index.d.ts",
+    "types": "lib/esm/index.d.ts",
     "exports": {
         ".": {
-            "types": "./lib/cjs/index.d.ts",
+            "types": "./lib/esm/index.d.ts",
             "import": "./lib/esm/index.js"
         },
         "./*": {
-            "types": "./lib/cjs/pub/*.d.ts",
-            "import": "./lib/cjs/esm/*.js"
+            "types": "./lib/esm/pub/*.d.ts",
+            "import": "./lib/esm/pub/*.js"
         }
     },
     "sideEffects": false,

@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 import { ContractAddress } from '@concordium/common-sdk';
 import { serializeTypeValue } from '@concordium/common-sdk/schema';
 import { CIS4, CIS4Contract, Web3IdSigner } from '@concordium/common-sdk/cis4';

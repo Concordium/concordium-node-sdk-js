@@ -1,6 +1,6 @@
-import { GenericAtomicStatement, AtomicProof } from '../commonProofTypes';
+import { GenericAtomicStatement, AtomicProof } from '../commonProofTypes.js';
 import JSONBigInt from 'json-bigint';
-import { AttributeType } from '../web3-id/web3IdProofTypes';
+import { AttributeType } from '../web3-id/web3IdProofTypes.js';
 
 type DIDString = string;
 

@@ -1,5 +1,5 @@
-import { Buffer } from 'buffer/';
-import { HexString } from './types';
+import { Buffer } from 'buffer/index.js';
+import { HexString } from './types.js';
 
 /**
  * A wrapper around some data, which enables reading from the data without

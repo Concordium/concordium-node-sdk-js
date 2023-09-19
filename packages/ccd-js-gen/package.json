@@ -2,8 +2,10 @@
     "name": "@concordium/ccd-js-gen",
     "version": "1.0.0",
     "description": "Generate JS clients for the Concordium Blockchain",
+    "type": "module",
     "bin": "bin/ccd-js-gen.js",
     "main": "lib/src/lib.js",
+    "module": "lib/src/lib.js",
     "typings": "lib/src/lib.d.ts",
     "scripts": {
         "build": "tsc",

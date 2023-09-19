@@ -1,5 +1,5 @@
-import { Buffer } from 'buffer/';
-import { serializeCredentialDeploymentInfo } from './serialization';
+import { Buffer } from 'buffer/index.js';
+import { serializeCredentialDeploymentInfo } from './serialization.js';
 import {
     encodeWord64,
     encodeDataBlob,
@@ -10,7 +10,7 @@ import {
     encodeWord8,
     serializeConfigureDelegationPayload,
     serializeConfigureBakerPayload,
-} from './serializationHelpers';
+} from './serializationHelpers.js';
 import {
     AccountTransactionType,
     InitContractPayload,
@@ -23,11 +23,11 @@ import {
     RegisterDataPayload,
     ConfigureDelegationPayload,
     ConfigureBakerPayload,
-} from './types';
-import { AccountAddress } from './types/accountAddress';
-import { DataBlob } from './types/DataBlob';
-import { CcdAmount } from './types/ccdAmount';
-import { Cursor } from './deserializationHelpers';
+} from './types.js';
+import { AccountAddress } from './types/accountAddress.js';
+import { DataBlob } from './types/DataBlob.js';
+import { CcdAmount } from './types/ccdAmount.js';
+import { Cursor } from './deserializationHelpers.js';
 
 interface AccountTransactionHandler<
     PayloadType extends AccountTransactionPayload = AccountTransactionPayload

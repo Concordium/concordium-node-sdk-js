@@ -1,4 +1,4 @@
-import type { HexString } from '../types';
+import type { HexString } from '../types.js';
 
 /** Hash of a transaction. */
 class TransactionHash {

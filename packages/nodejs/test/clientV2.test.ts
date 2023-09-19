@@ -21,7 +21,7 @@ import {
 } from './testHelpers';
 import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons';
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 
 import { TextEncoder, TextDecoder } from 'util';
 import {

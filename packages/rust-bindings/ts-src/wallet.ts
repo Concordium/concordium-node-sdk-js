@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 
 import { initSync } from '../pkg/wallet/web';
 import wasmBase64 from '../pkg/wallet/web/index_bg.wasm'; // Expected to resolve to base64 encoded bytes of wasm module

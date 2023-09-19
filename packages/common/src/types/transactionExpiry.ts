@@ -1,4 +1,4 @@
-import { secondsSinceEpoch } from '../util';
+import { secondsSinceEpoch } from '../util.js';
 
 /**
  * Representation of a transaction expiry date.

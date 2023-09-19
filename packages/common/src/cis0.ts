@@ -1,15 +1,15 @@
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 import { stringify } from 'json-bigint';
 
-import { ContractAddress, HexString } from './types';
-import { ConcordiumGRPCClient } from './grpc/GRPCClient';
+import { ContractAddress, HexString } from './types.js';
+import { ConcordiumGRPCClient } from './grpc/GRPCClient.js';
 import {
     encodeWord16,
     packBufferWithWord8Length,
-} from './serializationHelpers';
-import { getContractName } from './contractHelpers';
-import { makeDynamicFunction } from './util';
-import { makeDeserializeListResponse } from './deserializationHelpers';
+} from './serializationHelpers.js';
+import { getContractName } from './contractHelpers.js';
+import { makeDynamicFunction } from './util.js';
+import { makeDeserializeListResponse } from './deserializationHelpers.js';
 
 /**
  * Namespace with types for CIS-0 standard contracts

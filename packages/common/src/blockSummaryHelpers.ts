@@ -11,7 +11,7 @@ import {
     UpdatesV0,
     UpdatesV1,
     UpdatesV2,
-} from './types';
+} from './types.js';
 
 /** Whether {@link UpdateQueues} parameter given is of type {@link UpdateQueuesV0} */
 export const isUpdateQueuesV0 = (uq: UpdateQueues): uq is UpdateQueuesV0 =>

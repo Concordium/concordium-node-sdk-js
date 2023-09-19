@@ -11,7 +11,7 @@ import {
 } from '@concordium/common-sdk';
 import fs from 'fs';
 import * as ed from '@noble/ed25519';
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 import {
     deserializeTransaction,
     serializeCredentialDeploymentTransactionForSubmission,

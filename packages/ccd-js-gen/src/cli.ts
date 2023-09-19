@@ -3,7 +3,7 @@ This file contains code for building the command line inferface to the ccd-js-ge
 */
 import { Command } from 'commander';
 import packageJson from '../package.json';
-import * as lib from './lib';
+import * as lib from './lib.js';
 
 /** Type representing the CLI options/arguments and needs to match the options set with commander.js */
 type Options = {

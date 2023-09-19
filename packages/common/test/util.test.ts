@@ -1,6 +1,6 @@
 import { intToStringTransformer, stringToInt, wasmToSchema } from '../src/util';
 import { readFileSync } from 'fs';
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 
 test('intToStringTransformer transform chosen field, but not others', () => {
     const keysToTransform = ['a'];

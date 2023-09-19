@@ -6,7 +6,7 @@ import {
     ContractAddress,
     Amount,
     BakerId,
-} from '../types';
+} from '../types.js';
 
 /*
  * An enum containing all the possible reject reasons that can be

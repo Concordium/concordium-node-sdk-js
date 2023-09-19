@@ -1,5 +1,5 @@
-import { checkParameterLength } from '../contractHelpers';
-import type { HexString } from '../types';
+import { checkParameterLength } from '../contractHelpers.js';
+import type { HexString } from '../types.js';
 
 /** Parameter for a smart contract entrypoint. */
 class Parameter {

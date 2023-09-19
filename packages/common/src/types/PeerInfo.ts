@@ -1,4 +1,4 @@
-import { HexString, IpAddressString } from '..';
+import type { HexString, IpAddressString } from '../types.js';
 
 export interface PeerInfo {
     peerId: HexString;

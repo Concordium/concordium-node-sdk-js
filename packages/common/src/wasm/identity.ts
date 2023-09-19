@@ -7,8 +7,8 @@ import type {
     IpInfo,
     Network,
     Versioned,
-} from '../types';
-import type { IdProofInput, IdProofOutput } from '../id';
+} from '../types.js';
+import type { IdProofInput, IdProofOutput } from '../id/index.js';
 
 export type IdentityRequestInput = {
     ipInfo: IpInfo;

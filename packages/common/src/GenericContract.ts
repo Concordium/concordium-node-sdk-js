@@ -1,13 +1,13 @@
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 import { stringify } from 'json-bigint';
 
 import {
     checkParameterLength,
     getContractName,
     getContractNameFromInit,
-} from './contractHelpers';
-import { ConcordiumGRPCClient } from './grpc/GRPCClient';
-import { AccountSigner, signTransaction } from './signHelpers';
+} from './contractHelpers.js';
+import { ConcordiumGRPCClient } from './grpc/GRPCClient.js';
+import { AccountSigner, signTransaction } from './signHelpers.js';
 import {
     AccountTransactionType,
     Base58String,
@@ -20,12 +20,12 @@ import {
     MakeOptional,
     SmartContractTypeValues,
     UpdateContractPayload,
-} from './types';
-import { AccountAddress } from './types/accountAddress';
-import { CcdAmount } from './types/ccdAmount';
-import { TransactionExpiry } from './types/transactionExpiry';
-import { ModuleReference } from './types/moduleReference';
-import * as BlockHash from './types/BlockHash';
+} from './types.js';
+import { AccountAddress } from './types/accountAddress.js';
+import { CcdAmount } from './types/ccdAmount.js';
+import { TransactionExpiry } from './types/transactionExpiry.js';
+import { ModuleReference } from './types/moduleReference.js';
+import * as BlockHash from './types/BlockHash.js';
 
 /**
  * Metadata necessary for smart contract transactions

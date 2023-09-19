@@ -1,7 +1,7 @@
 import { AccountAddress } from '../src/types/accountAddress';
 import bs58check from 'bs58check';
 import { getAlias, isAlias } from '../src/alias';
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 
 test('isAlias is reflexive', () => {
     const address = new AccountAddress(

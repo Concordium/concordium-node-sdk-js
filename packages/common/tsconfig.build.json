@@ -4,9 +4,6 @@
         "src/**/*",
         "types/**/*"
     ],
-    "exclude": [
-        "src/grpc-api/**/*"
-    ],
     "compilerOptions": {
         "rootDir": "./src",
         "outDir": "./lib/esm"

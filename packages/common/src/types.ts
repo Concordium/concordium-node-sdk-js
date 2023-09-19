@@ -2,29 +2,29 @@
  * @module Common GRPC-Client
  */
 
-import { AccountAddress } from './types/accountAddress';
-import { CredentialRegistrationId } from './types/CredentialRegistrationId';
-import { CcdAmount } from './types/ccdAmount';
-import { DataBlob } from './types/DataBlob';
-import { TransactionExpiry } from './types/transactionExpiry';
-import { Buffer } from 'buffer/';
-import { ModuleReference } from './types/moduleReference';
-import { RejectReason, RejectReasonV1 } from './types/rejectReason';
+import { AccountAddress } from './types/accountAddress.js';
+import { CredentialRegistrationId } from './types/CredentialRegistrationId.js';
+import { CcdAmount } from './types/ccdAmount.js';
+import { DataBlob } from './types/DataBlob.js';
+import { TransactionExpiry } from './types/transactionExpiry.js';
+import { Buffer } from 'buffer/index.js';
+import { ModuleReference } from './types/moduleReference.js';
+import { RejectReason, RejectReasonV1 } from './types/rejectReason.js';
 import {
     ContractTraceEvent,
     MemoEvent,
     TransactionEvent,
     TransferredEvent,
-} from './types/transactionEvent';
+} from './types/transactionEvent.js';
 
-export * from './types/NodeInfo';
-export * from './types/PeerInfo';
-export * from './types/blockItemSummary';
-export * from './types/chainUpdate';
-export * from './types/rejectReason';
-export * from './types/transactionEvent';
-export * from './types/BlockSpecialEvents';
-export * from './types/errors';
+export * from './types/NodeInfo.js';
+export * from './types/PeerInfo.js';
+export * from './types/blockItemSummary.js';
+export * from './types/chainUpdate.js';
+export * from './types/rejectReason.js';
+export * from './types/transactionEvent.js';
+export * from './types/BlockSpecialEvents.js';
+export * from './types/errors.js';
 
 export type HexString = string;
 export type Base58String = string;

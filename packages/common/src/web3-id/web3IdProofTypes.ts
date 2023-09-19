@@ -4,8 +4,8 @@ import {
     GenericMembershipStatement,
     GenericNonMembershipStatement,
     GenericRangeStatement,
-} from '../commonProofTypes';
-import { ContractAddress, CryptographicParameters } from '../types';
+} from '../commonProofTypes.js';
+import { ContractAddress, CryptographicParameters } from '../types.js';
 
 export type TimestampAttribute = {
     type: 'date-time';

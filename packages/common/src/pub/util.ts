@@ -4,4 +4,4 @@ export {
     intToStringTransformer,
     isValidHash,
     stringToInt,
-} from '../util';
+} from '../util.js';

@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 import {
     AccountInfo,
     AccountTransaction,
@@ -18,21 +18,21 @@ import {
     TransactionStatus,
     TransactionSummary,
     Versioned,
-} from '../types';
-import { AccountAddress } from '../types/accountAddress';
-import Provider, { JsonRpcResponse } from './providers/provider';
+} from '../types.js';
+import { AccountAddress } from '../types/accountAddress.js';
+import Provider, { JsonRpcResponse } from './providers/provider.js';
 import {
     serializeAccountTransactionForSubmission,
     serializeSignedCredentialDeploymentDetailsForSubmission,
-} from '../serialization';
-import { CcdAmount } from '../types/ccdAmount';
-import { ModuleReference } from '../types/moduleReference';
+} from '../serialization.js';
+import { CcdAmount } from '../types/ccdAmount.js';
+import { ModuleReference } from '../types/moduleReference.js';
 import {
     buildJsonResponseReviver,
     intToStringTransformer,
     isValidHash,
-} from '../util';
-import { CredentialRegistrationId } from '../types/CredentialRegistrationId';
+} from '../util.js';
+import { CredentialRegistrationId } from '../types/CredentialRegistrationId.js';
 
 function transformJsonResponse<Result>(
     jsonString: string,

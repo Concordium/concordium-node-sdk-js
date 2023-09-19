@@ -1,5 +1,5 @@
-import { Buffer } from 'buffer/';
-import { packBufferWithWord32Length } from '../serializationHelpers';
+import { Buffer } from 'buffer/index.js';
+import { packBufferWithWord32Length } from '../serializationHelpers.js';
 
 /**
  * Representation of a module reference, which enforces that it:

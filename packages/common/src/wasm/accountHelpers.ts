@@ -1,6 +1,6 @@
 import * as wasm from '@concordium/rust-bindings/wallet';
-import { GenerateBakerKeysOutput } from '../types';
-import { AccountAddress } from '../types/accountAddress';
+import { GenerateBakerKeysOutput } from '../types.js';
+import { AccountAddress } from '../types/accountAddress.js';
 
 /**
  * Generates random baker keys for the specified account, that can be used with the configureBaker transaction

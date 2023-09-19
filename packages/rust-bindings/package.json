@@ -19,17 +19,17 @@
     "types": "./lib/dapp/node/index.d.ts",
     "exports": {
         ".": {
-            "require": "./lib/dapp/node/index.js",
+            "node": "./lib/dapp/node/index.js",
             "browser": "./lib/dapp/web/index.min.js",
             "types": "./lib/dapp/node/index.d.ts"
         },
         "./dapp": {
-            "require": "./lib/dapp/node/index.js",
+            "node": "./lib/dapp/node/index.js",
             "browser": "./lib/dapp/web/index.min.js",
             "types": "./lib/dapp/node/index.d.ts"
         },
         "./wallet": {
-            "require": "./lib/wallet/node/index.js",
+            "node": "./lib/wallet/node/index.js",
             "browser": "./lib/wallet/web/index.min.js",
             "types": "./lib/wallet/node/index.d.ts"
         },

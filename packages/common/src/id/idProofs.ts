@@ -3,20 +3,20 @@ import {
     AttributeKeyString,
     AttributesKeys,
     IdDocType,
-} from '../types';
+} from '../types.js';
 import {
     AtomicStatement,
     IdStatement,
     MembershipStatement,
     NonMembershipStatement,
     RangeStatement,
-} from './idProofTypes';
+} from './idProofTypes.js';
 import {
     EU_MEMBERS,
     MAX_DATE,
     MIN_DATE,
     StatementTypes,
-} from '../commonProofTypes';
+} from '../commonProofTypes.js';
 import { whereAlpha2 } from 'iso-3166-1';
 
 /**

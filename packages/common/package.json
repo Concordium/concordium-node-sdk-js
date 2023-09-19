@@ -11,8 +11,7 @@
         "directory": "packages/common"
     },
     "sideEffects": false,
-    "main": "lib/cjs/index.js",
-    "type": "commonjs",
+    "type": "module",
     "types": "lib/esm/index.d.ts",
     "module": "lib/esm/index.js",
     "browser": "lib/esm/index.js",
@@ -20,20 +19,16 @@
         ".": {
             "types": "./lib/esm/index.d.ts",
             "import": "./lib/esm/index.js",
-            "browser": "./lib/esm/index.js",
-            "require": "./lib/cjs/index.js"
+            "browser": "./lib/esm/index.js"
         },
         "./*": {
             "types": "./lib/esm/pub/*.d.ts",
             "import": "./lib/esm/pub/*.js",
-            "browser": "./lib/esm/pub/*.js",
-            "require": "./lib/cjs/pub/*.js"
+            "browser": "./lib/esm/pub/*.js"
         }
     },
     "files": [
-        "/lib/cjs/**/*",
-        "/lib/esm/**/*",
-        "/lib/grpc-api/**/*"
+        "/lib/esm/**/*"
     ],
     "devDependencies": {
         "@protobuf-ts/plugin": "^2.9.1",
@@ -63,16 +58,14 @@
         "tabWidth": 4
     },
     "scripts": {
-        "generate-ts-v2-cjs": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/@protobuf-ts/plugin/bin/protoc-gen-ts --ts_opt 'optimize_code_size,output_legacy_commonjs,output_javascript' --ts_out=lib/cjs/grpc-api -I ../../deps/concordium-base/concordium-grpc-api ../../deps/concordium-base/concordium-grpc-api/v2/concordium/*.proto",
-        "generate-ts-v2": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/@protobuf-ts/plugin/bin/protoc-gen-ts --ts_opt 'optimize_code_size,output_javascript' --ts_out=src/grpc-api -I ../../deps/concordium-base/concordium-grpc-api ../../deps/concordium-base/concordium-grpc-api/v2/concordium/*.proto",
-        "generate": "([ -e \"../../deps/concordium-base/concordium-grpc-api\" ] && yarn generate-ts-v2) || echo 'Please checkout submodules before building'",
+        "generate-ts-v2": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/@protobuf-ts/plugin/bin/protoc-gen-ts --ts_opt 'optimize_code_size' --ts_out=src/grpc-api -I ../../deps/concordium-base/concordium-grpc-api ../../deps/concordium-base/concordium-grpc-api/v2/concordium/*.proto",
+        "generate": "([ -e \"../../deps/concordium-base/concordium-grpc-api\" ] && yarn generate-ts-v2 && node ../../scripts/proto-node-esm.js) || echo 'Please checkout submodules before building'",
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
         "build": "yarn clean; mkdir -p src/grpc-api; yarn generate && yarn build-dev",
-        "build-dev": "yarn tsc-esm && yarn tsc-cjs && cp -R src/grpc-api lib/esm && rm -rf lib/cjs/grpc-api && mkdir -p lib/cjs/grpc-api && yarn generate-ts-v2-cjs",
+        "build-dev": "yarn tsc-esm",
         "tsc-esm": "tsc -p tsconfig.build.json",
-        "tsc-cjs": "tsc -p tsconfig.build.json --outDir ./lib/cjs --module node16 --moduleResolution node16",
         "clean": "rimraf -- lib src/grpc-api"
     },
     "dependencies": {

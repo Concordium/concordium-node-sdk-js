@@ -1,5 +1,5 @@
-import { Buffer } from 'buffer/';
-import { packBufferWithWord16Length } from '../serializationHelpers';
+import { Buffer } from 'buffer/index.js';
+import { packBufferWithWord16Length } from '../serializationHelpers.js';
 
 /**
  * Representation of a transfer's memo or a registerData transaction's data, which enforces that:

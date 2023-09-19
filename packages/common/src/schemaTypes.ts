@@ -1,4 +1,4 @@
-import { ContractName, EntrypointName } from './contractHelpers';
+import { ContractName, EntrypointName } from './contractHelpers.js';
 import {
     Cursor,
     Deserializer,
@@ -6,8 +6,8 @@ import {
     deserializeUInt16LE,
     deserializeUInt32LE,
     deserializeUInt8,
-} from './deserializationHelpers';
-import { Buffer } from 'buffer/';
+} from './deserializationHelpers.js';
+import { Buffer } from 'buffer/index.js';
 /**
  * The JSON schema representation of a rust Option
  *

@@ -1,7 +1,7 @@
 import * as wasm from '@concordium/rust-bindings';
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 import JSONbig from 'json-bigint';
-import { SchemaVersion, SmartContractTypeValues } from './types';
+import { SchemaVersion, SmartContractTypeValues } from './types.js';
 
 /**
  * @param moduleSchema buffer for the schema of a module that contains the contract

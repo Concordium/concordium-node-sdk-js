@@ -12,23 +12,18 @@
     },
     "sideEffects": false,
     "type": "module",
-    "types": "lib/esm/index.d.ts",
-    "module": "lib/esm/index.js",
-    "browser": "lib/esm/index.js",
     "exports": {
         ".": {
-            "types": "./lib/esm/index.d.ts",
-            "import": "./lib/esm/index.js",
-            "browser": "./lib/esm/index.js"
+            "types": "./lib/index.d.ts",
+            "default": "./lib/index.js"
         },
         "./*": {
-            "types": "./lib/esm/pub/*.d.ts",
-            "import": "./lib/esm/pub/*.js",
-            "browser": "./lib/esm/pub/*.js"
+            "types": "./lib/pub/*.d.ts",
+            "default": "./lib/pub/*.js"
         }
     },
     "files": [
-        "/lib/esm/**/*"
+        "/lib/**/*"
     ],
     "devDependencies": {
         "@protobuf-ts/plugin": "^2.9.1",
@@ -59,14 +54,13 @@
     },
     "scripts": {
         "generate-ts-v2": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/@protobuf-ts/plugin/bin/protoc-gen-ts --ts_opt 'optimize_code_size' --ts_out=src/grpc-api -I ../../deps/concordium-base/concordium-grpc-api ../../deps/concordium-base/concordium-grpc-api/v2/concordium/*.proto",
-        "generate": "([ -e \"../../deps/concordium-base/concordium-grpc-api\" ] && yarn generate-ts-v2 && node ../../scripts/proto-node-esm.js) || echo 'Please checkout submodules before building'",
+        "generate": "([ -e \"../../deps/concordium-base/concordium-grpc-api\" ] && yarn generate-ts-v2 && node ../../scripts/proto-node-esm-compat.js src/grpc-api) || echo 'Please checkout submodules before building'",
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
         "build": "yarn clean; mkdir -p src/grpc-api; yarn generate && yarn build-dev",
-        "build-dev": "yarn tsc-esm",
-        "tsc-esm": "tsc -p tsconfig.build.json",
-        "clean": "rimraf -- lib src/grpc-api"
+        "build-dev": "tsc -p tsconfig.build.json",
+        "clean": "rimraf -- lib src/grpc-api tsconfig.build.buildinfo"
     },
     "dependencies": {
         "@concordium/rust-bindings": "1.2.0",

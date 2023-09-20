@@ -1,8 +1,11 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { Configuration, SourceMapDevToolPlugin, ProvidePlugin } from 'webpack';
+import webpack from 'webpack';
 import { resolve } from 'path';
+import url from 'url';
 
-const config: Configuration = {
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
+
+const config: webpack.Configuration = {
     mode: 'production',
     cache: {
         type: 'filesystem',
@@ -12,14 +15,20 @@ const config: Configuration = {
         concordium: resolve(__dirname, 'src/index.ts'),
     },
     plugins: [
-        new SourceMapDevToolPlugin({
+        new webpack.SourceMapDevToolPlugin({
             filename: '[file].map',
         }),
-        new ProvidePlugin({
+        new webpack.ProvidePlugin({
             process: 'process/browser',
         }),
+        // new webpack.NormalModuleReplacementPlugin(/^\..+\.js$/, (resource) => {
+        //     resource.request = resource.request.replace(/\.js$/, '');
+        // }),
     ],
     resolve: {
+        extensionAlias: {
+            '.js': ['.ts', '.js'],
+        },
         extensions: ['.tsx', '.ts', '.js'],
     },
     module: {

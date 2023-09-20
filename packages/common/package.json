@@ -48,10 +48,6 @@
         "ts-jest": "^29.1.1",
         "typescript": "^5.2.2"
     },
-    "prettier": {
-        "singleQuote": true,
-        "tabWidth": 4
-    },
     "scripts": {
         "generate-ts-v2": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/@protobuf-ts/plugin/bin/protoc-gen-ts --ts_opt 'optimize_code_size' --ts_out=src/grpc-api -I ../../deps/concordium-base/concordium-grpc-api ../../deps/concordium-base/concordium-grpc-api/v2/concordium/*.proto",
         "generate": "([ -e \"../../deps/concordium-base/concordium-grpc-api\" ] && yarn generate-ts-v2 && node ../../scripts/proto-node-esm-compat.js src/grpc-api) || echo 'Please checkout submodules before building'",
@@ -60,7 +56,7 @@
         "test": "jest",
         "build": "yarn clean; mkdir -p src/grpc-api; yarn generate && yarn build-dev",
         "build-dev": "tsc -p tsconfig.build.json",
-        "clean": "rimraf -- lib src/grpc-api tsconfig.build.buildinfo"
+        "clean": "rimraf -- lib src/grpc-api tsconfig.build.tsbuildinfo"
     },
     "dependencies": {
         "@concordium/rust-bindings": "1.2.0",

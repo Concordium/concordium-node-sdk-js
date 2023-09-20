@@ -14,10 +14,5 @@
             "ES2020",
             "dom"
         ]
-    },
-    "ts-node": {
-        "compilerOptions": {
-            "module": "CommonJS"
-        }
     }
 }

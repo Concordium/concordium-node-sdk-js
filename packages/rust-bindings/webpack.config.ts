@@ -18,6 +18,9 @@ const config: Configuration = {
         }),
     ],
     resolve: {
+        extensionAlias: {
+            '.js': ['.ts', '.js'],
+        },
         extensions: ['.tsx', '.ts', '.js'],
     },
     module: {

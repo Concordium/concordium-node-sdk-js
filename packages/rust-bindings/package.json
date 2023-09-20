@@ -19,31 +19,31 @@
     "types": "./lib/dapp/node/index.d.ts",
     "exports": {
         ".": {
+            "types": "./lib/dapp/node/index.d.ts",
             "node": "./lib/dapp/node/index.js",
-            "browser": "./lib/dapp/web/index.min.js",
-            "types": "./lib/dapp/node/index.d.ts"
+            "default": "./lib/dapp/web/index.min.js"
         },
         "./dapp": {
+            "types": "./lib/dapp/node/index.d.ts",
             "node": "./lib/dapp/node/index.js",
-            "browser": "./lib/dapp/web/index.min.js",
-            "types": "./lib/dapp/node/index.d.ts"
+            "default": "./lib/dapp/web/index.min.js"
         },
         "./wallet": {
+            "types": "./lib/wallet/node/index.d.ts",
             "node": "./lib/wallet/node/index.js",
-            "browser": "./lib/wallet/web/index.min.js",
-            "types": "./lib/wallet/node/index.d.ts"
+            "default": "./lib/wallet/web/index.min.js"
         },
         "./bundler": {
-            "browser": "./lib/dapp/bundler/index.js",
-            "types": "./lib/dapp/bundler/index.d.ts"
+            "types": "./lib/dapp/bundler/index.d.ts",
+            "default": "./lib/dapp/bundler/index.js"
         },
         "./bundler/dapp": {
-            "browser": "./lib/dapp/bundler/index.js",
-            "types": "./lib/dapp/bundler/index.d.ts"
+            "types": "./lib/dapp/bundler/index.d.ts",
+            "default": "./lib/dapp/bundler/index.js"
         },
         "./bundler/wallet": {
-            "browser": "./lib/wallet/bundler/index.js",
-            "types": "./lib/wallet/bundler/index.d.ts"
+            "types": "./lib/wallet/bundler/index.d.ts",
+            "default": "./lib/wallet/bundler/index.js"
         }
     },
     "files": [
@@ -67,6 +67,6 @@
     },
     "dependencies": {
         "buffer": "^6.0.3",
-        "webpack": "^5.72.0"
+        "webpack": "^5.88.2"
     }
 }

@@ -5,7 +5,7 @@ import {
     isConsensusStatusV0,
     isConsensusStatusV1,
 } from '@concordium/common-sdk';
-import { getNodeClient } from './testHelpers';
+import { getNodeClient } from './testHelpers.js';
 
 /**
  * These tests mostly serve the purpose of making sure that the types exposed follow the format returned by the API,

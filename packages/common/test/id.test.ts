@@ -3,7 +3,7 @@ import {
     IdentityRequestInput,
     IdentityRecoveryRequestInput,
     createIdentityRecoveryRequest,
-} from '../src/wasm/identity';
+} from '../src/wasm/identity.js';
 import fs from 'fs';
 
 test('idrequest', () => {

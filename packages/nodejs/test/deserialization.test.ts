@@ -1,4 +1,4 @@
-import { getNodeClient } from './testHelpers';
+import { getNodeClient } from './testHelpers.js';
 import { isInstanceInfoV0 } from '@concordium/common-sdk';
 import { Buffer } from 'buffer/index.js';
 import * as fs from 'fs';

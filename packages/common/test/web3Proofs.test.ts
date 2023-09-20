@@ -13,24 +13,24 @@ import {
     VerifiablePresentation,
     verifyAtomicStatements,
     Web3StatementBuilder,
-} from '../src';
+} from '../src/index.js';
 import {
     expectedAccountCredentialPresentation,
     expectedWeb3IdCredentialPresentation,
-} from './resources/expectedPresentation';
-import { expectedStatementMixed } from './resources/expectedStatements';
+} from './resources/expectedPresentation.js';
+import { expectedStatementMixed } from './resources/expectedStatements.js';
 import {
     CommitmentInput,
     CredentialSchemaSubject,
     TimestampAttribute,
-} from '../src/web3-id/web3IdProofTypes';
-import { TEST_SEED_1 } from './HdWallet.test';
+} from '../src/web3-id/web3IdProofTypes.js';
+import { TEST_SEED_1 } from './HdWallet.test.js';
 import fs from 'fs';
 import {
     GenericMembershipStatement,
     GenericNonMembershipStatement,
     GenericRangeStatement,
-} from '../src/commonProofTypes';
+} from '../src/commonProofTypes.js';
 
 test('Generate V2 statement', () => {
     const builder = new Web3StatementBuilder();

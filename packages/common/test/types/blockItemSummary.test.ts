@@ -20,7 +20,7 @@ import {
     getSummaryContractUpdateLogs,
     getTransactionKindString,
     AccountTransactionType,
-} from '../../src';
+} from '../../src/index.js';
 
 const chainUpdate: UpdateSummary = {
     type: TransactionSummaryType.UpdateTransaction,

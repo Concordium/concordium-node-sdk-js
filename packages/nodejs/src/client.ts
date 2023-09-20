@@ -1,4 +1,4 @@
-import { ChannelCredentials } from '@grpc/grpc-js';
+import { ChannelCredentials, Metadata } from '@grpc/grpc-js';
 import { Buffer as BufferFormater } from 'buffer/index.js';
 import { P2PClient } from './grpc-api/concordium_p2p_rpc.client.js';
 import {
@@ -89,6 +89,7 @@ import {
 import { convertJsonResponse, intListToStringList } from './util.js';
 import { serializeCredentialDeploymentTransactionForSubmission } from '@concordium/common-sdk/wasm';
 import { GrpcTransport } from '@protobuf-ts/grpc-transport';
+import { RpcMetadata } from '@protobuf-ts/runtime-rpc';
 
 /**
  * A concordium-node specific gRPC client wrapper.
@@ -114,6 +115,7 @@ export default class ConcordiumNodeClient {
      * @param address the ip address of the node, e.g. 127.0.0.1
      * @param port the port to use when econnecting to the node
      * @param credentials credentials to use to connect to the node
+     * @param meta metadata to send with requests to node
      * @param timeout milliseconds to wait before timing out
      * @param options optional options for the P2PClient
      */
@@ -121,7 +123,7 @@ export default class ConcordiumNodeClient {
         address: string,
         port: number,
         credentials: ChannelCredentials,
-        // metadata: Metadata,
+        meta: RpcMetadata,
         timeout: number,
         options?: Record<string, unknown>
     ) {
@@ -138,6 +140,7 @@ export default class ConcordiumNodeClient {
         const grpcTransport = new GrpcTransport({
             host: `${address}:${port}`,
             channelCredentials: credentials,
+            meta,
             ...options,
         });
         this.client = new P2PClient(grpcTransport);

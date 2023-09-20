@@ -3,7 +3,7 @@ import * as path from 'path';
 import {
     getEmbeddedModuleSchema,
     versionedModuleSourceFromBuffer,
-} from '../src/types/VersionedModuleSource';
+} from '../src/types/VersionedModuleSource.js';
 import { Buffer } from 'buffer/index.js';
 
 // Directory with smart contract modules and schemas for testing.

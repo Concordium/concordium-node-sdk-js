@@ -3,6 +3,7 @@
     "include": [
         "src/**/*",
         "types/**/*",
-        "test/**/*"
+        "test/**/*",
+        "jest.config.ts"
     ]
 }

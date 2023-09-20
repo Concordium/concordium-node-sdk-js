@@ -1,13 +1,13 @@
-import { AttributeKeyString, AttributesKeys, IdDocType } from '../src/types';
-import { StatementTypes } from '../src/commonProofTypes';
+import { AttributeKeyString, AttributesKeys, IdDocType } from '../src/types.js';
+import { StatementTypes } from '../src/commonProofTypes.js';
 import {
     attributesWithRange,
     attributesWithSet,
     RangeStatement,
-} from '../src/id/idProofTypes';
-import { IdStatementBuilder } from '../src/id/idProofs';
+} from '../src/id/idProofTypes.js';
+import { IdStatementBuilder } from '../src/id/idProofs.js';
 import fs from 'fs';
-import { getIdProof } from '../src/wasm';
+import { getIdProof } from '../src/wasm/index.js';
 
 test('Creating a statement with multiple atomic statements on the same attribute fails', () => {
     const builder = new IdStatementBuilder(true);

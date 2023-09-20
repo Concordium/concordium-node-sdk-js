@@ -11,7 +11,7 @@ import {
     serializeUpdateContractParameters,
     serializeTypeValue,
     serializeInitContractParameters,
-} from '../src/schema';
+} from '../src/schema.js';
 import {
     CIS2_WCCD_STATE_SCHEMA,
     V0_PIGGYBANK_SCHEMA,
@@ -21,7 +21,7 @@ import {
     TEST_CONTRACT_RECEIVE_ERROR_SCHEMA,
     AUCTION_WITH_ERRORS_VIEW_RETURN_VALUE_SCHEMA,
     TEST_CONTRACT_U64,
-} from './resources/schema';
+} from './resources/schema.js';
 
 const U64_MAX = 18446744073709551615n;
 

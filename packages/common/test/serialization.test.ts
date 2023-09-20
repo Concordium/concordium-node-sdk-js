@@ -1,17 +1,17 @@
-import { AccountAddress } from '../src/types/accountAddress';
-import { CcdAmount } from '../src/types/ccdAmount';
+import { AccountAddress } from '../src/types/accountAddress.js';
+import { CcdAmount } from '../src/types/ccdAmount.js';
 import {
     serializeAccountTransactionForSubmission,
     serializeAccountTransactionSignature,
-} from '../src/serialization';
+} from '../src/serialization.js';
 import {
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionSignature,
     AccountTransactionType,
     SimpleTransferPayload,
-} from '../src/types';
-import { TransactionExpiry } from '../src/types/transactionExpiry';
+} from '../src/types.js';
+import { TransactionExpiry } from '../src/types/transactionExpiry.js';
 
 test('fail account transaction serialization if no signatures', () => {
     const simpleTransferPayload: SimpleTransferPayload = {

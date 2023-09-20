@@ -1,4 +1,4 @@
-import { getIdentityInput } from './testHelpers';
+import { getIdentityInput } from './testHelpers.js';
 import {
     VerifyKey,
     CredentialDeploymentTransaction,

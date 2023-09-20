@@ -1,5 +1,5 @@
-import { AccountAddress } from '../src/types/accountAddress';
-import { TransactionExpiry } from '../src/types/transactionExpiry';
+import { AccountAddress } from '../src/types/accountAddress.js';
+import { TransactionExpiry } from '../src/types/transactionExpiry.js';
 import {
     OpenStatus,
     AccountTransaction,
@@ -7,7 +7,7 @@ import {
     CcdAmount,
     ConfigureBakerPayload,
     getAccountTransactionSignDigest,
-} from '../src';
+} from '../src/index.js';
 
 test('configureBaker is serialized correctly', async () => {
     const senderAccountAddress =

@@ -1,4 +1,8 @@
-import { intToStringTransformer, stringToInt, wasmToSchema } from '../src/util';
+import {
+    intToStringTransformer,
+    stringToInt,
+    wasmToSchema,
+} from '../src/util.js';
 import { readFileSync } from 'fs';
 import { Buffer } from 'buffer/index.js';
 

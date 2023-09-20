@@ -2,10 +2,10 @@ import {
     createCredentialTransaction,
     CredentialInput,
     createCredentialV1,
-} from '../src/wasm/credentialDeploymentTransactions';
+} from '../src/wasm/credentialDeploymentTransactions.js';
 import fs from 'fs';
-import { AttributeKey } from '../src/types';
-import { TransactionExpiry } from '../src';
+import { AttributeKey } from '../src/types.js';
+import { TransactionExpiry } from '../src/index.js';
 
 export function createCredentialInput(
     revealedAttributes: AttributeKey[]

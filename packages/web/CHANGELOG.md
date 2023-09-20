@@ -4,7 +4,8 @@
 
 ### Breaking changes
 
-- The package has been split into several entrypoints to decrease the size of bundles produced for applications using only part of the functionality provided.
+- The package is published as an ES module, instead of UMD. Migration steps can be seen in [the upgrade guide](../../docs/pages/misc-pages/upgrade-guide.md)
+- The package has been split into several entrypoints that can be used to limit the scope of what is included from the SDK.
   - `@concordium/web-sdk` exposes the full API of the SDK.
   - `@concordium/web-sdk/cis0` entrypoint exposes functionality for working with contracts adhering to the [CIS-0](https://proposals.concordium.software/CIS/cis-0.html) standard.
   - `@concordium/web-sdk/cis2` entrypoint exposes functionality for working with contracts adhering to the [CIS-2](https://proposals.concordium.software/CIS/cis-2.html) standard.
@@ -212,8 +213,8 @@
 
 ## 0.1.1
 
--   Fixed issue with wasm from rust bindings
+- Fixed issue with wasm from rust bindings
 
 ## 0.1.0
 
--   Initial release
+- Initial release

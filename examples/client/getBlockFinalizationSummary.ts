@@ -1,6 +1,7 @@
 import { parseEndpoint } from '../shared/util.js';
 import {
     BlockFinalizationSummary,
+    BlockHash,
     createConcordiumClient,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
@@ -51,8 +52,12 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
     const summary: BlockFinalizationSummary =
-        await client.getBlockFinalizationSummary(cli.flags.block);
+        await client.getBlockFinalizationSummary(blockHash);
 
     if (summary.tag === 'record') {
         // Response contains finalization summary for the given block:

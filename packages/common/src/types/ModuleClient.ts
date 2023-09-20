@@ -3,7 +3,6 @@ import {
     getContractUpdateDefaultExpiryDate,
 } from '../GenericContract.js';
 import { ModuleReference } from './moduleReference.js';
-import { Buffer } from 'buffer/index.js';
 import * as BlockHash from './BlockHash.js';
 import * as Parameter from './Parameter.js';
 import * as TransactionHash from './TransactionHash.js';
@@ -117,7 +116,7 @@ export function getModuleSource(
 ): Promise<VersionedModuleSource> {
     return moduleClient.grpcClient.getModuleSource(
         moduleClient.moduleReference,
-        blockHash === undefined ? undefined : BlockHash.toHexString(blockHash)
+        blockHash
     );
 }
 
@@ -145,9 +144,9 @@ export async function createAndSendInitTransaction(
     const payload: InitContractPayload = {
         moduleRef: moduleClient.moduleReference,
         amount: new CcdAmount(metadata.amount ?? 0n),
-        initName: `init_${contractName}`,
+        initName: contractName,
         maxContractExecutionEnergy: metadata.energy,
-        param: Buffer.from(parameter.buffer),
+        param: parameter,
     };
     const { nonce } = await moduleClient.grpcClient.getNextAccountNonce(
         metadata.senderAddress
@@ -165,9 +164,8 @@ export async function createAndSendInitTransaction(
         payload,
     };
     const signature = await signTransaction(transaction, signer);
-    const hash = await moduleClient.grpcClient.sendAccountTransaction(
+    return moduleClient.grpcClient.sendAccountTransaction(
         transaction,
         signature
     );
-    return TransactionHash.fromHexString(hash);
 }

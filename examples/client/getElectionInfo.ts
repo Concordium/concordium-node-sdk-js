@@ -1,5 +1,6 @@
 import { parseEndpoint } from '../shared/util.js';
 import {
+    BlockHash,
     createConcordiumClient,
     ElectionInfo,
     isElectionInfoV0,
@@ -49,9 +50,11 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const electionInfo: ElectionInfo = await client.getElectionInfo(
-        cli.flags.block
-    );
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
+    const electionInfo: ElectionInfo = await client.getElectionInfo(blockHash);
 
     // Discard address, convert to tuple:
     const bakers: [bigint, number][] = electionInfo.bakerElectionInfo.map(

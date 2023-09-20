@@ -32,7 +32,6 @@ export * from '../blockSummaryHelpers.js';
 export * from '../rewardStatusHelpers.js';
 
 export { isHex, streamToList, wasmToSchema, unwrap } from '../util.js';
-export { getContractName } from '../contractHelpers.js';
 
 export { getAccountTransactionHandler } from '../accountTransactions.js';
 export * from '../energyCost.js';
@@ -58,6 +57,7 @@ export * as TransactionHash from '../types/TransactionHash.js';
 export * as BlockHash from '../types/BlockHash.js';
 export * as ContractName from '../types/ContractName.js';
 export * as InitName from '../types/InitName.js';
+export * as ReceiveName from '../types/ReceiveName.js';
 export * as CredentialRegistrationId from '../types/CredentialRegistrationId.js';
 export * as AccountAddress from '../types/AccountAddress.js';
 export * as ContractAddress from '../types/ContractAddress.js';

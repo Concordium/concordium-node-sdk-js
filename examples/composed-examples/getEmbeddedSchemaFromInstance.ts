@@ -1,4 +1,4 @@
-import { createConcordiumClient } from '@concordium/node-sdk';
+import { ContractAddress, createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -57,10 +57,11 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const info = await client.getInstanceInfo({
-        index: BigInt(cli.flags.index),
-        subindex: BigInt(cli.flags.subindex),
-    });
+    const contractAddress = ContractAddress.create(
+        cli.flags.index,
+        cli.flags.subindex
+    );
+    const info = await client.getInstanceInfo(contractAddress);
     const moduleRef = info.sourceModule;
     const schema = await client.getEmbeddedSchema(moduleRef);
     // #endregion documentation-snippet

@@ -238,10 +238,7 @@ export async function verifyMessageSignature(
         return false;
     }
 
-    const digest = getMessageDigest(
-        AccountAddress.fromBase58(accountInfo.accountAddress),
-        message
-    );
+    const digest = getMessageDigest(accountInfo.accountAddress, message);
 
     for (const credentialIndex of Object.keys(signature)) {
         const credential =

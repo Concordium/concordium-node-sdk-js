@@ -1,4 +1,5 @@
 import type { HexString } from '../types.js';
+import type * as Proto from '../grpc-api/v2/concordium/types.js';
 
 /** Hash of a transaction. */
 class TransactionHash {
@@ -6,7 +7,7 @@ class TransactionHash {
     private __nominal = true;
     constructor(
         /** Internal buffer with the hash. */
-        public readonly buffer: ArrayBuffer
+        public readonly buffer: Uint8Array
     ) {}
 }
 
@@ -27,7 +28,7 @@ export function fromBuffer(buffer: ArrayBuffer): TransactionHash {
             ).toString('hex')}'.`
         );
     }
-    return new TransactionHash(buffer);
+    return new TransactionHash(new Uint8Array(buffer));
 }
 
 /**
@@ -47,4 +48,23 @@ export function fromHexString(hex: HexString): TransactionHash {
  */
 export function toHexString(hash: TransactionHash): HexString {
     return Buffer.from(hash.buffer).toString('hex');
+}
+
+/**
+ * Get byte representation of a TransactionHash.
+ * @param {TransactionHash} hash The transaction hash.
+ * @returns {ArrayBuffer} Hash represented as bytes.
+ */
+export function toBuffer(hash: TransactionHash): Uint8Array {
+    return hash.buffer;
+}
+
+export function fromProto(hash: Proto.TransactionHash): TransactionHash {
+    return fromBuffer(hash.value);
+}
+
+export function toProto(hash: TransactionHash): Proto.TransactionHash {
+    return {
+        value: hash.buffer,
+    };
 }

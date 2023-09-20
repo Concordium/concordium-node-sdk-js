@@ -1,4 +1,5 @@
 import type { HexString } from '../types.js';
+import type * as Proto from '../grpc-api/v2/concordium/types.js';
 
 /**
  * Represents a hash of a block in the chain.
@@ -8,7 +9,7 @@ class BlockHash {
     private __nominal = true;
     constructor(
         /** The internal buffer of bytes representing the hash. */
-        public readonly buffer: ArrayBuffer
+        public readonly buffer: Uint8Array
     ) {}
 }
 
@@ -31,7 +32,7 @@ export function fromBuffer(buffer: ArrayBuffer): BlockHash {
             ).toString('hex')}'.`
         );
     }
-    return new BlockHash(buffer);
+    return new BlockHash(new Uint8Array(buffer));
 }
 
 /**
@@ -51,4 +52,42 @@ export function fromHexString(hex: HexString): BlockHash {
  */
 export function toHexString(hash: BlockHash): HexString {
     return Buffer.from(hash.buffer).toString('hex');
+}
+
+/**
+ * Get byte representation of a BlockHash.
+ * @param {BlockHash} hash The block hash.
+ * @returns {ArrayBuffer} Hash represented as bytes.
+ */
+export function toBuffer(hash: BlockHash): Uint8Array {
+    return hash.buffer;
+}
+
+/**
+ * Convert a block hash from its protobuf encoding.
+ * @param {Proto.BlockHash} hash The protobuf encoding.
+ * @returns {BlockHash}
+ */
+export function fromProto(hash: Proto.BlockHash): BlockHash {
+    return fromBuffer(hash.value);
+}
+
+/**
+ * Convert a block hash into its protobuf encoding.
+ * @param {BlockHash} hash The block hash.
+ * @returns {Proto.BlockHash} The protobuf encoding.
+ */
+export function toProto(hash: BlockHash): Proto.BlockHash {
+    return {
+        value: hash.buffer,
+    };
+}
+
+/**
+ * Construct a 'given' block hash input from a block hash.
+ * @param {BlockHash} hash The given block hash.
+ * @returns {Proto.BlockHashInput} The given block hash input.
+ */
+export function toBlockHashInput(hash: BlockHash): Proto.BlockHashInput {
+    return { blockHashInput: { oneofKind: 'given', given: toProto(hash) } };
 }

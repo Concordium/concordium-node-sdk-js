@@ -78,7 +78,10 @@ import {
     ConsensusParameters,
     TimeoutParameters,
     Ratio,
+    ReceiveName,
     ConcordiumBftStatus,
+    Parameter,
+    InitName,
 } from '@concordium/common-sdk';
 import {
     buildJsonResponseReviver,
@@ -634,8 +637,8 @@ export default class ConcordiumNodeClient {
                 amount: new CcdAmount(BigInt(result.amount)),
                 sourceModule: new ModuleReference(result.sourceModule),
                 owner: Address.fromBase58(result.owner),
-                methods: result.methods,
-                name: result.name,
+                methods: result.methods.map(ReceiveName.fromStringUnchecked),
+                name: InitName.fromStringUnchecked(result.name),
             };
 
             switch (result.version) {
@@ -849,8 +852,9 @@ export default class ConcordiumNodeClient {
                         contractContext.amount.microCcdAmount.toString(),
                     method: contractContext.method,
                     parameter:
-                        contractContext.parameter &&
-                        contractContext.parameter.toString('hex'),
+                        contractContext.parameter === undefined
+                            ? undefined
+                            : Parameter.toHexString(contractContext.parameter),
                     energy:
                         contractContext.energy &&
                         Number(contractContext.energy.toString()),

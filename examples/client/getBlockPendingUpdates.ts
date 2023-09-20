@@ -1,5 +1,9 @@
 import { parseEndpoint } from '../shared/util.js';
-import { createConcordiumClient, PendingUpdate } from '@concordium/node-sdk';
+import {
+    BlockHash,
+    createConcordiumClient,
+    PendingUpdate,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -51,8 +55,12 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
     const pendingUpdates: AsyncIterable<PendingUpdate> =
-        client.getBlockPendingUpdates(cli.flags.block);
+        client.getBlockPendingUpdates(blockHash);
     // #endregion documentation-snippet
 
     for await (const pendingUpdate of pendingUpdates) {

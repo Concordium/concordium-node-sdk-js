@@ -5,7 +5,6 @@ import {
     IpAddressString,
     ReleaseSchedule,
 } from './types.js';
-import { Buffer } from 'buffer/index.js';
 
 /**
  * Replaces a number in a JSON string with the same number as a
@@ -148,7 +147,7 @@ export function countSignatures(
  *
  * @returns the smart contract schema as a Buffer
  */
-export function wasmToSchema(wasm: Buffer): Buffer {
+export function wasmToSchema(wasm: ArrayBuffer): Uint8Array {
     const wasmModule = new WebAssembly.Module(wasm);
     const schemaBytes = schemaBytesFromWasmModule(
         wasmModule,
@@ -157,7 +156,7 @@ export function wasmToSchema(wasm: Buffer): Buffer {
     if (schemaBytes === null) {
         throw Error('WASM-Module contains no schema!');
     }
-    return schemaBytes;
+    return new Uint8Array(schemaBytes);
 }
 
 /**
@@ -171,10 +170,10 @@ export function schemaBytesFromWasmModule(
         | 'concordium-schema'
         | 'concordium-schema-v1'
         | 'concordium-schema-v2'
-): Buffer | null {
+): ArrayBuffer | null {
     const sections = WebAssembly.Module.customSections(wasmModule, sectionName);
     if (sections.length === 1) {
-        return Buffer.from(sections[0]);
+        return sections[0];
     } else if (sections.length === 0) {
         return null;
     } else {

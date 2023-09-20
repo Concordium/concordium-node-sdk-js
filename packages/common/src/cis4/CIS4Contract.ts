@@ -35,6 +35,8 @@ import {
     serializeCIS4UpdateRevocationKeysParam,
     Web3IdSigner,
 } from './util.js';
+import * as BlockHash from '../types/BlockHash.js';
+import * as TransactionHash from '../types/TransactionHash.js';
 
 type Views =
     | 'credentialEntry'
@@ -62,7 +64,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
      * @param {AccountAddress.Type | ContractAddress.Type} sender - Address of the sender of the transfer.
      * @param {CIS4.CredentialInfo} credInfo - the credential info to register
      * @param {HexString} [additionalData] - any additional data to include
-     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
+     * @param {BlockHash.Type} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
      *
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */
@@ -70,7 +72,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
         sender: AccountAddress.Type | ContractAddress.Type,
         credInfo: CIS4.CredentialInfo,
         additionalData: HexString = '',
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
         return this.invokeMethod(
             EntrypointName.fromStringUnchecked('registerCredential'),
@@ -88,7 +90,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
      * @param {HexString} credHolderPubKey - the public key of the credential holder (hex encoded)
      * @param {string} [reason] - the reason for the revocation
      * @param {HexString} [additionalData] - any additional data to include
-     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
+     * @param {BlockHash.Type} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
      *
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */
@@ -97,7 +99,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
         credHolderPubKey: HexString,
         reason?: string,
         additionalData: HexString = '',
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
         return this.invokeMethod(
             EntrypointName.fromStringUnchecked('revokeCredentialIssuer'),
@@ -116,7 +118,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
      * @param {bigint} nonce - the nonce of the owner inside the contract
      * @param {Date} expiry - Expiry time of the revocation message
      * @param {string} [reason] - the reason for the revocation
-     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
+     * @param {BlockHash.Type} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
      *
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */
@@ -126,7 +128,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
         nonce: bigint,
         expiry: Date,
         reason?: string,
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
         const credentialPubKey = credHolderSigner.pubKey;
         const entrypoint = EntrypointName.fromStringUnchecked(
@@ -164,7 +166,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
      * @param {bigint} nonce - the nonce of the owner inside the contract
      * @param {Date} expiry - Expiry time of the revocation message
      * @param {string} [reason] - the reason for the revocation
-     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
+     * @param {BlockHash.Type} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
      *
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */
@@ -175,7 +177,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
         nonce: bigint,
         expiry: Date,
         reason?: string,
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
         const revocationPubKey = revokerSigner.pubKey;
         const entrypoint = EntrypointName.fromStringUnchecked(
@@ -211,7 +213,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
      * @param {AccountAddress.Type | ContractAddress.Type} sender - Address of the sender of the transfer.
      * @param {HexString | HexString[]} keys - a single or list of hex encoded public keys to be used for revocation
      * @param {HexString} [additionalData] - any additional data to include
-     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
+     * @param {BlockHash.Type} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
      *
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */
@@ -219,7 +221,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
         sender: AccountAddress.Type | ContractAddress.Type,
         keys: HexString | HexString[],
         additionalData: HexString = '',
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
         const ks = Array.isArray(keys) ? keys : [keys];
         return this.invokeMethod(
@@ -237,7 +239,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
      * @param {AccountAddress.Type | ContractAddress.Type} sender - Address of the sender of the transfer.
      * @param {HexString | HexString[]} keys - a single or list of hex encoded public keys to be removed
      * @param {HexString} [additionalData] - any additional data to include
-     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
+     * @param {BlockHash.Type} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
      *
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */
@@ -245,7 +247,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
         sender: AccountAddress.Type | ContractAddress.Type,
         keys: HexString | HexString[],
         additionalData: HexString = '',
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
         const ks = Array.isArray(keys) ? keys : [keys];
         return this.invokeMethod(
@@ -320,13 +322,13 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
      * Look up an entry in the registry by the public key of its holder.
      *
      * @param {HexString} credHolderPubKey - public key identifying the credential holder
-     * @param {HexString} [blockHash] - block to perform query at.
+     * @param {BlockHash.Type} [blockHash] - block to perform query at.
      *
      * @returns {CIS4.CredentialEntry} a corresponding credential entry.
      */
     public credentialEntry(
         credHolderPubKey: HexString,
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<CIS4.CredentialEntry> {
         return this.invokeView(
             'credentialEntry',
@@ -341,13 +343,13 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
      * Look up the status of a credential by the public key of its holder.
      *
      * @param {HexString} credHolderPubKey - public key identifying the credential holder
-     * @param {HexString} [blockHash] - block to perform query at.
+     * @param {BlockHash.Type} [blockHash] - block to perform query at.
      *
      * @returns {CIS4.CredentialStatus} a corresponding credential status.
      */
     public credentialStatus(
         credHolderPubKey: HexString,
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<CIS4.CredentialStatus> {
         return this.invokeView(
             'credentialStatus',
@@ -361,12 +363,12 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
     /**
      * Get list of all revocation keys and their corresponding nonces.
      *
-     * @param {HexString} [blockHash] - block to perform query at.
+     * @param {BlockHash.Type} [blockHash] - block to perform query at.
      *
      * @returns {CIS4.RevocationKeyWithNonce[]} the revocation keys wityh corresponding nonces.
      */
     public revocationKeys(
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<CIS4.RevocationKeyWithNonce[]> {
         return this.invokeView(
             'revocationKeys',
@@ -380,12 +382,12 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
     /**
      * Get the registry metadata.
      *
-     * @param {HexString} [blockHash] - block to perform query at.
+     * @param {BlockHash.Type} [blockHash] - block to perform query at.
      *
      * @returns {CIS4.MetadataUrl} a metadata URL.
      */
     public registryMetadata(
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<CIS4.MetadataResponse> {
         return this.invokeView(
             'registryMetadata',
@@ -399,11 +401,11 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
     /**
      * Get the {@link AccountAddress} public key of the issuer.
      *
-     * @param {HexString} [blockHash] - block to perform query at.
+     * @param {BlockHash.Type} [blockHash] - block to perform query at.
      *
      * @returns {HexString} a hex encoded public key.
      */
-    public issuer(blockHash?: HexString): Promise<HexString> {
+    public issuer(blockHash?: BlockHash.Type): Promise<HexString> {
         return this.invokeView(
             'issuer',
             () => Buffer.alloc(0),
@@ -444,14 +446,14 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
      * @param {CIS4.CredentialInfo} credInfo - the credential info to register
      * @param {HexString} [additionalData] - any additional data to include
      *
-     * @returns {HexString} The hash of the submitted transaction
+     * @returns {TransactionHash.Type} The hash of the submitted transaction
      */
     public registerCredential(
         signer: AccountSigner,
         metadata: ContractTransactionMetadata,
         credInfo: CIS4.CredentialInfo,
         additionalData: HexString = ''
-    ): Promise<HexString> {
+    ): Promise<TransactionHash.Type> {
         const transaction = this.createRegisterCredential(
             metadata,
             credInfo,
@@ -494,7 +496,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
      * @param {string} [reason] - the reason for the revocation
      * @param {HexString} [additionalData] - any additional data to include
      *
-     * @returns {HexString} The hash of the submitted transaction
+     * @returns {TransactionHash.Type} The hash of the submitted transaction
      */
     public revokeCredentialAsIssuer(
         signer: AccountSigner,
@@ -502,7 +504,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         credHolderPubKey: HexString,
         reason?: string,
         additionalData: HexString = ''
-    ): Promise<HexString> {
+    ): Promise<TransactionHash.Type> {
         const transaction = this.createRevokeCredentialAsIssuer(
             metadata,
             credHolderPubKey,
@@ -573,7 +575,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
      * @param {bigint} nonce - the nonce of the owner inside the contract
      * @param {string} [reason] - the reason for the revocation
      *
-     * @returns {HexString} The hash of the submitted transaction
+     * @returns {TransactionHash.Type} The hash of the submitted transaction
      */
     public async revokeCredentialAsHolder(
         signer: AccountSigner,
@@ -581,7 +583,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         credHolderSigner: Web3IdSigner,
         nonce: bigint,
         reason?: string
-    ): Promise<HexString> {
+    ): Promise<TransactionHash.Type> {
         const transaction = await this.createRevokeCredentialAsHolder(
             metadata,
             credHolderSigner,
@@ -662,7 +664,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
      * @param {bigint} nonce - the nonce of the owner inside the contract
      * @param {string} [reason] - the reason for the revocation
      *
-     * @returns {HexString} The hash of the submitted transaction
+     * @returns {TransactionHash.Type} The hash of the submitted transaction
      */
     public async revokeCredentialAsOther(
         signer: AccountSigner,
@@ -671,7 +673,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         credentialPubKey: HexString,
         nonce: bigint,
         reason?: string
-    ): Promise<HexString> {
+    ): Promise<TransactionHash.Type> {
         const transaction = await this.createRevokeCredentialAsOther(
             metadata,
             revokerSigner,
@@ -715,14 +717,14 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
      * @param {HexString | HexString[]} keys - a single or list of hex encoded public keys to be used for revocation
      * @param {HexString} [additionalData] - any additional data to include
      *
-     * @returns {HexString} The hash of the submitted transaction
+     * @returns {TransactionHash.Type} The hash of the submitted transaction
      */
     public registerRevocationKeys(
         signer: AccountSigner,
         metadata: ContractTransactionMetadata,
         keys: HexString | HexString[],
         additionalData: HexString = ''
-    ): Promise<HexString> {
+    ): Promise<TransactionHash.Type> {
         const transaction = this.createRegisterRevocationKeys(
             metadata,
             keys,
@@ -763,14 +765,14 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
      * @param {HexString | HexString[]} keys - a single or list of hex encoded public keys to be removed
      * @param {HexString} [additionalData] - any additional data to include
      *
-     * @returns {HexString} The hash of the submitted transaction
+     * @returns {TransactionHash.Type} The hash of the submitted transaction
      */
     public removeRevocationKeys(
         signer: AccountSigner,
         metadata: ContractTransactionMetadata,
         keys: HexString | HexString[],
         additionalData: HexString = ''
-    ): Promise<HexString> {
+    ): Promise<TransactionHash.Type> {
         const transaction = this.createRemoveRevocationKeys(
             metadata,
             keys,

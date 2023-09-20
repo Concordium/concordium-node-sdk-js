@@ -26,13 +26,13 @@ import {
     HexString,
     TransactionSummaryType,
     TransactionStatusEnum,
-    ContractAddress,
     Base58String,
     AccountTransactionType,
 } from '../types.js';
 import { RejectReason } from './rejectReason.js';
 import { isDefined } from '../util.js';
 import { isEqualContractAddress } from '../contractHelpers.js';
+import type * as ContractAddress from './ContractAddress.js';
 
 export interface BaseBlockItemSummary {
     index: bigint;
@@ -419,7 +419,7 @@ export function getReceiverAccount(
  */
 export function affectedContracts<
     T extends InitContractSummary | UpdateContractSummary
->(summary: T): ContractAddress[];
+>(summary: T): ContractAddress.Type[];
 export function affectedContracts(
     summary: Exclude<
         AccountTransactionSummary,
@@ -429,10 +429,12 @@ export function affectedContracts(
 export function affectedContracts(
     summary: AccountCreationSummary | UpdateSummary
 ): never[];
-export function affectedContracts(summary: BlockItemSummary): ContractAddress[];
 export function affectedContracts(
     summary: BlockItemSummary
-): ContractAddress[] {
+): ContractAddress.Type[];
+export function affectedContracts(
+    summary: BlockItemSummary
+): ContractAddress.Type[] {
     if (summary.type !== TransactionSummaryType.AccountTransaction) {
         return [];
     }
@@ -443,7 +445,7 @@ export function affectedContracts(
         }
         case TransactionKindString.Update: {
             return summary.events.reduce(
-                (addresses: ContractAddress[], event) => {
+                (addresses: ContractAddress.Type[], event) => {
                     if (
                         event.tag !== TransactionEventTag.Updated ||
                         addresses.some(isEqualContractAddress(event.address))
@@ -517,7 +519,7 @@ export function affectedAccounts(summary: BlockItemSummary): Base58String[] {
 }
 
 export type SummaryContractUpdateLog = {
-    address: ContractAddress;
+    address: ContractAddress.Type;
     events: HexString[];
 };
 

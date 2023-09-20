@@ -3,7 +3,7 @@ import { generateBakerKeys } from '../src/wasm/accountHelpers.js';
 
 test('generate baker keys', () => {
     const accountAddress = '3eP94feEdmhYiPC1333F9VoV31KGMswonuHk5tqmZrzf761zK5';
-    const keys = generateBakerKeys(new AccountAddress(accountAddress));
+    const keys = generateBakerKeys(AccountAddress.fromBase58(accountAddress));
     expect(typeof keys.signatureVerifyKey).toBe('string');
     expect(typeof keys.electionVerifyKey).toBe('string');
     expect(typeof keys.aggregationVerifyKey).toBe('string');

@@ -13,9 +13,9 @@ import { isDefined } from './util.js';
 
 export function serializeMap<K extends string | number | symbol, T>(
     map: Record<K, T>,
-    encodeSize: (size: number) => Buffer,
-    encodeKey: (k: string) => Buffer,
-    encodeValue: (t: T) => Buffer
+    encodeSize: (size: number) => Uint8Array,
+    encodeKey: (k: string) => Uint8Array,
+    encodeValue: (t: T) => Uint8Array
 ): Buffer {
     const keys = Object.keys(map);
     const buffers = [encodeSize(keys.length)];
@@ -198,7 +198,7 @@ export function encodeDataBlob(blob: DataBlob): Buffer {
  * @returns Buffer containing the 32 bit length of buffer and buffer.
  */
 export function packBufferWithWord32Length(
-    buffer: Buffer,
+    buffer: Uint8Array,
     useLittleEndian = false
 ): Buffer {
     const length = encodeWord32(buffer.length, useLittleEndian);
@@ -211,7 +211,7 @@ export function packBufferWithWord32Length(
  * @returns Buffer containing the length of the buffer of 16 bit and buffer.
  */
 export function packBufferWithWord16Length(
-    buffer: Buffer,
+    buffer: Uint8Array,
     useLittleEndian = false
 ): Buffer {
     const length = encodeWord16(buffer.length, useLittleEndian);
@@ -223,7 +223,7 @@ export function packBufferWithWord16Length(
  * @param buffer containing the buffer
  * @returns Buffer containing the length of the buffer of 8 bit and buffer.
  */
-export function packBufferWithWord8Length(buffer: Buffer): Buffer {
+export function packBufferWithWord8Length(buffer: Uint8Array): Buffer {
     const length = encodeWord8(buffer.length);
     return Buffer.concat([length, buffer]);
 }

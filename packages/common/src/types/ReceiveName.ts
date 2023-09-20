@@ -1,6 +1,7 @@
 import { isAsciiAlphaNumericPunctuation } from '../contractHelpers.js';
 import * as ContractName from './ContractName.js';
 import * as EntrypointName from './EntrypointName.js';
+import type * as Proto from '../grpc-api/v2/concordium/types.js';
 
 /**
  * Represents a receive-function in a smart contract module.
@@ -128,4 +129,24 @@ export function toSchemaValue(receiveName: ReceiveName): SchemaValue {
     const contract = ContractName.toString(toContractName(receiveName));
     const func = EntrypointName.toString(toEntrypointName(receiveName));
     return { contract, func };
+}
+
+/**
+ * Convert a smart contract receive name from its protobuf encoding.
+ * @param {Proto.ReceiveName} receiveName The protobuf encoding.
+ * @returns {ReceiveName}
+ */
+export function fromProto(receiveName: Proto.ReceiveName): ReceiveName {
+    return fromStringUnchecked(receiveName.value);
+}
+
+/**
+ * Convert a smart contract receive name into its protobuf encoding.
+ * @param {ReceiveName} receiveName The receive name.
+ * @returns {Proto.ReceiveName} The protobuf encoding.
+ */
+export function toProto(receiveName: ReceiveName): Proto.ReceiveName {
+    return {
+        value: receiveName.value,
+    };
 }

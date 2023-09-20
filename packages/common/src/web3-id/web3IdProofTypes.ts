@@ -5,7 +5,8 @@ import {
     GenericNonMembershipStatement,
     GenericRangeStatement,
 } from '../commonProofTypes.js';
-import { ContractAddress, CryptographicParameters } from '../types.js';
+import type { CryptographicParameters } from '../types.js';
+import type * as ContractAddress from '../types/ContractAddress.js';
 
 export type TimestampAttribute = {
     type: 'date-time';
@@ -187,7 +188,7 @@ export type AtomicStatementV2 = GenericAtomicStatement<string, AttributeType>;
 
 export type VerifiableCredentialQualifier = {
     type: 'sci';
-    issuers: ContractAddress[];
+    issuers: ContractAddress.Type[];
 };
 
 type IdentityProviderIndex = number;

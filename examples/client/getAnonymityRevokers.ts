@@ -1,5 +1,9 @@
 import { parseEndpoint } from '../shared/util.js';
-import { ArInfo, createConcordiumClient } from '@concordium/node-sdk';
+import {
+    ArInfo,
+    BlockHash,
+    createConcordiumClient,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -48,9 +52,11 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const ars: AsyncIterable<ArInfo> = client.getAnonymityRevokers(
-        cli.flags.block
-    );
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
+    const ars: AsyncIterable<ArInfo> = client.getAnonymityRevokers(blockHash);
 
     for await (const ar of ars) {
         console.log('Anonymity Revoker ID:', ar.arIdentity);

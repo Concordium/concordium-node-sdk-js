@@ -1,5 +1,6 @@
 import { parseEndpoint } from '../shared/util.js';
 import {
+    BlockHash,
     ContractAddress,
     createConcordiumClient,
     InstanceStateKVPair,
@@ -62,9 +63,13 @@ const client = createConcordiumClient(
 (async () => {
     // #region documentation-snippet
     const contractAddress = ContractAddress.create(cli.flags.contract);
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
     const states: AsyncIterable<InstanceStateKVPair> = client.getInstanceState(
         contractAddress,
-        cli.flags.block
+        blockHash
     );
     // #endregion documentation-snippet
 

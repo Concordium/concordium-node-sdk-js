@@ -1,5 +1,6 @@
 import { parseEndpoint } from '../shared/util.js';
 import {
+    BlockHash,
     createConcordiumClient,
     PassiveDelegationStatus,
 } from '@concordium/node-sdk';
@@ -49,8 +50,12 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
     const passiveDelegationInfo: PassiveDelegationStatus =
-        await client.getPassiveDelegationInfo(cli.flags.block);
+        await client.getPassiveDelegationInfo(blockHash);
 
     console.log(
         'CCD provided by the delegators to the pool:',

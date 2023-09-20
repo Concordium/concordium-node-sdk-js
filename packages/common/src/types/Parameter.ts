@@ -2,6 +2,7 @@ import { checkParameterLength } from '../contractHelpers.js';
 import { SchemaType, serializeSchemaType } from '../schemaTypes.js';
 import { serializeTypeValue } from '../schema.js';
 import type { Base64String, HexString } from '../types.js';
+import type * as Proto from '../grpc-api/v2/concordium/types.js';
 
 /** Parameter for a smart contract entrypoint. */
 class Parameter {
@@ -9,7 +10,7 @@ class Parameter {
     private __nominal = true;
     constructor(
         /** Internal buffer of bytes representing the parameter. */
-        public readonly buffer: ArrayBuffer
+        public readonly buffer: Uint8Array
     ) {}
 }
 
@@ -21,7 +22,7 @@ export type Type = Parameter;
  * @returns {Parameter} An empty parameter.
  */
 export function empty(): Parameter {
-    return new Parameter(new ArrayBuffer(0));
+    return fromBufferUnchecked(new ArrayBuffer(0));
 }
 
 /**
@@ -33,7 +34,7 @@ export function empty(): Parameter {
  */
 export function fromBuffer(buffer: ArrayBuffer): Parameter {
     checkParameterLength(buffer);
-    return new Parameter(buffer);
+    return fromBufferUnchecked(buffer);
 }
 
 /**
@@ -43,7 +44,7 @@ export function fromBuffer(buffer: ArrayBuffer): Parameter {
  * @returns {Parameter}
  */
 export function fromBufferUnchecked(buffer: ArrayBuffer): Parameter {
-    return new Parameter(buffer);
+    return new Parameter(new Uint8Array(buffer));
 }
 
 /**
@@ -64,6 +65,15 @@ export function fromHexString(hex: HexString): Parameter {
  */
 export function toHexString(parameter: Parameter): HexString {
     return Buffer.from(parameter.buffer).toString('hex');
+}
+
+/**
+ * Convert a parameter into a buffer.
+ * @param {Parameter} parameter The parameter to get the buffer from.
+ * @returns {Uint8Array}
+ */
+export function toBuffer(parameter: Parameter): Uint8Array {
+    return parameter.buffer;
 }
 
 /**
@@ -92,4 +102,14 @@ export function fromBase64SchemaType(
 ): Parameter {
     const schemaBytes = Buffer.from(schemaBase64, 'base64');
     return fromBuffer(serializeTypeValue(value, schemaBytes));
+}
+
+export function fromProto(parameter: Proto.Parameter): Parameter {
+    return fromBuffer(parameter.value);
+}
+
+export function toProto(parameter: Parameter): Proto.Parameter {
+    return {
+        value: parameter.buffer,
+    };
 }

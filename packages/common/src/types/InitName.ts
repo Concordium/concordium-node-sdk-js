@@ -1,5 +1,6 @@
 import * as ContractName from './ContractName.js';
 import { isAsciiAlphaNumericPunctuation } from '../contractHelpers.js';
+import type * as Proto from '../grpc-api/v2/concordium/types.js';
 
 /** The name of an init-function for a smart contract. Note: This is of the form 'init_<contractName>'. */
 class InitName {
@@ -64,4 +65,24 @@ export function fromContractName(contractName: ContractName.Type): InitName {
  */
 export function toString(initName: InitName): string {
     return initName.value;
+}
+
+/**
+ * Convert a smart contract init name from its protobuf encoding.
+ * @param {Proto.InitName} initName The protobuf encoding.
+ * @returns {InitName}
+ */
+export function fromProto(initName: Proto.InitName): InitName {
+    return fromStringUnchecked(initName.value);
+}
+
+/**
+ * Convert a smart contract init name into its protobuf encoding.
+ * @param {InitName} initName The init name.
+ * @returns {Proto.InitName} The protobuf encoding.
+ */
+export function toProto(initName: InitName): Proto.InitName {
+    return {
+        value: initName.value,
+    };
 }

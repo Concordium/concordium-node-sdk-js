@@ -3,11 +3,16 @@
  */
 
 import * as AccountAddress from './types/AccountAddress.js';
+import * as ContractAddress from './types/ContractAddress.js';
+import type * as BlockHash from './types/BlockHash.js';
 import * as CredentialRegistrationId from './types/CredentialRegistrationId.js';
+import * as Parameter from './types/Parameter.js';
+import type * as InitName from './types/InitName.js';
+import type * as ContractName from './types/ContractName.js';
+import type * as ReceiveName from './types/ReceiveName.js';
 import { CcdAmount } from './types/ccdAmount.js';
 import { DataBlob } from './types/DataBlob.js';
 import { TransactionExpiry } from './types/transactionExpiry.js';
-import { Buffer } from 'buffer/index.js';
 import { ModuleReference } from './types/moduleReference.js';
 import { RejectReason, RejectReasonV1 } from './types/rejectReason.js';
 import {
@@ -133,10 +138,10 @@ export interface AddressAccount {
     address: Base58String;
 }
 
-export interface ContractAddress {
-    index: bigint;
-    subindex: bigint;
-}
+// export interface ContractAddress {
+//     index: bigint;
+//     subindex: bigint;
+// }
 
 export type AccountIdentifierInput =
     | AccountAddress.Type
@@ -146,7 +151,7 @@ export type AccountIdentifierInput =
 export type Address =
     | {
           type: 'AddressContract';
-          address: ContractAddress;
+          address: ContractAddress.Type;
       }
     | AddressAccount;
 
@@ -756,13 +761,13 @@ export interface BlockInfoCommon {
      * Hash of parent block. For the initial genesis block (i.e. not re-genesis)
      * this will be the hash of the block itself
      */
-    blockParent: HexString;
+    blockParent: BlockHash.Type;
     /** Hash of block */
-    blockHash: HexString;
+    blockHash: BlockHash.Type;
     /** Hash of block state */
     blockStateHash: HexString;
     /** Hash of last finalized block when this block was baked */
-    blockLastFinalized: HexString;
+    blockLastFinalized: BlockHash.Type;
 
     /** The absolute height of this (i.e. relative to the initial genesis block) */
     blockHeight: bigint;
@@ -815,7 +820,7 @@ export interface BlockInfoV1 extends BlockInfoCommon {
 export type BlockInfo = BlockInfoV0 | BlockInfoV1;
 
 export interface CommonBlockInfo {
-    hash: HexString;
+    hash: BlockHash.Type;
     height: bigint;
 }
 
@@ -836,13 +841,13 @@ export type BlocksAtHeightRequest =
 /** Common properties for  consensus status types used across all protocol versions */
 export interface ConsensusStatusCommon {
     /** Hash of the current best block */
-    bestBlock: HexString;
+    bestBlock: BlockHash.Type;
     /** Hash of the initial genesis block */
-    genesisBlock: HexString;
+    genesisBlock: BlockHash.Type;
     /** Hash of the genesis block of the current era, i.e. since the last protocol update. */
-    currentEraGenesisBlock: HexString;
+    currentEraGenesisBlock: BlockHash.Type;
     /** Hash of the last finalized block */
-    lastFinalizedBlock: HexString;
+    lastFinalizedBlock: BlockHash.Type;
 
     /** Current epoch duration, in milliseconds */
     epochDuration: Duration;
@@ -1262,7 +1267,7 @@ type PoolStatusWrapper<T extends keyof typeof PoolStatusType, S> = S & {
 
 export interface BakerPoolStatusDetails {
     bakerId: BakerId;
-    bakerAddress: Base58String;
+    bakerAddress: AccountAddress.Type;
     bakerEquityCapital: Amount;
     delegatedCapital: Amount;
     delegatedCapitalCap: Amount;
@@ -1346,7 +1351,7 @@ export type AccountCredential = Versioned<
 >;
 
 interface AccountInfoCommon {
-    accountAddress: Base58String;
+    accountAddress: AccountAddress.Type;
     accountNonce: bigint;
     accountAmount: bigint;
     accountIndex: bigint;
@@ -1481,7 +1486,7 @@ export interface BlockFinalizationSummary_Record {
 }
 
 export interface FinalizationSummary {
-    block: HexString;
+    block: BlockHash.Type;
     index: bigint;
     delay: bigint;
     finalizers: FinalizationSummaryParty[];
@@ -1539,12 +1544,12 @@ export interface DeployModulePayload {
     version?: number;
 
     /** Wasm module to be deployed */
-    source: Buffer;
+    source: Uint8Array;
 }
 
 export interface VersionedModuleSource {
     version: 0 | 1;
-    source: Buffer;
+    source: Uint8Array;
 }
 
 export interface InitContractPayload {
@@ -1555,10 +1560,10 @@ export interface InitContractPayload {
     moduleRef: ModuleReference;
 
     /** Name of the contract */
-    initName: string;
+    initName: ContractName.Type;
 
     /** Parameters for the init function */
-    param: Buffer;
+    param: Parameter.Type;
 
     /** The amount of energy that can be used for contract execution.
     The base energy amount for transaction verification will be added to this cost.*/
@@ -1570,13 +1575,13 @@ export interface UpdateContractPayload {
     amount: CcdAmount;
 
     /** Address of contract instance consisting of an index and a subindex */
-    address: ContractAddress;
+    address: ContractAddress.Type;
 
     /** Name of receive function including <contractName>. prefix */
-    receiveName: string;
+    receiveName: ReceiveName.Type;
 
     /** Parameters for the update function */
-    message: Buffer;
+    message: Parameter.Type;
 
     /** The amount of energy that can be used for contract execution.
     The base energy amount for transaction verification will be added to this cost.*/
@@ -1782,14 +1787,14 @@ export interface InstanceInfoCommon {
     /** Account used to instantiate this smart contract instance. */
     owner: AccountAddress.Type;
     /** List of receive functions currently exposed by this smart contract. These are of the form '<contractName>.<entrypointName>'. */
-    methods: string[];
+    methods: ReceiveName.Type[];
     /** Name of the smart contract. This is of the form 'init_<contractName>'. */
-    name: string;
+    name: InitName.Type;
 }
 
 export interface InstanceInfoV0 extends InstanceInfoCommon {
     version: 0;
-    model: Buffer;
+    model: ArrayBuffer;
 }
 
 export interface InstanceInfoV1 extends InstanceInfoCommon {
@@ -1835,11 +1840,11 @@ export interface InstanceStateKVPair {
 }
 
 export interface ContractContext {
-    invoker?: ContractAddress | AccountAddress.Type;
-    contract: ContractAddress;
+    invoker?: ContractAddress.Type | AccountAddress.Type;
+    contract: ContractAddress.Type;
     amount?: CcdAmount;
     method: string;
-    parameter?: Buffer;
+    parameter?: Parameter.Type;
     energy?: bigint;
 }
 
@@ -1867,7 +1872,7 @@ export type Invoker =
  * @deprecated This is helper intented for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export function buildInvoker(
-    invoker?: AccountAddress.Type | ContractAddress
+    invoker?: AccountAddress.Type | ContractAddress.Type
 ): Invoker {
     if (!invoker) {
         return null;
@@ -1876,13 +1881,12 @@ export function buildInvoker(
             type: 'AddressAccount',
             address: AccountAddress.toBase58(invoker),
         };
-    } else if ((invoker as ContractAddress).index !== undefined) {
-        const invokerContract = invoker as ContractAddress;
+    } else if (ContractAddress.isContractAddress(invoker)) {
         return {
             type: 'AddressContract',
             address: {
-                subindex: invokerContract.subindex.toString(),
-                index: invokerContract.index.toString(),
+                subindex: invoker.subindex.toString(),
+                index: invoker.index.toString(),
             },
         };
     } else {

@@ -1,5 +1,6 @@
 import { parseEndpoint } from '../shared/util.js';
 import {
+    BlockHash,
     createConcordiumClient,
     CryptographicParameters,
 } from '@concordium/node-sdk';
@@ -48,8 +49,12 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
     const parameters: CryptographicParameters =
-        await client.getCryptographicParameters(cli.flags.block);
+        await client.getCryptographicParameters(blockHash);
     // #endregion documentation-snippet
 
     console.log('Genesis string:', parameters.genesisString);

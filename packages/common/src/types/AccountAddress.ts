@@ -1,5 +1,6 @@
 import bs58check from 'bs58check';
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
+import type * as Proto from '../grpc-api/v2/concordium/types.js';
 
 /**
  * Representation of an account address, which enforces that it:
@@ -156,4 +157,16 @@ export function getAlias(
     const aliasBytes = Buffer.alloc(aliasBytesLength);
     aliasBytes.writeUIntBE(counter, 0, aliasBytesLength);
     return fromBuffer(Buffer.concat([commonBytes, aliasBytes]));
+}
+
+export function fromProto(
+    accountAddress: Proto.AccountAddress
+): AccountAddress {
+    return fromBuffer(accountAddress.value);
+}
+
+export function toProto(accountAddress: AccountAddress): Proto.AccountAddress {
+    return {
+        value: accountAddress.decodedAddress,
+    };
 }

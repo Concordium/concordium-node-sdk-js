@@ -1,5 +1,9 @@
 import { parseEndpoint } from '../shared/util.js';
-import { BlockInfo, createConcordiumClient } from '@concordium/node-sdk';
+import {
+    BlockHash,
+    BlockInfo,
+    createConcordiumClient,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -45,7 +49,11 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const blockInfo: BlockInfo = await client.getBlockInfo(cli.flags.block);
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
+    const blockInfo: BlockInfo = await client.getBlockInfo(blockHash);
     // #endregion documentation-snippet
 
     console.dir(blockInfo, { depth: null, colors: true });

@@ -1,13 +1,15 @@
 import { parseEndpoint } from '../shared/util.js';
 import {
     AccountAddress,
+    BlockHash,
     CcdAmount,
+    ContractAddress,
     ContractContext,
     ContractTraceEvent,
+    Parameter,
     createConcordiumClient,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
-import { Buffer } from 'buffer/index.js';
 
 import meow from 'meow';
 
@@ -98,14 +100,11 @@ const client = createConcordiumClient(
         ? new CcdAmount(BigInt(cli.flags.amount))
         : undefined;
     const parameter = cli.flags.parameter
-        ? Buffer.from(cli.flags.parameter, 'hex')
+        ? Parameter.fromHexString(cli.flags.parameter)
         : undefined;
     const energy = cli.flags.energy ? BigInt(cli.flags.energy) : undefined;
 
-    const contract = {
-        index: BigInt(cli.flags.contract),
-        subindex: 0n,
-    };
+    const contract = ContractAddress.create(cli.flags.contract);
     const context: ContractContext = {
         // Required
         method: cli.flags.receive,
@@ -116,8 +115,12 @@ const client = createConcordiumClient(
         parameter,
         energy,
     };
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
 
-    const result = await client.invokeContract(context, cli.flags.block);
+    const result = await client.invokeContract(context, blockHash);
 
     // We can inspect the result
     if (result.tag === 'failure') {

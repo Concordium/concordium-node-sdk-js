@@ -8,6 +8,10 @@ import { ModuleReference } from '../types/moduleReference.js';
 import { CcdAmount } from '../types/ccdAmount.js';
 import { Base58String } from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';
+import * as BlockHash from '../types/BlockHash.js';
+import * as ReceiveName from '../types/ReceiveName.js';
+import * as InitName from '../types/InitName.js';
+import * as ContractAddress from '../types/ContractAddress.js';
 
 function unwrapToHex(bytes: Uint8Array | undefined): v1.HexString {
     return Buffer.from(unwrap(bytes)).toString('hex');
@@ -366,7 +370,7 @@ export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
         schedule: unwrap(acc.schedule?.schedules).map(trRelease),
     };
     const accInfoCommon: v1.AccountInfoSimple = {
-        accountAddress: unwrapToBase58(acc.address),
+        accountAddress: AccountAddress.fromProto(unwrap(acc.address)),
         accountNonce: unwrap(acc.sequenceNumber?.value),
         accountAmount: unwrap(acc.amount?.value),
         accountIndex: unwrap(acc.index?.value),
@@ -623,7 +627,7 @@ export function bakerPoolInfo(info: v2.PoolInfoResponse): v1.BakerPoolStatus {
     return {
         poolType: v1.PoolStatusType.BakerPool,
         bakerId: unwrap(info.baker?.value),
-        bakerAddress: unwrapToBase58(info.address),
+        bakerAddress: AccountAddress.fromProto(unwrap(info.address)),
         bakerEquityCapital: unwrap(info.equityCapital?.value),
         delegatedCapital: unwrap(info.delegatedCapital?.value),
         delegatedCapitalCap: unwrap(info.delegatedCapitalCap?.value),
@@ -698,10 +702,12 @@ export function tokenomicsInfo(info: v2.TokenomicsInfo): v1.RewardStatus {
 
 export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
     const common: v1.ConsensusStatusCommon = {
-        bestBlock: unwrapValToHex(ci.bestBlock),
-        genesisBlock: unwrapValToHex(ci.genesisBlock),
-        currentEraGenesisBlock: unwrapValToHex(ci.currentEraGenesisBlock),
-        lastFinalizedBlock: unwrapValToHex(ci.lastFinalizedBlock),
+        bestBlock: BlockHash.fromProto(unwrap(ci.bestBlock)),
+        genesisBlock: BlockHash.fromProto(unwrap(ci.genesisBlock)),
+        currentEraGenesisBlock: BlockHash.fromProto(
+            unwrap(ci.currentEraGenesisBlock)
+        ),
+        lastFinalizedBlock: BlockHash.fromProto(unwrap(ci.lastFinalizedBlock)),
         epochDuration: unwrap(ci.epochDuration?.value),
         bestBlockHeight: unwrap(ci.bestBlockHeight?.value),
         lastFinalizedBlockHeight: unwrap(ci.lastFinalizedBlockHeight?.value),
@@ -788,7 +794,7 @@ function trAddress(
 
     if (accountAddress.value) {
         return trAccountAddress(accountAddress);
-    } else if (contractAddress.index) {
+    } else if (ContractAddress.isContractAddress(contractAddress)) {
         return {
             type: 'AddressContract',
             address: contractAddress,
@@ -798,7 +804,7 @@ function trAddress(
     } else if (address.type.oneofKind === 'contract') {
         return {
             type: 'AddressContract',
-            address: address.type.contract,
+            address: ContractAddress.fromProto(address.type.contract),
         };
     } else {
         throw Error('Invalid address encountered!');
@@ -814,7 +820,9 @@ function trContractTraceElement(
             return {
                 tag: v1.TransactionEventTag.Updated,
                 contractVersion: element.updated.contractVersion,
-                address: unwrap(element.updated.address),
+                address: ContractAddress.fromProto(
+                    unwrap(element.updated.address)
+                ),
                 instigator: trAddress(element.updated.instigator),
                 amount: unwrap(element.updated.amount?.value),
                 message: unwrapValToHex(element.updated.parameter),
@@ -831,19 +839,25 @@ function trContractTraceElement(
         case 'interrupted':
             return {
                 tag: v1.TransactionEventTag.Interrupted,
-                address: unwrap(element.interrupted.address),
+                address: ContractAddress.fromProto(
+                    unwrap(element.interrupted.address)
+                ),
                 events: element.interrupted.events.map(unwrapValToHex),
             };
         case 'resumed':
             return {
                 tag: v1.TransactionEventTag.Resumed,
-                address: unwrap(element.resumed.address),
+                address: ContractAddress.fromProto(
+                    unwrap(element.resumed.address)
+                ),
                 success: unwrap(element.resumed.success),
             };
         case 'upgraded':
             return {
                 tag: v1.TransactionEventTag.Upgraded,
-                address: unwrap(element.upgraded.address),
+                address: ContractAddress.fromProto(
+                    unwrap(element.upgraded.address)
+                ),
                 from: unwrapValToHex(element.upgraded.from),
                 to: unwrapValToHex(element.upgraded.to),
             };
@@ -1168,7 +1182,9 @@ function trRejectReason(
         case 'invalidContractAddress':
             return {
                 tag: Tag.InvalidContractAddress,
-                contents: reason.invalidContractAddress,
+                contents: ContractAddress.fromProto(
+                    reason.invalidContractAddress
+                ),
             };
         case 'amountTooLarge':
             return {
@@ -1186,7 +1202,9 @@ function trRejectReason(
         case 'rejectedReceive':
             return {
                 tag: Tag.RejectedReceive,
-                contractAddress: unwrap(reason.rejectedReceive.contractAddress),
+                contractAddress: ContractAddress.fromProto(
+                    unwrap(reason.rejectedReceive.contractAddress)
+                ),
                 receiveName: unwrap(reason.rejectedReceive.receiveName?.value),
                 rejectReason: unwrap(reason.rejectedReceive.rejectReason),
                 parameter: unwrapValToHex(reason.rejectedReceive.parameter),
@@ -1859,7 +1877,9 @@ function trAccountTransactionSummary(
             const contractInit = effect.contractInitialized;
             const event: v1.ContractInitializedEvent = {
                 tag: v1.TransactionEventTag.ContractInitialized,
-                address: unwrap(contractInit.address),
+                address: ContractAddress.fromProto(
+                    unwrap(contractInit.address)
+                ),
                 amount: unwrap(contractInit.amount?.value),
                 initName: unwrap(contractInit.initName?.value),
                 events: unwrap(contractInit.events.map(unwrapValToHex)),
@@ -2229,8 +2249,8 @@ function trInstanceInfoCommon(
             Buffer.from(unwrap(info.sourceModule?.value))
         ),
         owner: AccountAddress.fromBuffer(unwrap(info.owner?.value)),
-        methods: info.methods.map((name) => name.value),
-        name: unwrap(info.name?.value),
+        methods: info.methods.map(ReceiveName.fromProto),
+        name: InitName.fromProto(unwrap(info.name)),
     };
 }
 
@@ -2259,7 +2279,7 @@ export function commonBlockInfo(
     blockInfo: v2.ArrivedBlockInfo | v2.FinalizedBlockInfo
 ): v1.CommonBlockInfo {
     return {
-        hash: unwrapValToHex(blockInfo.hash),
+        hash: BlockHash.fromProto(unwrap(blockInfo.hash)),
         height: unwrap(blockInfo.height?.value),
     };
 }
@@ -2292,16 +2312,18 @@ export function arInfo(ar: v2.ArInfo): v1.ArInfo {
 
 export function blocksAtHeightResponse(
     blocks: v2.BlocksAtHeightResponse
-): v1.HexString[] {
-    return blocks.blocks.map(unwrapValToHex);
+): BlockHash.Type[] {
+    return blocks.blocks.map(BlockHash.fromProto);
 }
 
 export function blockInfo(blockInfo: v2.BlockInfo): v1.BlockInfo {
     const common: v1.BlockInfoCommon = {
-        blockParent: unwrapValToHex(blockInfo.parentBlock),
-        blockHash: unwrapValToHex(blockInfo.hash),
+        blockParent: BlockHash.fromProto(unwrap(blockInfo.parentBlock)),
+        blockHash: BlockHash.fromProto(unwrap(blockInfo.hash)),
         blockStateHash: unwrapValToHex(blockInfo.stateHash),
-        blockLastFinalized: unwrapValToHex(blockInfo.lastFinalizedBlock),
+        blockLastFinalized: BlockHash.fromProto(
+            unwrap(blockInfo.lastFinalizedBlock)
+        ),
         blockHeight: unwrap(blockInfo.height?.value),
         blockBaker: blockInfo.baker?.value,
         blockArriveTime: trTimestamp(blockInfo.arriveTime),
@@ -2711,7 +2733,7 @@ function trFinalizationSummary(
     summary: v2.FinalizationSummary
 ): v1.FinalizationSummary {
     return {
-        block: unwrapValToHex(summary.block),
+        block: BlockHash.fromProto(unwrap(summary.block)),
         index: unwrap(summary.index?.value),
         delay: unwrap(summary.delay?.value),
         finalizers: summary.finalizers.map(trFinalizationSummaryParty),

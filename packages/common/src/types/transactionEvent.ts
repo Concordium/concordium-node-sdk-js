@@ -1,6 +1,5 @@
 import type {
     OpenStatusText,
-    ContractAddress,
     ReleaseSchedule,
     ContractVersion,
     Address,
@@ -13,6 +12,7 @@ import type {
     DelegatorId,
 } from '../types.js';
 import type { UpdateInstructionPayload } from './chainUpdate.js';
+import type * as ContractAddress from './ContractAddress.js';
 
 export enum TransactionEventTag {
     ModuleDeployed = 'ModuleDeployed',
@@ -92,19 +92,19 @@ export type TransactionEvent =
 
 export interface InterruptedEvent {
     tag: TransactionEventTag.Interrupted;
-    address: ContractAddress;
+    address: ContractAddress.Type;
     events: HexString[];
 }
 
 export interface ResumedEvent {
     tag: TransactionEventTag.Resumed;
-    address: ContractAddress;
+    address: ContractAddress.Type;
     success: boolean;
 }
 
 export interface UpdatedEvent {
     tag: TransactionEventTag.Updated;
-    address: ContractAddress;
+    address: ContractAddress.Type;
     instigator: Address;
     amount: Amount;
     contractVersion: ContractVersion;
@@ -115,7 +115,7 @@ export interface UpdatedEvent {
 
 export interface UpgradedEvent {
     tag: TransactionEventTag.Upgraded;
-    address: ContractAddress;
+    address: ContractAddress.Type;
     from: ModuleRef;
     to: ModuleRef;
 }
@@ -127,7 +127,7 @@ export interface DataRegisteredEvent {
 
 export interface ContractInitializedEvent {
     tag: TransactionEventTag.ContractInitialized;
-    address: ContractAddress;
+    address: ContractAddress.Type;
     amount: Amount;
     initName: string;
     events: HexString[];

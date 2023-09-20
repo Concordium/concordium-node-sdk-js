@@ -1,3 +1,5 @@
+import type * as Proto from '../grpc-api/v2/concordium/types.js';
+
 /** Address of a smart contract instance. */
 class ContractAddress {
     /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
@@ -68,4 +70,19 @@ export type SchemaValue = {
  */
 export function toSchemaValue(contractAddress: ContractAddress): SchemaValue {
     return { index: contractAddress.index, subindex: contractAddress.subindex };
+}
+
+export function fromProto(
+    contractAddress: Proto.ContractAddress
+): ContractAddress {
+    return create(contractAddress.index, contractAddress.subindex);
+}
+
+export function toProto(
+    contractAddress: ContractAddress
+): Proto.ContractAddress {
+    return {
+        index: contractAddress.index,
+        subindex: contractAddress.subindex,
+    };
 }

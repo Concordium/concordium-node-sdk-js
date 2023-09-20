@@ -9,7 +9,7 @@ import type { RpcError, RpcTransport } from '@protobuf-ts/runtime-rpc';
 
 import * as v1 from '../types.js';
 import * as v2 from '../grpc-api/v2/concordium/types.js';
-import { Base58String, HexString, isRpcError } from '../types.js';
+import { HexString, isRpcError } from '../types.js';
 import { QueriesClient } from '../grpc-api/v2/concordium/service.client.js';
 import { HealthClient } from '../grpc-api/v2/concordium/health.client.js';
 import * as CredentialRegistrationId from '../types/CredentialRegistrationId.js';
@@ -20,7 +20,6 @@ import { calculateEnergyCost } from '../energyCost.js';
 import {
     countSignatures,
     isHex,
-    isValidHash,
     isValidIp,
     mapRecord,
     mapStream,
@@ -28,19 +27,23 @@ import {
     wasmToSchema,
 } from '../util.js';
 import { serializeAccountTransactionPayload } from '../serialization.js';
-import {
+import type {
     BlockItemStatus,
     BlockItemSummary,
 } from '../types/blockItemSummary.js';
 import { ModuleReference } from '../types/moduleReference.js';
 import { DEFAULT_INVOKE_ENERGY } from '../constants.js';
 import { TransactionExpiry } from '../types/transactionExpiry.js';
+import * as BlockHash from '../types/BlockHash.js';
+import * as TransactionHash from '../types/TransactionHash.js';
+import * as ContractAddress from '../types/ContractAddress.js';
+import * as Parameter from '../types/Parameter.js';
 
 /**
  * @hidden
  */
 export type FindInstanceCreationReponse = {
-    hash: HexString;
+    hash: BlockHash.Type;
     height: bigint;
     instanceInfo: v1.InstanceInfo;
 };
@@ -98,7 +101,7 @@ export class ConcordiumGRPCClient {
      * @returns the global cryptographic parameters at the given block, or undefined it the block does not exist.
      */
     async getCryptographicParameters(
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<v1.CryptographicParameters> {
         const blockHashInput = getBlockHashInput(blockHash);
 
@@ -126,7 +129,7 @@ export class ConcordiumGRPCClient {
      */
     async getAccountInfo(
         accountIdentifier: v1.AccountIdentifierInput,
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<v1.AccountInfo> {
         const accountInfoRequest: v2.AccountInfoRequest = {
             blockHash: getBlockHashInput(blockHash),
@@ -148,11 +151,10 @@ export class ConcordiumGRPCClient {
      * @returns the status for the given transaction/block item, or undefined if it does not exist.
      */
     async getBlockItemStatus(
-        transactionHash: HexString
+        transactionHash: TransactionHash.Type
     ): Promise<BlockItemStatus> {
-        assertValidHash(transactionHash);
         const transactionHashV2: v2.TransactionHash = {
-            value: Buffer.from(transactionHash, 'hex'),
+            value: TransactionHash.toBuffer(transactionHash),
         };
 
         const response = await this.client.getBlockItemStatus(transactionHashV2)
@@ -185,7 +187,7 @@ export class ConcordiumGRPCClient {
      */
     async getModuleSource(
         moduleRef: ModuleReference,
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<v1.VersionedModuleSource> {
         const moduleSourceRequest: v2.ModuleSourceRequest = {
             blockHash: getBlockHashInput(blockHash),
@@ -223,8 +225,8 @@ export class ConcordiumGRPCClient {
      */
     async getEmbeddedSchema(
         moduleRef: ModuleReference,
-        blockHash?: HexString
-    ): Promise<Buffer> {
+        blockHash?: BlockHash.Type
+    ): Promise<Uint8Array> {
         const versionedSource = await this.getModuleSource(
             moduleRef,
             blockHash
@@ -244,12 +246,12 @@ export class ConcordiumGRPCClient {
      * @throws An error of type `RpcError` if not found in the block.
      */
     async getInstanceInfo(
-        contractAddress: v1.ContractAddress,
-        blockHash?: HexString
+        contractAddress: ContractAddress.Type,
+        blockHash?: BlockHash.Type
     ): Promise<v1.InstanceInfo> {
         const instanceInfoRequest: v2.InstanceInfoRequest = {
             blockHash: getBlockHashInput(blockHash),
-            address: contractAddress,
+            address: ContractAddress.toProto(contractAddress),
         };
 
         const response = await this.client.getInstanceInfo(instanceInfoRequest)
@@ -280,7 +282,7 @@ export class ConcordiumGRPCClient {
      */
     async invokeContract(
         context: v1.ContractContext,
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<v1.InvokeContractResult> {
         const blockHashInput = getBlockHashInput(blockHash);
 
@@ -290,7 +292,9 @@ export class ConcordiumGRPCClient {
             instance: context.contract,
             amount: { value: context.amount?.microCcdAmount || 0n },
             entrypoint: { value: context.method },
-            parameter: { value: context.parameter || Buffer.alloc(0) },
+            parameter: Parameter.toProto(
+                context.parameter ?? Parameter.empty()
+            ),
             energy: { value: context.energy || DEFAULT_INVOKE_ENERGY },
         };
 
@@ -315,7 +319,7 @@ export class ConcordiumGRPCClient {
     async sendAccountTransaction(
         transaction: v1.AccountTransaction,
         signature: v1.AccountTransactionSignature
-    ): Promise<HexString> {
+    ): Promise<TransactionHash.Type> {
         const accountTransactionHandler = getAccountTransactionHandler(
             transaction.type
         );
@@ -360,9 +364,9 @@ export class ConcordiumGRPCClient {
     async sendRawAccountTransaction(
         header: v1.AccountTransactionHeader,
         energyAmount: bigint,
-        payload: Buffer,
+        payload: Uint8Array,
         signature: v1.AccountTransactionSignature
-    ): Promise<HexString> {
+    ): Promise<TransactionHash.Type> {
         const transactionSignature: v2.AccountTransactionSignature =
             translate.accountTransactionSignatureToV2(signature);
 
@@ -389,7 +393,7 @@ export class ConcordiumGRPCClient {
 
         const response = await this.client.sendBlockItem(sendBlockItemRequest)
             .response;
-        return Buffer.from(response.value).toString('hex');
+        return TransactionHash.fromProto(response);
     }
 
     /**
@@ -404,12 +408,12 @@ export class ConcordiumGRPCClient {
      * @param rawPayload the serialized payload, consisting of the {@link v1.CredentialDeploymentTransaction}
      * along with corresponding signatures. This can be serialized by utilizing the `serializeCredentialDeploymentPayload` function.
      * @param expiry the expiry of the transaction
-     * @returns The transaction hash as a hex string
+     * @returns The transaction hash
      */
     async sendCredentialDeploymentTransaction(
         rawPayload: Buffer,
         expiry: TransactionExpiry
-    ): Promise<HexString> {
+    ): Promise<TransactionHash.Type> {
         const credentialDeployment: v2.CredentialDeployment = {
             messageExpiry: {
                 value: expiry.expiryEpochSeconds,
@@ -428,7 +432,7 @@ export class ConcordiumGRPCClient {
 
         const response = await this.client.sendBlockItem(sendBlockItemRequest)
             .response;
-        return Buffer.from(response.value).toString('hex');
+        return TransactionHash.fromProto(response);
     }
 
     /**
@@ -437,12 +441,12 @@ export class ConcordiumGRPCClient {
      *
      * @param updateInstructionTransaction the update instruction transaction to send to the node
      * @param signatures map of the signatures on the hash of the serialized unsigned update instruction, with the key index as map key
-     * @returns The transaction hash as a hex string
+     * @returns The transaction hash
      */
     async sendUpdateInstruction(
         updateInstructionTransaction: v1.UpdateInstruction,
         signatures: Record<number, HexString>
-    ): Promise<HexString> {
+    ): Promise<TransactionHash.Type> {
         const header = updateInstructionTransaction.header;
         const updateInstruction: v2.UpdateInstruction = {
             header: {
@@ -481,7 +485,7 @@ export class ConcordiumGRPCClient {
 
         const response = await this.client.sendBlockItem(sendBlockItemRequest)
             .response;
-        return Buffer.from(response.value).toString('hex');
+        return TransactionHash.fromProto(response);
     }
 
     /**
@@ -493,7 +497,7 @@ export class ConcordiumGRPCClient {
      * @returns Info on all of the block chain parameters.
      */
     async getBlockChainParameters(
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<v1.ChainParameters> {
         const blockHashInput = getBlockHashInput(blockHash);
         const response = await this.client.getBlockChainParameters(
@@ -513,7 +517,7 @@ export class ConcordiumGRPCClient {
      */
     async getPoolInfo(
         bakerId: v1.BakerId,
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<v1.BakerPoolStatus> {
         const input: v2.PoolInfoRequest = {
             blockHash: getBlockHashInput(blockHash),
@@ -534,7 +538,7 @@ export class ConcordiumGRPCClient {
      * @returns The status of the passive delegators.
      */
     async getPassiveDelegationInfo(
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<v1.PassiveDelegationStatus> {
         const input = getBlockHashInput(blockHash);
         const response = await this.client.getPassiveDelegationInfo(input)
@@ -550,7 +554,9 @@ export class ConcordiumGRPCClient {
      * @param blockHash optional block hash to get the reward status at, otherwise retrieves from last finalized block
      * @returns the reward status at the given block, or undefined it the block does not exist.
      */
-    async getTokenomicsInfo(blockHash?: HexString): Promise<v1.TokenomicsInfo> {
+    async getTokenomicsInfo(
+        blockHash?: BlockHash.Type
+    ): Promise<v1.TokenomicsInfo> {
         const blockHashInput = getBlockHashInput(blockHash);
 
         const response = await this.client.getTokenomicsInfo(blockHashInput)
@@ -603,10 +609,9 @@ export class ConcordiumGRPCClient {
      * @returns BlockItemSummary of the transaction.
      */
     async waitForTransactionFinalization(
-        transactionHash: HexString,
+        transactionHash: TransactionHash.Type,
         timeoutTime?: number
     ): Promise<v1.BlockItemSummaryInBlock> {
-        assertValidHash(transactionHash);
         return new Promise(async (resolve, reject) => {
             const abortController = new AbortController();
             if (timeoutTime) {
@@ -659,13 +664,13 @@ export class ConcordiumGRPCClient {
      * @returns an async iterable of account addresses represented as Base58 encoded strings.
      */
     getAccountList(
-        blockHash?: HexString,
+        blockHash?: BlockHash.Type,
         abortSignal?: AbortSignal
-    ): AsyncIterable<Base58String> {
+    ): AsyncIterable<AccountAddress.Type> {
         const opts = { abort: abortSignal };
         const hash = getBlockHashInput(blockHash);
         const asyncIter = this.client.getAccountList(hash, opts).responses;
-        return mapStream(asyncIter, translate.unwrapToBase58);
+        return mapStream(asyncIter, AccountAddress.fromProto);
     }
 
     /**
@@ -680,7 +685,7 @@ export class ConcordiumGRPCClient {
      * @returns an async iterable of contract module references, represented as hex strings.
      */
     getModuleList(
-        blockHash?: HexString,
+        blockHash?: BlockHash.Type,
         abortSignal?: AbortSignal
     ): AsyncIterable<HexString> {
         const opts = { abort: abortSignal };
@@ -703,16 +708,16 @@ export class ConcordiumGRPCClient {
      */
     getAncestors(
         maxAmountOfAncestors: bigint,
-        blockHash?: HexString,
+        blockHash?: BlockHash.Type,
         abortSignal?: AbortSignal
-    ): AsyncIterable<HexString> {
+    ): AsyncIterable<BlockHash.Type> {
         const opts = { abort: abortSignal };
         const request: v2.AncestorsRequest = {
             blockHash: getBlockHashInput(blockHash),
             amount: maxAmountOfAncestors,
         };
         const asyncIter = this.client.getAncestors(request, opts).responses;
-        return mapStream(asyncIter, translate.unwrapValToHex);
+        return mapStream(asyncIter, BlockHash.fromProto);
     }
 
     /**
@@ -727,14 +732,14 @@ export class ConcordiumGRPCClient {
      * @returns an async iterable of instance states as key-value pairs of hex strings.
      */
     getInstanceState(
-        contractAddress: v1.ContractAddress,
-        blockHash?: HexString,
+        contractAddress: ContractAddress.Type,
+        blockHash?: BlockHash.Type,
         abortSignal?: AbortSignal
     ): AsyncIterable<v1.InstanceStateKVPair> {
         const opts = { abort: abortSignal };
         const request: v2.InstanceInfoRequest = {
             blockHash: getBlockHashInput(blockHash),
-            address: contractAddress,
+            address: ContractAddress.toProto(contractAddress),
         };
         const asyncIter = this.client.getInstanceState(request, opts).responses;
         return mapStream(asyncIter, translate.instanceStateKVPair);
@@ -753,13 +758,13 @@ export class ConcordiumGRPCClient {
      * @returns the state of the contract at the given key as a hex string.
      */
     async instanceStateLookup(
-        contractAddress: v1.ContractAddress,
+        contractAddress: ContractAddress.Type,
         key: HexString,
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<HexString> {
         assertValidHex(key);
         const request: v2.InstanceStateLookupRequest = {
-            address: contractAddress,
+            address: ContractAddress.toProto(contractAddress),
             key: Buffer.from(key, 'hex'),
             blockHash: getBlockHashInput(blockHash),
         };
@@ -780,7 +785,7 @@ export class ConcordiumGRPCClient {
      * @returns an async iterable of identity provider info objects.
      */
     getIdentityProviders(
-        blockHash?: HexString,
+        blockHash?: BlockHash.Type,
         abortSignal?: AbortSignal
     ): AsyncIterable<v1.IpInfo> {
         const opts = { abort: abortSignal };
@@ -801,7 +806,7 @@ export class ConcordiumGRPCClient {
      * @returns an async iterable of identity provider info objects.
      */
     getAnonymityRevokers(
-        blockHash?: HexString,
+        blockHash?: BlockHash.Type,
         abortSignal?: AbortSignal
     ): AsyncIterable<v1.ArInfo> {
         const opts = { abort: abortSignal };
@@ -820,11 +825,11 @@ export class ConcordiumGRPCClient {
      */
     async getBlocksAtHeight(
         blockHeightRequest: v1.BlocksAtHeightRequest
-    ): Promise<HexString[]> {
+    ): Promise<BlockHash.Type[]> {
         const requestV2 =
             translate.BlocksAtHeightRequestToV2(blockHeightRequest);
         const blocks = await this.client.getBlocksAtHeight(requestV2).response;
-        return translate.blocksAtHeightResponse(blocks);
+        return blocks.blocks.map(BlockHash.fromProto);
     }
 
     /**
@@ -835,7 +840,7 @@ export class ConcordiumGRPCClient {
      * @param blockHash an optional block hash to get the info from, otherwise retrieves from last finalized block.
      * @returns information on a block.
      */
-    async getBlockInfo(blockHash?: HexString): Promise<v1.BlockInfo> {
+    async getBlockInfo(blockHash?: BlockHash.Type): Promise<v1.BlockInfo> {
         const block = getBlockHashInput(blockHash);
         const blockInfo = await this.client.getBlockInfo(block).response;
         return translate.blockInfo(blockInfo);
@@ -851,7 +856,7 @@ export class ConcordiumGRPCClient {
      * @returns an async iterable of BakerIds.
      */
     getBakerList(
-        blockHash?: HexString,
+        blockHash?: BlockHash.Type,
         abortSignal?: AbortSignal
     ): AsyncIterable<v1.BakerId> {
         const opts = { abort: abortSignal };
@@ -877,7 +882,7 @@ export class ConcordiumGRPCClient {
      */
     getPoolDelegators(
         baker: v1.BakerId,
-        blockHash?: HexString,
+        blockHash?: BlockHash.Type,
         abortSignal?: AbortSignal
     ): AsyncIterable<v1.DelegatorInfo> {
         const request: v2.GetPoolDelegatorsRequest = {
@@ -906,7 +911,7 @@ export class ConcordiumGRPCClient {
      */
     getPoolDelegatorsRewardPeriod(
         baker: v1.BakerId,
-        blockHash?: HexString,
+        blockHash?: BlockHash.Type,
         abortSignal?: AbortSignal
     ): AsyncIterable<v1.DelegatorRewardPeriodInfo> {
         const request: v2.GetPoolDelegatorsRequest = {
@@ -936,7 +941,7 @@ export class ConcordiumGRPCClient {
      * @returns a stream of DelegatorInfo
      */
     getPassiveDelegators(
-        blockHash?: HexString,
+        blockHash?: BlockHash.Type,
         abortSignal?: AbortSignal
     ): AsyncIterable<v1.DelegatorInfo> {
         const delegatorInfo = this.client.getPassiveDelegators(
@@ -961,7 +966,7 @@ export class ConcordiumGRPCClient {
      * @returns a stream of DelegatorRewardPeriodInfo
      */
     getPassiveDelegatorsRewardPeriod(
-        blockHash?: HexString,
+        blockHash?: BlockHash.Type,
         abortSignal?: AbortSignal
     ): AsyncIterable<v1.DelegatorRewardPeriodInfo> {
         const delegatorInfo = this.client.getPassiveDelegatorsRewardPeriod(
@@ -990,7 +995,9 @@ export class ConcordiumGRPCClient {
      * @param blockHash an optional block hash to get the election info at, otherwise retrieves from last finalized block.
      * @returns election info for the given block
      */
-    async getElectionInfo(blockHash?: HexString): Promise<v1.ElectionInfo> {
+    async getElectionInfo(
+        blockHash?: BlockHash.Type
+    ): Promise<v1.ElectionInfo> {
         const blockHashInput = getBlockHashInput(blockHash);
         const electionInfo = await this.client.getElectionInfo(blockHashInput)
             .response;
@@ -1006,18 +1013,18 @@ export class ConcordiumGRPCClient {
      * {@codeblock ~~:client/getAccountNonFinalizedTransactions.ts#documentation-snippet}
      *
      * @param accountAddress The address of the account that you wish to query.
-     * @returns a stream of transaction hashes as hex strings.
+     * @returns a stream of transaction hashes.
      */
     getAccountNonFinalizedTransactions(
         accountAddress: AccountAddress.Type,
         abortSignal?: AbortSignal
-    ): AsyncIterable<HexString> {
+    ): AsyncIterable<TransactionHash.Type> {
         const transactions = this.client.getAccountNonFinalizedTransactions(
             { value: AccountAddress.toBuffer(accountAddress) },
             { abort: abortSignal }
         ).responses;
 
-        return mapStream(transactions, translate.unwrapValToHex);
+        return mapStream(transactions, TransactionHash.fromProto);
     }
 
     /**
@@ -1031,7 +1038,7 @@ export class ConcordiumGRPCClient {
      * @returns a stream of block item summaries
      */
     getBlockTransactionEvents(
-        blockHash?: HexString,
+        blockHash?: BlockHash.Type,
         abortSignal?: AbortSignal
     ): AsyncIterable<BlockItemSummary> {
         const blockItemSummaries = this.client.getBlockTransactionEvents(
@@ -1051,7 +1058,7 @@ export class ConcordiumGRPCClient {
      * @return a NextUpdateSequenceNumbers object
      */
     async getNextUpdateSequenceNumbers(
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<v1.NextUpdateSequenceNumbers> {
         const sequenceNumbers = await this.client.getNextUpdateSequenceNumbers(
             getBlockHashInput(blockHash)
@@ -1233,7 +1240,7 @@ export class ConcordiumGRPCClient {
      * @returns a stream of block item summaries
      */
     getBlockSpecialEvents(
-        blockHash?: HexString,
+        blockHash?: BlockHash.Type,
         abortSignal?: AbortSignal
     ): AsyncIterable<v1.BlockSpecialEvent> {
         const blockSpecialEvents = this.client.getBlockSpecialEvents(
@@ -1255,7 +1262,7 @@ export class ConcordiumGRPCClient {
      * @returns a stream of pending updates
      */
     getBlockPendingUpdates(
-        blockHash?: HexString,
+        blockHash?: BlockHash.Type,
         abortSignal?: AbortSignal
     ): AsyncIterable<v1.PendingUpdate> {
         const pendingUpdates = this.client.getBlockPendingUpdates(
@@ -1275,7 +1282,7 @@ export class ConcordiumGRPCClient {
      * @returns a finalization summary
      */
     async getBlockFinalizationSummary(
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<v1.BlockFinalizationSummary> {
         const finalizationSummary =
             await this.client.getBlockFinalizationSummary(
@@ -1451,7 +1458,7 @@ export class ConcordiumGRPCClient {
      * @returns {FindInstanceCreationReponse} Information about the block and the contract instance, or undefined if not found.
      */
     async findInstanceCreation(
-        address: v1.ContractAddress,
+        address: ContractAddress.Type,
         from?: v1.AbsoluteBlocksAtHeightRequest,
         to?: v1.AbsoluteBlocksAtHeightRequest
     ): Promise<FindInstanceCreationReponse | undefined> {
@@ -1524,24 +1531,24 @@ export class ConcordiumGRPCClient {
 /**
  * @hidden
  */
-export function getBlockHashInput(blockHash?: HexString): v2.BlockHashInput {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let blockHashInput: any = {};
-
+export function getBlockHashInput(
+    blockHash?: BlockHash.Type
+): v2.BlockHashInput {
     if (blockHash) {
-        assertValidHash(blockHash);
-        blockHashInput = {
-            oneofKind: 'given',
-            given: { value: Buffer.from(blockHash, 'hex') },
+        return {
+            blockHashInput: {
+                oneofKind: 'given',
+                given: BlockHash.toProto(blockHash),
+            },
         };
     } else {
-        blockHashInput = {
-            oneofKind: 'lastFinal',
-            lastFinal: v2.Empty,
+        return {
+            blockHashInput: {
+                oneofKind: 'lastFinal',
+                lastFinal: v2.Empty,
+            },
         };
     }
-
-    return { blockHashInput: blockHashInput };
 }
 
 /**
@@ -1586,7 +1593,7 @@ export function getAccountIdentifierInput(
  * @hidden
  */
 export function getInvokerInput(
-    invoker?: AccountAddress.Type | v1.ContractAddress
+    invoker?: AccountAddress.Type | ContractAddress.Type
 ): v2.Address | undefined {
     if (!invoker) {
         return undefined;
@@ -1594,14 +1601,14 @@ export function getInvokerInput(
         return {
             type: {
                 oneofKind: 'account',
-                account: { value: AccountAddress.toBuffer(invoker) },
+                account: AccountAddress.toProto(invoker),
             },
         };
-    } else if ((<v1.ContractAddress>invoker).index) {
+    } else if (ContractAddress.isContractAddress(invoker)) {
         return {
             type: {
                 oneofKind: 'contract',
-                contract: <v1.ContractAddress>invoker,
+                contract: ContractAddress.toProto(invoker),
             },
         };
     } else {
@@ -1627,13 +1634,5 @@ function assertValidPort(port: number): void {
 function assertValidHex(hex: HexString): void {
     if (!isHex(hex)) {
         throw new Error('The input was not a valid hex: ' + hex);
-    }
-}
-
-function assertValidHash(hash: HexString): void {
-    if (!isValidHash(hash)) {
-        throw new Error(
-            'The input was not a valid hash, must be 32 bytes: ' + hash
-        );
     }
 }

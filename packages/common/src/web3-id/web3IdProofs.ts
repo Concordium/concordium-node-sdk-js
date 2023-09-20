@@ -4,10 +4,10 @@ import {
     AttributeKeyString,
     AttributeList,
     AttributesKeys,
-    ContractAddress,
     HexString,
     Network,
 } from '../types.js';
+import type * as ContractAddress from '../types/ContractAddress.js';
 import {
     AtomicStatementV2,
     IdentityQualifier,
@@ -351,7 +351,7 @@ export function verifyAtomicStatements(
 }
 
 function getWeb3IdCredentialQualifier(
-    validContractAddresses: ContractAddress[]
+    validContractAddresses: ContractAddress.Type[]
 ): VerifiableCredentialQualifier {
     return {
         type: 'sci',
@@ -569,7 +569,7 @@ export class Web3StatementBuilder {
     }
 
     addForVerifiableCredentials(
-        validContractAddresses: ContractAddress[],
+        validContractAddresses: ContractAddress.Type[],
         builderCallback: (builder: InternalBuilder) => void,
         schema?: CredentialSchemaSubject
     ): this {
@@ -700,7 +700,7 @@ export function createWeb3CommitmentInput(
  */
 export function createWeb3CommitmentInputWithHdWallet(
     wallet: ConcordiumHdWallet,
-    issuer: ContractAddress,
+    issuer: ContractAddress.Type,
     credentialIndex: number,
     credentialSubject: CredentialSubject,
     randomness: Record<string, string>,

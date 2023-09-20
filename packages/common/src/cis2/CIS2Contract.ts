@@ -2,6 +2,8 @@ import { stringify } from 'json-bigint';
 
 import { HexString, InvokeContractResult } from '../types.js';
 import * as ContractAddress from '../types/ContractAddress.js';
+import * as BlockHash from '../types/BlockHash.js';
+import * as TransactionHash from '../types/TransactionHash.js';
 import * as ContractName from '../types/ContractName.js';
 import * as EntrypointName from '../types/EntrypointName.js';
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
@@ -62,17 +64,17 @@ class CIS2DryRun extends ContractDryRun<Updates> {
     public transfer(
         sender: CIS2.Address,
         transfer: CIS2.Transfer,
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult>;
     public transfer(
         sender: CIS2.Address,
         transfers: CIS2.Transfer[],
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult>;
     public transfer(
         sender: CIS2.Address,
         transfers: CIS2.Transfer | CIS2.Transfer[],
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
         const serialize = makeDynamicFunction(serializeCIS2Transfers);
         return this.invokeMethod(
@@ -96,17 +98,17 @@ class CIS2DryRun extends ContractDryRun<Updates> {
     public updateOperator(
         owner: CIS2.Address,
         update: CIS2.UpdateOperator,
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult>;
     public updateOperator(
         owner: CIS2.Address,
         updates: CIS2.UpdateOperator[],
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult>;
     public updateOperator(
         owner: CIS2.Address,
         updates: CIS2.UpdateOperator | CIS2.UpdateOperator[],
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
         const serialize = makeDynamicFunction(serializeCIS2UpdateOperators);
         return this.invokeMethod(
@@ -229,13 +231,13 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
      *
      * @throws If the update could not be invoked successfully.
      *
-     * @returns {Promise<HexString>} The transaction hash of the update transaction
+     * @returns {Promise<TransactionHash.Type>} The transaction hash of the update transaction
      */
     public transfer(
         metadata: CIS2.TransactionMetadata,
         transfer: CIS2.Transfer,
         signer: AccountSigner
-    ): Promise<HexString>;
+    ): Promise<TransactionHash.Type>;
     /**
      * Sends a CIS-2 "transfer" update transaction containing a list transfers.
      *
@@ -245,18 +247,18 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
      *
      * @throws If the update could not be invoked successfully.
      *
-     * @returns {Promise<HexString>} The transaction hash of the update transaction
+     * @returns {Promise<TransactionHash.Type>} The transaction hash of the update transaction
      */
     public transfer(
         metadata: CIS2.TransactionMetadata,
         transfers: CIS2.Transfer[],
         signer: AccountSigner
-    ): Promise<HexString>;
+    ): Promise<TransactionHash.Type>;
     public transfer(
         metadata: CIS2.TransactionMetadata,
         transfers: CIS2.Transfer | CIS2.Transfer[],
         signer: AccountSigner
-    ): Promise<HexString> {
+    ): Promise<TransactionHash.Type> {
         const transaction = this.createTransfer(metadata, transfers);
         return this.sendUpdateTransaction(transaction, metadata, signer);
     }
@@ -322,13 +324,13 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
      *
      * @throws If the update could not be invoked successfully.
      *
-     * @returns {Promise<HexString>} The transaction hash of the update transaction
+     * @returns {Promise<TransactionHash.Type>} The transaction hash of the update transaction
      */
     public updateOperator(
         metadata: CIS2.TransactionMetadata,
         update: CIS2.UpdateOperator,
         signer: AccountSigner
-    ): Promise<HexString>;
+    ): Promise<TransactionHash.Type>;
     /**
      * Sends a CIS-2 "operatorOf" update transaction containing a list of operator update instructions.
      *
@@ -338,18 +340,18 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
      *
      * @throws If the update could not be invoked successfully.
      *
-     * @returns {Promise<HexString>} The transaction hash of the update transaction
+     * @returns {Promise<TransactionHash.Type>} The transaction hash of the update transaction
      */
     public updateOperator(
         metadata: CIS2.TransactionMetadata,
         updates: CIS2.UpdateOperator[],
         signer: AccountSigner
-    ): Promise<HexString>;
+    ): Promise<TransactionHash.Type>;
     public updateOperator(
         metadata: CIS2.TransactionMetadata,
         updates: CIS2.UpdateOperator | CIS2.UpdateOperator[],
         signer: AccountSigner
-    ): Promise<HexString> {
+    ): Promise<TransactionHash.Type> {
         const transaction = this.createUpdateOperator(metadata, updates);
         return this.sendUpdateTransaction(transaction, metadata, signer);
     }
@@ -358,7 +360,7 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
      * Invokes CIS-2 "balanceOf" with a single query.
      *
      * @param {CIS2.BalanceOfQuery} query - The query object specifying the details of the query.
-     * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
+     * @param {BlockHash.Type} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
      * @throws If the query could not be invoked successfully.
      *
@@ -366,13 +368,13 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
      */
     public balanceOf(
         query: CIS2.BalanceOfQuery,
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<bigint>;
     /**
      * Invokes CIS-2 "balanceOf" with a list of queries.
      *
      * @param {CIS2.BalanceOfQuery[]} queries - A list of query objects, each specifying the details of a query.
-     * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
+     * @param {BlockHash.Type} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
      * @throws If the query could not be invoked successfully.
      *
@@ -380,11 +382,11 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
      */
     public balanceOf(
         queries: CIS2.BalanceOfQuery[],
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<bigint[]>;
     public async balanceOf(
         queries: CIS2.BalanceOfQuery | CIS2.BalanceOfQuery[],
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<bigint | bigint[]> {
         const serialize = makeDynamicFunction(serializeCIS2BalanceOfQueries);
         const deserialize = ensureMatchesInput(
@@ -404,7 +406,7 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
      * Invokes CIS-2 "operatorOf" with a single query.
      *
      * @param {CIS2.OperatorOfQuery} query - The query object specifying the details of the query.
-     * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
+     * @param {BlockHash.Type} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
      * @throws If the query could not be invoked successfully.
      *
@@ -412,13 +414,13 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
      */
     public operatorOf(
         query: CIS2.OperatorOfQuery,
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<boolean>;
     /**
      * Invokes CIS-2 "operatorOf" with a list of queries.
      *
      * @param {CIS2.OperatorOfQuery[]} queries - A list of query objects, each specifying the details of a query.
-     * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
+     * @param {BlockHash.Type} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
      * @throws If the query could not be invoked successfully.
      *
@@ -427,11 +429,11 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
      */
     public operatorOf(
         queries: CIS2.OperatorOfQuery[],
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<boolean[]>;
     public operatorOf(
         queries: CIS2.OperatorOfQuery | CIS2.OperatorOfQuery[],
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<boolean | boolean[]> {
         const serialize = makeDynamicFunction(serializeCIS2OperatorOfQueries);
         const deserialize = ensureMatchesInput(
@@ -451,7 +453,7 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
      * Invokes CIS-2 "tokenMetadata" with a single token ID.
      *
      * @param {HexString} tokenId - The ID of the token to get the metadata URL for.
-     * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
+     * @param {BlockHash.Type} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
      * @throws If the query could not be invoked successfully.
      *
@@ -459,13 +461,13 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
      */
     public tokenMetadata(
         tokenId: HexString,
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<CIS2.MetadataUrl>;
     /**
      * Invokes CIS-2 "tokenMetadata" with a list of token ID's.
      *
      * @param {HexString[]} tokenIds - A list of ID's of the tokens to get metadata URL's for.
-     * @param {HexString} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
+     * @param {BlockHash.Type} [blockHash] - The hash of the block to perform the query at. Defaults to the latest finalized block.
      *
      * @throws If the query could not be invoked successfully.
      *
@@ -474,11 +476,11 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
      */
     public tokenMetadata(
         tokenIds: HexString[],
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<CIS2.MetadataUrl[]>;
     public tokenMetadata(
         tokenIds: HexString | HexString[],
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<CIS2.MetadataUrl | CIS2.MetadataUrl[]> {
         const serialize = makeDynamicFunction(serializeCIS2TokenIds);
         const deserialize = ensureMatchesInput(

@@ -1,5 +1,9 @@
 import { parseEndpoint } from '../shared/util.js';
-import { BlockItemStatus, createConcordiumClient } from '@concordium/node-sdk';
+import {
+    BlockItemStatus,
+    TransactionHash,
+    createConcordiumClient,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -52,8 +56,9 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
+
     const blockItemStatus: BlockItemStatus = await client.getBlockItemStatus(
-        cli.flags.transaction
+        TransactionHash.fromHexString(cli.flags.transaction)
     );
 
     console.log('Status of the transaction:', cli.flags.transaction, '\n');

@@ -1,7 +1,6 @@
 import { Buffer } from 'buffer/index.js';
 import { stringify } from 'json-bigint';
 
-import { checkParameterLength } from './contractHelpers.js';
 import { ConcordiumGRPCClient } from './grpc/GRPCClient.js';
 import { AccountSigner, signTransaction } from './signHelpers.js';
 import {
@@ -18,9 +17,10 @@ import {
 import * as AccountAddress from './types/AccountAddress.js';
 import * as ContractAddress from './types/ContractAddress.js';
 import * as ContractName from './types/ContractName.js';
-import * as InitName from './types/InitName.js';
 import * as EntrypointName from './types/EntrypointName.js';
 import * as ReceiveName from './types/ReceiveName.js';
+import * as Parameter from './types/Parameter.js';
+import * as TransactionHash from './types/TransactionHash.js';
 import { CcdAmount } from './types/ccdAmount.js';
 import { TransactionExpiry } from './types/transactionExpiry.js';
 import { ModuleReference } from './types/moduleReference.js';
@@ -127,10 +127,9 @@ export class ContractDryRun<E extends string = string> {
         invoker: ContractAddress.Type | AccountAddress.Type,
         serializer: (input: T) => Buffer,
         input: T,
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
-        const parameter = serializer(input);
-        checkParameterLength(parameter);
+        const parameter = Parameter.fromBuffer(serializer(input));
 
         const method = ReceiveName.create(this.contractName, entrypoint);
 
@@ -235,7 +234,7 @@ class ContractBase<E extends string = string, V extends string = string> {
             grpcClient,
             contractAddress
         );
-        return ContractName.fromStringUnchecked(instanceInfo.name);
+        return ContractName.fromInitName(instanceInfo.name);
     }
 
     /**
@@ -250,14 +249,7 @@ class ContractBase<E extends string = string, V extends string = string> {
     public async getInstanceInfo(
         blockHash?: BlockHash.Type
     ): Promise<InstanceInfo> {
-        const blockHashHex =
-            blockHash === undefined
-                ? undefined
-                : BlockHash.toHexString(blockHash);
-        return this.grpcClient.getInstanceInfo(
-            this.contractAddress,
-            blockHashHex
-        );
+        return this.grpcClient.getInstanceInfo(this.contractAddress, blockHash);
     }
 
     /**
@@ -272,9 +264,7 @@ class ContractBase<E extends string = string, V extends string = string> {
         options: ContractCheckOnChainOptions = {}
     ): Promise<void> {
         const info = await this.getInstanceInfo(options.blockHash);
-
-        const initNameOnChain = InitName.fromStringUnchecked(info.name);
-        const contractNameOnChain = ContractName.fromInitName(initNameOnChain);
+        const contractNameOnChain = ContractName.fromInitName(info.name);
 
         if (!ContractName.equals(contractNameOnChain, this.contractName)) {
             throw new Error(
@@ -352,13 +342,12 @@ class ContractBase<E extends string = string, V extends string = string> {
     ):
         | ContractUpdateTransaction
         | MakeOptional<ContractUpdateTransactionWithSchema<J>, 'schema'> {
-        const parameter = serializeInput(input);
-        checkParameterLength(parameter);
+        const parameter = Parameter.fromBuffer(serializeInput(input));
 
         const payload: UpdateContractPayload = {
             amount: new CcdAmount(amount),
             address: this.contractAddress,
-            receiveName: `${this.contractName}.${entrypoint}`,
+            receiveName: ReceiveName.create(this.contractName, entrypoint),
             maxContractExecutionEnergy: energy,
             message: parameter,
         };
@@ -391,7 +380,7 @@ class ContractBase<E extends string = string, V extends string = string> {
         return {
             ...transaction,
             parameter: {
-                hex: parameter.toString('hex'),
+                hex: Parameter.toHexString(parameter),
                 json: jsonParameter,
             },
             schema,
@@ -416,7 +405,7 @@ class ContractBase<E extends string = string, V extends string = string> {
             expiry = getContractUpdateDefaultExpiryDate(),
         }: ContractTransactionMetadata,
         signer: AccountSigner
-    ): Promise<HexString> {
+    ): Promise<TransactionHash.Type> {
         const { nonce } = await this.grpcClient.getNextAccountNonce(
             senderAddress
         );
@@ -454,7 +443,7 @@ class ContractBase<E extends string = string, V extends string = string> {
         metadata: ContractTransactionMetadata,
         input: T,
         signer: AccountSigner
-    ): Promise<HexString> {
+    ): Promise<TransactionHash.Type> {
         const transactionBase = this.createUpdateTransaction(
             entrypoint,
             serializeInput,
@@ -485,10 +474,9 @@ class ContractBase<E extends string = string, V extends string = string> {
         serializeInput: (input: T) => Buffer,
         deserializeResponse: (value: HexString) => R,
         input: T,
-        blockHash?: HexString
+        blockHash?: BlockHash.Type
     ): Promise<R> {
-        const parameter = serializeInput(input);
-        checkParameterLength(parameter);
+        const parameter = Parameter.fromBuffer(serializeInput(input));
 
         const response = await this.grpcClient.invokeContract(
             {
@@ -552,9 +540,7 @@ export class Contract<
             contractAddress
         );
         // No reason to run checks, since this is from chain.
-        const contractName = ContractName.fromInitName(
-            InitName.fromStringUnchecked(instanceInfo.name)
-        );
+        const contractName = ContractName.fromInitName(instanceInfo.name);
 
         let mSchema: string | undefined;
         if (!schema) {
@@ -562,7 +548,7 @@ export class Contract<
                 const raw = await grpcClient.getEmbeddedSchema(
                     instanceInfo.sourceModule
                 );
-                const encoded = raw.toString('base64');
+                const encoded = Buffer.from(raw).toString('base64');
 
                 if (encoded) {
                     mSchema = encoded;

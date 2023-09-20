@@ -3,10 +3,10 @@ import {
     Base58String,
     DigitString,
     HexString,
-    ContractAddress,
     Amount,
     BakerId,
 } from '../types.js';
+import type * as ContractAddress from './ContractAddress.js';
 
 /*
  * An enum containing all the possible reject reasons that can be
@@ -76,7 +76,7 @@ export enum RejectReasonTag {
 
 export interface RejectedReceive {
     tag: RejectReasonTag.RejectedReceive;
-    contractAddress: ContractAddress;
+    contractAddress: ContractAddress.Type;
     receiveName: string;
     rejectReason: number;
     parameter: HexString;
@@ -217,7 +217,7 @@ export interface AmountTooLargeV1 {
 
 export interface InvalidContractAddress {
     tag: RejectReasonTag.InvalidContractAddress;
-    contents: ContractAddress;
+    contents: ContractAddress.Type;
 }
 
 export type CredIdsRejectReasonTag =

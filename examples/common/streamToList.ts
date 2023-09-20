@@ -1,5 +1,6 @@
 import {
     BakerId,
+    BlockHash,
     createConcordiumClient,
     streamToList,
 } from '@concordium/node-sdk';
@@ -48,9 +49,12 @@ const client = createConcordiumClient(
  */
 
 async () => {
-    const bakerIds: AsyncIterable<BakerId> = client.getBakerList(
-        cli.flags.block
-    );
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
+
+    const bakerIds: AsyncIterable<BakerId> = client.getBakerList(blockHash);
 
     const bakerList = await streamToList(bakerIds);
 

@@ -2,7 +2,7 @@ import { parseEndpoint } from '../shared/util.js';
 import {
     AccountAddress,
     createConcordiumClient,
-    HexString,
+    TransactionHash,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -58,7 +58,7 @@ const client = createConcordiumClient(
 (async () => {
     // #region documentation-snippet
     const accountAddress = AccountAddress.fromBase58(cli.flags.account);
-    const transactions: AsyncIterable<HexString> =
+    const transactions: AsyncIterable<TransactionHash.Type> =
         client.getAccountNonFinalizedTransactions(accountAddress);
     // #endregion documentation-snippet
 

@@ -3,15 +3,17 @@ name: Build, lint and typecheck examples
 on:
     # Triggers the workflow on push or pull request events but only for the main branch
     push:
-        branches: [main, release**]
+        branches: [ main, release** ]
     pull_request:
-        branches: [main, release**]
+        branches: [ main, release** ]
         # Don't run on draft PR's, see: https://github.com/orgs/community/discussions/25722#discussioncomment-3248917
-        types: [opened, synchronize, reopened, ready_for_review]
+        types: [ opened, synchronize, reopened, ready_for_review ]
     # Allows us to run the workflow manually from the Actions tab
     workflow_dispatch:
 
+
 env:
+    DUMMY: 1
     NODE_VERSION: 18.16.0
     RUST_VERSION: 1.65
     RUST_FMT: nightly-2023-04-01-x86_64-unknown-linux-gnu
@@ -37,7 +39,7 @@ jobs:
                   path: |
                       ./node_modules
                       ./docs/node_modules
-                  key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+                  key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}-${{ env.DUMMY }}
                   restore-keys: |
                       ${{ runner.os }}-yarn
 
@@ -65,7 +67,7 @@ jobs:
                   path: |
                       ./packages/common/src/grpc-api
                       ./packages/nodejs/src/grpc-api
-                  key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}
+                  key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}-${{ env.DUMMY }}
                   restore-keys: ${{ runner.os }}-grpc
 
             - name: Cache WebPack

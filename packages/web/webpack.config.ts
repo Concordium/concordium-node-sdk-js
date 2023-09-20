@@ -1,4 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
+// eslint-disable-next-line import/no-named-as-default
 import webpack from 'webpack';
 import { resolve } from 'path';
 import url from 'url';
@@ -21,9 +22,6 @@ const config: webpack.Configuration = {
         new webpack.ProvidePlugin({
             process: 'process/browser',
         }),
-        // new webpack.NormalModuleReplacementPlugin(/^\..+\.js$/, (resource) => {
-        //     resource.request = resource.request.replace(/\.js$/, '');
-        // }),
     ],
     resolve: {
         extensionAlias: {

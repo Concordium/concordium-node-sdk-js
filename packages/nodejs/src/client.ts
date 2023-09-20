@@ -1,4 +1,4 @@
-import { ChannelCredentials, Metadata } from '@grpc/grpc-js';
+import { ChannelCredentials } from '@grpc/grpc-js';
 import { Buffer as BufferFormater } from 'buffer/index.js';
 import { P2PClient } from './grpc-api/concordium_p2p_rpc.client.js';
 import {

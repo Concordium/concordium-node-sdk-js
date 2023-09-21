@@ -159,12 +159,22 @@ export function getAlias(
     return fromBuffer(Buffer.concat([commonBytes, aliasBytes]));
 }
 
+/**
+ * Convert an account address from its protobuf encoding.
+ * @param {Proto.AccountAddress} accountAddress The account address in protobuf.
+ * @returns {AccountAddress} The account address
+ */
 export function fromProto(
     accountAddress: Proto.AccountAddress
 ): AccountAddress {
     return fromBuffer(accountAddress.value);
 }
 
+/**
+ * Convert an account address into its protobuf encoding.
+ * @param {AccountAddress} accountAddress The account address.
+ * @returns {Proto.AccountAddress} The protobuf encoding.
+ */
 export function toProto(accountAddress: AccountAddress): Proto.AccountAddress {
     return {
         value: accountAddress.decodedAddress,

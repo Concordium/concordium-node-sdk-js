@@ -1,10 +1,12 @@
+import type * as Proto from '../grpc-api/v2/concordium/types.js';
+
 /** Represents a timestamp. */
 class Timestamp {
     /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
     private __nominal = true;
     constructor(
         /** The internal value for representing the timestamp as milliseconds since Unix epoch. */
-        public readonly value: number
+        public readonly value: bigint
     ) {}
 }
 
@@ -17,13 +19,13 @@ export type Type = Timestamp;
  * @throws If the value is negative.
  * @returns {Timestamp} The created timestamp.
  */
-export function fromMillis(value: number): Timestamp {
+export function fromMillis(value: number | bigint): Timestamp {
     if (value < 0) {
         throw new Error(
             'Invalid timestamp: The value cannot be a negative number.'
         );
     }
-    return new Timestamp(value);
+    return new Timestamp(BigInt(value));
 }
 
 /**
@@ -45,8 +47,7 @@ export type SchemaValue = string;
  * @returns {SchemaValue} The schema value representation.
  */
 export function toSchemaValue(timestamp: Timestamp): SchemaValue {
-    const date = new Date(timestamp.value);
-    return date.toISOString();
+    return toDate(timestamp).toISOString();
 }
 
 /**
@@ -55,5 +56,29 @@ export function toSchemaValue(timestamp: Timestamp): SchemaValue {
  * @returns {Date} Date object.
  */
 export function toDate(timestamp: Timestamp): Date {
-    return new Date(timestamp.value);
+    const number = Number(timestamp.value);
+    if (isNaN(number)) {
+        throw new Error('Timestamp cannot be represented as a date.');
+    }
+    return new Date(number);
+}
+
+/**
+ * Convert a timestamp from its protobuf encoding.
+ * @param {Proto.Timestamp} timestamp The timestamp in protobuf.
+ * @returns {Timestamp} The timestamp.
+ */
+export function fromProto(timestamp: Proto.Timestamp): Timestamp {
+    return fromMillis(timestamp.value);
+}
+
+/**
+ * Convert a timestamp into its protobuf encoding.
+ * @param {Timestamp} timestamp The timestamp.
+ * @returns {Proto.Timestamp} The protobuf encoding.
+ */
+export function toProto(timestamp: Timestamp): Proto.Timestamp {
+    return {
+        value: timestamp.value,
+    };
 }

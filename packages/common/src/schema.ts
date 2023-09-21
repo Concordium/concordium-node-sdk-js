@@ -10,12 +10,12 @@ import { SchemaVersion, SmartContractTypeValues } from './types.js';
  * @returns buffer containing the schema for of init contract parameters
  */
 export function getInitContractParameterSchema(
-    moduleSchema: Buffer,
+    moduleSchema: ArrayBuffer,
     contractName: string,
     schemaVersion?: SchemaVersion
 ): Buffer {
     const parameterSchema = wasm.getInitContractParameterSchema(
-        moduleSchema.toString('hex'),
+        Buffer.from(moduleSchema).toString('hex'),
         contractName,
         schemaVersion
     );
@@ -30,13 +30,13 @@ export function getInitContractParameterSchema(
  * @returns buffer containing the schema for of update contract parameters
  */
 export function getUpdateContractParameterSchema(
-    moduleSchema: Buffer,
+    moduleSchema: ArrayBuffer,
     contractName: string,
     receiveFunctionName: string,
     schemaVersion?: SchemaVersion
 ): Buffer {
     const parameterSchema = wasm.getReceiveContractParameterSchema(
-        moduleSchema.toString('hex'),
+        Buffer.from(moduleSchema).toString('hex'),
         contractName,
         receiveFunctionName,
         schemaVersion
@@ -48,8 +48,10 @@ export function getUpdateContractParameterSchema(
  * @param rawSchema the schema for the type
  * @returns JSON template of the schema
  */
-export function displayTypeSchemaTemplate(rawSchema: Buffer): string {
-    return wasm.displayTypeSchemaTemplate(rawSchema.toString('hex'));
+export function displayTypeSchemaTemplate(rawSchema: ArrayBuffer): string {
+    return wasm.displayTypeSchemaTemplate(
+        Buffer.from(rawSchema).toString('hex')
+    );
 }
 
 /**
@@ -64,13 +66,13 @@ export function serializeInitContractParameters(
     contractName: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     parameters: any,
-    rawSchema: Buffer,
+    rawSchema: ArrayBuffer,
     schemaVersion?: SchemaVersion,
     verboseErrorMessage = false
 ): Buffer {
     const serializedParameters = wasm.serializeInitContractParameters(
         JSONbig.stringify(parameters),
-        rawSchema.toString('hex'),
+        Buffer.from(rawSchema).toString('hex'),
         contractName,
         schemaVersion,
         verboseErrorMessage
@@ -92,13 +94,13 @@ export function serializeUpdateContractParameters(
     receiveFunctionName: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
     parameters: any,
-    rawSchema: Buffer,
+    rawSchema: ArrayBuffer,
     schemaVersion?: SchemaVersion,
     verboseErrorMessage = false
 ): Buffer {
     const serializedParameters = wasm.serializeReceiveContractParameters(
         JSONbig.stringify(parameters),
-        rawSchema.toString('hex'),
+        Buffer.from(rawSchema).toString('hex'),
         contractName,
         receiveFunctionName,
         schemaVersion,
@@ -134,15 +136,15 @@ export function serializeTypeValue(
  */
 export function deserializeContractState(
     contractName: string,
-    schema: Buffer,
-    state: Buffer,
+    schema: ArrayBuffer,
+    state: ArrayBuffer,
     verboseErrorMessage = false
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
     const serializedState = wasm.deserializeState(
         contractName,
-        state.toString('hex'),
-        schema.toString('hex'),
+        Buffer.from(state).toString('hex'),
+        Buffer.from(schema).toString('hex'),
         verboseErrorMessage
     );
     try {
@@ -167,8 +169,8 @@ export function deserializeContractState(
  * @param verboseErrorMessage Whether errors are in a verbose format or not. Defaults to `false`.
  */
 export function deserializeReceiveReturnValue(
-    returnValueBytes: Buffer,
-    moduleSchema: Buffer,
+    returnValueBytes: ArrayBuffer,
+    moduleSchema: ArrayBuffer,
     contractName: string,
     functionName: string,
     schemaVersion?: number,
@@ -176,8 +178,8 @@ export function deserializeReceiveReturnValue(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
     const deserializedReturnValue = wasm.deserializeReceiveReturnValue(
-        returnValueBytes.toString('hex'),
-        moduleSchema.toString('hex'),
+        Buffer.from(returnValueBytes).toString('hex'),
+        Buffer.from(moduleSchema).toString('hex'),
         contractName,
         functionName,
         schemaVersion,
@@ -205,16 +207,16 @@ export function deserializeReceiveReturnValue(
  * @param verboseErrorMessage Whether errors are in a verbose format or not. Defaults to `false`.
  */
 export function deserializeReceiveError(
-    errorBytes: Buffer,
-    moduleSchema: Buffer,
+    errorBytes: ArrayBuffer,
+    moduleSchema: ArrayBuffer,
     contractName: string,
     functionName: string,
     verboseErrorMessage = false
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
     const deserializedError = wasm.deserializeReceiveError(
-        errorBytes.toString('hex'),
-        moduleSchema.toString('hex'),
+        Buffer.from(errorBytes).toString('hex'),
+        Buffer.from(moduleSchema).toString('hex'),
         contractName,
         functionName,
         verboseErrorMessage
@@ -240,15 +242,15 @@ export function deserializeReceiveError(
  * @param verboseErrorMessage Whether errors are in a verbose format or not. Defaults to `false`.
  */
 export function deserializeInitError(
-    errorBytes: Buffer,
-    moduleSchema: Buffer,
+    errorBytes: ArrayBuffer,
+    moduleSchema: ArrayBuffer,
     contractName: string,
     verboseErrorMessage = false
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
     const deserializedError = wasm.deserializeInitError(
-        errorBytes.toString('hex'),
-        moduleSchema.toString('hex'),
+        Buffer.from(errorBytes).toString('hex'),
+        Buffer.from(moduleSchema).toString('hex'),
         contractName,
         verboseErrorMessage
     );
@@ -273,13 +275,13 @@ export function deserializeInitError(
  * @returns the deserialized value
  */
 export function deserializeTypeValue(
-    value: Buffer,
-    rawSchema: Buffer,
+    value: ArrayBuffer,
+    rawSchema: ArrayBuffer,
     verboseErrorMessage = false
 ): SmartContractTypeValues {
     const deserializedValue = wasm.deserializeTypeValue(
-        value.toString('hex'),
-        rawSchema.toString('hex'),
+        Buffer.from(value).toString('hex'),
+        Buffer.from(rawSchema).toString('hex'),
         verboseErrorMessage
     );
     return JSONbig({

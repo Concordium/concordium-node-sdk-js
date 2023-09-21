@@ -38,6 +38,7 @@ import * as BlockHash from '../types/BlockHash.js';
 import * as TransactionHash from '../types/TransactionHash.js';
 import * as ContractAddress from '../types/ContractAddress.js';
 import * as Parameter from '../types/Parameter.js';
+import * as Energy from '../types/Energy.js';
 
 /**
  * @hidden
@@ -295,7 +296,7 @@ export class ConcordiumGRPCClient {
             parameter: Parameter.toProto(
                 context.parameter ?? Parameter.empty()
             ),
-            energy: { value: context.energy || DEFAULT_INVOKE_ENERGY },
+            energy: Energy.toProto(context.energy ?? DEFAULT_INVOKE_ENERGY),
         };
 
         const response = await this.client.invokeInstance(invokeInstanceRequest)
@@ -411,7 +412,7 @@ export class ConcordiumGRPCClient {
      * @returns The transaction hash
      */
     async sendCredentialDeploymentTransaction(
-        rawPayload: Buffer,
+        rawPayload: Uint8Array,
         expiry: TransactionExpiry
     ): Promise<TransactionHash.Type> {
         const credentialDeployment: v2.CredentialDeployment = {

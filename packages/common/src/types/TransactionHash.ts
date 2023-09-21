@@ -59,12 +59,26 @@ export function toBuffer(hash: TransactionHash): Uint8Array {
     return hash.buffer;
 }
 
-export function fromProto(hash: Proto.TransactionHash): TransactionHash {
-    return fromBuffer(hash.value);
+/**
+ * Convert a transaction hash from its protobuf encoding.
+ * @param {Proto.TransactionHash} transactionHash The transaction hash in protobuf.
+ * @returns {TransactionHash} The transaction hash.
+ */
+export function fromProto(
+    transactionHash: Proto.TransactionHash
+): TransactionHash {
+    return fromBuffer(transactionHash.value);
 }
 
-export function toProto(hash: TransactionHash): Proto.TransactionHash {
+/**
+ * Convert a transaction hash into its protobuf encoding.
+ * @param {TransactionHash} transactionHash The transaction hash.
+ * @returns {Proto.TransactionHash} The protobuf encoding.
+ */
+export function toProto(
+    transactionHash: TransactionHash
+): Proto.TransactionHash {
     return {
-        value: hash.buffer,
+        value: transactionHash.buffer,
     };
 }

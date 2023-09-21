@@ -72,12 +72,22 @@ export function toSchemaValue(contractAddress: ContractAddress): SchemaValue {
     return { index: contractAddress.index, subindex: contractAddress.subindex };
 }
 
+/**
+ * Convert a smart contract address from its protobuf encoding.
+ * @param {Proto.ContractAddress} contractAddress The contract address in protobuf.
+ * @returns {ContractAddress} The contract address.
+ */
 export function fromProto(
     contractAddress: Proto.ContractAddress
 ): ContractAddress {
     return create(contractAddress.index, contractAddress.subindex);
 }
 
+/**
+ * Convert a smart contract address into its protobuf encoding.
+ * @param {ContractAddress} contractAddress The contract address.
+ * @returns {Proto.ContractAddress} The protobuf encoding.
+ */
 export function toProto(
     contractAddress: ContractAddress
 ): Proto.ContractAddress {

@@ -9,6 +9,7 @@ import {
     CIS4Contract,
     ContractAddress,
     createConcordiumClient,
+    Energy,
     parseWallet,
 } from '@concordium/node-sdk';
 import { parseEndpoint } from '../shared/util.js';
@@ -91,7 +92,7 @@ const signer = buildAccountSigner(wallet);
         signer,
         {
             senderAddress: AccountAddress.fromBase58(wallet.value.address),
-            energy: 10000n,
+            energy: Energy.create(10000n),
         },
         cli.flags.credId,
         cli.flags.reason,

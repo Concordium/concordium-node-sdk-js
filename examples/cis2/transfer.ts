@@ -6,6 +6,7 @@ import {
     ContractAddress,
     AccountAddress,
     EntrypointName,
+    Energy,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
@@ -105,7 +106,7 @@ const client = createConcordiumClient(
     const txHash = await contract.transfer(
         {
             senderAddress: from,
-            energy: 10000n,
+            energy: Energy.create(10000n),
         },
         {
             from,

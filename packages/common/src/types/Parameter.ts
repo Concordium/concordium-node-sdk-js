@@ -104,10 +104,20 @@ export function fromBase64SchemaType(
     return fromBuffer(serializeTypeValue(value, schemaBytes));
 }
 
+/**
+ * Convert a smart contract parameter from its protobuf encoding.
+ * @param {Proto.Parameter} parameter The parameter in protobuf.
+ * @returns {Parameter} The parameter.
+ */
 export function fromProto(parameter: Proto.Parameter): Parameter {
     return fromBuffer(parameter.value);
 }
 
+/**
+ * Convert a parameter into its protobuf encoding.
+ * @param {Parameter} parameter The parameter.
+ * @returns {Proto.Parameter} The protobuf encoding.
+ */
 export function toProto(parameter: Parameter): Proto.Parameter {
     return {
         value: parameter.buffer,

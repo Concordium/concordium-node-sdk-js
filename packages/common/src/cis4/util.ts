@@ -300,11 +300,11 @@ export class Web3IdSigner {
     /**
      * Signs the message given
      *
-     * @param {Buffer} message - the message to sign
+     * @param {ArrayBuffer} message - the message to sign
      *
      * @returns {Buffer} the signature on `message`
      */
-    public async sign(message: Buffer): Promise<Buffer> {
+    public async sign(message: ArrayBuffer): Promise<Buffer> {
         return getSignature(message, this.privateKey);
     }
 }

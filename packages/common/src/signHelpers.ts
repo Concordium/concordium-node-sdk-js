@@ -22,11 +22,11 @@ export interface AccountSigner {
     /**
      * Creates a signature of the provided digest
      *
-     * @param {Buffer} digest - The digest to create signatures on.
+     * @param {ArrayBuffer} digest - The digest to create signatures on.
      *
      * @returns {Promise<AccountTransactionSignature>} A promise resolving with a set of signatures for a set of credentials corresponding to some account
      */
-    sign(digest: Buffer): Promise<AccountTransactionSignature>;
+    sign(digest: ArrayBuffer): Promise<AccountTransactionSignature>;
     /**
      * Returns the amount of signatures that the signer produces
      */ getSignatureCount(): bigint;
@@ -41,9 +41,10 @@ export interface AccountSigner {
  * @returns {Buffer} the signature.
  */
 export const getSignature = async (
-    digest: Buffer,
+    digest: ArrayBuffer,
     privateKey: HexString
-): Promise<Buffer> => Buffer.from(await sign(digest, privateKey));
+): Promise<Buffer> =>
+    Buffer.from(await sign(new Uint8Array(digest), privateKey));
 
 /**
  * Creates an `AccountSigner` for an account which uses the first credential's first keypair.
@@ -58,7 +59,7 @@ export function buildBasicAccountSigner(privateKey: HexString): AccountSigner {
         getSignatureCount() {
             return 1n;
         },
-        async sign(digest: Buffer) {
+        async sign(digest: ArrayBuffer) {
             const sig = await getSignature(digest, privateKey);
             return {
                 0: {
@@ -96,7 +97,7 @@ const getKeys = <T extends WithAccountKeys>(
 };
 
 const getCredentialSignature = async (
-    digest: Buffer,
+    digest: ArrayBuffer,
     keys: Record<number, HexString>
 ): Promise<CredentialSignature> => {
     const sig: CredentialSignature = {};
@@ -164,7 +165,7 @@ export function buildAccountSigner<T extends WithAccountKeys>(
         getSignatureCount() {
             return numKeys;
         },
-        async sign(digest: Buffer) {
+        async sign(digest: ArrayBuffer) {
             const sig: AccountTransactionSignature = {};
             for (const key in keys) {
                 sig[key] = await getCredentialSignature(digest, keys[key]);

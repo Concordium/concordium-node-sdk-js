@@ -12,6 +12,9 @@ import * as BlockHash from '../types/BlockHash.js';
 import * as ReceiveName from '../types/ReceiveName.js';
 import * as InitName from '../types/InitName.js';
 import * as ContractAddress from '../types/ContractAddress.js';
+import * as Energy from '../types/Energy.js';
+import * as Duration from '../types/Duration.js';
+import * as Timestamp from '../types/Timestamp.js';
 
 function unwrapToHex(bytes: Uint8Array | undefined): v1.HexString {
     return Buffer.from(unwrap(bytes)).toString('hex');
@@ -579,8 +582,8 @@ function trChainParametersV2(
                 ),
             },
         },
-        timeoutBase: unwrap(
-            params.consensusParameters?.timeoutParameters?.timeoutBase?.value
+        timeoutBase: Duration.fromProto(
+            unwrap(params.consensusParameters?.timeoutParameters?.timeoutBase)
         ),
         timeoutDecrease: unwrap(
             params.consensusParameters?.timeoutParameters?.timeoutDecrease
@@ -588,9 +591,11 @@ function trChainParametersV2(
         timeoutIncrease: unwrap(
             params.consensusParameters?.timeoutParameters?.timeoutIncrease
         ),
-        minBlockTime: unwrap(params.consensusParameters?.minBlockTime?.value),
-        blockEnergyLimit: unwrap(
-            params.consensusParameters?.blockEnergyLimit?.value
+        minBlockTime: Duration.fromProto(
+            unwrap(params.consensusParameters?.minBlockTime)
+        ),
+        blockEnergyLimit: Energy.fromProto(
+            unwrap(params.consensusParameters?.blockEnergyLimit)
         ),
         finalizerRelativeStakeThreshold: trAmountFraction(
             params.finalizationCommitteeParameters
@@ -708,7 +713,7 @@ export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
             unwrap(ci.currentEraGenesisBlock)
         ),
         lastFinalizedBlock: BlockHash.fromProto(unwrap(ci.lastFinalizedBlock)),
-        epochDuration: unwrap(ci.epochDuration?.value),
+        epochDuration: Duration.fromProto(unwrap(ci.epochDuration)),
         bestBlockHeight: unwrap(ci.bestBlockHeight?.value),
         lastFinalizedBlockHeight: unwrap(ci.lastFinalizedBlockHeight?.value),
         finalizationCount: BigInt(unwrap(ci.finalizationCount)),
@@ -757,7 +762,7 @@ export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
     if (ci.protocolVersion < v2.ProtocolVersion.PROTOCOL_VERSION_6) {
         const ci0: v1.ConsensusStatusV0 = {
             ...common,
-            slotDuration: unwrap(ci.slotDuration?.value),
+            slotDuration: Duration.fromProto(unwrap(ci.slotDuration)),
         };
 
         return ci0;
@@ -766,7 +771,9 @@ export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
     const ci1: v1.ConsensusStatusV1 = {
         ...common,
         concordiumBFTStatus: {
-            currentTimeoutDuration: unwrap(ci.currentTimeoutDuration?.value),
+            currentTimeoutDuration: Duration.fromProto(
+                unwrap(ci.currentTimeoutDuration)
+            ),
             currentRound: unwrap(ci.currentRound?.value),
             currentEpoch: unwrap(ci.currentEpoch?.value),
             triggerBlockTime: trTimestamp(ci.triggerBlockTime),
@@ -1449,7 +1456,7 @@ function trTimeoutParameteresUpdate(
     return {
         updateType: v1.UpdateType.TimeoutParameters,
         update: {
-            timeoutBase: unwrap(timeout.timeoutBase?.value),
+            timeoutBase: Duration.fromProto(unwrap(timeout.timeoutBase)),
             timeoutDecrease: unwrap(timeout.timeoutDecrease),
             timeoutIncrease: unwrap(timeout.timeoutIncrease),
         },
@@ -1459,7 +1466,7 @@ function trTimeoutParameteresUpdate(
 function trMinBlockTimeUpdate(duration: v2.Duration): v1.MinBlockTimeUpdate {
     return {
         updateType: v1.UpdateType.MinBlockTime,
-        update: unwrap(duration.value),
+        update: Duration.fromProto(duration),
     };
 }
 
@@ -1468,7 +1475,7 @@ function trBlockEnergyLimitUpdate(
 ): v1.BlockEnergyLimitUpdate {
     return {
         updateType: v1.UpdateType.BlockEnergyLimit,
-        update: unwrap(energy.value),
+        update: Energy.fromProto(energy),
     };
 }
 
@@ -2332,7 +2339,9 @@ export function blockInfo(blockInfo: v2.BlockInfo): v1.BlockInfo {
         finalized: blockInfo.finalized,
         transactionCount: BigInt(blockInfo.transactionCount),
         transactionsSize: BigInt(blockInfo.transactionsSize),
-        transactionEnergyCost: unwrap(blockInfo.transactionsEnergyCost?.value),
+        transactionEnergyCost: Energy.fromProto(
+            unwrap(blockInfo.transactionsEnergyCost)
+        ),
         genesisIndex: unwrap(blockInfo.genesisIndex?.value),
         eraBlockHeight: Number(unwrap(blockInfo.eraBlockHeight?.value)),
         protocolVersion: translateProtocolVersion(blockInfo.protocolVersion),
@@ -2531,8 +2540,8 @@ export function nodeInfo(nodeInfo: v2.NodeInfo): v1.NodeInfo {
 
     return {
         peerVersion: nodeInfo.peerVersion,
-        localTime: unwrap(nodeInfo.localTime?.value),
-        peerUptime: unwrap(nodeInfo.peerUptime?.value),
+        localTime: Timestamp.fromProto(unwrap(nodeInfo.localTime)),
+        peerUptime: Duration.fromProto(unwrap(nodeInfo.peerUptime)),
         networkInfo: trNetworkInfo(nodeInfo.networkInfo),
         details,
     };

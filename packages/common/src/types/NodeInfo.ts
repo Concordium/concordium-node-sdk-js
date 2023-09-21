@@ -1,9 +1,11 @@
-import { BakerId, Duration, HexString, Timestamp } from '../types.js';
+import type { BakerId, HexString } from '../types.js';
+import type * as Duration from '../types/Duration.js';
+import type * as Timestamp from '../types/Timestamp.js';
 
 export interface NodeInfo {
     peerVersion: string;
-    localTime: Timestamp;
-    peerUptime: Duration;
+    localTime: Timestamp.Type;
+    peerUptime: Duration.Type;
     networkInfo: NodeNetworkInfo;
     details: NodeInfoDetails;
 }

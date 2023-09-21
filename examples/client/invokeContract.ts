@@ -6,6 +6,7 @@ import {
     ContractAddress,
     ContractContext,
     ContractTraceEvent,
+    Energy,
     Parameter,
     createConcordiumClient,
 } from '@concordium/node-sdk';
@@ -102,7 +103,9 @@ const client = createConcordiumClient(
     const parameter = cli.flags.parameter
         ? Parameter.fromHexString(cli.flags.parameter)
         : undefined;
-    const energy = cli.flags.energy ? BigInt(cli.flags.energy) : undefined;
+    const energy = cli.flags.energy
+        ? Energy.create(cli.flags.energy)
+        : undefined;
 
     const contract = ContractAddress.create(cli.flags.contract);
     const context: ContractContext = {

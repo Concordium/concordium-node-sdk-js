@@ -4,6 +4,7 @@ import {
     buildBasicAccountSigner,
     ContractAddress,
     AccountAddress,
+    Energy,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
@@ -85,7 +86,7 @@ const client = createConcordiumClient(
     const txHash = await contract.updateOperator(
         {
             senderAddress: owner,
-            energy: 10000n,
+            energy: Energy.create(10000n),
         },
         {
             type: cli.flags.updateType as 'add' | 'remove',

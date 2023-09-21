@@ -6,7 +6,6 @@ import { AccountSigner, signTransaction } from './signHelpers.js';
 import {
     AccountTransactionType,
     Base64String,
-    Energy,
     HexString,
     InstanceInfo,
     InvokeContractResult,
@@ -20,6 +19,7 @@ import * as ContractName from './types/ContractName.js';
 import * as EntrypointName from './types/EntrypointName.js';
 import * as ReceiveName from './types/ReceiveName.js';
 import * as Parameter from './types/Parameter.js';
+import * as Energy from './types/Energy.js';
 import * as TransactionHash from './types/TransactionHash.js';
 import { CcdAmount } from './types/ccdAmount.js';
 import { TransactionExpiry } from './types/transactionExpiry.js';
@@ -37,7 +37,7 @@ export type ContractTransactionMetadata = {
     /** Expiry date of the transaction. Defaults to 5 minutes in the future */
     expiry?: Date;
     /** Max energy to be used for the transaction */
-    energy: Energy;
+    energy: Energy.Type;
 };
 
 /**
@@ -125,7 +125,7 @@ export class ContractDryRun<E extends string = string> {
     public invokeMethod<T>(
         entrypoint: EntrypointName.Type<E>,
         invoker: ContractAddress.Type | AccountAddress.Type,
-        serializer: (input: T) => Buffer,
+        serializer: (input: T) => ArrayBuffer,
         input: T,
         blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
@@ -305,7 +305,7 @@ class ContractBase<E extends string = string, V extends string = string> {
      */
     public createUpdateTransaction<T>(
         entrypoint: EntrypointName.Type<E>,
-        serializeInput: (input: T) => Buffer,
+        serializeInput: (input: T) => ArrayBuffer,
         metadata: CreateContractTransactionMetadata,
         input: T
     ): ContractUpdateTransaction;
@@ -328,14 +328,14 @@ class ContractBase<E extends string = string, V extends string = string> {
      */
     public createUpdateTransaction<T, J extends SmartContractTypeValues>(
         entrypoint: EntrypointName.Type<E>,
-        serializeInput: (input: T) => Buffer,
+        serializeInput: (input: T) => ArrayBuffer,
         metadata: CreateContractTransactionMetadata,
         input: T,
         inputJsonFormatter: (input: T) => J
     ): MakeOptional<ContractUpdateTransactionWithSchema<J>, 'schema'>;
     public createUpdateTransaction<T, J extends SmartContractTypeValues>(
         entrypoint: EntrypointName.Type<E>,
-        serializeInput: (input: T) => Buffer,
+        serializeInput: (input: T) => ArrayBuffer,
         { amount = 0n, energy }: CreateContractTransactionMetadata,
         input: T,
         inputJsonFormatter?: (input: T) => J
@@ -439,7 +439,7 @@ class ContractBase<E extends string = string, V extends string = string> {
      */
     public async createAndSendUpdateTransaction<T>(
         entrypoint: EntrypointName.Type<E>,
-        serializeInput: (input: T) => Buffer,
+        serializeInput: (input: T) => ArrayBuffer,
         metadata: ContractTransactionMetadata,
         input: T,
         signer: AccountSigner
@@ -471,7 +471,7 @@ class ContractBase<E extends string = string, V extends string = string> {
      */
     public async invokeView<T, R>(
         entrypoint: V,
-        serializeInput: (input: T) => Buffer,
+        serializeInput: (input: T) => ArrayBuffer,
         deserializeResponse: (value: HexString) => R,
         input: T,
         blockHash?: BlockHash.Type
@@ -629,7 +629,7 @@ export abstract class CISContract<
      */
     public createUpdateTransaction<T>(
         entrypoint: EntrypointName.Type<E>,
-        serializeInput: (input: T) => Buffer,
+        serializeInput: (input: T) => ArrayBuffer,
         metadata: CreateContractTransactionMetadata,
         input: T
     ): ContractUpdateTransaction;
@@ -649,7 +649,7 @@ export abstract class CISContract<
      */
     public createUpdateTransaction<T, J extends SmartContractTypeValues>(
         entrypoint: EntrypointName.Type<E>,
-        serializeInput: (input: T) => Buffer,
+        serializeInput: (input: T) => ArrayBuffer,
         metadata: CreateContractTransactionMetadata,
         input: T,
         inputJsonFormatter: (input: T) => J
@@ -659,7 +659,7 @@ export abstract class CISContract<
         J extends SmartContractTypeValues
     >(
         entrypoint: EntrypointName.Type<E>,
-        serializeInput: (input: T) => Buffer,
+        serializeInput: (input: T) => ArrayBuffer,
         metadata: CreateContractTransactionMetadata,
         input: T,
         inputJsonFormatter?: (input: T) => J

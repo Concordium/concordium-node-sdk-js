@@ -9,6 +9,7 @@ import {
     CIS4Contract,
     ContractAddress,
     createConcordiumClient,
+    Energy,
     parseWallet,
     Web3IdSigner,
 } from '@concordium/node-sdk';
@@ -98,7 +99,7 @@ const signer = buildAccountSigner(wallet);
         signer,
         {
             senderAddress: AccountAddress.fromBase58(wallet.value.address),
-            energy: 10000n,
+            energy: Energy.create(10000n),
         },
         hSigner,
         nonce,

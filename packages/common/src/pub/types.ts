@@ -49,17 +49,36 @@ export {
     ContractUpdateTransactionWithSchema,
 } from '../GenericContract.js';
 
-export * as ModuleClient from '../types/ModuleClient.js';
-export * as Parameter from '../types/Parameter.js';
-export * as AccountSequenceNumber from '../types/AccountSequenceNumber.js';
-export * as Energy from '../types/Energy.js';
-export * as TransactionHash from '../types/TransactionHash.js';
-export * as BlockHash from '../types/BlockHash.js';
-export * as ContractName from '../types/ContractName.js';
-export * as InitName from '../types/InitName.js';
-export * as ReceiveName from '../types/ReceiveName.js';
-export * as CredentialRegistrationId from '../types/CredentialRegistrationId.js';
-export * as AccountAddress from '../types/AccountAddress.js';
-export * as ContractAddress from '../types/ContractAddress.js';
-export * as EntrypointName from '../types/EntrypointName.js';
-export * as Timestamp from '../types/Timestamp.js';
+import * as ModuleClient from '../types/ModuleClient.js';
+import * as Parameter from '../types/Parameter.js';
+import * as AccountSequenceNumber from '../types/AccountSequenceNumber.js';
+import * as Energy from '../types/Energy.js';
+import * as TransactionHash from '../types/TransactionHash.js';
+import * as BlockHash from '../types/BlockHash.js';
+import * as ContractName from '../types/ContractName.js';
+import * as InitName from '../types/InitName.js';
+import * as ReceiveName from '../types/ReceiveName.js';
+import * as CredentialRegistrationId from '../types/CredentialRegistrationId.js';
+import * as AccountAddress from '../types/AccountAddress.js';
+import * as ContractAddress from '../types/ContractAddress.js';
+import * as EntrypointName from '../types/EntrypointName.js';
+import * as Timestamp from '../types/Timestamp.js';
+
+// These cannot be exported directly as modules because of a bug in an eslint plugin.
+// https://github.com/import-js/eslint-plugin-import/issues/2289.
+export {
+    ModuleClient,
+    Parameter,
+    AccountSequenceNumber,
+    Energy,
+    TransactionHash,
+    BlockHash,
+    ContractName,
+    InitName,
+    ReceiveName,
+    CredentialRegistrationId,
+    AccountAddress,
+    ContractAddress,
+    EntrypointName,
+    Timestamp,
+};

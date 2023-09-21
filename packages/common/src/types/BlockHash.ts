@@ -85,9 +85,11 @@ export function toProto(hash: BlockHash): Proto.BlockHash {
 
 /**
  * Construct a 'given' block hash input from a block hash.
- * @param {BlockHash} hash The given block hash.
+ * @param {BlockHash} blockHash The given block hash.
  * @returns {Proto.BlockHashInput} The given block hash input.
  */
-export function toBlockHashInput(hash: BlockHash): Proto.BlockHashInput {
-    return { blockHashInput: { oneofKind: 'given', given: toProto(hash) } };
+export function toBlockHashInput(blockHash: BlockHash): Proto.BlockHashInput {
+    return {
+        blockHashInput: { oneofKind: 'given', given: toProto(blockHash) },
+    };
 }

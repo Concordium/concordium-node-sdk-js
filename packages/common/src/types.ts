@@ -4,6 +4,9 @@
 
 import * as AccountAddress from './types/AccountAddress.js';
 import * as ContractAddress from './types/ContractAddress.js';
+import * as Duration from './types/Duration.js';
+import * as Timestamp from './types/Timestamp.js';
+import * as Energy from './types/Energy.js';
 import type * as BlockHash from './types/BlockHash.js';
 import * as CredentialRegistrationId from './types/CredentialRegistrationId.js';
 import * as Parameter from './types/Parameter.js';
@@ -41,14 +44,8 @@ export type JsonString = string;
 
 export type ModuleRef = HexString;
 
-/** A number of milliseconds */
-export type Duration = bigint;
-/** Unix timestamp in milliseconds */
-export type Timestamp = bigint;
 /** A consensus round */
 export type Round = bigint;
-/** An amount of energy */
-export type Energy = bigint;
 
 /**
  * Makes keys of type optional
@@ -196,7 +193,7 @@ export interface BaseTransactionSummary {
     hash: string;
 
     cost: bigint;
-    energyCost: bigint;
+    energyCost: Energy.Type;
     index: bigint;
 }
 
@@ -421,7 +418,7 @@ export interface TimeParametersV1 {
 /** Parameters that determine timeouts in the consensus protocol used from protocol version 6. */
 export interface TimeoutParameters {
     /** The base value for triggering a timeout, in milliseconds. */
-    timeoutBase: Duration;
+    timeoutBase: Duration.Type;
     /** Factor for increasing the timeout. Must be greater than 1. */
     timeoutIncrease: Ratio;
     /** Factor for decreasing the timeout. Must be between 0 and 1. */
@@ -431,9 +428,9 @@ export interface TimeoutParameters {
 /** Consensus parameters, used from protocol version 6 */
 export interface ConsensusParameters {
     /** Minimum time interval between blocks. */
-    minBlockTime: Duration;
+    minBlockTime: Duration.Type;
     /** Maximum energy allowed per block. */
-    blockEnergyLimit: Energy;
+    blockEnergyLimit: Energy.Type;
 }
 
 /**
@@ -789,7 +786,7 @@ export interface BlockInfoCommon {
     /** The total byte size of all transactions in the block */
     transactionsSize: bigint;
     /** The energy cost of the transactions in the block */
-    transactionEnergyCost: Energy;
+    transactionEnergyCost: Energy.Type;
 
     /**
      * The genesis index for the block. This counst the number of protocol updates that have
@@ -850,7 +847,7 @@ export interface ConsensusStatusCommon {
     lastFinalizedBlock: BlockHash.Type;
 
     /** Current epoch duration, in milliseconds */
-    epochDuration: Duration;
+    epochDuration: Duration.Type;
     /** Absolute height of the best block */
     bestBlockHeight: bigint;
     /** Absolute height of the last finalized block */
@@ -919,12 +916,12 @@ export interface ConsensusStatusCommon {
 /** Consensus status used for protocol version 1-5 */
 export interface ConsensusStatusV0 extends ConsensusStatusCommon {
     /** (Current) slot duration in milliseconds */
-    slotDuration: Duration;
+    slotDuration: Duration.Type;
 }
 
 export interface ConcordiumBftStatus {
     /** Current duration before a round times out, in milliseconds */
-    currentTimeoutDuration: Duration;
+    currentTimeoutDuration: Duration.Type;
     /** Current round */
     currentRound: Round;
     /** Current epoch */
@@ -1567,7 +1564,7 @@ export interface InitContractPayload {
 
     /** The amount of energy that can be used for contract execution.
     The base energy amount for transaction verification will be added to this cost.*/
-    maxContractExecutionEnergy: bigint;
+    maxContractExecutionEnergy: Energy.Type;
 }
 
 export interface UpdateContractPayload {
@@ -1585,7 +1582,7 @@ export interface UpdateContractPayload {
 
     /** The amount of energy that can be used for contract execution.
     The base energy amount for transaction verification will be added to this cost.*/
-    maxContractExecutionEnergy: bigint;
+    maxContractExecutionEnergy: Energy.Type;
 }
 
 export interface AccountTransactionHeader {
@@ -1845,7 +1842,7 @@ export interface ContractContext {
     amount?: CcdAmount;
     method: string;
     parameter?: Parameter.Type;
-    energy?: bigint;
+    energy?: Energy.Type;
 }
 
 /**
@@ -2032,7 +2029,7 @@ export interface IdObjectRequestV1 {
 
 export interface IdRecoveryRequest {
     idCredPub: string;
-    timestamp: Timestamp;
+    timestamp: Timestamp.Type;
     proof: string;
 }
 

@@ -1,3 +1,5 @@
+import type * as Proto from '../grpc-api/v2/concordium/types.js';
+
 /**
  * Type representing a duration of time.
  */
@@ -6,7 +8,7 @@ class Duration {
     private __nominal = true;
     constructor(
         /** The internal value for representing a duration in milliseconds. */
-        public readonly value: number
+        public readonly value: bigint
     ) {}
 }
 
@@ -21,13 +23,13 @@ export type Type = Duration;
  * @throws If a negative value is provided.
  * @returns {Duration} Duration corresponding to the provided value.
  */
-export function fromMillis(value: number): Duration {
+export function fromMillis(value: number | bigint): Duration {
     if (value < 0) {
         throw new Error(
             'Invalid duration: The value cannot be a negative number.'
         );
     }
-    return new Duration(value);
+    return new Duration(BigInt(value));
 }
 
 /** Type used when encoding a duration using a schema. */
@@ -40,4 +42,24 @@ export type SchemaValue = string;
  */
 export function toSchemaValue(duration: Duration): SchemaValue {
     return `${duration.value} ms`;
+}
+
+/**
+ * Convert a duration from its protobuf encoding.
+ * @param {Proto.Duration} duration The duration in protobuf.
+ * @returns {Duration} The duration.
+ */
+export function fromProto(duration: Proto.Duration): Duration {
+    return fromMillis(duration.value);
+}
+
+/**
+ * Convert a duration into its protobuf encoding.
+ * @param {Duration} duration The duration.
+ * @returns {Proto.Duration} The protobuf encoding.
+ */
+export function toProto(duration: Duration): Proto.Duration {
+    return {
+        value: duration.value,
+    };
 }

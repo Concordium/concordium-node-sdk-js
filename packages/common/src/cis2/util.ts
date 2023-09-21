@@ -191,13 +191,13 @@ function serializeCIS2TokenId(tokenId: CIS2.TokenId): Buffer {
     return packBufferWithWord8Length(serialized);
 }
 
-function deserializeCIS2TokenId(buffer: Buffer): CIS2.TokenId {
+function deserializeCIS2TokenId(buffer: Uint8Array): CIS2.TokenId {
     if (buffer.length > TOKEN_ID_MAX_LENGTH) {
         throw Error(
             `Token ID exceeds maximum size of ${TOKEN_ID_MAX_LENGTH} bytes`
         );
     }
-    return buffer.toString('hex');
+    return Buffer.from(buffer).toString('hex');
 }
 
 function serializeTokenAmount(amount: bigint): Buffer {
@@ -284,7 +284,7 @@ function serializeAdditionalData(data: HexString): Buffer {
 }
 
 const makeSerializeList =
-    <T>(serialize: (input: T) => Buffer) =>
+    <T>(serialize: (input: T) => Uint8Array) =>
     (input: T[]): Buffer => {
         const n = encodeWord16(input.length, true);
         return Buffer.concat([n, ...input.map(serialize)]);

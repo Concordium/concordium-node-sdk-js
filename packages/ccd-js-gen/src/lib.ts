@@ -390,7 +390,11 @@ ${
     ${moduleClientId}.${internalModuleClientId},
     SDK.ContractName.fromStringUnchecked('${contract.contractName}'),
     ${transactionMetadataId},
-    ${initParameter?.tokens ?? 'SDK.Parameter.empty()'},
+    ${
+        initParameter === undefined
+            ? ''
+            : `${createInitParameterFnId}(${parameterId})`
+    },
     ${signerId}
 );`
             );
@@ -715,15 +719,15 @@ ${
                 .setBodyText(
                     `return ${contractClientId}.${genericContractId}.createAndSendUpdateTransaction(
     SDK.EntrypointName.fromStringUnchecked('${entrypointName}'),
-    SDK.encodeHexString,
+    SDK.Parameter.toBuffer,
     ${transactionMetadataId},
     ${
         receiveParameter === undefined
             ? ''
-            : `SDK.Parameter.toHexString(${createReceiveParameterFnId}(${parameterId}))`
+            : `${createReceiveParameterFnId}(${parameterId})`
     },
     ${signerId}
-).then(SDK.TransactionHash.fromHexString);`
+);`
                 );
 
             contractSourceFile
@@ -778,13 +782,13 @@ ${
                     `return ${contractClientId}.${genericContractId}.dryRun.invokeMethod(
     SDK.EntrypointName.fromStringUnchecked('${entrypointName}'),
     ${invokerId},
-    SDK.encodeHexString,
+    SDK.Parameter.toBuffer,
     ${
         receiveParameter === undefined
             ? ''
-            : `SDK.Parameter.toHexString(${createReceiveParameterFnId}(${parameterId}))`
+            : `${createReceiveParameterFnId}(${parameterId})`
     },
-    ${blockHashId} === undefined ? undefined : SDK.BlockHash.toHexString(${blockHashId})
+    ${blockHashId}
 );`
                 );
         }

@@ -4,7 +4,7 @@ class Timestamp {
     private __nominal = true;
     constructor(
         /** The internal value for representing the timestamp as milliseconds since Unix epoch. */
-        public value: number
+        public readonly value: number
     ) {}
 }
 

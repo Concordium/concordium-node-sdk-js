@@ -6,7 +6,7 @@ class Duration {
     private __nominal = true;
     constructor(
         /** The internal value for representing a duration in milliseconds. */
-        public value: number
+        public readonly value: number
     ) {}
 }
 

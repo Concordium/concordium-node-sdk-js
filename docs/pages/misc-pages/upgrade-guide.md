@@ -1,5 +1,19 @@
 ## Common SDK version 10 (Web 7) (Node 10)
 
+### Common
+
+Several types have been replaced with a module containing the type itself together with functions for constructing and converting the type:
+- `AccountAddress` is now a module with functions related to account addresses:
+  - To refer to `AccountAddress` as a type use `AccountAddress.Type`.
+  - Constructing `new AccountAddress("<address>")` is now `AccountAddress.fromBase58("<address>")`.
+  - `isAlias` and `getAlias` are now accessable from `AccountAddress.isAlias` and `AccountAddress.getAlias`.
+- `ContractAddresss` is now a module with functions related to contract addresses:
+  - To refer to `ContractAddress` as a type use `ContractAddress.Type`.
+  - To construct the type use `ContractAddress.create(index, subindex)`.
+- `CredentialRegistrationId` is now a module with functions related to credential registration IDs:
+  - To refer to `CredentialRegistrationId` as a type use `CredentialRegistrationId.Type`.
+  - Constructing `new CredentialRegistrationId("<hex-string>")` is now `CredentialRegistrationId.fromHexString("<hex-string>")`.
+
 ### Web
 
 The `@concordium/web-sdk` now requires bundlers to respect `exports` field of

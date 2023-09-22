@@ -13,7 +13,7 @@ class CredentialRegistrationId {
     private __nominal = true;
     constructor(
         /** Representation of a credential registration id */
-        public credId: string
+        public readonly credId: string
     ) {}
 
     toJSON(): string {

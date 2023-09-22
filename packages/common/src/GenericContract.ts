@@ -1,10 +1,7 @@
 import { Buffer } from 'buffer/index.js';
 import { stringify } from 'json-bigint';
 
-import {
-    checkParameterLength,
-    getContractNameFromInit,
-} from './contractHelpers.js';
+import { checkParameterLength } from './contractHelpers.js';
 import { ConcordiumGRPCClient } from './grpc/GRPCClient.js';
 import { AccountSigner, signTransaction } from './signHelpers.js';
 import {
@@ -117,7 +114,7 @@ export class ContractDryRun<E extends string = string> {
      *
      * @template T - The type of the input given
      *
-     * @param {string} entrypoint - The name of the receive function to invoke.
+     * @param {EntrypointName.Type} entrypoint - The name of the receive function to invoke.
      * @param {ContractAddress | AccountAddress} invoker - The address of the invoker.
      * @param {Function} serializer - A function for serializing the input to bytes.
      * @param {T} input - Input for for contract function.
@@ -276,12 +273,10 @@ class ContractBase<E extends string = string, V extends string = string> {
     ): Promise<void> {
         const info = await this.getInstanceInfo(options.blockHash);
 
-        const initNameString = InitName.toString(
-            InitName.fromContractName(this.contractName)
-        );
+        const initNameOnChain = InitName.fromStringUnchecked(info.name);
+        const contractNameOnChain = ContractName.fromInitName(initNameOnChain);
 
-        const contractNameOnChain = getContractNameFromInit(info.name);
-        if (contractNameOnChain !== initNameString) {
+        if (!ContractName.equals(contractNameOnChain, this.contractName)) {
             throw new Error(
                 `Instance ${this.contractAddress} have contract name '${contractNameOnChain}' on chain. The client expected: '${this.contractName}'.`
             );
@@ -309,7 +304,7 @@ class ContractBase<E extends string = string, V extends string = string> {
      *
      * @template T - The type of the input
      *
-     * @param {string} entrypoint - The name of the receive function to invoke.
+     * @param {EntrypointName.Type} entrypoint - The name of the receive function to invoke.
      * @param {Function} serializeInput - A function to serialize the `input` to bytes.
      * @param {ContractTransactionMetadata} metadata - Metadata to be used for the transaction creation (with defaults).
      * @param {T} input - Input for for contract function.
@@ -331,7 +326,7 @@ class ContractBase<E extends string = string, V extends string = string> {
      * @template T - The type of the input
      * @template J - The type of the input formatted as JSON compatible with the corresponding contract schema
      *
-     * @param {EntrypointName} entrypoint - The name of the receive function to invoke.
+     * @param {EntrypointName.Type} entrypoint - The name of the receive function to invoke.
      * @param {Function} serializeInput - A function to serialize the `input` to bytes.
      * @param {ContractTransactionMetadata} metadata - Metadata to be used for the transaction creation (with defaults).
      * @param {T} input - Input for for contract function.
@@ -557,8 +552,8 @@ export class Contract<
             contractAddress
         );
         // No reason to run checks, since this is from chain.
-        const contractName = ContractName.fromStringUnchecked(
-            instanceInfo.name
+        const contractName = ContractName.fromInitName(
+            InitName.fromStringUnchecked(instanceInfo.name)
         );
 
         let mSchema: string | undefined;

@@ -9,7 +9,7 @@ class EntrypointName<S extends string> {
     private __nominal = true;
     constructor(
         /** The internal string value of the receive name. */
-        public value: S
+        public readonly value: S
     ) {}
 }
 

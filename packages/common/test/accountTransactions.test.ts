@@ -1,4 +1,4 @@
-import { AccountAddress } from '../src/types/accountAddress.js';
+import * as AccountAddress from '../src/types/AccountAddress.js';
 import { TransactionExpiry } from '../src/types/transactionExpiry.js';
 import {
     OpenStatus,
@@ -21,7 +21,7 @@ test('configureBaker is serialized correctly', async () => {
     const header = {
         expiry,
         nonce: 1n,
-        sender: new AccountAddress(senderAccountAddress),
+        sender: AccountAddress.fromBase58(senderAccountAddress),
     };
 
     const payload: Required<ConfigureBakerPayload> = {

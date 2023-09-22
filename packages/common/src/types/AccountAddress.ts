@@ -11,9 +11,9 @@ class AccountAddress {
     private __nominal = true;
     constructor(
         /** The account address represented in base58check. */
-        public address: string,
+        public readonly address: string,
         /** The account address represented in bytes. */
-        public decodedAddress: Uint8Array
+        public readonly decodedAddress: Uint8Array
     ) {}
 }
 

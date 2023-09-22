@@ -14,7 +14,7 @@ class ReceiveName {
     private __nominal = true;
     constructor(
         /** The internal string value of the receive name. */
-        public value: string
+        public readonly value: string
     ) {}
 }
 

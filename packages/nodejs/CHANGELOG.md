@@ -24,6 +24,27 @@
     - NodeJS: 4.7, `"moduleResolution": "node16" // or "nodenext"`
     - Bundled applications (webpack, esbuild, rollup, etc...): 5.0, `"moduleResolution": "bundler"`
 
+Several types have been replaced with a module containing the type itself together with functions for constructing and converting the type:
+- `AccountAddress` is now a module with functions related to account addresses:
+  - To refer to `AccountAddress` as a type use `AccountAddress.Type`.
+  - Constructing `new AccountAddress("<address>")` is now `AccountAddress.fromBase58("<address>")`.
+  - `isAlias` and `getAlias` are now accessable from `AccountAddress.isAlias` and `AccountAddress.getAlias`.
+- `ContractAddresss` is now a module with functions related to contract addresses:
+  - To refer to `ContractAddress` as a type use `ContractAddress.Type`.
+  - To construct the type use `ContractAddress.create(index, subindex)`.
+- `CredentialRegistrationId` is now a module with functions related to credential registration IDs:
+  - To refer to `CredentialRegistrationId` as a type use `CredentialRegistrationId.Type`.
+  - Constructing `new CredentialRegistrationId("<hex-string>")` is now `CredentialRegistrationId.fromHexString("<hex-string>")`.
+
+### Added
+
+- All JSON serialization in `serialization.ts` is now handled by `json-bigint` meaning that all functions now correctly handles bigint inputs
+- `Timestamp` is now a module with functions related to time.
+  - To refer to `Timestamp` as a type use `Timestamp.Type`.
+- `Duration` is now a module with functions related to durations of time.
+- `EntrypointName` is now a module with functions related to entrypoint names of a smart contract.
+- `ReceiveName` is now a module with functions related to receive-function names of a smart contract.
+
 ## 9.4.0
 
 - Bumped @concordium/common-sdk to 9.4.0.

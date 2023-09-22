@@ -4,9 +4,9 @@ class ContractAddress {
     private __nominal = true;
     constructor(
         /** The index of the smart contract address. */
-        public index: bigint,
+        public readonly index: bigint,
         /** The subindex of the smart contract address. */
-        public subindex: bigint
+        public readonly subindex: bigint
     ) {}
 }
 

@@ -843,12 +843,18 @@ function schemaToTypeAndMapper(
             };
         case 'U64':
         case 'I64':
+            return {
+                type: 'number | bigint',
+                mapper(id) {
+                    return `BigInt(${id})`;
+                },
+            };
         case 'U128':
         case 'I128':
             return {
                 type: 'number | bigint',
                 mapper(id) {
-                    return `BigInt(${id}).toString()`; // TODO: check that the schema JSON actually use a string here.
+                    return `BigInt(${id}).toString()`;
                 },
             };
         case 'Amount':

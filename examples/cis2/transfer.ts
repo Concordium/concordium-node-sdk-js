@@ -106,7 +106,7 @@ const client = createConcordiumClient(
     const txHash = await contract.transfer(
         {
             senderAddress: from,
-            energy: Energy.create(10000n),
+            energy: Energy.create(10000),
         },
         {
             from,

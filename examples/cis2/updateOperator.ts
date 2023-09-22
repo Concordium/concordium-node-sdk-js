@@ -86,7 +86,7 @@ const client = createConcordiumClient(
     const txHash = await contract.updateOperator(
         {
             senderAddress: owner,
-            energy: Energy.create(10000n),
+            energy: Energy.create(10000),
         },
         {
             type: cli.flags.updateType as 'add' | 'remove',

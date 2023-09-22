@@ -13,6 +13,8 @@ import * as Parameter from './types/Parameter.js';
 import type * as InitName from './types/InitName.js';
 import type * as ContractName from './types/ContractName.js';
 import type * as ReceiveName from './types/ReceiveName.js';
+import type * as SequenceNumber from './types/SequenceNumber.js';
+import type * as ReturnValue from './types/ReturnValue.js';
 import { CcdAmount } from './types/ccdAmount.js';
 import { DataBlob } from './types/DataBlob.js';
 import { TransactionExpiry } from './types/transactionExpiry.js';
@@ -132,7 +134,7 @@ export enum TransactionStatusEnum {
 
 export interface AddressAccount {
     type: 'AddressAccount';
-    address: Base58String;
+    address: AccountAddress.Type;
 }
 
 // export interface ContractAddress {
@@ -948,7 +950,7 @@ export interface CryptographicParameters {
 }
 
 export interface NextAccountNonce {
-    nonce: bigint;
+    nonce: SequenceNumber.Type;
     allFinal: boolean;
 }
 
@@ -1349,7 +1351,7 @@ export type AccountCredential = Versioned<
 
 interface AccountInfoCommon {
     accountAddress: AccountAddress.Type;
-    accountNonce: bigint;
+    accountNonce: SequenceNumber.Type;
     accountAmount: bigint;
     accountIndex: bigint;
 
@@ -1593,7 +1595,7 @@ export interface AccountTransactionHeader {
      * the nonce for the transaction, usually acquired by
      * getting the next account nonce from the node
      */
-    nonce: bigint;
+    nonce: SequenceNumber.Type;
 
     /** expiration of the transaction */
     expiry: TransactionExpiry;
@@ -1893,15 +1895,16 @@ export function buildInvoker(
 
 export interface InvokeContractSuccessResult {
     tag: 'success';
-    usedEnergy: bigint;
+    usedEnergy: Energy.Type;
     events: ContractTraceEvent[];
-    returnValue?: string;
+    returnValue?: ReturnValue.Type;
 }
 
 export interface InvokeContractFailedResult {
     tag: 'failure';
-    usedEnergy: bigint;
+    usedEnergy: Energy.Type;
     reason: RejectReason;
+    returnValue?: ReturnValue.Type;
 }
 
 /**
@@ -1909,7 +1912,7 @@ export interface InvokeContractFailedResult {
  */
 export interface InvokeContractFailedResultV1 {
     tag: 'failure';
-    usedEnergy: bigint;
+    usedEnergy: Energy.Type;
     reason: RejectReasonV1;
 }
 

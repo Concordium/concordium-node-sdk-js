@@ -28,6 +28,7 @@ import {
 import { calculateEnergyCost } from './energyCost.js';
 import { countSignatures } from './util.js';
 import * as AccountAddress from './types/AccountAddress.js';
+import * as Energy from './types/Energy.js';
 import { sha256 } from './hash.js';
 
 function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
@@ -46,11 +47,11 @@ function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
 function serializeAccountTransactionHeader(
     header: AccountTransactionHeader,
     payloadSize: number,
-    energyAmount: bigint
+    energyAmount: Energy.Type
 ) {
-    const serializedSender = header.sender.decodedAddress;
-    const serializedNonce = encodeWord64(header.nonce);
-    const serializedEnergyAmount = encodeWord64(energyAmount);
+    const serializedSender = AccountAddress.toBuffer(header.sender);
+    const serializedNonce = encodeWord64(header.nonce.value);
+    const serializedEnergyAmount = encodeWord64(energyAmount.value);
     const serializedPayloadSize = encodeWord32(payloadSize);
     const serializedExpiry = encodeWord64(header.expiry.expiryEpochSeconds);
     return Buffer.concat([

@@ -13,6 +13,7 @@ import * as BlockHash from './types/BlockHash.js';
 import * as Parameter from './types/Parameter.js';
 import * as ContractName from './types/ContractName.js';
 import * as ReceiveName from './types/ReceiveName.js';
+import * as ReturnValue from './types/ReturnValue.js';
 
 /**
  * Namespace with types for CIS-0 standard contracts
@@ -180,7 +181,9 @@ export async function cis0Supports(
             }`
         );
     }
-    const results = deserializeSupportResult(response.returnValue);
+    const results = deserializeSupportResult(
+        ReturnValue.toHexString(response.returnValue)
+    );
     const isListInput = Array.isArray(standardIds);
     const expectedValuesLength = isListInput ? standardIds.length : 1;
 

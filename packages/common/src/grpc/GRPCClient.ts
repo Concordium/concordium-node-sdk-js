@@ -39,6 +39,7 @@ import * as TransactionHash from '../types/TransactionHash.js';
 import * as ContractAddress from '../types/ContractAddress.js';
 import * as Parameter from '../types/Parameter.js';
 import * as Energy from '../types/Energy.js';
+import * as SequenceNumber from '../types/SequenceNumber.js';
 
 /**
  * @hidden
@@ -364,7 +365,7 @@ export class ConcordiumGRPCClient {
      */
     async sendRawAccountTransaction(
         header: v1.AccountTransactionHeader,
-        energyAmount: bigint,
+        energyAmount: Energy.Type,
         payload: Uint8Array,
         signature: v1.AccountTransactionSignature
     ): Promise<TransactionHash.Type> {
@@ -373,9 +374,9 @@ export class ConcordiumGRPCClient {
 
         // Put together sendBlockItemRequest
         const convertedHeader: v2.AccountTransactionHeader = {
-            sender: { value: header.sender.decodedAddress },
-            sequenceNumber: { value: header.nonce },
-            energyAmount: { value: energyAmount },
+            sender: AccountAddress.toProto(header.sender),
+            sequenceNumber: SequenceNumber.toProto(header.nonce),
+            energyAmount: Energy.toProto(energyAmount),
             expiry: { value: header.expiry.expiryEpochSeconds },
         };
         const accountTransaction: v2.AccountTransaction = {

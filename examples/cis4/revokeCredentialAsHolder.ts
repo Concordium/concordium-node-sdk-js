@@ -99,7 +99,7 @@ const signer = buildAccountSigner(wallet);
         signer,
         {
             senderAddress: AccountAddress.fromBase58(wallet.value.address),
-            energy: Energy.create(10000n),
+            energy: Energy.create(10000),
         },
         hSigner,
         nonce,

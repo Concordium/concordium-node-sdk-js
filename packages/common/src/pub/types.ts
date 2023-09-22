@@ -51,7 +51,8 @@ export {
 
 import * as ModuleClient from '../types/ModuleClient.js';
 import * as Parameter from '../types/Parameter.js';
-import * as AccountSequenceNumber from '../types/AccountSequenceNumber.js';
+import * as ReturnValue from '../types/ReturnValue.js';
+import * as SequenceNumber from '../types/SequenceNumber.js';
 import * as Energy from '../types/Energy.js';
 import * as TransactionHash from '../types/TransactionHash.js';
 import * as BlockHash from '../types/BlockHash.js';
@@ -69,7 +70,8 @@ import * as Timestamp from '../types/Timestamp.js';
 export {
     ModuleClient,
     Parameter,
-    AccountSequenceNumber,
+    ReturnValue,
+    SequenceNumber,
     Energy,
     TransactionHash,
     BlockHash,

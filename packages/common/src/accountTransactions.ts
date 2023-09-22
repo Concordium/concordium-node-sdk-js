@@ -47,7 +47,7 @@ export class SimpleTransferHandler
     }
 
     serialize(transfer: SimpleTransferPayload): Buffer {
-        const serializedToAddress = transfer.toAddress.decodedAddress;
+        const serializedToAddress = AccountAddress.toBuffer(transfer.toAddress);
         const serializedAmount = encodeWord64(transfer.amount.microCcdAmount);
         return Buffer.concat([serializedToAddress, serializedAmount]);
     }
@@ -71,7 +71,7 @@ export class SimpleTransferWithMemoHandler
     implements AccountTransactionHandler<SimpleTransferWithMemoPayload>
 {
     serialize(transfer: SimpleTransferWithMemoPayload): Buffer {
-        const serializedToAddress = transfer.toAddress.decodedAddress;
+        const serializedToAddress = AccountAddress.toBuffer(transfer.toAddress);
         const serializedMemo = encodeDataBlob(transfer.memo);
         const serializedAmount = encodeWord64(transfer.amount.microCcdAmount);
         return Buffer.concat([

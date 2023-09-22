@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer/index.js';
 import { getAccountTransactionHandler } from './accountTransactions.js';
 import { Cursor } from './deserializationHelpers.js';
 import {
@@ -8,6 +7,7 @@ import {
     isAccountTransactionType,
 } from './types.js';
 import * as AccountAddress from './types/AccountAddress.js';
+import * as AccountSequenceNumber from './types/SequenceNumber.js';
 import { TransactionExpiry } from './types/transactionExpiry.js';
 
 /**
@@ -61,10 +61,10 @@ function deserializeAccountTransactionSignature(
 function deserializeTransactionHeader(
     serializedHeader: Cursor
 ): AccountTransactionHeader {
-    const sender = AccountAddress.fromBuffer(
-        Buffer.from(serializedHeader.read(32))
+    const sender = AccountAddress.fromBuffer(serializedHeader.read(32));
+    const nonce = AccountSequenceNumber.create(
+        serializedHeader.read(8).readBigUInt64BE(0)
     );
-    const nonce = serializedHeader.read(8).readBigUInt64BE(0);
     // TODO: extract payloadSize and energyAmount?
     // energyAmount
     serializedHeader.read(8).readBigUInt64BE(0);

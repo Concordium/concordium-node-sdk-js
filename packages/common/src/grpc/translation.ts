@@ -6,7 +6,6 @@ import * as v2 from '../grpc-api/v2/concordium/types.js';
 import { mapRecord, unwrap } from '../util.js';
 import { ModuleReference } from '../types/moduleReference.js';
 import { CcdAmount } from '../types/ccdAmount.js';
-import { Base58String } from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';
 import * as BlockHash from '../types/BlockHash.js';
 import * as ReceiveName from '../types/ReceiveName.js';
@@ -15,6 +14,10 @@ import * as ContractAddress from '../types/ContractAddress.js';
 import * as Energy from '../types/Energy.js';
 import * as Duration from '../types/Duration.js';
 import * as Timestamp from '../types/Timestamp.js';
+import * as SequenceNumber from '../types/SequenceNumber.js';
+import * as TransactionHash from '../types/TransactionHash.js';
+import * as Parameter from '../types/Parameter.js';
+import * as ReturnValue from '../types/ReturnValue.js';
 
 function unwrapToHex(bytes: Uint8Array | undefined): v1.HexString {
     return Buffer.from(unwrap(bytes)).toString('hex');
@@ -374,7 +377,7 @@ export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
     };
     const accInfoCommon: v1.AccountInfoSimple = {
         accountAddress: AccountAddress.fromProto(unwrap(acc.address)),
-        accountNonce: unwrap(acc.sequenceNumber?.value),
+        accountNonce: SequenceNumber.fromProto(unwrap(acc.sequenceNumber)),
         accountAmount: unwrap(acc.amount?.value),
         accountIndex: unwrap(acc.index?.value),
         accountThreshold: unwrap(acc.threshold?.value),
@@ -403,7 +406,7 @@ export function nextAccountSequenceNumber(
     nasn: v2.NextAccountSequenceNumber
 ): v1.NextAccountNonce {
     return {
-        nonce: unwrap(nasn.sequenceNumber?.value),
+        nonce: SequenceNumber.fromProto(unwrap(nasn.sequenceNumber)),
         allFinal: nasn.allFinal,
     };
 }
@@ -788,7 +791,7 @@ function trAccountAddress(
 ): v1.AddressAccount {
     return {
         type: 'AddressAccount',
-        address: unwrapToBase58(accountAddress),
+        address: AccountAddress.fromProto(unwrap(accountAddress)),
     };
 }
 
@@ -832,8 +835,10 @@ function trContractTraceElement(
                 ),
                 instigator: trAddress(element.updated.instigator),
                 amount: unwrap(element.updated.amount?.value),
-                message: unwrapValToHex(element.updated.parameter),
-                receiveName: unwrap(element.updated.receiveName?.value),
+                message: Parameter.fromProto(unwrap(element.updated.parameter)),
+                receiveName: ReceiveName.fromProto(
+                    unwrap(element.updated.receiveName)
+                ),
                 events: element.updated.events.map(unwrapValToHex),
             };
         case 'transferred':
@@ -877,7 +882,7 @@ function trContractTraceElement(
 
 function trBakerEvent(
     bakerEvent: v2.BakerEvent,
-    account: Base58String
+    account: AccountAddress.Type
 ): v1.BakerEvent {
     const event = bakerEvent.event;
     switch (event.oneofKind) {
@@ -886,7 +891,7 @@ function trBakerEvent(
             return {
                 tag: v1.TransactionEventTag.BakerAdded,
                 bakerId: unwrap(keysEvent?.bakerId?.value),
-                account: unwrapToBase58(keysEvent?.account),
+                account: AccountAddress.fromProto(unwrap(keysEvent?.account)),
                 signKey: unwrapValToHex(keysEvent?.signKey),
                 electionKey: unwrapValToHex(keysEvent?.electionKey),
                 aggregationKey: unwrapValToHex(keysEvent?.aggregationKey),
@@ -927,7 +932,9 @@ function trBakerEvent(
             return {
                 tag: v1.TransactionEventTag.BakerKeysUpdated,
                 bakerId: unwrap(event.bakerKeysUpdated.bakerId?.value),
-                account: unwrapToBase58(event.bakerKeysUpdated.account),
+                account: AccountAddress.fromProto(
+                    unwrap(event.bakerKeysUpdated.account)
+                ),
                 signKey: unwrapValToHex(event.bakerKeysUpdated.signKey),
                 electionKey: unwrapValToHex(event.bakerKeysUpdated.electionKey),
                 aggregationKey: unwrapValToHex(
@@ -1008,7 +1015,7 @@ function trDelegTarget(
 
 function trDelegationEvent(
     delegationEvent: v2.DelegationEvent,
-    account: Base58String
+    account: AccountAddress.Type
 ): v1.DelegationEvent {
     const event = delegationEvent.event;
     switch (event.oneofKind) {
@@ -1855,7 +1862,7 @@ function trAccountTransactionSummary(
         ...baseBlockItemSummary,
         type: v1.TransactionSummaryType.AccountTransaction,
         cost: unwrap(details.cost?.value),
-        sender: unwrapToBase58(details.sender),
+        sender: AccountAddress.fromProto(unwrap(details.sender)),
     };
 
     const effect = unwrap(details.effects?.effect);
@@ -2001,7 +2008,9 @@ function trAccountTransactionSummary(
             };
             const added: v1.NewEncryptedAmountEvent = {
                 tag: v1.TransactionEventTag.NewEncryptedAmount,
-                account: unwrapToBase58(transfer.added?.receiver),
+                account: AccountAddress.fromProto(
+                    unwrap(transfer.added?.receiver)
+                ),
                 newIndex: Number(unwrap(transfer.added?.newIndex)),
                 encryptedAmount: unwrapValToHex(
                     transfer.added?.encryptedAmount
@@ -2031,7 +2040,7 @@ function trAccountTransactionSummary(
             const transfer = effect.transferredToEncrypted;
             const added: v1.EncryptedSelfAmountAddedEvent = {
                 tag: v1.TransactionEventTag.EncryptedSelfAmountAdded,
-                account: unwrapToBase58(transfer.account),
+                account: AccountAddress.fromProto(unwrap(transfer.account)),
                 amount: unwrap(transfer.amount?.value),
                 newAmount: unwrapValToHex(transfer.newAmount),
             };
@@ -2066,7 +2075,7 @@ function trAccountTransactionSummary(
             const transfer = effect.transferredWithSchedule;
             const event: v1.TransferredWithScheduleEvent = {
                 tag: v1.TransactionEventTag.TransferredWithSchedule,
-                to: unwrapToBase58(transfer.receiver),
+                to: AccountAddress.fromProto(unwrap(transfer.receiver)),
                 amount: transfer.amount.map(trNewRelease),
             };
             if (transfer.memo) {
@@ -2151,8 +2160,8 @@ export function blockItemSummary(
 ): v1.BlockItemSummary {
     const base = {
         index: unwrap(summary.index?.value),
-        energyCost: unwrap(summary.energyCost?.value),
-        hash: unwrapValToHex(summary.hash),
+        energyCost: Energy.fromProto(unwrap(summary.energyCost)),
+        hash: TransactionHash.fromProto(unwrap(summary.hash)),
     };
     if (summary.details.oneofKind === 'accountTransaction') {
         return trAccountTransactionSummary(
@@ -2168,7 +2177,9 @@ export function blockItemSummary(
                 v2.CredentialType.INITIAL
                     ? 'initial'
                     : 'normal',
-            address: unwrapToBase58(summary.details.accountCreation.address),
+            address: AccountAddress.fromProto(
+                unwrap(summary.details.accountCreation.address)
+            ),
             regId: unwrapValToHex(summary.details.accountCreation.regId),
         };
     } else if (summary.details.oneofKind === 'update') {
@@ -2187,7 +2198,7 @@ function trBlockItemSummaryInBlock(
     summary: v2.BlockItemSummaryInBlock
 ): v1.BlockItemSummaryInBlock {
     return {
-        blockHash: unwrapValToHex(summary.blockHash),
+        blockHash: BlockHash.fromProto(unwrap(summary.blockHash)),
         summary: blockItemSummary(unwrap(summary.outcome)),
     };
 }
@@ -2226,19 +2237,26 @@ export function invokeInstanceResponse(
         case 'failure':
             return {
                 tag: 'failure',
-                usedEnergy: unwrap(
-                    invokeResponse.result.failure.usedEnergy?.value
+                usedEnergy: Energy.fromProto(
+                    unwrap(invokeResponse.result.failure.usedEnergy)
                 ),
                 reason: trRejectReason(invokeResponse.result.failure.reason),
+                returnValue:
+                    invokeResponse.result.failure.returnValue === undefined
+                        ? undefined
+                        : ReturnValue.fromBuffer(
+                              invokeResponse.result.failure.returnValue
+                          ),
             };
         case 'success': {
             const result = invokeResponse.result.success;
             return {
                 tag: 'success',
-                usedEnergy: unwrap(result.usedEnergy?.value),
-                returnValue: result.returnValue
-                    ? Buffer.from(unwrap(result.returnValue)).toString('hex')
-                    : undefined,
+                usedEnergy: Energy.fromProto(unwrap(result.usedEnergy)),
+                returnValue:
+                    result.returnValue === undefined
+                        ? undefined
+                        : ReturnValue.fromBuffer(result.returnValue),
                 events: result.effects.map(trContractTraceElement),
             };
         }

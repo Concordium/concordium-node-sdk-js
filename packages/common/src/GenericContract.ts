@@ -25,6 +25,7 @@ import { CcdAmount } from './types/ccdAmount.js';
 import { TransactionExpiry } from './types/transactionExpiry.js';
 import { ModuleReference } from './types/moduleReference.js';
 import * as BlockHash from './types/BlockHash.js';
+import * as ReturnValue from './types/ReturnValue.js';
 
 /**
  * Metadata necessary for smart contract transactions
@@ -501,7 +502,9 @@ class ContractBase<E extends string = string, V extends string = string> {
             );
         }
 
-        return deserializeResponse(response.returnValue);
+        return deserializeResponse(
+            ReturnValue.toHexString(response.returnValue)
+        );
     }
 }
 

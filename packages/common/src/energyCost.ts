@@ -6,6 +6,7 @@ import {
     ChainParameters,
     Ratio,
 } from './types.js';
+import * as Energy from './types/Energy.js';
 
 /**
  * These constants must be consistent with constA and constB in:
@@ -31,11 +32,11 @@ export function calculateEnergyCost(
     signatureCount: bigint,
     payloadSize: bigint,
     transactionSpecificCost: bigint
-): bigint {
-    return (
+): Energy.Type {
+    return Energy.create(
         constantA * signatureCount +
-        constantB * (accountTransactionHeaderSize + payloadSize) +
-        transactionSpecificCost
+            constantB * (accountTransactionHeaderSize + payloadSize) +
+            transactionSpecificCost
     );
 }
 
@@ -48,7 +49,7 @@ export function getEnergyCost(
     transactionType: AccountTransactionType,
     payload: AccountTransactionPayload,
     signatureCount = 1n
-): bigint {
+): Energy.Type {
     const handler = getAccountTransactionHandler(transactionType);
     const size = handler.serialize(payload).length;
     return calculateEnergyCost(

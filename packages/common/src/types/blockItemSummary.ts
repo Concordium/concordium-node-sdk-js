@@ -26,24 +26,27 @@ import {
     HexString,
     TransactionSummaryType,
     TransactionStatusEnum,
-    Base58String,
     AccountTransactionType,
 } from '../types.js';
 import { RejectReason } from './rejectReason.js';
 import { isDefined } from '../util.js';
 import { isEqualContractAddress } from '../contractHelpers.js';
 import type * as ContractAddress from './ContractAddress.js';
+import type * as AccountAddress from './AccountAddress.js';
+import type * as BlockHash from './BlockHash.js';
+import type * as TransactionHash from './TransactionHash.js';
+import type * as Energy from './Energy.js';
 
 export interface BaseBlockItemSummary {
     index: bigint;
-    energyCost: bigint;
-    hash: HexString;
+    energyCost: Energy.Type;
+    hash: TransactionHash.Type;
 }
 
 export interface BaseAccountTransactionSummary extends BaseBlockItemSummary {
     type: TransactionSummaryType.AccountTransaction;
     cost: bigint;
-    sender: string;
+    sender: AccountAddress.Type;
 }
 
 export enum TransactionKindString {
@@ -231,7 +234,7 @@ export type AccountTransactionSummary = BaseAccountTransactionSummary &
 export interface AccountCreationSummary extends BaseBlockItemSummary {
     type: TransactionSummaryType.AccountCreation;
     credentialType: 'initial' | 'normal';
-    address: string;
+    address: AccountAddress.Type;
     regId: string;
 }
 
@@ -247,7 +250,7 @@ export type BlockItemSummary =
     | UpdateSummary;
 
 export interface BlockItemSummaryInBlock {
-    blockHash: string;
+    blockHash: BlockHash.Type;
     summary: BlockItemSummary;
 }
 
@@ -377,7 +380,7 @@ export function getReceiverAccount<
         | TransferWithMemoSummary
         | TransferWithScheduleSummary
         | TransferWithScheduleAndMemoSummary
->(summary: T): Base58String;
+>(summary: T): AccountAddress.Type;
 export function getReceiverAccount(
     summary: Exclude<
         AccountTransactionSummary,
@@ -392,10 +395,10 @@ export function getReceiverAccount(
 ): undefined;
 export function getReceiverAccount(
     summary: BlockItemSummary
-): Base58String | undefined;
+): AccountAddress.Type | undefined;
 export function getReceiverAccount(
     summary: BlockItemSummary
-): Base58String | undefined {
+): AccountAddress.Type | undefined {
     if (summary.type !== TransactionSummaryType.AccountTransaction) {
         return undefined;
     }
@@ -469,16 +472,20 @@ export function affectedContracts(
  *
  * @param {BlockItemSummary} summary - The block item summary to check.
  *
- * @returns {Base58String[]} List of account addresses affected by the transaction.
+ * @returns {AccountAddress.Type[]} List of account addresses affected by the transaction.
  */
 export function affectedAccounts(
     summary: AccountTransactionSummary
-): Base58String[];
+): AccountAddress.Type[];
 export function affectedAccounts(
     summary: AccountCreationSummary | UpdateSummary
 ): never[];
-export function affectedAccounts(summary: BlockItemSummary): Base58String[];
-export function affectedAccounts(summary: BlockItemSummary): Base58String[] {
+export function affectedAccounts(
+    summary: BlockItemSummary
+): AccountAddress.Type[];
+export function affectedAccounts(
+    summary: BlockItemSummary
+): AccountAddress.Type[] {
     if (summary.type !== TransactionSummaryType.AccountTransaction) {
         return [];
     }
@@ -493,7 +500,7 @@ export function affectedAccounts(summary: BlockItemSummary): Base58String[] {
             return [summary.removed.account];
         case TransactionKindString.Update: {
             return summary.events.reduce(
-                (addresses: Base58String[], event) => {
+                (addresses: AccountAddress.Type[], event) => {
                     if (
                         event.tag === TransactionEventTag.Transferred &&
                         event.to.type === 'AddressAccount' &&

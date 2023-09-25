@@ -596,8 +596,7 @@ export default class ConcordiumNodeClient {
             throw new Error('The input was not a valid hash: ' + blockHash);
         }
         const input: BlockHash = { blockHash };
-        const { value } = await this.client.getAnonymityRevokers(input)
-            .response;
+        const { value } = await this.client.getInstances(input).response;
         const bigIntPropertyKeys: (keyof ContractAddress)[] = [
             'index',
             'subindex',
@@ -781,8 +780,6 @@ export default class ConcordiumNodeClient {
             'effectiveStake',
             'allPoolTotalCapital',
         ];
-
-        // const response = await this.sendRequest(this.client.getPoolStatus, req);
 
         return convertJsonResponse<PoolStatus>(
             value,

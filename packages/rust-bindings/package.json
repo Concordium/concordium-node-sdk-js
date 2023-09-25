@@ -19,31 +19,31 @@
     "types": "./lib/dapp/node/index.d.ts",
     "exports": {
         ".": {
-            "require": "./lib/dapp/node/index.js",
-            "browser": "./lib/dapp/web/index.min.js",
-            "types": "./lib/dapp/node/index.d.ts"
+            "types": "./lib/dapp/node/index.d.ts",
+            "node": "./lib/dapp/node/index.js",
+            "default": "./lib/dapp/web/index.min.js"
         },
         "./dapp": {
-            "require": "./lib/dapp/node/index.js",
-            "browser": "./lib/dapp/web/index.min.js",
-            "types": "./lib/dapp/node/index.d.ts"
+            "types": "./lib/dapp/node/index.d.ts",
+            "node": "./lib/dapp/node/index.js",
+            "default": "./lib/dapp/web/index.min.js"
         },
         "./wallet": {
-            "require": "./lib/wallet/node/index.js",
-            "browser": "./lib/wallet/web/index.min.js",
-            "types": "./lib/wallet/node/index.d.ts"
+            "types": "./lib/wallet/node/index.d.ts",
+            "node": "./lib/wallet/node/index.js",
+            "default": "./lib/wallet/web/index.min.js"
         },
         "./bundler": {
-            "browser": "./lib/dapp/bundler/index.js",
-            "types": "./lib/dapp/bundler/index.d.ts"
+            "types": "./lib/dapp/bundler/index.d.ts",
+            "default": "./lib/dapp/bundler/index.js"
         },
         "./bundler/dapp": {
-            "browser": "./lib/dapp/bundler/index.js",
-            "types": "./lib/dapp/bundler/index.d.ts"
+            "types": "./lib/dapp/bundler/index.d.ts",
+            "default": "./lib/dapp/bundler/index.js"
         },
         "./bundler/wallet": {
-            "browser": "./lib/wallet/bundler/index.js",
-            "types": "./lib/wallet/bundler/index.d.ts"
+            "types": "./lib/wallet/bundler/index.d.ts",
+            "default": "./lib/wallet/bundler/index.js"
         }
     },
     "files": [
@@ -63,10 +63,10 @@
         "rimraf": "^5.0.1",
         "ts-loader": "^9.4.4",
         "typescript": "^5.2.2",
-        "wasm-pack": "^0.12.1"
+        "wasm-pack": "^0.12.1",
+        "webpack": "^5.88.2"
     },
     "dependencies": {
-        "buffer": "^6.0.3",
-        "webpack": "^5.72.0"
+        "buffer": "^6.0.3"
     }
 }

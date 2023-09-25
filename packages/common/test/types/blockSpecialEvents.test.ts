@@ -8,7 +8,7 @@ import {
     BlockSpecialEventPaydayAccountReward,
     BlockSpecialEventBlockReward,
     specialEventAffectedAccounts,
-} from '../../src';
+} from '../../src/index.js';
 
 const bakingRewards: BlockSpecialEventBakingRewards = {
     tag: 'bakingRewards',

@@ -1,1 +1,1 @@
-export * from '../clientV2';
+export * from '../clientV2.js';

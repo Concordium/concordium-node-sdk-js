@@ -1,9 +1,9 @@
-import { ContractAddress, CryptographicParameters } from '../types';
+import { ContractAddress, CryptographicParameters } from '../types.js';
 import {
     AttributeType,
     StatementAttributeType,
     TimestampAttribute,
-} from './web3IdProofTypes';
+} from './web3IdProofTypes.js';
 
 export type VerifyWeb3IdCredentialSignatureInput = {
     globalContext: CryptographicParameters;

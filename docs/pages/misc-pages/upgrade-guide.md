@@ -49,10 +49,25 @@ with web3-id proofs.
 ### NodeJS
 
 The `@concordium/node-sdk` module is no longer compatible with
-node versions <16. This is due to relying on entrypoints declared in
-the `exports` field of `@concordium/common-sdk`
-and correspondingly `@concordium/rust-bindings` to make it possible to select
-only parts of the SDK to include in your application.
+node versions <16 and is published only as an ES module.
+This is due to relying on entrypoints declared in the `exports` field
+of `@concordium/common-sdk` and correspondingly `@concordium/rust-bindings`
+to make it possible to select only parts of the SDK to include in your
+application.
+
+The easiest way to run your node application as an ES module, is by setting
+the `type` field of `package.json` to be set to `"module"`:
+
+```json
+{
+    ...
+    "type": "module",
+    ...
+}
+```
+
+Alternatively, files names with the extension `mjs` (or `mts` for TypeScript)
+are always handled as ES modules.
 
 For **TypeScript** users, at least typescript version 4.7 is required along
 with the setting `compilerOptions.moduleResultion` to `"node16"` or

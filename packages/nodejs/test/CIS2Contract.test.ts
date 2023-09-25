@@ -1,10 +1,10 @@
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 import {
     AccountTransactionType,
     ContractAddress,
     TransactionEventTag,
 } from '@concordium/common-sdk';
-import { getNodeClientV2 as getNodeClient } from './testHelpers';
+import { getNodeClientV2 as getNodeClient } from './testHelpers.js';
 import { CIS2Contract } from '@concordium/common-sdk/cis2';
 import { serializeTypeValue } from '@concordium/common-sdk/schema';
 

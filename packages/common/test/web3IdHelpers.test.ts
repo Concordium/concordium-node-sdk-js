@@ -8,7 +8,7 @@ import {
     isStringAttributeInRange,
     timestampToDate,
     verifyWeb3IdCredentialSignature,
-} from '../src';
+} from '../src/index.js';
 
 const globalContext = JSON.parse(
     fs.readFileSync('./test/resources/global.json').toString()

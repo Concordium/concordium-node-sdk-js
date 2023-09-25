@@ -1,2 +1,2 @@
 // The JSON-RPC client
-export * from '../json-rpc';
+export * from '../json-rpc/index.js';

@@ -1,2 +1,2 @@
-export * from './idProofs';
-export * from './idProofTypes';
+export * from './idProofs.js';
+export * from './idProofTypes.js';

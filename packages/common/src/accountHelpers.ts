@@ -4,7 +4,7 @@ import {
     AccountInfo,
     AccountInfoBaker,
     AccountInfoDelegator,
-} from './types';
+} from './types.js';
 
 /** Whether {@link AccountInfo} parameter given is of type {@link AccountInfoDelegator}, i.e. the account is a delegator */
 export const isDelegatorAccount = (

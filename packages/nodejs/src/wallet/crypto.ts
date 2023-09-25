@@ -1,5 +1,5 @@
 import * as crypto from 'crypto';
-import { MobileWalletExport } from './types';
+import { MobileWalletExport } from './types.js';
 
 interface EncryptionMetaData {
     keyLen: number;

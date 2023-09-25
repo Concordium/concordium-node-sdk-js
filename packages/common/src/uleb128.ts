@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 
 /**
  * Decodes an unsigned leb128 encoded value to bigint. Note that if buffer

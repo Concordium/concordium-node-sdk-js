@@ -1,11 +1,11 @@
-import { ModuleReference } from './moduleReference';
-import * as H from '../contractHelpers';
-import { sha256 } from '../hash';
-import { Buffer } from 'buffer/';
-import { VersionedModuleSource } from '../types';
-import { schemaBytesFromWasmModule } from '../util';
-import { RawModuleSchema } from '../schemaTypes';
-import { Cursor, deserializeUInt32BE } from '../deserializationHelpers';
+import { ModuleReference } from './moduleReference.js';
+import * as H from '../contractHelpers.js';
+import { sha256 } from '../hash.js';
+import { Buffer } from 'buffer/index.js';
+import { VersionedModuleSource } from '../types.js';
+import { schemaBytesFromWasmModule } from '../util.js';
+import { RawModuleSchema } from '../schemaTypes.js';
+import { Cursor, deserializeUInt32BE } from '../deserializationHelpers.js';
 
 /** Interface of a smart contract containing the name of the contract and every entrypoint. */
 export type ContractInterface = {

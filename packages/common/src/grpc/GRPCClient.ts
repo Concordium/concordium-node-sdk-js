@@ -4,19 +4,19 @@
  *
  * @module Common GRPC-Client
  */
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 import type { RpcError, RpcTransport } from '@protobuf-ts/runtime-rpc';
 
-import * as v1 from '../types';
-import * as v2 from '../grpc-api/v2/concordium/types';
-import { Base58String, HexString, isRpcError } from '../types';
-import { QueriesClient } from '../grpc-api/v2/concordium/service.client';
-import { HealthClient } from '../grpc-api/v2/concordium/health.client';
-import { CredentialRegistrationId } from '../types/CredentialRegistrationId';
-import * as translate from './translation';
-import { AccountAddress } from '../types/accountAddress';
-import { getAccountTransactionHandler } from '../accountTransactions';
-import { calculateEnergyCost } from '../energyCost';
+import * as v1 from '../types.js';
+import * as v2 from '../grpc-api/v2/concordium/types.js';
+import { Base58String, HexString, isRpcError } from '../types.js';
+import { QueriesClient } from '../grpc-api/v2/concordium/service.client.js';
+import { HealthClient } from '../grpc-api/v2/concordium/health.client.js';
+import { CredentialRegistrationId } from '../types/CredentialRegistrationId.js';
+import * as translate from './translation.js';
+import { AccountAddress } from '../types/accountAddress.js';
+import { getAccountTransactionHandler } from '../accountTransactions.js';
+import { calculateEnergyCost } from '../energyCost.js';
 import {
     countSignatures,
     isHex,
@@ -26,12 +26,15 @@ import {
     mapStream,
     unwrap,
     wasmToSchema,
-} from '../util';
-import { serializeAccountTransactionPayload } from '../serialization';
-import { BlockItemStatus, BlockItemSummary } from '../types/blockItemSummary';
-import { ModuleReference } from '../types/moduleReference';
-import { DEFAULT_INVOKE_ENERGY } from '../constants';
-import { TransactionExpiry } from '../types/transactionExpiry';
+} from '../util.js';
+import { serializeAccountTransactionPayload } from '../serialization.js';
+import {
+    BlockItemStatus,
+    BlockItemSummary,
+} from '../types/blockItemSummary.js';
+import { ModuleReference } from '../types/moduleReference.js';
+import { DEFAULT_INVOKE_ENERGY } from '../constants.js';
+import { TransactionExpiry } from '../types/transactionExpiry.js';
 
 /**
  * @hidden

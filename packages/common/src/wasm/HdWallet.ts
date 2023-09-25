@@ -1,14 +1,14 @@
 import * as wasm from '@concordium/rust-bindings/wallet';
 import { mnemonicToSeedSync, validateMnemonic } from '@scure/bip39';
-import { wordlist } from '@scure/bip39/wordlists/english';
-import { Buffer } from 'buffer/';
-import { isHex } from '../util';
+import { wordlist } from '@scure/bip39/wordlists/english.js';
+import { Buffer } from 'buffer/index.js';
+import { isHex } from '../util.js';
 import {
     AttributesKeys,
     Network,
     CryptographicParameters,
     ContractAddress,
-} from '../types';
+} from '../types.js';
 
 /**
  * Class for Hierarchical Deterministic key derivation for Concordium identities and accounts.

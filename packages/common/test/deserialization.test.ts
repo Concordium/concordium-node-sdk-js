@@ -1,6 +1,6 @@
-import { deserializeTransaction } from '../src/wasm/deserialization';
-import { Buffer } from 'buffer/';
-import { serializeAccountTransactionForSubmission } from '../src/serialization';
+import { deserializeTransaction } from '../src/wasm/deserialization.js';
+import { Buffer } from 'buffer/index.js';
+import { serializeAccountTransactionForSubmission } from '../src/serialization.js';
 import {
     AccountAddress,
     AccountTransaction,
@@ -17,7 +17,7 @@ import {
     TransactionExpiry,
     tokenAddressFromBase58,
     tokenAddressToBase58,
-} from '../src';
+} from '../src/index.js';
 
 function deserializeAccountTransactionBase(
     type: AccountTransactionType,

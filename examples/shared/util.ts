@@ -1,4 +1,4 @@
-import { Base58String, ContractAddress } from '@concordium/node-sdk';
+import type { Base58String, ContractAddress } from '@concordium/node-sdk';
 
 export const parseAddress = (input: string): Base58String | ContractAddress => {
     if (!input.includes(',')) {

@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 
 import {
     ContractTransactionMetadata,
@@ -8,15 +8,15 @@ import {
     ContractDryRun,
     getContractUpdateDefaultExpiryDate,
     getInvoker,
-} from '../GenericContract';
-import { ConcordiumGRPCClient } from '../grpc/GRPCClient';
-import { AccountSigner } from '../signHelpers';
+} from '../GenericContract.js';
+import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
+import { AccountSigner } from '../signHelpers.js';
 import type {
     ContractAddress,
     Base58String,
     HexString,
     InvokeContractResult,
-} from '../types';
+} from '../types.js';
 import {
     CIS4,
     deserializeCIS4CredentialEntry,
@@ -35,7 +35,7 @@ import {
     serializeCIS4RevokeCredentialIssuerParam,
     serializeCIS4UpdateRevocationKeysParam,
     Web3IdSigner,
-} from './util';
+} from './util.js';
 
 type Views =
     | 'credentialEntry'

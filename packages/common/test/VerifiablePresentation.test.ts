@@ -1,7 +1,7 @@
 import {
     replaceDateWithTimeStampAttribute,
     reviveDateFromTimeStampAttribute,
-} from '../src/types/VerifiablePresentation';
+} from '../src/types/VerifiablePresentation.js';
 
 const dateValue = '2023-08-24T15:15:29.000Z';
 const timestamp = 1692890129000;

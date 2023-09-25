@@ -1,4 +1,4 @@
-import { intListToStringList } from '../src/util';
+import { intListToStringList } from '../src/util.js';
 
 test('Correctly converts stringified list of numbers to stringified list of corresponding strings', () => {
     // List of ints

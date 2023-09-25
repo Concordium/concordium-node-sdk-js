@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 
 import { initSync } from '../pkg/dapp/web';
 import wasmBase64 from '../pkg/dapp/web/index_bg.wasm'; // Expected to resolve to base64 encoded bytes of wasm module

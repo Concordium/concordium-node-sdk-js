@@ -9,7 +9,7 @@ import {
     GasRewardsV1,
     HexString,
     TimeoutParameters,
-} from '..';
+} from '../types.js';
 import type {
     Energy,
     IpInfo,
@@ -20,7 +20,7 @@ import type {
     MintDistribution,
     MintRate,
     CommissionRates,
-} from '../types';
+} from '../types.js';
 
 type ChainUpdate<UpdateType, T> = {
     /** The type of the update */

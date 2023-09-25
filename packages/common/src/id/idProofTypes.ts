@@ -4,7 +4,7 @@ import type {
     IdentityObjectV1,
     Network,
     Versioned,
-} from '../types';
+} from '../types.js';
 import type {
     AtomicProof,
     GenericAtomicStatement,
@@ -12,7 +12,7 @@ import type {
     GenericNonMembershipStatement,
     GenericRangeStatement,
     GenericRevealStatement,
-} from '../commonProofTypes';
+} from '../commonProofTypes.js';
 
 export type RangeStatement = GenericRangeStatement<AttributeKey, string>;
 export type NonMembershipStatement = GenericNonMembershipStatement<

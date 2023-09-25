@@ -1,4 +1,4 @@
-import { getAccountTransactionSignDigest } from './serialization';
+import { getAccountTransactionSignDigest } from './serialization.js';
 import {
     AccountInfo,
     AccountTransaction,
@@ -8,12 +8,12 @@ import {
     SimpleAccountKeys,
     WalletExportFormat,
     WithAccountKeys,
-} from './types';
+} from './types.js';
 import { sign, verify } from '@noble/ed25519';
-import { Buffer } from 'buffer/';
-import { AccountAddress } from './types/accountAddress';
-import { sha256 } from './hash';
-import { mapRecord } from './util';
+import { Buffer } from 'buffer/index.js';
+import { AccountAddress } from './types/accountAddress.js';
+import { sha256 } from './hash.js';
+import { mapRecord } from './util.js';
 
 /**
  * A structure to use for creating signatures on a given digest.

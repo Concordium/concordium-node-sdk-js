@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 import {
     BakerKeysWithProofs,
     ConfigureBakerPayload,
@@ -7,9 +7,9 @@ import {
     ConfigureDelegationPayload,
     DelegationTarget,
     DelegationTargetType,
-} from './types';
-import { DataBlob } from './types/DataBlob';
-import { isDefined } from './util';
+} from './types.js';
+import { DataBlob } from './types/DataBlob.js';
+import { isDefined } from './util.js';
 
 export function serializeMap<K extends string | number | symbol, T>(
     map: Record<K, T>,

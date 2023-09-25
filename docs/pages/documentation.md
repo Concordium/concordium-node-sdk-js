@@ -55,3 +55,22 @@ from versions
 `compilerOptions.moduleResolution: "node16" // Or "nodenext"`.
 - Bundlers -> Typescript version **5.0** and later with
 `compilerOptions.moduleResolution: "bundler"`.
+
+### NodeJS
+
+The node-sdk is published as an ES module, and as such packages using it must
+also be ES modules.
+
+The easiest way to run your node application as an ES module, is by setting
+the `type` field of `package.json` to be set to `"module"`:
+
+```json
+{
+    ...
+    "type": "module",
+    ...
+}
+```
+
+Alternatively, files names with the extension `mjs` (or `mts` for TypeScript)
+are always handled as ES modules.

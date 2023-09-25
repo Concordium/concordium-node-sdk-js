@@ -1,6 +1,6 @@
-import { encode as bs58Encode } from 'bs58check';
-import { Buffer } from 'buffer/';
-import { AccountAddress } from './types/accountAddress';
+import bs58check from 'bs58check';
+import { Buffer } from 'buffer/index.js';
+import { AccountAddress } from './types/accountAddress.js';
 
 const addressByteLength = 32;
 const aliasBytesLength = 3;
@@ -53,5 +53,5 @@ export function getAlias(
         commonBytes,
         aliasBytes,
     ]);
-    return new AccountAddress(bs58Encode(prefixedWithVersion));
+    return new AccountAddress(bs58check.encode(prefixedWithVersion));
 }

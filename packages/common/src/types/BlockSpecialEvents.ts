@@ -1,4 +1,4 @@
-import { Amount, BakerId, Base58String } from '../types';
+import { Amount, BakerId, Base58String } from '../types.js';
 
 export type BlockSpecialEvent =
     | BlockSpecialEventBakingRewards

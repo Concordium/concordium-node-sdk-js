@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 import {
     AttributeKey,
     AttributeKeyString,
@@ -7,7 +7,7 @@ import {
     ContractAddress,
     HexString,
     Network,
-} from '../types';
+} from '../types.js';
 import {
     AtomicStatementV2,
     IdentityQualifier,
@@ -27,22 +27,22 @@ import {
     AttributeType,
     isTimestampAttribute,
     StatementAttributeType,
-} from './web3IdProofTypes';
-import { getPastDate } from '../id/idProofs';
+} from './web3IdProofTypes.js';
+import { getPastDate } from '../id/idProofs.js';
 import {
     StatementTypes,
     StatementBuilder,
     MIN_DATE,
     MAX_DATE,
     EU_MEMBERS,
-} from '../commonProofTypes';
-import { ConcordiumHdWallet } from '../wasm/HdWallet';
+} from '../commonProofTypes.js';
+import { ConcordiumHdWallet } from '../wasm/HdWallet.js';
 import {
     compareStringAttributes,
     isStringAttributeInRange,
     statementAttributeTypeToAttributeType,
     timestampToDate,
-} from './web3IdHelpers';
+} from './web3IdHelpers.js';
 
 export const MAX_STRING_BYTE_LENGTH = 31;
 export const MAX_U64 = 18446744073709551615n; // 2n ** 64n - 1n

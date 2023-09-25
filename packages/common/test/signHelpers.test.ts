@@ -2,13 +2,13 @@ import {
     signMessage,
     buildBasicAccountSigner,
     verifyMessageSignature,
-} from '../src/signHelpers';
+} from '../src/signHelpers.js';
 import {
     AccountAddress,
     AccountInfo,
     buildAccountSigner,
     SimpleAccountKeys,
-} from '../src';
+} from '../src/index.js';
 
 const TEST_ACCOUNT_SINGLE =
     '3eP94feEdmhYiPC1333F9VoV31KGMswonuHk5tqmZrzf761zK5';

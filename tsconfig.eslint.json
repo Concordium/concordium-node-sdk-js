@@ -1,6 +1,7 @@
 {
     "include": [
         "./**/*.config.js",
-        "./.eslintrc.js"
+        "./.eslintrc.cjs",
+        "./scripts/*.js"
     ]
 }

@@ -4,8 +4,8 @@ import {
     HexString,
     IpAddressString,
     ReleaseSchedule,
-} from './types';
-import { Buffer } from 'buffer/';
+} from './types.js';
+import { Buffer } from 'buffer/index.js';
 
 /**
  * Replaces a number in a JSON string with the same number as a

@@ -1,10 +1,10 @@
-import * as v2 from '../../common/lib/cjs/grpc-api/v2/concordium/types';
+import * as v2 from '../../common/lib/grpc-api/v2/concordium/types.js';
 import * as v1 from '@concordium/common-sdk';
 import {
     buildBasicAccountSigner,
     signTransaction,
 } from '@concordium/common-sdk';
-import { getNodeClientV2 as getNodeClient } from '../test/testHelpers';
+import { getNodeClientV2 as getNodeClient } from '../test/testHelpers.js';
 
 const client = getNodeClient();
 

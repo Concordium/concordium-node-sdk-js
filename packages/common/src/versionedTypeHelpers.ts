@@ -23,7 +23,7 @@ import {
     StakePendingChange,
     StakePendingChangeV0,
     StakePendingChangeV1,
-} from './types';
+} from './types.js';
 
 /** Whether {@link AccountInfo} parameter given is of type {@link AccountInfoBakerV0} */
 export const isBakerAccountV0 = (ai: AccountInfo): ai is AccountInfoBakerV0 =>

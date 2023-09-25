@@ -1,5 +1,5 @@
 import Big from 'big.js';
-import { CcdAmount } from '../../src';
+import { CcdAmount } from '../../src/index.js';
 
 describe('To and from ccd as strings', () => {
     test('Parses one CCD correctly', () => {

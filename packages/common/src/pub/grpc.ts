@@ -1,2 +1,2 @@
 // The GRPC client.
-export * from '../grpc';
+export * from '../grpc/index.js';

@@ -1,6 +1,6 @@
 import * as v1 from '@concordium/common-sdk';
-import * as v2 from '../../common/lib/cjs/grpc-api/v2/concordium/types';
-import { testnetBulletproofGenerators } from './resources/bulletproofgenerators';
+import * as v2 from '../../common/lib/grpc-api/v2/concordium/types.js';
+import { testnetBulletproofGenerators } from './resources/bulletproofgenerators.js';
 import {
     buildBasicAccountSigner,
     calculateEnergyCost,
@@ -18,10 +18,10 @@ import {
     getIdentityInput,
     getNodeClientV2,
     getNodeClientWeb,
-} from './testHelpers';
+} from './testHelpers.js';
 import * as ed from '@noble/ed25519';
-import * as expected from './resources/expectedJsons';
-import { Buffer } from 'buffer/';
+import * as expected from './resources/expectedJsons.js';
+import { Buffer } from 'buffer/index.js';
 
 import { TextEncoder, TextDecoder } from 'util';
 import {

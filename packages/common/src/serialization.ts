@@ -1,5 +1,5 @@
-import { Buffer } from 'buffer/';
-import { getAccountTransactionHandler } from './accountTransactions';
+import { Buffer } from 'buffer/index.js';
+import { getAccountTransactionHandler } from './accountTransactions.js';
 import {
     encodeWord8FromString,
     encodeWord8,
@@ -9,7 +9,7 @@ import {
     serializeMap,
     serializeVerifyKey,
     serializeYearMonth,
-} from './serializationHelpers';
+} from './serializationHelpers.js';
 import {
     AccountTransactionHeader,
     AccountTransactionType,
@@ -24,11 +24,11 @@ import {
     CredentialDeploymentInfo,
     CredentialDeploymentDetails,
     SignedCredentialDeploymentDetails,
-} from './types';
-import { calculateEnergyCost } from './energyCost';
-import { countSignatures } from './util';
-import { AccountAddress } from './types/accountAddress';
-import { sha256 } from './hash';
+} from './types.js';
+import { calculateEnergyCost } from './energyCost.js';
+import { countSignatures } from './util.js';
+import { AccountAddress } from './types/accountAddress.js';
+import { sha256 } from './hash.js';
 
 function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
     return Buffer.from(Uint8Array.of(type));

@@ -1,23 +1,23 @@
 import {
     ContractTransactionMetadata,
     getContractUpdateDefaultExpiryDate,
-} from '../GenericContract';
-import { ModuleReference } from './moduleReference';
-import { Buffer } from 'buffer/';
-import * as BlockHash from './BlockHash';
-import * as Parameter from './Parameter';
-import * as TransactionHash from './TransactionHash';
-import * as ContractName from './ContractName';
+} from '../GenericContract.js';
+import { ModuleReference } from './moduleReference.js';
+import { Buffer } from 'buffer/index.js';
+import * as BlockHash from './BlockHash.js';
+import * as Parameter from './Parameter.js';
+import * as TransactionHash from './TransactionHash.js';
+import * as ContractName from './ContractName.js';
 import {
     AccountTransactionType,
     InitContractPayload,
     VersionedModuleSource,
-} from '../types';
-import { ConcordiumGRPCClient } from '../grpc';
-import { AccountSigner, signTransaction } from '../signHelpers';
-import { CcdAmount } from './ccdAmount';
-import { AccountAddress } from './accountAddress';
-import { TransactionExpiry } from './transactionExpiry';
+} from '../types.js';
+import { ConcordiumGRPCClient } from '../grpc/index.js';
+import { AccountSigner, signTransaction } from '../signHelpers.js';
+import { CcdAmount } from './ccdAmount.js';
+import { AccountAddress } from './accountAddress.js';
+import { TransactionExpiry } from './transactionExpiry.js';
 
 /**
  * An update transaction without header.

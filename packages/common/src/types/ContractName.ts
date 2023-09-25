@@ -1,5 +1,5 @@
-import * as InitName from './InitName';
-import { isAsciiAlphaNumericPunctuation } from '../contractHelpers';
+import * as InitName from './InitName.js';
+import { isAsciiAlphaNumericPunctuation } from '../contractHelpers.js';
 
 /** The name of a smart contract. Note: This does _not_ including the 'init_' prefix. */
 class ContractName {

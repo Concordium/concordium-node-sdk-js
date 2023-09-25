@@ -1,13 +1,13 @@
-import { Buffer } from 'buffer/';
+import { Buffer } from 'buffer/index.js';
 import bs58check from 'bs58check';
 
-import * as v1 from '../types';
-import * as v2 from '../grpc-api/v2/concordium/types';
-import { mapRecord, unwrap } from '../util';
-import { AccountAddress } from '../types/accountAddress';
-import { ModuleReference } from '../types/moduleReference';
-import { CcdAmount } from '../types/ccdAmount';
-import { Base58String } from '../types';
+import * as v1 from '../types.js';
+import * as v2 from '../grpc-api/v2/concordium/types.js';
+import { mapRecord, unwrap } from '../util.js';
+import { AccountAddress } from '../types/accountAddress.js';
+import { ModuleReference } from '../types/moduleReference.js';
+import { CcdAmount } from '../types/ccdAmount.js';
+import { Base58String } from '../types.js';
 
 function unwrapToHex(bytes: Uint8Array | undefined): v1.HexString {
     return Buffer.from(unwrap(bytes)).toString('hex');

@@ -1,18 +1,22 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import * as fs from 'fs';
-import { credentials, Metadata } from '@grpc/grpc-js/';
+import { credentials } from '@grpc/grpc-js';
 import { IdentityInput } from '@concordium/common-sdk';
 import { ConcordiumGRPCClient } from '@concordium/common-sdk/grpc';
-import { decryptMobileWalletExport, EncryptedData } from '../src/wallet/crypto';
-import { MobileWalletExport } from '../src/wallet/types';
-import { createConcordiumClient } from '../src/clientV2';
-import ConcordiumNodeClient from '../src/client';
+import {
+    decryptMobileWalletExport,
+    EncryptedData,
+} from '../src/wallet/crypto.js';
+import { MobileWalletExport } from '../src/wallet/types.js';
+import { createConcordiumClient } from '../src/clientV2.js';
+import ConcordiumNodeClient from '../src/client.js';
 import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
 
 // This makes sure the necessary types are added to `globalThis`
 import 'isomorphic-fetch';
+import { RpcMetadata } from '@protobuf-ts/runtime-rpc';
 
-export { getModuleBuffer } from '../src/util';
+export { getModuleBuffer } from '../src/util.js';
 
 const TESTNET_NODE = 'node.testnet.concordium.com';
 const GRPCV1_PORT = 10000;
@@ -26,8 +30,9 @@ export function getNodeClient(
     address = TESTNET_NODE,
     port = GRPCV1_PORT
 ): ConcordiumNodeClient {
-    const metadata = new Metadata();
-    metadata.add('authentication', 'rpcadmin');
+    const metadata: RpcMetadata = {
+        authentication: 'rpcadmin',
+    };
     return new ConcordiumNodeClient(
         address,
         port,

@@ -1,4 +1,4 @@
-import { ContractAddress, InstanceInfo } from './types';
+import { ContractAddress, InstanceInfo } from './types.js';
 
 const CONTRACT_PARAM_MAX_LENGTH = 65535;
 

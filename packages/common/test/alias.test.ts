@@ -4,7 +4,7 @@ import { Buffer } from 'buffer/index.js';
 test('isAlias is reflexive', () => {
     const address = AccountAddress.fromBuffer(
         Buffer.from(
-            '01e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ec000002',
+            'e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ec000002',
             'hex'
         )
     );
@@ -14,13 +14,13 @@ test('isAlias is reflexive', () => {
 test('isAlias: Addresses with first 29 bytes in common are aliases', () => {
     const address = AccountAddress.fromBuffer(
         Buffer.from(
-            '01e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ec000002',
+            'e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ec000002',
             'hex'
         )
     );
     const alias = AccountAddress.fromBuffer(
         Buffer.from(
-            '01e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ececb467',
+            'e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ececb467',
             'hex'
         )
     );
@@ -30,13 +30,13 @@ test('isAlias: Addresses with first 29 bytes in common are aliases', () => {
 test('isAlias: Addresses with differences in the 5th byte are not aliases', () => {
     const address = AccountAddress.fromBuffer(
         Buffer.from(
-            '01e718721412249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ec000002',
+            'e718721412249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ec000002',
             'hex'
         )
     );
     const alias = AccountAddress.fromBuffer(
         Buffer.from(
-            '01e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ec000002',
+            'e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ec000002',
             'hex'
         )
     );
@@ -46,13 +46,13 @@ test('isAlias: Addresses with differences in the 5th byte are not aliases', () =
 test('isAlias: Addresses with differences in the 29th byte are not aliases', () => {
     const address = AccountAddress.fromBuffer(
         Buffer.from(
-            '01e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ececb467',
+            'e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83ececb467',
             'hex'
         )
     );
     const alias = AccountAddress.fromBuffer(
         Buffer.from(
-            '01e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83e1ecb467',
+            'e718721402249e81f8fedcba6027f1c9bcb4445e9433b7905d579d83e1ecb467',
             'hex'
         )
     );

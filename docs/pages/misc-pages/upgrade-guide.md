@@ -2,7 +2,9 @@
 
 ### Common
 
-Several types have been replaced with a module containing the type itself together with functions for constructing and converting the type:
+Several types have been replaced with a module containing the type itself together with functions for constructing and
+converting the type:
+
 - `AccountAddress` is now a module with functions related to account addresses:
   - To refer to `AccountAddress` as a type use `AccountAddress.Type`.
   - Constructing `new AccountAddress("<address>")` is now `AccountAddress.fromBase58("<address>")`.

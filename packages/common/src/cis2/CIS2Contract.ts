@@ -1,6 +1,6 @@
 import { stringify } from 'json-bigint';
 
-import { HexString, InvokeContractResult } from '../types.js';
+import type { HexString, InvokeContractResult } from '../types.js';
 import * as ContractAddress from '../types/ContractAddress.js';
 import * as ContractName from '../types/ContractName.js';
 import * as EntrypointName from '../types/EntrypointName.js';

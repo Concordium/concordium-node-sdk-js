@@ -1,10 +1,16 @@
 import { Buffer } from 'buffer/index.js';
-import { ContractAddress } from '@concordium/common-sdk';
+import {
+    AccountAddress,
+    ContractAddress,
+    Timestamp,
+} from '@concordium/common-sdk';
 import { serializeTypeValue } from '@concordium/common-sdk/schema';
 import { CIS4, CIS4Contract, Web3IdSigner } from '@concordium/common-sdk/cis4';
 import { getNodeClientV2 as getNodeClient } from './testHelpers.js';
 
-const ISSUER_ACCOUNT = '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd';
+const ISSUER_ACCOUNT = AccountAddress.fromBase58(
+    '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
+);
 const ISSUER_PUB_KEY =
     '23e7b282e69f39f962fa587eb033ca201e09d59c9740f18d5666b390fea9d486';
 
@@ -28,10 +34,7 @@ const NEW_REVOKER_2_KEYPAIR = {
     prv: 'cbfa761a29b8d11c5a0b421f402dfc498703d40762007876550beae7727c68c2',
     pub: 'b9372d7afffa99f7223c622aac78b5cb199c94f3b961feabd6f776d2d0a10b1c',
 };
-const WEB3ID_ADDRESS_REVOKE: ContractAddress = {
-    index: 5587n,
-    subindex: 0n,
-};
+const WEB3ID_ADDRESS_REVOKE = ContractAddress.create(5587);
 
 const TEST_BLOCK =
     'bf956ef81bb6a22eda754d490bdb7a3085318b3a1fe9370f83f86649a5f7cb60';
@@ -53,8 +56,12 @@ describe('credentialEntry', () => {
             credentialInfo: {
                 holderPubKey: HOLDER_KEYPAIR.pub,
                 holderRevocable: true,
-                validFrom: new Date('2023-08-01T13:47:02.260Z'),
-                validUntil: new Date('2025-08-01T13:47:02.260Z'),
+                validFrom: Timestamp.fromDate(
+                    new Date('2023-08-01T13:47:02.260Z')
+                ),
+                validUntil: Timestamp.fromDate(
+                    new Date('2023-08-01T13:47:02.260Z')
+                ),
                 metadataUrl: { url: '' },
             },
             schemaRef: { url: 'http://foo-schema-url.com' },
@@ -126,7 +133,7 @@ describe('registerCredential', () => {
         const credential: CIS4.CredentialInfo = {
             holderPubKey: NEW_HOLDER_KEYPAIR.pub,
             holderRevocable: true,
-            validFrom: new Date('1/1/2023'),
+            validFrom: Timestamp.fromDate(new Date('1/1/2023')),
             metadataUrl: {
                 url: 'http://issuer-metadata-url.com',
             },
@@ -147,7 +154,7 @@ describe('registerCredential', () => {
         const credential: CIS4.CredentialInfo = {
             holderPubKey: NEW_HOLDER_KEYPAIR.pub,
             holderRevocable: true,
-            validFrom: new Date('1/1/2023'),
+            validFrom: Timestamp.fromDate(new Date('1/1/2023')),
             metadataUrl: {
                 url: 'http://issuer-metadata-url.com',
             },
@@ -162,8 +169,8 @@ describe('registerCredential', () => {
         expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
 
         // With `validUntil` + !`holderRevocable`
-        credential.validUntil = new Date(
-            new Date().setFullYear(new Date().getFullYear() + 1)
+        credential.validUntil = Timestamp.fromDate(
+            new Date(new Date().setFullYear(new Date().getFullYear() + 1))
         );
         credential.holderRevocable = false;
 

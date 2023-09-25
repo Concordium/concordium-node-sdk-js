@@ -27,7 +27,7 @@ function deserializeAccountTransactionBase(
     const header: AccountTransactionHeader = {
         expiry,
         nonce: 0n,
-        sender: new AccountAddress(
+        sender: AccountAddress.fromBase58(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
     };
@@ -61,7 +61,7 @@ function deserializeAccountTransactionBase(
 test('test deserialize simpleTransfer ', () => {
     const payload: SimpleTransferPayload = {
         amount: new CcdAmount(5100000n),
-        toAddress: new AccountAddress(
+        toAddress: AccountAddress.fromBase58(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
     };
@@ -71,7 +71,7 @@ test('test deserialize simpleTransfer ', () => {
 test('test deserialize simpleTransfer with memo ', () => {
     const payload: SimpleTransferWithMemoPayload = {
         amount: new CcdAmount(5100000n),
-        toAddress: new AccountAddress(
+        toAddress: AccountAddress.fromBase58(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
         memo: new DataBlob(Buffer.from('00', 'hex')),
@@ -95,7 +95,7 @@ test('test deserialize registerData ', () => {
 test('Expired transactions can be deserialized', () => {
     const payload: SimpleTransferPayload = {
         amount: new CcdAmount(5100000n),
-        toAddress: new AccountAddress(
+        toAddress: AccountAddress.fromBase58(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
     };

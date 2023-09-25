@@ -21,7 +21,6 @@ import {
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import { readFileSync } from 'node:fs';
-import { Buffer } from 'buffer/index.js';
 import { parseEndpoint } from '../shared/util.js';
 
 import meow from 'meow';

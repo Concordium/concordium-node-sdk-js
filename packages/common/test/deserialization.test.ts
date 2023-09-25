@@ -1,5 +1,4 @@
 import { deserializeTransaction } from '../src/wasm/deserialization.js';
-import { Buffer } from 'buffer/index.js';
 import { serializeAccountTransactionForSubmission } from '../src/serialization.js';
 import {
     AccountAddress,

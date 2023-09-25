@@ -1,5 +1,4 @@
 import * as fs from 'fs';
-import { Buffer } from 'buffer/index.js';
 
 /**
  * @deprecated This is a helper function for the v1 gRPC client, which has been deprecated

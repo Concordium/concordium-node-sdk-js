@@ -4,7 +4,6 @@ import {
     wasmToSchema,
 } from '../src/util.js';
 import { readFileSync } from 'fs';
-import { Buffer } from 'buffer/index.js';
 
 test('intToStringTransformer transform chosen field, but not others', () => {
     const keysToTransform = ['a'];

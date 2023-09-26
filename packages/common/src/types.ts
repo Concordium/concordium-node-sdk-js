@@ -211,10 +211,13 @@ interface MintDistributionCommon {
 }
 
 export interface MintDistributionV0 extends MintDistributionCommon {
+    version: 0;
     mintPerSlot: number;
 }
 
-export type MintDistributionV1 = MintDistributionCommon;
+export interface MintDistributionV1 extends MintDistributionCommon {
+    version: 1;
+}
 
 export type MintDistribution = MintDistributionV0 | MintDistributionV1;
 
@@ -230,12 +233,15 @@ export interface GasRewardsCommon {
 
 /** Gas rewards properties for protocol version 1-5 ({@link ChainParametersV0} and {@link ChainParametersV1}). */
 export interface GasRewardsV0 extends GasRewardsCommon {
+    version: 0;
     /** The fractional amount paid for including a finalization proof */
     finalizationProof: number;
 }
 
 /** Gas rewards properties from protocol version 6 ({@link ChainParametersV2}). */
-export type GasRewardsV1 = GasRewardsCommon;
+export interface GasRewardsV1 extends GasRewardsCommon {
+    version: 1;
+}
 
 /** Common reward parameters used across all protocol versions */
 export interface RewardParametersCommon {
@@ -245,6 +251,7 @@ export interface RewardParametersCommon {
 
 /** Reward parameters used from protocol version 1-3 ({@link ChainParametersV0}). */
 export interface RewardParametersV0 extends RewardParametersCommon {
+    version: 0;
     /** The current mint distribution */
     mintDistribution: MintDistributionV0;
     /** The current gas rewards parameters */
@@ -253,6 +260,7 @@ export interface RewardParametersV0 extends RewardParametersCommon {
 
 /** Reward parameters used in protocol versions 4 and 5 ({@link ChainParametersV1}). */
 export interface RewardParametersV1 extends RewardParametersCommon {
+    version: 1;
     /** The current mint distribution */
     mintDistribution: MintDistributionV1;
     /** The current gas rewards parameters */
@@ -261,6 +269,7 @@ export interface RewardParametersV1 extends RewardParametersCommon {
 
 /** Reward parameters used from protocol version 6 ({@link ChainParametersV2}). */
 export interface RewardParametersV2 extends RewardParametersCommon {
+    version: 2;
     /** The current mint distribution */
     mintDistribution: MintDistributionV1;
     /** The current gas rewards parameters */
@@ -381,6 +390,7 @@ export interface ChainParametersCommon {
 export type ChainParametersV0 = ChainParametersCommon &
     CooldownParametersV0 &
     PoolParametersV0 & {
+        version: 0;
         /** The election difficulty for consensus lottery */
         electionDifficulty: number;
         /** The election difficulty for consensus lottery */
@@ -394,6 +404,7 @@ export type ChainParametersV1 = ChainParametersCommon &
     CooldownParametersV1 &
     TimeParametersV1 &
     PoolParametersV1 & {
+        version: 1;
         /** The election difficulty for consensus lottery */
         electionDifficulty: number;
         /** The election difficulty for consensus lottery */
@@ -410,6 +421,7 @@ export type ChainParametersV2 = ChainParametersCommon &
     FinalizationCommitteeParameters &
     TimeoutParameters &
     ConsensusParameters & {
+        version: 2;
         /** The election difficulty for consensus lottery */
         rewardParameters: RewardParametersV2;
         /** Keys allowed to do parameter updates */
@@ -452,12 +464,15 @@ interface AuthorizationsCommon {
 /**
  * Used from protocol version 1-3
  */
-export type AuthorizationsV0 = AuthorizationsCommon;
+export interface AuthorizationsV0 extends AuthorizationsCommon {
+    version: 0;
+}
 
 /**
  * Used from protocol version 4
  */
 export interface AuthorizationsV1 extends AuthorizationsCommon {
+    version: 1;
     cooldownParameters: Authorization;
     timeParameters: Authorization;
 }
@@ -478,9 +493,12 @@ interface RewardStatusCommon {
     gasAccount: Amount;
 }
 
-export type RewardStatusV0 = RewardStatusCommon;
+export interface RewardStatusV0 extends RewardStatusCommon {
+    version: 0;
+}
 
 export interface RewardStatusV1 extends RewardStatusCommon {
+    version: 1;
     foundationTransactionRewards: Amount;
     nextPaydayTime: Date;
     nextPaydayMintRate: MintRate;
@@ -540,12 +558,14 @@ export interface BlockInfoCommon {
 
 /** Block info used for protocol version 1-5 */
 export interface BlockInfoV0 extends BlockInfoCommon {
+    version: 0;
     /** The slot number in which the block was baked. */
     blockSlot: bigint;
 }
 
 /** Block info used from protocol version 6 */
 export interface BlockInfoV1 extends BlockInfoCommon {
+    version: 1;
     /** The block round */
     round: Round;
     /** The block epoch */
@@ -654,6 +674,7 @@ export interface ConsensusStatusCommon {
 
 /** Consensus status used for protocol version 1-5 */
 export interface ConsensusStatusV0 extends ConsensusStatusCommon {
+    version: 0;
     /** (Current) slot duration in milliseconds */
     slotDuration: Duration.Type;
 }
@@ -674,6 +695,7 @@ export interface ConcordiumBftStatus {
 
 /** Consensus status used from protocol version 6 */
 export type ConsensusStatusV1 = ConsensusStatusCommon & {
+    version: 1;
     concordiumBFTStatus: ConcordiumBftStatus;
 };
 
@@ -952,9 +974,14 @@ interface AccountBakerDetailsCommon {
     pendingChange?: StakePendingChange;
 }
 
-export type AccountBakerDetailsV0 = AccountBakerDetailsCommon;
+/** Protocol version 1-3. */
+export interface AccountBakerDetailsV0 extends AccountBakerDetailsCommon {
+    version: 0;
+}
 
+/** Protocol version 4 and later. */
 export interface AccountBakerDetailsV1 extends AccountBakerDetailsCommon {
+    version: 1;
     bakerPoolInfo: BakerPoolInfo;
 }
 
@@ -971,37 +998,36 @@ export type AccountCredential = Versioned<
     InitialAccountCredential | NormalAccountCredential
 >;
 
+export enum AccountInfoType {
+    Simple = 'simple',
+    Baker = 'baker',
+    Delegator = 'delegator',
+}
+
 interface AccountInfoCommon {
     accountAddress: AccountAddress.Type;
     accountNonce: SequenceNumber.Type;
     accountAmount: bigint;
     accountIndex: bigint;
-
     accountThreshold: number;
-
     accountEncryptionKey: string;
     accountEncryptedAmount: AccountEncryptedAmount;
-
     accountReleaseSchedule: AccountReleaseSchedule;
-
     accountCredentials: Record<number, AccountCredential>;
 }
 
-export type AccountInfoSimple = AccountInfoCommon;
-
-export interface AccountInfoBakerV0 extends AccountInfoCommon {
-    accountBaker: AccountBakerDetailsV0;
+export interface AccountInfoSimple extends AccountInfoCommon {
+    type: AccountInfoType.Simple;
 }
 
-/** Protocol version 4 and later. */
-export interface AccountInfoBakerV1 extends AccountInfoCommon {
-    accountBaker: AccountBakerDetailsV1;
+export interface AccountInfoBaker extends AccountInfoCommon {
+    type: AccountInfoType.Baker;
+    accountBaker: AccountBakerDetails;
 }
-
-export type AccountInfoBaker = AccountInfoBakerV0 | AccountInfoBakerV1;
 
 /** Protocol version 4 and later. */
 export interface AccountInfoDelegator extends AccountInfoCommon {
+    type: AccountInfoType.Delegator;
     accountDelegation: AccountDelegationDetails;
 }
 
@@ -1058,11 +1084,14 @@ export interface ElectionInfoCommon {
 
 /** Election info used for protocol version 1-5 */
 export interface ElectionInfoV0 extends ElectionInfoCommon {
+    version: 0;
     electionDifficulty: number;
 }
 
 /** Election info used from protocol version 6 */
-export type ElectionInfoV1 = ElectionInfoCommon;
+export interface ElectionInfoV1 extends ElectionInfoCommon {
+    version: 1;
+}
 
 /**
  * Union of different versions of election info across all protocol versions.

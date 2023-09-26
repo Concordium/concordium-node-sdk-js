@@ -5,6 +5,8 @@ import {
     ChainParametersV0,
     ChainParametersV1,
     ElectionInfoV0,
+    Energy,
+    InstanceInfo,
     ModuleReference,
     NextUpdateSequenceNumbers,
 } from '@concordium/common-sdk';
@@ -181,9 +183,9 @@ export const blockItemStatusTransfer = {
     },
 };
 
-export const instanceInfo = {
+export const instanceInfo: InstanceInfo = {
     version: 1,
-    owner: new AccountAddress(
+    owner: AccountAddress.fromBase58(
         '4Y1c27ZRpRut9av69n3i1uhfeDp4XGuvsm9fkEjFvgpoxXWxQB'
     ),
     amount: new CcdAmount(0n),
@@ -2042,7 +2044,7 @@ export const blockInfo: BlockInfoV0 = {
     finalized: true,
     transactionCount: 0n,
     transactionsSize: 0n,
-    transactionEnergyCost: 0n,
+    transactionEnergyCost: Energy.create(0),
     genesisIndex: 1,
     eraBlockHeight: 1258806,
     protocolVersion: 4n,

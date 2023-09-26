@@ -8,10 +8,10 @@ import { getNodeClientV2 as getNodeClient } from '../test/testHelpers.js';
 
 const client = getNodeClient();
 
-const testAccount = new v1.AccountAddress(
+const testAccount = v1.AccountAddress.fromBase58(
     '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'
 );
-const senderAccount = new v1.AccountAddress(
+const senderAccount = v1.AccountAddress.fromBase58(
     '39zbDo5ycLdugboskzUqjme8uNnDFfAYdyAYB9csegQJ2BqLoe'
 );
 

@@ -1,24 +1,22 @@
 import {
+    AccountAddress,
     AccountTransactionType,
     ContractAddress,
+    EntrypointName,
     TransactionEventTag,
 } from '@concordium/common-sdk';
 import { getNodeClientV2 as getNodeClient } from './testHelpers.js';
 import { CIS2Contract } from '@concordium/common-sdk/cis2';
 import { serializeTypeValue } from '@concordium/common-sdk/schema';
 
-const CIS2_FT_ADDRESS: ContractAddress = {
-    index: 3496n,
-    subindex: 0n,
-};
-const CIS2_NFT_ADDRESS: ContractAddress = {
-    index: 1696n,
-    subindex: 0n,
-};
+const CIS2_FT_ADDRESS = ContractAddress.create(3496);
+const CIS2_NFT_ADDRESS = ContractAddress.create(1696);
 
 const TEST_BLOCK =
     '3e9d90325c61ab190065f3c90364beeb925833319de68d982ec6da7762e8357b';
-const TEST_ACCOUNT = '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd';
+const TEST_ACCOUNT = AccountAddress.fromBase58(
+    '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
+);
 
 const getCIS2Single = () =>
     CIS2Contract.create(getNodeClient(), CIS2_FT_ADDRESS);
@@ -26,10 +24,10 @@ const getCIS2Multi = () =>
     CIS2Contract.create(getNodeClient(), CIS2_NFT_ADDRESS);
 
 test('create throws on non cis-2', async () => {
-    const promise = CIS2Contract.create(getNodeClient(), {
-        index: 3494n,
-        subindex: 0n,
-    });
+    const promise = CIS2Contract.create(
+        getNodeClient(),
+        ContractAddress.create(3494)
+    );
     expect(promise).rejects.toThrow();
 });
 
@@ -55,7 +53,7 @@ test('balanceOf', async () => {
 test('operatorOf', async () => {
     const cis2Single = await getCIS2Single();
     const isOperator = await cis2Single.operatorOf(
-        { owner: TEST_ACCOUNT, address: { index: 3494n, subindex: 0n } },
+        { owner: TEST_ACCOUNT, address: ContractAddress.create(3494) },
         TEST_BLOCK
     );
     expect(isOperator).toEqual(true);
@@ -65,9 +63,11 @@ test('operatorOf', async () => {
         [
             {
                 owner: TEST_ACCOUNT,
-                address: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
+                address: AccountAddress.fromBase58(
+                    '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'
+                ),
             },
-            { owner: TEST_ACCOUNT, address: { index: 3494n, subindex: 0n } },
+            { owner: TEST_ACCOUNT, address: ContractAddress.create(3494) },
         ],
         TEST_BLOCK
     );
@@ -123,13 +123,17 @@ test('dryRun.transfer', async () => {
             {
                 tokenId: '',
                 from: TEST_ACCOUNT,
-                to: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
+                to: AccountAddress.fromBase58(
+                    '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'
+                ),
                 tokenAmount: 100n,
             },
             {
                 tokenId: '',
                 from: TEST_ACCOUNT,
-                to: '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe',
+                to: AccountAddress.fromBase58(
+                    '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
+                ),
                 tokenAmount: 120n,
             },
         ],
@@ -150,8 +154,8 @@ test('dryRun.transfer', async () => {
             tokenId: '',
             from: TEST_ACCOUNT,
             to: {
-                address: { index: 4416n, subindex: 0n },
-                hookName: 'onReceivingCIS2',
+                address: ContractAddress.create(4416),
+                hookName: EntrypointName.fromStringUnchecked('onReceivingCIS2'),
             },
             tokenAmount: 0n,
         },
@@ -167,7 +171,9 @@ describe('createTransfer', () => {
             { energy: 1000000n },
             {
                 tokenId: '',
-                to: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
+                to: AccountAddress.fromBase58(
+                    '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'
+                ),
                 from: TEST_ACCOUNT,
                 tokenAmount: 100n,
             }
@@ -207,7 +213,9 @@ describe('createTransfer', () => {
         const { parameter, schema } = cis2.createTransfer({ energy: 10000n }, [
             {
                 tokenId: '',
-                to: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
+                to: AccountAddress.fromBase58(
+                    '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'
+                ),
                 from: TEST_ACCOUNT,
                 tokenAmount: 100n,
             },
@@ -215,8 +223,9 @@ describe('createTransfer', () => {
                 tokenId: '',
                 from: TEST_ACCOUNT,
                 to: {
-                    address: { index: 4416n, subindex: 0n },
-                    hookName: 'onReceivingCIS2',
+                    address: ContractAddress.create(4416),
+                    hookName:
+                        EntrypointName.fromStringUnchecked('onReceivingCIS2'),
                 },
                 tokenAmount: 0n,
             },
@@ -261,7 +270,9 @@ test('dryRun.updateOperator', async () => {
         TEST_ACCOUNT,
         {
             type: 'add',
-            address: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
+            address: AccountAddress.fromBase58(
+                '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'
+            ),
         },
         TEST_BLOCK
     );
@@ -278,11 +289,13 @@ test('dryRun.updateOperator', async () => {
         [
             {
                 type: 'add',
-                address: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
+                address: AccountAddress.fromBase58(
+                    '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'
+                ),
             },
             {
                 type: 'remove',
-                address: { index: 3494n, subindex: 0n },
+                address: ContractAddress.create(3494),
             },
         ],
         TEST_BLOCK
@@ -304,7 +317,9 @@ describe('createUpdateOperator', () => {
             { energy: 1000000n },
             {
                 type: 'add',
-                address: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
+                address: AccountAddress.fromBase58(
+                    '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'
+                ),
             }
         );
 
@@ -339,11 +354,13 @@ describe('createUpdateOperator', () => {
         const { parameter } = cis2.createUpdateOperator({ energy: 1000000n }, [
             {
                 type: 'add',
-                address: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
+                address: AccountAddress.fromBase58(
+                    '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'
+                ),
             },
             {
                 type: 'remove',
-                address: { index: 3494n, subindex: 0n },
+                address: ContractAddress.create(3494),
             },
         ]);
         const expectedParameterHex =

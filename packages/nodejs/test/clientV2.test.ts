@@ -38,16 +38,16 @@ global.TextDecoder = TextDecoder as any;
 const clientV2 = getNodeClientV2();
 const clientWeb = getNodeClientWeb();
 
-const testAccount = new v1.AccountAddress(
+const testAccount = v1.AccountAddress.fromBase58(
     '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'
 );
-const testCredId = new v1.CredentialRegistrationId(
+const testCredId = v1.CredentialRegistrationId.fromHexString(
     'aa730045bcd20bb5c24349db29d949f767e72f7cce459dc163c4b93c780a7d7f65801dda8ff7e4fc06fdf1a1b246276f'
 );
-const testAccBaker = new v1.AccountAddress(
+const testAccBaker = v1.AccountAddress.fromBase58(
     '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L'
 );
-const testAccDeleg = new v1.AccountAddress(
+const testAccDeleg = v1.AccountAddress.fromBase58(
     '3bFo43GiPnkk5MmaSdsRVboaX2DNSKaRkLseQbyB3WPW1osPwh'
 );
 const testBlockHash =
@@ -362,7 +362,7 @@ test.each([clientV2, clientWeb])('getConsensusStatus', async (client) => {
 });
 
 test.each([clientV2, clientWeb])('sendBlockItem', async (client) => {
-    const senderAccount = new v1.AccountAddress(
+    const senderAccount = v1.AccountAddress.fromBase58(
         '37TRfx9PqFX386rFcNThyA3zdoWsjF8Koy6Nh3i8VrPy4duEsA'
     );
     const privateKey =
@@ -398,7 +398,7 @@ test.each([clientV2, clientWeb])('sendBlockItem', async (client) => {
 });
 
 test.each([clientV2, clientWeb])('transactionHash', async (client) => {
-    const senderAccount = new v1.AccountAddress(
+    const senderAccount = v1.AccountAddress.fromBase58(
         '37TRfx9PqFX386rFcNThyA3zdoWsjF8Koy6Nh3i8VrPy4duEsA'
     );
     const privateKey =

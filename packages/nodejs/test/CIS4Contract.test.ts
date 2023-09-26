@@ -1,9 +1,16 @@
-import { ContractAddress } from '@concordium/common-sdk';
+import {
+    ContractAddress,
+    AccountAddress,
+    Timestamp,
+    Energy,
+} from '@concordium/common-sdk';
 import { serializeTypeValue } from '@concordium/common-sdk/schema';
 import { CIS4, CIS4Contract, Web3IdSigner } from '@concordium/common-sdk/cis4';
 import { getNodeClientV2 as getNodeClient } from './testHelpers.js';
 
-const ISSUER_ACCOUNT = '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd';
+const ISSUER_ACCOUNT = AccountAddress.fromBase58(
+    '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
+);
 const ISSUER_PUB_KEY =
     '23e7b282e69f39f962fa587eb033ca201e09d59c9740f18d5666b390fea9d486';
 
@@ -27,10 +34,7 @@ const NEW_REVOKER_2_KEYPAIR = {
     prv: 'cbfa761a29b8d11c5a0b421f402dfc498703d40762007876550beae7727c68c2',
     pub: 'b9372d7afffa99f7223c622aac78b5cb199c94f3b961feabd6f776d2d0a10b1c',
 };
-const WEB3ID_ADDRESS_REVOKE: ContractAddress = {
-    index: 5587n,
-    subindex: 0n,
-};
+const WEB3ID_ADDRESS_REVOKE = ContractAddress.create(5587);
 
 const TEST_BLOCK =
     'bf956ef81bb6a22eda754d490bdb7a3085318b3a1fe9370f83f86649a5f7cb60';
@@ -52,8 +56,12 @@ describe('credentialEntry', () => {
             credentialInfo: {
                 holderPubKey: HOLDER_KEYPAIR.pub,
                 holderRevocable: true,
-                validFrom: new Date('2023-08-01T13:47:02.260Z'),
-                validUntil: new Date('2025-08-01T13:47:02.260Z'),
+                validFrom: Timestamp.fromDate(
+                    new Date('2023-08-01T13:47:02.260Z')
+                ),
+                validUntil: Timestamp.fromDate(
+                    new Date('2023-08-01T13:47:02.260Z')
+                ),
                 metadataUrl: { url: '' },
             },
             schemaRef: { url: 'http://foo-schema-url.com' },
@@ -125,7 +133,7 @@ describe('registerCredential', () => {
         const credential: CIS4.CredentialInfo = {
             holderPubKey: NEW_HOLDER_KEYPAIR.pub,
             holderRevocable: true,
-            validFrom: new Date('1/1/2023'),
+            validFrom: Timestamp.fromDate(new Date('1/1/2023')),
             metadataUrl: {
                 url: 'http://issuer-metadata-url.com',
             },
@@ -146,13 +154,16 @@ describe('registerCredential', () => {
         const credential: CIS4.CredentialInfo = {
             holderPubKey: NEW_HOLDER_KEYPAIR.pub,
             holderRevocable: true,
-            validFrom: new Date('1/1/2023'),
+            validFrom: Timestamp.fromDate(new Date('1/1/2023')),
             metadataUrl: {
                 url: 'http://issuer-metadata-url.com',
             },
         };
 
-        let tx = cis4.createRegisterCredential({ energy: 100000n }, credential);
+        let tx = cis4.createRegisterCredential(
+            { energy: Energy.create(100000) },
+            credential
+        );
         let schemaSerial = serializeTypeValue(
             tx.parameter.json,
             Buffer.from(tx.schema.value, 'base64'),
@@ -161,12 +172,15 @@ describe('registerCredential', () => {
         expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
 
         // With `validUntil` + !`holderRevocable`
-        credential.validUntil = new Date(
-            new Date().setFullYear(new Date().getFullYear() + 1)
+        credential.validUntil = Timestamp.fromDate(
+            new Date(new Date().setFullYear(new Date().getFullYear() + 1))
         );
         credential.holderRevocable = false;
 
-        tx = cis4.createRegisterCredential({ energy: 100000n }, credential);
+        tx = cis4.createRegisterCredential(
+            { energy: Energy.create(100000) },
+            credential
+        );
         schemaSerial = serializeTypeValue(
             tx.parameter.json,
             Buffer.from(tx.schema.value, 'base64'),
@@ -178,7 +192,7 @@ describe('registerCredential', () => {
         const auxData = Buffer.from('Hello world!').toString('hex');
 
         tx = cis4.createRegisterCredential(
-            { energy: 100000n },
+            { energy: Energy.create(100000) },
             credential,
             auxData
         );
@@ -207,7 +221,7 @@ describe('registerRevocationKeys', () => {
 
         // Single key
         let tx = cis4.createRegisterRevocationKeys(
-            { energy: 100000n },
+            { energy: Energy.create(100000) },
             NEW_REVOKER_1_KEYPAIR.pub
         );
         let schemaSerial = serializeTypeValue(
@@ -218,10 +232,10 @@ describe('registerRevocationKeys', () => {
         expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
 
         // Multilple keys
-        tx = cis4.createRegisterRevocationKeys({ energy: 100000n }, [
-            NEW_REVOKER_1_KEYPAIR.pub,
-            NEW_REVOKER_2_KEYPAIR.pub,
-        ]);
+        tx = cis4.createRegisterRevocationKeys(
+            { energy: Energy.create(100000) },
+            [NEW_REVOKER_1_KEYPAIR.pub, NEW_REVOKER_2_KEYPAIR.pub]
+        );
         schemaSerial = serializeTypeValue(
             tx.parameter.json,
             Buffer.from(tx.schema.value, 'base64'),
@@ -231,7 +245,7 @@ describe('registerRevocationKeys', () => {
 
         // With data
         tx = cis4.createRegisterRevocationKeys(
-            { energy: 100000n },
+            { energy: Energy.create(100000) },
             [NEW_REVOKER_1_KEYPAIR.pub, NEW_REVOKER_2_KEYPAIR.pub],
             Buffer.from('Test').toString('hex')
         );
@@ -259,7 +273,7 @@ describe('removeRevocationKeys', () => {
         const cis4 = await getCIS4();
 
         let tx = cis4.createRemoveRevocationKeys(
-            { energy: 100000n },
+            { energy: Energy.create(100000) },
             REVOKER_KEYPAIR.pub
         );
         let schemaSerial = serializeTypeValue(
@@ -270,10 +284,10 @@ describe('removeRevocationKeys', () => {
         expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
 
         // Multiple keys
-        tx = cis4.createRemoveRevocationKeys({ energy: 100000n }, [
-            REVOKER_KEYPAIR.pub,
-            NEW_REVOKER_1_KEYPAIR.pub,
-        ]);
+        tx = cis4.createRemoveRevocationKeys(
+            { energy: Energy.create(100000) },
+            [REVOKER_KEYPAIR.pub, NEW_REVOKER_1_KEYPAIR.pub]
+        );
         schemaSerial = serializeTypeValue(
             tx.parameter.json,
             Buffer.from(tx.schema.value, 'base64'),
@@ -283,7 +297,7 @@ describe('removeRevocationKeys', () => {
 
         // With data
         tx = cis4.createRemoveRevocationKeys(
-            { energy: 100000n },
+            { energy: Energy.create(100000) },
             [REVOKER_KEYPAIR.pub, NEW_REVOKER_1_KEYPAIR.pub],
             Buffer.from('Test').toString('hex')
         );
@@ -313,7 +327,7 @@ describe('revokeCredentialAsIssuer', () => {
         const cis4 = await getCIS4();
 
         let tx = cis4.createRevokeCredentialAsIssuer(
-            { energy: 100000n },
+            { energy: Energy.create(100000) },
             HOLDER_KEYPAIR.pub,
             undefined,
             undefined
@@ -327,7 +341,7 @@ describe('revokeCredentialAsIssuer', () => {
 
         // With reason
         tx = cis4.createRevokeCredentialAsIssuer(
-            { energy: 100000n },
+            { energy: Energy.create(100000) },
             HOLDER_KEYPAIR.pub,
             'Because test...',
             undefined
@@ -341,7 +355,7 @@ describe('revokeCredentialAsIssuer', () => {
 
         // With data
         tx = cis4.createRevokeCredentialAsIssuer(
-            { energy: 100000n },
+            { energy: Energy.create(100000) },
             HOLDER_KEYPAIR.pub,
             undefined,
             Buffer.from('Is anyone watching?').toString('hex')
@@ -375,7 +389,7 @@ describe('revokeCredentialAsHolder', () => {
         const cis4 = await getCIS4();
 
         let tx = await cis4.createRevokeCredentialAsHolder(
-            { energy: 100000n },
+            { energy: Energy.create(100000) },
             signer,
             0n,
             in5Minutes(),
@@ -390,7 +404,7 @@ describe('revokeCredentialAsHolder', () => {
 
         // With reason
         tx = await cis4.createRevokeCredentialAsHolder(
-            { energy: 100000n },
+            { energy: Energy.create(100000) },
             signer,
             0n,
             in5Minutes(),
@@ -426,7 +440,7 @@ describe('revokeCredentialAsOther', () => {
         const cis4 = await getCIS4();
 
         let tx = await cis4.createRevokeCredentialAsOther(
-            { energy: 100000n },
+            { energy: Energy.create(100000) },
             signer,
             HOLDER_KEYPAIR.pub,
             0n,
@@ -442,7 +456,7 @@ describe('revokeCredentialAsOther', () => {
 
         // With reason
         tx = await cis4.createRevokeCredentialAsOther(
-            { energy: 100000n },
+            { energy: Energy.create(100000) },
             signer,
             HOLDER_KEYPAIR.pub,
             0n,

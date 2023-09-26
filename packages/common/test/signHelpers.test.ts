@@ -76,14 +76,14 @@ const testEachMessageType = test.each(['test', Buffer.from('test', 'utf8')]);
 testEachMessageType('[%o] test signMessage', async (message) => {
     const sign = () => signMessage(account, message, signer);
 
-    let account = new AccountAddress(TEST_ACCOUNT_SINGLE);
+    let account = AccountAddress.fromBase58(TEST_ACCOUNT_SINGLE);
     let signer = buildBasicAccountSigner(TEST_KEY_SINGLE);
     let signature = await sign();
     expect(signature[0][0]).toBe(
         '445197d79ca90d8cc8440328dac9f307932ade0c03cc7aa575b59b746e26e5f1bca13ade5ff7a56e918ba5a32450fdf52b034cd2580929b21213263e81f7f809'
     );
 
-    account = new AccountAddress(TEST_ACCOUNT_MULTI);
+    account = AccountAddress.fromBase58(TEST_ACCOUNT_MULTI);
     signer = buildAccountSigner(TEST_KEYS_MULTI);
     signature = await sign();
 

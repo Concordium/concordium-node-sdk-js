@@ -783,8 +783,6 @@ export default class ConcordiumNodeClient {
             'allPoolTotalCapital',
         ];
 
-        // const response = await this.sendRequest(this.client.getPoolStatus, req);
-
         return convertJsonResponse<PoolStatus>(
             value,
             buildJsonResponseReviver(dates, bigInts),

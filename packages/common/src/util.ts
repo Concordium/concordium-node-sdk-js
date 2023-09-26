@@ -48,55 +48,6 @@ export function stringToInt(jsonStruct: string, keys: string[]): string {
 }
 
 /**
- * A transformer that converts all the values provided as keys to
- * string values.
- * @param json the json to transform
- * @param bigIntPropertyKeys the keys in the json that must be converted to strings
- * @returns the transformed json where numbers have been replaced with strings
- * @deprecated This is helper intented for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export function intToStringTransformer(
-    bigIntPropertyKeys: string[]
-): (json: string) => string {
-    return (json: string) => intToString(json, bigIntPropertyKeys);
-}
-
-/**
- * Builds a JSON.parse() reviver function used to parse dates and big integers.
- * @param datePropertyKeys the JSON keys that must be parsed as dates
- * @param bigIntPropertyKeys the JSON keys that must be parsed as big integers
- * @returns a reviver function that handles dates and big integers
- * @deprecated This is helper intented for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export function buildJsonResponseReviver<T>(
-    datePropertyKeys: (keyof T)[],
-    bigIntPropertyKeys: (keyof T)[]
-): (key: string, value: any) => any {
-    return function reviver(key: string, value: any) {
-        if (datePropertyKeys.includes(key as keyof T)) {
-            // Note that we reduce the time precision from nano to milliseconds when doing this conversion.
-            return new Date(value);
-        } else if (bigIntPropertyKeys.includes(key as keyof T)) {
-            // Handle the special case where amount is a scheduled amount,
-            // which has an array structure.
-            if (key === 'amount' && Array.isArray(value)) {
-                const result: ReleaseSchedule[] = [];
-                for (const entry of value) {
-                    const schedule: ReleaseSchedule = {
-                        timestamp: new Date(entry[0]),
-                        amount: BigInt(entry[1]),
-                    };
-                    result.push(schedule);
-                }
-                return result;
-            }
-            return value === null ? value : BigInt(value);
-        }
-        return value;
-    };
-}
-
-/**
  * Checks if the input string is a valid hexadecimal string.
  * @param str the string to check for hexadecimal
  */

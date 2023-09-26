@@ -17,12 +17,9 @@ import {
     ElectionInfo,
     ElectionInfoV0,
     ElectionInfoV1,
-    Keys,
-    KeysV0,
-    KeysV1,
-    StakePendingChange,
-    StakePendingChangeV0,
-    StakePendingChangeV1,
+    InstanceInfo,
+    InstanceInfoV0,
+    InstanceInfoV1,
 } from './types.js';
 
 /** Whether {@link AccountInfo} parameter given is of type {@link AccountInfoBakerV0} */
@@ -32,18 +29,6 @@ export const isBakerAccountV0 = (ai: AccountInfo): ai is AccountInfoBakerV0 =>
 /** Whether {@link AccountInfo} parameter given is of type {@link AccountInfoBakerV1} */
 export const isBakerAccountV1 = (ai: AccountInfo): ai is AccountInfoBakerV1 =>
     (ai as AccountInfoBakerV1).accountBaker?.bakerPoolInfo !== undefined;
-
-/** Whether {@link StakePendingChange} parameter given is of type {@link StakePendingChangeV0} */
-export const isStakePendingChangeV0 = (
-    spc: StakePendingChange
-): spc is StakePendingChangeV0 =>
-    (spc as StakePendingChangeV0).epoch !== undefined;
-
-/** Whether {@link StakePendingChange} parameter given is of type {@link StakePendingChangeV1} */
-export const isStakePendingChangeV1 = (
-    spc: StakePendingChange
-): spc is StakePendingChangeV1 =>
-    (spc as StakePendingChangeV1).effectiveTime !== undefined;
 
 /** Whether {@link Authorizations} parameter given is of type {@link AuthorizationsV1} */
 export const isAuthorizationsV1 = (
@@ -69,14 +54,6 @@ export const isChainParametersV2 = (
     cp: ChainParameters
 ): cp is ChainParametersV2 =>
     (cp as ChainParametersV2).maximumFinalizers !== undefined;
-
-/** Whether {@link Keys} parameter given is of type {@link KeysV0} */
-export const isKeysV0 = (ks: Keys): ks is KeysV0 =>
-    !isAuthorizationsV1(ks.level2Keys);
-
-/** Whether {@link Keys} parameter given is of type {@link KeysV1} */
-export const isKeysV1 = (ks: Keys): ks is KeysV1 =>
-    isAuthorizationsV1(ks.level2Keys);
 
 /** Whether {@link BlockInfo} parameter given is of type {@link BlockInfoV0} */
 export const isBlockInfoV0 = (bi: BlockInfo): bi is BlockInfoV0 =>
@@ -104,3 +81,9 @@ export const isElectionInfoV0 = (ei: ElectionInfo): ei is ElectionInfoV0 =>
 /** Whether {@link ElectionInfo} parameter given is of type {@link ElectionInfoV1} */
 export const isElectionInfoV1 = (ei: ElectionInfo): ei is ElectionInfoV1 =>
     !isElectionInfoV0(ei);
+
+export const isInstanceInfoV1 = (info: InstanceInfo): info is InstanceInfoV1 =>
+    info.version === 1;
+
+export const isInstanceInfoV0 = (info: InstanceInfo): info is InstanceInfoV0 =>
+    info.version === undefined || info.version === 0;

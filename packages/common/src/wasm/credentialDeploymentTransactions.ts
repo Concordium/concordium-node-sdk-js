@@ -88,43 +88,6 @@ function createUnsignedCredentialInfo(
 }
 
 /**
- * Create a credential deployment transaction, which is the transaction used
- * when deploying a new account.
- * @deprecated This function doesn't use allow supplying the randomness. {@link createCredentialTransactionV1 } or { @link createCredentialTransactionV1NoSeed } should be used instead.
- * @param identity the identity to create a credential for
- * @param cryptographicParameters the global cryptographic parameters from the chain
- * @param threshold the signature threshold for the credential, has to be less than number of public keys
- * @param publicKeys the public keys for the account
- * @param credentialIndex the index of the credential to create, has to be in sequence and unused
- * @param revealedAttributes the attributes about the account holder that should be revealed on chain
- * @param expiry the expiry of the transaction
- * @returns the details used in a credential deployment transaction
- */
-export function createCredentialDeploymentTransaction(
-    identity: IdentityInput,
-    cryptographicParameters: CryptographicParameters,
-    threshold: number,
-    publicKeys: VerifyKey[],
-    credentialIndex: number,
-    revealedAttributes: AttributeKey[],
-    expiry: TransactionExpiry
-): CredentialDeploymentTransaction {
-    const unsignedCredentialInfo = createUnsignedCredentialInfo(
-        identity,
-        cryptographicParameters,
-        threshold,
-        publicKeys,
-        credentialIndex,
-        revealedAttributes
-    );
-    return {
-        unsignedCdi: unsignedCredentialInfo.unsignedCdi,
-        randomness: unsignedCredentialInfo.randomness,
-        expiry: expiry,
-    };
-}
-
-/**
  * Create an unsigned credential for an existing account. This credential has to be signed by
  * the creator before it can be deployed on the existing account.
  * @param identity the identity to create a credential for
@@ -202,26 +165,6 @@ export type CredentialInput = CredentialInputCommon & {
     net: Network;
     identityIndex: number;
 };
-
-/**
- * Creates a credential for a new account, using the version 1 algorithm, which uses a seed to generate keys and commitments.
- * @deprecated This function outputs the format used by the JSON-RPC client, createCredentialTransaction should be used instead.
- */
-export function createCredentialV1(
-    input: CredentialInput & { expiry: number }
-): SignedCredentialDeploymentDetails {
-    const rawRequest = wasm.createCredentialV1(JSON.stringify(input));
-    let info: CredentialDeploymentInfo;
-    try {
-        info = JSON.parse(rawRequest);
-    } catch (e) {
-        throw new Error(rawRequest);
-    }
-    return {
-        expiry: TransactionExpiry.fromEpochSeconds(BigInt(input.expiry)),
-        cdi: info,
-    };
-}
 
 export type CredentialInputNoSeed = CredentialInputCommon & {
     idCredSec: HexString;

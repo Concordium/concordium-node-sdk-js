@@ -6,7 +6,6 @@ export {
     getCredentialDeploymentSignDigest,
     getCredentialForExistingAccountSignDigest,
     serializeAccountTransactionForSubmission,
-    getSignedCredentialDeploymentTransactionHash,
     serializeAccountTransactionPayload,
     serializeAccountTransaction,
 } from '../serialization.js';
@@ -28,7 +27,6 @@ export { deserializeAccountTransaction } from '../deserialization.js';
 export * from '../signHelpers.js';
 export * from '../versionedTypeHelpers.js';
 export * from '../accountHelpers.js';
-export * from '../blockSummaryHelpers.js';
 export * from '../rewardStatusHelpers.js';
 
 export { isHex, streamToList, wasmToSchema, unwrap } from '../util.js';

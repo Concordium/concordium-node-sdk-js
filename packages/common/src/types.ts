@@ -19,13 +19,8 @@ import { CcdAmount } from './types/ccdAmount.js';
 import { DataBlob } from './types/DataBlob.js';
 import { TransactionExpiry } from './types/transactionExpiry.js';
 import { ModuleReference } from './types/moduleReference.js';
-import { RejectReason, RejectReasonV1 } from './types/rejectReason.js';
-import {
-    ContractTraceEvent,
-    MemoEvent,
-    TransactionEvent,
-    TransferredEvent,
-} from './types/transactionEvent.js';
+import { RejectReason } from './types/rejectReason.js';
+import { ContractTraceEvent } from './types/transactionEvent.js';
 
 export * from './types/NodeInfo.js';
 export * from './types/PeerInfo.js';
@@ -154,21 +149,6 @@ export type Address =
       }
     | AddressAccount;
 
-interface RejectedEventResult {
-    outcome: 'reject';
-    rejectReason: RejectReasonV1;
-}
-
-interface SuccessfulEventResult {
-    outcome: 'success';
-    events: TransactionEvent[];
-}
-
-export type EventResult =
-    | SuccessfulEventResult
-    | TransferWithMemoEventResult
-    | RejectedEventResult;
-
 export enum TransactionSummaryType {
     AccountTransaction = 'accountTransaction',
     CredentialDeploymentTransaction = 'credentialDeploymentTransaction',
@@ -197,76 +177,6 @@ export interface BaseTransactionSummary {
     cost: bigint;
     energyCost: Energy.Type;
     index: bigint;
-}
-
-/**
- * @deprecated This is type for describing return types from the V1 gRPC client, which has been deprecated
- */
-interface GenericTransactionSummary extends BaseTransactionSummary {
-    type: GenericTransactionSummaryType;
-    result: EventResult;
-}
-
-/**
- * @deprecated This is type for describing return types from the V1 gRPC client, which has been deprecated
- */
-interface TransferWithMemoEventResult {
-    outcome: 'success';
-    events: [TransferredEvent, MemoEvent];
-}
-
-/**
- * @deprecated This is type for describing return types from the V1 gRPC client, which has been deprecated
- */
-export interface TransferWithMemoTransactionSummary
-    extends BaseTransactionSummary {
-    type: TransferWithMemoSummaryType;
-    result: TransferWithMemoEventResult;
-}
-
-/**
- * @deprecated This is helper intented for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export type TransactionSummary =
-    | GenericTransactionSummary
-    | TransferWithMemoTransactionSummary;
-
-/**
- * @deprecated This is helper for type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export function instanceOfTransferWithMemoTransactionSummary(
-    object: TransactionSummary
-): object is TransferWithMemoTransactionSummary {
-    return (
-        object.type !== undefined && object.type.contents === 'transferWithMemo'
-    );
-}
-
-/**
- * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export interface TransactionStatus {
-    status: TransactionStatusEnum;
-    outcomes?: Record<string, TransactionSummary>;
-}
-
-/**
- * @deprecated This is type describing return types from the V1 gRPC client, which has been deprecated
- */
-export interface PartyInfo {
-    bakerId: bigint;
-    weight: bigint;
-    signed: boolean;
-}
-
-/**
- * @deprecated This is type describing return types from the V1 gRPC client, which has been deprecated
- */
-export interface FinalizationData {
-    finalizationIndex: bigint;
-    finalizationDelay: bigint;
-    finalizationBlockPointer: string;
-    finalizers: PartyInfo[];
 }
 
 export interface Ratio {
@@ -461,8 +371,6 @@ export interface ChainParametersCommon {
     accountCreationLimit: number;
     /** The chain foundation account */
     foundationAccount: Base58String;
-    /** The chain foundation account index */
-    foundationAccountIndex?: bigint;
     /** Keys allowed to do level1 updates */
     level1Keys: KeysWithThreshold;
     /** Keys allowed to do root updates */
@@ -560,177 +468,6 @@ export interface KeysWithThreshold {
     keys: VerifyKey[];
     threshold: number;
 }
-
-interface KeysCommon {
-    rootKeys: KeysWithThreshold;
-    level1Keys: KeysWithThreshold;
-}
-
-/**
- * Used from protocol version 1-3
- */
-export interface KeysV0 extends KeysCommon {
-    level2Keys: AuthorizationsV0;
-}
-
-/**
- * Used from protocol version 4
- */
-export interface KeysV1 extends KeysCommon {
-    level2Keys: AuthorizationsV1;
-}
-
-export type Keys = KeysV0 | KeysV1;
-
-export interface UpdateQueueQueue {
-    effectiveTime: Date;
-    // TODO Update the type of update to a generic update transaction when
-    // update types have been added.
-    /** Information about the actual update. */
-    update: unknown;
-}
-
-export interface UpdateQueue {
-    nextSequenceNumber: bigint;
-    queue: UpdateQueueQueue[];
-}
-
-interface UpdateQueuesCommon {
-    microGTUPerEuro: UpdateQueue;
-    euroPerEnergy: UpdateQueue;
-    transactionFeeDistribution: UpdateQueue;
-    foundationAccount: UpdateQueue;
-    mintDistribution: UpdateQueue;
-    protocol: UpdateQueue;
-    gasRewards: UpdateQueue;
-    addAnonymityRevoker: UpdateQueue;
-    addIdentityProvider: UpdateQueue;
-    rootKeys: UpdateQueue;
-    level1Keys: UpdateQueue;
-    level2Keys: UpdateQueue;
-}
-
-/**
- * Used from protocol version 1-3
- */
-export interface UpdateQueuesV0 extends UpdateQueuesCommon {
-    electionDifficulty: UpdateQueue;
-    bakerStakeThreshold: UpdateQueue;
-}
-
-/**
- * Used in protocol version 4 and 5
- */
-export interface UpdateQueuesV1 extends UpdateQueuesCommon {
-    electionDifficulty: UpdateQueue;
-    cooldownParameters: UpdateQueue;
-    timeParameters: UpdateQueue;
-    poolParameters: UpdateQueue;
-}
-
-/**
- * Used from protocol version 6
- */
-export interface UpdateQueuesV2 extends UpdateQueuesV1 {
-    consensus2TimingParameters: UpdateQueue;
-}
-
-export type UpdateQueues = UpdateQueuesV0 | UpdateQueuesV1 | UpdateQueuesV2;
-
-interface ProtocolUpdate {
-    message: string;
-    specificationUrl: string;
-    specificationHash: string;
-    specificationAuxiliaryData: string;
-}
-
-interface UpdatesCommon {
-    protocolUpdate: ProtocolUpdate | undefined;
-}
-
-/**
- * Used from protocol version 1-3
- * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export interface UpdatesV0 extends UpdatesCommon {
-    chainParameters: Omit<
-        ChainParametersV0,
-        'level1Keys' | 'level2Keys' | 'rootKeys'
-    >;
-    updateQueues: UpdateQueuesV0;
-    keys: KeysV0;
-}
-
-/**
- * Used in protocol version 4 and 5
- * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export interface UpdatesV1 extends UpdatesCommon {
-    chainParameters: Omit<
-        ChainParametersV1,
-        'level1Keys' | 'level2Keys' | 'rootKeys'
-    >;
-    updateQueues: UpdateQueuesV1;
-    keys: KeysV1;
-}
-
-/**
- * Used from protocol version 6
- * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export interface UpdatesV2 extends UpdatesCommon {
-    chainParameters: Omit<
-        ChainParametersV2,
-        'level1Keys' | 'level2Keys' | 'rootKeys'
-    >;
-    updateQueues: UpdateQueuesV2;
-    keys: KeysV1;
-}
-
-/**
- * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export type Updates = UpdatesV0 | UpdatesV1 | UpdatesV2;
-
-/**
- * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-interface BlockSummaryCommon {
-    protocolVersion?: bigint;
-    finalizationData: FinalizationData;
-    transactionSummaries: TransactionSummary[];
-}
-
-/**
- * Used from protocol version 1-3
- * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export interface BlockSummaryV0 extends BlockSummaryCommon {
-    updates: UpdatesV0;
-}
-
-/**
- * Used in protocol version 4 and 5
- * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export interface BlockSummaryV1 extends BlockSummaryCommon {
-    updates: UpdatesV1;
-    protocolVersion: bigint;
-}
-
-/**
- * Used from protocol version 6
- * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export interface BlockSummaryV2 extends BlockSummaryCommon {
-    updates: UpdatesV2;
-    protocolVersion: bigint;
-}
-
-/**
- * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export type BlockSummary = BlockSummaryV0 | BlockSummaryV1 | BlockSummaryV2;
 
 interface RewardStatusCommon {
     protocolVersion?: bigint;
@@ -981,89 +718,9 @@ export interface VerifyKey {
     verifyKey: HexString;
 }
 
-export interface KeyPair {
-    signKey: HexString;
-    verifyKey: HexString;
-}
-
 export interface CredentialPublicKeys {
     keys: Record<number, VerifyKey>;
     threshold: number;
-}
-
-export interface CredentialKeys {
-    keys: Record<number, KeyPair>;
-    threshold: number;
-}
-
-export interface AccountKeys {
-    keys: Record<number, CredentialKeys>;
-    threshold: number;
-}
-
-export type SimpleAccountKeys = Record<number, Record<number, HexString>>;
-
-export interface WithAccountKeys {
-    accountKeys: AccountKeys;
-}
-
-export interface WalletExportFormat {
-    type: string;
-    v: number;
-    environment: string;
-    value: {
-        accountKeys: AccountKeys;
-        address: Base58String;
-        credentials: Record<number, HexString>;
-    };
-}
-
-/**
- * Parses a wallet export file into a WalletExportFormat. The wallet export
- * file is exported from a concordium wallet.
- */
-export function parseWallet(walletString: JsonString): WalletExportFormat {
-    const wallet = JSON.parse(walletString);
-    console.log(typeof wallet.type);
-    if (typeof wallet.type !== 'string') {
-        throw Error(
-            'Expected field "type" to be of type "string" but was of type "' +
-                typeof wallet.type +
-                '"'
-        );
-    }
-    if (typeof wallet.v !== 'number') {
-        throw Error(
-            'Expected field "v" to be of type "number" but was of type "' +
-                typeof wallet.v +
-                '"'
-        );
-    }
-    if (typeof wallet.environment !== 'string') {
-        throw Error(
-            'Expected field "environment" to be of type "string" but was of type "' +
-                typeof wallet.environment +
-                '"'
-        );
-    }
-    if (typeof wallet.value.address !== 'string') {
-        throw Error(
-            'Expected field "value.address" to be of type "string" but was of type "' +
-                typeof wallet.value.address +
-                '"'
-        );
-    }
-    if (wallet.value.accountKeys === undefined) {
-        throw Error(
-            'Expected field "value.accountKeys" to be defined, but was not'
-        );
-    }
-    if (wallet.value.credentials === undefined) {
-        throw Error(
-            'Expected field "value.credentials" to be defined, but was not'
-        );
-    }
-    return wallet;
 }
 
 export interface ChainArData {
@@ -1115,59 +772,25 @@ export interface InitialAccountCredential {
 
 export enum StakePendingChangeType {
     ReduceStake = 'ReduceStake',
-    RemoveStakeV0 = 'RemoveBaker',
-    RemoveStakeV1 = 'RemoveStake',
+    RemoveStake = 'RemoveStake',
 }
 
-interface StakePendingChangeV0Common {
-    epoch: bigint;
-}
-
-interface StakePendingChangeV1Common {
+interface StakePendingChangeCommon {
     effectiveTime: Date;
 }
 
-interface ReduceStakePendingChangeCommon {
+export interface ReduceStakePendingChange extends StakePendingChangeCommon {
+    change: StakePendingChangeType.ReduceStake;
     newStake: bigint;
 }
 
-export interface ReduceStakePendingChangeV0
-    extends ReduceStakePendingChangeCommon,
-        StakePendingChangeV0Common {
-    change: StakePendingChangeType.ReduceStake;
+export interface RemovalPendingChange extends StakePendingChangeCommon {
+    change: StakePendingChangeType.RemoveStake;
 }
 
-export interface ReduceStakePendingChangeV1
-    extends ReduceStakePendingChangeCommon,
-        StakePendingChangeV1Common {
-    change: StakePendingChangeType.ReduceStake;
-}
-
-export type ReduceStakePendingChange =
-    | ReduceStakePendingChangeV0
-    | ReduceStakePendingChangeV1;
-
-export interface RemovalPendingChangeV0 extends StakePendingChangeV0Common {
-    change: StakePendingChangeType.RemoveStakeV0;
-}
-
-export interface RemovalPendingChangeV1 extends StakePendingChangeV1Common {
-    change: StakePendingChangeType.RemoveStakeV1;
-}
-
-export type RemovalPendingChange =
-    | RemovalPendingChangeV0
-    | RemovalPendingChangeV1;
-
-export type StakePendingChangeV0 =
-    | ReduceStakePendingChangeV0
-    | RemovalPendingChangeV0;
-
-export type StakePendingChangeV1 =
-    | ReduceStakePendingChangeV1
-    | RemovalPendingChangeV1;
-
-export type StakePendingChange = StakePendingChangeV0 | StakePendingChangeV1;
+export type StakePendingChange =
+    | ReduceStakePendingChange
+    | RemovalPendingChange;
 
 export enum OpenStatus {
     OpenForAll = 0,
@@ -1186,8 +809,7 @@ export enum OpenStatusText {
 
 export type Amount = bigint;
 export type BakerId = bigint;
-// TODO: Change this to bigint when GrpcV1 is removed.
-export type DelegatorId = number;
+export type DelegatorId = bigint;
 
 export interface BakerPoolInfo {
     openStatus: OpenStatusText;
@@ -1342,7 +964,7 @@ export interface AccountDelegationDetails {
     restakeEarnings: boolean;
     stakedAmount: bigint;
     delegationTarget: DelegationTarget;
-    pendingChange?: StakePendingChangeV1;
+    pendingChange?: StakePendingChange;
 }
 
 export type AccountCredential = Versioned<
@@ -1708,74 +1330,6 @@ export interface AccountTransaction {
     payload: AccountTransactionPayload;
 }
 
-/**
- * @deprecated This type was for serialization code, which has been moved to rust-bindings
- */
-export enum ParameterType {
-    /** Nothing. */
-    Unit = 0,
-    /** Boolean (`true` or `false`). */
-    Bool,
-    /** Unsigned 8-bit integer. */
-    U8,
-    /** Unsigned 16-bit integer. */
-    U16,
-    /** Unsigned 32-bit integer. */
-    U32,
-    /** Unsigned 64-bit integer. */
-    U64,
-    /** Signed 8-bit integer. */
-    I8,
-    /** Signed 16-bit integer. */
-    I16,
-    /** Signed 32-bit integer. */
-    I32,
-    /** Signed 64-bit integer. */
-    I64,
-    /** Token amount in microCCD (10^-6 CCD). */
-    Amount,
-    /** Sender account address. */
-    AccountAddress,
-    /** Address of the contract instance consisting of an index and a subindex. */
-    ContractAddress,
-    /** Unsigned 64-bit integer storing milliseconds since UNIX epoch and representing a timestamp. */
-    Timestamp,
-    /** Unsigned 64-bit integer storing milliseconds and representing a duration. */
-    Duration,
-    /** Tuple. */
-    Pair,
-    /** Variable size list. */
-    List,
-    /** Unordered collection of unique elements. */
-    Set,
-    /** Unordered map from keys to values.  */
-    Map,
-    /** Fixed size array. */
-    Array,
-    /** Struct. */
-    Struct,
-    /** Enum. */
-    Enum,
-    /** List of bytes representing a string. */
-    String,
-    /** Unsigned 128-bit integer. */
-    U128,
-    /** Signed 128-bit integer. */
-    I128,
-    /** Name of the contract. */
-    ContractName,
-    /** Receive function name. */
-    ReceiveName,
-    /** LEB128 encoding of an unsigned integer */
-    ULeb128,
-    /** LEB128 encoding of a signed integer */
-    ILeb128,
-    /** Variable size list of bytes */
-    ByteList,
-    /** Fixed size list of bytes */
-    ByteArray,
-}
-
 export interface InstanceInfoCommon {
     /** Version of the smart contract module. */
     version: number;
@@ -1801,12 +1355,6 @@ export interface InstanceInfoV1 extends InstanceInfoCommon {
 }
 
 export type InstanceInfo = InstanceInfoV0 | InstanceInfoV1;
-
-export const isInstanceInfoV1 = (info: InstanceInfo): info is InstanceInfoV1 =>
-    info.version === 1;
-
-export const isInstanceInfoV0 = (info: InstanceInfo): info is InstanceInfoV0 =>
-    info.version === undefined || info.version === 0;
 
 export type CredentialSignature = Record<number, string>;
 export type AccountTransactionSignature = Record<number, CredentialSignature>;
@@ -1847,52 +1395,6 @@ export interface ContractContext {
     energy?: Energy.Type;
 }
 
-/**
- * Format of invoker expected by the node for the invokeContract entrypoint.
- * @deprecated This is type used by the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export type Invoker =
-    | {
-          type: 'AddressContract';
-          address: {
-              index: DigitString;
-              subindex: DigitString;
-          };
-      }
-    | {
-          type: 'AddressAccount';
-          address: Base58String;
-      }
-    | null;
-
-/**
- * Takes an accountAddress or ContractAddress and transforms it into the specific format used for
- * InvokeContract's invoker parameter.
- * @deprecated This is helper intented for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export function buildInvoker(
-    invoker?: AccountAddress.Type | ContractAddress.Type
-): Invoker {
-    if (!invoker) {
-        return null;
-    } else if (AccountAddress.isAccountAddress(invoker)) {
-        return {
-            type: 'AddressAccount',
-            address: AccountAddress.toBase58(invoker),
-        };
-    } else if (ContractAddress.isContractAddress(invoker)) {
-        return {
-            type: 'AddressContract',
-            address: {
-                subindex: invoker.subindex.toString(),
-                index: invoker.index.toString(),
-            },
-        };
-    } else {
-        throw new Error('Unexpected input to build invoker');
-    }
-}
-
 export interface InvokeContractSuccessResult {
     tag: 'success';
     usedEnergy: Energy.Type;
@@ -1907,25 +1409,9 @@ export interface InvokeContractFailedResult {
     returnValue?: ReturnValue.Type;
 }
 
-/**
- * @deprecated This is type for describing return types for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export interface InvokeContractFailedResultV1 {
-    tag: 'failure';
-    usedEnergy: Energy.Type;
-    reason: RejectReasonV1;
-}
-
 export type InvokeContractResult =
     | InvokeContractSuccessResult
     | InvokeContractFailedResult;
-
-/**
- * @deprecated This is helper intented for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export type InvokeContractResultV1 =
-    | InvokeContractSuccessResult
-    | InvokeContractFailedResultV1;
 
 export interface CredentialDeploymentDetails {
     expiry: TransactionExpiry;

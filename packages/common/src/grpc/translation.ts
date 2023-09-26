@@ -187,7 +187,7 @@ function trTimestamp(timestamp: v2.Timestamp | undefined): Date {
 
 function trPendingChange(
     pendingChange: v2.StakePendingChange | undefined
-): v1.StakePendingChangeV1 {
+): v1.StakePendingChange {
     const change = unwrap(pendingChange?.change);
     if (change.oneofKind === 'reduce') {
         return {
@@ -198,7 +198,7 @@ function trPendingChange(
     } else if (change.oneofKind === 'remove') {
         return {
             effectiveTime: trTimestamp(change.remove),
-            change: v1.StakePendingChangeType.RemoveStakeV1,
+            change: v1.StakePendingChangeType.RemoveStake,
         };
     } else {
         throw Error(
@@ -1023,7 +1023,7 @@ function trDelegationEvent(
             const stakeIncr = event.delegationStakeIncreased;
             return {
                 tag: v1.TransactionEventTag.DelegationStakeIncreased,
-                delegatorId: Number(unwrap(stakeIncr.delegatorId?.id?.value)),
+                delegatorId: unwrap(stakeIncr.delegatorId?.id?.value),
                 newStake: unwrap(stakeIncr.newStake?.value),
                 account,
             };
@@ -1032,7 +1032,7 @@ function trDelegationEvent(
             const stakeDecr = event.delegationStakeDecreased;
             return {
                 tag: v1.TransactionEventTag.DelegationStakeDecreased,
-                delegatorId: Number(unwrap(stakeDecr.delegatorId?.id?.value)),
+                delegatorId: unwrap(stakeDecr.delegatorId?.id?.value),
                 newStake: unwrap(stakeDecr.newStake?.value),
                 account,
             };
@@ -1041,7 +1041,7 @@ function trDelegationEvent(
             const restake = event.delegationSetRestakeEarnings;
             return {
                 tag: v1.TransactionEventTag.DelegationSetRestakeEarnings,
-                delegatorId: Number(unwrap(restake.delegatorId?.id?.value)),
+                delegatorId: unwrap(restake.delegatorId?.id?.value),
                 restakeEarnings: unwrap(restake.restakeEarnings),
                 account,
             };
@@ -1050,7 +1050,7 @@ function trDelegationEvent(
             const target = event.delegationSetDelegationTarget;
             return {
                 tag: v1.TransactionEventTag.DelegationSetDelegationTarget,
-                delegatorId: Number(unwrap(target.delegatorId?.id?.value)),
+                delegatorId: unwrap(target.delegatorId?.id?.value),
                 delegationTarget: trDelegTarget(target.delegationTarget),
                 account,
             };
@@ -1058,13 +1058,13 @@ function trDelegationEvent(
         case 'delegationAdded':
             return {
                 tag: v1.TransactionEventTag.DelegationAdded,
-                delegatorId: Number(unwrap(event.delegationAdded.id?.value)),
+                delegatorId: unwrap(event.delegationAdded.id?.value),
                 account,
             };
         case 'delegationRemoved':
             return {
                 tag: v1.TransactionEventTag.DelegationRemoved,
-                delegatorId: Number(unwrap(event.delegationRemoved.id?.value)),
+                delegatorId: unwrap(event.delegationRemoved.id?.value),
                 account,
             };
         default:

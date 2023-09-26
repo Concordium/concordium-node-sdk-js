@@ -83,15 +83,13 @@ test('intToStringTransformer is inverse of stringToInt (with same chosen keys, a
 });
 
 test('Embedded schema is the same as a seperate schema file', () => {
-    const versionedWasmModule = new Buffer(
-        readFileSync('test/resources/icecream-with-schema.wasm')
+    const versionedWasmModule = readFileSync(
+        'test/resources/icecream-with-schema.wasm'
     );
     // Strip module version information
-    const wasmModule = versionedWasmModule.slice(8);
+    const wasmModule = versionedWasmModule.subarray(8);
 
-    const seperateSchema = new Buffer(
-        readFileSync('test/resources/icecream-schema.bin')
-    );
+    const seperateSchema = readFileSync('test/resources/icecream-schema.bin');
     const embeddedSchema = wasmToSchema(wasmModule);
 
     expect(seperateSchema).toEqual(embeddedSchema);

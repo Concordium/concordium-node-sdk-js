@@ -1,5 +1,4 @@
 import * as fs from 'fs';
-import { Buffer } from 'buffer/index.js';
 import {
     displayTypeSchemaTemplate,
     getUpdateContractParameterSchema,

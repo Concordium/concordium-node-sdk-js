@@ -23,7 +23,7 @@ export const uleb128Decode = (buffer: Uint8Array): bigint => {
  * Decodes an unsigned leb128 encoded value to bigint and returns it along
  * with the index of the end of the encoded uleb128 number + 1.
  *
- * @param {Buffer} bytes - The buffer to decode
+ * @param {UInt8Array} bytes - The buffer to decode
  * @param {number} index - A non-negative index to decode at, defaults to 0
  *
  * @returns {[bigint, number]} the decoded bigint value and the index of

@@ -35,7 +35,7 @@ export interface AccountSigner {
 /**
  * Gets Ed25519 signature for `digest`.
  *
- * @param {Buffer} digest - the message to sign.
+ * @param {ArrayBuffer} digest - the message to sign.
  * @param {HexString} privateKey - the ed25519 private key in HEX format.
  *
  * @returns {Buffer} the signature.

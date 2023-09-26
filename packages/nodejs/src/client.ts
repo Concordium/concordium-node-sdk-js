@@ -1,5 +1,4 @@
 import { ChannelCredentials } from '@grpc/grpc-js';
-import { Buffer as BufferFormater } from 'buffer/index.js';
 import { P2PClient } from './grpc-api/concordium_p2p_rpc.client.js';
 import {
     AccountAddress,
@@ -652,7 +651,7 @@ export default class ConcordiumNodeClient {
                     return {
                         version: 0,
                         ...common,
-                        model: BufferFormater.from(result.model, 'hex'),
+                        model: Buffer.from(result.model, 'hex'),
                     };
                 default:
                     throw new Error(

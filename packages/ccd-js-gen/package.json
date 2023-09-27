@@ -31,7 +31,7 @@
     },
     "license": "Apache-2.0",
     "dependencies": {
-        "@concordium/node-sdk": "9.4.0",
+        "@concordium/web-sdk": "6.4.0",
         "buffer": "^6.0.3",
         "commander": "^11.0.0",
         "ts-morph": "^19.0.0"

@@ -2,11 +2,7 @@
     "private": true,
     "workspaces": {
         "packages": [
-            "./packages/rust-bindings",
-            "./packages/common",
-            "./packages/nodejs",
-            "./packages/web",
-            "./packages/ccd-js-gen",
+            "./packages/*",
             "./examples",
             "./docs"
         ]

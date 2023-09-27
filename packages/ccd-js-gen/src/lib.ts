@@ -1,7 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as tsm from 'ts-morph';
-import * as SDK from '@concordium/node-sdk';
+import * as SDK from '@concordium/web-sdk';
 
 /**
  * Output options for the generated code.
@@ -340,19 +340,16 @@ This function ensures the smart contract module is deployed on chain.
         moduleSourceFile
             .addFunction({
                 docs: [
-                    `Send transaction for instantiating a new '${
-                        contract.contractName
+                    `Send transaction for instantiating a new '${contract.contractName
                     }' smart contract instance.
 
-@param {${moduleClientType}} ${moduleClientId} - The client of the on-chain smart contract module with referecence '${
-                        moduleRef.moduleRef
+@param {${moduleClientType}} ${moduleClientId} - The client of the on-chain smart contract module with referecence '${moduleRef.moduleRef
                     }'.
 @param {SDK.ContractTransactionMetadata} ${transactionMetadataId} - Metadata related to constructing a transaction for a smart contract module.
-${
-    initParameter === undefined
-        ? ''
-        : `@param {${initParameterTypeId}} ${parameterId} - Parameter to provide as part of the transaction for the instantiation of a new smart contract contract.`
-}
+${initParameter === undefined
+                        ? ''
+                        : `@param {${initParameterTypeId}} ${parameterId} - Parameter to provide as part of the transaction for the instantiation of a new smart contract contract.`
+                    }
 @param {SDK.AccountSigner} ${signerId} - The signer of the update contract transaction.
 
 @throws If failing to communicate with the concordium node.
@@ -373,11 +370,11 @@ ${
                     ...(initParameter === undefined
                         ? []
                         : [
-                              {
-                                  name: parameterId,
-                                  type: initParameterTypeId,
-                              },
-                          ]),
+                            {
+                                name: parameterId,
+                                type: initParameterTypeId,
+                            },
+                        ]),
                     {
                         name: signerId,
                         type: 'SDK.AccountSigner',
@@ -390,11 +387,10 @@ ${
     ${moduleClientId}.${internalModuleClientId},
     SDK.ContractName.fromStringUnchecked('${contract.contractName}'),
     ${transactionMetadataId},
-    ${
-        initParameter === undefined
-            ? ''
-            : `${createInitParameterFnId}(${parameterId})`
-    },
+    ${initParameter === undefined
+                    ? ''
+                    : `${createInitParameterFnId}(${parameterId})`
+                },
     ${signerId}
 );`
             );
@@ -671,19 +667,16 @@ Without checking the instance information on chain.
             contractSourceFile
                 .addFunction({
                     docs: [
-                        `Send an update-contract transaction to the '${entrypointName}' entrypoint of the '${
-                            contract.contractName
+                        `Send an update-contract transaction to the '${entrypointName}' entrypoint of the '${contract.contractName
                         }' contract.
 
-@param {${contractClientType}} ${contractClientId} The client for a '${
-                            contract.contractName
+@param {${contractClientType}} ${contractClientId} The client for a '${contract.contractName
                         }' smart contract instance on chain.
 @param {SDK.ContractTransactionMetadata} ${transactionMetadataId} - Metadata related to constructing a transaction for a smart contract.
-${
-    receiveParameter === undefined
-        ? ''
-        : `@param {${receiveParameterTypeId}} ${parameterId} - Parameter to provide the smart contract entrypoint as part of the transaction.`
-}
+${receiveParameter === undefined
+                            ? ''
+                            : `@param {${receiveParameterTypeId}} ${parameterId} - Parameter to provide the smart contract entrypoint as part of the transaction.`
+                        }
 @param {SDK.AccountSigner} ${signerId} - The signer of the update contract transaction.
 
 @throws If the entrypoint is not successfully invoked.
@@ -704,11 +697,11 @@ ${
                         ...(receiveParameter === undefined
                             ? []
                             : [
-                                  {
-                                      name: parameterId,
-                                      type: receiveParameterTypeId,
-                                  },
-                              ]),
+                                {
+                                    name: parameterId,
+                                    type: receiveParameterTypeId,
+                                },
+                            ]),
                         {
                             name: signerId,
                             type: 'SDK.AccountSigner',
@@ -721,11 +714,10 @@ ${
     SDK.EntrypointName.fromStringUnchecked('${entrypointName}'),
     SDK.Parameter.toBuffer,
     ${transactionMetadataId},
-    ${
-        receiveParameter === undefined
-            ? ''
-            : `${createReceiveParameterFnId}(${parameterId})`
-    },
+    ${receiveParameter === undefined
+                        ? ''
+                        : `${createReceiveParameterFnId}(${parameterId})`
+                    },
     ${signerId}
 );`
                 );
@@ -733,19 +725,16 @@ ${
             contractSourceFile
                 .addFunction({
                     docs: [
-                        `Dry-run an update-contract transaction to the '${entrypointName}' entrypoint of the '${
-                            contract.contractName
+                        `Dry-run an update-contract transaction to the '${entrypointName}' entrypoint of the '${contract.contractName
                         }' contract.
 
-@param {${contractClientType}} ${contractClientId} The client for a '${
-                            contract.contractName
+@param {${contractClientType}} ${contractClientId} The client for a '${contract.contractName
                         }' smart contract instance on chain.
 @param {SDK.ContractAddress.Type | SDK.AccountAddress.Type} ${invokerId} - The address of the account or contract which is invoking this transaction.
-${
-    receiveParameter === undefined
-        ? ''
-        : `@param {${receiveParameterTypeId}} ${parameterId} - Parameter to provide the smart contract entrypoint as part of the transaction.`
-}@param {SDK.BlockHash.Type} [${blockHashId}] - Optional block hash allowing for dry-running the transaction at the end of a specific block.
+${receiveParameter === undefined
+                            ? ''
+                            : `@param {${receiveParameterTypeId}} ${parameterId} - Parameter to provide the smart contract entrypoint as part of the transaction.`
+                        }@param {SDK.BlockHash.Type} [${blockHashId}] - Optional block hash allowing for dry-running the transaction at the end of a specific block.
 
 @throws {SDK.RpcError} If failing to communicate with the concordium node or if any of the checks fails.
 
@@ -765,11 +754,11 @@ ${
                         ...(receiveParameter === undefined
                             ? []
                             : [
-                                  {
-                                      name: parameterId,
-                                      type: receiveParameterTypeId,
-                                  },
-                              ]),
+                                {
+                                    name: parameterId,
+                                    type: receiveParameterTypeId,
+                                },
+                            ]),
                         {
                             name: blockHashId,
                             hasQuestionToken: true,
@@ -783,11 +772,10 @@ ${
     SDK.EntrypointName.fromStringUnchecked('${entrypointName}'),
     ${invokerId},
     SDK.Parameter.toBuffer,
-    ${
-        receiveParameter === undefined
-            ? ''
-            : `${createReceiveParameterFnId}(${parameterId})`
-    },
+    ${receiveParameter === undefined
+                        ? ''
+                        : `${createReceiveParameterFnId}(${parameterId})`
+                    },
     ${blockHashId}
 );`
                 );
@@ -962,10 +950,9 @@ function schemaToTypeAndMapper(
 
             const variantTypes = variantSchemas.map(
                 (variantSchema) =>
-                    `{ type: '${variantSchema.name}'${
-                        variantSchema.type === undefined
-                            ? ''
-                            : `, content: ${variantSchema.type}`
+                    `{ type: '${variantSchema.name}'${variantSchema.type === undefined
+                        ? ''
+                        : `, content: ${variantSchema.type}`
                     } }`
             );
 
@@ -974,9 +961,8 @@ function schemaToTypeAndMapper(
                 mapper(id) {
                     const variantCases = variantSchemas.map(
                         (variantSchema) => `    case '${variantSchema.name}': {
-        return { '${variantSchema.name}': ${
-                            variantSchema.mapper?.(`${id}.content`) ?? '[]'
-                        }};
+        return { '${variantSchema.name}': ${variantSchema.mapper?.(`${id}.content`) ?? '[]'
+                            }};
     }`
                     );
                     return `(() => { switch (${id}.type) {\n${variantCases.join(
@@ -1035,11 +1021,11 @@ function fieldToTypeAndMapper(
                 return schema === undefined
                     ? []
                     : [
-                          {
-                              name: named.name,
-                              ...schema,
-                          },
-                      ];
+                        {
+                            name: named.name,
+                            ...schema,
+                        },
+                    ];
             });
 
             const objectFieldTypes = schemas.flatMap(

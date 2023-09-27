@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer/index.js';
 import { stringify } from 'json-bigint';
 
-import { ConcordiumGRPCClient } from './grpc/GRPCClient.js';
+import { ConcordiumGrpcClient } from './grpc/GRPCClient.js';
 import { AccountSigner, signTransaction } from './signHelpers.js';
 import {
     AccountTransactionType,
@@ -104,7 +104,7 @@ export function getContractUpdateDefaultExpiryDate(): Date {
  */
 export class ContractDryRun<E extends string = string> {
     constructor(
-        protected grpcClient: ConcordiumGRPCClient,
+        protected grpcClient: ConcordiumGrpcClient,
         protected contractAddress: ContractAddress.Type,
         protected contractName: ContractName.Type
     ) {}
@@ -180,7 +180,7 @@ class ContractBase<E extends string = string, V extends string = string> {
     protected dryRunInstance: ContractDryRun<E>;
 
     constructor(
-        protected grpcClient: ConcordiumGRPCClient,
+        protected grpcClient: ConcordiumGrpcClient,
         protected contractAddress: ContractAddress.Type,
         protected contractName: ContractName.Type,
         protected schema?: Schema<E>
@@ -195,7 +195,7 @@ class ContractBase<E extends string = string, V extends string = string> {
     /**
      * Helper function for getting the {@link InstanceInfo} of a contract
      *
-     * @param {ConcordiumGRPCClient} grpcClient - The GRPC client for accessing a node.
+     * @param {ConcordiumGrpcClient} grpcClient - The GRPC client for accessing a node.
      * @param {ContractAddress} contractAddress - The address of the contract.
      *
      * @throws if the {@link InstanceInfo} of the contract could not be found.
@@ -203,7 +203,7 @@ class ContractBase<E extends string = string, V extends string = string> {
      * @returns {InstanceInfo} the instance info.
      */
     protected static async getInstanceInfo(
-        grpcClient: ConcordiumGRPCClient,
+        grpcClient: ConcordiumGrpcClient,
         contractAddress: ContractAddress.Type
     ): Promise<InstanceInfo> {
         try {
@@ -220,7 +220,7 @@ class ContractBase<E extends string = string, V extends string = string> {
     /**
      * Helper function for getting the name of a contract
      *
-     * @param {ConcordiumGRPCClient} grpcClient - The GRPC client for accessing a node.
+     * @param {ConcordiumGrpcClient} grpcClient - The GRPC client for accessing a node.
      * @param {ContractAddress} contractAddress - The address of the contract.
      *
      * @throws if the {@link InstanceInfo} of the contract could not be found.
@@ -228,7 +228,7 @@ class ContractBase<E extends string = string, V extends string = string> {
      * @returns {string} the name of the contract.
      */
     protected static async getContractName(
-        grpcClient: ConcordiumGRPCClient,
+        grpcClient: ConcordiumGrpcClient,
         contractAddress: ContractAddress.Type
     ): Promise<ContractName.Type> {
         const instanceInfo = await this.getInstanceInfo(
@@ -521,7 +521,7 @@ export class Contract<
     /**
      * Creates a new `Contract` instance by querying the node for the necessary information through the supplied `grpcClient`.
      *
-     * @param {ConcordiumGRPCClient} grpcClient - The client used for contract invocations and updates.
+     * @param {ConcordiumGrpcClient} grpcClient - The client used for contract invocations and updates.
      * @param {ContractAddress} contractAddress - Address of the contract instance.
      * @param {Schema} [schema] - The schema of the contract, either defined as parameter schemas per entrypoint `E` or as a single module schema.
      * If no schema is defined, an attempt to get an embedded schema from the contract is made.
@@ -534,7 +534,7 @@ export class Contract<
         E extends string = string,
         V extends string = string
     >(
-        grpcClient: ConcordiumGRPCClient,
+        grpcClient: ConcordiumGrpcClient,
         contractAddress: ContractAddress.Type,
         schema?: Schema<E>
     ): Promise<Contract<E, V>> {
@@ -589,7 +589,7 @@ export abstract class CISContract<
     protected override dryRunInstance: D;
 
     constructor(
-        protected grpcClient: ConcordiumGRPCClient,
+        protected grpcClient: ConcordiumGrpcClient,
         protected contractAddress: ContractAddress.Type,
         protected contractName: ContractName.Type
     ) {
@@ -606,7 +606,7 @@ export abstract class CISContract<
      * Function for creating the {@CISContract.dryRunInstance}.
      */
     protected abstract makeDryRunInstance(
-        grpcClient: ConcordiumGRPCClient,
+        grpcClient: ConcordiumGrpcClient,
         contractAddress: ContractAddress.Type,
         contractName: ContractName.Type
     ): D;

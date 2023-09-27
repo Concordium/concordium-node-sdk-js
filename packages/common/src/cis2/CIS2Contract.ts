@@ -6,7 +6,7 @@ import * as BlockHash from '../types/BlockHash.js';
 import * as TransactionHash from '../types/TransactionHash.js';
 import * as ContractName from '../types/ContractName.js';
 import * as EntrypointName from '../types/EntrypointName.js';
-import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
+import { ConcordiumGrpcClient } from '../grpc/GRPCClient.js';
 import { AccountSigner } from '../signHelpers.js';
 import {
     serializeCIS2Transfers,
@@ -134,7 +134,7 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
             'EAEUAAIAAAAGAAAAdXBkYXRlFQIAAAAGAAAAUmVtb3ZlAgMAAABBZGQCCAAAAG9wZXJhdG9yFQIAAAAHAAAAQWNjb3VudAEBAAAACwgAAABDb250cmFjdAEBAAAADA',
     };
     protected makeDryRunInstance(
-        grpcClient: ConcordiumGRPCClient,
+        grpcClient: ConcordiumGrpcClient,
         contractAddress: ContractAddress.Type,
         contractName: ContractName.Type
     ): CIS2DryRun {
@@ -144,14 +144,14 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
     /**
      * Creates a new `CIS2Contract` instance by querying the node for the necessary information through the supplied `grpcClient`.
      *
-     * @param {ConcordiumGRPCClient} grpcClient - The client used for contract invocations and updates.
+     * @param {ConcordiumGrpcClient} grpcClient - The client used for contract invocations and updates.
      * @param {ContractAddress.Type} contractAddress - Address of the contract instance.
      *
      * @throws If `InstanceInfo` could not be received for the contract, if the contract does not support the CIS-2 standard,
      * or if the contract name could not be parsed from the information received from the node.
      */
     public static async create(
-        grpcClient: ConcordiumGRPCClient,
+        grpcClient: ConcordiumGrpcClient,
         contractAddress: ContractAddress.Type
     ): Promise<CIS2Contract> {
         const contractName = await super.getContractName(

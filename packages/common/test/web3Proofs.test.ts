@@ -1,6 +1,7 @@
 import {
     AttributeKeyString,
     ConcordiumHdWallet,
+    ContractAddress,
     createAccountDID,
     createWeb3IdDID,
     dateToTimestampAttribute,
@@ -36,16 +37,13 @@ test('Generate V2 statement', () => {
     const builder = new Web3StatementBuilder();
     const statement = builder
         .addForVerifiableCredentials(
-            [
-                { index: 2101n, subindex: 0n },
-                { index: 1337n, subindex: 42n },
-            ],
+            [ContractAddress.create(2101), ContractAddress.create(1337, 42)],
             (b) =>
                 b
                     .addRange('b', 80n, 1237n)
                     .addMembership('c', ['aa', 'ff', 'zz'])
         )
-        .addForVerifiableCredentials([{ index: 1338n, subindex: 0n }], (b) =>
+        .addForVerifiableCredentials([ContractAddress.create(1338)], (b) =>
             b
                 .addRange('a', 80n, 1237n)
                 .addNonMembership('d', ['aa', 'ff', 'zz'])
@@ -151,7 +149,7 @@ test('create Web3Id proof with Web3Id Credentials', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
 
     const publicKey = wallet
-        .getVerifiableCredentialPublicKey({ index: 1n, subindex: 0n }, 1)
+        .getVerifiableCredentialPublicKey(ContractAddress.create(1), 1)
         .toString('hex');
 
     const values: Record<string, bigint | string> = {
@@ -181,10 +179,7 @@ test('create Web3Id proof with Web3Id Credentials', () => {
         {
             type: 'web3Issuer',
             signer: wallet
-                .getVerifiableCredentialSigningKey(
-                    { index: 1n, subindex: 0n },
-                    1
-                )
+                .getVerifiableCredentialSigningKey(ContractAddress.create(1), 1)
                 .toString('hex'),
             values,
             randomness,
@@ -286,7 +281,7 @@ test('Generate statement with timestamp', () => {
 
     const statement = builder
         .addForVerifiableCredentials(
-            [{ index: 0n, subindex: 0n }],
+            [ContractAddress.create(0)],
             (b) => b.addRange('graduationDate', lower, upper),
             schemaWithTimeStamp
         )
@@ -307,7 +302,7 @@ test('Generate statement with timestamp fails if not timestamp attribute', () =>
 
     expect(() =>
         builder.addForVerifiableCredentials(
-            [{ index: 0n, subindex: 0n }],
+            [ContractAddress.create(0)],
             (b) =>
                 b
                     // Use degreeName, which is a string property, not timestamp

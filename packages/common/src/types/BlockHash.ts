@@ -2,6 +2,11 @@ import type { HexString } from '../types.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
 
 /**
+ * The number of bytes used to represent a block hash.
+ */
+const blockHashByteLength = 32;
+
+/**
  * Represents a hash of a block in the chain.
  */
 class BlockHash {
@@ -25,7 +30,7 @@ export type Type = BlockHash;
  * @returns {BlockHash}
  */
 export function fromBuffer(buffer: ArrayBuffer): BlockHash {
-    if (buffer.byteLength !== 32) {
+    if (buffer.byteLength !== blockHashByteLength) {
         throw new Error(
             `Invalid transaction hash provided: Expected a buffer containing 32 bytes, instead got '${Buffer.from(
                 buffer
@@ -92,4 +97,19 @@ export function toBlockHashInput(blockHash: BlockHash): Proto.BlockHashInput {
     return {
         blockHashInput: { oneofKind: 'given', given: toProto(blockHash) },
     };
+}
+
+/**
+ * Check if two transaction hashes are the same.
+ * @param {BlockHash} left
+ * @param {BlockHash} right
+ * @returns {boolean} True if they are equal.
+ */
+export function equals(left: BlockHash, right: BlockHash): boolean {
+    for (let i = 0; i < blockHashByteLength; i++) {
+        if (left.buffer.at(i) !== right.buffer.at(i)) {
+            return false;
+        }
+    }
+    return true;
 }

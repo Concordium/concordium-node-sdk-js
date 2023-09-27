@@ -150,3 +150,13 @@ export function toProto(receiveName: ReceiveName): Proto.ReceiveName {
         value: receiveName.value,
     };
 }
+
+/**
+ * Check if two smart contract receive names represent the same.
+ * @param {ReceiveName} left
+ * @param {ReceiveName} right
+ * @returns {boolean} True if they are equal.
+ */
+export function equals(left: ReceiveName, right: ReceiveName): boolean {
+    return left.value === right.value;
+}

@@ -373,6 +373,7 @@ export class JsonRpcClient {
         const context = {
             ...contractContext,
             invoker,
+            method: contractContext.method.value,
             energy:
                 contractContext.energy === undefined
                     ? undefined

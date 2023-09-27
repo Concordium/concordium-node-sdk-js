@@ -8,6 +8,7 @@ import {
     isStringAttributeInRange,
     timestampToDate,
     verifyWeb3IdCredentialSignature,
+    ContractAddress,
 } from '../src/index.js';
 
 const globalContext = JSON.parse(
@@ -33,7 +34,7 @@ const holder =
     '32c0b24855060114c7b781bc94fcb089edc255f16e78ece9b597bf0c6880fa98';
 const issuerPublicKey =
     '2DC9C80EBF73F6EE44F6BD8C067C1FCE660C9B78779A5CD4674A56B59C3474B2';
-const issuerContract = { index: 5463n, subindex: 0n };
+const issuerContract = ContractAddress.create(5463);
 
 test('verifyWeb3IdCredentialSignature', async () => {
     expect(
@@ -67,7 +68,7 @@ test('verifyWeb3IdCredentialSignature can reject due to incorrect signature', as
 });
 
 test('verifyWeb3IdCredentialSignature can reject due to incorrect issuer contract', async () => {
-    const incorrectIssuerContract = { index: 4463n, subindex: 0n };
+    const incorrectIssuerContract = ContractAddress.create(4463);
     expect(
         verifyWeb3IdCredentialSignature({
             globalContext,
@@ -121,7 +122,7 @@ test('verifyWeb3IdCredentialSignature with timestamps', async () => {
         '666b4811c26b36357186b6c286261930d12a8772776d70c485a9b16059881824';
     const issuerPublicKey =
         '00ee7c443e604fbe6defbbc08ee0bf25e76656037fc189c41e631ac3a0ab136d';
-    const issuerContract = { index: 6105n, subindex: 0n };
+    const issuerContract = ContractAddress.create(6105);
 
     expect(
         verifyWeb3IdCredentialSignature({

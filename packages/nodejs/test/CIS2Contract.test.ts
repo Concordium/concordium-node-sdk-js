@@ -1,8 +1,12 @@
 import {
     AccountAddress,
     AccountTransactionType,
+    BlockHash,
     ContractAddress,
+    Energy,
     EntrypointName,
+    Parameter,
+    ReceiveName,
     TransactionEventTag,
 } from '@concordium/common-sdk';
 import { getNodeClientV2 as getNodeClient } from './testHelpers.js';
@@ -12,8 +16,9 @@ import { serializeTypeValue } from '@concordium/common-sdk/schema';
 const CIS2_FT_ADDRESS = ContractAddress.create(3496);
 const CIS2_NFT_ADDRESS = ContractAddress.create(1696);
 
-const TEST_BLOCK =
-    '3e9d90325c61ab190065f3c90364beeb925833319de68d982ec6da7762e8357b';
+const TEST_BLOCK = BlockHash.fromHexString(
+    '3e9d90325c61ab190065f3c90364beeb925833319de68d982ec6da7762e8357b'
+);
 const TEST_ACCOUNT = AccountAddress.fromBase58(
     '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
 );
@@ -109,13 +114,13 @@ test('dryRun.transfer', async () => {
         },
         TEST_BLOCK
     );
-    expect(result.usedEnergy).toEqual(2803n);
+    expect(result.usedEnergy.value).toBe(2803n);
     // Results in 1 transfer event
     expect(
         result.tag === 'success' &&
             result.events[0].tag === TransactionEventTag.Updated &&
             result.events[0].events.length
-    ).toEqual(1);
+    ).toBe(1);
 
     const resultMulti = await cis2.dryRun.transfer(
         TEST_ACCOUNT,
@@ -140,13 +145,13 @@ test('dryRun.transfer', async () => {
         TEST_BLOCK
     );
 
-    expect(resultMulti.usedEnergy).toEqual(3278n);
+    expect(resultMulti.usedEnergy.value).toBe(3278n);
     // Results in 2 transfer events
     expect(
         resultMulti.tag === 'success' &&
             resultMulti.events[0].tag === TransactionEventTag.Updated &&
             resultMulti.events[0].events.length
-    ).toEqual(2);
+    ).toBe(2);
 
     const resultContractReceiver = await cis2.dryRun.transfer(
         TEST_ACCOUNT,
@@ -159,16 +164,18 @@ test('dryRun.transfer', async () => {
             },
             tokenAmount: 0n,
         },
-        'a03ca5112f2bf38bbb4f4d524432ff3a060226d823a3a868aa23b7d0d628e112'
+        BlockHash.fromHexString(
+            'a03ca5112f2bf38bbb4f4d524432ff3a060226d823a3a868aa23b7d0d628e112'
+        )
     );
-    expect(resultContractReceiver.tag).toEqual('success');
+    expect(resultContractReceiver.tag).toBe('success');
 });
 
 describe('createTransfer', () => {
     test('single update', async () => {
         const cis2 = await getCIS2Single();
         const { type, parameter, payload } = cis2.createTransfer(
-            { energy: 1000000n },
+            { energy: Energy.create(1000000) },
             {
                 tokenId: '',
                 to: AccountAddress.fromBase58(
@@ -190,7 +197,7 @@ describe('createTransfer', () => {
             {
                 token_id: '',
                 amount: '100',
-                from: { Account: [TEST_ACCOUNT] },
+                from: { Account: [AccountAddress.toBase58(TEST_ACCOUNT)] },
                 to: {
                     Account: [
                         '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
@@ -202,34 +209,48 @@ describe('createTransfer', () => {
 
         // Checks that payload contains the expected values
         expect(payload.amount.microCcdAmount).toEqual(0n);
-        expect(payload.address).toEqual({ index: 3496n, subindex: 0n });
-        expect(payload.message.toString('hex')).toEqual(expectedParameterHex);
-        expect(payload.receiveName).toEqual('cis2-bridgeable.transfer');
-        expect(payload.maxContractExecutionEnergy).toEqual(1000000n);
+        expect(
+            ContractAddress.equals(
+                payload.address,
+                ContractAddress.create(3496)
+            )
+        ).toBeTruthy();
+        expect(Parameter.toHexString(payload.message)).toEqual(
+            expectedParameterHex
+        );
+        expect(payload.receiveName).toEqual(
+            ReceiveName.fromStringUnchecked('cis2-bridgeable.transfer')
+        );
+        expect(payload.maxContractExecutionEnergy.value).toEqual(1000000n);
     });
 
     test('multiple transfers', async () => {
         const cis2 = await getCIS2Single();
-        const { parameter, schema } = cis2.createTransfer({ energy: 10000n }, [
-            {
-                tokenId: '',
-                to: AccountAddress.fromBase58(
-                    '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'
-                ),
-                from: TEST_ACCOUNT,
-                tokenAmount: 100n,
-            },
-            {
-                tokenId: '',
-                from: TEST_ACCOUNT,
-                to: {
-                    address: ContractAddress.create(4416),
-                    hookName:
-                        EntrypointName.fromStringUnchecked('onReceivingCIS2'),
+        const { parameter, schema } = cis2.createTransfer(
+            { energy: Energy.create(10000) },
+            [
+                {
+                    tokenId: '',
+                    to: AccountAddress.fromBase58(
+                        '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'
+                    ),
+                    from: TEST_ACCOUNT,
+                    tokenAmount: 100n,
                 },
-                tokenAmount: 0n,
-            },
-        ]);
+                {
+                    tokenId: '',
+                    from: TEST_ACCOUNT,
+                    to: {
+                        address: ContractAddress.create(4416),
+                        hookName:
+                            EntrypointName.fromStringUnchecked(
+                                'onReceivingCIS2'
+                            ),
+                    },
+                    tokenAmount: 0n,
+                },
+            ]
+        );
         const expectedParameterHex =
             '0200006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb490000000000c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f01401100000000000000000000000000000f006f6e526563656976696e67434953320000';
         // Parameter is formatted and serialized as expected
@@ -238,7 +259,7 @@ describe('createTransfer', () => {
             {
                 token_id: '',
                 amount: '100',
-                from: { Account: [TEST_ACCOUNT] },
+                from: { Account: [AccountAddress.toBase58(TEST_ACCOUNT)] },
                 to: {
                     Account: [
                         '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
@@ -249,7 +270,7 @@ describe('createTransfer', () => {
             {
                 token_id: '',
                 amount: '0',
-                from: { Account: [TEST_ACCOUNT] },
+                from: { Account: [AccountAddress.toBase58(TEST_ACCOUNT)] },
                 to: {
                     Contract: [{ index: 4416, subindex: 0 }, 'onReceivingCIS2'],
                 },
@@ -276,7 +297,7 @@ test('dryRun.updateOperator', async () => {
         },
         TEST_BLOCK
     );
-    expect(result.usedEnergy).toEqual(2735n);
+    expect(result.usedEnergy.value).toEqual(2735n);
     // Results in 1 transfer event
     expect(
         result.tag === 'success' &&
@@ -301,7 +322,7 @@ test('dryRun.updateOperator', async () => {
         TEST_BLOCK
     );
 
-    expect(resultMulti.usedEnergy).toEqual(2960n);
+    expect(resultMulti.usedEnergy.value).toEqual(2960n);
     // Results in 2 transfer events
     expect(
         resultMulti.tag === 'success' &&
@@ -314,7 +335,7 @@ describe('createUpdateOperator', () => {
     test('single update', async () => {
         const cis2 = await getCIS2Single();
         const { type, parameter, payload } = cis2.createUpdateOperator(
-            { energy: 1000000n },
+            { energy: Energy.create(1000000) },
             {
                 type: 'add',
                 address: AccountAddress.fromBase58(
@@ -343,26 +364,33 @@ describe('createUpdateOperator', () => {
 
         // Checks that payload contains the expected values
         expect(payload.amount.microCcdAmount).toEqual(0n);
-        expect(payload.address).toEqual({ index: 3496n, subindex: 0n });
-        expect(payload.message.toString('hex')).toEqual(expectedParameterHex);
-        expect(payload.receiveName).toEqual('cis2-bridgeable.updateOperator');
-        expect(payload.maxContractExecutionEnergy).toEqual(1000000n);
+        expect(payload.address).toEqual(ContractAddress.create(3496));
+        expect(Parameter.toHexString(payload.message)).toEqual(
+            expectedParameterHex
+        );
+        expect(payload.receiveName.value).toEqual(
+            'cis2-bridgeable.updateOperator'
+        );
+        expect(payload.maxContractExecutionEnergy.value).toEqual(1000000n);
     });
 
     test('multiple updates', async () => {
         const cis2 = await getCIS2Single();
-        const { parameter } = cis2.createUpdateOperator({ energy: 1000000n }, [
-            {
-                type: 'add',
-                address: AccountAddress.fromBase58(
-                    '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'
-                ),
-            },
-            {
-                type: 'remove',
-                address: ContractAddress.create(3494),
-            },
-        ]);
+        const { parameter } = cis2.createUpdateOperator(
+            { energy: Energy.create(1000000) },
+            [
+                {
+                    type: 'add',
+                    address: AccountAddress.fromBase58(
+                        '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'
+                    ),
+                },
+                {
+                    type: 'remove',
+                    address: ContractAddress.create(3494),
+                },
+            ]
+        );
         const expectedParameterHex =
             '0200010087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb490001a60d0000000000000000000000000000';
         // Parameter is formatted and serialized as expected

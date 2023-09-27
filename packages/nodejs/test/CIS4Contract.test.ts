@@ -3,6 +3,7 @@ import {
     AccountAddress,
     Timestamp,
     Energy,
+    BlockHash,
 } from '@concordium/common-sdk';
 import { serializeTypeValue } from '@concordium/common-sdk/schema';
 import { CIS4, CIS4Contract, Web3IdSigner } from '@concordium/common-sdk/cis4';
@@ -36,8 +37,9 @@ const NEW_REVOKER_2_KEYPAIR = {
 };
 const WEB3ID_ADDRESS_REVOKE = ContractAddress.create(5587);
 
-const TEST_BLOCK =
-    'bf956ef81bb6a22eda754d490bdb7a3085318b3a1fe9370f83f86649a5f7cb60';
+const TEST_BLOCK = BlockHash.fromHexString(
+    'bf956ef81bb6a22eda754d490bdb7a3085318b3a1fe9370f83f86649a5f7cb60'
+);
 
 const getCIS4 = () =>
     CIS4Contract.create(getNodeClient(), WEB3ID_ADDRESS_REVOKE);
@@ -60,7 +62,7 @@ describe('credentialEntry', () => {
                     new Date('2023-08-01T13:47:02.260Z')
                 ),
                 validUntil: Timestamp.fromDate(
-                    new Date('2023-08-01T13:47:02.260Z')
+                    new Date('2025-08-01T13:47:02.260Z')
                 ),
                 metadataUrl: { url: '' },
             },
@@ -211,6 +213,7 @@ describe('registerRevocationKeys', () => {
         const res = await cis4.dryRun.registerRevocationKeys(
             ISSUER_ACCOUNT,
             NEW_REVOKER_1_KEYPAIR.pub,
+            undefined,
             TEST_BLOCK
         );
         expect(res.tag).toBe('success');
@@ -264,6 +267,7 @@ describe('removeRevocationKeys', () => {
         const res = await cis4.dryRun.removeRevocationKeys(
             ISSUER_ACCOUNT,
             REVOKER_KEYPAIR.pub,
+            undefined,
             TEST_BLOCK
         );
         expect(res.tag).toBe('success');

@@ -131,15 +131,12 @@ export class ContractDryRun<E extends string = string> {
         blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
         const parameter = Parameter.fromBuffer(serializer(input));
-
-        const method = ReceiveName.create(this.contractName, entrypoint);
-
         return this.grpcClient.invokeContract(
             {
                 contract: this.contractAddress,
                 parameter,
                 invoker,
-                method: ReceiveName.toString(method),
+                method: ReceiveName.create(this.contractName, entrypoint),
             },
             blockHash
         );
@@ -471,7 +468,7 @@ class ContractBase<E extends string = string, V extends string = string> {
      * @returns {R} The transaction hash of the update transaction
      */
     public async invokeView<T, R>(
-        entrypoint: V,
+        entrypoint: EntrypointName.Type<V>,
         serializeInput: (input: T) => ArrayBuffer,
         deserializeResponse: (value: HexString) => R,
         input: T,
@@ -483,7 +480,7 @@ class ContractBase<E extends string = string, V extends string = string> {
             {
                 contract: this.contractAddress,
                 parameter,
-                method: `${this.contractName}.${entrypoint}`,
+                method: ReceiveName.create(this.contractName, entrypoint),
             },
             blockHash
         );

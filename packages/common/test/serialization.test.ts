@@ -12,6 +12,7 @@ import {
     SimpleTransferPayload,
 } from '../src/types.js';
 import { TransactionExpiry } from '../src/types/transactionExpiry.js';
+import { SequenceNumber } from '../src/index.js';
 
 test('fail account transaction serialization if no signatures', () => {
     const simpleTransferPayload: SimpleTransferPayload = {
@@ -23,7 +24,7 @@ test('fail account transaction serialization if no signatures', () => {
 
     const header: AccountTransactionHeader = {
         expiry: new TransactionExpiry(new Date(Date.now() + 1200000)),
-        nonce: 0n,
+        nonce: SequenceNumber.create(1),
         sender: AccountAddress.fromBase58(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),

@@ -3,28 +3,7 @@ import {
     AccountTransactionSignature,
     HexString,
     IpAddressString,
-    ReleaseSchedule,
 } from './types.js';
-
-/**
- * Replaces a number in a JSON string with the same number as a
- * string, i.e. with quotes (") prior to and after the number. This
- * is needed as the default JSON parser cannot intepret BigInts
- * correctly when they arrive as JSON numbers.
- * @param jsonStruct the JSON structure as a string
- * @param keys the keys where the number has to be quoted
- * @returns the same JSON string where the numbers at the supplied keys are quoted
- */
-function intToString(jsonStruct: string, keys: string[]): string {
-    let result = jsonStruct;
-    for (const key of keys) {
-        result = result.replace(
-            new RegExp(`"${key}":\\s*([0-9]+)`, 'g'),
-            `"${key}":"$1"`
-        );
-    }
-    return result;
-}
 
 /**
  * Replaces a string in a JSON string with the same string as a

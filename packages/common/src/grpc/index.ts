@@ -1,7 +1,7 @@
 export {
-    ConcordiumGrpcClient,
-    ConcordiumGrpcWebClient,
-    ConcordiumGrpcNodeClient,
+    ConcordiumGRPCClient,
+    ConcordiumGRPCWebClient,
+    ConcordiumGRPCNodeClient,
     getAccountIdentifierInput,
     getBlockHashInput,
 } from './GRPCClient.js';

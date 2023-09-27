@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer/index.js';
 import { stringify } from 'json-bigint';
 
-import { ConcordiumGrpcClient } from './grpc/GRPCClient.js';
+import { ConcordiumGRPCClient } from './grpc/GRPCClient.js';
 import {
     encodeWord16,
     packBufferWithWord8Length,
@@ -93,7 +93,7 @@ const deserializeSupportResult =
 /**
  * Queries a CIS-0 contract for support for a {@link CIS0.StandardIdentifier}.
  *
- * @param {ConcordiumGrpcClient} grpcClient - The client to be used for the query.
+ * @param {ConcordiumGRPCClient} grpcClient - The client to be used for the query.
  * @param {ContractAddress.Type} contractAddress - The address of the contract to query.
  * @param {CIS0.StandardIdentifier} standardId - The standard identifier to query for support in contract.
  * @param {BlockHash.Type} [blockHash] - The hash of the block to query at.
@@ -103,7 +103,7 @@ const deserializeSupportResult =
  * @returns {CIS0.SupportResult} The support result of the query, or `undefined` if the contract does not support CIS-0.
  */
 export function cis0Supports(
-    grpcClient: ConcordiumGrpcClient,
+    grpcClient: ConcordiumGRPCClient,
     contractAddress: ContractAddress.Type,
     standardId: CIS0.StandardIdentifier,
     blockHash?: BlockHash.Type
@@ -111,7 +111,7 @@ export function cis0Supports(
 /**
  * Queries a CIS-0 contract for support for a {@link CIS0.StandardIdentifier}.
  *
- * @param {ConcordiumGrpcClient} grpcClient - The client to be used for the query.
+ * @param {ConcordiumGRPCClient} grpcClient - The client to be used for the query.
  * @param {ContractAddress.Type} contractAddress - The address of the contract to query.
  * @param {CIS0.StandardIdentifier[]} standardIds - The standard identifiers to query for support in contract.
  * @param {BlockHash.Type} [blockHash] - The hash of the block to query at.
@@ -121,13 +121,13 @@ export function cis0Supports(
  * @returns {CIS0.SupportResult[]} The support results of the query ordered by the ID's supplied by the `ids` param, or `undefined` if the contract does not support CIS-0.
  */
 export function cis0Supports(
-    grpcClient: ConcordiumGrpcClient,
+    grpcClient: ConcordiumGRPCClient,
     contractAddress: ContractAddress.Type,
     standardIds: CIS0.StandardIdentifier[],
     blockHash?: BlockHash.Type
 ): Promise<CIS0.SupportResult[] | undefined>;
 export async function cis0Supports(
-    grpcClient: ConcordiumGrpcClient,
+    grpcClient: ConcordiumGRPCClient,
     contractAddress: ContractAddress.Type,
     standardIds: CIS0.StandardIdentifier | CIS0.StandardIdentifier[],
     blockHash?: BlockHash.Type

@@ -1,6 +1,6 @@
 /**
  * This is the GRPC-Client used by both the Web-SDK and the NodeJS-SDK. Check
- * out the {@link ConcordiumGrpcClient}
+ * out the {@link ConcordiumGRPCClient}
  *
  * @module Common GRPC-Client
  */
@@ -58,10 +58,10 @@ export type FindInstanceCreationReponse = {
 
 /**
  * A concordium-node specific gRPC client wrapper. Only use this if you intend to supply a custom
- * transport layer. Otherwise more user-friendly options {@link ConcordiumGrpcWebClient} and
- * {@link ConcordiumGrpcNodeClient} exist for web/nodejs use respectively.
+ * transport layer. Otherwise more user-friendly options {@link ConcordiumGRPCWebClient} and
+ * {@link ConcordiumGRPCNodeClient} exist for web/nodejs use respectively.
  */
-export class ConcordiumGrpcClient {
+export class ConcordiumGRPCClient {
     client: QueriesClient;
     healthClient: HealthClient;
 
@@ -1600,10 +1600,10 @@ export function getAccountIdentifierInput(
  * This requires that the node at the address supplied has grpc-web enabled.
  *
  * @example
- * import { ConcordiumGrpcWebClient } from "..."
- * const client = new ConcordiumGrpcClient('127.0.0.1', 20000);
+ * import { ConcordiumGRPCWebClient } from "..."
+ * const client = new ConcordiumGRPCWebClient('127.0.0.1', 20000);
  */
-export class ConcordiumGrpcWebClient extends ConcordiumGrpcClient {
+export class ConcordiumGRPCWebClient extends ConcordiumGRPCClient {
     constructor(address: string, port: number, options?: GrpcWebOptions) {
         const transport = new GrpcWebFetchTransport({
             baseUrl: `${address}:${port}`,
@@ -1615,17 +1615,17 @@ export class ConcordiumGrpcWebClient extends ConcordiumGrpcClient {
 
 /**
  * A concordium-node specific gRPC client wrapper.
- * This will not work in a browser environment, in which case {@link ConcordiumGrpcWebClient}
+ * This will not work in a browser environment, in which case {@link ConcordiumGRPCWebClient}
  * should be used instead.
  *
  * @example
- * import { ConcordiumGrpcWebClient } from "..."
+ * import { ConcordiumGRPCNodeClient } from "..."
  * import { credentials } from '@grpc/grpc-js';
  *
- * const credentials = ...; // e.g. credentials.createInsecure();
- * const client = new ConcordiumGrpcClient('127.0.0.1', 20000);
+ * const creds = ...; // e.g. credentials.createInsecure();
+ * const client = new ConcordiumGRPCClient('127.0.0.1', 20000, creds);
  */
-export class ConcordiumGrpcNodeClient extends ConcordiumGrpcClient {
+export class ConcordiumGRPCNodeClient extends ConcordiumGRPCClient {
     constructor(
         address: string,
         port: number,

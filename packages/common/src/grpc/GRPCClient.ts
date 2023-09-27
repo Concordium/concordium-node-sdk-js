@@ -6,6 +6,10 @@
  */
 import { Buffer } from 'buffer/index.js';
 import type { RpcError, RpcTransport } from '@protobuf-ts/runtime-rpc';
+import {
+    GrpcWebFetchTransport,
+    GrpcWebOptions,
+} from '@protobuf-ts/grpcweb-transport';
 
 import * as v1 from '../types.js';
 import * as v2 from '../grpc-api/v2/concordium/types.js';
@@ -68,6 +72,25 @@ export class ConcordiumGRPCClient {
     constructor(transport: RpcTransport) {
         this.client = new QueriesClient(transport);
         this.healthClient = new HealthClient(transport);
+    }
+
+    /**
+     * Initialize a gRPC client for a specific concordium node, utilizing a grpc-web transport layer.
+     *
+     * @param address the ip address of the node, e.g. http://127.0.0.1
+     * @param port the port to use when econnecting to the node
+     * @param options optional options for the grpc-web transport
+     */
+    static withDefaultTransport(
+        address: string,
+        port: number,
+        options?: Partial<GrpcWebOptions>
+    ): ConcordiumGRPCClient {
+        const transport = new GrpcWebFetchTransport({
+            baseUrl: `${address}:${port}`,
+            ...options,
+        });
+        return new ConcordiumGRPCClient(transport);
     }
 
     /**

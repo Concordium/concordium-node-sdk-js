@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { Buffer } from 'buffer/index.js';
 import {
     AccountTransactionSignature,
     HexString,
@@ -229,4 +230,8 @@ export const makeDynamicFunction =
 
 export function isDefined<T>(v?: T): v is T {
     return v !== undefined;
+}
+
+export function toBuffer(s: string, encoding?: string): Buffer {
+    return Buffer.from(s, encoding);
 }

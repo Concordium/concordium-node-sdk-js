@@ -1,2 +1,1 @@
-// Utility functions needed in web/nodejs packages
-export { isValidHash, stringToInt } from '../util.js';
+export { toBuffer } from '../util.js';

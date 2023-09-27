@@ -1,11 +1,4 @@
-import {
-    Address,
-    Base58String,
-    DigitString,
-    HexString,
-    Amount,
-    BakerId,
-} from '../types.js';
+import { Address, Base58String, HexString, Amount, BakerId } from '../types.js';
 import type * as ContractAddress from './ContractAddress.js';
 
 /*

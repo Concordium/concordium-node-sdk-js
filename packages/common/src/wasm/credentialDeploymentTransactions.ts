@@ -13,7 +13,6 @@ import {
     IpInfo,
     ArInfo,
     IdentityObjectV1,
-    SignedCredentialDeploymentDetails,
     Network,
     CredentialPublicKeys,
     AttributesKeys,

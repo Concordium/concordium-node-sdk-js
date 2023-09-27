@@ -1,9 +1,8 @@
 import {
     AccountAddress,
-    createConcordiumClient,
     isTransferLikeSummary,
     unwrap,
-} from '@concordium/node-sdk';
+} from '@concordium/web-sdk';
 import { credentials } from '@grpc/grpc-js';
 import { parseEndpoint } from '../shared/util.js';
 
@@ -43,7 +42,7 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()

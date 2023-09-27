@@ -5,7 +5,6 @@ import {
     AccountTransactionType,
     CcdAmount,
     ContractContext,
-    createConcordiumClient,
     deserializeReceiveReturnValue,
     InitContractPayload,
     ModuleReference,
@@ -18,7 +17,8 @@ import {
     parseWallet,
     buildAccountSigner,
     affectedContracts,
-} from '@concordium/node-sdk';
+} from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import { readFileSync } from 'node:fs';
 import { parseEndpoint } from '../shared/util.js';
@@ -55,7 +55,7 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()

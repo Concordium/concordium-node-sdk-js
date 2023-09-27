@@ -1,5 +1,6 @@
 import { credentials } from '@grpc/grpc-js';
-import * as SDK from '@concordium/node-sdk';
+import * as SDK from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import * as Gen from '@concordium/ccd-js-gen';
 import * as Path from 'node:path';
 import * as Url from 'node:url';
@@ -30,7 +31,7 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const grpcClient = SDK.createConcordiumClient(
+const grpcClient = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()

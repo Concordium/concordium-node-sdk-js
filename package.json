@@ -64,7 +64,7 @@
         "typedoc-plugin-missing-exports": "^0.23",
         "typescript": "^5.2.2",
         "webpack": "^5.88.2",
-        "webpack-cli": "^4.9.2"
+        "webpack-cli": "^5.1.4"
     },
     "scripts": {
         "test": "FORCE_COLOR=true yarn workspaces foreach --no-private run test --passWithNoTests",

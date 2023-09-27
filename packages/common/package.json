@@ -14,15 +14,24 @@
     "type": "module",
     "exports": {
         ".": {
-            "types": "./lib/index.d.ts",
-            "default": "./lib/index.js"
+            "types": "./lib/esm/index.d.ts",
+            "bun": "./src/index.ts",
+            "default": "./lib/esm/index.js"
+        },
+        "./nodejs": {
+            "types": "./lib/esm/nodejs/index.d.ts",
+            "bun": "./src/nodejs/index.ts",
+            "node": "./lib/esm/nodejs/index.js",
+            "browser": null
         },
         "./*": {
-            "types": "./lib/pub/*.d.ts",
-            "default": "./lib/pub/*.js"
+            "types": "./lib/esm/pub/*.d.ts",
+            "bun": "./src/pub/*.ts",
+            "default": "./lib/esm/pub/*.js"
         }
     },
     "files": [
+        "/src/**/*",
         "/lib/**/*"
     ],
     "devDependencies": {
@@ -46,17 +55,20 @@
         "prettier": "^2.3.2",
         "rimraf": "^5.0.1",
         "ts-jest": "^29.1.1",
-        "typescript": "^5.2.2"
+        "typescript": "^5.2.2",
+        "webpack": "^5.88.2",
+        "webpack-cli": "^5.1.4"
     },
     "scripts": {
         "generate-ts-v2": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/@protobuf-ts/plugin/bin/protoc-gen-ts --ts_opt 'optimize_code_size' --ts_out=src/grpc-api -I ../../deps/concordium-base/concordium-grpc-api ../../deps/concordium-base/concordium-grpc-api/v2/concordium/*.proto",
-        "generate": "([ -e \"../../deps/concordium-base/concordium-grpc-api\" ] && yarn generate-ts-v2 && node ../../scripts/proto-node-esm-compat.js src/grpc-api) || echo 'Please checkout submodules before building'",
+        "generate": "([ -e \"../../deps/concordium-base/concordium-grpc-api\" ] && yarn generate-ts-v2 && node scripts/proto-node-esm-compat.js src/grpc-api) || echo 'Please checkout submodules before building'",
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
         "build": "yarn clean; mkdir -p src/grpc-api; yarn generate && yarn build-dev",
-        "build-dev": "tsc -p tsconfig.build.json",
-        "clean": "rimraf -- lib src/grpc-api tsconfig.build.tsbuildinfo"
+        "build-dev": "tsc -p tsconfig.build.json && yarn webpack",
+        "webpack": "node --loader ts-node/esm ../../node_modules/.bin/webpack --config webpack.config.ts",
+        "clean": "rimraf -- lib src/grpc-api"
     },
     "dependencies": {
         "@concordium/rust-bindings": "1.2.0",

@@ -1,11 +1,10 @@
 {
     "extends": "./tsconfig.json",
     "include": [
-        "src/**/*",
-        "types/**/*"
+        "src/**/*"
     ],
     "compilerOptions": {
         "rootDir": "./src",
-        "outDir": "./lib"
+        "outDir": "./lib/esm"
     }
 }

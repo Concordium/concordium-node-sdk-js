@@ -10,8 +10,6 @@ import {
     GrpcWebFetchTransport,
     GrpcWebOptions,
 } from '@protobuf-ts/grpcweb-transport';
-import { ChannelCredentials } from '@grpc/grpc-js';
-import { GrpcOptions, GrpcTransport } from '@protobuf-ts/grpc-transport';
 
 import * as v1 from '../types.js';
 import * as v2 from '../grpc-api/v2/concordium/types.js';
@@ -1607,34 +1605,6 @@ export class ConcordiumGRPCWebClient extends ConcordiumGRPCClient {
     constructor(address: string, port: number, options?: GrpcWebOptions) {
         const transport = new GrpcWebFetchTransport({
             baseUrl: `${address}:${port}`,
-            ...options,
-        });
-        super(transport);
-    }
-}
-
-/**
- * A concordium-node specific gRPC client wrapper.
- * This will not work in a browser environment, in which case {@link ConcordiumGRPCWebClient}
- * should be used instead.
- *
- * @example
- * import { ConcordiumGRPCNodeClient } from "..."
- * import { credentials } from '@grpc/grpc-js';
- *
- * const creds = ...; // e.g. credentials.createInsecure();
- * const client = new ConcordiumGRPCClient('127.0.0.1', 20000, creds);
- */
-export class ConcordiumGRPCNodeClient extends ConcordiumGRPCClient {
-    constructor(
-        address: string,
-        port: number,
-        credentials: ChannelCredentials,
-        options?: GrpcOptions
-    ) {
-        const transport = new GrpcTransport({
-            host: `${address}:${port}`,
-            channelCredentials: credentials,
             ...options,
         });
         super(transport);

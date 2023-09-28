@@ -21,6 +21,7 @@ import {
     AUCTION_WITH_ERRORS_VIEW_RETURN_VALUE_SCHEMA,
     TEST_CONTRACT_U64,
 } from './resources/schema.js';
+import { ContractName, EntrypointName, Parameter } from '../src/index.js';
 
 const U64_MAX = 18446744073709551615n;
 
@@ -28,8 +29,8 @@ test('U64_MAX can be deserialized', () => {
     const returnVal = deserializeReceiveReturnValue(
         Buffer.from('ffffffffffffffff', 'hex'),
         Buffer.from(TEST_CONTRACT_U64, 'base64'),
-        'test',
-        'receive'
+        ContractName.fromStringUnchecked('test'),
+        EntrypointName.fromStringUnchecked('receive')
     );
 
     expect(returnVal).toEqual(U64_MAX);
@@ -40,8 +41,8 @@ test('schema template display', () => {
         fs.readFileSync('./test/resources/cis2-nft-schema.bin')
     );
     const schemaVersion = 1;
-    const contractName = 'CIS2-NFT';
-    const functionName = 'transfer';
+    const contractName = ContractName.fromStringUnchecked('CIS2-NFT');
+    const functionName = EntrypointName.fromStringUnchecked('transfer');
     const template = displayTypeSchemaTemplate(
         getUpdateContractParameterSchema(
             fullSchema,
@@ -57,7 +58,7 @@ test('schema template display', () => {
 
 test('test that deserializeContractState works', () => {
     const state = deserializeContractState(
-        'PiggyBank',
+        ContractName.fromStringUnchecked('PiggyBank'),
         Buffer.from(V0_PIGGYBANK_SCHEMA, 'base64'),
         Buffer.from('00', 'hex')
     );
@@ -69,8 +70,8 @@ test('Receive return value can be deserialized', () => {
     const returnValue = deserializeReceiveReturnValue(
         Buffer.from('80f18c27', 'hex'),
         Buffer.from(CIS2_WCCD_STATE_SCHEMA, 'base64'),
-        'CIS2-wCCD-State',
-        'getBalance'
+        ContractName.fromStringUnchecked('CIS2-wCCD-State'),
+        EntrypointName.fromStringUnchecked('getBalance')
     );
 
     expect(returnValue).toEqual('82000000');
@@ -109,8 +110,8 @@ test('Return value can be deserialized - auction', () => {
         Buffer.from(
             fs.readFileSync('./test/resources/auction-with-errors-schema.bin')
         ),
-        'auction',
-        'view'
+        ContractName.fromStringUnchecked('auction'),
+        EntrypointName.fromStringUnchecked('view')
     );
 
     expectAuctionReturnValue(returnValue);
@@ -132,8 +133,8 @@ test('Receive error can be deserialized', () => {
     const error = deserializeReceiveError(
         Buffer.from('ffff', 'hex'),
         Buffer.from(TEST_CONTRACT_SCHEMA, 'base64'),
-        'TestContract',
-        'receive_function'
+        ContractName.fromStringUnchecked('TestContract'),
+        EntrypointName.fromStringUnchecked('receive_function')
     );
 
     expect(error).toEqual(-1n);
@@ -154,7 +155,7 @@ test('Init error can be deserialized', () => {
     const error = deserializeInitError(
         Buffer.from('0100', 'hex'),
         Buffer.from(TEST_CONTRACT_SCHEMA, 'base64'),
-        'TestContract'
+        ContractName.fromStringUnchecked('TestContract')
     );
 
     expect(error).toEqual(1n);
@@ -173,8 +174,8 @@ test('Init error can be deserialized using deserializeTypeValue', () => {
 
 test('serialize UpdateContractParameters using CIS2 contract', () => {
     const parameter = serializeUpdateContractParameters(
-        'CIS2-NFT',
-        'transfer',
+        ContractName.fromStringUnchecked('CIS2-NFT'),
+        EntrypointName.fromStringUnchecked('transfer'),
         [
             {
                 token_id: [],
@@ -196,7 +197,7 @@ test('serialize UpdateContractParameters using CIS2 contract', () => {
         1
     );
 
-    expect(parameter.toString('hex')).toBe(
+    expect(Parameter.toHexString(parameter)).toBe(
         '010000c80000c320b41f1997accd5d21c6bf4992370948ed711435e0e2c9302def62afd1295f004651a37c65c8461540decd511e7440d1ff6d4191b7e2133b7239b2485be1a4860000'
     );
 });
@@ -204,8 +205,8 @@ test('serialize UpdateContractParameters using CIS2 contract', () => {
 test('serialize UpdateContractParameters using CIS2 contract and incorrect name', () => {
     const parameter = function () {
         serializeUpdateContractParameters(
-            'CIS2-NFT',
-            'non-existent',
+            ContractName.fromStringUnchecked('CIS2-NFT'),
+            EntrypointName.fromStringUnchecked('non-existent'),
             [
                 {
                     token_id: [],
@@ -251,8 +252,8 @@ test('serialize type value and serializeUpdateContractParameters give same resul
         fs.readFileSync('./test/resources/cis2-nft-schema.bin')
     );
     const schemaVersion = 1;
-    const contractName = 'CIS2-NFT';
-    const functionName = 'transfer';
+    const contractName = ContractName.fromStringUnchecked('CIS2-NFT');
+    const functionName = EntrypointName.fromStringUnchecked('transfer');
 
     const serializedParameter = serializeUpdateContractParameters(
         contractName,
@@ -272,8 +273,8 @@ test('serialize type value and serializeUpdateContractParameters give same resul
         )
     );
 
-    expect(serializedParameter.toString('hex')).toEqual(
-        serializedType.toString('hex')
+    expect(Parameter.toHexString(serializedParameter)).toEqual(
+        Parameter.toHexString(serializedType)
     );
 });
 
@@ -285,18 +286,18 @@ test('serializeTypeValue throws an error if unable to serialize', () => {
 
 test('Parameter serialization works for U64_MAX', () => {
     const updateParam = serializeUpdateContractParameters(
-        'test',
-        'receive',
+        ContractName.fromStringUnchecked('test'),
+        EntrypointName.fromStringUnchecked('receive'),
         U64_MAX,
         Buffer.from(TEST_CONTRACT_U64, 'base64')
     );
     const initParam = serializeInitContractParameters(
-        'test',
+        ContractName.fromStringUnchecked('test'),
         U64_MAX,
         Buffer.from(TEST_CONTRACT_U64, 'base64')
     );
-    expect(updateParam.toString('hex')).toEqual('ffffffffffffffff');
-    expect(initParam.toString('hex')).toEqual('ffffffffffffffff');
+    expect(Parameter.toHexString(updateParam)).toEqual('ffffffffffffffff');
+    expect(Parameter.toHexString(initParam)).toEqual('ffffffffffffffff');
 });
 
 test('Parameter serialization errors on (U64_MAX + 1)', () => {
@@ -304,14 +305,14 @@ test('Parameter serialization errors on (U64_MAX + 1)', () => {
         'Unable to serialize parameters, due to: Unsigned integer required';
     const updateParam = () =>
         serializeUpdateContractParameters(
-            'test',
-            'receive',
+            ContractName.fromStringUnchecked('test'),
+            EntrypointName.fromStringUnchecked('receive'),
             U64_MAX + 1n,
             Buffer.from(TEST_CONTRACT_U64, 'base64')
         );
     const initParam = () =>
         serializeInitContractParameters(
-            'test',
+            ContractName.fromStringUnchecked('test'),
             U64_MAX + 1n,
             Buffer.from(TEST_CONTRACT_U64, 'base64')
         );

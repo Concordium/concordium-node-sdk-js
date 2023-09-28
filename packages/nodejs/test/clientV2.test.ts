@@ -769,8 +769,8 @@ test.each([clientV2, clientWeb])('getEmbeddedSchema', async (client) => {
         const returnValue = deserializeReceiveReturnValue(
             v1.ReturnValue.toBuffer(rawReturnValue),
             schema,
-            'weather',
-            'get'
+            v1.ContractName.fromStringUnchecked('weather'),
+            v1.EntrypointName.fromStringUnchecked('get')
         );
         expect(returnValue).toEqual({ Sunny: [] });
     } else {

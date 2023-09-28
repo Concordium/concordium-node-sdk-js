@@ -18,6 +18,11 @@ import {
     parseWallet,
     buildAccountSigner,
     affectedContracts,
+    ContractName,
+    ReceiveName,
+    Energy,
+    EntrypointName,
+    ReturnValue,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import { readFileSync } from 'node:fs';
@@ -78,9 +83,9 @@ const client = createConcordiumClient(
     const moduleRef = new ModuleReference(
         '44434352ddba724930d6b1b09cd58bd1fba6ad9714cf519566d5fe72d80da0d1'
     );
-    const maxCost = 30000n;
-    const contractName = 'weather';
-    const receiveName = 'weather.set';
+    const maxCost = Energy.create(30000);
+    const contractName = ContractName.fromStringUnchecked('weather');
+    const receiveName = ReceiveName.fromStringUnchecked('weather.set');
     const schema = await client.getEmbeddedSchema(moduleRef);
 
     // --- Initialize Contract --- //
@@ -148,7 +153,7 @@ const client = createConcordiumClient(
 
     const updateParams = serializeUpdateContractParameters(
         contractName,
-        'set',
+        EntrypointName.fromString('set'),
         rainyWeather,
         schema
     );
@@ -191,21 +196,18 @@ const client = createConcordiumClient(
         const contextPostInit: ContractContext = {
             contract: unwrap(contractAddress),
             invoker: sender,
-            method: 'weather.get',
+            method: ReceiveName.fromString('weather.get'),
         };
 
         const invokedPostInit = await client.invokeContract(contextPostInit);
 
         if (invokedPostInit.tag === 'success') {
-            const rawReturnValue = Buffer.from(
-                unwrap(invokedPostInit.returnValue),
-                'hex'
-            );
+            const rawReturnValue = unwrap(invokedPostInit.returnValue);
             const returnValue = deserializeReceiveReturnValue(
-                rawReturnValue,
+                ReturnValue.toBuffer(rawReturnValue),
                 schema,
-                'weather',
-                'get'
+                contractName,
+                EntrypointName.fromString('get')
             );
             console.log('\nThe weather is now:');
             console.dir(returnValue, { depth: null, colors: true });

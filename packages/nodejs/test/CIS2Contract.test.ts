@@ -281,7 +281,9 @@ describe('createTransfer', () => {
             parameter.json,
             Buffer.from(schema.value, 'base64')
         );
-        expect(schemaSerialized.toString('hex')).toEqual(expectedParameterHex);
+        expect(Parameter.toHexString(schemaSerialized)).toEqual(
+            expectedParameterHex
+        );
     });
 });
 

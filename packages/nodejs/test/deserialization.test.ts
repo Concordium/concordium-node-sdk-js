@@ -1,5 +1,9 @@
 import { getNodeClient } from './testHelpers.js';
-import { ContractAddress, isInstanceInfoV0 } from '@concordium/common-sdk';
+import {
+    ContractAddress,
+    ContractName,
+    isInstanceInfoV0,
+} from '@concordium/common-sdk';
 import * as fs from 'fs';
 import { deserializeContractState } from '@concordium/common-sdk/schema';
 
@@ -29,7 +33,7 @@ test.skip('Deserialize state with schema from file (two-step-transfer)', async (
         fs.readFileSync('./test/resources/two-step-transfer-schema.bin')
     );
     const state = deserializeContractState(
-        'two-step-transfer',
+        ContractName.fromStringUnchecked('two-step-transfer'),
         schema,
         instanceInfo.model
     );

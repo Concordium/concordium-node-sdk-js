@@ -4,6 +4,7 @@ import {
     Timestamp,
     Energy,
     BlockHash,
+    Parameter,
 } from '@concordium/common-sdk';
 import { serializeTypeValue } from '@concordium/common-sdk/schema';
 import { CIS4, CIS4Contract, Web3IdSigner } from '@concordium/common-sdk/cis4';
@@ -171,7 +172,7 @@ describe('registerCredential', () => {
             Buffer.from(tx.schema.value, 'base64'),
             true
         );
-        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+        expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
 
         // With `validUntil` + !`holderRevocable`
         credential.validUntil = Timestamp.fromDate(
@@ -188,7 +189,7 @@ describe('registerCredential', () => {
             Buffer.from(tx.schema.value, 'base64'),
             true
         );
-        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+        expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
 
         // With data
         const auxData = Buffer.from('Hello world!').toString('hex');
@@ -203,7 +204,7 @@ describe('registerCredential', () => {
             Buffer.from(tx.schema.value, 'base64'),
             true
         );
-        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+        expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
     });
 });
 
@@ -232,7 +233,7 @@ describe('registerRevocationKeys', () => {
             Buffer.from(tx.schema.value, 'base64'),
             true
         );
-        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+        expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
 
         // Multilple keys
         tx = cis4.createRegisterRevocationKeys(
@@ -244,7 +245,7 @@ describe('registerRevocationKeys', () => {
             Buffer.from(tx.schema.value, 'base64'),
             true
         );
-        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+        expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
 
         // With data
         tx = cis4.createRegisterRevocationKeys(
@@ -257,7 +258,7 @@ describe('registerRevocationKeys', () => {
             Buffer.from(tx.schema.value, 'base64'),
             true
         );
-        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+        expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
     });
 });
 
@@ -285,7 +286,7 @@ describe('removeRevocationKeys', () => {
             Buffer.from(tx.schema.value, 'base64'),
             true
         );
-        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+        expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
 
         // Multiple keys
         tx = cis4.createRemoveRevocationKeys(
@@ -297,7 +298,7 @@ describe('removeRevocationKeys', () => {
             Buffer.from(tx.schema.value, 'base64'),
             true
         );
-        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+        expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
 
         // With data
         tx = cis4.createRemoveRevocationKeys(
@@ -310,7 +311,7 @@ describe('removeRevocationKeys', () => {
             Buffer.from(tx.schema.value, 'base64'),
             true
         );
-        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+        expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
     });
 });
 
@@ -341,7 +342,7 @@ describe('revokeCredentialAsIssuer', () => {
             Buffer.from(tx.schema.value, 'base64'),
             true
         );
-        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+        expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
 
         // With reason
         tx = cis4.createRevokeCredentialAsIssuer(
@@ -355,7 +356,7 @@ describe('revokeCredentialAsIssuer', () => {
             Buffer.from(tx.schema.value, 'base64'),
             true
         );
-        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+        expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
 
         // With data
         tx = cis4.createRevokeCredentialAsIssuer(
@@ -369,7 +370,7 @@ describe('revokeCredentialAsIssuer', () => {
             Buffer.from(tx.schema.value, 'base64'),
             true
         );
-        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+        expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
     });
 });
 
@@ -404,7 +405,7 @@ describe('revokeCredentialAsHolder', () => {
             Buffer.from(tx.schema.value, 'base64'),
             true
         );
-        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+        expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
 
         // With reason
         tx = await cis4.createRevokeCredentialAsHolder(
@@ -419,7 +420,7 @@ describe('revokeCredentialAsHolder', () => {
             Buffer.from(tx.schema.value, 'base64'),
             true
         );
-        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+        expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
     });
 });
 
@@ -456,7 +457,7 @@ describe('revokeCredentialAsOther', () => {
             Buffer.from(tx.schema.value, 'base64'),
             true
         );
-        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+        expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
 
         // With reason
         tx = await cis4.createRevokeCredentialAsOther(
@@ -472,6 +473,6 @@ describe('revokeCredentialAsOther', () => {
             Buffer.from(tx.schema.value, 'base64'),
             true
         );
-        expect(tx.parameter.hex).toEqual(schemaSerial.toString('hex'));
+        expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
     });
 });

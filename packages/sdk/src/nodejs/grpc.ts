@@ -30,3 +30,9 @@ export class ConcordiumGRPCNodeClient extends ConcordiumGRPCClient {
         super(transport);
     }
 }
+
+export {
+    credentials,
+    ChannelCredentials,
+    CallCredentials,
+} from '@grpc/grpc-js';

@@ -24,6 +24,11 @@
                 "module": "./lib/dapp/node/umd/index.min.js",
                 "default": "./lib/dapp/node/cjs/index.js"
             },
+            "browser": {
+                "module": "./lib/dapp/web/umd/index.min.js",
+                "types": "./lib/dapp/web/esm/index.d.ts",
+                "import": "./lib/dapp/web/esm/index.js"
+            },
             "default": "./lib/dapp/web/umd/index.min.js"
         },
         "./dapp": {
@@ -32,6 +37,11 @@
                 "module": "./lib/dapp/node/umd/index.min.js",
                 "default": "./lib/dapp/node/cjs/index.js"
             },
+            "browser": {
+                "module": "./lib/dapp/web/umd/index.min.js",
+                "types": "./lib/dapp/web/esm/index.d.ts",
+                "import": "./lib/dapp/web/esm/index.js"
+            },
             "default": "./lib/dapp/web/umd/index.min.js"
         },
         "./wallet": {
@@ -39,6 +49,11 @@
             "node": {
                 "module": "./lib/wallet/node/umd/index.min.js",
                 "default": "./lib/wallet/node/cjs/index.js"
+            },
+            "browser": {
+                "module": "./lib/wallet/web/umd/index.min.js",
+                "types": "./lib/wallet/web/esm/index.d.ts",
+                "import": "./lib/wallet/web/esm/index.js"
             },
             "default": "./lib/wallet/web/umd/index.min.js"
         },
@@ -66,7 +81,7 @@
         "build-bundler": "wasm-pack build ./packages/dapp --target bundler --out-dir $INIT_CWD/lib/dapp/bundler --out-name index \"$@\" && wasm-pack build ./packages/wallet --target bundler --out-dir $INIT_CWD/lib/wallet/bundler --out-name index \"$@\"",
         "build": "yarn build-node \"$@\" && yarn build-bundler \"$@\" && yarn build-web \"$@\"",
         "build:rust-bindings": "yarn build",
-        "clean": "rimraf -- target pkg lib .webpack-cache"
+        "clean": "rimraf -- target lib .webpack-cache"
     },
     "devDependencies": {
         "rimraf": "^5.0.1",

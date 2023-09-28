@@ -137,11 +137,6 @@ export interface AddressAccount {
     address: AccountAddress.Type;
 }
 
-// export interface ContractAddress {
-//     index: bigint;
-//     subindex: bigint;
-// }
-
 export type AccountIdentifierInput =
     | AccountAddress.Type
     | CredentialRegistrationId.Type

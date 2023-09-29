@@ -2,7 +2,7 @@
 This file contains code for building the command line inferface to the ccd-js-gen library.
 */
 import { Command } from 'commander';
-import packageJson from '../package.json';
+import packageJson from '../package.json' assert { type: 'json' };
 import * as lib from './lib.js';
 
 /** Type representing the CLI options/arguments and needs to match the options set with commander.js */
@@ -30,5 +30,7 @@ export async function main(): Promise<void> {
         )
         .parse(process.argv);
     const options = program.opts<Options>();
+    console.log('Generating smart contract clients...');
     await lib.generateContractClientsFromFile(options.module, options.outDir);
+    console.log('Done');
 }

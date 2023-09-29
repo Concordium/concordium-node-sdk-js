@@ -38,6 +38,7 @@ The API now uses dedicated types instead of language primitives:
 - Use `SequenceNumber` (formerly called nonce) instead of a bigint. Use `SequenceNumber.create(<integer>)` to construct it.
 - Use `Timestamp` instead of a bigint. Can be constructed using `Timestamp.fromMillis(<integer>)`.
 - Use `Duration` instead of a bigint. Can be constructed using `Duration.fromMillis(<integer>)`.
+- Use `ContractEvent` instead of a string with hex encoding. Can be constructed using `ContractEvent.fromHexString('<hex>')`.
 
 Several types have been replaced with a module containing the type itself together with functions for constructing and converting the type:
 - `AccountAddress` is now a module with functions related to account addresses:

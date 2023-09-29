@@ -132,6 +132,15 @@ export function toSchemaValue(receiveName: ReceiveName): SchemaValue {
 }
 
 /**
+ * Convert a smart contract receive name from format used by schema.
+ * @param {SchemaValue} receiveName The receive name in schema format.
+ * @returns {ReceiveName} The receive name.
+ */
+export function fromSchemaValue(receiveName: SchemaValue): ReceiveName {
+    return fromString(`${receiveName.contract}.${receiveName.func}`);
+}
+
+/**
  * Convert a smart contract receive name from its protobuf encoding.
  * @param {Proto.ReceiveName} receiveName The protobuf encoding.
  * @returns {ReceiveName}

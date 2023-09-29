@@ -110,6 +110,15 @@ export function toSchemaValue(accountAddress: AccountAddress): SchemaValue {
     return accountAddress.address;
 }
 
+/**
+ * Convert account address from format used by schema.
+ * @param {SchemaValue} accountAddress The account address in schema JSON format.
+ * @returns {AccountAddress} The account address.
+ */
+export function fromSchemaValue(accountAddress: SchemaValue): AccountAddress {
+    return fromBase58(accountAddress);
+}
+
 const addressByteLength = 32;
 const aliasBytesLength = 3;
 const commonBytesLength = addressByteLength - aliasBytesLength;

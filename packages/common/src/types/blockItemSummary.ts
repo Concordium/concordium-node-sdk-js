@@ -23,7 +23,6 @@ import {
 } from './transactionEvent.js';
 import { UpdateInstructionPayload } from './chainUpdate.js';
 import {
-    HexString,
     TransactionSummaryType,
     TransactionStatusEnum,
     AccountTransactionType,
@@ -36,6 +35,7 @@ import * as AccountAddress from './AccountAddress.js';
 import type * as BlockHash from './BlockHash.js';
 import type * as TransactionHash from './TransactionHash.js';
 import type * as Energy from './Energy.js';
+import type * as ContractEvent from './ContractEvent.js';
 
 export interface BaseBlockItemSummary {
     index: bigint;
@@ -531,11 +531,11 @@ export function affectedAccounts(
 
 export type SummaryContractUpdateLog = {
     address: ContractAddress.Type;
-    events: HexString[];
+    events: ContractEvent.Type[];
 };
 
 /**
- * Gets a list of update logs, each consisting of a {@link ContractAddress} and a list of {@link HexString} events.
+ * Gets a list of update logs, each consisting of a {@link ContractAddress.Type} and a list of {@link ContractEvent.Type} events.
  * The list will be empty for any transaction type but {@link UpdateContractSummary} contract updates.
  *
  * @param {BlockItemSummary} summary - The block item summary to check.

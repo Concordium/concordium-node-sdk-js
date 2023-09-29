@@ -73,6 +73,15 @@ export function toSchemaValue(contractAddress: ContractAddress): SchemaValue {
 }
 
 /**
+ * Convert contract address from format used by schema.
+ * @param {SchemaValue} contractAddress The contract address in schema format.
+ * @returns {ContractAddress} The contract address.
+ */
+export function fromSchemaValue(contractAddress: SchemaValue): ContractAddress {
+    return create(contractAddress.index, contractAddress.subindex);
+}
+
+/**
  * Convert a smart contract address from its protobuf encoding.
  * @param {Proto.ContractAddress} contractAddress The contract address in protobuf.
  * @returns {ContractAddress} The contract address.

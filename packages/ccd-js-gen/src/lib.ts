@@ -293,10 +293,9 @@ This function ensures the smart contract module is deployed on chain.
     const signerId = 'signer';
 
     for (const contract of moduleInterface.values()) {
-        const contractSchema = moduleSchema?.module.contracts.get(
-            contract.contractName
-        );
-        const initParameter = constructType(
+        const contractSchema: SDK.SchemaContractV3 | undefined =
+            moduleSchema?.module.contracts.get(contract.contractName);
+        const initParameter = constructParameterType(
             parameterId,
             contractSchema?.init?.parameter
         );
@@ -334,7 +333,11 @@ This function ensures the smart contract module is deployed on chain.
                     ],
                     returnType: 'SDK.Parameter.Type',
                 })
-                .setBodyText(`return ${initParameter.tokens}`);
+                .setBodyText(
+                    `${initParameter.tokens.code?.join('\n')}\nreturn ${
+                        initParameter.tokens.id
+                    }`
+                );
         }
 
         moduleSourceFile
@@ -524,7 +527,7 @@ Checking the information instance on chain.
 
 @param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The client used for contract invocations and updates.
 @param {SDK.ContractAddress.Type} ${contractAddressId} - Address of the contract instance.
-@param {string} [${blockHashId}] - Hash of the block to check the information at. When not provided the last finalized block is used.
+@param {SDK.BlockHash.Type} [${blockHashId}] - Hash of the block to check the information at. When not provided the last finalized block is used.
 
 @throws If failing to communicate with the concordium node or if any of the checks fails.
 
@@ -624,10 +627,45 @@ Without checking the instance information on chain.
                 `return ${contractClientId}.${genericContractId}.checkOnChain({moduleReference: ${moduleRefId}, blockHash: ${blockHashId} });`
             );
 
-        const invokerId = 'invoker';
+        const eventParameterId = 'event';
+        const eventParameterTypeId = 'Event';
+        const eventParser = parseEventType(
+            eventParameterId,
+            contractSchema?.event
+        );
+        if (eventParser !== undefined) {
+            contractSourceFile.addTypeAlias({
+                docs: [
+                    `Contract event type for the '${contract.contractName}' contract.`,
+                ],
+                isExported: true,
+                name: eventParameterTypeId,
+                type: eventParser.type,
+            });
 
+            contractSourceFile
+                .addFunction({
+                    docs: ['TODO'],
+                    isExported: true,
+                    name: 'parseEvent',
+                    parameters: [
+                        {
+                            name: eventParameterId,
+                            type: 'SDK.ContractEvent.Type',
+                        },
+                    ],
+                    returnType: eventParameterTypeId,
+                })
+                .setBodyText(
+                    `${eventParser.tokens.code.join('\n')}\nreturn <any>${
+                        eventParser.tokens.id
+                    };`
+                );
+        }
+
+        const invokerId = 'invoker';
         for (const entrypointName of contract.entrypointNames) {
-            const receiveParameter = constructType(
+            const receiveParameter = constructParameterType(
                 parameterId,
                 contractSchema?.receive.get(entrypointName)?.parameter
             );
@@ -665,7 +703,11 @@ Without checking the instance information on chain.
                         ],
                         returnType: 'SDK.Parameter.Type',
                     })
-                    .setBodyText(`return ${receiveParameter.tokens}`);
+                    .setBodyText(
+                        `${receiveParameter.tokens.code?.join('\n')}\nreturn ${
+                            receiveParameter.tokens.id
+                        }`
+                    );
             }
 
             contractSourceFile
@@ -809,24 +851,35 @@ function toPascalCase(str: string): string {
 }
 
 /** Type information from the schema. */
-type SchemaTypeAndMapper = {
+type SchemaNativeType = {
     /** The type to provide for a given schema type. */
-    type: string;
+    nativeType: string;
     /** Provided the identifier for the input (of the above type), this generates tokens for converting it into Schema JSON format. */
-    mapper: (id: string) => string;
+    nativeToJson: (
+        nativeId: string,
+        idGenerator: (name: string) => string
+    ) => { code: string[]; id: string };
+    /** Provided the identifier for the input (Schema JSON format), this generates tokens for converting it into a native type (the above type). */
+    jsonToNative: (
+        jsonId: string,
+        idGenerator: (name: string) => string
+    ) => { code: string[]; id: string };
 };
 
-function schemaToTypeAndMapper(
+function schemaAsNativeType(
     schemaType: SDK.SchemaType
-): SchemaTypeAndMapper | undefined {
+): SchemaNativeType | undefined {
     switch (schemaType.type) {
         case 'Unit':
             return undefined;
         case 'Bool':
             return {
-                type: 'boolean',
-                mapper(id) {
-                    return id;
+                nativeType: 'boolean',
+                nativeToJson(id) {
+                    return { code: [], id };
+                },
+                jsonToNative(id) {
+                    return { code: [], id };
                 },
             };
         case 'U8':
@@ -836,112 +889,354 @@ function schemaToTypeAndMapper(
         case 'I16':
         case 'I32':
             return {
-                type: 'number',
-                mapper(id) {
-                    return id;
+                nativeType: 'number',
+                nativeToJson(id) {
+                    return { code: [], id };
+                },
+                jsonToNative(id) {
+                    return { code: [], id };
                 },
             };
         case 'U64':
         case 'I64':
             return {
-                type: 'number | bigint',
-                mapper(id) {
-                    return `BigInt(${id})`;
+                nativeType: 'number | bigint',
+                nativeToJson(id, idGenerator) {
+                    const resultId = idGenerator('number');
+                    return {
+                        code: [`const ${resultId} = BigInt(${id});`],
+                        id: resultId,
+                    };
+                },
+                jsonToNative(id) {
+                    return { code: [], id };
                 },
             };
         case 'U128':
         case 'I128':
             return {
-                type: 'number | bigint',
-                mapper(id) {
-                    return `BigInt(${id}).toString()`;
+                nativeType: 'number | bigint',
+                nativeToJson(id, idGenerator) {
+                    const resultId = idGenerator('number');
+                    return {
+                        code: [`const ${resultId} = BigInt(${id}).toString();`],
+                        id: resultId,
+                    };
+                },
+                jsonToNative(id) {
+                    return { code: [], id: `BigInt(${id})` };
                 },
             };
         case 'Amount':
             return {
-                type: 'SDK.Amount.Type',
-                mapper(id) {
-                    return `SDK.Amount.toSchemaValue(${id})`;
+                nativeType: 'SDK.Amount.Type',
+                nativeToJson(id, idGenerator) {
+                    const resultId = idGenerator('amount');
+                    return {
+                        code: [
+                            `const ${resultId} = SDK.Amount.toSchemaValue(${id});`,
+                        ],
+                        id: resultId,
+                    };
+                },
+                jsonToNative(id, idGenerator) {
+                    const resultId = idGenerator('amount');
+                    return {
+                        code: [
+                            `const ${resultId} = SDK.Amount.fromSchemaValue(${id});`,
+                        ],
+                        id: resultId,
+                    };
                 },
             };
         case 'AccountAddress':
             return {
-                type: 'SDK.AccountAddress.Type',
-                mapper(id) {
-                    return `SDK.AccountAddress.toSchemaValue(${id})`;
+                nativeType: 'SDK.AccountAddress.Type',
+                nativeToJson(id, idGenerator) {
+                    const resultId = idGenerator('accountAddress');
+                    return {
+                        code: [
+                            `const ${resultId} = SDK.AccountAddress.toSchemaValue(${id});`,
+                        ],
+                        id: resultId,
+                    };
+                },
+                jsonToNative(id, idGenerator) {
+                    const resultId = idGenerator('accountAddress');
+                    return {
+                        code: [
+                            `const ${resultId} = SDK.AccountAddress.fromSchemaValue(${id});`,
+                        ],
+                        id: resultId,
+                    };
                 },
             };
         case 'ContractAddress':
             return {
-                type: 'SDK.ContractAddress.Type',
-                mapper(id) {
-                    return `SDK.ContractAddress.toSchemaValue(${id})`;
+                nativeType: 'SDK.ContractAddress.Type',
+                nativeToJson(id, idGenerator) {
+                    const resultId = idGenerator('contractAddress');
+                    return {
+                        code: [
+                            `const ${resultId} = SDK.ContractAddress.toSchemaValue(${id});`,
+                        ],
+                        id: resultId,
+                    };
+                },
+                jsonToNative(id, idGenerator) {
+                    const resultId = idGenerator('contractAddress');
+                    return {
+                        code: [
+                            `const ${resultId} = SDK.ContractAddress.fromSchemaValue(${id});`,
+                        ],
+                        id: resultId,
+                    };
                 },
             };
         case 'Timestamp':
             return {
-                type: 'SDK.Timestamp.Type',
-                mapper(id) {
-                    return `SDK.Timestamp.toSchemaValue(${id})`;
+                nativeType: 'SDK.Timestamp.Type',
+                nativeToJson(id, idGenerator) {
+                    const resultId = idGenerator('timestamp');
+                    return {
+                        code: [
+                            `const ${resultId} = SDK.Timestamp.toSchemaValue(${id});`,
+                        ],
+                        id: resultId,
+                    };
+                },
+                jsonToNative(id, idGenerator) {
+                    const resultId = idGenerator('timestamp');
+                    return {
+                        code: [
+                            `const ${resultId} = SDK.Timestamp.fromSchemaValue(${id});`,
+                        ],
+                        id: resultId,
+                    };
                 },
             };
         case 'Duration':
             return {
-                type: 'SDK.Duration.Type',
-                mapper(id) {
-                    return `SDK.Duration.toSchemaValue(${id})`;
+                nativeType: 'SDK.Duration.Type',
+                nativeToJson(id, idGenerator) {
+                    const resultId = idGenerator('duration');
+                    return {
+                        code: [
+                            `const ${resultId} = SDK.Duration.toSchemaValue(${id});`,
+                        ],
+                        id: resultId,
+                    };
+                },
+                jsonToNative(id, idGenerator) {
+                    const resultId = idGenerator('duration');
+                    return {
+                        code: [
+                            `const ${resultId} = SDK.Duration.fromSchemaValue(${id});`,
+                        ],
+                        id: resultId,
+                    };
                 },
             };
         case 'Pair':
-            const first = schemaToTypeAndMapper(schemaType.first);
-            const second = schemaToTypeAndMapper(schemaType.second);
+            const first = schemaAsNativeType(schemaType.first);
+            const second = schemaAsNativeType(schemaType.second);
 
             return {
-                type: `[${first?.type}, ${second?.type}]`,
-                mapper(id) {
-                    return `[${first?.mapper(`${id}[0]`)}, ${second?.mapper(
-                        `${id}[1]`
-                    )}]`;
+                nativeType: `[${first?.nativeType}, ${second?.nativeType}]`,
+                nativeToJson(id, idGenerator) {
+                    const resultId = idGenerator('pair');
+                    const firstTokens = first?.nativeToJson(
+                        `${id}[0]`,
+                        idGenerator
+                    );
+                    const secondTokens = second?.nativeToJson(
+                        `${id}[1]`,
+                        idGenerator
+                    );
+                    return {
+                        code: [
+                            ...(firstTokens?.code ?? []),
+                            ...(secondTokens?.code ?? []),
+                            `const ${resultId} = [${firstTokens?.id}, ${secondTokens?.id}];`,
+                        ],
+                        id: resultId,
+                    };
+                },
+                jsonToNative(id, idGenerator) {
+                    const resultId = idGenerator('pair');
+                    const firstTokens = first?.jsonToNative(
+                        `${id}[0]`,
+                        idGenerator
+                    );
+                    const secondTokens = second?.jsonToNative(
+                        `${id}[1]`,
+                        idGenerator
+                    );
+                    return {
+                        code: [
+                            ...(firstTokens?.code ?? []),
+                            ...(secondTokens?.code ?? []),
+                            `const ${resultId} = [${firstTokens?.id}, ${secondTokens?.id}];`,
+                        ],
+                        id: resultId,
+                    };
                 },
             };
         case 'List': {
-            const item = schemaToTypeAndMapper(schemaType.item);
+            const item = schemaAsNativeType(schemaType.item);
             return {
-                type: `Array<${item?.type}>`,
-                mapper(id) {
-                    return `${id}.map((item) => (${item?.mapper('item')}))`;
+                nativeType: `Array<${item?.nativeType}>`,
+                nativeToJson(id, idGenerator) {
+                    const resultId = idGenerator('list');
+                    const itemId = idGenerator('item');
+                    const tokens = item?.jsonToNative(itemId, idGenerator);
+
+                    return {
+                        code: [
+                            `const ${resultId} = ${id}.map((${itemId}: any) => {\n${tokens?.code.join(
+                                '\n'
+                            )}\nreturn ${tokens?.id}})`,
+                        ],
+                        id: resultId,
+                    };
+                },
+                jsonToNative(id, idGenerator) {
+                    const resultId = idGenerator('list');
+                    const itemId = idGenerator('item');
+                    const tokens = item?.jsonToNative(itemId, idGenerator);
+                    return {
+                        code: [
+                            `const ${resultId} = ${id}.map((${itemId}: any) => {\n${
+                                tokens?.code.join('\n') ?? ''
+                            }\nreturn ${tokens?.id};\n}));`,
+                        ],
+                        id: resultId,
+                    };
                 },
             };
         }
         case 'Set': {
-            const item = schemaToTypeAndMapper(schemaType.item);
+            const item = schemaAsNativeType(schemaType.item);
             return {
-                type: `Set<${item?.type}>`,
-                mapper(id) {
-                    return `[...${id}.values()].map((value) => (${item?.mapper(
-                        'value'
-                    )}))`;
+                nativeType: `Set<${item?.nativeType}>`,
+                nativeToJson(id, idGenerator) {
+                    const resultId = idGenerator('set');
+                    const valueId = idGenerator('value');
+                    const valuesId = idGenerator('values');
+                    const valueTokens = item?.nativeToJson(
+                        valueId,
+                        idGenerator
+                    );
+                    return {
+                        code: [
+                            `const ${valuesId} = [...${id}.values()]..map((${valueId}: any) => {\n${valueTokens?.code.join(
+                                '\n'
+                            )}\nreturn ${valueTokens?.id}});`,
+                        ],
+                        id: resultId,
+                    };
+                },
+                jsonToNative(id, idGenerator) {
+                    const resultId = idGenerator('set');
+                    const valueId = idGenerator('value');
+                    const valuesId = idGenerator('values');
+                    const valueTokens = item?.jsonToNative(
+                        valueId,
+                        idGenerator
+                    );
+                    return {
+                        code: [
+                            `const ${valuesId} = ${id}.map((${valueId}: any) => {\n${valueTokens?.code.join(
+                                '\n'
+                            )}return ${valueTokens?.id}})`,
+                            `const ${resultId} = new Set(${valuesId});`,
+                        ],
+                        id: resultId,
+                    };
                 },
             };
         }
         case 'Map': {
-            const key = schemaToTypeAndMapper(schemaType.key);
-            const value = schemaToTypeAndMapper(schemaType.value);
+            const key = schemaAsNativeType(schemaType.key);
+            const value = schemaAsNativeType(schemaType.value);
             return {
-                type: `Map<${key?.type}, ${value?.type}>`,
-                mapper(id) {
-                    return `[...${id}.entries()].map(([key, value]) => [${key?.mapper(
-                        'key'
-                    )}, ${value?.mapper('value')}])`;
+                nativeType: `Map<${key?.nativeType}, ${value?.nativeType}>`,
+                nativeToJson(id, idGenerator) {
+                    const resultId = idGenerator('map');
+                    const keyId = idGenerator('key');
+                    const valueId = idGenerator('value');
+                    const keyTokens = key?.nativeToJson(keyId, idGenerator);
+                    const valueTokens = value?.nativeToJson(
+                        valueId,
+                        idGenerator
+                    );
+
+                    return {
+                        code: [
+                            `const ${resultId} = [...${id}.entries()].map(([${keyId}, ${valueId}]) => {\n${[
+                                ...(keyTokens?.code ?? []),
+                                ...(valueTokens?.code ?? []),
+                            ].join('\n')}\nreturn [${keyTokens?.id}, ${
+                                valueTokens?.id
+                            }]})`,
+                        ],
+                        id: resultId,
+                    };
+                },
+                jsonToNative(id, idGenerator) {
+                    const resultId = idGenerator('map');
+                    const entriesId = idGenerator('entries');
+                    const keyId = idGenerator('key');
+                    const valueId = idGenerator('value');
+                    const keyTokens = key?.jsonToNative(keyId, idGenerator);
+                    const valueTokens = value?.jsonToNative(
+                        valueId,
+                        idGenerator
+                    );
+                    return {
+                        code: [
+                            `const ${entriesId} = ${id}.map(([${keyId}, ${valueId}]) => {\n${[
+                                ...(keyTokens?.code ?? []),
+                                ...(valueTokens?.code ?? []),
+                            ].join('\n')}\nreturn [${keyTokens?.id}, ${
+                                valueTokens?.id
+                            }]})`,
+                            `const ${resultId} = Map.fromEntries(${entriesId});`,
+                        ],
+                        id: resultId,
+                    };
                 },
             };
         }
         case 'Array': {
-            const item = schemaToTypeAndMapper(schemaType.item);
+            const item = schemaAsNativeType(schemaType.item);
             return {
-                type: `Array<${item?.type}>`,
-                mapper(id) {
-                    return `${id}.map((item) => (${item?.mapper('item')}))`;
+                nativeType: `Array<${item?.nativeType}>`,
+                nativeToJson(id, idGenerator) {
+                    const resultId = idGenerator('array');
+                    const itemId = idGenerator('item');
+                    const tokens = item?.nativeToJson(itemId, idGenerator);
+                    return {
+                        code: [
+                            `const ${resultId} = ${id}.map((${itemId}: any) => {\n${tokens?.code.join(
+                                '\n'
+                            )}\nreturn ${tokens?.id}; });`,
+                        ],
+                        id: resultId,
+                    };
+                },
+                jsonToNative(id, idGenerator) {
+                    const resultId = idGenerator('array');
+                    const itemId = idGenerator('item');
+                    const tokens = item?.jsonToNative(itemId, idGenerator);
+                    return {
+                        code: [
+                            `const ${resultId} = ${id}.map((${itemId}: any) => {\n${
+                                tokens?.code.join('\n') ?? ''
+                            }return ${tokens?.id};\n});`,
+                        ],
+                        id: resultId,
+                    };
                 },
             };
         }
@@ -955,71 +1250,170 @@ function schemaToTypeAndMapper(
                     ? schemaType.variants
                     : [...schemaType.variants.values()];
 
-            const variantSchemas = variants.map((variant) => ({
+            const variantFieldSchemas = variants.map((variant) => ({
                 name: variant.name,
                 ...fieldToTypeAndMapper(variant.fields),
             }));
 
-            const variantTypes = variantSchemas.map(
+            const variantTypes = variantFieldSchemas.map(
                 (variantSchema) =>
                     `{ type: '${variantSchema.name}'${
-                        variantSchema.type === undefined
+                        variantSchema.nativeType === undefined
                             ? ''
-                            : `, content: ${variantSchema.type}`
+                            : `, content: ${variantSchema.nativeType}`
                     } }`
             );
 
             return {
-                type: variantTypes.join(' | '),
-                mapper(id) {
-                    const variantCases = variantSchemas.map(
-                        (variantSchema) => `    case '${variantSchema.name}': {
-        return { '${variantSchema.name}': ${
-                            variantSchema.mapper?.(`${id}.content`) ?? '[]'
-                        }};
-    }`
+                nativeType: variantTypes.join(' | '),
+                nativeToJson(id, idGenerator) {
+                    const resultId = idGenerator('match');
+
+                    const variantCases = variantFieldSchemas.map(
+                        (variantSchema) => {
+                            const tokens = variantSchema.nativeToJson?.(
+                                `${id}.content`,
+                                idGenerator
+                            );
+                            return `    case '${variantSchema.name}': {
+        ${tokens?.code.join('\n        ') ?? ''}
+        return { '${variantSchema.name}': ${tokens?.id ?? '[]'} };
+    }`;
+                        }
                     );
-                    return `(() => { switch (${id}.type) {\n${variantCases.join(
-                        '\n'
-                    )}\n}})()`;
+                    return {
+                        code: [
+                            `const ${resultId} = (() => { switch (${id}.type) {\n${variantCases.join(
+                                '\n'
+                            )}\n}})();`,
+                        ],
+                        id: resultId,
+                    };
+                },
+                jsonToNative(id, idGenerator) {
+                    const variantKeyId = idGenerator('variantKey');
+
+                    const variantCases = variantFieldSchemas.map(
+                        (variantFieldSchema) => {
+                            const variantId = idGenerator('variant');
+                            const variantTokens =
+                                variantFieldSchema.jsonToNative?.(
+                                    variantId,
+                                    idGenerator
+                                );
+                            return `    case '${variantFieldSchema.name}': {
+        ${
+            variantTokens === undefined
+                ? ''
+                : `const ${variantId} = ${id}['${variantFieldSchema.name}'];
+        ${variantTokens?.code.join('\n') ?? ''}`
+        }
+        return {
+            type: '${variantFieldSchema.name}',
+            content: ${variantTokens?.id ?? '[]'},
+        };
+    }`;
+                        }
+                    );
+                    const resultId = idGenerator('match');
+                    return {
+                        code: [
+                            `const ${variantKeyId} = Object.keys(${id})[0]`,
+                            `const ${resultId} = (() => {
+    switch (${variantKeyId}) {\n${variantCases.join('\n')}\n}})();`,
+                        ],
+                        id: resultId,
+                    };
                 },
             };
         }
         case 'String':
             return {
-                type: 'string',
-                mapper(id) {
-                    return id;
+                nativeType: 'string',
+                nativeToJson(id) {
+                    return { code: [], id };
+                },
+                jsonToNative(id) {
+                    return {
+                        code: [],
+                        id,
+                    };
                 },
             };
         case 'ContractName':
             return {
-                type: 'SDK.ContractName.Type',
-                mapper(id) {
-                    return `SDK.ContractName.toSchemaValue(${id})`;
+                nativeType: 'SDK.ContractName.Type',
+                nativeToJson(id, idGenerator) {
+                    const resultId = idGenerator('contractName');
+                    return {
+                        code: [
+                            `const ${resultId} = SDK.ContractName.toSchemaValue(${id});`,
+                        ],
+                        id: resultId,
+                    };
+                },
+                jsonToNative(id, idGenerator) {
+                    const resultId = idGenerator('contractName');
+                    return {
+                        code: [
+                            `const ${resultId} = SDK.ContractName.fromSchemaValue(${id});`,
+                        ],
+                        id: resultId,
+                    };
                 },
             };
         case 'ReceiveName':
             return {
-                type: 'SDK.ReceiveName.Type',
-                mapper(id) {
-                    return `SDK.ReceiveName.toSchemaValue(${id})`;
+                nativeType: 'SDK.ReceiveName.Type',
+                nativeToJson(id, idGenerator) {
+                    const resultId = idGenerator('receiveName');
+                    return {
+                        code: [
+                            `const ${resultId} = SDK.ReceiveName.toSchemaValue(${id});`,
+                        ],
+                        id: resultId,
+                    };
+                },
+                jsonToNative(id, idGenerator) {
+                    const resultId = idGenerator('receiveName');
+                    return {
+                        code: [
+                            `const ${resultId} = SDK.ReceiveName.fromSchemaValue(${id});`,
+                        ],
+                        id: resultId,
+                    };
                 },
             };
         case 'ULeb128':
         case 'ILeb128':
             return {
-                type: 'number | bigint',
-                mapper(id) {
-                    return `BigInt(${id}).toString()`;
+                nativeType: 'number | bigint',
+                nativeToJson(id, idGenerator) {
+                    const resultId = idGenerator('number');
+                    return {
+                        code: [`const ${resultId} = BigInt(${id}).toString();`],
+                        id: resultId,
+                    };
+                },
+                jsonToNative(id) {
+                    return {
+                        code: [],
+                        id: `BigInt(${id})`,
+                    };
                 },
             };
         case 'ByteList':
         case 'ByteArray':
             return {
-                type: 'SDK.HexString',
-                mapper(id) {
-                    return id;
+                nativeType: 'SDK.HexString',
+                nativeToJson(id) {
+                    return { code: [], id };
+                },
+                jsonToNative(id) {
+                    return {
+                        code: [],
+                        id,
+                    };
                 },
             };
     }
@@ -1027,11 +1421,11 @@ function schemaToTypeAndMapper(
 
 function fieldToTypeAndMapper(
     fields: SDK.SchemaFields
-): SchemaTypeAndMapper | undefined {
+): SchemaNativeType | undefined {
     switch (fields.type) {
         case 'Named': {
             const schemas = fields.fields.flatMap((named) => {
-                const schema = schemaToTypeAndMapper(named.field);
+                const schema = schemaAsNativeType(named.field);
                 return schema === undefined
                     ? []
                     : [
@@ -1043,43 +1437,129 @@ function fieldToTypeAndMapper(
             });
 
             const objectFieldTypes = schemas.flatMap(
-                (s) => `    '${s.name}': ${s.type},`
+                (s) => `    '${s.name}': ${s.nativeType},`
             );
 
             return {
-                type: `{\n${objectFieldTypes.join('\n')}\n}`,
-                mapper(id) {
-                    const objectFields = schemas.map(
-                        (s) =>
-                            `   '${s.name}': ${s.mapper?.(
-                                `${id}['${s.name}']`
-                            )},`
+                nativeType: `{\n${objectFieldTypes.join('\n')}\n}`,
+                nativeToJson(id, idGenerator) {
+                    const resultId = idGenerator('named');
+                    const fields = schemas.map((s) => {
+                        const fieldId = idGenerator('field');
+                        const field = s.nativeToJson?.(fieldId, idGenerator);
+                        return {
+                            name: s.name,
+                            constructTokens: [
+                                `const ${fieldId} = ${id}['${s.name}'];`,
+                                ...field.code,
+                            ],
+                            id: field.id,
+                        };
+                    });
+                    const constructTokens = fields.flatMap(
+                        (tokens) => tokens.constructTokens
                     );
-                    return `{\n${objectFields.join('\n')}\n}`;
+
+                    return {
+                        code: [
+                            ...constructTokens,
+                            `const ${resultId} = {\n${fields
+                                .map(
+                                    (tokens) =>
+                                        `    ['${tokens.name}']: ${tokens.id},`
+                                )
+                                .join('\n')}\n};`,
+                        ],
+                        id: resultId,
+                    };
+                },
+                jsonToNative(id, idGenerator) {
+                    const fields = schemas.map((s) => {
+                        const fieldId = idGenerator('field');
+                        const field = s.jsonToNative?.(fieldId, idGenerator);
+                        return {
+                            name: s.name,
+                            constructTokens: [
+                                `const ${fieldId} = ${id}['${s.name}'];`,
+                                ...field.code,
+                            ],
+                            id: field.id,
+                        };
+                    });
+                    const constructTokens = fields.flatMap(
+                        (tokens) => tokens.constructTokens
+                    );
+                    const resultId = idGenerator('named');
+                    return {
+                        code: [
+                            ...constructTokens,
+                            `const ${resultId} = {\n${fields
+                                .map(
+                                    (tokens) =>
+                                        `    ['${tokens.name}']: ${tokens.id},`
+                                )
+                                .join('\n')}\n};`,
+                        ],
+                        id: resultId,
+                    };
                 },
             };
         }
         case 'Unnamed': {
             const schemas = fields.fields.flatMap((f) => {
-                const schema = schemaToTypeAndMapper(f);
+                const schema = schemaAsNativeType(f);
                 return schema === undefined ? [] : [schema];
             });
             if (schemas.length === 1) {
                 const schema = schemas[0];
                 return {
-                    type: schema.type,
-                    mapper(id) {
-                        return `[${schema.mapper(id)}]`;
+                    nativeType: schema.nativeType,
+                    nativeToJson(id, idGenerator) {
+                        const tokens = schema.nativeToJson(id, idGenerator);
+                        return { code: tokens.code, id: `[${tokens.id}]` };
+                    },
+                    jsonToNative(id, idGenerator) {
+                        return schema.nativeToJson(id, idGenerator);
                     },
                 };
             } else {
                 return {
-                    type: `[${schemas.map((s) => s?.type).join(', ')}]`,
-                    mapper(id) {
+                    nativeType: `[${schemas
+                        .map((s) => s?.nativeType)
+                        .join(', ')}]`,
+                    nativeToJson(id, idGenerator) {
+                        const resultId = idGenerator('unnamed');
                         const mapped = schemas.map((schema, index) =>
-                            schema.mapper(`${id}[${index}]`)
+                            schema.nativeToJson(`${id}[${index}]`, idGenerator)
                         );
-                        return `[${mapped.join(', ')}]`;
+                        const constructFields = mapped.flatMap(
+                            (tokens) => tokens.code
+                        );
+                        const fieldIds = mapped.map((s) => s.id);
+                        return {
+                            code: [
+                                ...constructFields,
+                                `const ${resultId} = [${fieldIds.join(', ')}];`,
+                            ],
+                            id: resultId,
+                        };
+                    },
+                    jsonToNative(id, idGenerator) {
+                        const resultId = idGenerator('unnamed');
+                        const mapped = schemas.map((schema, index) =>
+                            schema.jsonToNative(`${id}[${index}]`, idGenerator)
+                        );
+                        const constructFields = mapped.flatMap(
+                            (tokens) => tokens.code
+                        );
+                        const fieldIds = mapped.map((s) => s.id);
+                        return {
+                            code: [
+                                ...constructFields,
+                                `const ${resultId} = [${fieldIds.join(', ')}];`,
+                            ],
+                            id: resultId,
+                        };
                     },
                 };
             }
@@ -1089,15 +1569,52 @@ function fieldToTypeAndMapper(
     }
 }
 
-function constructType(parameterId: string, schemaType?: SDK.SchemaType) {
+function constructParameterType(
+    parameterId: string,
+    schemaType?: SDK.SchemaType
+) {
     // No schema type is present so fallback to plain parameter.
     if (schemaType === undefined) {
-        return { type: 'SDK.Parameter.Type', tokens: parameterId };
+        return {
+            type: 'SDK.Parameter.Type',
+            tokens: { code: [], id: parameterId },
+        };
     }
 
-    const typeAndMapper = schemaToTypeAndMapper(schemaType);
+    const typeAndMapper = schemaAsNativeType(schemaType);
     if (typeAndMapper === undefined) {
         // No parameter is needed according to the schema.
+        return undefined;
+    }
+
+    const buffer = SDK.serializeSchemaType(schemaType);
+    const base64Schema = Buffer.from(buffer).toString('base64');
+
+    const mappedParameter = typeAndMapper.nativeToJson(
+        parameterId,
+        createIdGenerator()
+    );
+    const resultId = 'out';
+    return {
+        type: typeAndMapper.nativeType,
+        tokens: {
+            code: [
+                ...mappedParameter.code,
+                `const ${resultId} = SDK.Parameter.fromBase64SchemaType('${base64Schema}', ${mappedParameter.id});`,
+            ],
+            id: resultId,
+        },
+    };
+}
+
+function parseEventType(parameterId: string, schemaType?: SDK.SchemaType) {
+    // No schema type is present so generate any code.
+    if (schemaType === undefined) {
+        return undefined;
+    }
+    const typeAndMapper = schemaAsNativeType(schemaType);
+    if (typeAndMapper === undefined) {
+        // No event is emitted according to the schema.
         return undefined;
     }
 
@@ -1105,12 +1622,24 @@ function constructType(parameterId: string, schemaType?: SDK.SchemaType) {
         SDK.serializeSchemaType(schemaType)
     ).toString('base64');
 
-    const mappedParameter =
-        typeAndMapper.mapper === undefined
-            ? parameterId
-            : typeAndMapper.mapper(parameterId);
+    const schemaJsonId = 'schemaJson';
+    const tokens = typeAndMapper.jsonToNative(
+        schemaJsonId,
+        createIdGenerator()
+    );
     return {
-        type: typeAndMapper.type,
-        tokens: `SDK.Parameter.fromBase64SchemaType('${base64Schema}', ${mappedParameter})`,
+        type: typeAndMapper.nativeType,
+        tokens: {
+            code: [
+                `const ${schemaJsonId} = (<any>SDK.ContractEvent.parseWithSchemaTypeBase64(${parameterId}, '${base64Schema}'))`,
+                ...tokens.code,
+            ],
+            id: tokens.id,
+        },
     };
+}
+
+function createIdGenerator() {
+    let counter = 0;
+    return (name: string) => `${name}${counter++}`;
 }

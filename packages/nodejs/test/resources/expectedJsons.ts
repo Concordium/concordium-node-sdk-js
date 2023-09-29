@@ -18,6 +18,7 @@ import {
     ChainParametersV0,
     ChainParametersV1,
     ContractAddress,
+    ContractEvent,
     ContractInitializedEvent,
     ContractTraceEvent,
     CredentialKeysUpdatedEvent,
@@ -935,7 +936,7 @@ export const updateEvent: ContractTraceEvent[] = [
         contractVersion: 1,
         events: [
             'fd00c0843d00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be00083',
-        ],
+        ].map(ContractEvent.fromHexString),
         instigator: {
             address: ContractAddress.create(865),
             type: 'AddressContract',

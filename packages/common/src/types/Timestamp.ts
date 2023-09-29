@@ -51,6 +51,15 @@ export function toSchemaValue(timestamp: Timestamp): SchemaValue {
 }
 
 /**
+ * Convert timestamp from format used by schemas.
+ * @param {SchemaValue} timestamp The timestamp in schema format.
+ * @returns {Timestamp} The timestamp
+ */
+export function fromSchemaValue(timestamp: SchemaValue): Timestamp {
+    return fromMillis(Date.parse(timestamp));
+}
+
+/**
  * Get timestamp as a Date.
  * @param {Timestamp} timestamp The timestamp.
  * @returns {Date} Date object.

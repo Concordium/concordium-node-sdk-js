@@ -18,6 +18,7 @@ import * as SequenceNumber from '../types/SequenceNumber.js';
 import * as TransactionHash from '../types/TransactionHash.js';
 import * as Parameter from '../types/Parameter.js';
 import * as ReturnValue from '../types/ReturnValue.js';
+import * as ContractEvent from '../types/ContractEvent.js';
 
 function unwrapToHex(bytes: Uint8Array | undefined): v1.HexString {
     return Buffer.from(unwrap(bytes)).toString('hex');
@@ -822,7 +823,7 @@ function trContractTraceElement(
                 receiveName: ReceiveName.fromProto(
                     unwrap(element.updated.receiveName)
                 ),
-                events: element.updated.events.map(unwrapValToHex),
+                events: element.updated.events.map(ContractEvent.fromProto),
             };
         case 'transferred':
             return {
@@ -841,7 +842,7 @@ function trContractTraceElement(
                 address: ContractAddress.fromProto(
                     unwrap(element.interrupted.address)
                 ),
-                events: element.interrupted.events.map(unwrapValToHex),
+                events: element.interrupted.events.map(ContractEvent.fromProto),
             };
         case 'resumed':
             return {

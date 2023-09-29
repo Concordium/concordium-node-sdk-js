@@ -31,6 +31,17 @@ export async function main(): Promise<void> {
         .parse(process.argv);
     const options = program.opts<Options>();
     console.log('Generating smart contract clients...');
-    await lib.generateContractClientsFromFile(options.module, options.outDir);
-    console.log('Done');
+
+    const startTime = Date.now();
+    await lib.generateContractClientsFromFile(options.module, options.outDir, {
+        onProgress(update) {
+            if (update.type === 'Progress') {
+                console.log(
+                    `[${update.doneItems}/${update.totalItems}] ${update.spentTime}ms`
+                );
+            }
+        },
+    });
+
+    console.log(`Done in ${Date.now() - startTime}ms`);
 }

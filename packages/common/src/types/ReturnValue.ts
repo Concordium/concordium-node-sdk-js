@@ -65,13 +65,13 @@ export function toBuffer(parameter: ReturnValue): Uint8Array {
 
 /**
  * Convert a return value into a more structured representation using a schema type.
- * @param {SchemaType} schemaType The schema type for the return value.
  * @param {ReturnValue} returnValue The return value.
+ * @param {SchemaType} schemaType The schema type for the return value.
  * @returns {SmartContractTypeValues}
  */
-export function toSchemaType(
-    schemaType: SchemaType,
-    returnValue: ReturnValue
+export function parseWithSchemaType(
+    returnValue: ReturnValue,
+    schemaType: SchemaType
 ): SmartContractTypeValues {
     const schemaBytes = serializeSchemaType(schemaType);
     return deserializeTypeValue(returnValue.buffer, schemaBytes);
@@ -79,13 +79,13 @@ export function toSchemaType(
 
 /**
  * Convert a return value into a more structured representation using a schema type.
- * @param {Base64String} schemaBase64 The schema type for the return value.
  * @param {ReturnValue} returnValue The return value.
+ * @param {Base64String} schemaBase64 The schema type for the return value.
  * @returns {SmartContractTypeValues}
  */
-export function toBase64SchemaType(
-    schemaBase64: Base64String,
-    returnValue: ReturnValue
+export function parseWithSchemaTypeBase64(
+    returnValue: ReturnValue,
+    schemaBase64: Base64String
 ): SmartContractTypeValues {
     const schemaBytes = Buffer.from(schemaBase64, 'base64');
     return deserializeTypeValue(returnValue.buffer, schemaBytes);

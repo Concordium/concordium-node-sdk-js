@@ -82,5 +82,10 @@ const contractAddress = SDK.ContractAddress.create(
         ),
         parameter
     );
-    console.log({ result });
+    const returnValue =
+        wCCDContractClient.parseReturnValueTokenMetadata(result);
+    console.log(
+        'The token metadata for wCCD can be found at: ',
+        returnValue?.[0].url
+    );
 })();

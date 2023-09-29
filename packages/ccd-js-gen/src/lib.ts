@@ -16,10 +16,28 @@ export type OutputOptions =
     | 'TypedJavaScript'
     | 'Everything';
 
-/** Options for generating clients */
+/** Options for generating clients. */
 export type GenerateContractClientsOptions = {
-    /** Options for the output */
+    /** Options for the output. */
     output?: OutputOptions;
+    /** Callback for getting notified on progress. */
+    onProgress?: NotifyProgress;
+};
+
+/** Callback for getting notified on progress. */
+export type NotifyProgress = (progress: Progress) => void;
+
+/**
+ * Progress notification
+ */
+export type Progress = {
+    type: 'Progress';
+    /** Total number of 'items' to be generated. */
+    totalItems: number;
+    /** Number of 'items' generated at the time of this notification. */
+    doneItems: number;
+    /** Number of milliseconds spent on the previous item. */
+    spentTime: number;
 };
 
 /**
@@ -73,7 +91,13 @@ export async function generateContractClients(
     };
     const project = new tsm.Project({ compilerOptions });
 
-    await addModuleClient(project, outName, outDirPath, moduleSource);
+    await generateCode(
+        project,
+        outName,
+        outDirPath,
+        moduleSource,
+        options.onProgress
+    );
 
     if (outputOption === 'Everything' || outputOption === 'TypeScript') {
         await project.save();
@@ -87,16 +111,34 @@ export async function generateContractClients(
     }
 }
 
-/** Iterates a module interface building source files in the project. */
-async function addModuleClient(
+/**
+ * Iterates a module interface building source files in the project.
+ * @param project The project to use for creating sourcefiles.
+ * @param outModuleName The name for outputting the module client file.
+ * @param outDirPath The directory to use for outputting files.
+ * @param moduleSource The source of the smart contract module.
+ * @param notifyProgress Callback to report progress.
+ */
+async function generateCode(
     project: tsm.Project,
     outModuleName: string,
     outDirPath: string,
-    moduleSource: SDK.VersionedModuleSource
+    moduleSource: SDK.VersionedModuleSource,
+    notifyProgress?: NotifyProgress
 ) {
-    const moduleInterface = await SDK.parseModuleInterface(moduleSource);
-    const moduleRef = await SDK.calculateModuleReference(moduleSource);
-    const rawModuleSchema = await SDK.getEmbeddedModuleSchema(moduleSource);
+    const [moduleInterface, moduleRef, rawModuleSchema] = await Promise.all([
+        SDK.parseModuleInterface(moduleSource),
+        SDK.calculateModuleReference(moduleSource),
+        SDK.getEmbeddedModuleSchema(moduleSource),
+    ]);
+
+    let totalItems = 0;
+    for (const contracts of moduleInterface.values()) {
+        totalItems += contracts.entrypointNames.size;
+    }
+    let doneItems = 0;
+    notifyProgress?.({ type: 'Progress', totalItems, doneItems, spentTime: 0 });
+
     const moduleSchema =
         rawModuleSchema === null
             ? null
@@ -110,11 +152,104 @@ async function addModuleClient(
     const moduleSourceFile = project.createSourceFile(outputFilePath, '', {
         overwrite: true,
     });
+    const moduleClientId = 'moduleClient';
+    const moduleClientType = `${toPascalCase(outModuleName)}Module`;
+    const internalModuleClientId = 'internalModuleClient';
+
+    generateModuleBaseCode(
+        moduleSourceFile,
+        moduleRef,
+        moduleClientId,
+        moduleClientType,
+        internalModuleClientId
+    );
+
+    for (const contract of moduleInterface.values()) {
+        const contractSchema: SDK.SchemaContractV3 | undefined =
+            moduleSchema?.module.contracts.get(contract.contractName);
+
+        generactionModuleContractCode(
+            moduleSourceFile,
+            contract.contractName,
+            moduleClientId,
+            moduleClientType,
+            internalModuleClientId,
+            moduleRef,
+            contractSchema
+        );
+
+        const contractOutputFilePath = path.format({
+            dir: outDirPath,
+            name: contract.contractName,
+            ext: '.ts',
+        });
+        const contractSourceFile = project.createSourceFile(
+            contractOutputFilePath,
+            '',
+            {
+                overwrite: true,
+            }
+        );
+
+        const contractClientType = `${toPascalCase(
+            contract.contractName
+        )}Contract`;
+        const contractClientId = 'contractClient';
+
+        generateContractBaseCode(
+            contractSourceFile,
+            contract.contractName,
+            contractClientId,
+            contractClientType,
+            moduleRef,
+            contractSchema
+        );
+
+        for (const entrypointName of contract.entrypointNames) {
+            const startTime = Date.now();
+            const entrypointSchema =
+                contractSchema?.receive.get(entrypointName);
+            generateContractEntrypointCode(
+                contractSourceFile,
+                contract.contractName,
+                contractClientId,
+                contractClientType,
+                entrypointName,
+                entrypointSchema
+            );
+            const spentTime = Date.now() - startTime;
+            doneItems++;
+            notifyProgress?.({
+                type: 'Progress',
+                totalItems,
+                doneItems,
+                spentTime,
+            });
+        }
+    }
+}
+
+/**
+ * Generate code for a smart contract module client.
+ * @param moduleSourceFile The sourcefile of the module.
+ * @param moduleRef The module reference.
+ * @param moduleClientId The identifier to use for the module client.
+ * @param moduleClientType The identifier to use for the type of the module client.
+ * @param internalModuleClientId The identifier to use for referencing the internal module client.
+ */
+function generateModuleBaseCode(
+    moduleSourceFile: tsm.SourceFile,
+    moduleRef: SDK.ModuleReference,
+    moduleClientId: string,
+    moduleClientType: string,
+    internalModuleClientId: string
+) {
+    const moduleRefId = 'moduleReference';
+
     moduleSourceFile.addImportDeclaration({
         namespaceImport: 'SDK',
         moduleSpecifier: '@concordium/common-sdk',
     });
-    const moduleRefId = 'moduleReference';
 
     moduleSourceFile.addVariableStatement({
         isExported: true,
@@ -130,9 +265,6 @@ async function addModuleClient(
             },
         ],
     });
-
-    const moduleClientType = `${toPascalCase(outModuleName)}Module`;
-    const internalModuleClientId = 'internalModuleClient';
 
     const moduleClassDecl = moduleSourceFile.addClass({
         docs: [
@@ -187,14 +319,13 @@ async function addModuleClient(
     moduleSourceFile
         .addFunction({
             docs: [
-                `Construct a ${moduleClientType} client for interacting with a smart contract module on chain.
-This function ensures the smart contract module is deployed on chain.
-
-@param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The concordium node client to use.
-
-@throws If failing to communicate with the concordium node or if the module reference is not present on chain.
-
-@returns {${moduleClientType}} A module client ensured to be deployed on chain.`,
+                [
+                    `Construct a ${moduleClientType} client for interacting with a smart contract module on chain.`,
+                    'This function ensures the smart contract module is deployed on chain.',
+                    `@param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The concordium node client to use.`,
+                    '@throws If failing to communicate with the concordium node or if the module reference is not present on chain.',
+                    `@returns {${moduleClientType}} A module client ensured to be deployed on chain.`,
+                ].join('\n'),
             ],
             isExported: true,
             isAsync: true,
@@ -208,20 +339,19 @@ This function ensures the smart contract module is deployed on chain.
             returnType: `Promise<${moduleClientType}>`,
         })
         .setBodyText(
-            `const moduleClient = await SDK.ModuleClient.create(${grpcClientId}, ${moduleRefId});
-return new ${moduleClientType}(moduleClient);`
+            [
+                `const moduleClient = await SDK.ModuleClient.create(${grpcClientId}, ${moduleRefId});`,
+                `return new ${moduleClientType}(moduleClient);`,
+            ].join('\n')
         );
     moduleSourceFile
         .addFunction({
             docs: [
-                `Construct a ${moduleClientType} client for interacting with a smart contract module on chain.
-It is up to the caller to ensure the module is deployed on chain.
-
-@param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The concordium node client to use.
-
-@throws If failing to communicate with the concordium node.
-
-@returns {${moduleClientType}}`,
+                `Construct a ${moduleClientType} client for interacting with a smart contract module on chain.`,
+                'It is up to the caller to ensure the module is deployed on chain.',
+                `@param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The concordium node client to use.`,
+                '@throws If failing to communicate with the concordium node.',
+                `@returns {${moduleClientType}}`,
             ],
             isExported: true,
             name: 'createUnchecked',
@@ -234,22 +364,22 @@ It is up to the caller to ensure the module is deployed on chain.
             returnType: `${moduleClientType}`,
         })
         .setBodyText(
-            `const moduleClient = SDK.ModuleClient.createUnchecked(${grpcClientId}, ${moduleRefId});
-return new ${moduleClientType}(moduleClient);`
+            [
+                `const moduleClient = SDK.ModuleClient.createUnchecked(${grpcClientId}, ${moduleRefId});`,
+                `return new ${moduleClientType}(moduleClient);`,
+            ].join('\n')
         );
-
-    const moduleClientId = 'moduleClient';
 
     moduleSourceFile
         .addFunction({
             docs: [
-                `Construct a ${moduleClientType} client for interacting with a smart contract module on chain.
-This function ensures the smart contract module is deployed on chain.
-
-@param {${moduleClientType}} ${moduleClientId} - The client of the on-chain smart contract module with referecence '${moduleRef.moduleRef}'.
-@throws If failing to communicate with the concordium node or if the module reference is not present on chain.
-
-@returns {${moduleClientType}} A module client ensured to be deployed on chain.`,
+                [
+                    `Construct a ${moduleClientType} client for interacting with a smart contract module on chain.`,
+                    'This function ensures the smart contract module is deployed on chain.',
+                    `@param {${moduleClientType}} ${moduleClientId} - The client of the on-chain smart contract module with referecence '${moduleRef.moduleRef}'.`,
+                    '@throws If failing to communicate with the concordium node or if the module reference is not present on chain.',
+                    `@returns {${moduleClientType}} A module client ensured to be deployed on chain.`,
+                ].join('\n'),
             ],
             isExported: true,
             name: 'checkOnChain',
@@ -268,11 +398,12 @@ This function ensures the smart contract module is deployed on chain.
     moduleSourceFile
         .addFunction({
             docs: [
-                `Get the module source of the deployed smart contract module.
-
-@param {${moduleClientType}} ${moduleClientId} - The client of the on-chain smart contract module with referecence '${moduleRef.moduleRef}'.
-@throws {SDK.RpcError} If failing to communicate with the concordium node or module not found.
-@returns {SDK.VersionedModuleSource} Module source of the deployed smart contract module.`,
+                [
+                    'Get the module source of the deployed smart contract module.',
+                    `@param {${moduleClientType}} ${moduleClientId} - The client of the on-chain smart contract module with referecence '${moduleRef.moduleRef}'.`,
+                    '@throws {SDK.RpcError} If failing to communicate with the concordium node or module not found.',
+                    '@returns {SDK.VersionedModuleSource} Module source of the deployed smart contract module.',
+                ].join('\n'),
             ],
             isExported: true,
             name: 'getModuleSource',
@@ -287,553 +418,685 @@ This function ensures the smart contract module is deployed on chain.
         .setBodyText(
             `return SDK.ModuleClient.getModuleSource(${moduleClientId}.${internalModuleClientId});`
         );
+}
 
+/**
+ * Generate code in the module client specific to each contract in the module.
+ * @param moduleSourceFile The sourcefile of the module client.
+ * @param contractName The name of the contract.
+ * @param moduleClientId The identifier for the module client.
+ * @param moduleClientType The identifier for the type of the module client.
+ * @param internalModuleClientId The identifier for the internal module client.
+ * @param moduleRef The reference of the module.
+ * @param contractSchema The contract schema.
+ */
+function generactionModuleContractCode(
+    moduleSourceFile: tsm.SourceFile,
+    contractName: string,
+    moduleClientId: string,
+    moduleClientType: string,
+    internalModuleClientId: string,
+    moduleRef: SDK.ModuleReference,
+    contractSchema?: SDK.SchemaContractV3
+) {
     const transactionMetadataId = 'transactionMetadata';
     const parameterId = 'parameter';
     const signerId = 'signer';
 
-    for (const contract of moduleInterface.values()) {
-        const contractSchema: SDK.SchemaContractV3 | undefined =
-            moduleSchema?.module.contracts.get(contract.contractName);
-        const initParameter = constructParameterType(
-            parameterId,
-            contractSchema?.init?.parameter
-        );
+    const initParameter = createParameterCode(
+        parameterId,
+        contractSchema?.init?.parameter
+    );
 
-        const initParameterTypeId = `${toPascalCase(
-            contract.contractName
-        )}Parameter`;
+    const initParameterTypeId = `${toPascalCase(contractName)}Parameter`;
 
-        const createInitParameterFnId = `create${toPascalCase(
-            contract.contractName
-        )}Parameter`;
+    const createInitParameterFnId = `create${toPascalCase(
+        contractName
+    )}Parameter`;
 
-        if (initParameter !== undefined) {
-            moduleSourceFile.addTypeAlias({
-                docs: [
-                    `Parameter type transaction for instantiating a new '${contract.contractName}' smart contract instance`,
-                ],
-                isExported: true,
-                name: initParameterTypeId,
-                type: initParameter.type,
-            });
-
-            moduleSourceFile
-                .addFunction({
-                    docs: [
-                        `Construct Parameter type transaction for instantiating a new '${contract.contractName}' smart contract instance.`,
-                    ],
-                    isExported: true,
-                    name: createInitParameterFnId,
-                    parameters: [
-                        {
-                            type: initParameterTypeId,
-                            name: parameterId,
-                        },
-                    ],
-                    returnType: 'SDK.Parameter.Type',
-                })
-                .setBodyText(
-                    `${initParameter.tokens.code?.join('\n')}\nreturn ${
-                        initParameter.tokens.id
-                    }`
-                );
-        }
+    if (initParameter !== undefined) {
+        moduleSourceFile.addTypeAlias({
+            docs: [
+                `Parameter type transaction for instantiating a new '${contractName}' smart contract instance`,
+            ],
+            isExported: true,
+            name: initParameterTypeId,
+            type: initParameter.type,
+        });
 
         moduleSourceFile
             .addFunction({
                 docs: [
-                    `Send transaction for instantiating a new '${
-                        contract.contractName
-                    }' smart contract instance.
-
-@param {${moduleClientType}} ${moduleClientId} - The client of the on-chain smart contract module with referecence '${
-                        moduleRef.moduleRef
-                    }'.
-@param {SDK.ContractTransactionMetadata} ${transactionMetadataId} - Metadata related to constructing a transaction for a smart contract module.
-${
-    initParameter === undefined
-        ? ''
-        : `@param {${initParameterTypeId}} ${parameterId} - Parameter to provide as part of the transaction for the instantiation of a new smart contract contract.`
-}
-@param {SDK.AccountSigner} ${signerId} - The signer of the update contract transaction.
-
-@throws If failing to communicate with the concordium node.
-
-@returns {SDK.TransactionHash.Type}`,
+                    [
+                        `Construct Parameter type transaction for instantiating a new '${contractName}' smart contract instance.`,
+                        `@param {${initParameterTypeId}} ${parameterId} The structured parameter to construct from.`,
+                        '@returns {SDK.Parameter.Type} The smart contract parameter.',
+                    ].join('\n'),
                 ],
                 isExported: true,
-                name: `instantiate${toPascalCase(contract.contractName)}`,
+                name: createInitParameterFnId,
                 parameters: [
                     {
-                        name: moduleClientId,
-                        type: moduleClientType,
+                        type: initParameterTypeId,
+                        name: parameterId,
                     },
-                    {
-                        name: transactionMetadataId,
-                        type: 'SDK.ContractTransactionMetadata',
-                    },
+                ],
+                returnType: 'SDK.Parameter.Type',
+            })
+            .setBodyText(
+                [
+                    ...(initParameter.code ?? []),
+                    `return ${initParameter.id}`,
+                ].join('\n')
+            );
+    }
+
+    moduleSourceFile
+        .addFunction({
+            docs: [
+                [
+                    `Send transaction for instantiating a new '${contractName}' smart contract instance.`,
+                    `@param {${moduleClientType}} ${moduleClientId} - The client of the on-chain smart contract module with referecence '${moduleRef.moduleRef}'.`,
+                    `@param {SDK.ContractTransactionMetadata} ${transactionMetadataId} - Metadata related to constructing a transaction for a smart contract module.`,
                     ...(initParameter === undefined
                         ? []
                         : [
-                              {
-                                  name: parameterId,
-                                  type: initParameterTypeId,
-                              },
+                              `@param {${initParameterTypeId}} ${parameterId} - Parameter to provide as part of the transaction for the instantiation of a new smart contract contract.`,
                           ]),
-                    {
-                        name: signerId,
-                        type: 'SDK.AccountSigner',
-                    },
-                ],
-                returnType: 'Promise<SDK.TransactionHash.Type>',
-            })
-            .setBodyText(
-                `return SDK.ModuleClient.createAndSendInitTransaction(
-    ${moduleClientId}.${internalModuleClientId},
-    SDK.ContractName.fromStringUnchecked('${contract.contractName}'),
-    ${transactionMetadataId},
-    ${
-        initParameter === undefined
-            ? ''
-            : `${createInitParameterFnId}(${parameterId})`
-    },
-    ${signerId}
-);`
-            );
+                    `@param {SDK.AccountSigner} ${signerId} - The signer of the update contract transaction.`,
+                    '@throws If failing to communicate with the concordium node.',
+                    '@returns {SDK.TransactionHash.Type}',
+                ].join('\n'),
+            ],
+            isExported: true,
+            name: `instantiate${toPascalCase(contractName)}`,
+            parameters: [
+                {
+                    name: moduleClientId,
+                    type: moduleClientType,
+                },
+                {
+                    name: transactionMetadataId,
+                    type: 'SDK.ContractTransactionMetadata',
+                },
+                ...(initParameter === undefined
+                    ? []
+                    : [
+                          {
+                              name: parameterId,
+                              type: initParameterTypeId,
+                          },
+                      ]),
+                {
+                    name: signerId,
+                    type: 'SDK.AccountSigner',
+                },
+            ],
+            returnType: 'Promise<SDK.TransactionHash.Type>',
+        })
+        .setBodyText(
+            [
+                'return SDK.ModuleClient.createAndSendInitTransaction(',
+                `    ${moduleClientId}.${internalModuleClientId},`,
+                `    SDK.ContractName.fromStringUnchecked('${contractName}'),`,
+                `    ${transactionMetadataId},`,
+                ...(initParameter === undefined
+                    ? []
+                    : [`    ${createInitParameterFnId}(${parameterId}),`]),
+                `    ${signerId}`,
+                ');',
+            ].join('\n')
+        );
+}
 
-        const contractOutputFilePath = path.format({
-            dir: outDirPath,
-            name: contract.contractName,
-            ext: '.ts',
-        });
-        const contractSourceFile = project.createSourceFile(
-            contractOutputFilePath,
-            '',
+/**
+ * Generate code for a smart contract instance client.
+ * @param contractSourceFile The sourcefile of the contract client.
+ * @param contractName The name of the smart contract.
+ * @param contractClientId The identifier to use for the contract client.
+ * @param contractClientType The identifier to use for the type of the contract client.
+ * @param moduleRef The module reference.
+ * @param contractSchema The contract schema to use in the client.
+ */
+function generateContractBaseCode(
+    contractSourceFile: tsm.SourceFile,
+    contractName: string,
+    contractClientId: string,
+    contractClientType: string,
+    moduleRef: SDK.ModuleReference,
+    contractSchema?: SDK.SchemaContractV3
+) {
+    const moduleRefId = 'moduleReference';
+    const grpcClientId = 'grpcClient';
+    const contractNameId = 'contractName';
+    const genericContractId = 'genericContract';
+    const contractAddressId = 'contractAddress';
+    const blockHashId = 'blockHash';
+
+    contractSourceFile.addImportDeclaration({
+        namespaceImport: 'SDK',
+        moduleSpecifier: '@concordium/common-sdk',
+    });
+
+    contractSourceFile.addVariableStatement({
+        docs: [
+            'The reference of the smart contract module supported by the provided client.',
+        ],
+        isExported: true,
+        declarationKind: tsm.VariableDeclarationKind.Const,
+        declarations: [
             {
-                overwrite: true,
-            }
+                name: moduleRefId,
+                type: 'SDK.ModuleReference',
+                initializer: `new SDK.ModuleReference('${moduleRef.moduleRef}')`,
+            },
+        ],
+    });
+
+    contractSourceFile.addVariableStatement({
+        docs: ['Name of the smart contract supported by this client.'],
+        isExported: true,
+        declarationKind: tsm.VariableDeclarationKind.Const,
+        declarations: [
+            {
+                name: contractNameId,
+                type: 'SDK.ContractName.Type',
+                initializer: `SDK.ContractName.fromStringUnchecked('${contractName}')`,
+            },
+        ],
+    });
+
+    const contractClassDecl = contractSourceFile.addClass({
+        docs: ['Smart contract client for a contract instance on chain.'],
+        name: contractClientType,
+        properties: [
+            {
+                docs: [
+                    'Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing).',
+                ],
+                scope: tsm.Scope.Private,
+                name: '__nominal',
+                initializer: 'true',
+            },
+            {
+                docs: ['The gRPC connection used by this client.'],
+                scope: tsm.Scope.Public,
+                isReadonly: true,
+                name: grpcClientId,
+                type: 'SDK.ConcordiumGRPCClient',
+            },
+            {
+                docs: ['The contract address used by this client.'],
+                scope: tsm.Scope.Public,
+                isReadonly: true,
+                name: contractAddressId,
+                type: 'SDK.ContractAddress.Type',
+            },
+
+            {
+                docs: ['Generic contract client used internally.'],
+                scope: tsm.Scope.Public,
+                isReadonly: true,
+                name: genericContractId,
+                type: 'SDK.Contract',
+            },
+        ],
+    });
+
+    contractClassDecl
+        .addConstructor({
+            parameters: [
+                { name: grpcClientId, type: 'SDK.ConcordiumGRPCClient' },
+                {
+                    name: contractAddressId,
+                    type: 'SDK.ContractAddress.Type',
+                },
+                { name: genericContractId, type: 'SDK.Contract' },
+            ],
+        })
+        .setBodyText(
+            [grpcClientId, contractAddressId, genericContractId]
+                .map((name) => `this.${name} = ${name};`)
+                .join('\n')
         );
 
-        const moduleRefId = 'moduleReference';
-        const grpcClientId = 'grpcClient';
-        const contractNameId = 'contractName';
-        const genericContractId = 'genericContract';
-        const contractAddressId = 'contractAddress';
-        const blockHashId = 'blockHash';
-        const contractClientType = `${toPascalCase(
-            contract.contractName
-        )}Contract`;
+    contractSourceFile.addTypeAlias({
+        docs: ['Smart contract client for a contract instance on chain.'],
+        name: 'Type',
+        isExported: true,
+        type: contractClientType,
+    });
 
-        contractSourceFile.addImportDeclaration({
-            namespaceImport: 'SDK',
-            moduleSpecifier: '@concordium/common-sdk',
-        });
-
-        contractSourceFile.addVariableStatement({
+    contractSourceFile
+        .addFunction({
             docs: [
-                'The reference of the smart contract module supported by the provided client.',
+                [
+                    `Construct an instance of \`${contractClientType}\` for interacting with a '${contractName}' contract on chain.`,
+                    'Checking the information instance on chain.',
+                    `@param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The client used for contract invocations and updates.`,
+                    `@param {SDK.ContractAddress.Type} ${contractAddressId} - Address of the contract instance.`,
+                    `@param {SDK.BlockHash.Type} [${blockHashId}] - Hash of the block to check the information at. When not provided the last finalized block is used.`,
+                    '@throws If failing to communicate with the concordium node or if any of the checks fails.',
+                    `@returns {${contractClientType}}`,
+                ].join('\n'),
             ],
             isExported: true,
-            declarationKind: tsm.VariableDeclarationKind.Const,
-            declarations: [
+            isAsync: true,
+            name: 'create',
+            parameters: [
                 {
-                    name: moduleRefId,
-                    type: 'SDK.ModuleReference',
-                    initializer: `new SDK.ModuleReference('${moduleRef.moduleRef}')`,
-                },
-            ],
-        });
-
-        contractSourceFile.addVariableStatement({
-            docs: ['Name of the smart contract supported by this client.'],
-            isExported: true,
-            declarationKind: tsm.VariableDeclarationKind.Const,
-            declarations: [
-                {
-                    name: contractNameId,
-                    type: 'SDK.ContractName.Type',
-                    initializer: `SDK.ContractName.fromStringUnchecked('${contract.contractName}')`,
-                },
-            ],
-        });
-
-        const contractClassDecl = contractSourceFile.addClass({
-            docs: ['Smart contract client for a contract instance on chain.'],
-            name: contractClientType,
-            properties: [
-                {
-                    docs: [
-                        'Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing).',
-                    ],
-                    scope: tsm.Scope.Private,
-                    name: '__nominal',
-                    initializer: 'true',
-                },
-                {
-                    docs: ['The gRPC connection used by this client.'],
-                    scope: tsm.Scope.Public,
-                    isReadonly: true,
                     name: grpcClientId,
                     type: 'SDK.ConcordiumGRPCClient',
                 },
                 {
-                    docs: ['The contract address used by this client.'],
-                    scope: tsm.Scope.Public,
-                    isReadonly: true,
                     name: contractAddressId,
                     type: 'SDK.ContractAddress.Type',
                 },
-
                 {
-                    docs: ['Generic contract client used internally.'],
-                    scope: tsm.Scope.Public,
-                    isReadonly: true,
-                    name: genericContractId,
-                    type: 'SDK.Contract',
+                    name: blockHashId,
+                    hasQuestionToken: true,
+                    type: 'SDK.BlockHash.Type',
                 },
             ],
+            returnType: `Promise<${contractClientType}>`,
+        })
+        .setBodyText(
+            [
+                `const ${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, ${contractNameId});`,
+                `await ${genericContractId}.checkOnChain({ moduleReference: ${moduleRefId}, blockHash: ${blockHashId} });`,
+                `return new ${contractClientType}(`,
+                `    ${grpcClientId},`,
+                `    ${contractAddressId},`,
+                `    ${genericContractId}`,
+                ');',
+            ].join('\n')
+        );
+
+    contractSourceFile
+        .addFunction({
+            docs: [
+                [
+                    `Construct the \`${contractClientType}\` for interacting with a '${contractName}' contract on chain.`,
+                    'Without checking the instance information on chain.',
+                    `@param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The client used for contract invocations and updates.`,
+                    `@param {SDK.ContractAddress.Type} ${contractAddressId} - Address of the contract instance.`,
+                    `@returns {${contractClientType}}`,
+                ].join('\n'),
+            ],
+            isExported: true,
+            name: 'createUnchecked',
+            parameters: [
+                {
+                    name: grpcClientId,
+                    type: 'SDK.ConcordiumGRPCClient',
+                },
+                {
+                    name: contractAddressId,
+                    type: 'SDK.ContractAddress.Type',
+                },
+            ],
+            returnType: contractClientType,
+        })
+        .setBodyText(
+            [
+                `const ${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, ${contractNameId});`,
+                `return new ${contractClientType}(`,
+                `    ${grpcClientId},`,
+                `    ${contractAddressId},`,
+                `    ${genericContractId},`,
+                ');',
+            ].join('\n')
+        );
+
+    contractSourceFile
+        .addFunction({
+            docs: [
+                [
+                    'Check if the smart contract instance exists on the blockchain and whether it uses a matching contract name and module reference.',
+                    `@param {${contractClientType}} ${contractClientId} The client for a '${contractName}' smart contract instance on chain.`,
+                    `@param {SDK.BlockHash.Type} [${blockHashId}] A optional block hash to use for checking information on chain, if not provided the last finalized will be used.`,
+                    '@throws {SDK.RpcError} If failing to communicate with the concordium node or if any of the checks fails.',
+                ].join('\n'),
+            ],
+            isExported: true,
+            name: 'checkOnChain',
+            parameters: [
+                {
+                    name: contractClientId,
+                    type: contractClientType,
+                },
+                {
+                    name: blockHashId,
+                    hasQuestionToken: true,
+                    type: 'SDK.BlockHash.Type',
+                },
+            ],
+            returnType: 'Promise<void>',
+        })
+        .setBodyText(
+            `return ${contractClientId}.${genericContractId}.checkOnChain({moduleReference: ${moduleRefId}, blockHash: ${blockHashId} });`
+        );
+
+    const eventParameterId = 'event';
+    const eventParameterTypeId = 'Event';
+    const eventParser = parseEventCode(eventParameterId, contractSchema?.event);
+    if (eventParser !== undefined) {
+        contractSourceFile.addTypeAlias({
+            docs: [`Contract event type for the '${contractName}' contract.`],
+            isExported: true,
+            name: eventParameterTypeId,
+            type: eventParser.type,
         });
 
-        contractClassDecl
-            .addConstructor({
+        contractSourceFile
+            .addFunction({
+                docs: ['TODO'],
+                isExported: true,
+                name: 'parseEvent',
                 parameters: [
-                    { name: grpcClientId, type: 'SDK.ConcordiumGRPCClient' },
                     {
-                        name: contractAddressId,
-                        type: 'SDK.ContractAddress.Type',
+                        name: eventParameterId,
+                        type: 'SDK.ContractEvent.Type',
                     },
-                    { name: genericContractId, type: 'SDK.Contract' },
                 ],
+                returnType: eventParameterTypeId,
             })
             .setBodyText(
-                [grpcClientId, contractAddressId, genericContractId]
-                    .map((name) => `this.${name} = ${name};`)
-                    .join('\n')
+                [...eventParser.code, `return <any>${eventParser.id};`].join(
+                    '\n'
+                )
             );
+    }
+}
+
+/**
+ * Generate contract client code for each entrypoint.
+ * @param contractSourceFile The sourcefile of the contract.
+ * @param contractName The name of the contract.
+ * @param contractClientId The identifier to use for the contract client.
+ * @param contractClientType The identifier to use for the type of the contract client.
+ * @param entrypointName The name of the entrypoint.
+ * @param entrypointSchema The schema to use for the entrypoint.
+ */
+function generateContractEntrypointCode(
+    contractSourceFile: tsm.SourceFile,
+    contractName: string,
+    contractClientId: string,
+    contractClientType: string,
+    entrypointName: string,
+    entrypointSchema?: SDK.SchemaFunctionV2
+) {
+    const invokerId = 'invoker';
+    const parameterId = 'parameter';
+    const transactionMetadataId = 'transactionMetadata';
+    const signerId = 'signer';
+    const genericContractId = 'genericContract';
+    const blockHashId = 'blockHash';
+
+    const receiveParameter = createParameterCode(
+        parameterId,
+        entrypointSchema?.parameter
+    );
+
+    const receiveParameterTypeId = `${toPascalCase(entrypointName)}Parameter`;
+
+    const createReceiveParameterFnId = `create${toPascalCase(
+        entrypointName
+    )}Parameter`;
+
+    if (receiveParameter !== undefined) {
+        contractSourceFile.addTypeAlias({
+            docs: [
+                `Parameter type for update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
+            ],
+            isExported: true,
+            name: receiveParameterTypeId,
+            type: receiveParameter.type,
+        });
+
+        contractSourceFile
+            .addFunction({
+                docs: [
+                    [
+                        `Construct Parameter for update transactions for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
+                        `@param {${receiveParameterTypeId}} ${parameterId} The structured parameter to construct from.`,
+                        '@returns {SDK.Parameter.Type} The smart contract parameter.',
+                    ].join('\n'),
+                ],
+                isExported: true,
+                name: createReceiveParameterFnId,
+                parameters: [
+                    {
+                        type: receiveParameterTypeId,
+                        name: parameterId,
+                    },
+                ],
+                returnType: 'SDK.Parameter.Type',
+            })
+            .setBodyText(
+                [
+                    ...(receiveParameter.code ?? []),
+                    `return ${receiveParameter.id}`,
+                ].join('\n')
+            );
+    }
+
+    contractSourceFile
+        .addFunction({
+            docs: [
+                [
+                    `Send an update-contract transaction to the '${entrypointName}' entrypoint of the '${contractName}' contract.`,
+                    `@param {${contractClientType}} ${contractClientId} The client for a '${contractName}' smart contract instance on chain.`,
+                    `@param {SDK.ContractTransactionMetadata} ${transactionMetadataId} - Metadata related to constructing a transaction for a smart contract.`,
+                    ...(receiveParameter === undefined
+                        ? []
+                        : [
+                              `@param {${receiveParameterTypeId}} ${parameterId} - Parameter to provide the smart contract entrypoint as part of the transaction.`,
+                          ]),
+                    `@param {SDK.AccountSigner} ${signerId} - The signer of the update contract transaction.`,
+                    '@throws If the entrypoint is not successfully invoked.',
+                    '@returns {SDK.TransactionHash.Type} Transaction hash',
+                ].join('\n'),
+            ],
+            isExported: true,
+            name: `send${toPascalCase(entrypointName)}`,
+            parameters: [
+                {
+                    name: contractClientId,
+                    type: contractClientType,
+                },
+                {
+                    name: transactionMetadataId,
+                    type: 'SDK.ContractTransactionMetadata',
+                },
+                ...(receiveParameter === undefined
+                    ? []
+                    : [
+                          {
+                              name: parameterId,
+                              type: receiveParameterTypeId,
+                          },
+                      ]),
+                {
+                    name: signerId,
+                    type: 'SDK.AccountSigner',
+                },
+            ],
+            returnType: 'Promise<SDK.TransactionHash.Type>',
+        })
+        .setBodyText(
+            [
+                `return ${contractClientId}.${genericContractId}.createAndSendUpdateTransaction(`,
+                `    SDK.EntrypointName.fromStringUnchecked('${entrypointName}'),`,
+                '    SDK.Parameter.toBuffer,',
+                `    ${transactionMetadataId},`,
+                ...(receiveParameter === undefined
+                    ? []
+                    : [`    ${createReceiveParameterFnId}(${parameterId}),`]),
+                `    ${signerId}`,
+                ');',
+            ].join('\n')
+        );
+
+    contractSourceFile
+        .addFunction({
+            docs: [
+                [
+                    `Dry-run an update-contract transaction to the '${entrypointName}' entrypoint of the '${contractName}' contract.`,
+                    `@param {${contractClientType}} ${contractClientId} The client for a '${contractName}' smart contract instance on chain.`,
+                    `@param {SDK.ContractAddress.Type | SDK.AccountAddress.Type} ${invokerId} - The address of the account or contract which is invoking this transaction.`,
+                    ...(receiveParameter === undefined
+                        ? []
+                        : [
+                              `@param {${receiveParameterTypeId}} ${parameterId} - Parameter to provide the smart contract entrypoint as part of the transaction.`,
+                          ]),
+                    `@param {SDK.BlockHash.Type} [${blockHashId}] - Optional block hash allowing for dry-running the transaction at the end of a specific block.`,
+                    '@throws {SDK.RpcError} If failing to communicate with the concordium node or if any of the checks fails.',
+                    '@returns {SDK.InvokeContractResult} The result of invoking the smart contract instance.',
+                ].join('\n'),
+            ],
+            isExported: true,
+            name: `dryRun${toPascalCase(entrypointName)}`,
+            parameters: [
+                {
+                    name: contractClientId,
+                    type: contractClientType,
+                },
+                {
+                    name: invokerId,
+                    type: 'SDK.ContractAddress.Type | SDK.AccountAddress.Type',
+                },
+                ...(receiveParameter === undefined
+                    ? []
+                    : [
+                          {
+                              name: parameterId,
+                              type: receiveParameterTypeId,
+                          },
+                      ]),
+                {
+                    name: blockHashId,
+                    hasQuestionToken: true,
+                    type: 'SDK.BlockHash.Type',
+                },
+            ],
+            returnType: 'Promise<SDK.InvokeContractResult>',
+        })
+        .setBodyText(
+            [
+                `return ${contractClientId}.${genericContractId}.dryRun.invokeMethod(`,
+                `    SDK.EntrypointName.fromStringUnchecked('${entrypointName}'),`,
+                `    ${invokerId},`,
+                '    SDK.Parameter.toBuffer,',
+                ...(receiveParameter === undefined
+                    ? []
+                    : [`    ${createReceiveParameterFnId}(${parameterId}),`]),
+                `    ${blockHashId}`,
+                ');',
+            ].join('\n')
+        );
+
+    const invokeResultId = 'invokeResult';
+    const returnValueTokens = parseReturnValueCode(
+        `${invokeResultId}.returnValue`,
+        entrypointSchema?.returnValue
+    );
+    if (returnValueTokens !== undefined) {
+        const returnValueTypeId = `ReturnValue${toPascalCase(entrypointName)}`;
 
         contractSourceFile.addTypeAlias({
-            docs: ['Smart contract client for a contract instance on chain.'],
-            name: 'Type',
+            docs: [
+                `Return value for dry-running update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
+            ],
             isExported: true,
-            type: contractClientType,
+            name: returnValueTypeId,
+            type: returnValueTokens.type,
         });
 
         contractSourceFile
             .addFunction({
                 docs: [
-                    `Construct an instance of \`${contractClientType}\` for interacting with a '${contract.contractName}' contract on chain.
-Checking the information instance on chain.
-
-@param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The client used for contract invocations and updates.
-@param {SDK.ContractAddress.Type} ${contractAddressId} - Address of the contract instance.
-@param {SDK.BlockHash.Type} [${blockHashId}] - Hash of the block to check the information at. When not provided the last finalized block is used.
-
-@throws If failing to communicate with the concordium node or if any of the checks fails.
-
-@returns {${contractClientType}}`,
+                    [
+                        `Get and parse the return value from dry-running update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
+                        'Returns undefined if the result is not successful.',
+                        '@param {SDK.InvokeContractResult} invokeResult The result from dry-running the transaction.',
+                        `@returns {${returnValueTypeId} | undefined} The structured return value or undefined if result was not a success.`,
+                    ].join('\n'),
                 ],
                 isExported: true,
-                isAsync: true,
-                name: 'create',
+                name: `parseReturnValue${toPascalCase(entrypointName)}`,
                 parameters: [
                     {
-                        name: grpcClientId,
-                        type: 'SDK.ConcordiumGRPCClient',
-                    },
-                    {
-                        name: contractAddressId,
-                        type: 'SDK.ContractAddress.Type',
-                    },
-                    {
-                        name: blockHashId,
-                        hasQuestionToken: true,
-                        type: 'SDK.BlockHash.Type',
+                        name: invokeResultId,
+                        type: 'SDK.InvokeContractResult',
                     },
                 ],
-                returnType: `Promise<${contractClientType}>`,
+                returnType: `${returnValueTypeId} | undefined`,
             })
             .setBodyText(
-                `const ${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, ${contractNameId});
-await ${genericContractId}.checkOnChain({ moduleReference: ${moduleRefId}, blockHash: ${blockHashId} });
-return new ${contractClientType}(
-    ${grpcClientId},
-    ${contractAddressId},
-    ${genericContractId}
-);`
+                [
+                    `if (${invokeResultId}.tag !== 'success') {`,
+                    '    return undefined;',
+                    '}',
+                    `if (${invokeResultId}.returnValue === undefined) {`,
+                    "    throw new Error('Invalid smart contract version.')",
+                    '}',
+                    ...returnValueTokens.code,
+                    `return <any>${returnValueTokens.id}`,
+                ].join('\n')
             );
+    }
+
+    const errorMessageTokens = parseReturnValueCode(
+        `${invokeResultId}.returnValue`,
+        entrypointSchema?.error
+    );
+    if (errorMessageTokens !== undefined) {
+        const errorMessageTypeId = `ErrorMessage${toPascalCase(
+            entrypointName
+        )}`;
+
+        contractSourceFile.addTypeAlias({
+            docs: [
+                `Error message for dry-running update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
+            ],
+            isExported: true,
+            name: errorMessageTypeId,
+            type: errorMessageTokens.type,
+        });
 
         contractSourceFile
             .addFunction({
                 docs: [
-                    `Construct the \`${contractClientType}\` for interacting with a '${contract.contractName}' contract on chain.
-Without checking the instance information on chain.
-
-@param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The client used for contract invocations and updates.
-@param {SDK.ContractAddress.Type} ${contractAddressId} - Address of the contract instance.
-
-@returns {${contractClientType}}`,
+                    [
+                        `Get and parse the error message from dry-running update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
+                        'Returns undefined if the result is not a failure.',
+                        '@param {SDK.InvokeContractResult} invokeResult The result from dry-running the transaction.',
+                        `@returns {${errorMessageTypeId} | undefined} The structured error message or undefined if result was not a failure.`,
+                    ].join('\n'),
                 ],
                 isExported: true,
-                name: 'createUnchecked',
+                name: `parseErrorMessage${toPascalCase(entrypointName)}`,
                 parameters: [
                     {
-                        name: grpcClientId,
-                        type: 'SDK.ConcordiumGRPCClient',
-                    },
-                    {
-                        name: contractAddressId,
-                        type: 'SDK.ContractAddress.Type',
+                        name: invokeResultId,
+                        type: 'SDK.InvokeContractResult',
                     },
                 ],
-                returnType: contractClientType,
+                returnType: `${errorMessageTypeId} | undefined`,
             })
             .setBodyText(
-                `const ${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, ${contractNameId});
-    return new ${contractClientType}(
-        ${grpcClientId},
-        ${contractAddressId},
-        ${genericContractId},
-    );`
+                [
+                    `if (${invokeResultId}.tag !== 'failure') {`,
+                    '    return undefined;',
+                    '}',
+                    `if (${invokeResultId}.returnValue === undefined) {`,
+                    "    throw new Error('Invalid smart contract version')",
+                    '}',
+                    ...errorMessageTokens.code,
+                    `return <any>${errorMessageTokens.id}`,
+                ].join('\n')
             );
-
-        const contractClientId = 'contractClient';
-        contractSourceFile
-            .addFunction({
-                docs: [
-                    `Check if the smart contract instance exists on the blockchain and whether it uses a matching contract name and module reference.
-
-@param {${contractClientType}} ${contractClientId} The client for a '${contract.contractName}' smart contract instance on chain.
-@param {SDK.BlockHash.Type} [${blockHashId}] A optional block hash to use for checking information on chain, if not provided the last finalized will be used.
-
-@throws {SDK.RpcError} If failing to communicate with the concordium node or if any of the checks fails.`,
-                ],
-                isExported: true,
-                name: 'checkOnChain',
-                parameters: [
-                    {
-                        name: contractClientId,
-                        type: contractClientType,
-                    },
-                    {
-                        name: blockHashId,
-                        hasQuestionToken: true,
-                        type: 'SDK.BlockHash.Type',
-                    },
-                ],
-                returnType: 'Promise<void>',
-            })
-            .setBodyText(
-                `return ${contractClientId}.${genericContractId}.checkOnChain({moduleReference: ${moduleRefId}, blockHash: ${blockHashId} });`
-            );
-
-        const eventParameterId = 'event';
-        const eventParameterTypeId = 'Event';
-        const eventParser = parseEventType(
-            eventParameterId,
-            contractSchema?.event
-        );
-        if (eventParser !== undefined) {
-            contractSourceFile.addTypeAlias({
-                docs: [
-                    `Contract event type for the '${contract.contractName}' contract.`,
-                ],
-                isExported: true,
-                name: eventParameterTypeId,
-                type: eventParser.type,
-            });
-
-            contractSourceFile
-                .addFunction({
-                    docs: ['TODO'],
-                    isExported: true,
-                    name: 'parseEvent',
-                    parameters: [
-                        {
-                            name: eventParameterId,
-                            type: 'SDK.ContractEvent.Type',
-                        },
-                    ],
-                    returnType: eventParameterTypeId,
-                })
-                .setBodyText(
-                    `${eventParser.tokens.code.join('\n')}\nreturn <any>${
-                        eventParser.tokens.id
-                    };`
-                );
-        }
-
-        const invokerId = 'invoker';
-        for (const entrypointName of contract.entrypointNames) {
-            const receiveParameter = constructParameterType(
-                parameterId,
-                contractSchema?.receive.get(entrypointName)?.parameter
-            );
-
-            const receiveParameterTypeId = `${toPascalCase(
-                entrypointName
-            )}Parameter`;
-
-            const createReceiveParameterFnId = `create${toPascalCase(
-                entrypointName
-            )}Parameter`;
-
-            if (receiveParameter !== undefined) {
-                contractSourceFile.addTypeAlias({
-                    docs: [
-                        `Parameter type for update transaction for '${entrypointName}' entrypoint of the '${contract.contractName}' contract.`,
-                    ],
-                    isExported: true,
-                    name: receiveParameterTypeId,
-                    type: receiveParameter.type,
-                });
-
-                contractSourceFile
-                    .addFunction({
-                        docs: [
-                            `Construct Parameter for update transactions for '${entrypointName}' entrypoint of the '${contract.contractName}' contract.`,
-                        ],
-                        isExported: true,
-                        name: createReceiveParameterFnId,
-                        parameters: [
-                            {
-                                type: receiveParameterTypeId,
-                                name: parameterId,
-                            },
-                        ],
-                        returnType: 'SDK.Parameter.Type',
-                    })
-                    .setBodyText(
-                        `${receiveParameter.tokens.code?.join('\n')}\nreturn ${
-                            receiveParameter.tokens.id
-                        }`
-                    );
-            }
-
-            contractSourceFile
-                .addFunction({
-                    docs: [
-                        `Send an update-contract transaction to the '${entrypointName}' entrypoint of the '${
-                            contract.contractName
-                        }' contract.
-
-@param {${contractClientType}} ${contractClientId} The client for a '${
-                            contract.contractName
-                        }' smart contract instance on chain.
-@param {SDK.ContractTransactionMetadata} ${transactionMetadataId} - Metadata related to constructing a transaction for a smart contract.
-${
-    receiveParameter === undefined
-        ? ''
-        : `@param {${receiveParameterTypeId}} ${parameterId} - Parameter to provide the smart contract entrypoint as part of the transaction.`
-}
-@param {SDK.AccountSigner} ${signerId} - The signer of the update contract transaction.
-
-@throws If the entrypoint is not successfully invoked.
-
-@returns {SDK.TransactionHash.Type} Transaction hash`,
-                    ],
-                    isExported: true,
-                    name: `send${toPascalCase(entrypointName)}`,
-                    parameters: [
-                        {
-                            name: contractClientId,
-                            type: contractClientType,
-                        },
-                        {
-                            name: transactionMetadataId,
-                            type: 'SDK.ContractTransactionMetadata',
-                        },
-                        ...(receiveParameter === undefined
-                            ? []
-                            : [
-                                  {
-                                      name: parameterId,
-                                      type: receiveParameterTypeId,
-                                  },
-                              ]),
-                        {
-                            name: signerId,
-                            type: 'SDK.AccountSigner',
-                        },
-                    ],
-                    returnType: 'Promise<SDK.TransactionHash.Type>',
-                })
-                .setBodyText(
-                    `return ${contractClientId}.${genericContractId}.createAndSendUpdateTransaction(
-    SDK.EntrypointName.fromStringUnchecked('${entrypointName}'),
-    SDK.Parameter.toBuffer,
-    ${transactionMetadataId},
-    ${
-        receiveParameter === undefined
-            ? ''
-            : `${createReceiveParameterFnId}(${parameterId})`
-    },
-    ${signerId}
-);`
-                );
-
-            contractSourceFile
-                .addFunction({
-                    docs: [
-                        `Dry-run an update-contract transaction to the '${entrypointName}' entrypoint of the '${
-                            contract.contractName
-                        }' contract.
-
-@param {${contractClientType}} ${contractClientId} The client for a '${
-                            contract.contractName
-                        }' smart contract instance on chain.
-@param {SDK.ContractAddress.Type | SDK.AccountAddress.Type} ${invokerId} - The address of the account or contract which is invoking this transaction.
-${
-    receiveParameter === undefined
-        ? ''
-        : `@param {${receiveParameterTypeId}} ${parameterId} - Parameter to provide the smart contract entrypoint as part of the transaction.`
-}@param {SDK.BlockHash.Type} [${blockHashId}] - Optional block hash allowing for dry-running the transaction at the end of a specific block.
-
-@throws {SDK.RpcError} If failing to communicate with the concordium node or if any of the checks fails.
-
-@returns {SDK.InvokeContractResult} The result of invoking the smart contract instance.`,
-                    ],
-                    isExported: true,
-                    name: `dryRun${toPascalCase(entrypointName)}`,
-                    parameters: [
-                        {
-                            name: contractClientId,
-                            type: contractClientType,
-                        },
-                        {
-                            name: invokerId,
-                            type: 'SDK.ContractAddress.Type | SDK.AccountAddress.Type',
-                        },
-                        ...(receiveParameter === undefined
-                            ? []
-                            : [
-                                  {
-                                      name: parameterId,
-                                      type: receiveParameterTypeId,
-                                  },
-                              ]),
-                        {
-                            name: blockHashId,
-                            hasQuestionToken: true,
-                            type: 'SDK.BlockHash.Type',
-                        },
-                    ],
-                    returnType: 'Promise<SDK.InvokeContractResult>',
-                })
-                .setBodyText(
-                    `return ${contractClientId}.${genericContractId}.dryRun.invokeMethod(
-    SDK.EntrypointName.fromStringUnchecked('${entrypointName}'),
-    ${invokerId},
-    SDK.Parameter.toBuffer,
-    ${
-        receiveParameter === undefined
-            ? ''
-            : `${createReceiveParameterFnId}(${parameterId})`
-    },
-    ${blockHashId}
-);`
-                );
-        }
     }
 }
 
@@ -1090,12 +1353,19 @@ function schemaAsNativeType(
                     const resultId = idGenerator('list');
                     const itemId = idGenerator('item');
                     const tokens = item?.jsonToNative(itemId, idGenerator);
-
+                    // Check if any mapping is needed.
+                    if (tokens?.id === itemId && tokens?.code.length === 0) {
+                        return {
+                            code: [],
+                            id,
+                        };
+                    }
                     return {
                         code: [
-                            `const ${resultId} = ${id}.map((${itemId}: any) => {\n${tokens?.code.join(
-                                '\n'
-                            )}\nreturn ${tokens?.id}})`,
+                            `const ${resultId} = ${id}.map((${itemId}: any) => {`,
+                            ...(tokens?.code ?? []),
+                            `return ${tokens?.id};`,
+                            '});',
                         ],
                         id: resultId,
                     };
@@ -1104,11 +1374,19 @@ function schemaAsNativeType(
                     const resultId = idGenerator('list');
                     const itemId = idGenerator('item');
                     const tokens = item?.jsonToNative(itemId, idGenerator);
+                    // Check if any mapping is needed.
+                    if (tokens?.id === itemId && tokens?.code.length === 0) {
+                        return {
+                            code: [],
+                            id,
+                        };
+                    }
                     return {
                         code: [
-                            `const ${resultId} = ${id}.map((${itemId}: any) => {\n${
-                                tokens?.code.join('\n') ?? ''
-                            }\nreturn ${tokens?.id};\n}));`,
+                            `const ${resultId} = ${id}.map((${itemId}: any) => {`,
+                            ...(tokens?.code ?? []),
+                            `return ${tokens?.id};`,
+                            '});',
                         ],
                         id: resultId,
                     };
@@ -1129,9 +1407,10 @@ function schemaAsNativeType(
                     );
                     return {
                         code: [
-                            `const ${valuesId} = [...${id}.values()]..map((${valueId}: any) => {\n${valueTokens?.code.join(
-                                '\n'
-                            )}\nreturn ${valueTokens?.id}});`,
+                            `const ${valuesId} = [...${id}.values()]..map((${valueId}: any) => {`,
+                            ...(valueTokens?.code ?? []),
+                            `return ${valueTokens?.id};`,
+                            '});',
                         ],
                         id: resultId,
                     };
@@ -1146,9 +1425,10 @@ function schemaAsNativeType(
                     );
                     return {
                         code: [
-                            `const ${valuesId} = ${id}.map((${valueId}: any) => {\n${valueTokens?.code.join(
-                                '\n'
-                            )}return ${valueTokens?.id}})`,
+                            `const ${valuesId} = ${id}.map((${valueId}: any) => {`,
+                            ...(valueTokens?.code ?? []),
+                            `return ${valueTokens?.id}; `,
+                            '});',
                             `const ${resultId} = new Set(${valuesId});`,
                         ],
                         id: resultId,
@@ -1173,12 +1453,11 @@ function schemaAsNativeType(
 
                     return {
                         code: [
-                            `const ${resultId} = [...${id}.entries()].map(([${keyId}, ${valueId}]) => {\n${[
-                                ...(keyTokens?.code ?? []),
-                                ...(valueTokens?.code ?? []),
-                            ].join('\n')}\nreturn [${keyTokens?.id}, ${
-                                valueTokens?.id
-                            }]})`,
+                            `const ${resultId} = [...${id}.entries()].map(([${keyId}, ${valueId}]) => {`,
+                            ...(keyTokens?.code ?? []),
+                            ...(valueTokens?.code ?? []),
+                            `    return [${keyTokens?.id}, ${valueTokens?.id}];`,
+                            '});',
                         ],
                         id: resultId,
                     };
@@ -1195,12 +1474,11 @@ function schemaAsNativeType(
                     );
                     return {
                         code: [
-                            `const ${entriesId} = ${id}.map(([${keyId}, ${valueId}]) => {\n${[
-                                ...(keyTokens?.code ?? []),
-                                ...(valueTokens?.code ?? []),
-                            ].join('\n')}\nreturn [${keyTokens?.id}, ${
-                                valueTokens?.id
-                            }]})`,
+                            `const ${entriesId} = ${id}.map(([${keyId}, ${valueId}]) => {`,
+                            ...(keyTokens?.code ?? []),
+                            ...(valueTokens?.code ?? []),
+                            `return [${keyTokens?.id}, ${valueTokens?.id}];`,
+                            '});',
                             `const ${resultId} = Map.fromEntries(${entriesId});`,
                         ],
                         id: resultId,
@@ -1216,11 +1494,20 @@ function schemaAsNativeType(
                     const resultId = idGenerator('array');
                     const itemId = idGenerator('item');
                     const tokens = item?.nativeToJson(itemId, idGenerator);
+                    // Check if any mapping is needed.
+                    if (tokens?.id === itemId && tokens?.code.length === 0) {
+                        return {
+                            code: [],
+                            id,
+                        };
+                    }
+
                     return {
                         code: [
-                            `const ${resultId} = ${id}.map((${itemId}: any) => {\n${tokens?.code.join(
-                                '\n'
-                            )}\nreturn ${tokens?.id}; });`,
+                            `const ${resultId} = ${id}.map((${itemId}: any) => {`,
+                            ...(tokens?.code ?? []),
+                            `    return ${tokens?.id};`,
+                            '});',
                         ],
                         id: resultId,
                     };
@@ -1229,11 +1516,19 @@ function schemaAsNativeType(
                     const resultId = idGenerator('array');
                     const itemId = idGenerator('item');
                     const tokens = item?.jsonToNative(itemId, idGenerator);
+                    // Check if any mapping is needed.
+                    if (tokens?.id === itemId && tokens?.code.length === 0) {
+                        return {
+                            code: [],
+                            id,
+                        };
+                    }
                     return {
                         code: [
-                            `const ${resultId} = ${id}.map((${itemId}: any) => {\n${
-                                tokens?.code.join('\n') ?? ''
-                            }return ${tokens?.id};\n});`,
+                            `const ${resultId} = ${id}.map((${itemId}: any) => {`,
+                            ...(tokens?.code ?? []),
+                            `    return ${tokens?.id};`,
+                            '});',
                         ],
                         id: resultId,
                     };
@@ -1269,31 +1564,39 @@ function schemaAsNativeType(
                 nativeToJson(id, idGenerator) {
                     const resultId = idGenerator('match');
 
-                    const variantCases = variantFieldSchemas.map(
+                    const variantCases = variantFieldSchemas.flatMap(
                         (variantSchema) => {
                             const tokens = variantSchema.nativeToJson?.(
                                 `${id}.content`,
                                 idGenerator
                             );
-                            return `    case '${variantSchema.name}': {
-        ${tokens?.code.join('\n        ') ?? ''}
-        return { '${variantSchema.name}': ${tokens?.id ?? '[]'} };
-    }`;
+                            return [
+                                `    case '${variantSchema.name}':`,
+                                ...(tokens?.code ?? []),
+                                `        ${resultId} = { ${
+                                    identifierRegex.test(variantSchema.name)
+                                        ? variantSchema.name
+                                        : `'${variantSchema.name}'`
+                                }: ${tokens?.id ?? '[]'} };`,
+                                '    break;',
+                            ];
                         }
                     );
                     return {
                         code: [
-                            `const ${resultId} = (() => { switch (${id}.type) {\n${variantCases.join(
-                                '\n'
-                            )}\n}})();`,
+                            `let ${resultId};`,
+                            `switch (${id}.type) {`,
+                            ...variantCases,
+                            '}',
                         ],
                         id: resultId,
                     };
                 },
                 jsonToNative(id, idGenerator) {
+                    const resultId = idGenerator('match');
                     const variantKeyId = idGenerator('variantKey');
 
-                    const variantCases = variantFieldSchemas.map(
+                    const variantCasesCode = variantFieldSchemas.flatMap(
                         (variantFieldSchema) => {
                             const variantId = idGenerator('variant');
                             const variantTokens =
@@ -1301,26 +1604,32 @@ function schemaAsNativeType(
                                     variantId,
                                     idGenerator
                                 );
-                            return `    case '${variantFieldSchema.name}': {
-        ${
-            variantTokens === undefined
-                ? ''
-                : `const ${variantId} = ${id}['${variantFieldSchema.name}'];
-        ${variantTokens?.code.join('\n') ?? ''}`
-        }
-        return {
-            type: '${variantFieldSchema.name}',
-            content: ${variantTokens?.id ?? '[]'},
-        };
-    }`;
+                            return [
+                                `    case '${variantFieldSchema.name}':`,
+                                ...(variantTokens === undefined
+                                    ? []
+                                    : [
+                                          `const ${variantId} = ${accessProp(
+                                              id,
+                                              variantFieldSchema.name
+                                          )};`,
+                                          ...variantTokens?.code,
+                                      ]),
+                                `${resultId} = {`,
+                                `    type: '${variantFieldSchema.name}',`,
+                                `    content: ${variantTokens?.id ?? '[]'},`,
+                                '};',
+                                'break;',
+                            ];
                         }
                     );
-                    const resultId = idGenerator('match');
                     return {
                         code: [
-                            `const ${variantKeyId} = Object.keys(${id})[0]`,
-                            `const ${resultId} = (() => {
-    switch (${variantKeyId}) {\n${variantCases.join('\n')}\n}})();`,
+                            `const ${variantKeyId} = Object.keys(${id})[0];`,
+                            `let ${resultId};`,
+                            `switch (${variantKeyId}) {`,
+                            ...variantCasesCode,
+                            '}',
                         ],
                         id: resultId,
                     };
@@ -1436,8 +1745,10 @@ function fieldToTypeAndMapper(
                       ];
             });
 
-            const objectFieldTypes = schemas.flatMap(
-                (s) => `    '${s.name}': ${s.nativeType},`
+            const objectFieldTypes = schemas.flatMap((s) =>
+                identifierRegex.test(s.name)
+                    ? `    ${s.name}: ${s.nativeType},`
+                    : `    '${s.name}': ${s.nativeType},`
             );
 
             return {
@@ -1450,7 +1761,7 @@ function fieldToTypeAndMapper(
                         return {
                             name: s.name,
                             constructTokens: [
-                                `const ${fieldId} = ${id}['${s.name}'];`,
+                                `const ${fieldId} = ${accessProp(id, s.name)};`,
                                 ...field.code,
                             ],
                             id: field.id,
@@ -1463,12 +1774,13 @@ function fieldToTypeAndMapper(
                     return {
                         code: [
                             ...constructTokens,
-                            `const ${resultId} = {\n${fields
-                                .map(
-                                    (tokens) =>
-                                        `    ['${tokens.name}']: ${tokens.id},`
-                                )
-                                .join('\n')}\n};`,
+                            `const ${resultId} = {`,
+                            ...fields.map((tokens) =>
+                                identifierRegex.test(tokens.name)
+                                    ? `    ${tokens.name}: ${tokens.id},`
+                                    : `    ['${tokens.name}']: ${tokens.id},`
+                            ),
+                            '};',
                         ],
                         id: resultId,
                     };
@@ -1480,7 +1792,7 @@ function fieldToTypeAndMapper(
                         return {
                             name: s.name,
                             constructTokens: [
-                                `const ${fieldId} = ${id}['${s.name}'];`,
+                                `const ${fieldId} = ${accessProp(id, s.name)};`,
                                 ...field.code,
                             ],
                             id: field.id,
@@ -1493,12 +1805,13 @@ function fieldToTypeAndMapper(
                     return {
                         code: [
                             ...constructTokens,
-                            `const ${resultId} = {\n${fields
-                                .map(
-                                    (tokens) =>
-                                        `    ['${tokens.name}']: ${tokens.id},`
-                                )
-                                .join('\n')}\n};`,
+                            `const ${resultId} = {`,
+                            ...fields.map((tokens) =>
+                                identifierRegex.test(tokens.name)
+                                    ? `    ${tokens.name}: ${tokens.id},`
+                                    : `    ['${tokens.name}']: ${tokens.id},`
+                            ),
+                            '};',
                         ],
                         id: resultId,
                     };
@@ -1569,15 +1882,34 @@ function fieldToTypeAndMapper(
     }
 }
 
-function constructParameterType(
+/**
+ * Information related to conversion between JSON and native type.
+ */
+type TypeConversionCode = {
+    /** The native type. */
+    type: string;
+    /** Code to convert JSON either to or from native type.  */
+    code: string[];
+    /** Identifier for the result of the code. */
+    id: string;
+};
+
+/**
+ * Generate tokens for creating the parameter from input.
+ * @param parameterId Identifier of the input.
+ * @param schemaType The schema type to use for the parameter.
+ * @returns Undefined if no parameter is expected.
+ */
+function createParameterCode(
     parameterId: string,
     schemaType?: SDK.SchemaType
-) {
+): TypeConversionCode | undefined {
     // No schema type is present so fallback to plain parameter.
     if (schemaType === undefined) {
         return {
             type: 'SDK.Parameter.Type',
-            tokens: { code: [], id: parameterId },
+            code: [],
+            id: parameterId,
         };
     }
 
@@ -1597,17 +1929,24 @@ function constructParameterType(
     const resultId = 'out';
     return {
         type: typeAndMapper.nativeType,
-        tokens: {
-            code: [
-                ...mappedParameter.code,
-                `const ${resultId} = SDK.Parameter.fromBase64SchemaType('${base64Schema}', ${mappedParameter.id});`,
-            ],
-            id: resultId,
-        },
+        code: [
+            ...mappedParameter.code,
+            `const ${resultId} = SDK.Parameter.fromBase64SchemaType('${base64Schema}', ${mappedParameter.id});`,
+        ],
+        id: resultId,
     };
 }
 
-function parseEventType(parameterId: string, schemaType?: SDK.SchemaType) {
+/**
+ * Generate tokens for parsing a contract event.
+ * @param eventId Identifier of the event to parse.
+ * @param schemaType The schema to take into account when parsing.
+ * @returns Undefined if no code should be produce.
+ */
+function parseEventCode(
+    eventId: string,
+    schemaType?: SDK.SchemaType
+): TypeConversionCode | undefined {
     // No schema type is present so generate any code.
     if (schemaType === undefined) {
         return undefined;
@@ -1629,17 +1968,75 @@ function parseEventType(parameterId: string, schemaType?: SDK.SchemaType) {
     );
     return {
         type: typeAndMapper.nativeType,
-        tokens: {
-            code: [
-                `const ${schemaJsonId} = (<any>SDK.ContractEvent.parseWithSchemaTypeBase64(${parameterId}, '${base64Schema}'))`,
-                ...tokens.code,
-            ],
-            id: tokens.id,
-        },
+        code: [
+            `const ${schemaJsonId} = (<any>SDK.ContractEvent.parseWithSchemaTypeBase64(${eventId}, '${base64Schema}'));`,
+            ...tokens.code,
+        ],
+        id: tokens.id,
     };
 }
 
+/**
+ * Generate tokens for parsing a return type.
+ * @param returnTypeId Identifier of the return type to parse.
+ * @param schemaType The schema to take into account when parsing return type.
+ * @returns Undefined if no code should be produce.
+ */
+function parseReturnValueCode(
+    returnTypeId: string,
+    schemaType?: SDK.SchemaType
+): TypeConversionCode | undefined {
+    // No schema type is present so generate any code.
+    if (schemaType === undefined) {
+        return undefined;
+    }
+    const typeAndMapper = schemaAsNativeType(schemaType);
+    if (typeAndMapper === undefined) {
+        // No event is emitted according to the schema.
+        return undefined;
+    }
+
+    const base64Schema = Buffer.from(
+        SDK.serializeSchemaType(schemaType)
+    ).toString('base64');
+
+    const schemaJsonId = 'schemaJson';
+    const tokens = typeAndMapper.jsonToNative(
+        schemaJsonId,
+        createIdGenerator()
+    );
+    return {
+        type: typeAndMapper.nativeType,
+        code: [
+            `const ${schemaJsonId} = (<any>SDK.ReturnValue.parseWithSchemaTypeBase64(${returnTypeId}, '${base64Schema}'))`,
+            ...tokens.code,
+        ],
+        id: tokens.id,
+    };
+}
+
+/**
+ * Create stateful function for suffixing a number, which increments everytime this is called.
+ * Used to ensure identifiers are unique.
+ */
 function createIdGenerator() {
     let counter = 0;
     return (name: string) => `${name}${counter++}`;
 }
+
+/**
+ * Create tokens for accessing a property on an object.
+ * @param objectId Identifier for the object.
+ * @param propId Identifier for the property.
+ * @returns Tokens for accessing the prop.
+ */
+function accessProp(objectId: string, propId: string): string {
+    return identifierRegex.test(propId)
+        ? `${objectId}.${propId}`
+        : `${objectId}['${propId}']`;
+}
+
+/**
+ * Regular expression matching valid identifiers in javascript, without considering keywords.
+ */
+const identifierRegex = /^[$A-Z_][0-9A-Z_$]*$/i;

@@ -2,14 +2,17 @@
 import { Configuration } from 'webpack';
 import { resolve } from 'path';
 
-function configForTarget(target: 'web' | 'node'): Configuration {
-    return {
+function configFor(target: 'web' | 'node' | 'react-native'): Configuration {
+    const t = target === 'react-native' ? 'node' : target;
+    const config: Configuration = {
         mode: 'production',
+        // mode: 'development',
+        devtool: 'inline-source-map',
         cache: {
             type: 'filesystem',
             cacheDirectory: resolve(__dirname, '.webpack-cache'),
         },
-        target,
+        target: t,
         entry: {
             dapp: resolve(__dirname, './ts-src/dapp.ts'),
             wallet: resolve(__dirname, './ts-src/wallet.ts'),
@@ -51,6 +54,14 @@ function configForTarget(target: 'web' | 'node'): Configuration {
             publicPath: '',
         },
     };
+
+    if (target === 'react-native') {
+        config.externalsPresets = {
+            node: false,
+        };
+    }
+
+    return config;
 }
 
-export default [configForTarget('web'), configForTarget('node')];
+export default [configFor('web'), configFor('node'), configFor('react-native')];

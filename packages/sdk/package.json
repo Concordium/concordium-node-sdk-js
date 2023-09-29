@@ -12,13 +12,15 @@
     },
     "sideEffects": false,
     "type": "module",
-    "main": "./lib/umd/concordium.min.js",
-    "cdn": "./lib/umd/concordium.min.js",
+    "main": "./lib/umd/concordium-web.min.js",
+    "react-native": "./lib/umd/concordium-react-native.min.js",
+    "cdn": "./lib/umd/concordium-web.min.js",
     "types": "./lib/esm/index.d.ts",
     "exports": {
         ".": {
             "types": "./lib/esm/index.d.ts",
             "bun": "./src/index.ts",
+            "react-native": "./lib/esm/index.js",
             "default": "./lib/esm/index.js"
         },
         "./nodejs": {
@@ -30,6 +32,7 @@
         "./*": {
             "types": "./lib/esm/pub/*.d.ts",
             "bun": "./src/pub/*.ts",
+            "react-native": "./lib/esm/pub/*.js",
             "default": "./lib/esm/pub/*.js"
         }
     },
@@ -88,6 +91,8 @@
         "hash.js": "^1.1.7",
         "iso-3166-1": "^2.1.1",
         "json-bigint": "^1.0.0",
+        "url": "^0.11.3",
+        "util": "^0.12.5",
         "uuid": "^8.3.2"
     }
 }

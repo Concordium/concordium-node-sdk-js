@@ -6,7 +6,7 @@ import { parseEndpoint } from '../../shared/util.js';
 // The generated module could be imported directly like below,
 // but for this example it is imported dynamicly to improve
 // the error message when not generated.
-import * as wCCDContractClient from './lib/cis2_wCCD.js';
+// import * as wCCDContractClient from './lib/cis2_wCCD.js';
 
 const cli = meow(
     `
@@ -57,7 +57,19 @@ const contractAddress = SDK.ContractAddress.create(
 );
 
 (async () => {
-    const parameter: wCCDContractClient.UpdateOperatorParameter = [
+    // Importing the generated smart contract module client.
+    /* eslint-disable import/no-unresolved */
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const wCCDContractClient = await import('./lib/cis2_wCCD.js').catch((e) => {
+        /* eslint-enable import/no-unresolved */
+        console.error(
+            '\nFailed to load the generated wCCD module, did you run the `generate` script?\n'
+        );
+        throw e;
+    });
+
+    const parameter = [
         {
             update: { type: 'Add' },
             operator: { type: 'Contract', content: contractAddress },

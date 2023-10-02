@@ -12,7 +12,6 @@
   - `@concordium/web-sdk/cis4` entrypoint exposes functionality for working with contracts adhering to the [CIS-4](https://proposals.concordium.software/CIS/cis-4.html) standard.
   - `@concordium/web-sdk/grpc` entrypoint exposes the grpc client for interacting with a nodes GRPCv2 interface.
   - `@concordium/web-sdk/id` entrypoint exposes functionality for working with ID proofs.
-  - `@concordium/web-sdk/json-rpc` entrypoint exposes the **(deprecated)** json-rpc client for interacting with a nodes GPRCv1 interface.
   - `@concordium/web-sdk/schema` entrypoint exposes functionality for working with smart contract schemas, i.e.(de)serializing types using a smart contract schema.
     - This uses the wasm entrypoint at `@concordium/rust-bindings/dapp`.
   - `@concordium/web-sdk/types` entrypoint exposes functionality for working with concordium domain types.
@@ -23,7 +22,6 @@
   - For TypeScript projects the minimum required version of typescript is:
     - NodeJS: 4.7, `"moduleResolution": "node16" // or "nodenext"`
     - Bundled applications (webpack, esbuild, rollup, etc...): 5.0, `"moduleResolution": "bundler"`
-
 
 The API now uses dedicated types instead of language primitives:
 - Use `AccountAddress` instead of a string with base58 encoding. Use `AccountAddress.fromBase58('<base58>')` to construct it.
@@ -51,6 +49,7 @@ Several types have been replaced with a module containing the type itself togeth
 - `CredentialRegistrationId` is now a module with functions related to credential registration IDs:
   - To refer to `CredentialRegistrationId` as a type use `CredentialRegistrationId.Type`.
   - Constructing `new CredentialRegistrationId("<hex-string>")` is now `CredentialRegistrationId.fromHexString("<hex-string>")`.
+- Removed `JsonRpcClient` and types and functionality associated solely with this class.
 
 - Renamed `AccountSequenceNumber` module to `SequenceNumber`.
 - Fix type for `TranferredEvent` from `ContractTraceEvent` to only be from contract addresses to account addresses.

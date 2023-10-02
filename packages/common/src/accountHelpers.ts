@@ -4,25 +4,44 @@ import {
     AccountInfo,
     AccountInfoBaker,
     AccountInfoDelegator,
+    StakePendingChange,
+    AccountInfoType,
+    StakePendingChangeType,
 } from './types.js';
 
-/** Whether {@link AccountInfo} parameter given is of type {@link AccountInfoDelegator}, i.e. the account is a delegator */
+/**
+ * Whether {@link AccountInfo} parameter given is of type {@link AccountInfoDelegator}, i.e. the account is a delegator
+ *
+ * @deprecated check `type` member instead.
+ */
 export const isDelegatorAccount = (
     ai: AccountInfo
-): ai is AccountInfoDelegator =>
-    (ai as AccountInfoDelegator).accountDelegation !== undefined;
+): ai is AccountInfoDelegator => ai.type === AccountInfoType.Delegator;
 
-/** Whether {@link AccountInfo} parameter given is of type {@link AccountInfoBaker}, i.e. the account is a baker. */
+/**
+ * Whether {@link AccountInfo} parameter given is of type {@link AccountInfoBaker}, i.e. the account is a baker.
+ *
+ * @deprecated check `type` member instead.
+ */
 export const isBakerAccount = (ai: AccountInfo): ai is AccountInfoBaker =>
-    (ai as AccountInfoBaker).accountBaker !== undefined;
+    ai.type === AccountInfoType.Baker;
 
-/** Whether the pending change given is of type {@link ReduceStakePendingChange} */
+/**
+ * Whether the pending change given is of type {@link ReduceStakePendingChange}
+ *
+ * @deprecated check `change` member instead.
+ */
 export const isReduceStakePendingChange = (
-    spc: ReduceStakePendingChange | RemovalPendingChange
+    spc: StakePendingChange
 ): spc is ReduceStakePendingChange =>
-    (spc as ReduceStakePendingChange).newStake !== undefined;
+    spc.change === StakePendingChangeType.ReduceStake;
 
-/** Whether the pending change given is of type {@link RemovalPendingChange} */
+/**
+ * Whether the pending change given is of type {@link RemovalPendingChange}
+ *
+ * @deprecated check `change` member instead.
+ */
 export const isRemovalPendingChange = (
-    spc: ReduceStakePendingChange | RemovalPendingChange
-): spc is RemovalPendingChange => !isReduceStakePendingChange(spc);
+    spc: StakePendingChange
+): spc is RemovalPendingChange =>
+    spc.change === StakePendingChangeType.RemoveStake;

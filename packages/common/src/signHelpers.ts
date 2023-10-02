@@ -3,17 +3,96 @@ import {
     AccountInfo,
     AccountTransaction,
     AccountTransactionSignature,
+    Base58String,
     CredentialSignature,
     HexString,
-    SimpleAccountKeys,
-    WalletExportFormat,
-    WithAccountKeys,
+    JsonString,
 } from './types.js';
 import { sign, verify } from '@noble/ed25519';
 import { Buffer } from 'buffer/index.js';
 import * as AccountAddress from './types/AccountAddress.js';
 import { sha256 } from './hash.js';
 import { mapRecord } from './util.js';
+
+export interface KeyPair {
+    signKey: HexString;
+    verifyKey: HexString;
+}
+
+export interface CredentialKeys {
+    keys: Record<number, KeyPair>;
+    threshold: number;
+}
+
+export interface AccountKeys {
+    keys: Record<number, CredentialKeys>;
+    threshold: number;
+}
+
+export type SimpleAccountKeys = Record<number, Record<number, HexString>>;
+
+export interface WithAccountKeys {
+    accountKeys: AccountKeys;
+}
+
+export interface WalletExportFormat {
+    type: string;
+    v: number;
+    environment: string;
+    value: {
+        accountKeys: AccountKeys;
+        address: Base58String;
+        credentials: Record<number, HexString>;
+    };
+}
+
+/**
+ * Parses a wallet export file into a WalletExportFormat. The wallet export
+ * file is exported from a concordium wallet.
+ */
+export function parseWallet(walletString: JsonString): WalletExportFormat {
+    const wallet = JSON.parse(walletString);
+    console.log(typeof wallet.type);
+    if (typeof wallet.type !== 'string') {
+        throw Error(
+            'Expected field "type" to be of type "string" but was of type "' +
+                typeof wallet.type +
+                '"'
+        );
+    }
+    if (typeof wallet.v !== 'number') {
+        throw Error(
+            'Expected field "v" to be of type "number" but was of type "' +
+                typeof wallet.v +
+                '"'
+        );
+    }
+    if (typeof wallet.environment !== 'string') {
+        throw Error(
+            'Expected field "environment" to be of type "string" but was of type "' +
+                typeof wallet.environment +
+                '"'
+        );
+    }
+    if (typeof wallet.value.address !== 'string') {
+        throw Error(
+            'Expected field "value.address" to be of type "string" but was of type "' +
+                typeof wallet.value.address +
+                '"'
+        );
+    }
+    if (wallet.value.accountKeys === undefined) {
+        throw Error(
+            'Expected field "value.accountKeys" to be defined, but was not'
+        );
+    }
+    if (wallet.value.credentials === undefined) {
+        throw Error(
+            'Expected field "value.credentials" to be defined, but was not'
+        );
+    }
+    return wallet;
+}
 
 /**
  * A structure to use for creating signatures on a given digest.

@@ -23,7 +23,6 @@ import {
     UnsignedCredentialDeploymentInformation,
     CredentialDeploymentInfo,
     CredentialDeploymentDetails,
-    SignedCredentialDeploymentDetails,
 } from './types.js';
 import { calculateEnergyCost } from './energyCost.js';
 import { countSignatures } from './util.js';
@@ -402,51 +401,4 @@ export function getCredentialDeploymentSignDigest(
         newAccountByte,
         encodeWord64(credentialDeployment.expiry.expiryEpochSeconds),
     ]);
-}
-
-/**
- * @deprecated the SignedCredentialDeploymentDetails is only used with JSON-RPC
- */
-function serializeSignedCredentialDeploymentDetails(
-    credentialDetails: SignedCredentialDeploymentDetails
-): Buffer {
-    const serializedBlockItemKind = encodeWord8(
-        BlockItemKind.CredentialDeploymentKind
-    );
-    const serializedExpiry = encodeWord64(
-        credentialDetails.expiry.expiryEpochSeconds
-    );
-    const serializedCredentialKind = encodeWord8(1);
-    const serializedInfo: Buffer = Buffer.from(
-        serializeCredentialDeploymentInfo(credentialDetails.cdi)
-    );
-    return Buffer.concat([
-        serializedBlockItemKind,
-        serializedExpiry,
-        serializedCredentialKind,
-        serializedInfo,
-    ]);
-}
-
-/**
- * @deprecated the SignedCredentialDeploymentDetails is only used with JSON-RPC
- */
-export function serializeSignedCredentialDeploymentDetailsForSubmission(
-    credentialDetails: SignedCredentialDeploymentDetails
-): Buffer {
-    const serializedVersion = encodeWord8(0);
-    const serializedDetails =
-        serializeSignedCredentialDeploymentDetails(credentialDetails);
-    return Buffer.concat([serializedVersion, serializedDetails]);
-}
-
-/**
- * @deprecated the SignedCredentialDeploymentDetails is only used with JSON-RPC
- */
-export function getSignedCredentialDeploymentTransactionHash(
-    credentialDetails: SignedCredentialDeploymentDetails
-): string {
-    const serializedDetails =
-        serializeSignedCredentialDeploymentDetails(credentialDetails);
-    return sha256([serializedDetails]).toString('hex');
 }

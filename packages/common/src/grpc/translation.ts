@@ -188,7 +188,7 @@ function trTimestamp(timestamp: v2.Timestamp | undefined): Date {
 
 function trPendingChange(
     pendingChange: v2.StakePendingChange | undefined
-): v1.StakePendingChangeV1 {
+): v1.StakePendingChange {
     const change = unwrap(pendingChange?.change);
     if (change.oneofKind === 'reduce') {
         return {
@@ -199,7 +199,7 @@ function trPendingChange(
     } else if (change.oneofKind === 'remove') {
         return {
             effectiveTime: trTimestamp(change.remove),
-            change: v1.StakePendingChangeType.RemoveStakeV1,
+            change: v1.StakePendingChangeType.RemoveStake,
         };
     } else {
         throw Error(
@@ -242,23 +242,34 @@ function trOpenStatus(
 
 function trBaker(baker: v2.AccountStakingInfo_Baker): v1.AccountBakerDetails {
     const bakerInfo = baker.bakerInfo;
+
+    const v0: v1.AccountBakerDetails = {
+        version: 0,
+        restakeEarnings: baker.restakeEarnings,
+        bakerId: unwrap(bakerInfo?.bakerId?.value),
+        bakerAggregationVerifyKey: unwrapValToHex(bakerInfo?.aggregationKey),
+        bakerElectionVerifyKey: unwrapValToHex(baker.bakerInfo?.electionKey),
+        bakerSignatureVerifyKey: unwrapValToHex(bakerInfo?.signatureKey),
+        stakedAmount: unwrap(baker.stakedAmount?.value),
+        // Set the following value if baker.pendingChange is set to true
+        ...(baker.pendingChange && {
+            pendingChange: trPendingChange(baker.pendingChange),
+        }),
+    };
+
+    if (baker.poolInfo === undefined) {
+        return v0;
+    }
+
     const bakerPoolInfo: v1.BakerPoolInfo = {
         openStatus: trOpenStatus(baker.poolInfo?.openStatus),
         metadataUrl: unwrap(baker.poolInfo?.url),
         commissionRates: trCommissionRates(baker.poolInfo?.commissionRates),
     };
     return {
-        restakeEarnings: baker.restakeEarnings,
-        bakerId: unwrap(baker.bakerInfo?.bakerId?.value),
-        bakerAggregationVerifyKey: unwrapValToHex(bakerInfo?.aggregationKey),
-        bakerElectionVerifyKey: unwrapValToHex(baker.bakerInfo?.electionKey),
-        bakerSignatureVerifyKey: unwrapValToHex(bakerInfo?.signatureKey),
+        ...v0,
+        version: 1,
         bakerPoolInfo: bakerPoolInfo,
-        stakedAmount: unwrap(baker.stakedAmount?.value),
-        // Set the following value if baker.pendingChange is set to true
-        ...(baker.pendingChange && {
-            pendingChange: trPendingChange(baker.pendingChange),
-        }),
     };
 }
 
@@ -379,6 +390,7 @@ export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
         schedule: unwrap(acc.schedule?.schedules).map(trRelease),
     };
     const accInfoCommon: v1.AccountInfoSimple = {
+        type: v1.AccountInfoType.Simple,
         accountAddress: AccountAddress.fromProto(unwrap(acc.address)),
         accountNonce: SequenceNumber.fromProto(unwrap(acc.sequenceNumber)),
         accountAmount: unwrap(acc.amount?.value),
@@ -393,11 +405,13 @@ export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
     if (acc.stake?.stakingInfo.oneofKind === 'delegator') {
         return {
             ...accInfoCommon,
+            type: v1.AccountInfoType.Delegator,
             accountDelegation: trDelegator(acc.stake.stakingInfo.delegator),
         };
     } else if (acc.stake?.stakingInfo.oneofKind === 'baker') {
         return {
             ...accInfoCommon,
+            type: v1.AccountInfoType.Baker,
             accountBaker: trBaker(acc.stake.stakingInfo.baker),
         };
     } else {
@@ -429,13 +443,16 @@ function trChainParametersV0(v0: v2.ChainParametersV0): v1.ChainParametersV0 {
     const commonRewardParameters = translateRewardParametersCommon(v0);
     return {
         ...common,
+        version: 0,
         level2Keys: trAuthorizationsV0(unwrap(v0.level2Keys)),
         electionDifficulty: trAmountFraction(v0.electionDifficulty?.value),
         bakerCooldownEpochs: unwrap(v0.bakerCooldownEpochs?.value),
         minimumThresholdForBaking: unwrap(v0.minimumThresholdForBaking?.value),
         rewardParameters: {
+            version: 0,
             ...commonRewardParameters,
             gASRewards: {
+                version: 0,
                 baker: trAmountFraction(v0.gasRewards?.baker),
                 finalizationProof: trAmountFraction(
                     v0.gasRewards?.finalizationProof
@@ -446,6 +463,7 @@ function trChainParametersV0(v0: v2.ChainParametersV0): v1.ChainParametersV0 {
                 chainUpdate: trAmountFraction(v0.gasRewards?.chainUpdate),
             },
             mintDistribution: {
+                version: 0,
                 bakingReward: trAmountFraction(
                     v0.mintDistribution?.bakingReward
                 ),
@@ -465,6 +483,7 @@ function trChainParametersV1(
     const commonRewardParameters = translateRewardParametersCommon(params);
     return {
         ...common,
+        version: 1,
         level2Keys: trAuthorizationsV1(unwrap(params.level2Keys)),
         electionDifficulty: trAmountFraction(params.electionDifficulty?.value),
         rewardPeriodLength: unwrap(
@@ -504,7 +523,9 @@ function trChainParametersV1(
         leverageBound: unwrap(params.poolParameters?.leverageBound?.value),
         rewardParameters: {
             ...commonRewardParameters,
+            version: 1,
             gASRewards: {
+                version: 0,
                 baker: trAmountFraction(params.gasRewards?.baker),
                 finalizationProof: trAmountFraction(
                     params.gasRewards?.finalizationProof
@@ -515,6 +536,7 @@ function trChainParametersV1(
                 chainUpdate: trAmountFraction(params.gasRewards?.chainUpdate),
             },
             mintDistribution: {
+                version: 1,
                 bakingReward: trAmountFraction(
                     params.mintDistribution?.bakingReward
                 ),
@@ -534,6 +556,7 @@ function trChainParametersV2(
 
     return {
         ...common,
+        version: 2,
         level2Keys: trAuthorizationsV1(unwrap(params.level2Keys)),
         rewardPeriodLength: unwrap(
             params.timeParameters?.rewardPeriodLength?.value?.value
@@ -572,7 +595,9 @@ function trChainParametersV2(
         leverageBound: unwrap(params.poolParameters?.leverageBound?.value),
         rewardParameters: {
             ...commonRewardParameters,
+            version: 2,
             gASRewards: {
+                version: 1,
                 baker: trAmountFraction(params.gasRewards?.baker),
                 accountCreation: trAmountFraction(
                     params.gasRewards?.accountCreation
@@ -580,6 +605,7 @@ function trChainParametersV2(
                 chainUpdate: trAmountFraction(params.gasRewards?.chainUpdate),
             },
             mintDistribution: {
+                version: 1,
                 bakingReward: trAmountFraction(
                     params.mintDistribution?.bakingReward
                 ),
@@ -677,6 +703,7 @@ export function tokenomicsInfo(info: v2.TokenomicsInfo): v1.RewardStatus {
         case 'v0': {
             const v0 = info.tokenomics.v0;
             return {
+                version: 0,
                 protocolVersion: translateProtocolVersion(v0.protocolVersion),
                 totalAmount: unwrap(v0.totalAmount?.value),
                 totalEncryptedAmount: unwrap(v0.totalEncryptedAmount?.value),
@@ -690,6 +717,7 @@ export function tokenomicsInfo(info: v2.TokenomicsInfo): v1.RewardStatus {
         case 'v1': {
             const v1 = info.tokenomics.v1;
             return {
+                version: 1,
                 protocolVersion: translateProtocolVersion(v1.protocolVersion),
                 totalAmount: unwrap(v1.totalAmount?.value),
                 totalEncryptedAmount: unwrap(v1.totalEncryptedAmount?.value),
@@ -768,6 +796,7 @@ export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
     if (ci.protocolVersion < v2.ProtocolVersion.PROTOCOL_VERSION_6) {
         const ci0: v1.ConsensusStatusV0 = {
             ...common,
+            version: 0,
             slotDuration: Duration.fromProto(unwrap(ci.slotDuration)),
         };
 
@@ -776,6 +805,7 @@ export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
 
     const ci1: v1.ConsensusStatusV1 = {
         ...common,
+        version: 1,
         concordiumBFTStatus: {
             currentTimeoutDuration: Duration.fromProto(
                 unwrap(ci.currentTimeoutDuration)
@@ -1011,7 +1041,7 @@ function trDelegationEvent(
             const stakeIncr = event.delegationStakeIncreased;
             return {
                 tag: v1.TransactionEventTag.DelegationStakeIncreased,
-                delegatorId: Number(unwrap(stakeIncr.delegatorId?.id?.value)),
+                delegatorId: unwrap(stakeIncr.delegatorId?.id?.value),
                 newStake: unwrap(stakeIncr.newStake?.value),
                 account,
             };
@@ -1020,7 +1050,7 @@ function trDelegationEvent(
             const stakeDecr = event.delegationStakeDecreased;
             return {
                 tag: v1.TransactionEventTag.DelegationStakeDecreased,
-                delegatorId: Number(unwrap(stakeDecr.delegatorId?.id?.value)),
+                delegatorId: unwrap(stakeDecr.delegatorId?.id?.value),
                 newStake: unwrap(stakeDecr.newStake?.value),
                 account,
             };
@@ -1029,7 +1059,7 @@ function trDelegationEvent(
             const restake = event.delegationSetRestakeEarnings;
             return {
                 tag: v1.TransactionEventTag.DelegationSetRestakeEarnings,
-                delegatorId: Number(unwrap(restake.delegatorId?.id?.value)),
+                delegatorId: unwrap(restake.delegatorId?.id?.value),
                 restakeEarnings: unwrap(restake.restakeEarnings),
                 account,
             };
@@ -1038,7 +1068,7 @@ function trDelegationEvent(
             const target = event.delegationSetDelegationTarget;
             return {
                 tag: v1.TransactionEventTag.DelegationSetDelegationTarget,
-                delegatorId: Number(unwrap(target.delegatorId?.id?.value)),
+                delegatorId: unwrap(target.delegatorId?.id?.value),
                 delegationTarget: trDelegTarget(target.delegationTarget),
                 account,
             };
@@ -1046,13 +1076,13 @@ function trDelegationEvent(
         case 'delegationAdded':
             return {
                 tag: v1.TransactionEventTag.DelegationAdded,
-                delegatorId: Number(unwrap(event.delegationAdded.id?.value)),
+                delegatorId: unwrap(event.delegationAdded.id?.value),
                 account,
             };
         case 'delegationRemoved':
             return {
                 tag: v1.TransactionEventTag.DelegationRemoved,
-                delegatorId: Number(unwrap(event.delegationRemoved.id?.value)),
+                delegatorId: unwrap(event.delegationRemoved.id?.value),
                 account,
             };
         default:
@@ -1333,6 +1363,7 @@ function trGasRewardsUpdate(gasRewards: v2.GasRewards): v1.GasRewardsV0Update {
     return {
         updateType: v1.UpdateType.GasRewards,
         update: {
+            version: 0,
             baker: trAmountFraction(gasRewards.baker),
             accountCreation: trAmountFraction(gasRewards.accountCreation),
             chainUpdate: trAmountFraction(gasRewards.accountCreation),
@@ -1347,6 +1378,7 @@ function trGasRewardsCpv2Update(
     return {
         updateType: v1.UpdateType.GasRewardsCpv2,
         update: {
+            version: 1,
             baker: trAmountFraction(gasRewards.baker),
             accountCreation: trAmountFraction(gasRewards.accountCreation),
             chainUpdate: trAmountFraction(gasRewards.accountCreation),
@@ -1495,6 +1527,7 @@ function trMintDistributionCpv0Update(
     return {
         updateType: v1.UpdateType.MintDistribution,
         update: {
+            version: 0,
             bakingReward: trAmountFraction(mintDist.bakingReward),
             finalizationReward: trAmountFraction(mintDist.finalizationReward),
             mintPerSlot: trMintRate(mintDist.mintPerSlot),
@@ -1508,6 +1541,7 @@ function trMintDistributionCpv1Update(
     return {
         updateType: v1.UpdateType.MintDistribution,
         update: {
+            version: 1,
             bakingReward: trAmountFraction(mintDist.bakingReward),
             finalizationReward: trAmountFraction(mintDist.finalizationReward),
         },
@@ -1744,6 +1778,7 @@ function trKeyUpdate(keyUpdate: v2.RootUpdate | v2.Level1Update): v1.KeyUpdate {
                 typeOfUpdate: v1.AuthorizationKeysUpdateType.Level2KeysUpdateV1,
                 updatePayload: {
                     ...trAuthorizationsV0(v0),
+                    version: 1,
                     cooldownParameters: trAccessStructure(
                         update.parameterCooldown
                     ),
@@ -1758,6 +1793,7 @@ function trKeyUpdate(keyUpdate: v2.RootUpdate | v2.Level1Update): v1.KeyUpdate {
 
 function trAuthorizationsV0(auths: v2.AuthorizationsV0): v1.AuthorizationsV0 {
     return {
+        version: 0,
         keys: auths.keys.map(trUpdatePublicKey),
         addIdentityProvider: trAccessStructure(auths.addIdentityProvider),
         addAnonymityRevoker: trAccessStructure(auths.addAnonymityRevoker),
@@ -1779,6 +1815,7 @@ function trAuthorizationsV0(auths: v2.AuthorizationsV0): v1.AuthorizationsV0 {
 function trAuthorizationsV1(auths: v2.AuthorizationsV1): v1.AuthorizationsV1 {
     return {
         ...trAuthorizationsV0(unwrap(auths.v0)),
+        version: 1,
         cooldownParameters: trAccessStructure(auths.parameterCooldown),
         timeParameters: trAccessStructure(auths.parameterTime),
     };
@@ -2358,6 +2395,7 @@ export function blockInfo(blockInfo: v2.BlockInfo): v1.BlockInfo {
     if (blockInfo.protocolVersion < v2.ProtocolVersion.PROTOCOL_VERSION_6) {
         const bi0: v1.BlockInfoV0 = {
             ...common,
+            version: 0,
             blockSlot: unwrap(blockInfo.slotNumber?.value),
         };
 
@@ -2366,6 +2404,7 @@ export function blockInfo(blockInfo: v2.BlockInfo): v1.BlockInfo {
 
     const bi1: v1.BlockInfoV1 = {
         ...common,
+        version: 1,
         round: unwrap(blockInfo.round?.value),
         epoch: unwrap(blockInfo.epoch?.value),
     };
@@ -2411,11 +2450,15 @@ export function electionInfo(electionInfo: v2.ElectionInfo): v1.ElectionInfo {
 
     if (electionInfo.electionDifficulty === undefined) {
         // election difficulty removed in protocol version 6.
-        return common;
+        return {
+            ...common,
+            version: 1,
+        };
     }
 
     return {
         ...common,
+        version: 0,
         electionDifficulty: trAmountFraction(
             electionInfo.electionDifficulty?.value
         ),

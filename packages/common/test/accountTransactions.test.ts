@@ -1,5 +1,5 @@
 import * as AccountAddress from '../src/types/AccountAddress.js';
-import { TransactionExpiry } from '../src/types/transactionExpiry.js';
+import * as TransactionExpiry from '../src/types/TransactionExpiry.js';
 import {
     OpenStatus,
     AccountTransaction,
@@ -18,7 +18,7 @@ test('configureBaker is serialized correctly', async () => {
     const expectedDigest =
         'dcfb92b6e57b1d3e252c52cb8b838f44a33bf8d67301e89753101912f299dffb';
 
-    const expiry = new TransactionExpiry(new Date(1675872215), true);
+    const expiry = TransactionExpiry.fromDate(new Date(1675872215));
 
     const header: AccountTransactionHeader = {
         expiry,
@@ -27,7 +27,7 @@ test('configureBaker is serialized correctly', async () => {
     };
 
     const payload: Required<ConfigureBakerPayload> = {
-        stake: new CcdAmount(1000000000n),
+        stake: CcdAmount.fromMicroCcd(1000000000n),
         restakeEarnings: true,
         openForDelegation: OpenStatus.ClosedForAll,
         keys: {

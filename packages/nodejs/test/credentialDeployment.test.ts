@@ -48,7 +48,7 @@ test('test deserialize credentialDeployment ', async () => {
     // The attributes to reveal on the chain.
     const revealedAttributes: AttributeKey[] = ['firstName', 'nationality'];
 
-    const expiry = new TransactionExpiry(new Date(Date.now() + 3600000));
+    const expiry = TransactionExpiry.futureMinutes(60);
     const credentialDeploymentTransaction: CredentialDeploymentTransaction =
         createCredentialDeploymentTransaction(
             identityInput,

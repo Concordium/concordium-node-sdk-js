@@ -633,8 +633,10 @@ export default class ConcordiumNodeClient {
         const result = convertJsonResponse<InstanceInfoSerialized>(value);
         if (result !== undefined) {
             const common = {
-                amount: new CcdAmount(BigInt(result.amount)),
-                sourceModule: new ModuleReference(result.sourceModule),
+                amount: CcdAmount.fromMicroCcd(BigInt(result.amount)),
+                sourceModule: ModuleReference.fromHexString(
+                    result.sourceModule
+                ),
                 owner: Address.fromBase58(result.owner),
                 methods: result.methods.map(ReceiveName.fromStringUnchecked),
                 name: InitName.fromStringUnchecked(result.name),
@@ -676,13 +678,13 @@ export default class ConcordiumNodeClient {
         const dates: DateKey[] = ['nextPaydayTime'];
         const bigInts: BigIntKey[] = [
             'protocolVersion',
-            'gasAccount',
-            'totalAmount',
-            'totalStakedCapital',
-            'bakingRewardAccount',
-            'totalEncryptedAmount',
-            'finalizationRewardAccount',
-            'foundationTransactionRewards',
+            // 'gasAccount',
+            // 'totalAmount',
+            // 'totalStakedCapital',
+            // 'bakingRewardAccount',
+            // 'totalEncryptedAmount',
+            // 'finalizationRewardAccount',
+            // 'foundationTransactionRewards',
         ];
 
         const input: BlockHash = { blockHash };
@@ -772,15 +774,15 @@ export default class ConcordiumNodeClient {
         const dates: DateKey[] = ['effectiveTime'];
         const bigInts: BigIntKey[] = [
             'bakerId',
-            'bakerEquityCapital',
-            'delegatedCapital',
-            'delegatedCapitalCap',
-            'currentPaydayTransactionFeesEarned',
-            'currentPaydayDelegatedCapital',
+            // 'bakerEquityCapital',
+            // 'delegatedCapital',
+            // 'delegatedCapitalCap',
+            // 'currentPaydayTransactionFeesEarned',
+            // 'currentPaydayDelegatedCapital',
             'blocksBaked',
-            'transactionFeesEarned',
-            'effectiveStake',
-            'allPoolTotalCapital',
+            // 'transactionFeesEarned',
+            // 'effectiveStake',
+            // 'allPoolTotalCapital',
         ];
 
         return convertJsonResponse<PoolStatus>(
@@ -798,7 +800,7 @@ export default class ConcordiumNodeClient {
      * @returns the source of the module as raw bytes.
      */
     async getModuleSource(
-        moduleReference: ModuleReference,
+        moduleReference: ModuleReference.Type,
         blockHash: string
     ): Promise<Buffer | undefined> {
         if (!isValidHash(blockHash)) {

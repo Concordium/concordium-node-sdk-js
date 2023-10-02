@@ -242,7 +242,8 @@ test('InvalidInitMethod', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'failed'
     ) {
-        expect(event.rejectReason).toEqual(
+        expectToEqual(
+            event.rejectReason,
             expected.invalidInitMethodRejectReason
         );
     } else {
@@ -408,7 +409,8 @@ test('InvalidReceiveMethod', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'failed'
     ) {
-        expect(event.rejectReason).toEqual(
+        expectToEqual(
+            event.rejectReason,
             expected.invalidReceiveMethodRejectReason
         );
     } else {

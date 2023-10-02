@@ -197,7 +197,7 @@ test.each([clientV2, clientWeb])(
     async (client) => {
         const status = await client.getPassiveDelegationInfo(testBlockHash);
 
-        expect(status).toEqual(expected.passiveDelegationStatus);
+        expectToEqual(status, expected.passiveDelegationStatus);
     }
 );
 
@@ -250,7 +250,7 @@ test.each([clientV2, clientWeb])('getInstanceInfo', async (client) => {
         testBlockHash
     );
 
-    expect(instanceInfo).toEqual(expected.instanceInfo);
+    expectToEqual(instanceInfo, expected.instanceInfo);
 });
 
 test.each([clientV2, clientWeb])('Failed invoke contract', async (client) => {
@@ -259,7 +259,7 @@ test.each([clientV2, clientWeb])('Failed invoke contract', async (client) => {
             invoker: testAccount,
             contract: v1.ContractAddress.create(6),
             method: v1.ReceiveName.fromStringUnchecked('PiggyBank.smash'),
-            amount: new v1.CcdAmount(0n),
+            amount: v1.CcdAmount.zero(),
             parameter: undefined,
             energy: v1.Energy.create(30000),
         },
@@ -282,7 +282,7 @@ test.each([clientV2, clientWeb])(
                 invoker: testAccount,
                 contract: v1.ContractAddress.create(6),
                 method: v1.ReceiveName.fromStringUnchecked('PiggyBank.insert'),
-                amount: new v1.CcdAmount(1n),
+                amount: v1.CcdAmount.fromMicroCcd(1n),
                 parameter: undefined,
                 energy: v1.Energy.create(30000),
             },
@@ -300,7 +300,7 @@ test.each([clientV2, clientWeb])(
             invoker: testAccount,
             contract: v1.ContractAddress.create(81),
             method: v1.ReceiveName.fromStringUnchecked('PiggyBank.view'),
-            amount: new v1.CcdAmount(0n),
+            amount: v1.CcdAmount.zero(),
             parameter: undefined,
             energy: v1.Energy.create(30000),
         };
@@ -312,11 +312,8 @@ test.each([clientV2, clientWeb])(
 
 test.each([clientV2, clientWeb])('getModuleSource', async (client) => {
     const localModuleBytes = getModuleBuffer('test/resources/piggy_bank.wasm');
-    const moduleRef = new v1.ModuleReference(
-        Buffer.from(
-            'foOYrcQGqX202GnD/XrcgToxg2Z6On2weOuub33OX2Q=',
-            'base64'
-        ).toString('hex')
+    const moduleRef = v1.ModuleReference.fromBuffer(
+        Buffer.from('foOYrcQGqX202GnD/XrcgToxg2Z6On2weOuub33OX2Q=', 'base64')
     );
 
     const localModuleHex = Buffer.from(localModuleBytes);
@@ -353,12 +350,12 @@ test.each([clientV2, clientWeb])('sendBlockItem', async (client) => {
 
     // Create local transaction
     const header: v1.AccountTransactionHeader = {
-        expiry: new v1.TransactionExpiry(new Date(Date.now() + 3600000)),
+        expiry: v1.TransactionExpiry.futureMinutes(60),
         nonce: nextNonce.nonce,
         sender: senderAccount,
     };
     const simpleTransfer: v1.SimpleTransferPayload = {
-        amount: new v1.CcdAmount(10000000000n),
+        amount: v1.CcdAmount.fromCcd(10_000),
         toAddress: testAccount,
     };
     const accountTransaction: v1.AccountTransaction = {
@@ -389,12 +386,12 @@ test.each([clientV2, clientWeb])('transactionHash', async (client) => {
 
     // Create local transaction
     const headerLocal: v1.AccountTransactionHeader = {
-        expiry: new v1.TransactionExpiry(new Date(Date.now() + 3600000)),
+        expiry: v1.TransactionExpiry.futureMinutes(60),
         nonce: nextNonce.nonce,
         sender: senderAccount,
     };
     const simpleTransfer: v1.SimpleTransferPayload = {
-        amount: new v1.CcdAmount(10000000000n),
+        amount: v1.CcdAmount.fromCcd(10_000),
         toAddress: testAccount,
     };
     const transaction: v1.AccountTransaction = {
@@ -474,7 +471,7 @@ test.each([clientV2, clientWeb])('createAccount', async (client) => {
     const identityInput: v1.IdentityInput = getIdentityInput();
     const threshold = 1;
     const credentialIndex = 1;
-    const expiry = new v1.TransactionExpiry(new Date(Date.now() + 3600000));
+    const expiry = v1.TransactionExpiry.futureMinutes(60);
     const revealedAttributes: v1.AttributeKey[] = [];
     const publicKeys: v1.VerifyKey[] = [
         {
@@ -751,7 +748,7 @@ test.each([clientV2, clientWeb])(
 
 test.each([clientV2, clientWeb])('getEmbeddedSchema', async (client) => {
     const contract = v1.ContractAddress.create(4422);
-    const moduleRef = new v1.ModuleReference(
+    const moduleRef = v1.ModuleReference.fromHexString(
         '44434352ddba724930d6b1b09cd58bd1fba6ad9714cf519566d5fe72d80da0d1'
     );
 

@@ -27,8 +27,8 @@ import {
     serializeAccountTransactionForSubmission,
     serializeSignedCredentialDeploymentDetailsForSubmission,
 } from '../serialization.js';
-import { CcdAmount } from '../types/ccdAmount.js';
-import { ModuleReference } from '../types/moduleReference.js';
+import * as CcdAmount from '../types/CcdAmount.js';
+import * as ModuleReference from '../types/ModuleReference.js';
 import { buildJsonResponseReviver, intToStringTransformer } from '../util.js';
 import * as CredentialRegistrationId from '../types/CredentialRegistrationId.js';
 
@@ -206,8 +206,8 @@ export class JsonRpcClient {
 
         // TODO: Avoid code duplication with nodejs client
         const common = {
-            amount: new CcdAmount(BigInt(result.amount)),
-            sourceModule: new ModuleReference(result.sourceModule),
+            amount: CcdAmount.fromMicroCcd(BigInt(result.amount)),
+            sourceModule: ModuleReference.fromHexString(result.sourceModule),
             owner: AccountAddress.fromBase58(result.owner),
             methods: result.methods,
             name: result.name,
@@ -331,7 +331,7 @@ export class JsonRpcClient {
      * @returns the source of the module as raw bytes.
      */
     async getModuleSource(
-        moduleReference: ModuleReference,
+        moduleReference: ModuleReference.Type,
         blockHash?: BlockHash.Type
     ): Promise<Buffer> {
         if (!blockHash) {

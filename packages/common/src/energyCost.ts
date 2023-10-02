@@ -7,6 +7,7 @@ import {
     Ratio,
 } from './types.js';
 import * as Energy from './types/Energy.js';
+import * as CcdAmount from './types/CcdAmount.js';
 
 /**
  * These constants must be consistent with constA and constB in:
@@ -80,9 +81,11 @@ export function getExchangeRate({
  * Given an NRG amount and the current blockchain parameters, this returns the corresponding amount in microCcd.
  */
 export function convertEnergyToMicroCcd(
-    cost: bigint,
+    cost: Energy.Type,
     chainParameters: ChainParameters
-): bigint {
+): CcdAmount.Type {
     const rate = getExchangeRate(chainParameters);
-    return collapseRatio(multiplyRatio(rate, cost));
+    return CcdAmount.fromMicroCcd(
+        collapseRatio(multiplyRatio(rate, cost.value))
+    );
 }

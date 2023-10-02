@@ -5,6 +5,7 @@ import {
     IpAddressString,
     ReleaseSchedule,
 } from './types.js';
+import * as CcdAmount from './types/CcdAmount.js';
 
 /**
  * Replaces a number in a JSON string with the same number as a
@@ -84,7 +85,7 @@ export function buildJsonResponseReviver<T>(
                 for (const entry of value) {
                     const schedule: ReleaseSchedule = {
                         timestamp: new Date(entry[0]),
-                        amount: BigInt(entry[1]),
+                        amount: CcdAmount.fromMicroCcd(BigInt(entry[1])),
                     };
                     result.push(schedule);
                 }

@@ -20,7 +20,6 @@ import {
     CIS2,
     ContractAddress,
 } from '../../src/index.js';
-import { expectToEqual } from './testHelpers.js';
 
 function deserializeAccountTransactionBase(
     type: AccountTransactionType,
@@ -55,7 +54,7 @@ function deserializeAccountTransactionBase(
         throw new Error('Incorrect BlockItemKind');
     }
 
-    expectToEqual(deserialized.transaction, {
+    expect(deserialized.transaction).toEqual({
         accountTransaction: transaction,
         signatures,
     });

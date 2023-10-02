@@ -18,7 +18,6 @@ import {
     getIdentityInput,
     getNodeClientV2,
     getNodeClientWeb,
-    expectToEqual,
 } from './testHelpers.js';
 import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons.js';
@@ -134,7 +133,7 @@ test.each([clientV2, clientWeb])(
             testBlockHash
         );
 
-        expectToEqual(accInfo, credIdInfo);
+        expect(accInfo).toEqual(credIdInfo);
     }
 );
 
@@ -146,10 +145,10 @@ test.each([clientV2, clientWeb])(
         const baker = await client.getAccountInfo(testAccBaker, testBlockHash);
         const deleg = await client.getAccountInfo(testAccDeleg, testBlockHash);
 
-        expectToEqual(regular, expected.regularAccountInfo);
-        expectToEqual(credId, expected.credIdAccountInfo);
-        expectToEqual(baker, expected.bakerAccountInfo);
-        expectToEqual(deleg, expected.delegatorAccountInfo);
+        expect(regular).toEqual(expected.regularAccountInfo);
+        expect(credId).toEqual(expected.credIdAccountInfo);
+        expect(baker).toEqual(expected.bakerAccountInfo);
+        expect(deleg).toEqual(expected.delegatorAccountInfo);
     }
 );
 

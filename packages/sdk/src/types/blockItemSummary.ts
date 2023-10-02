@@ -503,15 +503,11 @@ export function affectedAccounts(
                 (addresses: AccountAddress.Type[], event) => {
                     if (
                         event.tag === TransactionEventTag.Transferred &&
-                        event.to.type === 'AddressAccount' &&
                         !addresses.some(
-                            AccountAddress.equals.bind(
-                                undefined,
-                                event.to.address
-                            )
+                            AccountAddress.equals.bind(undefined, event.to)
                         )
                     ) {
-                        return [...addresses, event.to.address];
+                        return [...addresses, event.to];
                     }
                     return addresses;
                 },

@@ -1,9 +1,6 @@
 import * as expected from './resources/expectedJsons.js';
 import { streamToList, BlockHash } from '../../src/index.js';
-import {
-    expectToEqual,
-    getNodeClientV2 as getNodeClient,
-} from './testHelpers.js';
+import { getNodeClientV2 as getNodeClient } from './testHelpers.js';
 
 const client = getNodeClient();
 
@@ -15,7 +12,7 @@ test('accountCreated', async () => {
     const eventStream = client.getBlockTransactionEvents(blockHash);
     const events = await streamToList(eventStream);
 
-    expectToEqual(events[0], expected.accountCreationEvent);
+    expect(events[0]).toEqual(expected.accountCreationEvent);
 });
 
 // EncryptedAmountsRemoved, AmountAddedByDecryption
@@ -32,7 +29,7 @@ test('transferToPublic', async () => {
         event.transactionType === 'transferToPublic'
     ) {
         const transferToPublicEvent = [event.removed, event.added];
-        expectToEqual(transferToPublicEvent, expected.transferToPublicEvent);
+        expect(transferToPublicEvent).toEqual(expected.transferToPublicEvent);
     } else {
         throw Error('Wrong event.');
     }
@@ -53,7 +50,7 @@ test('configureBaker: Add baker', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'configureBaker'
     ) {
-        expectToEqual(event.events, expected.configureBaker);
+        expect(event.events).toEqual(expected.configureBaker);
     } else {
         throw Error('Wrong event.');
     }
@@ -72,7 +69,7 @@ test('configureBaker: Remove baker', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'configureBaker'
     ) {
-        expectToEqual(event.events[0], expected.bakerRemoved);
+        expect(event.events[0]).toEqual(expected.bakerRemoved);
     } else {
         throw Error('Wrong event.');
     }
@@ -92,14 +89,14 @@ test('configureDelegation', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'configureDelegation'
     ) {
-        expectToEqual(event.events, expected.configureDelegation);
+        expect(event.events).toEqual(expected.configureDelegation);
     } else {
         throw Error('Wrong event.');
     }
 });
 
 // Interrupted, Resumed, Transferred, Updated
-test('contract update', async () => {
+test.only('contract update', async () => {
     const blockHash = BlockHash.fromHexString(
         'a74a3914143eb596132c74685fac1314f6d5e8bb393e3372e83726f0c4654de2'
     );
@@ -111,7 +108,7 @@ test('contract update', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'update'
     ) {
-        expectToEqual(event.events, expected.updateEvent);
+        expect(event.events).toEqual(expected.updateEvent);
     } else {
         throw Error('Wrong event.');
     }
@@ -130,7 +127,7 @@ test('transferToEncrypted', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'transferToEncrypted'
     ) {
-        expectToEqual(event.added, expected.encryptedSelfAmountAddedEvent);
+        expect(event.added).toEqual(expected.encryptedSelfAmountAddedEvent);
     } else {
         throw Error('Wrong event.');
     }
@@ -144,7 +141,7 @@ test('UpdateEnqueued', async () => {
     const eventStream = client.getBlockTransactionEvents(blockHash);
     const events = await streamToList(eventStream);
 
-    expectToEqual(events[0], expected.updateEnqueuedEvent);
+    expect(events[0]).toEqual(expected.updateEnqueuedEvent);
 });
 
 // ContractInitialized
@@ -160,8 +157,7 @@ test('ContractInitialized', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'initContract'
     ) {
-        expectToEqual(
-            event.contractInitialized,
+        expect(event.contractInitialized).toEqual(
             expected.contractInitializedEvent
         );
     } else {
@@ -182,7 +178,7 @@ test('ModuleDeployed', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'deployModule'
     ) {
-        expectToEqual(event.moduleDeployed, expected.moduleDeployedEvent);
+        expect(event.moduleDeployed).toEqual(expected.moduleDeployedEvent);
     } else {
         throw Error('Wrong event.');
     }
@@ -201,7 +197,7 @@ test('DelegationRemoved', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'configureDelegation'
     ) {
-        expectToEqual(event.events[0], expected.delegationRemovedEvent);
+        expect(event.events[0]).toEqual(expected.delegationRemovedEvent);
     } else {
         throw Error('Wrong event.');
     }
@@ -220,7 +216,7 @@ test('TransferMemo', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'transferWithMemo'
     ) {
-        expectToEqual(event, expected.transferWithMemoSummary);
+        expect(event).toEqual(expected.transferWithMemoSummary);
     } else {
         throw Error('Wrong event.');
     }
@@ -239,7 +235,7 @@ test('Upgraded', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'update'
     ) {
-        expectToEqual(event.events[1], expected.upgradedEvent);
+        expect(event.events[1]).toEqual(expected.upgradedEvent);
     } else {
         throw Error('Wrong event.');
     }
@@ -258,7 +254,7 @@ test('DataRegistered', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'registerData'
     ) {
-        expectToEqual(event.dataRegistered, expected.dataRegisteredEvent);
+        expect(event.dataRegistered).toEqual(expected.dataRegisteredEvent);
     } else {
         throw Error('Wrong event.');
     }
@@ -277,7 +273,7 @@ test('NewEncryptedAmountEvent', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'encryptedAmountTransfer'
     ) {
-        expectToEqual(event.added, expected.newEncryptedAmountEvent);
+        expect(event.added).toEqual(expected.newEncryptedAmountEvent);
     } else {
         throw Error('Wrong event.');
     }
@@ -296,7 +292,7 @@ test('TransferWithScheduleEvent', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'transferWithSchedule'
     ) {
-        expectToEqual(event.event, expected.transferWithScheduleEvent);
+        expect(event.event).toEqual(expected.transferWithScheduleEvent);
     } else {
         throw Error('Wrong event.');
     }
@@ -315,7 +311,7 @@ test('BakerKeysUpdated', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'configureBaker'
     ) {
-        expectToEqual(event.events[0], expected.bakerKeysUpdatedEvent);
+        expect(event.events[0]).toEqual(expected.bakerKeysUpdatedEvent);
     } else {
         throw Error('Wrong event:');
     }
@@ -334,7 +330,7 @@ test('BakerStakeIncreased', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'configureBaker'
     ) {
-        expectToEqual(event.events[0], expected.bakerStakeIncreasedEvent);
+        expect(event.events[0]).toEqual(expected.bakerStakeIncreasedEvent);
     } else {
         throw Error('Wrong event:');
     }
@@ -353,7 +349,7 @@ test('CredentialKeysUpdated', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'updateCredentialKeys'
     ) {
-        expectToEqual(event.keysUpdated, expected.credentialKeysUpdatedEvent);
+        expect(event.keysUpdated).toEqual(expected.credentialKeysUpdatedEvent);
     } else {
         throw Error('Wrong event:');
     }
@@ -372,8 +368,7 @@ test('CredentialsUpdated', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'updateCredentials'
     ) {
-        expectToEqual(
-            event.credentialsUpdated,
+        expect(event.credentialsUpdated).toEqual(
             expected.credentialsUpdatedEvent
         );
     } else {
@@ -394,7 +389,7 @@ test('BakerStakeDecreased', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'configureBaker'
     ) {
-        expectToEqual(event.events[0], expected.bakerStakeDecreasedEvent);
+        expect(event.events[0]).toEqual(expected.bakerStakeDecreasedEvent);
     } else {
         throw Error('Wrong event:');
     }
@@ -413,7 +408,7 @@ test('DelegationStakeDecreased', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'configureDelegation'
     ) {
-        expectToEqual(event.events[2], expected.delegationStakeDecreasedEvent);
+        expect(event.events[2]).toEqual(expected.delegationStakeDecreasedEvent);
     } else {
         throw Error('Wrong event:');
     }

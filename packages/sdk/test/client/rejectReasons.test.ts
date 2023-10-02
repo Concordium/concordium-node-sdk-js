@@ -1,9 +1,6 @@
 import { BlockHash, streamToList } from '../../src/index.js';
 import * as expected from './resources/expectedJsons.js';
-import {
-    expectToEqual,
-    getNodeClientV2 as getNodeClient,
-} from './testHelpers.js';
+import { getNodeClientV2 as getNodeClient } from './testHelpers.js';
 
 const client = getNodeClient();
 
@@ -142,7 +139,7 @@ test('AmountTooLarge', async () => {
         event.type === 'accountTransaction' &&
         event.transactionType === 'failed'
     ) {
-        expectToEqual(event.rejectReason, expected.amountTooLargeRejectReason);
+        expect(event.rejectReason).toEqual(expected.amountTooLargeRejectReason);
     } else {
         throw Error('Wrong event');
     }

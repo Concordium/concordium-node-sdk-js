@@ -70,8 +70,7 @@ const contractAddress = SDK.ContractAddress.create(
         throw e;
     });
 
-    const wCCDTokenId = '';
-    const parameter = [wCCDTokenId];
+    const parameter = SDK.Parameter.fromHexString('010000'); // First 2 bytes for number of tokens to query, 1 byte for the token ID.
     const contract = await wCCDContractClient.create(
         grpcClient,
         contractAddress

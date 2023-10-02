@@ -1,6 +1,4 @@
-## Common SDK version 10 (Web 7) (Node 10)
-
-### Common
+## SDK version 10
 
 Several types have been replaced with a module containing the type itself together with functions for constructing and
 converting the type:
@@ -48,12 +46,9 @@ The API now uses dedicated types instead of language primitives:
 - Uses `Duration` instead of a bigint.
   Can be constructed using `Duration.fromMillis(<integer>)`.
 
-### Web
-
 The `@concordium/web-sdk` now requires bundlers to respect `exports` field of
 `package.json` of a module. This is due to relying on entrypoints declared in
-the `exports` field of `@concordium/common-sdk`
-and correspondingly `@concordium/rust-bindings` to make it possible to select
+the `exports` field of `@concordium/rust-bindings` to make it possible to select
 only parts of the SDK to include in your application.
 Furthermore, the SDK is now published as an ES module, making it possible to
 eliminate dead code.
@@ -96,12 +91,9 @@ with web3-id proofs.
 
 ### NodeJS
 
-The `@concordium/node-sdk` module is no longer compatible with
+The `@concordium/web-sdk` module is not compatible with
 node versions <16 and is published only as an ES module.
-This is due to relying on entrypoints declared in the `exports` field
-of `@concordium/common-sdk` and correspondingly `@concordium/rust-bindings`
-to make it possible to select only parts of the SDK to include in your
-application.
+This, in turn, requires users to also run applications as ES modules.
 
 The easiest way to run your node application as an ES module, is by setting
 the `type` field of `package.json` to be set to `"module"`:
@@ -120,36 +112,6 @@ are always handled as ES modules.
 For **TypeScript** users, at least typescript version 4.7 is required along
 with the setting `compilerOptions.moduleResultion` to `"node16"` or
 `"nodenext"` to match the resolution strategy of node version 16 and later.
-
-The following entrypoints are made available for consumers of
-`@concordium/node-sdk`:
-
-- `@concordium/node-sdk` exposes the full API of the SDK.
-- `@concordium/node-sdk/cis0` entrypoint exposes functionality for working
-with contracts adhering to the
-[CIS-0](https://proposals.concordium.software/CIS/cis-0.html) standard.
-- `@concordium/node-sdk/cis2` entrypoint exposes functionality for working
-with contracts adhering to the
-[CIS-2](https://proposals.concordium.software/CIS/cis-2.html) standard.
-- `@concordium/node-sdk/cis4` entrypoint exposes functionality for working
-with contracts adhering to the
-[CIS-4](https://proposals.concordium.software/CIS/cis-4.html) standard.
-- `@concordium/node-sdk/client` entrypoint exposes the **(deprecated)**
-grpc client for interacting with a nodes GPRCv1 interface.
-- `@concordium/node-sdk/grpc` entrypoint exposes the grpc client for
-interacting with a nodes GRPCv2 interface.
-- `@concordium/node-sdk/id` entrypoint exposes functionality for working
-with ID proofs.
-- `@concordium/node-sdk/schema` entrypoint exposes functionality for working
-with smart contract schemas, i.e.(de)serializing types using a smart contract schema.
-  - This uses the wasm entrypoint at `@concordium/rust-bindings/dapp`.
-- `@concordium/node-sdk/types` entrypoint exposes functionality for working
-with concordium domain types.
-- `@concordium/node-sdk/wasm` entrypoint exposes a variety of functionality for
-working with concordium domain types, which requires WASM.
-  - This uses the wasm entrypoint at `@concorodium/rust-bindings/wallet`.
-- `@concordium/node-sdk/web3-id` entrypoint exposes functionality for working
-with web3-id proofs.
 
 ## Common SDK version 5 to 6 (Web 2->3) (Node 5->6)
 

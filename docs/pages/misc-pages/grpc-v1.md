@@ -47,7 +47,7 @@ interface as the grpc v1 node client:
   - [getModuleSource](#getmodulesource)
 <!--toc:end-->
 
-## GRPCv1-Client
+## GRPCv1-Client (only accessible prior to version 10)
 
 The ConcordiumNodeClient defines the interface to be used to send and receive
 data from a concordium-node.

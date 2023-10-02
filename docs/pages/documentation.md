@@ -11,13 +11,12 @@ utility functions}.
 A good way to get started is to check out the {@page runnable-examples.md
 runnable examples}.
 
-To create a GRPC-Client in NodeJS-SDK:
+To create a GRPC-Client for use with nodeJS:
 
 ```ts
-    import { credentials } from '@grpc/grpc-js/';
-    import { createConcordiumClient } from '@concordium/node-sdk';
+    import { ConcordiumGRPCNodeClient, credentials } from '@concordium/web-sdk/nodejs';
     ...
-    return createConcordiumClient(
+    return new ConcordiumGRPCNodeClient(
         address,
         port,
         credentials.createSsl(),
@@ -25,12 +24,12 @@ To create a GRPC-Client in NodeJS-SDK:
     );
 ```
 
-To create a GRPC-Client in the Web-SDK:
+To create a GRPC-Client for use in a browser (requires GRPC-web enabled on the node):
 
 ```ts
-    import { createConcordiumClient } from '@concordium/web-sdk';
+    import { ConcordiumGRPCWebClient } from '@concordium/web-sdk';
     ...
-    return createConcordiumClient(
+    return new ConcordiumGRPCWebClient(
         address,
         port,
         { timeout: 15000 }

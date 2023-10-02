@@ -91,7 +91,7 @@ class CIS2DryRun extends ContractDryRun<Updates> {
      *
      * @param {CIS2.Address} owner - Address of the owner of the address to perform the update on.
      * @param {CIS2.UpdateOperator | CIS2.UpdateOperator[]} update(s) - The update object(s).
-     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
+     * @param {BlockHash.Type} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
      *
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */

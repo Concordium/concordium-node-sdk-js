@@ -57,11 +57,7 @@ export enum TransactionEventTag {
 }
 
 export type TransactionEvent =
-    | TransferredEvent
-    | UpdatedEvent
-    | ResumedEvent
-    | InterruptedEvent
-    | UpgradedEvent
+    | AccountTransferredEvent
     | MemoEvent
     | TransferredWithScheduleEvent
     | AccountCreatedEvent
@@ -116,6 +112,13 @@ export interface UpdatedEvent {
     events: HexString[];
 }
 
+export interface TransferredEvent {
+    tag: TransactionEventTag.Transferred;
+    amount: Amount;
+    to: AccountAddress.Type;
+    from: ContractAddress.Type;
+}
+
 export interface UpgradedEvent {
     tag: TransactionEventTag.Upgraded;
     address: ContractAddress.Type;
@@ -151,17 +154,9 @@ export interface AccountTransferredEvent {
     to: AccountAddress.Type;
 }
 
-export interface TransferredEvent {
-    tag: TransactionEventTag.Transferred;
-    amount: Amount;
-    to: Address;
-    from?: Address;
-}
-
 export interface TransferredWithScheduleEvent {
     tag: TransactionEventTag.TransferredWithSchedule;
     to: AccountAddress.Type;
-    from?: AccountAddress.Type;
     amount: ReleaseSchedule[];
 }
 

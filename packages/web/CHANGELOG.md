@@ -52,6 +52,7 @@ Several types have been replaced with a module containing the type itself togeth
   - Constructing `new CredentialRegistrationId("<hex-string>")` is now `CredentialRegistrationId.fromHexString("<hex-string>")`.
 
 - Renamed `AccountSequenceNumber` module to `SequenceNumber`.
+- Fix type for `TranferredEvent` from `ContractTraceEvent` to only be from contract addresses to account addresses.
 
 ### Added
 

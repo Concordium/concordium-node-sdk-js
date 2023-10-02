@@ -28,7 +28,6 @@ import {
     Parameter,
     ReceiveName,
 } from '../../src/index.js';
-import { expectToEqual } from '../testHelpers.js';
 
 const chainUpdate: UpdateSummary = {
     type: TransactionSummaryType.UpdateTransaction,
@@ -140,22 +139,18 @@ const contractUpdate: UpdateContractSummary & BaseAccountTransactionSummary = {
         {
             tag: TransactionEventTag.Transferred,
             amount: 0n,
-            to: {
-                type: 'AddressAccount',
-                address: AccountAddress.fromBase58(
-                    '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
-                ),
-            },
+            to: AccountAddress.fromBase58(
+                '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
+            ),
+            from: ContractAddress.create(3496),
         },
         {
             tag: TransactionEventTag.Transferred,
             amount: 0n,
-            to: {
-                type: 'AddressAccount',
-                address: AccountAddress.fromBase58(
-                    '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'
-                ),
-            },
+            to: AccountAddress.fromBase58(
+                '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'
+            ),
+            from: ContractAddress.create(3496),
         },
     ],
 };
@@ -349,8 +344,7 @@ describe('affectedAccounts', () => {
 
     test('Returns list of unique account addresses corresponding to transaction', () => {
         let accounts = affectedAccounts(contractUpdate);
-        expectToEqual(
-            accounts,
+        expect(accounts).toEqual(
             [
                 '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd',
                 '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
@@ -358,15 +352,14 @@ describe('affectedAccounts', () => {
         );
 
         accounts = affectedAccounts(rejected);
-        expectToEqual(accounts, [
+        expect(accounts).toEqual([
             AccountAddress.fromBase58(
                 '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
             ),
         ]);
 
         accounts = affectedAccounts(transfer);
-        expectToEqual(
-            accounts,
+        expect(accounts).toEqual(
             [
                 '3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV',
                 '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe',
@@ -374,16 +367,14 @@ describe('affectedAccounts', () => {
         );
 
         accounts = affectedAccounts(transferToSelf);
-        expectToEqual(
-            accounts,
+        expect(accounts).toEqual(
             ['4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'].map(
                 AccountAddress.fromBase58
             )
         );
 
         accounts = affectedAccounts(configureDelegation);
-        expectToEqual(
-            accounts,
+        expect(accounts).toEqual(
             ['4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'].map(
                 AccountAddress.fromBase58
             )

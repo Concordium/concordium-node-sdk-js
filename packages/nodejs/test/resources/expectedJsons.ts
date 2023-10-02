@@ -891,17 +891,11 @@ export const updateEvent: ContractTraceEvent[] = [
     },
     {
         amount: 1000000n,
-        from: {
-            address: ContractAddress.create(866),
-            type: 'AddressContract',
-        },
+        from: ContractAddress.create(866),
         tag: TransactionEventTag.Transferred,
-        to: {
-            address: AccountAddress.fromBase58(
-                '4inf4g36xDEQmjxDbbkqeHD2HNg9v7dohXUDH5S9en4Th53kxm'
-            ),
-            type: 'AddressAccount',
-        },
+        to: AccountAddress.fromBase58(
+            '4inf4g36xDEQmjxDbbkqeHD2HNg9v7dohXUDH5S9en4Th53kxm'
+        ),
     },
     {
         address: ContractAddress.create(866),

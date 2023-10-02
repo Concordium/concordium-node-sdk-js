@@ -788,31 +788,12 @@ export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
     return ci1;
 }
 
-function trAccountAddress(
-    accountAddress: v2.AccountAddress | undefined
-): v1.AddressAccount {
-    return {
-        type: 'AddressAccount',
-        address: AccountAddress.fromProto(unwrap(accountAddress)),
-    };
-}
-
-function trAddress(
-    addr: v2.Address | v2.ContractAddress | v2.AccountAddress | undefined
-): v1.Address {
-    const accountAddress = <v2.AccountAddress>unwrap(addr);
-    const contractAddress = <v2.ContractAddress>unwrap(addr);
-    const address = <v2.Address>unwrap(addr);
-
-    if (accountAddress.value) {
-        return trAccountAddress(accountAddress);
-    } else if (ContractAddress.isContractAddress(contractAddress)) {
+function trAddress(address: v2.Address): v1.Address {
+    if (address.type.oneofKind === 'account') {
         return {
-            type: 'AddressContract',
-            address: contractAddress,
+            type: 'AddressAccount',
+            address: AccountAddress.fromProto(unwrap(address.type.account)),
         };
-    } else if (address.type.oneofKind === 'account') {
-        return trAccountAddress(address.type.account);
     } else if (address.type.oneofKind === 'contract') {
         return {
             type: 'AddressContract',
@@ -835,7 +816,7 @@ function trContractTraceElement(
                 address: ContractAddress.fromProto(
                     unwrap(element.updated.address)
                 ),
-                instigator: trAddress(element.updated.instigator),
+                instigator: trAddress(unwrap(element.updated.instigator)),
                 amount: unwrap(element.updated.amount?.value),
                 message: Parameter.fromProto(unwrap(element.updated.parameter)),
                 receiveName: ReceiveName.fromProto(
@@ -846,9 +827,13 @@ function trContractTraceElement(
         case 'transferred':
             return {
                 tag: v1.TransactionEventTag.Transferred,
-                from: trAddress(element.transferred.sender),
+                from: ContractAddress.fromProto(
+                    unwrap(element.transferred.sender)
+                ),
                 amount: unwrap(element.transferred.amount?.value),
-                to: trAddress(element.transferred.receiver),
+                to: AccountAddress.fromProto(
+                    unwrap(element.transferred.receiver)
+                ),
             };
         case 'interrupted':
             return {
@@ -1206,7 +1191,7 @@ function trRejectReason(
             return {
                 tag: Tag.AmountTooLarge,
                 contents: {
-                    address: trAddress(reason.amountTooLarge.address),
+                    address: trAddress(unwrap(reason.amountTooLarge.address)),
                     amount: unwrap(reason.amountTooLarge.amount?.value),
                 },
             };
@@ -1920,7 +1905,9 @@ function trAccountTransactionSummary(
             const transfer: v1.AccountTransferredEvent = {
                 tag: v1.TransactionEventTag.Transferred,
                 amount: unwrap(effect.accountTransfer.amount?.value),
-                to: trAccountAddress(effect.accountTransfer.receiver).address,
+                to: AccountAddress.fromProto(
+                    unwrap(effect.accountTransfer.receiver)
+                ),
             };
             if (effect.accountTransfer.memo) {
                 return {

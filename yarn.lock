@@ -1661,12 +1661,7 @@ __metadata:
     "@grpc/grpc-js": ^1.3.4
     "@noble/ed25519": ^1.7.1
     "@protobuf-ts/grpc-transport": ^2.8.2
-    "@protobuf-ts/grpcweb-transport": ^2.8.2
-    "@protobuf-ts/plugin": ^2.9.1
-    "@protobuf-ts/runtime": ^2.9.1
-    "@protobuf-ts/runtime-rpc": ^2.9.1
     "@types/bs58check": ^2.1.0
-    "@types/google-protobuf": ^3.15.3
     "@types/jest": ^26.0.23
     "@typescript-eslint/eslint-plugin": ^6.7.0
     "@typescript-eslint/parser": ^6.7.0
@@ -1676,9 +1671,6 @@ __metadata:
     eslint-config-prettier: ^8.3.0
     eslint-plugin-import: ^2.23.4
     eslint-plugin-prettier: ^3.4.0
-    google-protobuf: ^3.20.1
-    grpc-tools: ^1.11.2
-    grpc_tools_node_protoc_ts: 5.3.0
     isomorphic-fetch: ^3.0.0
     jest: ^29.6.2
     lint-staged: ^12.0.2
@@ -2681,13 +2673,6 @@ __metadata:
   version: 1.0.1
   resolution: "@types/estree@npm:1.0.1"
   checksum: e9aa175eacb797216fafce4d41e8202c7a75555bc55232dee0f9903d7171f8f19f0ae7d5191bb1a88cb90e65468be508c0df850a9fb81b4433b293a5a749899d
-  languageName: node
-  linkType: hard
-
-"@types/google-protobuf@npm:^3.15.3":
-  version: 3.15.6
-  resolution: "@types/google-protobuf@npm:3.15.6"
-  checksum: e8f7cd9d263093cd0a72eb10ff0bb8221e28aa8b9f601eddbe19b286932aae96fbc9ccb1f3a744525e7811fa87a6aeefd431858b6e2034f14a2dc68710a86d54
   languageName: node
   linkType: hard
 
@@ -5596,13 +5581,6 @@ __metadata:
   version: 3.15.8
   resolution: "google-protobuf@npm:3.15.8"
   checksum: f95f4d8203e94a6cf1983c8ad3b93ebe5e2b7408a39b5925332cce82e4a261cf9308a01458cd0887b78ccae885afcdff8e7a96da7c54c34baada79a84476f7fb
-  languageName: node
-  linkType: hard
-
-"google-protobuf@npm:^3.20.1":
-  version: 3.20.1
-  resolution: "google-protobuf@npm:3.20.1"
-  checksum: a440fbc329bb441b253bc421b01540918f4b66921c47a3bc57d154d2677dc917cb1a29126ff35ddc4d8872d1b5843ef1ece60b6dff506ba64a9f5807962d3f61
   languageName: node
   linkType: hard
 

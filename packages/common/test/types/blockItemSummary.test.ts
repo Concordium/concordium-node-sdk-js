@@ -236,14 +236,14 @@ const configureDelegation: BaseAccountTransactionSummary &
     events: [
         {
             tag: TransactionEventTag.DelegationAdded,
-            delegatorId: 2499,
+            delegatorId: 2499n,
             account: AccountAddress.fromBase58(
                 '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
             ),
         },
         {
             tag: TransactionEventTag.DelegationSetDelegationTarget,
-            delegatorId: 2499,
+            delegatorId: 2499n,
             delegationTarget: {
                 delegateType: DelegationTargetType.Baker,
                 bakerId: 15,
@@ -254,7 +254,7 @@ const configureDelegation: BaseAccountTransactionSummary &
         },
         {
             tag: TransactionEventTag.DelegationSetRestakeEarnings,
-            delegatorId: 2499,
+            delegatorId: 2499n,
             restakeEarnings: true,
             account: AccountAddress.fromBase58(
                 '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
@@ -262,7 +262,7 @@ const configureDelegation: BaseAccountTransactionSummary &
         },
         {
             tag: TransactionEventTag.DelegationStakeIncreased,
-            delegatorId: 2499,
+            delegatorId: 2499n,
             newStake: 240000000n,
             account: AccountAddress.fromBase58(
                 '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'

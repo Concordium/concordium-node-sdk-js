@@ -9,38 +9,15 @@ import {
 } from '../src/wallet/crypto.js';
 import { MobileWalletExport } from '../src/wallet/types.js';
 import { createConcordiumClient } from '../src/clientV2.js';
-import ConcordiumNodeClient from '../src/client.js';
 import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
 
 // This makes sure the necessary types are added to `globalThis`
 import 'isomorphic-fetch';
-import { RpcMetadata } from '@protobuf-ts/runtime-rpc';
 
 export { getModuleBuffer } from '../src/util.js';
 
 const TESTNET_NODE = 'node.testnet.concordium.com';
-const GRPCV1_PORT = 10000;
 const GRPCV2_PORT = 20000;
-
-/**
- * Creates a gRPC v1 client (for nodeJS) to communicate with a local concordium-node
- * used for automatic tests.
- */
-export function getNodeClient(
-    address = TESTNET_NODE,
-    port = GRPCV1_PORT
-): ConcordiumNodeClient {
-    const metadata: RpcMetadata = {
-        authentication: 'rpcadmin',
-    };
-    return new ConcordiumNodeClient(
-        address,
-        port,
-        credentials.createInsecure(),
-        metadata,
-        15000
-    );
-}
 
 /**
  * Creates a gRPC v2 client (for nodeJS) to communicate with a local concordium-node

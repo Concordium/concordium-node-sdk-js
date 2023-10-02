@@ -1,8 +1,9 @@
-import { getNodeClient } from './testHelpers.js';
+import { getNodeClientV2 as getNodeClient } from './testHelpers.js';
 import {
     ContractAddress,
     ContractName,
     isInstanceInfoV0,
+    BlockHash,
 } from '@concordium/common-sdk';
 import * as fs from 'fs';
 import { deserializeContractState } from '@concordium/common-sdk/schema';
@@ -17,7 +18,7 @@ test.skip('Deserialize state with schema from file (two-step-transfer)', async (
 
     const instanceInfo = await client.getInstanceInfo(
         contractAddress,
-        blockHash
+        BlockHash.fromHexString(blockHash)
     );
     if (!instanceInfo) {
         throw new Error(

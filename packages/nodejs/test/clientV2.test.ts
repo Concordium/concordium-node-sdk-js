@@ -196,8 +196,7 @@ test.each([clientV2, clientWeb])(
     'getPassiveDelegationInfo corresponds to getPoolStatus with no bakerId',
     async (client) => {
         const status = await client.getPassiveDelegationInfo(testBlockHash);
-
-        expectToEqual(status, expected.passiveDelegationStatus);
+        expect(status).toEqual(expected.passiveDelegationStatus);
     }
 );
 
@@ -250,7 +249,7 @@ test.each([clientV2, clientWeb])('getInstanceInfo', async (client) => {
         testBlockHash
     );
 
-    expectToEqual(instanceInfo, expected.instanceInfo);
+    expect(instanceInfo).toEqual(expected.instanceInfo);
 });
 
 test.each([clientV2, clientWeb])('Failed invoke contract', async (client) => {

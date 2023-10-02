@@ -13,7 +13,6 @@ import {
     IpInfo,
     ArInfo,
     IdentityObjectV1,
-    SignedCredentialDeploymentDetails,
     Network,
     CredentialPublicKeys,
     AttributesKeys,
@@ -202,26 +201,6 @@ export type CredentialInput = CredentialInputCommon & {
     net: Network;
     identityIndex: number;
 };
-
-/**
- * Creates a credential for a new account, using the version 1 algorithm, which uses a seed to generate keys and commitments.
- * @deprecated This function outputs the format used by the JSON-RPC client, createCredentialTransaction should be used instead.
- */
-export function createCredentialV1(
-    input: CredentialInput & { expiry: number }
-): SignedCredentialDeploymentDetails {
-    const rawRequest = wasm.createCredentialV1(JSON.stringify(input));
-    let info: CredentialDeploymentInfo;
-    try {
-        info = JSON.parse(rawRequest);
-    } catch (e) {
-        throw new Error(rawRequest);
-    }
-    return {
-        expiry: TransactionExpiry.fromEpochSeconds(BigInt(input.expiry)),
-        cdi: info,
-    };
-}
 
 export type CredentialInputNoSeed = CredentialInputCommon & {
     idCredSec: HexString;

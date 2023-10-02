@@ -1,10 +1,4 @@
-import {
-    Address,
-    Base58String,
-    DigitString,
-    HexString,
-    BakerId,
-} from '../types.js';
+import { Address, Base58String, HexString, BakerId } from '../types.js';
 import type * as ContractAddress from './ContractAddress.js';
 import type * as ReceiveName from './ReceiveName.js';
 import type * as CcdAmount from './CcdAmount.js';
@@ -159,14 +153,6 @@ export interface BakerIdRejectReason {
     contents: BakerId;
 }
 
-/**
- * @deprecated This is type for describing return types for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export interface NumberRejectReason {
-    tag: BakerIdRejectReasonTag;
-    contents: number;
-}
-
 export interface SimpleRejectReason {
     tag: SimpleRejectReasonTag;
 }
@@ -179,14 +165,6 @@ export interface InvalidReceiveMethod {
     };
 }
 
-/**
- * @deprecated This is type for describing return types for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export interface InvalidReceiveMethodV1 {
-    tag: RejectReasonTag.InvalidReceiveMethod;
-    contents: [HexString, string]; // [moduleRef, receiveName]
-}
-
 export interface InvalidInitMethod {
     tag: RejectReasonTag.InvalidInitMethod;
     contents: {
@@ -195,28 +173,12 @@ export interface InvalidInitMethod {
     };
 }
 
-/**
- * @deprecated This is type for describing return types for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export interface InvalidInitMethodV1 {
-    tag: RejectReasonTag.InvalidInitMethod;
-    contents: [HexString, InitName.Type]; // [moduleRef, initName]
-}
-
 export interface AmountTooLarge {
     tag: RejectReasonTag.AmountTooLarge;
     contents: {
         address: Address;
         amount: CcdAmount.Type;
     };
-}
-
-/**
- * @deprecated This is type for describing return types for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export interface AmountTooLargeV1 {
-    tag: RejectReasonTag.AmountTooLarge;
-    contents: [Address, DigitString]; // [address, amount]
 }
 
 export interface InvalidContractAddress {
@@ -247,13 +209,3 @@ export type RejectReason =
     | InvalidReceiveMethod
     | InvalidInitMethod
     | AmountTooLarge;
-
-/**
- * @deprecated This is type for describing return types for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
- */
-export type RejectReasonV1 =
-    | RejectReasonCommon
-    | NumberRejectReason
-    | InvalidReceiveMethodV1
-    | InvalidInitMethodV1
-    | AmountTooLargeV1;

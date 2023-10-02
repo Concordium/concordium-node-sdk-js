@@ -63,7 +63,10 @@ export function fromHexString(moduleRef: HexString) {
                 ' is invalid as its length was not 64'
         );
     }
-    return new ModuleReference(moduleRef, Buffer.from(moduleRef, 'hex'));
+    return new ModuleReference(
+        moduleRef,
+        new Uint8Array(Buffer.from(moduleRef, 'hex'))
+    );
 }
 
 /**

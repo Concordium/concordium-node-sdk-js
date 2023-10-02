@@ -1,9 +1,6 @@
 import { streamToList, BlockHash } from '@concordium/common-sdk';
 import * as expected from './resources/expectedJsons.js';
-import {
-    expectToEqual,
-    getNodeClientV2 as getNodeClient,
-} from './testHelpers.js';
+import { getNodeClientV2 as getNodeClient } from './testHelpers.js';
 
 const client = getNodeClient();
 
@@ -14,7 +11,7 @@ test('mint', async () => {
     const eventStream = client.getBlockSpecialEvents(blockHash);
     const events = await streamToList(eventStream);
 
-    expectToEqual(events[0], expected.mintSpecialEvent);
+    expect(events[0]).toEqual(expected.mintSpecialEvent);
 });
 
 test('paydayFoundationReward', async () => {
@@ -24,7 +21,7 @@ test('paydayFoundationReward', async () => {
     const eventStream = client.getBlockSpecialEvents(blockHash);
     const events = await streamToList(eventStream);
 
-    expectToEqual(events[1], expected.paydayFoundationRewardSpecialEvent);
+    expect(events[1]).toEqual(expected.paydayFoundationRewardSpecialEvent);
 });
 
 test('paydayPoolReward', async () => {
@@ -44,7 +41,7 @@ test('paydayAccountReward', async () => {
     const eventStream = client.getBlockSpecialEvents(blockHash);
     const events = await streamToList(eventStream);
 
-    expectToEqual(events[4], expected.paydayAccountRewardSpecialEvent);
+    expect(events[4]).toEqual(expected.paydayAccountRewardSpecialEvent);
 });
 
 test('blockAccrueReward', async () => {
@@ -64,7 +61,7 @@ test('bakingRewards', async () => {
     const eventStream = client.getBlockSpecialEvents(blockHash);
     const events = await streamToList(eventStream);
 
-    expectToEqual(events[0], expected.bakingRewardsSpecialEvent);
+    expect(events[0]).toEqual(expected.bakingRewardsSpecialEvent);
 });
 
 test('finalizationRewards', async () => {
@@ -74,7 +71,7 @@ test('finalizationRewards', async () => {
     const eventStream = client.getBlockSpecialEvents(blockHash);
     const events = await streamToList(eventStream);
 
-    expectToEqual(events[2], expected.finalizationRewardsSpecialEvent);
+    expect(events[2]).toEqual(expected.finalizationRewardsSpecialEvent);
 });
 
 test('blockReward', async () => {
@@ -84,5 +81,5 @@ test('blockReward', async () => {
     const eventStream = client.getBlockSpecialEvents(blockHash);
     const events = await streamToList(eventStream);
 
-    expectToEqual(events[3], expected.blockRewardSpecialEvent);
+    expect(events[3]).toEqual(expected.blockRewardSpecialEvent);
 });

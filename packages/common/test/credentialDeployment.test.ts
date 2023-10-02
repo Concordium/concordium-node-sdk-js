@@ -1,7 +1,6 @@
 import {
     createCredentialTransaction,
     CredentialInput,
-    createCredentialV1,
 } from '../src/wasm/credentialDeploymentTransactions.js';
 import fs from 'fs';
 import { AttributeKey } from '../src/types.js';
@@ -38,36 +37,6 @@ export function createCredentialInput(
         credNumber: 1,
     };
 }
-
-test('Test createCredentialV1', () => {
-    const expiry = Math.floor(Date.now() / 1000) + 720;
-    const revealedAttributes: AttributeKey[] = ['firstName'];
-    const output = createCredentialV1({
-        ...createCredentialInput(revealedAttributes),
-        expiry,
-    });
-
-    expect(output.cdi.credId).toEqual(
-        'b317d3fea7de56f8c96f6e72820c5cd502cc0eef8454016ee548913255897c6b52156cc60df965d3efb3f160eff6ced4'
-    );
-    expect(output.cdi.credentialPublicKeys.keys[0].verifyKey).toEqual(
-        '29723ec9a0b4ca16d5d548b676a1a0adbecdedc5446894151acb7699293d69b1'
-    );
-    expect(output.cdi.credentialPublicKeys.threshold).toEqual(1);
-    expect(output.cdi.ipIdentity).toEqual(0);
-    expect(output.cdi.policy.createdAt).toEqual('202208');
-    expect(output.cdi.policy.validTo).toEqual('202308');
-    expect(Object.keys(output.cdi.policy.revealedAttributes)).toEqual(
-        revealedAttributes
-    );
-    expect(output.cdi.revocationThreshold).toEqual(1);
-    expect(typeof output.cdi.proofs).toEqual('string');
-    expect(Object.keys(output.cdi.arData)).toEqual(['1', '2', '3']);
-    expect(typeof output.cdi.arData[1].encIdCredPubShare).toEqual('string');
-    expect(typeof output.cdi.arData[2].encIdCredPubShare).toEqual('string');
-    expect(typeof output.cdi.arData[3].encIdCredPubShare).toEqual('string');
-    expect(output.expiry.expiryEpochSeconds).toEqual(BigInt(expiry));
-});
 
 test('Test createCredentialTransaction', () => {
     const expiry = BigInt(Math.floor(Date.now() / 1000)) + BigInt(720);

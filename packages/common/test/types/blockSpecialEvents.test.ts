@@ -11,7 +11,6 @@ import {
     CcdAmount,
     AccountAddress,
 } from '../../src/index.js';
-import { expectToEqual } from '../testHelpers.js';
 
 const bakingRewards: BlockSpecialEventBakingRewards = {
     tag: 'bakingRewards',
@@ -139,8 +138,7 @@ describe('specialEventAffectedAccounts', () => {
 
     test('Returns correct list of accounts for events with account payouts', () => {
         let accounts = specialEventAffectedAccounts(bakingRewards);
-        expectToEqual(
-            accounts,
+        expect(accounts).toEqual(
             [
                 '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe',
                 '3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV',
@@ -148,8 +146,7 @@ describe('specialEventAffectedAccounts', () => {
         );
 
         accounts = specialEventAffectedAccounts(finalizationRewards);
-        expectToEqual(
-            accounts,
+        expect(accounts).toEqual(
             [
                 '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe',
                 '3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV',
@@ -157,40 +154,35 @@ describe('specialEventAffectedAccounts', () => {
         );
 
         accounts = specialEventAffectedAccounts(foundationReward);
-        expectToEqual(
-            accounts,
+        expect(accounts).toEqual(
             ['3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'].map(
                 AccountAddress.fromBase58
             )
         );
 
         accounts = specialEventAffectedAccounts(mint);
-        expectToEqual(
-            accounts,
+        expect(accounts).toEqual(
             ['3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'].map(
                 AccountAddress.fromBase58
             )
         );
 
         accounts = specialEventAffectedAccounts(paydayAccountReward);
-        expectToEqual(
-            accounts,
+        expect(accounts).toEqual(
             ['4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'].map(
                 AccountAddress.fromBase58
             )
         );
 
         accounts = specialEventAffectedAccounts(foundationBlockReward);
-        expectToEqual(
-            accounts,
+        expect(accounts).toEqual(
             ['3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'].map(
                 AccountAddress.fromBase58
             )
         );
 
         accounts = specialEventAffectedAccounts(blockReward);
-        expectToEqual(
-            accounts,
+        expect(accounts).toEqual(
             [
                 '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe',
                 '3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV',

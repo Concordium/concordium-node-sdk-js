@@ -12,7 +12,6 @@
   - `@concordium/common-sdk/cis4` entrypoint exposes functionality for working with contracts adhering to the [CIS-4](https://proposals.concordium.software/CIS/cis-4.html) standard.
   - `@concordium/common-sdk/grpc` entrypoint exposes the grpc client for interacting with a nodes GRPCv2 interface.
   - `@concordium/common-sdk/id` entrypoint exposes functionality for working with ID proofs.
-  - `@concordium/common-sdk/json-rpc` entrypoint exposes the **(deprecated)** json-rpc client for interacting with a nodes GPRCv1 interface.
   - `@concordium/common-sdk/schema` entrypoint exposes functionality for working with smart contract schemas, i.e.(de)serializing types using a smart contract schema.
     - This uses the wasm entrypoint at `@concordium/rust-bindings/dapp`.
   - `@concordium/common-sdk/types` entrypoint exposes functionality for working with concordium domain types.
@@ -23,7 +22,6 @@
   - For TypeScript projects the minimum required version of typescript is:
     - NodeJS: 4.7, `"moduleResolution": "node16" // or "nodenext"`
     - Bundled applications (webpack, esbuild, rollup, etc...): 5.0, `"moduleResolution": "bundler"`
-
 - The following functions now parse using `json-bigint` meaning that they return bigints instead of numbers _for all numbers no matter size_
   - `deserializeContractState`
   - `deserializeReceiveReturnValue`
@@ -70,7 +68,7 @@ Several types have been replaced with a module containing the type itself togeth
   - To refer to `ModuleReference` as a type use `ModuleReference.Type`.
   - Constructing `new ModuleReference("<hex-string>")` is now `ModuleReference.fromHexString("<hex-string>")`.
   - The static method `ModuleReference.fromBytes` is now `ModuleReference.fromBuffer`.
-
+- Removed `JsonRpcClient` and types and functionality associated solely with this class.
 - Renamed `AccountSequenceNumber` module to `SequenceNumber`.
 - Fix type for `TranferredEvent` from `ContractTraceEvent` to only be from contract addresses to account addresses.
 
@@ -83,6 +81,21 @@ Several types have been replaced with a module containing the type itself togeth
 - `EntrypointName` is now a module with functions related to entrypoint names of a smart contract.
 - `ReceiveName` is now a module with functions related to receive-function names of a smart contract.
 - `ReturnValue` is now a module with functions related to return values from invoking a smart contract.
+
+### Changes
+
+- Added version discriminators to types versioned by the protocol version of Concordium nodes:
+  - `MintDistribution`
+  - `GasRewards`
+  - `RewardParameters`
+  - `ChainParameters`
+  - `Authorizations`
+  - `RewardStatus`
+  - `BlockInfo`
+  - `ConsensusStatus`
+  - `AccountBakerDetails`
+  - `ElectionInfo`
+- Added type discriminator to different forms of `AccountInfo`.
 
 ## 9.4.0
 

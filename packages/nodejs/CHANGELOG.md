@@ -24,6 +24,7 @@
     - NodeJS: 4.7, `"moduleResolution": "node16" // or "nodenext"`
     - Bundled applications (webpack, esbuild, rollup, etc...): 5.0, `"moduleResolution": "bundler"`
 
+- Removed `ConcordiumNodeClient` and types and functionality associated solely with this class.
 
 The API now uses dedicated types instead of language primitives:
 - Use `AccountAddress` instead of a string with base58 encoding. Use `AccountAddress.fromBase58('<base58>')` to construct it.
@@ -43,6 +44,7 @@ The API now uses dedicated types instead of language primitives:
 - Use `ModuleReference` instead of a string with hex encoding. Can be constructed using `ModuleReference.fromHexString('<hex-string>')`.
 
 Several types have been replaced with a module containing the type itself together with functions for constructing and converting the type:
+
 - `AccountAddress` is now a module with functions related to account addresses:
   - To refer to `AccountAddress` as a type use `AccountAddress.Type`.
   - Constructing `new AccountAddress("<address>")` is now `AccountAddress.fromBase58("<address>")`.

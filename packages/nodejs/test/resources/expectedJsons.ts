@@ -450,7 +450,7 @@ export const passiveDelegatorInfoList: DelegatorInfo[] = [
         stake: 100000000n,
         pendingChange: {
             effectiveTime: new Date('2022-06-28T11:47:37.750Z'),
-            change: StakePendingChangeType.RemoveStakeV1,
+            change: StakePendingChangeType.RemoveStake,
         },
     },
 ];
@@ -471,6 +471,7 @@ export const passiveDelegatorRewardInfoList: DelegatorRewardPeriodInfo[] = [
 ];
 
 export const electionInfoList: ElectionInfoV0 = {
+    version: 0,
     electionDifficulty: 0.025,
     electionNonce:
         '0bb2121015ddd9026d0c31a8b33499ce6049daf5696fe4e2cd94cff83ad331f2',
@@ -763,7 +764,7 @@ export const configureDelegation: DelegationEvent[] = [
         account: AccountAddress.fromBase58(
             '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj'
         ),
-        delegatorId: 2059,
+        delegatorId: 2059n,
         tag: TransactionEventTag.DelegationAdded,
     },
     {
@@ -773,14 +774,14 @@ export const configureDelegation: DelegationEvent[] = [
         delegationTarget: {
             delegateType: DelegationTargetType.PassiveDelegation,
         },
-        delegatorId: 2059,
+        delegatorId: 2059n,
         tag: TransactionEventTag.DelegationSetDelegationTarget,
     },
     {
         account: AccountAddress.fromBase58(
             '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj'
         ),
-        delegatorId: 2059,
+        delegatorId: 2059n,
         restakeEarnings: true,
         tag: TransactionEventTag.DelegationSetRestakeEarnings,
     },
@@ -788,7 +789,7 @@ export const configureDelegation: DelegationEvent[] = [
         account: AccountAddress.fromBase58(
             '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj'
         ),
-        delegatorId: 2059,
+        delegatorId: 2059n,
         newStake: 1000000n,
         tag: TransactionEventTag.DelegationStakeIncreased,
     },
@@ -1066,7 +1067,7 @@ export const delegationRemovedEvent: DelegationEvent = {
     account: AccountAddress.fromBase58(
         '4nvFUvdF3Ki7M6Xc2vHejX7iQW5Gtu7UBu6RaPRZV7LorLToPG'
     ),
-    delegatorId: 4002,
+    delegatorId: 4002n,
 };
 
 export const transferWithMemoSummary: BaseAccountTransactionSummary &
@@ -1165,7 +1166,7 @@ export const delegationStakeDecreasedEvent: DelegationEvent = {
     account: AccountAddress.fromBase58(
         '4mAs6xcFw26fb6u8odkJWoe3fAK8bCJ91BwScUc36DFhh3thwD'
     ),
-    delegatorId: 57,
+    delegatorId: 57n,
     newStake: 10000000n,
 };
 
@@ -1544,6 +1545,7 @@ export const bakerAccountInfo: AccountInfo = {
         '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L'
     ),
     accountBaker: {
+        version: 1,
         bakerAggregationVerifyKey:
             'b18a02de74826e55f6eadc0f31d0d9a6edfb2993d030e65136f1e1256a69ba523acb40fa4d304d0668aa307c19257a0a10726e70149c904e1ef29aedb2679c825997e3f14edd303bf276f2c0b0c5a4c4870fff0c043150be06b715466be564c4',
         bakerElectionVerifyKey:
@@ -1951,6 +1953,7 @@ const level1Keys = {
 };
 
 export const chainParameters: ChainParametersV1 = {
+    version: 1,
     electionDifficulty: 0.025,
     euroPerEnergy: { numerator: 1n, denominator: 50000n },
     microGTUPerEuro: {
@@ -1975,17 +1978,24 @@ export const chainParameters: ChainParametersV1 = {
     capitalBound: 0.1,
     leverageBound: { numerator: 3n, denominator: 1n },
     rewardParameters: {
+        version: 1,
         transactionFeeDistribution: { baker: 0.45, gasAccount: 0.45 },
         gASRewards: {
+            version: 0,
             baker: 0.25,
             finalizationProof: 0.005,
             accountCreation: 0.02,
             chainUpdate: 0.005,
         },
-        mintDistribution: { bakingReward: 0.6, finalizationReward: 0.3 },
+        mintDistribution: {
+            version: 1,
+            bakingReward: 0.6,
+            finalizationReward: 0.3,
+        },
     },
     level1Keys,
     level2Keys: {
+        version: 1,
         addAnonymityRevoker: {
             authorizedKeys: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
             threshold: 7,
@@ -2123,10 +2133,11 @@ export const chainParameters: ChainParametersV1 = {
     rootKeys,
 };
 
-const { cooldownParameters, timeParameters, ...oldLevel2Keys } =
+const { cooldownParameters, timeParameters, version, ...oldLevel2Keys } =
     chainParameters.level2Keys;
 
 export const oldChainParameters: ChainParametersV0 = {
+    version: 0,
     electionDifficulty: 0.025,
     euroPerEnergy: { numerator: 1n, denominator: 50000n },
     microGTUPerEuro: { numerator: 50000000n, denominator: 1n },
@@ -2137,21 +2148,24 @@ export const oldChainParameters: ChainParametersV0 = {
     bakerCooldownEpochs: 166n,
     minimumThresholdForBaking: 15000000000n,
     rewardParameters: {
+        version: 0,
         transactionFeeDistribution: { baker: 0.45, gasAccount: 0.45 },
         gASRewards: {
+            version: 0,
             baker: 0.25,
             finalizationProof: 0.005,
             accountCreation: 0.02,
             chainUpdate: 0.005,
         },
         mintDistribution: {
+            version: 0,
             bakingReward: 0.6,
             finalizationReward: 0.3,
             mintPerSlot: 7.555665e-10,
         },
     },
     level1Keys,
-    level2Keys: oldLevel2Keys,
+    level2Keys: { version: 0, ...oldLevel2Keys },
     rootKeys,
 };
 
@@ -2255,6 +2269,7 @@ export const blocksAtHeight: BlockHash.Type[] = [
 ].map(BlockHash.fromHexString);
 
 export const blockInfo: BlockInfoV0 = {
+    version: 0,
     blockParent: BlockHash.fromHexString(
         '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf'
     ),

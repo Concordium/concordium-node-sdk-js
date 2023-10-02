@@ -116,10 +116,10 @@ export class ContractDryRun<E extends string = string> {
      * @template T - The type of the input given
      *
      * @param {EntrypointName.Type} entrypoint - The name of the receive function to invoke.
-     * @param {ContractAddress | AccountAddress} invoker - The address of the invoker.
+     * @param {ContractAddress | AccountAddress.Type} invoker - The address of the invoker.
      * @param {Function} serializer - A function for serializing the input to bytes.
      * @param {T} input - Input for for contract function.
-     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
+     * @param {BlockHash.Type} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
      *
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */
@@ -193,7 +193,7 @@ class ContractBase<E extends string = string, V extends string = string> {
      * Helper function for getting the {@link InstanceInfo} of a contract
      *
      * @param {ConcordiumGRPCClient} grpcClient - The GRPC client for accessing a node.
-     * @param {ContractAddress} contractAddress - The address of the contract.
+     * @param {ContractAddress.Type} contractAddress - The address of the contract.
      *
      * @throws if the {@link InstanceInfo} of the contract could not be found.
      *
@@ -218,11 +218,11 @@ class ContractBase<E extends string = string, V extends string = string> {
      * Helper function for getting the name of a contract
      *
      * @param {ConcordiumGRPCClient} grpcClient - The GRPC client for accessing a node.
-     * @param {ContractAddress} contractAddress - The address of the contract.
+     * @param {ContractAddress.Type} contractAddress - The address of the contract.
      *
      * @throws if the {@link InstanceInfo} of the contract could not be found.
      *
-     * @returns {string} the name of the contract.
+     * @returns {ContractName.Type} the name of the contract.
      */
     protected static async getContractName(
         grpcClient: ConcordiumGRPCClient,
@@ -394,7 +394,7 @@ class ContractBase<E extends string = string, V extends string = string> {
      *
      * @throws If the query could not be invoked successfully.
      *
-     * @returns {HexString} The transaction hash of the update transaction
+     * @returns {TransactionHash.Type} The transaction hash of the update transaction
      */
     protected async sendUpdateTransaction(
         transactionBase: ContractUpdateTransaction,
@@ -425,7 +425,7 @@ class ContractBase<E extends string = string, V extends string = string> {
      *
      * @template T - The type of the input
      *
-     * @param {string} entrypoint - The name of the receive function to invoke.
+     * @param {EntrypointName.Type} entrypoint - The name of the receive function to invoke.
      * @param {Function} serializeInput - A function to serialize the `input` to bytes.
      * @param {CIS2.TransactionMetadata} metadata - Metadata to be used for the transaction (with defaults).
      * @param {T} input - Input for for contract function.
@@ -433,7 +433,7 @@ class ContractBase<E extends string = string, V extends string = string> {
      *
      * @throws If the query could not be invoked successfully.
      *
-     * @returns {HexString} The transaction hash of the update transaction
+     * @returns {TransactionHash.Type} The transaction hash of the update transaction
      */
     public async createAndSendUpdateTransaction<T>(
         entrypoint: EntrypointName.Type<E>,
@@ -457,11 +457,11 @@ class ContractBase<E extends string = string, V extends string = string> {
      * @template T - The type of the input
      * @template R - The type the invocation response should be deserialized into.
      *
-     * @param {string} entrypoint - The name of the view function to invoke.
+     * @param {EntrypointName.Type} entrypoint - The name of the view function to invoke.
      * @param {Function} serializeInput - A function to serialize the `input` to bytes.
      * @param {Function} deserializeResponse - A function to deserialize the value returned from the view invocation.
      * @param {T | T[]} input - Input for for contract function.
-     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
+     * @param {BlockHash.Type} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
      *
      * @throws If the query could not be invoked successfully.
      *
@@ -618,7 +618,7 @@ export abstract class CISContract<
     /**
      * Creates a {@link ContractUpdateTransactionWithSchema} contract update transaction, holding the necessary parts to sign/submit to the chain.
      *
-     * @param {string} entrypoint - The name of the receive function to invoke.
+     * @param {EntrypointName.Type} entrypoint - The name of the receive function to invoke.
      * @param {Function} serializeInput - A function to serialize the `input` to bytes.
      * @param {ContractTransactionMetadata} metadata - Metadata to be used for the transaction creation (with defaults).
      * @param {T} input - Input for for contract function.
@@ -637,7 +637,7 @@ export abstract class CISContract<
     /**
      * Creates a {@link ContractUpdateTransactionWithSchema} contract update transaction, holding the necessary parts to sign/submit to the chain.
      *
-     * @param {string} entrypoint - The name of the receive function to invoke.
+     * @param {EntrypointName.Type} entrypoint - The name of the receive function to invoke.
      * @param {Function} serializeInput - A function to serialize the `input` to bytes.
      * @param {ContractTransactionMetadata} metadata - Metadata to be used for the transaction creation (with defaults).
      * @param {T} input - Input for for contract function.

@@ -51,6 +51,7 @@ Several types have been replaced with a module containing the type itself togeth
 - Removed `JsonRpcClient` and types and functionality associated solely with this class.
 
 - Renamed `AccountSequenceNumber` module to `SequenceNumber`.
+- Fix type for `TranferredEvent` from `ContractTraceEvent` to only be from contract addresses to account addresses.
 
 ### Added
 

@@ -13,14 +13,16 @@ const moduleReferenceByteLength = 32;
  */
 class ModuleReference {
     constructor(
-        public moduleRef: string,
-        public decodedModuleRef: Uint8Array
+        /** Internal field, the module reference represented as a hex string. */
+        public readonly moduleRef: string,
+        /** Internal field, buffer containing the 32 bytes for the module reference. */
+        public readonly decodedModuleRef: Uint8Array
     ) {}
 
     toJSON(): string {
-        return packBufferWithWord32Length(
-            Buffer.from(this.decodedModuleRef)
-        ).toString('hex');
+        return packBufferWithWord32Length(this.decodedModuleRef).toString(
+            'hex'
+        );
     }
 }
 

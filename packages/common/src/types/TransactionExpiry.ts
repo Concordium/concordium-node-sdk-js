@@ -9,7 +9,7 @@ class TransactionExpiry {
     private __nominal = true;
     constructor(
         /** Internal representation of expiry. Seconds since unix epoch */
-        public expiryEpochSeconds: bigint
+        public readonly expiryEpochSeconds: bigint
     ) {}
 
     toJSON(): number {
@@ -22,24 +22,46 @@ class TransactionExpiry {
  */
 export type Type = TransactionExpiry;
 
-export function fromEpochSeconds(seconds: bigint): TransactionExpiry {
+/**
+ * Construct a TransactionExpiry from a number of seconds since unix epoch.
+ * @param {bigint | number} seconds Number of seconds since unix epoch.
+ * @throws If provided a negative number.
+ * @returns The transaction expiry.
+ */
+export function fromEpochSeconds(seconds: bigint | number): TransactionExpiry {
     if (seconds < 0n) {
         throw new Error(
             'Invalid transaction expiry: Expiry cannot be before unix epoch.'
         );
     }
-    return new TransactionExpiry(seconds);
+    return new TransactionExpiry(BigInt(seconds));
 }
 
-export function fromDate(expiry: Date) {
+/**
+ * Construct a TransactionExpiry from a Date object.
+ * @param {Date} expiry The date representing the expiry time.
+ * @throws If provided the date is from before unix epoch.
+ * @returns {TransactionExpiry} The transaction expiry.
+ */
+export function fromDate(expiry: Date): TransactionExpiry {
     return fromEpochSeconds(secondsSinceEpoch(expiry));
 }
 
+/**
+ * Convert a TransactionExpiry into a Date object.
+ * @param {TransactionExpiry} expiry A TransactionExpiry to convert.
+ * @returns {Date} The date object.
+ */
 export function toDate(expiry: TransactionExpiry): Date {
     return new Date(Number(expiry.expiryEpochSeconds) * 1000);
 }
 
-export function futureMinutes(minutes: number) {
+/**
+ * Construct a TransactionExpiry minutes in the future from the time of calling this function.
+ * @param {number} minutes The number of minutes in the future to set as the expiry time.
+ * @returns {TransactionExpiry} The transaction expiry.
+ */
+export function futureMinutes(minutes: number): TransactionExpiry {
     const expiryMillis = Date.now() + minutes * 60 * 1000;
     return fromDate(new Date(expiryMillis));
 }

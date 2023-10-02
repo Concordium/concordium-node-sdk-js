@@ -13,7 +13,7 @@ class CcdAmount {
     private __nominal = true;
     constructor(
         /** Internal representation of Ccd amound in micro Ccd. */
-        public microCcdAmount: bigint
+        public readonly microCcdAmount: bigint
     ) {}
 
     toJSON(): string {

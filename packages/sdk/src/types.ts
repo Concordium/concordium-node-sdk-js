@@ -132,11 +132,6 @@ export interface AddressAccount {
     address: AccountAddress.Type;
 }
 
-// export interface ContractAddress {
-//     index: bigint;
-//     subindex: bigint;
-// }
-
 export type AccountIdentifierInput =
     | AccountAddress.Type
     | CredentialRegistrationId.Type
@@ -379,7 +374,7 @@ export interface ChainParametersCommon {
     /** Limit for the number of account creations in a block */
     accountCreationLimit: number;
     /** The chain foundation account */
-    foundationAccount: Base58String;
+    foundationAccount: AccountAddress.Type;
     /** Keys allowed to do level1 updates */
     level1Keys: KeysWithThreshold;
     /** Keys allowed to do root updates */
@@ -1056,7 +1051,7 @@ export interface ArInfo {
 }
 
 interface DelegatorInfoCommon {
-    account: Base58String;
+    account: AccountAddress.Type;
     stake: Amount;
 }
 export interface DelegatorInfo extends DelegatorInfoCommon {
@@ -1066,13 +1061,13 @@ export interface DelegatorInfo extends DelegatorInfoCommon {
 export type DelegatorRewardPeriodInfo = DelegatorInfoCommon;
 
 export interface Branch {
-    blockHash: HexString;
+    blockHash: BlockHash.Type;
     children: Branch[];
 }
 
 export interface BakerElectionInfo {
     baker: BakerId;
-    account: Base58String;
+    account: AccountAddress.Type;
     lotteryPower: number;
 }
 
@@ -1419,7 +1414,7 @@ export interface ContractContext {
     invoker?: ContractAddress.Type | AccountAddress.Type;
     contract: ContractAddress.Type;
     amount?: CcdAmount;
-    method: string;
+    method: ReceiveName.Type;
     parameter?: Parameter.Type;
     energy?: Energy.Type;
 }

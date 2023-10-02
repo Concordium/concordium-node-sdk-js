@@ -14,6 +14,7 @@ import * as Parameter from './types/Parameter.js';
 import * as ContractName from './types/ContractName.js';
 import * as ReceiveName from './types/ReceiveName.js';
 import * as ReturnValue from './types/ReturnValue.js';
+import { EntrypointName } from './index.js';
 
 /**
  * Namespace with types for CIS-0 standard contracts
@@ -142,14 +143,16 @@ export async function cis0Supports(
             );
         });
 
-    const contractName = ContractName.toString(
-        ContractName.fromInitName(instanceInfo.name)
+    const contractName = ContractName.fromInitName(instanceInfo.name);
+    const supportReceiveName = ReceiveName.create(
+        contractName,
+        EntrypointName.fromStringUnchecked('supports')
     );
 
     if (
-        !instanceInfo.methods
-            .map(ReceiveName.toString)
-            .includes(`${contractName}.supports`)
+        !instanceInfo.methods.some((methods) =>
+            ReceiveName.equals(methods, supportReceiveName)
+        )
     ) {
         return undefined;
     }
@@ -162,7 +165,7 @@ export async function cis0Supports(
         {
             contract: contractAddress,
             parameter,
-            method: `${contractName}.supports`,
+            method: supportReceiveName,
         },
         blockHash
     );

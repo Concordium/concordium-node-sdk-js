@@ -79,8 +79,8 @@ export function fromBase58(address: string): AccountAddress {
             `The provided address '${address}' does not use version byte with value of 1`
         );
     }
-    const decodedAddress = buffer.subarray(1);
-    return new AccountAddress(address, decodedAddress);
+    const decodedAddress = buffer.subarray(1, 33); // Ensure only the 32 bytes for the address is kept.
+    return new AccountAddress(address, new Uint8Array(decodedAddress));
 }
 
 /**
@@ -179,4 +179,14 @@ export function toProto(accountAddress: AccountAddress): Proto.AccountAddress {
     return {
         value: accountAddress.decodedAddress,
     };
+}
+
+/**
+ * Check if two account addresses are the exact same. This will not consider different aliases for the same account as equal.
+ * @param {AccountAddress} left
+ * @param {AccountAddress} right
+ * @returns {boolean} True if they are equal.
+ */
+export function equals(left: AccountAddress, right: AccountAddress): boolean {
+    return left.address === right.address;
 }

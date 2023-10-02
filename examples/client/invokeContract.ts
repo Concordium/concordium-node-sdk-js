@@ -8,6 +8,8 @@ import {
     ContractTraceEvent,
     Energy,
     Parameter,
+    ReceiveName,
+    ReturnValue,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
@@ -110,7 +112,7 @@ const client = new ConcordiumGRPCNodeClient(
     const contract = ContractAddress.create(cli.flags.contract);
     const context: ContractContext = {
         // Required
-        method: cli.flags.receive,
+        method: ReceiveName.fromString(cli.flags.receive),
         contract,
         // Optional
         invoker,
@@ -132,9 +134,12 @@ const client = new ConcordiumGRPCNodeClient(
     } else if (result.tag === 'success') {
         console.log('Invoke was succesful');
 
-        const returnValue: string | undefined = result.returnValue; // If the invoked method has return value
+        const returnValue = result.returnValue; // If the invoked method has return value
         if (returnValue) {
-            console.log('The return value of the invoked method:', returnValue);
+            console.log(
+                'The return value of the invoked method:',
+                ReturnValue.toHexString(returnValue)
+            );
         }
 
         const events: ContractTraceEvent[] = result.events;

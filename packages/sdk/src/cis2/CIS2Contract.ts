@@ -1,6 +1,6 @@
 import { stringify } from 'json-bigint';
 
-import { HexString, InvokeContractResult } from '../types.js';
+import type { HexString, InvokeContractResult } from '../types.js';
 import * as ContractAddress from '../types/ContractAddress.js';
 import * as BlockHash from '../types/BlockHash.js';
 import * as TransactionHash from '../types/TransactionHash.js';
@@ -57,7 +57,7 @@ class CIS2DryRun extends ContractDryRun<Updates> {
      *
      * @param {CIS2.Address} sender - Address of the sender of the transfer.
      * @param {CIS2.Transfer | CIS2.Transfer[]} transfer(s) - The transfer object(s).
-     * @param {HexString} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
+     * @param {BlockHash.Type} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
      *
      * @returns {InvokeContractResult} the contract invocation result, which includes whether or not the invocation succeeded along with the energy spent.
      */
@@ -394,7 +394,7 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
             deserializeCIS2BalanceOfResponse
         );
         return this.invokeView(
-            'balanceOf',
+            EntrypointName.fromStringUnchecked('balanceOf'),
             serialize,
             deserialize,
             queries,
@@ -441,7 +441,7 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
             deserializeCIS2OperatorOfResponse
         );
         return this.invokeView(
-            'operatorOf',
+            EntrypointName.fromStringUnchecked('operatorOf'),
             serialize,
             deserialize,
             queries,
@@ -488,7 +488,7 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
             deserializeCIS2TokenMetadataResponse
         );
         return this.invokeView(
-            'tokenMetadata',
+            EntrypointName.fromStringUnchecked('tokenMetadata'),
             serialize,
             deserialize,
             tokenIds,

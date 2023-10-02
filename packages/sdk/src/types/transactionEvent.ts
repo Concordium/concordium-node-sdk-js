@@ -15,6 +15,7 @@ import type * as ContractAddress from './ContractAddress.js';
 import type * as AccountAddress from './AccountAddress.js';
 import type * as Parameter from './Parameter.js';
 import type * as ReceiveName from './ReceiveName.js';
+import type * as InitName from './InitName.js';
 
 export enum TransactionEventTag {
     ModuleDeployed = 'ModuleDeployed',
@@ -131,7 +132,7 @@ export interface ContractInitializedEvent {
     tag: TransactionEventTag.ContractInitialized;
     address: ContractAddress.Type;
     amount: Amount;
-    initName: string;
+    initName: InitName.Type;
     events: HexString[];
     contractVersion: ContractVersion;
     ref: ModuleRef;

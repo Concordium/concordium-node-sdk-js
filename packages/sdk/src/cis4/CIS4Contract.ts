@@ -331,7 +331,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         blockHash?: BlockHash.Type
     ): Promise<CIS4.CredentialEntry> {
         return this.invokeView(
-            'credentialEntry',
+            EntrypointName.fromStringUnchecked('credentialEntry'),
             (k) => Buffer.from(k, 'hex'),
             deserializeCIS4CredentialEntry,
             credHolderPubKey,
@@ -352,7 +352,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         blockHash?: BlockHash.Type
     ): Promise<CIS4.CredentialStatus> {
         return this.invokeView(
-            'credentialStatus',
+            EntrypointName.fromStringUnchecked('credentialStatus'),
             (k) => Buffer.from(k, 'hex'),
             deserializeCIS4CredentialStatus,
             credHolderPubKey,
@@ -371,7 +371,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         blockHash?: BlockHash.Type
     ): Promise<CIS4.RevocationKeyWithNonce[]> {
         return this.invokeView(
-            'revocationKeys',
+            EntrypointName.fromStringUnchecked('revocationKeys'),
             () => Buffer.alloc(0),
             deserializeCIS4RevocationKeys,
             undefined,
@@ -390,7 +390,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         blockHash?: BlockHash.Type
     ): Promise<CIS4.MetadataResponse> {
         return this.invokeView(
-            'registryMetadata',
+            EntrypointName.fromStringUnchecked('registryMetadata'),
             () => Buffer.alloc(0),
             deserializeCIS4MetadataResponse,
             undefined,
@@ -407,7 +407,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
      */
     public issuer(blockHash?: BlockHash.Type): Promise<HexString> {
         return this.invokeView(
-            'issuer',
+            EntrypointName.fromStringUnchecked('issuer'),
             () => Buffer.alloc(0),
             (value) => value,
             undefined,

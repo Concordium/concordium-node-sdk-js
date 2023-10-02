@@ -44,6 +44,7 @@ import * as ContractAddress from '../types/ContractAddress.js';
 import * as Parameter from '../types/Parameter.js';
 import * as Energy from '../types/Energy.js';
 import * as SequenceNumber from '../types/SequenceNumber.js';
+import * as ReceiveName from '../types/ReceiveName.js';
 
 /**
  * @hidden
@@ -295,7 +296,7 @@ export class ConcordiumGRPCClient {
             invoker: getInvokerInput(context.invoker),
             instance: context.contract,
             amount: { value: context.amount?.microCcdAmount || 0n },
-            entrypoint: { value: context.method },
+            entrypoint: ReceiveName.toProto(context.method),
             parameter: Parameter.toProto(
                 context.parameter ?? Parameter.empty()
             ),
@@ -1566,9 +1567,7 @@ export function getAccountIdentifierInput(
     if (AccountAddress.isAccountAddress(accountIdentifier)) {
         returnIdentifier = {
             oneofKind: 'address',
-            address: {
-                value: AccountAddress.toBuffer(accountIdentifier),
-            },
+            address: AccountAddress.toProto(accountIdentifier),
         };
     } else if (
         CredentialRegistrationId.isCredentialRegistrationId(accountIdentifier)

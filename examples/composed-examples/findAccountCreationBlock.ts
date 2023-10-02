@@ -81,7 +81,7 @@ const client = new ConcordiumGRPCNodeClient(
     for await (const summary of summaries) {
         if (
             summary.type === 'accountCreation' &&
-            summary.address === account.address
+            AccountAddress.equals(summary.address, account)
         ) {
             console.log(
                 'Hash of transaction that created the account:',

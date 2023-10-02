@@ -61,6 +61,7 @@ import * as AccountAddress from '../types/AccountAddress.js';
 import * as ContractAddress from '../types/ContractAddress.js';
 import * as EntrypointName from '../types/EntrypointName.js';
 import * as Timestamp from '../types/Timestamp.js';
+import * as Duration from '../types/Duration.js';
 
 // These cannot be exported directly as modules because of a bug in an eslint plugin.
 // https://github.com/import-js/eslint-plugin-import/issues/2289.
@@ -80,4 +81,5 @@ export {
     ContractAddress,
     EntrypointName,
     Timestamp,
+    Duration,
 };

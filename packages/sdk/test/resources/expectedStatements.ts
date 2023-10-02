@@ -1,3 +1,4 @@
+import { ContractAddress } from '../../src/index.js';
 import { CredentialStatement } from '../../src/web3-id/web3IdProofTypes.js';
 
 export const expectedStatementMixed: CredentialStatement[] = [
@@ -5,8 +6,8 @@ export const expectedStatementMixed: CredentialStatement[] = [
         idQualifier: {
             type: 'sci',
             issuers: [
-                { index: 2101n, subindex: 0n },
-                { index: 1337n, subindex: 42n },
+                ContractAddress.create(2101),
+                ContractAddress.create(1337, 42),
             ],
         },
         statement: [
@@ -26,7 +27,7 @@ export const expectedStatementMixed: CredentialStatement[] = [
     {
         idQualifier: {
             type: 'sci',
-            issuers: [{ index: 1338n, subindex: 0n }],
+            issuers: [ContractAddress.create(1338, 0)],
         },
         statement: [
             {

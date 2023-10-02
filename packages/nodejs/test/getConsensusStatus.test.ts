@@ -1,4 +1,4 @@
-import { ConsensusStatus, isHex } from '@concordium/common-sdk';
+import { ConsensusStatus } from '@concordium/common-sdk';
 import { getNodeClientV2 as getNodeClient } from './testHelpers.js';
 
 const client = getNodeClient();
@@ -6,9 +6,6 @@ test('retrieves the consensus status from the node with correct types', async ()
     const consensusStatus: ConsensusStatus = await client.getConsensusStatus();
 
     return Promise.all([
-        expect(isHex(consensusStatus.bestBlock)).toBeTruthy(),
-        expect(isHex(consensusStatus.genesisBlock)).toBeTruthy(),
-        expect(isHex(consensusStatus.lastFinalizedBlock)).toBeTruthy(),
         expect(
             typeof consensusStatus.finalizationCount === 'bigint'
         ).toBeTruthy(),
@@ -53,7 +50,6 @@ test('retrieves the consensus status from the node with correct types', async ()
         ).toBeFalsy(),
         expect(Number.isNaN(consensusStatus.genesisIndex)).toBeFalsy(),
 
-        expect(typeof consensusStatus.epochDuration === 'bigint').toBeTruthy(),
         expect(
             typeof consensusStatus.bestBlockHeight === 'bigint'
         ).toBeTruthy(),

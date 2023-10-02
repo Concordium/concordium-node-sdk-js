@@ -4,10 +4,20 @@ import bs58check from 'bs58check';
 import * as v1 from '../types.js';
 import * as v2 from '../grpc-api/v2/concordium/types.js';
 import { mapRecord, unwrap } from '../util.js';
-import { AccountAddress } from '../types/accountAddress.js';
 import { ModuleReference } from '../types/moduleReference.js';
 import { CcdAmount } from '../types/ccdAmount.js';
-import { Base58String } from '../types.js';
+import * as AccountAddress from '../types/AccountAddress.js';
+import * as BlockHash from '../types/BlockHash.js';
+import * as ReceiveName from '../types/ReceiveName.js';
+import * as InitName from '../types/InitName.js';
+import * as ContractAddress from '../types/ContractAddress.js';
+import * as Energy from '../types/Energy.js';
+import * as Duration from '../types/Duration.js';
+import * as Timestamp from '../types/Timestamp.js';
+import * as SequenceNumber from '../types/SequenceNumber.js';
+import * as TransactionHash from '../types/TransactionHash.js';
+import * as Parameter from '../types/Parameter.js';
+import * as ReturnValue from '../types/ReturnValue.js';
 
 function unwrapToHex(bytes: Uint8Array | undefined): v1.HexString {
     return Buffer.from(unwrap(bytes)).toString('hex');
@@ -267,7 +277,9 @@ function translateChainParametersCommon(
         euroPerEnergy: unwrap(params.euroPerEnergy?.value),
         microGTUPerEuro: unwrap(params.microCcdPerEuro?.value),
         accountCreationLimit: unwrap(params.accountCreationLimit?.value),
-        foundationAccount: unwrapToBase58(params.foundationAccount),
+        foundationAccount: AccountAddress.fromProto(
+            unwrap(params.foundationAccount)
+        ),
         level1Keys: trHigherLevelKeysUpdate(unwrap(params.level1Keys)),
         rootKeys: trHigherLevelKeysUpdate(unwrap(params.rootKeys)),
     };
@@ -366,8 +378,8 @@ export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
         schedule: unwrap(acc.schedule?.schedules).map(trRelease),
     };
     const accInfoCommon: v1.AccountInfoSimple = {
-        accountAddress: unwrapToBase58(acc.address),
-        accountNonce: unwrap(acc.sequenceNumber?.value),
+        accountAddress: AccountAddress.fromProto(unwrap(acc.address)),
+        accountNonce: SequenceNumber.fromProto(unwrap(acc.sequenceNumber)),
         accountAmount: unwrap(acc.amount?.value),
         accountIndex: unwrap(acc.index?.value),
         accountThreshold: unwrap(acc.threshold?.value),
@@ -396,7 +408,7 @@ export function nextAccountSequenceNumber(
     nasn: v2.NextAccountSequenceNumber
 ): v1.NextAccountNonce {
     return {
-        nonce: unwrap(nasn.sequenceNumber?.value),
+        nonce: SequenceNumber.fromProto(unwrap(nasn.sequenceNumber)),
         allFinal: nasn.allFinal,
     };
 }
@@ -575,8 +587,8 @@ function trChainParametersV2(
                 ),
             },
         },
-        timeoutBase: unwrap(
-            params.consensusParameters?.timeoutParameters?.timeoutBase?.value
+        timeoutBase: Duration.fromProto(
+            unwrap(params.consensusParameters?.timeoutParameters?.timeoutBase)
         ),
         timeoutDecrease: unwrap(
             params.consensusParameters?.timeoutParameters?.timeoutDecrease
@@ -584,9 +596,11 @@ function trChainParametersV2(
         timeoutIncrease: unwrap(
             params.consensusParameters?.timeoutParameters?.timeoutIncrease
         ),
-        minBlockTime: unwrap(params.consensusParameters?.minBlockTime?.value),
-        blockEnergyLimit: unwrap(
-            params.consensusParameters?.blockEnergyLimit?.value
+        minBlockTime: Duration.fromProto(
+            unwrap(params.consensusParameters?.minBlockTime)
+        ),
+        blockEnergyLimit: Energy.fromProto(
+            unwrap(params.consensusParameters?.blockEnergyLimit)
         ),
         finalizerRelativeStakeThreshold: trAmountFraction(
             params.finalizationCommitteeParameters
@@ -623,7 +637,7 @@ export function bakerPoolInfo(info: v2.PoolInfoResponse): v1.BakerPoolStatus {
     return {
         poolType: v1.PoolStatusType.BakerPool,
         bakerId: unwrap(info.baker?.value),
-        bakerAddress: unwrapToBase58(info.address),
+        bakerAddress: AccountAddress.fromProto(unwrap(info.address)),
         bakerEquityCapital: unwrap(info.equityCapital?.value),
         delegatedCapital: unwrap(info.delegatedCapital?.value),
         delegatedCapitalCap: unwrap(info.delegatedCapitalCap?.value),
@@ -698,11 +712,13 @@ export function tokenomicsInfo(info: v2.TokenomicsInfo): v1.RewardStatus {
 
 export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
     const common: v1.ConsensusStatusCommon = {
-        bestBlock: unwrapValToHex(ci.bestBlock),
-        genesisBlock: unwrapValToHex(ci.genesisBlock),
-        currentEraGenesisBlock: unwrapValToHex(ci.currentEraGenesisBlock),
-        lastFinalizedBlock: unwrapValToHex(ci.lastFinalizedBlock),
-        epochDuration: unwrap(ci.epochDuration?.value),
+        bestBlock: BlockHash.fromProto(unwrap(ci.bestBlock)),
+        genesisBlock: BlockHash.fromProto(unwrap(ci.genesisBlock)),
+        currentEraGenesisBlock: BlockHash.fromProto(
+            unwrap(ci.currentEraGenesisBlock)
+        ),
+        lastFinalizedBlock: BlockHash.fromProto(unwrap(ci.lastFinalizedBlock)),
+        epochDuration: Duration.fromProto(unwrap(ci.epochDuration)),
         bestBlockHeight: unwrap(ci.bestBlockHeight?.value),
         lastFinalizedBlockHeight: unwrap(ci.lastFinalizedBlockHeight?.value),
         finalizationCount: BigInt(unwrap(ci.finalizationCount)),
@@ -751,7 +767,7 @@ export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
     if (ci.protocolVersion < v2.ProtocolVersion.PROTOCOL_VERSION_6) {
         const ci0: v1.ConsensusStatusV0 = {
             ...common,
-            slotDuration: unwrap(ci.slotDuration?.value),
+            slotDuration: Duration.fromProto(unwrap(ci.slotDuration)),
         };
 
         return ci0;
@@ -760,7 +776,9 @@ export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
     const ci1: v1.ConsensusStatusV1 = {
         ...common,
         concordiumBFTStatus: {
-            currentTimeoutDuration: unwrap(ci.currentTimeoutDuration?.value),
+            currentTimeoutDuration: Duration.fromProto(
+                unwrap(ci.currentTimeoutDuration)
+            ),
             currentRound: unwrap(ci.currentRound?.value),
             currentEpoch: unwrap(ci.currentEpoch?.value),
             triggerBlockTime: trTimestamp(ci.triggerBlockTime),
@@ -770,35 +788,16 @@ export function consensusInfo(ci: v2.ConsensusInfo): v1.ConsensusStatus {
     return ci1;
 }
 
-function trAccountAddress(
-    accountAddress: v2.AccountAddress | undefined
-): v1.AddressAccount {
-    return {
-        type: 'AddressAccount',
-        address: unwrapToBase58(accountAddress),
-    };
-}
-
-function trAddress(
-    addr: v2.Address | v2.ContractAddress | v2.AccountAddress | undefined
-): v1.Address {
-    const accountAddress = <v2.AccountAddress>unwrap(addr);
-    const contractAddress = <v2.ContractAddress>unwrap(addr);
-    const address = <v2.Address>unwrap(addr);
-
-    if (accountAddress.value) {
-        return trAccountAddress(accountAddress);
-    } else if (contractAddress.index) {
+function trAddress(address: v2.Address): v1.Address {
+    if (address.type.oneofKind === 'account') {
         return {
-            type: 'AddressContract',
-            address: contractAddress,
+            type: 'AddressAccount',
+            address: AccountAddress.fromProto(unwrap(address.type.account)),
         };
-    } else if (address.type.oneofKind === 'account') {
-        return trAccountAddress(address.type.account);
     } else if (address.type.oneofKind === 'contract') {
         return {
             type: 'AddressContract',
-            address: address.type.contract,
+            address: ContractAddress.fromProto(address.type.contract),
         };
     } else {
         throw Error('Invalid address encountered!');
@@ -814,36 +813,50 @@ function trContractTraceElement(
             return {
                 tag: v1.TransactionEventTag.Updated,
                 contractVersion: element.updated.contractVersion,
-                address: unwrap(element.updated.address),
-                instigator: trAddress(element.updated.instigator),
+                address: ContractAddress.fromProto(
+                    unwrap(element.updated.address)
+                ),
+                instigator: trAddress(unwrap(element.updated.instigator)),
                 amount: unwrap(element.updated.amount?.value),
-                message: unwrapValToHex(element.updated.parameter),
-                receiveName: unwrap(element.updated.receiveName?.value),
+                message: Parameter.fromProto(unwrap(element.updated.parameter)),
+                receiveName: ReceiveName.fromProto(
+                    unwrap(element.updated.receiveName)
+                ),
                 events: element.updated.events.map(unwrapValToHex),
             };
         case 'transferred':
             return {
                 tag: v1.TransactionEventTag.Transferred,
-                from: trAddress(element.transferred.sender),
+                from: ContractAddress.fromProto(
+                    unwrap(element.transferred.sender)
+                ),
                 amount: unwrap(element.transferred.amount?.value),
-                to: trAddress(element.transferred.receiver),
+                to: AccountAddress.fromProto(
+                    unwrap(element.transferred.receiver)
+                ),
             };
         case 'interrupted':
             return {
                 tag: v1.TransactionEventTag.Interrupted,
-                address: unwrap(element.interrupted.address),
+                address: ContractAddress.fromProto(
+                    unwrap(element.interrupted.address)
+                ),
                 events: element.interrupted.events.map(unwrapValToHex),
             };
         case 'resumed':
             return {
                 tag: v1.TransactionEventTag.Resumed,
-                address: unwrap(element.resumed.address),
+                address: ContractAddress.fromProto(
+                    unwrap(element.resumed.address)
+                ),
                 success: unwrap(element.resumed.success),
             };
         case 'upgraded':
             return {
                 tag: v1.TransactionEventTag.Upgraded,
-                address: unwrap(element.upgraded.address),
+                address: ContractAddress.fromProto(
+                    unwrap(element.upgraded.address)
+                ),
                 from: unwrapValToHex(element.upgraded.from),
                 to: unwrapValToHex(element.upgraded.to),
             };
@@ -856,7 +869,7 @@ function trContractTraceElement(
 
 function trBakerEvent(
     bakerEvent: v2.BakerEvent,
-    account: Base58String
+    account: AccountAddress.Type
 ): v1.BakerEvent {
     const event = bakerEvent.event;
     switch (event.oneofKind) {
@@ -865,7 +878,7 @@ function trBakerEvent(
             return {
                 tag: v1.TransactionEventTag.BakerAdded,
                 bakerId: unwrap(keysEvent?.bakerId?.value),
-                account: unwrapToBase58(keysEvent?.account),
+                account: AccountAddress.fromProto(unwrap(keysEvent?.account)),
                 signKey: unwrapValToHex(keysEvent?.signKey),
                 electionKey: unwrapValToHex(keysEvent?.electionKey),
                 aggregationKey: unwrapValToHex(keysEvent?.aggregationKey),
@@ -906,7 +919,9 @@ function trBakerEvent(
             return {
                 tag: v1.TransactionEventTag.BakerKeysUpdated,
                 bakerId: unwrap(event.bakerKeysUpdated.bakerId?.value),
-                account: unwrapToBase58(event.bakerKeysUpdated.account),
+                account: AccountAddress.fromProto(
+                    unwrap(event.bakerKeysUpdated.account)
+                ),
                 signKey: unwrapValToHex(event.bakerKeysUpdated.signKey),
                 electionKey: unwrapValToHex(event.bakerKeysUpdated.electionKey),
                 aggregationKey: unwrapValToHex(
@@ -987,7 +1002,7 @@ function trDelegTarget(
 
 function trDelegationEvent(
     delegationEvent: v2.DelegationEvent,
-    account: Base58String
+    account: AccountAddress.Type
 ): v1.DelegationEvent {
     const event = delegationEvent.event;
     switch (event.oneofKind) {
@@ -1168,13 +1183,15 @@ function trRejectReason(
         case 'invalidContractAddress':
             return {
                 tag: Tag.InvalidContractAddress,
-                contents: reason.invalidContractAddress,
+                contents: ContractAddress.fromProto(
+                    reason.invalidContractAddress
+                ),
             };
         case 'amountTooLarge':
             return {
                 tag: Tag.AmountTooLarge,
                 contents: {
-                    address: trAddress(reason.amountTooLarge.address),
+                    address: trAddress(unwrap(reason.amountTooLarge.address)),
                     amount: unwrap(reason.amountTooLarge.amount?.value),
                 },
             };
@@ -1186,7 +1203,9 @@ function trRejectReason(
         case 'rejectedReceive':
             return {
                 tag: Tag.RejectedReceive,
-                contractAddress: unwrap(reason.rejectedReceive.contractAddress),
+                contractAddress: ContractAddress.fromProto(
+                    unwrap(reason.rejectedReceive.contractAddress)
+                ),
                 receiveName: unwrap(reason.rejectedReceive.receiveName?.value),
                 rejectReason: unwrap(reason.rejectedReceive.rejectReason),
                 parameter: unwrapValToHex(reason.rejectedReceive.parameter),
@@ -1431,7 +1450,7 @@ function trTimeoutParameteresUpdate(
     return {
         updateType: v1.UpdateType.TimeoutParameters,
         update: {
-            timeoutBase: unwrap(timeout.timeoutBase?.value),
+            timeoutBase: Duration.fromProto(unwrap(timeout.timeoutBase)),
             timeoutDecrease: unwrap(timeout.timeoutDecrease),
             timeoutIncrease: unwrap(timeout.timeoutIncrease),
         },
@@ -1441,7 +1460,7 @@ function trTimeoutParameteresUpdate(
 function trMinBlockTimeUpdate(duration: v2.Duration): v1.MinBlockTimeUpdate {
     return {
         updateType: v1.UpdateType.MinBlockTime,
-        update: unwrap(duration.value),
+        update: Duration.fromProto(duration),
     };
 }
 
@@ -1450,7 +1469,7 @@ function trBlockEnergyLimitUpdate(
 ): v1.BlockEnergyLimitUpdate {
     return {
         updateType: v1.UpdateType.BlockEnergyLimit,
-        update: unwrap(energy.value),
+        update: Energy.fromProto(energy),
     };
 }
 
@@ -1830,7 +1849,7 @@ function trAccountTransactionSummary(
         ...baseBlockItemSummary,
         type: v1.TransactionSummaryType.AccountTransaction,
         cost: unwrap(details.cost?.value),
-        sender: unwrapToBase58(details.sender),
+        sender: AccountAddress.fromProto(unwrap(details.sender)),
     };
 
     const effect = unwrap(details.effects?.effect);
@@ -1859,9 +1878,11 @@ function trAccountTransactionSummary(
             const contractInit = effect.contractInitialized;
             const event: v1.ContractInitializedEvent = {
                 tag: v1.TransactionEventTag.ContractInitialized,
-                address: unwrap(contractInit.address),
+                address: ContractAddress.fromProto(
+                    unwrap(contractInit.address)
+                ),
                 amount: unwrap(contractInit.amount?.value),
-                initName: unwrap(contractInit.initName?.value),
+                initName: InitName.fromProto(unwrap(contractInit.initName)),
                 events: unwrap(contractInit.events.map(unwrapValToHex)),
                 contractVersion: unwrap(contractInit.contractVersion),
                 ref: unwrapValToHex(contractInit.originRef),
@@ -1884,7 +1905,9 @@ function trAccountTransactionSummary(
             const transfer: v1.AccountTransferredEvent = {
                 tag: v1.TransactionEventTag.Transferred,
                 amount: unwrap(effect.accountTransfer.amount?.value),
-                to: trAccountAddress(effect.accountTransfer.receiver).address,
+                to: AccountAddress.fromProto(
+                    unwrap(effect.accountTransfer.receiver)
+                ),
             };
             if (effect.accountTransfer.memo) {
                 return {
@@ -1974,7 +1997,9 @@ function trAccountTransactionSummary(
             };
             const added: v1.NewEncryptedAmountEvent = {
                 tag: v1.TransactionEventTag.NewEncryptedAmount,
-                account: unwrapToBase58(transfer.added?.receiver),
+                account: AccountAddress.fromProto(
+                    unwrap(transfer.added?.receiver)
+                ),
                 newIndex: Number(unwrap(transfer.added?.newIndex)),
                 encryptedAmount: unwrapValToHex(
                     transfer.added?.encryptedAmount
@@ -2004,7 +2029,7 @@ function trAccountTransactionSummary(
             const transfer = effect.transferredToEncrypted;
             const added: v1.EncryptedSelfAmountAddedEvent = {
                 tag: v1.TransactionEventTag.EncryptedSelfAmountAdded,
-                account: unwrapToBase58(transfer.account),
+                account: AccountAddress.fromProto(unwrap(transfer.account)),
                 amount: unwrap(transfer.amount?.value),
                 newAmount: unwrapValToHex(transfer.newAmount),
             };
@@ -2039,7 +2064,7 @@ function trAccountTransactionSummary(
             const transfer = effect.transferredWithSchedule;
             const event: v1.TransferredWithScheduleEvent = {
                 tag: v1.TransactionEventTag.TransferredWithSchedule,
-                to: unwrapToBase58(transfer.receiver),
+                to: AccountAddress.fromProto(unwrap(transfer.receiver)),
                 amount: transfer.amount.map(trNewRelease),
             };
             if (transfer.memo) {
@@ -2124,8 +2149,8 @@ export function blockItemSummary(
 ): v1.BlockItemSummary {
     const base = {
         index: unwrap(summary.index?.value),
-        energyCost: unwrap(summary.energyCost?.value),
-        hash: unwrapValToHex(summary.hash),
+        energyCost: Energy.fromProto(unwrap(summary.energyCost)),
+        hash: TransactionHash.fromProto(unwrap(summary.hash)),
     };
     if (summary.details.oneofKind === 'accountTransaction') {
         return trAccountTransactionSummary(
@@ -2141,7 +2166,9 @@ export function blockItemSummary(
                 v2.CredentialType.INITIAL
                     ? 'initial'
                     : 'normal',
-            address: unwrapToBase58(summary.details.accountCreation.address),
+            address: AccountAddress.fromProto(
+                unwrap(summary.details.accountCreation.address)
+            ),
             regId: unwrapValToHex(summary.details.accountCreation.regId),
         };
     } else if (summary.details.oneofKind === 'update') {
@@ -2160,7 +2187,7 @@ function trBlockItemSummaryInBlock(
     summary: v2.BlockItemSummaryInBlock
 ): v1.BlockItemSummaryInBlock {
     return {
-        blockHash: unwrapValToHex(summary.blockHash),
+        blockHash: BlockHash.fromProto(unwrap(summary.blockHash)),
         summary: blockItemSummary(unwrap(summary.outcome)),
     };
 }
@@ -2199,19 +2226,26 @@ export function invokeInstanceResponse(
         case 'failure':
             return {
                 tag: 'failure',
-                usedEnergy: unwrap(
-                    invokeResponse.result.failure.usedEnergy?.value
+                usedEnergy: Energy.fromProto(
+                    unwrap(invokeResponse.result.failure.usedEnergy)
                 ),
                 reason: trRejectReason(invokeResponse.result.failure.reason),
+                returnValue:
+                    invokeResponse.result.failure.returnValue === undefined
+                        ? undefined
+                        : ReturnValue.fromBuffer(
+                              invokeResponse.result.failure.returnValue
+                          ),
             };
         case 'success': {
             const result = invokeResponse.result.success;
             return {
                 tag: 'success',
-                usedEnergy: unwrap(result.usedEnergy?.value),
-                returnValue: result.returnValue
-                    ? Buffer.from(unwrap(result.returnValue)).toString('hex')
-                    : undefined,
+                usedEnergy: Energy.fromProto(unwrap(result.usedEnergy)),
+                returnValue:
+                    result.returnValue === undefined
+                        ? undefined
+                        : ReturnValue.fromBuffer(result.returnValue),
                 events: result.effects.map(trContractTraceElement),
             };
         }
@@ -2228,9 +2262,9 @@ function trInstanceInfoCommon(
         sourceModule: ModuleReference.fromBytes(
             Buffer.from(unwrap(info.sourceModule?.value))
         ),
-        owner: AccountAddress.fromBytes(Buffer.from(unwrap(info.owner?.value))),
-        methods: info.methods.map((name) => name.value),
-        name: unwrap(info.name?.value),
+        owner: AccountAddress.fromBuffer(unwrap(info.owner?.value)),
+        methods: info.methods.map(ReceiveName.fromProto),
+        name: InitName.fromProto(unwrap(info.name)),
     };
 }
 
@@ -2259,7 +2293,7 @@ export function commonBlockInfo(
     blockInfo: v2.ArrivedBlockInfo | v2.FinalizedBlockInfo
 ): v1.CommonBlockInfo {
     return {
-        hash: unwrapValToHex(blockInfo.hash),
+        hash: BlockHash.fromProto(unwrap(blockInfo.hash)),
         height: unwrap(blockInfo.height?.value),
     };
 }
@@ -2292,16 +2326,18 @@ export function arInfo(ar: v2.ArInfo): v1.ArInfo {
 
 export function blocksAtHeightResponse(
     blocks: v2.BlocksAtHeightResponse
-): v1.HexString[] {
-    return blocks.blocks.map(unwrapValToHex);
+): BlockHash.Type[] {
+    return blocks.blocks.map(BlockHash.fromProto);
 }
 
 export function blockInfo(blockInfo: v2.BlockInfo): v1.BlockInfo {
     const common: v1.BlockInfoCommon = {
-        blockParent: unwrapValToHex(blockInfo.parentBlock),
-        blockHash: unwrapValToHex(blockInfo.hash),
+        blockParent: BlockHash.fromProto(unwrap(blockInfo.parentBlock)),
+        blockHash: BlockHash.fromProto(unwrap(blockInfo.hash)),
         blockStateHash: unwrapValToHex(blockInfo.stateHash),
-        blockLastFinalized: unwrapValToHex(blockInfo.lastFinalizedBlock),
+        blockLastFinalized: BlockHash.fromProto(
+            unwrap(blockInfo.lastFinalizedBlock)
+        ),
         blockHeight: unwrap(blockInfo.height?.value),
         blockBaker: blockInfo.baker?.value,
         blockArriveTime: trTimestamp(blockInfo.arriveTime),
@@ -2310,7 +2346,9 @@ export function blockInfo(blockInfo: v2.BlockInfo): v1.BlockInfo {
         finalized: blockInfo.finalized,
         transactionCount: BigInt(blockInfo.transactionCount),
         transactionsSize: BigInt(blockInfo.transactionsSize),
-        transactionEnergyCost: unwrap(blockInfo.transactionsEnergyCost?.value),
+        transactionEnergyCost: Energy.fromProto(
+            unwrap(blockInfo.transactionsEnergyCost)
+        ),
         genesisIndex: unwrap(blockInfo.genesisIndex?.value),
         eraBlockHeight: Number(unwrap(blockInfo.eraBlockHeight?.value)),
         protocolVersion: translateProtocolVersion(blockInfo.protocolVersion),
@@ -2338,7 +2376,7 @@ export function delegatorInfo(
     delegatorInfo: v2.DelegatorInfo
 ): v1.DelegatorInfo {
     return {
-        account: unwrapToBase58(delegatorInfo.account),
+        account: AccountAddress.fromProto(unwrap(delegatorInfo.account)),
         stake: unwrap(delegatorInfo.stake?.value),
         ...(delegatorInfo.pendingChange && {
             pendingChange: trPendingChange(delegatorInfo.pendingChange),
@@ -2348,7 +2386,7 @@ export function delegatorInfo(
 
 export function branch(branchV2: v2.Branch): v1.Branch {
     return {
-        blockHash: unwrapValToHex(branchV2.blockHash),
+        blockHash: BlockHash.fromProto(unwrap(branchV2.blockHash)),
         children: branchV2.children.map(branch),
     };
 }
@@ -2358,7 +2396,7 @@ function trBakerElectionInfo(
 ): v1.BakerElectionInfo {
     return {
         baker: unwrap(bakerElectionInfo.baker?.value),
-        account: unwrapToBase58(bakerElectionInfo.account),
+        account: AccountAddress.fromProto(unwrap(bakerElectionInfo.account)),
         lotteryPower: bakerElectionInfo.lotteryPower,
     };
 }
@@ -2509,8 +2547,8 @@ export function nodeInfo(nodeInfo: v2.NodeInfo): v1.NodeInfo {
 
     return {
         peerVersion: nodeInfo.peerVersion,
-        localTime: unwrap(nodeInfo.localTime?.value),
-        peerUptime: unwrap(nodeInfo.peerUptime?.value),
+        localTime: Timestamp.fromProto(unwrap(nodeInfo.localTime)),
+        peerUptime: Duration.fromProto(unwrap(nodeInfo.peerUptime)),
         networkInfo: trNetworkInfo(nodeInfo.networkInfo),
         details,
     };
@@ -2711,7 +2749,7 @@ function trFinalizationSummary(
     summary: v2.FinalizationSummary
 ): v1.FinalizationSummary {
     return {
-        block: unwrapValToHex(summary.block),
+        block: BlockHash.fromProto(unwrap(summary.block)),
         index: unwrap(summary.index?.value),
         delay: unwrap(summary.delay?.value),
         finalizers: summary.finalizers.map(trFinalizationSummaryParty),

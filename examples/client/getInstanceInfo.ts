@@ -1,5 +1,6 @@
 import { parseEndpoint } from '../shared/util.js';
 import {
+    BlockHash,
     ContractAddress,
     createConcordiumClient,
     InstanceInfo,
@@ -57,14 +58,15 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const contractAddress: ContractAddress = {
-        index: BigInt(cli.flags.contract),
-        subindex: 0n,
-    };
+    const contractAddress = ContractAddress.create(cli.flags.contract);
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
 
     const instanceInfo: InstanceInfo = await client.getInstanceInfo(
         contractAddress,
-        cli.flags.block
+        blockHash
     );
 
     console.log('Name:', instanceInfo.name);

@@ -1,5 +1,4 @@
 import * as wasm from '@concordium/rust-bindings/wallet';
-import { Buffer } from 'buffer/index.js';
 import {
     deserializeAccountTransaction,
     deserializeUint8,
@@ -50,7 +49,7 @@ export type BlockItem =
  * @returns An object specifiying the blockItemKind that the transaction has. The object also contains the actual transaction under the transaction field.
  **/
 export function deserializeTransaction(
-    serializedTransaction: Buffer
+    serializedTransaction: ArrayBuffer
 ): BlockItem {
     const cursor = Cursor.fromBuffer(serializedTransaction);
 

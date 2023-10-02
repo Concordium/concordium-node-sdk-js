@@ -1570,7 +1570,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@concordium/ccd-js-gen@workspace:packages/ccd-js-gen"
   dependencies:
-    "@concordium/common-sdk": 9.4.0
+    "@concordium/node-sdk": 9.4.0
     "@types/node": ^20.5.0
     "@typescript-eslint/eslint-plugin": ^6.7.0
     "@typescript-eslint/parser": ^6.7.0
@@ -1653,7 +1653,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@concordium/node-sdk@workspace:^, @concordium/node-sdk@workspace:packages/nodejs":
+"@concordium/node-sdk@9.4.0, @concordium/node-sdk@workspace:^, @concordium/node-sdk@workspace:packages/nodejs":
   version: 0.0.0-use.local
   resolution: "@concordium/node-sdk@workspace:packages/nodejs"
   dependencies:
@@ -1671,7 +1671,6 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^6.7.0
     "@typescript-eslint/parser": ^6.7.0
     babel-jest: ^27.0.6
-    buffer: ^6.0.3
     cross-env: 5.0.5
     eslint: ^7.29.0
     eslint-config-prettier: ^8.3.0

@@ -1,8 +1,8 @@
 import { parseEndpoint } from '../shared/util.js';
 import {
+    BlockHash,
     BlocksAtHeightRequest,
     createConcordiumClient,
-    HexString,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
@@ -70,7 +70,7 @@ const client = createConcordiumClient(
         height: BigInt(cli.flags.height),
         restrict: cli.flags.restrict,
     };
-    const blocks: HexString[] = await client.getBlocksAtHeight(request);
+    const blocks: BlockHash.Type[] = await client.getBlocksAtHeight(request);
     // #endregion documentation-snippet
 
     for (const block of blocks) {

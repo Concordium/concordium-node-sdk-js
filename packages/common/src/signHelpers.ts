@@ -11,7 +11,7 @@ import {
 } from './types.js';
 import { sign, verify } from '@noble/ed25519';
 import { Buffer } from 'buffer/index.js';
-import { AccountAddress } from './types/accountAddress.js';
+import * as AccountAddress from './types/AccountAddress.js';
 import { sha256 } from './hash.js';
 import { mapRecord } from './util.js';
 
@@ -22,11 +22,11 @@ export interface AccountSigner {
     /**
      * Creates a signature of the provided digest
      *
-     * @param {Buffer} digest - The digest to create signatures on.
+     * @param {ArrayBuffer} digest - The digest to create signatures on.
      *
      * @returns {Promise<AccountTransactionSignature>} A promise resolving with a set of signatures for a set of credentials corresponding to some account
      */
-    sign(digest: Buffer): Promise<AccountTransactionSignature>;
+    sign(digest: ArrayBuffer): Promise<AccountTransactionSignature>;
     /**
      * Returns the amount of signatures that the signer produces
      */ getSignatureCount(): bigint;
@@ -35,15 +35,16 @@ export interface AccountSigner {
 /**
  * Gets Ed25519 signature for `digest`.
  *
- * @param {Buffer} digest - the message to sign.
+ * @param {ArrayBuffer} digest - the message to sign.
  * @param {HexString} privateKey - the ed25519 private key in HEX format.
  *
  * @returns {Buffer} the signature.
  */
 export const getSignature = async (
-    digest: Buffer,
+    digest: ArrayBuffer,
     privateKey: HexString
-): Promise<Buffer> => Buffer.from(await sign(digest, privateKey));
+): Promise<Buffer> =>
+    Buffer.from(await sign(new Uint8Array(digest), privateKey));
 
 /**
  * Creates an `AccountSigner` for an account which uses the first credential's first keypair.
@@ -58,7 +59,7 @@ export function buildBasicAccountSigner(privateKey: HexString): AccountSigner {
         getSignatureCount() {
             return 1n;
         },
-        async sign(digest: Buffer) {
+        async sign(digest: ArrayBuffer) {
             const sig = await getSignature(digest, privateKey);
             return {
                 0: {
@@ -96,7 +97,7 @@ const getKeys = <T extends WithAccountKeys>(
 };
 
 const getCredentialSignature = async (
-    digest: Buffer,
+    digest: ArrayBuffer,
     keys: Record<number, HexString>
 ): Promise<CredentialSignature> => {
     const sig: CredentialSignature = {};
@@ -164,7 +165,7 @@ export function buildAccountSigner<T extends WithAccountKeys>(
         getSignatureCount() {
             return numKeys;
         },
-        async sign(digest: Buffer) {
+        async sign(digest: ArrayBuffer) {
             const sig: AccountTransactionSignature = {};
             for (const key in keys) {
                 sig[key] = await getCredentialSignature(digest, keys[key]);
@@ -195,13 +196,13 @@ export function signTransaction(
  * @param message the message to sign, assumed to be utf8 encoded string or a Uint8Array/buffer.
  */
 function getMessageDigest(
-    account: AccountAddress,
+    account: AccountAddress.Type,
     message: string | Uint8Array
 ): Buffer {
     const prepend = Buffer.alloc(8, 0);
     const rawMessage =
         typeof message === 'string' ? Buffer.from(message, 'utf8') : message;
-    return sha256([account.decodedAddress, prepend, rawMessage]);
+    return sha256([AccountAddress.toBuffer(account), prepend, rawMessage]);
 }
 
 /**
@@ -212,7 +213,7 @@ function getMessageDigest(
  * @param signer An object that handles the keys of the account, and performs the actual signing.
  */
 export function signMessage(
-    account: AccountAddress,
+    account: AccountAddress.Type,
     message: string | Uint8Array,
     signer: AccountSigner
 ): Promise<AccountTransactionSignature> {
@@ -238,10 +239,7 @@ export async function verifyMessageSignature(
         return false;
     }
 
-    const digest = getMessageDigest(
-        new AccountAddress(accountInfo.accountAddress),
-        message
-    );
+    const digest = getMessageDigest(accountInfo.accountAddress, message);
 
     for (const credentialIndex of Object.keys(signature)) {
         const credential =

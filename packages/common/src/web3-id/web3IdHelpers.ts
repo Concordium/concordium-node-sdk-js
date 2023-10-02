@@ -1,4 +1,5 @@
-import { ContractAddress, CryptographicParameters } from '../types.js';
+import { CryptographicParameters } from '../types.js';
+import type * as ContractAddress from '../types/ContractAddress.js';
 import {
     AttributeType,
     StatementAttributeType,
@@ -12,7 +13,7 @@ export type VerifyWeb3IdCredentialSignatureInput = {
     randomness: Record<string, string>;
     holder: string;
     issuerPublicKey: string;
-    issuerContract: ContractAddress;
+    issuerContract: ContractAddress.Type;
 };
 
 /**

@@ -1,7 +1,7 @@
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as tsm from 'ts-morph';
-import * as SDK from '@concordium/common-sdk';
+import * as SDK from '@concordium/node-sdk';
 
 /**
  * Output options for the generated code.
@@ -414,7 +414,7 @@ This function ensures the smart contract module is deployed on chain.
                     scope: tsm.Scope.Public,
                     isReadonly: true,
                     name: contractAddressId,
-                    type: 'SDK.ContractAddress',
+                    type: 'SDK.ContractAddress.Type',
                 },
 
                 {
@@ -431,7 +431,10 @@ This function ensures the smart contract module is deployed on chain.
             .addConstructor({
                 parameters: [
                     { name: grpcClientId, type: 'SDK.ConcordiumGRPCClient' },
-                    { name: contractAddressId, type: 'SDK.ContractAddress' },
+                    {
+                        name: contractAddressId,
+                        type: 'SDK.ContractAddress.Type',
+                    },
                     { name: genericContractId, type: 'SDK.Contract' },
                 ],
             })
@@ -455,7 +458,7 @@ This function ensures the smart contract module is deployed on chain.
 Checking the information instance on chain.
 
 @param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The client used for contract invocations and updates.
-@param {SDK.ContractAddress} ${contractAddressId} - Address of the contract instance.
+@param {SDK.ContractAddress.Type} ${contractAddressId} - Address of the contract instance.
 @param {string} [${blockHashId}] - Hash of the block to check the information at. When not provided the last finalized block is used.
 
 @throws If failing to communicate with the concordium node or if any of the checks fails.
@@ -472,7 +475,7 @@ Checking the information instance on chain.
                     },
                     {
                         name: contractAddressId,
-                        type: 'SDK.ContractAddress',
+                        type: 'SDK.ContractAddress.Type',
                     },
                     {
                         name: blockHashId,
@@ -483,7 +486,7 @@ Checking the information instance on chain.
                 returnType: `Promise<${contractClientType}>`,
             })
             .setBodyText(
-                `const ${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, SDK.ContractName.toString(${contractNameId}));
+                `const ${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, ${contractNameId});
 await ${genericContractId}.checkOnChain({ moduleReference: ${moduleRefId}, blockHash: ${blockHashId} });
 return new ${contractClientType}(
     ${grpcClientId},
@@ -499,7 +502,7 @@ return new ${contractClientType}(
 Without checking the instance information on chain.
 
 @param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The client used for contract invocations and updates.
-@param {SDK.ContractAddress} ${contractAddressId} - Address of the contract instance.
+@param {SDK.ContractAddress.Type} ${contractAddressId} - Address of the contract instance.
 
 @returns {${contractClientType}}`,
                 ],
@@ -512,13 +515,13 @@ Without checking the instance information on chain.
                     },
                     {
                         name: contractAddressId,
-                        type: 'SDK.ContractAddress',
+                        type: 'SDK.ContractAddress.Type',
                     },
                 ],
                 returnType: contractClientType,
             })
             .setBodyText(
-                `const ${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, SDK.ContractName.toString(${contractNameId}));
+                `const ${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, ${contractNameId});
     return new ${contractClientType}(
         ${grpcClientId},
         ${contractAddressId},
@@ -553,7 +556,7 @@ Without checking the instance information on chain.
                 returnType: 'Promise<void>',
             })
             .setBodyText(
-                `return ${contractClientId}.${genericContractId}.checkOnChain({moduleReference: ${moduleRefId}, blockHash: ${blockHashId} })`
+                `return ${contractClientId}.${genericContractId}.checkOnChain({moduleReference: ${moduleRefId}, blockHash: ${blockHashId} });`
             );
 
         const invokerId = 'invoker';
@@ -597,12 +600,12 @@ Without checking the instance information on chain.
                 })
                 .setBodyText(
                     `return ${contractClientId}.${genericContractId}.createAndSendUpdateTransaction(
-    '${entrypointName}',
-    SDK.encodeHexString,
+    SDK.EntrypointName.fromStringUnchecked('${entrypointName}'),
+    SDK.Parameter.toBuffer,
     ${transactionMetadataId},
-    SDK.Parameter.toHexString(${parameterId}),
+    ${parameterId},
     ${signerId}
-).then(SDK.TransactionHash.fromHexString);`
+);`
                 );
 
             contractSourceFile
@@ -611,7 +614,7 @@ Without checking the instance information on chain.
                         `Dry-run an update-contract transaction to the '${entrypointName}' entrypoint of the '${contract.contractName}' contract.
 
 @param {${contractClientType}} ${contractClientId} The client for a '${contract.contractName}' smart contract instance on chain.
-@param {SDK.ContractAddress | SDK.AccountAddress} ${invokerId} - The address of the account or contract which is invoking this transaction.
+@param {SDK.ContractAddress.Type | SDK.AccountAddress.Type} ${invokerId} - The address of the account or contract which is invoking this transaction.
 @param {SDK.Parameter.Type} ${parameterId} - Parameter to include in the transaction for the smart contract entrypoint.
 @param {SDK.BlockHash.Type} [${blockHashId}] - Optional block hash allowing for dry-running the transaction at the end of a specific block.
 
@@ -628,7 +631,7 @@ Without checking the instance information on chain.
                         },
                         {
                             name: invokerId,
-                            type: 'SDK.ContractAddress | SDK.AccountAddress',
+                            type: 'SDK.ContractAddress.Type | SDK.AccountAddress.Type',
                         },
                         {
                             name: parameterId,
@@ -644,11 +647,11 @@ Without checking the instance information on chain.
                 })
                 .setBodyText(
                     `return ${contractClientId}.${genericContractId}.dryRun.invokeMethod(
-    '${entrypointName}',
+    SDK.EntrypointName.fromStringUnchecked('${entrypointName}'),
     ${invokerId},
-    SDK.encodeHexString,
-    SDK.Parameter.toHexString(${parameterId}),
-    ${blockHashId} === undefined ? undefined : SDK.BlockHash.toHexString(${blockHashId})
+    SDK.Parameter.toBuffer,
+    ${parameterId},
+    ${blockHashId}
 );`
                 );
         }

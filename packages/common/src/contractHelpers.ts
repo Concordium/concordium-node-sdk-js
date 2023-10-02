@@ -1,19 +1,6 @@
-import { ContractAddress, InstanceInfo } from './types.js';
+import type * as ContractAddress from './types/ContractAddress.js';
 
 const CONTRACT_PARAM_MAX_LENGTH = 65535;
-
-/**
- * Gets the contract name from an {@link InstanceInfo} object.
- *
- * @throws If name is not structured as expected
- */
-export const getContractName = ({ name }: InstanceInfo): string => {
-    if (!name.startsWith('init_')) {
-        throw new Error('Could not get name from contract instance info.');
-    }
-
-    return name.substring(5);
-};
 
 /**
  * Checks if a buffer is larger than what is accepted for smart contract parameters
@@ -36,8 +23,8 @@ export const checkParameterLength = (buffer: ArrayBuffer): void => {
  * Whether two {@link ContractAddress} contract addresses are equal.
  */
 export const isEqualContractAddress =
-    (a: ContractAddress) =>
-    (b: ContractAddress): boolean =>
+    (a: ContractAddress.Type) =>
+    (b: ContractAddress.Type): boolean =>
         a.index === b.index && a.subindex === b.subindex;
 
 /** The name of a smart contract. Note: This does _not_ including the 'init_' prefix. */

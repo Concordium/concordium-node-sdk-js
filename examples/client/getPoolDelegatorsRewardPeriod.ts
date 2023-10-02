@@ -1,5 +1,6 @@
 import { parseEndpoint } from '../shared/util.js';
 import {
+    BlockHash,
     createConcordiumClient,
     DelegatorRewardPeriodInfo,
 } from '@concordium/node-sdk';
@@ -64,10 +65,14 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
     const delegators: AsyncIterable<DelegatorRewardPeriodInfo> =
         client.getPoolDelegatorsRewardPeriod(
             BigInt(cli.flags.poolOwner),
-            cli.flags.block
+            blockHash
         );
 
     console.log('Each staking account and the amount of stake they have:\n');

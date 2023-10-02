@@ -1,5 +1,5 @@
 import { parseEndpoint } from '../shared/util.js';
-import { createConcordiumClient, HexString } from '@concordium/node-sdk';
+import { BlockHash, createConcordiumClient } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -47,7 +47,7 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const blocks: HexString[] = await client.getBlocksAtHeight(
+    const blocks: BlockHash.Type[] = await client.getBlocksAtHeight(
         BigInt(cli.flags.height)
     );
     // #endregion documentation-snippet

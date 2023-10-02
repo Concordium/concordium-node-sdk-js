@@ -2,6 +2,7 @@ import { parseEndpoint } from '../shared/util.js';
 import {
     AccountAddress,
     AccountInfo,
+    BlockHash,
     createConcordiumClient,
     isDelegatorAccount,
 } from '@concordium/node-sdk';
@@ -61,10 +62,14 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const accountAddress = new AccountAddress(cli.flags.account);
+    const accountAddress = AccountAddress.fromBase58(cli.flags.account);
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
     const accountInfo: AccountInfo = await client.getAccountInfo(
         accountAddress,
-        cli.flags.block
+        blockHash
     );
 
     console.log('Account balance:', accountInfo.accountAmount);

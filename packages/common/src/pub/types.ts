@@ -13,8 +13,6 @@ export {
 export { encodeHexString } from '../serializationHelpers.js';
 export { sha256 } from '../hash.js';
 
-export { CredentialRegistrationId } from '../types/CredentialRegistrationId.js';
-export { AccountAddress } from '../types/accountAddress.js';
 export { CcdAmount } from '../types/ccdAmount.js';
 export { TransactionExpiry } from '../types/transactionExpiry.js';
 export { DataBlob } from '../types/DataBlob.js';
@@ -26,7 +24,6 @@ export {
     replaceDateWithTimeStampAttribute,
 } from '../types/VerifiablePresentation.js';
 
-export { isAlias, getAlias } from '../alias.js';
 export { deserializeAccountTransaction } from '../deserialization.js';
 export * from '../signHelpers.js';
 export * from '../versionedTypeHelpers.js';
@@ -35,7 +32,6 @@ export * from '../blockSummaryHelpers.js';
 export * from '../rewardStatusHelpers.js';
 
 export { isHex, streamToList, wasmToSchema, unwrap } from '../util.js';
-export { getContractName } from '../contractHelpers.js';
 
 export { getAccountTransactionHandler } from '../accountTransactions.js';
 export * from '../energyCost.js';
@@ -53,11 +49,40 @@ export {
     ContractUpdateTransactionWithSchema,
 } from '../GenericContract.js';
 
-export * as ModuleClient from '../types/ModuleClient.js';
-export * as Parameter from '../types/Parameter.js';
-export * as AccountSequenceNumber from '../types/AccountSequenceNumber.js';
-export * as Energy from '../types/Energy.js';
-export * as TransactionHash from '../types/TransactionHash.js';
-export * as BlockHash from '../types/BlockHash.js';
-export * as ContractName from '../types/ContractName.js';
-export * as InitName from '../types/InitName.js';
+import * as ModuleClient from '../types/ModuleClient.js';
+import * as Parameter from '../types/Parameter.js';
+import * as ReturnValue from '../types/ReturnValue.js';
+import * as SequenceNumber from '../types/SequenceNumber.js';
+import * as Energy from '../types/Energy.js';
+import * as TransactionHash from '../types/TransactionHash.js';
+import * as BlockHash from '../types/BlockHash.js';
+import * as ContractName from '../types/ContractName.js';
+import * as InitName from '../types/InitName.js';
+import * as ReceiveName from '../types/ReceiveName.js';
+import * as CredentialRegistrationId from '../types/CredentialRegistrationId.js';
+import * as AccountAddress from '../types/AccountAddress.js';
+import * as ContractAddress from '../types/ContractAddress.js';
+import * as EntrypointName from '../types/EntrypointName.js';
+import * as Timestamp from '../types/Timestamp.js';
+import * as Duration from '../types/Duration.js';
+
+// These cannot be exported directly as modules because of a bug in an eslint plugin.
+// https://github.com/import-js/eslint-plugin-import/issues/2289.
+export {
+    ModuleClient,
+    Parameter,
+    ReturnValue,
+    SequenceNumber,
+    Energy,
+    TransactionHash,
+    BlockHash,
+    ContractName,
+    InitName,
+    ReceiveName,
+    CredentialRegistrationId,
+    AccountAddress,
+    ContractAddress,
+    EntrypointName,
+    Timestamp,
+    Duration,
+};

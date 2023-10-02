@@ -13,9 +13,9 @@ import { isDefined } from './util.js';
 
 export function serializeMap<K extends string | number | symbol, T>(
     map: Record<K, T>,
-    encodeSize: (size: number) => Buffer,
-    encodeKey: (k: string) => Buffer,
-    encodeValue: (t: T) => Buffer
+    encodeSize: (size: number) => Uint8Array,
+    encodeKey: (k: string) => Uint8Array,
+    encodeValue: (t: T) => Uint8Array
 ): Buffer {
     const keys = Object.keys(map);
     const buffers = [encodeSize(keys.length)];
@@ -28,8 +28,8 @@ export function serializeMap<K extends string | number | symbol, T>(
 
 export function serializeList<T>(
     list: T[],
-    putSize: (size: number) => Buffer,
-    putMember: (t: T) => Buffer
+    putSize: (size: number) => Uint8Array,
+    putMember: (t: T) => Uint8Array
 ): Buffer {
     const buffers = [putSize(list.length)];
     list.forEach((member: T) => {
@@ -198,7 +198,7 @@ export function encodeDataBlob(blob: DataBlob): Buffer {
  * @returns Buffer containing the 32 bit length of buffer and buffer.
  */
 export function packBufferWithWord32Length(
-    buffer: Buffer,
+    buffer: Uint8Array,
     useLittleEndian = false
 ): Buffer {
     const length = encodeWord32(buffer.length, useLittleEndian);
@@ -211,7 +211,7 @@ export function packBufferWithWord32Length(
  * @returns Buffer containing the length of the buffer of 16 bit and buffer.
  */
 export function packBufferWithWord16Length(
-    buffer: Buffer,
+    buffer: Uint8Array,
     useLittleEndian = false
 ): Buffer {
     const length = encodeWord16(buffer.length, useLittleEndian);
@@ -223,7 +223,7 @@ export function packBufferWithWord16Length(
  * @param buffer containing the buffer
  * @returns Buffer containing the length of the buffer of 8 bit and buffer.
  */
-export function packBufferWithWord8Length(buffer: Buffer): Buffer {
+export function packBufferWithWord8Length(buffer: Uint8Array): Buffer {
     const length = encodeWord8(buffer.length);
     return Buffer.concat([length, buffer]);
 }
@@ -297,7 +297,7 @@ function getPayloadBitmap<T>(payload: T, fieldOrder: Array<keyof T>) {
  * Makes a type with keys from Object and values being functions that take values with types of respective original values, returning a Buffer or undefined.
  */
 type SerializationSpec<T> = Required<{
-    [P in keyof T]: (v: T[P]) => Buffer | undefined;
+    [P in keyof T]: (v: T[P]) => Uint8Array | undefined;
 }>;
 
 /**
@@ -312,7 +312,7 @@ const serializeFromSpec =
                 const v = payload[k as keyof T];
                 const f = spec[k as keyof typeof spec] as (
                     x: typeof v
-                ) => Buffer | undefined;
+                ) => Uint8Array | undefined;
                 return f(v);
             })
             .filter(isDefined);
@@ -421,7 +421,9 @@ export function serializeConfigureBakerPayload(
  * Prefixed with a byte indicating if a value follows or not.
  */
 export const makeSerializeOptional =
-    <T>(fun: (value: T) => Buffer): ((value: T | undefined) => Buffer) =>
+    <T>(
+        fun: (value: T) => Uint8Array
+    ): ((value: T | undefined) => Uint8Array) =>
     (value) => {
         if (value === undefined) {
             return encodeBool(false);

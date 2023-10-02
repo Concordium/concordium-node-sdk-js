@@ -24,10 +24,12 @@ import {
     ConfigureDelegationPayload,
     ConfigureBakerPayload,
 } from './types.js';
-import { AccountAddress } from './types/accountAddress.js';
+import * as AccountAddress from './types/AccountAddress.js';
 import { DataBlob } from './types/DataBlob.js';
 import { CcdAmount } from './types/ccdAmount.js';
 import { Cursor } from './deserializationHelpers.js';
+import * as ReceiveName from './types/ReceiveName.js';
+import * as Parameter from './types/Parameter.js';
 
 interface AccountTransactionHandler<
     PayloadType extends AccountTransactionPayload = AccountTransactionPayload
@@ -45,13 +47,13 @@ export class SimpleTransferHandler
     }
 
     serialize(transfer: SimpleTransferPayload): Buffer {
-        const serializedToAddress = transfer.toAddress.decodedAddress;
+        const serializedToAddress = AccountAddress.toBuffer(transfer.toAddress);
         const serializedAmount = encodeWord64(transfer.amount.microCcdAmount);
         return Buffer.concat([serializedToAddress, serializedAmount]);
     }
 
     deserialize(serializedPayload: Cursor): SimpleTransferPayload {
-        const toAddress = AccountAddress.fromBytes(
+        const toAddress = AccountAddress.fromBuffer(
             Buffer.from(serializedPayload.read(32))
         );
         const amount = new CcdAmount(
@@ -69,7 +71,7 @@ export class SimpleTransferWithMemoHandler
     implements AccountTransactionHandler<SimpleTransferWithMemoPayload>
 {
     serialize(transfer: SimpleTransferWithMemoPayload): Buffer {
-        const serializedToAddress = transfer.toAddress.decodedAddress;
+        const serializedToAddress = AccountAddress.toBuffer(transfer.toAddress);
         const serializedMemo = encodeDataBlob(transfer.memo);
         const serializedAmount = encodeWord64(transfer.amount.microCcdAmount);
         return Buffer.concat([
@@ -80,7 +82,7 @@ export class SimpleTransferWithMemoHandler
     }
 
     deserialize(serializedPayload: Cursor): SimpleTransferWithMemoPayload {
-        const toAddress = AccountAddress.fromBytes(
+        const toAddress = AccountAddress.fromBuffer(
             Buffer.from(serializedPayload.read(32))
         );
         const memoLength = serializedPayload.read(2).readUInt16BE(0);
@@ -102,7 +104,7 @@ export class DeployModuleHandler
     implements AccountTransactionHandler<DeployModulePayload>
 {
     getBaseEnergyCost(payload: DeployModulePayload): bigint {
-        let length = payload.source.length;
+        let length = payload.source.byteLength;
         if (payload.version === undefined) {
             // Remove the 8 bytes from the embedded version and length.
             length -= 8;
@@ -114,7 +116,7 @@ export class DeployModuleHandler
     serialize(payload: DeployModulePayload): Buffer {
         if (payload.version === undefined) {
             // Assume the module has version and length embedded
-            return payload.source;
+            return Buffer.from(payload.source);
         } else {
             // Assume the module is legacy build, which doesn't contain version and length
             const serializedWasm = packBufferWithWord32Length(payload.source);
@@ -132,7 +134,7 @@ export class InitContractHandler
     implements AccountTransactionHandler<InitContractPayload>
 {
     getBaseEnergyCost(payload: InitContractPayload): bigint {
-        return payload.maxContractExecutionEnergy;
+        return payload.maxContractExecutionEnergy.value;
     }
 
     serialize(payload: InitContractPayload): Buffer {
@@ -140,7 +142,7 @@ export class InitContractHandler
         const initNameBuffer = Buffer.from('init_' + payload.initName, 'utf8');
         const serializedInitName = packBufferWithWord16Length(initNameBuffer);
         const serializedModuleRef = payload.moduleRef.decodedModuleRef;
-        const parameterBuffer = payload.param;
+        const parameterBuffer = Parameter.toBuffer(payload.param);
         const serializedParameters =
             packBufferWithWord16Length(parameterBuffer);
         return Buffer.concat([
@@ -160,7 +162,7 @@ export class UpdateContractHandler
     implements AccountTransactionHandler<UpdateContractPayload>
 {
     getBaseEnergyCost(payload: UpdateContractPayload): bigint {
-        return payload.maxContractExecutionEnergy;
+        return payload.maxContractExecutionEnergy.value;
     }
 
     serialize(payload: UpdateContractPayload): Buffer {
@@ -171,13 +173,15 @@ export class UpdateContractHandler
             serializeIndex,
             serializeSubindex,
         ]);
-        const receiveNameBuffer = Buffer.from(payload.receiveName, 'utf8');
+        const receiveNameBuffer = Buffer.from(
+            ReceiveName.toString(payload.receiveName),
+            'utf8'
+        );
         const serializedReceiveName =
             packBufferWithWord16Length(receiveNameBuffer);
-        const parameterBuffer = payload.message;
-        const serializedParameters = packBufferWithWord16Length(
-            Buffer.from(parameterBuffer)
-        );
+        const parameterBuffer = Parameter.toBuffer(payload.message);
+        const serializedParameters =
+            packBufferWithWord16Length(parameterBuffer);
         return Buffer.concat([
             serializedAmount,
             serializedContractAddress,

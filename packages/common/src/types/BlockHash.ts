@@ -1,4 +1,10 @@
 import type { HexString } from '../types.js';
+import type * as Proto from '../grpc-api/v2/concordium/types.js';
+
+/**
+ * The number of bytes used to represent a block hash.
+ */
+const blockHashByteLength = 32;
 
 /**
  * Represents a hash of a block in the chain.
@@ -8,7 +14,7 @@ class BlockHash {
     private __nominal = true;
     constructor(
         /** The internal buffer of bytes representing the hash. */
-        public readonly buffer: ArrayBuffer
+        public readonly buffer: Uint8Array
     ) {}
 }
 
@@ -24,14 +30,14 @@ export type Type = BlockHash;
  * @returns {BlockHash}
  */
 export function fromBuffer(buffer: ArrayBuffer): BlockHash {
-    if (buffer.byteLength !== 32) {
+    if (buffer.byteLength !== blockHashByteLength) {
         throw new Error(
             `Invalid transaction hash provided: Expected a buffer containing 32 bytes, instead got '${Buffer.from(
                 buffer
             ).toString('hex')}'.`
         );
     }
-    return new BlockHash(buffer);
+    return new BlockHash(new Uint8Array(buffer));
 }
 
 /**
@@ -51,4 +57,59 @@ export function fromHexString(hex: HexString): BlockHash {
  */
 export function toHexString(hash: BlockHash): HexString {
     return Buffer.from(hash.buffer).toString('hex');
+}
+
+/**
+ * Get byte representation of a BlockHash.
+ * @param {BlockHash} hash The block hash.
+ * @returns {ArrayBuffer} Hash represented as bytes.
+ */
+export function toBuffer(hash: BlockHash): Uint8Array {
+    return hash.buffer;
+}
+
+/**
+ * Convert a block hash from its protobuf encoding.
+ * @param {Proto.BlockHash} hash The protobuf encoding.
+ * @returns {BlockHash}
+ */
+export function fromProto(hash: Proto.BlockHash): BlockHash {
+    return fromBuffer(hash.value);
+}
+
+/**
+ * Convert a block hash into its protobuf encoding.
+ * @param {BlockHash} hash The block hash.
+ * @returns {Proto.BlockHash} The protobuf encoding.
+ */
+export function toProto(hash: BlockHash): Proto.BlockHash {
+    return {
+        value: hash.buffer,
+    };
+}
+
+/**
+ * Construct a 'given' block hash input from a block hash.
+ * @param {BlockHash} blockHash The given block hash.
+ * @returns {Proto.BlockHashInput} The given block hash input.
+ */
+export function toBlockHashInput(blockHash: BlockHash): Proto.BlockHashInput {
+    return {
+        blockHashInput: { oneofKind: 'given', given: toProto(blockHash) },
+    };
+}
+
+/**
+ * Check if two transaction hashes are the same.
+ * @param {BlockHash} left
+ * @param {BlockHash} right
+ * @returns {boolean} True if they are equal.
+ */
+export function equals(left: BlockHash, right: BlockHash): boolean {
+    for (let i = 0; i < blockHashByteLength; i++) {
+        if (left.buffer.at(i) !== right.buffer.at(i)) {
+            return false;
+        }
+    }
+    return true;
 }

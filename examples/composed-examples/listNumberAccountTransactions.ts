@@ -1,7 +1,6 @@
 import {
     AccountAddress,
     createConcordiumClient,
-    isAlias,
     isTransferLikeSummary,
     unwrap,
 } from '@concordium/node-sdk';
@@ -90,20 +89,20 @@ const client = createConcordiumClient(
         // For each transaction in the block:
         trxLoop: for await (const trx of trxStream) {
             if (isTransferLikeSummary(trx)) {
-                const trxAcc = new AccountAddress(trx.sender);
+                const trxAcc = trx.sender;
 
                 // Loop over account dictionary entries to check if account
                 // is already in dictionary:
                 for (const [addr, trxSent] of Object.entries(dict)) {
-                    const acc = new AccountAddress(addr);
-                    if (isAlias(acc, trxAcc)) {
+                    const acc = AccountAddress.fromBase58(addr);
+                    if (AccountAddress.isAlias(acc, trxAcc)) {
                         dict[addr] = trxSent + 1;
                         break trxLoop;
                     }
                 }
 
                 // If account is not in dictionary, then add it:
-                dict[trx.sender] = 1;
+                dict[AccountAddress.toBase58(trx.sender)] = 1;
             }
         }
     }

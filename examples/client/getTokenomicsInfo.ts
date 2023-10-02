@@ -1,5 +1,9 @@
 import { parseEndpoint } from '../shared/util.js';
-import { isRewardStatusV1, createConcordiumClient } from '@concordium/node-sdk';
+import {
+    isRewardStatusV1,
+    createConcordiumClient,
+    BlockHash,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -10,7 +14,7 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> [options]
 
   Required:
-    --pool-owner, -p  The BakerId of the pool owner 
+    --pool-owner, -p  The BakerId of the pool owner
 
   Options
     --help,         Displays this message
@@ -53,7 +57,11 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const tokenomics = await client.getTokenomicsInfo(cli.flags.block);
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
+    const tokenomics = await client.getTokenomicsInfo(blockHash);
 
     // Protocol version 4 expanded the amount of information in the response, so one should check the type to access that.
     // This information includes information about the payday and total amount of funds staked.

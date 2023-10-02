@@ -1,4 +1,10 @@
 import type { HexString } from '../types.js';
+import type * as Proto from '../grpc-api/v2/concordium/types.js';
+
+/**
+ * The number of bytes used to represent a transaction hash.
+ */
+const transactionHashByteLength = 32;
 
 /** Hash of a transaction. */
 class TransactionHash {
@@ -6,7 +12,7 @@ class TransactionHash {
     private __nominal = true;
     constructor(
         /** Internal buffer with the hash. */
-        public readonly buffer: ArrayBuffer
+        public readonly buffer: Uint8Array
     ) {}
 }
 
@@ -20,14 +26,14 @@ export type Type = TransactionHash;
  * @returns {TransactionHash}
  */
 export function fromBuffer(buffer: ArrayBuffer): TransactionHash {
-    if (buffer.byteLength !== 32) {
+    if (buffer.byteLength !== transactionHashByteLength) {
         throw new Error(
             `Invalid transaction hash provided: Expected a buffer containing 32 bytes, instead got '${Buffer.from(
                 buffer
             ).toString('hex')}'.`
         );
     }
-    return new TransactionHash(buffer);
+    return new TransactionHash(new Uint8Array(buffer));
 }
 
 /**
@@ -47,4 +53,52 @@ export function fromHexString(hex: HexString): TransactionHash {
  */
 export function toHexString(hash: TransactionHash): HexString {
     return Buffer.from(hash.buffer).toString('hex');
+}
+
+/**
+ * Get byte representation of a TransactionHash.
+ * @param {TransactionHash} hash The transaction hash.
+ * @returns {ArrayBuffer} Hash represented as bytes.
+ */
+export function toBuffer(hash: TransactionHash): Uint8Array {
+    return hash.buffer;
+}
+
+/**
+ * Convert a transaction hash from its protobuf encoding.
+ * @param {Proto.TransactionHash} transactionHash The transaction hash in protobuf.
+ * @returns {TransactionHash} The transaction hash.
+ */
+export function fromProto(
+    transactionHash: Proto.TransactionHash
+): TransactionHash {
+    return fromBuffer(transactionHash.value);
+}
+
+/**
+ * Convert a transaction hash into its protobuf encoding.
+ * @param {TransactionHash} transactionHash The transaction hash.
+ * @returns {Proto.TransactionHash} The protobuf encoding.
+ */
+export function toProto(
+    transactionHash: TransactionHash
+): Proto.TransactionHash {
+    return {
+        value: transactionHash.buffer,
+    };
+}
+
+/**
+ * Check if two transaction hashes are the same.
+ * @param {TransactionHash} left
+ * @param {TransactionHash} right
+ * @returns {boolean} True if they are equal.
+ */
+export function equals(left: TransactionHash, right: TransactionHash): boolean {
+    for (let i = 0; i < transactionHashByteLength; i++) {
+        if (left.buffer.at(i) !== right.buffer.at(i)) {
+            return false;
+        }
+    }
+    return true;
 }

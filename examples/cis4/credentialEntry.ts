@@ -1,7 +1,11 @@
 import meow from 'meow';
 import { credentials } from '@grpc/grpc-js';
 
-import { CIS4Contract, createConcordiumClient } from '@concordium/node-sdk';
+import {
+    CIS4Contract,
+    ContractAddress,
+    createConcordiumClient,
+} from '@concordium/node-sdk';
 import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
@@ -52,10 +56,10 @@ const client = createConcordiumClient(
 );
 
 (async () => {
-    const contract = await CIS4Contract.create(client, {
-        index: BigInt(cli.flags.index),
-        subindex: BigInt(cli.flags.subindex),
-    });
+    const contract = await CIS4Contract.create(
+        client,
+        ContractAddress.create(cli.flags.index, cli.flags.subindex)
+    );
 
     const credentialEntry = await contract.credentialEntry(cli.flags.credId);
     console.log('Credential entry:', credentialEntry);

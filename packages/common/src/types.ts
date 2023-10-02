@@ -2,12 +2,22 @@
  * @module Common GRPC-Client
  */
 
-import { AccountAddress } from './types/accountAddress.js';
-import { CredentialRegistrationId } from './types/CredentialRegistrationId.js';
+import * as AccountAddress from './types/AccountAddress.js';
+import * as ContractAddress from './types/ContractAddress.js';
+import * as Duration from './types/Duration.js';
+import * as Timestamp from './types/Timestamp.js';
+import * as Energy from './types/Energy.js';
+import type * as BlockHash from './types/BlockHash.js';
+import * as CredentialRegistrationId from './types/CredentialRegistrationId.js';
+import * as Parameter from './types/Parameter.js';
+import type * as InitName from './types/InitName.js';
+import type * as ContractName from './types/ContractName.js';
+import type * as ReceiveName from './types/ReceiveName.js';
+import type * as SequenceNumber from './types/SequenceNumber.js';
+import type * as ReturnValue from './types/ReturnValue.js';
 import { CcdAmount } from './types/ccdAmount.js';
 import { DataBlob } from './types/DataBlob.js';
 import { TransactionExpiry } from './types/transactionExpiry.js';
-import { Buffer } from 'buffer/index.js';
 import { ModuleReference } from './types/moduleReference.js';
 import { RejectReason, RejectReasonV1 } from './types/rejectReason.js';
 import {
@@ -36,14 +46,8 @@ export type JsonString = string;
 
 export type ModuleRef = HexString;
 
-/** A number of milliseconds */
-export type Duration = bigint;
-/** Unix timestamp in milliseconds */
-export type Timestamp = bigint;
 /** A consensus round */
 export type Round = bigint;
-/** An amount of energy */
-export type Energy = bigint;
 
 /**
  * Makes keys of type optional
@@ -130,23 +134,18 @@ export enum TransactionStatusEnum {
 
 export interface AddressAccount {
     type: 'AddressAccount';
-    address: Base58String;
-}
-
-export interface ContractAddress {
-    index: bigint;
-    subindex: bigint;
+    address: AccountAddress.Type;
 }
 
 export type AccountIdentifierInput =
-    | AccountAddress
-    | CredentialRegistrationId
+    | AccountAddress.Type
+    | CredentialRegistrationId.Type
     | bigint;
 
 export type Address =
     | {
           type: 'AddressContract';
-          address: ContractAddress;
+          address: ContractAddress.Type;
       }
     | AddressAccount;
 
@@ -191,7 +190,7 @@ export interface BaseTransactionSummary {
     hash: string;
 
     cost: bigint;
-    energyCost: bigint;
+    energyCost: Energy.Type;
     index: bigint;
 }
 
@@ -416,7 +415,7 @@ export interface TimeParametersV1 {
 /** Parameters that determine timeouts in the consensus protocol used from protocol version 6. */
 export interface TimeoutParameters {
     /** The base value for triggering a timeout, in milliseconds. */
-    timeoutBase: Duration;
+    timeoutBase: Duration.Type;
     /** Factor for increasing the timeout. Must be greater than 1. */
     timeoutIncrease: Ratio;
     /** Factor for decreasing the timeout. Must be between 0 and 1. */
@@ -426,9 +425,9 @@ export interface TimeoutParameters {
 /** Consensus parameters, used from protocol version 6 */
 export interface ConsensusParameters {
     /** Minimum time interval between blocks. */
-    minBlockTime: Duration;
+    minBlockTime: Duration.Type;
     /** Maximum energy allowed per block. */
-    blockEnergyLimit: Energy;
+    blockEnergyLimit: Energy.Type;
 }
 
 /**
@@ -456,7 +455,7 @@ export interface ChainParametersCommon {
     /** Limit for the number of account creations in a block */
     accountCreationLimit: number;
     /** The chain foundation account */
-    foundationAccount: Base58String;
+    foundationAccount: AccountAddress.Type;
     /** The chain foundation account index */
     foundationAccountIndex?: bigint;
     /** Keys allowed to do level1 updates */
@@ -756,13 +755,13 @@ export interface BlockInfoCommon {
      * Hash of parent block. For the initial genesis block (i.e. not re-genesis)
      * this will be the hash of the block itself
      */
-    blockParent: HexString;
+    blockParent: BlockHash.Type;
     /** Hash of block */
-    blockHash: HexString;
+    blockHash: BlockHash.Type;
     /** Hash of block state */
     blockStateHash: HexString;
     /** Hash of last finalized block when this block was baked */
-    blockLastFinalized: HexString;
+    blockLastFinalized: BlockHash.Type;
 
     /** The absolute height of this (i.e. relative to the initial genesis block) */
     blockHeight: bigint;
@@ -784,7 +783,7 @@ export interface BlockInfoCommon {
     /** The total byte size of all transactions in the block */
     transactionsSize: bigint;
     /** The energy cost of the transactions in the block */
-    transactionEnergyCost: Energy;
+    transactionEnergyCost: Energy.Type;
 
     /**
      * The genesis index for the block. This counst the number of protocol updates that have
@@ -815,7 +814,7 @@ export interface BlockInfoV1 extends BlockInfoCommon {
 export type BlockInfo = BlockInfoV0 | BlockInfoV1;
 
 export interface CommonBlockInfo {
-    hash: HexString;
+    hash: BlockHash.Type;
     height: bigint;
 }
 
@@ -836,16 +835,16 @@ export type BlocksAtHeightRequest =
 /** Common properties for  consensus status types used across all protocol versions */
 export interface ConsensusStatusCommon {
     /** Hash of the current best block */
-    bestBlock: HexString;
+    bestBlock: BlockHash.Type;
     /** Hash of the initial genesis block */
-    genesisBlock: HexString;
+    genesisBlock: BlockHash.Type;
     /** Hash of the genesis block of the current era, i.e. since the last protocol update. */
-    currentEraGenesisBlock: HexString;
+    currentEraGenesisBlock: BlockHash.Type;
     /** Hash of the last finalized block */
-    lastFinalizedBlock: HexString;
+    lastFinalizedBlock: BlockHash.Type;
 
     /** Current epoch duration, in milliseconds */
-    epochDuration: Duration;
+    epochDuration: Duration.Type;
     /** Absolute height of the best block */
     bestBlockHeight: bigint;
     /** Absolute height of the last finalized block */
@@ -914,12 +913,12 @@ export interface ConsensusStatusCommon {
 /** Consensus status used for protocol version 1-5 */
 export interface ConsensusStatusV0 extends ConsensusStatusCommon {
     /** (Current) slot duration in milliseconds */
-    slotDuration: Duration;
+    slotDuration: Duration.Type;
 }
 
 export interface ConcordiumBftStatus {
     /** Current duration before a round times out, in milliseconds */
-    currentTimeoutDuration: Duration;
+    currentTimeoutDuration: Duration.Type;
     /** Current round */
     currentRound: Round;
     /** Current epoch */
@@ -946,7 +945,7 @@ export interface CryptographicParameters {
 }
 
 export interface NextAccountNonce {
-    nonce: bigint;
+    nonce: SequenceNumber.Type;
     allFinal: boolean;
 }
 
@@ -1262,7 +1261,7 @@ type PoolStatusWrapper<T extends keyof typeof PoolStatusType, S> = S & {
 
 export interface BakerPoolStatusDetails {
     bakerId: BakerId;
-    bakerAddress: Base58String;
+    bakerAddress: AccountAddress.Type;
     bakerEquityCapital: Amount;
     delegatedCapital: Amount;
     delegatedCapitalCap: Amount;
@@ -1346,8 +1345,8 @@ export type AccountCredential = Versioned<
 >;
 
 interface AccountInfoCommon {
-    accountAddress: Base58String;
-    accountNonce: bigint;
+    accountAddress: AccountAddress.Type;
+    accountNonce: SequenceNumber.Type;
     accountAmount: bigint;
     accountIndex: bigint;
 
@@ -1404,7 +1403,7 @@ export interface ArInfo {
 }
 
 interface DelegatorInfoCommon {
-    account: Base58String;
+    account: AccountAddress.Type;
     stake: Amount;
 }
 export interface DelegatorInfo extends DelegatorInfoCommon {
@@ -1414,13 +1413,13 @@ export interface DelegatorInfo extends DelegatorInfoCommon {
 export type DelegatorRewardPeriodInfo = DelegatorInfoCommon;
 
 export interface Branch {
-    blockHash: HexString;
+    blockHash: BlockHash.Type;
     children: Branch[];
 }
 
 export interface BakerElectionInfo {
     baker: BakerId;
-    account: Base58String;
+    account: AccountAddress.Type;
     lotteryPower: number;
 }
 
@@ -1481,7 +1480,7 @@ export interface BlockFinalizationSummary_Record {
 }
 
 export interface FinalizationSummary {
-    block: HexString;
+    block: BlockHash.Type;
     index: bigint;
     delay: bigint;
     finalizers: FinalizationSummaryParty[];
@@ -1539,12 +1538,12 @@ export interface DeployModulePayload {
     version?: number;
 
     /** Wasm module to be deployed */
-    source: Buffer;
+    source: Uint8Array;
 }
 
 export interface VersionedModuleSource {
     version: 0 | 1;
-    source: Buffer;
+    source: Uint8Array;
 }
 
 export interface InitContractPayload {
@@ -1555,14 +1554,14 @@ export interface InitContractPayload {
     moduleRef: ModuleReference;
 
     /** Name of the contract */
-    initName: string;
+    initName: ContractName.Type;
 
     /** Parameters for the init function */
-    param: Buffer;
+    param: Parameter.Type;
 
     /** The amount of energy that can be used for contract execution.
     The base energy amount for transaction verification will be added to this cost.*/
-    maxContractExecutionEnergy: bigint;
+    maxContractExecutionEnergy: Energy.Type;
 }
 
 export interface UpdateContractPayload {
@@ -1570,28 +1569,28 @@ export interface UpdateContractPayload {
     amount: CcdAmount;
 
     /** Address of contract instance consisting of an index and a subindex */
-    address: ContractAddress;
+    address: ContractAddress.Type;
 
     /** Name of receive function including <contractName>. prefix */
-    receiveName: string;
+    receiveName: ReceiveName.Type;
 
     /** Parameters for the update function */
-    message: Buffer;
+    message: Parameter.Type;
 
     /** The amount of energy that can be used for contract execution.
     The base energy amount for transaction verification will be added to this cost.*/
-    maxContractExecutionEnergy: bigint;
+    maxContractExecutionEnergy: Energy.Type;
 }
 
 export interface AccountTransactionHeader {
     /** account address that is source of this transaction */
-    sender: AccountAddress;
+    sender: AccountAddress.Type;
 
     /**
      * the nonce for the transaction, usually acquired by
      * getting the next account nonce from the node
      */
-    nonce: bigint;
+    nonce: SequenceNumber.Type;
 
     /** expiration of the transaction */
     expiry: TransactionExpiry;
@@ -1602,7 +1601,7 @@ export interface SimpleTransferPayload {
     amount: CcdAmount;
 
     /** the recipient of the transfer */
-    toAddress: AccountAddress;
+    toAddress: AccountAddress.Type;
 }
 
 export interface SimpleTransferWithMemoPayload extends SimpleTransferPayload {
@@ -1780,16 +1779,16 @@ export interface InstanceInfoCommon {
     /** Module reference of the current module being used by this instance. */
     sourceModule: ModuleReference;
     /** Account used to instantiate this smart contract instance. */
-    owner: AccountAddress;
+    owner: AccountAddress.Type;
     /** List of receive functions currently exposed by this smart contract. These are of the form '<contractName>.<entrypointName>'. */
-    methods: string[];
+    methods: ReceiveName.Type[];
     /** Name of the smart contract. This is of the form 'init_<contractName>'. */
-    name: string;
+    name: InitName.Type;
 }
 
 export interface InstanceInfoV0 extends InstanceInfoCommon {
     version: 0;
-    model: Buffer;
+    model: ArrayBuffer;
 }
 
 export interface InstanceInfoV1 extends InstanceInfoCommon {
@@ -1835,12 +1834,12 @@ export interface InstanceStateKVPair {
 }
 
 export interface ContractContext {
-    invoker?: ContractAddress | AccountAddress;
-    contract: ContractAddress;
+    invoker?: ContractAddress.Type | AccountAddress.Type;
+    contract: ContractAddress.Type;
     amount?: CcdAmount;
-    method: string;
-    parameter?: Buffer;
-    energy?: bigint;
+    method: ReceiveName.Type;
+    parameter?: Parameter.Type;
+    energy?: Energy.Type;
 }
 
 /**
@@ -1867,22 +1866,21 @@ export type Invoker =
  * @deprecated This is helper intented for the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export function buildInvoker(
-    invoker?: AccountAddress | ContractAddress
+    invoker?: AccountAddress.Type | ContractAddress.Type
 ): Invoker {
     if (!invoker) {
         return null;
-    } else if ((invoker as AccountAddress).address) {
+    } else if (AccountAddress.isAccountAddress(invoker)) {
         return {
             type: 'AddressAccount',
-            address: (invoker as AccountAddress).address,
+            address: AccountAddress.toBase58(invoker),
         };
-    } else if ((invoker as ContractAddress).index !== undefined) {
-        const invokerContract = invoker as ContractAddress;
+    } else if (ContractAddress.isContractAddress(invoker)) {
         return {
             type: 'AddressContract',
             address: {
-                subindex: invokerContract.subindex.toString(),
-                index: invokerContract.index.toString(),
+                subindex: invoker.subindex.toString(),
+                index: invoker.index.toString(),
             },
         };
     } else {
@@ -1892,15 +1890,16 @@ export function buildInvoker(
 
 export interface InvokeContractSuccessResult {
     tag: 'success';
-    usedEnergy: bigint;
+    usedEnergy: Energy.Type;
     events: ContractTraceEvent[];
-    returnValue?: string;
+    returnValue?: ReturnValue.Type;
 }
 
 export interface InvokeContractFailedResult {
     tag: 'failure';
-    usedEnergy: bigint;
+    usedEnergy: Energy.Type;
     reason: RejectReason;
+    returnValue?: ReturnValue.Type;
 }
 
 /**
@@ -1908,7 +1907,7 @@ export interface InvokeContractFailedResult {
  */
 export interface InvokeContractFailedResultV1 {
     tag: 'failure';
-    usedEnergy: bigint;
+    usedEnergy: Energy.Type;
     reason: RejectReasonV1;
 }
 
@@ -2028,7 +2027,7 @@ export interface IdObjectRequestV1 {
 
 export interface IdRecoveryRequest {
     idCredPub: string;
-    timestamp: Timestamp;
+    timestamp: Timestamp.Type;
     proof: string;
 }
 

@@ -24,6 +24,45 @@
     - NodeJS: 4.7, `"moduleResolution": "node16" // or "nodenext"`
     - Bundled applications (webpack, esbuild, rollup, etc...): 5.0, `"moduleResolution": "bundler"`
 
+
+The API now uses dedicated types instead of language primitives:
+- Use `AccountAddress` instead of a string with base58 encoding. Use `AccountAddress.fromBase58('<base58>')` to construct it.
+- Use `BlockHash` instead of a string with hex encoding. Use `BlockHash.fromHexString('<hex>')` to construct it.
+- Use `TranactionHash` instead of a string with hex encoding. Use `TransactionHash.fromHexString('<hex>')` to construct it.
+- Use `Energy` instead of a bigint. Use `Energy.create(<integer>)` to construct it.
+- Use `ReceiveName` instead of a string. Use `ReceiveName.fromString('<contract>.<function>')` to construct it.
+- Use `InitName` instead of a string. Use `Init.fromString('init_<contract>')` to construct it.
+- Use `ContractName` instead of a string. Use `ContractName.fromString('<contract>')` to construct it.
+- Use `EntrypointName` instead of a string. Use `EntrypointName.fromString('<function>')` to construct it.
+- Use `Parameter` instead of a string with hex encoding. Use `Parameter.fromHexString('<hex>')`.
+- Use `SequenceNumber` (formerly called nonce) instead of a bigint. Use `SequenceNumber.create(<integer>)` to construct it.
+- Use `Timestamp` instead of a bigint. Can be constructed using `Timestamp.fromMillis(<integer>)`.
+- Use `Duration` instead of a bigint. Can be constructed using `Duration.fromMillis(<integer>)`.
+
+Several types have been replaced with a module containing the type itself together with functions for constructing and converting the type:
+- `AccountAddress` is now a module with functions related to account addresses:
+  - To refer to `AccountAddress` as a type use `AccountAddress.Type`.
+  - Constructing `new AccountAddress("<address>")` is now `AccountAddress.fromBase58("<address>")`.
+  - `isAlias` and `getAlias` are now accessable from `AccountAddress.isAlias` and `AccountAddress.getAlias`.
+- `ContractAddresss` is now a module with functions related to contract addresses:
+  - To refer to `ContractAddress` as a type use `ContractAddress.Type`.
+  - To construct the type use `ContractAddress.create(index, subindex)`.
+- `CredentialRegistrationId` is now a module with functions related to credential registration IDs:
+  - To refer to `CredentialRegistrationId` as a type use `CredentialRegistrationId.Type`.
+  - Constructing `new CredentialRegistrationId("<hex-string>")` is now `CredentialRegistrationId.fromHexString("<hex-string>")`.
+
+- Renamed `AccountSequenceNumber` module to `SequenceNumber`.
+- Fix type for `TranferredEvent` from `ContractTraceEvent` to only be from contract addresses to account addresses.
+
+### Added
+
+- All JSON serialization in `serialization.ts` is now handled by `json-bigint` meaning that all functions now correctly handles bigint inputs
+- `Timestamp` is now a module with functions related to time.
+  - To refer to `Timestamp` as a type use `Timestamp.Type`.
+- `Duration` is now a module with functions related to durations of time.
+- `EntrypointName` is now a module with functions related to entrypoint names of a smart contract.
+- `ReceiveName` is now a module with functions related to receive-function names of a smart contract.
+
 ## 6.4.0
 
 - Bumped @concordium/common-sdk to 9.4.0.

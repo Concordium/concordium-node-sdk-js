@@ -3,12 +3,8 @@ import { mnemonicToSeedSync, validateMnemonic } from '@scure/bip39';
 import { wordlist } from '@scure/bip39/wordlists/english.js';
 import { Buffer } from 'buffer/index.js';
 import { isHex } from '../util.js';
-import {
-    AttributesKeys,
-    Network,
-    CryptographicParameters,
-    ContractAddress,
-} from '../types.js';
+import { AttributesKeys, Network, CryptographicParameters } from '../types.js';
+import type * as ContractAddress from '../types/ContractAddress.js';
 
 /**
  * Class for Hierarchical Deterministic key derivation for Concordium identities and accounts.
@@ -158,7 +154,7 @@ export class ConcordiumHdWallet {
     }
 
     getVerifiableCredentialSigningKey(
-        issuer: ContractAddress,
+        issuer: ContractAddress.Type,
         verifiableCredentialIndex: number
     ): Buffer {
         return Buffer.from(
@@ -174,7 +170,7 @@ export class ConcordiumHdWallet {
     }
 
     getVerifiableCredentialPublicKey(
-        issuer: ContractAddress,
+        issuer: ContractAddress.Type,
         verifiableCredentialIndex: number
     ): Buffer {
         return Buffer.from(

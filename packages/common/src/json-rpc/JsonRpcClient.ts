@@ -18,8 +18,10 @@ import {
     TransactionStatus,
     TransactionSummary,
     Versioned,
-} from '../types.js';
-import { AccountAddress } from '../types/accountAddress.js';
+} from '../pub/types.js';
+import * as AccountAddress from '../types/AccountAddress.js';
+import * as BlockHash from '../types/BlockHash.js';
+import * as Parameter from '../types/Parameter.js';
 import Provider, { JsonRpcResponse } from './providers/provider.js';
 import {
     serializeAccountTransactionForSubmission,
@@ -27,12 +29,8 @@ import {
 } from '../serialization.js';
 import { CcdAmount } from '../types/ccdAmount.js';
 import { ModuleReference } from '../types/moduleReference.js';
-import {
-    buildJsonResponseReviver,
-    intToStringTransformer,
-    isValidHash,
-} from '../util.js';
-import { CredentialRegistrationId } from '../types/CredentialRegistrationId.js';
+import { buildJsonResponseReviver, intToStringTransformer } from '../util.js';
+import * as CredentialRegistrationId from '../types/CredentialRegistrationId.js';
 
 function transformJsonResponse<Result>(
     jsonString: string,
@@ -58,7 +56,7 @@ export class JsonRpcClient {
     }
 
     async getNextAccountNonce(
-        accountAddress: AccountAddress
+        accountAddress: AccountAddress.Type
     ): Promise<NextAccountNonce | undefined> {
         const response = await this.provider.request('getNextAccountNonce', {
             address: accountAddress.address,
@@ -186,20 +184,18 @@ export class JsonRpcClient {
      * @returns A JSON object with information about the contract instance
      */
     async getInstanceInfo(
-        address: ContractAddress,
-        blockHash?: string
+        address: ContractAddress.Type,
+        blockHash?: BlockHash.Type
     ): Promise<InstanceInfo | undefined> {
         if (!blockHash) {
             const consensusStatus = await this.getConsensusStatus();
             blockHash = consensusStatus.lastFinalizedBlock;
-        } else if (!isValidHash(blockHash)) {
-            throw new Error('The input was not a valid hash: ' + blockHash);
         }
 
         const response = await this.provider.request('getInstanceInfo', {
             index: address.index,
             subindex: address.subindex,
-            blockHash,
+            blockHash: BlockHash.toHexString(blockHash),
         });
 
         const result = JSON.parse(response).result;
@@ -212,7 +208,7 @@ export class JsonRpcClient {
         const common = {
             amount: new CcdAmount(BigInt(result.amount)),
             sourceModule: new ModuleReference(result.sourceModule),
-            owner: new AccountAddress(result.owner),
+            owner: AccountAddress.fromBase58(result.owner),
             methods: result.methods,
             name: result.name,
         };
@@ -251,14 +247,15 @@ export class JsonRpcClient {
      * @returns the account info for the provided account address, undefined is the account does not exist
      */
     async getAccountInfo(
-        accountAddress: string | AccountAddress | CredentialRegistrationId,
-        blockHash?: string
+        accountAddress:
+            | string
+            | AccountAddress.Type
+            | CredentialRegistrationId.Type,
+        blockHash?: BlockHash.Type
     ): Promise<AccountInfo | undefined> {
         if (!blockHash) {
             const consensusStatus = await this.getConsensusStatus();
             blockHash = consensusStatus.lastFinalizedBlock;
-        } else if (!isValidHash(blockHash)) {
-            throw new Error('The input was not a valid hash: ' + blockHash);
         }
 
         let address: string;
@@ -273,7 +270,7 @@ export class JsonRpcClient {
         }
 
         const response = await this.provider.request('getAccountInfo', {
-            blockHash,
+            blockHash: BlockHash.toHexString(blockHash),
             address,
         });
 
@@ -306,19 +303,17 @@ export class JsonRpcClient {
      * @returns the global cryptographic parameters at the given block, or undefined it the block does not exist.
      */
     async getCryptographicParameters(
-        blockHash?: string
+        blockHash?: BlockHash.Type
     ): Promise<Versioned<CryptographicParameters> | undefined> {
         if (!blockHash) {
             const consensusStatus = await this.getConsensusStatus();
             blockHash = consensusStatus.lastFinalizedBlock;
-        } else if (!isValidHash(blockHash)) {
-            throw new Error('The input was not a valid hash: ' + blockHash);
         }
 
         const response = await this.provider.request(
             'getCryptographicParameters',
             {
-                blockHash,
+                blockHash: BlockHash.toHexString(blockHash),
             }
         );
 
@@ -337,18 +332,16 @@ export class JsonRpcClient {
      */
     async getModuleSource(
         moduleReference: ModuleReference,
-        blockHash?: string
+        blockHash?: BlockHash.Type
     ): Promise<Buffer> {
         if (!blockHash) {
             const consensusStatus = await this.getConsensusStatus();
             blockHash = consensusStatus.lastFinalizedBlock;
-        } else if (!isValidHash(blockHash)) {
-            throw new Error('The input was not a valid hash: ' + blockHash);
         }
 
         const response = await this.provider.request('getModuleSource', {
             moduleReference: moduleReference.moduleRef,
-            blockHash,
+            blockHash: BlockHash.toHexString(blockHash),
         });
 
         return Buffer.from(JSON.parse(response).result, 'base64');
@@ -368,13 +361,11 @@ export class JsonRpcClient {
      */
     async invokeContract(
         contractContext: ContractContext,
-        blockHash?: string
+        blockHash?: BlockHash.Type
     ): Promise<InvokeContractResultV1 | undefined> {
         if (!blockHash) {
             const consensusStatus = await this.getConsensusStatus();
             blockHash = consensusStatus.lastFinalizedBlock;
-        } else if (!isValidHash(blockHash)) {
-            throw new Error('The input was not a valid hash: ' + blockHash);
         }
 
         const invoker = buildInvoker(contractContext.invoker);
@@ -382,15 +373,21 @@ export class JsonRpcClient {
         const context = {
             ...contractContext,
             invoker,
+            method: contractContext.method.value,
+            energy:
+                contractContext.energy === undefined
+                    ? undefined
+                    : contractContext.energy.value,
             amount:
                 contractContext.amount && contractContext.amount.microCcdAmount,
             parameter:
-                contractContext.parameter &&
-                contractContext.parameter.toString('hex'),
+                contractContext.parameter === undefined
+                    ? undefined
+                    : Parameter.toHexString(contractContext.parameter),
         };
 
         const response = await this.provider.request('invokeContract', {
-            blockHash,
+            blockHash: BlockHash.toHexString(blockHash),
             context,
         });
 

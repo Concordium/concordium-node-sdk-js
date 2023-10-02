@@ -1,5 +1,6 @@
 import { parseEndpoint } from '../shared/util.js';
 import {
+    BlockHash,
     createConcordiumClient,
     NextUpdateSequenceNumbers,
 } from '@concordium/node-sdk';
@@ -48,8 +49,12 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
     const updateSeqNums: NextUpdateSequenceNumbers =
-        await client.getNextUpdateSequenceNumbers(cli.flags.block);
+        await client.getNextUpdateSequenceNumbers(blockHash);
     // #endregion documentation-snippet
 
     console.dir(updateSeqNums, { depth: null, colors: true });

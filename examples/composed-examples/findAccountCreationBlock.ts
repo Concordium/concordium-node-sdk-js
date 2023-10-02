@@ -54,7 +54,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
-    const account = new AccountAddress(cli.flags.account);
+    const account = AccountAddress.fromBase58(cli.flags.account);
 
     const accBlock = await client.findEarliestFinalized(async (bi) => {
         try {
@@ -84,7 +84,7 @@ const client = createConcordiumClient(
     for await (const summary of summaries) {
         if (
             summary.type === 'accountCreation' &&
-            summary.address === account.address
+            AccountAddress.equals(summary.address, account)
         ) {
             console.log(
                 'Hash of transaction that created the account:',

@@ -1,15 +1,20 @@
 import { Buffer } from 'buffer/index.js';
 import { stringify } from 'json-bigint';
 
-import { ContractAddress, HexString } from './types.js';
 import { ConcordiumGRPCClient } from './grpc/GRPCClient.js';
 import {
     encodeWord16,
     packBufferWithWord8Length,
 } from './serializationHelpers.js';
-import { getContractName } from './contractHelpers.js';
 import { makeDynamicFunction } from './util.js';
 import { makeDeserializeListResponse } from './deserializationHelpers.js';
+import * as ContractAddress from './types/ContractAddress.js';
+import * as BlockHash from './types/BlockHash.js';
+import * as Parameter from './types/Parameter.js';
+import * as ContractName from './types/ContractName.js';
+import * as ReceiveName from './types/ReceiveName.js';
+import * as ReturnValue from './types/ReturnValue.js';
+import { EntrypointName } from './index.js';
 
 /**
  * Namespace with types for CIS-0 standard contracts
@@ -43,7 +48,7 @@ export namespace CIS0 {
     /** The standard is supported by another contract located at `address` */
     export type SupportBy = SupportResponse<SupportType.SupportBy> & {
         /** The address supporting the standard queried */
-        addresses: ContractAddress[];
+        addresses: ContractAddress.Type[];
     };
     /** Union of the different possible support query results. */
     export type SupportResult = NoSupport | Support | SupportBy;
@@ -72,13 +77,12 @@ const deserializeSupportResult =
         }
 
         const numAddresses = cursor.read(1).readUInt8(0);
-        const addresses: ContractAddress[] = [];
+        const addresses: ContractAddress.Type[] = [];
 
         for (let i = 0; i < numAddresses; i++) {
-            const index = cursor.read(8).readBigUInt64LE(0) as bigint;
-            const subindex = cursor.read(8).readBigUInt64LE(0) as bigint;
-
-            addresses.push({ index, subindex });
+            const index = cursor.read(8).readBigUInt64LE(0).valueOf();
+            const subindex = cursor.read(8).readBigUInt64LE(0).valueOf();
+            addresses.push(ContractAddress.create(index, subindex));
         }
 
         return {
@@ -91,9 +95,9 @@ const deserializeSupportResult =
  * Queries a CIS-0 contract for support for a {@link CIS0.StandardIdentifier}.
  *
  * @param {ConcordiumGRPCClient} grpcClient - The client to be used for the query.
- * @param {ContractAddress} contractAddress - The address of the contract to query.
+ * @param {ContractAddress.Type} contractAddress - The address of the contract to query.
  * @param {CIS0.StandardIdentifier} standardId - The standard identifier to query for support in contract.
- * @param {HexString} [blockHash] - The hash of the block to query at.
+ * @param {BlockHash.Type} [blockHash] - The hash of the block to query at.
  *
  * @throws If the query could not be invoked successfully.
  *
@@ -101,17 +105,17 @@ const deserializeSupportResult =
  */
 export function cis0Supports(
     grpcClient: ConcordiumGRPCClient,
-    contractAddress: ContractAddress,
+    contractAddress: ContractAddress.Type,
     standardId: CIS0.StandardIdentifier,
-    blockHash?: HexString
+    blockHash?: BlockHash.Type
 ): Promise<CIS0.SupportResult | undefined>;
 /**
  * Queries a CIS-0 contract for support for a {@link CIS0.StandardIdentifier}.
  *
  * @param {ConcordiumGRPCClient} grpcClient - The client to be used for the query.
- * @param {ContractAddress} contractAddress - The address of the contract to query.
+ * @param {ContractAddress.Type} contractAddress - The address of the contract to query.
  * @param {CIS0.StandardIdentifier[]} standardIds - The standard identifiers to query for support in contract.
- * @param {HexString} [blockHash] - The hash of the block to query at.
+ * @param {BlockHash.Type} [blockHash] - The hash of the block to query at.
  *
  * @throws If the query could not be invoked successfully.
  *
@@ -119,15 +123,15 @@ export function cis0Supports(
  */
 export function cis0Supports(
     grpcClient: ConcordiumGRPCClient,
-    contractAddress: ContractAddress,
+    contractAddress: ContractAddress.Type,
     standardIds: CIS0.StandardIdentifier[],
-    blockHash?: HexString
+    blockHash?: BlockHash.Type
 ): Promise<CIS0.SupportResult[] | undefined>;
 export async function cis0Supports(
     grpcClient: ConcordiumGRPCClient,
-    contractAddress: ContractAddress,
+    contractAddress: ContractAddress.Type,
     standardIds: CIS0.StandardIdentifier | CIS0.StandardIdentifier[],
-    blockHash?: HexString
+    blockHash?: BlockHash.Type
 ): Promise<CIS0.SupportResult | CIS0.SupportResult[] | undefined> {
     const instanceInfo = await grpcClient
         .getInstanceInfo(contractAddress)
@@ -139,21 +143,29 @@ export async function cis0Supports(
             );
         });
 
-    const contractName = getContractName(instanceInfo);
+    const contractName = ContractName.fromInitName(instanceInfo.name);
+    const supportReceiveName = ReceiveName.create(
+        contractName,
+        EntrypointName.fromStringUnchecked('supports')
+    );
 
-    if (!instanceInfo.methods.includes(`${contractName}.supports`)) {
+    if (
+        !instanceInfo.methods.some((methods) =>
+            ReceiveName.equals(methods, supportReceiveName)
+        )
+    ) {
         return undefined;
     }
 
-    const parameter = makeDynamicFunction(serializeSupportIdentifiers)(
-        standardIds
+    const parameter = Parameter.fromBuffer(
+        makeDynamicFunction(serializeSupportIdentifiers)(standardIds)
     );
 
     const response = await grpcClient.invokeContract(
         {
             contract: contractAddress,
             parameter,
-            method: `${contractName}.supports`,
+            method: supportReceiveName,
         },
         blockHash
     );
@@ -172,7 +184,9 @@ export async function cis0Supports(
             }`
         );
     }
-    const results = deserializeSupportResult(response.returnValue);
+    const results = deserializeSupportResult(
+        ReturnValue.toHexString(response.returnValue)
+    );
     const isListInput = Array.isArray(standardIds);
     const expectedValuesLength = isListInput ? standardIds.length : 1;
 

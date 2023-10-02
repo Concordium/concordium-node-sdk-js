@@ -76,7 +76,6 @@
         "@protobuf-ts/grpc-transport": "^2.8.2",
         "@protobuf-ts/runtime": "^2.9.1",
         "@protobuf-ts/runtime-rpc": "^2.9.1",
-        "buffer": "^6.0.3",
         "google-protobuf": "^3.20.1"
     }
 }

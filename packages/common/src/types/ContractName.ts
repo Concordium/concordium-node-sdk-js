@@ -21,7 +21,7 @@ export type Type = ContractName;
  * @returns {ContractName}
  */
 export function fromString(value: string): ContractName {
-    if (value.length <= 95) {
+    if (value.length > 95) {
         throw new Error(
             'Invalid ContractName: Can be atmost 95 characters long.'
         );
@@ -65,4 +65,28 @@ export function fromInitName(initName: InitName.Type): ContractName {
  */
 export function toString(contractName: ContractName): string {
     return contractName.value;
+}
+
+/** Type used when encoding a contract name for the schema. */
+export type SchemaValue = {
+    contract: string;
+};
+
+/**
+ * Get contract name in the format used by schema.
+ * @param {ContractName} contractName The contract name.
+ * @returns {SchemaValue} The schema value representation.
+ */
+export function toSchemaValue(contractName: ContractName): SchemaValue {
+    return { contract: contractName.value };
+}
+
+/**
+ * Check if two contract names represent the same name of a contract.
+ * @param {ContractName} left
+ * @param {ContractName} right
+ * @returns {boolean} True if they are equal.
+ */
+export function equals(left: ContractName, right: ContractName): boolean {
+    return left.value === right.value;
 }

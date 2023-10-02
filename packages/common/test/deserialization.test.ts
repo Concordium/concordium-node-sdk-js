@@ -1,5 +1,4 @@
 import { deserializeTransaction } from '../src/wasm/deserialization.js';
-import { Buffer } from 'buffer/index.js';
 import { serializeAccountTransactionForSubmission } from '../src/serialization.js';
 import {
     AccountAddress,
@@ -17,6 +16,9 @@ import {
     TransactionExpiry,
     tokenAddressFromBase58,
     tokenAddressToBase58,
+    SequenceNumber,
+    CIS2,
+    ContractAddress,
 } from '../src/index.js';
 
 function deserializeAccountTransactionBase(
@@ -26,8 +28,8 @@ function deserializeAccountTransactionBase(
 ) {
     const header: AccountTransactionHeader = {
         expiry,
-        nonce: 0n,
-        sender: new AccountAddress(
+        nonce: SequenceNumber.create(1),
+        sender: AccountAddress.fromBase58(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
     };
@@ -61,7 +63,7 @@ function deserializeAccountTransactionBase(
 test('test deserialize simpleTransfer ', () => {
     const payload: SimpleTransferPayload = {
         amount: new CcdAmount(5100000n),
-        toAddress: new AccountAddress(
+        toAddress: AccountAddress.fromBase58(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
     };
@@ -71,7 +73,7 @@ test('test deserialize simpleTransfer ', () => {
 test('test deserialize simpleTransfer with memo ', () => {
     const payload: SimpleTransferWithMemoPayload = {
         amount: new CcdAmount(5100000n),
-        toAddress: new AccountAddress(
+        toAddress: AccountAddress.fromBase58(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
         memo: new DataBlob(Buffer.from('00', 'hex')),
@@ -95,7 +97,7 @@ test('test deserialize registerData ', () => {
 test('Expired transactions can be deserialized', () => {
     const payload: SimpleTransferPayload = {
         amount: new CcdAmount(5100000n),
-        toAddress: new AccountAddress(
+        toAddress: AccountAddress.fromBase58(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
     };
@@ -110,11 +112,8 @@ test('Test parsing of Token Addresses', () => {
     let base58 = '5Pxr5EUtU';
     let address = tokenAddressFromBase58(base58);
     let rebase58 = tokenAddressToBase58(address);
-    let expectedAddress = {
-        contract: {
-            index: 0n,
-            subindex: 0n,
-        },
+    let expectedAddress: CIS2.TokenAddress = {
+        contract: ContractAddress.create(0),
         id: '',
     };
     expect(address).toEqual(expectedAddress);
@@ -124,10 +123,7 @@ test('Test parsing of Token Addresses', () => {
     address = tokenAddressFromBase58(base58);
     rebase58 = tokenAddressToBase58(address);
     expectedAddress = {
-        contract: {
-            index: 0n,
-            subindex: 0n,
-        },
+        contract: ContractAddress.create(0),
         id: 'aa',
     };
     expect(address).toEqual(expectedAddress);
@@ -137,10 +133,7 @@ test('Test parsing of Token Addresses', () => {
     address = tokenAddressFromBase58(base58);
     rebase58 = tokenAddressToBase58(address);
     const expectedAddress2 = {
-        contract: {
-            index: 1n,
-            subindex: 0n,
-        },
+        contract: ContractAddress.create(1),
         id: '',
     };
     expect(address).toEqual(expectedAddress2);
@@ -150,10 +143,7 @@ test('Test parsing of Token Addresses', () => {
     address = tokenAddressFromBase58(base58);
     rebase58 = tokenAddressToBase58(address);
     expectedAddress = {
-        contract: {
-            index: 1n,
-            subindex: 0n,
-        },
+        contract: ContractAddress.create(1),
         id: 'aa',
     };
     expect(address).toEqual(expectedAddress);
@@ -163,10 +153,7 @@ test('Test parsing of Token Addresses', () => {
     address = tokenAddressFromBase58(base58);
     rebase58 = tokenAddressToBase58(address);
     expectedAddress = {
-        contract: {
-            index: 1n,
-            subindex: 0n,
-        },
+        contract: ContractAddress.create(1),
         id: '0a',
     };
     expect(address).toEqual(expectedAddress);

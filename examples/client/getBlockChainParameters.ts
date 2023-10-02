@@ -1,5 +1,6 @@
 import { parseEndpoint } from '../shared/util.js';
 import {
+    BlockHash,
     ChainParameters,
     createConcordiumClient,
     isChainParametersV1,
@@ -49,9 +50,11 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const cp: ChainParameters = await client.getBlockChainParameters(
-        cli.flags.block
-    );
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
+    const cp: ChainParameters = await client.getBlockChainParameters(blockHash);
 
     const euroPerEnergy =
         cp.euroPerEnergy.numerator + '/' + cp.euroPerEnergy.denominator;

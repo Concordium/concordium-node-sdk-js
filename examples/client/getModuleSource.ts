@@ -1,5 +1,9 @@
 import { parseEndpoint } from '../shared/util.js';
-import { createConcordiumClient, ModuleReference } from '@concordium/node-sdk';
+import {
+    BlockHash,
+    createConcordiumClient,
+    ModuleReference,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import fs from 'fs';
 
@@ -61,7 +65,11 @@ const client = createConcordiumClient(
 (async () => {
     // #region documentation-snippet
     const ref = new ModuleReference(cli.flags.module);
-    const versionedSource = await client.getModuleSource(ref, cli.flags.block);
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
+    const versionedSource = await client.getModuleSource(ref, blockHash);
     // #endregion documentation-snippet
 
     fs.writeFileSync(cli.flags.outPath, versionedSource.source);

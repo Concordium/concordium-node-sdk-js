@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer/index.js';
 import { getPublicKey } from '@noble/ed25519';
 
-import type { ContractAddress, HexString } from '../types.js';
+import type { HexString } from '../types.js';
 import type { CIS2 } from '../cis2/util.js';
 import {
     deserializeCIS2MetadataUrl,
@@ -23,6 +23,9 @@ import {
 } from '../serializationHelpers.js';
 import { OptionJson, toOptionJson } from '../schemaTypes.js';
 import { getSignature } from '../signHelpers.js';
+import * as ContractAddress from '../types/ContractAddress.js';
+import * as EntrypointName from '../types/EntrypointName.js';
+import * as Timestamp from '../types/Timestamp.js';
 
 /** Holds all types related to CIS4 */
 // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -49,9 +52,9 @@ export namespace CIS4 {
         /** Whether holder can revoke or not */
         holderRevocable: boolean;
         /** Time the credential is valid from */
-        validFrom: Date;
+        validFrom: Timestamp.Type;
         /** (Optional) time the credential is valid until */
-        validUntil?: Date;
+        validUntil?: Timestamp.Type;
         /** Metadata url of the credential */
         metadataUrl: MetadataUrl;
     };
@@ -107,9 +110,9 @@ export namespace CIS4 {
             /** Whether holder can revoke or not */
             holder_revocable: boolean;
             /** Time (as ISO string) the credential is valid from */
-            valid_from: string;
+            valid_from: Timestamp.SchemaValue;
             /** (Optional) Time (as ISO string) the credential is valid until */
-            valid_until: OptionJson<string>;
+            valid_until: OptionJson<Timestamp.SchemaValue>;
             /** Metadata url of the credential */
             metadata_url: {
                 /** The url */
@@ -151,13 +154,13 @@ export namespace CIS4 {
     /** Signing metadata for credential revocation */
     export type SigningData = {
         /** The contract address of the CIS4 contract */
-        contractAddress: ContractAddress;
+        contractAddress: ContractAddress.Type;
         /** The CIS4 entrypoint from which the revocation is done */
-        entrypoint: string;
+        entrypoint: EntrypointName.Type;
         /** The credential nonce */
         nonce: bigint;
         /** Timestamp at which the revocation should be invalidated */
-        timestamp: Date;
+        timestamp: Timestamp.Type;
     };
 
     export type SigningDataJson = {
@@ -297,11 +300,11 @@ export class Web3IdSigner {
     /**
      * Signs the message given
      *
-     * @param {Buffer} message - the message to sign
+     * @param {ArrayBuffer} message - the message to sign
      *
      * @returns {Buffer} the signature on `message`
      */
-    public async sign(message: Buffer): Promise<Buffer> {
+    public async sign(message: ArrayBuffer): Promise<Buffer> {
         return getSignature(message, this.privateKey);
     }
 }
@@ -323,13 +326,13 @@ const deserializeOptional = <T>(
     return fun(cursor);
 };
 
-function serializeDate(date: Date): Buffer {
-    return encodeWord64(BigInt(date.getTime()), true);
+function serializeDate(date: Timestamp.Type): Buffer {
+    return encodeWord64(BigInt(date.value), true);
 }
 
-function deserializeDate(cursor: Cursor): Date {
+function deserializeDate(cursor: Cursor): Timestamp.Type {
     const value = cursor.read(8).readBigInt64LE(0);
-    return new Date(Number(value));
+    return Timestamp.fromMillis(Number(value));
 }
 
 function deserializeEd25519PublicKey(cursor: Cursor): HexString {
@@ -471,8 +474,12 @@ export function formatCIS4RegisterCredential({
         credential_info: {
             holder_id: credInfo.holderPubKey,
             holder_revocable: credInfo.holderRevocable,
-            valid_from: credInfo.validFrom.toISOString(),
-            valid_until: toOptionJson(credInfo.validUntil?.toISOString()),
+            valid_from: Timestamp.toSchemaValue(credInfo.validFrom),
+            valid_until: toOptionJson(
+                credInfo.validUntil === undefined
+                    ? undefined
+                    : Timestamp.toSchemaValue(credInfo.validUntil)
+            ),
             metadata_url: {
                 url: credInfo.metadataUrl.url,
                 hash: toOptionJson(credInfo.metadataUrl.hash),
@@ -568,9 +575,11 @@ export function formatCIS4RevokeCredentialHolder({
                     index: Number(data.signingData.contractAddress.index),
                     subindex: Number(data.signingData.contractAddress.subindex),
                 },
-                entry_point: data.signingData.entrypoint,
+                entry_point: EntrypointName.toString(
+                    data.signingData.entrypoint
+                ),
                 nonce: Number(data.signingData.nonce),
-                timestamp: data.signingData.timestamp.toISOString(),
+                timestamp: Timestamp.toSchemaValue(data.signingData.timestamp),
             },
             reason: toOptionJson(reason ? { reason } : undefined),
         },
@@ -627,9 +636,11 @@ export function formatCIS4RevokeCredentialOther({
                     index: Number(data.signingData.contractAddress.index),
                     subindex: Number(data.signingData.contractAddress.subindex),
                 },
-                entry_point: data.signingData.entrypoint,
+                entry_point: EntrypointName.toString(
+                    data.signingData.entrypoint
+                ),
                 nonce: Number(data.signingData.nonce),
-                timestamp: data.signingData.timestamp.toISOString(),
+                timestamp: Timestamp.toSchemaValue(data.signingData.timestamp),
             },
             revocation_key: data.revocationPubKey,
             reason: toOptionJson(reason ? { reason } : undefined),

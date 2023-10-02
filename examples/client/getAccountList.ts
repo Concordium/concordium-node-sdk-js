@@ -1,5 +1,9 @@
 import { parseEndpoint } from '../shared/util.js';
-import { createConcordiumClient, Base58String } from '@concordium/node-sdk';
+import {
+    createConcordiumClient,
+    BlockHash,
+    AccountAddress,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -48,13 +52,16 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const accounts: AsyncIterable<Base58String> = client.getAccountList(
-        cli.flags.block
-    );
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
+    const accounts: AsyncIterable<AccountAddress.Type> =
+        client.getAccountList(blockHash);
     // #endregion documentation-snippet
 
     console.log('Accounts that exists at the end of the given block:');
     for await (const account of accounts) {
-        console.log(account);
+        console.log(AccountAddress.toBase58(account));
     }
 })();

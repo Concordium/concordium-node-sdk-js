@@ -1,12 +1,63 @@
 import {
     AccountAddress,
+    AccountCreationSummary,
+    AccountInfo,
+    AmountAddedByDecryptionEvent,
+    AmountTooLarge,
+    BakerEvent,
+    BakerPoolPendingChangeType,
+    BakerPoolStatus,
+    BaseAccountTransactionSummary,
+    BlockFinalizationSummary,
+    BlockHash,
     BlockInfoV0,
+    BlockItemStatus,
+    BlockItemSummary,
+    BlockSpecialEvent,
     CcdAmount,
     ChainParametersV0,
     ChainParametersV1,
+    ContractAddress,
+    ContractInitializedEvent,
+    ContractTraceEvent,
+    CredentialKeysUpdatedEvent,
+    CredentialsUpdatedEvent,
+    DataRegisteredEvent,
+    DelegationEvent,
+    DelegationTargetType,
+    DelegatorInfo,
+    DelegatorRewardPeriodInfo,
     ElectionInfoV0,
+    EncryptedAmountsRemovedEvent,
+    EncryptedSelfAmountAddedEvent,
+    Energy,
+    InitName,
+    InstanceInfo,
+    InvalidContractAddress,
+    InvokeContractResult,
+    ModuleDeployedEvent,
     ModuleReference,
+    NewEncryptedAmountEvent,
     NextUpdateSequenceNumbers,
+    OpenStatusText,
+    Parameter,
+    PendingUpdate,
+    PoolStatusType,
+    ReceiveName,
+    RejectReasonTag,
+    RejectedReceive,
+    ReturnValue,
+    SequenceNumber,
+    StakePendingChangeType,
+    TransactionEventTag,
+    TransactionHash,
+    TransactionKindString,
+    TransactionStatusEnum,
+    TransactionSummaryType,
+    TransferWithMemoSummary,
+    TransferredWithScheduleEvent,
+    UpdateSummary,
+    UpdateType,
 } from '@concordium/common-sdk';
 
 export const accountInfo = {
@@ -137,19 +188,22 @@ export const stakingInfoDelegator = {
     },
 };
 
-export const blockItemStatusUpdate = {
-    status: 'finalized',
+export const blockItemStatusUpdate: BlockItemStatus = {
+    status: TransactionStatusEnum.Finalized,
     outcome: {
-        blockHash:
-            '2d9e1a081819ad8dbf81d5a882ea2f5352cb3429fc12b0ec18c131a360751a66',
+        blockHash: BlockHash.fromHexString(
+            '2d9e1a081819ad8dbf81d5a882ea2f5352cb3429fc12b0ec18c131a360751a66'
+        ),
         summary: {
             index: 0n,
-            energyCost: 0n,
-            hash: '3de823b876d05cdd33a311a0f84124079f5f677afb2534c4943f830593edc650',
-            type: 'updateTransaction',
+            energyCost: Energy.create(0),
+            hash: TransactionHash.fromHexString(
+                '3de823b876d05cdd33a311a0f84124079f5f677afb2534c4943f830593edc650'
+            ),
+            type: TransactionSummaryType.UpdateTransaction,
             effectiveTime: 0n,
             payload: {
-                updateType: 'microGtuPerEuro',
+                updateType: UpdateType.MicroGtuPerEuro,
                 update: {
                     numerator: 17592435270983729152n,
                     denominator: 163844642115n,
@@ -159,66 +213,74 @@ export const blockItemStatusUpdate = {
     },
 };
 
-export const blockItemStatusTransfer = {
-    status: 'finalized',
+export const blockItemStatusTransfer: BlockItemStatus = {
+    status: TransactionStatusEnum.Finalized,
     outcome: {
-        blockHash:
-            '577513ab772da146c7abb9f30c521668d7ef4fa01f4838cc51d5f59e27c7a5fc',
+        blockHash: BlockHash.fromHexString(
+            '577513ab772da146c7abb9f30c521668d7ef4fa01f4838cc51d5f59e27c7a5fc'
+        ),
         summary: {
-            type: 'accountTransaction',
+            type: TransactionSummaryType.AccountTransaction,
             index: 0n,
             cost: 1480606n,
-            energyCost: 501n,
-            hash: '502332239efc0407eebef5c73c390080e5d7e1b127ff29f786a62b3c9ab6cfe7',
-            sender: '4fKPBDf9r5vhEpoeNY7SJbZv8bAJvYYyJSEggZkNyQPgao8iLy',
-            transactionType: 'transfer',
+            energyCost: Energy.create(501),
+            hash: TransactionHash.fromHexString(
+                '502332239efc0407eebef5c73c390080e5d7e1b127ff29f786a62b3c9ab6cfe7'
+            ),
+            sender: AccountAddress.fromBase58(
+                '4fKPBDf9r5vhEpoeNY7SJbZv8bAJvYYyJSEggZkNyQPgao8iLy'
+            ),
+            transactionType: TransactionKindString.Transfer,
             transfer: {
                 amount: 1000000n,
-                tag: 'Transferred',
-                to: '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
+                tag: TransactionEventTag.Transferred,
+                to: AccountAddress.fromBase58(
+                    '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj'
+                ),
             },
         },
     },
 };
 
-export const instanceInfo = {
+export const instanceInfo: InstanceInfo = {
     version: 1,
-    owner: new AccountAddress(
+    owner: AccountAddress.fromBase58(
         '4Y1c27ZRpRut9av69n3i1uhfeDp4XGuvsm9fkEjFvgpoxXWxQB'
     ),
     amount: new CcdAmount(0n),
-    methods: ['weather.get', 'weather.set'],
-    name: 'init_weather',
+    methods: ['weather.get', 'weather.set'].map(
+        ReceiveName.fromStringUnchecked
+    ),
+    name: InitName.fromStringUnchecked('init_weather'),
     sourceModule: new ModuleReference(
         '67d568433bd72e4326241f262213d77f446db8ba03dfba351ae35c1b2e7e5109'
     ),
 };
 
-export const invokeInstanceResponseV0 = {
+export const invokeInstanceResponseV0: InvokeContractResult = {
     tag: 'success',
-    usedEnergy: 342n,
+    usedEnergy: Energy.create(342),
     returnValue: undefined,
     events: [
         {
-            tag: 'Updated',
+            tag: TransactionEventTag.Updated,
             events: [],
             amount: 1n,
-            address: {
-                index: 6n,
-                subindex: 0n,
-            },
+            address: ContractAddress.create(6),
             contractVersion: 0,
             instigator: {
                 type: 'AddressAccount',
-                address: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
+                address: AccountAddress.fromBase58(
+                    '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'
+                ),
             },
-            message: '',
-            receiveName: 'PiggyBank.insert',
+            message: Parameter.empty(),
+            receiveName: ReceiveName.fromStringUnchecked('PiggyBank.insert'),
         },
     ],
 };
 
-export const accountList = [
+export const accountList: AccountAddress.Type[] = [
     '3QK1rxUXV7GRk4Ng7Bs7qnbkdjyBdjzCytpTrSQN7BaJkiEfgZ',
     '3U4sfVSqGG6XK8g6eho2qRYtnHc4MWJBG1dfxdtPGbfHwFxini',
     '3gGBYDSpx2zWL3YMcqD48U5jVXYG4pJBDZqeY5CbMMKpxVBbc3',
@@ -232,7 +294,7 @@ export const accountList = [
     '4AnukgcopMC4crxfL1L9fUYw9MAkoo1yKLvH7eA1NAX7SxgyRY',
     '4BTFaHx8CioLi8Xe7YiimpAK1oQMkbx5Wj6B8N7d7NXgmLvEZs',
     '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L',
-];
+].map(AccountAddress.fromBase58);
 
 export const moduleList = [
     '67d568433bd72e4326241f262213d77f446db8ba03dfba351ae35c1b2e7e5109',
@@ -240,11 +302,11 @@ export const moduleList = [
     'ceb018e4cd3456c0ccc0bca14285a69fd55f4cb09c322195d49c5c22f85930fe',
 ];
 
-export const ancestorList = [
+export const ancestorList: BlockHash.Type[] = [
     'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e',
     '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf',
     'abc98d4866e92b0ac4722d523aee96cafcdd127694d565c532e149616dbad96c',
-];
+].map(BlockHash.fromHexString);
 
 export const instanceStateList = [
     {
@@ -335,55 +397,75 @@ export const arList = [
     },
 ];
 
-export const delegatorInfoList = [
+export const delegatorInfoList: DelegatorInfo[] = [
     {
-        account: '3uX8g2uzQwBjVSJ6ZDU5cQCKhgsET6kMuRoraQH2ANB9Xa84YR',
+        account: AccountAddress.fromBase58(
+            '3uX8g2uzQwBjVSJ6ZDU5cQCKhgsET6kMuRoraQH2ANB9Xa84YR'
+        ),
         stake: 40000000000n,
     },
     {
-        account: '4mAs6xcFw26fb6u8odkJWoe3fAK8bCJ91BwScUc36DFhh3thwD',
+        account: AccountAddress.fromBase58(
+            '4mAs6xcFw26fb6u8odkJWoe3fAK8bCJ91BwScUc36DFhh3thwD'
+        ),
         stake: 10000000n,
     },
     {
-        account: '3NvUNvVm5puDT2EYbo7hCF3d5AwzzCqKE18Ms6BYkKY9UShdf3',
+        account: AccountAddress.fromBase58(
+            '3NvUNvVm5puDT2EYbo7hCF3d5AwzzCqKE18Ms6BYkKY9UShdf3'
+        ),
         stake: 3000000000n,
     },
     {
-        account: '3ivPxmqdRk5TX5mKpFshKzrA44bYUW2tg6EwDPvALszNoBGTK9',
+        account: AccountAddress.fromBase58(
+            '3ivPxmqdRk5TX5mKpFshKzrA44bYUW2tg6EwDPvALszNoBGTK9'
+        ),
         stake: 33000000n,
     },
     {
-        account: '37tU96v4MQSaEgVP68M3TBRHMwZpgYSGnMer3ta3FJ8wkXtjDQ',
+        account: AccountAddress.fromBase58(
+            '37tU96v4MQSaEgVP68M3TBRHMwZpgYSGnMer3ta3FJ8wkXtjDQ'
+        ),
         stake: 94000000n,
     },
 ];
 
-export const passiveDelegatorInfoList = [
+export const passiveDelegatorInfoList: DelegatorInfo[] = [
     {
-        account: '4gCvJ91EeYzsTzwiC7Kr4AcFzSuDmf5wxev7FRzU3uw49WamBm',
+        account: AccountAddress.fromBase58(
+            '4gCvJ91EeYzsTzwiC7Kr4AcFzSuDmf5wxev7FRzU3uw49WamBm'
+        ),
         stake: 1900000000n,
     },
     {
-        account: '4mQweXtq3zHwS7CtK5fjWkpJDUvtUSKycNa8xaEbe6kErGeXcL',
+        account: AccountAddress.fromBase58(
+            '4mQweXtq3zHwS7CtK5fjWkpJDUvtUSKycNa8xaEbe6kErGeXcL'
+        ),
         stake: 1000000000n,
     },
     {
-        account: '3irV7FF3BZbz9ejGTm7EHLUi6CQHdJUELDfyhwkHcLqXmQyUfR',
+        account: AccountAddress.fromBase58(
+            '3irV7FF3BZbz9ejGTm7EHLUi6CQHdJUELDfyhwkHcLqXmQyUfR'
+        ),
         stake: 100000000n,
         pendingChange: {
             effectiveTime: new Date('2022-06-28T11:47:37.750Z'),
-            change: 'RemoveStake',
+            change: StakePendingChangeType.RemoveStakeV1,
         },
     },
 ];
 
-export const passiveDelegatorRewardInfoList = [
+export const passiveDelegatorRewardInfoList: DelegatorRewardPeriodInfo[] = [
     {
-        account: '4gCvJ91EeYzsTzwiC7Kr4AcFzSuDmf5wxev7FRzU3uw49WamBm',
+        account: AccountAddress.fromBase58(
+            '4gCvJ91EeYzsTzwiC7Kr4AcFzSuDmf5wxev7FRzU3uw49WamBm'
+        ),
         stake: 1900000000n,
     },
     {
-        account: '4mQweXtq3zHwS7CtK5fjWkpJDUvtUSKycNa8xaEbe6kErGeXcL',
+        account: AccountAddress.fromBase58(
+            '4mQweXtq3zHwS7CtK5fjWkpJDUvtUSKycNa8xaEbe6kErGeXcL'
+        ),
         stake: 1000000000n,
     },
 ];
@@ -395,71 +477,95 @@ export const electionInfoList: ElectionInfoV0 = {
     bakerElectionInfo: [
         {
             baker: 0n,
-            account: '48XGRnvQoG92T1AwETvW5pnJ1aRSPMKsWtGdKhTqyiNZzMk3Qn',
+            account: AccountAddress.fromBase58(
+                '48XGRnvQoG92T1AwETvW5pnJ1aRSPMKsWtGdKhTqyiNZzMk3Qn'
+            ),
             lotteryPower: 0.09090909090909091,
         },
         {
             baker: 1n,
-            account: '3U4sfVSqGG6XK8g6eho2qRYtnHc4MWJBG1dfxdtPGbfHwFxini',
+            account: AccountAddress.fromBase58(
+                '3U4sfVSqGG6XK8g6eho2qRYtnHc4MWJBG1dfxdtPGbfHwFxini'
+            ),
             lotteryPower: 0.09090909090909091,
         },
         {
             baker: 2n,
-            account: '3QK1rxUXV7GRk4Ng7Bs7qnbkdjyBdjzCytpTrSQN7BaJkiEfgZ',
+            account: AccountAddress.fromBase58(
+                '3QK1rxUXV7GRk4Ng7Bs7qnbkdjyBdjzCytpTrSQN7BaJkiEfgZ'
+            ),
             lotteryPower: 0.09090909090909091,
         },
         {
             baker: 3n,
-            account: '3gGBYDSpx2zWL3YMcqD48U5jVXYG4pJBDZqeY5CbMMKpxVBbc3',
+            account: AccountAddress.fromBase58(
+                '3gGBYDSpx2zWL3YMcqD48U5jVXYG4pJBDZqeY5CbMMKpxVBbc3'
+            ),
             lotteryPower: 0.09090909090909091,
         },
         {
             baker: 4n,
-            account: '44Axe5eHnMkBinX7GKvUm5w6mX83JGdasijhvsMv5ZW2Wmgphg',
+            account: AccountAddress.fromBase58(
+                '44Axe5eHnMkBinX7GKvUm5w6mX83JGdasijhvsMv5ZW2Wmgphg'
+            ),
             lotteryPower: 0.09090909090909091,
         },
         {
             baker: 5n,
-            account: '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L',
+            account: AccountAddress.fromBase58(
+                '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L'
+            ),
             lotteryPower: 0.09090909090909091,
         },
         {
             baker: 6n,
-            account: '3ntvNGT6tDuLYiSb5gMJSQAZfLPUJnzoizcFiVRWqLoctuXxpK',
+            account: AccountAddress.fromBase58(
+                '3ntvNGT6tDuLYiSb5gMJSQAZfLPUJnzoizcFiVRWqLoctuXxpK'
+            ),
             lotteryPower: 0.09090909090909091,
         },
         {
             baker: 7n,
-            account: '4BTFaHx8CioLi8Xe7YiimpAK1oQMkbx5Wj6B8N7d7NXgmLvEZs',
+            account: AccountAddress.fromBase58(
+                '4BTFaHx8CioLi8Xe7YiimpAK1oQMkbx5Wj6B8N7d7NXgmLvEZs'
+            ),
             lotteryPower: 0.09090909090909091,
         },
         {
             baker: 8n,
-            account: '4AnukgcopMC4crxfL1L9fUYw9MAkoo1yKLvH7eA1NAX7SxgyRY',
+            account: AccountAddress.fromBase58(
+                '4AnukgcopMC4crxfL1L9fUYw9MAkoo1yKLvH7eA1NAX7SxgyRY'
+            ),
             lotteryPower: 0.09090909090909091,
         },
         {
             baker: 9n,
-            account: '3y9DtDUL8xpf8i2yj9k44zMVkf4H1hkpBEQcXbJhrgcwYSGg41',
+            account: AccountAddress.fromBase58(
+                '3y9DtDUL8xpf8i2yj9k44zMVkf4H1hkpBEQcXbJhrgcwYSGg41'
+            ),
             lotteryPower: 0.09090909090909091,
         },
         {
             baker: 10n,
-            account: '42tFTDWvTmBd7hEacohuCfGFa9TsBKhsmXKeViQ7q7NoY7UadV',
+            account: AccountAddress.fromBase58(
+                '42tFTDWvTmBd7hEacohuCfGFa9TsBKhsmXKeViQ7q7NoY7UadV'
+            ),
             lotteryPower: 0.09090909090909091,
         },
     ],
 };
 
-export const transactionEventList = [
+export const transactionEventList: BlockItemSummary[] = [
     {
-        type: 'updateTransaction',
+        type: TransactionSummaryType.UpdateTransaction,
         index: 0n,
-        energyCost: 0n,
-        hash: '49d7b5c3234dc17bd904af0b63712dc0a6680b96ad556c5ac1103d8cdd128891',
+        energyCost: Energy.create(0),
+        hash: TransactionHash.fromHexString(
+            '49d7b5c3234dc17bd904af0b63712dc0a6680b96ad556c5ac1103d8cdd128891'
+        ),
         effectiveTime: 0n,
         payload: {
-            updateType: 'microGtuPerEuro',
+            updateType: UpdateType.MicroGtuPerEuro,
             update: {
                 denominator: 126230907181n,
                 numerator: 9397474320418127872n,
@@ -490,7 +596,7 @@ export const seqNums: NextUpdateSequenceNumbers = {
     finalizationCommiteeParameters: 1n,
 };
 
-export const specialEventList = [
+export const specialEventList: BlockSpecialEvent[] = [
     {
         tag: 'blockAccrueReward',
         transactionFees: 0n,
@@ -503,9 +609,9 @@ export const specialEventList = [
     },
 ];
 
-export const pendingUpdateList = [
+export const pendingUpdateList: PendingUpdate[] = [
     {
-        updateType: 'protocol',
+        updateType: UpdateType.Protocol,
         update: {
             message: 'Enable protocol version 5',
             specificationHash:
@@ -517,10 +623,12 @@ export const pendingUpdateList = [
     },
 ];
 
-export const blockFinalizationSummary = {
+export const blockFinalizationSummary: BlockFinalizationSummary = {
     tag: 'record',
     record: {
-        block: '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf',
+        block: BlockHash.fromHexString(
+            '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf'
+        ),
         index: 1131614n,
         delay: 0n,
         finalizers: [
@@ -538,20 +646,29 @@ export const blockFinalizationSummary = {
     },
 };
 
-export const accountCreationEvent = {
-    type: 'accountCreation',
+export const accountCreationEvent: AccountCreationSummary = {
+    type: TransactionSummaryType.AccountCreation,
     index: 0n,
-    energyCost: 54100n,
-    hash: '9931f541e166d86916354fc98759fcad604d447041142c0897f473093aaafdb5',
+    energyCost: Energy.create(54100),
+    hash: TransactionHash.fromHexString(
+        '9931f541e166d86916354fc98759fcad604d447041142c0897f473093aaafdb5'
+    ),
     credentialType: 'normal',
-    address: '32YGU1j7Z3xwA5URGYFrMamKj7JtfGvXFiXH4p3gAKdrpJcdg2',
+    address: AccountAddress.fromBase58(
+        '32YGU1j7Z3xwA5URGYFrMamKj7JtfGvXFiXH4p3gAKdrpJcdg2'
+    ),
     regId: '9015cfd6c1bd06f0e0355fc5355a0c18fe0cb37632d469b07d6fbfa9c05facc271c975466d8dfe3144c683f44fd0af71',
 };
 
-export const transferToPublicEvent = [
+export const transferToPublicEvent: [
+    EncryptedAmountsRemovedEvent,
+    AmountAddedByDecryptionEvent
+] = [
     {
-        tag: 'EncryptedAmountsRemoved',
-        account: '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
+        tag: TransactionEventTag.EncryptedAmountsRemoved,
+        account: AccountAddress.fromBase58(
+            '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj'
+        ),
         inputAmount:
             'b74e0a607e30eefc5e9323befdbebae158f66c0f6767d3c3f3ff4b1a9d5b9f0e5e565d734141bd82bfca4bcf32e2bec182e895b7afde650cd2e51c2d704d58965b0c462ffef2fca87204ac5248b111290b699dfe84887aa11ab357dab4b2ba00b3301a5e0fbc6cd3f9ac58bbf19abcc9a56ecc83a16738508fb9ec60da2818d5360dbf66839c6a4037e37c2a4a64956ab5c30c0bf1ed90713838dd8a6cce803111698f9c0e145cae6be38e4136ebdc6205ac4ca2f43852dac7e7f6d37fc55cdc',
         newAmount:
@@ -559,16 +676,20 @@ export const transferToPublicEvent = [
         upToIndex: 0,
     },
     {
-        tag: 'AmountAddedByDecryption',
-        account: '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
+        tag: TransactionEventTag.AmountAddedByDecryption,
+        account: AccountAddress.fromBase58(
+            '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj'
+        ),
         amount: 1000000n,
     },
 ];
 
-export const configureBaker = [
+export const configureBaker: BakerEvent[] = [
     {
-        tag: 'BakerAdded',
-        account: '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS',
+        tag: TransactionEventTag.BakerAdded,
+        account: AccountAddress.fromBase58(
+            '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS'
+        ),
         aggregationKey:
             '802f086e91d71a4d8e1437229b4b7f39c2f45ee1a075e4b786f60af7ec278fa0052318f3f65989cd0cdd0e9ef17b865710b59ef9b894f1f4fb6a58ebbef7b07a04a503421cfa37229c66a9fe8e943be47fba7b15eb263227224e35e0ff088fda',
         bakerId: 2561n,
@@ -580,275 +701,317 @@ export const configureBaker = [
         stake: 15000000000n,
     },
     {
-        tag: 'BakerSetRestakeEarnings',
-        account: '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS',
+        tag: TransactionEventTag.BakerSetRestakeEarnings,
+        account: AccountAddress.fromBase58(
+            '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS'
+        ),
         bakerId: 2561n,
         restakeEarnings: true,
     },
     {
-        tag: 'BakerSetOpenStatus',
-        account: '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS',
+        tag: TransactionEventTag.BakerSetOpenStatus,
+        account: AccountAddress.fromBase58(
+            '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS'
+        ),
         bakerId: 2561n,
-        openStatus: 'openForAll',
+        openStatus: OpenStatusText.OpenForAll,
     },
     {
-        tag: 'BakerSetMetadataURL',
-        account: '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS',
+        tag: TransactionEventTag.BakerSetMetadataURL,
+        account: AccountAddress.fromBase58(
+            '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS'
+        ),
         bakerId: 2561n,
         metadataURL: '',
     },
     {
-        tag: 'BakerSetTransactionFeeCommission',
-        account: '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS',
+        tag: TransactionEventTag.BakerSetTransactionFeeCommission,
+        account: AccountAddress.fromBase58(
+            '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS'
+        ),
         bakerId: 2561n,
         transactionFeeCommission: 0.1,
     },
     {
-        tag: 'BakerSetBakingRewardCommission',
-        account: '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS',
+        tag: TransactionEventTag.BakerSetBakingRewardCommission,
+        account: AccountAddress.fromBase58(
+            '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS'
+        ),
         bakerId: 2561n,
         bakingRewardCommission: 0.1,
     },
     {
-        tag: 'BakerSetFinalizationRewardCommission',
-        account: '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS',
+        tag: TransactionEventTag.BakerSetFinalizationRewardCommission,
+        account: AccountAddress.fromBase58(
+            '2zdNDFqqn6pGPzEVRLTLNfBX6FTyQECjAgdLWqYEvBsv7uRjSS'
+        ),
         bakerId: 2561n,
         finalizationRewardCommission: 1,
     },
 ];
 
-export const bakerRemoved = {
-    tag: 'BakerRemoved',
+export const bakerRemoved: BakerEvent = {
+    tag: TransactionEventTag.BakerRemoved,
     bakerId: 1879n,
-    account: '4aCoaW3qkQRnY3fUGThQcEMGSPLUEQ7XL9Yagx2UR91QpvtoAe',
+    account: AccountAddress.fromBase58(
+        '4aCoaW3qkQRnY3fUGThQcEMGSPLUEQ7XL9Yagx2UR91QpvtoAe'
+    ),
 };
 
-export const configureDelegation = [
+export const configureDelegation: DelegationEvent[] = [
     {
-        account: '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
+        account: AccountAddress.fromBase58(
+            '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj'
+        ),
         delegatorId: 2059,
-        tag: 'DelegationAdded',
+        tag: TransactionEventTag.DelegationAdded,
     },
     {
-        account: '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
-        delegationTarget: { delegateType: 'Passive' },
+        account: AccountAddress.fromBase58(
+            '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj'
+        ),
+        delegationTarget: {
+            delegateType: DelegationTargetType.PassiveDelegation,
+        },
         delegatorId: 2059,
-        tag: 'DelegationSetDelegationTarget',
+        tag: TransactionEventTag.DelegationSetDelegationTarget,
     },
     {
-        account: '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
+        account: AccountAddress.fromBase58(
+            '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj'
+        ),
         delegatorId: 2059,
         restakeEarnings: true,
-        tag: 'DelegationSetRestakeEarnings',
+        tag: TransactionEventTag.DelegationSetRestakeEarnings,
     },
     {
-        account: '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
+        account: AccountAddress.fromBase58(
+            '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj'
+        ),
         delegatorId: 2059,
         newStake: 1000000n,
-        tag: 'DelegationStakeIncreased',
+        tag: TransactionEventTag.DelegationStakeIncreased,
     },
 ];
 
-export const updateEvent = [
+export const updateEvent: ContractTraceEvent[] = [
     {
-        address: { index: 866n, subindex: 0n },
+        address: ContractAddress.create(866),
         events: [],
-        tag: 'Interrupted',
+        tag: TransactionEventTag.Interrupted,
     },
     {
-        address: { index: 865n, subindex: 0n },
+        address: ContractAddress.create(865),
         events: [],
-        tag: 'Interrupted',
+        tag: TransactionEventTag.Interrupted,
     },
     {
-        address: { index: 864n, subindex: 0n },
+        address: ContractAddress.create(864),
         amount: 0n,
         contractVersion: 1,
         events: [],
         instigator: {
-            address: { index: 865n, subindex: 0n },
+            address: ContractAddress.create(865),
             type: 'AddressContract',
         },
-        message: '0000',
-        receiveName: 'CIS2-wCCD-State.getPaused',
-        tag: 'Updated',
+        message: Parameter.fromHexString('0000'),
+        receiveName: ReceiveName.fromStringUnchecked(
+            'CIS2-wCCD-State.getPaused'
+        ),
+        tag: TransactionEventTag.Updated,
     },
     {
-        address: { index: 865n, subindex: 0n },
+        address: ContractAddress.create(865),
         success: true,
-        tag: 'Resumed',
+        tag: TransactionEventTag.Resumed,
     },
     {
-        address: { index: 865n, subindex: 0n },
+        address: ContractAddress.create(865),
         events: [],
-        tag: 'Interrupted',
+        tag: TransactionEventTag.Interrupted,
     },
     {
-        address: { index: 864n, subindex: 0n },
+        address: ContractAddress.create(864),
         amount: 0n,
         contractVersion: 1,
         events: [],
         instigator: {
-            address: { index: 865n, subindex: 0n },
+            address: ContractAddress.create(865),
             type: 'AddressContract',
         },
-        message:
-            '00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be00083',
-        receiveName: 'CIS2-wCCD-State.getBalance',
-        tag: 'Updated',
+        message: Parameter.fromHexString(
+            '00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be00083'
+        ),
+        receiveName: ReceiveName.fromStringUnchecked(
+            'CIS2-wCCD-State.getBalance'
+        ),
+        tag: TransactionEventTag.Updated,
     },
     {
-        address: { index: 865n, subindex: 0n },
+        address: ContractAddress.create(865),
         success: true,
-        tag: 'Resumed',
+        tag: TransactionEventTag.Resumed,
     },
     {
-        address: { index: 865n, subindex: 0n },
+        address: ContractAddress.create(865),
         events: [],
-        tag: 'Interrupted',
+        tag: TransactionEventTag.Interrupted,
     },
     {
-        address: { index: 864n, subindex: 0n },
+        address: ContractAddress.create(864),
         amount: 0n,
         contractVersion: 1,
         events: [],
         instigator: {
-            address: { index: 865n, subindex: 0n },
+            address: ContractAddress.create(865),
             type: 'AddressContract',
         },
-        message:
-            '00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be00083c0843d00',
-        receiveName: 'CIS2-wCCD-State.setBalance',
-        tag: 'Updated',
+        message: Parameter.fromHexString(
+            '00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be00083c0843d00'
+        ),
+        receiveName: ReceiveName.fromStringUnchecked(
+            'CIS2-wCCD-State.setBalance'
+        ),
+        tag: TransactionEventTag.Updated,
     },
     {
-        address: { index: 865n, subindex: 0n },
+        address: ContractAddress.create(865),
         success: true,
-        tag: 'Resumed',
+        tag: TransactionEventTag.Resumed,
     },
     {
-        address: { index: 865n, subindex: 0n },
+        address: ContractAddress.create(865),
         events: [],
-        tag: 'Interrupted',
+        tag: TransactionEventTag.Interrupted,
     },
     {
-        address: { index: 866n, subindex: 0n },
+        address: ContractAddress.create(866),
         events: [],
-        tag: 'Interrupted',
+        tag: TransactionEventTag.Interrupted,
     },
     {
         amount: 1000000n,
-        from: {
-            address: { index: 866n, subindex: 0n },
-            type: 'AddressContract',
-        },
-        tag: 'Transferred',
-        to: {
-            address: '4inf4g36xDEQmjxDbbkqeHD2HNg9v7dohXUDH5S9en4Th53kxm',
-            type: 'AddressAccount',
-        },
+        from: ContractAddress.create(866),
+        tag: TransactionEventTag.Transferred,
+        to: AccountAddress.fromBase58(
+            '4inf4g36xDEQmjxDbbkqeHD2HNg9v7dohXUDH5S9en4Th53kxm'
+        ),
     },
     {
-        address: { index: 866n, subindex: 0n },
+        address: ContractAddress.create(866),
         success: true,
-        tag: 'Resumed',
+        tag: TransactionEventTag.Resumed,
     },
     {
-        address: { index: 866n, subindex: 0n },
+        address: ContractAddress.create(866),
         amount: 0n,
         contractVersion: 1,
         events: [],
         instigator: {
-            address: { index: 865n, subindex: 0n },
+            address: ContractAddress.create(865),
             type: 'AddressContract',
         },
-        message:
-            'c0843d00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be000830000',
-        receiveName: 'CIS2-wCCD-Proxy.transferCCD',
-        tag: 'Updated',
+        message: Parameter.fromHexString(
+            'c0843d00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be000830000'
+        ),
+        receiveName: ReceiveName.fromStringUnchecked(
+            'CIS2-wCCD-Proxy.transferCCD'
+        ),
+        tag: TransactionEventTag.Updated,
     },
     {
-        address: { index: 865n, subindex: 0n },
+        address: ContractAddress.create(865),
         success: true,
-        tag: 'Resumed',
+        tag: TransactionEventTag.Resumed,
     },
     {
-        address: { index: 865n, subindex: 0n },
+        address: ContractAddress.create(865),
         events: [],
-        tag: 'Interrupted',
+        tag: TransactionEventTag.Interrupted,
     },
     {
-        address: { index: 866n, subindex: 0n },
+        address: ContractAddress.create(866),
         amount: 0n,
         contractVersion: 1,
         events: [
             'fd00c0843d00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be00083',
         ],
         instigator: {
-            address: { index: 865n, subindex: 0n },
+            address: ContractAddress.create(865),
             type: 'AddressContract',
         },
-        message:
-            'fd00c0843d00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be00083',
-        receiveName: 'CIS2-wCCD-Proxy.logEvent',
-        tag: 'Updated',
+        message: Parameter.fromHexString(
+            'fd00c0843d00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be00083'
+        ),
+        receiveName: ReceiveName.fromStringUnchecked(
+            'CIS2-wCCD-Proxy.logEvent'
+        ),
+        tag: TransactionEventTag.Updated,
     },
     {
-        address: { index: 865n, subindex: 0n },
+        address: ContractAddress.create(865),
         success: true,
-        tag: 'Resumed',
+        tag: TransactionEventTag.Resumed,
     },
     {
-        address: { index: 865n, subindex: 0n },
+        address: ContractAddress.create(865),
         amount: 0n,
         contractVersion: 1,
         events: [],
         instigator: {
-            address: { index: 866n, subindex: 0n },
+            address: ContractAddress.create(866),
             type: 'AddressContract',
         },
-        message:
-            'c0843d00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be0008300e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be00083000000e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be00083',
-        receiveName: 'CIS2-wCCD.unwrap',
-        tag: 'Updated',
+        message: Parameter.fromHexString(
+            'c0843d00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be0008300e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be00083000000e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be00083'
+        ),
+        receiveName: ReceiveName.fromStringUnchecked('CIS2-wCCD.unwrap'),
+        tag: TransactionEventTag.Updated,
     },
     {
-        address: { index: 866n, subindex: 0n },
+        address: ContractAddress.create(866),
         success: true,
-        tag: 'Resumed',
+        tag: TransactionEventTag.Resumed,
     },
     {
-        address: { index: 866n, subindex: 0n },
+        address: ContractAddress.create(866),
         amount: 0n,
         contractVersion: 1,
         events: [],
         instigator: {
-            address: '4inf4g36xDEQmjxDbbkqeHD2HNg9v7dohXUDH5S9en4Th53kxm',
+            address: AccountAddress.fromBase58(
+                '4inf4g36xDEQmjxDbbkqeHD2HNg9v7dohXUDH5S9en4Th53kxm'
+            ),
             type: 'AddressAccount',
         },
-        message:
-            'c0843d00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be0008300e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be000830000',
-        receiveName: 'CIS2-wCCD-Proxy.unwrap',
-        tag: 'Updated',
+        message: Parameter.fromHexString(
+            'c0843d00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be0008300e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be000830000'
+        ),
+        receiveName: ReceiveName.fromStringUnchecked('CIS2-wCCD-Proxy.unwrap'),
+        tag: TransactionEventTag.Updated,
     },
 ];
 
-export const encryptedSelfAmountAddedEvent = {
-    account: '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj',
+export const encryptedSelfAmountAddedEvent: EncryptedSelfAmountAddedEvent = {
+    account: AccountAddress.fromBase58(
+        '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj'
+    ),
     amount: 10000000n,
     newAmount:
         'c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000098c71824023d5fb1bca5accb3ac010551e4af7e9988cd0ef309ee37149ef7843af6f294e79b8fcbda9b4f4ed094d66cbc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
-    tag: 'EncryptedSelfAmountAdded',
+    tag: TransactionEventTag.EncryptedSelfAmountAdded,
 };
 
-export const updateEnqueuedEvent = {
-    type: 'updateTransaction',
+export const updateEnqueuedEvent: UpdateSummary = {
+    type: TransactionSummaryType.UpdateTransaction,
     index: 0n,
-    energyCost: 0n,
-    hash: 'f296a32603fc14aa679001c49a4db1b2133787ae37743536938ec51382fb8392',
+    energyCost: Energy.create(0),
+    hash: TransactionHash.fromHexString(
+        'f296a32603fc14aa679001c49a4db1b2133787ae37743536938ec51382fb8392'
+    ),
     effectiveTime: 1669115100n,
     payload: {
-        updateType: 'protocol',
+        updateType: UpdateType.Protocol,
         update: {
             message: 'Enable protocol version 5',
             specificationHash:
@@ -859,9 +1022,11 @@ export const updateEnqueuedEvent = {
         },
     },
 };
-export const transferWithScheduleEvent = {
-    tag: 'TransferredWithSchedule',
-    to: '3ySdbNTPogmvUBD5g42FaZqYht78jQZ2jose9yZFkCj8zyCGWt',
+export const transferWithScheduleEvent: TransferredWithScheduleEvent = {
+    tag: TransactionEventTag.TransferredWithSchedule,
+    to: AccountAddress.fromBase58(
+        '3ySdbNTPogmvUBD5g42FaZqYht78jQZ2jose9yZFkCj8zyCGWt'
+    ),
     amount: [
         {
             timestamp: new Date('2023-01-10T12:00:00.919Z'),
@@ -874,110 +1039,131 @@ export const transferWithScheduleEvent = {
     ],
 };
 
-export const contractInitializedEvent = {
-    tag: 'ContractInitialized',
-    address: { index: 3132n, subindex: 0n },
+export const contractInitializedEvent: ContractInitializedEvent = {
+    tag: TransactionEventTag.ContractInitialized,
+    address: ContractAddress.create(3132),
     amount: 0n,
     contractVersion: 1,
     events: [],
-    initName: 'init_CIS2-Fractionalizer',
+    initName: InitName.fromStringUnchecked('init_CIS2-Fractionalizer'),
     ref: 'e80161061e5074e850dd1fabbabbf80008fc5d3ffae554744aedc4704ee7b412',
 };
 
-export const moduleDeployedEvent = {
-    tag: 'ModuleDeployed',
+export const moduleDeployedEvent: ModuleDeployedEvent = {
+    tag: TransactionEventTag.ModuleDeployed,
     contents:
         '3c532ed32dcb3b9f49afb442457a63465987994e400fd5023c8471c26a858ab4',
 };
 
-export const delegationRemovedEvent = {
-    tag: 'DelegationRemoved',
-    account: '4nvFUvdF3Ki7M6Xc2vHejX7iQW5Gtu7UBu6RaPRZV7LorLToPG',
+export const delegationRemovedEvent: DelegationEvent = {
+    tag: TransactionEventTag.DelegationRemoved,
+    account: AccountAddress.fromBase58(
+        '4nvFUvdF3Ki7M6Xc2vHejX7iQW5Gtu7UBu6RaPRZV7LorLToPG'
+    ),
     delegatorId: 4002,
 };
 
-export const transferWithMemoSummary = {
+export const transferWithMemoSummary: BaseAccountTransactionSummary &
+    TransferWithMemoSummary = {
     index: 0n,
-    energyCost: 508n,
-    hash: '8bfd6c5d3006ea005531d90e88af1075c1a5d0bce1f2befa7abb3ec8b3fb60b5',
-    type: 'accountTransaction',
+    energyCost: Energy.create(508),
+    hash: TransactionHash.fromHexString(
+        '8bfd6c5d3006ea005531d90e88af1075c1a5d0bce1f2befa7abb3ec8b3fb60b5'
+    ),
+    type: TransactionSummaryType.AccountTransaction,
     cost: 879395n,
-    sender: '4nJU5pCM49KmrYQ1tsUTEBNBJVxs3X2qo8nKj8CQYsgBmUACHG',
-    transactionType: 'transferWithMemo',
+    sender: AccountAddress.fromBase58(
+        '4nJU5pCM49KmrYQ1tsUTEBNBJVxs3X2qo8nKj8CQYsgBmUACHG'
+    ),
+    transactionType: TransactionKindString.TransferWithMemo,
     transfer: {
-        tag: 'Transferred',
+        tag: TransactionEventTag.Transferred,
         amount: 250000000n,
-        to: '4fxkFceRT3XyUpb4yW3C2c9RnEBhunyNrKprYarr7htKmMvztG',
+        to: AccountAddress.fromBase58(
+            '4fxkFceRT3XyUpb4yW3C2c9RnEBhunyNrKprYarr7htKmMvztG'
+        ),
     },
-    memo: { tag: 'TransferMemo', memo: '6474657374' },
+    memo: { tag: TransactionEventTag.TransferMemo, memo: '6474657374' },
 };
 
-export const upgradedEvent = {
-    address: { index: 3143n, subindex: 0n },
+export const upgradedEvent: ContractTraceEvent = {
+    address: ContractAddress.create(3143),
     from: '7371d1039a0e4587a54b8959eaabf11da83fad24650ee6af380357849648f477',
-    tag: 'Upgraded',
+    tag: TransactionEventTag.Upgraded,
     to: '7371d1039a0e4587a54b8959eaabf11da83fad24650ee6af380357849648f477',
 };
 
-export const dataRegisteredEvent = {
+export const dataRegisteredEvent: DataRegisteredEvent = {
     data: '6b68656c6c6f20776f726c64',
-    tag: 'DataRegistered',
+    tag: TransactionEventTag.DataRegistered,
 };
 
-export const newEncryptedAmountEvent = {
-    account: '2za2yAXbFiaB151oYqTteZfqiBzibHXizwjNbpdU8hodq9SfEk',
+export const newEncryptedAmountEvent: NewEncryptedAmountEvent = {
+    account: AccountAddress.fromBase58(
+        '2za2yAXbFiaB151oYqTteZfqiBzibHXizwjNbpdU8hodq9SfEk'
+    ),
     encryptedAmount:
         '8695a917b4404bfa7cb787297662f610f08758f73bc73028a0ec004626b28e28bb82a69e86b9b985e36c588ff2b36089ab40ecae0a199c53f088e6c75012c1c116600dbd22dc33285a22ad63b0a99e5b8b6bad012d1d88568eaddcbac8bf03938762267b06a3353659e436cad83ac2f2b6961ccbf4a77cffaa20757f69f2ef3a2d2c7e9a4bf7c7373e50fbd5da02c46c9565146ac5b56c1a9eb7ae0b9614ed9475e26d4cfc2cb03014f70a4ba82f1aae131b735eec2dcc5ddafe5fac1ab0dbf4',
     newIndex: 1,
-    tag: 'NewEncryptedAmount',
+    tag: TransactionEventTag.NewEncryptedAmount,
 };
 
-export const bakerKeysUpdatedEvent = {
-    account: '4Kmo9keJQaiyAuRM2pRh2xK4e75ph7hp4CzxdFAcRDeQRHfaHT',
+export const bakerKeysUpdatedEvent: BakerEvent = {
+    account: AccountAddress.fromBase58(
+        '4Kmo9keJQaiyAuRM2pRh2xK4e75ph7hp4CzxdFAcRDeQRHfaHT'
+    ),
     aggregationKey:
         '8cf3c6fe9bebc45e9c9bb34442c5baf7bb612adc193525173d6fe36355be29ad69affeb3937f2b819976ecefeb14c3ae04d9c44d0117eda8c7968602f08f266960226c5fe2014c1bda1794b7fdbd5b5f9d31deb2c053d5f9f3734452e1dcb4b8',
     bakerId: 15n,
     electionKey:
         'b40185d794485eeb099bdfb7df58fc64fd303847f2a947884648e535b023fe23',
     signKey: '5cbc1c8ab56047360ff37229760302e03844d48299f4fb1f1247832778f980c0',
-    tag: 'BakerKeysUpdated',
+    tag: TransactionEventTag.BakerKeysUpdated,
 };
 
-export const bakerStakeIncreasedEvent = {
-    account: '4JzAXhzJKwG3DGoAbgGhZNnRQqeFdp9zbxv6WUjDbVbyKEie8e',
+export const bakerStakeIncreasedEvent: BakerEvent = {
+    account: AccountAddress.fromBase58(
+        '4JzAXhzJKwG3DGoAbgGhZNnRQqeFdp9zbxv6WUjDbVbyKEie8e'
+    ),
     bakerId: 525n,
     newStake: 14001000000n,
-    tag: 'BakerStakeIncreased',
+    tag: TransactionEventTag.BakerStakeIncreased,
 };
 
-export const credentialKeysUpdatedEvent = {
+export const credentialKeysUpdatedEvent: CredentialKeysUpdatedEvent = {
     credId: 'a643d6082a8f80460fff27f3ff27fedbfdc60039527402b8188fc845a849428b5484c82a1589cab7604c1a2be978c39c',
-    tag: 'CredentialKeysUpdated',
+    tag: TransactionEventTag.CredentialKeysUpdated,
 };
 
-export const credentialsUpdatedEvent = {
-    account: '3irV7FF3BZbz9ejGTm7EHLUi6CQHdJUELDfyhwkHcLqXmQyUfR',
+export const credentialsUpdatedEvent: CredentialsUpdatedEvent = {
+    account: AccountAddress.fromBase58(
+        '3irV7FF3BZbz9ejGTm7EHLUi6CQHdJUELDfyhwkHcLqXmQyUfR'
+    ),
     newCredIds: [],
     newThreshold: 1,
     removedCredIds: [],
-    tag: 'CredentialsUpdated',
+    tag: TransactionEventTag.CredentialsUpdated,
 };
 
-export const bakerStakeDecreasedEvent = {
-    tag: 'BakerStakeDecreased',
-    account: '4Kmo9keJQaiyAuRM2pRh2xK4e75ph7hp4CzxdFAcRDeQRHfaHT',
+export const bakerStakeDecreasedEvent: BakerEvent = {
+    tag: TransactionEventTag.BakerStakeDecreased,
+    account: AccountAddress.fromBase58(
+        '4Kmo9keJQaiyAuRM2pRh2xK4e75ph7hp4CzxdFAcRDeQRHfaHT'
+    ),
     bakerId: 15n,
     newStake: 950000000000n,
 };
 
-export const delegationStakeDecreasedEvent = {
-    tag: 'DelegationStakeDecreased',
-    account: '4mAs6xcFw26fb6u8odkJWoe3fAK8bCJ91BwScUc36DFhh3thwD',
+export const delegationStakeDecreasedEvent: DelegationEvent = {
+    tag: TransactionEventTag.DelegationStakeDecreased,
+    account: AccountAddress.fromBase58(
+        '4mAs6xcFw26fb6u8odkJWoe3fAK8bCJ91BwScUc36DFhh3thwD'
+    ),
     delegatorId: 57,
     newStake: 10000000n,
 };
 
-export const mintSpecialEvent = {
+export const mintSpecialEvent: BlockSpecialEvent = {
     tag: 'mint',
     mintBakingReward: 12708081798618n,
     mintFinalizationReward: 6354040899309n,
@@ -1144,12 +1330,14 @@ export const alreadyABakerRejectReason = {
     tag: 'AlreadyABaker',
 };
 
-export const amountTooLargeRejectReason = {
-    tag: 'AmountTooLarge',
+export const amountTooLargeRejectReason: AmountTooLarge = {
+    tag: RejectReasonTag.AmountTooLarge,
     contents: {
         address: {
             type: 'AddressAccount',
-            address: '4Qod7UHWmkyz2ahPrWFH1kCqv1cvhT7NtEFbXG7G2soxXSYuMH',
+            address: AccountAddress.fromBase58(
+                '4Qod7UHWmkyz2ahPrWFH1kCqv1cvhT7NtEFbXG7G2soxXSYuMH'
+            ),
         },
         amount: 2000000000n,
     },
@@ -1198,12 +1386,12 @@ export const invalidInitMethodRejectReason = {
 
 export const runtimeFailureRejectReason = { tag: 'RuntimeFailure' };
 
-export const rejectedReceiveRejectReason = {
-    contractAddress: { index: 2372n, subindex: 0n },
+export const rejectedReceiveRejectReason: RejectedReceive = {
+    contractAddress: ContractAddress.create(2372),
     parameter: '',
     receiveName: 'auction.finalize',
     rejectReason: -1,
-    tag: 'RejectedReceive',
+    tag: RejectReasonTag.RejectedReceive,
 };
 
 export const poolClosedRejectReason = { tag: 'PoolClosed' };
@@ -1257,9 +1445,9 @@ export const firstScheduledReleaseExpiredRejectReason = {
     tag: 'FirstScheduledReleaseExpired',
 };
 
-export const invalidContractAddressRejectReason = {
-    contents: { index: 2339n, subindex: 0n },
-    tag: 'InvalidContractAddress',
+export const invalidContractAddressRejectReason: InvalidContractAddress = {
+    contents: ContractAddress.create(2339),
+    tag: RejectReasonTag.InvalidContractAddress,
 };
 
 export const missingBakerAddParametersRejectReason = {
@@ -1273,8 +1461,8 @@ export const invalidTransferToPublicProofRejectReason = {
 export const poolWouldBecomeOverDelegatedRejectReason = {
     tag: 'PoolWouldBecomeOverDelegated',
 };
-export const bakerAccountInfo = {
-    accountNonce: 1n,
+export const bakerAccountInfo: AccountInfo = {
+    accountNonce: SequenceNumber.create(1),
     accountAmount: 7449646704751788n,
     accountReleaseSchedule: { total: 0n, schedule: [] },
     accountCredentials: {
@@ -1289,6 +1477,8 @@ export const bakerAccountInfo = {
                         },
                     },
                     commitments: {
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                        // @ts-ignore
                         cmmAttributes: {},
                         cmmCredCounter:
                             '80e04147024fd25dcab36e535f990d7678fc22d95d3c8b1456e48b8b208289cc00aae180e718d3800d9efb196dccfa7a',
@@ -1323,6 +1513,8 @@ export const bakerAccountInfo = {
                     ipIdentity: 0,
                     policy: {
                         createdAt: '202206',
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                        // @ts-ignore
                         revealedAttributes: {},
                         validTo: '202306',
                     },
@@ -1342,7 +1534,9 @@ export const bakerAccountInfo = {
     accountEncryptionKey:
         'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a33426f86d431f2312b19213ced9df3cc97da9111a312aa1abdecef9327388d4936bc61ef6b1f7f0064b6dfc0630bbed',
     accountIndex: 5n,
-    accountAddress: '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L',
+    accountAddress: AccountAddress.fromBase58(
+        '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L'
+    ),
     accountBaker: {
         bakerAggregationVerifyKey:
             'b18a02de74826e55f6eadc0f31d0d9a6edfb2993d030e65136f1e1256a69ba523acb40fa4d304d0668aa307c19257a0a10726e70149c904e1ef29aedb2679c825997e3f14edd303bf276f2c0b0c5a4c4870fff0c043150be06b715466be564c4',
@@ -1356,7 +1550,7 @@ export const bakerAccountInfo = {
                 transactionCommission: 0.1,
             },
             metadataUrl: '',
-            openStatus: 'closedForAll',
+            openStatus: OpenStatusText.ClosedForAll,
         },
         bakerSignatureVerifyKey:
             'c385ccb5c8a0710a162f2c107123744650ff35f00040bfa262d974bfb3c3f8f1',
@@ -1365,8 +1559,8 @@ export const bakerAccountInfo = {
     },
 };
 
-export const delegatorAccountInfo = {
-    accountNonce: 11n,
+export const delegatorAccountInfo: AccountInfo = {
+    accountNonce: SequenceNumber.create(11),
     accountAmount: 620948501142n,
     accountReleaseSchedule: { total: 0n, schedule: [] },
     accountCredentials: {
@@ -1439,6 +1633,8 @@ export const delegatorAccountInfo = {
                     ipIdentity: 0,
                     policy: {
                         createdAt: '202206',
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                        // @ts-ignore
                         revealedAttributes: {},
                         validTo: '202306',
                     },
@@ -1458,16 +1654,20 @@ export const delegatorAccountInfo = {
     accountEncryptionKey:
         'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5af9816eae1ab8c733e26e790a7d88c5688472dcd8b536668b0d2182e406321499695ae80c8363505a479ffd89daf5fbb',
     accountIndex: 276n,
-    accountAddress: '3bFo43GiPnkk5MmaSdsRVboaX2DNSKaRkLseQbyB3WPW1osPwh',
+    accountAddress: AccountAddress.fromBase58(
+        '3bFo43GiPnkk5MmaSdsRVboaX2DNSKaRkLseQbyB3WPW1osPwh'
+    ),
     accountDelegation: {
-        delegationTarget: { delegateType: 'Passive' },
+        delegationTarget: {
+            delegateType: DelegationTargetType.PassiveDelegation,
+        },
         restakeEarnings: true,
         stakedAmount: 620942412516n,
     },
 };
 
-export const credIdAccountInfo = {
-    accountNonce: 19n,
+export const credIdAccountInfo: AccountInfo = {
+    accountNonce: SequenceNumber.create(19),
     accountAmount: 35495453082577742n,
     accountReleaseSchedule: { total: 0n, schedule: [] },
     accountCredentials: {
@@ -1482,6 +1682,8 @@ export const credIdAccountInfo = {
                         },
                     },
                     commitments: {
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                        // @ts-ignore
                         cmmAttributes: {},
                         cmmCredCounter:
                             'b0aa65f420a9f3fab61d3f875eebcc221e43154bfaf1b6365dace99bff20778de7003437631222e845fd9917c8d2874b',
@@ -1516,6 +1718,8 @@ export const credIdAccountInfo = {
                     ipIdentity: 0,
                     policy: {
                         createdAt: '202206',
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                        // @ts-ignore
                         revealedAttributes: {},
                         validTo: '202306',
                     },
@@ -1535,11 +1739,13 @@ export const credIdAccountInfo = {
     accountEncryptionKey:
         'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5aa730045bcd20bb5c24349db29d949f767e72f7cce459dc163c4b93c780a7d7f65801dda8ff7e4fc06fdf1a1b246276f',
     accountIndex: 11n,
-    accountAddress: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
+    accountAddress: AccountAddress.fromBase58(
+        '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'
+    ),
 };
 
-export const regularAccountInfo = {
-    accountNonce: 19n,
+export const regularAccountInfo: AccountInfo = {
+    accountNonce: SequenceNumber.create(19),
     accountAmount: 35495453082577742n,
     accountReleaseSchedule: { total: 0n, schedule: [] },
     accountCredentials: {
@@ -1554,6 +1760,8 @@ export const regularAccountInfo = {
                         },
                     },
                     commitments: {
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                        // @ts-ignore
                         cmmAttributes: {},
                         cmmCredCounter:
                             'b0aa65f420a9f3fab61d3f875eebcc221e43154bfaf1b6365dace99bff20778de7003437631222e845fd9917c8d2874b',
@@ -1588,6 +1796,8 @@ export const regularAccountInfo = {
                     ipIdentity: 0,
                     policy: {
                         createdAt: '202206',
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                        // @ts-ignore
                         revealedAttributes: {},
                         validTo: '202306',
                     },
@@ -1607,7 +1817,9 @@ export const regularAccountInfo = {
     accountEncryptionKey:
         'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5aa730045bcd20bb5c24349db29d949f767e72f7cce459dc163c4b93c780a7d7f65801dda8ff7e4fc06fdf1a1b246276f',
     accountIndex: 11n,
-    accountAddress: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
+    accountAddress: AccountAddress.fromBase58(
+        '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'
+    ),
 };
 
 const rootKeys = {
@@ -1740,7 +1952,9 @@ export const chainParameters: ChainParametersV1 = {
         denominator: 7989497115n,
     },
     accountCreationLimit: 10,
-    foundationAccount: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
+    foundationAccount: AccountAddress.fromBase58(
+        '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'
+    ),
     mintPerPayday: 0.000261157877,
     rewardPeriodLength: 24n,
     delegatorCooldown: 1209600n,
@@ -1911,7 +2125,9 @@ export const oldChainParameters: ChainParametersV0 = {
     euroPerEnergy: { numerator: 1n, denominator: 50000n },
     microGTUPerEuro: { numerator: 50000000n, denominator: 1n },
     accountCreationLimit: 10,
-    foundationAccount: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
+    foundationAccount: AccountAddress.fromBase58(
+        '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'
+    ),
     bakerCooldownEpochs: 166n,
     minimumThresholdForBaking: 15000000000n,
     rewardParameters: {
@@ -1933,15 +2149,17 @@ export const oldChainParameters: ChainParametersV0 = {
     rootKeys,
 };
 
-export const bakerPoolStatus = {
-    poolType: 'BakerPool',
+export const bakerPoolStatus: BakerPoolStatus = {
+    poolType: PoolStatusType.BakerPool,
     bakerId: 1n,
-    bakerAddress: '3U4sfVSqGG6XK8g6eho2qRYtnHc4MWJBG1dfxdtPGbfHwFxini',
+    bakerAddress: AccountAddress.fromBase58(
+        '3U4sfVSqGG6XK8g6eho2qRYtnHc4MWJBG1dfxdtPGbfHwFxini'
+    ),
     bakerEquityCapital: 7347853372468927n,
     delegatedCapital: 0n,
     delegatedCapitalCap: 0n,
     poolInfo: {
-        openStatus: 'openForAll',
+        openStatus: OpenStatusText.OpenForAll,
         metadataUrl: '',
         commissionRates: {
             transactionCommission: 0.1,
@@ -1949,7 +2167,9 @@ export const bakerPoolStatus = {
             finalizationCommission: 1,
         },
     },
-    bakerStakePendingChange: { pendingChangeType: 'NoChange' },
+    bakerStakePendingChange: {
+        pendingChangeType: BakerPoolPendingChangeType.NoChange,
+    },
     currentPaydayStatus: {
         blocksBaked: 1329n,
         finalizationLive: true,
@@ -1975,15 +2195,17 @@ export const passiveDelegationStatus = {
     allPoolTotalCapital: 46071942529284135n,
 };
 
-export const bakerPoolStatusWithPendingChange = {
-    poolType: 'BakerPool',
+export const bakerPoolStatusWithPendingChange: BakerPoolStatus = {
+    poolType: PoolStatusType.BakerPool,
     bakerId: 1879n,
-    bakerAddress: '4aCoaW3qkQRnY3fUGThQcEMGSPLUEQ7XL9Yagx2UR91QpvtoAe',
+    bakerAddress: AccountAddress.fromBase58(
+        '4aCoaW3qkQRnY3fUGThQcEMGSPLUEQ7XL9Yagx2UR91QpvtoAe'
+    ),
     bakerEquityCapital: 19999999999n,
     delegatedCapital: 0n,
     delegatedCapitalCap: 39999999998n,
     poolInfo: {
-        openStatus: 'openForAll',
+        openStatus: OpenStatusText.OpenForAll,
         metadataUrl: 'b',
         commissionRates: {
             transactionCommission: 0.1,
@@ -1992,47 +2214,52 @@ export const bakerPoolStatusWithPendingChange = {
         },
     },
     bakerStakePendingChange: {
-        pendingChangeType: 'RemovePool',
+        pendingChangeType: BakerPoolPendingChangeType.RemovePool,
         effectiveTime: new Date('2022-12-08T07:54:00.000Z'),
     },
     currentPaydayStatus: null,
     allPoolTotalCapital: 46470271917743628n,
 };
 
-export const invokeContractResult = {
+export const invokeContractResult: InvokeContractResult = {
     tag: 'success',
-    usedEnergy: 502n,
-    returnValue: '000f17697d00000000',
+    usedEnergy: Energy.create(502),
+    returnValue: ReturnValue.fromHexString('000f17697d00000000'),
     events: [
         {
-            tag: 'Updated',
+            tag: TransactionEventTag.Updated,
             contractVersion: 1,
-            address: { index: 81n, subindex: 0n },
+            address: ContractAddress.create(81),
             instigator: {
                 type: 'AddressAccount',
-                address: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
+                address: AccountAddress.fromBase58(
+                    '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'
+                ),
             },
             amount: 0n,
-            message: '',
-            receiveName: 'PiggyBank.view',
+            message: Parameter.empty(),
+            receiveName: ReceiveName.fromStringUnchecked('PiggyBank.view'),
             events: [],
         },
     ],
 };
 
-export const blocksAtHeight = [
+export const blocksAtHeight: BlockHash.Type[] = [
     '99ceb0dfcd36714d9c141fde08e85da1d0d624994e95b35114f14193c811b76e',
-];
+].map(BlockHash.fromHexString);
 
 export const blockInfo: BlockInfoV0 = {
-    blockParent:
-        '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf',
-    blockHash:
-        'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e',
+    blockParent: BlockHash.fromHexString(
+        '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf'
+    ),
+    blockHash: BlockHash.fromHexString(
+        'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e'
+    ),
     blockStateHash:
         '6e602157d76677fc4b630b2701571d2b0166e2b08e0afe8ab92356e4d0b88a6a',
-    blockLastFinalized:
-        '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf',
+    blockLastFinalized: BlockHash.fromHexString(
+        '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf'
+    ),
     blockHeight: 1259179n,
     blockBaker: 4n,
     blockSlot: 50801674n,
@@ -2042,7 +2269,7 @@ export const blockInfo: BlockInfoV0 = {
     finalized: true,
     transactionCount: 0n,
     transactionsSize: 0n,
-    transactionEnergyCost: 0n,
+    transactionEnergyCost: Energy.create(0),
     genesisIndex: 1,
     eraBlockHeight: 1258806,
     protocolVersion: 4n,

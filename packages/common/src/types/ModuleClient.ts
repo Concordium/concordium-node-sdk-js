@@ -3,7 +3,6 @@ import {
     getContractUpdateDefaultExpiryDate,
 } from '../GenericContract.js';
 import { ModuleReference } from './moduleReference.js';
-import { Buffer } from 'buffer/index.js';
 import * as BlockHash from './BlockHash.js';
 import * as Parameter from './Parameter.js';
 import * as TransactionHash from './TransactionHash.js';
@@ -16,7 +15,6 @@ import {
 import { ConcordiumGRPCClient } from '../grpc/index.js';
 import { AccountSigner, signTransaction } from '../signHelpers.js';
 import { CcdAmount } from './ccdAmount.js';
-import { AccountAddress } from './accountAddress.js';
 import { TransactionExpiry } from './transactionExpiry.js';
 
 /**
@@ -118,7 +116,7 @@ export function getModuleSource(
 ): Promise<VersionedModuleSource> {
     return moduleClient.grpcClient.getModuleSource(
         moduleClient.moduleReference,
-        blockHash === undefined ? undefined : BlockHash.toHexString(blockHash)
+        blockHash
     );
 }
 
@@ -146,18 +144,19 @@ export async function createAndSendInitTransaction(
     const payload: InitContractPayload = {
         moduleRef: moduleClient.moduleReference,
         amount: new CcdAmount(metadata.amount ?? 0n),
-        initName: `init_${contractName}`,
+        initName: contractName,
         maxContractExecutionEnergy: metadata.energy,
-        param: Buffer.from(parameter.buffer),
+        param: parameter,
     };
-    const sender = new AccountAddress(metadata.senderAddress);
-    const { nonce } = await moduleClient.grpcClient.getNextAccountNonce(sender);
+    const { nonce } = await moduleClient.grpcClient.getNextAccountNonce(
+        metadata.senderAddress
+    );
     const header = {
         expiry: new TransactionExpiry(
             metadata.expiry ?? getContractUpdateDefaultExpiryDate()
         ),
         nonce: nonce,
-        sender,
+        sender: metadata.senderAddress,
     };
     const transaction = {
         type: AccountTransactionType.InitContract,
@@ -165,9 +164,8 @@ export async function createAndSendInitTransaction(
         payload,
     };
     const signature = await signTransaction(transaction, signer);
-    const hash = await moduleClient.grpcClient.sendAccountTransaction(
+    return moduleClient.grpcClient.sendAccountTransaction(
         transaction,
         signature
     );
-    return TransactionHash.fromHexString(hash);
 }

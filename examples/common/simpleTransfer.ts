@@ -15,7 +15,6 @@ import {
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import { readFileSync } from 'node:fs';
-import { Buffer } from 'buffer/index.js';
 import { parseEndpoint } from '../shared/util.js';
 
 import meow from 'meow';
@@ -82,9 +81,9 @@ const client = createConcordiumClient(
     // #region documentation-snippet
     const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
     const walletExport = parseWallet(walletFile);
-    const sender = new AccountAddress(walletExport.value.address);
+    const sender = AccountAddress.fromBase58(walletExport.value.address);
 
-    const toAddress = new AccountAddress(cli.flags.receiver);
+    const toAddress = AccountAddress.fromBase58(cli.flags.receiver);
     const nextNonce: NextAccountNonce = await client.getNextAccountNonce(
         sender
     );

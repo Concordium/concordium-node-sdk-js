@@ -55,7 +55,7 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const account = new AccountAddress(cli.flags.account);
+    const account = AccountAddress.fromBase58(cli.flags.account);
     const nextNonce: NextAccountNonce = await client.getNextAccountNonce(
         account
     );

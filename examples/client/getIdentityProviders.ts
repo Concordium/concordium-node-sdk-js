@@ -1,5 +1,9 @@
 import { parseEndpoint } from '../shared/util.js';
-import { createConcordiumClient, IpInfo } from '@concordium/node-sdk';
+import {
+    BlockHash,
+    createConcordiumClient,
+    IpInfo,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -48,9 +52,11 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const ips: AsyncIterable<IpInfo> = client.getIdentityProviders(
-        cli.flags.block
-    );
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
+    const ips: AsyncIterable<IpInfo> = client.getIdentityProviders(blockHash);
 
     for await (const ip of ips) {
         console.log('Identity Provider ID:', ip.ipIdentity);

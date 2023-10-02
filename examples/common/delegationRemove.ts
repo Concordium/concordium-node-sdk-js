@@ -62,7 +62,7 @@ const client = createConcordiumClient(
     // Read wallet-file
     const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
     const wallet = parseWallet(walletFile);
-    const sender = new AccountAddress(wallet.value.address);
+    const sender = AccountAddress.fromBase58(wallet.value.address);
 
     const header: AccountTransactionHeader = {
         expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),

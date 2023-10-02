@@ -1,17 +1,13 @@
-import {
+import type {
     Amount,
     AuthorizationsV0,
     AuthorizationsV1,
     Base58String,
-    Duration,
     FinalizationCommitteeParameters,
     GasRewardsV0,
     GasRewardsV1,
     HexString,
     TimeoutParameters,
-} from '../types.js';
-import type {
-    Energy,
     IpInfo,
     ArInfo,
     VerifyKey,
@@ -21,6 +17,8 @@ import type {
     MintRate,
     CommissionRates,
 } from '../types.js';
+import type * as Energy from './Energy.js';
+import type * as Duration from './Duration.js';
 
 type ChainUpdate<UpdateType, T> = {
     /** The type of the update */
@@ -126,12 +124,15 @@ export type TimeoutParametersUpdate = ChainUpdate<
 >;
 
 /** An update to mininum time between blocks, used from protocol version 6 */
-export type MinBlockTimeUpdate = ChainUpdate<UpdateType.MinBlockTime, Duration>;
+export type MinBlockTimeUpdate = ChainUpdate<
+    UpdateType.MinBlockTime,
+    Duration.Type
+>;
 
 /** An update to maximum amount of energy per block, used from protocol version 6 */
 export type BlockEnergyLimitUpdate = ChainUpdate<
     UpdateType.BlockEnergyLimit,
-    Energy
+    Energy.Type
 >;
 
 /** An update to finalization committee parameters, used from protocol version 6 */

@@ -1,5 +1,53 @@
 ## Common SDK version 10 (Web 7) (Node 10)
 
+### Common
+
+Several types have been replaced with a module containing the type itself together with functions for constructing and
+converting the type:
+
+- `AccountAddress` is now a module with functions related to account addresses:
+  - To refer to `AccountAddress` as a type use `AccountAddress.Type`.
+  - Constructing `new AccountAddress("<address>")` is now `AccountAddress.fromBase58("<address>")`.
+  - `isAlias` and `getAlias` are now accessable from `AccountAddress.isAlias` and `AccountAddress.getAlias`.
+- `ContractAddresss` is now a module with functions related to contract addresses:
+  - To refer to `ContractAddress` as a type use `ContractAddress.Type`.
+  - To construct the type use `ContractAddress.create(index, subindex)`.
+- `CredentialRegistrationId` is now a module with functions related to credential registration IDs:
+  - To refer to `CredentialRegistrationId` as a type use `CredentialRegistrationId.Type`.
+  - Constructing `new CredentialRegistrationId("<hex-string>")` is now
+    `CredentialRegistrationId.fromHexString("<hex-string>")`.
+- `Duration` is now a module with functions related to durations of time.
+  - To refer to `Duration` as a type use `Duration.Type`.
+- `Timestamp` is now a module with functions related to timestamps.
+  - To refer to `Timestamp` as a type use `Timestamp.Type`.
+
+The API now uses dedicated types instead of language primitives:
+
+- Uses `AccountAddress` instead of a string with base58 encoding.
+  Can be constructed using `AccountAddress.fromBase58('<base58>')`.
+- Uses `BlockHash` instead of a string with hex encoding.
+  Can be constructed using `BlockHash.fromHexString('<hex>')`.
+- Uses `TranactionHash` instead of a string with hex encoding.
+  Can be constructed using `TransactionHash.fromHexString('<hex>')`.
+- Uses `Energy` instead of a bigint.
+  Can be constructed using `Energy.create(<integer>)`.
+- Uses `ReceiveName` instead of a string.
+  Can be constructed using `ReceiveName.fromString('<contract>.<function>')`.
+- Uses `InitName` instead of a string.
+  Can be constructed using `Init.fromString('init_<contract>')`.
+- Uses `ContractName` instead of a string.
+  Can be constructed using `ContractName.fromString('<contract>')`.
+- Uses `EntrypointName` instead of a string.
+  Can be constructed using `EntrypointName.fromString('<function>')`.
+- Uses `Parameter` instead of a string with hex encoding.
+  Can be constructed using `Parameter.fromHexString('<hex>')`.
+- Uses `SequenceNumber` (formerly called nonce) instead of a bigint.
+  Can be constructed using  `SequenceNumber.create(<integer>)`.
+- Uses `Timestamp` instead of a bigint.
+  Can be constructed using `Timestamp.fromMillis(<integer>)`.
+- Uses `Duration` instead of a bigint.
+  Can be constructed using `Duration.fromMillis(<integer>)`.
+
 ### Web
 
 The `@concordium/web-sdk` now requires bundlers to respect `exports` field of

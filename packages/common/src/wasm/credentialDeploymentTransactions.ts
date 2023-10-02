@@ -1,4 +1,3 @@
-import bs58check from 'bs58check';
 import { Buffer } from 'buffer/index.js';
 import { sign } from '@noble/ed25519';
 import * as wasm from '@concordium/rust-bindings/wallet';
@@ -22,7 +21,7 @@ import {
     HexString,
 } from '../types.js';
 import { TransactionExpiry } from '../types/transactionExpiry.js';
-import { AccountAddress } from '../types/accountAddress.js';
+import * as AccountAddress from '../types/AccountAddress.js';
 import { sha256 } from '../hash.js';
 import { ConcordiumHdWallet } from './HdWallet.js';
 import { filterRecord, mapRecord } from '../util.js';
@@ -50,7 +49,7 @@ function createUnsignedCredentialInfo(
     publicKeys: VerifyKey[],
     credentialIndex: number,
     revealedAttributes: AttributeKey[],
-    address?: AccountAddress
+    address?: AccountAddress.Type
 ): UnsignedCdiWithRandomness {
     if (publicKeys.length > 255) {
         throw new Error(
@@ -143,7 +142,7 @@ export function createUnsignedCredentialForExistingAccount(
     publicKeys: VerifyKey[],
     credentialIndex: number,
     revealedAttributes: AttributeKey[],
-    address: AccountAddress
+    address: AccountAddress.Type
 ): UnsignedCdiWithRandomness {
     return createUnsignedCredentialInfo(
         identity,
@@ -184,13 +183,9 @@ export function buildSignedCredentialForExistingAccount(
  * @param credId the credential id from a credential deployment transaction
  * @returns the account address
  */
-export function getAccountAddress(credId: string): AccountAddress {
+export function getAccountAddress(credId: string): AccountAddress.Type {
     const hashedCredId = sha256([Buffer.from(credId, 'hex')]);
-    const prefixedWithVersion = Buffer.concat([Buffer.of(1), hashedCredId]);
-    const accountAddress = new AccountAddress(
-        bs58check.encode(prefixedWithVersion)
-    );
-    return accountAddress;
+    return AccountAddress.fromBuffer(hashedCredId);
 }
 
 type CredentialInputCommon = {

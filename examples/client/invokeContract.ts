@@ -1,13 +1,18 @@
 import { parseEndpoint } from '../shared/util.js';
 import {
     AccountAddress,
+    BlockHash,
     CcdAmount,
+    ContractAddress,
     ContractContext,
     ContractTraceEvent,
+    Energy,
+    Parameter,
+    ReceiveName,
+    ReturnValue,
     createConcordiumClient,
 } from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
-import { Buffer } from 'buffer/index.js';
 
 import meow from 'meow';
 
@@ -92,23 +97,22 @@ const client = createConcordiumClient(
     // #region documentation-snippet
     // Handle the optional arguments
     const invoker = cli.flags.invoker
-        ? new AccountAddress(cli.flags.invoker)
+        ? AccountAddress.fromBase58(cli.flags.invoker)
         : undefined;
     const amount = cli.flags.amount
         ? new CcdAmount(BigInt(cli.flags.amount))
         : undefined;
     const parameter = cli.flags.parameter
-        ? Buffer.from(cli.flags.parameter, 'hex')
+        ? Parameter.fromHexString(cli.flags.parameter)
         : undefined;
-    const energy = cli.flags.energy ? BigInt(cli.flags.energy) : undefined;
+    const energy = cli.flags.energy
+        ? Energy.create(cli.flags.energy)
+        : undefined;
 
-    const contract = {
-        index: BigInt(cli.flags.contract),
-        subindex: 0n,
-    };
+    const contract = ContractAddress.create(cli.flags.contract);
     const context: ContractContext = {
         // Required
-        method: cli.flags.receive,
+        method: ReceiveName.fromString(cli.flags.receive),
         contract,
         // Optional
         invoker,
@@ -116,8 +120,12 @@ const client = createConcordiumClient(
         parameter,
         energy,
     };
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
 
-    const result = await client.invokeContract(context, cli.flags.block);
+    const result = await client.invokeContract(context, blockHash);
 
     // We can inspect the result
     if (result.tag === 'failure') {
@@ -126,9 +134,12 @@ const client = createConcordiumClient(
     } else if (result.tag === 'success') {
         console.log('Invoke was succesful');
 
-        const returnValue: string | undefined = result.returnValue; // If the invoked method has return value
+        const returnValue = result.returnValue; // If the invoked method has return value
         if (returnValue) {
-            console.log('The return value of the invoked method:', returnValue);
+            console.log(
+                'The return value of the invoked method:',
+                ReturnValue.toHexString(returnValue)
+            );
         }
 
         const events: ContractTraceEvent[] = result.events;

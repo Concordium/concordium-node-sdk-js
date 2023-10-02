@@ -1,12 +1,19 @@
-import type { Base58String, ContractAddress } from '@concordium/node-sdk';
+import { ContractAddress, AccountAddress } from '@concordium/node-sdk';
 
-export const parseAddress = (input: string): Base58String | ContractAddress => {
+export const parseAddress = (
+    input: string
+): AccountAddress.Type | ContractAddress.Type => {
     if (!input.includes(',')) {
-        return input;
+        return AccountAddress.fromBase58(input);
     }
 
     const [i, si] = input.split(',');
-    return { index: BigInt(i), subindex: BigInt(si) };
+    const index = parseInt(i);
+    const subindex = parseInt(si);
+    if (isNaN(index) || isNaN(subindex)) {
+        throw new Error('Invalid address');
+    }
+    return ContractAddress.create(index, subindex);
 };
 
 // Regular expression for matching the scheme prefix of a URL.

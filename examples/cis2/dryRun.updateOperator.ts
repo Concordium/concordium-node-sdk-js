@@ -1,4 +1,8 @@
-import { createConcordiumClient, CIS2Contract } from '@concordium/node-sdk';
+import {
+    createConcordiumClient,
+    CIS2Contract,
+    ContractAddress,
+} from '@concordium/node-sdk';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 import { parseAddress, parseEndpoint } from '../shared/util.js';
@@ -57,10 +61,10 @@ const client = createConcordiumClient(
 );
 
 (async () => {
-    const contract = await CIS2Contract.create(client, {
-        index: BigInt(cli.flags.index),
-        subindex: BigInt(cli.flags.subindex),
-    });
+    const contract = await CIS2Contract.create(
+        client,
+        ContractAddress.create(cli.flags.index, cli.flags.subindex)
+    );
 
     const owner = parseAddress(cli.flags.owner);
     const address = parseAddress(cli.flags.address);

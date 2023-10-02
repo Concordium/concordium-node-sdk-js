@@ -1,5 +1,6 @@
 import { parseEndpoint } from '../shared/util.js';
 import {
+    BlockHash,
     BlockSpecialEvent,
     createConcordiumClient,
 } from '@concordium/node-sdk';
@@ -55,8 +56,12 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
     const events: AsyncIterable<BlockSpecialEvent> =
-        client.getBlockSpecialEvents(cli.flags.block);
+        client.getBlockSpecialEvents(blockHash);
     // #endregion documentation-snippet
 
     for await (const event of events) {

@@ -5,9 +5,12 @@ import * as ed25519 from '@noble/ed25519';
 import { credentials } from '@grpc/grpc-js';
 
 import {
+    AccountAddress,
     buildAccountSigner,
     CIS4Contract,
+    ContractAddress,
     createConcordiumClient,
+    Energy,
     HexString,
     parseWallet,
 } from '@concordium/node-sdk';
@@ -77,10 +80,10 @@ const wallet = parseWallet(walletFile);
 const signer = buildAccountSigner(wallet);
 
 (async () => {
-    const contract = await CIS4Contract.create(client, {
-        index: BigInt(cli.flags.index),
-        subindex: BigInt(cli.flags.subindex),
-    });
+    const contract = await CIS4Contract.create(
+        client,
+        ContractAddress.create(cli.flags.index, cli.flags.subindex)
+    );
 
     let keys: HexString[] = cli.flags.keys ?? [];
     if (!cli.flags.keys?.length) {
@@ -99,8 +102,8 @@ const signer = buildAccountSigner(wallet);
     const txHash = await contract.registerRevocationKeys(
         signer,
         {
-            senderAddress: wallet.value.address,
-            energy: 10000n,
+            senderAddress: AccountAddress.fromBase58(wallet.value.address),
+            energy: Energy.create(10000),
         },
         keys,
         cli.flags.data

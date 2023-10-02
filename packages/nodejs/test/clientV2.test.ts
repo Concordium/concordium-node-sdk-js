@@ -12,12 +12,14 @@ import {
     createCredentialDeploymentTransaction,
     serializeAccountTransaction,
     streamToList,
+    BlockHash,
 } from '@concordium/common-sdk';
 import {
     getModuleBuffer,
     getIdentityInput,
     getNodeClientV2,
     getNodeClientWeb,
+    expectToEqual,
 } from './testHelpers.js';
 import * as ed from '@noble/ed25519';
 import * as expected from './resources/expectedJsons.js';
@@ -38,20 +40,21 @@ global.TextDecoder = TextDecoder as any;
 const clientV2 = getNodeClientV2();
 const clientWeb = getNodeClientWeb();
 
-const testAccount = new v1.AccountAddress(
+const testAccount = v1.AccountAddress.fromBase58(
     '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'
 );
-const testCredId = new v1.CredentialRegistrationId(
+const testCredId = v1.CredentialRegistrationId.fromHexString(
     'aa730045bcd20bb5c24349db29d949f767e72f7cce459dc163c4b93c780a7d7f65801dda8ff7e4fc06fdf1a1b246276f'
 );
-const testAccBaker = new v1.AccountAddress(
+const testAccBaker = v1.AccountAddress.fromBase58(
     '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L'
 );
-const testAccDeleg = new v1.AccountAddress(
+const testAccDeleg = v1.AccountAddress.fromBase58(
     '3bFo43GiPnkk5MmaSdsRVboaX2DNSKaRkLseQbyB3WPW1osPwh'
 );
-const testBlockHash =
-    'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e';
+const testBlockHash = v1.BlockHash.fromHexString(
+    'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e'
+);
 
 // Retrieves the account info for the given account in the GRPCv2 type format.
 function getAccountInfoV2(
@@ -87,7 +90,7 @@ test.each([clientV2, clientWeb])(
 
 test.each([clientV2, clientWeb])('nextAccountNonce', async (client) => {
     const nan = await client.getNextAccountNonce(testAccount);
-    expect(nan.nonce).toBeGreaterThanOrEqual(19n);
+    expect(nan.nonce.value).toBeGreaterThanOrEqual(19n);
     expect(nan.allFinal).toBeDefined();
 });
 
@@ -96,21 +99,6 @@ test.each([clientV2, clientWeb])('getAccountInfo', async (client) => {
 
     expect(v2.AccountInfo.toJson(accountInfo)).toEqual(expected.accountInfo);
 });
-
-test.each([clientV2, clientWeb])(
-    'getAccountInfo: Invalid hash throws error',
-    async (client) => {
-        const invalidBlockHash = '1010101010';
-        await expect(
-            client.getAccountInfo(testAccount, invalidBlockHash)
-        ).rejects.toEqual(
-            new Error(
-                'The input was not a valid hash, must be 32 bytes: ' +
-                    invalidBlockHash
-            )
-        );
-    }
-);
 
 test.each([clientV2, clientWeb])('getAccountInfo for baker', async (client) => {
     const accInfo = await getAccountInfoV2(client, testAccBaker);
@@ -152,7 +140,7 @@ test.each([clientV2, clientWeb])(
             testBlockHash
         );
 
-        expect(accInfo).toEqual(credIdInfo);
+        expectToEqual(accInfo, credIdInfo);
     }
 );
 
@@ -164,10 +152,10 @@ test.each([clientV2, clientWeb])(
         const baker = await client.getAccountInfo(testAccBaker, testBlockHash);
         const deleg = await client.getAccountInfo(testAccDeleg, testBlockHash);
 
-        expect(regular).toEqual(expected.regularAccountInfo);
-        expect(credId).toEqual(expected.credIdAccountInfo);
-        expect(baker).toEqual(expected.bakerAccountInfo);
-        expect(deleg).toEqual(expected.delegatorAccountInfo);
+        expectToEqual(regular, expected.regularAccountInfo);
+        expectToEqual(credId, expected.credIdAccountInfo);
+        expectToEqual(baker, expected.bakerAccountInfo);
+        expectToEqual(deleg, expected.delegatorAccountInfo);
     }
 );
 
@@ -185,8 +173,9 @@ test.each([clientV2, clientWeb])(
 test.each([clientV2, clientWeb])(
     'getChainParameters corresponds to GetBlockSummary subset on protocol level < 4',
     async (client) => {
-        const oldBlockHash =
-            'ed2507c4d05108038741e87757ab1c3acdeeb3327027cd2972666807c9c4a20d';
+        const oldBlockHash = v1.BlockHash.fromHexString(
+            'ed2507c4d05108038741e87757ab1c3acdeeb3327027cd2972666807c9c4a20d'
+        );
         const oldChainParameters = await client.getBlockChainParameters(
             oldBlockHash
         );
@@ -216,8 +205,9 @@ test.each([clientV2, clientWeb])(
 test.each([clientV2, clientWeb])(
     'getPoolInfo corresponds to getPoolStatus with bakerId (with pending change)',
     async (client) => {
-        const changeHash =
-            '2aa7c4a54ad403a9f9b48de2469e5f13a64c95f2cf7a8e72c0f9f7ae0718f642';
+        const changeHash = v1.BlockHash.fromHexString(
+            '2aa7c4a54ad403a9f9b48de2469e5f13a64c95f2cf7a8e72c0f9f7ae0718f642'
+        );
         const changedAccount = 1879n;
 
         const poolStatus = await client.getPoolInfo(changedAccount, changeHash);
@@ -229,8 +219,9 @@ test.each([clientV2, clientWeb])(
 test.each([clientV2, clientWeb])(
     'getBlockItemStatus on chain update',
     async (client) => {
-        const transactionHash =
-            '3de823b876d05cdd33a311a0f84124079f5f677afb2534c4943f830593edc650';
+        const transactionHash = v1.TransactionHash.fromHexString(
+            '3de823b876d05cdd33a311a0f84124079f5f677afb2534c4943f830593edc650'
+        );
         const blockItemStatus = await client.getBlockItemStatus(
             transactionHash
         );
@@ -242,8 +233,9 @@ test.each([clientV2, clientWeb])(
 test.each([clientV2, clientWeb])(
     'getBlockItemStatus on simple transfer',
     async (client) => {
-        const transactionHash =
-            '502332239efc0407eebef5c73c390080e5d7e1b127ff29f786a62b3c9ab6cfe7';
+        const transactionHash = v1.TransactionHash.fromHexString(
+            '502332239efc0407eebef5c73c390080e5d7e1b127ff29f786a62b3c9ab6cfe7'
+        );
         const blockItemStatus = await client.getBlockItemStatus(
             transactionHash
         );
@@ -253,10 +245,7 @@ test.each([clientV2, clientWeb])(
 );
 
 test.each([clientV2, clientWeb])('getInstanceInfo', async (client) => {
-    const contractAddress = {
-        index: 0n,
-        subindex: 0n,
-    };
+    const contractAddress = v1.ContractAddress.create(0, 0);
     const instanceInfo = await client.getInstanceInfo(
         contractAddress,
         testBlockHash
@@ -269,14 +258,11 @@ test.each([clientV2, clientWeb])('Failed invoke contract', async (client) => {
     const result = await client.invokeContract(
         {
             invoker: testAccount,
-            contract: {
-                index: 6n,
-                subindex: 0n,
-            },
-            method: 'PiggyBank.smash',
+            contract: v1.ContractAddress.create(6),
+            method: v1.ReceiveName.fromStringUnchecked('PiggyBank.smash'),
             amount: new v1.CcdAmount(0n),
             parameter: undefined,
-            energy: 30000n,
+            energy: v1.Energy.create(30000),
         },
         testBlockHash
     );
@@ -285,7 +271,7 @@ test.each([clientV2, clientWeb])('Failed invoke contract', async (client) => {
         throw new Error('Expected invoke to be fail');
     }
 
-    expect(result.usedEnergy).toBe(340n);
+    expect(result.usedEnergy.value).toBe(340n);
     expect(result.reason.tag).toBe(v1.RejectReasonTag.RejectedReceive);
 });
 
@@ -295,14 +281,11 @@ test.each([clientV2, clientWeb])(
         const result = await client.invokeContract(
             {
                 invoker: testAccount,
-                contract: {
-                    index: 6n,
-                    subindex: 0n,
-                },
-                method: 'PiggyBank.insert',
+                contract: v1.ContractAddress.create(6),
+                method: v1.ReceiveName.fromStringUnchecked('PiggyBank.insert'),
                 amount: new v1.CcdAmount(1n),
                 parameter: undefined,
-                energy: 30000n,
+                energy: v1.Energy.create(30000),
             },
             testBlockHash
         );
@@ -316,14 +299,11 @@ test.each([clientV2, clientWeb])(
     async (client) => {
         const context = {
             invoker: testAccount,
-            contract: {
-                index: 81n,
-                subindex: 0n,
-            },
-            method: 'PiggyBank.view',
+            contract: v1.ContractAddress.create(81),
+            method: v1.ReceiveName.fromStringUnchecked('PiggyBank.view'),
             amount: new v1.CcdAmount(0n),
             parameter: undefined,
-            energy: 30000n,
+            energy: v1.Energy.create(30000),
         };
         const result = await client.invokeContract(context, testBlockHash);
 
@@ -347,12 +327,15 @@ test.each([clientV2, clientWeb])('getModuleSource', async (client) => {
     );
 
     expect(versionedModuleSource.version).toEqual(0);
-    expect(localModuleHex).toEqual(versionedModuleSource.source);
+    expect(new Uint8Array(localModuleHex)).toEqual(
+        new Uint8Array(versionedModuleSource.source)
+    );
 });
 
 test.each([clientV2, clientWeb])('getConsensusStatus', async (client) => {
-    const genesisBlock =
-        '4221332d34e1694168c2a0c0b3fd0f273809612cb13d000d5c2e00e85f50f796';
+    const genesisBlock = v1.BlockHash.fromHexString(
+        '4221332d34e1694168c2a0c0b3fd0f273809612cb13d000d5c2e00e85f50f796'
+    );
 
     const ci = await client.getConsensusStatus();
 
@@ -362,7 +345,7 @@ test.each([clientV2, clientWeb])('getConsensusStatus', async (client) => {
 });
 
 test.each([clientV2, clientWeb])('sendBlockItem', async (client) => {
-    const senderAccount = new v1.AccountAddress(
+    const senderAccount = v1.AccountAddress.fromBase58(
         '37TRfx9PqFX386rFcNThyA3zdoWsjF8Koy6Nh3i8VrPy4duEsA'
     );
     const privateKey =
@@ -398,7 +381,7 @@ test.each([clientV2, clientWeb])('sendBlockItem', async (client) => {
 });
 
 test.each([clientV2, clientWeb])('transactionHash', async (client) => {
-    const senderAccount = new v1.AccountAddress(
+    const senderAccount = v1.AccountAddress.fromBase58(
         '37TRfx9PqFX386rFcNThyA3zdoWsjF8Koy6Nh3i8VrPy4duEsA'
     );
     const privateKey =
@@ -445,9 +428,9 @@ test.each([clientV2, clientWeb])('transactionHash', async (client) => {
 
     // Put together sendBlockItemRequest
     const header: v2.AccountTransactionHeader = {
-        sender: { value: transaction.header.sender.decodedAddress },
-        sequenceNumber: { value: transaction.header.nonce },
-        energyAmount: { value: energyCost },
+        sender: v1.AccountAddress.toProto(transaction.header.sender),
+        sequenceNumber: v1.SequenceNumber.toProto(transaction.header.nonce),
+        energyAmount: v1.Energy.toProto(energyCost),
         expiry: { value: transaction.header.expiry.expiryEpochSeconds },
     };
     const accountTransaction: v2.PreAccountTransaction = {
@@ -554,10 +537,7 @@ test.each([clientV2, clientWeb])('getAncestors', async (client) => {
 });
 
 test.each([clientV2, clientWeb])('getInstanceState', async (client) => {
-    const contract = {
-        index: 602n,
-        subindex: 0n,
-    };
+    const contract = v1.ContractAddress.create(602);
     const instanceStateIter = client.getInstanceState(contract, testBlockHash);
     const instanceStateList = await streamToList(instanceStateIter);
 
@@ -567,10 +547,7 @@ test.each([clientV2, clientWeb])('getInstanceState', async (client) => {
 test.each([clientV2, clientWeb])('instanceStateLookup', async (client) => {
     const key = '0000000000000000';
     const expectedValue = '0800000000000000';
-    const contract = {
-        index: 601n,
-        subindex: 0n,
-    };
+    const contract = v1.ContractAddress.create(601);
     const value = await client.instanceStateLookup(
         contract,
         key,
@@ -611,8 +588,9 @@ test.each([clientV2, clientWeb])(
             height: 100n,
             restrict: true,
         };
-        const expectedBlock =
-            '956c3bc5c9d10449e13686a4cc69e8bc7dee450608866242075a6ce37331187c';
+        const expectedBlock = v1.BlockHash.fromHexString(
+            '956c3bc5c9d10449e13686a4cc69e8bc7dee450608866242075a6ce37331187c'
+        );
         const blocks = await client.getBlocksAtHeight(request);
 
         expect(blocks[0]).toEqual(expectedBlock);
@@ -709,8 +687,9 @@ test.each([clientV2, clientWeb])(
 test.each([clientV2, clientWeb])(
     'getBlockTransactionEvents',
     async (client) => {
-        const blockHash =
-            '8f3acabb19ef769db4d13ada858a305cc1a3d64adeb78fcbf3bb9f7583de6362';
+        const blockHash = v1.BlockHash.fromHexString(
+            '8f3acabb19ef769db4d13ada858a305cc1a3d64adeb78fcbf3bb9f7583de6362'
+        );
         const transactionEvents = client.getBlockTransactionEvents(blockHash);
         const transactionEventList = await streamToList(transactionEvents);
 
@@ -721,8 +700,9 @@ test.each([clientV2, clientWeb])(
 test.each([clientV2, clientWeb])(
     'getBlockTransactionEvents',
     async (client) => {
-        const blockHash =
-            '8f3acabb19ef769db4d13ada858a305cc1a3d64adeb78fcbf3bb9f7583de6362';
+        const blockHash = v1.BlockHash.fromHexString(
+            '8f3acabb19ef769db4d13ada858a305cc1a3d64adeb78fcbf3bb9f7583de6362'
+        );
         const transactionEvents = client.getBlockTransactionEvents(blockHash);
         const transactionEventList = await streamToList(transactionEvents);
 
@@ -749,8 +729,9 @@ test.each([clientV2, clientWeb])('getBlockSpecialEvents', async (client) => {
 });
 
 test.each([clientV2, clientWeb])('getBlockPendingUpdates', async (client) => {
-    const pendingUpdateBlock =
-        '39122a9c720cae643b999d93dd7bf09bcf50e99bb716767dd35c39690390db54';
+    const pendingUpdateBlock = v1.BlockHash.fromHexString(
+        '39122a9c720cae643b999d93dd7bf09bcf50e99bb716767dd35c39690390db54'
+    );
     const pendingUpdateStream =
         client.getBlockPendingUpdates(pendingUpdateBlock);
     const pendingUpdateList = await streamToList(pendingUpdateStream);
@@ -770,23 +751,26 @@ test.each([clientV2, clientWeb])(
 );
 
 test.each([clientV2, clientWeb])('getEmbeddedSchema', async (client) => {
-    const contract = { index: 4422n, subindex: 0n };
+    const contract = v1.ContractAddress.create(4422);
     const moduleRef = new v1.ModuleReference(
         '44434352ddba724930d6b1b09cd58bd1fba6ad9714cf519566d5fe72d80da0d1'
     );
 
     const schema = await client.getEmbeddedSchema(moduleRef);
 
-    const context = { contract, method: 'weather.get' };
+    const context = {
+        contract,
+        method: v1.ReceiveName.fromStringUnchecked('weather.get'),
+    };
     const invoked = await client.invokeContract(context);
 
     if (invoked.tag === 'success' && invoked.returnValue) {
-        const rawReturnValue = Buffer.from(invoked.returnValue, 'hex');
+        const rawReturnValue = invoked.returnValue;
         const returnValue = deserializeReceiveReturnValue(
-            rawReturnValue,
+            v1.ReturnValue.toBuffer(rawReturnValue),
             schema,
-            'weather',
-            'get'
+            v1.ContractName.fromStringUnchecked('weather'),
+            v1.EntrypointName.fromStringUnchecked('get')
         );
         expect(returnValue).toEqual({ Sunny: [] });
     } else {
@@ -795,7 +779,7 @@ test.each([clientV2, clientWeb])('getEmbeddedSchema', async (client) => {
 });
 
 // For tests that take a long time to run, is skipped by default
-describe.skip('Long run-time test suite', () => {
+describe('Long run-time test suite', () => {
     const longTestTime = 45000;
 
     // Sometimes fails as there is no guarantee that a new block comes fast enough.
@@ -835,15 +819,21 @@ test.each([clientV2, clientWeb])('getFinalizedBlocksFrom', async (client) => {
     const expectedValues = [
         {
             height: 123n,
-            hash: 'd2f69ff78b898c4eb0863bcbc179764b3ed20ed142e93eb3ed0cfc730c77f4ca',
+            hash: v1.BlockHash.fromHexString(
+                'd2f69ff78b898c4eb0863bcbc179764b3ed20ed142e93eb3ed0cfc730c77f4ca'
+            ),
         },
         {
             height: 124n,
-            hash: 'fc86847a2482d5eb36028fe4a4702d1cd52d6d6f953d5effe4855acc974dfc64',
+            hash: v1.BlockHash.fromHexString(
+                'fc86847a2482d5eb36028fe4a4702d1cd52d6d6f953d5effe4855acc974dfc64'
+            ),
         },
         {
             height: 125n,
-            hash: 'bc5e6aadad1bd5d107a8a02e7df5532f6c758ec456f709cfba1f402c408e7256',
+            hash: v1.BlockHash.fromHexString(
+                'bc5e6aadad1bd5d107a8a02e7df5532f6c758ec456f709cfba1f402c408e7256'
+            ),
         },
     ];
 
@@ -852,7 +842,7 @@ test.each([clientV2, clientWeb])('getFinalizedBlocksFrom', async (client) => {
     expect(bis.length).toBe(3);
     bis.forEach((bi, i) => {
         expect(bi.height).toBe(expectedValues[i].height);
-        expect(bi.hash).toBe(expectedValues[i].hash);
+        expect(bi.hash).toEqual(expectedValues[i].hash);
     });
 });
 
@@ -873,7 +863,10 @@ describe('findEarliestFinalized', () => {
 
                     if (accounts.length > genesisAccounts.length) {
                         return accounts.filter(
-                            (a) => !genesisAccounts.includes(a)
+                            (a) =>
+                                !genesisAccounts.some(
+                                    v1.AccountAddress.equals.bind(undefined, a)
+                                )
                         )[0];
                     }
                 },
@@ -881,23 +874,36 @@ describe('findEarliestFinalized', () => {
                 10000n
             );
 
-            expect(firstAccount).toBe(
-                '3sPayiQEQHrJUpwYUAnYCLWUTkk3JvEW5x6Vn6mD4raBgPAuSp'
-            );
+            if (firstAccount === undefined) {
+                throw new Error('Expected firstAccount to be defined');
+            }
+            expect(
+                v1.AccountAddress.equals(
+                    firstAccount,
+                    v1.AccountAddress.fromBase58(
+                        '3sPayiQEQHrJUpwYUAnYCLWUTkk3JvEW5x6Vn6mD4raBgPAuSp'
+                    )
+                )
+            ).toBeTruthy();
         }
     );
 
     test.each([clientV2, clientWeb])(
         'Works on single block range',
         async (client) => {
-            const firstAccount = await client.findEarliestFinalized(
+            const blockHash = await client.findEarliestFinalized(
                 async (bi) => bi.hash,
                 10000n,
                 10000n
             );
+            if (blockHash === undefined) {
+                throw new Error('Expected blockHash to be defined');
+            }
 
-            expect(firstAccount).toBe(
-                'e4f7f5512e55183f56efe31c1a9da6e5c7f93f24d5b746180e3b5076e54811c1'
+            expect(blockHash).toEqual(
+                BlockHash.fromHexString(
+                    'e4f7f5512e55183f56efe31c1a9da6e5c7f93f24d5b746180e3b5076e54811c1'
+                )
             );
         }
     );
@@ -905,7 +911,7 @@ describe('findEarliestFinalized', () => {
 
 test.each([clientV2, clientWeb])('findInstanceCreation', async (client) => {
     const blockFirstContract = await client.findInstanceCreation(
-        { index: 0n, subindex: 0n },
+        v1.ContractAddress.create(0),
         0n,
         10000n
     );

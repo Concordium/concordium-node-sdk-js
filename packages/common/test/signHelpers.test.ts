@@ -10,9 +10,12 @@ import {
     SimpleAccountKeys,
 } from '../src/index.js';
 
-const TEST_ACCOUNT_SINGLE =
-    '3eP94feEdmhYiPC1333F9VoV31KGMswonuHk5tqmZrzf761zK5';
-const TEST_ACCOUNT_MULTI = '4hTGW1Uz6u2hUgEtwWjJUdZQncVpHGWZPgGdRpgL1VNn5NzyHd';
+const TEST_ACCOUNT_SINGLE = AccountAddress.fromBase58(
+    '3eP94feEdmhYiPC1333F9VoV31KGMswonuHk5tqmZrzf761zK5'
+);
+const TEST_ACCOUNT_MULTI = AccountAddress.fromBase58(
+    '4hTGW1Uz6u2hUgEtwWjJUdZQncVpHGWZPgGdRpgL1VNn5NzyHd'
+);
 
 const TEST_KEY_SINGLE =
     'e1cf504954663e49f4fe884c7c35415b09632cccd82d3d2a62ab2825e67d785d';
@@ -76,14 +79,14 @@ const testEachMessageType = test.each(['test', Buffer.from('test', 'utf8')]);
 testEachMessageType('[%o] test signMessage', async (message) => {
     const sign = () => signMessage(account, message, signer);
 
-    let account = new AccountAddress(TEST_ACCOUNT_SINGLE);
+    let account = TEST_ACCOUNT_SINGLE;
     let signer = buildBasicAccountSigner(TEST_KEY_SINGLE);
     let signature = await sign();
     expect(signature[0][0]).toBe(
         '445197d79ca90d8cc8440328dac9f307932ade0c03cc7aa575b59b746e26e5f1bca13ade5ff7a56e918ba5a32450fdf52b034cd2580929b21213263e81f7f809'
     );
 
-    account = new AccountAddress(TEST_ACCOUNT_MULTI);
+    account = TEST_ACCOUNT_MULTI;
     signer = buildAccountSigner(TEST_KEYS_MULTI);
     signature = await sign();
 
@@ -143,8 +146,9 @@ test('verifyMessageSignature returns false on the incorrect address', async () =
             },
         },
         {
-            accountAddress:
-                '3dbRxtzhb8MotFBgH5DcdFJy7t4we4N8Ep6Mxdha8XvLhq7YmZ',
+            accountAddress: AccountAddress.fromBase58(
+                '3dbRxtzhb8MotFBgH5DcdFJy7t4we4N8Ep6Mxdha8XvLhq7YmZ'
+            ),
             accountThreshold: 1,
             accountCredentials: TEST_CREDENTIALS_SINGLE,
         } as unknown as AccountInfo

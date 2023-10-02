@@ -32,7 +32,7 @@ import { RejectReason } from './rejectReason.js';
 import { isDefined } from '../util.js';
 import { isEqualContractAddress } from '../contractHelpers.js';
 import type * as ContractAddress from './ContractAddress.js';
-import type * as AccountAddress from './AccountAddress.js';
+import * as AccountAddress from './AccountAddress.js';
 import type * as BlockHash from './BlockHash.js';
 import type * as TransactionHash from './TransactionHash.js';
 import type * as Energy from './Energy.js';
@@ -504,7 +504,12 @@ export function affectedAccounts(
                     if (
                         event.tag === TransactionEventTag.Transferred &&
                         event.to.type === 'AddressAccount' &&
-                        !addresses.includes(event.to.address)
+                        !addresses.some(
+                            AccountAddress.equals.bind(
+                                undefined,
+                                event.to.address
+                            )
+                        )
                     ) {
                         return [...addresses, event.to.address];
                     }
@@ -516,7 +521,10 @@ export function affectedAccounts(
         default: {
             const receiver = getReceiverAccount(summary);
 
-            if (summary.sender === receiver || receiver === undefined) {
+            if (
+                receiver === undefined ||
+                AccountAddress.equals(summary.sender, receiver)
+            ) {
                 return [summary.sender];
             }
 

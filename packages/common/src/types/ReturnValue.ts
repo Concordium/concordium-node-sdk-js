@@ -37,6 +37,15 @@ export function fromBuffer(buffer: ArrayBuffer): ReturnValue {
 }
 
 /**
+ * Create a return type from invoking a smart contract entrypoint from a hex string.
+ * @param {HexString} hex The hex string representing the return value.
+ * @returns {ReturnValue}
+ */
+export function fromHexString(hex: HexString): ReturnValue {
+    return new ReturnValue(new Uint8Array(Buffer.from(hex, 'hex')));
+}
+
+/**
  * Convert a return value into a hex string.
  * @param {ReturnValue} returnValue The return value to encode in a hex string.
  * @returns {HexString} The return value encoded in hex.

@@ -76,7 +76,7 @@ export function isCredentialRegistrationId(
         typeof input.credId === 'string' &&
         input.credId.length === 96 &&
         isHex(input.credId) &&
-        (parseInt(input.credId.substring(0, 2), 16) & 0b10000000) === 0
+        (parseInt(input.credId.substring(0, 2), 16) & 0b10000000) !== 0
     );
 }
 

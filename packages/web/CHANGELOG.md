@@ -22,6 +22,21 @@
   - For TypeScript projects the minimum required version of typescript is:
     - NodeJS: 4.7, `"moduleResolution": "node16" // or "nodenext"`
     - Bundled applications (webpack, esbuild, rollup, etc...): 5.0, `"moduleResolution": "bundler"`
+
+The API now uses dedicated types instead of language primitives:
+- Use `AccountAddress` instead of a string with base58 encoding. Use `AccountAddress.fromBase58('<base58>')` to construct it.
+- Use `BlockHash` instead of a string with hex encoding. Use `BlockHash.fromHexString('<hex>')` to construct it.
+- Use `TranactionHash` instead of a string with hex encoding. Use `TransactionHash.fromHexString('<hex>')` to construct it.
+- Use `Energy` instead of a bigint. Use `Energy.create(<integer>)` to construct it.
+- Use `ReceiveName` instead of a string. Use `ReceiveName.fromString('<contract>.<function>')` to construct it.
+- Use `InitName` instead of a string. Use `Init.fromString('init_<contract>')` to construct it.
+- Use `ContractName` instead of a string. Use `ContractName.fromString('<contract>')` to construct it.
+- Use `EntrypointName` instead of a string. Use `EntrypointName.fromString('<function>')` to construct it.
+- Use `Parameter` instead of a string with hex encoding. Use `Parameter.fromHexString('<hex>')`.
+- Use `SequenceNumber` (formerly called nonce) instead of a bigint. Use `SequenceNumber.create(<integer>)` to construct it.
+- Use `Timestamp` instead of a bigint. Can be constructed using `Timestamp.fromMillis(<integer>)`.
+- Use `Duration` instead of a bigint. Can be constructed using `Duration.fromMillis(<integer>)`.
+
 Several types have been replaced with a module containing the type itself together with functions for constructing and converting the type:
 - `AccountAddress` is now a module with functions related to account addresses:
   - To refer to `AccountAddress` as a type use `AccountAddress.Type`.
@@ -34,6 +49,8 @@ Several types have been replaced with a module containing the type itself togeth
   - To refer to `CredentialRegistrationId` as a type use `CredentialRegistrationId.Type`.
   - Constructing `new CredentialRegistrationId("<hex-string>")` is now `CredentialRegistrationId.fromHexString("<hex-string>")`.
 - Removed `JsonRpcClient` and types and functionality associated solely with this class.
+
+- Renamed `AccountSequenceNumber` module to `SequenceNumber`.
 
 ### Added
 

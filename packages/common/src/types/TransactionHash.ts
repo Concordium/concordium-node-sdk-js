@@ -1,6 +1,11 @@
 import type { HexString } from '../types.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
 
+/**
+ * The number of bytes used to represent a transaction hash.
+ */
+const transactionHashByteLength = 32;
+
 /** Hash of a transaction. */
 class TransactionHash {
     /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
@@ -21,7 +26,7 @@ export type Type = TransactionHash;
  * @returns {TransactionHash}
  */
 export function fromBuffer(buffer: ArrayBuffer): TransactionHash {
-    if (buffer.byteLength !== 32) {
+    if (buffer.byteLength !== transactionHashByteLength) {
         throw new Error(
             `Invalid transaction hash provided: Expected a buffer containing 32 bytes, instead got '${Buffer.from(
                 buffer
@@ -81,4 +86,19 @@ export function toProto(
     return {
         value: transactionHash.buffer,
     };
+}
+
+/**
+ * Check if two transaction hashes are the same.
+ * @param {TransactionHash} left
+ * @param {TransactionHash} right
+ * @returns {boolean} True if they are equal.
+ */
+export function equals(left: TransactionHash, right: TransactionHash): boolean {
+    for (let i = 0; i < transactionHashByteLength; i++) {
+        if (left.buffer.at(i) !== right.buffer.at(i)) {
+            return false;
+        }
+    }
+    return true;
 }

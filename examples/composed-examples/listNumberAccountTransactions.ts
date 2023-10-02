@@ -89,7 +89,7 @@ const client = createConcordiumClient(
         // For each transaction in the block:
         trxLoop: for await (const trx of trxStream) {
             if (isTransferLikeSummary(trx)) {
-                const trxAcc = AccountAddress.fromBase58(trx.sender);
+                const trxAcc = trx.sender;
 
                 // Loop over account dictionary entries to check if account
                 // is already in dictionary:
@@ -102,7 +102,7 @@ const client = createConcordiumClient(
                 }
 
                 // If account is not in dictionary, then add it:
-                dict[trx.sender] = 1;
+                dict[AccountAddress.toBase58(trx.sender)] = 1;
             }
         }
     }

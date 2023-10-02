@@ -20,13 +20,23 @@ import {
     getSummaryContractUpdateLogs,
     getTransactionKindString,
     AccountTransactionType,
+    Energy,
+    TransactionHash,
+    AccountAddress,
+    ContractAddress,
+    InitName,
+    Parameter,
+    ReceiveName,
 } from '../../src/index.js';
+import { expectToEqual } from '../testHelpers.js';
 
 const chainUpdate: UpdateSummary = {
     type: TransactionSummaryType.UpdateTransaction,
     index: 0n,
-    energyCost: 0n,
-    hash: '4b4adfbe9a10a83601a1171bff0d9f916d259f744d1283726314482beeab60ee',
+    energyCost: Energy.create(0),
+    hash: TransactionHash.fromHexString(
+        '4b4adfbe9a10a83601a1171bff0d9f916d259f744d1283726314482beeab60ee'
+    ),
     effectiveTime: 1655118000n,
     payload: {
         updateType: UpdateType.Protocol,
@@ -44,17 +54,21 @@ const chainUpdate: UpdateSummary = {
 
 const contractInit: InitContractSummary & BaseAccountTransactionSummary = {
     index: 0n,
-    energyCost: 1032n,
-    hash: '00205bab563b31dbd0d6cff9504a325953ac70a428ac7169f66620c40b20c431',
+    energyCost: Energy.create(1032),
+    hash: TransactionHash.fromHexString(
+        '00205bab563b31dbd0d6cff9504a325953ac70a428ac7169f66620c40b20c431'
+    ),
     type: TransactionSummaryType.AccountTransaction,
     cost: 2765192n,
-    sender: '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd',
+    sender: AccountAddress.fromBase58(
+        '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
+    ),
     transactionType: TransactionKindString.InitContract,
     contractInitialized: {
         tag: TransactionEventTag.ContractInitialized,
-        address: { index: 4416n, subindex: 0n },
+        address: ContractAddress.create(4416),
         amount: 0n,
-        initName: 'init_cis2-receive-test',
+        initName: InitName.fromStringUnchecked('init_cis2-receive-test'),
         events: [],
         contractVersion: 1,
         ref: '627d5b8358ecf0eaa0442855d57bd84258aa1e06006cbb59ca03d31ddd5cb8b7',
@@ -63,32 +77,41 @@ const contractInit: InitContractSummary & BaseAccountTransactionSummary = {
 
 const contractUpdate: UpdateContractSummary & BaseAccountTransactionSummary = {
     index: 0n,
-    energyCost: 3183n,
-    hash: '9f23369ed3f19cb5627f685d7193e58432e9b50e0841469b07b6d02aa7770901',
+    energyCost: Energy.create(3183),
+    hash: TransactionHash.fromHexString(
+        '9f23369ed3f19cb5627f685d7193e58432e9b50e0841469b07b6d02aa7770901'
+    ),
     type: TransactionSummaryType.AccountTransaction,
     cost: 8681698n,
-    sender: '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd',
+    sender: AccountAddress.fromBase58(
+        '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
+    ),
     transactionType: TransactionKindString.Update,
     events: [
         {
             tag: TransactionEventTag.Updated,
             contractVersion: 1,
-            address: { index: 3496n, subindex: 0n },
+            address: ContractAddress.create(3496),
             instigator: {
                 type: 'AddressAccount',
-                address: '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd',
+                address: AccountAddress.fromBase58(
+                    '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
+                ),
             },
             amount: 0n,
-            message:
-                '0100006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb490000',
-            receiveName: 'cis2-bridgeable.transfer',
+            message: Parameter.fromHexString(
+                '0100006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb490000'
+            ),
+            receiveName: ReceiveName.fromStringUnchecked(
+                'cis2-bridgeable.transfer'
+            ),
             events: [
                 'ff006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb49',
             ],
         },
         {
             tag: TransactionEventTag.Interrupted,
-            address: { index: 3496n, subindex: 0n },
+            address: ContractAddress.create(3496),
             events: [
                 'ff006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb49',
             ],
@@ -96,15 +119,20 @@ const contractUpdate: UpdateContractSummary & BaseAccountTransactionSummary = {
         {
             tag: TransactionEventTag.Updated,
             contractVersion: 1,
-            address: { index: 4416n, subindex: 0n },
+            address: ContractAddress.create(4416),
             instigator: {
                 type: 'AddressAccount',
-                address: '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd',
+                address: AccountAddress.fromBase58(
+                    '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
+                ),
             },
             amount: 0n,
-            message:
-                '0100006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb490000',
-            receiveName: 'cis2-bridgeable.transfer',
+            message: Parameter.fromHexString(
+                '0100006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb490000'
+            ),
+            receiveName: ReceiveName.fromStringUnchecked(
+                'cis2-bridgeable.transfer'
+            ),
             events: [
                 'ff006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb49',
             ],
@@ -114,7 +142,9 @@ const contractUpdate: UpdateContractSummary & BaseAccountTransactionSummary = {
             amount: 0n,
             to: {
                 type: 'AddressAccount',
-                address: '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd',
+                address: AccountAddress.fromBase58(
+                    '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
+                ),
             },
         },
         {
@@ -122,7 +152,9 @@ const contractUpdate: UpdateContractSummary & BaseAccountTransactionSummary = {
             amount: 0n,
             to: {
                 type: 'AddressAccount',
-                address: '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
+                address: AccountAddress.fromBase58(
+                    '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'
+                ),
             },
         },
     ],
@@ -130,16 +162,20 @@ const contractUpdate: UpdateContractSummary & BaseAccountTransactionSummary = {
 
 const rejected: FailedTransactionSummary & BaseAccountTransactionSummary = {
     index: 0n,
-    energyCost: 4600n,
-    hash: '9e3eb5a2d36cb125292c553be304d943148c861f284b5d58afd215d1cfbbd8bf',
+    energyCost: Energy.create(4600),
+    hash: TransactionHash.fromHexString(
+        '9e3eb5a2d36cb125292c553be304d943148c861f284b5d58afd215d1cfbbd8bf'
+    ),
     type: TransactionSummaryType.AccountTransaction,
     cost: 12403437n,
-    sender: '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd',
+    sender: AccountAddress.fromBase58(
+        '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
+    ),
     transactionType: TransactionKindString.Failed,
     failedTransactionType: TransactionKindString.Update,
     rejectReason: {
         tag: RejectReasonTag.RejectedReceive,
-        contractAddress: { index: 3496n, subindex: 0n },
+        contractAddress: ContractAddress.create(3496),
         receiveName: 'cis2-bridgeable.transfer',
         rejectReason: -5,
         parameter:
@@ -149,48 +185,66 @@ const rejected: FailedTransactionSummary & BaseAccountTransactionSummary = {
 
 const transfer: BaseAccountTransactionSummary & TransferSummary = {
     index: 0n,
-    energyCost: 601n,
-    hash: 'a396ae28d1158650d52168ad108e7c5f566831fe5d0695ceab91044ba5eb6b5b',
+    energyCost: Energy.create(601),
+    hash: TransactionHash.fromHexString(
+        'a396ae28d1158650d52168ad108e7c5f566831fe5d0695ceab91044ba5eb6b5b'
+    ),
     type: TransactionSummaryType.AccountTransaction,
     cost: 1651916n,
-    sender: '3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV',
+    sender: AccountAddress.fromBase58(
+        '3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'
+    ),
     transactionType: TransactionKindString.Transfer,
     transfer: {
         tag: TransactionEventTag.Transferred,
         amount: 2000000000n,
-        to: '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe',
+        to: AccountAddress.fromBase58(
+            '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
+        ),
     },
 };
 
 const transferToSelf: BaseAccountTransactionSummary & TransferSummary = {
     index: 0n,
-    energyCost: 601n,
-    hash: 'a396ae28d1158650d52168ad108e7c5f566831fe5d0695ceab91044ba5eb6b5b',
+    energyCost: Energy.create(601),
+    hash: TransactionHash.fromHexString(
+        'a396ae28d1158650d52168ad108e7c5f566831fe5d0695ceab91044ba5eb6b5b'
+    ),
     type: TransactionSummaryType.AccountTransaction,
     cost: 1651916n,
-    sender: '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe',
+    sender: AccountAddress.fromBase58(
+        '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
+    ),
     transactionType: TransactionKindString.Transfer,
     transfer: {
         tag: TransactionEventTag.Transferred,
         amount: 2000000000n,
-        to: '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe',
+        to: AccountAddress.fromBase58(
+            '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
+        ),
     },
 };
 
 const configureDelegation: BaseAccountTransactionSummary &
     ConfigureDelegationSummary = {
     index: 0n,
-    energyCost: 601n,
-    hash: 'a396ae28d1158650d52168ad108e7c5f566831fe5d0695ceab91044ba5eb6b5b',
+    energyCost: Energy.create(601),
+    hash: TransactionHash.fromHexString(
+        'a396ae28d1158650d52168ad108e7c5f566831fe5d0695ceab91044ba5eb6b5b'
+    ),
     type: TransactionSummaryType.AccountTransaction,
     cost: 1651916n,
-    sender: '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe',
+    sender: AccountAddress.fromBase58(
+        '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
+    ),
     transactionType: TransactionKindString.ConfigureDelegation,
     events: [
         {
             tag: TransactionEventTag.DelegationAdded,
             delegatorId: 2499,
-            account: '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe',
+            account: AccountAddress.fromBase58(
+                '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
+            ),
         },
         {
             tag: TransactionEventTag.DelegationSetDelegationTarget,
@@ -199,19 +253,25 @@ const configureDelegation: BaseAccountTransactionSummary &
                 delegateType: DelegationTargetType.Baker,
                 bakerId: 15,
             },
-            account: '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe',
+            account: AccountAddress.fromBase58(
+                '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
+            ),
         },
         {
             tag: TransactionEventTag.DelegationSetRestakeEarnings,
             delegatorId: 2499,
             restakeEarnings: true,
-            account: '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe',
+            account: AccountAddress.fromBase58(
+                '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
+            ),
         },
         {
             tag: TransactionEventTag.DelegationStakeIncreased,
             delegatorId: 2499,
             newStake: 240000000n,
-            account: '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe',
+            account: AccountAddress.fromBase58(
+                '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
+            ),
         },
     ],
 };
@@ -269,14 +329,14 @@ describe('affectedContracts', () => {
 
     test('Returns list of one contract address corresponding to contract init transaction events', () => {
         const contracts = affectedContracts(contractInit);
-        expect(contracts).toEqual([{ index: 4416n, subindex: 0n }]);
+        expect(contracts).toEqual([ContractAddress.create(4416)]);
     });
 
     test('Returns list of unique contract addresses corresponding to contract update transaction events', () => {
         const contracts = affectedContracts(contractUpdate);
         expect(contracts).toEqual([
-            { index: 3496n, subindex: 0n },
-            { index: 4416n, subindex: 0n },
+            ContractAddress.create(3496),
+            ContractAddress.create(4416),
         ]);
     });
 });
@@ -289,31 +349,45 @@ describe('affectedAccounts', () => {
 
     test('Returns list of unique account addresses corresponding to transaction', () => {
         let accounts = affectedAccounts(contractUpdate);
-        expect(accounts).toEqual([
-            '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd',
-            '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
-        ]);
+        expectToEqual(
+            accounts,
+            [
+                '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd',
+                '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB',
+            ].map(AccountAddress.fromBase58)
+        );
 
         accounts = affectedAccounts(rejected);
-        expect(accounts).toEqual([
-            '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd',
+        expectToEqual(accounts, [
+            AccountAddress.fromBase58(
+                '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
+            ),
         ]);
 
         accounts = affectedAccounts(transfer);
-        expect(accounts).toEqual([
-            '3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV',
-            '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe',
-        ]);
+        expectToEqual(
+            accounts,
+            [
+                '3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV',
+                '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe',
+            ].map(AccountAddress.fromBase58)
+        );
 
         accounts = affectedAccounts(transferToSelf);
-        expect(accounts).toEqual([
-            '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe',
-        ]);
+        expectToEqual(
+            accounts,
+            ['4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'].map(
+                AccountAddress.fromBase58
+            )
+        );
 
         accounts = affectedAccounts(configureDelegation);
-        expect(accounts).toEqual([
-            '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe',
-        ]);
+        expectToEqual(
+            accounts,
+            ['4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'].map(
+                AccountAddress.fromBase58
+            )
+        );
     });
 });
 
@@ -330,19 +404,19 @@ describe('getSummaryContractUpdateLogs', () => {
         const logs = getSummaryContractUpdateLogs(contractUpdate);
         expect(logs).toEqual([
             {
-                address: { index: 3496n, subindex: 0n },
+                address: ContractAddress.create(3496),
                 events: [
                     'ff006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb49',
                 ],
             },
             {
-                address: { index: 3496n, subindex: 0n },
+                address: ContractAddress.create(3496),
                 events: [
                     'ff006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb49',
                 ],
             },
             {
-                address: { index: 4416n, subindex: 0n },
+                address: ContractAddress.create(4416),
                 events: [
                     'ff006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb49',
                 ],

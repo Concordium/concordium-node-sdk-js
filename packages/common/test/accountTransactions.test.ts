@@ -7,6 +7,8 @@ import {
     CcdAmount,
     ConfigureBakerPayload,
     getAccountTransactionSignDigest,
+    AccountTransactionHeader,
+    SequenceNumber,
 } from '../src/index.js';
 
 test('configureBaker is serialized correctly', async () => {
@@ -18,9 +20,9 @@ test('configureBaker is serialized correctly', async () => {
 
     const expiry = new TransactionExpiry(new Date(1675872215), true);
 
-    const header = {
+    const header: AccountTransactionHeader = {
         expiry,
-        nonce: 1n,
+        nonce: SequenceNumber.create(1),
         sender: AccountAddress.fromBase58(senderAccountAddress),
     };
 

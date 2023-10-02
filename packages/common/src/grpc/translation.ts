@@ -288,7 +288,9 @@ function translateChainParametersCommon(
         euroPerEnergy: unwrap(params.euroPerEnergy?.value),
         microGTUPerEuro: unwrap(params.microCcdPerEuro?.value),
         accountCreationLimit: unwrap(params.accountCreationLimit?.value),
-        foundationAccount: unwrapToBase58(params.foundationAccount),
+        foundationAccount: AccountAddress.fromProto(
+            unwrap(params.foundationAccount)
+        ),
         level1Keys: trHigherLevelKeysUpdate(unwrap(params.level1Keys)),
         rootKeys: trHigherLevelKeysUpdate(unwrap(params.rootKeys)),
     };
@@ -1932,7 +1934,7 @@ function trAccountTransactionSummary(
                     unwrap(contractInit.address)
                 ),
                 amount: unwrap(contractInit.amount?.value),
-                initName: unwrap(contractInit.initName?.value),
+                initName: InitName.fromProto(unwrap(contractInit.initName)),
                 events: unwrap(contractInit.events.map(unwrapValToHex)),
                 contractVersion: unwrap(contractInit.contractVersion),
                 ref: unwrapValToHex(contractInit.originRef),
@@ -2426,7 +2428,7 @@ export function delegatorInfo(
     delegatorInfo: v2.DelegatorInfo
 ): v1.DelegatorInfo {
     return {
-        account: unwrapToBase58(delegatorInfo.account),
+        account: AccountAddress.fromProto(unwrap(delegatorInfo.account)),
         stake: unwrap(delegatorInfo.stake?.value),
         ...(delegatorInfo.pendingChange && {
             pendingChange: trPendingChange(delegatorInfo.pendingChange),
@@ -2436,7 +2438,7 @@ export function delegatorInfo(
 
 export function branch(branchV2: v2.Branch): v1.Branch {
     return {
-        blockHash: unwrapValToHex(branchV2.blockHash),
+        blockHash: BlockHash.fromProto(unwrap(branchV2.blockHash)),
         children: branchV2.children.map(branch),
     };
 }
@@ -2446,7 +2448,7 @@ function trBakerElectionInfo(
 ): v1.BakerElectionInfo {
     return {
         baker: unwrap(bakerElectionInfo.baker?.value),
-        account: unwrapToBase58(bakerElectionInfo.account),
+        account: AccountAddress.fromProto(unwrap(bakerElectionInfo.account)),
         lotteryPower: bakerElectionInfo.lotteryPower,
     };
 }

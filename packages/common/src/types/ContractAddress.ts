@@ -96,3 +96,13 @@ export function toProto(
         subindex: contractAddress.subindex,
     };
 }
+
+/**
+ * Check if two contract addresses are the same.
+ * @param {ContractAddress} left
+ * @param {ContractAddress} right
+ * @returns {boolean} True if they are equal.
+ */
+export function equals(left: ContractAddress, right: ContractAddress): boolean {
+    return left.index === right.index && left.subindex === right.subindex;
+}

@@ -1,4 +1,6 @@
+import { ContractAddress } from '../src/index.js';
 import { ConcordiumHdWallet } from '../src/wasm/HdWallet.js';
+import { Buffer } from 'buffer/index.js';
 export const TEST_SEED_1 =
     'efa5e27326f8fa0902e647b52449bf335b7b605adc387015ec903f41d95080eb71361cbc7fb78721dcd4f3926a337340aa1406df83332c44c1cdcfe100603860';
 import * as ed from '@noble/ed25519';
@@ -190,7 +192,10 @@ test('Testnet CredId matches credDeployment test', () => {
 test('Mainnet verifiable credential signing key', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Mainnet');
     expect(
-        wallet.getVerifiableCredentialSigningKey({ index: 1n, subindex: 2n }, 1)
+        wallet.getVerifiableCredentialSigningKey(
+            ContractAddress.create(1n, 2n),
+            1
+        )
     ).toEqual(
         Buffer.from(
             '670d904509ce09372deb784e702d4951d4e24437ad3879188d71ae6db51f3301',
@@ -203,7 +208,7 @@ test('Mainnet verifiable credential public key', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Mainnet');
     expect(
         wallet.getVerifiableCredentialPublicKey(
-            { index: 3n, subindex: 1232n },
+            ContractAddress.create(3, 1232),
             341
         )
     ).toEqual(
@@ -217,10 +222,7 @@ test('Mainnet verifiable credential public key', () => {
 test('Testnet verifiable credential signing key', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
     expect(
-        wallet.getVerifiableCredentialSigningKey(
-            { index: 13n, subindex: 0n },
-            1
-        )
+        wallet.getVerifiableCredentialSigningKey(ContractAddress.create(13), 1)
     ).toEqual(
         Buffer.from(
             'c75a161b97a1e204d9f31202308958e541e14f0b14903bd220df883bd06702bb',
@@ -232,10 +234,7 @@ test('Testnet verifiable credential signing key', () => {
 test('Testnet verifiable credential public key', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
     expect(
-        wallet.getVerifiableCredentialPublicKey(
-            { index: 17n, subindex: 0n },
-            341
-        )
+        wallet.getVerifiableCredentialPublicKey(ContractAddress.create(17), 341)
     ).toEqual(
         Buffer.from(
             'c52a30475bac88da9e65471cf9cf59f99dcce22ce31de580b3066597746b394a',

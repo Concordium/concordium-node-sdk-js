@@ -87,7 +87,7 @@ export function fromSchemaType(
     value: unknown
 ): Parameter {
     const schemaBytes = serializeSchemaType(schemaType);
-    return fromBuffer(serializeTypeValue(value, schemaBytes));
+    return serializeTypeValue(value, schemaBytes);
 }
 
 /**
@@ -101,7 +101,7 @@ export function fromBase64SchemaType(
     value: unknown
 ): Parameter {
     const schemaBytes = Buffer.from(schemaBase64, 'base64');
-    return fromBuffer(serializeTypeValue(value, schemaBytes));
+    return serializeTypeValue(value, schemaBytes);
 }
 
 /**

@@ -20,7 +20,7 @@ export class ConcordiumGRPCNodeClient extends ConcordiumGRPCClient {
         address: string,
         port: number,
         credentials: ChannelCredentials,
-        options?: GrpcOptions
+        options?: Partial<GrpcOptions>
     ) {
         const transport = new GrpcTransport({
             host: `${address}:${port}`,

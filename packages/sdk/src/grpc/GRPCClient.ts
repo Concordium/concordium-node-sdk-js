@@ -1601,7 +1601,11 @@ export function getAccountIdentifierInput(
  * const client = new ConcordiumGRPCWebClient('127.0.0.1', 20000);
  */
 export class ConcordiumGRPCWebClient extends ConcordiumGRPCClient {
-    constructor(address: string, port: number, options?: GrpcWebOptions) {
+    constructor(
+        address: string,
+        port: number,
+        options?: Partial<GrpcWebOptions>
+    ) {
         const transport = new GrpcWebFetchTransport({
             baseUrl: `${address}:${port}`,
             ...options,

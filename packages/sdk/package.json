@@ -73,6 +73,7 @@
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
+        "test-ci": "yarn test ./test/ci",
         "build": "yarn clean; mkdir -p src/grpc-api; yarn generate && yarn build-dev",
         "build-dev": "tsc -p tsconfig.build.json && yarn webpack",
         "webpack": "node --loader ts-node/esm ../../node_modules/.bin/webpack --config webpack.config.ts",

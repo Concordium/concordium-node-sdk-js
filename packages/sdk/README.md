@@ -22,7 +22,7 @@ The SDK provides a gRPC client, which can interact with the [Concordium
 Node](https://github.com/Concordium/concordium-node) using gRPC-web.
 
 For an overview of the endpoints, [click
-here](https://developer.concordium.software/concordium-node-sdk-js/classes/index.ConcordiumGRPCClient.html).
+here](https://developer.concordium.software/concordium-node-sdk-js/classes/grpc.ConcordiumGRPCClient.html).
 
 To create a client, the `ConcordiumGRPCWebClient` class can be used. It
 requires the address and port of the concordium node.
@@ -50,7 +50,7 @@ The SDK provides a gRPC client, which can interact with the [Concordium
 Node](https://github.com/Concordium/concordium-node) using gRPC.
 
 For an overview of the endpoints, [click
-here](https://developer.concordium.software/concordium-node-sdk-js/classes/index.ConcordiumGRPCClient.html).
+here](https://developer.concordium.software/concordium-node-sdk-js/classes/grpc.ConcordiumGRPCClient.html).
 
 To create a client, the `ConcordiumGRPCNodeClient` class can be used. It
 requires the address and port of the concordium node.

@@ -1,7 +1,6 @@
 import {
     AccountAddress,
     AccountCreationSummary,
-    AccountInfo,
     AccountInfoBaker,
     AccountInfoDelegator,
     AccountInfoSimple,

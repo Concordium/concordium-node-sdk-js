@@ -84,7 +84,7 @@ Several types have been replaced with a module containing the type itself togeth
   - `ElectionInfo`
 - Added type discriminator to different forms of `AccountInfo`.
 
-## 9.4.0
+## 6.4.0
 
 ### Added
 
@@ -109,7 +109,7 @@ Several types have been replaced with a module containing the type itself togeth
 - Added missing fields to `getBlockChainParameters` response. (rootKeys, level1Keys, level2Keys)
 - Use of bigint exponentiation causing issues in web.
 
-## 9.3.0
+## 6.3.0
 
 ### Added
 
@@ -120,13 +120,13 @@ Several types have been replaced with a module containing the type itself togeth
 - Stopped using `replaceDateWithTimeStampAttribute` and `reviveDateFromTimeStampAttribute` for serializing and parsing verifiable presentation.
 - AttributeType no longer contains `Date`, but now instead has `TimestampAttribute`. The statement builders have their types extended to keep allowing for both `Date` and `TimestampAttribute`.
 
-## 9.2.1
+## 6.2.1
 
 ### Fixed
 
 - Missing buffer import causing issues in web.
 
-## 9.2.0
+## 6.2.0
 
 ### Breaking changes
 
@@ -143,14 +143,14 @@ Several types have been replaced with a module containing the type itself togeth
 - Aligned credential schema types with the tested types in the browser wallet.
 - `addMinimumAge` now creates the precise age statement instead of one day off.
 
-## 9.1.1
+## 6.1.1
 
 ### Fixes
 
 - `verifyWeb3IdCredentialSignature` now supports dates/timestamp attributes.
 - `canProveAtomicStatement` now supports timestamp attributes, handles undefined attribute value correctly and handles strings correctly for range statements.
 
-## 9.1.0
+## 6.1.0
 
 ### Added
 
@@ -174,7 +174,7 @@ All function parameters now also accepts strings, these strings can use comma as
 - The max smart contract parameter length was changed to 65535 bytes in protocol version 5 and onwards.
   Functions which checks the parameter length will now reflect that.
 
-## 9.0.0
+## 6.0.0
 
 ### Breaking changes
 
@@ -189,7 +189,7 @@ All function parameters now also accepts strings, these strings can use comma as
 - `getTransactionKindString` function.
 - `displayTypeSchemaTemplate` function.
 
-## 8.0.0
+## 5.0.0
 
 ### Breaking changes
 
@@ -229,13 +229,13 @@ All function parameters now also accepts strings, these strings can use comma as
   - `serializeUpdateContractParameters`
   - `serializeTypeValue`
 
-## 7.0.1 2023-05-25
+## 4.0.1 2023-05-25
 
 ### Fixed
 
 - Cost calculation for `deployModule` transaction.
 
-## 7.0.0 2023-05-15
+## 4.0.0 2023-05-15
 
 ### Breaking changes
 
@@ -272,7 +272,7 @@ All function parameters now also accepts strings, these strings can use comma as
 
 - Bumped @concordium/rust-bindings to 0.12.0. (Adds key derivation for verifiable credentials)
 
-## 6.5.0 2023-5-03
+## 3.5.0 2023-5-03
 
 ### Added
 
@@ -290,20 +290,20 @@ All function parameters now also accepts strings, these strings can use comma as
 
 - Fixed bug where `AccountCreationSummary` type did not have fields: `index`, `energyCost`, `hash`
 
-## 6.4.2 2023-04-21
+## 3.4.2 2023-04-21
 
 ### Changed
 
 - `generateBakerKeys` now also returns the private baker keys.
 
-## 6.4.1 2023-03-31
+## 3.4.1 2023-03-31
 
 ### Changed
 
 - Replace use of `setImmediate` with `setTimeout` since the former is not
     supported in browsers.
 
-## 6.4.0 2023-03-22
+## 3.4.0 2023-03-22
 
 ### Added
 
@@ -318,7 +318,7 @@ All function parameters now also accepts strings, these strings can use comma as
 
 - `serializeTypeValue` now reports an error when called with invalid data, such as a receive function with missing schema, or a schema that cannot be parsed.
 
-## 6.3.0 2023-02-27
+## 3.3.0 2023-02-27
 
 ### Added
 
@@ -351,7 +351,7 @@ All function parameters now also accepts strings, these strings can use comma as
 - The JSON-RPC client has been deprecated in favor of the new gRPC v2 client.
 - Various types and helper functions used by the JSON-RPC client (and the v1 gRPC client) have also been deprecated.
 
-## 6.2.0 2023-01-04
+## 3.2.0 2023-01-04
 
 ### Added
 
@@ -359,7 +359,7 @@ All function parameters now also accepts strings, these strings can use comma as
 - `getInitContractParameterSchema` Given a buffer containing the schema for a module, extract the schema for a given contract's init function's parameters.
 - `getReceiveContractParameterSchema` Given a buffer containing the schema for a module, extract the schema for a given contract's receive methods' parameters.
 
-## 6.1.0 2022-11-30
+## 3.1.0 2022-11-30
 
 ### Added
 
@@ -368,7 +368,7 @@ All function parameters now also accepts strings, these strings can use comma as
 - `getIdProof` function to prove a statement holds for the given identity/account.
 - Enums for sex and idDocType values.
 
-## 6.0.0 2022-11-15
+## 3.0.0 2022-11-15
 
 ### Breaking changes
 
@@ -382,13 +382,13 @@ All function parameters now also accepts strings, these strings can use comma as
 - The ability to deserialize error values of receive and init functions using `deserializeReceiveError()` and `deserializeInitError()` respectfully.
 - Refactored the `upserializeUpdateContractParameters()` and `serializeInitContractParameters()` to call into rust functions.
 
-## 5.2.0 2022-11-8
+## 2.2.0 2022-11-8
 
 ### Added
 
 - The ability to deserialize the return values of receive functions using `deserializeReceiveReturnValue()`.
 
-## 5.1.0 2022-9-29
+## 2.1.0 2022-9-29
 
 ### Added
 
@@ -398,7 +398,7 @@ All function parameters now also accepts strings, these strings can use comma as
 
 - getAccountInfo no longer relies on instanceof to determine the type of input.
 
-## 5.0.0 2022-9-29
+## 2.0.0 2022-9-29
 
 ### Added
 
@@ -408,7 +408,7 @@ All function parameters now also accepts strings, these strings can use comma as
 
 - Updated the signature of helper functions for accounts to sign messages. (and changed the prepend)
 
-## 4.0.0 2022-8-26
+## 1.0.0 2022-8-26
 
 ### Breaking changes
 
@@ -419,7 +419,7 @@ All function parameters now also accepts strings, these strings can use comma as
 
 - Added missing `accountAddress` field to `AccountInfo` types.
 
-## 3.0.0 2022-8-26
+## 0.5.0 2022-8-26
 
 ### Added
 
@@ -429,10 +429,11 @@ All function parameters now also accepts strings, these strings can use comma as
 
 - SchemaVersion, Module, and schema types are now 0-indexed instead of 1-indexed. This means that the schemas used for V0 contracts are now version 0, and so is the associated types. And the first schema version for V1 contracts are now version 1.
 
-## 2.4.0 2022-8-15
+## 0.4.0 2022-8-15
 
 ### Added
 
+- `deserializeTransaction` function to deserialize transaction created by `serializeAccountTransactionForSubmission` and `serializeCredentialDeploymentTransactionForSubmission`. (Currently SimpleTransfer, SimpleTransferWithMemo and RegisterData are the only supported account transactions kinds)
 - `createIdentityRequest`, to create identity requests.
 - `createCredentialV1`, to create credentials using a seedPhrase.
 - `createIdentityRecoveryRequest`, to create identity recovery requests.
@@ -441,54 +442,34 @@ All function parameters now also accepts strings, these strings can use comma as
 - Added `ConfigureBaker` to `AccountTransactionType` enum.
 - Added `ConcordiumHdWallet` with functions to get keys and randomness from a seed phrase.
 
-## 2.3.2 2022-7-26
-
 ### Fixed
 
 - `deserializeTransaction` no longer throws an error on expired transactions.
-
-## 2.3.1 2022-7-26
-
-### Fixed
-
 - `deserializeTransaction` is now exported from index.
 
-## 2.3.0 2022-7-25
-
-### Added
-
-- `deserializeTransaction` function to deserialize transaction created by `serializeAccountTransactionForSubmission` and `serializeCredentialDeploymentTransactionForSubmission`. (Currently SimpleTransfer, SimpleTransferWithMemo and RegisterData are the only supported account transactions kinds)
-
-## 2.2.0 2022-7-21
-
-### Added
-
-- Add support for getAccountInfo, InvokeContract, getCryptographicParameters and getModuleSource with JSON-RPC
-
-## 2.1.1 2022-7-8
-
-### Fixed
-
-- Fixed contract schema serialization for ByteList
-
-## 2.1.0 2022-7-5
+## 0.3.0 2022-7-21
 
 ### Added
 
 - Support deserializing new schema types: ULeb128, ILeb128, ByteArray and ByteList.
 - Support deserializing schemas with versioning information.
+- Add support for getAccountInfo, InvokeContract, getCryptographicParameters and getModuleSource with JSON-RPC
+
+### Fixed
+
+- Fixed contract schema serialization for ByteList
 
 ### Changes
 
 - The function for deserializing a module schema `deserialModuleFromBuffer` now have the schema version as an optional argument. The function will try to extract the version from the buffer. When a version is provided it falls back to this, otherwise it throws an error.
 
-## 2.0.1 2022-6-27
+## 0.2.1 2022-6-27
 
 ### Fixed
 
 - @noble/ed25519 and cross-fetch moved from devDependencies to dependencies.
 
-## 2.0.0 2022-6-24
+## 0.2.0 2022-6-24
 
 ### Added
 
@@ -501,7 +482,7 @@ All function parameters now also accepts strings, these strings can use comma as
 - `serializeInitContractParameters` and `serializeUpdateContractParameters` each have an additional parameter, which denotes the version of the schema provided. For existing users that are using V0 contracts, that parameter should be `SchemaVersion.V1`.
 - Deserialization of schemas have been changed: types and functions have been renamed and `deserialModuleFromBuffer` have an additional parameter.
 
-## 1.0.1 2022-6-2
+## 0.1.1 2022-6-2
 
 ### Fixed
 
@@ -509,6 +490,6 @@ All function parameters now also accepts strings, these strings can use comma as
     (And update the format of the arguments for the server)
 - Fixed issue by bumping rust bindings version
 
-## 1.0.0 2022-5-25
+## 0.1.0 2022-5-25
 
 - Initial release

@@ -26,9 +26,9 @@
             "default": "./lib/esm/index.js"
         },
         "./nodejs": {
-            "types": "./lib/esm/nodejs/index.d.ts",
-            "bun": "./src/nodejs/index.ts",
-            "node": "./lib/esm/nodejs/index.js",
+            "types": "./lib/esm/pub/nodejs.d.ts",
+            "bun": "./src/pub/nodejs.ts",
+            "node": "./lib/esm/pub/nodejs.js",
             "browser": null
         },
         "./*": {

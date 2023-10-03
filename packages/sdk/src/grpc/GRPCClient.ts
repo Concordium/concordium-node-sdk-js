@@ -57,8 +57,8 @@ export type FindInstanceCreationReponse = {
 
 /**
  * A concordium-node specific gRPC client wrapper. Only use this if you intend to supply a custom
- * transport layer. Otherwise more user-friendly options {@link ConcordiumGRPCWebClient} and
- * {@link ConcordiumGRPCNodeClient} exist for web/nodejs use respectively.
+ * transport layer. Otherwise more user-friendly options {@linkcode ConcordiumGRPCWebClient} and
+ * `ConcordiumGRPCNodeClient` exist for web/nodejs use respectively.
  */
 export class ConcordiumGRPCClient {
     client: QueriesClient;

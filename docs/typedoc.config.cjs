@@ -5,10 +5,7 @@ module.exports = {
     name: 'Concordium JS-SDKs',
     out: path.resolve(__dirname, '../typedoc'),
     entryPointStrategy: 'expand',
-    entryPoints: [
-        path.resolve(__dirname, '../packages/sdk/src/index.ts'),
-        path.resolve(__dirname, '../packages/sdk/src/nodejs/index.ts'),
-    ],
+    entryPoints: [path.resolve(__dirname, '../packages/sdk/src/pub')],
     tsconfig: path.resolve(__dirname, '../tsconfig.json'),
     readme: path.resolve(__dirname, './pages/documentation.md'),
     plugin: [

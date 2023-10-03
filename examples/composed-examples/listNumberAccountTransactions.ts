@@ -3,10 +3,11 @@ import {
     isTransferLikeSummary,
     unwrap,
 } from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
+import meow from 'meow';
+
 import { credentials } from '@grpc/grpc-js';
 import { parseEndpoint } from '../shared/util.js';
-
-import meow from 'meow';
 
 const cli = meow(
     `

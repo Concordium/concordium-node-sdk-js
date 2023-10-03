@@ -107,7 +107,7 @@ async function addModuleClient(
     });
     moduleSourceFile.addImportDeclaration({
         namespaceImport: 'SDK',
-        moduleSpecifier: '@concordium/common-sdk',
+        moduleSpecifier: '@concordium/web-sdk',
     });
     const moduleRefId = 'moduleReference';
 
@@ -359,7 +359,7 @@ This function ensures the smart contract module is deployed on chain.
 
         contractSourceFile.addImportDeclaration({
             namespaceImport: 'SDK',
-            moduleSpecifier: '@concordium/common-sdk',
+            moduleSpecifier: '@concordium/web-sdk',
         });
 
         contractSourceFile.addVariableStatement({

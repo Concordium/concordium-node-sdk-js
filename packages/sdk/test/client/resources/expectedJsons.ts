@@ -2,6 +2,10 @@ import {
     AccountAddress,
     AccountCreationSummary,
     AccountInfo,
+    AccountInfoBaker,
+    AccountInfoDelegator,
+    AccountInfoSimple,
+    AccountInfoType,
     AmountAddedByDecryptionEvent,
     AmountTooLarge,
     BakerEvent,
@@ -1462,7 +1466,8 @@ export const invalidTransferToPublicProofRejectReason = {
 export const poolWouldBecomeOverDelegatedRejectReason = {
     tag: 'PoolWouldBecomeOverDelegated',
 };
-export const bakerAccountInfo: AccountInfo = {
+export const bakerAccountInfo: AccountInfoBaker = {
+    type: AccountInfoType.Baker,
     accountNonce: SequenceNumber.create(1),
     accountAmount: 7449646704751788n,
     accountReleaseSchedule: { total: 0n, schedule: [] },
@@ -1561,7 +1566,8 @@ export const bakerAccountInfo: AccountInfo = {
     },
 };
 
-export const delegatorAccountInfo: AccountInfo = {
+export const delegatorAccountInfo: AccountInfoDelegator = {
+    type: AccountInfoType.Delegator,
     accountNonce: SequenceNumber.create(11),
     accountAmount: 620948501142n,
     accountReleaseSchedule: { total: 0n, schedule: [] },
@@ -1668,7 +1674,8 @@ export const delegatorAccountInfo: AccountInfo = {
     },
 };
 
-export const credIdAccountInfo: AccountInfo = {
+export const credIdAccountInfo: AccountInfoSimple = {
+    type: AccountInfoType.Simple,
     accountNonce: SequenceNumber.create(19),
     accountAmount: 35495453082577742n,
     accountReleaseSchedule: { total: 0n, schedule: [] },
@@ -1746,7 +1753,8 @@ export const credIdAccountInfo: AccountInfo = {
     ),
 };
 
-export const regularAccountInfo: AccountInfo = {
+export const regularAccountInfo: AccountInfoSimple = {
+    type: AccountInfoType.Simple,
     accountNonce: SequenceNumber.create(19),
     accountAmount: 35495453082577742n,
     accountReleaseSchedule: { total: 0n, schedule: [] },

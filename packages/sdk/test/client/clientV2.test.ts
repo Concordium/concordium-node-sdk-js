@@ -138,13 +138,13 @@ test.each([clientV2, clientWeb])(
 );
 
 test.each([clientV2, clientWeb])(
+    // TODO: fails..
     'accountInfo implementations is the same',
     async (client) => {
         const regular = await client.getAccountInfo(testAccount, testBlockHash);
         const credId = await client.getAccountInfo(testCredId, testBlockHash);
         const baker = await client.getAccountInfo(testAccBaker, testBlockHash);
         const deleg = await client.getAccountInfo(testAccDeleg, testBlockHash);
-
         expect(regular).toEqual(expected.regularAccountInfo);
         expect(credId).toEqual(expected.credIdAccountInfo);
         expect(baker).toEqual(expected.bakerAccountInfo);

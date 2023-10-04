@@ -8,4 +8,3 @@ export * from './pub/cis2.js';
 export * from './pub/cis4.js';
 export * from './pub/schema.js';
 export * from './pub/web3-id.js';
-export * from './pub/wallet.js';

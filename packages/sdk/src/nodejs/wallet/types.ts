@@ -1,4 +1,4 @@
-import { IdentityProvider, Versioned } from '../types.js';
+import { IdentityProvider, Versioned } from '../../types.js';
 
 interface CredentialHolderInformation {
     idCredSecret: string;

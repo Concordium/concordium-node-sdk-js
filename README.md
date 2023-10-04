@@ -36,7 +36,7 @@ Contains the different packages for the JS-SDKs.
 ### SDK package
 
 The [SDK](./packages/sdk) contains the actual SDK, which can used in
-both a web and nodeJS environment.
+both a web and NodeJS environment.
 
 ### Rust-bindings package
 

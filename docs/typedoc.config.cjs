@@ -2,7 +2,7 @@
 const path = require('node:path');
 
 module.exports = {
-    name: 'Concordium JS-SDKs',
+    name: 'Concordium JS-SDK',
     out: path.resolve(__dirname, '../typedoc'),
     entryPointStrategy: 'expand',
     entryPoints: [path.resolve(__dirname, '../packages/sdk/src/pub')],
@@ -21,7 +21,7 @@ module.exports = {
         source: path.resolve(__dirname, './pages'),
         pages: [
             {
-                name: 'Concordium JS-SDKs',
+                name: 'Concordium JS-SDK',
                 children: [
                     {
                         name: 'CIS2-Contracts',

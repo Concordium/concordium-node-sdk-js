@@ -1,0 +1,86 @@
+{
+    "name": "@concordium/web-sdk",
+    "version": "6.4.0",
+    "license": "Apache-2.0",
+    "engines": {
+        "node": ">=14.16.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Concordium/concordium-node-sdk-js",
+        "directory": "packages/common"
+    },
+    "sideEffects": false,
+    "type": "module",
+    "main": "./lib/umd/concordium.min.js",
+    "cdn": "./lib/umd/concordium.min.js",
+    "types": "./lib/esm/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./lib/esm/index.d.ts",
+            "bun": "./src/index.ts",
+            "default": "./lib/esm/index.js"
+        },
+        "./nodejs": {
+            "types": "./lib/esm/pub/nodejs.d.ts",
+            "bun": "./src/pub/nodejs.ts",
+            "node": "./lib/esm/pub/nodejs.js",
+            "browser": null
+        },
+        "./*": {
+            "types": "./lib/esm/pub/*.d.ts",
+            "bun": "./src/pub/*.ts",
+            "default": "./lib/esm/pub/*.js"
+        }
+    },
+    "files": [
+        "/src/**/*",
+        "/lib/esm/**/*",
+        "/lib/umd/**/*"
+    ],
+    "devDependencies": {
+        "@protobuf-ts/plugin": "^2.9.1",
+        "@types/big.js": "^6.2.0",
+        "@types/bs58check": "^2.1.0",
+        "@types/jest": "^26.0.23",
+        "@types/json-bigint": "^1.0.1",
+        "@types/uuid": "^8.3.4",
+        "glob": "^10.3.10",
+        "grpc-tools": "^1.11.2",
+        "grpc_tools_node_protoc_ts": "5.3.0",
+        "jest": "^29.6.2",
+        "rimraf": "^5.0.1",
+        "ts-jest": "^29.1.1",
+        "typescript": "^5.2.2",
+        "webpack": "^5.88.2",
+        "webpack-cli": "^5.1.4"
+    },
+    "scripts": {
+        "generate-ts-v2": "yarn run grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/@protobuf-ts/plugin/bin/protoc-gen-ts --ts_opt 'optimize_code_size' --ts_out=src/grpc-api -I ../../deps/concordium-base/concordium-grpc-api ../../deps/concordium-base/concordium-grpc-api/v2/concordium/*.proto",
+        "generate": "([ -e \"../../deps/concordium-base/concordium-grpc-api\" ] && yarn generate-ts-v2 && node scripts/proto-node-esm-compat.js src/grpc-api) || echo 'Please checkout submodules before building'",
+        "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
+        "lint-fix": "yarn --silent lint --fix; exit 0",
+        "test": "jest",
+        "test-ci": "yarn test ./test/ci",
+        "build": "yarn clean; mkdir -p src/grpc-api; yarn generate && yarn build-dev",
+        "build-dev": "tsc -p tsconfig.build.json && yarn webpack",
+        "webpack": "node --loader ts-node/esm ../../node_modules/.bin/webpack --config webpack.config.ts",
+        "clean": "rimraf -- lib src/grpc-api"
+    },
+    "dependencies": {
+        "@concordium/rust-bindings": "1.2.0",
+        "@grpc/grpc-js": "^1.9.4",
+        "@noble/ed25519": "^1.7.1",
+        "@protobuf-ts/grpc-transport": "^2.9.1",
+        "@protobuf-ts/grpcweb-transport": "^2.9.1",
+        "@protobuf-ts/runtime-rpc": "^2.8.2",
+        "@scure/bip39": "^1.1.0",
+        "big.js": "^6.2.0",
+        "bs58check": "^3.0.1",
+        "buffer": "^6.0.3",
+        "hash.js": "^1.1.7",
+        "iso-3166-1": "^2.1.1",
+        "json-bigint": "^1.0.0",
+        "uuid": "^8.3.2"
+    }
+}

@@ -1,4 +1,4 @@
-import { AccountAddress } from '@concordium/node-sdk';
+import { AccountAddress } from '@concordium/web-sdk';
 
 /**
  * The following shows how to generate an account alias, and how to test

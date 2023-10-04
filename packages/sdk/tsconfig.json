@@ -1,0 +1,16 @@
+{
+    "extends": "../../tsconfig-base.json",
+    "compilerOptions": {
+        "lib": [
+            "ES2020",
+            "DOM" // To get WebAssembly type.
+        ]
+    },
+    "include": [
+        "src/**/*",
+        "scripts/**/*",
+        "test/**/*",
+        "webpack.config.ts",
+        "jest.config.ts"
+    ]
+}

@@ -10,8 +10,8 @@ import {
     Parameter,
     ReceiveName,
     ReturnValue,
-    createConcordiumClient,
-} from '@concordium/node-sdk';
+} from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -32,7 +32,7 @@ const cli = meow(
     --energy,    -n  The maximum amount of energy to allow for execution, defaults to 1000000
     --invoker,   -i  The address of the invoker, defaults to the zero account address
     --endpoint,  -e  Specify endpoint of the form "address:port", defaults to localhost:20000
-    --parameter, -p  The serialized parameters that the contract will be invoked with, as a 
+    --parameter, -p  The serialized parameters that the contract will be invoked with, as a
                      hex string. Will default to an empty hex string meaning no parameters
 `,
     {
@@ -79,7 +79,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()

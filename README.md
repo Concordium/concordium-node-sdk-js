@@ -10,9 +10,7 @@ Wrappers for interacting with the Concordium node.
 - [Concordium SDK for Javascript](#concordium-sdk-for-javascript)
   - [Documentation](#documentation)
   - [Packages](#packages)
-    - [Nodejs package](#nodejs-package)
-    - [Web package](#web-package)
-    - [Common package](#common-package)
+    - [SDK package](#sdk-package)
     - [Rust-bindings package](#rust-bindings-package)
   - [Install/updating dependencies](#installupdating-dependencies)
     - [MacOS arm64](#macos-arm64)
@@ -20,9 +18,7 @@ Wrappers for interacting with the Concordium node.
     - [Building for a release](#building-for-a-release)
     - [Building for development](#building-for-development)
   - [Making a new release](#making-a-new-release)
-    - [common](#common)
-    - [nodejs](#nodejs)
-    - [web](#web)
+    - [SDK](#sdk)
     - [rust-bindings](#rust-bindings)
   - [Test](#test)
 <!--toc:end-->
@@ -37,27 +33,16 @@ for more information
 
 Contains the different packages for the JS-SDKs.
 
-### Nodejs package
+### SDK package
 
-The [Nodejs package](./packages/nodejs) contains the Nodejs SDK, particularly
-the client that wraps the GRPC calls to the node, is located here.
-
-### Web package
-
-The [Web package](./packages/web) contains the Web SDK, which can used in
-a web environment.
-
-### Common package
-
-The [common package](./packages/common) contains the shared library for the
-Nodejs and Web SDK's. The GRPC-client, all serialization and most utility
-functions are located in this package.
+The [SDK](./packages/sdk) contains the actual SDK, which can used in
+both a web and NodeJS environment.
 
 ### Rust-bindings package
 
-The [common package](./packages/common) contains bindings for Rust code,
-which is used by the common package. This package is a utility package that
-should not be used directly, only through the usage of the common package.
+The [rust-bindings](./packages/rust-bindings) contains bindings for Rust code,
+which is used by the SDK through WASM. This package is a utility package that
+should not be used directly, only through the usage of the SDK.
 
 ## Install/updating dependencies
 
@@ -96,9 +81,6 @@ yarn build
 
 This will build all the subprojects.
 
-Note that you must have [wasm-pack](https://rustwasm.github.io/wasm-pack/)
-installed to build the project.
-
 ### Building for development
 
 To build the project quickly during development run
@@ -115,60 +97,26 @@ Note that this skips generating the grpc API and optimizing the wasm modules.
 The following describes the requirements for creating  a new release for
 each of the packages contained in this repository.
 
-### common
+### SDK
 
-- Bump the version in [package.json](./packages/common/package.json).
-- Update the [CHANGELOG](./packages/common/CHANGELOG.md) describing the
+- Bump the version in [package.json](./packages/sdk/package.json).
+- Update the [CHANGELOG](./packages/sdk/CHANGELOG.md) describing the
   changes made.
-- Update the dependency to common in the [web](./packages/web/package.json)
-  and [nodejs](./packages/nodejs/package.json) packages.
-- Update the CHANGELOG in the [web](./packages/web/CHANGELOG.md) and
-  [nodejs](./packages/nodejs/CHANGELOG.md) packages.
-  - Add a change entry: Bumped @concordium/common-sdk to x.y.z.
 - Commit and tag the release.
-  - Tag should be `common/x.y.z`.
+  - Tag should be `sdk/x.y.z`.
 - Run the deploy workflow.
   - Under github actions, run the "deploy" workflow and download the
     `build-release` artifact. Unpack this file and use it for the release.
 - Publish the release to NPM.
-  - From the common package directory (packages/common) run `yarn npm publish`
-
-### nodejs
-
-- Bump the version in [package.json](./packages/nodejs/package.json).
-- Update the [CHANGELOG](./packages/nodejs/CHANGELOG.md) describing the
-  changes made.
-- Commit and tag the release.
-  - Tag should be `nodejs/x.y.z`.
-- Build the release.
-  - Under github actions, run the "deploy" workflow and download the
-    `build-release` artifact. Unpack this file and use it for the release.
-- Publish the release to NPM.
-  - From the nodejs package directory (packages/nodejs) run `yarn npm publish`
-
-### web
-
-- Bump the version in [package.json](./packages/web/package.json).
-- Update the [CHANGELOG](./packages/web/CHANGELOG.md) describing the
-  changes made.
-- Commit and tag the release.
-  - Tag should be `web/x.y.z`.
-- Build the release.
-  - Under github actions, run the "deploy" workflow and download the
-    `build-release` artifact. Unpack this file and use it for the release.
-- Publish the release to NPM.
-  - From the web package directory (packages/web) run `yarn npm publish`
+  - From the sdk package directory (packages/sdk) run `yarn npm publish`
 
 ### rust-bindings
 
 - Bump the version in [package.json](./packages/rust-bindings/package.json).
 - Update the [CHANGELOG](./packages/rust-bindings/CHANGELOG.md) describing
   the changes made.
-- Update the dependency to rust-bindings in the
-  [common](./packages/common/package.json) and
-  [web](./packages/web/package.json) packages.
-- Update the CHANGELOG in the [common](./packages/common/CHANGELOG.md) and
-  [web](./packages/web/CHANGELOG.md) packages.
+- Update the dependency to rust-bindings in the [sdk](./packages/sdk/package.json)
+- Update the CHANGELOG in the [sdk](./packages/sdk/CHANGELOG.md)
   - Add a change entry: Bumped @concordium/rust-bindings to x.y.z.
 - Commit and tag the release.
   - Tag should be `rust-bindings/x.y.z`.

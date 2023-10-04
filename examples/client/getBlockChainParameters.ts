@@ -1,11 +1,6 @@
 import { parseEndpoint } from '../shared/util.js';
-import {
-    BlockHash,
-    ChainParameters,
-    createConcordiumClient,
-    isChainParametersV1,
-    isChainParametersV2,
-} from '@concordium/node-sdk';
+import { BlockHash, ChainParameters } from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -38,7 +33,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -62,9 +57,9 @@ const client = createConcordiumClient(
     console.log('Euro per Energy:', euroPerEnergy);
 
     // Check version of chain parameters
-    if (isChainParametersV2(cp)) {
+    if (cp.version === 2) {
         console.log('Minimum block time', cp.minBlockTime);
-    } else if (isChainParametersV1(cp)) {
+    } else if (cp.version === 1) {
         console.log('Minimum equity capital:', cp.minimumEquityCapital);
     } else {
         console.log(

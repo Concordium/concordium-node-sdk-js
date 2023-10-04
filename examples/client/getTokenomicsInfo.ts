@@ -1,9 +1,6 @@
 import { parseEndpoint } from '../shared/util.js';
-import {
-    isRewardStatusV1,
-    createConcordiumClient,
-    BlockHash,
-} from '@concordium/node-sdk';
+import { BlockHash } from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -44,7 +41,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -65,7 +62,7 @@ const client = createConcordiumClient(
 
     // Protocol version 4 expanded the amount of information in the response, so one should check the type to access that.
     // This information includes information about the payday and total amount of funds staked.
-    if (isRewardStatusV1(tokenomics)) {
+    if (tokenomics.version === 1) {
         console.log('Next payday time:', tokenomics.nextPaydayTime);
         console.log(
             'Total staked amount by bakers and delegators',

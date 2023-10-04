@@ -9,11 +9,11 @@ import {
     buildAccountSigner,
     CIS4Contract,
     ContractAddress,
-    createConcordiumClient,
     Energy,
     HexString,
     parseWallet,
-} from '@concordium/node-sdk';
+} from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
@@ -66,7 +66,7 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()

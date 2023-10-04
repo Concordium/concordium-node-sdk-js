@@ -25,10 +25,6 @@ const config: webpack.Configuration = {
             '.js': ['.ts', '.js'],
         },
         extensions: ['.tsx', '.ts', '.js'],
-        fallback: {
-            stream: 'stream-browserify',
-            crypto: 'crypto-browserify',
-        },
     },
     module: {
         rules: [

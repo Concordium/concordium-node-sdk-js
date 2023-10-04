@@ -15,10 +15,6 @@
     "main": "./lib/umd/concordium.min.js",
     "cdn": "./lib/umd/concordium.min.js",
     "types": "./lib/esm/index.d.ts",
-    "browser": {
-        "crypto": "crypto-browserify",
-        "stream": "stream-browserify"
-    },
     "exports": {
         ".": {
             "types": "./lib/esm/index.d.ts",
@@ -88,14 +84,12 @@
         "@protobuf-ts/runtime-rpc": "^2.8.2",
         "@scure/bip39": "^1.1.0",
         "big.js": "^6.2.0",
-        "bs58check": "^2.1.2",
+        "bs58check": "^3.0.1",
         "buffer": "^6.0.3",
         "cross-fetch": "3.1.5",
-        "crypto-browserify": "^3.12.0",
         "hash.js": "^1.1.7",
         "iso-3166-1": "^2.1.1",
         "json-bigint": "^1.0.0",
-        "stream-browserify": "^3.0.0",
         "uuid": "^8.3.2"
     }
 }

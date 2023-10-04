@@ -1,4 +1,4 @@
-import { ContractAddress, AccountAddress } from '@concordium/node-sdk';
+import { ContractAddress, AccountAddress } from '@concordium/web-sdk';
 
 export const parseAddress = (
     input: string

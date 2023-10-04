@@ -1,10 +1,8 @@
-import {
-    createConcordiumClient,
-    CIS2Contract,
-    ContractAddress,
-} from '@concordium/node-sdk';
+import { CIS2Contract, ContractAddress } from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
+import fetch from 'node-fetch';
 
 const cli = meow(
     `
@@ -47,7 +45,7 @@ const cli = meow(
 );
 
 const [address, port] = cli.flags.endpoint.split(':');
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()

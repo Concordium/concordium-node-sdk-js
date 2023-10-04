@@ -1,9 +1,6 @@
 import { parseEndpoint } from '../shared/util.js';
-import {
-    BakerPoolStatus,
-    BlockHash,
-    createConcordiumClient,
-} from '@concordium/node-sdk';
+import { BakerPoolStatus, BlockHash } from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -14,7 +11,7 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> [options]
 
   Required:
-    --pool-owner, -p  The BakerId of the pool owner 
+    --pool-owner, -p  The BakerId of the pool owner
 
   Options
     --help,     -h  Displays this message
@@ -44,7 +41,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()

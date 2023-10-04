@@ -1,10 +1,6 @@
 import { parseEndpoint } from '../shared/util.js';
-import {
-    BlockHash,
-    createConcordiumClient,
-    ElectionInfo,
-    isElectionInfoV0,
-} from '@concordium/node-sdk';
+import { BlockHash, ElectionInfo } from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -37,7 +33,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -66,7 +62,7 @@ const client = createConcordiumClient(
     console.log('Bakers sorted by lottery power:', sortedBakers);
     console.log('Election nonce:', electionInfo.electionNonce);
 
-    if (isElectionInfoV0(electionInfo)) {
+    if (electionInfo.version === 0) {
         console.log('Election difficulty:', electionInfo.electionDifficulty);
     }
     // #endregion documentation-snippet

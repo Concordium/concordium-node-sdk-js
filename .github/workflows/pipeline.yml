@@ -3,13 +3,14 @@ name: Build, lint and typecheck examples
 on:
     # Triggers the workflow on push or pull request events but only for the main branch
     push:
-        branches: [main, release**]
+        branches: [ main, release** ]
     pull_request:
-        branches: [main, release**]
+        branches: [ main, release** ]
         # Don't run on draft PR's, see: https://github.com/orgs/community/discussions/25722#discussioncomment-3248917
-        types: [opened, synchronize, reopened, ready_for_review]
+        types: [ opened, synchronize, reopened, ready_for_review ]
     # Allows us to run the workflow manually from the Actions tab
     workflow_dispatch:
+
 
 env:
     DUMMY: 1 # For cache busting.
@@ -64,8 +65,7 @@ jobs:
               uses: actions/cache@v3
               with:
                   path: |
-                      ./packages/common/src/grpc-api
-                      ./packages/nodejs/src/grpc-api
+                      ./packages/sdk/src/grpc-api
                   key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}-${{ env.DUMMY }}
                   restore-keys: ${{ runner.os }}-grpc
 
@@ -107,11 +107,11 @@ jobs:
               uses: ./.github/actions/upload-artifact
               with:
                   name: build-debug
+                  # sdk/src is needed here because of sdk/src/grpc-api
                   path: |
                       ./packages/rust-bindings/lib
-                      ./packages/common/lib
-                      ./packages/web/lib
-                      ./packages/nodejs/lib
+                      ./packages/sdk/lib
+                      ./packages/sdk/src
                       ./packages/ccd-js-gen/lib
 
     typecheck-examples:
@@ -141,12 +141,12 @@ jobs:
             - name: Typecheck examples
               run: yarn workspace @concordium/examples typecheck
 
-    common-tests:
+    tests:
         runs-on: ubuntu-22.04
         needs: build
         defaults:
             run:
-                working-directory: packages/common
+                working-directory: packages/sdk
         steps:
             - name: Checkout
               uses: actions/checkout@v3
@@ -166,21 +166,13 @@ jobs:
                       ./docs/node_modules
                   key: ${{ runner.os }}-yarn
 
-            - name: Restore grpc
-              uses: actions/cache/restore@v3
-              with:
-                  path: |
-                      ./packages/common/src/grpc-api
-                      ./packages/nodejs/src/grpc-api
-                  key: ${{ runner.os }}-grpc
-
             - name: Get build-debug
               uses: ./.github/actions/download-artifact
               with:
                   name: build-debug
 
             - name: Run Tests
-              run: yarn test
+              run: yarn test-ci
 
     typedoc:
         runs-on: ubuntu-22.04
@@ -200,14 +192,6 @@ jobs:
                       ./node_modules
                       ./docs/node_modules
                   key: ${{ runner.os }}-yarn
-
-            - name: Restore grpc
-              uses: actions/cache/restore@v3
-              with:
-                  path: |
-                      ./packages/common/src/grpc-api
-                      ./packages/nodejs/src/grpc-api
-                  key: ${{ runner.os }}-grpc
 
             - name: Get build-debug
               uses: ./.github/actions/download-artifact
@@ -236,14 +220,6 @@ jobs:
                       ./node_modules
                       ./docs/node_modules
                   key: ${{ runner.os }}-yarn
-
-            - name: Restore grpc
-              uses: actions/cache/restore@v3
-              with:
-                  path: |
-                      ./packages/common/src/grpc-api
-                      ./packages/nodejs/src/grpc-api
-                  key: ${{ runner.os }}-grpc
 
             - name: Get build-debug
               uses: ./.github/actions/download-artifact

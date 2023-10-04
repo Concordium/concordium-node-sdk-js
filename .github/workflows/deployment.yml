@@ -62,8 +62,7 @@ jobs:
               uses: actions/cache@v3
               with:
                   path: |
-                      ./packages/common/src/grpc-api
-                      ./packages/nodejs/src/grpc-api
+                      ./packages/sdk/src/grpc-api
                   key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}
                   restore-keys: ${{ runner.os }}-grpc
 
@@ -79,9 +78,8 @@ jobs:
               with:
                   name: build-release
                   path: |
-                      packages/common/lib
-                      packages/nodejs/lib
-                      packages/web/lib
+                      packages/sdk/lib
+                      packages/sdk/src
                       packages/rust-bindings/lib/**/index*
                       packages/*/package.json
                       packages/*/README.md
@@ -101,14 +99,6 @@ jobs:
               uses: ./.github/actions/download-artifact
               with:
                   name: build-release
-
-            - name: Restore grpc
-              uses: actions/cache/restore@v3
-              with:
-                  path: |
-                      ./packages/common/src/grpc-api
-                      ./packages/nodejs/src/grpc-api
-                  key: ${{ runner.os }}-grpc
 
             - name: Restore cached dependencies
               uses: actions/cache/restore@v3

@@ -6,7 +6,7 @@ import {
     signMessage,
     buildAccountSigner,
     parseWallet,
-} from '@concordium/node-sdk';
+} from '@concordium/web-sdk';
 
 const cli = meow(
     `

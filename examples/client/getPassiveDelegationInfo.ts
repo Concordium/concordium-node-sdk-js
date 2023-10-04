@@ -1,5 +1,9 @@
 import { parseEndpoint } from '../shared/util.js';
-import { BlockHash, PassiveDelegationStatus } from '@concordium/web-sdk';
+import {
+    BlockHash,
+    CcdAmount,
+    PassiveDelegationStatus,
+} from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
@@ -56,11 +60,11 @@ const client = new ConcordiumGRPCNodeClient(
 
     console.log(
         'CCD provided by the delegators to the pool:',
-        passiveDelegationInfo.delegatedCapital / 1000000n
+        CcdAmount.toCcd(passiveDelegationInfo.delegatedCapital)
     );
     console.log(
         'Total capital in CCD of ALL pools:',
-        passiveDelegationInfo.allPoolTotalCapital / 1000000n
+        CcdAmount.toCcd(passiveDelegationInfo.allPoolTotalCapital)
     );
     console.log('Pool commision rates:', passiveDelegationInfo.commissionRates);
     // #endregion documentation-snippet

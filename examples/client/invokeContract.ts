@@ -100,7 +100,7 @@ const client = new ConcordiumGRPCNodeClient(
         ? AccountAddress.fromBase58(cli.flags.invoker)
         : undefined;
     const amount = cli.flags.amount
-        ? new CcdAmount(BigInt(cli.flags.amount))
+        ? CcdAmount.fromMicroCcd(cli.flags.amount)
         : undefined;
     const parameter = cli.flags.parameter
         ? Parameter.fromHexString(cli.flags.parameter)

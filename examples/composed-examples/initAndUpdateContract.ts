@@ -80,7 +80,7 @@ const client = new ConcordiumGRPCNodeClient(
     const sender = AccountAddress.fromBase58(wallet.value.address);
     const signer = buildAccountSigner(wallet);
 
-    const moduleRef = new ModuleReference(
+    const moduleRef = ModuleReference.fromHexString(
         '44434352ddba724930d6b1b09cd58bd1fba6ad9714cf519566d5fe72d80da0d1'
     );
     const maxCost = Energy.create(30000);
@@ -95,7 +95,7 @@ const client = new ConcordiumGRPCNodeClient(
     // #region documentation-snippet-init-contract
 
     const initHeader: AccountTransactionHeader = {
-        expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+        expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
     };
@@ -107,7 +107,7 @@ const client = new ConcordiumGRPCNodeClient(
     );
 
     const initPayload: InitContractPayload = {
-        amount: new CcdAmount(0n),
+        amount: CcdAmount.zero(),
         moduleRef: moduleRef,
         initName: contractName,
         param: initParams,
@@ -146,7 +146,7 @@ const client = new ConcordiumGRPCNodeClient(
     // #region documentation-snippet-update-contract
 
     const updateHeader: AccountTransactionHeader = {
-        expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+        expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
     };
@@ -159,7 +159,7 @@ const client = new ConcordiumGRPCNodeClient(
     );
 
     const updatePayload: UpdateContractPayload = {
-        amount: new CcdAmount(0n),
+        amount: CcdAmount.zero(),
         address: unwrap(contractAddress),
         receiveName,
         message: updateParams,

@@ -61,7 +61,7 @@ const client = new ConcordiumGRPCNodeClient(
 
 (async () => {
     // #region documentation-snippet
-    const ref = new ModuleReference(cli.flags.module);
+    const ref = ModuleReference.fromHexString(cli.flags.module);
     const blockHash =
         cli.flags.block === undefined
             ? undefined

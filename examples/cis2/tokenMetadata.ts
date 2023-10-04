@@ -2,6 +2,7 @@ import { CIS2Contract, ContractAddress } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
+import fetch from 'node-fetch';
 
 const cli = meow(
     `

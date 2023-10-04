@@ -12,8 +12,6 @@ import {
     MobileWalletExport,
 } from '../../src/nodejs/index.js';
 
-// This makes sure the necessary types are added to `globalThis`
-// import 'isomorphic-fetch';
 import { ConcordiumGRPCNodeClient } from '../../src/nodejs/grpc.js';
 
 const TESTNET_NODE = 'node.testnet.concordium.com';

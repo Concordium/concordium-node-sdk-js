@@ -107,6 +107,7 @@ jobs:
               uses: ./.github/actions/upload-artifact
               with:
                   name: build-debug
+                  # sdk/src is needed here because of sdk/src/grpc-api
                   path: |
                       ./packages/rust-bindings/lib
                       ./packages/sdk/lib

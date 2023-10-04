@@ -233,7 +233,7 @@ and does not give any guarantees for whether the contract adheres to the
 standard it claims to implement. The function returns `undefined` if the
 contract does not support CIS-0.
 
-This requires a [`ConcordiumGRPCClient`](../classes/Common_GRPC_Client.ConcordiumGRPCClient.html).
+This requires a [`ConcordiumGRPCClient`](../classes/grpc.ConcordiumGRPCClient.html).
 
 ```ts
     const client = ...; // `ConcordiumGRPCClient`

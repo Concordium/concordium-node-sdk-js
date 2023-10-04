@@ -16,9 +16,8 @@ module.exports = {
         tsconfigRootDir: __dirname,
         project: [
             './packages/**/tsconfig.json',
-            './packages/**/tsconfig.eslint.json',
-            './tsconfig.eslint.json',
-            './examples/tsconfig.eslint.json',
+            './docs/**/tsconfig.json',
+            '**/tsconfig.eslint.json',
         ],
     },
     plugins: ['@typescript-eslint', 'import'],
@@ -33,12 +32,7 @@ module.exports = {
         'import/no-unresolved': [
             2,
             {
-                ignore: [
-                    '@concordium/rust-bindings',
-                    '@concordium/common-sdk',
-                    '@concordium/node-sdk',
-                    'grpc-api',
-                ],
+                ignore: ['@concordium/rust-bindings', 'grpc-api'],
             },
         ],
         'import/no-extraneous-dependencies': [

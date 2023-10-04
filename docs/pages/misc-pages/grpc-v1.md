@@ -1,5 +1,5 @@
 > :warning: **This explains behaviour of the deprecated v1 concordium client**:
-check out [the documentation the v2 client](../../classes/Common_GRPC_Client.ConcordiumGRPCClient.html)
+check out [the documentation the v2 client](../../classes/grpc.ConcordiumGRPCClient.html)
 
 This describes the JSON-RPC client, which can interact with the [Concordium
 JSON-RPC server](https://github.com/Concordium/concordium-json-rpc)
@@ -48,6 +48,8 @@ interface as the grpc v1 node client:
 <!--toc:end-->
 
 ## GRPCv1-Client
+
+_Only accessible prior to version 10_
 
 The ConcordiumNodeClient defines the interface to be used to send and receive
 data from a concordium-node.

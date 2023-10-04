@@ -10,13 +10,7 @@
     "files": [],
     "references": [
         {
-            "path": "./packages/common"
-        },
-        {
-            "path": "./packages/nodejs"
-        },
-        {
-            "path": "./packages/web"
+            "path": "./packages/sdk"
         }
     ]
 }

@@ -10,7 +10,7 @@ import {
     decryptMobileWalletExport,
     EncryptedData,
     MobileWalletExport,
-} from '../../src/wallet/index.js';
+} from '../../src/nodejs/index.js';
 
 // This makes sure the necessary types are added to `globalThis`
 // import 'isomorphic-fetch';

@@ -1,21 +1,35 @@
 import bs58check from 'bs58check';
 import { Buffer } from 'buffer/index.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
+import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+import { Base58String } from '../types.js';
+
+export const JSON_TYPE = TypedJsonDiscriminator.AccountAddress;
+type AccountAddressJson = Base58String;
 
 /**
  * Representation of an account address, which enforces that it:
  * - Is a valid base58 string with version byte of 1.
  * - The base58 string is a length of 50 (encoding exactly 32 bytes).
  */
-class AccountAddress {
-    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __nominal = true;
+class AccountAddress extends TypeBase<
+    TypedJsonDiscriminator.AccountAddress,
+    AccountAddressJson
+> {
+    protected jsonType: TypedJsonDiscriminator.AccountAddress = JSON_TYPE;
+
     constructor(
         /** The account address represented in base58check. */
         public readonly address: string,
         /** The account address represented in bytes. */
         public readonly decodedAddress: Uint8Array
-    ) {}
+    ) {
+        super();
+    }
+
+    protected get jsonValue(): AccountAddressJson {
+        return this.address;
+    }
 }
 
 /**
@@ -190,3 +204,12 @@ export function toProto(accountAddress: AccountAddress): Proto.AccountAddress {
 export function equals(left: AccountAddress, right: AccountAddress): boolean {
     return left.address === right.address;
 }
+
+/**
+ * Takes a JSON string and converts it to instance of type {@linkcode AccountAddress}.
+ *
+ * @param {JsonString} json - The JSON string to convert.
+ * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
+ * @returns {AccountAddress} An {@linkcode AccountAddress} instance.
+ */
+export const fromJSON = fromTypedJson(JSON_TYPE, fromBase58);

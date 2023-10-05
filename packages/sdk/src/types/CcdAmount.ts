@@ -1,23 +1,30 @@
 import { Big, BigSource } from 'big.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
+import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
 
 const MICRO_CCD_PER_CCD = 1_000_000;
+/**
+ * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ */
+export const JSON_TYPE = TypedJsonDiscriminator.CcdAmount;
+type Json = string;
 
 /**
  * Representation of a CCD amount.
  * The base unit of CCD is micro CCD, which is the representation
  * used on chain.
  */
-class CcdAmount {
-    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __nominal = true;
+class CcdAmount extends TypeBase<Json> {
+    protected jsonType = JSON_TYPE;
+    protected get jsonValue(): Json {
+        return this.microCcdAmount.toString();
+    }
+
     constructor(
         /** Internal representation of Ccd amound in micro Ccd. */
         public readonly microCcdAmount: bigint
-    ) {}
-
-    toJSON(): string {
-        return this.microCcdAmount.toString();
+    ) {
+        super();
     }
 }
 
@@ -158,3 +165,12 @@ export function toProto(amount: CcdAmount): Proto.Amount {
         value: amount.microCcdAmount,
     };
 }
+
+/**
+ * Takes a JSON string and converts it to instance of type {@linkcode Type}.
+ *
+ * @param {JsonString} json - The JSON string to convert.
+ * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
+ * @returns {Type} The parsed instance.
+ */
+export const fromJSON = fromTypedJson(JSON_TYPE, fromMicroCcd);

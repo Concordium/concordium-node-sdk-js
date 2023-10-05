@@ -1,15 +1,27 @@
 import * as ContractName from './ContractName.js';
 import { isAsciiAlphaNumericPunctuation } from '../contractHelpers.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
+import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+
+/**
+ * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ */
+export const JSON_TYPE = TypedJsonDiscriminator.InitName;
+type Json = string;
 
 /** The name of an init-function for a smart contract. Note: This is of the form 'init_<contractName>'. */
-class InitName {
-    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __nominal = true;
+class InitName extends TypeBase<Json> {
+    protected jsonType = JSON_TYPE;
+    protected get jsonValue(): Json {
+        return this.value;
+    }
+
     constructor(
         /** The internal string corresponding to the init-function. */
         public readonly value: string
-    ) {}
+    ) {
+        super();
+    }
 }
 
 /** The name of an init-function for a smart contract. Note: This is of the form 'init_<contractName>'. */
@@ -86,3 +98,12 @@ export function toProto(initName: InitName): Proto.InitName {
         value: initName.value,
     };
 }
+
+/**
+ * Takes a JSON string and converts it to instance of type {@linkcode Type}.
+ *
+ * @param {JsonString} json - The JSON string to convert.
+ * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
+ * @returns {Type} The parsed instance.
+ */
+export const fromJSON = fromTypedJson(JSON_TYPE, InitName);

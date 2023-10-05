@@ -1,19 +1,31 @@
 import type { HexString } from '../types.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
+import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+
+/**
+ * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ */
+export const JSON_TYPE = TypedJsonDiscriminator.TransactionHash;
+type Json = HexString;
 
 /**
  * The number of bytes used to represent a transaction hash.
  */
-const transactionHashByteLength = 32;
+const TRANSACTION_HASH_BYTE_LENGTH = 32;
 
 /** Hash of a transaction. */
-class TransactionHash {
-    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __nominal = true;
+class TransactionHash extends TypeBase<Json> {
+    protected jsonType = JSON_TYPE;
+    protected get jsonValue(): Json {
+        return toHexString(this);
+    }
+
     constructor(
         /** Internal buffer with the hash. */
         public readonly buffer: Uint8Array
-    ) {}
+    ) {
+        super();
+    }
 }
 
 /** Hash of a transaction. */
@@ -26,7 +38,7 @@ export type Type = TransactionHash;
  * @returns {TransactionHash}
  */
 export function fromBuffer(buffer: ArrayBuffer): TransactionHash {
-    if (buffer.byteLength !== transactionHashByteLength) {
+    if (buffer.byteLength !== TRANSACTION_HASH_BYTE_LENGTH) {
         throw new Error(
             `Invalid transaction hash provided: Expected a buffer containing 32 bytes, instead got '${Buffer.from(
                 buffer
@@ -95,10 +107,19 @@ export function toProto(
  * @returns {boolean} True if they are equal.
  */
 export function equals(left: TransactionHash, right: TransactionHash): boolean {
-    for (let i = 0; i < transactionHashByteLength; i++) {
+    for (let i = 0; i < TRANSACTION_HASH_BYTE_LENGTH; i++) {
         if (left.buffer.at(i) !== right.buffer.at(i)) {
             return false;
         }
     }
     return true;
 }
+
+/**
+ * Takes a JSON string and converts it to instance of type {@linkcode Type}.
+ *
+ * @param {JsonString} json - The JSON string to convert.
+ * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
+ * @returns {Type} The parsed instance.
+ */
+export const fromJSON = fromTypedJson(JSON_TYPE, fromHexString);

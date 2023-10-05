@@ -1,13 +1,25 @@
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
+import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+
+/**
+ * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ */
+export const JSON_TYPE = TypedJsonDiscriminator.SequenceNumber;
+type Json = string;
 
 /** Transaction sequence number. (Formerly refered as Nonce) */
-class SequenceNumber {
-    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __nominal = true;
+class SequenceNumber extends TypeBase<Json> {
+    protected jsonType = JSON_TYPE;
+    protected get jsonValue(): Json {
+        return this.value.toString();
+    }
+
     constructor(
         /** Internal value representing the sequence number. */
         public readonly value: bigint
-    ) {}
+    ) {
+        super();
+    }
 }
 
 /** A transaction sequence number. (Formerly refered as Nonce) */
@@ -49,3 +61,14 @@ export function toProto(sequenceNumber: SequenceNumber): Proto.SequenceNumber {
         value: sequenceNumber.value,
     };
 }
+
+/**
+ * Takes a JSON string and converts it to instance of type {@linkcode Type}.
+ *
+ * @param {JsonString} json - The JSON string to convert.
+ * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
+ * @returns {Type} The parsed instance.
+ */
+export const fromJSON = fromTypedJson(JSON_TYPE, (v: string) => {
+    create(BigInt(v));
+});

@@ -1,15 +1,27 @@
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
+import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+
+/**
+ * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ */
+export const JSON_TYPE = TypedJsonDiscriminator.Duration;
+type Json = string;
 
 /**
  * Type representing a duration of time.
  */
-class Duration {
-    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __nominal = true;
+class Duration extends TypeBase<Json> {
+    protected jsonType = JSON_TYPE;
+    protected get jsonValue(): Json {
+        return this.value.toString();
+    }
+
     constructor(
         /** The internal value for representing a duration in milliseconds. */
         public readonly value: bigint
-    ) {}
+    ) {
+        super();
+    }
 }
 
 /**
@@ -63,3 +75,14 @@ export function toProto(duration: Duration): Proto.Duration {
         value: duration.value,
     };
 }
+
+/**
+ * Takes a JSON string and converts it to instance of type {@linkcode Type}.
+ *
+ * @param {JsonString} json - The JSON string to convert.
+ * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
+ * @returns {Type} The parsed instance.
+ */
+export const fromJSON = fromTypedJson(JSON_TYPE, (v: string) => {
+    fromMillis(BigInt(v));
+});

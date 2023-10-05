@@ -1,21 +1,32 @@
 import type { HexString } from '../types.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
+import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
 
 /**
  * The number of bytes used to represent a block hash.
  */
-const blockHashByteLength = 32;
+const BLOCK_HASH_BYTE_LENGTH = 32;
+/**
+ * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ */
+export const JSON_TYPE = TypedJsonDiscriminator.BlockHash;
+type Json = HexString;
 
 /**
  * Represents a hash of a block in the chain.
  */
-class BlockHash {
-    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __nominal = true;
+class BlockHash extends TypeBase<Json> {
+    protected jsonType = JSON_TYPE;
+    protected get jsonValue(): Json {
+        return toHexString(this);
+    }
+
     constructor(
         /** The internal buffer of bytes representing the hash. */
         public readonly buffer: Uint8Array
-    ) {}
+    ) {
+        super();
+    }
 }
 
 /**
@@ -30,7 +41,7 @@ export type Type = BlockHash;
  * @returns {BlockHash}
  */
 export function fromBuffer(buffer: ArrayBuffer): BlockHash {
-    if (buffer.byteLength !== blockHashByteLength) {
+    if (buffer.byteLength !== BLOCK_HASH_BYTE_LENGTH) {
         throw new Error(
             `Invalid transaction hash provided: Expected a buffer containing 32 bytes, instead got '${Buffer.from(
                 buffer
@@ -106,10 +117,19 @@ export function toBlockHashInput(blockHash: BlockHash): Proto.BlockHashInput {
  * @returns {boolean} True if they are equal.
  */
 export function equals(left: BlockHash, right: BlockHash): boolean {
-    for (let i = 0; i < blockHashByteLength; i++) {
+    for (let i = 0; i < BLOCK_HASH_BYTE_LENGTH; i++) {
         if (left.buffer.at(i) !== right.buffer.at(i)) {
             return false;
         }
     }
     return true;
 }
+
+/**
+ * Takes a JSON string and converts it to instance of type {@linkcode BlockHash}.
+ *
+ * @param {JsonString} json - The JSON string to convert.
+ * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
+ * @returns {BlockHash} The parsed instance.
+ */
+export const fromJSON = fromTypedJson(JSON_TYPE, fromHexString);

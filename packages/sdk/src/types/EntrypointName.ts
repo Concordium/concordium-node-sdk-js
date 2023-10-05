@@ -1,16 +1,28 @@
 import { isAsciiAlphaNumericPunctuation } from '../contractHelpers.js';
+import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+
+/**
+ * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ */
+export const JSON_TYPE = TypedJsonDiscriminator.EntrypointName;
+type Json = string;
 
 /**
  * Type representing an entrypoint of a smart contract.
  * @template S Use for using string literals for the type.
  */
-class EntrypointName<S extends string> {
-    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __nominal = true;
+class EntrypointName<S extends string = string> extends TypeBase<Json> {
+    protected jsonType = JSON_TYPE;
+    protected get jsonValue(): Json {
+        return this.value;
+    }
+
     constructor(
         /** The internal string value of the receive name. */
         public readonly value: S
-    ) {}
+    ) {
+        super();
+    }
 }
 
 /**
@@ -60,3 +72,12 @@ export function toString<S extends string>(
 ): S {
     return entrypointName.value;
 }
+
+/**
+ * Takes a JSON string and converts it to instance of type {@linkcode Type}.
+ *
+ * @param {JsonString} json - The JSON string to convert.
+ * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
+ * @returns {Type} The parsed instance.
+ */
+export const fromJSON = fromTypedJson(JSON_TYPE, EntrypointName);

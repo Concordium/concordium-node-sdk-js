@@ -1,14 +1,25 @@
 import * as InitName from './InitName.js';
 import { isAsciiAlphaNumericPunctuation } from '../contractHelpers.js';
+import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+
+/**
+ * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ */
+export const JSON_TYPE = TypedJsonDiscriminator.ContractName;
+type Json = string;
 
 /** The name of a smart contract. Note: This does _not_ including the 'init_' prefix. */
-class ContractName {
-    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __nominal = true;
+class ContractName extends TypeBase<Json> {
+    protected jsonType = JSON_TYPE;
+    protected get jsonValue(): Json {
+        return this.value;
+    }
     constructor(
         /** The internal string value of the contract name. */
         public readonly value: string
-    ) {}
+    ) {
+        super();
+    }
 }
 
 /** The name of a smart contract. Note: This does _not_ including the 'init_' prefix. */
@@ -90,3 +101,12 @@ export function toSchemaValue(contractName: ContractName): SchemaValue {
 export function equals(left: ContractName, right: ContractName): boolean {
     return left.value === right.value;
 }
+
+/**
+ * Takes a JSON string and converts it to instance of type {@linkcode Type}.
+ *
+ * @param {JsonString} json - The JSON string to convert.
+ * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
+ * @returns {Type} The parsed instance.
+ */
+export const fromJSON = fromTypedJson(JSON_TYPE, ContractName);

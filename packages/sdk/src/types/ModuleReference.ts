@@ -1,28 +1,45 @@
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
 import { Buffer } from 'buffer/index.js';
 import { packBufferWithWord32Length } from '../serializationHelpers.js';
-import { HexString } from '../types.js';
+import type { HexString } from '../types.js';
+import {
+    TypeBase,
+    TypedJsonDiscriminator,
+    TypedJsonParseError,
+    TypedJsonParseErrorType,
+    fromTypedJson,
+} from './util.js';
+import { Cursor, deserializeUInt32BE } from '../deserializationHelpers.js';
 
 /**
  * The number of bytes used to represent a block hash.
  */
-const moduleReferenceByteLength = 32;
+const MODULE_REF_BYTE_LENGTH = 32;
+/**
+ * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ */
+export const JSON_TYPE = TypedJsonDiscriminator.ModuleReference;
+type Json = HexString;
 
 /**
  * Reference to a smart contract module.
  */
-class ModuleReference {
-    constructor(
-        /** Internal field, the module reference represented as a hex string. */
-        public readonly moduleRef: string,
-        /** Internal field, buffer containing the 32 bytes for the module reference. */
-        public readonly decodedModuleRef: Uint8Array
-    ) {}
-
-    toJSON(): string {
+class ModuleReference extends TypeBase<Json> {
+    protected jsonType = JSON_TYPE;
+    protected get jsonValue(): Json {
+        // TODO: why?
         return packBufferWithWord32Length(this.decodedModuleRef).toString(
             'hex'
         );
+    }
+
+    constructor(
+        /** Internal field, the module reference represented as a hex string. */
+        public readonly moduleRef: HexString,
+        /** Internal field, buffer containing the 32 bytes for the module reference. */
+        public readonly decodedModuleRef: Uint8Array
+    ) {
+        super();
     }
 }
 
@@ -39,7 +56,7 @@ export type Type = ModuleReference;
  */
 export function fromBuffer(buffer: ArrayBuffer): ModuleReference {
     const hex = Buffer.from(buffer).toString('hex');
-    if (buffer.byteLength !== moduleReferenceByteLength) {
+    if (buffer.byteLength !== MODULE_REF_BYTE_LENGTH) {
         throw new Error(
             'The provided moduleRef ' +
                 hex +
@@ -51,12 +68,12 @@ export function fromBuffer(buffer: ArrayBuffer): ModuleReference {
 
 /**
  * Create a ModuleReference from a hex string.
- * @param {HexString} hex Hex encoding of the module reference.
+ * @param {HexString} moduleRef Hex encoding of the module reference.
  * @throws If the provided hex encoding does not correspond to a buffer of exactly 32 bytes.
  * @returns {ModuleReference} A module reference.
  */
-export function fromHexString(moduleRef: HexString) {
-    if (moduleRef.length !== moduleReferenceByteLength * 2) {
+export function fromHexString(moduleRef: HexString): ModuleReference {
+    if (moduleRef.length !== MODULE_REF_BYTE_LENGTH * 2) {
         throw new Error(
             'The provided moduleRef ' +
                 moduleRef +
@@ -98,3 +115,25 @@ export function toProto(moduleReference: ModuleReference): Proto.ModuleRef {
 export function equals(left: ModuleReference, right: ModuleReference): boolean {
     return left.moduleRef === right.moduleRef;
 }
+
+/**
+ * Takes a JSON string and converts it to instance of type {@linkcode Type}.
+ *
+ * @param {JsonString} json - The JSON string to convert.
+ * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
+ * @returns {Type} The parsed instance.
+ */
+export const fromJSON = fromTypedJson(JSON_TYPE, (v: Json) => {
+    const cursor = Cursor.fromHex(v);
+    const len = deserializeUInt32BE(cursor);
+    const data = cursor.remainingBytes;
+
+    if (data.length !== len) {
+        throw new TypedJsonParseError(
+            TypedJsonParseErrorType.Malformed,
+            `Expected byte length of data to be ${len}, had actual length of ${data.length}`
+        );
+    }
+
+    return fromBuffer(data);
+});

@@ -5,15 +5,27 @@ import type {
     HexString,
     SmartContractTypeValues,
 } from '../types.js';
+import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+
+/**
+ * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ */
+export const JSON_TYPE = TypedJsonDiscriminator.ReturnValue;
+type Json = HexString;
 
 /** Return value from invoking a smart contract entrypoint. */
-class ReturnValue {
-    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __nominal = true;
+class ReturnValue extends TypeBase<Json> {
+    protected jsonType = JSON_TYPE;
+    protected get jsonValue(): Json {
+        return toHexString(this);
+    }
+
     constructor(
         /** Internal buffer of bytes representing the return type. */
         public readonly buffer: Uint8Array
-    ) {}
+    ) {
+        super();
+    }
 }
 
 /** Return value from invoking a smart contract entrypoint. */
@@ -90,3 +102,12 @@ export function toBase64SchemaType(
     const schemaBytes = Buffer.from(schemaBase64, 'base64');
     return deserializeTypeValue(returnValue.buffer, schemaBytes);
 }
+
+/**
+ * Takes a JSON string and converts it to instance of type {@linkcode Type}.
+ *
+ * @param {JsonString} json - The JSON string to convert.
+ * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
+ * @returns {Type} The parsed instance.
+ */
+export const fromJSON = fromTypedJson(JSON_TYPE, fromHexString);

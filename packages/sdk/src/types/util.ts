@@ -15,7 +15,6 @@ export enum TypedJsonDiscriminator {
     Energy = 'ccd_energy',
     EntrypointName = 'ccd_entrypoint_name',
     InitName = 'ccd_init_name',
-    ModuleClient = 'ccd_module_client',
     ModuleReference = 'ccd_module_reference',
     Parameter = 'ccd_parameter',
     ReceiveName = 'ccd_receive_name',
@@ -29,11 +28,11 @@ export enum TypedJsonDiscriminator {
 /**
  * Type describing the JSON representation of strong types used in the SDK.
  */
-export interface TypedJson<D extends TypedJsonDiscriminator, V> {
+export interface TypedJson<V> {
     /** The type discriminator */
-    __ccdType: D;
+    ['@type']: TypedJsonDiscriminator;
     /** The type value */
-    __ccdValue: V;
+    value: V;
 }
 
 /**
@@ -42,14 +41,12 @@ export interface TypedJson<D extends TypedJsonDiscriminator, V> {
  * @template D - The JSON discriminator
  * @template V - The JSON value
  */
-export abstract class TypeBase<D extends TypedJsonDiscriminator, V>
-    implements ToTypedJson<D, V>
-{
+export abstract class TypeBase<V> implements ToTypedJson<V> {
+    protected abstract jsonType: TypedJsonDiscriminator;
     protected abstract get jsonValue(): V;
-    protected abstract jsonType: D;
 
-    toJSON(): TypedJson<D, V> {
-        return { __ccdType: this.jsonType, __ccdValue: this.jsonValue };
+    public toJSON(): TypedJson<V> {
+        return { ['@type']: this.jsonType, value: this.jsonValue };
     }
 }
 
@@ -60,13 +57,13 @@ export abstract class TypeBase<D extends TypedJsonDiscriminator, V>
  * @template D - The JSON discriminator
  * @template V - The JSON value
  */
-export interface ToTypedJson<D extends TypedJsonDiscriminator, V> {
+export interface ToTypedJson<V> {
     /**
      * Converts type to {@link TypedJson}
      *
      * @returns {TypedJson} The typed JSON.
      */
-    toJSON(): TypedJson<D, V>;
+    toJSON(): TypedJson<V>;
 }
 
 /**
@@ -77,6 +74,8 @@ export enum TypedJsonParseErrorType {
     Malformed,
     /** JSON passed to parser function had unexpected {@link TypedJsonDiscriminator} type discriminator */
     WrongType,
+    /** Value could not be parsed successfully */
+    InvalidValue,
 }
 
 /**
@@ -93,6 +92,13 @@ export class TypedJsonParseError extends Error {
     ) {
         super(message);
     }
+
+    public static fromParseValueError(e: unknown): TypedJsonParseError {
+        return new TypedJsonParseError(
+            TypedJsonParseErrorType.InvalidValue,
+            (e as Error)?.message ?? `${e}`
+        );
+    }
 }
 
 /**
@@ -102,25 +108,44 @@ export const isJsonParseError = (
     error: unknown
 ): error is TypedJsonParseError => error instanceof TypedJsonParseError;
 
+interface Class<V, T> {
+    new (v: V): T;
+}
+
 /**
  * Creates a function to convert typed JSON strings to their corresponding type instance.
  *
- * @template D - The JSON discriminator
+ * @template V - The JSON value
+ * @param {D} expectedTypeDiscriminator - The discriminator expected in the JSON string parsed
+ * @returns The JSON parser function
+ */
+export function fromTypedJson<V, T>(
+    expectedTypeDiscriminator: TypedJsonDiscriminator,
+    Class: Class<V, T>
+): (json: JsonString) => V;
+/**
+ * Creates a function to convert typed JSON strings to their corresponding type instance.
+ *
  * @template V - The JSON value
  * @template T - The type returned
  *
  * @param {D} expectedTypeDiscriminator - The discriminator expected in the JSON string parsed
  * @param {Function} toType - A function converting values of type `V` to instances of type `T`
  *
+ * @throws {TypedJsonParseError} {@linkcode TypedJsonParseError} if the returned function fails to parse the passed value.
+ *
  * @returns The JSON parser function
  */
-export const fromTypedJson =
-    <D extends TypedJsonDiscriminator, V, T>(
-        expectedTypeDiscriminator: D,
-        toType: (value: V) => T
-    ) =>
-    (json: JsonString): T => {
-        const { __ccdType: type, __ccdValue: value }: TypedJson<D, V> =
+export function fromTypedJson<V, T>(
+    expectedTypeDiscriminator: TypedJsonDiscriminator,
+    toType: (value: V) => T
+): (json: JsonString) => T;
+export function fromTypedJson<V, T>(
+    expectedTypeDiscriminator: TypedJsonDiscriminator,
+    dyn: ((value: V) => T) | Class<V, T>
+) {
+    return (json: JsonString): T | V => {
+        const { ['@type']: type, value: value }: TypedJson<V> =
             JSON.parse(json);
 
         if (!type || !value) {
@@ -137,5 +162,27 @@ export const fromTypedJson =
             );
         }
 
-        return toType(value);
+        /**
+         * Parses the value
+         */
+        const parse = () => {
+            try {
+                return new (dyn as Class<V, T>)(value);
+            } catch (e) {
+                // thrown if `dyn` is not newable
+                if (e instanceof TypeError) {
+                    return (dyn as (value: V) => T)(value);
+                }
+
+                throw e;
+            }
+        };
+
+        try {
+            return parse();
+        } catch (e) {
+            // Value cannot be successfully parsed
+            throw TypedJsonParseError.fromParseValueError(e);
+        }
     };
+}

@@ -4,19 +4,19 @@ import type * as Proto from '../grpc-api/v2/concordium/types.js';
 import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
 import { Base58String } from '../types.js';
 
+/**
+ * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ */
 export const JSON_TYPE = TypedJsonDiscriminator.AccountAddress;
-type AccountAddressJson = Base58String;
+type Json = Base58String;
 
 /**
  * Representation of an account address, which enforces that it:
  * - Is a valid base58 string with version byte of 1.
  * - The base58 string is a length of 50 (encoding exactly 32 bytes).
  */
-class AccountAddress extends TypeBase<
-    TypedJsonDiscriminator.AccountAddress,
-    AccountAddressJson
-> {
-    protected jsonType: TypedJsonDiscriminator.AccountAddress = JSON_TYPE;
+class AccountAddress extends TypeBase<Json> {
+    protected jsonType = JSON_TYPE;
 
     constructor(
         /** The account address represented in base58check. */
@@ -27,7 +27,7 @@ class AccountAddress extends TypeBase<
         super();
     }
 
-    protected get jsonValue(): AccountAddressJson {
+    protected get jsonValue(): Json {
         return this.address;
     }
 }
@@ -210,6 +210,6 @@ export function equals(left: AccountAddress, right: AccountAddress): boolean {
  *
  * @param {JsonString} json - The JSON string to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
- * @returns {AccountAddress} An {@linkcode AccountAddress} instance.
+ * @returns {AccountAddress} The parsed instance.
  */
 export const fromJSON = fromTypedJson(JSON_TYPE, fromBase58);

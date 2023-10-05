@@ -1,19 +1,27 @@
 import { secondsSinceEpoch } from '../util.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
+import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+
+/**
+ * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ */
+export const JSON_TYPE = TypedJsonDiscriminator.TransactionExpiry;
+type Json = number;
 
 /**
  * Representation of a transaction expiry date.
  */
-class TransactionExpiry {
-    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __nominal = true;
+class TransactionExpiry extends TypeBase<Json> {
+    protected jsonType = JSON_TYPE;
+    protected get jsonValue(): Json {
+        return Number(this.expiryEpochSeconds);
+    }
+
     constructor(
         /** Internal representation of expiry. Seconds since unix epoch */
         public readonly expiryEpochSeconds: bigint
-    ) {}
-
-    toJSON(): number {
-        return Number(this.expiryEpochSeconds);
+    ) {
+        super();
     }
 }
 
@@ -85,3 +93,12 @@ export function toProto(expiry: TransactionExpiry): Proto.TransactionTime {
         value: expiry.expiryEpochSeconds,
     };
 }
+
+/**
+ * Takes a JSON string and converts it to instance of type {@linkcode Type}.
+ *
+ * @param {JsonString} json - The JSON string to convert.
+ * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
+ * @returns {Type} The parsed instance.
+ */
+export const fromJSON = fromTypedJson(JSON_TYPE, fromEpochSeconds);

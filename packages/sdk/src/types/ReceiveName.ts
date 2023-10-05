@@ -2,6 +2,13 @@ import { isAsciiAlphaNumericPunctuation } from '../contractHelpers.js';
 import * as ContractName from './ContractName.js';
 import * as EntrypointName from './EntrypointName.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
+import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+
+/**
+ * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ */
+export const JSON_TYPE = TypedJsonDiscriminator.ReceiveName;
+type Json = string;
 
 /**
  * Represents a receive-function in a smart contract module.
@@ -10,13 +17,18 @@ import type * as Proto from '../grpc-api/v2/concordium/types.js';
  * - It is at most 100 characters.
  * - It contains at least one '.' character.
  */
-class ReceiveName {
-    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __nominal = true;
+class ReceiveName extends TypeBase<Json> {
+    protected jsonType = JSON_TYPE;
+    protected get jsonValue(): Json {
+        return this.value;
+    }
+
     constructor(
         /** The internal string value of the receive name. */
         public readonly value: string
-    ) {}
+    ) {
+        super();
+    }
 }
 
 /**
@@ -160,3 +172,12 @@ export function toProto(receiveName: ReceiveName): Proto.ReceiveName {
 export function equals(left: ReceiveName, right: ReceiveName): boolean {
     return left.value === right.value;
 }
+
+/**
+ * Takes a JSON string and converts it to instance of type {@linkcode Type}.
+ *
+ * @param {JsonString} json - The JSON string to convert.
+ * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
+ * @returns {Type} The parsed instance.
+ */
+export const fromJSON = fromTypedJson(JSON_TYPE, fromString);

@@ -1,6 +1,13 @@
 import { HexString } from '../types.js';
 import { isHex } from '../util.js';
 import { Buffer } from 'buffer/index.js';
+import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+
+/**
+ * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ */
+export const JSON_TYPE = TypedJsonDiscriminator.CredentialRegistrationId;
+type Json = string;
 
 /**
  * Representation of a credential registration id, which enforces that it:
@@ -8,16 +15,17 @@ import { Buffer } from 'buffer/index.js';
  * - Has length exactly 96, because a credId is 48 bytes.
  * - Checks the first bit is 1, which indicates that the value represents a compressed BLS12-381 curve point.
  */
-class CredentialRegistrationId {
-    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __nominal = true;
+class CredentialRegistrationId extends TypeBase<Json> {
+    protected jsonType = JSON_TYPE;
+    protected get jsonValue(): Json {
+        return this.credId;
+    }
+
     constructor(
         /** Representation of a credential registration id */
         public readonly credId: string
-    ) {}
-
-    toJSON(): string {
-        return this.credId;
+    ) {
+        super();
     }
 }
 
@@ -97,3 +105,12 @@ export function toHexString(cred: CredentialRegistrationId): HexString {
 export function toBuffer(cred: CredentialRegistrationId): Uint8Array {
     return Buffer.from(cred.credId, 'hex');
 }
+
+/**
+ * Takes a JSON string and converts it to instance of type {@linkcode Type}.
+ *
+ * @param {JsonString} json - The JSON string to convert.
+ * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
+ * @returns {Type} The parsed instance.
+ */
+export const fromJSON = fromTypedJson(JSON_TYPE, CredentialRegistrationId);

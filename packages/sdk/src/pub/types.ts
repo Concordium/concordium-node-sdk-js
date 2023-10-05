@@ -66,6 +66,8 @@ export {
     isJsonParseError,
     TypedJsonParseError,
     TypedJsonParseErrorType,
+    TypedJson,
+    ToTypedJson,
 } from '../types/util.js';
 
 // These cannot be exported directly as modules because of a bug in an eslint plugin.

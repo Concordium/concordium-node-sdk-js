@@ -27,7 +27,7 @@ type Json = HexString;
 class ModuleReference extends TypeBase<Json> {
     protected jsonType = JSON_TYPE;
     protected get jsonValue(): Json {
-        // TODO: why?
+        // TODO: why is this prefixed with length of data?
         return packBufferWithWord32Length(this.decodedModuleRef).toString(
             'hex'
         );

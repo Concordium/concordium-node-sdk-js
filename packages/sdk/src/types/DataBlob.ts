@@ -23,6 +23,7 @@ type Json = HexString;
 export class DataBlob extends TypeBase<Json> {
     protected jsonType = JSON_TYPE;
     protected get jsonValue(): string {
+        // TODO: why is this prefixed with length of data?
         return packBufferWithWord16Length(this.data).toString('hex');
     }
     public readonly data: Buffer;

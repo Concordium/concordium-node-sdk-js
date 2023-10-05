@@ -1,7 +1,8 @@
 import type { JsonString } from '../types.js';
 
 /**
- * Discriminator for {@link TypedJson}.
+ * Discriminator for {@link TypedJson}. The member used to identify each type is
+ * exported from each type module and can be accessed through named export `JSON_TYPE`.
  */
 export enum TypedJsonDiscriminator {
     AccountAddress = 'ccd_account_address',
@@ -91,6 +92,7 @@ export class TypedJsonParseError extends Error {
         message: string
     ) {
         super(message);
+        this.name = 'TypedJsonParseError'; // convention for discriminating between error types.
     }
 
     public static fromParseValueError(e: unknown): TypedJsonParseError {
@@ -104,7 +106,7 @@ export class TypedJsonParseError extends Error {
 /**
  * Determines if error is of type {@link TypedJsonParseError}
  */
-export const isJsonParseError = (
+export const isTypedJsonParseError = (
     error: unknown
 ): error is TypedJsonParseError => error instanceof TypedJsonParseError;
 
@@ -116,7 +118,11 @@ interface Class<V, T> {
  * Creates a function to convert typed JSON strings to their corresponding type instance.
  *
  * @template V - The JSON value
+ * @template T - The type returned
+ *
  * @param {D} expectedTypeDiscriminator - The discriminator expected in the JSON string parsed
+ * @param {Class} Class - A class which can be instantiated with a single parameter of type `V`
+ *
  * @returns The JSON parser function
  */
 export function fromTypedJson<V, T>(

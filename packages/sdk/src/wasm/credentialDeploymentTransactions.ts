@@ -19,7 +19,7 @@ import {
     CredentialDeploymentDetails,
     HexString,
 } from '../types.js';
-import { TransactionExpiry } from '../types/transactionExpiry.js';
+import * as TransactionExpiry from '../types/TransactionExpiry.js';
 import * as AccountAddress from '../types/AccountAddress.js';
 import { sha256 } from '../hash.js';
 import { ConcordiumHdWallet } from './HdWallet.js';
@@ -106,7 +106,7 @@ export function createCredentialDeploymentTransaction(
     publicKeys: VerifyKey[],
     credentialIndex: number,
     revealedAttributes: AttributeKey[],
-    expiry: TransactionExpiry
+    expiry: TransactionExpiry.Type
 ): CredentialDeploymentTransaction {
     const unsignedCredentialInfo = createUnsignedCredentialInfo(
         identity,
@@ -215,7 +215,7 @@ export type CredentialInputNoSeed = CredentialInputCommon & {
  */
 export function createCredentialTransaction(
     input: CredentialInput,
-    expiry: TransactionExpiry
+    expiry: TransactionExpiry.Type
 ): CredentialDeploymentTransaction {
     const wallet = ConcordiumHdWallet.fromHex(input.seedAsHex, input.net);
     const publicKey = wallet
@@ -282,7 +282,7 @@ export function createCredentialTransaction(
  */
 export function createCredentialTransactionNoSeed(
     input: CredentialInputNoSeed,
-    expiry: TransactionExpiry
+    expiry: TransactionExpiry.Type
 ): CredentialDeploymentTransaction {
     const rawRequest = wasm.createUnsignedCredentialV1(JSON.stringify(input));
     let info: UnsignedCdiWithRandomness;

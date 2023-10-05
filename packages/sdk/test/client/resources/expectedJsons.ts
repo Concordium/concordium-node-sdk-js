@@ -17,6 +17,13 @@ import {
     BlockItemStatus,
     BlockItemSummary,
     BlockSpecialEvent,
+    BlockSpecialEventBakingRewards,
+    BlockSpecialEventBlockAccrueReward,
+    BlockSpecialEventBlockReward,
+    BlockSpecialEventFinalizationRewards,
+    BlockSpecialEventPaydayAccountReward,
+    BlockSpecialEventPaydayFoundationReward,
+    BlockSpecialEventPaydayPoolReward,
     CcdAmount,
     ChainParametersV0,
     ChainParametersV1,
@@ -44,9 +51,11 @@ import {
     NextUpdateSequenceNumbers,
     OpenStatusText,
     Parameter,
+    PassiveDelegationStatus,
     PendingUpdate,
     PoolStatusType,
     ReceiveName,
+    RejectReason,
     RejectReasonTag,
     RejectedReceive,
     ReturnValue,
@@ -235,7 +244,7 @@ export const blockItemStatusTransfer: BlockItemStatus = {
             ),
             transactionType: TransactionKindString.Transfer,
             transfer: {
-                amount: 1000000n,
+                amount: CcdAmount.fromMicroCcd(1000000),
                 tag: TransactionEventTag.Transferred,
                 to: AccountAddress.fromBase58(
                     '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj'
@@ -250,12 +259,12 @@ export const instanceInfo: InstanceInfo = {
     owner: AccountAddress.fromBase58(
         '4Y1c27ZRpRut9av69n3i1uhfeDp4XGuvsm9fkEjFvgpoxXWxQB'
     ),
-    amount: new CcdAmount(0n),
+    amount: CcdAmount.zero(),
     methods: ['weather.get', 'weather.set'].map(
         ReceiveName.fromStringUnchecked
     ),
     name: InitName.fromStringUnchecked('init_weather'),
-    sourceModule: new ModuleReference(
+    sourceModule: ModuleReference.fromHexString(
         '67d568433bd72e4326241f262213d77f446db8ba03dfba351ae35c1b2e7e5109'
     ),
 };
@@ -268,7 +277,7 @@ export const invokeInstanceResponseV0: InvokeContractResult = {
         {
             tag: TransactionEventTag.Updated,
             events: [],
-            amount: 1n,
+            amount: CcdAmount.fromMicroCcd(1),
             address: ContractAddress.create(6),
             contractVersion: 0,
             instigator: {
@@ -405,31 +414,31 @@ export const delegatorInfoList: DelegatorInfo[] = [
         account: AccountAddress.fromBase58(
             '3uX8g2uzQwBjVSJ6ZDU5cQCKhgsET6kMuRoraQH2ANB9Xa84YR'
         ),
-        stake: 40000000000n,
+        stake: CcdAmount.fromMicroCcd(40_000_000_000),
     },
     {
         account: AccountAddress.fromBase58(
             '4mAs6xcFw26fb6u8odkJWoe3fAK8bCJ91BwScUc36DFhh3thwD'
         ),
-        stake: 10000000n,
+        stake: CcdAmount.fromMicroCcd(10_000_000),
     },
     {
         account: AccountAddress.fromBase58(
             '3NvUNvVm5puDT2EYbo7hCF3d5AwzzCqKE18Ms6BYkKY9UShdf3'
         ),
-        stake: 3000000000n,
+        stake: CcdAmount.fromMicroCcd(3000_000_000),
     },
     {
         account: AccountAddress.fromBase58(
             '3ivPxmqdRk5TX5mKpFshKzrA44bYUW2tg6EwDPvALszNoBGTK9'
         ),
-        stake: 33000000n,
+        stake: CcdAmount.fromMicroCcd(33_000_000),
     },
     {
         account: AccountAddress.fromBase58(
             '37tU96v4MQSaEgVP68M3TBRHMwZpgYSGnMer3ta3FJ8wkXtjDQ'
         ),
-        stake: 94000000n,
+        stake: CcdAmount.fromMicroCcd(94_000_000),
     },
 ];
 
@@ -438,19 +447,19 @@ export const passiveDelegatorInfoList: DelegatorInfo[] = [
         account: AccountAddress.fromBase58(
             '4gCvJ91EeYzsTzwiC7Kr4AcFzSuDmf5wxev7FRzU3uw49WamBm'
         ),
-        stake: 1900000000n,
+        stake: CcdAmount.fromMicroCcd(1_900_000_000),
     },
     {
         account: AccountAddress.fromBase58(
             '4mQweXtq3zHwS7CtK5fjWkpJDUvtUSKycNa8xaEbe6kErGeXcL'
         ),
-        stake: 1000000000n,
+        stake: CcdAmount.fromMicroCcd(1_000_000_000),
     },
     {
         account: AccountAddress.fromBase58(
             '3irV7FF3BZbz9ejGTm7EHLUi6CQHdJUELDfyhwkHcLqXmQyUfR'
         ),
-        stake: 100000000n,
+        stake: CcdAmount.fromMicroCcd(100_000_000),
         pendingChange: {
             effectiveTime: new Date('2022-06-28T11:47:37.750Z'),
             change: StakePendingChangeType.RemoveStake,
@@ -463,13 +472,13 @@ export const passiveDelegatorRewardInfoList: DelegatorRewardPeriodInfo[] = [
         account: AccountAddress.fromBase58(
             '4gCvJ91EeYzsTzwiC7Kr4AcFzSuDmf5wxev7FRzU3uw49WamBm'
         ),
-        stake: 1900000000n,
+        stake: CcdAmount.fromMicroCcd(1_900_000_000),
     },
     {
         account: AccountAddress.fromBase58(
             '4mQweXtq3zHwS7CtK5fjWkpJDUvtUSKycNa8xaEbe6kErGeXcL'
         ),
-        stake: 1000000000n,
+        stake: CcdAmount.fromMicroCcd(1_000_000_000),
     },
 ];
 
@@ -603,12 +612,12 @@ export const seqNums: NextUpdateSequenceNumbers = {
 export const specialEventList: BlockSpecialEvent[] = [
     {
         tag: 'blockAccrueReward',
-        transactionFees: 0n,
-        oldGasAccount: 293604n,
-        newGasAccount: 219102n,
-        bakerReward: 74502n,
-        passiveReward: 0n,
-        foundationCharge: 0n,
+        transactionFees: CcdAmount.zero(),
+        oldGasAccount: CcdAmount.fromMicroCcd(293604),
+        newGasAccount: CcdAmount.fromMicroCcd(219102),
+        bakerReward: CcdAmount.fromMicroCcd(74502),
+        passiveReward: CcdAmount.zero(),
+        foundationCharge: CcdAmount.zero(),
         baker: 4n,
     },
 ];
@@ -684,7 +693,7 @@ export const transferToPublicEvent: [
         account: AccountAddress.fromBase58(
             '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj'
         ),
-        amount: 1000000n,
+        amount: CcdAmount.fromMicroCcd(1_000_000),
     },
 ];
 
@@ -702,7 +711,7 @@ export const configureBaker: BakerEvent[] = [
         restakeEarnings: true,
         signKey:
             '0055703a2615746700b58e312aa428e5526993d6d3f3f109db92436115d63818',
-        stake: 15000000000n,
+        stake: CcdAmount.fromMicroCcd(15000000000n),
     },
     {
         tag: TransactionEventTag.BakerSetRestakeEarnings,
@@ -793,7 +802,7 @@ export const configureDelegation: DelegationEvent[] = [
             '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj'
         ),
         delegatorId: 2059n,
-        newStake: 1000000n,
+        newStake: CcdAmount.fromMicroCcd(1000000n),
         tag: TransactionEventTag.DelegationStakeIncreased,
     },
 ];
@@ -811,7 +820,7 @@ export const updateEvent: ContractTraceEvent[] = [
     },
     {
         address: ContractAddress.create(864),
-        amount: 0n,
+        amount: CcdAmount.zero(),
         contractVersion: 1,
         events: [],
         instigator: {
@@ -836,7 +845,7 @@ export const updateEvent: ContractTraceEvent[] = [
     },
     {
         address: ContractAddress.create(864),
-        amount: 0n,
+        amount: CcdAmount.zero(),
         contractVersion: 1,
         events: [],
         instigator: {
@@ -863,7 +872,7 @@ export const updateEvent: ContractTraceEvent[] = [
     },
     {
         address: ContractAddress.create(864),
-        amount: 0n,
+        amount: CcdAmount.zero(),
         contractVersion: 1,
         events: [],
         instigator: {
@@ -894,7 +903,7 @@ export const updateEvent: ContractTraceEvent[] = [
         tag: TransactionEventTag.Interrupted,
     },
     {
-        amount: 1000000n,
+        amount: CcdAmount.fromMicroCcd(1000000n),
         from: ContractAddress.create(866),
         tag: TransactionEventTag.Transferred,
         to: AccountAddress.fromBase58(
@@ -908,7 +917,7 @@ export const updateEvent: ContractTraceEvent[] = [
     },
     {
         address: ContractAddress.create(866),
-        amount: 0n,
+        amount: CcdAmount.zero(),
         contractVersion: 1,
         events: [],
         instigator: {
@@ -935,7 +944,7 @@ export const updateEvent: ContractTraceEvent[] = [
     },
     {
         address: ContractAddress.create(866),
-        amount: 0n,
+        amount: CcdAmount.zero(),
         contractVersion: 1,
         events: [
             'fd00c0843d00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be00083',
@@ -959,7 +968,7 @@ export const updateEvent: ContractTraceEvent[] = [
     },
     {
         address: ContractAddress.create(865),
-        amount: 0n,
+        amount: CcdAmount.zero(),
         contractVersion: 1,
         events: [],
         instigator: {
@@ -979,7 +988,7 @@ export const updateEvent: ContractTraceEvent[] = [
     },
     {
         address: ContractAddress.create(866),
-        amount: 0n,
+        amount: CcdAmount.zero(),
         contractVersion: 1,
         events: [],
         instigator: {
@@ -1000,7 +1009,7 @@ export const encryptedSelfAmountAddedEvent: EncryptedSelfAmountAddedEvent = {
     account: AccountAddress.fromBase58(
         '3BpVX13dw29JruyMzCfde96hoB7DtQ53WMGVDMrmPtuYAbzADj'
     ),
-    amount: 10000000n,
+    amount: CcdAmount.fromMicroCcd(10000000n),
     newAmount:
         'c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000098c71824023d5fb1bca5accb3ac010551e4af7e9988cd0ef309ee37149ef7843af6f294e79b8fcbda9b4f4ed094d66cbc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
     tag: TransactionEventTag.EncryptedSelfAmountAdded,
@@ -1034,11 +1043,11 @@ export const transferWithScheduleEvent: TransferredWithScheduleEvent = {
     amount: [
         {
             timestamp: new Date('2023-01-10T12:00:00.919Z'),
-            amount: 500000n,
+            amount: CcdAmount.fromMicroCcd(500000n),
         },
         {
             timestamp: new Date('2023-02-10T12:00:00.919Z'),
-            amount: 500000n,
+            amount: CcdAmount.fromMicroCcd(500000n),
         },
     ],
 };
@@ -1046,7 +1055,7 @@ export const transferWithScheduleEvent: TransferredWithScheduleEvent = {
 export const contractInitializedEvent: ContractInitializedEvent = {
     tag: TransactionEventTag.ContractInitialized,
     address: ContractAddress.create(3132),
-    amount: 0n,
+    amount: CcdAmount.zero(),
     contractVersion: 1,
     events: [],
     initName: InitName.fromStringUnchecked('init_CIS2-Fractionalizer'),
@@ -1082,7 +1091,7 @@ export const transferWithMemoSummary: BaseAccountTransactionSummary &
     transactionType: TransactionKindString.TransferWithMemo,
     transfer: {
         tag: TransactionEventTag.Transferred,
-        amount: 250000000n,
+        amount: CcdAmount.fromMicroCcd(250000000n),
         to: AccountAddress.fromBase58(
             '4fxkFceRT3XyUpb4yW3C2c9RnEBhunyNrKprYarr7htKmMvztG'
         ),
@@ -1130,7 +1139,7 @@ export const bakerStakeIncreasedEvent: BakerEvent = {
         '4JzAXhzJKwG3DGoAbgGhZNnRQqeFdp9zbxv6WUjDbVbyKEie8e'
     ),
     bakerId: 525n,
-    newStake: 14001000000n,
+    newStake: CcdAmount.fromMicroCcd(14001000000n),
     tag: TransactionEventTag.BakerStakeIncreased,
 };
 
@@ -1155,7 +1164,7 @@ export const bakerStakeDecreasedEvent: BakerEvent = {
         '4Kmo9keJQaiyAuRM2pRh2xK4e75ph7hp4CzxdFAcRDeQRHfaHT'
     ),
     bakerId: 15n,
-    newStake: 950000000000n,
+    newStake: CcdAmount.fromMicroCcd(950000000000n),
 };
 
 export const delegationStakeDecreasedEvent: DelegationEvent = {
@@ -1164,160 +1173,218 @@ export const delegationStakeDecreasedEvent: DelegationEvent = {
         '4mAs6xcFw26fb6u8odkJWoe3fAK8bCJ91BwScUc36DFhh3thwD'
     ),
     delegatorId: 57n,
-    newStake: 10000000n,
+    newStake: CcdAmount.fromMicroCcd(10000000n),
 };
 
 export const mintSpecialEvent: BlockSpecialEvent = {
     tag: 'mint',
-    mintBakingReward: 12708081798618n,
-    mintFinalizationReward: 6354040899309n,
-    mintPlatformDevelopmentCharge: 2118013633103n,
-    foundationAccount: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
+    mintBakingReward: CcdAmount.fromMicroCcd(12708081798618n),
+    mintFinalizationReward: CcdAmount.fromMicroCcd(6354040899309n),
+    mintPlatformDevelopmentCharge: CcdAmount.fromMicroCcd(2118013633103n),
+    foundationAccount: AccountAddress.fromBase58(
+        '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'
+    ),
 };
 
-export const paydayFoundationRewardSpecialEvent = {
-    tag: 'paydayFoundationReward',
-    foundationAccount: '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G',
-    developmentCharge: 103517862n,
-};
+export const paydayFoundationRewardSpecialEvent: BlockSpecialEventPaydayFoundationReward =
+    {
+        tag: 'paydayFoundationReward',
+        foundationAccount: AccountAddress.fromBase58(
+            '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'
+        ),
+        developmentCharge: CcdAmount.fromMicroCcd(103517862n),
+    };
 
-export const paydayPoolRewardSpecialEvent = {
+export const paydayPoolRewardSpecialEvent: BlockSpecialEventPaydayPoolReward = {
     tag: 'paydayPoolReward',
-    transactionFees: 0n,
-    bakerReward: 0n,
-    finalizationReward: 0n,
+    transactionFees: CcdAmount.zero(),
+    bakerReward: CcdAmount.zero(),
+    finalizationReward: CcdAmount.zero(),
 };
 
-export const paydayAccountRewardSpecialEvent = {
-    tag: 'paydayAccountReward',
-    account: '48XGRnvQoG92T1AwETvW5pnJ1aRSPMKsWtGdKhTqyiNZzMk3Qn',
-    transactionFees: 128913265n,
-    bakerReward: 1139222197711n,
-    finalizationReward: 577640081755n,
-};
+export const paydayAccountRewardSpecialEvent: BlockSpecialEventPaydayAccountReward =
+    {
+        tag: 'paydayAccountReward',
+        account: AccountAddress.fromBase58(
+            '48XGRnvQoG92T1AwETvW5pnJ1aRSPMKsWtGdKhTqyiNZzMk3Qn'
+        ),
+        transactionFees: CcdAmount.fromMicroCcd(128913265n),
+        bakerReward: CcdAmount.fromMicroCcd(1139222197711n),
+        finalizationReward: CcdAmount.fromMicroCcd(577640081755n),
+    };
 
-export const blockAccrueRewardSpecialEvent = {
-    tag: 'blockAccrueReward',
-    transactionFees: 0n,
-    oldGasAccount: 3n,
-    newGasAccount: 3n,
-    bakerReward: 0n,
-    passiveReward: 0n,
-    foundationCharge: 0n,
-    baker: 6n,
-};
+export const blockAccrueRewardSpecialEvent: BlockSpecialEventBlockAccrueReward =
+    {
+        tag: 'blockAccrueReward',
+        transactionFees: CcdAmount.zero(),
+        oldGasAccount: CcdAmount.fromMicroCcd(3n),
+        newGasAccount: CcdAmount.fromMicroCcd(3n),
+        bakerReward: CcdAmount.zero(),
+        passiveReward: CcdAmount.zero(),
+        foundationCharge: CcdAmount.zero(),
+        baker: 6n,
+    };
 
-export const bakingRewardsSpecialEvent = {
+export const bakingRewardsSpecialEvent: BlockSpecialEventBakingRewards = {
     tag: 'bakingRewards',
     bakingRewards: [
         {
-            account: '3QK1rxUXV7GRk4Ng7Bs7qnbkdjyBdjzCytpTrSQN7BaJkiEfgZ',
-            amount: 56740641000n,
+            account: AccountAddress.fromBase58(
+                '3QK1rxUXV7GRk4Ng7Bs7qnbkdjyBdjzCytpTrSQN7BaJkiEfgZ'
+            ),
+            amount: CcdAmount.fromMicroCcd(56740641000n),
         },
         {
-            account: '3U4sfVSqGG6XK8g6eho2qRYtnHc4MWJBG1dfxdtPGbfHwFxini',
-            amount: 32625868575n,
+            account: AccountAddress.fromBase58(
+                '3U4sfVSqGG6XK8g6eho2qRYtnHc4MWJBG1dfxdtPGbfHwFxini'
+            ),
+            amount: CcdAmount.fromMicroCcd(32625868575n),
         },
         {
-            account: '3gGBYDSpx2zWL3YMcqD48U5jVXYG4pJBDZqeY5CbMMKpxVBbc3',
-            amount: 39718448700n,
+            account: AccountAddress.fromBase58(
+                '3gGBYDSpx2zWL3YMcqD48U5jVXYG4pJBDZqeY5CbMMKpxVBbc3'
+            ),
+            amount: CcdAmount.fromMicroCcd(39718448700n),
         },
         {
-            account: '3ntvNGT6tDuLYiSb5gMJSQAZfLPUJnzoizcFiVRWqLoctuXxpK',
-            amount: 41136964725n,
+            account: AccountAddress.fromBase58(
+                '3ntvNGT6tDuLYiSb5gMJSQAZfLPUJnzoizcFiVRWqLoctuXxpK'
+            ),
+            amount: CcdAmount.fromMicroCcd(41136964725n),
         },
         {
-            account: '3y9DtDUL8xpf8i2yj9k44zMVkf4H1hkpBEQcXbJhrgcwYSGg41',
-            amount: 35462900625n,
+            account: AccountAddress.fromBase58(
+                '3y9DtDUL8xpf8i2yj9k44zMVkf4H1hkpBEQcXbJhrgcwYSGg41'
+            ),
+            amount: CcdAmount.fromMicroCcd(35462900625n),
         },
         {
-            account: '42tFTDWvTmBd7hEacohuCfGFa9TsBKhsmXKeViQ7q7NoY7UadV',
-            amount: 49648060875n,
+            account: AccountAddress.fromBase58(
+                '42tFTDWvTmBd7hEacohuCfGFa9TsBKhsmXKeViQ7q7NoY7UadV'
+            ),
+            amount: CcdAmount.fromMicroCcd(49648060875n),
         },
         {
-            account: '44Axe5eHnMkBinX7GKvUm5w6mX83JGdasijhvsMv5ZW2Wmgphg',
-            amount: 51066576900n,
+            account: AccountAddress.fromBase58(
+                '44Axe5eHnMkBinX7GKvUm5w6mX83JGdasijhvsMv5ZW2Wmgphg'
+            ),
+            amount: CcdAmount.fromMicroCcd(51066576900n),
         },
         {
-            account: '48XGRnvQoG92T1AwETvW5pnJ1aRSPMKsWtGdKhTqyiNZzMk3Qn',
-            amount: 35462900625n,
+            account: AccountAddress.fromBase58(
+                '48XGRnvQoG92T1AwETvW5pnJ1aRSPMKsWtGdKhTqyiNZzMk3Qn'
+            ),
+            amount: CcdAmount.fromMicroCcd(35462900625n),
         },
         {
-            account: '4AnukgcopMC4crxfL1L9fUYw9MAkoo1yKLvH7eA1NAX7SxgyRY',
-            amount: 56740641000n,
+            account: AccountAddress.fromBase58(
+                '4AnukgcopMC4crxfL1L9fUYw9MAkoo1yKLvH7eA1NAX7SxgyRY'
+            ),
+            amount: CcdAmount.fromMicroCcd(56740641000n),
         },
         {
-            account: '4BTFaHx8CioLi8Xe7YiimpAK1oQMkbx5Wj6B8N7d7NXgmLvEZs',
-            amount: 66670253175n,
+            account: AccountAddress.fromBase58(
+                '4BTFaHx8CioLi8Xe7YiimpAK1oQMkbx5Wj6B8N7d7NXgmLvEZs'
+            ),
+            amount: CcdAmount.fromMicroCcd(66670253175n),
         },
         {
-            account: '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L',
-            amount: 60996189075n,
+            account: AccountAddress.fromBase58(
+                '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L'
+            ),
+            amount: CcdAmount.fromMicroCcd(60996189075n),
         },
     ],
-    remainder: 290n,
+    remainder: CcdAmount.fromMicroCcd(290n),
 };
 
-export const finalizationRewardsSpecialEvent = {
-    tag: 'finalizationRewards',
-    finalizationRewards: [
-        {
-            account: '3QK1rxUXV7GRk4Ng7Bs7qnbkdjyBdjzCytpTrSQN7BaJkiEfgZ',
-            amount: 359306692n,
-        },
-        {
-            account: '3U4sfVSqGG6XK8g6eho2qRYtnHc4MWJBG1dfxdtPGbfHwFxini',
-            amount: 359306692n,
-        },
-        {
-            account: '3gGBYDSpx2zWL3YMcqD48U5jVXYG4pJBDZqeY5CbMMKpxVBbc3',
-            amount: 359306692n,
-        },
-        {
-            account: '3ntvNGT6tDuLYiSb5gMJSQAZfLPUJnzoizcFiVRWqLoctuXxpK',
-            amount: 359306692n,
-        },
-        {
-            account: '3y9DtDUL8xpf8i2yj9k44zMVkf4H1hkpBEQcXbJhrgcwYSGg41',
-            amount: 359306692n,
-        },
-        {
-            account: '42tFTDWvTmBd7hEacohuCfGFa9TsBKhsmXKeViQ7q7NoY7UadV',
-            amount: 359306692n,
-        },
-        {
-            account: '44Axe5eHnMkBinX7GKvUm5w6mX83JGdasijhvsMv5ZW2Wmgphg',
-            amount: 359306692n,
-        },
-        {
-            account: '48XGRnvQoG92T1AwETvW5pnJ1aRSPMKsWtGdKhTqyiNZzMk3Qn',
-            amount: 359306692n,
-        },
-        {
-            account: '4AnukgcopMC4crxfL1L9fUYw9MAkoo1yKLvH7eA1NAX7SxgyRY',
-            amount: 359306692n,
-        },
-        {
-            account: '4BTFaHx8CioLi8Xe7YiimpAK1oQMkbx5Wj6B8N7d7NXgmLvEZs',
-            amount: 359306692n,
-        },
-        {
-            account: '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L',
-            amount: 359306692n,
-        },
-    ],
-    remainder: 4n,
-};
+export const finalizationRewardsSpecialEvent: BlockSpecialEventFinalizationRewards =
+    {
+        tag: 'finalizationRewards',
+        finalizationRewards: [
+            {
+                account: AccountAddress.fromBase58(
+                    '3QK1rxUXV7GRk4Ng7Bs7qnbkdjyBdjzCytpTrSQN7BaJkiEfgZ'
+                ),
+                amount: CcdAmount.fromMicroCcd(359306692n),
+            },
+            {
+                account: AccountAddress.fromBase58(
+                    '3U4sfVSqGG6XK8g6eho2qRYtnHc4MWJBG1dfxdtPGbfHwFxini'
+                ),
+                amount: CcdAmount.fromMicroCcd(359306692n),
+            },
+            {
+                account: AccountAddress.fromBase58(
+                    '3gGBYDSpx2zWL3YMcqD48U5jVXYG4pJBDZqeY5CbMMKpxVBbc3'
+                ),
+                amount: CcdAmount.fromMicroCcd(359306692n),
+            },
+            {
+                account: AccountAddress.fromBase58(
+                    '3ntvNGT6tDuLYiSb5gMJSQAZfLPUJnzoizcFiVRWqLoctuXxpK'
+                ),
+                amount: CcdAmount.fromMicroCcd(359306692n),
+            },
+            {
+                account: AccountAddress.fromBase58(
+                    '3y9DtDUL8xpf8i2yj9k44zMVkf4H1hkpBEQcXbJhrgcwYSGg41'
+                ),
+                amount: CcdAmount.fromMicroCcd(359306692n),
+            },
+            {
+                account: AccountAddress.fromBase58(
+                    '42tFTDWvTmBd7hEacohuCfGFa9TsBKhsmXKeViQ7q7NoY7UadV'
+                ),
+                amount: CcdAmount.fromMicroCcd(359306692n),
+            },
+            {
+                account: AccountAddress.fromBase58(
+                    '44Axe5eHnMkBinX7GKvUm5w6mX83JGdasijhvsMv5ZW2Wmgphg'
+                ),
+                amount: CcdAmount.fromMicroCcd(359306692n),
+            },
+            {
+                account: AccountAddress.fromBase58(
+                    '48XGRnvQoG92T1AwETvW5pnJ1aRSPMKsWtGdKhTqyiNZzMk3Qn'
+                ),
+                amount: CcdAmount.fromMicroCcd(359306692n),
+            },
+            {
+                account: AccountAddress.fromBase58(
+                    '4AnukgcopMC4crxfL1L9fUYw9MAkoo1yKLvH7eA1NAX7SxgyRY'
+                ),
+                amount: CcdAmount.fromMicroCcd(359306692n),
+            },
+            {
+                account: AccountAddress.fromBase58(
+                    '4BTFaHx8CioLi8Xe7YiimpAK1oQMkbx5Wj6B8N7d7NXgmLvEZs'
+                ),
+                amount: CcdAmount.fromMicroCcd(359306692n),
+            },
+            {
+                account: AccountAddress.fromBase58(
+                    '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L'
+                ),
+                amount: CcdAmount.fromMicroCcd(359306692n),
+            },
+        ],
+        remainder: CcdAmount.fromMicroCcd(4n),
+    };
 
-export const blockRewardSpecialEvent = {
+export const blockRewardSpecialEvent: BlockSpecialEventBlockReward = {
     tag: 'blockReward',
-    transactionFees: 0n,
-    oldGasAccount: 0n,
-    newGasAccount: 0n,
-    bakerReward: 0n,
-    foundationCharge: 0n,
-    baker: '44Axe5eHnMkBinX7GKvUm5w6mX83JGdasijhvsMv5ZW2Wmgphg',
-    foundationAccount: '44Axe5eHnMkBinX7GKvUm5w6mX83JGdasijhvsMv5ZW2Wmgphg',
+    transactionFees: CcdAmount.zero(),
+    oldGasAccount: CcdAmount.zero(),
+    newGasAccount: CcdAmount.zero(),
+    bakerReward: CcdAmount.zero(),
+    foundationCharge: CcdAmount.zero(),
+    baker: AccountAddress.fromBase58(
+        '44Axe5eHnMkBinX7GKvUm5w6mX83JGdasijhvsMv5ZW2Wmgphg'
+    ),
+    foundationAccount: AccountAddress.fromBase58(
+        '44Axe5eHnMkBinX7GKvUm5w6mX83JGdasijhvsMv5ZW2Wmgphg'
+    ),
 };
 
 export const insufficientBalanceForDelegationStakeRejectReason = {
@@ -1343,7 +1410,7 @@ export const amountTooLargeRejectReason: AmountTooLarge = {
                 '4Qod7UHWmkyz2ahPrWFH1kCqv1cvhT7NtEFbXG7G2soxXSYuMH'
             ),
         },
-        amount: 2000000000n,
+        amount: CcdAmount.fromMicroCcd(2000000000n),
     },
 };
 
@@ -1379,34 +1446,36 @@ export const insufficientBalanceForBakerStakeRejectReason = {
 
 export const outOfEnergyRejectReason = { tag: 'OutOfEnergy' };
 
-export const invalidInitMethodRejectReason = {
+export const invalidInitMethodRejectReason: RejectReason = {
     contents: {
-        moduleRef:
-            'c2ddbce88a7acae8bd610abf46afbdcf6264c8777163b345468b8e6f2ff8660f',
-        initName: 'init_cis2_nft',
+        moduleRef: ModuleReference.fromHexString(
+            'c2ddbce88a7acae8bd610abf46afbdcf6264c8777163b345468b8e6f2ff8660f'
+        ),
+        initName: InitName.fromStringUnchecked('init_cis2_nft'),
     },
-    tag: 'InvalidInitMethod',
+    tag: RejectReasonTag.InvalidInitMethod,
 };
 
 export const runtimeFailureRejectReason = { tag: 'RuntimeFailure' };
 
 export const rejectedReceiveRejectReason: RejectedReceive = {
     contractAddress: ContractAddress.create(2372),
-    parameter: '',
-    receiveName: 'auction.finalize',
+    parameter: Parameter.empty(),
+    receiveName: ReceiveName.fromStringUnchecked('auction.finalize'),
     rejectReason: -1,
     tag: RejectReasonTag.RejectedReceive,
 };
 
 export const poolClosedRejectReason = { tag: 'PoolClosed' };
 
-export const invalidReceiveMethodRejectReason = {
+export const invalidReceiveMethodRejectReason: RejectReason = {
     contents: {
-        moduleRef:
-            '4065819567755d7d2269acce2a8b0b510cdf30e36f5fb3303be16f8724e9b8b7',
-        receiveName: 'CIS2-TOKEN.mint',
+        moduleRef: ModuleReference.fromHexString(
+            '4065819567755d7d2269acce2a8b0b510cdf30e36f5fb3303be16f8724e9b8b7'
+        ),
+        receiveName: ReceiveName.fromStringUnchecked('CIS2-TOKEN.mint'),
     },
-    tag: 'InvalidReceiveMethod',
+    tag: RejectReasonTag.InvalidReceiveMethod,
 };
 
 export const transactionFeeCommissionNotInRangeRejectReason = {
@@ -1468,8 +1537,8 @@ export const poolWouldBecomeOverDelegatedRejectReason = {
 export const bakerAccountInfo: AccountInfoBaker = {
     type: AccountInfoType.Baker,
     accountNonce: SequenceNumber.create(1),
-    accountAmount: 7449646704751788n,
-    accountReleaseSchedule: { total: 0n, schedule: [] },
+    accountAmount: CcdAmount.fromMicroCcd(7449646704751788n),
+    accountReleaseSchedule: { total: CcdAmount.zero(), schedule: [] },
     accountCredentials: {
         '0': {
             v: 0,
@@ -1561,15 +1630,15 @@ export const bakerAccountInfo: AccountInfoBaker = {
         bakerSignatureVerifyKey:
             'c385ccb5c8a0710a162f2c107123744650ff35f00040bfa262d974bfb3c3f8f1',
         restakeEarnings: true,
-        stakedAmount: 7349646704751788n,
+        stakedAmount: CcdAmount.fromMicroCcd(7349646704751788n),
     },
 };
 
 export const delegatorAccountInfo: AccountInfoDelegator = {
     type: AccountInfoType.Delegator,
     accountNonce: SequenceNumber.create(11),
-    accountAmount: 620948501142n,
-    accountReleaseSchedule: { total: 0n, schedule: [] },
+    accountAmount: CcdAmount.fromMicroCcd(620948501142n),
+    accountReleaseSchedule: { total: CcdAmount.zero(), schedule: [] },
     accountCredentials: {
         '0': {
             v: 0,
@@ -1669,15 +1738,15 @@ export const delegatorAccountInfo: AccountInfoDelegator = {
             delegateType: DelegationTargetType.PassiveDelegation,
         },
         restakeEarnings: true,
-        stakedAmount: 620942412516n,
+        stakedAmount: CcdAmount.fromMicroCcd(620942412516n),
     },
 };
 
 export const credIdAccountInfo: AccountInfoSimple = {
     type: AccountInfoType.Simple,
     accountNonce: SequenceNumber.create(19),
-    accountAmount: 35495453082577742n,
-    accountReleaseSchedule: { total: 0n, schedule: [] },
+    accountAmount: CcdAmount.fromMicroCcd(35495453082577742n),
+    accountReleaseSchedule: { total: CcdAmount.zero(), schedule: [] },
     accountCredentials: {
         '0': {
             v: 0,
@@ -1755,8 +1824,8 @@ export const credIdAccountInfo: AccountInfoSimple = {
 export const regularAccountInfo: AccountInfoSimple = {
     type: AccountInfoType.Simple,
     accountNonce: SequenceNumber.create(19),
-    accountAmount: 35495453082577742n,
-    accountReleaseSchedule: { total: 0n, schedule: [] },
+    accountAmount: CcdAmount.fromMicroCcd(35495453082577742n),
+    accountReleaseSchedule: { total: CcdAmount.zero(), schedule: [] },
     accountCredentials: {
         '0': {
             v: 0,
@@ -1975,7 +2044,7 @@ export const chainParameters: ChainParametersV1 = {
     finalizationCommissionRange: { min: 1, max: 1 },
     bakingCommissionRange: { min: 0.1, max: 0.1 },
     transactionCommissionRange: { min: 0.1, max: 0.1 },
-    minimumEquityCapital: 14000000000n,
+    minimumEquityCapital: CcdAmount.fromMicroCcd(14000000000n),
     capitalBound: 0.1,
     leverageBound: { numerator: 3n, denominator: 1n },
     rewardParameters: {
@@ -2147,7 +2216,7 @@ export const oldChainParameters: ChainParametersV0 = {
         '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'
     ),
     bakerCooldownEpochs: 166n,
-    minimumThresholdForBaking: 15000000000n,
+    minimumThresholdForBaking: CcdAmount.fromMicroCcd(15000000000n),
     rewardParameters: {
         version: 0,
         transactionFeeDistribution: { baker: 0.45, gasAccount: 0.45 },
@@ -2176,9 +2245,9 @@ export const bakerPoolStatus: BakerPoolStatus = {
     bakerAddress: AccountAddress.fromBase58(
         '3U4sfVSqGG6XK8g6eho2qRYtnHc4MWJBG1dfxdtPGbfHwFxini'
     ),
-    bakerEquityCapital: 7347853372468927n,
-    delegatedCapital: 0n,
-    delegatedCapitalCap: 0n,
+    bakerEquityCapital: CcdAmount.fromMicroCcd(7347853372468927n),
+    delegatedCapital: CcdAmount.zero(),
+    delegatedCapitalCap: CcdAmount.zero(),
     poolInfo: {
         openStatus: OpenStatusText.OpenForAll,
         metadataUrl: '',
@@ -2194,26 +2263,26 @@ export const bakerPoolStatus: BakerPoolStatus = {
     currentPaydayStatus: {
         blocksBaked: 1329n,
         finalizationLive: true,
-        transactionFeesEarned: 105169976n,
-        effectiveStake: 4605214437901336n,
+        transactionFeesEarned: CcdAmount.fromMicroCcd(105169976n),
+        effectiveStake: CcdAmount.fromMicroCcd(4605214437901336n),
         lotteryPower: 0.15552531374613243,
-        bakerEquityCapital: 7344771840225046n,
-        delegatedCapital: 0n,
+        bakerEquityCapital: CcdAmount.fromMicroCcd(7344771840225046n),
+        delegatedCapital: CcdAmount.zero(),
     },
-    allPoolTotalCapital: 46071942529284135n,
+    allPoolTotalCapital: CcdAmount.fromMicroCcd(46071942529284135n),
 };
 
-export const passiveDelegationStatus = {
-    poolType: 'PassiveDelegation',
-    delegatedCapital: 698892529615n,
+export const passiveDelegationStatus: PassiveDelegationStatus = {
+    poolType: PoolStatusType.PassiveDelegation,
+    delegatedCapital: CcdAmount.fromMicroCcd(698892529615n),
     commissionRates: {
         transactionCommission: 0.12,
         bakingCommission: 0.12,
         finalizationCommission: 1,
     },
-    currentPaydayTransactionFeesEarned: 24070n,
-    currentPaydayDelegatedCapital: 698618484955n,
-    allPoolTotalCapital: 46071942529284135n,
+    currentPaydayTransactionFeesEarned: CcdAmount.fromMicroCcd(24070n),
+    currentPaydayDelegatedCapital: CcdAmount.fromMicroCcd(698618484955n),
+    allPoolTotalCapital: CcdAmount.fromMicroCcd(46071942529284135n),
 };
 
 export const bakerPoolStatusWithPendingChange: BakerPoolStatus = {
@@ -2222,9 +2291,9 @@ export const bakerPoolStatusWithPendingChange: BakerPoolStatus = {
     bakerAddress: AccountAddress.fromBase58(
         '4aCoaW3qkQRnY3fUGThQcEMGSPLUEQ7XL9Yagx2UR91QpvtoAe'
     ),
-    bakerEquityCapital: 19999999999n,
-    delegatedCapital: 0n,
-    delegatedCapitalCap: 39999999998n,
+    bakerEquityCapital: CcdAmount.fromMicroCcd(19999999999n),
+    delegatedCapital: CcdAmount.zero(),
+    delegatedCapitalCap: CcdAmount.fromMicroCcd(39999999998n),
     poolInfo: {
         openStatus: OpenStatusText.OpenForAll,
         metadataUrl: 'b',
@@ -2239,7 +2308,7 @@ export const bakerPoolStatusWithPendingChange: BakerPoolStatus = {
         effectiveTime: new Date('2022-12-08T07:54:00.000Z'),
     },
     currentPaydayStatus: null,
-    allPoolTotalCapital: 46470271917743628n,
+    allPoolTotalCapital: CcdAmount.fromMicroCcd(46470271917743628n),
 };
 
 export const invokeContractResult: InvokeContractResult = {
@@ -2257,7 +2326,7 @@ export const invokeContractResult: InvokeContractResult = {
                     '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'
                 ),
             },
-            amount: 0n,
+            amount: CcdAmount.zero(),
             message: Parameter.empty(),
             receiveName: ReceiveName.fromStringUnchecked('PiggyBank.view'),
             events: [],

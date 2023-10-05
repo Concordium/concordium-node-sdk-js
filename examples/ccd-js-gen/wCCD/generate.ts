@@ -37,7 +37,7 @@ const grpcClient = new ConcordiumGRPCNodeClient(
     credentials.createInsecure()
 );
 
-const wCCDModuleRef = new SDK.ModuleReference(
+const wCCDModuleRef = SDK.ModuleReference.fromHexString(
     'cc285180b45d7695db75c29dee004d2e81a1383880c9b122399bea809196c98f'
 );
 

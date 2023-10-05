@@ -65,13 +65,13 @@ const client = new ConcordiumGRPCNodeClient(
     const sender = AccountAddress.fromBase58(wallet.value.address);
 
     const header: AccountTransactionHeader = {
-        expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+        expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender: sender,
     };
 
     const configureDelegationPayload: ConfigureDelegationPayload = {
-        stake: new CcdAmount(0n),
+        stake: CcdAmount.zero(),
     };
 
     const configureDelegationTransaction: AccountTransaction = {

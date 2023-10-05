@@ -1,4 +1,4 @@
-import { ModuleReference } from './moduleReference.js';
+import * as ModuleReference from './ModuleReference.js';
 import * as H from '../contractHelpers.js';
 import { sha256 } from '../hash.js';
 import { Buffer } from 'buffer/index.js';
@@ -48,12 +48,12 @@ export function versionedModuleSourceFromBuffer(
  */
 export function calculateModuleReference(
     moduleSource: VersionedModuleSource
-): ModuleReference {
+): ModuleReference.Type {
     const prefix = Buffer.alloc(8);
     prefix.writeUInt32BE(moduleSource.version, 0);
     prefix.writeUInt32BE(moduleSource.source.length, 4);
     const hash = sha256([prefix, moduleSource.source]);
-    return ModuleReference.fromBytes(hash);
+    return ModuleReference.fromBuffer(hash);
 }
 
 /**

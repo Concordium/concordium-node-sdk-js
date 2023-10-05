@@ -8,7 +8,7 @@ import {
 } from './types.js';
 import * as AccountAddress from './types/AccountAddress.js';
 import * as AccountSequenceNumber from './types/SequenceNumber.js';
-import { TransactionExpiry } from './types/transactionExpiry.js';
+import * as TransactionExpiry from './types/TransactionExpiry.js';
 
 /**
  * Reads an unsigned 8-bit integer from the given {@link Cursor}.
@@ -71,8 +71,7 @@ function deserializeTransactionHeader(
     // payloadSize
     serializedHeader.read(4).readUInt32BE(0);
     const expiry = TransactionExpiry.fromEpochSeconds(
-        serializedHeader.read(8).readBigUInt64BE(0),
-        true
+        serializedHeader.read(8).readBigUInt64BE(0)
     );
     return {
         sender,

@@ -1,5 +1,10 @@
-import { Address, Base58String, HexString, Amount, BakerId } from '../types.js';
+import { Address, Base58String, HexString, BakerId } from '../types.js';
 import type * as ContractAddress from './ContractAddress.js';
+import type * as ReceiveName from './ReceiveName.js';
+import type * as CcdAmount from './CcdAmount.js';
+import type * as Parameter from './Parameter.js';
+import type * as InitName from './InitName.js';
+import type * as ModuleReference from './ModuleReference.js';
 
 /*
  * An enum containing all the possible reject reasons that can be
@@ -70,9 +75,9 @@ export enum RejectReasonTag {
 export interface RejectedReceive {
     tag: RejectReasonTag.RejectedReceive;
     contractAddress: ContractAddress.Type;
-    receiveName: string;
+    receiveName: ReceiveName.Type;
     rejectReason: number;
-    parameter: HexString;
+    parameter: Parameter.Type;
 }
 
 export interface RejectedInit {
@@ -155,16 +160,16 @@ export interface SimpleRejectReason {
 export interface InvalidReceiveMethod {
     tag: RejectReasonTag.InvalidReceiveMethod;
     contents: {
-        moduleRef: HexString;
-        receiveName: string;
+        moduleRef: ModuleReference.Type;
+        receiveName: ReceiveName.Type;
     };
 }
 
 export interface InvalidInitMethod {
     tag: RejectReasonTag.InvalidInitMethod;
     contents: {
-        moduleRef: HexString;
-        initName: string; // [moduleRef, initName]
+        moduleRef: ModuleReference.Type;
+        initName: InitName.Type;
     };
 }
 
@@ -172,7 +177,7 @@ export interface AmountTooLarge {
     tag: RejectReasonTag.AmountTooLarge;
     contents: {
         address: Address;
-        amount: Amount;
+        amount: CcdAmount.Type;
     };
 }
 

@@ -21,12 +21,12 @@ describe.skip('Manual test suite', () => {
 
         // Create local transaction
         const header: v1.AccountTransactionHeader = {
-            expiry: new v1.TransactionExpiry(new Date(Date.now() + 3600000)),
+            expiry: v1.TransactionExpiry.futureMinutes(60),
             nonce: nonce,
             sender: senderAccount,
         };
         const simpleTransfer: v1.SimpleTransferPayload = {
-            amount: new v1.CcdAmount(100n),
+            amount: v1.CcdAmount.fromMicroCcd(100),
             toAddress: testAccount,
         };
         const accountTransaction: v1.AccountTransaction = {

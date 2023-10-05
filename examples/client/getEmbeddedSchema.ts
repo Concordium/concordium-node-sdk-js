@@ -53,7 +53,7 @@ const client = new ConcordiumGRPCNodeClient(
 
 (async () => {
     // #region documentation-snippet
-    const moduleRef = new ModuleReference(cli.flags.module);
+    const moduleRef = ModuleReference.fromHexString(cli.flags.module);
     const schema = await client.getEmbeddedSchema(moduleRef);
     // #endregion documentation-snippet
 

@@ -35,9 +35,9 @@ import type {
     BlockItemStatus,
     BlockItemSummary,
 } from '../types/blockItemSummary.js';
-import { ModuleReference } from '../types/moduleReference.js';
+import * as ModuleReference from '../types/ModuleReference.js';
 import { DEFAULT_INVOKE_ENERGY } from '../constants.js';
-import { TransactionExpiry } from '../types/transactionExpiry.js';
+import * as TransactionExpiry from '../types/TransactionExpiry.js';
 import * as BlockHash from '../types/BlockHash.js';
 import * as TransactionHash from '../types/TransactionHash.js';
 import * as ContractAddress from '../types/ContractAddress.js';
@@ -191,7 +191,7 @@ export class ConcordiumGRPCClient {
      * @throws An error of type `RpcError` if not found in the block.
      */
     async getModuleSource(
-        moduleRef: ModuleReference,
+        moduleRef: ModuleReference.Type,
         blockHash?: BlockHash.Type
     ): Promise<v1.VersionedModuleSource> {
         const moduleSourceRequest: v2.ModuleSourceRequest = {
@@ -229,7 +229,7 @@ export class ConcordiumGRPCClient {
      * @throws If the module or schema cannot be parsed
      */
     async getEmbeddedSchema(
-        moduleRef: ModuleReference,
+        moduleRef: ModuleReference.Type,
         blockHash?: BlockHash.Type
     ): Promise<Uint8Array> {
         const versionedSource = await this.getModuleSource(
@@ -375,12 +375,19 @@ export class ConcordiumGRPCClient {
         const transactionSignature: v2.AccountTransactionSignature =
             translate.accountTransactionSignatureToV2(signature);
 
+        if (TransactionExpiry.toDate(header.expiry) < new Date()) {
+            throw new Error(
+                'A transaction expiry is not allowed to be in the past: ' +
+                    TransactionExpiry.toDate(header.expiry)
+            );
+        }
+
         // Put together sendBlockItemRequest
         const convertedHeader: v2.AccountTransactionHeader = {
             sender: AccountAddress.toProto(header.sender),
             sequenceNumber: SequenceNumber.toProto(header.nonce),
             energyAmount: Energy.toProto(energyAmount),
-            expiry: { value: header.expiry.expiryEpochSeconds },
+            expiry: TransactionExpiry.toProto(header.expiry),
         };
         const accountTransaction: v2.AccountTransaction = {
             signature: transactionSignature,
@@ -417,12 +424,10 @@ export class ConcordiumGRPCClient {
      */
     async sendCredentialDeploymentTransaction(
         rawPayload: Uint8Array,
-        expiry: TransactionExpiry
+        expiry: TransactionExpiry.Type
     ): Promise<TransactionHash.Type> {
         const credentialDeployment: v2.CredentialDeployment = {
-            messageExpiry: {
-                value: expiry.expiryEpochSeconds,
-            },
+            messageExpiry: TransactionExpiry.toProto(expiry),
             payload: {
                 oneofKind: 'rawPayload',
                 rawPayload,

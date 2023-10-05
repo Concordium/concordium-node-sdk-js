@@ -15,10 +15,11 @@ import type * as ContractName from './types/ContractName.js';
 import type * as ReceiveName from './types/ReceiveName.js';
 import type * as SequenceNumber from './types/SequenceNumber.js';
 import type * as ReturnValue from './types/ReturnValue.js';
-import { CcdAmount } from './types/ccdAmount.js';
+import type * as CcdAmount from './types/CcdAmount.js';
+import type * as TransactionHash from './types/TransactionHash.js';
+import type * as TransactionExpiry from './types/TransactionExpiry.js';
 import { DataBlob } from './types/DataBlob.js';
-import { TransactionExpiry } from './types/transactionExpiry.js';
-import { ModuleReference } from './types/moduleReference.js';
+import type * as ModuleReference from './types/ModuleReference.js';
 import { RejectReason } from './types/rejectReason.js';
 import { ContractTraceEvent } from './types/transactionEvent.js';
 
@@ -166,10 +167,10 @@ export interface GenericTransactionSummaryType
 }
 
 export interface BaseTransactionSummary {
-    sender?: string;
-    hash: string;
+    sender?: AccountAddress.Type;
+    hash: TransactionHash.Type;
 
-    cost: bigint;
+    cost: CcdAmount.Type;
     energyCost: Energy.Type;
     index: bigint;
 }
@@ -288,7 +289,7 @@ export interface CooldownParametersV1 {
 /** Pool parameters used from protocol version 1-3 */
 export interface PoolParametersV0 {
     /** The minimum threshold to stake to become a baker. */
-    minimumThresholdForBaking: Amount;
+    minimumThresholdForBaking: CcdAmount.Type;
 }
 
 /** Pool parameters used from protocol version 4 */
@@ -306,7 +307,7 @@ export interface PoolParametersV1 {
     /** Fraction of transaction rewards charged by the pool owner. */
     transactionCommissionRange: InclusiveRange<number>;
     /** Minimum equity capital required for a new baker.*/
-    minimumEquityCapital: Amount;
+    minimumEquityCapital: CcdAmount.Type;
     /**
      * Maximum fraction of the total staked capital of that a new baker can
      * have.
@@ -481,11 +482,11 @@ export interface KeysWithThreshold {
 
 interface RewardStatusCommon {
     protocolVersion?: bigint;
-    totalAmount: Amount;
-    totalEncryptedAmount: Amount;
-    bakingRewardAccount: Amount;
-    finalizationRewardAccount: Amount;
-    gasAccount: Amount;
+    totalAmount: CcdAmount.Type;
+    totalEncryptedAmount: CcdAmount.Type;
+    bakingRewardAccount: CcdAmount.Type;
+    finalizationRewardAccount: CcdAmount.Type;
+    gasAccount: CcdAmount.Type;
 }
 
 export interface RewardStatusV0 extends RewardStatusCommon {
@@ -494,10 +495,10 @@ export interface RewardStatusV0 extends RewardStatusCommon {
 
 export interface RewardStatusV1 extends RewardStatusCommon {
     version: 1;
-    foundationTransactionRewards: Amount;
+    foundationTransactionRewards: CcdAmount.Type;
     nextPaydayTime: Date;
     nextPaydayMintRate: MintRate;
-    totalStakedCapital: Amount;
+    totalStakedCapital: CcdAmount.Type;
     protocolVersion: bigint;
 }
 
@@ -710,7 +711,7 @@ export interface NextAccountNonce {
 
 export interface ReleaseSchedule {
     timestamp: Date;
-    amount: Amount;
+    amount: CcdAmount.Type;
 }
 
 export interface ReleaseScheduleWithTransactions extends ReleaseSchedule {
@@ -718,16 +719,16 @@ export interface ReleaseScheduleWithTransactions extends ReleaseSchedule {
 }
 
 export interface AccountReleaseSchedule {
-    total: Amount;
+    total: CcdAmount.Type;
     schedule: ReleaseScheduleWithTransactions[];
 }
 
 export interface AccountEncryptedAmount {
-    selfAmount: string;
+    selfAmount: HexString;
     startIndex: bigint;
-    incomingAmounts: string[];
+    incomingAmounts: HexString[];
     numAggregated?: number;
-    aggregatedAmount?: string;
+    aggregatedAmount?: HexString;
 }
 
 export interface VerifyKey {
@@ -824,7 +825,6 @@ export enum OpenStatusText {
     ClosedForAll = 'closedForAll',
 }
 
-export type Amount = bigint;
 export type BakerId = bigint;
 export type DelegatorId = bigint;
 
@@ -843,11 +843,11 @@ export interface CommissionRates {
 export interface CurrentPaydayBakerPoolStatus {
     blocksBaked: bigint;
     finalizationLive: boolean;
-    transactionFeesEarned: Amount;
-    effectiveStake: Amount;
+    transactionFeesEarned: CcdAmount.Type;
+    effectiveStake: CcdAmount.Type;
     lotteryPower: number;
-    bakerEquityCapital: Amount;
-    delegatedCapital: Amount;
+    bakerEquityCapital: CcdAmount.Type;
+    delegatedCapital: CcdAmount.Type;
 }
 
 export enum BakerPoolPendingChangeType {
@@ -864,7 +864,7 @@ type BakerPoolPendingChangeWrapper<
 };
 
 export interface BakerPoolPendingChangeReduceBakerCapitalDetails {
-    bakerEquityCapital: Amount;
+    bakerEquityCapital: CcdAmount.Type;
     effectiveTime: Date;
 }
 
@@ -906,13 +906,13 @@ type PoolStatusWrapper<T extends keyof typeof PoolStatusType, S> = S & {
 export interface BakerPoolStatusDetails {
     bakerId: BakerId;
     bakerAddress: AccountAddress.Type;
-    bakerEquityCapital: Amount;
-    delegatedCapital: Amount;
-    delegatedCapitalCap: Amount;
+    bakerEquityCapital: CcdAmount.Type;
+    delegatedCapital: CcdAmount.Type;
+    delegatedCapitalCap: CcdAmount.Type;
     poolInfo: BakerPoolInfo;
     bakerStakePendingChange: BakerPoolPendingChange;
     currentPaydayStatus: CurrentPaydayBakerPoolStatus | null;
-    allPoolTotalCapital: Amount;
+    allPoolTotalCapital: CcdAmount.Type;
 }
 
 export type BakerPoolStatus = PoolStatusWrapper<
@@ -921,11 +921,11 @@ export type BakerPoolStatus = PoolStatusWrapper<
 >;
 
 export interface PassiveDelegationStatusDetails {
-    delegatedCapital: Amount;
+    delegatedCapital: CcdAmount.Type;
     commissionRates: CommissionRates;
-    currentPaydayTransactionFeesEarned: Amount;
-    currentPaydayDelegatedCapital: Amount;
-    allPoolTotalCapital: Amount;
+    currentPaydayTransactionFeesEarned: CcdAmount.Type;
+    currentPaydayDelegatedCapital: CcdAmount.Type;
+    allPoolTotalCapital: CcdAmount.Type;
 }
 
 export type PassiveDelegationStatus = PoolStatusWrapper<
@@ -965,7 +965,7 @@ interface AccountBakerDetailsCommon {
     bakerAggregationVerifyKey: string;
     bakerElectionVerifyKey: string;
     bakerSignatureVerifyKey: string;
-    stakedAmount: bigint;
+    stakedAmount: CcdAmount.Type;
     pendingChange?: StakePendingChange;
 }
 
@@ -984,7 +984,7 @@ export type AccountBakerDetails = AccountBakerDetailsV0 | AccountBakerDetailsV1;
 
 export interface AccountDelegationDetails {
     restakeEarnings: boolean;
-    stakedAmount: bigint;
+    stakedAmount: CcdAmount.Type;
     delegationTarget: DelegationTarget;
     pendingChange?: StakePendingChange;
 }
@@ -1002,7 +1002,7 @@ export enum AccountInfoType {
 interface AccountInfoCommon {
     accountAddress: AccountAddress.Type;
     accountNonce: SequenceNumber.Type;
-    accountAmount: bigint;
+    accountAmount: CcdAmount.Type;
     accountIndex: bigint;
     accountThreshold: number;
     accountEncryptionKey: string;
@@ -1052,7 +1052,7 @@ export interface ArInfo {
 
 interface DelegatorInfoCommon {
     account: AccountAddress.Type;
-    stake: Amount;
+    stake: CcdAmount.Type;
 }
 export interface DelegatorInfo extends DelegatorInfoCommon {
     pendingChange?: StakePendingChange;
@@ -1198,11 +1198,11 @@ export interface VersionedModuleSource {
 }
 
 export interface InitContractPayload {
-    /** µCCD amount to transfer */
-    amount: CcdAmount;
+    /** CCD amount to transfer */
+    amount: CcdAmount.Type;
 
     /** Hash of the module on chain */
-    moduleRef: ModuleReference;
+    moduleRef: ModuleReference.Type;
 
     /** Name of the contract */
     initName: ContractName.Type;
@@ -1216,8 +1216,8 @@ export interface InitContractPayload {
 }
 
 export interface UpdateContractPayload {
-    /** µCCD amount to transfer */
-    amount: CcdAmount;
+    /** CCD amount to transfer */
+    amount: CcdAmount.Type;
 
     /** Address of contract instance consisting of an index and a subindex */
     address: ContractAddress.Type;
@@ -1244,12 +1244,12 @@ export interface AccountTransactionHeader {
     nonce: SequenceNumber.Type;
 
     /** expiration of the transaction */
-    expiry: TransactionExpiry;
+    expiry: TransactionExpiry.Type;
 }
 
 export interface SimpleTransferPayload {
-    /** µCCD amount to transfer */
-    amount: CcdAmount;
+    /** CCD amount to transfer */
+    amount: CcdAmount.Type;
 
     /** the recipient of the transfer */
     toAddress: AccountAddress.Type;
@@ -1317,7 +1317,7 @@ export type GenerateBakerKeysOutput = PublicBakerKeys &
 
 export interface ConfigureBakerPayload {
     /* stake to bake. if set to 0, this removes the account as a baker */
-    stake?: CcdAmount;
+    stake?: CcdAmount.Type;
     /* should earnings from baking be added to staked amount  */
     restakeEarnings?: boolean;
     openForDelegation?: OpenStatus;
@@ -1330,7 +1330,7 @@ export interface ConfigureBakerPayload {
 
 export interface ConfigureDelegationPayload {
     /* stake to delegate. if set to 0, this removes the account as a delegator */
-    stake?: CcdAmount;
+    stake?: CcdAmount.Type;
     /* should earnings from delegation be added to staked amount  */
     restakeEarnings?: boolean;
     /* determines if the account should use passive delegation, or which specific baker to delegate to  */
@@ -1358,9 +1358,9 @@ export interface InstanceInfoCommon {
     /** Version of the smart contract module. */
     version: number;
     /** Total balance of CCD hold by this instance. */
-    amount: CcdAmount;
+    amount: CcdAmount.Type;
     /** Module reference of the current module being used by this instance. */
-    sourceModule: ModuleReference;
+    sourceModule: ModuleReference.Type;
     /** Account used to instantiate this smart contract instance. */
     owner: AccountAddress.Type;
     /** List of receive functions currently exposed by this smart contract. These are of the form '<contractName>.<entrypointName>'. */
@@ -1413,7 +1413,7 @@ export interface InstanceStateKVPair {
 export interface ContractContext {
     invoker?: ContractAddress.Type | AccountAddress.Type;
     contract: ContractAddress.Type;
-    amount?: CcdAmount;
+    amount?: CcdAmount.Type;
     method: ReceiveName.Type;
     parameter?: Parameter.Type;
     energy?: Energy.Type;
@@ -1438,7 +1438,7 @@ export type InvokeContractResult =
     | InvokeContractFailedResult;
 
 export interface CredentialDeploymentDetails {
-    expiry: TransactionExpiry;
+    expiry: TransactionExpiry.Type;
     unsignedCdi: UnsignedCredentialDeploymentInformation;
 }
 
@@ -1484,7 +1484,7 @@ export interface CredentialDeploymentInfo extends CredentialDeploymentValues {
 }
 
 export interface SignedCredentialDeploymentDetails {
-    expiry: TransactionExpiry;
+    expiry: TransactionExpiry.Type;
     cdi: CredentialDeploymentInfo;
 }
 

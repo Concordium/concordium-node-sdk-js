@@ -89,7 +89,7 @@ const client = new ConcordiumGRPCNodeClient(
     );
 
     const header: AccountTransactionHeader = {
-        expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+        expiry: TransactionExpiry.futureMinutes(60),
         nonce: nextNonce.nonce,
         sender,
     };
@@ -98,13 +98,13 @@ const client = new ConcordiumGRPCNodeClient(
     let simpleTransfer = undefined;
     if (cli.flags.memo) {
         simpleTransfer = {
-            amount: new CcdAmount(BigInt(cli.flags.amount)),
+            amount: CcdAmount.fromMicroCcd(cli.flags.amount),
             toAddress,
             memo: new DataBlob(Buffer.from(cli.flags.memo, 'hex')),
         };
     } else {
         simpleTransfer = {
-            amount: new CcdAmount(BigInt(cli.flags.amount)),
+            amount: CcdAmount.fromMicroCcd(cli.flags.amount),
             toAddress,
         };
     }

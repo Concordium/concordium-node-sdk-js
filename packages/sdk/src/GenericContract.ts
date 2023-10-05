@@ -21,9 +21,9 @@ import * as ReceiveName from './types/ReceiveName.js';
 import * as Parameter from './types/Parameter.js';
 import * as Energy from './types/Energy.js';
 import * as TransactionHash from './types/TransactionHash.js';
-import { CcdAmount } from './types/ccdAmount.js';
-import { TransactionExpiry } from './types/transactionExpiry.js';
-import { ModuleReference } from './types/moduleReference.js';
+import * as CcdAmount from './types/CcdAmount.js';
+import * as TransactionExpiry from './types/TransactionExpiry.js';
+import * as ModuleReference from './types/ModuleReference.js';
 import * as BlockHash from './types/BlockHash.js';
 import * as ReturnValue from './types/ReturnValue.js';
 
@@ -31,12 +31,12 @@ import * as ReturnValue from './types/ReturnValue.js';
  * Metadata necessary for smart contract transactions
  */
 export type ContractTransactionMetadata = {
-    /** Amount (in microCCD) to include in the transaction. Defaults to 0n */
-    amount?: bigint;
+    /** Amount to include in the transaction. Defaults to 0 */
+    amount?: CcdAmount.Type;
     /** The sender address of the transaction */
     senderAddress: AccountAddress.Type;
     /** Expiry date of the transaction. Defaults to 5 minutes in the future */
-    expiry?: Date;
+    expiry?: TransactionExpiry.Type;
     /** Max energy to be used for the transaction */
     energy: Energy.Type;
 };
@@ -92,9 +92,8 @@ export type ContractUpdateTransactionWithSchema<
 /**
  * Default expiry date used for contract update transactions.
  */
-export function getContractUpdateDefaultExpiryDate(): Date {
-    const future5Minutes = Date.now() + 5 * 60 * 1000;
-    return new Date(future5Minutes);
+export function getContractUpdateDefaultExpiryDate(): TransactionExpiry.Type {
+    return TransactionExpiry.futureMinutes(5);
 }
 
 /**
@@ -154,7 +153,7 @@ export type ContractCheckOnChainOptions = {
      * The expected module reference to be used by the contract instance.
      * When not provided no check is done against the module reference.
      */
-    moduleReference?: ModuleReference;
+    moduleReference?: ModuleReference.Type;
 };
 
 /**
@@ -334,7 +333,10 @@ class ContractBase<E extends string = string, V extends string = string> {
     public createUpdateTransaction<T, J extends SmartContractTypeValues>(
         entrypoint: EntrypointName.Type<E>,
         serializeInput: (input: T) => ArrayBuffer,
-        { amount = 0n, energy }: CreateContractTransactionMetadata,
+        {
+            amount = CcdAmount.zero(),
+            energy,
+        }: CreateContractTransactionMetadata,
         input: T,
         inputJsonFormatter?: (input: T) => J
     ):
@@ -343,7 +345,7 @@ class ContractBase<E extends string = string, V extends string = string> {
         const parameter = Parameter.fromBuffer(serializeInput(input));
 
         const payload: UpdateContractPayload = {
-            amount: new CcdAmount(amount),
+            amount,
             address: this.contractAddress,
             receiveName: ReceiveName.create(this.contractName, entrypoint),
             maxContractExecutionEnergy: energy,
@@ -408,7 +410,7 @@ class ContractBase<E extends string = string, V extends string = string> {
             senderAddress
         );
         const header = {
-            expiry: new TransactionExpiry(expiry),
+            expiry,
             nonce: nonce,
             sender: senderAddress,
         };

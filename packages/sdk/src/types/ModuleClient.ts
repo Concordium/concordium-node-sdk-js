@@ -1,8 +1,5 @@
-import {
-    ContractTransactionMetadata,
-    getContractUpdateDefaultExpiryDate,
-} from '../GenericContract.js';
-import { ModuleReference } from './moduleReference.js';
+import { ContractTransactionMetadata } from '../GenericContract.js';
+import * as ModuleReference from './ModuleReference.js';
 import * as BlockHash from './BlockHash.js';
 import * as Parameter from './Parameter.js';
 import * as TransactionHash from './TransactionHash.js';
@@ -14,8 +11,8 @@ import {
 } from '../types.js';
 import { ConcordiumGRPCClient } from '../grpc/index.js';
 import { AccountSigner, signTransaction } from '../signHelpers.js';
-import { CcdAmount } from './ccdAmount.js';
-import { TransactionExpiry } from './transactionExpiry.js';
+import * as CcdAmount from './CcdAmount.js';
+import * as TransactionExpiry from './TransactionExpiry.js';
 
 /**
  * An update transaction without header.
@@ -40,7 +37,7 @@ class ModuleClient {
         /** The gRPC connection used by this object */
         public readonly grpcClient: ConcordiumGRPCClient,
         /** The reference for this module */
-        public readonly moduleReference: ModuleReference
+        public readonly moduleReference: ModuleReference.Type
     ) {}
 }
 
@@ -60,7 +57,7 @@ export type Type = ModuleClient;
  */
 export function createUnchecked(
     grpcClient: ConcordiumGRPCClient,
-    moduleReference: ModuleReference
+    moduleReference: ModuleReference.Type
 ): ModuleClient {
     return new ModuleClient(grpcClient, moduleReference);
 }
@@ -78,7 +75,7 @@ export function createUnchecked(
  */
 export async function create(
     grpcClient: ConcordiumGRPCClient,
-    moduleReference: ModuleReference
+    moduleReference: ModuleReference.Type
 ): Promise<ModuleClient> {
     const mod = new ModuleClient(grpcClient, moduleReference);
     await checkOnChain(mod);
@@ -123,7 +120,6 @@ export function getModuleSource(
 /**
  * Creates and sends transaction for initializing a smart contract `contractName` with parameter `input`.
  *
- *
  * @param {ModuleClient} moduleClient The client for a smart contract module on chain.
  * @param {ContractName.Type} contractName - The name of the smart contract to instantiate (this is without the `init_` prefix).
  * @param {ContractTransactionMetadata} metadata - Metadata to be used for the transaction (with defaults).
@@ -143,7 +139,7 @@ export async function createAndSendInitTransaction(
 ): Promise<TransactionHash.Type> {
     const payload: InitContractPayload = {
         moduleRef: moduleClient.moduleReference,
-        amount: new CcdAmount(metadata.amount ?? 0n),
+        amount: metadata.amount ?? CcdAmount.zero(),
         initName: contractName,
         maxContractExecutionEnergy: metadata.energy,
         param: parameter,
@@ -152,9 +148,7 @@ export async function createAndSendInitTransaction(
         metadata.senderAddress
     );
     const header = {
-        expiry: new TransactionExpiry(
-            metadata.expiry ?? getContractUpdateDefaultExpiryDate()
-        ),
+        expiry: metadata.expiry ?? TransactionExpiry.futureMinutes(5),
         nonce: nonce,
         sender: metadata.senderAddress,
     };

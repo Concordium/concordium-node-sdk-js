@@ -28,6 +28,7 @@ import {
     Parameter,
     ReceiveName,
     ContractEvent,
+    CcdAmount,
 } from '../../../src/index.js';
 
 const chainUpdate: UpdateSummary = {
@@ -67,7 +68,7 @@ const contractInit: InitContractSummary & BaseAccountTransactionSummary = {
     contractInitialized: {
         tag: TransactionEventTag.ContractInitialized,
         address: ContractAddress.create(4416),
-        amount: 0n,
+        amount: CcdAmount.zero(),
         initName: InitName.fromStringUnchecked('init_cis2-receive-test'),
         events: [],
         contractVersion: 1,
@@ -98,7 +99,7 @@ const contractUpdate: UpdateContractSummary & BaseAccountTransactionSummary = {
                     '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
                 ),
             },
-            amount: 0n,
+            amount: CcdAmount.zero(),
             message: Parameter.fromHexString(
                 '0100006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb490000'
             ),
@@ -126,7 +127,7 @@ const contractUpdate: UpdateContractSummary & BaseAccountTransactionSummary = {
                     '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
                 ),
             },
-            amount: 0n,
+            amount: CcdAmount.zero(),
             message: Parameter.fromHexString(
                 '0100006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb490000'
             ),
@@ -139,7 +140,7 @@ const contractUpdate: UpdateContractSummary & BaseAccountTransactionSummary = {
         },
         {
             tag: TransactionEventTag.Transferred,
-            amount: 0n,
+            amount: CcdAmount.zero(),
             to: AccountAddress.fromBase58(
                 '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
             ),
@@ -147,7 +148,7 @@ const contractUpdate: UpdateContractSummary & BaseAccountTransactionSummary = {
         },
         {
             tag: TransactionEventTag.Transferred,
-            amount: 0n,
+            amount: CcdAmount.zero(),
             to: AccountAddress.fromBase58(
                 '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'
             ),
@@ -172,10 +173,13 @@ const rejected: FailedTransactionSummary & BaseAccountTransactionSummary = {
     rejectReason: {
         tag: RejectReasonTag.RejectedReceive,
         contractAddress: ContractAddress.create(3496),
-        receiveName: 'cis2-bridgeable.transfer',
+        receiveName: ReceiveName.fromStringUnchecked(
+            'cis2-bridgeable.transfer'
+        ),
         rejectReason: -5,
-        parameter:
-            '0100006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f01271100000000000000000000000000000f006f6e526563656976696e67434953320000',
+        parameter: Parameter.fromHexString(
+            '0100006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f01271100000000000000000000000000000f006f6e526563656976696e67434953320000'
+        ),
     },
 };
 
@@ -193,7 +197,7 @@ const transfer: BaseAccountTransactionSummary & TransferSummary = {
     transactionType: TransactionKindString.Transfer,
     transfer: {
         tag: TransactionEventTag.Transferred,
-        amount: 2000000000n,
+        amount: CcdAmount.fromCcd(2000),
         to: AccountAddress.fromBase58(
             '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
         ),
@@ -214,7 +218,7 @@ const transferToSelf: BaseAccountTransactionSummary & TransferSummary = {
     transactionType: TransactionKindString.Transfer,
     transfer: {
         tag: TransactionEventTag.Transferred,
-        amount: 2000000000n,
+        amount: CcdAmount.fromCcd(2000),
         to: AccountAddress.fromBase58(
             '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
         ),
@@ -264,7 +268,7 @@ const configureDelegation: BaseAccountTransactionSummary &
         {
             tag: TransactionEventTag.DelegationStakeIncreased,
             delegatorId: 2499n,
-            newStake: 240000000n,
+            newStake: CcdAmount.fromMicroCcd(240000000n),
             account: AccountAddress.fromBase58(
                 '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
             ),

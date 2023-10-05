@@ -1,5 +1,5 @@
 import { parseEndpoint } from '../shared/util.js';
-import { BakerPoolStatus, BlockHash } from '@concordium/web-sdk';
+import { BakerPoolStatus, BlockHash, CcdAmount } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
@@ -67,15 +67,15 @@ const client = new ConcordiumGRPCNodeClient(
     console.log('Baker address:', bakerPool.bakerAddress);
     console.log(
         'CCD provided by the baker to the pool:',
-        bakerPool.bakerEquityCapital / 1000000n
+        CcdAmount.toCcd(bakerPool.bakerEquityCapital)
     );
     console.log(
         'CCD provided by the delegators to the pool:',
-        bakerPool.delegatedCapital / 1000000n
+        CcdAmount.toCcd(bakerPool.delegatedCapital)
     );
     console.log(
         'Total capital in CCD of ALL pools:',
-        bakerPool.allPoolTotalCapital / 1000000n
+        CcdAmount.toCcd(bakerPool.allPoolTotalCapital)
     );
     console.log('Pool commision rates:', bakerPool.poolInfo.commissionRates);
     // #endregion documentation-snippet

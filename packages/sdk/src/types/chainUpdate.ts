@@ -1,5 +1,4 @@
 import type {
-    Amount,
     AuthorizationsV0,
     AuthorizationsV1,
     Base58String,
@@ -19,6 +18,7 @@ import type {
 } from '../types.js';
 import type * as Energy from './Energy.js';
 import type * as Duration from './Duration.js';
+import type * as CcdAmount from './CcdAmount.js';
 
 type ChainUpdate<UpdateType, T> = {
     /** The type of the update */
@@ -272,7 +272,7 @@ export interface CommissionRanges {
 export interface PoolParameters {
     passiveCommissions: CommissionRates;
     commissionBounds: CommissionRanges;
-    minimumEquityCapital: Amount;
+    minimumEquityCapital: CcdAmount.Type;
     capitalBound: number;
     leverageBound: Fraction;
 }

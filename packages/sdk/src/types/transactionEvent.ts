@@ -6,7 +6,6 @@ import type {
     ModuleRef,
     HexString,
     EventDelegationTarget,
-    Amount,
     BakerId,
     DelegatorId,
 } from '../types.js';
@@ -17,6 +16,7 @@ import type * as Parameter from './Parameter.js';
 import type * as ReceiveName from './ReceiveName.js';
 import type * as InitName from './InitName.js';
 import type * as ContractEvent from './ContractEvent.js';
+import type * as CcdAmount from './CcdAmount.js';
 
 export enum TransactionEventTag {
     ModuleDeployed = 'ModuleDeployed',
@@ -106,7 +106,7 @@ export interface UpdatedEvent {
     tag: TransactionEventTag.Updated;
     address: ContractAddress.Type;
     instigator: Address;
-    amount: Amount;
+    amount: CcdAmount.Type;
     contractVersion: ContractVersion;
     message: Parameter.Type;
     receiveName: ReceiveName.Type;
@@ -115,7 +115,7 @@ export interface UpdatedEvent {
 
 export interface TransferredEvent {
     tag: TransactionEventTag.Transferred;
-    amount: Amount;
+    amount: CcdAmount.Type;
     to: AccountAddress.Type;
     from: ContractAddress.Type;
 }
@@ -135,7 +135,7 @@ export interface DataRegisteredEvent {
 export interface ContractInitializedEvent {
     tag: TransactionEventTag.ContractInitialized;
     address: ContractAddress.Type;
-    amount: Amount;
+    amount: CcdAmount.Type;
     initName: InitName.Type;
     events: HexString[];
     contractVersion: ContractVersion;
@@ -151,7 +151,7 @@ export interface ModuleDeployedEvent {
 
 export interface AccountTransferredEvent {
     tag: TransactionEventTag.Transferred;
-    amount: Amount;
+    amount: CcdAmount.Type;
     to: AccountAddress.Type;
 }
 
@@ -174,13 +174,13 @@ export interface AccountCreatedEvent {
 export interface AmountAddedByDecryptionEvent {
     tag: TransactionEventTag.AmountAddedByDecryption;
     account: AccountAddress.Type;
-    amount: Amount;
+    amount: CcdAmount.Type;
 }
 
 export interface EncryptedSelfAmountAddedEvent {
     tag: TransactionEventTag.EncryptedSelfAmountAdded;
     account: AccountAddress.Type;
-    amount: Amount;
+    amount: CcdAmount.Type;
     newAmount: string;
 }
 
@@ -248,7 +248,7 @@ export interface DelegationStakeChangedEvent {
         | TransactionEventTag.DelegationStakeIncreased;
     delegatorId: DelegatorId;
     account: AccountAddress.Type;
-    newStake: bigint;
+    newStake: CcdAmount.Type;
 }
 
 // Baker Events
@@ -260,7 +260,7 @@ export interface BakerAddedEvent {
     signKey: string;
     electionKey: string;
     aggregationKey: string;
-    stake: bigint;
+    stake: CcdAmount.Type;
     restakeEarnings: boolean;
 }
 
@@ -276,7 +276,7 @@ export interface BakerStakeChangedEvent {
         | TransactionEventTag.BakerStakeDecreased;
     bakerId: BakerId;
     account: AccountAddress.Type;
-    newStake: bigint;
+    newStake: CcdAmount.Type;
 }
 
 export interface BakerSetRestakeEarningsEvent {

@@ -29,17 +29,17 @@ describe('To and from ccd as strings', () => {
     });
 
     test('Returns correct amount of CCD, test 1', () => {
-        const ccd = new CcdAmount(1000n);
-        expect(ccd.toCcd()).toEqual(Big('0.001'));
+        const ccd = CcdAmount.fromMicroCcd(1000);
+        expect(CcdAmount.toCcd(ccd)).toEqual(Big('0.001'));
     });
 
     test('Returns correct amount of CCD, test 2', () => {
-        const ccd = new CcdAmount(123456789n);
-        expect(ccd.toCcd()).toEqual(Big('123.456789'));
+        const ccd = CcdAmount.fromMicroCcd(123456789);
+        expect(CcdAmount.toCcd(ccd)).toEqual(Big('123.456789'));
     });
 
     test('FromCcd correctly takes comma as a decimal seperator', () => {
-        expect(CcdAmount.fromCcd('10,000').toCcd()).toEqual(Big('10'));
+        expect(CcdAmount.toCcd(CcdAmount.fromCcd('10,000'))).toEqual(Big('10'));
     });
 
     test('CcdAmount constructor correctly rejects multiple comma seperators', () => {
@@ -55,7 +55,7 @@ describe('To and from ccd as strings', () => {
     });
 
     test('toCcd is equal to microCcdToCcd', () => {
-        const ccd1 = new CcdAmount('1').toCcd();
+        const ccd1 = CcdAmount.toCcd(CcdAmount.fromMicroCcd('1'));
         const ccd2 = CcdAmount.microCcdToCcd('1');
         expect(ccd1).toEqual(ccd2);
     });

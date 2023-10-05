@@ -43,6 +43,9 @@ The API now uses dedicated types instead of language primitives:
 - Use `Timestamp` instead of a bigint. Can be constructed using `Timestamp.fromMillis(<integer>)`.
 - Use `Duration` instead of a bigint. Can be constructed using `Duration.fromMillis(<integer>)`.
 - Use `ContractEvent` instead of a string with hex encoding. Can be constructed using `ContractEvent.fromHexString('<hex>')`.
+- Use `CcdAmount` instead of a bigint. Can be constructed using `CcdAmount.fromMicroCcd(<integer>)`.
+- Use `TransactionExpiry` instead of a Date object. Can be constructed using `TransactionExpiry.fromDate(<date>)`.
+- Use `ModuleReference` instead of a string with hex encoding. Can be constructed using `ModuleReference.fromHexString('<hex-string>')`.
 
 Several types have been replaced with a module containing the type itself together with functions for constructing and converting the type:
 - `AccountAddress` is now a module with functions related to account addresses:
@@ -55,8 +58,18 @@ Several types have been replaced with a module containing the type itself togeth
 - `CredentialRegistrationId` is now a module with functions related to credential registration IDs:
   - To refer to `CredentialRegistrationId` as a type use `CredentialRegistrationId.Type`.
   - Constructing `new CredentialRegistrationId("<hex-string>")` is now `CredentialRegistrationId.fromHexString("<hex-string>")`.
+- `CcdAmount` is now a module with functions related to amounts of CCDs:
+  - To refer to `CcdAmount` as a type use `CcdAmount.Type`.
+  - Constructing `new CcdAmount(<integer>)` is now `CcdAmount.fromMicroCcd(<integer>)`.
+  - The methods `toMicroCcd` and `toCcd` are now functions refered to as `CcdAmount.toMicroCcd` and `CcdAmount.toCcd` respectively.
+- `TransactionExpiry` is now a module with functions related to amounts of expiry time of transactions:
+  - To refer to `TransactionExpiry` as a type use `TransactionExpiry.Type`.
+  - Constructing `new TransactionExpiry(<expiry>, <allowExpired>)` is now `TransactionExpiry.fromDate(<expiry>)`, and the check of being a time in the future is removed and done when sending the transaction instead.
+- `ModuleReference` is now a module with functions related to references to smart contract modules:
+  - To refer to `ModuleReference` as a type use `ModuleReference.Type`.
+  - Constructing `new ModuleReference("<hex-string>")` is now `ModuleReference.fromHexString("<hex-string>")`.
+  - The static method `ModuleReference.fromBytes` is now `ModuleReference.fromBuffer`.
 - Removed `JsonRpcClient` and types and functionality associated solely with this class.
-
 - Renamed `AccountSequenceNumber` module to `SequenceNumber`.
 - Fix type for `TranferredEvent` from `ContractTraceEvent` to only be from contract addresses to account addresses.
 

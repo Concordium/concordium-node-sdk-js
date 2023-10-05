@@ -12,10 +12,7 @@ export {
 export { encodeHexString } from '../serializationHelpers.js';
 export { sha256 } from '../hash.js';
 
-export { CcdAmount } from '../types/ccdAmount.js';
-export { TransactionExpiry } from '../types/transactionExpiry.js';
 export { DataBlob } from '../types/DataBlob.js';
-export { ModuleReference } from '../types/moduleReference.js';
 export * from '../types/VersionedModuleSource.js';
 export {
     VerifiablePresentation,
@@ -63,6 +60,9 @@ import * as EntrypointName from '../types/EntrypointName.js';
 import * as Timestamp from '../types/Timestamp.js';
 import * as Duration from '../types/Duration.js';
 import * as ContractEvent from '../types/ContractEvent.js';
+import * as CcdAmount from '../types/CcdAmount.js';
+import * as TransactionExpiry from '../types/TransactionExpiry.js';
+import * as ModuleReference from '../types/ModuleReference.js';
 
 // These cannot be exported directly as modules because of a bug in an eslint plugin.
 // https://github.com/import-js/eslint-plugin-import/issues/2289.
@@ -84,4 +84,7 @@ export {
     Timestamp,
     Duration,
     ContractEvent,
+    CcdAmount,
+    TransactionExpiry,
+    ModuleReference,
 };

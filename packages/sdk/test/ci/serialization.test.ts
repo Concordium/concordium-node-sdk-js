@@ -1,5 +1,5 @@
 import * as AccountAddress from '../../src/types/AccountAddress.js';
-import { CcdAmount } from '../../src/types/ccdAmount.js';
+import * as CcdAmount from '../../src/types/CcdAmount.js';
 import {
     serializeAccountTransactionForSubmission,
     serializeAccountTransactionSignature,
@@ -11,19 +11,19 @@ import {
     AccountTransactionType,
     SimpleTransferPayload,
 } from '../../src/types.js';
-import { TransactionExpiry } from '../../src/types/transactionExpiry.js';
-import { SequenceNumber } from '../../src/index.js';
+import * as TransactionExpiry from '../../src/types/TransactionExpiry.js';
+import * as SequenceNumber from '../../src/types/SequenceNumber.js';
 
 test('fail account transaction serialization if no signatures', () => {
     const simpleTransferPayload: SimpleTransferPayload = {
-        amount: new CcdAmount(5100000n),
+        amount: CcdAmount.fromMicroCcd(5100000n),
         toAddress: AccountAddress.fromBase58(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
     };
 
     const header: AccountTransactionHeader = {
-        expiry: new TransactionExpiry(new Date(Date.now() + 1200000)),
+        expiry: TransactionExpiry.futureMinutes(20),
         nonce: SequenceNumber.create(1),
         sender: AccountAddress.fromBase58(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'

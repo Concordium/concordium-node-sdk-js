@@ -1,5 +1,9 @@
 import { parseEndpoint } from '../shared/util.js';
-import { BlockItemStatus, TransactionHash } from '@concordium/web-sdk';
+import {
+    BlockItemStatus,
+    CcdAmount,
+    TransactionHash,
+} from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
@@ -86,7 +90,7 @@ const client = new ConcordiumGRPCNodeClient(
                 case 'transfer':
                     // The transaction is a simple transfer
                     const { amount, to } = summary.transfer;
-                    const ccdAmount = Number(amount / 1000000n);
+                    const ccdAmount = CcdAmount.toCcd(amount);
                     console.log(ccdAmount, 'CCD sent to', to);
                     break;
                 case 'failed':

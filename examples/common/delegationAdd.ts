@@ -80,13 +80,13 @@ const client = new ConcordiumGRPCNodeClient(
     const signer = buildAccountSigner(wallet);
 
     const header: AccountTransactionHeader = {
-        expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+        expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender: sender,
     };
 
     const configureDelegationPayload: ConfigureDelegationPayload = {
-        stake: new CcdAmount(BigInt(cli.flags.stake)),
+        stake: CcdAmount.fromMicroCcd(cli.flags.stake),
         delegationTarget: {
             delegateType: DelegationTargetType.PassiveDelegation,
         },

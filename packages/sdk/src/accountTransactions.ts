@@ -26,7 +26,7 @@ import {
 } from './types.js';
 import * as AccountAddress from './types/AccountAddress.js';
 import { DataBlob } from './types/DataBlob.js';
-import { CcdAmount } from './types/ccdAmount.js';
+import * as CcdAmount from './types/CcdAmount.js';
 import { Cursor } from './deserializationHelpers.js';
 import * as ReceiveName from './types/ReceiveName.js';
 import * as Parameter from './types/Parameter.js';
@@ -56,7 +56,7 @@ export class SimpleTransferHandler
         const toAddress = AccountAddress.fromBuffer(
             Buffer.from(serializedPayload.read(32))
         );
-        const amount = new CcdAmount(
+        const amount = CcdAmount.fromMicroCcd(
             serializedPayload.read(8).readBigUInt64BE(0)
         );
         return {
@@ -89,7 +89,7 @@ export class SimpleTransferWithMemoHandler
         const memo = new DataBlob(
             Buffer.from(serializedPayload.read(memoLength))
         );
-        const amount = new CcdAmount(
+        const amount = CcdAmount.fromMicroCcd(
             serializedPayload.read(8).readBigUInt64BE(0)
         );
         return {

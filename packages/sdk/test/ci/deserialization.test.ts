@@ -24,7 +24,7 @@ import {
 function deserializeAccountTransactionBase(
     type: AccountTransactionType,
     payload: AccountTransactionPayload,
-    expiry = new TransactionExpiry(new Date(Date.now() + 1200000))
+    expiry = TransactionExpiry.futureMinutes(20)
 ) {
     const header: AccountTransactionHeader = {
         expiry,
@@ -62,7 +62,7 @@ function deserializeAccountTransactionBase(
 
 test('test deserialize simpleTransfer ', () => {
     const payload: SimpleTransferPayload = {
-        amount: new CcdAmount(5100000n),
+        amount: CcdAmount.fromMicroCcd(5100000),
         toAddress: AccountAddress.fromBase58(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
@@ -72,7 +72,7 @@ test('test deserialize simpleTransfer ', () => {
 
 test('test deserialize simpleTransfer with memo ', () => {
     const payload: SimpleTransferWithMemoPayload = {
-        amount: new CcdAmount(5100000n),
+        amount: CcdAmount.fromMicroCcd(5100000),
         toAddress: AccountAddress.fromBase58(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
@@ -96,7 +96,7 @@ test('test deserialize registerData ', () => {
 
 test('Expired transactions can be deserialized', () => {
     const payload: SimpleTransferPayload = {
-        amount: new CcdAmount(5100000n),
+        amount: CcdAmount.fromMicroCcd(5100000),
         toAddress: AccountAddress.fromBase58(
             '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
         ),
@@ -104,7 +104,7 @@ test('Expired transactions can be deserialized', () => {
     deserializeAccountTransactionBase(
         AccountTransactionType.Transfer,
         payload,
-        new TransactionExpiry(new Date(2000, 1), true)
+        TransactionExpiry.fromDate(new Date(2000, 1))
     );
 });
 

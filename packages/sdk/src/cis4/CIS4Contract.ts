@@ -37,6 +37,7 @@ import {
 } from './util.js';
 import * as BlockHash from '../types/BlockHash.js';
 import * as TransactionHash from '../types/TransactionHash.js';
+import * as TransactionExpiry from '../types/TransactionExpiry.js';
 
 type Views =
     | 'credentialEntry'
@@ -588,7 +589,9 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
             metadata,
             credHolderSigner,
             nonce,
-            metadata.expiry ?? getContractUpdateDefaultExpiryDate(),
+            TransactionExpiry.toDate(
+                metadata.expiry ?? getContractUpdateDefaultExpiryDate()
+            ),
             reason
         );
         return this.sendUpdateTransaction(transaction, metadata, signer);
@@ -679,7 +682,9 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
             revokerSigner,
             credentialPubKey,
             nonce,
-            metadata.expiry ?? getContractUpdateDefaultExpiryDate(),
+            TransactionExpiry.toDate(
+                metadata.expiry ?? getContractUpdateDefaultExpiryDate()
+            ),
             reason
         );
         return this.sendUpdateTransaction(transaction, metadata, signer);

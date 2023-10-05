@@ -66,13 +66,13 @@ const client = new ConcordiumGRPCNodeClient(
     const signer = buildAccountSigner(wallet);
 
     const header: AccountTransactionHeader = {
-        expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+        expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
     };
 
     const configureBakerPayload: ConfigureBakerPayload = {
-        stake: new CcdAmount(0n),
+        stake: CcdAmount.zero(),
     };
 
     const configureBakerAccountTransaction: AccountTransaction = {

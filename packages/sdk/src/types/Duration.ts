@@ -1,7 +1,8 @@
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
 
 /**
- * Type representing a duration of time.
+ * Type representing a duration of time down to milliseconds.
+ * Can not be negative.
  */
 class Duration {
     /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
@@ -13,7 +14,8 @@ class Duration {
 }
 
 /**
- * Type representing a duration of time.
+ * Type representing a duration of time down to milliseconds.
+ * Can not be negative.
  */
 export type Type = Duration;
 
@@ -54,9 +56,9 @@ const stringMeasureRegexp = /^(\d+)(ms|s|m|h|d)$/;
  * - `d` for days
  *
  * # Example
- * The duration of 10 days, 1 hour, 2minutes and 7 seconds is:
+ * The duration of 10 days, 1 hour, 2 minutes and 7 seconds is:
  * ```text
- * "10d 1h 2m 3s 4s"
+ * "10d 1h 2m 7s"
  * ```
  * @param {string} durationString string representing a duration.
  * @throws The format of the string is not matching the format.
@@ -94,6 +96,15 @@ export function fromString(durationString: string): Duration {
         }
     }
     return fromMillis(durationInMillis);
+}
+
+/**
+ * Get the duration in milliseconds.
+ * @param {Duration} duration The duration.
+ * @returns {bigint} The duration represented in milliseconds.
+ */
+export function toMillis(duration: Duration): bigint {
+    return duration.value;
 }
 
 /** Type used when encoding a duration using a schema. */

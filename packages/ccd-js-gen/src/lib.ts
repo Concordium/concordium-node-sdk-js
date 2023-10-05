@@ -42,9 +42,9 @@ export type Progress = {
 
 /**
  * Generate smart contract client code for a given smart contract module file.
- * @param modulePath Path to the smart contract module.
- * @param outDirPath Path to the directory to use for the output.
- * @param options Options for generating the clients.
+ * @param {string} modulePath Path to the smart contract module.
+ * @param {string} outDirPath Path to the directory to use for the output.
+ * @param {GenerateContractClientsOptions} [options] Options for generating the clients.
  * @throws If unable to: read provided file at `modulePath`, parse the provided smart contract module or write to provided directory `outDirPath`.
  */
 export async function generateContractClientsFromFile(
@@ -70,10 +70,10 @@ export async function generateContractClientsFromFile(
 
 /**
  * Generate smart contract client code for a given smart contract module.
- * @param moduleSource Buffer with bytes for the smart contract module.
- * @param outName Name for the output file.
- * @param outDirPath Path to the directory to use for the output.
- * @param options Options for generating the clients.
+ * @param {SDK.VersionedModuleSource} moduleSource Buffer with bytes for the smart contract module.
+ * @param {string} outName Name for the output file.
+ * @param {string} outDirPath Path to the directory to use for the output.
+ * @param {GenerateContractClientsOptions} [options] Options for generating the clients.
  * @throws If unable to write to provided directory `outDirPath`.
  */
 export async function generateContractClients(
@@ -113,11 +113,11 @@ export async function generateContractClients(
 
 /**
  * Iterates a module interface building source files in the project.
- * @param project The project to use for creating sourcefiles.
- * @param outModuleName The name for outputting the module client file.
- * @param outDirPath The directory to use for outputting files.
- * @param moduleSource The source of the smart contract module.
- * @param notifyProgress Callback to report progress.
+ * @param {tsm.Project} project The project to use for creating sourcefiles.
+ * @param {string} outModuleName The name for outputting the module client file.
+ * @param {string} outDirPath The directory to use for outputting files.
+ * @param {SDK.VersionedModuleSource} moduleSource The source of the smart contract module.
+ * @param {NotifyProgress} [notifyProgress] Callback to report progress.
  */
 async function generateCode(
     project: tsm.Project,
@@ -239,7 +239,7 @@ async function generateCode(
  */
 function generateModuleBaseCode(
     moduleSourceFile: tsm.SourceFile,
-    moduleRef: SDK.ModuleReference,
+    moduleRef: SDK.ModuleReference.Type,
     moduleClientId: string,
     moduleClientType: string,
     internalModuleClientId: string
@@ -260,8 +260,8 @@ function generateModuleBaseCode(
         declarations: [
             {
                 name: moduleRefId,
-                type: 'SDK.ModuleReference',
-                initializer: `new SDK.ModuleReference('${moduleRef.moduleRef}')`,
+                type: 'SDK.ModuleReference.Type',
+                initializer: `SDK.ModuleReference.fromHexString('${moduleRef.moduleRef}')`,
             },
         ],
     });
@@ -422,13 +422,13 @@ function generateModuleBaseCode(
 
 /**
  * Generate code in the module client specific to each contract in the module.
- * @param moduleSourceFile The sourcefile of the module client.
- * @param contractName The name of the contract.
- * @param moduleClientId The identifier for the module client.
- * @param moduleClientType The identifier for the type of the module client.
- * @param internalModuleClientId The identifier for the internal module client.
- * @param moduleRef The reference of the module.
- * @param contractSchema The contract schema.
+ * @param {tsm.SourceFile} moduleSourceFile The sourcefile of the module client.
+ * @param {string} contractName The name of the contract.
+ * @param {string} moduleClientId The identifier for the module client.
+ * @param {string} moduleClientType The identifier for the type of the module client.
+ * @param {string} internalModuleClientId The identifier for the internal module client.
+ * @param {SDK.ModuleReference.Type} moduleRef The reference of the module.
+ * @param {SDK.SchemaContractV3} [contractSchema] The contract schema.
  */
 function generactionModuleContractCode(
     moduleSourceFile: tsm.SourceFile,
@@ -436,7 +436,7 @@ function generactionModuleContractCode(
     moduleClientId: string,
     moduleClientType: string,
     internalModuleClientId: string,
-    moduleRef: SDK.ModuleReference,
+    moduleRef: SDK.ModuleReference.Type,
     contractSchema?: SDK.SchemaContractV3
 ) {
     const transactionMetadataId = 'transactionMetadata';
@@ -551,19 +551,19 @@ function generactionModuleContractCode(
 
 /**
  * Generate code for a smart contract instance client.
- * @param contractSourceFile The sourcefile of the contract client.
- * @param contractName The name of the smart contract.
- * @param contractClientId The identifier to use for the contract client.
- * @param contractClientType The identifier to use for the type of the contract client.
- * @param moduleRef The module reference.
- * @param contractSchema The contract schema to use in the client.
+ * @param {tsm.SourceFile} contractSourceFile The sourcefile of the contract client.
+ * @param {string} contractName The name of the smart contract.
+ * @param {string} contractClientId The identifier to use for the contract client.
+ * @param {string} contractClientType The identifier to use for the type of the contract client.
+ * @param {SDK.ModuleReference.Type} moduleRef The module reference.
+ * @param {SDK.SchemaContractV3} [contractSchema] The contract schema to use in the client.
  */
 function generateContractBaseCode(
     contractSourceFile: tsm.SourceFile,
     contractName: string,
     contractClientId: string,
     contractClientType: string,
-    moduleRef: SDK.ModuleReference,
+    moduleRef: SDK.ModuleReference.Type,
     contractSchema?: SDK.SchemaContractV3
 ) {
     const moduleRefId = 'moduleReference';
@@ -587,8 +587,8 @@ function generateContractBaseCode(
         declarations: [
             {
                 name: moduleRefId,
-                type: 'SDK.ModuleReference',
-                initializer: `new SDK.ModuleReference('${moduleRef.moduleRef}')`,
+                type: 'SDK.ModuleReference.Type',
+                initializer: `SDK.ModuleReference.fromHexString('${moduleRef.moduleRef}')`,
             },
         ],
     });
@@ -790,7 +790,13 @@ function generateContractBaseCode(
 
         contractSourceFile
             .addFunction({
-                docs: ['TODO'],
+                docs: [
+                    [
+                        `Parse the contract events logged by the '${contractName}' contract.`,
+                        `@param {SDK.ContractEvent.Type} ${eventParameterId} The unparsed contract event.`,
+                        `@returns {${eventParameterTypeId}} The structured contract event.`,
+                    ].join('\n'),
+                ],
                 isExported: true,
                 name: 'parseEvent',
                 parameters: [
@@ -811,12 +817,12 @@ function generateContractBaseCode(
 
 /**
  * Generate contract client code for each entrypoint.
- * @param contractSourceFile The sourcefile of the contract.
- * @param contractName The name of the contract.
- * @param contractClientId The identifier to use for the contract client.
- * @param contractClientType The identifier to use for the type of the contract client.
- * @param entrypointName The name of the entrypoint.
- * @param entrypointSchema The schema to use for the entrypoint.
+ * @param {tsm.SourceFile} contractSourceFile The sourcefile of the contract.
+ * @param {string} contractName The name of the contract.
+ * @param {string} contractClientId The identifier to use for the contract client.
+ * @param {string} contractClientType The identifier to use for the type of the contract client.
+ * @param {string} entrypointName The name of the entrypoint.
+ * @param {SDK.SchemaFunctionV2} [entrypointSchema] The schema to use for the entrypoint.
  */
 function generateContractEntrypointCode(
     contractSourceFile: tsm.SourceFile,
@@ -876,7 +882,7 @@ function generateContractEntrypointCode(
             .setBodyText(
                 [
                     ...(receiveParameter.code ?? []),
-                    `return ${receiveParameter.id}`,
+                    `return ${receiveParameter.id};`,
                 ].join('\n')
             );
     }
@@ -895,7 +901,7 @@ function generateContractEntrypointCode(
                           ]),
                     `@param {SDK.AccountSigner} ${signerId} - The signer of the update contract transaction.`,
                     '@throws If the entrypoint is not successfully invoked.',
-                    '@returns {SDK.TransactionHash.Type} Transaction hash',
+                    '@returns {SDK.TransactionHash.Type} Hash of the transaction.',
                 ].join('\n'),
             ],
             isExported: true,
@@ -1039,10 +1045,10 @@ function generateContractEntrypointCode(
                     '    return undefined;',
                     '}',
                     `if (${invokeResultId}.returnValue === undefined) {`,
-                    "    throw new Error('Invalid smart contract version.')",
+                    "    throw new Error('Invalid smart contract version.');",
                     '}',
                     ...returnValueTokens.code,
-                    `return <any>${returnValueTokens.id}`,
+                    `return <any>${returnValueTokens.id};`,
                 ].join('\n')
             );
     }
@@ -1896,8 +1902,8 @@ type TypeConversionCode = {
 
 /**
  * Generate tokens for creating the parameter from input.
- * @param parameterId Identifier of the input.
- * @param schemaType The schema type to use for the parameter.
+ * @param {string} parameterId Identifier of the input.
+ * @param {SDK.SchemaType} [schemaType] The schema type to use for the parameter.
  * @returns Undefined if no parameter is expected.
  */
 function createParameterCode(
@@ -1939,9 +1945,9 @@ function createParameterCode(
 
 /**
  * Generate tokens for parsing a contract event.
- * @param eventId Identifier of the event to parse.
- * @param schemaType The schema to take into account when parsing.
- * @returns Undefined if no code should be produce.
+ * @param {string} eventId Identifier of the event to parse.
+ * @param {SDK.SchemaType} [schemaType] The schema to take into account when parsing.
+ * @returns Undefined if no code should be produced.
  */
 function parseEventCode(
     eventId: string,
@@ -1978,9 +1984,9 @@ function parseEventCode(
 
 /**
  * Generate tokens for parsing a return type.
- * @param returnTypeId Identifier of the return type to parse.
- * @param schemaType The schema to take into account when parsing return type.
- * @returns Undefined if no code should be produce.
+ * @param {string} returnTypeId Identifier of the return type to parse.
+ * @param {SDK.SchemaType} [schemaType] The schema to take into account when parsing return type.
+ * @returns Undefined if no code should be produced.
  */
 function parseReturnValueCode(
     returnTypeId: string,
@@ -2026,9 +2032,9 @@ function createIdGenerator() {
 
 /**
  * Create tokens for accessing a property on an object.
- * @param objectId Identifier for the object.
- * @param propId Identifier for the property.
- * @returns Tokens for accessing the prop.
+ * @param {string} objectId Identifier for the object.
+ * @param {string} propId Identifier for the property.
+ * @returns {string} Tokens for accessing the prop.
  */
 function accessProp(objectId: string, propId: string): string {
     return identifierRegex.test(propId)

@@ -104,7 +104,5 @@ export function toProto(timestamp: Timestamp): Proto.Timestamp {
  */
 export const fromTypedJSON = makeFromTypedJson(
     JSON_DISCRIMINATOR,
-    (v: string) => {
-        fromMillis(BigInt(v));
-    }
+    (v: string) => fromMillis(BigInt(v))
 );

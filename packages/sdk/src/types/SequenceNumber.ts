@@ -71,7 +71,5 @@ export function toProto(sequenceNumber: SequenceNumber): Proto.SequenceNumber {
  */
 export const fromTypedJSON = makeFromTypedJson(
     JSON_DISCRIMINATOR,
-    (v: string) => {
-        create(BigInt(v));
-    }
+    (v: string) => create(BigInt(v))
 );

@@ -30,6 +30,7 @@
   - `deserializeTypeValue`
 
 The API now uses dedicated types instead of language primitives:
+
 - Use `AccountAddress` instead of a string with base58 encoding. Use `AccountAddress.fromBase58('<base58>')` to construct it.
 - Use `BlockHash` instead of a string with hex encoding. Use `BlockHash.fromHexString('<hex>')` to construct it.
 - Use `TranactionHash` instead of a string with hex encoding. Use `TransactionHash.fromHexString('<hex>')` to construct it.
@@ -47,6 +48,7 @@ The API now uses dedicated types instead of language primitives:
 - Use `ModuleReference` instead of a string with hex encoding. Can be constructed using `ModuleReference.fromHexString('<hex-string>')`.
 
 Several types have been replaced with a module containing the type itself together with functions for constructing and converting the type:
+
 - `AccountAddress` is now a module with functions related to account addresses:
   - To refer to `AccountAddress` as a type use `AccountAddress.Type`.
   - Constructing `new AccountAddress("<address>")` is now `AccountAddress.fromBase58("<address>")`.
@@ -81,6 +83,8 @@ Several types have been replaced with a module containing the type itself togeth
 - `EntrypointName` is now a module with functions related to entrypoint names of a smart contract.
 - `ReceiveName` is now a module with functions related to receive-function names of a smart contract.
 - `ReturnValue` is now a module with functions related to return values from invoking a smart contract.
+- Functions `jsonStringify` and `jsonParse`, which acts as a regular `JSON.stringify` and `JSON.parse` correspondingly,
+  with the addition of stringifying concordium domain types in a wrapper object that can be parsed into the respective types.
 
 ### Changes
 

@@ -85,7 +85,5 @@ export function toProto(duration: Duration): Proto.Duration {
  */
 export const fromTypedJSON = makeFromTypedJson(
     JSON_DISCRIMINATOR,
-    (v: string) => {
-        fromMillis(BigInt(v));
-    }
+    (v: string) => fromMillis(BigInt(v))
 );

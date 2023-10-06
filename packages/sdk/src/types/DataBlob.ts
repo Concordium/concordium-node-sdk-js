@@ -29,7 +29,7 @@ export class DataBlob extends TypeBase<Serializable> {
         this.data = Buffer.from(data);
     }
 
-    toJSON(): string {
+    public toJSON(): string {
         return packBufferWithWord16Length(this.data).toString('hex');
     }
 

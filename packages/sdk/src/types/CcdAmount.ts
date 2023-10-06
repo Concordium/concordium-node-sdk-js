@@ -37,7 +37,9 @@ class CcdAmount extends TypeBase<Serializable> {
  * The base unit of CCD is micro CCD, which is the representation
  * used on chain.
  */
-export { CcdAmount as Type };
+export type Type = CcdAmount;
+export const instanceOf = (value: unknown): value is CcdAmount =>
+    value instanceof CcdAmount;
 
 /**
  * Constructs a CcdAmount and checks that it is valid. It accepts a number, string, big, or bigint as parameter.

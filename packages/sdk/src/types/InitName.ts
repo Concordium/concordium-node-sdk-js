@@ -25,7 +25,9 @@ class InitName extends TypeBase<Serializable> {
 }
 
 /** The name of an init-function for a smart contract. Note: This is of the form 'init_<contractName>'. */
-export { InitName as Type };
+export type Type = InitName;
+export const instanceOf = (value: unknown): value is InitName =>
+    value instanceof InitName;
 
 /**
  * Create an InitName directly from a string, ensuring it follows the format of an init-function name.
@@ -34,10 +36,10 @@ export { InitName as Type };
  * @returns {InitName}
  */
 export function fromString(value: string): InitName {
-    if (value.length <= 100) {
+    if (value.length > 100) {
         throw new Error('Invalid InitName: Can be atmost 100 characters long.');
     }
-    if (value.startsWith('init_')) {
+    if (!value.startsWith('init_')) {
         throw new Error("Invalid InitName: Must be prefixed with 'init_'.");
     }
     if (value.includes('.')) {
@@ -106,4 +108,4 @@ export function toProto(initName: InitName): Proto.InitName {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(JSON_DISCRIMINATOR, InitName);
+export const fromTypedJSON = makeFromTypedJson(JSON_DISCRIMINATOR, fromString);

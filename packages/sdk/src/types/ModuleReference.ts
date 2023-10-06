@@ -32,7 +32,7 @@ class ModuleReference extends TypeBase<Serializable> {
         super();
     }
 
-    toJSON(): string {
+    public toJSON(): string {
         return packBufferWithWord32Length(this.decodedModuleRef).toString(
             'hex'
         );
@@ -42,7 +42,9 @@ class ModuleReference extends TypeBase<Serializable> {
 /**
  * Reference to a smart contract module.
  */
-export { ModuleReference as Type };
+export type Type = ModuleReference;
+export const instanceOf = (value: unknown): value is ModuleReference =>
+    value instanceof ModuleReference;
 
 /**
  * Create a ModuleReference from a buffer of 32 bytes.
@@ -112,6 +114,11 @@ export function equals(left: ModuleReference, right: ModuleReference): boolean {
     return left.moduleRef === right.moduleRef;
 }
 
+const fromSerializable = (v: Serializable) => {
+    const data = Buffer.from(v, 'hex');
+    return fromBuffer(data);
+};
+
 /**
  * Takes a JSON string and converts it to instance of type {@linkcode Type}.
  *
@@ -121,8 +128,5 @@ export function equals(left: ModuleReference, right: ModuleReference): boolean {
  */
 export const fromTypedJSON = makeFromTypedJson(
     JSON_DISCRIMINATOR,
-    (v: Serializable) => {
-        const data = Buffer.from(v, 'hex');
-        return fromBuffer(data);
-    }
+    fromSerializable
 );

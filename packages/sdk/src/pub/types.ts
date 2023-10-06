@@ -69,6 +69,7 @@ export {
     TypedJson,
     ToTypedJson,
 } from '../types/util.js';
+export { jsonParse, jsonStringify } from '../types/json.js';
 
 // These cannot be exported directly as modules because of a bug in an eslint plugin.
 // https://github.com/import-js/eslint-plugin-import/issues/2289.

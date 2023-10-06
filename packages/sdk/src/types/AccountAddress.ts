@@ -37,7 +37,9 @@ class AccountAddress extends TypeBase<Serializable> {
  * - Is a valid base58 string with version byte of 1.
  * - The base58 string is a length of 50 (encoding exactly 32 bytes).
  */
-export { AccountAddress as Type };
+export type Type = AccountAddress;
+export const instanceOf = (value: unknown): value is AccountAddress =>
+    value instanceof AccountAddress;
 
 /**
  * Type guard for AccountAddress

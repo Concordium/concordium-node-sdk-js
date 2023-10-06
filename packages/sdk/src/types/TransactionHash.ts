@@ -29,7 +29,9 @@ class TransactionHash extends TypeBase<Serializable> {
 }
 
 /** Hash of a transaction. */
-export { TransactionHash as Type };
+export type Type = TransactionHash;
+export const instanceOf = (value: unknown): value is TransactionHash =>
+    value instanceof TransactionHash;
 
 /**
  * Create a TransactionHash from a buffer.

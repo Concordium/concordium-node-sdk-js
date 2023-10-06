@@ -24,7 +24,7 @@ class TransactionExpiry extends TypeBase<Serializable> {
         super();
     }
 
-    toJSON(): number {
+    public toJSON(): number {
         return Number(this.expiryEpochSeconds);
     }
 }
@@ -32,7 +32,9 @@ class TransactionExpiry extends TypeBase<Serializable> {
 /**
  * Representation of a transaction expiry date.
  */
-export { TransactionExpiry as Type };
+export type Type = TransactionExpiry;
+export const instanceOf = (value: unknown): value is TransactionExpiry =>
+    value instanceof TransactionExpiry;
 
 /**
  * Construct a TransactionExpiry from a number of seconds since unix epoch.
@@ -98,6 +100,8 @@ export function toProto(expiry: TransactionExpiry): Proto.TransactionTime {
     };
 }
 
+const fromSerializable = (v: Serializable) => fromEpochSeconds(BigInt(v));
+
 /**
  * Takes a JSON string and converts it to instance of type {@linkcode Type}.
  *
@@ -107,5 +111,5 @@ export function toProto(expiry: TransactionExpiry): Proto.TransactionTime {
  */
 export const fromTypedJSON = makeFromTypedJson(
     JSON_DISCRIMINATOR,
-    (v: string) => fromEpochSeconds(BigInt(v))
+    fromSerializable
 );

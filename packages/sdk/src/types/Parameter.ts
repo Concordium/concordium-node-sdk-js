@@ -27,7 +27,9 @@ class Parameter extends TypeBase<Serializable> {
 }
 
 /** Parameter for a smart contract entrypoint. */
-export { Parameter as Type };
+export type Type = Parameter;
+export const instanceOf = (value: unknown): value is Parameter =>
+    value instanceof Parameter;
 
 /**
  * Create an empty parameter.

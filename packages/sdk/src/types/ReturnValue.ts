@@ -29,7 +29,9 @@ class ReturnValue extends TypeBase<Serializable> {
 }
 
 /** Return value from invoking a smart contract entrypoint. */
-export { ReturnValue as Type };
+export type Type = ReturnValue;
+export const instanceOf = (value: unknown): value is ReturnValue =>
+    value instanceof ReturnValue;
 
 /**
  * Create an empty return value.

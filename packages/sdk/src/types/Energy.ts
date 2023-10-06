@@ -23,7 +23,9 @@ class Energy extends TypeBase<Serializable> {
 }
 
 /** Energy measure. Used as part of cost calculations for transactions. */
-export { Energy as Type };
+export type Type = Energy;
+export const instanceOf = (value: unknown): value is Energy =>
+    value instanceof Energy;
 
 /**
  * Construct an Energy type.
@@ -60,6 +62,8 @@ export function toProto(energy: Energy): Proto.Energy {
     };
 }
 
+const fromSerializable = (v: Serializable) => create(BigInt(v));
+
 /**
  * Takes a JSON string and converts it to instance of type {@linkcode Type}.
  *
@@ -67,4 +71,7 @@ export function toProto(energy: Energy): Proto.Energy {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(JSON_DISCRIMINATOR, Energy);
+export const fromTypedJSON = makeFromTypedJson(
+    JSON_DISCRIMINATOR,
+    fromSerializable
+);

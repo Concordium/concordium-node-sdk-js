@@ -38,7 +38,9 @@ class ReceiveName extends TypeBase<Serializable> {
  * - It is at most 100 characters.
  * - It contains at least one '.' character.
  */
-export { ReceiveName as Type };
+export type Type = ReceiveName;
+export const instanceOf = (value: unknown): value is ReceiveName =>
+    value instanceof ReceiveName;
 
 /**
  * Create a ReceiveName.

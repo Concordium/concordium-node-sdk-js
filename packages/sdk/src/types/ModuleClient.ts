@@ -44,7 +44,9 @@ class ModuleClient {
 /**
  * Type representing a smart contract module deployed on chain.
  */
-export { ModuleClient as Type };
+export type Type = ModuleClient;
+export const instanceOf = (value: unknown): value is ModuleClient =>
+    value instanceof ModuleClient;
 
 /**
  * Create a new `GenericModule` instance for interacting with a smart contract module on chain.

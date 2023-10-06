@@ -28,7 +28,9 @@ class EntrypointName<S extends string = string> extends TypeBase<Serializable> {
 /**
  * Type representing an entrypoint of a smart contract.
  */
-export { EntrypointName as Type };
+export type Type<S extends string = string> = EntrypointName<S>;
+export const instanceOf = (value: unknown): value is EntrypointName =>
+    value instanceof EntrypointName;
 
 /**
  * Create a smart contract entrypoint name from a string, ensuring it follows the required format.
@@ -80,7 +82,4 @@ export function toString<S extends string>(
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(
-    JSON_DISCRIMINATOR,
-    EntrypointName
-);
+export const fromTypedJSON = makeFromTypedJson(JSON_DISCRIMINATOR, fromString);

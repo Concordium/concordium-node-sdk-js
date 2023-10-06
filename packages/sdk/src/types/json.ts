@@ -81,49 +81,52 @@ export function jsonParse(
     }
     return JSON.parse(
         input,
-        (k, v) => reviveConcordiumTypes(k) ?? reviver?.(k, v) ?? v
+        (k, v) => reviveConcordiumTypes(v) ?? reviver?.(k, v) ?? v
     );
 }
 
-function replaceConcordiumTypes(value: any) {
+/**
+ * Replaces values of concordium domain types with values that can be revived into their original types.
+ */
+function replaceConcordiumType(value: any) {
     switch (true) {
-        case value instanceof AccountAddress.Type:
+        case AccountAddress.instanceOf(value):
             return (value as AccountAddress.Type).toTypedJSON();
-        case value instanceof BlockHash.Type:
+        case BlockHash.instanceOf(value):
             return (value as BlockHash.Type).toTypedJSON();
-        case value instanceof CcdAmount.Type:
+        case CcdAmount.instanceOf(value):
             return (value as CcdAmount.Type).toTypedJSON();
-        case value instanceof ContractAddress.Type:
+        case ContractAddress.instanceOf(value):
             return (value as ContractAddress.Type).toTypedJSON();
-        case value instanceof ContractName.Type:
+        case ContractName.instanceOf(value):
             return (value as ContractName.Type).toTypedJSON();
-        case value instanceof CredentialRegistrationId.Type:
+        case CredentialRegistrationId.instanceOf(value):
             return (value as CredentialRegistrationId.Type).toTypedJSON();
         case value instanceof DataBlob:
             return (value as DataBlob).toTypedJSON();
-        case value instanceof Duration.Type:
+        case Duration.instanceOf(value):
             return (value as Duration.Type).toTypedJSON();
-        case value instanceof Energy.Type:
+        case Energy.instanceOf(value):
             return (value as Energy.Type).toTypedJSON();
-        case value instanceof EntrypointName.Type:
+        case EntrypointName.instanceOf(value):
             return (value as EntrypointName.Type).toTypedJSON();
-        case value instanceof InitName.Type:
+        case InitName.instanceOf(value):
             return (value as InitName.Type).toTypedJSON();
-        case value instanceof ModuleReference.Type:
+        case ModuleReference.instanceOf(value):
             return (value as ModuleReference.Type).toTypedJSON();
-        case value instanceof Parameter.Type:
+        case Parameter.instanceOf(value):
             return (value as Parameter.Type).toTypedJSON();
-        case value instanceof ReceiveName.Type:
+        case ReceiveName.instanceOf(value):
             return (value as ReceiveName.Type).toTypedJSON();
-        case value instanceof ReturnValue.Type:
+        case ReturnValue.instanceOf(value):
             return (value as ReturnValue.Type).toTypedJSON();
-        case value instanceof SequenceNumber.Type:
+        case SequenceNumber.instanceOf(value):
             return (value as SequenceNumber.Type).toTypedJSON();
-        case value instanceof Timestamp.Type:
+        case Timestamp.instanceOf(value):
             return (value as Timestamp.Type).toTypedJSON();
-        case value instanceof TransactionExpiry.Type:
+        case TransactionExpiry.instanceOf(value):
             return (value as TransactionExpiry.Type).toTypedJSON();
-        case value instanceof TransactionHash.Type:
+        case TransactionHash.instanceOf(value):
             return (value as TransactionHash.Type).toTypedJSON();
     }
 
@@ -132,13 +135,48 @@ function replaceConcordiumTypes(value: any) {
 
 /**
  * Stringify, which ensures concordium domain types are stringified in a restorable fashion.
+ *
+ * @param value A JavaScript value, usually an object or array, to be converted.
+ * @param replacer A function that transforms the results.
+ * @param space Adds indentation, white space, and line break characters to the return-value JSON text to make it easier to read.
  */
 export function jsonStringify(
+    value: any,
+    replacer?: (this: any, key: string, value: any) => any,
+    space?: string | number
+): string;
+/**
+ * Stringify, which ensures concordium domain types are stringified in a restorable fashion.
+ *
+ * @param value A JavaScript value, usually an object or array, to be converted.
+ * @param replacer An array of strings and numbers that acts as an approved list for selecting the object properties that will be stringified.
+ * @param space Adds indentation, white space, and line break characters to the return-value JSON text to make it easier to read.
+ */
+export function jsonStringify(
+    value: any,
+    replacer?: (number | string)[] | null,
+    space?: string | number
+): string;
+export function jsonStringify(
     input: any,
-    replacer?: (this: any, key: string, value: any) => any
+    replacer?: any,
+    space?: string | number
 ): string {
+    /**
+     * Recursively maps concordium domain types to values that can be revived into their original types.
+     */
+    const mapValues = (v: any): any => {
+        if (v == undefined || typeof v !== 'object') return v;
+        return Object.entries(v)
+            .map(([k, v]) => [k, mapValues(replaceConcordiumType(v))])
+            .reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {});
+    };
+
     return JSON.stringify(
-        input,
-        (k, v) => replaceConcordiumTypes(v) ?? replacer?.(k, v) ?? v
+        // Runs replace function for concordium types prior to JSON.stringify, as otherwise
+        // an attempt to run `toJSON` on objects is done before any replacer function.
+        mapValues(input),
+        replacer,
+        space
     );
 }

@@ -32,7 +32,9 @@ class BlockHash extends TypeBase<Serializable> {
 /**
  * Represents a hash of a block in the chain.
  */
-export { BlockHash as Type };
+export type Type = BlockHash;
+export const instanceOf = (value: unknown): value is BlockHash =>
+    value instanceof BlockHash;
 
 /**
  * Create a BlockHash from a buffer of 32 bytes.

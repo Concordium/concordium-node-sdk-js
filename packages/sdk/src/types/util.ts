@@ -125,21 +125,6 @@ interface Class<V, T> {
 }
 
 /**
- * Creates a function to convert typed JSON strings to their corresponding type instance.
- *
- * @template V - The JSON value
- * @template T - The type returned
- *
- * @param {D} expectedTypeDiscriminator - The discriminator expected in the JSON string parsed
- * @param {Class} Class - A class which can be instantiated with a single parameter of type `V`
- *
- * @returns The JSON parser function
- */
-export function makeFromTypedJson<V, T>(
-    expectedTypeDiscriminator: TypedJsonDiscriminator,
-    Class: Class<V, T>
-): (json: TypedJson<V>) => V;
-/**
  * Creates a function to convert {@linkcode TypedJson} to their corresponding type instance.
  *
  * @template V - The JSON value
@@ -155,10 +140,6 @@ export function makeFromTypedJson<V, T>(
 export function makeFromTypedJson<V, T>(
     expectedTypeDiscriminator: TypedJsonDiscriminator,
     toType: (value: V) => T
-): (json: TypedJson<V>) => T;
-export function makeFromTypedJson<V, T>(
-    expectedTypeDiscriminator: TypedJsonDiscriminator,
-    dyn: ((value: V) => T) | Class<V, T>
 ) {
     return ({ ['@type']: type, value }: TypedJson<V>): T | V => {
         if (!type) {
@@ -175,24 +156,8 @@ export function makeFromTypedJson<V, T>(
             );
         }
 
-        /**
-         * Parses the value
-         */
-        const transform = () => {
-            try {
-                return new (dyn as Class<V, T>)(value);
-            } catch (e) {
-                // thrown if `dyn` is not newable
-                if (e instanceof TypeError) {
-                    return (dyn as (value: V) => T)(value);
-                }
-
-                throw e;
-            }
-        };
-
         try {
-            return transform();
+            return toType(value);
         } catch (e) {
             // Value cannot be successfully parsed
             throw TypedJsonParseError.fromParseValueError(e);

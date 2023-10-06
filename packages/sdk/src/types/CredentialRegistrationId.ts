@@ -40,7 +40,9 @@ class CredentialRegistrationId extends TypeBase<Serializable> {
  * - Has length exactly 96, because a credId is 48 bytes.
  * - Checks the first bit is 1, which indicates that the value represents a compressed BLS12-381 curve point.
  */
-export { CredentialRegistrationId as Type };
+export type Type = CredentialRegistrationId;
+export const instanceOf = (value: unknown): value is CredentialRegistrationId =>
+    value instanceof CredentialRegistrationId;
 
 /**
  * Construct a CredentialRegistrationId from a hex string.
@@ -120,5 +122,5 @@ export function toBuffer(cred: CredentialRegistrationId): Uint8Array {
  */
 export const fromTypedJSON = makeFromTypedJson(
     JSON_DISCRIMINATOR,
-    CredentialRegistrationId
+    fromHexString
 );

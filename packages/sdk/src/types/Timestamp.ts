@@ -23,7 +23,9 @@ class Timestamp extends TypeBase<Serializable> {
 }
 
 /** Represents a timestamp. */
-export { Timestamp as Type };
+export type Type = Timestamp;
+export const instanceOf = (value: unknown): value is Timestamp =>
+    value instanceof Timestamp;
 
 /**
  * Create a Timestamp from milliseconds since Unix epoch.
@@ -95,6 +97,8 @@ export function toProto(timestamp: Timestamp): Proto.Timestamp {
     };
 }
 
+const fromSerializable = (v: Serializable) => fromMillis(BigInt(v));
+
 /**
  * Takes a JSON string and converts it to instance of type {@linkcode Type}.
  *
@@ -104,5 +108,5 @@ export function toProto(timestamp: Timestamp): Proto.Timestamp {
  */
 export const fromTypedJSON = makeFromTypedJson(
     JSON_DISCRIMINATOR,
-    (v: string) => fromMillis(BigInt(v))
+    fromSerializable
 );

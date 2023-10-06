@@ -28,7 +28,9 @@ class ContractAddress extends TypeBase<Serializable> {
 }
 
 /** Address of a smart contract instance. */
-export { ContractAddress as Type };
+export type Type = ContractAddress;
+export const instanceOf = (value: unknown): value is ContractAddress =>
+    value instanceof ContractAddress;
 
 /**
  * Type guard for ContractAddress
@@ -122,6 +124,9 @@ export function equals(left: ContractAddress, right: ContractAddress): boolean {
     return left.index === right.index && left.subindex === right.subindex;
 }
 
+const fromSerializable = (v: Serializable) =>
+    new ContractAddress(BigInt(v.index), BigInt(v.subindex));
+
 /**
  * Takes a JSON string and converts it to instance of type {@linkcode Type}.
  *
@@ -131,6 +136,5 @@ export function equals(left: ContractAddress, right: ContractAddress): boolean {
  */
 export const fromTypedJSON = makeFromTypedJson(
     JSON_DISCRIMINATOR,
-    (v: Serializable) =>
-        new ContractAddress(BigInt(v.index), BigInt(v.subindex))
+    fromSerializable
 );

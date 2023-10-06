@@ -23,7 +23,9 @@ class SequenceNumber extends TypeBase<Serializable> {
 }
 
 /** A transaction sequence number. (Formerly refered as Nonce) */
-export { SequenceNumber as Type };
+export type Type = SequenceNumber;
+export const instanceOf = (value: unknown): value is SequenceNumber =>
+    value instanceof SequenceNumber;
 
 /**
  * Construct an SequenceNumber type.
@@ -62,6 +64,8 @@ export function toProto(sequenceNumber: SequenceNumber): Proto.SequenceNumber {
     };
 }
 
+const fromSerializable = (v: Serializable) => create(BigInt(v));
+
 /**
  * Takes a JSON string and converts it to instance of type {@linkcode Type}.
  *
@@ -71,5 +75,5 @@ export function toProto(sequenceNumber: SequenceNumber): Proto.SequenceNumber {
  */
 export const fromTypedJSON = makeFromTypedJson(
     JSON_DISCRIMINATOR,
-    (v: string) => create(BigInt(v))
+    fromSerializable
 );

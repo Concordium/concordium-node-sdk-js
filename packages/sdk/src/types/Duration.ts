@@ -27,7 +27,9 @@ class Duration extends TypeBase<Serializable> {
 /**
  * Type representing a duration of time.
  */
-export { Duration as Type };
+export type Type = Duration;
+export const instanceOf = (value: unknown): value is Duration =>
+    value instanceof Duration;
 
 /**
  * Construct a Duration from a given number of milliseconds.
@@ -76,6 +78,8 @@ export function toProto(duration: Duration): Proto.Duration {
     };
 }
 
+const fromSerializable = (v: Serializable) => fromMillis(BigInt(v));
+
 /**
  * Takes a JSON string and converts it to instance of type {@linkcode Type}.
  *
@@ -85,5 +89,5 @@ export function toProto(duration: Duration): Proto.Duration {
  */
 export const fromTypedJSON = makeFromTypedJson(
     JSON_DISCRIMINATOR,
-    (v: string) => fromMillis(BigInt(v))
+    fromSerializable
 );

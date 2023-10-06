@@ -2,13 +2,13 @@ import { isAsciiAlphaNumericPunctuation } from '../contractHelpers.js';
 import * as ContractName from './ContractName.js';
 import * as EntrypointName from './EntrypointName.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_TYPE = TypedJsonDiscriminator.ReceiveName;
-type Json = string;
+type Serializable = string;
 
 /**
  * Represents a receive-function in a smart contract module.
@@ -17,9 +17,9 @@ type Json = string;
  * - It is at most 100 characters.
  * - It contains at least one '.' character.
  */
-class ReceiveName extends TypeBase<Json> {
-    protected jsonType = JSON_TYPE;
-    protected get jsonValue(): Json {
+class ReceiveName extends TypeBase<Serializable> {
+    protected typedJsonType = JSON_TYPE;
+    protected get serializableJsonValue(): Serializable {
         return this.value;
     }
 
@@ -180,4 +180,4 @@ export function equals(left: ReceiveName, right: ReceiveName): boolean {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromJSON = fromTypedJson(JSON_TYPE, fromString);
+export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, fromString);

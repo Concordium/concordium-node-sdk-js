@@ -1,6 +1,6 @@
 import type { HexString } from '../types.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The number of bytes used to represent a block hash.
@@ -10,14 +10,14 @@ const BLOCK_HASH_BYTE_LENGTH = 32;
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_TYPE = TypedJsonDiscriminator.BlockHash;
-type Json = HexString;
+type Serializable = HexString;
 
 /**
  * Represents a hash of a block in the chain.
  */
-class BlockHash extends TypeBase<Json> {
-    protected jsonType = JSON_TYPE;
-    protected get jsonValue(): Json {
+class BlockHash extends TypeBase<Serializable> {
+    protected typedJsonType = JSON_TYPE;
+    protected get serializableJsonValue(): Serializable {
         return toHexString(this);
     }
 
@@ -132,4 +132,4 @@ export function equals(left: BlockHash, right: BlockHash): boolean {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {BlockHash} The parsed instance.
  */
-export const fromJSON = fromTypedJson(JSON_TYPE, fromHexString);
+export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, fromHexString);

@@ -3,18 +3,18 @@ import { SchemaType, serializeSchemaType } from '../schemaTypes.js';
 import { serializeTypeValue } from '../schema.js';
 import type { Base64String, HexString } from '../types.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_TYPE = TypedJsonDiscriminator.Parameter;
-type Json = HexString;
+type Serializable = HexString;
 
 /** Parameter for a smart contract entrypoint. */
-class Parameter extends TypeBase<Json> {
-    protected jsonType = JSON_TYPE;
-    protected get jsonValue(): Json {
+class Parameter extends TypeBase<Serializable> {
+    protected typedJsonType = JSON_TYPE;
+    protected get serializableJsonValue(): Serializable {
         return toHexString(this);
     }
 
@@ -143,4 +143,4 @@ export function toProto(parameter: Parameter): Proto.Parameter {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromJSON = fromTypedJson(JSON_TYPE, fromHexString);
+export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, fromHexString);

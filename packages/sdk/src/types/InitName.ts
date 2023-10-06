@@ -1,18 +1,18 @@
 import * as ContractName from './ContractName.js';
 import { isAsciiAlphaNumericPunctuation } from '../contractHelpers.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_TYPE = TypedJsonDiscriminator.InitName;
-type Json = string;
+type Serializable = string;
 
 /** The name of an init-function for a smart contract. Note: This is of the form 'init_<contractName>'. */
-class InitName extends TypeBase<Json> {
-    protected jsonType = JSON_TYPE;
-    protected get jsonValue(): Json {
+class InitName extends TypeBase<Serializable> {
+    protected typedJsonType = JSON_TYPE;
+    protected get serializableJsonValue(): Serializable {
         return this.value;
     }
 
@@ -106,4 +106,4 @@ export function toProto(initName: InitName): Proto.InitName {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromJSON = fromTypedJson(JSON_TYPE, InitName);
+export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, InitName);

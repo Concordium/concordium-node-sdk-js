@@ -1,19 +1,19 @@
 import { isAsciiAlphaNumericPunctuation } from '../contractHelpers.js';
-import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_TYPE = TypedJsonDiscriminator.EntrypointName;
-type Json = string;
+type Serializable = string;
 
 /**
  * Type representing an entrypoint of a smart contract.
  * @template S Use for using string literals for the type.
  */
-class EntrypointName<S extends string = string> extends TypeBase<Json> {
-    protected jsonType = JSON_TYPE;
-    protected get jsonValue(): Json {
+class EntrypointName<S extends string = string> extends TypeBase<Serializable> {
+    protected typedJsonType = JSON_TYPE;
+    protected get serializableJsonValue(): Serializable {
         return this.value;
     }
 
@@ -80,4 +80,4 @@ export function toString<S extends string>(
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromJSON = fromTypedJson(JSON_TYPE, EntrypointName);
+export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, EntrypointName);

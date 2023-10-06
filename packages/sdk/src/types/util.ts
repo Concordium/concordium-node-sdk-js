@@ -32,7 +32,6 @@ export enum TypedJsonDiscriminator {
 export interface TypedJson<V> {
     /** The type discriminator */
     ['@type']: TypedJsonDiscriminator;
-    /** The type value */
     value: V;
 }
 
@@ -43,11 +42,14 @@ export interface TypedJson<V> {
  * @template V - The JSON value
  */
 export abstract class TypeBase<V> implements ToTypedJson<V> {
-    protected abstract jsonType: TypedJsonDiscriminator;
-    protected abstract get jsonValue(): V;
+    protected abstract typedJsonType: TypedJsonDiscriminator;
+    protected abstract get serializableJsonValue(): V;
 
-    public toJSON(): TypedJson<V> {
-        return { ['@type']: this.jsonType, value: this.jsonValue };
+    public toTypedJSON(): TypedJson<V> {
+        return {
+            ['@type']: this.typedJsonType,
+            value: this.serializableJsonValue,
+        };
     }
 }
 
@@ -64,19 +66,19 @@ export interface ToTypedJson<V> {
      *
      * @returns {TypedJson} The typed JSON.
      */
-    toJSON(): TypedJson<V>;
+    toTypedJSON(): TypedJson<V>;
 }
 
 /**
  * Describes the type of the JsonParseError.
  */
-export enum TypedJsonParseErrorType {
+export enum TypedJsonParseErrorCode {
     /** Malformed JSON passed to parser function */
-    Malformed,
+    MALFORMED = 'MALFORMED',
     /** JSON passed to parser function had unexpected {@link TypedJsonDiscriminator} type discriminator */
-    WrongType,
+    WRONG_TYPE = 'WRONG_TYPE',
     /** Value could not be parsed successfully */
-    InvalidValue,
+    INVALID_VALUE = 'INVALID_VALUE',
 }
 
 /**
@@ -84,21 +86,28 @@ export enum TypedJsonParseErrorType {
  */
 export class TypedJsonParseError extends Error {
     /**
-     * @param {TypedJsonParseErrorType} type - The error type.
+     * @param {TypedJsonParseErrorCode} code - The error code.
      * @param {string} message - The error message.
      */
     constructor(
-        public readonly type: TypedJsonParseErrorType,
+        public readonly code: TypedJsonParseErrorCode,
         message: string
     ) {
         super(message);
         this.name = 'TypedJsonParseError'; // convention for discriminating between error types.
     }
 
-    public static fromParseValueError(e: unknown): TypedJsonParseError {
+    /**
+     * Translates errors to {@linkcode TypedJsonParseError} parse error of
+     * type {@linkcode TypedJsonParseErrorCode.INVALID_VALUE} `INVALID_VALUE`.
+     *
+     * @param {unknown} error - An error of uknown type.
+     * @returns {TypedJsonParseError} The tranlated error.
+     */
+    public static fromParseValueError(error: unknown): TypedJsonParseError {
         return new TypedJsonParseError(
-            TypedJsonParseErrorType.InvalidValue,
-            (e as Error)?.message ?? `${e}`
+            TypedJsonParseErrorCode.INVALID_VALUE,
+            (error as Error)?.message ?? `${error}`
         );
     }
 }
@@ -125,7 +134,7 @@ interface Class<V, T> {
  *
  * @returns The JSON parser function
  */
-export function fromTypedJson<V, T>(
+export function makeFromTypedJson<V, T>(
     expectedTypeDiscriminator: TypedJsonDiscriminator,
     Class: Class<V, T>
 ): (json: JsonString) => V;
@@ -142,28 +151,27 @@ export function fromTypedJson<V, T>(
  *
  * @returns The JSON parser function
  */
-export function fromTypedJson<V, T>(
+export function makeFromTypedJson<V, T>(
     expectedTypeDiscriminator: TypedJsonDiscriminator,
     toType: (value: V) => T
 ): (json: JsonString) => T;
-export function fromTypedJson<V, T>(
+export function makeFromTypedJson<V, T>(
     expectedTypeDiscriminator: TypedJsonDiscriminator,
     dyn: ((value: V) => T) | Class<V, T>
 ) {
     return (json: JsonString): T | V => {
-        const { ['@type']: type, value: value }: TypedJson<V> =
-            JSON.parse(json);
+        const { ['@type']: type, value }: TypedJson<V> = JSON.parse(json);
 
-        if (!type || !value) {
+        if (!type) {
             throw new TypedJsonParseError(
-                TypedJsonParseErrorType.Malformed,
+                TypedJsonParseErrorCode.MALFORMED,
                 'Received malformed JSON string'
             );
         }
 
         if (expectedTypeDiscriminator !== type) {
             throw new TypedJsonParseError(
-                TypedJsonParseErrorType.WrongType,
+                TypedJsonParseErrorCode.WRONG_TYPE,
                 `Wrong type discriminator found when parsing JSON. Expected "${expectedTypeDiscriminator}", found "${type}"`
             );
         }

@@ -1,16 +1,16 @@
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_TYPE = TypedJsonDiscriminator.Energy;
-type Json = string;
+type Serializable = string;
 
 /** Energy measure. Used as part of cost calculations for transactions. */
-class Energy extends TypeBase<Json> {
-    protected jsonType = JSON_TYPE;
-    protected get jsonValue(): Json {
+class Energy extends TypeBase<Serializable> {
+    protected typedJsonType = JSON_TYPE;
+    protected get serializableJsonValue(): Serializable {
         return this.value.toString();
     }
 
@@ -67,4 +67,4 @@ export function toProto(energy: Energy): Proto.Energy {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromJSON = fromTypedJson(JSON_TYPE, Energy);
+export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, Energy);

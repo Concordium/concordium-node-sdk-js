@@ -1,17 +1,17 @@
 import * as InitName from './InitName.js';
 import { isAsciiAlphaNumericPunctuation } from '../contractHelpers.js';
-import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_TYPE = TypedJsonDiscriminator.ContractName;
-type Json = string;
+type Serializable = string;
 
 /** The name of a smart contract. Note: This does _not_ including the 'init_' prefix. */
-class ContractName extends TypeBase<Json> {
-    protected jsonType = JSON_TYPE;
-    protected get jsonValue(): Json {
+class ContractName extends TypeBase<Serializable> {
+    protected typedJsonType = JSON_TYPE;
+    protected get serializableJsonValue(): Serializable {
         return this.value;
     }
     constructor(
@@ -109,4 +109,4 @@ export function equals(left: ContractName, right: ContractName): boolean {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromJSON = fromTypedJson(JSON_TYPE, ContractName);
+export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, ContractName);

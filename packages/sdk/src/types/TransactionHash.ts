@@ -1,12 +1,12 @@
 import type { HexString } from '../types.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_TYPE = TypedJsonDiscriminator.TransactionHash;
-type Json = HexString;
+type Serializable = HexString;
 
 /**
  * The number of bytes used to represent a transaction hash.
@@ -14,9 +14,9 @@ type Json = HexString;
 const TRANSACTION_HASH_BYTE_LENGTH = 32;
 
 /** Hash of a transaction. */
-class TransactionHash extends TypeBase<Json> {
-    protected jsonType = JSON_TYPE;
-    protected get jsonValue(): Json {
+class TransactionHash extends TypeBase<Serializable> {
+    protected typedJsonType = JSON_TYPE;
+    protected get serializableJsonValue(): Serializable {
         return toHexString(this);
     }
 
@@ -122,4 +122,4 @@ export function equals(left: TransactionHash, right: TransactionHash): boolean {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromJSON = fromTypedJson(JSON_TYPE, fromHexString);
+export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, fromHexString);

@@ -1,13 +1,13 @@
 import { HexString } from '../types.js';
 import { isHex } from '../util.js';
 import { Buffer } from 'buffer/index.js';
-import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_TYPE = TypedJsonDiscriminator.CredentialRegistrationId;
-type Json = string;
+type Serializable = string;
 
 /**
  * Representation of a credential registration id, which enforces that it:
@@ -15,9 +15,9 @@ type Json = string;
  * - Has length exactly 96, because a credId is 48 bytes.
  * - Checks the first bit is 1, which indicates that the value represents a compressed BLS12-381 curve point.
  */
-class CredentialRegistrationId extends TypeBase<Json> {
-    protected jsonType = JSON_TYPE;
-    protected get jsonValue(): Json {
+class CredentialRegistrationId extends TypeBase<Serializable> {
+    protected typedJsonType = JSON_TYPE;
+    protected get serializableJsonValue(): Serializable {
         return this.credId;
     }
 
@@ -26,6 +26,10 @@ class CredentialRegistrationId extends TypeBase<Json> {
         public readonly credId: string
     ) {
         super();
+    }
+
+    public toJSON(): string {
+        return this.credId;
     }
 }
 
@@ -113,4 +117,7 @@ export function toBuffer(cred: CredentialRegistrationId): Uint8Array {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromJSON = fromTypedJson(JSON_TYPE, CredentialRegistrationId);
+export const fromTypedJSON = makeFromTypedJson(
+    JSON_TYPE,
+    CredentialRegistrationId
+);

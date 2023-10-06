@@ -1,22 +1,22 @@
 import bs58check from 'bs58check';
 import { Buffer } from 'buffer/index.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 import { Base58String } from '../types.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_TYPE = TypedJsonDiscriminator.AccountAddress;
-type Json = Base58String;
+type Serializable = Base58String;
 
 /**
  * Representation of an account address, which enforces that it:
  * - Is a valid base58 string with version byte of 1.
  * - The base58 string is a length of 50 (encoding exactly 32 bytes).
  */
-class AccountAddress extends TypeBase<Json> {
-    protected jsonType = JSON_TYPE;
+class AccountAddress extends TypeBase<Serializable> {
+    protected typedJsonType = JSON_TYPE;
 
     constructor(
         /** The account address represented in base58check. */
@@ -27,7 +27,7 @@ class AccountAddress extends TypeBase<Json> {
         super();
     }
 
-    protected get jsonValue(): Json {
+    protected get serializableJsonValue(): Serializable {
         return this.address;
     }
 }
@@ -212,4 +212,4 @@ export function equals(left: AccountAddress, right: AccountAddress): boolean {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {AccountAddress} The parsed instance.
  */
-export const fromJSON = fromTypedJson(JSON_TYPE, fromBase58);
+export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, fromBase58);

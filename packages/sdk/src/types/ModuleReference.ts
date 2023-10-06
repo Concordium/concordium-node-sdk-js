@@ -2,14 +2,7 @@ import type * as Proto from '../grpc-api/v2/concordium/types.js';
 import { Buffer } from 'buffer/index.js';
 import { packBufferWithWord32Length } from '../serializationHelpers.js';
 import type { HexString } from '../types.js';
-import {
-    TypeBase,
-    TypedJsonDiscriminator,
-    TypedJsonParseError,
-    TypedJsonParseErrorType,
-    fromTypedJson,
-} from './util.js';
-import { Cursor, deserializeUInt32BE } from '../deserializationHelpers.js';
+import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The number of bytes used to represent a block hash.
@@ -19,18 +12,15 @@ const MODULE_REF_BYTE_LENGTH = 32;
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_TYPE = TypedJsonDiscriminator.ModuleReference;
-type Json = HexString;
+type Serializable = HexString;
 
 /**
  * Reference to a smart contract module.
  */
-class ModuleReference extends TypeBase<Json> {
-    protected jsonType = JSON_TYPE;
-    protected get jsonValue(): Json {
-        // TODO: why is this prefixed with length of data?
-        return packBufferWithWord32Length(this.decodedModuleRef).toString(
-            'hex'
-        );
+class ModuleReference extends TypeBase<Serializable> {
+    protected typedJsonType = JSON_TYPE;
+    protected get serializableJsonValue(): Serializable {
+        return Buffer.from(this.decodedModuleRef).toString('hex');
     }
 
     constructor(
@@ -40,6 +30,12 @@ class ModuleReference extends TypeBase<Json> {
         public readonly decodedModuleRef: Uint8Array
     ) {
         super();
+    }
+
+    toJSON(): string {
+        return packBufferWithWord32Length(this.decodedModuleRef).toString(
+            'hex'
+        );
     }
 }
 
@@ -123,17 +119,7 @@ export function equals(left: ModuleReference, right: ModuleReference): boolean {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromJSON = fromTypedJson(JSON_TYPE, (v: Json) => {
-    const cursor = Cursor.fromHex(v);
-    const len = deserializeUInt32BE(cursor);
-    const data = cursor.remainingBytes;
-
-    if (data.length !== len) {
-        throw new TypedJsonParseError(
-            TypedJsonParseErrorType.Malformed,
-            `Expected byte length of data to be ${len}, had actual length of ${data.length}`
-        );
-    }
-
+export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, (v: Serializable) => {
+    const data = Buffer.from(v, 'hex');
     return fromBuffer(data);
 });

@@ -1,22 +1,22 @@
 import { Big, BigSource } from 'big.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 const MICRO_CCD_PER_CCD = 1_000_000;
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_TYPE = TypedJsonDiscriminator.CcdAmount;
-type Json = string;
+type Serializable = string;
 
 /**
  * Representation of a CCD amount.
  * The base unit of CCD is micro CCD, which is the representation
  * used on chain.
  */
-class CcdAmount extends TypeBase<Json> {
-    protected jsonType = JSON_TYPE;
-    protected get jsonValue(): Json {
+class CcdAmount extends TypeBase<Serializable> {
+    protected typedJsonType = JSON_TYPE;
+    protected get serializableJsonValue(): Serializable {
         return this.microCcdAmount.toString();
     }
 
@@ -25,6 +25,10 @@ class CcdAmount extends TypeBase<Json> {
         public readonly microCcdAmount: bigint
     ) {
         super();
+    }
+
+    public toJSON(): string {
+        return this.microCcdAmount.toString();
     }
 }
 
@@ -173,4 +177,4 @@ export function toProto(amount: CcdAmount): Proto.Amount {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromJSON = fromTypedJson(JSON_TYPE, fromMicroCcd);
+export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, fromMicroCcd);

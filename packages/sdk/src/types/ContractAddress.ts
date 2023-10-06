@@ -1,21 +1,22 @@
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import { TypeBase, TypedJsonDiscriminator, fromTypedJson } from './util.js';
+import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_TYPE = TypedJsonDiscriminator.ContractAddress;
-type Json = { index: string; subindex: string };
+type Serializable = { index: string; subindex: string };
 
 /** Address of a smart contract instance. */
-class ContractAddress extends TypeBase<Json> {
-    protected jsonType = JSON_TYPE;
-    protected get jsonValue(): Json {
+class ContractAddress extends TypeBase<Serializable> {
+    protected typedJsonType = JSON_TYPE;
+    protected get serializableJsonValue(): Serializable {
         return {
             index: this.index.toString(),
             subindex: this.subindex.toString(),
         };
     }
+
     constructor(
         /** The index of the smart contract address. */
         public readonly index: bigint,
@@ -128,7 +129,7 @@ export function equals(left: ContractAddress, right: ContractAddress): boolean {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromJSON = fromTypedJson(
+export const fromTypedJSON = makeFromTypedJson(
     JSON_TYPE,
     (v: Json) => new ContractAddress(BigInt(v.index), BigInt(v.subindex))
 );

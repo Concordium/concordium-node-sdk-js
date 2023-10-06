@@ -1,5 +1,5 @@
 import { parseEndpoint } from '../shared/util.js';
-import { BlockHash, HexString } from '@concordium/web-sdk';
+import { BlockHash, ModuleReference } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
@@ -54,12 +54,12 @@ const client = new ConcordiumGRPCNodeClient(
         cli.flags.block === undefined
             ? undefined
             : BlockHash.fromHexString(cli.flags.block);
-    const moduleRefs: AsyncIterable<HexString> =
+    const moduleRefs: AsyncIterable<ModuleReference.Type> =
         client.getModuleList(blockHash);
     // #endregion documentation-snippet
 
     // Prints module references
     for await (const moduleRef of moduleRefs) {
-        console.log(moduleRef);
+        console.log(ModuleReference.toHexString(moduleRef));
     }
 })();

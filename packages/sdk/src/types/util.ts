@@ -120,10 +120,6 @@ export const isTypedJsonParseError = (
     error: unknown
 ): error is TypedJsonParseError => error instanceof TypedJsonParseError;
 
-interface Class<V, T> {
-    new (v: V): T;
-}
-
 /**
  * Creates a function to convert {@linkcode TypedJson} to their corresponding type instance.
  *

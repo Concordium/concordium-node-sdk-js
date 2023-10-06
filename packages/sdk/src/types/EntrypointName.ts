@@ -4,7 +4,7 @@ import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
-export const JSON_TYPE = TypedJsonDiscriminator.EntrypointName;
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.EntrypointName;
 type Serializable = string;
 
 /**
@@ -12,7 +12,7 @@ type Serializable = string;
  * @template S Use for using string literals for the type.
  */
 class EntrypointName<S extends string = string> extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_TYPE;
+    protected typedJsonType = JSON_DISCRIMINATOR;
     protected get serializable(): Serializable {
         return this.value;
     }
@@ -28,7 +28,7 @@ class EntrypointName<S extends string = string> extends TypeBase<Serializable> {
 /**
  * Type representing an entrypoint of a smart contract.
  */
-export type Type<S extends string = string> = EntrypointName<S>;
+export { EntrypointName as Type };
 
 /**
  * Create a smart contract entrypoint name from a string, ensuring it follows the required format.
@@ -80,4 +80,7 @@ export function toString<S extends string>(
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, EntrypointName);
+export const fromTypedJSON = makeFromTypedJson(
+    JSON_DISCRIMINATOR,
+    EntrypointName
+);

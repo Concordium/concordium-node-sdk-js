@@ -5,12 +5,12 @@ import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
-export const JSON_TYPE = TypedJsonDiscriminator.ContractName;
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.ContractName;
 type Serializable = string;
 
 /** The name of a smart contract. Note: This does _not_ including the 'init_' prefix. */
 class ContractName extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_TYPE;
+    protected typedJsonType = JSON_DISCRIMINATOR;
     protected get serializable(): Serializable {
         return this.value;
     }
@@ -23,7 +23,7 @@ class ContractName extends TypeBase<Serializable> {
 }
 
 /** The name of a smart contract. Note: This does _not_ including the 'init_' prefix. */
-export type Type = ContractName;
+export { ContractName as Type };
 
 /**
  * Create a contract name from a string, ensuring it follows the format of a contract name.
@@ -109,4 +109,7 @@ export function equals(left: ContractName, right: ContractName): boolean {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, ContractName);
+export const fromTypedJSON = makeFromTypedJson(
+    JSON_DISCRIMINATOR,
+    ContractName
+);

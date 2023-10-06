@@ -8,12 +8,12 @@ import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
-export const JSON_TYPE = TypedJsonDiscriminator.Parameter;
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.Parameter;
 type Serializable = HexString;
 
 /** Parameter for a smart contract entrypoint. */
 class Parameter extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_TYPE;
+    protected typedJsonType = JSON_DISCRIMINATOR;
     protected get serializable(): Serializable {
         return toHexString(this);
     }
@@ -27,7 +27,7 @@ class Parameter extends TypeBase<Serializable> {
 }
 
 /** Parameter for a smart contract entrypoint. */
-export type Type = Parameter;
+export { Parameter as Type };
 
 /**
  * Create an empty parameter.
@@ -143,4 +143,7 @@ export function toProto(parameter: Parameter): Proto.Parameter {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, fromHexString);
+export const fromTypedJSON = makeFromTypedJson(
+    JSON_DISCRIMINATOR,
+    fromHexString
+);

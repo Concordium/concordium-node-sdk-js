@@ -1,6 +1,6 @@
 /**
  * Discriminator for {@linkcode TypedJson}. The member used to identify each type is
- * exported from each type module and can be accessed through named export `JSON_TYPE`.
+ * exported from each type module and can be accessed through named export `JSON_DISCRIMINATOR`.
  */
 export enum TypedJsonDiscriminator {
     AccountAddress = 'ccd_account_address',

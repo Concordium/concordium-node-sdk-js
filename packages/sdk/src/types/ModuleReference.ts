@@ -11,14 +11,14 @@ const MODULE_REF_BYTE_LENGTH = 32;
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
-export const JSON_TYPE = TypedJsonDiscriminator.ModuleReference;
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.ModuleReference;
 type Serializable = HexString;
 
 /**
  * Reference to a smart contract module.
  */
 class ModuleReference extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_TYPE;
+    protected typedJsonType = JSON_DISCRIMINATOR;
     protected get serializable(): Serializable {
         return Buffer.from(this.decodedModuleRef).toString('hex');
     }
@@ -42,7 +42,7 @@ class ModuleReference extends TypeBase<Serializable> {
 /**
  * Reference to a smart contract module.
  */
-export type Type = ModuleReference;
+export { ModuleReference as Type };
 
 /**
  * Create a ModuleReference from a buffer of 32 bytes.
@@ -119,7 +119,10 @@ export function equals(left: ModuleReference, right: ModuleReference): boolean {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, (v: Serializable) => {
-    const data = Buffer.from(v, 'hex');
-    return fromBuffer(data);
-});
+export const fromTypedJSON = makeFromTypedJson(
+    JSON_DISCRIMINATOR,
+    (v: Serializable) => {
+        const data = Buffer.from(v, 'hex');
+        return fromBuffer(data);
+    }
+);

@@ -7,7 +7,7 @@ import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
-export const JSON_TYPE = TypedJsonDiscriminator.ReceiveName;
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.ReceiveName;
 type Serializable = string;
 
 /**
@@ -18,7 +18,7 @@ type Serializable = string;
  * - It contains at least one '.' character.
  */
 class ReceiveName extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_TYPE;
+    protected typedJsonType = JSON_DISCRIMINATOR;
     protected get serializable(): Serializable {
         return this.value;
     }
@@ -38,7 +38,7 @@ class ReceiveName extends TypeBase<Serializable> {
  * - It is at most 100 characters.
  * - It contains at least one '.' character.
  */
-export type Type = ReceiveName;
+export { ReceiveName as Type };
 
 /**
  * Create a ReceiveName.
@@ -180,4 +180,4 @@ export function equals(left: ReceiveName, right: ReceiveName): boolean {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, fromString);
+export const fromTypedJSON = makeFromTypedJson(JSON_DISCRIMINATOR, fromString);

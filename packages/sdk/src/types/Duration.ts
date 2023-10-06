@@ -4,14 +4,14 @@ import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
-export const JSON_TYPE = TypedJsonDiscriminator.Duration;
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.Duration;
 type Serializable = string;
 
 /**
  * Type representing a duration of time.
  */
 class Duration extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_TYPE;
+    protected typedJsonType = JSON_DISCRIMINATOR;
     protected get serializable(): Serializable {
         return this.value.toString();
     }
@@ -27,7 +27,7 @@ class Duration extends TypeBase<Serializable> {
 /**
  * Type representing a duration of time.
  */
-export type Type = Duration;
+export { Duration as Type };
 
 /**
  * Construct a Duration from a given number of milliseconds.
@@ -83,6 +83,9 @@ export function toProto(duration: Duration): Proto.Duration {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, (v: string) => {
-    fromMillis(BigInt(v));
-});
+export const fromTypedJSON = makeFromTypedJson(
+    JSON_DISCRIMINATOR,
+    (v: string) => {
+        fromMillis(BigInt(v));
+    }
+);

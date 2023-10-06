@@ -7,7 +7,7 @@ import { Base58String } from '../types.js';
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
-export const JSON_TYPE = TypedJsonDiscriminator.AccountAddress;
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.AccountAddress;
 type Serializable = Base58String;
 
 /**
@@ -16,7 +16,7 @@ type Serializable = Base58String;
  * - The base58 string is a length of 50 (encoding exactly 32 bytes).
  */
 class AccountAddress extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_TYPE;
+    protected typedJsonType = JSON_DISCRIMINATOR;
 
     constructor(
         /** The account address represented in base58check. */
@@ -37,7 +37,7 @@ class AccountAddress extends TypeBase<Serializable> {
  * - Is a valid base58 string with version byte of 1.
  * - The base58 string is a length of 50 (encoding exactly 32 bytes).
  */
-export type Type = AccountAddress;
+export { AccountAddress as Type };
 
 /**
  * Type guard for AccountAddress
@@ -212,4 +212,4 @@ export function equals(left: AccountAddress, right: AccountAddress): boolean {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {AccountAddress} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, fromBase58);
+export const fromTypedJSON = makeFromTypedJson(JSON_DISCRIMINATOR, fromBase58);

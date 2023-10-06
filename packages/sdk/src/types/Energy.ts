@@ -4,12 +4,12 @@ import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
-export const JSON_TYPE = TypedJsonDiscriminator.Energy;
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.Energy;
 type Serializable = string;
 
 /** Energy measure. Used as part of cost calculations for transactions. */
 class Energy extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_TYPE;
+    protected typedJsonType = JSON_DISCRIMINATOR;
     protected get serializable(): Serializable {
         return this.value.toString();
     }
@@ -23,7 +23,7 @@ class Energy extends TypeBase<Serializable> {
 }
 
 /** Energy measure. Used as part of cost calculations for transactions. */
-export type Type = Energy;
+export { Energy as Type };
 
 /**
  * Construct an Energy type.
@@ -67,4 +67,4 @@ export function toProto(energy: Energy): Proto.Energy {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, Energy);
+export const fromTypedJSON = makeFromTypedJson(JSON_DISCRIMINATOR, Energy);

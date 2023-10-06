@@ -44,7 +44,7 @@ class ModuleClient {
 /**
  * Type representing a smart contract module deployed on chain.
  */
-export type Type = ModuleClient;
+export { ModuleClient as Type };
 
 /**
  * Create a new `GenericModule` instance for interacting with a smart contract module on chain.

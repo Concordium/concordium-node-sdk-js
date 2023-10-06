@@ -6,12 +6,12 @@ import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
-export const JSON_TYPE = TypedJsonDiscriminator.InitName;
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.InitName;
 type Serializable = string;
 
 /** The name of an init-function for a smart contract. Note: This is of the form 'init_<contractName>'. */
 class InitName extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_TYPE;
+    protected typedJsonType = JSON_DISCRIMINATOR;
     protected get serializable(): Serializable {
         return this.value;
     }
@@ -25,7 +25,7 @@ class InitName extends TypeBase<Serializable> {
 }
 
 /** The name of an init-function for a smart contract. Note: This is of the form 'init_<contractName>'. */
-export type Type = InitName;
+export { InitName as Type };
 
 /**
  * Create an InitName directly from a string, ensuring it follows the format of an init-function name.
@@ -106,4 +106,4 @@ export function toProto(initName: InitName): Proto.InitName {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, InitName);
+export const fromTypedJSON = makeFromTypedJson(JSON_DISCRIMINATOR, InitName);

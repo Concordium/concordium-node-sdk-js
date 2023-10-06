@@ -4,12 +4,12 @@ import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
-export const JSON_TYPE = TypedJsonDiscriminator.SequenceNumber;
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.SequenceNumber;
 type Serializable = string;
 
 /** Transaction sequence number. (Formerly refered as Nonce) */
 class SequenceNumber extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_TYPE;
+    protected typedJsonType = JSON_DISCRIMINATOR;
     protected get serializable(): Serializable {
         return this.value.toString();
     }
@@ -23,7 +23,7 @@ class SequenceNumber extends TypeBase<Serializable> {
 }
 
 /** A transaction sequence number. (Formerly refered as Nonce) */
-export type Type = SequenceNumber;
+export { SequenceNumber as Type };
 
 /**
  * Construct an SequenceNumber type.
@@ -69,6 +69,9 @@ export function toProto(sequenceNumber: SequenceNumber): Proto.SequenceNumber {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, (v: string) => {
-    create(BigInt(v));
-});
+export const fromTypedJSON = makeFromTypedJson(
+    JSON_DISCRIMINATOR,
+    (v: string) => {
+        create(BigInt(v));
+    }
+);

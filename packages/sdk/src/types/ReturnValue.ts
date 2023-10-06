@@ -10,12 +10,12 @@ import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
-export const JSON_TYPE = TypedJsonDiscriminator.ReturnValue;
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.ReturnValue;
 type Serializable = HexString;
 
 /** Return value from invoking a smart contract entrypoint. */
 class ReturnValue extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_TYPE;
+    protected typedJsonType = JSON_DISCRIMINATOR;
     protected get serializable(): Serializable {
         return toHexString(this);
     }
@@ -29,7 +29,7 @@ class ReturnValue extends TypeBase<Serializable> {
 }
 
 /** Return value from invoking a smart contract entrypoint. */
-export type Type = ReturnValue;
+export { ReturnValue as Type };
 
 /**
  * Create an empty return value.
@@ -110,4 +110,7 @@ export function toBase64SchemaType(
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, fromHexString);
+export const fromTypedJSON = makeFromTypedJson(
+    JSON_DISCRIMINATOR,
+    fromHexString
+);

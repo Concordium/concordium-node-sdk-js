@@ -6,7 +6,7 @@ import type { HexString } from '../types.js';
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
-export const JSON_TYPE = TypedJsonDiscriminator.DataBlob;
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.DataBlob;
 type Serializable = HexString;
 
 /**
@@ -14,7 +14,7 @@ type Serializable = HexString;
  * - the byte length is <= 256
  */
 export class DataBlob extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_TYPE;
+    protected typedJsonType = JSON_DISCRIMINATOR;
     protected get serializable(): string {
         return this.data.toString('hex');
     }
@@ -41,7 +41,7 @@ export class DataBlob extends TypeBase<Serializable> {
      * @returns {DataBlob} The parsed instance.
      */
     public static fromTypedJSON = makeFromTypedJson(
-        JSON_TYPE,
+        JSON_DISCRIMINATOR,
         (v: Serializable) => {
             const data = Buffer.from(v, 'hex');
             return new DataBlob(data);

@@ -4,12 +4,12 @@ import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
-export const JSON_TYPE = TypedJsonDiscriminator.ContractAddress;
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.ContractAddress;
 type Serializable = { index: string; subindex: string };
 
 /** Address of a smart contract instance. */
 class ContractAddress extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_TYPE;
+    protected typedJsonType = JSON_DISCRIMINATOR;
     protected get serializable(): Serializable {
         return {
             index: this.index.toString(),
@@ -28,7 +28,7 @@ class ContractAddress extends TypeBase<Serializable> {
 }
 
 /** Address of a smart contract instance. */
-export type Type = ContractAddress;
+export { ContractAddress as Type };
 
 /**
  * Type guard for ContractAddress
@@ -130,6 +130,7 @@ export function equals(left: ContractAddress, right: ContractAddress): boolean {
  * @returns {Type} The parsed instance.
  */
 export const fromTypedJSON = makeFromTypedJson(
-    JSON_TYPE,
-    (v: Json) => new ContractAddress(BigInt(v.index), BigInt(v.subindex))
+    JSON_DISCRIMINATOR,
+    (v: Serializable) =>
+        new ContractAddress(BigInt(v.index), BigInt(v.subindex))
 );

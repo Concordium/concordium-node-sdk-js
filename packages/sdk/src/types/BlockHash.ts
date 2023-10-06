@@ -9,14 +9,14 @@ const BLOCK_HASH_BYTE_LENGTH = 32;
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
-export const JSON_TYPE = TypedJsonDiscriminator.BlockHash;
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.BlockHash;
 type Serializable = HexString;
 
 /**
  * Represents a hash of a block in the chain.
  */
 class BlockHash extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_TYPE;
+    protected typedJsonType = JSON_DISCRIMINATOR;
     protected get serializable(): Serializable {
         return toHexString(this);
     }
@@ -32,7 +32,7 @@ class BlockHash extends TypeBase<Serializable> {
 /**
  * Represents a hash of a block in the chain.
  */
-export type Type = BlockHash;
+export { BlockHash as Type };
 
 /**
  * Create a BlockHash from a buffer of 32 bytes.
@@ -132,4 +132,7 @@ export function equals(left: BlockHash, right: BlockHash): boolean {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {BlockHash} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, fromHexString);
+export const fromTypedJSON = makeFromTypedJson(
+    JSON_DISCRIMINATOR,
+    fromHexString
+);

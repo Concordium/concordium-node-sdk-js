@@ -5,7 +5,7 @@ import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
-export const JSON_TYPE = TypedJsonDiscriminator.TransactionHash;
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.TransactionHash;
 type Serializable = HexString;
 
 /**
@@ -15,7 +15,7 @@ const TRANSACTION_HASH_BYTE_LENGTH = 32;
 
 /** Hash of a transaction. */
 class TransactionHash extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_TYPE;
+    protected typedJsonType = JSON_DISCRIMINATOR;
     protected get serializable(): Serializable {
         return toHexString(this);
     }
@@ -29,7 +29,7 @@ class TransactionHash extends TypeBase<Serializable> {
 }
 
 /** Hash of a transaction. */
-export type Type = TransactionHash;
+export { TransactionHash as Type };
 
 /**
  * Create a TransactionHash from a buffer.
@@ -122,4 +122,7 @@ export function equals(left: TransactionHash, right: TransactionHash): boolean {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, fromHexString);
+export const fromTypedJSON = makeFromTypedJson(
+    JSON_DISCRIMINATOR,
+    fromHexString
+);

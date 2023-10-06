@@ -5,14 +5,14 @@ import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
-export const JSON_TYPE = TypedJsonDiscriminator.TransactionExpiry;
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.TransactionExpiry;
 type Serializable = string;
 
 /**
  * Representation of a transaction expiry date.
  */
 class TransactionExpiry extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_TYPE;
+    protected typedJsonType = JSON_DISCRIMINATOR;
     protected get serializable(): Serializable {
         return this.expiryEpochSeconds.toString();
     }
@@ -32,7 +32,7 @@ class TransactionExpiry extends TypeBase<Serializable> {
 /**
  * Representation of a transaction expiry date.
  */
-export type Type = TransactionExpiry;
+export { TransactionExpiry as Type };
 
 /**
  * Construct a TransactionExpiry from a number of seconds since unix epoch.
@@ -105,6 +105,7 @@ export function toProto(expiry: TransactionExpiry): Proto.TransactionTime {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, (v: string) =>
-    fromEpochSeconds(BigInt(v))
+export const fromTypedJSON = makeFromTypedJson(
+    JSON_DISCRIMINATOR,
+    (v: string) => fromEpochSeconds(BigInt(v))
 );

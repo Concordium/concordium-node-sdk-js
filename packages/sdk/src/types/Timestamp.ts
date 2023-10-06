@@ -4,12 +4,12 @@ import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
-export const JSON_TYPE = TypedJsonDiscriminator.Timestamp;
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.Timestamp;
 type Serializable = string;
 
 /** Represents a timestamp. */
 class Timestamp extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_TYPE;
+    protected typedJsonType = JSON_DISCRIMINATOR;
     protected get serializable(): Serializable {
         return this.value.toString();
     }
@@ -23,7 +23,7 @@ class Timestamp extends TypeBase<Serializable> {
 }
 
 /** Represents a timestamp. */
-export type Type = Timestamp;
+export { Timestamp as Type };
 
 /**
  * Create a Timestamp from milliseconds since Unix epoch.
@@ -102,6 +102,9 @@ export function toProto(timestamp: Timestamp): Proto.Timestamp {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(JSON_TYPE, (v: string) => {
-    fromMillis(BigInt(v));
-});
+export const fromTypedJSON = makeFromTypedJson(
+    JSON_DISCRIMINATOR,
+    (v: string) => {
+        fromMillis(BigInt(v));
+    }
+);

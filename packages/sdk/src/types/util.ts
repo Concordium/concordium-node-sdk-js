@@ -85,40 +85,45 @@ export enum TypedJsonParseErrorCode {
 /**
  * Error thrown from trying to parse objects of type {@linkcode TypedJson}
  */
-export class TypedJsonParseError extends Error {
+export abstract class TypedJsonParseError extends Error {
+    public abstract readonly code: TypedJsonParseErrorCode;
+    private _name: string = 'TypedJsonParseError';
     /**
-     * @param {TypedJsonParseErrorCode} code - The error code.
      * @param {string} message - The error message.
      */
-    constructor(
-        public readonly code: TypedJsonParseErrorCode,
-        message: string
-    ) {
+    constructor(message: string) {
         super(message);
-        this.name = 'TypedJsonParseError'; // convention for discriminating between error types.
     }
 
-    /**
-     * Translates errors to {@linkcode TypedJsonParseError} parse error of
-     * type {@linkcode TypedJsonParseErrorCode.INVALID_VALUE} `INVALID_VALUE`.
-     *
-     * @param {unknown} error - An error of uknown type.
-     * @returns {TypedJsonParseError} The tranlated error.
-     */
-    public static fromParseValueError(error: unknown): TypedJsonParseError {
-        return new TypedJsonParseError(
-            TypedJsonParseErrorCode.INVALID_VALUE,
-            (error as Error)?.message ?? `${error}`
+    public override get name() {
+        return `${this._name}.${this.code}`;
+    }
+}
+
+export class TypedJsonMalformedError extends TypedJsonParseError {
+    public code = TypedJsonParseErrorCode.MALFORMED;
+}
+
+export class TypedJsonWrongTypeError extends TypedJsonParseError {
+    public code = TypedJsonParseErrorCode.WRONG_TYPE;
+
+    constructor(
+        public readonly expected: TypedJsonDiscriminator,
+        public readonly actual: TypedJsonDiscriminator
+    ) {
+        super(
+            `Wrong type discriminator found in JSON. Expected "${expected}", found "${actual}"`
         );
     }
 }
 
-/**
- * Determines if error is of type {@linkcode TypedJsonParseError}
- */
-export const isTypedJsonParseError = (
-    error: unknown
-): error is TypedJsonParseError => error instanceof TypedJsonParseError;
+export class TypedJsonInvalidValueError extends TypedJsonParseError {
+    public code = TypedJsonParseErrorCode.INVALID_VALUE;
+
+    constructor(public readonly inner: unknown) {
+        super(`Unable to parse value (${(inner as Error)?.message ?? inner})`);
+    }
+}
 
 /**
  * Creates a function to convert {@linkcode TypedJson} to their corresponding type instance.
@@ -138,25 +143,21 @@ export function makeFromTypedJson<V, T>(
     toType: (value: V) => T
 ) {
     return ({ ['@type']: type, value }: TypedJson<V>): T | V => {
-        if (!type) {
-            throw new TypedJsonParseError(
-                TypedJsonParseErrorCode.MALFORMED,
-                'Received malformed JSON string'
+        if (!type || !value) {
+            throw new TypedJsonMalformedError(
+                'Expected both "@type" and "value" properties to be available in JSON'
             );
         }
 
         if (expectedTypeDiscriminator !== type) {
-            throw new TypedJsonParseError(
-                TypedJsonParseErrorCode.WRONG_TYPE,
-                `Wrong type discriminator found when parsing JSON. Expected "${expectedTypeDiscriminator}", found "${type}"`
-            );
+            throw new TypedJsonWrongTypeError(expectedTypeDiscriminator, type);
         }
 
         try {
             return toType(value);
         } catch (e) {
             // Value cannot be successfully parsed
-            throw TypedJsonParseError.fromParseValueError(e);
+            throw new TypedJsonInvalidValueError(value);
         }
     };
 }

@@ -70,6 +70,15 @@ export function fromHexString(moduleRef: HexString) {
 }
 
 /**
+ * Get the module reference bytes encoded as hex.
+ * @param {ModuleReference} moduleReference The module reference.
+ * @returns {HexString} String with hex encoding.
+ */
+export function toHexString(moduleReference: ModuleReference): HexString {
+    return moduleReference.moduleRef;
+}
+
+/**
  * Convert module reference from its protobuf encoding.
  * @param {Proto.ModuleRef} moduleReference The module reference in protobuf.
  * @returns {ModuleReference} The module reference.

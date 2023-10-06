@@ -13,7 +13,7 @@ type Serializable = string;
  */
 class EntrypointName<S extends string = string> extends TypeBase<Serializable> {
     protected typedJsonType = JSON_TYPE;
-    protected get serializableJsonValue(): Serializable {
+    protected get serializable(): Serializable {
         return this.value;
     }
 
@@ -76,7 +76,7 @@ export function toString<S extends string>(
 /**
  * Takes a JSON string and converts it to instance of type {@linkcode Type}.
  *
- * @param {JsonString} json - The JSON string to convert.
+ * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */

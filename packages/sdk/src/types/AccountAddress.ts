@@ -27,7 +27,7 @@ class AccountAddress extends TypeBase<Serializable> {
         super();
     }
 
-    protected get serializableJsonValue(): Serializable {
+    protected get serializable(): Serializable {
         return this.address;
     }
 }
@@ -208,7 +208,7 @@ export function equals(left: AccountAddress, right: AccountAddress): boolean {
 /**
  * Takes a JSON string and converts it to instance of type {@linkcode AccountAddress}.
  *
- * @param {JsonString} json - The JSON string to convert.
+ * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {AccountAddress} The parsed instance.
  */

@@ -17,7 +17,7 @@ type Serializable = HexString;
  */
 class BlockHash extends TypeBase<Serializable> {
     protected typedJsonType = JSON_TYPE;
-    protected get serializableJsonValue(): Serializable {
+    protected get serializable(): Serializable {
         return toHexString(this);
     }
 
@@ -128,7 +128,7 @@ export function equals(left: BlockHash, right: BlockHash): boolean {
 /**
  * Takes a JSON string and converts it to instance of type {@linkcode BlockHash}.
  *
- * @param {JsonString} json - The JSON string to convert.
+ * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {BlockHash} The parsed instance.
  */

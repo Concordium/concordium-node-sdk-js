@@ -14,7 +14,7 @@ type Serializable = HexString;
 /** Parameter for a smart contract entrypoint. */
 class Parameter extends TypeBase<Serializable> {
     protected typedJsonType = JSON_TYPE;
-    protected get serializableJsonValue(): Serializable {
+    protected get serializable(): Serializable {
         return toHexString(this);
     }
 
@@ -139,7 +139,7 @@ export function toProto(parameter: Parameter): Proto.Parameter {
 /**
  * Takes a JSON string and converts it to instance of type {@linkcode Type}.
  *
- * @param {JsonString} json - The JSON string to convert.
+ * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */

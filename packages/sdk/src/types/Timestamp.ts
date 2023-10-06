@@ -10,7 +10,7 @@ type Serializable = string;
 /** Represents a timestamp. */
 class Timestamp extends TypeBase<Serializable> {
     protected typedJsonType = JSON_TYPE;
-    protected get serializableJsonValue(): Serializable {
+    protected get serializable(): Serializable {
         return this.value.toString();
     }
 
@@ -98,7 +98,7 @@ export function toProto(timestamp: Timestamp): Proto.Timestamp {
 /**
  * Takes a JSON string and converts it to instance of type {@linkcode Type}.
  *
- * @param {JsonString} json - The JSON string to convert.
+ * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */

@@ -11,7 +11,7 @@ type Serializable = string;
 /** The name of a smart contract. Note: This does _not_ including the 'init_' prefix. */
 class ContractName extends TypeBase<Serializable> {
     protected typedJsonType = JSON_TYPE;
-    protected get serializableJsonValue(): Serializable {
+    protected get serializable(): Serializable {
         return this.value;
     }
     constructor(
@@ -105,7 +105,7 @@ export function equals(left: ContractName, right: ContractName): boolean {
 /**
  * Takes a JSON string and converts it to instance of type {@linkcode Type}.
  *
- * @param {JsonString} json - The JSON string to convert.
+ * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */

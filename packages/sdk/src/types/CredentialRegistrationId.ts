@@ -17,7 +17,7 @@ type Serializable = string;
  */
 class CredentialRegistrationId extends TypeBase<Serializable> {
     protected typedJsonType = JSON_TYPE;
-    protected get serializableJsonValue(): Serializable {
+    protected get serializable(): Serializable {
         return this.credId;
     }
 
@@ -113,7 +113,7 @@ export function toBuffer(cred: CredentialRegistrationId): Uint8Array {
 /**
  * Takes a JSON string and converts it to instance of type {@linkcode Type}.
  *
- * @param {JsonString} json - The JSON string to convert.
+ * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */

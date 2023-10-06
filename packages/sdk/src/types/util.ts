@@ -1,7 +1,5 @@
-import type { JsonString } from '../types.js';
-
 /**
- * Discriminator for {@link TypedJson}. The member used to identify each type is
+ * Discriminator for {@linkcode TypedJson}. The member used to identify each type is
  * exported from each type module and can be accessed through named export `JSON_TYPE`.
  */
 export enum TypedJsonDiscriminator {
@@ -28,10 +26,13 @@ export enum TypedJsonDiscriminator {
 
 /**
  * Type describing the JSON representation of strong types used in the SDK.
+ *
+ * @template V - The serializable JSON value
  */
 export interface TypedJson<V> {
     /** The type discriminator */
     ['@type']: TypedJsonDiscriminator;
+    /** The serializable type value */
     value: V;
 }
 
@@ -39,30 +40,30 @@ export interface TypedJson<V> {
  * Base class for concordium domain types
  *
  * @template D - The JSON discriminator
- * @template V - The JSON value
+ * @template V - The serializable JSON value
  */
 export abstract class TypeBase<V> implements ToTypedJson<V> {
     protected abstract typedJsonType: TypedJsonDiscriminator;
-    protected abstract get serializableJsonValue(): V;
+    protected abstract get serializable(): V;
 
     public toTypedJSON(): TypedJson<V> {
         return {
             ['@type']: this.typedJsonType,
-            value: this.serializableJsonValue,
+            value: this.serializable,
         };
     }
 }
 
 /**
  * Common interface implemented by strong types used in the SDK
- * for converting instances of the type to types of {@link TypedJson}.
+ * for converting instances of the type to types of {@linkcode TypedJson}.
  *
  * @template D - The JSON discriminator
- * @template V - The JSON value
+ * @template V - The serializable JSON value
  */
 export interface ToTypedJson<V> {
     /**
-     * Converts type to {@link TypedJson}
+     * Converts type to {@linkcode TypedJson}
      *
      * @returns {TypedJson} The typed JSON.
      */
@@ -75,14 +76,14 @@ export interface ToTypedJson<V> {
 export enum TypedJsonParseErrorCode {
     /** Malformed JSON passed to parser function */
     MALFORMED = 'MALFORMED',
-    /** JSON passed to parser function had unexpected {@link TypedJsonDiscriminator} type discriminator */
+    /** JSON passed to parser function had unexpected {@linkcode TypedJsonDiscriminator} type discriminator */
     WRONG_TYPE = 'WRONG_TYPE',
     /** Value could not be parsed successfully */
     INVALID_VALUE = 'INVALID_VALUE',
 }
 
 /**
- * Error thrown from trying to parse objects of type {@link TypedJson}
+ * Error thrown from trying to parse objects of type {@linkcode TypedJson}
  */
 export class TypedJsonParseError extends Error {
     /**
@@ -113,7 +114,7 @@ export class TypedJsonParseError extends Error {
 }
 
 /**
- * Determines if error is of type {@link TypedJsonParseError}
+ * Determines if error is of type {@linkcode TypedJsonParseError}
  */
 export const isTypedJsonParseError = (
     error: unknown
@@ -137,9 +138,9 @@ interface Class<V, T> {
 export function makeFromTypedJson<V, T>(
     expectedTypeDiscriminator: TypedJsonDiscriminator,
     Class: Class<V, T>
-): (json: JsonString) => V;
+): (json: TypedJson<V>) => V;
 /**
- * Creates a function to convert typed JSON strings to their corresponding type instance.
+ * Creates a function to convert {@linkcode TypedJson} to their corresponding type instance.
  *
  * @template V - The JSON value
  * @template T - The type returned
@@ -154,14 +155,12 @@ export function makeFromTypedJson<V, T>(
 export function makeFromTypedJson<V, T>(
     expectedTypeDiscriminator: TypedJsonDiscriminator,
     toType: (value: V) => T
-): (json: JsonString) => T;
+): (json: TypedJson<V>) => T;
 export function makeFromTypedJson<V, T>(
     expectedTypeDiscriminator: TypedJsonDiscriminator,
     dyn: ((value: V) => T) | Class<V, T>
 ) {
-    return (json: JsonString): T | V => {
-        const { ['@type']: type, value }: TypedJson<V> = JSON.parse(json);
-
+    return ({ ['@type']: type, value }: TypedJson<V>): T | V => {
         if (!type) {
             throw new TypedJsonParseError(
                 TypedJsonParseErrorCode.MALFORMED,
@@ -179,7 +178,7 @@ export function makeFromTypedJson<V, T>(
         /**
          * Parses the value
          */
-        const parse = () => {
+        const transform = () => {
             try {
                 return new (dyn as Class<V, T>)(value);
             } catch (e) {
@@ -193,7 +192,7 @@ export function makeFromTypedJson<V, T>(
         };
 
         try {
-            return parse();
+            return transform();
         } catch (e) {
             // Value cannot be successfully parsed
             throw TypedJsonParseError.fromParseValueError(e);

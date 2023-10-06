@@ -16,7 +16,7 @@ const TRANSACTION_HASH_BYTE_LENGTH = 32;
 /** Hash of a transaction. */
 class TransactionHash extends TypeBase<Serializable> {
     protected typedJsonType = JSON_TYPE;
-    protected get serializableJsonValue(): Serializable {
+    protected get serializable(): Serializable {
         return toHexString(this);
     }
 
@@ -118,7 +118,7 @@ export function equals(left: TransactionHash, right: TransactionHash): boolean {
 /**
  * Takes a JSON string and converts it to instance of type {@linkcode Type}.
  *
- * @param {JsonString} json - The JSON string to convert.
+ * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */

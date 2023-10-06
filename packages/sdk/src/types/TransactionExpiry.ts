@@ -13,7 +13,7 @@ type Serializable = string;
  */
 class TransactionExpiry extends TypeBase<Serializable> {
     protected typedJsonType = JSON_TYPE;
-    protected get serializableJsonValue(): Serializable {
+    protected get serializable(): Serializable {
         return this.expiryEpochSeconds.toString();
     }
 
@@ -101,7 +101,7 @@ export function toProto(expiry: TransactionExpiry): Proto.TransactionTime {
 /**
  * Takes a JSON string and converts it to instance of type {@linkcode Type}.
  *
- * @param {JsonString} json - The JSON string to convert.
+ * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */

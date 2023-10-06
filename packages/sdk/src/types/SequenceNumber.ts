@@ -10,7 +10,7 @@ type Serializable = string;
 /** Transaction sequence number. (Formerly refered as Nonce) */
 class SequenceNumber extends TypeBase<Serializable> {
     protected typedJsonType = JSON_TYPE;
-    protected get serializableJsonValue(): Serializable {
+    protected get serializable(): Serializable {
         return this.value.toString();
     }
 
@@ -65,7 +65,7 @@ export function toProto(sequenceNumber: SequenceNumber): Proto.SequenceNumber {
 /**
  * Takes a JSON string and converts it to instance of type {@linkcode Type}.
  *
- * @param {JsonString} json - The JSON string to convert.
+ * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */

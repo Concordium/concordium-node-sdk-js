@@ -15,7 +15,7 @@ type Serializable = HexString;
  */
 export class DataBlob extends TypeBase<Serializable> {
     protected typedJsonType = JSON_TYPE;
-    protected get serializableJsonValue(): string {
+    protected get serializable(): string {
         return this.data.toString('hex');
     }
     public readonly data: Buffer;
@@ -36,7 +36,7 @@ export class DataBlob extends TypeBase<Serializable> {
     /**
      * Takes a JSON string and converts it to instance of type {@linkcode DataBlob}.
      *
-     * @param {JsonString} json - The JSON string to convert.
+     * @param {TypedJson} json - The typed JSON to convert.
      * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
      * @returns {DataBlob} The parsed instance.
      */

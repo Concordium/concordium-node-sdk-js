@@ -16,7 +16,7 @@ type Serializable = HexString;
 /** Return value from invoking a smart contract entrypoint. */
 class ReturnValue extends TypeBase<Serializable> {
     protected typedJsonType = JSON_TYPE;
-    protected get serializableJsonValue(): Serializable {
+    protected get serializable(): Serializable {
         return toHexString(this);
     }
 
@@ -106,7 +106,7 @@ export function toBase64SchemaType(
 /**
  * Takes a JSON string and converts it to instance of type {@linkcode Type}.
  *
- * @param {JsonString} json - The JSON string to convert.
+ * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */

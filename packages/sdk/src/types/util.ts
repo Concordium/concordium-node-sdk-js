@@ -88,6 +88,7 @@ export enum TypedJsonParseErrorCode {
 export abstract class TypedJsonParseError extends Error {
     public abstract readonly code: TypedJsonParseErrorCode;
     private _name: string = 'TypedJsonParseError';
+
     /**
      * @param {string} message - The error message.
      */
@@ -107,6 +108,10 @@ export class TypedJsonMalformedError extends TypedJsonParseError {
 export class TypedJsonWrongTypeError extends TypedJsonParseError {
     public code = TypedJsonParseErrorCode.WRONG_TYPE;
 
+    /**
+     * @param {TypedJsonDiscriminator} expected - The discriminator expected by the typed JSON parser.
+     * @param {TypedJsonDiscriminator} actual - The discriminator received by the typed JSON parser.
+     */
     constructor(
         public readonly expected: TypedJsonDiscriminator,
         public readonly actual: TypedJsonDiscriminator
@@ -120,8 +125,15 @@ export class TypedJsonWrongTypeError extends TypedJsonParseError {
 export class TypedJsonInvalidValueError extends TypedJsonParseError {
     public code = TypedJsonParseErrorCode.INVALID_VALUE;
 
+    /**
+     * @param {string} inner - The original cause of the error.
+     */
     constructor(public readonly inner: unknown) {
         super(`Unable to parse value (${(inner as Error)?.message ?? inner})`);
+
+        if (inner instanceof Error) {
+            this.stack = inner.stack ?? this.stack;
+        }
     }
 }
 

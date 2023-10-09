@@ -63,7 +63,6 @@ import * as CcdAmount from '../types/CcdAmount.js';
 import * as TransactionExpiry from '../types/TransactionExpiry.js';
 import * as ModuleReference from '../types/ModuleReference.js';
 export {
-    isTypedJsonParseError,
     TypedJsonParseError,
     TypedJsonParseErrorCode,
     TypedJson,

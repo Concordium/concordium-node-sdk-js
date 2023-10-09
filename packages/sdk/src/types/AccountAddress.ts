@@ -48,22 +48,6 @@ export function instanceOf(value: unknown): value is AccountAddress {
 }
 
 /**
- * Type guard for AccountAddress
- * @param {unknown} input Input to check.
- * @returns {boolean} Boolean indicating whether input is an account address.
- */
-export function isAccountAddress(input: unknown): input is AccountAddress {
-    return (
-        typeof input === 'object' &&
-        input !== null &&
-        'address' in input &&
-        'decodedAddress' in input &&
-        typeof input.address === 'string' &&
-        input.address.length === 50
-    );
-}
-
-/**
  * Construct an AccountAddress from a buffer of bytes.
  * @param {ArrayBuffer} buffer Buffer containing exactly 32 bytes representing the address of the account.
  * @throws If the provided buffer does not contain exactly 32 bytes.

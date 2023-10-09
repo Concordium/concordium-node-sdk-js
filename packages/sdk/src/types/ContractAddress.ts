@@ -37,24 +37,6 @@ export function instanceOf(value: unknown): value is ContractAddress {
 }
 
 /**
- * Type guard for ContractAddress
- * @param {unknown} input Input to check.
- * @returns {boolean} Boolean indicating whether input is a contract address.
- */
-export function isContractAddress(input: unknown): input is ContractAddress {
-    return (
-        typeof input === 'object' &&
-        input !== null &&
-        'index' in input &&
-        'subindex' in input &&
-        typeof input.index === 'bigint' &&
-        typeof input.subindex === 'bigint' &&
-        0 <= input.index &&
-        0 <= input.subindex
-    );
-}
-
-/**
  * Construct a ContractAddress type.
  * @param {number | bigint} index The index of the smart contract instance.
  * @param {number | bigint} [subindex] The subindex of the smart contract instance. Defaults to 0.

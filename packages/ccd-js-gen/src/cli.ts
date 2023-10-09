@@ -17,7 +17,7 @@ type Options = {
 export async function main(): Promise<void> {
     const program = new Command();
     program
-        .name(packageJson.name)
+        .name('ccd-js-gen')
         .description(packageJson.description)
         .version(packageJson.version)
         .requiredOption(

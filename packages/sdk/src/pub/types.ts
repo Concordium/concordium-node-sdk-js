@@ -39,6 +39,7 @@ export {
     ContractSchema,
     ContractUpdateTransaction,
     ContractTransactionMetadata,
+    ContractInvokeMetadata,
     CreateContractTransactionMetadata,
     ContractUpdateTransactionWithSchema,
 } from '../GenericContract.js';

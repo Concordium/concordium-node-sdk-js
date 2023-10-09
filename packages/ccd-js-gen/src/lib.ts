@@ -347,11 +347,12 @@ function generateModuleBaseCode(
     moduleSourceFile
         .addFunction({
             docs: [
-                `Construct a ${moduleClientType} client for interacting with a smart contract module on chain.`,
-                'It is up to the caller to ensure the module is deployed on chain.',
-                `@param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The concordium node client to use.`,
-                '@throws If failing to communicate with the concordium node.',
-                `@returns {${moduleClientType}}`,
+                [
+                    `Construct a ${moduleClientType} client for interacting with a smart contract module on chain.`,
+                    'It is up to the caller to ensure the module is deployed on chain.',
+                    `@param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The concordium node client to use.`,
+                    `@returns {${moduleClientType}}`,
+                ].join('\n'),
             ],
             isExported: true,
             name: 'createUnchecked',
@@ -832,7 +833,7 @@ function generateContractEntrypointCode(
     entrypointName: string,
     entrypointSchema?: SDK.SchemaFunctionV2
 ) {
-    const invokerId = 'invoker';
+    const invokeMetadataId = 'invokeMetadata';
     const parameterId = 'parameter';
     const transactionMetadataId = 'transactionMetadata';
     const signerId = 'signer';
@@ -950,7 +951,7 @@ function generateContractEntrypointCode(
                 [
                     `Dry-run an update-contract transaction to the '${entrypointName}' entrypoint of the '${contractName}' contract.`,
                     `@param {${contractClientType}} ${contractClientId} The client for a '${contractName}' smart contract instance on chain.`,
-                    `@param {SDK.ContractAddress.Type | SDK.AccountAddress.Type} ${invokerId} - The address of the account or contract which is invoking this transaction.`,
+                    `@param {SDK.ContractAddress.Type | SDK.AccountAddress.Type} ${invokeMetadataId} - The address of the account or contract which is invoking this transaction.`,
                     ...(receiveParameter === undefined
                         ? []
                         : [
@@ -968,10 +969,6 @@ function generateContractEntrypointCode(
                     name: contractClientId,
                     type: contractClientType,
                 },
-                {
-                    name: invokerId,
-                    type: 'SDK.ContractAddress.Type | SDK.AccountAddress.Type',
-                },
                 ...(receiveParameter === undefined
                     ? []
                     : [
@@ -980,6 +977,11 @@ function generateContractEntrypointCode(
                               type: receiveParameterTypeId,
                           },
                       ]),
+                {
+                    name: invokeMetadataId,
+                    type: 'SDK.ContractInvokeMetadata',
+                    initializer: '{}',
+                },
                 {
                     name: blockHashId,
                     hasQuestionToken: true,
@@ -992,7 +994,7 @@ function generateContractEntrypointCode(
             [
                 `return ${contractClientId}.${genericContractId}.dryRun.invokeMethod(`,
                 `    SDK.EntrypointName.fromStringUnchecked('${entrypointName}'),`,
-                `    ${invokerId},`,
+                `    ${invokeMetadataId},`,
                 '    SDK.Parameter.toBuffer,',
                 ...(receiveParameter === undefined
                     ? []
@@ -1203,7 +1205,7 @@ function schemaAsNativeType(
                     const resultId = idGenerator('amount');
                     return {
                         code: [
-                            `const ${resultId} = SDK.Amount.toSchemaValue(${id});`,
+                            `const ${resultId} = SDK.CcdAmount.toSchemaValue(${id});`,
                         ],
                         id: resultId,
                     };
@@ -1212,7 +1214,7 @@ function schemaAsNativeType(
                     const resultId = idGenerator('amount');
                     return {
                         code: [
-                            `const ${resultId} = SDK.Amount.fromSchemaValue(${id});`,
+                            `const ${resultId} = SDK.CcdAmount.fromSchemaValue(${id});`,
                         ],
                         id: resultId,
                     };
@@ -1358,7 +1360,7 @@ function schemaAsNativeType(
                 nativeToJson(id, idGenerator) {
                     const resultId = idGenerator('list');
                     const itemId = idGenerator('item');
-                    const tokens = item?.jsonToNative(itemId, idGenerator);
+                    const tokens = item?.nativeToJson(itemId, idGenerator);
                     // Check if any mapping is needed.
                     if (tokens?.id === itemId && tokens?.code.length === 0) {
                         return {
@@ -1576,14 +1578,17 @@ function schemaAsNativeType(
                                 `${id}.content`,
                                 idGenerator
                             );
+                            const variantName = identifierRegex.test(
+                                variantSchema.name
+                            )
+                                ? variantSchema.name
+                                : `'${variantSchema.name}'`;
                             return [
                                 `    case '${variantSchema.name}':`,
                                 ...(tokens?.code ?? []),
-                                `        ${resultId} = { ${
-                                    identifierRegex.test(variantSchema.name)
-                                        ? variantSchema.name
-                                        : `'${variantSchema.name}'`
-                                }: ${tokens?.id ?? '[]'} };`,
+                                `        ${resultId} = { ${variantName}: ${
+                                    tokens?.id ?? '[]'
+                                } };`,
                                 '    break;',
                             ];
                         }
@@ -1591,7 +1596,7 @@ function schemaAsNativeType(
                     return {
                         code: [
                             `let ${resultId};`,
-                            `switch (${id}.type) {`,
+                            `switch  (${id}.type) {`,
                             ...variantCases,
                             '}',
                         ],
@@ -1622,7 +1627,7 @@ function schemaAsNativeType(
                                           ...variantTokens?.code,
                                       ]),
                                 `${resultId} = {`,
-                                `    type: '${variantFieldSchema.name}',`,
+                                `    type:   '${variantFieldSchema.name}',`,
                                 `    content: ${variantTokens?.id ?? '[]'},`,
                                 '};',
                                 'break;',
@@ -1838,7 +1843,7 @@ function fieldToTypeAndMapper(
                         return { code: tokens.code, id: `[${tokens.id}]` };
                     },
                     jsonToNative(id, idGenerator) {
-                        return schema.nativeToJson(id, idGenerator);
+                        return schema.jsonToNative(`${id}[0]`, idGenerator);
                     },
                 };
             } else {

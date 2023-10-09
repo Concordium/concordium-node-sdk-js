@@ -656,12 +656,13 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@concordium/ccd-js-gen@workspace:packages/ccd-js-gen"
   dependencies:
-    "@concordium/web-sdk": 6.4.0
     "@types/node": ^20.5.0
     buffer: ^6.0.3
     commander: ^11.0.0
     ts-morph: ^19.0.0
     typescript: ^5.2.2
+  peerDependencies:
+    "@concordium/web-sdk": 6.x
   bin:
     ccd-js-gen: bin/ccd-js-gen.js
   languageName: unknown
@@ -697,7 +698,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@concordium/web-sdk@6.4.0, @concordium/web-sdk@workspace:^, @concordium/web-sdk@workspace:packages/sdk":
+"@concordium/web-sdk@workspace:^, @concordium/web-sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@concordium/web-sdk@workspace:packages/sdk"
   dependencies:

@@ -42,6 +42,23 @@ export type ContractTransactionMetadata = {
 };
 
 /**
+ * Metadata necessary for invocating a smart contract.
+ */
+export type ContractInvokeMetadata = {
+    /** Amount to include in the transaction. Defaults to 0 */
+    amount?: CcdAmount.Type;
+    /**
+     * Invoker of the contract.
+     * If this is not supplied then the contract will be invoked by an account with address 0,
+     * no credentials and sufficient amount of CCD to cover the transfer amount.
+     * If given, the relevant address (either account or contract) must exist in the blockstate.
+     */
+    invoker?: ContractAddress.Type | AccountAddress.Type;
+    /** Max energy to be used for the transaction, if not provided the max energy is used. */
+    energy?: Energy.Type;
+};
+
+/**
  * Metadata necessary for creating a {@link UpdateTransaction}
  */
 export type CreateContractTransactionMetadata = Pick<
@@ -115,7 +132,7 @@ export class ContractDryRun<E extends string = string> {
      * @template T - The type of the input given
      *
      * @param {EntrypointName.Type} entrypoint - The name of the receive function to invoke.
-     * @param {ContractAddress | AccountAddress.Type} invoker - The address of the invoker.
+     * @param {ContractInvokeMetadata | ContractAddress | AccountAddress.Type} metaOrInvoker - Metadata for contract invocation of the address of the invoker.
      * @param {Function} serializer - A function for serializing the input to bytes.
      * @param {T} input - Input for for contract function.
      * @param {BlockHash.Type} [blockHash] - The hash of the block to perform the invocation of. Defaults to the latest finalized block on chain.
@@ -124,17 +141,25 @@ export class ContractDryRun<E extends string = string> {
      */
     public invokeMethod<T>(
         entrypoint: EntrypointName.Type<E>,
-        invoker: ContractAddress.Type | AccountAddress.Type,
+        metaOrInvoker:
+            | ContractInvokeMetadata
+            | ContractAddress.Type
+            | AccountAddress.Type,
         serializer: (input: T) => ArrayBuffer,
         input: T,
         blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
         const parameter = Parameter.fromBuffer(serializer(input));
+        const meta =
+            AccountAddress.isAccountAddress(metaOrInvoker) ||
+            ContractAddress.isContractAddress(metaOrInvoker)
+                ? { invoker: metaOrInvoker }
+                : metaOrInvoker;
         return this.grpcClient.invokeContract(
             {
+                ...meta,
                 contract: this.contractAddress,
                 parameter,
-                invoker,
                 method: ReceiveName.create(this.contractName, entrypoint),
             },
             blockHash

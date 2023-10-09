@@ -140,11 +140,35 @@ export function microCcdToCcd(microCcd: BigSource | bigint): Big {
 }
 
 /**
+ * JSON format to provived when encoding a CCD amount using a schema.
+ * String representation of the amount of micro CCD.
+ */
+export type SchemaValue = string;
+
+/**
+ * Get CCD amount in the format used by schemas.
+ * @param {CcdAmount} amount The amount.
+ * @returns {SchemaValue} The schema value representation.
+ */
+export function toSchemaValue(amount: CcdAmount): SchemaValue {
+    return amount.microCcdAmount.toString();
+}
+
+/**
+ * Convert CCD amount from format used by schemas.
+ * @param {SchemaValue} microCcdString The amount in schema format.
+ * @returns {CcdAmount} The amount.
+ */
+export function fromSchemaValue(microCcdString: SchemaValue): CcdAmount {
+    return new CcdAmount(BigInt(microCcdString));
+}
+
+/**
  * Convert an amount of CCD from its protobuf encoding.
  * @param {Proto.Amount} amount The energy in protobuf.
  * @returns {CcdAmount} The energy.
  */
-export function fromProto(amount: Proto.Energy): CcdAmount {
+export function fromProto(amount: Proto.Amount): CcdAmount {
     return new CcdAmount(amount.value);
 }
 

@@ -74,7 +74,7 @@ const contractAddress = SDK.ContractAddress.create(
         {
             update: { type: 'Add' },
             operator: { type: 'Contract', content: contractAddress },
-        },
+        } as const,
     ];
     const contract = await wCCDContractClient.create(
         grpcClient,
@@ -83,9 +83,6 @@ const contractAddress = SDK.ContractAddress.create(
 
     const result = await wCCDContractClient.dryRunUpdateOperator(
         contract,
-        SDK.AccountAddress.fromBase58(
-            '357EYHqrmMiJBmUZTVG5FuaMq4soAhgtgz6XNEAJaXHW3NHaUf'
-        ),
         parameter
     );
     if (result.tag !== 'success') {

@@ -79,9 +79,6 @@ const contractAddress = SDK.ContractAddress.create(
 
     const result = await wCCDContractClient.dryRunTokenMetadata(
         contract,
-        SDK.AccountAddress.fromBase58(
-            '357EYHqrmMiJBmUZTVG5FuaMq4soAhgtgz6XNEAJaXHW3NHaUf'
-        ),
         parameter
     );
     const returnValue =

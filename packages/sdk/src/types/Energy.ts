@@ -1,5 +1,9 @@
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
+import {
+    TypedJson,
+    TypedJsonDiscriminator,
+    makeFromTypedJson,
+} from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
@@ -8,24 +12,31 @@ export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.Energy;
 type Serializable = string;
 
 /** Energy measure. Used as part of cost calculations for transactions. */
-class Energy extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_DISCRIMINATOR;
+class Energy {
     protected get serializable(): Serializable {
         return this.value.toString();
     }
 
+    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
+    private __type = JSON_DISCRIMINATOR;
     constructor(
         /** The internal value for representing the energy. */
         public readonly value: bigint
-    ) {
-        super();
-    }
+    ) {}
 }
 
 /** Energy measure. Used as part of cost calculations for transactions. */
 export type Type = Energy;
-export const instanceOf = (value: unknown): value is Energy =>
-    value instanceof Energy;
+
+/**
+ * Type predicate for {@linkcode Type}
+ *
+ * @param value value to check.
+ * @returns whether `value` is of type {@linkcode Type}
+ */
+export function instanceOf(value: unknown): value is Energy {
+    return value instanceof Energy;
+}
 
 /**
  * Construct an Energy type.
@@ -65,13 +76,26 @@ export function toProto(energy: Energy): Proto.Energy {
 const fromSerializable = (v: Serializable) => create(BigInt(v));
 
 /**
- * Takes a JSON string and converts it to instance of type {@linkcode Type}.
+ * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
+ *
+ * @param {Type} value - The account address instance to transform.
+ * @returns {TypedJson} The transformed object.
+ */
+export function toTypedJSON({ value }: Energy): TypedJson<Serializable> {
+    return {
+        ['@type']: JSON_DISCRIMINATOR,
+        value: value.toString(),
+    };
+}
+
+/**
+ * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
  *
  * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
     JSON_DISCRIMINATOR,
     fromSerializable
 );

@@ -2,7 +2,11 @@ import type * as Proto from '../grpc-api/v2/concordium/types.js';
 import { Buffer } from 'buffer/index.js';
 import { packBufferWithWord32Length } from '../serializationHelpers.js';
 import type { HexString } from '../types.js';
-import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
+import {
+    TypedJson,
+    TypedJsonDiscriminator,
+    makeFromTypedJson,
+} from './util.js';
 
 /**
  * The number of bytes used to represent a block hash.
@@ -17,20 +21,15 @@ type Serializable = HexString;
 /**
  * Reference to a smart contract module.
  */
-class ModuleReference extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_DISCRIMINATOR;
-    protected get serializable(): Serializable {
-        return Buffer.from(this.decodedModuleRef).toString('hex');
-    }
-
+class ModuleReference {
+    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
+    private __type = JSON_DISCRIMINATOR;
     constructor(
         /** Internal field, the module reference represented as a hex string. */
         public readonly moduleRef: HexString,
         /** Internal field, buffer containing the 32 bytes for the module reference. */
         public readonly decodedModuleRef: Uint8Array
-    ) {
-        super();
-    }
+    ) {}
 
     public toJSON(): string {
         return packBufferWithWord32Length(this.decodedModuleRef).toString(
@@ -43,8 +42,16 @@ class ModuleReference extends TypeBase<Serializable> {
  * Reference to a smart contract module.
  */
 export type Type = ModuleReference;
-export const instanceOf = (value: unknown): value is ModuleReference =>
-    value instanceof ModuleReference;
+
+/**
+ * Type predicate for {@linkcode Type}
+ *
+ * @param value value to check.
+ * @returns whether `value` is of type {@linkcode Type}
+ */
+export function instanceOf(value: unknown): value is ModuleReference {
+    return value instanceof ModuleReference;
+}
 
 /**
  * Create a ModuleReference from a buffer of 32 bytes.
@@ -120,13 +127,26 @@ const fromSerializable = (v: Serializable) => {
 };
 
 /**
- * Takes a JSON string and converts it to instance of type {@linkcode Type}.
+ * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
+ *
+ * @param {Type} value - The account address instance to transform.
+ * @returns {TypedJson} The transformed object.
+ */
+export function toTypedJSON(value: ModuleReference): TypedJson<Serializable> {
+    return {
+        ['@type']: JSON_DISCRIMINATOR,
+        value: value.moduleRef,
+    };
+}
+
+/**
+ * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
  *
  * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
     JSON_DISCRIMINATOR,
     fromSerializable
 );

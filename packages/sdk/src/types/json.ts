@@ -90,43 +90,47 @@ export function jsonParse(
 function replaceConcordiumType(value: unknown) {
     switch (true) {
         case AccountAddress.instanceOf(value):
-            return (value as AccountAddress.Type).toTypedJSON();
+            return AccountAddress.toTypedJSON(value as AccountAddress.Type);
         case BlockHash.instanceOf(value):
-            return (value as BlockHash.Type).toTypedJSON();
+            return BlockHash.toTypedJSON(value as BlockHash.Type);
         case CcdAmount.instanceOf(value):
-            return (value as CcdAmount.Type).toTypedJSON();
+            return CcdAmount.toTypedJSON(value as CcdAmount.Type);
         case ContractAddress.instanceOf(value):
-            return (value as ContractAddress.Type).toTypedJSON();
+            return ContractAddress.toTypedJSON(value as ContractAddress.Type);
         case ContractName.instanceOf(value):
-            return (value as ContractName.Type).toTypedJSON();
+            return ContractName.toTypedJSON(value as ContractName.Type);
         case CredentialRegistrationId.instanceOf(value):
-            return (value as CredentialRegistrationId.Type).toTypedJSON();
+            return CredentialRegistrationId.toTypedJSON(
+                value as CredentialRegistrationId.Type
+            );
         case value instanceof DataBlob:
             return (value as DataBlob).toTypedJSON();
         case Duration.instanceOf(value):
-            return (value as Duration.Type).toTypedJSON();
+            return Duration.toTypedJSON(value as Duration.Type);
         case Energy.instanceOf(value):
-            return (value as Energy.Type).toTypedJSON();
+            return Energy.toTypedJSON(value as Energy.Type);
         case EntrypointName.instanceOf(value):
-            return (value as EntrypointName.Type).toTypedJSON();
+            return EntrypointName.toTypedJSON(value as EntrypointName.Type);
         case InitName.instanceOf(value):
-            return (value as InitName.Type).toTypedJSON();
+            return InitName.toTypedJSON(value as InitName.Type);
         case ModuleReference.instanceOf(value):
-            return (value as ModuleReference.Type).toTypedJSON();
+            return ModuleReference.toTypedJSON(value as ModuleReference.Type);
         case Parameter.instanceOf(value):
-            return (value as Parameter.Type).toTypedJSON();
+            return Parameter.toTypedJSON(value as Parameter.Type);
         case ReceiveName.instanceOf(value):
-            return (value as ReceiveName.Type).toTypedJSON();
+            return ReceiveName.toTypedJSON(value as ReceiveName.Type);
         case ReturnValue.instanceOf(value):
-            return (value as ReturnValue.Type).toTypedJSON();
+            return ReturnValue.toTypedJSON(value as ReturnValue.Type);
         case SequenceNumber.instanceOf(value):
-            return (value as SequenceNumber.Type).toTypedJSON();
+            return SequenceNumber.toTypedJSON(value as SequenceNumber.Type);
         case Timestamp.instanceOf(value):
-            return (value as Timestamp.Type).toTypedJSON();
+            return Timestamp.toTypedJSON(value as Timestamp.Type);
         case TransactionExpiry.instanceOf(value):
-            return (value as TransactionExpiry.Type).toTypedJSON();
+            return TransactionExpiry.toTypedJSON(
+                value as TransactionExpiry.Type
+            );
         case TransactionHash.instanceOf(value):
-            return (value as TransactionHash.Type).toTypedJSON();
+            return TransactionHash.toTypedJSON(value as TransactionHash.Type);
     }
 
     return value;

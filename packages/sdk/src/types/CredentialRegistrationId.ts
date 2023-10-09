@@ -1,7 +1,11 @@
 import { HexString } from '../types.js';
 import { isHex } from '../util.js';
 import { Buffer } from 'buffer/index.js';
-import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
+import {
+    TypedJson,
+    TypedJsonDiscriminator,
+    makeFromTypedJson,
+} from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
@@ -16,18 +20,13 @@ type Serializable = string;
  * - Has length exactly 96, because a credId is 48 bytes.
  * - Checks the first bit is 1, which indicates that the value represents a compressed BLS12-381 curve point.
  */
-class CredentialRegistrationId extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_DISCRIMINATOR;
-    protected get serializable(): Serializable {
-        return this.credId;
-    }
-
+class CredentialRegistrationId {
+    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
+    private __type = JSON_DISCRIMINATOR;
     constructor(
         /** Representation of a credential registration id */
         public readonly credId: string
-    ) {
-        super();
-    }
+    ) {}
 
     public toJSON(): string {
         return this.credId;
@@ -41,8 +40,16 @@ class CredentialRegistrationId extends TypeBase<Serializable> {
  * - Checks the first bit is 1, which indicates that the value represents a compressed BLS12-381 curve point.
  */
 export type Type = CredentialRegistrationId;
-export const instanceOf = (value: unknown): value is CredentialRegistrationId =>
-    value instanceof CredentialRegistrationId;
+
+/**
+ * Type predicate for {@linkcode Type}
+ *
+ * @param value value to check.
+ * @returns whether `value` is of type {@linkcode Type}
+ */
+export function instanceOf(value: unknown): value is CredentialRegistrationId {
+    return value instanceof CredentialRegistrationId;
+}
 
 /**
  * Construct a CredentialRegistrationId from a hex string.
@@ -114,13 +121,28 @@ export function toBuffer(cred: CredentialRegistrationId): Uint8Array {
 }
 
 /**
- * Takes a JSON string and converts it to instance of type {@linkcode Type}.
+ * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
+ *
+ * @param {Type} value - The account address instance to transform.
+ * @returns {TypedJson} The transformed object.
+ */
+export function toTypedJSON(
+    value: CredentialRegistrationId
+): TypedJson<Serializable> {
+    return {
+        ['@type']: JSON_DISCRIMINATOR,
+        value: value.credId,
+    };
+}
+
+/**
+ * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
  *
  * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
     JSON_DISCRIMINATOR,
     fromHexString
 );

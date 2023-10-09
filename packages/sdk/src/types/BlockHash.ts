@@ -1,6 +1,10 @@
 import type { HexString } from '../types.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import { TypeBase, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
+import {
+    TypedJson,
+    TypedJsonDiscriminator,
+    makeFromTypedJson,
+} from './util.js';
 
 /**
  * The number of bytes used to represent a block hash.
@@ -15,26 +19,31 @@ type Serializable = HexString;
 /**
  * Represents a hash of a block in the chain.
  */
-class BlockHash extends TypeBase<Serializable> {
-    protected typedJsonType = JSON_DISCRIMINATOR;
-    protected get serializable(): Serializable {
-        return toHexString(this);
-    }
+class BlockHash {
+    private typedJsonType = JSON_DISCRIMINATOR;
 
+    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
+    private __type = JSON_DISCRIMINATOR;
     constructor(
         /** The internal buffer of bytes representing the hash. */
         public readonly buffer: Uint8Array
-    ) {
-        super();
-    }
+    ) {}
 }
 
 /**
  * Represents a hash of a block in the chain.
  */
 export type Type = BlockHash;
-export const instanceOf = (value: unknown): value is BlockHash =>
-    value instanceof BlockHash;
+
+/**
+ * Type predicate for {@linkcode Type}
+ *
+ * @param value value to check.
+ * @returns whether `value` is of type {@linkcode Type}
+ */
+export function instanceOf(value: unknown): value is BlockHash {
+    return value instanceof BlockHash;
+}
 
 /**
  * Create a BlockHash from a buffer of 32 bytes.
@@ -128,13 +137,26 @@ export function equals(left: BlockHash, right: BlockHash): boolean {
 }
 
 /**
- * Takes a JSON string and converts it to instance of type {@linkcode BlockHash}.
+ * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
+ *
+ * @param {Type} value - The account address instance to transform.
+ * @returns {TypedJson} The transformed object.
+ */
+export function toTypedJSON(value: BlockHash): TypedJson<Serializable> {
+    return {
+        ['@type']: JSON_DISCRIMINATOR,
+        value: toHexString(value),
+    };
+}
+
+/**
+ * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
  *
  * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
- * @returns {BlockHash} The parsed instance.
+ * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = makeFromTypedJson(
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
     JSON_DISCRIMINATOR,
     fromHexString
 );

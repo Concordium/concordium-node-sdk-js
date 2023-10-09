@@ -66,7 +66,6 @@ export {
     TypedJsonParseError,
     TypedJsonParseErrorCode,
     TypedJson,
-    ToTypedJson,
 } from '../types/util.js';
 export { jsonParse, jsonStringify } from '../types/json.js';
 

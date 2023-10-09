@@ -54,38 +54,6 @@ export function isTypedJsonCandidate(value: unknown): value is TypedJson<any> {
 }
 
 /**
- * Base class for concordium domain types
- *
- * @template V - The serializable JSON value
- */
-export abstract class TypeBase<V> implements ToTypedJson<V> {
-    protected abstract typedJsonType: TypedJsonDiscriminator;
-    protected abstract get serializable(): V;
-
-    public toTypedJSON(): TypedJson<V> {
-        return {
-            ['@type']: this.typedJsonType,
-            value: this.serializable,
-        };
-    }
-}
-
-/**
- * Common interface implemented by strong types used in the SDK
- * for converting instances of the type to types of {@linkcode TypedJson}.
- *
- * @template V - The serializable JSON value
- */
-export interface ToTypedJson<V> {
-    /**
-     * Converts type to {@linkcode TypedJson}
-     *
-     * @returns {TypedJson} The typed JSON.
-     */
-    toTypedJSON(): TypedJson<V>;
-}
-
-/**
  * Describes the type of the JsonParseError.
  */
 export enum TypedJsonParseErrorCode {

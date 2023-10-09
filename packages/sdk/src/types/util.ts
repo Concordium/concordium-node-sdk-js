@@ -29,17 +29,33 @@ export enum TypedJsonDiscriminator {
  *
  * @template V - The serializable JSON value
  */
-export interface TypedJson<V> {
+export type TypedJson<V> = {
     /** The type discriminator */
     ['@type']: TypedJsonDiscriminator;
     /** The serializable type value */
     value: V;
+};
+
+/**
+ * Type predeicate for {@linkcode TypedJson}.
+ *
+ * @param value value to test
+ * @returns boolean indicating whether `value` is {@linkcode TypedJson}
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isTypedJsonCandidate(value: unknown): value is TypedJson<any> {
+    if (typeof value !== 'object' || value === null) {
+        return false;
+    }
+
+    return ['@type', 'value'].every((name) =>
+        Object.getOwnPropertyNames(value).includes(name)
+    );
 }
 
 /**
  * Base class for concordium domain types
  *
- * @template D - The JSON discriminator
  * @template V - The serializable JSON value
  */
 export abstract class TypeBase<V> implements ToTypedJson<V> {
@@ -58,7 +74,6 @@ export abstract class TypeBase<V> implements ToTypedJson<V> {
  * Common interface implemented by strong types used in the SDK
  * for converting instances of the type to types of {@linkcode TypedJson}.
  *
- * @template D - The JSON discriminator
  * @template V - The serializable JSON value
  */
 export interface ToTypedJson<V> {
@@ -143,7 +158,7 @@ export class TypedJsonInvalidValueError extends TypedJsonParseError {
  * @template V - The JSON value
  * @template T - The type returned
  *
- * @param {D} expectedTypeDiscriminator - The discriminator expected in the JSON string parsed
+ * @param {TypedJsonDiscriminator} expectedTypeDiscriminator - The discriminator expected in the JSON string parsed
  * @param {Function} toType - A function converting values of type `V` to instances of type `T`
  *
  * @throws {TypedJsonParseError} {@linkcode TypedJsonParseError} if the returned function fails to parse the passed value.
@@ -155,7 +170,7 @@ export function makeFromTypedJson<V, T>(
     toType: (value: V) => T
 ) {
     return ({ ['@type']: type, value }: TypedJson<V>): T | V => {
-        if (!type || !value) {
+        if (type === undefined || value === undefined) {
             throw new TypedJsonMalformedError(
                 'Expected both "@type" and "value" properties to be available in JSON'
             );

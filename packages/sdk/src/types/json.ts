@@ -21,9 +21,10 @@ import {
     DataBlob,
     JSON_DISCRIMINATOR as DATA_BLOB_DISCRIMINATOR,
 } from './DataBlob.js';
+import { isTypedJsonCandidate } from './util.js';
 
-function reviveConcordiumTypes(value: any) {
-    if (value) {
+function reviveConcordiumTypes(value: unknown) {
+    if (isTypedJsonCandidate(value)) {
         switch (value['@type']) {
             case Parameter.JSON_DISCRIMINATOR:
                 return Parameter.fromTypedJSON(value);
@@ -66,29 +67,27 @@ function reviveConcordiumTypes(value: any) {
         }
     }
 
-    return undefined;
+    return value;
 }
 
 /**
  * Acts as an inverse for {@linkcode jsonStringify}
  */
 export function jsonParse(
-    input: string | undefined,
+    input: string,
     reviver?: (this: any, key: string, value: any) => any
 ): any {
-    if (!input) {
-        return undefined;
-    }
-    return JSON.parse(
-        input,
-        (k, v) => reviveConcordiumTypes(v) ?? reviver?.(k, v) ?? v
+    return JSON.parse(input, (k, v) =>
+        reviver === undefined
+            ? reviveConcordiumTypes(v)
+            : reviver(k, reviveConcordiumTypes(v))
     );
 }
 
 /**
  * Replaces values of concordium domain types with values that can be revived into their original types.
  */
-function replaceConcordiumType(value: any) {
+function replaceConcordiumType(value: unknown) {
     switch (true) {
         case AccountAddress.instanceOf(value):
             return (value as AccountAddress.Type).toTypedJSON();
@@ -166,7 +165,7 @@ export function jsonStringify(
      * Recursively maps concordium domain types to values that can be revived into their original types.
      */
     const mapValues = (v: any): any => {
-        if (v == undefined || typeof v !== 'object') return v;
+        if (v === undefined || v === null || typeof v !== 'object') return v;
         return Object.entries(v)
             .map(([k, v]) => [k, mapValues(replaceConcordiumType(v))])
             .reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {});

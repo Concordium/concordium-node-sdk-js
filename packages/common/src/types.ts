@@ -77,6 +77,19 @@ export type Energy = bigint;
 export type GenesisIndex = number;
 
 /**
+ * Makes keys of type optional
+ *
+ * @example
+ * type PartiallyOptionalProps = MakeOptional<{test: string; another: number;}, 'another'>; // {test: string; another?: number;}
+ */
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> &
+    Partial<Pick<T, K>>;
+
+/** Makes keys of type required (i.e. non-optional) */
+export type MakeRequired<T, K extends keyof T> = Required<Pick<T, K>> &
+    Omit<T, K>;
+
+/**
  * Returns a union of all keys of type T with values matching type V.
  */
 export type KeysMatching<T, V> = {
@@ -478,6 +491,10 @@ export interface ChainParametersCommon {
     foundationAccount: Base58String;
     /** The chain foundation account index */
     foundationAccountIndex?: bigint;
+    /** Keys allowed to do level1 updates */
+    level1Keys: KeysWithThreshold;
+    /** Keys allowed to do root updates */
+    rootKeys: KeysWithThreshold;
 }
 
 /** Chain parameters used from protocol version 1-3 */
@@ -488,6 +505,8 @@ export type ChainParametersV0 = ChainParametersCommon &
         electionDifficulty: number;
         /** The election difficulty for consensus lottery */
         rewardParameters: RewardParametersV0;
+        /** Keys allowed to do parameter updates */
+        level2Keys: AuthorizationsV0;
     };
 
 /** Chain parameters used in protocol versions 4 and 5 */
@@ -499,6 +518,8 @@ export type ChainParametersV1 = ChainParametersCommon &
         electionDifficulty: number;
         /** The election difficulty for consensus lottery */
         rewardParameters: RewardParametersV1;
+        /** Keys allowed to do parameter updates */
+        level2Keys: AuthorizationsV1;
     };
 
 /** Chain parameters used from protocol version 6 */
@@ -511,6 +532,8 @@ export type ChainParametersV2 = ChainParametersCommon &
     ConsensusParameters & {
         /** The election difficulty for consensus lottery */
         rewardParameters: RewardParametersV2;
+        /** Keys allowed to do parameter updates */
+        level2Keys: AuthorizationsV1;
     };
 
 /** Union of all chain parameters across all protocol versions */
@@ -658,7 +681,10 @@ interface UpdatesCommon {
  * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export interface UpdatesV0 extends UpdatesCommon {
-    chainParameters: ChainParametersV0;
+    chainParameters: Omit<
+        ChainParametersV0,
+        'level1Keys' | 'level2Keys' | 'rootKeys'
+    >;
     updateQueues: UpdateQueuesV0;
     keys: KeysV0;
 }
@@ -668,7 +694,10 @@ export interface UpdatesV0 extends UpdatesCommon {
  * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export interface UpdatesV1 extends UpdatesCommon {
-    chainParameters: ChainParametersV1;
+    chainParameters: Omit<
+        ChainParametersV1,
+        'level1Keys' | 'level2Keys' | 'rootKeys'
+    >;
     updateQueues: UpdateQueuesV1;
     keys: KeysV1;
 }
@@ -678,7 +707,10 @@ export interface UpdatesV1 extends UpdatesCommon {
  * @deprecated This is type describing return types from the JSON-RPC client and the V1 gRPC client, both of which have been deprecated
  */
 export interface UpdatesV2 extends UpdatesCommon {
-    chainParameters: ChainParametersV2;
+    chainParameters: Omit<
+        ChainParametersV2,
+        'level1Keys' | 'level2Keys' | 'rootKeys'
+    >;
     updateQueues: UpdateQueuesV2;
     keys: KeysV1;
 }
@@ -2266,3 +2298,12 @@ export interface WinningBaker {
      */
     present: boolean;
 }
+
+export type HealthCheckResponse =
+    | {
+          isHealthy: true;
+      }
+    | {
+          isHealthy: false;
+          message?: string;
+      };

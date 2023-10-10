@@ -9,7 +9,8 @@ import * as v1 from './types';
 import * as v2 from '../grpc/v2/concordium/types';
 import { Base58String, HexString, isRpcError } from './types';
 import { QueriesClient } from '../grpc/v2/concordium/service.client';
-import type { RpcTransport } from '@protobuf-ts/runtime-rpc';
+import { HealthClient } from '../grpc/v2/concordium/health.client';
+import type { RpcError, RpcTransport } from '@protobuf-ts/runtime-rpc';
 import { CredentialRegistrationId } from './types/CredentialRegistrationId';
 import * as translate from './GRPCTypeTranslation';
 import { AccountAddress } from './types/accountAddress';
@@ -20,6 +21,7 @@ import {
     isHex,
     isValidHash,
     isValidIp,
+    mapRecord,
     mapStream,
     unwrap,
     wasmToSchema,
@@ -50,6 +52,7 @@ export type FindInstanceCreationReponse = {
  */
 export class ConcordiumGRPCClient {
     client: QueriesClient;
+    healthClient: HealthClient;
 
     /**
      * Initialize a gRPC client for a specific concordium node.
@@ -57,6 +60,7 @@ export class ConcordiumGRPCClient {
      */
     constructor(transport: RpcTransport) {
         this.client = new QueriesClient(transport);
+        this.healthClient = new HealthClient(transport);
     }
 
     /**
@@ -213,6 +217,7 @@ export class ConcordiumGRPCClient {
      *
      * @returns the module schema as a buffer.
      * @throws An error of type `RpcError` if not found in the block.
+     * @throws If the module or schema cannot be parsed
      */
     async getEmbeddedSchema(
         moduleRef: ModuleReference,
@@ -309,35 +314,68 @@ export class ConcordiumGRPCClient {
         transaction: v1.AccountTransaction,
         signature: v1.AccountTransactionSignature
     ): Promise<HexString> {
-        const rawPayload = serializeAccountTransactionPayload(transaction);
-        const transactionSignature: v2.AccountTransactionSignature =
-            translate.accountTransactionSignatureToV2(signature);
-
-        // Energy cost
         const accountTransactionHandler = getAccountTransactionHandler(
             transaction.type
         );
+
+        const rawPayload = serializeAccountTransactionPayload(transaction);
+
+        // Energy cost
         const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(
             transaction.payload
         );
+
         const energyCost = calculateEnergyCost(
             countSignatures(signature),
             BigInt(rawPayload.length),
             baseEnergyCost
         );
 
+        return this.sendRawAccountTransaction(
+            transaction.header,
+            energyCost,
+            rawPayload,
+            signature
+        );
+    }
+
+    /**
+     * Sends an account transaction, with an already serialized payload, to the node to be
+     * put in a block on the chain.
+     *
+     * Note that a transaction can still fail even if it was accepted by the node.
+     * To keep track of the transaction use getTransactionStatus.
+     *
+     * In general, { @link ConcordiumGRPCClient.sendAccountTransaction } is the recommended
+     * method to send account transactions, as this does not require the caller to serialize the payload themselves.
+     *
+     * @param header the transactionheader to send to the node
+     * @param energyAmount the amount of energy allotted for the transaction
+     * @param payload the payload serialized to a buffer
+     * @param signature the signatures on the signing digest of the transaction
+     * @returns The transaction hash as a byte array
+     */
+    async sendRawAccountTransaction(
+        header: v1.AccountTransactionHeader,
+        energyAmount: bigint,
+        payload: Buffer,
+        signature: v1.AccountTransactionSignature
+    ): Promise<HexString> {
+        const transactionSignature: v2.AccountTransactionSignature =
+            translate.accountTransactionSignatureToV2(signature);
+
         // Put together sendBlockItemRequest
-        const header: v2.AccountTransactionHeader = {
-            sender: { value: transaction.header.sender.decodedAddress },
-            sequenceNumber: { value: transaction.header.nonce },
-            energyAmount: { value: energyCost },
-            expiry: { value: transaction.header.expiry.expiryEpochSeconds },
+        const convertedHeader: v2.AccountTransactionHeader = {
+            sender: { value: header.sender.decodedAddress },
+            sequenceNumber: { value: header.nonce },
+            energyAmount: { value: energyAmount },
+            expiry: { value: header.expiry.expiryEpochSeconds },
         };
         const accountTransaction: v2.AccountTransaction = {
             signature: transactionSignature,
-            header: header,
+            header: convertedHeader,
             payload: {
-                payload: { oneofKind: 'rawPayload', rawPayload: rawPayload },
+                payload: { oneofKind: 'rawPayload', rawPayload: payload },
             },
         };
         const sendBlockItemRequest: v2.SendBlockItemRequest = {
@@ -388,6 +426,59 @@ export class ConcordiumGRPCClient {
             blockItem: {
                 oneofKind: 'credentialDeployment',
                 credentialDeployment: credentialDeployment,
+            },
+        };
+
+        const response = await this.client.sendBlockItem(sendBlockItemRequest)
+            .response;
+        return Buffer.from(response.value).toString('hex');
+    }
+
+    /**
+     * Sends an update instruction transaction for updating a chain parameter
+     * to the node to be put in a block on the chain.
+     *
+     * @param updateInstructionTransaction the update instruction transaction to send to the node
+     * @param signatures map of the signatures on the hash of the serialized unsigned update instruction, with the key index as map key
+     * @returns The transaction hash as a hex string
+     */
+    async sendUpdateInstruction(
+        updateInstructionTransaction: v1.UpdateInstruction,
+        signatures: Record<number, HexString>
+    ): Promise<HexString> {
+        const header = updateInstructionTransaction.header;
+        const updateInstruction: v2.UpdateInstruction = {
+            header: {
+                sequenceNumber: {
+                    value: header.sequenceNumber,
+                },
+                effectiveTime: {
+                    value: header.effectiveTime,
+                },
+                timeout: {
+                    value: header.timeout,
+                },
+            },
+            payload: {
+                payload: {
+                    oneofKind: 'rawPayload',
+                    rawPayload: Buffer.from(
+                        updateInstructionTransaction.payload,
+                        'hex'
+                    ),
+                },
+            },
+            signatures: {
+                signatures: mapRecord(signatures, (x) => ({
+                    value: Buffer.from(x, 'hex'),
+                })),
+            },
+        };
+
+        const sendBlockItemRequest: v2.SendBlockItemRequest = {
+            blockItem: {
+                oneofKind: 'updateInstruction',
+                updateInstruction: updateInstruction,
             },
         };
 
@@ -1534,6 +1625,22 @@ export class ConcordiumGRPCClient {
 
     private async getConsensusHeight() {
         return (await this.getConsensusStatus()).lastFinalizedBlockHeight;
+    }
+
+    /**
+     * Queries the node to check its health
+     *
+     * {@codeblock ~~:client/healthCheck.ts#documentation-snippet}
+     *
+     * @returns a HealthCheck indicating whether the node is healthy or not and provides the message from the client, if not healthy.
+     */
+    async healthCheck(): Promise<v1.HealthCheckResponse> {
+        try {
+            await this.healthClient.check({});
+            return { isHealthy: true };
+        } catch (e) {
+            return { isHealthy: false, message: (e as RpcError).message };
+        }
     }
 }
 

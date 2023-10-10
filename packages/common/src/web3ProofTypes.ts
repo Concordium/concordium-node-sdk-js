@@ -4,10 +4,24 @@ import {
     GenericMembershipStatement,
     GenericNonMembershipStatement,
     GenericRangeStatement,
-    AtomicProof,
 } from './commonProofTypes';
 import { ContractAddress, CryptographicParameters } from './types';
-import JSONBigInt from 'json-bigint';
+
+export type TimestampAttribute = {
+    type: 'date-time';
+    timestamp: string;
+};
+export type AttributeType = string | bigint | TimestampAttribute;
+export type StatementAttributeType = AttributeType | Date;
+
+export function isTimestampAttribute(
+    attribute: AttributeType
+): attribute is TimestampAttribute {
+    return (
+        (attribute as TimestampAttribute).type === 'date-time' &&
+        typeof (attribute as TimestampAttribute).timestamp === 'string'
+    );
+}
 
 export type AccountCommitmentInput = {
     type: 'account';
@@ -20,7 +34,7 @@ export type Web3IssuerCommitmentInput = {
     type: 'web3Issuer';
     signature: string;
     signer: string;
-    values: Record<string, string | bigint>;
+    values: Record<string, AttributeType>;
     randomness: Record<string, string>;
 };
 
@@ -39,31 +53,56 @@ export type Web3IdProofInput = {
     commitmentInputs: CommitmentInput[];
 };
 
-export type PropertyDetails = {
+export type TimestampProperty = {
+    title: string;
+    type: 'object';
+    properties: {
+        type: {
+            type: 'string';
+            const: 'date-time';
+        };
+        timestamp: {
+            type: 'string';
+            format?: 'date-time';
+        };
+    };
+    required: ['type', 'timestamp'];
+    description?: string;
+};
+
+export type SimpleProperty = {
     title: string;
     description?: string;
-    type: string;
+    type: 'string' | 'integer';
     format?: string;
 };
 
-type IndexDetails = {
-    title: 'id';
+export type CredentialSchemaProperty = SimpleProperty | TimestampProperty;
+
+type IdDetails = {
+    title: string;
     description?: string;
     type: 'string';
 };
 
-export type VerifiableCredentialSubject = {
+type CredentialSchemaAttributes = {
+    title?: string;
+    description?: string;
+    type: 'object';
+    properties: Record<string, CredentialSchemaProperty | TimestampProperty>;
+    required: string[];
+};
+
+export type CredentialSchemaSubject = {
     type: 'object';
     properties: {
-        id: IndexDetails;
-        attributes: {
-            properties: Record<string, PropertyDetails>;
-        };
+        id: IdDetails;
+        attributes: CredentialSchemaAttributes;
     };
     required: string[];
 };
 
-export const IDENTITY_SUBJECT_SCHEMA: VerifiableCredentialSubject = {
+export const IDENTITY_SUBJECT_SCHEMA: CredentialSchemaSubject = {
     type: 'object',
     properties: {
         id: {
@@ -72,149 +111,79 @@ export const IDENTITY_SUBJECT_SCHEMA: VerifiableCredentialSubject = {
             description: 'Credential subject identifier',
         },
         attributes: {
+            type: 'object',
             properties: {
                 firstName: {
-                    title: 'first name',
+                    title: 'First name',
                     type: 'string',
                 },
                 lastName: {
-                    title: 'last name',
+                    title: 'Last name',
                     type: 'string',
                 },
                 sex: {
-                    title: 'sex',
+                    title: 'Sex',
                     type: 'string',
                 },
                 dob: {
-                    title: 'date of birth',
+                    title: 'Date of birth',
                     type: 'string',
                 },
                 countryOfResidence: {
-                    title: 'last name',
+                    title: 'Country of residence',
                     type: 'string',
                 },
                 nationality: {
-                    title: 'last name',
+                    title: 'Nationality',
                     type: 'string',
                 },
                 idDocType: {
-                    title: 'last name',
+                    title: 'ID Document Type',
                     type: 'string',
                 },
                 idDocNo: {
-                    title: 'last name',
+                    title: 'ID Document Number',
                     type: 'string',
                 },
                 idDocIssuer: {
-                    title: 'last name',
+                    title: 'ID Document Issuer',
                     type: 'string',
                 },
                 idDocIssuedAt: {
-                    title: 'last name',
+                    title: 'ID Document Issued At',
                     type: 'string',
                 },
                 idDocExpiresAt: {
-                    title: 'last name',
+                    title: 'ID Document Expires At',
                     type: 'string',
                 },
                 nationalIdNo: {
-                    title: 'last name',
+                    title: 'National ID Number',
                     type: 'string',
                 },
                 taxIdNo: {
-                    title: 'last name',
+                    title: 'Tax ID Number',
                     type: 'string',
                 },
             },
+            required: [],
         },
     },
     required: [],
 };
 
-type DIDString = string;
-
-export type ConcordiumWeakLinkingProofV1 = {
-    created: string;
-    proofValue: string[];
-    type: 'ConcordiumWeakLinkingProofV1';
-};
-
-export type AtomicProofV2 = AtomicProof<string | bigint>;
-
-export type StatementProof = {
-    created: string;
-    proofValue: AtomicProofV2[];
-    type: 'ConcordiumZKProofV3';
-};
-
-export type CredentialSubjectProof = {
-    id: DIDString;
-    proof: StatementProof;
-    statement: AtomicStatementV2[];
-};
-
-export type VerifiableCredentialProof = {
-    credentialSubject: CredentialSubjectProof;
-    issuer: DIDString;
-    type: [
-        'VerifiableCredential',
-        'ConcordiumVerifiableCredential',
-        ...string[]
-    ];
-};
-
-export class VerifiablePresentation {
-    presentationContext: string;
-    proof: ConcordiumWeakLinkingProofV1;
-    type: string;
-    verifiableCredential: VerifiableCredentialProof[];
-
-    constructor(
-        presentationContext: string,
-        proof: ConcordiumWeakLinkingProofV1,
-        type: string,
-        verifiableCredential: VerifiableCredentialProof[]
-    ) {
-        this.presentationContext = presentationContext;
-        this.proof = proof;
-        this.type = type;
-        this.verifiableCredential = verifiableCredential;
-    }
-
-    toString(): string {
-        return JSONBigInt({
-            alwaysParseAsBig: true,
-            useNativeBigInt: true,
-        }).stringify(this);
-    }
-
-    static fromString(json: string): VerifiablePresentation {
-        // We allow all numbers to be parsed as bigints to avoid lossy conversion of attribute values. The structure does not contain any other numbers.
-        const parsed: VerifiablePresentation = JSONBigInt({
-            alwaysParseAsBig: true,
-            useNativeBigInt: true,
-        }).parse(json);
-        return new VerifiablePresentation(
-            parsed.presentationContext,
-            parsed.proof,
-            parsed.type,
-            parsed.verifiableCredential
-        );
-    }
-}
-
-export type RangeStatementV2 = GenericRangeStatement<string, string | bigint>;
+export type RangeStatementV2 = GenericRangeStatement<string, AttributeType>;
 export type NonMembershipStatementV2 = GenericNonMembershipStatement<
     string,
-    string | bigint
+    AttributeType
 >;
 export type MembershipStatementV2 = GenericMembershipStatement<
     string,
-    string | bigint
+    AttributeType
 >;
 export type RevealStatementV2 = GenericRevealStatement<string>;
 
-export type AtomicStatementV2 = GenericAtomicStatement<string, string | bigint>;
+export type AtomicStatementV2 = GenericAtomicStatement<string, AttributeType>;
 
 export type VerifiableCredentialQualifier = {
     type: 'sci';
@@ -276,5 +245,5 @@ export type CredentialStatements = CredentialStatement[];
 
 export type CredentialSubject = {
     id: string;
-    attributes: Record<string, string | bigint>;
+    attributes: Record<string, AttributeType>;
 };

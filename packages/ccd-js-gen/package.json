@@ -1,0 +1,52 @@
+{
+    "name": "@concordium/ccd-js-gen",
+    "version": "1.0.0",
+    "description": "Generate JS clients for the Concordium Blockchain",
+    "bin": "bin/ccd-js-gen.js",
+    "main": "lib/src/lib.js",
+    "typings": "lib/src/lib.d.ts",
+    "scripts": {
+        "build": "tsc",
+        "build-dev": "yarn build",
+        "clean": "rm -r lib",
+        "lint": "eslint src/** bin/** --cache --ext .ts,.js --max-warnings 0",
+        "lint-fix": "yarn --silent lint --fix; exit 0",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "concordium",
+        "smart-contracts"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Concordium/concordium-node-sdk-js",
+        "directory": "packages/ccd-js-gen"
+    },
+    "author": {
+        "name": "Concordium Software",
+        "email": "support@concordium.software",
+        "url": "https://concordium.com"
+    },
+    "license": "Apache-2.0",
+    "dependencies": {
+        "@concordium/common-sdk": "9.4.0",
+        "buffer": "^6.0.3",
+        "commander": "^11.0.0",
+        "ts-morph": "^19.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.5.0",
+        "@typescript-eslint/eslint-plugin": "^4.28.1",
+        "@typescript-eslint/parser": "^4.28.1",
+        "eslint": "^7.29.0",
+        "eslint-config-prettier": "^8.3.0",
+        "eslint-plugin-import": "^2.23.4",
+        "eslint-plugin-prettier": "^3.4.0",
+        "prettier": "^2.3.2",
+        "typescript": "^4.3.5"
+    },
+    "prettier": {
+        "singleQuote": true,
+        "tabWidth": 4
+    }
+}

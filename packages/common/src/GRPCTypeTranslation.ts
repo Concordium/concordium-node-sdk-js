@@ -250,6 +250,15 @@ function trBaker(baker: v2.AccountStakingInfo_Baker): v1.AccountBakerDetails {
     };
 }
 
+function trHigherLevelKeysUpdate(
+    update: v2.HigherLevelKeys
+): v1.KeysWithThreshold {
+    return {
+        keys: update.keys.map(trUpdatePublicKey),
+        threshold: unwrap(update.threshold?.value),
+    };
+}
+
 function translateChainParametersCommon(
     params: v2.ChainParametersV1 | v2.ChainParametersV0
 ): v1.ChainParametersCommon {
@@ -258,6 +267,8 @@ function translateChainParametersCommon(
         microGTUPerEuro: unwrap(params.microCcdPerEuro?.value),
         accountCreationLimit: unwrap(params.accountCreationLimit?.value),
         foundationAccount: unwrapToBase58(params.foundationAccount),
+        level1Keys: trHigherLevelKeysUpdate(unwrap(params.level1Keys)),
+        rootKeys: trHigherLevelKeysUpdate(unwrap(params.rootKeys)),
     };
 }
 
@@ -405,6 +416,7 @@ function trChainParametersV0(v0: v2.ChainParametersV0): v1.ChainParametersV0 {
     const commonRewardParameters = translateRewardParametersCommon(v0);
     return {
         ...common,
+        level2Keys: trAuthorizationsV0(unwrap(v0.level2Keys)),
         electionDifficulty: trAmountFraction(v0.electionDifficulty?.value),
         bakerCooldownEpochs: unwrap(v0.bakerCooldownEpochs?.value),
         minimumThresholdForBaking: unwrap(v0.minimumThresholdForBaking?.value),
@@ -440,6 +452,7 @@ function trChainParametersV1(
     const commonRewardParameters = translateRewardParametersCommon(params);
     return {
         ...common,
+        level2Keys: trAuthorizationsV1(unwrap(params.level2Keys)),
         electionDifficulty: trAmountFraction(params.electionDifficulty?.value),
         rewardPeriodLength: unwrap(
             params.timeParameters?.rewardPeriodLength?.value?.value
@@ -508,6 +521,7 @@ function trChainParametersV2(
 
     return {
         ...common,
+        level2Keys: trAuthorizationsV1(unwrap(params.level2Keys)),
         rewardPeriodLength: unwrap(
             params.timeParameters?.rewardPeriodLength?.value?.value
         ),

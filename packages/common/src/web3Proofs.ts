@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer/';
 import * as wasm from '@concordium/rust-bindings';
 import {
     AttributeKey,
@@ -15,17 +16,19 @@ import {
     CredentialStatements,
     MembershipStatementV2,
     NonMembershipStatementV2,
-    PropertyDetails,
+    CredentialSchemaProperty,
     RangeStatementV2,
     StatementProverQualifier,
     VerifiableCredentialQualifier,
-    VerifiableCredentialSubject,
+    CredentialSchemaSubject,
     Web3IdProofInput,
     AccountCommitmentInput,
     Web3IssuerCommitmentInput,
-    VerifiablePresentation,
     CredentialStatement,
     CredentialSubject,
+    AttributeType,
+    isTimestampAttribute,
+    StatementAttributeType,
 } from './web3ProofTypes';
 import { getPastDate } from './idProofs';
 import {
@@ -37,12 +40,32 @@ import {
 } from './commonProofTypes';
 import { ConcordiumHdWallet } from './HdWallet';
 import { stringify } from 'json-bigint';
+import { VerifiablePresentation } from './types/VerifiablePresentation';
+import {
+    compareStringAttributes,
+    isStringAttributeInRange,
+    statementAttributeTypeToAttributeType,
+    timestampToDate,
+} from './web3IdHelpers';
+
+export const MAX_STRING_BYTE_LENGTH = 31;
+export const MAX_U64 = 18446744073709551615n; // 2n ** 64n - 1n
+export const MIN_DATE_ISO = '-262144-01-01T00:00:00Z';
+export const MAX_DATE_ISO = '+262143-12-31T23:59:59.999999999Z';
+export const MIN_DATE_TIMESTAMP = Date.parse(MIN_DATE_ISO);
+export const MAX_DATE_TIMESTAMP = Date.parse(MAX_DATE_ISO);
+
+const TIMESTAMP_VALID_VALUES = MIN_DATE_ISO + 'to ' + MAX_DATE_ISO;
+const STRING_VALID_VALUES =
+    '0 to ' + MAX_STRING_BYTE_LENGTH + ' bytes as UTF-8';
+const INTEGER_VALID_VALUES = '0 to ' + MAX_U64;
 
 const throwRangeError = (
     title: string,
     property: string,
     end: string,
-    mustBe: string
+    mustBe: string,
+    validRange: string
 ) => {
     throw new Error(
         title +
@@ -51,22 +74,73 @@ const throwRangeError = (
             ' property and therefore the ' +
             end +
             ' end of a range statement must be a ' +
-            mustBe
+            mustBe +
+            ' in the range of ' +
+            validRange
     );
 };
-const throwSetError = (title: string, property: string, mustBe: string) => {
+const throwSetError = (
+    title: string,
+    property: string,
+    mustBe: string,
+    validRange: string
+) => {
     throw new Error(
         title +
             ' is a ' +
             property +
-            ' property and therefore the end members of a set statement must be ' +
-            mustBe
+            ' property and therefore the members of a set statement must be ' +
+            mustBe +
+            ' in the range of ' +
+            validRange
     );
 };
 
+function isTimestampAttributeSchemaProperty(
+    properties?: CredentialSchemaProperty
+) {
+    return (
+        properties &&
+        properties.type === 'object' &&
+        properties.properties.type.const === 'date-time'
+    );
+}
+
+function isValidStringAttribute(attributeValue: string): boolean {
+    return (
+        Buffer.from(attributeValue, 'utf-8').length <= MAX_STRING_BYTE_LENGTH
+    );
+}
+
+function isValidIntegerAttribute(attributeValue: bigint) {
+    return attributeValue >= 0 && attributeValue <= MAX_U64;
+}
+
+function isValidTimestampAttribute(attributeValue: Date) {
+    return (
+        attributeValue.getTime() >= MIN_DATE_TIMESTAMP &&
+        attributeValue.getTime() <= MAX_DATE_TIMESTAMP
+    );
+}
+
+function validateTimestampAttribute(value: AttributeType) {
+    return (
+        isTimestampAttribute(value) &&
+        isValidTimestampAttribute(timestampToDate(value))
+    );
+}
+
+function validateStringAttribute(value: AttributeType) {
+    return typeof value === 'string' && isValidStringAttribute(value);
+}
+
+function validateIntegerAttribute(value: AttributeType) {
+    return typeof value === 'bigint' && isValidIntegerAttribute(value);
+}
+
 function verifyRangeStatement(
     statement: RangeStatementV2,
-    properties?: PropertyDetails
+    properties?: CredentialSchemaProperty
 ) {
     if (statement.lower === undefined) {
         throw new Error('Range statements must contain a lower field');
@@ -75,37 +149,71 @@ function verifyRangeStatement(
         throw new Error('Range statements must contain an upper field');
     }
 
-    const checkRange = (
-        typeName: string,
-        validate: (a: bigint | string) => boolean,
-        typeString: string
-    ) => {
-        if (properties?.type === typeName) {
+    if (properties) {
+        const checkRange = (
+            typeName: string,
+            validate: (a: AttributeType) => boolean,
+            typeString: string,
+            validRange: string
+        ) => {
             if (!validate(statement.lower)) {
                 throwRangeError(
                     properties.title,
                     typeName,
                     'lower',
-                    typeString
+                    typeString,
+                    validRange
                 );
             }
             if (!validate(statement.upper)) {
                 throwRangeError(
                     properties.title,
                     typeName,
-                    'lower',
-                    typeString
+                    'upper',
+                    typeString,
+                    validRange
                 );
             }
+        };
+
+        if (isTimestampAttributeSchemaProperty(properties)) {
+            checkRange(
+                'timestamp',
+                validateTimestampAttribute,
+                'Date',
+                TIMESTAMP_VALID_VALUES
+            );
+        } else if (properties.type === 'string') {
+            checkRange(
+                'string',
+                validateStringAttribute,
+                'string',
+                STRING_VALID_VALUES
+            );
+        } else if (properties.type === 'integer') {
+            checkRange(
+                'integer',
+                validateIntegerAttribute,
+                'bigint',
+                INTEGER_VALID_VALUES
+            );
         }
-    };
+    }
 
-    checkRange('string', (end) => typeof end !== 'string', 'string');
-    checkRange('integer', (end) => typeof end !== 'bigint', 'bigint');
-
-    // TODO Add lower < upper validation for string attributes
-    // We only check for integer attributes, because strings must be converted into field elements.
-    if (properties?.type === 'integer' && statement.upper < statement.lower) {
+    // The assertions are safe, because we already validated that lower/upper has the correct types.
+    if (
+        (properties?.type === 'integer' && statement.upper < statement.lower) ||
+        (isTimestampAttributeSchemaProperty(properties) &&
+            isTimestampAttribute(statement.lower) &&
+            isTimestampAttribute(statement.upper) &&
+            timestampToDate(statement.upper).getTime() <
+                timestampToDate(statement.lower).getTime()) ||
+        (properties?.type === 'string' &&
+            compareStringAttributes(
+                statement.lower as string,
+                statement.upper as string
+            ) > 0)
+    ) {
         throw new Error('Upper bound must be greater than lower bound');
     }
 }
@@ -113,7 +221,7 @@ function verifyRangeStatement(
 function verifySetStatement(
     statement: MembershipStatementV2 | NonMembershipStatementV2,
     statementTypeName: string,
-    properties?: PropertyDetails
+    properties?: CredentialSchemaProperty
 ) {
     if (statement.set === undefined) {
         throw new Error(
@@ -126,23 +234,51 @@ function verifySetStatement(
         );
     }
 
-    const checkSet = (
-        typeName: string,
-        validate: (a: bigint | string) => boolean,
-        typeString: string
-    ) => {
-        if (properties?.type === typeName && !statement.set.every(validate)) {
-            throwSetError(properties.title, typeName, typeString);
-        }
-    };
+    if (properties) {
+        const checkSet = (
+            typeName: string,
+            validate: (a: AttributeType) => boolean,
+            typeString: string,
+            validValues: string
+        ) => {
+            if (!statement.set.every(validate)) {
+                throwSetError(
+                    properties.title,
+                    typeName,
+                    typeString,
+                    validValues
+                );
+            }
+        };
 
-    checkSet('string', (value) => typeof value == 'string', 'strings');
-    checkSet('integer', (value) => typeof value == 'bigint', 'bigints');
+        if (isTimestampAttributeSchemaProperty(properties)) {
+            checkSet(
+                'date-time',
+                validateTimestampAttribute,
+                'Date',
+                TIMESTAMP_VALID_VALUES
+            );
+        } else if (properties.type === 'string') {
+            checkSet(
+                'string',
+                validateStringAttribute,
+                'string',
+                STRING_VALID_VALUES
+            );
+        } else if (properties.type === 'integer') {
+            checkSet(
+                'integer',
+                validateIntegerAttribute,
+                'bigint',
+                INTEGER_VALID_VALUES
+            );
+        }
+    }
 }
 
 function verifyAtomicStatement(
     statement: AtomicStatementV2,
-    schema?: VerifiableCredentialSubject
+    schema?: CredentialSchemaSubject
 ) {
     if (statement.type === undefined) {
         throw new Error('Statements must contain a type field');
@@ -187,7 +323,7 @@ function verifyAtomicStatement(
 function verifyAtomicStatementInContext(
     statement: AtomicStatementV2,
     existingStatements: AtomicStatementV2[],
-    schema: VerifiableCredentialSubject
+    schema?: CredentialSchemaSubject
 ) {
     verifyAtomicStatement(statement, schema);
     if (
@@ -205,7 +341,7 @@ function verifyAtomicStatementInContext(
  */
 export function verifyAtomicStatements(
     statements: AtomicStatementV2[],
-    schema: VerifiableCredentialSubject
+    schema?: CredentialSchemaSubject
 ): boolean {
     if (statements.length === 0) {
         throw new Error('Empty statements are not allowed');
@@ -238,9 +374,9 @@ function getAccountCredentialQualifier(
 
 export class AtomicStatementBuilder implements InternalBuilder {
     statements: AtomicStatementV2[];
-    schema: VerifiableCredentialSubject | undefined;
+    schema: CredentialSchemaSubject | undefined;
 
-    constructor(schema?: VerifiableCredentialSubject) {
+    constructor(schema?: CredentialSchemaSubject) {
         this.statements = [];
         this.schema = schema;
     }
@@ -253,7 +389,7 @@ export class AtomicStatementBuilder implements InternalBuilder {
     }
 
     /**
-     * If checkConstraints is true, this checks whether the given statement may be added to the statement being built.
+     * This checks whether the given statement may be added to the statement being built.
      * If the statement breaks any rules, this will throw an error.
      */
     private check(statement: AtomicStatementV2) {
@@ -275,14 +411,14 @@ export class AtomicStatementBuilder implements InternalBuilder {
      */
     addRange(
         attribute: string,
-        lower: string | bigint,
-        upper: string | bigint
+        lower: StatementAttributeType,
+        upper: StatementAttributeType
     ): this {
         const statement: AtomicStatementV2 = {
             type: StatementTypes.AttributeInRange,
             attributeTag: attribute,
-            lower,
-            upper,
+            lower: statementAttributeTypeToAttributeType(lower),
+            upper: statementAttributeTypeToAttributeType(upper),
         };
         this.check(statement);
         this.statements.push(statement);
@@ -295,11 +431,11 @@ export class AtomicStatementBuilder implements InternalBuilder {
      * @param set: the set of values that the attribute must be included in.
      * @returns the updated builder
      */
-    addMembership(attribute: string, set: string[] | bigint[]): this {
+    addMembership(attribute: string, set: StatementAttributeType[]): this {
         const statement: AtomicStatementV2 = {
             type: StatementTypes.AttributeInSet,
             attributeTag: attribute,
-            set,
+            set: set.map(statementAttributeTypeToAttributeType),
         };
         this.check(statement);
         this.statements.push(statement);
@@ -312,11 +448,11 @@ export class AtomicStatementBuilder implements InternalBuilder {
      * @param set: the set of values that the attribute must be included in.
      * @returns the updated builder
      */
-    addNonMembership(attribute: string, set: string[] | bigint[]): this {
+    addNonMembership(attribute: string, set: StatementAttributeType[]): this {
         const statement: AtomicStatementV2 = {
             type: StatementTypes.AttributeNotInSet,
             attributeTag: attribute,
-            set,
+            set: set.map(statementAttributeTypeToAttributeType),
         };
         this.check(statement);
         this.statements.push(statement);
@@ -351,7 +487,7 @@ export class AccountStatementBuild extends AtomicStatementBuilder {
         return this.addRange(
             AttributeKeyString.dob,
             MIN_DATE,
-            getPastDate(age)
+            getPastDate(age, 1)
         );
     }
 
@@ -418,14 +554,14 @@ export class AccountStatementBuild extends AtomicStatementBuilder {
     }
 }
 
-type InternalBuilder = StatementBuilder<string | bigint, string>;
+type InternalBuilder = StatementBuilder<StatementAttributeType, string>;
 export class Web3StatementBuilder {
     private statements: CredentialStatements = [];
 
     private add(
         idQualifier: StatementProverQualifier,
         builderCallback: (builder: InternalBuilder) => void,
-        schema?: VerifiableCredentialSubject
+        schema?: CredentialSchemaSubject
     ): this {
         const builder = new AtomicStatementBuilder(schema);
         builderCallback(builder);
@@ -439,7 +575,7 @@ export class Web3StatementBuilder {
     addForVerifiableCredentials(
         validContractAddresses: ContractAddress[],
         builderCallback: (builder: InternalBuilder) => void,
-        schema?: VerifiableCredentialSubject
+        schema?: CredentialSchemaSubject
     ): this {
         return this.add(
             getWeb3IdCredentialQualifier(validContractAddresses),
@@ -602,20 +738,81 @@ export function createWeb3CommitmentInputWithHdWallet(
 }
 
 /**
+ * Helper to check if an attribute value is in the given range.
+ */
+function isInRange(
+    value: AttributeType,
+    lower: AttributeType,
+    upper: AttributeType
+) {
+    if (
+        typeof value === 'string' &&
+        typeof lower === 'string' &&
+        typeof upper === 'string'
+    ) {
+        return isStringAttributeInRange(value, lower, upper);
+    }
+    if (
+        typeof value === 'bigint' &&
+        typeof lower === 'bigint' &&
+        typeof upper === 'bigint'
+    ) {
+        return lower <= value && upper > value;
+    }
+    if (
+        isTimestampAttribute(value) &&
+        isTimestampAttribute(lower) &&
+        isTimestampAttribute(upper)
+    ) {
+        return (
+            timestampToDate(lower).getTime() <=
+                timestampToDate(value).getTime() &&
+            timestampToDate(upper).getTime() > timestampToDate(value).getTime()
+        );
+    }
+    // Mismatch in types.
+    return false;
+}
+
+/**
+ * Helper to check if an attribute value is in the given set.
+ */
+function isInSet(value: AttributeType, set: AttributeType[]) {
+    if (typeof value === 'string' || typeof value === 'bigint') {
+        return set.includes(value);
+    }
+    if (isTimestampAttribute(value)) {
+        return set
+            .map((timestamp) =>
+                isTimestampAttribute(timestamp)
+                    ? timestampToDate(timestamp).getTime()
+                    : undefined
+            )
+            .includes(timestampToDate(value).getTime());
+    }
+    return false;
+}
+
+/**
  * Given an atomic statement and a prover's attributes, determine whether the statement is fulfilled.
  */
 export function canProveAtomicStatement(
     statement: AtomicStatementV2,
-    attributes: Record<string, string | bigint>
+    attributes: Record<string, AttributeType>
 ): boolean {
     const attribute = attributes[statement.attributeTag];
+
+    if (attribute === undefined) {
+        return false;
+    }
+
     switch (statement.type) {
-        case StatementTypes.AttributeInSet:
-            return statement.set.includes(attribute);
-        case StatementTypes.AttributeNotInSet:
-            return !statement.set.includes(attribute);
         case StatementTypes.AttributeInRange:
-            return statement.upper > attribute && attribute >= statement.lower;
+            return isInRange(attribute, statement.lower, statement.upper);
+        case StatementTypes.AttributeInSet:
+            return isInSet(attribute, statement.set);
+        case StatementTypes.AttributeNotInSet:
+            return !isInSet(attribute, statement.set);
         case StatementTypes.RevealAttribute:
             return attribute !== undefined;
         default:
@@ -630,7 +827,7 @@ export function canProveAtomicStatement(
  */
 export function canProveCredentialStatement(
     credentialStatement: CredentialStatement,
-    attributes: Record<string, string | bigint>
+    attributes: Record<string, AttributeType>
 ): boolean {
     return credentialStatement.statement.every((statement) =>
         canProveAtomicStatement(statement, attributes)

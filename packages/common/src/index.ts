@@ -15,6 +15,7 @@ export {
     serializeAccountTransactionPayload,
     serializeCredentialDeploymentPayload,
 } from './serialization';
+export { encodeHexString } from './serializationHelpers';
 export { sha256 };
 export { CredentialRegistrationId } from './types/CredentialRegistrationId';
 export { AccountAddress } from './types/accountAddress';
@@ -22,6 +23,12 @@ export { CcdAmount } from './types/ccdAmount';
 export { TransactionExpiry } from './types/transactionExpiry';
 export { DataBlob } from './types/DataBlob';
 export { ModuleReference } from './types/moduleReference';
+export * from './types/VersionedModuleSource';
+export {
+    VerifiablePresentation,
+    reviveDateFromTimeStampAttribute,
+    replaceDateWithTimeStampAttribute,
+} from './types/VerifiablePresentation';
 export * from './credentialDeploymentTransactions';
 export { isAlias, getAlias } from './alias';
 export {
@@ -68,3 +75,5 @@ export * from './energyCost';
 export * from './uleb128';
 export * from './cis2';
 export * from './cis0';
+export * from './cis4';
+export * from './GenericContract';

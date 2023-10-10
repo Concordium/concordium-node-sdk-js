@@ -172,7 +172,66 @@ function transformConcordiumType(
 
 type ReplacerFun = (this: any, key: string, value: any) => any;
 
-function transformConcordiumTypes(obj: unknown, replacer?: ReplacerFun) {
+/**
+ * Thrown if a circular reference is found while trying to stringify object.
+ */
+export class JsonCircularReferenceError extends Error {
+    public override readonly name = 'CircularReferenceError';
+    /**
+     * @param {string} key - The key the circular reference was found at.
+     */
+    constructor(public readonly key: string) {
+        super(`Circular reference found in object at path ${key}`);
+    }
+}
+
+/**
+ * Creates a replacer function which is a no-op, but throws {@link JsonCircularReferenceError} when finding circular references.
+ * Modified from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Cyclic_object_value.
+ *
+ * @throws {JsonCircularReferenceError} If a cyclic reference is found.
+ * @returns {ReplacerFun} replacer function, which throws when finding circular references.
+ * The function returned expects parent object to be accessible on `this`
+ *
+ * @example
+ * const check = getCheckCircular();
+ *
+ * const circularReference = { otherData: 123 };
+ * circularReference.myself = circularReference;
+ *
+ * for (cosnt key in circularReference) {
+ *   check.call(circularReference, key, circularReference[key]); // throws `JsonCircularReferenceError`
+ * }
+ */
+function getCheckCircular(): ReplacerFun {
+    const ancestors: any[] = [];
+    return function (this: any, key: string, value: any) {
+        if (typeof value !== 'object' || value === null) {
+            return value;
+        }
+        // `this` is the object that value is contained in,
+        // i.e., its direct parent.
+        while (ancestors.length > 0 && ancestors.at(-1) !== this) {
+            ancestors.pop();
+        }
+        if (ancestors.includes(value)) {
+            throw new JsonCircularReferenceError(key);
+        }
+        ancestors.push(value);
+        return value;
+    };
+}
+
+/**
+ * Transforms concordium domain types in an object of arbitrary depth in a non-recursive manner.
+ *
+ * @param {unknown} obj - The object to transform
+ * @param {ReplacerFun} [replacer] - An optional replacer function to run in addition to transforming concordium domain types.
+ *
+ * @throws {JsonCircularReferenceError} If a circular reference is found.
+ * @returns {any} The transformed object.
+ */
+function transformConcordiumTypes(obj: unknown, replacer?: ReplacerFun): any {
     if (typeof obj !== 'object' || obj === null) {
         return obj;
     }
@@ -182,28 +241,35 @@ function transformConcordiumTypes(obj: unknown, replacer?: ReplacerFun) {
         path: string[];
     };
 
+    const checkCircular = getCheckCircular();
+
     const stack: StackItem[] = [{ obj, path: [] }];
-    const result: Record<string, any> = { ...obj };
+    const result: Record<string, any> = { ...obj }; // Shallow clone to aviod modifying original.
 
     while (stack.length) {
-        const item = stack[0];
-        for (const k in item.obj) {
+        const { path, obj } = stack[0];
+
+        for (const k in obj) {
+            const originalValue = obj[k];
+            checkCircular.call(obj, k, originalValue); // Throws if a circular reference is found.
+
             // Transform concordium types first.
-            const { transformed, value } = transformConcordiumType(item.obj[k]);
+            const { transformed, value } =
+                transformConcordiumType(originalValue);
             // Then run values through user defined replacer function.
             const jsonValue =
                 (value as any).toJSON?.() ??
-                replacer?.call(item.obj, k, value) ??
+                replacer?.call(obj, k, value) ??
                 value;
 
             // Find the node matching the path registered for the object.
-            const local = item.path.reduce((acc, key) => acc[key], result);
+            const local = path.reduce((acc, key) => acc[key], result);
             if (transformed) {
                 local[k] = jsonValue;
             } else if (typeof jsonValue === 'object' && jsonValue !== null) {
                 // If the value was not replaced and is a valid object, push it to the stack.
-                stack.push({ obj: jsonValue, path: [...item.path, k] });
-                // And override the value with a shallow copy to avoid modifying the original.
+                stack.push({ obj: jsonValue, path: [...path, k] });
+                // And override the value with a shallow clone to avoid modifying the original.
                 local[k] = { ...jsonValue };
             }
         }
@@ -220,6 +286,8 @@ function transformConcordiumTypes(obj: unknown, replacer?: ReplacerFun) {
  * @param value A JavaScript value, usually an object or array, to be converted.
  * @param replacer A function that transforms the results.
  * @param space Adds indentation, white space, and line break characters to the return-value JSON text to make it easier to read.
+ *
+ * @throws {JsonCircularReferenceError} If a circular reference is found.
  */
 export function jsonStringify(
     value: any,
@@ -233,6 +301,8 @@ export function jsonStringify(
  * @param value A JavaScript value, usually an object or array, to be converted.
  * @param replacer An array of strings and numbers that acts as an approved list for selecting the object properties that will be stringified.
  * @param space Adds indentation, white space, and line break characters to the return-value JSON text to make it easier to read.
+ *
+ * @throws {JsonCircularReferenceError} If a circular reference is found.
  */
 export function jsonStringify(
     value: any,
@@ -244,24 +314,15 @@ export function jsonStringify(
     replacer?: any,
     space?: string | number
 ): string {
-    /**
-     * Recursively maps concordium domain types to values that can be revived into their original types.
-     */
-    // const mapValues = (v: any): any => {
-    //     if (v === undefined || v === null || typeof v !== 'object') return v;
-    //     return Object.entries(v)
-    //         .map(([k, v]) => [k, mapValues(replaceConcordiumType(v))])
-    //         .reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {});
-    // };
-    //
-
+    // Runs replace function for concordium types prior to JSON.stringify, as otherwise
+    // an attempt to run `toJSON` on objects is done before any replacer function.
+    const transformed = transformConcordiumTypes(
+        input,
+        typeof replacer === 'function' ? replacer : undefined
+    );
     return JSON.stringify(
-        // Runs replace function for concordium types prior to JSON.stringify, as otherwise
-        // an attempt to run `toJSON` on objects is done before any replacer function.
-        transformConcordiumTypes(
-            input,
-            typeof replacer === 'function' ? replacer : undefined
-        ),
+        transformed,
+        // Only add replacer if it hasn't already been run in the concordium transformer function.
         typeof replacer === 'function' ? undefined : replacer,
         space
     );

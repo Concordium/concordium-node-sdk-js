@@ -1695,7 +1695,7 @@ export const bakerPoolStatus = {
         lotteryPower: 0.15552531374613243,
         bakerEquityCapital: 7344771840225046n,
         delegatedCapital: 0n,
-        commisionRates: {
+        commissionRates: {
             bakingCommission: 0.1,
             finalizationCommission: 1,
             transactionCommission: 0.1,

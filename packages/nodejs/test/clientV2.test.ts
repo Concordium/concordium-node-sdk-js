@@ -1066,5 +1066,7 @@ test.each([clientV2, clientWeb])('getWinningBakersEpoch', async (client) => {
     );
     const round = winningBakers.filter((x) => x.round === 296651n)[0];
 
-    expect(round).toEqual({ round: 296651n, winner: 5n, present: true });
+    expect(round.round).toEqual(296651n);
+    expect(round.winner).toEqual(5n);
+    expect(round.present).toEqual(true);
 });

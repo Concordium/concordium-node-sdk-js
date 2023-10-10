@@ -21,7 +21,7 @@ import {
     DataBlob,
     JSON_DISCRIMINATOR as DATA_BLOB_DISCRIMINATOR,
 } from './DataBlob.js';
-import { isTypedJsonCandidate } from './util.js';
+import { TypedJson, isTypedJsonCandidate } from './util.js';
 
 function reviveConcordiumTypes(value: unknown) {
     if (isTypedJsonCandidate(value)) {
@@ -87,53 +87,131 @@ export function jsonParse(
 /**
  * Replaces values of concordium domain types with values that can be revived into their original types.
  */
-function replaceConcordiumType(value: unknown) {
+function transformConcordiumType(
+    value: unknown
+):
+    | { transformed: true; value: TypedJson<unknown> }
+    | { transformed: false; value: unknown } {
+    let newValue: TypedJson<unknown> | undefined = undefined;
     switch (true) {
         case AccountAddress.instanceOf(value):
-            return AccountAddress.toTypedJSON(value as AccountAddress.Type);
+            newValue = AccountAddress.toTypedJSON(value as AccountAddress.Type);
+            break;
         case BlockHash.instanceOf(value):
-            return BlockHash.toTypedJSON(value as BlockHash.Type);
+            newValue = BlockHash.toTypedJSON(value as BlockHash.Type);
+            break;
         case CcdAmount.instanceOf(value):
-            return CcdAmount.toTypedJSON(value as CcdAmount.Type);
+            newValue = CcdAmount.toTypedJSON(value as CcdAmount.Type);
+            break;
         case ContractAddress.instanceOf(value):
-            return ContractAddress.toTypedJSON(value as ContractAddress.Type);
+            newValue = ContractAddress.toTypedJSON(
+                value as ContractAddress.Type
+            );
+            break;
         case ContractName.instanceOf(value):
-            return ContractName.toTypedJSON(value as ContractName.Type);
+            newValue = ContractName.toTypedJSON(value as ContractName.Type);
+            break;
         case CredentialRegistrationId.instanceOf(value):
-            return CredentialRegistrationId.toTypedJSON(
+            newValue = CredentialRegistrationId.toTypedJSON(
                 value as CredentialRegistrationId.Type
             );
+            break;
         case value instanceof DataBlob:
-            return (value as DataBlob).toTypedJSON();
+            newValue = (value as DataBlob).toTypedJSON();
+            break;
         case Duration.instanceOf(value):
-            return Duration.toTypedJSON(value as Duration.Type);
+            newValue = Duration.toTypedJSON(value as Duration.Type);
+            break;
         case Energy.instanceOf(value):
-            return Energy.toTypedJSON(value as Energy.Type);
+            newValue = Energy.toTypedJSON(value as Energy.Type);
+            break;
         case EntrypointName.instanceOf(value):
-            return EntrypointName.toTypedJSON(value as EntrypointName.Type);
+            newValue = EntrypointName.toTypedJSON(value as EntrypointName.Type);
+            break;
         case InitName.instanceOf(value):
-            return InitName.toTypedJSON(value as InitName.Type);
+            newValue = InitName.toTypedJSON(value as InitName.Type);
+            break;
         case ModuleReference.instanceOf(value):
-            return ModuleReference.toTypedJSON(value as ModuleReference.Type);
+            newValue = ModuleReference.toTypedJSON(
+                value as ModuleReference.Type
+            );
+            break;
         case Parameter.instanceOf(value):
-            return Parameter.toTypedJSON(value as Parameter.Type);
+            newValue = Parameter.toTypedJSON(value as Parameter.Type);
+            break;
         case ReceiveName.instanceOf(value):
-            return ReceiveName.toTypedJSON(value as ReceiveName.Type);
+            newValue = ReceiveName.toTypedJSON(value as ReceiveName.Type);
+            break;
         case ReturnValue.instanceOf(value):
-            return ReturnValue.toTypedJSON(value as ReturnValue.Type);
+            newValue = ReturnValue.toTypedJSON(value as ReturnValue.Type);
+            break;
         case SequenceNumber.instanceOf(value):
-            return SequenceNumber.toTypedJSON(value as SequenceNumber.Type);
+            newValue = SequenceNumber.toTypedJSON(value as SequenceNumber.Type);
+            break;
         case Timestamp.instanceOf(value):
-            return Timestamp.toTypedJSON(value as Timestamp.Type);
+            newValue = Timestamp.toTypedJSON(value as Timestamp.Type);
+            break;
         case TransactionExpiry.instanceOf(value):
-            return TransactionExpiry.toTypedJSON(
+            newValue = TransactionExpiry.toTypedJSON(
                 value as TransactionExpiry.Type
             );
+            break;
         case TransactionHash.instanceOf(value):
-            return TransactionHash.toTypedJSON(value as TransactionHash.Type);
+            newValue = TransactionHash.toTypedJSON(
+                value as TransactionHash.Type
+            );
+            break;
     }
 
-    return value;
+    if (newValue !== undefined) {
+        return { transformed: true, value: newValue };
+    }
+
+    return { transformed: false, value };
+}
+
+type ReplacerFun = (this: any, key: string, value: any) => any;
+
+function transformConcordiumTypes(obj: unknown, replacer?: ReplacerFun) {
+    if (typeof obj !== 'object' || obj === null) {
+        return obj;
+    }
+
+    type StackItem = {
+        obj: Record<string, any>;
+        path: string[];
+    };
+
+    const stack: StackItem[] = [{ obj, path: [] }];
+    const result: Record<string, any> = { ...obj };
+
+    while (stack.length) {
+        const item = stack[0];
+        for (const k in item.obj) {
+            // Transform concordium types first.
+            const { transformed, value } = transformConcordiumType(item.obj[k]);
+            // Then run values through user defined replacer function.
+            const jsonValue =
+                (value as any).toJSON?.() ??
+                replacer?.call(item.obj, k, value) ??
+                value;
+
+            // Find the node matching the path registered for the object.
+            const local = item.path.reduce((acc, key) => acc[key], result);
+            if (transformed) {
+                local[k] = jsonValue;
+            } else if (typeof jsonValue === 'object' && jsonValue !== null) {
+                // If the value was not replaced and is a valid object, push it to the stack.
+                stack.push({ obj: jsonValue, path: [...item.path, k] });
+                // And override the value with a shallow copy to avoid modifying the original.
+                local[k] = { ...jsonValue };
+            }
+        }
+
+        stack.shift();
+    }
+
+    return result;
 }
 
 /**
@@ -145,9 +223,10 @@ function replaceConcordiumType(value: unknown) {
  */
 export function jsonStringify(
     value: any,
-    replacer?: (this: any, key: string, value: any) => any,
+    replacer?: ReplacerFun,
     space?: string | number
 ): string;
+
 /**
  * Stringify, which ensures concordium domain types are stringified in a restorable fashion.
  *
@@ -168,18 +247,22 @@ export function jsonStringify(
     /**
      * Recursively maps concordium domain types to values that can be revived into their original types.
      */
-    const mapValues = (v: any): any => {
-        if (v === undefined || v === null || typeof v !== 'object') return v;
-        return Object.entries(v)
-            .map(([k, v]) => [k, mapValues(replaceConcordiumType(v))])
-            .reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {});
-    };
+    // const mapValues = (v: any): any => {
+    //     if (v === undefined || v === null || typeof v !== 'object') return v;
+    //     return Object.entries(v)
+    //         .map(([k, v]) => [k, mapValues(replaceConcordiumType(v))])
+    //         .reduce((acc, [k, v]) => ({ ...acc, [k]: v }), {});
+    // };
+    //
 
     return JSON.stringify(
         // Runs replace function for concordium types prior to JSON.stringify, as otherwise
         // an attempt to run `toJSON` on objects is done before any replacer function.
-        mapValues(input),
-        replacer,
+        transformConcordiumTypes(
+            input,
+            typeof replacer === 'function' ? replacer : undefined
+        ),
+        typeof replacer === 'function' ? undefined : replacer,
         space
     );
 }

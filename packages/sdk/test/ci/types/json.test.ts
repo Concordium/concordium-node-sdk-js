@@ -26,7 +26,9 @@ describe('JSON ID test', () => {
     test('Stringified types are parsed correctly', () => {
         const original = {
             parameter: Parameter.fromHexString('010203'),
-            returnValue: ReturnValue.fromHexString('020103'),
+            nested: {
+                returnValue: ReturnValue.fromHexString('020103'),
+            },
             sequenceNumber: SequenceNumber.create(1),
             energy: Energy.create(123),
             transactionhash: TransactionHash.fromHexString(
@@ -58,10 +60,6 @@ describe('JSON ID test', () => {
 
         const json = jsonStringify(original);
         const parsed = jsonParse(json);
-
-        console.log(json);
-        console.log(original);
-        console.log(parsed);
 
         expect(parsed).toEqual(original);
     });

@@ -237,7 +237,7 @@ export function serializeContractAddress(
 
 function serializeAddress(address: CIS2.Address): Buffer {
     return Buffer.concat(
-        ContractAddress.isContractAddress(address)
+        ContractAddress.instanceOf(address)
             ? [encodeWord8(1), serializeContractAddress(address)]
             : [encodeWord8(0), serializeAccountAddress(address)]
     );
@@ -272,7 +272,7 @@ function serializeContractReceiver(receiver: CIS2.ContractReceiver): Buffer {
 
 function serializeReceiver(receiver: CIS2.Receiver): Buffer {
     return Buffer.concat(
-        AccountAddress.isAccountAddress(receiver)
+        AccountAddress.instanceOf(receiver)
             ? [encodeWord8(0), AccountAddress.toBuffer(receiver)]
             : [encodeWord8(1), serializeContractReceiver(receiver)]
     );
@@ -556,7 +556,7 @@ export function formatCIS2UpdateOperator(
 ): CIS2.UpdateOperatorParamJson {
     return {
         update: input.type === 'add' ? { Add: {} } : { Remove: {} },
-        operator: ContractAddress.isContractAddress(input.address)
+        operator: ContractAddress.instanceOf(input.address)
             ? {
                   Contract: [
                       {
@@ -575,9 +575,7 @@ export function formatCIS2UpdateOperator(
 export function formatCIS2Transfer(
     input: CIS2.Transfer
 ): CIS2.TransferParamJson {
-    const from: CIS2.AddressParamJson = ContractAddress.isContractAddress(
-        input.from
-    )
+    const from: CIS2.AddressParamJson = ContractAddress.instanceOf(input.from)
         ? {
               Contract: [
                   {
@@ -588,7 +586,7 @@ export function formatCIS2Transfer(
           }
         : { Account: [AccountAddress.toBase58(input.from)] };
     let to: CIS2.ReceiverParamJson;
-    if (AccountAddress.isAccountAddress(input.to)) {
+    if (AccountAddress.instanceOf(input.to)) {
         to = { Account: [AccountAddress.toBase58(input.to)] };
     } else {
         to = {

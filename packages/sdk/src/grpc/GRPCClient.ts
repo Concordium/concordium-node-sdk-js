@@ -1569,7 +1569,7 @@ export function getAccountIdentifierInput(
 ): v2.AccountIdentifierInput {
     let returnIdentifier: v2.AccountIdentifierInput['accountIdentifierInput'];
 
-    if (AccountAddress.isAccountAddress(accountIdentifier)) {
+    if (AccountAddress.instanceOf(accountIdentifier)) {
         returnIdentifier = {
             oneofKind: 'address',
             address: AccountAddress.toProto(accountIdentifier),
@@ -1627,14 +1627,14 @@ export function getInvokerInput(
 ): v2.Address | undefined {
     if (!invoker) {
         return undefined;
-    } else if (AccountAddress.isAccountAddress(invoker)) {
+    } else if (AccountAddress.instanceOf(invoker)) {
         return {
             type: {
                 oneofKind: 'account',
                 account: AccountAddress.toProto(invoker),
             },
         };
-    } else if (ContractAddress.isContractAddress(invoker)) {
+    } else if (ContractAddress.instanceOf(invoker)) {
         return {
             type: {
                 oneofKind: 'contract',

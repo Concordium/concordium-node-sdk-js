@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import meow from 'meow';
 import { credentials } from '@grpc/grpc-js';
-import * as ed25519 from '@noble/ed25519';
+import * as ed25519 from '#ed25519';
 
 import {
     AccountAddress,
@@ -104,7 +104,7 @@ const signer = buildAccountSigner(wallet);
     let holderPubKey: HexString;
     if (!cli.flags.holderPubKey) {
         const prv = ed25519.utils.randomPrivateKey();
-        const pub = Buffer.from(await ed25519.getPublicKey(prv)).toString(
+        const pub = Buffer.from(await ed25519.getPublicKeyAsync(prv)).toString(
             'hex'
         );
 

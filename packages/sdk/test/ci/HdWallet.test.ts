@@ -3,7 +3,7 @@ import { ConcordiumHdWallet } from '../../src/wasm/HdWallet.js';
 import { Buffer } from 'buffer/index.js';
 export const TEST_SEED_1 =
     'efa5e27326f8fa0902e647b52449bf335b7b605adc387015ec903f41d95080eb71361cbc7fb78721dcd4f3926a337340aa1406df83332c44c1cdcfe100603860';
-import * as ed from '@noble/ed25519';
+import * as ed from '#ed25519';
 
 test('Mainnet signing key', () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Mainnet');
@@ -30,8 +30,8 @@ test('Mainnet public and signing key match', async () => {
     const privateKey = wallet.getAccountSigningKey(0, 0, 0);
     const publicKey = wallet.getAccountPublicKey(0, 0, 0);
     const message = 'abcd1234abcd5678';
-    const signature = await ed.sign(message, privateKey.toString('hex'));
-    expect(await ed.verify(signature, message, publicKey)).toBeTruthy();
+    const signature = await ed.signAsync(message, privateKey.toString('hex'));
+    expect(await ed.verifyAsync(signature, message, publicKey)).toBeTruthy();
 });
 
 test('Mainnet Id Cred Sec', () => {
@@ -114,8 +114,8 @@ test('Testnet public and signing key match', async () => {
     const privateKey = wallet.getAccountSigningKey(0, 0, 0);
     const publicKey = wallet.getAccountPublicKey(0, 0, 0);
     const message = 'abcd1234abcd5678';
-    const signature = await ed.sign(message, privateKey.toString('hex'));
-    expect(await ed.verify(signature, message, publicKey)).toBeTruthy();
+    const signature = await ed.signAsync(message, privateKey.toString('hex'));
+    expect(await ed.verifyAsync(signature, message, publicKey)).toBeTruthy();
 });
 
 test('Testnet Id Cred Sec', () => {

@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer/index.js';
-import { sign } from '@noble/ed25519';
+import * as ed from '#ed25519';
 import * as wasm from '@concordium/rust-bindings/wallet';
 import {
     AttributeKey,
@@ -302,5 +302,5 @@ export async function signCredentialTransaction(
     signingKey: HexString
 ): Promise<HexString> {
     const digest = getCredentialDeploymentSignDigest(credDeployment);
-    return Buffer.from(await sign(digest, signingKey)).toString('hex');
+    return Buffer.from(await ed.signAsync(digest, signingKey)).toString('hex');
 }

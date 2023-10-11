@@ -13,7 +13,7 @@ type Options = {
     outDir: string;
 };
 
-// Main function, which is called be the executable script in `bin`.
+// Main function, which is called in the executable script in `bin`.
 export async function main(): Promise<void> {
     const program = new Command();
     program

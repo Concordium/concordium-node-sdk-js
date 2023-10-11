@@ -67,23 +67,23 @@ export function toString(contractName: ContractName): string {
     return contractName.value;
 }
 
-/** Type used when encoding a contract name for the schema. */
+/** Type used when encoding a contract name in the JSON format used when serializing using a smart contract schema type. */
 export type SchemaValue = {
     contract: string;
 };
 
 /**
- * Get contract name in the format used by schema.
+ * Get contract name in the JSON format used when serializing using a smart contract schema type.
  * @param {ContractName} contractName The contract name.
- * @returns {SchemaValue} The schema value representation.
+ * @returns {SchemaValue} The schema JSON representation.
  */
 export function toSchemaValue(contractName: ContractName): SchemaValue {
     return { contract: contractName.value };
 }
 
 /**
- * Convert a contract name format used by schema.
- * @param {SchemaValue} contractName The contract name in schema format.
+ * Convert to contract name from JSON format used when serializing using a smart contract schema type.
+ * @param {SchemaValue} contractName The contract name in schema JSON format.
  * @returns {ContractName} The contract name.
  */
 export function fromSchemaValue(contractName: SchemaValue): ContractName {

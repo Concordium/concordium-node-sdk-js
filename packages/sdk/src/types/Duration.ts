@@ -107,21 +107,21 @@ export function toMillis(duration: Duration): bigint {
     return duration.value;
 }
 
-/** Type used when encoding a duration using a schema. */
+/** Type used when encoding a duration in the JSON format used when serializing using a smart contract schema type. */
 export type SchemaValue = string;
 
 /**
- * Get duration in the format used by schemas.
+ * Get duration in the JSON format used when serializing using a smart contract schema type.
  * @param {Duration} duration The duration.
- * @returns {SchemaValue} The schema value representation.
+ * @returns {SchemaValue} The schema JSON representation.
  */
 export function toSchemaValue(duration: Duration): SchemaValue {
     return `${duration.value} ms`;
 }
 
 /**
- * Convert duration from format used by schemas.
- * @param {SchemaValue} duration The duration in schema format.
+ * Convert to duration from JSON format used when serializing using a smart contract schema type.
+ * @param {SchemaValue} duration The duration in schema JSON format.
  * @returns {Duration} The duration.
  */
 export function fromSchemaValue(duration: SchemaValue): Duration {

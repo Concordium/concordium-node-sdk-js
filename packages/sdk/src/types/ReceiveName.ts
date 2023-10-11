@@ -114,16 +114,16 @@ export function toEntrypointName(
     return EntrypointName.fromStringUnchecked(entrypointName);
 }
 
-/** Type used when encoding a receive-name using a schema. */
+/** Type used when encoding a receive-name in the JSON format used when serializing using a smart contract schema type. */
 export type SchemaValue = {
     contract: string;
     func: string;
 };
 
 /**
- * Get receiveName in the format used by schemas.
+ * Get receiveName in the JSON format used when serializing using a smart contract schema type.
  * @param {ReceiveName} receiveName The receive name.
- * @returns {SchemaValue} The schema value representation.
+ * @returns {SchemaValue} The schema JSON representation.
  */
 export function toSchemaValue(receiveName: ReceiveName): SchemaValue {
     const contract = ContractName.toString(toContractName(receiveName));
@@ -132,8 +132,8 @@ export function toSchemaValue(receiveName: ReceiveName): SchemaValue {
 }
 
 /**
- * Convert a smart contract receive name from format used by schema.
- * @param {SchemaValue} receiveName The receive name in schema format.
+ * Convert to smart contract receive name from JSON format used when serializing using a smart contract schema type.
+ * @param {SchemaValue} receiveName The receive name in schema JSON format.
  * @returns {ReceiveName} The receive name.
  */
 export function fromSchemaValue(receiveName: SchemaValue): ReceiveName {

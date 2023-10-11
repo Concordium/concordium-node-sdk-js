@@ -1443,6 +1443,11 @@ export interface InvokeContractFailedResult {
     tag: 'failure';
     usedEnergy: Energy.Type;
     reason: RejectReason;
+    /**
+     * Return value from smart contract call, used to provide error messages.
+     * Is only defined when smart contract instance is a V1 smart contract and
+     * the transaction was rejected by the smart contract logic i.e. `reason.tag === "RejectedReceive"`.
+     */
     returnValue?: ReturnValue.Type;
 }
 

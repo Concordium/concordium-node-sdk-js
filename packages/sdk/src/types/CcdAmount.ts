@@ -140,13 +140,13 @@ export function microCcdToCcd(microCcd: BigSource | bigint): Big {
 }
 
 /**
- * JSON format to provived when encoding a CCD amount using a schema.
+ * Type used when encoding a CCD amount in the JSON format used when serializing using a smart contract schema type.
  * String representation of the amount of micro CCD.
  */
 export type SchemaValue = string;
 
 /**
- * Get CCD amount in the format used by schemas.
+ * Get CCD amount in the JSON format used when serializing using a smart contract schema type.
  * @param {CcdAmount} amount The amount.
  * @returns {SchemaValue} The schema value representation.
  */
@@ -155,7 +155,7 @@ export function toSchemaValue(amount: CcdAmount): SchemaValue {
 }
 
 /**
- * Convert CCD amount from format used by schemas.
+ * Convert to CCD amount from JSON format used when serializing using a smart contract schema type.
  * @param {SchemaValue} microCcdString The amount in schema format.
  * @returns {CcdAmount} The amount.
  */

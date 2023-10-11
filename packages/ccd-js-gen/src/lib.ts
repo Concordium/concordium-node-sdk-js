@@ -261,7 +261,7 @@ function generateModuleBaseCode(
             {
                 name: moduleRefId,
                 type: 'SDK.ModuleReference.Type',
-                initializer: `SDK.ModuleReference.fromHexString('${moduleRef.moduleRef}')`,
+                initializer: `/*#__PURE__*/ SDK.ModuleReference.fromHexString('${moduleRef.moduleRef}')`,
             },
         ],
     });
@@ -485,10 +485,7 @@ function generactionModuleContractCode(
                 returnType: 'SDK.Parameter.Type',
             })
             .setBodyText(
-                [
-                    ...(initParameter.code ?? []),
-                    `return ${initParameter.id}`,
-                ].join('\n')
+                [...initParameter.code, `return ${initParameter.id}`].join('\n')
             );
     }
 
@@ -589,7 +586,7 @@ function generateContractBaseCode(
             {
                 name: moduleRefId,
                 type: 'SDK.ModuleReference.Type',
-                initializer: `SDK.ModuleReference.fromHexString('${moduleRef.moduleRef}')`,
+                initializer: `/*#__PURE__*/ SDK.ModuleReference.fromHexString('${moduleRef.moduleRef}')`,
             },
         ],
     });
@@ -602,7 +599,7 @@ function generateContractBaseCode(
             {
                 name: contractNameId,
                 type: 'SDK.ContractName.Type',
-                initializer: `SDK.ContractName.fromStringUnchecked('${contractName}')`,
+                initializer: `/*#__PURE__*/ SDK.ContractName.fromStringUnchecked('${contractName}')`,
             },
         ],
     });
@@ -809,9 +806,7 @@ function generateContractBaseCode(
                 returnType: eventParameterTypeId,
             })
             .setBodyText(
-                [...eventParser.code, `return <any>${eventParser.id};`].join(
-                    '\n'
-                )
+                [...eventParser.code, `return ${eventParser.id};`].join('\n')
             );
     }
 }
@@ -882,7 +877,7 @@ function generateContractEntrypointCode(
             })
             .setBodyText(
                 [
-                    ...(receiveParameter.code ?? []),
+                    ...receiveParameter.code,
                     `return ${receiveParameter.id};`,
                 ].join('\n')
             );
@@ -1047,10 +1042,10 @@ function generateContractEntrypointCode(
                     '    return undefined;',
                     '}',
                     `if (${invokeResultId}.returnValue === undefined) {`,
-                    "    throw new Error('Invalid smart contract version.');",
+                    "    throw new Error('Unexpected missing \\'returnValue\\' in result of invocation. Client expected a V1 smart contract.');",
                     '}',
                     ...returnValueTokens.code,
-                    `return <any>${returnValueTokens.id};`,
+                    `return ${returnValueTokens.id};`,
                 ].join('\n')
             );
     }
@@ -1080,7 +1075,7 @@ function generateContractEntrypointCode(
                         `Get and parse the error message from dry-running update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
                         'Returns undefined if the result is not a failure.',
                         '@param {SDK.InvokeContractResult} invokeResult The result from dry-running the transaction.',
-                        `@returns {${errorMessageTypeId} | undefined} The structured error message or undefined if result was not a failure.`,
+                        `@returns {${errorMessageTypeId} | undefined} The structured error message or undefined if result was not a failure or failed for other reason than contract rejectedReceive.`,
                     ].join('\n'),
                 ],
                 isExported: true,
@@ -1095,14 +1090,14 @@ function generateContractEntrypointCode(
             })
             .setBodyText(
                 [
-                    `if (${invokeResultId}.tag !== 'failure') {`,
+                    `if (${invokeResultId}.tag !== 'failure' || ${invokeResultId}.reason.tag !== 'RejectedReceive') {`,
                     '    return undefined;',
                     '}',
                     `if (${invokeResultId}.returnValue === undefined) {`,
-                    "    throw new Error('Invalid smart contract version')",
+                    "    throw new Error('Unexpected missing \\'returnValue\\' in result of invocation. Client expected a V1 smart contract.');",
                     '}',
                     ...errorMessageTokens.code,
-                    `return <any>${errorMessageTokens.id}`,
+                    `return ${errorMessageTokens.id}`,
                 ].join('\n')
             );
     }
@@ -1125,32 +1120,49 @@ function toPascalCase(str: string): string {
 type SchemaNativeType = {
     /** The type to provide for a given schema type. */
     nativeType: string;
-    /** Provided the identifier for the input (of the above type), this generates tokens for converting it into Schema JSON format. */
-    nativeToJson: (
-        nativeId: string,
-        idGenerator: (name: string) => string
-    ) => { code: string[]; id: string };
-    /** Provided the identifier for the input (Schema JSON format), this generates tokens for converting it into a native type (the above type). */
-    jsonToNative: (
-        jsonId: string,
-        idGenerator: (name: string) => string
-    ) => { code: string[]; id: string };
+    /** The type in the Schema JSON format. */
+    jsonType: string;
+    /**
+     * Provided the identifier for the input (of the above type), this generates
+     * tokens for converting it into Schema JSON format.
+     */
+    nativeToJson: (nativeId: string) => { code: string[]; id: string };
+    /**
+     * Provided the identifier for the input (Schema JSON format), this generates
+     * tokens for converting it into a native type (the above type).
+     */
+    jsonToNative: (jsonId: string) => { code: string[]; id: string };
 };
 
-function schemaAsNativeType(
-    schemaType: SDK.SchemaType
-): SchemaNativeType | undefined {
+/**
+ * From a schema type construct a 'native' type, a type of the expected JSON format and converter functions
+ * between this native type and the JSON format expected when serializing using a schema.
+ *
+ * @param {SDK.SchemaType} schemaType The schema type
+ * @returns {SchemaNativeType} native type, JSON type and converters.
+ */
+function schemaAsNativeType(schemaType: SDK.SchemaType): SchemaNativeType {
     switch (schemaType.type) {
         case 'Unit':
-            return undefined;
+            return {
+                nativeType: '"Unit"',
+                jsonType: '[]',
+                jsonToNative() {
+                    return { code: [], id: '[]' };
+                },
+                nativeToJson() {
+                    return { code: [], id: '"Unit"' };
+                },
+            };
         case 'Bool':
             return {
                 nativeType: 'boolean',
-                nativeToJson(id) {
-                    return { code: [], id };
+                jsonType: 'boolean',
+                nativeToJson(nativeId) {
+                    return { code: [], id: nativeId };
                 },
-                jsonToNative(id) {
-                    return { code: [], id };
+                jsonToNative(jsonId) {
+                    return { code: [], id: jsonId };
                 },
             };
         case 'U8':
@@ -1161,6 +1173,7 @@ function schemaAsNativeType(
         case 'I32':
             return {
                 nativeType: 'number',
+                jsonType: 'number',
                 nativeToJson(id) {
                     return { code: [], id };
                 },
@@ -1172,7 +1185,8 @@ function schemaAsNativeType(
         case 'I64':
             return {
                 nativeType: 'number | bigint',
-                nativeToJson(id, idGenerator) {
+                jsonType: 'bigint',
+                nativeToJson(id) {
                     const resultId = idGenerator('number');
                     return {
                         code: [`const ${resultId} = BigInt(${id});`],
@@ -1187,7 +1201,8 @@ function schemaAsNativeType(
         case 'I128':
             return {
                 nativeType: 'number | bigint',
-                nativeToJson(id, idGenerator) {
+                jsonType: 'string',
+                nativeToJson(id) {
                     const resultId = idGenerator('number');
                     return {
                         code: [`const ${resultId} = BigInt(${id}).toString();`],
@@ -1200,8 +1215,9 @@ function schemaAsNativeType(
             };
         case 'Amount':
             return {
-                nativeType: 'SDK.Amount.Type',
-                nativeToJson(id, idGenerator) {
+                nativeType: 'SDK.CcdAmount.Type',
+                jsonType: 'SDK.CcdAmount.SchemaValue',
+                nativeToJson(id) {
                     const resultId = idGenerator('amount');
                     return {
                         code: [
@@ -1210,7 +1226,7 @@ function schemaAsNativeType(
                         id: resultId,
                     };
                 },
-                jsonToNative(id, idGenerator) {
+                jsonToNative(id) {
                     const resultId = idGenerator('amount');
                     return {
                         code: [
@@ -1223,7 +1239,8 @@ function schemaAsNativeType(
         case 'AccountAddress':
             return {
                 nativeType: 'SDK.AccountAddress.Type',
-                nativeToJson(id, idGenerator) {
+                jsonType: 'SDK.AccountAddress.SchemaValue',
+                nativeToJson(id) {
                     const resultId = idGenerator('accountAddress');
                     return {
                         code: [
@@ -1232,7 +1249,7 @@ function schemaAsNativeType(
                         id: resultId,
                     };
                 },
-                jsonToNative(id, idGenerator) {
+                jsonToNative(id) {
                     const resultId = idGenerator('accountAddress');
                     return {
                         code: [
@@ -1245,7 +1262,8 @@ function schemaAsNativeType(
         case 'ContractAddress':
             return {
                 nativeType: 'SDK.ContractAddress.Type',
-                nativeToJson(id, idGenerator) {
+                jsonType: 'SDK.ContractAddress.SchemaValue',
+                nativeToJson(id) {
                     const resultId = idGenerator('contractAddress');
                     return {
                         code: [
@@ -1254,7 +1272,7 @@ function schemaAsNativeType(
                         id: resultId,
                     };
                 },
-                jsonToNative(id, idGenerator) {
+                jsonToNative(id) {
                     const resultId = idGenerator('contractAddress');
                     return {
                         code: [
@@ -1267,7 +1285,8 @@ function schemaAsNativeType(
         case 'Timestamp':
             return {
                 nativeType: 'SDK.Timestamp.Type',
-                nativeToJson(id, idGenerator) {
+                jsonType: 'SDK.Timestamp.SchemaValue',
+                nativeToJson(id) {
                     const resultId = idGenerator('timestamp');
                     return {
                         code: [
@@ -1276,7 +1295,7 @@ function schemaAsNativeType(
                         id: resultId,
                     };
                 },
-                jsonToNative(id, idGenerator) {
+                jsonToNative(id) {
                     const resultId = idGenerator('timestamp');
                     return {
                         code: [
@@ -1289,7 +1308,8 @@ function schemaAsNativeType(
         case 'Duration':
             return {
                 nativeType: 'SDK.Duration.Type',
-                nativeToJson(id, idGenerator) {
+                jsonType: 'SDK.Duration.SchemaValue',
+                nativeToJson(id) {
                     const resultId = idGenerator('duration');
                     return {
                         code: [
@@ -1298,7 +1318,7 @@ function schemaAsNativeType(
                         id: resultId,
                     };
                 },
-                jsonToNative(id, idGenerator) {
+                jsonToNative(id) {
                     const resultId = idGenerator('duration');
                     return {
                         code: [
@@ -1313,41 +1333,30 @@ function schemaAsNativeType(
             const second = schemaAsNativeType(schemaType.second);
 
             return {
-                nativeType: `[${first?.nativeType}, ${second?.nativeType}]`,
-                nativeToJson(id, idGenerator) {
+                nativeType: `[${first.nativeType}, ${second.nativeType}]`,
+                jsonType: `[${first.jsonType}, ${second.jsonType}]`,
+                nativeToJson(id) {
                     const resultId = idGenerator('pair');
-                    const firstTokens = first?.nativeToJson(
-                        `${id}[0]`,
-                        idGenerator
-                    );
-                    const secondTokens = second?.nativeToJson(
-                        `${id}[1]`,
-                        idGenerator
-                    );
+                    const firstTokens = first.nativeToJson(`${id}[0]`);
+                    const secondTokens = second.nativeToJson(`${id}[1]`);
                     return {
                         code: [
-                            ...(firstTokens?.code ?? []),
-                            ...(secondTokens?.code ?? []),
-                            `const ${resultId} = [${firstTokens?.id}, ${secondTokens?.id}];`,
+                            ...firstTokens.code,
+                            ...secondTokens.code,
+                            `const ${resultId}: ${this.jsonType} = [${firstTokens.id}, ${secondTokens.id}];`,
                         ],
                         id: resultId,
                     };
                 },
-                jsonToNative(id, idGenerator) {
+                jsonToNative(id) {
                     const resultId = idGenerator('pair');
-                    const firstTokens = first?.jsonToNative(
-                        `${id}[0]`,
-                        idGenerator
-                    );
-                    const secondTokens = second?.jsonToNative(
-                        `${id}[1]`,
-                        idGenerator
-                    );
+                    const firstTokens = first.jsonToNative(`${id}[0]`);
+                    const secondTokens = second.jsonToNative(`${id}[1]`);
                     return {
                         code: [
-                            ...(firstTokens?.code ?? []),
-                            ...(secondTokens?.code ?? []),
-                            `const ${resultId} = [${firstTokens?.id}, ${secondTokens?.id}];`,
+                            ...firstTokens.code,
+                            ...secondTokens.code,
+                            `const ${resultId}: ${this.nativeType} = [${firstTokens.id}, ${secondTokens.id}];`,
                         ],
                         id: resultId,
                     };
@@ -1356,13 +1365,14 @@ function schemaAsNativeType(
         case 'List': {
             const item = schemaAsNativeType(schemaType.item);
             return {
-                nativeType: `Array<${item?.nativeType}>`,
-                nativeToJson(id, idGenerator) {
+                nativeType: `Array<${item.nativeType}>`,
+                jsonType: `Array<${item.jsonType}>`,
+                nativeToJson(id) {
                     const resultId = idGenerator('list');
                     const itemId = idGenerator('item');
-                    const tokens = item?.nativeToJson(itemId, idGenerator);
+                    const tokens = item.nativeToJson(itemId);
                     // Check if any mapping is needed.
-                    if (tokens?.id === itemId && tokens?.code.length === 0) {
+                    if (tokens.id === itemId && tokens.code.length === 0) {
                         return {
                             code: [],
                             id,
@@ -1370,20 +1380,20 @@ function schemaAsNativeType(
                     }
                     return {
                         code: [
-                            `const ${resultId} = ${id}.map((${itemId}: any) => {`,
-                            ...(tokens?.code ?? []),
-                            `return ${tokens?.id};`,
+                            `const ${resultId} = ${id}.map((${itemId}) => {`,
+                            ...tokens.code,
+                            `return ${tokens.id};`,
                             '});',
                         ],
                         id: resultId,
                     };
                 },
-                jsonToNative(id, idGenerator) {
+                jsonToNative(id) {
                     const resultId = idGenerator('list');
                     const itemId = idGenerator('item');
-                    const tokens = item?.jsonToNative(itemId, idGenerator);
+                    const tokens = item.jsonToNative(itemId);
                     // Check if any mapping is needed.
-                    if (tokens?.id === itemId && tokens?.code.length === 0) {
+                    if (tokens.id === itemId && tokens.code.length === 0) {
                         return {
                             code: [],
                             id,
@@ -1391,9 +1401,9 @@ function schemaAsNativeType(
                     }
                     return {
                         code: [
-                            `const ${resultId} = ${id}.map((${itemId}: any) => {`,
-                            ...(tokens?.code ?? []),
-                            `return ${tokens?.id};`,
+                            `const ${resultId} = ${id}.map((${itemId}) => {`,
+                            ...tokens.code,
+                            `return ${tokens.id};`,
                             '});',
                         ],
                         id: resultId,
@@ -1404,38 +1414,33 @@ function schemaAsNativeType(
         case 'Set': {
             const item = schemaAsNativeType(schemaType.item);
             return {
-                nativeType: `Set<${item?.nativeType}>`,
-                nativeToJson(id, idGenerator) {
+                nativeType: `Set<${item.nativeType}>`,
+                jsonType: `Array<${item.jsonType}>`,
+                nativeToJson(id) {
                     const resultId = idGenerator('set');
                     const valueId = idGenerator('value');
                     const valuesId = idGenerator('values');
-                    const valueTokens = item?.nativeToJson(
-                        valueId,
-                        idGenerator
-                    );
+                    const valueTokens = item.nativeToJson(valueId);
                     return {
                         code: [
-                            `const ${valuesId} = [...${id}.values()]..map((${valueId}: any) => {`,
-                            ...(valueTokens?.code ?? []),
-                            `return ${valueTokens?.id};`,
+                            `const ${valuesId} = [...${id}.values()]..map((${valueId}) => {`,
+                            ...valueTokens.code,
+                            `return ${valueTokens.id};`,
                             '});',
                         ],
                         id: resultId,
                     };
                 },
-                jsonToNative(id, idGenerator) {
+                jsonToNative(id) {
                     const resultId = idGenerator('set');
                     const valueId = idGenerator('value');
                     const valuesId = idGenerator('values');
-                    const valueTokens = item?.jsonToNative(
-                        valueId,
-                        idGenerator
-                    );
+                    const valueTokens = item.jsonToNative(valueId);
                     return {
                         code: [
-                            `const ${valuesId} = ${id}.map((${valueId}: any) => {`,
-                            ...(valueTokens?.code ?? []),
-                            `return ${valueTokens?.id}; `,
+                            `const ${valuesId} = ${id}.map((${valueId}) => {`,
+                            ...valueTokens.code,
+                            `return ${valueTokens.id}; `,
                             '});',
                             `const ${resultId} = new Set(${valuesId});`,
                         ],
@@ -1448,46 +1453,41 @@ function schemaAsNativeType(
             const key = schemaAsNativeType(schemaType.key);
             const value = schemaAsNativeType(schemaType.value);
             return {
-                nativeType: `Map<${key?.nativeType}, ${value?.nativeType}>`,
-                nativeToJson(id, idGenerator) {
+                nativeType: `Map<${key.nativeType}, ${value.nativeType}>`,
+                jsonType: `[${key.jsonType}, ${value.jsonType}][]`,
+                nativeToJson(id) {
                     const resultId = idGenerator('map');
                     const keyId = idGenerator('key');
                     const valueId = idGenerator('value');
-                    const keyTokens = key?.nativeToJson(keyId, idGenerator);
-                    const valueTokens = value?.nativeToJson(
-                        valueId,
-                        idGenerator
-                    );
+                    const keyTokens = key.nativeToJson(keyId);
+                    const valueTokens = value.nativeToJson(valueId);
 
                     return {
                         code: [
-                            `const ${resultId} = [...${id}.entries()].map(([${keyId}, ${valueId}]) => {`,
-                            ...(keyTokens?.code ?? []),
-                            ...(valueTokens?.code ?? []),
-                            `    return [${keyTokens?.id}, ${valueTokens?.id}];`,
+                            `const ${resultId}: ${this.jsonType} = [...${id}.entries()].map(([${keyId}, ${valueId}]) => {`,
+                            ...keyTokens.code,
+                            ...valueTokens.code,
+                            `    return [${keyTokens.id}, ${valueTokens.id}];`,
                             '});',
                         ],
                         id: resultId,
                     };
                 },
-                jsonToNative(id, idGenerator) {
+                jsonToNative(id) {
                     const resultId = idGenerator('map');
                     const entriesId = idGenerator('entries');
                     const keyId = idGenerator('key');
                     const valueId = idGenerator('value');
-                    const keyTokens = key?.jsonToNative(keyId, idGenerator);
-                    const valueTokens = value?.jsonToNative(
-                        valueId,
-                        idGenerator
-                    );
+                    const keyTokens = key.jsonToNative(keyId);
+                    const valueTokens = value.jsonToNative(valueId);
                     return {
                         code: [
                             `const ${entriesId} = ${id}.map(([${keyId}, ${valueId}]) => {`,
-                            ...(keyTokens?.code ?? []),
-                            ...(valueTokens?.code ?? []),
-                            `return [${keyTokens?.id}, ${valueTokens?.id}];`,
+                            ...keyTokens.code,
+                            ...valueTokens.code,
+                            `return [${keyTokens.id}, ${valueTokens.id}];`,
                             '});',
-                            `const ${resultId} = Map.fromEntries(${entriesId});`,
+                            `const ${resultId}: ${this.nativeType} = Map.fromEntries(${entriesId});`,
                         ],
                         id: resultId,
                     };
@@ -1497,13 +1497,18 @@ function schemaAsNativeType(
         case 'Array': {
             const item = schemaAsNativeType(schemaType.item);
             return {
-                nativeType: `Array<${item?.nativeType}>`,
-                nativeToJson(id, idGenerator) {
+                nativeType: `[${new Array(schemaType.size)
+                    .fill(item.nativeType)
+                    .join(', ')}]`,
+                jsonType: `[${new Array(schemaType.size)
+                    .fill(item.jsonType)
+                    .join(', ')}]`,
+                nativeToJson(id) {
                     const resultId = idGenerator('array');
                     const itemId = idGenerator('item');
-                    const tokens = item?.nativeToJson(itemId, idGenerator);
+                    const tokens = item.nativeToJson(itemId);
                     // Check if any mapping is needed.
-                    if (tokens?.id === itemId && tokens?.code.length === 0) {
+                    if (tokens.id === itemId && tokens.code.length === 0) {
                         return {
                             code: [],
                             id,
@@ -1512,20 +1517,20 @@ function schemaAsNativeType(
 
                     return {
                         code: [
-                            `const ${resultId} = ${id}.map((${itemId}: any) => {`,
-                            ...(tokens?.code ?? []),
-                            `    return ${tokens?.id};`,
+                            `const ${resultId} = ${id}.map((${itemId}) => {`,
+                            ...tokens.code,
+                            `    return ${tokens.id};`,
                             '});',
                         ],
                         id: resultId,
                     };
                 },
-                jsonToNative(id, idGenerator) {
+                jsonToNative(id) {
                     const resultId = idGenerator('array');
                     const itemId = idGenerator('item');
-                    const tokens = item?.jsonToNative(itemId, idGenerator);
+                    const tokens = item.jsonToNative(itemId);
                     // Check if any mapping is needed.
-                    if (tokens?.id === itemId && tokens?.code.length === 0) {
+                    if (tokens.id === itemId && tokens.code.length === 0) {
                         return {
                             code: [],
                             id,
@@ -1534,8 +1539,8 @@ function schemaAsNativeType(
                     return {
                         code: [
                             `const ${resultId} = ${id}.map((${itemId}: any) => {`,
-                            ...(tokens?.code ?? []),
-                            `    return ${tokens?.id};`,
+                            ...tokens.code,
+                            `    return ${tokens.id};`,
                             '});',
                         ],
                         id: resultId,
@@ -1558,88 +1563,87 @@ function schemaAsNativeType(
                 ...fieldToTypeAndMapper(variant.fields),
             }));
 
-            const variantTypes = variantFieldSchemas.map(
+            const variantTypes = variantFieldSchemas.map((variantSchema) =>
+                variantSchema.nativeType === '"no-fields"'
+                    ? `{ type: '${variantSchema.name}'}`
+                    : `{ type: '${variantSchema.name}', content: ${variantSchema.nativeType} }`
+            );
+
+            const variantJsonTypes = variantFieldSchemas.map(
                 (variantSchema) =>
-                    `{ type: '${variantSchema.name}'${
-                        variantSchema.nativeType === undefined
-                            ? ''
-                            : `, content: ${variantSchema.nativeType}`
-                    } }`
+                    `{'${variantSchema.name}' : ${variantSchema.jsonType} }`
             );
 
             return {
                 nativeType: variantTypes.join(' | '),
-                nativeToJson(id, idGenerator) {
+                jsonType: variantJsonTypes.join(' | '),
+                nativeToJson(id) {
                     const resultId = idGenerator('match');
 
                     const variantCases = variantFieldSchemas.flatMap(
                         (variantSchema) => {
-                            const tokens = variantSchema.nativeToJson?.(
-                                `${id}.content`,
-                                idGenerator
+                            const tokens = variantSchema.nativeToJson(
+                                `${id}.content`
                             );
-                            const variantName = identifierRegex.test(
-                                variantSchema.name
-                            )
-                                ? variantSchema.name
-                                : `'${variantSchema.name}'`;
                             return [
                                 `    case '${variantSchema.name}':`,
-                                ...(tokens?.code ?? []),
-                                `        ${resultId} = { ${variantName}: ${
-                                    tokens?.id ?? '[]'
-                                } };`,
+                                ...tokens.code,
+                                `        ${resultId} = { ${defineProp(
+                                    variantSchema.name,
+                                    tokens.id
+                                )} };`,
                                 '    break;',
                             ];
                         }
                     );
                     return {
                         code: [
-                            `let ${resultId};`,
-                            `switch  (${id}.type) {`,
+                            `let ${resultId}: ${this.jsonType};`,
+                            `switch (${id}.type) {`,
                             ...variantCases,
                             '}',
                         ],
                         id: resultId,
                     };
                 },
-                jsonToNative(id, idGenerator) {
+                jsonToNative(id) {
                     const resultId = idGenerator('match');
-                    const variantKeyId = idGenerator('variantKey');
+                    //const variantKeyId = idGenerator('variantKey');
 
-                    const variantCasesCode = variantFieldSchemas.flatMap(
+                    const variantIfStatements = variantFieldSchemas.map(
                         (variantFieldSchema) => {
                             const variantId = idGenerator('variant');
                             const variantTokens =
-                                variantFieldSchema.jsonToNative?.(
-                                    variantId,
-                                    idGenerator
-                                );
+                                variantFieldSchema.jsonToNative(variantId);
                             return [
-                                `    case '${variantFieldSchema.name}':`,
-                                ...(variantTokens === undefined
-                                    ? []
+                                `if ('${variantFieldSchema.name}' in ${id}) {`,
+                                ...(variantTokens.id === '"no-fields"'
+                                    ? [
+                                          `   ${resultId} = {`,
+                                          `       type: '${variantFieldSchema.name}',`,
+                                          '   };',
+                                      ]
                                     : [
-                                          `const ${variantId} = ${accessProp(
+                                          `   const ${variantId} = ${accessProp(
                                               id,
                                               variantFieldSchema.name
                                           )};`,
-                                          ...variantTokens?.code,
+                                          ...variantTokens.code,
+                                          `   ${resultId} = {`,
+                                          `       type: '${variantFieldSchema.name}',`,
+                                          `       content: ${variantTokens.id},`,
+                                          '   };',
                                       ]),
-                                `${resultId} = {`,
-                                `    type:   '${variantFieldSchema.name}',`,
-                                `    content: ${variantTokens?.id ?? '[]'},`,
-                                '};',
-                                'break;',
-                            ];
+                                '}',
+                            ].join('\n');
                         }
                     );
                     return {
                         code: [
-                            `const ${variantKeyId} = Object.keys(${id})[0];`,
-                            `let ${resultId};`,
-                            `switch (${variantKeyId}) {`,
-                            ...variantCasesCode,
+                            `let ${resultId}: ${this.nativeType};`,
+                            variantIfStatements.join(' else '),
+                            ' else {',
+                            '   throw new Error("Unexpected enum variant");',
                             '}',
                         ],
                         id: resultId,
@@ -1650,6 +1654,7 @@ function schemaAsNativeType(
         case 'String':
             return {
                 nativeType: 'string',
+                jsonType: 'string',
                 nativeToJson(id) {
                     return { code: [], id };
                 },
@@ -1663,7 +1668,8 @@ function schemaAsNativeType(
         case 'ContractName':
             return {
                 nativeType: 'SDK.ContractName.Type',
-                nativeToJson(id, idGenerator) {
+                jsonType: 'SDK.ContractName.SchemaType',
+                nativeToJson(id) {
                     const resultId = idGenerator('contractName');
                     return {
                         code: [
@@ -1672,7 +1678,7 @@ function schemaAsNativeType(
                         id: resultId,
                     };
                 },
-                jsonToNative(id, idGenerator) {
+                jsonToNative(id) {
                     const resultId = idGenerator('contractName');
                     return {
                         code: [
@@ -1685,7 +1691,8 @@ function schemaAsNativeType(
         case 'ReceiveName':
             return {
                 nativeType: 'SDK.ReceiveName.Type',
-                nativeToJson(id, idGenerator) {
+                jsonType: 'SDK.ReceiveName.SchemaType',
+                nativeToJson(id) {
                     const resultId = idGenerator('receiveName');
                     return {
                         code: [
@@ -1694,7 +1701,7 @@ function schemaAsNativeType(
                         id: resultId,
                     };
                 },
-                jsonToNative(id, idGenerator) {
+                jsonToNative(id) {
                     const resultId = idGenerator('receiveName');
                     return {
                         code: [
@@ -1708,7 +1715,8 @@ function schemaAsNativeType(
         case 'ILeb128':
             return {
                 nativeType: 'number | bigint',
-                nativeToJson(id, idGenerator) {
+                jsonType: 'bigint',
+                nativeToJson(id) {
                     const resultId = idGenerator('number');
                     return {
                         code: [`const ${resultId} = BigInt(${id}).toString();`],
@@ -1726,6 +1734,7 @@ function schemaAsNativeType(
         case 'ByteArray':
             return {
                 nativeType: 'SDK.HexString',
+                jsonType: 'string',
                 nativeToJson(id) {
                     return { code: [], id };
                 },
@@ -1739,36 +1748,29 @@ function schemaAsNativeType(
     }
 }
 
-function fieldToTypeAndMapper(
-    fields: SDK.SchemaFields
-): SchemaNativeType | undefined {
+function fieldToTypeAndMapper(fields: SDK.SchemaFields): SchemaNativeType {
     switch (fields.type) {
         case 'Named': {
-            const schemas = fields.fields.flatMap((named) => {
-                const schema = schemaAsNativeType(named.field);
-                return schema === undefined
-                    ? []
-                    : [
-                          {
-                              name: named.name,
-                              ...schema,
-                          },
-                      ];
-            });
+            const schemas = fields.fields.map((named) => ({
+                name: named.name,
+                ...schemaAsNativeType(named.field),
+            }));
 
-            const objectFieldTypes = schemas.flatMap((s) =>
-                identifierRegex.test(s.name)
-                    ? `    ${s.name}: ${s.nativeType},`
-                    : `    '${s.name}': ${s.nativeType},`
+            const objectFieldTypes = schemas.map((s) =>
+                defineProp(s.name, s.nativeType)
+            );
+            const objectFieldJsonTypes = schemas.map((s) =>
+                defineProp(s.name, s.jsonType)
             );
 
             return {
                 nativeType: `{\n${objectFieldTypes.join('\n')}\n}`,
-                nativeToJson(id, idGenerator) {
+                jsonType: `{\n${objectFieldJsonTypes.join('\n')}\n}`,
+                nativeToJson(id) {
                     const resultId = idGenerator('named');
                     const fields = schemas.map((s) => {
                         const fieldId = idGenerator('field');
-                        const field = s.nativeToJson?.(fieldId, idGenerator);
+                        const field = s.nativeToJson(fieldId);
                         return {
                             name: s.name,
                             constructTokens: [
@@ -1787,19 +1789,17 @@ function fieldToTypeAndMapper(
                             ...constructTokens,
                             `const ${resultId} = {`,
                             ...fields.map((tokens) =>
-                                identifierRegex.test(tokens.name)
-                                    ? `    ${tokens.name}: ${tokens.id},`
-                                    : `    ['${tokens.name}']: ${tokens.id},`
+                                defineProp(tokens.name, tokens.id)
                             ),
                             '};',
                         ],
                         id: resultId,
                     };
                 },
-                jsonToNative(id, idGenerator) {
+                jsonToNative(id) {
                     const fields = schemas.map((s) => {
                         const fieldId = idGenerator('field');
-                        const field = s.jsonToNative?.(fieldId, idGenerator);
+                        const field = s.jsonToNative(fieldId);
                         return {
                             name: s.name,
                             constructTokens: [
@@ -1818,9 +1818,7 @@ function fieldToTypeAndMapper(
                             ...constructTokens,
                             `const ${resultId} = {`,
                             ...fields.map((tokens) =>
-                                identifierRegex.test(tokens.name)
-                                    ? `    ${tokens.name}: ${tokens.id},`
-                                    : `    ['${tokens.name}']: ${tokens.id},`
+                                defineProp(tokens.name, tokens.id)
                             ),
                             '};',
                         ],
@@ -1838,23 +1836,25 @@ function fieldToTypeAndMapper(
                 const schema = schemas[0];
                 return {
                     nativeType: schema.nativeType,
-                    nativeToJson(id, idGenerator) {
-                        const tokens = schema.nativeToJson(id, idGenerator);
+                    jsonType: `[${schema.jsonType}]`,
+                    nativeToJson(id) {
+                        const tokens = schema.nativeToJson(id);
                         return { code: tokens.code, id: `[${tokens.id}]` };
                     },
-                    jsonToNative(id, idGenerator) {
-                        return schema.jsonToNative(`${id}[0]`, idGenerator);
+                    jsonToNative(id) {
+                        return schema.jsonToNative(`${id}[0]`);
                     },
                 };
             } else {
                 return {
                     nativeType: `[${schemas
-                        .map((s) => s?.nativeType)
+                        .map((s) => s.nativeType)
                         .join(', ')}]`,
-                    nativeToJson(id, idGenerator) {
+                    jsonType: `[${schemas.map((s) => s.jsonType).join(', ')}]`,
+                    nativeToJson(id) {
                         const resultId = idGenerator('unnamed');
                         const mapped = schemas.map((schema, index) =>
-                            schema.nativeToJson(`${id}[${index}]`, idGenerator)
+                            schema.nativeToJson(`${id}[${index}]`)
                         );
                         const constructFields = mapped.flatMap(
                             (tokens) => tokens.code
@@ -1863,15 +1863,17 @@ function fieldToTypeAndMapper(
                         return {
                             code: [
                                 ...constructFields,
-                                `const ${resultId} = [${fieldIds.join(', ')}];`,
+                                `const ${resultId}: ${
+                                    this.jsonType
+                                } = [${fieldIds.join(', ')}];`,
                             ],
                             id: resultId,
                         };
                     },
-                    jsonToNative(id, idGenerator) {
+                    jsonToNative(id) {
                         const resultId = idGenerator('unnamed');
                         const mapped = schemas.map((schema, index) =>
-                            schema.jsonToNative(`${id}[${index}]`, idGenerator)
+                            schema.jsonToNative(`${id}[${index}]`)
                         );
                         const constructFields = mapped.flatMap(
                             (tokens) => tokens.code
@@ -1889,7 +1891,16 @@ function fieldToTypeAndMapper(
             }
         }
         case 'None':
-            return undefined;
+            return {
+                nativeType: '"no-fields"',
+                jsonType: '[]',
+                nativeToJson() {
+                    return { code: [], id: '[]' };
+                },
+                jsonToNative() {
+                    return { code: [], id: '"no-fields"' };
+                },
+            };
     }
 }
 
@@ -1924,19 +1935,15 @@ function createParameterCode(
         };
     }
 
-    const typeAndMapper = schemaAsNativeType(schemaType);
-    if (typeAndMapper === undefined) {
+    if (schemaType.type === 'Unit') {
         // No parameter is needed according to the schema.
         return undefined;
     }
-
+    const typeAndMapper = schemaAsNativeType(schemaType);
     const buffer = SDK.serializeSchemaType(schemaType);
     const base64Schema = Buffer.from(buffer).toString('base64');
 
-    const mappedParameter = typeAndMapper.nativeToJson(
-        parameterId,
-        createIdGenerator()
-    );
+    const mappedParameter = typeAndMapper.nativeToJson(parameterId);
     const resultId = 'out';
     return {
         type: typeAndMapper.nativeType,
@@ -1963,24 +1970,16 @@ function parseEventCode(
         return undefined;
     }
     const typeAndMapper = schemaAsNativeType(schemaType);
-    if (typeAndMapper === undefined) {
-        // No event is emitted according to the schema.
-        return undefined;
-    }
-
     const base64Schema = Buffer.from(
         SDK.serializeSchemaType(schemaType)
     ).toString('base64');
 
     const schemaJsonId = 'schemaJson';
-    const tokens = typeAndMapper.jsonToNative(
-        schemaJsonId,
-        createIdGenerator()
-    );
+    const tokens = typeAndMapper.jsonToNative(schemaJsonId);
     return {
         type: typeAndMapper.nativeType,
         code: [
-            `const ${schemaJsonId} = (<any>SDK.ContractEvent.parseWithSchemaTypeBase64(${eventId}, '${base64Schema}'));`,
+            `const ${schemaJsonId} = <${typeAndMapper.jsonType}>SDK.ContractEvent.parseWithSchemaTypeBase64(${eventId}, '${base64Schema}');`,
             ...tokens.code,
         ],
         id: tokens.id,
@@ -1997,29 +1996,22 @@ function parseReturnValueCode(
     returnTypeId: string,
     schemaType?: SDK.SchemaType
 ): TypeConversionCode | undefined {
-    // No schema type is present so generate any code.
+    // No schema type is present so don't generate any code.
     if (schemaType === undefined) {
         return undefined;
     }
     const typeAndMapper = schemaAsNativeType(schemaType);
-    if (typeAndMapper === undefined) {
-        // No event is emitted according to the schema.
-        return undefined;
-    }
-
     const base64Schema = Buffer.from(
         SDK.serializeSchemaType(schemaType)
     ).toString('base64');
 
     const schemaJsonId = 'schemaJson';
-    const tokens = typeAndMapper.jsonToNative(
-        schemaJsonId,
-        createIdGenerator()
-    );
+    const tokens = typeAndMapper.jsonToNative(schemaJsonId);
     return {
         type: typeAndMapper.nativeType,
+
         code: [
-            `const ${schemaJsonId} = (<any>SDK.ReturnValue.parseWithSchemaTypeBase64(${returnTypeId}, '${base64Schema}'))`,
+            `const ${schemaJsonId} = <${typeAndMapper.jsonType}>SDK.ReturnValue.parseWithSchemaTypeBase64(${returnTypeId}, '${base64Schema}');`,
             ...tokens.code,
         ],
         id: tokens.id,
@@ -2027,13 +2019,15 @@ function parseReturnValueCode(
 }
 
 /**
- * Create stateful function for suffixing a number, which increments everytime this is called.
+ * Stateful function which suffixes a provided string with a number, which increments everytime this is called.
  * Used to ensure identifiers are unique.
+ * @param {string} name Name of the identifier.
+ * @returns {string} The name of the identifier suffixed with a number.
  */
-function createIdGenerator() {
+const idGenerator = (() => {
     let counter = 0;
     return (name: string) => `${name}${counter++}`;
-}
+})();
 
 /**
  * Create tokens for accessing a property on an object.
@@ -2048,6 +2042,21 @@ function accessProp(objectId: string, propId: string): string {
 }
 
 /**
- * Regular expression matching valid identifiers in javascript, without considering keywords.
+ * Create tokens for defining a property in an object
+ * @param {string} propId Identifier for the property.
+ * @param {string} valueId Identifier for the value.
+ * @returns {string} Tokens for defining a property initialized to the value.
+ */
+function defineProp(propId: string, valueId: string): string {
+    return identifierRegex.test(propId)
+        ? `${propId}: ${valueId},`
+        : `'${propId}': ${valueId},`;
+}
+
+/**
+ * Regular expression matching the format of valid identifiers in javascript.
+ *
+ * > Note: this does not check for collision with keywords, which is not a problem
+ * when accessing props or defining fields in an object.
  */
 const identifierRegex = /^[$A-Z_][0-9A-Z_$]*$/i;

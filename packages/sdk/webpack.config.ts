@@ -61,6 +61,10 @@ function configFor(
     };
 
     if (target === 'react-native') {
+        config.resolve!.fallback = {
+            crypto: resolve(__dirname, 'shims/node-webcrypto.ts'),
+            process: 'process/browser',
+        };
         config.externalsPresets = {
             node: false,
         };

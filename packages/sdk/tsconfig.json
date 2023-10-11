@@ -8,6 +8,7 @@
     },
     "include": [
         "src/**/*",
+        "shims/**/*",
         "scripts/**/*",
         "test/**/*",
         "webpack.config.ts",

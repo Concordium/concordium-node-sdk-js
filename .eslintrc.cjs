@@ -32,7 +32,11 @@ module.exports = {
         'import/no-unresolved': [
             2,
             {
-                ignore: ['@concordium/rust-bindings', 'grpc-api', '^#.+$'],
+                ignore: [
+                    '@concordium/rust-bindings',
+                    'grpc-api',
+                    '^#.+$', // ESLint resolver does not support subpath imports: https://github.com/import-js/eslint-plugin-import/issues/1868.
+                ],
             },
         ],
         'import/no-extraneous-dependencies': [

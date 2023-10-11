@@ -9,7 +9,9 @@ const config: Config = {
     moduleNameMapper: {
         '^(\\.\\.?\\/.+)\\.js$': '$1', // Remap esmodule file extensions
     },
-    transformIgnorePatterns: ['node_modules/(?!@noble/ed25519)'],
+    transformIgnorePatterns: [
+        'node_modules/(?!@noble/ed25519)', // @noble/ed25519 is an ES module only
+    ],
     transform: {
         '^.+\\.[jt]sx?$': [
             'ts-jest',

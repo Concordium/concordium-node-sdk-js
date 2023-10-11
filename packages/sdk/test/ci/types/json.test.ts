@@ -38,7 +38,13 @@ describe('JSON ID test', () => {
             blockHash: BlockHash.fromHexString(
                 'c2ef4acafd8ac8956ad941b4c4b87688baa714eb43510f078427db1b52e824e3 '
             ),
-            contractName: ContractName.fromString('test-contract'),
+            some: {
+                deeply: {
+                    nested: {
+                        contractName: ContractName.fromString('test-contract'),
+                    },
+                },
+            },
             initName: InitName.fromString('init_another-contract'),
             receiveName: ReceiveName.fromString('some-contract.receive'),
             credRegId: CredentialRegistrationId.fromHexString(

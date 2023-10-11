@@ -244,7 +244,7 @@ function transformConcordiumTypes(obj: unknown, replacer?: ReplacerFun): any {
     const checkCircular = getCheckCircular();
 
     const stack: StackItem[] = [{ obj, path: [] }];
-    const result: Record<string, any> = { ...obj }; // Shallow clone to aviod modifying original.
+    const result: Record<string, any> = {};
 
     while (stack.length) {
         const { path, obj } = stack[0];
@@ -257,20 +257,22 @@ function transformConcordiumTypes(obj: unknown, replacer?: ReplacerFun): any {
             const { transformed, value } =
                 transformConcordiumType(originalValue);
             // Then run values through user defined replacer function.
-            const jsonValue =
-                (value as any).toJSON?.() ??
-                replacer?.call(obj, k, value) ??
-                value;
+            const jsonValue = (value as any).toJSON?.(k) ?? value;
+            const replacedValue =
+                replacer?.call(obj, k, jsonValue) ?? jsonValue;
 
             // Find the node matching the path registered for the object.
             const local = path.reduce((acc, key) => acc[key], result);
             if (transformed) {
-                local[k] = jsonValue;
-            } else if (typeof jsonValue === 'object' && jsonValue !== null) {
+                local[k] = replacedValue;
+            } else if (
+                typeof replacedValue === 'object' &&
+                replacedValue !== null
+            ) {
                 // If the value was not replaced and is a valid object, push it to the stack.
-                stack.push({ obj: jsonValue, path: [...path, k] });
+                stack.push({ obj: replacedValue, path: [...path, k] });
                 // And override the value with a shallow clone to avoid modifying the original.
-                local[k] = { ...jsonValue };
+                local[k] = { ...replacedValue };
             }
         }
 

@@ -32,7 +32,7 @@ module.exports = {
         'import/no-unresolved': [
             2,
             {
-                ignore: ['@concordium/rust-bindings', 'grpc-api'],
+                ignore: ['@concordium/rust-bindings', 'grpc-api', '^#.+$'],
             },
         ],
         'import/no-extraneous-dependencies': [

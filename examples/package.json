@@ -11,6 +11,7 @@
         "node-fetch": "^3.3.2"
     },
     "devDependencies": {
+        "eslint": "^8.50.0",
         "ts-node": "10.9",
         "typescript": "^5.2.2"
     },

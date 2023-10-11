@@ -81,9 +81,12 @@
         "build-bundler": "wasm-pack build ./packages/dapp --target bundler --out-dir $INIT_CWD/lib/dapp/bundler --out-name index \"$@\" && wasm-pack build ./packages/wallet --target bundler --out-dir $INIT_CWD/lib/wallet/bundler --out-name index \"$@\"",
         "build": "yarn build-node \"$@\" && yarn build-bundler \"$@\" && yarn build-web \"$@\"",
         "build:rust-bindings": "yarn build",
-        "clean": "rimraf -- target lib .webpack-cache"
+        "clean": "rimraf -- target lib .webpack-cache",
+        "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
+        "lint-fix": "yarn --silent lint --fix; exit 0"
     },
     "devDependencies": {
+        "eslint": "^8.50.0",
         "rimraf": "^5.0.1",
         "ts-loader": "^9.4.4",
         "typescript": "^5.2.2",

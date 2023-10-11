@@ -1,18 +1,29 @@
 import { secondsSinceEpoch } from '../util.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
+import {
+    TypedJson,
+    TypedJsonDiscriminator,
+    makeFromTypedJson,
+} from './util.js';
+
+/**
+ * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ */
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.TransactionExpiry;
+type Serializable = string;
 
 /**
  * Representation of a transaction expiry date.
  */
 class TransactionExpiry {
     /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __nominal = true;
+    private __type = JSON_DISCRIMINATOR;
     constructor(
         /** Internal representation of expiry. Seconds since unix epoch */
         public readonly expiryEpochSeconds: bigint
     ) {}
 
-    toJSON(): number {
+    public toJSON(): number {
         return Number(this.expiryEpochSeconds);
     }
 }
@@ -21,6 +32,16 @@ class TransactionExpiry {
  * Representation of a transaction expiry date.
  */
 export type Type = TransactionExpiry;
+
+/**
+ * Type predicate for {@linkcode Type}
+ *
+ * @param value value to check.
+ * @returns whether `value` is of type {@linkcode Type}
+ */
+export function instanceOf(value: unknown): value is TransactionExpiry {
+    return value instanceof TransactionExpiry;
+}
 
 /**
  * Construct a TransactionExpiry from a number of seconds since unix epoch.
@@ -85,3 +106,30 @@ export function toProto(expiry: TransactionExpiry): Proto.TransactionTime {
         value: expiry.expiryEpochSeconds,
     };
 }
+
+const fromSerializable = (v: Serializable) => fromEpochSeconds(BigInt(v));
+
+/**
+ * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
+ *
+ * @param {Type} value - The account address instance to transform.
+ * @returns {TypedJson} The transformed object.
+ */
+export function toTypedJSON(value: TransactionExpiry): TypedJson<Serializable> {
+    return {
+        ['@type']: JSON_DISCRIMINATOR,
+        value: value.expiryEpochSeconds.toString(),
+    };
+}
+
+/**
+ * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
+ *
+ * @param {TypedJson} json - The typed JSON to convert.
+ * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
+ * @returns {Type} The parsed instance.
+ */
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
+    JSON_DISCRIMINATOR,
+    fromSerializable
+);

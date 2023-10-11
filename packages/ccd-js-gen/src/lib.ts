@@ -2,6 +2,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import * as tsm from 'ts-morph';
 import * as SDK from '@concordium/web-sdk';
+import sanitize from 'sanitize-filename';
 
 /**
  * Output options for the generated code.
@@ -180,7 +181,7 @@ async function generateCode(
 
         const contractOutputFilePath = path.format({
             dir: outDirPath,
-            name: contract.contractName,
+            name: sanitize(contract.contractName, { replacement: '-' }),
             ext: '.ts',
         });
         const contractSourceFile = project.createSourceFile(

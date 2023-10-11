@@ -36,6 +36,7 @@
     "dependencies": {
         "buffer": "^6.0.3",
         "commander": "^11.0.0",
+        "sanitize-filename": "^1.6.3",
         "ts-morph": "^19.0.0"
     },
     "devDependencies": {

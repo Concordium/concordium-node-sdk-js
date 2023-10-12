@@ -15,13 +15,13 @@
         "./lib/*/bundler/index.js"
     ],
     "main": "./lib/dapp/node/index.js",
-    "react-native": "./lib/dapp/node/umd/index.min.js",
+    "react-native": "./lib/dapp/react-native/index.js",
     "browser": "./lib/dapp/web/index.min.js",
     "types": "./lib/dapp/node/index.d.ts",
     "exports": {
         ".": {
             "types": "./lib/dapp/node/cjs/index.d.ts",
-            "react-native": "./lib/dapp/node/umd/index.min.js",
+            "react-native": "./lib/dapp/react-native/index.js",
             "node": {
                 "module": "./lib/dapp/node/umd/index.min.js",
                 "default": "./lib/dapp/node/cjs/index.js"
@@ -35,7 +35,7 @@
         },
         "./dapp": {
             "types": "./lib/dapp/node/cjs/index.d.ts",
-            "react-native": "./lib/dapp/node/umd/index.min.js",
+            "react-native": "./lib/dapp/react-native/index.js",
             "node": {
                 "module": "./lib/dapp/node/umd/index.min.js",
                 "default": "./lib/dapp/node/cjs/index.js"
@@ -49,7 +49,7 @@
         },
         "./wallet": {
             "types": "./lib/wallet/node/cjs/index.d.ts",
-            "react-native": "./lib/wallet/node/umd/index.min.js",
+            "react-native": null,
             "node": {
                 "module": "./lib/wallet/node/umd/index.min.js",
                 "default": "./lib/wallet/node/cjs/index.js"
@@ -80,16 +80,22 @@
     "scripts": {
         "fmt": "cargo +nightly-2023-04-01-x86_64-unknown-linux-gnu fmt -- --color=always --check",
         "clippy": "cargo +1.62 clippy --color=always --tests --benches -- -Dclippy::all",
-        "build-web": "wasm-pack build ./packages/dapp --target web --out-dir $INIT_CWD/lib/dapp/web/esm --out-name index \"$@\" && wasm-pack build ./packages/wallet --target web --out-dir $INIT_CWD/lib/wallet/web/esm --out-name index \"$@\" && webpack",
-        "build-node": "wasm-pack build ./packages/dapp --target nodejs --out-dir $INIT_CWD/lib/dapp/node/cjs --out-name index \"$@\" && wasm-pack build ./packages/wallet --target nodejs --out-dir $INIT_CWD/lib/wallet/node/cjs --out-name index \"$@\"",
-        "build-bundler": "wasm-pack build ./packages/dapp --target bundler --out-dir $INIT_CWD/lib/dapp/bundler --out-name index \"$@\" && wasm-pack build ./packages/wallet --target bundler --out-dir $INIT_CWD/lib/wallet/bundler --out-name index \"$@\"",
-        "build": "yarn build-node \"$@\" && yarn build-bundler \"$@\" && yarn build-web \"$@\"",
+        "build-web": "wasm-pack build ./packages/$0 --target web --out-dir $INIT_CWD/lib/$0/web/esm --out-name index",
+        "build-node": "wasm-pack build ./packages/$0 --target nodejs --out-dir $INIT_CWD/lib/$0/node/cjs --out-name index",
+        "build-bundler": "wasm-pack build ./packages/$0 --target bundler --out-dir $INIT_CWD/lib/$0/bundler --out-name index",
+        "build-all": "yarn build-web $0 && yarn build-node $0 && yarn build-bundler $0",
+        "build": "yarn build-all dapp && ts-node ./scripts/build-react-native.ts && yarn build-all wallet && webpack",
+        "build:rust-bindings-dapp": "yarn build-all dapp && webpack --env package=dapp && ts-node ./scripts/build-react-native.ts",
+        "build:rust-bindings-wallet": "yarn build-all wallet && webpack --env package=wallet",
         "build:rust-bindings": "yarn build",
         "clean": "rimraf -- target lib .webpack-cache",
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0"
     },
     "devDependencies": {
+        "@types/copyfiles": "^2.4.1",
+        "buffer": "^6.0.3",
+        "copyfiles": "^2.4.1",
         "eslint": "^8.50.0",
         "rimraf": "^5.0.1",
         "ts-loader": "^9.4.4",
@@ -97,9 +103,5 @@
         "wasm-pack": "^0.12.1",
         "webpack": "^5.88.2",
         "webpack-cli": "^5.1.4"
-    },
-    "dependencies": {
-        "buffer": "^6.0.3",
-        "url": "^0.11.3"
     }
 }

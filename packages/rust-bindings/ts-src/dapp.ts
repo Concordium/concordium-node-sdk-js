@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import { Buffer } from 'buffer/index.js';
 
 import * as pkg from '../lib/dapp/web/esm';

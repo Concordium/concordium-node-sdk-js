@@ -2,8 +2,11 @@
 import { Configuration } from 'webpack';
 import { resolve } from 'path';
 
-function configFor(target: 'web' | 'node' | 'react-native'): Configuration {
-    const t = target === 'react-native' ? 'node' : target;
+type WebpackEnv = Partial<{
+    package: string;
+}>;
+
+function configFor(target: 'web' | 'node', pkg?: string): Configuration {
     const config: Configuration = {
         mode: 'production',
         // mode: 'development',
@@ -12,11 +15,7 @@ function configFor(target: 'web' | 'node' | 'react-native'): Configuration {
             type: 'filesystem',
             cacheDirectory: resolve(__dirname, '.webpack-cache'),
         },
-        target: t,
-        entry: {
-            dapp: resolve(__dirname, './ts-src/dapp.ts'),
-            wallet: resolve(__dirname, './ts-src/wallet.ts'),
-        },
+        target,
         resolve: {
             extensionAlias: {
                 '.js': ['.ts', '.js'],
@@ -55,13 +54,27 @@ function configFor(target: 'web' | 'node' | 'react-native'): Configuration {
         },
     };
 
-    if (target === 'react-native') {
-        config.externalsPresets = {
-            node: false,
+    if (!pkg) {
+        config.entry = {
+            dapp: resolve(__dirname, './ts-src/dapp.ts'),
+            wallet: resolve(__dirname, './ts-src/wallet.ts'),
+        };
+    } else {
+        config.entry = {
+            [pkg]: resolve(__dirname, `./ts-src/${pkg}.ts`),
         };
     }
+
+    // if (target === 'react-native') {
+    //     config.externalsPresets = {
+    //         node: false,
+    //     };
+    // }
 
     return config;
 }
 
-export default [configFor('web'), configFor('node'), configFor('react-native')];
+export default (env: WebpackEnv) => [
+    configFor('web', env.package),
+    configFor('node', env.package),
+];

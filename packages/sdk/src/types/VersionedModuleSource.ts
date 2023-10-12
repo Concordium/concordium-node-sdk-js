@@ -6,6 +6,7 @@ import { VersionedModuleSource } from '../types.js';
 import { schemaBytesFromWasmModule } from '../util.js';
 import { RawModuleSchema } from '../schemaTypes.js';
 import { Cursor, deserializeUInt32BE } from '../deserializationHelpers.js';
+import { encodeWord32 } from '../serializationHelpers.js';
 
 /** Interface of a smart contract containing the name of the contract and every entrypoint. */
 export type ContractInterface = {
@@ -39,6 +40,19 @@ export function versionedModuleSourceFromBuffer(
         version,
         source,
     };
+}
+
+/**
+ * Serialize a versioned module source. Useful when saving to file.
+ * @param {VersionedModuleSource} moduleSource The versioned module source to serialize.
+ * @returns {Uint8Array} Buffer with serialized module source.
+ */
+export function versionedModuleSourceToBuffer(
+    moduleSource: VersionedModuleSource
+): Uint8Array {
+    const versionBytes = encodeWord32(moduleSource.version);
+    const lengthBytes = encodeWord32(moduleSource.source.byteLength);
+    return Buffer.concat([versionBytes, lengthBytes, moduleSource.source]);
 }
 
 /**

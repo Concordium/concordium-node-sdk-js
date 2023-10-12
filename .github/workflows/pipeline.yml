@@ -11,7 +11,6 @@ on:
     # Allows us to run the workflow manually from the Actions tab
     workflow_dispatch:
 
-
 env:
     DUMMY: 2 # For cache busting.
     NODE_VERSION: 18.16.0
@@ -144,9 +143,12 @@ jobs:
     tests:
         runs-on: ubuntu-22.04
         needs: build
+        strategy:
+            matrix:
+                package: ['sdk', 'ccd-js-gen']
         defaults:
             run:
-                working-directory: packages/sdk
+                working-directory: packages/${{matrix.package}}
         steps:
             - name: Checkout
               uses: actions/checkout@v3

@@ -79,9 +79,10 @@
         "build-web": "wasm-pack build ./packages/dapp --target web --out-dir $INIT_CWD/lib/dapp/web/esm --out-name index \"$@\" && wasm-pack build ./packages/wallet --target web --out-dir $INIT_CWD/lib/wallet/web/esm --out-name index \"$@\" && webpack",
         "build-node": "wasm-pack build ./packages/dapp --target nodejs --out-dir $INIT_CWD/lib/dapp/node/cjs --out-name index \"$@\" && wasm-pack build ./packages/wallet --target nodejs --out-dir $INIT_CWD/lib/wallet/node/cjs --out-name index \"$@\"",
         "build-bundler": "wasm-pack build ./packages/dapp --target bundler --out-dir $INIT_CWD/lib/dapp/bundler --out-name index \"$@\" && wasm-pack build ./packages/wallet --target bundler --out-dir $INIT_CWD/lib/wallet/bundler --out-name index \"$@\"",
-        "build": "yarn build-node \"$@\" && yarn build-bundler \"$@\" && yarn build-web \"$@\"",
+        "build": "yarn build-node \"$@\" && yarn build-bundler \"$@\" && yarn build-web \"$@\" && yarn sanitize",
         "build:rust-bindings": "yarn build",
         "clean": "rimraf -- target lib .webpack-cache",
+        "sanitize": "find . -name \"*.gitignore\" -delete",
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0"
     },

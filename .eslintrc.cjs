@@ -22,6 +22,7 @@ module.exports = {
     },
     plugins: ['@typescript-eslint', 'import'],
     rules: {
+        'prettier/prettier': 'warn',
         quotes: [
             2,
             'single',

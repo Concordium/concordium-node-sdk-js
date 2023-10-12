@@ -59,16 +59,25 @@ export function fromDate(date: Date): Timestamp {
     return fromMillis(date.getTime());
 }
 
-/** Type used when encoding the account address using a schema. */
+/** Type used when encoding a timestamp in the JSON format used when serializing using a smart contract schema type. */
 export type SchemaValue = string;
 
 /**
- * Get timestamp in the format used by schemas.
+ * Get timestamp in the JSON format used when serializing using a smart contract schema type.
  * @param {Timestamp} timestamp The timestamp.
  * @returns {SchemaValue} The schema value representation.
  */
 export function toSchemaValue(timestamp: Timestamp): SchemaValue {
     return toDate(timestamp).toISOString();
+}
+
+/**
+ * Convert to timestamp from JSON format used when serializing using a smart contract schema type.
+ * @param {SchemaValue} timestamp The timestamp in schema format.
+ * @returns {Timestamp} The timestamp
+ */
+export function fromSchemaValue(timestamp: SchemaValue): Timestamp {
+    return fromMillis(Date.parse(timestamp));
 }
 
 /**

@@ -462,6 +462,16 @@ function deserializeOption<A>(
 
 /**
  * Deserialize a schema type.
+ * @param {ArrayBuffer} buffer The buffer to deserialize.
+ * @returns {SchemaType} The deserialized schema type.
+ */
+export function deserializeSchemaType(buffer: ArrayBuffer): SchemaType {
+    const cursor = Cursor.fromBuffer(buffer);
+    return deserialSchemaType(cursor);
+}
+
+/**
+ * Deserialize a schema type.
  * @param {Cursor} cursor A cursor over the buffer to deserialize.
  * @returns {SchemaType} The deserialized schema type.
  */
@@ -1007,12 +1017,12 @@ function serialSize(
 function serialFields(fields: SchemaFields): Uint8Array {
     switch (fields.type) {
         case 'Named':
-            return Buffer.from([
+            return Buffer.concat([
                 Uint8Array.of(0),
                 serializeList('U32', serialNamedField, fields.fields),
             ]);
         case 'Unnamed':
-            return Buffer.from([
+            return Buffer.concat([
                 Uint8Array.of(1),
                 serializeList('U32', serializeSchemaType, fields.fields),
             ]);
@@ -1027,7 +1037,7 @@ function serialFields(fields: SchemaFields): Uint8Array {
  * @returns {Uint8Array} Buffer with serialization.
  */
 function serialNamedField(named: SchemaNamedField): Uint8Array {
-    return Buffer.from([
+    return Buffer.concat([
         serializeString('U32', named.name),
         serializeSchemaType(named.field),
     ]);
@@ -1039,7 +1049,7 @@ function serialNamedField(named: SchemaNamedField): Uint8Array {
  * @returns {Uint8Array} Buffer with serialization.
  */
 function serializeEnumVariant(variant: SchemaEnumVariant): Uint8Array {
-    return Buffer.from([
+    return Buffer.concat([
         serializeString('U32', variant.name),
         serialFields(variant.fields),
     ]);
@@ -1064,7 +1074,7 @@ function serializeList<A>(
     serialItem: Serializer<A>,
     list: A[]
 ): Uint8Array {
-    return Buffer.from([
+    return Buffer.concat([
         serialSize(sizeLength, list.length),
         ...list.map(serialItem),
     ]);
@@ -1079,7 +1089,7 @@ function serializeString(
     sizeLength: SchemaSizeLength,
     value: string
 ): Uint8Array {
-    return Buffer.from([
+    return Buffer.concat([
         serialSize(sizeLength, value.length),
         Buffer.from(value, 'utf8'),
     ]);
@@ -1105,5 +1115,5 @@ function serializeMap<K, V>(
     for (const [k, v] of map.entries()) {
         buffers.push(serialKey(k), serialValue(v));
     }
-    return Buffer.from(buffers);
+    return Buffer.concat(buffers);
 }

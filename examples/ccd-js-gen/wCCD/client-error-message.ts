@@ -73,20 +73,35 @@ const contractAddress = SDK.ContractAddress.create(
     );
 
     const wCCDTokenId = '';
-    const parameter = [wCCDTokenId];
+    const fromAddress = SDK.AccountAddress.fromBuffer(
+        new Uint8Array(32).fill(0)
+    );
+    const toAddress = SDK.AccountAddress.fromBuffer(new Uint8Array(32).fill(1));
+    const parameter = [
+        {
+            token_id: wCCDTokenId,
+            amount: 1000,
+            from: { type: 'Account', content: fromAddress },
+            to: { type: 'Account', content: toAddress },
+            data: '',
+        } as const,
+    ];
     const contract = await wCCDContractClient.create(
         grpcClient,
         contractAddress
     );
 
-    const result = await wCCDContractClient.dryRunTokenMetadata(
+    const unauthorizedInvoker = SDK.AccountAddress.fromBase58(
+        '357EYHqrmMiJBmUZTVG5FuaMq4soAhgtgz6XNEAJaXHW3NHaUf'
+    );
+
+    const result = await wCCDContractClient.dryRunTransfer(
         contract,
-        parameter
+        parameter,
+        {
+            invoker: unauthorizedInvoker,
+        }
     );
-    const returnValue =
-        wCCDContractClient.parseReturnValueTokenMetadata(result);
-    console.log(
-        'The token metadata for wCCD can be found at: ',
-        returnValue?.[0].url
-    );
+    const errorMessage = wCCDContractClient.parseErrorMessageTransfer(result);
+    console.log('Transfer failed with error: ', errorMessage);
 })();

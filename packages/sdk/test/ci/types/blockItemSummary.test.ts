@@ -27,6 +27,7 @@ import {
     InitName,
     Parameter,
     ReceiveName,
+    ContractEvent,
     CcdAmount,
 } from '../../../src/index.js';
 
@@ -107,14 +108,14 @@ const contractUpdate: UpdateContractSummary & BaseAccountTransactionSummary = {
             ),
             events: [
                 'ff006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb49',
-            ],
+            ].map(ContractEvent.fromHexString),
         },
         {
             tag: TransactionEventTag.Interrupted,
             address: ContractAddress.create(3496),
             events: [
                 'ff006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb49',
-            ],
+            ].map(ContractEvent.fromHexString),
         },
         {
             tag: TransactionEventTag.Updated,
@@ -135,7 +136,7 @@ const contractUpdate: UpdateContractSummary & BaseAccountTransactionSummary = {
             ),
             events: [
                 'ff006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb49',
-            ],
+            ].map(ContractEvent.fromHexString),
         },
         {
             tag: TransactionEventTag.Transferred,
@@ -402,19 +403,19 @@ describe('getSummaryContractUpdateLogs', () => {
                 address: ContractAddress.create(3496),
                 events: [
                     'ff006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb49',
-                ],
+                ].map(ContractEvent.fromHexString),
             },
             {
                 address: ContractAddress.create(3496),
                 events: [
                     'ff006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb49',
-                ],
+                ].map(ContractEvent.fromHexString),
             },
             {
                 address: ContractAddress.create(4416),
                 events: [
                     'ff006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb49',
-                ],
+                ].map(ContractEvent.fromHexString),
             },
         ]);
     });

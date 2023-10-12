@@ -43,6 +43,7 @@ The API now uses dedicated types instead of language primitives:
 - Use `SequenceNumber` (formerly called nonce) instead of a bigint. Use `SequenceNumber.create(<integer>)` to construct it.
 - Use `Timestamp` instead of a bigint. Can be constructed using `Timestamp.fromMillis(<integer>)`.
 - Use `Duration` instead of a bigint. Can be constructed using `Duration.fromMillis(<integer>)`.
+- Use `ContractEvent` instead of a string with hex encoding. Can be constructed using `ContractEvent.fromHexString('<hex>')`.
 - Use `CcdAmount` instead of a bigint. Can be constructed using `CcdAmount.fromMicroCcd(<integer>)`.
 - Use `TransactionExpiry` instead of a Date object. Can be constructed using `TransactionExpiry.fromDate(<date>)`.
 - Use `ModuleReference` instead of a string with hex encoding. Can be constructed using `ModuleReference.fromHexString('<hex-string>')`.

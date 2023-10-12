@@ -60,19 +60,28 @@ export function create(
     return new ContractAddress(BigInt(index), BigInt(subindex));
 }
 
-/** Type used when representing a contract address while using a schema. */
+/** Type used when encoding a contract address in the JSON format used when serializing using a smart contract schema type. */
 export type SchemaValue = {
     index: bigint;
     subindex: bigint;
 };
 
 /**
- * Get contract address in the format used by schema.
+ * Get contract address in the JSON format used when serializing using a smart contract schema type.
  * @param {ContractAddress} contractAddress The contract address.
- * @returns {SchemaValue} The schema value representation.
+ * @returns {SchemaValue} The schema JSON representation.
  */
 export function toSchemaValue(contractAddress: ContractAddress): SchemaValue {
     return { index: contractAddress.index, subindex: contractAddress.subindex };
+}
+
+/**
+ * Convert to contract address from JSON format used when serializing using a smart contract schema type.
+ * @param {SchemaValue} contractAddress The contract address in schema JSON format.
+ * @returns {ContractAddress} The contract address.
+ */
+export function fromSchemaValue(contractAddress: SchemaValue): ContractAddress {
+    return create(contractAddress.index, contractAddress.subindex);
 }
 
 /**

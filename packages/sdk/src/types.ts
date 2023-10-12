@@ -46,17 +46,30 @@ export type ModuleRef = HexString;
 export type Round = bigint;
 
 /**
+ * Utility type that takes an object type and makes the hover overlay more readable.
+ *
+ * @example
+ * type ComplexType = {test: string;} & {another: number;}; // Hovering this type shows: {test: string;} & {another: number;}
+ * type Test = Compute<ComplexType>; // Now it shows: {test: string; another: number;}
+ */
+type Compute<T> = {
+    [K in keyof T]: T[K];
+} & unknown;
+
+/**
  * Makes keys of type optional
  *
  * @example
  * type PartiallyOptionalProps = MakeOptional<{test: string; another: number;}, 'another'>; // {test: string; another?: number;}
  */
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> &
-    Partial<Pick<T, K>>;
+export type MakeOptional<T, K extends keyof T> = Compute<
+    Omit<T, K> & Partial<Pick<T, K>>
+>;
 
 /** Makes keys of type required (i.e. non-optional) */
-export type MakeRequired<T, K extends keyof T> = Required<Pick<T, K>> &
-    Omit<T, K>;
+export type MakeRequired<T, K extends keyof T> = Compute<
+    Required<Pick<T, K>> & Omit<T, K>
+>;
 /**
  * Returns a union of all keys of type T with values matching type V.
  */
@@ -1430,6 +1443,11 @@ export interface InvokeContractFailedResult {
     tag: 'failure';
     usedEnergy: Energy.Type;
     reason: RejectReason;
+    /**
+     * Return value from smart contract call, used to provide error messages.
+     * Is only defined when smart contract instance is a V1 smart contract and
+     * the transaction was rejected by the smart contract logic i.e. `reason.tag === "RejectedReceive"`.
+     */
     returnValue?: ReturnValue.Type;
 }
 
@@ -1565,6 +1583,7 @@ export type SmartContractTypeValues =
     | { [key: string]: SmartContractTypeValues }
     | SmartContractTypeValues[]
     | number
+    | bigint
     | string
     | boolean;
 

@@ -97,4 +97,4 @@ test('test deserialize credentialDeployment ', async () => {
     expect(BigInt(deployment.transaction.expiry)).toEqual(
         credentialDeploymentTransaction.expiry.expiryEpochSeconds
     );
-});
+}, 8000);

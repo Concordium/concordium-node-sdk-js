@@ -1,9 +1,9 @@
 {
     "name": "@concordium/web-sdk",
-    "version": "6.4.0",
+    "version": "7.0.0-rc.1",
     "license": "Apache-2.0",
     "engines": {
-        "node": ">=14.16.0"
+        "node": ">=16"
     },
     "repository": {
         "type": "git",
@@ -75,7 +75,7 @@
         "clean": "rimraf -- lib src/grpc-api"
     },
     "dependencies": {
-        "@concordium/rust-bindings": "1.2.0",
+        "@concordium/rust-bindings": "2.0.0-rc.1",
         "@grpc/grpc-js": "^1.9.4",
         "@noble/ed25519": "^2.0.0",
         "@protobuf-ts/grpc-transport": "^2.9.1",

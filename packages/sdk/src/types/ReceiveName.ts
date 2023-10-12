@@ -2,6 +2,17 @@ import { isAsciiAlphaNumericPunctuation } from '../contractHelpers.js';
 import * as ContractName from './ContractName.js';
 import * as EntrypointName from './EntrypointName.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
+import {
+    TypedJson,
+    TypedJsonDiscriminator,
+    makeFromTypedJson,
+} from './util.js';
+
+/**
+ * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ */
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.ReceiveName;
+type Serializable = string;
 
 /**
  * Represents a receive-function in a smart contract module.
@@ -12,7 +23,7 @@ import type * as Proto from '../grpc-api/v2/concordium/types.js';
  */
 class ReceiveName {
     /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __nominal = true;
+    private __type = JSON_DISCRIMINATOR;
     constructor(
         /** The internal string value of the receive name. */
         public readonly value: string
@@ -27,6 +38,16 @@ class ReceiveName {
  * - It contains at least one '.' character.
  */
 export type Type = ReceiveName;
+
+/**
+ * Type predicate for {@linkcode Type}
+ *
+ * @param value value to check.
+ * @returns whether `value` is of type {@linkcode Type}
+ */
+export function instanceOf(value: unknown): value is ReceiveName {
+    return value instanceof ReceiveName;
+}
 
 /**
  * Create a ReceiveName.
@@ -169,3 +190,28 @@ export function toProto(receiveName: ReceiveName): Proto.ReceiveName {
 export function equals(left: ReceiveName, right: ReceiveName): boolean {
     return left.value === right.value;
 }
+
+/**
+ * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
+ *
+ * @param {Type} value - The account address instance to transform.
+ * @returns {TypedJson} The transformed object.
+ */
+export function toTypedJSON({ value }: ReceiveName): TypedJson<Serializable> {
+    return {
+        ['@type']: JSON_DISCRIMINATOR,
+        value,
+    };
+}
+
+/**
+ * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
+ *
+ * @param {TypedJson} json - The typed JSON to convert.
+ * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
+ * @returns {Type} The parsed instance.
+ */
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
+    JSON_DISCRIMINATOR,
+    fromString
+);

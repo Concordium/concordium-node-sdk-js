@@ -309,11 +309,11 @@ export const accountList: AccountAddress.Type[] = [
     '4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L',
 ].map(AccountAddress.fromBase58);
 
-export const moduleList = [
+export const moduleList: ModuleReference.Type[] = [
     '67d568433bd72e4326241f262213d77f446db8ba03dfba351ae35c1b2e7e5109',
     '6f0524700ed808a8fe0d7e23014c5138e4fac1fd8ec85c5e3591096f48609206',
     'ceb018e4cd3456c0ccc0bca14285a69fd55f4cb09c322195d49c5c22f85930fe',
-];
+].map(ModuleReference.fromHexString);
 
 export const ancestorList: BlockHash.Type[] = [
     'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e',

@@ -1,7 +1,17 @@
 import { Big, BigSource } from 'big.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
+import {
+    TypedJson,
+    TypedJsonDiscriminator,
+    makeFromTypedJson,
+} from './util.js';
 
 const MICRO_CCD_PER_CCD = 1_000_000;
+/**
+ * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ */
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.CcdAmount;
+type Serializable = string;
 
 /**
  * Representation of a CCD amount.
@@ -10,13 +20,13 @@ const MICRO_CCD_PER_CCD = 1_000_000;
  */
 class CcdAmount {
     /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __nominal = true;
+    private __type = JSON_DISCRIMINATOR;
     constructor(
         /** Internal representation of Ccd amound in micro Ccd. */
         public readonly microCcdAmount: bigint
     ) {}
 
-    toJSON(): string {
+    public toJSON(): string {
         return this.microCcdAmount.toString();
     }
 }
@@ -27,6 +37,16 @@ class CcdAmount {
  * used on chain.
  */
 export type Type = CcdAmount;
+
+/**
+ * Type predicate for {@linkcode Type}
+ *
+ * @param value value to check.
+ * @returns whether `value` is of type {@linkcode Type}
+ */
+export function instanceOf(value: unknown): value is CcdAmount {
+    return value instanceof CcdAmount;
+}
 
 /**
  * Constructs a CcdAmount and checks that it is valid. It accepts a number, string, big, or bigint as parameter.
@@ -182,3 +202,28 @@ export function toProto(amount: CcdAmount): Proto.Amount {
         value: amount.microCcdAmount,
     };
 }
+
+/**
+ * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
+ *
+ * @param {Type} value - The account address instance to transform.
+ * @returns {TypedJson} The transformed object.
+ */
+export function toTypedJSON(value: CcdAmount): TypedJson<Serializable> {
+    return {
+        ['@type']: JSON_DISCRIMINATOR,
+        value: value.microCcdAmount.toString(),
+    };
+}
+
+/**
+ * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
+ *
+ * @param {TypedJson} json - The typed JSON to convert.
+ * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
+ * @returns {Type} The parsed instance.
+ */
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
+    JSON_DISCRIMINATOR,
+    fromMicroCcd
+);

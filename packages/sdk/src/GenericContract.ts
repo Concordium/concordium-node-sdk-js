@@ -151,8 +151,8 @@ export class ContractDryRun<E extends string = string> {
     ): Promise<InvokeContractResult> {
         const parameter = Parameter.fromBuffer(serializer(input));
         const meta =
-            AccountAddress.isAccountAddress(metaOrInvoker) ||
-            ContractAddress.isContractAddress(metaOrInvoker)
+            AccountAddress.instanceOf(metaOrInvoker) ||
+            ContractAddress.instanceOf(metaOrInvoker)
                 ? { invoker: metaOrInvoker }
                 : metaOrInvoker;
         return this.grpcClient.invokeContract(

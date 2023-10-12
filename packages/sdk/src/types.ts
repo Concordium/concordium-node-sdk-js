@@ -1583,6 +1583,7 @@ export type SmartContractTypeValues =
     | { [key: string]: SmartContractTypeValues }
     | SmartContractTypeValues[]
     | number
+    | bigint
     | string
     | boolean;
 

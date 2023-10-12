@@ -1,6 +1,18 @@
 import bs58check from 'bs58check';
 import { Buffer } from 'buffer/index.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
+import {
+    TypedJson,
+    TypedJsonDiscriminator,
+    makeFromTypedJson,
+} from './util.js';
+import { Base58String } from '../types.js';
+
+/**
+ * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ */
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.AccountAddress;
+type Serializable = Base58String;
 
 /**
  * Representation of an account address, which enforces that it:
@@ -9,7 +21,7 @@ import type * as Proto from '../grpc-api/v2/concordium/types.js';
  */
 class AccountAddress {
     /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __nominal = true;
+    private __type = JSON_DISCRIMINATOR;
     constructor(
         /** The account address represented in base58check. */
         public readonly address: string,
@@ -26,19 +38,13 @@ class AccountAddress {
 export type Type = AccountAddress;
 
 /**
- * Type guard for AccountAddress
- * @param {unknown} input Input to check.
- * @returns {boolean} Boolean indicating whether input is an account address.
+ * Type predicate for {@linkcode Type}
+ *
+ * @param value value to check.
+ * @returns whether `value` is of type {@linkcode Type}
  */
-export function isAccountAddress(input: unknown): input is AccountAddress {
-    return (
-        typeof input === 'object' &&
-        input !== null &&
-        'address' in input &&
-        'decodedAddress' in input &&
-        typeof input.address === 'string' &&
-        input.address.length === 50
-    );
+export function instanceOf(value: unknown): value is AccountAddress {
+    return value instanceof AccountAddress;
 }
 
 /**
@@ -199,3 +205,28 @@ export function toProto(accountAddress: AccountAddress): Proto.AccountAddress {
 export function equals(left: AccountAddress, right: AccountAddress): boolean {
     return left.address === right.address;
 }
+
+/**
+ * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
+ *
+ * @param {Type} value - The account address instance to transform.
+ * @returns {TypedJson} The transformed object.
+ */
+export function toTypedJSON(value: AccountAddress): TypedJson<Serializable> {
+    return {
+        ['@type']: JSON_DISCRIMINATOR,
+        value: value.address,
+    };
+}
+
+/**
+ * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
+ *
+ * @param {TypedJson} json - The typed JSON to convert.
+ * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
+ * @returns {Type} The parsed instance.
+ */
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
+    JSON_DISCRIMINATOR,
+    fromBase58
+);

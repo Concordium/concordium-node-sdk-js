@@ -3,11 +3,22 @@ import { SchemaType, serializeSchemaType } from '../schemaTypes.js';
 import { serializeTypeValue } from '../schema.js';
 import type { Base64String, HexString } from '../types.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
+import {
+    TypedJson,
+    TypedJsonDiscriminator,
+    makeFromTypedJson,
+} from './util.js';
+
+/**
+ * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ */
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.Parameter;
+type Serializable = HexString;
 
 /** Parameter for a smart contract entrypoint. */
 class Parameter {
     /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __nominal = true;
+    private __type = JSON_DISCRIMINATOR;
     constructor(
         /** Internal buffer of bytes representing the parameter. */
         public readonly buffer: Uint8Array
@@ -16,6 +27,16 @@ class Parameter {
 
 /** Parameter for a smart contract entrypoint. */
 export type Type = Parameter;
+
+/**
+ * Type predicate for {@linkcode Type}
+ *
+ * @param value value to check.
+ * @returns whether `value` is of type {@linkcode Type}
+ */
+export function instanceOf(value: unknown): value is Parameter {
+    return value instanceof Parameter;
+}
 
 /**
  * Create an empty parameter.
@@ -123,3 +144,28 @@ export function toProto(parameter: Parameter): Proto.Parameter {
         value: parameter.buffer,
     };
 }
+
+/**
+ * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
+ *
+ * @param {Type} value - The account address instance to transform.
+ * @returns {TypedJson} The transformed object.
+ */
+export function toTypedJSON(value: Parameter): TypedJson<Serializable> {
+    return {
+        ['@type']: JSON_DISCRIMINATOR,
+        value: toHexString(value),
+    };
+}
+
+/**
+ * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
+ *
+ * @param {TypedJson} json - The typed JSON to convert.
+ * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
+ * @returns {Type} The parsed instance.
+ */
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
+    JSON_DISCRIMINATOR,
+    fromHexString
+);

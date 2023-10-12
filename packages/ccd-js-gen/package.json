@@ -34,6 +34,7 @@
         "@concordium/web-sdk": "6.x"
     },
     "dependencies": {
+        "@concordium/web-sdk": "6.x",
         "buffer": "^6.0.3",
         "commander": "^11.0.0",
         "sanitize-filename": "^1.6.3",
@@ -41,6 +42,7 @@
     },
     "devDependencies": {
         "@types/node": "^20.5.0",
+        "eslint": "^8.50.0",
         "typescript": "^5.2.2"
     },
     "prettier": {

@@ -94,7 +94,7 @@ const client = new ConcordiumGRPCNodeClient(
     const tokenId = cli.flags.tokenId;
     const from = AccountAddress.fromBase58(cli.flags.from);
     const toAddress = parseAddress(cli.flags.to);
-    const to: CIS2.Receiver = AccountAddress.isAccountAddress(toAddress)
+    const to: CIS2.Receiver = AccountAddress.instanceOf(toAddress)
         ? toAddress
         : {
               address: toAddress,

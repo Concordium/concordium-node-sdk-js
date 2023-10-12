@@ -8,7 +8,7 @@ import {
     HexString,
     JsonString,
 } from './types.js';
-import { sign, verify } from '@noble/ed25519';
+import * as ed from '#ed25519';
 import { Buffer } from 'buffer/index.js';
 import * as AccountAddress from './types/AccountAddress.js';
 import { sha256 } from './hash.js';
@@ -123,7 +123,7 @@ export const getSignature = async (
     digest: ArrayBuffer,
     privateKey: HexString
 ): Promise<Buffer> =>
-    Buffer.from(await sign(new Uint8Array(digest), privateKey));
+    Buffer.from(await ed.signAsync(new Uint8Array(digest), privateKey));
 
 /**
  * Creates an `AccountSigner` for an account which uses the first credential's first keypair.
@@ -345,7 +345,7 @@ export async function verifyMessageSignature(
                 );
             }
             if (
-                !(await verify(
+                !(await ed.verifyAsync(
                     credentialSignature[Number(keyIndex)],
                     digest,
                     credentialKeys.keys[Number(keyIndex)].verifyKey

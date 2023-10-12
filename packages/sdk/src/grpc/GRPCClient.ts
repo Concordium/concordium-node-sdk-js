@@ -671,7 +671,7 @@ export class ConcordiumGRPCClient {
      *
      * @param blockHash an optional block hash to get the accounts at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
-     * @returns an async iterable of account addresses represented as Base58 encoded strings.
+     * @returns an async iterable of account addresses.
      */
     getAccountList(
         blockHash?: BlockHash.Type,
@@ -692,16 +692,16 @@ export class ConcordiumGRPCClient {
      *
      * @param blockHash an optional block hash to get the contract modules at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
-     * @returns an async iterable of contract module references, represented as hex strings.
+     * @returns an async iterable of contract module references.
      */
     getModuleList(
         blockHash?: BlockHash.Type,
         abortSignal?: AbortSignal
-    ): AsyncIterable<HexString> {
+    ): AsyncIterable<ModuleReference.Type> {
         const opts = { abort: abortSignal };
         const hash = getBlockHashInput(blockHash);
         const asyncIter = this.client.getModuleList(hash, opts).responses;
-        return mapStream(asyncIter, translate.unwrapValToHex);
+        return mapStream(asyncIter, ModuleReference.fromProto);
     }
 
     /**
@@ -714,7 +714,7 @@ export class ConcordiumGRPCClient {
      * @param maxAmountOfAncestors the maximum amount of ancestors as a bigint.
      * @param blockHash a optional block hash to get the ancestors at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
-     * @returns an async iterable of ancestors' block hashes as hex strings.
+     * @returns an async iterable of ancestors' block hashes.
      */
     getAncestors(
         maxAmountOfAncestors: bigint,
@@ -1569,7 +1569,7 @@ export function getAccountIdentifierInput(
 ): v2.AccountIdentifierInput {
     let returnIdentifier: v2.AccountIdentifierInput['accountIdentifierInput'];
 
-    if (AccountAddress.isAccountAddress(accountIdentifier)) {
+    if (AccountAddress.instanceOf(accountIdentifier)) {
         returnIdentifier = {
             oneofKind: 'address',
             address: AccountAddress.toProto(accountIdentifier),
@@ -1627,14 +1627,14 @@ export function getInvokerInput(
 ): v2.Address | undefined {
     if (!invoker) {
         return undefined;
-    } else if (AccountAddress.isAccountAddress(invoker)) {
+    } else if (AccountAddress.instanceOf(invoker)) {
         return {
             type: {
                 oneofKind: 'account',
                 account: AccountAddress.toProto(invoker),
             },
         };
-    } else if (ContractAddress.isContractAddress(invoker)) {
+    } else if (ContractAddress.instanceOf(invoker)) {
         return {
             type: {
                 oneofKind: 'contract',

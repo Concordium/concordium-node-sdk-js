@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer/index.js';
-import { getPublicKey } from '@noble/ed25519';
+import * as ed from '#ed25519';
 
 import type { HexString } from '../types.js';
 import type { CIS2 } from '../cis2/util.js';
@@ -287,7 +287,7 @@ export class Web3IdSigner {
      */
     public static async from(privateKey: HexString): Promise<Web3IdSigner> {
         const publicKey = Buffer.from(
-            await getPublicKey(Buffer.from(privateKey, 'hex'))
+            await ed.getPublicKeyAsync(Buffer.from(privateKey, 'hex'))
         ).toString('hex');
         return new Web3IdSigner(privateKey, publicKey);
     }

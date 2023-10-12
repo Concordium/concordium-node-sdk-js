@@ -1,9 +1,20 @@
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
+import {
+    TypedJson,
+    TypedJsonDiscriminator,
+    makeFromTypedJson,
+} from './util.js';
+
+/**
+ * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ */
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.ContractAddress;
+type Serializable = { index: string; subindex: string };
 
 /** Address of a smart contract instance. */
 class ContractAddress {
     /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __nominal = true;
+    private __type = JSON_DISCRIMINATOR;
     constructor(
         /** The index of the smart contract address. */
         public readonly index: bigint,
@@ -16,21 +27,13 @@ class ContractAddress {
 export type Type = ContractAddress;
 
 /**
- * Type guard for ContractAddress
- * @param {unknown} input Input to check.
- * @returns {boolean} Boolean indicating whether input is a contract address.
+ * Type predicate for {@linkcode Type}
+ *
+ * @param value value to check.
+ * @returns whether `value` is of type {@linkcode Type}
  */
-export function isContractAddress(input: unknown): input is ContractAddress {
-    return (
-        typeof input === 'object' &&
-        input !== null &&
-        'index' in input &&
-        'subindex' in input &&
-        typeof input.index === 'bigint' &&
-        typeof input.subindex === 'bigint' &&
-        0 <= input.index &&
-        0 <= input.subindex
-    );
+export function instanceOf(value: unknown): value is ContractAddress {
+    return value instanceof ContractAddress;
 }
 
 /**
@@ -115,3 +118,34 @@ export function toProto(
 export function equals(left: ContractAddress, right: ContractAddress): boolean {
     return left.index === right.index && left.subindex === right.subindex;
 }
+
+const fromSerializable = (v: Serializable) =>
+    new ContractAddress(BigInt(v.index), BigInt(v.subindex));
+
+/**
+ * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
+ *
+ * @param {Type} value - The account address instance to transform.
+ * @returns {TypedJson} The transformed object.
+ */
+export function toTypedJSON(value: ContractAddress): TypedJson<Serializable> {
+    return {
+        ['@type']: JSON_DISCRIMINATOR,
+        value: {
+            index: value.index.toString(),
+            subindex: value.subindex.toString(),
+        },
+    };
+}
+
+/**
+ * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
+ *
+ * @param {TypedJson} json - The typed JSON to convert.
+ * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
+ * @returns {Type} The parsed instance.
+ */
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
+    JSON_DISCRIMINATOR,
+    fromSerializable
+);

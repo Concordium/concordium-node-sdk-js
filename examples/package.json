@@ -1,5 +1,6 @@
 {
     "name": "@concordium/examples",
+    "private": true,
     "type": "module",
     "imports": {
         "#ed25519": {

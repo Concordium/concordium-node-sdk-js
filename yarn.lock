@@ -654,7 +654,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@concordium/ccd-js-gen@workspace:packages/ccd-js-gen"
   dependencies:
-    "@concordium/web-sdk": 6.x
+    "@concordium/web-sdk": 7.0.0-rc.1
     "@types/node": ^20.5.0
     buffer: ^6.0.3
     commander: ^11.0.0
@@ -663,7 +663,7 @@ __metadata:
     ts-morph: ^19.0.0
     typescript: ^5.2.2
   peerDependencies:
-    "@concordium/web-sdk": 6.x
+    "@concordium/web-sdk": 7.0.0-rc.1
   bin:
     ccd-js-gen: bin/ccd-js-gen.js
   languageName: unknown
@@ -686,7 +686,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@concordium/rust-bindings@1.2.0, @concordium/rust-bindings@workspace:packages/rust-bindings":
+"@concordium/rust-bindings@2.0.0-rc.1, @concordium/rust-bindings@workspace:packages/rust-bindings":
   version: 0.0.0-use.local
   resolution: "@concordium/rust-bindings@workspace:packages/rust-bindings"
   dependencies:
@@ -701,11 +701,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@concordium/web-sdk@6.x, @concordium/web-sdk@workspace:^, @concordium/web-sdk@workspace:packages/sdk":
+"@concordium/web-sdk@7.0.0-rc.1, @concordium/web-sdk@workspace:^, @concordium/web-sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@concordium/web-sdk@workspace:packages/sdk"
   dependencies:
-    "@concordium/rust-bindings": 1.2.0
+    "@concordium/rust-bindings": 2.0.0-rc.1
     "@grpc/grpc-js": ^1.9.4
     "@noble/ed25519": ^2.0.0
     "@protobuf-ts/grpc-transport": ^2.9.1

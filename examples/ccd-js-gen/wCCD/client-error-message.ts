@@ -62,13 +62,15 @@ const contractAddress = SDK.ContractAddress.create(
     /* eslint-disable import/no-unresolved */
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const wCCDContractClient = await import('./lib/cis2_wCCD.js').catch((e) => {
-        /* eslint-enable import/no-unresolved */
-        console.error(
-            '\nFailed to load the generated wCCD module, did you run the `generate` script?\n'
-        );
-        throw e;
-    });
+    const wCCDContractClient = await import('./lib/wCCD_cis2_wCCD.js').catch(
+        (e) => {
+            /* eslint-enable import/no-unresolved */
+            console.error(
+                '\nFailed to load the generated wCCD module, did you run the `generate` script?\n'
+            );
+            throw e;
+        }
+    );
 
     const wCCDTokenId = '';
     const fromAddress = SDK.AccountAddress.fromBuffer(

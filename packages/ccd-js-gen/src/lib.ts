@@ -181,7 +181,9 @@ async function generateCode(
 
         const contractOutputFilePath = path.format({
             dir: outDirPath,
-            name: sanitize(contract.contractName, { replacement: '-' }),
+            name: `${outModuleName}_${sanitize(contract.contractName, {
+                replacement: '-',
+            })}`,
             ext: '.ts',
         });
         const contractSourceFile = project.createSourceFile(

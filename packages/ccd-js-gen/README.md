@@ -181,8 +181,8 @@ into the directory `./generated` produces the following structure:
 ```
 generated/
 ├─ my-module.js        // Functions for interacting with the 'my-module' smart contract module on chain.
-├─ my-contract-a.js    // Functions for interacting with the 'my-contract-a' smart contract.
-└─ my-contract-b.js    // Functions for interacting with the 'my-contract-b' smart contract.
+├─ my-module_my-contract-a.js    // Functions for interacting with the 'my-contract-a' smart contract.
+└─ my-module_my-contract-b.js    // Functions for interacting with the 'my-contract-b' smart contract.
 ```
 
 > There might also be type declarations (`<file>.d.ts`) for TypeScript, depending on the provided options.
@@ -290,7 +290,7 @@ Each file contains functions for interacting with an instance of this smart cont
 An example of importing a smart contract contract client generated from a module containing a smart contract named `my-contract`:
 
 ```typescript
-import * as MyContract from "./generated/my-contract.js";
+import * as MyContract from "./generated/my-module_my-contract.js";
 ```
 
 #### The contract client type
@@ -409,13 +409,16 @@ An example for a smart contract with an entrypoint named `launch-rocket`, the fu
 The function parameters are:
 
 - `contractClient` The client of the smart contract instance.
-- `invoker` TODO
 - `parameter` Parameter to provide to the smart contract entrypoint.
 
   _With schema type:_ If the schema contains type information for the parameter, a type for the parameter is generated and used for this function (see type above).
 
   _Without schema type:_ If no schema information is present, the function uses the generic `Parameter` from `@concordium/web-sdk`.
 
+- `invokeMetadata` Optional transaction metadata object with the following optional properties:
+  - `invoker` The address invoking this call, can be either an `AccountAddress` or `ContractAddress`. Defaults to an `AccountAddress` (Base58check encoding of 32 bytes with value zero).
+  - `amount` The amount of CCD included in the transaction. Defaults to 0.
+  - `energy` The energy reserved for executing this transaction. Defaults to max energy possible.
 - `blockHash` (optional) Provide to specify the block hash, for which the state will be used for dry-running.
   When not provided, the last finalized block is used.
 
@@ -423,9 +426,9 @@ The function parameters are:
 
 ```typescript
 const myContract: MyContract.Type = ...; // Generated contract client.
-const invoker = { ... }; // TODO
 const parameter = ...; // Parameter to pass the smart contract entrypoint.
-const invokeResult = await MyContract.dryRunLaunchRocket(myContract, invoker, parameter);
+const metadata = { ... }; // Transaction metadata for invoking.
+const invokeResult = await MyContract.dryRunLaunchRocket(myContract, parameter, metadata);
 ```
 
 #### type `ReturnValue<EntrypointName>`

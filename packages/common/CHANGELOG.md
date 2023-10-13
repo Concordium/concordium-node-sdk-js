@@ -61,7 +61,6 @@ New consensus endpoints:
 ### Fixes
  - `verifyWeb3IdCredentialSignature` now supports dates/timestamp attributes.
  - `canProveAtomicStatement` now supports timestamp attributes, handles undefined attribute value correctly and handles strings correctly for range statements.
->>>>>>> origin/main
 
 ## 9.1.0
 

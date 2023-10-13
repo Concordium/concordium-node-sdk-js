@@ -21,7 +21,7 @@ import {
     DataBlob,
     JSON_DISCRIMINATOR as DATA_BLOB_DISCRIMINATOR,
 } from './DataBlob.js';
-import { TypedJson, isTypedJsonCandidate } from './util.js';
+import { isTypedJsonCandidate } from './util.js';
 
 function reviveConcordiumTypes(value: unknown) {
     if (isTypedJsonCandidate(value)) {
@@ -87,90 +87,61 @@ export function jsonParse(
 /**
  * Replaces values of concordium domain types with values that can be revived into their original types.
  */
-function transformConcordiumType(
-    value: unknown
-):
-    | { transformed: true; value: TypedJson<unknown> }
-    | { transformed: false; value: unknown } {
-    let newValue: TypedJson<unknown> | undefined = undefined;
+function transformConcordiumType(value: unknown): unknown | undefined {
     switch (true) {
         case AccountAddress.instanceOf(value):
-            newValue = AccountAddress.toTypedJSON(value as AccountAddress.Type);
-            break;
+            return AccountAddress.toTypedJSON(value as AccountAddress.Type);
         case BlockHash.instanceOf(value):
-            newValue = BlockHash.toTypedJSON(value as BlockHash.Type);
-            break;
+            return BlockHash.toTypedJSON(value as BlockHash.Type);
         case CcdAmount.instanceOf(value):
-            newValue = CcdAmount.toTypedJSON(value as CcdAmount.Type);
-            break;
+            return CcdAmount.toTypedJSON(value as CcdAmount.Type);
         case ContractAddress.instanceOf(value):
-            newValue = ContractAddress.toTypedJSON(
-                value as ContractAddress.Type
-            );
-            break;
+            return ContractAddress.toTypedJSON(value as ContractAddress.Type);
         case ContractName.instanceOf(value):
-            newValue = ContractName.toTypedJSON(value as ContractName.Type);
-            break;
+            return ContractName.toTypedJSON(value as ContractName.Type);
         case CredentialRegistrationId.instanceOf(value):
-            newValue = CredentialRegistrationId.toTypedJSON(
+            return CredentialRegistrationId.toTypedJSON(
                 value as CredentialRegistrationId.Type
             );
-            break;
         case value instanceof DataBlob:
-            newValue = (value as DataBlob).toTypedJSON();
-            break;
+            return (value as DataBlob).toTypedJSON();
         case Duration.instanceOf(value):
-            newValue = Duration.toTypedJSON(value as Duration.Type);
-            break;
+            return Duration.toTypedJSON(value as Duration.Type);
         case Energy.instanceOf(value):
-            newValue = Energy.toTypedJSON(value as Energy.Type);
-            break;
+            return Energy.toTypedJSON(value as Energy.Type);
         case EntrypointName.instanceOf(value):
-            newValue = EntrypointName.toTypedJSON(value as EntrypointName.Type);
-            break;
+            return EntrypointName.toTypedJSON(value as EntrypointName.Type);
         case InitName.instanceOf(value):
-            newValue = InitName.toTypedJSON(value as InitName.Type);
-            break;
+            return InitName.toTypedJSON(value as InitName.Type);
         case ModuleReference.instanceOf(value):
-            newValue = ModuleReference.toTypedJSON(
-                value as ModuleReference.Type
-            );
-            break;
+            return ModuleReference.toTypedJSON(value as ModuleReference.Type);
         case Parameter.instanceOf(value):
-            newValue = Parameter.toTypedJSON(value as Parameter.Type);
-            break;
+            return Parameter.toTypedJSON(value as Parameter.Type);
         case ReceiveName.instanceOf(value):
-            newValue = ReceiveName.toTypedJSON(value as ReceiveName.Type);
-            break;
+            return ReceiveName.toTypedJSON(value as ReceiveName.Type);
         case ReturnValue.instanceOf(value):
-            newValue = ReturnValue.toTypedJSON(value as ReturnValue.Type);
-            break;
+            return ReturnValue.toTypedJSON(value as ReturnValue.Type);
         case SequenceNumber.instanceOf(value):
-            newValue = SequenceNumber.toTypedJSON(value as SequenceNumber.Type);
-            break;
+            return SequenceNumber.toTypedJSON(value as SequenceNumber.Type);
         case Timestamp.instanceOf(value):
-            newValue = Timestamp.toTypedJSON(value as Timestamp.Type);
-            break;
+            return Timestamp.toTypedJSON(value as Timestamp.Type);
         case TransactionExpiry.instanceOf(value):
-            newValue = TransactionExpiry.toTypedJSON(
+            return TransactionExpiry.toTypedJSON(
                 value as TransactionExpiry.Type
             );
-            break;
         case TransactionHash.instanceOf(value):
-            newValue = TransactionHash.toTypedJSON(
-                value as TransactionHash.Type
-            );
-            break;
+            return TransactionHash.toTypedJSON(value as TransactionHash.Type);
     }
 
-    if (newValue !== undefined) {
-        return { transformed: true, value: newValue };
-    }
-
-    return { transformed: false, value };
+    return undefined;
 }
 
 type ReplacerFun = (this: any, key: string, value: any) => any;
+
+function ccdTypesReplacer(this: any, key: string, value: any): any {
+    const rawValue = this[key];
+    return transformConcordiumType(rawValue) ?? value;
+}
 
 /**
  * Thrown if a circular reference is found while trying to stringify object.
@@ -223,66 +194,6 @@ function getCheckCircular(): ReplacerFun {
 }
 
 /**
- * Transforms concordium domain types in an object of arbitrary depth in a non-recursive manner.
- *
- * @param {unknown} obj - The object to transform
- * @param {ReplacerFun} [replacer] - An optional replacer function to run in addition to transforming concordium domain types.
- *
- * @throws {JsonCircularReferenceError} If a circular reference is found.
- * @returns {any} The transformed object.
- */
-function transformConcordiumTypes(obj: unknown, replacer?: ReplacerFun): any {
-    if (typeof obj !== 'object' || obj === null) {
-        return obj;
-    }
-
-    type StackItem = {
-        obj: Record<string, any>;
-        path: string[];
-    };
-
-    const checkCircular = getCheckCircular();
-
-    const stack: StackItem[] = [{ obj, path: [] }];
-    const result: Record<string, any> = {};
-
-    while (stack.length) {
-        const { path, obj } = stack[0];
-
-        for (const k in obj) {
-            const originalValue = obj[k];
-            checkCircular.call(obj, k, originalValue); // Throws if a circular reference is found.
-
-            // Transform concordium types first.
-            const { transformed, value } =
-                transformConcordiumType(originalValue);
-            // Then run values through user defined replacer function.
-            const jsonValue = (value as any).toJSON?.(k) ?? value;
-            const replacedValue =
-                replacer?.call(obj, k, jsonValue) ?? jsonValue;
-
-            // Find the node matching the path registered for the object.
-            const local = path.reduce((acc, key) => acc[key], result);
-            if (transformed) {
-                local[k] = replacedValue;
-            } else if (
-                typeof replacedValue === 'object' &&
-                replacedValue !== null
-            ) {
-                // If the value was not replaced and is a valid object, push it to the stack.
-                stack.push({ obj: replacedValue, path: [...path, k] });
-                // And override the value with a shallow clone to avoid modifying the original.
-                local[k] = { ...replacedValue };
-            }
-        }
-
-        stack.shift();
-    }
-
-    return result;
-}
-
-/**
  * Stringify, which ensures concordium domain types are stringified in a restorable fashion.
  *
  * @param value A JavaScript value, usually an object or array, to be converted.
@@ -292,40 +203,15 @@ function transformConcordiumTypes(obj: unknown, replacer?: ReplacerFun): any {
  * @throws {JsonCircularReferenceError} If a circular reference is found.
  */
 export function jsonStringify(
-    value: any,
+    input: any,
     replacer?: ReplacerFun,
     space?: string | number
-): string;
-
-/**
- * Stringify, which ensures concordium domain types are stringified in a restorable fashion.
- *
- * @param value A JavaScript value, usually an object or array, to be converted.
- * @param replacer An array of strings and numbers that acts as an approved list for selecting the object properties that will be stringified.
- * @param space Adds indentation, white space, and line break characters to the return-value JSON text to make it easier to read.
- *
- * @throws {JsonCircularReferenceError} If a circular reference is found.
- */
-export function jsonStringify(
-    value: any,
-    replacer?: (number | string)[] | null,
-    space?: string | number
-): string;
-export function jsonStringify(
-    input: any,
-    replacer?: any,
-    space?: string | number
 ): string {
-    // Runs replace function for concordium types prior to JSON.stringify, as otherwise
-    // an attempt to run `toJSON` on objects is done before any replacer function.
-    const transformed = transformConcordiumTypes(
-        input,
-        typeof replacer === 'function' ? replacer : undefined
-    );
-    return JSON.stringify(
-        transformed,
-        // Only add replacer if it hasn't already been run in the concordium transformer function.
-        typeof replacer === 'function' ? undefined : replacer,
-        space
-    );
+    const checkCircular = getCheckCircular();
+    function replacerFunction(this: any, key: string, value: any) {
+        checkCircular.call(this, key, value); // Throws if a circular reference is found.
+        const transformedValue = ccdTypesReplacer.call(this, key, value);
+        return replacer?.call(this, key, transformedValue) ?? transformedValue;
+    }
+    return JSON.stringify(input, replacerFunction, space);
 }

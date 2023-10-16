@@ -11,7 +11,7 @@ import {
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.InitName;
-type Serializable = string;
+export type Serializable = string;
 
 /** The name of an init-function for a smart contract. Note: This is of the form 'init_<contractName>'. */
 class InitName {
@@ -118,10 +118,10 @@ export function toProto(initName: InitName): Proto.InitName {
  * @param {Type} value - The account address instance to transform.
  * @returns {TypedJson} The transformed object.
  */
-export function toTypedJSON({ value }: InitName): TypedJson<Serializable> {
+export function toTypedJSON(value: InitName): TypedJson<Serializable> {
     return {
         ['@type']: JSON_DISCRIMINATOR,
-        value: value,
+        value: toString(value),
     };
 }
 

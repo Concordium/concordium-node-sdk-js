@@ -12,7 +12,7 @@ import { Base58String } from '../types.js';
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.AccountAddress;
-type Serializable = Base58String;
+export type Serializable = Base58String;
 
 /**
  * Representation of an account address, which enforces that it:
@@ -215,7 +215,7 @@ export function equals(left: AccountAddress, right: AccountAddress): boolean {
 export function toTypedJSON(value: AccountAddress): TypedJson<Serializable> {
     return {
         ['@type']: JSON_DISCRIMINATOR,
-        value: value.address,
+        value: toBase58(value),
     };
 }
 

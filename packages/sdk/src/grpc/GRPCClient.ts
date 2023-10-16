@@ -1574,9 +1574,7 @@ export function getAccountIdentifierInput(
             oneofKind: 'address',
             address: AccountAddress.toProto(accountIdentifier),
         };
-    } else if (
-        CredentialRegistrationId.isCredentialRegistrationId(accountIdentifier)
-    ) {
+    } else if (CredentialRegistrationId.instanceOf(accountIdentifier)) {
         returnIdentifier = {
             oneofKind: 'credId',
             credId: {

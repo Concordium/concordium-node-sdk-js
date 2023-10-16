@@ -9,7 +9,7 @@ import {
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.EntrypointName;
-type Serializable = string;
+export type Serializable = string;
 
 /**
  * Type representing an entrypoint of a smart contract.
@@ -92,12 +92,10 @@ export function toString<S extends string>(
  * @param {Type} value - The account address instance to transform.
  * @returns {TypedJson} The transformed object.
  */
-export function toTypedJSON({
-    value,
-}: EntrypointName): TypedJson<Serializable> {
+export function toTypedJSON(value: EntrypointName): TypedJson<Serializable> {
     return {
         ['@type']: JSON_DISCRIMINATOR,
-        value: value,
+        value: toString(value),
     };
 }
 

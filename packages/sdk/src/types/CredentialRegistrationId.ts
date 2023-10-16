@@ -12,7 +12,7 @@ import {
  */
 export const JSON_DISCRIMINATOR =
     TypedJsonDiscriminator.CredentialRegistrationId;
-type Serializable = string;
+export type Serializable = string;
 
 /**
  * Representation of a credential registration id, which enforces that it:
@@ -84,25 +84,6 @@ export function fromHexString(credId: HexString): CredentialRegistrationId {
 }
 
 /**
- * Type guard for CredentialRegistrationId
- * @param {unknown} input Input to check.
- * @returns {boolean} Boolean indicating whether input is a valid CredentialRegistrationId.
- */
-export function isCredentialRegistrationId(
-    input: unknown
-): input is CredentialRegistrationId {
-    return (
-        typeof input === 'object' &&
-        input !== null &&
-        'credId' in input &&
-        typeof input.credId === 'string' &&
-        input.credId.length === 96 &&
-        isHex(input.credId) &&
-        (parseInt(input.credId.substring(0, 2), 16) & 0b10000000) !== 0
-    );
-}
-
-/**
  * Get the hex string representation of the credential registatration ID.
  * @param {CredentialRegistrationId} cred The credential registration ID.
  * @returns {HexString} The hex encoding.
@@ -131,7 +112,7 @@ export function toTypedJSON(
 ): TypedJson<Serializable> {
     return {
         ['@type']: JSON_DISCRIMINATOR,
-        value: value.credId,
+        value: toHexString(value),
     };
 }
 

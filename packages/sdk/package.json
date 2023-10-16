@@ -46,7 +46,6 @@
     ],
     "devDependencies": {
         "@protobuf-ts/plugin": "^2.9.1",
-        "@types/big.js": "^6.2.0",
         "@types/bs58check": "^2.1.0",
         "@types/jest": "^26.0.23",
         "@types/json-bigint": "^1.0.1",
@@ -82,6 +81,7 @@
         "@protobuf-ts/grpcweb-transport": "^2.9.1",
         "@protobuf-ts/runtime-rpc": "^2.8.2",
         "@scure/bip39": "^1.1.0",
+        "@types/big.js": "^6.2.0",
         "big.js": "^6.2.0",
         "bs58check": "^3.0.1",
         "buffer": "^6.0.3",

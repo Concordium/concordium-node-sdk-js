@@ -9,7 +9,7 @@ import {
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.ContractAddress;
-type Serializable = { index: string; subindex: string };
+export type Serializable = { index: string; subindex: string };
 
 /** Address of a smart contract instance. */
 class ContractAddress {
@@ -119,8 +119,26 @@ export function equals(left: ContractAddress, right: ContractAddress): boolean {
     return left.index === right.index && left.subindex === right.subindex;
 }
 
-const fromSerializable = (v: Serializable) =>
-    new ContractAddress(BigInt(v.index), BigInt(v.subindex));
+/**
+ * Constructs a {@linkcode ContractAddress} from {@linkcode Serializable}.
+ * @param {Serializable} value
+ * @returns {ContractAddress} The contract address.
+ */
+export function fromSerializable(value: Serializable): ContractAddress {
+    return new ContractAddress(BigInt(value.index), BigInt(value.subindex));
+}
+
+/**
+ * Converts {@linkcode ContractAddress} into {@linkcode Serializable}
+ * @param {ContractAddress} contractAddress
+ * @returns {Serializable} The serializable contract address
+ */
+export function toSerializable(contractAddress: ContractAddress): Serializable {
+    return {
+        index: contractAddress.index.toString(),
+        subindex: contractAddress.subindex.toString(),
+    };
+}
 
 /**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
@@ -131,10 +149,7 @@ const fromSerializable = (v: Serializable) =>
 export function toTypedJSON(value: ContractAddress): TypedJson<Serializable> {
     return {
         ['@type']: JSON_DISCRIMINATOR,
-        value: {
-            index: value.index.toString(),
-            subindex: value.subindex.toString(),
-        },
+        value: toSerializable(value),
     };
 }
 

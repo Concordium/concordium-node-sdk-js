@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer/index.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
 import { deserializeTypeValue } from '../schema.js';
 import { SchemaType, serializeSchemaType } from '../schemaTypes.js';

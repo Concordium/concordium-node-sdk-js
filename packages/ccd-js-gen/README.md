@@ -1,9 +1,8 @@
 # Smart Contract Client Generator <!-- omit in toc -->
 
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](https://github.com/Concordium/.github/blob/main/.github/CODE_OF_CONDUCT.md)
-
 Generate TypeScript/JavaScript code for interating with smart contracts and modules on the Concordium blockchain.
 
+- Functions for instantiating new smart contract instances from a module.
 - Functions for dry-running and calling entrypoints of the smart contract.
 - Functions for constructing parameters.
 - Parsing logged events, return values and error messages.
@@ -13,14 +12,18 @@ The code is generated from deployable smart contract modules, meaning it can be 
 
 ### Example usage of a generated client
 
+An example of using a generated client for a token smart contract implementing the [CIS-2 standard](https://proposals.concordium.software/CIS/cis-2.html).
+In the example, a contract client is constructed and a transaction calling the [`transfer` entrypoint](https://proposals.concordium.software/CIS/cis-2.html#transfer) of the smart contract. The parameter includes a transfer of 10 tokens from `sender` address to `receiver` address.
+
 ```typescript
-import * as SDK from "@concordium/node-sdk"; // or use @concordium/web-sdk.
+import * as SDK from "@concordium/web-sdk";
 import * as MyContract from "./generated/my-contract.js"; // Code generated from a smart contract module.
 
 const grpcClient = // Setup gRPC client code here ...
-const contractAddress = SDK.ContractAddress.create(42) // Address of the smart contract.
+const contractAddress = // Address of the smart contract instance.
 const signer = // Keys for signing an account transaction.
-const sender = // AccountAddress
+const sender = // The AccountAddress sending the tokens and signing the transaction.
+const receiver = // The AccountAddress receiving the tokens.
 
 // Create a client for 'my-contract' smart contract.
 const contractClient = await MyContract.create(
@@ -28,8 +31,7 @@ const contractClient = await MyContract.create(
     contractAddress
 );
 
-// Construct the parameter for the 'transfer' entrypoint.
-const receiver = AccountAddress.fromBase58('4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd');
+// Construct the parameter for the 'transfer' entrypoint. The structure of the parameter depends on the contract.
 const parameter: MyContract.TransferParameter = [{
     tokenId: "",
     amount: 10,
@@ -41,7 +43,7 @@ const parameter: MyContract.TransferParameter = [{
 // Send transaction for invoking the 'transfer' entrypoint of the smart contract.
 const transactionHash = await MyContract.sendTransfer(contractClient, {
     senderAddress: sender,
-    energy: Energy.create(12000)
+    energy: SDK.Energy.create(12000) // The amount of energy needed will depend on the contract.
 }, parameter, signer);
 ```
 
@@ -154,7 +156,6 @@ Use `@concordium/web-sdk` to download the smart contract module and use it to ge
 import * as ccdJsGen from "@concordium/ccd-js-gen"
 import * as SDK from "@concordium/web-sdk"
 
-const moduleFilePath = "./my-contract.wasm.v1"; // Path to smart contract module.
 const outDirPath = "./generated"; // The directory to use for the generated files.
 const outputModuleName = "wCCD-module"; // The name to give the output smart contract module.
 
@@ -247,7 +248,7 @@ const moduleSource = await MyModule.getModuleSource(myModule);
 
 #### type `<ContractName>Parameter`
 
-Type representing the parameter for when instantiating a smart contract. The type is name `<ContractName>Parameter` where `<ContractName>` is the smart contract name in Pascal case.
+Type representing the parameter for when instantiating a smart contract. The type is named `<ContractName>Parameter` where `<ContractName>` is the smart contract name in Pascal case.
 
 _This is only generated when the schema contains init-function parameter type._
 
@@ -264,21 +265,34 @@ The function parameters are:
 
 - `moduleClient` The client of the on-chain smart contract module.
 - `transactionMetadata` Metadata related to constructing the transaction, such as energy and CCD amount to include.
+  - `senderAddress` The address invoking this call.
+  - `energy` The energy reserved for executing this transaction.
+  - `amount` The amount of CCD included in the transaction. Defaults to 0.
+  - `expiry` Expiry date of the transaction. Defaults to 5 minutes from when constructing the transaction.
 - `parameter` Parameter to provide the smart contract module for the instantiation.
 
-  _With schema type:_ If the schema contains type information for the parameter, a type for the parameter is generated and used for this function. The type is name `<ContractName>Parameter` where `<ContractName>` is the smart contract name in Pascal case.
+  _With schema type:_ If the schema contains type information for the parameter, a type for the parameter is generated and used for this function. The type is named `<ContractName>Parameter` where `<ContractName>` is the smart contract name in Pascal case.
 
   _Without schema type:_ If no schema information is present, the function uses the generic `Parameter` from `@concordium/web-sdk`.
 
-- `signer` The keys of to use for signing the transaction.
+- `signer` The keys to use for signing the transaction.
 
 **Returns**: Promise with the hash of the transaction.
 
 ```typescript
-const myModule: MyModule.Type = ...; // Generated module client.
-const transactionMeta = { ... }; // Transaction meta information.
-const parameter = ...; // Parameter to pass the smart contract init-function.
-const signer = ...; // The keys to use for signing the transaction.
+// Generated module client.
+const myModule: MyModule.Type = await MyModule.create(grpcClient);
+// The keys to use for signing the transaction.
+const signer = ...;
+// Transaction meta information.
+const transactionMeta = {
+  // The account address signing the transaction.
+  senderAddress: SDK.AccountAddress.fromBase58("357EYHqrmMiJBmUZTVG5FuaMq4soAhgtgz6XNEAJaXHW3NHaUf"),
+  // The amount of energy needed will depend on the contract.
+  energy: SDK.Energy.create(12000),
+};
+// Parameter to pass the smart contract init-function. The structure depends on the contract.
+const parameter = ...;
 const transactionHash = await MyModule.instantiateMyContract(myModule, transactionMeta, parameter, signer);
 ```
 
@@ -309,7 +323,7 @@ This function ensures the smart contract instance exists on chain, and that it i
 
 ```typescript
 const grpcClient = ...; // Concordium gRPC client from '@concordium/web-sdk'.
-const contractAddress = ContractAddress.create(...) // The address of the contract instance.
+const contractAddress = SDK.ContractAddress.create(...); // The address of the contract instance.
 const myContract: MyContract.Type = await MyContract.create(grpcClient, contractAddress);
 ```
 
@@ -325,7 +339,7 @@ This function _skips_ the check ensuring the smart contract instance exists on c
 
 ```typescript
 const grpcClient = ...; // Concordium gRPC client from '@concordium/web-sdk'.
-const contractAddress = ContractAddress.create(...) // The address of the contract instance.
+const contractAddress = SDK.ContractAddress.create(...); // The address of the contract instance.
 const myContract: MyContract.Type = MyContract.createUnchecked(grpcClient, contractAddress);
 ```
 
@@ -379,6 +393,10 @@ The function parameters are:
 
 - `contractClient` The client of the smart contract instance.
 - `transactionMetadata` Metadata related to constructing the transaction, such as energy and CCD amount to include.
+  - `senderAddress` The address invoking this call.
+  - `energy` The energy reserved for executing this transaction.
+  - `amount` The amount of CCD included in the transaction. Defaults to 0.
+  - `expiry` Expiry date of the transaction. Defaults to 5 minutes from when constructing the transaction.
 - `parameter` Parameter to provide to the smart contract entrypoint.
 
   _With schema type:_ If the schema contains type information for the parameter, a type for the parameter is generated and used for this function (see type above).
@@ -390,10 +408,20 @@ The function parameters are:
 **Returns**: Promise with the hash of the transaction.
 
 ```typescript
-const myContract: MyContract.Type = ...; // Generated contract client.
-const transactionMeta = { ... }; // Transaction meta information.
-const parameter = ...; // Parameter to pass the smart contract entrypoint.
-const signer = ...; // The keys to use for signing the transaction.
+// Generated contract client.
+const myContract: MyContract.Type = await MyContract.create(grpcClient, contractAddress);
+// The keys to use for signing the transaction.
+const signer = ...;
+// Transaction meta information.
+const transactionMeta = {
+  // The account address signing the transaction.
+  senderAddress: SDK.AccountAddress.fromBase58("357EYHqrmMiJBmUZTVG5FuaMq4soAhgtgz6XNEAJaXHW3NHaUf"),
+  // The amount of energy needed will depend on the contract.
+  energy: SDK.Energy.create(12000),
+};
+// Parameter to pass the smart contract entrypoint. The structure depends on the contract.
+const parameter = ...;
+// Send the transaction calling the `launch-rockets` entrypoint.
 const transactionHash = await MyContract.sendLaunchRocket(myContract, transactionMeta, parameter, signer);
 ```
 
@@ -427,7 +455,13 @@ The function parameters are:
 ```typescript
 const myContract: MyContract.Type = ...; // Generated contract client.
 const parameter = ...; // Parameter to pass the smart contract entrypoint.
-const metadata = { ... }; // Transaction metadata for invoking.
+// Transaction metadata for invoking.
+const metadata = {
+  // Amount of CCD to include in the transaction.
+  amount: SDK.CcdAmount.fromCcd(10),
+  // Invoker of the transaction
+  invoker: SDK.AccountAddress.fromBase58("357EYHqrmMiJBmUZTVG5FuaMq4soAhgtgz6XNEAJaXHW3NHaUf")
+};
 const invokeResult = await MyContract.dryRunLaunchRocket(myContract, parameter, metadata);
 ```
 
@@ -483,5 +517,5 @@ An example for a smart contract with an entrypoint named `launch-rocket`, the fu
 const invokeResult = await MyContract.dryRunLaunchRocket(myContract, invoker, parameter);
 
 // Parse the error message
-const message: MyContract.ErrorMessageLaunchRocket | undefined = parseErrorMessageLaunchRocket(invokeResult);
+const message: MyContract.ErrorMessageLaunchRocket | undefined = MyContract.parseErrorMessageLaunchRocket(invokeResult);
 ```

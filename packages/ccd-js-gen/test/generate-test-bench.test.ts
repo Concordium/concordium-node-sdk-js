@@ -1,3 +1,20 @@
+/*
+ * This file contains tests for generating clients for the smart contract module 'test-bench'
+ * located at https://github.com/Concordium/concordium-misc-tools/tree/main/wallet-connect-test-bench/smart-contract
+ *
+ * The tests will run the client generator, typecheck the generated files and ensure the files
+ * exposes relevant functions.
+ *
+ * These tests depends on the smart contract module being a file with path:
+ *
+ *   test/resources/test-bench.wasm.v1
+ *
+ * Which can be built from the above linked project using `cargo-concordium`:
+ *
+ * ```
+ * cargo concordium build --schema-embed --out ./path/to/test/resources/test-bench.wasm.v1
+ * ```
+ */
 import * as Gen from '../src/lib.js';
 import { assertTypeChecks } from './testHelpers.js';
 

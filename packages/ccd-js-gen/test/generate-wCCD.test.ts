@@ -1,3 +1,24 @@
+/*
+ * This file contains tests for generating clients for the smart contract module of wCCD
+ * (module reference "cc285180b45d7695db75c29dee004d2e81a1383880c9b122399bea809196c98f").
+ *
+ * The tests will run the client generator, typecheck the generated files and ensure the files
+ * exposes relevant functions.
+ *
+ * These tests depends on the smart contract module being a file with path:
+ *
+ *   test/resources/wCCD.wasm.v1
+ *
+ * Which can be generated using the SDK:
+ *
+ * ```
+ * import * as SDK from "@concordium/web-sdk";
+ * import * as fs from "node:fs/promises";
+ * const client = ...// Grpc client for Testnet.
+ * const source = await client.getModuleSource("cc285180b45d7695db75c29dee004d2e81a1383880c9b122399bea809196c98f");
+ * await fs.writeFile("test/resources/wCCD.wasm.v1", versionedModuleSourceToBuffer(source));
+ * ```
+ */
 import * as Gen from '../src/lib.js';
 import { assertTypeChecks } from './testHelpers.js';
 

@@ -822,7 +822,7 @@ export interface BlockInfoCommon {
      * The genesis index for the block. This counst the number of protocol updates that have
      * preceeded this block, and defines the era of the block.
      */
-    genesisIndex: number;
+    genesisIndex: GenesisIndex;
     /** The height of this block relative to the (re)genesis block of its era */
     eraBlockHeight: number;
     /** The protocol version the block belongs to */
@@ -856,7 +856,7 @@ export type FinalizedBlockInfo = CommonBlockInfo;
 
 export type AbsoluteBlocksAtHeightRequest = bigint;
 export interface RelativeBlocksAtHeightRequest {
-    genesisIndex: number;
+    genesisIndex: GenesisIndex;
     height: bigint;
     restrict: boolean;
 }
@@ -937,7 +937,7 @@ export interface ConsensusStatusCommon {
      * specified in the previous field, but it always increments the genesis
      * index.
      */
-    genesisIndex: number;
+    genesisIndex: GenesisIndex;
 
     /** Currently active protocol version. */
     protocolVersion: bigint;

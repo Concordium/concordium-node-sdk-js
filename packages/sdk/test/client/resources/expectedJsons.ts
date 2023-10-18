@@ -61,6 +61,7 @@ import {
     ReturnValue,
     SequenceNumber,
     StakePendingChangeType,
+    Timestamp,
     TransactionEventTag,
     TransactionHash,
     TransactionKindString,
@@ -622,8 +623,9 @@ export const specialEventList: BlockSpecialEvent[] = [
     },
 ];
 
-export const pendingUpdateList: PendingUpdate[] = [
-    {
+export const pendingUpdate: PendingUpdate = {
+    effectiveTime: Timestamp.fromMillis(1669115100n),
+    effect: {
         updateType: UpdateType.Protocol,
         update: {
             message: 'Enable protocol version 5',
@@ -634,7 +636,7 @@ export const pendingUpdateList: PendingUpdate[] = [
             specificationAuxiliaryData: '',
         },
     },
-];
+};
 
 export const blockFinalizationSummary: BlockFinalizationSummary = {
     tag: 'record',

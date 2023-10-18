@@ -727,7 +727,11 @@ test.each([clientV2, clientWeb])('getBlockPendingUpdates', async (client) => {
         client.getBlockPendingUpdates(pendingUpdateBlock);
     const pendingUpdateList = await streamToList(pendingUpdateStream);
 
-    expect(pendingUpdateList).toEqual(expected.pendingUpdateList);
+    expect(pendingUpdateList.length).toEqual(1);
+    expect(pendingUpdateList[0].effectiveTime.value).toEqual(
+        expected.pendingUpdate.effectiveTime.value
+    );
+    expect(pendingUpdateList[0].effect).toEqual(expected.pendingUpdate.effect);
 });
 
 test.each([clientV2, clientWeb])(

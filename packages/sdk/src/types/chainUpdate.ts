@@ -19,6 +19,7 @@ import type {
 import type * as Energy from './Energy.js';
 import type * as Duration from './Duration.js';
 import type * as CcdAmount from './CcdAmount.js';
+import { Timestamp } from '../index.js';
 
 type ChainUpdate<UpdateType, T> = {
     /** The type of the update */
@@ -184,8 +185,16 @@ export type CommonUpdate =
 /** A union of chain updates */
 export type UpdateInstructionPayload = CommonUpdate | RootUpdate | Level1Update;
 
-/** A union of possible pending updates */
-export type PendingUpdate =
+/** A pending update */
+export type PendingUpdate = {
+    /** The effective time of the update */
+    effectiveTime: Timestamp.Type;
+    /** The effect of the update */
+    effect: PendingUpdateEffect;
+};
+
+/** A union of possible effects */
+export type PendingUpdateEffect =
     | CommonUpdate
     | PendingHigherLevelKeyUpdate
     | PendingAuthorizationKeysUpdate;

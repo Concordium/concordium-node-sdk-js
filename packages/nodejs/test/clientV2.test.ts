@@ -623,7 +623,32 @@ test.each([clientV2, clientWeb])(
 test.each([clientV2, clientWeb])('getBlockInfo', async (client) => {
     const blockInfo = await client.getBlockInfo(testBlockHash);
 
-    expect(blockInfo).toEqual(expected.blockInfo);
+    expect(blockInfo.blockParent).toEqual(
+        '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf'
+    );
+    expect(blockInfo.blockHash).toEqual(
+        'fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e'
+    );
+    expect(blockInfo.blockStateHash).toEqual(
+        '6e602157d76677fc4b630b2701571d2b0166e2b08e0afe8ab92356e4d0b88a6a'
+    );
+    expect(blockInfo.blockLastFinalized).toEqual(
+        '28d92ec42dbda119f0b0207d3400b0573fe8baf4b0d3dbe44b86781ad6b655cf'
+    );
+    expect(blockInfo.blockHeight).toEqual(1259179n);
+    expect(blockInfo.blockBaker).toEqual(4n);
+    expect(blockInfo.blockArriveTime).toBeDefined();
+    expect(blockInfo.blockReceiveTime).toBeDefined();
+    expect(blockInfo.blockSlotTime).toEqual(
+        new Date('2022-11-07T10:54:10.750Z')
+    );
+    expect(blockInfo.finalized).toEqual(true);
+    expect(blockInfo.transactionCount).toEqual(0n);
+    expect(blockInfo.transactionsSize).toEqual(0n);
+    expect(blockInfo.transactionEnergyCost).toEqual(0n);
+    expect(blockInfo.genesisIndex).toEqual(1);
+    expect(blockInfo.eraBlockHeight).toEqual(1258806);
+    expect(blockInfo.protocolVersion).toEqual(4n);
 });
 
 test.each([clientV2, clientWeb])('getBakerList', async (client) => {
@@ -942,4 +967,106 @@ describe('findFirstFinalizedBlockNoLaterThan', () => {
             expect(bi).toBe(undefined);
         }
     );
+});
+
+test.each([clientV2, clientWeb])('getBakerEarliestWinTime', async (client) => {
+    const bakers = await streamToList(client.getBakerList());
+    const earliestWinTime = await client.getBakerEarliestWinTime(bakers[0]);
+
+    // Arbitrary eraliestWinTime measured at the time of running the test.
+    // Every earliestWinTime measured after this point should be greater than this.
+    expect(earliestWinTime).toBeGreaterThan(1692792026500n);
+});
+
+test.each([clientV2, clientWeb])(
+    'getBlockCertificates: With timeout certificate',
+    async (client) => {
+        const blockWithTimeoutCert =
+            'ac94ab7628d44fd8b4edb3075ae156e4b85d4007f52f147df6936ff70083d1ef';
+        const blockCertificates = await client.getBlockCertificates(
+            blockWithTimeoutCert
+        );
+
+        expect(blockCertificates.timeoutCertificate).toEqual(
+            expected.timeoutCertificate
+        );
+    }
+);
+
+test.each([clientV2, clientWeb])(
+    'getBlockCertificates: With epoch finalization entry',
+    async (client) => {
+        const blockWithEpochFinalizationEntry =
+            '1ba4bcd28a6e014204f79a81a47bac7518066410acbeb7853f20b55e335b947a';
+        const blockCertificates = await client.getBlockCertificates(
+            blockWithEpochFinalizationEntry
+        );
+
+        expect(blockCertificates.quorumCertificate).toEqual(
+            expected.quorumCertificate
+        );
+        expect(blockCertificates.epochFinalizationEntry).toEqual(
+            expected.epochFinalizationEntry
+        );
+    }
+);
+
+test.each([clientV2, clientWeb])('getBakersRewardPeriod', async (client) => {
+    const bakerRewardPeriodInfo = await streamToList(
+        client.getBakersRewardPeriod()
+    );
+    const brpi = bakerRewardPeriodInfo[0];
+
+    expect(typeof brpi.baker.bakerId).toEqual('bigint');
+    expect(brpi.baker.electionKey.length).toEqual(64);
+    expect(brpi.baker.signatureKey.length).toEqual(64);
+    expect(brpi.baker.aggregationKey.length).toEqual(192);
+    expect(brpi.baker.aggregationKey.length).toEqual(192);
+    expect(typeof brpi.commissionRates.bakingCommission).toEqual('number');
+    expect(typeof brpi.commissionRates.finalizationCommission).toEqual(
+        'number'
+    );
+    expect(typeof brpi.commissionRates.transactionCommission).toEqual('number');
+    expect(typeof brpi.effectiveStake).toEqual('bigint');
+    expect(typeof brpi.equityCapital).toEqual('bigint');
+    expect(typeof brpi.isFinalizer).toEqual('boolean');
+});
+
+test.each([clientV2, clientWeb])(
+    'getFirstBlockEpoch - block hash',
+    async (client) => {
+        const firstBlockEpoch = await client.getFirstBlockEpoch(testBlockHash);
+
+        expect(firstBlockEpoch).toEqual(
+            '1ffd2823aa0dff331cc1ec98cf8269cf22120b94e2087c107874c7e84190317b'
+        );
+    }
+);
+
+test.each([clientV2, clientWeb])(
+    'getFirstBlockEpoch - relative epoch request',
+    async (client) => {
+        const req = {
+            genesisIndex: 1,
+            epoch: 5n,
+        };
+        const firstBlockEpoch = await client.getFirstBlockEpoch(req);
+
+        expect(firstBlockEpoch).toEqual(
+            'ea2a11db1d20658e9dc91f70116fe3f83a5fc49ac318d8ed1848295ae93c66fa'
+        );
+    }
+);
+
+test.each([clientV2, clientWeb])('getWinningBakersEpoch', async (client) => {
+    const blockHash =
+        'ae4a8e864bb71dc2b6043a31c429be4fc4a110955143753ab3963c6a829c8818';
+    const winningBakers = await streamToList(
+        client.getWinningBakersEpoch(blockHash)
+    );
+    const round = winningBakers.filter((x) => x.round === 296651n)[0];
+
+    expect(round.round).toEqual(296651n);
+    expect(round.winner).toEqual(5n);
+    expect(round.present).toEqual(true);
 });

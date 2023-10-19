@@ -11,7 +11,7 @@ import type { HexString } from '../types.js';
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.DataBlob;
-type Serializable = HexString;
+export type Serializable = HexString;
 
 /**
  * Representation of a transfer's memo or a registerData transaction's data, which enforces that:

@@ -1,6 +1,6 @@
 {
     "name": "@concordium/rust-bindings",
-    "version": "2.0.0-rc.1",
+    "version": "2.0.0-rc.2",
     "license": "Apache-2.0",
     "engines": {
         "node": ">=16"
@@ -14,9 +14,9 @@
         "./lib/*/web/index.min.js",
         "./lib/*/bundler/index.js"
     ],
-    "main": "./lib/dapp/node/index.js",
-    "browser": "./lib/dapp/web/index.min.js",
-    "types": "./lib/dapp/node/index.d.ts",
+    "main": "lib/dapp/node/cjs/index.js",
+    "browser": "lib/dapp/web/umd/index.min.js",
+    "types": "lib/dapp/node/cjs/index.d.ts",
     "exports": {
         ".": {
             "types": "./lib/dapp/node/cjs/index.d.ts",
@@ -27,7 +27,8 @@
             "browser": {
                 "module": "./lib/dapp/web/umd/index.min.js",
                 "types": "./lib/dapp/web/esm/index.d.ts",
-                "import": "./lib/dapp/web/esm/index.js"
+                "import": "./lib/dapp/web/esm/index.js",
+                "default": "./lib/dapp/web/umd/index.min.js"
             },
             "default": "./lib/dapp/web/umd/index.min.js"
         },
@@ -40,7 +41,8 @@
             "browser": {
                 "module": "./lib/dapp/web/umd/index.min.js",
                 "types": "./lib/dapp/web/esm/index.d.ts",
-                "import": "./lib/dapp/web/esm/index.js"
+                "import": "./lib/dapp/web/esm/index.js",
+                "default": "./lib/dapp/web/umd/index.min.js"
             },
             "default": "./lib/dapp/web/umd/index.min.js"
         },
@@ -53,7 +55,8 @@
             "browser": {
                 "module": "./lib/wallet/web/umd/index.min.js",
                 "types": "./lib/wallet/web/esm/index.d.ts",
-                "import": "./lib/wallet/web/esm/index.js"
+                "import": "./lib/wallet/web/esm/index.js",
+                "default": "./lib/wallet/web/umd/index.min.js"
             },
             "default": "./lib/wallet/web/umd/index.min.js"
         },

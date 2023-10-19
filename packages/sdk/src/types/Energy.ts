@@ -9,7 +9,7 @@ import {
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.Energy;
-type Serializable = string;
+export type Serializable = string;
 
 /** Energy measure. Used as part of cost calculations for transactions. */
 class Energy {
@@ -73,7 +73,23 @@ export function toProto(energy: Energy): Proto.Energy {
     };
 }
 
-const fromSerializable = (v: Serializable) => create(BigInt(v));
+/**
+ * Constructs a {@linkcode Type} from {@linkcode Serializable}.
+ * @param {Serializable} value
+ * @returns {Type} The duration.
+ */
+export function fromSerializable(value: Serializable): Type {
+    return create(BigInt(value));
+}
+
+/**
+ * Converts {@linkcode Type} into {@linkcode Serializable}
+ * @param {Type} energy
+ * @returns {Serializable} The serializable value
+ */
+export function toSerializable(energy: Type): Serializable {
+    return energy.value.toString();
+}
 
 /**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
@@ -81,10 +97,10 @@ const fromSerializable = (v: Serializable) => create(BigInt(v));
  * @param {Type} value - The account address instance to transform.
  * @returns {TypedJson} The transformed object.
  */
-export function toTypedJSON({ value }: Energy): TypedJson<Serializable> {
+export function toTypedJSON(value: Type): TypedJson<Serializable> {
     return {
         ['@type']: JSON_DISCRIMINATOR,
-        value: value.toString(),
+        value: toSerializable(value),
     };
 }
 

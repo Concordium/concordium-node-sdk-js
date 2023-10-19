@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer/index.js';
 import { SchemaType, serializeSchemaType } from '../schemaTypes.js';
 import { deserializeTypeValue } from '../schema.js';
 import type {
@@ -15,7 +16,7 @@ import {
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.ReturnValue;
-type Serializable = HexString;
+export type Serializable = HexString;
 
 /** Return value from invoking a smart contract entrypoint. */
 class ReturnValue {

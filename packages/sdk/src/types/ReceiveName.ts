@@ -12,7 +12,7 @@ import {
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.ReceiveName;
-type Serializable = string;
+export type Serializable = string;
 
 /**
  * Represents a receive-function in a smart contract module.

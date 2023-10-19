@@ -1,6 +1,6 @@
 {
     "name": "@concordium/web-sdk",
-    "version": "7.0.0-rc.1",
+    "version": "7.0.0-rc.4",
     "license": "Apache-2.0",
     "engines": {
         "node": ">=16"
@@ -46,7 +46,6 @@
     ],
     "devDependencies": {
         "@protobuf-ts/plugin": "^2.9.1",
-        "@types/big.js": "^6.2.0",
         "@types/bs58check": "^2.1.0",
         "@types/jest": "^26.0.23",
         "@types/json-bigint": "^1.0.1",
@@ -75,13 +74,14 @@
         "clean": "rimraf -- lib src/grpc-api"
     },
     "dependencies": {
-        "@concordium/rust-bindings": "2.0.0-rc.1",
+        "@concordium/rust-bindings": "2.0.0-rc.2",
         "@grpc/grpc-js": "^1.9.4",
         "@noble/ed25519": "^2.0.0",
         "@protobuf-ts/grpc-transport": "^2.9.1",
         "@protobuf-ts/grpcweb-transport": "^2.9.1",
         "@protobuf-ts/runtime-rpc": "^2.8.2",
         "@scure/bip39": "^1.2.1",
+        "@types/big.js": "^6.2.0",
         "big.js": "^6.2.0",
         "bs58check": "^3.0.1",
         "buffer": "^6.0.3",

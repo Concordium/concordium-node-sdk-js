@@ -9,7 +9,7 @@ import {
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.SequenceNumber;
-type Serializable = string;
+export type Serializable = string;
 
 /** Transaction sequence number. (Formerly refered as Nonce) */
 class SequenceNumber {
@@ -71,7 +71,23 @@ export function toProto(sequenceNumber: SequenceNumber): Proto.SequenceNumber {
     };
 }
 
-const fromSerializable = (v: Serializable) => create(BigInt(v));
+/**
+ * Constructs a {@linkcode Type} from {@linkcode Serializable}.
+ * @param {Serializable} value
+ * @returns {Type} The duration.
+ */
+export function fromSerializable(value: Serializable): Type {
+    return create(BigInt(value));
+}
+
+/**
+ * Converts {@linkcode Type} into {@linkcode Serializable}
+ * @param {Type} value
+ * @returns {Serializable} The serializable value
+ */
+export function toSerializable(value: Type): Serializable {
+    return value.value.toString();
+}
 
 /**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
@@ -79,12 +95,10 @@ const fromSerializable = (v: Serializable) => create(BigInt(v));
  * @param {Type} value - The account address instance to transform.
  * @returns {TypedJson} The transformed object.
  */
-export function toTypedJSON({
-    value,
-}: SequenceNumber): TypedJson<Serializable> {
+export function toTypedJSON(value: SequenceNumber): TypedJson<Serializable> {
     return {
         ['@type']: JSON_DISCRIMINATOR,
-        value: value.toString(),
+        value: toSerializable(value),
     };
 }
 

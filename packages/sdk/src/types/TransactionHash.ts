@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer/index.js';
 import type { HexString } from '../types.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
 import {
@@ -10,7 +11,7 @@ import {
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.TransactionHash;
-type Serializable = HexString;
+export type Serializable = HexString;
 
 /**
  * The number of bytes used to represent a transaction hash.

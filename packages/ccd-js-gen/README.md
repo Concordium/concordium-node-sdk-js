@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD024 -->
 # Smart Contract Client Generator <!-- omit in toc -->
 
 Generate TypeScript/JavaScript code for interating with smart contracts and modules on the Concordium blockchain.
@@ -10,7 +11,7 @@ Generate TypeScript/JavaScript code for interating with smart contracts and modu
 
 The code is generated from deployable smart contract modules, meaning it can be done with any smart contract available locally and any smart contract deployed on chain.
 
-### Example usage of a generated client
+## Example usage of a generated client
 
 An example of using a generated client for a token smart contract implementing the [CIS-2 standard](https://proposals.concordium.software/CIS/cis-2.html).
 In the example, a contract client is constructed and a transaction calling the [`transfer` entrypoint](https://proposals.concordium.software/CIS/cis-2.html#transfer) of the smart contract. The parameter includes a transfer of 10 tokens from `sender` address to `receiver` address.
@@ -84,17 +85,20 @@ const transactionHash = await MyContract.sendTransfer(contractClient, {
 Install the package, saving it to `devDependencies`:
 
 **npm**
-```
+
+```bash
 npm install --save-dev @concordium/ccd-js-gen
 ```
 
 **yarn**
-```
+
+```bash
 yarn add --dev @concordium/ccd-js-gen
 ```
 
 **pnpm**
-```
+
+```bash
 pnpm install --save-dev @concordium/ccd-js-gen
 ```
 
@@ -116,7 +120,7 @@ This package provides the `ccd-js-gen` command, which can be used from the comma
 To generate smart contract clients into a directory `generated` from the smart contract
 module `./my-contract.wasm.v1`:
 
-```
+```bash
 ccd-js-gen --module ./my-contract.wasm.v1 --out-dir ./generated
 ```
 
@@ -179,7 +183,7 @@ For example: generating clients for a smart contract module `my-module` containi
 the smart contracts `my-contract-a` and `my-contract-b`.
 into the directory `./generated` produces the following structure:
 
-```
+```bash
 generated/
 ├─ my-module.js        // Functions for interacting with the 'my-module' smart contract module on chain.
 ├─ my-module_my-contract-a.js    // Functions for interacting with the 'my-contract-a' smart contract.
@@ -497,7 +501,6 @@ const returnValue: MyContract.ReturnValueLaunchRocket | undefined = parseReturnV
 Type representing the error message from a rejected dry-run/invocation of an entrypoint. The type is named `ErrorMessage<EntrypointName>` where `<EntrypointName>` is the name of the relevant entrypoint in Pascal case.
 
 _This is only generated when the schema contains entrypoint error message type._
-
 
 #### function `parseErrorMessage<EntrypointName>`
 

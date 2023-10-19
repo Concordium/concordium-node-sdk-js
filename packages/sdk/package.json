@@ -35,7 +35,7 @@
     },
     "imports": {
         "#ed25519": {
-            "node": "./src/shims/ed25519.node.ts",
+            "node": "./lib/esm/shims/ed25519.node.js",
             "default": "@noble/ed25519"
         }
     },

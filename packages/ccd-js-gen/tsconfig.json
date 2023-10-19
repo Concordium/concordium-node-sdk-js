@@ -1,6 +1,6 @@
 {
     "extends": "../../tsconfig-base.json",
-    "include": ["src/**/*", "package.json"],
+    "include": ["src/**/*", "test/**/*", "package.json", "jest.config.ts"],
     "compilerOptions": {
         "module": "NodeNext",
         "moduleResolution": "NodeNext",

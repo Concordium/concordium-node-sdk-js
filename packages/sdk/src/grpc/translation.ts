@@ -1586,6 +1586,15 @@ function trMintDistributionCpv1Update(
 export function pendingUpdate(
     pendingUpdate: v2.PendingUpdate
 ): v1.PendingUpdate {
+    return {
+        effectiveTime: Timestamp.fromProto(unwrap(pendingUpdate.effectiveTime)),
+        effect: trPendingUpdateEffect(pendingUpdate),
+    };
+}
+
+export function trPendingUpdateEffect(
+    pendingUpdate: v2.PendingUpdate
+): v1.PendingUpdateEffect {
     const effect = pendingUpdate.effect;
     switch (effect.oneofKind) {
         case 'protocol':

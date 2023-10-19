@@ -32,10 +32,10 @@
     },
     "license": "Apache-2.0",
     "peerDependencies": {
-        "@concordium/web-sdk": "7.0.0-rc.5"
+        "@concordium/web-sdk": "7.0.0"
     },
     "dependencies": {
-        "@concordium/web-sdk": "7.0.0-rc.5",
+        "@concordium/web-sdk": "7.0.0",
         "buffer": "^6.0.3",
         "commander": "^11.0.0",
         "sanitize-filename": "^1.6.3",

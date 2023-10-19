@@ -8,12 +8,16 @@ Generate TypeScript/JavaScript code for interating with smart contracts and modu
 - Parsing logged events, return values and error messages.
 - Structured types for parameter, logged events, return values and error messages.
 
-The code is generated from deployable smart contract modules, meaning it can be done with any smart contract available locally and any smart contract deployed on chain.
+The code is generated from deployable smart contract modules, meaning it can be done with any smart contract available
+locally and any smart contract deployed on chain.
 
-### Example usage of a generated client
+## Example usage of a generated client
 
-An example of using a generated client for a token smart contract implementing the [CIS-2 standard](https://proposals.concordium.software/CIS/cis-2.html).
-In the example, a contract client is constructed and a transaction calling the [`transfer` entrypoint](https://proposals.concordium.software/CIS/cis-2.html#transfer) of the smart contract. The parameter includes a transfer of 10 tokens from `sender` address to `receiver` address.
+An example of using a generated client for a token smart contract implementing the
+[CIS-2 standard](https://proposals.concordium.software/CIS/cis-2.html).
+In the example, a contract client is constructed and a transaction calling the
+[`transfer` entrypoint](https://proposals.concordium.software/CIS/cis-2.html#transfer)
+of the smart contract. The parameter includes a transfer of 10 tokens from `sender` address to `receiver` address.
 
 ```typescript
 import * as SDK from "@concordium/web-sdk";
@@ -48,6 +52,7 @@ const transactionHash = await MyContract.sendTransfer(contractClient, {
 ```
 
 <!--toc:start-->
+- [Example usage of a generated client](#example-usage-of-a-generated-client)
 - [Install the package](#install-the-package)
 - [Using the CLI](#using-the-cli)
   - [Example](#example)
@@ -84,16 +89,19 @@ const transactionHash = await MyContract.sendTransfer(contractClient, {
 Install the package, saving it to `devDependencies`:
 
 **npm**
+
 ```
 npm install --save-dev @concordium/ccd-js-gen
 ```
 
 **yarn**
+
 ```
 yarn add --dev @concordium/ccd-js-gen
 ```
 
 **pnpm**
+
 ```
 pnpm install --save-dev @concordium/ccd-js-gen
 ```
@@ -149,7 +157,8 @@ console.log('Code generation was successful.')
 
 ### Generate from smart contract module on chain
 
-To generate smart contract clients for a smart contract module on chain, you need access to the gRPC of a Concordium node.
+To generate smart contract clients for a smart contract module on chain,
+you need access to the gRPC of a Concordium node.
 Use `@concordium/web-sdk` to download the smart contract module and use it to generate the clients.
 
 ```typescript
@@ -173,7 +182,8 @@ console.info('Code generation was successful.');
 
 ## Using the generated client
 
-The generator produces a file with functions for interacting with the smart contract module and files for each smart contract in the smart contract module used.
+The generator produces a file with functions for interacting with the smart contract module and files
+for each smart contract in the smart contract module used.
 
 For example: generating clients for a smart contract module `my-module` containing
 the smart contracts `my-contract-a` and `my-contract-b`.
@@ -218,7 +228,8 @@ const myModule: MyModule.Type = await MyModule.create(grpcClient);
 #### function `createUnchecked`
 
 Construct a module client for interacting with a smart contract module on chain.
-This function _skips_ the check of the smart contract module being deployed on chain and leaves it up to the caller to ensure this.
+This function _skips_ the check of the smart contract module being deployed on chain and leaves it
+up to the caller to ensure this.
 
 **Parameter:** The function takes a gRPC client from '@concordium/web-sdk'.
 
@@ -248,7 +259,8 @@ const moduleSource = await MyModule.getModuleSource(myModule);
 
 #### type `<ContractName>Parameter`
 
-Type representing the parameter for when instantiating a smart contract. The type is named `<ContractName>Parameter` where `<ContractName>` is the smart contract name in Pascal case.
+Type representing the parameter for when instantiating a smart contract.
+The type is named `<ContractName>Parameter` where `<ContractName>` is the smart contract name in Pascal case.
 
 _This is only generated when the schema contains init-function parameter type._
 
@@ -257,7 +269,8 @@ _This is only generated when the schema contains init-function parameter type._
 For each smart contract in module a function for instantiating new instance is produced.
 These are named `instantiate<ContractName>` where `<ContractName>` is the smart contract name in Pascal case.
 
-An example for a smart contract module containing a smart contract named `my-contract`, the function becomes `instantiateMyContract`.
+An example for a smart contract module containing a smart contract named `my-contract`,
+the function becomes `instantiateMyContract`.
 
 **Parameters**
 
@@ -271,9 +284,13 @@ The function parameters are:
   - `expiry` Expiry date of the transaction. Defaults to 5 minutes from when constructing the transaction.
 - `parameter` Parameter to provide the smart contract module for the instantiation.
 
-  _With schema type:_ If the schema contains type information for the parameter, a type for the parameter is generated and used for this function. The type is named `<ContractName>Parameter` where `<ContractName>` is the smart contract name in Pascal case.
+  _With schema type:_
+  If the schema contains type information for the parameter,
+  a type for the parameter is generated and used for this function.
+  The type is named `<ContractName>Parameter` where `<ContractName>` is the smart contract name in Pascal case.
 
-  _Without schema type:_ If no schema information is present, the function uses the generic `Parameter` from `@concordium/web-sdk`.
+  _Without schema type:_
+  If no schema information is present, the function uses the generic `Parameter` from `@concordium/web-sdk`.
 
 - `signer` The keys to use for signing the transaction.
 
@@ -301,7 +318,8 @@ const transactionHash = await MyModule.instantiateMyContract(myModule, transacti
 For each of the smart contracts in the module a file is produced named after the smart contract.
 Each file contains functions for interacting with an instance of this smart contract.
 
-An example of importing a smart contract contract client generated from a module containing a smart contract named `my-contract`:
+An example of importing a smart contract contract client generated from a module containing a
+smart contract named `my-contract`:
 
 ```typescript
 import * as MyContract from "./generated/my-module_my-contract.js";
@@ -314,7 +332,8 @@ The type representing the client for the smart contract instance is accessable u
 #### function `create`
 
 Construct a client for interacting with a smart contract instance on chain.
-This function ensures the smart contract instance exists on chain, and that it is using a smart contract module with a matching reference.
+This function ensures the smart contract instance exists on chain, and that it is using a
+smart contract module with a matching reference.
 
 **Parameters:**
 
@@ -330,7 +349,8 @@ const myContract: MyContract.Type = await MyContract.create(grpcClient, contract
 #### function `createUnchecked`
 
 Construct a client for interacting with a smart contract instance on chain.
-This function _skips_ the check ensuring the smart contract instance exists on chain, and that it is using a smart contract module with a matching reference, leaving it up to the caller to ensure this.
+This function _skips_ the check ensuring the smart contract instance exists on chain,
+and that it is using a smart contract module with a matching reference, leaving it up to the caller to ensure this.
 
 **Parameters:**
 
@@ -376,7 +396,8 @@ const event: MyContract.Event = MyContract.parseEvent(rawContractEvent);
 
 #### type `<EntrypointName>Parameter`
 
-Type representing the parameter of for an entrypoint. The type is named `<EntrypointName>Parameter` where `<EntrypointName>` is the name of the entrypoint in Pascal case.
+Type representing the parameter of for an entrypoint.
+The type is named `<EntrypointName>Parameter` where `<EntrypointName>` is the name of the entrypoint in Pascal case.
 
 _This is only generated when the schema contains contract entrypoint parameter type._
 
@@ -399,9 +420,12 @@ The function parameters are:
   - `expiry` Expiry date of the transaction. Defaults to 5 minutes from when constructing the transaction.
 - `parameter` Parameter to provide to the smart contract entrypoint.
 
-  _With schema type:_ If the schema contains type information for the parameter, a type for the parameter is generated and used for this function (see type above).
+  _With schema type:_
+  If the schema contains type information for the parameter,
+  a type for the parameter is generated and used for this function (see type above).
 
-  _Without schema type:_ If no schema information is present, the function uses the generic `Parameter` from `@concordium/web-sdk`.
+  _Without schema type:_
+  If no schema information is present, the function uses the generic `Parameter` from `@concordium/web-sdk`.
 
 - `signer` The keys of to use for signing the transaction.
 
@@ -439,12 +463,16 @@ The function parameters are:
 - `contractClient` The client of the smart contract instance.
 - `parameter` Parameter to provide to the smart contract entrypoint.
 
-  _With schema type:_ If the schema contains type information for the parameter, a type for the parameter is generated and used for this function (see type above).
+  _With schema type:_
+  If the schema contains type information for the parameter,
+  a type for the parameter is generated and used for this function (see type above).
 
-  _Without schema type:_ If no schema information is present, the function uses the generic `Parameter` from `@concordium/web-sdk`.
+  _Without schema type:_
+  If no schema information is present, the function uses the generic `Parameter` from `@concordium/web-sdk`.
 
 - `invokeMetadata` Optional transaction metadata object with the following optional properties:
-  - `invoker` The address invoking this call, can be either an `AccountAddress` or `ContractAddress`. Defaults to an `AccountAddress` (Base58check encoding of 32 bytes with value zero).
+  - `invoker` The address invoking this call, can be either an `AccountAddress` or `ContractAddress`.
+  Defaults to an `AccountAddress` (Base58check encoding of 32 bytes with value zero).
   - `amount` The amount of CCD included in the transaction. Defaults to 0.
   - `energy` The energy reserved for executing this transaction. Defaults to max energy possible.
 - `blockHash` (optional) Provide to specify the block hash, for which the state will be used for dry-running.
@@ -467,22 +495,28 @@ const invokeResult = await MyContract.dryRunLaunchRocket(myContract, parameter, 
 
 #### type `ReturnValue<EntrypointName>`
 
-Type representing the return value from a successful dry-run/invocation of an entrypoint. The type is named `ReturnValue<EntrypointName>` where `<EntrypointName>` is the name of the relevant entrypoint in Pascal case.
+Type representing the return value from a successful dry-run/invocation of an entrypoint.
+The type is named `ReturnValue<EntrypointName>` where `<EntrypointName>` is the name of
+the relevant entrypoint in Pascal case.
 
 _This is only generated when the schema contains entrypoint return value type._
 
 #### function `parseReturnValue<EntrypointName>`
 
-For each entrypoint of the smart contract a function for parsing the return value in a successful invocation/dry-running.
-These are named `parseReturnValue<EntrypointName>` where `<EntrypointName>` is the name of the entrypoint in Pascal case.
+For each entrypoint of the smart contract a function for parsing the return value in a
+successful invocation/dry-running.
+These are named `parseReturnValue<EntrypointName>` where `<EntrypointName>` is the name
+of the entrypoint in Pascal case.
 
 _This is only generated when the schema contains entrypoint return value type._
 
-An example for a smart contract with an entrypoint named `launch-rocket`, the function becomes `parseReturnValueLaunchRocket`.
+An example for a smart contract with an entrypoint named `launch-rocket`, the function
+becomes `parseReturnValueLaunchRocket`.
 
 **Parameter:** `invokeResult` The result from dry-running a transactions calling the entrypoint.
 
-**Returns:** Undefined if the invocation was not successful otherwise the parsed return value of the type `ReturnValue<EntrypointName>`.
+**Returns:** Undefined if the invocation was not successful otherwise the parsed return
+value of the type `ReturnValue<EntrypointName>`.
 
 ```typescript
 // Dry run the entrypoint
@@ -494,23 +528,28 @@ const returnValue: MyContract.ReturnValueLaunchRocket | undefined = parseReturnV
 
 #### type `ErrorMessage<EntrypointName>`
 
-Type representing the error message from a rejected dry-run/invocation of an entrypoint. The type is named `ErrorMessage<EntrypointName>` where `<EntrypointName>` is the name of the relevant entrypoint in Pascal case.
+Type representing the error message from a rejected dry-run/invocation of an entrypoint.
+The type is named `ErrorMessage<EntrypointName>` where `<EntrypointName>` is the name of
+the relevant entrypoint in Pascal case.
 
 _This is only generated when the schema contains entrypoint error message type._
-
 
 #### function `parseErrorMessage<EntrypointName>`
 
-For each entrypoint of the smart contract a function for parsing the error message in a rejected invocation/dry-running.
-These are named `parseErrorMessage<EntrypointName>` where `<EntrypointName>` is the name of the entrypoint in Pascal case.
+For each entrypoint of the smart contract a function for parsing the error message in a
+rejected invocation/dry-running.
+These are named `parseErrorMessage<EntrypointName>` where `<EntrypointName>` is the name
+of the entrypoint in Pascal case.
 
 _This is only generated when the schema contains entrypoint error message type._
 
-An example for a smart contract with an entrypoint named `launch-rocket`, the function becomes `parseErrorMessageLaunchRocket`.
+An example for a smart contract with an entrypoint named `launch-rocket`, the function
+becomes `parseErrorMessageLaunchRocket`.
 
 **Parameter:** `invokeResult` The result from dry-running a transactions calling some entrypoint.
 
-**Returns:** Undefined if the invocation was not rejected, otherwise the parsed error message of the type `ReturnValue<EntrypointName>`.
+**Returns:** Undefined if the invocation was not rejected, otherwise the parsed error
+message of the type `ReturnValue<EntrypointName>`.
 
 ```typescript
 // Dry run the entrypoint

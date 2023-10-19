@@ -2128,7 +2128,7 @@ export interface QuorumCertificate {
     aggregateSignature: QuorumSignature;
     /**
      * A list of the finalizers that formed the quorum certificate
-     * i.e., the ones who have contributed to the 'aggregate_siganture'.
+     * i.e., the ones who have contributed to the 'aggregateSignature'.
      * The finalizers are identified by their baker id as this is stable
      * across protocols and epochs.
      */
@@ -2153,12 +2153,12 @@ export interface TimeoutCertificate {
     minEpoch: Epoch;
     /**
      * The rounds of which finalizers have their best
-     * QCs in the 'min_epoch'.
+     * quorum certificates in the 'minEpoch'.
      */
     qcRoundsFirstEpoch: FinalizerRound[];
     /**
      * The rounds of which finalizers have their best
-     * QCs in the epoch 'min_epoch' + 1.
+     * quorum certificates in the epoch 'minEpoch' + 1.
      */
     qcRoundsSecondEpoch: FinalizerRound[];
     /**
@@ -2198,7 +2198,7 @@ export interface EpochFinalizationEntry {
     finalizedQc: QuorumCertificate;
     /**
      * The quorum certificate for the block that finalizes
-     * the block that 'finalized_qc' points to.
+     * the block that 'finalizedQc' points to.
      */
     successorQc: QuorumCertificate;
     /**

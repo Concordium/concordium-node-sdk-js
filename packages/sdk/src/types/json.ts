@@ -144,72 +144,18 @@ function ccdTypesReplacer(this: any, key: string, value: any): any {
 }
 
 /**
- * Thrown if a circular reference is found while trying to stringify object.
- */
-export class JsonCircularReferenceError extends Error {
-    public override readonly name = 'CircularReferenceError';
-    /**
-     * @param {string} key - The key the circular reference was found at.
-     */
-    constructor(public readonly key: string) {
-        super(`Circular reference found in object at path ${key}`);
-    }
-}
-
-/**
- * Creates a replacer function which is a no-op, but throws {@link JsonCircularReferenceError} when finding circular references.
- * Modified from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/Cyclic_object_value.
- *
- * @throws {JsonCircularReferenceError} If a cyclic reference is found.
- * @returns {ReplacerFun} replacer function, which throws when finding circular references.
- * The function returned expects parent object to be accessible on `this`
- *
- * @example
- * const check = getCheckCircular();
- *
- * const circularReference = { otherData: 123 };
- * circularReference.myself = circularReference;
- *
- * for (cosnt key in circularReference) {
- *   check.call(circularReference, key, circularReference[key]); // throws `JsonCircularReferenceError`
- * }
- */
-function getCheckCircular(): ReplacerFun {
-    const ancestors: any[] = [];
-    return function (this: any, key: string, value: any) {
-        if (typeof value !== 'object' || value === null) {
-            return value;
-        }
-        // `this` is the object that value is contained in,
-        // i.e., its direct parent.
-        while (ancestors.length > 0 && ancestors.at(-1) !== this) {
-            ancestors.pop();
-        }
-        if (ancestors.includes(value)) {
-            throw new JsonCircularReferenceError(key);
-        }
-        ancestors.push(value);
-        return value;
-    };
-}
-
-/**
  * Stringify, which ensures concordium domain types are stringified in a restorable fashion.
  *
  * @param value A JavaScript value, usually an object or array, to be converted.
  * @param replacer A function that transforms the results.
  * @param space Adds indentation, white space, and line break characters to the return-value JSON text to make it easier to read.
- *
- * @throws {JsonCircularReferenceError} If a circular reference is found.
  */
 export function jsonStringify(
     input: any,
     replacer?: ReplacerFun,
     space?: string | number
 ): string {
-    const checkCircular = getCheckCircular();
     function replacerFunction(this: any, key: string, value: any) {
-        checkCircular.call(this, key, value); // Throws if a circular reference is found.
         const transformedValue = ccdTypesReplacer.call(this, key, value);
         return replacer?.call(this, key, transformedValue) ?? transformedValue;
     }

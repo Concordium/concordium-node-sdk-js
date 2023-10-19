@@ -1,6 +1,6 @@
 {
     "name": "@concordium/common-sdk",
-    "version": "9.5.0",
+    "version": "9.5.1",
     "license": "Apache-2.0",
     "engines": {
         "node": ">=14.16.0"

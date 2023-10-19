@@ -2805,7 +2805,7 @@ export function bakerRewardPeriodInfo(
         effectiveStake: unwrap(bakerRewardPeriod.effectiveStake?.value),
         commissionRates: trCommissionRates(bakerRewardPeriod.commissionRates),
         equityCapital: unwrap(bakerRewardPeriod.equityCapital?.value),
-        delegatedCapital: unwrap(bakerRewardPeriod.equityCapital?.value),
+        delegatedCapital: unwrap(bakerRewardPeriod.delegatedCapital?.value),
         isFinalizer: bakerRewardPeriod.isFinalizer,
     };
 }

@@ -1,5 +1,9 @@
 # Changelog
 
+## 6.5.1
+
+- Bumped @concordium/common-sdk to 9.5.1.
+
 ## 6.5.0
 
 - Bumped @concordium/common-sdk to 9.5.0.

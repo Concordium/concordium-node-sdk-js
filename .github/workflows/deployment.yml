@@ -80,6 +80,8 @@ jobs:
           path: |
             ./packages/sdk/lib
             ./packages/sdk/src
+            ./packages/ccd-js-gen/lib
+            ./packages/ccd-js-gen/src
             ./packages/rust-bindings/lib
             ./packages/*/package.json
             ./packages/*/README.md

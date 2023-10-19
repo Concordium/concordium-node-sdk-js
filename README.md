@@ -21,6 +21,7 @@ Wrappers for interacting with the Concordium node.
   - [Making a new release](#making-a-new-release)
     - [SDK](#sdk)
     - [rust-bindings](#rust-bindings)
+    - [ccd-js-gen](#ccd-js-gen)
   - [Test](#test)
 <!--toc:end-->
 
@@ -132,6 +133,19 @@ each of the packages contained in this repository.
 - Publish the release to NPM.
   - From the rust-bindings package directory (packages/rust-bindings) run
     `yarn npm publish`
+
+### ccd-js-gen
+
+- Bump the version in [package.json](./packages/ccd-js-gen/package.json).
+- Update the [CHANGELOG](./packages/ccd-js-gen/CHANGELOG.md) describing
+  the changes made.
+- Commit and tag the release.
+  - Tag should be `ccd-js-gen/x.y.z`.
+- Run the deploy workflow.
+  - Under github actions, run the "deploy" workflow and download the
+    `build-release` artifact. Unpack this file and use it for the release.
+- Publish the release to NPM.
+  - From the ccd-js-gen package directory (packages/ccd-js-gen) run `yarn npm publish`
 
 ## Test
 

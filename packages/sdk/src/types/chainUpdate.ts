@@ -19,7 +19,7 @@ import type {
 import type * as Energy from './Energy.js';
 import type * as Duration from './Duration.js';
 import type * as CcdAmount from './CcdAmount.js';
-import { Timestamp } from '../Timestamp.js';
+import type * as Timestamp from './Timestamp.js';
 
 type ChainUpdate<UpdateType, T> = {
     /** The type of the update */

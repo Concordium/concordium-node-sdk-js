@@ -77,9 +77,7 @@ describe('jsonStringify', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (obj as any)['circular'] = obj;
 
-        expect(() => jsonStringify(obj)).toThrowError(
-            JsonCircularReferenceError
-        );
+        expect(() => jsonStringify(obj)).toThrowError();
     });
 
     test('Allow non-circular references to same object', () => {

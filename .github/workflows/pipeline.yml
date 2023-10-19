@@ -94,11 +94,6 @@ jobs:
                       deps/concordium-base/rust-src
                       deps/concordium-base/concordium-contracts-common
 
-            - name: Get wasm-pack
-              uses: jetli/wasm-pack-action@v0.4.0
-              with:
-                  version: 'latest'
-
             - name: Build
               run: yarn build
 

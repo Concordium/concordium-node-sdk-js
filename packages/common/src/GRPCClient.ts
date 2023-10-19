@@ -1589,7 +1589,7 @@ export class ConcordiumGRPCClient {
      *
      * @param {HexString | v1.RelativeEpochRequest } epochRequest - Consists of either a hex-encoded block hash or a relative epoch request consisting of a genesis index and an epoch. If none is passed, it queries the last finalized block.
      *
-     * @returns {v1.Timestamp} The projected earliest time at which a particular baker will be required to bake a block, as a unix timestamp in milliseconds.
+     * @returns {v1.WinningBaker} A stream of winning bakers for a given epoch.
      */
     getWinningBakersEpoch(
         epochRequest?: HexString | v1.RelativeEpochRequest

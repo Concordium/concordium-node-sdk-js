@@ -1,5 +1,11 @@
 # Changelog
 
+## 9.5.1
+
+### Fixed
+
+- An issue where `BakerRewardPeriodInfo` incorrectly mapped `delegatedCapital` field
+
 ## 9.5.0
 
 ### Added

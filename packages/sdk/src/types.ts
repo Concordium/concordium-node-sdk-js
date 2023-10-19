@@ -40,7 +40,30 @@ export type UrlString = string;
 export type IpAddressString = string;
 export type JsonString = string;
 
+/** A smart contract module reference. This is always 32 bytes long. */
 export type ModuleRef = HexString;
+/** The signature of a 'QuorumCertificate'. the bytes have a fixed length of 48 bytes. */
+export type QuorumSignature = HexString;
+/** The signature of a 'TimeoutCertificate'. the bytes have a fixed length of 48 bytes. */
+export type TimeoutSignature = HexString;
+/**
+ * A proof that establishes that the successor block of
+ * a 'EpochFinalizationEntry' is the immediate successor of
+ * the finalized block.
+ *
+ * The bytes have a fixed length of 32 bytes.
+ */
+export type SuccessorProof = HexString;
+/** Baker's public key used to check whether they won the lottery or not. */
+export type BakerElectionVerifyKey = HexString;
+/** Baker's public key used to check that they are indeed the ones who produced the block. */
+export type BakerSignatureVerifyKey = HexString;
+/**
+ * Baker's public key used to check signatures on finalization records.
+ * This is only used if the baker has sufficient stake to participate in
+ * finalization.
+ */
+export type BakerAggregationVerifyKey = HexString;
 
 /** A consensus round */
 export type Round = bigint;
@@ -55,6 +78,14 @@ export type Round = bigint;
 type Compute<T> = {
     [K in keyof T]: T[K];
 } & unknown;
+
+/**
+ * The number of chain restarts via a protocol update. An effected
+ * protocol update instruction might not change the protocol version
+ * specified in the previous field, but it always increments the genesis
+ * index.
+ */
+export type GenesisIndex = number;
 
 /**
  * Makes keys of type optional
@@ -558,7 +589,7 @@ export interface BlockInfoCommon {
      * The genesis index for the block. This counst the number of protocol updates that have
      * preceeded this block, and defines the era of the block.
      */
-    genesisIndex: number;
+    genesisIndex: GenesisIndex;
     /** The height of this block relative to the (re)genesis block of its era */
     eraBlockHeight: number;
     /** The protocol version the block belongs to */
@@ -594,7 +625,7 @@ export type FinalizedBlockInfo = CommonBlockInfo;
 
 export type AbsoluteBlocksAtHeightRequest = bigint;
 export interface RelativeBlocksAtHeightRequest {
-    genesisIndex: number;
+    genesisIndex: GenesisIndex;
     height: bigint;
     restrict: boolean;
 }
@@ -675,7 +706,7 @@ export interface ConsensusStatusCommon {
      * specified in the previous field, but it always increments the genesis
      * index.
      */
-    genesisIndex: number;
+    genesisIndex: GenesisIndex;
 
     /** Currently active protocol version. */
     protocolVersion: bigint;
@@ -861,6 +892,7 @@ export interface CurrentPaydayBakerPoolStatus {
     lotteryPower: number;
     bakerEquityCapital: CcdAmount.Type;
     delegatedCapital: CcdAmount.Type;
+    commissionRates: CommissionRates;
 }
 
 export enum BakerPoolPendingChangeType {
@@ -1586,6 +1618,224 @@ export type SmartContractTypeValues =
     | bigint
     | string
     | boolean;
+
+/**
+ * Certificates for a block for protocols supporting
+ * ConcordiumBFT.
+ */
+export interface BlockCertificates {
+    /**
+     * The quorum certificate. Is present if and only if the block is
+     * not a genesis block.
+     */
+    quorumCertificate?: QuorumCertificate;
+    /**
+     * The timeout certificate. Is present only if the round prior to the
+     * round of the block timed out.
+     */
+    timeoutCertificate?: TimeoutCertificate;
+    /**
+     * The epoch finalization entry. Is present only if the block initiates
+     * a new epoch.
+     */
+    epochFinalizationEntry?: EpochFinalizationEntry;
+}
+
+/**
+ * A quorum certificate is the certificate that the
+ * finalization comittee issues in order to certify a block.
+ * A block must be certified before it will be part of the
+ * authorative part of the chain.
+ */
+export interface QuorumCertificate {
+    /**
+     * The hash of the block that the quorum certificate refers to.
+     */
+    blockHash: HexString;
+    /**
+     * The round of the block.
+     */
+    round: Round;
+    /**
+     * The epoch of the block.
+     */
+    epoch: Epoch;
+    /**
+     * The aggregated signature by the finalization committee on the block.
+     */
+    aggregateSignature: QuorumSignature;
+    /**
+     * A list of the finalizers that formed the quorum certificate
+     * i.e., the ones who have contributed to the 'aggregateSignature'.
+     * The finalizers are identified by their baker id as this is stable
+     * across protocols and epochs.
+     */
+    signatories: BakerId[];
+}
+
+/**
+ * A timeout certificate is the certificate that the
+ * finalization committee issues when a round times out,
+ * thus making it possible for the protocol to proceed to the
+ * next round.
+ */
+export interface TimeoutCertificate {
+    /**
+     * The round that timed out.
+     */
+    round: Round;
+    /**
+     * The minimum epoch of which signatures are included
+     * in the 'aggregate_signature'.
+     */
+    minEpoch: Epoch;
+    /**
+     * The rounds of which finalizers have their best
+     * quorum certificates in the 'minEpoch'.
+     */
+    qcRoundsFirstEpoch: FinalizerRound[];
+    /**
+     * The rounds of which finalizers have their best
+     * quorum certificates in the epoch 'minEpoch' + 1.
+     */
+    qcRoundsSecondEpoch: FinalizerRound[];
+    /**
+     * The aggregated signature by the finalization committee that witnessed
+     * the 'round' timed out.
+     */
+    aggregateSignature: TimeoutSignature;
+}
+
+/**
+ * The finalizer round is a map from a 'Round'
+ * to the list of finalizers (identified by their 'BakerId') that signed
+ * off the round.
+ */
+export interface FinalizerRound {
+    /**
+     * The round that was signed off.
+     */
+    round: Round;
+    /**
+     * The finalizers (identified by their 'BakerId' that
+     * signed off the in 'round'.
+     */
+    finalizers: BakerId[];
+}
+
+/**
+ * The epoch finalization entry is the proof that
+ * makes the protocol able to advance to a new epoch.
+ * I.e. the 'EpochFinalizationEntry' is present if and only if
+ * the block is the first block of a new 'Epoch'.
+ */
+export interface EpochFinalizationEntry {
+    /**
+     * The quorum certificate for the finalized block.
+     */
+    finalizedQc: QuorumCertificate;
+    /**
+     * The quorum certificate for the block that finalizes
+     * the block that 'finalizedQc' points to.
+     */
+    successorQc: QuorumCertificate;
+    /**
+     * A proof that the successor block is an immediate
+     * successor of the finalized block.
+     */
+    successorProof: SuccessorProof;
+}
+
+/**
+ * Information about a particular baker with respect to
+ * the current reward period.
+ */
+export interface BakerRewardPeriodInfo {
+    /**
+     * The baker id and public keys for the baker.
+     */
+    baker: BakerInfo;
+    /**
+     * The effective stake of the baker for the consensus protocol.
+     * The returned amount accounts for delegation, capital bounds and leverage bounds.
+     */
+    effectiveStake: CcdAmount.Type;
+    /**
+     * The effective commission rate for the baker that applies for the reward period.
+     */
+    commissionRates: CommissionRates;
+    /**
+     * The amount staked by the baker itself.
+     */
+    equityCapital: CcdAmount.Type;
+    /**
+     * The total amount of capital delegated to this baker pool.
+     */
+    delegatedCapital: CcdAmount.Type;
+    /**
+     * Whether the baker is a finalizer or not.
+     */
+    isFinalizer: boolean;
+}
+
+/**
+ * Information about a baker.
+ */
+export interface BakerInfo {
+    /**
+     * Identity of the baker. This is actually the account index of
+     * the account controlling the baker.
+     */
+    bakerId: BakerId;
+    /**
+     * Baker's public key used to check whether they won the lottery or not.
+     */
+    electionKey: BakerElectionVerifyKey;
+    /**
+     * Baker's public key used to check that they are indeed the ones who
+     * produced the block.
+     */
+    signatureKey: BakerSignatureVerifyKey;
+    /**
+     * Baker's public key used to check signatures on finalization records.
+     * This is only used if the baker has sufficient stake to participate in
+     * finalization.
+     */
+    aggregationKey: BakerAggregationVerifyKey;
+}
+
+/**
+ * Request an epoch by number at a given genesis index.
+ */
+export interface RelativeEpochRequest {
+    /**
+     * The genesis index to query at. The query is restricted to this genesis index, and
+     * will not return results for other indices even if the epoch number is out of bounds.
+     */
+    genesisIndex: GenesisIndex;
+    /**
+     * The epoch number to query at.
+     */
+    epoch: Epoch;
+}
+
+/**
+ * Details of which baker won the lottery in a given round in consensus version 1.
+ */
+export interface WinningBaker {
+    /**
+     * The round number.
+     */
+    round: Round;
+    /**
+     * The baker that won the round.
+     */
+    winner: BakerId;
+    /**
+     * True if the baker produced a block in this round on the finalized chain, and False otherwise.
+     */
+    present: boolean;
+}
 
 export type HealthCheckResponse =
     | {

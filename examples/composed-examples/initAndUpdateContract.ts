@@ -185,7 +185,7 @@ const client = new ConcordiumGRPCNodeClient(
     );
     console.dir(updateStatus, { depth: null, colors: true });
 
-    // #region documentation-snippet-update-contract
+    // #endregion documentation-snippet-update-contract
 
     // --- Checking Weather --- //
 

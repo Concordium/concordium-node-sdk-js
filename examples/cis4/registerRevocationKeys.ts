@@ -1,17 +1,20 @@
 import fs from 'fs';
 import path from 'path';
 import meow from 'meow';
-import * as ed25519 from '@noble/ed25519';
+import * as ed25519 from '#ed25519';
 import { credentials } from '@grpc/grpc-js';
 
 import {
+    AccountAddress,
     buildAccountSigner,
     CIS4Contract,
-    createConcordiumClient,
+    ContractAddress,
+    Energy,
     HexString,
     parseWallet,
-} from '@concordium/node-sdk';
-import { parseEndpoint } from '../shared/util';
+} from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -63,7 +66,7 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -77,15 +80,15 @@ const wallet = parseWallet(walletFile);
 const signer = buildAccountSigner(wallet);
 
 (async () => {
-    const contract = await CIS4Contract.create(client, {
-        index: BigInt(cli.flags.index),
-        subindex: BigInt(cli.flags.subindex),
-    });
+    const contract = await CIS4Contract.create(
+        client,
+        ContractAddress.create(cli.flags.index, cli.flags.subindex)
+    );
 
     let keys: HexString[] = cli.flags.keys ?? [];
     if (!cli.flags.keys?.length) {
         const prv = ed25519.utils.randomPrivateKey();
-        const pub = Buffer.from(await ed25519.getPublicKey(prv)).toString(
+        const pub = Buffer.from(await ed25519.getPublicKeyAsync(prv)).toString(
             'hex'
         );
 
@@ -99,8 +102,8 @@ const signer = buildAccountSigner(wallet);
     const txHash = await contract.registerRevocationKeys(
         signer,
         {
-            senderAddress: wallet.value.address,
-            energy: 10000n,
+            senderAddress: AccountAddress.fromBase58(wallet.value.address),
+            energy: Energy.create(10000),
         },
         keys,
         cli.flags.data

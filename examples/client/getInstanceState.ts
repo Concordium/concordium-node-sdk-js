@@ -1,8 +1,10 @@
-import { parseEndpoint } from '../shared/util';
+import { parseEndpoint } from '../shared/util.js';
 import {
-    createConcordiumClient,
+    BlockHash,
+    ContractAddress,
     InstanceStateKVPair,
-} from '@concordium/node-sdk';
+} from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -43,7 +45,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -60,13 +62,14 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const contractAddress = {
-        index: BigInt(cli.flags.contract),
-        subindex: 0n,
-    };
+    const contractAddress = ContractAddress.create(cli.flags.contract);
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
     const states: AsyncIterable<InstanceStateKVPair> = client.getInstanceState(
         contractAddress,
-        cli.flags.block
+        blockHash
     );
     // #endregion documentation-snippet
 

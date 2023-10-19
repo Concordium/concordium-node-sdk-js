@@ -1,4 +1,5 @@
-import { createConcordiumClient, ModuleReference } from '@concordium/node-sdk';
+import { ModuleReference } from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -40,7 +41,7 @@ const cli = meow(
 );
 
 const [address, port] = cli.flags.endpoint.split(':');
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -52,7 +53,7 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const moduleRef = new ModuleReference(cli.flags.module);
+    const moduleRef = ModuleReference.fromHexString(cli.flags.module);
     const schema = await client.getEmbeddedSchema(moduleRef);
     // #endregion documentation-snippet
 

@@ -1,8 +1,10 @@
-import { parseEndpoint } from '../shared/util';
+import { parseEndpoint } from '../shared/util.js';
 import {
-    createConcordiumClient,
+    BlockHash,
+    CcdAmount,
     PassiveDelegationStatus,
-} from '@concordium/node-sdk';
+} from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -35,7 +37,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -49,16 +51,20 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
     const passiveDelegationInfo: PassiveDelegationStatus =
-        await client.getPassiveDelegationInfo(cli.flags.block);
+        await client.getPassiveDelegationInfo(blockHash);
 
     console.log(
         'CCD provided by the delegators to the pool:',
-        passiveDelegationInfo.delegatedCapital / 1000000n
+        CcdAmount.toCcd(passiveDelegationInfo.delegatedCapital)
     );
     console.log(
         'Total capital in CCD of ALL pools:',
-        passiveDelegationInfo.allPoolTotalCapital / 1000000n
+        CcdAmount.toCcd(passiveDelegationInfo.allPoolTotalCapital)
     );
     console.log('Pool commision rates:', passiveDelegationInfo.commissionRates);
     // #endregion documentation-snippet

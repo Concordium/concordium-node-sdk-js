@@ -9,14 +9,13 @@ import {
     NextAccountNonce,
     signTransaction,
     TransactionExpiry,
-    createConcordiumClient,
     parseWallet,
     buildAccountSigner,
-} from '@concordium/node-sdk';
+} from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import { readFileSync } from 'node:fs';
-import { Buffer } from 'buffer/index.js';
-import { parseEndpoint } from '../shared/util';
+import { parseEndpoint } from '../shared/util.js';
 
 import meow from 'meow';
 
@@ -68,7 +67,7 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -82,15 +81,15 @@ const client = createConcordiumClient(
     // #region documentation-snippet
     const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
     const walletExport = parseWallet(walletFile);
-    const sender = new AccountAddress(walletExport.value.address);
+    const sender = AccountAddress.fromBase58(walletExport.value.address);
 
-    const toAddress = new AccountAddress(cli.flags.receiver);
+    const toAddress = AccountAddress.fromBase58(cli.flags.receiver);
     const nextNonce: NextAccountNonce = await client.getNextAccountNonce(
         sender
     );
 
     const header: AccountTransactionHeader = {
-        expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+        expiry: TransactionExpiry.futureMinutes(60),
         nonce: nextNonce.nonce,
         sender,
     };
@@ -99,13 +98,13 @@ const client = createConcordiumClient(
     let simpleTransfer = undefined;
     if (cli.flags.memo) {
         simpleTransfer = {
-            amount: new CcdAmount(BigInt(cli.flags.amount)),
+            amount: CcdAmount.fromMicroCcd(cli.flags.amount),
             toAddress,
             memo: new DataBlob(Buffer.from(cli.flags.memo, 'hex')),
         };
     } else {
         simpleTransfer = {
-            amount: new CcdAmount(BigInt(cli.flags.amount)),
+            amount: CcdAmount.fromMicroCcd(cli.flags.amount),
             toAddress,
         };
     }

@@ -4,7 +4,7 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+    # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
@@ -38,7 +38,8 @@ jobs:
         with:
           workspaces: |
             packages/rust-bindings
-            deps/concordium-deps
+            deps/concordium-base/rust-src
+            deps/concordium-base/concordium-contracts-common
 
       - name: Get wasm-pack
         uses: jetli/wasm-pack-action@v0.4.0
@@ -49,10 +50,21 @@ jobs:
         id: yarn-cache
         uses: actions/cache@v3
         with:
-          path: node_modules
+          path: |
+            ./node_modules
+            ./docs/node_modules
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+
+      - name: Cache GRPC
+        id: cache-grpc
+        uses: actions/cache@v3
+        with:
+          path: |
+            ./packages/sdk/src/grpc-api
+          key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}
+          restore-keys: ${{ runner.os }}-grpc
 
       - name: Get dependencies
         if: steps.yarn-cache.outputs.cache-hit != 'true'
@@ -66,19 +78,17 @@ jobs:
         with:
           name: build-release
           path: |
-            packages/*/lib
-            packages/*/grpc
-            packages/*/package.json
-            packages/*/README.md
-            packages/rust-bindings/pkg/*/concordium_rust_bindings*
+            ./packages/sdk/lib
+            ./packages/sdk/src
+            ./packages/rust-bindings/lib
+            ./packages/*/package.json
+            ./packages/*/README.md
 
   build-typedoc:
     runs-on: ubuntu-22.04
     needs: build
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: "recursive"
 
       - uses: actions/setup-node@v3
         with:
@@ -93,11 +103,13 @@ jobs:
       - name: Restore cached dependencies
         uses: actions/cache/restore@v3
         with:
-          path: node_modules
+          path: |
+            ./node_modules
+            ./docs/node_modules
           key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
       - name: Generate typedoc documentation
-        run: yarn typedoc
+        run: yarn build:docs
 
       - name: Store typedoc
         uses: ./.github/actions/upload-artifact

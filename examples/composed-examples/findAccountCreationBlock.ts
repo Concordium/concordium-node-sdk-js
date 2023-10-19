@@ -1,10 +1,7 @@
-import {
-    AccountAddress,
-    createConcordiumClient,
-    isRpcError,
-} from '@concordium/node-sdk';
+import { AccountAddress, isRpcError } from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
-import { parseEndpoint } from '../shared/util';
+import { parseEndpoint } from '../shared/util.js';
 
 import meow from 'meow';
 
@@ -43,7 +40,7 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -54,7 +51,7 @@ const client = createConcordiumClient(
  */
 
 (async () => {
-    const account = new AccountAddress(cli.flags.account);
+    const account = AccountAddress.fromBase58(cli.flags.account);
 
     const accBlock = await client.findEarliestFinalized(async (bi) => {
         try {
@@ -84,7 +81,7 @@ const client = createConcordiumClient(
     for await (const summary of summaries) {
         if (
             summary.type === 'accountCreation' &&
-            summary.address === account.address
+            AccountAddress.equals(summary.address, account)
         ) {
             console.log(
                 'Hash of transaction that created the account:',

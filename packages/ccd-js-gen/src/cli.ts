@@ -2,8 +2,8 @@
 This file contains code for building the command line inferface to the ccd-js-gen library.
 */
 import { Command } from 'commander';
-import packageJson from '../package.json';
-import * as lib from './lib';
+import packageJson from '../package.json' assert { type: 'json' };
+import * as lib from './lib.js';
 
 /** Type representing the CLI options/arguments and needs to match the options set with commander.js */
 type Options = {
@@ -13,11 +13,11 @@ type Options = {
     outDir: string;
 };
 
-// Main function, which is called be the executable script in `bin`.
+// Main function, which is called in the executable script in `bin`.
 export async function main(): Promise<void> {
     const program = new Command();
     program
-        .name(packageJson.name)
+        .name('ccd-js-gen')
         .description(packageJson.description)
         .version(packageJson.version)
         .requiredOption(
@@ -30,5 +30,18 @@ export async function main(): Promise<void> {
         )
         .parse(process.argv);
     const options = program.opts<Options>();
-    await lib.generateContractClientsFromFile(options.module, options.outDir);
+    console.log('Generating smart contract clients...');
+
+    const startTime = Date.now();
+    await lib.generateContractClientsFromFile(options.module, options.outDir, {
+        onProgress(update) {
+            if (update.type === 'Progress') {
+                console.log(
+                    `[${update.doneItems}/${update.totalItems}] ${update.spentTime}ms`
+                );
+            }
+        },
+    });
+
+    console.log(`Done in ${Date.now() - startTime}ms`);
 }

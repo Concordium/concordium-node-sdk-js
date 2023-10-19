@@ -1,4 +1,3 @@
-#!/usr/bin/env node
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const cli = require('../lib/src/cli.js');
-cli.main();
+#!/usr/bin/env -S node --no-warnings
+import { main } from '../lib/src/cli.js';
+main();

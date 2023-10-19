@@ -1,12 +1,16 @@
 import {
-    createConcordiumClient,
     CIS2,
     CIS2Contract,
     buildBasicAccountSigner,
-} from '@concordium/node-sdk';
+    ContractAddress,
+    AccountAddress,
+    EntrypointName,
+    Energy,
+} from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
-import { parseAddress, parseEndpoint } from '../shared/util';
+import { parseAddress, parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -74,34 +78,35 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
 );
 
 (async () => {
-    const contract = await CIS2Contract.create(client, {
-        index: BigInt(cli.flags.index),
-        subindex: BigInt(cli.flags.subindex),
-    });
+    const contract = await CIS2Contract.create(
+        client,
+        ContractAddress.create(cli.flags.index, cli.flags.subindex)
+    );
 
     const signer = buildBasicAccountSigner(cli.flags.privateKey);
     const tokenId = cli.flags.tokenId;
-    const from = cli.flags.from;
+    const from = AccountAddress.fromBase58(cli.flags.from);
     const toAddress = parseAddress(cli.flags.to);
-    const to: CIS2.Receiver =
-        typeof toAddress === 'string'
-            ? toAddress
-            : {
-                  address: toAddress,
-                  hookName: cli.flags.receiveHookName ?? '',
-              };
+    const to: CIS2.Receiver = AccountAddress.instanceOf(toAddress)
+        ? toAddress
+        : {
+              address: toAddress,
+              hookName: EntrypointName.fromString(
+                  cli.flags.receiveHookName ?? ''
+              ),
+          };
 
     const txHash = await contract.transfer(
         {
             senderAddress: from,
-            energy: 10000n,
+            energy: Energy.create(10000),
         },
         {
             from,

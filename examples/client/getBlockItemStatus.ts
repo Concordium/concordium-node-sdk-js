@@ -1,5 +1,10 @@
-import { parseEndpoint } from '../shared/util';
-import { BlockItemStatus, createConcordiumClient } from '@concordium/node-sdk';
+import { parseEndpoint } from '../shared/util.js';
+import {
+    BlockItemStatus,
+    CcdAmount,
+    TransactionHash,
+} from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -35,7 +40,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -52,8 +57,9 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
+
     const blockItemStatus: BlockItemStatus = await client.getBlockItemStatus(
-        cli.flags.transaction
+        TransactionHash.fromHexString(cli.flags.transaction)
     );
 
     console.log('Status of the transaction:', cli.flags.transaction, '\n');
@@ -84,7 +90,7 @@ const client = createConcordiumClient(
                 case 'transfer':
                     // The transaction is a simple transfer
                     const { amount, to } = summary.transfer;
-                    const ccdAmount = Number(amount / 1000000n);
+                    const ccdAmount = CcdAmount.toCcd(amount);
                     console.log(ccdAmount, 'CCD sent to', to);
                     break;
                 case 'failed':

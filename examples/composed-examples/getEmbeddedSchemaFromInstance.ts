@@ -1,4 +1,5 @@
-import { createConcordiumClient } from '@concordium/node-sdk';
+import { ContractAddress } from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -45,7 +46,7 @@ const cli = meow(
 );
 
 const [address, port] = cli.flags.endpoint.split(':');
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -57,10 +58,11 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const info = await client.getInstanceInfo({
-        index: BigInt(cli.flags.index),
-        subindex: BigInt(cli.flags.subindex),
-    });
+    const contractAddress = ContractAddress.create(
+        cli.flags.index,
+        cli.flags.subindex
+    );
+    const info = await client.getInstanceInfo(contractAddress);
     const moduleRef = info.sourceModule;
     const schema = await client.getEmbeddedSchema(moduleRef);
     // #endregion documentation-snippet

@@ -5,7 +5,6 @@ import {
     AccountTransactionType,
     CcdAmount,
     ContractContext,
-    createConcordiumClient,
     deserializeReceiveReturnValue,
     InitContractPayload,
     ModuleReference,
@@ -18,11 +17,16 @@ import {
     parseWallet,
     buildAccountSigner,
     affectedContracts,
-} from '@concordium/node-sdk';
+    ContractName,
+    ReceiveName,
+    Energy,
+    EntrypointName,
+    ReturnValue,
+} from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import { readFileSync } from 'node:fs';
-import { Buffer } from 'buffer/index.js';
-import { parseEndpoint } from '../shared/util';
+import { parseEndpoint } from '../shared/util.js';
 
 import meow from 'meow';
 
@@ -56,7 +60,7 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -73,15 +77,15 @@ const client = createConcordiumClient(
 
     const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
     const wallet = parseWallet(walletFile);
-    const sender = new AccountAddress(wallet.value.address);
+    const sender = AccountAddress.fromBase58(wallet.value.address);
     const signer = buildAccountSigner(wallet);
 
-    const moduleRef = new ModuleReference(
+    const moduleRef = ModuleReference.fromHexString(
         '44434352ddba724930d6b1b09cd58bd1fba6ad9714cf519566d5fe72d80da0d1'
     );
-    const maxCost = 30000n;
-    const contractName = 'weather';
-    const receiveName = 'weather.set';
+    const maxCost = Energy.create(30000);
+    const contractName = ContractName.fromStringUnchecked('weather');
+    const receiveName = ReceiveName.fromStringUnchecked('weather.set');
     const schema = await client.getEmbeddedSchema(moduleRef);
 
     // --- Initialize Contract --- //
@@ -91,7 +95,7 @@ const client = createConcordiumClient(
     // #region documentation-snippet-init-contract
 
     const initHeader: AccountTransactionHeader = {
-        expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+        expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
     };
@@ -103,7 +107,7 @@ const client = createConcordiumClient(
     );
 
     const initPayload: InitContractPayload = {
-        amount: new CcdAmount(0n),
+        amount: CcdAmount.zero(),
         moduleRef: moduleRef,
         initName: contractName,
         param: initParams,
@@ -142,20 +146,20 @@ const client = createConcordiumClient(
     // #region documentation-snippet-update-contract
 
     const updateHeader: AccountTransactionHeader = {
-        expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+        expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
     };
 
     const updateParams = serializeUpdateContractParameters(
         contractName,
-        'set',
+        EntrypointName.fromString('set'),
         rainyWeather,
         schema
     );
 
     const updatePayload: UpdateContractPayload = {
-        amount: new CcdAmount(0n),
+        amount: CcdAmount.zero(),
         address: unwrap(contractAddress),
         receiveName,
         message: updateParams,
@@ -192,21 +196,18 @@ const client = createConcordiumClient(
         const contextPostInit: ContractContext = {
             contract: unwrap(contractAddress),
             invoker: sender,
-            method: 'weather.get',
+            method: ReceiveName.fromString('weather.get'),
         };
 
         const invokedPostInit = await client.invokeContract(contextPostInit);
 
         if (invokedPostInit.tag === 'success') {
-            const rawReturnValue = Buffer.from(
-                unwrap(invokedPostInit.returnValue),
-                'hex'
-            );
+            const rawReturnValue = unwrap(invokedPostInit.returnValue);
             const returnValue = deserializeReceiveReturnValue(
-                rawReturnValue,
+                ReturnValue.toBuffer(rawReturnValue),
                 schema,
-                'weather',
-                'get'
+                contractName,
+                EntrypointName.fromString('get')
             );
             console.log('\nThe weather is now:');
             console.dir(returnValue, { depth: null, colors: true });

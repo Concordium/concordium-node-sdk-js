@@ -1,8 +1,6 @@
-import { parseEndpoint } from '../shared/util';
-import {
-    BlockSpecialEvent,
-    createConcordiumClient,
-} from '@concordium/node-sdk';
+import { parseEndpoint } from '../shared/util.js';
+import { BlockHash, BlockSpecialEvent } from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -35,7 +33,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -55,8 +53,12 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
     const events: AsyncIterable<BlockSpecialEvent> =
-        client.getBlockSpecialEvents(cli.flags.block);
+        client.getBlockSpecialEvents(blockHash);
     // #endregion documentation-snippet
 
     for await (const event of events) {

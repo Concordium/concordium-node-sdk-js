@@ -1,12 +1,9 @@
 import meow from 'meow';
 import { credentials } from '@grpc/grpc-js';
 
-import {
-    CIS4,
-    CIS4Contract,
-    createConcordiumClient,
-} from '@concordium/node-sdk';
-import { parseEndpoint } from '../shared/util';
+import { CIS4, CIS4Contract, ContractAddress } from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -49,17 +46,17 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
 );
 
 (async () => {
-    const contract = await CIS4Contract.create(client, {
-        index: BigInt(cli.flags.index),
-        subindex: BigInt(cli.flags.subindex),
-    });
+    const contract = await CIS4Contract.create(
+        client,
+        ContractAddress.create(cli.flags.index, cli.flags.subindex)
+    );
 
     const credentialStatus = await contract.credentialStatus(cli.flags.credId);
 

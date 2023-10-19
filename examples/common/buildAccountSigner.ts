@@ -6,7 +6,7 @@ import {
     signMessage,
     buildAccountSigner,
     parseWallet,
-} from '@concordium/node-sdk';
+} from '@concordium/web-sdk';
 
 const cli = meow(
     `
@@ -45,9 +45,11 @@ const wallet = parseWallet(walletFile);
 try {
     const signer = buildAccountSigner(wallet);
 
-    signMessage(new AccountAddress(wallet.value.address), 'test', signer).then(
-        console.log
-    );
+    signMessage(
+        AccountAddress.fromBase58(wallet.value.address),
+        'test',
+        signer
+    ).then(console.log);
 } catch {
     console.error('File passed does not conform to a supported JSON format');
 }

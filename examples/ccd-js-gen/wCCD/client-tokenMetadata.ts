@@ -1,12 +1,13 @@
 import { credentials } from '@grpc/grpc-js';
-import * as SDK from '@concordium/node-sdk';
+import * as SDK from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import meow from 'meow';
-import { parseEndpoint } from '../../shared/util';
+import { parseEndpoint } from '../../shared/util.js';
 
 // The generated module could be imported directly like below,
 // but for this example it is imported dynamicly to improve
 // the error message when not generated.
-// import * as wCCDModule from './lib/wCCD';
+// import * as wCCDContractClient from './lib/cis2_wCCD';
 
 const cli = meow(
     `
@@ -45,33 +46,47 @@ const cli = meow(
 );
 
 const [address, port, scheme] = parseEndpoint(cli.flags.endpoint);
-const grpcClient = SDK.createConcordiumClient(
+const grpcClient = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     scheme === 'https' ? credentials.createSsl() : credentials.createInsecure()
 );
 
-const contractAddress: SDK.ContractAddress = {
-    index: BigInt(cli.flags.index),
-    subindex: BigInt(cli.flags.subindex),
-};
+const contractAddress = SDK.ContractAddress.create(
+    cli.flags.index,
+    cli.flags.subindex
+);
 
 (async () => {
     // Importing the generated smart contract module client.
     /* eslint-disable import/no-unresolved */
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const wCCDModule = await import('./lib/wCCD').catch((e) => {
-        /* eslint-enable import/no-unresolved */
-        console.error(
-            '\nFailed to load the generated wCCD module, did you run the `generate` script?\n'
-        );
-        throw e;
-    });
+    const wCCDContractClient = await import('./lib/wCCD_cis2_wCCD.js').catch(
+        (e) => {
+            /* eslint-enable import/no-unresolved */
+            console.error(
+                '\nFailed to load the generated wCCD module, did you run the `generate` script?\n'
+            );
+            throw e;
+        }
+    );
 
-    const parameter = '010000'; // First 2 bytes for number of tokens to query, 1 byte for the token ID.
-    const contract = new wCCDModule.Cis2WCCD(grpcClient, contractAddress);
+    const wCCDTokenId = '';
+    const parameter = [wCCDTokenId];
+    const contract = await wCCDContractClient.create(
+        grpcClient,
+        contractAddress
+    );
 
-    const responseHex = await contract.dryRun.tokenMetadata(parameter);
-    console.log({ responseHex });
+    const result = await wCCDContractClient.dryRunTokenMetadata(
+        contract,
+        parameter
+    );
+    const returnValue =
+        wCCDContractClient.parseReturnValueTokenMetadata(result);
+    console.log(
+        'The token metadata for wCCD can be found at: ',
+        returnValue?.[0].url
+    );
 })();

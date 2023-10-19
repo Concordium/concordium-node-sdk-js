@@ -2,12 +2,9 @@
     "private": true,
     "workspaces": {
         "packages": [
-            "./packages/rust-bindings",
-            "./packages/common",
-            "./packages/nodejs",
-            "./packages/web",
-            "./packages/ccd-js-gen",
-            "./examples"
+            "./packages/*",
+            "./examples",
+            "./docs"
         ]
     },
     "husky": {
@@ -32,45 +29,31 @@
         "singleQuote": true,
         "tabWidth": 4
     },
+    "type": "module",
     "devDependencies": {
-        "@babel/core": "^7.17.10",
-        "@babel/plugin-transform-modules-commonjs": "^7.12.1",
-        "@babel/plugin-transform-runtime": "^7.12.1",
-        "@babel/preset-env": "^7.12.1",
-        "@knodes/typedoc-plugin-code-blocks": "^0.23.0",
-        "@knodes/typedoc-plugin-pages": "^0.23.0",
-        "@typescript-eslint/eslint-plugin": "^4.28.1",
-        "@typescript-eslint/parser": "^4.28.1",
-        "babel-jest": "^27.0.6",
-        "babel-loader": "^8.1.0",
-        "eslint": "^7.29.0",
+        "@typescript-eslint/eslint-plugin": "^6.7.0",
+        "@typescript-eslint/parser": "^6.7.0",
+        "eslint": "^8.51.0",
         "eslint-config-prettier": "^8.3.0",
+        "eslint-import-resolver-exports": "^1.0.0-beta.5",
         "eslint-import-resolver-typescript": "^2.7.1",
         "eslint-plugin-import": "^2.26.0",
         "eslint-plugin-prettier": "^3.4.0",
         "husky": "^4.2.5",
-        "jest": "^27.0.6",
         "lint-staged": "^12.0.2",
         "markdown-link-check": "^3.1.4",
         "markdownlint-cli": "^0.34.0",
-        "prettier": "^2.3.2",
-        "stream-browserify": "^3.0.0",
-        "ts-jest": "^27.0.3",
-        "typedoc": "^0.23",
-        "typedoc-plugin-merge-modules": "^4.0.1",
-        "typedoc-plugin-missing-exports": "^0.23",
-        "typescript": "^4.3.5",
-        "webpack": "^5.72.0",
-        "webpack-cli": "^4.9.2"
+        "prettier": "^2.3.2"
     },
     "scripts": {
         "test": "FORCE_COLOR=true yarn workspaces foreach --no-private run test --passWithNoTests",
         "lint": "FORCE_COLOR=true yarn workspaces foreach --no-private run lint",
         "lint-fix": "eslint --cache . --fix",
-        "markdown:lint": "yarn markdownlint pages/**/*.md packages/*/README.md README.md",
-        "markdown:lint-fix": "yarn markdownlint --fix pages/**/*.md packages/*/README.md README.md",
-        "markdown:linkcheck": "yarn markdown-link-check --config .markdown-linkcheck.json pages/**/*.md packages/*/README.md README.md",
+        "markdown:lint": "yarn markdownlint docs/README.md docs/pages/**/*.md packages/*/README.md examples/readme.md README.md",
+        "markdown:lint-fix": "yarn markdownlint --fix docs/README.md docs/pages/**/*.md packages/*/README.md examples/readme.md README.md",
+        "markdown:linkcheck": "yarn markdown-link-check --config .markdown-linkcheck.json docs/README.md docs/pages/**/*.md packages/*/README.md examples/readme.md README.md",
         "build": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build",
-        "build:dev": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build-dev"
+        "build:dev": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build-dev",
+        "clean": "FORCE_COLOR=true yarn workspaces foreach -p --no-private run clean"
     }
 }

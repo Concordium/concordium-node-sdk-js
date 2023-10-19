@@ -4,12 +4,15 @@ import meow from 'meow';
 import { credentials } from '@grpc/grpc-js';
 
 import {
+    AccountAddress,
     buildAccountSigner,
     CIS4Contract,
-    createConcordiumClient,
+    ContractAddress,
+    Energy,
     parseWallet,
-} from '@concordium/node-sdk';
-import { parseEndpoint } from '../shared/util';
+} from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -66,7 +69,7 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -80,16 +83,16 @@ const wallet = parseWallet(walletFile);
 const signer = buildAccountSigner(wallet);
 
 (async () => {
-    const contract = await CIS4Contract.create(client, {
-        index: BigInt(cli.flags.index),
-        subindex: BigInt(cli.flags.subindex),
-    });
+    const contract = await CIS4Contract.create(
+        client,
+        ContractAddress.create(cli.flags.index, cli.flags.subindex)
+    );
 
     const txHash = await contract.revokeCredentialAsIssuer(
         signer,
         {
-            senderAddress: wallet.value.address,
-            energy: 10000n,
+            senderAddress: AccountAddress.fromBase58(wallet.value.address),
+            energy: Energy.create(10000),
         },
         cli.flags.credId,
         cli.flags.reason,

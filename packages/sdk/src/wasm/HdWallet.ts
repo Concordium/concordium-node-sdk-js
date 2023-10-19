@@ -1,6 +1,6 @@
 import * as wasm from '@concordium/rust-bindings/wallet';
 import { mnemonicToSeedSync, validateMnemonic } from '@scure/bip39';
-import { wordlist } from '@scure/bip39/wordlists/english.js';
+import { wordlist } from '@scure/bip39/wordlists/english';
 import { Buffer } from 'buffer/index.js';
 import { isHex } from '../util.js';
 import { AttributesKeys, Network, CryptographicParameters } from '../types.js';

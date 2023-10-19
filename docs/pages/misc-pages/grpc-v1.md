@@ -49,7 +49,7 @@ interface as the grpc v1 node client:
 
 ## GRPCv1-Client
 
-_Only accessible prior to version 10_
+_Only accessible prior to version 7 of the web SDK (and in all versions of the deprecated nodejs SDK)_
 
 The ConcordiumNodeClient defines the interface to be used to send and receive
 data from a concordium-node.

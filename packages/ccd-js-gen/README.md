@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD024 -->
 # Smart Contract Client Generator <!-- omit in toc -->
 
 Generate TypeScript/JavaScript code for interating with smart contracts and modules on the Concordium blockchain.
@@ -90,19 +91,19 @@ Install the package, saving it to `devDependencies`:
 
 **npm**
 
-```
+```bash
 npm install --save-dev @concordium/ccd-js-gen
 ```
 
 **yarn**
 
-```
+```bash
 yarn add --dev @concordium/ccd-js-gen
 ```
 
 **pnpm**
 
-```
+```bash
 pnpm install --save-dev @concordium/ccd-js-gen
 ```
 
@@ -124,7 +125,7 @@ This package provides the `ccd-js-gen` command, which can be used from the comma
 To generate smart contract clients into a directory `generated` from the smart contract
 module `./my-contract.wasm.v1`:
 
-```
+```bash
 ccd-js-gen --module ./my-contract.wasm.v1 --out-dir ./generated
 ```
 
@@ -189,7 +190,7 @@ For example: generating clients for a smart contract module `my-module` containi
 the smart contracts `my-contract-a` and `my-contract-b`.
 into the directory `./generated` produces the following structure:
 
-```
+```bash
 generated/
 ├─ my-module.js        // Functions for interacting with the 'my-module' smart contract module on chain.
 ├─ my-module_my-contract-a.js    // Functions for interacting with the 'my-contract-a' smart contract.

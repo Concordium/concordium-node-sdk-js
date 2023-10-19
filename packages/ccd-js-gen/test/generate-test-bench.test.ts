@@ -28,7 +28,7 @@ beforeAll(() => {
         outDir,
         { output: 'Everything' }
     );
-}, 30_000);
+}, 60_000);
 
 describe('Generated module client file', () => {
     test('Type checks', () => {

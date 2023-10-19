@@ -10,7 +10,7 @@ import {
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.TransactionExpiry;
-type Serializable = string;
+export type Serializable = string;
 
 /**
  * Representation of a transaction expiry date.
@@ -107,7 +107,23 @@ export function toProto(expiry: TransactionExpiry): Proto.TransactionTime {
     };
 }
 
-const fromSerializable = (v: Serializable) => fromEpochSeconds(BigInt(v));
+/**
+ * Constructs a {@linkcode Type} from {@linkcode Serializable}.
+ * @param {Serializable} value
+ * @returns {Type} The duration.
+ */
+export function fromSerializable(value: Serializable): Type {
+    return fromEpochSeconds(BigInt(value));
+}
+
+/**
+ * Converts {@linkcode Type} into {@linkcode Serializable}
+ * @param {Type} value
+ * @returns {Serializable} The serializable value
+ */
+export function toSerializable(value: Type): Serializable {
+    return value.expiryEpochSeconds.toString();
+}
 
 /**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
@@ -118,7 +134,7 @@ const fromSerializable = (v: Serializable) => fromEpochSeconds(BigInt(v));
 export function toTypedJSON(value: TransactionExpiry): TypedJson<Serializable> {
     return {
         ['@type']: JSON_DISCRIMINATOR,
-        value: value.expiryEpochSeconds.toString(),
+        value: toSerializable(value),
     };
 }
 

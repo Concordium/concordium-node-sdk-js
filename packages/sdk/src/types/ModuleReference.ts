@@ -16,7 +16,7 @@ const MODULE_REF_BYTE_LENGTH = 32;
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.ModuleReference;
-type Serializable = HexString;
+export type Serializable = HexString;
 
 /**
  * Reference to a smart contract module.
@@ -130,11 +130,6 @@ export function equals(left: ModuleReference, right: ModuleReference): boolean {
     return left.moduleRef === right.moduleRef;
 }
 
-const fromSerializable = (v: Serializable) => {
-    const data = Buffer.from(v, 'hex');
-    return fromBuffer(data);
-};
-
 /**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
  *
@@ -144,7 +139,7 @@ const fromSerializable = (v: Serializable) => {
 export function toTypedJSON(value: ModuleReference): TypedJson<Serializable> {
     return {
         ['@type']: JSON_DISCRIMINATOR,
-        value: value.moduleRef,
+        value: toHexString(value),
     };
 }
 
@@ -157,5 +152,5 @@ export function toTypedJSON(value: ModuleReference): TypedJson<Serializable> {
  */
 export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
     JSON_DISCRIMINATOR,
-    fromSerializable
+    fromHexString
 );

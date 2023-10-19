@@ -15,6 +15,7 @@ import type * as AccountAddress from './AccountAddress.js';
 import type * as Parameter from './Parameter.js';
 import type * as ReceiveName from './ReceiveName.js';
 import type * as InitName from './InitName.js';
+import type * as ContractEvent from './ContractEvent.js';
 import type * as CcdAmount from './CcdAmount.js';
 
 export enum TransactionEventTag {
@@ -92,7 +93,7 @@ export type TransactionEvent =
 export interface InterruptedEvent {
     tag: TransactionEventTag.Interrupted;
     address: ContractAddress.Type;
-    events: HexString[];
+    events: ContractEvent.Type[];
 }
 
 export interface ResumedEvent {
@@ -109,7 +110,7 @@ export interface UpdatedEvent {
     contractVersion: ContractVersion;
     message: Parameter.Type;
     receiveName: ReceiveName.Type;
-    events: HexString[];
+    events: ContractEvent.Type[];
 }
 
 export interface TransferredEvent {

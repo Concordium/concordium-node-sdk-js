@@ -1,3 +1,5 @@
+## Optimizing bundled applications with async WASM
+
 As part of the logic of the SDK's is implemented in rust, some functionality
 requires WASM modules to be loaded. By default, this is embedded in a UMD
 to make it easy to use, however the recommended way to load WASM into the browser

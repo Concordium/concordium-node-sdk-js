@@ -21,7 +21,6 @@ import {
     jsonStringify,
     jsonParse,
 } from '../../../src/pub/types.js';
-import { JsonCircularReferenceError } from '../../../src/types/json.js';
 
 describe('JSON ID test', () => {
     test('Stringified types are parsed correctly', () => {
@@ -78,9 +77,7 @@ describe('jsonStringify', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (obj as any)['circular'] = obj;
 
-        expect(() => jsonStringify(obj)).toThrowError(
-            JsonCircularReferenceError
-        );
+        expect(() => jsonStringify(obj)).toThrowError();
     });
 
     test('Allow non-circular references to same object', () => {

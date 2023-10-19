@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 7.0.0
 
 ### Breaking changes
 
@@ -43,6 +43,7 @@ The API now uses dedicated types instead of language primitives:
 - Use `SequenceNumber` (formerly called nonce) instead of a bigint. Use `SequenceNumber.create(<integer>)` to construct it.
 - Use `Timestamp` instead of a bigint. Can be constructed using `Timestamp.fromMillis(<integer>)`.
 - Use `Duration` instead of a bigint. Can be constructed using `Duration.fromMillis(<integer>)`.
+- Use `ContractEvent` instead of a string with hex encoding. Can be constructed using `ContractEvent.fromHexString('<hex>')`.
 - Use `CcdAmount` instead of a bigint. Can be constructed using `CcdAmount.fromMicroCcd(<integer>)`.
 - Use `TransactionExpiry` instead of a Date object. Can be constructed using `TransactionExpiry.fromDate(<date>)`.
 - Use `ModuleReference` instead of a string with hex encoding. Can be constructed using `ModuleReference.fromHexString('<hex-string>')`.
@@ -73,6 +74,7 @@ Several types have been replaced with a module containing the type itself togeth
 - Removed `JsonRpcClient` and types and functionality associated solely with this class.
 - Renamed `AccountSequenceNumber` module to `SequenceNumber`.
 - Fix type for `TranferredEvent` from `ContractTraceEvent` to only be from contract addresses to account addresses.
+- Added `effectiveTime` field to `PendingUpdate`.
 
 ### Added
 
@@ -85,6 +87,8 @@ Several types have been replaced with a module containing the type itself togeth
 - `ReturnValue` is now a module with functions related to return values from invoking a smart contract.
 - Functions `jsonStringify` and `jsonParse`, which acts as a regular `JSON.stringify` and `JSON.parse` correspondingly,
   with the addition of stringifying concordium domain types in a wrapper object that can be parsed into the respective types.
+- Introduce function `versionedModuleSourceToBuffer` for serializing a versioned module to a buffer, which can be stored in a file.
+
 
 ### Changes
 
@@ -100,6 +104,26 @@ Several types have been replaced with a module containing the type itself togeth
   - `AccountBakerDetails`
   - `ElectionInfo`
 - Added type discriminator to different forms of `AccountInfo`.
+
+## 6.5.1
+
+### Fixed
+
+- An issue where `BakerRewardPeriodInfo` incorrectly mapped `delegatedCapital` field
+
+## 6.5.0
+
+### Added
+
+New consensus endpoints:
+
+- `getBakerEarliestWinTime`
+- `getBlockCertificates`
+- `getBakersRewardPeriod`
+- `getWinningBakersEpoch`
+- `getFirstBlockEpoch`
+- `commissionRates` is now added to the `getPoolInfo` under `bakerPoolStatus.PoolInfo`
+
 
 ## 6.4.0
 

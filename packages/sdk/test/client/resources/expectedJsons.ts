@@ -28,6 +28,7 @@ import {
     ChainParametersV0,
     ChainParametersV1,
     ContractAddress,
+    ContractEvent,
     ContractInitializedEvent,
     ContractTraceEvent,
     CredentialKeysUpdatedEvent,
@@ -61,6 +62,7 @@ import {
     ReturnValue,
     SequenceNumber,
     StakePendingChangeType,
+    Timestamp,
     TransactionEventTag,
     TransactionHash,
     TransactionKindString,
@@ -70,6 +72,9 @@ import {
     TransferredWithScheduleEvent,
     UpdateSummary,
     UpdateType,
+    QuorumCertificate,
+    TimeoutCertificate,
+    EpochFinalizationEntry,
 } from '../../../src/index.js';
 
 export const accountInfo = {
@@ -622,8 +627,9 @@ export const specialEventList: BlockSpecialEvent[] = [
     },
 ];
 
-export const pendingUpdateList: PendingUpdate[] = [
-    {
+export const pendingUpdate: PendingUpdate = {
+    effectiveTime: Timestamp.fromMillis(1669115100n),
+    effect: {
         updateType: UpdateType.Protocol,
         update: {
             message: 'Enable protocol version 5',
@@ -634,7 +640,7 @@ export const pendingUpdateList: PendingUpdate[] = [
             specificationAuxiliaryData: '',
         },
     },
-];
+};
 
 export const blockFinalizationSummary: BlockFinalizationSummary = {
     tag: 'record',
@@ -948,7 +954,7 @@ export const updateEvent: ContractTraceEvent[] = [
         contractVersion: 1,
         events: [
             'fd00c0843d00e9f89f76878691716298685f21637d86fd8c98de7baa1d67e0ce11241be00083',
-        ],
+        ].map(ContractEvent.fromHexString),
         instigator: {
             address: ContractAddress.create(865),
             type: 'AddressContract',
@@ -2268,6 +2274,11 @@ export const bakerPoolStatus: BakerPoolStatus = {
         lotteryPower: 0.15552531374613243,
         bakerEquityCapital: CcdAmount.fromMicroCcd(7344771840225046n),
         delegatedCapital: CcdAmount.zero(),
+        commissionRates: {
+            bakingCommission: 0.1,
+            finalizationCommission: 1,
+            transactionCommission: 0.1,
+        },
     },
     allPoolTotalCapital: CcdAmount.fromMicroCcd(46071942529284135n),
 };
@@ -2394,3 +2405,49 @@ export const bakers = [
     1601n,
     1614n,
 ];
+
+export const epochFinalizationEntry: EpochFinalizationEntry = {
+    finalizedQc: {
+        blockHash:
+            '20e3ebb41565b460615b08e994103b4a7415f4224441fc9c17c766a1ed1e040f',
+        round: 78524n,
+        epoch: 48n,
+        aggregateSignature:
+            'a351b4f049da150731d2699bc49584af158633ec842ab6a676ab4c2402d1c917149d57c4c2ea73d3c58eae222853a6ba',
+        signatories: [3n, 4n, 5n, 6n, 8n, 1004n],
+    },
+    successorQc: {
+        blockHash:
+            '524d787522286a3b2483d3c1cbec5e13ed6ba282484c6caacec56b1353a3c6bc',
+        round: 78525n,
+        epoch: 48n,
+        aggregateSignature:
+            'b8f823d6b4c09243f77396ce62b7d33ad17d429036a0c37810d58d2cfdec293645a02c6874cf17523d41ccf373d943aa',
+        signatories: [3n, 4n, 5n, 6n, 8n, 1004n],
+    },
+    successorProof:
+        '3c95938c7aba9c93c805390d9d93dd7f67bd868320e4dd5bcd2f27a7f6f3c011',
+};
+
+export const quorumCertificate: QuorumCertificate = {
+    blockHash:
+        '524d787522286a3b2483d3c1cbec5e13ed6ba282484c6caacec56b1353a3c6bc',
+    round: 78525n,
+    epoch: 48n,
+    aggregateSignature:
+        'b8f823d6b4c09243f77396ce62b7d33ad17d429036a0c37810d58d2cfdec293645a02c6874cf17523d41ccf373d943aa',
+    signatories: [3n, 4n, 5n, 6n, 8n, 1004n],
+};
+export const timeoutCertificate: TimeoutCertificate = {
+    round: 78992n,
+    minEpoch: 49n,
+    qcRoundsFirstEpoch: [
+        {
+            round: 78991n,
+            finalizers: [1n, 3n, 5n, 6n, 8n, 1004n, 1010n, 1016n],
+        },
+    ],
+    qcRoundsSecondEpoch: [],
+    aggregateSignature:
+        'ad8f2c078af44f2b4002172108385c59d012e72d9c8febfa9c2cd6592697621fd4b036df2668bc65190cbf5a5c20dcad',
+};

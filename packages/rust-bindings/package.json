@@ -1,9 +1,9 @@
 {
     "name": "@concordium/rust-bindings",
-    "version": "1.2.0",
+    "version": "2.0.0",
     "license": "Apache-2.0",
     "engines": {
-        "node": ">=14.16.0"
+        "node": ">=16"
     },
     "repository": {
         "type": "git",
@@ -11,13 +11,13 @@
         "directory": "packages/rust-bindings"
     },
     "sideEffects": [
-        "./lib/*/web/index.min.js",
+        "./lib/*/web/umd/index.min.js",
         "./lib/*/bundler/index.js"
     ],
-    "main": "./lib/dapp/node/index.js",
-    "react-native": "./lib/dapp/react-native/index.js",
-    "browser": "./lib/dapp/web/index.min.js",
-    "types": "./lib/dapp/node/index.d.ts",
+    "main": "lib/dapp/node/cjs/index.js",
+    "react-native": "lib/dapp/react-native/index.js",
+    "browser": "lib/dapp/web/umd/index.min.js",
+    "types": "lib/dapp/node/cjs/index.d.ts",
     "exports": {
         ".": {
             "types": "./lib/dapp/node/cjs/index.d.ts",
@@ -29,7 +29,8 @@
             "browser": {
                 "module": "./lib/dapp/web/umd/index.min.js",
                 "types": "./lib/dapp/web/esm/index.d.ts",
-                "import": "./lib/dapp/web/esm/index.js"
+                "import": "./lib/dapp/web/esm/index.js",
+                "default": "./lib/dapp/web/umd/index.min.js"
             },
             "default": "./lib/dapp/web/umd/index.min.js"
         },
@@ -43,7 +44,8 @@
             "browser": {
                 "module": "./lib/dapp/web/umd/index.min.js",
                 "types": "./lib/dapp/web/esm/index.d.ts",
-                "import": "./lib/dapp/web/esm/index.js"
+                "import": "./lib/dapp/web/esm/index.js",
+                "default": "./lib/dapp/web/umd/index.min.js"
             },
             "default": "./lib/dapp/web/umd/index.min.js"
         },
@@ -57,7 +59,8 @@
             "browser": {
                 "module": "./lib/wallet/web/umd/index.min.js",
                 "types": "./lib/wallet/web/esm/index.d.ts",
-                "import": "./lib/wallet/web/esm/index.js"
+                "import": "./lib/wallet/web/esm/index.js",
+                "default": "./lib/wallet/web/umd/index.min.js"
             },
             "default": "./lib/wallet/web/umd/index.min.js"
         },
@@ -89,6 +92,7 @@
         "build:rust-bindings-wallet": "yarn build-all wallet && webpack --env package=wallet",
         "build:rust-bindings": "yarn build",
         "clean": "rimraf -- target lib .webpack-cache",
+        "sanitize": "find . -name \"*.gitignore\" -delete",
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0"
     },

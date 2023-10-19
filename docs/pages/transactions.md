@@ -207,7 +207,7 @@ transaction, which is used to deploy a smart contract module.
 The following example demonstrates how to initialize a smart contract from
 a module, which has already been deployed. The name of the contract `"weather"`.
 
-{@codeblock ~~/composed-examples/initAndUpdateContract.ts #documentation-snippet-init-contract}
+{@codeblock ~~:composed-examples/initAndUpdateContract.ts#documentation-snippet-init-contract}
 
 ### Update Contract
 
@@ -222,7 +222,7 @@ and the receive function has the name `"set"` then the receiveName should be
 We also need to supply the contract address of the contract instance. This
 consists of an index and a subindex.
 
-{@codeblock ~~/composed-examples/initAndUpdateContract.ts #documentation-snippet-update-contract}
+{@codeblock ~~:composed-examples/initAndUpdateContract.ts#documentation-snippet-update-contract}
 
 ### Smart contract parameters
 

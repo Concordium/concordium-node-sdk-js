@@ -1,17 +1,17 @@
 import { credentials } from '@grpc/grpc-js';
-import * as SDK from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
+import * as SDK from '@concordium/web-sdk';
 import meow from 'meow';
 import { parseEndpoint } from '../../shared/util.js';
 
 // The generated module could be imported directly like below,
 // but for this example it is imported dynamicly to improve
 // the error message when not generated.
-// import * as wCCDContractClient from './lib/cis2_wCCD';
+// import * as wCCDContractClient from './lib/cis2_wCCD.js';
 
 const cli = meow(
     `
-  This example uses a generated smart contract client for the wCCD smart contract.
+  This example uses a generated smart contract client for the wCCD smart contract to display events.
 
   Usage
     $ yarn run-example <path-to-this-file> [options]
@@ -72,21 +72,42 @@ const contractAddress = SDK.ContractAddress.create(
         }
     );
 
-    const wCCDTokenId = '';
-    const parameter = [wCCDTokenId];
+    // The sender of the transaction, i.e the one updating an operator.
+    const senderAccount = SDK.AccountAddress.fromBase58(
+        '357EYHqrmMiJBmUZTVG5FuaMq4soAhgtgz6XNEAJaXHW3NHaUf'
+    );
+    // The parameter adding the wCCD contract as an operator of sender.
+    const parameter = [
+        {
+            update: { type: 'Add' },
+            operator: { type: 'Contract', content: contractAddress },
+        } as const,
+    ];
+
+    // The client for the wCCD contract
     const contract = await wCCDContractClient.create(
         grpcClient,
         contractAddress
     );
 
-    const result = await wCCDContractClient.dryRunTokenMetadata(
+    // Dry run the update of operator.
+    const result = await wCCDContractClient.dryRunUpdateOperator(
         contract,
-        parameter
+        parameter,
+        { invoker: senderAccount }
     );
-    const returnValue =
-        wCCDContractClient.parseReturnValueTokenMetadata(result);
-    console.log(
-        'The token metadata for wCCD can be found at: ',
-        returnValue?.[0].url
-    );
+    if (result.tag !== 'success') {
+        throw new Error('Unexpected failure');
+    }
+    for (const traceEvent of result.events) {
+        if (
+            traceEvent.tag === SDK.TransactionEventTag.Updated ||
+            traceEvent.tag === SDK.TransactionEventTag.Interrupted
+        ) {
+            for (const contractEvent of traceEvent.events) {
+                const parsed = wCCDContractClient.parseEvent(contractEvent);
+                console.log(parsed);
+            }
+        }
+    }
 })();

@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer/index.js';
 import { checkParameterLength } from '../contractHelpers.js';
 import { SchemaType, serializeSchemaType } from '../schemaTypes.js';
 import { serializeTypeValue } from '../schema.js';
@@ -13,7 +14,7 @@ import {
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.Parameter;
-type Serializable = HexString;
+export type Serializable = HexString;
 
 /** Parameter for a smart contract entrypoint. */
 class Parameter {

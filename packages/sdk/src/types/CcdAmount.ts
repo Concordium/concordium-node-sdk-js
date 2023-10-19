@@ -11,7 +11,7 @@ const MICRO_CCD_PER_CCD = 1_000_000;
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.CcdAmount;
-type Serializable = string;
+export type Serializable = string;
 
 /**
  * Representation of a CCD amount.
@@ -93,7 +93,7 @@ export function zero(): CcdAmount {
 /**
  * Creates a CcdAmount from a number, string, big, or bigint.
  *
- * @param ccd The amount of micro CCD as a number, string, big or bigint.
+ * @param ccd The amount of CCD as a number, string, big or bigint.
  * @returns The CcdAmount object derived from the ccd input parameter
  * @throws If a number is passed with several decimal seperators
  * @throws If a negative amount of micro CCD is passed
@@ -160,11 +160,35 @@ export function microCcdToCcd(microCcd: BigSource | bigint): Big {
 }
 
 /**
+ * Type used when encoding a CCD amount in the JSON format used when serializing using a smart contract schema type.
+ * String representation of the amount of micro CCD.
+ */
+export type SchemaValue = string;
+
+/**
+ * Get CCD amount in the JSON format used when serializing using a smart contract schema type.
+ * @param {CcdAmount} amount The amount.
+ * @returns {SchemaValue} The schema value representation.
+ */
+export function toSchemaValue(amount: CcdAmount): SchemaValue {
+    return amount.microCcdAmount.toString();
+}
+
+/**
+ * Convert to CCD amount from JSON format used when serializing using a smart contract schema type.
+ * @param {SchemaValue} microCcdString The amount in schema format.
+ * @returns {CcdAmount} The amount.
+ */
+export function fromSchemaValue(microCcdString: SchemaValue): CcdAmount {
+    return new CcdAmount(BigInt(microCcdString));
+}
+
+/**
  * Convert an amount of CCD from its protobuf encoding.
  * @param {Proto.Amount} amount The energy in protobuf.
  * @returns {CcdAmount} The energy.
  */
-export function fromProto(amount: Proto.Energy): CcdAmount {
+export function fromProto(amount: Proto.Amount): CcdAmount {
     return new CcdAmount(amount.value);
 }
 
@@ -180,6 +204,24 @@ export function toProto(amount: CcdAmount): Proto.Amount {
 }
 
 /**
+ * Constructs a {@linkcode Type} from {@linkcode Serializable}.
+ * @param {Serializable} value
+ * @returns {Type} The duration.
+ */
+export function fromSerializable(value: Serializable): Type {
+    return fromMicroCcd(value);
+}
+
+/**
+ * Converts {@linkcode Type} into {@linkcode Serializable}
+ * @param {Type} value
+ * @returns {Serializable} The serializable value
+ */
+export function toSerializable(value: Type): Serializable {
+    return value.microCcdAmount.toString();
+}
+
+/**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
  *
  * @param {Type} value - The account address instance to transform.
@@ -188,7 +230,7 @@ export function toProto(amount: CcdAmount): Proto.Amount {
 export function toTypedJSON(value: CcdAmount): TypedJson<Serializable> {
     return {
         ['@type']: JSON_DISCRIMINATOR,
-        value: value.microCcdAmount.toString(),
+        value: toSerializable(value),
     };
 }
 
@@ -201,5 +243,5 @@ export function toTypedJSON(value: CcdAmount): TypedJson<Serializable> {
  */
 export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
     JSON_DISCRIMINATOR,
-    fromMicroCcd
+    fromSerializable
 );

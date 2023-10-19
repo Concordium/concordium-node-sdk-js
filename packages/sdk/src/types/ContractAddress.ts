@@ -9,7 +9,7 @@ import {
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.ContractAddress;
-type Serializable = { index: string; subindex: string };
+export type Serializable = { index: string; subindex: string };
 
 /** Address of a smart contract instance. */
 class ContractAddress {
@@ -60,19 +60,28 @@ export function create(
     return new ContractAddress(BigInt(index), BigInt(subindex));
 }
 
-/** Type used when representing a contract address while using a schema. */
+/** Type used when encoding a contract address in the JSON format used when serializing using a smart contract schema type. */
 export type SchemaValue = {
     index: bigint;
     subindex: bigint;
 };
 
 /**
- * Get contract address in the format used by schema.
+ * Get contract address in the JSON format used when serializing using a smart contract schema type.
  * @param {ContractAddress} contractAddress The contract address.
- * @returns {SchemaValue} The schema value representation.
+ * @returns {SchemaValue} The schema JSON representation.
  */
 export function toSchemaValue(contractAddress: ContractAddress): SchemaValue {
     return { index: contractAddress.index, subindex: contractAddress.subindex };
+}
+
+/**
+ * Convert to contract address from JSON format used when serializing using a smart contract schema type.
+ * @param {SchemaValue} contractAddress The contract address in schema JSON format.
+ * @returns {ContractAddress} The contract address.
+ */
+export function fromSchemaValue(contractAddress: SchemaValue): ContractAddress {
+    return create(contractAddress.index, contractAddress.subindex);
 }
 
 /**
@@ -110,8 +119,26 @@ export function equals(left: ContractAddress, right: ContractAddress): boolean {
     return left.index === right.index && left.subindex === right.subindex;
 }
 
-const fromSerializable = (v: Serializable) =>
-    new ContractAddress(BigInt(v.index), BigInt(v.subindex));
+/**
+ * Constructs a {@linkcode ContractAddress} from {@linkcode Serializable}.
+ * @param {Serializable} value
+ * @returns {ContractAddress} The contract address.
+ */
+export function fromSerializable(value: Serializable): ContractAddress {
+    return new ContractAddress(BigInt(value.index), BigInt(value.subindex));
+}
+
+/**
+ * Converts {@linkcode ContractAddress} into {@linkcode Serializable}
+ * @param {ContractAddress} contractAddress
+ * @returns {Serializable} The serializable contract address
+ */
+export function toSerializable(contractAddress: ContractAddress): Serializable {
+    return {
+        index: contractAddress.index.toString(),
+        subindex: contractAddress.subindex.toString(),
+    };
+}
 
 /**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
@@ -122,10 +149,7 @@ const fromSerializable = (v: Serializable) =>
 export function toTypedJSON(value: ContractAddress): TypedJson<Serializable> {
     return {
         ['@type']: JSON_DISCRIMINATOR,
-        value: {
-            index: value.index.toString(),
-            subindex: value.subindex.toString(),
-        },
+        value: toSerializable(value),
     };
 }
 

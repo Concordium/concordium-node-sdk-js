@@ -39,6 +39,7 @@ export {
     ContractSchema,
     ContractUpdateTransaction,
     ContractTransactionMetadata,
+    ContractInvokeMetadata,
     CreateContractTransactionMetadata,
     ContractUpdateTransactionWithSchema,
 } from '../GenericContract.js';
@@ -59,6 +60,7 @@ import * as ContractAddress from '../types/ContractAddress.js';
 import * as EntrypointName from '../types/EntrypointName.js';
 import * as Timestamp from '../types/Timestamp.js';
 import * as Duration from '../types/Duration.js';
+import * as ContractEvent from '../types/ContractEvent.js';
 import * as CcdAmount from '../types/CcdAmount.js';
 import * as TransactionExpiry from '../types/TransactionExpiry.js';
 import * as ModuleReference from '../types/ModuleReference.js';
@@ -88,6 +90,7 @@ export {
     EntrypointName,
     Timestamp,
     Duration,
+    ContractEvent,
     CcdAmount,
     TransactionExpiry,
     ModuleReference,

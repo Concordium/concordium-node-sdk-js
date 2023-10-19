@@ -18,6 +18,7 @@ import * as SequenceNumber from '../types/SequenceNumber.js';
 import * as TransactionHash from '../types/TransactionHash.js';
 import * as Parameter from '../types/Parameter.js';
 import * as ReturnValue from '../types/ReturnValue.js';
+import * as ContractEvent from '../types/ContractEvent.js';
 
 function unwrapToHex(bytes: Uint8Array | undefined): v1.HexString {
     return Buffer.from(unwrap(bytes)).toString('hex');
@@ -371,6 +372,7 @@ function transPaydayStatus(
             unwrap(status.bakerEquityCapital)
         ),
         delegatedCapital: CcdAmount.fromProto(unwrap(status.delegatedCapital)),
+        commissionRates: trCommissionRates(status.commissionRates),
     };
 }
 
@@ -874,7 +876,7 @@ function trContractTraceElement(
                 receiveName: ReceiveName.fromProto(
                     unwrap(element.updated.receiveName)
                 ),
-                events: element.updated.events.map(unwrapValToHex),
+                events: element.updated.events.map(ContractEvent.fromProto),
             };
         case 'transferred':
             return {
@@ -893,7 +895,7 @@ function trContractTraceElement(
                 address: ContractAddress.fromProto(
                     unwrap(element.interrupted.address)
                 ),
-                events: element.interrupted.events.map(unwrapValToHex),
+                events: element.interrupted.events.map(ContractEvent.fromProto),
             };
         case 'resumed':
             return {
@@ -1584,6 +1586,15 @@ function trMintDistributionCpv1Update(
 export function pendingUpdate(
     pendingUpdate: v2.PendingUpdate
 ): v1.PendingUpdate {
+    return {
+        effectiveTime: Timestamp.fromProto(unwrap(pendingUpdate.effectiveTime)),
+        effect: trPendingUpdateEffect(pendingUpdate),
+    };
+}
+
+export function trPendingUpdateEffect(
+    pendingUpdate: v2.PendingUpdate
+): v1.PendingUpdateEffect {
     const effect = pendingUpdate.effect;
     switch (effect.oneofKind) {
         case 'protocol':
@@ -2875,6 +2886,101 @@ export function blockFinalizationSummary(
             'Error translating BlockFinalizationSummary: unexpected undefined'
         );
     }
+}
+
+export function blockCertificates(
+    certs: v2.BlockCertificates
+): v1.BlockCertificates {
+    return {
+        ...(certs.quorumCertificate !== undefined && {
+            quorumCertificate: quorumCertificate(certs.quorumCertificate),
+        }),
+        ...(certs.timeoutCertificate !== undefined && {
+            timeoutCertificate: timeoutCertificate(certs.timeoutCertificate),
+        }),
+        ...(certs.epochFinalizationEntry !== undefined && {
+            epochFinalizationEntry: epochFinalizationEntry(
+                certs.epochFinalizationEntry
+            ),
+        }),
+    };
+}
+
+export function quorumCertificate(
+    cert: v2.QuorumCertificate
+): v1.QuorumCertificate {
+    return {
+        blockHash: unwrapValToHex(cert.blockHash),
+        round: unwrap(cert.round?.value),
+        epoch: unwrap(cert.epoch?.value),
+        aggregateSignature: unwrapValToHex(cert.aggregateSignature),
+        signatories: cert.signatories.map((x) => unwrap(x.value)),
+    };
+}
+
+export function timeoutCertificate(
+    cert: v2.TimeoutCertificate
+): v1.TimeoutCertificate {
+    return {
+        round: unwrap(cert.round?.value),
+        minEpoch: unwrap(cert.minEpoch?.value),
+        qcRoundsFirstEpoch: cert.qcRoundsFirstEpoch.map(finalizerRound),
+        qcRoundsSecondEpoch: cert.qcRoundsSecondEpoch.map(finalizerRound),
+        aggregateSignature: unwrapValToHex(cert.aggregateSignature),
+    };
+}
+
+export function epochFinalizationEntry(
+    cert: v2.EpochFinalizationEntry
+): v1.EpochFinalizationEntry {
+    return {
+        finalizedQc: quorumCertificate(unwrap(cert.finalizedQc)),
+        successorQc: quorumCertificate(unwrap(cert.successorQc)),
+        successorProof: unwrapValToHex(cert.successorProof),
+    };
+}
+
+export function finalizerRound(round: v2.FinalizerRound): v1.FinalizerRound {
+    return {
+        round: unwrap(round.round?.value),
+        finalizers: round.finalizers.map((x) => x.value),
+    };
+}
+
+export function bakerRewardPeriodInfo(
+    bakerRewardPeriod: v2.BakerRewardPeriodInfo
+): v1.BakerRewardPeriodInfo {
+    return {
+        baker: bakerInfo(unwrap(bakerRewardPeriod.baker)),
+        effectiveStake: CcdAmount.fromMicroCcd(
+            unwrap(bakerRewardPeriod.effectiveStake?.value)
+        ),
+        commissionRates: trCommissionRates(bakerRewardPeriod.commissionRates),
+        equityCapital: CcdAmount.fromMicroCcd(
+            unwrap(bakerRewardPeriod.equityCapital?.value)
+        ),
+        delegatedCapital: CcdAmount.fromMicroCcd(
+            unwrap(bakerRewardPeriod.delegatedCapital?.value)
+        ),
+        isFinalizer: bakerRewardPeriod.isFinalizer,
+    };
+}
+
+export function bakerInfo(bakerInfo: v2.BakerInfo): v1.BakerInfo {
+    return {
+        bakerId: unwrap(bakerInfo.bakerId?.value),
+        electionKey: unwrapValToHex(bakerInfo.electionKey),
+        signatureKey: unwrapValToHex(bakerInfo.signatureKey),
+        aggregationKey: unwrapValToHex(bakerInfo.aggregationKey),
+    };
+}
+
+export function winningBaker(winningBaker: v2.WinningBaker): v1.WinningBaker {
+    return {
+        round: unwrap(winningBaker.round?.value),
+        winner: unwrap(winningBaker.winner?.value),
+        present: winningBaker.present,
+    };
 }
 
 // ---------------------------- //

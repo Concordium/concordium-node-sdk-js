@@ -3,14 +3,13 @@ name: Build, lint and typecheck examples
 on:
     # Triggers the workflow on push or pull request events but only for the main branch
     push:
-        branches: [ main, release** ]
+        branches: [main, release**, feature**]
     pull_request:
-        branches: [ main, release** ]
+        branches: [main, release**, feature**]
         # Don't run on draft PR's, see: https://github.com/orgs/community/discussions/25722#discussioncomment-3248917
         types: [ opened, synchronize, reopened, ready_for_review ]
     # Allows us to run the workflow manually from the Actions tab
     workflow_dispatch:
-
 
 env:
     DUMMY: 2 # For cache busting.
@@ -95,11 +94,6 @@ jobs:
                       deps/concordium-base/rust-src
                       deps/concordium-base/concordium-contracts-common
 
-            - name: Get wasm-pack
-              uses: jetli/wasm-pack-action@v0.4.0
-              with:
-                  version: 'latest'
-
             - name: Build
               run: yarn build
 
@@ -144,9 +138,12 @@ jobs:
     tests:
         runs-on: ubuntu-22.04
         needs: build
+        strategy:
+            matrix:
+                package: ['sdk', 'ccd-js-gen']
         defaults:
             run:
-                working-directory: packages/sdk
+                working-directory: packages/${{matrix.package}}
         steps:
             - name: Checkout
               uses: actions/checkout@v3

@@ -22,6 +22,7 @@ module.exports = {
     },
     plugins: ['@typescript-eslint', 'import'],
     rules: {
+        'prettier/prettier': 'warn',
         quotes: [
             2,
             'single',
@@ -42,11 +43,7 @@ module.exports = {
         'import/no-extraneous-dependencies': [
             'error',
             {
-                devDependencies: [
-                    '**/*.test.ts',
-                    '**/*.test.tsx',
-                    '**/*.config.js',
-                ],
+                devDependencies: ['**/*/test/*', '**/*.config.js'],
             },
         ],
         '@typescript-eslint/no-unused-vars': [

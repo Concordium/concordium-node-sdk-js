@@ -12,7 +12,7 @@ import { Base58String } from '../types.js';
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.AccountAddress;
-type Serializable = Base58String;
+export type Serializable = Base58String;
 
 /**
  * Representation of an account address, which enforces that it:
@@ -104,16 +104,25 @@ export function toBase58(accountAddress: AccountAddress): string {
     return accountAddress.address;
 }
 
-/** Type used when encoding the account address using a schema. */
+/** Type used when encoding an account address in the JSON format used when serializing using a smart contract schema type. */
 export type SchemaValue = string;
 
 /**
- * Get account address in the format used by schema.
+ * Get account address in the JSON format used when serializing using a smart contract schema type.
  * @param {AccountAddress} accountAddress The account address.
- * @returns {SchemaValue} The schema value representation.
+ * @returns {SchemaValue} The schema JSON representation.
  */
 export function toSchemaValue(accountAddress: AccountAddress): SchemaValue {
     return accountAddress.address;
+}
+
+/**
+ * Convert to account address from JSON format used when serializing using a smart contract schema type.
+ * @param {SchemaValue} accountAddress The account address in schema JSON format.
+ * @returns {AccountAddress} The account address.
+ */
+export function fromSchemaValue(accountAddress: SchemaValue): AccountAddress {
+    return fromBase58(accountAddress);
 }
 
 const addressByteLength = 32;
@@ -206,7 +215,7 @@ export function equals(left: AccountAddress, right: AccountAddress): boolean {
 export function toTypedJSON(value: AccountAddress): TypedJson<Serializable> {
     return {
         ['@type']: JSON_DISCRIMINATOR,
-        value: value.address,
+        value: toBase58(value),
     };
 }
 

@@ -45,6 +45,7 @@ import * as Parameter from '../types/Parameter.js';
 import * as Energy from '../types/Energy.js';
 import * as SequenceNumber from '../types/SequenceNumber.js';
 import * as ReceiveName from '../types/ReceiveName.js';
+import * as Timestamp from '../types/Timestamp.js';
 
 /**
  * @hidden
@@ -319,7 +320,7 @@ export class ConcordiumGRPCClient {
      *
      * @param transaction the transaction to send to the node
      * @param signature the signatures on the signing digest of the transaction
-     * @returns The transaction hash as a byte array
+     * @returns The transaction hash as a hex-encoded string
      */
     async sendAccountTransaction(
         transaction: v1.AccountTransaction,
@@ -1517,6 +1518,126 @@ export class ConcordiumGRPCClient {
         );
     }
 
+    /**
+     * Get the projected earliest time at which a particular baker will be required to bake a block.
+     *
+     * If the baker is not a baker for the current reward period, this returns a timestamp at the
+     * start of the next reward period. If the baker is a baker for the current reward period, the
+     * earliest win time is projected from the current round forward, assuming that each round after
+     * the last finalized round will take the minimum block time. (If blocks take longer, or timeouts
+     * occur, the actual time may be later, and the reported time in subsequent queries may reflect
+     * this.) At the end of an epoch (or if the baker is not projected to bake before the end of the
+     * epoch) the earliest win time for a (current) baker will be projected as the start of the next
+     * epoch. This is because the seed for the leader election is updated at the epoch boundary, and
+     * so the winners cannot be predicted beyond that. Note that in some circumstances the returned
+     * timestamp can be in the past, especially at the end of an epoch.
+     *
+     * @throws an `UNAVAILABLE` RPC error if the current consensus version is 0 (prior to protocol version 6), as the endpoint is only supported from consensus version 1 (from protocol version 6).
+     *
+     * @param {v1.BakerId} baker - The baker that should be queried for.
+     *
+     * @returns {Timestamp.Type} The projected earliest time at which a particular baker will be required to bake a block, as a unix timestamp in milliseconds.
+     */
+    async getBakerEarliestWinTime(baker: v1.BakerId): Promise<Timestamp.Type> {
+        const bakerId = {
+            value: baker,
+        };
+        const winTime = await this.client.getBakerEarliestWinTime(bakerId)
+            .response;
+        return Timestamp.fromMillis(winTime.value);
+    }
+
+    /**
+     * For a non-genesis block, this returns the quorum certificate, a timeout
+     * certificate (if present) and epoch finalization entry (if present).
+     *
+     * @throws an `UNIMPLEMENTED` RPC error if the endpoint is not enabled by the node.
+     * @throws an `INVALID_ARGUMENT` if the block being pointed to is not a product of ConcordiumBFT
+     *
+     * @param blockHash optional block hash to get the cryptographic parameters at, otherwise retrieves from last finalized block.
+     *
+     * @returns the requested block certificates.
+     */
+    async getBlockCertificates(
+        blockHash?: BlockHash.Type
+    ): Promise<v1.BlockCertificates> {
+        const blockHashInput = getBlockHashInput(blockHash);
+        const blockCertificates = await this.client.getBlockCertificates(
+            blockHashInput
+        ).response;
+        return translate.blockCertificates(blockCertificates);
+    }
+
+    /**
+     * Get all bakers in the reward period of a block.
+     * This endpoint is only supported for protocol version 6 and onwards.
+     *
+     * @throws an `IllegalArgument` RPC error if the protocol does not support the endpoint.
+     *
+     * @param blockHash optional block hash to get the cryptographic parameters at, otherwise retrieves from last finalized block.
+     *
+     * @returns All bakers in the reward period of a block
+     */
+    getBakersRewardPeriod(
+        blockHash?: BlockHash.Type
+    ): AsyncIterable<v1.BakerRewardPeriodInfo> {
+        const blockHashInput = getBlockHashInput(blockHash);
+        const bakersRewardPeriod =
+            this.client.getBakersRewardPeriod(blockHashInput).responses;
+        return mapStream(bakersRewardPeriod, translate.bakerRewardPeriodInfo);
+    }
+
+    /**
+     * Get the list of bakers that won the lottery in a particular historical epoch (i.e. the
+     * last finalized block is in a later epoch). This lists the winners for each round in the
+     * epoch, starting from the round after the last block in the previous epoch, running to
+     * the round before the first block in the next epoch. It also indicates if a block in each
+     * round was included in the finalized chain.
+     *
+     * The following error cases are possible:
+     * @throws a `NOT_FOUND` RPC error if the query specifies an unknown block.
+     * @throws an `UNAVAILABLE` RPC error if the query is for an epoch that is not finalized in the current genesis index, or is for a future genesis index.
+     * @throws an `INVALID_ARGUMENT` RPC error if the query is for an epoch that is not finalized for a past genesis index.
+     * @throws an `INVALID_ARGUMENT` RPC error if the query is for a genesis index at consensus version 0.
+     * @throws an `INVALID_ARGUMENT` RPC error if the input `EpochRequest` is malformed.
+     * @throws an `UNAVAILABLE` RPC error if the endpoint is disabled on the node.
+     *
+     * @param {BlockHash.Type | v1.RelativeEpochRequest } epochRequest - Consists of either a block hash or a relative epoch request consisting of a genesis index and an epoch. If none is passed, it queries the last finalized block.
+     *
+     * @returns {v1.WinningBaker} A stream of winning bakers for a given epoch.
+     */
+    getWinningBakersEpoch(
+        epochRequest?: BlockHash.Type | v1.RelativeEpochRequest
+    ): AsyncIterable<v1.WinningBaker> {
+        const req = getEpochRequest(epochRequest);
+        const winningBakers = this.client.getWinningBakersEpoch(req).responses;
+
+        return mapStream(winningBakers, translate.winningBaker);
+    }
+
+    /**
+     * Get the block hash of the first finalized block in a specified epoch.
+     *
+     * The following error cases are possible:
+     * @throws - a `NOT_FOUND` RPC error if the query specifies an unknown block.
+     * @throws - an `UNAVAILABLE` RPC error if the query is for an epoch that is not finalized in the current genesis index, or is for a future genesis index.
+     * @throws - an `INVALID_ARGUMENT` RPC error if the query is for an epoch with no finalized blocks for a past genesis index.
+     * @throws - an `INVALID_ARGUMENT` RPC error if the input `EpochRequest` is malformed.
+     * @throws - an `UNAVAILABLE` RPC error if the endpoint is disabled on the node.
+     *
+     * @param {BlockHash.Type | v1.RelativeEpochRequest } epochRequest - Consists of either a block hash or a relative epoch request consisting of a genesis index and an epoch. If none is passed, it queries the last finalized block.
+     *
+     * @returns {HexString} The block hash as a hex encoded string.
+     */
+    async getFirstBlockEpoch(
+        epochRequest?: BlockHash.Type | v1.RelativeEpochRequest
+    ): Promise<BlockHash.Type> {
+        const req = getEpochRequest(epochRequest);
+        const blockHash = await this.client.getFirstBlockEpoch(req).response;
+
+        return BlockHash.fromProto(blockHash);
+    }
+
     private async getConsensusHeight() {
         return (await this.getConsensusStatus()).lastFinalizedBlockHeight;
     }
@@ -1641,6 +1762,32 @@ export function getInvokerInput(
         };
     } else {
         throw new Error('Unexpected input to build invoker');
+    }
+}
+
+function getEpochRequest(
+    epochRequest?: BlockHash.Type | v1.RelativeEpochRequest
+): v2.EpochRequest {
+    if (
+        BlockHash.instanceOf(epochRequest) ||
+        typeof epochRequest === 'undefined'
+    ) {
+        return {
+            epochRequestInput: {
+                oneofKind: 'blockHash',
+                blockHash: getBlockHashInput(epochRequest),
+            },
+        };
+    } else {
+        return {
+            epochRequestInput: {
+                oneofKind: 'relativeEpoch',
+                relativeEpoch: {
+                    genesisIndex: { value: epochRequest.genesisIndex },
+                    epoch: { value: epochRequest.epoch },
+                },
+            },
+        };
     }
 }
 

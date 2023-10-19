@@ -102,6 +102,26 @@ Several types have been replaced with a module containing the type itself togeth
   - `ElectionInfo`
 - Added type discriminator to different forms of `AccountInfo`.
 
+## 6.5.1
+
+### Fixed
+
+- An issue where `BakerRewardPeriodInfo` incorrectly mapped `delegatedCapital` field
+
+## 6.5.0
+
+### Added
+
+New consensus endpoints:
+
+- `getBakerEarliestWinTime`
+- `getBlockCertificates`
+- `getBakersRewardPeriod`
+- `getWinningBakersEpoch`
+- `getFirstBlockEpoch`
+- `commissionRates` is now added to the `getPoolInfo` under `bakerPoolStatus.PoolInfo`
+
+
 ## 6.4.0
 
 ### Added

@@ -21,7 +21,6 @@ import {
     jsonStringify,
     jsonParse,
 } from '../../../src/pub/types.js';
-import { JsonCircularReferenceError } from '../../../src/types/json.js';
 
 describe('JSON ID test', () => {
     test('Stringified types are parsed correctly', () => {

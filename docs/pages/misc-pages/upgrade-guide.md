@@ -1,4 +1,4 @@
-## SDK version 10
+## web SDK version 7
 
 Several types have been replaced with a module containing the type itself together with functions for constructing and
 converting the type:
@@ -90,6 +90,11 @@ working with concordium domain types, which requires WASM.
 with web3-id proofs.
 
 ### NodeJS
+
+_The `@concordium/node-sdk` has been removed in favor of unifying both web and
+nodejs SDK's in a single platform agnostic SDK. This means users of
+`@concordium/node-sdk` looking to upgrade, will need to install
+`@concordium/web-sdk` instead._
 
 The `@concordium/web-sdk` module is not compatible with
 node versions <16 and is published only as an ES module.

@@ -38,7 +38,7 @@ To create a GRPC-Client for use in a browser (requires GRPC-web enabled on the n
 
 ## Compatibility
 
-As of version 10 (node-sdk@10, web-sdk@7), the SDK's are compatible only with environments
+As of version 7, the SDK's are compatible only with environments
 respecting the `exports` field of a modules `package.json`, i.e. taking this into
 account when resolving modules. This means
 
@@ -57,7 +57,7 @@ from versions
 
 ### NodeJS
 
-The node-sdk is published as an ES module, and as such packages using it must
+The web-sdk is published as an ES module, and as such packages using it must
 also be ES modules.
 
 The easiest way to run your node application as an ES module, is by setting

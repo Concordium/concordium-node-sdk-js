@@ -2,12 +2,6 @@
 
 ## Unreleased
 
-### Added
-
-- Introduce function `versionedModuleSourceToBuffer` for serializing a versioned module to a buffer, which can be stored in a file.
-
-## 7.0.0
-
 ### Breaking changes
 
 - The package is published as an ES module, instead of commonJS. Migration steps can be seen in [the upgrade guide](../../docs/pages/misc-pages/upgrade-guide.md)
@@ -92,6 +86,8 @@ Several types have been replaced with a module containing the type itself togeth
 - `ReturnValue` is now a module with functions related to return values from invoking a smart contract.
 - Functions `jsonStringify` and `jsonParse`, which acts as a regular `JSON.stringify` and `JSON.parse` correspondingly,
   with the addition of stringifying concordium domain types in a wrapper object that can be parsed into the respective types.
+- Introduce function `versionedModuleSourceToBuffer` for serializing a versioned module to a buffer, which can be stored in a file.
+
 
 ### Changes
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 6.5.0
+
+- Bumped @concordium/common-sdk to 9.5.0.
+
 ## 6.4.0
 
 - Bumped @concordium/common-sdk to 9.4.0.
@@ -189,8 +193,8 @@
 
 ## 0.1.1
 
--   Fixed issue with wasm from rust bindings
+- Fixed issue with wasm from rust bindings
 
 ## 0.1.0
 
--   Initial release
+- Initial release

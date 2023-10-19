@@ -1,5 +1,9 @@
 # Changelog
 
+## 9.5.0
+
+- Bumped @concordium/common-sdk to 9.5.0.
+
 ## 9.4.0
 
 - Bumped @concordium/common-sdk to 9.4.0.
@@ -91,6 +95,7 @@
 - Bumped @concordium/common-sdk to 6.0.0. (Which changes transaction type names and field names to be aligned with other implementations)
 
 ## 5.0.0 2022-11-8
+
 Breaking Changes
 
 - Bumped @concordium/common-sdk to 5.2.0. (Which changes the function signature of ConcordiumHdWallet and sign helpers functions)
@@ -189,8 +194,8 @@ Breaking Changes
 - Support for getting baker list from node.
 - Support for getting status of a Baker Pool/Passive delegation (required node to have protocol version 4 or later).
 - Support for getting reward status of chain at specific block.
-- Helper functions for determining the version of `BlockSummary` and nested types. 
-- Helper functions for determining the version of `AccountInfo` variants. 
+- Helper functions for determining the version of `BlockSummary` and nested types.
+- Helper functions for determining the version of `AccountInfo` variants.
 - Support for the new "configure delegation" transaction type.
 
 ### Changed
@@ -209,7 +214,6 @@ Breaking Changes
 - Added missing dependency "google-protobuf"
 
 ## 0.7.2 2022-05-05
-
 
 ### Added
 

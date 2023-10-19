@@ -12,6 +12,7 @@ Wrappers for interacting with the Concordium node.
   - [Packages](#packages)
     - [SDK package](#sdk-package)
     - [Rust-bindings package](#rust-bindings-package)
+    - [Ccd-js-gen package](#ccd-js-gen-package)
   - [Install/updating dependencies](#installupdating-dependencies)
     - [MacOS arm64](#macos-arm64)
   - [Build](#build)
@@ -43,6 +44,11 @@ both a web and NodeJS environment.
 The [rust-bindings](./packages/rust-bindings) contains bindings for Rust code,
 which is used by the SDK through WASM. This package is a utility package that
 should not be used directly, only through the usage of the SDK.
+
+### Ccd-js-gen package
+
+The [ccd-js-gen](./packages/ccd-js-gen) contains a library and CLI for
+generating smart contract clients for TypeScript and JavaScript.
 
 ## Install/updating dependencies
 

@@ -12,8 +12,11 @@ function configFor(
     const t = target === 'react-native' ? 'web' : target;
     const entry =
         target === 'react-native'
-            ? 'src/index.react-native.ts'
-            : 'src/index.ts';
+            ? [
+                  resolve(__dirname, './shims/webcrypto.react-native.ts'),
+                  resolve(__dirname, './src/index.react-native.ts'),
+              ]
+            : resolve(__dirname, './src/index.ts');
 
     const config: webpack.Configuration = {
         // mode: 'production',
@@ -25,7 +28,7 @@ function configFor(
             cacheDirectory: resolve(__dirname, '.webpack-cache'),
         },
         entry: {
-            concordium: resolve(__dirname, entry),
+            concordium: entry,
         },
         plugins: [
             new webpack.SourceMapDevToolPlugin({
@@ -59,9 +62,6 @@ function configFor(
         output: {
             filename: `[name]-${target}.min.js`,
             path: resolve(__dirname, 'lib/umd'),
-            library: 'concordiumSDK',
-            libraryTarget: 'umd',
-            publicPath: '',
         },
     };
 
@@ -72,6 +72,26 @@ function configFor(
             'module',
             'require',
         ];
+        config.externals = 'isomorphic-webcrypto'; // Included in dependencies, so will be installed by dependants
+        // config.externals = 'isomorphic-webcrypto/src/react-native'; // Included in dependencies, so will be installed by dependants
+    }
+
+    if (target === 'web') {
+        config.output = {
+            ...config.output,
+            library: {
+                name: 'concordiumSDK',
+                type: 'umd',
+            },
+            publicPath: '',
+        };
+    } else {
+        config.output = {
+            ...config.output,
+            library: {
+                type: 'commonjs2',
+            },
+        };
     }
 
     return config;

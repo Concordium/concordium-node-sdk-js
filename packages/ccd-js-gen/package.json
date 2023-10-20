@@ -1,6 +1,6 @@
 {
     "name": "@concordium/ccd-js-gen",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Generate JS clients for the Concordium Blockchain",
     "type": "module",
     "bin": "bin/ccd-js-gen.js",
@@ -16,6 +16,12 @@
         "test": "jest",
         "test-ci": "yarn test"
     },
+    "files": [
+        "lib/**/*.json",
+        "lib/src/**/*",
+        "src",
+        "bin"
+    ],
     "keywords": [
         "concordium",
         "smart-contracts"

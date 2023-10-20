@@ -1,5 +1,6 @@
-import { parseEndpoint } from '../shared/util';
-import { createConcordiumClient, DelegatorInfo } from '@concordium/node-sdk';
+import { parseEndpoint } from '../shared/util.js';
+import { BlockHash, DelegatorInfo } from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -32,7 +33,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -54,8 +55,12 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
     const delegators: AsyncIterable<DelegatorInfo> =
-        client.getPassiveDelegators(cli.flags.block);
+        client.getPassiveDelegators(blockHash);
 
     console.log('Each staking account and the amount of stake they have:\n');
     for await (const delegatorInfo of delegators) {

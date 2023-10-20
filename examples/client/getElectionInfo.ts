@@ -1,9 +1,6 @@
-import { parseEndpoint } from '../shared/util';
-import {
-    createConcordiumClient,
-    ElectionInfo,
-    isElectionInfoV0,
-} from '@concordium/node-sdk';
+import { parseEndpoint } from '../shared/util.js';
+import { BlockHash, ElectionInfo } from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -36,7 +33,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -49,9 +46,11 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const electionInfo: ElectionInfo = await client.getElectionInfo(
-        cli.flags.block
-    );
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
+    const electionInfo: ElectionInfo = await client.getElectionInfo(blockHash);
 
     // Discard address, convert to tuple:
     const bakers: [bigint, number][] = electionInfo.bakerElectionInfo.map(
@@ -63,7 +62,7 @@ const client = createConcordiumClient(
     console.log('Bakers sorted by lottery power:', sortedBakers);
     console.log('Election nonce:', electionInfo.electionNonce);
 
-    if (isElectionInfoV0(electionInfo)) {
+    if (electionInfo.version === 0) {
         console.log('Election difficulty:', electionInfo.electionDifficulty);
     }
     // #endregion documentation-snippet

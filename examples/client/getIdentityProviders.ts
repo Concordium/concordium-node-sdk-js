@@ -1,5 +1,6 @@
-import { parseEndpoint } from '../shared/util';
-import { createConcordiumClient, IpInfo } from '@concordium/node-sdk';
+import { parseEndpoint } from '../shared/util.js';
+import { BlockHash, IpInfo } from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -32,7 +33,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -48,9 +49,11 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const ips: AsyncIterable<IpInfo> = client.getIdentityProviders(
-        cli.flags.block
-    );
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
+    const ips: AsyncIterable<IpInfo> = client.getIdentityProviders(blockHash);
 
     for await (const ip of ips) {
         console.log('Identity Provider ID:', ip.ipIdentity);

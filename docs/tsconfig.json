@@ -1,0 +1,14 @@
+{
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext"
+    },
+    "include": [
+        "../packages/**/*",
+        "./typedoc.config.cjs"
+    ],
+    "exclude": [
+        "../packages/ccd-js-gen/**/*"
+    ]
+}

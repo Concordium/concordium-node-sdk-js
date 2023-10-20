@@ -1,26 +1,104 @@
 {
     "name": "@concordium/rust-bindings",
-    "version": "1.1.0",
+    "version": "2.0.0",
     "license": "Apache-2.0",
     "engines": {
-        "node": ">=14.16.0"
+        "node": ">=16"
     },
     "repository": {
         "type": "git",
         "url": "https://github.com/Concordium/concordium-node-sdk-js",
         "directory": "packages/rust-bindings"
     },
-    "main": "pkg/node/concordium_rust_bindings.js",
-    "browser": "pkg/bundler/concordium_rust_bindings.js",
-    "types": "pkg/bundler/concordium_rust_bindings.d.ts",
+    "sideEffects": [
+        "./lib/*/web/index.min.js",
+        "./lib/*/bundler/index.js"
+    ],
+    "main": "lib/dapp/node/cjs/index.js",
+    "browser": "lib/dapp/web/umd/index.min.js",
+    "types": "lib/dapp/node/cjs/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./lib/dapp/node/cjs/index.d.ts",
+            "node": {
+                "module": "./lib/dapp/node/umd/index.min.js",
+                "default": "./lib/dapp/node/cjs/index.js"
+            },
+            "browser": {
+                "module": "./lib/dapp/web/umd/index.min.js",
+                "types": "./lib/dapp/web/esm/index.d.ts",
+                "import": "./lib/dapp/web/esm/index.js",
+                "default": "./lib/dapp/web/umd/index.min.js"
+            },
+            "default": "./lib/dapp/web/umd/index.min.js"
+        },
+        "./dapp": {
+            "types": "./lib/dapp/node/cjs/index.d.ts",
+            "node": {
+                "module": "./lib/dapp/node/umd/index.min.js",
+                "default": "./lib/dapp/node/cjs/index.js"
+            },
+            "browser": {
+                "module": "./lib/dapp/web/umd/index.min.js",
+                "types": "./lib/dapp/web/esm/index.d.ts",
+                "import": "./lib/dapp/web/esm/index.js",
+                "default": "./lib/dapp/web/umd/index.min.js"
+            },
+            "default": "./lib/dapp/web/umd/index.min.js"
+        },
+        "./wallet": {
+            "types": "./lib/wallet/node/cjs/index.d.ts",
+            "node": {
+                "module": "./lib/wallet/node/umd/index.min.js",
+                "default": "./lib/wallet/node/cjs/index.js"
+            },
+            "browser": {
+                "module": "./lib/wallet/web/umd/index.min.js",
+                "types": "./lib/wallet/web/esm/index.d.ts",
+                "import": "./lib/wallet/web/esm/index.js",
+                "default": "./lib/wallet/web/umd/index.min.js"
+            },
+            "default": "./lib/wallet/web/umd/index.min.js"
+        },
+        "./bundler": {
+            "types": "./lib/dapp/bundler/index.d.ts",
+            "default": "./lib/dapp/bundler/index.js"
+        },
+        "./bundler/dapp": {
+            "types": "./lib/dapp/bundler/index.d.ts",
+            "default": "./lib/dapp/bundler/index.js"
+        },
+        "./bundler/wallet": {
+            "types": "./lib/wallet/bundler/index.d.ts",
+            "default": "./lib/wallet/bundler/index.js"
+        }
+    },
     "files": [
-        "/pkg/**/concordium_rust_bindings*"
+        "./lib/**/index*"
     ],
     "scripts": {
         "fmt": "cargo +nightly-2023-04-01-x86_64-unknown-linux-gnu fmt -- --color=always --check",
         "clippy": "cargo +1.62 clippy --color=always --tests --benches -- -Dclippy::all",
-        "build": "wasm-pack build --target web --out-dir pkg/bundler \"$@\" && wasm-pack build --target nodejs --out-dir pkg/node \"$@\"",
-        "build-dev": "yarn build --dev",
-        "build:rust-bindings": "yarn build"
+        "build-web": "wasm-pack build ./packages/dapp --target web --out-dir $INIT_CWD/lib/dapp/web/esm --out-name index \"$@\" && wasm-pack build ./packages/wallet --target web --out-dir $INIT_CWD/lib/wallet/web/esm --out-name index \"$@\" && webpack",
+        "build-node": "wasm-pack build ./packages/dapp --target nodejs --out-dir $INIT_CWD/lib/dapp/node/cjs --out-name index \"$@\" && wasm-pack build ./packages/wallet --target nodejs --out-dir $INIT_CWD/lib/wallet/node/cjs --out-name index \"$@\"",
+        "build-bundler": "wasm-pack build ./packages/dapp --target bundler --out-dir $INIT_CWD/lib/dapp/bundler --out-name index \"$@\" && wasm-pack build ./packages/wallet --target bundler --out-dir $INIT_CWD/lib/wallet/bundler --out-name index \"$@\"",
+        "build": "yarn build-node \"$@\" && yarn build-bundler \"$@\" && yarn build-web \"$@\" && yarn sanitize",
+        "build:rust-bindings": "yarn build",
+        "clean": "rimraf -- target lib .webpack-cache",
+        "sanitize": "find . -name \"*.gitignore\" -delete",
+        "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
+        "lint-fix": "yarn --silent lint --fix; exit 0"
+    },
+    "devDependencies": {
+        "eslint": "^8.50.0",
+        "rimraf": "^5.0.1",
+        "ts-loader": "^9.4.4",
+        "typescript": "^5.2.2",
+        "wasm-pack": "^0.12.1",
+        "webpack": "^5.88.2",
+        "webpack-cli": "^5.1.4"
+    },
+    "dependencies": {
+        "buffer": "^6.0.3"
     }
 }

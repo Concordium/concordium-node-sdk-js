@@ -1,11 +1,14 @@
 import {
-    createConcordiumClient,
     CIS2Contract,
     buildBasicAccountSigner,
-} from '@concordium/node-sdk';
+    ContractAddress,
+    AccountAddress,
+    Energy,
+} from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
-import { parseAddress, parseEndpoint } from '../shared/util';
+import { parseAddress, parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -64,26 +67,26 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
 );
 
 (async () => {
-    const contract = await CIS2Contract.create(client, {
-        index: BigInt(cli.flags.index),
-        subindex: BigInt(cli.flags.subindex),
-    });
+    const contract = await CIS2Contract.create(
+        client,
+        ContractAddress.create(cli.flags.index, cli.flags.subindex)
+    );
 
     const signer = buildBasicAccountSigner(cli.flags.privateKey);
-    const owner = cli.flags.owner;
+    const owner = AccountAddress.fromBase58(cli.flags.owner);
     const address = parseAddress(cli.flags.address);
 
     const txHash = await contract.updateOperator(
         {
             senderAddress: owner,
-            energy: 10000n,
+            energy: Energy.create(10000),
         },
         {
             type: cli.flags.updateType as 'add' | 'remove',

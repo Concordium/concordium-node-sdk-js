@@ -1,9 +1,6 @@
-import { parseEndpoint } from '../shared/util';
-import {
-    ContractAddress,
-    HexString,
-    createConcordiumClient,
-} from '@concordium/node-sdk';
+import { parseEndpoint } from '../shared/util.js';
+import { BlockHash, ContractAddress, HexString } from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -50,7 +47,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -65,15 +62,16 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const contract: ContractAddress = {
-        index: BigInt(cli.flags.contract),
-        subindex: 0n,
-    };
+    const contract = ContractAddress.create(cli.flags.contract);
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
 
     const state: HexString = await client.instanceStateLookup(
         contract,
         cli.flags.key,
-        cli.flags.block
+        blockHash
     );
     // #endregion documentation-snippet
 

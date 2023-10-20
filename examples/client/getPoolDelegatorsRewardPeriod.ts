@@ -1,8 +1,6 @@
-import { parseEndpoint } from '../shared/util';
-import {
-    createConcordiumClient,
-    DelegatorRewardPeriodInfo,
-} from '@concordium/node-sdk';
+import { parseEndpoint } from '../shared/util.js';
+import { BlockHash, DelegatorRewardPeriodInfo } from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -13,7 +11,7 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> [options]
 
   Required:
-    --pool-owner, -p  The BakerId of the pool owner 
+    --pool-owner, -p  The BakerId of the pool owner
 
   Options
     --help,     -h  Displays this message
@@ -43,7 +41,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -64,10 +62,14 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
     const delegators: AsyncIterable<DelegatorRewardPeriodInfo> =
         client.getPoolDelegatorsRewardPeriod(
             BigInt(cli.flags.poolOwner),
-            cli.flags.block
+            blockHash
         );
 
     console.log('Each staking account and the amount of stake they have:\n');

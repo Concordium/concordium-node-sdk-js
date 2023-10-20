@@ -1,33 +1,30 @@
-[package]
-name = "concordium-rust-bindings"
-version = "0.1.0"
+[workspace]
+members = ["packages/*"]
+
+[workspace.package]
 authors = ["Concordium AG <developers@concordium.com>"]
-edition = "2018"
+edition = "2021"
 
 [profile.dev]
 opt-level = 3
 
-[dependencies]
+[workspace.dependencies]
+anyhow = "1.0"
+concordium_rust_bindings_common = { path = "./packages/common" }
+either = "1.6"
+hex = "0.4"
+rand = { version = "=0.7", features = ["wasm-bindgen"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-wasm-bindgen = { version = "0.2.80", features = ["serde-serialize"] }
-anyhow = "1.0"
-hex = "0.4"
-either = "1.6"
-thiserror = "1.0"
-rand = { version = "=0.7", features = [ "wasm-bindgen" ] }
 serde-wasm-bindgen = "0.5"
+thiserror = "1.0"
+wasm-bindgen = { version = "0.2.80", features = ["serde-serialize"] }
 
-[dependencies.concordium_base]
+[workspace.dependencies.concordium_base]
 path = "../../deps/concordium-base/rust-src/concordium_base"
 
-[dependencies.ed25519_hd_key_derivation]
+[workspace.dependencies.ed25519_hd_key_derivation]
 path = "../../deps/concordium-base/rust-src/ed25519_hd_key_derivation"
 
-[dependencies.key_derivation]
+[workspace.dependencies.key_derivation]
 path = "../../deps/concordium-base/rust-src/key_derivation"
-
-[lib]
-name = "concordium_rust_bindings"
-crate-type = ["cdylib"]
-path = "src/lib.rs"

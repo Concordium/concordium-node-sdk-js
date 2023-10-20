@@ -1,10 +1,11 @@
-import { parseEndpoint } from '../shared/util';
+import { parseEndpoint } from '../shared/util.js';
 import {
     AccountAddress,
     AccountInfo,
-    createConcordiumClient,
-    isDelegatorAccount,
-} from '@concordium/node-sdk';
+    AccountInfoType,
+    BlockHash,
+} from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -45,7 +46,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -61,17 +62,21 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const accountAddress = new AccountAddress(cli.flags.account);
+    const accountAddress = AccountAddress.fromBase58(cli.flags.account);
+    const blockHash =
+        cli.flags.block === undefined
+            ? undefined
+            : BlockHash.fromHexString(cli.flags.block);
     const accountInfo: AccountInfo = await client.getAccountInfo(
         accountAddress,
-        cli.flags.block
+        blockHash
     );
 
     console.log('Account balance:', accountInfo.accountAmount);
     console.log('Account address:', accountInfo.accountAddress);
 
     // If the account is a delegator print delegator information
-    if (isDelegatorAccount(accountInfo)) {
+    if (accountInfo.type === AccountInfoType.Delegator) {
         console.log(
             'Delegated stake amount:',
             accountInfo.accountDelegation.stakedAmount

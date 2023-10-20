@@ -7,14 +7,13 @@ import {
     DeployModulePayload,
     signTransaction,
     TransactionExpiry,
-    createConcordiumClient,
     parseWallet,
     buildAccountSigner,
-} from '@concordium/node-sdk';
+} from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import { readFileSync } from 'node:fs';
-import { Buffer } from 'buffer/index.js';
-import { parseEndpoint } from '../shared/util';
+import { parseEndpoint } from '../shared/util.js';
 
 import meow from 'meow';
 
@@ -54,7 +53,7 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -68,7 +67,7 @@ const client = createConcordiumClient(
     // #region documentation-snippet
     const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
     const wallet = parseWallet(walletFile);
-    const sender = new AccountAddress(wallet.value.address);
+    const sender = AccountAddress.fromBase58(wallet.value.address);
 
     // Get the wasm file as a buffer.
     const wasmModule = Buffer.from(readFileSync(cli.flags.moduleFile));
@@ -82,7 +81,7 @@ const client = createConcordiumClient(
     };
 
     const header: AccountTransactionHeader = {
-        expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+        expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
     };

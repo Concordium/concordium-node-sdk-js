@@ -5,18 +5,18 @@ import {
     AccountTransactionType,
     signTransaction,
     TransactionExpiry,
-    createConcordiumClient,
     ConfigureDelegationPayload,
     CcdAmount,
     DelegationTargetType,
     parseWallet,
     buildAccountSigner,
-} from '@concordium/node-sdk';
+} from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import { readFileSync } from 'node:fs';
 
 import meow from 'meow';
-import { parseEndpoint } from '../shared/util';
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -60,7 +60,7 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -76,17 +76,17 @@ const client = createConcordiumClient(
     // Read wallet-file
     const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
     const wallet = parseWallet(walletFile);
-    const sender = new AccountAddress(wallet.value.address);
+    const sender = AccountAddress.fromBase58(wallet.value.address);
     const signer = buildAccountSigner(wallet);
 
     const header: AccountTransactionHeader = {
-        expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+        expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender: sender,
     };
 
     const configureDelegationPayload: ConfigureDelegationPayload = {
-        stake: new CcdAmount(BigInt(cli.flags.stake)),
+        stake: CcdAmount.fromMicroCcd(cli.flags.stake),
         delegationTarget: {
             delegateType: DelegationTargetType.PassiveDelegation,
         },

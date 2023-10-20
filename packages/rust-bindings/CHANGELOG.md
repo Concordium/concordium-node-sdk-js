@@ -1,5 +1,35 @@
 # Changelog
 
+## 2.0.0
+
+### Breaking changes
+
+- The package has been split into two entrypoints to decrease the size of bundles produced for applications using only part of the functionality provided.
+  - `@concordium/rust-bindings` (and its alias `@concordium/rust-bindings/dapp`) entrypoints expose functionality commonly used by dApps.
+  - `@concordium/rust-bindings/wallet` entrypoint exposes functionality commonly used by wallets and other applications requiring functionality used in wallets.
+  - If using a bundler, it might be preferable to load the WASM module asynchronously instead of the version which has it inlined. This can be done
+  by adding an alias to your bundler resolve configuration from `@concordium/rust-bindings` to `@concordium/rust-bindings/bundler`.
+  - This change makes the library **incompatible** with node versions <16 and requires bundlers to respect the `exports` field of `package.json`.
+  - For TypeScript projects the minimum required version of typescript is:
+    - NodeJS: 4.7, `"moduleResolution": "node16" // or "nodenext"`
+    - Bundled applications (webpack, esbuild, rollup, etc...): 5.0, `"moduleResolution": "bundler"`
+
+## 1.2.0
+
+### Added
+
+- `create_web3_id_proof_ext` function.
+- `verify_web3_id_credential_signature_ext` function.
+- `get_verifiable_credential_backup_encryption_key_ext` function.
+
+### Changed
+
+- Add issuer contract index and subindex as arguments to `get_verifiable_credential_signing_key_aux` and `get_verifiable_credential_public_key_ext`.
+
+### Removed
+
+- `get_verifiable_credential_encryption_key_ext` function.
+
 ## 1.1.0
 
 ### Added
@@ -86,7 +116,7 @@
 
 ### Changes
 
--  Bindings for the HdWallet methods: `getAccountSigningKey`, `getAccountPublicKey`, `getPrfKey`, `getSignatureBlindingRandomness` and `getAttributeCommitmentRandomness` now takes the identity provider index as parameter.
+- Bindings for the HdWallet methods: `getAccountSigningKey`, `getAccountPublicKey`, `getPrfKey`, `getSignatureBlindingRandomness` and `getAttributeCommitmentRandomness` now takes the identity provider index as parameter.
 
 ## 0.3.0 2022-8-15
 
@@ -95,4 +125,4 @@
 - `createCredentialV1`
 - `createIdRequestV1`
 - `createIdentityRecoveryRequest`
--  Bindings for the HdWallet methods: `getAccountSigningKey`, `getAccountPublicKey`, `getPrfKey`, `getSignatureBlindingRandomness` and `getAttributeCommitmentRandomness`.
+- Bindings for the HdWallet methods: `getAccountSigningKey`, `getAccountPublicKey`, `getPrfKey`, `getSignatureBlindingRandomness` and `getAttributeCommitmentRandomness`.

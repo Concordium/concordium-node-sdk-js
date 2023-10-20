@@ -5,17 +5,17 @@ import {
     AccountTransactionType,
     signTransaction,
     TransactionExpiry,
-    createConcordiumClient,
     CcdAmount,
     generateBakerKeys,
     ConfigureBakerPayload,
     OpenStatus,
     parseWallet,
     buildAccountSigner,
-} from '@concordium/node-sdk';
+} from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import { readFileSync } from 'node:fs';
-import { parseEndpoint } from '../shared/util';
+import { parseEndpoint } from '../shared/util.js';
 
 import meow from 'meow';
 
@@ -55,7 +55,7 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -71,11 +71,11 @@ const client = createConcordiumClient(
     // Read wallet-file
     const walletFile = readFileSync(cli.flags.walletFile, 'utf8');
     const wallet = parseWallet(walletFile);
-    const sender = new AccountAddress(wallet.value.address);
+    const sender = AccountAddress.fromBase58(wallet.value.address);
     const signer = buildAccountSigner(wallet);
 
     const header: AccountTransactionHeader = {
-        expiry: new TransactionExpiry(new Date(Date.now() + 3600000)),
+        expiry: TransactionExpiry.futureMinutes(60),
         nonce: (await client.getNextAccountNonce(sender)).nonce,
         sender,
     };
@@ -83,7 +83,7 @@ const client = createConcordiumClient(
     const bakerKeys = generateBakerKeys(sender);
 
     const configureBakerPayload: ConfigureBakerPayload = {
-        stake: new CcdAmount(BigInt(cli.flags.stake)),
+        stake: CcdAmount.fromMicroCcd(cli.flags.stake),
         restakeEarnings: true,
         openForDelegation: OpenStatus.OpenForAll,
         keys: bakerKeys,

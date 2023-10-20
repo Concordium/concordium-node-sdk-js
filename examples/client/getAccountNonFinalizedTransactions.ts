@@ -1,9 +1,6 @@
-import { parseEndpoint } from '../shared/util';
-import {
-    AccountAddress,
-    createConcordiumClient,
-    HexString,
-} from '@concordium/node-sdk';
+import { parseEndpoint } from '../shared/util.js';
+import { AccountAddress, TransactionHash } from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 
 import meow from 'meow';
@@ -39,7 +36,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = createConcordiumClient(
+const client = new ConcordiumGRPCNodeClient(
     address,
     Number(port),
     credentials.createInsecure()
@@ -57,8 +54,8 @@ const client = createConcordiumClient(
 
 (async () => {
     // #region documentation-snippet
-    const accountAddress = new AccountAddress(cli.flags.account);
-    const transactions: AsyncIterable<HexString> =
+    const accountAddress = AccountAddress.fromBase58(cli.flags.account);
+    const transactions: AsyncIterable<TransactionHash.Type> =
         client.getAccountNonFinalizedTransactions(accountAddress);
     // #endregion documentation-snippet
 

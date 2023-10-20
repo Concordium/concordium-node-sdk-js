@@ -1,5 +1,11 @@
 # Concordium NodeJS SDK
 
+## Deprecation notice
+
+The `@concordium/node-sdk` package is now deprecated and will not receive major/minor version updates going forward.`@concordium/web-sdk@^7` is now compatible with nodeJS, and can be used for both browser and nodeJS runtimes. A GRPC client for nodeJS runtimes is accessible at `@concoridum/web-sdk/nodejs` (does not use GRPC-web).
+
+More information can be found in [the upgrade guide](https://developer.concordium.software/concordium-node-sdk-js/pages/misc-pages/upgrade-guide.html#web-sdk-version-7)
+
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](https://github.com/Concordium/.github/blob/main/.github/CODE_OF_CONDUCT.md)
 
 Wrappers for interacting with the Concordium node, using nodejs.

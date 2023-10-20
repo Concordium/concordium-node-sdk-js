@@ -1,5 +1,11 @@
 # Changelog
 
+## 9.5.2
+
+The `@concordium/node-sdk` package is now deprecated and will not receive major/minor version updates going forward.`@concordium/web-sdk@^7` is now compatible with nodeJS, and can be used for both browser and nodeJS runtimes. A GRPC client for nodeJS runtimes is accessible at `@concoridum/web-sdk/nodejs` (does not use GRPC-web).
+
+More information can be found in [the upgrade guide](https://developer.concordium.software/concordium-node-sdk-js/pages/misc-pages/upgrade-guide.html#web-sdk-version-7)
+
 ## 9.5.1
 
 - Bumped @concordium/common-sdk to 9.5.1.

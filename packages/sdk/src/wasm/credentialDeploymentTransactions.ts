@@ -1,6 +1,6 @@
 import { Buffer } from 'buffer/index.js';
 import * as ed from '#ed25519';
-import * as wasm from '@concordium/rust-bindings/wallet';
+import * as wasm from '#rust-bindings/wallet';
 import {
     AttributeKey,
     CredentialDeploymentTransaction,

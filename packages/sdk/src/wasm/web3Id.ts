@@ -1,4 +1,4 @@
-import * as wasm from '@concordium/rust-bindings/wallet';
+import * as wasm from '#rust-bindings/wallet';
 import { stringify } from 'json-bigint';
 import { VerifyWeb3IdCredentialSignatureInput } from '../web3-id/web3IdHelpers.js';
 import { Web3IdProofInput } from '../web3-id/web3IdProofTypes.js';

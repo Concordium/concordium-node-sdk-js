@@ -1,4 +1,4 @@
-import * as wasm from '@concordium/rust-bindings/wallet';
+import * as wasm from '#rust-bindings/wallet';
 import { mnemonicToSeedSync, validateMnemonic } from '@scure/bip39';
 import { wordlist } from '@scure/bip39/wordlists/english';
 import { Buffer } from 'buffer/index.js';

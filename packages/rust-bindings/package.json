@@ -12,7 +12,8 @@
     },
     "sideEffects": [
         "./lib/*/web/umd/index.min.js",
-        "./lib/*/bundler/index.js"
+        "./lib/*/bundler/index.js",
+        "./lib/*/react-native/index.js"
     ],
     "main": "lib/dapp/node/cjs/index.js",
     "react-native": "lib/dapp/react-native/index.js",

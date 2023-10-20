@@ -9,7 +9,12 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 function configFor(
     target: 'web' | 'node' | 'react-native'
 ): webpack.Configuration {
-    const t = target === 'react-native' ? 'node' : target;
+    const t = target === 'react-native' ? 'web' : target;
+    const entry =
+        target === 'react-native'
+            ? 'src/index.react-native.ts'
+            : 'src/index.ts';
+
     const config: webpack.Configuration = {
         // mode: 'production',
         mode: 'development',
@@ -20,7 +25,7 @@ function configFor(
             cacheDirectory: resolve(__dirname, '.webpack-cache'),
         },
         entry: {
-            concordium: resolve(__dirname, 'src/index.ts'),
+            concordium: resolve(__dirname, entry),
         },
         plugins: [
             new webpack.SourceMapDevToolPlugin({
@@ -61,13 +66,12 @@ function configFor(
     };
 
     if (target === 'react-native') {
-        config.resolve!.fallback = {
-            crypto: resolve(__dirname, 'shims/node-webcrypto.ts'),
-            process: 'process/browser',
-        };
-        config.externalsPresets = {
-            node: false,
-        };
+        config.resolve!.conditionNames = [
+            'react-native',
+            'browser',
+            'module',
+            'require',
+        ];
     }
 
     return config;

@@ -40,6 +40,10 @@
         "#ed25519": {
             "node": "./lib/esm/shims/ed25519.node.js",
             "default": "@noble/ed25519"
+        },
+        "#rust-bindings/wallet": {
+            "react-native": null,
+            "default": "@concordium/rust-bindings/wallet"
         }
     },
     "files": [

@@ -14,7 +14,7 @@ import * as Parameter from './types/Parameter.js';
 import * as ContractName from './types/ContractName.js';
 import * as ReceiveName from './types/ReceiveName.js';
 import * as ReturnValue from './types/ReturnValue.js';
-import { EntrypointName } from './index.js';
+import * as EntrypointName from './types/EntrypointName.js';
 
 /**
  * Namespace with types for CIS-0 standard contracts

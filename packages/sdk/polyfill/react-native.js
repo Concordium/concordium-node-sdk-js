@@ -1,5 +1,9 @@
 /* eslint-disable import/no-extraneous-dependencies */
+import { polyfillGlobal } from 'react-native/Libraries/Utilities/PolyfillFunctions';
+
 import '@stardazed/streams-polyfill';
+import crypto from 'isomorphic-webcrypto';
+import '@azure/core-asynciterator-polyfill';
 
 // import { polyfill as polyfillBase64 } from 'react-native-polyfill-globals/src/base64.js';
 import { polyfill as polyfillEncoding } from 'react-native-polyfill-globals/src/encoding.js';
@@ -14,3 +18,6 @@ polyfillEncoding();
 // polyfillURL();
 // polyfillFetch();
 // polyfillCrypto();
+
+await crypto.ensureSecure();
+polyfillGlobal('crypto', () => crypto);

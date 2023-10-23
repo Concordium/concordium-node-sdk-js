@@ -14,6 +14,7 @@ function configFor(
         target === 'react-native'
             ? [
                   //   resolve(__dirname, './shims/webcrypto.react-native.ts'),
+                  resolve(__dirname, './polyfill/react-native.js'),
                   resolve(__dirname, './src/index.react-native.ts'),
               ]
             : resolve(__dirname, './src/index.ts');
@@ -80,7 +81,11 @@ function configFor(
         // config.output!.library = {
         //     type: 'module'
         // }
-        config.externals = 'isomorphic-webcrypto'; // Included in dependencies, so will be installed by dependants
+        config.externals = [
+            'isomorphic-webcrypto',
+            'react-native',
+            'react-native/Libraries/Utilities/PolyfillFunctions',
+        ]; // Included in dependencies, so will be installed by dependants
         // config.externals = 'isomorphic-webcrypto/src/react-native'; // Included in dependencies, so will be installed by dependants
     }
 

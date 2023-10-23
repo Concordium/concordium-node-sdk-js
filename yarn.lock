@@ -718,6 +718,7 @@ __metadata:
     "@protobuf-ts/plugin": ^2.9.1
     "@protobuf-ts/runtime-rpc": ^2.8.2
     "@scure/bip39": ^1.2.1
+    "@stardazed/streams-polyfill": ^2.4.0
     "@types/big.js": ^6.2.0
     "@types/bs58check": ^2.1.0
     "@types/jest": ^26.0.23
@@ -736,7 +737,9 @@ __metadata:
     jest: ^29.6.2
     json-bigint: ^1.0.0
     process: ^0.11.10
+    react-native-polyfill-globals: ^3.1.0
     rimraf: ^5.0.1
+    text-encoding: ^0.7.0
     ts-jest: ^29.1.1
     typescript: ^5.2.2
     url: ^0.11.3
@@ -1579,6 +1582,13 @@ __metadata:
   dependencies:
     "@sinonjs/commons": ^3.0.0
   checksum: 614d30cb4d5201550c940945d44c9e0b6d64a888ff2cd5b357f95ad6721070d6b8839cd10e15b76bf5e14af0bcc1d8f9ec00d49a46318f1f669a4bec1d7f3148
+  languageName: node
+  linkType: hard
+
+"@stardazed/streams-polyfill@npm:^2.4.0":
+  version: 2.4.0
+  resolution: "@stardazed/streams-polyfill@npm:2.4.0"
+  checksum: 4590789d735f37e229239e80754ae24a64646110dcc913634698d50d0990e4d8c3e9a56a1312885026f815e1b083b3b54855da8cb4e9923389299d9b56b94f18
   languageName: node
   linkType: hard
 
@@ -7434,6 +7444,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-native-polyfill-globals@npm:^3.1.0":
+  version: 3.1.0
+  resolution: "react-native-polyfill-globals@npm:3.1.0"
+  peerDependencies:
+    base-64: "*"
+    react-native-fetch-api: "*"
+    react-native-get-random-values: "*"
+    react-native-url-polyfill: "*"
+    text-encoding: "*"
+    web-streams-polyfill: "*"
+  checksum: ff968f257a10c420c96fb1b5e838bf665f5312b9709ff23001fd57480a05991df6d0f8751a2f46250174f858dcc3ebfdaf5548c9f37b729d472d3152b99e3356
+  languageName: node
+  linkType: hard
+
 "react-native-securerandom@npm:^0.1.1":
   version: 0.1.1
   resolution: "react-native-securerandom@npm:0.1.1"
@@ -8320,6 +8344,13 @@ __metadata:
     glob: ^7.1.4
     minimatch: ^3.0.4
   checksum: 3b34a3d77165a2cb82b34014b3aba93b1c4637a5011807557dc2f3da826c59975a5ccad765721c4648b39817e3472789f9b0fa98fc854c5c1c7a1e632aacdc28
+  languageName: node
+  linkType: hard
+
+"text-encoding@npm:^0.7.0":
+  version: 0.7.0
+  resolution: "text-encoding@npm:0.7.0"
+  checksum: b6109a843fb1b8748b32e1ecd6df74d370f46c13ac136bcb6ca15db70209bb0b8ec1f296ebb4b0dd9961150e205dcc044b89f8cf7657f6faef78c7569a2a81bc
   languageName: node
   linkType: hard
 

@@ -12,15 +12,16 @@
     },
     "sideEffects": false,
     "type": "module",
-    "main": "lib/umd/concordium.web.min.js",
+    "main": "lib/umd/concordium.node.min.js",
+    "browser": "lib/umd/concordium.web.min.js",
     "react-native": "lib/umd/concordium.react-native.min.js",
     "cdn": "lib/umd/concordium.web.min.js",
     "types": "lib/esm/index.d.ts",
     "exports": {
         ".": {
             "types": "./lib/esm/index.d.ts",
-            "react-native": "./lib/umd/concordium.react-native.min.js",
             "bun": "./src/index.ts",
+            "react-native": "./lib/umd/concordium.react-native.min.js",
             "default": "./lib/esm/index.js"
         },
         "./nodejs": {
@@ -38,8 +39,8 @@
         },
         "./*": {
             "types": "./lib/esm/pub/*.d.ts",
-            "react-native": "./lib/umd/concordium.react-native.min.js",
             "bun": "./src/pub/*.ts",
+            "react-native": "./lib/umd/concordium.react-native.min.js",
             "default": "./lib/esm/pub/*.js"
         }
     },

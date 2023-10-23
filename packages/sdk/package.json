@@ -12,14 +12,14 @@
     },
     "sideEffects": false,
     "type": "module",
-    "main": "lib/umd/concordium-web.min.js",
-    "react-native": "lib/umd/concordium-react-native.min.js",
-    "cdn": "lib/umd/concordium-web.min.js",
+    "main": "lib/umd/concordium.web.min.js",
+    "react-native": "lib/umd/concordium.react-native.min.js",
+    "cdn": "lib/umd/concordium.web.min.js",
     "types": "lib/esm/index.d.ts",
     "exports": {
         ".": {
             "types": "./lib/esm/index.d.ts",
-            "react-native": "./lib/umd/concordium-react-native.min.js",
+            "react-native": "./lib/umd/concordium.react-native.min.js",
             "bun": "./src/index.ts",
             "default": "./lib/esm/index.js"
         },
@@ -38,7 +38,7 @@
         },
         "./*": {
             "types": "./lib/esm/pub/*.d.ts",
-            "react-native": "./lib/umd/concordium-react-native.min.js",
+            "react-native": "./lib/umd/concordium.react-native.min.js",
             "bun": "./src/pub/*.ts",
             "default": "./lib/esm/pub/*.js"
         }
@@ -101,8 +101,8 @@
         "bs58check": "^3.0.1",
         "buffer": "^6.0.3",
         "hash.js": "^1.1.7",
-        "isomorphic-webcrypto": "^2.3.8",
         "iso-3166-1": "^2.1.1",
+        "isomorphic-webcrypto": "^2.3.8",
         "json-bigint": "^1.0.0",
         "url": "^0.11.3",
         "util": "^0.12.5",

@@ -13,7 +13,7 @@ function configFor(
     const entry =
         target === 'react-native'
             ? [
-                  resolve(__dirname, './shims/webcrypto.react-native.ts'),
+                  //   resolve(__dirname, './shims/webcrypto.react-native.ts'),
                   resolve(__dirname, './src/index.react-native.ts'),
               ]
             : resolve(__dirname, './src/index.ts');
@@ -60,8 +60,12 @@ function configFor(
             ],
         },
         output: {
-            filename: `[name]-${target}.min.js`,
+            filename: `[name].${target}.min.js`,
             path: resolve(__dirname, 'lib/umd'),
+            library: {
+                name: 'concordiumSDK',
+                type: 'umd',
+            },
         },
     };
 
@@ -72,26 +76,12 @@ function configFor(
             'module',
             'require',
         ];
+        // config.experiments = {...config.experiments, outputModule: true};
+        // config.output!.library = {
+        //     type: 'module'
+        // }
         config.externals = 'isomorphic-webcrypto'; // Included in dependencies, so will be installed by dependants
         // config.externals = 'isomorphic-webcrypto/src/react-native'; // Included in dependencies, so will be installed by dependants
-    }
-
-    if (target === 'web') {
-        config.output = {
-            ...config.output,
-            library: {
-                name: 'concordiumSDK',
-                type: 'umd',
-            },
-            publicPath: '',
-        };
-    } else {
-        config.output = {
-            ...config.output,
-            library: {
-                type: 'commonjs2',
-            },
-        };
     }
 
     return config;

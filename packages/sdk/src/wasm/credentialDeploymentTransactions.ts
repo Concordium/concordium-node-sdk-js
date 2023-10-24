@@ -302,5 +302,5 @@ export async function signCredentialTransaction(
     signingKey: HexString
 ): Promise<HexString> {
     const digest = getCredentialDeploymentSignDigest(credDeployment);
-    return Buffer.from(await ed.signAsync(digest, signingKey)).toString('hex');
+    return Buffer.from(ed.sign(digest, signingKey)).toString('hex');
 }

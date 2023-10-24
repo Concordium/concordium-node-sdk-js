@@ -122,8 +122,7 @@ export interface AccountSigner {
 export const getSignature = async (
     digest: ArrayBuffer,
     privateKey: HexString
-): Promise<Buffer> =>
-    Buffer.from(await ed.signAsync(new Uint8Array(digest), privateKey));
+): Promise<Buffer> => Buffer.from(ed.sign(new Uint8Array(digest), privateKey));
 
 /**
  * Creates an `AccountSigner` for an account which uses the first credential's first keypair.
@@ -345,11 +344,11 @@ export async function verifyMessageSignature(
                 );
             }
             if (
-                !(await ed.verifyAsync(
+                !ed.verify(
                     credentialSignature[Number(keyIndex)],
                     digest,
                     credentialKeys.keys[Number(keyIndex)].verifyKey
-                ))
+                )
             ) {
                 // Incorrect signature;
                 return false;

@@ -13,8 +13,7 @@ function configFor(
     const entry =
         target === 'react-native'
             ? [
-                  //   resolve(__dirname, './shims/webcrypto.react-native.ts'),
-                  resolve(__dirname, './polyfill/react-native.js'),
+                  resolve(__dirname, './polyfill/react-native.ts'),
                   resolve(__dirname, './src/index.react-native.ts'),
               ]
             : resolve(__dirname, './src/index.ts');
@@ -77,21 +76,10 @@ function configFor(
             'module',
             'require',
         ];
-        // config.experiments = {...config.experiments, outputModule: true};
-        // config.output!.library = {
-        //     type: 'module'
-        // }
         config.externals = [
-            'isomorphic-webcrypto',
-            '@azure/core-asynciterator-polyfill',
-            '@stardazed/streams-polyfill',
-            'react-native-polyfill-globals',
-            'react-native-get-random-values',
-            'text-encoding',
-            'react-native',
+            'react-native-get-random-values', // Is a peer dependency, and thus required as a direct dependency in react native dependants, as native modules are not installed for transitive dependencies.
             'react-native/Libraries/Utilities/PolyfillFunctions',
-        ]; // Included in dependencies, so will be installed by dependants
-        // config.externals = 'isomorphic-webcrypto/src/react-native'; // Included in dependencies, so will be installed by dependants
+        ];
     }
 
     return config;

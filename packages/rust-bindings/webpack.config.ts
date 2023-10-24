@@ -9,7 +9,6 @@ type WebpackEnv = Partial<{
 function configFor(target: 'web' | 'node', pkg?: string): Configuration {
     const config: Configuration = {
         mode: 'production',
-        // mode: 'development',
         devtool: 'inline-source-map',
         cache: {
             type: 'filesystem',
@@ -64,12 +63,6 @@ function configFor(target: 'web' | 'node', pkg?: string): Configuration {
             [pkg]: resolve(__dirname, `./ts-src/${pkg}.ts`),
         };
     }
-
-    // if (target === 'react-native') {
-    //     config.externalsPresets = {
-    //         node: false,
-    //     };
-    // }
 
     return config;
 }

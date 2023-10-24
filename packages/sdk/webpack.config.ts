@@ -19,9 +19,7 @@ function configFor(
             : resolve(__dirname, './src/index.ts');
 
     const config: webpack.Configuration = {
-        // mode: 'production',
-        mode: 'development',
-        devtool: 'inline-source-map',
+        mode: 'production',
         target: t,
         cache: {
             type: 'filesystem',

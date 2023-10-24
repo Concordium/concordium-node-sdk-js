@@ -679,9 +679,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@concordium/examples@workspace:examples":
+"@concordium/examples@workspace:examples/nodejs":
   version: 0.0.0-use.local
-  resolution: "@concordium/examples@workspace:examples"
+  resolution: "@concordium/examples@workspace:examples/nodejs"
   dependencies:
     "@concordium/ccd-js-gen": "workspace:^"
     "@concordium/web-sdk": "workspace:^"

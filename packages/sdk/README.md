@@ -14,6 +14,7 @@ for more information
 - [concordium-web-sdk](#concordium-web-sdk)
   - [ConcordiumGRPCWebClient](#concordiumgrpcwebclient)
   - [ConcordiumGRPCNodeClient](#concordiumgrpcnodeclient)
+  - [React Native](#react-native)
 <!--toc:end-->
 
 ## ConcordiumGRPCWebClient
@@ -68,3 +69,15 @@ return new ConcordiumGRPCWebClient(
 ```
 
 Like with the grpc web client, the fourth argument is additional options.
+
+## React native
+
+To use the SDK in a react native context, the peer dependency [react-native-get-random-values](https://github.com/LinusU/react-native-get-random-values) is required
+to be installed in the project alongside `@concordium/web-sdk`:
+
+```bash
+yarn add @concordium/web-sdk react-native-get-random-values # or npm install ...
+npx pod-install
+```
+
+This ensures the native modules required by the SDK are present.

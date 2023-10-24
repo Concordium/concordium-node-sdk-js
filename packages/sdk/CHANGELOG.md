@@ -4,7 +4,7 @@
 
 ### Added
 
-- Support for using the SDK in a react native environment.
+- Support for using the SDK in a react native environment. Requires installing `react-native-get-random-values` peer dependency in consuming package.
 
 ## 7.0.0
 

@@ -83,6 +83,11 @@ function configFor(
         // }
         config.externals = [
             'isomorphic-webcrypto',
+            '@azure/core-asynciterator-polyfill',
+            '@stardazed/streams-polyfill',
+            'react-native-polyfill-globals',
+            'react-native-get-random-values',
+            'text-encoding',
             'react-native',
             'react-native/Libraries/Utilities/PolyfillFunctions',
         ]; // Included in dependencies, so will be installed by dependants

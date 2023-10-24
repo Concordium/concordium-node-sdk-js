@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Support for using the SDK in a react native environment.
+
 ## 7.0.0
 
 ### Breaking changes

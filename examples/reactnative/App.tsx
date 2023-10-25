@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import type {PropsWithChildren} from 'react';
+import type { PropsWithChildren } from 'react';
 import {
     SafeAreaView,
     ScrollView,
@@ -17,7 +17,7 @@ import {
     View,
 } from 'react-native';
 
-import {Buffer} from 'buffer/';
+import { Buffer } from 'buffer/';
 import * as ed from '@noble/ed25519';
 import {
     displayTypeSchemaTemplate,
@@ -44,7 +44,7 @@ function TestSDK() {
     // SCHEMA
     const schema = Buffer.from(
         'FAACAAAABAAAAGtleXMQAR4gAAAADgAAAGF1eGlsaWFyeV9kYXRhEAEC',
-        'base64',
+        'base64'
     );
     console.log(schema);
     const jsonSchema = displayTypeSchemaTemplate(schema);
@@ -56,11 +56,8 @@ function TestSDK() {
     // Unary calls
     client
         .getBlockInfo()
-        .then(bi => console.log('BLOCK INFO', bi))
-        .catch(e => {
-            console.error(e);
-            throw new Error(e);
-        });
+        .then((bi) => console.log('BLOCK INFO', bi))
+        .catch(console.error);
 
     // Streaming calls
     (async () => {
@@ -75,13 +72,13 @@ function TestSDK() {
     const k = ed.utils.randomPrivateKey();
     const m = Buffer.from('This is a message to be signed.');
     getSignature(m, Buffer.from(k).toString('hex'))
-        .then(r => console.log('SIGNATURE', r))
-        .catch(e => console.error('ERROR', e));
+        .then((r) => console.log('SIGNATURE', r))
+        .catch((e) => console.error('ERROR', e));
 
     return null;
 }
 
-function Section({children, title}: SectionProps): JSX.Element {
+function Section({ children, title }: SectionProps): JSX.Element {
     const isDarkMode = useColorScheme() === 'dark';
     return (
         <View style={styles.sectionContainer}>
@@ -91,7 +88,8 @@ function Section({children, title}: SectionProps): JSX.Element {
                     {
                         color: isDarkMode ? Colors.white : Colors.black,
                     },
-                ]}>
+                ]}
+            >
                 {title}
             </Text>
             <Text
@@ -100,7 +98,8 @@ function Section({children, title}: SectionProps): JSX.Element {
                     {
                         color: isDarkMode ? Colors.light : Colors.dark,
                     },
-                ]}>
+                ]}
+            >
                 {children}
             </Text>
         </View>
@@ -123,14 +122,16 @@ function App(): JSX.Element {
             />
             <ScrollView
                 contentInsetAdjustmentBehavior="automatic"
-                style={backgroundStyle}>
+                style={backgroundStyle}
+            >
                 <Header />
                 <View
                     style={{
                         backgroundColor: isDarkMode
                             ? Colors.black
                             : Colors.white,
-                    }}>
+                    }}
+                >
                     <Section title="Step One">
                         Edit <Text style={styles.highlight}>App.tsx</Text> to
                         change this screen and then come back to see your edits.

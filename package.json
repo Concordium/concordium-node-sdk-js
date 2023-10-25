@@ -49,9 +49,9 @@
         "test": "FORCE_COLOR=true yarn workspaces foreach --no-private run test --passWithNoTests",
         "lint": "FORCE_COLOR=true yarn workspaces foreach --no-private run lint",
         "lint-fix": "eslint --cache . --fix",
-        "markdown:lint": "yarn markdownlint docs/README.md docs/pages/**/*.md packages/*/README.md examples/readme.md README.md",
-        "markdown:lint-fix": "yarn markdownlint --fix docs/README.md docs/pages/**/*.md packages/*/README.md examples/readme.md README.md",
-        "markdown:linkcheck": "yarn markdown-link-check --config .markdown-linkcheck.json docs/README.md docs/pages/**/*.md packages/*/README.md examples/readme.md README.md",
+        "markdown:lint": "yarn markdownlint docs/README.md docs/pages/**/*.md packages/*/README.md examples/*/README.md README.md",
+        "markdown:lint-fix": "yarn markdownlint --fix docs/README.md docs/pages/**/*.md packages/*/README.md examples/*/README.md README.md",
+        "markdown:linkcheck": "yarn markdown-link-check --config .markdown-linkcheck.json docs/README.md docs/pages/**/*.md packages/*/README.md examples/*/README.md README.md",
         "build": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build",
         "build:dev": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build-dev",
         "clean": "FORCE_COLOR=true yarn workspaces foreach -p --no-private run clean"

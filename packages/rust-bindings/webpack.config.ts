@@ -9,7 +9,6 @@ type WebpackEnv = Partial<{
 function configFor(target: 'web' | 'node', pkg?: string): Configuration {
     const config: Configuration = {
         mode: 'production',
-        devtool: 'inline-source-map',
         cache: {
             type: 'filesystem',
             cacheDirectory: resolve(__dirname, '.webpack-cache'),

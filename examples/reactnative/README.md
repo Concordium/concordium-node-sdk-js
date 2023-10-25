@@ -32,6 +32,15 @@ npm run android
 yarn android
 ```
 
+#### Troubleshooting
+
+If simply running `yarn android` does not work, I got executing the following steps might work:
+
+1. run `yarn start`
+2. Run project from android studio
+
+This is likely due to the project being set up in the context of a yarn workspace. The gradle files (and `Podfile` for iOS) have been manually edited to point to the workspace root for resolving node modules.
+
 ### For iOS
 
 ```bash

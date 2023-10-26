@@ -10,7 +10,9 @@
         "url": "https://github.com/Concordium/concordium-node-sdk-js",
         "directory": "packages/sdk"
     },
-    "sideEffects": false,
+    "sideEffects": [
+        "lib/umd/*"
+    ],
     "type": "module",
     "main": "lib/umd/concordium.node.min.js",
     "browser": "lib/umd/concordium.web.min.js",

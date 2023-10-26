@@ -20,7 +20,6 @@ const WASM_FILENAME_JS = `${WASM_FILENAME}.js`;
 
 const bundlerPath = path.join(__dirname, '../lib/dapp/bundler');
 const outPath = path.join(__dirname, '../lib/dapp/react-native');
-const wasm2js = path.join(__dirname, '../tools/binaryen/bin/wasm2js');
 
 // Copy files to react native folder
 copyfiles(
@@ -32,7 +31,7 @@ copyfiles(
 (async () => {
     // Convert files using `wasm2js`
     await exec(
-        `${wasm2js} ${path.join(outPath, WASM_FILENAME)} -o ${path.join(
+        `wasm2js ${path.join(outPath, WASM_FILENAME)} -o ${path.join(
             outPath,
             WASM_FILENAME_JS
         )}`
@@ -42,7 +41,7 @@ copyfiles(
     fs.rmSync(path.join(outPath, WASM_FILENAME));
 
     // Replace references to wasm file with references to converted file
-    ['index.js', 'index_bg.js', 'package.json']
+    ['index.js', 'index_bg.js']
         .map((filename) => path.join(outPath, filename))
         .forEach((file) => {
             let content = fs.readFileSync(file, 'utf-8');

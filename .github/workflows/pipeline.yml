@@ -3,13 +3,14 @@ name: Build, lint and typecheck examples
 on:
     # Triggers the workflow on push or pull request events but only for the main branch
     push:
-        branches: [main, release**, feature**]
+        branches: [ main, release**, feature** ]
     pull_request:
-        branches: [main, release**, feature**]
+        branches: [ main, release**, feature** ]
         # Don't run on draft PR's, see: https://github.com/orgs/community/discussions/25722#discussioncomment-3248917
         types: [ opened, synchronize, reopened, ready_for_review ]
     # Allows us to run the workflow manually from the Actions tab
     workflow_dispatch:
+
 
 env:
     DUMMY: 3 # For cache busting.
@@ -58,6 +59,12 @@ jobs:
               with:
                   node-version: ${{ env.NODE_VERSION }}
                   cache: yarn
+
+            - name: Install binaryen (wasm2js)
+              uses: awalsh128/cache-apt-pkgs-action@latest
+              with:
+                  packages: binaryen
+                  version: 1.0
 
             - name: Cache GRPC
               id: cache-grpc
@@ -140,7 +147,7 @@ jobs:
         needs: build
         strategy:
             matrix:
-                package: ['sdk', 'ccd-js-gen']
+                package: [ 'sdk', 'ccd-js-gen' ]
         defaults:
             run:
                 working-directory: packages/${{matrix.package}}

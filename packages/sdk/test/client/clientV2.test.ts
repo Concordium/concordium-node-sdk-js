@@ -19,7 +19,9 @@ import {
     getNodeClientV2,
     getNodeClientWeb,
 } from './testHelpers.js';
-import * as ed from '#ed25519';
+// self-referencing not allowed by eslint resolver
+// eslint-disable-next-line import/no-extraneous-dependencies
+import * as ed from '@concordium/web-sdk/shims/ed25519';
 import * as expected from './resources/expectedJsons.js';
 
 import { TextEncoder, TextDecoder } from 'util';

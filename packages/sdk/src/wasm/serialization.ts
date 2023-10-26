@@ -1,4 +1,4 @@
-import * as wasm from '#rust-bindings/wallet';
+import * as wasm from '@concordium/rust-bindings/wallet';
 import JSONbig from 'json-bigint';
 import { Buffer } from 'buffer/index.js';
 import type {

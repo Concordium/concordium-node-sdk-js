@@ -1,6 +1,8 @@
 import { Buffer } from 'buffer/index.js';
-import * as ed from '#ed25519';
-import * as wasm from '#rust-bindings/wallet';
+// self-referencing not allowed by eslint resolver
+// eslint-disable-next-line import/no-extraneous-dependencies
+import * as ed from '@concordium/web-sdk/shims/ed25519';
+import * as wasm from '@concordium/rust-bindings/wallet';
 import {
     AttributeKey,
     CredentialDeploymentTransaction,

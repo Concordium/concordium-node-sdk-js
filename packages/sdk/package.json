@@ -23,7 +23,6 @@
         ".": {
             "types": "./lib/esm/index.d.ts",
             "bun": "./src/index.ts",
-            "react-native": "./lib/umd/concordium.react-native.min.js",
             "default": "./lib/esm/index.js"
         },
         "./nodejs": {
@@ -42,18 +41,12 @@
         "./*": {
             "types": "./lib/esm/pub/*.d.ts",
             "bun": "./src/pub/*.ts",
-            "react-native": "./lib/umd/concordium.react-native.min.js",
             "default": "./lib/esm/pub/*.js"
-        }
-    },
-    "imports": {
-        "#ed25519": {
+        },
+        "./shims/ed25519": {
+            "types": "./lib/esm/shims/ed25519.d.ts",
             "node": "./lib/esm/shims/ed25519.node.js",
             "default": "./lib/esm/shims/ed25519.js"
-        },
-        "#rust-bindings/wallet": {
-            "react-native": null,
-            "default": "@concordium/rust-bindings/wallet"
         }
     },
     "files": [

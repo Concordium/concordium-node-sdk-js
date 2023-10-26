@@ -9,7 +9,6 @@ const config: Config = {
     preset: 'react-native',
     moduleNameMapper: {
         ...nodeConfig.moduleNameMapper,
-        '#rust-bindings/wallet': '@concordium/rust-bindings/wallet',
     },
     transformIgnorePatterns: [`node_modules/(?!${rnEsModules.join('|')})`],
     transform: {

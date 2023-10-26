@@ -1,4 +1,4 @@
-import * as wasm from '#rust-bindings/wallet';
+import * as wasm from '@concordium/rust-bindings/wallet';
 import { GenerateBakerKeysOutput } from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';
 

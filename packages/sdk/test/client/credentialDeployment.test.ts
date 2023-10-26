@@ -12,7 +12,9 @@ import {
     serializeCredentialDeploymentTransactionForSubmission,
 } from '../../src/index.js';
 import fs from 'fs';
-import * as ed from '#ed25519';
+// self-referencing not allowed by eslint resolver
+// eslint-disable-next-line import/no-extraneous-dependencies
+import * as ed from '@concordium/web-sdk/shims/ed25519';
 
 test('test deserialize credentialDeployment ', () => {
     const identityInput: IdentityInput = getIdentityInput();

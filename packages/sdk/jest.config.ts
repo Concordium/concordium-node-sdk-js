@@ -7,6 +7,9 @@ const config: Config = {
     moduleNameMapper: {
         '^(\\.\\.?\\/.+)\\.js$': '$1', // Remap esmodule file extensions
     },
+    globals: {
+        __ENV__: 'node',
+    },
     transformIgnorePatterns: [`node_modules/(?!${esModules.join('|')})`],
 };
 

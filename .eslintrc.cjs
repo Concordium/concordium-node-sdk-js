@@ -44,7 +44,7 @@ module.exports = {
         'import/no-extraneous-dependencies': [
             'error',
             {
-                devDependencies: ['**/*/test/*', '**/*.config.js'],
+                devDependencies: ['**/*/test/*', '**/*.config.*'],
             },
         ],
         '@typescript-eslint/no-unused-vars': [

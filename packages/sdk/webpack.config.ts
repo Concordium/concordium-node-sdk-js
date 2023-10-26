@@ -12,10 +12,7 @@ function configFor(
     const t = target === 'react-native' ? 'web' : target;
     const entry =
         target === 'react-native'
-            ? [
-                  resolve(__dirname, './polyfill/react-native.ts'),
-                  resolve(__dirname, './src/index.react-native.ts'),
-              ]
+            ? resolve(__dirname, './src/index.react-native.ts')
             : resolve(__dirname, './src/index.ts');
 
     const config: webpack.Configuration = {
@@ -59,7 +56,7 @@ function configFor(
         },
         output: {
             filename: `[name].${target}.min.js`,
-            path: resolve(__dirname, 'lib/umd'),
+            path: resolve(__dirname, 'lib/min'),
             library: {
                 name: 'concordiumSDK',
                 type: 'umd',
@@ -67,16 +64,16 @@ function configFor(
         },
     };
 
+    if (target === 'node') {
+        config.output = { ...config.output, library: { type: 'commonjs2' } }; // To support legacy versions of nodeJS.
+    }
+
     if (target === 'react-native') {
         config.resolve!.conditionNames = [
             'react-native',
             'browser',
             'module',
             'require',
-        ];
-        config.externals = [
-            'react-native-get-random-values', // Is a peer dependency, and thus required as a direct dependency in react native dependants, as native modules are not installed for transitive dependencies.
-            'react-native/Libraries/Utilities/PolyfillFunctions',
         ];
     }
 

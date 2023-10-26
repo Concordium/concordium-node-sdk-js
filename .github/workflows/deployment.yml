@@ -41,12 +41,6 @@ jobs:
                       deps/concordium-base/rust-src
                       deps/concordium-base/concordium-contracts-common
 
-            - name: Install binaryen (wasm2js)
-              uses: awalsh128/cache-apt-pkgs-action@latest
-              with:
-                  packages: binaryen
-                  version: 1.0
-
             - name: Cache dependencies
               id: yarn-cache
               uses: actions/cache@v3

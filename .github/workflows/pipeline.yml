@@ -60,12 +60,6 @@ jobs:
                   node-version: ${{ env.NODE_VERSION }}
                   cache: yarn
 
-            - name: Install binaryen (wasm2js)
-              uses: awalsh128/cache-apt-pkgs-action@latest
-              with:
-                  packages: binaryen
-                  version: 1.0
-
             - name: Cache GRPC
               id: cache-grpc
               uses: actions/cache@v3

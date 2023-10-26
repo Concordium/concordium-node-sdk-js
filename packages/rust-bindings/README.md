@@ -7,15 +7,3 @@ Bindings for the Rust functions that are used by the SDK.
 Please see the
 [documentation](https://developer.concordium.software/concordium-node-sdk-js/index.html)
 for more information
-
-## Dependencies
-
-- `wasm2js` (from `binaryen`) - to build for react native.
-  - MacOS: `brew install binaryen`
-  - Linux: `apt-get install binaryen`
-
-## Building
-
-```bash
-yarn build
-```

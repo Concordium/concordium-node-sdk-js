@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fix
+
+- Export type `BlockItem` in the public API again, this was removed accidentally in v7.0.0.
+
 ## 7.0.0
 
 ### Breaking changes

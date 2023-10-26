@@ -61,6 +61,7 @@
     ],
     "devDependencies": {
         "@protobuf-ts/plugin": "^2.9.1",
+        "@testing-library/react-native": "^12.3.1",
         "@types/bs58check": "^2.1.0",
         "@types/jest": "^26.0.23",
         "@types/json-bigint": "^1.0.1",
@@ -85,7 +86,8 @@
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
-        "test-ci": "yarn test ./test/ci",
+        "test-rn": "yarn test -c jest.config.react-native.ts",
+        "test-ci": "yarn test ./test/ci && yarn test-rn ./test/ci",
         "build": "yarn clean; mkdir -p src/grpc-api; yarn generate && yarn build-dev",
         "build-dev": "tsc -p tsconfig.build.json && yarn webpack",
         "webpack": "node --loader ts-node/esm ../../node_modules/.bin/webpack --config webpack.config.ts",

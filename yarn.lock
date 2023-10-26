@@ -2141,6 +2141,7 @@ __metadata:
     "@protobuf-ts/runtime-rpc": ^2.8.2
     "@scure/bip39": ^1.2.1
     "@stardazed/streams-polyfill": ^2.4.0
+    "@testing-library/react-native": ^12.3.1
     "@types/big.js": ^6.2.0
     "@types/bs58check": ^2.1.0
     "@types/jest": ^26.0.23
@@ -3600,6 +3601,25 @@ __metadata:
   version: 2.4.0
   resolution: "@stardazed/streams-polyfill@npm:2.4.0"
   checksum: 4590789d735f37e229239e80754ae24a64646110dcc913634698d50d0990e4d8c3e9a56a1312885026f815e1b083b3b54855da8cb4e9923389299d9b56b94f18
+  languageName: node
+  linkType: hard
+
+"@testing-library/react-native@npm:^12.3.1":
+  version: 12.3.1
+  resolution: "@testing-library/react-native@npm:12.3.1"
+  dependencies:
+    jest-matcher-utils: ^29.7.0
+    pretty-format: ^29.7.0
+    redent: ^3.0.0
+  peerDependencies:
+    jest: ">=28.0.0"
+    react: ">=16.8.0"
+    react-native: ">=0.59"
+    react-test-renderer: ">=16.8.0"
+  peerDependenciesMeta:
+    jest:
+      optional: true
+  checksum: ad50508e35b077533d5a711c01d96758a82da6bca255bc37f0c9f037c44cde67efbd5984862aec8cb7c4c0c8648b21f3f09378b2fe9e067aa593e5fcb49038e7
   languageName: node
   linkType: hard
 
@@ -10723,7 +10743,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"min-indent@npm:^1.0.1":
+"min-indent@npm:^1.0.0, min-indent@npm:^1.0.1":
   version: 1.0.1
   resolution: "min-indent@npm:1.0.1"
   checksum: bfc6dd03c5eaf623a4963ebd94d087f6f4bbbfd8c41329a7f09706b0cb66969c4ddd336abeb587bc44bc6f08e13bf90f0b374f9d71f9f01e04adc2cd6f083ef1
@@ -12247,6 +12267,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"redent@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "redent@npm:3.0.0"
+  dependencies:
+    indent-string: ^4.0.0
+    strip-indent: ^3.0.0
+  checksum: fa1ef20404a2d399235e83cc80bd55a956642e37dd197b4b612ba7327bf87fa32745aeb4a1634b2bab25467164ab4ed9c15be2c307923dd08b0fe7c52431ae6b
+  languageName: node
+  linkType: hard
+
 "redent@npm:^4.0.0":
   version: 4.0.0
   resolution: "redent@npm:4.0.0"
@@ -13334,6 +13364,15 @@ __metadata:
   version: 2.0.0
   resolution: "strip-final-newline@npm:2.0.0"
   checksum: 69412b5e25731e1938184b5d489c32e340605bb611d6140344abc3421b7f3c6f9984b21dff296dfcf056681b82caa3bb4cc996a965ce37bcfad663e92eae9c64
+  languageName: node
+  linkType: hard
+
+"strip-indent@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "strip-indent@npm:3.0.0"
+  dependencies:
+    min-indent: ^1.0.0
+  checksum: 18f045d57d9d0d90cd16f72b2313d6364fd2cb4bf85b9f593523ad431c8720011a4d5f08b6591c9d580f446e78855c5334a30fb91aa1560f5d9f95ed1b4a0530
   languageName: node
   linkType: hard
 

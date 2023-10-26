@@ -493,9 +493,9 @@ test.each([clientV2, clientWeb])('createAccount', async (client) => {
     );
     const signingKey1 =
         '1053de23867e0f92a48814aabff834e2ca0b518497abaef71cad4e1be506334a';
-    const signature = Buffer.from(
-        await ed.signAsync(hashToSign, signingKey1)
-    ).toString('hex');
+    const signature = Buffer.from(ed.sign(hashToSign, signingKey1)).toString(
+        'hex'
+    );
     const signatures: string[] = [signature];
     const payload = v1.serializeCredentialDeploymentPayload(
         signatures,

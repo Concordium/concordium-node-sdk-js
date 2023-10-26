@@ -14,7 +14,7 @@ import {
 import fs from 'fs';
 import * as ed from '#ed25519';
 
-test('test deserialize credentialDeployment ', async () => {
+test('test deserialize credentialDeployment ', () => {
     const identityInput: IdentityInput = getIdentityInput();
 
     const cryptographicParameters = JSON.parse(
@@ -66,12 +66,12 @@ test('test deserialize credentialDeployment ', async () => {
     const signingKey2 =
         'fcd0e499f5dc7a989a37f8c89536e9af956170d7f502411855052ff75cfc3646';
 
-    const signature1 = Buffer.from(
-        await ed.signAsync(hashToSign, signingKey1)
-    ).toString('hex');
-    const signature2 = Buffer.from(
-        await ed.signAsync(hashToSign, signingKey2)
-    ).toString('hex');
+    const signature1 = Buffer.from(ed.sign(hashToSign, signingKey1)).toString(
+        'hex'
+    );
+    const signature2 = Buffer.from(ed.sign(hashToSign, signingKey2)).toString(
+        'hex'
+    );
     const signatures: string[] = [signature1, signature2];
 
     const serialized = serializeCredentialDeploymentTransactionForSubmission(

@@ -20,7 +20,7 @@ alternative address, which is connected to the same account.  The getAlias
 function takes a counter (0 <= counter < 2^24) to determine which alias
 to return.
 
-{@codeblock ~~:common/aliases.ts#documentation-snippet}
+{@codeblock ~~:nodejs/common/aliases.ts#documentation-snippet}
 
 ## Deserialize contract state
 
@@ -112,7 +112,7 @@ the function `buildAccountSigner`.
 
 If you have a wallet file export from a Concordium wallet it can be used:
 
-{@codeblock ~~:common/buildAccountSigner.ts#documentation-snippet}
+{@codeblock ~~:nodejs/common/buildAccountSigner.ts#documentation-snippet}
 
 For a simple account, with a single credential and one keypair in the
 credential, one can also supply a single private key, like so:
@@ -144,7 +144,7 @@ the chain genesis tool, Concordium wallet exports, along with a map of type
 The following example demonstrates how to use the `signTransaction` helper
 function to sign a account transaction:
 
-{@codeblock ~~:common/simpleTransfer.ts#documentation-snippet-sign-transaction}
+{@codeblock ~~:nodejs/common/simpleTransfer.ts#documentation-snippet-sign-transaction}
 
 The following is an example of how to sign an account transaction without
 using the `signTransaction` helper function:

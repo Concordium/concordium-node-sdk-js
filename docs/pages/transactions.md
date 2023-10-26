@@ -25,7 +25,7 @@ Nodejs and Web SDK's.
 
 The following example demonstrates how a simple transfer can be created.
 
-{@codeblock ~~:common/simpleTransfer.ts#documentation-snippet}
+{@codeblock ~~:nodejs/common/simpleTransfer.ts#documentation-snippet}
 
 ### Create a Register data transaction
 
@@ -54,7 +54,7 @@ The following example demonstrates how a configure delegation transaction
 can be created. Note that although all the fields are optional, they are
 all required, when becoming a delegator.
 
-{@codeblock ~~:common/delegationAdd.ts#documentation-snippet}
+{@codeblock ~~:nodejs/common/delegationAdd.ts#documentation-snippet}
 
 ### Create a configure baker transaction
 
@@ -62,7 +62,7 @@ The following example demonstrates how a configure baker transaction can
 be created.  Note that although all the fields are optional, they are all
 required, when registering as a baker.
 
-{@codeblock ~~:common/bakerAdd.ts#documentation-snippet}
+{@codeblock ~~:nodejs/common/bakerAdd.ts#documentation-snippet}
 
 The open for delegation field determines the baker pools status and can have
 three different values:
@@ -200,14 +200,14 @@ account. Note that the initial credential with index 0 cannot be removed.
 The following example demonstrates how to construct a "deployModule"
 transaction, which is used to deploy a smart contract module.
 
-{@codeblock ~~:common/deployModule.ts#documentation-snippet}
+{@codeblock ~~:nodejs/common/deployModule.ts#documentation-snippet}
 
 ### Init Contract
 
 The following example demonstrates how to initialize a smart contract from
 a module, which has already been deployed. The name of the contract `"weather"`.
 
-{@codeblock ~~:composed-examples/initAndUpdateContract.ts#documentation-snippet-init-contract}
+{@codeblock ~~:nodejs/composed-examples/initAndUpdateContract.ts#documentation-snippet-init-contract}
 
 ### Update Contract
 
@@ -222,7 +222,7 @@ and the receive function has the name `"set"` then the receiveName should be
 We also need to supply the contract address of the contract instance. This
 consists of an index and a subindex.
 
-{@codeblock ~~:composed-examples/initAndUpdateContract.ts#documentation-snippet-update-contract}
+{@codeblock ~~:nodejs/composed-examples/initAndUpdateContract.ts#documentation-snippet-update-contract}
 
 ### Smart contract parameters
 

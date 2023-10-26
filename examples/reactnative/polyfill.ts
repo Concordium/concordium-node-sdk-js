@@ -1,3 +1,4 @@
+// #region documentation-snippet
 import '@stardazed/streams-polyfill';
 import '@azure/core-asynciterator-polyfill';
 
@@ -8,3 +9,4 @@ import { polyfill as polyfillCrypto } from 'react-native-polyfill-globals/src/cr
 
 polyfillEncoding();
 polyfillCrypto();
+// #endregion documentation-snippet

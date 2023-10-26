@@ -67,6 +67,10 @@ module.exports = {
                                 name: 'Upgrade Guide',
                                 source: 'upgrade-guide.md',
                             },
+                            {
+                                name: 'React Native',
+                                source: 'react-native.md',
+                            },
                         ],
                     },
                 ],

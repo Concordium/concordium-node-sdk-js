@@ -25,28 +25,9 @@ npx pod-install # if building for ios, adds native modules from dependencies to 
 
 ### Adding polyfill to app
 
-```js
-// polyfill.js
-import '@stardazed/streams-polyfill';
-import '@azure/core-asynciterator-polyfill';
-import { polyfill as polyfillEncoding } from 'react-native-polyfill-globals/src/encoding'; // Requires peer dependency `text-encoding`
-import { polyfill as polyfillCrypto } from 'react-native-polyfill-globals/src/crypto'; // Requires peer dependency `react-native-get-random-values`
+{@codeblock ~~:reactnative/polyfill.ts#documentation-snippet}
 
-polyfillEncoding();
-polyfillCrypto();
-```
-
-```js
-// index.js
-import { AppRegistry } from 'react-native';
-
-import './polyfill'; // polyfills must be added before ./App
-
-import App from './App';
-import { name as appName } from './app.json';
-
-AppRegistry.registerComponent(appName, () => App);
-```
+{@codeblock ~~:reactnative/index.js#documentation-snippet}
 
 This ensures the native modules required by the SDK are present.
 

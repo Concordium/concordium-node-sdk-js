@@ -6,9 +6,6 @@ const rnEsModules = [...esModules, 'react-native', '@react-native'];
 
 const config: Config = {
     preset: 'react-native',
-    // testEnvironmentOptions: {
-    //     customExportConditions: ['react-native', 'browser'],
-    // },
     moduleNameMapper: {
         ...nodeConfig.moduleNameMapper,
         // No idea why, but the following declaration seems to force the resolver to not respect package.json exports.

@@ -5,6 +5,8 @@
 // #region documentation-snippet
 import { AppRegistry } from 'react-native';
 
+// Polyfill must come before any reference to @concordium/web-sdk.
+// In this case, that means before importing ./App.tsx
 import './polyfill';
 
 import App from './App';

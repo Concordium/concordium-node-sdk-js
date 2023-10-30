@@ -6,6 +6,10 @@
 
 - Support for using the SDK in a react native environment. Requires installing `react-native-get-random-values` peer dependency in consuming package.
 
+### Fixed
+
+- Export type `BlockItem` in the public API again, this was removed accidentally in v7.0.0.
+
 ## 7.0.0
 
 ### Breaking changes
@@ -95,7 +99,6 @@ Several types have been replaced with a module containing the type itself togeth
   with the addition of stringifying concordium domain types in a wrapper object that can be parsed into the respective types.
 - Introduce function `versionedModuleSourceToBuffer` for serializing a versioned module to a buffer, which can be stored in a file.
 
-
 ### Changes
 
 - Added version discriminators to types versioned by the protocol version of Concordium nodes:
@@ -129,7 +132,6 @@ New consensus endpoints:
 - `getWinningBakersEpoch`
 - `getFirstBlockEpoch`
 - `commissionRates` is now added to the `getPoolInfo` under `bakerPoolStatus.PoolInfo`
-
 
 ## 6.4.0
 

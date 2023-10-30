@@ -44,9 +44,10 @@
             "default": "./lib/esm/pub/*.js"
         },
         "./shims/ed25519": {
-            "types": "./lib/esm/shims/ed25519.d.ts",
-            "node": "./lib/esm/shims/ed25519.node.js",
-            "default": "./lib/esm/shims/ed25519.js"
+            "types": "./lib/esm/shims/ed25519/default.d.ts",
+            "react-native": "./lib/esm/shims/ed25519/react-native.js",
+            "node": "./lib/esm/shims/ed25519/node.js",
+            "default": "./lib/esm/shims/ed25519/default.js"
         }
     },
     "files": [

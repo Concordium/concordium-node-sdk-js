@@ -7,4 +7,4 @@ import { webcrypto } from 'node:crypto';
 if (!globalThis.crypto) globalThis.crypto = webcrypto;
 
 // eslint-disable-next-line import/export
-export * from './ed25519.js';
+export * from '@noble/ed25519';

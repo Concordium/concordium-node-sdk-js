@@ -289,7 +289,7 @@ export class Web3IdSigner {
      */
     public static async from(privateKey: HexString): Promise<Web3IdSigner> {
         const publicKey = Buffer.from(
-            ed.getPublicKey(Buffer.from(privateKey, 'hex'))
+            await ed.getPublicKeyAsync(Buffer.from(privateKey, 'hex'))
         ).toString('hex');
         return new Web3IdSigner(privateKey, publicKey);
     }

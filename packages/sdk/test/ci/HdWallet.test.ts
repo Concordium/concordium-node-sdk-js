@@ -28,13 +28,13 @@ test('Mainnet public key', () => {
     );
 });
 
-test('Mainnet public and signing key match', () => {
+test('Mainnet public and signing key match', async () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Mainnet');
     const privateKey = wallet.getAccountSigningKey(0, 0, 0);
     const publicKey = wallet.getAccountPublicKey(0, 0, 0);
     const message = 'abcd1234abcd5678';
-    const signature = ed.sign(message, privateKey.toString('hex'));
-    expect(ed.verify(signature, message, publicKey)).toBeTruthy();
+    const signature = await ed.signAsync(message, privateKey.toString('hex'));
+    expect(await ed.verifyAsync(signature, message, publicKey)).toBeTruthy();
 });
 
 test('Mainnet Id Cred Sec', () => {
@@ -112,13 +112,13 @@ test('Testnet public key', () => {
     );
 });
 
-test('Testnet public and signing key match', () => {
+test('Testnet public and signing key match', async () => {
     const wallet = ConcordiumHdWallet.fromHex(TEST_SEED_1, 'Testnet');
     const privateKey = wallet.getAccountSigningKey(0, 0, 0);
     const publicKey = wallet.getAccountPublicKey(0, 0, 0);
     const message = 'abcd1234abcd5678';
-    const signature = ed.sign(message, privateKey.toString('hex'));
-    expect(ed.verify(signature, message, publicKey)).toBeTruthy();
+    const signature = await ed.signAsync(message, privateKey.toString('hex'));
+    expect(await ed.verifyAsync(signature, message, publicKey)).toBeTruthy();
 });
 
 test('Testnet Id Cred Sec', () => {

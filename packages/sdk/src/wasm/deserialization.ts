@@ -4,12 +4,7 @@ import {
     deserializeUint8,
 } from '../deserialization.js';
 import { Cursor } from '../deserializationHelpers.js';
-import {
-    AccountTransaction,
-    AccountTransactionSignature,
-    BlockItemKind,
-    TypedCredentialDeployment,
-} from '../types.js';
+import { BlockItem, BlockItemKind } from '../types.js';
 
 function deserializeCredentialDeployment(serializedDeployment: Cursor) {
     const raw = wasm.deserializeCredentialDeployment(
@@ -26,22 +21,6 @@ function deserializeCredentialDeployment(serializedDeployment: Cursor) {
         throw new Error(raw);
     }
 }
-
-export type BlockItem =
-    | {
-          kind: BlockItemKind.AccountTransactionKind;
-          transaction: {
-              accountTransaction: AccountTransaction;
-              signatures: AccountTransactionSignature;
-          };
-      }
-    | {
-          kind: BlockItemKind.CredentialDeploymentKind;
-          transaction: {
-              credential: TypedCredentialDeployment;
-              expiry: number;
-          };
-      };
 
 /**
  * Deserializes a transaction, from the binary format used to send it to the node, back into an js object.

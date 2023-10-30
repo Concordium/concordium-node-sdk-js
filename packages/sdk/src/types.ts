@@ -1845,3 +1845,22 @@ export type HealthCheckResponse =
           isHealthy: false;
           message?: string;
       };
+
+/**
+ * Type representing an item which is included in a block, such as account transactions, chain updates or deployments of new credentials.
+ */
+export type BlockItem =
+    | {
+          kind: BlockItemKind.AccountTransactionKind;
+          transaction: {
+              accountTransaction: AccountTransaction;
+              signatures: AccountTransactionSignature;
+          };
+      }
+    | {
+          kind: BlockItemKind.CredentialDeploymentKind;
+          transaction: {
+              credential: TypedCredentialDeployment;
+              expiry: number;
+          };
+      };

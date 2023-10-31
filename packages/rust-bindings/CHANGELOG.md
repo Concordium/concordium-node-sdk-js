@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.1
+
+### Added
+
+- Added react-native condition to root/dapp subpath for, which uses javascript converted from the corresponding WASM used otherwise.
+
 ## 2.0.0
 
 ### Breaking changes

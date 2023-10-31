@@ -1,6 +1,6 @@
 {
     "name": "@concordium/web-sdk",
-    "version": "7.0.0",
+    "version": "7.0.1",
     "license": "Apache-2.0",
     "engines": {
         "node": ">=16"
@@ -91,7 +91,7 @@
         "clean": "rimraf -- lib src/grpc-api"
     },
     "dependencies": {
-        "@concordium/rust-bindings": "2.0.0",
+        "@concordium/rust-bindings": "2.0.1",
         "@grpc/grpc-js": "^1.9.4",
         "@noble/ed25519": "^2.0.0",
         "@noble/hashes": "^1.3.2",

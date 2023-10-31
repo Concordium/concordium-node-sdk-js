@@ -1,8 +1,13 @@
 # Changelog
 
-## Unreleased
+## 7.0.1
 
-### Fix
+### Added
+
+- Support for using the SDK in a react native environment. Requires polyfilling functionality used within the SDK.
+  Please refer to the guide found at [the react native compatibility guide](https://developer.concordium.software/concordium-node-sdk-js/pages/misc-pages/react-native.html)
+
+### Fixed
 
 - Export type `BlockItem` in the public API again, this was removed accidentally in v7.0.0.
 
@@ -95,7 +100,6 @@ Several types have been replaced with a module containing the type itself togeth
   with the addition of stringifying concordium domain types in a wrapper object that can be parsed into the respective types.
 - Introduce function `versionedModuleSourceToBuffer` for serializing a versioned module to a buffer, which can be stored in a file.
 
-
 ### Changes
 
 - Added version discriminators to types versioned by the protocol version of Concordium nodes:
@@ -129,7 +133,6 @@ New consensus endpoints:
 - `getWinningBakersEpoch`
 - `getFirstBlockEpoch`
 - `commissionRates` is now added to the `getPoolInfo` under `bakerPoolStatus.PoolInfo`
-
 
 ## 6.4.0
 

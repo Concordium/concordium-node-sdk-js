@@ -4,13 +4,17 @@
         "lib": [
             "ES2020",
             "DOM" // To get WebAssembly type.
-        ]
+        ],
+        "allowImportingTsExtensions": true
     },
     "include": [
         "src/**/*",
+        "polyfill/**/*",
         "scripts/**/*",
         "test/**/*",
         "webpack.config.ts",
+        "jest.config.react-native.ts",
+        "jest.config.web.ts",
         "jest.config.ts"
     ]
 }

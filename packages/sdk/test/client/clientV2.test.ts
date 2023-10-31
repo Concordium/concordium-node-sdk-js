@@ -19,19 +19,18 @@ import {
     getNodeClientV2,
     getNodeClientWeb,
 } from './testHelpers.js';
-import * as ed from '#ed25519';
+// self-referencing not allowed by eslint resolver
+// eslint-disable-next-line import/no-extraneous-dependencies
+import * as ed from '@concordium/web-sdk/shims/ed25519';
 import * as expected from './resources/expectedJsons.js';
 
-import { TextEncoder, TextDecoder } from 'util';
 import { getModuleBuffer } from '../../src/nodejs/index.js';
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-global.TextEncoder = TextEncoder as any;
-global.TextDecoder = TextDecoder as any;
-/* eslint-enable @typescript-eslint/no-explicit-any */
+import { testEnvironment } from '../globals.ts';
 
 const clientV2 = getNodeClientV2();
 const clientWeb = getNodeClientWeb();
+const clients =
+    testEnvironment === 'node' ? [clientV2, clientWeb] : [clientWeb];
 
 const testAccount = v1.AccountAddress.fromBase58(
     '3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'
@@ -62,38 +61,31 @@ function getAccountInfoV2(
     return client.client.getAccountInfo(accountInfoRequest).response;
 }
 
-test.each([clientV2, clientWeb])(
-    'getCryptographicParameters',
-    async (client) => {
-        const parameters = await client.getCryptographicParameters(
-            testBlockHash
-        );
-        expect(parameters.genesisString).toEqual(
-            'Concordium Testnet Version 5'
-        );
-        expect(parameters.onChainCommitmentKey).toEqual(
-            'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a8d45e64b6f917c540eee16c970c3d4b7f3caf48a7746284878e2ace21c82ea44bf84609834625be1f309988ac523fac'
-        );
+test.each(clients)('getCryptographicParameters', async (client) => {
+    const parameters = await client.getCryptographicParameters(testBlockHash);
+    expect(parameters.genesisString).toEqual('Concordium Testnet Version 5');
+    expect(parameters.onChainCommitmentKey).toEqual(
+        'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5a8d45e64b6f917c540eee16c970c3d4b7f3caf48a7746284878e2ace21c82ea44bf84609834625be1f309988ac523fac'
+    );
 
-        expect(parameters.bulletproofGenerators).toEqual(
-            Buffer.from(testnetBulletproofGenerators, 'base64').toString('hex')
-        );
-    }
-);
+    expect(parameters.bulletproofGenerators).toEqual(
+        Buffer.from(testnetBulletproofGenerators, 'base64').toString('hex')
+    );
+});
 
-test.each([clientV2, clientWeb])('nextAccountNonce', async (client) => {
+test.each(clients)('nextAccountNonce', async (client) => {
     const nan = await client.getNextAccountNonce(testAccount);
     expect(nan.nonce.value).toBeGreaterThanOrEqual(19n);
     expect(nan.allFinal).toBeDefined();
 });
 
-test.each([clientV2, clientWeb])('getAccountInfo', async (client) => {
+test.each(clients)('getAccountInfo', async (client) => {
     const accountInfo = await getAccountInfoV2(client, testAccount);
 
     expect(v2.AccountInfo.toJson(accountInfo)).toEqual(expected.accountInfo);
 });
 
-test.each([clientV2, clientWeb])('getAccountInfo for baker', async (client) => {
+test.each(clients)('getAccountInfo for baker', async (client) => {
     const accInfo = await getAccountInfoV2(client, testAccBaker);
     const accountIndexInfo = await getAccountInfoV2(client, 5n);
 
@@ -109,22 +101,19 @@ test.each([clientV2, clientWeb])('getAccountInfo for baker', async (client) => {
     }
 });
 
-test.each([clientV2, clientWeb])(
-    'getAccountInfo for delegator',
-    async (client) => {
-        const accInfo = await getAccountInfoV2(client, testAccDeleg);
+test.each(clients)('getAccountInfo for delegator', async (client) => {
+    const accInfo = await getAccountInfoV2(client, testAccDeleg);
 
-        if (accInfo.stake) {
-            expect(v2.AccountStakingInfo.toJson(accInfo.stake)).toEqual(
-                expected.stakingInfoDelegator
-            );
-        } else {
-            throw Error('Stake field not found in accountInfo.');
-        }
+    if (accInfo.stake) {
+        expect(v2.AccountStakingInfo.toJson(accInfo.stake)).toEqual(
+            expected.stakingInfoDelegator
+        );
+    } else {
+        throw Error('Stake field not found in accountInfo.');
     }
-);
+});
 
-test.each([clientV2, clientWeb])(
+test.each(clients)(
     'getAccountInfo: Account Address and CredentialRegistrationId is equal',
     async (client) => {
         const accInfo = await client.getAccountInfo(testAccount, testBlockHash);
@@ -137,7 +126,7 @@ test.each([clientV2, clientWeb])(
     }
 );
 
-test.each([clientV2, clientWeb])(
+test.each(clients)(
     // TODO: fails..
     'accountInfo implementations is the same',
     async (client) => {
@@ -152,7 +141,7 @@ test.each([clientV2, clientWeb])(
     }
 );
 
-test.each([clientV2, clientWeb])(
+test.each(clients)(
     'getChainParameters corresponds to GetBlockSummary subset',
     async (client) => {
         const chainParameters = await client.getBlockChainParameters(
@@ -163,7 +152,7 @@ test.each([clientV2, clientWeb])(
     }
 );
 
-test.each([clientV2, clientWeb])(
+test.each(clients)(
     'getChainParameters corresponds to GetBlockSummary subset on protocol level < 4',
     async (client) => {
         const oldBlockHash = v1.BlockHash.fromHexString(
@@ -177,7 +166,7 @@ test.each([clientV2, clientWeb])(
     }
 );
 
-test.each([clientV2, clientWeb])(
+test.each(clients)(
     'getPoolInfo corresponds to getPoolStatus with a bakerId',
     async (client) => {
         const bakerPoolStatus = await client.getPoolInfo(1n, testBlockHash);
@@ -186,7 +175,7 @@ test.each([clientV2, clientWeb])(
     }
 );
 
-test.each([clientV2, clientWeb])(
+test.each(clients)(
     'getPassiveDelegationInfo corresponds to getPoolStatus with no bakerId',
     async (client) => {
         const status = await client.getPassiveDelegationInfo(testBlockHash);
@@ -194,7 +183,7 @@ test.each([clientV2, clientWeb])(
     }
 );
 
-test.each([clientV2, clientWeb])(
+test.each(clients)(
     'getPoolInfo corresponds to getPoolStatus with bakerId (with pending change)',
     async (client) => {
         const changeHash = v1.BlockHash.fromHexString(
@@ -208,35 +197,25 @@ test.each([clientV2, clientWeb])(
     }
 );
 
-test.each([clientV2, clientWeb])(
-    'getBlockItemStatus on chain update',
-    async (client) => {
-        const transactionHash = v1.TransactionHash.fromHexString(
-            '3de823b876d05cdd33a311a0f84124079f5f677afb2534c4943f830593edc650'
-        );
-        const blockItemStatus = await client.getBlockItemStatus(
-            transactionHash
-        );
+test.each(clients)('getBlockItemStatus on chain update', async (client) => {
+    const transactionHash = v1.TransactionHash.fromHexString(
+        '3de823b876d05cdd33a311a0f84124079f5f677afb2534c4943f830593edc650'
+    );
+    const blockItemStatus = await client.getBlockItemStatus(transactionHash);
 
-        expect(blockItemStatus).toEqual(expected.blockItemStatusUpdate);
-    }
-);
+    expect(blockItemStatus).toEqual(expected.blockItemStatusUpdate);
+});
 
-test.each([clientV2, clientWeb])(
-    'getBlockItemStatus on simple transfer',
-    async (client) => {
-        const transactionHash = v1.TransactionHash.fromHexString(
-            '502332239efc0407eebef5c73c390080e5d7e1b127ff29f786a62b3c9ab6cfe7'
-        );
-        const blockItemStatus = await client.getBlockItemStatus(
-            transactionHash
-        );
+test.each(clients)('getBlockItemStatus on simple transfer', async (client) => {
+    const transactionHash = v1.TransactionHash.fromHexString(
+        '502332239efc0407eebef5c73c390080e5d7e1b127ff29f786a62b3c9ab6cfe7'
+    );
+    const blockItemStatus = await client.getBlockItemStatus(transactionHash);
 
-        expect(blockItemStatus).toEqual(expected.blockItemStatusTransfer);
-    }
-);
+    expect(blockItemStatus).toEqual(expected.blockItemStatusTransfer);
+});
 
-test.each([clientV2, clientWeb])('getInstanceInfo', async (client) => {
+test.each(clients)('getInstanceInfo', async (client) => {
     const contractAddress = v1.ContractAddress.create(0, 0);
     const instanceInfo = await client.getInstanceInfo(
         contractAddress,
@@ -246,7 +225,7 @@ test.each([clientV2, clientWeb])('getInstanceInfo', async (client) => {
     expect(instanceInfo).toEqual(expected.instanceInfo);
 });
 
-test.each([clientV2, clientWeb])('Failed invoke contract', async (client) => {
+test.each(clients)('Failed invoke contract', async (client) => {
     const result = await client.invokeContract(
         {
             invoker: testAccount,
@@ -267,26 +246,23 @@ test.each([clientV2, clientWeb])('Failed invoke contract', async (client) => {
     expect(result.reason.tag).toBe(v1.RejectReasonTag.RejectedReceive);
 });
 
-test.each([clientV2, clientWeb])(
-    'Invoke contract on v0 contract',
-    async (client) => {
-        const result = await client.invokeContract(
-            {
-                invoker: testAccount,
-                contract: v1.ContractAddress.create(6),
-                method: v1.ReceiveName.fromStringUnchecked('PiggyBank.insert'),
-                amount: v1.CcdAmount.fromMicroCcd(1n),
-                parameter: undefined,
-                energy: v1.Energy.create(30000),
-            },
-            testBlockHash
-        );
+test.each(clients)('Invoke contract on v0 contract', async (client) => {
+    const result = await client.invokeContract(
+        {
+            invoker: testAccount,
+            contract: v1.ContractAddress.create(6),
+            method: v1.ReceiveName.fromStringUnchecked('PiggyBank.insert'),
+            amount: v1.CcdAmount.fromMicroCcd(1n),
+            parameter: undefined,
+            energy: v1.Energy.create(30000),
+        },
+        testBlockHash
+    );
 
-        expect(result).toEqual(expected.invokeInstanceResponseV0);
-    }
-);
+    expect(result).toEqual(expected.invokeInstanceResponseV0);
+});
 
-test.each([clientV2, clientWeb])(
+test.each(clients)(
     'Invoke contract same in v1 and v2 on v1 contract',
     async (client) => {
         const context = {
@@ -303,7 +279,7 @@ test.each([clientV2, clientWeb])(
     }
 );
 
-test.each([clientV2, clientWeb])('getModuleSource', async (client) => {
+test.each(clients)('getModuleSource', async (client) => {
     const localModuleBytes = getModuleBuffer(
         'test/client/resources/piggy_bank.wasm'
     );
@@ -323,7 +299,7 @@ test.each([clientV2, clientWeb])('getModuleSource', async (client) => {
     );
 });
 
-test.each([clientV2, clientWeb])('getConsensusStatus', async (client) => {
+test.each(clients)('getConsensusStatus', async (client) => {
     const genesisBlock = v1.BlockHash.fromHexString(
         '4221332d34e1694168c2a0c0b3fd0f273809612cb13d000d5c2e00e85f50f796'
     );
@@ -335,7 +311,7 @@ test.each([clientV2, clientWeb])('getConsensusStatus', async (client) => {
     expect(ci.lastFinalizedTime?.getTime()).toBeGreaterThan(1669214033937n); // 23Nov2022 in milliseconds
 });
 
-test.each([clientV2, clientWeb])('sendBlockItem', async (client) => {
+test.each(clients)('sendBlockItem', async (client) => {
     const senderAccount = v1.AccountAddress.fromBase58(
         '37TRfx9PqFX386rFcNThyA3zdoWsjF8Koy6Nh3i8VrPy4duEsA'
     );
@@ -371,7 +347,7 @@ test.each([clientV2, clientWeb])('sendBlockItem', async (client) => {
     ).rejects.toThrow('costs');
 });
 
-test.each([clientV2, clientWeb])('transactionHash', async (client) => {
+test.each(clients)('transactionHash', async (client) => {
     const senderAccount = v1.AccountAddress.fromBase58(
         '37TRfx9PqFX386rFcNThyA3zdoWsjF8Koy6Nh3i8VrPy4duEsA'
     );
@@ -446,7 +422,7 @@ test.each([clientV2, clientWeb])('transactionHash', async (client) => {
 });
 
 // Todo: verify that accounts can actually be created.
-test.each([clientV2, clientWeb])('createAccount', async (client) => {
+test.each(clients)('createAccount', async (client) => {
     // Get information from node
     const lastFinalizedBlockHash = (await client.getConsensusStatus())
         .lastFinalizedBlock;
@@ -507,27 +483,27 @@ test.each([clientV2, clientWeb])('createAccount', async (client) => {
     ).rejects.toThrow('expired');
 });
 
-test.each([clientV2, clientWeb])('getAccountList', async (client) => {
+test.each(clients)('getAccountList', async (client) => {
     const blocks = await client.getBlocksAtHeight(10n);
     const accountIter = client.getAccountList(blocks[0]);
     const accountList = await streamToList(accountIter);
     expect(accountList).toEqual(expected.accountList);
 });
 
-test.each([clientV2, clientWeb])('getModuleList', async (client) => {
+test.each(clients)('getModuleList', async (client) => {
     const blocks = await client.getBlocksAtHeight(5000n);
     const moduleIter = client.getModuleList(blocks[0]);
     const moduleList = await streamToList(moduleIter);
     expect(moduleList).toEqual(expected.moduleList);
 });
 
-test.each([clientV2, clientWeb])('getAncestors', async (client) => {
+test.each(clients)('getAncestors', async (client) => {
     const ancestorsIter = client.getAncestors(3n, testBlockHash);
     const ancestorsList = await streamToList(ancestorsIter);
     expect(ancestorsList).toEqual(expected.ancestorList);
 });
 
-test.each([clientV2, clientWeb])('getInstanceState', async (client) => {
+test.each(clients)('getInstanceState', async (client) => {
     const contract = v1.ContractAddress.create(602);
     const instanceStateIter = client.getInstanceState(contract, testBlockHash);
     const instanceStateList = await streamToList(instanceStateIter);
@@ -535,7 +511,7 @@ test.each([clientV2, clientWeb])('getInstanceState', async (client) => {
     expect(instanceStateList).toEqual(expected.instanceStateList);
 });
 
-test.each([clientV2, clientWeb])('instanceStateLookup', async (client) => {
+test.each(clients)('instanceStateLookup', async (client) => {
     const key = '0000000000000000';
     const expectedValue = '0800000000000000';
     const contract = v1.ContractAddress.create(601);
@@ -548,7 +524,7 @@ test.each([clientV2, clientWeb])('instanceStateLookup', async (client) => {
     expect(value).toEqual(expectedValue);
 });
 
-test.each([clientV2, clientWeb])('getIdentityProviders', async (client) => {
+test.each(clients)('getIdentityProviders', async (client) => {
     const earlyBlock = await client.getBlocksAtHeight(1n);
     const ips = client.getIdentityProviders(earlyBlock[0]);
     const ipList = await streamToList(ips);
@@ -557,7 +533,7 @@ test.each([clientV2, clientWeb])('getIdentityProviders', async (client) => {
     expect(ipList).toEqual(expected.ipList);
 });
 
-test.each([clientV2, clientWeb])('getAnonymityRevokers', async (client) => {
+test.each(clients)('getAnonymityRevokers', async (client) => {
     const earlyBlock = await client.getBlocksAtHeight(1n);
     const ars = client.getAnonymityRevokers(earlyBlock[0]);
     const arList = await streamToList(ars);
@@ -565,30 +541,27 @@ test.each([clientV2, clientWeb])('getAnonymityRevokers', async (client) => {
     expect(arList).toEqual(expected.arList);
 });
 
-test.each([clientV2, clientWeb])('getBlocksAtHeight', async (client) => {
+test.each(clients)('getBlocksAtHeight', async (client) => {
     const blocks = await client.getBlocksAtHeight(1n);
 
     expect(blocks).toEqual(expected.blocksAtHeight);
 });
 
-test.each([clientV2, clientWeb])(
-    'getBlocksAtHeight different request',
-    async (client) => {
-        const request: v1.BlocksAtHeightRequest = {
-            genesisIndex: 1,
-            height: 100n,
-            restrict: true,
-        };
-        const expectedBlock = v1.BlockHash.fromHexString(
-            '956c3bc5c9d10449e13686a4cc69e8bc7dee450608866242075a6ce37331187c'
-        );
-        const blocks = await client.getBlocksAtHeight(request);
+test.each(clients)('getBlocksAtHeight different request', async (client) => {
+    const request: v1.BlocksAtHeightRequest = {
+        genesisIndex: 1,
+        height: 100n,
+        restrict: true,
+    };
+    const expectedBlock = v1.BlockHash.fromHexString(
+        '956c3bc5c9d10449e13686a4cc69e8bc7dee450608866242075a6ce37331187c'
+    );
+    const blocks = await client.getBlocksAtHeight(request);
 
-        expect(blocks[0]).toEqual(expectedBlock);
-    }
-);
+    expect(blocks[0]).toEqual(expectedBlock);
+});
 
-test.each([clientV2, clientWeb])('getBlockInfo', async (client) => {
+test.each(clients)('getBlockInfo', async (client) => {
     const blockInfo = await client.getBlockInfo(testBlockHash);
 
     expect(blockInfo.blockParent).toEqual(
@@ -625,33 +598,30 @@ test.each([clientV2, clientWeb])('getBlockInfo', async (client) => {
     expect(blockInfo.protocolVersion).toEqual(4n);
 });
 
-test.each([clientV2, clientWeb])('getBakerList', async (client) => {
+test.each(clients)('getBakerList', async (client) => {
     const bakerAsyncIterable = client.getBakerList(testBlockHash);
     const bakers = await streamToList(bakerAsyncIterable);
 
     expect(bakers).toEqual(expected.bakers);
 });
 
-test.each([clientV2, clientWeb])('getPoolDelegators', async (client) => {
+test.each(clients)('getPoolDelegators', async (client) => {
     const delegatorInfoStream = client.getPoolDelegators(15n, testBlockHash);
     const delegatorInfoList = await streamToList(delegatorInfoStream);
 
     expect(delegatorInfoList).toEqual(expected.delegatorInfoList);
 });
 
-test.each([clientV2, clientWeb])(
-    'getPoolDelegatorsRewardPeriod',
-    async (client) => {
-        const delegatorInfoStream = client.getPoolDelegatorsRewardPeriod(
-            15n,
-            testBlockHash
-        );
-        const delegatorInfoList = await streamToList(delegatorInfoStream);
+test.each(clients)('getPoolDelegatorsRewardPeriod', async (client) => {
+    const delegatorInfoStream = client.getPoolDelegatorsRewardPeriod(
+        15n,
+        testBlockHash
+    );
+    const delegatorInfoList = await streamToList(delegatorInfoStream);
 
-        expect(delegatorInfoList).toEqual(expected.delegatorInfoList);
-    }
-);
-test.each([clientV2, clientWeb])('getPassiveDelegators', async (client) => {
+    expect(delegatorInfoList).toEqual(expected.delegatorInfoList);
+});
+test.each(clients)('getPassiveDelegators', async (client) => {
     const blocks = await client.getBlocksAtHeight(10000n);
     const passiveDelegatorInfoStream = client.getPassiveDelegators(blocks[0]);
     const passiveDelegatorInfoList = await streamToList(
@@ -661,23 +631,20 @@ test.each([clientV2, clientWeb])('getPassiveDelegators', async (client) => {
     expect(passiveDelegatorInfoList).toEqual(expected.passiveDelegatorInfoList);
 });
 
-test.each([clientV2, clientWeb])(
-    'getPassiveDelegatorsRewardPeriod',
-    async (client) => {
-        const blocks = await client.getBlocksAtHeight(10000n);
-        const passiveDelegatorRewardInfoStream =
-            client.getPassiveDelegatorsRewardPeriod(blocks[0]);
-        const passiveDelegatorRewardInfoList = await streamToList(
-            passiveDelegatorRewardInfoStream
-        );
+test.each(clients)('getPassiveDelegatorsRewardPeriod', async (client) => {
+    const blocks = await client.getBlocksAtHeight(10000n);
+    const passiveDelegatorRewardInfoStream =
+        client.getPassiveDelegatorsRewardPeriod(blocks[0]);
+    const passiveDelegatorRewardInfoList = await streamToList(
+        passiveDelegatorRewardInfoStream
+    );
 
-        expect(passiveDelegatorRewardInfoList).toEqual(
-            expected.passiveDelegatorRewardInfoList
-        );
-    }
-);
+    expect(passiveDelegatorRewardInfoList).toEqual(
+        expected.passiveDelegatorRewardInfoList
+    );
+});
 
-test.each([clientV2, clientWeb])('getBranches', async (client) => {
+test.each(clients)('getBranches', async (client) => {
     const branch = await client.getBranches();
 
     expect(branch).toBeDefined();
@@ -685,72 +652,57 @@ test.each([clientV2, clientWeb])('getBranches', async (client) => {
     expect(branch.children).toBeDefined();
 });
 
-test.each([clientV2, clientWeb])('getElectionInfo', async (client) => {
+test.each(clients)('getElectionInfo', async (client) => {
     const blocks = await client.getBlocksAtHeight(10n);
     const electionInfo = await client.getElectionInfo(blocks[0]);
 
     expect(electionInfo).toEqual(expected.electionInfoList);
 });
 
-test.each([clientV2, clientWeb])(
-    'getAccountNonFinalizedTransactions',
-    async (client) => {
-        const transactions =
-            client.getAccountNonFinalizedTransactions(testAccount);
-        const transactionsList = await streamToList(transactions);
+test.each(clients)('getAccountNonFinalizedTransactions', async (client) => {
+    const transactions = client.getAccountNonFinalizedTransactions(testAccount);
+    const transactionsList = await streamToList(transactions);
 
-        expect(transactionsList).toBeDefined();
-        if (transactionsList[0]) {
-            expect(typeof transactionsList[0]).toEqual('string');
-        }
+    expect(transactionsList).toBeDefined();
+    if (transactionsList[0]) {
+        expect(typeof transactionsList[0]).toEqual('string');
     }
-);
+});
 
-test.each([clientV2, clientWeb])(
-    'getBlockTransactionEvents',
-    async (client) => {
-        const blockHash = v1.BlockHash.fromHexString(
-            '8f3acabb19ef769db4d13ada858a305cc1a3d64adeb78fcbf3bb9f7583de6362'
-        );
-        const transactionEvents = client.getBlockTransactionEvents(blockHash);
-        const transactionEventList = await streamToList(transactionEvents);
+test.each(clients)('getBlockTransactionEvents', async (client) => {
+    const blockHash = v1.BlockHash.fromHexString(
+        '8f3acabb19ef769db4d13ada858a305cc1a3d64adeb78fcbf3bb9f7583de6362'
+    );
+    const transactionEvents = client.getBlockTransactionEvents(blockHash);
+    const transactionEventList = await streamToList(transactionEvents);
 
-        expect(transactionEventList).toEqual(expected.transactionEventList);
-    }
-);
+    expect(transactionEventList).toEqual(expected.transactionEventList);
+});
 
-test.each([clientV2, clientWeb])(
-    'getBlockTransactionEvents',
-    async (client) => {
-        const blockHash = v1.BlockHash.fromHexString(
-            '8f3acabb19ef769db4d13ada858a305cc1a3d64adeb78fcbf3bb9f7583de6362'
-        );
-        const transactionEvents = client.getBlockTransactionEvents(blockHash);
-        const transactionEventList = await streamToList(transactionEvents);
+test.each(clients)('getBlockTransactionEvents', async (client) => {
+    const blockHash = v1.BlockHash.fromHexString(
+        '8f3acabb19ef769db4d13ada858a305cc1a3d64adeb78fcbf3bb9f7583de6362'
+    );
+    const transactionEvents = client.getBlockTransactionEvents(blockHash);
+    const transactionEventList = await streamToList(transactionEvents);
 
-        expect(transactionEventList).toEqual(expected.transactionEventList);
-    }
-);
+    expect(transactionEventList).toEqual(expected.transactionEventList);
+});
 
-test.each([clientV2, clientWeb])(
-    'getNextUpdateSequenceNumbers',
-    async (client) => {
-        const seqNums = await client.getNextUpdateSequenceNumbers(
-            testBlockHash
-        );
+test.each(clients)('getNextUpdateSequenceNumbers', async (client) => {
+    const seqNums = await client.getNextUpdateSequenceNumbers(testBlockHash);
 
-        expect(seqNums).toEqual(expected.seqNums);
-    }
-);
+    expect(seqNums).toEqual(expected.seqNums);
+});
 
-test.each([clientV2, clientWeb])('getBlockSpecialEvents', async (client) => {
+test.each(clients)('getBlockSpecialEvents', async (client) => {
     const specialEventStream = client.getBlockSpecialEvents(testBlockHash);
     const specialEventList = await streamToList(specialEventStream);
 
     expect(specialEventList).toEqual(expected.specialEventList);
 });
 
-test.each([clientV2, clientWeb])('getBlockPendingUpdates', async (client) => {
+test.each(clients)('getBlockPendingUpdates', async (client) => {
     const pendingUpdateBlock = v1.BlockHash.fromHexString(
         '39122a9c720cae643b999d93dd7bf09bcf50e99bb716767dd35c39690390db54'
     );
@@ -765,18 +717,15 @@ test.each([clientV2, clientWeb])('getBlockPendingUpdates', async (client) => {
     expect(pendingUpdateList[0].effect).toEqual(expected.pendingUpdate.effect);
 });
 
-test.each([clientV2, clientWeb])(
-    'getBlockFinalizationSummary',
-    async (client) => {
-        const finalizationSummary = await client.getBlockFinalizationSummary(
-            testBlockHash
-        );
+test.each(clients)('getBlockFinalizationSummary', async (client) => {
+    const finalizationSummary = await client.getBlockFinalizationSummary(
+        testBlockHash
+    );
 
-        expect(finalizationSummary).toEqual(expected.blockFinalizationSummary);
-    }
-);
+    expect(finalizationSummary).toEqual(expected.blockFinalizationSummary);
+});
 
-test.each([clientV2, clientWeb])('getEmbeddedSchema', async (client) => {
+test.each(clients)('getEmbeddedSchema', async (client) => {
     const contract = v1.ContractAddress.create(4422);
     const moduleRef = v1.ModuleReference.fromHexString(
         '44434352ddba724930d6b1b09cd58bd1fba6ad9714cf519566d5fe72d80da0d1'
@@ -809,7 +758,7 @@ describe('Long run-time test suite', () => {
     const longTestTime = 45000;
 
     // Sometimes fails as there is no guarantee that a new block comes fast enough.
-    test.each([clientV2, clientWeb])(
+    test.each(clients)(
         'getFinalizedBlocks',
         async (client) => {
             const ac = new AbortController();
@@ -825,7 +774,7 @@ describe('Long run-time test suite', () => {
     );
 
     // Sometimes fails as there is no guarantee that a new block comes fast enough.
-    test.each([clientV2, clientWeb])(
+    test.each(clients)(
         'getBlocks',
         async (client) => {
             const ac = new AbortController();
@@ -841,7 +790,7 @@ describe('Long run-time test suite', () => {
     );
 });
 
-test.each([clientV2, clientWeb])('getFinalizedBlocksFrom', async (client) => {
+test.each(clients)('getFinalizedBlocksFrom', async (client) => {
     const expectedValues = [
         {
             height: 123n,
@@ -873,69 +822,63 @@ test.each([clientV2, clientWeb])('getFinalizedBlocksFrom', async (client) => {
 });
 
 describe('findEarliestFinalized', () => {
-    test.each([clientV2, clientWeb])(
-        'Finds expected result',
-        async (client) => {
-            const [genesisBlockHash] = await client.getBlocksAtHeight(0n);
-            const genesisAccounts = await streamToList(
-                client.getAccountList(genesisBlockHash)
-            );
+    test.each(clients)('Finds expected result', async (client) => {
+        const [genesisBlockHash] = await client.getBlocksAtHeight(0n);
+        const genesisAccounts = await streamToList(
+            client.getAccountList(genesisBlockHash)
+        );
 
-            const firstAccount = await client.findEarliestFinalized(
-                async (bi) => {
-                    const accounts = await streamToList(
-                        client.getAccountList(bi.hash)
-                    );
+        const firstAccount = await client.findEarliestFinalized(
+            async (bi) => {
+                const accounts = await streamToList(
+                    client.getAccountList(bi.hash)
+                );
 
-                    if (accounts.length > genesisAccounts.length) {
-                        return accounts.filter(
-                            (a) =>
-                                !genesisAccounts.some(
-                                    v1.AccountAddress.equals.bind(undefined, a)
-                                )
-                        )[0];
-                    }
-                },
-                0n,
-                10000n
-            );
+                if (accounts.length > genesisAccounts.length) {
+                    return accounts.filter(
+                        (a) =>
+                            !genesisAccounts.some(
+                                v1.AccountAddress.equals.bind(undefined, a)
+                            )
+                    )[0];
+                }
+            },
+            0n,
+            10000n
+        );
 
-            if (firstAccount === undefined) {
-                throw new Error('Expected firstAccount to be defined');
-            }
-            expect(
-                v1.AccountAddress.equals(
-                    firstAccount,
-                    v1.AccountAddress.fromBase58(
-                        '3sPayiQEQHrJUpwYUAnYCLWUTkk3JvEW5x6Vn6mD4raBgPAuSp'
-                    )
-                )
-            ).toBeTruthy();
+        if (firstAccount === undefined) {
+            throw new Error('Expected firstAccount to be defined');
         }
-    );
-
-    test.each([clientV2, clientWeb])(
-        'Works on single block range',
-        async (client) => {
-            const blockHash = await client.findEarliestFinalized(
-                async (bi) => bi.hash,
-                10000n,
-                10000n
-            );
-            if (blockHash === undefined) {
-                throw new Error('Expected blockHash to be defined');
-            }
-
-            expect(blockHash).toEqual(
-                BlockHash.fromHexString(
-                    'e4f7f5512e55183f56efe31c1a9da6e5c7f93f24d5b746180e3b5076e54811c1'
+        expect(
+            v1.AccountAddress.equals(
+                firstAccount,
+                v1.AccountAddress.fromBase58(
+                    '3sPayiQEQHrJUpwYUAnYCLWUTkk3JvEW5x6Vn6mD4raBgPAuSp'
                 )
-            );
+            )
+        ).toBeTruthy();
+    });
+
+    test.each(clients)('Works on single block range', async (client) => {
+        const blockHash = await client.findEarliestFinalized(
+            async (bi) => bi.hash,
+            10000n,
+            10000n
+        );
+        if (blockHash === undefined) {
+            throw new Error('Expected blockHash to be defined');
         }
-    );
+
+        expect(blockHash).toEqual(
+            BlockHash.fromHexString(
+                'e4f7f5512e55183f56efe31c1a9da6e5c7f93f24d5b746180e3b5076e54811c1'
+            )
+        );
+    });
 });
 
-test.each([clientV2, clientWeb])('findInstanceCreation', async (client) => {
+test.each(clients)('findInstanceCreation', async (client) => {
     const blockFirstContract = await client.findInstanceCreation(
         v1.ContractAddress.create(0),
         0n,
@@ -946,7 +889,7 @@ test.each([clientV2, clientWeb])('findInstanceCreation', async (client) => {
 });
 
 describe('findFirstFinalizedBlockNoLaterThan', () => {
-    test.each([clientV2, clientWeb])(
+    test.each(clients)(
         'Returns lowest block in range on date earlier than genesis',
         async (client) => {
             const time = new Date('11/5/2000');
@@ -960,22 +903,19 @@ describe('findFirstFinalizedBlockNoLaterThan', () => {
         }
     );
 
-    test.each([clientV2, clientWeb])(
-        'Returns undefined on future date',
-        async (client) => {
-            const time = new Date(Date.now() + 10000);
-            const bi = await client.findFirstFinalizedBlockNoLaterThan(
-                time,
-                1000000n,
-                1500000n
-            );
+    test.each(clients)('Returns undefined on future date', async (client) => {
+        const time = new Date(Date.now() + 10000);
+        const bi = await client.findFirstFinalizedBlockNoLaterThan(
+            time,
+            1000000n,
+            1500000n
+        );
 
-            expect(bi).toBe(undefined);
-        }
-    );
+        expect(bi).toBe(undefined);
+    });
 });
 
-test.each([clientV2, clientWeb])('getBakerEarliestWinTime', async (client) => {
+test.each(clients)('getBakerEarliestWinTime', async (client) => {
     const bakers = await streamToList(client.getBakerList());
     const earliestWinTime = await client.getBakerEarliestWinTime(bakers[0]);
 
@@ -984,7 +924,7 @@ test.each([clientV2, clientWeb])('getBakerEarliestWinTime', async (client) => {
     expect(earliestWinTime.value).toBeGreaterThan(1692792026500n);
 });
 
-test.each([clientV2, clientWeb])(
+test.each(clients)(
     'getBlockCertificates: With timeout certificate',
     async (client) => {
         const blockWithTimeoutCert =
@@ -999,7 +939,7 @@ test.each([clientV2, clientWeb])(
     }
 );
 
-test.each([clientV2, clientWeb])(
+test.each(clients)(
     'getBlockCertificates: With epoch finalization entry',
     async (client) => {
         const blockWithEpochFinalizationEntry =
@@ -1017,7 +957,7 @@ test.each([clientV2, clientWeb])(
     }
 );
 
-test.each([clientV2, clientWeb])('getBakersRewardPeriod', async (client) => {
+test.each(clients)('getBakersRewardPeriod', async (client) => {
     const bakerRewardPeriodInfo = await streamToList(
         client.getBakersRewardPeriod()
     );
@@ -1039,20 +979,17 @@ test.each([clientV2, clientWeb])('getBakersRewardPeriod', async (client) => {
     expect(typeof brpi.isFinalizer).toEqual('boolean');
 });
 
-test.each([clientV2, clientWeb])(
-    'getFirstBlockEpoch - block hash',
-    async (client) => {
-        const firstBlockEpoch = await client.getFirstBlockEpoch(testBlockHash);
+test.each(clients)('getFirstBlockEpoch - block hash', async (client) => {
+    const firstBlockEpoch = await client.getFirstBlockEpoch(testBlockHash);
 
-        expect(firstBlockEpoch).toEqual(
-            BlockHash.fromHexString(
-                '1ffd2823aa0dff331cc1ec98cf8269cf22120b94e2087c107874c7e84190317b'
-            )
-        );
-    }
-);
+    expect(firstBlockEpoch).toEqual(
+        BlockHash.fromHexString(
+            '1ffd2823aa0dff331cc1ec98cf8269cf22120b94e2087c107874c7e84190317b'
+        )
+    );
+});
 
-test.each([clientV2, clientWeb])(
+test.each(clients)(
     'getFirstBlockEpoch - relative epoch request',
     async (client) => {
         const req = {
@@ -1069,7 +1006,7 @@ test.each([clientV2, clientWeb])(
     }
 );
 
-test.each([clientV2, clientWeb])('getWinningBakersEpoch', async (client) => {
+test.each(clients)('getWinningBakersEpoch', async (client) => {
     const blockHash =
         'ae4a8e864bb71dc2b6043a31c429be4fc4a110955143753ab3963c6a829c8818';
     const winningBakers = await streamToList(

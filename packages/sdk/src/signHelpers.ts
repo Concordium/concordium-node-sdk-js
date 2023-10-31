@@ -8,7 +8,9 @@ import {
     HexString,
     JsonString,
 } from './types.js';
-import * as ed from '#ed25519';
+// self-referencing not allowed by eslint resolver
+// eslint-disable-next-line import/no-extraneous-dependencies
+import * as ed from '@concordium/web-sdk/shims/ed25519';
 import { Buffer } from 'buffer/index.js';
 import * as AccountAddress from './types/AccountAddress.js';
 import { sha256 } from './hash.js';

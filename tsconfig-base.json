@@ -6,6 +6,7 @@
         ],
         "module": "Node16",
         "declaration": true,
+        "sourceMap": true,
         "moduleResolution": "Node16",
         "target": "ES2020",
         "esModuleInterop": true,

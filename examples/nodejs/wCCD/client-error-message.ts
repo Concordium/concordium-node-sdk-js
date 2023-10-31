@@ -2,7 +2,7 @@ import { credentials } from '@grpc/grpc-js';
 import * as SDK from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import meow from 'meow';
-import { parseEndpoint } from '../../shared/util.js';
+import { parseEndpoint } from '../shared/util.js';
 
 // The generated module could be imported directly like below,
 // but for this example it is imported dynamicly to improve

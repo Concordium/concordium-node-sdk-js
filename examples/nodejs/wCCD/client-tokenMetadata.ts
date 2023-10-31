@@ -1,17 +1,17 @@
 import { credentials } from '@grpc/grpc-js';
-import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import * as SDK from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import meow from 'meow';
-import { parseEndpoint } from '../../shared/util.js';
+import { parseEndpoint } from '../shared/util.js';
 
 // The generated module could be imported directly like below,
 // but for this example it is imported dynamicly to improve
 // the error message when not generated.
-// import * as wCCDContractClient from './lib/cis2_wCCD.js';
+// import * as wCCDContractClient from './lib/cis2_wCCD';
 
 const cli = meow(
     `
-  This example uses a generated smart contract client for the wCCD smart contract to display events.
+  This example uses a generated smart contract client for the wCCD smart contract.
 
   Usage
     $ yarn run-example <path-to-this-file> [options]
@@ -72,42 +72,21 @@ const contractAddress = SDK.ContractAddress.create(
         }
     );
 
-    // The sender of the transaction, i.e the one updating an operator.
-    const senderAccount = SDK.AccountAddress.fromBase58(
-        '357EYHqrmMiJBmUZTVG5FuaMq4soAhgtgz6XNEAJaXHW3NHaUf'
-    );
-    // The parameter adding the wCCD contract as an operator of sender.
-    const parameter = [
-        {
-            update: { type: 'Add' },
-            operator: { type: 'Contract', content: contractAddress },
-        } as const,
-    ];
-
-    // The client for the wCCD contract
+    const wCCDTokenId = '';
+    const parameter = [wCCDTokenId];
     const contract = await wCCDContractClient.create(
         grpcClient,
         contractAddress
     );
 
-    // Dry run the update of operator.
-    const result = await wCCDContractClient.dryRunUpdateOperator(
+    const result = await wCCDContractClient.dryRunTokenMetadata(
         contract,
-        parameter,
-        { invoker: senderAccount }
+        parameter
     );
-    if (result.tag !== 'success') {
-        throw new Error('Unexpected failure');
-    }
-    for (const traceEvent of result.events) {
-        if (
-            traceEvent.tag === SDK.TransactionEventTag.Updated ||
-            traceEvent.tag === SDK.TransactionEventTag.Interrupted
-        ) {
-            for (const contractEvent of traceEvent.events) {
-                const parsed = wCCDContractClient.parseEvent(contractEvent);
-                console.log(parsed);
-            }
-        }
-    }
+    const returnValue =
+        wCCDContractClient.parseReturnValueTokenMetadata(result);
+    console.log(
+        'The token metadata for wCCD can be found at: ',
+        returnValue?.[0].url
+    );
 })();

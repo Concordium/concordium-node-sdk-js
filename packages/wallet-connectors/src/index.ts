@@ -23,7 +23,6 @@ export const TESTNET: Network = {
     grpcOpts: {
         baseUrl: 'https://grpc.testnet.concordium.com:20000',
     },
-    jsonRpcUrl: 'https://json-rpc.testnet.concordium.com',
     ccdScanBaseUrl: 'https://testnet.ccdscan.io',
 };
 
@@ -36,6 +35,5 @@ export const MAINNET: Network = {
     grpcOpts: {
         baseUrl: 'https://grpc.mainnet.concordium.software:20000',
     },
-    jsonRpcUrl: 'https://json-rpc.mainnet.concordium.software',
     ccdScanBaseUrl: 'https://ccdscan.io',
 };

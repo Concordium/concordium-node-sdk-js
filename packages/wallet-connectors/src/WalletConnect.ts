@@ -2,9 +2,7 @@ import {
     AccountTransactionPayload,
     AccountTransactionSignature,
     AccountTransactionType,
-    HttpProvider,
     InitContractPayload,
-    JsonRpcClient,
     UpdateContractPayload,
     getTransactionKindString,
     serializeInitContractParameters,
@@ -206,18 +204,10 @@ export class WalletConnectConnection implements WalletConnection {
 
     session: SessionTypes.Struct;
 
-    readonly jsonRpcClient: JsonRpcClient | undefined;
-
-    constructor(
-        connector: WalletConnectConnector,
-        chainId: string,
-        session: SessionTypes.Struct,
-        jsonRpcClient: JsonRpcClient | undefined
-    ) {
+    constructor(connector: WalletConnectConnector, chainId: string, session: SessionTypes.Struct) {
         this.connector = connector;
         this.chainId = chainId;
         this.session = session;
-        this.jsonRpcClient = jsonRpcClient;
     }
 
     getConnector() {
@@ -236,13 +226,6 @@ export class WalletConnectConnection implements WalletConnection {
         // We're only expecting a single account to be connected.
         const fullAddress = this.session.namespaces[WALLET_CONNECT_SESSION_NAMESPACE].accounts[0];
         return fullAddress.substring(fullAddress.lastIndexOf(':') + 1);
-    }
-
-    getJsonRpcClient() {
-        if (!this.jsonRpcClient) {
-            throw new Error('no JSON RPC URL provided in network configuration');
-        }
-        return this.jsonRpcClient;
     }
 
     async signAndSendTransaction(
@@ -393,7 +376,7 @@ export class WalletConnectConnector implements WalletConnector {
     }
 
     async connect() {
-        const { name, jsonRpcUrl } = this.network;
+        const { name } = this.network;
 
         const chainId = `${WALLET_CONNECT_SESSION_NAMESPACE}:${name}`;
         const session = await new Promise<SessionTypes.Struct | undefined>((resolve) => {
@@ -403,8 +386,7 @@ export class WalletConnectConnector implements WalletConnector {
             // Connect was cancelled.
             return undefined;
         }
-        const jsonRpcClient = jsonRpcUrl ? new JsonRpcClient(new HttpProvider(jsonRpcUrl)) : undefined;
-        const connection = new WalletConnectConnection(this, chainId, session, jsonRpcClient);
+        const connection = new WalletConnectConnection(this, chainId, session);
         this.connections.set(session.topic, connection);
         this.delegate.onConnected(connection, connection.getConnectedAccount());
         return connection;

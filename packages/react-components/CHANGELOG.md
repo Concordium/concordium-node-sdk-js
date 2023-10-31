@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Build as ES module to facilitate tree-shaking.
 
+### Fixed
+
+-   `useContractSelector`: Fix docstring of `rpc` parameter.
+
 ## [0.3.0] - 2023-06-04
 
 ### Added

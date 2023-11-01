@@ -1,5 +1,11 @@
 # Changelog
 
+## 7.0.2
+
+### Fixed
+
+- Missing files (react native build) in published version.
+
 ## 7.0.1
 
 ### Added

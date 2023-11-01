@@ -1,6 +1,6 @@
 {
     "name": "@concordium/web-sdk",
-    "version": "7.0.1",
+    "version": "7.0.2",
     "license": "Apache-2.0",
     "engines": {
         "node": ">=16"
@@ -11,7 +11,7 @@
         "directory": "packages/sdk"
     },
     "sideEffects": [
-        "lib/umd/*"
+        "lib/min/*"
     ],
     "type": "module",
     "main": "lib/min/concordium.node.min.js",
@@ -53,7 +53,7 @@
     "files": [
         "/src/**/*",
         "/lib/esm/**/*",
-        "/lib/umd/**/*"
+        "/lib/min/**/*"
     ],
     "devDependencies": {
         "@protobuf-ts/plugin": "^2.9.1",

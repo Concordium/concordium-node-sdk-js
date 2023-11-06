@@ -9,16 +9,21 @@ import {
     getAccountTransactionSignDigest,
     AccountTransactionHeader,
     SequenceNumber,
+    InitContractPayload,
+    ContractName,
+    Energy,
+    ModuleReference,
+    Parameter,
+    serializeAccountTransactionPayload,
 } from '../../src/index.js';
 
-test('configureBaker is serialized correctly', async () => {
-    const senderAccountAddress =
-        '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
+const senderAccountAddress =
+    '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
+const expiry = TransactionExpiry.fromDate(new Date(1675872215));
 
+test('configureBaker is serialized correctly', async () => {
     const expectedDigest =
         'dcfb92b6e57b1d3e252c52cb8b838f44a33bf8d67301e89753101912f299dffb';
-
-    const expiry = TransactionExpiry.fromDate(new Date(1675872215));
 
     const header: AccountTransactionHeader = {
         expiry,
@@ -59,4 +64,40 @@ test('configureBaker is serialized correctly', async () => {
     const signDigest = getAccountTransactionSignDigest(transaction);
 
     expect(signDigest.toString('hex')).toBe(expectedDigest);
+});
+
+test('Init contract serializes init name correctly', async () => {
+    const header: AccountTransactionHeader = {
+        expiry,
+        nonce: SequenceNumber.create(1),
+        sender: AccountAddress.fromBase58(senderAccountAddress),
+    };
+
+    const initNameBase = 'credential_registry';
+
+    const payload: InitContractPayload = {
+        amount: CcdAmount.fromMicroCcd(0),
+        initName: ContractName.fromString(initNameBase),
+        maxContractExecutionEnergy: Energy.create(30000),
+        moduleRef: ModuleReference.fromHexString(
+            'aabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccdd'
+        ),
+        param: Parameter.empty(),
+    };
+
+    const transaction: AccountTransaction = {
+        header,
+        payload,
+        type: AccountTransactionType.InitContract,
+    };
+
+    const serializedTransaction =
+        serializeAccountTransactionPayload(transaction);
+
+    // Slice out the init name part of the serialized transaction.
+    const serializedInitName = serializedTransaction
+        .slice(43, serializedTransaction.length - 2)
+        .toString('utf8');
+
+    expect(serializedInitName).toEqual('init_credential_registry');
 });

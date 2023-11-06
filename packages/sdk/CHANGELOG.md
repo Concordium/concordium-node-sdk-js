@@ -1,5 +1,11 @@
 # Changelog
 
+## 7.0.3
+
+### Fixed
+
+- An issue with the serialization of init contract account transactions.
+
 ## 7.0.2
 
 ### Fixed

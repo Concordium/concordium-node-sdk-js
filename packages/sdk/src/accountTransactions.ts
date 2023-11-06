@@ -139,7 +139,10 @@ export class InitContractHandler
 
     serialize(payload: InitContractPayload): Buffer {
         const serializedAmount = encodeWord64(payload.amount.microCcdAmount);
-        const initNameBuffer = Buffer.from('init_' + payload.initName, 'utf8');
+        const initNameBuffer = Buffer.from(
+            'init_' + payload.initName.value,
+            'utf8'
+        );
         const serializedInitName = packBufferWithWord16Length(initNameBuffer);
         const serializedModuleRef = payload.moduleRef.decodedModuleRef;
         const parameterBuffer = Parameter.toBuffer(payload.param);

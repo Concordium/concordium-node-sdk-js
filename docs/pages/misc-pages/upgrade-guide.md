@@ -54,7 +54,7 @@ Furthermore, the SDK is now published as an ES module, making it possible to
 eliminate dead code.
 
 For **TypeScript** users, at least typescript version 5 is required along with
-the setting `compilerOptions.moduleResultion` to `"bundler"` to match the
+the setting `compilerOptions.moduleResolution` to `"bundler"` to match the
 resolution strategy of modern bundlers.
 
 The following entrypoints are made available for consumers of
@@ -115,7 +115,7 @@ Alternatively, files names with the extension `mjs` (or `mts` for TypeScript)
 are always handled as ES modules.
 
 For **TypeScript** users, at least typescript version 4.7 is required along
-with the setting `compilerOptions.moduleResultion` to `"node16"` or
+with the setting `compilerOptions.moduleResolution` to `"node16"` or
 `"nodenext"` to match the resolution strategy of node version 16 and later.
 
 ## Common SDK version 5 to 6 (Web 2->3) (Node 5->6)

@@ -7,20 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
--   Build as ES module to facilitate tree-shaking.
-
-## [0.3.2] - 2023-08-17
-
 ### Changed
 
--   Bump dependency `@concordium/web-sdk` to v6.0.0+. This transitively bumps `@concordium/common-sdk` to v9.0.0.
-
-### Fixed
-
--   `WalletConnect`: Fix schema object format conversion in `signAndSendTransaction` in request payloads.
--   `WalletConnect`: Use standard string identifiers for transaction type in request payload.
+-   Build as ES module to facilitate tree-shaking.
 
 ### Removed
 
@@ -45,6 +34,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     The `Network` type has a field `grpcOpts` which may be used to construct the client (see its docstring for details).
     The field is optional, but present on the predefined constants `TESTNET` and `MAINNET`.
     For users of `@concordium/react-components`, this is all wrapped into the hook `useGrpcClient`.
+
+## [0.3.2] - 2023-08-17
+
+### Changed
+
+-   Bump dependency `@concordium/web-sdk` to v6.0.0+. This transitively bumps `@concordium/common-sdk` to v9.0.0.
+
+### Fixed
+
+-   `WalletConnect`: Fix schema object format conversion in `signAndSendTransaction` in request payloads.
+-   `WalletConnect`: Use standard string identifiers for transaction type in request payload.
 
 ## [0.3.1] - 2023-06-04
 

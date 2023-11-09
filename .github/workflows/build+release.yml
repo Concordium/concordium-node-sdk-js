@@ -81,7 +81,7 @@ jobs:
               run: |
                   [[ "${{steps.tag.outputs.version}}" = "${{steps.package.outputs.version}}"-* ]]
             - name: Setup Node
-              uses: actions/setup-node@v3
+              uses: actions/setup-node@v4
               with:
                   node-version: '${{env.node_version}}'
                   cache: yarn

@@ -19,6 +19,10 @@ class Timestamp {
         /** The internal value for representing the timestamp as milliseconds since Unix epoch. */
         public readonly value: bigint
     ) {}
+
+    public toJSON(): bigint {
+        return this.value;
+    }
 }
 
 /** Represents a timestamp. */

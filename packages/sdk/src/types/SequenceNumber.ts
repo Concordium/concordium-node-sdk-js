@@ -19,6 +19,10 @@ class SequenceNumber {
         /** Internal value representing the sequence number. */
         public readonly value: bigint
     ) {}
+
+    public toJSON(): bigint {
+        return this.value;
+    }
 }
 
 /** A transaction sequence number. (Formerly refered as Nonce) */

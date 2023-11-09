@@ -26,6 +26,10 @@ class EntrypointName<S extends string = string> {
         /** The internal string value of the receive name. */
         public readonly value: S
     ) {}
+
+    public toJSON(): S {
+        return toString(this);
+    }
 }
 
 /**

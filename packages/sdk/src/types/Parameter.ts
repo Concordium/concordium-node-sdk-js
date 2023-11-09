@@ -24,6 +24,10 @@ class Parameter {
         /** Internal buffer of bytes representing the parameter. */
         public readonly buffer: Uint8Array
     ) {}
+
+    public toJSON(): HexString {
+        return toHexString(this);
+    }
 }
 
 /** Parameter for a smart contract entrypoint. */

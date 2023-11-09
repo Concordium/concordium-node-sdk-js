@@ -28,6 +28,10 @@ class ReceiveName {
         /** The internal string value of the receive name. */
         public readonly value: string
     ) {}
+
+    public toJSON(): string {
+        return toString(this);
+    }
 }
 
 /**

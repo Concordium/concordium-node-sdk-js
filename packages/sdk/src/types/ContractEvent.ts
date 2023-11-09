@@ -18,6 +18,10 @@ class ContractEvent {
         /** The internal buffer of bytes representing the event. */
         public readonly buffer: Uint8Array
     ) {}
+
+    public toJSON(): HexString {
+        return toHexString(this);
+    }
 }
 
 /**

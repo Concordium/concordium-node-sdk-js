@@ -26,6 +26,10 @@ class TransactionHash {
         /** Internal buffer with the hash. */
         public readonly buffer: Uint8Array
     ) {}
+
+    public toJSON(): HexString {
+        return toHexString(this);
+    }
 }
 
 /** Hash of a transaction. */

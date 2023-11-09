@@ -22,6 +22,10 @@ class Duration {
         /** The internal value for representing a duration in milliseconds. */
         public readonly value: bigint
     ) {}
+
+    public toJSON(): bigint {
+        return this.value;
+    }
 }
 
 /**

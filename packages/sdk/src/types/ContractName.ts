@@ -20,6 +20,10 @@ class ContractName {
         /** The internal string value of the contract name. */
         public readonly value: string
     ) {}
+
+    public toJSON(): string {
+        return toString(this);
+    }
 }
 
 /** The name of a smart contract. Note: This does _not_ including the 'init_' prefix. */

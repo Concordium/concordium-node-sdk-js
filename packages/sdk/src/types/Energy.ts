@@ -23,6 +23,10 @@ class Energy {
         /** The internal value for representing the energy. */
         public readonly value: bigint
     ) {}
+
+    public toJSON(): bigint {
+        return this.value;
+    }
 }
 
 /** Energy measure. Used as part of cost calculations for transactions. */

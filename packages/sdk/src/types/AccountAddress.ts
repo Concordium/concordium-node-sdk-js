@@ -28,6 +28,10 @@ class AccountAddress {
         /** The account address represented in bytes. */
         public readonly decodedAddress: Uint8Array
     ) {}
+
+    public toJSON(): Base58String {
+        return toBase58(this);
+    }
 }
 
 /**

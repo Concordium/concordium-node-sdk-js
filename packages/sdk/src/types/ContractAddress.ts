@@ -9,7 +9,9 @@ import {
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.ContractAddress;
-export type Serializable = { index: string; subindex: string };
+
+type ContractAddressLike<T> = { index: T; subindex: T };
+export type Serializable = ContractAddressLike<string>;
 
 /** Address of a smart contract instance. */
 class ContractAddress {
@@ -21,6 +23,10 @@ class ContractAddress {
         /** The subindex of the smart contract address. */
         public readonly subindex: bigint
     ) {}
+
+    public toJSON(): ContractAddressLike<bigint> {
+        return { index: this.index, subindex: this.subindex };
+    }
 }
 
 /** Address of a smart contract instance. */

@@ -26,6 +26,10 @@ class ReturnValue {
         /** Internal buffer of bytes representing the return type. */
         public readonly buffer: Uint8Array
     ) {}
+
+    public toJSON(): HexString {
+        return toHexString(this);
+    }
 }
 
 /** Return value from invoking a smart contract entrypoint. */

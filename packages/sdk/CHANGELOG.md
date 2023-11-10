@@ -2,9 +2,9 @@
 
 ## Unreleased
 
-### Fixed
+### Added
 
-- Ensure types serialize as inner values to ease compatibility with dependants deserializing stringified types.
+- `jsonUnwrapStringify` function, which ensure concordium domain types serialize as inner values to ease compatibility with dependants deserializing stringified JSON.
 
 ## 7.0.3
 

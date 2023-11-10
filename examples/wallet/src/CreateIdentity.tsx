@@ -1,16 +1,13 @@
-import { useAtomValue } from 'jotai';
 import React, { useEffect, useState } from 'react';
-import { networkAtom, seedPhraseAtom } from './Index';
+import { identityIndex, network, seedPhraseCookie } from './Index';
 import { useNavigate } from 'react-router-dom';
-import { IdentityProviderMetaData, identityIndex } from './Root';
 import { ConcordiumGRPCWebClient, CryptographicParameters, IdObjectRequestV1, IdentityProvider, IdentityRequestInput, Network, Versioned, createIdentityRequest } from '@concordium/web-sdk';
 import { mnemonicToSeedSync } from '@scure/bip39';
 import { Buffer } from 'buffer/';
+import { IdentityProviderWithMetadata } from './types';
+import { useCookies } from 'react-cookie';
 
-
-type IdentityProviderWithMetadata = IdentityProvider & { metadata: IdentityProviderMetaData };
-
-async function getIdentityProviders(): Promise<IdentityProviderWithMetadata[]> {
+export async function getIdentityProviders(): Promise<IdentityProviderWithMetadata[]> {
     const response = await fetch('https://wallet-proxy.testnet.concordium.com/v1/ip_info');
     return response.json();
 }
@@ -61,8 +58,9 @@ export function CreateIdentity() {
     const [identityProviders, setIdentityProviders] = useState<IdentityProviderWithMetadata[]>();
     const [selectedIdentityProvider, setSelectedIdentityProvider] = useState<IdentityProviderWithMetadata>();
     const [cryptographicParameters, setCryptographicParameters] = useState<CryptographicParameters>();
-    const network = useAtomValue(networkAtom);
-    const seedPhrase = useAtomValue(seedPhraseAtom);
+
+    const [cookies] = useCookies([seedPhraseCookie]);
+    const seedPhrase = cookies[seedPhraseCookie];
     const navigate = useNavigate();
 
     useEffect(() => {

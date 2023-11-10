@@ -2,8 +2,8 @@ import { AccountAddress, AccountInfo, AccountTransaction, AccountTransactionHead
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { DEFAULT_TRANSACTION_EXPIRY, credNumber } from './Identity';
-import { identityIndex } from './Root';
 import { useCookies } from 'react-cookie';
+import { identityIndex } from './Index';
 
 function DisplayAccount({ accountInfo }: { accountInfo: AccountInfo }) {
     return (

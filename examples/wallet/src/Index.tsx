@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import Root from './Root';
 import {
     createBrowserRouter,
     RouterProvider,
@@ -12,6 +11,7 @@ import { Account } from './Account';
 import { atom } from 'jotai';
 import { ConcordiumGRPCClient, ConcordiumHdWallet } from '@concordium/web-sdk';
 import { CreateIdentity } from './CreateIdentity';
+import { SetupSeedPhrase } from './Root';
 
 const container = document.getElementById('root');
 
@@ -22,7 +22,7 @@ if (!container) {
 const router = createBrowserRouter([
     {
         path: "/",
-        element: <Root />,
+        element: <SetupSeedPhrase />,
     },
     {
         path: "/create",
@@ -39,11 +39,13 @@ const router = createBrowserRouter([
 ]);
 
 // Global state definitions.
-// TODO Get rid of the seed phrase atom when the web-sdk can create identity requests without
-// providing the seed phase as input.
-export const seedPhraseAtom = atom<string | undefined>(undefined);
-export const networkAtom = atom<'Testnet' | 'Mainnet'>('Testnet');
+export const network = 'Testnet';
+
+// The index of the identity to create. This index is part of the key derivation path used
+// for generating the keys for the identity and any account created from it.
+export const identityIndex = 0;
 export const client = atom<ConcordiumGRPCClient | undefined>(undefined);
+export const seedPhraseCookie = 'seed-phrase-cookie';
 
 createRoot(container).render(<React.StrictMode>
     <RouterProvider router={router} />

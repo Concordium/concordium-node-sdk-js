@@ -2,9 +2,11 @@ import { AttributeList, ConcordiumGRPCWebClient, ConcordiumHdWallet, CredentialD
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { mnemonicToSeedSync } from '@scure/bip39';
-import { getIdentityProvider, identityIndex } from './Root';
 import { Buffer } from 'buffer/';
 import { useCookies } from 'react-cookie';
+import { identityIndex } from './Index';
+import { IdentityProviderWithMetadata } from './types';
+import { getIdentityProviders } from './CreateIdentity';
 
 export const DEFAULT_TRANSACTION_EXPIRY = 360000;
 export const credNumber = 0;
@@ -23,7 +25,8 @@ async function createAccountRequest(identityObject: IdentityObjectV1, seedPhrase
     const client = new ConcordiumGRPCWebClient('https://grpc.testnet.concordium.com', 20000);
     const global = await client.getCryptographicParameters();
 
-    const selectedIdentityProvider = await getIdentityProvider();
+    // TODO Fix this. We only select identity provider once.
+    const selectedIdentityProvider = (await getIdentityProviders())[0];
 
     const credentialInput: CredentialInput = {
         net: 'Testnet',
@@ -93,7 +96,7 @@ export function Identity() {
         const wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, 'Testnet');
 
         const signingKey = wallet.getAccountSigningKey(accountRequest.unsignedCdi.ipIdentity, identityIndex, credNumber).toString('hex');
-        const hash = await sendAndSignAccountRequest(accountRequest, signingKey);
+        await sendAndSignAccountRequest(accountRequest, signingKey);
         const accountAddress = getAccountAddress(accountRequest.unsignedCdi.credId);
         navigate(`/account/${accountAddress.address}`);
     }

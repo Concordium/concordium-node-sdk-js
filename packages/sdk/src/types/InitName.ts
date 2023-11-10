@@ -25,10 +25,16 @@ class InitName {
         /** The internal string corresponding to the init-function. */
         public readonly value: string
     ) {}
+}
 
-    public toJSON(): string {
-        return toString(this);
-    }
+/**
+ * Unwraps {@linkcode Type} value
+ *
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode Serializable} value
+ */
+export function toUnwrappedJSON(value: Type): Serializable {
+    return toString(value);
 }
 
 /** The name of an init-function for a smart contract. Note: This is of the form 'init_<contractName>'. */

@@ -22,10 +22,16 @@ class Duration {
         /** The internal value for representing a duration in milliseconds. */
         public readonly value: bigint
     ) {}
+}
 
-    public toJSON(): bigint {
-        return this.value;
-    }
+/**
+ * Unwraps {@linkcode Type} value
+ *
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode bigint} value
+ */
+export function toUnwrappedJSON(value: Type): bigint {
+    return value.value;
 }
 
 /**

@@ -24,10 +24,16 @@ class Parameter {
         /** Internal buffer of bytes representing the parameter. */
         public readonly buffer: Uint8Array
     ) {}
+}
 
-    public toJSON(): HexString {
-        return toHexString(this);
-    }
+/**
+ * Unwraps {@linkcode Type} value
+ *
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode Serializable} value
+ */
+export function toUnwrappedJSON(value: Type): Serializable {
+    return toHexString(value);
 }
 
 /** Parameter for a smart contract entrypoint. */

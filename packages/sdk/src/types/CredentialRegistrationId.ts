@@ -28,7 +28,7 @@ class CredentialRegistrationId {
         public readonly credId: string
     ) {}
 
-    public toJSON(): HexString {
+    public toJSON(): Serializable {
         return this.credId;
     }
 }

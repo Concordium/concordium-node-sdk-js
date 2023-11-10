@@ -14,7 +14,7 @@ type ContractAddressLike<T> = { index: T; subindex: T };
 export type Serializable = ContractAddressLike<string>;
 
 /** Address of a smart contract instance. */
-class ContractAddress {
+class ContractAddress implements ContractAddressLike<bigint> {
     /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
     private __type = JSON_DISCRIMINATOR;
     constructor(
@@ -23,10 +23,19 @@ class ContractAddress {
         /** The subindex of the smart contract address. */
         public readonly subindex: bigint
     ) {}
+}
 
-    public toJSON(): ContractAddressLike<bigint> {
-        return { index: this.index, subindex: this.subindex };
-    }
+/**
+ * Unwraps {@linkcode Type} value
+ *
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode Serializable} value
+ */
+export function toUnwrappedJSON({
+    index,
+    subindex,
+}: Type): ContractAddressLike<bigint> {
+    return { index, subindex };
 }
 
 /** Address of a smart contract instance. */

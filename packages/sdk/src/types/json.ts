@@ -22,6 +22,7 @@ import {
     JSON_DISCRIMINATOR as DATA_BLOB_DISCRIMINATOR,
 } from './DataBlob.js';
 import { isTypedJsonCandidate } from './util.js';
+import JSONBig from 'json-bigint';
 
 function reviveConcordiumTypes(value: unknown) {
     if (isTypedJsonCandidate(value)) {
@@ -85,7 +86,7 @@ export function jsonParse(
 }
 
 /**
- * Replaces values of concordium domain types with values that can be revived into their original types.
+ * Replaces values of concordium domain types with values that can be revived into their original types. Returns undefined if type cannot be matched.
  */
 function transformConcordiumType(value: unknown): unknown | undefined {
     switch (true) {
@@ -136,6 +137,60 @@ function transformConcordiumType(value: unknown): unknown | undefined {
     return undefined;
 }
 
+/**
+ * Replaces values of concordium domain types with their unwrapped values. Returns undefined if type cannot be matched.
+ */
+function unwrapConcordiumType(value: unknown): unknown | undefined {
+    switch (true) {
+        case AccountAddress.instanceOf(value):
+            return AccountAddress.toUnwrappedJSON(value as AccountAddress.Type);
+        case BlockHash.instanceOf(value):
+            return BlockHash.toUnwrappedJSON(value as BlockHash.Type);
+        case CcdAmount.instanceOf(value):
+            return (value as CcdAmount.Type).toJSON();
+        case ContractAddress.instanceOf(value):
+            return ContractAddress.toUnwrappedJSON(
+                value as ContractAddress.Type
+            );
+        case ContractName.instanceOf(value):
+            return ContractName.toUnwrappedJSON(value as ContractName.Type);
+        case CredentialRegistrationId.instanceOf(value):
+            return (value as CredentialRegistrationId.Type).toJSON();
+        case value instanceof DataBlob:
+            return (value as DataBlob).toJSON();
+        case Duration.instanceOf(value):
+            return Duration.toUnwrappedJSON(value as Duration.Type);
+        case Energy.instanceOf(value):
+            return Energy.toUnwrappedJSON(value as Energy.Type);
+        case EntrypointName.instanceOf(value):
+            return EntrypointName.toUnwrappedJSON(value as EntrypointName.Type);
+        case InitName.instanceOf(value):
+            return InitName.toUnwrappedJSON(value as InitName.Type);
+        case ModuleReference.instanceOf(value):
+            return ModuleReference.toUnwrappedJSON(
+                value as ModuleReference.Type
+            );
+        case Parameter.instanceOf(value):
+            return Parameter.toUnwrappedJSON(value as Parameter.Type);
+        case ReceiveName.instanceOf(value):
+            return ReceiveName.toUnwrappedJSON(value as ReceiveName.Type);
+        case ReturnValue.instanceOf(value):
+            return ReturnValue.toUnwrappedJSON(value as ReturnValue.Type);
+        case SequenceNumber.instanceOf(value):
+            return SequenceNumber.toUnwrappedJSON(value as SequenceNumber.Type);
+        case Timestamp.instanceOf(value):
+            return Timestamp.toUnwrappedJSON(value as Timestamp.Type);
+        case TransactionExpiry.instanceOf(value):
+            return (value as TransactionExpiry.Type).toJSON();
+        case TransactionHash.instanceOf(value):
+            return TransactionHash.toUnwrappedJSON(
+                value as TransactionHash.Type
+            );
+    }
+
+    return undefined;
+}
+
 type ReplacerFun = (this: any, key: string, value: any) => any;
 
 function ccdTypesReplacer(this: any, key: string, value: any): any {
@@ -143,8 +198,14 @@ function ccdTypesReplacer(this: any, key: string, value: any): any {
     return transformConcordiumType(rawValue) ?? value;
 }
 
+function ccdUnwrapReplacer(this: any, key: string, value: any): any {
+    const rawValue = this[key];
+    return unwrapConcordiumType(rawValue) ?? value;
+}
+
 /**
  * Stringify, which ensures concordium domain types are stringified in a restorable fashion.
+ * This should be used if you want to be able to restore the concordium domain types in the JSON to its original types.
  *
  * @param value A JavaScript value, usually an object or array, to be converted.
  * @param replacer A function that transforms the results.
@@ -160,4 +221,39 @@ export function jsonStringify(
         return replacer?.call(this, key, transformedValue) ?? transformedValue;
     }
     return JSON.stringify(input, replacerFunction, space);
+}
+
+/**
+ * Stringify, which ensures concordium domain types are unwrapped to their inner type before stringified.
+ * This should be used if you want to manually deserialize the inner property values, as the serialization is irreversible.
+ *
+ * @param value A JavaScript value, usually an object or array, to be converted.
+ * @param bigintFormat Determines how to handle bigints.
+ * Can be set to either 'number' (uses 'json-bigint to safely serialize), 'string', or undefined (must be taken care of in replacer function)
+ * @param replacer A function that transforms the results.
+ * @param space Adds indentation, white space, and line break characters to the return-value JSON text to make it easier to read.
+ */
+export function jsonUnwrapStringify(
+    input: any,
+    bigintFormat: 'number' | 'string' | undefined = 'number',
+    replacer?: ReplacerFun,
+    space?: string | number
+): string {
+    function replacerFunction(this: any, key: string, value: any) {
+        let transformedValue = ccdUnwrapReplacer.call(this, key, value);
+
+        switch (bigintFormat) {
+            case 'string':
+                if (typeof value === 'bigint') {
+                    transformedValue = value.toString();
+                }
+            default:
+                break;
+        }
+        return replacer?.call(this, key, transformedValue) ?? transformedValue;
+    }
+
+    const stringify =
+        bigintFormat === 'number' ? JSONBig.stringify : JSON.stringify;
+    return stringify(input, replacerFunction, space);
 }

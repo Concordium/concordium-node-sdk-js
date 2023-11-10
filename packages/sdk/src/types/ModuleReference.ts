@@ -31,11 +31,21 @@ class ModuleReference {
         public readonly decodedModuleRef: Uint8Array
     ) {}
 
-    public toJSON(): string {
+    public toJSON(): Serializable {
         return packBufferWithWord32Length(this.decodedModuleRef).toString(
             'hex'
         );
     }
+}
+
+/**
+ * Unwraps {@linkcode Type} value
+ *
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode Serializable} value
+ */
+export function toUnwrappedJSON(value: Type): Serializable {
+    return value.toJSON();
 }
 
 /**

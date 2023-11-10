@@ -28,10 +28,16 @@ class ReceiveName {
         /** The internal string value of the receive name. */
         public readonly value: string
     ) {}
+}
 
-    public toJSON(): string {
-        return toString(this);
-    }
+/**
+ * Unwraps {@linkcode Type} value
+ *
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode Serializable} value
+ */
+export function toUnwrappedJSON(value: Type): Serializable {
+    return toString(value);
 }
 
 /**

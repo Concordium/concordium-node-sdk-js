@@ -28,10 +28,16 @@ class AccountAddress {
         /** The account address represented in bytes. */
         public readonly decodedAddress: Uint8Array
     ) {}
+}
 
-    public toJSON(): Base58String {
-        return toBase58(this);
-    }
+/**
+ * Unwraps {@linkcode Type} value
+ *
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode Serializable} value
+ */
+export function toUnwrappedJSON(value: Type): Serializable {
+    return toBase58(value);
 }
 
 /**

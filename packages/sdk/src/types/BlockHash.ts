@@ -29,10 +29,16 @@ class BlockHash {
         /** The internal buffer of bytes representing the hash. */
         public readonly buffer: Uint8Array
     ) {}
+}
 
-    public toJSON(): HexString {
-        return toHexString(this);
-    }
+/**
+ * Unwraps {@linkcode Type} value
+ *
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode Serializable} value
+ */
+export function toUnwrappedJSON(value: Type): Serializable {
+    return toHexString(value);
 }
 
 /**

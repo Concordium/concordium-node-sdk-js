@@ -26,10 +26,16 @@ class EntrypointName<S extends string = string> {
         /** The internal string value of the receive name. */
         public readonly value: S
     ) {}
+}
 
-    public toJSON(): S {
-        return toString(this);
-    }
+/**
+ * Unwraps {@linkcode Type} value
+ *
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode Serializable} value
+ */
+export function toUnwrappedJSON<S extends string>(value: Type<S>): S {
+    return toString(value);
 }
 
 /**

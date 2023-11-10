@@ -20,10 +20,16 @@ class ContractName {
         /** The internal string value of the contract name. */
         public readonly value: string
     ) {}
+}
 
-    public toJSON(): string {
-        return toString(this);
-    }
+/**
+ * Unwraps {@linkcode Type} value
+ *
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode Serializable} value
+ */
+export function toUnwrappedJSON(value: Type): Serializable {
+    return toString(value);
 }
 
 /** The name of a smart contract. Note: This does _not_ including the 'init_' prefix. */

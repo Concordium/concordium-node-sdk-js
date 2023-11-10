@@ -6,8 +6,8 @@ import { mnemonicToSeedSync } from '@scure/bip39';
 import { getIdentityProvider, identityIndex, seedPhrase } from './Root';
 import { Buffer } from 'buffer/';
 
-const DEFAULT_TRANSACTION_EXPIRY = 360000;
-const credNumber = 0;
+export const DEFAULT_TRANSACTION_EXPIRY = 360000;
+export const credNumber = 0;
 
 /**
  * Utility function for extracting the URL where the identity object can be fetched

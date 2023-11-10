@@ -1,17 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { createRoot } from 'react-dom/client';
 import {
     createBrowserRouter,
     RouterProvider,
 } from "react-router-dom";
-
 import './index.css';
 import { Identity } from './Identity';
 import { Account } from './Account';
 import { atom } from 'jotai';
 import { ConcordiumGRPCClient, ConcordiumHdWallet } from '@concordium/web-sdk';
 import { CreateIdentity } from './CreateIdentity';
-import { SetupSeedPhrase } from './Root';
+import { SetupSeedPhrase } from './Setup';
 
 const container = document.getElementById('root');
 
@@ -44,6 +43,7 @@ export const network = 'Testnet';
 // The index of the identity to create. This index is part of the key derivation path used
 // for generating the keys for the identity and any account created from it.
 export const identityIndex = 0;
+export const credNumber = 0;
 export const client = atom<ConcordiumGRPCClient | undefined>(undefined);
 export const seedPhraseCookie = 'seed-phrase-cookie';
 

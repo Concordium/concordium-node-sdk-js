@@ -1,9 +1,9 @@
 import { AccountAddress, AccountInfo, AccountTransaction, AccountTransactionHeader, AccountTransactionType, CcdAmount, ConcordiumGRPCWebClient, ConcordiumHdWallet, SimpleTransferPayload, TransactionExpiry, TransactionHash, buildBasicAccountSigner, signTransaction } from '@concordium/web-sdk';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { DEFAULT_TRANSACTION_EXPIRY, credNumber } from './Identity';
 import { useCookies } from 'react-cookie';
-import { identityIndex } from './Index';
+import { credNumber, identityIndex } from './Index';
+import { DEFAULT_TRANSACTION_EXPIRY } from './util';
 
 function DisplayAccount({ accountInfo }: { accountInfo: AccountInfo }) {
     return (

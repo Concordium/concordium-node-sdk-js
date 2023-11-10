@@ -1,16 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { identityIndex, network, seedPhraseCookie } from './Index';
 import { useNavigate } from 'react-router-dom';
-import { ConcordiumGRPCWebClient, CryptographicParameters, IdObjectRequestV1, IdentityProvider, IdentityRequestInput, Network, Versioned, createIdentityRequest } from '@concordium/web-sdk';
+import {  CryptographicParameters, IdObjectRequestV1, IdentityRequestInput, Network, Versioned, createIdentityRequest } from '@concordium/web-sdk';
 import { mnemonicToSeedSync } from '@scure/bip39';
 import { Buffer } from 'buffer/';
 import { IdentityProviderWithMetadata } from './types';
 import { useCookies } from 'react-cookie';
-
-export async function getIdentityProviders(): Promise<IdentityProviderWithMetadata[]> {
-    const response = await fetch('https://wallet-proxy.testnet.concordium.com/v1/ip_info');
-    return response.json();
-}
+import { getCryptographicParameters, getIdentityProviders } from './util';
 
 function createIdentityObjectRequest(identityProvider: IdentityProviderWithMetadata, global: CryptographicParameters, network: Network, seedPhrase: string) {
     const seedCorrectFormat = Buffer.from(mnemonicToSeedSync(seedPhrase)).toString('hex');
@@ -58,15 +54,13 @@ export function CreateIdentity() {
     const [identityProviders, setIdentityProviders] = useState<IdentityProviderWithMetadata[]>();
     const [selectedIdentityProvider, setSelectedIdentityProvider] = useState<IdentityProviderWithMetadata>();
     const [cryptographicParameters, setCryptographicParameters] = useState<CryptographicParameters>();
-
     const [cookies] = useCookies([seedPhraseCookie]);
     const seedPhrase = cookies[seedPhraseCookie];
     const navigate = useNavigate();
 
     useEffect(() => {
         getIdentityProviders().then(setIdentityProviders);
-        const client = new ConcordiumGRPCWebClient('https://grpc.testnet.concordium.com', 20000);
-        client.getCryptographicParameters().then(setCryptographicParameters);
+        getCryptographicParameters().then(setCryptographicParameters);
     }, []);
 
     if (!seedPhrase) {
@@ -75,8 +69,8 @@ export function CreateIdentity() {
         navigate('/');
     }
 
-    if (!identityProviders || !cryptographicParameters || !seedPhrase) {
-        // Loading data from state.
+    if (!identityProviders || !cryptographicParameters) {
+        // Loading identity providers and cryptographic parameters.
         return null;
     }
 
@@ -92,10 +86,7 @@ export function CreateIdentity() {
             window.open(url);
         }
     }
-
-    // TODO Show some other text when the person is creating an identity.
-    // TODO Prevent from sending more than one request.
-
+    
     return (
         <div>
             <label>

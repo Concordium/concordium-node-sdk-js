@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCookies } from 'react-cookie';
 
+/**
+ * Allow the user to input their seed phrase. The seed phrase will be stored
+ * in a cookie which is not safe, so only use this with a seed phrase for generated
+ * specifically for testing.
+ */
 export function SetupSeedPhrase() {
     const [seedPhraseWords, setSeedPhraseWords] = useState<string>();
     const [_, setCookie] = useCookies(['seed-phrase-cookie'])

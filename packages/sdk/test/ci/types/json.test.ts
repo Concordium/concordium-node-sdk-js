@@ -87,6 +87,43 @@ describe('jsonStringify', () => {
     });
 });
 
+describe(jsonUnwrapStringify, () => {
+    test('Serializes bigint values as expected', () => {
+        const t = 100n;
+        expect(jsonUnwrapStringify(t)).toEqual('100');
+        expect(jsonUnwrapStringify(t, 'string')).toEqual('"100"');
+        expect(
+            jsonUnwrapStringify(t, undefined, (_, v) =>
+                typeof v === 'bigint' ? -v : v
+            )
+        ).toEqual('-100');
+    });
+
+    test('Serializes nested bigint (arrays) values as expected', () => {
+        const t = [100n, 200n];
+        expect(jsonUnwrapStringify(t)).toEqual('[100,200]');
+        expect(jsonUnwrapStringify(t, 'string')).toEqual('["100","200"]');
+        expect(
+            jsonUnwrapStringify(t, undefined, (_, v) =>
+                typeof v === 'bigint' ? -v : v
+            )
+        ).toEqual('[-100,-200]');
+    });
+
+    test('Serializes nested bigint (objects) values as expected', () => {
+        const t = { a: 100n, b: 200n };
+        expect(jsonUnwrapStringify(t)).toEqual('{"a":100,"b":200}');
+        expect(jsonUnwrapStringify(t, 'string')).toEqual(
+            '{"a":"100","b":"200"}'
+        );
+        expect(
+            jsonUnwrapStringify(t, undefined, (_, v) =>
+                typeof v === 'bigint' ? -v : v
+            )
+        ).toEqual('{"a":-100,"b":-200}');
+    });
+});
+
 describe('ContractName', () => {
     test('Unwraps as expected', () => {
         const t = ContractName.fromString('some-name');
@@ -151,6 +188,12 @@ describe('SequenceNumber', () => {
         let t = SequenceNumber.create(300);
         let e = '300';
         expect(jsonUnwrapStringify(t)).toEqual(e);
+        expect(jsonUnwrapStringify(t, 'string')).toEqual(`"${e}"`);
+        expect(
+            jsonUnwrapStringify(t, undefined, (_, v) =>
+                typeof v === 'bigint' ? -v : v
+            )
+        ).toEqual('-300');
 
         // Test for numbers bigger than Number.MAX_SAFE_INTEGER
         t = SequenceNumber.create(9007199254740997n);
@@ -204,6 +247,9 @@ describe('ContractAddress', () => {
         let t = ContractAddress.create(100, 10);
         let e = '{"index":100,"subindex":10}';
         expect(jsonUnwrapStringify(t)).toEqual(e);
+        expect(jsonUnwrapStringify(t, 'string')).toEqual(
+            '{"index":"100","subindex":"10"}'
+        );
 
         // Test for numbers bigger than Number.MAX_SAFE_INTEGER
         t = ContractAddress.create(9007199254740997n, 10);
@@ -257,7 +303,7 @@ describe('ModuleReference', () => {
         const v =
             '5d99b6dfa7ba9dc0cac8626754985500d51d6d06829210748b3fd24fa30cde4a';
         const t = ModuleReference.fromHexString(v);
-        const e = `"00000020${v}"`; // is prefixed with 4 byte length, for some reason
+        const e = `"00000020${v}"`; // is prefixed with 4 byte length
         expect(jsonUnwrapStringify(t)).toEqual(e);
     });
 });

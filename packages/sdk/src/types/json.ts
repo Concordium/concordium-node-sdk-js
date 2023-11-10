@@ -228,8 +228,11 @@ export function jsonStringify(
  * This should be used if you want to manually deserialize the inner property values, as the serialization is irreversible.
  *
  * @param value A JavaScript value, usually an object or array, to be converted.
- * @param bigintFormat Determines how to handle bigints.
- * Can be set to either 'number' (uses 'json-bigint to safely serialize), 'string', or undefined (must be taken care of in replacer function)
+ * @param bigintFormat Determines how to handle bigints. Can be set to either:
+ * - `'number'`: uses 'json-bigint to safely serialize,
+ * - `'string'`: converts `bigint` to strings
+ * - `undefined`: must be taken care of manually, e.g. in replacer function.
+ * Defaults to 'number'
  * @param replacer A function that transforms the results.
  * @param space Adds indentation, white space, and line break characters to the return-value JSON text to make it easier to read.
  */
@@ -239,21 +242,30 @@ export function jsonUnwrapStringify(
     replacer?: ReplacerFun,
     space?: string | number
 ): string {
-    function replacerFunction(this: any, key: string, value: any) {
-        let transformedValue = ccdUnwrapReplacer.call(this, key, value);
-
+    function replaceBigintValue(value: any): any {
         switch (bigintFormat) {
             case 'string':
                 if (typeof value === 'bigint') {
-                    transformedValue = value.toString();
+                    return value.toString();
                 }
             default:
-                break;
+                return value;
         }
+    }
+
+    function replacerFunction(this: any, key: string, value: any) {
+        let transformedValue = ccdUnwrapReplacer.call(this, key, value);
+        transformedValue = replaceBigintValue(transformedValue);
         return replacer?.call(this, key, transformedValue) ?? transformedValue;
+    }
+
+    let replaced = input;
+
+    if (typeof input !== 'object') {
+        replaced = replaceBigintValue(replaced);
     }
 
     const stringify =
         bigintFormat === 'number' ? JSONBig.stringify : JSON.stringify;
-    return stringify(input, replacerFunction, space);
+    return stringify(replaced, replacerFunction, space);
 }

@@ -23,7 +23,7 @@
 ### Added
 
 - Support for using the SDK in a react native environment. Requires polyfilling functionality used within the SDK.
-    Please refer to the guide found at [the react native compatibility guide](https://developer.concordium.software/concordium-node-sdk-js/pages/misc-pages/react-native.html)
+  Please refer to the guide found at [the react native compatibility guide](https://developer.concordium.software/concordium-node-sdk-js/pages/misc-pages/react-native.html)
 
 ### Fixed
 
@@ -115,7 +115,7 @@ Several types have been replaced with a module containing the type itself togeth
 - `ReceiveName` is now a module with functions related to receive-function names of a smart contract.
 - `ReturnValue` is now a module with functions related to return values from invoking a smart contract.
 - Functions `jsonStringify` and `jsonParse`, which acts as a regular `JSON.stringify` and `JSON.parse` correspondingly,
-    with the addition of stringifying concordium domain types in a wrapper object that can be parsed into the respective types.
+  with the addition of stringifying concordium domain types in a wrapper object that can be parsed into the respective types.
 - Introduce function `versionedModuleSourceToBuffer` for serializing a versioned module to a buffer, which can be stored in a file.
 
 ### Changes
@@ -240,7 +240,7 @@ All function parameters now also accepts strings, these strings can use comma as
 ### Fixes
 
 - The max smart contract parameter length was changed to 65535 bytes in protocol version 5 and onwards.
-    Functions which checks the parameter length will now reflect that.
+  Functions which checks the parameter length will now reflect that.
 
 ## 6.0.0
 

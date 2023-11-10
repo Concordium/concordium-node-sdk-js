@@ -1,8 +1,12 @@
 /* eslint-disable no-console */
 import { ConcordiumGRPCWebClient, ConcordiumHdWallet, IdObjectRequestV1, IdentityProvider, IdentityRequestInput, Versioned, createIdentityRequest } from '@concordium/web-sdk';
 import { mnemonicToSeedSync } from '@scure/bip39';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Buffer } from 'buffer/';
+import { useAtomValue, useSetAtom } from 'jotai';
+import { networkAtom, seedPhraseAtom } from './Index';
+import { useNavigate } from 'react-router-dom';
+import { useCookies } from 'react-cookie';
 
 export interface IdentityProviderMetaData {
     issuanceStart: string;
@@ -13,12 +17,9 @@ export interface IdentityProviderMetaData {
 
 const redirectUri = 'http://localhost:4173/identity';
 
-// const seedPhrase = 'nuclear caution purse prosper primary gap snap chef youth rain virtual frozen silly economy motion group motion situate chimney rescue effort hint rival melt';
-export const seedPhrase = 'hint initial anchor laundry effort brain shoe fancy forward trouble elbow pistol moment cement panic pioneer broom affair avoid various voyage slight excuse talent';
-
 // The index of the identity to create. This index is part of the key derivation path used
 // for generating the keys for the identity and any account created from it.
-export const identityIndex = 2;
+export const identityIndex = 0;
 
 type IdentityProviderWithMetadata = IdentityProvider & { metadata: IdentityProviderMetaData };
 
@@ -35,73 +36,38 @@ export async function getIdentityProvider() {
     return (await getIdentityProviders())[0];
 }
 
-async function createIdentity() {
-    const selectedIdentityProvider = await getIdentityProvider();
-
-
-    const client = new ConcordiumGRPCWebClient('https://grpc.testnet.concordium.com', 20000);
-    const global = await client.getCryptographicParameters();
-    const seedCorrectFormat = Buffer.from(mnemonicToSeedSync(seedPhrase)).toString('hex');
-
-    const identityRequestInput: IdentityRequestInput = {
-        net: 'Testnet',
-        seed: seedCorrectFormat,
-        identityIndex,
-        arsInfos: selectedIdentityProvider.arsInfos,
-        arThreshold: Math.min(Object.keys(selectedIdentityProvider.arsInfos).length - 1, 255), // Explain this choice.
-        ipInfo: selectedIdentityProvider.ipInfo,
-        globalContext: global
-    };
-
-    return { identityRequestInput, provider: selectedIdentityProvider.metadata };
-}
-
-export function buildURLwithSearchParameters(baseUrl: string, params: Record<string, string>) {
-    const searchParams = new URLSearchParams(params);
-    return Object.entries(params).length === 0 ? baseUrl : `${baseUrl}?${searchParams.toString()}`;
-}
-
-async function sendRequest(idObjectRequest: Versioned<IdObjectRequestV1>, baseUrl: string) {
-    const params = {
-        scope: 'identity',
-        response_type: 'code',
-        redirect_uri: redirectUri,
-        state: JSON.stringify({ idObjectRequest }),
-    };
-
-    const url = buildURLwithSearchParameters(baseUrl, params);
-    const response = await fetch(url);
-    
-    // The identity creation protocol dictates that we will receive a redirect.
-    if (!response.redirected) {
-        // Something went wrong...
-    } else {
-        return response.url;
-    }
-}
-
 export default function Root() {
-    const [input, setInput] = useState<IdentityRequestInput>();
-    const [idpUrl, setIdpUrl] = useState<string>();
+    const [seedPhraseWords, setSeedPhraseWords] = useState<string>();
+    const navigate = useNavigate();
+    const network = useAtomValue(networkAtom);
+    const setSeedPhrase = useSetAtom(seedPhraseAtom);
+    const [cookies, setCookie, removeCookie] = useCookies(['seed-phrase-cookie'])
 
-    let wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, 'Testnet');
+    function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+        event.preventDefault();
 
-    useEffect(() => {
-        createIdentity().then((res) => { 
-            setInput(res.identityRequestInput);
-    
-            const identityRequest = createIdentityRequest(res.identityRequestInput);
-            sendRequest(identityRequest, res.provider.issuanceStart).then((idpUrl) => {
-                setIdpUrl(idpUrl);
-                if (!idpUrl?.includes(redirectUri)) {
-                    window.open(idpUrl, "_blank", "noreferrer");
-                }
-            });
+        if (!seedPhraseWords) {
+            alert('Please input a seed phrase');
+            return; 
+        }
 
-        });
-    }, []);
+        try {
+            setSeedPhrase(seedPhraseWords);
+            setCookie('seed-phrase-cookie', seedPhraseWords);
+            navigate('/create');
+        } catch {
+            alert('An invalid seed phrase was provided');
+            return;
+        }
+    }
 
-    return (<div>
-        {JSON.stringify(input)}
-        </div>);
+    return (
+        <form onSubmit={handleSubmit}>
+            <label>
+                Enter your seed phrase
+                <input type="text" value={seedPhraseWords} onChange={(event) => setSeedPhraseWords(event.target.value)} />
+            </label>
+            <input type="submit" value="Submit" />
+        </form>
+    );
 }

@@ -1,9 +1,9 @@
-import { AccountAddress, AccountInfo, AccountTransaction, AccountTransactionHeader, AccountTransactionType, CcdAmount, ConcordiumGRPCWebClient, ConcordiumHdWallet, SequenceNumber, SimpleTransferPayload, TransactionExpiry, buildBasicAccountSigner, signTransaction } from '@concordium/web-sdk';
-import React, { useEffect, useMemo, useState } from 'react';
-import JSONPretty from 'react-json-pretty';
-import { useLocation, useParams } from 'react-router-dom';
+import { AccountAddress, AccountInfo, AccountTransaction, AccountTransactionHeader, AccountTransactionType, CcdAmount, ConcordiumGRPCWebClient, ConcordiumHdWallet, SimpleTransferPayload, TransactionExpiry, TransactionHash, buildBasicAccountSigner, signTransaction } from '@concordium/web-sdk';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { DEFAULT_TRANSACTION_EXPIRY, credNumber } from './Identity';
-import { identityIndex, seedPhrase } from './Root';
+import { identityIndex } from './Root';
+import { useCookies } from 'react-cookie';
 
 function DisplayAccount({ accountInfo }: { accountInfo: AccountInfo }) {
     return (
@@ -17,7 +17,7 @@ function DisplayAccount({ accountInfo }: { accountInfo: AccountInfo }) {
     );
 }
 
-function TransferInput({ accountAddress }: { accountAddress: AccountAddress.Type }) {
+function TransferInput({ accountAddress, seedPhrase }: { accountAddress: AccountAddress.Type, seedPhrase: string }) {
     const [transferAmount, setTransferAmount] = useState<string>('0');
     const [recipient, setRecipient] = useState<string>();
 
@@ -70,8 +70,7 @@ function TransferInput({ accountAddress }: { accountAddress: AccountAddress.Type
         const signingKey = wallet.getAccountSigningKey(0, identityIndex, credNumber).toString('hex');
         const signature = await signTransaction(transaction, buildBasicAccountSigner(signingKey));
         const transactionHash = await client.sendAccountTransaction(transaction, signature);
-
-        console.log(transactionHash);
+        console.log(TransactionHash.toHexString(transactionHash));
     }
 
     function handleChange(event: any) {
@@ -99,6 +98,7 @@ export function Account() {
     // TODO: We also need the correct indices to derive the correct keys.
     const { accountAddress } = useParams();
     const [accountInfo, setAccountInfo] = useState<AccountInfo>();
+    const [cookies] = useCookies(['seed-phrase-cookie']);
 
     useEffect(() => {
         if (accountAddress) {
@@ -115,7 +115,7 @@ export function Account() {
         return (
             <>
             <DisplayAccount accountInfo={accountInfo} />
-            <TransferInput accountAddress={AccountAddress.fromBase58(accountAddress)} />
+            <TransferInput accountAddress={AccountAddress.fromBase58(accountAddress)} seedPhrase={cookies['seed-phrase-cookie']} />
         </>
         );
     }

@@ -1,10 +1,10 @@
-import { ConcordiumGRPCWebClient, ConcordiumHdWallet, CredentialDeploymentTransaction, CredentialInput, CredentialRegistrationId, IdentityObjectV1, TransactionExpiry, TransactionHash, createCredentialTransaction, serializeCredentialDeploymentPayload, signCredentialTransaction } from '@concordium/web-sdk';
+import { AttributeList, ConcordiumGRPCWebClient, ConcordiumHdWallet, CredentialDeploymentTransaction, CredentialInput, IdentityObjectV1, TransactionExpiry, createCredentialTransaction, getAccountAddress, serializeCredentialDeploymentPayload, signCredentialTransaction } from '@concordium/web-sdk';
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import JSONPretty from 'react-json-pretty';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { mnemonicToSeedSync } from '@scure/bip39';
-import { getIdentityProvider, identityIndex, seedPhrase } from './Root';
+import { getIdentityProvider, identityIndex } from './Root';
 import { Buffer } from 'buffer/';
+import { useCookies } from 'react-cookie';
 
 export const DEFAULT_TRANSACTION_EXPIRY = 360000;
 export const credNumber = 0;
@@ -19,7 +19,7 @@ function extractIdentityObjectUrl(path: string) {
     return path.split('#code_uri=')[1];
 }
 
-async function createAccountRequest(identityObject: IdentityObjectV1) {
+async function createAccountRequest(identityObject: IdentityObjectV1, seedPhrase: string) {
     const client = new ConcordiumGRPCWebClient('https://grpc.testnet.concordium.com', 20000);
     const global = await client.getCryptographicParameters();
 
@@ -42,22 +42,28 @@ async function createAccountRequest(identityObject: IdentityObjectV1) {
     return request;
 }
 
-async function sendAndSignAccountRequest(credentialDeployment: CredentialDeploymentTransaction) {
+async function sendAndSignAccountRequest(credentialDeployment: CredentialDeploymentTransaction, signingKey: string) {
     const client = new ConcordiumGRPCWebClient('https://grpc.testnet.concordium.com', 20000);
-
-    const signingKey = ConcordiumHdWallet.fromHex(Buffer.from(mnemonicToSeedSync(seedPhrase)).toString('hex'), 'Testnet').getAccountSigningKey(credentialDeployment.unsignedCdi.ipIdentity, identityIndex, credNumber).toString('hex');
-
     const signature = await signCredentialTransaction(credentialDeployment, signingKey);
     const payload = serializeCredentialDeploymentPayload([signature], credentialDeployment);
-
     const successful = await client.sendCredentialDeploymentTransaction(payload, credentialDeployment.expiry);
     return successful;
 }
 
-export function Identity() {
+function DisplayIdentity({ attributes }: { attributes: AttributeList }) {
+    return (
+        <ul>
+            <li>Name: {attributes.chosenAttributes.firstName} {attributes.chosenAttributes.lastName}</li>
+            <li>Nationality: {attributes.chosenAttributes.nationality}</li>
+        </ul>
+    );
+}
+
+export function Identity() {    
     const location = useLocation();
     const [identity, setIdentity] = useState<IdentityObjectV1>();
-    const [accountAddress, setAccountAddress] = useState<string>();
+    const navigate = useNavigate();
+    const [cookies, setCookie, removeCookie] = useCookies(['seed-phrase-cookie']);
 
     useEffect(() => {
         const identityObjectUrl = extractIdentityObjectUrl(location.hash);
@@ -68,23 +74,39 @@ export function Identity() {
             // To be able to later create accounts from the identity, the identity must be
             // persisted. As this is only a demonstration example we only keep it in memory.
             response.json().then((response) => {
-                setIdentity(response);
-
-                createAccountRequest(response.token.identityObject.value).then((req) => {
-                    const client = new ConcordiumGRPCWebClient('https://grpc.testnet.concordium.com', 20000);
-                    client.getAccountInfo(CredentialRegistrationId.fromHexString(req.unsignedCdi.credId)).then((info) => {
-                        const existingAddress = info.accountAddress.address;
-                        setAccountAddress(existingAddress);
-                    }).catch(() => {
-                        // Account does not already exist, so we can create it.
-                        sendAndSignAccountRequest(req).then((hash) => {
-                            console.log('sent request: ' + TransactionHash.toHexString(hash));
-                        });
-                    });
-                });
+                console.log(response);
+                // Provide better typing of the response(?)
+                setIdentity(response.token.identityObject.value);
             });
         });
     }, []);
 
-    return (<div>This will fetch an identity. {identity && <JSONPretty data={JSON.stringify(identity)} />} {accountAddress && <div>{accountAddress}</div>} </div>);
+    async function onClick() {
+        if (!identity) {
+            return;
+        }
+
+        const seedPhrase = cookies['seed-phrase-cookie'];
+        console.log(seedPhrase);
+        
+        const accountRequest = await createAccountRequest(identity, seedPhrase);
+        const wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, 'Testnet');
+
+        const signingKey = wallet.getAccountSigningKey(accountRequest.unsignedCdi.ipIdentity, identityIndex, credNumber).toString('hex');
+        const hash = await sendAndSignAccountRequest(accountRequest, signingKey);
+        const accountAddress = getAccountAddress(accountRequest.unsignedCdi.credId);
+        navigate(`/account/${accountAddress.address}`);
+    }
+
+    return (
+        <>
+            <h3>Your Concordium identity</h3> 
+            {identity && 
+                <>
+                    <DisplayIdentity attributes={identity.attributeList} />
+                    <button onClick={onClick}>Create account</button>
+                </>
+            }
+        </>
+    );
 }

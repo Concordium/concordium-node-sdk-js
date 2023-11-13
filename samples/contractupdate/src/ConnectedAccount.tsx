@@ -20,7 +20,7 @@ export function ConnectedAccount({ network, rpc, account }: Props) {
     useEffect(() => {
         if (rpc && account) {
             setInfo(undefined);
-            rpc.getAccountInfo(new AccountAddress(account))
+            rpc.getAccountInfo(AccountAddress.fromBase58(account))
                 .then((res) => {
                     setInfo(res);
                     setInfoError('');
@@ -51,7 +51,7 @@ function Details({ account }: { account: AccountInfo }) {
     return (
         <Alert variant="info">
             <ul className="mb-0">
-                <li>Address: {account.accountAddress}</li>
+                <li>Address: {account.accountAddress.address}</li>
                 <li>Nonce: {account.accountNonce.toString()}</li>
                 <li>Balance: {account.accountAmount.toString()}</li>
                 <li>Index: {account.accountIndex.toString()}</li>

@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
-import { AccountAddress, CcdAmount, ConcordiumGRPCClient, JsonRpcClient } from '@concordium/web-sdk';
+import {
+    AccountAddress,
+    CcdAmount,
+    ConcordiumGRPCClient,
+    ContractAddress,
+    ContractName,
+    ReceiveName,
+} from '@concordium/web-sdk';
 import { errorString } from './error';
 
 /**
@@ -24,12 +31,12 @@ export interface Info {
     /**
      * The contract's balance.
      */
-    amount: CcdAmount;
+    amount: CcdAmount.Type;
 
     /**
      * The address of the account that owns the contract.
      */
-    owner: AccountAddress;
+    owner: AccountAddress.Type;
 
     /**
      * The contract's invokable methods.
@@ -42,24 +49,20 @@ export interface Info {
     moduleRef: string;
 }
 
-async function refresh(rpc: ConcordiumGRPCClient | JsonRpcClient, index: bigint) {
-    const info = await rpc.getInstanceInfo({ index, subindex: BigInt(0) });
+async function refresh(rpc: ConcordiumGRPCClient, index: bigint): Promise<Info> {
+    const info = await rpc.getInstanceInfo(ContractAddress.create(index, BigInt(0)));
     if (!info) {
         throw new Error(`contract ${index} not found`);
     }
 
     const { version, name, owner, amount, methods, sourceModule } = info;
-    const prefix = 'init_';
-    if (!name.startsWith(prefix)) {
-        throw new Error(`name "${name}" doesn't start with "init_"`);
-    }
     return {
         version,
         index,
-        name: name.substring(prefix.length),
+        name: ContractName.fromInitName(name).value,
         amount,
         owner,
-        methods,
+        methods: methods.map(ReceiveName.toString),
         moduleRef: sourceModule.moduleRef,
     };
 }
@@ -72,7 +75,7 @@ function parseContractIndex(input: string) {
     }
 }
 
-async function loadContract(rpc: ConcordiumGRPCClient | JsonRpcClient, input: string) {
+async function loadContract(rpc: ConcordiumGRPCClient, input: string) {
     const index = parseContractIndex(input);
     return refresh(rpc, index);
 }
@@ -105,10 +108,7 @@ export interface ContractSelector {
  * @param input The index of the contract to look up.
  * @return The resolved contract and related state.
  */
-export function useContractSelector(
-    rpc: ConcordiumGRPCClient | JsonRpcClient | undefined,
-    input: string
-): ContractSelector {
+export function useContractSelector(rpc: ConcordiumGRPCClient | undefined, input: string): ContractSelector {
     const [selected, setSelected] = useState<Info>();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');

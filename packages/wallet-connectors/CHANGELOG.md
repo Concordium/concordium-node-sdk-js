@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+-   (breaking) Make compatible with `@concordium/web-sdk@^7`, which is now a peer dependency.
+-   `BrowserWalletConnector` (breaking): Change method `getGrpcClient` to `getGrpcTransport`
+    and expose the transport object instead of a full client.
 -   Build as ES module to facilitate tree-shaking.
 
 ### Removed

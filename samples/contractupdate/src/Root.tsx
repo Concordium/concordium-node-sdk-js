@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, Button, Col, Container, Row, Spinner } from 'react-bootstrap';
 import { MAINNET, TESTNET, WalletConnectionProps, WithWalletConnector } from '@concordium/react-components';
 import { useConnect, useConnection, useGrpcClient } from '@concordium/react-components';
+import { BlockHash } from '@concordium/web-sdk';
 import { App } from './App';
 import { ConnectedAccount } from './ConnectedAccount';
 import { NetworkSelector } from './NetworkSelector';
@@ -35,7 +36,7 @@ function Main(props: WalletConnectionProps) {
             rpc.getConsensusStatus()
                 .then((status) => status.genesisBlock)
                 .then((hash) => {
-                    setRpcGenesisHash(hash);
+                    setRpcGenesisHash(BlockHash.toHexString(hash));
                     setRpcError('');
                 })
                 .catch((err) => {

@@ -1,10 +1,20 @@
 import {
+    SendTransactionInitContractPayload,
+    SendTransactionPayload,
+    SendTransactionUpdateContractPayload,
+} from '@concordium/browser-wallet-api-helpers';
+import {
     AccountTransactionPayload,
     AccountTransactionSignature,
     AccountTransactionType,
+    BigintFormatType,
+    ContractName,
+    EntrypointName,
     InitContractPayload,
+    Parameter,
     UpdateContractPayload,
     getTransactionKindString,
+    jsonUnwrapStringify,
     serializeInitContractParameters,
     serializeTypeValue,
     serializeUpdateContractParameters,
@@ -67,26 +77,26 @@ function isSignAndSendTransactionError(obj: any): obj is SignAndSendTransactionE
 }
 
 function accountTransactionPayloadToJson(data: AccountTransactionPayload) {
-    return JSON.stringify(data, (key, value) => {
+    return jsonUnwrapStringify(data, BigintFormatType.Integer, (_key, value) => {
         if (value?.type === 'Buffer') {
             // Buffer has already been transformed by its 'toJSON' method.
             return toBuffer(value.data).toString('hex');
-        }
-        if (typeof value === 'bigint') {
-            return Number(value);
         }
         return value;
     });
 }
 
-function serializeInitContractParam(initName: string, typedParams: TypedSmartContractParameters | undefined) {
+function serializeInitContractParam(
+    contractName: ContractName.Type,
+    typedParams: TypedSmartContractParameters | undefined
+): Parameter.Type {
     if (!typedParams) {
-        return toBuffer('');
+        return Parameter.empty();
     }
     const { parameters, schema } = typedParams;
     switch (schema.type) {
         case 'ModuleSchema':
-            return serializeInitContractParameters(initName, parameters, schema.value, schema.version);
+            return serializeInitContractParameters(contractName, parameters, schema.value, schema.version);
         case 'TypeSchema':
             return serializeTypeValue(parameters, schema.value);
         default:
@@ -95,12 +105,12 @@ function serializeInitContractParam(initName: string, typedParams: TypedSmartCon
 }
 
 function serializeUpdateContractMessage(
-    contractName: string,
-    entrypointName: string,
+    contractName: ContractName.Type,
+    entrypointName: EntrypointName.Type,
     typedParams: TypedSmartContractParameters | undefined
-) {
+): Parameter.Type {
     if (!typedParams) {
-        return toBuffer('');
+        return Parameter.empty();
     }
     const { parameters, schema } = typedParams;
     switch (schema.type) {
@@ -154,7 +164,7 @@ function convertSchemaFormat(schema: Schema | undefined) {
  */
 function serializePayloadParameters(
     type: AccountTransactionType,
-    payload: AccountTransactionPayload,
+    payload: SendTransactionPayload,
     typedParams: TypedSmartContractParameters | undefined
 ): AccountTransactionPayload {
     switch (type) {
@@ -166,24 +176,31 @@ function serializePayloadParameters(
             return {
                 ...payload,
                 param: serializeInitContractParam(initContractPayload.initName, typedParams),
-            };
+            } as InitContractPayload;
         }
         case AccountTransactionType.Update: {
             const updateContractPayload = payload as UpdateContractPayload;
             if (updateContractPayload.message) {
                 throw new Error(`'message' field of 'Update' parameters must be empty`);
             }
-            const [contractName, entrypointName] = updateContractPayload.receiveName.split('.');
+            const [contractName, entrypointName] = updateContractPayload.receiveName.value.split('.');
             return {
                 ...payload,
-                message: serializeUpdateContractMessage(contractName, entrypointName, typedParams),
-            };
+                message: serializeUpdateContractMessage(
+                    ContractName.fromString(contractName),
+                    EntrypointName.fromString(entrypointName),
+                    typedParams
+                ),
+            } as UpdateContractPayload;
         }
         default: {
             if (typedParams) {
                 throw new Error(`'typedParams' must not be provided for transaction of type '${type}'`);
             }
-            return payload;
+            return payload as Exclude<
+                SendTransactionPayload,
+                SendTransactionInitContractPayload | SendTransactionUpdateContractPayload
+            >;
         }
     }
 }
@@ -231,7 +248,7 @@ export class WalletConnectConnection implements WalletConnection {
     async signAndSendTransaction(
         accountAddress: string,
         type: AccountTransactionType,
-        payload: AccountTransactionPayload,
+        payload: SendTransactionPayload,
         typedParams?: TypedSmartContractParameters
     ) {
         const params = {

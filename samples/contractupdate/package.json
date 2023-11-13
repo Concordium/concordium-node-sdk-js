@@ -4,6 +4,7 @@
     "private": true,
     "dependencies": {
         "@concordium/react-components": "workspace:^",
+        "@concordium/web-sdk": "^7.1.0",
         "bootstrap": "^5.2.3",
         "buffer": "^6.0.3",
         "neverthrow": "^6.0.0",
@@ -24,7 +25,7 @@
         "@types/react": "^18.0.0",
         "@types/react-dom": "^18.0.0",
         "prettier": "2.8.1",
-        "react-scripts": "5.0.1",
+        "react-scripts": "^5.0.1",
         "typescript": "^5.2.2"
     },
     "scripts": {

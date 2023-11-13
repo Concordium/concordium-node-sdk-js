@@ -14,6 +14,9 @@ import {
     AccountTransactionType,
     CcdAmount,
     ConcordiumGRPCClient,
+    ContractAddress,
+    Energy,
+    ReceiveName,
     SchemaVersion,
 } from '@concordium/web-sdk';
 import { useContractSchemaRpc } from './useContractSchemaRpc';
@@ -85,7 +88,7 @@ function schemaOfType(type: SchemaType, schemaBase64: string): Schema {
 function parseParamValue(v: string) {
     try {
         // Assume that value is an account if it successfully parses as one.
-        return { Account: [new AccountAddress(v).address] };
+        return { Account: [AccountAddress.fromBase58(v).address] };
     } catch (e) {
         // Value is not an account.
         return v;
@@ -158,10 +161,10 @@ export function ContractInvoker({ rpc, network, connection, connectedAccount, co
                             connectedAccount,
                             AccountTransactionType.Update,
                             {
-                                amount: new CcdAmount(amount),
-                                address: { index: contract.index, subindex: BigInt(0) },
-                                receiveName: contract.methods[selectedMethodIndex],
-                                maxContractExecutionEnergy: BigInt(30000),
+                                amount: CcdAmount.fromMicroCcd(amount),
+                                address: ContractAddress.create(contract.index, BigInt(0)),
+                                receiveName: ReceiveName.fromString(contract.methods[selectedMethodIndex]),
+                                maxContractExecutionEnergy: Energy.create(30000),
                             },
                             schema && { parameters, schema }
                         ),

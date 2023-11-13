@@ -224,27 +224,53 @@ export function jsonStringify(
 }
 
 /**
+ * Describes how bigints encountered in {@linkcode jsonUnwrapStringify} are handled by default.
+ */
+export const enum BigintFormatType {
+    /** Use 'json-bigint' to safely convert `bigint`s to integers */
+    Integer,
+    /** Convert `bigint`s to strings */
+    String,
+    /** Do nothing, i.e. must be handled manually in replacer function. */
+    None,
+}
+
+/**
  * Stringify, which ensures concordium domain types are unwrapped to their inner type before stringified.
  * This should be used if you want to manually deserialize the inner property values, as the serialization is irreversible.
  *
  * @param value A JavaScript value, usually an object or array, to be converted.
  * @param bigintFormat Determines how to handle bigints. Can be set to either:
- * - `'number'`: uses 'json-bigint to safely serialize,
- * - `'string'`: converts `bigint` to strings
- * - `undefined`: must be taken care of manually, e.g. in replacer function.
- * Defaults to 'number'
+ * - `BigintFormatType.Number`: uses 'json-bigint to safely serialize,
+ * - `BigintFormatType.String`: converts `bigint` to strings
+ * - `BigintFormatType.None`: must be taken care of manually, e.g. in replacer function.
+ * Defaults to BigintFormatType.None
  * @param replacer A function that transforms the results.
+ * This overrides `bigintFormat`, and will also run on primitive values passed as `value.`
  * @param space Adds indentation, white space, and line break characters to the return-value JSON text to make it easier to read.
+ *
+ * @example
+ * jsonUnwrapStringify(100n) => throws `TypeError`, as bigints cannot be serialized.
+ * jsonUnwrapStringify(100n, BigintFormatType.None) => throws `TypeError`
+ * jsonUnwrapStringify(100n, BigintFormatType.None, (_key, value) => 'replaced') => '"replaced"'
+ *
+ * jsonUnwrapStringify(100n, BigintFormatType.Number) => '100'
+ * jsonUnwrapStringify(100n, BigintFormatType.Number, (_key, value) => -value) => '-100' // runs both replacer and bigintFormat
+ * jsonUnwrapStringify(100n, BigintFormatType.Number, (_key, value) => 'replaced') => '"replaced"' // replacer takes precedence
+ *
+ * jsonUnwrapStringify(100n, BigintFormatType.String) => '"100"'
+ * jsonUnwrapStringify(100n, BigintFormatType.String, (_key, value) => -value) => '"-100"' // runs both replacer and bigintFormat
+ * jsonUnwrapStringify(100n, BigintFormatType.String, (_key, value) => 10) => '10' // replacer takes precedence
  */
 export function jsonUnwrapStringify(
     input: any,
-    bigintFormat: 'number' | 'string' | undefined = 'number',
+    bigintFormat = BigintFormatType.None,
     replacer?: ReplacerFun,
     space?: string | number
 ): string {
     function replaceBigintValue(value: any): any {
         switch (bigintFormat) {
-            case 'string':
+            case BigintFormatType.String:
                 if (typeof value === 'bigint') {
                     return value.toString();
                 }
@@ -254,18 +280,20 @@ export function jsonUnwrapStringify(
     }
 
     function replacerFunction(this: any, key: string, value: any) {
-        let transformedValue = ccdUnwrapReplacer.call(this, key, value);
-        transformedValue = replaceBigintValue(transformedValue);
-        return replacer?.call(this, key, transformedValue) ?? transformedValue;
+        let replaced = ccdUnwrapReplacer.call(this, key, value);
+        replaced = replacer?.call(this, key, replaced) ?? replaced;
+        return replaceBigintValue(replaced);
     }
 
     let replaced = input;
-
     if (typeof input !== 'object') {
+        replaced = replacer?.call(replaced, '', replaced) ?? replaced;
         replaced = replaceBigintValue(replaced);
     }
 
     const stringify =
-        bigintFormat === 'number' ? JSONBig.stringify : JSON.stringify;
+        bigintFormat === BigintFormatType.Integer
+            ? JSONBig.stringify
+            : JSON.stringify;
     return stringify(replaced, replacerFunction, space);
 }

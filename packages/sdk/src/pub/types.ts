@@ -73,6 +73,7 @@ export {
     jsonParse,
     jsonStringify,
     jsonUnwrapStringify,
+    BigintFormatType,
 } from '../types/json.js';
 
 // These cannot be exported directly as modules because of a bug in an eslint plugin.

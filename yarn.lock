@@ -1698,7 +1698,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@concordium/react-components@workspace:packages/react-components"
   dependencies:
-    "@concordium/wallet-connectors": ^0.4.0-rc.7
+    "@concordium/wallet-connectors": ^0.4.0
     "@tsconfig/recommended": ^1.0.1
     "@types/node": ^18.11.17
     "@types/react": ^18
@@ -1717,7 +1717,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@concordium/wallet-connectors@^0.4.0-rc.7, @concordium/wallet-connectors@workspace:packages/wallet-connectors":
+"@concordium/wallet-connectors@^0.4.0, @concordium/wallet-connectors@workspace:packages/wallet-connectors":
   version: 0.0.0-use.local
   resolution: "@concordium/wallet-connectors@workspace:packages/wallet-connectors"
   dependencies:

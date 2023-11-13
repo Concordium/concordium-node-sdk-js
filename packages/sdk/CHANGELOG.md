@@ -1,5 +1,12 @@
 # Changelog
 
+## 7.1.0
+
+### Added
+
+- `jsonUnwrapStringify` function, which can be used to unwrap concordium domain types to their inner values before serializing, to ease compatibility with dependants deserializing stringified JSON.
+
+
 ## 7.0.3
 
 ### Fixed

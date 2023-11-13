@@ -5,14 +5,21 @@ import {
     makeFromTypedJson,
 } from './util.js';
 
+// IMPORTANT:
+// When adding functionality to this module, it is important to not change the wrapper class, as changing this might break compatibility
+// between different versions of the SDK, e.g. if a dependency exposes an API that depends on the class and a class from a different version
+// of the SDK is passed.
+
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.ContractAddress;
-export type Serializable = { index: string; subindex: string };
+
+type ContractAddressLike<T> = { index: T; subindex: T };
+export type Serializable = ContractAddressLike<string>;
 
 /** Address of a smart contract instance. */
-class ContractAddress {
+class ContractAddress implements ContractAddressLike<bigint> {
     /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
     private __type = JSON_DISCRIMINATOR;
     constructor(
@@ -21,6 +28,19 @@ class ContractAddress {
         /** The subindex of the smart contract address. */
         public readonly subindex: bigint
     ) {}
+}
+
+/**
+ * Unwraps {@linkcode Type} value
+ *
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode Serializable} value
+ */
+export function toUnwrappedJSON({
+    index,
+    subindex,
+}: Type): ContractAddressLike<bigint> {
+    return { index, subindex };
 }
 
 /** Address of a smart contract instance. */

@@ -5,6 +5,11 @@ import {
     makeFromTypedJson,
 } from './util.js';
 
+// IMPORTANT:
+// When adding functionality to this module, it is important to not change the wrapper class, as changing this might break compatibility
+// between different versions of the SDK, e.g. if a dependency exposes an API that depends on the class and a class from a different version
+// of the SDK is passed.
+
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */
@@ -23,6 +28,16 @@ class Energy {
         /** The internal value for representing the energy. */
         public readonly value: bigint
     ) {}
+}
+
+/**
+ * Unwraps {@linkcode Type} value
+ *
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode bigint} value
+ */
+export function toUnwrappedJSON(value: Type): bigint {
+    return value.value;
 }
 
 /** Energy measure. Used as part of cost calculations for transactions. */

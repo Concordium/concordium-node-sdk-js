@@ -8,6 +8,11 @@ import {
 } from './util.js';
 import { Base58String } from '../types.js';
 
+// IMPORTANT:
+// When adding functionality to this module, it is important to not change the wrapper class, as changing this might break compatibility
+// between different versions of the SDK, e.g. if a dependency exposes an API that depends on the class and a class from a different version
+// of the SDK is passed.
+
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  */

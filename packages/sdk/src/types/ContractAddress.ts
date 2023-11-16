@@ -161,6 +161,15 @@ export function toSerializable(contractAddress: ContractAddress): Serializable {
 }
 
 /**
+ * Converts {@linkcode ContractAddress} into a string using the `<index, subindex>` format.
+ * @param {ContractAddress} contractAddress
+ * @returns {string} The string representation of the address.
+ */
+export function toString(contractAddress: ContractAddress): string {
+    return `<${contractAddress.index}, ${contractAddress.subindex}>`;
+}
+
+/**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
  *
  * @param {Type} value - The account address instance to transform.

@@ -1,5 +1,5 @@
 import { AccountAddress, AccountInfo, AccountTransaction, AccountTransactionHeader, AccountTransactionType, CcdAmount, ConcordiumGRPCWebClient, ConcordiumHdWallet, SimpleTransferPayload, TransactionExpiry, TransactionHash, buildBasicAccountSigner, signTransaction } from '@concordium/web-sdk';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useCookies } from 'react-cookie';
 import { credNumber, identityIndex } from './Index';
@@ -75,7 +75,7 @@ function TransferInput({ accountAddress, seedPhrase }: { accountAddress: Account
 
     function handleChange(event: any) {
         setTransferAmount(event.target.value);
-      }
+    }
 
     function handleRecipientChange(event: any) {
         setRecipient(event.target.value);
@@ -94,31 +94,59 @@ function TransferInput({ accountAddress, seedPhrase }: { accountAddress: Account
     );
 }
 
+async function getAccount(accountAddress: AccountAddress.Type): Promise<AccountInfo> {
+    const client = new ConcordiumGRPCWebClient('https://grpc.testnet.concordium.com', 20000);
+    const maxRetries = 20;
+    const timeoutMs = 1000;
+    return new Promise(async (resolve, reject) => {
+        let escapeCounter = 0;
+        setTimeout(async function waitForAccount() {
+            try {
+                const accountInfo = await client.getAccountInfo(accountAddress);
+                return resolve(accountInfo);
+            } catch {
+                if (escapeCounter > maxRetries) {
+                    return reject();
+                } else {
+                    escapeCounter += 1;
+                    setTimeout(waitForAccount, timeoutMs);
+                }
+            }
+        }, timeoutMs);
+    });
+}
+
 export function Account() {
     // TODO: We also need the correct indices to derive the correct keys.
     const { accountAddress } = useParams();
     const [accountInfo, setAccountInfo] = useState<AccountInfo>();
+    const [error, setError] = useState<string>();
     const [cookies] = useCookies(['seed-phrase-cookie']);
+    const address = useMemo(() => accountAddress ? AccountAddress.fromBase58(accountAddress) : undefined, [accountAddress]);
 
     useEffect(() => {
-        if (accountAddress) {
-            const client = new ConcordiumGRPCWebClient('https://grpc.testnet.concordium.com', 20000);
-            client.getAccountInfo(AccountAddress.fromBase58(accountAddress)).then(setAccountInfo);
+        if (address) {
+            // TODO Needs abort controller to abort in cleanup function.
+            getAccount(address).then(setAccountInfo).catch(() => setError('Failed to retrieve account info.'));
         }
-    }, [accountAddress]);
+    }, [address]);
 
-    if (!accountAddress) {
+    if (!address) {
         return <div>Missing the account address.</div>
     }
 
-    if (accountInfo) {
-        return (
-            <>
-            <DisplayAccount accountInfo={accountInfo} />
-            <TransferInput accountAddress={AccountAddress.fromBase58(accountAddress)} seedPhrase={cookies['seed-phrase-cookie']} />
-        </>
-        );
+    if (error) {
+        return (<div>{error}</div>);
     }
 
-    return null;
+    if (!accountInfo) {
+        return (<div>Waiting for account to be on chain.</div>);
+    }
+
+    return (
+        <>
+            <DisplayAccount accountInfo={accountInfo} />
+            <TransferInput accountAddress={address} seedPhrase={cookies['seed-phrase-cookie']} />
+        </>
+    );
 }

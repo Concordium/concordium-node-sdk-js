@@ -1,4 +1,4 @@
-import { ConcordiumGRPCWebClient, CredentialDeploymentTransaction, CredentialInput, IdentityObjectV1, TransactionExpiry, createCredentialTransaction, serializeCredentialDeploymentPayload, signCredentialTransaction } from "@concordium/web-sdk";
+import { ConcordiumGRPCWebClient, ConcordiumHdWallet, CredentialDeploymentTransaction, CredentialInput, IdentityObjectV1, TransactionExpiry, createCredentialTransaction, serializeCredentialDeploymentPayload, signCredentialTransaction } from "@concordium/web-sdk";
 import { IdentityProviderWithMetadata } from "./types";
 import { mnemonicToSeedSync } from "@scure/bip39";
 import { credNumber, identityIndex } from "./Index";
@@ -65,8 +65,47 @@ export async function createCredentialDeploymentTransaction(identityObject: Iden
     return createCredentialTransaction(credentialInput, expiry);
 }
 
-export async function signAndSendCredentialDeploymentTransaction(credentialDeployment: CredentialDeploymentTransaction, signingKey: string) {
-    const signature = await signCredentialTransaction(credentialDeployment, signingKey);
+/**
+ * Fetches an identity at the provided URL.
+ * 
+ * An identity is not guaranteed to be available as soon as we have received the URL
+ * for where to fetch it. Therefore a wallet must keep polling until the identity is
+ * either confirmed or rejected by the identity provider.
+ * 
+ * For demonstration purposes, and as this wallet example is in memory, this method
+ * will reject after some time. A production ready wallet should never abandon the polling,
+ * but must only stop when the identity has either been confirmed or rejected.
+ * @param identityObjectUrl the location received from the identity provider where we can fetch the identity
+ * @returns the parsed identity object (if successful).
+ */
+export async function fetchIdentity(identityObjectUrl: string): Promise<IdentityObjectV1> {
+    const maxRetries = 60;
+    const timeoutMs = 5000;
+    return new Promise(async (resolve, reject) => {
+        let escapeCounter = 0;
+        setTimeout(async function waitForIdentity() {
+            try {
+                const response = await fetch(identityObjectUrl);
+                const responseJson = await response.json();
+                return resolve(responseJson.token.identityObject.value);
+            } catch {
+                if (escapeCounter > maxRetries) {
+                    return reject();
+                } else {
+                    escapeCounter += 1;
+                    setTimeout(waitForIdentity, timeoutMs);
+                }
+            }
+        }, timeoutMs);
+    });
+}
+
+export function getAccountSigningKey(seedPhrase: string, ipIdentity: number, identityIndex: number, credNumber: number) {
+    const wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, 'Testnet');
+    return wallet.getAccountSigningKey(ipIdentity, identityIndex, credNumber).toString('hex');
+}
+
+export async function sendCredentialDeploymentTransaction(credentialDeployment: CredentialDeploymentTransaction, signature: string) {
     const payload = serializeCredentialDeploymentPayload([signature], credentialDeployment);
     return await client.sendCredentialDeploymentTransaction(payload, credentialDeployment.expiry);
 }

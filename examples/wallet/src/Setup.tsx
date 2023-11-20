@@ -4,7 +4,7 @@ import { useCookies } from 'react-cookie';
 
 /**
  * Allow the user to input their seed phrase. The seed phrase will be stored
- * in a cookie which is not safe, so only use this with a seed phrase for generated
+ * in a cookie which is not safe, so only use this with a seed phrase generated
  * specifically for testing.
  */
 export function SetupSeedPhrase() {

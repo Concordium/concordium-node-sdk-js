@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { identityIndex, network, seedPhraseCookie } from './Index';
 import { useNavigate } from 'react-router-dom';
-import {  CryptographicParameters, IdObjectRequestV1, IdentityRequestInput, Network, Versioned, createIdentityRequest } from '@concordium/web-sdk';
+import { CryptographicParameters, IdObjectRequestV1, IdentityRequestInput, Network, Versioned, createIdentityRequest } from '@concordium/web-sdk';
 import { mnemonicToSeedSync } from '@scure/bip39';
 import { Buffer } from 'buffer/';
 import { IdentityProviderWithMetadata } from './types';
 import { useCookies } from 'react-cookie';
 import { getCryptographicParameters, getIdentityProviders } from './util';
+
+const redirectUri = 'http://localhost:4173/identity';
 
 function createIdentityObjectRequest(identityProvider: IdentityProviderWithMetadata, global: CryptographicParameters, network: Network, seedPhrase: string) {
     const seedCorrectFormat = Buffer.from(mnemonicToSeedSync(seedPhrase)).toString('hex');
@@ -24,9 +26,7 @@ function createIdentityObjectRequest(identityProvider: IdentityProviderWithMetad
     return createIdentityRequest(identityRequestInput);
 }
 
-const redirectUri = 'http://localhost:4173/identity';
-
-export function buildURLwithSearchParameters(baseUrl: string, params: Record<string, string>) {
+function buildURLwithSearchParameters(baseUrl: string, params: Record<string, string>) {
     const searchParams = new URLSearchParams(params);
     return Object.entries(params).length === 0 ? baseUrl : `${baseUrl}?${searchParams.toString()}`;
 }
@@ -41,7 +41,7 @@ async function sendRequest(idObjectRequest: Versioned<IdObjectRequestV1>, baseUr
 
     const url = buildURLwithSearchParameters(baseUrl, params);
     const response = await fetch(url);
-    
+
     // The identity creation protocol dictates that we will receive a redirect.
     if (!response.redirected) {
         // Something went wrong...
@@ -57,9 +57,13 @@ export function CreateIdentity() {
     const [cookies] = useCookies([seedPhraseCookie]);
     const seedPhrase = cookies[seedPhraseCookie];
     const navigate = useNavigate();
+    const dataLoaded = identityProviders !== undefined && cryptographicParameters !== undefined && selectedIdentityProvider !== undefined;
 
     useEffect(() => {
-        getIdentityProviders().then(setIdentityProviders);
+        getIdentityProviders().then((idps) => {
+            setIdentityProviders(idps);
+            setSelectedIdentityProvider(idps[0]);
+        });
         getCryptographicParameters().then(setCryptographicParameters);
     }, []);
 
@@ -69,13 +73,13 @@ export function CreateIdentity() {
         navigate('/');
     }
 
-    if (!identityProviders || !cryptographicParameters) {
+    if (!dataLoaded) {
         // Loading identity providers and cryptographic parameters.
         return null;
     }
 
-    async function onClick() {
-        if (!selectedIdentityProvider || !cryptographicParameters || !seedPhrase) {
+    async function createIdentity() {
+        if (!dataLoaded) {
             return;
         }
 
@@ -86,7 +90,7 @@ export function CreateIdentity() {
             window.open(url);
         }
     }
-    
+
     return (
         <div>
             <label>
@@ -97,7 +101,7 @@ export function CreateIdentity() {
                     })}
                 </select>
             </label>
-            <button disabled={selectedIdentityProvider === undefined} onClick={onClick}>Create identity</button>
+            <button disabled={selectedIdentityProvider === undefined} onClick={createIdentity}>Create identity</button>
         </div>
     );
 }

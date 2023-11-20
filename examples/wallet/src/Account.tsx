@@ -1,9 +1,8 @@
-import { AccountAddress, AccountInfo, AccountTransaction, AccountTransactionHeader, AccountTransactionType, CcdAmount, ConcordiumGRPCWebClient, ConcordiumHdWallet, SimpleTransferPayload, TransactionExpiry, TransactionHash, buildBasicAccountSigner, signTransaction } from '@concordium/web-sdk';
+import { AccountAddress, AccountInfo, CcdAmount, TransactionHash, buildBasicAccountSigner, signTransaction } from '@concordium/web-sdk';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useCookies } from 'react-cookie';
-import { credNumber, identityIndex } from './Index';
-import { DEFAULT_TRANSACTION_EXPIRY } from './util';
+import { client, createSimpleTransferTransaction, getAccount, getAccountSigningKey } from './util';
 
 function DisplayAccount({ accountInfo }: { accountInfo: AccountInfo }) {
     return (
@@ -20,6 +19,7 @@ function DisplayAccount({ accountInfo }: { accountInfo: AccountInfo }) {
 function TransferInput({ accountAddress, seedPhrase }: { accountAddress: AccountAddress.Type, seedPhrase: string }) {
     const [transferAmount, setTransferAmount] = useState<string>('0');
     const [recipient, setRecipient] = useState<string>();
+    const [transactionHash, setTransactionHash] = useState<string>();
 
     async function handleSubmit(event: any) {
         event.preventDefault();
@@ -45,32 +45,14 @@ function TransferInput({ accountAddress, seedPhrase }: { accountAddress: Account
             return;
         }
 
+        const simpleTransfer = await createSimpleTransferTransaction(amount, accountAddress, toAddress);
 
-        const client = new ConcordiumGRPCWebClient('https://grpc.testnet.concordium.com', 20000);
-        const payload: SimpleTransferPayload = {
-            amount,
-            toAddress
-        }
+        // TODO This doesn't work if we select another IDP than 0.
+        const signingKey = getAccountSigningKey(seedPhrase, 0, 0, 0);
 
-        const nonce = (await client.getNextAccountNonce(accountAddress)).nonce
-
-        const header: AccountTransactionHeader = {
-            expiry: TransactionExpiry.fromDate(new Date(Date.now() + DEFAULT_TRANSACTION_EXPIRY)),
-            nonce,
-            sender: accountAddress
-        };
-
-        const transaction: AccountTransaction = {
-            type: AccountTransactionType.Transfer,
-            payload,
-            header
-        }
-
-        let wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, 'Testnet');
-        const signingKey = wallet.getAccountSigningKey(0, identityIndex, credNumber).toString('hex');
-        const signature = await signTransaction(transaction, buildBasicAccountSigner(signingKey));
-        const transactionHash = await client.sendAccountTransaction(transaction, signature);
-        console.log(TransactionHash.toHexString(transactionHash));
+        const signature = await signTransaction(simpleTransfer, buildBasicAccountSigner(signingKey));
+        const transactionHash = await client.sendAccountTransaction(simpleTransfer, signature);
+        setTransactionHash(TransactionHash.toHexString(transactionHash));
     }
 
     function handleChange(event: any) {
@@ -90,43 +72,24 @@ function TransferInput({ accountAddress, seedPhrase }: { accountAddress: Account
                 <input type="text" value={recipient} onChange={handleRecipientChange} />
             </label>
             <input type="submit" value="Send" />
+            {transactionHash && (<div>Latest transaction hash: <a href={`https://testnet.ccdscan.io/transactions?dcount=1&dentity=transaction&dhash=${transactionHash}`}>{transactionHash}</a></div>)}
         </form>
     );
 }
 
-async function getAccount(accountAddress: AccountAddress.Type): Promise<AccountInfo> {
-    const client = new ConcordiumGRPCWebClient('https://grpc.testnet.concordium.com', 20000);
-    const maxRetries = 20;
-    const timeoutMs = 1000;
-    return new Promise(async (resolve, reject) => {
-        let escapeCounter = 0;
-        setTimeout(async function waitForAccount() {
-            try {
-                const accountInfo = await client.getAccountInfo(accountAddress);
-                return resolve(accountInfo);
-            } catch {
-                if (escapeCounter > maxRetries) {
-                    return reject();
-                } else {
-                    escapeCounter += 1;
-                    setTimeout(waitForAccount, timeoutMs);
-                }
-            }
-        }, timeoutMs);
-    });
-}
-
 export function Account() {
-    // TODO: We also need the correct indices to derive the correct keys.
+
+    // TODO We also need to get the IDP index as a value here.
+
     const { accountAddress } = useParams();
     const [accountInfo, setAccountInfo] = useState<AccountInfo>();
     const [error, setError] = useState<string>();
     const [cookies] = useCookies(['seed-phrase-cookie']);
+    const seedPhrase = useMemo(() => cookies['seed-phrase-cookie'] as string, [cookies]);
     const address = useMemo(() => accountAddress ? AccountAddress.fromBase58(accountAddress) : undefined, [accountAddress]);
 
     useEffect(() => {
         if (address) {
-            // TODO Needs abort controller to abort in cleanup function.
             getAccount(address).then(setAccountInfo).catch(() => setError('Failed to retrieve account info.'));
         }
     }, [address]);
@@ -146,7 +109,7 @@ export function Account() {
     return (
         <>
             <DisplayAccount accountInfo={accountInfo} />
-            <TransferInput accountAddress={address} seedPhrase={cookies['seed-phrase-cookie']} />
+            <TransferInput accountAddress={address} seedPhrase={seedPhrase} />
         </>
     );
 }

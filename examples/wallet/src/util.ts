@@ -1,4 +1,4 @@
-import { ConcordiumGRPCWebClient, ConcordiumHdWallet, CredentialDeploymentTransaction, CredentialInput, IdentityObjectV1, TransactionExpiry, createCredentialTransaction, serializeCredentialDeploymentPayload, signCredentialTransaction } from "@concordium/web-sdk";
+import { AccountAddress, AccountInfo, AccountTransaction, AccountTransactionHeader, AccountTransactionType, CcdAmount, ConcordiumGRPCWebClient, ConcordiumHdWallet, CredentialDeploymentTransaction, CredentialInput, CryptographicParameters, IdObjectRequestV1, IdentityObjectV1, IdentityRequestInput, Network, SimpleTransferPayload, TransactionExpiry, Versioned, createCredentialTransaction, createIdentityRequest, serializeCredentialDeploymentPayload, signCredentialTransaction } from "@concordium/web-sdk";
 import { IdentityProviderWithMetadata } from "./types";
 import { mnemonicToSeedSync } from "@scure/bip39";
 import { credNumber, identityIndex } from "./Index";
@@ -24,7 +24,7 @@ export async function getIdentityProviders(): Promise<IdentityProviderWithMetada
     return response.json();
 }
 
-const client = new ConcordiumGRPCWebClient('https://grpc.testnet.concordium.com', 20000);
+export const client = new ConcordiumGRPCWebClient('https://grpc.testnet.concordium.com', 20000);
 
 /**
  * Retrieves the global cryptographic parameters from a node.
@@ -108,4 +108,113 @@ export function getAccountSigningKey(seedPhrase: string, ipIdentity: number, ide
 export async function sendCredentialDeploymentTransaction(credentialDeployment: CredentialDeploymentTransaction, signature: string) {
     const payload = serializeCredentialDeploymentPayload([signature], credentialDeployment);
     return await client.sendCredentialDeploymentTransaction(payload, credentialDeployment.expiry);
+}
+
+/**
+ * Finds the maximum anonymity revoker threshold for the given count of
+ * anonymity revokers for an identity provider.
+ * @param anonymityRevokerCount the number of anonymity revokers for an identity provider
+ * @returns the maximum anonymity revoker threshold possible
+ */
+function determineMaxAnonymityRevokerThreshold(anonymityRevokerCount: number) {
+    return Math.min(anonymityRevokerCount, 255);
+}
+
+export function createIdentityObjectRequest(identityProvider: IdentityProviderWithMetadata, global: CryptographicParameters, network: Network, seedPhrase: string) {
+    const seedCorrectFormat = Buffer.from(mnemonicToSeedSync(seedPhrase)).toString('hex');
+    
+    const identityRequestInput: IdentityRequestInput = {
+        net: network,
+        seed: seedCorrectFormat,
+        identityIndex: identityIndex,
+        arsInfos: identityProvider.arsInfos,
+        arThreshold: determineMaxAnonymityRevokerThreshold(Object.keys(identityProvider.arsInfos).length - 1),
+        ipInfo: identityProvider.ipInfo,
+        globalContext: global
+    };
+
+    return createIdentityRequest(identityRequestInput);
+}
+
+
+export const redirectUri = 'http://localhost:4173/identity';
+
+function buildURLwithSearchParameters(baseUrl: string, params: Record<string, string>) {
+    const searchParams = new URLSearchParams(params);
+    return Object.entries(params).length === 0 ? baseUrl : `${baseUrl}?${searchParams.toString()}`;
+}
+
+export async function sendRequest(idObjectRequest: Versioned<IdObjectRequestV1>, baseUrl: string) {
+    const params = {
+        scope: 'identity',
+        response_type: 'code',
+        redirect_uri: redirectUri,
+        state: JSON.stringify({ idObjectRequest }),
+    };
+
+    const url = buildURLwithSearchParameters(baseUrl, params);
+    const response = await fetch(url);
+
+    // The identity creation protocol dictates that we will receive a redirect.
+    if (!response.redirected) {
+        // Something went wrong...
+    } else {
+        return response.url;
+    }
+}
+
+
+export async function getAccount(accountAddress: AccountAddress.Type): Promise<AccountInfo> {
+    const client = new ConcordiumGRPCWebClient('https://grpc.testnet.concordium.com', 20000);
+    const maxRetries = 20;
+    const timeoutMs = 1000;
+    return new Promise(async (resolve, reject) => {
+        let escapeCounter = 0;
+        setTimeout(async function waitForAccount() {
+            try {
+                const accountInfo = await client.getAccountInfo(accountAddress);
+                return resolve(accountInfo);
+            } catch {
+                if (escapeCounter > maxRetries) {
+                    return reject();
+                } else {
+                    escapeCounter += 1;
+                    setTimeout(waitForAccount, timeoutMs);
+                }
+            }
+        }, timeoutMs);
+    });
+}
+
+
+
+/**
+ * Creates a simple transfer account transaction. This transaction sends an amount of CCD from
+ * one account to another.
+ * @param amount the amount of CCD to send
+ * @param senderAddress the sender account address
+ * @param toAddress the account address that the CCD will be sent to
+ * @returns the simple transfer account transaction object
+ */
+export async function createSimpleTransferTransaction(amount: CcdAmount.Type, senderAddress: AccountAddress.Type, toAddress: AccountAddress.Type) {
+    const payload: SimpleTransferPayload = {
+        amount,
+        toAddress
+    };
+    
+    const nonce = (await client.getNextAccountNonce(senderAddress)).nonce;
+
+    const header: AccountTransactionHeader = {
+        expiry: TransactionExpiry.fromDate(new Date(Date.now() + DEFAULT_TRANSACTION_EXPIRY)),
+        nonce,
+        sender: senderAddress
+    };
+
+    const transaction: AccountTransaction = {
+        type: AccountTransactionType.Transfer,
+        payload,
+        header
+    };
+
+    return transaction;
 }

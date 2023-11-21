@@ -1,7 +1,7 @@
 import { AttributeList, CredentialDeploymentTransaction, CredentialInput, IdentityObjectV1, getAccountAddress, signCredentialTransaction } from '@concordium/web-sdk';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { extractIdentityObjectUrl, fetchIdentity, getAccountSigningKey, sendCredentialDeploymentTransaction, getCryptographicParameters, getIdentityProviders, DEFAULT_TRANSACTION_EXPIRY, getDefaultTransactionExpiry } from './util';
+import { extractIdentityObjectUrl, fetchIdentity, getAccountSigningKey, sendCredentialDeploymentTransaction, getCryptographicParameters, getIdentityProviders, getDefaultTransactionExpiry } from './util';
 import { mnemonicToSeedSync } from '@scure/bip39';
 import { Buffer } from 'buffer/';
 import { AccountWorkerInput } from './types';

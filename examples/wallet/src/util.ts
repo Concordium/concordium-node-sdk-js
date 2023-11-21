@@ -1,10 +1,8 @@
 import { AccountAddress, AccountInfo, AccountTransaction, AccountTransactionHeader, AccountTransactionType, CcdAmount, ConcordiumGRPCWebClient, ConcordiumHdWallet, CredentialDeploymentTransaction, CredentialInput, CryptographicParameters, IdObjectRequestV1, IdentityObjectV1, IdentityRequestInput, Network, SimpleTransferPayload, TransactionExpiry, Versioned, createCredentialTransaction, createIdentityRequest, serializeCredentialDeploymentPayload, signCredentialTransaction } from "@concordium/web-sdk";
 import { IdentityProviderWithMetadata } from "./types";
-import { mnemonicToSeedSync } from "@scure/bip39";
-import { Buffer } from 'buffer/';
-import { credNumber, identityIndex, network } from "./constants";
+import { credNumber, identityIndex, network, redirectUri } from "./constants";
 
-export const DEFAULT_TRANSACTION_EXPIRY = 360000;
+export const client = new ConcordiumGRPCWebClient('https://grpc.testnet.concordium.com', 20000);
 
 /**
  * Creates a default transaction expiration that will ensure that the
@@ -12,6 +10,7 @@ export const DEFAULT_TRANSACTION_EXPIRY = 360000;
  * @returns a default transaction expiration to be used for transactions submitted soon after
  */
 export function getDefaultTransactionExpiry() {
+    const DEFAULT_TRANSACTION_EXPIRY = 360000;
     return TransactionExpiry.fromDate(new Date(Date.now() + DEFAULT_TRANSACTION_EXPIRY));
 }
 
@@ -26,10 +25,6 @@ export function getAccountSigningKey(seedPhrase: string, identityProviderIdentit
     const wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, network);
     return wallet.getAccountSigningKey(identityProviderIdentity, identityIndex, credNumber).toString('hex');
 }
-
-
-
-
 
 /**
  * Utility function for extracting the URL where the identity object can be fetched
@@ -51,8 +46,6 @@ export async function getIdentityProviders(): Promise<IdentityProviderWithMetada
     return response.json();
 }
 
-export const client = new ConcordiumGRPCWebClient('https://grpc.testnet.concordium.com', 20000);
-
 /**
  * Retrieves the global cryptographic parameters from a node.
  * @returns the global cryptographic parameters.
@@ -60,34 +53,6 @@ export const client = new ConcordiumGRPCWebClient('https://grpc.testnet.concordi
 export async function getCryptographicParameters() {
     const cryptographicParameters = await client.getCryptographicParameters();
     return cryptographicParameters;
-}
-
-/**
- * Creates a credential deployment transaction.
- * @param identityObject the identity object that will be used for creating the credential
- * @param seedPhrase the seed phrase used to derive the keys for the credential
- * @returns a credential deployment transaction
- */
-export async function createCredentialDeploymentTransaction(identityObject: IdentityObjectV1, seedPhrase: string) {
-    const global = await getCryptographicParameters();
-
-    // TODO Fix this. We only select identity provider once.
-    const selectedIdentityProvider = (await getIdentityProviders())[0];
-
-    const credentialInput: CredentialInput = {
-        net: network,
-        revealedAttributes: [],
-        seedAsHex: Buffer.from(mnemonicToSeedSync(seedPhrase)).toString('hex'),
-        idObject: identityObject,
-        identityIndex,
-        globalContext: global,
-        credNumber,
-        ipInfo: selectedIdentityProvider.ipInfo,
-        arsInfos: selectedIdentityProvider.arsInfos
-    };
-
-    const expiry = TransactionExpiry.fromDate(new Date(Date.now() + DEFAULT_TRANSACTION_EXPIRY));
-    return createCredentialTransaction(credentialInput, expiry);
 }
 
 /**
@@ -125,13 +90,16 @@ export async function fetchIdentity(identityObjectUrl: string): Promise<Identity
     });
 }
 
-
-
+/**
+ * Serializes a credential deployment transaction and sends it to a node.
+ * @param credentialDeployment the credential deployment to send
+ * @param signature a signature on the credential deployment
+ * @returns a promise with the transaction hash of the submitted credential deployment
+ */
 export async function sendCredentialDeploymentTransaction(credentialDeployment: CredentialDeploymentTransaction, signature: string) {
     const payload = serializeCredentialDeploymentPayload([signature], credentialDeployment);
     return await client.sendCredentialDeploymentTransaction(payload, credentialDeployment.expiry);
 }
-
 
 /**
  * Finds the optimal anonymity revoker threshold for the given count of
@@ -144,16 +112,14 @@ export function determineAnonymityRevokerThreshold(anonymityRevokerCount: number
     return Math.min(anonymityRevokerCount - 1, 255);
 }
 
-
-
-export const redirectUri = 'http://localhost:4173/identity';
-
-function buildURLwithSearchParameters(baseUrl: string, params: Record<string, string>) {
-    const searchParams = new URLSearchParams(params);
-    return Object.entries(params).length === 0 ? baseUrl : `${baseUrl}?${searchParams.toString()}`;
-}
-
-export async function sendRequest(idObjectRequest: Versioned<IdObjectRequestV1>, baseUrl: string) {
+/**
+ * Sends an identity object request, which is the start of the identity creation flow, to the 
+ * provided URL.
+ * @param idObjectRequest the identity object request to send
+ * @param baseUrl the identity issuance start URL
+ * @returns the URL that the identity provider redirects to. This URL should be opened to continue the identity issuance flow.
+ */
+export async function sendIdentityRequest(idObjectRequest: Versioned<IdObjectRequestV1>, baseUrl: string) {
     const params = {
         scope: 'identity',
         response_type: 'code',
@@ -161,20 +127,27 @@ export async function sendRequest(idObjectRequest: Versioned<IdObjectRequestV1>,
         state: JSON.stringify({ idObjectRequest }),
     };
 
-    const url = buildURLwithSearchParameters(baseUrl, params);
+    const searchParams = new URLSearchParams(params);
+    const url = `${baseUrl}?${searchParams.toString()}`;
     const response = await fetch(url);
 
     // The identity creation protocol dictates that we will receive a redirect.
+    // If we don't receive a redirect, then something went wrong at the identity
+    // provider's side.
     if (!response.redirected) {
-        // Something went wrong...
+        throw new Error('The identity provider did not redirect as expected.');
     } else {
         return response.url;
     }
 }
 
-
+/**
+ * Gets information about an account from the node. The method will continue to poll for some time
+ * as the account might not be in a block when this is first called.
+ * @param accountAddress the address of the account to retrieve the information about
+ * @returns the account info
+ */
 export async function getAccount(accountAddress: AccountAddress.Type): Promise<AccountInfo> {
-    const client = new ConcordiumGRPCWebClient('https://grpc.testnet.concordium.com', 20000);
     const maxRetries = 20;
     const timeoutMs = 1000;
     return new Promise(async (resolve, reject) => {
@@ -208,11 +181,10 @@ export async function createSimpleTransferTransaction(amount: CcdAmount.Type, se
         amount,
         toAddress
     };
-    
     const nonce = (await client.getNextAccountNonce(senderAddress)).nonce;
 
     const header: AccountTransactionHeader = {
-        expiry: TransactionExpiry.fromDate(new Date(Date.now() + DEFAULT_TRANSACTION_EXPIRY)),
+        expiry: getDefaultTransactionExpiry(),
         nonce,
         sender: senderAddress
     };

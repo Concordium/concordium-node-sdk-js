@@ -2,10 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CryptographicParameters, IdObjectRequestV1, IdentityRequestInput, Versioned } from '@concordium/web-sdk';
 import { IdentityProviderWithMetadata } from './types';
-import { determineAnonymityRevokerThreshold, getCryptographicParameters, getIdentityProviders, redirectUri, sendRequest } from './util';
+import { determineAnonymityRevokerThreshold, getCryptographicParameters, getIdentityProviders, sendIdentityRequest } from './util';
 import { mnemonicToSeedSync } from '@scure/bip39';
 import { Buffer } from 'buffer/';
-import { network, seedPhraseKey, selectedIdentityProviderKey } from './constants';
+import { network, redirectUri, seedPhraseKey, selectedIdentityProviderKey } from './constants';
 
 const worker = new Worker(new URL("./identity-worker.ts", import.meta.url));
 
@@ -46,7 +46,8 @@ export function CreateIdentity() {
         setCreateButtonDisabled(true);
 
         const listener = worker.onmessage = async (e: MessageEvent<Versioned<IdObjectRequestV1>>) => {
-            const url = await sendRequest(e.data, selectedIdentityProvider.metadata.issuanceStart);
+            const url = await sendIdentityRequest(e.data, selectedIdentityProvider.metadata.issuanceStart);
+            // TODO Explain this check. Handle the error case as well.
             if (!url?.includes(redirectUri)) {
                 window.open(url);
             }

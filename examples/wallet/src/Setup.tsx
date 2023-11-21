@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCookies } from 'react-cookie';
+import { seedPhraseKey } from './constants';
 
 /**
  * Allow the user to input their seed phrase. The seed phrase will be stored
@@ -9,19 +9,18 @@ import { useCookies } from 'react-cookie';
  */
 export function SetupSeedPhrase() {
     const [seedPhraseWords, setSeedPhraseWords] = useState<string>();
-    const [_, setCookie] = useCookies(['seed-phrase-cookie'])
     const navigate = useNavigate();
-    
+
     function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
         if (!seedPhraseWords) {
             alert('Please input a seed phrase');
-            return; 
+            return;
         }
 
         try {
-            setCookie('seed-phrase-cookie', seedPhraseWords);
+            localStorage.setItem(seedPhraseKey, seedPhraseWords);
             navigate('/create');
         } catch {
             alert('An invalid seed phrase was provided');

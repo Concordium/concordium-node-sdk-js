@@ -1,8 +1,8 @@
 import { AccountAddress, AccountInfo, CcdAmount, TransactionHash, buildBasicAccountSigner, signTransaction } from '@concordium/web-sdk';
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { useCookies } from 'react-cookie';
+import { useNavigate, useParams } from 'react-router-dom';
 import { client, createSimpleTransferTransaction, getAccount, getAccountSigningKey } from './util';
+import { seedPhraseKey, selectedIdentityProviderKey } from './constants';
 
 function DisplayAccount({ accountInfo }: { accountInfo: AccountInfo }) {
     return (
@@ -16,7 +16,7 @@ function DisplayAccount({ accountInfo }: { accountInfo: AccountInfo }) {
     );
 }
 
-function TransferInput({ accountAddress, seedPhrase }: { accountAddress: AccountAddress.Type, seedPhrase: string }) {
+function TransferInput({ accountAddress, seedPhrase, identityProviderIdentity }: { accountAddress: AccountAddress.Type, seedPhrase: string, identityProviderIdentity: number }) {
     const [transferAmount, setTransferAmount] = useState<string>('0');
     const [recipient, setRecipient] = useState<string>();
     const [transactionHash, setTransactionHash] = useState<string>();
@@ -46,10 +46,7 @@ function TransferInput({ accountAddress, seedPhrase }: { accountAddress: Account
         }
 
         const simpleTransfer = await createSimpleTransferTransaction(amount, accountAddress, toAddress);
-
-        // TODO This doesn't work if we select another IDP than 0.
-        const signingKey = getAccountSigningKey(seedPhrase, 0, 0, 0);
-
+        const signingKey = getAccountSigningKey(seedPhrase, identityProviderIdentity);
         const signature = await signTransaction(simpleTransfer, buildBasicAccountSigner(signingKey));
         const transactionHash = await client.sendAccountTransaction(simpleTransfer, signature);
         setTransactionHash(TransactionHash.toHexString(transactionHash));
@@ -78,14 +75,12 @@ function TransferInput({ accountAddress, seedPhrase }: { accountAddress: Account
 }
 
 export function Account() {
-
-    // TODO We also need to get the IDP index as a value here.
-
+    const navigate = useNavigate();
     const { accountAddress } = useParams();
     const [accountInfo, setAccountInfo] = useState<AccountInfo>();
     const [error, setError] = useState<string>();
-    const [cookies] = useCookies(['seed-phrase-cookie']);
-    const seedPhrase = useMemo(() => cookies['seed-phrase-cookie'] as string, [cookies]);
+    const seedPhrase = useMemo(() => localStorage.getItem(seedPhraseKey), []);
+    const selectedIdentityProviderIdentity = useMemo(() => localStorage.getItem(selectedIdentityProviderKey), []);
     const address = useMemo(() => accountAddress ? AccountAddress.fromBase58(accountAddress) : undefined, [accountAddress]);
 
     useEffect(() => {
@@ -94,8 +89,15 @@ export function Account() {
         }
     }, [address]);
 
+    if (seedPhrase === null || selectedIdentityProviderIdentity === null) {
+        // Someone navigated directly to this page without first setting up the wallet.
+        // Move them to the initial setup page.
+        navigate('/');
+        return;
+    }
+
     if (!address) {
-        return <div>Missing the account address.</div>
+        return (<div>Missing the account address.</div>);
     }
 
     if (error) {
@@ -109,7 +111,7 @@ export function Account() {
     return (
         <>
             <DisplayAccount accountInfo={accountInfo} />
-            <TransferInput accountAddress={address} seedPhrase={seedPhrase} />
+            <TransferInput accountAddress={address} seedPhrase={seedPhrase} identityProviderIdentity={Number.parseInt(selectedIdentityProviderIdentity)} />
         </>
     );
 }

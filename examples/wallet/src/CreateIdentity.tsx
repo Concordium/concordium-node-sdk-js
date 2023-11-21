@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { seedPhraseCookie } from './Index';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CryptographicParameters, IdObjectRequestV1, IdentityRequestInput, Versioned } from '@concordium/web-sdk';
 import { IdentityProviderWithMetadata } from './types';
-import { useCookies } from 'react-cookie';
 import { determineAnonymityRevokerThreshold, getCryptographicParameters, getIdentityProviders, redirectUri, sendRequest } from './util';
 import { mnemonicToSeedSync } from '@scure/bip39';
 import { Buffer } from 'buffer/';
+import { network, seedPhraseKey, selectedIdentityProviderKey } from './constants';
 
 const worker = new Worker(new URL("./identity-worker.ts", import.meta.url));
 
@@ -15,10 +14,9 @@ export function CreateIdentity() {
     const [identityProviders, setIdentityProviders] = useState<IdentityProviderWithMetadata[]>();
     const [selectedIdentityProvider, setSelectedIdentityProvider] = useState<IdentityProviderWithMetadata>();
     const [cryptographicParameters, setCryptographicParameters] = useState<CryptographicParameters>();
-    const [cookies, setCookie] = useCookies([seedPhraseCookie, 'selected-identity-provider']);
-    const seedPhrase = cookies[seedPhraseCookie];
     const navigate = useNavigate();
     const dataLoaded = identityProviders !== undefined && cryptographicParameters !== undefined && selectedIdentityProvider !== undefined;
+    const seedPhrase = useMemo(() => localStorage.getItem(seedPhraseKey), []);
 
     useEffect(() => {
         getIdentityProviders().then((idps) => {
@@ -40,11 +38,11 @@ export function CreateIdentity() {
     }
 
     async function createIdentity() {
-        if (!dataLoaded) {
+        if (!dataLoaded || !seedPhrase) {
             return;
         }
 
-        setCookie('selected-identity-provider', selectedIdentityProvider.ipInfo.ipIdentity);
+        localStorage.setItem(selectedIdentityProviderKey, selectedIdentityProvider.ipInfo.ipIdentity.toString());
         setCreateButtonDisabled(true);
 
         const listener = worker.onmessage = async (e: MessageEvent<Versioned<IdObjectRequestV1>>) => {
@@ -56,7 +54,7 @@ export function CreateIdentity() {
         }
 
         const identityRequestInput: IdentityRequestInput = {
-            net: 'Testnet',
+            net: network,
             seed: Buffer.from(mnemonicToSeedSync(seedPhrase)).toString('hex'),
             identityIndex: selectedIdentityProvider.ipInfo.ipIdentity,
             arsInfos: selectedIdentityProvider.arsInfos,

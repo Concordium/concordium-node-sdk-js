@@ -9,13 +9,6 @@ export interface IdentityProviderMetaData {
 
 export type IdentityProviderWithMetadata = IdentityProvider & { metadata: IdentityProviderMetaData };
 
-export interface IdentityWorkerInput {
-    selectedIdentityProvider: IdentityProviderWithMetadata,
-    cryptographicParameters: CryptographicParameters,
-    network: Network,
-    seedPhrase: string
-};
-
 export interface AccountWorkerInput {
     credentialInput: CredentialInput;
     expiry: TransactionExpiry.Type;

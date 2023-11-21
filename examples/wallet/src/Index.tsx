@@ -37,16 +37,6 @@ const router = createBrowserRouter([
     }
 ]);
 
-// Global state definitions.
-export const network = 'Testnet';
-
-// The index of the identity to create. This index is part of the key derivation path used
-// for generating the keys for the identity and any account created from it.
-export const identityIndex = 0;
-export const credNumber = 0;
-export const client = atom<ConcordiumGRPCClient | undefined>(undefined);
-export const seedPhraseCookie = 'seed-phrase-cookie';
-
 createRoot(container).render(<React.StrictMode>
     <RouterProvider router={router} />
 </React.StrictMode>);

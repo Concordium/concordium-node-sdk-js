@@ -1,8 +1,8 @@
 import { AccountAddress, AccountInfo, AccountTransaction, AccountTransactionHeader, AccountTransactionType, CcdAmount, ConcordiumGRPCWebClient, ConcordiumHdWallet, CredentialDeploymentTransaction, CredentialInput, CryptographicParameters, IdObjectRequestV1, IdentityObjectV1, IdentityRequestInput, Network, SimpleTransferPayload, TransactionExpiry, Versioned, createCredentialTransaction, createIdentityRequest, serializeCredentialDeploymentPayload, signCredentialTransaction } from "@concordium/web-sdk";
 import { IdentityProviderWithMetadata } from "./types";
 import { mnemonicToSeedSync } from "@scure/bip39";
-import { credNumber, identityIndex } from "./Index";
 import { Buffer } from 'buffer/';
+import { credNumber, identityIndex, network } from "./constants";
 
 export const DEFAULT_TRANSACTION_EXPIRY = 360000;
 
@@ -14,6 +14,21 @@ export const DEFAULT_TRANSACTION_EXPIRY = 360000;
 export function getDefaultTransactionExpiry() {
     return TransactionExpiry.fromDate(new Date(Date.now() + DEFAULT_TRANSACTION_EXPIRY));
 }
+
+/**
+ * Derives an account signing key.
+ * 
+ * For this example we only work with a single identity and a single account, therefore
+ * those indices are hardcoded to 0. In a production wallet any number of identities and
+ * accounts could be created.
+ */
+export function getAccountSigningKey(seedPhrase: string, identityProviderIdentity: number) {
+    const wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, network);
+    return wallet.getAccountSigningKey(identityProviderIdentity, identityIndex, credNumber).toString('hex');
+}
+
+
+
 
 
 /**
@@ -47,7 +62,6 @@ export async function getCryptographicParameters() {
     return cryptographicParameters;
 }
 
-
 /**
  * Creates a credential deployment transaction.
  * @param identityObject the identity object that will be used for creating the credential
@@ -61,7 +75,7 @@ export async function createCredentialDeploymentTransaction(identityObject: Iden
     const selectedIdentityProvider = (await getIdentityProviders())[0];
 
     const credentialInput: CredentialInput = {
-        net: 'Testnet',
+        net: network,
         revealedAttributes: [],
         seedAsHex: Buffer.from(mnemonicToSeedSync(seedPhrase)).toString('hex'),
         idObject: identityObject,
@@ -111,10 +125,7 @@ export async function fetchIdentity(identityObjectUrl: string): Promise<Identity
     });
 }
 
-export function getAccountSigningKey(seedPhrase: string, ipIdentity: number, identityIndex: number, credNumber: number) {
-    const wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, 'Testnet');
-    return wallet.getAccountSigningKey(ipIdentity, identityIndex, credNumber).toString('hex');
-}
+
 
 export async function sendCredentialDeploymentTransaction(credentialDeployment: CredentialDeploymentTransaction, signature: string) {
     const payload = serializeCredentialDeploymentPayload([signature], credentialDeployment);

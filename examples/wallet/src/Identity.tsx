@@ -1,12 +1,11 @@
 import { AttributeList, CredentialDeploymentTransaction, CredentialInput, IdentityObjectV1, getAccountAddress, signCredentialTransaction } from '@concordium/web-sdk';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useCookies } from 'react-cookie';
-import { credNumber, identityIndex } from './Index';
 import { extractIdentityObjectUrl, fetchIdentity, getAccountSigningKey, sendCredentialDeploymentTransaction, getCryptographicParameters, getIdentityProviders, DEFAULT_TRANSACTION_EXPIRY, getDefaultTransactionExpiry } from './util';
 import { mnemonicToSeedSync } from '@scure/bip39';
 import { Buffer } from 'buffer/';
 import { AccountWorkerInput } from './types';
+import { credNumber, identityIndex, network, seedPhraseKey, selectedIdentityProviderKey } from './constants';
 
 const worker = new Worker(new URL("./account-worker.ts", import.meta.url));
 
@@ -21,9 +20,10 @@ function DisplayIdentity({ attributes }: { attributes: AttributeList }) {
 
 export function Identity() {
     const location = useLocation();
-    const [identity, setIdentity] = useState<IdentityObjectV1>();
-    const [cookies] = useCookies(['seed-phrase-cookie', 'selected-identity-provider']);
     const navigate = useNavigate();
+    const [identity, setIdentity] = useState<IdentityObjectV1>();
+    const seedPhrase = useMemo(() => localStorage.getItem(seedPhraseKey), []);
+    const selectedIdentityProviderIdentity = useMemo(() => localStorage.getItem(selectedIdentityProviderKey), []);
 
     useEffect(() => {
         const identityObjectUrl = extractIdentityObjectUrl(location.hash);
@@ -35,13 +35,11 @@ export function Identity() {
     }, [location.hash]);
 
     async function createAndSendAccount() {
-        const seedPhrase = cookies['seed-phrase-cookie'] as string;
-        if (!identity || !seedPhrase) {
+        if (!identity || !seedPhrase || selectedIdentityProviderIdentity === null) {
             return;
         }
 
-        const selectedIpIdentity: number = cookies['selected-identity-provider'];
-        const selectedIdentityProvider = (await getIdentityProviders()).find((idp) => idp.ipInfo.ipIdentity === selectedIpIdentity);
+        const selectedIdentityProvider = (await getIdentityProviders()).find((idp) => idp.ipInfo.ipIdentity === Number.parseInt(selectedIdentityProviderIdentity));
         if (!selectedIdentityProvider) {
             return;
         }
@@ -49,7 +47,7 @@ export function Identity() {
         const listener = worker.onmessage = async (e: MessageEvent<CredentialDeploymentTransaction>) => {
             worker.removeEventListener('message', listener);
             const credentialDeploymentTransaction = e.data;
-            const signingKey = getAccountSigningKey(seedPhrase, credentialDeploymentTransaction.unsignedCdi.ipIdentity, identityIndex, credNumber);
+            const signingKey = getAccountSigningKey(seedPhrase, credentialDeploymentTransaction.unsignedCdi.ipIdentity);
             const signature = await signCredentialTransaction(credentialDeploymentTransaction, signingKey);
             await sendCredentialDeploymentTransaction(credentialDeploymentTransaction, signature);
             const accountAddress = getAccountAddress(credentialDeploymentTransaction.unsignedCdi.credId);
@@ -58,7 +56,7 @@ export function Identity() {
 
         const global = await getCryptographicParameters();
         const credentialInput: CredentialInput = {
-            net: 'Testnet',
+            net: network,
             revealedAttributes: [],
             seedAsHex: Buffer.from(mnemonicToSeedSync(seedPhrase)).toString('hex'),
             idObject: identity,

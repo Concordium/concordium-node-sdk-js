@@ -4,6 +4,18 @@ import { mnemonicToSeedSync } from "@scure/bip39";
 import { credNumber, identityIndex } from "./Index";
 import { Buffer } from 'buffer/';
 
+export const DEFAULT_TRANSACTION_EXPIRY = 360000;
+
+/**
+ * Creates a default transaction expiration that will ensure that the
+ * transaction will be valid in time.
+ * @returns a default transaction expiration to be used for transactions submitted soon after
+ */
+export function getDefaultTransactionExpiry() {
+    return TransactionExpiry.fromDate(new Date(Date.now() + DEFAULT_TRANSACTION_EXPIRY));
+}
+
+
 /**
  * Utility function for extracting the URL where the identity object can be fetched
  * when ready.
@@ -35,7 +47,6 @@ export async function getCryptographicParameters() {
     return cryptographicParameters;
 }
 
-export const DEFAULT_TRANSACTION_EXPIRY = 360000;
 
 /**
  * Creates a credential deployment transaction.

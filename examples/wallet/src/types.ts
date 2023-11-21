@@ -1,4 +1,4 @@
-import { CryptographicParameters, IdentityProvider, Network } from "@concordium/web-sdk";
+import { CredentialInput, CryptographicParameters, IdentityObjectV1, IdentityProvider, Network, TransactionExpiry } from "@concordium/web-sdk";
 
 export interface IdentityProviderMetaData {
     issuanceStart: string;
@@ -15,3 +15,8 @@ export interface IdentityWorkerInput {
     network: Network,
     seedPhrase: string
 };
+
+export interface AccountWorkerInput {
+    credentialInput: CredentialInput;
+    expiry: TransactionExpiry.Type;
+}

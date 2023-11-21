@@ -15,7 +15,7 @@ export function CreateIdentity() {
     const [identityProviders, setIdentityProviders] = useState<IdentityProviderWithMetadata[]>();
     const [selectedIdentityProvider, setSelectedIdentityProvider] = useState<IdentityProviderWithMetadata>();
     const [cryptographicParameters, setCryptographicParameters] = useState<CryptographicParameters>();
-    const [cookies] = useCookies([seedPhraseCookie]);
+    const [cookies, setCookie] = useCookies([seedPhraseCookie, 'selected-identity-provider']);
     const seedPhrase = cookies[seedPhraseCookie];
     const navigate = useNavigate();
     const dataLoaded = identityProviders !== undefined && cryptographicParameters !== undefined && selectedIdentityProvider !== undefined;
@@ -44,6 +44,7 @@ export function CreateIdentity() {
             return;
         }
 
+        setCookie('selected-identity-provider', selectedIdentityProvider.ipInfo.ipIdentity);
         setCreateButtonDisabled(true);
 
         const listener = worker.onmessage = async (e: MessageEvent<Versioned<IdObjectRequestV1>>) => {

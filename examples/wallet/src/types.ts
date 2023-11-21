@@ -1,4 +1,4 @@
-import { IdentityProvider } from "@concordium/web-sdk";
+import { CryptographicParameters, IdentityProvider, Network } from "@concordium/web-sdk";
 
 export interface IdentityProviderMetaData {
     issuanceStart: string;
@@ -8,3 +8,10 @@ export interface IdentityProviderMetaData {
 }
 
 export type IdentityProviderWithMetadata = IdentityProvider & { metadata: IdentityProviderMetaData };
+
+export interface IdentityWorkerInput {
+    selectedIdentityProvider: IdentityProviderWithMetadata,
+    cryptographicParameters: CryptographicParameters,
+    network: Network,
+    seedPhrase: string
+};

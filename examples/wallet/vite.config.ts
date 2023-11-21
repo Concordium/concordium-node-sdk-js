@@ -18,4 +18,7 @@ export default defineConfig({
             '@concordium/rust-bindings': '@concordium/rust-bindings/bundler', // Resolve bundler-specific wasm entrypoints.
         },
     },
+    worker: {
+        plugins: [wasm(), topLevelAwait()],        
+    }
 });

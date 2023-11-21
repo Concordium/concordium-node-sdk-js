@@ -110,31 +110,18 @@ export async function sendCredentialDeploymentTransaction(credentialDeployment: 
     return await client.sendCredentialDeploymentTransaction(payload, credentialDeployment.expiry);
 }
 
+
 /**
- * Finds the maximum anonymity revoker threshold for the given count of
- * anonymity revokers for an identity provider.
+ * Finds the optimal anonymity revoker threshold for the given count of
+ * anonymity revokers for an identity provider. Here optimal is taken as being
+ * #anonymity-revokers - 1.
  * @param anonymityRevokerCount the number of anonymity revokers for an identity provider
- * @returns the maximum anonymity revoker threshold possible
+ * @returns the optimal anonymity revoker threshold possible
  */
-function determineMaxAnonymityRevokerThreshold(anonymityRevokerCount: number) {
-    return Math.min(anonymityRevokerCount, 255);
+export function determineAnonymityRevokerThreshold(anonymityRevokerCount: number) {
+    return Math.min(anonymityRevokerCount - 1, 255);
 }
 
-export function createIdentityObjectRequest(identityProvider: IdentityProviderWithMetadata, global: CryptographicParameters, network: Network, seedPhrase: string) {
-    const seedCorrectFormat = Buffer.from(mnemonicToSeedSync(seedPhrase)).toString('hex');
-    
-    const identityRequestInput: IdentityRequestInput = {
-        net: network,
-        seed: seedCorrectFormat,
-        identityIndex: identityIndex,
-        arsInfos: identityProvider.arsInfos,
-        arThreshold: determineMaxAnonymityRevokerThreshold(Object.keys(identityProvider.arsInfos).length - 1),
-        ipInfo: identityProvider.ipInfo,
-        globalContext: global
-    };
-
-    return createIdentityRequest(identityRequestInput);
-}
 
 
 export const redirectUri = 'http://localhost:4173/identity';
@@ -185,8 +172,6 @@ export async function getAccount(accountAddress: AccountAddress.Type): Promise<A
         }, timeoutMs);
     });
 }
-
-
 
 /**
  * Creates a simple transfer account transaction. This transaction sends an amount of CCD from

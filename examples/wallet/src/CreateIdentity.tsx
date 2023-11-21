@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { network, seedPhraseCookie } from './Index';
+import { seedPhraseCookie } from './Index';
 import { useNavigate } from 'react-router-dom';
-import { CryptographicParameters } from '@concordium/web-sdk';
+import { CryptographicParameters, IdObjectRequestV1, IdentityRequestInput, Versioned } from '@concordium/web-sdk';
 import { IdentityProviderWithMetadata } from './types';
 import { useCookies } from 'react-cookie';
-import { createIdentityObjectRequest, getCryptographicParameters, getIdentityProviders, redirectUri, sendRequest } from './util';
+import { determineAnonymityRevokerThreshold, getCryptographicParameters, getIdentityProviders, redirectUri, sendRequest } from './util';
+import { mnemonicToSeedSync } from '@scure/bip39';
+import { Buffer } from 'buffer/';
+
+const worker = new Worker(new URL("./identity-worker.ts", import.meta.url));
 
 export function CreateIdentity() {
+    const [createButtonDisabled, setCreateButtonDisabled] = useState<boolean>(false);
     const [identityProviders, setIdentityProviders] = useState<IdentityProviderWithMetadata[]>();
     const [selectedIdentityProvider, setSelectedIdentityProvider] = useState<IdentityProviderWithMetadata>();
     const [cryptographicParameters, setCryptographicParameters] = useState<CryptographicParameters>();
@@ -39,13 +44,26 @@ export function CreateIdentity() {
             return;
         }
 
-        const identityObjectRequest = createIdentityObjectRequest(selectedIdentityProvider, cryptographicParameters, network, seedPhrase);
-        const url = await sendRequest(identityObjectRequest, selectedIdentityProvider.metadata.issuanceStart);
+        setCreateButtonDisabled(true);
 
-        // TODO Explain why this check is required.
-        if (!url?.includes(redirectUri)) {
-            window.open(url);
+        const listener = worker.onmessage = async (e: MessageEvent<Versioned<IdObjectRequestV1>>) => {
+            const url = await sendRequest(e.data, selectedIdentityProvider.metadata.issuanceStart);
+            if (!url?.includes(redirectUri)) {
+                window.open(url);
+            }
+            worker.removeEventListener('message', listener);
         }
+
+        const identityRequestInput: IdentityRequestInput = {
+            net: 'Testnet',
+            seed: Buffer.from(mnemonicToSeedSync(seedPhrase)).toString('hex'),
+            identityIndex: selectedIdentityProvider.ipInfo.ipIdentity,
+            arsInfos: selectedIdentityProvider.arsInfos,
+            arThreshold: determineAnonymityRevokerThreshold(Object.keys(selectedIdentityProvider.arsInfos).length),
+            ipInfo: selectedIdentityProvider.ipInfo,
+            globalContext: cryptographicParameters
+        };
+        worker.postMessage(identityRequestInput);
     }
 
     return (
@@ -58,7 +76,8 @@ export function CreateIdentity() {
                     })}
                 </select>
             </label>
-            <button disabled={selectedIdentityProvider === undefined} onClick={createIdentity}>Create identity</button>
+            <button disabled={createButtonDisabled && dataLoaded} onClick={createIdentity}>Create identity</button>
+            {createButtonDisabled && <div>Generating identity request. This can take a while.</div>}
         </div>
     );
 }

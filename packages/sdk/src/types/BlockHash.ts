@@ -7,6 +7,11 @@ import {
     makeFromTypedJson,
 } from './util.js';
 
+// IMPORTANT:
+// When adding functionality to this module, it is important to not change the wrapper class, as changing this might break compatibility
+// between different versions of the SDK, e.g. if a dependency exposes an API that depends on the class and a class from a different version
+// of the SDK is passed.
+
 /**
  * The number of bytes used to represent a block hash.
  */
@@ -29,6 +34,16 @@ class BlockHash {
         /** The internal buffer of bytes representing the hash. */
         public readonly buffer: Uint8Array
     ) {}
+}
+
+/**
+ * Unwraps {@linkcode Type} value
+ *
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode Serializable} value
+ */
+export function toUnwrappedJSON(value: Type): Serializable {
+    return toHexString(value);
 }
 
 /**

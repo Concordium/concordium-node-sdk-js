@@ -231,7 +231,7 @@ class ContractBase<E extends string = string, V extends string = string> {
             return await grpcClient.getInstanceInfo(contractAddress);
         } catch (e) {
             throw new Error(
-                `Could not get contract instance info for contract at address ${stringify(
+                `Could not get contract instance info for contract at address ${ContractAddress.toString(
                     contractAddress
                 )}: ${(e as Error).message ?? e}`
             );
@@ -290,7 +290,11 @@ class ContractBase<E extends string = string, V extends string = string> {
 
         if (!ContractName.equals(contractNameOnChain, this.contractName)) {
             throw new Error(
-                `Instance ${this.contractAddress} have contract name '${contractNameOnChain}' on chain. The client expected: '${this.contractName}'.`
+                `Instance ${ContractAddress.toString(
+                    this.contractAddress
+                )} has contract name '${
+                    contractNameOnChain.value
+                }' on chain. The client expected: '${this.contractName.value}'.`
             );
         }
 
@@ -299,7 +303,11 @@ class ContractBase<E extends string = string, V extends string = string> {
             info.sourceModule.moduleRef !== options.moduleReference.moduleRef
         ) {
             throw new Error(
-                `Instance ${this.contractAddress} uses module with reference '${info.sourceModule.moduleRef}' expected '${options.moduleReference.moduleRef}'`
+                `Instance ${ContractAddress.toString(
+                    this.contractAddress
+                )} uses module with reference '${
+                    info.sourceModule.moduleRef
+                }' expected '${options.moduleReference.moduleRef}'`
             );
         }
     }
@@ -517,7 +525,7 @@ class ContractBase<E extends string = string, V extends string = string> {
             response.returnValue === undefined
         ) {
             throw new Error(
-                `Failed to invoke view ${entrypoint} for contract at ${stringify(
+                `Failed to invoke view ${entrypoint} for contract at ${ContractAddress.toString(
                     this.contractAddress
                 )}${
                     response.tag === 'failure' &&

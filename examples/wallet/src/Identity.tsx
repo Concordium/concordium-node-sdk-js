@@ -47,6 +47,8 @@ export function Identity() {
     const navigate = useNavigate();
     const [identity, setIdentity] = useState<IdentityObjectV1>();
     const [error, setError] = useState<string>();
+    const [createButtonDisabled, setCreateButtonDisabled] =
+        useState<boolean>(false);
     const seedPhrase = useMemo(() => localStorage.getItem(seedPhraseKey), []);
     const selectedIdentityProviderIdentity = useMemo(
         () => localStorage.getItem(selectedIdentityProviderKey),
@@ -63,11 +65,14 @@ export function Identity() {
     }, [location.hash]);
 
     async function createAndSendAccount() {
+        setCreateButtonDisabled(true);
+
         if (
             !identity ||
             !seedPhrase ||
             selectedIdentityProviderIdentity === null
         ) {
+            setCreateButtonDisabled(false);
             return;
         }
 
@@ -77,6 +82,7 @@ export function Identity() {
                 Number.parseInt(selectedIdentityProviderIdentity)
         );
         if (!selectedIdentityProvider) {
+            setCreateButtonDisabled(false);
             return;
         }
 
@@ -141,7 +147,10 @@ export function Identity() {
             {identity && (
                 <>
                     <DisplayIdentity attributes={identity.attributeList} />
-                    <button onClick={createAndSendAccount}>
+                    <button
+                        disabled={createButtonDisabled}
+                        onClick={createAndSendAccount}
+                    >
                         Create account
                     </button>
                 </>

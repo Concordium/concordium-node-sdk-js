@@ -64,11 +64,12 @@ export function CreateIdentity() {
             return;
         }
 
+        setCreateButtonDisabled(true);
+
         localStorage.setItem(
             selectedIdentityProviderKey,
             selectedIdentityProvider.ipInfo.ipIdentity.toString()
         );
-        setCreateButtonDisabled(true);
 
         const listener = (worker.onmessage = async (
             e: MessageEvent<Versioned<IdObjectRequestV1>>

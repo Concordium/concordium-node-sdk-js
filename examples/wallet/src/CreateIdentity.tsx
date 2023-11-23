@@ -1,21 +1,43 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CryptographicParameters, IdObjectRequestV1, IdentityRequestInput, Versioned } from '@concordium/web-sdk';
+import {
+    CryptographicParameters,
+    IdObjectRequestV1,
+    IdentityRequestInput,
+    Versioned,
+} from '@concordium/web-sdk';
 import { IdentityProviderWithMetadata } from './types';
-import { determineAnonymityRevokerThreshold, getCryptographicParameters, getIdentityProviders, sendIdentityRequest } from './util';
+import {
+    determineAnonymityRevokerThreshold,
+    getCryptographicParameters,
+    getIdentityProviders,
+    sendIdentityRequest,
+} from './util';
 import { mnemonicToSeedSync } from '@scure/bip39';
 import { Buffer } from 'buffer/';
-import { network, redirectUri, seedPhraseKey, selectedIdentityProviderKey } from './constants';
+import {
+    network,
+    redirectUri,
+    seedPhraseKey,
+    selectedIdentityProviderKey,
+} from './constants';
 
-const worker = new Worker(new URL("./identity-worker.ts", import.meta.url));
+const worker = new Worker(new URL('./identity-worker.ts', import.meta.url));
 
 export function CreateIdentity() {
-    const [createButtonDisabled, setCreateButtonDisabled] = useState<boolean>(false);
-    const [identityProviders, setIdentityProviders] = useState<IdentityProviderWithMetadata[]>();
-    const [selectedIdentityProvider, setSelectedIdentityProvider] = useState<IdentityProviderWithMetadata>();
-    const [cryptographicParameters, setCryptographicParameters] = useState<CryptographicParameters>();
+    const [createButtonDisabled, setCreateButtonDisabled] =
+        useState<boolean>(false);
+    const [identityProviders, setIdentityProviders] =
+        useState<IdentityProviderWithMetadata[]>();
+    const [selectedIdentityProvider, setSelectedIdentityProvider] =
+        useState<IdentityProviderWithMetadata>();
+    const [cryptographicParameters, setCryptographicParameters] =
+        useState<CryptographicParameters>();
     const navigate = useNavigate();
-    const dataLoaded = identityProviders !== undefined && cryptographicParameters !== undefined && selectedIdentityProvider !== undefined;
+    const dataLoaded =
+        identityProviders !== undefined &&
+        cryptographicParameters !== undefined &&
+        selectedIdentityProvider !== undefined;
     const seedPhrase = useMemo(() => localStorage.getItem(seedPhraseKey), []);
 
     useEffect(() => {
@@ -42,26 +64,36 @@ export function CreateIdentity() {
             return;
         }
 
-        localStorage.setItem(selectedIdentityProviderKey, selectedIdentityProvider.ipInfo.ipIdentity.toString());
+        localStorage.setItem(
+            selectedIdentityProviderKey,
+            selectedIdentityProvider.ipInfo.ipIdentity.toString()
+        );
         setCreateButtonDisabled(true);
 
-        const listener = worker.onmessage = async (e: MessageEvent<Versioned<IdObjectRequestV1>>) => {
-            const url = await sendIdentityRequest(e.data, selectedIdentityProvider.metadata.issuanceStart);
+        const listener = (worker.onmessage = async (
+            e: MessageEvent<Versioned<IdObjectRequestV1>>
+        ) => {
+            const url = await sendIdentityRequest(
+                e.data,
+                selectedIdentityProvider.metadata.issuanceStart
+            );
             // TODO Explain this check. Handle the error case as well.
             if (!url?.includes(redirectUri)) {
                 window.open(url);
             }
             worker.removeEventListener('message', listener);
-        }
+        });
 
         const identityRequestInput: IdentityRequestInput = {
             net: network,
             seed: Buffer.from(mnemonicToSeedSync(seedPhrase)).toString('hex'),
             identityIndex: selectedIdentityProvider.ipInfo.ipIdentity,
             arsInfos: selectedIdentityProvider.arsInfos,
-            arThreshold: determineAnonymityRevokerThreshold(Object.keys(selectedIdentityProvider.arsInfos).length),
+            arThreshold: determineAnonymityRevokerThreshold(
+                Object.keys(selectedIdentityProvider.arsInfos).length
+            ),
             ipInfo: selectedIdentityProvider.ipInfo,
-            globalContext: cryptographicParameters
+            globalContext: cryptographicParameters,
         };
         worker.postMessage(identityRequestInput);
     }
@@ -70,14 +102,31 @@ export function CreateIdentity() {
         <div>
             <label>
                 Select an identity provider
-                <select onChange={(e) => setSelectedIdentityProvider(identityProviders[Number.parseInt(e.target.value)])}>
+                <select
+                    onChange={(e) =>
+                        setSelectedIdentityProvider(
+                            identityProviders[Number.parseInt(e.target.value)]
+                        )
+                    }
+                >
                     {identityProviders.map((idp, index) => {
-                        return (<option value={index}>{idp.ipInfo.ipDescription.name}</option>);
+                        return (
+                            <option value={index}>
+                                {idp.ipInfo.ipDescription.name}
+                            </option>
+                        );
                     })}
                 </select>
             </label>
-            <button disabled={createButtonDisabled && dataLoaded} onClick={createIdentity}>Create identity</button>
-            {createButtonDisabled && <div>Generating identity request. This can take a while.</div>}
+            <button
+                disabled={createButtonDisabled && dataLoaded}
+                onClick={createIdentity}
+            >
+                Create identity
+            </button>
+            {createButtonDisabled && (
+                <div>Generating identity request. This can take a while.</div>
+            )}
         </div>
     );
 }

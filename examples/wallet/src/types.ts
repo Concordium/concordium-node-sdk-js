@@ -1,4 +1,8 @@
-import { CredentialInput, CryptographicParameters, IdentityObjectV1, IdentityProvider, Network, TransactionExpiry } from "@concordium/web-sdk";
+import {
+    CredentialInput,
+    IdentityProvider,
+    TransactionExpiry,
+} from '@concordium/web-sdk';
 
 export interface IdentityProviderMetaData {
     issuanceStart: string;
@@ -7,7 +11,9 @@ export interface IdentityProviderMetaData {
     support: string;
 }
 
-export type IdentityProviderWithMetadata = IdentityProvider & { metadata: IdentityProviderMetaData };
+export type IdentityProviderWithMetadata = IdentityProvider & {
+    metadata: IdentityProviderMetaData;
+};
 
 export interface AccountWorkerInput {
     credentialInput: CredentialInput;

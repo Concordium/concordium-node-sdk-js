@@ -17,6 +17,7 @@
         "@types/react": "^18.0.9",
         "@types/react-dom": "^18.0.5",
         "@vitejs/plugin-react-swc": "^3.4.0",
+        "eslint": "^8.50.0",
         "typescript": "^5.2.2",
         "vite": "^4.5.0",
         "vite-plugin-svgr": "^4.1.0",
@@ -26,6 +27,8 @@
     "scripts": {
         "build": "tsc && vite build",
         "dev": "vite",
-        "start": "vite preview"
+        "start": "vite preview",
+        "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
+        "lint-fix": "yarn lint --fix; exit 0"
     }
 }

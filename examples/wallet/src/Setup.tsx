@@ -32,7 +32,11 @@ export function SetupSeedPhrase() {
         <form onSubmit={handleSubmit}>
             <label>
                 Enter your seed phrase
-                <input type="text" value={seedPhraseWords} onChange={(event) => setSeedPhraseWords(event.target.value)} />
+                <input
+                    type="text"
+                    value={seedPhraseWords}
+                    onChange={(event) => setSeedPhraseWords(event.target.value)}
+                />
             </label>
             <input type="submit" value="Submit" />
         </form>

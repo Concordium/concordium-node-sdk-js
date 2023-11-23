@@ -1,9 +1,32 @@
-import { AccountAddress, AccountInfo, AccountTransaction, AccountTransactionHeader, AccountTransactionType, CcdAmount, ConcordiumGRPCWebClient, ConcordiumHdWallet, CredentialDeploymentTransaction, CredentialInput, CryptographicParameters, IdObjectRequestV1, IdentityObjectV1, IdentityRequestInput, Network, SimpleTransferPayload, TransactionExpiry, Versioned, createCredentialTransaction, createIdentityRequest, serializeCredentialDeploymentPayload, signCredentialTransaction } from "@concordium/web-sdk";
-import { IdentityProviderWithMetadata } from "./types";
-import { credNumber, identityIndex, network, redirectUri } from "./constants";
-import { IdentityProviderIdentityStatus, IdentityTokenContainer, sleep } from "wallet-common-helpers";
+import {
+    AccountAddress,
+    AccountInfo,
+    AccountTransaction,
+    AccountTransactionHeader,
+    AccountTransactionType,
+    CcdAmount,
+    ConcordiumGRPCWebClient,
+    ConcordiumHdWallet,
+    CredentialDeploymentTransaction,
+    IdObjectRequestV1,
+    IdentityObjectV1,
+    SimpleTransferPayload,
+    TransactionExpiry,
+    Versioned,
+    serializeCredentialDeploymentPayload,
+} from '@concordium/web-sdk';
+import { IdentityProviderWithMetadata } from './types';
+import { credNumber, identityIndex, network, redirectUri } from './constants';
+import {
+    IdentityProviderIdentityStatus,
+    IdentityTokenContainer,
+    sleep,
+} from 'wallet-common-helpers';
 
-export const client = new ConcordiumGRPCWebClient('https://grpc.testnet.concordium.com', 20000);
+export const client = new ConcordiumGRPCWebClient(
+    'https://grpc.testnet.concordium.com',
+    20000
+);
 
 /**
  * Creates a default transaction expiration that will ensure that the
@@ -12,19 +35,30 @@ export const client = new ConcordiumGRPCWebClient('https://grpc.testnet.concordi
  */
 export function getDefaultTransactionExpiry() {
     const DEFAULT_TRANSACTION_EXPIRY = 360000;
-    return TransactionExpiry.fromDate(new Date(Date.now() + DEFAULT_TRANSACTION_EXPIRY));
+    return TransactionExpiry.fromDate(
+        new Date(Date.now() + DEFAULT_TRANSACTION_EXPIRY)
+    );
 }
 
 /**
  * Derives an account signing key.
- * 
+ *
  * For this example we only work with a single identity and a single account, therefore
  * those indices are hardcoded to 0. In a production wallet any number of identities and
  * accounts could be created.
  */
-export function getAccountSigningKey(seedPhrase: string, identityProviderIdentity: number) {
+export function getAccountSigningKey(
+    seedPhrase: string,
+    identityProviderIdentity: number
+) {
     const wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, network);
-    return wallet.getAccountSigningKey(identityProviderIdentity, identityIndex, credNumber).toString('hex');
+    return wallet
+        .getAccountSigningKey(
+            identityProviderIdentity,
+            identityIndex,
+            credNumber
+        )
+        .toString('hex');
 }
 
 /**
@@ -42,8 +76,12 @@ export function extractIdentityObjectUrl(path: string) {
  * contains the URL for where the identity issuance flow starts for that provider.
  * @returns the list of identity providers available.
  */
-export async function getIdentityProviders(): Promise<IdentityProviderWithMetadata[]> {
-    const response = await fetch('https://wallet-proxy.testnet.concordium.com/v1/ip_info');
+export async function getIdentityProviders(): Promise<
+    IdentityProviderWithMetadata[]
+> {
+    const response = await fetch(
+        'https://wallet-proxy.testnet.concordium.com/v1/ip_info'
+    );
     return response.json();
 }
 
@@ -61,7 +99,10 @@ export async function getCryptographicParameters() {
  * @param intervalMS how much time between executing the provided function that should be looped
  * @param loopFun the function to execute in each loop
  */
-export const loop = async (intervalMS: number, loopFun: () => Promise<boolean>) => {
+export const loop = async (
+    intervalMS: number,
+    loopFun: () => Promise<boolean>
+) => {
     const run = async () => {
         if (await loopFun()) {
             await sleep(intervalMS).then(run);
@@ -72,23 +113,29 @@ export const loop = async (intervalMS: number, loopFun: () => Promise<boolean>) 
 
 /**
  * Fetches an identity at the provided URL.
- * 
+ *
  * An identity is not guaranteed to be available as soon as we have received the URL
  * for where to fetch it. Therefore a wallet must keep polling until the identity is
  * either confirmed or rejected by the identity provider.
  * @param identityObjectUrl the location received from the identity provider where we can fetch the identity
  * @returns the parsed identity object (if successful). On reject the error message is given.
  */
-export async function fetchIdentity(identityObjectUrl: string): Promise<IdentityObjectV1> {
+export async function fetchIdentity(
+    identityObjectUrl: string
+): Promise<IdentityObjectV1> {
     const intervalMs = 5000;
     return new Promise(async (resolve, reject) => {
         await loop(intervalMs, async () => {
             try {
-                const response = (await (await fetch(identityObjectUrl)).json()) as IdentityTokenContainer;
+                const response = (await (
+                    await fetch(identityObjectUrl)
+                ).json()) as IdentityTokenContainer;
                 if (IdentityProviderIdentityStatus.Done === response.status) {
                     resolve(response.token.identityObject.value);
                     return false;
-                } else if (IdentityProviderIdentityStatus.Error === response.status) {
+                } else if (
+                    IdentityProviderIdentityStatus.Error === response.status
+                ) {
                     reject(response.detail);
                     return false;
                 } else {
@@ -107,9 +154,18 @@ export async function fetchIdentity(identityObjectUrl: string): Promise<Identity
  * @param signature a signature on the credential deployment
  * @returns a promise with the transaction hash of the submitted credential deployment
  */
-export async function sendCredentialDeploymentTransaction(credentialDeployment: CredentialDeploymentTransaction, signature: string) {
-    const payload = serializeCredentialDeploymentPayload([signature], credentialDeployment);
-    return await client.sendCredentialDeploymentTransaction(payload, credentialDeployment.expiry);
+export async function sendCredentialDeploymentTransaction(
+    credentialDeployment: CredentialDeploymentTransaction,
+    signature: string
+) {
+    const payload = serializeCredentialDeploymentPayload(
+        [signature],
+        credentialDeployment
+    );
+    return await client.sendCredentialDeploymentTransaction(
+        payload,
+        credentialDeployment.expiry
+    );
 }
 
 /**
@@ -119,18 +175,23 @@ export async function sendCredentialDeploymentTransaction(credentialDeployment: 
  * @param anonymityRevokerCount the number of anonymity revokers for an identity provider
  * @returns the optimal anonymity revoker threshold possible
  */
-export function determineAnonymityRevokerThreshold(anonymityRevokerCount: number) {
+export function determineAnonymityRevokerThreshold(
+    anonymityRevokerCount: number
+) {
     return Math.min(anonymityRevokerCount - 1, 255);
 }
 
 /**
- * Sends an identity object request, which is the start of the identity creation flow, to the 
+ * Sends an identity object request, which is the start of the identity creation flow, to the
  * provided URL.
  * @param idObjectRequest the identity object request to send
  * @param baseUrl the identity issuance start URL
  * @returns the URL that the identity provider redirects to. This URL should be opened to continue the identity issuance flow.
  */
-export async function sendIdentityRequest(idObjectRequest: Versioned<IdObjectRequestV1>, baseUrl: string) {
+export async function sendIdentityRequest(
+    idObjectRequest: Versioned<IdObjectRequestV1>,
+    baseUrl: string
+) {
     const params = {
         scope: 'identity',
         response_type: 'code',
@@ -158,7 +219,9 @@ export async function sendIdentityRequest(idObjectRequest: Versioned<IdObjectReq
  * @param accountAddress the address of the account to retrieve the information about
  * @returns the account info
  */
-export async function getAccount(accountAddress: AccountAddress.Type): Promise<AccountInfo> {
+export async function getAccount(
+    accountAddress: AccountAddress.Type
+): Promise<AccountInfo> {
     const maxRetries = 10;
     const intervalMs = 2500;
     let escapeCounter = 0;
@@ -189,23 +252,27 @@ export async function getAccount(accountAddress: AccountAddress.Type): Promise<A
  * @param toAddress the account address that the CCD will be sent to
  * @returns the simple transfer account transaction object
  */
-export async function createSimpleTransferTransaction(amount: CcdAmount.Type, senderAddress: AccountAddress.Type, toAddress: AccountAddress.Type) {
+export async function createSimpleTransferTransaction(
+    amount: CcdAmount.Type,
+    senderAddress: AccountAddress.Type,
+    toAddress: AccountAddress.Type
+) {
     const payload: SimpleTransferPayload = {
         amount,
-        toAddress
+        toAddress,
     };
     const nonce = (await client.getNextAccountNonce(senderAddress)).nonce;
 
     const header: AccountTransactionHeader = {
         expiry: getDefaultTransactionExpiry(),
         nonce,
-        sender: senderAddress
+        sender: senderAddress,
     };
 
     const transaction: AccountTransaction = {
         type: AccountTransactionType.Transfer,
         payload,
-        header
+        header,
     };
 
     return transaction;

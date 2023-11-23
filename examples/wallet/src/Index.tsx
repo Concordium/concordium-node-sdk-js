@@ -1,14 +1,9 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import {
-    createBrowserRouter,
-    RouterProvider,
-} from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './index.css';
 import { Identity } from './Identity';
 import { Account } from './Account';
-import { atom } from 'jotai';
-import { ConcordiumGRPCClient, ConcordiumHdWallet } from '@concordium/web-sdk';
 import { CreateIdentity } from './CreateIdentity';
 import { SetupSeedPhrase } from './Setup';
 
@@ -20,23 +15,25 @@ if (!container) {
 
 const router = createBrowserRouter([
     {
-        path: "/",
+        path: '/',
         element: <SetupSeedPhrase />,
     },
     {
-        path: "/create",
+        path: '/create',
         element: <CreateIdentity />,
     },
     {
-        path: "/identity",
+        path: '/identity',
         element: <Identity />,
     },
     {
-        path: "/account/:accountAddress",
+        path: '/account/:accountAddress',
         element: <Account />,
-    }
+    },
 ]);
 
-createRoot(container).render(<React.StrictMode>
-    <RouterProvider router={router} />
-</React.StrictMode>);
+createRoot(container).render(
+    <React.StrictMode>
+        <RouterProvider router={router} />
+    </React.StrictMode>
+);

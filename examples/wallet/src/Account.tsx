@@ -1,7 +1,19 @@
-import { AccountAddress, AccountInfo, CcdAmount, TransactionHash, buildBasicAccountSigner, signTransaction } from '@concordium/web-sdk';
+import {
+    AccountAddress,
+    AccountInfo,
+    CcdAmount,
+    TransactionHash,
+    buildBasicAccountSigner,
+    signTransaction,
+} from '@concordium/web-sdk';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { client, createSimpleTransferTransaction, getAccount, getAccountSigningKey } from './util';
+import {
+    client,
+    createSimpleTransferTransaction,
+    getAccount,
+    getAccountSigningKey,
+} from './util';
 import { seedPhraseKey, selectedIdentityProviderKey } from './constants';
 
 function DisplayAccount({ accountInfo }: { accountInfo: AccountInfo }) {
@@ -10,18 +22,29 @@ function DisplayAccount({ accountInfo }: { accountInfo: AccountInfo }) {
             <h3>Your Concordium account</h3>
             <ul>
                 <li>Address: {accountInfo.accountAddress.address}</li>
-                <li>Amount: {accountInfo.accountAmount.microCcdAmount.toString()}</li>
+                <li>
+                    Amount:{' '}
+                    {accountInfo.accountAmount.microCcdAmount.toString()}
+                </li>
             </ul>
         </div>
     );
 }
 
-function TransferInput({ accountAddress, seedPhrase, identityProviderIdentity }: { accountAddress: AccountAddress.Type, seedPhrase: string, identityProviderIdentity: number }) {
+function TransferInput({
+    accountAddress,
+    seedPhrase,
+    identityProviderIdentity,
+}: {
+    accountAddress: AccountAddress.Type;
+    seedPhrase: string;
+    identityProviderIdentity: number;
+}) {
     const [transferAmount, setTransferAmount] = useState<string>('0');
     const [recipient, setRecipient] = useState<string>();
     const [transactionHash, setTransactionHash] = useState<string>();
 
-    async function handleSubmit(event: any) {
+    async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
         if (!recipient) {
@@ -45,18 +68,31 @@ function TransferInput({ accountAddress, seedPhrase, identityProviderIdentity }:
             return;
         }
 
-        const simpleTransfer = await createSimpleTransferTransaction(amount, accountAddress, toAddress);
-        const signingKey = getAccountSigningKey(seedPhrase, identityProviderIdentity);
-        const signature = await signTransaction(simpleTransfer, buildBasicAccountSigner(signingKey));
-        const transactionHash = await client.sendAccountTransaction(simpleTransfer, signature);
+        const simpleTransfer = await createSimpleTransferTransaction(
+            amount,
+            accountAddress,
+            toAddress
+        );
+        const signingKey = getAccountSigningKey(
+            seedPhrase,
+            identityProviderIdentity
+        );
+        const signature = await signTransaction(
+            simpleTransfer,
+            buildBasicAccountSigner(signingKey)
+        );
+        const transactionHash = await client.sendAccountTransaction(
+            simpleTransfer,
+            signature
+        );
         setTransactionHash(TransactionHash.toHexString(transactionHash));
     }
 
-    function handleChange(event: any) {
+    function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
         setTransferAmount(event.target.value);
     }
 
-    function handleRecipientChange(event: any) {
+    function handleRecipientChange(event: React.ChangeEvent<HTMLInputElement>) {
         setRecipient(event.target.value);
     }
 
@@ -64,12 +100,29 @@ function TransferInput({ accountAddress, seedPhrase, identityProviderIdentity }:
         <form onSubmit={handleSubmit}>
             <label>
                 Transfer
-                <input type="text" value={transferAmount} onChange={handleChange} />
+                <input
+                    type="text"
+                    value={transferAmount}
+                    onChange={handleChange}
+                />
                 Recipient
-                <input type="text" value={recipient} onChange={handleRecipientChange} />
+                <input
+                    type="text"
+                    value={recipient}
+                    onChange={handleRecipientChange}
+                />
             </label>
             <input type="submit" value="Send" />
-            {transactionHash && (<div>Latest transaction hash: <a href={`https://testnet.ccdscan.io/transactions?dcount=1&dentity=transaction&dhash=${transactionHash}`}>{transactionHash}</a></div>)}
+            {transactionHash && (
+                <div>
+                    Latest transaction hash:{' '}
+                    <a
+                        href={`https://testnet.ccdscan.io/transactions?dcount=1&dentity=transaction&dhash=${transactionHash}`}
+                    >
+                        {transactionHash}
+                    </a>
+                </div>
+            )}
         </form>
     );
 }
@@ -80,12 +133,23 @@ export function Account() {
     const [accountInfo, setAccountInfo] = useState<AccountInfo>();
     const [error, setError] = useState<string>();
     const seedPhrase = useMemo(() => localStorage.getItem(seedPhraseKey), []);
-    const selectedIdentityProviderIdentity = useMemo(() => localStorage.getItem(selectedIdentityProviderKey), []);
-    const address = useMemo(() => accountAddress ? AccountAddress.fromBase58(accountAddress) : undefined, [accountAddress]);
+    const selectedIdentityProviderIdentity = useMemo(
+        () => localStorage.getItem(selectedIdentityProviderKey),
+        []
+    );
+    const address = useMemo(
+        () =>
+            accountAddress
+                ? AccountAddress.fromBase58(accountAddress)
+                : undefined,
+        [accountAddress]
+    );
 
     useEffect(() => {
         if (address) {
-            getAccount(address).then(setAccountInfo).catch(() => setError('Failed to retrieve account info.'));
+            getAccount(address)
+                .then(setAccountInfo)
+                .catch(() => setError('Failed to retrieve account info.'));
         }
     }, [address]);
 
@@ -97,21 +161,27 @@ export function Account() {
     }
 
     if (!address) {
-        return (<div>Missing the account address.</div>);
+        return <div>Missing the account address.</div>;
     }
 
     if (error) {
-        return (<div>{error}</div>);
+        return <div>{error}</div>;
     }
 
     if (!accountInfo) {
-        return (<div>Waiting for account to be on chain.</div>);
+        return <div>Waiting for account to be on chain.</div>;
     }
 
     return (
         <>
             <DisplayAccount accountInfo={accountInfo} />
-            <TransferInput accountAddress={address} seedPhrase={seedPhrase} identityProviderIdentity={Number.parseInt(selectedIdentityProviderIdentity)} />
+            <TransferInput
+                accountAddress={address}
+                seedPhrase={seedPhrase}
+                identityProviderIdentity={Number.parseInt(
+                    selectedIdentityProviderIdentity
+                )}
+            />
         </>
     );
 }

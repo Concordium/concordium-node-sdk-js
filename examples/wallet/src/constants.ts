@@ -1,4 +1,4 @@
-import { Network } from "@concordium/web-sdk";
+import { Network } from '@concordium/web-sdk';
 
 export const network: Network = 'Testnet';
 

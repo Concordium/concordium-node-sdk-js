@@ -1,4 +1,9 @@
 {
+    "extends": "ts-node/node16/tsconfig.json",
+    "ts-node": {
+        "files": true,
+        "esm": true
+    },
     "compilerOptions": {
         "noEmit": true,
         "types": ["vite-plugin-svgr/client"],
@@ -17,6 +22,5 @@
         "isolatedModules": true,
         "downlevelIteration": true,
         "jsx": "react",
-    },
-    "include": ["./**/*"]
+    }
 }

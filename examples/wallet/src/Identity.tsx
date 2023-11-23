@@ -22,6 +22,7 @@ export function Identity() {
     const location = useLocation();
     const navigate = useNavigate();
     const [identity, setIdentity] = useState<IdentityObjectV1>();
+    const [error, setError] = useState<string>();
     const seedPhrase = useMemo(() => localStorage.getItem(seedPhraseKey), []);
     const selectedIdentityProviderIdentity = useMemo(() => localStorage.getItem(selectedIdentityProviderKey), []);
 
@@ -31,7 +32,7 @@ export function Identity() {
         // To be able to create an account the identity is required. In a production
         // wallet the identity should be persisted, and not only kept in memory as in this
         // example.
-        fetchIdentity(identityObjectUrl).then(setIdentity);
+        fetchIdentity(identityObjectUrl).then(setIdentity).catch(setError);
     }, [location.hash]);
 
     async function createAndSendAccount() {
@@ -73,6 +74,10 @@ export function Identity() {
         };
 
         worker.postMessage(workerInput);
+    }
+
+    if (error) {
+        return (<div><h3>Identity creation failed</h3><div>{error}</div></div>);
     }
 
     return (

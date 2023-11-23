@@ -1,6 +1,7 @@
 import { AccountAddress, AccountInfo, AccountTransaction, AccountTransactionHeader, AccountTransactionType, CcdAmount, ConcordiumGRPCWebClient, ConcordiumHdWallet, CredentialDeploymentTransaction, CredentialInput, CryptographicParameters, IdObjectRequestV1, IdentityObjectV1, IdentityRequestInput, Network, SimpleTransferPayload, TransactionExpiry, Versioned, createCredentialTransaction, createIdentityRequest, serializeCredentialDeploymentPayload, signCredentialTransaction } from "@concordium/web-sdk";
 import { IdentityProviderWithMetadata } from "./types";
 import { credNumber, identityIndex, network, redirectUri } from "./constants";
+import { IdentityProviderIdentityStatus, IdentityTokenContainer, sleep } from "wallet-common-helpers";
 
 export const client = new ConcordiumGRPCWebClient('https://grpc.testnet.concordium.com', 20000);
 
@@ -56,37 +57,47 @@ export async function getCryptographicParameters() {
 }
 
 /**
+ * Convenience for creating a polling function that polls at a given interval.
+ * @param intervalMS how much time between executing the provided function that should be looped
+ * @param loopFun the function to execute in each loop
+ */
+export const loop = async (intervalMS: number, loopFun: () => Promise<boolean>) => {
+    const run = async () => {
+        if (await loopFun()) {
+            await sleep(intervalMS).then(run);
+        }
+    };
+    await run();
+};
+
+/**
  * Fetches an identity at the provided URL.
  * 
  * An identity is not guaranteed to be available as soon as we have received the URL
  * for where to fetch it. Therefore a wallet must keep polling until the identity is
  * either confirmed or rejected by the identity provider.
- * 
- * For demonstration purposes, and as this wallet example is in memory, this method
- * will reject after some time. A production ready wallet should never abandon the polling,
- * but must only stop when the identity has either been confirmed or rejected.
  * @param identityObjectUrl the location received from the identity provider where we can fetch the identity
- * @returns the parsed identity object (if successful).
+ * @returns the parsed identity object (if successful). On reject the error message is given.
  */
 export async function fetchIdentity(identityObjectUrl: string): Promise<IdentityObjectV1> {
-    const maxRetries = 60;
-    const timeoutMs = 5000;
+    const intervalMs = 5000;
     return new Promise(async (resolve, reject) => {
-        let escapeCounter = 0;
-        setTimeout(async function waitForIdentity() {
+        await loop(intervalMs, async () => {
             try {
-                const response = await fetch(identityObjectUrl);
-                const responseJson = await response.json();
-                return resolve(responseJson.token.identityObject.value);
-            } catch {
-                if (escapeCounter > maxRetries) {
-                    return reject();
+                const response = (await (await fetch(identityObjectUrl)).json()) as IdentityTokenContainer;
+                if (IdentityProviderIdentityStatus.Done === response.status) {
+                    resolve(response.token.identityObject.value);
+                    return false;
+                } else if (IdentityProviderIdentityStatus.Error === response.status) {
+                    reject(response.detail);
+                    return false;
                 } else {
-                    escapeCounter += 1;
-                    setTimeout(waitForIdentity, timeoutMs);
+                    return true;
                 }
+            } catch {
+                return true;
             }
-        }, timeoutMs);
+        });
     });
 }
 
@@ -148,23 +159,25 @@ export async function sendIdentityRequest(idObjectRequest: Versioned<IdObjectReq
  * @returns the account info
  */
 export async function getAccount(accountAddress: AccountAddress.Type): Promise<AccountInfo> {
-    const maxRetries = 20;
-    const timeoutMs = 1000;
+    const maxRetries = 10;
+    const intervalMs = 2500;
+    let escapeCounter = 0;
     return new Promise(async (resolve, reject) => {
-        let escapeCounter = 0;
-        setTimeout(async function waitForAccount() {
+        await loop(intervalMs, async () => {
             try {
                 const accountInfo = await client.getAccountInfo(accountAddress);
-                return resolve(accountInfo);
+                resolve(accountInfo);
+                return false;
             } catch {
                 if (escapeCounter > maxRetries) {
-                    return reject();
+                    reject();
+                    return false;
                 } else {
                     escapeCounter += 1;
-                    setTimeout(waitForAccount, timeoutMs);
+                    return true;
                 }
             }
-        }, timeoutMs);
+        });
     });
 }
 

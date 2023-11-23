@@ -15,12 +15,12 @@ import {
     Versioned,
     serializeCredentialDeploymentPayload,
 } from '@concordium/web-sdk';
-import { IdentityProviderWithMetadata } from './types';
-import { credNumber, identityIndex, network, redirectUri } from './constants';
 import {
+    IdentityProviderWithMetadata,
     IdentityProviderIdentityStatus,
     IdentityTokenContainer,
 } from './types';
+import { credNumber, identityIndex, network, redirectUri } from './constants';
 
 /**
  * Async timeout

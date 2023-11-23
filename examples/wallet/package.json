@@ -10,8 +10,7 @@
         "react-cookie": "^6.1.1",
         "react-dom": "^18.1.0",
         "react-json-pretty": "^2.2.0",
-        "react-router-dom": "^6.18.0",
-        "wallet-common-helpers": "https://github.com/Concordium/concordium-wallet-common-helpers.git#12cba9df452e92130566dd0b525f814dbee85190"
+        "react-router-dom": "^6.18.0"
     },
     "devDependencies": {
         "@types/react": "^18.0.9",

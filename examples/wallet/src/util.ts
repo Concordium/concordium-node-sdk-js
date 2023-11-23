@@ -20,8 +20,17 @@ import { credNumber, identityIndex, network, redirectUri } from './constants';
 import {
     IdentityProviderIdentityStatus,
     IdentityTokenContainer,
-    sleep,
-} from 'wallet-common-helpers';
+} from './types';
+
+/**
+ * Async timeout
+ * @param time timeout length, in milliseconds.
+ */
+export async function sleep(time: number) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, time);
+    });
+}
 
 export const client = new ConcordiumGRPCWebClient(
     'https://grpc.testnet.concordium.com',

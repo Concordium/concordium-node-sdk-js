@@ -4480,17 +4480,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:^18.0.9":
-  version: 18.2.37
-  resolution: "@types/react@npm:18.2.37"
-  dependencies:
-    "@types/prop-types": "*"
-    "@types/scheduler": "*"
-    csstype: ^3.0.2
-  checksum: 2d2599f1a09e4f678509161fea8baeaf76d21deee460f4f3ccc1ca431ebe85f896d7d0b906127de17e97ed57240cec61955eb97d0b5d9cbf4e97fd6620b1acdb
-  languageName: node
-  linkType: hard
-
 "@types/scheduler@npm:*":
   version: 0.16.5
   resolution: "@types/scheduler@npm:0.16.5"
@@ -13185,7 +13174,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:18.2.0, react@npm:^18.1.0":
+"react@npm:18.2.0":
   version: 18.2.0
   resolution: "react@npm:18.2.0"
   dependencies:
@@ -15561,13 +15550,13 @@ __metadata:
   dependencies:
     "@concordium/web-sdk": ^7.0.3
     "@scure/bip39": ^1.2.1
-    "@types/react": ^18.0.9
+    "@types/react": ^18.0.24
     "@types/react-dom": ^18.0.5
     "@vitejs/plugin-react-swc": ^3.4.0
     buffer: ^6.0.3
     eslint: ^8.50.0
     jotai: ^2.5.1
-    react: ^18.1.0
+    react: 18.2.0
     react-cookie: ^6.1.1
     react-dom: ^18.1.0
     react-json-pretty: ^2.2.0

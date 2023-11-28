@@ -33,6 +33,7 @@ env:
 jobs:
     build-and-upload-release:
         runs-on: ubuntu-latest
+        environment: npm
         steps:
             - name: Apply tag override and parse ref
               uses: bisgardo/github-action-parse-ref@v1

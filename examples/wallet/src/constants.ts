@@ -11,8 +11,3 @@ export const selectedIdentityProviderKey = 'selected-identity-provider';
 // a single credential.
 export const identityIndex = 0;
 export const credNumber = 0;
-
-// Redirect constant URI used in the identity creation protocol.
-// This determines where the identity provider will redirect the
-// user back to when completing the identity process.
-export const redirectUri = 'http://localhost:4173/identity';

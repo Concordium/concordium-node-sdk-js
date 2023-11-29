@@ -22,7 +22,16 @@ import {
     IdentityProviderIdentityStatus,
     IdentityTokenContainer,
 } from './types';
-import { credNumber, identityIndex, network, redirectUri } from './constants';
+import { credNumber, identityIndex, network } from './constants';
+
+// Redirect URI used in the identity creation protocol.
+// This determines where the identity provider will redirect the
+// user back to when completing the identity process.
+// We dynamically resolve this as the hosted server can run at different
+// locations.
+export function getRedirectUri() {
+    return window.location.origin + '/identity';
+}
 
 /**
  * Async timeout
@@ -206,7 +215,7 @@ export async function sendIdentityRequest(
     const params = {
         scope: 'identity',
         response_type: 'code',
-        redirect_uri: redirectUri,
+        redirect_uri: getRedirectUri(),
         state: JSON.stringify({ idObjectRequest }),
     };
 

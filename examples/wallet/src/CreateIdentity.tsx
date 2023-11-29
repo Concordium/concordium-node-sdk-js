@@ -11,13 +11,13 @@ import {
     determineAnonymityRevokerThreshold,
     getCryptographicParameters,
     getIdentityProviders,
+    getRedirectUri,
     sendIdentityRequest,
 } from './util';
 import { mnemonicToSeedSync } from '@scure/bip39';
 import { Buffer } from 'buffer/';
 import {
     network,
-    redirectUri,
     seedPhraseKey,
     selectedIdentityProviderKey,
 } from './constants';
@@ -78,9 +78,10 @@ export function CreateIdentity() {
                 e.data,
                 selectedIdentityProvider.metadata.issuanceStart
             );
-            // TODO Explain this check. Handle the error case as well.
-            if (!url?.includes(redirectUri)) {
+            if (!url?.includes(getRedirectUri())) {
                 window.open(url);
+            } else {
+                window.alert('An error occurred during the identity creation.');
             }
             worker.removeEventListener('message', listener);
         });

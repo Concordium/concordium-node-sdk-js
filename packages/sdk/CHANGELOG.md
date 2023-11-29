@@ -6,12 +6,12 @@
 
 - `ContractAddress.toString` function that converts the address to a string in
   the `<index, subindex>` format.
-  
+
 ### Fixed
 
 - Error messages in `GenericContract` now display the data, e.g., the contract
   address, rather than `[object Object]`.
-
+- Incorrect check in isRewardStatusV1.
 
 ## 7.1.0
 

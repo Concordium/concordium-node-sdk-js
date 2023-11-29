@@ -6,13 +6,7 @@ nothing is persisted.
 
 ## Installing
 
-From the root of the concordium-node-sdk-js you must first run
-
-```console
-yarn install
-```
-
-Then navigate into the example/wallet directory and run
+From the root of concordium-node-sdk-js you must run
 
 ```console
 yarn install

@@ -13,7 +13,9 @@ import {
     SimpleTransferPayload,
     TransactionExpiry,
     Versioned,
+    buildBasicAccountSigner,
     serializeCredentialDeploymentPayload,
+    signTransaction,
 } from '@concordium/web-sdk';
 import {
     IdentityProviderWithMetadata,
@@ -261,7 +263,7 @@ export async function getAccount(
  * @param toAddress the account address that the CCD will be sent to
  * @returns the simple transfer account transaction object
  */
-export async function createSimpleTransferTransaction(
+async function createSimpleTransferTransaction(
     amount: CcdAmount.Type,
     senderAddress: AccountAddress.Type,
     toAddress: AccountAddress.Type
@@ -285,4 +287,27 @@ export async function createSimpleTransferTransaction(
     };
 
     return transaction;
+}
+
+export async function sendTransferTransaction(
+    amount: CcdAmount.Type,
+    accountAddress: AccountAddress.Type,
+    toAddress: AccountAddress.Type,
+    seedPhrase: string,
+    identityProviderIdentity: number
+) {
+    const simpleTransfer = await createSimpleTransferTransaction(
+        amount,
+        accountAddress,
+        toAddress
+    );
+    const signingKey = getAccountSigningKey(
+        seedPhrase,
+        identityProviderIdentity
+    );
+    const signature = await signTransaction(
+        simpleTransfer,
+        buildBasicAccountSigner(signingKey)
+    );
+    return await client.sendAccountTransaction(simpleTransfer, signature);
 }

@@ -3,17 +3,10 @@ import {
     AccountInfo,
     CcdAmount,
     TransactionHash,
-    buildBasicAccountSigner,
-    signTransaction,
 } from '@concordium/web-sdk';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-    client,
-    createSimpleTransferTransaction,
-    getAccount,
-    getAccountSigningKey,
-} from './util';
+import { getAccount, sendTransferTransaction } from './util';
 import { seedPhraseKey, selectedIdentityProviderKey } from './constants';
 
 function DisplayAccount({ accountInfo }: { accountInfo: AccountInfo }) {
@@ -68,22 +61,12 @@ function TransferInput({
             return;
         }
 
-        const simpleTransfer = await createSimpleTransferTransaction(
+        const transactionHash = await sendTransferTransaction(
             amount,
             accountAddress,
-            toAddress
-        );
-        const signingKey = getAccountSigningKey(
+            toAddress,
             seedPhrase,
             identityProviderIdentity
-        );
-        const signature = await signTransaction(
-            simpleTransfer,
-            buildBasicAccountSigner(signingKey)
-        );
-        const transactionHash = await client.sendAccountTransaction(
-            simpleTransfer,
-            signature
         );
         setTransactionHash(TransactionHash.toHexString(transactionHash));
     }

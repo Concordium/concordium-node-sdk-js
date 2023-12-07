@@ -129,5 +129,5 @@ export const isInstanceInfoV0 = (info: InstanceInfo): info is InstanceInfoV0 =>
  * @deprecated check the `version` member instead.
  */
 export function isRewardStatusV1(rs: RewardStatus): rs is RewardStatusV1 {
-    return rs.version === 0;
+    return rs.version === 1;
 }

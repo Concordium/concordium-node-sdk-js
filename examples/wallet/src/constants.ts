@@ -11,3 +11,14 @@ export const selectedIdentityProviderKey = 'selected-identity-provider';
 // a single credential.
 export const identityIndex = 0;
 export const credNumber = 0;
+
+// Connection parameters that determine the node that the wallet
+// connects to.
+export const nodeAddress = 'https://grpc.testnet.concordium.com';
+export const nodePort = 20000;
+
+// Base URL for the wallet proxy.
+export const walletProxyBaseUrl = 'https://wallet-proxy.testnet.concordium.com';
+
+// Base URL for CCDscan. This is used to link to a submitted transaction.
+export const ccdscanBaseUrl = 'https://testnet.ccdscan.io';

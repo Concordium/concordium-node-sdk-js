@@ -7,7 +7,11 @@ import {
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getAccount, sendTransferTransaction } from './util';
-import { seedPhraseKey, selectedIdentityProviderKey } from './constants';
+import {
+    ccdscanBaseUrl,
+    seedPhraseKey,
+    selectedIdentityProviderKey,
+} from './constants';
 
 function DisplayAccount({ accountInfo }: { accountInfo: AccountInfo }) {
     return (
@@ -100,7 +104,7 @@ function TransferInput({
                 <div>
                     Latest transaction hash:{' '}
                     <a
-                        href={`https://testnet.ccdscan.io/transactions?dcount=1&dentity=transaction&dhash=${transactionHash}`}
+                        href={`${ccdscanBaseUrl}/transactions?dcount=1&dentity=transaction&dhash=${transactionHash}`}
                     >
                         {transactionHash}
                     </a>

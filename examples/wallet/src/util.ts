@@ -22,7 +22,14 @@ import {
     IdentityProviderIdentityStatus,
     IdentityTokenContainer,
 } from './types';
-import { credNumber, identityIndex, network } from './constants';
+import {
+    credNumber,
+    identityIndex,
+    network,
+    nodeAddress,
+    nodePort,
+    walletProxyBaseUrl,
+} from './constants';
 
 // Redirect URI used in the identity creation protocol.
 // This determines where the identity provider will redirect the
@@ -43,10 +50,7 @@ export async function sleep(time: number) {
     });
 }
 
-export const client = new ConcordiumGRPCWebClient(
-    'https://grpc.testnet.concordium.com',
-    20000
-);
+export const client = new ConcordiumGRPCWebClient(nodeAddress, nodePort);
 
 /**
  * Creates a default transaction expiration that will ensure that the
@@ -99,9 +103,7 @@ export function extractIdentityObjectUrl(path: string) {
 export async function getIdentityProviders(): Promise<
     IdentityProviderWithMetadata[]
 > {
-    const response = await fetch(
-        'https://wallet-proxy.testnet.concordium.com/v1/ip_info'
-    );
+    const response = await fetch(walletProxyBaseUrl + '/v1/ip_info');
     return response.json();
 }
 

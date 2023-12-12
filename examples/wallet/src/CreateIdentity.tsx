@@ -17,6 +17,7 @@ import {
 import { mnemonicToSeedSync } from '@scure/bip39';
 import { Buffer } from 'buffer/';
 import {
+    identityIndex,
     network,
     seedPhraseKey,
     selectedIdentityProviderKey,
@@ -89,7 +90,7 @@ export function CreateIdentity() {
         const identityRequestInput: IdentityRequestInput = {
             net: network,
             seed: Buffer.from(mnemonicToSeedSync(seedPhrase)).toString('hex'),
-            identityIndex: selectedIdentityProvider.ipInfo.ipIdentity,
+            identityIndex,
             arsInfos: selectedIdentityProvider.arsInfos,
             arThreshold: determineAnonymityRevokerThreshold(
                 Object.keys(selectedIdentityProvider.arsInfos).length

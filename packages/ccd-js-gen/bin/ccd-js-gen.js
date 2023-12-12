@@ -8,9 +8,8 @@
  * */
 
 import { spawn } from 'node:child_process';
-import { fileURLToPath } from 'url';
 import * as path from 'path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 // Find the path to this script and resolve any symlinks.
 // Then use it to locate and execute the `cli.js` file while forwarding all arguments.
@@ -33,4 +32,3 @@ node.stderr.on('data', (data) => {
 node.on('close', (code) => {
     process.exit(code);
 });
->>>>>>> Stashed changes

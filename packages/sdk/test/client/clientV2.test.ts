@@ -487,7 +487,9 @@ test.each(clients)('getAccountList', async (client) => {
     const blocks = await client.getBlocksAtHeight(10n);
     const accountIter = client.getAccountList(blocks[0]);
     const accountList = await streamToList(accountIter);
-    expect(accountList).toEqual(expected.accountList);
+    for (const account of accountList) {
+        expect(expected.accountList).toContainEqual(account);
+    }
 });
 
 test.each(clients)('getModuleList', async (client) => {

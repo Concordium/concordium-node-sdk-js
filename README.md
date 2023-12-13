@@ -7,23 +7,24 @@ Wrappers for interacting with the Concordium node.
 **Table of Contents:**
 
 <!--toc:start-->
-- [Concordium SDK for Javascript](#concordium-sdk-for-javascript)
-  - [Documentation](#documentation)
-  - [Packages](#packages)
-    - [SDK package](#sdk-package)
-    - [Rust-bindings package](#rust-bindings-package)
-    - [Ccd-js-gen package](#ccd-js-gen-package)
-  - [Install/updating dependencies](#installupdating-dependencies)
-    - [MacOS arm64](#macos-arm64)
-  - [Build](#build)
-    - [Building for a release](#building-for-a-release)
-    - [Building for development](#building-for-development)
-  - [Making a new release](#making-a-new-release)
-    - [SDK](#sdk)
-    - [rust-bindings](#rust-bindings)
-    - [ccd-js-gen](#ccd-js-gen)
-  - [Test](#test)
-<!--toc:end-->
+
+-   [Concordium SDK for Javascript](#concordium-sdk-for-javascript)
+    -   [Documentation](#documentation)
+    -   [Packages](#packages)
+        -   [SDK package](#sdk-package)
+        -   [Rust-bindings package](#rust-bindings-package)
+        -   [Ccd-js-gen package](#ccd-js-gen-package)
+    -   [Install/updating dependencies](#installupdating-dependencies)
+        -   [MacOS arm64](#macos-arm64)
+    -   [Build](#build)
+        -   [Building for a release](#building-for-a-release)
+        -   [Building for development](#building-for-development)
+    -   [Making a new release](#making-a-new-release)
+        -   [SDK](#sdk)
+        -   [rust-bindings](#rust-bindings)
+        -   [ccd-js-gen](#ccd-js-gen)
+    -   [Test](#test)
+    <!--toc:end-->
 
 ## Documentation
 
@@ -65,12 +66,13 @@ and
 yarn
 ```
 
-### MacOS arm64
+### MacOS
 
-When installing/updating dependencies on a mac with an arm64 processor, it
-might be required to explicitly set the target architecture of dependencies
-to x64, as not all dependencies are available for the new mac processors. This
-is done by replacing the `yarn` command with
+It may be necessary to install Xcode when installing dependencies on a mac.
+
+On a mac with an arm64 processor, it might also be required to explicitly set the target
+architecture of dependencies to x64, as not all dependencies are available for the new mac
+processors. This is done by replacing the `yarn` command with
 
 ```shell
 npm_config_target_arch=x64 yarn
@@ -101,51 +103,51 @@ Note that this skips generating the grpc API and optimizing the wasm modules.
 
 ## Making a new release
 
-The following describes the requirements for creating  a new release for
+The following describes the requirements for creating a new release for
 each of the packages contained in this repository.
 
 ### SDK
 
-- Bump the version in [package.json](./packages/sdk/package.json).
-- Update the [CHANGELOG](./packages/sdk/CHANGELOG.md) describing the
-  changes made.
-- Commit and tag the release.
-  - Tag should be `sdk/x.y.z`.
-- Run the deploy workflow.
-  - Under github actions, run the "deploy" workflow and download the
-    `build-release` artifact. Unpack this file and use it for the release.
-- Publish the release to NPM.
-  - From the sdk package directory (packages/sdk) run `yarn npm publish`
+-   Bump the version in [package.json](./packages/sdk/package.json).
+-   Update the [CHANGELOG](./packages/sdk/CHANGELOG.md) describing the
+    changes made.
+-   Commit and tag the release.
+    -   Tag should be `sdk/x.y.z`.
+-   Run the deploy workflow.
+    -   Under github actions, run the "deploy" workflow and download the
+        `build-release` artifact. Unpack this file and use it for the release.
+-   Publish the release to NPM.
+    -   From the sdk package directory (packages/sdk) run `yarn npm publish`
 
 ### rust-bindings
 
-- Bump the version in [package.json](./packages/rust-bindings/package.json).
-- Update the [CHANGELOG](./packages/rust-bindings/CHANGELOG.md) describing
-  the changes made.
-- Update the dependency to rust-bindings in the [sdk](./packages/sdk/package.json)
-- Update the CHANGELOG in the [sdk](./packages/sdk/CHANGELOG.md)
-  - Add a change entry: Bumped @concordium/rust-bindings to x.y.z.
-- Commit and tag the release.
-  - Tag should be `rust-bindings/x.y.z`.
-- Build the release.
-  - Under github actions, run the "deploy" workflow and download the
-    `build-release` artifact. Unpack this file and use it for the release.
-- Publish the release to NPM.
-  - From the rust-bindings package directory (packages/rust-bindings) run
-    `yarn npm publish`
+-   Bump the version in [package.json](./packages/rust-bindings/package.json).
+-   Update the [CHANGELOG](./packages/rust-bindings/CHANGELOG.md) describing
+    the changes made.
+-   Update the dependency to rust-bindings in the [sdk](./packages/sdk/package.json)
+-   Update the CHANGELOG in the [sdk](./packages/sdk/CHANGELOG.md)
+    -   Add a change entry: Bumped @concordium/rust-bindings to x.y.z.
+-   Commit and tag the release.
+    -   Tag should be `rust-bindings/x.y.z`.
+-   Build the release.
+    -   Under github actions, run the "deploy" workflow and download the
+        `build-release` artifact. Unpack this file and use it for the release.
+-   Publish the release to NPM.
+    -   From the rust-bindings package directory (packages/rust-bindings) run
+        `yarn npm publish`
 
 ### ccd-js-gen
 
-- Bump the version in [package.json](./packages/ccd-js-gen/package.json).
-- Update the [CHANGELOG](./packages/ccd-js-gen/CHANGELOG.md) describing
-  the changes made.
-- Commit and tag the release.
-  - Tag should be `ccd-js-gen/x.y.z`.
-- Run the deploy workflow.
-  - Under github actions, run the "deploy" workflow and download the
-    `build-release` artifact. Unpack this file and use it for the release.
-- Publish the release to NPM.
-  - From the ccd-js-gen package directory (packages/ccd-js-gen) run `yarn npm publish`
+-   Bump the version in [package.json](./packages/ccd-js-gen/package.json).
+-   Update the [CHANGELOG](./packages/ccd-js-gen/CHANGELOG.md) describing
+    the changes made.
+-   Commit and tag the release.
+    -   Tag should be `ccd-js-gen/x.y.z`.
+-   Run the deploy workflow.
+    -   Under github actions, run the "deploy" workflow and download the
+        `build-release` artifact. Unpack this file and use it for the release.
+-   Publish the release to NPM.
+    -   From the ccd-js-gen package directory (packages/ccd-js-gen) run `yarn npm publish`
 
 ## Test
 

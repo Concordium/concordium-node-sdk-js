@@ -11,6 +11,8 @@ const config: Config = {
         __ENV__: 'node',
     },
     transformIgnorePatterns: [`node_modules/(?!${esModules.join('|')})`],
+    // Needed due to a bug in Jest, issue: https://github.com/jestjs/jest/issues/11617
+    workerThreads: true,
 };
 
 export default config;

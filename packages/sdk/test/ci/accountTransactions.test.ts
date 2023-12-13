@@ -15,7 +15,32 @@ import {
     ModuleReference,
     Parameter,
     serializeAccountTransactionPayload,
+    SimpleTransferPayload,
+    SimpleTransferWithMemoPayload,
+    DataBlob,
+    DeployModulePayload,
+    UpdateContractPayload,
+    ContractAddress,
+    ReceiveName,
+    UpdateCredentialsPayload,
+    IndexedCredentialDeploymentInfo,
+    RegisterDataPayload,
+    ConfigureDelegationPayload,
+    DelegationTargetType,
 } from '../../src/index.js';
+import JSONBig from 'json-bigint';
+import {
+    ConfigureBakerHandler,
+    DeployModuleHandler,
+    InitContractHandler,
+    RegisterDataHandler,
+    SimpleTransferHandler,
+    SimpleTransferWithMemoHandler,
+    UpdateContractHandler,
+    UpdateCredentialsHandler,
+} from '../../src/accountTransactions.ts';
+import { Buffer } from 'buffer/index.js';
+import fs from 'fs';
 
 const senderAccountAddress =
     '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M';
@@ -100,4 +125,184 @@ test('Init contract serializes init name correctly', async () => {
         .toString('utf8');
 
     expect(serializedInitName).toEqual('init_credential_registry');
+});
+
+test('SimpleTransferPayload serializes to JSON correctly', async () => {
+    const payload: SimpleTransferPayload = {
+        amount: CcdAmount.fromMicroCcd(1000000000n),
+        toAddress: AccountAddress.fromBase58(senderAccountAddress),
+    };
+    const handler = new SimpleTransferHandler();
+    const json = handler.toJSON(payload);
+    expect(handler.fromJSON(JSONBig.parse(JSONBig.stringify(json)))).toEqual(
+        payload
+    );
+});
+
+test('SimpleTransferWithMemoPayload serializes to JSON correctly', async () => {
+    const payload: SimpleTransferWithMemoPayload = {
+        amount: CcdAmount.fromMicroCcd(1000000000n),
+        memo: new DataBlob(Buffer.from('test', 'utf8')),
+        toAddress: AccountAddress.fromBase58(senderAccountAddress),
+    };
+    const handler = new SimpleTransferWithMemoHandler();
+    const json = handler.toJSON(payload);
+    expect(handler.fromJSON(JSONBig.parse(JSONBig.stringify(json)))).toEqual(
+        payload
+    );
+});
+
+test('DeployModulePayload serializes to JSON correctly', async () => {
+    const payload: DeployModulePayload = {
+        version: 1,
+        source: Buffer.from('test', 'utf8'),
+    };
+    const handler = new DeployModuleHandler();
+    const json = handler.toJSON(payload);
+    expect(handler.fromJSON(JSONBig.parse(JSONBig.stringify(json)))).toEqual(
+        payload
+    );
+
+    const payloadNoVersion: DeployModulePayload = {
+        source: Buffer.from('test2', 'utf8'),
+    };
+    const jsonNoVersion = handler.toJSON(payloadNoVersion);
+    expect(
+        handler.fromJSON(JSONBig.parse(JSONBig.stringify(jsonNoVersion)))
+    ).toEqual(payloadNoVersion);
+});
+
+test('InitContractPayload serializes to JSON correctly', async () => {
+    const payload: InitContractPayload = {
+        amount: CcdAmount.fromMicroCcd(1000),
+        initName: ContractName.fromString('test'),
+        maxContractExecutionEnergy: Energy.create(30000),
+        moduleRef: ModuleReference.fromHexString(
+            'aabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccddaabbccdd'
+        ),
+        param: Parameter.fromBuffer(Buffer.from('test', 'utf8')),
+    };
+    const handler = new InitContractHandler();
+    const json = handler.toJSON(payload);
+    expect(handler.fromJSON(JSONBig.parse(JSONBig.stringify(json)))).toEqual(
+        payload
+    );
+});
+
+test('UpdateContractPayload serializes to JSON correctly', async () => {
+    const payload: UpdateContractPayload = {
+        amount: CcdAmount.fromMicroCcd(5),
+        address: ContractAddress.fromSchemaValue({ index: 1n, subindex: 2n }),
+        receiveName: ReceiveName.fromString('test.abc'),
+        message: Parameter.fromBuffer(Buffer.from('test', 'utf8')),
+        maxContractExecutionEnergy: Energy.create(30000),
+    };
+    const handler = new UpdateContractHandler();
+    const json = handler.toJSON(payload);
+    expect(handler.fromJSON(JSONBig.parse(JSONBig.stringify(json)))).toEqual(
+        payload
+    );
+});
+
+test('UpdateCredentialsPayload serializes to JSON correctly', async () => {
+    const credentialDeploymentInfo: IndexedCredentialDeploymentInfo = {
+        index: 0,
+        cdi: JSON.parse(
+            fs.readFileSync('./test/ci/resources/cdi.json').toString()
+        ).value,
+    };
+
+    const payload: UpdateCredentialsPayload = {
+        newCredentials: [credentialDeploymentInfo],
+        removeCredentialIds: ['123', '456'],
+        threshold: 5,
+        currentNumberOfCredentials: 2n,
+    };
+    const handler = new UpdateCredentialsHandler();
+    const json = handler.toJSON(payload);
+    // We cannot JSONBig.stringify and JSONBig.parse the json because small BigInts are converted to numbers
+    expect(handler.fromJSON(json)).toEqual(payload);
+    expect(() => JSONBig.stringify(json)).not.toThrow();
+});
+
+test('RegisterDataPayload serializes to JSON correctly', async () => {
+    const payload: RegisterDataPayload = {
+        data: new DataBlob(Buffer.from('test', 'utf8')),
+    };
+    const handler = new RegisterDataHandler();
+    const json = handler.toJSON(payload);
+    expect(handler.fromJSON(JSONBig.parse(JSONBig.stringify(json)))).toEqual(
+        payload
+    );
+});
+
+test('ConfigureBakerPayload serializes to JSON correctly', async () => {
+    const payload: ConfigureBakerPayload = {
+        stake: CcdAmount.fromMicroCcd(1000000000n),
+        restakeEarnings: true,
+        openForDelegation: OpenStatus.ClosedForAll,
+        keys: {
+            signatureVerifyKey: 'abcdef',
+            electionVerifyKey: 'abcdef',
+            aggregationVerifyKey: 'abcdef',
+            proofAggregation: 'abcdef',
+            proofSig: 'abcdef',
+            proofElection: 'abcdef',
+        },
+        metadataUrl: 'http://example.com',
+        transactionFeeCommission: 1,
+        bakingRewardCommission: 1,
+        finalizationRewardCommission: 1,
+    };
+    const handler = new ConfigureBakerHandler();
+    const json = handler.toJSON(payload);
+    expect(handler.fromJSON(JSONBig.parse(JSONBig.stringify(json)))).toEqual(
+        payload
+    );
+
+    const payloadPartial: ConfigureBakerPayload = {
+        stake: CcdAmount.fromMicroCcd(1000000000n),
+        restakeEarnings: true,
+        openForDelegation: OpenStatus.ClosedForAll,
+    };
+    const jsonPartial = handler.toJSON(payloadPartial);
+    expect(
+        handler.fromJSON(JSONBig.parse(JSONBig.stringify(jsonPartial)))
+    ).toEqual(payloadPartial);
+});
+
+test('ConfigureDelegationPayload serializes to JSON correctly', async () => {
+    const payloadBakerDelegation: ConfigureDelegationPayload = {
+        stake: CcdAmount.fromMicroCcd(1000000000n),
+        restakeEarnings: true,
+        delegationTarget: {
+            delegateType: DelegationTargetType.Baker,
+            bakerId: 5n,
+        },
+    };
+    const handler = new ConfigureBakerHandler();
+    const json = handler.toJSON(payloadBakerDelegation);
+    // We cannot JSONBig.stringify and JSONBig.parse the json because small BigInts are converted to numbers
+    expect(handler.fromJSON(json)).toEqual(payloadBakerDelegation);
+    expect(() => JSONBig.stringify(json)).not.toThrow();
+
+    const payloadPassiveDelegation: ConfigureDelegationPayload = {
+        stake: CcdAmount.fromMicroCcd(1000000000n),
+        restakeEarnings: true,
+        delegationTarget: {
+            delegateType: DelegationTargetType.PassiveDelegation,
+        },
+    };
+    const jsonPassive = handler.toJSON(payloadPassiveDelegation);
+    expect(
+        handler.fromJSON(JSONBig.parse(JSONBig.stringify(jsonPassive)))
+    ).toEqual(payloadPassiveDelegation);
+
+    const payloadPartial: ConfigureDelegationPayload = {
+        restakeEarnings: true,
+    };
+    const jsonPartial = handler.toJSON(payloadPartial);
+    expect(
+        handler.fromJSON(JSONBig.parse(JSONBig.stringify(jsonPartial)))
+    ).toEqual(payloadPartial);
 });

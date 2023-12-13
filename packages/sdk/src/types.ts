@@ -792,7 +792,7 @@ export interface ChainArData {
 export interface Policy {
     validTo: string; // "YYYYMM"
     createdAt: string; // "YYYYMM"
-    revealedAttributes: Record<AttributeKey, string>;
+    revealedAttributes: Partial<Record<AttributeKey, string>>;
 }
 
 interface SharedCredentialDeploymentValues {
@@ -818,7 +818,7 @@ export interface CredentialDeploymentCommitments {
     cmmPrf: string;
     cmmCredCounter: string;
     cmmIdCredSecSharingCoeff: string[];
-    cmmAttributes: Record<AttributeKey, string>;
+    cmmAttributes: Partial<Record<AttributeKey, string>>;
     cmmMaxAccounts: string;
 }
 

@@ -3,7 +3,7 @@ use concordium_rust_bindings_common::{
     helpers::{to_js_error, JsResult},
     types::{Base58String, HexString, JsonString},
 };
-use wallet_library::{wallet::{get_account_signing_key_aux, get_account_public_key_aux, get_credential_id_aux, get_prf_key_aux, get_id_cred_sec_aux, get_signature_blinding_randomness_aux, get_attribute_commitment_randomness_aux, get_verifiable_credential_signing_key_aux, get_verifiable_credential_public_key_aux, get_verifiable_credential_backup_encryption_key_aux}, identity::{create_id_request_v1_aux,  create_identity_recovery_request_with_seed_aux}};
+use wallet_library::{wallet::{get_account_signing_key_aux, get_account_public_key_aux, get_credential_id_aux, get_prf_key_aux, get_id_cred_sec_aux, get_signature_blinding_randomness_aux, get_attribute_commitment_randomness_aux, get_verifiable_credential_signing_key_aux, get_verifiable_credential_public_key_aux, get_verifiable_credential_backup_encryption_key_aux}, identity::{create_id_request_v1_aux,  create_identity_recovery_request_with_seed_aux}, credential::create_unsigned_credential_v1_aux};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen(js_name = generateUnsignedCredential)]

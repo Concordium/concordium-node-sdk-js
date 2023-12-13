@@ -91,7 +91,7 @@ function createUnsignedCredentialInfo(
 /**
  * Create a credential deployment transaction, which is the transaction used
  * when deploying a new account.
- * @deprecated This function doesn't use allow supplying the randomness. {@link createCredentialTransactionV1 } or { @link createCredentialTransactionV1NoSeed } should be used instead.
+ * @deprecated This function doesn't use allow supplying the randomness. {@link createCredentialTransaction} or {@link createCredentialTransactionNoSeed} should be used instead.
  * @param identity the identity to create a credential for
  * @param cryptographicParameters the global cryptographic parameters from the chain
  * @param threshold the signature threshold for the credential, has to be less than number of public keys
@@ -286,7 +286,17 @@ export function createCredentialTransactionNoSeed(
     input: CredentialInputNoSeed,
     expiry: TransactionExpiry.Type
 ): CredentialDeploymentTransaction {
-    const rawRequest = wasm.createUnsignedCredentialV1(JSON.stringify(input));
+    const { prfKey, idCredSec, sigRetrievelRandomness, ...common } = input;
+    const internalInput = {
+        common,
+        prfKey,
+        idCredSec,
+        blindingRandomness: sigRetrievelRandomness,
+    };
+
+    const rawRequest = wasm.createUnsignedCredentialV1(
+        JSON.stringify(internalInput)
+    );
     let info: UnsignedCdiWithRandomness;
     try {
         info = JSON.parse(rawRequest);

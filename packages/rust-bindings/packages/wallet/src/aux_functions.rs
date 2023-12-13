@@ -525,48 +525,6 @@ impl HasAttributeRandomness<ArCurve> for AttributeRandomness {
     }
 }
 
-pub fn create_unsigned_credential_v1_aux(input: UnsignedCredentialInput) -> Result<JsonString> {
-    let chi = CredentialHolderInfo::<constants::ArCurve> {
-        id_cred: IdCredentials {
-            id_cred_sec: input.id_cred_sec,
-        },
-    };
-    let aci = AccCredentialInfo {
-        cred_holder_info: chi,
-        prf_key:          input.prf_key,
-    };
-
-    let blinding_randomness: Value<constants::ArCurve> = concordium_base::common::from_bytes(
-        &mut hex::decode(&input.sig_retrievel_randomness)?.as_slice(),
-    )?;
-    let id_use_data = IdObjectUseData {
-        aci,
-        randomness:
-            concordium_base::id::ps_sig::SigRetrievalRandomness::<constants::IpPairing>::new(
-                *blinding_randomness,
-            ),
-    };
-
-    let context = IpContext::new(&input.ip_info, &input.ars_infos, &input.global_context);
-
-    let policy = build_policy(&input.id_object.alist, input.revealed_attributes)?;
-
-    let (cdi, rand) = create_unsigned_credential(
-        context,
-        &input.id_object,
-        &id_use_data,
-        input.cred_number,
-        policy,
-        input.credential_public_keys,
-        None,
-        &AttributeRandomness(input.attribute_randomness),
-    )?;
-
-    let response = json!({"unsignedCdi": cdi, "randomness": rand});
-
-    Ok(response.to_string())
-}
-
 #[derive(SerdeSerialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BakerKeys {

@@ -10,14 +10,22 @@ import type {
 } from '../types.js';
 import type { IdProofInput, IdProofOutput } from '../id/index.js';
 
-export type IdentityRequestInput = {
+interface IdentityRequestInputCommon {
     ipInfo: IpInfo;
     globalContext: CryptographicParameters;
     arsInfos: Record<string, ArInfo>;
-    seed: string;
     net: Network;
     identityIndex: number;
     arThreshold: number;
+}
+
+export type IdentityRequestInput = IdentityRequestInputCommon & {
+    seed: string;
+};
+
+type IdentityRequestInputInternal = {
+    common: IdentityRequestInputCommon;
+    seed: string;
 };
 
 /**
@@ -26,7 +34,13 @@ export type IdentityRequestInput = {
 export function createIdentityRequest(
     input: IdentityRequestInput
 ): Versioned<IdObjectRequestV1> {
-    const rawRequest = wasm.createIdRequestV1(JSON.stringify(input));
+    const { seed, ...common } = input;
+    const internalInput: IdentityRequestInputInternal = {
+        common,
+        seed,
+    };
+
+    const rawRequest = wasm.createIdRequestV1(JSON.stringify(internalInput));
     try {
         return JSON.parse(rawRequest).idObjectRequest;
     } catch (e) {

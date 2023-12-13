@@ -6,6 +6,8 @@
 
 - `ContractAddress.toString` function that converts the address to a string in
   the `<index, subindex>` format.
+- `fromJSON` and `toJSON` methods to the `AccountTransactionHandler` interface,
+  and implementations for all transaction handlers.
 
 ### Fixed
 

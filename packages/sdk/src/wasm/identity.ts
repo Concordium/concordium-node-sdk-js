@@ -15,17 +15,18 @@ interface IdentityRequestInputCommon {
     globalContext: CryptographicParameters;
     arsInfos: Record<string, ArInfo>;
     net: Network;
-    identityIndex: number;
     arThreshold: number;
 }
 
 export type IdentityRequestInput = IdentityRequestInputCommon & {
     seed: string;
+    identityIndex: number;
 };
 
 type IdentityRequestInputInternal = {
     common: IdentityRequestInputCommon;
-    seed: string;
+    seedAsHex: string;
+    identityIndex: number;
 };
 
 /**
@@ -34,10 +35,11 @@ type IdentityRequestInputInternal = {
 export function createIdentityRequest(
     input: IdentityRequestInput
 ): Versioned<IdObjectRequestV1> {
-    const { seed, ...common } = input;
+    const { seed, identityIndex, ...common } = input;
     const internalInput: IdentityRequestInputInternal = {
         common,
-        seed,
+        seedAsHex: seed,
+        identityIndex,
     };
 
     const rawRequest = wasm.createIdRequestV1(JSON.stringify(internalInput));
@@ -48,13 +50,24 @@ export function createIdentityRequest(
     }
 }
 
-export type IdentityRecoveryRequestInput = {
+type IdentityRecoveryRequestInputCommon = {
     ipInfo: IpInfo;
     globalContext: CryptographicParameters;
+    timestamp: number;
+};
+
+export type IdentityRecoveryRequestInput =
+    IdentityRecoveryRequestInputCommon & {
+        seedAsHex: string;
+        net: Network;
+        identityIndex: number;
+    };
+
+type IdentityRecoveryRequestInputInternal = {
+    common: IdentityRecoveryRequestInputCommon;
     seedAsHex: string;
     net: Network;
     identityIndex: number;
-    timestamp: number;
 };
 
 /**
@@ -63,8 +76,17 @@ export type IdentityRecoveryRequestInput = {
 export function createIdentityRecoveryRequest(
     input: IdentityRecoveryRequestInput
 ): Versioned<IdRecoveryRequest> {
+    const { seedAsHex, net, identityIndex, ...common } = input;
+
+    const internalInput: IdentityRecoveryRequestInputInternal = {
+        common,
+        identityIndex,
+        net,
+        seedAsHex,
+    };
+
     const rawRequest = wasm.createIdentityRecoveryRequest(
-        JSON.stringify(input)
+        JSON.stringify(internalInput)
     );
     try {
         return JSON.parse(rawRequest).idRecoveryRequest;

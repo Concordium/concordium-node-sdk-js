@@ -9,16 +9,12 @@ use concordium_base::{
     contracts_common::ContractAddress,
     curve_arithmetic::Pairing,
     id::{
-        account_holder::{
-            create_credential, create_unsigned_credential},
+        account_holder::{create_credential, create_unsigned_credential},
         constants,
         constants::{ArCurve, AttributeKind},
         dodis_yampolskiy_prf as prf,
         id_proof_types::{Proof, ProofVersion, Statement, StatementWithContext},
-        pedersen_commitment::{
-            Randomness as PedersenRandomness, Value as PedersenValue,
-            Value,
-        },
+        pedersen_commitment::{Randomness as PedersenRandomness, Value as PedersenValue, Value},
         types::*,
     },
     ps_sig::SigRetrievalRandomness,

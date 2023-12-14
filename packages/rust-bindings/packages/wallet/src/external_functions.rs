@@ -6,7 +6,8 @@ use concordium_rust_bindings_common::{
 use wallet_library::{
     credential::create_unsigned_credential_with_keys_v1_aux,
     identity::{
-        create_id_request_with_seed_v1_aux, create_identity_recovery_request_with_seed_aux,
+        create_id_request_with_keys_v1_aux, create_id_request_with_seed_v1_aux,
+        create_identity_recovery_request_aux, create_identity_recovery_request_with_seed_aux,
     },
     wallet::{
         get_account_public_key_aux, get_account_signing_key_aux,
@@ -58,10 +59,20 @@ pub fn create_id_request_v1_ext(input: JsonString) -> JsResult {
     create_id_request_with_seed_v1_aux(serde_json::from_str(&input).unwrap()).map_err(to_js_error)
 }
 
+#[wasm_bindgen(js_name = createIdRequestWithKeysV1)]
+pub fn create_id_request_with_keys_v1_ext(input: JsonString) -> JsResult {
+    create_id_request_with_keys_v1_aux(serde_json::from_str(&input).unwrap()).map_err(to_js_error)
+}
+
 #[wasm_bindgen(js_name = createIdentityRecoveryRequest)]
 pub fn create_identity_recovery_request_ext(input: JsonString) -> JsResult {
     create_identity_recovery_request_with_seed_aux(serde_json::from_str(&input).unwrap())
         .map_err(to_js_error)
+}
+
+#[wasm_bindgen(js_name = createIdentityRecoveryRequestWithKeys)]
+pub fn create_identity_recovery_request_with_keys_ext(input: JsonString) -> JsResult {
+    create_identity_recovery_request_aux(serde_json::from_str(&input).unwrap()).map_err(to_js_error)
 }
 
 #[wasm_bindgen(js_name = createCredentialV1)]

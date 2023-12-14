@@ -14,6 +14,7 @@ interface IdentityRequestInputCommon {
     ipInfo: IpInfo;
     globalContext: CryptographicParameters;
     arsInfos: Record<string, ArInfo>;
+    // TODO Net should be moved out of common when fixed in concordium-base/wallet_library.
     net: Network;
     arThreshold: number;
 }
@@ -29,8 +30,49 @@ type IdentityRequestInputInternal = {
     identityIndex: number;
 };
 
+export type IdentityRequestWithKeysInput = IdentityRequestInputCommon & {
+    prfKey: string;
+    idCredSec: string;
+    blindingRandomness: string;
+};
+
+type IdentityRequestWithKeysInputInternal = {
+    common: IdentityRequestInputCommon;
+    prfKey: string;
+    idCredSec: string;
+    blindingRandomness: string;
+};
+
 /**
- * Creates a V1 identityRequest.
+ * Creates a V1 identity request by providing the secret keys directly.
+ * This allows for the generation of the keys separately from creating
+ * the request.
+ */
+export function createIdentityRequestWithKeys(
+    input: IdentityRequestWithKeysInput
+): Versioned<IdObjectRequestV1> {
+    const { prfKey, idCredSec, blindingRandomness, ...common } = input;
+    const internalInput: IdentityRequestWithKeysInputInternal = {
+        common,
+        prfKey,
+        idCredSec,
+        blindingRandomness,
+    };
+
+    const rawRequest = wasm.createIdRequestWithKeysV1(
+        JSON.stringify(internalInput)
+    );
+    try {
+        return JSON.parse(rawRequest).idObjectRequest;
+    } catch (e) {
+        throw new Error(rawRequest);
+    }
+}
+
+/**
+ * Creates a V1 identity request from a seed. This will derive the corresponding
+ * keys based on the provided identity index, identity provider index and seed.
+ * The identity provider index is extracted from the provided IpInfo.
  */
 export function createIdentityRequest(
     input: IdentityRequestInput
@@ -70,8 +112,20 @@ type IdentityRecoveryRequestInputInternal = {
     identityIndex: number;
 };
 
+export type IdentityRecoveryRequestWithKeysInput =
+    IdentityRecoveryRequestInputCommon & {
+        idCredSec: string;
+    };
+
+type IdentityRecoveryRequestWithKeysInputInternal = {
+    common: IdentityRecoveryRequestInputCommon;
+    idCredSec: string;
+};
+
 /**
- * Creates a identity Recovery Request.
+ * Creates an identity recovery request from a seed. This will derive the
+ * corresponding keys based on the provided identity index, identity provider index
+ * and seed. The identity provider index is extracted from the provided IpInfo.
  */
 export function createIdentityRecoveryRequest(
     input: IdentityRecoveryRequestInput
@@ -86,6 +140,30 @@ export function createIdentityRecoveryRequest(
     };
 
     const rawRequest = wasm.createIdentityRecoveryRequest(
+        JSON.stringify(internalInput)
+    );
+    try {
+        return JSON.parse(rawRequest).idRecoveryRequest;
+    } catch (e) {
+        throw new Error(rawRequest);
+    }
+}
+
+/**
+ * Creates an identity recovery request from a seed. This will derive the
+ * corresponding keys based on the provided identity index, identity provider index
+ * and seed. The identity provider index is extracted from the provided IpInfo.
+ */
+export function createIdentityRecoveryRequestWithKeys(
+    input: IdentityRecoveryRequestWithKeysInput
+): Versioned<IdRecoveryRequest> {
+    const { idCredSec, ...common } = input;
+    const internalInput: IdentityRecoveryRequestWithKeysInputInternal = {
+        common,
+        idCredSec,
+    };
+
+    const rawRequest = wasm.createIdentityRecoveryRequestWithKeys(
         JSON.stringify(internalInput)
     );
     try {

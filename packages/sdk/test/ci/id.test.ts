@@ -86,7 +86,6 @@ test('Create identity request using individual keys', () => {
         globalContext,
         ipInfo,
         arThreshold,
-        net: 'Testnet',
         idCredSec,
         prfKey,
         blindingRandomness,

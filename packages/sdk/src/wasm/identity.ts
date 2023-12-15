@@ -14,18 +14,18 @@ interface IdentityRequestInputCommon {
     ipInfo: IpInfo;
     globalContext: CryptographicParameters;
     arsInfos: Record<string, ArInfo>;
-    // TODO Net should be moved out of common when fixed in concordium-base/wallet_library.
-    net: Network;
     arThreshold: number;
 }
 
 export type IdentityRequestInput = IdentityRequestInputCommon & {
     seed: string;
+    net: Network;
     identityIndex: number;
 };
 
 type IdentityRequestInputInternal = {
     common: IdentityRequestInputCommon;
+    net: Network;
     seedAsHex: string;
     identityIndex: number;
 };
@@ -77,9 +77,10 @@ export function createIdentityRequestWithKeys(
 export function createIdentityRequest(
     input: IdentityRequestInput
 ): Versioned<IdObjectRequestV1> {
-    const { seed, identityIndex, ...common } = input;
+    const { seed, identityIndex, net, ...common } = input;
     const internalInput: IdentityRequestInputInternal = {
         common,
+        net,
         seedAsHex: seed,
         identityIndex,
     };

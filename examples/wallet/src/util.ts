@@ -4,12 +4,14 @@ import {
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionType,
+    AttributesKeys,
     CcdAmount,
     ConcordiumGRPCWebClient,
     ConcordiumHdWallet,
     CredentialDeploymentTransaction,
     IdObjectRequestV1,
     IdentityObjectV1,
+    Network,
     SimpleTransferPayload,
     TransactionExpiry,
     Versioned,
@@ -30,6 +32,7 @@ import {
     nodePort,
     walletProxyBaseUrl,
 } from './constants';
+import { filterRecord, mapRecord } from '../../../packages/sdk/lib/esm/util';
 
 // Redirect URI used in the identity creation protocol.
 // This determines where the identity provider will redirect the
@@ -168,6 +171,63 @@ export async function fetchIdentity(
             }
         });
     });
+}
+
+/**
+ * Derive the required secret key material, the randomness and public key for a credential deployment transaction
+ * from a seed phrase.
+ */
+export function createCredentialDeploymentKeysAndRandomness(
+    seedPhrase: string,
+    net: Network,
+    identityProviderIndex: number,
+    identityIndex: number,
+    credNumber: number
+) {
+    const wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, net);
+    const publicKey = wallet
+        .getAccountPublicKey(identityProviderIndex, identityIndex, credNumber)
+        .toString('hex');
+
+    const verifyKey = {
+        schemeId: 'Ed25519',
+        verifyKey: publicKey,
+    };
+    const credentialPublicKeys = {
+        keys: { 0: verifyKey },
+        threshold: 1,
+    };
+
+    const prfKey = wallet
+        .getPrfKey(identityProviderIndex, identityIndex)
+        .toString('hex');
+    const idCredSec = wallet
+        .getIdCredSec(identityProviderIndex, identityIndex)
+        .toString('hex');
+    const blindingRandomness = wallet
+        .getSignatureBlindingRandomness(identityProviderIndex, identityIndex)
+        .toString('hex');
+
+    const attributeRandomness = mapRecord(
+        filterRecord(AttributesKeys, (k) => isNaN(Number(k))),
+        (x) =>
+            wallet
+                .getAttributeCommitmentRandomness(
+                    identityProviderIndex,
+                    identityIndex,
+                    credNumber,
+                    x
+                )
+                .toString('hex')
+    );
+
+    return {
+        prfKey,
+        idCredSec,
+        blindingRandomness,
+        attributeRandomness,
+        credentialPublicKeys,
+    };
 }
 
 /**

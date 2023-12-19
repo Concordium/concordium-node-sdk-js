@@ -225,7 +225,7 @@ export function createCredentialTransaction(
         identityIndex,
     };
 
-    const rawRequest = wasm.createUnsignedCredentialWithSeedV1(
+    const rawRequest = wasm.createUnsignedCredentialV1(
         JSON.stringify(internalInput)
     );
     let info: UnsignedCdiWithRandomness;
@@ -255,7 +255,7 @@ export function createCredentialTransactionNoSeed(
         blindingRandomness: sigRetrievelRandomness,
     };
 
-    const rawRequest = wasm.createUnsignedCredentialV1(
+    const rawRequest = wasm.createUnsignedCredentialWithKeysV1(
         JSON.stringify(internalInput)
     );
     let info: UnsignedCdiWithRandomness;

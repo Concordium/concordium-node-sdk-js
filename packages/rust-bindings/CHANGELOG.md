@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.1.0
+
+### Added
+
+- WASM entrypoint (`createIdRequestWithKeysV1`) for creating an identity request by supplying the secret key material instead of the seed.
+- WASM entrypoint Method (`createIdentityRecoveryRequestWithKeys`) for creating an identity recovery request by supplying the secret key material instead of the seed.
+- WASM entrypoint (`createUnsignedCredentialWithSeedV1`) for creating an unsigned credential by supplying a seed instead of the secret key material.
+
+### Changed
+
+- Identity requests, identity recovery requests and unsigned credentials are now created using the `wallet_library` from `concordium-base` instead of the local implementation.
+- Deriving wallet keys is now done by utilizing functionality from `wallet_library` in `concordium-base` instead of the local implementation.
+
 ## 2.0.1
 
 ### Added

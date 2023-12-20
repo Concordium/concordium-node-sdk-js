@@ -2215,7 +2215,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@concordium/web-sdk@npm:^7.0.0, @concordium/web-sdk@npm:^7.0.3":
+"@concordium/web-sdk@npm:^7.0.0":
   version: 7.1.0
   resolution: "@concordium/web-sdk@npm:7.1.0"
   dependencies:
@@ -15557,7 +15557,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "web-wallet@workspace:examples/wallet"
   dependencies:
-    "@concordium/web-sdk": ^7.0.3
+    "@concordium/web-sdk": "workspace:^"
     "@scure/bip39": ^1.2.1
     "@types/react": ^18.0.24
     "@types/react-dom": ^18.0.5

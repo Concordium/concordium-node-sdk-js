@@ -31,7 +31,7 @@ export async function main(): Promise<void> {
             'The output directory for the generated code'
         )
         .option<lib.OutputOptions>(
-            '-t, --output-type [TypeScript|JavaScript|TypedJavaScript|Everything]',
+            '-t, --output-type <TypeScript|JavaScript|TypedJavaScript|Everything>',
             'The output file types for the generated code.',
             (value: string) => {
                 switch (value) {
@@ -39,7 +39,7 @@ export async function main(): Promise<void> {
                     case 'JavaScript':
                     case 'TypedJavaScript':
                     case 'Everything':
-                        return value as lib.OutputOptions;
+                        return value;
                     default:
                         // Exit in case `value` is not a valid OutputOptions.
                         console.error(

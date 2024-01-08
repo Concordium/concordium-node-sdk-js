@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add output-type flag to cli.
 - Fix the executable version of the package on Windows.
 
 ## 1.0.1

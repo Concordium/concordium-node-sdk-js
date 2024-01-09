@@ -21,7 +21,7 @@ export type OutputOptions =
 export type GenerateContractClientsOptions = {
     /** Options for the output. */
     output?: OutputOptions;
-    /** Generate `// @ts-nocheck` annotations in each file. Disabled by default. */
+    /** Generate `// @ts-nocheck` annotations in each file. Defaults to `false`. */
     tsNocheck?: boolean;
     /** Callback for getting notified on progress. */
     onProgress?: NotifyProgress;

@@ -13,7 +13,7 @@ type Options = {
     outDir: string;
     /** The output file types for the generated code */
     outputType: lib.OutputOptions;
-    /** Generate `// @ts-nocheck` annotations in each file. Disabled by default. */
+    /** Generate `// @ts-nocheck` annotations in each file. */
     tsNocheck: boolean;
 };
 
@@ -53,7 +53,7 @@ export async function main(): Promise<void> {
             'Everything'
         )
         .option(
-            '--ts-nocheck',
+            '-n, --ts-nocheck',
             'Generate `@ts-nocheck` annotations at the top of each typescript file.',
             false
         )

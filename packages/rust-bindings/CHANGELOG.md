@@ -6,7 +6,6 @@
 
 - The function `create_id_request_v1_ext` exposed with the WASM entrypoint `createIdRequestV1` now expects a new JSON type.
 - The function `create_identity_recovery_request_ext` exposed with the WASM entrypoint `createIdentityRecoveryRequest` now expects a new JSON type.
-- The function `create_unsigned_credential_v1_ext` exposed with the WASM entrypoint `createUnsignedCredentialV1` now expects a new JSON type.
 
 ### Changed
 

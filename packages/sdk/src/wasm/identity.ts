@@ -9,7 +9,7 @@ import type {
     Versioned,
 } from '../types.js';
 import type { IdProofInput, IdProofOutput } from '../id/index.js';
-import { ConcordiumHdWallet } from './HdWallet.ts';
+import { ConcordiumHdWallet } from './HdWallet.js';
 
 interface IdentityRequestInputCommon {
     ipInfo: IpInfo;

@@ -4,9 +4,7 @@ use concordium_rust_bindings_common::{
     types::{Base58String, HexString, JsonString},
 };
 use wallet_library::{
-    credential::{
-        create_unsigned_credential_with_keys_v1_aux, create_unsigned_credential_with_seed_v1_aux,
-    },
+    credential::create_unsigned_credential_v1_aux,
     identity::{
         create_id_request_v1_aux,
         create_identity_recovery_request_aux,
@@ -73,15 +71,9 @@ pub fn create_credential_v1_ext(raw_input: JsonString) -> JsResult {
     create_credential_v1_aux(input).map_err(to_js_error)
 }
 
-#[wasm_bindgen(js_name = createUnsignedCredentialWithKeysV1)]
-pub fn create_unsigned_credential_v1_ext(input: JsonString) -> JsResult {
-    create_unsigned_credential_with_keys_v1_aux(serde_json::from_str(&input).unwrap())
-        .map_err(to_js_error)
-}
-
 #[wasm_bindgen(js_name = createUnsignedCredentialV1)]
-pub fn create_unsigned_credential_with_seed_v1_ext(input: JsonString) -> JsResult {
-    create_unsigned_credential_with_seed_v1_aux(serde_json::from_str(&input).unwrap())
+pub fn create_unsigned_credential_v1_ext(input: JsonString) -> JsResult {
+    create_unsigned_credential_v1_aux(serde_json::from_str(&input).unwrap())
         .map_err(to_js_error)
 }
 

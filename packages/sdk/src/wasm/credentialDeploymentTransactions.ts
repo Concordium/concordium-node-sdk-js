@@ -25,6 +25,8 @@ import * as TransactionExpiry from '../types/TransactionExpiry.js';
 import * as AccountAddress from '../types/AccountAddress.js';
 import { sha256 } from '../hash.js';
 import { getCredentialDeploymentSignDigest } from '../serialization.js';
+import { ConcordiumHdWallet } from './HdWallet.js';
+import { filterRecord, mapRecord } from '../util.js';
 
 /**
  * Generates the unsigned credential information that has to be signed when
@@ -217,27 +219,65 @@ export function createCredentialTransaction(
     input: CredentialInput,
     expiry: TransactionExpiry.Type
 ): CredentialDeploymentTransaction {
-    const { seedAsHex, net, identityIndex, ...common } = input;
-    const internalInput = {
-        common,
-        seedAsHex,
-        net,
-        identityIndex,
+    const wallet = ConcordiumHdWallet.fromHex(input.seedAsHex, input.net);
+    const publicKey = wallet
+        .getAccountPublicKey(
+            input.ipInfo.ipIdentity,
+            input.identityIndex,
+            input.credNumber
+        )
+        .toString('hex');
+
+    const verifyKey = {
+        schemeId: 'Ed25519',
+        verifyKey: publicKey,
+    };
+    const credentialPublicKeys = {
+        keys: { 0: verifyKey },
+        threshold: 1,
     };
 
-    const rawRequest = wasm.createUnsignedCredentialV1(
-        JSON.stringify(internalInput)
+    const prfKey = wallet
+        .getPrfKey(input.ipInfo.ipIdentity, input.identityIndex)
+        .toString('hex');
+    const idCredSec = wallet
+        .getIdCredSec(input.ipInfo.ipIdentity, input.identityIndex)
+        .toString('hex');
+    const randomness = wallet
+        .getSignatureBlindingRandomness(
+            input.ipInfo.ipIdentity,
+            input.identityIndex
+        )
+        .toString('hex');
+
+    const attributeRandomness = mapRecord(
+        filterRecord(AttributesKeys, (k) => isNaN(Number(k))),
+        (x) =>
+            wallet
+                .getAttributeCommitmentRandomness(
+                    input.ipInfo.ipIdentity,
+                    input.identityIndex,
+                    input.credNumber,
+                    x
+                )
+                .toString('hex')
     );
-    let info: UnsignedCdiWithRandomness;
-    try {
-        info = JSON.parse(rawRequest);
-    } catch (e) {
-        throw new Error(rawRequest);
-    }
-    return {
-        expiry,
-        ...info,
+
+    const noSeedInput: CredentialInputNoSeed = {
+        ipInfo: input.ipInfo,
+        globalContext: input.globalContext,
+        arsInfos: input.arsInfos,
+        idObject: input.idObject,
+        idCredSec,
+        prfKey,
+        sigRetrievelRandomness: randomness,
+        credentialPublicKeys,
+        attributeRandomness,
+        revealedAttributes: input.revealedAttributes,
+        credNumber: input.credNumber,
     };
+
+    return createCredentialTransactionNoSeed(noSeedInput, expiry);
 }
 
 /**
@@ -247,17 +287,7 @@ export function createCredentialTransactionNoSeed(
     input: CredentialInputNoSeed,
     expiry: TransactionExpiry.Type
 ): CredentialDeploymentTransaction {
-    const { prfKey, idCredSec, sigRetrievelRandomness, ...common } = input;
-    const internalInput = {
-        common,
-        prfKey,
-        idCredSec,
-        blindingRandomness: sigRetrievelRandomness,
-    };
-
-    const rawRequest = wasm.createUnsignedCredentialWithKeysV1(
-        JSON.stringify(internalInput)
-    );
+    const rawRequest = wasm.createUnsignedCredentialV1(JSON.stringify(input));
     let info: UnsignedCdiWithRandomness;
     try {
         info = JSON.parse(rawRequest);

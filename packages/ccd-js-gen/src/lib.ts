@@ -155,13 +155,9 @@ async function generateCode(
         name: outModuleName,
         ext: '.ts',
     });
-    const moduleSourceFile = project.createSourceFile(
-        outputFilePath,
-        tsNocheck ? '// @ts-nocheck' : '',
-        {
-            overwrite: true,
-        }
-    );
+    const moduleSourceFile = project.createSourceFile(outputFilePath, '', {
+        overwrite: true,
+    });
     const moduleClientId = 'moduleClient';
     const moduleClientType = `${toPascalCase(outModuleName)}Module`;
     const internalModuleClientId = 'internalModuleClient';
@@ -171,7 +167,8 @@ async function generateCode(
         moduleRef,
         moduleClientId,
         moduleClientType,
-        internalModuleClientId
+        internalModuleClientId,
+        tsNocheck
     );
 
     for (const contract of moduleInterface.values()) {
@@ -197,7 +194,7 @@ async function generateCode(
         });
         const contractSourceFile = project.createSourceFile(
             contractOutputFilePath,
-            tsNocheck ? '// @ts-nocheck' : '',
+            '',
             {
                 overwrite: true,
             }
@@ -214,6 +211,7 @@ async function generateCode(
             contractClientId,
             contractClientType,
             moduleRef,
+            tsNocheck,
             contractSchema
         );
 
@@ -254,14 +252,19 @@ function generateModuleBaseCode(
     moduleRef: SDK.ModuleReference.Type,
     moduleClientId: string,
     moduleClientType: string,
-    internalModuleClientId: string
+    internalModuleClientId: string,
+    tsNocheck: boolean
 ) {
     const moduleRefId = 'moduleReference';
 
-    moduleSourceFile.addImportDeclaration({
-        namespaceImport: 'SDK',
-        moduleSpecifier: '@concordium/web-sdk',
-    });
+    moduleSourceFile.addStatements([
+        tsNocheck ? '// @ts-nocheck' : '',
+        {
+            kind: tsm.StructureKind.ImportDeclaration,
+            namespaceImport: 'SDK',
+            moduleSpecifier: '@concordium/web-sdk',
+        },
+    ]);
 
     moduleSourceFile.addVariableStatement({
         isExported: true,
@@ -574,6 +577,7 @@ function generateContractBaseCode(
     contractClientId: string,
     contractClientType: string,
     moduleRef: SDK.ModuleReference.Type,
+    tsNocheck: boolean,
     contractSchema?: SDK.SchemaContractV3
 ) {
     const moduleRefId = 'moduleReference';
@@ -583,10 +587,14 @@ function generateContractBaseCode(
     const contractAddressId = 'contractAddress';
     const blockHashId = 'blockHash';
 
-    contractSourceFile.addImportDeclaration({
-        namespaceImport: 'SDK',
-        moduleSpecifier: '@concordium/web-sdk',
-    });
+    contractSourceFile.addStatements([
+        tsNocheck ? '// @ts-nocheck' : '',
+        {
+            kind: tsm.StructureKind.ImportDeclaration,
+            namespaceImport: 'SDK',
+            moduleSpecifier: '@concordium/web-sdk',
+        },
+    ]);
 
     contractSourceFile.addVariableStatement({
         docs: [

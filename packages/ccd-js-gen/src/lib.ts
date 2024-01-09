@@ -41,6 +41,8 @@ export type Progress = {
     doneItems: number;
     /** Number of milliseconds spent on the previous item. */
     spentTime: number;
+    /** Description of the item being completed. */
+    description: string;
 };
 
 /**
@@ -85,12 +87,27 @@ export async function generateContractClients(
     outDirPath: string,
     options: GenerateContractClientsOptions = {}
 ): Promise<void> {
+    const notifier = new Notifier(options.onProgress);
     const outputOption = options.output ?? 'Everything';
+    const outputTypeScript =
+        outputOption === 'Everything' || outputOption === 'TypeScript';
+    const outputJavaScript =
+        outputOption === 'Everything' ||
+        outputOption === 'JavaScript' ||
+        outputOption === 'TypedJavaScript';
+    const outputDeclarations =
+        outputOption === 'Everything' || outputOption === 'TypedJavaScript';
+
+    if (outputTypeScript) {
+        notifier.todo(1);
+    }
+    if (outputJavaScript) {
+        notifier.todo(1);
+    }
 
     const compilerOptions: tsm.CompilerOptions = {
         outDir: outDirPath,
-        declaration:
-            outputOption === 'Everything' || outputOption === 'TypedJavaScript',
+        declaration: outputDeclarations,
     };
     const project = new tsm.Project({ compilerOptions });
 
@@ -100,18 +117,52 @@ export async function generateContractClients(
         outDirPath,
         moduleSource,
         options.tsNocheck ?? false,
-        options.onProgress
+        notifier
     );
 
-    if (outputOption === 'Everything' || outputOption === 'TypeScript') {
+    if (outputTypeScript) {
         await project.save();
+        notifier.done('Saving generated TypeScript files.');
     }
-    if (
-        outputOption === 'Everything' ||
-        outputOption === 'JavaScript' ||
-        outputOption === 'TypedJavaScript'
-    ) {
+    if (outputJavaScript) {
         await project.emit();
+        notifier.done('Emitting JavaScript files.');
+    }
+}
+
+/** Wrapper around the NotifyProgress callback for tracking and reporting progress state. */
+class Notifier {
+    constructor(private notifyProgress?: NotifyProgress) {}
+    /** Total number of items to do. */
+    private totalItems = 0;
+    /** Total number of items done so far. */
+    private doneItems = 0;
+    /** Timestamp for last reporting or creation,
+     * this is used to measure the time spent between reporting items done. */
+    private startTime = Date.now();
+    /**
+     * Increment the total number of items to do.
+     * @param {number} todoItems The amount to increment it with.
+     */
+    todo(todoItems: number) {
+        this.totalItems += todoItems;
+    }
+    /**
+     * Mark an item as done, note the time and report progress.
+     * This restarts the timer for the next task.
+     * @param {string} description A description of the item which is done.
+     */
+    done(description: string) {
+        const now = Date.now();
+        this.doneItems += 1;
+        this.notifyProgress?.({
+            type: 'Progress',
+            totalItems: this.totalItems,
+            doneItems: this.doneItems,
+            spentTime: now - this.startTime,
+            description,
+        });
+        this.startTime = now;
     }
 }
 
@@ -122,7 +173,7 @@ export async function generateContractClients(
  * @param {string} outDirPath The directory to use for outputting files.
  * @param {SDK.VersionedModuleSource} moduleSource The source of the smart contract module.
  * @param {boolean} tsNocheck When `true` generate `// @ts-nocheck` annotations in each file.
- * @param {NotifyProgress} [notifyProgress] Callback to report progress.
+ * @param {Notifier} notifier Callback to report progress.
  */
 async function generateCode(
     project: tsm.Project,
@@ -130,7 +181,7 @@ async function generateCode(
     outDirPath: string,
     moduleSource: SDK.VersionedModuleSource,
     tsNocheck: boolean,
-    notifyProgress?: NotifyProgress
+    notifier: Notifier
 ) {
     const [moduleInterface, moduleRef, rawModuleSchema] = await Promise.all([
         SDK.parseModuleInterface(moduleSource),
@@ -138,12 +189,14 @@ async function generateCode(
         SDK.getEmbeddedModuleSchema(moduleSource),
     ]);
 
-    let totalItems = 0;
+    notifier.todo(2); // Parsing and adding base statements to module.
     for (const contracts of moduleInterface.values()) {
-        totalItems += contracts.entrypointNames.size;
+        // Add initialize function to module and base statements to contract source files.
+        notifier.todo(2);
+        // Adding entrypoint functions to contract.
+        notifier.todo(contracts.entrypointNames.size);
     }
-    let doneItems = 0;
-    notifyProgress?.({ type: 'Progress', totalItems, doneItems, spentTime: 0 });
+    notifier.done('Parse smart contract module.');
 
     const moduleSchema =
         rawModuleSchema === null
@@ -162,27 +215,33 @@ async function generateCode(
     const moduleClientType = `${toPascalCase(outModuleName)}Module`;
     const internalModuleClientId = 'internalModuleClient';
 
-    generateModuleBaseCode(
-        moduleSourceFile,
-        moduleRef,
-        moduleClientId,
-        moduleClientType,
-        internalModuleClientId,
-        tsNocheck
+    moduleSourceFile.addStatements(
+        generateModuleBaseStatements(
+            moduleRef,
+            moduleClientId,
+            moduleClientType,
+            internalModuleClientId,
+            tsNocheck
+        )
     );
+    notifier.done('Generate base statements in module.');
 
     for (const contract of moduleInterface.values()) {
         const contractSchema: SDK.SchemaContractV3 | undefined =
             moduleSchema?.module.contracts.get(contract.contractName);
 
-        generactionModuleContractCode(
-            moduleSourceFile,
-            contract.contractName,
-            moduleClientId,
-            moduleClientType,
-            internalModuleClientId,
-            moduleRef,
-            contractSchema
+        moduleSourceFile.addStatements(
+            generateModuleContractStatements(
+                contract.contractName,
+                moduleClientId,
+                moduleClientType,
+                internalModuleClientId,
+                moduleRef,
+                contractSchema
+            )
+        );
+        notifier.done(
+            `Generate initialize statements for '${contract.contractName}' in module.`
         );
 
         const contractOutputFilePath = path.format({
@@ -205,68 +264,68 @@ async function generateCode(
         )}Contract`;
         const contractClientId = 'contractClient';
 
-        generateContractBaseCode(
-            contractSourceFile,
-            contract.contractName,
-            contractClientId,
-            contractClientType,
-            moduleRef,
-            tsNocheck,
-            contractSchema
-        );
-
-        for (const entrypointName of contract.entrypointNames) {
-            const startTime = Date.now();
-            const entrypointSchema =
-                contractSchema?.receive.get(entrypointName);
-            generateContractEntrypointCode(
-                contractSourceFile,
+        contractSourceFile.addStatements(
+            generateContractBaseStatements(
                 contract.contractName,
                 contractClientId,
                 contractClientType,
-                entrypointName,
-                entrypointSchema
+                moduleRef,
+                tsNocheck,
+                contractSchema
+            )
+        );
+        notifier.done(
+            `Generate base statements for '${contract.contractName}'.`
+        );
+
+        for (const entrypointName of contract.entrypointNames) {
+            const entrypointSchema =
+                contractSchema?.receive.get(entrypointName);
+            contractSourceFile.addStatements(
+                generateContractEntrypointStatements(
+                    contract.contractName,
+                    contractClientId,
+                    contractClientType,
+                    entrypointName,
+                    entrypointSchema
+                )
             );
-            const spentTime = Date.now() - startTime;
-            doneItems++;
-            notifyProgress?.({
-                type: 'Progress',
-                totalItems,
-                doneItems,
-                spentTime,
-            });
+            notifier.done(
+                `Generate statements for '${contract.contractName}.${entrypointName}'.`
+            );
         }
     }
 }
 
 /**
  * Generate code for a smart contract module client.
- * @param moduleSourceFile The sourcefile of the module.
  * @param moduleRef The module reference.
  * @param moduleClientId The identifier to use for the module client.
  * @param moduleClientType The identifier to use for the type of the module client.
+ * @param tsNocheck When `true` generate `// @ts-nocheck` annotations in each file.
  * @param internalModuleClientId The identifier to use for referencing the internal module client.
  */
-function generateModuleBaseCode(
-    moduleSourceFile: tsm.SourceFile,
+function generateModuleBaseStatements(
     moduleRef: SDK.ModuleReference.Type,
     moduleClientId: string,
     moduleClientType: string,
     internalModuleClientId: string,
     tsNocheck: boolean
-) {
+): Array<tsm.StatementStructures | string> {
+    const statements: Array<tsm.StatementStructures | string> = [];
     const moduleRefId = 'moduleReference';
+    if (tsNocheck) {
+        statements.push('// @ts-nocheck');
+    }
 
-    moduleSourceFile.addStatements([
-        tsNocheck ? '// @ts-nocheck' : '',
-        {
-            kind: tsm.StructureKind.ImportDeclaration,
-            namespaceImport: 'SDK',
-            moduleSpecifier: '@concordium/web-sdk',
-        },
-    ]);
+    statements.push({
+        kind: tsm.StructureKind.ImportDeclaration,
+        namespaceImport: 'SDK',
+        moduleSpecifier: '@concordium/web-sdk',
+    });
 
-    moduleSourceFile.addVariableStatement({
+    statements.push({
+        kind: tsm.StructureKind.VariableStatement,
         isExported: true,
         declarationKind: tsm.VariableDeclarationKind.Const,
         docs: [
@@ -281,7 +340,8 @@ function generateModuleBaseCode(
         ],
     });
 
-    const moduleClassDecl = moduleSourceFile.addClass({
+    statements.push({
+        kind: tsm.StructureKind.Class,
         docs: [
             `Client for an on-chain smart contract module with module reference '${moduleRef.moduleRef}', can be used for instantiating new smart contract instances.`,
         ],
@@ -303,25 +363,24 @@ function generateModuleBaseCode(
                 type: 'SDK.ModuleClient.Type',
             },
         ],
+        ctors: [
+            {
+                docs: [
+                    'Constructor is only ment to be used internally in this module. Use functions such as `create` or `createUnchecked` for construction.',
+                ],
+                parameters: [
+                    {
+                        name: internalModuleClientId,
+                        type: 'SDK.ModuleClient.Type',
+                    },
+                ],
+                statements: `this.${internalModuleClientId} = ${internalModuleClientId};`,
+            },
+        ],
     });
 
-    moduleClassDecl
-        .addConstructor({
-            docs: [
-                'Constructor is only ment to be used internally in this module. Use functions such as `create` or `createUnchecked` for construction.',
-            ],
-            parameters: [
-                {
-                    name: internalModuleClientId,
-                    type: 'SDK.ModuleClient.Type',
-                },
-            ],
-        })
-        .setBodyText(
-            `this.${internalModuleClientId} = ${internalModuleClientId};`
-        );
-
-    moduleSourceFile.addTypeAlias({
+    statements.push({
+        kind: tsm.StructureKind.TypeAlias,
         docs: [
             `Client for an on-chain smart contract module with module reference '${moduleRef.moduleRef}', can be used for instantiating new smart contract instances.`,
         ],
@@ -331,130 +390,123 @@ function generateModuleBaseCode(
     });
 
     const grpcClientId = 'grpcClient';
-    moduleSourceFile
-        .addFunction({
-            docs: [
-                [
-                    `Construct a ${moduleClientType} client for interacting with a smart contract module on chain.`,
-                    'This function ensures the smart contract module is deployed on chain.',
-                    `@param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The concordium node client to use.`,
-                    '@throws If failing to communicate with the concordium node or if the module reference is not present on chain.',
-                    `@returns {${moduleClientType}} A module client ensured to be deployed on chain.`,
-                ].join('\n'),
-            ],
-            isExported: true,
-            isAsync: true,
-            name: 'create',
-            parameters: [
-                {
-                    name: grpcClientId,
-                    type: 'SDK.ConcordiumGRPCClient',
-                },
-            ],
-            returnType: `Promise<${moduleClientType}>`,
-        })
-        .setBodyText(
+    statements.push({
+        kind: tsm.StructureKind.Function,
+        docs: [
             [
-                `const moduleClient = await SDK.ModuleClient.create(${grpcClientId}, ${moduleRefId});`,
-                `return new ${moduleClientType}(moduleClient);`,
-            ].join('\n')
-        );
-    moduleSourceFile
-        .addFunction({
-            docs: [
-                [
-                    `Construct a ${moduleClientType} client for interacting with a smart contract module on chain.`,
-                    'It is up to the caller to ensure the module is deployed on chain.',
-                    `@param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The concordium node client to use.`,
-                    `@returns {${moduleClientType}}`,
-                ].join('\n'),
-            ],
-            isExported: true,
-            name: 'createUnchecked',
-            parameters: [
-                {
-                    name: grpcClientId,
-                    type: 'SDK.ConcordiumGRPCClient',
-                },
-            ],
-            returnType: `${moduleClientType}`,
-        })
-        .setBodyText(
+                `Construct a ${moduleClientType} client for interacting with a smart contract module on chain.`,
+                'This function ensures the smart contract module is deployed on chain.',
+                `@param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The concordium node client to use.`,
+                '@throws If failing to communicate with the concordium node or if the module reference is not present on chain.',
+                `@returns {${moduleClientType}} A module client ensured to be deployed on chain.`,
+            ].join('\n'),
+        ],
+        isExported: true,
+        isAsync: true,
+        name: 'create',
+        parameters: [
+            {
+                name: grpcClientId,
+                type: 'SDK.ConcordiumGRPCClient',
+            },
+        ],
+        returnType: `Promise<${moduleClientType}>`,
+        statements: [
+            `const moduleClient = await SDK.ModuleClient.create(${grpcClientId}, ${moduleRefId});`,
+            `return new ${moduleClientType}(moduleClient);`,
+        ],
+    });
+    statements.push({
+        kind: tsm.StructureKind.Function,
+        docs: [
             [
-                `const moduleClient = SDK.ModuleClient.createUnchecked(${grpcClientId}, ${moduleRefId});`,
-                `return new ${moduleClientType}(moduleClient);`,
-            ].join('\n')
-        );
+                `Construct a ${moduleClientType} client for interacting with a smart contract module on chain.`,
+                'It is up to the caller to ensure the module is deployed on chain.',
+                `@param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The concordium node client to use.`,
+                `@returns {${moduleClientType}}`,
+            ].join('\n'),
+        ],
+        isExported: true,
+        name: 'createUnchecked',
+        parameters: [
+            {
+                name: grpcClientId,
+                type: 'SDK.ConcordiumGRPCClient',
+            },
+        ],
+        returnType: `${moduleClientType}`,
+        statements: [
+            `const moduleClient = SDK.ModuleClient.createUnchecked(${grpcClientId}, ${moduleRefId});`,
+            `return new ${moduleClientType}(moduleClient);`,
+        ],
+    });
 
-    moduleSourceFile
-        .addFunction({
-            docs: [
-                [
-                    `Construct a ${moduleClientType} client for interacting with a smart contract module on chain.`,
-                    'This function ensures the smart contract module is deployed on chain.',
-                    `@param {${moduleClientType}} ${moduleClientId} - The client of the on-chain smart contract module with referecence '${moduleRef.moduleRef}'.`,
-                    '@throws If failing to communicate with the concordium node or if the module reference is not present on chain.',
-                    `@returns {${moduleClientType}} A module client ensured to be deployed on chain.`,
-                ].join('\n'),
-            ],
-            isExported: true,
-            name: 'checkOnChain',
-            parameters: [
-                {
-                    name: moduleClientId,
-                    type: moduleClientType,
-                },
-            ],
-            returnType: 'Promise<void>',
-        })
-        .setBodyText(
-            `return SDK.ModuleClient.checkOnChain(${moduleClientId}.${internalModuleClientId});`
-        );
+    statements.push({
+        kind: tsm.StructureKind.Function,
+        docs: [
+            [
+                `Construct a ${moduleClientType} client for interacting with a smart contract module on chain.`,
+                'This function ensures the smart contract module is deployed on chain.',
+                `@param {${moduleClientType}} ${moduleClientId} - The client of the on-chain smart contract module with referecence '${moduleRef.moduleRef}'.`,
+                '@throws If failing to communicate with the concordium node or if the module reference is not present on chain.',
+                `@returns {${moduleClientType}} A module client ensured to be deployed on chain.`,
+            ].join('\n'),
+        ],
+        isExported: true,
+        name: 'checkOnChain',
+        parameters: [
+            {
+                name: moduleClientId,
+                type: moduleClientType,
+            },
+        ],
+        returnType: 'Promise<void>',
+        statements: `return SDK.ModuleClient.checkOnChain(${moduleClientId}.${internalModuleClientId});`,
+    });
 
-    moduleSourceFile
-        .addFunction({
-            docs: [
-                [
-                    'Get the module source of the deployed smart contract module.',
-                    `@param {${moduleClientType}} ${moduleClientId} - The client of the on-chain smart contract module with referecence '${moduleRef.moduleRef}'.`,
-                    '@throws {SDK.RpcError} If failing to communicate with the concordium node or module not found.',
-                    '@returns {SDK.VersionedModuleSource} Module source of the deployed smart contract module.',
-                ].join('\n'),
-            ],
-            isExported: true,
-            name: 'getModuleSource',
-            parameters: [
-                {
-                    name: moduleClientId,
-                    type: moduleClientType,
-                },
-            ],
-            returnType: 'Promise<SDK.VersionedModuleSource>',
-        })
-        .setBodyText(
-            `return SDK.ModuleClient.getModuleSource(${moduleClientId}.${internalModuleClientId});`
-        );
+    statements.push({
+        kind: tsm.StructureKind.Function,
+        docs: [
+            [
+                'Get the module source of the deployed smart contract module.',
+                `@param {${moduleClientType}} ${moduleClientId} - The client of the on-chain smart contract module with referecence '${moduleRef.moduleRef}'.`,
+                '@throws {SDK.RpcError} If failing to communicate with the concordium node or module not found.',
+                '@returns {SDK.VersionedModuleSource} Module source of the deployed smart contract module.',
+            ].join('\n'),
+        ],
+        isExported: true,
+        name: 'getModuleSource',
+        parameters: [
+            {
+                name: moduleClientId,
+                type: moduleClientType,
+            },
+        ],
+        returnType: 'Promise<SDK.VersionedModuleSource>',
+        statements: `return SDK.ModuleClient.getModuleSource(${moduleClientId}.${internalModuleClientId});`,
+    });
+    return statements;
 }
 
 /**
  * Generate code in the module client specific to each contract in the module.
- * @param {tsm.SourceFile} moduleSourceFile The sourcefile of the module client.
  * @param {string} contractName The name of the contract.
  * @param {string} moduleClientId The identifier for the module client.
  * @param {string} moduleClientType The identifier for the type of the module client.
  * @param {string} internalModuleClientId The identifier for the internal module client.
  * @param {SDK.ModuleReference.Type} moduleRef The reference of the module.
  * @param {SDK.SchemaContractV3} [contractSchema] The contract schema.
+ * @returns {tsm.StatementStructures[]} List of statements to be included in the module source file.
  */
-function generactionModuleContractCode(
-    moduleSourceFile: tsm.SourceFile,
+function generateModuleContractStatements(
     contractName: string,
     moduleClientId: string,
     moduleClientType: string,
     internalModuleClientId: string,
     moduleRef: SDK.ModuleReference.Type,
     contractSchema?: SDK.SchemaContractV3
-) {
+): tsm.StatementStructures[] {
+    const statements: tsm.StatementStructures[] = [];
     const transactionMetadataId = 'transactionMetadata';
     const parameterId = 'parameter';
     const signerId = 'signer';
@@ -478,7 +530,8 @@ function generactionModuleContractCode(
     const initParameterSchemaType = contractSchema?.init?.parameter;
 
     if (initParameterSchemaType !== undefined) {
-        moduleSourceFile.addVariableStatement({
+        statements.push({
+            kind: tsm.StructureKind.VariableStatement,
             docs: [
                 `Base64 encoding of the parameter schema type used when instantiating a new '${contractName}' smart contract instance.`,
             ],
@@ -492,9 +545,9 @@ function generactionModuleContractCode(
                 },
             ],
         });
-
         const typeAndMapper = schemaAsNativeType(initParameterSchemaType);
-        moduleSourceFile.addTypeAlias({
+        statements.push({
+            kind: tsm.StructureKind.TypeAlias,
             docs: [
                 `Parameter JSON type needed by the schema when instantiating a new '${contractName}' smart contract instance.`,
             ],
@@ -503,7 +556,8 @@ function generactionModuleContractCode(
         });
 
         if (initParameterSchemaType.type !== 'Unit') {
-            moduleSourceFile.addTypeAlias({
+            statements.push({
+                kind: tsm.StructureKind.TypeAlias,
                 docs: [
                     `Parameter type transaction for instantiating a new '${contractName}' smart contract instance.`,
                 ],
@@ -513,7 +567,8 @@ function generactionModuleContractCode(
             });
 
             const mappedParameter = typeAndMapper.nativeToJson(parameterId);
-            moduleSourceFile.addFunction({
+            statements.push({
+                kind: tsm.StructureKind.Function,
                 docs: [
                     [
                         `Construct schema JSON representation used in transactions for instantiating a new '${contractName}' smart contract instance.`,
@@ -534,7 +589,8 @@ function generactionModuleContractCode(
                     `return ${mappedParameter.id};`,
                 ],
             });
-            moduleSourceFile.addFunction({
+            statements.push({
+                kind: tsm.StructureKind.Function,
                 docs: [
                     [
                         `Construct Parameter type used in transactions for instantiating a new '${contractName}' smart contract instance.`,
@@ -556,7 +612,8 @@ function generactionModuleContractCode(
                 ],
             });
 
-            moduleSourceFile.addFunction({
+            statements.push({
+                kind: tsm.StructureKind.Function,
                 docs: [
                     [
                         `Construct WebWallet parameter type used in transactions for instantiating a new '${contractName}' smart contract instance.`,
@@ -584,7 +641,8 @@ function generactionModuleContractCode(
             });
         }
     } else {
-        moduleSourceFile.addTypeAlias({
+        statements.push({
+            kind: tsm.StructureKind.TypeAlias,
             docs: [
                 `Parameter type transaction for instantiating a new '${contractName}' smart contract instance.`,
             ],
@@ -596,84 +654,85 @@ function generactionModuleContractCode(
 
     const initTakesNoParameter = initParameterSchemaType?.type === 'Unit';
 
-    moduleSourceFile
-        .addFunction({
-            docs: [
-                [
-                    `Send transaction for instantiating a new '${contractName}' smart contract instance.`,
-                    `@param {${moduleClientType}} ${moduleClientId} - The client of the on-chain smart contract module with referecence '${moduleRef.moduleRef}'.`,
-                    `@param {SDK.ContractTransactionMetadata} ${transactionMetadataId} - Metadata related to constructing a transaction for a smart contract module.`,
-                    ...(initTakesNoParameter
-                        ? []
-                        : [
-                              `@param {${initParameterTypeId}} ${parameterId} - Parameter to provide as part of the transaction for the instantiation of a new smart contract contract.`,
-                          ]),
-                    `@param {SDK.AccountSigner} ${signerId} - The signer of the update contract transaction.`,
-                    '@throws If failing to communicate with the concordium node.',
-                    '@returns {SDK.TransactionHash.Type}',
-                ].join('\n'),
-            ],
-            isExported: true,
-            name: `instantiate${toPascalCase(contractName)}`,
-            parameters: [
-                {
-                    name: moduleClientId,
-                    type: moduleClientType,
-                },
-                {
-                    name: transactionMetadataId,
-                    type: 'SDK.ContractTransactionMetadata',
-                },
+    statements.push({
+        kind: tsm.StructureKind.Function,
+        docs: [
+            [
+                `Send transaction for instantiating a new '${contractName}' smart contract instance.`,
+                `@param {${moduleClientType}} ${moduleClientId} - The client of the on-chain smart contract module with referecence '${moduleRef.moduleRef}'.`,
+                `@param {SDK.ContractTransactionMetadata} ${transactionMetadataId} - Metadata related to constructing a transaction for a smart contract module.`,
                 ...(initTakesNoParameter
                     ? []
                     : [
-                          {
-                              name: parameterId,
-                              type: initParameterTypeId,
-                          },
+                          `@param {${initParameterTypeId}} ${parameterId} - Parameter to provide as part of the transaction for the instantiation of a new smart contract contract.`,
                       ]),
-                {
-                    name: signerId,
-                    type: 'SDK.AccountSigner',
-                },
-            ],
-            returnType: 'Promise<SDK.TransactionHash.Type>',
-        })
-        .setBodyText(
-            [
-                'return SDK.ModuleClient.createAndSendInitTransaction(',
-                `    ${moduleClientId}.${internalModuleClientId},`,
-                `    SDK.ContractName.fromStringUnchecked('${contractName}'),`,
-                `    ${transactionMetadataId},`,
-                ...(initParameterSchemaType === undefined
-                    ? [`    ${parameterId},`]
-                    : initParameterSchemaType.type === 'Unit'
-                    ? []
-                    : [`    ${createInitParameterFnId}(${parameterId}),`]),
-                `    ${signerId}`,
-                ');',
-            ].join('\n')
-        );
+                `@param {SDK.AccountSigner} ${signerId} - The signer of the update contract transaction.`,
+                '@throws If failing to communicate with the concordium node.',
+                '@returns {SDK.TransactionHash.Type}',
+            ].join('\n'),
+        ],
+        isExported: true,
+        name: `instantiate${toPascalCase(contractName)}`,
+        parameters: [
+            {
+                name: moduleClientId,
+                type: moduleClientType,
+            },
+            {
+                name: transactionMetadataId,
+                type: 'SDK.ContractTransactionMetadata',
+            },
+            ...(initTakesNoParameter
+                ? []
+                : [
+                      {
+                          name: parameterId,
+                          type: initParameterTypeId,
+                      },
+                  ]),
+            {
+                name: signerId,
+                type: 'SDK.AccountSigner',
+            },
+        ],
+        returnType: 'Promise<SDK.TransactionHash.Type>',
+        statements: [
+            'return SDK.ModuleClient.createAndSendInitTransaction(',
+            `    ${moduleClientId}.${internalModuleClientId},`,
+            `    SDK.ContractName.fromStringUnchecked('${contractName}'),`,
+            `    ${transactionMetadataId},`,
+            ...(initParameterSchemaType === undefined
+                ? [`    ${parameterId},`]
+                : initParameterSchemaType.type === 'Unit'
+                ? []
+                : [`    ${createInitParameterFnId}(${parameterId}),`]),
+            `    ${signerId}`,
+            ');',
+        ],
+    });
+
+    return statements;
 }
 
 /**
  * Generate code for a smart contract instance client.
- * @param {tsm.SourceFile} contractSourceFile The sourcefile of the contract client.
  * @param {string} contractName The name of the smart contract.
  * @param {string} contractClientId The identifier to use for the contract client.
  * @param {string} contractClientType The identifier to use for the type of the contract client.
  * @param {SDK.ModuleReference.Type} moduleRef The module reference.
+ * @param {boolean} tsNocheck When `true` generate `// @ts-nocheck` annotations in each file.
  * @param {SDK.SchemaContractV3} [contractSchema] The contract schema to use in the client.
+ * @returns {Array<tsm.StatementStructures | string>} A list of statements to be included in the contract source file.
  */
-function generateContractBaseCode(
-    contractSourceFile: tsm.SourceFile,
+function generateContractBaseStatements(
     contractName: string,
     contractClientId: string,
     contractClientType: string,
     moduleRef: SDK.ModuleReference.Type,
     tsNocheck: boolean,
     contractSchema?: SDK.SchemaContractV3
-) {
+): Array<tsm.StatementStructures | string> {
+    const statements: Array<tsm.StatementStructures | string> = [];
     const moduleRefId = 'moduleReference';
     const grpcClientId = 'grpcClient';
     const contractNameId = 'contractName';
@@ -681,16 +740,17 @@ function generateContractBaseCode(
     const contractAddressId = 'contractAddress';
     const blockHashId = 'blockHash';
 
-    contractSourceFile.addStatements([
-        tsNocheck ? '// @ts-nocheck' : '',
-        {
-            kind: tsm.StructureKind.ImportDeclaration,
-            namespaceImport: 'SDK',
-            moduleSpecifier: '@concordium/web-sdk',
-        },
-    ]);
+    if (tsNocheck) {
+        statements.push('// @ts-nocheck');
+    }
+    statements.push({
+        kind: tsm.StructureKind.ImportDeclaration,
+        namespaceImport: 'SDK',
+        moduleSpecifier: '@concordium/web-sdk',
+    });
 
-    contractSourceFile.addVariableStatement({
+    statements.push({
+        kind: tsm.StructureKind.VariableStatement,
         docs: [
             'The reference of the smart contract module supported by the provided client.',
         ],
@@ -705,7 +765,8 @@ function generateContractBaseCode(
         ],
     });
 
-    contractSourceFile.addVariableStatement({
+    statements.push({
+        kind: tsm.StructureKind.VariableStatement,
         docs: ['Name of the smart contract supported by this client.'],
         isExported: true,
         declarationKind: tsm.VariableDeclarationKind.Const,
@@ -718,7 +779,8 @@ function generateContractBaseCode(
         ],
     });
 
-    const contractClassDecl = contractSourceFile.addClass({
+    statements.push({
+        kind: tsm.StructureKind.Class,
         docs: ['Smart contract client for a contract instance on chain.'],
         name: contractClientType,
         properties: [
@@ -753,195 +815,193 @@ function generateContractBaseCode(
                 type: 'SDK.Contract',
             },
         ],
+        ctors: [
+            {
+                kind: tsm.StructureKind.Constructor,
+                parameters: [
+                    { name: grpcClientId, type: 'SDK.ConcordiumGRPCClient' },
+                    {
+                        name: contractAddressId,
+                        type: 'SDK.ContractAddress.Type',
+                    },
+                    { name: genericContractId, type: 'SDK.Contract' },
+                ],
+                statements: [
+                    grpcClientId,
+                    contractAddressId,
+                    genericContractId,
+                ].map((name) => `this.${name} = ${name};`),
+            },
+        ],
     });
 
-    contractClassDecl
-        .addConstructor({
-            parameters: [
-                { name: grpcClientId, type: 'SDK.ConcordiumGRPCClient' },
-                {
-                    name: contractAddressId,
-                    type: 'SDK.ContractAddress.Type',
-                },
-                { name: genericContractId, type: 'SDK.Contract' },
-            ],
-        })
-        .setBodyText(
-            [grpcClientId, contractAddressId, genericContractId]
-                .map((name) => `this.${name} = ${name};`)
-                .join('\n')
-        );
-
-    contractSourceFile.addTypeAlias({
+    statements.push({
+        kind: tsm.StructureKind.TypeAlias,
         docs: ['Smart contract client for a contract instance on chain.'],
         name: 'Type',
         isExported: true,
         type: contractClientType,
     });
 
-    contractSourceFile
-        .addFunction({
-            docs: [
-                [
-                    `Construct an instance of \`${contractClientType}\` for interacting with a '${contractName}' contract on chain.`,
-                    'Checking the information instance on chain.',
-                    `@param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The client used for contract invocations and updates.`,
-                    `@param {SDK.ContractAddress.Type} ${contractAddressId} - Address of the contract instance.`,
-                    `@param {SDK.BlockHash.Type} [${blockHashId}] - Hash of the block to check the information at. When not provided the last finalized block is used.`,
-                    '@throws If failing to communicate with the concordium node or if any of the checks fails.',
-                    `@returns {${contractClientType}}`,
-                ].join('\n'),
-            ],
-            isExported: true,
-            isAsync: true,
-            name: 'create',
-            parameters: [
-                {
-                    name: grpcClientId,
-                    type: 'SDK.ConcordiumGRPCClient',
-                },
-                {
-                    name: contractAddressId,
-                    type: 'SDK.ContractAddress.Type',
-                },
-                {
-                    name: blockHashId,
-                    hasQuestionToken: true,
-                    type: 'SDK.BlockHash.Type',
-                },
-            ],
-            returnType: `Promise<${contractClientType}>`,
-        })
-        .setBodyText(
+    statements.push({
+        kind: tsm.StructureKind.Function,
+        docs: [
             [
-                `const ${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, ${contractNameId});`,
-                `await ${genericContractId}.checkOnChain({ moduleReference: ${moduleRefId}, blockHash: ${blockHashId} });`,
-                `return new ${contractClientType}(`,
-                `    ${grpcClientId},`,
-                `    ${contractAddressId},`,
-                `    ${genericContractId}`,
-                ');',
-            ].join('\n')
-        );
+                `Construct an instance of \`${contractClientType}\` for interacting with a '${contractName}' contract on chain.`,
+                'Checking the information instance on chain.',
+                `@param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The client used for contract invocations and updates.`,
+                `@param {SDK.ContractAddress.Type} ${contractAddressId} - Address of the contract instance.`,
+                `@param {SDK.BlockHash.Type} [${blockHashId}] - Hash of the block to check the information at. When not provided the last finalized block is used.`,
+                '@throws If failing to communicate with the concordium node or if any of the checks fails.',
+                `@returns {${contractClientType}}`,
+            ].join('\n'),
+        ],
+        isExported: true,
+        isAsync: true,
+        name: 'create',
+        parameters: [
+            {
+                name: grpcClientId,
+                type: 'SDK.ConcordiumGRPCClient',
+            },
+            {
+                name: contractAddressId,
+                type: 'SDK.ContractAddress.Type',
+            },
+            {
+                name: blockHashId,
+                hasQuestionToken: true,
+                type: 'SDK.BlockHash.Type',
+            },
+        ],
+        returnType: `Promise<${contractClientType}>`,
+        statements: [
+            `const ${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, ${contractNameId});`,
+            `await ${genericContractId}.checkOnChain({ moduleReference: ${moduleRefId}, blockHash: ${blockHashId} });`,
+            `return new ${contractClientType}(`,
+            `    ${grpcClientId},`,
+            `    ${contractAddressId},`,
+            `    ${genericContractId}`,
+            ');',
+        ],
+    });
 
-    contractSourceFile
-        .addFunction({
-            docs: [
-                [
-                    `Construct the \`${contractClientType}\` for interacting with a '${contractName}' contract on chain.`,
-                    'Without checking the instance information on chain.',
-                    `@param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The client used for contract invocations and updates.`,
-                    `@param {SDK.ContractAddress.Type} ${contractAddressId} - Address of the contract instance.`,
-                    `@returns {${contractClientType}}`,
-                ].join('\n'),
-            ],
-            isExported: true,
-            name: 'createUnchecked',
-            parameters: [
-                {
-                    name: grpcClientId,
-                    type: 'SDK.ConcordiumGRPCClient',
-                },
-                {
-                    name: contractAddressId,
-                    type: 'SDK.ContractAddress.Type',
-                },
-            ],
-            returnType: contractClientType,
-        })
-        .setBodyText(
+    statements.push({
+        kind: tsm.StructureKind.Function,
+        docs: [
             [
-                `const ${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, ${contractNameId});`,
-                `return new ${contractClientType}(`,
-                `    ${grpcClientId},`,
-                `    ${contractAddressId},`,
-                `    ${genericContractId},`,
-                ');',
-            ].join('\n')
-        );
+                `Construct the \`${contractClientType}\` for interacting with a '${contractName}' contract on chain.`,
+                'Without checking the instance information on chain.',
+                `@param {SDK.ConcordiumGRPCClient} ${grpcClientId} - The client used for contract invocations and updates.`,
+                `@param {SDK.ContractAddress.Type} ${contractAddressId} - Address of the contract instance.`,
+                `@returns {${contractClientType}}`,
+            ].join('\n'),
+        ],
+        isExported: true,
+        name: 'createUnchecked',
+        parameters: [
+            {
+                name: grpcClientId,
+                type: 'SDK.ConcordiumGRPCClient',
+            },
+            {
+                name: contractAddressId,
+                type: 'SDK.ContractAddress.Type',
+            },
+        ],
+        returnType: contractClientType,
+        statements: [
+            `const ${genericContractId} = new SDK.Contract(${grpcClientId}, ${contractAddressId}, ${contractNameId});`,
+            `return new ${contractClientType}(`,
+            `    ${grpcClientId},`,
+            `    ${contractAddressId},`,
+            `    ${genericContractId},`,
+            ');',
+        ],
+    });
 
-    contractSourceFile
-        .addFunction({
-            docs: [
-                [
-                    'Check if the smart contract instance exists on the blockchain and whether it uses a matching contract name and module reference.',
-                    `@param {${contractClientType}} ${contractClientId} The client for a '${contractName}' smart contract instance on chain.`,
-                    `@param {SDK.BlockHash.Type} [${blockHashId}] A optional block hash to use for checking information on chain, if not provided the last finalized will be used.`,
-                    '@throws {SDK.RpcError} If failing to communicate with the concordium node or if any of the checks fails.',
-                ].join('\n'),
-            ],
-            isExported: true,
-            name: 'checkOnChain',
-            parameters: [
-                {
-                    name: contractClientId,
-                    type: contractClientType,
-                },
-                {
-                    name: blockHashId,
-                    hasQuestionToken: true,
-                    type: 'SDK.BlockHash.Type',
-                },
-            ],
-            returnType: 'Promise<void>',
-        })
-        .setBodyText(
-            `return ${contractClientId}.${genericContractId}.checkOnChain({moduleReference: ${moduleRefId}, blockHash: ${blockHashId} });`
-        );
+    statements.push({
+        kind: tsm.StructureKind.Function,
+        docs: [
+            [
+                'Check if the smart contract instance exists on the blockchain and whether it uses a matching contract name and module reference.',
+                `@param {${contractClientType}} ${contractClientId} The client for a '${contractName}' smart contract instance on chain.`,
+                `@param {SDK.BlockHash.Type} [${blockHashId}] A optional block hash to use for checking information on chain, if not provided the last finalized will be used.`,
+                '@throws {SDK.RpcError} If failing to communicate with the concordium node or if any of the checks fails.',
+            ].join('\n'),
+        ],
+        isExported: true,
+        name: 'checkOnChain',
+        parameters: [
+            {
+                name: contractClientId,
+                type: contractClientType,
+            },
+            {
+                name: blockHashId,
+                hasQuestionToken: true,
+                type: 'SDK.BlockHash.Type',
+            },
+        ],
+        returnType: 'Promise<void>',
+        statements: `return ${contractClientId}.${genericContractId}.checkOnChain({moduleReference: ${moduleRefId}, blockHash: ${blockHashId} });`,
+    });
 
     const eventParameterId = 'event';
     const eventParameterTypeId = 'Event';
     const eventParser = parseEventCode(eventParameterId, contractSchema?.event);
     if (eventParser !== undefined) {
-        contractSourceFile.addTypeAlias({
+        statements.push({
+            kind: tsm.StructureKind.TypeAlias,
             docs: [`Contract event type for the '${contractName}' contract.`],
             isExported: true,
             name: eventParameterTypeId,
             type: eventParser.type,
         });
 
-        contractSourceFile
-            .addFunction({
-                docs: [
-                    [
-                        `Parse the contract events logged by the '${contractName}' contract.`,
-                        `@param {SDK.ContractEvent.Type} ${eventParameterId} The unparsed contract event.`,
-                        `@returns {${eventParameterTypeId}} The structured contract event.`,
-                    ].join('\n'),
-                ],
-                isExported: true,
-                name: 'parseEvent',
-                parameters: [
-                    {
-                        name: eventParameterId,
-                        type: 'SDK.ContractEvent.Type',
-                    },
-                ],
-                returnType: eventParameterTypeId,
-            })
-            .setBodyText(
-                [...eventParser.code, `return ${eventParser.id};`].join('\n')
-            );
+        statements.push({
+            kind: tsm.StructureKind.Function,
+            docs: [
+                [
+                    `Parse the contract events logged by the '${contractName}' contract.`,
+                    `@param {SDK.ContractEvent.Type} ${eventParameterId} The unparsed contract event.`,
+                    `@returns {${eventParameterTypeId}} The structured contract event.`,
+                ].join('\n'),
+            ],
+            isExported: true,
+            name: 'parseEvent',
+            parameters: [
+                {
+                    name: eventParameterId,
+                    type: 'SDK.ContractEvent.Type',
+                },
+            ],
+            returnType: eventParameterTypeId,
+            statements: [...eventParser.code, `return ${eventParser.id};`].join(
+                '\n'
+            ),
+        });
     }
+    return statements;
 }
 
 /**
- * Generate contract client code for each entrypoint.
- * @param {tsm.SourceFile} contractSourceFile The sourcefile of the contract.
+ * Generate contract client statements for an entrypoint.
  * @param {string} contractName The name of the contract.
  * @param {string} contractClientId The identifier to use for the contract client.
  * @param {string} contractClientType The identifier to use for the type of the contract client.
  * @param {string} entrypointName The name of the entrypoint.
  * @param {SDK.SchemaFunctionV2} [entrypointSchema] The schema to use for the entrypoint.
+ * @return {tsm.StatementStructures[]} List of statements related to an entrypoint.
  */
-function generateContractEntrypointCode(
-    contractSourceFile: tsm.SourceFile,
+function generateContractEntrypointStatements(
     contractName: string,
     contractClientId: string,
     contractClientType: string,
     entrypointName: string,
     entrypointSchema?: SDK.SchemaFunctionV2
-) {
+): tsm.StatementStructures[] {
+    const statements: tsm.StatementStructures[] = [];
     const invokeMetadataId = 'invokeMetadata';
     const parameterId = 'parameter';
     const transactionMetadataId = 'transactionMetadata';
@@ -968,7 +1028,8 @@ function generateContractEntrypointCode(
     const receiveParameterSchemaType = entrypointSchema?.parameter;
 
     if (receiveParameterSchemaType !== undefined) {
-        contractSourceFile.addVariableStatement({
+        statements.push({
+            kind: tsm.StructureKind.VariableStatement,
             docs: [
                 `Base64 encoding of the parameter schema type for update transactions to '${entrypointName}' entrypoint of the '${contractName}' contract.`,
             ],
@@ -984,7 +1045,8 @@ function generateContractEntrypointCode(
         });
 
         const typeAndMapper = schemaAsNativeType(receiveParameterSchemaType);
-        contractSourceFile.addTypeAlias({
+        statements.push({
+            kind: tsm.StructureKind.TypeAlias,
             docs: [
                 `Parameter JSON type needed by the schema for update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
             ],
@@ -992,7 +1054,8 @@ function generateContractEntrypointCode(
             type: typeAndMapper.jsonType,
         });
         if (receiveParameterSchemaType.type !== 'Unit') {
-            contractSourceFile.addTypeAlias({
+            statements.push({
+                kind: tsm.StructureKind.TypeAlias,
                 docs: [
                     `Parameter type for update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
                 ],
@@ -1003,7 +1066,8 @@ function generateContractEntrypointCode(
 
             const mappedParameter = typeAndMapper.nativeToJson(parameterId);
 
-            contractSourceFile.addFunction({
+            statements.push({
+                kind: tsm.StructureKind.Function,
                 docs: [
                     [
                         `Construct schema JSON representation used in update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
@@ -1024,7 +1088,8 @@ function generateContractEntrypointCode(
                     `return ${mappedParameter.id};`,
                 ],
             });
-            contractSourceFile.addFunction({
+            statements.push({
+                kind: tsm.StructureKind.Function,
                 docs: [
                     [
                         `Construct Parameter type used in update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
@@ -1046,7 +1111,8 @@ function generateContractEntrypointCode(
                 ],
             });
 
-            contractSourceFile.addFunction({
+            statements.push({
+                kind: tsm.StructureKind.Function,
                 docs: [
                     [
                         `Construct WebWallet parameter type used in update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
@@ -1074,7 +1140,8 @@ function generateContractEntrypointCode(
             });
         }
     } else {
-        contractSourceFile.addTypeAlias({
+        statements.push({
+            kind: tsm.StructureKind.TypeAlias,
             docs: [
                 `Parameter type  used in update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
             ],
@@ -1086,125 +1153,121 @@ function generateContractEntrypointCode(
 
     const receiveTakesNoParameter = receiveParameterSchemaType?.type === 'Unit';
 
-    contractSourceFile
-        .addFunction({
-            docs: [
-                [
-                    `Send an update-contract transaction to the '${entrypointName}' entrypoint of the '${contractName}' contract.`,
-                    `@param {${contractClientType}} ${contractClientId} The client for a '${contractName}' smart contract instance on chain.`,
-                    `@param {SDK.ContractTransactionMetadata} ${transactionMetadataId} - Metadata related to constructing a transaction for a smart contract.`,
-                    ...(receiveTakesNoParameter
-                        ? []
-                        : [
-                              `@param {${receiveParameterTypeId}} ${parameterId} - Parameter to provide the smart contract entrypoint as part of the transaction.`,
-                          ]),
-                    `@param {SDK.AccountSigner} ${signerId} - The signer of the update contract transaction.`,
-                    '@throws If the entrypoint is not successfully invoked.',
-                    '@returns {SDK.TransactionHash.Type} Hash of the transaction.',
-                ].join('\n'),
-            ],
-            isExported: true,
-            name: `send${toPascalCase(entrypointName)}`,
-            parameters: [
-                {
-                    name: contractClientId,
-                    type: contractClientType,
-                },
-                {
-                    name: transactionMetadataId,
-                    type: 'SDK.ContractTransactionMetadata',
-                },
+    statements.push({
+        kind: tsm.StructureKind.Function,
+        docs: [
+            [
+                `Send an update-contract transaction to the '${entrypointName}' entrypoint of the '${contractName}' contract.`,
+                `@param {${contractClientType}} ${contractClientId} The client for a '${contractName}' smart contract instance on chain.`,
+                `@param {SDK.ContractTransactionMetadata} ${transactionMetadataId} - Metadata related to constructing a transaction for a smart contract.`,
                 ...(receiveTakesNoParameter
                     ? []
                     : [
-                          {
-                              name: parameterId,
-                              type: receiveParameterTypeId,
-                          },
+                          `@param {${receiveParameterTypeId}} ${parameterId} - Parameter to provide the smart contract entrypoint as part of the transaction.`,
                       ]),
-                {
-                    name: signerId,
-                    type: 'SDK.AccountSigner',
-                },
-            ],
-            returnType: 'Promise<SDK.TransactionHash.Type>',
-        })
-        .setBodyText(
-            [
-                `return ${contractClientId}.${genericContractId}.createAndSendUpdateTransaction(`,
-                `    SDK.EntrypointName.fromStringUnchecked('${entrypointName}'),`,
-                '    SDK.Parameter.toBuffer,',
-                `    ${transactionMetadataId},`,
-                ...(receiveParameterSchemaType === undefined
-                    ? [`    ${parameterId},`]
-                    : receiveParameterSchemaType.type === 'Unit'
-                    ? []
-                    : [`    ${createReceiveParameterFnId}(${parameterId}),`]),
-                `    ${signerId}`,
-                ');',
-            ].join('\n')
-        );
+                `@param {SDK.AccountSigner} ${signerId} - The signer of the update contract transaction.`,
+                '@throws If the entrypoint is not successfully invoked.',
+                '@returns {SDK.TransactionHash.Type} Hash of the transaction.',
+            ].join('\n'),
+        ],
+        isExported: true,
+        name: `send${toPascalCase(entrypointName)}`,
+        parameters: [
+            {
+                name: contractClientId,
+                type: contractClientType,
+            },
+            {
+                name: transactionMetadataId,
+                type: 'SDK.ContractTransactionMetadata',
+            },
+            ...(receiveTakesNoParameter
+                ? []
+                : [
+                      {
+                          name: parameterId,
+                          type: receiveParameterTypeId,
+                      },
+                  ]),
+            {
+                name: signerId,
+                type: 'SDK.AccountSigner',
+            },
+        ],
+        returnType: 'Promise<SDK.TransactionHash.Type>',
+        statements: [
+            `return ${contractClientId}.${genericContractId}.createAndSendUpdateTransaction(`,
+            `    SDK.EntrypointName.fromStringUnchecked('${entrypointName}'),`,
+            '    SDK.Parameter.toBuffer,',
+            `    ${transactionMetadataId},`,
+            ...(receiveParameterSchemaType === undefined
+                ? [`    ${parameterId},`]
+                : receiveParameterSchemaType.type === 'Unit'
+                ? []
+                : [`    ${createReceiveParameterFnId}(${parameterId}),`]),
+            `    ${signerId}`,
+            ');',
+        ],
+    });
 
-    contractSourceFile
-        .addFunction({
-            docs: [
-                [
-                    `Dry-run an update-contract transaction to the '${entrypointName}' entrypoint of the '${contractName}' contract.`,
-                    `@param {${contractClientType}} ${contractClientId} The client for a '${contractName}' smart contract instance on chain.`,
-                    `@param {SDK.ContractAddress.Type | SDK.AccountAddress.Type} ${invokeMetadataId} - The address of the account or contract which is invoking this transaction.`,
-                    ...(receiveTakesNoParameter
-                        ? []
-                        : [
-                              `@param {${receiveParameterTypeId}} ${parameterId} - Parameter to provide the smart contract entrypoint as part of the transaction.`,
-                          ]),
-                    `@param {SDK.BlockHash.Type} [${blockHashId}] - Optional block hash allowing for dry-running the transaction at the end of a specific block.`,
-                    '@throws {SDK.RpcError} If failing to communicate with the concordium node or if any of the checks fails.',
-                    '@returns {SDK.InvokeContractResult} The result of invoking the smart contract instance.',
-                ].join('\n'),
-            ],
-            isExported: true,
-            name: `dryRun${toPascalCase(entrypointName)}`,
-            parameters: [
-                {
-                    name: contractClientId,
-                    type: contractClientType,
-                },
+    statements.push({
+        kind: tsm.StructureKind.Function,
+        docs: [
+            [
+                `Dry-run an update-contract transaction to the '${entrypointName}' entrypoint of the '${contractName}' contract.`,
+                `@param {${contractClientType}} ${contractClientId} The client for a '${contractName}' smart contract instance on chain.`,
+                `@param {SDK.ContractAddress.Type | SDK.AccountAddress.Type} ${invokeMetadataId} - The address of the account or contract which is invoking this transaction.`,
                 ...(receiveTakesNoParameter
                     ? []
                     : [
-                          {
-                              name: parameterId,
-                              type: receiveParameterTypeId,
-                          },
+                          `@param {${receiveParameterTypeId}} ${parameterId} - Parameter to provide the smart contract entrypoint as part of the transaction.`,
                       ]),
-                {
-                    name: invokeMetadataId,
-                    type: 'SDK.ContractInvokeMetadata',
-                    initializer: '{}',
-                },
-                {
-                    name: blockHashId,
-                    hasQuestionToken: true,
-                    type: 'SDK.BlockHash.Type',
-                },
-            ],
-            returnType: 'Promise<SDK.InvokeContractResult>',
-        })
-        .setBodyText(
-            [
-                `return ${contractClientId}.${genericContractId}.dryRun.invokeMethod(`,
-                `    SDK.EntrypointName.fromStringUnchecked('${entrypointName}'),`,
-                `    ${invokeMetadataId},`,
-                '    SDK.Parameter.toBuffer,',
-                ...(receiveParameterSchemaType === undefined
-                    ? [`    ${parameterId},`]
-                    : receiveParameterSchemaType.type === 'Unit'
-                    ? []
-                    : [`    ${createReceiveParameterFnId}(${parameterId}),`]),
-                `    ${blockHashId}`,
-                ');',
-            ].join('\n')
-        );
+                `@param {SDK.BlockHash.Type} [${blockHashId}] - Optional block hash allowing for dry-running the transaction at the end of a specific block.`,
+                '@throws {SDK.RpcError} If failing to communicate with the concordium node or if any of the checks fails.',
+                '@returns {SDK.InvokeContractResult} The result of invoking the smart contract instance.',
+            ].join('\n'),
+        ],
+        isExported: true,
+        name: `dryRun${toPascalCase(entrypointName)}`,
+        parameters: [
+            {
+                name: contractClientId,
+                type: contractClientType,
+            },
+            ...(receiveTakesNoParameter
+                ? []
+                : [
+                      {
+                          name: parameterId,
+                          type: receiveParameterTypeId,
+                      },
+                  ]),
+            {
+                name: invokeMetadataId,
+                type: 'SDK.ContractInvokeMetadata',
+                initializer: '{}',
+            },
+            {
+                name: blockHashId,
+                hasQuestionToken: true,
+                type: 'SDK.BlockHash.Type',
+            },
+        ],
+        returnType: 'Promise<SDK.InvokeContractResult>',
+        statements: [
+            `return ${contractClientId}.${genericContractId}.dryRun.invokeMethod(`,
+            `    SDK.EntrypointName.fromStringUnchecked('${entrypointName}'),`,
+            `    ${invokeMetadataId},`,
+            '    SDK.Parameter.toBuffer,',
+            ...(receiveParameterSchemaType === undefined
+                ? [`    ${parameterId},`]
+                : receiveParameterSchemaType.type === 'Unit'
+                ? []
+                : [`    ${createReceiveParameterFnId}(${parameterId}),`]),
+            `    ${blockHashId}`,
+            ');',
+        ],
+    });
 
     const invokeResultId = 'invokeResult';
     const returnValueTokens = parseReturnValueCode(
@@ -1214,7 +1277,8 @@ function generateContractEntrypointCode(
     if (returnValueTokens !== undefined) {
         const returnValueTypeId = `ReturnValue${toPascalCase(entrypointName)}`;
 
-        contractSourceFile.addTypeAlias({
+        statements.push({
+            kind: tsm.StructureKind.TypeAlias,
             docs: [
                 `Return value for dry-running update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
             ],
@@ -1223,38 +1287,36 @@ function generateContractEntrypointCode(
             type: returnValueTokens.type,
         });
 
-        contractSourceFile
-            .addFunction({
-                docs: [
-                    [
-                        `Get and parse the return value from dry-running update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
-                        'Returns undefined if the result is not successful.',
-                        '@param {SDK.InvokeContractResult} invokeResult The result from dry-running the transaction.',
-                        `@returns {${returnValueTypeId} | undefined} The structured return value or undefined if result was not a success.`,
-                    ].join('\n'),
-                ],
-                isExported: true,
-                name: `parseReturnValue${toPascalCase(entrypointName)}`,
-                parameters: [
-                    {
-                        name: invokeResultId,
-                        type: 'SDK.InvokeContractResult',
-                    },
-                ],
-                returnType: `${returnValueTypeId} | undefined`,
-            })
-            .setBodyText(
+        statements.push({
+            kind: tsm.StructureKind.Function,
+            docs: [
                 [
-                    `if (${invokeResultId}.tag !== 'success') {`,
-                    '    return undefined;',
-                    '}',
-                    `if (${invokeResultId}.returnValue === undefined) {`,
-                    "    throw new Error('Unexpected missing \\'returnValue\\' in result of invocation. Client expected a V1 smart contract.');",
-                    '}',
-                    ...returnValueTokens.code,
-                    `return ${returnValueTokens.id};`,
-                ].join('\n')
-            );
+                    `Get and parse the return value from dry-running update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
+                    'Returns undefined if the result is not successful.',
+                    '@param {SDK.InvokeContractResult} invokeResult The result from dry-running the transaction.',
+                    `@returns {${returnValueTypeId} | undefined} The structured return value or undefined if result was not a success.`,
+                ].join('\n'),
+            ],
+            isExported: true,
+            name: `parseReturnValue${toPascalCase(entrypointName)}`,
+            parameters: [
+                {
+                    name: invokeResultId,
+                    type: 'SDK.InvokeContractResult',
+                },
+            ],
+            returnType: `${returnValueTypeId} | undefined`,
+            statements: [
+                `if (${invokeResultId}.tag !== 'success') {`,
+                '    return undefined;',
+                '}',
+                `if (${invokeResultId}.returnValue === undefined) {`,
+                "    throw new Error('Unexpected missing \\'returnValue\\' in result of invocation. Client expected a V1 smart contract.');",
+                '}',
+                ...returnValueTokens.code,
+                `return ${returnValueTokens.id};`,
+            ],
+        });
     }
 
     const errorMessageTokens = parseReturnValueCode(
@@ -1266,7 +1328,8 @@ function generateContractEntrypointCode(
             entrypointName
         )}`;
 
-        contractSourceFile.addTypeAlias({
+        statements.push({
+            kind: tsm.StructureKind.TypeAlias,
             docs: [
                 `Error message for dry-running update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
             ],
@@ -1275,39 +1338,38 @@ function generateContractEntrypointCode(
             type: errorMessageTokens.type,
         });
 
-        contractSourceFile
-            .addFunction({
-                docs: [
-                    [
-                        `Get and parse the error message from dry-running update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
-                        'Returns undefined if the result is not a failure.',
-                        '@param {SDK.InvokeContractResult} invokeResult The result from dry-running the transaction.',
-                        `@returns {${errorMessageTypeId} | undefined} The structured error message or undefined if result was not a failure or failed for other reason than contract rejectedReceive.`,
-                    ].join('\n'),
-                ],
-                isExported: true,
-                name: `parseErrorMessage${toPascalCase(entrypointName)}`,
-                parameters: [
-                    {
-                        name: invokeResultId,
-                        type: 'SDK.InvokeContractResult',
-                    },
-                ],
-                returnType: `${errorMessageTypeId} | undefined`,
-            })
-            .setBodyText(
+        statements.push({
+            kind: tsm.StructureKind.Function,
+            docs: [
                 [
-                    `if (${invokeResultId}.tag !== 'failure' || ${invokeResultId}.reason.tag !== 'RejectedReceive') {`,
-                    '    return undefined;',
-                    '}',
-                    `if (${invokeResultId}.returnValue === undefined) {`,
-                    "    throw new Error('Unexpected missing \\'returnValue\\' in result of invocation. Client expected a V1 smart contract.');",
-                    '}',
-                    ...errorMessageTokens.code,
-                    `return ${errorMessageTokens.id}`,
-                ].join('\n')
-            );
+                    `Get and parse the error message from dry-running update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
+                    'Returns undefined if the result is not a failure.',
+                    '@param {SDK.InvokeContractResult} invokeResult The result from dry-running the transaction.',
+                    `@returns {${errorMessageTypeId} | undefined} The structured error message or undefined if result was not a failure or failed for other reason than contract rejectedReceive.`,
+                ].join('\n'),
+            ],
+            isExported: true,
+            name: `parseErrorMessage${toPascalCase(entrypointName)}`,
+            parameters: [
+                {
+                    name: invokeResultId,
+                    type: 'SDK.InvokeContractResult',
+                },
+            ],
+            returnType: `${errorMessageTypeId} | undefined`,
+            statements: [
+                `if (${invokeResultId}.tag !== 'failure' || ${invokeResultId}.reason.tag !== 'RejectedReceive') {`,
+                '    return undefined;',
+                '}',
+                `if (${invokeResultId}.returnValue === undefined) {`,
+                "    throw new Error('Unexpected missing \\'returnValue\\' in result of invocation. Client expected a V1 smart contract.');",
+                '}',
+                ...errorMessageTokens.code,
+                `return ${errorMessageTokens.id}`,
+            ],
+        });
     }
+    return statements;
 }
 
 /** Make the first character in a string uppercase */

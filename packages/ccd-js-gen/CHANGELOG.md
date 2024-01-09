@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Improve information when reporting progress during code-generation.
 - Generate `create<ContractName>ParameterWebWallet` and `create<EntrypointName>ParameterWebWallet` functions for constructing the smart contract parameters in the format used by the Concordium Web-Wallet.
 - Minor breaking change: `create<EntrypointName>Parameter` function for contract entries and `create<ContractName>Parameter` function in module are no longer generated when parameter schema type is `Unit`. These functions are mainly used internally, but are still exposed.
 - Fix bug for generating JSON for schema type `ULeb128` and `ILeb128`.

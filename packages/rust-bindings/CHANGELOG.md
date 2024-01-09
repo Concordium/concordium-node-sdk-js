@@ -2,19 +2,11 @@
 
 ## 3.0.0
 
-## Breaking changes
+### Breaking changes
 
 - The function `create_id_request_v1_ext` exposed with the WASM entrypoint `createIdRequestV1` now expects a new JSON type.
 - The function `create_identity_recovery_request_ext` exposed with the WASM entrypoint `createIdentityRecoveryRequest` now expects a new JSON type.
-- The function `create_unsigned_credential_v1_ext` previously exposed with the WASM entrypoint `createUnsignedCredentialV1` now expects a new JSON type and is instead exposed with the WASM entrypoint `createUnsignedCredentialWithKeysV1`.
-- The WASM entrypoint `createUnsignedCredentialV1` is now instead used to create an unsigned credential from a provided seed to align it with the naming convention used for identity requests and identity recovery requests.
-
-### Added
-
-- WASM entrypoint `createIdRequestWithKeysV1` for creating an identity request by supplying the secret key material instead of the seed.
-- WASM entrypoint Method `createIdentityRecoveryRequestWithKeys` for creating an identity recovery request by supplying the secret key material instead of the seed.
-- WASM entrypoint `createUnsignedCredentialV1` for creating an unsigned credential by supplying a seed instead of the secret key material.
-  - Note that this re-uses the WASM entrypoint previously used when supplying the secret key material directly.
+- The function `create_unsigned_credential_v1_ext` exposed with the WASM entrypoint `createUnsignedCredentialV1` now expects a new JSON type.
 
 ### Changed
 

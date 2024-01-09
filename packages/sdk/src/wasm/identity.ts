@@ -9,6 +9,7 @@ import type {
     Versioned,
 } from '../types.js';
 import type { IdProofInput, IdProofOutput } from '../id/index.js';
+import { ConcordiumHdWallet } from './HdWallet.ts';
 
 interface IdentityRequestInputCommon {
     ipInfo: IpInfo;
@@ -23,21 +24,7 @@ export type IdentityRequestInput = IdentityRequestInputCommon & {
     identityIndex: number;
 };
 
-type IdentityRequestInputInternal = {
-    common: IdentityRequestInputCommon;
-    net: Network;
-    seedAsHex: string;
-    identityIndex: number;
-};
-
 export type IdentityRequestWithKeysInput = IdentityRequestInputCommon & {
-    prfKey: string;
-    idCredSec: string;
-    blindingRandomness: string;
-};
-
-type IdentityRequestWithKeysInputInternal = {
-    common: IdentityRequestInputCommon;
     prfKey: string;
     idCredSec: string;
     blindingRandomness: string;
@@ -51,17 +38,7 @@ type IdentityRequestWithKeysInputInternal = {
 export function createIdentityRequestWithKeys(
     input: IdentityRequestWithKeysInput
 ): Versioned<IdObjectRequestV1> {
-    const { prfKey, idCredSec, blindingRandomness, ...common } = input;
-    const internalInput: IdentityRequestWithKeysInputInternal = {
-        common,
-        prfKey,
-        idCredSec,
-        blindingRandomness,
-    };
-
-    const rawRequest = wasm.createIdRequestWithKeysV1(
-        JSON.stringify(internalInput)
-    );
+    const rawRequest = wasm.createIdRequestV1(JSON.stringify(input));
     try {
         return JSON.parse(rawRequest).idObjectRequest;
     } catch (e) {
@@ -77,20 +54,30 @@ export function createIdentityRequestWithKeys(
 export function createIdentityRequest(
     input: IdentityRequestInput
 ): Versioned<IdObjectRequestV1> {
-    const { seed, identityIndex, net, ...common } = input;
-    const internalInput: IdentityRequestInputInternal = {
-        common,
-        net,
-        seedAsHex: seed,
-        identityIndex,
+    const wallet = ConcordiumHdWallet.fromHex(input.seed, input.net);
+    const identityProviderIndex = input.ipInfo.ipIdentity;
+    const identityIndex = input.identityIndex;
+    const idCredSec = wallet
+        .getIdCredSec(identityProviderIndex, identityIndex)
+        .toString('hex');
+    const prfKey = wallet
+        .getPrfKey(identityProviderIndex, identityIndex)
+        .toString('hex');
+    const blindingRandomness = wallet
+        .getSignatureBlindingRandomness(identityProviderIndex, identityIndex)
+        .toString('hex');
+
+    const inputWithKeys: IdentityRequestWithKeysInput = {
+        arsInfos: input.arsInfos,
+        arThreshold: input.arThreshold,
+        globalContext: input.globalContext,
+        ipInfo: input.ipInfo,
+        idCredSec,
+        prfKey,
+        blindingRandomness,
     };
 
-    const rawRequest = wasm.createIdRequestV1(JSON.stringify(internalInput));
-    try {
-        return JSON.parse(rawRequest).idObjectRequest;
-    } catch (e) {
-        throw new Error(rawRequest);
-    }
+    return createIdentityRequestWithKeys(inputWithKeys);
 }
 
 type IdentityRecoveryRequestInputCommon = {
@@ -106,22 +93,10 @@ export type IdentityRecoveryRequestInput =
         identityIndex: number;
     };
 
-type IdentityRecoveryRequestInputInternal = {
-    common: IdentityRecoveryRequestInputCommon;
-    seedAsHex: string;
-    net: Network;
-    identityIndex: number;
-};
-
 export type IdentityRecoveryRequestWithKeysInput =
     IdentityRecoveryRequestInputCommon & {
         idCredSec: string;
     };
-
-type IdentityRecoveryRequestWithKeysInputInternal = {
-    common: IdentityRecoveryRequestInputCommon;
-    idCredSec: string;
-};
 
 /**
  * Creates an identity recovery request from a seed. This will derive the
@@ -131,41 +106,31 @@ type IdentityRecoveryRequestWithKeysInputInternal = {
 export function createIdentityRecoveryRequest(
     input: IdentityRecoveryRequestInput
 ): Versioned<IdRecoveryRequest> {
-    const { seedAsHex, net, identityIndex, ...common } = input;
+    const wallet = ConcordiumHdWallet.fromHex(input.seedAsHex, input.net);
+    const idCredSec = wallet
+        .getIdCredSec(input.ipInfo.ipIdentity, input.identityIndex)
+        .toString('hex');
 
-    const internalInput: IdentityRecoveryRequestInputInternal = {
-        common,
-        identityIndex,
-        net,
-        seedAsHex,
+    const inputWithKeys: IdentityRecoveryRequestWithKeysInput = {
+        globalContext: input.globalContext,
+        ipInfo: input.ipInfo,
+        timestamp: input.timestamp,
+        idCredSec,
     };
 
-    const rawRequest = wasm.createIdentityRecoveryRequest(
-        JSON.stringify(internalInput)
-    );
-    try {
-        return JSON.parse(rawRequest).idRecoveryRequest;
-    } catch (e) {
-        throw new Error(rawRequest);
-    }
+    return createIdentityRecoveryRequestWithKeys(inputWithKeys);
 }
 
 /**
- * Creates an identity recovery request from a seed. This will derive the
- * corresponding keys based on the provided identity index, identity provider index
- * and seed. The identity provider index is extracted from the provided IpInfo.
+ * Creates an indentity recovery request by providing the secret key directly.
+ * This allows for the generation of the keys separately from creating
+ * the request.
  */
 export function createIdentityRecoveryRequestWithKeys(
     input: IdentityRecoveryRequestWithKeysInput
 ): Versioned<IdRecoveryRequest> {
-    const { idCredSec, ...common } = input;
-    const internalInput: IdentityRecoveryRequestWithKeysInputInternal = {
-        common,
-        idCredSec,
-    };
-
-    const rawRequest = wasm.createIdentityRecoveryRequestWithKeys(
-        JSON.stringify(internalInput)
+    const rawRequest = wasm.createIdentityRecoveryRequest(
+        JSON.stringify(input)
     );
     try {
         return JSON.parse(rawRequest).idRecoveryRequest;

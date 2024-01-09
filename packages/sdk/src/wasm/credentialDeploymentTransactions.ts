@@ -287,7 +287,14 @@ export function createCredentialTransactionNoSeed(
     input: CredentialInputNoSeed,
     expiry: TransactionExpiry.Type
 ): CredentialDeploymentTransaction {
-    const rawRequest = wasm.createUnsignedCredentialV1(JSON.stringify(input));
+    const { sigRetrievelRandomness, ...other } = input;
+    const internalInput = {
+        ...other,
+        blindingRandomness: input.sigRetrievelRandomness,
+    };
+    const rawRequest = wasm.createUnsignedCredentialV1(
+        JSON.stringify(internalInput)
+    );
     let info: UnsignedCdiWithRandomness;
     try {
         info = JSON.parse(rawRequest);

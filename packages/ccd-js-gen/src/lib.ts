@@ -21,6 +21,8 @@ export type OutputOptions =
 export type GenerateContractClientsOptions = {
     /** Options for the output. */
     output?: OutputOptions;
+    /** Generate `// @ts-nocheck` annotations in each file. Disabled by default. */
+    tsNocheck?: boolean;
     /** Callback for getting notified on progress. */
     onProgress?: NotifyProgress;
 };
@@ -97,6 +99,7 @@ export async function generateContractClients(
         outName,
         outDirPath,
         moduleSource,
+        options.tsNocheck ?? false,
         options.onProgress
     );
 
@@ -118,6 +121,7 @@ export async function generateContractClients(
  * @param {string} outModuleName The name for outputting the module client file.
  * @param {string} outDirPath The directory to use for outputting files.
  * @param {SDK.VersionedModuleSource} moduleSource The source of the smart contract module.
+ * @param {boolean} tsNocheck When `true` generate `// @ts-nocheck` annotations in each file.
  * @param {NotifyProgress} [notifyProgress] Callback to report progress.
  */
 async function generateCode(
@@ -125,6 +129,7 @@ async function generateCode(
     outModuleName: string,
     outDirPath: string,
     moduleSource: SDK.VersionedModuleSource,
+    tsNocheck: boolean,
     notifyProgress?: NotifyProgress
 ) {
     const [moduleInterface, moduleRef, rawModuleSchema] = await Promise.all([
@@ -150,9 +155,13 @@ async function generateCode(
         name: outModuleName,
         ext: '.ts',
     });
-    const moduleSourceFile = project.createSourceFile(outputFilePath, '', {
-        overwrite: true,
-    });
+    const moduleSourceFile = project.createSourceFile(
+        outputFilePath,
+        tsNocheck ? '// @ts-nocheck' : '',
+        {
+            overwrite: true,
+        }
+    );
     const moduleClientId = 'moduleClient';
     const moduleClientType = `${toPascalCase(outModuleName)}Module`;
     const internalModuleClientId = 'internalModuleClient';
@@ -188,7 +197,7 @@ async function generateCode(
         });
         const contractSourceFile = project.createSourceFile(
             contractOutputFilePath,
-            '',
+            tsNocheck ? '// @ts-nocheck' : '',
             {
                 overwrite: true,
             }

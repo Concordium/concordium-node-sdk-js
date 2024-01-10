@@ -6,7 +6,7 @@ use concordium_rust_bindings_common::{
 use wallet_library::{
     credential::create_unsigned_credential_v1_aux,
     identity::{
-        create_id_request_v1_aux,
+        create_identity_object_request_v1_aux,
         create_identity_recovery_request_aux,
     },
     wallet::{
@@ -56,7 +56,7 @@ pub fn get_credential_deployment_info_ext(signatures: &JsValue, unsigned_info: &
 
 #[wasm_bindgen(js_name = createIdRequestV1)]
 pub fn create_id_request_v1_ext(input: JsonString) -> JsResult {
-    create_id_request_v1_aux(serde_json::from_str(&input).unwrap()).map_err(to_js_error)
+    create_identity_object_request_v1_aux(serde_json::from_str(&input).unwrap()).map_err(to_js_error)
 }
 
 #[wasm_bindgen(js_name = createIdentityRecoveryRequest)]

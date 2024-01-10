@@ -18,12 +18,20 @@ interface IdentityRequestInputCommon {
     arThreshold: number;
 }
 
+/**
+ * The input parameter for creating an identity object request where
+ * the secret keys are derived from the provided seed.
+ */
 export type IdentityRequestInput = IdentityRequestInputCommon & {
     seed: string;
     net: Network;
     identityIndex: number;
 };
 
+/**
+ * The input parameter for creating an identity object request where
+ * the secret keys and randomness are provided directly.
+ */
 export type IdentityRequestWithKeysInput = IdentityRequestInputCommon & {
     prfKey: string;
     idCredSec: string;
@@ -86,6 +94,10 @@ type IdentityRecoveryRequestInputCommon = {
     timestamp: number;
 };
 
+/**
+ * The input parameter for creating an identity recovery request where
+ * the secret keys are derived from the provided seed.
+ */
 export type IdentityRecoveryRequestInput =
     IdentityRecoveryRequestInputCommon & {
         seedAsHex: string;
@@ -93,6 +105,10 @@ export type IdentityRecoveryRequestInput =
         identityIndex: number;
     };
 
+/**
+ * The input parameter for creating an identity recovery request where
+ * the secret keys and randomness are provided directly.
+ */
 export type IdentityRecoveryRequestWithKeysInput =
     IdentityRecoveryRequestInputCommon & {
         idCredSec: string;

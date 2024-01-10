@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add optional flag `--ts-nocheck`, enabling it will add `// @ts-nocheck` in each generated file.
+- Add `--output-type <type>` flag to CLI allowing to specify whether to generate TypeScript or JavaScript directly.
 - Fix the executable version of the package on Windows.
 
 ## 1.0.1

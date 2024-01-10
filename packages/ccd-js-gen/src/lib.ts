@@ -21,6 +21,8 @@ export type OutputOptions =
 export type GenerateContractClientsOptions = {
     /** Options for the output. */
     output?: OutputOptions;
+    /** Generate `// @ts-nocheck` annotations in each file. Defaults to `false`. */
+    tsNocheck?: boolean;
     /** Callback for getting notified on progress. */
     onProgress?: NotifyProgress;
 };
@@ -97,6 +99,7 @@ export async function generateContractClients(
         outName,
         outDirPath,
         moduleSource,
+        options.tsNocheck ?? false,
         options.onProgress
     );
 
@@ -118,6 +121,7 @@ export async function generateContractClients(
  * @param {string} outModuleName The name for outputting the module client file.
  * @param {string} outDirPath The directory to use for outputting files.
  * @param {SDK.VersionedModuleSource} moduleSource The source of the smart contract module.
+ * @param {boolean} tsNocheck When `true` generate `// @ts-nocheck` annotations in each file.
  * @param {NotifyProgress} [notifyProgress] Callback to report progress.
  */
 async function generateCode(
@@ -125,6 +129,7 @@ async function generateCode(
     outModuleName: string,
     outDirPath: string,
     moduleSource: SDK.VersionedModuleSource,
+    tsNocheck: boolean,
     notifyProgress?: NotifyProgress
 ) {
     const [moduleInterface, moduleRef, rawModuleSchema] = await Promise.all([
@@ -162,7 +167,8 @@ async function generateCode(
         moduleRef,
         moduleClientId,
         moduleClientType,
-        internalModuleClientId
+        internalModuleClientId,
+        tsNocheck
     );
 
     for (const contract of moduleInterface.values()) {
@@ -205,6 +211,7 @@ async function generateCode(
             contractClientId,
             contractClientType,
             moduleRef,
+            tsNocheck,
             contractSchema
         );
 
@@ -245,14 +252,19 @@ function generateModuleBaseCode(
     moduleRef: SDK.ModuleReference.Type,
     moduleClientId: string,
     moduleClientType: string,
-    internalModuleClientId: string
+    internalModuleClientId: string,
+    tsNocheck: boolean
 ) {
     const moduleRefId = 'moduleReference';
 
-    moduleSourceFile.addImportDeclaration({
-        namespaceImport: 'SDK',
-        moduleSpecifier: '@concordium/web-sdk',
-    });
+    moduleSourceFile.addStatements([
+        tsNocheck ? '// @ts-nocheck' : '',
+        {
+            kind: tsm.StructureKind.ImportDeclaration,
+            namespaceImport: 'SDK',
+            moduleSpecifier: '@concordium/web-sdk',
+        },
+    ]);
 
     moduleSourceFile.addVariableStatement({
         isExported: true,
@@ -565,6 +577,7 @@ function generateContractBaseCode(
     contractClientId: string,
     contractClientType: string,
     moduleRef: SDK.ModuleReference.Type,
+    tsNocheck: boolean,
     contractSchema?: SDK.SchemaContractV3
 ) {
     const moduleRefId = 'moduleReference';
@@ -574,10 +587,14 @@ function generateContractBaseCode(
     const contractAddressId = 'contractAddress';
     const blockHashId = 'blockHash';
 
-    contractSourceFile.addImportDeclaration({
-        namespaceImport: 'SDK',
-        moduleSpecifier: '@concordium/web-sdk',
-    });
+    contractSourceFile.addStatements([
+        tsNocheck ? '// @ts-nocheck' : '',
+        {
+            kind: tsm.StructureKind.ImportDeclaration,
+            namespaceImport: 'SDK',
+            moduleSpecifier: '@concordium/web-sdk',
+        },
+    ]);
 
     contractSourceFile.addVariableStatement({
         docs: [

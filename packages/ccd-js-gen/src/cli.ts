@@ -11,6 +11,10 @@ type Options = {
     module: string;
     /** The output directory for the generated code */
     outDir: string;
+    /** The output file types for the generated code */
+    outputType: lib.OutputOptions;
+    /** Generate `// @ts-nocheck` annotations in each file. */
+    tsNocheck: boolean;
 };
 
 // Main function, which is called in the executable script in `bin`.
@@ -28,12 +32,39 @@ export async function main(): Promise<void> {
             '-o, --out-dir <directory>',
             'The output directory for the generated code'
         )
+        .option<lib.OutputOptions>(
+            '-t, --output-type <TypeScript|JavaScript|TypedJavaScript|Everything>',
+            'The output file types for the generated code.',
+            (value: string) => {
+                switch (value) {
+                    case 'TypeScript':
+                    case 'JavaScript':
+                    case 'TypedJavaScript':
+                    case 'Everything':
+                        return value;
+                    default:
+                        // Exit in case `value` is not a valid OutputOptions.
+                        console.error(
+                            `Invalid '--output-type' flag: ${value}. Use 'TypeScript', 'JavaScript', 'TypedJavaScript', or 'Everything'.`
+                        );
+                        process.exit(1);
+                }
+            },
+            'Everything'
+        )
+        .option(
+            '-n, --ts-nocheck',
+            'Generate `@ts-nocheck` annotations at the top of each typescript file.',
+            false
+        )
         .parse(process.argv);
     const options = program.opts<Options>();
     console.log('Generating smart contract clients...');
 
     const startTime = Date.now();
     await lib.generateContractClientsFromFile(options.module, options.outDir, {
+        output: options.outputType,
+        tsNocheck: options.tsNocheck,
         onProgress(update) {
             if (update.type === 'Progress') {
                 console.log(

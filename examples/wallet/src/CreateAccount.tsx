@@ -1,7 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { mnemonicToSeedSync } from '@scure/bip39';
-import { Buffer } from 'buffer/';
 import { AccountWorkerInput } from './types';
 import {
     credNumber,
@@ -16,10 +14,11 @@ import {
     getCryptographicParameters,
     getIdentityProviders,
     getDefaultTransactionExpiry,
+    createCredentialDeploymentKeysAndRandomness,
 } from './util';
 import {
     CredentialDeploymentTransaction,
-    CredentialInput,
+    CredentialInputNoSeed,
     IdentityObjectV1,
     getAccountAddress,
     signCredentialTransaction,
@@ -79,19 +78,35 @@ export function CreateAccount({ identity }: { identity: IdentityObjectV1 }) {
         });
 
         const global = await getCryptographicParameters();
-        const credentialInput: CredentialInput = {
-            net: network,
-            revealedAttributes: [],
-            seedAsHex: Buffer.from(mnemonicToSeedSync(seedPhrase)).toString(
-                'hex'
-            ),
-            idObject: identity,
+
+        const {
+            idCredSec,
+            prfKey,
+            attributeRandomness,
+            blindingRandomness,
+            credentialPublicKeys,
+        } = createCredentialDeploymentKeysAndRandomness(
+            seedPhrase,
+            network,
+            selectedIdentityProvider.ipInfo.ipIdentity,
             identityIndex,
+            credNumber
+        );
+
+        const credentialInput: CredentialInputNoSeed = {
+            revealedAttributes: [],
+            idObject: identity,
             globalContext: global,
             credNumber,
             ipInfo: selectedIdentityProvider.ipInfo,
             arsInfos: selectedIdentityProvider.arsInfos,
+            attributeRandomness,
+            credentialPublicKeys,
+            idCredSec,
+            prfKey,
+            sigRetrievelRandomness: blindingRandomness,
         };
+
         const expiry = getDefaultTransactionExpiry();
         const workerInput: AccountWorkerInput = {
             credentialInput,

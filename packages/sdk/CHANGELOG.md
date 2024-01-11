@@ -1,11 +1,13 @@
 # Changelog
 
-## Unreleased changes
+## 7.2.0
 
 ### Added
 
 - `ContractAddress.toString` function that converts the address to a string in
   the `<index, subindex>` format.
+- Method (`createIdRequestWithKeysV1`) for creating an identity request by supplying the secret key material instead of the seed.
+- Method (`createIdentityRecoveryRequestWithKeys`) for creating an identity recovery request by supplying the secret key material instead of the seed.
 
 ### Fixed
 

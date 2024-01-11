@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+    ConcordiumHdWallet,
     CryptographicParameters,
     IdObjectRequestV1,
-    IdentityRequestInput,
+    IdentityRequestWithKeysInput,
     Versioned,
 } from '@concordium/web-sdk';
 import { IdentityProviderWithMetadata } from './types';
@@ -14,8 +15,6 @@ import {
     getRedirectUri,
     sendIdentityRequest,
 } from './util';
-import { mnemonicToSeedSync } from '@scure/bip39';
-import { Buffer } from 'buffer/';
 import {
     identityIndex,
     network,
@@ -87,16 +86,33 @@ export function CreateIdentity() {
             worker.removeEventListener('message', listener);
         });
 
-        const identityRequestInput: IdentityRequestInput = {
-            net: network,
-            seed: Buffer.from(mnemonicToSeedSync(seedPhrase)).toString('hex'),
-            identityIndex,
+        // Derive the required secret key material.
+        const wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, network);
+        const identityProviderIndex =
+            selectedIdentityProvider.ipInfo.ipIdentity;
+        const idCredSec = wallet
+            .getIdCredSec(identityProviderIndex, identityIndex)
+            .toString('hex');
+        const prfKey = wallet
+            .getPrfKey(identityProviderIndex, identityIndex)
+            .toString('hex');
+        const blindingRandomness = wallet
+            .getSignatureBlindingRandomness(
+                identityProviderIndex,
+                identityIndex
+            )
+            .toString('hex');
+
+        const identityRequestInput: IdentityRequestWithKeysInput = {
             arsInfos: selectedIdentityProvider.arsInfos,
             arThreshold: determineAnonymityRevokerThreshold(
                 Object.keys(selectedIdentityProvider.arsInfos).length
             ),
             ipInfo: selectedIdentityProvider.ipInfo,
             globalContext: cryptographicParameters,
+            idCredSec,
+            prfKey,
+            blindingRandomness,
         };
         worker.postMessage(identityRequestInput);
     }

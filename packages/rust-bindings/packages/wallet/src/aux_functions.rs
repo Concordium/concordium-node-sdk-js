@@ -1,4 +1,4 @@
-use anyhow::{anyhow, bail, ensure, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use concordium_base::{
     base::{BakerAggregationSignKey, BakerElectionSignKey, BakerKeyPairs, BakerSignatureSignKey},
     cis4_types::IssuerKey,
@@ -9,19 +9,12 @@ use concordium_base::{
     contracts_common::ContractAddress,
     curve_arithmetic::Pairing,
     id::{
-        account_holder::{
-            create_credential, create_unsigned_credential, generate_id_recovery_request,
-            generate_pio_v1,
-        },
+        account_holder::{create_credential, create_unsigned_credential},
         constants,
         constants::{ArCurve, AttributeKind},
         dodis_yampolskiy_prf as prf,
         id_proof_types::{Proof, ProofVersion, Statement, StatementWithContext},
-        pedersen_commitment::{
-            CommitmentKey as PedersenKey, Randomness as PedersenRandomness, Value as PedersenValue,
-            Value,
-        },
-        secret_sharing::Threshold,
+        pedersen_commitment::{Randomness as PedersenRandomness, Value as PedersenValue, Value},
         types::*,
     },
     ps_sig::SigRetrievalRandomness,
@@ -36,7 +29,7 @@ use either::Either::Left;
 use key_derivation::{ConcordiumHdWallet, CredentialContext, Net};
 use rand::thread_rng;
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
-use serde_json::{from_str, from_value, to_string, Value as SerdeValue};
+use serde_json::{from_str, from_value, Value as SerdeValue};
 use std::{collections::BTreeMap, convert::TryInto};
 use thiserror::Error;
 
@@ -111,262 +104,12 @@ pub struct CredId {
     pub cred_id: constants::ArCurve,
 }
 
-#[derive(SerdeSerialize, SerdeDeserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct IdRequestInput {
-    ip_info:        IpInfo<constants::IpPairing>,
-    global_context: GlobalContext<constants::ArCurve>,
-    ars_infos:      BTreeMap<ArIdentity, ArInfo<constants::ArCurve>>,
-    seed:           String,
-    net:            String,
-    identity_index: u32,
-    ar_threshold:   u8,
-}
-
 fn get_net(net: &str) -> Result<Net> {
     Ok(match net {
         "Mainnet" => Net::Mainnet,
         "Testnet" => Net::Testnet,
         _ => bail!("Unknown net"),
     })
-}
-
-fn get_wallet(seed_as_hex: HexString, raw_net: &str) -> anyhow::Result<ConcordiumHdWallet> {
-    let seed_decoded = hex::decode(&seed_as_hex)?;
-    let seed: [u8; 64] = match seed_decoded.try_into() {
-        Ok(s) => s,
-        Err(_) => bail!("The provided seed {} was not 64 bytes", seed_as_hex),
-    };
-
-    let net = get_net(raw_net)?;
-    let wallet = ConcordiumHdWallet { seed, net };
-    Ok(wallet)
-}
-
-pub fn get_account_signing_key_aux(
-    seed_as_hex: HexString,
-    raw_net: &str,
-    identity_provider_index: u32,
-    identity_index: u32,
-    credential_counter: u32,
-) -> Result<String> {
-    let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_account_signing_key(
-        identity_provider_index,
-        identity_index,
-        credential_counter,
-    )?;
-    Ok(hex::encode(key.as_bytes()))
-}
-
-pub fn get_account_public_key_aux(
-    seed_as_hex: HexString,
-    raw_net: &str,
-    identity_provider_index: u32,
-    identity_index: u32,
-    credential_counter: u32,
-) -> Result<HexString> {
-    let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_account_public_key(
-        identity_provider_index,
-        identity_index,
-        credential_counter,
-    )?;
-    Ok(hex::encode(key.as_bytes()))
-}
-
-pub fn get_credential_id_aux(
-    seed_as_hex: HexString,
-    raw_net: &str,
-    identity_provider_index: u32,
-    identity_index: u32,
-    credential_counter: u8,
-    raw_on_chain_commitment_key: &str,
-) -> Result<HexString> {
-    let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let prf_key = wallet.get_prf_key(identity_provider_index, identity_index)?;
-
-    let cred_id_exponent = prf_key.prf_exponent(credential_counter)?;
-    let on_chain_commitment_key: PedersenKey<constants::ArCurve> =
-        base16_decode_string(raw_on_chain_commitment_key)?;
-    let cred_id = on_chain_commitment_key
-        .hide(
-            &Value::<constants::ArCurve>::new(cred_id_exponent),
-            &PedersenRandomness::zero(),
-        )
-        .0;
-    Ok(base16_encode_string(&cred_id))
-}
-
-pub fn get_prf_key_aux(
-    seed_as_hex: HexString,
-    raw_net: &str,
-    identity_provider_index: u32,
-    identity_index: u32,
-) -> Result<HexString> {
-    let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_prf_key(identity_provider_index, identity_index)?;
-    Ok(hex::encode(to_bytes(&key)))
-}
-
-pub fn get_id_cred_sec_aux(
-    seed_as_hex: HexString,
-    raw_net: &str,
-    identity_provider_index: u32,
-    identity_index: u32,
-) -> Result<HexString> {
-    let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_id_cred_sec(identity_provider_index, identity_index)?;
-    Ok(hex::encode(to_bytes(&key)))
-}
-
-pub fn get_signature_blinding_randomness_aux(
-    seed_as_hex: HexString,
-    raw_net: &str,
-    identity_provider_index: u32,
-    identity_index: u32,
-) -> Result<HexString> {
-    let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_blinding_randomness(identity_provider_index, identity_index)?;
-    Ok(hex::encode(to_bytes(&key)))
-}
-
-pub fn get_attribute_commitment_randomness_aux(
-    seed_as_hex: HexString,
-    raw_net: &str,
-    identity_provider_index: u32,
-    identity_index: u32,
-    credential_counter: u32,
-    attribute: u8,
-) -> Result<HexString> {
-    let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_attribute_commitment_randomness(
-        identity_provider_index,
-        identity_index,
-        credential_counter,
-        AttributeTag(attribute),
-    )?;
-    Ok(hex::encode(to_bytes(&key)))
-}
-
-pub fn get_verifiable_credential_signing_key_aux(
-    seed_as_hex: HexString,
-    raw_net: &str,
-    issuer_index: u64,
-    issuer_subindex: u64,
-    verifiable_credential_index: u32,
-) -> Result<HexString> {
-    let issuer: ContractAddress = ContractAddress::new(issuer_index, issuer_subindex);
-    let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_verifiable_credential_signing_key(issuer, verifiable_credential_index)?;
-    Ok(hex::encode(key.as_bytes()))
-}
-
-pub fn get_verifiable_credential_public_key_aux(
-    seed_as_hex: HexString,
-    raw_net: &str,
-    issuer_index: u64,
-    issuer_subindex: u64,
-    verifiable_credential_index: u32,
-) -> Result<HexString> {
-    let issuer: ContractAddress = ContractAddress::new(issuer_index, issuer_subindex);
-    let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_verifiable_credential_public_key(issuer, verifiable_credential_index)?;
-    Ok(hex::encode(key.as_bytes()))
-}
-
-pub fn get_verifiable_credential_backup_encryption_key_aux(
-    seed_as_hex: HexString,
-    raw_net: &str,
-) -> Result<HexString> {
-    let wallet = get_wallet(seed_as_hex, raw_net)?;
-    let key = wallet.get_verifiable_credential_backup_encryption_key()?;
-    Ok(hex::encode(key.as_bytes()))
-}
-
-pub fn create_id_request_v1_aux(input: IdRequestInput) -> Result<JsonString> {
-    let seed_decoded = hex::decode(&input.seed)?;
-    let seed: [u8; 64] = match seed_decoded.try_into() {
-        Ok(s) => s,
-        Err(_) => bail!("The provided seed {} was not 64 bytes", input.seed),
-    };
-    let identity_provider_index = input.ip_info.ip_identity.0;
-
-    let net = get_net(&input.net)?;
-    let wallet = ConcordiumHdWallet { seed, net };
-
-    let prf_key: prf::SecretKey<ArCurve> =
-        wallet.get_prf_key(identity_provider_index, input.identity_index)?;
-
-    let id_cred_sec: PedersenValue<ArCurve> =
-        PedersenValue::new(wallet.get_id_cred_sec(identity_provider_index, input.identity_index)?);
-    let id_cred: IdCredentials<ArCurve> = IdCredentials { id_cred_sec };
-
-    let sig_retrievel_randomness: concordium_base::id::ps_sig::SigRetrievalRandomness<
-        constants::IpPairing,
-    > = wallet.get_blinding_randomness(identity_provider_index, input.identity_index)?;
-
-    let num_of_ars = input.ars_infos.len();
-
-    ensure!(input.ar_threshold > 0, "arThreshold must be at least 1.");
-    ensure!(
-        num_of_ars >= usize::from(input.ar_threshold),
-        "Number of anonymity revokers in arsInfos should be at least arThreshold."
-    );
-
-    let threshold = Threshold(input.ar_threshold);
-
-    let chi = CredentialHolderInfo::<ArCurve> { id_cred };
-
-    let aci = AccCredentialInfo {
-        cred_holder_info: chi,
-        prf_key,
-    };
-
-    let context = IpContext::new(&input.ip_info, &input.ars_infos, &input.global_context);
-
-    let id_use_data = IdObjectUseData {
-        aci,
-        randomness: sig_retrievel_randomness,
-    };
-    let (pio, _) = {
-        match generate_pio_v1(&context, threshold, &id_use_data) {
-            Some(x) => x,
-            None => bail!("Generating the pre-identity object failed."),
-        }
-    };
-
-    let response = json!({ "idObjectRequest": Versioned::new(VERSION_0, pio) });
-
-    Ok(to_string(&response)?)
-}
-
-#[derive(SerdeSerialize, SerdeDeserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct IdRecoveryRequestInput {
-    ip_info:        IpInfo<constants::IpPairing>,
-    global_context: GlobalContext<constants::ArCurve>,
-    seed_as_hex:    HexString,
-    net:            String,
-    identity_index: u32,
-    timestamp:      u64,
-}
-
-pub fn create_identity_recovery_request_aux(input: IdRecoveryRequestInput) -> Result<JsonString> {
-    let identity_provider_index = input.ip_info.ip_identity.0;
-    let wallet = get_wallet(input.seed_as_hex, &input.net)?;
-    let id_cred_sec = wallet.get_id_cred_sec(identity_provider_index, input.identity_index)?;
-    let request = generate_id_recovery_request(
-        &input.ip_info,
-        &input.global_context,
-        &PedersenValue::new(id_cred_sec),
-        input.timestamp,
-    );
-
-    let response = json!({
-        "idRecoveryRequest": Versioned::new(VERSION_0, request),
-    });
-    Ok(to_string(&response)?)
 }
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
@@ -776,48 +519,6 @@ impl HasAttributeRandomness<ArCurve> for AttributeRandomness {
             None => Err(AttributeError::NotFound),
         }
     }
-}
-
-pub fn create_unsigned_credential_v1_aux(input: UnsignedCredentialInput) -> Result<JsonString> {
-    let chi = CredentialHolderInfo::<constants::ArCurve> {
-        id_cred: IdCredentials {
-            id_cred_sec: input.id_cred_sec,
-        },
-    };
-    let aci = AccCredentialInfo {
-        cred_holder_info: chi,
-        prf_key:          input.prf_key,
-    };
-
-    let blinding_randomness: Value<constants::ArCurve> = concordium_base::common::from_bytes(
-        &mut hex::decode(&input.sig_retrievel_randomness)?.as_slice(),
-    )?;
-    let id_use_data = IdObjectUseData {
-        aci,
-        randomness:
-            concordium_base::id::ps_sig::SigRetrievalRandomness::<constants::IpPairing>::new(
-                *blinding_randomness,
-            ),
-    };
-
-    let context = IpContext::new(&input.ip_info, &input.ars_infos, &input.global_context);
-
-    let policy = build_policy(&input.id_object.alist, input.revealed_attributes)?;
-
-    let (cdi, rand) = create_unsigned_credential(
-        context,
-        &input.id_object,
-        &id_use_data,
-        input.cred_number,
-        policy,
-        input.credential_public_keys,
-        None,
-        &AttributeRandomness(input.attribute_randomness),
-    )?;
-
-    let response = json!({"unsignedCdi": cdi, "randomness": rand});
-
-    Ok(response.to_string())
 }
 
 #[derive(SerdeSerialize)]

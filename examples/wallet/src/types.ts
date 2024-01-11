@@ -1,5 +1,5 @@
 import {
-    CredentialInput,
+    CredentialInputNoSeed,
     IdentityObjectV1,
     IdentityProvider,
     TransactionExpiry,
@@ -18,7 +18,7 @@ export type IdentityProviderWithMetadata = IdentityProvider & {
 };
 
 export interface AccountWorkerInput {
-    credentialInput: CredentialInput;
+    credentialInput: CredentialInputNoSeed;
     expiry: TransactionExpiry.Type;
 }
 

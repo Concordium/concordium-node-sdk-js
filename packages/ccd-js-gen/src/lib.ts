@@ -302,8 +302,8 @@ async function generateCode(
  * @param moduleRef The module reference.
  * @param moduleClientId The identifier to use for the module client.
  * @param moduleClientType The identifier to use for the type of the module client.
- * @param tsNocheck When `true` generate `// @ts-nocheck` annotations in each file.
  * @param internalModuleClientId The identifier to use for referencing the internal module client.
+ * @param tsNocheck When `true` generate `// @ts-nocheck` annotations in each file.
  */
 function generateModuleBaseStatements(
     moduleRef: SDK.ModuleReference.Type,
@@ -366,7 +366,7 @@ function generateModuleBaseStatements(
         ctors: [
             {
                 docs: [
-                    'Constructor is only ment to be used internally in this module. Use functions such as `create` or `createUnchecked` for construction.',
+                    'Constructor is only meant to be used internally in this module. Use functions such as `create` or `createUnchecked` for construction.',
                 ],
                 parameters: [
                     {

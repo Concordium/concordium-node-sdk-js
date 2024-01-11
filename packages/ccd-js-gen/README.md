@@ -599,7 +599,7 @@ const message: MyContract.ErrorMessageLaunchRocket | undefined = MyContract.pars
 #### function `create<EntrypointName>ParameterWebWallet`
 
 For each entrypoint of the smart contract a function for _constructing_ the WebWallet formattet parameter is produced. This is to be used with the [`@concordium/wallet-connector`](https://www.npmjs.com/package/@concordium/wallet-connectors) package.
-These are named `create<EntrypointName>ParameterWebWallet` where `<ContractName>` is the smart contract name in Pascal case.
+These are named `create<EntrypointName>ParameterWebWallet` where `<EntrypointName>` is the entrypoint name in Pascal case.
 
 _This is only generated when the schema contains contract entrypoint parameter type._
 

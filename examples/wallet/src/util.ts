@@ -18,6 +18,7 @@ import {
     buildBasicAccountSigner,
     serializeCredentialDeploymentPayload,
     signTransaction,
+    IdRecoveryRequest,
 } from '@concordium/web-sdk';
 import {
     IdentityProviderWithMetadata,
@@ -40,7 +41,7 @@ import { filterRecord, mapRecord } from '../../../packages/sdk/lib/esm/util';
 // We dynamically resolve this as the hosted server can run at different
 // locations.
 export function getRedirectUri() {
-    return window.location.origin + '/identity';
+    return window.location.origin + '/confirm-identity';
 }
 
 /**
@@ -295,6 +296,27 @@ export async function sendIdentityRequest(
     }
 }
 
+/**
+ * Sends an identity recovery object request, which is the start of the identity recovery flow, to the
+ * provided URL.
+ * @param recoveryRequest the identity recovery request to send
+ * @param baseUrl the identity recovery start URL
+ * @returns the URL that the identity provider redirects to. This URL should point to to versioned identity object.
+ */
+export async function sendIdentityRecoveryRequest(
+    recoveryRequest: IdRecoveryRequest,
+    baseUrl: string
+) {
+    const searchParams = new URLSearchParams({ state: JSON.stringify({idRecoveryRequest: recoveryRequest})});
+    const url = `${baseUrl}?${searchParams.toString()}`;
+    const response = await fetch(url);
+
+    if (response.ok) {
+        return response.url;
+    } else {
+        throw new Error((await response.json()).message);
+    }
+}
 /**
  * Gets information about an account from the node. The method will continue to poll for some time
  * as the account might not be in a block when this is first called.

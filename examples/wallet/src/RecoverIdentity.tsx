@@ -59,7 +59,7 @@ export function RecoverIdentity() {
         return null;
     }
 
-    async function createIdentity() {
+    async function recoverIdentity() {
         if (!dataLoaded || !seedPhrase) {
             return;
         }
@@ -144,7 +144,7 @@ export function RecoverIdentity() {
             </label>
             <button
                 disabled={createButtonDisabled && dataLoaded}
-                onClick={createIdentity}
+                onClick={recoverIdentity}
             >
                 Recover identity
             </button>

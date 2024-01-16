@@ -8,6 +8,7 @@ import { CreateIdentity } from './CreateIdentity';
 import { SetupSeedPhrase } from './Setup';
 import { RecoverIdentity } from './RecoverIdentity';
 import { ConfirmIdentity } from './ConfirmIdentity';
+import { NewIdentity } from './NewIdentity';
 
 const container = document.getElementById('root');
 
@@ -19,6 +20,10 @@ const router = createBrowserRouter([
     {
         path: '/',
         element: <SetupSeedPhrase />,
+    },
+    {
+        path: '/new',
+        element: <NewIdentity />,
     },
     {
         path: '/create',

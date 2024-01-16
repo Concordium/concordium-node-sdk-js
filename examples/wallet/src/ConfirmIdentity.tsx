@@ -29,7 +29,7 @@ export function ConfirmIdentity() {
 
     return (
         <>
-            <h3>Identity is not ready yet</h3>
+            <h3>Identity is not ready yet. Please wait.</h3>
         </>
     );
 }

@@ -18,9 +18,9 @@ function DisplayIdentity({ attributes }: { attributes: AttributeList }) {
 export function Identity() {
     const [missingIdentity, setMissingIdentity] = useState<boolean>(false);
     const identity = useMemo<IdentityObjectV1>(() => {
-        const raw = localStorage.getItem(identityObjectKey);
-        if (raw) {
-            return JSON.parse(raw);
+        const identityObjectJson = localStorage.getItem(identityObjectKey);
+        if (identityObjectJson) {
+            return JSON.parse(identityObjectJson);
         } else {
             setMissingIdentity(true);
         }

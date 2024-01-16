@@ -307,7 +307,9 @@ export async function sendIdentityRecoveryRequest(
     recoveryRequest: IdRecoveryRequest,
     baseUrl: string
 ) {
-    const searchParams = new URLSearchParams({ state: JSON.stringify({idRecoveryRequest: recoveryRequest})});
+    const searchParams = new URLSearchParams({
+        state: JSON.stringify({ idRecoveryRequest: recoveryRequest }),
+    });
     const url = `${baseUrl}?${searchParams.toString()}`;
     const response = await fetch(url);
 

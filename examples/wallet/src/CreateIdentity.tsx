@@ -144,7 +144,7 @@ export function CreateIdentity() {
             >
                 Create identity
             </button>
-            <button onClick={() => navigate("/recover")}>Go to recovery</button>
+            <button onClick={() => navigate('/recover')}>Go to recovery</button>
             {createButtonDisabled && (
                 <div>Generating identity request. This can take a while.</div>
             )}

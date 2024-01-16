@@ -1,7 +1,5 @@
 import { AttributeList, IdentityObjectV1 } from '@concordium/web-sdk';
-import React, { useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { extractIdentityObjectUrl, fetchIdentity } from './util';
+import React, { useMemo, useState } from 'react';
 import { CreateAccount } from './CreateAccount';
 import { identityObjectKey } from './constants';
 
@@ -18,24 +16,20 @@ function DisplayIdentity({ attributes }: { attributes: AttributeList }) {
 }
 
 export function Identity() {
-    const location = useLocation();
     const [missingIdentity, setMissingIdentity] = useState<boolean>(false);
-    const identity = useMemo<IdentityObjectV1>(
-        () => {
-            const raw = localStorage.getItem(identityObjectKey)
-            if (raw) {
-                return JSON.parse(raw)
-            } else {
-                setMissingIdentity(true);
-            }
-        },
-        []
-    );
+    const identity = useMemo<IdentityObjectV1>(() => {
+        const raw = localStorage.getItem(identityObjectKey);
+        if (raw) {
+            return JSON.parse(raw);
+        } else {
+            setMissingIdentity(true);
+        }
+    }, []);
 
     return (
         <>
             <h3>Your Concordium identity</h3>
-            {missingIdentity && (<h3>Missing identity in storage</h3>)}
+            {missingIdentity && <h3>Missing identity in storage</h3>}
             {identity && (
                 <>
                     <DisplayIdentity attributes={identity.attributeList} />

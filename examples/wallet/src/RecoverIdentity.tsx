@@ -2,8 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     CryptographicParameters,
-    IdObjectRequestV1,
-    Versioned,
     IdentityRecoveryRequestInput,
     IdRecoveryRequest,
 } from '@concordium/web-sdk';
@@ -11,9 +9,7 @@ import { IdentityProviderWithMetadata } from './types';
 import {
     getCryptographicParameters,
     getIdentityProviders,
-    getRedirectUri,
     sendIdentityRecoveryRequest,
-    sendIdentityRequest,
 } from './util';
 import { mnemonicToSeedSync } from '@scure/bip39';
 import { Buffer } from 'buffer/';
@@ -42,7 +38,7 @@ export function RecoverIdentity() {
         cryptographicParameters !== undefined &&
         selectedIdentityProvider !== undefined;
     const seedPhrase = useMemo(() => localStorage.getItem(seedPhraseKey), []);
-    const [recoveryFailed, setRecoveryFailed] = useState<String>();
+    const [recoveryFailed, setRecoveryFailed] = useState<string>();
 
     useEffect(() => {
         getIdentityProviders().then((idps) => {
@@ -80,26 +76,31 @@ export function RecoverIdentity() {
         ) => {
             try {
                 const url = await sendIdentityRecoveryRequest(
-                e.data,
-                selectedIdentityProvider.metadata.recoveryStart
-            );
-            worker.removeEventListener('message', listener);
-            const response = await fetch(url);
+                    e.data,
+                    selectedIdentityProvider.metadata.recoveryStart
+                );
+                worker.removeEventListener('message', listener);
+                const response = await fetch(url);
 
-            if (response.ok) {
-                const identity = await response.json()
-                localStorage.setItem(identityObjectKey, JSON.stringify(identity.value));
-            }
+                if (response.ok) {
+                    const identity = await response.json();
+                    localStorage.setItem(
+                        identityObjectKey,
+                        JSON.stringify(identity.value)
+                    );
+                }
 
-            navigate('/identity');
+                navigate('/identity');
             } catch (e) {
-                setRecoveryFailed((e as any).message);
+                setRecoveryFailed((e as Error).message);
             }
         });
 
         const identityRequestInput: IdentityRecoveryRequestInput = {
             net: network,
-            seedAsHex: Buffer.from(mnemonicToSeedSync(seedPhrase)).toString('hex'),
+            seedAsHex: Buffer.from(mnemonicToSeedSync(seedPhrase)).toString(
+                'hex'
+            ),
             identityIndex: identityIndex,
             ipInfo: selectedIdentityProvider.ipInfo,
             globalContext: cryptographicParameters,
@@ -110,11 +111,13 @@ export function RecoverIdentity() {
 
     if (recoveryFailed) {
         return (
-        <div>
-            <h3>Recovery failed</h3>
-            <p>Error: {recoveryFailed}</p>
-            <button onClick={() => navigate("/create")} >Go to identity creation</button>
-        </div>
+            <div>
+                <h3>Recovery failed</h3>
+                <p>Error: {recoveryFailed}</p>
+                <button onClick={() => navigate('/create')}>
+                    Go to identity creation
+                </button>
+            </div>
         );
     }
 
@@ -146,7 +149,9 @@ export function RecoverIdentity() {
                 Recover identity
             </button>
             {createButtonDisabled && (
-                <div>Generating identity recovery request. This can take a while.</div>
+                <div>
+                    Generating identity recovery request. This can take a while.
+                </div>
             )}
         </div>
     );

@@ -1,6 +1,6 @@
 import {
     createIdentityRecoveryRequest,
-    IdentityRecoveryRequestInput
+    IdentityRecoveryRequestInput,
 } from '@concordium/web-sdk';
 
 self.onmessage = (e: MessageEvent<IdentityRecoveryRequestInput>) => {

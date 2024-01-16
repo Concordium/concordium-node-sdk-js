@@ -26,7 +26,7 @@ const router = createBrowserRouter([
     },
     {
         path: '/confirm-identity',
-        element: <ConfirmIdentity />
+        element: <ConfirmIdentity />,
     },
     {
         path: '/identity',
@@ -34,7 +34,7 @@ const router = createBrowserRouter([
     },
     {
         path: '/recover',
-        element: <RecoverIdentity />
+        element: <RecoverIdentity />,
     },
     {
         path: '/account/:accountAddress',

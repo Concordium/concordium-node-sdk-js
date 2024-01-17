@@ -1,30 +1,29 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    ConcordiumHdWallet,
     CryptographicParameters,
-    IdObjectRequestV1,
-    IdentityRequestWithKeysInput,
-    Versioned,
+    IdentityRecoveryRequestInput,
+    IdRecoveryRequest,
 } from '@concordium/web-sdk';
 import { IdentityProviderWithMetadata } from './types';
 import {
-    determineAnonymityRevokerThreshold,
     getCryptographicParameters,
     getIdentityProviders,
-    getRedirectUri,
-    sendIdentityRequest,
+    sendIdentityRecoveryRequest,
 } from './util';
+import { mnemonicToSeedSync } from '@scure/bip39';
+import { Buffer } from 'buffer/';
 import {
     identityIndex,
+    identityObjectKey,
     network,
     seedPhraseKey,
     selectedIdentityProviderKey,
 } from './constants';
 
-const worker = new Worker(new URL('./identity-worker.ts', import.meta.url));
+const worker = new Worker(new URL('./recovery-worker.ts', import.meta.url));
 
-export function CreateIdentity() {
+export function RecoverIdentity() {
     const [createButtonDisabled, setCreateButtonDisabled] =
         useState<boolean>(false);
     const [identityProviders, setIdentityProviders] =
@@ -39,6 +38,7 @@ export function CreateIdentity() {
         cryptographicParameters !== undefined &&
         selectedIdentityProvider !== undefined;
     const seedPhrase = useMemo(() => localStorage.getItem(seedPhraseKey), []);
+    const [recoveryFailed, setRecoveryFailed] = useState<string>();
 
     useEffect(() => {
         getIdentityProviders().then((idps) => {
@@ -59,7 +59,7 @@ export function CreateIdentity() {
         return null;
     }
 
-    async function createIdentity() {
+    async function recoverIdentity() {
         if (!dataLoaded || !seedPhrase) {
             return;
         }
@@ -72,54 +72,58 @@ export function CreateIdentity() {
         );
 
         const listener = (worker.onmessage = async (
-            e: MessageEvent<Versioned<IdObjectRequestV1>>
+            e: MessageEvent<IdRecoveryRequest>
         ) => {
-            const url = await sendIdentityRequest(
-                e.data,
-                selectedIdentityProvider.metadata.issuanceStart
-            );
-            if (!url?.includes(getRedirectUri())) {
-                window.open(url);
-            } else {
-                window.alert('An error occurred during the identity creation.');
+            try {
+                const url = await sendIdentityRecoveryRequest(
+                    e.data,
+                    selectedIdentityProvider.metadata.recoveryStart
+                );
+                worker.removeEventListener('message', listener);
+                const response = await fetch(url);
+
+                if (response.ok) {
+                    const identity = await response.json();
+                    localStorage.setItem(
+                        identityObjectKey,
+                        JSON.stringify(identity.value)
+                    );
+                }
+
+                navigate('/identity');
+            } catch (e) {
+                setRecoveryFailed((e as Error).message);
             }
-            worker.removeEventListener('message', listener);
         });
 
-        // Derive the required secret key material.
-        const wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, network);
-        const identityProviderIndex =
-            selectedIdentityProvider.ipInfo.ipIdentity;
-        const idCredSec = wallet
-            .getIdCredSec(identityProviderIndex, identityIndex)
-            .toString('hex');
-        const prfKey = wallet
-            .getPrfKey(identityProviderIndex, identityIndex)
-            .toString('hex');
-        const blindingRandomness = wallet
-            .getSignatureBlindingRandomness(
-                identityProviderIndex,
-                identityIndex
-            )
-            .toString('hex');
-
-        const identityRequestInput: IdentityRequestWithKeysInput = {
-            arsInfos: selectedIdentityProvider.arsInfos,
-            arThreshold: determineAnonymityRevokerThreshold(
-                Object.keys(selectedIdentityProvider.arsInfos).length
+        const identityRequestInput: IdentityRecoveryRequestInput = {
+            net: network,
+            seedAsHex: Buffer.from(mnemonicToSeedSync(seedPhrase)).toString(
+                'hex'
             ),
+            identityIndex: identityIndex,
             ipInfo: selectedIdentityProvider.ipInfo,
             globalContext: cryptographicParameters,
-            idCredSec,
-            prfKey,
-            blindingRandomness,
+            timestamp: Math.floor(Date.now() / 1000),
         };
         worker.postMessage(identityRequestInput);
     }
 
+    if (recoveryFailed) {
+        return (
+            <div>
+                <h3>Recovery failed</h3>
+                <p>Error: {recoveryFailed}</p>
+                <button onClick={() => navigate('/create')}>
+                    Go to identity creation
+                </button>
+            </div>
+        );
+    }
+
     return (
         <div>
-            <h3>Identity Issuance</h3>
+            <h3>Identity Recovery</h3>
             <label>
                 Select an identity provider
                 <select
@@ -140,12 +144,14 @@ export function CreateIdentity() {
             </label>
             <button
                 disabled={createButtonDisabled && dataLoaded}
-                onClick={createIdentity}
+                onClick={recoverIdentity}
             >
-                Create identity
+                Recover identity
             </button>
             {createButtonDisabled && (
-                <div>Generating identity request. This can take a while.</div>
+                <div>
+                    Generating identity recovery request. This can take a while.
+                </div>
             )}
         </div>
     );

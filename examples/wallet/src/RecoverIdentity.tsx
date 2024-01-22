@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+    ConcordiumHdWallet,
     CredentialRegistrationId,
     CryptographicParameters,
     IdentityRecoveryRequestInput,
+    IdentityRecoveryRequestWithKeysInput,
     IdRecoveryRequest,
 } from '@concordium/web-sdk';
 import { IdentityProviderWithMetadata } from './types';
@@ -69,9 +71,11 @@ export function RecoverIdentity() {
 
         setCreateButtonDisabled(true);
 
+        const ipIdentity = selectedIdentityProvider.ipInfo.ipIdentity;
+
         localStorage.setItem(
             selectedIdentityProviderKey,
-            selectedIdentityProvider.ipInfo.ipIdentity.toString()
+            ipIdentity.toString()
         );
 
         const listener = (worker.onmessage = async (
@@ -95,7 +99,7 @@ export function RecoverIdentity() {
                     // Check if the account exists, in which case we go directly to the account page.
                     const credId = getCredentialId(
                         seedPhrase,
-                        selectedIdentityProvider.ipInfo.ipIdentity,
+                        ipIdentity,
                         cryptographicParameters
                     );
                     try {
@@ -117,12 +121,12 @@ export function RecoverIdentity() {
             }
         });
 
-        const identityRequestInput: IdentityRecoveryRequestInput = {
-            net: network,
-            seedAsHex: Buffer.from(mnemonicToSeedSync(seedPhrase)).toString(
-                'hex'
-            ),
-            identityIndex: identityIndex,
+        const wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, network);
+        const idCredSec = wallet
+            .getIdCredSec(ipIdentity, identityIndex)
+            .toString('hex');
+        const identityRequestInput: IdentityRecoveryRequestWithKeysInput = {
+            idCredSec,
             ipInfo: selectedIdentityProvider.ipInfo,
             globalContext: cryptographicParameters,
             timestamp: Math.floor(Date.now() / 1000),

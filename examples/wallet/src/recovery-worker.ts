@@ -1,9 +1,9 @@
 import {
-    createIdentityRecoveryRequest,
-    IdentityRecoveryRequestInput,
+    createIdentityRecoveryRequestWithKeys,
+    IdentityRecoveryRequestWithKeysInput,
 } from '@concordium/web-sdk';
 
-self.onmessage = (e: MessageEvent<IdentityRecoveryRequestInput>) => {
-    const recoveryRequest = createIdentityRecoveryRequest(e.data);
+self.onmessage = (e: MessageEvent<IdentityRecoveryRequestWithKeysInput>) => {
+    const recoveryRequest = createIdentityRecoveryRequestWithKeys(e.data);
     self.postMessage(recoveryRequest);
 };

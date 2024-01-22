@@ -97,7 +97,11 @@ export function getAccountSigningKey(
  * those indices are hardcoded to 0. In a production wallet any number of identities and
  * accounts could be created.
  */
-export function getCredentialId(seedPhrase: string, identityProviderIdentity: number, global: CryptographicParameters) {
+export function getCredentialId(
+    seedPhrase: string,
+    identityProviderIdentity: number,
+    global: CryptographicParameters
+) {
     const wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, network);
     return wallet
         .getCredentialId(

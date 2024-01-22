@@ -1,10 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    ConcordiumHdWallet,
     CredentialRegistrationId,
     CryptographicParameters,
-    getAccountAddress,
     IdentityRecoveryRequestInput,
     IdRecoveryRequest,
 } from '@concordium/web-sdk';
@@ -95,10 +93,18 @@ export function RecoverIdentity() {
                     );
 
                     // Check if the account exists, in which case we go directly to the account page.
-                    const credId = getCredentialId(seedPhrase, selectedIdentityProvider.ipInfo.ipIdentity,cryptographicParameters)
+                    const credId = getCredentialId(
+                        seedPhrase,
+                        selectedIdentityProvider.ipInfo.ipIdentity,
+                        cryptographicParameters
+                    );
                     try {
-                        const accountInfo = await client.getAccountInfo(CredentialRegistrationId.fromHexString(credId));
-                        navigate(`/account/${accountInfo.accountAddress.address}`);
+                        const accountInfo = await client.getAccountInfo(
+                            CredentialRegistrationId.fromHexString(credId)
+                        );
+                        navigate(
+                            `/account/${accountInfo.accountAddress.address}`
+                        );
                         return;
                     } catch {
                         // We assume that the account does not exist, so we continue to the identity page

@@ -19,6 +19,7 @@ import {
     serializeCredentialDeploymentPayload,
     signTransaction,
     IdRecoveryRequest,
+    CryptographicParameters,
 } from '@concordium/web-sdk';
 import {
     IdentityProviderWithMetadata,
@@ -85,6 +86,29 @@ export function getAccountSigningKey(
             identityProviderIdentity,
             identityIndex,
             credNumber
+        )
+        .toString('hex');
+}
+
+/**
+ * Derives a credential (registration) id.
+ *
+ * For this example we only work with a single identity and a single account, therefore
+ * those indices are hardcoded to 0. In a production wallet any number of identities and
+ * accounts could be created.
+ */
+export function getCredentialId(
+    seedPhrase: string,
+    identityProviderIdentity: number,
+    global: CryptographicParameters
+) {
+    const wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, network);
+    return wallet
+        .getCredentialId(
+            identityProviderIdentity,
+            identityIndex,
+            credNumber,
+            global
         )
         .toString('hex');
 }

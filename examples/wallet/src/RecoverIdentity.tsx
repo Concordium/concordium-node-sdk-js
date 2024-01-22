@@ -4,7 +4,6 @@ import {
     ConcordiumHdWallet,
     CredentialRegistrationId,
     CryptographicParameters,
-    IdentityRecoveryRequestInput,
     IdentityRecoveryRequestWithKeysInput,
     IdRecoveryRequest,
 } from '@concordium/web-sdk';
@@ -16,8 +15,6 @@ import {
     getIdentityProviders,
     sendIdentityRecoveryRequest,
 } from './util';
-import { mnemonicToSeedSync } from '@scure/bip39';
-import { Buffer } from 'buffer/';
 import {
     identityIndex,
     identityObjectKey,

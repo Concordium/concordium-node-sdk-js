@@ -21,7 +21,7 @@ export function SetupSeedPhrase() {
 
         try {
             localStorage.setItem(seedPhraseKey, seedPhraseWords);
-            navigate('/create');
+            navigate('/new');
         } catch {
             alert('An invalid seed phrase was provided');
             return;

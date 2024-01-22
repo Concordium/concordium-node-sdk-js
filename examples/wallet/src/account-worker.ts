@@ -1,8 +1,8 @@
-import { createCredentialTransaction } from '@concordium/web-sdk';
+import { createCredentialTransactionNoSeed } from '@concordium/web-sdk';
 import { AccountWorkerInput } from './types';
 
 self.onmessage = (e: MessageEvent<AccountWorkerInput>) => {
-    const credentialTransaction = createCredentialTransaction(
+    const credentialTransaction = createCredentialTransactionNoSeed(
         e.data.credentialInput,
         e.data.expiry
     );

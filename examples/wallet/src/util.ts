@@ -4,18 +4,21 @@ import {
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionType,
+    AttributesKeys,
     CcdAmount,
     ConcordiumGRPCWebClient,
     ConcordiumHdWallet,
     CredentialDeploymentTransaction,
     IdObjectRequestV1,
     IdentityObjectV1,
+    Network,
     SimpleTransferPayload,
     TransactionExpiry,
     Versioned,
     buildBasicAccountSigner,
     serializeCredentialDeploymentPayload,
     signTransaction,
+    IdRecoveryRequest,
 } from '@concordium/web-sdk';
 import {
     IdentityProviderWithMetadata,
@@ -30,6 +33,7 @@ import {
     nodePort,
     walletProxyBaseUrl,
 } from './constants';
+import { filterRecord, mapRecord } from '../../../packages/sdk/lib/esm/util';
 
 // Redirect URI used in the identity creation protocol.
 // This determines where the identity provider will redirect the
@@ -37,7 +41,7 @@ import {
 // We dynamically resolve this as the hosted server can run at different
 // locations.
 export function getRedirectUri() {
-    return window.location.origin + '/identity';
+    return window.location.origin + '/confirm-identity';
 }
 
 /**
@@ -171,6 +175,63 @@ export async function fetchIdentity(
 }
 
 /**
+ * Derive the required secret key material, the randomness and public key for a credential deployment transaction
+ * from a seed phrase.
+ */
+export function createCredentialDeploymentKeysAndRandomness(
+    seedPhrase: string,
+    net: Network,
+    identityProviderIndex: number,
+    identityIndex: number,
+    credNumber: number
+) {
+    const wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, net);
+    const publicKey = wallet
+        .getAccountPublicKey(identityProviderIndex, identityIndex, credNumber)
+        .toString('hex');
+
+    const verifyKey = {
+        schemeId: 'Ed25519',
+        verifyKey: publicKey,
+    };
+    const credentialPublicKeys = {
+        keys: { 0: verifyKey },
+        threshold: 1,
+    };
+
+    const prfKey = wallet
+        .getPrfKey(identityProviderIndex, identityIndex)
+        .toString('hex');
+    const idCredSec = wallet
+        .getIdCredSec(identityProviderIndex, identityIndex)
+        .toString('hex');
+    const blindingRandomness = wallet
+        .getSignatureBlindingRandomness(identityProviderIndex, identityIndex)
+        .toString('hex');
+
+    const attributeRandomness = mapRecord(
+        filterRecord(AttributesKeys, (k) => isNaN(Number(k))),
+        (x) =>
+            wallet
+                .getAttributeCommitmentRandomness(
+                    identityProviderIndex,
+                    identityIndex,
+                    credNumber,
+                    x
+                )
+                .toString('hex')
+    );
+
+    return {
+        prfKey,
+        idCredSec,
+        blindingRandomness,
+        attributeRandomness,
+        credentialPublicKeys,
+    };
+}
+
+/**
  * Serializes a credential deployment transaction and sends it to a node.
  * @param credentialDeployment the credential deployment to send
  * @param signature a signature on the credential deployment
@@ -235,6 +296,29 @@ export async function sendIdentityRequest(
     }
 }
 
+/**
+ * Sends an identity recovery object request, which is the start of the identity recovery flow, to the
+ * provided URL.
+ * @param recoveryRequest the identity recovery request to send
+ * @param baseUrl the identity recovery start URL
+ * @returns the URL that the identity provider redirects to. This URL should point to to versioned identity object.
+ */
+export async function sendIdentityRecoveryRequest(
+    recoveryRequest: IdRecoveryRequest,
+    baseUrl: string
+) {
+    const searchParams = new URLSearchParams({
+        state: JSON.stringify({ idRecoveryRequest: recoveryRequest }),
+    });
+    const url = `${baseUrl}?${searchParams.toString()}`;
+    const response = await fetch(url);
+
+    if (response.ok) {
+        return response.url;
+    } else {
+        throw new Error((await response.json()).message);
+    }
+}
 /**
  * Gets information about an account from the node. The method will continue to poll for some time
  * as the account might not be in a block when this is first called.

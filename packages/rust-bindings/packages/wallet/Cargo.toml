@@ -19,6 +19,7 @@ serde-wasm-bindgen.workspace = true
 concordium_base.workspace = true
 ed25519_hd_key_derivation.workspace = true
 key_derivation.workspace = true
+wallet_library.workspace = true
 concordium_rust_bindings_common.workspace = true
 ed25519-dalek = { version = "=1.0" }
 chrono = "0.4.24"

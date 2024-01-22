@@ -28,3 +28,6 @@ path = "../../deps/concordium-base/rust-src/ed25519_hd_key_derivation"
 
 [workspace.dependencies.key_derivation]
 path = "../../deps/concordium-base/rust-src/key_derivation"
+
+[workspace.dependencies.wallet_library]
+path = "../../deps/concordium-base/rust-src/wallet_library"

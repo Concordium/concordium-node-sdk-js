@@ -5,6 +5,7 @@ export const network: Network = 'Testnet';
 // Local storage keys
 export const seedPhraseKey = 'seed-phrase';
 export const selectedIdentityProviderKey = 'selected-identity-provider';
+export const identityObjectKey = 'identity-object';
 
 // The indices of the identity and the credential deployed on the account.
 // These are static in this example as we only create a single identity and

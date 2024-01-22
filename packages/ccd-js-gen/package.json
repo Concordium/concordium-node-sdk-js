@@ -37,9 +37,6 @@
         "url": "https://concordium.com"
     },
     "license": "Apache-2.0",
-    "engines": {
-        "node": ">=16.15.0 <21"
-    },
     "peerDependencies": {
         "@concordium/web-sdk": "7.x"
     },

@@ -1,8 +1,10 @@
 /*
 This file contains code for building the command line inferface to the ccd-js-gen library.
 */
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Command } from 'commander';
-import packageJson from '../package.json' assert { type: 'json' };
 import * as lib from './lib.js';
 
 /** Type representing the CLI options/arguments and needs to match the options set with commander.js */
@@ -19,6 +21,16 @@ type Options = {
 
 // Main function, which is called in the executable script in `bin`.
 export async function main(): Promise<void> {
+    // Read package.json for version and description:
+    const scriptPath = fileURLToPath(import.meta.url);
+    const binFolder = path.parse(scriptPath).dir;
+    const cliPath = pathToFileURL(
+        path.resolve(binFolder, '..', '..', 'package.json')
+    );
+    const packageJson: { version: string; description: string } = await fs
+        .readFile(cliPath, 'utf-8')
+        .then(JSON.parse);
+
     const program = new Command();
     program
         .name('ccd-js-gen')

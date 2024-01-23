@@ -68,7 +68,10 @@ export async function main(): Promise<void> {
         onProgress(update) {
             if (update.type === 'Progress') {
                 console.log(
-                    `[${update.doneItems}/${update.totalItems}] ${update.spentTime}ms`
+                    `[${update.doneItems}/${update.totalItems}] ${update.spentTime}ms `.padEnd(
+                        15,
+                        ' '
+                    ) + update.description
                 );
             }
         },

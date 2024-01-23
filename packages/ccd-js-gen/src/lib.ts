@@ -212,7 +212,8 @@ async function generateCode(
         overwrite: true,
     });
     const moduleClientId = 'moduleClient';
-    const moduleClientType = `${toPascalCase(outModuleName)}Module`;
+    const sanitizedOutModuleName = sanitizeIdentifier(outModuleName);
+    const moduleClientType = `${toPascalCase(sanitizedOutModuleName)}Module`;
     const internalModuleClientId = 'internalModuleClient';
 
     moduleSourceFile.addStatements(
@@ -2290,3 +2291,20 @@ function defineProp(propId: string, valueId: string): string {
  * when accessing props or defining fields in an object.
  */
 const identifierRegex = /^[$A-Z_][0-9A-Z_$]*$/i;
+
+/**
+ * Regular expression matching any character which cannot be used as an identifier.
+ */
+const notIdentifierSymbolRegex = /[^0-9A-Z_$]/gi;
+
+/**
+ * Remove any characters from a string which cannot be used as an identifier.
+ * @param {string} input Input to sanitize.
+ * @returns {string} Input string without any characters which are invalid for identifiers.
+ *
+ * @example
+ * sanitizeIdentifier("some/weird variable.name") // "someweirdvariablename"
+ */
+function sanitizeIdentifier(input: string): string {
+    return input.replaceAll(notIdentifierSymbolRegex, '');
+}

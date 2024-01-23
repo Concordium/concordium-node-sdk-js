@@ -85,6 +85,9 @@ const transactionHash = await MyContract.sendTransfer(contractClient, {
     - [type `ErrorMessage<EntrypointName>`](#type-errormessageentrypointname)
     - [function `parseErrorMessage<EntrypointName>`](#function-parseerrormessageentrypointname)
     - [function `create<EntrypointName>ParameterWebWallet`](#function-createentrypointnameparameterwebwallet)
+- [Development](#development)
+  - [Setup](#setup)
+  - [Development workflow](#development-workflow)
 <!--toc:end-->
 
 ## Install the package
@@ -628,4 +631,38 @@ const transactionHash = await webWalletConnection.signAndSendTransaction(
     AccountTransactionType.Update,
     walletParameter
 );
+```
+
+## Development
+
+This section describes how to setup and start developing this package.
+
+### Setup
+
+To be able to develop `ccd-js-gen` make sure to have:
+
+- [NodeJs](https://nodejs.org/en) (see `package.json` for which versions are supported).
+- [Yarn](https://yarnpkg.com/)
+- [Rust and cargo](https://rustup.rs/)
+
+After cloning this repository makes sure to do the following:
+
+- Initialize git submodules recursively, can be done using `git submodules update --init --recursive`.
+- Install dependencies by running `yarn install` in the root of this repo.
+- Build everything using `yarn build` in the root of this repo.
+
+### Development workflow
+
+After doing changes to the source code of `ccd-js-gen` run `yarn build` from the `packages/ccd-js-gen` directory.
+
+To run CLI locally use:
+
+```bash
+./bin/ccd-js-gen.js --module "<module>" --out-dir "./lib/generated"
+```
+
+To run tests locally use:
+
+```bash
+yarn test
 ```

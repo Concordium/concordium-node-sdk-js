@@ -1,4 +1,4 @@
 {
     "extends": "./tsconfig.json",
-    "include": ["src/**/*", "package.json"]
+    "include": ["src/**/*", "package.json"] // package.json is used by the CLI, therefore it is included here.
 }

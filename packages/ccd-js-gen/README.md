@@ -657,7 +657,7 @@ After doing changes to the source code of `ccd-js-gen` run `yarn build` from the
 To run CLI locally use:
 
 ```
-./bin/ccd-js-gen.js --module "<module>" --out "./lib/generated"
+./bin/ccd-js-gen.js --module "<module>" --out-dir "./lib/generated"
 ```
 
 To run tests locally use:

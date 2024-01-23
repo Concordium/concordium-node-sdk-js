@@ -638,6 +638,7 @@ const transactionHash = await webWalletConnection.signAndSendTransaction(
 This section describes how to setup and start developing this package.
 
 ### Setup
+
 To be able to develop `ccd-js-gen` make sure to have:
 
 - [NodeJs](https://nodejs.org/en) (see `package.json` for which versions are supported).
@@ -656,12 +657,12 @@ After doing changes to the source code of `ccd-js-gen` run `yarn build` from the
 
 To run CLI locally use:
 
-```
+```bash
 ./bin/ccd-js-gen.js --module "<module>" --out-dir "./lib/generated"
 ```
 
 To run tests locally use:
 
-```
+```bash
 yarn test
 ```

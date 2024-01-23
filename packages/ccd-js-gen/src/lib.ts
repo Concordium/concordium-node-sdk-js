@@ -458,33 +458,86 @@ function generactionModuleContractCode(
     const transactionMetadataId = 'transactionMetadata';
     const parameterId = 'parameter';
     const signerId = 'signer';
-
-    const initParameter = createParameterCode(
-        parameterId,
-        contractSchema?.init?.parameter
-    );
-
     const initParameterTypeId = `${toPascalCase(contractName)}Parameter`;
-
+    const base64InitParameterSchemaTypeId = `base64${toPascalCase(
+        contractName
+    )}ParameterSchema`;
+    const initParameterJsonTypeId = `${toPascalCase(
+        contractName
+    )}ParameterSchemaJson`;
     const createInitParameterFnId = `create${toPascalCase(
         contractName
     )}Parameter`;
+    const createInitParameterJsonFnId = `create${toPascalCase(
+        contractName
+    )}ParameterSchemaJson`;
+    const createInitParameterFnWebWalletId = `create${toPascalCase(
+        contractName
+    )}ParameterWebWallet`;
 
-    if (initParameter !== undefined) {
-        moduleSourceFile.addTypeAlias({
+    const initParameterSchemaType = contractSchema?.init?.parameter;
+
+    if (initParameterSchemaType !== undefined) {
+        moduleSourceFile.addVariableStatement({
             docs: [
-                `Parameter type transaction for instantiating a new '${contractName}' smart contract instance`,
+                `Base64 encoding of the parameter schema type used when instantiating a new '${contractName}' smart contract instance.`,
             ],
-            isExported: true,
-            name: initParameterTypeId,
-            type: initParameter.type,
+            declarationKind: tsm.VariableDeclarationKind.Const,
+            declarations: [
+                {
+                    name: base64InitParameterSchemaTypeId,
+                    initializer: `'${Buffer.from(
+                        SDK.serializeSchemaType(initParameterSchemaType)
+                    ).toString('base64')}'`,
+                },
+            ],
         });
 
-        moduleSourceFile
-            .addFunction({
+        const typeAndMapper = schemaAsNativeType(initParameterSchemaType);
+        moduleSourceFile.addTypeAlias({
+            docs: [
+                `Parameter JSON type needed by the schema when instantiating a new '${contractName}' smart contract instance.`,
+            ],
+            name: initParameterJsonTypeId,
+            type: typeAndMapper.jsonType,
+        });
+
+        if (initParameterSchemaType.type !== 'Unit') {
+            moduleSourceFile.addTypeAlias({
+                docs: [
+                    `Parameter type transaction for instantiating a new '${contractName}' smart contract instance.`,
+                ],
+                isExported: true,
+                name: initParameterTypeId,
+                type: typeAndMapper.nativeType,
+            });
+
+            const mappedParameter = typeAndMapper.nativeToJson(parameterId);
+            moduleSourceFile.addFunction({
                 docs: [
                     [
-                        `Construct Parameter type transaction for instantiating a new '${contractName}' smart contract instance.`,
+                        `Construct schema JSON representation used in transactions for instantiating a new '${contractName}' smart contract instance.`,
+                        `@param {${initParameterTypeId}} ${parameterId} The structured parameter to construct from.`,
+                        `@returns {${initParameterJsonTypeId}} The smart contract parameter JSON.`,
+                    ].join('\n'),
+                ],
+                name: createInitParameterJsonFnId,
+                parameters: [
+                    {
+                        type: initParameterTypeId,
+                        name: parameterId,
+                    },
+                ],
+                returnType: initParameterJsonTypeId,
+                statements: [
+                    ...mappedParameter.code,
+                    `return ${mappedParameter.id};`,
+                ],
+            });
+            moduleSourceFile.addFunction({
+                docs: [
+                    [
+                        `Construct Parameter type used in transactions for instantiating a new '${contractName}' smart contract instance.`,
                         `@param {${initParameterTypeId}} ${parameterId} The structured parameter to construct from.`,
                         '@returns {SDK.Parameter.Type} The smart contract parameter.',
                     ].join('\n'),
@@ -498,11 +551,50 @@ function generactionModuleContractCode(
                     },
                 ],
                 returnType: 'SDK.Parameter.Type',
-            })
-            .setBodyText(
-                [...initParameter.code, `return ${initParameter.id}`].join('\n')
-            );
+                statements: [
+                    `return SDK.Parameter.fromBase64SchemaType(${base64InitParameterSchemaTypeId}, ${createInitParameterJsonFnId}(${parameterId}));`,
+                ],
+            });
+
+            moduleSourceFile.addFunction({
+                docs: [
+                    [
+                        `Construct WebWallet parameter type used in transactions for instantiating a new '${contractName}' smart contract instance.`,
+                        `@param {${initParameterTypeId}} ${parameterId} The structured parameter to construct from.`,
+                        '@returns The smart contract parameter support by the WebWallet.',
+                    ].join('\n'),
+                ],
+                isExported: true,
+                name: createInitParameterFnWebWalletId,
+                parameters: [
+                    {
+                        type: initParameterTypeId,
+                        name: parameterId,
+                    },
+                ],
+                statements: [
+                    'return {',
+                    `    parameters: ${createInitParameterJsonFnId}(${parameterId}),`,
+                    '    schema: {',
+                    "        type: 'TypeSchema' as const,",
+                    `        value: SDK.toBuffer(${base64InitParameterSchemaTypeId}, 'base64')`,
+                    '    },',
+                    '}',
+                ],
+            });
+        }
+    } else {
+        moduleSourceFile.addTypeAlias({
+            docs: [
+                `Parameter type transaction for instantiating a new '${contractName}' smart contract instance.`,
+            ],
+            isExported: true,
+            name: initParameterTypeId,
+            type: 'SDK.Parameter.Type',
+        });
     }
+
+    const initTakesNoParameter = initParameterSchemaType?.type === 'Unit';
 
     moduleSourceFile
         .addFunction({
@@ -511,7 +603,7 @@ function generactionModuleContractCode(
                     `Send transaction for instantiating a new '${contractName}' smart contract instance.`,
                     `@param {${moduleClientType}} ${moduleClientId} - The client of the on-chain smart contract module with referecence '${moduleRef.moduleRef}'.`,
                     `@param {SDK.ContractTransactionMetadata} ${transactionMetadataId} - Metadata related to constructing a transaction for a smart contract module.`,
-                    ...(initParameter === undefined
+                    ...(initTakesNoParameter
                         ? []
                         : [
                               `@param {${initParameterTypeId}} ${parameterId} - Parameter to provide as part of the transaction for the instantiation of a new smart contract contract.`,
@@ -532,7 +624,7 @@ function generactionModuleContractCode(
                     name: transactionMetadataId,
                     type: 'SDK.ContractTransactionMetadata',
                 },
-                ...(initParameter === undefined
+                ...(initTakesNoParameter
                     ? []
                     : [
                           {
@@ -553,7 +645,9 @@ function generactionModuleContractCode(
                 `    ${moduleClientId}.${internalModuleClientId},`,
                 `    SDK.ContractName.fromStringUnchecked('${contractName}'),`,
                 `    ${transactionMetadataId},`,
-                ...(initParameter === undefined
+                ...(initParameterSchemaType === undefined
+                    ? [`    ${parameterId},`]
+                    : initParameterSchemaType.type === 'Unit'
                     ? []
                     : [`    ${createInitParameterFnId}(${parameterId}),`]),
                 `    ${signerId}`,
@@ -854,33 +948,86 @@ function generateContractEntrypointCode(
     const signerId = 'signer';
     const genericContractId = 'genericContract';
     const blockHashId = 'blockHash';
-
-    const receiveParameter = createParameterCode(
-        parameterId,
-        entrypointSchema?.parameter
-    );
-
     const receiveParameterTypeId = `${toPascalCase(entrypointName)}Parameter`;
-
+    const base64ReceiveParameterSchemaTypeId = `base64${toPascalCase(
+        entrypointName
+    )}ParameterSchema`;
+    const receiveParameterJsonTypeId = `${toPascalCase(
+        entrypointName
+    )}ParameterSchemaJson`;
     const createReceiveParameterFnId = `create${toPascalCase(
         entrypointName
     )}Parameter`;
+    const createReceiveParameterJsonFnId = `create${toPascalCase(
+        entrypointName
+    )}ParameterSchemaJson`;
+    const createReceiveParameterFnWebWalletId = `create${toPascalCase(
+        entrypointName
+    )}ParameterWebWallet`;
 
-    if (receiveParameter !== undefined) {
-        contractSourceFile.addTypeAlias({
+    const receiveParameterSchemaType = entrypointSchema?.parameter;
+
+    if (receiveParameterSchemaType !== undefined) {
+        contractSourceFile.addVariableStatement({
             docs: [
-                `Parameter type for update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
+                `Base64 encoding of the parameter schema type for update transactions to '${entrypointName}' entrypoint of the '${contractName}' contract.`,
             ],
-            isExported: true,
-            name: receiveParameterTypeId,
-            type: receiveParameter.type,
+            declarationKind: tsm.VariableDeclarationKind.Const,
+            declarations: [
+                {
+                    name: base64ReceiveParameterSchemaTypeId,
+                    initializer: `'${Buffer.from(
+                        SDK.serializeSchemaType(receiveParameterSchemaType)
+                    ).toString('base64')}'`,
+                },
+            ],
         });
 
-        contractSourceFile
-            .addFunction({
+        const typeAndMapper = schemaAsNativeType(receiveParameterSchemaType);
+        contractSourceFile.addTypeAlias({
+            docs: [
+                `Parameter JSON type needed by the schema for update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
+            ],
+            name: receiveParameterJsonTypeId,
+            type: typeAndMapper.jsonType,
+        });
+        if (receiveParameterSchemaType.type !== 'Unit') {
+            contractSourceFile.addTypeAlias({
+                docs: [
+                    `Parameter type for update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
+                ],
+                isExported: true,
+                name: receiveParameterTypeId,
+                type: typeAndMapper.nativeType,
+            });
+
+            const mappedParameter = typeAndMapper.nativeToJson(parameterId);
+
+            contractSourceFile.addFunction({
                 docs: [
                     [
-                        `Construct Parameter for update transactions for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
+                        `Construct schema JSON representation used in update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
+                        `@param {${receiveParameterTypeId}} ${parameterId} The structured parameter to construct from.`,
+                        `@returns {${receiveParameterJsonTypeId}} The smart contract parameter JSON.`,
+                    ].join('\n'),
+                ],
+                name: createReceiveParameterJsonFnId,
+                parameters: [
+                    {
+                        type: receiveParameterTypeId,
+                        name: parameterId,
+                    },
+                ],
+                returnType: receiveParameterJsonTypeId,
+                statements: [
+                    ...mappedParameter.code,
+                    `return ${mappedParameter.id};`,
+                ],
+            });
+            contractSourceFile.addFunction({
+                docs: [
+                    [
+                        `Construct Parameter type used in update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
                         `@param {${receiveParameterTypeId}} ${parameterId} The structured parameter to construct from.`,
                         '@returns {SDK.Parameter.Type} The smart contract parameter.',
                     ].join('\n'),
@@ -894,14 +1041,50 @@ function generateContractEntrypointCode(
                     },
                 ],
                 returnType: 'SDK.Parameter.Type',
-            })
-            .setBodyText(
-                [
-                    ...receiveParameter.code,
-                    `return ${receiveParameter.id};`,
-                ].join('\n')
-            );
+                statements: [
+                    `return SDK.Parameter.fromBase64SchemaType(${base64ReceiveParameterSchemaTypeId}, ${createReceiveParameterJsonFnId}(${parameterId}));`,
+                ],
+            });
+
+            contractSourceFile.addFunction({
+                docs: [
+                    [
+                        `Construct WebWallet parameter type used in update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
+                        `@param {${receiveParameterTypeId}} ${parameterId} The structured parameter to construct from.`,
+                        '@returns The smart contract parameter support by the WebWallet.',
+                    ].join('\n'),
+                ],
+                isExported: true,
+                name: createReceiveParameterFnWebWalletId,
+                parameters: [
+                    {
+                        type: receiveParameterTypeId,
+                        name: parameterId,
+                    },
+                ],
+                statements: [
+                    'return {',
+                    `    parameters: ${createReceiveParameterJsonFnId}(${parameterId}),`,
+                    '    schema: {',
+                    "        type: 'TypeSchema' as const,",
+                    `        value: SDK.toBuffer(${base64ReceiveParameterSchemaTypeId}, 'base64')`,
+                    '    },',
+                    '}',
+                ],
+            });
+        }
+    } else {
+        contractSourceFile.addTypeAlias({
+            docs: [
+                `Parameter type  used in update transaction for '${entrypointName}' entrypoint of the '${contractName}' contract.`,
+            ],
+            isExported: true,
+            name: receiveParameterTypeId,
+            type: 'SDK.Parameter.Type',
+        });
     }
+
+    const receiveTakesNoParameter = receiveParameterSchemaType?.type === 'Unit';
 
     contractSourceFile
         .addFunction({
@@ -910,7 +1093,7 @@ function generateContractEntrypointCode(
                     `Send an update-contract transaction to the '${entrypointName}' entrypoint of the '${contractName}' contract.`,
                     `@param {${contractClientType}} ${contractClientId} The client for a '${contractName}' smart contract instance on chain.`,
                     `@param {SDK.ContractTransactionMetadata} ${transactionMetadataId} - Metadata related to constructing a transaction for a smart contract.`,
-                    ...(receiveParameter === undefined
+                    ...(receiveTakesNoParameter
                         ? []
                         : [
                               `@param {${receiveParameterTypeId}} ${parameterId} - Parameter to provide the smart contract entrypoint as part of the transaction.`,
@@ -931,7 +1114,7 @@ function generateContractEntrypointCode(
                     name: transactionMetadataId,
                     type: 'SDK.ContractTransactionMetadata',
                 },
-                ...(receiveParameter === undefined
+                ...(receiveTakesNoParameter
                     ? []
                     : [
                           {
@@ -952,7 +1135,9 @@ function generateContractEntrypointCode(
                 `    SDK.EntrypointName.fromStringUnchecked('${entrypointName}'),`,
                 '    SDK.Parameter.toBuffer,',
                 `    ${transactionMetadataId},`,
-                ...(receiveParameter === undefined
+                ...(receiveParameterSchemaType === undefined
+                    ? [`    ${parameterId},`]
+                    : receiveParameterSchemaType.type === 'Unit'
                     ? []
                     : [`    ${createReceiveParameterFnId}(${parameterId}),`]),
                 `    ${signerId}`,
@@ -967,7 +1152,7 @@ function generateContractEntrypointCode(
                     `Dry-run an update-contract transaction to the '${entrypointName}' entrypoint of the '${contractName}' contract.`,
                     `@param {${contractClientType}} ${contractClientId} The client for a '${contractName}' smart contract instance on chain.`,
                     `@param {SDK.ContractAddress.Type | SDK.AccountAddress.Type} ${invokeMetadataId} - The address of the account or contract which is invoking this transaction.`,
-                    ...(receiveParameter === undefined
+                    ...(receiveTakesNoParameter
                         ? []
                         : [
                               `@param {${receiveParameterTypeId}} ${parameterId} - Parameter to provide the smart contract entrypoint as part of the transaction.`,
@@ -984,7 +1169,7 @@ function generateContractEntrypointCode(
                     name: contractClientId,
                     type: contractClientType,
                 },
-                ...(receiveParameter === undefined
+                ...(receiveTakesNoParameter
                     ? []
                     : [
                           {
@@ -1011,7 +1196,9 @@ function generateContractEntrypointCode(
                 `    SDK.EntrypointName.fromStringUnchecked('${entrypointName}'),`,
                 `    ${invokeMetadataId},`,
                 '    SDK.Parameter.toBuffer,',
-                ...(receiveParameter === undefined
+                ...(receiveParameterSchemaType === undefined
+                    ? [`    ${parameterId},`]
+                    : receiveParameterSchemaType.type === 'Unit'
                     ? []
                     : [`    ${createReceiveParameterFnId}(${parameterId}),`]),
                 `    ${blockHashId}`,
@@ -1733,11 +1920,11 @@ function schemaAsNativeType(schemaType: SDK.SchemaType): SchemaNativeType {
             };
         case 'ULeb128':
         case 'ILeb128':
+            const resultId = idGenerator('leb');
             return {
                 nativeType: 'number | bigint',
-                jsonType: 'bigint',
+                jsonType: 'string',
                 nativeToJson(id) {
-                    const resultId = idGenerator('number');
                     return {
                         code: [`const ${resultId} = BigInt(${id}).toString();`],
                         id: resultId,
@@ -1745,8 +1932,8 @@ function schemaAsNativeType(schemaType: SDK.SchemaType): SchemaNativeType {
                 },
                 jsonToNative(id) {
                     return {
-                        code: [],
-                        id: `BigInt(${id})`,
+                        code: [`const ${resultId} = BigInt(${id});`],
+                        id: resultId,
                     };
                 },
             };
@@ -1935,45 +2122,6 @@ type TypeConversionCode = {
     /** Identifier for the result of the code. */
     id: string;
 };
-
-/**
- * Generate tokens for creating the parameter from input.
- * @param {string} parameterId Identifier of the input.
- * @param {SDK.SchemaType} [schemaType] The schema type to use for the parameter.
- * @returns Undefined if no parameter is expected.
- */
-function createParameterCode(
-    parameterId: string,
-    schemaType?: SDK.SchemaType
-): TypeConversionCode | undefined {
-    // No schema type is present so fallback to plain parameter.
-    if (schemaType === undefined) {
-        return {
-            type: 'SDK.Parameter.Type',
-            code: [],
-            id: parameterId,
-        };
-    }
-
-    if (schemaType.type === 'Unit') {
-        // No parameter is needed according to the schema.
-        return undefined;
-    }
-    const typeAndMapper = schemaAsNativeType(schemaType);
-    const buffer = SDK.serializeSchemaType(schemaType);
-    const base64Schema = Buffer.from(buffer).toString('base64');
-
-    const mappedParameter = typeAndMapper.nativeToJson(parameterId);
-    const resultId = 'out';
-    return {
-        type: typeAndMapper.nativeType,
-        code: [
-            ...mappedParameter.code,
-            `const ${resultId} = SDK.Parameter.fromBase64SchemaType('${base64Schema}', ${mappedParameter.id});`,
-        ],
-        id: resultId,
-    };
-}
 
 /**
  * Generate tokens for parsing a contract event.

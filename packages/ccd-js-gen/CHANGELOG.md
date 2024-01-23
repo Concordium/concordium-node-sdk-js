@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.2.0
+
 - Fix issue related to inferring module type names from the input file name, by removing characters, which are not valid in type names.
 - Improve information when reporting progress during code-generation.
 - Generate `create<ContractName>ParameterWebWallet` and `create<EntrypointName>ParameterWebWallet` functions for constructing the smart contract parameters in the format used by the Concordium Web-Wallet.

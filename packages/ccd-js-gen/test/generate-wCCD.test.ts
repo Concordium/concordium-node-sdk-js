@@ -91,8 +91,10 @@ describe('Generated contract client file', () => {
         const module = require(`${outContractFile}.js`);
         expect(module.parseEvent).toBeDefined();
         expect(module.createUnwrapParameter).toBeDefined();
+        expect(module.createUnwrapParameterWebWallet).toBeDefined();
         expect(module.parseErrorMessageUnwrap).toBeDefined();
         expect(module.createTransferParameter).toBeDefined();
+        expect(module.createTransferParameterWebWallet).toBeDefined();
         expect(module.parseErrorMessageTransfer).toBeDefined();
     });
 });

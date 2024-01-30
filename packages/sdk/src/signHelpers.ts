@@ -54,7 +54,6 @@ export interface WalletExportFormat {
  */
 export function parseWallet(walletString: JsonString): WalletExportFormat {
     const wallet = JSON.parse(walletString);
-    console.log(typeof wallet.type);
     if (typeof wallet.type !== 'string') {
         throw Error(
             'Expected field "type" to be of type "string" but was of type "' +

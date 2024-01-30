@@ -1,13 +1,18 @@
 # Changelog
 
+## Unreleased Changes
+
+### Added
+
+- `fromJSON` and `toJSON` methods to the `AccountTransactionHandler` interface,
+  and implementations for all transaction handlers.
+
 ## 7.2.0
 
 ### Added
 
 - `ContractAddress.toString` function that converts the address to a string in
   the `<index, subindex>` format.
-- `fromJSON` and `toJSON` methods to the `AccountTransactionHandler` interface,
-  and implementations for all transaction handlers.
 - Method (`createIdRequestWithKeysV1`) for creating an identity request by supplying the secret key material instead of the seed.
 - Method (`createIdentityRecoveryRequestWithKeys`) for creating an identity recovery request by supplying the secret key material instead of the seed.
 

@@ -10,7 +10,6 @@ import {
     encodeWord8,
     serializeConfigureDelegationPayload,
     serializeConfigureBakerPayload,
-    encodeHexString,
 } from './serializationHelpers.js';
 import {
     AccountTransactionType,
@@ -28,6 +27,8 @@ import {
     BakerKeysWithProofs,
     UrlString,
     DelegationTarget,
+    Base58String,
+    HexString,
 } from './types.js';
 import * as AccountAddress from './types/AccountAddress.js';
 import { DataBlob } from './types/DataBlob.js';
@@ -42,19 +43,51 @@ import {
     ModuleReference,
 } from './pub/types.js';
 
+/**
+ * A handler for a specific {@linkcode AccountTransactionType}.
+ */
 interface AccountTransactionHandler<
     PayloadType extends AccountTransactionPayload = AccountTransactionPayload,
     JSONType = PayloadType
 > {
+    /**
+     * Serializes the payload to a buffer.
+     * @param payload - The payload to serialize.
+     * @returns The serialized payload.
+     */
     serialize: (payload: PayloadType) => Buffer;
+
+    /**
+     * Deserializes the serialized payload into the payload type.
+     * @param serializedPayload - The serialized payload to be deserialized.
+     * @returns The deserialized payload.
+     */
     deserialize: (serializedPayload: Cursor) => PayloadType;
+
+    /**
+     * Gets the base energy cost for the given payload.
+     * @param payload - The payload for which to get the base energy cost.
+     * @returns The base energy cost for the payload.
+     */
     getBaseEnergyCost: (payload: PayloadType) => bigint;
+
+    /**
+     * Converts the payload into JSON format.
+     * @param payload - The payload to be converted into JSON.
+     * @returns The payload in JSON format.
+     */
     toJSON: (payload: PayloadType) => JSONType;
+
+    /**
+     * Converts a JSON-serialized payload into the payload type.
+     * @param json - The JSON to be converted back into the payload.
+     * @returns The payload obtained from the JSON.
+     */
     fromJSON: (json: JSONType) => PayloadType;
 }
 
 interface SimpleTransferPayloadJSON {
-    toAddress: string;
+    toAddress: Base58String;
     amount: bigint;
 }
 
@@ -104,7 +137,7 @@ export class SimpleTransferHandler
 }
 
 interface SimpleTransferWithMemoPayloadJSON extends SimpleTransferPayloadJSON {
-    memo: string;
+    memo: HexString;
 }
 
 export class SimpleTransferWithMemoHandler
@@ -159,15 +192,14 @@ export class SimpleTransferWithMemoHandler
     ): SimpleTransferWithMemoPayload {
         return {
             toAddress: AccountAddress.fromBase58(json.toAddress),
-            // The first 2 bytes are the length of the memo buffer, so we need to remove them.
-            memo: new DataBlob(encodeHexString(json.memo.substring(4))),
+            memo: DataBlob.fromJSON(json.memo),
             amount: CcdAmount.fromMicroCcd(json.amount),
         };
     }
 }
 
 interface DeployModulePayloadJSON {
-    source: string;
+    source: HexString;
     version?: number;
 }
 
@@ -218,9 +250,9 @@ export class DeployModuleHandler
 
 interface InitContractPayloadJSON {
     amount: bigint;
-    moduleRef: string;
+    moduleRef: HexString;
     initName: string;
-    param: string;
+    param: HexString;
     maxContractExecutionEnergy: bigint;
 }
 
@@ -283,7 +315,7 @@ interface UpdateContractPayloadJSON {
     amount: bigint;
     address: ContractAddress.SchemaValue;
     receiveName: string;
-    message: string;
+    message: HexString;
     maxContractExecutionEnergy: bigint;
 }
 
@@ -401,7 +433,7 @@ export class UpdateCredentialsHandler
     toJSON(
         updateCredentials: UpdateCredentialsPayload
     ): UpdateCredentialsPayload {
-        // UpdateCredentialsPayload is already fully JSON serializable, so we just need to clone it.
+        // UpdateCredentialsPayload is already fully JSON serializable.
         return updateCredentials;
     }
 
@@ -411,7 +443,7 @@ export class UpdateCredentialsHandler
 }
 
 interface RegisterDataPayloadJSON {
-    data: string;
+    data: HexString;
 }
 
 export class RegisterDataHandler
@@ -442,7 +474,7 @@ export class RegisterDataHandler
     fromJSON(json: RegisterDataPayloadJSON): RegisterDataPayload {
         return {
             // The first 2 bytes are the length of the data buffer, so we need to remove them.
-            data: new DataBlob(encodeHexString(json.data.substring(4))),
+            data: DataBlob.fromJSON(json.data),
         };
     }
 }

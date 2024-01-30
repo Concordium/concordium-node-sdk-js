@@ -1,5 +1,8 @@
 import { Buffer } from 'buffer/index.js';
-import { packBufferWithWord16Length } from '../serializationHelpers.js';
+import {
+    encodeHexString,
+    packBufferWithWord16Length,
+} from '../serializationHelpers.js';
 import {
     TypedJson,
     TypedJsonDiscriminator,
@@ -30,8 +33,13 @@ export class DataBlob {
         this.data = Buffer.from(data);
     }
 
-    public toJSON(): string {
+    public toJSON(): HexString {
         return packBufferWithWord16Length(this.data).toString('hex');
+    }
+
+    public static fromJSON(value: HexString): DataBlob {
+        // The first 2 bytes are the length of the data buffer, so we need to remove them.
+        return new DataBlob(encodeHexString(value.substring(4)));
     }
 
     /**

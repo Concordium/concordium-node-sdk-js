@@ -1600,7 +1600,7 @@ export interface AttributeList {
     validTo: string; // "YYYYMM"
     createdAt: string; // "YYYYMM"
     maxAccounts: number;
-    chosenAttributes: Record<AttributeKey, string>;
+    chosenAttributes: Partial<Record<AttributeKey, string>>;
 }
 
 export type IdentityObjectV1 = {

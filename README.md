@@ -67,10 +67,11 @@ yarn
 
 ### MacOS arm64
 
-When installing/updating dependencies on a mac with an arm64 processor, it
-might be required to explicitly set the target architecture of dependencies
-to x64, as not all dependencies are available for the new mac processors. This
-is done by replacing the `yarn` command with
+It may be necessary to install Xcode when installing dependencies on a mac.
+
+On a mac with an arm64 processor, it might also be required to explicitly set the target
+architecture of dependencies to x64, as not all dependencies are available for the new mac
+processors. This is done by replacing the `yarn` command with
 
 ```shell
 npm_config_target_arch=x64 yarn

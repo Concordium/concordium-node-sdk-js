@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased Changes
+
+### Added
+
+- `fromJSON` and `toJSON` methods to the `AccountTransactionHandler` interface,
+  and implementations for all transaction handlers.
+
 ## 7.2.0
 
 ### Added

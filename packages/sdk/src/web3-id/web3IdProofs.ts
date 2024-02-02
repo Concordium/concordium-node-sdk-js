@@ -637,8 +637,12 @@ export function createAccountCommitmentInput(
         type: 'account',
         issuer: identityProvider,
         values: statements.reduce<Record<string, string>>((acc, x) => {
-            acc[x.attributeTag] =
+            const attr =
                 attributes.chosenAttributes[x.attributeTag as AttributeKey];
+            if (attr !== undefined) {
+                acc[x.attributeTag] = attr;
+            }
+
             return acc;
         }, {}),
         randomness,

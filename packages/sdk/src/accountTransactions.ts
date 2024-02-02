@@ -23,6 +23,12 @@ import {
     RegisterDataPayload,
     ConfigureDelegationPayload,
     ConfigureBakerPayload,
+    OpenStatus,
+    BakerKeysWithProofs,
+    UrlString,
+    DelegationTarget,
+    Base58String,
+    HexString,
 } from './types.js';
 import * as AccountAddress from './types/AccountAddress.js';
 import { DataBlob } from './types/DataBlob.js';
@@ -30,17 +36,67 @@ import * as CcdAmount from './types/CcdAmount.js';
 import { Cursor } from './deserializationHelpers.js';
 import * as ReceiveName from './types/ReceiveName.js';
 import * as Parameter from './types/Parameter.js';
+import {
+    ContractAddress,
+    ContractName,
+    Energy,
+    ModuleReference,
+} from './pub/types.js';
 
+/**
+ * A handler for a specific {@linkcode AccountTransactionType}.
+ */
 interface AccountTransactionHandler<
-    PayloadType extends AccountTransactionPayload = AccountTransactionPayload
+    PayloadType extends AccountTransactionPayload = AccountTransactionPayload,
+    JSONType = PayloadType
 > {
+    /**
+     * Serializes the payload to a buffer.
+     * @param payload - The payload to serialize.
+     * @returns The serialized payload.
+     */
     serialize: (payload: PayloadType) => Buffer;
+
+    /**
+     * Deserializes the serialized payload into the payload type.
+     * @param serializedPayload - The serialized payload to be deserialized.
+     * @returns The deserialized payload.
+     */
     deserialize: (serializedPayload: Cursor) => PayloadType;
+
+    /**
+     * Gets the base energy cost for the given payload.
+     * @param payload - The payload for which to get the base energy cost.
+     * @returns The base energy cost for the payload.
+     */
     getBaseEnergyCost: (payload: PayloadType) => bigint;
+
+    /**
+     * Converts the payload into JSON format.
+     * @param payload - The payload to be converted into JSON.
+     * @returns The payload in JSON format.
+     */
+    toJSON: (payload: PayloadType) => JSONType;
+
+    /**
+     * Converts a JSON-serialized payload into the payload type.
+     * @param json - The JSON to be converted back into the payload.
+     * @returns The payload obtained from the JSON.
+     */
+    fromJSON: (json: JSONType) => PayloadType;
+}
+
+interface SimpleTransferPayloadJSON {
+    toAddress: Base58String;
+    amount: bigint;
 }
 
 export class SimpleTransferHandler
-    implements AccountTransactionHandler<SimpleTransferPayload>
+    implements
+        AccountTransactionHandler<
+            SimpleTransferPayload,
+            SimpleTransferPayloadJSON
+        >
 {
     getBaseEnergyCost(): bigint {
         return 300n;
@@ -64,11 +120,33 @@ export class SimpleTransferHandler
             amount,
         };
     }
+
+    toJSON(transfer: SimpleTransferPayload): SimpleTransferPayloadJSON {
+        return {
+            toAddress: AccountAddress.toBase58(transfer.toAddress),
+            amount: transfer.amount.microCcdAmount,
+        };
+    }
+
+    fromJSON(json: SimpleTransferPayloadJSON): SimpleTransferPayload {
+        return {
+            toAddress: AccountAddress.fromBase58(json.toAddress),
+            amount: CcdAmount.fromMicroCcd(json.amount),
+        };
+    }
+}
+
+interface SimpleTransferWithMemoPayloadJSON extends SimpleTransferPayloadJSON {
+    memo: HexString;
 }
 
 export class SimpleTransferWithMemoHandler
     extends SimpleTransferHandler
-    implements AccountTransactionHandler<SimpleTransferWithMemoPayload>
+    implements
+        AccountTransactionHandler<
+            SimpleTransferWithMemoPayload,
+            SimpleTransferWithMemoPayloadJSON
+        >
 {
     serialize(transfer: SimpleTransferWithMemoPayload): Buffer {
         const serializedToAddress = AccountAddress.toBuffer(transfer.toAddress);
@@ -98,10 +176,36 @@ export class SimpleTransferWithMemoHandler
             amount,
         };
     }
+
+    toJSON(
+        transfer: SimpleTransferWithMemoPayload
+    ): SimpleTransferWithMemoPayloadJSON {
+        return {
+            toAddress: AccountAddress.toBase58(transfer.toAddress),
+            memo: transfer.memo.toJSON(),
+            amount: transfer.amount.microCcdAmount,
+        };
+    }
+
+    fromJSON(
+        json: SimpleTransferWithMemoPayloadJSON
+    ): SimpleTransferWithMemoPayload {
+        return {
+            toAddress: AccountAddress.fromBase58(json.toAddress),
+            memo: DataBlob.fromJSON(json.memo),
+            amount: CcdAmount.fromMicroCcd(json.amount),
+        };
+    }
+}
+
+interface DeployModulePayloadJSON {
+    source: HexString;
+    version?: number;
 }
 
 export class DeployModuleHandler
-    implements AccountTransactionHandler<DeployModulePayload>
+    implements
+        AccountTransactionHandler<DeployModulePayload, DeployModulePayloadJSON>
 {
     getBaseEnergyCost(payload: DeployModulePayload): bigint {
         let length = payload.source.byteLength;
@@ -128,10 +232,33 @@ export class DeployModuleHandler
     deserialize(): DeployModulePayload {
         throw new Error('deserialize not supported');
     }
+
+    toJSON(payload: DeployModulePayload): DeployModulePayloadJSON {
+        return {
+            source: Buffer.from(payload.source).toString('hex'),
+            version: payload.version,
+        };
+    }
+
+    fromJSON(json: DeployModulePayloadJSON): DeployModulePayload {
+        return {
+            source: Buffer.from(json.source, 'hex'),
+            version: json.version,
+        };
+    }
+}
+
+interface InitContractPayloadJSON {
+    amount: bigint;
+    moduleRef: HexString;
+    initName: string;
+    param: HexString;
+    maxContractExecutionEnergy: bigint;
 }
 
 export class InitContractHandler
-    implements AccountTransactionHandler<InitContractPayload>
+    implements
+        AccountTransactionHandler<InitContractPayload, InitContractPayloadJSON>
 {
     getBaseEnergyCost(payload: InitContractPayload): bigint {
         return payload.maxContractExecutionEnergy.value;
@@ -159,10 +286,45 @@ export class InitContractHandler
     deserialize(): InitContractPayload {
         throw new Error('deserialize not supported');
     }
+
+    toJSON(payload: InitContractPayload): InitContractPayloadJSON {
+        return {
+            amount: payload.amount.microCcdAmount,
+            moduleRef: ModuleReference.toHexString(payload.moduleRef),
+            initName: ContractName.toString(payload.initName),
+            param: Parameter.toHexString(payload.param),
+            maxContractExecutionEnergy:
+                payload.maxContractExecutionEnergy.value,
+        };
+    }
+
+    fromJSON(json: InitContractPayloadJSON): InitContractPayload {
+        return {
+            amount: CcdAmount.fromMicroCcd(json.amount),
+            moduleRef: ModuleReference.fromHexString(json.moduleRef),
+            initName: ContractName.fromString(json.initName),
+            param: Parameter.fromHexString(json.param),
+            maxContractExecutionEnergy: Energy.create(
+                json.maxContractExecutionEnergy
+            ),
+        };
+    }
+}
+
+interface UpdateContractPayloadJSON {
+    amount: bigint;
+    address: ContractAddress.SchemaValue;
+    receiveName: string;
+    message: HexString;
+    maxContractExecutionEnergy: bigint;
 }
 
 export class UpdateContractHandler
-    implements AccountTransactionHandler<UpdateContractPayload>
+    implements
+        AccountTransactionHandler<
+            UpdateContractPayload,
+            UpdateContractPayloadJSON
+        >
 {
     getBaseEnergyCost(payload: UpdateContractPayload): bigint {
         return payload.maxContractExecutionEnergy.value;
@@ -195,6 +357,29 @@ export class UpdateContractHandler
 
     deserialize(): UpdateContractPayload {
         throw new Error('deserialize not supported');
+    }
+
+    toJSON(payload: UpdateContractPayload): UpdateContractPayloadJSON {
+        return {
+            amount: payload.amount.microCcdAmount,
+            address: ContractAddress.toSchemaValue(payload.address),
+            receiveName: ReceiveName.toString(payload.receiveName),
+            message: Parameter.toHexString(payload.message),
+            maxContractExecutionEnergy:
+                payload.maxContractExecutionEnergy.value,
+        };
+    }
+
+    fromJSON(json: UpdateContractPayloadJSON): UpdateContractPayload {
+        return {
+            amount: CcdAmount.fromMicroCcd(json.amount),
+            address: ContractAddress.fromSchemaValue(json.address),
+            receiveName: ReceiveName.fromString(json.receiveName),
+            message: Parameter.fromHexString(json.message),
+            maxContractExecutionEnergy: Energy.create(
+                json.maxContractExecutionEnergy
+            ),
+        };
     }
 }
 
@@ -244,10 +429,26 @@ export class UpdateCredentialsHandler
     deserialize(): UpdateCredentialsPayload {
         throw new Error('deserialize not supported');
     }
+
+    toJSON(
+        updateCredentials: UpdateCredentialsPayload
+    ): UpdateCredentialsPayload {
+        // UpdateCredentialsPayload is already fully JSON serializable.
+        return updateCredentials;
+    }
+
+    fromJSON(json: UpdateCredentialsPayload): UpdateCredentialsPayload {
+        return json;
+    }
+}
+
+interface RegisterDataPayloadJSON {
+    data: HexString;
 }
 
 export class RegisterDataHandler
-    implements AccountTransactionHandler<RegisterDataPayload>
+    implements
+        AccountTransactionHandler<RegisterDataPayload, RegisterDataPayloadJSON>
 {
     getBaseEnergyCost(): bigint {
         return 300n;
@@ -263,10 +464,38 @@ export class RegisterDataHandler
             data: new DataBlob(Buffer.from(serializedPayload.read(memoLength))),
         };
     }
+
+    toJSON(payload: RegisterDataPayload): RegisterDataPayloadJSON {
+        return {
+            data: payload.data.toJSON(),
+        };
+    }
+
+    fromJSON(json: RegisterDataPayloadJSON): RegisterDataPayload {
+        return {
+            // The first 2 bytes are the length of the data buffer, so we need to remove them.
+            data: DataBlob.fromJSON(json.data),
+        };
+    }
+}
+
+interface ConfigureBakerPayloadJSON {
+    stake?: bigint;
+    restakeEarnings?: boolean;
+    openForDelegation?: OpenStatus;
+    keys?: BakerKeysWithProofs;
+    metadataUrl?: UrlString;
+    transactionFeeCommission?: number;
+    bakingRewardCommission?: number;
+    finalizationRewardCommission?: number;
 }
 
 export class ConfigureBakerHandler
-    implements AccountTransactionHandler<ConfigureBakerPayload>
+    implements
+        AccountTransactionHandler<
+            ConfigureBakerPayload,
+            ConfigureBakerPayloadJSON
+        >
 {
     getBaseEnergyCost(payload: ConfigureBakerPayload): bigint {
         if (payload.keys) {
@@ -283,10 +512,34 @@ export class ConfigureBakerHandler
     deserialize(): ConfigureBakerPayload {
         throw new Error('deserialize not supported');
     }
+
+    toJSON(payload: ConfigureBakerPayload): ConfigureBakerPayloadJSON {
+        return {
+            ...payload,
+            stake: payload.stake?.microCcdAmount,
+        };
+    }
+
+    fromJSON(json: ConfigureBakerPayloadJSON): ConfigureBakerPayload {
+        return {
+            ...json,
+            stake: json.stake ? CcdAmount.fromMicroCcd(json.stake) : undefined,
+        };
+    }
+}
+
+interface ConfigureDelegationPayloadJSON {
+    stake?: bigint;
+    restakeEarnings?: boolean;
+    delegationTarget?: DelegationTarget;
 }
 
 export class ConfigureDelegationHandler
-    implements AccountTransactionHandler<ConfigureDelegationPayload>
+    implements
+        AccountTransactionHandler<
+            ConfigureDelegationPayload,
+            ConfigureDelegationPayloadJSON
+        >
 {
     getBaseEnergyCost(): bigint {
         return 300n;
@@ -298,6 +551,22 @@ export class ConfigureDelegationHandler
 
     deserialize(): ConfigureDelegationPayload {
         throw new Error('deserialize not supported');
+    }
+
+    toJSON(
+        payload: ConfigureDelegationPayload
+    ): ConfigureDelegationPayloadJSON {
+        return {
+            ...payload,
+            stake: payload.stake?.microCcdAmount,
+        };
+    }
+
+    fromJSON(json: ConfigureDelegationPayloadJSON): ConfigureDelegationPayload {
+        return {
+            ...json,
+            stake: json.stake ? CcdAmount.fromMicroCcd(json.stake) : undefined,
+        };
     }
 }
 

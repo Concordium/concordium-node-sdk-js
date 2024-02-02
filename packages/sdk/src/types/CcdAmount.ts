@@ -27,7 +27,7 @@ class CcdAmount {
     /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
     private __type = JSON_DISCRIMINATOR;
     constructor(
-        /** Internal representation of Ccd amound in micro Ccd. */
+        /** Internal representation of Ccd amount in micro Ccd. */
         public readonly microCcdAmount: bigint
     ) {}
 

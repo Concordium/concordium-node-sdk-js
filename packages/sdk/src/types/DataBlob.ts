@@ -33,10 +33,22 @@ export class DataBlob {
         this.data = Buffer.from(data);
     }
 
+    /**
+     * Encodes the data to a JSON-serializable hex-string.
+     *
+     * @returns The hex-string representation of the data.
+     */
     public toJSON(): HexString {
         return packBufferWithWord16Length(this.data).toString('hex');
     }
 
+    /**
+     * Takes a hex-string and converts it to an instance of type {@linkcode DataBlob}.
+     * The method expects the string to be prefixed with a 2-byte length like the one returned by {@linkcode toJSON}.
+     *
+     * @param value Hex-string to be converted to a DataBlob.
+     * @returns The parsed instance.
+     */
     public static fromJSON(value: HexString): DataBlob {
         // The first 2 bytes are the length of the data buffer, so we need to remove them.
         return new DataBlob(encodeHexString(value.substring(4)));

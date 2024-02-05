@@ -6,6 +6,7 @@ use concordium_rust_bindings_common::{
 use wallet_library::{
     credential::create_unsigned_credential_v1_aux,
     identity::{create_identity_object_request_v1_aux, create_identity_recovery_request_aux},
+    proofs::create_web3_id_proof,
     wallet::{
         get_account_public_key_aux, get_account_signing_key_aux,
         get_attribute_commitment_randomness_aux, get_credential_id_aux, get_id_cred_sec_aux,
@@ -278,7 +279,7 @@ pub fn generate_baker_keys_ext(sender: Base58String) -> JsResult {
 #[wasm_bindgen(js_name = createWeb3IdProof)]
 pub fn create_web3_id_proof_ext(raw_input: JsonString) -> JsResult {
     let input = serde_json::from_str(&raw_input)?;
-    create_web3_id_proof_aux(input).map_err(to_js_error)
+    create_web3_id_proof(input).map(|p| json!(p).to_string()).map_err(to_js_error)
 }
 
 #[wasm_bindgen(js_name = verifyWeb3IdCredentialSignature)]

@@ -20,8 +20,7 @@ use concordium_base::{
     ps_sig::SigRetrievalRandomness,
     transactions::{ConfigureBakerKeysPayload, Payload},
     web3id::{
-        CredentialHolderId, OwnedCommitmentInputs, Request, SignedCommitments, Web3IdAttribute,
-        Web3IdSigner,
+        CredentialHolderId, SignedCommitments, Web3IdAttribute,
     },
 };
 use concordium_rust_bindings_common::types::{HexString, JsonString};
@@ -174,8 +173,7 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<JsonString> {
             input.identity_index,
             u32::from(input.cred_number),
         )?;
-        let public = (&secret).into();
-        keys.insert(KeyIndex(0), KeyPair { secret, public });
+        keys.insert(KeyIndex(0), KeyPair::from(ed25519_dalek::SigningKey::from_bytes(&secret)));
 
         CredentialData {
             keys,
@@ -441,32 +439,6 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<JsonString> {
     };
 
     Ok(json!(out).to_string())
-}
-
-#[derive(SerdeDeserialize)]
-struct Web3SecretKey(#[serde(deserialize_with = "base16_decode")] ed25519_dalek::SecretKey);
-
-impl Web3IdSigner for Web3SecretKey {
-    fn id(&self) -> ed25519_dalek::PublicKey { self.0.id() }
-
-    fn sign(&self, msg: &impl AsRef<[u8]>) -> ed25519_dalek::Signature { self.0.sign(msg) }
-}
-
-#[derive(SerdeDeserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Web3IdProofInput {
-    request:           Request<constants::ArCurve, Web3IdAttribute>,
-    global_context:    GlobalContext<constants::ArCurve>,
-    commitment_inputs:
-        Vec<OwnedCommitmentInputs<constants::ArCurve, Web3IdAttribute, Web3SecretKey>>,
-}
-
-pub fn create_web3_id_proof_aux(input: Web3IdProofInput) -> Result<JsonString> {
-    let presentation = input.request.prove(
-        &input.global_context,
-        input.commitment_inputs.iter().map(Into::into),
-    );
-    Ok(json!(presentation.unwrap()).to_string())
 }
 
 pub fn serialize_credential_deployment_payload_aux(

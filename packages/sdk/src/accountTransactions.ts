@@ -570,9 +570,17 @@ export class ConfigureDelegationHandler
     }
 }
 
-export function getAccountTransactionHandler(
-    type: AccountTransactionType
-): AccountTransactionHandler;
+export type AccountTransactionPayloadJSON =
+    | SimpleTransferPayloadJSON
+    | SimpleTransferWithMemoPayloadJSON
+    | DeployModulePayloadJSON
+    | InitContractPayloadJSON
+    | UpdateContractPayloadJSON
+    | UpdateCredentialsPayload
+    | RegisterDataPayloadJSON
+    | ConfigureDelegationPayloadJSON
+    | ConfigureBakerPayloadJSON;
+
 export function getAccountTransactionHandler(
     type: AccountTransactionType.Transfer
 ): SimpleTransferHandler;
@@ -600,6 +608,12 @@ export function getAccountTransactionHandler(
 export function getAccountTransactionHandler(
     type: AccountTransactionType.ConfigureBaker
 ): ConfigureBakerHandler;
+export function getAccountTransactionHandler(
+    type: AccountTransactionType
+): AccountTransactionHandler<
+    AccountTransactionPayload,
+    AccountTransactionPayloadJSON
+>;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

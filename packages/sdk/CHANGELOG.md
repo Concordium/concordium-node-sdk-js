@@ -1,5 +1,11 @@
 # Changelog
 
+## 7.3.1
+
+### Fixed
+
+- Return type of `getAccountTransactionHandler`.
+
 ## 7.3.0
 
 ### Added

@@ -1,5 +1,11 @@
 # Changelog
 
+## 7.3.2
+
+### Added
+
+- Export all types from `accountTransaction.ts`.
+
 ## 7.3.1
 
 ### Fixed

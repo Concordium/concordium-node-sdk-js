@@ -27,7 +27,7 @@ export * from '../accountHelpers.js';
 
 export { isHex, streamToList, wasmToSchema, unwrap } from '../util.js';
 
-export { getAccountTransactionHandler } from '../accountTransactions.js';
+export * from '../accountTransactions.js';
 export * from '../energyCost.js';
 export * from '../commonProofTypes.js';
 

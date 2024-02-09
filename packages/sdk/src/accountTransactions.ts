@@ -46,7 +46,7 @@ import {
 /**
  * A handler for a specific {@linkcode AccountTransactionType}.
  */
-interface AccountTransactionHandler<
+export interface AccountTransactionHandler<
     PayloadType extends AccountTransactionPayload = AccountTransactionPayload,
     JSONType = PayloadType
 > {
@@ -86,7 +86,7 @@ interface AccountTransactionHandler<
     fromJSON: (json: JSONType) => PayloadType;
 }
 
-interface SimpleTransferPayloadJSON {
+export interface SimpleTransferPayloadJSON {
     toAddress: Base58String;
     amount: bigint;
 }
@@ -136,7 +136,8 @@ export class SimpleTransferHandler
     }
 }
 
-interface SimpleTransferWithMemoPayloadJSON extends SimpleTransferPayloadJSON {
+export interface SimpleTransferWithMemoPayloadJSON
+    extends SimpleTransferPayloadJSON {
     memo: HexString;
 }
 
@@ -198,7 +199,7 @@ export class SimpleTransferWithMemoHandler
     }
 }
 
-interface DeployModulePayloadJSON {
+export interface DeployModulePayloadJSON {
     source: HexString;
     version?: number;
 }
@@ -248,7 +249,7 @@ export class DeployModuleHandler
     }
 }
 
-interface InitContractPayloadJSON {
+export interface InitContractPayloadJSON {
     amount: bigint;
     moduleRef: HexString;
     initName: string;
@@ -311,7 +312,7 @@ export class InitContractHandler
     }
 }
 
-interface UpdateContractPayloadJSON {
+export interface UpdateContractPayloadJSON {
     amount: bigint;
     address: ContractAddress.SchemaValue;
     receiveName: string;
@@ -442,7 +443,7 @@ export class UpdateCredentialsHandler
     }
 }
 
-interface RegisterDataPayloadJSON {
+export interface RegisterDataPayloadJSON {
     data: HexString;
 }
 
@@ -479,7 +480,7 @@ export class RegisterDataHandler
     }
 }
 
-interface ConfigureBakerPayloadJSON {
+export interface ConfigureBakerPayloadJSON {
     stake?: bigint;
     restakeEarnings?: boolean;
     openForDelegation?: OpenStatus;
@@ -528,7 +529,7 @@ export class ConfigureBakerHandler
     }
 }
 
-interface ConfigureDelegationPayloadJSON {
+export interface ConfigureDelegationPayloadJSON {
     stake?: bigint;
     restakeEarnings?: boolean;
     delegationTarget?: DelegationTarget;

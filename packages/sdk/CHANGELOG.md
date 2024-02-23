@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased Changes
+
+### Added
+
+- `toString`, `toJSON`, and `fromJSON` to all concordium domain types.
+- Deprecated types and functions related to typed JSON serialization and deserialization.
+
 ## 7.3.2
 
 ### Added

@@ -72,7 +72,8 @@ function reviveConcordiumTypes(value: unknown) {
 }
 
 /**
- * Acts as an inverse for {@linkcode jsonStringify}
+ * Acts as an inverse for {@linkcode jsonStringify}.
+ * @deprecated Use an `AccountTransactionHandler` instance instead.
  */
 export function jsonParse(
     input: string,
@@ -147,7 +148,7 @@ function unwrapConcordiumType(value: unknown): unknown | undefined {
         case BlockHash.instanceOf(value):
             return BlockHash.toUnwrappedJSON(value as BlockHash.Type);
         case CcdAmount.instanceOf(value):
-            return (value as CcdAmount.Type).toJSON();
+            return CcdAmount.toSerializable(value as CcdAmount.Type);
         case ContractAddress.instanceOf(value):
             return ContractAddress.toUnwrappedJSON(
                 value as ContractAddress.Type
@@ -206,6 +207,7 @@ function ccdUnwrapReplacer(this: any, key: string, value: any): any {
 /**
  * Stringify, which ensures concordium domain types are stringified in a restorable fashion.
  * This should be used if you want to be able to restore the concordium domain types in the JSON to its original types.
+ * @deprecated Use an `AccountTransactionHandler` instance instead.
  *
  * @param value A JavaScript value, usually an object or array, to be converted.
  * @param replacer A function that transforms the results.
@@ -238,6 +240,7 @@ export const enum BigintFormatType {
 /**
  * Stringify, which ensures concordium domain types are unwrapped to their inner type before stringified.
  * This should be used if you want to manually deserialize the inner property values, as the serialization is irreversible.
+ * @deprecated Use an `AccountTransactionHandler` instance instead.
  *
  * @param value A JavaScript value, usually an object or array, to be converted.
  * @param bigintFormat Determines how to handle bigints. Can be set to either:

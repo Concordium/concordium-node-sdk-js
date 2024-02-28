@@ -1,8 +1,12 @@
 import { Buffer } from 'buffer/index.js';
 import { checkParameterLength } from '../contractHelpers.js';
 import { SchemaType, serializeSchemaType } from '../schemaTypes.js';
-import { serializeTypeValue } from '../schema.js';
-import type { Base64String, HexString } from '../types.js';
+import { deserializeTypeValue, serializeTypeValue } from '../schema.js';
+import type {
+    Base64String,
+    HexString,
+    SmartContractTypeValues,
+} from '../types.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
 import {
     TypedJson,
@@ -142,6 +146,34 @@ export function fromBase64SchemaType(
 }
 
 /**
+ * Parse a contract parameter using a schema type.
+ * @param {Parameter} parameter The parameter.
+ * @param {SchemaType} schemaType The schema type for the parameter.
+ * @returns {SmartContractTypeValues}
+ */
+export function parseWithSchemaType(
+    parameter: Parameter,
+    schemaType: SchemaType
+): SmartContractTypeValues {
+    const schemaBytes = serializeSchemaType(schemaType);
+    return deserializeTypeValue(toBuffer(parameter), schemaBytes);
+}
+
+/**
+ * Parse a contract parameter using a schema type.
+ * @param {Parameter} parameter The parameter to parse.
+ * @param {Base64String} schemaBase64 The schema type for the parameter encoded as Base64.
+ * @returns {SmartContractTypeValues}
+ */
+export function parseWithSchemaTypeBase64(
+    parameter: Parameter,
+    schemaBase64: Base64String
+): SmartContractTypeValues {
+    const schemaBytes = Buffer.from(schemaBase64, 'base64');
+    return deserializeTypeValue(toBuffer(parameter), schemaBytes);
+}
+
+/**
  * Convert a smart contract parameter from its protobuf encoding.
  * @param {Proto.Parameter} parameter The parameter in protobuf.
  * @returns {Parameter} The parameter.
@@ -164,7 +196,7 @@ export function toProto(parameter: Parameter): Proto.Parameter {
 /**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
  *
- * @param {Type} value - The account address instance to transform.
+ * @param {Type} value - The parameter to transform.
  * @returns {TypedJson} The transformed object.
  */
 export function toTypedJSON(value: Parameter): TypedJson<Serializable> {

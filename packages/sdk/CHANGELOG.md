@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `Parameter.parseWithSchemaTypeBase64` and `Parameter.parseWithSchemaType` to
+  help parsing smart contract parameters into typed structures.
+
 ## 7.3.2
 
 ### Added

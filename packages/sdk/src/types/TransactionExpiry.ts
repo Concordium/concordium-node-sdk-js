@@ -37,7 +37,6 @@ class TransactionExpiry {
 
     /**
      * Get a JSON-serializable representation of the transaction expiry date.
-     * @throws If the expiry is not representable as a number.
      * @returns {bigint} The JSON-serializable representation.
      */
     public toJSON(): bigint {

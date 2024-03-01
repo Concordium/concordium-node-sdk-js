@@ -42,19 +42,19 @@ class CcdAmount {
 
     /**
      * Get a JSON-serializable representation of the CCD amount in micro CCD.
-     * @returns {bigint} The JSON-serializable representation.
+     * @returns {string} The JSON-serializable representation.
      */
-    public toJSON(): bigint {
-        return this.microCcdAmount;
+    public toJSON(): string {
+        return this.microCcdAmount.toString();
     }
 }
 
 /**
  * Converts a `bigint` to a CCD amount in micro CCD.
- * @param {bigint} json The JSON representation of the CCD amount.
+ * @param {string} json The JSON representation of the CCD amount.
  * @returns {CcdAmount} The CCD amount.
  */
-export function fromJSON(json: bigint): CcdAmount {
+export function fromJSON(json: string): CcdAmount {
     return fromMicroCcd(json);
 }
 

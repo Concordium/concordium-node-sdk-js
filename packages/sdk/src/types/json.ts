@@ -148,7 +148,7 @@ function unwrapConcordiumType(value: unknown): unknown | undefined {
         case BlockHash.instanceOf(value):
             return BlockHash.toUnwrappedJSON(value as BlockHash.Type);
         case CcdAmount.instanceOf(value):
-            return CcdAmount.toSerializable(value as CcdAmount.Type);
+            return (value as CcdAmount.Type).toJSON();
         case ContractAddress.instanceOf(value):
             return ContractAddress.toUnwrappedJSON(
                 value as ContractAddress.Type

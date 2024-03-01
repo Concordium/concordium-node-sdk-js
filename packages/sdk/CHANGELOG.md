@@ -6,6 +6,8 @@
 
 - `toString`, `toJSON`, and `fromJSON` to all concordium domain types.
 - Deprecated types and functions related to typed JSON serialization and deserialization.
+- `Parameter.parseWithSchemaTypeBase64` and `Parameter.parseWithSchemaType` to
+  help parsing smart contract parameters into typed structures.
 
 ### Fixed
 

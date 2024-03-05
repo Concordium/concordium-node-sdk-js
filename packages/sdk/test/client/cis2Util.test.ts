@@ -9,8 +9,6 @@ import {
     BlockItemSummary,
     ContractAddress,
     ContractEvent,
-    TransactionEventTag,
-    TransactionSummaryType,
 } from '../../src/pub/types.js';
 import {
     SchemaEnumVariant,

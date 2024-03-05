@@ -35,6 +35,7 @@ import {
 } from '../GenericContract.js';
 import {
     Cursor,
+    deserializeBigUInt64LE,
     makeDeserializeListResponse,
 } from '../deserializationHelpers.js';
 import { deserializeUint8 } from '../deserialization.js';
@@ -756,8 +757,8 @@ function addressDeserializer(cursor: Cursor): CIS2.Address {
         case 0:
             return AccountAddress.fromBuffer(cursor.read(32));
         case 1:
-            const index = cursor.read(8).readBigUInt64LE(0) as bigint;
-            const subindex = cursor.read(8).readBigUInt64LE(0) as bigint;
+            const index = deserializeBigUInt64LE(cursor);
+            const subindex = deserializeBigUInt64LE(cursor);
             return ContractAddress.create(index, subindex);
         default:
             throw new Error('Invalid address kind');

@@ -1,9 +1,16 @@
-import { CIS2, deserializeCIS2Event } from '../../src/cis2/util.js';
+import {
+    CIS2,
+    deserializeCIS2Event,
+    deserializeCIS2EventsFromSummary,
+} from '../../src/cis2/util.js';
 import * as wasm from '@concordium/rust-bindings';
 import {
     AccountAddress,
+    BlockItemSummary,
     ContractAddress,
     ContractEvent,
+    TransactionEventTag,
+    TransactionSummaryType,
 } from '../../src/pub/types.js';
 import {
     SchemaEnumVariant,
@@ -11,6 +18,8 @@ import {
     serializeSchemaType,
 } from '../../src/schemaTypes.js';
 import JSONbig from 'json-bigint';
+import v8 from 'v8';
+import fs from 'fs';
 
 const TokenIdSchemaType: SchemaType = {
     type: 'ByteList',
@@ -395,4 +404,31 @@ test('CIS2 token metadata events are deserialized correctly', async () => {
     expect(deserializedTokenMetadataEventWithHash).toEqual(
         expectedDeserializedTokenMetadataEventWithHash
     );
+});
+
+test('CIS2 events are deserialized correctly from a BlockItemSummary', async () => {
+    const blockItemSummary = v8.deserialize(
+        fs.readFileSync('./test/client/resources/block-item-summary.bin')
+    ) as BlockItemSummary;
+    const events = deserializeCIS2EventsFromSummary(blockItemSummary);
+
+    const expectedMetadataEvent: CIS2.TokenMetadataEvent = {
+        type: CIS2.EventType.TokenMetadata,
+        tokenId: '0101',
+        metadataUrl: {
+            url: 'example.com',
+        },
+    };
+    const expectedMintEvent: CIS2.MintEvent = {
+        type: CIS2.EventType.Mint,
+        tokenId: '0101',
+        tokenAmount: 100n,
+        owner: AccountAddress.fromBase58(
+            '4NgCvVSCuCyHkALqbAnSX3QEC7zrfoZbig7X3ePMpk8iLod6Yj'
+        ),
+    };
+
+    expect(events.length).toBe(2);
+    expect(events).toContainEqual(expectedMetadataEvent);
+    expect(events).toContainEqual(expectedMintEvent);
 });

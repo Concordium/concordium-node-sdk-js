@@ -3,7 +3,14 @@ import { Buffer } from 'buffer/index.js';
 // eslint-disable-next-line import/no-extraneous-dependencies
 import * as ed from '@concordium/web-sdk/shims/ed25519';
 
-import type { HexString } from '../types.js';
+import {
+    TransactionSummaryType,
+    type BlockItemSummary,
+    type ContractTraceEvent,
+    type HexString,
+    type InvokeContractSuccessResult,
+    TransactionKindString,
+} from '../types.js';
 import type { CIS2 } from '../cis2/util.js';
 import {
     deserializeCIS2MetadataUrl,
@@ -28,6 +35,7 @@ import { getSignature } from '../signHelpers.js';
 import * as ContractAddress from '../types/ContractAddress.js';
 import * as EntrypointName from '../types/EntrypointName.js';
 import * as Timestamp from '../types/Timestamp.js';
+import * as ContractEvent from '../types/ContractEvent.js';
 
 /** Holds all types related to CIS4 */
 // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -266,6 +274,86 @@ export namespace CIS4 {
         /** Any additional data to include in the parameter (hex encoded) */
         auxiliary_data: number[];
     };
+
+    export enum RevokerType {
+        Issuer,
+        Holder,
+        Other,
+    }
+
+    export type Revoker =
+        | {
+              type: RevokerType.Issuer | RevokerType.Holder;
+          }
+        | {
+              type: RevokerType.Other;
+              key: HexString;
+          };
+
+    export enum RevocationKeyAction {
+        Register,
+        Remove,
+    }
+
+    export enum EventType {
+        RegisterCredential,
+        RevokeCredential,
+        IssuerMetadata,
+        CredentialMetadata,
+        CredentialSchemaRef,
+        RevocationKey,
+        Custom,
+    }
+
+    export type RegisterCredentialEvent = {
+        type: EventType.RegisterCredential;
+        credentialPubKey: HexString;
+        schemaRef: SchemaRef;
+        credentialType: string;
+    };
+
+    export type RevokeCredentialEvent = {
+        type: EventType.RevokeCredential;
+        credentialPubKey: HexString;
+        revoker: Revoker;
+        reason?: string;
+    };
+
+    export type IssuerMetadataEvent = {
+        type: EventType.IssuerMetadata;
+        metadata: MetadataUrl;
+    };
+
+    export type CredentialMetadataEvent = {
+        type: EventType.CredentialMetadata;
+        credentialPubKey: HexString;
+        metadata: MetadataUrl;
+    };
+
+    export type CredentialSchemaRefEvent = {
+        type: EventType.CredentialSchemaRef;
+        credentialType: string;
+        schemaRef: SchemaRef;
+    };
+
+    export type RevocationKeyEvent = {
+        type: EventType.RevocationKey;
+        action: RevocationKeyAction;
+    };
+
+    export type CustomEvent = {
+        type: EventType.Custom;
+        data: Uint8Array;
+    };
+
+    export type Event =
+        | RegisterCredentialEvent
+        | RevokeCredentialEvent
+        | IssuerMetadataEvent
+        | CredentialMetadataEvent
+        | CredentialSchemaRefEvent
+        | RevocationKeyEvent
+        | CustomEvent;
 }
 
 /**
@@ -339,6 +427,13 @@ function deserializeDate(cursor: Cursor): Timestamp.Type {
 
 function deserializeEd25519PublicKey(cursor: Cursor): HexString {
     return cursor.read(32).toString('hex');
+}
+
+function deserializeReason(cursor: Cursor): string | undefined {
+    return deserializeOptional(cursor, (c) => {
+        const len = c.read(1).readUInt8(0);
+        return c.read(len).toString('utf8');
+    });
 }
 
 function serializeCIS4CredentialInfo(credInfo: CIS4.CredentialInfo): Buffer {
@@ -702,4 +797,148 @@ export function deserializeCIS4MetadataResponse(
     const credentialSchema = deserializeCIS2MetadataUrl(cursor);
 
     return { issuerMetadata, credentialType, credentialSchema };
+}
+
+export function deserializeCIS4Event(event: ContractEvent.Type): CIS4.Event {
+    const cursor = Cursor.fromBuffer(event.buffer);
+    const tag = cursor.read(1).readUInt8(0);
+    if (tag == 249) {
+        const credentialPubKey = deserializeEd25519PublicKey(cursor);
+        const schemaRef = deserializeCIS2MetadataUrl(cursor);
+        const credentialType = deserializeCredentialType(cursor);
+        return {
+            type: CIS4.EventType.RegisterCredential,
+            credentialPubKey,
+            schemaRef,
+            credentialType,
+        };
+    } else if (tag == 248) {
+        const credentialPubKey = deserializeEd25519PublicKey(cursor);
+        const revokerType = cursor.read(1).readUInt8(0);
+        let revoker: CIS4.Revoker;
+        if (revokerType == 0) {
+            revoker = {
+                type: CIS4.RevokerType.Issuer,
+            };
+        } else if (revokerType == 1) {
+            revoker = {
+                type: CIS4.RevokerType.Holder,
+            };
+        } else if (revokerType == 2) {
+            const key = deserializeEd25519PublicKey(cursor);
+            revoker = {
+                type: CIS4.RevokerType.Other,
+                key,
+            };
+        } else {
+            throw new Error('Unknown revoker type');
+        }
+        const reason = deserializeReason(cursor);
+        return {
+            type: CIS4.EventType.RevokeCredential,
+            credentialPubKey,
+            revoker,
+            reason,
+        };
+    } else if (tag == 247) {
+        const metadata = deserializeCIS2MetadataUrl(cursor);
+        return {
+            type: CIS4.EventType.IssuerMetadata,
+            metadata,
+        };
+    } else if (tag == 246) {
+        const credentialPubKey = deserializeEd25519PublicKey(cursor);
+        const metadata = deserializeCIS2MetadataUrl(cursor);
+        return {
+            type: CIS4.EventType.CredentialMetadata,
+            credentialPubKey,
+            metadata,
+        };
+    } else if (tag == 245) {
+        const credentialType = deserializeCredentialType(cursor);
+        const schemaRef = deserializeCIS2MetadataUrl(cursor);
+        return {
+            type: CIS4.EventType.CredentialSchemaRef,
+            credentialType,
+            schemaRef,
+        };
+    } else if (tag == 244) {
+        const actionByte = cursor.read(1).readUInt8(0);
+        let action: CIS4.RevocationKeyAction;
+        if (actionByte == 0) {
+            action = CIS4.RevocationKeyAction.Register;
+        } else if (actionByte == 1) {
+            action = CIS4.RevocationKeyAction.Remove;
+        } else {
+            throw new Error('Unknown revocation key action');
+        }
+        return {
+            type: CIS4.EventType.RevocationKey,
+            action,
+        };
+    } else {
+        return {
+            type: CIS4.EventType.Custom,
+            data: event.buffer,
+        };
+    }
+}
+
+/**
+ * Deserializes a successful contract invokation to a list of CIS-4 events according to the CIS-4 standard.
+ *
+ * @param {InvokeContractSuccessResult} result - The contract invokation result to deserialize
+ *
+ * @returns {CIS4.Event[]} The deserialized events
+ */
+export function deserializeCIS4EventsFromInvokationResult(
+    result: InvokeContractSuccessResult
+): CIS4.Event[] {
+    return deserializeContractTraceEvents(result.events);
+}
+
+/**
+ * Deserializes all CIS-4 events from a {@linkcode BlockItemSummary}.
+ *
+ * @param {BlockItemSummary} summary - The summary to deserialize
+ *
+ * @returns {CIS4.Event[]} The deserialized events
+ */
+export function deserializeCIS4EventsFromSummary(
+    summary: BlockItemSummary
+): CIS4.Event[] {
+    if (summary.type !== TransactionSummaryType.AccountTransaction) {
+        return [];
+    }
+
+    switch (summary.transactionType) {
+        case TransactionKindString.Update:
+            return deserializeContractTraceEvents(summary.events);
+        case TransactionKindString.InitContract:
+            return summary.contractInitialized.events
+                .map((e) =>
+                    deserializeCIS4Event(ContractEvent.fromHexString(e))
+                )
+                .filter((e) => e.type !== CIS4.EventType.Custom);
+        default:
+            return [];
+    }
+}
+
+function deserializeContractTraceEvents(
+    events: ContractTraceEvent[]
+): CIS4.Event[] {
+    const deserializedEvents = [];
+    for (const traceEvent of events) {
+        if (!('events' in traceEvent)) {
+            continue;
+        }
+        for (const event of traceEvent.events) {
+            const deserializedEvent = deserializeCIS4Event(event);
+            if (deserializedEvent.type !== CIS4.EventType.Custom) {
+                deserializedEvents.push(deserializedEvent);
+            }
+        }
+    }
+    return deserializedEvents;
 }

@@ -7,13 +7,17 @@ import {
     packBufferWithWord16Length,
     packBufferWithWord8Length,
 } from '../serializationHelpers.js';
-import type {
-    Base58String,
-    HexString,
-    SmartContractTypeValues,
+import {
+    TransactionEventTag,
+    type Base58String,
+    type HexString,
+    type InvokeContractSuccessResult,
+    type SmartContractTypeValues,
+    RejectedReceive,
 } from '../types.js';
 import * as ContractAddress from '../types/ContractAddress.js';
 import * as AccountAddress from '../types/AccountAddress.js';
+import * as ContractEvent from '../types/ContractEvent.js';
 import * as EntrypointName from '../types/EntrypointName.js';
 import { Buffer } from 'buffer/index.js';
 import {
@@ -30,6 +34,7 @@ import {
     Cursor,
     makeDeserializeListResponse,
 } from '../deserializationHelpers.js';
+import { deserializeUint8 } from '../deserialization.js';
 
 const TOKEN_ID_MAX_LENGTH = 255;
 const TOKEN_AMOUNT_MAX_LENGTH = 37;
@@ -142,6 +147,140 @@ export namespace CIS2 {
      */
     export type UpdateTransaction<J extends SmartContractTypeValues> =
         ContractUpdateTransactionWithSchema<J>;
+
+    /**
+     * The type of a CIS-2 event.
+     * @see {@linkcode Event}
+     */
+    export enum EventType {
+        Transfer,
+        Mint,
+        Burn,
+        UpdateOperatorOf,
+        TokenMetadata,
+        Custom,
+    }
+
+    /**
+     * A CIS-2 transfer event.
+     */
+    export type TransferEvent = {
+        type: EventType.Transfer;
+        tokenId: TokenId;
+        tokenAmount: bigint;
+        from: Address;
+        to: Address;
+    };
+
+    /**
+     * A CIS-2 mint event.
+     */
+    export type MintEvent = {
+        type: EventType.Mint;
+        tokenId: TokenId;
+        tokenAmount: bigint;
+        owner: Address;
+    };
+
+    /**
+     * A CIS-2 burn event.
+     */
+    export type BurnEvent = {
+        type: EventType.Burn;
+        tokenId: TokenId;
+        tokenAmount: bigint;
+        owner: Address;
+    };
+
+    /**
+     * A CIS-2 update operator event.
+     */
+    export type UpdateOperatorEvent = {
+        type: EventType.UpdateOperatorOf;
+        isOperator: boolean;
+        owner: Address;
+        operator: Address;
+    };
+
+    /**
+     * A CIS-2 token metadata event.
+     */
+    export type TokenMetadataEvent = {
+        type: EventType.TokenMetadata;
+        tokenId: TokenId;
+        metadataUrl: MetadataUrl;
+    };
+
+    /**
+     * A CIS-2 custom event.
+     */
+    export type CustomEvent = {
+        type: EventType.Custom;
+        data: ArrayBuffer;
+    };
+
+    /**
+     * A CIS-2 event.
+     */
+    export type Event =
+        | TransferEvent
+        | MintEvent
+        | BurnEvent
+        | UpdateOperatorEvent
+        | TokenMetadataEvent
+        | CustomEvent;
+
+    /**
+     * The type of a CIS-2 rejection error.
+     * @see {@linkcode RejectionError}
+     */
+    export enum ErrorType {
+        InvalidTokenId,
+        InsufficientFunds,
+        Unauthorized,
+        Custom,
+    }
+
+    /**
+     * An invalid token CIS-2 rejection error.
+     */
+    type InvalidTokenIdError = {
+        type: ErrorType.InvalidTokenId;
+        tag: -42000001;
+    };
+
+    /**
+     * An insufficient funds CIS-2 rejection error.
+     */
+    type InsufficientFundsError = {
+        type: ErrorType.InsufficientFunds;
+        tag: -42000002;
+    };
+
+    /**
+     * An unauthorized CIS-2 rejection error.
+     */
+    type UnauthorizedError = {
+        type: ErrorType.Unauthorized;
+        tag: -42000003;
+    };
+
+    /**
+     * A custom CIS-2 rejection error.
+     */
+    type CustomError = {
+        type: ErrorType.Custom;
+        tag: number;
+    };
+
+    /**
+     * A CIS-2 rejection error.
+     */
+    export type RejectionError =
+        | InvalidTokenIdError
+        | InsufficientFundsError
+        | UnauthorizedError
+        | CustomError;
 
     /**
      * Structure of a JSON-formatted address parameter.
@@ -606,4 +745,170 @@ export function formatCIS2Transfer(
         to,
         data: input.data ?? '',
     };
+}
+
+function addressDeserializer(cursor: Cursor): CIS2.Address {
+    const kind = deserializeUint8(cursor);
+    switch (kind) {
+        case 0:
+            return AccountAddress.fromBuffer(cursor.read(32));
+        case 1:
+            const index = cursor.read(8).readBigUInt64LE(0) as bigint;
+            const subindex = cursor.read(8).readBigUInt64LE(0) as bigint;
+            return ContractAddress.create(index, subindex);
+        default:
+            throw new Error('Invalid address kind');
+    }
+}
+
+/**
+ * Deserializes a CIS-2 event according to the CIS-2 standard.
+ *
+ * @param {ContractEvent.Type} event - The event to deserialize
+ *
+ * @returns {CIS2.Event} The deserialized event
+ */
+export function deserializeCIS2Event(event: ContractEvent.Type): CIS2.Event {
+    const buffer = event.buffer;
+    const tag = buffer[0];
+    if (tag == 255) {
+        // Transfer event
+        const n = buffer[1];
+        const tokenId = deserializeCIS2TokenId(buffer.subarray(1, 2 + n));
+
+        const [tokenAmount, i] = uleb128DecodeWithIndex(buffer, 2 + n);
+
+        const cursor = Cursor.fromBuffer(buffer.subarray(i));
+        const from = addressDeserializer(cursor);
+        const to = addressDeserializer(cursor);
+
+        return {
+            type: CIS2.EventType.Transfer,
+            tokenId,
+            tokenAmount,
+            from,
+            to,
+        };
+    } else if (tag == 254) {
+        // Mint event
+        const n = buffer[1];
+        const tokenId = deserializeCIS2TokenId(buffer.subarray(1, 2 + n));
+
+        const [tokenAmount, i] = uleb128DecodeWithIndex(buffer, 2 + n);
+
+        const cursor = Cursor.fromBuffer(buffer.subarray(i));
+        const owner = addressDeserializer(cursor);
+
+        return {
+            type: CIS2.EventType.Mint,
+            tokenId,
+            tokenAmount,
+            owner,
+        };
+    } else if (tag == 253) {
+        // Burn event
+        const n = buffer[1];
+        const tokenId = deserializeCIS2TokenId(buffer.subarray(1, 2 + n));
+
+        const [tokenAmount, i] = uleb128DecodeWithIndex(buffer, 2 + n);
+
+        const cursor = Cursor.fromBuffer(buffer.subarray(i));
+        const owner = addressDeserializer(cursor);
+
+        return {
+            type: CIS2.EventType.Burn,
+            tokenId,
+            tokenAmount,
+            owner,
+        };
+    } else if (tag == 252) {
+        // UpdateOperator event
+        const isOperator = Boolean(buffer[1]);
+
+        const cursor = Cursor.fromBuffer(buffer.subarray(2));
+        const owner = addressDeserializer(cursor);
+        const operator = addressDeserializer(cursor);
+
+        return {
+            type: CIS2.EventType.UpdateOperatorOf,
+            isOperator,
+            owner,
+            operator,
+        };
+    } else if (tag == 251) {
+        // TokenMetadata event
+        const n = buffer[1];
+        const tokenId = deserializeCIS2TokenId(buffer.subarray(1, 2 + n));
+
+        const cursor = Cursor.fromBuffer(buffer.subarray(2 + n));
+        const metadataUrl = deserializeCIS2MetadataUrl(cursor);
+
+        return {
+            type: CIS2.EventType.TokenMetadata,
+            tokenId,
+            metadataUrl,
+        };
+    } else {
+        // Custom event
+        return {
+            type: CIS2.EventType.Custom,
+            data: buffer,
+        };
+    }
+}
+
+/**
+ * Deserializes a successful contract invokation to a list of CIS-2 events according to the CIS-2 standard.
+ *
+ * @param {InvokeContractSuccessResult} result - The contract invokation result to deserialize
+ *
+ * @returns {CIS2.Event[]} The deserialized events
+ */
+export function deserializeCIS2Events(
+    result: InvokeContractSuccessResult
+): CIS2.Event[] {
+    const deserializedEvents = [];
+    for (const event of result.events) {
+        if (event.tag != TransactionEventTag.Updated) {
+            continue;
+        }
+        for (const e of event.events) {
+            deserializedEvents.push(deserializeCIS2Event(e));
+        }
+    }
+    return deserializedEvents;
+}
+
+/**
+ * Parses the {@linkcode CIS2.RejectionError} from a rejected receive error.
+ *
+ * @param {RejectedReceive} rejection - The rejected receive error
+ *
+ * @returns {CIS2.RejectionError} The parsed rejection error
+ */
+export function parseCIS2RejectionError(
+    rejection: RejectedReceive
+): CIS2.RejectionError {
+    switch (rejection.rejectReason) {
+        case -42000001:
+            return {
+                type: CIS2.ErrorType.InvalidTokenId,
+                tag: -42000001,
+            };
+        case -42000002:
+            return {
+                type: CIS2.ErrorType.InsufficientFunds,
+                tag: -42000002,
+            };
+        case -42000003:
+            return {
+                type: CIS2.ErrorType.Unauthorized,
+                tag: -42000003,
+            };
+        default:
+            return {
+                type: CIS2.ErrorType.Custom,
+                tag: rejection.rejectReason,
+            };
+    }
 }

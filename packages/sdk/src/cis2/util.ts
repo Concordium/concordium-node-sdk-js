@@ -8,12 +8,15 @@ import {
     packBufferWithWord8Length,
 } from '../serializationHelpers.js';
 import {
-    TransactionEventTag,
     type Base58String,
     type HexString,
     type InvokeContractSuccessResult,
     type SmartContractTypeValues,
     RejectedReceive,
+    BlockItemSummary,
+    TransactionSummaryType,
+    TransactionKindString,
+    ContractTraceEvent,
 } from '../types.js';
 import * as ContractAddress from '../types/ContractAddress.js';
 import * as AccountAddress from '../types/AccountAddress.js';
@@ -864,19 +867,10 @@ export function deserializeCIS2Event(event: ContractEvent.Type): CIS2.Event {
  *
  * @returns {CIS2.Event[]} The deserialized events
  */
-export function deserializeCIS2Events(
+export function deserializeCIS2EventsFromInvokationResult(
     result: InvokeContractSuccessResult
 ): CIS2.Event[] {
-    const deserializedEvents = [];
-    for (const event of result.events) {
-        if (event.tag != TransactionEventTag.Updated) {
-            continue;
-        }
-        for (const e of event.events) {
-            deserializedEvents.push(deserializeCIS2Event(e));
-        }
-    }
-    return deserializedEvents;
+    return deserializeContractTraceEvents(result.events);
 }
 
 /**
@@ -911,4 +905,45 @@ export function parseCIS2RejectionError(
                 tag: rejection.rejectReason,
             };
     }
+}
+
+/**
+ * Deserializes all CIS-2 events from a {@linkcode BlockItemSummary}.
+ *
+ * @param {BlockItemSummary} summary - The summary to deserialize
+ *
+ * @returns {CIS2.Event[]} The deserialized events
+ */
+export function deserializeCIS2EventsFromSummary(
+    summary: BlockItemSummary
+): CIS2.Event[] {
+    if (summary.type !== TransactionSummaryType.AccountTransaction) {
+        return [];
+    }
+
+    switch (summary.transactionType) {
+        case TransactionKindString.Update:
+            return deserializeContractTraceEvents(summary.events);
+        case TransactionKindString.InitContract:
+            return summary.contractInitialized.events.map((e) =>
+                deserializeCIS2Event(ContractEvent.fromHexString(e))
+            );
+        default:
+            return [];
+    }
+}
+
+function deserializeContractTraceEvents(
+    events: ContractTraceEvent[]
+): CIS2.Event[] {
+    const deserializedEvents = [];
+    for (const traceEvent of events) {
+        if (!('events' in traceEvent)) {
+            continue;
+        }
+        for (const event of traceEvent.events) {
+            deserializedEvents.push(deserializeCIS2Event(event));
+        }
+    }
+    return deserializedEvents;
 }

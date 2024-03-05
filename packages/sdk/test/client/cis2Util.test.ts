@@ -406,6 +406,17 @@ test('CIS2 token metadata events are deserialized correctly', async () => {
     );
 });
 
+test('Custom CIS2 events are deserialized correctly', async () => {
+    const data = Uint8Array.from([250, 1, 2, 3]);
+    const event = ContractEvent.fromBuffer(data);
+    const deserializedCustomEvent = deserializeCIS2Event(event);
+    const expectedDeserializedCustomEvent: CIS2.CustomEvent = {
+        type: CIS2.EventType.Custom,
+        data,
+    };
+    expect(deserializedCustomEvent).toEqual(expectedDeserializedCustomEvent);
+});
+
 test('CIS2 events are deserialized correctly from a BlockItemSummary', async () => {
     const blockItemSummary = v8.deserialize(
         fs.readFileSync('./test/client/resources/block-item-summary.bin')

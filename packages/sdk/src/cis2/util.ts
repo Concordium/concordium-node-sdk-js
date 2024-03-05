@@ -240,7 +240,7 @@ export namespace CIS2 {
         /** The type of the event */
         type: EventType.Custom;
         /** The raw data of the custom event */
-        data: ArrayBuffer;
+        data: Uint8Array;
     };
 
     /**

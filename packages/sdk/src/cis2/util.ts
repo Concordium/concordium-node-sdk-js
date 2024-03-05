@@ -169,10 +169,15 @@ export namespace CIS2 {
      * A CIS-2 transfer event.
      */
     export type TransferEvent = {
+        /** The type of the event */
         type: EventType.Transfer;
+        /** The ID of the token transferred */
         tokenId: TokenId;
+        /** The amount of tokens transferred */
         tokenAmount: bigint;
+        /** The address the tokens were transferred from */
         from: Address;
+        /** The address the tokens were transferred to */
         to: Address;
     };
 
@@ -180,9 +185,13 @@ export namespace CIS2 {
      * A CIS-2 mint event.
      */
     export type MintEvent = {
+        /** The type of the event */
         type: EventType.Mint;
+        /** The ID of the token minted */
         tokenId: TokenId;
+        /** The amount of tokens minted */
         tokenAmount: bigint;
+        /** The address the tokens were minted for */
         owner: Address;
     };
 
@@ -190,9 +199,13 @@ export namespace CIS2 {
      * A CIS-2 burn event.
      */
     export type BurnEvent = {
+        /** The type of the event */
         type: EventType.Burn;
+        /** The ID of the token burned */
         tokenId: TokenId;
+        /** The amount of tokens burned */
         tokenAmount: bigint;
+        /** The address the tokens were burned for */
         owner: Address;
     };
 
@@ -200,18 +213,23 @@ export namespace CIS2 {
      * A CIS-2 update operator event.
      */
     export type UpdateOperatorEvent = {
+        /** The type of the event */
         type: EventType.UpdateOperatorOf;
-        isOperator: boolean;
+        /** The operator update data */
+        updateOperatorData: UpdateOperator;
+        /** The owner address for the updated operator */
         owner: Address;
-        operator: Address;
     };
 
     /**
      * A CIS-2 token metadata event.
      */
     export type TokenMetadataEvent = {
+        /** The type of the event */
         type: EventType.TokenMetadata;
+        /** The ID of the token for which the metadata was updated */
         tokenId: TokenId;
+        /** The updated metadata URL */
         metadataUrl: MetadataUrl;
     };
 
@@ -219,7 +237,9 @@ export namespace CIS2 {
      * A CIS-2 custom event.
      */
     export type CustomEvent = {
+        /** The type of the event */
         type: EventType.Custom;
+        /** The raw data of the custom event */
         data: ArrayBuffer;
     };
 
@@ -249,7 +269,9 @@ export namespace CIS2 {
      * An invalid token CIS-2 rejection error.
      */
     type InvalidTokenIdError = {
+        /** The type of the error */
         type: ErrorType.InvalidTokenId;
+        /** The error tag specified in the CIS-2 standard */
         tag: -42000001;
     };
 
@@ -257,7 +279,9 @@ export namespace CIS2 {
      * An insufficient funds CIS-2 rejection error.
      */
     type InsufficientFundsError = {
+        /** The type of the error */
         type: ErrorType.InsufficientFunds;
+        /** The error tag specified in the CIS-2 standard */
         tag: -42000002;
     };
 
@@ -265,7 +289,9 @@ export namespace CIS2 {
      * An unauthorized CIS-2 rejection error.
      */
     type UnauthorizedError = {
+        /** The type of the error */
         type: ErrorType.Unauthorized;
+        /** The error tag specified in the CIS-2 standard */
         tag: -42000003;
     };
 
@@ -273,7 +299,9 @@ export namespace CIS2 {
      * A custom CIS-2 rejection error.
      */
     type CustomError = {
+        /** The type of the error */
         type: ErrorType.Custom;
+        /** A custom error tag */
         tag: number;
     };
 
@@ -827,7 +855,10 @@ export function deserializeCIS2Event(event: ContractEvent.Type): CIS2.Event {
         };
     } else if (tag == 252) {
         // UpdateOperator event
-        const isOperator = Boolean(buffer[1]);
+        let updateType: 'add' | 'remove' = 'add';
+        if (buffer[1] === 0) {
+            updateType = 'remove';
+        }
 
         const cursor = Cursor.fromBuffer(buffer.subarray(2));
         const owner = addressDeserializer(cursor);
@@ -835,9 +866,11 @@ export function deserializeCIS2Event(event: ContractEvent.Type): CIS2.Event {
 
         return {
             type: CIS2.EventType.UpdateOperatorOf,
-            isOperator,
+            updateOperatorData: {
+                type: updateType,
+                address: operator,
+            },
             owner,
-            operator,
         };
     } else if (tag == 251) {
         // TokenMetadata event

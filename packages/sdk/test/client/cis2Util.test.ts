@@ -328,11 +328,13 @@ test('CIS2 update operator events are deserialized correctly', async () => {
 
     const expectedDeserializedUpdateOperatorEvent: CIS2.UpdateOperatorEvent = {
         type: CIS2.EventType.UpdateOperatorOf,
-        isOperator: true,
+        updateOperatorData: {
+            type: 'add',
+            address: ContractAddress.create(5, 6),
+        },
         owner: AccountAddress.fromBase58(
             '4NgCvVSCuCyHkALqbAnSX3QEC7zrfoZbig7X3ePMpk8iLod6Yj'
         ),
-        operator: ContractAddress.create(5, 6),
     };
 
     expect(deserializedUpdateOperatorEvent).toEqual(

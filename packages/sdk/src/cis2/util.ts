@@ -255,6 +255,12 @@ export namespace CIS2 {
         | CustomEvent;
 
     /**
+     * A CIS-2 event that is not a {@linkcode CustomEvent}.
+     * @see {@linkcode Event}
+     */
+    export type NonCustomEvent = Exclude<Event, CustomEvent>;
+
+    /**
      * The type of a CIS-2 rejection error.
      * @see {@linkcode RejectionError}
      */
@@ -899,12 +905,12 @@ export function deserializeCIS2Event(event: ContractEvent.Type): CIS2.Event {
  *
  * @param {InvokeContractSuccessResult} result - The contract invokation result to deserialize
  *
- * @returns {CIS2.Event[]} The deserialized events
+ * @returns {CIS2.NonCustomEvent[]} The deserialized events
  */
 export function deserializeCIS2EventsFromInvokationResult(
     result: InvokeContractSuccessResult
-): CIS2.Event[] {
-    return deserializeContractTraceEvents(result.events);
+): CIS2.NonCustomEvent[] {
+    return deserializeCIS2ContractTraceEvents(result.events);
 }
 
 /**
@@ -942,41 +948,58 @@ export function parseCIS2RejectionError(
 }
 
 /**
- * Deserializes all CIS-2 events from a {@linkcode BlockItemSummary}.
+ * Deserializes all CIS-2 events (skipping custom events) from a {@linkcode BlockItemSummary}.
  *
  * @param {BlockItemSummary} summary - The summary to deserialize
  *
- * @returns {CIS2.Event[]} The deserialized events
+ * @returns {CIS2.NonCustomEvent[]} The deserialized events
  */
 export function deserializeCIS2EventsFromSummary(
     summary: BlockItemSummary
-): CIS2.Event[] {
+): CIS2.NonCustomEvent[] {
     if (summary.type !== TransactionSummaryType.AccountTransaction) {
         return [];
     }
 
     switch (summary.transactionType) {
         case TransactionKindString.Update:
-            return deserializeContractTraceEvents(summary.events);
+            return deserializeCIS2ContractTraceEvents(summary.events);
         case TransactionKindString.InitContract:
-            return summary.contractInitialized.events.map((e) =>
-                deserializeCIS2Event(ContractEvent.fromHexString(e))
-            );
+            const deserializedEvents = [];
+            for (const event of summary.contractInitialized.events) {
+                const deserializedEvent = deserializeCIS2Event(
+                    ContractEvent.fromHexString(event)
+                );
+                if (deserializedEvent.type !== CIS2.EventType.Custom) {
+                    deserializedEvents.push(deserializedEvent);
+                }
+            }
         default:
             return [];
     }
 }
 
-function deserializeContractTraceEvents(
+/**
+ * Deserializes a list of {@linkcode ContractTraceEvent} into a list of CIS-2 events.
+ * This function filters out any custom events.
+ *
+ * @param {ContractTraceEvent[]} events - The list of contract trace events to deserialize
+ *
+ * @returns {CIS2.NonCustomEvent[]} The deserialized CIS-2 events
+ */
+function deserializeCIS2ContractTraceEvents(
     events: ContractTraceEvent[]
-): CIS2.Event[] {
+): CIS2.NonCustomEvent[] {
     const deserializedEvents = [];
     for (const traceEvent of events) {
         if (!('events' in traceEvent)) {
             continue;
         }
         for (const event of traceEvent.events) {
-            deserializedEvents.push(deserializeCIS2Event(event));
+            const deserializedEvent = deserializeCIS2Event(event);
+            if (deserializedEvent.type !== CIS2.EventType.Custom) {
+                deserializedEvents.push(deserializedEvent);
+            }
         }
     }
     return deserializedEvents;

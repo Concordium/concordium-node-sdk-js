@@ -5884,6 +5884,25 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"concordium-dapp-request-verifiable-presentation@workspace:samples/proofs":
+  version: 0.0.0-use.local
+  resolution: "concordium-dapp-request-verifiable-presentation@workspace:samples/proofs"
+  dependencies:
+    "@concordium/react-components": "workspace:^"
+    "@concordium/web-sdk": ^7.1.0
+    "@types/node": ^16.18.16
+    "@types/react": ^18.0.28
+    "@types/react-dom": ^18.0.11
+    bootstrap: ^5.2.3
+    prettier: 2.8.1
+    react: ^18.2.0
+    react-bootstrap: ^2.7.2
+    react-dom: ^18.2.0
+    react-scripts: ^5.0.1
+    typescript: ^5.2.2
+  languageName: unknown
+  linkType: soft
+
 "concordium-dapp-sign-message@workspace:samples/sign-message":
   version: 0.0.0-use.local
   resolution: "concordium-dapp-sign-message@workspace:samples/sign-message"

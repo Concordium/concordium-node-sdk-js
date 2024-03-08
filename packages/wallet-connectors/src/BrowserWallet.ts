@@ -4,7 +4,12 @@ import {
     WalletApi,
     detectConcordiumProvider,
 } from '@concordium/browser-wallet-api-helpers';
-import { AccountTransactionSignature, AccountTransactionType } from '@concordium/web-sdk';
+import {
+    AccountTransactionSignature,
+    AccountTransactionType,
+    CredentialStatements,
+    VerifiablePresentation,
+} from '@concordium/web-sdk';
 import {
     SignableMessage,
     TypedSmartContractParameters,
@@ -172,5 +177,12 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
             default:
                 throw new UnreachableCaseError('message', msg);
         }
+    }
+
+    async requestVerifiablePresentation(
+        challenge: string,
+        statements: CredentialStatements
+    ): Promise<VerifiablePresentation> {
+        return this.client.requestVerifiablePresentation(challenge, statements);
     }
 }

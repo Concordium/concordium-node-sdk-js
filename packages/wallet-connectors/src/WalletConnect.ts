@@ -9,10 +9,12 @@ import {
     AccountTransactionType,
     BigintFormatType,
     ContractName,
+    CredentialStatements,
     EntrypointName,
     InitContractPayload,
     Parameter,
     UpdateContractPayload,
+    VerifiablePresentation,
     getTransactionKindString,
     jsonUnwrapStringify,
     serializeInitContractParameters,
@@ -294,6 +296,14 @@ export class WalletConnectConnection implements WalletConnection {
             default:
                 throw new UnreachableCaseError('message', msg);
         }
+    }
+
+    async requestVerifiablePresentation(
+        challenge: string,
+        statements: CredentialStatements
+    ): Promise<VerifiablePresentation> {
+        // TODO Implement this later.
+        throw new Error(`Identity proofs are not yet supported on mobile. ${challenge} ${statements.toString}`);
     }
 
     async disconnect() {

@@ -2,8 +2,8 @@ import * as ModuleReference from './ModuleReference.js';
 import * as H from '../contractHelpers.js';
 import { sha256 } from '../hash.js';
 import { Buffer } from 'buffer/index.js';
-import { VersionedModuleSource } from '../types.js';
-import { schemaBytesFromWasmModule } from '../util.js';
+import { SchemaVersion, VersionedModuleSource } from '../types.js';
+import { wasmToSchema } from '../util.js';
 import { RawModuleSchema } from '../schemaTypes.js';
 import { Cursor, deserializeUInt32BE } from '../deserializationHelpers.js';
 import { encodeWord32 } from '../serializationHelpers.js';
@@ -113,29 +113,30 @@ export async function parseModuleInterface(
 export async function getEmbeddedModuleSchema(
     moduleSource: VersionedModuleSource
 ): Promise<RawModuleSchema | null> {
-    const wasmModule = await WebAssembly.compile(moduleSource.source);
-    const versionedSchema = schemaBytesFromWasmModule(
-        wasmModule,
-        'concordium-schema'
-    );
-    if (versionedSchema !== null) {
-        return { type: 'versioned', buffer: versionedSchema };
+    const res = wasmToSchema(moduleSource.source, moduleSource.version);
+    if (!res) {
+        return null;
     }
-    const unversionedSchemaV0 = schemaBytesFromWasmModule(
-        wasmModule,
-        'concordium-schema-v1'
-    );
-    if (unversionedSchemaV0 !== null) {
-        return { type: 'unversioned', version: 0, buffer: unversionedSchemaV0 };
+    const { schema, schemaVersion } = res;
+    if (schemaVersion !== undefined) {
+        return {
+            type: 'unversioned',
+            version: schemaVersionToUnversionedSchemaVersion(schemaVersion),
+            buffer: schema,
+        };
     }
-    const unversionedSchemaV1 = schemaBytesFromWasmModule(
-        wasmModule,
-        'concordium-schema-v2'
-    );
-    if (unversionedSchemaV1 !== null) {
-        return { type: 'unversioned', version: 1, buffer: unversionedSchemaV1 };
+    return { type: 'versioned', buffer: schema };
+}
+
+function schemaVersionToUnversionedSchemaVersion(v: SchemaVersion) {
+    switch (v) {
+        case SchemaVersion.V0:
+        case SchemaVersion.V1:
+            return v;
+        case SchemaVersion.V2:
+            // Private type 'UnversionedSchemaType' only includes values 0 and 1.
+            return SchemaVersion.V1;
     }
-    return null;
 }
 
 /**

@@ -237,7 +237,8 @@ export class ConcordiumGRPCClient {
             moduleRef,
             blockHash
         );
-        return wasmToSchema(versionedSource.source);
+        const res = wasmToSchema(versionedSource.source);
+        return new Uint8Array(res!.schema);
     }
 
     /**

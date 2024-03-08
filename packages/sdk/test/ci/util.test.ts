@@ -41,5 +41,7 @@ test('Embedded schema is the same as a seperate schema file', () => {
     );
     const embeddedSchema = wasmToSchema(wasmModule);
 
-    expect(new Uint8Array(seperateSchema)).toEqual(embeddedSchema);
+    expect(new Uint8Array(seperateSchema)).toEqual(
+        new Uint8Array(embeddedSchema!.schema)
+    );
 });

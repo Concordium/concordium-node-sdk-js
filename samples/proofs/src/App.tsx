@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Alert, Button, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
-import { TESTNET, WalletConnectionProps, WithWalletConnector } from '@concordium/react-components';
+import { TESTNET, WalletConnectionProps, WithWalletConnector, useConnect, useConnection } from '@concordium/react-components';
 import { VerifiablePresentation, Web3StatementBuilder } from '@concordium/web-sdk';
 import { WalletConnectorButton } from './WalletConnectorButton';
 import { BROWSER_WALLET, WALLET_CONNECT } from './config';

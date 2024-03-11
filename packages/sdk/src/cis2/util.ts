@@ -52,9 +52,14 @@ export namespace CIS2 {
     export type Address = ContractAddress.Type | AccountAddress.Type;
 
     /**
-     * A Token ID that uniquely identifies the CIS-2 Token
+     * A Token ID that uniquely identifies the CIS-2 Token.
      */
     export type TokenId = HexString;
+
+    /**
+     * An amount of CIS-2 tokens.
+     */
+    export type TokenAmount = bigint;
 
     /**
      * A Token Address, that contains both a Contract Address and the unique
@@ -87,7 +92,7 @@ export namespace CIS2 {
         /** The ID of the token to transfer */
         tokenId: HexString;
         /** The amount of tokens to transfer, cannot be negative. */
-        tokenAmount: bigint;
+        tokenAmount: TokenAmount;
         /** The address to transfer from */
         from: Address;
         /** The receiver of the transfer */
@@ -174,7 +179,7 @@ export namespace CIS2 {
         /** The ID of the token transferred */
         tokenId: TokenId;
         /** The amount of tokens transferred */
-        tokenAmount: bigint;
+        tokenAmount: TokenAmount;
         /** The address the tokens were transferred from */
         from: Address;
         /** The address the tokens were transferred to */
@@ -190,7 +195,7 @@ export namespace CIS2 {
         /** The ID of the token minted */
         tokenId: TokenId;
         /** The amount of tokens minted */
-        tokenAmount: bigint;
+        tokenAmount: TokenAmount;
         /** The address the tokens were minted for */
         owner: Address;
     };
@@ -204,7 +209,7 @@ export namespace CIS2 {
         /** The ID of the token burned */
         tokenId: TokenId;
         /** The amount of tokens burned */
-        tokenAmount: bigint;
+        tokenAmount: TokenAmount;
         /** The address the tokens were burned for */
         owner: Address;
     };
@@ -234,7 +239,7 @@ export namespace CIS2 {
     };
 
     /**
-     * A CIS-2 custom event.
+     * A custom event outside CIS-2.
      */
     export type CustomEvent = {
         /** The type of the event */
@@ -274,7 +279,7 @@ export namespace CIS2 {
     /**
      * An invalid token CIS-2 rejection error.
      */
-    type InvalidTokenIdError = {
+    export type InvalidTokenIdError = {
         /** The type of the error */
         type: ErrorType.InvalidTokenId;
         /** The error tag specified in the CIS-2 standard */
@@ -284,7 +289,7 @@ export namespace CIS2 {
     /**
      * An insufficient funds CIS-2 rejection error.
      */
-    type InsufficientFundsError = {
+    export type InsufficientFundsError = {
         /** The type of the error */
         type: ErrorType.InsufficientFunds;
         /** The error tag specified in the CIS-2 standard */
@@ -294,7 +299,7 @@ export namespace CIS2 {
     /**
      * An unauthorized CIS-2 rejection error.
      */
-    type UnauthorizedError = {
+    export type UnauthorizedError = {
         /** The type of the error */
         type: ErrorType.Unauthorized;
         /** The error tag specified in the CIS-2 standard */
@@ -302,9 +307,9 @@ export namespace CIS2 {
     };
 
     /**
-     * A custom CIS-2 rejection error.
+     * A rejection error outside of CIS-2.
      */
-    type CustomError = {
+    export type CustomError = {
         /** The type of the error */
         type: ErrorType.Custom;
         /** A custom error tag */
@@ -377,7 +382,7 @@ function deserializeCIS2TokenId(buffer: Uint8Array): CIS2.TokenId {
     return Buffer.from(buffer).toString('hex');
 }
 
-function serializeTokenAmount(amount: bigint): Buffer {
+function serializeTokenAmount(amount: CIS2.TokenAmount): Buffer {
     if (amount < 0) {
         throw new Error('Negative token amount is not allowed');
     }
@@ -543,7 +548,7 @@ export const serializeCIS2BalanceOfQueries = makeSerializeList(
  *
  * @param {HexString} value - The hex string value to deserialize
  *
- * @returns {bigint[]} A list of token balances.
+ * @returns {TokenAmount[]} A list of token balances.
  */
 export const deserializeCIS2BalanceOfResponse = makeDeserializeListResponse(
     (cursor) => {
@@ -808,6 +813,14 @@ function addressDeserializer(cursor: Cursor): CIS2.Address {
  */
 export function deserializeCIS2Event(event: ContractEvent.Type): CIS2.Event {
     const buffer = event.buffer;
+    // An empty buffer is a valid custom event
+    if (buffer.length === 0) {
+        return {
+            type: CIS2.EventType.Custom,
+            data: buffer,
+        };
+    }
+
     const tag = buffer[0];
     if (tag == 255) {
         // Transfer event
@@ -974,6 +987,7 @@ export function deserializeCIS2EventsFromSummary(
                     deserializedEvents.push(deserializedEvent);
                 }
             }
+            return deserializedEvents;
         default:
             return [];
     }

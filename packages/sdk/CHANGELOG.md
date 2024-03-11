@@ -1,9 +1,13 @@
 # Changelog
 
-## Unreleased
+## Unreleased Changes
 
 ### Added
 
+- Various types related to CIS-2 events and errors in the `CIS2` namespace.
+- `deserializeCIS2Event` for deserializing a CIS-2 event from a `ContractEvent`.
+- `deserializeCIS2Events` and `deserializeCIS2EventsFromSummary` for deserializing all CIS-2 events from `InvokeContractSuccessResult`s and `BlockItemSummary`s, respectively.
+- `parseCIS2RejectionError` for parsing a CIS-2 rejection error from a `InvokeContractFailureResult`.
 - `Parameter.parseWithSchemaTypeBase64` and `Parameter.parseWithSchemaType` to
   help parsing smart contract parameters into typed structures.
 

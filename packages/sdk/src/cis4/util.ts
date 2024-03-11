@@ -321,7 +321,7 @@ export namespace CIS4 {
         CredentialSchemaRef,
         /** A revocation key was registered or removed */
         RevocationKey,
-        /** A custom event */
+        /** A custom event outside CIS-4 */
         Custom,
     }
 
@@ -335,6 +335,8 @@ export namespace CIS4 {
         schemaRef: SchemaRef;
         /** The credential type of the registered credential */
         credentialType: string;
+        /** The metadata URL of the registered credential */
+        metadataUrl: MetadataUrl;
     };
 
     /** A RevokeCredential event from the CIS-4 standard */
@@ -353,8 +355,8 @@ export namespace CIS4 {
     export type IssuerMetadataEvent = {
         /** The type of the event */
         type: EventType.IssuerMetadata;
-        /** The updated metadata of the issuer */
-        metadata: MetadataUrl;
+        /** The updated metadata URL of the issuer */
+        metadataUrl: MetadataUrl;
     };
 
     /** A CredentialMetadata event from the CIS-4 standard */
@@ -363,8 +365,8 @@ export namespace CIS4 {
         type: EventType.CredentialMetadata;
         /** The public key of the credential (hex encoded) */
         credentialPubKey: HexString;
-        /** The updated metadata of the credential */
-        metadata: MetadataUrl;
+        /** The updated metadata URL of the credential */
+        metadataUrl: MetadataUrl;
     };
 
     /** A CredentialSchemaRef event from the CIS-4 standard */
@@ -381,11 +383,13 @@ export namespace CIS4 {
     export type RevocationKeyEvent = {
         /** The type of the event */
         type: EventType.RevocationKey;
+        /** The key being registered or removed */
+        key: HexString;
         /** The action (either registration or removal) performed on the revocation key */
         action: RevocationKeyAction;
     };
 
-    /** A custom event */
+    /** A custom event outside CIS-4 */
     export type CustomEvent = {
         /** The type of the event */
         type: EventType.Custom;
@@ -858,17 +862,27 @@ export function deserializeCIS4MetadataResponse(
  * @returns {CIS4.Event} The deserialized event
  */
 export function deserializeCIS4Event(event: ContractEvent.Type): CIS4.Event {
+    // An empty buffer is a valid custom event
+    if (event.buffer.length === 0) {
+        return {
+            type: CIS4.EventType.Custom,
+            data: event.buffer,
+        };
+    }
+
     const cursor = Cursor.fromBuffer(event.buffer);
     const tag = cursor.read(1).readUInt8(0);
     if (tag == 249) {
         const credentialPubKey = deserializeEd25519PublicKey(cursor);
         const schemaRef = deserializeCIS2MetadataUrl(cursor);
         const credentialType = deserializeCredentialType(cursor);
+        const metadataUrl = deserializeCIS2MetadataUrl(cursor);
         return {
             type: CIS4.EventType.RegisterCredential,
             credentialPubKey,
             schemaRef,
             credentialType,
+            metadataUrl,
         };
     } else if (tag == 248) {
         const credentialPubKey = deserializeEd25519PublicKey(cursor);
@@ -899,18 +913,18 @@ export function deserializeCIS4Event(event: ContractEvent.Type): CIS4.Event {
             reason,
         };
     } else if (tag == 247) {
-        const metadata = deserializeCIS2MetadataUrl(cursor);
+        const metadataUrl = deserializeCIS2MetadataUrl(cursor);
         return {
             type: CIS4.EventType.IssuerMetadata,
-            metadata,
+            metadataUrl,
         };
     } else if (tag == 246) {
         const credentialPubKey = deserializeEd25519PublicKey(cursor);
-        const metadata = deserializeCIS2MetadataUrl(cursor);
+        const metadataUrl = deserializeCIS2MetadataUrl(cursor);
         return {
             type: CIS4.EventType.CredentialMetadata,
             credentialPubKey,
-            metadata,
+            metadataUrl,
         };
     } else if (tag == 245) {
         const credentialType = deserializeCredentialType(cursor);
@@ -921,6 +935,7 @@ export function deserializeCIS4Event(event: ContractEvent.Type): CIS4.Event {
             schemaRef,
         };
     } else if (tag == 244) {
+        const key = deserializeEd25519PublicKey(cursor);
         const actionByte = cursor.read(1).readUInt8(0);
         let action: CIS4.RevocationKeyAction;
         if (actionByte == 0) {
@@ -932,6 +947,7 @@ export function deserializeCIS4Event(event: ContractEvent.Type): CIS4.Event {
         }
         return {
             type: CIS4.EventType.RevocationKey,
+            key,
             action,
         };
     } else {

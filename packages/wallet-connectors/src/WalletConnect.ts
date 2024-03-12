@@ -43,7 +43,7 @@ async function connect(client: ISignClient, chainId: string, cancel: () => void)
         const { uri, approval } = await client.connect({
             requiredNamespaces: {
                 ccd: {
-                    methods: ['sign_and_send_transaction', 'sign_message', 'proof_of_identity'],
+                    methods: ['sign_and_send_transaction', 'sign_message', 'request_verifiable_presentation'],
                     chains: [chainId],
                     events: ['chain_changed', 'accounts_changed'],
                 },
@@ -305,7 +305,7 @@ export class WalletConnectConnection implements WalletConnection {
         return this.connector.client.request<VerifiablePresentation>({
             topic: this.session.topic,
             request: {
-                method: 'proof_of_identity',
+                method: 'request_verifiable_presentation',
                 params: { challenge, credentialStatements: statements },
             },
             chainId: this.chainId,

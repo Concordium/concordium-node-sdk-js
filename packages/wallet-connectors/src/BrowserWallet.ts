@@ -181,8 +181,8 @@ export class BrowserWalletConnector implements WalletConnector, WalletConnection
 
     async requestVerifiablePresentation(
         challenge: string,
-        statements: CredentialStatements
+        credentialStatements: CredentialStatements
     ): Promise<VerifiablePresentation> {
-        return this.client.requestVerifiablePresentation(challenge, statements);
+        return this.client.requestVerifiablePresentation(challenge, credentialStatements);
     }
 }

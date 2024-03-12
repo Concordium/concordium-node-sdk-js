@@ -192,10 +192,13 @@ export interface WalletConnection {
      * The returned promise resolves to the verifiable presentation once the wallet approves the request. If
      * this doesn't happen, the promise rejects with an explanatory error message.
      * @param challenge a challenge that is used to avoid accepting proofs created for other contexts.
-     * @param statements the statements to provide a verifiable presentation for
+     * @param credentialStatements the statements to provide a verifiable presentation for
      * @return A promise for the verifiable presentation for the statements.
      */
-    requestVerifiablePresentation(challenge: string, statements: CredentialStatements): Promise<VerifiablePresentation>;
+    requestVerifiablePresentation(
+        challenge: string,
+        credentialStatements: CredentialStatements
+    ): Promise<VerifiablePresentation>;
 
     /**
      * Close the connection and clean up relevant resources.

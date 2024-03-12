@@ -300,13 +300,13 @@ export class WalletConnectConnection implements WalletConnection {
 
     async requestVerifiablePresentation(
         challenge: string,
-        statements: CredentialStatements
+        credentialStatements: CredentialStatements
     ): Promise<VerifiablePresentation> {
         return this.connector.client.request<VerifiablePresentation>({
             topic: this.session.topic,
             request: {
                 method: 'request_verifiable_presentation',
-                params: { challenge, credentialStatements: statements },
+                params: { challenge, credentialStatements },
             },
             chainId: this.chainId,
         });

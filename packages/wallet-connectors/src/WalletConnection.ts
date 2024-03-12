@@ -187,8 +187,7 @@ export interface WalletConnection {
     signMessage(accountAddress: string, msg: SignableMessage): Promise<AccountTransactionSignature>;
 
     /**
-     * Request the wallet to provide a verifiable presentation (which contains the proof of) for the
-     * provided statements.
+     * Request the wallet to provide a verifiable presentation for the provided challenge and statements.
      *
      * The returned promise resolves to the verifiable presentation once the wallet approves the request. If
      * this doesn't happen, the promise rejects with an explanatory error message.

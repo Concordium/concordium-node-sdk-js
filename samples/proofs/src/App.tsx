@@ -36,6 +36,10 @@ function Main(props: WalletConnectionProps) {
     const [isWaiting, setIsWaiting] = useState(false);
 
     const handleSubmit = useCallback(() => {
+        setVerifiablePresentation(undefined);
+        setError('');
+        setIsWaiting(true);
+
         const statementBuilder = new Web3StatementBuilder().addForIdentityCredentials([0, 1, 2, 3, 4, 5], (b) =>
             b.addRange(AttributeKeyString.dob, MIN_DATE, getPastDate(18, 1))
         );
@@ -43,7 +47,6 @@ function Main(props: WalletConnectionProps) {
         // In a production scenario the challenge should not be hardcoded, in order to avoid accepting proofs created for other contexts.
         const challenge = 'beefbeefbeefbeefbeefbeefbeefbeefbeefbeefbeefbeefbeefbeefbeefbeef';
 
-        setIsWaiting(true);
         connection
             ?.requestVerifiablePresentation(challenge, statement)
             .then((res) => setVerifiablePresentation(res))

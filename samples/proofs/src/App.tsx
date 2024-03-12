@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Alert, Button, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
+import { Accordion, Alert, Button, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
 import {
     TESTNET,
     WalletConnectionProps,
@@ -7,7 +7,13 @@ import {
     useConnect,
     useConnection,
 } from '@concordium/react-components';
-import { VerifiablePresentation, Web3StatementBuilder } from '@concordium/web-sdk';
+import {
+    AttributeKeyString,
+    MIN_DATE,
+    VerifiablePresentation,
+    Web3StatementBuilder,
+    getPastDate,
+} from '@concordium/web-sdk';
 import { WalletConnectorButton } from './WalletConnectorButton';
 import { BROWSER_WALLET, WALLET_CONNECT } from './config';
 
@@ -31,7 +37,7 @@ function Main(props: WalletConnectionProps) {
 
     const handleSubmit = useCallback(() => {
         const statementBuilder = new Web3StatementBuilder().addForIdentityCredentials([0, 1, 2, 3, 4, 5], (b) =>
-            b.revealAttribute('firstName')
+            b.addRange(AttributeKeyString.dob, MIN_DATE, getPastDate(18, 1))
         );
         const statement = statementBuilder.getStatements();
         // In a production scenario the challenge should not be hardcoded, in order to avoid accepting proofs created for other contexts.
@@ -41,7 +47,7 @@ function Main(props: WalletConnectionProps) {
         connection
             ?.requestVerifiablePresentation(challenge, statement)
             .then((res) => setVerifiablePresentation(res))
-            .catch(() => setError('Failed to get verifiable presentation'))
+            .catch((e: Error) => setError(`Failed to get verifiable presentation: ${e.message}`))
             .finally(() => setIsWaiting(false));
     }, [connection]);
 
@@ -87,8 +93,7 @@ function Main(props: WalletConnectionProps) {
                 </Row>
             )}
             <Form.Group as={Row} className="mb-3">
-                <Form.Label column sm={3} />
-                <Col sm={9}>
+                <Col sm={3}>
                     <Button variant="primary" onClick={handleSubmit} disabled={!connection || isWaiting}>
                         {isWaiting ? 'Waiting for proof...' : 'Request proof'}
                     </Button>
@@ -97,12 +102,14 @@ function Main(props: WalletConnectionProps) {
             <Row>
                 {error && <Alert variant="danger">{error}</Alert>}
                 {verifiablePresentation && (
-                    <>
-                        <Col sm={3}>Verifiable presentation:</Col>
-                        <Col sm={9}>
-                            <pre title={`Verifiable presentation`}>{JSON.stringify(verifiablePresentation)}</pre>
-                        </Col>
-                    </>
+                    <Accordion defaultActiveKey="0">
+                        <Accordion.Item eventKey="0">
+                            <Accordion.Header>Verifiable presentation:</Accordion.Header>
+                            <Accordion.Body style={{ wordBreak: 'break-word' }}>
+                                {JSON.stringify(verifiablePresentation)}
+                            </Accordion.Body>
+                        </Accordion.Item>
+                    </Accordion>
                 )}
             </Row>
         </>

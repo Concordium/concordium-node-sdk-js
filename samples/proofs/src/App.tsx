@@ -1,6 +1,12 @@
 import React, { useCallback, useState } from 'react';
 import { Alert, Button, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
-import { TESTNET, WalletConnectionProps, WithWalletConnector, useConnect, useConnection } from '@concordium/react-components';
+import {
+    TESTNET,
+    WalletConnectionProps,
+    WithWalletConnector,
+    useConnect,
+    useConnection,
+} from '@concordium/react-components';
 import { VerifiablePresentation, Web3StatementBuilder } from '@concordium/web-sdk';
 import { WalletConnectorButton } from './WalletConnectorButton';
 import { BROWSER_WALLET, WALLET_CONNECT } from './config';
@@ -18,8 +24,8 @@ function Main(props: WalletConnectionProps) {
     const { activeConnectorType, activeConnector, activeConnectorError, connectedAccounts, genesisHashes } = props;
     const { connection, setConnection, account } = useConnection(connectedAccounts, genesisHashes);
     const { connect, isConnecting, connectError } = useConnect(activeConnector, setConnection);
-    const [proof, setProof] = useState<VerifiablePresentation>();
 
+    const [verifiablePresentation, setVerifiablePresentation] = useState<VerifiablePresentation>();
     const [error, setError] = useState('');
     const [isWaiting, setIsWaiting] = useState(false);
 
@@ -34,8 +40,8 @@ function Main(props: WalletConnectionProps) {
         setIsWaiting(true);
         connection
             ?.requestVerifiablePresentation(challenge, statement)
-            .then((res) => setProof(res))
-            .catch(() => setError('Failed to get proof'))
+            .then((res) => setVerifiablePresentation(res))
+            .catch(() => setError('Failed to get verifiable presentation'))
             .finally(() => setIsWaiting(false));
     }, [connection]);
 
@@ -90,11 +96,11 @@ function Main(props: WalletConnectionProps) {
             </Form.Group>
             <Row>
                 {error && <Alert variant="danger">{error}</Alert>}
-                {proof && (
+                {verifiablePresentation && (
                     <>
                         <Col sm={3}>Verifiable presentation:</Col>
                         <Col sm={9}>
-                            <pre title={`Verifiable presentation`}>{proof.toString()}</pre>
+                            <pre title={`Verifiable presentation`}>{JSON.stringify(verifiablePresentation)}</pre>
                         </Col>
                     </>
                 )}

@@ -43,7 +43,7 @@ async function connect(client: ISignClient, chainId: string, cancel: () => void)
         const { uri, approval } = await client.connect({
             requiredNamespaces: {
                 ccd: {
-                    methods: ['sign_and_send_transaction', 'sign_message'],
+                    methods: ['sign_and_send_transaction', 'sign_message', 'proof_of_identity'],
                     chains: [chainId],
                     events: ['chain_changed', 'accounts_changed'],
                 },
@@ -302,8 +302,14 @@ export class WalletConnectConnection implements WalletConnection {
         challenge: string,
         statements: CredentialStatements
     ): Promise<VerifiablePresentation> {
-        // TODO Implement this later.
-        throw new Error(`Identity proofs are not yet supported on mobile. ${challenge} ${statements.toString}`);
+        return this.connector.client.request<VerifiablePresentation>({
+            topic: this.session.topic,
+            request: {
+                method: 'proof_of_identity',
+                params: { challenge, credentialStatements: statements },
+            },
+            chainId: this.chainId,
+        });
     }
 
     async disconnect() {

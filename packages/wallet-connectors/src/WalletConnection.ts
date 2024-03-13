@@ -1,6 +1,13 @@
 import { Buffer } from 'buffer/';
 import { SendTransactionPayload, SmartContractParameters } from '@concordium/browser-wallet-api-helpers';
-import { AccountTransactionSignature, AccountTransactionType, SchemaVersion, toBuffer } from '@concordium/web-sdk';
+import {
+    AccountTransactionSignature,
+    AccountTransactionType,
+    CredentialStatements,
+    SchemaVersion,
+    VerifiablePresentation,
+    toBuffer,
+} from '@concordium/web-sdk';
 import { GrpcWebOptions } from '@protobuf-ts/grpcweb-transport';
 
 export type ModuleSchema = {
@@ -178,6 +185,20 @@ export interface WalletConnection {
      * @return A promise for the signatures of the message.
      */
     signMessage(accountAddress: string, msg: SignableMessage): Promise<AccountTransactionSignature>;
+
+    /**
+     * Request the wallet to provide a verifiable presentation for the provided challenge and statements.
+     *
+     * The returned promise resolves to the verifiable presentation once the wallet approves the request. If
+     * this doesn't happen, the promise rejects with an explanatory error message.
+     * @param challenge a challenge that is used to avoid accepting proofs created for other contexts.
+     * @param credentialStatements the statements to provide a verifiable presentation for
+     * @return A promise for the verifiable presentation for the statements.
+     */
+    requestVerifiablePresentation(
+        challenge: string,
+        credentialStatements: CredentialStatements
+    ): Promise<VerifiablePresentation>;
 
     /**
      * Close the connection and clean up relevant resources.

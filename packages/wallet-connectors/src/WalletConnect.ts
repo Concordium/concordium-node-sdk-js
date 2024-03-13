@@ -9,10 +9,12 @@ import {
     AccountTransactionType,
     BigintFormatType,
     ContractName,
+    CredentialStatements,
     EntrypointName,
     InitContractPayload,
     Parameter,
     UpdateContractPayload,
+    VerifiablePresentation,
     getTransactionKindString,
     jsonUnwrapStringify,
     serializeInitContractParameters,
@@ -41,7 +43,7 @@ async function connect(client: ISignClient, chainId: string, cancel: () => void)
         const { uri, approval } = await client.connect({
             requiredNamespaces: {
                 ccd: {
-                    methods: ['sign_and_send_transaction', 'sign_message'],
+                    methods: ['sign_and_send_transaction', 'sign_message', 'request_verifiable_presentation'],
                     chains: [chainId],
                     events: ['chain_changed', 'accounts_changed'],
                 },
@@ -294,6 +296,20 @@ export class WalletConnectConnection implements WalletConnection {
             default:
                 throw new UnreachableCaseError('message', msg);
         }
+    }
+
+    async requestVerifiablePresentation(
+        challenge: string,
+        credentialStatements: CredentialStatements
+    ): Promise<VerifiablePresentation> {
+        return this.connector.client.request<VerifiablePresentation>({
+            topic: this.session.topic,
+            request: {
+                method: 'request_verifiable_presentation',
+                params: { challenge, credentialStatements },
+            },
+            chainId: this.chainId,
+        });
     }
 
     async disconnect() {

@@ -1698,7 +1698,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@concordium/react-components@workspace:packages/react-components"
   dependencies:
-    "@concordium/wallet-connectors": ^0.4.0
+    "@concordium/wallet-connectors": ^0.5.0
     "@tsconfig/recommended": ^1.0.1
     "@types/node": ^18.11.17
     "@types/react": ^18
@@ -1717,7 +1717,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@concordium/wallet-connectors@^0.4.0, @concordium/wallet-connectors@workspace:packages/wallet-connectors":
+"@concordium/wallet-connectors@^0.5.0, @concordium/wallet-connectors@workspace:packages/wallet-connectors":
   version: 0.0.0-use.local
   resolution: "@concordium/wallet-connectors@workspace:packages/wallet-connectors"
   dependencies:
@@ -5881,6 +5881,25 @@ __metadata:
     stream: "npm:stream-browserify@3.0.0"
     typescript: ^5.2.2
     web-vitals: ^2.1.0
+  languageName: unknown
+  linkType: soft
+
+"concordium-dapp-request-verifiable-presentation@workspace:samples/proofs":
+  version: 0.0.0-use.local
+  resolution: "concordium-dapp-request-verifiable-presentation@workspace:samples/proofs"
+  dependencies:
+    "@concordium/react-components": "workspace:^"
+    "@concordium/web-sdk": ^7.1.0
+    "@types/node": ^16.18.16
+    "@types/react": ^18.0.28
+    "@types/react-dom": ^18.0.11
+    bootstrap: ^5.2.3
+    prettier: 2.8.1
+    react: ^18.2.0
+    react-bootstrap: ^2.7.2
+    react-dom: ^18.2.0
+    react-scripts: ^5.0.1
+    typescript: ^5.2.2
   languageName: unknown
   linkType: soft
 

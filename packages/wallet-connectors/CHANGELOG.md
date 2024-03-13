@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+-   Added a new method `requestVerifiablePresentation` to the `WalletConnect` interface for requesting verifiable presentations from a wallet.
+
 ## [0.4.0] - 2023-11-13
 
 ### Changed

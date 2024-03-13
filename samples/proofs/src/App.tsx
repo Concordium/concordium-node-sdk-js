@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Accordion, Alert, Button, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
+import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
 import {
     TESTNET,
     WalletConnectionProps,
@@ -102,19 +102,15 @@ function Main(props: WalletConnectionProps) {
                     </Button>
                 </Col>
             </Form.Group>
-            <Row>
-                {error && <Alert variant="danger">{error}</Alert>}
-                {verifiablePresentation && (
-                    <Accordion defaultActiveKey="0">
-                        <Accordion.Item eventKey="0">
-                            <Accordion.Header>Verifiable presentation:</Accordion.Header>
-                            <Accordion.Body style={{ wordBreak: 'break-word' }}>
-                                {JSON.stringify(verifiablePresentation)}
-                            </Accordion.Body>
-                        </Accordion.Item>
-                    </Accordion>
-                )}
-            </Row>
+            {error && <Alert variant="danger">{error}</Alert>}
+            {verifiablePresentation && (
+                <Card>
+                    <Card.Header>Verifiable presentation</Card.Header>
+                    <Card.Body>
+                        <Card.Text>{JSON.stringify(verifiablePresentation)}</Card.Text>
+                    </Card.Body>
+                </Card>
+            )}
         </>
     );
 }

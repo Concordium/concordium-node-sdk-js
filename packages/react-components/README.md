@@ -59,6 +59,15 @@ const { connect, isConnecting, connectError } = useConnect(activeConnector, setC
 
 The app uses the function `connect` to initiate a new connection from `activeConnector`.
 The fields `isConnecting` and `connectError` are used to render the connection status.
+If `activeConnector` is `undefined` then so is `connect` as it doesn't make sense to call it in that case.
+This may be used to disable a button whose click handler invokes the function, like for instance:
+
+```tsx
+<Button type="button" onClick={connect} disabled={!connect}>
+    Connect
+</Button>
+```
+
 Once established, the connection and its state are exposed in the following fields:
 
 -   `connection`: The `WalletConnection` object that the app uses to interact with the wallet.

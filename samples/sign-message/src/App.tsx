@@ -107,7 +107,7 @@ function Main(props: WalletConnectionProps) {
                     {activeConnectorError && <Alert variant="danger">Connector error: {activeConnectorError}.</Alert>}
                     {!activeConnectorError && activeConnectorType && !activeConnector && <Spinner />}
                     {connectError && <Alert variant="danger">Connection error: {connectError}.</Alert>}
-                    {activeConnector && !account && (
+                    {connect && !account && (
                         <Button type="button" onClick={connect} disabled={isConnecting}>
                             {isConnecting && 'Connecting...'}
                             {!isConnecting && activeConnectorType === BROWSER_WALLET && 'Connect Browser Wallet'}

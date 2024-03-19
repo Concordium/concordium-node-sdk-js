@@ -1,3 +1,4 @@
+import JSONBigInt from 'json-bigint';
 import {
     SendTransactionInitContractPayload,
     SendTransactionPayload,
@@ -302,14 +303,17 @@ export class WalletConnectConnection implements WalletConnection {
         challenge: string,
         credentialStatements: CredentialStatements
     ): Promise<VerifiablePresentation> {
-        return this.connector.client.request<VerifiablePresentation>({
+        const serializedParams = JSONBigInt.stringify({ challenge, credentialStatements });
+        const params = { paramsJson: serializedParams };
+        const result = await this.connector.client.request<{ verifiablePresentationJson: string }>({
             topic: this.session.topic,
             request: {
                 method: 'request_verifiable_presentation',
-                params: { challenge, credentialStatements },
+                params,
             },
             chainId: this.chainId,
         });
+        return VerifiablePresentation.fromString(result.verifiablePresentationJson);
     }
 
     async disconnect() {

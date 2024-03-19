@@ -107,7 +107,7 @@ function Main(props: WalletConnectionProps) {
                 <Card>
                     <Card.Header>Verifiable presentation</Card.Header>
                     <Card.Body>
-                        <Card.Text>{JSON.stringify(verifiablePresentation)}</Card.Text>
+                        <Card.Text>{verifiablePresentation.toString()}</Card.Text>
                     </Card.Body>
                 </Card>
             )}

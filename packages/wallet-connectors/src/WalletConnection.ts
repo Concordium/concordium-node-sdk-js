@@ -70,12 +70,16 @@ export function typeSchema(schema: Buffer): TypeSchema {
 }
 
 function schemaAsBuffer(schemaBase64: string) {
-    const res = toBuffer(schemaBase64, 'base64');
-    // Check round-trip. This requires the provided schema to be properly padded.
-    if (res.toString('base64') !== schemaBase64) {
-        throw new Error(`provided schema '${schemaBase64}' is not valid base64`);
+    const res = Buffer.from(schemaBase64, 'base64');
+    // Check round-trip. We allow for unpadded base64.
+    const serialized = res.toString('base64');
+    if (serialized.startsWith(schemaBase64)) {
+        const padding = serialized.slice(schemaBase64.length);
+        if (['==', '=', ''].includes(padding)) {
+            return res;
+        }
     }
-    return res;
+    throw new Error(`The provided schema '${schemaBase64}' is not valid base64`);
 }
 
 export type TypedSmartContractParameters = {

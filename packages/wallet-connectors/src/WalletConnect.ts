@@ -1,4 +1,3 @@
-import JSONBigInt from 'json-bigint';
 import {
     SendTransactionInitContractPayload,
     SendTransactionPayload,
@@ -303,7 +302,7 @@ export class WalletConnectConnection implements WalletConnection {
         challenge: string,
         credentialStatements: CredentialStatements
     ): Promise<VerifiablePresentation> {
-        const paramsJson = JSONBigInt.stringify({ challenge, credentialStatements });
+        const paramsJson = jsonUnwrapStringify({ challenge, credentialStatements });
         const params = { paramsJson };
         const result = await this.connector.client.request<{ verifiablePresentationJson: string }>({
             topic: this.session.topic,

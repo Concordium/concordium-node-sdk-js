@@ -1723,11 +1723,9 @@ __metadata:
   dependencies:
     "@concordium/browser-wallet-api-helpers": ^3.0.0
     "@tsconfig/recommended": ^1.0.1
-    "@types/json-bigint": ^1
     "@walletconnect/qrcode-modal": ^1.8.0
     "@walletconnect/sign-client": ^2.1.4
     "@walletconnect/types": ^2.1.4
-    json-bigint: ^1.0.0
     prettier: 2.8.1
     typescript: ^5.2.2
   peerDependencies:
@@ -3441,13 +3439,6 @@ __metadata:
     jest-matcher-utils: ^27.0.0
     pretty-format: ^27.0.0
   checksum: 7e11c6826aa429ad990dc262e4e4b54aa36573287fddf15773e4137f07d11d3105f0dd9f1baff73252160a057df23f5529bb83b1bf83cd3f45f9460a5ca5c22e
-  languageName: node
-  linkType: hard
-
-"@types/json-bigint@npm:^1":
-  version: 1.0.4
-  resolution: "@types/json-bigint@npm:1.0.4"
-  checksum: 7aee137b3796121cec755247ea56577611c8e5df89224c567fa71999764d01e12199c4089c6be8a9e4e6a6a8f5c6f309eee2965cc3dd8d576f4c4ba432566041
   languageName: node
   linkType: hard
 

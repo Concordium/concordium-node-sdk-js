@@ -303,8 +303,8 @@ export class WalletConnectConnection implements WalletConnection {
         challenge: string,
         credentialStatements: CredentialStatements
     ): Promise<VerifiablePresentation> {
-        const serializedParams = JSONBigInt.stringify({ challenge, credentialStatements });
-        const params = { paramsJson: serializedParams };
+        const paramsJson = JSONBigInt.stringify({ challenge, credentialStatements });
+        const params = { paramsJson };
         const result = await this.connector.client.request<{ verifiablePresentationJson: string }>({
             topic: this.session.topic,
             request: {

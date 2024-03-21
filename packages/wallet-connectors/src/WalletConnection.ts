@@ -69,17 +69,19 @@ export function typeSchema(schema: Buffer): TypeSchema {
     };
 }
 
-function schemaAsBuffer(schemaBase64: string) {
-    const res = Buffer.from(schemaBase64, 'base64');
-    // Check round-trip. We allow for unpadded base64.
-    const serialized = res.toString('base64');
-    if (serialized.startsWith(schemaBase64)) {
-        const padding = serialized.slice(schemaBase64.length);
-        if (['==', '=', ''].includes(padding)) {
-            return res;
-        }
+export function schemaAsBuffer(schemaBase64: string) {
+    let unpaddedLen = schemaBase64.length;
+    if (schemaBase64.charAt(unpaddedLen - 1) === '=') {
+        unpaddedLen--;
     }
-    throw new Error(`The provided schema '${schemaBase64}' is not valid base64`);
+    if (schemaBase64.charAt(unpaddedLen - 1) === '=') {
+        unpaddedLen--;
+    }
+    const res = toBuffer(schemaBase64, 'base64');
+    if (unpaddedLen !== Math.ceil((4 * res.length) / 3)) {
+        throw new Error(`The provided schema '${schemaBase64}' is not valid base64`);
+    }
+    return res;
 }
 
 export type TypedSmartContractParameters = {

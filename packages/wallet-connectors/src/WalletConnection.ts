@@ -73,9 +73,10 @@ export function schemaAsBuffer(schemaBase64: string) {
     let unpaddedLen = schemaBase64.length;
     if (schemaBase64.charAt(unpaddedLen - 1) === '=') {
         unpaddedLen--;
-    }
-    if (schemaBase64.charAt(unpaddedLen - 1) === '=') {
-        unpaddedLen--;
+
+        if (schemaBase64.charAt(unpaddedLen - 1) === '=') {
+            unpaddedLen--;
+        }
     }
     const res = toBuffer(schemaBase64, 'base64');
     if (unpaddedLen !== Math.ceil((4 * res.length) / 3)) {

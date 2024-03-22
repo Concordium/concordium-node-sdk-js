@@ -69,11 +69,18 @@ export function typeSchema(schema: Buffer): TypeSchema {
     };
 }
 
-function schemaAsBuffer(schemaBase64: string) {
+export function schemaAsBuffer(schemaBase64: string) {
+    let unpaddedLen = schemaBase64.length;
+    if (schemaBase64.charAt(unpaddedLen - 1) === '=') {
+        unpaddedLen--;
+
+        if (schemaBase64.charAt(unpaddedLen - 1) === '=') {
+            unpaddedLen--;
+        }
+    }
     const res = toBuffer(schemaBase64, 'base64');
-    // Check round-trip. This requires the provided schema to be properly padded.
-    if (res.toString('base64') !== schemaBase64) {
-        throw new Error(`provided schema '${schemaBase64}' is not valid base64`);
+    if (unpaddedLen !== Math.ceil((4 * res.length) / 3)) {
+        throw new Error(`The provided schema '${schemaBase64}' is not valid base64`);
     }
     return res;
 }

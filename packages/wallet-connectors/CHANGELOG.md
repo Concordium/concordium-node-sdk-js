@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Fixed serialization of parameters in `requestVerifiablePresentation` and parsing of the result of the request.
 
+### Changed
+
+-   `schemaAsBuffer` and thereby `typeSchemaFromBase64` no longer requires a base64 encoded schema to be padded.
+
 ## [0.5.0] - 2024-03-13
 
 ### Added

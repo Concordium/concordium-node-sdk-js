@@ -4,14 +4,14 @@
 
 ### Added
 
-- `toString`, `toJSON`, and `fromJSON` to all concordium domain types.
+- `toString`, `toJSON`, and `fromJSON` to most concordium domain types.
 - Deprecated types and functions related to typed JSON serialization and deserialization.
 - `Parameter.parseWithSchemaTypeBase64` and `Parameter.parseWithSchemaType` to
   help parsing smart contract parameters into typed structures.
 
 ### Fixed
 
-- Changed the return type of `TransactionExpiry.toJSON` from `number` to `bigint`, since the former could throw an error.
+- Changed the return type of `TransactionExpiry.toJSON` from `number` to `string`, since the former could throw an error.
 
 ## 7.3.2
 

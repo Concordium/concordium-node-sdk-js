@@ -251,19 +251,6 @@ describe('TransactionExpiry', () => {
         expect(jsonUnwrapStringify(t, BigintFormatType.Integer)).toEqual(e);
     });
 
-    test('Serializes and deserializes to JSON as expected', () => {
-        let expiry = TransactionExpiry.fromEpochSeconds(300);
-        let json = expiry.toJSON();
-        let parsed = TransactionExpiry.fromJSON(json);
-        expect(parsed).toEqual(expiry);
-
-        // Test for numbers bigger than Number.MAX_SAFE_INTEGER
-        expiry = TransactionExpiry.fromEpochSeconds(9007199254740997n);
-        json = expiry.toJSON();
-        parsed = TransactionExpiry.fromJSON(json);
-        expect(parsed).toEqual(expiry);
-    });
-
     test('Is stringified correctly by toString', () => {
         let expiry = TransactionExpiry.fromEpochSeconds(300);
         expect(`${expiry}`).toEqual('300');
@@ -353,19 +340,6 @@ describe('Energy', () => {
         expect(jsonUnwrapStringify(t, BigintFormatType.Integer)).toEqual(e);
     });
 
-    test('Serializes and deserializes to JSON as expected', () => {
-        let energy = Energy.create(300);
-        let json = energy.toJSON();
-        let parsed = Energy.fromJSON(json);
-        expect(parsed).toEqual(energy);
-
-        // Test for numbers bigger than Number.MAX_SAFE_INTEGER
-        energy = Energy.create(9007199254740997n);
-        json = energy.toJSON();
-        parsed = Energy.fromJSON(json);
-        expect(parsed).toEqual(energy);
-    });
-
     test('Is stringified correctly by toString', () => {
         let energy = Energy.create(300);
         expect(`${energy}`).toEqual('300');
@@ -388,19 +362,6 @@ describe('Timestamp', () => {
         expect(jsonUnwrapStringify(t, BigintFormatType.Integer)).toEqual(e);
     });
 
-    test('Serializes and deserializes to JSON as expected', () => {
-        let time = Timestamp.fromMillis(300);
-        let json = time.toJSON();
-        let parsed = Timestamp.fromJSON(json);
-        expect(parsed).toEqual(time);
-
-        // Test for numbers bigger than Number.MAX_SAFE_INTEGER
-        time = Timestamp.fromMillis(9007199254740997n);
-        json = time.toJSON();
-        parsed = Timestamp.fromJSON(json);
-        expect(parsed).toEqual(time);
-    });
-
     test('Is stringified correctly by toString', () => {
         let time = Timestamp.fromMillis(300);
         expect(`${time}`).toEqual('300');
@@ -421,19 +382,6 @@ describe('Duration', () => {
         t = Duration.fromMillis(9007199254740997n);
         e = '9007199254740997';
         expect(jsonUnwrapStringify(t, BigintFormatType.Integer)).toEqual(e);
-    });
-
-    test('Serializes and deserializes to JSON as expected', () => {
-        let duration = Duration.fromMillis(300);
-        let json = duration.toJSON();
-        let parsed = Duration.fromJSON(json);
-        expect(parsed).toEqual(duration);
-
-        // Test for numbers bigger than Number.MAX_SAFE_INTEGER
-        duration = Duration.fromMillis(9007199254740997n);
-        json = duration.toJSON();
-        parsed = Duration.fromJSON(json);
-        expect(parsed).toEqual(duration);
     });
 
     test('Is stringified correctly by toString', () => {
@@ -463,24 +411,6 @@ describe('ContractAddress', () => {
         t = ContractAddress.create(9007199254740997n, 109007199254740997n);
         e = '{"index":9007199254740997,"subindex":109007199254740997}';
         expect(jsonUnwrapStringify(t, BigintFormatType.Integer)).toEqual(e);
-    });
-
-    test('Serializes and deserializes to JSON as expected', () => {
-        let addr = ContractAddress.create(100, 10);
-        let json = addr.toJSON();
-        let parsed = ContractAddress.fromJSON(json);
-        expect(parsed).toEqual(addr);
-
-        // Test for numbers bigger than Number.MAX_SAFE_INTEGER
-        addr = ContractAddress.create(9007199254740997n, 10);
-        json = addr.toJSON();
-        parsed = ContractAddress.fromJSON(json);
-        expect(parsed).toEqual(addr);
-
-        addr = ContractAddress.create(9007199254740997n, 109007199254740997n);
-        json = addr.toJSON();
-        parsed = ContractAddress.fromJSON(json);
-        expect(parsed).toEqual(addr);
     });
 
     test('Is stringified correctly by toString', () => {

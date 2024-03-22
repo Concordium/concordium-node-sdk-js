@@ -10,16 +10,10 @@ import {
  * @deprecated
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.Energy;
-/**
- * @deprecated
- */
 export type Serializable = string;
 
 /** Energy measure. Used as part of cost calculations for transactions. */
 class Energy {
-    /**
-     * @deprecated Use the {@linkcode Energy.toJSON} method instead.
-     */
     protected get serializable(): Serializable {
         return this.value.toString();
     }
@@ -38,28 +32,10 @@ class Energy {
     public toString(): string {
         return this.value.toString();
     }
-
-    /**
-     * Get a JSON-serializable representation of the energy.
-     * @returns {bigint} The JSON-serializable representation.
-     */
-    public toJSON(): bigint {
-        return this.value;
-    }
-}
-
-/**
- * Converts a `bigint` to energy.
- * @param {bigint} json The JSON representation of the energy.
- * @returns {Energy} The energy.
- */
-export function fromJSON(json: bigint): Energy {
-    return create(json);
 }
 
 /**
  * Unwraps {@linkcode Type} value
- * @deprecated Use the {@linkcode Energy.toJSON} method instead.
  * @param value value to unwrap.
  * @returns the unwrapped {@linkcode bigint} value
  */
@@ -117,7 +93,6 @@ export function toProto(energy: Energy): Proto.Energy {
 
 /**
  * Constructs a {@linkcode Type} from {@linkcode Serializable}.
- * @deprecated Use the {@linkcode fromJSON} function instead.
  * @param {Serializable} value
  * @returns {Type} The duration.
  */
@@ -127,7 +102,6 @@ export function fromSerializable(value: Serializable): Type {
 
 /**
  * Converts {@linkcode Type} into {@linkcode Serializable}
- * @deprecated Use the {@linkcode Energy.toJSON} method instead.
  * @param {Type} energy
  * @returns {Serializable} The serializable value
  */
@@ -137,7 +111,7 @@ export function toSerializable(energy: Type): Serializable {
 
 /**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
- * @deprecated Use the {@linkcode Energy.toJSON} method instead.
+ * @deprecated Use the {@linkcode toSerializable} function instead.
  * @param {Type} value - The account address instance to transform.
  * @returns {TypedJson} The transformed object.
  */
@@ -150,7 +124,7 @@ export function toTypedJSON(value: Type): TypedJson<Serializable> {
 
 /**
  * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
- * @deprecated Use the {@linkcode fromJSON} function instead.
+ * @deprecated Use the {@linkcode fromSerializable} function instead.
  * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.

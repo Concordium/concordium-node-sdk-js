@@ -43,7 +43,7 @@ class TransactionHash {
      * Get a JSON-serializable representation of the transaction hash.
      * @returns {HexString} The JSON-serializable representation.
      */
-    public toJSON(): Serializable {
+    public toJSON(): HexString {
         return toHexString(this);
     }
 }

@@ -11,9 +11,6 @@ import {
  * @deprecated
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.TransactionExpiry;
-/**
- * @deprecated
- */
 export type Serializable = string;
 
 /**
@@ -37,20 +34,20 @@ class TransactionExpiry {
 
     /**
      * Get a JSON-serializable representation of the transaction expiry date.
-     * @returns {bigint} The JSON-serializable representation.
+     * @returns {string} The JSON-serializable representation.
      */
-    public toJSON(): bigint {
-        return this.expiryEpochSeconds;
+    public toJSON(): string {
+        return this.expiryEpochSeconds.toString();
     }
 }
 
 /**
- * Converts a `bigint` to a transaction expiry.
- * @param {bigint} json The JSON representation of the transaction expiry.
- * @returns {TransactionExpiry} The transaction expiry.
+ * Unwraps {@linkcode Type} value
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode bigint} value
  */
-export function fromJSON(json: bigint): TransactionExpiry {
-    return fromEpochSeconds(json);
+export function toUnwrappedJSON(value: Type): bigint {
+    return value.expiryEpochSeconds;
 }
 
 /**
@@ -134,7 +131,6 @@ export function toProto(expiry: TransactionExpiry): Proto.TransactionTime {
 
 /**
  * Constructs a {@linkcode Type} from {@linkcode Serializable}.
- * @deprecated Use the {@linkcode fromJSON} function instead.
  * @param {Serializable} value
  * @returns {Type} The duration.
  */
@@ -144,7 +140,6 @@ export function fromSerializable(value: Serializable): Type {
 
 /**
  * Converts {@linkcode Type} into {@linkcode Serializable}
- * @deprecated Use the {@linkcode TransactionExpiry.toJSON} method instead.
  * @param {Type} value
  * @returns {Serializable} The serializable value
  */
@@ -154,7 +149,7 @@ export function toSerializable(value: Type): Serializable {
 
 /**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
- * @deprecated Use the {@linkcode TransactionExpiry.toJSON} method instead.
+ * @deprecated Use the {@linkcode toSerializable} function instead.
  * @param {Type} value - The account address instance to transform.
  * @returns {TypedJson} The transformed object.
  */
@@ -167,7 +162,7 @@ export function toTypedJSON(value: TransactionExpiry): TypedJson<Serializable> {
 
 /**
  * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
- * @deprecated Use the {@linkcode fromJSON} function instead.
+ * @deprecated Use the {@linkcode fromSerializable} function instead.
  * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.

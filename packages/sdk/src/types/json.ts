@@ -182,7 +182,9 @@ function unwrapConcordiumType(value: unknown): unknown | undefined {
         case Timestamp.instanceOf(value):
             return Timestamp.toUnwrappedJSON(value as Timestamp.Type);
         case TransactionExpiry.instanceOf(value):
-            return (value as TransactionExpiry.Type).toJSON();
+            return TransactionExpiry.toUnwrappedJSON(
+                value as TransactionExpiry.Type
+            );
         case TransactionHash.instanceOf(value):
             return TransactionHash.toUnwrappedJSON(
                 value as TransactionHash.Type

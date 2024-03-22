@@ -10,9 +10,6 @@ import {
  * @deprecated
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.Duration;
-/**
- * @deprecated
- */
 export type Serializable = string;
 
 /**
@@ -34,28 +31,10 @@ class Duration {
     public toString(): string {
         return this.value.toString();
     }
-
-    /**
-     * Get a JSON-serializable representation of the duration.
-     * @returns {bigint} The JSON-serializable representation.
-     */
-    public toJSON(): bigint {
-        return this.value;
-    }
-}
-
-/**
- * Converts a `bigint` to a duration.
- * @param {bigint} json The JSON representation of the duration.
- * @returns {Duration} The duration.
- */
-export function fromJSON(json: bigint): Duration {
-    return fromMillis(json);
 }
 
 /**
  * Unwraps {@linkcode Type} value
- * @deprecated Use the {@linkcode Duration.toJSON} method instead.
  * @param value value to unwrap.
  * @returns the unwrapped {@linkcode bigint} value
  */
@@ -210,7 +189,6 @@ export function toProto(duration: Duration): Proto.Duration {
 
 /**
  * Constructs a {@linkcode Duration} from {@linkcode Serializable}.
- * @deprecated Use the {@linkcode fromJSON} function instead.
  * @param {Serializable} value
  * @returns {Duration} The duration.
  */
@@ -220,7 +198,6 @@ export function fromSerializable(value: Serializable): Duration {
 
 /**
  * Converts {@linkcode Duration} into {@linkcode Serializable}
- * @deprecated Use the {@linkcode Duration.toJSON} method instead.
  * @param {Duration} duration
  * @returns {Serializable} The serializable value
  */
@@ -230,7 +207,7 @@ export function toSerializable(duration: Duration): Serializable {
 
 /**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
- * @deprecated Use the {@linkcode Duration.toJSON} method instead.
+ * @deprecated Use the {@linkcode toSerializable} function instead.
  * @param {Type} value - The account address instance to transform.
  * @returns {TypedJson} The transformed object.
  */
@@ -243,7 +220,7 @@ export function toTypedJSON(value: Duration): TypedJson<Serializable> {
 
 /**
  * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
- * @deprecated Use the {@linkcode fromJSON} function instead.
+ * @deprecated Use the {@linkcode fromSerializable} function instead.
  * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.

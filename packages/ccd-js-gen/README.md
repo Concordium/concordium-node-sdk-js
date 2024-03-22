@@ -124,6 +124,8 @@ This package provides the `ccd-js-gen` command, which can be used from the comma
 
 - `-m, --module <path>` Path to the smart contract module.
 - `-o, --out-dir <path>` Directory to use for the generated code.
+- `-t, --output-type <TypeScript|JavaScript|TypedJavaScript|Everything>` The output file types for the generated code. Defaults to `Everything`.
+- `-n, --ts-nocheck` Generate `@ts-nocheck` annotations at the top of each typescript file.
 
 ### Example
 

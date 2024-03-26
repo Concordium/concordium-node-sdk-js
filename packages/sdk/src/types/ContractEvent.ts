@@ -8,11 +8,9 @@ import type {
     SmartContractTypeValues,
 } from '../types.js';
 
-// IMPORTANT:
-// When adding functionality to this module, it is important to not change the wrapper class, as changing this might break compatibility
-// between different versions of the SDK, e.g. if a dependency exposes an API that depends on the class and a class from a different version
-// of the SDK is passed.
-
+/**
+ * @deprecated
+ */
 export type Serializable = HexString;
 
 /**
@@ -25,11 +23,36 @@ class ContractEvent {
         /** The internal buffer of bytes representing the event. */
         public readonly buffer: Uint8Array
     ) {}
+
+    /**
+     * Get a string representation of the contract event.
+     * @returns {string} The string representation.
+     */
+    public toString(): string {
+        return toHexString(this);
+    }
+
+    /**
+     * Get a JSON-serializable representation of the contract event.
+     * @returns {HexString} The JSON-serializable representation.
+     */
+    public toJSON(): HexString {
+        return toHexString(this);
+    }
+}
+
+/**
+ * Converts a {@linkcode HexString} to a contract event.
+ * @param {HexString} json The JSON representation of the contract event.
+ * @returns {ContractEvent} The contract event.
+ */
+export function fromJSON(json: HexString): ContractEvent {
+    return fromHexString(json);
 }
 
 /**
  * Unwraps {@linkcode Type} value
- *
+ * @deprecated Use the {@linkcode ContractEvent.toJSON} method instead.
  * @param value value to unwrap.
  * @returns the unwrapped {@linkcode Serializable} value
  */

@@ -6,15 +6,14 @@ import {
     makeFromTypedJson,
 } from './util.js';
 
-// IMPORTANT:
-// When adding functionality to this module, it is important to not change the wrapper class, as changing this might break compatibility
-// between different versions of the SDK, e.g. if a dependency exposes an API that depends on the class and a class from a different version
-// of the SDK is passed.
-
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ * @deprecated
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.ContractName;
+/**
+ * @deprecated
+ */
 export type Serializable = string;
 
 /** The name of a smart contract. Note: This does _not_ including the 'init_' prefix. */
@@ -25,16 +24,41 @@ class ContractName {
         /** The internal string value of the contract name. */
         public readonly value: string
     ) {}
+
+    /**
+     * Get a string representation of the contract name.
+     * @returns {string} The string representation.
+     */
+    public toString(): string {
+        return this.value;
+    }
+
+    /**
+     * Get a JSON-serializable representation of the contract name.
+     * @returns {string} The JSON-serializable representation.
+     */
+    public toJSON(): string {
+        return this.value;
+    }
+}
+
+/**
+ * Converts a `string` to a contract name.
+ * @param {string} json The JSON representation of the contract name.
+ * @returns {ContractName} The contract name.
+ */
+export function fromJSON(json: string): ContractName {
+    return fromString(json);
 }
 
 /**
  * Unwraps {@linkcode Type} value
- *
+ * @deprecated Use the {@linkcode ContractName.toJSON} method instead.
  * @param value value to unwrap.
  * @returns the unwrapped {@linkcode Serializable} value
  */
 export function toUnwrappedJSON(value: Type): Serializable {
-    return toString(value);
+    return value.toString();
 }
 
 /** The name of a smart contract. Note: This does _not_ including the 'init_' prefix. */
@@ -96,6 +120,7 @@ export function fromInitName(initName: InitName.Type): ContractName {
 
 /**
  * Convert a contract name to a string
+ * @deprecated Use the {@linkcode ContractName.toString} method instead.
  * @param {ContractName} contractName The contract name to stringify.
  * @returns {string}
  */
@@ -138,7 +163,7 @@ export function equals(left: ContractName, right: ContractName): boolean {
 
 /**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
- *
+ * @deprecated Use the {@linkcode ContractName.toJSON} method instead.
  * @param {Type} value - The account address instance to transform.
  * @returns {TypedJson} The transformed object.
  */
@@ -151,7 +176,7 @@ export function toTypedJSON(value: ContractName): TypedJson<Serializable> {
 
 /**
  * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
- *
+ * @deprecated Use the {@linkcode fromJSON} function instead.
  * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.

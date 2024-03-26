@@ -7,19 +7,18 @@ import {
     makeFromTypedJson,
 } from './util.js';
 
-// IMPORTANT:
-// When adding functionality to this module, it is important to not change the wrapper class, as changing this might break compatibility
-// between different versions of the SDK, e.g. if a dependency exposes an API that depends on the class and a class from a different version
-// of the SDK is passed.
-
 /**
  * The number of bytes used to represent a block hash.
  */
 const BLOCK_HASH_BYTE_LENGTH = 32;
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ * @deprecated
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.BlockHash;
+/**
+ * @deprecated
+ */
 export type Serializable = HexString;
 
 /**
@@ -34,11 +33,36 @@ class BlockHash {
         /** The internal buffer of bytes representing the hash. */
         public readonly buffer: Uint8Array
     ) {}
+
+    /**
+     * Get a string representation of the block hash.
+     * @returns {string} The string representation.
+     */
+    public toString(): string {
+        return toHexString(this);
+    }
+
+    /**
+     * Get a JSON-serializable representation of the block hash.
+     * @returns {HexString} The JSON-serializable representation.
+     */
+    public toJSON(): HexString {
+        return toHexString(this);
+    }
+}
+
+/**
+ * Converts a {@linkcode HexString} to a block hash.
+ * @param {HexString} json The JSON representation of the block hash.
+ * @returns {BlockHash} The block hash.
+ */
+export function fromJSON(json: HexString): BlockHash {
+    return fromHexString(json);
 }
 
 /**
  * Unwraps {@linkcode Type} value
- *
+ * @deprecated Use the {@linkcode BlockHash.toJSON} method instead.
  * @param value value to unwrap.
  * @returns the unwrapped {@linkcode Serializable} value
  */
@@ -154,7 +178,7 @@ export function equals(left: BlockHash, right: BlockHash): boolean {
 
 /**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
- *
+ * @deprecated Use the {@linkcode BlockHash.toJSON} method instead.
  * @param {Type} value - The account address instance to transform.
  * @returns {TypedJson} The transformed object.
  */
@@ -167,7 +191,7 @@ export function toTypedJSON(value: BlockHash): TypedJson<Serializable> {
 
 /**
  * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
- *
+ * @deprecated Use the {@linkcode fromJSON} function instead.
  * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.

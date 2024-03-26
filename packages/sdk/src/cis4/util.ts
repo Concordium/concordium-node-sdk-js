@@ -903,7 +903,7 @@ export function deserializeCIS4Event(event: ContractEvent.Type): CIS4.Event {
                 key,
             };
         } else {
-            throw new Error('Unknown revoker type');
+            throw new Error('Failed deserializing CIS-4 RevokeCredential event: Unknown revoker type');
         }
         const reason = deserializeReason(cursor);
         return {
@@ -943,7 +943,7 @@ export function deserializeCIS4Event(event: ContractEvent.Type): CIS4.Event {
         } else if (actionByte == 1) {
             action = CIS4.RevocationKeyAction.Remove;
         } else {
-            throw new Error('Unknown revocation key action');
+            throw new Error('Failed deserializing CIS-4 RevocationKey event: Unknown revocation key action');
         }
         return {
             type: CIS4.EventType.RevocationKey,

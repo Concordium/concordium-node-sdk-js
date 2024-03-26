@@ -860,6 +860,9 @@ export function deserializeCIS4MetadataResponse(
  * @param {ContractEvent.Type} event - The event to deserialize
  *
  * @returns {CIS4.Event} The deserialized event
+ *
+ * @throws If the event is not custom (starts with an unreserved tag)
+ * and the event cannot be deserialized to a valid CIS-4 event
  */
 export function deserializeCIS4Event(event: ContractEvent.Type): CIS4.Event {
     // An empty buffer is a valid custom event
@@ -903,7 +906,9 @@ export function deserializeCIS4Event(event: ContractEvent.Type): CIS4.Event {
                 key,
             };
         } else {
-            throw new Error('Failed deserializing CIS-4 RevokeCredential event: Unknown revoker type');
+            throw new Error(
+                'Failed deserializing CIS-4 RevokeCredential event: Unknown revoker type'
+            );
         }
         const reason = deserializeReason(cursor);
         return {
@@ -943,7 +948,9 @@ export function deserializeCIS4Event(event: ContractEvent.Type): CIS4.Event {
         } else if (actionByte == 1) {
             action = CIS4.RevocationKeyAction.Remove;
         } else {
-            throw new Error('Failed deserializing CIS-4 RevocationKey event: Unknown revocation key action');
+            throw new Error(
+                'Failed deserializing CIS-4 RevocationKey event: Unknown revocation key action'
+            );
         }
         return {
             type: CIS4.EventType.RevocationKey,

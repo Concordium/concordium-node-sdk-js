@@ -10,6 +10,9 @@
 - `deserializeCIS2Event` for deserializing a CIS-2 event from a `ContractEvent`.
 - `deserializeCIS2Events` and `deserializeCIS2EventsFromSummary` for deserializing all CIS-2 events from `InvokeContractSuccessResult`s and `BlockItemSummary`s, respectively.
 - `parseCIS2RejectionError` for parsing a CIS-2 rejection error from a `InvokeContractFailureResult`.
+- Various types related to CIS-4 events in the `CIS4` namespace.
+- `deserializeCIS4Event` for deserializing a CIS-4 event from a `ContractEvent`.
+- `deserializeCIS4Events` and `deserializeCIS4EventsFromSummary` for deserializing all CIS-4 events from `InvokeContractSuccessResult`s and `BlockItemSummary`s, respectively.
 - `Parameter.parseWithSchemaTypeBase64` and `Parameter.parseWithSchemaType` to
   help parsing smart contract parameters into typed structures.
 

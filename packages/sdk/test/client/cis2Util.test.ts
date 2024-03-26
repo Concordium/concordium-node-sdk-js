@@ -419,7 +419,7 @@ test('Custom CIS2 events are deserialized correctly', async () => {
 
 test('CIS2 events are deserialized correctly from a BlockItemSummary', async () => {
     const blockItemSummary = v8.deserialize(
-        fs.readFileSync('./test/client/resources/block-item-summary.bin')
+        fs.readFileSync('./test/client/resources/csi2-block-item-summary.bin')
     ) as BlockItemSummary;
     const events = deserializeCIS2EventsFromSummary(blockItemSummary);
 

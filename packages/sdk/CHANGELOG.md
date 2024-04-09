@@ -18,6 +18,10 @@
 - Documentation on when`TransactionExpiry.toJSON` throws an error.
 
 
+### Fixed
+
+- Serialization of nonces with `serializeCIS4RevocationDataHolder` to serialize as little endian.
+
 ## 7.3.2
 
 ### Added

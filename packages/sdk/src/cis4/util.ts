@@ -696,7 +696,7 @@ export function serializeCIS4RevocationDataHolder(
         data.signingData.contractAddress
     );
     const entrypoint = serializeReceiveHookName(data.signingData.entrypoint);
-    const nonce = encodeWord64(data.signingData.nonce);
+    const nonce = encodeWord64(data.signingData.nonce, true);
     const timestamp = serializeDate(data.signingData.timestamp);
     const reason = makeSerializeOptional<string>(serializeReason)(data.reason);
 

@@ -34,10 +34,20 @@ class TransactionExpiry {
 
     /**
      * Get a JSON-serializable representation of the transaction expiry date.
+     * @throws If the expiry represented as seconds after unix epoch is too
+     * large to be represented as a number.
      * @returns {string} The JSON-serializable representation.
      */
-    public toJSON(): string {
-        return this.expiryEpochSeconds.toString();
+    public toJSON(): number {
+        if (
+            this.expiryEpochSeconds > Number.MAX_SAFE_INTEGER ||
+            this.expiryEpochSeconds < Number.MIN_SAFE_INTEGER
+        ) {
+            throw new Error(
+                'Transaction expiry is too large to be represented as a number.'
+            );
+        }
+        return Number(this.expiryEpochSeconds);
     }
 }
 

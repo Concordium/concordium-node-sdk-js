@@ -15,10 +15,8 @@
 - `deserializeCIS4Events` and `deserializeCIS4EventsFromSummary` for deserializing all CIS-4 events from `InvokeContractSuccessResult`s and `BlockItemSummary`s, respectively.
 - `Parameter.parseWithSchemaTypeBase64` and `Parameter.parseWithSchemaType` to
   help parsing smart contract parameters into typed structures.
+- Documentation on when`TransactionExpiry.toJSON` throws an error.
 
-### Fixed
-
-- Changed the return type of `TransactionExpiry.toJSON` from `number` to `string`, since the former could throw an error.
 
 ## 7.3.2
 

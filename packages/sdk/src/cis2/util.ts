@@ -398,7 +398,9 @@ function serializeTokenAmount(amount: CIS2.TokenAmount): Buffer {
     return serialized;
 }
 
-function serializeAccountAddress(address: AccountAddress.Type): Uint8Array {
+export function serializeAccountAddress(
+    address: AccountAddress.Type
+): Uint8Array {
     return AccountAddress.toBuffer(address);
 }
 

@@ -471,11 +471,11 @@ const deserializeOptional = <T>(
     return fun(cursor);
 };
 
-function serializeDate(date: Timestamp.Type): Buffer {
+export function serializeDate(date: Timestamp.Type): Buffer {
     return encodeWord64(BigInt(date.value), true);
 }
 
-function deserializeDate(cursor: Cursor): Timestamp.Type {
+export function deserializeDate(cursor: Cursor): Timestamp.Type {
     const value = cursor.read(8).readBigInt64LE(0);
     return Timestamp.fromMillis(Number(value));
 }

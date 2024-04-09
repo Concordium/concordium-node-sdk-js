@@ -14,6 +14,10 @@
 - `Parameter.parseWithSchemaTypeBase64` and `Parameter.parseWithSchemaType` to
   help parsing smart contract parameters into typed structures.
 
+### Fixed
+
+- Serialization of nonces with `serializeCIS4RevocationDataHolder` to serialize as little endian.
+
 ## 7.3.2
 
 ### Added

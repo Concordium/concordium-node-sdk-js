@@ -5,15 +5,14 @@ import {
     makeFromTypedJson,
 } from './util.js';
 
-// IMPORTANT:
-// When adding functionality to this module, it is important to not change the wrapper class, as changing this might break compatibility
-// between different versions of the SDK, e.g. if a dependency exposes an API that depends on the class and a class from a different version
-// of the SDK is passed.
-
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ * @deprecated
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.EntrypointName;
+/**
+ * @deprecated
+ */
 export type Serializable = string;
 
 /**
@@ -21,6 +20,9 @@ export type Serializable = string;
  * @template S Use for using string literals for the type.
  */
 class EntrypointName<S extends string = string> {
+    /**
+     * @deprecated Use the {@linkcode EntrypointName.toJSON} method instead.
+     */
     protected get serializable(): Serializable {
         return this.value;
     }
@@ -31,11 +33,37 @@ class EntrypointName<S extends string = string> {
         /** The internal string value of the receive name. */
         public readonly value: S
     ) {}
+
+    /**
+     * Get a string representation of the entrypoint name.
+     * @returns {string} The string representation.
+     */
+    public toString(): string {
+        return this.value;
+    }
+
+    /**
+     * Get a JSON-serializable representation of the entrypoint name.
+     * @returns {string} The JSON-serializable representation.
+     */
+    public toJSON(): string {
+        return this.value;
+    }
+}
+
+/**
+ * Converts a `string` to an entrypoint name.
+ * @param {string} json The JSON representation of the entrypoint name.
+ * @throws If the string is not a valid entrypoint name.
+ * @returns {EntrypointName<string>} The entrypoint name.
+ */
+export function fromJSON(json: string): EntrypointName<string> {
+    return fromString(json);
 }
 
 /**
  * Unwraps {@linkcode Type} value
- *
+ * @deprecated Use the {@linkcode EntrypointName.toJSON} method instead.
  * @param value value to unwrap.
  * @returns the unwrapped {@linkcode Serializable} value
  */
@@ -92,6 +120,7 @@ export function fromStringUnchecked<S extends string>(
 
 /**
  * Convert a entrypoint name to a string
+ * @deprecated Use the {@linkcode EntrypointName.toString} method instead.
  * @param {EntrypointName} entrypointName The entrypoint name to stringify.
  * @returns {string}
  */
@@ -103,7 +132,7 @@ export function toString<S extends string>(
 
 /**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
- *
+ * @deprecated Use the {@linkcode EntrypointName.toJSON} method instead.
  * @param {Type} value - The account address instance to transform.
  * @returns {TypedJson} The transformed object.
  */
@@ -116,7 +145,7 @@ export function toTypedJSON(value: EntrypointName): TypedJson<Serializable> {
 
 /**
  * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
- *
+ * @deprecated Use the {@linkcode fromJSON} function instead.
  * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.

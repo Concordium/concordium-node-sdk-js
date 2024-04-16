@@ -69,6 +69,7 @@ const transactionHash = await MyContract.sendTransfer(contractClient, {
     - [function `getModuleSource`](#function-getmodulesource)
     - [type `<ContractName>Parameter`](#type-contractnameparameter)
     - [function `instantiate<ContractName>`](#function-instantiatecontractname)
+    - [function `create<ContractName>ParameterWebWallet`](#function-createcontractnameparameterwebwallet)
   - [Generated contract client](#generated-contract-client)
     - [The contract client type](#the-contract-client-type)
     - [function `create`](#function-create-1)
@@ -83,6 +84,10 @@ const transactionHash = await MyContract.sendTransfer(contractClient, {
     - [function `parseReturnValue<EntrypointName>`](#function-parsereturnvalueentrypointname)
     - [type `ErrorMessage<EntrypointName>`](#type-errormessageentrypointname)
     - [function `parseErrorMessage<EntrypointName>`](#function-parseerrormessageentrypointname)
+    - [function `create<EntrypointName>ParameterWebWallet`](#function-createentrypointnameparameterwebwallet)
+- [Development](#development)
+  - [Setup](#setup)
+  - [Development workflow](#development-workflow)
 <!--toc:end-->
 
 ## Install the package
@@ -119,6 +124,8 @@ This package provides the `ccd-js-gen` command, which can be used from the comma
 
 - `-m, --module <path>` Path to the smart contract module.
 - `-o, --out-dir <path>` Directory to use for the generated code.
+- `-t, --output-type <TypeScript|JavaScript|TypedJavaScript|Everything>` The output file types for the generated code. Defaults to `Everything`.
+- `-n, --ts-nocheck` Generate `@ts-nocheck` annotations at the top of each typescript file.
 
 ### Example
 
@@ -312,6 +319,40 @@ const transactionMeta = {
 // Parameter to pass the smart contract init-function. The structure depends on the contract.
 const parameter = ...;
 const transactionHash = await MyModule.instantiateMyContract(myModule, transactionMeta, parameter, signer);
+```
+
+#### function `create<ContractName>ParameterWebWallet`
+
+For each smart contract in module a function for _constructing_ the WebWallet formattet parameter for initializing a new instance is produced. This is to be used with the [`@concordium/wallet-connector`](https://www.npmjs.com/package/@concordium/wallet-connectors) package.
+These are named `create<ContractName>ParameterWebWallet` where `<ContractName>` is the smart contract name in Pascal case.
+
+An example for a smart contract module containing a smart contract named `my-contract`,
+the function becomes `createMyContractParameterWebWallet`.
+
+_This is only generated when the schema contains contract initialization parameter type._
+
+**Parameter**
+
+The function parameter is:
+
+- `parameter` Parameter to provide the smart contract module for the instantiation.
+
+**Returns**: Parameter for initializing a contract instance in the format used by [`@concordium/wallet-connector`](https://www.npmjs.com/package/@concordium/wallet-connectors).
+
+```typescript
+// Wallet connection from `@concordium/wallet-connector`.
+const webWalletConnection: WalletConnection = ...;
+// Parameter to pass the smart contract init-function. The structure depends on the contract.
+const parameter: MyModule.MyContractParameter = ...;
+// Convert the parameter into the format expected by the wallet.
+const walletParameter = MyModule.createMyContractParameterWebWallet(parameter);
+// Use wallet connection to sign and send the transaction.
+const sender = ...;
+const transactionHash = await webWalletConnection.signAndSendTransaction(
+    sender,
+    AccountTransactionType.InitContract,
+    walletParameter
+);
 ```
 
 ### Generated contract client
@@ -558,4 +599,72 @@ const invokeResult = await MyContract.dryRunLaunchRocket(myContract, invoker, pa
 
 // Parse the error message
 const message: MyContract.ErrorMessageLaunchRocket | undefined = MyContract.parseErrorMessageLaunchRocket(invokeResult);
+```
+
+#### function `create<EntrypointName>ParameterWebWallet`
+
+For each entrypoint of the smart contract a function for _constructing_ the WebWallet formattet parameter is produced. This is to be used with the [`@concordium/wallet-connector`](https://www.npmjs.com/package/@concordium/wallet-connectors) package.
+These are named `create<EntrypointName>ParameterWebWallet` where `<EntrypointName>` is the entrypoint name in Pascal case.
+
+_This is only generated when the schema contains contract entrypoint parameter type._
+
+An example for a smart contract with an entrypoint named `launch-rocket`, the function
+becomes `createLaunchRocketParameterWebWallet`.
+
+**Parameter**
+
+The function parameter is:
+
+- `parameter` Parameter to provide to the smart contract entrypoint.
+
+**Returns**: Parameter for updating a contract instance in the format used by [`@concordium/wallet-connector`](https://www.npmjs.com/package/@concordium/wallet-connectors).
+
+```typescript
+// Wallet connection from `@concordium/wallet-connector`.
+const webWalletConnection: WalletConnection = ...;
+// Parameter to pass the smart contract init-function. The structure depends on the contract.
+const parameter: MyContract.LaunchRocketParameter = ...;
+// Convert the parameter into the format expected by the wallet.
+const walletParameter = MyContract.createLaunchRocketParameterWebWallet(parameter);
+// Use wallet connection to sign and send the transaction.
+const sender = ...;
+const transactionHash = await webWalletConnection.signAndSendTransaction(
+    sender,
+    AccountTransactionType.Update,
+    walletParameter
+);
+```
+
+## Development
+
+This section describes how to setup and start developing this package.
+
+### Setup
+
+To be able to develop `ccd-js-gen` make sure to have:
+
+- [NodeJs](https://nodejs.org/en) (see `package.json` for which versions are supported).
+- [Yarn](https://yarnpkg.com/)
+- [Rust and cargo](https://rustup.rs/)
+
+After cloning this repository makes sure to do the following:
+
+- Initialize git submodules recursively, can be done using `git submodules update --init --recursive`.
+- Install dependencies by running `yarn install` in the root of this repo.
+- Build everything using `yarn build` in the root of this repo.
+
+### Development workflow
+
+After doing changes to the source code of `ccd-js-gen` run `yarn build` from the `packages/ccd-js-gen` directory.
+
+To run CLI locally use:
+
+```bash
+./bin/ccd-js-gen.js --module "<module>" --out-dir "./lib/generated"
+```
+
+To run tests locally use:
+
+```bash
+yarn test
 ```

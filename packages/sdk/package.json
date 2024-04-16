@@ -1,6 +1,6 @@
 {
     "name": "@concordium/web-sdk",
-    "version": "7.0.0",
+    "version": "7.3.2",
     "license": "Apache-2.0",
     "engines": {
         "node": ">=16"
@@ -8,13 +8,17 @@
     "repository": {
         "type": "git",
         "url": "https://github.com/Concordium/concordium-node-sdk-js",
-        "directory": "packages/common"
+        "directory": "packages/sdk"
     },
-    "sideEffects": false,
+    "sideEffects": [
+        "lib/min/*"
+    ],
     "type": "module",
-    "main": "./lib/umd/concordium.min.js",
-    "cdn": "./lib/umd/concordium.min.js",
-    "types": "./lib/esm/index.d.ts",
+    "main": "lib/min/concordium.node.min.js",
+    "browser": "lib/min/concordium.web.min.js",
+    "react-native": "lib/min/concordium.react-native.min.js",
+    "cdn": "lib/min/concordium.web.min.js",
+    "types": "lib/esm/index.d.ts",
     "exports": {
         ".": {
             "types": "./lib/esm/index.d.ts",
@@ -24,28 +28,36 @@
         "./nodejs": {
             "types": "./lib/esm/pub/nodejs.d.ts",
             "bun": "./src/pub/nodejs.ts",
-            "node": "./lib/esm/pub/nodejs.js",
-            "browser": null
+            "react-native": null,
+            "browser": null,
+            "default": "./lib/esm/pub/nodejs.js"
+        },
+        "./wasm": {
+            "types": "./lib/esm/pub/wasm.d.ts",
+            "bun": "./src/pub/wasm.ts",
+            "react-native": null,
+            "default": "./lib/esm/pub/wasm.js"
         },
         "./*": {
             "types": "./lib/esm/pub/*.d.ts",
             "bun": "./src/pub/*.ts",
             "default": "./lib/esm/pub/*.js"
-        }
-    },
-    "imports": {
-        "#ed25519": {
-            "node": "./lib/esm/shims/ed25519.node.js",
-            "default": "@noble/ed25519"
+        },
+        "./shims/ed25519": {
+            "types": "./lib/esm/shims/ed25519/default.d.ts",
+            "react-native": "./lib/esm/shims/ed25519/react-native.js",
+            "node": "./lib/esm/shims/ed25519/node.js",
+            "default": "./lib/esm/shims/ed25519/default.js"
         }
     },
     "files": [
         "/src/**/*",
         "/lib/esm/**/*",
-        "/lib/umd/**/*"
+        "/lib/min/**/*"
     ],
     "devDependencies": {
         "@protobuf-ts/plugin": "^2.9.1",
+        "@testing-library/react-native": "^12.3.1",
         "@types/bs58check": "^2.1.0",
         "@types/jest": "^26.0.23",
         "@types/json-bigint": "^1.0.1",
@@ -54,9 +66,12 @@
         "glob": "^10.3.10",
         "grpc-tools": "^1.11.2",
         "grpc_tools_node_protoc_ts": "5.3.0",
+        "isomorphic-fetch": "^3.0.0",
         "jest": "^29.6.2",
+        "jest-environment-jsdom": "^29.7.0",
         "rimraf": "^5.0.1",
         "ts-jest": "^29.1.1",
+        "ts-node": "^10.9.1",
         "typescript": "^5.2.2",
         "webpack": "^5.88.2",
         "webpack-cli": "^5.1.4"
@@ -67,16 +82,19 @@
         "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint-fix": "yarn --silent lint --fix; exit 0",
         "test": "jest",
-        "test-ci": "yarn test ./test/ci",
+        "test-rn": "yarn test -c jest.config.react-native.ts",
+        "test-web": "yarn test -c jest.config.web.ts",
+        "test-ci": "yarn test ./test/ci && yarn test-rn ./test/ci && yarn test-web ./test/ci",
         "build": "yarn clean; mkdir -p src/grpc-api; yarn generate && yarn build-dev",
         "build-dev": "tsc -p tsconfig.build.json && yarn webpack",
         "webpack": "node --loader ts-node/esm ../../node_modules/.bin/webpack --config webpack.config.ts",
         "clean": "rimraf -- lib src/grpc-api"
     },
     "dependencies": {
-        "@concordium/rust-bindings": "2.0.0",
+        "@concordium/rust-bindings": "3.0.0",
         "@grpc/grpc-js": "^1.9.4",
         "@noble/ed25519": "^2.0.0",
+        "@noble/hashes": "^1.3.2",
         "@protobuf-ts/grpc-transport": "^2.9.1",
         "@protobuf-ts/grpcweb-transport": "^2.9.1",
         "@protobuf-ts/runtime-rpc": "^2.8.2",

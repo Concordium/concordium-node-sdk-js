@@ -9,12 +9,19 @@ import {
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ * @deprecated
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.InitName;
+/**
+ * @deprecated
+ */
 export type Serializable = string;
 
 /** The name of an init-function for a smart contract. Note: This is of the form 'init_<contractName>'. */
 class InitName {
+    /**
+     * @deprecated Use the {@linkcode InitName.toJSON} method instead.
+     */
     protected get serializable(): Serializable {
         return this.value;
     }
@@ -25,6 +32,42 @@ class InitName {
         /** The internal string corresponding to the init-function. */
         public readonly value: string
     ) {}
+
+    /**
+     * Get a string representation of the init-function name.
+     * @returns {string} The string representation.
+     */
+    public toString(): string {
+        return this.value;
+    }
+
+    /**
+     * Get a JSON-serializable representation of the init-function name.
+     * @returns {string} The JSON-serializable representation.
+     */
+    public toJSON(): string {
+        return this.value;
+    }
+}
+
+/**
+ * Converts a `string` to an init-function name.
+ * @param {string} json The JSON representation of the init-function name.
+ * @throws If the string is not a valid init-function name.
+ * @returns {InitName} The init-function name.
+ */
+export function fromJSON(json: string): InitName {
+    return fromString(json);
+}
+
+/**
+ * Unwraps {@linkcode Type} value
+ * @deprecated Use the {@linkcode InitName.toJSON} method instead.
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode Serializable} value
+ */
+export function toUnwrappedJSON(value: Type): Serializable {
+    return toString(value);
 }
 
 /** The name of an init-function for a smart contract. Note: This is of the form 'init_<contractName>'. */
@@ -85,6 +128,7 @@ export function fromContractName(contractName: ContractName.Type): InitName {
 
 /**
  * Get the string representation of the smart contract init-function name.
+ * @deprecated Use the {@linkcode InitName.toString} method instead.
  * @param {InitName} initName The init-function name of the smart contract.
  * @returns {string} a string.
  */
@@ -114,7 +158,7 @@ export function toProto(initName: InitName): Proto.InitName {
 
 /**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
- *
+ * @deprecated Use the {@linkcode InitName.toJSON} method instead.
  * @param {Type} value - The account address instance to transform.
  * @returns {TypedJson} The transformed object.
  */
@@ -127,7 +171,7 @@ export function toTypedJSON(value: InitName): TypedJson<Serializable> {
 
 /**
  * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
- *
+ * @deprecated Use the {@linkcode fromJSON} function instead.
  * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.

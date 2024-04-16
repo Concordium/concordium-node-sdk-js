@@ -1,8 +1,10 @@
 import { streamToList, BlockHash } from '../../src/index.js';
 import * as expected from './resources/expectedJsons.js';
-import { getNodeClientV2 as getNodeClient } from './testHelpers.js';
+import { getNodeClientWeb, getNodeClientV2 } from './testHelpers.js';
+import { testEnvironment } from '../globals.ts';
 
-const client = getNodeClient();
+const client =
+    testEnvironment === 'node' ? getNodeClientV2() : getNodeClientWeb();
 
 test('mint', async () => {
     const blockHash = BlockHash.fromHexString(

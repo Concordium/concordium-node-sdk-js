@@ -21,7 +21,7 @@ then be proven.
 
 To do so, use the IdStatementBuilder, to build a statement:
 
-{@codeblock ~~:common/statements.ts#documentation-snippet}
+{@codeblock ~~:nodejs/common/statements.ts#documentation-snippet}
 
 The statement can then be proved using the `getIdProof`, or be provided to a
 wallet for them it to provide a proof for the statement. There are currently

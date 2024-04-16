@@ -9,6 +9,11 @@ import type {
 } from '../types.js';
 
 /**
+ * @deprecated
+ */
+export type Serializable = HexString;
+
+/**
  * An event logged by a smart contract instance.
  */
 class ContractEvent {
@@ -18,6 +23,41 @@ class ContractEvent {
         /** The internal buffer of bytes representing the event. */
         public readonly buffer: Uint8Array
     ) {}
+
+    /**
+     * Get a string representation of the contract event.
+     * @returns {string} The string representation.
+     */
+    public toString(): string {
+        return toHexString(this);
+    }
+
+    /**
+     * Get a JSON-serializable representation of the contract event.
+     * @returns {HexString} The JSON-serializable representation.
+     */
+    public toJSON(): HexString {
+        return toHexString(this);
+    }
+}
+
+/**
+ * Converts a {@linkcode HexString} to a contract event.
+ * @param {HexString} json The JSON representation of the contract event.
+ * @returns {ContractEvent} The contract event.
+ */
+export function fromJSON(json: HexString): ContractEvent {
+    return fromHexString(json);
+}
+
+/**
+ * Unwraps {@linkcode Type} value
+ * @deprecated Use the {@linkcode ContractEvent.toJSON} method instead.
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode Serializable} value
+ */
+export function toUnwrappedJSON(value: Type): Serializable {
+    return toHexString(value);
 }
 
 /**

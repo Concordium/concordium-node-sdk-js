@@ -7,12 +7,14 @@ import {
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ * @deprecated
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.ContractAddress;
-export type Serializable = { index: string; subindex: string };
+type ContractAddressLike<T> = { index: T; subindex: T };
+export type Serializable = ContractAddressLike<string>;
 
 /** Address of a smart contract instance. */
-class ContractAddress {
+class ContractAddress implements ContractAddressLike<bigint> {
     /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
     private __type = JSON_DISCRIMINATOR;
     constructor(
@@ -21,6 +23,27 @@ class ContractAddress {
         /** The subindex of the smart contract address. */
         public readonly subindex: bigint
     ) {}
+
+    /**
+     * Get a string representation of the contract address using the `<index, subindex>` format.
+     * @returns {string} The string representation.
+     */
+    public toString(): string {
+        return `<${this.index}, ${this.subindex}>`;
+    }
+}
+
+/**
+ * Unwraps {@linkcode Type} value
+ *
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode Serializable} value
+ */
+export function toUnwrappedJSON({
+    index,
+    subindex,
+}: Type): ContractAddressLike<bigint> {
+    return { index, subindex };
 }
 
 /** Address of a smart contract instance. */
@@ -129,7 +152,7 @@ export function fromSerializable(value: Serializable): ContractAddress {
 }
 
 /**
- * Converts {@linkcode ContractAddress} into {@linkcode Serializable}
+ * Converts {@linkcode ContractAddress} into {@linkcode Serializable}.
  * @param {ContractAddress} contractAddress
  * @returns {Serializable} The serializable contract address
  */
@@ -141,8 +164,18 @@ export function toSerializable(contractAddress: ContractAddress): Serializable {
 }
 
 /**
+ * Converts {@linkcode ContractAddress} into a string using the `<index, subindex>` format.
+ * @deprecated Use the {@linkcode ContractAddress.toString} method instead.
+ * @param {ContractAddress} contractAddress
+ * @returns {string} The string representation of the address.
+ */
+export function toString(contractAddress: ContractAddress): string {
+    return `<${contractAddress.index}, ${contractAddress.subindex}>`;
+}
+
+/**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
- *
+ * @deprecated Use the {@linkcode toSerializable} function instead.
  * @param {Type} value - The account address instance to transform.
  * @returns {TypedJson} The transformed object.
  */
@@ -155,7 +188,7 @@ export function toTypedJSON(value: ContractAddress): TypedJson<Serializable> {
 
 /**
  * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
- *
+ * @deprecated Use the {@linkcode fromSerializable} function instead.
  * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.

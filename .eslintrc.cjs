@@ -34,8 +34,9 @@ module.exports = {
             2,
             {
                 ignore: [
-                    '@concordium/rust-bindings',
+                    '^@concordium/rust-bindings(/(.*))?$',
                     'grpc-api',
+                    '^@concordium/web-sdk(/(.*))?$',
                     '^#.+$', // ESLint resolver does not support subpath imports: https://github.com/import-js/eslint-plugin-import/issues/1868.
                 ],
             },
@@ -43,7 +44,7 @@ module.exports = {
         'import/no-extraneous-dependencies': [
             'error',
             {
-                devDependencies: ['**/*/test/*', '**/*.config.js'],
+                devDependencies: ['**/*/test/*', '**/*.config.*'],
             },
         ],
         '@typescript-eslint/no-unused-vars': [
@@ -63,9 +64,9 @@ module.exports = {
         },
     ],
     ignorePatterns: [
-        '**/pkg/**/',
-        '**/dist/**/',
-        '**/lib/**/',
+        '**/pkg/**/*',
+        '**/dist/**/*',
+        '**/lib/**/*',
         'deps/**/*',
         '**/src/grpc-api/*',
         'typedoc/**',

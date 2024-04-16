@@ -9,9 +9,13 @@ import {
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ * @deprecated
  */
 export const JSON_DISCRIMINATOR =
     TypedJsonDiscriminator.CredentialRegistrationId;
+/**
+ * @deprecated
+ */
 export type Serializable = string;
 
 /**
@@ -28,9 +32,31 @@ class CredentialRegistrationId {
         public readonly credId: string
     ) {}
 
+    /**
+     * Get a string representation of the credential registration id.
+     * @returns {string} The string representation.
+     */
+    public toString(): string {
+        return this.credId;
+    }
+
+    /**
+     * Get a JSON-serializable representation of the credential registration id.
+     * @returns {string} The JSON-serializable representation.
+     */
     public toJSON(): string {
         return this.credId;
     }
+}
+
+/**
+ * Converts a `string` to a credential registration id.
+ * @param {string} json The JSON representation of the credential registration id.
+ * @throws If the provided input is: not a valid hex string, not of exactly 96 characters, the first bit is not 1.
+ * @returns {CredentialRegistrationId} The credential registration id.
+ */
+export function fromJSON(json: string): CredentialRegistrationId {
+    return fromHexString(json);
 }
 
 /**
@@ -103,7 +129,7 @@ export function toBuffer(cred: CredentialRegistrationId): Uint8Array {
 
 /**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
- *
+ * @deprecated Use the {@linkcode CredentialRegistrationId.toJSON} method instead.
  * @param {Type} value - The account address instance to transform.
  * @returns {TypedJson} The transformed object.
  */
@@ -118,7 +144,7 @@ export function toTypedJSON(
 
 /**
  * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
- *
+ * @deprecated Use the {@linkcode fromJSON} function instead.
  * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.

@@ -7,6 +7,7 @@ import {
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ * @deprecated
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.Timestamp;
 export type Serializable = string;
@@ -19,6 +20,23 @@ class Timestamp {
         /** The internal value for representing the timestamp as milliseconds since Unix epoch. */
         public readonly value: bigint
     ) {}
+
+    /**
+     * Get a string representation of the timestamp as the number of milliseconds since Unix epoch.
+     * @returns {string} The string representation.
+     */
+    public toString(): string {
+        return this.value.toString();
+    }
+}
+
+/**
+ * Unwraps {@linkcode Type} value
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode bigint} value
+ */
+export function toUnwrappedJSON(value: Type): bigint {
+    return value.value;
 }
 
 /** Represents a timestamp. */
@@ -133,7 +151,7 @@ export function toSerializable(value: Type): Serializable {
 
 /**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
- *
+ * @deprecated Use the {@linkcode toSerializable} function instead.
  * @param {Type} value - The account address instance to transform.
  * @returns {TypedJson} The transformed object.
  */
@@ -146,7 +164,7 @@ export function toTypedJSON(value: Timestamp): TypedJson<Serializable> {
 
 /**
  * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
- *
+ * @deprecated Use the{@linkcode fromSerializable} function instead.
  * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.

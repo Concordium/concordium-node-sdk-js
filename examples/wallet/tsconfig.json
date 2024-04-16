@@ -1,0 +1,26 @@
+{
+    "extends": "ts-node/node16/tsconfig.json",
+    "ts-node": {
+        "files": true,
+        "esm": true
+    },
+    "compilerOptions": {
+        "noEmit": true,
+        "types": ["vite-plugin-svgr/client"],
+        "target": "ES2020",
+        "lib": ["dom", "dom.iterable", "esnext"],
+        "baseUrl": ".",
+        "allowJs": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "strict": true,
+        "noFallthroughCasesInSwitch": true,
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "downlevelIteration": true,
+        "jsx": "react",
+    }
+}

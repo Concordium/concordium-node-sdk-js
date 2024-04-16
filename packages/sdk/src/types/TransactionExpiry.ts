@@ -8,6 +8,7 @@ import {
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ * @deprecated
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.TransactionExpiry;
 export type Serializable = string;
@@ -23,9 +24,40 @@ class TransactionExpiry {
         public readonly expiryEpochSeconds: bigint
     ) {}
 
+    /**
+     * Get a string representation of the transaction expiry date in seconds since the Unix epoch.
+     * @returns {string} The string representation.
+     */
+    public toString(): string {
+        return this.expiryEpochSeconds.toString();
+    }
+
+    /**
+     * Get a JSON-serializable representation of the transaction expiry date.
+     * @throws If the expiry represented as seconds after unix epoch is too
+     * large to be represented as a number.
+     * @returns {string} The JSON-serializable representation.
+     */
     public toJSON(): number {
+        if (
+            this.expiryEpochSeconds > Number.MAX_SAFE_INTEGER ||
+            this.expiryEpochSeconds < Number.MIN_SAFE_INTEGER
+        ) {
+            throw new Error(
+                'Transaction expiry is too large to be represented as a number.'
+            );
+        }
         return Number(this.expiryEpochSeconds);
     }
+}
+
+/**
+ * Unwraps {@linkcode Type} value
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode bigint} value
+ */
+export function toUnwrappedJSON(value: Type): bigint {
+    return value.expiryEpochSeconds;
 }
 
 /**
@@ -127,7 +159,7 @@ export function toSerializable(value: Type): Serializable {
 
 /**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
- *
+ * @deprecated Use the {@linkcode toSerializable} function instead.
  * @param {Type} value - The account address instance to transform.
  * @returns {TypedJson} The transformed object.
  */
@@ -140,7 +172,7 @@ export function toTypedJSON(value: TransactionExpiry): TypedJson<Serializable> {
 
 /**
  * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
- *
+ * @deprecated Use the {@linkcode fromSerializable} function instead.
  * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.

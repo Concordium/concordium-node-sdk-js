@@ -1,5 +1,91 @@
 # Changelog
 
+## Unreleased Changes
+
+### Added
+
+- `toString`, `toJSON`, and `fromJSON` to most concordium domain types.
+- Deprecated types and functions related to typed JSON serialization and deserialization.
+- Various types related to CIS-2 events and errors in the `CIS2` namespace.
+- `deserializeCIS2Event` for deserializing a CIS-2 event from a `ContractEvent`.
+- `deserializeCIS2Events` and `deserializeCIS2EventsFromSummary` for deserializing all CIS-2 events from `InvokeContractSuccessResult`s and `BlockItemSummary`s, respectively.
+- `parseCIS2RejectionError` for parsing a CIS-2 rejection error from a `InvokeContractFailureResult`.
+- Various types related to CIS-4 events in the `CIS4` namespace.
+- `deserializeCIS4Event` for deserializing a CIS-4 event from a `ContractEvent`.
+- `deserializeCIS4Events` and `deserializeCIS4EventsFromSummary` for deserializing all CIS-4 events from `InvokeContractSuccessResult`s and `BlockItemSummary`s, respectively.
+- `Parameter.parseWithSchemaTypeBase64` and `Parameter.parseWithSchemaType` to
+  help parsing smart contract parameters into typed structures.
+- Documentation on when`TransactionExpiry.toJSON` throws an error.
+
+
+### Fixed
+
+- Serialization of nonces with `serializeCIS4RevocationDataHolder` to serialize as little endian.
+
+## 7.3.2
+
+### Added
+
+- Export all types from `accountTransaction.ts`.
+
+## 7.3.1
+
+### Fixed
+
+- Return type of `getAccountTransactionHandler`.
+
+## 7.3.0
+
+### Added
+
+- `fromJSON` and `toJSON` methods to the `AccountTransactionHandler` interface,
+  and implementations for all transaction handlers.
+
+## 7.2.0
+
+### Added
+
+- `ContractAddress.toString` function that converts the address to a string in
+  the `<index, subindex>` format.
+- Method (`createIdRequestWithKeysV1`) for creating an identity request by supplying the secret key material instead of the seed.
+- Method (`createIdentityRecoveryRequestWithKeys`) for creating an identity recovery request by supplying the secret key material instead of the seed.
+
+### Fixed
+
+- Error messages in `GenericContract` now display the data, e.g., the contract
+  address, rather than `[object Object]`.
+- Incorrect check in isRewardStatusV1.
+
+## 7.1.0
+
+### Added
+
+- `jsonUnwrapStringify` function, which can be used to unwrap concordium domain types to their inner values before serializing, to ease compatibility with dependants deserializing stringified JSON.
+
+
+## 7.0.3
+
+### Fixed
+
+- An issue with the serialization of init contract account transactions.
+
+## 7.0.2
+
+### Fixed
+
+- Missing files (react native build) in published version.
+
+## 7.0.1
+
+### Added
+
+- Support for using the SDK in a react native environment. Requires polyfilling functionality used within the SDK.
+  Please refer to the guide found at [the react native compatibility guide](https://developer.concordium.software/concordium-node-sdk-js/pages/misc-pages/react-native.html)
+
+### Fixed
+
+- Export type `BlockItem` in the public API again, this was removed accidentally in v7.0.0.
+
 ## 7.0.0
 
 ### Breaking changes
@@ -89,7 +175,6 @@ Several types have been replaced with a module containing the type itself togeth
   with the addition of stringifying concordium domain types in a wrapper object that can be parsed into the respective types.
 - Introduce function `versionedModuleSourceToBuffer` for serializing a versioned module to a buffer, which can be stored in a file.
 
-
 ### Changes
 
 - Added version discriminators to types versioned by the protocol version of Concordium nodes:
@@ -123,7 +208,6 @@ New consensus endpoints:
 - `getWinningBakersEpoch`
 - `getFirstBlockEpoch`
 - `commissionRates` is now added to the `getPoolInfo` under `bakerPoolStatus.PoolInfo`
-
 
 ## 6.4.0
 

@@ -1,5 +1,7 @@
 import { Buffer } from 'buffer/index.js';
-import * as ed from '#ed25519';
+// self-referencing not allowed by eslint resolver
+// eslint-disable-next-line import/no-extraneous-dependencies
+import * as ed from '@concordium/web-sdk/shims/ed25519';
 import * as wasm from '@concordium/rust-bindings/wallet';
 import {
     AttributeKey,
@@ -22,9 +24,9 @@ import {
 import * as TransactionExpiry from '../types/TransactionExpiry.js';
 import * as AccountAddress from '../types/AccountAddress.js';
 import { sha256 } from '../hash.js';
+import { getCredentialDeploymentSignDigest } from '../serialization.js';
 import { ConcordiumHdWallet } from './HdWallet.js';
 import { filterRecord, mapRecord } from '../util.js';
-import { getCredentialDeploymentSignDigest } from '../serialization.js';
 
 /**
  * Generates the unsigned credential information that has to be signed when
@@ -89,7 +91,7 @@ function createUnsignedCredentialInfo(
 /**
  * Create a credential deployment transaction, which is the transaction used
  * when deploying a new account.
- * @deprecated This function doesn't use allow supplying the randomness. {@link createCredentialTransactionV1 } or { @link createCredentialTransactionV1NoSeed } should be used instead.
+ * @deprecated This function doesn't use allow supplying the randomness. {@link createCredentialTransaction} or {@link createCredentialTransactionNoSeed} should be used instead.
  * @param identity the identity to create a credential for
  * @param cryptographicParameters the global cryptographic parameters from the chain
  * @param threshold the signature threshold for the credential, has to be less than number of public keys
@@ -274,6 +276,7 @@ export function createCredentialTransaction(
         revealedAttributes: input.revealedAttributes,
         credNumber: input.credNumber,
     };
+
     return createCredentialTransactionNoSeed(noSeedInput, expiry);
 }
 
@@ -284,7 +287,14 @@ export function createCredentialTransactionNoSeed(
     input: CredentialInputNoSeed,
     expiry: TransactionExpiry.Type
 ): CredentialDeploymentTransaction {
-    const rawRequest = wasm.createUnsignedCredentialV1(JSON.stringify(input));
+    const { sigRetrievelRandomness, ...other } = input;
+    const internalInput = {
+        ...other,
+        blindingRandomness: input.sigRetrievelRandomness,
+    };
+    const rawRequest = wasm.createUnsignedCredentialV1(
+        JSON.stringify(internalInput)
+    );
     let info: UnsignedCdiWithRandomness;
     try {
         info = JSON.parse(rawRequest);

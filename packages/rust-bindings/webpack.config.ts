@@ -2,18 +2,18 @@
 import { Configuration } from 'webpack';
 import { resolve } from 'path';
 
-function configForTarget(target: 'web' | 'node'): Configuration {
-    return {
+type WebpackEnv = Partial<{
+    package: string;
+}>;
+
+function configFor(target: 'web' | 'node', pkg?: string): Configuration {
+    const config: Configuration = {
         mode: 'production',
         cache: {
             type: 'filesystem',
             cacheDirectory: resolve(__dirname, '.webpack-cache'),
         },
         target,
-        entry: {
-            dapp: resolve(__dirname, './ts-src/dapp.ts'),
-            wallet: resolve(__dirname, './ts-src/wallet.ts'),
-        },
         resolve: {
             extensionAlias: {
                 '.js': ['.ts', '.js'],
@@ -51,6 +51,22 @@ function configForTarget(target: 'web' | 'node'): Configuration {
             publicPath: '',
         },
     };
+
+    if (!pkg) {
+        config.entry = {
+            dapp: resolve(__dirname, './ts-src/dapp.ts'),
+            wallet: resolve(__dirname, './ts-src/wallet.ts'),
+        };
+    } else {
+        config.entry = {
+            [pkg]: resolve(__dirname, `./ts-src/${pkg}.ts`),
+        };
+    }
+
+    return config;
 }
 
-export default [configForTarget('web'), configForTarget('node')];
+export default (env: WebpackEnv) => [
+    configFor('web', env.package),
+    configFor('node', env.package),
+];

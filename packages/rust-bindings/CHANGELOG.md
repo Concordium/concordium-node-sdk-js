@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.0.0
+
+### Breaking changes
+
+- The function `create_id_request_v1_ext` exposed with the WASM entrypoint `createIdRequestV1` now expects a new JSON type.
+- The function `create_identity_recovery_request_ext` exposed with the WASM entrypoint `createIdentityRecoveryRequest` now expects a new JSON type.
+
+### Changed
+
+- Identity requests, identity recovery requests and unsigned credentials are now created using the `wallet_library` from `concordium-base` instead of the local implementation.
+- Deriving wallet keys is now done by utilizing functionality from `wallet_library` in `concordium-base` instead of the local implementation.
+
+## 2.0.1
+
+### Added
+
+- Added react-native condition to root/dapp subpath for, which uses javascript converted from the corresponding WASM used otherwise.
+
 ## 2.0.0
 
 ### Breaking changes

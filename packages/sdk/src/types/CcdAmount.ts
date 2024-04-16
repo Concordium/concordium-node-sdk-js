@@ -9,8 +9,12 @@ import {
 const MICRO_CCD_PER_CCD = 1_000_000;
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ * @deprecated
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.CcdAmount;
+/**
+ * @deprecated
+ */
 export type Serializable = string;
 
 /**
@@ -22,13 +26,36 @@ class CcdAmount {
     /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
     private __type = JSON_DISCRIMINATOR;
     constructor(
-        /** Internal representation of Ccd amound in micro Ccd. */
+        /** Internal representation of Ccd amount in micro Ccd. */
         public readonly microCcdAmount: bigint
     ) {}
 
+    /**
+     * Get a string representation of the CCD amount.
+     * @returns {string} The string representation.
+     */
+    public toString(): string {
+        const microCcdString = this.microCcdAmount.toString();
+        const padded = microCcdString.padStart(7, '0');
+        return `${padded.slice(0, -6)}.${padded.slice(-6)}`;
+    }
+
+    /**
+     * Get a JSON-serializable representation of the CCD amount in micro CCD.
+     * @returns {string} The JSON-serializable representation.
+     */
     public toJSON(): string {
         return this.microCcdAmount.toString();
     }
+}
+
+/**
+ * Converts a `bigint` to a CCD amount in micro CCD.
+ * @param {string} json The JSON representation of the CCD amount.
+ * @returns {CcdAmount} The CCD amount.
+ */
+export function fromJSON(json: string): CcdAmount {
+    return fromMicroCcd(json);
 }
 
 /**
@@ -205,6 +232,7 @@ export function toProto(amount: CcdAmount): Proto.Amount {
 
 /**
  * Constructs a {@linkcode Type} from {@linkcode Serializable}.
+ * @deprecated Use  the{@linkcode fromJSON} function instead.
  * @param {Serializable} value
  * @returns {Type} The duration.
  */
@@ -214,6 +242,7 @@ export function fromSerializable(value: Serializable): Type {
 
 /**
  * Converts {@linkcode Type} into {@linkcode Serializable}
+ * @deprecated Use {@linkcode CcdAmount.toJSON} method instead.
  * @param {Type} value
  * @returns {Serializable} The serializable value
  */
@@ -223,7 +252,7 @@ export function toSerializable(value: Type): Serializable {
 
 /**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
- *
+ * @deprecated Use the {@linkcode CcdAmount.toJSON} method instead.
  * @param {Type} value - The account address instance to transform.
  * @returns {TypedJson} The transformed object.
  */
@@ -236,7 +265,7 @@ export function toTypedJSON(value: CcdAmount): TypedJson<Serializable> {
 
 /**
  * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
- *
+ * @deprecated Use the {@linkcode fromJSON} function instead.
  * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.

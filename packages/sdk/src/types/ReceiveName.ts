@@ -10,8 +10,12 @@ import {
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ * @deprecated
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.ReceiveName;
+/**
+ * @deprecated
+ */
 export type Serializable = string;
 
 /**
@@ -28,6 +32,42 @@ class ReceiveName {
         /** The internal string value of the receive name. */
         public readonly value: string
     ) {}
+
+    /**
+     * Get a string representation of the receive name.
+     * @returns {string} The string representation.
+     */
+    public toString(): string {
+        return this.value;
+    }
+
+    /**
+     * Get a JSON-serializable representation of the receive name.
+     * @returns {string} The JSON-serializable representation.
+     */
+    public toJSON(): string {
+        return this.value;
+    }
+}
+
+/**
+ * Converts a `string` to a receive name.
+ * @param {string} json The JSON representation of the receive name.
+ * @throws If the string is not a valid receive name.
+ * @returns {ReceiveName} The receive name.
+ */
+export function fromJSON(json: string): ReceiveName {
+    return fromString(json);
+}
+
+/**
+ * Unwraps {@linkcode Type} value
+ * @deprecated Use the {@linkcode ReceiveName.toJSON} method instead.
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode Serializable} value
+ */
+export function toUnwrappedJSON(value: Type): Serializable {
+    return toString(value);
 }
 
 /**
@@ -104,6 +144,7 @@ export function fromStringUnchecked(value: string): ReceiveName {
 
 /**
  * Convert a receive name to a string
+ * @deprecated Use the {@linkcode ReceiveName.toString} method instead.
  * @param {ReceiveName} receiveName The receive name to stringify.
  * @returns {string}
  */
@@ -193,7 +234,7 @@ export function equals(left: ReceiveName, right: ReceiveName): boolean {
 
 /**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
- *
+ * @deprecated Use the {@linkcode ReceiveName.toJSON} method instead.
  * @param {Type} value - The account address instance to transform.
  * @returns {TypedJson} The transformed object.
  */
@@ -206,7 +247,7 @@ export function toTypedJSON({ value }: ReceiveName): TypedJson<Serializable> {
 
 /**
  * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
- *
+ * @deprecated Use the{@linkcode fromJSON} function instead.
  * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.

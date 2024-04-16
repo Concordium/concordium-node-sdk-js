@@ -78,7 +78,7 @@ export class ConcordiumGRPCClient {
      * Retrieves the next account nonce for the given account. The account nonce is
      * used in all account transactions as part of their header.
      *
-     * {@codeblock ~~:client/getNextAccountSequenceNumber.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getNextAccountSequenceNumber.ts#documentation-snippet}
      *
      * @param accountAddress base58 account address to get the next account nonce for.
      *
@@ -101,7 +101,7 @@ export class ConcordiumGRPCClient {
      * fields will only be unavailable for a newly started node that has not processed
      * enough data yet.
      *
-     * {@codeblock ~~:client/getCryptographicParameters.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getCryptographicParameters.ts#documentation-snippet}
      *
      * @param blockHash optional block hash to get the cryptographic parameters at, otherwise retrieves from last finalized block.
      * @returns the global cryptographic parameters at the given block, or undefined it the block does not exist.
@@ -125,7 +125,7 @@ export class ConcordiumGRPCClient {
      * the node will return the account info of the account, which the corresponding credential
      * is (or was) deployed to. An account index can also be provided.
      *
-     * {@codeblock ~~:client/getAccountInfo.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getAccountInfo.ts#documentation-snippet}
      *
      * @param accountIdentifier base58 account address, or a credential registration id or account index to get the account info for
      * @param blockHash optional block hash to get the account info at, otherwise retrieves from last finalized block
@@ -150,7 +150,7 @@ export class ConcordiumGRPCClient {
     /**
      * Retrieves a status for the given transaction/block item.
      *
-     * {@codeblock ~~:client/getBlockItemStatus.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getBlockItemStatus.ts#documentation-snippet}
      *
      * @param transactionHash the transaction/block item to get a status for.
      *
@@ -173,7 +173,7 @@ export class ConcordiumGRPCClient {
      * fields will only be unavailable for a newly started node that has not processed
      * enough data yet.
      *
-     * {@codeblock ~~:client/getConsensusStatus.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getConsensusStatus.ts#documentation-snippet}
      */
     async getConsensusStatus(): Promise<v1.ConsensusStatus> {
         const response = await this.client.getConsensusInfo(v2.Empty).response;
@@ -183,7 +183,7 @@ export class ConcordiumGRPCClient {
     /**
      * Retrieves the source of the given module at the provided block.
      *
-     * {@codeblock ~~:client/getModuleSource.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getModuleSource.ts#documentation-snippet}
      *
      * @param moduleRef the module's reference, represented by the ModuleReference class.
      * @param blockHash optional block hash to get the module source at, otherwise retrieves from last finalized block
@@ -220,7 +220,7 @@ export class ConcordiumGRPCClient {
     /**
      * Retrieves the embedded schema of the given module at the provided block.
      *
-     * {@codeblock ~~:client/getEmbeddedSchema.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getEmbeddedSchema.ts#documentation-snippet}
      *
      * @param moduleRef the module's reference, represented by the ModuleReference class.
      * @param blockHash optional block hash to get the module embedded schema at, otherwise retrieves from last finalized block
@@ -244,7 +244,7 @@ export class ConcordiumGRPCClient {
     /**
      * Retrieve information about a given smart contract instance.
      *
-     * {@codeblock ~~:client/getInstanceInfo.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getInstanceInfo.ts#documentation-snippet}
      *
      * @param contractAddress the address of the smart contract.
      * @param blockHash optional block hash to get the smart contact instances at, otherwise retrieves from last finalized block
@@ -269,7 +269,7 @@ export class ConcordiumGRPCClient {
     /**
      * Invokes a smart contract.
      *
-     * {@codeblock ~~:client/invokeContract.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/invokeContract.ts#documentation-snippet}
      *
      * @param context.contract The address of the smart contract that shall be evoked.
      * @param context.amount The amount of microCCD to invoke the contract with.
@@ -317,7 +317,7 @@ export class ConcordiumGRPCClient {
      * Note that a transaction can still fail even if it was accepted by the node.
      * To keep track of the transaction use getTransactionStatus.
      *
-     * {@codeblock ~~:common/simpleTransfer.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/common/simpleTransfer.ts#documentation-snippet}
      *
      * @param transaction the transaction to send to the node
      * @param signature the signatures on the signing digest of the transaction
@@ -503,7 +503,7 @@ export class ConcordiumGRPCClient {
     /**
      * Retrieves the status of the block chain parameters at the given blockHash.
      *
-     * {@codeblock ~~:client/getBlockChainParameters.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getBlockChainParameters.ts#documentation-snippet}
      *
      * @param blockHash the block hash of the block to get the information from.
      * @returns Info on all of the block chain parameters.
@@ -521,7 +521,7 @@ export class ConcordiumGRPCClient {
     /**
      * Retrieves information on the baker pool of the given bakerId.
      *
-     * {@codeblock ~~:client/getPoolInfo.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getPoolInfo.ts#documentation-snippet}
      *
      * @param blockHash the block hash of the block to get the information from.
      * @param bakerId the ID of the baker to get the status for.
@@ -544,7 +544,7 @@ export class ConcordiumGRPCClient {
     /**
      * Retrieves information on the passive delegators.
      *
-     * {@codeblock ~~:client/getPassiveDelegationInfo.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getPassiveDelegationInfo.ts#documentation-snippet}
      *
      * @param blockHash the block hash of the block to get the information from.
      * @returns The status of the passive delegators.
@@ -561,7 +561,7 @@ export class ConcordiumGRPCClient {
     /**
      * Retrieves the reward status at the given blockHash
      *
-     * {@codeblock ~~:client/getTokenomicsInfo.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getTokenomicsInfo.ts#documentation-snippet}
      *
      * @param blockHash optional block hash to get the reward status at, otherwise retrieves from last finalized block
      * @returns the reward status at the given block, or undefined it the block does not exist.
@@ -579,7 +579,7 @@ export class ConcordiumGRPCClient {
     /**
      * Gets a stream of finalized blocks.
      *
-     * {@codeblock ~~:client/getFinalizedBlocks.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getFinalizedBlocks.ts#documentation-snippet}
      *
      * @param abortSignal an AbortSignal to close the stream. Note that the
      * stream does not close itself as it is infinite, so usually you'd want
@@ -598,7 +598,7 @@ export class ConcordiumGRPCClient {
      * Gets a stream of blocks. To get a stream of only finalized blocks
      * use `getFinalizedBlocks()` instead.
      *
-     * {@codeblock ~~:client/getBlocks.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getBlocks.ts#documentation-snippet}
      *
      * @param abortSignal an AbortSignal to close the stream. Note that the
      * stream does not close itself as it is infinite, so usually you'd want
@@ -614,7 +614,7 @@ export class ConcordiumGRPCClient {
     /**
      * Waits until given transaction is finalized.
      *
-     * {@codeblock ~~:common/simpleTransfer.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/common/simpleTransfer.ts#documentation-snippet}
      *
      * @param transactionHash a transaction hash as a bytearray.
      * @param timeoutTime the number of milliseconds until the function throws error.
@@ -669,7 +669,7 @@ export class ConcordiumGRPCClient {
     /**
      * Retrieve a stream of accounts that exist at the end of the given block.
      *
-     * {@codeblock ~~:client/getAccountList.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getAccountList.ts#documentation-snippet}
      *
      * @param blockHash an optional block hash to get the accounts at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -690,7 +690,7 @@ export class ConcordiumGRPCClient {
      * when all modules that exist in the state at the end of the given
      * block have been returned.
      *
-     * {@codeblock ~~:client/getModuleList.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getModuleList.ts#documentation-snippet}
      *
      * @param blockHash an optional block hash to get the contract modules at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -711,7 +711,7 @@ export class ConcordiumGRPCClient {
      * Starting with the provided block itself, moving backwards until no more
      * ancestors or the requested number of ancestors has been returned.
      *
-     * {@codeblock ~~:client/getAncestors.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getAncestors.ts#documentation-snippet}
      *
      * @param maxAmountOfAncestors the maximum amount of ancestors as a bigint.
      * @param blockHash a optional block hash to get the ancestors at, otherwise retrieves from last finalized block.
@@ -736,7 +736,7 @@ export class ConcordiumGRPCClient {
      * Get the exact state of a specific contract instance, streamed as a list of
      * key-value pairs. The list is streamed in lexicographic order of keys.
      *
-     * {@codeblock ~~:client/getInstanceState.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getInstanceState.ts#documentation-snippet}
      *
      * @param contractAddress the contract to get the state of.
      * @param blockHash a optional block hash to get the instance states at, otherwise retrieves from last finalized block.
@@ -762,7 +762,7 @@ export class ConcordiumGRPCClient {
      * `GetInstanceState` this is more efficient, but requires the user to know
      * the specific key to look for.
      *
-     * {@codeblock ~~:client/instanceStateLookup.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/instanceStateLookup.ts#documentation-snippet}
      *
      * @param contractAddress the contract to get the state of.
      * @param key the key of the desired contract state.
@@ -790,7 +790,7 @@ export class ConcordiumGRPCClient {
      * The stream will end when all the identity providers have been returned,
      * or an abort signal is called.
      *
-     * {@codeblock ~~:client/getIdentityProviders.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getIdentityProviders.ts#documentation-snippet}
      *
      * @param blockHash an optional block hash to get the providers at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -811,7 +811,7 @@ export class ConcordiumGRPCClient {
      * The stream will end when all the anonymity revokers have been returned,
      * or an abort signal is called.
      *
-     * {@codeblock ~~:client/getAnonymityRevokers.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getAnonymityRevokers.ts#documentation-snippet}
      *
      * @param blockHash an optional block hash to get the anonymity revokers at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -830,7 +830,7 @@ export class ConcordiumGRPCClient {
     /**
      * Get a list of live blocks at a given height.
      *
-     * {@codeblock ~~:client/getBlocksAtHeightAbsolute.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getBlocksAtHeightAbsolute.ts#documentation-snippet}
      *
      * @param blockHeightRequest Either an absolute block height request or a relative block height request
      * @returns A list of block hashes as hex strings
@@ -847,7 +847,7 @@ export class ConcordiumGRPCClient {
     /**
      * Get information, such as height, timings, and transaction counts for the given block.
      *
-     * {@codeblock ~~:client/getBlockInfo.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getBlockInfo.ts#documentation-snippet}
      *
      * @param blockHash an optional block hash to get the info from, otherwise retrieves from last finalized block.
      * @returns information on a block.
@@ -861,7 +861,7 @@ export class ConcordiumGRPCClient {
     /**
      * Get all the bakers at the end of the given block.
      *
-     * {@codeblock ~~:client/getBakerList.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getBakerList.ts#documentation-snippet}
      *
      * @param blockHash an optional block hash to get the baker list at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -885,7 +885,7 @@ export class ConcordiumGRPCClient {
      * are immediately visible in this list.
      * The stream will end when all the delegators has been returned.
      *
-     * {@codeblock ~~:client/getPoolDelegators.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getPoolDelegators.ts#documentation-snippet}
      *
      * @param baker The BakerId of the pool owner
      * @param blockHash an optional block hash to get the delegators at, otherwise retrieves from last finalized block.
@@ -914,7 +914,7 @@ export class ConcordiumGRPCClient {
      * stake in the reward period containing the given block.
      * The stream will end when all the delegators has been returned.
      *
-     * {@codeblock ~~:client/getPoolDelegatorsRewardPeriod.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getPoolDelegatorsRewardPeriod.ts#documentation-snippet}
      *
      * @param baker The BakerId of the pool owner
      * @param blockHash an optional block hash to get the delegators at, otherwise retrieves from last finalized block.
@@ -946,7 +946,7 @@ export class ConcordiumGRPCClient {
      * are immediately visible in this list.
      * The stream will end when all the delegators has been returned.
      *
-     * {@codeblock ~~:client/getPassiveDelegators.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getPassiveDelegators.ts#documentation-snippet}
      *
      * @param blockHash an optional block hash to get the delegators at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -971,7 +971,7 @@ export class ConcordiumGRPCClient {
      * stake in the reward period containing the given block.
      * The stream will end when all the delegators has been returned.
      *
-     * {@codeblock ~~:client/getPassiveDelegatorsRewardPeriod.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getPassiveDelegatorsRewardPeriod.ts#documentation-snippet}
      *
      * @param blockHash an optional block hash to get the delegators at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -992,7 +992,7 @@ export class ConcordiumGRPCClient {
     /**
      * Get the current branches of blocks starting from and including the last finalized block.
      *
-     * {@codeblock ~~:client/getBranches.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getBranches.ts#documentation-snippet}
      *
      * @returns a branch with a block hash and a list of branch-children
      */
@@ -1022,7 +1022,7 @@ export class ConcordiumGRPCClient {
      * but in bad network conditions it might. The stream will end when all the
      * non-finalized transaction hashes have been returned.
      *
-     * {@codeblock ~~:client/getAccountNonFinalizedTransactions.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getAccountNonFinalizedTransactions.ts#documentation-snippet}
      *
      * @param accountAddress The address of the account that you wish to query.
      * @returns a stream of transaction hashes.
@@ -1043,7 +1043,7 @@ export class ConcordiumGRPCClient {
      * Get a list of transaction events in a given block.
      * The stream will end when all the transaction events for a given block have been returned.
      *
-     * {@codeblock ~~:client/getBlockTransactionEvents.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getBlockTransactionEvents.ts#documentation-snippet}
      *
      * @param blockHash an optional block hash to get the transaction events at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -1064,7 +1064,7 @@ export class ConcordiumGRPCClient {
     /**
      * Get next available sequence numbers for updating chain parameters after a given block.
      *
-     * {@codeblock ~~:client/getNextUpdateSequenceNumbers.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getNextUpdateSequenceNumbers.ts#documentation-snippet}
      *
      * @param blockHash an optional block hash to get the sequence numbers at, otherwise retrieves from last finalized block.
      * @return a NextUpdateSequenceNumbers object
@@ -1082,7 +1082,7 @@ export class ConcordiumGRPCClient {
      * Shut down the node.
      * Return a GRPC error if the shutdown failed.
      *
-     * {@codeblock ~~:client/shutdown.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/shutdown.ts#documentation-snippet}
      */
     async shutdown(): Promise<void> {
         await this.client.shutdown(v2.Empty);
@@ -1096,7 +1096,7 @@ export class ConcordiumGRPCClient {
      * the node will try to establish the connection in near future. This
      * function returns a GRPC status 'Ok' in this case.
      *
-     * {@codeblock ~~:client/peerConnect.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/peerConnect.ts#documentation-snippet}
      *
      * @param ip The ip address to connect to. Must be a valid ip address.
      * @param port The port to connect to. Must be between 0 and 65535.
@@ -1117,7 +1117,7 @@ export class ConcordiumGRPCClient {
      * if they are on it. Return if the request was processed successfully.
      * Otherwise return a GRPC error.
      *
-     * {@codeblock ~~:client/peerDisconnect.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/peerDisconnect.ts#documentation-snippet}
      *
      * @param ip The ip address to connect to. Must be a valid ip address.
      * @param port The port to connect to. Must be between 0 and 65535.
@@ -1136,7 +1136,7 @@ export class ConcordiumGRPCClient {
     /**
      * Get a list of banned peers.
      *
-     * {@codeblock ~~:client/getBannedPeers.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getBannedPeers.ts#documentation-snippet}
      *
      * @return A list of the ip's of banned peers.
      */
@@ -1149,7 +1149,7 @@ export class ConcordiumGRPCClient {
      * Ban the given peer.
      * Rejects if the action fails.
      *
-     * {@codeblock ~~:client/banPeer.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/banPeer.ts#documentation-snippet}
      *
      * @param ip The ip address of the peer to ban. Must be a valid ip address.
      */
@@ -1166,7 +1166,7 @@ export class ConcordiumGRPCClient {
      * Unbans the given peer.
      * Rejects if the action fails.
      *
-     * {@codeblock ~~:client/unbanPeer.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/unbanPeer.ts#documentation-snippet}
      *
      * @param ip The ip address of the peer to unban. Must be a valid ip address.
      */
@@ -1184,7 +1184,7 @@ export class ConcordiumGRPCClient {
      * Only enabled if the node was built with the `network_dump` feature.
      * Rejects if the network dump failed to start.
      *
-     * {@codeblock ~~:client/dumpStart.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/dumpStart.ts#documentation-snippet}
      *
      * @param filePath Which file to dump the packages into. Requires a valid path.
      * @param raw Whether the node should dump raw packages.
@@ -1202,7 +1202,7 @@ export class ConcordiumGRPCClient {
      * Only enabled if the node was built with the `network_dump` feature.
      * Rejects if the network dump failed to be stopped.
      *
-     * {@codeblock ~~:client/dumpStop.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/dumpStop.ts#documentation-snippet}
      */
     async dumpStop(): Promise<void> {
         await this.client.dumpStop(v2.Empty);
@@ -1217,7 +1217,7 @@ export class ConcordiumGRPCClient {
      * * ConsensusInfo. The `ConsensusInfo` returned depends on if the node supports
      *   the protocol on chain and whether the node is configured as a baker or not.
      *
-     * {@codeblock ~~:client/getNodeInfo.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getNodeInfo.ts#documentation-snippet}
      *
      * @returns Info about the node
      */
@@ -1230,7 +1230,7 @@ export class ConcordiumGRPCClient {
      * Get a list of the peers that the node is connected to
      * and associated network related information for each peer.
      *
-     * {@codeblock ~~:client/getPeersInfo.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getPeersInfo.ts#documentation-snippet}
      *
      * @returns a list containing info on each peer of the node.
      */
@@ -1245,7 +1245,7 @@ export class ConcordiumGRPCClient {
      * generated by any transaction. The stream will end when all the special
      * events for a given block have been returned.
      *
-     * {@codeblock ~~:client/getBlockSpecialEvents.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getBlockSpecialEvents.ts#documentation-snippet}
      *
      * @param blockHash an optional block hash to get the special events at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -1267,7 +1267,7 @@ export class ConcordiumGRPCClient {
      * Get the pending updates to chain parameters at the end of a given block.
      * The stream will end when all the pending updates for a given block have been returned.
      *
-     * {@codeblock ~~:client/getBlockPendingUpdates.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getBlockPendingUpdates.ts#documentation-snippet}
      *
      * @param blockHash an optional block hash to get the pending updates at, otherwise retrieves from last finalized block.
      * @param abortSignal an optional AbortSignal to close the stream.
@@ -1288,7 +1288,7 @@ export class ConcordiumGRPCClient {
     /**
      * Get the summary of the finalization data in a given block.
      *
-     * {@codeblock ~~:client/getBlockFinalizationSummary.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/getBlockFinalizationSummary.ts#documentation-snippet}
      *
      * @param blockHash an optional block hash to get the finalization summaries at, otherwise retrieves from last finalized block.
      * @returns a finalization summary
@@ -1646,7 +1646,7 @@ export class ConcordiumGRPCClient {
     /**
      * Queries the node to check its health
      *
-     * {@codeblock ~~:client/healthCheck.ts#documentation-snippet}
+     * {@codeblock ~~:nodejs/client/healthCheck.ts#documentation-snippet}
      *
      * @returns a HealthCheck indicating whether the node is healthy or not and provides the message from the client, if not healthy.
      */

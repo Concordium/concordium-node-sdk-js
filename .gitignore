@@ -15,10 +15,11 @@ node_modules
 .eslintcache
 
 # Compiled files
-lib
+**/lib/**/*
 target
 dist
 doc
+!packages/rust-bindings/tools/binaryen/lib/**/*
 
 # Auto generate files from the gRPC proto file
 grpc-api

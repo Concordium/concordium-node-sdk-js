@@ -14,8 +14,12 @@ import {
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
+ * @deprecated
  */
 export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.ReturnValue;
+/**
+ * @deprecated
+ */
 export type Serializable = HexString;
 
 /** Return value from invoking a smart contract entrypoint. */
@@ -26,6 +30,41 @@ class ReturnValue {
         /** Internal buffer of bytes representing the return type. */
         public readonly buffer: Uint8Array
     ) {}
+
+    /**
+     * Get a string representation of the return value.
+     * @returns {string} The string representation.
+     */
+    public toString(): string {
+        return toHexString(this);
+    }
+
+    /**
+     * Get a JSON-serializable representation of the return value.
+     * @returns {HexString} The JSON-serializable representation.
+     */
+    public toJSON(): HexString {
+        return toHexString(this);
+    }
+}
+
+/**
+ * Converts a {@linkcode HexString} to a return value.
+ * @param {HexString} json The JSON representation of the return value.
+ * @returns {ReturnValue} The return value.
+ */
+export function fromJSON(json: HexString): ReturnValue {
+    return fromHexString(json);
+}
+
+/**
+ * Unwraps {@linkcode Type} value
+ * @deprecated Use the {@linkcode ReturnValue.toJSON} method instead.
+ * @param value value to unwrap.
+ * @returns the unwrapped {@linkcode Serializable} value
+ */
+export function toUnwrappedJSON(value: Type): Serializable {
+    return toHexString(value);
 }
 
 /** Return value from invoking a smart contract entrypoint. */
@@ -115,7 +154,7 @@ export function parseWithSchemaTypeBase64(
 
 /**
  * Takes an {@linkcode Type} and transforms it to a {@linkcode TypedJson} format.
- *
+ * @deprecated Use the {@linkcode ReturnValue.toJSON} method instead.
  * @param {Type} value - The account address instance to transform.
  * @returns {TypedJson} The transformed object.
  */
@@ -128,7 +167,7 @@ export function toTypedJSON(value: ReturnValue): TypedJson<Serializable> {
 
 /**
  * Takes a {@linkcode TypedJson} object and converts it to instance of type {@linkcode Type}.
- *
+ * @deprecated Use the {@linkcode fromJSON} function instead.
  * @param {TypedJson} json - The typed JSON to convert.
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.

@@ -792,7 +792,7 @@ export interface ChainArData {
 export interface Policy {
     validTo: string; // "YYYYMM"
     createdAt: string; // "YYYYMM"
-    revealedAttributes: Record<AttributeKey, string>;
+    revealedAttributes: Partial<Record<AttributeKey, string>>;
 }
 
 interface SharedCredentialDeploymentValues {
@@ -818,7 +818,7 @@ export interface CredentialDeploymentCommitments {
     cmmPrf: string;
     cmmCredCounter: string;
     cmmIdCredSecSharingCoeff: string[];
-    cmmAttributes: Record<AttributeKey, string>;
+    cmmAttributes: Partial<Record<AttributeKey, string>>;
     cmmMaxAccounts: string;
 }
 
@@ -1600,7 +1600,7 @@ export interface AttributeList {
     validTo: string; // "YYYYMM"
     createdAt: string; // "YYYYMM"
     maxAccounts: number;
-    chosenAttributes: Record<AttributeKey, string>;
+    chosenAttributes: Partial<Record<AttributeKey, string>>;
 }
 
 export type IdentityObjectV1 = {
@@ -1844,4 +1844,23 @@ export type HealthCheckResponse =
     | {
           isHealthy: false;
           message?: string;
+      };
+
+/**
+ * Type representing an item which is included in a block, such as account transactions, chain updates or deployments of new credentials.
+ */
+export type BlockItem =
+    | {
+          kind: BlockItemKind.AccountTransactionKind;
+          transaction: {
+              accountTransaction: AccountTransaction;
+              signatures: AccountTransactionSignature;
+          };
+      }
+    | {
+          kind: BlockItemKind.CredentialDeploymentKind;
+          transaction: {
+              credential: TypedCredentialDeployment;
+              expiry: number;
+          };
       };

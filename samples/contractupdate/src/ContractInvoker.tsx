@@ -9,6 +9,7 @@ import {
     moduleSchemaFromBase64,
     typeSchemaFromBase64,
 } from '@concordium/react-components';
+import { useModuleSchemaRpc } from '@concordium/react-components';
 import {
     AccountAddress,
     AccountTransactionType,
@@ -19,7 +20,6 @@ import {
     ReceiveName,
     SchemaVersion,
 } from '@concordium/web-sdk';
-import { useContractSchemaRpc } from './useContractSchemaRpc';
 import { errorString } from './util';
 
 interface ContractParamEntry {
@@ -99,6 +99,17 @@ function ccdScanUrl(network: Network, txHash: string | undefined) {
     return `${network.ccdScanBaseUrl}/?dcount=1&dentity=transaction&dhash=${txHash}`;
 }
 
+type SchemaResult = SchemaFromInput | SchemaFromRpc;
+interface SchemaFromInput {
+    fromRpc: false;
+    schema: Schema | undefined;
+}
+interface SchemaFromRpc {
+    fromRpc: true;
+    schema: Schema;
+    sectionName: string;
+}
+
 export function ContractInvoker({ rpc, network, connection, connectedAccount, contract }: ContractInvokerProps) {
     const [selectedMethodIndex, setSelectedMethodIndex] = useState(0);
     const [schemaInput, setSchemaInput] = useState('');
@@ -108,7 +119,8 @@ export function ContractInvoker({ rpc, network, connection, connectedAccount, co
         setSchemaInput('');
     }, [contract]);
 
-    const schemaRpcResult = useContractSchemaRpc(rpc, contract);
+    const [schemaRpcError, setSchemaRpcError] = useState('');
+    const schemaRpcResult = useModuleSchemaRpc(rpc, contract.moduleRef, setSchemaRpcError);
     const [schemaTypeInput, setSchemaTypeInput] = useState(DEFAULT_SCHEMA_TYPE);
 
     const [contractParams, setContractParams] = useState<Array<ContractParamEntry>>([]);
@@ -123,7 +135,7 @@ export function ContractInvoker({ rpc, network, connection, connectedAccount, co
         () => ok(Object.fromEntries(contractParams.map((p) => [p.name, parseParamValue(p.value)]))),
         [contractParams]
     );
-    const schemaResult = useMemo(() => {
+    const schemaResult: Result<SchemaResult, string> = useMemo(() => {
         let input = schemaInput.trim();
         if (input) {
             try {
@@ -132,10 +144,10 @@ export function ContractInvoker({ rpc, network, connection, connectedAccount, co
                 return err('schema is not valid base64');
             }
         }
-        return (
-            schemaRpcResult?.map((r) => ({ fromRpc: true, schema: r?.schema })) ||
-            ok({ fromRpc: false, schema: undefined })
-        );
+        if (schemaRpcResult) {
+            return ok({ ...schemaRpcResult, fromRpc: true });
+        }
+        return ok({ fromRpc: false, schema: undefined });
     }, [schemaInput, schemaTypeInput, schemaRpcResult]);
     const amountResult = useMemo(() => {
         try {
@@ -180,13 +192,10 @@ export function ContractInvoker({ rpc, network, connection, connectedAccount, co
     return (
         <>
             <h4>Update Contract</h4>
-            {schemaRpcResult?.match(
-                () => undefined,
-                (e) => (
-                    <Alert variant="warning">
-                        Error fetching contract schema from chain: <code>{e}</code>.
-                    </Alert>
-                )
+            {schemaRpcError && (
+                <Alert variant="warning">
+                    Error fetching contract schema from chain: <code>{schemaRpcError}</code>.
+                </Alert>
             )}
             <Form>
                 <Form.Group as={Row} className="mb-3">
@@ -215,8 +224,8 @@ export function ContractInvoker({ rpc, network, connection, connectedAccount, co
                                     () => false
                                 )}
                                 isInvalid={schemaResult.isErr()}
-                                placeholder={schemaRpcResult?.match(
-                                    (v) => v && v.schema.value.toString('base64'),
+                                placeholder={schemaResult.match(
+                                    ({ fromRpc, schema }) => (fromRpc ? schema.value.toString('base64') : undefined),
                                     () => undefined
                                 )}
                             />
@@ -250,16 +259,12 @@ export function ContractInvoker({ rpc, network, connection, connectedAccount, co
                                 </Dropdown.Item>
                             </DropdownButton>
                             {schemaResult.match(
-                                () =>
-                                    schemaRpcResult?.match(
-                                        (v) =>
-                                            v && (
-                                                <Form.Control.Feedback>
-                                                    Using schema from section <code>{v.sectionName}</code> of the
-                                                    contract's module.
-                                                </Form.Control.Feedback>
-                                            ),
-                                        () => undefined
+                                (r) =>
+                                    r.fromRpc && (
+                                        <Form.Control.Feedback>
+                                            Using schema from section <code>{r.sectionName}</code> of the contract's
+                                            module.
+                                        </Form.Control.Feedback>
                                     ),
                                 (e) => (
                                     <Form.Control.Feedback type="invalid">{e}</Form.Control.Feedback>

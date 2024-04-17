@@ -104,7 +104,7 @@ export interface ContractSelector {
 
 /**
  * React hook to look up a smart contract's data and state from its index.
- * @param rpc gRPC client through which to perform the lookup. The JSON-RPC client is supported for backwards compatibility only.
+ * @param rpc gRPC client through which to perform the lookup.
  * @param input The index of the contract to look up.
  * @return The resolved contract and related state.
  */

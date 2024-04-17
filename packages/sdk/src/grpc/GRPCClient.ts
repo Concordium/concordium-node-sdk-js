@@ -234,11 +234,8 @@ export class ConcordiumGRPCClient {
         moduleRef: ModuleReference.Type,
         blockHash?: BlockHash.Type
     ): Promise<RawModuleSchema | null> {
-        const source = await this.getModuleSource(
-            moduleRef,
-            blockHash
-        );
-        return getEmbeddedModuleSchema(source)
+        const source = await this.getModuleSource(moduleRef, blockHash);
+        return getEmbeddedModuleSchema(source);
     }
 
     /**

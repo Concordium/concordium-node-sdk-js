@@ -3,9 +3,7 @@ import {
     AccountTransactionSignature,
     HexString,
     IpAddressString,
-    SchemaVersion,
 } from './types.js';
-import { RawModuleSchema, UnversionedSchemaVersion } from './schemaTypes.js';
 
 /**
  * Replaces a string in a JSON string with the same string as a

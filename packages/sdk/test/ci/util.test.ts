@@ -40,7 +40,10 @@ test('Embedded schema is the same as a seperate schema file', () => {
     const seperateSchema = readFileSync(
         'test/ci/resources/icecream-schema.bin'
     );
-    const embeddedSchema = getEmbeddedModuleSchema({source: wasmModule, version: 1});
+    const embeddedSchema = getEmbeddedModuleSchema({
+        source: wasmModule,
+        version: 1,
+    });
 
     expect(new Uint8Array(seperateSchema)).toEqual(
         new Uint8Array(embeddedSchema!.buffer)

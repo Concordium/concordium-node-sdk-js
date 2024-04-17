@@ -110,9 +110,10 @@ export async function parseModuleInterface(
  * @returns {RawModuleSchema | null} The raw module schema if found.
  * @throws If the module source cannot be parsed or contains duplicate schema sections.
  */
-export function getEmbeddedModuleSchema(
-    {source, version}: VersionedModuleSource
-): RawModuleSchema | null {
+export function getEmbeddedModuleSchema({
+    source,
+    version,
+}: VersionedModuleSource): RawModuleSchema | null {
     const sections = findCustomSections(
         new WebAssembly.Module(source),
         version
@@ -126,7 +127,7 @@ export function getEmbeddedModuleSchema(
             `invalid module: expected to find at most one custom section named "${sectionName}", but found ${contents.length}`
         );
     }
-    let schema = contents[0];
+    const schema = contents[0];
     if (unversionedSchemaVersion !== undefined) {
         return {
             type: 'unversioned',
@@ -163,7 +164,6 @@ function findCustomSections(m: WebAssembly.Module, moduleVersion: number) {
     }
     return getCustomSections('concordium-schema', undefined); // expecting to find this section in future module versions
 }
-
 
 /**
  * Get a key from a map, if not present, insert a new value and return this.

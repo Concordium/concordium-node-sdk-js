@@ -232,13 +232,13 @@ export class ConcordiumGRPCClient {
     async getEmbeddedSchema(
         moduleRef: ModuleReference.Type,
         blockHash?: BlockHash.Type
-    ): Promise<Uint8Array> {
-        const versionedSource = await this.getModuleSource(
+    ): Promise<Uint8Array | undefined> {
+        const { source, version } = await this.getModuleSource(
             moduleRef,
             blockHash
         );
-        const res = wasmToSchema(versionedSource.source);
-        return new Uint8Array(res!.schema);
+        const res = wasmToSchema(source, version);
+        return res ? new Uint8Array(res.schema) : undefined;
     }
 
     /**

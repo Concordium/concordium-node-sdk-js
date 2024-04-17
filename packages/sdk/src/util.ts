@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Buffer } from 'buffer/index.js';
 import {
     AccountTransactionSignature,
@@ -75,10 +74,7 @@ export interface SchemaFromWasm {
     sectionName: string;
 }
 
-function findCustomSections(
-    m: WebAssembly.Module,
-    moduleVersion: number | undefined
-) {
+function findCustomSections(m: WebAssembly.Module, moduleVersion: number) {
     function getCustomSections(
         sectionName: string,
         schemaVersion: SchemaVersion | undefined
@@ -94,15 +90,15 @@ function findCustomSections(
         case 0:
             return (
                 getCustomSections('concordium-schema', undefined) || // always v0
-                getCustomSections('concordium-schema-v1', SchemaVersion.V0) // v0 ("-v1" is not a typo)
+                getCustomSections('concordium-schema-v1', SchemaVersion.V0) // v0 (not a typo)
             );
         case 1:
             return (
                 getCustomSections('concordium-schema', undefined) || // v1, v2, or v3
-                getCustomSections('concordium-schema-v2', SchemaVersion.V1) // v1 ("-v2" is not a typo)
+                getCustomSections('concordium-schema-v2', SchemaVersion.V1) // v1 (not a typo)
             );
     }
-    return getCustomSections('concordium-schema', undefined); // expecting to find this section in unknown/future module versions
+    return getCustomSections('concordium-schema', undefined); // expecting to find this section in future module versions
 }
 
 /**
@@ -113,7 +109,7 @@ function findCustomSections(
  */
 export function wasmToSchema(
     moduleSourceWasm: BufferSource,
-    moduleVersion?: number
+    moduleVersion: number
 ): SchemaFromWasm | undefined {
     const sections = findCustomSections(
         new WebAssembly.Module(moduleSourceWasm),
@@ -125,7 +121,7 @@ export function wasmToSchema(
     const { sectionName, schemaVersion, contents } = sections;
     if (contents.length !== 1) {
         throw new Error(
-            `Unexpected size (${contents.length}) of custom section "${sectionName}": Expected to find at most one section`
+            `invalid module: expected to find at most one custom section named "${sectionName}", but found ${contents.length}`
         );
     }
     return { schema: contents[0], schemaVersion, sectionName };

@@ -28,7 +28,6 @@ import {
     mapRecord,
     mapStream,
     unwrap,
-    wasmToSchema,
 } from '../util.js';
 import { serializeAccountTransactionPayload } from '../serialization.js';
 import type {
@@ -46,6 +45,8 @@ import * as Energy from '../types/Energy.js';
 import * as SequenceNumber from '../types/SequenceNumber.js';
 import * as ReceiveName from '../types/ReceiveName.js';
 import * as Timestamp from '../types/Timestamp.js';
+import { getEmbeddedModuleSchema } from '../types/VersionedModuleSource.js';
+import { RawModuleSchema } from '../schemaTypes.js';
 
 /**
  * @hidden
@@ -232,13 +233,12 @@ export class ConcordiumGRPCClient {
     async getEmbeddedSchema(
         moduleRef: ModuleReference.Type,
         blockHash?: BlockHash.Type
-    ): Promise<Uint8Array | undefined> {
-        const { source, version } = await this.getModuleSource(
+    ): Promise<RawModuleSchema | null> {
+        const versionedModuleSource = await this.getModuleSource(
             moduleRef,
             blockHash
         );
-        const res = wasmToSchema(source, version);
-        return res ? new Uint8Array(res.schema) : undefined;
+        return getEmbeddedModuleSchema(versionedModuleSource)
     }
 
     /**

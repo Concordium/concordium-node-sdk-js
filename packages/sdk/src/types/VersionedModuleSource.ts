@@ -2,9 +2,8 @@ import * as ModuleReference from './ModuleReference.js';
 import * as H from '../contractHelpers.js';
 import { sha256 } from '../hash.js';
 import { Buffer } from 'buffer/index.js';
-import { SchemaVersion, VersionedModuleSource } from '../types.js';
-import { wasmToSchema } from '../util.js';
-import { RawModuleSchema } from '../schemaTypes.js';
+import { VersionedModuleSource } from '../types.js';
+import { RawModuleSchema, UnversionedSchemaVersion } from '../schemaTypes.js';
 import { Cursor, deserializeUInt32BE } from '../deserializationHelpers.js';
 import { encodeWord32 } from '../serializationHelpers.js';
 
@@ -111,33 +110,59 @@ export async function parseModuleInterface(
  * @returns {RawModuleSchema | null} The raw module schema if found.
  */
 export async function getEmbeddedModuleSchema(
-    moduleSource: VersionedModuleSource
+    {source, version}: VersionedModuleSource
 ): Promise<RawModuleSchema | null> {
-    const res = wasmToSchema(moduleSource.source, moduleSource.version);
-    if (!res) {
+    const sections = findCustomSections(
+        new WebAssembly.Module(source),
+        version
+    );
+    if (!sections) {
         return null;
     }
-    const { schema, schemaVersion } = res;
-    if (schemaVersion !== undefined) {
+    const { sectionName, unversionedSchemaVersion, contents } = sections;
+    if (contents.length !== 1) {
+        throw new Error(
+            `invalid module: expected to find at most one custom section named "${sectionName}", but found ${contents.length}`
+        );
+    }
+    let schema = contents[0];
+    if (unversionedSchemaVersion !== undefined) {
         return {
             type: 'unversioned',
-            version: schemaVersionToUnversionedSchemaVersion(schemaVersion),
+            version: unversionedSchemaVersion,
             buffer: schema,
         };
     }
     return { type: 'versioned', buffer: schema };
 }
 
-function schemaVersionToUnversionedSchemaVersion(v: SchemaVersion) {
-    switch (v) {
-        case SchemaVersion.V0:
-        case SchemaVersion.V1:
-            return v;
-        case SchemaVersion.V2:
-            // Private type 'UnversionedSchemaType' only includes values 0 and 1.
-            return SchemaVersion.V1;
+function findCustomSections(m: WebAssembly.Module, moduleVersion: number) {
+    function getCustomSections(
+        sectionName: string,
+        unversionedSchemaVersion: UnversionedSchemaVersion | undefined
+    ) {
+        const s = WebAssembly.Module.customSections(m, sectionName);
+        return s.length === 0
+            ? undefined
+            : { sectionName, unversionedSchemaVersion, contents: s };
     }
+
+    // First look for section containing schema with embedded version, then "-v1" or "-v2" depending on the module version.
+    switch (moduleVersion) {
+        case 0:
+            return (
+                getCustomSections('concordium-schema', undefined) || // always v0
+                getCustomSections('concordium-schema-v1', 0) // v0 (not a typo)
+            );
+        case 1:
+            return (
+                getCustomSections('concordium-schema', undefined) || // v1, v2, or v3
+                getCustomSections('concordium-schema-v2', 1) // v1 (not a typo)
+            );
+    }
+    return getCustomSections('concordium-schema', undefined); // expecting to find this section in future module versions
 }
+
 
 /**
  * Get a key from a map, if not present, insert a new value and return this.

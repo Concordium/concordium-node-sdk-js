@@ -24,8 +24,12 @@
 
 ### Changed
 
-- `wasmToSchema` now expects the module version and uses it to determine which custom sections to inspect.
-- `ConcordiumGRPCClient.getEmbeddedSchema` now returns `undefined` if no schema was found instead of an error.
+- `getEmbeddedModuleSchema` now uses the module version to determine in which custom wasm sections to look for the schema.
+- `ConcordiumGRPCClient.getEmbeddedSchema` now delegates to `getEmbeddedModuleSchema` instead of `wasmToSchema`
+  (which was removed as it was just a less capable version of `getEmbeddedModuleSchema`).
+  This means that it returns the complete `RawModuleSchema` instead of only the schema bytes.
+  It also means that it returns `null` instead of an error when no embedded schema was found.
+  
 
 ## 7.3.2
 

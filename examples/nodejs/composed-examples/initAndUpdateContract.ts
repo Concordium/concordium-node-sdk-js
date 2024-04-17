@@ -103,7 +103,7 @@ const client = new ConcordiumGRPCNodeClient(
     const initParams = serializeInitContractParameters(
         contractName,
         sunnyWeather,
-        schema
+        schema!.buffer
     );
 
     const initPayload: InitContractPayload = {
@@ -155,7 +155,7 @@ const client = new ConcordiumGRPCNodeClient(
         contractName,
         EntrypointName.fromString('set'),
         rainyWeather,
-        schema
+        schema!.buffer
     );
 
     const updatePayload: UpdateContractPayload = {
@@ -205,7 +205,7 @@ const client = new ConcordiumGRPCNodeClient(
             const rawReturnValue = unwrap(invokedPostInit.returnValue);
             const returnValue = deserializeReceiveReturnValue(
                 ReturnValue.toBuffer(rawReturnValue),
-                schema,
+                schema!.buffer,
                 contractName,
                 EntrypointName.fromString('get')
             );

@@ -583,10 +583,11 @@ export class Contract<
                 const raw = await grpcClient.getEmbeddedSchema(
                     instanceInfo.sourceModule
                 );
-                const encoded = Buffer.from(raw).toString('base64');
-
-                if (encoded) {
-                    mSchema = encoded;
+                if (raw) {
+                    const encoded = Buffer.from(raw.buffer).toString('base64');
+                    if (encoded) {
+                        mSchema = encoded;
+                    }
                 }
             } catch {
                 // Do nothing.

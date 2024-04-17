@@ -108,10 +108,11 @@ export async function parseModuleInterface(
  * Extract the embedded smart contract schema bytes. Returns `null` if no schema is embedded.
  * @param {VersionedModuleSource} moduleSource The smart contract module source.
  * @returns {RawModuleSchema | null} The raw module schema if found.
+ * @throws If the module source cannot be parsed or contains duplicate schema sections.
  */
-export async function getEmbeddedModuleSchema(
+export function getEmbeddedModuleSchema(
     {source, version}: VersionedModuleSource
-): Promise<RawModuleSchema | null> {
+): RawModuleSchema | null {
     const sections = findCustomSections(
         new WebAssembly.Module(source),
         version

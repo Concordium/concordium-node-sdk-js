@@ -104,7 +104,7 @@ function findCustomSections(m: WebAssembly.Module, moduleVersion: number) {
 /**
  * Attempts to extract a smart contract schema from a given wasm module, optionally based on the module version.
  * @param moduleSourceWasm the wasm module as a buffer.
- * @param moduleVersion module version. If provided, we will attempt to find the schema in sections specific to that version. Otherwise, we'll only look in "concordium-schema".
+ * @param moduleVersion module version. If it's a known version, we will attempt to find the schema in sections specific to that version. Otherwise, we only look in "concordium-schema".
  * @returns the smart contract schema with version and name of custom section where it was found or undefined if no schema was found
  */
 export function wasmToSchema(

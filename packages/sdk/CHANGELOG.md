@@ -22,6 +22,11 @@
 
 - Serialization of nonces with `serializeCIS4RevocationDataHolder` to serialize as little endian.
 
+### Changed
+
+- `wasmToSchema` now expects the module version and uses it to determine which custom sections to inspect.
+- `ConcordiumGRPCClient.getEmbeddedSchema` now returns `undefined` if no schema was found instead of an error.
+
 ## 7.3.2
 
 ### Added

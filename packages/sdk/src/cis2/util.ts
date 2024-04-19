@@ -1,8 +1,8 @@
 import bs58check from 'bs58check';
 import {
-    encodeWord16,
     encodeWord64,
     encodeWord8,
+    makeSerializeList,
     makeSerializeOptional,
     packBufferWithWord16Length,
     packBufferWithWord8Length,
@@ -466,13 +466,6 @@ function serializeAdditionalData(data: HexString): Buffer {
     const serialized = Buffer.from(data, 'hex');
     return packBufferWithWord16Length(serialized, true);
 }
-
-const makeSerializeList =
-    <T>(serialize: (input: T) => Uint8Array) =>
-    (input: T[]): Buffer => {
-        const n = encodeWord16(input.length, true);
-        return Buffer.concat([n, ...input.map(serialize)]);
-    };
 
 function serializeCIS2Transfer(transfer: CIS2.Transfer): Buffer {
     const id = serializeCIS2TokenId(transfer.tokenId);

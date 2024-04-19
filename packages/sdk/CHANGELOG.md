@@ -13,6 +13,7 @@
 - `deserializeCIS4Events` and `deserializeCIS4EventsFromSummary` for deserializing all CIS-4 events from `InvokeContractSuccessResult`s and `BlockItemSummary`s, respectively.
 - `Parameter.parseWithSchemaTypeBase64` and `Parameter.parseWithSchemaType` to
   help parsing smart contract parameters into typed structures.
+- `CIS3Contract` class for interacting with contracts adhering to the CIS-3 standard.
 
 ### Fixed
 

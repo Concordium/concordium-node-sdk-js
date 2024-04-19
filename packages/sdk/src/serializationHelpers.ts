@@ -431,3 +431,10 @@ export const makeSerializeOptional =
 
         return Buffer.concat([encodeBool(true), fun(value)]);
     };
+
+export const makeSerializeList =
+    <T>(serialize: (input: T) => Uint8Array) =>
+    (input: T[]): Buffer => {
+        const n = encodeWord16(input.length, true);
+        return Buffer.concat([n, ...input.map(serialize)]);
+    };

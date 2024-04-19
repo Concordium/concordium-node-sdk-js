@@ -24,29 +24,10 @@ import {
 import { CIS0, cis0Supports } from '../cis0.js';
 import { CISContract, ContractDryRun } from '../GenericContract.js';
 import { makeDynamicFunction } from '../util.js';
+import { ensureMatchesInput } from '../deserializationHelpers.js';
 
 type Views = 'balanceOf' | 'operatorOf' | 'tokenMetadata';
 type Updates = 'transfer' | 'updateOperator';
-
-const ensureMatchesInput =
-    <T, R>(input: T, deserializer: (value: HexString) => R[]) =>
-    (value: HexString): R[] | R => {
-        const result = deserializer(value);
-        const expectList = Array.isArray(input);
-        const expectLength = expectList ? input.length : 1;
-
-        if (result.length !== expectLength) {
-            throw new Error(
-                `Expected list with length ${expectLength} when deserializing response, received list with length ${result.length}`
-            );
-        }
-
-        if (expectList) {
-            return result;
-        }
-
-        return result[0];
-    };
 
 /**
  * Contains methods for performing dry-run invocations of update instructions on CIS-2 smart contracts.

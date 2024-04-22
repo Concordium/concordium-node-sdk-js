@@ -22,7 +22,7 @@
 
 - Serialization of nonces with `serializeCIS4RevocationDataHolder` to serialize as little endian.
 
-### Changed
+### Breaking changes
 
 - `getEmbeddedModuleSchema` now uses the module version to determine in which custom wasm sections to look for the schema.
   It also no longer is `async` because there isn't any need for it to be so.

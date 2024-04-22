@@ -118,7 +118,7 @@ export function getEmbeddedModuleSchema({
         new WebAssembly.Module(source),
         version
     );
-    if (!sections) {
+    if (sections === undefined) {
         return null;
     }
     const { sectionName, unversionedSchemaVersion, contents } = sections;

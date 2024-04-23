@@ -343,6 +343,27 @@ function serializePayloadParameters(
 }
 
 /**
+ * Convert {@link SignableMessage} into the object format expected by the Mobile Wallets.
+ * As of this writing, the iOS wallets only support the {@link StringMessage} variant.
+ * So if used with these application the iOS wallet will not correctly sign the actual bytes in the message.
+ * @param msg The binary or string message to be signed.
+ */
+function convertSignableMessageFormat(msg: SignableMessage) {
+    switch (msg.type) {
+        case 'StringMessage': {
+            return { message: msg.value };
+        }
+        case 'BinaryMessage': {
+            return {
+                message: { schema: msg.schema.value.toString('base64'), data: msg.value.toString('hex') },
+            };
+        }
+        default:
+            throw new UnreachableCaseError('message', msg);
+    }
+}
+
+/**
  * Implementation of {@link WalletConnection} for WalletConnect v2.
  *
  * While WalletConnect doesn't set any restrictions on the amount of accounts and networks/chains
@@ -413,24 +434,22 @@ export class WalletConnectConnection implements WalletConnection {
     }
 
     async signMessage(accountAddress: string, msg: SignableMessage) {
-        switch (msg.type) {
-            case 'StringMessage': {
-                const params = { message: msg.value };
-                const signature = await this.connector.client.request({
-                    topic: this.session.topic,
-                    request: {
-                        method: 'sign_message',
-                        params,
-                    },
-                    chainId: this.chainId,
-                });
-                return signature as AccountTransactionSignature; // TODO do proper type check
-            }
-            case 'BinaryMessage':
-                throw new Error(`signing 'BinaryMessage' is not yet supported by the mobile wallets`);
-            default:
-                throw new UnreachableCaseError('message', msg);
+        const connectedAccount = this.getConnectedAccount();
+        if (accountAddress !== connectedAccount) {
+            throw new Error(
+                `cannot sign message with address '${accountAddress}' on connection for account '${connectedAccount}'`
+            );
         }
+        const params = convertSignableMessageFormat(msg);
+        const signature = await this.connector.client.request({
+            topic: this.session.topic,
+            request: {
+                method: 'sign_message',
+                params,
+            },
+            chainId: this.chainId,
+        });
+        return signature as AccountTransactionSignature; // TODO do proper type check
     }
 
     async requestVerifiablePresentation(

@@ -9,12 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+-   `WalletConnect`: `signMessage` now supports passing binary message including schema to the wallet.
 -   Added `createWalletConnectModalConfig` to create a configuration the modal shown when connecting to a walletconnect compatible wallet. The value returned can be passed to `WalletConnectConnector.create`.
 -   Added `CRYPTO_X_WALLET_MAINNET` and `CONCORDIUM_WALLET_MAINNET` exports, which can be passed `createWalletConnectModalConfig` for more control over which wallets are shown.
 -   Added option to specify the methods and events to request permission for by walletconnect
 
 ### Changed
 
+-   `WalletConnect`: `signMessage` now requires the provided account address to match the connected account rather than silently ignoring it.
 -   Changed the wallet connect modal dependency from `@walletconnect/qrcode-modal` (which is deprecated) to `@walletconnect/modal`.
 
 ## [0.5.1] - 2024-03-22

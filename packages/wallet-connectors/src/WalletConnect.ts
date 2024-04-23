@@ -356,7 +356,6 @@ function convertSignableMessageFormat(msg: SignableMessage) {
         case 'BinaryMessage': {
             return {
                 message: { schema: msg.schema.value.toString('base64'), data: msg.value.toString('hex') },
-                schema: msg.schema.value.toString('base64'),
             };
         }
         default:

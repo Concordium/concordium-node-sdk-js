@@ -101,15 +101,15 @@ jobs:
               run: yarn build
 
             - name: Store build-debug
-              uses: ./.github/actions/upload-artifact
+              uses: actions/upload-artifact@v4
               with:
                   name: build-debug
                   # sdk/src is needed here because of sdk/src/grpc-api
                   path: |
-                      ./packages/rust-bindings/lib
-                      ./packages/sdk/lib
-                      ./packages/sdk/src
-                      ./packages/ccd-js-gen/lib
+                      packages/rust-bindings/lib
+                      packages/sdk/lib
+                      packages/sdk/src
+                      packages/ccd-js-gen/lib
 
     typecheck-examples:
         runs-on: ubuntu-22.04
@@ -132,8 +132,9 @@ jobs:
                   key: ${{ runner.os }}-yarn
 
             - name: Get build-debug
-              uses: ./.github/actions/download-artifact
+              uses: actions/download-artifact@v4
               with:
+                  path: packages
                   name: build-debug
 
             - name: Typecheck examples
@@ -169,8 +170,9 @@ jobs:
                   key: ${{ runner.os }}-yarn
 
             - name: Get build-debug
-              uses: ./.github/actions/download-artifact
+              uses: actions/download-artifact@v4
               with:
+                  path: packages
                   name: build-debug
 
             - name: Run Tests
@@ -197,8 +199,9 @@ jobs:
                   key: ${{ runner.os }}-yarn
 
             - name: Get build-debug
-              uses: ./.github/actions/download-artifact
+              uses: actions/download-artifact@v4
               with:
+                  path: packages
                   name: build-debug
 
             - name: Build typedoc
@@ -226,8 +229,9 @@ jobs:
                   key: ${{ runner.os }}-yarn
 
             - name: Get build-debug
-              uses: ./.github/actions/download-artifact
+              uses: actions/download-artifact@v4
               with:
+                  path: packages
                   name: build-debug
 
             - name: Lint

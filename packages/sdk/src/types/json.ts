@@ -72,7 +72,10 @@ function reviveConcordiumTypes(value: unknown) {
 }
 
 /**
- * Acts as an inverse for {@linkcode jsonStringify}
+ * Acts as an inverse for {@linkcode jsonStringify}.
+ * @deprecated Manually convert the JSON structure instead. For account transactions,
+ * parse the output with something that handles deserializing`bigint`s, e.g. the
+ * `json-bigint` dependency, and use `AccountTransactionHandler.fromJSON`.
  */
 export function jsonParse(
     input: string,
@@ -181,7 +184,9 @@ function unwrapConcordiumType(value: unknown): unknown | undefined {
         case Timestamp.instanceOf(value):
             return Timestamp.toUnwrappedJSON(value as Timestamp.Type);
         case TransactionExpiry.instanceOf(value):
-            return (value as TransactionExpiry.Type).toJSON();
+            return TransactionExpiry.toUnwrappedJSON(
+                value as TransactionExpiry.Type
+            );
         case TransactionHash.instanceOf(value):
             return TransactionHash.toUnwrappedJSON(
                 value as TransactionHash.Type
@@ -206,6 +211,9 @@ function ccdUnwrapReplacer(this: any, key: string, value: any): any {
 /**
  * Stringify, which ensures concordium domain types are stringified in a restorable fashion.
  * This should be used if you want to be able to restore the concordium domain types in the JSON to its original types.
+ * @deprecated Manually convert the object to the preferred JSON structure instead. For account transactions,
+ * use `AccountTransactionHandler.toJSON` prior to invoking `JSON.stringify`. It's up to the developer to
+ * handle serialization of `bigints`, e.g. with the `json-bigint` dependency.
  *
  * @param value A JavaScript value, usually an object or array, to be converted.
  * @param replacer A function that transforms the results.
@@ -238,6 +246,9 @@ export const enum BigintFormatType {
 /**
  * Stringify, which ensures concordium domain types are unwrapped to their inner type before stringified.
  * This should be used if you want to manually deserialize the inner property values, as the serialization is irreversible.
+ * @deprecated Manually convert the object to the preferred JSON structure instead. For account transactions,
+ * use `AccountTransactionHandler.toJSON` prior to invoking `JSON.stringify`. It's up to the developer to
+ * handle serialization of `bigints`, e.g. with the `json-bigint` dependency.
  *
  * @param value A JavaScript value, usually an object or array, to be converted.
  * @param bigintFormat Determines how to handle bigints. Can be set to either:

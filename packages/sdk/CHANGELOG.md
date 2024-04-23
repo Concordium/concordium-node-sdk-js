@@ -4,6 +4,8 @@
 
 ### Added
 
+- `toString`, `toJSON`, and `fromJSON` to most concordium domain types.
+- Deprecated types and functions related to typed JSON serialization and deserialization.
 - Various types related to CIS-2, CIS-3, and CIS-4 events and errors in the `CIS2`, `CIS3`, and `CIS4` namespaces.
 - `deserializeCIS2Event`, `deserializeCIS3Event`, and `deserializeCIS4Event` for deserializing a CIS event from a `ContractEvent`.
 - `deserializeCIS2Events` and `deserializeCIS2EventsFromSummary` for deserializing all CIS-2 events from `InvokeContractSuccessResult`s and `BlockItemSummary`s, respectively, as well as similar functions for CIS-3 and CIS-4 events.
@@ -11,6 +13,8 @@
 - `CIS3Contract` class for interacting with contracts adhering to the CIS-3 standard.
 - `Parameter.parseWithSchemaTypeBase64` and `Parameter.parseWithSchemaType` to
   help parsing smart contract parameters into typed structures.
+- Documentation on when`TransactionExpiry.toJSON` throws an error.
+
 
 ### Fixed
 

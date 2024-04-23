@@ -3,10 +3,16 @@ import * as Timestamp from '../types/Timestamp.js';
 import * as EntrypointName from '../types/EntrypointName.js';
 import * as Parameter from '../types/Parameter.js';
 import * as AccountAddress from '../types/AccountAddress.js';
+import * as ContractEvent from '../types/ContractEvent.js';
 import {
     AccountTransactionSignature,
     Base58String,
+    BlockItemSummary,
+    ContractTraceEvent,
     HexString,
+    InvokeContractSuccessResult,
+    TransactionKindString,
+    TransactionSummaryType,
 } from '../types.js';
 import {
     serializeAccountAddress,
@@ -16,7 +22,11 @@ import {
 import { encodeWord16, encodeWord64 } from '../serializationHelpers.js';
 import { serializeDate } from '../cis4/util.js';
 import { serializeAccountTransactionSignature } from '../serialization.js';
-import { makeDeserializeListResponse } from '../deserializationHelpers.js';
+import {
+    Cursor,
+    makeDeserializeListResponse,
+} from '../deserializationHelpers.js';
+import { deserializeUint8 } from '../deserialization.js';
 
 const PERMIT_PAYLOAD_MAX_LENGTH = 65535;
 const SUPPORTS_PERMIT_QUERY_MAX_LENGTH = 65535;
@@ -70,6 +80,42 @@ export namespace CIS3 {
         signer: Base58String;
         message: PermitMessageJson;
     };
+
+    /**
+     * The type of a CIS-3 event.
+     * @see {@linkcode Event}
+     */
+    export enum EventType {
+        Nonce,
+        Custom,
+    }
+
+    /**
+     * A CIS-3 nonce event. This event is logged every time the `permit` function is invoked.
+     */
+    export type NonceEvent = {
+        /** The type of the event */
+        type: EventType.Nonce;
+        /** The nonce used for the `permit` invocation */
+        nonce: bigint;
+        /** The address of the sponsoree */
+        sponsoree: AccountAddress.Type;
+    };
+
+    /**
+     * A custom event outside CIS-3.
+     */
+    export type CustomEvent = {
+        /** The type of the event */
+        type: EventType.Custom;
+        /** The raw data of the custom event */
+        data: Uint8Array;
+    };
+
+    /**
+     * A CIS-3 event.
+     */
+    export type Event = NonceEvent | CustomEvent;
 }
 
 /**
@@ -195,10 +241,19 @@ export function formatCIS3PermitParam(
  * @param {CIS3.PermitMessage} message - The message to format.
  *
  * @returns {CIS3.PermitMessageJson} The formatted message.
+ *
+ * @throws If the of the message is outside of the safe integer range.
  */
 function formatCIS3PermitMessage(
     message: CIS3.PermitMessage
 ): CIS3.PermitMessageJson {
+    if (
+        message.nonce < Number.MIN_SAFE_INTEGER ||
+        message.nonce > Number.MAX_SAFE_INTEGER
+    ) {
+        throw new Error('Nonce is too large');
+    }
+
     return {
         contract_address: {
             index: Number(message.contractAddress.index),
@@ -209,4 +264,114 @@ function formatCIS3PermitMessage(
         entry_point: EntrypointName.toString(message.entrypoint),
         payload: [...Parameter.toBuffer(message.payload)],
     };
+}
+
+/**
+ * Deserializes a CIS-3 event according to the CIS-3 standard.
+ *
+ * @param {ContractEvent.Type} event - The event to deserialize
+ *
+ * @returns {CIS3.Event} The deserialized event
+ */
+export function deserializeCIS3Event(event: ContractEvent.Type): CIS3.Event {
+    const buffer = event.buffer;
+    // An empty buffer is a valid custom event
+    if (buffer.length === 0) {
+        return {
+            type: CIS3.EventType.Custom,
+            data: buffer,
+        };
+    }
+
+    const cursor = Cursor.fromBuffer(buffer);
+    const tag = deserializeUint8(cursor);
+    if (tag == 250) {
+        // Nonce event
+        const nonce = cursor.read(8).readBigUInt64LE(0).valueOf();
+        const sponsoree = AccountAddress.fromBuffer(cursor.read(32));
+
+        return {
+            type: CIS3.EventType.Nonce,
+            nonce,
+            sponsoree,
+        };
+    } else {
+        // Custom event
+        return {
+            type: CIS3.EventType.Custom,
+            data: buffer,
+        };
+    }
+}
+
+/**
+ * Deserializes a successful contract invokation to a list of CIS-3 events according to the CIS-3 standard.
+ *
+ * @param {InvokeContractSuccessResult} result - The contract invokation result to deserialize
+ *
+ * @returns {CIS3.NonceEvent[]} The deserialized `nonce` events
+ */
+export function deserializeCIS3EventsFromInvokationResult(
+    result: InvokeContractSuccessResult
+): CIS3.NonceEvent[] {
+    return deserializeCIS3ContractTraceEvents(result.events);
+}
+
+/**
+ * Deserializes all CIS-3 `nonce` events (skipping custom events) from a {@linkcode BlockItemSummary}.
+ *
+ * @param {BlockItemSummary} summary - The summary to deserialize
+ *
+ * @returns {CIS3.NonceEvent[]} The deserialized `nonce` events
+ */
+export function deserializeCIS3EventsFromSummary(
+    summary: BlockItemSummary
+): CIS3.NonceEvent[] {
+    if (summary.type !== TransactionSummaryType.AccountTransaction) {
+        return [];
+    }
+
+    switch (summary.transactionType) {
+        case TransactionKindString.Update:
+            return deserializeCIS3ContractTraceEvents(summary.events);
+        case TransactionKindString.InitContract:
+            const deserializedEvents = [];
+            for (const event of summary.contractInitialized.events) {
+                const deserializedEvent = deserializeCIS3Event(
+                    ContractEvent.fromHexString(event)
+                );
+                if (deserializedEvent.type === CIS3.EventType.Nonce) {
+                    deserializedEvents.push(deserializedEvent);
+                }
+            }
+            return deserializedEvents;
+        default:
+            return [];
+    }
+}
+
+/**
+ * Deserializes a list of {@linkcode ContractTraceEvent} into a list of CIS-3 events.
+ * This function filters out any custom events, and so only returns {@linkcode CIS3.NonceEvent}.
+ *
+ * @param {ContractTraceEvent[]} events - The list of contract trace events to deserialize
+ *
+ * @returns {CIS3.NonceEvent[]} The deserialized CIS-3 `nonce` events
+ */
+function deserializeCIS3ContractTraceEvents(
+    events: ContractTraceEvent[]
+): CIS3.NonceEvent[] {
+    const deserializedEvents = [];
+    for (const traceEvent of events) {
+        if (!('events' in traceEvent)) {
+            continue;
+        }
+        for (const event of traceEvent.events) {
+            const deserializedEvent = deserializeCIS3Event(event);
+            if (deserializedEvent.type === CIS3.EventType.Nonce) {
+                deserializedEvents.push(deserializedEvent);
+            }
+        }
+    }
+    return deserializedEvents;
 }

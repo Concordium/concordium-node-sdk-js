@@ -344,9 +344,8 @@ function serializePayloadParameters(
 
 /**
  * Convert {@link SignableMessage} into the object format expected by the Mobile Wallets.
- * As of this writing, the Android and iOS wallets only support the {@link StringMessage} variant.
- * So if used with these application (which ignore the {@code schema} field), they will present (and sign)
- * the hex string of the message rather than the actual bytes in the message.
+ * As of this writing, the iOS wallets only support the {@link StringMessage} variant.
+ * So if used with these application the iOS wallet will not correctly sign the actual bytes in the message.
  * @param msg The binary or string message to be signed.
  */
 function convertSignableMessageFormat(msg: SignableMessage) {
@@ -355,7 +354,10 @@ function convertSignableMessageFormat(msg: SignableMessage) {
             return { message: msg.value };
         }
         case 'BinaryMessage': {
-            return { message: msg.value.toString('hex'), schema: msg.schema.value.toString('base64') };
+            return {
+                message: { schema: msg.schema.value.toString('base64'), data: msg.value.toString('hex') },
+                schema: msg.schema.value.toString('base64'),
+            };
         }
         default:
             throw new UnreachableCaseError('message', msg);

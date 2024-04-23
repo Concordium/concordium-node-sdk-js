@@ -26,7 +26,6 @@ import { WalletConnectModal, WalletConnectModalConfig } from '@walletconnect/mod
 import { MobileWallet } from '@walletconnect/modal-core';
 import SignClient from '@walletconnect/sign-client';
 import { ISignClient, ProposalTypes, SessionTypes, SignClientTypes } from '@walletconnect/types';
-import { CONCORDIUM_WALLET_CONNECT_PROJECT_ID, MAINNET, TESTNET } from '.';
 import {
     Network,
     Schema,
@@ -36,6 +35,7 @@ import {
     WalletConnectionDelegate,
     WalletConnector,
 } from './WalletConnection';
+import { CONCORDIUM_WALLET_CONNECT_PROJECT_ID, MAINNET, TESTNET } from './constants';
 import { UnreachableCaseError } from './error';
 
 const WALLET_CONNECT_SESSION_NAMESPACE = 'ccd';

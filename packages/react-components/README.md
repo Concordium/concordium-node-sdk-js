@@ -43,10 +43,15 @@ Connector types for the Browser Wallet and WalletConnect connectors are usually 
 
 ```typescript
 export const BROWSER_WALLET = ephemeralConnectorType(BrowserWalletConnector.create);
-export const WALLET_CONNECT = ephemeralConnectorType(
-    WalletConnectConnector.create.bind(undefined, WALLET_CONNECT_OPTS)
+export const WALLET_CONNECT = ephemeralConnectorType((delegate, network) =>
+    WalletConnectConnector.create(walletConnectOptions, delegate, network, walletConnectNamespaceConfig)
 );
 ```
+
+where `walletConnectOptions` is the initialization configuration for WalletConnect
+and `walletConnectNamespaceConfig` is the Concordium-specific connection configuration (optional; defaults to all supported methods and events).
+In practice, both of these values are usually constants.
+See [sample configuration](../../samples/sign-message/src/config.ts) for a complete example.
 
 Initiate a connection by invoking `connect` on a connector.
 This is most easily done using the hooks `useConnection` and `useConnect`:

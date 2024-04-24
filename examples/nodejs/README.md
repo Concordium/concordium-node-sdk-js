@@ -24,7 +24,8 @@ An alternative to building all of the packages in the project, you can change th
 
 - Remove packages from the workspace i.e remove the line with `"./packages/*",` from `package.json` in the project root.
 - Replace `workspace:^` in `package.json` found in this example with `*`:
-  ```
+
+  ```json
   ...
   "@concordium/ccd-js-gen": "*",
   "@concordium/web-sdk": "*",
@@ -32,7 +33,7 @@ An alternative to building all of the packages in the project, you can change th
 
 Then run:
 
-```
+```shell
 yarn workspaces focus @concordium/examples
 ```
 
@@ -47,4 +48,3 @@ yarn run-example /path/to/example.ts [opts]
 ```
 
 Where opts are any arguments that the example script takes.
-

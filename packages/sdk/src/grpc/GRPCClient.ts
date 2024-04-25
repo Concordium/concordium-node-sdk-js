@@ -233,7 +233,7 @@ export class ConcordiumGRPCClient {
     async getEmbeddedSchema(
         moduleRef: ModuleReference.Type,
         blockHash?: BlockHash.Type
-    ): Promise<RawModuleSchema | null> {
+    ): Promise<RawModuleSchema | undefined> {
         const source = await this.getModuleSource(moduleRef, blockHash);
         return getEmbeddedModuleSchema(source);
     }

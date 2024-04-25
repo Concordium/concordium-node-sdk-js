@@ -113,13 +113,13 @@ export async function parseModuleInterface(
 export function getEmbeddedModuleSchema({
     source,
     version,
-}: VersionedModuleSource): RawModuleSchema | null {
+}: VersionedModuleSource): RawModuleSchema | undefined {
     const sections = findCustomSections(
         new WebAssembly.Module(source),
         version
     );
     if (sections === undefined) {
-        return null;
+        return undefined;
     }
     const { sectionName, unversionedSchemaVersion, contents } = sections;
     if (contents.length !== 1) {

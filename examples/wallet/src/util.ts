@@ -34,7 +34,6 @@ import {
     nodePort,
     walletProxyBaseUrl,
 } from './constants';
-import { filterRecord, mapRecord } from '../../../packages/sdk/lib/esm/util';
 
 // Redirect URI used in the identity creation protocol.
 // This determines where the identity provider will redirect the
@@ -67,6 +66,41 @@ export function getDefaultTransactionExpiry() {
     return TransactionExpiry.fromDate(
         new Date(Date.now() + DEFAULT_TRANSACTION_EXPIRY)
     );
+}
+
+// Maps a `Record<A,C>` to a `Record<B,D>`.
+// Works the same way as a list mapping, allowing both a value and key mapping.
+// If `keyMapper()` is not provided, it will map `Record<A,C>` to `Record<A,D>`
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export function mapRecord<
+    A extends string | number | symbol,
+    B,
+    C extends string | number | symbol,
+    D
+>(
+    rec: Record<A, B>,
+    valMapper: (x: B) => D,
+    keyMapper: (x: A) => C = (a: any) => a
+): Record<C, D> {
+    const ret: any = {};
+    for (const i in rec) {
+        ret[keyMapper(i)] = valMapper(rec[i]);
+    }
+    return ret;
+}
+
+/**
+ * Filters entries from a record
+ * @param rec the record, whose entries should be filtered.
+ * @param predicate predicate to test entries, only if this returns true does the entry remain
+ */
+export function filterRecord<A extends string | number | symbol, B>(
+    rec: Record<A, B>,
+    predicate: (k: A, v: B) => boolean
+): Record<A, B> {
+    return Object.fromEntries(
+        Object.entries(rec).filter(([k, v]) => predicate(k as A, v as B))
+    ) as Record<A, B>;
 }
 
 /**

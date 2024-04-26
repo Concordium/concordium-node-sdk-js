@@ -12,6 +12,26 @@ From the root of concordium-node-sdk-js you must run
 yarn install
 ```
 
+### Skip building
+
+An alternative to building all of the packages in the project, you can change the code base to use the builds already published on NPM, note that this might not work for unreleased changes:
+
+- Remove packages from the workspace i.e remove the line with `"./packages/*",` from `package.json` in the project root.
+- Replace `workspace:^` in `package.json` found in this example with `*`:
+
+  ```json
+  ...
+  "@concordium/web-sdk": "*",
+  ```
+
+Then run:
+
+```shell
+yarn workspaces focus @concordium/examples-web-wallet
+```
+
+to only install dependencies related to examples.
+
 ## Running
 
 When dependencies have been installed, then build and run the example by executing

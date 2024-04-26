@@ -1,5 +1,6 @@
 {
-    "name": "web-wallet",
+    "name": "@concordium/examples-web-wallet",
+    "private": true,
     "packageManager": "yarn@3.2.0",
     "dependencies": {
         "@concordium/web-sdk": "workspace:^",
@@ -16,6 +17,7 @@
         "@types/react-dom": "^18.0.5",
         "@vitejs/plugin-react-swc": "^3.4.0",
         "eslint": "^8.50.0",
+        "ts-node": "10.9",
         "typescript": "^5.2.2",
         "vite": "^4.5.0",
         "vite-plugin-svgr": "^4.1.0",

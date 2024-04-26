@@ -19,8 +19,8 @@ describe('VersionedModuleSource: getEmbeddedModuleSchema', () => {
             )
         );
         const moduleSource = versionedModuleSourceFromBuffer(contractModule);
-        const moduleSchema = await getEmbeddedModuleSchema(moduleSource);
-        if (moduleSchema === null) {
+        const moduleSchema = getEmbeddedModuleSchema(moduleSource);
+        if (moduleSchema === undefined) {
             fail('Failed to find module schame');
         }
         expect(moduleSchema.type).toBe('versioned');
@@ -34,8 +34,8 @@ describe('VersionedModuleSource: getEmbeddedModuleSchema', () => {
             )
         );
         const moduleSource = versionedModuleSourceFromBuffer(contractModule);
-        const moduleSchema = await getEmbeddedModuleSchema(moduleSource);
-        if (moduleSchema === null) {
+        const moduleSchema = getEmbeddedModuleSchema(moduleSource);
+        if (moduleSchema === undefined) {
             fail('Failed to find module schame');
         }
         expect(moduleSchema.type).toBe('versioned');
@@ -52,8 +52,8 @@ describe('VersionedModuleSource: getEmbeddedModuleSchema', () => {
             version: 0,
             source: Buffer.from(unversionedContractModule),
         } as const;
-        const moduleSchema = await getEmbeddedModuleSchema(moduleSource);
-        if (moduleSchema === null) {
+        const moduleSchema = getEmbeddedModuleSchema(moduleSource);
+        if (moduleSchema === undefined) {
             fail('Failed to find module schame');
         }
         expect(moduleSchema.type).toBe('unversioned');
@@ -67,8 +67,8 @@ describe('VersionedModuleSource: getEmbeddedModuleSchema', () => {
             )
         );
         const moduleSource = versionedModuleSourceFromBuffer(contractModule);
-        const moduleSchema = await getEmbeddedModuleSchema(moduleSource);
-        if (moduleSchema === null) {
+        const moduleSchema = getEmbeddedModuleSchema(moduleSource);
+        if (moduleSchema === undefined) {
             fail('Failed to find module schame');
         }
         expect(moduleSchema.type).toBe('unversioned');

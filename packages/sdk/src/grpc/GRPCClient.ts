@@ -28,7 +28,6 @@ import {
     mapRecord,
     mapStream,
     unwrap,
-    wasmToSchema,
 } from '../util.js';
 import { serializeAccountTransactionPayload } from '../serialization.js';
 import type {
@@ -46,6 +45,8 @@ import * as Energy from '../types/Energy.js';
 import * as SequenceNumber from '../types/SequenceNumber.js';
 import * as ReceiveName from '../types/ReceiveName.js';
 import * as Timestamp from '../types/Timestamp.js';
+import { getEmbeddedModuleSchema } from '../types/VersionedModuleSource.js';
+import { RawModuleSchema } from '../schemaTypes.js';
 
 /**
  * @hidden
@@ -225,19 +226,16 @@ export class ConcordiumGRPCClient {
      * @param moduleRef the module's reference, represented by the ModuleReference class.
      * @param blockHash optional block hash to get the module embedded schema at, otherwise retrieves from last finalized block
      *
-     * @returns the module schema as a buffer.
-     * @throws An error of type `RpcError` if not found in the block.
-     * @throws If the module or schema cannot be parsed
+     * @returns the module schema as a {@link RawModuleSchema} or `null` if not found in the block.
+     * @throws An error of type `RpcError` if the module was not found in the block.
+     * @throws If the module source cannot be parsed or contains duplicate schema sections.
      */
     async getEmbeddedSchema(
         moduleRef: ModuleReference.Type,
         blockHash?: BlockHash.Type
-    ): Promise<Uint8Array> {
-        const versionedSource = await this.getModuleSource(
-            moduleRef,
-            blockHash
-        );
-        return wasmToSchema(versionedSource.source);
+    ): Promise<RawModuleSchema | undefined> {
+        const source = await this.getModuleSource(moduleRef, blockHash);
+        return getEmbeddedModuleSchema(source);
     }
 
     /**

@@ -25,7 +25,7 @@ export * from '../signHelpers.js';
 export * from '../versionedTypeHelpers.js';
 export * from '../accountHelpers.js';
 
-export { isHex, streamToList, wasmToSchema, unwrap } from '../util.js';
+export { isHex, streamToList, unwrap } from '../util.js';
 
 export * from '../accountTransactions.js';
 export * from '../energyCost.js';

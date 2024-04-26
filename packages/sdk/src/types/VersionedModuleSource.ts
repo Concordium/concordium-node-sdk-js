@@ -3,8 +3,7 @@ import * as H from '../contractHelpers.js';
 import { sha256 } from '../hash.js';
 import { Buffer } from 'buffer/index.js';
 import { VersionedModuleSource } from '../types.js';
-import { schemaBytesFromWasmModule } from '../util.js';
-import { RawModuleSchema } from '../schemaTypes.js';
+import { RawModuleSchema, UnversionedSchemaVersion } from '../schemaTypes.js';
 import { Cursor, deserializeUInt32BE } from '../deserializationHelpers.js';
 import { encodeWord32 } from '../serializationHelpers.js';
 
@@ -109,33 +108,61 @@ export async function parseModuleInterface(
  * Extract the embedded smart contract schema bytes. Returns `null` if no schema is embedded.
  * @param {VersionedModuleSource} moduleSource The smart contract module source.
  * @returns {RawModuleSchema | null} The raw module schema if found.
+ * @throws If the module source cannot be parsed or contains duplicate schema sections.
  */
-export async function getEmbeddedModuleSchema(
-    moduleSource: VersionedModuleSource
-): Promise<RawModuleSchema | null> {
-    const wasmModule = await WebAssembly.compile(moduleSource.source);
-    const versionedSchema = schemaBytesFromWasmModule(
-        wasmModule,
-        'concordium-schema'
+export function getEmbeddedModuleSchema({
+    source,
+    version,
+}: VersionedModuleSource): RawModuleSchema | undefined {
+    const sections = findCustomSections(
+        new WebAssembly.Module(source),
+        version
     );
-    if (versionedSchema !== null) {
-        return { type: 'versioned', buffer: versionedSchema };
+    if (sections === undefined) {
+        return undefined;
     }
-    const unversionedSchemaV0 = schemaBytesFromWasmModule(
-        wasmModule,
-        'concordium-schema-v1'
-    );
-    if (unversionedSchemaV0 !== null) {
-        return { type: 'unversioned', version: 0, buffer: unversionedSchemaV0 };
+    const { sectionName, unversionedSchemaVersion, contents } = sections;
+    if (contents.length !== 1) {
+        throw new Error(
+            `invalid module: expected to find at most one custom section named "${sectionName}", but found ${contents.length}`
+        );
     }
-    const unversionedSchemaV1 = schemaBytesFromWasmModule(
-        wasmModule,
-        'concordium-schema-v2'
-    );
-    if (unversionedSchemaV1 !== null) {
-        return { type: 'unversioned', version: 1, buffer: unversionedSchemaV1 };
+    const schema = contents[0];
+    if (unversionedSchemaVersion !== undefined) {
+        return {
+            type: 'unversioned',
+            version: unversionedSchemaVersion,
+            buffer: schema,
+        };
     }
-    return null;
+    return { type: 'versioned', buffer: schema };
+}
+
+function findCustomSections(m: WebAssembly.Module, moduleVersion: number) {
+    function getCustomSections(
+        sectionName: string,
+        unversionedSchemaVersion: UnversionedSchemaVersion | undefined
+    ) {
+        const s = WebAssembly.Module.customSections(m, sectionName);
+        return s.length === 0
+            ? undefined
+            : { sectionName, unversionedSchemaVersion, contents: s };
+    }
+
+    // First look for section containing schema with embedded version, then "-v1" or "-v2" depending on the module version.
+    switch (moduleVersion) {
+        case 0:
+            return (
+                getCustomSections('concordium-schema', undefined) || // always v0
+                getCustomSections('concordium-schema-v1', 0) // v0 (not a typo)
+            );
+        case 1:
+            return (
+                getCustomSections('concordium-schema', undefined) || // v1, v2, or v3
+                getCustomSections('concordium-schema-v2', 1) // v1 (not a typo)
+            );
+    }
+    return getCustomSections('concordium-schema', undefined); // expecting to find this section in future module versions
 }
 
 /**

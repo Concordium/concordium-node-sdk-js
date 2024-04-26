@@ -39,7 +39,7 @@ export function toOptionJson<T>(value: T | undefined): OptionJson<T> {
 }
 
 /** Schema version from before the schema bytes contained version information. */
-type UnversionedSchemaVersion = 0 | 1;
+export type UnversionedSchemaVersion = 0 | 1;
 
 /**
  * Represents unparsed bytes for a smart contract module schema.

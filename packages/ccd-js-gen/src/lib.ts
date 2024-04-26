@@ -199,9 +199,7 @@ async function generateCode(
     notifier.done('Parse smart contract module.');
 
     const moduleSchema =
-        rawModuleSchema === null
-            ? null
-            : SDK.parseRawModuleSchema(rawModuleSchema);
+        rawModuleSchema && SDK.parseRawModuleSchema(rawModuleSchema);
 
     const outputFilePath = path.format({
         dir: outDirPath,

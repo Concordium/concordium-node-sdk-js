@@ -32,9 +32,6 @@ const TEST_BLOCK = BlockHash.fromHexString(
     '5f11cac7e4b81784dda33d46ffdef94e886db3321fb3a995f6b63eef8d4b68b7'
 );
 
-const in5Minutes = () =>
-    Timestamp.fromDate(new Date(Date.now() + 1000 * 60 * 5));
-
 async function getContract() {
     const nodeClient = getNodeClientV2();
     return await CIS3Contract.create(nodeClient, CIS2_MULTI_CONTRACT);
@@ -52,7 +49,7 @@ async function makePermitParams(): Promise<CIS3.PermitParam> {
     const message: CIS3.PermitMessage = {
         contractAddress: CIS2_MULTI_CONTRACT,
         nonce: 0n,
-        timestamp: in5Minutes(),
+        timestamp: Timestamp.futureMinutes(5),
         entrypoint: EntrypointName.fromString('transfer'),
         payload: Parameter.fromBuffer(payload),
     };

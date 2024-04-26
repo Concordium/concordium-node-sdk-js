@@ -14,7 +14,7 @@
 - `Parameter.parseWithSchemaTypeBase64` and `Parameter.parseWithSchemaType` to
   help parsing smart contract parameters into typed structures.
 - Documentation on when`TransactionExpiry.toJSON` throws an error.
-
+- `Timestamp.futureMinutes` for creating a `Timestamp` a number of minutes in the future.
 
 ### Fixed
 

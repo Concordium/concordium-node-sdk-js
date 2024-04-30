@@ -77,6 +77,16 @@ export function fromDate(date: Date): Timestamp {
     return fromMillis(date.getTime());
 }
 
+/**
+ * Construct a Timestamp minutes in the future from the time of calling this function.
+ * @param {number} minutes The number of minutes in the future to set as the expiry time.
+ * @returns {Timestamp} The transaction expiry.
+ */
+export function futureMinutes(minutes: number): Timestamp {
+    const timestampMillis = Date.now() + minutes * 60 * 1000;
+    return fromDate(new Date(timestampMillis));
+}
+
 /** Type used when encoding a timestamp in the JSON format used when serializing using a smart contract schema type. */
 export type SchemaValue = string;
 

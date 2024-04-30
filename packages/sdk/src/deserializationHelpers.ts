@@ -160,3 +160,33 @@ export const makeDeserializeListResponse =
 
         return values;
     };
+
+/**
+ * Helper function to create a function that deserializes a `HexString` value into either a value or a list of values,
+ * depending on a given input value. The returned function will produce a single value if the input is not an array
+ * or an array of length 1, and a list of values of the same length as the input if it is an array.
+ *
+ * @param {T} input - The input value to compare the deserialized value against.
+ * @param {Function} deserializer - A deserialization function that takes a `HexString` value and returns a list of deserialized values.
+ *
+ * @returns {Function} A function taking a single `HexString` input, returning either a single value or a list of values.
+ */
+export const ensureMatchesInput =
+    <T, R>(input: T, deserializer: (value: HexString) => R[]) =>
+    (value: HexString): R[] | R => {
+        const result = deserializer(value);
+        const expectList = Array.isArray(input);
+        const expectLength = expectList ? input.length : 1;
+
+        if (result.length !== expectLength) {
+            throw new Error(
+                `Expected list with length ${expectLength} when deserializing response, received list with length ${result.length}`
+            );
+        }
+
+        if (expectList) {
+            return result;
+        }
+
+        return result[0];
+    };

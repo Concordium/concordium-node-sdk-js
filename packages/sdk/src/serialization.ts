@@ -65,13 +65,9 @@ function serializeAccountTransactionHeader(
 /**
  * Serializes a map of account transaction signatures. If no signatures are provided,
  * then an error is thrown.
- *
- * If `serializeSignatureLength` is `true` (default), the lengths of the inner signatures
- * are serialized. Otherwise, the length is not serialized.
  */
 export function serializeAccountTransactionSignature(
-    signatures: AccountTransactionSignature,
-    serializeSignatureLength = true
+    signatures: AccountTransactionSignature
 ): Buffer {
     if (Object.keys(signatures).length === 0) {
         throw new Error('No signatures were provided');
@@ -79,13 +75,9 @@ export function serializeAccountTransactionSignature(
 
     const putSignature = (signature: string) => {
         const signatureBytes = Buffer.from(signature, 'hex');
-        if (serializeSignatureLength) {
-            const length = Buffer.alloc(2);
-            length.writeUInt16BE(signatureBytes.length, 0);
-            return Buffer.concat([length, signatureBytes]);
-        } else {
-            return Buffer.concat([Buffer.from([0]), signatureBytes]);
-        }
+        const length = Buffer.alloc(2);
+        length.writeUInt16BE(signatureBytes.length, 0);
+        return Buffer.concat([length, signatureBytes]);
     };
     const putCredentialSignatures = (credSig: CredentialSignature) =>
         serializeMap(credSig, encodeWord8, encodeWord8FromString, putSignature);

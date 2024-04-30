@@ -1,3 +1,4 @@
+import { Buffer } from 'buffer/index.js';
 import * as ContractAddress from '../types/ContractAddress.js';
 import * as Timestamp from '../types/Timestamp.js';
 import * as EntrypointName from '../types/EntrypointName.js';
@@ -9,6 +10,7 @@ import {
     Base58String,
     BlockItemSummary,
     ContractTraceEvent,
+    CredentialSignature,
     HexString,
     InvokeContractSuccessResult,
     TransactionKindString,
@@ -19,9 +21,14 @@ import {
     serializeContractAddress,
     serializeReceiveHookName,
 } from '../cis2/util.js';
-import { encodeWord16, encodeWord64 } from '../serializationHelpers.js';
+import {
+    encodeWord16,
+    encodeWord64,
+    encodeWord8,
+    encodeWord8FromString,
+    serializeMap,
+} from '../serializationHelpers.js';
 import { serializeDate } from '../cis4/util.js';
-import { serializeAccountTransactionSignature } from '../serialization.js';
 import {
     Cursor,
     makeDeserializeListResponse,
@@ -164,14 +171,37 @@ export function serializeCIS3PermitPayload(payload: Parameter.Type): Buffer {
  * @returns {Buffer} The serialized parameter.
  */
 export function serializeCIS3PermitParam(param: CIS3.PermitParam): Buffer {
-    const signature = serializeAccountTransactionSignature(
-        param.signature,
-        false
-    );
+    const signature = serializeCIS3AccountTransactionSignature(param.signature);
     const signer = serializeAccountAddress(param.signer);
     const message = serializeCIS3PermitMessage(param.message);
 
     return Buffer.concat([signature, signer, message]);
+}
+
+/**
+ * Serializes a map of account transaction signatures according to the CIS-3 standard.
+ * If no signatures are provided, then an error is thrown.
+ */
+export function serializeCIS3AccountTransactionSignature(
+    signatures: AccountTransactionSignature
+): Buffer {
+    if (Object.keys(signatures).length === 0) {
+        throw new Error('No signatures were provided');
+    }
+
+    const putSignature = (signature: string) => {
+        const signatureBytes = Buffer.from(signature, 'hex');
+        // CIS-3 requires a 0 byte prefix for each signature
+        return Buffer.concat([Buffer.from([0]), signatureBytes]);
+    };
+    const putCredentialSignatures = (credSig: CredentialSignature) =>
+        serializeMap(credSig, encodeWord8, encodeWord8FromString, putSignature);
+    return serializeMap(
+        signatures,
+        encodeWord8,
+        encodeWord8FromString,
+        putCredentialSignatures
+    );
 }
 
 /**

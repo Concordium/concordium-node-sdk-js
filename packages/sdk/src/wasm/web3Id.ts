@@ -1,8 +1,8 @@
 import * as wasm from '@concordium/rust-bindings/wallet';
 import { stringify } from 'json-bigint';
-import { VerifyWeb3IdCredentialSignatureInput } from '../web3-id/web3IdHelpers.js';
-import { Web3IdProofInput } from '../web3-id/web3IdProofTypes.js';
-import { VerifiablePresentation } from '../types/VerifiablePresentation.js';
+import { VerifyWeb3IdCredentialSignatureInput } from '../web3-id/helpers.ts';
+import { Web3IdProofInput } from '../web3-id/types.ts';
+import { VerifiablePresentation } from '../types/VerifiablePresentation.ts';
 
 /**
  * Verifies that the given signature is correct for the given values/randomness/holder/issuerPublicKey/issuerContract

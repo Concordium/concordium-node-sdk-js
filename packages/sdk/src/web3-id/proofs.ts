@@ -6,8 +6,8 @@ import {
     AttributesKeys,
     HexString,
     Network,
-} from '../types.js';
-import type * as ContractAddress from '../types/ContractAddress.js';
+} from '../types.ts';
+import type * as ContractAddress from '../types/ContractAddress.ts';
 import {
     AtomicStatementV2,
     IdentityQualifier,
@@ -27,22 +27,22 @@ import {
     AttributeType,
     isTimestampAttribute,
     StatementAttributeType,
-} from './web3IdProofTypes.js';
-import { getPastDate } from '../id/idProofs.js';
+} from './types.ts';
+import { getPastDate } from '../id/idProofs.ts';
 import {
     StatementTypes,
     StatementBuilder,
     MIN_DATE,
     MAX_DATE,
     EU_MEMBERS,
-} from '../commonProofTypes.js';
-import { ConcordiumHdWallet } from '../wasm/HdWallet.js';
+} from '../commonProofTypes.ts';
+import { ConcordiumHdWallet } from '../wasm/HdWallet.ts';
 import {
     compareStringAttributes,
     isStringAttributeInRange,
     statementAttributeTypeToAttributeType,
     timestampToDate,
-} from './web3IdHelpers.js';
+} from './helpers.ts';
 
 export const MAX_STRING_BYTE_LENGTH = 31;
 export const MAX_U64 = 18446744073709551615n; // 2n ** 64n - 1n

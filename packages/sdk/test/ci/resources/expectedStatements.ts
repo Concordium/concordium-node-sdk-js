@@ -1,5 +1,5 @@
 import { ContractAddress } from '../../../src/index.js';
-import { CredentialStatement } from '../../../src/web3-id/web3IdProofTypes.js';
+import { CredentialStatement } from '../../../src/web3-id/types.ts';
 
 export const expectedStatementMixed: CredentialStatement[] = [
     {

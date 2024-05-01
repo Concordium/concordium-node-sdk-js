@@ -1,6 +1,6 @@
-import { GenericAtomicStatement, AtomicProof } from '../commonProofTypes.js';
+import { GenericAtomicStatement, AtomicProof } from '../commonProofTypes.ts';
 import JSONBigInt from 'json-bigint';
-import { AttributeType } from '../web3-id/web3IdProofTypes.js';
+import { AttributeType } from '../web3-id/types.ts';
 
 type DIDString = string;
 
@@ -68,8 +68,6 @@ export function reviveDateFromTimeStampAttribute(
     }
     return value;
 }
-
-/* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 
 export class VerifiablePresentation {
     presentationContext: string;

@@ -3,7 +3,7 @@ use concordium_base::{
     base::{BakerAggregationSignKey, BakerElectionSignKey, BakerKeyPairs, BakerSignatureSignKey},
     cis4_types::IssuerKey,
     common::{
-        types::{KeyIndex, KeyPair, TransactionTime},
+        types::{KeyIndex, TransactionTime},
         *,
     },
     contracts_common::ContractAddress,
@@ -25,6 +25,7 @@ use concordium_base::{
     },
 };
 use concordium_rust_bindings_common::types::{HexString, JsonString};
+use ed25519_dalek::{SigningKey, VerifyingKey};
 use either::Either::Left;
 use key_derivation::{ConcordiumHdWallet, CredentialContext, Net};
 use rand::thread_rng;
@@ -174,8 +175,8 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<JsonString> {
             input.identity_index,
             u32::from(input.cred_number),
         )?;
-        let public = (&secret).into();
-        keys.insert(KeyIndex(0), KeyPair { secret, public });
+        let secret = ed25519_dalek::SigningKey::from_bytes(&secret);
+        keys.insert(KeyIndex(0), secret.into());
 
         CredentialData {
             keys,
@@ -447,7 +448,7 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<JsonString> {
 struct Web3SecretKey(#[serde(deserialize_with = "base16_decode")] ed25519_dalek::SecretKey);
 
 impl Web3IdSigner for Web3SecretKey {
-    fn id(&self) -> ed25519_dalek::PublicKey { self.0.id() }
+    fn id(&self) -> VerifyingKey { SigningKey::from_bytes(&self.0).verifying_key() }
 
     fn sign(&self, msg: &impl AsRef<[u8]>) -> ed25519_dalek::Signature { self.0.sign(msg) }
 }

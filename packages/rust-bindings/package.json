@@ -83,7 +83,7 @@
     ],
     "scripts": {
         "fmt": "cargo +nightly-2023-04-01-x86_64-unknown-linux-gnu fmt -- --color=always --check",
-        "clippy": "cargo +1.62 clippy --color=always --tests --benches -- -Dclippy::all",
+        "clippy": "cargo +1.73 clippy --color=always --tests --benches -- -Dclippy::all",
         "build-web": "wasm-pack build ./packages/$0 --target web --out-dir $INIT_CWD/lib/$0/web/esm --out-name index",
         "build-node": "wasm-pack build ./packages/$0 --target nodejs --out-dir $INIT_CWD/lib/$0/node/cjs --out-name index",
         "build-bundler": "wasm-pack build ./packages/$0 --target bundler --out-dir $INIT_CWD/lib/$0/bundler --out-name index",

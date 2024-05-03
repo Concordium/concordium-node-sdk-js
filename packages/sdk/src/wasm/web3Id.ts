@@ -3,6 +3,7 @@ import { stringify } from 'json-bigint';
 import { VerifyWeb3IdCredentialSignatureInput } from '../web3-id/helpers.ts';
 import { Web3IdProofInput } from '../web3-id/types.ts';
 import { VerifiablePresentation } from '../types/VerifiablePresentation.ts';
+import { CryptographicParameters } from '../types.ts';
 
 /**
  * Verifies that the given signature is correct for the given values/randomness/holder/issuerPublicKey/issuerContract
@@ -29,4 +30,20 @@ export function getVerifiablePresentation(
     } catch (e) {
         throw new Error(e as string);
     }
+}
+
+type VerificationResult = unknown; // TODO: define type
+type CredentialsInputs = unknown; // TODO: define type
+// TODO: document
+export function verifyPresentation(
+    presentation: VerifiablePresentation,
+    globalContext: CryptographicParameters,
+    credentialInputs: CredentialsInputs
+): VerificationResult {
+    const result = wasm.verifyPresentation(
+        JSON.stringify(presentation),
+        JSON.stringify(globalContext),
+        JSON.stringify(credentialInputs)
+    );
+    return JSON.parse(result);
 }

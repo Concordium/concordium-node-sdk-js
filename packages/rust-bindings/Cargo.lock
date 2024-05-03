@@ -441,6 +441,7 @@ dependencies = [
  "anyhow",
  "concordium_base",
  "concordium_rust_bindings_common",
+ "getrandom",
  "hex",
  "serde-wasm-bindgen",
  "serde_json",

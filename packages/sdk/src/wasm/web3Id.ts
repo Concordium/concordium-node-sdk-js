@@ -1,7 +1,11 @@
 import * as wasm from '@concordium/rust-bindings/wallet';
 import { stringify } from 'json-bigint';
 import { VerifyWeb3IdCredentialSignatureInput } from '../web3-id/helpers.ts';
-import { Web3IdProofInput } from '../web3-id/types.ts';
+import {
+    CredentialsInputs,
+    VerificationResult,
+    Web3IdProofInput,
+} from '../web3-id/types.ts';
 import { VerifiablePresentation } from '../types/VerifiablePresentation.ts';
 import { CryptographicParameters } from '../types.ts';
 
@@ -32,8 +36,6 @@ export function getVerifiablePresentation(
     }
 }
 
-type VerificationResult = unknown; // TODO: define type
-type CredentialsInputs = unknown; // TODO: define type
 // TODO: document
 export function verifyPresentation(
     presentation: VerifiablePresentation,

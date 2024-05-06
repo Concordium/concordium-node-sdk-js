@@ -1,3 +1,4 @@
+import { CIS4 } from '../cis4/util.ts';
 import {
     GenericAtomicStatement,
     GenericRevealStatement,
@@ -248,3 +249,29 @@ export type CredentialSubject = {
     id: string;
     attributes: Record<string, AttributeType>;
 };
+
+// TODO: doc
+export type CredentialsInputsAccount = {
+    type: 'account';
+    commitments: unknown; // TODO: ??
+};
+
+// TODO: doc
+export type CredentialsInputsWeb3 = {
+    type: 'web3';
+    issuerPk: string;
+};
+
+// TODO: doc
+export type CredentialsInputs =
+    | CredentialsInputsAccount
+    | CredentialsInputsWeb3;
+
+// TODO: doc
+export type CredentialWithMetadata = {
+    status: CIS4.CredentialStatus;
+    credentialsInputs: CredentialsInputs;
+};
+
+// TODO: doc
+export type VerificationResult = unknown; // TODO: define type

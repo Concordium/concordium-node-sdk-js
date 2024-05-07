@@ -1,10 +1,10 @@
-name: Deploy ccd-js-gen
+name: Deploy rust-bindings
 
 on:
     # Run automatically on tag push
     push:
         tags: 
-            - ccd-js-gen/*
+            - rust-bindings/*
     # Allows you to run this workflow manually from the Actions tab
     workflow_dispatch:
 
@@ -17,7 +17,7 @@ permissions:
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
-    group: "deploy-ccdjsgen"
+    group: "deploy-rustbindings"
     cancel-in-progress: false
 
 env:
@@ -92,6 +92,7 @@ jobs:
         runs-on: ubuntu-latest
         permissions:
             contents: write
+        environment: deploy-rust-bindings
         steps:
             - name: Checkout sources
               uses: actions/checkout@v4
@@ -100,10 +101,10 @@ jobs:
 
             - name: Extract tag name
               id: get_tag
-              run: echo "::set-output name=tag::${GITHUB_REF#refs/tags/ccd-js-gen/}"
+              run: echo "::set-output name=tag::${GITHUB_REF#refs/tags/rust-bindings/}"
 
             - name: Test that tag version matches package.json version
-              run: test "${{ steps.get_tag.outputs.tag }}" = "$(jq -r ".version" packages/ccd-js-gen/package.json)" || exit 1
+              run: test "${{ steps.get_tag.outputs.tag }}" = "$(jq -r ".version" packages/rust-bindings/package.json)" || exit 1
 
             - name: Get build-output
               uses: actions/download-artifact@v4
@@ -114,13 +115,13 @@ jobs:
             - name: Create a GitHub release
               uses: ncipollo/release-action@v1
               with:
-                  tag: ccd-js-gen/v${{ steps.get_tag.outputs.tag_name }}
-                  name: CCD-JS-Gen Release v${{ steps.get_tag.outputs.tag_name }}
+                  tag: rust-bindings/v${{ steps.get_tag.outputs.tag_name }}
+                  name: Rust-Bindings Release v${{ steps.get_tag.outputs.tag_name }}
                   artifacts: |
                       packages/*
                   draft: true
 
             - name: Publish to NPM
-              run: npm publish --workspace packages/ccd-js-gen
+              run: npm publish --workspace packages/rust-bindings
               env:
                   NODE_AUTH_TOKEN: '${{secrets.NPM_TOKEN}}'

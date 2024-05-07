@@ -157,6 +157,7 @@ jobs:
         runs-on: ubuntu-latest
         permissions:
             contents: write
+        environment: deploy-sdk
         steps:
             - name: Checkout sources
               uses: actions/checkout@v4

@@ -270,7 +270,7 @@ export type CredentialsInputs =
 // TODO: doc
 export type CredentialWithMetadata = {
     status: CIS4.CredentialStatus;
-    credentialsInputs: CredentialsInputs;
+    inputs: CredentialsInputs;
 };
 
 // TODO: doc

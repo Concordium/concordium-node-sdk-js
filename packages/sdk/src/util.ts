@@ -235,3 +235,12 @@ export function isDefined<T>(v?: T): v is T {
 export function toBuffer(s: string, encoding?: string): Buffer {
     return Buffer.from(s, encoding);
 }
+
+/**
+ * Immediately returns an {@linkcode Error} with the message passed.
+ * @param message - The message to pass to the error
+ * @throws an error immediately
+ */
+export const bail = (message: string): never => {
+    throw new Error(message);
+};

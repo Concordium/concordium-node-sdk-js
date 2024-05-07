@@ -1,5 +1,6 @@
 import { CryptographicParameters } from '../types.ts';
 import type * as ContractAddress from '../types/ContractAddress.ts';
+import { bail } from '../util.ts';
 import {
     AttributeType,
     StatementAttributeType,
@@ -91,4 +92,23 @@ export function statementAttributeTypeToAttributeType(
         return dateToTimestampAttribute(statementAttribute);
     }
     return statementAttribute;
+}
+
+/**
+ * Parses a {@linkcode Date} from a string containing a year and month in the form "YYYYMM".
+ *
+ * @param yearMonth - The string to parse
+ * @returns the parsed {@linkcode Date}
+ * @throws if the date cannot be parsed
+ */
+export function parseYearMonth(yearMonth: string): Date {
+    const b = () => bail('Failed to parse date from year-month string');
+
+    const [, y, m] = yearMonth.match(/^(\d{4})(\d{2})$/) ?? b();
+
+    const year = Number(y);
+    const month = Number(m) - 1; // `Date` month starts from 0, we expect january to be defined as '01'
+    if (Number.isNaN(year) || Number.isNaN(month) || month > 11) b();
+
+    return new Date(year, month);
 }

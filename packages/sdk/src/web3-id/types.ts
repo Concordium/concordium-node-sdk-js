@@ -252,13 +252,13 @@ export type CredentialSubject = {
 
 // TODO: doc
 export type CredentialsInputsAccount = {
-    type: 'account';
+    type: 'Account';
     commitments: Partial<Record<AttributeKey, HexString>>;
 };
 
 // TODO: doc
 export type CredentialsInputsWeb3 = {
-    type: 'web3';
+    type: 'Web3';
     issuerPk: HexString;
 };
 

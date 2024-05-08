@@ -33,8 +33,6 @@ export type CredentialSubjectProof<P extends StatementProofAccount> = {
  * Matches the serialization of `CredentialProof::Account` from concordium-base
  */
 export type VerifiableCredentialProofAccount = {
-    /** Tagged union discriminator */
-    tag: 'account';
     credentialSubject: CredentialSubjectProof<StatementProofAccount>;
     issuer: DIDString;
     type: ['VerifiableCredential', 'ConcordiumVerifiableCredential'];
@@ -44,8 +42,6 @@ export type VerifiableCredentialProofAccount = {
  * Matches the serialization of `CredentialProof::Web3Id` from concordium-base
  */
 export type VerifiableCredentialProofWeb3Id = {
-    /** Tagged union discriminator */
-    tag: 'web3Id';
     credentialSubject: CredentialSubjectProof<StatementProofWeb3Id>;
     issuer: DIDString;
     type: [
@@ -61,6 +57,18 @@ export type VerifiableCredentialProofWeb3Id = {
 export type VerifiableCredentialProof =
     | VerifiableCredentialProofAccount
     | VerifiableCredentialProofWeb3Id;
+
+/**
+ * Type predicate to check if the proof is a {@linkcode VerifiableCredentialProofWeb3Id}, or consequently a {@linkcode VerifiableCredentialProofAccount}
+ */
+export function isWeb3IdProof(
+    proof: VerifiableCredentialProof
+): proof is VerifiableCredentialProofWeb3Id {
+    return (
+        (proof as VerifiableCredentialProofWeb3Id).credentialSubject.proof
+            .commitments !== undefined
+    );
+}
 
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 

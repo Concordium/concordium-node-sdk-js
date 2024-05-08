@@ -12,6 +12,7 @@ import {
     VerifiableCredentialProof,
     VerifiableCredentialProofAccount,
     VerifiableCredentialProofWeb3Id,
+    isWeb3IdProof,
 } from '../types/VerifiablePresentation.js';
 import { bail } from '../util.js';
 import { parseYearMonth } from './helpers.js';
@@ -58,7 +59,7 @@ export async function verifyCredentialMetadata(
     blockHash?: BlockHash.Type
 ): Promise<CredentialWithMetadata> {
     const [, parsedNetwork] =
-        credential.credentialSubject.id.match(/did:ccd:(.*):.*/) ??
+        credential.credentialSubject.id.match(/did:ccd:(.*):.*:.*/) ??
         bail('Failed to parse network from credential');
     if (parsedNetwork.toLowerCase() !== network.toLowerCase()) {
         bail(
@@ -66,67 +67,57 @@ export async function verifyCredentialMetadata(
         );
     }
 
-    switch (credential.tag) {
-        case 'account': {
-            const { credId, issuer } = parseAccountProofMetadata(credential);
-            const ai = await grpc.getAccountInfo(credId, blockHash);
+    if (isWeb3IdProof(credential)) {
+        const { contract, holder } = parseWeb3IdProofMetadata(credential);
+        const cis4 = await CIS4Contract.create(grpc, contract);
 
-            const cred = Object.values(ai.accountCredentials).find((c) => {
-                const _credId =
-                    c.value.type === 'initial'
-                        ? c.value.contents.regId
-                        : c.value.contents.credId;
-                return credId.credId === _credId;
-            });
-            if (cred === undefined) {
-                throw new Error(
-                    `Could not find credential for account ${ai.accountAddress}`
-                );
-            }
-            if (cred.value.type === 'initial') {
-                throw new Error(
-                    `Initial credential ${cred.value.contents.regId} cannot be used`
-                );
-            }
-            const { ipIdentity, policy, commitments } = cred.value.contents;
-            if (ipIdentity !== issuer) {
-                throw new Error(
-                    'Mismatch between expected issuer and found issuer for credential'
-                );
-            }
+        const issuerPk = await cis4.issuer();
+        const status = await cis4.credentialStatus(holder);
 
-            // At this point, we know we're dealing with a "normal" account credential.
-            const validFrom = parseYearMonth(policy.createdAt);
-            const validUntil = parseYearMonth(policy.validTo);
+        const inputs: CredentialsInputsWeb3 = { type: 'Web3', issuerPk };
+        return { status, inputs };
+    } else {
+        const { credId, issuer } = parseAccountProofMetadata(credential);
+        const ai = await grpc.getAccountInfo(credId, blockHash);
 
-            const { blockSlotTime: now } = await grpc.getBlockInfo(blockHash);
-            let status = CIS4.CredentialStatus.Active;
-            if (validFrom > now) status = CIS4.CredentialStatus.NotActivated;
-            if (validUntil < now) status = CIS4.CredentialStatus.Expired;
-
-            const inputs: CredentialsInputsAccount = {
-                type: 'account',
-                commitments: commitments.cmmAttributes,
-            };
-            return { status, inputs };
-        }
-        case 'web3Id': {
-            const { contract, holder } = parseWeb3IdProofMetadata(credential);
-            const cis4 = await CIS4Contract.create(grpc, contract);
-
-            const issuerPk = await cis4.issuer();
-            const status = await cis4.credentialStatus(holder);
-
-            const inputs: CredentialsInputsWeb3 = { type: 'web3', issuerPk };
-            return { status, inputs };
-        }
-        default: {
+        const cred = Object.values(ai.accountCredentials).find((c) => {
+            const _credId =
+                c.value.type === 'initial'
+                    ? c.value.contents.regId
+                    : c.value.contents.credId;
+            return credId.credId === _credId;
+        });
+        if (cred === undefined) {
             throw new Error(
-                `Unknown tag for union found: ${
-                    (credential as VerifiableCredentialProof).tag
-                }`
+                `Could not find credential for account ${ai.accountAddress}`
             );
         }
+        if (cred.value.type === 'initial') {
+            throw new Error(
+                `Initial credential ${cred.value.contents.regId} cannot be used`
+            );
+        }
+        const { ipIdentity, policy, commitments } = cred.value.contents;
+        if (ipIdentity !== issuer) {
+            throw new Error(
+                'Mismatch between expected issuer and found issuer for credential'
+            );
+        }
+
+        // At this point, we know we're dealing with a "normal" account credential.
+        const validFrom = parseYearMonth(policy.createdAt);
+        const validUntil = parseYearMonth(policy.validTo);
+
+        const { blockSlotTime: now } = await grpc.getBlockInfo(blockHash);
+        let status = CIS4.CredentialStatus.Active;
+        if (validFrom > now) status = CIS4.CredentialStatus.NotActivated;
+        if (validUntil < now) status = CIS4.CredentialStatus.Expired;
+
+        const inputs: CredentialsInputsAccount = {
+            type: 'Account',
+            commitments: commitments.cmmAttributes,
+        };
+        return { status, inputs };
     }
 }
 

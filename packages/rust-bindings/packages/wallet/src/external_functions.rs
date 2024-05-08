@@ -291,23 +291,24 @@ pub fn verify_web3_id_credential_signature_ext(raw_input: JsonString) -> JsResul
     verify_web3_id_credential_signature_aux(input).map_err(to_js_error)
 }
 
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct VerifyPresentationInput {
+    presentation: Presentation<ArCurve, Web3IdAttribute>,
+    global_context: GlobalContext<ArCurve>,
+    public_data: Vec<CredentialsInputs<ArCurve>>,
+}
+
 #[wasm_bindgen(js_name = verifyPresentation)]
 pub fn verify_presentation(
-    presentation: JsonString,
-    global_context: JsonString,
-    public_data: JsonString,
+    input: JsonString,
 ) -> JsResult {
-    let presentation: Presentation<ArCurve, Web3IdAttribute> =
-        serde_json::from_str(&presentation).map_err(to_js_error)?;
-    let global_context: GlobalContext<ArCurve> =
-        serde_json::from_str(&global_context).map_err(to_js_error)?;
-    let public_data: Vec<CredentialsInputs<ArCurve>> =
-        serde_json::from_str(&public_data).map_err(to_js_error)?;
-
-    let request = presentation
-        .verify(&global_context, public_data.iter())
+    let input: VerifyPresentationInput =
+        serde_json::from_str(&input).map_err(to_js_error)?;
+    //
+    let request = input.presentation
+        .verify(&input.global_context, input.public_data.iter())
         .map_err(to_js_error)?;
     let request = serde_json::to_string(&request)?;
-
     Ok(request)
 }

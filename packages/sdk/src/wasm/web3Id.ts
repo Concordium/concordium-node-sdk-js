@@ -1,13 +1,13 @@
 import * as wasm from '@concordium/rust-bindings/wallet';
 import { stringify } from 'json-bigint';
-import { VerifyWeb3IdCredentialSignatureInput } from '../web3-id/helpers.ts';
+import { VerifyWeb3IdCredentialSignatureInput } from '../web3-id/helpers.js';
 import {
     CredentialsInputs,
     VerificationResult,
     Web3IdProofInput,
-} from '../web3-id/types.ts';
-import { VerifiablePresentation } from '../types/VerifiablePresentation.ts';
-import { CryptographicParameters } from '../types.ts';
+} from '../web3-id/types.js';
+import { VerifiablePresentation } from '../types/VerifiablePresentation.js';
+import { CryptographicParameters } from '../types.js';
 
 /**
  * Verifies that the given signature is correct for the given values/randomness/holder/issuerPublicKey/issuerContract
@@ -40,12 +40,9 @@ export function getVerifiablePresentation(
 export function verifyPresentation(
     presentation: VerifiablePresentation,
     globalContext: CryptographicParameters,
-    credentialInputs: CredentialsInputs
+    publicData: CredentialsInputs[]
 ): VerificationResult {
-    const result = wasm.verifyPresentation(
-        JSON.stringify(presentation),
-        JSON.stringify(globalContext),
-        JSON.stringify(credentialInputs)
-    );
+    const input = stringify({ presentation, globalContext, publicData });
+    const result = wasm.verifyPresentation(input);
     return JSON.parse(result);
 }

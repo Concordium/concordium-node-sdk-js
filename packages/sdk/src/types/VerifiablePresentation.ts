@@ -1,6 +1,6 @@
-import { GenericAtomicStatement, AtomicProof } from '../commonProofTypes.ts';
+import { GenericAtomicStatement, AtomicProof } from '../commonProofTypes.js';
 import JSONBigInt from 'json-bigint';
-import { AttributeType } from '../web3-id/types.ts';
+import { AttributeType } from '../web3-id/types.js';
 
 // TODO: Doc everything!
 type DIDString = string;

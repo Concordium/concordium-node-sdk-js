@@ -1,3 +1,3 @@
-export * from './types.ts';
-export * from './proofs.ts';
-export * from './helpers.ts';
+export * from './types.js';
+export * from './proofs.js';
+export * from './helpers.js';

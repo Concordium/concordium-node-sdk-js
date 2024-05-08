@@ -1,13 +1,13 @@
-import { CIS4 } from '../cis4/util.ts';
+import { CIS4 } from '../cis4/util.js';
 import {
     GenericAtomicStatement,
     GenericRevealStatement,
     GenericMembershipStatement,
     GenericNonMembershipStatement,
     GenericRangeStatement,
-} from '../commonProofTypes.ts';
-import type { CryptographicParameters } from '../types.ts';
-import type * as ContractAddress from '../types/ContractAddress.ts';
+} from '../commonProofTypes.js';
+import type { AttributeKey, CryptographicParameters, HexString } from '../types.js';
+import type * as ContractAddress from '../types/ContractAddress.js';
 
 export type TimestampAttribute = {
     type: 'date-time';
@@ -253,13 +253,13 @@ export type CredentialSubject = {
 // TODO: doc
 export type CredentialsInputsAccount = {
     type: 'account';
-    commitments: unknown; // TODO: ??
+    commitments: Partial<Record<AttributeKey, HexString>>;
 };
 
 // TODO: doc
 export type CredentialsInputsWeb3 = {
     type: 'web3';
-    issuerPk: string;
+    issuerPk: HexString;
 };
 
 // TODO: doc

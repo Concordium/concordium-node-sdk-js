@@ -74,7 +74,7 @@ export async function verifyCredentialMetadata(
         const issuerPk = await cis4.issuer();
         const status = await cis4.credentialStatus(holder);
 
-        const inputs: CredentialsInputsWeb3 = { type: 'Web3', issuerPk };
+        const inputs: CredentialsInputsWeb3 = { type: 'web3', issuerPk };
         return { status, inputs };
     } else {
         const { credId, issuer } = parseAccountProofMetadata(credential);
@@ -114,7 +114,7 @@ export async function verifyCredentialMetadata(
         if (validUntil < now) status = CIS4.CredentialStatus.Expired;
 
         const inputs: CredentialsInputsAccount = {
-            type: 'Account',
+            type: 'account',
             commitments: commitments.cmmAttributes,
         };
         return { status, inputs };

@@ -252,13 +252,13 @@ export type CredentialSubject = {
 
 // TODO: doc
 export type CredentialsInputsAccount = {
-    type: 'Account';
+    type: 'account';
     commitments: Partial<Record<AttributeKey, HexString>>;
 };
 
 // TODO: doc
 export type CredentialsInputsWeb3 = {
-    type: 'Web3';
+    type: 'web3';
     issuerPk: HexString;
 };
 
@@ -272,6 +272,3 @@ export type CredentialWithMetadata = {
     status: CIS4.CredentialStatus;
     inputs: CredentialsInputs;
 };
-
-// TODO: doc
-export type VerificationResult = unknown; // TODO: define type

@@ -3,8 +3,8 @@ import { stringify } from 'json-bigint';
 import { VerifyWeb3IdCredentialSignatureInput } from '../web3-id/helpers.js';
 import {
     CredentialsInputs,
-    VerificationResult,
     Web3IdProofInput,
+    Web3IdProofRequest,
 } from '../web3-id/types.js';
 import { VerifiablePresentation } from '../types/VerifiablePresentation.js';
 import { CryptographicParameters } from '../types.js';
@@ -41,7 +41,7 @@ export function verifyPresentation(
     presentation: VerifiablePresentation,
     globalContext: CryptographicParameters,
     publicData: CredentialsInputs[]
-): VerificationResult {
+): Web3IdProofRequest {
     const input = stringify({ presentation, globalContext, publicData });
     const result = wasm.verifyPresentation(input);
     return JSON.parse(result);

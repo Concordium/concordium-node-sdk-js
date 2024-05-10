@@ -6,7 +6,11 @@ import {
     GenericNonMembershipStatement,
     GenericRangeStatement,
 } from '../commonProofTypes.js';
-import type { AttributeKey, CryptographicParameters, HexString } from '../types.js';
+import type {
+    AttributeKey,
+    CryptographicParameters,
+    HexString,
+} from '../types.js';
 import type * as ContractAddress from '../types/ContractAddress.js';
 
 export type TimestampAttribute = {
@@ -250,25 +254,31 @@ export type CredentialSubject = {
     attributes: Record<string, AttributeType>;
 };
 
-// TODO: doc
+/** The credentials inputs required to verify the proof of account proofs */
 export type CredentialsInputsAccount = {
+    /** Union tag */
     type: 'account';
+    /** Commitments for the ID attributes of the account */
     commitments: Partial<Record<AttributeKey, HexString>>;
 };
 
-// TODO: doc
+/** The credentials inputs required to verify the proof of Web3 ID proofs */
 export type CredentialsInputsWeb3 = {
+    /** Union tag */
     type: 'web3';
+    /** The public key of the Web3 ID issuer */
     issuerPk: HexString;
 };
 
-// TODO: doc
+/** Union of the different inputs required to verify corresponding proofs */
 export type CredentialsInputs =
     | CredentialsInputsAccount
     | CredentialsInputsWeb3;
 
-// TODO: doc
+/** Contains the credential status and inputs required to verify a corresponding credential proof */
 export type CredentialWithMetadata = {
+    /** The credential status */
     status: CIS4.CredentialStatus;
+    /** The public data required to verify a corresponding credential proof */
     inputs: CredentialsInputs;
 };

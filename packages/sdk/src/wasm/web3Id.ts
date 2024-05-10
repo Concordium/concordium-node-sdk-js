@@ -36,7 +36,16 @@ export function getVerifiablePresentation(
     }
 }
 
-// TODO: document
+/**
+ * Verify the proofs contained in the {@linkcode VerifiablePresentation}.
+ *
+ * @param presentation - The verifiable presentation to verify.
+ * @param globalContext - The cryptographic parameters of the chain the presentation is created on.
+ * @param publicData - The public data corresponding to the proofs contained in the presentation.
+ *
+ * @returns The request corresponding to the verifable presentation, if verification is successful.
+ * @throws If the verification is not successful for any reason.
+ */
 export function verifyPresentation(
     presentation: VerifiablePresentation,
     globalContext: CryptographicParameters,

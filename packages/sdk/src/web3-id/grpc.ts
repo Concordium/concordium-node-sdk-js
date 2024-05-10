@@ -51,7 +51,17 @@ function parseWeb3IdProofMetadata(cred: VerifiableCredentialProofWeb3Id): {
     return { contract, holder };
 }
 
-// TODO: doc
+/**
+ * Verifies the public metadata of the {@linkcode VerifiableCredentialProof}.
+ *
+ * @param grpc - The {@linkcode ConcordiumGRPCClient} to use for querying
+ * @param network - The target network
+ * @param credential - The credential proof to verify metadata for
+ * @param [blockHash] - The block to verify the proof at. If not specified, the last finalized block is used.
+ *
+ * @returns The corresponding {@linkcode CredentialWithMetadata} if successful.
+ * @throws If credential proof could not be successfully verified
+ */
 export async function verifyCredentialMetadata(
     grpc: ConcordiumGRPCClient,
     network: Network,
@@ -63,7 +73,7 @@ export async function verifyCredentialMetadata(
         bail('Failed to parse network from credential');
     if (parsedNetwork.toLowerCase() !== network.toLowerCase()) {
         bail(
-            `Network found in credential (${parsedNetwork}) did not match expected network (${network})`
+            `Network found in credential (${parsedNetwork.toLowerCase()}) did not match expected network (${network.toLowerCase()})`
         );
     }
 
@@ -80,18 +90,16 @@ export async function verifyCredentialMetadata(
         const { credId, issuer } = parseAccountProofMetadata(credential);
         const ai = await grpc.getAccountInfo(credId, blockHash);
 
-        const cred = Object.values(ai.accountCredentials).find((c) => {
-            const _credId =
-                c.value.type === 'initial'
-                    ? c.value.contents.regId
-                    : c.value.contents.credId;
-            return credId.credId === _credId;
-        });
-        if (cred === undefined) {
-            throw new Error(
-                `Could not find credential for account ${ai.accountAddress}`
-            );
-        }
+        const cred =
+            Object.values(ai.accountCredentials).find((c) => {
+                const _credId =
+                    c.value.type === 'initial'
+                        ? c.value.contents.regId
+                        : c.value.contents.credId;
+                return credId.credId === _credId;
+            }) ??
+            bail(`Could not find credential for account ${ai.accountAddress}`);
+
         if (cred.value.type === 'initial') {
             throw new Error(
                 `Initial credential ${cred.value.contents.regId} cannot be used`
@@ -121,7 +129,17 @@ export async function verifyCredentialMetadata(
     }
 }
 
-// TODO: doc
+/**
+ * Get all public metadata of the {@linkcode VerifiablePresentation}. The metadata is verified as part of this.
+ *
+ * @param grpc - The {@linkcode ConcordiumGRPCClient} to use for querying
+ * @param network - The target network
+ * @param presentation - The verifiable presentation to verify
+ * @param [blockHash] - The block to verify the proof at. If not specified, the last finalized block is used.
+ *
+ * @returns The corresponding list of {@linkcode CredentialWithMetadata} if successful.
+ * @throws If presentation could not be successfully verified
+ */
 export async function getPublicData(
     grpc: ConcordiumGRPCClient,
     network: Network,

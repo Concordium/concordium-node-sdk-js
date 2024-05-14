@@ -456,7 +456,6 @@ dependencies = [
  "chrono",
  "concordium_base",
  "concordium_rust_bindings_common",
- "ed25519-dalek",
  "ed25519_hd_key_derivation",
  "either",
  "getrandom",

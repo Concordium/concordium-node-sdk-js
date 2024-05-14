@@ -22,8 +22,7 @@ ed25519_hd_key_derivation.workspace = true
 key_derivation.workspace = true
 wallet_library.workspace = true
 concordium_rust_bindings_common.workspace = true
-ed25519-dalek = { version = "2.0" }
-chrono = "0.4.24" # patch version needs to to be locked for compatibility reasons
+chrono = "0.4.35" # patch version needs to to be locked for compatibility reasons
 serde_with = "3.0"
 
 [lib]

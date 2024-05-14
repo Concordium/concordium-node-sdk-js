@@ -302,7 +302,6 @@ struct VerifyPresentationInput {
 #[wasm_bindgen(js_name = verifyPresentation)]
 pub fn verify_presentation(input: JsonString) -> JsResult {
     let input: VerifyPresentationInput = serde_json::from_str(&input).map_err(to_js_error)?;
-    //
     let request = input
         .presentation
         .verify(&input.global_context, input.public_data.iter())

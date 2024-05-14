@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased Changes
+## 7.4.0
 
 ### Added
 

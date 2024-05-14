@@ -8,13 +8,13 @@ use concordium_base::{
     },
     contracts_common::ContractAddress,
     curve_arithmetic::Pairing,
+    ed25519::SigningKey,
     id::{
         account_holder::{create_credential, create_unsigned_credential},
-        constants,
-        constants::{ArCurve, AttributeKind},
+        constants::{self, ArCurve, AttributeKind},
         dodis_yampolskiy_prf as prf,
         id_proof_types::{Proof, ProofVersion, Statement, StatementWithContext},
-        pedersen_commitment::{Randomness as PedersenRandomness, Value as PedersenValue, Value},
+        pedersen_commitment::{Randomness as PedersenRandomness, Value as PedersenValue},
         types::*,
     },
     ps_sig::SigRetrievalRandomness,
@@ -169,13 +169,15 @@ pub fn create_credential_v1_aux(input: CredentialInput) -> Result<JsonString> {
 
     let cred_data = {
         let mut keys = std::collections::BTreeMap::new();
-        let secret = wallet.get_account_signing_key(
-            identity_provider_index,
-            input.identity_index,
-            u32::from(input.cred_number),
-        )?;
-        let public = (&secret).into();
-        keys.insert(KeyIndex(0), KeyPair { secret, public });
+        let signing_key: SigningKey = wallet
+            .get_account_signing_key(
+                identity_provider_index,
+                input.identity_index,
+                u32::from(input.cred_number),
+            )?
+            .into();
+        let keypair = KeyPair::from(signing_key);
+        keys.insert(KeyIndex(0), keypair);
 
         CredentialData {
             keys,
@@ -230,7 +232,7 @@ pub fn generate_unsigned_credential_aux(input: &str) -> Result<JsonString> {
         threshold: try_get(&v, "threshold")?,
     };
 
-    let id_cred_sec: Value<constants::ArCurve> = try_get(&v, "idCredSec")?;
+    let id_cred_sec: PedersenValue<constants::ArCurve> = try_get(&v, "idCredSec")?;
     let prf_key: prf::SecretKey<constants::ArCurve> = try_get(&v, "prfKey")?;
 
     let chi = CredentialHolderInfo::<constants::ArCurve> {
@@ -417,7 +419,7 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<JsonString> {
         .global_context
         .on_chain_commitment_key
         .hide(
-            &Value::<constants::ArCurve>::new(cred_id_exponent),
+            &PedersenValue::<constants::ArCurve>::new(cred_id_exponent),
             &PedersenRandomness::zero(),
         )
         .0;
@@ -444,12 +446,16 @@ pub fn create_id_proof_aux(input: IdProofInput) -> Result<JsonString> {
 }
 
 #[derive(SerdeDeserialize)]
-struct Web3SecretKey(#[serde(deserialize_with = "base16_decode")] ed25519_dalek::SecretKey);
+struct Web3SecretKey(
+    #[serde(deserialize_with = "base16_decode")] concordium_base::ed25519::SecretKey,
+);
 
 impl Web3IdSigner for Web3SecretKey {
-    fn id(&self) -> ed25519_dalek::PublicKey { self.0.id() }
+    fn id(&self) -> concordium_base::ed25519::PublicKey { self.0.id() }
 
-    fn sign(&self, msg: &impl AsRef<[u8]>) -> ed25519_dalek::Signature { self.0.sign(msg) }
+    fn sign(&self, msg: &impl AsRef<[u8]>) -> concordium_base::ed25519::Signature {
+        self.0.sign(msg)
+    }
 }
 
 #[derive(SerdeDeserialize)]
@@ -554,7 +560,7 @@ pub struct VerifyWeb3IdCredentialSignatureInput {
     values:            BTreeMap<String, Web3IdAttribute>,
     randomness:        BTreeMap<String, PedersenRandomness<constants::ArCurve>>,
     #[serde(serialize_with = "base16_encode", deserialize_with = "base16_decode")]
-    signature:         ed25519_dalek::Signature,
+    signature:         concordium_base::ed25519::Signature,
     holder:            CredentialHolderId,
     issuer_public_key: IssuerKey,
     issuer_contract:   ContractAddress,
@@ -572,7 +578,7 @@ pub fn verify_web3_id_credential_signature_aux(
         commitments.insert(
             ri.clone(),
             cmm_key.hide(
-                &Value::<constants::ArCurve>::new(value.to_field_element()),
+                &PedersenValue::<constants::ArCurve>::new(value.to_field_element()),
                 randomness,
             ),
         );

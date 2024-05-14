@@ -1,38 +1,101 @@
 import { GenericAtomicStatement, AtomicProof } from '../commonProofTypes.js';
 import JSONBigInt from 'json-bigint';
-import { AttributeType } from '../web3-id/web3IdProofTypes.js';
+import { AttributeType } from '../web3-id/types.js';
+import { HexString } from '../types.js';
 
+/**
+ * The "Distributed Identifier" string.
+ */
 type DIDString = string;
 
 export type ConcordiumWeakLinkingProofV1 = {
+    /** When the statement was created, serialized as an ISO string */
     created: string;
+    /** The proof value */
     proofValue: string[];
+    /** The proof type */
     type: 'ConcordiumWeakLinkingProofV1';
 };
 
 export type AtomicProofV2 = AtomicProof<AttributeType>;
 
-export type StatementProof = {
+export type StatementProofAccount = {
+    /** When the statement was created, serialized as an ISO string */
     created: string;
+    /** The proof value */
     proofValue: AtomicProofV2[];
+    /** The proof type */
     type: 'ConcordiumZKProofV3';
 };
 
-export type CredentialSubjectProof = {
+/** The signed commitments of a Web3 ID credential proof */
+export type SignedCommitments = {
+    /** A signature of the commitments */
+    signature: HexString;
+    /** The commitments for each attribute included in the proof */
+    commitments: Record<string, HexString>;
+};
+
+export type StatementProofWeb3Id = StatementProofAccount & {
+    /** The signed commitments of the proof needed to verify the proof */
+    commitments: SignedCommitments;
+};
+
+export type CredentialSubjectProof<P extends StatementProofAccount> = {
+    /** The credential proof ID */
     id: DIDString;
-    proof: StatementProof;
+    /** The credential proof data */
+    proof: P;
+    /** The statement used to request the proof */
     statement: GenericAtomicStatement<string, AttributeType>[];
 };
 
-export type VerifiableCredentialProof = {
-    credentialSubject: CredentialSubjectProof;
+/**
+ * Matches the serialization of `CredentialProof::Account` from concordium-base
+ */
+export type VerifiableCredentialProofAccount = {
+    /** The credential proof */
+    credentialSubject: CredentialSubjectProof<StatementProofAccount>;
+    /** The issuer DID */
     issuer: DIDString;
+    /** The credential type */
+    type: ['VerifiableCredential', 'ConcordiumVerifiableCredential'];
+};
+
+/**
+ * Matches the serialization of `CredentialProof::Web3Id` from concordium-base
+ */
+export type VerifiableCredentialProofWeb3Id = {
+    /** The credential proof */
+    credentialSubject: CredentialSubjectProof<StatementProofWeb3Id>;
+    /** The issuer DID */
+    issuer: DIDString;
+    /** The credential type */
     type: [
         'VerifiableCredential',
         'ConcordiumVerifiableCredential',
         ...string[]
     ];
 };
+
+/**
+ * Matches the serialization of `CredentialProof` enum from concordium-base.
+ */
+export type VerifiableCredentialProof =
+    | VerifiableCredentialProofAccount
+    | VerifiableCredentialProofWeb3Id;
+
+/**
+ * Type predicate to check if the proof is a {@linkcode VerifiableCredentialProofWeb3Id}, or consequently a {@linkcode VerifiableCredentialProofAccount}
+ */
+export function isWeb3IdProof(
+    proof: VerifiableCredentialProof
+): proof is VerifiableCredentialProofWeb3Id {
+    return (
+        (proof as VerifiableCredentialProofWeb3Id).credentialSubject.proof
+            .commitments !== undefined
+    );
+}
 
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 
@@ -68,8 +131,6 @@ export function reviveDateFromTimeStampAttribute(
     }
     return value;
 }
-
-/* eslint-enable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 
 export class VerifiablePresentation {
     presentationContext: string;

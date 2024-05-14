@@ -15,6 +15,9 @@
   help parsing smart contract parameters into typed structures.
 - Documentation on when`TransactionExpiry.toJSON` throws an error.
 - `Timestamp.futureMinutes` for creating a `Timestamp` a number of minutes in the future.
+- `verifyPresentation` function to `@concordium/web-sdk/wasm`, which can be used to verify the credential proofs in the presentation object.
+- `getPublicData` function to `@concordium/web-sdk/web3-id`, which is a helper function for accessing the public data of a `VerifiablePresentation` from chain.
+- `verifyCredentialMetadata` function to `@concordium/web-sdk/web3-id`, which is a helper function for fetching and verifying metadata associated with a credential proof.
 
 ### Fixed
 

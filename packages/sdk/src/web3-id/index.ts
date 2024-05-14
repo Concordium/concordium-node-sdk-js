@@ -1,3 +1,4 @@
-export * from './web3IdProofTypes.js';
-export * from './web3IdProofs.js';
-export * from './web3IdHelpers.js';
+export * from './types.js';
+export * from './proofs.js';
+export * from './helpers.js';
+export * from './grpc.js';

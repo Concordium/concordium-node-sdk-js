@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- The function `verify_presentation` to `@concordium/rust-bindings/wallet`, exposed with the WASM entrypoint `verifyPresentation`.
+
 ## 3.0.0
 
 ### Breaking changes

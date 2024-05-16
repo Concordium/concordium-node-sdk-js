@@ -27,7 +27,7 @@ import {
     AttributeType,
     isTimestampAttribute,
     StatementAttributeType,
-} from './web3IdProofTypes.js';
+} from './types.js';
 import { getPastDate } from '../id/idProofs.js';
 import {
     StatementTypes,
@@ -42,7 +42,7 @@ import {
     isStringAttributeInRange,
     statementAttributeTypeToAttributeType,
     timestampToDate,
-} from './web3IdHelpers.js';
+} from './helpers.js';
 
 export const MAX_STRING_BYTE_LENGTH = 31;
 export const MAX_U64 = 18446744073709551615n; // 2n ** 64n - 1n

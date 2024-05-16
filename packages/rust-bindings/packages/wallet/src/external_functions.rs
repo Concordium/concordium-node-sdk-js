@@ -1,4 +1,8 @@
 use crate::aux_functions::*;
+use concordium_base::{
+    id::{constants::ArCurve, types::GlobalContext},
+    web3id::{CredentialsInputs, Presentation, Web3IdAttribute},
+};
 use concordium_rust_bindings_common::{
     helpers::{to_js_error, JsResult},
     types::{Base58String, HexString, JsonString},
@@ -285,4 +289,23 @@ pub fn create_web3_id_proof_ext(raw_input: JsonString) -> JsResult {
 pub fn verify_web3_id_credential_signature_ext(raw_input: JsonString) -> JsResult<bool> {
     let input = serde_json::from_str(&raw_input)?;
     verify_web3_id_credential_signature_aux(input).map_err(to_js_error)
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct VerifyPresentationInput {
+    presentation:   Presentation<ArCurve, Web3IdAttribute>,
+    global_context: GlobalContext<ArCurve>,
+    public_data:    Vec<CredentialsInputs<ArCurve>>,
+}
+
+#[wasm_bindgen(js_name = verifyPresentation)]
+pub fn verify_presentation(input: JsonString) -> JsResult {
+    let input: VerifyPresentationInput = serde_json::from_str(&input).map_err(to_js_error)?;
+    let request = input
+        .presentation
+        .verify(&input.global_context, input.public_data.iter())
+        .map_err(to_js_error)?;
+    let request = serde_json::to_string(&request)?;
+    Ok(request)
 }

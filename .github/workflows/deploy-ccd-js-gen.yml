@@ -1,6 +1,10 @@
-name: Deploy
+name: Deploy ccd-js-gen
 
 on:
+    # Run automatically on tag push
+    push:
+        tags: 
+            - ccd-js-gen/*
     # Allows you to run this workflow manually from the Actions tab
     workflow_dispatch:
 
@@ -13,12 +17,12 @@ permissions:
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
-    group: "pages"
+    group: "deploy-ccdjsgen"
     cancel-in-progress: false
 
 env:
     NODE_VERSION: 18.16.0
-    RUST_VERSION: 1.73
+    RUST_VERSION: 1.62
     RUST_FMT: nightly-2023-04-01-x86_64-unknown-linux-gnu
 
 jobs:
@@ -83,16 +87,24 @@ jobs:
                       packages/*/package.json
                       packages/*/README.md
 
-    build-typedoc:
-        runs-on: ubuntu-22.04
+    upload-release:
         needs: build
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        environment: deploy-ccd-js-gen
         steps:
-            - uses: actions/checkout@v3
-
-            - uses: actions/setup-node@v3
+            - name: Checkout sources
+              uses: actions/checkout@v4
               with:
-                  node-version: ${{ env.NODE_VERSION }}
-                  cache: yarn
+                  submodules: recursive
+
+            - name: Extract tag name
+              id: get_tag
+              run: echo "::set-output name=tag::${GITHUB_REF#refs/tags/ccd-js-gen/}"
+
+            - name: Test that tag version matches package.json version
+              run: test "${{ steps.get_tag.outputs.tag }}" = "$(jq -r ".version" packages/ccd-js-gen/package.json)" || exit 1
 
             - name: Get build-output
               uses: actions/download-artifact@v4
@@ -100,48 +112,16 @@ jobs:
                   path: packages
                   name: build-release
 
-            - name: Restore cached dependencies
-              uses: actions/cache/restore@v3
+            - name: Create a GitHub release
+              uses: ncipollo/release-action@v1
               with:
-                  path: |
-                      ./node_modules
-                      ./docs/node_modules
-                      ./packages/ccd-js-gen/node_modules
-                  key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+                  tag: ccd-js-gen/v${{ steps.get_tag.outputs.tag_name }}
+                  name: CCD-JS-Gen Release v${{ steps.get_tag.outputs.tag_name }}
+                  artifacts: |
+                      packages/*
+                  draft: true
 
-            - name: Generate typedoc documentation
-              run: yarn build:docs
-
-            - name: Store typedoc
-              uses: actions/upload-artifact@v4
-              with:
-                  name: typedoc-build
-                  path: typedoc
-
-    deploy-typedoc:
-        needs: build-typedoc
-        environment:
-            name: github-pages
-            url: ${{ steps.deployment.outputs.page_url }}
-        runs-on: ubuntu-22.04
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v3
-
-            - name: Get typedoc
-              uses: actions/download-artifact@v4
-              with:
-                  path: typedoc
-                  name: typedoc-build
-
-            - name: Setup Pages
-              uses: actions/configure-pages@v3
-
-            - name: Upload GH pages artifact
-              uses: actions/upload-pages-artifact@v1
-              with:
-                  path: './typedoc'
-
-            - name: Deploy to GitHub Pages
-              id: deployment
-              uses: actions/deploy-pages@v2
+            - name: Publish to NPM
+              run: npm publish --workspace packages/ccd-js-gen
+              env:
+                  NODE_AUTH_TOKEN: '${{secrets.NPM_TOKEN}}'

@@ -112,11 +112,8 @@ each of the packages contained in this repository.
   changes made.
 - Commit and tag the release.
   - Tag should be `sdk/x.y.z`.
-- Run the deploy workflow.
-  - Under github actions, run the "deploy" workflow and download the
-    `build-release` artifact. Unpack this file and use it for the release.
-- Publish the release to NPM.
-  - From the sdk package directory (packages/sdk) run `yarn npm publish`
+- Push the tag
+- Have another code owner accept the deployment
 
 ### rust-bindings
 
@@ -128,12 +125,8 @@ each of the packages contained in this repository.
   - Add a change entry: Bumped @concordium/rust-bindings to x.y.z.
 - Commit and tag the release.
   - Tag should be `rust-bindings/x.y.z`.
-- Build the release.
-  - Under github actions, run the "deploy" workflow and download the
-    `build-release` artifact. Unpack this file and use it for the release.
-- Publish the release to NPM.
-  - From the rust-bindings package directory (packages/rust-bindings) run
-    `yarn npm publish`
+- Push the tag
+- Have another code owner accept the deployment
 
 ### ccd-js-gen
 
@@ -142,11 +135,8 @@ each of the packages contained in this repository.
   the changes made.
 - Commit and tag the release.
   - Tag should be `ccd-js-gen/x.y.z`.
-- Run the deploy workflow.
-  - Under github actions, run the "deploy" workflow and download the
-    `build-release` artifact. Unpack this file and use it for the release.
-- Publish the release to NPM.
-  - From the ccd-js-gen package directory (packages/ccd-js-gen) run `yarn npm publish`
+- Push the tag
+- Have another code owner accept the deployment
 
 ## Test
 

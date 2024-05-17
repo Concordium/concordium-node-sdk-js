@@ -157,7 +157,7 @@ jobs:
         runs-on: ubuntu-latest
         permissions:
             contents: write
-        environment: deploy-sdk
+        environment: deploy
         steps:
             - name: Checkout sources
               uses: actions/checkout@v4
@@ -185,6 +185,12 @@ jobs:
                   artifacts: |
                       packages/*
                   draft: true
+
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: yarn
+                  registry-url: 'https://registry.npmjs.org'
 
             - name: Publish to NPM
               run: npm publish --workspace packages/sdk

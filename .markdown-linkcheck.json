@@ -2,6 +2,9 @@
     "ignorePatterns": [
         {
             "pattern": "classes/grpc.ConcordiumGRPCClient.html"
+        },
+        {
+            "pattern": "https://node.testnet.concordium.com:20000"
         }
     ]
 }

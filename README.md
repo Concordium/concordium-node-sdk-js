@@ -81,6 +81,8 @@ npm_config_target_arch=x64 yarn
 
 ### Building for a release
 
+Note: you need rustup in order to build rust-bindings (can be installed from [rust-lang.org](https://www.rust-lang.org/tools/install))
+
 To build the project run
 
 ```shell

@@ -1,3 +1,4 @@
+import { ConcordiumGRPCClient } from './grpc/GRPCClient.js';
 import { getAccountTransactionHandler } from './accountTransactions.js';
 import { collapseRatio, multiplyRatio } from './ratioHelpers.js';
 import {
@@ -8,6 +9,13 @@ import {
 } from './types.js';
 import * as Energy from './types/Energy.js';
 import * as CcdAmount from './types/CcdAmount.js';
+import {
+    AccountAddress,
+    ContractAddress,
+    Parameter,
+    ReceiveName,
+} from './pub/types.js';
+import { getUpdatePayloadSize } from './contractHelpers.js';
 
 /**
  * These constants must be consistent with constA and constB in:
@@ -57,6 +65,42 @@ export function getEnergyCost(
         signatureCount,
         BigInt(size),
         handler.getBaseEnergyCost(payload)
+    );
+}
+
+/**
+ * Get contract update energy cost
+ * Estimated by calculateEnergyCost, where transactionSpecificCost received from invokeContract used energy
+ * @param {ConcordiumGRPCClient} grpcClient - The client to be used for the query
+ * @param {ContractAddress.Type} contractAddress - The address of the contract to query
+ * @param {AccountAddress.Type} invoker - Representation of an account address
+ * @param {Parameter.Type} parameter - Input for contract function
+ * @param {ReceiveName.Type} method - Represents a receive-function in a smart contract module
+ * @param {bigint} signatureCount - Number of expected signatures
+ */
+export async function getContractUpdateEnergyCost(
+    grpcClient: ConcordiumGRPCClient,
+    contractAddress: ContractAddress.Type,
+    invoker: AccountAddress.Type,
+    parameter: Parameter.Type,
+    method: ReceiveName.Type,
+    signatureCount: bigint
+): Promise<Energy.Type> {
+    const res = await grpcClient.invokeContract({
+        contract: contractAddress,
+        invoker,
+        parameter,
+        method,
+    });
+
+    if (!res || res.tag === 'failure') {
+        throw new Error(res?.reason?.tag || 'no response');
+    }
+
+    return calculateEnergyCost(
+        signatureCount,
+        getUpdatePayloadSize(parameter.buffer.length, method.toString().length),
+        res.usedEnergy.value
     );
 }
 

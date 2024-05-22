@@ -77,6 +77,13 @@ export function getEnergyCost(
  * @param {Parameter.Type} parameter - Input for contract function
  * @param {ReceiveName.Type} method - Represents a receive-function in a smart contract module
  * @param {bigint} signatureCount - Number of expected signatures
+ *
+ * @throws {Error} 'no response' if either the block does not exist, or then node fails to parse any of the inputs
+ * If the response tag is `failure`, then error contains a response message
+ *
+ * @returns {Energy} estimated amount of energy for the last finalized block according to the node,
+ * this means that the actual energy cost might be different depending on the implementation of the smart contract
+ * and the interaction with the instance, since this was estimated
  */
 export async function getContractUpdateEnergyCost(
     grpcClient: ConcordiumGRPCClient,

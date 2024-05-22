@@ -51,4 +51,4 @@ Where opts are any arguments that the example script takes.
 
 Default endpoint for node is 'localhost:20000',
 but instead of installing local node,
-can be used testnet node <https://node.testnet.concordium.com:20000>
+can be used testnet node <https://grpc.testnet.concordium.com:20000>

@@ -201,4 +201,4 @@ jobs:
                 NPM_AUTH_TOKEN: '${{secrets.NPM_TOKEN}}'
 
             - name: Publish to NPM
-              run: yarn workspace @concordium/web-sdk npm publish
+              run: yarn workspace @concordium/web-sdk npm publish --access public

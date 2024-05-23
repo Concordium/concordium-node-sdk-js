@@ -127,7 +127,13 @@ jobs:
                   cache: yarn
                   registry-url: 'https://registry.npmjs.org'
 
-            - name: Publish to NPM
-              run: npm publish --workspace packages/rust-bindings
+            - name: Setup .yarnrc.yml
+              run: |
+                yarn config set npmRegistryServer "https://registry.npmjs.org"
+                yarn config set npmAlwaysAuth true
+                yarn config set npmAuthToken $NPM_AUTH_TOKEN
               env:
-                  NODE_AUTH_TOKEN: '${{secrets.NPM_TOKEN}}'
+                NPM_AUTH_TOKEN: '${{secrets.NPM_TOKEN}}'
+
+            - name: Publish to NPM
+              run: yarn workspace @concordium/rust-bindings npm publish --access public

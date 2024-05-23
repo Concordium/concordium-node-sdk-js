@@ -99,7 +99,7 @@ export function getNamesFromReceive(receiveName: string): {
 export function getUpdatePayloadSize(
     parameterSize: number,
     receiveNameLength: number
-) {
+): bigint {
     return (
         8n + 16n + 2n + BigInt(parameterSize) + 2n + BigInt(receiveNameLength)
     );

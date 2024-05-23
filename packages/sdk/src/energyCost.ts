@@ -9,6 +9,7 @@ import {
 } from './types.js';
 import * as Energy from './types/Energy.js';
 import * as CcdAmount from './types/CcdAmount.js';
+import * as BlockHash from './types/BlockHash.js';
 import {
     AccountAddress,
     ContractAddress,
@@ -77,6 +78,7 @@ export function getEnergyCost(
  * @param {Parameter.Type} parameter - Input for contract function
  * @param {ReceiveName.Type} method - Represents a receive-function in a smart contract module
  * @param {bigint} signatureCount - Number of expected signatures
+ * @param {BlockHash.Type} [blockHash] - Optional block hash allowing for dry-running the contract update at the end of a specific block.
  *
  * @throws {Error} 'no response' if either the block does not exist, or then node fails to parse any of the inputs
  * If the response tag is `failure`, then error contains a response message
@@ -91,14 +93,18 @@ export async function getContractUpdateEnergyCost(
     invoker: AccountAddress.Type,
     parameter: Parameter.Type,
     method: ReceiveName.Type,
-    signatureCount: bigint
+    signatureCount: bigint,
+    blockHash?: BlockHash.Type
 ): Promise<Energy.Type> {
-    const res = await grpcClient.invokeContract({
-        contract: contractAddress,
-        invoker,
-        parameter,
-        method,
-    });
+    const res = await grpcClient.invokeContract(
+        {
+            contract: contractAddress,
+            invoker,
+            parameter,
+            method,
+        },
+        blockHash
+    );
 
     if (!res || res.tag === 'failure') {
         throw new Error(res?.reason?.tag || 'no response');

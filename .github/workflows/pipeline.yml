@@ -237,6 +237,41 @@ jobs:
             - name: Lint
               run: yarn lint
 
+    size:
+        runs-on: ubuntu-latest
+        needs: build
+        steps:
+            - uses: actions/checkout@v3
+
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: yarn
+
+            - name: Restore dependencies
+              uses: actions/cache/restore@v3
+              with:
+                  path: |
+                      ./node_modules
+                      ./docs/node_modules
+                      ./packages/ccd-js-gen/node_modules
+                  key: ${{ runner.os }}-yarn
+
+            - name: Get build-debug
+              uses: actions/download-artifact@v4
+              with:
+                  path: packages
+                  name: build-debug
+
+            - name: Size
+              uses: andresz1/size-limit-action@v1
+              with:
+                  directory: packages/sdk
+                  skip_step: install
+                  # Skip build by doing nothing, aka running ":"
+                  build: ":"
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+
     markdown-lint:
         runs-on: ubuntu-22.04
         if: github.event.pull_request.draft == false

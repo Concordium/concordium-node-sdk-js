@@ -54,6 +54,7 @@
         "markdown:linkcheck": "yarn markdown-link-check --config .markdown-linkcheck.json docs/README.md docs/pages/**/*.md packages/*/README.md examples/*/README.md README.md",
         "build": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build",
         "build:dev": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build-dev",
-        "clean": "FORCE_COLOR=true yarn workspaces foreach -p --no-private run clean"
+        "clean": "FORCE_COLOR=true yarn workspaces foreach -p --no-private run clean",
+        "size": "cd packages/sdk && yarn size"
     }
 }

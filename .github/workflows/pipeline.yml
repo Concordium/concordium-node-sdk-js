@@ -269,7 +269,7 @@ jobs:
                   directory: packages/sdk
                   skip_step: install
                   # Skip build by doing nothing, aka running ":"
-                  build: ":"
+                  build_script: ":"
                   github_token: ${{ secrets.GITHUB_TOKEN }}
 
     markdown-lint:

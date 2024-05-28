@@ -31,7 +31,6 @@
     },
     "type": "module",
     "devDependencies": {
-        "@size-limit/preset-big-lib": "^11.1.4",
         "@typescript-eslint/eslint-plugin": "^6.7.0",
         "@typescript-eslint/parser": "^6.7.0",
         "eslint": "^8.51.0",
@@ -44,8 +43,7 @@
         "lint-staged": "^12.0.2",
         "markdown-link-check": "^3.1.4",
         "markdownlint-cli": "^0.34.0",
-        "prettier": "^2.3.2",
-        "size-limit": "^11.1.4"
+        "prettier": "^2.3.2"
     },
     "scripts": {
         "test": "FORCE_COLOR=true yarn workspaces foreach --no-private run test --passWithNoTests",
@@ -57,6 +55,7 @@
         "build": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build",
         "build:dev": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build-dev",
         "clean": "FORCE_COLOR=true yarn workspaces foreach -p --no-private run clean",
-        "size": "yarn build && cd packages/sdk && size-limit"
+        "size": "yarn build && cd packages/sdk && yarn size:no-build",
+        "size:no-build": "cd packages/sdk && yarn size:no-build"
     }
 }

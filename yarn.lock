@@ -14480,7 +14480,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
-    "@size-limit/preset-big-lib": ^11.1.4
     "@typescript-eslint/eslint-plugin": ^6.7.0
     "@typescript-eslint/parser": ^6.7.0
     eslint: ^8.51.0
@@ -14494,7 +14493,6 @@ __metadata:
     markdown-link-check: ^3.1.4
     markdownlint-cli: ^0.34.0
     prettier: ^2.3.2
-    size-limit: ^11.1.4
   languageName: unknown
   linkType: soft
 

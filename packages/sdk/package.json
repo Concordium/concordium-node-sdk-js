@@ -91,7 +91,8 @@
         "build-dev": "tsc -p tsconfig.build.json && yarn webpack",
         "webpack": "node --loader ts-node/esm ../../node_modules/.bin/webpack --config webpack.config.ts",
         "clean": "rimraf -- lib src/grpc-api",
-        "size": "yarn build && size-limit"
+        "size": "yarn build && size-limit",
+        "do-nothing-for-use-in-size-limit-ci": ":"
     },
     "dependencies": {
         "@concordium/rust-bindings": "^3.1.0",

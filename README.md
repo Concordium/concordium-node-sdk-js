@@ -10,18 +10,22 @@ Wrappers for interacting with the Concordium node.
 - [Concordium SDK for Javascript](#concordium-sdk-for-javascript)
   - [Documentation](#documentation)
   - [Packages](#packages)
-    - [SDK package](#sdk-package)
-    - [Rust-bindings package](#rust-bindings-package)
-    - [Ccd-js-gen package](#ccd-js-gen-package)
+    - [sdk](#sdk-package)
+    - [rust-bindings](#rust-bindings-package)
+    - [ccd-js-gen package](#ccd-js-gen-package)
+    - [wallet-connectors](#wallet-connectors-package)
+    - [react-components](#react-components-package)
   - [Install/updating dependencies](#installupdating-dependencies)
     - [MacOS arm64](#macos-arm64)
   - [Build](#build)
     - [Building for a release](#building-for-a-release)
     - [Building for development](#building-for-development)
   - [Making a new release](#making-a-new-release)
-    - [SDK](#sdk)
+    - [sdk](#sdk)
     - [rust-bindings](#rust-bindings)
     - [ccd-js-gen](#ccd-js-gen)
+    - [wallet-connectors](#wallet-connectors)
+    - [react-components](#react-components)
   - [Test](#test)
 <!--toc:end-->
 
@@ -33,23 +37,25 @@ for more information
 
 ## Packages
 
-Contains the different packages for the JS-SDKs.
+A collection of useful packages for building typescript/javascript applications within for the Concordium blockchain.
 
-### SDK package
+- <a id="sdk-package"></a>[`@concordium/web-sdk`](./packages/sdk):
+  Contains the actual SDK, which can used in both a web and NodeJS environment.
 
-The [SDK](./packages/sdk) contains the actual SDK, which can used in
-both a web and NodeJS environment.
+- <a id="rust-bindings-package"></a>[`@concordium/rust-bindings`](./packages/rust-bindings){#rust-bindings-package}:
+  Contains bindings for Rust code, which is used by the SDK through WASM. This package is a utility package that
+  should not be used directly, only through the usage of the SDK.
 
-### Rust-bindings package
+- <a id="ccd-js-gen-package"></a>[`@concordium/ccd-js-gen`](./packages/ccd-js-gen){#ccd-js-gen-package}:
+  A library and CLI for generating smart contract clients for TypeScript and JavaScript
 
-The [rust-bindings](./packages/rust-bindings) contains bindings for Rust code,
-which is used by the SDK through WASM. This package is a utility package that
-should not be used directly, only through the usage of the SDK.
+- <a id="wallet-connectors-package"></a>[`@concordium/wallet-connectors`](./packages/wallet-connectors){#wallet-connectors-package}:
+  Interfaces for interacting with wallets along with implementations for Browser Wallet and WalletConnect (v2).
+  The library has no dependencies to any UI framework.
 
-### Ccd-js-gen package
-
-The [ccd-js-gen](./packages/ccd-js-gen) contains a library and CLI for
-generating smart contract clients for TypeScript and JavaScript.
+- <a id="react-components-package"></a>[`@concordium/react-components`](./packages/react-components){#react-components-package}:
+  React components and hooks for implementing features commonly needed by dApps.
+  The components only manage React state and pass data to application components - no actual HTML is being rendered.
 
 ## Install/updating dependencies
 
@@ -110,7 +116,8 @@ each of the packages contained in this repository.
 - Bump the version in [package.json](./packages/sdk/package.json).
 - Update the [CHANGELOG](./packages/sdk/CHANGELOG.md) describing the
   changes made.
-- Commit and tag the release.
+- Create a pull request to merge the changes into the target branch.
+- Pull and tag the merge commit for the release.
   - Tag should be `sdk/x.y.z`.
 - Push the tag
 - Have another code owner accept the deployment
@@ -123,9 +130,10 @@ each of the packages contained in this repository.
 - Update the dependency to rust-bindings in the [sdk](./packages/sdk/package.json)
 - Update the CHANGELOG in the [sdk](./packages/sdk/CHANGELOG.md)
   - Add a change entry: Bumped @concordium/rust-bindings to x.y.z.
-- Commit and tag the release.
-  - Tag should be `rust-bindings/x.y.z`.
-- Push the tag
+- Create a pull request to merge the changes into the target branch.
+- Pull and tag the merge commit for the release.
+  - Tag should be `rust-bindings/x.y.z` and `sdk/x.y.z` respectively.
+- Push the tags
 - Have another code owner accept the deployment
 
 ### ccd-js-gen
@@ -133,8 +141,31 @@ each of the packages contained in this repository.
 - Bump the version in [package.json](./packages/ccd-js-gen/package.json).
 - Update the [CHANGELOG](./packages/ccd-js-gen/CHANGELOG.md) describing
   the changes made.
-- Commit and tag the release.
+- Create a pull request to merge the changes into the target branch.
+- Pull and tag the merge commit for the release.
   - Tag should be `ccd-js-gen/x.y.z`.
+- Push the tag
+- Have another code owner accept the deployment
+
+### wallet-connectors
+
+- Bump the version in [package.json](./packages/wallet-connectors/package.json).
+- Update the [CHANGELOG](./packages/wallet-connectors/CHANGELOG.md) describing
+  the changes made.
+- Create a pull request to merge the changes into the target branch.
+- Pull and tag the merge commit for the release.
+  - Tag should be `wallet-connectors/x.y.z`.
+- Push the tag
+- Have another code owner accept the deployment
+
+### react-components
+
+- Bump the version in [package.json](./packages/react-components/package.json).
+- Update the [CHANGELOG](./packages/react-components/CHANGELOG.md) describing
+  the changes made.
+- Create a pull request to merge the changes into the target branch.
+- Pull and tag the merge commit for the release.
+  - Tag should be `react-components/x.y.z`.
 - Push the tag
 - Have another code owner accept the deployment
 

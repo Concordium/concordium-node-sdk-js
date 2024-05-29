@@ -46,14 +46,15 @@
         "prettier": "^2.3.2"
     },
     "scripts": {
+        "test-ci": "yarn workspace @concordium/web-sdk run test-ci && yarn workspaces foreach --no-private --exclude @concordium/web-sdk run test",
         "test": "FORCE_COLOR=true yarn workspaces foreach --no-private run test --passWithNoTests",
         "lint": "FORCE_COLOR=true yarn workspaces foreach --no-private run lint",
         "lint-fix": "eslint --cache . --fix",
         "markdown:lint": "yarn markdownlint docs/README.md docs/pages/**/*.md packages/*/README.md examples/*/README.md README.md",
         "markdown:lint-fix": "yarn markdownlint --fix docs/README.md docs/pages/**/*.md packages/*/README.md examples/*/README.md README.md",
         "markdown:linkcheck": "yarn markdown-link-check --config .markdown-linkcheck.json docs/README.md docs/pages/**/*.md packages/*/README.md examples/*/README.md README.md",
-        "build": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build",
-        "build:dev": "FORCE_COLOR=true yarn workspaces foreach -v -t --no-private run build-dev",
+        "build": "FORCE_COLOR=true yarn workspaces foreach -vt --no-private run build",
+        "build:dev": "FORCE_COLOR=true yarn workspaces foreach -vt --no-private run build-dev",
         "clean": "FORCE_COLOR=true yarn workspaces foreach -p --no-private run clean"
     }
 }

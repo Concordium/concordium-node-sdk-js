@@ -13,8 +13,7 @@
         "clean": "rm -r lib",
         "lint": "eslint src/** bin/** --cache --ext .ts,.js --max-warnings 0",
         "lint-fix": "yarn lint --fix; exit 0",
-        "test": "jest",
-        "test-ci": "yarn test"
+        "test": "jest"
     },
     "files": [
         "lib/**/*.json",

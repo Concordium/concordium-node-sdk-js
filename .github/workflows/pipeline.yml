@@ -39,7 +39,8 @@ jobs:
                   path: |
                       ./node_modules
                       ./docs/node_modules
-                      ./packages/ccd-js-gen/node_modules
+                      ./packages/*/node_modules
+                      ./examples/**/node_modules
                   key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}-${{ env.DUMMY }}
                   restore-keys: |
                       ${{ runner.os }}-yarn
@@ -84,7 +85,8 @@ jobs:
                   path: |
                       ./node_modules
                       ./docs/node_modules
-                      ./packages/ccd-js-gen/node_modules
+                      ./packages/*/node_modules
+                      ./examples/**/node_modules
                   key: ${{ runner.os }}-yarn
 
             - name: Install rust
@@ -128,7 +130,8 @@ jobs:
                   path: |
                       ./node_modules
                       ./docs/node_modules
-                      ./packages/ccd-js-gen/node_modules
+                      ./packages/*/node_modules
+                      ./examples/**/node_modules
                   key: ${{ runner.os }}-yarn
 
             - name: Get build-debug
@@ -143,12 +146,6 @@ jobs:
     tests:
         runs-on: ubuntu-22.04
         needs: build
-        strategy:
-            matrix:
-                package: [ 'sdk', 'ccd-js-gen' ]
-        defaults:
-            run:
-                working-directory: packages/${{matrix.package}}
         steps:
             - name: Checkout
               uses: actions/checkout@v3
@@ -166,7 +163,8 @@ jobs:
                   path: |
                       ./node_modules
                       ./docs/node_modules
-                      ./packages/ccd-js-gen/node_modules
+                      ./packages/*/node_modules
+                      ./examples/**/node_modules
                   key: ${{ runner.os }}-yarn
 
             - name: Get build-debug
@@ -195,7 +193,8 @@ jobs:
                   path: |
                       ./node_modules
                       ./docs/node_modules
-                      ./packages/ccd-js-gen/node_modules
+                      ./packages/*/node_modules
+                      ./examples/**/node_modules
                   key: ${{ runner.os }}-yarn
 
             - name: Get build-debug
@@ -225,7 +224,8 @@ jobs:
                   path: |
                       ./node_modules
                       ./docs/node_modules
-                      ./packages/ccd-js-gen/node_modules
+                      ./packages/*/node_modules
+                      ./examples/**/node_modules
                   key: ${{ runner.os }}-yarn
 
             - name: Get build-debug
@@ -255,7 +255,8 @@ jobs:
                   path: |
                       ./node_modules
                       ./docs/node_modules
-                      ./packages/ccd-js-gen/node_modules
+                      ./packages/*/node_modules
+                      ./examples/**/node_modules
                   key: ${{ runner.os }}-yarn
 
             - name: Lint markdown
@@ -279,7 +280,8 @@ jobs:
                   path: |
                       ./node_modules
                       ./docs/node_modules
-                      ./packages/ccd-js-gen/node_modules
+                      ./packages/*/node_modules
+                      ./examples/**/node_modules
                   key: ${{ runner.os }}-yarn
 
             - name: Lint markdown

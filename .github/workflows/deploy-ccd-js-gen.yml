@@ -3,7 +3,7 @@ name: Deploy ccd-js-gen
 on:
     # Run automatically on tag push
     push:
-        tags: 
+        tags:
             - ccd-js-gen/*
     # Allows you to run this workflow manually from the Actions tab
     workflow_dispatch:
@@ -22,7 +22,7 @@ concurrency:
 
 env:
     NODE_VERSION: 18.16.0
-    RUST_VERSION: 1.62
+    RUST_VERSION: 1.73
     RUST_FMT: nightly-2023-04-01-x86_64-unknown-linux-gnu
 
 jobs:
@@ -52,7 +52,8 @@ jobs:
                   path: |
                       ./node_modules
                       ./docs/node_modules
-                      ./packages/ccd-js-gen/node_modules
+                      ./packages/*/node_modules
+                      ./examples/**/node_modules
                   key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
                   restore-keys: |
                       ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
@@ -112,15 +113,6 @@ jobs:
                   path: packages
                   name: build-release
 
-            - name: Create a GitHub release
-              uses: ncipollo/release-action@v1
-              with:
-                  tag: ccd-js-gen/v${{ steps.get_tag.outputs.tag_name }}
-                  name: CCD-JS-Gen Release v${{ steps.get_tag.outputs.tag_name }}
-                  artifacts: |
-                      packages/*
-                  draft: true
-
             - uses: actions/setup-node@v3
               with:
                   node-version: ${{ env.NODE_VERSION }}
@@ -137,3 +129,10 @@ jobs:
 
             - name: Publish to NPM
               run: yarn workspace @concordium/ccd-js-gen npm publish --access public
+
+            - name: Create a GitHub release
+              uses: ncipollo/release-action@v1
+              with:
+                  tag: ccd-js-gen/v${{ steps.get_tag.outputs.tag_name }}
+                  name: CCD-JS-Gen Release v${{ steps.get_tag.outputs.tag_name }}
+                  draft: true

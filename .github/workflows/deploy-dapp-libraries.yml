@@ -1,0 +1,121 @@
+# Workflow for building and publishing a release of one of the libraries based on an annotated tag.
+
+# The commit to be released is selected by ref using the input 'tag_override' and defaults to the ref that triggered the workflow.
+# The ref must be an annotated tag with a specific format and a message consisting of the release notes.
+# The format of the tag must match the pattern '<package>/<version>', where '@concordium/<package>' is a workspace within
+# the project (located at './packages/<package>') and '<version>' must start with the value of the "version" field of
+# the 'package.json' file for that package.
+#
+# The workflow builds all packages in the project but publishes only '<package>'.
+# The release is uploaded as a GitHub release with the release notes fetched from the annotated tag
+# followed by the changelog entries for the version.
+# The release includes the build artifact assembled using 'npm pack'.
+#
+# The workflow fails without uploading if the ref doesn't satisfy some of the requirements above or if any package fails to build.
+#
+# In addition to uploading a GitHub release, the workflow also publishes the package to the npmjs registry.
+# If, for whatever reason, this step stops working, download the pack file from the GitHub release to a box
+# that is logged into the organization (using 'npm login') and publish it manually using the command 'npm publish <pack-file>'.
+
+name: Build and publish release
+
+on:
+    workflow_dispatch: # trigger manually
+        inputs:
+            tag_override:
+                description: 'Tag'
+                type: string
+                required: false
+
+env:
+    node_version: '16.x'
+
+jobs:
+    build-and-upload-release:
+        runs-on: ubuntu-latest
+        environment: npm
+        steps:
+            - name: Apply tag override and parse ref
+              uses: bisgardo/github-action-parse-ref@v1
+              id: ref
+              with:
+                  ref: '${{github.event.inputs.tag_override || github.ref}}'
+                  default-ref-type: tags
+            - name: Fail if ref is not a tag
+              if: "steps.ref.outputs.ref-type != 'tags'"
+              run: exit 1
+            - name: Parse tag name
+              uses: bisgardo/github-action-regex-parse@v1
+              id: tag
+              with:
+                  pattern: '(?<name>(?<package>.*?)/(?<version>.*))' # exports 'name', 'package', and 'version'
+                  input: '${{steps.ref.outputs.ref-name}}'
+            - name: Checkout project
+              uses: actions/checkout@v4
+              with:
+                  ref: '${{steps.ref.outputs.ref}}'
+            - name: Extract tag message
+              uses: bisgardo/github-action-echo@v1
+              id: tag-msg
+              with:
+                  msg: '$(git for-each-ref "${{steps.ref.outputs.ref}}" --format="%(contents)")'
+            - name: Fail if tag is not "annotated" or its message is empty
+              if: "steps.tag-msg.outputs.msg == ''"
+              run: exit 1
+            - name: Collect package data
+              uses: bisgardo/github-action-echo@v1
+              id: package
+              with:
+                  name: '${{steps.tag.outputs.package}}'
+                  workspace: '@concordium/${name}'
+                  version: '$(npm pkg get version --workspaces | jq -r ".[\"${workspace}\"]")'
+                  path: './packages/${name}'
+            - name: Collect release data
+              uses: bisgardo/github-action-echo@v1
+              id: release
+              with:
+                  _name: '${{steps.package.outputs.name}}'
+                  version: '${{steps.tag.outputs.version}}'
+                  npm-pack-file: 'concordium-${_name}-${{steps.package.outputs.version}}.tgz'
+                  github-release-name: '${_name}: ${version}'
+            - name: Check that tag version matches 'package.json' up to build version
+              run: |
+                  [[ "${{steps.tag.outputs.version}}" = "${{steps.package.outputs.version}}"-* ]]
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '${{env.node_version}}'
+                  cache: yarn
+                  registry-url: 'https://registry.npmjs.org'
+            - name: Run yarn install
+              run: yarn install --immutable
+            # TODO Find a way to force target lib to not build against local build of dependent lib, but always against published build.
+            - name: Build all libraries
+              run: yarn build
+            - name: Archive target library
+              run: npm pack --workspace="${{steps.package.outputs.workspace}}"
+            - name: Publish library to npm
+              run: npm publish "${{steps.release.outputs.npm-pack-file}}"
+              env:
+                NODE_AUTH_TOKEN: '${{secrets.NPM_TOKEN}}'
+            - name: Extract changelog entries
+              uses: concordium/github-action-changelog-extract@v1
+              id: changelog
+              with:
+                  file: '${{steps.package.outputs.path}}/CHANGELOG.md'
+                  version: '${{steps.package.outputs.version}}'
+            - name: Upload package as GitHub release
+              uses: softprops/action-gh-release@v1
+              with:
+                  tag_name: '${{steps.tag.outputs.name}}'
+                  # Release body is the message of the annotated tag followed by the changelog entries for the version.
+                  body: |
+                      ${{steps.tag-msg.outputs.msg}}
+
+                      # Changelog
+
+                      ${{steps.changelog.outputs.section}}
+                  files: '${{steps.release.outputs.npm-pack-file}}'
+                  name: '${{steps.release.outputs.github-release-name}}'
+                  # The method for auto-generating release notes just lists all commits (including those not relevant to the subproject).
+                  generate_release_notes: false

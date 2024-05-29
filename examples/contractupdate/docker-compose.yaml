@@ -1,0 +1,7 @@
+version: '3'
+services:
+    contractupdate:
+        image: ${CONTRACTUPDATE_IMAGE-concordium-dapp-contractupdate:test}
+        build: .
+        ports:
+            - '${CONTRACTUPDATE_PORT-8080}:80'

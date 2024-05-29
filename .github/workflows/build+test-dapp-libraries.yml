@@ -1,0 +1,36 @@
+# Verification workflow to run on all pushed commits.
+# Performs the following checks:
+# - 'yarn install' performs no changes to 'yarn.lock'.
+# - Check formatting in all workspaces.
+# - Build all workspaces.
+# - Run all tests.
+
+name: Build and test
+
+on:
+    push:
+        branches: main
+    pull_request:
+
+env:
+    node_version: '16.x'
+
+jobs:
+    build-and-test:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout project
+              uses: actions/checkout@v4
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '${{env.node_version}}'
+                  cache: yarn
+            - name: Run yarn install
+              run: yarn install --immutable
+            - name: Check formatting
+              run: yarn workspaces foreach -tv run prettier --check .
+            - name: Build all libraries and samples
+              run: yarn workspaces foreach -tv run build
+            - name: Run tests
+              run: yarn workspaces foreach -tv run test --passWithNoTests

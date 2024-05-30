@@ -24,6 +24,11 @@
         "url": "https://github.com/Concordium/concordium-node-sdk-js/tree/main/packages/wallet-connectors"
     },
     "scripts": {
+        "lint": "eslint . --cache --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "lint-fix": "yarn lint --fix",
+        "prettier": "prettier . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore --ignore-path .gitignore",
+        "fmt": "yarn prettier --write",
+        "fmt-check": "yarn prettier --check",
         "build": "tsc",
         "test": "jest"
     },
@@ -40,9 +45,11 @@
         "@jest/types": "^29.6.3",
         "@tsconfig/recommended": "^1.0.1",
         "@types/jest": "^29.5.12",
+        "@types/node": "^20.12.13",
         "@walletconnect/types": "^2.1.4",
+        "eslint": "8",
         "jest": "^29.7.0",
-        "prettier": "2.8.1",
+        "prettier": "^3.2.5",
         "ts-jest": "^29.1.2",
         "ts-node": "^10.9.2",
         "typescript": "^5.2.2"

@@ -100,7 +100,7 @@ jobs:
                       deps/concordium-base/concordium-contracts-common
 
             - name: Build
-              run: yarn build
+              run: yarn build:all
 
             - name: Store build-debug
               uses: actions/upload-artifact@v4
@@ -235,7 +235,7 @@ jobs:
                   name: build-debug
 
             - name: Lint
-              run: yarn lint
+              run: yarn lint:all && yarn fmt-check:all
 
     markdown-lint:
         runs-on: ubuntu-22.04

@@ -11,8 +11,11 @@
         "build": "tsc -p tsconfig.build.json",
         "build-dev": "yarn build",
         "clean": "rm -r lib",
-        "lint": "eslint src/** bin/** --cache --ext .ts,.js --max-warnings 0",
-        "lint-fix": "yarn lint --fix; exit 0",
+        "lint": "eslint . --cache --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "lint-fix": "yarn lint --fix",
+        "prettier": "prettier . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore --ignore-path .gitignore",
+        "fmt": "yarn prettier --write",
+        "fmt-check": "yarn prettier --check",
         "test": "jest"
     },
     "files": [
@@ -49,8 +52,9 @@
     "devDependencies": {
         "@types/jest": "^26.0.23",
         "@types/node": "^20.5.0",
-        "eslint": "^8.50.0",
+        "eslint": "8",
         "jest": "^29.6.2",
+        "prettier": "^3.2.5",
         "ts-jest": "^29.1.1",
         "typescript": "^5.2.2"
     },

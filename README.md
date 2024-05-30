@@ -90,7 +90,7 @@ npm_config_target_arch=x64 yarn
 To build the project run
 
 ```shell
-yarn build
+yarn build:all
 ```
 
 This will build all the subprojects.
@@ -100,7 +100,7 @@ This will build all the subprojects.
 To build the project quickly during development run
 
 ```shell
-yarn build:dev
+yarn build-dev:all
 ```
 
 This will build all the subprojects.
@@ -174,7 +174,7 @@ each of the packages contained in this repository.
 An automatic test suite is part of this project, and it is run by executing:
 
 ```shell
-yarn test
+yarn test:all
 ```
 
 This will run the tests for each package.

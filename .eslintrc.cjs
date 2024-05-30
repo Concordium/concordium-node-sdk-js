@@ -4,10 +4,9 @@ module.exports = {
         es2020: true,
     },
     extends: [
-        'plugin:prettier/recommended',
-        'plugin:@typescript-eslint/recommended',
         'plugin:import/recommended',
         'plugin:import/typescript',
+        'prettier'
     ],
     parser: '@typescript-eslint/parser',
     parserOptions: {
@@ -22,14 +21,6 @@ module.exports = {
     },
     plugins: ['@typescript-eslint', 'import'],
     rules: {
-        'prettier/prettier': 'warn',
-        quotes: [
-            2,
-            'single',
-            {
-                avoidEscape: true,
-            },
-        ],
         'import/no-unresolved': [
             2,
             {

@@ -1,5 +1,6 @@
-import { useCallback } from 'react';
 import { WalletConnection } from '@concordium/wallet-connectors';
+import { useCallback } from 'react';
+
 import { ConnectorType, WalletConnectionProps } from './WithWalletConnector';
 
 /**

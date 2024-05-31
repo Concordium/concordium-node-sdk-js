@@ -2,6 +2,7 @@ import { CIS2Contract, ContractAddress } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
+
 import { parseAddress, parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
@@ -51,17 +52,10 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 (async () => {
-    const contract = await CIS2Contract.create(
-        client,
-        ContractAddress.create(cli.flags.index, cli.flags.subindex)
-    );
+    const contract = await CIS2Contract.create(client, ContractAddress.create(cli.flags.index, cli.flags.subindex));
 
     const owner = parseAddress(cli.flags.owner);
     const address = parseAddress(cli.flags.address);

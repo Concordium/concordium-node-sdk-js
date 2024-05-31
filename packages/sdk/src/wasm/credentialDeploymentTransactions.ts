@@ -1,32 +1,33 @@
-import { Buffer } from 'buffer/index.js';
+import * as wasm from '@concordium/rust-bindings/wallet';
 // self-referencing not allowed by eslint resolver
 // eslint-disable-next-line import/no-extraneous-dependencies
 import * as ed from '@concordium/web-sdk/shims/ed25519';
-import * as wasm from '@concordium/rust-bindings/wallet';
+import { Buffer } from 'buffer/index.js';
+
+import { sha256 } from '../hash.js';
+import { getCredentialDeploymentSignDigest } from '../serialization.js';
 import {
+    ArInfo,
     AttributeKey,
-    CredentialDeploymentTransaction,
+    AttributesKeys,
+    CredentialDeploymentDetails,
     CredentialDeploymentInfo,
+    CredentialDeploymentTransaction,
+    CredentialPublicKeys,
     CryptographicParameters,
+    HexString,
     IdentityInput,
+    IdentityObjectV1,
+    IpInfo,
+    Network,
     UnsignedCdiWithRandomness,
     UnsignedCredentialDeploymentInformation,
     VerifyKey,
-    IpInfo,
-    ArInfo,
-    IdentityObjectV1,
-    Network,
-    CredentialPublicKeys,
-    AttributesKeys,
-    CredentialDeploymentDetails,
-    HexString,
 } from '../types.js';
-import * as TransactionExpiry from '../types/TransactionExpiry.js';
 import * as AccountAddress from '../types/AccountAddress.js';
-import { sha256 } from '../hash.js';
-import { getCredentialDeploymentSignDigest } from '../serialization.js';
-import { ConcordiumHdWallet } from './HdWallet.js';
+import * as TransactionExpiry from '../types/TransactionExpiry.js';
 import { filterRecord, mapRecord } from '../util.js';
+import { ConcordiumHdWallet } from './HdWallet.js';
 
 /**
  * Generates the unsigned credential information that has to be signed when
@@ -53,10 +54,7 @@ function createUnsignedCredentialInfo(
     address?: AccountAddress.Type
 ): UnsignedCdiWithRandomness {
     if (publicKeys.length > 255) {
-        throw new Error(
-            'The number of keys is greater than what the transaction supports: ' +
-                publicKeys.length
-        );
+        throw new Error('The number of keys is greater than what the transaction supports: ' + publicKeys.length);
     }
 
     const identityProvider = identity.identityProvider;
@@ -80,11 +78,8 @@ function createUnsignedCredentialInfo(
         credentialInput.address = address.address;
     }
 
-    const unsignedCredentialDeploymentInfoString =
-        wasm.generateUnsignedCredential(JSON.stringify(credentialInput));
-    const result: UnsignedCdiWithRandomness = JSON.parse(
-        unsignedCredentialDeploymentInfoString
-    );
+    const unsignedCredentialDeploymentInfoString = wasm.generateUnsignedCredential(JSON.stringify(credentialInput));
+    const result: UnsignedCdiWithRandomness = JSON.parse(unsignedCredentialDeploymentInfoString);
     return result;
 }
 
@@ -169,10 +164,7 @@ export function buildSignedCredentialForExistingAccount(
     signatures: string[]
 ): CredentialDeploymentInfo {
     const signedCredential: CredentialDeploymentInfo = JSON.parse(
-        wasm.getDeploymentInfo(
-            signatures,
-            JSON.stringify(unsignedCredentialInfo)
-        )
+        wasm.getDeploymentInfo(signatures, JSON.stringify(unsignedCredentialInfo))
     );
     return signedCredential;
 }
@@ -221,11 +213,7 @@ export function createCredentialTransaction(
 ): CredentialDeploymentTransaction {
     const wallet = ConcordiumHdWallet.fromHex(input.seedAsHex, input.net);
     const publicKey = wallet
-        .getAccountPublicKey(
-            input.ipInfo.ipIdentity,
-            input.identityIndex,
-            input.credNumber
-        )
+        .getAccountPublicKey(input.ipInfo.ipIdentity, input.identityIndex, input.credNumber)
         .toString('hex');
 
     const verifyKey = {
@@ -237,29 +225,17 @@ export function createCredentialTransaction(
         threshold: 1,
     };
 
-    const prfKey = wallet
-        .getPrfKey(input.ipInfo.ipIdentity, input.identityIndex)
-        .toString('hex');
-    const idCredSec = wallet
-        .getIdCredSec(input.ipInfo.ipIdentity, input.identityIndex)
-        .toString('hex');
+    const prfKey = wallet.getPrfKey(input.ipInfo.ipIdentity, input.identityIndex).toString('hex');
+    const idCredSec = wallet.getIdCredSec(input.ipInfo.ipIdentity, input.identityIndex).toString('hex');
     const randomness = wallet
-        .getSignatureBlindingRandomness(
-            input.ipInfo.ipIdentity,
-            input.identityIndex
-        )
+        .getSignatureBlindingRandomness(input.ipInfo.ipIdentity, input.identityIndex)
         .toString('hex');
 
     const attributeRandomness = mapRecord(
         filterRecord(AttributesKeys, (k) => isNaN(Number(k))),
         (x) =>
             wallet
-                .getAttributeCommitmentRandomness(
-                    input.ipInfo.ipIdentity,
-                    input.identityIndex,
-                    input.credNumber,
-                    x
-                )
+                .getAttributeCommitmentRandomness(input.ipInfo.ipIdentity, input.identityIndex, input.credNumber, x)
                 .toString('hex')
     );
 
@@ -292,9 +268,7 @@ export function createCredentialTransactionNoSeed(
         ...other,
         blindingRandomness: input.sigRetrievelRandomness,
     };
-    const rawRequest = wasm.createUnsignedCredentialV1(
-        JSON.stringify(internalInput)
-    );
+    const rawRequest = wasm.createUnsignedCredentialV1(JSON.stringify(internalInput));
     let info: UnsignedCdiWithRandomness;
     try {
         info = JSON.parse(rawRequest);

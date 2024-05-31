@@ -1,9 +1,9 @@
 import { AccountAddress, isRpcError } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
-import { parseEndpoint } from '../shared/util.js';
-
 import meow from 'meow';
+
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -40,11 +40,7 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 /**
  * Find account creation time, block and transaction.
@@ -79,14 +75,8 @@ const client = new ConcordiumGRPCNodeClient(
 
     // If account is not a genesis account print account creation transaction hash
     for await (const summary of summaries) {
-        if (
-            summary.type === 'accountCreation' &&
-            AccountAddress.equals(summary.address, account)
-        ) {
-            console.log(
-                'Hash of transaction that created the account:',
-                summary.hash
-            );
+        if (summary.type === 'accountCreation' && AccountAddress.equals(summary.address, account)) {
+            console.log('Hash of transaction that created the account:', summary.hash);
         }
     }
 })();

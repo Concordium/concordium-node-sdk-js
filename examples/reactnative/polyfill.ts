@@ -1,11 +1,13 @@
 // #region documentation-snippet
-import '@stardazed/streams-polyfill';
+// Requires peer dependency `text-encoding`
+// @ts-ignore
 import '@azure/core-asynciterator-polyfill';
+import '@stardazed/streams-polyfill';
+import { polyfill as polyfillCrypto } from 'react-native-polyfill-globals/src/crypto';
+// @ts-ignore
+import { polyfill as polyfillEncoding } from 'react-native-polyfill-globals/src/encoding';
 
-// @ts-ignore
-import { polyfill as polyfillEncoding } from 'react-native-polyfill-globals/src/encoding'; // Requires peer dependency `text-encoding`
-// @ts-ignore
-import { polyfill as polyfillCrypto } from 'react-native-polyfill-globals/src/crypto'; // Requires peer dependency `react-native-get-random-values`
+// Requires peer dependency `react-native-get-random-values`
 
 polyfillEncoding();
 polyfillCrypto();

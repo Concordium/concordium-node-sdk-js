@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
 import { Network } from '@concordium/wallet-connectors';
 import { ConcordiumGRPCClient } from '@concordium/web-sdk';
 import { GrpcWebFetchTransport } from '@protobuf-ts/grpcweb-transport';
+import { useEffect, useState } from 'react';
 
 /**
  * React hook that obtains a gRPC Web client for interacting with a node on the appropriate network.

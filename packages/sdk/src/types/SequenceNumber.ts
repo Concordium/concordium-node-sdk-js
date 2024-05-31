@@ -1,9 +1,5 @@
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import {
-    TypedJson,
-    TypedJsonDiscriminator,
-    makeFromTypedJson,
-} from './util.js';
+import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
@@ -81,9 +77,7 @@ export function instanceOf(value: unknown): value is SequenceNumber {
  */
 export function create(sequenceNumber: bigint | number): SequenceNumber {
     if (sequenceNumber < 1) {
-        throw new Error(
-            'Invalid account sequence number: Must be 1 or higher.'
-        );
+        throw new Error('Invalid account sequence number: Must be 1 or higher.');
     }
     return new SequenceNumber(BigInt(sequenceNumber));
 }
@@ -93,9 +87,7 @@ export function create(sequenceNumber: bigint | number): SequenceNumber {
  * @param {Proto.SequenceNumber} sequenceNumber The sequence number in protobuf.
  * @returns {SequenceNumber} The sequence number.
  */
-export function fromProto(
-    sequenceNumber: Proto.SequenceNumber
-): SequenceNumber {
+export function fromProto(sequenceNumber: Proto.SequenceNumber): SequenceNumber {
     return create(sequenceNumber.value);
 }
 
@@ -150,7 +142,4 @@ export function toTypedJSON(value: SequenceNumber): TypedJson<Serializable> {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
-    JSON_DISCRIMINATOR,
-    fromSerializable
-);
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromSerializable);

@@ -1,3 +1,5 @@
+import fs from 'fs';
+
 import {
     ArInfo,
     ConcordiumHdWallet,
@@ -7,24 +9,21 @@ import {
     IpInfo,
 } from '../../src/index.ts';
 import {
-    createIdentityRequest,
-    IdentityRequestInput,
     IdentityRecoveryRequestInput,
-    createIdentityRecoveryRequest,
-    IdentityRequestWithKeysInput,
-    createIdentityRequestWithKeys,
     IdentityRecoveryRequestWithKeysInput,
+    IdentityRequestInput,
+    IdentityRequestWithKeysInput,
+    createIdentityRecoveryRequest,
     createIdentityRecoveryRequestWithKeys,
+    createIdentityRequest,
+    createIdentityRequestWithKeys,
 } from '../../src/wasm/identity.js';
-import fs from 'fs';
 
 const seed =
     'efa5e27326f8fa0902e647b52449bf335b7b605adc387015ec903f41d95080eb71361cbc7fb78721dcd4f3926a337340aa1406df83332c44c1cdcfe100603860';
 
 function getTestData() {
-    const ipInfo: IpInfo = JSON.parse(
-        fs.readFileSync('./test/ci/resources/ip_info.json').toString()
-    ).value;
+    const ipInfo: IpInfo = JSON.parse(fs.readFileSync('./test/ci/resources/ip_info.json').toString()).value;
     const globalContext: CryptographicParameters = JSON.parse(
         fs.readFileSync('./test/ci/resources/global.json').toString()
     ).value;
@@ -39,10 +38,7 @@ function getTestData() {
     };
 }
 
-function assertIdentityRequestResult(
-    output: IdObjectRequestV1,
-    arThreshold: number
-) {
+function assertIdentityRequestResult(output: IdObjectRequestV1, arThreshold: number) {
     expect(typeof output.proofsOfKnowledge).toBe('string');
     expect(typeof output.prfKeySharingCoeffCommitments[0]).toEqual('string');
     expect(typeof output.idCredSecCommitment).toEqual('string');
@@ -60,10 +56,7 @@ function assertIdentityRequestResult(
     expect(typeof output.ipArData[3].proofComEncEq).toEqual('string');
 }
 
-function assertIdentityRecoveryRequestResult(
-    output: IdRecoveryRequest,
-    timestamp: number
-) {
+function assertIdentityRecoveryRequestResult(output: IdRecoveryRequest, timestamp: number) {
     expect(output.idCredPub).toEqual(
         'b23e360b21cb8baad1fb1f9a593d1115fc678cb9b7c1a5b5631f82e088092d79d34b6a6c8520c06c41002a666adf792f'
     );
@@ -77,9 +70,7 @@ test('Create identity request using individual keys', () => {
     const wallet = ConcordiumHdWallet.fromHex(seed, 'Testnet');
     const idCredSec = wallet.getIdCredSec(0, 0).toString('hex');
     const prfKey = wallet.getPrfKey(0, 0).toString('hex');
-    const blindingRandomness = wallet
-        .getSignatureBlindingRandomness(0, 0)
-        .toString('hex');
+    const blindingRandomness = wallet.getSignatureBlindingRandomness(0, 0).toString('hex');
     const arThreshold = 2;
     const input: IdentityRequestWithKeysInput = {
         arsInfos,

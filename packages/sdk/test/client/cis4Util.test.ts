@@ -1,19 +1,12 @@
-import {
-    CIS4,
-    deserializeCIS4Event,
-    deserializeCIS4EventsFromSummary,
-} from '../../src/cis4/util.js';
-import {
-    SchemaEnumVariant,
-    SchemaType,
-    serializeSchemaType,
-} from '../../src/schemaTypes.js';
-import { BlockItemSummary } from '../../src/types.js';
-import * as ContractEvent from '../../src/types/ContractEvent.js';
 import * as wasm from '@concordium/rust-bindings';
+import fs from 'fs';
 import JSONbig from 'json-bigint';
 import v8 from 'v8';
-import fs from 'fs';
+
+import { CIS4, deserializeCIS4Event, deserializeCIS4EventsFromSummary } from '../../src/cis4/util.js';
+import { SchemaEnumVariant, SchemaType, serializeSchemaType } from '../../src/schemaTypes.js';
+import { BlockItemSummary } from '../../src/types.js';
+import * as ContractEvent from '../../src/types/ContractEvent.js';
 
 function optionSchemaType(innerType: SchemaType): SchemaType {
     return {
@@ -280,9 +273,7 @@ test('CIS-4 Register events are deserialized correctly', () => {
         },
     };
     const serializedRegisterEvent = serializeJSONEvent(registerEvent);
-    const deserializedRegisterEvent = deserializeCIS4Event(
-        serializedRegisterEvent
-    );
+    const deserializedRegisterEvent = deserializeCIS4Event(serializedRegisterEvent);
 
     const expectedRegisterEvent: CIS4.RegisterCredentialEvent = {
         type: CIS4.EventType.RegisterCredential,
@@ -312,9 +303,7 @@ test('CIS-4 Revoke events are deserialized correctly', () => {
         },
     };
     const serializedRegisterEvent = serializeJSONEvent(revokeEvent);
-    const deserializedRegisterEvent = deserializeCIS4Event(
-        serializedRegisterEvent
-    );
+    const deserializedRegisterEvent = deserializeCIS4Event(serializedRegisterEvent);
 
     const expectedRevokeEvent: CIS4.RevokeCredentialEvent = {
         type: CIS4.EventType.RevokeCredential,
@@ -337,12 +326,8 @@ test('CIS-4 Revoke events are deserialized correctly', () => {
         },
     };
 
-    const serializedRevokeEventWithReason = serializeJSONEvent(
-        revokeEventWithReason
-    );
-    const deserializedRevokeEventWithReason = deserializeCIS4Event(
-        serializedRevokeEventWithReason
-    );
+    const serializedRevokeEventWithReason = serializeJSONEvent(revokeEventWithReason);
+    const deserializedRevokeEventWithReason = deserializeCIS4Event(serializedRevokeEventWithReason);
 
     const expectedRevokeEventWithReason: CIS4.RevokeCredentialEvent = {
         type: CIS4.EventType.RevokeCredential,
@@ -353,9 +338,7 @@ test('CIS-4 Revoke events are deserialized correctly', () => {
         },
         reason: 'reason',
     };
-    expect(deserializedRevokeEventWithReason).toEqual(
-        expectedRevokeEventWithReason
-    );
+    expect(deserializedRevokeEventWithReason).toEqual(expectedRevokeEventWithReason);
 });
 
 test('CIS-4 IssuerMetadata events are deserialized correctly', () => {
@@ -367,11 +350,8 @@ test('CIS-4 IssuerMetadata events are deserialized correctly', () => {
             },
         },
     };
-    const serializedIssuerMetadataEvent =
-        serializeJSONEvent(issuerMetadataEvent);
-    const deserializedIssuerMetadataEvent = deserializeCIS4Event(
-        serializedIssuerMetadataEvent
-    );
+    const serializedIssuerMetadataEvent = serializeJSONEvent(issuerMetadataEvent);
+    const deserializedIssuerMetadataEvent = deserializeCIS4Event(serializedIssuerMetadataEvent);
 
     const expectedIssuerMetadataEvent: CIS4.IssuerMetadataEvent = {
         type: CIS4.EventType.IssuerMetadata,
@@ -380,9 +360,7 @@ test('CIS-4 IssuerMetadata events are deserialized correctly', () => {
             hash: '1'.repeat(64),
         },
     };
-    expect(deserializedIssuerMetadataEvent).toEqual(
-        expectedIssuerMetadataEvent
-    );
+    expect(deserializedIssuerMetadataEvent).toEqual(expectedIssuerMetadataEvent);
 });
 
 test('CIS-4 CredentialMetadata events are deserialized correctly', () => {
@@ -397,12 +375,8 @@ test('CIS-4 CredentialMetadata events are deserialized correctly', () => {
             },
         },
     };
-    const serializedCredentialMetadataEvent = serializeJSONEvent(
-        credentialMetadataEvent
-    );
-    const deserializedCredentialMetadataEvent = deserializeCIS4Event(
-        serializedCredentialMetadataEvent
-    );
+    const serializedCredentialMetadataEvent = serializeJSONEvent(credentialMetadataEvent);
+    const deserializedCredentialMetadataEvent = deserializeCIS4Event(serializedCredentialMetadataEvent);
 
     const expectedCredentialMetadataEvent: CIS4.CredentialMetadataEvent = {
         type: CIS4.EventType.CredentialMetadata,
@@ -412,9 +386,7 @@ test('CIS-4 CredentialMetadata events are deserialized correctly', () => {
             hash: '0'.repeat(64),
         },
     };
-    expect(deserializedCredentialMetadataEvent).toEqual(
-        expectedCredentialMetadataEvent
-    );
+    expect(deserializedCredentialMetadataEvent).toEqual(expectedCredentialMetadataEvent);
 });
 
 test('CIS-4 Schema events are deserialized correctly', () => {
@@ -452,21 +424,15 @@ test('CIS-4 RevocationKey events are deserialized correctly', () => {
             },
         },
     };
-    const serializedRegisterRevocationKeyEvent = serializeJSONEvent(
-        registerRevocationKeyEvent
-    );
-    const deserializedRegisterRevocationKeyEvent = deserializeCIS4Event(
-        serializedRegisterRevocationKeyEvent
-    );
+    const serializedRegisterRevocationKeyEvent = serializeJSONEvent(registerRevocationKeyEvent);
+    const deserializedRegisterRevocationKeyEvent = deserializeCIS4Event(serializedRegisterRevocationKeyEvent);
 
     const expectedRegisterRevocationKeyEvent: CIS4.RevocationKeyEvent = {
         type: CIS4.EventType.RevocationKey,
         key: '1'.repeat(64),
         action: CIS4.RevocationKeyAction.Register,
     };
-    expect(deserializedRegisterRevocationKeyEvent).toEqual(
-        expectedRegisterRevocationKeyEvent
-    );
+    expect(deserializedRegisterRevocationKeyEvent).toEqual(expectedRegisterRevocationKeyEvent);
 
     const removeRevocationKeyEvent = {
         RevocationKey: {
@@ -476,21 +442,15 @@ test('CIS-4 RevocationKey events are deserialized correctly', () => {
             },
         },
     };
-    const serializedRemoveRevocationKeyEvent = serializeJSONEvent(
-        removeRevocationKeyEvent
-    );
-    const deserializedRemoveRevocationKeyEvent = deserializeCIS4Event(
-        serializedRemoveRevocationKeyEvent
-    );
+    const serializedRemoveRevocationKeyEvent = serializeJSONEvent(removeRevocationKeyEvent);
+    const deserializedRemoveRevocationKeyEvent = deserializeCIS4Event(serializedRemoveRevocationKeyEvent);
 
     const expectedRemoveRevocationKeyEvent: CIS4.RevocationKeyEvent = {
         type: CIS4.EventType.RevocationKey,
         key: '1'.repeat(64),
         action: CIS4.RevocationKeyAction.Remove,
     };
-    expect(deserializedRemoveRevocationKeyEvent).toEqual(
-        expectedRemoveRevocationKeyEvent
-    );
+    expect(deserializedRemoveRevocationKeyEvent).toEqual(expectedRemoveRevocationKeyEvent);
 });
 
 test('Custom CIS-4 events are deserialized correctly', async () => {
@@ -512,8 +472,7 @@ test('CIS-4 events are deserialized correctly from a BlockItemSummary', async ()
 
     const expectedRegisterEvent: CIS4.RegisterCredentialEvent = {
         type: CIS4.EventType.RegisterCredential,
-        credentialPubKey:
-            'c162a48f58448234da9f3848dc3bc5fd7f2aa0e4b7e5e15654876365f8b86c1b',
+        credentialPubKey: 'c162a48f58448234da9f3848dc3bc5fd7f2aa0e4b7e5e15654876365f8b86c1b',
         schemaRef: {
             url: 'http://127.0.0.1:8080/json-schemas/JsonSchema2023-telegram.json',
         },

@@ -1,20 +1,15 @@
 import * as wasm from '@concordium/rust-bindings/wallet';
 import { stringify } from 'json-bigint';
-import { VerifyWeb3IdCredentialSignatureInput } from '../web3-id/helpers.js';
-import {
-    CredentialsInputs,
-    Web3IdProofInput,
-    Web3IdProofRequest,
-} from '../web3-id/types.js';
-import { VerifiablePresentation } from '../types/VerifiablePresentation.js';
+
 import { CryptographicParameters } from '../types.js';
+import { VerifiablePresentation } from '../types/VerifiablePresentation.js';
+import { VerifyWeb3IdCredentialSignatureInput } from '../web3-id/helpers.js';
+import { CredentialsInputs, Web3IdProofInput, Web3IdProofRequest } from '../web3-id/types.js';
 
 /**
  * Verifies that the given signature is correct for the given values/randomness/holder/issuerPublicKey/issuerContract
  */
-export function verifyWeb3IdCredentialSignature(
-    input: VerifyWeb3IdCredentialSignatureInput
-): boolean {
+export function verifyWeb3IdCredentialSignature(input: VerifyWeb3IdCredentialSignatureInput): boolean {
     // Use json-bigint stringify to ensure we can handle bigints
     return wasm.verifyWeb3IdCredentialSignature(stringify(input));
 }
@@ -22,9 +17,7 @@ export function verifyWeb3IdCredentialSignature(
 /**
  * Given a statement about an identity and the inputs necessary to prove the statement, produces a proof that the associated identity fulfills the statement.
  */
-export function getVerifiablePresentation(
-    input: Web3IdProofInput
-): VerifiablePresentation {
+export function getVerifiablePresentation(input: Web3IdProofInput): VerifiablePresentation {
     try {
         const s: VerifiablePresentation = VerifiablePresentation.fromString(
             // Use json-bigint stringify to ensure we can handle bigints

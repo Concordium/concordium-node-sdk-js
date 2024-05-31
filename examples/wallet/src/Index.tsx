@@ -1,14 +1,15 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import './index.css';
-import { Identity } from './Identity';
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+
 import { Account } from './Account';
-import { CreateIdentity } from './CreateIdentity';
-import { SetupSeedPhrase } from './Setup';
-import { RecoverIdentity } from './RecoverIdentity';
 import { ConfirmIdentity } from './ConfirmIdentity';
+import { CreateIdentity } from './CreateIdentity';
+import { Identity } from './Identity';
 import { NewIdentity } from './NewIdentity';
+import { RecoverIdentity } from './RecoverIdentity';
+import { SetupSeedPhrase } from './Setup';
+import './index.css';
 
 const container = document.getElementById('root');
 

@@ -3,11 +3,7 @@ module.exports = {
         browser: true,
         es2020: true,
     },
-    extends: [
-        'plugin:import/recommended',
-        'plugin:import/typescript',
-        'prettier'
-    ],
+    extends: ['plugin:import/recommended', 'plugin:import/typescript', 'prettier'],
     parser: '@typescript-eslint/parser',
     parserOptions: {
         ecmaVersion: 2020,
@@ -55,14 +51,7 @@ module.exports = {
             },
         },
     ],
-    ignorePatterns: [
-        '**/pkg/**/*',
-        '**/dist/**/*',
-        '**/lib/**/*',
-        'deps/**/*',
-        '**/src/grpc-api/*',
-        'typedoc/**',
-    ],
+    ignorePatterns: ['**/pkg/**/*', '**/dist/**/*', '**/lib/**/*', 'deps/**/*', '**/src/grpc-api/*', 'typedoc/**'],
     settings: {
         'import/ignore': ['bs58check'],
         'import/parsers': {

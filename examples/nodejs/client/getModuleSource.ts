@@ -1,10 +1,10 @@
-import { parseEndpoint } from '../shared/util.js';
 import { BlockHash, ModuleReference } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
 import fs from 'fs';
-
 import meow from 'meow';
+
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -48,11 +48,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 /**
  * Gets the source of a module on the chain.
@@ -62,10 +58,7 @@ const client = new ConcordiumGRPCNodeClient(
 (async () => {
     // #region documentation-snippet
     const ref = ModuleReference.fromHexString(cli.flags.module);
-    const blockHash =
-        cli.flags.block === undefined
-            ? undefined
-            : BlockHash.fromHexString(cli.flags.block);
+    const blockHash = cli.flags.block === undefined ? undefined : BlockHash.fromHexString(cli.flags.block);
     const versionedSource = await client.getModuleSource(ref, blockHash);
     // #endregion documentation-snippet
 

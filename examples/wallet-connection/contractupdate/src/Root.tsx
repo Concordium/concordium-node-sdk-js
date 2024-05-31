@@ -1,7 +1,16 @@
+import {
+    MAINNET,
+    TESTNET,
+    WalletConnectionProps,
+    WithWalletConnector,
+    useConnect,
+    useConnection,
+    useGrpcClient,
+} from '@concordium/react-components';
+import { BlockHash } from '@concordium/web-sdk';
 import { useEffect, useState } from 'react';
 import { Alert, Button, Col, Container, Row, Spinner } from 'react-bootstrap';
-import { MAINNET, TESTNET, WalletConnectionProps, WithWalletConnector, useConnect, useConnection, useGrpcClient } from '@concordium/react-components';
-import { BlockHash } from '@concordium/web-sdk';
+
 import { App } from './App';
 import { ConnectedAccount } from './ConnectedAccount';
 import { NetworkSelector } from './NetworkSelector';

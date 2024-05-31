@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { extractIdentityObjectUrl, fetchIdentity } from './util';
+
 import { identityObjectKey } from './constants';
+import { extractIdentityObjectUrl, fetchIdentity } from './util';
 
 export function ConfirmIdentity() {
     const location = useLocation();

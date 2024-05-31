@@ -1,11 +1,11 @@
-import React from 'react';
-import { Button } from 'react-bootstrap';
 import {
     ConnectorType,
     WalletConnection,
     WalletConnectionProps,
     useWalletConnectorSelector,
 } from '@concordium/react-components';
+import React from 'react';
+import { Button } from 'react-bootstrap';
 
 interface Props extends WalletConnectionProps {
     connection: WalletConnection | undefined;

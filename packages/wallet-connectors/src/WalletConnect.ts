@@ -26,6 +26,7 @@ import { WalletConnectModal, WalletConnectModalConfig } from '@walletconnect/mod
 import { MobileWallet } from '@walletconnect/modal-core';
 import { SignClient } from '@walletconnect/sign-client';
 import { ISignClient, ProposalTypes, SessionTypes, SignClientTypes } from '@walletconnect/types';
+
 import {
     Network,
     Schema,

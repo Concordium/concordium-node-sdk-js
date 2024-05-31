@@ -1,4 +1,3 @@
-import { Buffer } from 'buffer/';
 import { SendTransactionPayload, SmartContractParameters } from '@concordium/browser-wallet-api-helpers';
 import {
     AccountTransactionSignature,
@@ -9,6 +8,7 @@ import {
     toBuffer,
 } from '@concordium/web-sdk';
 import { GrpcWebOptions } from '@protobuf-ts/grpcweb-transport';
+import { Buffer } from 'buffer/';
 
 export type ModuleSchema = {
     type: 'ModuleSchema';

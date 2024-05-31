@@ -12,9 +12,7 @@ import { Buffer } from 'buffer/index.js';
 export const uleb128Decode = (buffer: Uint8Array): bigint => {
     const [bigint, index] = uleb128DecodeWithIndex(buffer);
     if (index !== buffer.length) {
-        throw Error(
-            'The provided buffer did not contain just a single ULEB128 encoded number'
-        );
+        throw Error('The provided buffer did not contain just a single ULEB128 encoded number');
     }
     return bigint;
 };
@@ -29,10 +27,7 @@ export const uleb128Decode = (buffer: Uint8Array): bigint => {
  * @returns {[bigint, number]} the decoded bigint value and the index of
  * the end of the encoded uleb128 number + 1.
  */
-export function uleb128DecodeWithIndex(
-    bytes: Uint8Array,
-    index = 0
-): [bigint, number] {
+export function uleb128DecodeWithIndex(bytes: Uint8Array, index = 0): [bigint, number] {
     if (bytes.length <= index) {
         throw Error(
             `The ULEB128 encoding was not valid: The passed bytes from index ${index} must at least contain a single byte`
@@ -55,9 +50,7 @@ export function uleb128DecodeWithIndex(
         }
     }
 
-    throw Error(
-        'The ULEB128 encoding was not valid: Could not find end of number'
-    );
+    throw Error('The ULEB128 encoding was not valid: Could not find end of number');
 }
 
 /**

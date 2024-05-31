@@ -1,23 +1,28 @@
 import { Buffer } from 'buffer/index.js';
 
 import {
+    CISContract,
+    ContractDryRun,
     ContractTransactionMetadata,
     ContractUpdateTransactionWithSchema,
     CreateContractTransactionMetadata,
-    CISContract,
-    ContractDryRun,
     getContractUpdateDefaultExpiryDate,
 } from '../GenericContract.js';
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
 import { AccountSigner } from '../signHelpers.js';
 import type { HexString, InvokeContractResult } from '../types.js';
-import * as ContractAddress from '../types/ContractAddress.js';
 import * as AccountAddress from '../types/AccountAddress.js';
+import * as BlockHash from '../types/BlockHash.js';
+import * as ContractAddress from '../types/ContractAddress.js';
 import * as ContractName from '../types/ContractName.js';
 import * as EntrypointName from '../types/EntrypointName.js';
 import * as Timestamp from '../types/Timestamp.js';
+import * as TransactionExpiry from '../types/TransactionExpiry.js';
+import * as TransactionHash from '../types/TransactionHash.js';
 import {
     CIS4,
+    REVOKE_DOMAIN,
+    Web3IdSigner,
     deserializeCIS4CredentialEntry,
     deserializeCIS4CredentialStatus,
     deserializeCIS4MetadataResponse,
@@ -27,24 +32,14 @@ import {
     formatCIS4RevokeCredentialIssuer,
     formatCIS4RevokeCredentialOther,
     formatCIS4UpdateRevocationKeys,
-    REVOKE_DOMAIN,
     serializeCIS4RegisterCredentialParam,
     serializeCIS4RevocationDataHolder,
     serializeCIS4RevocationDataOther,
     serializeCIS4RevokeCredentialIssuerParam,
     serializeCIS4UpdateRevocationKeysParam,
-    Web3IdSigner,
 } from './util.js';
-import * as BlockHash from '../types/BlockHash.js';
-import * as TransactionHash from '../types/TransactionHash.js';
-import * as TransactionExpiry from '../types/TransactionExpiry.js';
 
-type Views =
-    | 'credentialEntry'
-    | 'credentialStatus'
-    | 'issuer'
-    | 'registryMetadata'
-    | 'revocationKeys';
+type Views = 'credentialEntry' | 'credentialStatus' | 'issuer' | 'registryMetadata' | 'revocationKeys';
 
 type Updates =
     | 'registerCredential'
@@ -132,9 +127,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
         blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
         const credentialPubKey = credHolderSigner.pubKey;
-        const entrypoint = EntrypointName.fromStringUnchecked(
-            'revokeCredentialHolder'
-        );
+        const entrypoint = EntrypointName.fromStringUnchecked('revokeCredentialHolder');
         const signingData: CIS4.SigningData = {
             contractAddress: this.contractAddress,
             entrypoint,
@@ -181,9 +174,7 @@ class CIS4DryRun extends ContractDryRun<Updates> {
         blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
         const revocationPubKey = revokerSigner.pubKey;
-        const entrypoint = EntrypointName.fromStringUnchecked(
-            'revokeCredentialOther'
-        );
+        const entrypoint = EntrypointName.fromStringUnchecked('revokeCredentialOther');
         const signingData: CIS4.SigningData = {
             contractAddress: this.contractAddress,
             entrypoint,
@@ -284,11 +275,9 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         revokeCredentialOther:
             'FAACAAAACQAAAHNpZ25hdHVyZR5AAAAABAAAAGRhdGEUAAQAAAANAAAAY3JlZGVudGlhbF9pZB4gAAAADAAAAHNpZ25pbmdfZGF0YRQABAAAABAAAABjb250cmFjdF9hZGRyZXNzDAsAAABlbnRyeV9wb2ludBYBBQAAAG5vbmNlBQkAAAB0aW1lc3RhbXANDgAAAHJldm9jYXRpb25fa2V5HiAAAAAGAAAAcmVhc29uFQIAAAAEAAAATm9uZQIEAAAAU29tZQEBAAAAFAABAAAABgAAAHJlYXNvbhYA',
         /** Parameter schema for `registerRevocationKeys` entrypoint */
-        registerRevocationKeys:
-            'FAACAAAABAAAAGtleXMQAR4gAAAADgAAAGF1eGlsaWFyeV9kYXRhEAEC',
+        registerRevocationKeys: 'FAACAAAABAAAAGtleXMQAR4gAAAADgAAAGF1eGlsaWFyeV9kYXRhEAEC',
         /** Parameter schema for `removeRevocationKeys` entrypoint */
-        removeRevocationKeys:
-            'FAACAAAABAAAAGtleXMQAR4gAAAADgAAAGF1eGlsaWFyeV9kYXRhEAEC',
+        removeRevocationKeys: 'FAACAAAABAAAAGtleXMQAR4gAAAADgAAAGF1eGlsaWFyeV9kYXRhEAEC',
     };
 
     /**
@@ -304,10 +293,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         grpcClient: ConcordiumGRPCClient,
         contractAddress: ContractAddress.Type
     ): Promise<CIS4Contract> {
-        const contractName = await super.getContractName(
-            grpcClient,
-            contractAddress
-        );
+        const contractName = await super.getContractName(grpcClient, contractAddress);
         return new CIS4Contract(grpcClient, contractAddress, contractName);
     }
 
@@ -327,10 +313,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
      *
      * @returns {CIS4.CredentialEntry} a corresponding credential entry.
      */
-    public credentialEntry(
-        credHolderPubKey: HexString,
-        blockHash?: BlockHash.Type
-    ): Promise<CIS4.CredentialEntry> {
+    public credentialEntry(credHolderPubKey: HexString, blockHash?: BlockHash.Type): Promise<CIS4.CredentialEntry> {
         return this.invokeView(
             EntrypointName.fromStringUnchecked('credentialEntry'),
             (k) => Buffer.from(k, 'hex'),
@@ -348,10 +331,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
      *
      * @returns {CIS4.CredentialStatus} a corresponding credential status.
      */
-    public credentialStatus(
-        credHolderPubKey: HexString,
-        blockHash?: BlockHash.Type
-    ): Promise<CIS4.CredentialStatus> {
+    public credentialStatus(credHolderPubKey: HexString, blockHash?: BlockHash.Type): Promise<CIS4.CredentialStatus> {
         return this.invokeView(
             EntrypointName.fromStringUnchecked('credentialStatus'),
             (k) => Buffer.from(k, 'hex'),
@@ -368,9 +348,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
      *
      * @returns {CIS4.RevocationKeyWithNonce[]} the revocation keys wityh corresponding nonces.
      */
-    public revocationKeys(
-        blockHash?: BlockHash.Type
-    ): Promise<CIS4.RevocationKeyWithNonce[]> {
+    public revocationKeys(blockHash?: BlockHash.Type): Promise<CIS4.RevocationKeyWithNonce[]> {
         return this.invokeView(
             EntrypointName.fromStringUnchecked('revocationKeys'),
             () => Buffer.alloc(0),
@@ -387,9 +365,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
      *
      * @returns {CIS4.MetadataUrl} a metadata URL.
      */
-    public registryMetadata(
-        blockHash?: BlockHash.Type
-    ): Promise<CIS4.MetadataResponse> {
+    public registryMetadata(blockHash?: BlockHash.Type): Promise<CIS4.MetadataResponse> {
         return this.invokeView(
             EntrypointName.fromStringUnchecked('registryMetadata'),
             () => Buffer.alloc(0),
@@ -455,11 +431,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         credInfo: CIS4.CredentialInfo,
         additionalData: HexString = ''
     ): Promise<TransactionHash.Type> {
-        const transaction = this.createRegisterCredential(
-            metadata,
-            credInfo,
-            additionalData
-        );
+        const transaction = this.createRegisterCredential(metadata, credInfo, additionalData);
         return this.sendUpdateTransaction(transaction, metadata, signer);
     }
 
@@ -506,12 +478,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         reason?: string,
         additionalData: HexString = ''
     ): Promise<TransactionHash.Type> {
-        const transaction = this.createRevokeCredentialAsIssuer(
-            metadata,
-            credHolderPubKey,
-            reason,
-            additionalData
-        );
+        const transaction = this.createRevokeCredentialAsIssuer(metadata, credHolderPubKey, reason, additionalData);
         return this.sendUpdateTransaction(transaction, metadata, signer);
     }
 
@@ -534,9 +501,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         reason?: string
     ): Promise<ContractUpdateTransactionWithSchema> {
         const credentialPubKey = credHolderSigner.pubKey;
-        const entrypoint = EntrypointName.fromStringUnchecked(
-            'revokeCredentialHolder'
-        );
+        const entrypoint = EntrypointName.fromStringUnchecked('revokeCredentialHolder');
         const signingData: CIS4.SigningData = {
             contractAddress: this.contractAddress,
             entrypoint,
@@ -551,10 +516,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         const digest = Buffer.concat([REVOKE_DOMAIN, serializedData]);
         const signature = await credHolderSigner.sign(digest);
 
-        return this.createUpdateTransaction<
-            CIS4.RevokeCredentialHolderParam,
-            CIS4.RevokeCredentialHolderParamJson
-        >(
+        return this.createUpdateTransaction<CIS4.RevokeCredentialHolderParam, CIS4.RevokeCredentialHolderParamJson>(
             entrypoint,
             () => Buffer.concat([signature, serializedData]), // Reuse existing serialization
             metadata,
@@ -589,9 +551,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
             metadata,
             credHolderSigner,
             nonce,
-            TransactionExpiry.toDate(
-                metadata.expiry ?? getContractUpdateDefaultExpiryDate()
-            ),
+            TransactionExpiry.toDate(metadata.expiry ?? getContractUpdateDefaultExpiryDate()),
             reason
         );
         return this.sendUpdateTransaction(transaction, metadata, signer);
@@ -618,9 +578,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         reason?: string
     ): Promise<ContractUpdateTransactionWithSchema> {
         const revocationPubKey = revokerSigner.pubKey;
-        const entrypoint = EntrypointName.fromStringUnchecked(
-            'revokeCredentialOther'
-        );
+        const entrypoint = EntrypointName.fromStringUnchecked('revokeCredentialOther');
         const signingData: CIS4.SigningData = {
             contractAddress: this.contractAddress,
             entrypoint,
@@ -636,10 +594,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         const digest = Buffer.concat([REVOKE_DOMAIN, serializedData]);
         const signature = await revokerSigner.sign(digest);
 
-        return this.createUpdateTransaction<
-            CIS4.RevokeCredentialOtherParam,
-            CIS4.RevokeCredentialOtherParamJson
-        >(
+        return this.createUpdateTransaction<CIS4.RevokeCredentialOtherParam, CIS4.RevokeCredentialOtherParamJson>(
             entrypoint,
             () => Buffer.concat([signature, serializedData]), // Reuse existing serialization
             metadata,
@@ -682,9 +637,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
             revokerSigner,
             credentialPubKey,
             nonce,
-            TransactionExpiry.toDate(
-                metadata.expiry ?? getContractUpdateDefaultExpiryDate()
-            ),
+            TransactionExpiry.toDate(metadata.expiry ?? getContractUpdateDefaultExpiryDate()),
             reason
         );
         return this.sendUpdateTransaction(transaction, metadata, signer);
@@ -730,11 +683,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         keys: HexString | HexString[],
         additionalData: HexString = ''
     ): Promise<TransactionHash.Type> {
-        const transaction = this.createRegisterRevocationKeys(
-            metadata,
-            keys,
-            additionalData
-        );
+        const transaction = this.createRegisterRevocationKeys(metadata, keys, additionalData);
         return this.sendUpdateTransaction(transaction, metadata, signer);
     }
 
@@ -778,11 +727,7 @@ export class CIS4Contract extends CISContract<Updates, Views, CIS4DryRun> {
         keys: HexString | HexString[],
         additionalData: HexString = ''
     ): Promise<TransactionHash.Type> {
-        const transaction = this.createRemoveRevocationKeys(
-            metadata,
-            keys,
-            additionalData
-        );
+        const transaction = this.createRemoveRevocationKeys(metadata, keys, additionalData);
         return this.sendUpdateTransaction(transaction, metadata, signer);
     }
 }

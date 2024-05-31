@@ -1,28 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import JSONBig from 'json-bigint';
+
+import * as AccountAddress from './AccountAddress.js';
+import * as BlockHash from './BlockHash.js';
+import * as CcdAmount from './CcdAmount.js';
+import * as ContractAddress from './ContractAddress.js';
+import * as ContractName from './ContractName.js';
+import * as CredentialRegistrationId from './CredentialRegistrationId.js';
+import { JSON_DISCRIMINATOR as DATA_BLOB_DISCRIMINATOR, DataBlob } from './DataBlob.js';
+import * as Duration from './Duration.js';
+import * as Energy from './Energy.js';
+import * as EntrypointName from './EntrypointName.js';
+import * as InitName from './InitName.js';
+import * as ModuleReference from './ModuleReference.js';
 import * as Parameter from './Parameter.js';
+import * as ReceiveName from './ReceiveName.js';
 import * as ReturnValue from './ReturnValue.js';
 import * as SequenceNumber from './SequenceNumber.js';
-import * as Energy from './Energy.js';
-import * as TransactionHash from './TransactionHash.js';
-import * as BlockHash from './BlockHash.js';
-import * as ContractName from './ContractName.js';
-import * as InitName from './InitName.js';
-import * as ReceiveName from './ReceiveName.js';
-import * as CredentialRegistrationId from './CredentialRegistrationId.js';
-import * as AccountAddress from './AccountAddress.js';
-import * as ContractAddress from './ContractAddress.js';
-import * as EntrypointName from './EntrypointName.js';
 import * as Timestamp from './Timestamp.js';
-import * as Duration from './Duration.js';
-import * as CcdAmount from './CcdAmount.js';
 import * as TransactionExpiry from './TransactionExpiry.js';
-import * as ModuleReference from './ModuleReference.js';
-import {
-    DataBlob,
-    JSON_DISCRIMINATOR as DATA_BLOB_DISCRIMINATOR,
-} from './DataBlob.js';
+import * as TransactionHash from './TransactionHash.js';
 import { isTypedJsonCandidate } from './util.js';
-import JSONBig from 'json-bigint';
 
 function reviveConcordiumTypes(value: unknown) {
     if (isTypedJsonCandidate(value)) {
@@ -77,14 +75,9 @@ function reviveConcordiumTypes(value: unknown) {
  * parse the output with something that handles deserializing`bigint`s, e.g. the
  * `json-bigint` dependency, and use `AccountTransactionHandler.fromJSON`.
  */
-export function jsonParse(
-    input: string,
-    reviver?: (this: any, key: string, value: any) => any
-): any {
+export function jsonParse(input: string, reviver?: (this: any, key: string, value: any) => any): any {
     return JSON.parse(input, (k, v) =>
-        reviver === undefined
-            ? reviveConcordiumTypes(v)
-            : reviver(k, reviveConcordiumTypes(v))
+        reviver === undefined ? reviveConcordiumTypes(v) : reviver(k, reviveConcordiumTypes(v))
     );
 }
 
@@ -104,9 +97,7 @@ function transformConcordiumType(value: unknown): unknown | undefined {
         case ContractName.instanceOf(value):
             return ContractName.toTypedJSON(value as ContractName.Type);
         case CredentialRegistrationId.instanceOf(value):
-            return CredentialRegistrationId.toTypedJSON(
-                value as CredentialRegistrationId.Type
-            );
+            return CredentialRegistrationId.toTypedJSON(value as CredentialRegistrationId.Type);
         case value instanceof DataBlob:
             return (value as DataBlob).toTypedJSON();
         case Duration.instanceOf(value):
@@ -130,9 +121,7 @@ function transformConcordiumType(value: unknown): unknown | undefined {
         case Timestamp.instanceOf(value):
             return Timestamp.toTypedJSON(value as Timestamp.Type);
         case TransactionExpiry.instanceOf(value):
-            return TransactionExpiry.toTypedJSON(
-                value as TransactionExpiry.Type
-            );
+            return TransactionExpiry.toTypedJSON(value as TransactionExpiry.Type);
         case TransactionHash.instanceOf(value):
             return TransactionHash.toTypedJSON(value as TransactionHash.Type);
     }
@@ -152,9 +141,7 @@ function unwrapConcordiumType(value: unknown): unknown | undefined {
         case CcdAmount.instanceOf(value):
             return (value as CcdAmount.Type).toJSON();
         case ContractAddress.instanceOf(value):
-            return ContractAddress.toUnwrappedJSON(
-                value as ContractAddress.Type
-            );
+            return ContractAddress.toUnwrappedJSON(value as ContractAddress.Type);
         case ContractName.instanceOf(value):
             return ContractName.toUnwrappedJSON(value as ContractName.Type);
         case CredentialRegistrationId.instanceOf(value):
@@ -170,9 +157,7 @@ function unwrapConcordiumType(value: unknown): unknown | undefined {
         case InitName.instanceOf(value):
             return InitName.toUnwrappedJSON(value as InitName.Type);
         case ModuleReference.instanceOf(value):
-            return ModuleReference.toUnwrappedJSON(
-                value as ModuleReference.Type
-            );
+            return ModuleReference.toUnwrappedJSON(value as ModuleReference.Type);
         case Parameter.instanceOf(value):
             return Parameter.toUnwrappedJSON(value as Parameter.Type);
         case ReceiveName.instanceOf(value):
@@ -184,13 +169,9 @@ function unwrapConcordiumType(value: unknown): unknown | undefined {
         case Timestamp.instanceOf(value):
             return Timestamp.toUnwrappedJSON(value as Timestamp.Type);
         case TransactionExpiry.instanceOf(value):
-            return TransactionExpiry.toUnwrappedJSON(
-                value as TransactionExpiry.Type
-            );
+            return TransactionExpiry.toUnwrappedJSON(value as TransactionExpiry.Type);
         case TransactionHash.instanceOf(value):
-            return TransactionHash.toUnwrappedJSON(
-                value as TransactionHash.Type
-            );
+            return TransactionHash.toUnwrappedJSON(value as TransactionHash.Type);
     }
 
     return undefined;
@@ -219,11 +200,7 @@ function ccdUnwrapReplacer(this: any, key: string, value: any): any {
  * @param replacer A function that transforms the results.
  * @param space Adds indentation, white space, and line break characters to the return-value JSON text to make it easier to read.
  */
-export function jsonStringify(
-    input: any,
-    replacer?: ReplacerFun,
-    space?: string | number
-): string {
+export function jsonStringify(input: any, replacer?: ReplacerFun, space?: string | number): string {
     function replacerFunction(this: any, key: string, value: any) {
         const transformedValue = ccdTypesReplacer.call(this, key, value);
         return replacer?.call(this, key, transformedValue) ?? transformedValue;
@@ -302,9 +279,6 @@ export function jsonUnwrapStringify(
         replaced = replaceBigintValue(replaced);
     }
 
-    const stringify =
-        bigintFormat === BigintFormatType.Integer
-            ? JSONBig.stringify
-            : JSON.stringify;
+    const stringify = bigintFormat === BigintFormatType.Integer ? JSONBig.stringify : JSON.stringify;
     return stringify(replaced, replacerFunction, space);
 }

@@ -1,9 +1,5 @@
 import { isAsciiAlphaNumericPunctuation } from '../contractHelpers.js';
-import {
-    TypedJson,
-    TypedJsonDiscriminator,
-    makeFromTypedJson,
-} from './util.js';
+import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
@@ -94,14 +90,10 @@ export function instanceOf(value: unknown): value is EntrypointName {
  */
 export function fromString<S extends string>(value: S): EntrypointName<S> {
     if (value.length > 99) {
-        throw new Error(
-            'Invalid EntrypointName: Can be atmost 99 characters long.'
-        );
+        throw new Error('Invalid EntrypointName: Can be atmost 99 characters long.');
     }
     if (!isAsciiAlphaNumericPunctuation(value)) {
-        throw new Error(
-            'Invalid EntrypointName: Must only contain ASCII alpha, numeric and punctuation characters.'
-        );
+        throw new Error('Invalid EntrypointName: Must only contain ASCII alpha, numeric and punctuation characters.');
     }
     return new EntrypointName(value);
 }
@@ -112,9 +104,7 @@ export function fromString<S extends string>(value: S): EntrypointName<S> {
  * @param {string} value The string with the entrypoint name.
  * @returns {EntrypointName}
  */
-export function fromStringUnchecked<S extends string>(
-    value: S
-): EntrypointName<S> {
+export function fromStringUnchecked<S extends string>(value: S): EntrypointName<S> {
     return new EntrypointName(value);
 }
 
@@ -124,9 +114,7 @@ export function fromStringUnchecked<S extends string>(
  * @param {EntrypointName} entrypointName The entrypoint name to stringify.
  * @returns {string}
  */
-export function toString<S extends string>(
-    entrypointName: EntrypointName<S>
-): S {
+export function toString<S extends string>(entrypointName: EntrypointName<S>): S {
     return entrypointName.value;
 }
 
@@ -150,7 +138,4 @@ export function toTypedJSON(value: EntrypointName): TypedJson<Serializable> {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
-    JSON_DISCRIMINATOR,
-    fromString
-);
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromString);

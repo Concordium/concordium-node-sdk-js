@@ -10,11 +10,8 @@ import { getNodeClientV2, getNodeClientWeb } from './testHelpers.ts';
 
 const clientV2 = getNodeClientV2();
 const clientWeb = getNodeClientWeb();
-const clients =
-    testEnvironment === 'node' ? [clientV2, clientWeb] : [clientWeb];
-const BLOCK_HASH = BlockHash.fromHexString(
-    '4b39f8206c7c24fe3644ede737801c25616a6f601f42ae0e9dca3962c412003b'
-);
+const clients = testEnvironment === 'node' ? [clientV2, clientWeb] : [clientWeb];
+const BLOCK_HASH = BlockHash.fromHexString('4b39f8206c7c24fe3644ede737801c25616a6f601f42ae0e9dca3962c412003b');
 
 const PRESENTATION = VerifiablePresentation.fromString(`{
     "presentationContext": "d7bce30c25cad255a30b8bc72a7d4ee654d2d1e0fa4342fde1e453c034e9afa7",
@@ -112,20 +109,14 @@ const PRESENTATION = VerifiablePresentation.fromString(`{
 
 test.each(clients)('verifyPresentation', async (client) => {
     const context = await client.getCryptographicParameters(BLOCK_HASH);
-    const data = await getPublicData(
-        client,
-        'Testnet',
-        PRESENTATION,
-        BLOCK_HASH
-    );
+    const data = await getPublicData(client, 'Testnet', PRESENTATION, BLOCK_HASH);
     const request = verifyPresentation(
         PRESENTATION,
         context,
         data.map((d) => d.inputs)
     );
     const expected: Web3IdProofRequest = {
-        challenge:
-            'd7bce30c25cad255a30b8bc72a7d4ee654d2d1e0fa4342fde1e453c034e9afa7',
+        challenge: 'd7bce30c25cad255a30b8bc72a7d4ee654d2d1e0fa4342fde1e453c034e9afa7',
         credentialStatements: [
             {
                 id: 'did:ccd:testnet:sci:6260:0/credentialEntry/70159fe625e369b05c09294692088174dbc5df15b78ebd6722e5cac6f6b93052',
@@ -133,11 +124,7 @@ test.each(clients)('verifyPresentation', async (client) => {
                     { attributeTag: 'userId', type: 'RevealAttribute' },
                     { attributeTag: 'username', type: 'RevealAttribute' },
                 ],
-                type: [
-                    'ConcordiumVerifiableCredential',
-                    'SoMeCredential',
-                    'VerifiableCredential',
-                ],
+                type: ['ConcordiumVerifiableCredential', 'SoMeCredential', 'VerifiableCredential'],
             },
             {
                 id: 'did:ccd:testnet:cred:9549a7e0894fe888a68019e31db5a99a21c9b14cca0513934e9951057c96434a86dd54f90ff2bf18b99dad5ec64d7563',

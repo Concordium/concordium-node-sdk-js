@@ -1,18 +1,14 @@
 import { ContractTransactionMetadata } from '../GenericContract.js';
-import * as ModuleReference from './ModuleReference.js';
-import * as BlockHash from './BlockHash.js';
-import * as Parameter from './Parameter.js';
-import * as TransactionHash from './TransactionHash.js';
-import * as ContractName from './ContractName.js';
-import {
-    AccountTransactionType,
-    InitContractPayload,
-    VersionedModuleSource,
-} from '../types.js';
 import { ConcordiumGRPCClient } from '../grpc/index.js';
 import { AccountSigner, signTransaction } from '../signHelpers.js';
+import { AccountTransactionType, InitContractPayload, VersionedModuleSource } from '../types.js';
+import * as BlockHash from './BlockHash.js';
 import * as CcdAmount from './CcdAmount.js';
+import * as ContractName from './ContractName.js';
+import * as ModuleReference from './ModuleReference.js';
+import * as Parameter from './Parameter.js';
 import * as TransactionExpiry from './TransactionExpiry.js';
+import * as TransactionHash from './TransactionHash.js';
 
 /**
  * An update transaction without header.
@@ -58,10 +54,7 @@ export function instanceOf(value: unknown): value is ModuleClient {
  *
  * @returns {ModuleClient}
  */
-export function createUnchecked(
-    grpcClient: ConcordiumGRPCClient,
-    moduleReference: ModuleReference.Type
-): ModuleClient {
+export function createUnchecked(grpcClient: ConcordiumGRPCClient, moduleReference: ModuleReference.Type): ModuleClient {
     return new ModuleClient(grpcClient, moduleReference);
 }
 
@@ -94,10 +87,7 @@ export async function create(
  * @throws {RpcError} If failing to communicate with the concordium node or module is not deployed on chain.
  * @returns {boolean} Indicating whether the module is deployed on chain.
  */
-export async function checkOnChain(
-    moduleClient: ModuleClient,
-    blockHash?: BlockHash.Type
-): Promise<void> {
+export async function checkOnChain(moduleClient: ModuleClient, blockHash?: BlockHash.Type): Promise<void> {
     await getModuleSource(moduleClient, blockHash);
 }
 
@@ -114,10 +104,7 @@ export function getModuleSource(
     moduleClient: ModuleClient,
     blockHash?: BlockHash.Type
 ): Promise<VersionedModuleSource> {
-    return moduleClient.grpcClient.getModuleSource(
-        moduleClient.moduleReference,
-        blockHash
-    );
+    return moduleClient.grpcClient.getModuleSource(moduleClient.moduleReference, blockHash);
 }
 
 /**
@@ -147,9 +134,7 @@ export async function createAndSendInitTransaction(
         maxContractExecutionEnergy: metadata.energy,
         param: parameter,
     };
-    const { nonce } = await moduleClient.grpcClient.getNextAccountNonce(
-        metadata.senderAddress
-    );
+    const { nonce } = await moduleClient.grpcClient.getNextAccountNonce(metadata.senderAddress);
     const header = {
         expiry: metadata.expiry ?? TransactionExpiry.futureMinutes(5),
         nonce: nonce,
@@ -161,8 +146,5 @@ export async function createAndSendInitTransaction(
         payload,
     };
     const signature = await signTransaction(transaction, signer);
-    return moduleClient.grpcClient.sendAccountTransaction(
-        transaction,
-        signature
-    );
+    return moduleClient.grpcClient.sendAccountTransaction(transaction, signature);
 }

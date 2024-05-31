@@ -16,12 +16,7 @@ import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
  * const client = new ConcordiumGRPCClient('127.0.0.1', 20000, creds);
  */
 export class ConcordiumGRPCNodeClient extends ConcordiumGRPCClient {
-    constructor(
-        address: string,
-        port: number,
-        credentials: ChannelCredentials,
-        options?: Partial<GrpcOptions>
-    ) {
+    constructor(address: string, port: number, credentials: ChannelCredentials, options?: Partial<GrpcOptions>) {
         const transport = new GrpcTransport({
             host: `${address}:${port}`,
             channelCredentials: credentials,
@@ -31,8 +26,4 @@ export class ConcordiumGRPCNodeClient extends ConcordiumGRPCClient {
     }
 }
 
-export {
-    credentials,
-    ChannelCredentials,
-    CallCredentials,
-} from '@grpc/grpc-js';
+export { credentials, ChannelCredentials, CallCredentials } from '@grpc/grpc-js';

@@ -48,9 +48,7 @@ export function isTypedJsonCandidate(value: unknown): value is TypedJson<any> {
         return false;
     }
 
-    return ['@type', 'value'].every((name) =>
-        Object.getOwnPropertyNames(value).includes(name)
-    );
+    return ['@type', 'value'].every((name) => Object.getOwnPropertyNames(value).includes(name));
 }
 
 /**
@@ -99,9 +97,7 @@ export class TypedJsonWrongTypeError extends TypedJsonParseError {
         public readonly expected: TypedJsonDiscriminator,
         public readonly actual: TypedJsonDiscriminator
     ) {
-        super(
-            `Wrong type discriminator found in JSON. Expected "${expected}", found "${actual}"`
-        );
+        super(`Wrong type discriminator found in JSON. Expected "${expected}", found "${actual}"`);
     }
 }
 
@@ -133,15 +129,10 @@ export class TypedJsonInvalidValueError extends TypedJsonParseError {
  *
  * @returns The JSON parser function
  */
-export function makeFromTypedJson<V, T>(
-    expectedTypeDiscriminator: TypedJsonDiscriminator,
-    toType: (value: V) => T
-) {
+export function makeFromTypedJson<V, T>(expectedTypeDiscriminator: TypedJsonDiscriminator, toType: (value: V) => T) {
     return ({ ['@type']: type, value }: TypedJson<V>): T | V => {
         if (type === undefined || value === undefined) {
-            throw new TypedJsonMalformedError(
-                'Expected both "@type" and "value" properties to be available in JSON'
-            );
+            throw new TypedJsonMalformedError('Expected both "@type" and "value" properties to be available in JSON');
         }
 
         if (expectedTypeDiscriminator !== type) {

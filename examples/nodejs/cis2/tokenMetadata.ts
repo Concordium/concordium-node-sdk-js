@@ -45,21 +45,14 @@ const cli = meow(
 );
 
 const [address, port] = cli.flags.endpoint.split(':');
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 if (cli.flags.h) {
     cli.showHelp();
 }
 
 (async () => {
-    const contract = await CIS2Contract.create(
-        client,
-        ContractAddress.create(cli.flags.index, cli.flags.subindex)
-    );
+    const contract = await CIS2Contract.create(client, ContractAddress.create(cli.flags.index, cli.flags.subindex));
 
     const url = await contract.tokenMetadata(cli.flags.tokenId);
     console.log('url object:', url);

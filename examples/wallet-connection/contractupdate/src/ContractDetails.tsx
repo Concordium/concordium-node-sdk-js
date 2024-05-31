@@ -1,5 +1,5 @@
-import { Alert, Col, Row } from 'react-bootstrap';
 import { Info } from '@concordium/react-components';
+import { Alert, Col, Row } from 'react-bootstrap';
 
 interface Props {
     contract: Info;

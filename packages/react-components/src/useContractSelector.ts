@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import {
     AccountAddress,
     CcdAmount,
@@ -7,6 +6,8 @@ import {
     ContractName,
     ReceiveName,
 } from '@concordium/web-sdk';
+import { useEffect, useState } from 'react';
+
 import { errorString } from './error';
 
 /**

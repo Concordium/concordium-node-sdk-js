@@ -1,20 +1,17 @@
 import { Buffer } from 'buffer/index.js';
 import { stringify } from 'json-bigint';
 
-import { ConcordiumGRPCClient } from './grpc/GRPCClient.js';
-import {
-    encodeWord16,
-    packBufferWithWord8Length,
-} from './serializationHelpers.js';
-import { makeDynamicFunction } from './util.js';
 import { makeDeserializeListResponse } from './deserializationHelpers.js';
-import * as ContractAddress from './types/ContractAddress.js';
+import { ConcordiumGRPCClient } from './grpc/GRPCClient.js';
+import { encodeWord16, packBufferWithWord8Length } from './serializationHelpers.js';
 import * as BlockHash from './types/BlockHash.js';
-import * as Parameter from './types/Parameter.js';
+import * as ContractAddress from './types/ContractAddress.js';
 import * as ContractName from './types/ContractName.js';
+import * as EntrypointName from './types/EntrypointName.js';
+import * as Parameter from './types/Parameter.js';
 import * as ReceiveName from './types/ReceiveName.js';
 import * as ReturnValue from './types/ReturnValue.js';
-import * as EntrypointName from './types/EntrypointName.js';
+import { makeDynamicFunction } from './util.js';
 
 /**
  * Namespace with types for CIS-0 standard contracts
@@ -22,12 +19,7 @@ import * as EntrypointName from './types/EntrypointName.js';
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace CIS0 {
     /** Identifier to query for support, f.x. 'CIS-2' */
-    export type StandardIdentifier =
-        | 'CIS-0'
-        | 'CIS-1'
-        | 'CIS-2'
-        | 'CIS-3'
-        | string;
+    export type StandardIdentifier = 'CIS-0' | 'CIS-1' | 'CIS-2' | 'CIS-3' | string;
     /** Possible response types for a query */
     export enum SupportType {
         /** The standard is not supported */
@@ -64,32 +56,31 @@ function serializeSupportIdentifiers(ids: CIS0.StandardIdentifier[]): Buffer {
     return Buffer.concat([n, ...ids.map(serializeSupportIdentifier)]);
 }
 
-const deserializeSupportResult =
-    makeDeserializeListResponse<CIS0.SupportResult>((cursor) => {
-        const type = cursor.read(1).readUInt8(0);
+const deserializeSupportResult = makeDeserializeListResponse<CIS0.SupportResult>((cursor) => {
+    const type = cursor.read(1).readUInt8(0);
 
-        if (type > 2) {
-            throw new Error('Unsupported support result type');
-        }
+    if (type > 2) {
+        throw new Error('Unsupported support result type');
+    }
 
-        if (type !== CIS0.SupportType.SupportBy) {
-            return { type };
-        }
+    if (type !== CIS0.SupportType.SupportBy) {
+        return { type };
+    }
 
-        const numAddresses = cursor.read(1).readUInt8(0);
-        const addresses: ContractAddress.Type[] = [];
+    const numAddresses = cursor.read(1).readUInt8(0);
+    const addresses: ContractAddress.Type[] = [];
 
-        for (let i = 0; i < numAddresses; i++) {
-            const index = cursor.read(8).readBigUInt64LE(0).valueOf();
-            const subindex = cursor.read(8).readBigUInt64LE(0).valueOf();
-            addresses.push(ContractAddress.create(index, subindex));
-        }
+    for (let i = 0; i < numAddresses; i++) {
+        const index = cursor.read(8).readBigUInt64LE(0).valueOf();
+        const subindex = cursor.read(8).readBigUInt64LE(0).valueOf();
+        addresses.push(ContractAddress.create(index, subindex));
+    }
 
-        return {
-            type,
-            addresses,
-        };
-    });
+    return {
+        type,
+        addresses,
+    };
+});
 
 /**
  * Queries a CIS-0 contract for support for a {@link CIS0.StandardIdentifier}.
@@ -133,33 +124,22 @@ export async function cis0Supports(
     standardIds: CIS0.StandardIdentifier | CIS0.StandardIdentifier[],
     blockHash?: BlockHash.Type
 ): Promise<CIS0.SupportResult | CIS0.SupportResult[] | undefined> {
-    const instanceInfo = await grpcClient
-        .getInstanceInfo(contractAddress)
-        .catch((e) => {
-            throw new Error(
-                `Could not get contract instance info for contract at address ${stringify(
-                    contractAddress
-                )}: ${e.message ?? e}`
-            );
-        });
+    const instanceInfo = await grpcClient.getInstanceInfo(contractAddress).catch((e) => {
+        throw new Error(
+            `Could not get contract instance info for contract at address ${stringify(
+                contractAddress
+            )}: ${e.message ?? e}`
+        );
+    });
 
     const contractName = ContractName.fromInitName(instanceInfo.name);
-    const supportReceiveName = ReceiveName.create(
-        contractName,
-        EntrypointName.fromStringUnchecked('supports')
-    );
+    const supportReceiveName = ReceiveName.create(contractName, EntrypointName.fromStringUnchecked('supports'));
 
-    if (
-        !instanceInfo.methods.some((methods) =>
-            ReceiveName.equals(methods, supportReceiveName)
-        )
-    ) {
+    if (!instanceInfo.methods.some((methods) => ReceiveName.equals(methods, supportReceiveName))) {
         return undefined;
     }
 
-    const parameter = Parameter.fromBuffer(
-        makeDynamicFunction(serializeSupportIdentifiers)(standardIds)
-    );
+    const parameter = Parameter.fromBuffer(makeDynamicFunction(serializeSupportIdentifiers)(standardIds));
 
     const response = await grpcClient.invokeContract(
         {
@@ -170,30 +150,19 @@ export async function cis0Supports(
         blockHash
     );
 
-    if (
-        response === undefined ||
-        response.tag === 'failure' ||
-        response.returnValue === undefined
-    ) {
+    if (response === undefined || response.tag === 'failure' || response.returnValue === undefined) {
         throw new Error(
-            `Failed to invoke support for contract at ${stringify(
-                contractAddress
-            )}${
-                response.tag === 'failure' &&
-                ` with error ${stringify(response.reason)}`
+            `Failed to invoke support for contract at ${stringify(contractAddress)}${
+                response.tag === 'failure' && ` with error ${stringify(response.reason)}`
             }`
         );
     }
-    const results = deserializeSupportResult(
-        ReturnValue.toHexString(response.returnValue)
-    );
+    const results = deserializeSupportResult(ReturnValue.toHexString(response.returnValue));
     const isListInput = Array.isArray(standardIds);
     const expectedValuesLength = isListInput ? standardIds.length : 1;
 
     if (results.length !== expectedValuesLength) {
-        throw new Error(
-            'Mismatch between length of queries in request and values in response.'
-        );
+        throw new Error('Mismatch between length of queries in request and values in response.');
     }
 
     if (isListInput) {

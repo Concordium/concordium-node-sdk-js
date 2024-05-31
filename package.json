@@ -38,7 +38,7 @@
         "eslint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint:all": "yarn eslint",
         "lint-fix:all": "yar eslint --fix",
-        "prettier": "prettier ./.*.* ./*.* -u --cache",
+        "prettier": "prettier ./.*.* ./*.* .github/**/* -u --cache",
         "fmt:all": "yarn prettier --write && yarn workspaces foreach --all -p run fmt",
         "fmt-check:all": "yarn prettier --check && yarn workspaces foreach --all -p run fmt-check",
         "markdown:lint": "markdownlint docs/README.md docs/pages/**/*.md packages/*/README.md examples/*/README.md README.md",

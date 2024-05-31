@@ -8,8 +8,7 @@ import {
     WalletConnection,
     moduleSchemaFromBase64,
     typeSchemaFromBase64,
-} from '@concordium/react-components';
-import { useModuleSchemaRpc } from '@concordium/react-components';
+ useModuleSchemaRpc } from '@concordium/react-components';
 import {
     AccountAddress,
     AccountTransactionType,

@@ -15,6 +15,7 @@ module.exports = {
         tsconfigRootDir: __dirname,
         project: [
             './packages/**/tsconfig.json',
+            './examples/wallet-connection/*/tsconfig.json',
             './docs/**/tsconfig.json',
             '**/tsconfig.eslint.json',
         ],
@@ -35,7 +36,7 @@ module.exports = {
         'import/no-extraneous-dependencies': [
             'error',
             {
-                devDependencies: ['**/*/test/*', '**/*.config.*'],
+                devDependencies: ['**/*/test/*', '**/*.config.*', '**/*/__tests__/*'],
             },
         ],
         '@typescript-eslint/no-unused-vars': [

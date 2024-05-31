@@ -32,7 +32,9 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@concordium/wallet-connectors": "^0.5.1"
+        "@concordium/wallet-connectors": "^0.5.1",
+        "@protobuf-ts/grpcweb-transport": "^2.9.4",
+        "buffer": "^6.0.3"
     },
     "devDependencies": {
         "@tsconfig/recommended": "^1.0.1",

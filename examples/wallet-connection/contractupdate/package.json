@@ -5,6 +5,7 @@
     "dependencies": {
         "@concordium/react-components": "workspace:^",
         "@concordium/web-sdk": "^7.1.0",
+        "@walletconnect/types": "^2.13.1",
         "bootstrap": "^5.2.3",
         "buffer": "^6.0.3",
         "neverthrow": "^6.0.0",
@@ -16,29 +17,25 @@
         "web-vitals": "^2.1.0"
     },
     "devDependencies": {
-        "@testing-library/jest-dom": "^5.14.1",
-        "@testing-library/react": "^13.0.0",
-        "@testing-library/user-event": "^13.2.1",
         "@types/is-base64": "^1.1.1",
-        "@types/jest": "^27.0.1",
         "@types/node": "^16.7.13",
         "@types/react": "^18.0.0",
         "@types/react-dom": "^18.0.0",
-        "prettier": "2.8.1",
+        "eslint": "8",
+        "prettier": "^3.2.5",
         "react-scripts": "^5.0.1",
         "typescript": "^5.2.2"
     },
     "scripts": {
+        "lint": "eslint . --cache --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "lint-fix": "yarn lint --fix",
+        "prettier": "prettier . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore --ignore-path .gitignore",
+        "fmt": "yarn prettier --write",
+        "fmt-check": "yarn prettier --check",
         "start": "react-scripts start",
         "build": "react-scripts build",
         "test": "react-scripts test",
         "eject": "react-scripts eject"
-    },
-    "eslintConfig": {
-        "extends": [
-            "react-app",
-            "react-app/jest"
-        ]
     },
     "browserslist": {
         "production": [

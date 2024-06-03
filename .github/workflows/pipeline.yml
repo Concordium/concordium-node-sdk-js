@@ -112,6 +112,8 @@ jobs:
                       packages/sdk/lib
                       packages/sdk/src
                       packages/ccd-js-gen/lib
+                      packages/wallet-connectors/dist
+                      packages/react-components/dist
 
     tests:
         runs-on: ubuntu-22.04

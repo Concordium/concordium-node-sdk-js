@@ -10,13 +10,13 @@ Wrappers for interacting with the Concordium node.
 - [Concordium SDK for Javascript](#concordium-sdk-for-javascript)
   - [Documentation](#documentation)
   - [Packages](#packages)
-<!-- markdown-link-check-disable -->
+    <!-- markdown-link-check-disable -->
     - [sdk](#sdk-package)
     - [rust-bindings](#rust-bindings-package)
     - [ccd-js-gen package](#ccd-js-gen-package)
     - [wallet-connectors](#wallet-connectors-package)
     - [react-components](#react-components-package)
-<!-- markdown-link-check-enable -->
+    <!-- markdown-link-check-enable -->
   - [Install/updating dependencies](#installupdating-dependencies)
     - [MacOS arm64](#macos-arm64)
   - [Build](#build)

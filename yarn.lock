@@ -3679,6 +3679,7 @@ __metadata:
     typescript: ^5.2.2
   peerDependencies:
     "@concordium/web-sdk": 7.x
+    "@walletconnect/types": ^2.13.1
   languageName: unknown
   linkType: soft
 
@@ -3723,6 +3724,8 @@ __metadata:
     uuid: ^8.3.2
     webpack: ^5.88.2
     webpack-cli: ^5.1.4
+  peerDependencies:
+    "@protobuf-ts/runtime-rpc": ^2.8.2
   languageName: unknown
   linkType: soft
 
@@ -5587,21 +5590,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@protobuf-ts/runtime-rpc@npm:^2.8.2, @protobuf-ts/runtime-rpc@npm:^2.9.1":
+"@protobuf-ts/runtime-rpc@npm:2.9.1":
   version: 2.9.1
   resolution: "@protobuf-ts/runtime-rpc@npm:2.9.1"
   dependencies:
     "@protobuf-ts/runtime": ^2.9.1
   checksum: 16f28b95f9e6418d44ba9f51c6d30ffb8bacd7902ccf4a8833bb1ffe498342ec2f1cfe6090bda547449c64995fbb7cc8b13a7ac01ceb6500f7d2f2087143dde6
-  languageName: node
-  linkType: hard
-
-"@protobuf-ts/runtime-rpc@npm:^2.9.4":
-  version: 2.9.4
-  resolution: "@protobuf-ts/runtime-rpc@npm:2.9.4"
-  dependencies:
-    "@protobuf-ts/runtime": ^2.9.4
-  checksum: a457c981aef71b5121b1f5a1a3e49510fd42017c7a88d75c60b3ba425a3fab886f8e89e8987f601c0585fdbcdeb4dc6c616ad6c8c0cae8b822cd9c0387d77345
   languageName: node
   linkType: hard
 
@@ -8218,20 +8212,6 @@ __metadata:
     "@walletconnect/logger": 2.1.2
     events: 3.3.0
   checksum: 868e12449026154c5a8945359ab03c2f2dd7dd329e631fea721e8399928823b93585013784253d787daf184adb76de6bccd76525679b4c87fd830300c70275d4
-  languageName: node
-  linkType: hard
-
-"@walletconnect/types@npm:^2.13.1":
-  version: 2.13.1
-  resolution: "@walletconnect/types@npm:2.13.1"
-  dependencies:
-    "@walletconnect/events": 1.0.1
-    "@walletconnect/heartbeat": 1.2.2
-    "@walletconnect/jsonrpc-types": 1.0.4
-    "@walletconnect/keyvaluestorage": 1.1.1
-    "@walletconnect/logger": 2.1.2
-    events: 3.3.0
-  checksum: 5a028bf2d1c250ffadf6a5b898553bd6f63d4eb944d73bd43a633b2d12854c4908cf966fd18c21275490e93d91f39cbd6b5461b0fc38c8eafb5b9554b1203aeb
   languageName: node
   linkType: hard
 

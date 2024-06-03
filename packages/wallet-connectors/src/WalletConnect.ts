@@ -24,7 +24,8 @@ import {
 } from '@concordium/web-sdk';
 import { WalletConnectModal, WalletConnectModalConfig } from '@walletconnect/modal';
 import { MobileWallet } from '@walletconnect/modal-core';
-import { SignClient } from '@walletconnect/sign-client';
+// eslint-disable-next-line import/no-named-as-default
+import SignClient from '@walletconnect/sign-client';
 import { ISignClient, ProposalTypes, SessionTypes, SignClientTypes } from '@walletconnect/types';
 import {
     Network,

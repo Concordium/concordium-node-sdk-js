@@ -48,6 +48,7 @@
         "markdown:lint": "markdownlint docs/README.md docs/pages/**/*.md packages/*/README.md examples/*/README.md README.md",
         "markdown:lint-fix": "yarn markdown:lint --fix",
         "markdown:linkcheck": "markdown-link-check --config .markdown-linkcheck.json docs/README.md docs/pages/**/*.md packages/*/README.md examples/*/README.md README.md",
+        "build-ci": "FORCE_COLOR=true yarn workspaces foreach -vt run build",
         "build:all": "FORCE_COLOR=true yarn workspaces foreach -vt --no-private run build",
         "build-dev:all": "FORCE_COLOR=true yarn workspaces foreach -vt --no-private run build-dev",
         "clean:all": "FORCE_COLOR=true yarn workspaces foreach -p --no-private run clean"

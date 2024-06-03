@@ -29,7 +29,7 @@
         "prettier": "prettier . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore --ignore-path .gitignore",
         "fmt": "yarn prettier --write",
         "fmt-check": "yarn prettier --check",
-        "typecheck": "tsc --noEmit",
+        "build": "tsc --noEmit",
         "run-example": "ts-node"
     }
 }

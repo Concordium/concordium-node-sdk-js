@@ -32,6 +32,10 @@
         "markdownlint-cli": "^0.34.0",
         "prettier": "^3.2.5"
     },
+    "resolutions": {
+        "@walletconnect/types": "2.13.0",
+        "@protobuf-ts/runtime-rpc": "2.9.1"
+    },
     "scripts": {
         "test-ci": "yarn workspace @concordium/web-sdk run test-ci && yarn workspaces foreach --no-private --exclude @concordium/web-sdk run test",
         "test:all": "FORCE_COLOR=true yarn workspaces foreach --no-private run test --passWithNoTests",
@@ -44,6 +48,7 @@
         "markdown:lint": "markdownlint docs/README.md docs/pages/**/*.md packages/*/README.md examples/*/README.md README.md",
         "markdown:lint-fix": "yarn markdown:lint --fix",
         "markdown:linkcheck": "markdown-link-check --config .markdown-linkcheck.json docs/README.md docs/pages/**/*.md packages/*/README.md examples/*/README.md README.md",
+        "build-ci": "FORCE_COLOR=true yarn workspaces foreach -vt run build",
         "build:all": "FORCE_COLOR=true yarn workspaces foreach -vt --no-private run build",
         "build-dev:all": "FORCE_COLOR=true yarn workspaces foreach -vt --no-private run build-dev",
         "clean:all": "FORCE_COLOR=true yarn workspaces foreach -p --no-private run clean"

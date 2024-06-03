@@ -13,7 +13,8 @@
         "start": "react-native start",
         "postinstall": "pod-install",
         "clean": "react-native clean-project",
-        "test": "jest"
+        "test": "jest",
+        "build": "tsc --noEmit"
     },
     "dependencies": {
         "@azure/core-asynciterator-polyfill": "^1.0.2",

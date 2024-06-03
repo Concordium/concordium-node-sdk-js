@@ -99,7 +99,7 @@ jobs:
             deps/concordium-base/concordium-contracts-common
 
       - name: Build
-        run: yarn build:all
+        run: yarn build-ci
 
       - name: Store build-debug
         uses: actions/upload-artifact@v4
@@ -111,36 +111,6 @@ jobs:
             packages/sdk/lib
             packages/sdk/src
             packages/ccd-js-gen/lib
-
-  typecheck-examples:
-    runs-on: ubuntu-22.04
-    needs: build
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: yarn
-
-      - name: Restore dependencies
-        uses: actions/cache/restore@v3
-        with:
-          path: |
-            ./node_modules
-            ./docs/node_modules
-            ./packages/*/node_modules
-            ./examples/**/node_modules
-          key: ${{ runner.os }}-yarn
-
-      - name: Get build-debug
-        uses: actions/download-artifact@v4
-        with:
-          path: packages
-          name: build-debug
-
-      - name: Typecheck examples
-        run: yarn workspace @concordium/examples typecheck
 
   tests:
     runs-on: ubuntu-22.04

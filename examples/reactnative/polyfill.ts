@@ -1,8 +1,8 @@
 // #region documentation-snippet
 // Requires peer dependency `text-encoding`
-// @ts-ignore
 import '@azure/core-asynciterator-polyfill';
 import '@stardazed/streams-polyfill';
+// @ts-ignore
 import { polyfill as polyfillCrypto } from 'react-native-polyfill-globals/src/crypto';
 // @ts-ignore
 import { polyfill as polyfillEncoding } from 'react-native-polyfill-globals/src/encoding';

@@ -25,8 +25,8 @@ Implementations may support multiple active connections from the same connector.
 A connection allows the application to interact with a wallet.
 The following interactions are supported:
 
--   `signMessage`: Ask the wallet to sign a message and return it back to the dApp.
--   `signAndSendTransaction`: Ask the wallet to sign a transaction and submit it to a node.
+- `signMessage`: Ask the wallet to sign a message and return it back to the dApp.
+- `signAndSendTransaction`: Ask the wallet to sign a transaction and submit it to a node.
 
 The wallet is responsible for prompting its user for approval of all interactions.
 

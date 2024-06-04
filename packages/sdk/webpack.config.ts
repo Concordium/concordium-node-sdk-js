@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
-// eslint-disable-next-line import/no-named-as-default
 import { resolve } from 'path';
 import url from 'url';
+// eslint-disable-next-line import/no-named-as-default
 import webpack from 'webpack';
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));

@@ -5,7 +5,7 @@ on:
   push:
     branches: [main, release**, feature**]
   pull_request:
-    branches: ["**"]
+    branches: ['**']
     # Don't run on draft PR's, see: https://github.com/orgs/community/discussions/25722#discussioncomment-3248917
     types: [opened, synchronize, reopened, ready_for_review]
   # Allows us to run the workflow manually from the Actions tab

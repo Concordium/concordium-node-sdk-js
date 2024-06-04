@@ -10,11 +10,13 @@ Wrappers for interacting with the Concordium node.
 - [Concordium SDK for Javascript](#concordium-sdk-for-javascript)
   - [Documentation](#documentation)
   - [Packages](#packages)
+    <!-- markdown-link-check-disable -->
     - [sdk](#sdk-package)
     - [rust-bindings](#rust-bindings-package)
     - [ccd-js-gen package](#ccd-js-gen-package)
     - [wallet-connectors](#wallet-connectors-package)
     - [react-components](#react-components-package)
+    <!-- markdown-link-check-enable -->
   - [Install/updating dependencies](#installupdating-dependencies)
     - [MacOS arm64](#macos-arm64)
   - [Build](#build)
@@ -42,18 +44,18 @@ A collection of useful packages for building typescript/javascript applications 
 - <a id="sdk-package"></a>[`@concordium/web-sdk`](./packages/sdk):
   Contains the actual SDK, which can used in both a web and NodeJS environment.
 
-- <a id="rust-bindings-package"></a>[`@concordium/rust-bindings`](./packages/rust-bindings){#rust-bindings-package}:
+- <a id="rust-bindings-package"></a>[`@concordium/rust-bindings`](./packages/rust-bindings):
   Contains bindings for Rust code, which is used by the SDK through WASM. This package is a utility package that
   should not be used directly, only through the usage of the SDK.
 
-- <a id="ccd-js-gen-package"></a>[`@concordium/ccd-js-gen`](./packages/ccd-js-gen){#ccd-js-gen-package}:
+- <a id="ccd-js-gen-package"></a>[`@concordium/ccd-js-gen`](./packages/ccd-js-gen):
   A library and CLI for generating smart contract clients for TypeScript and JavaScript
 
-- <a id="wallet-connectors-package"></a>[`@concordium/wallet-connectors`](./packages/wallet-connectors){#wallet-connectors-package}:
+- <a id="wallet-connectors-package"></a>[`@concordium/wallet-connectors`](./packages/wallet-connectors):
   Interfaces for interacting with wallets along with implementations for Browser Wallet and WalletConnect (v2).
   The library has no dependencies to any UI framework.
 
-- <a id="react-components-package"></a>[`@concordium/react-components`](./packages/react-components){#react-components-package}:
+- <a id="react-components-package"></a>[`@concordium/react-components`](./packages/react-components):
   React components and hooks for implementing features commonly needed by dApps.
   The components only manage React state and pass data to application components - no actual HTML is being rendered.
 

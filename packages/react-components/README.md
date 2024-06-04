@@ -51,7 +51,7 @@ export const WALLET_CONNECT = ephemeralConnectorType((delegate, network) =>
 where `walletConnectOptions` is the initialization configuration for WalletConnect
 and `walletConnectNamespaceConfig` is the Concordium-specific connection configuration (optional; defaults to all supported methods and events).
 In practice, both of these values are usually constants.
-See [sample configuration](../../samples/sign-message/src/config.ts) for a complete example.
+See [sample configuration](../../examples/wallet-connection/sign-message/src/config.ts) for a complete example.
 
 Initiate a connection by invoking `connect` on a connector.
 This is most easily done using the hooks `useConnection` and `useConnect`:
@@ -75,18 +75,18 @@ This may be used to disable a button whose click handler invokes the function, l
 
 Once established, the connection and its state are exposed in the following fields:
 
--   `connection`: The `WalletConnection` object that the app uses to interact with the wallet.
-    Is `undefined` if there is no established connection.
--   `account`: The account that `connection` is associated with in the wallet
-    or the empty string if the connection isn't associated with an account.
--   `genesisHash`: The hash of the genesis block for the chain that `account` lives on
-    if this value has been reported by the wallet or `undefined` otherwise.
-    This may for instance be used to check that `account` lives on the expected network.
-    Use with care as some wallets don't provide this value reliably.
+- `connection`: The `WalletConnection` object that the app uses to interact with the wallet.
+  Is `undefined` if there is no established connection.
+- `account`: The account that `connection` is associated with in the wallet
+  or the empty string if the connection isn't associated with an account.
+- `genesisHash`: The hash of the genesis block for the chain that `account` lives on
+  if this value has been reported by the wallet or `undefined` otherwise.
+  This may for instance be used to check that `account` lives on the expected network.
+  Use with care as some wallets don't provide this value reliably.
 
 All the fields hold the value `undefined` until the connection has been established and again after it's been disconnected.
 
-See [the sample dApp](../../samples/contractupdate/src/Root.tsx) for a complete example.
+See [the sample dApp](../../examples/wallet-connection/contractupdate/src/Root.tsx) for a complete example.
 
 ## Hooks
 
@@ -118,7 +118,7 @@ export function WalletConnectorButton(props: Props) {
 
 It's important that the `ConnectorType` reference passed to the hook is fixed.
 
-See [the sample dApp](../../samples/contractupdate/src/WalletConnectorButton.tsx) for a complete example.
+See [the sample dApp](../../examples/wallet-connection/contractupdate/src/WalletConnectorButton.tsx) for a complete example.
 
 ### [`useContractSelector`](./src/useContractSelector.ts)
 
@@ -146,7 +146,7 @@ export function ContractStuff({ rpc }: Props) {
 ```
 
 Use the hook [`useGrpcClient`](#usegrpcclient) below to obtain a `ConcordiumGRPCClient` instance.
-See [the sample dApp](../../samples/contractupdate/src/Root.tsx) for a complete example.
+See [the sample dApp](../../examples/wallet-connection/contractupdate/src/Root.tsx) for a complete example.
 
 ### [`useModuleSchemaRpc`](./src/useModuleSchemaRpc.ts)
 
@@ -174,7 +174,7 @@ export function ContractSchemaStuff({ rpc }: Props) {
 ```
 
 Use the hook [`useGrpcClient`](#usegrpcclient) below to obtain a `ConcordiumGRPCClient` instance.
-See [the sample dApp](../../samples/contractupdate/src/Root.tsx) for a complete example.
+See [the sample dApp](../../examples/wallet-connection/contractupdate/src/Root.tsx) for a complete example.
 
 ### [`useGrpcClient`](./src/useGrpcClient.ts)
 

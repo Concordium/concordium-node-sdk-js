@@ -1,9 +1,5 @@
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import {
-    TypedJson,
-    TypedJsonDiscriminator,
-    makeFromTypedJson,
-} from './util.js';
+import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
@@ -66,9 +62,7 @@ export function instanceOf(value: unknown): value is Duration {
  */
 export function fromMillis(value: number | bigint): Duration {
     if (value < 0) {
-        throw new Error(
-            'Invalid duration: The value cannot be a negative number.'
-        );
+        throw new Error('Invalid duration: The value cannot be a negative number.');
     }
     return new Duration(BigInt(value));
 }
@@ -129,9 +123,7 @@ export function fromString(durationString: string): Duration {
                 durationInMillis += value * 1000 * 60 * 60 * 24;
                 break;
             default:
-                throw new Error(
-                    `Invalid duration format: Unknown unit '${unit}'.`
-                );
+                throw new Error(`Invalid duration format: Unknown unit '${unit}'.`);
         }
     }
     return fromMillis(durationInMillis);
@@ -225,7 +217,4 @@ export function toTypedJSON(value: Duration): TypedJson<Serializable> {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
-    JSON_DISCRIMINATOR,
-    fromSerializable
-);
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromSerializable);

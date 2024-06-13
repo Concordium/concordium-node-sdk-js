@@ -11,10 +11,7 @@ test('replaceDateWithTimeStampAttribute', () => {
     const withDate = {
         date: new Date(timestamp),
     };
-    const serialized = JSON.stringify(
-        withDate,
-        replaceDateWithTimeStampAttribute
-    );
+    const serialized = JSON.stringify(withDate, replaceDateWithTimeStampAttribute);
     expect(serialized).toBe(withTimestamp);
 });
 

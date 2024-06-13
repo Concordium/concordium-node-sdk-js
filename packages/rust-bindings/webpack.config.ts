@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { Configuration } from 'webpack';
 import { resolve } from 'path';
+import { Configuration } from 'webpack';
 
 type WebpackEnv = Partial<{
     package: string;
@@ -27,10 +27,7 @@ function configFor(target: 'web' | 'node', pkg?: string): Configuration {
                     use: {
                         loader: 'ts-loader',
                         options: {
-                            configFile: resolve(
-                                __dirname,
-                                './tsconfig.build.json'
-                            ),
+                            configFile: resolve(__dirname, './tsconfig.build.json'),
                         },
                     },
                     exclude: /node_modules/,
@@ -66,7 +63,4 @@ function configFor(target: 'web' | 'node', pkg?: string): Configuration {
     return config;
 }
 
-export default (env: WebpackEnv) => [
-    configFor('web', env.package),
-    configFor('node', env.package),
-];
+export default (env: WebpackEnv) => [configFor('web', env.package), configFor('node', env.package)];

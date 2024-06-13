@@ -1,10 +1,11 @@
 import * as wasm from '@concordium/rust-bindings';
 import { Buffer } from 'buffer/index.js';
 import JSONbig from 'json-bigint';
+
+import { SchemaVersion, SmartContractTypeValues } from './types.js';
 import * as ContractName from './types/ContractName.js';
 import * as EntrypointName from './types/EntrypointName.js';
 import * as Parameter from './types/Parameter.js';
-import { SchemaVersion, SmartContractTypeValues } from './types.js';
 
 /**
  * @param moduleSchema buffer for the schema of a module that contains the contract
@@ -52,9 +53,7 @@ export function getUpdateContractParameterSchema(
  * @returns JSON template of the schema
  */
 export function displayTypeSchemaTemplate(rawSchema: ArrayBuffer): string {
-    return wasm.displayTypeSchemaTemplate(
-        Buffer.from(rawSchema).toString('hex')
-    );
+    return wasm.displayTypeSchemaTemplate(Buffer.from(rawSchema).toString('hex'));
 }
 
 /**
@@ -156,9 +155,7 @@ export function deserializeContractState(
             useNativeBigInt: true,
         }).parse(serializedState);
     } catch (e) {
-        throw new Error(
-            'unable to deserialize state, due to: ' + serializedState
-        ); // In this case serializedState is the error message from the rust module
+        throw new Error('unable to deserialize state, due to: ' + serializedState); // In this case serializedState is the error message from the rust module
     }
 }
 
@@ -194,10 +191,7 @@ export function deserializeReceiveReturnValue(
             useNativeBigInt: true,
         }).parse(deserializedReturnValue);
     } catch (e) {
-        throw new Error(
-            'unable to deserialize the return value, due to: ' +
-                deserializedReturnValue
-        ); // In this case deserializedReturnValue is the error message from the rust module
+        throw new Error('unable to deserialize the return value, due to: ' + deserializedReturnValue); // In this case deserializedReturnValue is the error message from the rust module
     }
 }
 
@@ -230,10 +224,7 @@ export function deserializeReceiveError(
             useNativeBigInt: true,
         }).parse(deserializedError);
     } catch (e) {
-        throw new Error(
-            'unable to deserialize the error value, due to: ' +
-                deserializedError
-        ); // In this case deserializedError is the error message from the rust module
+        throw new Error('unable to deserialize the error value, due to: ' + deserializedError); // In this case deserializedError is the error message from the rust module
     }
 }
 
@@ -263,10 +254,7 @@ export function deserializeInitError(
             useNativeBigInt: true,
         }).parse(deserializedError);
     } catch (e) {
-        throw new Error(
-            'unable to deserialize the error value, due to: ' +
-                deserializedError
-        ); // In this case deserializedError is the error message from the rust module
+        throw new Error('unable to deserialize the error value, due to: ' + deserializedError); // In this case deserializedError is the error message from the rust module
     }
 }
 

@@ -1,8 +1,4 @@
-import {
-    IdStatementBuilder,
-    verifyIdstatement,
-    AttributesKeys,
-} from '@concordium/web-sdk';
+import { AttributesKeys, IdStatementBuilder, verifyIdstatement } from '@concordium/web-sdk';
 
 /**
  * The following example shows how a proof statement can be built up.

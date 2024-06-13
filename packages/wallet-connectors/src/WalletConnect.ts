@@ -27,6 +27,7 @@ import { MobileWallet } from '@walletconnect/modal-core';
 // eslint-disable-next-line import/no-named-as-default
 import SignClient from '@walletconnect/sign-client';
 import { ISignClient, ProposalTypes, SessionTypes, SignClientTypes } from '@walletconnect/types';
+
 import {
     Network,
     Schema,

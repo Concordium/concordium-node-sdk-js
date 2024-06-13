@@ -1,7 +1,8 @@
-import { credentials } from '@grpc/grpc-js';
-import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import * as SDK from '@concordium/web-sdk';
+import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
+import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
+
 import { parseEndpoint } from '../shared/util.js';
 
 // The generated module could be imported directly like below,
@@ -52,30 +53,21 @@ const grpcClient = new ConcordiumGRPCNodeClient(
     scheme === 'https' ? credentials.createSsl() : credentials.createInsecure()
 );
 
-const contractAddress = SDK.ContractAddress.create(
-    cli.flags.index,
-    cli.flags.subindex
-);
+const contractAddress = SDK.ContractAddress.create(cli.flags.index, cli.flags.subindex);
 
 (async () => {
     // Importing the generated smart contract module client.
     /* eslint-disable import/no-unresolved */
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const wCCDContractClient = await import('./lib/wCCD_cis2_wCCD.js').catch(
-        (e) => {
-            /* eslint-enable import/no-unresolved */
-            console.error(
-                '\nFailed to load the generated wCCD module, did you run the `generate` script?\n'
-            );
-            throw e;
-        }
-    );
+    const wCCDContractClient = await import('./lib/wCCD_cis2_wCCD.js').catch((e) => {
+        /* eslint-enable import/no-unresolved */
+        console.error('\nFailed to load the generated wCCD module, did you run the `generate` script?\n');
+        throw e;
+    });
 
     // The sender of the transaction, i.e the one updating an operator.
-    const senderAccount = SDK.AccountAddress.fromBase58(
-        '357EYHqrmMiJBmUZTVG5FuaMq4soAhgtgz6XNEAJaXHW3NHaUf'
-    );
+    const senderAccount = SDK.AccountAddress.fromBase58('357EYHqrmMiJBmUZTVG5FuaMq4soAhgtgz6XNEAJaXHW3NHaUf');
     // The parameter adding the wCCD contract as an operator of sender.
     const parameter = [
         {
@@ -85,17 +77,10 @@ const contractAddress = SDK.ContractAddress.create(
     ];
 
     // The client for the wCCD contract
-    const contract = await wCCDContractClient.create(
-        grpcClient,
-        contractAddress
-    );
+    const contract = await wCCDContractClient.create(grpcClient, contractAddress);
 
     // Dry run the update of operator.
-    const result = await wCCDContractClient.dryRunUpdateOperator(
-        contract,
-        parameter,
-        { invoker: senderAccount }
-    );
+    const result = await wCCDContractClient.dryRunUpdateOperator(contract, parameter, { invoker: senderAccount });
     if (result.tag !== 'success') {
         throw new Error('Unexpected failure');
     }

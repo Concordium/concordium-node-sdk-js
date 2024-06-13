@@ -1,6 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { glob } from 'glob';
 import fs from 'fs';
+import { glob } from 'glob';
 
 const protoRoot = process.argv[2]; // First 2 arguments are node and path to this script. 3rd is expected to be location of generated proto type files.
 
@@ -14,9 +14,7 @@ files.forEach((file) => {
 
     content = content
         .split('\n')
-        .map((s) =>
-            s.replace(/^(import .+? from ["']\..+?)(["'];)$/, '$1.js$2')
-        )
+        .map((s) => s.replace(/^(import .+? from ["']\..+?)(["'];)$/, '$1.js$2'))
         .join('\n');
 
     fs.writeFileSync(file, content, 'utf-8');

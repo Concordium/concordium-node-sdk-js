@@ -1,6 +1,6 @@
 import type { BakerId } from '../types.js';
-import * as CcdAmount from './CcdAmount.js';
 import * as AccountAddress from './AccountAddress.js';
+import * as CcdAmount from './CcdAmount.js';
 
 export type BlockSpecialEvent =
     | BlockSpecialEventBakingRewards
@@ -123,22 +123,13 @@ export interface BlockSpecialEventAccountAmount {
  * @returns {AccountAddress.Type[]} List of account addresses affected by the event.
  */
 export function specialEventAffectedAccounts(
-    event: Exclude<
-        BlockSpecialEvent,
-        BlockSpecialEventBlockAccrueReward | BlockSpecialEventPaydayPoolReward
-    >
+    event: Exclude<BlockSpecialEvent, BlockSpecialEventBlockAccrueReward | BlockSpecialEventPaydayPoolReward>
 ): AccountAddress.Type[];
 export function specialEventAffectedAccounts(
-    event:
-        | BlockSpecialEventBlockAccrueReward
-        | BlockSpecialEventPaydayPoolReward
+    event: BlockSpecialEventBlockAccrueReward | BlockSpecialEventPaydayPoolReward
 ): never[];
-export function specialEventAffectedAccounts(
-    event: BlockSpecialEvent
-): AccountAddress.Type[];
-export function specialEventAffectedAccounts(
-    event: BlockSpecialEvent
-): AccountAddress.Type[] {
+export function specialEventAffectedAccounts(event: BlockSpecialEvent): AccountAddress.Type[];
+export function specialEventAffectedAccounts(event: BlockSpecialEvent): AccountAddress.Type[] {
     switch (event.tag) {
         case 'bakingRewards':
             return event.bakingRewards.map((br) => br.account);

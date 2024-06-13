@@ -1,7 +1,7 @@
-import { Buffer } from 'buffer/';
-import { useEffect, useState } from 'react';
 import { Schema, moduleSchema } from '@concordium/wallet-connectors';
 import { ConcordiumGRPCClient, ModuleReference, SchemaVersion } from '@concordium/web-sdk';
+import { Buffer } from 'buffer/';
+import { useEffect, useState } from 'react';
 
 /**
  * The result of extracting a smart contract {@link Schema} from a WebAssembly module.

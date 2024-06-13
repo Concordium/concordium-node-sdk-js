@@ -10,6 +10,7 @@ import {
     CredentialStatements,
     VerifiablePresentation,
 } from '@concordium/web-sdk';
+
 import {
     SignableMessage,
     TypedSmartContractParameters,

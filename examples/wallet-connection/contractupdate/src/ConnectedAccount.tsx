@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Alert } from 'react-bootstrap';
 import { Network } from '@concordium/react-components';
 import { AccountAddress, AccountInfo, ConcordiumGRPCClient } from '@concordium/web-sdk';
+import { useEffect, useState } from 'react';
+import { Alert } from 'react-bootstrap';
+
 import { errorString } from './util';
 
 interface Props {

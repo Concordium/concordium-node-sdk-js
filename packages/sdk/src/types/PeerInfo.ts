@@ -14,9 +14,7 @@ export interface PeerNetworkStats {
     latency: bigint;
 }
 
-export type PeerConsensusInfo =
-    | PeerConsensusInfoBootstrapper
-    | PeerConsensusInfoCatchupStatus;
+export type PeerConsensusInfo = PeerConsensusInfoBootstrapper | PeerConsensusInfoCatchupStatus;
 
 export interface PeerConsensusInfoBootstrapper {
     tag: 'bootstrapper';

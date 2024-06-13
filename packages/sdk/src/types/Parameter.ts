@@ -1,18 +1,11 @@
 import { Buffer } from 'buffer/index.js';
+
 import { checkParameterLength } from '../contractHelpers.js';
-import { SchemaType, serializeSchemaType } from '../schemaTypes.js';
-import { deserializeTypeValue, serializeTypeValue } from '../schema.js';
-import type {
-    Base64String,
-    HexString,
-    SmartContractTypeValues,
-} from '../types.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import {
-    TypedJson,
-    TypedJsonDiscriminator,
-    makeFromTypedJson,
-} from './util.js';
+import { deserializeTypeValue, serializeTypeValue } from '../schema.js';
+import { SchemaType, serializeSchemaType } from '../schemaTypes.js';
+import type { Base64String, HexString, SmartContractTypeValues } from '../types.js';
+import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
@@ -147,10 +140,7 @@ export function toBuffer(parameter: Parameter): Uint8Array {
  * @param {unknown} value The parameter value fitting the schema type.
  * @returns {Parameter} A parameter of the provided value encoded using the schema type.
  */
-export function fromSchemaType(
-    schemaType: SchemaType,
-    value: unknown
-): Parameter {
+export function fromSchemaType(schemaType: SchemaType, value: unknown): Parameter {
     const schemaBytes = serializeSchemaType(schemaType);
     return serializeTypeValue(value, schemaBytes);
 }
@@ -161,10 +151,7 @@ export function fromSchemaType(
  * @param {unknown} value The parameter value fitting the schema type.
  * @returns {Parameter} A parameter of the provided value encoded using the schema type.
  */
-export function fromBase64SchemaType(
-    schemaBase64: Base64String,
-    value: unknown
-): Parameter {
+export function fromBase64SchemaType(schemaBase64: Base64String, value: unknown): Parameter {
     const schemaBytes = Buffer.from(schemaBase64, 'base64');
     return serializeTypeValue(value, schemaBytes);
 }
@@ -175,10 +162,7 @@ export function fromBase64SchemaType(
  * @param {SchemaType} schemaType The schema type for the parameter.
  * @returns {SmartContractTypeValues}
  */
-export function parseWithSchemaType(
-    parameter: Parameter,
-    schemaType: SchemaType
-): SmartContractTypeValues {
+export function parseWithSchemaType(parameter: Parameter, schemaType: SchemaType): SmartContractTypeValues {
     const schemaBytes = serializeSchemaType(schemaType);
     return deserializeTypeValue(toBuffer(parameter), schemaBytes);
 }
@@ -189,10 +173,7 @@ export function parseWithSchemaType(
  * @param {Base64String} schemaBase64 The schema type for the parameter encoded as Base64.
  * @returns {SmartContractTypeValues}
  */
-export function parseWithSchemaTypeBase64(
-    parameter: Parameter,
-    schemaBase64: Base64String
-): SmartContractTypeValues {
+export function parseWithSchemaTypeBase64(parameter: Parameter, schemaBase64: Base64String): SmartContractTypeValues {
     const schemaBytes = Buffer.from(schemaBase64, 'base64');
     return deserializeTypeValue(toBuffer(parameter), schemaBytes);
 }
@@ -237,7 +218,4 @@ export function toTypedJSON(value: Parameter): TypedJson<Serializable> {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
-    JSON_DISCRIMINATOR,
-    fromHexString
-);
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromHexString);

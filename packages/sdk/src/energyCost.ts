@@ -1,13 +1,8 @@
 import { getAccountTransactionHandler } from './accountTransactions.js';
 import { collapseRatio, multiplyRatio } from './ratioHelpers.js';
-import {
-    AccountTransactionPayload,
-    AccountTransactionType,
-    ChainParameters,
-    Ratio,
-} from './types.js';
-import * as Energy from './types/Energy.js';
+import { AccountTransactionPayload, AccountTransactionType, ChainParameters, Ratio } from './types.js';
 import * as CcdAmount from './types/CcdAmount.js';
+import * as Energy from './types/Energy.js';
 
 /**
  * These constants must be consistent with constA and constB in:
@@ -35,9 +30,7 @@ export function calculateEnergyCost(
     transactionSpecificCost: bigint
 ): Energy.Type {
     return Energy.create(
-        constantA * signatureCount +
-            constantB * (accountTransactionHeaderSize + payloadSize) +
-            transactionSpecificCost
+        constantA * signatureCount + constantB * (accountTransactionHeaderSize + payloadSize) + transactionSpecificCost
     );
 }
 
@@ -53,39 +46,23 @@ export function getEnergyCost(
 ): Energy.Type {
     const handler = getAccountTransactionHandler(transactionType);
     const size = handler.serialize(payload).length;
-    return calculateEnergyCost(
-        signatureCount,
-        BigInt(size),
-        handler.getBaseEnergyCost(payload)
-    );
+    return calculateEnergyCost(signatureCount, BigInt(size), handler.getBaseEnergyCost(payload));
 }
 
 /**
  * Given the current blockchain parameters, return the microCCD per NRG exchange rate of the chain.
  * @returns the microCCD per NRG exchange rate as a ratio.
  */
-export function getExchangeRate({
-    euroPerEnergy,
-    microGTUPerEuro,
-}: ChainParameters): Ratio {
-    const denominator = BigInt(
-        euroPerEnergy.denominator * microGTUPerEuro.denominator
-    );
-    const numerator = BigInt(
-        euroPerEnergy.numerator * microGTUPerEuro.numerator
-    );
+export function getExchangeRate({ euroPerEnergy, microGTUPerEuro }: ChainParameters): Ratio {
+    const denominator = BigInt(euroPerEnergy.denominator * microGTUPerEuro.denominator);
+    const numerator = BigInt(euroPerEnergy.numerator * microGTUPerEuro.numerator);
     return { numerator, denominator };
 }
 
 /**
  * Given an NRG amount and the current blockchain parameters, this returns the corresponding amount in microCcd.
  */
-export function convertEnergyToMicroCcd(
-    cost: Energy.Type,
-    chainParameters: ChainParameters
-): CcdAmount.Type {
+export function convertEnergyToMicroCcd(cost: Energy.Type, chainParameters: ChainParameters): CcdAmount.Type {
     const rate = getExchangeRate(chainParameters);
-    return CcdAmount.fromMicroCcd(
-        collapseRatio(multiplyRatio(rate, cost.value))
-    );
+    return CcdAmount.fromMicroCcd(collapseRatio(multiplyRatio(rate, cost.value)));
 }

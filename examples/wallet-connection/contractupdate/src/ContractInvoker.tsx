@@ -1,6 +1,3 @@
-import { Result, ResultAsync, err, ok } from 'neverthrow';
-import React, { ChangeEvent, Dispatch, useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Button, Col, Dropdown, DropdownButton, Form, InputGroup, Row } from 'react-bootstrap';
 import {
     Info,
     Network,
@@ -8,7 +5,8 @@ import {
     WalletConnection,
     moduleSchemaFromBase64,
     typeSchemaFromBase64,
- useModuleSchemaRpc } from '@concordium/react-components';
+    useModuleSchemaRpc,
+} from '@concordium/react-components';
 import {
     AccountAddress,
     AccountTransactionType,
@@ -19,6 +17,10 @@ import {
     ReceiveName,
     SchemaVersion,
 } from '@concordium/web-sdk';
+import { Result, ResultAsync, err, ok } from 'neverthrow';
+import React, { ChangeEvent, Dispatch, useCallback, useEffect, useMemo, useState } from 'react';
+import { Alert, Button, Col, Dropdown, DropdownButton, Form, InputGroup, Row } from 'react-bootstrap';
+
 import { errorString } from './util';
 
 interface ContractParamEntry {

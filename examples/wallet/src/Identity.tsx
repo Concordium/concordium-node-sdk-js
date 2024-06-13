@@ -1,5 +1,6 @@
 import { AttributeList, IdentityObjectV1 } from '@concordium/web-sdk';
 import React, { useMemo, useState } from 'react';
+
 import { CreateAccount } from './CreateAccount';
 import { identityObjectKey } from './constants';
 
@@ -7,8 +8,7 @@ function DisplayIdentity({ attributes }: { attributes: AttributeList }) {
     return (
         <ul>
             <li>
-                Name: {attributes.chosenAttributes.firstName}{' '}
-                {attributes.chosenAttributes.lastName}
+                Name: {attributes.chosenAttributes.firstName} {attributes.chosenAttributes.lastName}
             </li>
             <li>Nationality: {attributes.chosenAttributes.nationality}</li>
         </ul>

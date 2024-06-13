@@ -1,9 +1,5 @@
 export interface StatementBuilder<ValueType, AttributeType> {
-    addRange(
-        attribute: AttributeType,
-        lower: ValueType,
-        upper: ValueType
-    ): this;
+    addRange(attribute: AttributeType, lower: ValueType, upper: ValueType): this;
 
     addMembership(attribute: AttributeType, set: ValueType[]): this;
 
@@ -95,6 +91,4 @@ export type GenericAtomicProof = {
     proof: string;
 };
 
-export type AtomicProof<ValueType> =
-    | RevealProof<ValueType>
-    | GenericAtomicProof;
+export type AtomicProof<ValueType> = RevealProof<ValueType> | GenericAtomicProof;

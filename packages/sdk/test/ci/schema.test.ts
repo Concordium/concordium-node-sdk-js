@@ -1,27 +1,28 @@
 import * as fs from 'fs';
+
+import { ContractName, EntrypointName, Parameter } from '../../src/index.js';
 import {
+    deserializeContractState,
+    deserializeInitError,
+    deserializeReceiveError,
+    deserializeReceiveReturnValue,
+    deserializeTypeValue,
     displayTypeSchemaTemplate,
     getUpdateContractParameterSchema,
-    deserializeContractState,
-    deserializeReceiveReturnValue,
-    deserializeReceiveError,
-    deserializeInitError,
-    deserializeTypeValue,
-    serializeUpdateContractParameters,
-    serializeTypeValue,
     serializeInitContractParameters,
+    serializeTypeValue,
+    serializeUpdateContractParameters,
 } from '../../src/schema.js';
 import {
-    CIS2_WCCD_STATE_SCHEMA,
-    V0_PIGGYBANK_SCHEMA,
-    CIS2_WCCD_STATE_GET_BALANCE_RETURN_VALUE_SCHEMA,
-    TEST_CONTRACT_INIT_ERROR_SCHEMA,
-    TEST_CONTRACT_SCHEMA,
-    TEST_CONTRACT_RECEIVE_ERROR_SCHEMA,
     AUCTION_WITH_ERRORS_VIEW_RETURN_VALUE_SCHEMA,
+    CIS2_WCCD_STATE_GET_BALANCE_RETURN_VALUE_SCHEMA,
+    CIS2_WCCD_STATE_SCHEMA,
+    TEST_CONTRACT_INIT_ERROR_SCHEMA,
+    TEST_CONTRACT_RECEIVE_ERROR_SCHEMA,
+    TEST_CONTRACT_SCHEMA,
     TEST_CONTRACT_U64,
+    V0_PIGGYBANK_SCHEMA,
 } from './resources/schema.js';
-import { ContractName, EntrypointName, Parameter } from '../../src/index.js';
 
 const U64_MAX = 18446744073709551615n;
 
@@ -37,19 +38,12 @@ test('U64_MAX can be deserialized', () => {
 });
 
 test('schema template display', () => {
-    const fullSchema = Buffer.from(
-        fs.readFileSync('./test/ci/resources/cis2-nft-schema.bin')
-    );
+    const fullSchema = Buffer.from(fs.readFileSync('./test/ci/resources/cis2-nft-schema.bin'));
     const schemaVersion = 1;
     const contractName = ContractName.fromStringUnchecked('CIS2-NFT');
     const functionName = EntrypointName.fromStringUnchecked('transfer');
     const template = displayTypeSchemaTemplate(
-        getUpdateContractParameterSchema(
-            fullSchema,
-            contractName,
-            functionName,
-            schemaVersion
-        )
+        getUpdateContractParameterSchema(fullSchema, contractName, functionName, schemaVersion)
     );
     expect(template).toBe(
         '[{"amount":["<UInt8>","<UInt8>"],"data":["<UInt8>"],"from":{"Enum":[{"Account":["<AccountAddress>"]},{"Contract":[{"index":"<UInt64>","subindex":"<UInt64>"}]}]},"to":{"Enum":[{"Account":["<AccountAddress>"]},{"Contract":[{"index":"<UInt64>","subindex":"<UInt64>"},{"contract":"<String>","func":"<String>"}]}]},"token_id":["<UInt8>"]}]'
@@ -88,10 +82,7 @@ test('Receive return value can be deserialized using deserializeTypeValue', () =
     expect(returnValue).toEqual('82000000');
 });
 
-const auctionRawReturnValue = Buffer.from(
-    '00000b0000004120676f6f64206974656d00a4fbca84010000',
-    'hex'
-);
+const auctionRawReturnValue = Buffer.from('00000b0000004120676f6f64206974656d00a4fbca84010000', 'hex');
 
 /**
  * Small helper for expected deserialized value of rawAuctionReturnValue
@@ -107,11 +98,7 @@ const expectAuctionReturnValue = (returnValue: any) => {
 test('Return value can be deserialized - auction', () => {
     const returnValue = deserializeReceiveReturnValue(
         auctionRawReturnValue,
-        Buffer.from(
-            fs.readFileSync(
-                './test/ci/resources/auction-with-errors-schema.bin'
-            )
-        ),
+        Buffer.from(fs.readFileSync('./test/ci/resources/auction-with-errors-schema.bin')),
         ContractName.fromStringUnchecked('auction'),
         EntrypointName.fromStringUnchecked('view')
     );
@@ -183,14 +170,10 @@ test('serialize UpdateContractParameters using CIS2 contract', () => {
                 token_id: [],
                 amount: [200, 0],
                 from: {
-                    Account: [
-                        '4RgTGQhg1Y8DAUkC2TpZsKmXdicArDqY9gcgJmBDECg4kkYNg4',
-                    ],
+                    Account: ['4RgTGQhg1Y8DAUkC2TpZsKmXdicArDqY9gcgJmBDECg4kkYNg4'],
                 },
                 to: {
-                    Account: [
-                        '3UiNwnmZ64YR423uamgZyY8RnRkD88tfn6SYtKzvWZCkyFdN94',
-                    ],
+                    Account: ['3UiNwnmZ64YR423uamgZyY8RnRkD88tfn6SYtKzvWZCkyFdN94'],
                 },
                 data: [],
             },
@@ -214,21 +197,15 @@ test('serialize UpdateContractParameters using CIS2 contract and incorrect name'
                     token_id: [],
                     amount: [200, 0],
                     from: {
-                        Account: [
-                            '4RgTGQhg1Y8DAUkC2TpZsKmXdicArDqY9gcgJmBDECg4kkYNg4',
-                        ],
+                        Account: ['4RgTGQhg1Y8DAUkC2TpZsKmXdicArDqY9gcgJmBDECg4kkYNg4'],
                     },
                     to: {
-                        Account: [
-                            '3UiNwnmZ64YR423uamgZyY8RnRkD88tfn6SYtKzvWZCkyFdN94',
-                        ],
+                        Account: ['3UiNwnmZ64YR423uamgZyY8RnRkD88tfn6SYtKzvWZCkyFdN94'],
                     },
                     data: [],
                 },
             ],
-            Buffer.from(
-                fs.readFileSync('./test/ci/resources/cis2-nft-schema.bin')
-            ),
+            Buffer.from(fs.readFileSync('./test/ci/resources/cis2-nft-schema.bin')),
             1
         );
     };
@@ -250,9 +227,7 @@ test('serialize type value and serializeUpdateContractParameters give same resul
             data: [],
         },
     ];
-    const fullSchema = Buffer.from(
-        fs.readFileSync('./test/ci/resources/cis2-nft-schema.bin')
-    );
+    const fullSchema = Buffer.from(fs.readFileSync('./test/ci/resources/cis2-nft-schema.bin'));
     const schemaVersion = 1;
     const contractName = ContractName.fromStringUnchecked('CIS2-NFT');
     const functionName = EntrypointName.fromStringUnchecked('transfer');
@@ -267,23 +242,14 @@ test('serialize type value and serializeUpdateContractParameters give same resul
 
     const serializedType = serializeTypeValue(
         parameters,
-        getUpdateContractParameterSchema(
-            fullSchema,
-            contractName,
-            functionName,
-            schemaVersion
-        )
+        getUpdateContractParameterSchema(fullSchema, contractName, functionName, schemaVersion)
     );
 
-    expect(Parameter.toHexString(serializedParameter)).toEqual(
-        Parameter.toHexString(serializedType)
-    );
+    expect(Parameter.toHexString(serializedParameter)).toEqual(Parameter.toHexString(serializedType));
 });
 
 test('serializeTypeValue throws an error if unable to serialize', () => {
-    expect(() => serializeTypeValue('test', Buffer.alloc(0))).toThrowError(
-        Error
-    );
+    expect(() => serializeTypeValue('test', Buffer.alloc(0))).toThrowError(Error);
 });
 
 test('Parameter serialization works for U64_MAX', () => {
@@ -303,8 +269,7 @@ test('Parameter serialization works for U64_MAX', () => {
 });
 
 test('Parameter serialization errors on (U64_MAX + 1)', () => {
-    const errMsg =
-        'Unable to serialize parameters, due to: Unsigned integer required';
+    const errMsg = 'Unable to serialize parameters, due to: Unsigned integer required';
     const updateParam = () =>
         serializeUpdateContractParameters(
             ContractName.fromStringUnchecked('test'),

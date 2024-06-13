@@ -1,27 +1,27 @@
 import {
+    AccountAddress,
+    BigintFormatType,
+    BlockHash,
+    CcdAmount,
+    ContractAddress,
+    ContractName,
+    CredentialRegistrationId,
+    DataBlob,
+    Duration,
+    Energy,
+    EntrypointName,
+    InitName,
+    ModuleReference,
     Parameter,
+    ReceiveName,
     ReturnValue,
     SequenceNumber,
-    Energy,
-    TransactionHash,
-    BlockHash,
-    ContractName,
-    InitName,
-    ReceiveName,
-    CredentialRegistrationId,
-    AccountAddress,
-    ContractAddress,
-    EntrypointName,
     Timestamp,
-    Duration,
-    CcdAmount,
     TransactionExpiry,
-    ModuleReference,
-    DataBlob,
-    jsonUnwrapStringify,
-    jsonStringify,
+    TransactionHash,
     jsonParse,
-    BigintFormatType,
+    jsonStringify,
+    jsonUnwrapStringify,
 } from '../../../src/pub/types.js';
 
 describe('JSON ID test', () => {
@@ -36,9 +36,7 @@ describe('JSON ID test', () => {
             transactionhash: TransactionHash.fromHexString(
                 '443682391401cd5938a8b87275e5f5e6d0c8178d512391bca81d9a2a45f11a63'
             ),
-            blockHash: BlockHash.fromHexString(
-                'c2ef4acafd8ac8956ad941b4c4b87688baa714eb43510f078427db1b52e824e3 '
-            ),
+            blockHash: BlockHash.fromHexString('c2ef4acafd8ac8956ad941b4c4b87688baa714eb43510f078427db1b52e824e3 '),
             some: {
                 deeply: {
                     nested: {
@@ -51,9 +49,7 @@ describe('JSON ID test', () => {
             credRegId: CredentialRegistrationId.fromHexString(
                 '83e4b29e1e2582a6f1dcc93bf2610ce6b0a6ba89c8f03e661f403b4c2e055d3adb80d071c2723530926bb8aed3ed52b1'
             ),
-            accountAddress: AccountAddress.fromBase58(
-                '35CJPZohio6Ztii2zy1AYzJKvuxbGG44wrBn7hLHiYLoF2nxnh'
-            ),
+            accountAddress: AccountAddress.fromBase58('35CJPZohio6Ztii2zy1AYzJKvuxbGG44wrBn7hLHiYLoF2nxnh'),
             contractAddress: ContractAddress.create(1234),
             entrypointName: EntrypointName.fromString('entrypoint'),
             timestamp: Timestamp.fromDate(new Date()),
@@ -89,34 +85,24 @@ describe(jsonStringify, () => {
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const testBigintReplacer = (_k: any, v: any) =>
-    typeof v === 'bigint' ? 'replaced' : v;
+const testBigintReplacer = (_k: any, v: any) => (typeof v === 'bigint' ? 'replaced' : v);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const unsafeReplacer = (_: any, v: any) =>
-    typeof v === 'bigint' ? Number(v) : v;
+const unsafeReplacer = (_: any, v: any) => (typeof v === 'bigint' ? Number(v) : v);
 
 describe(jsonUnwrapStringify, () => {
     const t = 100n;
 
     test('Serializes bigint values as expected', () => {
         expect(jsonUnwrapStringify(t, BigintFormatType.Integer)).toEqual('100');
-        expect(jsonUnwrapStringify(t, BigintFormatType.String)).toEqual(
-            '"100"'
-        );
-        expect(
-            jsonUnwrapStringify(t, BigintFormatType.None, testBigintReplacer)
-        ).toEqual('"replaced"');
+        expect(jsonUnwrapStringify(t, BigintFormatType.String)).toEqual('"100"');
+        expect(jsonUnwrapStringify(t, BigintFormatType.None, testBigintReplacer)).toEqual('"replaced"');
 
         // Test for numbers bigger than `Number.MAX_SAFE_INTEGER`
         const unsafeNumber = SequenceNumber.create(9007199254740997n);
         const unsafeExpected = '9007199254740997';
-        expect(
-            jsonUnwrapStringify(unsafeNumber, undefined, unsafeReplacer)
-        ).not.toEqual(unsafeExpected);
-        expect(
-            jsonUnwrapStringify(unsafeNumber, BigintFormatType.Integer)
-        ).toEqual(unsafeExpected);
+        expect(jsonUnwrapStringify(unsafeNumber, undefined, unsafeReplacer)).not.toEqual(unsafeExpected);
+        expect(jsonUnwrapStringify(unsafeNumber, BigintFormatType.Integer)).toEqual(unsafeExpected);
     });
 
     test('Throws `TypeError` on serialize bigint', () => {
@@ -125,37 +111,23 @@ describe(jsonUnwrapStringify, () => {
 
     test('Serializes nested bigint (arrays) values as expected', () => {
         const t = [100n, 200n];
-        expect(jsonUnwrapStringify(t, BigintFormatType.Integer)).toEqual(
-            '[100,200]'
-        );
-        expect(jsonUnwrapStringify(t, BigintFormatType.String)).toEqual(
-            '["100","200"]'
-        );
-        expect(
-            jsonUnwrapStringify(t, BigintFormatType.None, testBigintReplacer)
-        ).toEqual('["replaced","replaced"]');
+        expect(jsonUnwrapStringify(t, BigintFormatType.Integer)).toEqual('[100,200]');
+        expect(jsonUnwrapStringify(t, BigintFormatType.String)).toEqual('["100","200"]');
+        expect(jsonUnwrapStringify(t, BigintFormatType.None, testBigintReplacer)).toEqual('["replaced","replaced"]');
     });
 
     test('Serializes nested bigint (objects) values as expected', () => {
         const t = { a: 100n, b: 200n };
-        expect(jsonUnwrapStringify(t, BigintFormatType.Integer)).toEqual(
-            '{"a":100,"b":200}'
+        expect(jsonUnwrapStringify(t, BigintFormatType.Integer)).toEqual('{"a":100,"b":200}');
+        expect(jsonUnwrapStringify(t, BigintFormatType.String)).toEqual('{"a":"100","b":"200"}');
+        expect(jsonUnwrapStringify(t, BigintFormatType.None, testBigintReplacer)).toEqual(
+            '{"a":"replaced","b":"replaced"}'
         );
-        expect(jsonUnwrapStringify(t, BigintFormatType.String)).toEqual(
-            '{"a":"100","b":"200"}'
-        );
-        expect(
-            jsonUnwrapStringify(t, BigintFormatType.None, testBigintReplacer)
-        ).toEqual('{"a":"replaced","b":"replaced"}');
     });
 
     test('Replacer overrides bigint default', () => {
-        expect(
-            jsonUnwrapStringify(t, BigintFormatType.Integer, testBigintReplacer)
-        ).toEqual('"replaced"');
-        expect(
-            jsonUnwrapStringify(t, BigintFormatType.String, testBigintReplacer)
-        ).toEqual('"replaced"');
+        expect(jsonUnwrapStringify(t, BigintFormatType.Integer, testBigintReplacer)).toEqual('"replaced"');
+        expect(jsonUnwrapStringify(t, BigintFormatType.String, testBigintReplacer)).toEqual('"replaced"');
     });
 });
 
@@ -399,9 +371,7 @@ describe('ContractAddress', () => {
         let t = ContractAddress.create(100, 10);
         let e = '{"index":100,"subindex":10}';
         expect(jsonUnwrapStringify(t, BigintFormatType.Integer)).toEqual(e);
-        expect(jsonUnwrapStringify(t, BigintFormatType.String)).toEqual(
-            '{"index":"100","subindex":"10"}'
-        );
+        expect(jsonUnwrapStringify(t, BigintFormatType.String)).toEqual('{"index":"100","subindex":"10"}');
 
         // Test for numbers bigger than Number.MAX_SAFE_INTEGER
         t = ContractAddress.create(9007199254740997n, 10);
@@ -448,16 +418,14 @@ describe('Parameter', () => {
 
 describe('TransactionHash', () => {
     test('Unwraps as expected', () => {
-        const v =
-            '1a17008f7944a5fd11a665a864266fb2d76794e754986c367455a4937fd3a66b';
+        const v = '1a17008f7944a5fd11a665a864266fb2d76794e754986c367455a4937fd3a66b';
         const t = TransactionHash.fromHexString(v);
         const e = `"${v}"`;
         expect(jsonUnwrapStringify(t, BigintFormatType.Integer)).toEqual(e);
     });
 
     test('Serializes and deserializes to JSON as expected', () => {
-        const v =
-            '1a17008f7944a5fd11a665a864266fb2d76794e754986c367455a4937fd3a66b';
+        const v = '1a17008f7944a5fd11a665a864266fb2d76794e754986c367455a4937fd3a66b';
         const txHash = TransactionHash.fromHexString(v);
         const json = txHash.toJSON();
         const parsed = TransactionHash.fromJSON(json);
@@ -465,8 +433,7 @@ describe('TransactionHash', () => {
     });
 
     test('Is stringified correctly by toString', () => {
-        const v =
-            '1a17008f7944a5fd11a665a864266fb2d76794e754986c367455a4937fd3a66b';
+        const v = '1a17008f7944a5fd11a665a864266fb2d76794e754986c367455a4937fd3a66b';
         const txHash = TransactionHash.fromHexString(v);
         expect(`${txHash}`).toEqual(v);
     });
@@ -474,16 +441,14 @@ describe('TransactionHash', () => {
 
 describe('BlockHash', () => {
     test('Unwraps as expected', () => {
-        const v =
-            '1a17008f7944a5fd11a665a864266fb2d76794e754986c367455a4937fd3a66b';
+        const v = '1a17008f7944a5fd11a665a864266fb2d76794e754986c367455a4937fd3a66b';
         const t = BlockHash.fromHexString(v);
         const e = `"${v}"`;
         expect(jsonUnwrapStringify(t, BigintFormatType.Integer)).toEqual(e);
     });
 
     test('Serializes and deserializes to JSON as expected', () => {
-        const v =
-            '1a17008f7944a5fd11a665a864266fb2d76794e754986c367455a4937fd3a66b';
+        const v = '1a17008f7944a5fd11a665a864266fb2d76794e754986c367455a4937fd3a66b';
         const blockHash = BlockHash.fromHexString(v);
         const json = blockHash.toJSON();
         const parsed = BlockHash.fromJSON(json);
@@ -491,8 +456,7 @@ describe('BlockHash', () => {
     });
 
     test('Is stringified correctly by toString', () => {
-        const v =
-            '1a17008f7944a5fd11a665a864266fb2d76794e754986c367455a4937fd3a66b';
+        const v = '1a17008f7944a5fd11a665a864266fb2d76794e754986c367455a4937fd3a66b';
         const blockHash = BlockHash.fromHexString(v);
         expect(`${blockHash}`).toEqual(v);
     });
@@ -520,16 +484,14 @@ describe('ReturnValue', () => {
 
 describe('ModuleReference', () => {
     test('Unwraps as expected', () => {
-        const v =
-            '5d99b6dfa7ba9dc0cac8626754985500d51d6d06829210748b3fd24fa30cde4a';
+        const v = '5d99b6dfa7ba9dc0cac8626754985500d51d6d06829210748b3fd24fa30cde4a';
         const t = ModuleReference.fromHexString(v);
         const e = `"00000020${v}"`; // is prefixed with 4 byte length
         expect(jsonUnwrapStringify(t, BigintFormatType.Integer)).toEqual(e);
     });
 
     test('Serializes and deserializes to JSON as expected', () => {
-        const v =
-            '5d99b6dfa7ba9dc0cac8626754985500d51d6d06829210748b3fd24fa30cde4a';
+        const v = '5d99b6dfa7ba9dc0cac8626754985500d51d6d06829210748b3fd24fa30cde4a';
         const moduleRef = ModuleReference.fromHexString(v);
         const json = moduleRef.toJSON();
         const parsed = ModuleReference.fromJSON(json);
@@ -537,8 +499,7 @@ describe('ModuleReference', () => {
     });
 
     test('Is stringified correctly by toString', () => {
-        const v =
-            '5d99b6dfa7ba9dc0cac8626754985500d51d6d06829210748b3fd24fa30cde4a';
+        const v = '5d99b6dfa7ba9dc0cac8626754985500d51d6d06829210748b3fd24fa30cde4a';
         const moduleRef = ModuleReference.fromHexString(v);
         expect(`${moduleRef}`).toEqual(v);
     });
@@ -546,16 +507,14 @@ describe('ModuleReference', () => {
 
 describe('CredentialRegistrationId', () => {
     test('Unwraps as expected', () => {
-        const v =
-            '83e4b29e1e2582a6f1dcc93bf2610ce6b0a6ba89c8f03e661f403b4c2e055d3adb80d071c2723530926bb8aed3ed52b1';
+        const v = '83e4b29e1e2582a6f1dcc93bf2610ce6b0a6ba89c8f03e661f403b4c2e055d3adb80d071c2723530926bb8aed3ed52b1';
         const t = CredentialRegistrationId.fromHexString(v);
         const e = `"${v}"`;
         expect(jsonUnwrapStringify(t, BigintFormatType.Integer)).toEqual(e);
     });
 
     test('Serializes and deserializes to JSON as expected', () => {
-        const v =
-            '83e4b29e1e2582a6f1dcc93bf2610ce6b0a6ba89c8f03e661f403b4c2e055d3adb80d071c2723530926bb8aed3ed52b1';
+        const v = '83e4b29e1e2582a6f1dcc93bf2610ce6b0a6ba89c8f03e661f403b4c2e055d3adb80d071c2723530926bb8aed3ed52b1';
         const cri = CredentialRegistrationId.fromHexString(v);
         const json = cri.toJSON();
         const parsed = CredentialRegistrationId.fromJSON(json);
@@ -563,8 +522,7 @@ describe('CredentialRegistrationId', () => {
     });
 
     test('Is stringified correctly by toString', () => {
-        const v =
-            '83e4b29e1e2582a6f1dcc93bf2610ce6b0a6ba89c8f03e661f403b4c2e055d3adb80d071c2723530926bb8aed3ed52b1';
+        const v = '83e4b29e1e2582a6f1dcc93bf2610ce6b0a6ba89c8f03e661f403b4c2e055d3adb80d071c2723530926bb8aed3ed52b1';
         const cri = CredentialRegistrationId.fromHexString(v);
         expect(`${cri}`).toEqual(v);
     });
@@ -572,8 +530,7 @@ describe('CredentialRegistrationId', () => {
 
 describe('DataBlob', () => {
     test('Unwraps as expected', () => {
-        const v =
-            '83e4b29e1e2582a6f1dcc93bf2610ce6b0a6ba89c8f03e661f403b4c2e055d3adb80d071c2723530926bb8aed3ed52b1';
+        const v = '83e4b29e1e2582a6f1dcc93bf2610ce6b0a6ba89c8f03e661f403b4c2e055d3adb80d071c2723530926bb8aed3ed52b1';
         const t = new DataBlob(Buffer.from(v, 'hex'));
         const e = `"0030${v}"`; // Is prefixed with 2 byte length
         expect(jsonUnwrapStringify(t, BigintFormatType.Integer)).toEqual(e);

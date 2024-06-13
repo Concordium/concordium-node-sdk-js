@@ -1,4 +1,5 @@
 import * as crypto from 'crypto';
+
 import { MobileWalletExport } from './types.js';
 
 interface EncryptionMetaData {
@@ -35,25 +36,12 @@ function getEncryptionMethodImport(method: string) {
  * Decrypts the data using the metadata in the file that was given as input
  * and the provided password.
  */
-function decrypt(
-    { cipherText, metadata }: EncryptedData,
-    password: string
-): string {
-    const {
-        keyLen,
-        iterations,
-        salt,
-        initializationVector,
-        encryptionMethod,
-        hashAlgorithm,
-        keyDerivationMethod,
-    } = metadata;
+function decrypt({ cipherText, metadata }: EncryptedData, password: string): string {
+    const { keyLen, iterations, salt, initializationVector, encryptionMethod, hashAlgorithm, keyDerivationMethod } =
+        metadata;
 
     if (keyDerivationMethod !== PBKDF2keyDerivationMethodExternal) {
-        throw new Error(
-            'An unsupported key derivation method was used: ' +
-                keyDerivationMethod
-        );
+        throw new Error('An unsupported key derivation method was used: ' + keyDerivationMethod);
     }
 
     const key = crypto.pbkdf2Sync(
@@ -64,8 +52,7 @@ function decrypt(
         hashAlgorithm || hashAlgorithmInternal
     );
 
-    const internalEncryptionMethod =
-        getEncryptionMethodImport(encryptionMethod);
+    const internalEncryptionMethod = getEncryptionMethodImport(encryptionMethod);
     const decipher = crypto.createDecipheriv(
         internalEncryptionMethod,
         key,
@@ -83,12 +70,7 @@ function decrypt(
  * @param password the decryption password for the mobile wallet export
  * @returns the decrypted mobile wallet export
  */
-export function decryptMobileWalletExport(
-    mobileWalletExport: EncryptedData,
-    password: string
-): MobileWalletExport {
-    const decryptedMobileWalletExport: MobileWalletExport = JSON.parse(
-        decrypt(mobileWalletExport, password)
-    );
+export function decryptMobileWalletExport(mobileWalletExport: EncryptedData, password: string): MobileWalletExport {
+    const decryptedMobileWalletExport: MobileWalletExport = JSON.parse(decrypt(mobileWalletExport, password));
     return decryptedMobileWalletExport;
 }

@@ -1,11 +1,7 @@
 import { CryptographicParameters } from '../types.js';
 import type * as ContractAddress from '../types/ContractAddress.js';
 import { bail } from '../util.js';
-import {
-    AttributeType,
-    StatementAttributeType,
-    TimestampAttribute,
-} from './types.js';
+import { AttributeType, StatementAttributeType, TimestampAttribute } from './types.js';
 
 export type VerifyWeb3IdCredentialSignatureInput = {
     globalContext: CryptographicParameters;
@@ -44,11 +40,7 @@ export function compareStringAttributes(a: string, b: string): number {
 /**
  * Given a string attribute value and a range [lower, upper[, return whether value is in the range, when converted into field elements.
  */
-export function isStringAttributeInRange(
-    value: string,
-    lower: string,
-    upper: string
-): boolean {
+export function isStringAttributeInRange(value: string, lower: string, upper: string): boolean {
     const lowCmp = compareStringAttributes(value, lower);
     if (lowCmp < 0) {
         return false;
@@ -85,9 +77,7 @@ export function dateToTimestampAttribute(value: Date): TimestampAttribute {
  * @param statementAttribute the statement attribute to map
  * @returns the mapped attribute type
  */
-export function statementAttributeTypeToAttributeType(
-    statementAttribute: StatementAttributeType
-): AttributeType {
+export function statementAttributeTypeToAttributeType(statementAttribute: StatementAttributeType): AttributeType {
     if (statementAttribute instanceof Date) {
         return dateToTimestampAttribute(statementAttribute);
     }

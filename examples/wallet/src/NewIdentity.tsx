@@ -6,12 +6,8 @@ export function NewIdentity() {
     return (
         <div>
             <h3>Your Concordium Identity</h3>
-            <button onClick={() => navigate('/create')}>
-                Create new identity
-            </button>
-            <button onClick={() => navigate('/recover')}>
-                Recover existing identity
-            </button>
+            <button onClick={() => navigate('/create')}>Create new identity</button>
+            <button onClick={() => navigate('/recover')}>Recover existing identity</button>
         </div>
     );
 }

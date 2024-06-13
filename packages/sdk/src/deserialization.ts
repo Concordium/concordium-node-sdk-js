@@ -36,43 +36,25 @@ function deserializeMap<K extends string | number | symbol, T>(
     return result;
 }
 
-function deserializeAccountTransactionSignature(
-    signatures: Cursor
-): AccountTransactionSignature {
+function deserializeAccountTransactionSignature(signatures: Cursor): AccountTransactionSignature {
     const decodeSignature = (serialized: Cursor) => {
         const length = serialized.read(2).readUInt16BE(0);
         return serialized.read(length).toString('hex');
     };
     const decodeCredentialSignatures = (serialized: Cursor) =>
-        deserializeMap(
-            serialized,
-            deserializeUint8,
-            deserializeUint8,
-            decodeSignature
-        );
-    return deserializeMap(
-        signatures,
-        deserializeUint8,
-        deserializeUint8,
-        decodeCredentialSignatures
-    );
+        deserializeMap(serialized, deserializeUint8, deserializeUint8, decodeSignature);
+    return deserializeMap(signatures, deserializeUint8, deserializeUint8, decodeCredentialSignatures);
 }
 
-function deserializeTransactionHeader(
-    serializedHeader: Cursor
-): AccountTransactionHeader {
+function deserializeTransactionHeader(serializedHeader: Cursor): AccountTransactionHeader {
     const sender = AccountAddress.fromBuffer(serializedHeader.read(32));
-    const nonce = AccountSequenceNumber.create(
-        serializedHeader.read(8).readBigUInt64BE(0)
-    );
+    const nonce = AccountSequenceNumber.create(serializedHeader.read(8).readBigUInt64BE(0));
     // TODO: extract payloadSize and energyAmount?
     // energyAmount
     serializedHeader.read(8).readBigUInt64BE(0);
     // payloadSize
     serializedHeader.read(4).readUInt32BE(0);
-    const expiry = TransactionExpiry.fromEpochSeconds(
-        serializedHeader.read(8).readBigUInt64BE(0)
-    );
+    const expiry = TransactionExpiry.fromEpochSeconds(serializedHeader.read(8).readBigUInt64BE(0));
     return {
         sender,
         nonce,
@@ -84,23 +66,16 @@ export function deserializeAccountTransaction(serializedTransaction: Cursor): {
     accountTransaction: AccountTransaction;
     signatures: AccountTransactionSignature;
 } {
-    const signatures = deserializeAccountTransactionSignature(
-        serializedTransaction
-    );
+    const signatures = deserializeAccountTransactionSignature(serializedTransaction);
 
     const header = deserializeTransactionHeader(serializedTransaction);
 
     const transactionType = deserializeUint8(serializedTransaction);
     if (!isAccountTransactionType(transactionType)) {
-        throw new Error(
-            'TransactionType is not a valid value: ' + transactionType
-        );
+        throw new Error('TransactionType is not a valid value: ' + transactionType);
     }
-    const accountTransactionHandler =
-        getAccountTransactionHandler(transactionType);
-    const payload = accountTransactionHandler.deserialize(
-        serializedTransaction
-    );
+    const accountTransactionHandler = getAccountTransactionHandler(transactionType);
+    const payload = accountTransactionHandler.deserialize(serializedTransaction);
 
     return {
         accountTransaction: {

@@ -1,12 +1,9 @@
 import { Buffer } from 'buffer/index.js';
+
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
 import { deserializeTypeValue } from '../schema.js';
 import { SchemaType, serializeSchemaType } from '../schemaTypes.js';
-import type {
-    Base64String,
-    HexString,
-    SmartContractTypeValues,
-} from '../types.js';
+import type { Base64String, HexString, SmartContractTypeValues } from '../types.js';
 
 /**
  * @deprecated
@@ -122,10 +119,7 @@ export function toProto(event: ContractEvent): Proto.ContractEvent {
  * @param {SchemaType} schemaType The schema type for the event.
  * @returns {SmartContractTypeValues}
  */
-export function parseWithSchemaType(
-    event: ContractEvent,
-    schemaType: SchemaType
-): SmartContractTypeValues {
+export function parseWithSchemaType(event: ContractEvent, schemaType: SchemaType): SmartContractTypeValues {
     const schemaBytes = serializeSchemaType(schemaType);
     return deserializeTypeValue(toBuffer(event), schemaBytes);
 }
@@ -136,10 +130,7 @@ export function parseWithSchemaType(
  * @param {Base64String} schemaBase64 The schema type for the event encoded as Base64.
  * @returns {SmartContractTypeValues}
  */
-export function parseWithSchemaTypeBase64(
-    event: ContractEvent,
-    schemaBase64: Base64String
-): SmartContractTypeValues {
+export function parseWithSchemaTypeBase64(event: ContractEvent, schemaBase64: Base64String): SmartContractTypeValues {
     const schemaBytes = Buffer.from(schemaBase64, 'base64');
     return deserializeTypeValue(toBuffer(event), schemaBytes);
 }

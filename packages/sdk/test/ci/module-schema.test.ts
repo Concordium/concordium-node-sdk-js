@@ -1,22 +1,15 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import {
-    getEmbeddedModuleSchema,
-    versionedModuleSourceFromBuffer,
-} from '../../src/types/VersionedModuleSource.js';
+
+import { getEmbeddedModuleSchema, versionedModuleSourceFromBuffer } from '../../src/types/VersionedModuleSource.js';
 
 // Directory with smart contract modules and schemas for testing.
-const testFileDir = path.resolve(
-    '../../deps/concordium-base/smart-contracts/testdata/schemas'
-);
+const testFileDir = path.resolve('../../deps/concordium-base/smart-contracts/testdata/schemas');
 
 describe('VersionedModuleSource: getEmbeddedModuleSchema', () => {
     test('Smart contract module v1 with versioned schema', async () => {
         const contractModule = fs.readFileSync(
-            path.join(
-                testFileDir,
-                'cis2-wccd-embedded-schema-v1-versioned.wasm.v1'
-            )
+            path.join(testFileDir, 'cis2-wccd-embedded-schema-v1-versioned.wasm.v1')
         );
         const moduleSource = versionedModuleSourceFromBuffer(contractModule);
         const moduleSchema = await getEmbeddedModuleSchema(moduleSource);
@@ -28,10 +21,7 @@ describe('VersionedModuleSource: getEmbeddedModuleSchema', () => {
 
     test('Smart contract module v0 with versioned schema', async () => {
         const contractModule = fs.readFileSync(
-            path.join(
-                testFileDir,
-                'cis1-wccd-embedded-schema-v0-versioned.wasm.v0'
-            )
+            path.join(testFileDir, 'cis1-wccd-embedded-schema-v0-versioned.wasm.v0')
         );
         const moduleSource = versionedModuleSourceFromBuffer(contractModule);
         const moduleSchema = await getEmbeddedModuleSchema(moduleSource);
@@ -43,10 +33,7 @@ describe('VersionedModuleSource: getEmbeddedModuleSchema', () => {
 
     test('Smart contract module v0 with unversioned schema', async () => {
         const unversionedContractModule = fs.readFileSync(
-            path.join(
-                testFileDir,
-                'cis1-wccd-embedded-schema-v0-unversioned.wasm'
-            )
+            path.join(testFileDir, 'cis1-wccd-embedded-schema-v0-unversioned.wasm')
         );
         const moduleSource = {
             version: 0,
@@ -61,10 +48,7 @@ describe('VersionedModuleSource: getEmbeddedModuleSchema', () => {
 
     test('Smart contract module v1 with unversioned schema', async () => {
         const contractModule = fs.readFileSync(
-            path.join(
-                testFileDir,
-                'cis2-wccd-embedded-schema-v1-unversioned.wasm.v1'
-            )
+            path.join(testFileDir, 'cis2-wccd-embedded-schema-v1-unversioned.wasm.v1')
         );
         const moduleSource = versionedModuleSourceFromBuffer(contractModule);
         const moduleSchema = await getEmbeddedModuleSchema(moduleSource);

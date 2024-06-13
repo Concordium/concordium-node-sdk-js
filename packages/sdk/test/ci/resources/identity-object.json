@@ -23,11 +23,7 @@
         },
         "preIdentityObject": {
             "choiceArData": {
-                "arIdentities": [
-                    1,
-                    2,
-                    3
-                ],
+                "arIdentities": [1, 2, 3],
                 "threshold": 1
             },
             "idCredPub": "86bdc35aa086f3407e89220ebd4ea89840a53f37a8cdb26d917779984a751919ef7e4d2d98798038f441265c398a703e",

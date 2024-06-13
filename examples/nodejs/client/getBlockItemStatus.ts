@@ -1,13 +1,9 @@
-import { parseEndpoint } from '../shared/util.js';
-import {
-    BlockItemStatus,
-    CcdAmount,
-    TransactionHash,
-} from '@concordium/web-sdk';
+import { BlockItemStatus, CcdAmount, TransactionHash } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
-
 import meow from 'meow';
+
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -40,11 +36,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 /**
  * Retrieves status information about a block item (transaction).
@@ -65,21 +57,15 @@ const client = new ConcordiumGRPCNodeClient(
     console.log('Status of the transaction:', cli.flags.transaction, '\n');
     // Note that there will be no outcomes for a transaction that has only been received:
     if (blockItemStatus.status === 'received') {
-        console.log(
-            'blockItemStatus is "received" and therefore has no "status" field'
-        );
+        console.log('blockItemStatus is "received" and therefore has no "status" field');
     }
     // If the transaction has only been committed, then there is a list of outcomes:
     if (blockItemStatus.status === 'committed') {
-        console.log(
-            'blockItemStatus is "committed" and therefore there are potentially multiple outcomes'
-        );
+        console.log('blockItemStatus is "committed" and therefore there are potentially multiple outcomes');
     }
     // If the transaction has been finalized, then there is exactly one outcome:
     if (blockItemStatus.status === 'finalized') {
-        console.log(
-            'blockItemStatus is "finalized" and therefore there is exactly one outcome \n'
-        );
+        console.log('blockItemStatus is "finalized" and therefore there is exactly one outcome \n');
 
         const { summary } = blockItemStatus.outcome;
 
@@ -98,9 +84,7 @@ const client = new ConcordiumGRPCNodeClient(
                     // type is still available under the failedTransactionType field
                     const { failedTransactionType, rejectReason } = summary;
                     console.log(
-                        'Transaction of type "' +
-                            failedTransactionType +
-                            '" failed because:',
+                        'Transaction of type "' + failedTransactionType + '" failed because:',
                         rejectReason.tag
                     );
                     break;

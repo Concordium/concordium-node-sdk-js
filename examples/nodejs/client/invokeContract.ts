@@ -1,4 +1,3 @@
-import { parseEndpoint } from '../shared/util.js';
 import {
     AccountAddress,
     BlockHash,
@@ -13,8 +12,9 @@ import {
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
-
 import meow from 'meow';
+
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -79,11 +79,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 /**
  * Used to simulate a contract update, and to trigger view functions.
@@ -96,18 +92,10 @@ const client = new ConcordiumGRPCNodeClient(
 (async () => {
     // #region documentation-snippet
     // Handle the optional arguments
-    const invoker = cli.flags.invoker
-        ? AccountAddress.fromBase58(cli.flags.invoker)
-        : undefined;
-    const amount = cli.flags.amount
-        ? CcdAmount.fromMicroCcd(cli.flags.amount)
-        : undefined;
-    const parameter = cli.flags.parameter
-        ? Parameter.fromHexString(cli.flags.parameter)
-        : undefined;
-    const energy = cli.flags.energy
-        ? Energy.create(cli.flags.energy)
-        : undefined;
+    const invoker = cli.flags.invoker ? AccountAddress.fromBase58(cli.flags.invoker) : undefined;
+    const amount = cli.flags.amount ? CcdAmount.fromMicroCcd(cli.flags.amount) : undefined;
+    const parameter = cli.flags.parameter ? Parameter.fromHexString(cli.flags.parameter) : undefined;
+    const energy = cli.flags.energy ? Energy.create(cli.flags.energy) : undefined;
 
     const contract = ContractAddress.create(cli.flags.contract);
     const context: ContractContext = {
@@ -120,10 +108,7 @@ const client = new ConcordiumGRPCNodeClient(
         parameter,
         energy,
     };
-    const blockHash =
-        cli.flags.block === undefined
-            ? undefined
-            : BlockHash.fromHexString(cli.flags.block);
+    const blockHash = cli.flags.block === undefined ? undefined : BlockHash.fromHexString(cli.flags.block);
 
     const result = await client.invokeContract(context, blockHash);
 
@@ -136,10 +121,7 @@ const client = new ConcordiumGRPCNodeClient(
 
         const returnValue = result.returnValue; // If the invoked method has return value
         if (returnValue) {
-            console.log(
-                'The return value of the invoked method:',
-                ReturnValue.toHexString(returnValue)
-            );
+            console.log('The return value of the invoked method:', ReturnValue.toHexString(returnValue));
         }
 
         const events: ContractTraceEvent[] = result.events;

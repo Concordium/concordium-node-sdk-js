@@ -1,5 +1,3 @@
-import React, { useCallback, useState } from 'react';
-import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
 import {
     TESTNET,
     WalletConnectionProps,
@@ -14,6 +12,9 @@ import {
     Web3StatementBuilder,
     getPastDate,
 } from '@concordium/web-sdk';
+import React, { useCallback, useState } from 'react';
+import { Alert, Button, Card, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
+
 import { WalletConnectorButton } from './WalletConnectorButton';
 import { BROWSER_WALLET, WALLET_CONNECT } from './config';
 

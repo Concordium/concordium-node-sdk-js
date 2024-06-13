@@ -1,6 +1,3 @@
-import { ResultAsync, err, ok } from 'neverthrow';
-import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, Button, Col, Container, Form, InputGroup, Row, Spinner } from 'react-bootstrap';
 import {
     TESTNET,
     WalletConnectionProps,
@@ -12,6 +9,10 @@ import {
     useConnection,
 } from '@concordium/react-components';
 import { AccountTransactionSignature } from '@concordium/web-sdk';
+import { ResultAsync, err, ok } from 'neverthrow';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Alert, Button, Col, Container, Form, InputGroup, Row, Spinner } from 'react-bootstrap';
+
 import { WalletConnectorButton } from './WalletConnectorButton';
 import { BROWSER_WALLET, WALLET_CONNECT } from './config';
 import { errorString } from './util';
@@ -140,9 +141,7 @@ function Main(props: WalletConnectionProps) {
                         <InputGroup.Text>Base64</InputGroup.Text>
                         {schemaResult?.match(
                             () => undefined,
-                            (e) => (
-                                <Form.Control.Feedback type="invalid">{e}</Form.Control.Feedback>
-                            )
+                            (e) => <Form.Control.Feedback type="invalid">{e}</Form.Control.Feedback>
                         )}
                     </InputGroup>
                 </Col>
@@ -163,9 +162,7 @@ function Main(props: WalletConnectionProps) {
                         <InputGroup.Text>{schemaInput ? 'Hex' : 'String'}</InputGroup.Text>
                         {messageResult?.match(
                             () => undefined,
-                            (e) => (
-                                <Form.Control.Feedback type="invalid">{e}</Form.Control.Feedback>
-                            )
+                            (e) => <Form.Control.Feedback type="invalid">{e}</Form.Control.Feedback>
                         )}
                     </InputGroup>
                 </Col>

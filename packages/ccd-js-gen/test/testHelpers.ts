@@ -13,28 +13,15 @@ export function assertTypeChecks(files: string[]) {
     });
     const emitResult = program.emit();
 
-    const allDiagnostics = ts
-        .getPreEmitDiagnostics(program)
-        .concat(emitResult.diagnostics);
+    const allDiagnostics = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
 
     const errors = allDiagnostics.map((diagnostic) => {
         if (diagnostic.file) {
-            const { line, character } = ts.getLineAndCharacterOfPosition(
-                diagnostic.file,
-                diagnostic.start!
-            );
-            const message = ts.flattenDiagnosticMessageText(
-                diagnostic.messageText,
-                '\n'
-            );
-            return `${diagnostic.file.fileName} (${line + 1},${
-                character + 1
-            }): ${message}`;
+            const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start!);
+            const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+            return `${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`;
         } else {
-            return ts.flattenDiagnosticMessageText(
-                diagnostic.messageText,
-                '\n'
-            );
+            return ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
         }
     });
     expect(errors).toEqual([]);

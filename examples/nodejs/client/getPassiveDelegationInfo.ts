@@ -1,13 +1,9 @@
-import { parseEndpoint } from '../shared/util.js';
-import {
-    BlockHash,
-    CcdAmount,
-    PassiveDelegationStatus,
-} from '@concordium/web-sdk';
+import { BlockHash, CcdAmount, PassiveDelegationStatus } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
-
 import meow from 'meow';
+
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -37,11 +33,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 /**
  * Retrieves information about the passive delegation, including the total
@@ -51,21 +43,11 @@ const client = new ConcordiumGRPCNodeClient(
 
 (async () => {
     // #region documentation-snippet
-    const blockHash =
-        cli.flags.block === undefined
-            ? undefined
-            : BlockHash.fromHexString(cli.flags.block);
-    const passiveDelegationInfo: PassiveDelegationStatus =
-        await client.getPassiveDelegationInfo(blockHash);
+    const blockHash = cli.flags.block === undefined ? undefined : BlockHash.fromHexString(cli.flags.block);
+    const passiveDelegationInfo: PassiveDelegationStatus = await client.getPassiveDelegationInfo(blockHash);
 
-    console.log(
-        'CCD provided by the delegators to the pool:',
-        CcdAmount.toCcd(passiveDelegationInfo.delegatedCapital)
-    );
-    console.log(
-        'Total capital in CCD of ALL pools:',
-        CcdAmount.toCcd(passiveDelegationInfo.allPoolTotalCapital)
-    );
+    console.log('CCD provided by the delegators to the pool:', CcdAmount.toCcd(passiveDelegationInfo.delegatedCapital));
+    console.log('Total capital in CCD of ALL pools:', CcdAmount.toCcd(passiveDelegationInfo.allPoolTotalCapital));
     console.log('Pool commision rates:', passiveDelegationInfo.commissionRates);
     // #endregion documentation-snippet
 })();

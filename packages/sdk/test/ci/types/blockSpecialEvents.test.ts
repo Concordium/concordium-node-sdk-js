@@ -1,15 +1,15 @@
 import {
+    AccountAddress,
     BlockSpecialEventBakingRewards,
-    BlockSpecialEventPaydayPoolReward,
     BlockSpecialEventBlockAccrueReward,
-    BlockSpecialEventPaydayFoundationReward,
+    BlockSpecialEventBlockReward,
     BlockSpecialEventFinalizationRewards,
     BlockSpecialEventMint,
     BlockSpecialEventPaydayAccountReward,
-    BlockSpecialEventBlockReward,
-    specialEventAffectedAccounts,
+    BlockSpecialEventPaydayFoundationReward,
+    BlockSpecialEventPaydayPoolReward,
     CcdAmount,
-    AccountAddress,
+    specialEventAffectedAccounts,
 } from '../../../src/index.js';
 
 const bakingRewards: BlockSpecialEventBakingRewards = {
@@ -17,15 +17,11 @@ const bakingRewards: BlockSpecialEventBakingRewards = {
     remainder: CcdAmount.zero(),
     bakingRewards: [
         {
-            account: AccountAddress.fromBase58(
-                '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
-            ),
+            account: AccountAddress.fromBase58('4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'),
             amount: CcdAmount.fromMicroCcd(400000),
         },
         {
-            account: AccountAddress.fromBase58(
-                '3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'
-            ),
+            account: AccountAddress.fromBase58('3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'),
             amount: CcdAmount.fromMicroCcd(400000),
         },
     ],
@@ -36,15 +32,11 @@ const finalizationRewards: BlockSpecialEventFinalizationRewards = {
     remainder: CcdAmount.zero(),
     finalizationRewards: [
         {
-            account: AccountAddress.fromBase58(
-                '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
-            ),
+            account: AccountAddress.fromBase58('4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'),
             amount: CcdAmount.fromMicroCcd(400000),
         },
         {
-            account: AccountAddress.fromBase58(
-                '3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'
-            ),
+            account: AccountAddress.fromBase58('3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'),
             amount: CcdAmount.fromMicroCcd(400000),
         },
     ],
@@ -53,9 +45,7 @@ const finalizationRewards: BlockSpecialEventFinalizationRewards = {
 const foundationReward: BlockSpecialEventPaydayFoundationReward = {
     tag: 'paydayFoundationReward',
     developmentCharge: CcdAmount.fromMicroCcd(123),
-    foundationAccount: AccountAddress.fromBase58(
-        '3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'
-    ),
+    foundationAccount: AccountAddress.fromBase58('3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'),
 };
 
 const mint: BlockSpecialEventMint = {
@@ -63,16 +53,12 @@ const mint: BlockSpecialEventMint = {
     mintBakingReward: CcdAmount.zero(),
     mintFinalizationReward: CcdAmount.zero(),
     mintPlatformDevelopmentCharge: CcdAmount.zero(),
-    foundationAccount: AccountAddress.fromBase58(
-        '3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'
-    ),
+    foundationAccount: AccountAddress.fromBase58('3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'),
 };
 
 const paydayAccountReward: BlockSpecialEventPaydayAccountReward = {
     tag: 'paydayAccountReward',
-    account: AccountAddress.fromBase58(
-        '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
-    ),
+    account: AccountAddress.fromBase58('4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'),
     transactionFees: CcdAmount.fromMicroCcd(123),
     bakerReward: CcdAmount.fromMicroCcd(123),
     finalizationReward: CcdAmount.fromMicroCcd(123),
@@ -85,12 +71,8 @@ const foundationBlockReward: BlockSpecialEventBlockReward = {
     foundationCharge: CcdAmount.fromMicroCcd(12),
     newGasAccount: CcdAmount.fromMicroCcd(1),
     oldGasAccount: CcdAmount.zero(),
-    baker: AccountAddress.fromBase58(
-        '3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'
-    ),
-    foundationAccount: AccountAddress.fromBase58(
-        '3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'
-    ),
+    baker: AccountAddress.fromBase58('3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'),
+    foundationAccount: AccountAddress.fromBase58('3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'),
 };
 
 const blockReward: BlockSpecialEventBlockReward = {
@@ -100,12 +82,8 @@ const blockReward: BlockSpecialEventBlockReward = {
     foundationCharge: CcdAmount.fromMicroCcd(12),
     newGasAccount: CcdAmount.fromMicroCcd(1),
     oldGasAccount: CcdAmount.zero(),
-    baker: AccountAddress.fromBase58(
-        '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
-    ),
-    foundationAccount: AccountAddress.fromBase58(
-        '3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'
-    ),
+    baker: AccountAddress.fromBase58('4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'),
+    foundationAccount: AccountAddress.fromBase58('3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'),
 };
 
 const paydayPoolReward: BlockSpecialEventPaydayPoolReward = {
@@ -154,32 +132,16 @@ describe('specialEventAffectedAccounts', () => {
         );
 
         accounts = specialEventAffectedAccounts(foundationReward);
-        expect(accounts).toEqual(
-            ['3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'].map(
-                AccountAddress.fromBase58
-            )
-        );
+        expect(accounts).toEqual(['3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'].map(AccountAddress.fromBase58));
 
         accounts = specialEventAffectedAccounts(mint);
-        expect(accounts).toEqual(
-            ['3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'].map(
-                AccountAddress.fromBase58
-            )
-        );
+        expect(accounts).toEqual(['3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'].map(AccountAddress.fromBase58));
 
         accounts = specialEventAffectedAccounts(paydayAccountReward);
-        expect(accounts).toEqual(
-            ['4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'].map(
-                AccountAddress.fromBase58
-            )
-        );
+        expect(accounts).toEqual(['4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'].map(AccountAddress.fromBase58));
 
         accounts = specialEventAffectedAccounts(foundationBlockReward);
-        expect(accounts).toEqual(
-            ['3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'].map(
-                AccountAddress.fromBase58
-            )
-        );
+        expect(accounts).toEqual(['3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'].map(AccountAddress.fromBase58));
 
         accounts = specialEventAffectedAccounts(blockReward);
         expect(accounts).toEqual(

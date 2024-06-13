@@ -1,7 +1,8 @@
-import { credentials } from '@grpc/grpc-js';
 import * as SDK from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
+import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
+
 import { parseEndpoint } from '../shared/util.js';
 
 // The generated module could be imported directly like below,
@@ -52,30 +53,21 @@ const grpcClient = new ConcordiumGRPCNodeClient(
     scheme === 'https' ? credentials.createSsl() : credentials.createInsecure()
 );
 
-const contractAddress = SDK.ContractAddress.create(
-    cli.flags.index,
-    cli.flags.subindex
-);
+const contractAddress = SDK.ContractAddress.create(cli.flags.index, cli.flags.subindex);
 
 (async () => {
     // Importing the generated smart contract module client.
     /* eslint-disable import/no-unresolved */
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    const wCCDContractClient = await import('./lib/wCCD_cis2_wCCD.js').catch(
-        (e) => {
-            /* eslint-enable import/no-unresolved */
-            console.error(
-                '\nFailed to load the generated wCCD module, did you run the `generate` script?\n'
-            );
-            throw e;
-        }
-    );
+    const wCCDContractClient = await import('./lib/wCCD_cis2_wCCD.js').catch((e) => {
+        /* eslint-enable import/no-unresolved */
+        console.error('\nFailed to load the generated wCCD module, did you run the `generate` script?\n');
+        throw e;
+    });
 
     const wCCDTokenId = '';
-    const fromAddress = SDK.AccountAddress.fromBuffer(
-        new Uint8Array(32).fill(0)
-    );
+    const fromAddress = SDK.AccountAddress.fromBuffer(new Uint8Array(32).fill(0));
     const toAddress = SDK.AccountAddress.fromBuffer(new Uint8Array(32).fill(1));
     const parameter = [
         {
@@ -86,22 +78,13 @@ const contractAddress = SDK.ContractAddress.create(
             data: '',
         } as const,
     ];
-    const contract = await wCCDContractClient.create(
-        grpcClient,
-        contractAddress
-    );
+    const contract = await wCCDContractClient.create(grpcClient, contractAddress);
 
-    const unauthorizedInvoker = SDK.AccountAddress.fromBase58(
-        '357EYHqrmMiJBmUZTVG5FuaMq4soAhgtgz6XNEAJaXHW3NHaUf'
-    );
+    const unauthorizedInvoker = SDK.AccountAddress.fromBase58('357EYHqrmMiJBmUZTVG5FuaMq4soAhgtgz6XNEAJaXHW3NHaUf');
 
-    const result = await wCCDContractClient.dryRunTransfer(
-        contract,
-        parameter,
-        {
-            invoker: unauthorizedInvoker,
-        }
-    );
+    const result = await wCCDContractClient.dryRunTransfer(contract, parameter, {
+        invoker: unauthorizedInvoker,
+    });
     const errorMessage = wCCDContractClient.parseErrorMessageTransfer(result);
     console.log('Transfer failed with error: ', errorMessage);
 })();

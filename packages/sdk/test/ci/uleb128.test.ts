@@ -1,8 +1,4 @@
-import {
-    uleb128Decode,
-    uleb128DecodeWithIndex,
-    uleb128Encode,
-} from '../../src/uleb128.js';
+import { uleb128Decode, uleb128DecodeWithIndex, uleb128Encode } from '../../src/uleb128.js';
 
 test('uleb128 encodes value as expected', () => {
     let value = 0n;

@@ -1,0 +1,12 @@
+{
+    "extends": "@tsconfig/recommended/tsconfig.json",
+    "compilerOptions": {
+        "declaration": true,
+        "declarationMap": true,
+        "module": "ES2020",
+        "moduleResolution": "bundler",
+        "sourceMap": true,
+        "outDir": "./dist"
+    },
+    "include": ["./src"]
+}

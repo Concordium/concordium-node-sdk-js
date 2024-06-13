@@ -1,3 +1,9 @@
+// self-referencing not allowed by eslint resolver
+// eslint-disable-next-line import/no-extraneous-dependencies
+import * as ed from '@concordium/web-sdk/shims/ed25519';
+import { Buffer } from 'buffer/index.js';
+
+import { sha256 } from './hash.js';
 import { getAccountTransactionSignDigest } from './serialization.js';
 import {
     AccountInfo,
@@ -8,12 +14,7 @@ import {
     HexString,
     JsonString,
 } from './types.js';
-// self-referencing not allowed by eslint resolver
-// eslint-disable-next-line import/no-extraneous-dependencies
-import * as ed from '@concordium/web-sdk/shims/ed25519';
-import { Buffer } from 'buffer/index.js';
 import * as AccountAddress from './types/AccountAddress.js';
-import { sha256 } from './hash.js';
 import { mapRecord } from './util.js';
 
 export interface KeyPair {
@@ -55,24 +56,14 @@ export interface WalletExportFormat {
 export function parseWallet(walletString: JsonString): WalletExportFormat {
     const wallet = JSON.parse(walletString);
     if (typeof wallet.type !== 'string') {
-        throw Error(
-            'Expected field "type" to be of type "string" but was of type "' +
-                typeof wallet.type +
-                '"'
-        );
+        throw Error('Expected field "type" to be of type "string" but was of type "' + typeof wallet.type + '"');
     }
     if (typeof wallet.v !== 'number') {
-        throw Error(
-            'Expected field "v" to be of type "number" but was of type "' +
-                typeof wallet.v +
-                '"'
-        );
+        throw Error('Expected field "v" to be of type "number" but was of type "' + typeof wallet.v + '"');
     }
     if (typeof wallet.environment !== 'string') {
         throw Error(
-            'Expected field "environment" to be of type "string" but was of type "' +
-                typeof wallet.environment +
-                '"'
+            'Expected field "environment" to be of type "string" but was of type "' + typeof wallet.environment + '"'
         );
     }
     if (typeof wallet.value.address !== 'string') {
@@ -83,14 +74,10 @@ export function parseWallet(walletString: JsonString): WalletExportFormat {
         );
     }
     if (wallet.value.accountKeys === undefined) {
-        throw Error(
-            'Expected field "value.accountKeys" to be defined, but was not'
-        );
+        throw Error('Expected field "value.accountKeys" to be defined, but was not');
     }
     if (wallet.value.credentials === undefined) {
-        throw Error(
-            'Expected field "value.credentials" to be defined, but was not'
-        );
+        throw Error('Expected field "value.credentials" to be defined, but was not');
     }
     return wallet;
 }
@@ -120,10 +107,7 @@ export interface AccountSigner {
  *
  * @returns {Buffer} the signature.
  */
-export const getSignature = async (
-    digest: ArrayBuffer,
-    privateKey: HexString
-): Promise<Buffer> =>
+export const getSignature = async (digest: ArrayBuffer, privateKey: HexString): Promise<Buffer> =>
     Buffer.from(await ed.signAsync(new Uint8Array(digest), privateKey));
 
 /**
@@ -150,30 +134,21 @@ export function buildBasicAccountSigner(privateKey: HexString): AccountSigner {
     };
 }
 
-const isWalletExport = <T extends WithAccountKeys>(
-    value: T | WalletExportFormat
-): value is WalletExportFormat =>
+const isWalletExport = <T extends WithAccountKeys>(value: T | WalletExportFormat): value is WalletExportFormat =>
     (value as WalletExportFormat).value?.accountKeys !== undefined;
 
 const isSimpleAccountKeys = <T extends WithAccountKeys>(
     value: T | WalletExportFormat | SimpleAccountKeys
 ): value is SimpleAccountKeys =>
-    (value as WalletExportFormat).value?.accountKeys === undefined &&
-    (value as T).accountKeys === undefined;
+    (value as WalletExportFormat).value?.accountKeys === undefined && (value as T).accountKeys === undefined;
 
-const getKeys = <T extends WithAccountKeys>(
-    value: T | WalletExportFormat | SimpleAccountKeys
-): SimpleAccountKeys => {
+const getKeys = <T extends WithAccountKeys>(value: T | WalletExportFormat | SimpleAccountKeys): SimpleAccountKeys => {
     if (isSimpleAccountKeys(value)) {
         return value;
     }
-    const { keys } = isWalletExport(value)
-        ? value.value.accountKeys
-        : value.accountKeys;
+    const { keys } = isWalletExport(value) ? value.value.accountKeys : value.accountKeys;
 
-    return mapRecord(keys, (credKeys) =>
-        mapRecord(credKeys.keys, (keyPair) => keyPair.signKey)
-    );
+    return mapRecord(keys, (credKeys) => mapRecord(credKeys.keys, (keyPair) => keyPair.signKey));
 };
 
 const getCredentialSignature = async (
@@ -196,9 +171,7 @@ const getCredentialSignature = async (
  *
  * @returns {AccountSigner} An `AccountSigner` which creates signatures using all keys for all credentials
  */
-export function buildAccountSigner(
-    walletExport: WalletExportFormat
-): AccountSigner;
+export function buildAccountSigner(walletExport: WalletExportFormat): AccountSigner;
 /**
  * Creates an `AccountSigner` for an arbitrary format extending the {@link WithAccountKeys} type.
  * Creating signatures using the `AccountSigner` will hold signatures for all credentials and all their respective keys included.
@@ -207,9 +180,7 @@ export function buildAccountSigner(
  *
  * @returns {AccountSigner} An `AccountSigner` which creates signatures using all keys for all credentials
  */
-export function buildAccountSigner<T extends WithAccountKeys>(
-    value: T
-): AccountSigner;
+export function buildAccountSigner<T extends WithAccountKeys>(value: T): AccountSigner;
 /**
  * Creates an `AccountSigner` for the {@link SimpleAccountKeys} type.
  * Creating signatures using the `AccountSigner` will hold signatures for all credentials and all their respective keys included.
@@ -236,10 +207,7 @@ export function buildAccountSigner<T extends WithAccountKeys>(
     }
 
     const keys = getKeys<T>(value);
-    const numKeys = Object.values(keys).reduce(
-        (acc, credKeys) => acc + BigInt(Object.keys(credKeys).length),
-        0n
-    );
+    const numKeys = Object.values(keys).reduce((acc, credKeys) => acc + BigInt(Object.keys(credKeys).length), 0n);
 
     return {
         getSignatureCount() {
@@ -264,10 +232,7 @@ export function signTransaction(
     transaction: AccountTransaction,
     signer: AccountSigner
 ): Promise<AccountTransactionSignature> {
-    const digest = getAccountTransactionSignDigest(
-        transaction,
-        signer.getSignatureCount()
-    );
+    const digest = getAccountTransactionSignDigest(transaction, signer.getSignatureCount());
     return signer.sign(digest);
 }
 
@@ -275,13 +240,9 @@ export function signTransaction(
  * @param account the address of the account that will sign this message.
  * @param message the message to sign, assumed to be utf8 encoded string or a Uint8Array/buffer.
  */
-function getMessageDigest(
-    account: AccountAddress.Type,
-    message: string | Uint8Array
-): Buffer {
+function getMessageDigest(account: AccountAddress.Type, message: string | Uint8Array): Buffer {
     const prepend = Buffer.alloc(8, 0);
-    const rawMessage =
-        typeof message === 'string' ? Buffer.from(message, 'utf8') : message;
+    const rawMessage = typeof message === 'string' ? Buffer.from(message, 'utf8') : message;
     return sha256([AccountAddress.toBuffer(account), prepend, rawMessage]);
 }
 
@@ -309,10 +270,7 @@ export function signMessage(
 export async function verifyMessageSignature(
     message: string | Uint8Array,
     signature: AccountTransactionSignature,
-    accountInfo: Pick<
-        AccountInfo,
-        'accountThreshold' | 'accountCredentials' | 'accountAddress'
-    >
+    accountInfo: Pick<AccountInfo, 'accountThreshold' | 'accountCredentials' | 'accountAddress'>
 ): Promise<boolean> {
     if (Object.keys(signature).length < accountInfo.accountThreshold) {
         // Not enough credentials have signed;
@@ -322,28 +280,21 @@ export async function verifyMessageSignature(
     const digest = getMessageDigest(accountInfo.accountAddress, message);
 
     for (const credentialIndex of Object.keys(signature)) {
-        const credential =
-            accountInfo.accountCredentials[Number(credentialIndex)];
+        const credential = accountInfo.accountCredentials[Number(credentialIndex)];
         if (!credential) {
-            throw new Error(
-                'Signature contains signature for non-existing credential'
-            );
+            throw new Error('Signature contains signature for non-existing credential');
         }
         const credentialSignature = signature[Number(credentialIndex)];
         const credentialKeys = credential.value.contents.credentialPublicKeys;
 
-        if (
-            Object.keys(credentialSignature).length < credentialKeys.threshold
-        ) {
+        if (Object.keys(credentialSignature).length < credentialKeys.threshold) {
             // Not enough signatures for the current credential;
             return false;
         }
 
         for (const keyIndex of Object.keys(credentialSignature)) {
             if (!credentialKeys.keys[Number(keyIndex)]) {
-                throw new Error(
-                    'Signature contains signature for non-existing keyIndex'
-                );
+                throw new Error('Signature contains signature for non-existing keyIndex');
             }
             if (
                 !(await ed.verifyAsync(

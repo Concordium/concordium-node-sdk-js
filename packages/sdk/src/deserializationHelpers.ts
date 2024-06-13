@@ -1,4 +1,5 @@
 import { Buffer } from 'buffer/index.js';
+
 import { HexString } from './types.js';
 
 /**
@@ -49,9 +50,7 @@ export class Cursor {
     public read(numBytes: number = this.remainingBytes.length): Buffer {
         const end = this.cursor + numBytes;
         if (this.data.length < end) {
-            throw new Error(
-                `Failed to read ${numBytes} bytes from the cursor.`
-            );
+            throw new Error(`Failed to read ${numBytes} bytes from the cursor.`);
         }
         const data = Buffer.from(this.data.subarray(this.cursor, end));
         this.cursor += numBytes;

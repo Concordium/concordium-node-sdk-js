@@ -1,5 +1,3 @@
-import { deserializeTransaction } from '../../src/wasm/deserialization.js';
-import { serializeAccountTransactionForSubmission } from '../../src/serialization.js';
 import {
     AccountAddress,
     AccountTransaction,
@@ -8,18 +6,20 @@ import {
     AccountTransactionSignature,
     AccountTransactionType,
     BlockItemKind,
-    DataBlob,
+    CIS2,
     CcdAmount,
+    ContractAddress,
+    DataBlob,
     RegisterDataPayload,
+    SequenceNumber,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
     TransactionExpiry,
     tokenAddressFromBase58,
     tokenAddressToBase58,
-    SequenceNumber,
-    CIS2,
-    ContractAddress,
 } from '../../src/index.js';
+import { serializeAccountTransactionForSubmission } from '../../src/serialization.js';
+import { deserializeTransaction } from '../../src/wasm/deserialization.js';
 
 function deserializeAccountTransactionBase(
     type: AccountTransactionType,
@@ -29,9 +29,7 @@ function deserializeAccountTransactionBase(
     const header: AccountTransactionHeader = {
         expiry,
         nonce: SequenceNumber.create(1),
-        sender: AccountAddress.fromBase58(
-            '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
-        ),
+        sender: AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'),
     };
 
     const transaction: AccountTransaction = {
@@ -46,9 +44,7 @@ function deserializeAccountTransactionBase(
         },
     };
 
-    const deserialized = deserializeTransaction(
-        serializeAccountTransactionForSubmission(transaction, signatures)
-    );
+    const deserialized = deserializeTransaction(serializeAccountTransactionForSubmission(transaction, signatures));
 
     if (deserialized.kind !== BlockItemKind.AccountTransactionKind) {
         throw new Error('Incorrect BlockItemKind');
@@ -63,9 +59,7 @@ function deserializeAccountTransactionBase(
 test('test deserialize simpleTransfer ', () => {
     const payload: SimpleTransferPayload = {
         amount: CcdAmount.fromMicroCcd(5100000),
-        toAddress: AccountAddress.fromBase58(
-            '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
-        ),
+        toAddress: AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'),
     };
     deserializeAccountTransactionBase(AccountTransactionType.Transfer, payload);
 });
@@ -73,33 +67,23 @@ test('test deserialize simpleTransfer ', () => {
 test('test deserialize simpleTransfer with memo ', () => {
     const payload: SimpleTransferWithMemoPayload = {
         amount: CcdAmount.fromMicroCcd(5100000),
-        toAddress: AccountAddress.fromBase58(
-            '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
-        ),
+        toAddress: AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'),
         memo: new DataBlob(Buffer.from('00', 'hex')),
     };
-    deserializeAccountTransactionBase(
-        AccountTransactionType.TransferWithMemo,
-        payload
-    );
+    deserializeAccountTransactionBase(AccountTransactionType.TransferWithMemo, payload);
 });
 
 test('test deserialize registerData ', () => {
     const payload: RegisterDataPayload = {
         data: new DataBlob(Buffer.from('00AB5303926810EE', 'hex')),
     };
-    deserializeAccountTransactionBase(
-        AccountTransactionType.RegisterData,
-        payload
-    );
+    deserializeAccountTransactionBase(AccountTransactionType.RegisterData, payload);
 });
 
 test('Expired transactions can be deserialized', () => {
     const payload: SimpleTransferPayload = {
         amount: CcdAmount.fromMicroCcd(5100000),
-        toAddress: AccountAddress.fromBase58(
-            '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
-        ),
+        toAddress: AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'),
     };
     deserializeAccountTransactionBase(
         AccountTransactionType.Transfer,

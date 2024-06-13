@@ -5,10 +5,7 @@ export const expectedStatementMixed: CredentialStatement[] = [
     {
         idQualifier: {
             type: 'sci',
-            issuers: [
-                ContractAddress.create(2101),
-                ContractAddress.create(1337, 42),
-            ],
+            issuers: [ContractAddress.create(2101), ContractAddress.create(1337, 42)],
         },
         statement: [
             {

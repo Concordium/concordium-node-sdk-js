@@ -1,28 +1,15 @@
-import {
-    CIS3,
-    deserializeCIS3Event,
-    deserializeCIS3EventsFromSummary,
-} from '../../src/cis3/util.js';
-import {
-    AccountAddress,
-    BlockItemSummary,
-    ContractEvent,
-    TransactionHash,
-} from '../../src/index.js';
+import { CIS3, deserializeCIS3Event, deserializeCIS3EventsFromSummary } from '../../src/cis3/util.js';
+import { AccountAddress, BlockItemSummary, ContractEvent, TransactionHash } from '../../src/index.js';
 import { getNodeClientV2 } from './testHelpers.js';
 
 const TRANSACTION_HASH = TransactionHash.fromHexString(
     'bbbb4dbac785210092ccbe3692d166b858bb0edc05068c2346a0446d05d3695b'
 );
-const SPONSOREE = AccountAddress.fromBase58(
-    '4NgCvVSCuCyHkALqbAnSX3QEC7zrfoZbig7X3ePMpk8iLod6Yj'
-);
+const SPONSOREE = AccountAddress.fromBase58('4NgCvVSCuCyHkALqbAnSX3QEC7zrfoZbig7X3ePMpk8iLod6Yj');
 
 async function getBlockItemSummary(): Promise<BlockItemSummary> {
     const nodeClient = getNodeClientV2();
-    const bi = await nodeClient.waitForTransactionFinalization(
-        TRANSACTION_HASH
-    );
+    const bi = await nodeClient.waitForTransactionFinalization(TRANSACTION_HASH);
     return bi.summary;
 }
 

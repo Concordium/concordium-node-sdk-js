@@ -6,12 +6,11 @@
  * 2. Converting wasm file to js with [wasm2js]{@link https://github.com/WebAssembly/binaryen/blob/main/src/wasm2js.h}
  * 3. Replacing references to wasm file with corresponding references to converted file.
  */
-
-import path from 'node:path';
-import fs from 'node:fs';
-import util from 'node:util';
-import { exec as _exec } from 'node:child_process';
 import copyfiles from 'copyfiles';
+import { exec as _exec } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import util from 'node:util';
 
 const exec = util.promisify(_exec);
 
@@ -30,12 +29,7 @@ copyfiles(
 
 (async () => {
     // Convert files using `wasm2js`
-    await exec(
-        `wasm2js ${path.join(outPath, WASM_FILENAME)} -o ${path.join(
-            outPath,
-            WASM_FILENAME_JS
-        )}`
-    );
+    await exec(`wasm2js ${path.join(outPath, WASM_FILENAME)} -o ${path.join(outPath, WASM_FILENAME_JS)}`);
 
     // Remove unused wasm file
     fs.rmSync(path.join(outPath, WASM_FILENAME));

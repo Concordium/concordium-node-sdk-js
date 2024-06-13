@@ -1,12 +1,9 @@
-import type * as Proto from '../grpc-api/v2/concordium/types.js';
 import { Buffer } from 'buffer/index.js';
+
+import type * as Proto from '../grpc-api/v2/concordium/types.js';
 import { packBufferWithWord32Length } from '../serializationHelpers.js';
 import type { HexString } from '../types.js';
-import {
-    TypedJson,
-    TypedJsonDiscriminator,
-    makeFromTypedJson,
-} from './util.js';
+import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The number of bytes used to represent a block hash.
@@ -48,9 +45,7 @@ class ModuleReference {
      * @returns {HexString} The JSON-serializable representation.
      */
     public toJSON(): HexString {
-        return packBufferWithWord32Length(this.decodedModuleRef).toString(
-            'hex'
-        );
+        return packBufferWithWord32Length(this.decodedModuleRef).toString('hex');
     }
 }
 
@@ -99,9 +94,7 @@ export function fromBuffer(buffer: ArrayBuffer): ModuleReference {
     const hex = Buffer.from(buffer).toString('hex');
     if (buffer.byteLength !== MODULE_REF_BYTE_LENGTH) {
         throw new Error(
-            'The provided moduleRef ' +
-                hex +
-                ' is invalid as module reference as it does not contain 32 bytes'
+            'The provided moduleRef ' + hex + ' is invalid as module reference as it does not contain 32 bytes'
         );
     }
     return new ModuleReference(hex, new Uint8Array(buffer));
@@ -115,16 +108,9 @@ export function fromBuffer(buffer: ArrayBuffer): ModuleReference {
  */
 export function fromHexString(moduleRef: HexString): ModuleReference {
     if (moduleRef.length !== MODULE_REF_BYTE_LENGTH * 2) {
-        throw new Error(
-            'The provided moduleRef ' +
-                moduleRef +
-                ' is invalid as its length was not 64'
-        );
+        throw new Error('The provided moduleRef ' + moduleRef + ' is invalid as its length was not 64');
     }
-    return new ModuleReference(
-        moduleRef,
-        new Uint8Array(Buffer.from(moduleRef, 'hex'))
-    );
+    return new ModuleReference(moduleRef, new Uint8Array(Buffer.from(moduleRef, 'hex')));
 }
 
 /**
@@ -186,7 +172,4 @@ export function toTypedJSON(value: ModuleReference): TypedJson<Serializable> {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
-    JSON_DISCRIMINATOR,
-    fromHexString
-);
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromHexString);

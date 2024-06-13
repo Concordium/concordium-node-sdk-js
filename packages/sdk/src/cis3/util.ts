@@ -1,10 +1,16 @@
 import { Buffer } from 'buffer/index.js';
-import * as ContractAddress from '../types/ContractAddress.js';
-import * as Timestamp from '../types/Timestamp.js';
-import * as EntrypointName from '../types/EntrypointName.js';
-import * as Parameter from '../types/Parameter.js';
-import * as AccountAddress from '../types/AccountAddress.js';
-import * as ContractEvent from '../types/ContractEvent.js';
+
+import { serializeAccountAddress, serializeContractAddress, serializeReceiveHookName } from '../cis2/util.js';
+import { serializeDate } from '../cis4/util.js';
+import { deserializeUint8 } from '../deserialization.js';
+import { Cursor, makeDeserializeListResponse } from '../deserializationHelpers.js';
+import {
+    encodeWord8,
+    encodeWord8FromString,
+    encodeWord16,
+    encodeWord64,
+    serializeMap,
+} from '../serializationHelpers.js';
 import {
     AccountTransactionSignature,
     Base58String,
@@ -16,24 +22,12 @@ import {
     TransactionKindString,
     TransactionSummaryType,
 } from '../types.js';
-import {
-    serializeAccountAddress,
-    serializeContractAddress,
-    serializeReceiveHookName,
-} from '../cis2/util.js';
-import {
-    encodeWord16,
-    encodeWord64,
-    encodeWord8,
-    encodeWord8FromString,
-    serializeMap,
-} from '../serializationHelpers.js';
-import { serializeDate } from '../cis4/util.js';
-import {
-    Cursor,
-    makeDeserializeListResponse,
-} from '../deserializationHelpers.js';
-import { deserializeUint8 } from '../deserialization.js';
+import * as AccountAddress from '../types/AccountAddress.js';
+import * as ContractAddress from '../types/ContractAddress.js';
+import * as ContractEvent from '../types/ContractEvent.js';
+import * as EntrypointName from '../types/EntrypointName.js';
+import * as Parameter from '../types/Parameter.js';
+import * as Timestamp from '../types/Timestamp.js';
 
 const PERMIT_PAYLOAD_MAX_LENGTH = 65535;
 const SUPPORTS_PERMIT_QUERY_MAX_LENGTH = 65535;
@@ -132,9 +126,7 @@ export namespace CIS3 {
  *
  * @returns {Buffer} The serialized message.
  */
-export function serializeCIS3PermitMessage(
-    message: CIS3.PermitMessage
-): Buffer {
+export function serializeCIS3PermitMessage(message: CIS3.PermitMessage): Buffer {
     const contract = serializeContractAddress(message.contractAddress);
     const nonce = encodeWord64(message.nonce, true);
     const timestamp = serializeDate(message.timestamp);
@@ -182,9 +174,7 @@ export function serializeCIS3PermitParam(param: CIS3.PermitParam): Buffer {
  * Serializes a map of account transaction signatures according to the CIS-3 standard.
  * If no signatures are provided, then an error is thrown.
  */
-export function serializeCIS3AccountTransactionSignature(
-    signatures: AccountTransactionSignature
-): Buffer {
+export function serializeCIS3AccountTransactionSignature(signatures: AccountTransactionSignature): Buffer {
     if (Object.keys(signatures).length === 0) {
         throw new Error('No signatures were provided');
     }
@@ -196,12 +186,7 @@ export function serializeCIS3AccountTransactionSignature(
     };
     const putCredentialSignatures = (credSig: CredentialSignature) =>
         serializeMap(credSig, encodeWord8, encodeWord8FromString, putSignature);
-    return serializeMap(
-        signatures,
-        encodeWord8,
-        encodeWord8FromString,
-        putCredentialSignatures
-    );
+    return serializeMap(signatures, encodeWord8, encodeWord8FromString, putCredentialSignatures);
 }
 
 /**
@@ -214,9 +199,7 @@ export function serializeCIS3AccountTransactionSignature(
  *
  * @throws If the list of entrypoints is too long.
  */
-export function serializeCIS3SupportsPermitQueryParams(
-    params: EntrypointName.Type[]
-): Buffer {
+export function serializeCIS3SupportsPermitQueryParams(params: EntrypointName.Type[]): Buffer {
     if (params.length > SUPPORTS_PERMIT_QUERY_MAX_LENGTH) {
         throw new Error('Too many entrypoints');
     }
@@ -236,11 +219,10 @@ export function serializeCIS3SupportsPermitQueryParams(
  *
  * @returns {boolean[]} The deserialized list of booleans indicating support for each entrypoint.
  */
-export const deserializeCIS3SupportsPermitResponse =
-    makeDeserializeListResponse((cursor) => {
-        const value = Boolean(cursor.read(1).readUInt8(0));
-        return value;
-    });
+export const deserializeCIS3SupportsPermitResponse = makeDeserializeListResponse((cursor) => {
+    const value = Boolean(cursor.read(1).readUInt8(0));
+    return value;
+});
 
 /**
  * Format {@link CIS3.PermitParam} as a JSON compatible object.
@@ -249,16 +231,11 @@ export const deserializeCIS3SupportsPermitResponse =
  *
  * @returns {CIS3.PermitParamJson} The formatted parameters.
  */
-export function formatCIS3PermitParam(
-    params: CIS3.PermitParam
-): CIS3.PermitParamJson {
+export function formatCIS3PermitParam(params: CIS3.PermitParam): CIS3.PermitParamJson {
     return {
         signature: Object.entries(params.signature).map(([key1, innerMap]) => [
             parseInt(key1),
-            Object.entries(innerMap).map(([key2, value]) => [
-                parseInt(key2),
-                { Ed25519: [value] },
-            ]),
+            Object.entries(innerMap).map(([key2, value]) => [parseInt(key2), { Ed25519: [value] }]),
         ]),
         signer: AccountAddress.toBase58(params.signer),
         message: formatCIS3PermitMessage(params.message),
@@ -274,13 +251,8 @@ export function formatCIS3PermitParam(
  *
  * @throws If the of the message is outside of the safe integer range.
  */
-function formatCIS3PermitMessage(
-    message: CIS3.PermitMessage
-): CIS3.PermitMessageJson {
-    if (
-        message.nonce < Number.MIN_SAFE_INTEGER ||
-        message.nonce > Number.MAX_SAFE_INTEGER
-    ) {
+function formatCIS3PermitMessage(message: CIS3.PermitMessage): CIS3.PermitMessageJson {
+    if (message.nonce < Number.MIN_SAFE_INTEGER || message.nonce > Number.MAX_SAFE_INTEGER) {
         throw new Error('Nonce is too large');
     }
 
@@ -341,9 +313,7 @@ export function deserializeCIS3Event(event: ContractEvent.Type): CIS3.Event {
  *
  * @returns {CIS3.NonceEvent[]} The deserialized `nonce` events
  */
-export function deserializeCIS3EventsFromInvokationResult(
-    result: InvokeContractSuccessResult
-): CIS3.NonceEvent[] {
+export function deserializeCIS3EventsFromInvokationResult(result: InvokeContractSuccessResult): CIS3.NonceEvent[] {
     return deserializeCIS3ContractTraceEvents(result.events);
 }
 
@@ -354,9 +324,7 @@ export function deserializeCIS3EventsFromInvokationResult(
  *
  * @returns {CIS3.NonceEvent[]} The deserialized `nonce` events
  */
-export function deserializeCIS3EventsFromSummary(
-    summary: BlockItemSummary
-): CIS3.NonceEvent[] {
+export function deserializeCIS3EventsFromSummary(summary: BlockItemSummary): CIS3.NonceEvent[] {
     if (summary.type !== TransactionSummaryType.AccountTransaction) {
         return [];
     }
@@ -367,9 +335,7 @@ export function deserializeCIS3EventsFromSummary(
         case TransactionKindString.InitContract:
             const deserializedEvents = [];
             for (const event of summary.contractInitialized.events) {
-                const deserializedEvent = deserializeCIS3Event(
-                    ContractEvent.fromHexString(event)
-                );
+                const deserializedEvent = deserializeCIS3Event(ContractEvent.fromHexString(event));
                 if (deserializedEvent.type === CIS3.EventType.Nonce) {
                     deserializedEvents.push(deserializedEvent);
                 }
@@ -388,9 +354,7 @@ export function deserializeCIS3EventsFromSummary(
  *
  * @returns {CIS3.NonceEvent[]} The deserialized CIS-3 `nonce` events
  */
-function deserializeCIS3ContractTraceEvents(
-    events: ContractTraceEvent[]
-): CIS3.NonceEvent[] {
+function deserializeCIS3ContractTraceEvents(events: ContractTraceEvent[]): CIS3.NonceEvent[] {
     const deserializedEvents = [];
     for (const traceEvent of events) {
         if (!('events' in traceEvent)) {

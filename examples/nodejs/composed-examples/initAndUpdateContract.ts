@@ -5,30 +5,30 @@ import {
     AccountTransactionType,
     CcdAmount,
     ContractContext,
-    deserializeReceiveReturnValue,
+    ContractName,
+    Energy,
+    EntrypointName,
     InitContractPayload,
     ModuleReference,
+    ReceiveName,
+    ReturnValue,
+    TransactionExpiry,
+    UpdateContractPayload,
+    affectedContracts,
+    buildAccountSigner,
+    deserializeReceiveReturnValue,
+    parseWallet,
     serializeInitContractParameters,
     serializeUpdateContractParameters,
     signTransaction,
-    TransactionExpiry,
-    UpdateContractPayload,
     unwrap,
-    parseWallet,
-    buildAccountSigner,
-    affectedContracts,
-    ContractName,
-    ReceiveName,
-    Energy,
-    EntrypointName,
-    ReturnValue,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
-import { readFileSync } from 'node:fs';
-import { parseEndpoint } from '../shared/util.js';
-
 import meow from 'meow';
+import { readFileSync } from 'node:fs';
+
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -60,11 +60,7 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 /**
  * The following example demonstrates how a smart contract can be initialized
@@ -80,9 +76,7 @@ const client = new ConcordiumGRPCNodeClient(
     const sender = AccountAddress.fromBase58(wallet.value.address);
     const signer = buildAccountSigner(wallet);
 
-    const moduleRef = ModuleReference.fromHexString(
-        '44434352ddba724930d6b1b09cd58bd1fba6ad9714cf519566d5fe72d80da0d1'
-    );
+    const moduleRef = ModuleReference.fromHexString('44434352ddba724930d6b1b09cd58bd1fba6ad9714cf519566d5fe72d80da0d1');
     const maxCost = Energy.create(30000);
     const contractName = ContractName.fromStringUnchecked('weather');
     const receiveName = ReceiveName.fromStringUnchecked('weather.set');
@@ -100,11 +94,7 @@ const client = new ConcordiumGRPCNodeClient(
         sender,
     };
 
-    const initParams = serializeInitContractParameters(
-        contractName,
-        sunnyWeather,
-        schema
-    );
+    const initParams = serializeInitContractParameters(contractName, sunnyWeather, schema);
 
     const initPayload: InitContractPayload = {
         amount: CcdAmount.zero(),
@@ -121,10 +111,7 @@ const client = new ConcordiumGRPCNodeClient(
     };
 
     const initSignature = await signTransaction(initTransaction, signer);
-    const initTrxHash = await client.sendAccountTransaction(
-        initTransaction,
-        initSignature
-    );
+    const initTrxHash = await client.sendAccountTransaction(initTransaction, initSignature);
 
     console.log('Transaction submitted, waiting for finalization...');
 
@@ -173,16 +160,11 @@ const client = new ConcordiumGRPCNodeClient(
     };
 
     const updateSignature = await signTransaction(updateTransaction, signer);
-    const updateTrxHash = await client.sendAccountTransaction(
-        updateTransaction,
-        updateSignature
-    );
+    const updateTrxHash = await client.sendAccountTransaction(updateTransaction, updateSignature);
 
     console.log('Transaction submitted, waiting for finalization...');
 
-    const updateStatus = await client.waitForTransactionFinalization(
-        updateTrxHash
-    );
+    const updateStatus = await client.waitForTransactionFinalization(updateTrxHash);
     console.dir(updateStatus, { depth: null, colors: true });
 
     // #endregion documentation-snippet-update-contract

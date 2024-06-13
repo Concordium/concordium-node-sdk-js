@@ -82,7 +82,7 @@
         "./lib/**/index*"
     ],
     "scripts": {
-        "fmt": "cargo +nightly-2023-04-01-x86_64-unknown-linux-gnu fmt -- --color=always --check",
+        "rustfmt": "cargo +nightly-2023-04-01-x86_64-unknown-linux-gnu fmt -- --color=always",
         "clippy": "cargo +1.73 clippy --color=always --tests --benches -- -Dclippy::all",
         "build-web": "wasm-pack build ./packages/$0 --target web --out-dir $INIT_CWD/lib/$0/web/esm --out-name index",
         "build-node": "wasm-pack build ./packages/$0 --target nodejs --out-dir $INIT_CWD/lib/$0/node/cjs --out-name index",
@@ -94,15 +94,20 @@
         "build:rust-bindings": "yarn build",
         "clean": "rimraf -- target lib .webpack-cache",
         "sanitize": "find ./lib -type f -name .gitignore -delete -o -name package.json -delete",
-        "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
-        "lint-fix": "yarn --silent lint --fix; exit 0"
+        "lint": "eslint . --cache --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "lint-fix": "yarn lint --fix",
+        "prettier": "prettier . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore --ignore-path .gitignore",
+        "fmt": "yarn prettier --write",
+        "fmt-check": "yarn prettier --check"
     },
     "devDependencies": {
         "@types/copyfiles": "^2.4.1",
+        "@types/node": "^20.12.13",
         "binaryen": "^114.0.0",
         "buffer": "^6.0.3",
         "copyfiles": "^2.4.1",
-        "eslint": "^8.50.0",
+        "eslint": "8",
+        "prettier": "^3.2.5",
         "rimraf": "^5.0.1",
         "ts-loader": "^9.4.4",
         "ts-node": "^10.9.1",

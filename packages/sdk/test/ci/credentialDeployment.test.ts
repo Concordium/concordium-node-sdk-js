@@ -1,26 +1,14 @@
-import {
-    createCredentialTransaction,
-    CredentialInput,
-} from '../../src/wasm/credentialDeploymentTransactions.js';
 import fs from 'fs';
-import { AttributeKey } from '../../src/types.js';
-import { TransactionExpiry } from '../../src/index.js';
 
-export function createCredentialInput(
-    revealedAttributes: AttributeKey[]
-): CredentialInput {
-    const ipInfo = JSON.parse(
-        fs.readFileSync('./test/ci/resources/ip_info.json').toString()
-    ).value;
-    const globalContext = JSON.parse(
-        fs.readFileSync('./test/ci/resources/global.json').toString()
-    ).value;
-    const arsInfos = JSON.parse(
-        fs.readFileSync('./test/ci/resources/ars_infos.json').toString()
-    ).value;
-    const idObject = JSON.parse(
-        fs.readFileSync('./test/ci/resources/identity-object.json').toString()
-    ).value;
+import { TransactionExpiry } from '../../src/index.js';
+import { AttributeKey } from '../../src/types.js';
+import { CredentialInput, createCredentialTransaction } from '../../src/wasm/credentialDeploymentTransactions.js';
+
+export function createCredentialInput(revealedAttributes: AttributeKey[]): CredentialInput {
+    const ipInfo = JSON.parse(fs.readFileSync('./test/ci/resources/ip_info.json').toString()).value;
+    const globalContext = JSON.parse(fs.readFileSync('./test/ci/resources/global.json').toString()).value;
+    const arsInfos = JSON.parse(fs.readFileSync('./test/ci/resources/ars_infos.json').toString()).value;
+    const idObject = JSON.parse(fs.readFileSync('./test/ci/resources/identity-object.json').toString()).value;
 
     const seedAsHex =
         'efa5e27326f8fa0902e647b52449bf335b7b605adc387015ec903f41d95080eb71361cbc7fb78721dcd4f3926a337340aa1406df83332c44c1cdcfe100603860';
@@ -57,9 +45,7 @@ test('Test createCredentialTransaction', () => {
     expect(cdi.ipIdentity).toEqual(0);
     expect(cdi.policy.createdAt).toEqual('202208');
     expect(cdi.policy.validTo).toEqual('202308');
-    expect(Object.keys(cdi.policy.revealedAttributes)).toEqual(
-        revealedAttributes
-    );
+    expect(Object.keys(cdi.policy.revealedAttributes)).toEqual(revealedAttributes);
     expect(cdi.revocationThreshold).toEqual(1);
     expect(typeof cdi.proofs.challenge).toEqual('string');
     expect(typeof cdi.proofs.commitments).toEqual('string');

@@ -1,9 +1,9 @@
-import { parseEndpoint } from '../shared/util.js';
 import { BlockFinalizationSummary, BlockHash } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
-
 import meow from 'meow';
+
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -33,11 +33,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 /**
  * Get the summary of the finalization data in a given block. Only finalized
@@ -49,12 +45,8 @@ const client = new ConcordiumGRPCNodeClient(
 
 (async () => {
     // #region documentation-snippet
-    const blockHash =
-        cli.flags.block === undefined
-            ? undefined
-            : BlockHash.fromHexString(cli.flags.block);
-    const summary: BlockFinalizationSummary =
-        await client.getBlockFinalizationSummary(blockHash);
+    const blockHash = cli.flags.block === undefined ? undefined : BlockHash.fromHexString(cli.flags.block);
+    const summary: BlockFinalizationSummary = await client.getBlockFinalizationSummary(blockHash);
 
     if (summary.tag === 'record') {
         // Response contains finalization summary for the given block:
@@ -63,9 +55,7 @@ const client = new ConcordiumGRPCNodeClient(
         console.log('delay:', summary.record.delay);
         console.log('Amount of finalizers:', summary.record.finalizers.length);
     } else {
-        console.log(
-            'Given block has not been finalized, and no information can be gotten'
-        );
+        console.log('Given block has not been finalized, and no information can be gotten');
     }
     // #endregion documentation-snippet
 })();

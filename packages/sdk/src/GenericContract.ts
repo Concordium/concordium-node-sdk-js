@@ -14,18 +14,18 @@ import {
     UpdateContractPayload,
 } from './types.js';
 import * as AccountAddress from './types/AccountAddress.js';
+import * as BlockHash from './types/BlockHash.js';
+import * as CcdAmount from './types/CcdAmount.js';
 import * as ContractAddress from './types/ContractAddress.js';
 import * as ContractName from './types/ContractName.js';
-import * as EntrypointName from './types/EntrypointName.js';
-import * as ReceiveName from './types/ReceiveName.js';
-import * as Parameter from './types/Parameter.js';
 import * as Energy from './types/Energy.js';
-import * as TransactionHash from './types/TransactionHash.js';
-import * as CcdAmount from './types/CcdAmount.js';
-import * as TransactionExpiry from './types/TransactionExpiry.js';
+import * as EntrypointName from './types/EntrypointName.js';
 import * as ModuleReference from './types/ModuleReference.js';
-import * as BlockHash from './types/BlockHash.js';
+import * as Parameter from './types/Parameter.js';
+import * as ReceiveName from './types/ReceiveName.js';
 import * as ReturnValue from './types/ReturnValue.js';
+import * as TransactionExpiry from './types/TransactionExpiry.js';
+import * as TransactionHash from './types/TransactionHash.js';
 
 /**
  * Metadata necessary for smart contract transactions
@@ -61,10 +61,7 @@ export type ContractInvokeMetadata = {
 /**
  * Metadata necessary for creating a {@link UpdateTransaction}
  */
-export type CreateContractTransactionMetadata = Pick<
-    ContractTransactionMetadata,
-    'amount' | 'energy'
->;
+export type CreateContractTransactionMetadata = Pick<ContractTransactionMetadata, 'amount' | 'energy'>;
 
 /**
  * Holds either a contract module schema, or the schema for a single parameters of a contract entrypoint
@@ -92,19 +89,18 @@ export type ContractUpdateTransaction = {
  *
  * @template J - The type of the parameter formatted as JSON compatible with the corresponding contract schema
  */
-export type ContractUpdateTransactionWithSchema<
-    J extends SmartContractTypeValues = SmartContractTypeValues
-> = ContractUpdateTransaction & {
-    /** Parameter of the update */
-    parameter: {
-        /** Hex encoded parameter for the update */
-        hex: HexString;
-        /** JSON representation of the parameter to be used with the corresponding contract schema */
-        json: J;
+export type ContractUpdateTransactionWithSchema<J extends SmartContractTypeValues = SmartContractTypeValues> =
+    ContractUpdateTransaction & {
+        /** Parameter of the update */
+        parameter: {
+            /** Hex encoded parameter for the update */
+            hex: HexString;
+            /** JSON representation of the parameter to be used with the corresponding contract schema */
+            json: J;
+        };
+        /** The schema needed to serialize the parameter */
+        schema: ContractSchema;
     };
-    /** The schema needed to serialize the parameter */
-    schema: ContractSchema;
-};
 
 /**
  * Default expiry date used for contract update transactions.
@@ -141,18 +137,14 @@ export class ContractDryRun<E extends string = string> {
      */
     public invokeMethod<T>(
         entrypoint: EntrypointName.Type<E>,
-        metaOrInvoker:
-            | ContractInvokeMetadata
-            | ContractAddress.Type
-            | AccountAddress.Type,
+        metaOrInvoker: ContractInvokeMetadata | ContractAddress.Type | AccountAddress.Type,
         serializer: (input: T) => ArrayBuffer,
         input: T,
         blockHash?: BlockHash.Type
     ): Promise<InvokeContractResult> {
         const parameter = Parameter.fromBuffer(serializer(input));
         const meta =
-            AccountAddress.instanceOf(metaOrInvoker) ||
-            ContractAddress.instanceOf(metaOrInvoker)
+            AccountAddress.instanceOf(metaOrInvoker) || ContractAddress.instanceOf(metaOrInvoker)
                 ? { invoker: metaOrInvoker }
                 : metaOrInvoker;
         return this.grpcClient.invokeContract(
@@ -186,9 +178,7 @@ export type ContractCheckOnChainOptions = {
  *
  * @template E - union of entrypoints
  */
-export type Schema<E extends string = string> =
-    | Base64String
-    | Record<E, Base64String>;
+export type Schema<E extends string = string> = Base64String | Record<E, Base64String>;
 
 /**
  * Base class for interacting with arbitrary contracts. Public version is {@link Contract}.
@@ -206,11 +196,7 @@ class ContractBase<E extends string = string, V extends string = string> {
         protected contractName: ContractName.Type,
         protected schema?: Schema<E>
     ) {
-        this.dryRunInstance = new ContractDryRun(
-            grpcClient,
-            contractAddress,
-            contractName
-        );
+        this.dryRunInstance = new ContractDryRun(grpcClient, contractAddress, contractName);
     }
 
     /**
@@ -252,10 +238,7 @@ class ContractBase<E extends string = string, V extends string = string> {
         grpcClient: ConcordiumGRPCClient,
         contractAddress: ContractAddress.Type
     ): Promise<ContractName.Type> {
-        const instanceInfo = await this.getInstanceInfo(
-            grpcClient,
-            contractAddress
-        );
+        const instanceInfo = await this.getInstanceInfo(grpcClient, contractAddress);
         return ContractName.fromInitName(instanceInfo.name);
     }
 
@@ -268,9 +251,7 @@ class ContractBase<E extends string = string, V extends string = string> {
 
      * @returns {InstanceInfo} The instance info.
      */
-    public async getInstanceInfo(
-        blockHash?: BlockHash.Type
-    ): Promise<InstanceInfo> {
+    public async getInstanceInfo(blockHash?: BlockHash.Type): Promise<InstanceInfo> {
         return this.grpcClient.getInstanceInfo(this.contractAddress, blockHash);
     }
 
@@ -282,17 +263,13 @@ class ContractBase<E extends string = string, V extends string = string> {
      *
      * @throws {RpcError} If failing to communicate with the concordium node or if the instance does not exist on chain or fails the checks.
      */
-    public async checkOnChain(
-        options: ContractCheckOnChainOptions = {}
-    ): Promise<void> {
+    public async checkOnChain(options: ContractCheckOnChainOptions = {}): Promise<void> {
         const info = await this.getInstanceInfo(options.blockHash);
         const contractNameOnChain = ContractName.fromInitName(info.name);
 
         if (!ContractName.equals(contractNameOnChain, this.contractName)) {
             throw new Error(
-                `Instance ${ContractAddress.toString(
-                    this.contractAddress
-                )} has contract name '${
+                `Instance ${ContractAddress.toString(this.contractAddress)} has contract name '${
                     contractNameOnChain.value
                 }' on chain. The client expected: '${this.contractName.value}'.`
             );
@@ -303,9 +280,7 @@ class ContractBase<E extends string = string, V extends string = string> {
             info.sourceModule.moduleRef !== options.moduleReference.moduleRef
         ) {
             throw new Error(
-                `Instance ${ContractAddress.toString(
-                    this.contractAddress
-                )} uses module with reference '${
+                `Instance ${ContractAddress.toString(this.contractAddress)} uses module with reference '${
                     info.sourceModule.moduleRef
                 }' expected '${options.moduleReference.moduleRef}'`
             );
@@ -366,15 +341,10 @@ class ContractBase<E extends string = string, V extends string = string> {
     public createUpdateTransaction<T, J extends SmartContractTypeValues>(
         entrypoint: EntrypointName.Type<E>,
         serializeInput: (input: T) => ArrayBuffer,
-        {
-            amount = CcdAmount.zero(),
-            energy,
-        }: CreateContractTransactionMetadata,
+        { amount = CcdAmount.zero(), energy }: CreateContractTransactionMetadata,
         input: T,
         inputJsonFormatter?: (input: T) => J
-    ):
-        | ContractUpdateTransaction
-        | MakeOptional<ContractUpdateTransactionWithSchema<J>, 'schema'> {
+    ): ContractUpdateTransaction | MakeOptional<ContractUpdateTransactionWithSchema<J>, 'schema'> {
         const parameter = Parameter.fromBuffer(serializeInput(input));
 
         const payload: UpdateContractPayload = {
@@ -401,9 +371,7 @@ class ContractBase<E extends string = string, V extends string = string> {
                 value: this.schema,
                 type: 'module',
             };
-        } else if (
-            this.schema?.[EntrypointName.toString(entrypoint)] !== undefined
-        ) {
+        } else if (this.schema?.[EntrypointName.toString(entrypoint)] !== undefined) {
             schema = {
                 value: this.schema[EntrypointName.toString(entrypoint)],
                 type: 'parameter',
@@ -433,15 +401,10 @@ class ContractBase<E extends string = string, V extends string = string> {
      */
     protected async sendUpdateTransaction(
         transactionBase: ContractUpdateTransaction,
-        {
-            senderAddress,
-            expiry = getContractUpdateDefaultExpiryDate(),
-        }: ContractTransactionMetadata,
+        { senderAddress, expiry = getContractUpdateDefaultExpiryDate() }: ContractTransactionMetadata,
         signer: AccountSigner
     ): Promise<TransactionHash.Type> {
-        const { nonce } = await this.grpcClient.getNextAccountNonce(
-            senderAddress
-        );
+        const { nonce } = await this.grpcClient.getNextAccountNonce(senderAddress);
         const header = {
             expiry,
             nonce: nonce,
@@ -477,12 +440,7 @@ class ContractBase<E extends string = string, V extends string = string> {
         input: T,
         signer: AccountSigner
     ): Promise<TransactionHash.Type> {
-        const transactionBase = this.createUpdateTransaction(
-            entrypoint,
-            serializeInput,
-            metadata,
-            input
-        );
+        const transactionBase = this.createUpdateTransaction(entrypoint, serializeInput, metadata, input);
         return this.sendUpdateTransaction(transactionBase, metadata, signer);
     }
 
@@ -519,24 +477,15 @@ class ContractBase<E extends string = string, V extends string = string> {
             },
             blockHash
         );
-        if (
-            response === undefined ||
-            response.tag === 'failure' ||
-            response.returnValue === undefined
-        ) {
+        if (response === undefined || response.tag === 'failure' || response.returnValue === undefined) {
             throw new Error(
-                `Failed to invoke view ${entrypoint} for contract at ${ContractAddress.toString(
-                    this.contractAddress
-                )}${
-                    response.tag === 'failure' &&
-                    ` with error ${stringify(response.reason)}`
+                `Failed to invoke view ${entrypoint} for contract at ${ContractAddress.toString(this.contractAddress)}${
+                    response.tag === 'failure' && ` with error ${stringify(response.reason)}`
                 }`
             );
         }
 
-        return deserializeResponse(
-            ReturnValue.toHexString(response.returnValue)
-        );
+        return deserializeResponse(ReturnValue.toHexString(response.returnValue));
     }
 }
 
@@ -546,10 +495,7 @@ class ContractBase<E extends string = string, V extends string = string> {
  * @template E - union of update entrypoints
  * @template V - union of view entrypoints
  */
-export class Contract<
-    E extends string = string,
-    V extends string = string
-> extends ContractBase<E, V> {
+export class Contract<E extends string = string, V extends string = string> extends ContractBase<E, V> {
     /**
      * Creates a new `Contract` instance by querying the node for the necessary information through the supplied `grpcClient`.
      *
@@ -562,27 +508,19 @@ export class Contract<
      *
      * or if the contract name could not be parsed from the information received from the node.
      */
-    public static async create<
-        E extends string = string,
-        V extends string = string
-    >(
+    public static async create<E extends string = string, V extends string = string>(
         grpcClient: ConcordiumGRPCClient,
         contractAddress: ContractAddress.Type,
         schema?: Schema<E>
     ): Promise<Contract<E, V>> {
-        const instanceInfo = await super.getInstanceInfo(
-            grpcClient,
-            contractAddress
-        );
+        const instanceInfo = await super.getInstanceInfo(grpcClient, contractAddress);
         // No reason to run checks, since this is from chain.
         const contractName = ContractName.fromInitName(instanceInfo.name);
 
         let mSchema: string | undefined;
         if (!schema) {
             try {
-                const raw = await grpcClient.getEmbeddedSchema(
-                    instanceInfo.sourceModule
-                );
+                const raw = await grpcClient.getEmbeddedSchema(instanceInfo.sourceModule);
                 const encoded = Buffer.from(raw).toString('base64');
 
                 if (encoded) {
@@ -593,12 +531,7 @@ export class Contract<
             }
         }
 
-        return new Contract(
-            grpcClient,
-            contractAddress,
-            contractName,
-            schema ?? mSchema
-        );
+        return new Contract(grpcClient, contractAddress, contractName, schema ?? mSchema);
     }
 }
 
@@ -610,11 +543,10 @@ export class Contract<
  * @template V - union of view entrypoints
  * @template D - {@link ContractDryRun} extension
  */
-export abstract class CISContract<
-    E extends string,
-    V extends string,
-    D extends ContractDryRun<E>
-> extends ContractBase<E, V> {
+export abstract class CISContract<E extends string, V extends string, D extends ContractDryRun<E>> extends ContractBase<
+    E,
+    V
+> {
     /** Parameter schema for each entrypoint `E` */
     protected abstract override schema: Record<E, Base64String>;
     /** The dry-run instance accessible through the {@link CISContract.dryRun} `dryRun` getter */
@@ -627,11 +559,7 @@ export abstract class CISContract<
     ) {
         super(grpcClient, contractAddress, contractName);
 
-        this.dryRunInstance = this.makeDryRunInstance(
-            grpcClient,
-            contractAddress,
-            contractName
-        );
+        this.dryRunInstance = this.makeDryRunInstance(grpcClient, contractAddress, contractName);
     }
 
     /**
@@ -689,10 +617,7 @@ export abstract class CISContract<
         input: T,
         inputJsonFormatter: (input: T) => J
     ): ContractUpdateTransactionWithSchema<J>;
-    public override createUpdateTransaction<
-        T,
-        J extends SmartContractTypeValues
-    >(
+    public override createUpdateTransaction<T, J extends SmartContractTypeValues>(
         entrypoint: EntrypointName.Type<E>,
         serializeInput: (input: T) => ArrayBuffer,
         metadata: CreateContractTransactionMetadata,
@@ -700,12 +625,7 @@ export abstract class CISContract<
         inputJsonFormatter?: (input: T) => J
     ): ContractUpdateTransaction | ContractUpdateTransactionWithSchema<J> {
         if (inputJsonFormatter === undefined) {
-            return super.createUpdateTransaction(
-                entrypoint,
-                serializeInput,
-                metadata,
-                input
-            );
+            return super.createUpdateTransaction(entrypoint, serializeInput, metadata, input);
         }
 
         const transaction = super.createUpdateTransaction(
@@ -717,9 +637,7 @@ export abstract class CISContract<
         );
 
         if (transaction.schema === undefined) {
-            throw new Error(
-                `Could not find schema for entrypoint ${entrypoint}`
-            );
+            throw new Error(`Could not find schema for entrypoint ${entrypoint}`);
         }
 
         return transaction;

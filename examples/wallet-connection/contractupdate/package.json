@@ -4,7 +4,7 @@
     "private": true,
     "dependencies": {
         "@concordium/react-components": "workspace:^",
-        "@concordium/web-sdk": "^7.1.0",
+        "@concordium/web-sdk": "workspace:^",
         "@walletconnect/types": "^2.13.1",
         "bootstrap": "^5.2.3",
         "buffer": "^6.0.3",

@@ -72,7 +72,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Build release
-        run: yarn build
+        run: yarn build:all
 
       - name: Store build-release
         uses: actions/upload-artifact@v4

@@ -33,6 +33,9 @@
         "url": "https://github.com/Concordium/concordium-node-sdk-js",
         "directory": "packages/ccd-js-gen"
     },
+    "publishConfig": {
+        "access": "public"
+    },
     "author": {
         "name": "Concordium Software",
         "email": "support@concordium.software",

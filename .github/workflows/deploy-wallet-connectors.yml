@@ -118,7 +118,7 @@ jobs:
       - name: Publish to NPM
         run: npm publish --workspace "@concordium/wallet-connectors" --verbose
         env:
-          NODE_AUTH_TOKEN: '${{secrets.NPM_TOKEN}}'
+          NODE_AUTH_TOKEN: '${{secrets.NPM_PUBLISH_TOKEN}}'
 
       - name: Create a GitHub release
         uses: ncipollo/release-action@v1

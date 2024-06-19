@@ -116,7 +116,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Publish to NPM
-        run: npm publish --workspace "@concordium/wallet-connectors" --verbose
+        run: yarn workspace @concordium/wallet-connectors npm publish
         env:
           NODE_AUTH_TOKEN: '${{secrets.NPM_PUBLISH_TOKEN}}'
 

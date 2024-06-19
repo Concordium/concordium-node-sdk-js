@@ -16,9 +16,6 @@
         "./dist",
         "./src"
     ],
-    "publishConfig": {
-        "access": "public"
-    },
     "repository": {
         "type": "git",
         "url": "https://github.com/Concordium/concordium-node-sdk-js/tree/main/packages/react-components"
@@ -32,7 +29,7 @@
         "build": "tsc"
     },
     "dependencies": {
-        "@concordium/wallet-connectors": "^0.6.0",
+        "@concordium/wallet-connectors": "workspace:^",
         "@protobuf-ts/grpcweb-transport": "^2.9.4",
         "buffer": "^6.0.3"
     },

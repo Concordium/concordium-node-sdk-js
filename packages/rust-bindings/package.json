@@ -10,9 +10,6 @@
         "url": "https://github.com/Concordium/concordium-node-sdk-js",
         "directory": "packages/rust-bindings"
     },
-    "publishConfig": {
-        "access": "public"
-    },
     "sideEffects": [
         "./lib/*/web/umd/index.min.js",
         "./lib/*/bundler/index.js",

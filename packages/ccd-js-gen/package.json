@@ -33,9 +33,6 @@
         "url": "https://github.com/Concordium/concordium-node-sdk-js",
         "directory": "packages/ccd-js-gen"
     },
-    "publishConfig": {
-        "access": "public"
-    },
     "author": {
         "name": "Concordium Software",
         "email": "support@concordium.software",
@@ -46,7 +43,7 @@
         "@concordium/web-sdk": "7.x"
     },
     "dependencies": {
-        "@concordium/web-sdk": "^7.0.0",
+        "@concordium/web-sdk": "workspace:^7.0.0",
         "buffer": "^6.0.3",
         "commander": "^11.0.0",
         "sanitize-filename": "^1.6.3",

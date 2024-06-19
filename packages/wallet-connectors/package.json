@@ -16,9 +16,6 @@
         "./dist",
         "./src"
     ],
-    "publishConfig": {
-        "access": "public"
-    },
     "repository": {
         "type": "git",
         "url": "https://github.com/Concordium/concordium-node-sdk-js/tree/main/packages/wallet-connectors"

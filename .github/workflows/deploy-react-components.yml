@@ -116,9 +116,9 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Publish to NPM
-        run: npm publish --workspace "@concordium/react-components"
+        run: yarn workspace @concordium/react-components npm publish
         env:
-          NODE_AUTH_TOKEN: '${{secrets.NPM_TOKEN}}'
+          NODE_AUTH_TOKEN: '${{secrets.NPM_PUBLISH_TOKEN}}'
 
       - name: Create a GitHub release
         uses: ncipollo/release-action@v1

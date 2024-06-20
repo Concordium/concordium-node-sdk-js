@@ -79,14 +79,11 @@ jobs:
         with:
           name: build-release
           path: |
-            packages/sdk/lib
-            packages/sdk/src
             packages/ccd-js-gen/lib
             packages/ccd-js-gen/src
             packages/ccd-js-gen/bin
-            packages/rust-bindings/lib
-            packages/*/package.json
-            packages/*/README.md
+            packages/ccd-js-gen/package.json
+            packages/ccd-js-gen/README.md
 
   upload-release:
     needs: build
@@ -110,7 +107,7 @@ jobs:
       - name: Get build-output
         uses: actions/download-artifact@v4
         with:
-          path: packages
+          path: packages/ccd-js-gen
           name: build-release
 
       - uses: actions/setup-node@v3

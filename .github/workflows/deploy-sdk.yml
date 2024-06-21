@@ -74,6 +74,9 @@ jobs:
       - name: Build release
         run: yarn build:all
 
+      - name: Generate typedoc documentation
+        run: yarn build:docs
+
       - name: Store build-release
         uses: actions/upload-artifact@v4
         with:
@@ -81,42 +84,8 @@ jobs:
           path: |
             packages/sdk/lib
             packages/sdk/src
-            packages/ccd-js-gen/lib
-            packages/ccd-js-gen/src
-            packages/ccd-js-gen/bin
-            packages/rust-bindings/lib
-            packages/*/package.json
-            packages/*/README.md
-
-  build-typedoc:
-    runs-on: ubuntu-22.04
-    needs: build
-    steps:
-      - uses: actions/checkout@v3
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: yarn
-
-      - name: Get build-output
-        uses: actions/download-artifact@v4
-        with:
-          path: packages
-          name: build-release
-
-      - name: Restore cached dependencies
-        uses: actions/cache/restore@v3
-        with:
-          path: |
-            ./node_modules
-            ./docs/node_modules
-            ./packages/*/node_modules
-            ./examples/**/node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
-
-      - name: Generate typedoc documentation
-        run: yarn build:docs
+            packages/sdk/package.json
+            packages/sdk/README.md
 
       - name: Store typedoc
         uses: actions/upload-artifact@v4
@@ -124,9 +93,53 @@ jobs:
           name: typedoc-build
           path: typedoc
 
+  upload-release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    environment: deploy
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Extract tag name
+        id: get_tag
+        run: echo "::set-output name=tag::${GITHUB_REF#refs/tags/sdk/}"
+
+      - name: Test that tag version matches package.json version
+        run: test "${{ steps.get_tag.outputs.tag }}" = "$(jq -r ".version" packages/sdk/package.json)" || exit 1
+
+      - name: Get build-output
+        uses: actions/download-artifact@v4
+        with:
+          path: packages/sdk
+          name: build-release
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Publish to NPM
+        run: |
+          yarn config set npmAuthToken $NPM_AUTH_TOKEN
+          yarn workspace @concordium/web-sdk npm publish
+        env:
+          NPM_AUTH_TOKEN: '${{secrets.NPM_PUBLISH_TOKEN}}'
+
+      - name: Create a GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: sdk/v${{ steps.get_tag.outputs.tag_name }}
+          name: SDK Release v${{ steps.get_tag.outputs.tag_name }}
+          draft: true
+
   deploy-typedoc:
     needs:
-      - build-typedoc
       - upload-release
     environment:
       name: github-pages
@@ -153,52 +166,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v2
-
-  upload-release:
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    environment: deploy
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Extract tag name
-        id: get_tag
-        run: echo "::set-output name=tag::${GITHUB_REF#refs/tags/sdk/}"
-
-      - name: Test that tag version matches package.json version
-        run: test "${{ steps.get_tag.outputs.tag }}" = "$(jq -r ".version" packages/sdk/package.json)" || exit 1
-
-      - name: Get build-output
-        uses: actions/download-artifact@v4
-        with:
-          path: packages
-          name: build-release
-
-      - uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: yarn
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Setup .yarnrc.yml
-        run: |
-          yarn config set npmRegistryServer "https://registry.npmjs.org"
-          yarn config set npmAlwaysAuth true
-          yarn config set npmAuthToken $NPM_AUTH_TOKEN
-        env:
-          NPM_AUTH_TOKEN: '${{secrets.NPM_TOKEN}}'
-
-      - name: Publish to NPM
-        run: yarn workspace @concordium/web-sdk npm publish --access public
-
-      - name: Create a GitHub release
-        uses: ncipollo/release-action@v1
-        with:
-          tag: sdk/v${{ steps.get_tag.outputs.tag_name }}
-          name: SDK Release v${{ steps.get_tag.outputs.tag_name }}
-          draft: true

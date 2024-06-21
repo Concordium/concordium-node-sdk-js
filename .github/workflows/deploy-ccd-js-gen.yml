@@ -79,14 +79,11 @@ jobs:
         with:
           name: build-release
           path: |
-            packages/sdk/lib
-            packages/sdk/src
             packages/ccd-js-gen/lib
             packages/ccd-js-gen/src
             packages/ccd-js-gen/bin
-            packages/rust-bindings/lib
-            packages/*/package.json
-            packages/*/README.md
+            packages/ccd-js-gen/package.json
+            packages/ccd-js-gen/README.md
 
   upload-release:
     needs: build
@@ -110,7 +107,7 @@ jobs:
       - name: Get build-output
         uses: actions/download-artifact@v4
         with:
-          path: packages
+          path: packages/ccd-js-gen
           name: build-release
 
       - uses: actions/setup-node@v3
@@ -119,16 +116,12 @@ jobs:
           cache: yarn
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Setup .yarnrc.yml
-        run: |
-          yarn config set npmRegistryServer "https://registry.npmjs.org"
-          yarn config set npmAlwaysAuth true
-          yarn config set npmAuthToken $NPM_AUTH_TOKEN
-        env:
-          NPM_AUTH_TOKEN: '${{secrets.NPM_TOKEN}}'
-
       - name: Publish to NPM
-        run: yarn workspace @concordium/ccd-js-gen npm publish --access public
+        run: |
+          yarn config set npmAuthToken $NPM_AUTH_TOKEN
+          yarn workspace @concordium/ccd-js-gen npm publish
+        env:
+          NPM_AUTH_TOKEN: '${{secrets.NPM_PUBLISH_TOKEN}}'
 
       - name: Create a GitHub release
         uses: ncipollo/release-action@v1

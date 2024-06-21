@@ -3565,7 +3565,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@concordium/ccd-js-gen@workspace:packages/ccd-js-gen"
   dependencies:
-    "@concordium/web-sdk": ^7.0.0
+    "@concordium/web-sdk": "workspace:^7.0.0"
     "@types/jest": ^26.0.23
     "@types/node": ^20.5.0
     buffer: ^6.0.3
@@ -3632,7 +3632,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@concordium/react-components@workspace:packages/react-components"
   dependencies:
-    "@concordium/wallet-connectors": ^0.6.0
+    "@concordium/wallet-connectors": "workspace:^"
     "@protobuf-ts/grpcweb-transport": ^2.9.4
     "@tsconfig/recommended": ^1.0.1
     "@types/node": ^18.11.17
@@ -3647,7 +3647,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@concordium/rust-bindings@^3.1.0, @concordium/rust-bindings@workspace:packages/rust-bindings":
+"@concordium/rust-bindings@workspace:^, @concordium/rust-bindings@workspace:packages/rust-bindings":
   version: 0.0.0-use.local
   resolution: "@concordium/rust-bindings@workspace:packages/rust-bindings"
   dependencies:
@@ -3668,7 +3668,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@concordium/wallet-connectors@^0.6.0, @concordium/wallet-connectors@workspace:packages/wallet-connectors":
+"@concordium/wallet-connectors@workspace:^, @concordium/wallet-connectors@workspace:packages/wallet-connectors":
   version: 0.0.0-use.local
   resolution: "@concordium/wallet-connectors@workspace:packages/wallet-connectors"
   dependencies:
@@ -3695,11 +3695,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@concordium/web-sdk@^7.0.0, @concordium/web-sdk@workspace:^, @concordium/web-sdk@workspace:packages/sdk":
+"@concordium/web-sdk@workspace:^, @concordium/web-sdk@workspace:^7.0.0, @concordium/web-sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@concordium/web-sdk@workspace:packages/sdk"
   dependencies:
-    "@concordium/rust-bindings": ^3.1.0
+    "@concordium/rust-bindings": "workspace:^"
     "@grpc/grpc-js": ^1.9.4
     "@noble/ed25519": ^2.0.0
     "@noble/hashes": ^1.3.2

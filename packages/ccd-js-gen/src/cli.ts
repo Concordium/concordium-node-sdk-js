@@ -24,26 +24,16 @@ export async function main(): Promise<void> {
     // Read package.json for version and description:
     const scriptPath = fileURLToPath(import.meta.url);
     const binFolder = path.parse(scriptPath).dir;
-    const cliPath = pathToFileURL(
-        path.resolve(binFolder, '..', '..', 'package.json')
-    );
-    const packageJson: { version: string; description: string } = await fs
-        .readFile(cliPath, 'utf-8')
-        .then(JSON.parse);
+    const cliPath = pathToFileURL(path.resolve(binFolder, '..', '..', 'package.json'));
+    const packageJson: { version: string; description: string } = await fs.readFile(cliPath, 'utf-8').then(JSON.parse);
 
     const program = new Command();
     program
         .name('ccd-js-gen')
         .description(packageJson.description)
         .version(packageJson.version)
-        .requiredOption(
-            '-m, --module <module-file>',
-            'Smart contract module to generate clients from'
-        )
-        .requiredOption(
-            '-o, --out-dir <directory>',
-            'The output directory for the generated code'
-        )
+        .requiredOption('-m, --module <module-file>', 'Smart contract module to generate clients from')
+        .requiredOption('-o, --out-dir <directory>', 'The output directory for the generated code')
         .option<lib.OutputOptions>(
             '-t, --output-type <TypeScript|JavaScript|TypedJavaScript|Everything>',
             'The output file types for the generated code.',
@@ -57,18 +47,14 @@ export async function main(): Promise<void> {
                     default:
                         // Exit in case `value` is not a valid OutputOptions.
                         console.error(
-                            `Invalid '--output-type' flag: ${value}. Use 'TypeScript', 'JavaScript', 'TypedJavaScript', or 'Everything'.`
+                            `Invalid '--output-type' flag: ${value}. Use 'TypeScript', 'JavaScript', 'TypedJavaScript', or 'Everything'.`,
                         );
                         process.exit(1);
                 }
             },
-            'Everything'
+            'Everything',
         )
-        .option(
-            '-n, --ts-nocheck',
-            'Generate `@ts-nocheck` annotations at the top of each typescript file.',
-            false
-        )
+        .option('-n, --ts-nocheck', 'Generate `@ts-nocheck` annotations at the top of each typescript file.', false)
         .parse(process.argv);
     const options = program.opts<Options>();
     console.log('Generating smart contract clients...');
@@ -80,10 +66,8 @@ export async function main(): Promise<void> {
         onProgress(update) {
             if (update.type === 'Progress') {
                 console.log(
-                    `[${update.doneItems}/${update.totalItems}] ${update.spentTime}ms `.padEnd(
-                        15,
-                        ' '
-                    ) + update.description
+                    `[${update.doneItems}/${update.totalItems}] ${update.spentTime}ms `.padEnd(15, ' ') +
+                        update.description,
                 );
             }
         },

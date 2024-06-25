@@ -1,5 +1,3 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
     ConcordiumHdWallet,
     CryptographicParameters,
@@ -7,6 +5,10 @@ import {
     IdentityRequestWithKeysInput,
     Versioned,
 } from '@concordium/web-sdk';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { identityIndex, network, seedPhraseKey, selectedIdentityProviderKey } from './constants';
 import { IdentityProviderWithMetadata } from './types';
 import {
     determineAnonymityRevokerThreshold,
@@ -15,24 +17,14 @@ import {
     getRedirectUri,
     sendIdentityRequest,
 } from './util';
-import {
-    identityIndex,
-    network,
-    seedPhraseKey,
-    selectedIdentityProviderKey,
-} from './constants';
 
 const worker = new Worker(new URL('./identity-worker.ts', import.meta.url));
 
 export function CreateIdentity() {
-    const [createButtonDisabled, setCreateButtonDisabled] =
-        useState<boolean>(false);
-    const [identityProviders, setIdentityProviders] =
-        useState<IdentityProviderWithMetadata[]>();
-    const [selectedIdentityProvider, setSelectedIdentityProvider] =
-        useState<IdentityProviderWithMetadata>();
-    const [cryptographicParameters, setCryptographicParameters] =
-        useState<CryptographicParameters>();
+    const [createButtonDisabled, setCreateButtonDisabled] = useState<boolean>(false);
+    const [identityProviders, setIdentityProviders] = useState<IdentityProviderWithMetadata[]>();
+    const [selectedIdentityProvider, setSelectedIdentityProvider] = useState<IdentityProviderWithMetadata>();
+    const [cryptographicParameters, setCryptographicParameters] = useState<CryptographicParameters>();
     const navigate = useNavigate();
     const dataLoaded =
         identityProviders !== undefined &&
@@ -66,18 +58,10 @@ export function CreateIdentity() {
 
         setCreateButtonDisabled(true);
 
-        localStorage.setItem(
-            selectedIdentityProviderKey,
-            selectedIdentityProvider.ipInfo.ipIdentity.toString()
-        );
+        localStorage.setItem(selectedIdentityProviderKey, selectedIdentityProvider.ipInfo.ipIdentity.toString());
 
-        const listener = (worker.onmessage = async (
-            e: MessageEvent<Versioned<IdObjectRequestV1>>
-        ) => {
-            const url = await sendIdentityRequest(
-                e.data,
-                selectedIdentityProvider.metadata.issuanceStart
-            );
+        const listener = (worker.onmessage = async (e: MessageEvent<Versioned<IdObjectRequestV1>>) => {
+            const url = await sendIdentityRequest(e.data, selectedIdentityProvider.metadata.issuanceStart);
             if (!url?.includes(getRedirectUri())) {
                 window.open(url);
             } else {
@@ -88,26 +72,16 @@ export function CreateIdentity() {
 
         // Derive the required secret key material.
         const wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, network);
-        const identityProviderIndex =
-            selectedIdentityProvider.ipInfo.ipIdentity;
-        const idCredSec = wallet
-            .getIdCredSec(identityProviderIndex, identityIndex)
-            .toString('hex');
-        const prfKey = wallet
-            .getPrfKey(identityProviderIndex, identityIndex)
-            .toString('hex');
+        const identityProviderIndex = selectedIdentityProvider.ipInfo.ipIdentity;
+        const idCredSec = wallet.getIdCredSec(identityProviderIndex, identityIndex).toString('hex');
+        const prfKey = wallet.getPrfKey(identityProviderIndex, identityIndex).toString('hex');
         const blindingRandomness = wallet
-            .getSignatureBlindingRandomness(
-                identityProviderIndex,
-                identityIndex
-            )
+            .getSignatureBlindingRandomness(identityProviderIndex, identityIndex)
             .toString('hex');
 
         const identityRequestInput: IdentityRequestWithKeysInput = {
             arsInfos: selectedIdentityProvider.arsInfos,
-            arThreshold: determineAnonymityRevokerThreshold(
-                Object.keys(selectedIdentityProvider.arsInfos).length
-            ),
+            arThreshold: determineAnonymityRevokerThreshold(Object.keys(selectedIdentityProvider.arsInfos).length),
             ipInfo: selectedIdentityProvider.ipInfo,
             globalContext: cryptographicParameters,
             idCredSec,
@@ -123,30 +97,17 @@ export function CreateIdentity() {
             <label>
                 Select an identity provider
                 <select
-                    onChange={(e) =>
-                        setSelectedIdentityProvider(
-                            identityProviders[Number.parseInt(e.target.value)]
-                        )
-                    }
+                    onChange={(e) => setSelectedIdentityProvider(identityProviders[Number.parseInt(e.target.value)])}
                 >
                     {identityProviders.map((idp, index) => {
-                        return (
-                            <option value={index}>
-                                {idp.ipInfo.ipDescription.name}
-                            </option>
-                        );
+                        return <option value={index}>{idp.ipInfo.ipDescription.name}</option>;
                     })}
                 </select>
             </label>
-            <button
-                disabled={createButtonDisabled && dataLoaded}
-                onClick={createIdentity}
-            >
+            <button disabled={createButtonDisabled && dataLoaded} onClick={createIdentity}>
                 Create identity
             </button>
-            {createButtonDisabled && (
-                <div>Generating identity request. This can take a while.</div>
-            )}
+            {createButtonDisabled && <div>Generating identity request. This can take a while.</div>}
         </div>
     );
 }

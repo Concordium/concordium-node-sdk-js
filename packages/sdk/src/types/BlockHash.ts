@@ -1,11 +1,8 @@
 import { Buffer } from 'buffer/index.js';
-import type { HexString } from '../types.js';
+
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import {
-    TypedJson,
-    TypedJsonDiscriminator,
-    makeFromTypedJson,
-} from './util.js';
+import type { HexString } from '../types.js';
+import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The number of bytes used to represent a block hash.
@@ -196,7 +193,4 @@ export function toTypedJSON(value: BlockHash): TypedJson<Serializable> {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
-    JSON_DISCRIMINATOR,
-    fromHexString
-);
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromHexString);

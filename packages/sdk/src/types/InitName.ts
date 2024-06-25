@@ -1,11 +1,7 @@
-import * as ContractName from './ContractName.js';
 import { isAsciiAlphaNumericPunctuation } from '../contractHelpers.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import {
-    TypedJson,
-    TypedJsonDiscriminator,
-    makeFromTypedJson,
-} from './util.js';
+import * as ContractName from './ContractName.js';
+import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
@@ -100,9 +96,7 @@ export function fromString(value: string): InitName {
         throw new Error("Invalid InitName: Must not contain a '.' character.");
     }
     if (!isAsciiAlphaNumericPunctuation(value)) {
-        throw new Error(
-            'Invalid InitName: Must only contain ASCII alpha, numeric and punctuation characters.'
-        );
+        throw new Error('Invalid InitName: Must only contain ASCII alpha, numeric and punctuation characters.');
     }
     return new InitName(value);
 }
@@ -176,7 +170,4 @@ export function toTypedJSON(value: InitName): TypedJson<Serializable> {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
-    JSON_DISCRIMINATOR,
-    fromString
-);
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromString);

@@ -1,52 +1,48 @@
 import {
-    BaseAccountTransactionSummary,
-    FailedTransactionSummary,
-    isRejectTransaction,
-    isSuccessTransaction,
-    RejectReasonTag,
-    TransactionKindString,
-    TransactionSummaryType,
-    UpdateContractSummary,
-    getTransactionRejectReason,
-    UpdateSummary,
-    UpdateType,
-    affectedContracts,
-    TransactionEventTag,
-    InitContractSummary,
-    affectedAccounts,
-    TransferSummary,
-    ConfigureDelegationSummary,
-    DelegationTargetType,
-    getSummaryContractUpdateLogs,
-    getTransactionKindString,
-    AccountTransactionType,
-    Energy,
-    TransactionHash,
     AccountAddress,
+    AccountTransactionType,
+    BaseAccountTransactionSummary,
+    CcdAmount,
+    ConfigureDelegationSummary,
     ContractAddress,
+    ContractEvent,
+    DelegationTargetType,
+    Energy,
+    FailedTransactionSummary,
+    InitContractSummary,
     InitName,
     Parameter,
     ReceiveName,
-    ContractEvent,
-    CcdAmount,
+    RejectReasonTag,
+    TransactionEventTag,
+    TransactionHash,
+    TransactionKindString,
+    TransactionSummaryType,
+    TransferSummary,
+    UpdateContractSummary,
+    UpdateSummary,
+    UpdateType,
+    affectedAccounts,
+    affectedContracts,
+    getSummaryContractUpdateLogs,
+    getTransactionKindString,
+    getTransactionRejectReason,
+    isRejectTransaction,
+    isSuccessTransaction,
 } from '../../../src/index.js';
 
 const chainUpdate: UpdateSummary = {
     type: TransactionSummaryType.UpdateTransaction,
     index: 0n,
     energyCost: Energy.create(0),
-    hash: TransactionHash.fromHexString(
-        '4b4adfbe9a10a83601a1171bff0d9f916d259f744d1283726314482beeab60ee'
-    ),
+    hash: TransactionHash.fromHexString('4b4adfbe9a10a83601a1171bff0d9f916d259f744d1283726314482beeab60ee'),
     effectiveTime: 1655118000n,
     payload: {
         updateType: UpdateType.Protocol,
         update: {
             message: 'Enable delegation and updated smart contracts',
-            specificationHash:
-                '20c6f246713e573fb5bfdf1e59c0a6f1a37cded34ff68fda4a60aa2ed9b151aa',
-            specificationUrl:
-                'https://github.com/Concordium/concordium-update-proposals/blob/main/updates/P4.txt',
+            specificationHash: '20c6f246713e573fb5bfdf1e59c0a6f1a37cded34ff68fda4a60aa2ed9b151aa',
+            specificationUrl: 'https://github.com/Concordium/concordium-update-proposals/blob/main/updates/P4.txt',
             specificationAuxiliaryData:
                 '000186a0000027100000271002000f0000000100020003000400050006000700080009000a000b000c000d000e0007000f0000000100020003000400050006000700080009000a000b000c000d000e000700000000001baf80000000000012750000000000000000180f90f3f50c000186a000002ee000002ee0000186a0000186a0000027100000271000002710000027100000000342770c000000271000000000000000030000000000000001',
         },
@@ -56,14 +52,10 @@ const chainUpdate: UpdateSummary = {
 const contractInit: InitContractSummary & BaseAccountTransactionSummary = {
     index: 0n,
     energyCost: Energy.create(1032),
-    hash: TransactionHash.fromHexString(
-        '00205bab563b31dbd0d6cff9504a325953ac70a428ac7169f66620c40b20c431'
-    ),
+    hash: TransactionHash.fromHexString('00205bab563b31dbd0d6cff9504a325953ac70a428ac7169f66620c40b20c431'),
     type: TransactionSummaryType.AccountTransaction,
     cost: 2765192n,
-    sender: AccountAddress.fromBase58(
-        '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
-    ),
+    sender: AccountAddress.fromBase58('4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'),
     transactionType: TransactionKindString.InitContract,
     contractInitialized: {
         tag: TransactionEventTag.ContractInitialized,
@@ -79,14 +71,10 @@ const contractInit: InitContractSummary & BaseAccountTransactionSummary = {
 const contractUpdate: UpdateContractSummary & BaseAccountTransactionSummary = {
     index: 0n,
     energyCost: Energy.create(3183),
-    hash: TransactionHash.fromHexString(
-        '9f23369ed3f19cb5627f685d7193e58432e9b50e0841469b07b6d02aa7770901'
-    ),
+    hash: TransactionHash.fromHexString('9f23369ed3f19cb5627f685d7193e58432e9b50e0841469b07b6d02aa7770901'),
     type: TransactionSummaryType.AccountTransaction,
     cost: 8681698n,
-    sender: AccountAddress.fromBase58(
-        '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
-    ),
+    sender: AccountAddress.fromBase58('4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'),
     transactionType: TransactionKindString.Update,
     events: [
         {
@@ -95,17 +83,13 @@ const contractUpdate: UpdateContractSummary & BaseAccountTransactionSummary = {
             address: ContractAddress.create(3496),
             instigator: {
                 type: 'AddressAccount',
-                address: AccountAddress.fromBase58(
-                    '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
-                ),
+                address: AccountAddress.fromBase58('4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'),
             },
             amount: CcdAmount.zero(),
             message: Parameter.fromHexString(
                 '0100006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb490000'
             ),
-            receiveName: ReceiveName.fromStringUnchecked(
-                'cis2-bridgeable.transfer'
-            ),
+            receiveName: ReceiveName.fromStringUnchecked('cis2-bridgeable.transfer'),
             events: [
                 'ff006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb49',
             ].map(ContractEvent.fromHexString),
@@ -123,17 +107,13 @@ const contractUpdate: UpdateContractSummary & BaseAccountTransactionSummary = {
             address: ContractAddress.create(4416),
             instigator: {
                 type: 'AddressAccount',
-                address: AccountAddress.fromBase58(
-                    '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
-                ),
+                address: AccountAddress.fromBase58('4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'),
             },
             amount: CcdAmount.zero(),
             message: Parameter.fromHexString(
                 '0100006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb490000'
             ),
-            receiveName: ReceiveName.fromStringUnchecked(
-                'cis2-bridgeable.transfer'
-            ),
+            receiveName: ReceiveName.fromStringUnchecked('cis2-bridgeable.transfer'),
             events: [
                 'ff006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f0087e3bec61b8db2fb7389b57d2be4f7dd95d1088dfeb6ef7352c13d2b2d27bb49',
             ].map(ContractEvent.fromHexString),
@@ -141,17 +121,13 @@ const contractUpdate: UpdateContractSummary & BaseAccountTransactionSummary = {
         {
             tag: TransactionEventTag.Transferred,
             amount: CcdAmount.zero(),
-            to: AccountAddress.fromBase58(
-                '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
-            ),
+            to: AccountAddress.fromBase58('4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'),
             from: ContractAddress.create(3496),
         },
         {
             tag: TransactionEventTag.Transferred,
             amount: CcdAmount.zero(),
-            to: AccountAddress.fromBase58(
-                '3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'
-            ),
+            to: AccountAddress.fromBase58('3ybJ66spZ2xdWF3avgxQb2meouYa7mpvMWNPmUnczU8FoF8cGB'),
             from: ContractAddress.create(3496),
         },
     ],
@@ -160,22 +136,16 @@ const contractUpdate: UpdateContractSummary & BaseAccountTransactionSummary = {
 const rejected: FailedTransactionSummary & BaseAccountTransactionSummary = {
     index: 0n,
     energyCost: Energy.create(4600),
-    hash: TransactionHash.fromHexString(
-        '9e3eb5a2d36cb125292c553be304d943148c861f284b5d58afd215d1cfbbd8bf'
-    ),
+    hash: TransactionHash.fromHexString('9e3eb5a2d36cb125292c553be304d943148c861f284b5d58afd215d1cfbbd8bf'),
     type: TransactionSummaryType.AccountTransaction,
     cost: 12403437n,
-    sender: AccountAddress.fromBase58(
-        '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
-    ),
+    sender: AccountAddress.fromBase58('4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'),
     transactionType: TransactionKindString.Failed,
     failedTransactionType: TransactionKindString.Update,
     rejectReason: {
         tag: RejectReasonTag.RejectedReceive,
         contractAddress: ContractAddress.create(3496),
-        receiveName: ReceiveName.fromStringUnchecked(
-            'cis2-bridgeable.transfer'
-        ),
+        receiveName: ReceiveName.fromStringUnchecked('cis2-bridgeable.transfer'),
         rejectReason: -5,
         parameter: Parameter.fromHexString(
             '0100006400c8d4bb7106a96bfa6f069438270bf9748049c24798b13b08f88fc2f46afb435f01271100000000000000000000000000000f006f6e526563656976696e67434953320000'
@@ -186,65 +156,46 @@ const rejected: FailedTransactionSummary & BaseAccountTransactionSummary = {
 const transfer: BaseAccountTransactionSummary & TransferSummary = {
     index: 0n,
     energyCost: Energy.create(601),
-    hash: TransactionHash.fromHexString(
-        'a396ae28d1158650d52168ad108e7c5f566831fe5d0695ceab91044ba5eb6b5b'
-    ),
+    hash: TransactionHash.fromHexString('a396ae28d1158650d52168ad108e7c5f566831fe5d0695ceab91044ba5eb6b5b'),
     type: TransactionSummaryType.AccountTransaction,
     cost: 1651916n,
-    sender: AccountAddress.fromBase58(
-        '3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'
-    ),
+    sender: AccountAddress.fromBase58('3v1JUB1R1JLFtcKvHqD9QFqe2NXeBF53tp69FLPHYipTjNgLrV'),
     transactionType: TransactionKindString.Transfer,
     transfer: {
         tag: TransactionEventTag.Transferred,
         amount: CcdAmount.fromCcd(2000),
-        to: AccountAddress.fromBase58(
-            '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
-        ),
+        to: AccountAddress.fromBase58('4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'),
     },
 };
 
 const transferToSelf: BaseAccountTransactionSummary & TransferSummary = {
     index: 0n,
     energyCost: Energy.create(601),
-    hash: TransactionHash.fromHexString(
-        'a396ae28d1158650d52168ad108e7c5f566831fe5d0695ceab91044ba5eb6b5b'
-    ),
+    hash: TransactionHash.fromHexString('a396ae28d1158650d52168ad108e7c5f566831fe5d0695ceab91044ba5eb6b5b'),
     type: TransactionSummaryType.AccountTransaction,
     cost: 1651916n,
-    sender: AccountAddress.fromBase58(
-        '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
-    ),
+    sender: AccountAddress.fromBase58('4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'),
     transactionType: TransactionKindString.Transfer,
     transfer: {
         tag: TransactionEventTag.Transferred,
         amount: CcdAmount.fromCcd(2000),
-        to: AccountAddress.fromBase58(
-            '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
-        ),
+        to: AccountAddress.fromBase58('4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'),
     },
 };
 
-const configureDelegation: BaseAccountTransactionSummary &
-    ConfigureDelegationSummary = {
+const configureDelegation: BaseAccountTransactionSummary & ConfigureDelegationSummary = {
     index: 0n,
     energyCost: Energy.create(601),
-    hash: TransactionHash.fromHexString(
-        'a396ae28d1158650d52168ad108e7c5f566831fe5d0695ceab91044ba5eb6b5b'
-    ),
+    hash: TransactionHash.fromHexString('a396ae28d1158650d52168ad108e7c5f566831fe5d0695ceab91044ba5eb6b5b'),
     type: TransactionSummaryType.AccountTransaction,
     cost: 1651916n,
-    sender: AccountAddress.fromBase58(
-        '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
-    ),
+    sender: AccountAddress.fromBase58('4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'),
     transactionType: TransactionKindString.ConfigureDelegation,
     events: [
         {
             tag: TransactionEventTag.DelegationAdded,
             delegatorId: 2499n,
-            account: AccountAddress.fromBase58(
-                '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
-            ),
+            account: AccountAddress.fromBase58('4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'),
         },
         {
             tag: TransactionEventTag.DelegationSetDelegationTarget,
@@ -253,25 +204,19 @@ const configureDelegation: BaseAccountTransactionSummary &
                 delegateType: DelegationTargetType.Baker,
                 bakerId: 15,
             },
-            account: AccountAddress.fromBase58(
-                '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
-            ),
+            account: AccountAddress.fromBase58('4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'),
         },
         {
             tag: TransactionEventTag.DelegationSetRestakeEarnings,
             delegatorId: 2499n,
             restakeEarnings: true,
-            account: AccountAddress.fromBase58(
-                '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
-            ),
+            account: AccountAddress.fromBase58('4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'),
         },
         {
             tag: TransactionEventTag.DelegationStakeIncreased,
             delegatorId: 2499n,
             newStake: CcdAmount.fromMicroCcd(240000000n),
-            account: AccountAddress.fromBase58(
-                '4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'
-            ),
+            account: AccountAddress.fromBase58('4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'),
         },
     ],
 };
@@ -334,10 +279,7 @@ describe('affectedContracts', () => {
 
     test('Returns list of unique contract addresses corresponding to contract update transaction events', () => {
         const contracts = affectedContracts(contractUpdate);
-        expect(contracts).toEqual([
-            ContractAddress.create(3496),
-            ContractAddress.create(4416),
-        ]);
+        expect(contracts).toEqual([ContractAddress.create(3496), ContractAddress.create(4416)]);
     });
 });
 
@@ -357,11 +299,7 @@ describe('affectedAccounts', () => {
         );
 
         accounts = affectedAccounts(rejected);
-        expect(accounts).toEqual([
-            AccountAddress.fromBase58(
-                '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
-            ),
-        ]);
+        expect(accounts).toEqual([AccountAddress.fromBase58('4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd')]);
 
         accounts = affectedAccounts(transfer);
         expect(accounts).toEqual(
@@ -372,18 +310,10 @@ describe('affectedAccounts', () => {
         );
 
         accounts = affectedAccounts(transferToSelf);
-        expect(accounts).toEqual(
-            ['4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'].map(
-                AccountAddress.fromBase58
-            )
-        );
+        expect(accounts).toEqual(['4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'].map(AccountAddress.fromBase58));
 
         accounts = affectedAccounts(configureDelegation);
-        expect(accounts).toEqual(
-            ['4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'].map(
-                AccountAddress.fromBase58
-            )
-        );
+        expect(accounts).toEqual(['4owvMHZSKsPW8QGYUEWSdgqxfoPBh3ZwPameBV46pSvmeHDkEe'].map(AccountAddress.fromBase58));
     });
 });
 
@@ -422,73 +352,51 @@ describe('getSummaryContractUpdateLogs', () => {
 });
 
 test('getTransactionKindString', () => {
-    expect(getTransactionKindString(AccountTransactionType.DeployModule)).toBe(
-        TransactionKindString.DeployModule
+    expect(getTransactionKindString(AccountTransactionType.DeployModule)).toBe(TransactionKindString.DeployModule);
+    expect(getTransactionKindString(AccountTransactionType.InitContract)).toBe(TransactionKindString.InitContract);
+    expect(getTransactionKindString(AccountTransactionType.Update)).toBe(TransactionKindString.Update);
+    expect(getTransactionKindString(AccountTransactionType.Transfer)).toBe(TransactionKindString.Transfer);
+    expect(getTransactionKindString(AccountTransactionType.AddBaker)).toBe(TransactionKindString.AddBaker);
+    expect(getTransactionKindString(AccountTransactionType.RemoveBaker)).toBe(TransactionKindString.RemoveBaker);
+    expect(getTransactionKindString(AccountTransactionType.UpdateBakerStake)).toBe(
+        TransactionKindString.UpdateBakerStake
     );
-    expect(getTransactionKindString(AccountTransactionType.InitContract)).toBe(
-        TransactionKindString.InitContract
+    expect(getTransactionKindString(AccountTransactionType.UpdateBakerRestakeEarnings)).toBe(
+        TransactionKindString.UpdateBakerRestakeEarnings
     );
-    expect(getTransactionKindString(AccountTransactionType.Update)).toBe(
-        TransactionKindString.Update
+    expect(getTransactionKindString(AccountTransactionType.UpdateBakerKeys)).toBe(
+        TransactionKindString.UpdateBakerKeys
     );
-    expect(getTransactionKindString(AccountTransactionType.Transfer)).toBe(
-        TransactionKindString.Transfer
+    expect(getTransactionKindString(AccountTransactionType.UpdateCredentialKeys)).toBe(
+        TransactionKindString.UpdateCredentialKeys
     );
-    expect(getTransactionKindString(AccountTransactionType.AddBaker)).toBe(
-        TransactionKindString.AddBaker
+    expect(getTransactionKindString(AccountTransactionType.EncryptedAmountTransfer)).toBe(
+        TransactionKindString.EncryptedAmountTransfer
     );
-    expect(getTransactionKindString(AccountTransactionType.RemoveBaker)).toBe(
-        TransactionKindString.RemoveBaker
+    expect(getTransactionKindString(AccountTransactionType.TransferToEncrypted)).toBe(
+        TransactionKindString.TransferToEncrypted
     );
-    expect(
-        getTransactionKindString(AccountTransactionType.UpdateBakerStake)
-    ).toBe(TransactionKindString.UpdateBakerStake);
-    expect(
-        getTransactionKindString(
-            AccountTransactionType.UpdateBakerRestakeEarnings
-        )
-    ).toBe(TransactionKindString.UpdateBakerRestakeEarnings);
-    expect(
-        getTransactionKindString(AccountTransactionType.UpdateBakerKeys)
-    ).toBe(TransactionKindString.UpdateBakerKeys);
-    expect(
-        getTransactionKindString(AccountTransactionType.UpdateCredentialKeys)
-    ).toBe(TransactionKindString.UpdateCredentialKeys);
-    expect(
-        getTransactionKindString(AccountTransactionType.EncryptedAmountTransfer)
-    ).toBe(TransactionKindString.EncryptedAmountTransfer);
-    expect(
-        getTransactionKindString(AccountTransactionType.TransferToEncrypted)
-    ).toBe(TransactionKindString.TransferToEncrypted);
-    expect(
-        getTransactionKindString(AccountTransactionType.TransferToPublic)
-    ).toBe(TransactionKindString.TransferToPublic);
-    expect(
-        getTransactionKindString(AccountTransactionType.TransferWithSchedule)
-    ).toBe(TransactionKindString.TransferWithSchedule);
-    expect(
-        getTransactionKindString(AccountTransactionType.UpdateCredentials)
-    ).toBe(TransactionKindString.UpdateCredentials);
-    expect(getTransactionKindString(AccountTransactionType.RegisterData)).toBe(
-        TransactionKindString.RegisterData
+    expect(getTransactionKindString(AccountTransactionType.TransferToPublic)).toBe(
+        TransactionKindString.TransferToPublic
     );
-    expect(
-        getTransactionKindString(AccountTransactionType.TransferWithMemo)
-    ).toBe(TransactionKindString.TransferWithMemo);
-    expect(
-        getTransactionKindString(
-            AccountTransactionType.EncryptedAmountTransferWithMemo
-        )
-    ).toBe(TransactionKindString.EncryptedAmountTransferWithMemo);
-    expect(
-        getTransactionKindString(
-            AccountTransactionType.TransferWithScheduleAndMemo
-        )
-    ).toBe(TransactionKindString.TransferWithScheduleAndMemo);
-    expect(
-        getTransactionKindString(AccountTransactionType.ConfigureBaker)
-    ).toBe(TransactionKindString.ConfigureBaker);
-    expect(
-        getTransactionKindString(AccountTransactionType.ConfigureDelegation)
-    ).toBe(TransactionKindString.ConfigureDelegation);
+    expect(getTransactionKindString(AccountTransactionType.TransferWithSchedule)).toBe(
+        TransactionKindString.TransferWithSchedule
+    );
+    expect(getTransactionKindString(AccountTransactionType.UpdateCredentials)).toBe(
+        TransactionKindString.UpdateCredentials
+    );
+    expect(getTransactionKindString(AccountTransactionType.RegisterData)).toBe(TransactionKindString.RegisterData);
+    expect(getTransactionKindString(AccountTransactionType.TransferWithMemo)).toBe(
+        TransactionKindString.TransferWithMemo
+    );
+    expect(getTransactionKindString(AccountTransactionType.EncryptedAmountTransferWithMemo)).toBe(
+        TransactionKindString.EncryptedAmountTransferWithMemo
+    );
+    expect(getTransactionKindString(AccountTransactionType.TransferWithScheduleAndMemo)).toBe(
+        TransactionKindString.TransferWithScheduleAndMemo
+    );
+    expect(getTransactionKindString(AccountTransactionType.ConfigureBaker)).toBe(TransactionKindString.ConfigureBaker);
+    expect(getTransactionKindString(AccountTransactionType.ConfigureDelegation)).toBe(
+        TransactionKindString.ConfigureDelegation
+    );
 });

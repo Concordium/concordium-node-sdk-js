@@ -1,14 +1,8 @@
 import { Buffer } from 'buffer/index.js';
-import {
-    encodeHexString,
-    packBufferWithWord16Length,
-} from '../serializationHelpers.js';
-import {
-    TypedJson,
-    TypedJsonDiscriminator,
-    makeFromTypedJson,
-} from './util.js';
+
+import { encodeHexString, packBufferWithWord16Length } from '../serializationHelpers.js';
 import type { HexString } from '../types.js';
+import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
@@ -73,11 +67,8 @@ export class DataBlob {
      * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
      * @returns {DataBlob} The parsed instance.
      */
-    public static fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
-        JSON_DISCRIMINATOR,
-        (v: Serializable) => {
-            const data = Buffer.from(v, 'hex');
-            return new DataBlob(data);
-        }
-    );
+    public static fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, (v: Serializable) => {
+        const data = Buffer.from(v, 'hex');
+        return new DataBlob(data);
+    });
 }

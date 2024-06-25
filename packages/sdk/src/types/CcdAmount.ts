@@ -1,10 +1,7 @@
 import { Big, BigSource } from 'big.js';
+
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import {
-    TypedJson,
-    TypedJsonDiscriminator,
-    makeFromTypedJson,
-} from './util.js';
+import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 const MICRO_CCD_PER_CCD = 1_000_000;
 /**
@@ -95,14 +92,10 @@ export function fromMicroCcd(microCcdAmount: BigSource | bigint): CcdAmount {
     }
 
     if (microCcdAmount < 0n) {
-        throw new Error(
-            'A micro CCD amount must be a non-negative integer but was: ' +
-                microCcdAmount
-        );
+        throw new Error('A micro CCD amount must be a non-negative integer but was: ' + microCcdAmount);
     } else if (microCcdAmount > 18446744073709551615n) {
         throw new Error(
-            'A micro CCD amount must be representable as an unsigned 64 bit integer but was: ' +
-                microCcdAmount
+            'A micro CCD amount must be representable as an unsigned 64 bit integer but was: ' + microCcdAmount
         );
     }
 
@@ -270,7 +263,4 @@ export function toTypedJSON(value: CcdAmount): TypedJson<Serializable> {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
-    JSON_DISCRIMINATOR,
-    fromSerializable
-);
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromSerializable);

@@ -1,22 +1,19 @@
 import {
-    ContractAddress,
     AccountAddress,
-    Timestamp,
-    Energy,
     BlockHash,
-    Parameter,
     CIS4,
     CIS4Contract,
+    ContractAddress,
+    Energy,
+    Parameter,
+    Timestamp,
     Web3IdSigner,
     serializeTypeValue,
 } from '../../src/index.js';
 import { getNodeClientV2 as getNodeClient } from './testHelpers.js';
 
-const ISSUER_ACCOUNT = AccountAddress.fromBase58(
-    '4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd'
-);
-const ISSUER_PUB_KEY =
-    '23e7b282e69f39f962fa587eb033ca201e09d59c9740f18d5666b390fea9d486';
+const ISSUER_ACCOUNT = AccountAddress.fromBase58('4UC8o4m8AgTxt5VBFMdLwMCwwJQVJwjesNzW7RPXkACynrULmd');
+const ISSUER_PUB_KEY = '23e7b282e69f39f962fa587eb033ca201e09d59c9740f18d5666b390fea9d486';
 
 const HOLDER_KEYPAIR = {
     prv: 'df37c498bc038cedbb61b9c523f80d6bd4f8e13bddddc0be2d201cc08bb6b8ac',
@@ -40,33 +37,23 @@ const NEW_REVOKER_2_KEYPAIR = {
 };
 const WEB3ID_ADDRESS_REVOKE = ContractAddress.create(5587);
 
-const TEST_BLOCK = BlockHash.fromHexString(
-    'bf956ef81bb6a22eda754d490bdb7a3085318b3a1fe9370f83f86649a5f7cb60'
-);
+const TEST_BLOCK = BlockHash.fromHexString('bf956ef81bb6a22eda754d490bdb7a3085318b3a1fe9370f83f86649a5f7cb60');
 
-const getCIS4 = () =>
-    CIS4Contract.create(getNodeClient(), WEB3ID_ADDRESS_REVOKE);
+const getCIS4 = () => CIS4Contract.create(getNodeClient(), WEB3ID_ADDRESS_REVOKE);
 
 const in5Minutes = () => new Date(Date.now() + 1000 * 60 * 5);
 
 describe('credentialEntry', () => {
     test('Deserializes correctly', async () => {
         const cis4 = await getCIS4();
-        const credentialEntry = await cis4.credentialEntry(
-            HOLDER_KEYPAIR.pub,
-            TEST_BLOCK
-        );
+        const credentialEntry = await cis4.credentialEntry(HOLDER_KEYPAIR.pub, TEST_BLOCK);
 
         const expected: CIS4.CredentialEntry = {
             credentialInfo: {
                 holderPubKey: HOLDER_KEYPAIR.pub,
                 holderRevocable: true,
-                validFrom: Timestamp.fromDate(
-                    new Date('2023-08-01T13:47:02.260Z')
-                ),
-                validUntil: Timestamp.fromDate(
-                    new Date('2025-08-01T13:47:02.260Z')
-                ),
+                validFrom: Timestamp.fromDate(new Date('2023-08-01T13:47:02.260Z')),
+                validUntil: Timestamp.fromDate(new Date('2025-08-01T13:47:02.260Z')),
                 metadataUrl: { url: '' },
             },
             schemaRef: { url: 'http://foo-schema-url.com' },
@@ -79,10 +66,7 @@ describe('credentialEntry', () => {
 describe('credentialStatus', () => {
     test('Deserializes correctly', async () => {
         const cis4 = await getCIS4();
-        const credentialStatus = await cis4.credentialStatus(
-            HOLDER_KEYPAIR.pub,
-            TEST_BLOCK
-        );
+        const credentialStatus = await cis4.credentialStatus(HOLDER_KEYPAIR.pub, TEST_BLOCK);
 
         const expected: CIS4.CredentialStatus = CIS4.CredentialStatus.Active;
         expect(credentialStatus).toEqual(expected);
@@ -144,12 +128,7 @@ describe('registerCredential', () => {
             },
         };
         const auxData = Buffer.from('Hello world!').toString('hex');
-        const res = await cis4.dryRun.registerCredential(
-            ISSUER_ACCOUNT,
-            credential,
-            auxData,
-            TEST_BLOCK
-        );
+        const res = await cis4.dryRun.registerCredential(ISSUER_ACCOUNT, credential, auxData, TEST_BLOCK);
 
         expect(res.tag).toBe('success');
     });
@@ -165,47 +144,23 @@ describe('registerCredential', () => {
             },
         };
 
-        let tx = cis4.createRegisterCredential(
-            { energy: Energy.create(100000) },
-            credential
-        );
-        let schemaSerial = serializeTypeValue(
-            tx.parameter.json,
-            Buffer.from(tx.schema.value, 'base64'),
-            true
-        );
+        let tx = cis4.createRegisterCredential({ energy: Energy.create(100000) }, credential);
+        let schemaSerial = serializeTypeValue(tx.parameter.json, Buffer.from(tx.schema.value, 'base64'), true);
         expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
 
         // With `validUntil` + !`holderRevocable`
-        credential.validUntil = Timestamp.fromDate(
-            new Date(new Date().setFullYear(new Date().getFullYear() + 1))
-        );
+        credential.validUntil = Timestamp.fromDate(new Date(new Date().setFullYear(new Date().getFullYear() + 1)));
         credential.holderRevocable = false;
 
-        tx = cis4.createRegisterCredential(
-            { energy: Energy.create(100000) },
-            credential
-        );
-        schemaSerial = serializeTypeValue(
-            tx.parameter.json,
-            Buffer.from(tx.schema.value, 'base64'),
-            true
-        );
+        tx = cis4.createRegisterCredential({ energy: Energy.create(100000) }, credential);
+        schemaSerial = serializeTypeValue(tx.parameter.json, Buffer.from(tx.schema.value, 'base64'), true);
         expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
 
         // With data
         const auxData = Buffer.from('Hello world!').toString('hex');
 
-        tx = cis4.createRegisterCredential(
-            { energy: Energy.create(100000) },
-            credential,
-            auxData
-        );
-        schemaSerial = serializeTypeValue(
-            tx.parameter.json,
-            Buffer.from(tx.schema.value, 'base64'),
-            true
-        );
+        tx = cis4.createRegisterCredential({ energy: Energy.create(100000) }, credential, auxData);
+        schemaSerial = serializeTypeValue(tx.parameter.json, Buffer.from(tx.schema.value, 'base64'), true);
         expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
     });
 });
@@ -226,27 +181,16 @@ describe('registerRevocationKeys', () => {
         const cis4 = await getCIS4();
 
         // Single key
-        let tx = cis4.createRegisterRevocationKeys(
-            { energy: Energy.create(100000) },
-            NEW_REVOKER_1_KEYPAIR.pub
-        );
-        let schemaSerial = serializeTypeValue(
-            tx.parameter.json,
-            Buffer.from(tx.schema.value, 'base64'),
-            true
-        );
+        let tx = cis4.createRegisterRevocationKeys({ energy: Energy.create(100000) }, NEW_REVOKER_1_KEYPAIR.pub);
+        let schemaSerial = serializeTypeValue(tx.parameter.json, Buffer.from(tx.schema.value, 'base64'), true);
         expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
 
         // Multilple keys
-        tx = cis4.createRegisterRevocationKeys(
-            { energy: Energy.create(100000) },
-            [NEW_REVOKER_1_KEYPAIR.pub, NEW_REVOKER_2_KEYPAIR.pub]
-        );
-        schemaSerial = serializeTypeValue(
-            tx.parameter.json,
-            Buffer.from(tx.schema.value, 'base64'),
-            true
-        );
+        tx = cis4.createRegisterRevocationKeys({ energy: Energy.create(100000) }, [
+            NEW_REVOKER_1_KEYPAIR.pub,
+            NEW_REVOKER_2_KEYPAIR.pub,
+        ]);
+        schemaSerial = serializeTypeValue(tx.parameter.json, Buffer.from(tx.schema.value, 'base64'), true);
         expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
 
         // With data
@@ -255,11 +199,7 @@ describe('registerRevocationKeys', () => {
             [NEW_REVOKER_1_KEYPAIR.pub, NEW_REVOKER_2_KEYPAIR.pub],
             Buffer.from('Test').toString('hex')
         );
-        schemaSerial = serializeTypeValue(
-            tx.parameter.json,
-            Buffer.from(tx.schema.value, 'base64'),
-            true
-        );
+        schemaSerial = serializeTypeValue(tx.parameter.json, Buffer.from(tx.schema.value, 'base64'), true);
         expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
     });
 });
@@ -267,39 +207,23 @@ describe('registerRevocationKeys', () => {
 describe('removeRevocationKeys', () => {
     test('Invokes successfully', async () => {
         const cis4 = await getCIS4();
-        const res = await cis4.dryRun.removeRevocationKeys(
-            ISSUER_ACCOUNT,
-            REVOKER_KEYPAIR.pub,
-            undefined,
-            TEST_BLOCK
-        );
+        const res = await cis4.dryRun.removeRevocationKeys(ISSUER_ACCOUNT, REVOKER_KEYPAIR.pub, undefined, TEST_BLOCK);
         expect(res.tag).toBe('success');
     });
 
     test('Manual serialization matches schema serialization', async () => {
         const cis4 = await getCIS4();
 
-        let tx = cis4.createRemoveRevocationKeys(
-            { energy: Energy.create(100000) },
-            REVOKER_KEYPAIR.pub
-        );
-        let schemaSerial = serializeTypeValue(
-            tx.parameter.json,
-            Buffer.from(tx.schema.value, 'base64'),
-            true
-        );
+        let tx = cis4.createRemoveRevocationKeys({ energy: Energy.create(100000) }, REVOKER_KEYPAIR.pub);
+        let schemaSerial = serializeTypeValue(tx.parameter.json, Buffer.from(tx.schema.value, 'base64'), true);
         expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
 
         // Multiple keys
-        tx = cis4.createRemoveRevocationKeys(
-            { energy: Energy.create(100000) },
-            [REVOKER_KEYPAIR.pub, NEW_REVOKER_1_KEYPAIR.pub]
-        );
-        schemaSerial = serializeTypeValue(
-            tx.parameter.json,
-            Buffer.from(tx.schema.value, 'base64'),
-            true
-        );
+        tx = cis4.createRemoveRevocationKeys({ energy: Energy.create(100000) }, [
+            REVOKER_KEYPAIR.pub,
+            NEW_REVOKER_1_KEYPAIR.pub,
+        ]);
+        schemaSerial = serializeTypeValue(tx.parameter.json, Buffer.from(tx.schema.value, 'base64'), true);
         expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
 
         // With data
@@ -308,11 +232,7 @@ describe('removeRevocationKeys', () => {
             [REVOKER_KEYPAIR.pub, NEW_REVOKER_1_KEYPAIR.pub],
             Buffer.from('Test').toString('hex')
         );
-        schemaSerial = serializeTypeValue(
-            tx.parameter.json,
-            Buffer.from(tx.schema.value, 'base64'),
-            true
-        );
+        schemaSerial = serializeTypeValue(tx.parameter.json, Buffer.from(tx.schema.value, 'base64'), true);
         expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
     });
 });
@@ -339,11 +259,7 @@ describe('revokeCredentialAsIssuer', () => {
             undefined,
             undefined
         );
-        let schemaSerial = serializeTypeValue(
-            tx.parameter.json,
-            Buffer.from(tx.schema.value, 'base64'),
-            true
-        );
+        let schemaSerial = serializeTypeValue(tx.parameter.json, Buffer.from(tx.schema.value, 'base64'), true);
         expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
 
         // With reason
@@ -353,11 +269,7 @@ describe('revokeCredentialAsIssuer', () => {
             'Because test...',
             undefined
         );
-        schemaSerial = serializeTypeValue(
-            tx.parameter.json,
-            Buffer.from(tx.schema.value, 'base64'),
-            true
-        );
+        schemaSerial = serializeTypeValue(tx.parameter.json, Buffer.from(tx.schema.value, 'base64'), true);
         expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
 
         // With data
@@ -367,11 +279,7 @@ describe('revokeCredentialAsIssuer', () => {
             undefined,
             Buffer.from('Is anyone watching?').toString('hex')
         );
-        schemaSerial = serializeTypeValue(
-            tx.parameter.json,
-            Buffer.from(tx.schema.value, 'base64'),
-            true
-        );
+        schemaSerial = serializeTypeValue(tx.parameter.json, Buffer.from(tx.schema.value, 'base64'), true);
         expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
     });
 });
@@ -402,11 +310,7 @@ describe('revokeCredentialAsHolder', () => {
             in5Minutes(),
             undefined
         );
-        let schemaSerial = serializeTypeValue(
-            tx.parameter.json,
-            Buffer.from(tx.schema.value, 'base64'),
-            true
-        );
+        let schemaSerial = serializeTypeValue(tx.parameter.json, Buffer.from(tx.schema.value, 'base64'), true);
         expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
 
         // With reason
@@ -417,11 +321,7 @@ describe('revokeCredentialAsHolder', () => {
             in5Minutes(),
             'Because test...'
         );
-        schemaSerial = serializeTypeValue(
-            tx.parameter.json,
-            Buffer.from(tx.schema.value, 'base64'),
-            true
-        );
+        schemaSerial = serializeTypeValue(tx.parameter.json, Buffer.from(tx.schema.value, 'base64'), true);
         expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
     });
 });
@@ -454,11 +354,7 @@ describe('revokeCredentialAsOther', () => {
             in5Minutes(),
             undefined
         );
-        let schemaSerial = serializeTypeValue(
-            tx.parameter.json,
-            Buffer.from(tx.schema.value, 'base64'),
-            true
-        );
+        let schemaSerial = serializeTypeValue(tx.parameter.json, Buffer.from(tx.schema.value, 'base64'), true);
         expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
 
         // With reason
@@ -470,11 +366,7 @@ describe('revokeCredentialAsOther', () => {
             in5Minutes(),
             'Because test...'
         );
-        schemaSerial = serializeTypeValue(
-            tx.parameter.json,
-            Buffer.from(tx.schema.value, 'base64'),
-            true
-        );
+        schemaSerial = serializeTypeValue(tx.parameter.json, Buffer.from(tx.schema.value, 'base64'), true);
         expect(tx.parameter.hex).toEqual(Parameter.toHexString(schemaSerial));
     });
 });

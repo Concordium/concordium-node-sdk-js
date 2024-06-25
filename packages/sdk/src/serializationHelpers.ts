@@ -1,12 +1,13 @@
 import { Buffer } from 'buffer/index.js';
+
 import {
     BakerKeysWithProofs,
     ConfigureBakerPayload,
-    UrlString,
-    VerifyKey,
     ConfigureDelegationPayload,
     DelegationTarget,
     DelegationTargetType,
+    UrlString,
+    VerifyKey,
 } from './types.js';
 import { DataBlob } from './types/DataBlob.js';
 import { isDefined } from './util.js';
@@ -59,9 +60,7 @@ export function encodeBool(value: boolean): Buffer {
  */
 export function encodeWord64(value: bigint, useLittleEndian = false): Buffer {
     if (value > 18446744073709551615n || value < 0n) {
-        throw new Error(
-            'The input has to be a 64 bit unsigned integer but it was: ' + value
-        );
+        throw new Error('The input has to be a 64 bit unsigned integer but it was: ' + value);
     }
     const arr = new ArrayBuffer(8);
     const view = new DataView(arr);
@@ -77,9 +76,7 @@ export function encodeWord64(value: bigint, useLittleEndian = false): Buffer {
  */
 export function encodeInt32(value: number, useLittleEndian = false): Buffer {
     if (value < -2147483648 || value > 2147483647 || !Number.isInteger(value)) {
-        throw new Error(
-            'The input has to be a 32 bit signed integer but it was: ' + value
-        );
+        throw new Error('The input has to be a 32 bit signed integer but it was: ' + value);
     }
     const arr = new ArrayBuffer(4);
     const view = new DataView(arr);
@@ -95,9 +92,7 @@ export function encodeInt32(value: number, useLittleEndian = false): Buffer {
  */
 export function encodeWord32(value: number, useLittleEndian = false): Buffer {
     if (value > 4294967295 || value < 0 || !Number.isInteger(value)) {
-        throw new Error(
-            'The input has to be a 32 bit unsigned integer but it was: ' + value
-        );
+        throw new Error('The input has to be a 32 bit unsigned integer but it was: ' + value);
     }
     const arr = new ArrayBuffer(4);
     const view = new DataView(arr);
@@ -113,9 +108,7 @@ export function encodeWord32(value: number, useLittleEndian = false): Buffer {
  */
 export function encodeInt16(value: number, useLittleEndian = false): Buffer {
     if (value < -32768 || value > 32767 || !Number.isInteger(value)) {
-        throw new Error(
-            'The input has to be a 16 bit signed integer but it was: ' + value
-        );
+        throw new Error('The input has to be a 16 bit signed integer but it was: ' + value);
     }
     const arr = new ArrayBuffer(2);
     const view = new DataView(arr);
@@ -131,9 +124,7 @@ export function encodeInt16(value: number, useLittleEndian = false): Buffer {
  */
 export function encodeWord16(value: number, useLittleEndian = false): Buffer {
     if (value > 65535 || value < 0 || !Number.isInteger(value)) {
-        throw new Error(
-            'The input has to be a 16 bit unsigned integer but it was: ' + value
-        );
+        throw new Error('The input has to be a 16 bit unsigned integer but it was: ' + value);
     }
     const arr = new ArrayBuffer(2);
     const view = new DataView(arr);
@@ -148,9 +139,7 @@ export function encodeWord16(value: number, useLittleEndian = false): Buffer {
  */
 export function encodeInt8(value: number): Buffer {
     if (value > 127 || value < -128 || !Number.isInteger(value)) {
-        throw new Error(
-            'The input has to be a 8 bit signed integer but it was: ' + value
-        );
+        throw new Error('The input has to be a 8 bit signed integer but it was: ' + value);
     }
 
     return Buffer.from(Buffer.of(value));
@@ -163,9 +152,7 @@ export function encodeInt8(value: number): Buffer {
  */
 export function encodeWord8(value: number): Buffer {
     if (value > 255 || value < 0 || !Number.isInteger(value)) {
-        throw new Error(
-            'The input has to be a 8 bit unsigned integer but it was: ' + value
-        );
+        throw new Error('The input has to be a 8 bit unsigned integer but it was: ' + value);
     }
     return Buffer.from(Buffer.of(value));
 }
@@ -174,10 +161,7 @@ export function encodeWord8FromString(value: string): Buffer {
     return encodeWord8(Number(value));
 }
 
-export function encodeWord16FromString(
-    value: string,
-    useLittleEndian = false
-): Buffer {
+export function encodeWord16FromString(value: string, useLittleEndian = false): Buffer {
     return encodeWord16(Number(value), useLittleEndian);
 }
 
@@ -197,10 +181,7 @@ export function encodeDataBlob(blob: DataBlob): Buffer {
  * @param useLittleEndian a boolean value, if not given, the value is serialized in big endian.
  * @returns Buffer containing the 32 bit length of buffer and buffer.
  */
-export function packBufferWithWord32Length(
-    buffer: Uint8Array,
-    useLittleEndian = false
-): Buffer {
+export function packBufferWithWord32Length(buffer: Uint8Array, useLittleEndian = false): Buffer {
     const length = encodeWord32(buffer.length, useLittleEndian);
     return Buffer.concat([length, buffer]);
 }
@@ -210,10 +191,7 @@ export function packBufferWithWord32Length(
  * @param buffer containing the buffer
  * @returns Buffer containing the length of the buffer of 16 bit and buffer.
  */
-export function packBufferWithWord16Length(
-    buffer: Uint8Array,
-    useLittleEndian = false
-): Buffer {
+export function packBufferWithWord16Length(buffer: Uint8Array, useLittleEndian = false): Buffer {
     const length = encodeWord16(buffer.length, useLittleEndian);
     return Buffer.concat([length, buffer]);
 }
@@ -310,9 +288,7 @@ const serializeFromSpec =
         const buffers = Object.keys(spec)
             .map((k) => {
                 const v = payload[k as keyof T];
-                const f = spec[k as keyof typeof spec] as (
-                    x: typeof v
-                ) => Uint8Array | undefined;
+                const f = spec[k as keyof typeof spec] as (x: typeof v) => Uint8Array | undefined;
                 return f(v);
             })
             .filter(isDefined);
@@ -336,32 +312,23 @@ function serializeDelegationTarget(target: DelegationTarget) {
     }
 }
 
-export const configureDelegationSerializationSpec: SerializationSpec<ConfigureDelegationPayload> =
-    {
-        stake: orUndefined((x) => encodeWord64(x.microCcdAmount)),
-        restakeEarnings: orUndefined(encodeBool),
-        delegationTarget: orUndefined(serializeDelegationTarget),
-    };
+export const configureDelegationSerializationSpec: SerializationSpec<ConfigureDelegationPayload> = {
+    stake: orUndefined((x) => encodeWord64(x.microCcdAmount)),
+    restakeEarnings: orUndefined(encodeBool),
+    delegationTarget: orUndefined(serializeDelegationTarget),
+};
 
-export const getSerializedConfigureDelegationBitmap = (
-    payload: ConfigureDelegationPayload
-): Buffer =>
+export const getSerializedConfigureDelegationBitmap = (payload: ConfigureDelegationPayload): Buffer =>
     encodeWord16(
         getPayloadBitmap(
             payload,
-            Object.keys(configureDelegationSerializationSpec) as Array<
-                keyof ConfigureDelegationPayload
-            >
+            Object.keys(configureDelegationSerializationSpec) as Array<keyof ConfigureDelegationPayload>
         )
     );
 
-export function serializeConfigureDelegationPayload(
-    payload: ConfigureDelegationPayload
-): Buffer {
+export function serializeConfigureDelegationPayload(payload: ConfigureDelegationPayload): Buffer {
     const bitmap = getSerializedConfigureDelegationBitmap(payload);
-    const serializedPayload = serializeFromSpec(
-        configureDelegationSerializationSpec
-    )(payload);
+    const serializedPayload = serializeFromSpec(configureDelegationSerializationSpec)(payload);
 
     return Buffer.concat([bitmap, serializedPayload]);
 }
@@ -381,37 +348,25 @@ const serializeUrl = (url: UrlString) => {
     return Buffer.concat([length, data]);
 };
 
-const configureBakerSerializationSpec: SerializationSpec<ConfigureBakerPayload> =
-    {
-        stake: orUndefined((v) => encodeWord64(v.microCcdAmount)),
-        restakeEarnings: orUndefined(encodeBool),
-        openForDelegation: orUndefined(encodeWord8),
-        keys: orUndefined(serializeVerifyKeys),
-        metadataUrl: orUndefined(serializeUrl),
-        transactionFeeCommission: orUndefined(encodeWord32),
-        bakingRewardCommission: orUndefined(encodeWord32),
-        finalizationRewardCommission: orUndefined(encodeWord32),
-    };
+const configureBakerSerializationSpec: SerializationSpec<ConfigureBakerPayload> = {
+    stake: orUndefined((v) => encodeWord64(v.microCcdAmount)),
+    restakeEarnings: orUndefined(encodeBool),
+    openForDelegation: orUndefined(encodeWord8),
+    keys: orUndefined(serializeVerifyKeys),
+    metadataUrl: orUndefined(serializeUrl),
+    transactionFeeCommission: orUndefined(encodeWord32),
+    bakingRewardCommission: orUndefined(encodeWord32),
+    finalizationRewardCommission: orUndefined(encodeWord32),
+};
 
-const getSerializedConfigureBakerBitmap = (
-    payload: ConfigureBakerPayload
-): Buffer =>
+const getSerializedConfigureBakerBitmap = (payload: ConfigureBakerPayload): Buffer =>
     encodeWord16(
-        getPayloadBitmap(
-            payload,
-            Object.keys(configureBakerSerializationSpec) as Array<
-                keyof ConfigureBakerPayload
-            >
-        )
+        getPayloadBitmap(payload, Object.keys(configureBakerSerializationSpec) as Array<keyof ConfigureBakerPayload>)
     );
 
-export function serializeConfigureBakerPayload(
-    payload: ConfigureBakerPayload
-): Buffer {
+export function serializeConfigureBakerPayload(payload: ConfigureBakerPayload): Buffer {
     const bitmap = getSerializedConfigureBakerBitmap(payload);
-    const serializedPayload = serializeFromSpec(
-        configureBakerSerializationSpec
-    )(payload);
+    const serializedPayload = serializeFromSpec(configureBakerSerializationSpec)(payload);
 
     return Buffer.concat([bitmap, serializedPayload]);
 }
@@ -421,9 +376,7 @@ export function serializeConfigureBakerPayload(
  * Prefixed with a byte indicating if a value follows or not.
  */
 export const makeSerializeOptional =
-    <T>(
-        fun: (value: T) => Uint8Array
-    ): ((value: T | undefined) => Uint8Array) =>
+    <T>(fun: (value: T) => Uint8Array): ((value: T | undefined) => Uint8Array) =>
     (value) => {
         if (value === undefined) {
             return encodeBool(false);

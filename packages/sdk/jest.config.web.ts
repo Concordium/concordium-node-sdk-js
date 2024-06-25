@@ -1,4 +1,5 @@
 import { Config } from 'jest';
+
 import baseConfig from './jest.config.ts';
 
 const config: Config = {

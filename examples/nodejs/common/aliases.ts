@@ -8,18 +8,11 @@ import { AccountAddress } from '@concordium/web-sdk';
  */
 
 // #region documentation-snippet
-const accountAddress = AccountAddress.fromBase58(
-    '3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU'
-);
-const seperateAccount = AccountAddress.fromBase58(
-    '4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M'
-);
+const accountAddress = AccountAddress.fromBase58('3sAHwfehRNEnXk28W7A3XB3GzyBiuQkXLNRmDwDGPUe8JsoAcU');
+const seperateAccount = AccountAddress.fromBase58('4ZJBYQbVp3zVZyjCXfZAAYBVkJMyVj8UKUNj9ox5YqTCBdBq2M');
 
 const aliasCounter = 0;
-const alias: AccountAddress.Type = AccountAddress.getAlias(
-    accountAddress,
-    aliasCounter
-);
+const alias: AccountAddress.Type = AccountAddress.getAlias(accountAddress, aliasCounter);
 
 console.log('Original address:', accountAddress.address);
 console.log('Alias address:', alias.address);

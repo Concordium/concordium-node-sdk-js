@@ -9,7 +9,9 @@ import {
     ConcordiumGRPCWebClient,
     ConcordiumHdWallet,
     CredentialDeploymentTransaction,
+    CryptographicParameters,
     IdObjectRequestV1,
+    IdRecoveryRequest,
     IdentityObjectV1,
     Network,
     SimpleTransferPayload,
@@ -18,22 +20,10 @@ import {
     buildBasicAccountSigner,
     serializeCredentialDeploymentPayload,
     signTransaction,
-    IdRecoveryRequest,
-    CryptographicParameters,
 } from '@concordium/web-sdk';
-import {
-    IdentityProviderWithMetadata,
-    IdentityProviderIdentityStatus,
-    IdentityTokenContainer,
-} from './types';
-import {
-    credNumber,
-    identityIndex,
-    network,
-    nodeAddress,
-    nodePort,
-    walletProxyBaseUrl,
-} from './constants';
+
+import { credNumber, identityIndex, network, nodeAddress, nodePort, walletProxyBaseUrl } from './constants';
+import { IdentityProviderIdentityStatus, IdentityProviderWithMetadata, IdentityTokenContainer } from './types';
 
 // Redirect URI used in the identity creation protocol.
 // This determines where the identity provider will redirect the
@@ -63,21 +53,14 @@ export const client = new ConcordiumGRPCWebClient(nodeAddress, nodePort);
  */
 export function getDefaultTransactionExpiry() {
     const DEFAULT_TRANSACTION_EXPIRY = 360000;
-    return TransactionExpiry.fromDate(
-        new Date(Date.now() + DEFAULT_TRANSACTION_EXPIRY)
-    );
+    return TransactionExpiry.fromDate(new Date(Date.now() + DEFAULT_TRANSACTION_EXPIRY));
 }
 
 // Maps a `Record<A,C>` to a `Record<B,D>`.
 // Works the same way as a list mapping, allowing both a value and key mapping.
 // If `keyMapper()` is not provided, it will map `Record<A,C>` to `Record<A,D>`
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export function mapRecord<
-    A extends string | number | symbol,
-    B,
-    C extends string | number | symbol,
-    D
->(
+export function mapRecord<A extends string | number | symbol, B, C extends string | number | symbol, D>(
     rec: Record<A, B>,
     valMapper: (x: B) => D,
     keyMapper: (x: A) => C = (a: any) => a
@@ -98,9 +81,7 @@ export function filterRecord<A extends string | number | symbol, B>(
     rec: Record<A, B>,
     predicate: (k: A, v: B) => boolean
 ): Record<A, B> {
-    return Object.fromEntries(
-        Object.entries(rec).filter(([k, v]) => predicate(k as A, v as B))
-    ) as Record<A, B>;
+    return Object.fromEntries(Object.entries(rec).filter(([k, v]) => predicate(k as A, v as B))) as Record<A, B>;
 }
 
 /**
@@ -110,18 +91,9 @@ export function filterRecord<A extends string | number | symbol, B>(
  * those indices are hardcoded to 0. In a production wallet any number of identities and
  * accounts could be created.
  */
-export function getAccountSigningKey(
-    seedPhrase: string,
-    identityProviderIdentity: number
-) {
+export function getAccountSigningKey(seedPhrase: string, identityProviderIdentity: number) {
     const wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, network);
-    return wallet
-        .getAccountSigningKey(
-            identityProviderIdentity,
-            identityIndex,
-            credNumber
-        )
-        .toString('hex');
+    return wallet.getAccountSigningKey(identityProviderIdentity, identityIndex, credNumber).toString('hex');
 }
 
 /**
@@ -131,20 +103,9 @@ export function getAccountSigningKey(
  * those indices are hardcoded to 0. In a production wallet any number of identities and
  * accounts could be created.
  */
-export function getCredentialId(
-    seedPhrase: string,
-    identityProviderIdentity: number,
-    global: CryptographicParameters
-) {
+export function getCredentialId(seedPhrase: string, identityProviderIdentity: number, global: CryptographicParameters) {
     const wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, network);
-    return wallet
-        .getCredentialId(
-            identityProviderIdentity,
-            identityIndex,
-            credNumber,
-            global
-        )
-        .toString('hex');
+    return wallet.getCredentialId(identityProviderIdentity, identityIndex, credNumber, global).toString('hex');
 }
 
 /**
@@ -162,9 +123,7 @@ export function extractIdentityObjectUrl(path: string) {
  * contains the URL for where the identity issuance flow starts for that provider.
  * @returns the list of identity providers available.
  */
-export async function getIdentityProviders(): Promise<
-    IdentityProviderWithMetadata[]
-> {
+export async function getIdentityProviders(): Promise<IdentityProviderWithMetadata[]> {
     const response = await fetch(walletProxyBaseUrl + '/v1/ip_info');
     return response.json();
 }
@@ -183,10 +142,7 @@ export async function getCryptographicParameters() {
  * @param intervalMS how much time between executing the provided function that should be looped
  * @param loopFun the function to execute in each loop
  */
-export const loop = async (
-    intervalMS: number,
-    loopFun: () => Promise<boolean>
-) => {
+export const loop = async (intervalMS: number, loopFun: () => Promise<boolean>) => {
     const run = async () => {
         if (await loopFun()) {
             await sleep(intervalMS).then(run);
@@ -204,22 +160,16 @@ export const loop = async (
  * @param identityObjectUrl the location received from the identity provider where we can fetch the identity
  * @returns the parsed identity object (if successful). On reject the error message is given.
  */
-export async function fetchIdentity(
-    identityObjectUrl: string
-): Promise<IdentityObjectV1> {
+export async function fetchIdentity(identityObjectUrl: string): Promise<IdentityObjectV1> {
     const intervalMs = 5000;
     return new Promise(async (resolve, reject) => {
         await loop(intervalMs, async () => {
             try {
-                const response = (await (
-                    await fetch(identityObjectUrl)
-                ).json()) as IdentityTokenContainer;
+                const response = (await (await fetch(identityObjectUrl)).json()) as IdentityTokenContainer;
                 if (IdentityProviderIdentityStatus.Done === response.status) {
                     resolve(response.token.identityObject.value);
                     return false;
-                } else if (
-                    IdentityProviderIdentityStatus.Error === response.status
-                ) {
+                } else if (IdentityProviderIdentityStatus.Error === response.status) {
                     reject(response.detail);
                     return false;
                 } else {
@@ -244,9 +194,7 @@ export function createCredentialDeploymentKeysAndRandomness(
     credNumber: number
 ) {
     const wallet = ConcordiumHdWallet.fromSeedPhrase(seedPhrase, net);
-    const publicKey = wallet
-        .getAccountPublicKey(identityProviderIndex, identityIndex, credNumber)
-        .toString('hex');
+    const publicKey = wallet.getAccountPublicKey(identityProviderIndex, identityIndex, credNumber).toString('hex');
 
     const verifyKey = {
         schemeId: 'Ed25519',
@@ -257,12 +205,8 @@ export function createCredentialDeploymentKeysAndRandomness(
         threshold: 1,
     };
 
-    const prfKey = wallet
-        .getPrfKey(identityProviderIndex, identityIndex)
-        .toString('hex');
-    const idCredSec = wallet
-        .getIdCredSec(identityProviderIndex, identityIndex)
-        .toString('hex');
+    const prfKey = wallet.getPrfKey(identityProviderIndex, identityIndex).toString('hex');
+    const idCredSec = wallet.getIdCredSec(identityProviderIndex, identityIndex).toString('hex');
     const blindingRandomness = wallet
         .getSignatureBlindingRandomness(identityProviderIndex, identityIndex)
         .toString('hex');
@@ -270,14 +214,7 @@ export function createCredentialDeploymentKeysAndRandomness(
     const attributeRandomness = mapRecord(
         filterRecord(AttributesKeys, (k) => isNaN(Number(k))),
         (x) =>
-            wallet
-                .getAttributeCommitmentRandomness(
-                    identityProviderIndex,
-                    identityIndex,
-                    credNumber,
-                    x
-                )
-                .toString('hex')
+            wallet.getAttributeCommitmentRandomness(identityProviderIndex, identityIndex, credNumber, x).toString('hex')
     );
 
     return {
@@ -299,14 +236,8 @@ export async function sendCredentialDeploymentTransaction(
     credentialDeployment: CredentialDeploymentTransaction,
     signature: string
 ) {
-    const payload = serializeCredentialDeploymentPayload(
-        [signature],
-        credentialDeployment
-    );
-    return await client.sendCredentialDeploymentTransaction(
-        payload,
-        credentialDeployment.expiry
-    );
+    const payload = serializeCredentialDeploymentPayload([signature], credentialDeployment);
+    return await client.sendCredentialDeploymentTransaction(payload, credentialDeployment.expiry);
 }
 
 /**
@@ -316,9 +247,7 @@ export async function sendCredentialDeploymentTransaction(
  * @param anonymityRevokerCount the number of anonymity revokers for an identity provider
  * @returns the optimal anonymity revoker threshold possible
  */
-export function determineAnonymityRevokerThreshold(
-    anonymityRevokerCount: number
-) {
+export function determineAnonymityRevokerThreshold(anonymityRevokerCount: number) {
     return Math.min(anonymityRevokerCount - 1, 255);
 }
 
@@ -329,10 +258,7 @@ export function determineAnonymityRevokerThreshold(
  * @param baseUrl the identity issuance start URL
  * @returns the URL that the identity provider redirects to. This URL should be opened to continue the identity issuance flow.
  */
-export async function sendIdentityRequest(
-    idObjectRequest: Versioned<IdObjectRequestV1>,
-    baseUrl: string
-) {
+export async function sendIdentityRequest(idObjectRequest: Versioned<IdObjectRequestV1>, baseUrl: string) {
     const params = {
         scope: 'identity',
         response_type: 'code',
@@ -361,10 +287,7 @@ export async function sendIdentityRequest(
  * @param baseUrl the identity recovery start URL
  * @returns the URL that the identity provider redirects to. This URL should point to to versioned identity object.
  */
-export async function sendIdentityRecoveryRequest(
-    recoveryRequest: IdRecoveryRequest,
-    baseUrl: string
-) {
+export async function sendIdentityRecoveryRequest(recoveryRequest: IdRecoveryRequest, baseUrl: string) {
     const searchParams = new URLSearchParams({
         state: JSON.stringify({ idRecoveryRequest: recoveryRequest }),
     });
@@ -383,9 +306,7 @@ export async function sendIdentityRecoveryRequest(
  * @param accountAddress the address of the account to retrieve the information about
  * @returns the account info
  */
-export async function getAccount(
-    accountAddress: AccountAddress.Type
-): Promise<AccountInfo> {
+export async function getAccount(accountAddress: AccountAddress.Type): Promise<AccountInfo> {
     const maxRetries = 10;
     const intervalMs = 2500;
     let escapeCounter = 0;
@@ -449,18 +370,8 @@ export async function sendTransferTransaction(
     seedPhrase: string,
     identityProviderIdentity: number
 ) {
-    const simpleTransfer = await createSimpleTransferTransaction(
-        amount,
-        accountAddress,
-        toAddress
-    );
-    const signingKey = getAccountSigningKey(
-        seedPhrase,
-        identityProviderIdentity
-    );
-    const signature = await signTransaction(
-        simpleTransfer,
-        buildBasicAccountSigner(signingKey)
-    );
+    const simpleTransfer = await createSimpleTransferTransaction(amount, accountAddress, toAddress);
+    const signingKey = getAccountSigningKey(seedPhrase, identityProviderIdentity);
+    const signature = await signTransaction(simpleTransfer, buildBasicAccountSigner(signingKey));
     return await client.sendAccountTransaction(simpleTransfer, signature);
 }

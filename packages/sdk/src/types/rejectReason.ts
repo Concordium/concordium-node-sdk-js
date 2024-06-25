@@ -1,10 +1,10 @@
-import { Address, Base58String, HexString, BakerId } from '../types.js';
-import type * as ContractAddress from './ContractAddress.js';
-import type * as ReceiveName from './ReceiveName.js';
+import { Address, BakerId, Base58String, HexString } from '../types.js';
 import type * as CcdAmount from './CcdAmount.js';
-import type * as Parameter from './Parameter.js';
+import type * as ContractAddress from './ContractAddress.js';
 import type * as InitName from './InitName.js';
 import type * as ModuleReference from './ModuleReference.js';
+import type * as Parameter from './Parameter.js';
+import type * as ReceiveName from './ReceiveName.js';
 
 /*
  * An enum containing all the possible reject reasons that can be
@@ -123,9 +123,7 @@ export type SimpleRejectReasonTag =
     | RejectReasonTag.PoolWouldBecomeOverDelegated
     | RejectReasonTag.PoolClosed;
 
-export type ModuleRefRejectReasonTag =
-    | RejectReasonTag.ModuleHashAlreadyExists
-    | RejectReasonTag.InvalidModuleReference;
+export type ModuleRefRejectReasonTag = RejectReasonTag.ModuleHashAlreadyExists | RejectReasonTag.InvalidModuleReference;
 
 export type AccountAddressRejectReasonTag =
     | RejectReasonTag.InvalidAccountReference
@@ -144,9 +142,7 @@ export interface StringRejectReason {
     tag: StringRejectReasonTag;
     contents: HexString | Base58String;
 }
-export type BakerIdRejectReasonTag =
-    | RejectReasonTag.AlreadyABaker
-    | RejectReasonTag.DelegationTargetNotABaker;
+export type BakerIdRejectReasonTag = RejectReasonTag.AlreadyABaker | RejectReasonTag.DelegationTargetNotABaker;
 
 export interface BakerIdRejectReason {
     tag: BakerIdRejectReasonTag;
@@ -186,9 +182,7 @@ export interface InvalidContractAddress {
     contents: ContractAddress.Type;
 }
 
-export type CredIdsRejectReasonTag =
-    | RejectReasonTag.DuplicateCredIDs
-    | RejectReasonTag.NonExistentCredIDs;
+export type CredIdsRejectReasonTag = RejectReasonTag.DuplicateCredIDs | RejectReasonTag.NonExistentCredIDs;
 
 export interface CredIdsRejectReason {
     tag: CredIdsRejectReasonTag;

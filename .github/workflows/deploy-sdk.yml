@@ -1,204 +1,168 @@
 name: Deploy SDK
 
 on:
-    # Run automatically on tag push
-    push:
-        tags: 
-            - sdk/*
-    # Allows you to run this workflow manually from the Actions tab
-    workflow_dispatch:
+  # Run automatically on tag push
+  push:
+    tags:
+      - sdk/*
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
-    contents: read
-    pages: write
-    id-token: write
+  contents: read
+  pages: write
+  id-token: write
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
-    group: "deploy-sdk"
-    cancel-in-progress: false
+  group: 'deploy-sdk'
+  cancel-in-progress: false
 
 env:
-    NODE_VERSION: 18.16.0
-    RUST_VERSION: 1.73
-    RUST_FMT: nightly-2023-04-01-x86_64-unknown-linux-gnu
+  NODE_VERSION: 18.16.0
+  RUST_VERSION: 1.73
+  RUST_FMT: nightly-2023-04-01-x86_64-unknown-linux-gnu
 
 jobs:
-    build:
-        runs-on: ubuntu-22.04
-        steps:
-            - uses: actions/checkout@v3
-              with:
-                  submodules: "recursive"
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
 
-            - uses: actions/setup-node@v3
-              with:
-                  node-version: ${{ env.NODE_VERSION }}
-                  cache: yarn
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
 
-            - uses: Swatinem/rust-cache@v2
-              with:
-                  workspaces: |
-                      packages/rust-bindings
-                      deps/concordium-base/rust-src
-                      deps/concordium-base/concordium-contracts-common
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            packages/rust-bindings
+            deps/concordium-base/rust-src
+            deps/concordium-base/concordium-contracts-common
 
-            - name: Cache dependencies
-              id: yarn-cache
-              uses: actions/cache@v3
-              with:
-                  path: |
-                      ./node_modules
-                      ./docs/node_modules
-                      ./packages/ccd-js-gen/node_modules
-                  key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
-                  restore-keys: |
-                      ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+      - name: Cache dependencies
+        id: yarn-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ./node_modules
+            ./docs/node_modules
+            ./packages/*/node_modules
+            ./examples/**/node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
 
-            - name: Cache GRPC
-              id: cache-grpc
-              uses: actions/cache@v3
-              with:
-                  path: |
-                      ./packages/sdk/src/grpc-api
-                  key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}
-                  restore-keys: ${{ runner.os }}-grpc
+      - name: Cache GRPC
+        id: cache-grpc
+        uses: actions/cache@v3
+        with:
+          path: |
+            ./packages/sdk/src/grpc-api
+          key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}
+          restore-keys: ${{ runner.os }}-grpc
 
-            - name: Get dependencies
-              if: steps.yarn-cache.outputs.cache-hit != 'true'
-              run: yarn install --immutable
+      - name: Get dependencies
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        run: yarn install --immutable
 
-            - name: Build release
-              run: yarn build
+      - name: Build release
+        run: yarn build:all
 
-            - name: Store build-release
-              uses: actions/upload-artifact@v4
-              with:
-                  name: build-release
-                  path: |
-                      packages/sdk/lib
-                      packages/sdk/src
-                      packages/ccd-js-gen/lib
-                      packages/ccd-js-gen/src
-                      packages/ccd-js-gen/bin
-                      packages/rust-bindings/lib
-                      packages/*/package.json
-                      packages/*/README.md
+      - name: Generate typedoc documentation
+        run: yarn build:docs
 
-    build-typedoc:
-        runs-on: ubuntu-22.04
-        needs: build
-        steps:
-            - uses: actions/checkout@v3
+      - name: Store build-release
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-release
+          path: |
+            packages/sdk/lib
+            packages/sdk/src
+            packages/sdk/package.json
+            packages/sdk/README.md
 
-            - uses: actions/setup-node@v3
-              with:
-                  node-version: ${{ env.NODE_VERSION }}
-                  cache: yarn
+      - name: Store typedoc
+        uses: actions/upload-artifact@v4
+        with:
+          name: typedoc-build
+          path: typedoc
 
-            - name: Get build-output
-              uses: actions/download-artifact@v4
-              with:
-                  path: packages
-                  name: build-release
+  upload-release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    environment: deploy
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-            - name: Restore cached dependencies
-              uses: actions/cache/restore@v3
-              with:
-                  path: |
-                      ./node_modules
-                      ./docs/node_modules
-                      ./packages/ccd-js-gen/node_modules
-                  key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+      - name: Extract tag name
+        id: get_tag
+        run: echo "::set-output name=tag::${GITHUB_REF#refs/tags/sdk/}"
 
-            - name: Generate typedoc documentation
-              run: yarn build:docs
+      - name: Test that tag version matches package.json version
+        run: test "${{ steps.get_tag.outputs.tag }}" = "$(jq -r ".version" packages/sdk/package.json)" || exit 1
 
-            - name: Store typedoc
-              uses: actions/upload-artifact@v4
-              with:
-                  name: typedoc-build
-                  path: typedoc
+      - name: Get build-output
+        uses: actions/download-artifact@v4
+        with:
+          path: packages/sdk
+          name: build-release
 
-    deploy-typedoc:
-        needs: 
-            - build-typedoc
-            - upload-release
-        environment:
-            name: github-pages
-            url: ${{ steps.deployment.outputs.page_url }}
-        runs-on: ubuntu-22.04
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+          registry-url: 'https://registry.npmjs.org'
 
-            - name: Get typedoc
-              uses: actions/download-artifact@v4
-              with:
-                  path: typedoc
-                  name: typedoc-build
+      - name: Publish to NPM
+        run: |
+          yarn config set npmAuthToken $NPM_AUTH_TOKEN
+          yarn workspace @concordium/web-sdk npm publish
+        env:
+          NPM_AUTH_TOKEN: '${{secrets.NPM_PUBLISH_TOKEN}}'
 
-            - name: Setup Pages
-              uses: actions/configure-pages@v3
+      - name: Create a GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: sdk/v${{ steps.get_tag.outputs.tag_name }}
+          name: SDK Release v${{ steps.get_tag.outputs.tag_name }}
+          draft: true
 
-            - name: Upload GH pages artifact
-              uses: actions/upload-pages-artifact@v1
-              with:
-                  path: './typedoc'
+  deploy-typedoc:
+    needs:
+      - upload-release
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
-            - name: Deploy to GitHub Pages
-              id: deployment
-              uses: actions/deploy-pages@v2
+      - name: Get typedoc
+        uses: actions/download-artifact@v4
+        with:
+          path: typedoc
+          name: typedoc-build
 
-    upload-release:
-        needs: build
-        runs-on: ubuntu-latest
-        permissions:
-            contents: write
-        environment: deploy
-        steps:
-            - name: Checkout sources
-              uses: actions/checkout@v4
-              with:
-                  submodules: recursive
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
 
-            - name: Extract tag name
-              id: get_tag
-              run: echo "::set-output name=tag::${GITHUB_REF#refs/tags/sdk/}"
+      - name: Upload GH pages artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: './typedoc'
 
-            - name: Test that tag version matches package.json version
-              run: test "${{ steps.get_tag.outputs.tag }}" = "$(jq -r ".version" packages/sdk/package.json)" || exit 1
-
-            - name: Get build-output
-              uses: actions/download-artifact@v4
-              with:
-                  path: packages
-                  name: build-release
-
-            - name: Create a GitHub release
-              uses: ncipollo/release-action@v1
-              with:
-                  tag: sdk/v${{ steps.get_tag.outputs.tag_name }}
-                  name: SDK Release v${{ steps.get_tag.outputs.tag_name }}
-                  artifacts: |
-                      packages/*
-                  draft: true
-
-            - uses: actions/setup-node@v3
-              with:
-                  node-version: ${{ env.NODE_VERSION }}
-                  cache: yarn
-                  registry-url: 'https://registry.npmjs.org'
-
-            - name: Setup .yarnrc.yml
-              run: |
-                yarn config set npmRegistryServer "https://registry.npmjs.org"
-                yarn config set npmAlwaysAuth true
-                yarn config set npmAuthToken $NPM_AUTH_TOKEN
-              env:
-                NPM_AUTH_TOKEN: '${{secrets.NPM_TOKEN}}'
-
-            - name: Publish to NPM
-              run: yarn workspace @concordium/web-sdk npm publish --access public
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2

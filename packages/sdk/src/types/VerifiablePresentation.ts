@@ -1,7 +1,8 @@
-import { GenericAtomicStatement, AtomicProof } from '../commonProofTypes.js';
 import JSONBigInt from 'json-bigint';
-import { AttributeType } from '../web3-id/types.js';
+
+import { AtomicProof, GenericAtomicStatement } from '../commonProofTypes.js';
 import { HexString } from '../types.js';
+import { AttributeType } from '../web3-id/types.js';
 
 /**
  * The "Distributed Identifier" string.
@@ -71,30 +72,19 @@ export type VerifiableCredentialProofWeb3Id = {
     /** The issuer DID */
     issuer: DIDString;
     /** The credential type */
-    type: [
-        'VerifiableCredential',
-        'ConcordiumVerifiableCredential',
-        ...string[]
-    ];
+    type: ['VerifiableCredential', 'ConcordiumVerifiableCredential', ...string[]];
 };
 
 /**
  * Matches the serialization of `CredentialProof` enum from concordium-base.
  */
-export type VerifiableCredentialProof =
-    | VerifiableCredentialProofAccount
-    | VerifiableCredentialProofWeb3Id;
+export type VerifiableCredentialProof = VerifiableCredentialProofAccount | VerifiableCredentialProofWeb3Id;
 
 /**
  * Type predicate to check if the proof is a {@linkcode VerifiableCredentialProofWeb3Id}, or consequently a {@linkcode VerifiableCredentialProofAccount}
  */
-export function isWeb3IdProof(
-    proof: VerifiableCredentialProof
-): proof is VerifiableCredentialProofWeb3Id {
-    return (
-        (proof as VerifiableCredentialProofWeb3Id).credentialSubject.proof
-            .commitments !== undefined
-    );
+export function isWeb3IdProof(proof: VerifiableCredentialProof): proof is VerifiableCredentialProofWeb3Id {
+    return (proof as VerifiableCredentialProofWeb3Id).credentialSubject.proof.commitments !== undefined;
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
@@ -102,11 +92,7 @@ export function isWeb3IdProof(
 /**
  * Replacer to ensure dates are stringified to the timestamp attribute format.
  */
-export function replaceDateWithTimeStampAttribute(
-    this: any,
-    k: string,
-    value: any
-): any {
+export function replaceDateWithTimeStampAttribute(this: any, k: string, value: any): any {
     const rawValue = this[k];
     if (rawValue instanceof Date) {
         return { type: 'date-time', timestamp: rawValue.toISOString() };
@@ -117,16 +103,8 @@ export function replaceDateWithTimeStampAttribute(
 /**
  * Reviver to ensure dates are parsed from the timestamp attribute format.
  */
-export function reviveDateFromTimeStampAttribute(
-    this: any,
-    _key: string,
-    value: any
-) {
-    if (
-        value.type === 'date-time' &&
-        typeof value.timestamp === 'string' &&
-        Object.keys(value).length === 2
-    ) {
+export function reviveDateFromTimeStampAttribute(this: any, _key: string, value: any) {
+    if (value.type === 'date-time' && typeof value.timestamp === 'string' && Object.keys(value).length === 2) {
         return new Date(Date.parse(value.timestamp));
     }
     return value;

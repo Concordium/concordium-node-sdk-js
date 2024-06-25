@@ -1,9 +1,9 @@
 import { BakerId, BlockHash, streamToList } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
-import { parseEndpoint } from '../shared/util.js';
-
 import meow from 'meow';
+
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -33,11 +33,7 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 /**
  * This example shows how the streamToList function can be used. Note that if
@@ -45,10 +41,7 @@ const client = new ConcordiumGRPCNodeClient(
  */
 
 async () => {
-    const blockHash =
-        cli.flags.block === undefined
-            ? undefined
-            : BlockHash.fromHexString(cli.flags.block);
+    const blockHash = cli.flags.block === undefined ? undefined : BlockHash.fromHexString(cli.flags.block);
 
     const bakerIds: AsyncIterable<BakerId> = client.getBakerList(blockHash);
 

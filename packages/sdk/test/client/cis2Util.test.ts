@@ -1,23 +1,11 @@
-import {
-    CIS2,
-    deserializeCIS2Event,
-    deserializeCIS2EventsFromSummary,
-} from '../../src/cis2/util.js';
 import * as wasm from '@concordium/rust-bindings';
-import {
-    AccountAddress,
-    BlockItemSummary,
-    ContractAddress,
-    ContractEvent,
-} from '../../src/pub/types.js';
-import {
-    SchemaEnumVariant,
-    SchemaType,
-    serializeSchemaType,
-} from '../../src/schemaTypes.js';
+import fs from 'fs';
 import JSONbig from 'json-bigint';
 import v8 from 'v8';
-import fs from 'fs';
+
+import { CIS2, deserializeCIS2Event, deserializeCIS2EventsFromSummary } from '../../src/cis2/util.js';
+import { AccountAddress, BlockItemSummary, ContractAddress, ContractEvent } from '../../src/pub/types.js';
+import { SchemaEnumVariant, SchemaType, serializeSchemaType } from '../../src/schemaTypes.js';
 
 const TokenIdSchemaType: SchemaType = {
     type: 'ByteList',
@@ -234,23 +222,17 @@ test('CIS2 transfer events are deserialized correctly', async () => {
         },
     };
     const serializedTransferEvent = serializeJSONEvent(transferEvent);
-    const deserializedTransferEvent = deserializeCIS2Event(
-        serializedTransferEvent
-    );
+    const deserializedTransferEvent = deserializeCIS2Event(serializedTransferEvent);
 
     const expectedDeserializedTransferEvent: CIS2.TransferEvent = {
         type: CIS2.EventType.Transfer,
         tokenId: '01ff',
         tokenAmount: 3n,
-        from: AccountAddress.fromBase58(
-            '4NgCvVSCuCyHkALqbAnSX3QEC7zrfoZbig7X3ePMpk8iLod6Yj'
-        ),
+        from: AccountAddress.fromBase58('4NgCvVSCuCyHkALqbAnSX3QEC7zrfoZbig7X3ePMpk8iLod6Yj'),
         to: ContractAddress.create(5, 6),
     };
 
-    expect(deserializedTransferEvent).toEqual(
-        expectedDeserializedTransferEvent
-    );
+    expect(deserializedTransferEvent).toEqual(expectedDeserializedTransferEvent);
 });
 
 test('CIS2 mint events are deserialized correctly', async () => {
@@ -270,9 +252,7 @@ test('CIS2 mint events are deserialized correctly', async () => {
         type: CIS2.EventType.Mint,
         tokenId: '01ff',
         tokenAmount: 3n,
-        owner: AccountAddress.fromBase58(
-            '4NgCvVSCuCyHkALqbAnSX3QEC7zrfoZbig7X3ePMpk8iLod6Yj'
-        ),
+        owner: AccountAddress.fromBase58('4NgCvVSCuCyHkALqbAnSX3QEC7zrfoZbig7X3ePMpk8iLod6Yj'),
     };
 
     expect(deserializedMintEvent).toEqual(expectedDeserializedMintEvent);
@@ -295,9 +275,7 @@ test('CIS2 burn events are deserialized correctly', async () => {
         type: CIS2.EventType.Burn,
         tokenId: '01ff',
         tokenAmount: 3n,
-        owner: AccountAddress.fromBase58(
-            '4NgCvVSCuCyHkALqbAnSX3QEC7zrfoZbig7X3ePMpk8iLod6Yj'
-        ),
+        owner: AccountAddress.fromBase58('4NgCvVSCuCyHkALqbAnSX3QEC7zrfoZbig7X3ePMpk8iLod6Yj'),
     };
 
     expect(deserializedBurnEvent).toEqual(expectedDeserializedBurnEvent);
@@ -320,11 +298,8 @@ test('CIS2 update operator events are deserialized correctly', async () => {
             },
         },
     };
-    const serializedUpdateOperatorEvent =
-        serializeJSONEvent(updateOperatorEvent);
-    const deserializedUpdateOperatorEvent = deserializeCIS2Event(
-        serializedUpdateOperatorEvent
-    );
+    const serializedUpdateOperatorEvent = serializeJSONEvent(updateOperatorEvent);
+    const deserializedUpdateOperatorEvent = deserializeCIS2Event(serializedUpdateOperatorEvent);
 
     const expectedDeserializedUpdateOperatorEvent: CIS2.UpdateOperatorEvent = {
         type: CIS2.EventType.UpdateOperatorOf,
@@ -332,14 +307,10 @@ test('CIS2 update operator events are deserialized correctly', async () => {
             type: 'add',
             address: ContractAddress.create(5, 6),
         },
-        owner: AccountAddress.fromBase58(
-            '4NgCvVSCuCyHkALqbAnSX3QEC7zrfoZbig7X3ePMpk8iLod6Yj'
-        ),
+        owner: AccountAddress.fromBase58('4NgCvVSCuCyHkALqbAnSX3QEC7zrfoZbig7X3ePMpk8iLod6Yj'),
     };
 
-    expect(deserializedUpdateOperatorEvent).toEqual(
-        expectedDeserializedUpdateOperatorEvent
-    );
+    expect(deserializedUpdateOperatorEvent).toEqual(expectedDeserializedUpdateOperatorEvent);
 });
 
 test('CIS2 token metadata events are deserialized correctly', async () => {
@@ -353,9 +324,7 @@ test('CIS2 token metadata events are deserialized correctly', async () => {
         },
     };
     const serializedTokenMetadataEvent = serializeJSONEvent(tokenMetadataEvent);
-    const deserializedTokenMetadataEvent = deserializeCIS2Event(
-        serializedTokenMetadataEvent
-    );
+    const deserializedTokenMetadataEvent = deserializeCIS2Event(serializedTokenMetadataEvent);
 
     const expectedDeserializedTokenMetadataEvent: CIS2.TokenMetadataEvent = {
         type: CIS2.EventType.TokenMetadata,
@@ -365,9 +334,7 @@ test('CIS2 token metadata events are deserialized correctly', async () => {
         },
     };
 
-    expect(deserializedTokenMetadataEvent).toEqual(
-        expectedDeserializedTokenMetadataEvent
-    );
+    expect(deserializedTokenMetadataEvent).toEqual(expectedDeserializedTokenMetadataEvent);
 
     // Test with hash
     const tokenMetadataEventWithHash = {
@@ -376,34 +343,25 @@ test('CIS2 token metadata events are deserialized correctly', async () => {
             metadata_url: {
                 url: 'https://example.com',
                 hash: {
-                    Some: [
-                        '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
-                    ],
+                    Some: ['0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'],
                 },
             },
         },
     };
 
-    const serializedTokenMetadataEventWithHash = serializeJSONEvent(
-        tokenMetadataEventWithHash
-    );
-    const deserializedTokenMetadataEventWithHash = deserializeCIS2Event(
-        serializedTokenMetadataEventWithHash
-    );
+    const serializedTokenMetadataEventWithHash = serializeJSONEvent(tokenMetadataEventWithHash);
+    const deserializedTokenMetadataEventWithHash = deserializeCIS2Event(serializedTokenMetadataEventWithHash);
 
-    const expectedDeserializedTokenMetadataEventWithHash: CIS2.TokenMetadataEvent =
-        {
-            type: CIS2.EventType.TokenMetadata,
-            tokenId: '01ff',
-            metadataUrl: {
-                url: 'https://example.com',
-                hash: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
-            },
-        };
+    const expectedDeserializedTokenMetadataEventWithHash: CIS2.TokenMetadataEvent = {
+        type: CIS2.EventType.TokenMetadata,
+        tokenId: '01ff',
+        metadataUrl: {
+            url: 'https://example.com',
+            hash: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+        },
+    };
 
-    expect(deserializedTokenMetadataEventWithHash).toEqual(
-        expectedDeserializedTokenMetadataEventWithHash
-    );
+    expect(deserializedTokenMetadataEventWithHash).toEqual(expectedDeserializedTokenMetadataEventWithHash);
 });
 
 test('Custom CIS2 events are deserialized correctly', async () => {
@@ -434,9 +392,7 @@ test('CIS2 events are deserialized correctly from a BlockItemSummary', async () 
         type: CIS2.EventType.Mint,
         tokenId: '0101',
         tokenAmount: 100n,
-        owner: AccountAddress.fromBase58(
-            '4NgCvVSCuCyHkALqbAnSX3QEC7zrfoZbig7X3ePMpk8iLod6Yj'
-        ),
+        owner: AccountAddress.fromBase58('4NgCvVSCuCyHkALqbAnSX3QEC7zrfoZbig7X3ePMpk8iLod6Yj'),
     };
 
     expect(events.length).toBe(2);

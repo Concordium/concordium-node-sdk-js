@@ -1,16 +1,9 @@
-import {
-    AttributeKeyString,
-    AttributesKeys,
-    IdDocType,
-} from '../../src/types.js';
-import { StatementTypes } from '../../src/commonProofTypes.js';
-import {
-    attributesWithRange,
-    attributesWithSet,
-    RangeStatement,
-} from '../../src/id/idProofTypes.js';
-import { IdStatementBuilder } from '../../src/id/idProofs.js';
 import fs from 'fs';
+
+import { StatementTypes } from '../../src/commonProofTypes.js';
+import { RangeStatement, attributesWithRange, attributesWithSet } from '../../src/id/idProofTypes.js';
+import { IdStatementBuilder } from '../../src/id/idProofs.js';
+import { AttributeKeyString, AttributesKeys, IdDocType } from '../../src/types.js';
 import { getIdProof } from '../../src/wasm/index.js';
 
 test('Creating a statement with multiple atomic statements on the same attribute fails', () => {
@@ -20,20 +13,14 @@ test('Creating a statement with multiple atomic statements on the same attribute
             .addRange(AttributesKeys.dob, '20001010', '20201010')
             .addRange(AttributesKeys.dob, '20001010', '20201010')
     ).toThrow();
-    expect(() =>
-        builder
-            .addMembership(AttributesKeys.countryOfResidence, [])
-            .addEUResidency()
-    ).toThrow();
+    expect(() => builder.addMembership(AttributesKeys.countryOfResidence, []).addEUResidency()).toThrow();
     expect(() =>
         builder
             .addNonMembership(AttributesKeys.countryOfResidence, ['DE'])
             .addNonMembership(AttributesKeys.countryOfResidence, ['DK', 'FR'])
     ).toThrow();
     expect(() =>
-        builder
-            .revealAttribute(AttributesKeys.countryOfResidence)
-            .revealAttribute(AttributesKeys.countryOfResidence)
+        builder.revealAttribute(AttributesKeys.countryOfResidence).revealAttribute(AttributesKeys.countryOfResidence)
     ).toThrow();
     expect(() => builder.addMinimumAge(18).addMinimumAge(20)).toThrow();
 });
@@ -47,10 +34,7 @@ test('Minimum age helper adds a range statement on date of birth', () => {
 
 test('Eu helpers adds a membership statement', () => {
     const builder = new IdStatementBuilder(true);
-    const statement = builder
-        .addEUResidency()
-        .addEUNationality()
-        .getStatement();
+    const statement = builder.addEUResidency().addEUNationality().getStatement();
     expect(statement[0].type).toBe(StatementTypes.AttributeInSet);
     expect(statement[0].attributeTag).toBe('countryOfResidence');
     expect(statement[1].type).toBe(StatementTypes.AttributeInSet);
@@ -61,13 +45,9 @@ test('Only attributesWithRange can have range statements added', () => {
     const builder = new IdStatementBuilder(true);
     for (const x in AttributeKeyString) {
         if (!attributesWithRange.includes(x as AttributeKeyString)) {
-            expect(() =>
-                builder.addRange(
-                    AttributesKeys[x as AttributeKeyString],
-                    '20001010',
-                    '20201010'
-                )
-            ).toThrow(x + ' is not allowed to be used in range statements');
+            expect(() => builder.addRange(AttributesKeys[x as AttributeKeyString], '20001010', '20201010')).toThrow(
+                x + ' is not allowed to be used in range statements'
+            );
         } else {
         }
     }
@@ -78,12 +58,7 @@ test('Only attributesWithSet can have membership statements added', () => {
     const builder = new IdStatementBuilder(true);
     for (const x in AttributeKeyString) {
         if (!attributesWithSet.includes(x as AttributeKeyString)) {
-            expect(() =>
-                builder.addMembership(AttributesKeys[x as AttributeKeyString], [
-                    'DK',
-                    'DE',
-                ])
-            ).toThrow(
+            expect(() => builder.addMembership(AttributesKeys[x as AttributeKeyString], ['DK', 'DE'])).toThrow(
                 x + ' is not allowed to be used in membership statements'
             );
         }
@@ -98,34 +73,20 @@ test('Upper bound must be greater than lower bound for attribute statement', () 
 
 test('Unknown attribute tags are rejected', () => {
     const builder = new IdStatementBuilder(true);
-    expect(() =>
-        builder.addMembership(-1 as unknown as AttributesKeys, ['DK'])
-    ).toThrow();
-    expect(() =>
-        builder.addMembership(15 as unknown as AttributesKeys, ['DK'])
-    ).toThrow();
-    expect(() =>
-        builder.addMembership(1000 as unknown as AttributesKeys, ['DK'])
-    ).toThrow();
+    expect(() => builder.addMembership(-1 as unknown as AttributesKeys, ['DK'])).toThrow();
+    expect(() => builder.addMembership(15 as unknown as AttributesKeys, ['DK'])).toThrow();
+    expect(() => builder.addMembership(1000 as unknown as AttributesKeys, ['DK'])).toThrow();
 });
 
 test('Empty sets are rejected', () => {
     const builder = new IdStatementBuilder(true);
-    expect(() =>
-        builder.addMembership(AttributesKeys.countryOfResidence, [])
-    ).toThrow();
-    expect(() =>
-        builder.addNonMembership(AttributesKeys.countryOfResidence, [])
-    ).toThrow();
+    expect(() => builder.addMembership(AttributesKeys.countryOfResidence, [])).toThrow();
+    expect(() => builder.addNonMembership(AttributesKeys.countryOfResidence, [])).toThrow();
 });
 
 test('Can create id Proof', () => {
-    const idObject = JSON.parse(
-        fs.readFileSync('./test/ci/resources/identity-object.json').toString()
-    ).value;
-    const globalContext = JSON.parse(
-        fs.readFileSync('./test/ci/resources/global.json').toString()
-    ).value;
+    const idObject = JSON.parse(fs.readFileSync('./test/ci/resources/identity-object.json').toString()).value;
+    const globalContext = JSON.parse(fs.readFileSync('./test/ci/resources/global.json').toString()).value;
 
     const builder = new IdStatementBuilder(true);
     const statement = builder
@@ -163,15 +124,9 @@ test('Can create id Proof', () => {
 
 test('Non uppercase ISO3166_1Alpha2 are rejected', () => {
     const builder = new IdStatementBuilder(true);
-    expect(() =>
-        builder.addMembership(AttributesKeys.nationality, ['dk'])
-    ).toThrow();
-    expect(() =>
-        builder.addMembership(AttributesKeys.nationality, ['Dk'])
-    ).toThrow();
-    expect(() =>
-        builder.addMembership(AttributesKeys.nationality, ['dK'])
-    ).toThrow();
+    expect(() => builder.addMembership(AttributesKeys.nationality, ['dk'])).toThrow();
+    expect(() => builder.addMembership(AttributesKeys.nationality, ['Dk'])).toThrow();
+    expect(() => builder.addMembership(AttributesKeys.nationality, ['dK'])).toThrow();
     builder.addMembership(AttributesKeys.nationality, ['DK']);
     expect(builder.getStatement().length).toBe(1);
 });
@@ -179,9 +134,7 @@ test('Non uppercase ISO3166_1Alpha2 are rejected', () => {
 test('Maximum age 17 gives negative inf - 17.9999 range', () => {
     jest.useFakeTimers().setSystemTime(new Date('2020-01-02'));
     const builder = new IdStatementBuilder(true);
-    const statement = builder
-        .addMaximumAge(17)
-        .getStatement()[0] as RangeStatement;
+    const statement = builder.addMaximumAge(17).getStatement()[0] as RangeStatement;
     expect(statement.upper).toBe('99990101');
     expect(statement.lower).toBe('20020103');
 });
@@ -189,9 +142,7 @@ test('Maximum age 17 gives negative inf - 17.9999 range', () => {
 test('Age between 14 and 17 gives 14 - 17.9999 range', () => {
     jest.useFakeTimers().setSystemTime(new Date('2020-01-02'));
     const builder = new IdStatementBuilder(true);
-    const statement = builder
-        .addAgeInRange(14, 17)
-        .getStatement()[0] as RangeStatement;
+    const statement = builder.addAgeInRange(14, 17).getStatement()[0] as RangeStatement;
     expect(statement.upper).toBe('20060102');
     expect(statement.lower).toBe('20020103');
 });
@@ -199,9 +150,7 @@ test('Age between 14 and 17 gives 14 - 17.9999 range', () => {
 test('Age between 1 and 1 gives 1 - 1.9999 range', () => {
     jest.useFakeTimers().setSystemTime(new Date('2020-01-02'));
     const builder = new IdStatementBuilder(true);
-    const statement = builder
-        .addAgeInRange(1, 1)
-        .getStatement()[0] as RangeStatement;
+    const statement = builder.addAgeInRange(1, 1).getStatement()[0] as RangeStatement;
     expect(statement.upper).toBe('20190102');
     expect(statement.lower).toBe('20180103');
 });

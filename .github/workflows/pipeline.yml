@@ -275,7 +275,8 @@ jobs:
           path: |
             ./node_modules
             ./docs/node_modules
-            ./packages/ccd-js-gen/node_modules
+            ./packages/*/node_modules
+            ./examples/**/node_modules
           key: ${{ runner.os }}-yarn
 
       - name: Get build-debug

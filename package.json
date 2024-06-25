@@ -51,6 +51,8 @@
         "build-ci": "FORCE_COLOR=true yarn workspaces foreach -vt run build",
         "build:all": "FORCE_COLOR=true yarn workspaces foreach -vt --no-private run build",
         "build-dev:all": "FORCE_COLOR=true yarn workspaces foreach -vt --no-private run build-dev",
-        "clean:all": "FORCE_COLOR=true yarn workspaces foreach -p --no-private run clean"
+        "clean:all": "FORCE_COLOR=true yarn workspaces foreach -p --no-private run clean",
+        "size": "yarn build:all && cd packages/sdk && yarn size:no-build",
+        "size:no-build": "cd packages/sdk && yarn size:no-build"
     }
 }

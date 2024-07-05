@@ -1,5 +1,9 @@
 # Changelog
 
+## 7.5.0
+
+- Support company related attributes: `lei`, `legalName`, `legalCountry`, `businessNumber` and `registrationAuth`, allow for company account creation using the SDK.
+
 ## 7.4.0
 
 ### Added

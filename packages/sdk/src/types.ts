@@ -127,7 +127,7 @@ export enum AttributesKeys {
     legalName,
     legalCountry,
     businessNumber,
-    registrationAuth
+    registrationAuth,
 }
 
 export type Attributes = {
@@ -149,11 +149,11 @@ export enum AttributeKeyString {
     idDocExpiresAt = 'idDocExpiresAt',
     nationalIdNo = 'nationalIdNo',
     taxIdNo = 'taxIdNo',
-    lei = "lei",
-    legalName = "legalName",
-    legalCountry = "legalCountry",
-    businessNumber = "businessNumber",
-    registrationAuth = "registrationAuth"
+    lei = 'lei',
+    legalName = 'legalName',
+    legalCountry = 'legalCountry',
+    businessNumber = 'businessNumber',
+    registrationAuth = 'registrationAuth',
 }
 
 export enum Sex {

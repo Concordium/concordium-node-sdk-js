@@ -2,6 +2,8 @@
 
 ## 3.2.0
 
+### Added
+
 - Support creating account with company related attributes: `lei`, `legalName`, `legalCountry`, `businessNumber` and `registrationAuth`, allow for company account creation.
 
 ## 3.1.0

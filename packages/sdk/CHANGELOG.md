@@ -2,7 +2,9 @@
 
 ## 7.5.0
 
-- Support company related attributes: `lei`, `legalName`, `legalCountry`, `businessNumber` and `registrationAuth`, allow for company account creation using the SDK.
+### Added
+
+- Bumped @concordium/rust-bindings to 3.2.0: Support company related attributes: `lei`, `legalName`, `legalCountry`, `businessNumber` and `registrationAuth`, allow for company account creation using the SDK.
 
 ## 7.4.0
 

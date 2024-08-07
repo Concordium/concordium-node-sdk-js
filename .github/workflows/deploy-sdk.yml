@@ -38,12 +38,15 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
 
+      - name: Install rust
+        run: rustup default ${{ env.RUST_VERSION }}
+
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
             packages/rust-bindings
             deps/concordium-base/rust-src
-            deps/concordium-base/concordium-contracts-common
+            deps/concordium-base/smart-contracts/contracts-common
 
       - name: Cache dependencies
         id: yarn-cache

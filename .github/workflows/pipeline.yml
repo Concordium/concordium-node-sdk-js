@@ -96,7 +96,7 @@ jobs:
           workspaces: |
             packages/rust-bindings
             deps/concordium-base/rust-src
-            deps/concordium-base/concordium-contracts-common
+            deps/concordium-base/smart-contracts/contracts-common
 
       - name: Build
         run: yarn build-ci
@@ -331,7 +331,7 @@ jobs:
           workspaces: |
             packages/rust-bindings
             deps/concordium-base/rust-src
-            deps/concordium-base/concordium-contracts-common
+            deps/concordium-base/smart-contracts/contracts-common
 
       - name: Run clippy
         run: cargo clippy --color=always --tests --benches -- -Dclippy::all

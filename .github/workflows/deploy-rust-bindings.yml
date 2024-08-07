@@ -22,7 +22,7 @@ concurrency:
 
 env:
   NODE_VERSION: 18.16.0
-  RUST_VERSION: 1.73
+  RUST_VERSION: 1.73 ## Make sure to update wasm-pack to 0.13 or higher when this is rust version 1.74 or higher
   RUST_FMT: nightly-2023-04-01-x86_64-unknown-linux-gnu
 
 jobs:
@@ -38,12 +38,15 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
 
+      - name: Install rust
+        run: rustup default ${{ env.RUST_VERSION }}
+
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
             packages/rust-bindings
             deps/concordium-base/rust-src
-            deps/concordium-base/concordium-contracts-common
+            deps/concordium-base/smart-contracts/contracts-common
 
       - name: Cache dependencies
         id: yarn-cache

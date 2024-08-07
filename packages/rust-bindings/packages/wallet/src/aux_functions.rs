@@ -31,7 +31,6 @@ use rand::thread_rng;
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use serde_json::{from_str, from_value, Value as SerdeValue};
 use std::{collections::BTreeMap, convert::TryInto};
-use thiserror::Error;
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
 #[serde(bound(serialize = "P: Pairing", deserialize = "P: Pairing"))]
@@ -503,28 +502,6 @@ pub struct UnsignedCredentialInput {
     attribute_randomness:     BTreeMap<AttributeTag, PedersenRandomness<ArCurve>>,
     revealed_attributes:      Vec<AttributeTag>,
     cred_number:              u8,
-}
-
-struct AttributeRandomness(BTreeMap<AttributeTag, PedersenRandomness<ArCurve>>);
-
-#[derive(Debug, Error)]
-pub enum AttributeError {
-    #[error("Missing randomness for given attribute tag.")]
-    NotFound,
-}
-
-impl HasAttributeRandomness<ArCurve> for AttributeRandomness {
-    type ErrorType = AttributeError;
-
-    fn get_attribute_commitment_randomness(
-        &self,
-        attribute_tag: &AttributeTag,
-    ) -> Result<PedersenRandomness<ArCurve>, Self::ErrorType> {
-        match self.0.get(attribute_tag) {
-            Some(v) => Ok(v.clone()),
-            None => Err(AttributeError::NotFound),
-        }
-    }
 }
 
 #[derive(SerdeSerialize)]

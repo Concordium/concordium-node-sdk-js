@@ -1,4 +1,4 @@
-// Yarn stuff
+# Yarn stuff
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -45,3 +45,5 @@ package-lock.json
 
 # MacOS
 .DS_Store
+
+.vscode

@@ -22,6 +22,7 @@ import {
     ConfigureBakerPayload,
     ConfigureDelegationPayload,
     DelegationTarget,
+    DelegationTargetType,
     DeployModulePayload,
     HexString,
     InitContractPayload,
@@ -84,7 +85,7 @@ export interface AccountTransactionHandler<
 
 export interface SimpleTransferPayloadJSON {
     toAddress: Base58String;
-    amount: bigint;
+    amount: string;
 }
 
 export class SimpleTransferHandler
@@ -111,15 +112,15 @@ export class SimpleTransferHandler
 
     toJSON(transfer: SimpleTransferPayload): SimpleTransferPayloadJSON {
         return {
-            toAddress: AccountAddress.toBase58(transfer.toAddress),
-            amount: transfer.amount.microCcdAmount,
+            toAddress: transfer.toAddress.toJSON(),
+            amount: transfer.amount.toJSON(),
         };
     }
 
     fromJSON(json: SimpleTransferPayloadJSON): SimpleTransferPayload {
         return {
-            toAddress: AccountAddress.fromBase58(json.toAddress),
-            amount: CcdAmount.fromMicroCcd(json.amount),
+            toAddress: AccountAddress.fromJSON(json.toAddress),
+            amount: CcdAmount.fromJSON(json.amount),
         };
     }
 }
@@ -153,17 +154,17 @@ export class SimpleTransferWithMemoHandler
 
     toJSON(transfer: SimpleTransferWithMemoPayload): SimpleTransferWithMemoPayloadJSON {
         return {
-            toAddress: AccountAddress.toBase58(transfer.toAddress),
+            toAddress: transfer.toAddress.toJSON(),
             memo: transfer.memo.toJSON(),
-            amount: transfer.amount.microCcdAmount,
+            amount: transfer.amount.toJSON(),
         };
     }
 
     fromJSON(json: SimpleTransferWithMemoPayloadJSON): SimpleTransferWithMemoPayload {
         return {
-            toAddress: AccountAddress.fromBase58(json.toAddress),
+            toAddress: AccountAddress.fromJSON(json.toAddress),
             memo: DataBlob.fromJSON(json.memo),
-            amount: CcdAmount.fromMicroCcd(json.amount),
+            amount: CcdAmount.fromJSON(json.amount),
         };
     }
 }
@@ -210,13 +211,13 @@ export class DeployModuleHandler implements AccountTransactionHandler<DeployModu
     fromJSON(json: DeployModulePayloadJSON): DeployModulePayload {
         return {
             source: Buffer.from(json.source, 'hex'),
-            version: json.version,
+            version: json.version !== undefined ? Number(json.version) : undefined,
         };
     }
 }
 
 export interface InitContractPayloadJSON {
-    amount: bigint;
+    amount: string;
     moduleRef: HexString;
     initName: string;
     param: HexString;
@@ -244,27 +245,27 @@ export class InitContractHandler implements AccountTransactionHandler<InitContra
 
     toJSON(payload: InitContractPayload): InitContractPayloadJSON {
         return {
-            amount: payload.amount.microCcdAmount,
-            moduleRef: ModuleReference.toHexString(payload.moduleRef),
-            initName: ContractName.toString(payload.initName),
-            param: Parameter.toHexString(payload.param),
+            amount: payload.amount.toJSON(),
+            moduleRef: payload.moduleRef.toJSON(),
+            initName: payload.initName.toJSON(),
+            param: payload.param.toJSON(),
             maxContractExecutionEnergy: payload.maxContractExecutionEnergy.value,
         };
     }
 
     fromJSON(json: InitContractPayloadJSON): InitContractPayload {
         return {
-            amount: CcdAmount.fromMicroCcd(json.amount),
-            moduleRef: ModuleReference.fromHexString(json.moduleRef),
-            initName: ContractName.fromString(json.initName),
-            param: Parameter.fromHexString(json.param),
+            amount: CcdAmount.fromJSON(json.amount),
+            moduleRef: ModuleReference.fromJSON(json.moduleRef),
+            initName: ContractName.fromJSON(json.initName),
+            param: Parameter.fromJSON(json.param),
             maxContractExecutionEnergy: Energy.create(json.maxContractExecutionEnergy),
         };
     }
 }
 
 export interface UpdateContractPayloadJSON {
-    amount: bigint;
+    amount: string;
     address: ContractAddress.SchemaValue;
     receiveName: string;
     message: HexString;
@@ -301,20 +302,20 @@ export class UpdateContractHandler
 
     toJSON(payload: UpdateContractPayload): UpdateContractPayloadJSON {
         return {
-            amount: payload.amount.microCcdAmount,
+            amount: payload.amount.toJSON(),
             address: ContractAddress.toSchemaValue(payload.address),
-            receiveName: ReceiveName.toString(payload.receiveName),
-            message: Parameter.toHexString(payload.message),
+            receiveName: payload.receiveName.toJSON(),
+            message: payload.message.toJSON(),
             maxContractExecutionEnergy: payload.maxContractExecutionEnergy.value,
         };
     }
 
     fromJSON(json: UpdateContractPayloadJSON): UpdateContractPayload {
         return {
-            amount: CcdAmount.fromMicroCcd(json.amount),
+            amount: CcdAmount.fromJSON(json.amount),
             address: ContractAddress.fromSchemaValue(json.address),
-            receiveName: ReceiveName.fromString(json.receiveName),
-            message: Parameter.fromHexString(json.message),
+            receiveName: ReceiveName.fromJSON(json.receiveName),
+            message: Parameter.fromJSON(json.message),
             maxContractExecutionEnergy: Energy.create(json.maxContractExecutionEnergy),
         };
     }
@@ -355,12 +356,27 @@ export class UpdateCredentialsHandler implements AccountTransactionHandler<Updat
     }
 
     toJSON(updateCredentials: UpdateCredentialsPayload): UpdateCredentialsPayload {
-        // UpdateCredentialsPayload is already fully JSON serializable.
         return updateCredentials;
     }
 
     fromJSON(json: UpdateCredentialsPayload): UpdateCredentialsPayload {
-        return json;
+        return {
+            ...json,
+            currentNumberOfCredentials: BigInt(json.currentNumberOfCredentials),
+            threshold: Number(json.threshold),
+            newCredentials: json.newCredentials.map((nc) => ({
+                index: Number(nc.index),
+                cdi: {
+                    ...nc.cdi,
+                    credentialPublicKeys: {
+                        ...nc.cdi.credentialPublicKeys,
+                        threshold: Number(nc.cdi.credentialPublicKeys.threshold),
+                    },
+                    ipIdentity: Number(nc.cdi.ipIdentity),
+                    revocationThreshold: Number(nc.cdi.revocationThreshold),
+                },
+            })),
+        };
     }
 }
 
@@ -399,7 +415,7 @@ export class RegisterDataHandler implements AccountTransactionHandler<RegisterDa
 }
 
 export interface ConfigureBakerPayloadJSON {
-    stake?: bigint;
+    stake?: string;
     restakeEarnings?: boolean;
     openForDelegation?: OpenStatus;
     keys?: BakerKeysWithProofs;
@@ -431,20 +447,27 @@ export class ConfigureBakerHandler
     toJSON(payload: ConfigureBakerPayload): ConfigureBakerPayloadJSON {
         return {
             ...payload,
-            stake: payload.stake?.microCcdAmount,
+            stake: payload.stake?.toJSON(),
         };
     }
 
     fromJSON(json: ConfigureBakerPayloadJSON): ConfigureBakerPayload {
         return {
             ...json,
-            stake: json.stake ? CcdAmount.fromMicroCcd(json.stake) : undefined,
+            stake: json.stake ? CcdAmount.fromJSON(json.stake) : undefined,
+            openForDelegation: json.openForDelegation !== undefined ? Number(json.openForDelegation) : undefined,
+            transactionFeeCommission:
+                json.transactionFeeCommission !== undefined ? Number(json.transactionFeeCommission) : undefined,
+            bakingRewardCommission:
+                json.bakingRewardCommission !== undefined ? Number(json.bakingRewardCommission) : undefined,
+            finalizationRewardCommission:
+                json.finalizationRewardCommission !== undefined ? Number(json.finalizationRewardCommission) : undefined,
         };
     }
 }
 
 export interface ConfigureDelegationPayloadJSON {
-    stake?: bigint;
+    stake?: string;
     restakeEarnings?: boolean;
     delegationTarget?: DelegationTarget;
 }
@@ -467,15 +490,25 @@ export class ConfigureDelegationHandler
     toJSON(payload: ConfigureDelegationPayload): ConfigureDelegationPayloadJSON {
         return {
             ...payload,
-            stake: payload.stake?.microCcdAmount,
+            stake: payload.stake?.toJSON(),
         };
     }
 
     fromJSON(json: ConfigureDelegationPayloadJSON): ConfigureDelegationPayload {
-        return {
+        let result: ConfigureDelegationPayload = {
             ...json,
-            stake: json.stake ? CcdAmount.fromMicroCcd(json.stake) : undefined,
+            stake: json.stake ? CcdAmount.fromJSON(json.stake) : undefined,
         };
+
+        if (
+            json.delegationTarget === undefined ||
+            json.delegationTarget.delegateType === DelegationTargetType.PassiveDelegation
+        ) {
+            return result;
+        }
+
+        result.delegationTarget = { ...json.delegationTarget, bakerId: BigInt(json.delegationTarget.bakerId) };
+        return result;
     }
 }
 

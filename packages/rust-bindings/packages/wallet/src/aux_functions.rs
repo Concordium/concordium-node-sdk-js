@@ -505,28 +505,6 @@ pub struct UnsignedCredentialInput {
     cred_number:              u8,
 }
 
-struct AttributeRandomness(BTreeMap<AttributeTag, PedersenRandomness<ArCurve>>);
-
-#[derive(Debug, Error)]
-pub enum AttributeError {
-    #[error("Missing randomness for given attribute tag.")]
-    NotFound,
-}
-
-impl HasAttributeRandomness<ArCurve> for AttributeRandomness {
-    type ErrorType = AttributeError;
-
-    fn get_attribute_commitment_randomness(
-        &self,
-        attribute_tag: &AttributeTag,
-    ) -> Result<PedersenRandomness<ArCurve>, Self::ErrorType> {
-        match self.0.get(attribute_tag) {
-            Some(v) => Ok(v.clone()),
-            None => Err(AttributeError::NotFound),
-        }
-    }
-}
-
 #[derive(SerdeSerialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BakerKeys {

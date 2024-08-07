@@ -2,8 +2,11 @@ import fs from 'fs';
 
 import { TransactionExpiry } from '../../src/index.js';
 import { AttributeKey, IdentityObjectV1 } from '../../src/types.js';
-import { CredentialInput, createCredentialTransaction, createCredentialTransactionNoSeed } from '../../src/wasm/credentialDeploymentTransactions.js';
-
+import {
+    CredentialInput,
+    createCredentialTransaction,
+    createCredentialTransactionNoSeed,
+} from '../../src/wasm/credentialDeploymentTransactions.js';
 
 function createCredentialInput(revealedAttributes: AttributeKey[], idObject: IdentityObjectV1): CredentialInput {
     const ipInfo = JSON.parse(fs.readFileSync('./test/ci/resources/ip_info.json').toString()).value;
@@ -68,13 +71,10 @@ test('Test createCredentialTransaction', () => {
 });
 
 test('Test createCredentialTransactionNoSeed lastname with special characters', () => {
-  const input = JSON.parse(fs.readFileSync('./test/ci/resources/credential-input-no-seed.json').toString())
+    const input = JSON.parse(fs.readFileSync('./test/ci/resources/credential-input-no-seed.json').toString());
 
     const expiry = 1722939941n;
-    const output = createCredentialTransactionNoSeed(
-        input,
-        TransactionExpiry.fromEpochSeconds(expiry)
-    );
+    const output = createCredentialTransactionNoSeed(input, TransactionExpiry.fromEpochSeconds(expiry));
     const cdi = output.unsignedCdi;
 
     expect(cdi.credId).toEqual(
@@ -106,6 +106,3 @@ test('Test createCredentialTransactionNoSeed lastname with special characters', 
     expect(typeof cdi.arData[3].encIdCredPubShare).toEqual('string');
     expect(output.expiry.expiryEpochSeconds).toEqual(BigInt(expiry));
 });
-
-
-

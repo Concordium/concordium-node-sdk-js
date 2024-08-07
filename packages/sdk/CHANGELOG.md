@@ -1,5 +1,11 @@
 # Changelog
 
+## 7.5.1
+
+### Fixed
+
+- Update `@concordium/rust-bindings` to `3.2.1` which fixes an issue causing runtime error `unreachable` for the internal WebAssembly module.
+
 ## 7.5.0
 
 ### Added

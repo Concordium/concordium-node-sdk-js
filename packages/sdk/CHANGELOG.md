@@ -5,6 +5,7 @@
 ### Fixed
 
 - Update `@concordium/rust-bindings` to `3.2.1` which fixes an issue causing runtime error `unreachable` for the internal WebAssembly module.
+- Update JSON serialization of `AccountTransactionPayload` through `AccountTransactionPayloadHandler` to correctly serialize `CcdAmount` as `string`
 
 ## 7.5.0
 

@@ -31,7 +31,6 @@ use rand::thread_rng;
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use serde_json::{from_str, from_value, Value as SerdeValue};
 use std::{collections::BTreeMap, convert::TryInto};
-use thiserror::Error;
 
 #[derive(SerdeSerialize, SerdeDeserialize)]
 #[serde(bound(serialize = "P: Pairing", deserialize = "P: Pairing"))]

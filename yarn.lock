@@ -3565,7 +3565,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@concordium/ccd-js-gen@workspace:packages/ccd-js-gen"
   dependencies:
-    "@concordium/web-sdk": "workspace:^7.0.0"
+    "@concordium/web-sdk": "workspace:^8.0.0"
     "@types/jest": ^26.0.23
     "@types/node": ^20.5.0
     buffer: ^6.0.3
@@ -3578,7 +3578,7 @@ __metadata:
     ts-morph: ^19.0.0
     typescript: ^5.2.2
   peerDependencies:
-    "@concordium/web-sdk": 7.x
+    "@concordium/web-sdk": 8.x
   bin:
     ccd-js-gen: bin/ccd-js-gen.js
   languageName: unknown
@@ -3690,12 +3690,12 @@ __metadata:
     ts-node: ^10.9.2
     typescript: ^5.2.2
   peerDependencies:
-    "@concordium/web-sdk": 7.x
+    "@concordium/web-sdk": ">= 7"
     "@walletconnect/types": ^2.13.1
   languageName: unknown
   linkType: soft
 
-"@concordium/web-sdk@workspace:^, @concordium/web-sdk@workspace:^7.0.0, @concordium/web-sdk@workspace:packages/sdk":
+"@concordium/web-sdk@workspace:^, @concordium/web-sdk@workspace:^8.0.0, @concordium/web-sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@concordium/web-sdk@workspace:packages/sdk"
   dependencies:

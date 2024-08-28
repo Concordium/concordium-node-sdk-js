@@ -1,22 +1,22 @@
 import type {
+    Address,
+    BakerId,
+    ContractVersion,
+    DelegatorId,
+    EventDelegationTarget,
+    HexString,
+    ModuleRef,
     OpenStatusText,
     ReleaseSchedule,
-    ContractVersion,
-    Address,
-    ModuleRef,
-    HexString,
-    EventDelegationTarget,
-    BakerId,
-    DelegatorId,
 } from '../types.js';
-import type { UpdateInstructionPayload } from './chainUpdate.js';
-import type * as ContractAddress from './ContractAddress.js';
 import type * as AccountAddress from './AccountAddress.js';
+import type * as CcdAmount from './CcdAmount.js';
+import type * as ContractAddress from './ContractAddress.js';
+import type * as ContractEvent from './ContractEvent.js';
+import type * as InitName from './InitName.js';
 import type * as Parameter from './Parameter.js';
 import type * as ReceiveName from './ReceiveName.js';
-import type * as InitName from './InitName.js';
-import type * as ContractEvent from './ContractEvent.js';
-import type * as CcdAmount from './CcdAmount.js';
+import type { UpdateInstructionPayload } from './chainUpdate.js';
 
 export enum TransactionEventTag {
     ModuleDeployed = 'ModuleDeployed',
@@ -221,9 +221,7 @@ export interface CredentialsUpdatedEvent {
 // Delegation Events
 
 export interface DelegatorEvent {
-    tag:
-        | TransactionEventTag.DelegationAdded
-        | TransactionEventTag.DelegationRemoved;
+    tag: TransactionEventTag.DelegationAdded | TransactionEventTag.DelegationRemoved;
     delegatorId: DelegatorId;
     account: AccountAddress.Type;
 }
@@ -243,9 +241,7 @@ export interface DelegationSetRestakeEarningsEvent {
 }
 
 export interface DelegationStakeChangedEvent {
-    tag:
-        | TransactionEventTag.DelegationStakeDecreased
-        | TransactionEventTag.DelegationStakeIncreased;
+    tag: TransactionEventTag.DelegationStakeDecreased | TransactionEventTag.DelegationStakeIncreased;
     delegatorId: DelegatorId;
     account: AccountAddress.Type;
     newStake: CcdAmount.Type;
@@ -271,9 +267,7 @@ export interface BakerRemovedEvent {
 }
 
 export interface BakerStakeChangedEvent {
-    tag:
-        | TransactionEventTag.BakerStakeIncreased
-        | TransactionEventTag.BakerStakeDecreased;
+    tag: TransactionEventTag.BakerStakeIncreased | TransactionEventTag.BakerStakeDecreased;
     bakerId: BakerId;
     account: AccountAddress.Type;
     newStake: CcdAmount.Type;
@@ -336,12 +330,7 @@ export interface UpdateEnqueuedEvent {
     payload: UpdateInstructionPayload;
 }
 
-export type ContractTraceEvent =
-    | ResumedEvent
-    | InterruptedEvent
-    | UpdatedEvent
-    | UpgradedEvent
-    | TransferredEvent;
+export type ContractTraceEvent = ResumedEvent | InterruptedEvent | UpdatedEvent | UpgradedEvent | TransferredEvent;
 export type BakerEvent =
     | BakerSetTransactionFeeCommissionEvent
     | BakerSetBakingRewardCommissionEvent

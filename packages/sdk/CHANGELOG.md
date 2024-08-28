@@ -1,22 +1,36 @@
 # Changelog
 
-## Unreleased Changes
+## 7.5.1
+
+### Fixed
+
+- Update `@concordium/rust-bindings` to `3.2.1` which fixes an issue causing runtime error `unreachable` for the internal WebAssembly module.
+- Update JSON serialization of `AccountTransactionPayload` through `AccountTransactionPayloadHandler` to correctly serialize `CcdAmount` as `string`
+
+## 7.5.0
+
+### Added
+
+- Bumped @concordium/rust-bindings to 3.2.0: Support company related attributes: `lei`, `legalName`, `legalCountry`, `businessNumber` and `registrationAuth`, allow for company account creation using the SDK.
+
+## 7.4.0
 
 ### Added
 
 - `toString`, `toJSON`, and `fromJSON` to most concordium domain types.
 - Deprecated types and functions related to typed JSON serialization and deserialization.
-- Various types related to CIS-2 events and errors in the `CIS2` namespace.
-- `deserializeCIS2Event` for deserializing a CIS-2 event from a `ContractEvent`.
-- `deserializeCIS2Events` and `deserializeCIS2EventsFromSummary` for deserializing all CIS-2 events from `InvokeContractSuccessResult`s and `BlockItemSummary`s, respectively.
+- Various types related to CIS-2, CIS-3, and CIS-4 events and errors in the `CIS2`, `CIS3`, and `CIS4` namespaces.
+- `deserializeCIS2Event`, `deserializeCIS3Event`, and `deserializeCIS4Event` for deserializing a CIS event from a `ContractEvent`.
+- `deserializeCIS2Events` and `deserializeCIS2EventsFromSummary` for deserializing all CIS-2 events from `InvokeContractSuccessResult`s and `BlockItemSummary`s, respectively, as well as similar functions for CIS-3 and CIS-4 events.
 - `parseCIS2RejectionError` for parsing a CIS-2 rejection error from a `InvokeContractFailureResult`.
-- Various types related to CIS-4 events in the `CIS4` namespace.
-- `deserializeCIS4Event` for deserializing a CIS-4 event from a `ContractEvent`.
-- `deserializeCIS4Events` and `deserializeCIS4EventsFromSummary` for deserializing all CIS-4 events from `InvokeContractSuccessResult`s and `BlockItemSummary`s, respectively.
+- `CIS3Contract` class for interacting with contracts adhering to the CIS-3 standard.
 - `Parameter.parseWithSchemaTypeBase64` and `Parameter.parseWithSchemaType` to
   help parsing smart contract parameters into typed structures.
 - Documentation on when`TransactionExpiry.toJSON` throws an error.
-
+- `Timestamp.futureMinutes` for creating a `Timestamp` a number of minutes in the future.
+- `verifyPresentation` function to `@concordium/web-sdk/wasm`, which can be used to verify the credential proofs in the presentation object.
+- `getPublicData` function to `@concordium/web-sdk/web3-id`, which is a helper function for accessing the public data of a `VerifiablePresentation` from chain.
+- `verifyCredentialMetadata` function to `@concordium/web-sdk/web3-id`, which is a helper function for fetching and verifying metadata associated with a credential proof.
 
 ### Fixed
 

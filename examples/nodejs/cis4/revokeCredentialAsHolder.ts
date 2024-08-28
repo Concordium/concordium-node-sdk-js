@@ -1,18 +1,18 @@
-import fs from 'fs';
-import path from 'path';
-import meow from 'meow';
-import { credentials } from '@grpc/grpc-js';
-
 import {
     AccountAddress,
-    buildAccountSigner,
     CIS4Contract,
     ContractAddress,
     Energy,
-    parseWallet,
     Web3IdSigner,
+    buildAccountSigner,
+    parseWallet,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
+import { credentials } from '@grpc/grpc-js';
+import fs from 'fs';
+import meow from 'meow';
+import path from 'path';
+
 import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
@@ -74,24 +74,14 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
-const walletFile = fs.readFileSync(
-    path.resolve(process.cwd(), cli.flags.walletFile),
-    'utf8'
-);
+const walletFile = fs.readFileSync(path.resolve(process.cwd(), cli.flags.walletFile), 'utf8');
 const wallet = parseWallet(walletFile);
 const signer = buildAccountSigner(wallet);
 
 (async () => {
-    const contract = await CIS4Contract.create(
-        client,
-        ContractAddress.create(cli.flags.index, cli.flags.subindex)
-    );
+    const contract = await CIS4Contract.create(client, ContractAddress.create(cli.flags.index, cli.flags.subindex));
     const hSigner = await Web3IdSigner.from(cli.flags.holderPrivateKey);
     const nonce = BigInt(cli.flags.nonce);
 
@@ -113,10 +103,7 @@ const signer = buildAccountSigner(wallet);
         process.stdout.write('.');
     }, 1000);
 
-    const blockHash = await client.waitForTransactionFinalization(
-        txHash,
-        60000
-    );
+    const blockHash = await client.waitForTransactionFinalization(txHash, 60000);
     process.stdout.write('\n');
 
     clearInterval(interval);

@@ -1,19 +1,16 @@
+import { Buffer } from 'buffer/index.js';
+
 import { ContractName, EntrypointName } from './contractHelpers.js';
 import {
     Cursor,
     Deserializer,
     deserializeBigUInt64LE,
+    deserializeUInt8,
     deserializeUInt16LE,
     deserializeUInt32LE,
-    deserializeUInt8,
 } from './deserializationHelpers.js';
-import { Buffer } from 'buffer/index.js';
-import {
-    encodeWord16,
-    encodeWord32,
-    encodeWord64,
-    encodeWord8,
-} from './serializationHelpers.js';
+import { encodeWord8, encodeWord16, encodeWord32, encodeWord64 } from './serializationHelpers.js';
+
 /**
  * The JSON schema representation of a rust Option
  *
@@ -67,17 +64,12 @@ export type RawModuleSchema =
  * @returns {VersionedSchemaModule} A structured representation of the smart contract module schema.
  * @throws If unable to deserialize the module schema from provided bytes.
  */
-export function parseRawModuleSchema(
-    rawModuleSchema: RawModuleSchema
-): VersionedSchemaModule {
+export function parseRawModuleSchema(rawModuleSchema: RawModuleSchema): VersionedSchemaModule {
     const cursor = Cursor.fromBuffer(rawModuleSchema.buffer);
     if (rawModuleSchema.type === 'versioned') {
         return deserializeVersionedSchemaModule(cursor);
     } else {
-        return deserializeUnversionedSchemaModule(
-            rawModuleSchema.version,
-            cursor
-        );
+        return deserializeUnversionedSchemaModule(rawModuleSchema.version, cursor);
     }
 }
 
@@ -270,14 +262,10 @@ const magicPrefixVersionedSchema = Buffer.alloc(2, 255);
  * @throws If provided smart contract module schema is not prefixed with two max-value u8 bytes, or if the deserialization fails.
  * @returns {VersionedSchemaModule} The structured representation of a smart contract schema module.
  */
-export function deserializeVersionedSchemaModule(
-    cursor: Cursor
-): VersionedSchemaModule {
+export function deserializeVersionedSchemaModule(cursor: Cursor): VersionedSchemaModule {
     const prefix = cursor.read(2);
     if (!prefix.equals(magicPrefixVersionedSchema)) {
-        throw new Error(
-            'Deserialization failed: Unable to find prefix for versioned module.'
-        );
+        throw new Error('Deserialization failed: Unable to find prefix for versioned module.');
     }
     const version = deserializeUInt8(cursor);
     switch (version) {
@@ -290,9 +278,7 @@ export function deserializeVersionedSchemaModule(
         case 3:
             return { version, module: deserializeSchemaModuleV3(cursor) };
         default:
-            throw new Error(
-                'Deserialization failed: Unsupported version for schema module.'
-            );
+            throw new Error('Deserialization failed: Unsupported version for schema module.');
     }
 }
 
@@ -314,9 +300,7 @@ export function deserializeUnversionedSchemaModule(
         case 1:
             return { version, module: deserializeSchemaModuleV1(cursor) };
         default:
-            throw new Error(
-                'Deserialization failed: Unsupported version provided for unversioned schema module.'
-            );
+            throw new Error('Deserialization failed: Unsupported version provided for unversioned schema module.');
     }
 }
 
@@ -365,9 +349,7 @@ function deserializeSizeLength(cursor: Cursor): SchemaSizeLength {
         case 3:
             return 'U64';
         default:
-            throw new Error(
-                'Deserialization failed: Unknown size length tag: ' + sizeLength
-            );
+            throw new Error('Deserialization failed: Unknown size length tag: ' + sizeLength);
     }
 }
 
@@ -398,15 +380,10 @@ function deserializeSize(sizeLength: SchemaSizeLength, cursor: Cursor): bigint {
  * @param {Cursor} cursor A cursor over the buffer to deserialize.
  * @returns {string} The deserialized string.
  */
-function deserializeString(
-    sizeLength: SchemaSizeLength,
-    cursor: Cursor
-): string {
+function deserializeString(sizeLength: SchemaSizeLength, cursor: Cursor): string {
     const byteLen = deserializeSize(sizeLength, cursor);
     if (byteLen > BigInt(Number.MAX_SAFE_INTEGER)) {
-        throw new Error(
-            'Deserialization failed: Unsupported string length: ' + byteLen
-        );
+        throw new Error('Deserialization failed: Unsupported string length: ' + byteLen);
     }
     const bytes = cursor.read(Number(byteLen)); // Converting bigint to number here is safe becuase of the check above.
     return bytes.toString('utf8');
@@ -422,11 +399,7 @@ function deserializeString(
  * @param {Cursor} cursor A cursor over the buffer to deserialize.
  * @returns {A[]} The deserialized list of items.
  */
-function deserializeList<A>(
-    sizeLength: SchemaSizeLength,
-    deserializeItem: Deserializer<A>,
-    cursor: Cursor
-): A[] {
+function deserializeList<A>(sizeLength: SchemaSizeLength, deserializeItem: Deserializer<A>, cursor: Cursor): A[] {
     const len = deserializeSize(sizeLength, cursor);
     const out = [];
     for (let i = 0n; i < len; i++) {
@@ -444,19 +417,14 @@ function deserializeList<A>(
  * @param {Cursor} cursor A cursor over the buffer to deserialize.
  * @returns {A | undefined} The deserialized optional item.
  */
-function deserializeOption<A>(
-    deserializeValue: Deserializer<A>,
-    cursor: Cursor
-): A | undefined {
+function deserializeOption<A>(deserializeValue: Deserializer<A>, cursor: Cursor): A | undefined {
     const byte = deserializeUInt8(cursor);
     if (byte === 0) {
         return undefined;
     } else if (byte === 1) {
         return deserializeValue(cursor);
     } else {
-        throw new Error(
-            'Deserialization failed: Unexpected tag for optional value: ' + byte
-        );
+        throw new Error('Deserialization failed: Unexpected tag for optional value: ' + byte);
     }
 }
 
@@ -547,11 +515,7 @@ function deserialSchemaType(cursor: Cursor): SchemaType {
         case 21:
             return {
                 type: 'Enum',
-                variants: deserializeList(
-                    'U32',
-                    deserializeEnumVariant,
-                    cursor
-                ),
+                variants: deserializeList('U32', deserializeEnumVariant, cursor),
             };
         case 22:
             return {
@@ -595,18 +559,11 @@ function deserialSchemaType(cursor: Cursor): SchemaType {
         case 31:
             return {
                 type: 'TaggedEnum',
-                variants: deserializeMap(
-                    'U32',
-                    deserializeUInt8,
-                    deserializeEnumVariant,
-                    cursor
-                ),
+                variants: deserializeMap('U32', deserializeUInt8, deserializeEnumVariant, cursor),
             };
 
         default:
-            throw new Error(
-                'Deserialization failed: Unexpected tag for SchemaType: ' + tag
-            );
+            throw new Error('Deserialization failed: Unexpected tag for SchemaType: ' + tag);
     }
 }
 
@@ -631,9 +588,7 @@ function deserializeFields(cursor: Cursor): SchemaFields {
         case 2:
             return { type: 'None' };
         default:
-            throw new Error(
-                'Deserialization failed: Unexpected tag for Fields: ' + tag
-            );
+            throw new Error('Deserialization failed: Unexpected tag for Fields: ' + tag);
     }
 }
 
@@ -710,12 +665,7 @@ function deserializeContractV0(cursor: Cursor): SchemaContractV0 {
     return {
         state: deserializeOption(deserialSchemaType, cursor),
         init: deserializeOption(deserializeSchemaFunctionV1, cursor),
-        receive: deserializeMap(
-            'U32',
-            deserializeString.bind(undefined, 'U32'),
-            deserializeSchemaFunctionV1,
-            cursor
-        ),
+        receive: deserializeMap('U32', deserializeString.bind(undefined, 'U32'), deserializeSchemaFunctionV1, cursor),
     };
 }
 
@@ -727,12 +677,7 @@ function deserializeContractV0(cursor: Cursor): SchemaContractV0 {
 function deserializeContractV1(cursor: Cursor): SchemaContractV1 {
     return {
         init: deserializeOption(deserializeSchemaFunctionV1, cursor),
-        receive: deserializeMap(
-            'U32',
-            deserializeString.bind(undefined, 'U32'),
-            deserializeSchemaFunctionV1,
-            cursor
-        ),
+        receive: deserializeMap('U32', deserializeString.bind(undefined, 'U32'), deserializeSchemaFunctionV1, cursor),
     };
 }
 
@@ -744,12 +689,7 @@ function deserializeContractV1(cursor: Cursor): SchemaContractV1 {
 function deserializeContractV2(cursor: Cursor): SchemaContractV2 {
     return {
         init: deserializeOption(deserializeSchemaFunctionV2, cursor),
-        receive: deserializeMap(
-            'U32',
-            deserializeString.bind(undefined, 'U32'),
-            deserializeSchemaFunctionV2,
-            cursor
-        ),
+        receive: deserializeMap('U32', deserializeString.bind(undefined, 'U32'), deserializeSchemaFunctionV2, cursor),
     };
 }
 
@@ -761,12 +701,7 @@ function deserializeContractV2(cursor: Cursor): SchemaContractV2 {
 function deserializeContractV3(cursor: Cursor): SchemaContractV3 {
     return {
         init: deserializeOption(deserializeSchemaFunctionV2, cursor),
-        receive: deserializeMap(
-            'U32',
-            deserializeString.bind(undefined, 'U32'),
-            deserializeSchemaFunctionV2,
-            cursor
-        ),
+        receive: deserializeMap('U32', deserializeString.bind(undefined, 'U32'), deserializeSchemaFunctionV2, cursor),
         event: deserializeOption(deserialSchemaType, cursor),
     };
 }
@@ -778,12 +713,7 @@ function deserializeContractV3(cursor: Cursor): SchemaContractV3 {
  */
 function deserializeSchemaModuleV0(cursor: Cursor): SchemaModuleV0 {
     return {
-        contracts: deserializeMap(
-            'U32',
-            deserializeString.bind(undefined, 'U32'),
-            deserializeContractV0,
-            cursor
-        ),
+        contracts: deserializeMap('U32', deserializeString.bind(undefined, 'U32'), deserializeContractV0, cursor),
     };
 }
 
@@ -794,12 +724,7 @@ function deserializeSchemaModuleV0(cursor: Cursor): SchemaModuleV0 {
  */
 function deserializeSchemaModuleV1(cursor: Cursor): SchemaModuleV1 {
     return {
-        contracts: deserializeMap(
-            'U32',
-            deserializeString.bind(undefined, 'U32'),
-            deserializeContractV1,
-            cursor
-        ),
+        contracts: deserializeMap('U32', deserializeString.bind(undefined, 'U32'), deserializeContractV1, cursor),
     };
 }
 
@@ -810,12 +735,7 @@ function deserializeSchemaModuleV1(cursor: Cursor): SchemaModuleV1 {
  */
 function deserializeSchemaModuleV2(cursor: Cursor): SchemaModuleV2 {
     return {
-        contracts: deserializeMap(
-            'U32',
-            deserializeString.bind(undefined, 'U32'),
-            deserializeContractV2,
-            cursor
-        ),
+        contracts: deserializeMap('U32', deserializeString.bind(undefined, 'U32'), deserializeContractV2, cursor),
     };
 }
 
@@ -826,12 +746,7 @@ function deserializeSchemaModuleV2(cursor: Cursor): SchemaModuleV2 {
  */
 function deserializeSchemaModuleV3(cursor: Cursor): SchemaModuleV3 {
     return {
-        contracts: deserializeMap(
-            'U32',
-            deserializeString.bind(undefined, 'U32'),
-            deserializeContractV3,
-            cursor
-        ),
+        contracts: deserializeMap('U32', deserializeString.bind(undefined, 'U32'), deserializeContractV3, cursor),
     };
 }
 
@@ -904,68 +819,34 @@ export function serializeSchemaType(schemaType: SchemaType): Uint8Array {
                 serializeSchemaType(schemaType.item),
             ]);
         case 'Struct':
-            return Buffer.concat([
-                Uint8Array.of(20),
-                serialFields(schemaType.fields),
-            ]);
+            return Buffer.concat([Uint8Array.of(20), serialFields(schemaType.fields)]);
         case 'Enum':
-            return Buffer.concat([
-                Uint8Array.of(21),
-                serializeList('U32', serializeEnumVariant, schemaType.variants),
-            ]);
+            return Buffer.concat([Uint8Array.of(21), serializeList('U32', serializeEnumVariant, schemaType.variants)]);
         case 'String':
-            return Buffer.concat([
-                Uint8Array.of(22),
-                serialSizeLength(schemaType.sizeLength),
-            ]);
+            return Buffer.concat([Uint8Array.of(22), serialSizeLength(schemaType.sizeLength)]);
         case 'U128':
             return Uint8Array.of(23);
         case 'I128':
             return Uint8Array.of(24);
         case 'ContractName':
-            return Buffer.concat([
-                Uint8Array.of(25),
-                serialSizeLength(schemaType.sizeLength),
-            ]);
+            return Buffer.concat([Uint8Array.of(25), serialSizeLength(schemaType.sizeLength)]);
         case 'ReceiveName':
-            return Buffer.concat([
-                Uint8Array.of(26),
-                serialSizeLength(schemaType.sizeLength),
-            ]);
+            return Buffer.concat([Uint8Array.of(26), serialSizeLength(schemaType.sizeLength)]);
         case 'ULeb128':
-            return Buffer.concat([
-                Uint8Array.of(27),
-                encodeWord32(schemaType.maxByteSize, true),
-            ]);
+            return Buffer.concat([Uint8Array.of(27), encodeWord32(schemaType.maxByteSize, true)]);
         case 'ILeb128':
-            return Buffer.concat([
-                Uint8Array.of(28),
-                encodeWord32(schemaType.maxByteSize, true),
-            ]);
+            return Buffer.concat([Uint8Array.of(28), encodeWord32(schemaType.maxByteSize, true)]);
         case 'ByteList':
-            return Buffer.concat([
-                Uint8Array.of(29),
-                serialSizeLength(schemaType.sizeLength),
-            ]);
+            return Buffer.concat([Uint8Array.of(29), serialSizeLength(schemaType.sizeLength)]);
         case 'ByteArray':
-            return Buffer.concat([
-                Uint8Array.of(30),
-                encodeWord32(schemaType.size, true),
-            ]);
+            return Buffer.concat([Uint8Array.of(30), encodeWord32(schemaType.size, true)]);
         case 'TaggedEnum':
             return Buffer.concat([
                 Uint8Array.of(31),
-                serializeMap(
-                    'U32',
-                    encodeWord8,
-                    serializeEnumVariant,
-                    schemaType.variants
-                ),
+                serializeMap('U32', encodeWord8, serializeEnumVariant, schemaType.variants),
             ]);
         default:
-            throw new Error(
-                'Deserialization failed: Unexpected tag for SchemaType: '
-            );
+            throw new Error('Deserialization failed: Unexpected tag for SchemaType: ');
     }
 }
 
@@ -993,10 +874,7 @@ function serialSizeLength(sizeLength: SchemaSizeLength): Uint8Array {
  * @param {bigint | number} size Size to serialize.
  * @returns {Uint8Array} Buffer with serialization.
  */
-function serialSize(
-    sizeLength: SchemaSizeLength,
-    size: bigint | number
-): Uint8Array {
+function serialSize(sizeLength: SchemaSizeLength, size: bigint | number): Uint8Array {
     switch (sizeLength) {
         case 'U8':
             return encodeWord8(Number(size));
@@ -1017,15 +895,9 @@ function serialSize(
 function serialFields(fields: SchemaFields): Uint8Array {
     switch (fields.type) {
         case 'Named':
-            return Buffer.concat([
-                Uint8Array.of(0),
-                serializeList('U32', serialNamedField, fields.fields),
-            ]);
+            return Buffer.concat([Uint8Array.of(0), serializeList('U32', serialNamedField, fields.fields)]);
         case 'Unnamed':
-            return Buffer.concat([
-                Uint8Array.of(1),
-                serializeList('U32', serializeSchemaType, fields.fields),
-            ]);
+            return Buffer.concat([Uint8Array.of(1), serializeList('U32', serializeSchemaType, fields.fields)]);
         case 'None':
             return Uint8Array.of(2);
     }
@@ -1037,10 +909,7 @@ function serialFields(fields: SchemaFields): Uint8Array {
  * @returns {Uint8Array} Buffer with serialization.
  */
 function serialNamedField(named: SchemaNamedField): Uint8Array {
-    return Buffer.concat([
-        serializeString('U32', named.name),
-        serializeSchemaType(named.field),
-    ]);
+    return Buffer.concat([serializeString('U32', named.name), serializeSchemaType(named.field)]);
 }
 
 /**
@@ -1049,10 +918,7 @@ function serialNamedField(named: SchemaNamedField): Uint8Array {
  * @returns {Uint8Array} Buffer with serialization.
  */
 function serializeEnumVariant(variant: SchemaEnumVariant): Uint8Array {
-    return Buffer.concat([
-        serializeString('U32', variant.name),
-        serialFields(variant.fields),
-    ]);
+    return Buffer.concat([serializeString('U32', variant.name), serialFields(variant.fields)]);
 }
 
 /**
@@ -1069,15 +935,8 @@ type Serializer<A> = (a: A) => Uint8Array;
  * @param {A[]} list List of items to serialize.
  * @returns {Uint8Array} Buffer with serialization.
  */
-function serializeList<A>(
-    sizeLength: SchemaSizeLength,
-    serialItem: Serializer<A>,
-    list: A[]
-): Uint8Array {
-    return Buffer.concat([
-        serialSize(sizeLength, list.length),
-        ...list.map(serialItem),
-    ]);
+function serializeList<A>(sizeLength: SchemaSizeLength, serialItem: Serializer<A>, list: A[]): Uint8Array {
+    return Buffer.concat([serialSize(sizeLength, list.length), ...list.map(serialItem)]);
 }
 
 /**
@@ -1085,14 +944,8 @@ function serializeList<A>(
  * @param {SchemaSizeLength} sizeLength The size length to use for serializing the size.
  * @returns {Uint8Array} Buffer with serialization.
  */
-function serializeString(
-    sizeLength: SchemaSizeLength,
-    value: string
-): Uint8Array {
-    return Buffer.concat([
-        serialSize(sizeLength, value.length),
-        Buffer.from(value, 'utf8'),
-    ]);
+function serializeString(sizeLength: SchemaSizeLength, value: string): Uint8Array {
+    return Buffer.concat([serialSize(sizeLength, value.length), Buffer.from(value, 'utf8')]);
 }
 
 /**

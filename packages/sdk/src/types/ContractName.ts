@@ -1,10 +1,6 @@
-import * as InitName from './InitName.js';
 import { isAsciiAlphaNumericPunctuation } from '../contractHelpers.js';
-import {
-    TypedJson,
-    TypedJsonDiscriminator,
-    makeFromTypedJson,
-} from './util.js';
+import * as InitName from './InitName.js';
+import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
@@ -82,19 +78,13 @@ export function instanceOf(value: unknown): value is ContractName {
  */
 export function fromString(value: string): ContractName {
     if (value.length > 95) {
-        throw new Error(
-            'Invalid ContractName: Can be atmost 95 characters long.'
-        );
+        throw new Error('Invalid ContractName: Can be atmost 95 characters long.');
     }
     if (value.includes('.')) {
-        throw new Error(
-            "Invalid ContractName: Must not contain a '.' character."
-        );
+        throw new Error("Invalid ContractName: Must not contain a '.' character.");
     }
     if (!isAsciiAlphaNumericPunctuation(value)) {
-        throw new Error(
-            'Invalid ContractName: Must only contain ASCII alpha, numeric and punctuation characters.'
-        );
+        throw new Error('Invalid ContractName: Must only contain ASCII alpha, numeric and punctuation characters.');
     }
     return new ContractName(value);
 }
@@ -181,7 +171,4 @@ export function toTypedJSON(value: ContractName): TypedJson<Serializable> {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
-    JSON_DISCRIMINATOR,
-    fromString
-);
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromString);

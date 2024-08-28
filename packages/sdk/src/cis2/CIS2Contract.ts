@@ -1,52 +1,33 @@
 import { stringify } from 'json-bigint';
 
-import type { HexString, InvokeContractResult } from '../types.js';
-import * as ContractAddress from '../types/ContractAddress.js';
-import * as BlockHash from '../types/BlockHash.js';
-import * as TransactionHash from '../types/TransactionHash.js';
-import * as ContractName from '../types/ContractName.js';
-import * as EntrypointName from '../types/EntrypointName.js';
+import { CISContract, ContractDryRun } from '../GenericContract.js';
+import { CIS0, cis0Supports } from '../cis0.js';
+import { ensureMatchesInput } from '../deserializationHelpers.js';
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
 import { AccountSigner } from '../signHelpers.js';
-import {
-    serializeCIS2Transfers,
-    serializeCIS2BalanceOfQueries,
-    deserializeCIS2BalanceOfResponse,
-    serializeCIS2TokenIds,
-    deserializeCIS2TokenMetadataResponse,
-    serializeCIS2OperatorOfQueries,
-    deserializeCIS2OperatorOfResponse,
-    formatCIS2UpdateOperator,
-    formatCIS2Transfer,
-    serializeCIS2UpdateOperators,
-    CIS2,
-} from './util.js';
-import { CIS0, cis0Supports } from '../cis0.js';
-import { CISContract, ContractDryRun } from '../GenericContract.js';
+import type { HexString, InvokeContractResult } from '../types.js';
+import * as BlockHash from '../types/BlockHash.js';
+import * as ContractAddress from '../types/ContractAddress.js';
+import * as ContractName from '../types/ContractName.js';
+import * as EntrypointName from '../types/EntrypointName.js';
+import * as TransactionHash from '../types/TransactionHash.js';
 import { makeDynamicFunction } from '../util.js';
+import {
+    CIS2,
+    deserializeCIS2BalanceOfResponse,
+    deserializeCIS2OperatorOfResponse,
+    deserializeCIS2TokenMetadataResponse,
+    formatCIS2Transfer,
+    formatCIS2UpdateOperator,
+    serializeCIS2BalanceOfQueries,
+    serializeCIS2OperatorOfQueries,
+    serializeCIS2TokenIds,
+    serializeCIS2Transfers,
+    serializeCIS2UpdateOperators,
+} from './util.js';
 
 type Views = 'balanceOf' | 'operatorOf' | 'tokenMetadata';
 type Updates = 'transfer' | 'updateOperator';
-
-const ensureMatchesInput =
-    <T, R>(input: T, deserializer: (value: HexString) => R[]) =>
-    (value: HexString): R[] | R => {
-        const result = deserializer(value);
-        const expectList = Array.isArray(input);
-        const expectLength = expectList ? input.length : 1;
-
-        if (result.length !== expectLength) {
-            throw new Error(
-                `Expected list with length ${expectLength} when deserializing response, received list with length ${result.length}`
-            );
-        }
-
-        if (expectList) {
-            return result;
-        }
-
-        return result[0];
-    };
 
 /**
  * Contains methods for performing dry-run invocations of update instructions on CIS-2 smart contracts.
@@ -154,17 +135,12 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
         grpcClient: ConcordiumGRPCClient,
         contractAddress: ContractAddress.Type
     ): Promise<CIS2Contract> {
-        const contractName = await super.getContractName(
-            grpcClient,
-            contractAddress
-        );
+        const contractName = await super.getContractName(grpcClient, contractAddress);
 
         const result = await cis0Supports(grpcClient, contractAddress, 'CIS-2');
         if (result?.type !== CIS0.SupportType.Support) {
             throw new Error(
-                `The CIS-2 standard is not supported by the contract at address ${stringify(
-                    contractAddress
-                )}`
+                `The CIS-2 standard is not supported by the contract at address ${stringify(contractAddress)}`
             );
         }
 
@@ -210,9 +186,7 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
         transfers: CIS2.Transfer | CIS2.Transfer[]
     ): CIS2.UpdateTransaction<CIS2.TransferParamJson[]> {
         const serialize = makeDynamicFunction(serializeCIS2Transfers);
-        const format = makeDynamicFunction((us: CIS2.Transfer[]) =>
-            us.map(formatCIS2Transfer)
-        );
+        const format = makeDynamicFunction((us: CIS2.Transfer[]) => us.map(formatCIS2Transfer));
 
         return this.createUpdateTransaction(
             EntrypointName.fromStringUnchecked('transfer'),
@@ -302,9 +276,7 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
         updates: CIS2.UpdateOperator | CIS2.UpdateOperator[]
     ): CIS2.UpdateTransaction<CIS2.UpdateOperatorParamJson[]> {
         const serialize = makeDynamicFunction(serializeCIS2UpdateOperators);
-        const format = makeDynamicFunction((us: CIS2.UpdateOperator[]) =>
-            us.map(formatCIS2UpdateOperator)
-        );
+        const format = makeDynamicFunction((us: CIS2.UpdateOperator[]) => us.map(formatCIS2UpdateOperator));
 
         return this.createUpdateTransaction(
             EntrypointName.fromStringUnchecked('updateOperator'),
@@ -366,10 +338,7 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
      *
      * @returns {bigint} The balance corresponding to the query.
      */
-    public balanceOf(
-        query: CIS2.BalanceOfQuery,
-        blockHash?: BlockHash.Type
-    ): Promise<bigint>;
+    public balanceOf(query: CIS2.BalanceOfQuery, blockHash?: BlockHash.Type): Promise<bigint>;
     /**
      * Invokes CIS-2 "balanceOf" with a list of queries.
      *
@@ -380,19 +349,13 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
      *
      * @returns {bigint[]} A list of balances corresponding to and ordered by the list of queries.
      */
-    public balanceOf(
-        queries: CIS2.BalanceOfQuery[],
-        blockHash?: BlockHash.Type
-    ): Promise<bigint[]>;
+    public balanceOf(queries: CIS2.BalanceOfQuery[], blockHash?: BlockHash.Type): Promise<bigint[]>;
     public async balanceOf(
         queries: CIS2.BalanceOfQuery | CIS2.BalanceOfQuery[],
         blockHash?: BlockHash.Type
     ): Promise<bigint | bigint[]> {
         const serialize = makeDynamicFunction(serializeCIS2BalanceOfQueries);
-        const deserialize = ensureMatchesInput(
-            queries,
-            deserializeCIS2BalanceOfResponse
-        );
+        const deserialize = ensureMatchesInput(queries, deserializeCIS2BalanceOfResponse);
         return this.invokeView(
             EntrypointName.fromStringUnchecked('balanceOf'),
             serialize,
@@ -412,10 +375,7 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
      *
      * @returns {boolean} Whether the specified address is an operator of the specified owner.
      */
-    public operatorOf(
-        query: CIS2.OperatorOfQuery,
-        blockHash?: BlockHash.Type
-    ): Promise<boolean>;
+    public operatorOf(query: CIS2.OperatorOfQuery, blockHash?: BlockHash.Type): Promise<boolean>;
     /**
      * Invokes CIS-2 "operatorOf" with a list of queries.
      *
@@ -427,19 +387,13 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
      * @returns {boolean[]} As list of boolean results, each detailing whether the specified address is an operator of the specified owner for the corresponding query.
      * The list is ordered by the corresponding query.
      */
-    public operatorOf(
-        queries: CIS2.OperatorOfQuery[],
-        blockHash?: BlockHash.Type
-    ): Promise<boolean[]>;
+    public operatorOf(queries: CIS2.OperatorOfQuery[], blockHash?: BlockHash.Type): Promise<boolean[]>;
     public operatorOf(
         queries: CIS2.OperatorOfQuery | CIS2.OperatorOfQuery[],
         blockHash?: BlockHash.Type
     ): Promise<boolean | boolean[]> {
         const serialize = makeDynamicFunction(serializeCIS2OperatorOfQueries);
-        const deserialize = ensureMatchesInput(
-            queries,
-            deserializeCIS2OperatorOfResponse
-        );
+        const deserialize = ensureMatchesInput(queries, deserializeCIS2OperatorOfResponse);
         return this.invokeView(
             EntrypointName.fromStringUnchecked('operatorOf'),
             serialize,
@@ -459,10 +413,7 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
      *
      * @returns {CIS2.MetadataUrl} An object containing the URL of the token metadata.
      */
-    public tokenMetadata(
-        tokenId: HexString,
-        blockHash?: BlockHash.Type
-    ): Promise<CIS2.MetadataUrl>;
+    public tokenMetadata(tokenId: HexString, blockHash?: BlockHash.Type): Promise<CIS2.MetadataUrl>;
     /**
      * Invokes CIS-2 "tokenMetadata" with a list of token ID's.
      *
@@ -474,19 +425,13 @@ export class CIS2Contract extends CISContract<Updates, Views, CIS2DryRun> {
      * @returns {CIS2.MetadataUrl[]} A list of objects containing URL's for token metadata for the corresponding token.
      * The list is ordered by the token ID's given by `tokenIds` input parameter.
      */
-    public tokenMetadata(
-        tokenIds: HexString[],
-        blockHash?: BlockHash.Type
-    ): Promise<CIS2.MetadataUrl[]>;
+    public tokenMetadata(tokenIds: HexString[], blockHash?: BlockHash.Type): Promise<CIS2.MetadataUrl[]>;
     public tokenMetadata(
         tokenIds: HexString | HexString[],
         blockHash?: BlockHash.Type
     ): Promise<CIS2.MetadataUrl | CIS2.MetadataUrl[]> {
         const serialize = makeDynamicFunction(serializeCIS2TokenIds);
-        const deserialize = ensureMatchesInput(
-            tokenIds,
-            deserializeCIS2TokenMetadataResponse
-        );
+        const deserialize = ensureMatchesInput(tokenIds, deserializeCIS2TokenMetadataResponse);
         return this.invokeView(
             EntrypointName.fromStringUnchecked('tokenMetadata'),
             serialize,

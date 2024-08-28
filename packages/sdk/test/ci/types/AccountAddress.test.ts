@@ -8,9 +8,7 @@ test('Base58 decode-encode results is the same', () => {
 });
 
 test('Buffer encode-decode results is the same', () => {
-    const address = AccountAddress.fromBase58(
-        '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
-    );
+    const address = AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt');
     const buffer = AccountAddress.toBuffer(address);
     const converted = AccountAddress.fromBuffer(buffer);
     expect(AccountAddress.equals(converted, address)).toBeTruthy();

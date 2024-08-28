@@ -1,9 +1,7 @@
-import {
-    AttributeKey,
-    AttributeKeyString,
-    AttributesKeys,
-    IdDocType,
-} from '../types.js';
+import { whereAlpha2 } from 'iso-3166-1';
+
+import { EU_MEMBERS, MAX_DATE, MIN_DATE, StatementTypes } from '../commonProofTypes.js';
+import { AttributeKey, AttributeKeyString, AttributesKeys, IdDocType } from '../types.js';
 import {
     AtomicStatement,
     IdStatement,
@@ -11,13 +9,6 @@ import {
     NonMembershipStatement,
     RangeStatement,
 } from './idProofTypes.js';
-import {
-    EU_MEMBERS,
-    MAX_DATE,
-    MIN_DATE,
-    StatementTypes,
-} from '../commonProofTypes.js';
-import { whereAlpha2 } from 'iso-3166-1';
 
 /**
  * Given a number x, return the date string for x years ago.
@@ -35,18 +26,11 @@ export function getPastDate(yearsAgo: number, daysOffset = 0): string {
 }
 
 interface StatementBuilder {
-    addRange(
-        attribute: AttributesKeys,
-        lower: string,
-        upper: string
-    ): IdStatementBuilder;
+    addRange(attribute: AttributesKeys, lower: string, upper: string): IdStatementBuilder;
 
     addMembership(attribute: AttributesKeys, set: string[]): IdStatementBuilder;
 
-    addNonMembership(
-        attribute: AttributesKeys,
-        set: string[]
-    ): IdStatementBuilder;
+    addNonMembership(attribute: AttributesKeys, set: string[]): IdStatementBuilder;
     revealAttribute(attribute: AttributesKeys): IdStatementBuilder;
     getStatement(): IdStatement;
 }
@@ -87,10 +71,7 @@ function isISO3166_1Alpha2(code: string) {
  * ISO3166-2 codes consist of a ISO3166_1Alpha2 code, then a dash, and then 1-3 alphanumerical characters
  */
 function isISO3166_2(code: string) {
-    return (
-        isISO3166_1Alpha2(code.substring(0, 2)) &&
-        /^\-([a-zA-Z0-9]){1,3}$/.test(code.substring(2))
-    );
+    return isISO3166_1Alpha2(code.substring(0, 2)) && /^\-([a-zA-Z0-9]){1,3}$/.test(code.substring(2));
 }
 
 function verifyRangeStatement(statement: RangeStatement) {
@@ -109,31 +90,19 @@ function verifyRangeStatement(statement: RangeStatement) {
         case AttributeKeyString.idDocIssuedAt:
         case AttributeKeyString.idDocExpiresAt: {
             if (!isISO8601(statement.lower)) {
-                throw new Error(
-                    statement.attributeTag +
-                        ' lower range value must be YYYYMMDD'
-                );
+                throw new Error(statement.attributeTag + ' lower range value must be YYYYMMDD');
             }
             if (!isISO8601(statement.upper)) {
-                throw new Error(
-                    statement.attributeTag +
-                        ' upper range value must be YYYYMMDD'
-                );
+                throw new Error(statement.attributeTag + ' upper range value must be YYYYMMDD');
             }
             break;
         }
         default:
-            throw new Error(
-                statement.attributeTag +
-                    ' is not allowed to be used in range statements'
-            );
+            throw new Error(statement.attributeTag + ' is not allowed to be used in range statements');
     }
 }
 
-function verifySetStatement(
-    statement: MembershipStatement | NonMembershipStatement,
-    typeName: string
-) {
+function verifySetStatement(statement: MembershipStatement | NonMembershipStatement, typeName: string) {
     if (statement.set === undefined) {
         throw new Error(typeName + 'statements must contain a lower field');
     }
@@ -145,48 +114,25 @@ function verifySetStatement(
         case AttributeKeyString.countryOfResidence:
         case AttributeKeyString.nationality:
             if (!statement.set.every(isISO3166_1Alpha2)) {
-                throw new Error(
-                    statement.attributeTag +
-                        ' values must be ISO3166-1 Alpha 2 codes in upper case'
-                );
+                throw new Error(statement.attributeTag + ' values must be ISO3166-1 Alpha 2 codes in upper case');
             }
             break;
         case AttributeKeyString.idDocIssuer:
-            if (
-                !statement.set.every(
-                    (x) => isISO3166_1Alpha2(x) || isISO3166_2(x)
-                )
-            ) {
-                throw new Error(
-                    'idDocIssuer must be ISO3166-1 Alpha 2  in upper case or ISO3166-2 codes'
-                );
+            if (!statement.set.every((x) => isISO3166_1Alpha2(x) || isISO3166_2(x))) {
+                throw new Error('idDocIssuer must be ISO3166-1 Alpha 2  in upper case or ISO3166-2 codes');
             }
             break;
         case AttributeKeyString.idDocType:
-            if (
-                !statement.set.every((v) =>
-                    Object.values(IdDocType).includes(v as IdDocType)
-                )
-            ) {
-                throw new Error(
-                    'idDocType values must be one from IdDocType enum'
-                );
+            if (!statement.set.every((v) => Object.values(IdDocType).includes(v as IdDocType))) {
+                throw new Error('idDocType values must be one from IdDocType enum');
             }
             break;
         default:
-            throw new Error(
-                statement.attributeTag +
-                    ' is not allowed to be used in ' +
-                    typeName +
-                    ' statements'
-            );
+            throw new Error(statement.attributeTag + ' is not allowed to be used in ' + typeName + ' statements');
     }
 }
 
-function verifyAtomicStatement(
-    statement: AtomicStatement,
-    existingStatements: IdStatement
-) {
+function verifyAtomicStatement(statement: AtomicStatement, existingStatements: IdStatement) {
     if (statement.type === undefined) {
         throw new Error('Statements must contain a type field');
     }
@@ -196,11 +142,7 @@ function verifyAtomicStatement(
     if (!(statement.attributeTag in AttributeKeyString)) {
         throw new Error('Unknown attributeTag: ' + statement.attributeTag);
     }
-    if (
-        existingStatements.some(
-            (v) => v.attributeTag === statement.attributeTag
-        )
-    ) {
+    if (existingStatements.some((v) => v.attributeTag === statement.attributeTag)) {
         throw new Error('Only 1 statement is allowed for each attribute');
     }
     switch (statement.type) {
@@ -292,10 +234,7 @@ export class IdStatementBuilder implements StatementBuilder {
      * @param set: the set of values that the attribute must be included in.
      * @returns the updated builder
      */
-    addMembership(
-        attribute: AttributesKeys,
-        set: string[]
-    ): IdStatementBuilder {
+    addMembership(attribute: AttributesKeys, set: string[]): IdStatementBuilder {
         const statement: AtomicStatement = {
             type: StatementTypes.AttributeInSet,
             attributeTag: getAttributeString(attribute),
@@ -312,10 +251,7 @@ export class IdStatementBuilder implements StatementBuilder {
      * @param set: the set of values that the attribute must be included in.
      * @returns the updated builder
      */
-    addNonMembership(
-        attribute: AttributesKeys,
-        set: string[]
-    ): IdStatementBuilder {
+    addNonMembership(attribute: AttributesKeys, set: string[]): IdStatementBuilder {
         const statement: AtomicStatement = {
             type: StatementTypes.AttributeNotInSet,
             attributeTag: getAttributeString(attribute),
@@ -359,11 +295,7 @@ export class IdStatementBuilder implements StatementBuilder {
      * @returns the updated builder
      */
     addMaximumAge(age: number): IdStatementBuilder {
-        return this.addRange(
-            AttributesKeys.dob,
-            getPastDate(age + 1, 1),
-            MAX_DATE
-        );
+        return this.addRange(AttributesKeys.dob, getPastDate(age + 1, 1), MAX_DATE);
     }
 
     /**
@@ -374,11 +306,7 @@ export class IdStatementBuilder implements StatementBuilder {
      * @returns the updated builder
      */
     addAgeInRange(minAge: number, maxAge: number): IdStatementBuilder {
-        return this.addRange(
-            AttributesKeys.dob,
-            getPastDate(maxAge + 1, 1),
-            getPastDate(minAge)
-        );
+        return this.addRange(AttributesKeys.dob, getPastDate(maxAge + 1, 1), getPastDate(minAge));
     }
 
     /**
@@ -388,11 +316,7 @@ export class IdStatementBuilder implements StatementBuilder {
      * @returns the updated builder
      */
     documentExpiryNoEarlierThan(earliestDate: string): IdStatementBuilder {
-        return this.addRange(
-            AttributesKeys.idDocExpiresAt,
-            earliestDate,
-            MAX_DATE
-        );
+        return this.addRange(AttributesKeys.idDocExpiresAt, earliestDate, MAX_DATE);
     }
 
     /**
@@ -400,10 +324,7 @@ export class IdStatementBuilder implements StatementBuilder {
      * @returns the updated builder
      */
     addEUResidency(): IdStatementBuilder {
-        return this.addMembership(
-            AttributesKeys.countryOfResidence,
-            EU_MEMBERS
-        );
+        return this.addMembership(AttributesKeys.countryOfResidence, EU_MEMBERS);
     }
 
     /**

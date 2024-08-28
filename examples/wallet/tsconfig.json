@@ -21,6 +21,6 @@
         "resolveJsonModule": true,
         "isolatedModules": true,
         "downlevelIteration": true,
-        "jsx": "react",
+        "jsx": "react"
     }
 }

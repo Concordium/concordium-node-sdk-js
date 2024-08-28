@@ -1,9 +1,5 @@
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import {
-    TypedJson,
-    TypedJsonDiscriminator,
-    makeFromTypedJson,
-} from './util.js';
+import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
@@ -39,10 +35,7 @@ class ContractAddress implements ContractAddressLike<bigint> {
  * @param value value to unwrap.
  * @returns the unwrapped {@linkcode Serializable} value
  */
-export function toUnwrappedJSON({
-    index,
-    subindex,
-}: Type): ContractAddressLike<bigint> {
+export function toUnwrappedJSON({ index, subindex }: Type): ContractAddressLike<bigint> {
     return { index, subindex };
 }
 
@@ -66,19 +59,12 @@ export function instanceOf(value: unknown): value is ContractAddress {
  * @throws If provided index or subindex is sub-zero.
  * @returns {ContractAddress}
  */
-export function create(
-    index: number | bigint,
-    subindex: number | bigint = 0n
-): ContractAddress {
+export function create(index: number | bigint, subindex: number | bigint = 0n): ContractAddress {
     if (index < 0) {
-        throw new Error(
-            'Invalid contract address: The index cannot be a negative number.'
-        );
+        throw new Error('Invalid contract address: The index cannot be a negative number.');
     }
     if (subindex < 0) {
-        throw new Error(
-            'Invalid contract address: The subindex cannot be a negative number.'
-        );
+        throw new Error('Invalid contract address: The subindex cannot be a negative number.');
     }
     return new ContractAddress(BigInt(index), BigInt(subindex));
 }
@@ -112,9 +98,7 @@ export function fromSchemaValue(contractAddress: SchemaValue): ContractAddress {
  * @param {Proto.ContractAddress} contractAddress The contract address in protobuf.
  * @returns {ContractAddress} The contract address.
  */
-export function fromProto(
-    contractAddress: Proto.ContractAddress
-): ContractAddress {
+export function fromProto(contractAddress: Proto.ContractAddress): ContractAddress {
     return create(contractAddress.index, contractAddress.subindex);
 }
 
@@ -123,9 +107,7 @@ export function fromProto(
  * @param {ContractAddress} contractAddress The contract address.
  * @returns {Proto.ContractAddress} The protobuf encoding.
  */
-export function toProto(
-    contractAddress: ContractAddress
-): Proto.ContractAddress {
+export function toProto(contractAddress: ContractAddress): Proto.ContractAddress {
     return {
         index: contractAddress.index,
         subindex: contractAddress.subindex,
@@ -193,7 +175,4 @@ export function toTypedJSON(value: ContractAddress): TypedJson<Serializable> {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
-    JSON_DISCRIMINATOR,
-    fromSerializable
-);
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromSerializable);

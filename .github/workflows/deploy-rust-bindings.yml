@@ -1,0 +1,132 @@
+name: Deploy rust-bindings
+
+on:
+  # Run automatically on tag push
+  push:
+    tags:
+      - rust-bindings/*
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: 'deploy-rustbindings'
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: 18.16.0
+  RUST_VERSION: 1.73 ## Make sure to update wasm-pack to 0.13 or higher when this is rust version 1.74 or higher
+  RUST_FMT: nightly-2023-04-01-x86_64-unknown-linux-gnu
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+
+      - name: Install rust
+        run: rustup default ${{ env.RUST_VERSION }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            packages/rust-bindings
+            deps/concordium-base/rust-src
+            deps/concordium-base/smart-contracts/contracts-common
+
+      - name: Cache dependencies
+        id: yarn-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ./node_modules
+            ./docs/node_modules
+            ./packages/*/node_modules
+            ./examples/**/node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+
+      - name: Cache GRPC
+        id: cache-grpc
+        uses: actions/cache@v3
+        with:
+          path: |
+            ./packages/sdk/src/grpc-api
+          key: ${{ runner.os }}-grpc-${{ hashFiles('deps/concordium-base/concordium-grpc-api') }}
+          restore-keys: ${{ runner.os }}-grpc
+
+      - name: Get dependencies
+        if: steps.yarn-cache.outputs.cache-hit != 'true'
+        run: yarn install --immutable
+
+      - name: Build release
+        run: yarn build:all
+
+      - name: Store build-release
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-release
+          path: |
+            packages/rust-bindings/lib
+            packages/rust-bindings/package.json
+            packages/rust-bindings/README.md
+
+  upload-release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    environment: deploy
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Extract tag name
+        id: get_tag
+        run: echo "::set-output name=tag::${GITHUB_REF#refs/tags/rust-bindings/}"
+
+      - name: Test that tag version matches package.json version
+        run: test "${{ steps.get_tag.outputs.tag }}" = "$(jq -r ".version" packages/rust-bindings/package.json)" || exit 1
+
+      - name: Get build-output
+        uses: actions/download-artifact@v4
+        with:
+          path: packages/rust-bindings
+          name: build-release
+
+      - name: Create a GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: rust-bindings/v${{ steps.get_tag.outputs.tag_name }}
+          name: Rust-Bindings Release v${{ steps.get_tag.outputs.tag_name }}
+          draft: true
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Publish to NPM
+        run: |
+          yarn config set npmAuthToken $NPM_AUTH_TOKEN
+          yarn workspace @concordium/rust-bindings npm publish
+        env:
+          NPM_AUTH_TOKEN: '${{secrets.NPM_PUBLISH_TOKEN}}'

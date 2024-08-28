@@ -1,9 +1,5 @@
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import {
-    TypedJson,
-    TypedJsonDiscriminator,
-    makeFromTypedJson,
-} from './util.js';
+import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
@@ -60,9 +56,7 @@ export function instanceOf(value: unknown): value is Timestamp {
  */
 export function fromMillis(value: number | bigint): Timestamp {
     if (value < 0) {
-        throw new Error(
-            'Invalid timestamp: The value cannot be a negative number.'
-        );
+        throw new Error('Invalid timestamp: The value cannot be a negative number.');
     }
     return new Timestamp(BigInt(value));
 }
@@ -75,6 +69,16 @@ export function fromMillis(value: number | bigint): Timestamp {
  */
 export function fromDate(date: Date): Timestamp {
     return fromMillis(date.getTime());
+}
+
+/**
+ * Construct a Timestamp minutes in the future from the time of calling this function.
+ * @param {number} minutes The number of minutes in the future to set as the expiry time.
+ * @returns {Timestamp} The transaction expiry.
+ */
+export function futureMinutes(minutes: number): Timestamp {
+    const timestampMillis = Date.now() + minutes * 60 * 1000;
+    return fromDate(new Date(timestampMillis));
 }
 
 /** Type used when encoding a timestamp in the JSON format used when serializing using a smart contract schema type. */
@@ -169,7 +173,4 @@ export function toTypedJSON(value: Timestamp): TypedJson<Serializable> {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
-    JSON_DISCRIMINATOR,
-    fromSerializable
-);
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromSerializable);

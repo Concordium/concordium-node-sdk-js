@@ -1,8 +1,11 @@
 import { Buffer } from 'buffer/index.js';
+
 import { getAccountTransactionHandler } from './accountTransactions.js';
+import { calculateEnergyCost } from './energyCost.js';
+import { sha256 } from './hash.js';
 import {
-    encodeWord8FromString,
     encodeWord8,
+    encodeWord8FromString,
     encodeWord16,
     encodeWord32,
     encodeWord64,
@@ -11,24 +14,22 @@ import {
     serializeYearMonth,
 } from './serializationHelpers.js';
 import {
-    AccountTransactionHeader,
-    AccountTransactionType,
     AccountTransaction,
+    AccountTransactionHeader,
+    AccountTransactionSignature,
+    AccountTransactionType,
     AttributesKeys,
     BlockItemKind,
-    AccountTransactionSignature,
-    CredentialSignature,
+    CredentialDeploymentDetails,
+    CredentialDeploymentInfo,
     CredentialDeploymentValues,
+    CredentialSignature,
     IdOwnershipProofs,
     UnsignedCredentialDeploymentInformation,
-    CredentialDeploymentInfo,
-    CredentialDeploymentDetails,
 } from './types.js';
-import { calculateEnergyCost } from './energyCost.js';
-import { countSignatures } from './util.js';
 import * as AccountAddress from './types/AccountAddress.js';
 import * as Energy from './types/Energy.js';
-import { sha256 } from './hash.js';
+import { countSignatures } from './util.js';
 
 function serializeAccountTransactionType(type: AccountTransactionType): Buffer {
     return Buffer.from(Uint8Array.of(type));
@@ -66,9 +67,7 @@ function serializeAccountTransactionHeader(
  * Serializes a map of account transaction signatures. If no signatures are provided,
  * then an error is thrown.
  */
-export function serializeAccountTransactionSignature(
-    signatures: AccountTransactionSignature
-): Buffer {
+export function serializeAccountTransactionSignature(signatures: AccountTransactionSignature): Buffer {
     if (Object.keys(signatures).length === 0) {
         throw new Error('No signatures were provided');
     }
@@ -81,12 +80,7 @@ export function serializeAccountTransactionSignature(
     };
     const putCredentialSignatures = (credSig: CredentialSignature) =>
         serializeMap(credSig, encodeWord8, encodeWord8FromString, putSignature);
-    return serializeMap(
-        signatures,
-        encodeWord8,
-        encodeWord8FromString,
-        putCredentialSignatures
-    );
+    return serializeMap(signatures, encodeWord8, encodeWord8FromString, putCredentialSignatures);
 }
 
 /**
@@ -101,26 +95,15 @@ export function serializeAccountTransaction(
     accountTransaction: AccountTransaction,
     signatures: AccountTransactionSignature
 ): Buffer {
-    const serializedBlockItemKind = encodeWord8(
-        BlockItemKind.AccountTransactionKind
-    );
-    const serializedAccountTransactionSignatures =
-        serializeAccountTransactionSignature(signatures);
+    const serializedBlockItemKind = encodeWord8(BlockItemKind.AccountTransactionKind);
+    const serializedAccountTransactionSignatures = serializeAccountTransactionSignature(signatures);
 
-    const serializedType = serializeAccountTransactionType(
-        accountTransaction.type
-    );
+    const serializedType = serializeAccountTransactionType(accountTransaction.type);
 
-    const accountTransactionHandler = getAccountTransactionHandler(
-        accountTransaction.type
-    );
-    const serializedPayload = accountTransactionHandler.serialize(
-        accountTransaction.payload
-    );
+    const accountTransactionHandler = getAccountTransactionHandler(accountTransaction.type);
+    const serializedPayload = accountTransactionHandler.serialize(accountTransaction.payload);
 
-    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(
-        accountTransaction.payload
-    );
+    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(accountTransaction.payload);
     const energyCost = calculateEnergyCost(
         countSignatures(signatures),
         BigInt(serializedPayload.length + 1),
@@ -146,19 +129,11 @@ export function serializeAccountTransaction(
  * @param accountTransaction the transaction which payload is to be serialized
  * @returns the account transaction payload serialized as a buffer.
  */
-export function serializeAccountTransactionPayload(
-    accountTransaction: AccountTransaction
-): Buffer {
-    const serializedType = serializeAccountTransactionType(
-        accountTransaction.type
-    );
+export function serializeAccountTransactionPayload(accountTransaction: AccountTransaction): Buffer {
+    const serializedType = serializeAccountTransactionType(accountTransaction.type);
 
-    const accountTransactionHandler = getAccountTransactionHandler(
-        accountTransaction.type
-    );
-    const serializedPayload = accountTransactionHandler.serialize(
-        accountTransaction.payload
-    );
+    const accountTransactionHandler = getAccountTransactionHandler(accountTransaction.type);
+    const serializedPayload = accountTransactionHandler.serialize(accountTransaction.payload);
 
     return Buffer.concat([serializedType, serializedPayload]);
 }
@@ -173,10 +148,7 @@ export function getAccountTransactionHash(
     accountTransaction: AccountTransaction,
     signatures: AccountTransactionSignature
 ): string {
-    const serializedAccountTransaction = serializeAccountTransaction(
-        accountTransaction,
-        signatures
-    );
+    const serializedAccountTransaction = serializeAccountTransaction(accountTransaction, signatures);
     return sha256([serializedAccountTransaction]).toString('hex');
 }
 
@@ -186,36 +158,19 @@ export function getAccountTransactionHash(
  * @param signatureCount number of expected signatures
  * @returns the sha256 hash on the serialized header, type and payload
  */
-export function getAccountTransactionSignDigest(
-    accountTransaction: AccountTransaction,
-    signatureCount = 1n
-): Buffer {
-    const accountTransactionHandler = getAccountTransactionHandler(
-        accountTransaction.type
-    );
-    const serializedPayload = accountTransactionHandler.serialize(
-        accountTransaction.payload
-    );
+export function getAccountTransactionSignDigest(accountTransaction: AccountTransaction, signatureCount = 1n): Buffer {
+    const accountTransactionHandler = getAccountTransactionHandler(accountTransaction.type);
+    const serializedPayload = accountTransactionHandler.serialize(accountTransaction.payload);
 
-    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(
-        accountTransaction.payload
-    );
-    const energyCost = calculateEnergyCost(
-        signatureCount,
-        BigInt(serializedPayload.length + 1),
-        baseEnergyCost
-    );
+    const baseEnergyCost = accountTransactionHandler.getBaseEnergyCost(accountTransaction.payload);
+    const energyCost = calculateEnergyCost(signatureCount, BigInt(serializedPayload.length + 1), baseEnergyCost);
     const serializedHeader = serializeAccountTransactionHeader(
         accountTransaction.header,
         serializedPayload.length + 1,
         energyCost
     );
 
-    return sha256([
-        serializedHeader,
-        serializeAccountTransactionType(accountTransaction.type),
-        serializedPayload,
-    ]);
+    return sha256([serializedHeader, serializeAccountTransactionType(accountTransaction.type), serializedPayload]);
 }
 
 /**
@@ -230,10 +185,7 @@ export function serializeAccountTransactionForSubmission(
     accountTransaction: AccountTransaction,
     signatures: AccountTransactionSignature
 ): Buffer {
-    const serializedAccountTransaction = serializeAccountTransaction(
-        accountTransaction,
-        signatures
-    );
+    const serializedAccountTransaction = serializeAccountTransaction(accountTransaction, signatures);
 
     const serializedVersion = encodeWord8(0);
     return Buffer.concat([serializedVersion, serializedAccountTransaction]);
@@ -245,17 +197,10 @@ export function serializeAccountTransactionForSubmission(
  * @param credential the credential deployment values to serialize
  * @returns the serialization of CredentialDeploymentValues
  */
-function serializeCredentialDeploymentValues(
-    credential: CredentialDeploymentValues
-) {
+function serializeCredentialDeploymentValues(credential: CredentialDeploymentValues) {
     const buffers = [];
     buffers.push(
-        serializeMap(
-            credential.credentialPublicKeys.keys,
-            encodeWord8,
-            encodeWord8FromString,
-            serializeVerifyKey
-        )
+        serializeMap(credential.credentialPublicKeys.keys, encodeWord8, encodeWord8FromString, serializeVerifyKey)
     );
 
     buffers.push(encodeWord8(credential.credentialPublicKeys.threshold));
@@ -272,28 +217,20 @@ function serializeCredentialDeploymentValues(
     );
     buffers.push(serializeYearMonth(credential.policy.validTo));
     buffers.push(serializeYearMonth(credential.policy.createdAt));
-    const revealedAttributes = Object.entries(
-        credential.policy.revealedAttributes
-    );
+    const revealedAttributes = Object.entries(credential.policy.revealedAttributes);
     buffers.push(encodeWord16(revealedAttributes.length));
 
-    const revealedAttributeTags: [number, string][] = revealedAttributes.map(
-        ([tagName, value]) => [
-            AttributesKeys[tagName as keyof typeof AttributesKeys],
-            value,
-        ]
-    );
+    const revealedAttributeTags: [number, string][] = revealedAttributes.map(([tagName, value]) => [
+        AttributesKeys[tagName as keyof typeof AttributesKeys],
+        value,
+    ]);
     revealedAttributeTags
         .sort((a, b) => a[0] - b[0])
         .forEach(([tag, value]) => {
             const serializedAttributeValue = Buffer.from(value, 'utf-8');
             const serializedTag = encodeWord8(tag);
-            const serializedAttributeValueLength = encodeWord8(
-                serializedAttributeValue.length
-            );
-            buffers.push(
-                Buffer.concat([serializedTag, serializedAttributeValueLength])
-            );
+            const serializedAttributeValueLength = encodeWord8(serializedAttributeValue.length);
+            buffers.push(Buffer.concat([serializedTag, serializedAttributeValueLength]));
             buffers.push(serializedAttributeValue);
         });
 
@@ -307,15 +244,10 @@ function serializeCredentialDeploymentValues(
  * @returns the serialization of IdOwnershipProofs
  */
 function serializeIdOwnershipProofs(proofs: IdOwnershipProofs) {
-    const proofIdCredPub = encodeWord32(
-        Object.entries(proofs.proofIdCredPub).length
-    );
+    const proofIdCredPub = encodeWord32(Object.entries(proofs.proofIdCredPub).length);
     const idCredPubProofs = Buffer.concat(
         Object.entries(proofs.proofIdCredPub)
-            .sort(
-                ([indexA], [indexB]) =>
-                    parseInt(indexA, 10) - parseInt(indexB, 10)
-            )
+            .sort(([indexA], [indexB]) => parseInt(indexA, 10) - parseInt(indexB, 10))
             .map(([index, value]) => {
                 const serializedIndex = encodeWord32(parseInt(index, 10));
                 const serializedValue = Buffer.from(value, 'hex');
@@ -341,18 +273,11 @@ function serializeIdOwnershipProofs(proofs: IdOwnershipProofs) {
  * @param credential the already signed credential deployment information
  * @returns the serialization of the signed credential
  */
-export function serializeCredentialDeploymentInfo(
-    credential: CredentialDeploymentInfo
-): Buffer {
-    const serializedCredentialDeploymentValues =
-        serializeCredentialDeploymentValues(credential);
+export function serializeCredentialDeploymentInfo(credential: CredentialDeploymentInfo): Buffer {
+    const serializedCredentialDeploymentValues = serializeCredentialDeploymentValues(credential);
     const serializedProofs = Buffer.from(credential.proofs, 'hex');
     const serializedProofsLength = encodeWord32(serializedProofs.length);
-    return Buffer.concat([
-        serializedCredentialDeploymentValues,
-        serializedProofsLength,
-        serializedProofs,
-    ]);
+    return Buffer.concat([serializedCredentialDeploymentValues, serializedProofsLength, serializedProofs]);
 }
 
 /**
@@ -365,12 +290,8 @@ export function getCredentialForExistingAccountSignDigest(
     unsignedCredentialDeploymentInfo: UnsignedCredentialDeploymentInformation,
     address: AccountAddress.Type
 ): Buffer {
-    const serializedCredentialValues = serializeCredentialDeploymentValues(
-        unsignedCredentialDeploymentInfo
-    );
-    const serializedIdOwnershipProofs = serializeIdOwnershipProofs(
-        unsignedCredentialDeploymentInfo.proofs
-    );
+    const serializedCredentialValues = serializeCredentialDeploymentValues(unsignedCredentialDeploymentInfo);
+    const serializedIdOwnershipProofs = serializeIdOwnershipProofs(unsignedCredentialDeploymentInfo.proofs);
     const existingAccountByte = encodeWord8(1);
     return sha256([
         serializedCredentialValues,
@@ -385,15 +306,9 @@ export function getCredentialForExistingAccountSignDigest(
  * @param credentialDeployment the credential deployment transaction
  * @returns the sha256 of the serialized unsigned credential deployment information
  */
-export function getCredentialDeploymentSignDigest(
-    credentialDeployment: CredentialDeploymentDetails
-): Buffer {
-    const serializedCredentialValues = serializeCredentialDeploymentValues(
-        credentialDeployment.unsignedCdi
-    );
-    const serializedIdOwnershipProofs = serializeIdOwnershipProofs(
-        credentialDeployment.unsignedCdi.proofs
-    );
+export function getCredentialDeploymentSignDigest(credentialDeployment: CredentialDeploymentDetails): Buffer {
+    const serializedCredentialValues = serializeCredentialDeploymentValues(credentialDeployment.unsignedCdi);
+    const serializedIdOwnershipProofs = serializeIdOwnershipProofs(credentialDeployment.unsignedCdi.proofs);
     const newAccountByte = encodeWord8(0);
     return sha256([
         serializedCredentialValues,

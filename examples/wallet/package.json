@@ -1,5 +1,6 @@
 {
-    "name": "web-wallet",
+    "name": "@concordium/examples-web-wallet",
+    "private": true,
     "packageManager": "yarn@3.2.0",
     "dependencies": {
         "@concordium/web-sdk": "workspace:^",
@@ -12,10 +13,12 @@
         "react-router-dom": "^6.18.0"
     },
     "devDependencies": {
+        "@types/node": "^20.12.13",
         "@types/react": "^18.0.24",
         "@types/react-dom": "^18.0.5",
         "@vitejs/plugin-react-swc": "^3.4.0",
-        "eslint": "^8.50.0",
+        "eslint": "8",
+        "ts-node": "10.9",
         "typescript": "^5.2.2",
         "vite": "^4.5.0",
         "vite-plugin-svgr": "^4.1.0",
@@ -26,7 +29,10 @@
         "build": "tsc && vite build",
         "dev": "vite",
         "start": "vite preview",
-        "lint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
-        "lint-fix": "yarn lint --fix; exit 0"
+        "lint": "eslint . --cache --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+        "lint-fix": "yarn lint --fix",
+        "prettier": "prettier . --ignore-path ../../.gitignore --ignore-path ../../.prettierignore --ignore-path .gitignore",
+        "fmt": "yarn prettier --write",
+        "fmt-check": "yarn prettier --check"
     }
 }

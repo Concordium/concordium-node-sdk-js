@@ -1,5 +1,3 @@
-import * as AccountAddress from '../../src/types/AccountAddress.js';
-import * as CcdAmount from '../../src/types/CcdAmount.js';
 import {
     serializeAccountTransactionForSubmission,
     serializeAccountTransactionSignature,
@@ -11,23 +9,21 @@ import {
     AccountTransactionType,
     SimpleTransferPayload,
 } from '../../src/types.js';
-import * as TransactionExpiry from '../../src/types/TransactionExpiry.js';
+import * as AccountAddress from '../../src/types/AccountAddress.js';
+import * as CcdAmount from '../../src/types/CcdAmount.js';
 import * as SequenceNumber from '../../src/types/SequenceNumber.js';
+import * as TransactionExpiry from '../../src/types/TransactionExpiry.js';
 
 test('fail account transaction serialization if no signatures', () => {
     const simpleTransferPayload: SimpleTransferPayload = {
         amount: CcdAmount.fromMicroCcd(5100000n),
-        toAddress: AccountAddress.fromBase58(
-            '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
-        ),
+        toAddress: AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'),
     };
 
     const header: AccountTransactionHeader = {
         expiry: TransactionExpiry.futureMinutes(20),
         nonce: SequenceNumber.create(1),
-        sender: AccountAddress.fromBase58(
-            '3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'
-        ),
+        sender: AccountAddress.fromBase58('3VwCfvVskERFAJ3GeJy2mNFrzfChqUymSJJCvoLAP9rtAwMGYt'),
     };
 
     const simpleTransferAccountTransaction: AccountTransaction = {
@@ -36,12 +32,7 @@ test('fail account transaction serialization if no signatures', () => {
         type: AccountTransactionType.Transfer,
     };
 
-    expect(() =>
-        serializeAccountTransactionForSubmission(
-            simpleTransferAccountTransaction,
-            {}
-        )
-    ).toThrow();
+    expect(() => serializeAccountTransactionForSubmission(simpleTransferAccountTransaction, {})).toThrow();
 });
 
 test('serialization of an account signature with two credentials', () => {

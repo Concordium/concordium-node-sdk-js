@@ -1,9 +1,9 @@
-import { parseEndpoint } from '../shared/util.js';
 import { AccountAddress, NextAccountNonce } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
-
 import meow from 'meow';
+
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -36,11 +36,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 /**
  * Retrieves the next account sequence number (nonce), i.e. the number that must
@@ -53,9 +49,7 @@ const client = new ConcordiumGRPCNodeClient(
 (async () => {
     // #region documentation-snippet
     const account = AccountAddress.fromBase58(cli.flags.account);
-    const nextNonce: NextAccountNonce = await client.getNextAccountNonce(
-        account
-    );
+    const nextNonce: NextAccountNonce = await client.getNextAccountNonce(account);
 
     console.log('Next Nonce:', nextNonce.nonce);
     console.log('Nonce is reliable:', nextNonce.allFinal);

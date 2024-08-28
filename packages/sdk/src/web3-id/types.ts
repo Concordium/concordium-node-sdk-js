@@ -1,11 +1,12 @@
+import { CIS4 } from '../cis4/util.js';
 import {
     GenericAtomicStatement,
-    GenericRevealStatement,
     GenericMembershipStatement,
     GenericNonMembershipStatement,
     GenericRangeStatement,
+    GenericRevealStatement,
 } from '../commonProofTypes.js';
-import type { CryptographicParameters } from '../types.js';
+import type { AttributeKey, CryptographicParameters, HexString } from '../types.js';
 import type * as ContractAddress from '../types/ContractAddress.js';
 
 export type TimestampAttribute = {
@@ -15,9 +16,7 @@ export type TimestampAttribute = {
 export type AttributeType = string | bigint | TimestampAttribute;
 export type StatementAttributeType = AttributeType | Date;
 
-export function isTimestampAttribute(
-    attribute: AttributeType
-): attribute is TimestampAttribute {
+export function isTimestampAttribute(attribute: AttributeType): attribute is TimestampAttribute {
     return (
         (attribute as TimestampAttribute).type === 'date-time' &&
         typeof (attribute as TimestampAttribute).timestamp === 'string'
@@ -39,9 +38,7 @@ export type Web3IssuerCommitmentInput = {
     randomness: Record<string, string>;
 };
 
-export type CommitmentInput =
-    | AccountCommitmentInput
-    | Web3IssuerCommitmentInput;
+export type CommitmentInput = AccountCommitmentInput | Web3IssuerCommitmentInput;
 
 export type Web3IdProofRequest = {
     challenge: string;
@@ -174,14 +171,8 @@ export const IDENTITY_SUBJECT_SCHEMA: CredentialSchemaSubject = {
 };
 
 export type RangeStatementV2 = GenericRangeStatement<string, AttributeType>;
-export type NonMembershipStatementV2 = GenericNonMembershipStatement<
-    string,
-    AttributeType
->;
-export type MembershipStatementV2 = GenericMembershipStatement<
-    string,
-    AttributeType
->;
+export type NonMembershipStatementV2 = GenericNonMembershipStatement<string, AttributeType>;
+export type MembershipStatementV2 = GenericMembershipStatement<string, AttributeType>;
 export type RevealStatementV2 = GenericRevealStatement<string>;
 
 export type AtomicStatementV2 = GenericAtomicStatement<string, AttributeType>;
@@ -198,13 +189,9 @@ export type IdentityQualifier = {
     issuers: IdentityProviderIndex[];
 };
 
-export type StatementProverQualifier =
-    | VerifiableCredentialQualifier
-    | IdentityQualifier;
+export type StatementProverQualifier = VerifiableCredentialQualifier | IdentityQualifier;
 
-export function isAccountCredentialStatement(
-    statement: CredentialStatement
-): statement is AccountCredentialStatement {
+export function isAccountCredentialStatement(statement: CredentialStatement): statement is AccountCredentialStatement {
     return statement.idQualifier.type === 'cred';
 }
 
@@ -236,9 +223,7 @@ export type RequestStatement = {
     type?: string[];
 };
 
-export function isVerifiableCredentialRequestStatement(
-    statement: RequestStatement
-): boolean {
+export function isVerifiableCredentialRequestStatement(statement: RequestStatement): boolean {
     return Boolean(statement.type);
 }
 
@@ -247,4 +232,31 @@ export type CredentialStatements = CredentialStatement[];
 export type CredentialSubject = {
     id: string;
     attributes: Record<string, AttributeType>;
+};
+
+/** The credentials inputs required to verify the proof of account proofs */
+export type CredentialsInputsAccount = {
+    /** Union tag */
+    type: 'account';
+    /** Commitments for the ID attributes of the account */
+    commitments: Partial<Record<AttributeKey, HexString>>;
+};
+
+/** The credentials inputs required to verify the proof of Web3 ID proofs */
+export type CredentialsInputsWeb3 = {
+    /** Union tag */
+    type: 'web3';
+    /** The public key of the Web3 ID issuer */
+    issuerPk: HexString;
+};
+
+/** Union of the different inputs required to verify corresponding proofs */
+export type CredentialsInputs = CredentialsInputsAccount | CredentialsInputsWeb3;
+
+/** Contains the credential status and inputs required to verify a corresponding credential proof */
+export type CredentialWithMetadata = {
+    /** The credential status */
+    status: CIS4.CredentialStatus;
+    /** The public data required to verify a corresponding credential proof */
+    inputs: CredentialsInputs;
 };

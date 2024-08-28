@@ -15,9 +15,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // Then use it to locate and execute the `cli.js` file while forwarding all arguments.
 const scriptPath = fileURLToPath(import.meta.url);
 const binFolder = path.parse(scriptPath).dir;
-const cliPath = pathToFileURL(
-    path.join(binFolder, '..', 'lib', 'src', 'cli.js')
-);
+const cliPath = pathToFileURL(path.join(binFolder, '..', 'lib', 'src', 'cli.js'));
 const node = spawn('node', [
     '--no-warnings',
     '-e',

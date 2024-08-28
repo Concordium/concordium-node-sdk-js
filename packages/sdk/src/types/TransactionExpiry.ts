@@ -1,10 +1,6 @@
-import { secondsSinceEpoch } from '../util.js';
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import {
-    TypedJson,
-    TypedJsonDiscriminator,
-    makeFromTypedJson,
-} from './util.js';
+import { secondsSinceEpoch } from '../util.js';
+import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
@@ -39,13 +35,8 @@ class TransactionExpiry {
      * @returns {string} The JSON-serializable representation.
      */
     public toJSON(): number {
-        if (
-            this.expiryEpochSeconds > Number.MAX_SAFE_INTEGER ||
-            this.expiryEpochSeconds < Number.MIN_SAFE_INTEGER
-        ) {
-            throw new Error(
-                'Transaction expiry is too large to be represented as a number.'
-            );
+        if (this.expiryEpochSeconds > Number.MAX_SAFE_INTEGER || this.expiryEpochSeconds < Number.MIN_SAFE_INTEGER) {
+            throw new Error('Transaction expiry is too large to be represented as a number.');
         }
         return Number(this.expiryEpochSeconds);
     }
@@ -83,9 +74,7 @@ export function instanceOf(value: unknown): value is TransactionExpiry {
  */
 export function fromEpochSeconds(seconds: bigint | number): TransactionExpiry {
     if (seconds < 0n) {
-        throw new Error(
-            'Invalid transaction expiry: Expiry cannot be before unix epoch.'
-        );
+        throw new Error('Invalid transaction expiry: Expiry cannot be before unix epoch.');
     }
     return new TransactionExpiry(BigInt(seconds));
 }
@@ -177,7 +166,4 @@ export function toTypedJSON(value: TransactionExpiry): TypedJson<Serializable> {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
-    JSON_DISCRIMINATOR,
-    fromSerializable
-);
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromSerializable);

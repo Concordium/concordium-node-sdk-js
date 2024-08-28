@@ -1,44 +1,37 @@
 import bs58check from 'bs58check';
-import {
-    encodeWord16,
-    encodeWord64,
-    encodeWord8,
-    makeSerializeOptional,
-    packBufferWithWord16Length,
-    packBufferWithWord8Length,
-} from '../serializationHelpers.js';
-import {
-    type Base58String,
-    type HexString,
-    type InvokeContractSuccessResult,
-    type SmartContractTypeValues,
-    RejectedReceive,
-    BlockItemSummary,
-    TransactionSummaryType,
-    TransactionKindString,
-    ContractTraceEvent,
-} from '../types.js';
-import * as ContractAddress from '../types/ContractAddress.js';
-import * as AccountAddress from '../types/AccountAddress.js';
-import * as ContractEvent from '../types/ContractEvent.js';
-import * as EntrypointName from '../types/EntrypointName.js';
 import { Buffer } from 'buffer/index.js';
-import {
-    uleb128Decode,
-    uleb128DecodeWithIndex,
-    uleb128Encode,
-} from '../uleb128.js';
+
 import {
     ContractTransactionMetadata,
     ContractUpdateTransactionWithSchema,
     CreateContractTransactionMetadata,
 } from '../GenericContract.js';
-import {
-    Cursor,
-    deserializeBigUInt64LE,
-    makeDeserializeListResponse,
-} from '../deserializationHelpers.js';
 import { deserializeUint8 } from '../deserialization.js';
+import { Cursor, deserializeBigUInt64LE, makeDeserializeListResponse } from '../deserializationHelpers.js';
+import {
+    encodeWord8,
+    encodeWord64,
+    makeSerializeList,
+    makeSerializeOptional,
+    packBufferWithWord8Length,
+    packBufferWithWord16Length,
+} from '../serializationHelpers.js';
+import {
+    type Base58String,
+    BlockItemSummary,
+    ContractTraceEvent,
+    type HexString,
+    type InvokeContractSuccessResult,
+    RejectedReceive,
+    type SmartContractTypeValues,
+    TransactionKindString,
+    TransactionSummaryType,
+} from '../types.js';
+import * as AccountAddress from '../types/AccountAddress.js';
+import * as ContractAddress from '../types/ContractAddress.js';
+import * as ContractEvent from '../types/ContractEvent.js';
+import * as EntrypointName from '../types/EntrypointName.js';
+import { uleb128Decode, uleb128DecodeWithIndex, uleb128Encode } from '../uleb128.js';
 
 const TOKEN_ID_MAX_LENGTH = 255;
 const TOKEN_AMOUNT_MAX_LENGTH = 37;
@@ -154,8 +147,7 @@ export namespace CIS2 {
     /**
      * An update transaction without header. This is useful for sending through a wallet, which supplies the header information.
      */
-    export type UpdateTransaction<J extends SmartContractTypeValues> =
-        ContractUpdateTransactionWithSchema<J>;
+    export type UpdateTransaction<J extends SmartContractTypeValues> = ContractUpdateTransactionWithSchema<J>;
 
     /**
      * The type of a CIS-2 event.
@@ -251,13 +243,7 @@ export namespace CIS2 {
     /**
      * A CIS-2 event.
      */
-    export type Event =
-        | TransferEvent
-        | MintEvent
-        | BurnEvent
-        | UpdateOperatorEvent
-        | TokenMetadataEvent
-        | CustomEvent;
+    export type Event = TransferEvent | MintEvent | BurnEvent | UpdateOperatorEvent | TokenMetadataEvent | CustomEvent;
 
     /**
      * A CIS-2 event that is not a {@linkcode CustomEvent}.
@@ -319,18 +305,12 @@ export namespace CIS2 {
     /**
      * A CIS-2 rejection error.
      */
-    export type RejectionError =
-        | InvalidTokenIdError
-        | InsufficientFundsError
-        | UnauthorizedError
-        | CustomError;
+    export type RejectionError = InvalidTokenIdError | InsufficientFundsError | UnauthorizedError | CustomError;
 
     /**
      * Structure of a JSON-formatted address parameter.
      */
-    export type AddressParamJson =
-        | { Account: [Base58String] }
-        | { Contract: [{ index: number; subindex: number }] };
+    export type AddressParamJson = { Account: [Base58String] } | { Contract: [{ index: number; subindex: number }] };
 
     /**
      * Structure of JSON formatted receiver parameter
@@ -354,9 +334,7 @@ export namespace CIS2 {
      * Structure of JSON formatted parameter used for CIS-2 "updateOperator" transactions
      */
     export type UpdateOperatorParamJson = {
-        update:
-            | { Add: Record<string, never> }
-            | { Remove: Record<string, never> };
+        update: { Add: Record<string, never> } | { Remove: Record<string, never> };
         operator: AddressParamJson;
     };
 }
@@ -365,9 +343,7 @@ function serializeCIS2TokenId(tokenId: CIS2.TokenId): Buffer {
     const serialized = Buffer.from(tokenId, 'hex');
 
     if (serialized.length > TOKEN_ID_MAX_LENGTH) {
-        throw new Error(
-            `Token ID exceeds maximum size of ${TOKEN_ID_MAX_LENGTH} bytes`
-        );
+        throw new Error(`Token ID exceeds maximum size of ${TOKEN_ID_MAX_LENGTH} bytes`);
     }
 
     return packBufferWithWord8Length(serialized);
@@ -375,9 +351,7 @@ function serializeCIS2TokenId(tokenId: CIS2.TokenId): Buffer {
 
 function deserializeCIS2TokenId(buffer: Uint8Array): CIS2.TokenId {
     if (buffer.length > TOKEN_ID_MAX_LENGTH) {
-        throw Error(
-            `Token ID exceeds maximum size of ${TOKEN_ID_MAX_LENGTH} bytes`
-        );
+        throw Error(`Token ID exceeds maximum size of ${TOKEN_ID_MAX_LENGTH} bytes`);
     }
     return Buffer.from(buffer).toString('hex');
 }
@@ -390,15 +364,13 @@ function serializeTokenAmount(amount: CIS2.TokenAmount): Buffer {
     const serialized = uleb128Encode(amount);
 
     if (serialized.length > TOKEN_AMOUNT_MAX_LENGTH) {
-        throw new Error(
-            `Token amount exceeds maximum size of ${TOKEN_AMOUNT_MAX_LENGTH} bytes`
-        );
+        throw new Error(`Token amount exceeds maximum size of ${TOKEN_AMOUNT_MAX_LENGTH} bytes`);
     }
 
     return serialized;
 }
 
-function serializeAccountAddress(address: AccountAddress.Type): Uint8Array {
+export function serializeAccountAddress(address: AccountAddress.Type): Uint8Array {
     return AccountAddress.toBuffer(address);
 }
 
@@ -409,9 +381,7 @@ function serializeAccountAddress(address: AccountAddress.Type): Uint8Array {
  *
  * @returns {Buffer} the address serialized to bytes
  */
-export function serializeContractAddress(
-    address: ContractAddress.Type
-): Uint8Array {
+export function serializeContractAddress(address: ContractAddress.Type): Uint8Array {
     const index = encodeWord64(address.index, true);
     const subindex = encodeWord64(address.subindex, true);
     return Buffer.concat([index, subindex]);
@@ -432,15 +402,11 @@ function serializeAddress(address: CIS2.Address): Buffer {
  *
  * @returns {Uint8Array} the entrypoint serialized to bytes
  */
-export function serializeReceiveHookName(
-    hook: EntrypointName.Type
-): Uint8Array {
+export function serializeReceiveHookName(hook: EntrypointName.Type): Uint8Array {
     const serialized = Buffer.from(EntrypointName.toString(hook), 'ascii');
 
     if (serialized.length > TOKEN_RECEIVE_HOOK_MAX_LENGTH) {
-        throw new Error(
-            `Token receive hook name exceeds maximum size of ${TOKEN_RECEIVE_HOOK_MAX_LENGTH} bytes`
-        );
+        throw new Error(`Token receive hook name exceeds maximum size of ${TOKEN_RECEIVE_HOOK_MAX_LENGTH} bytes`);
     }
 
     return packBufferWithWord16Length(serialized, true);
@@ -464,13 +430,6 @@ function serializeAdditionalData(data: HexString): Buffer {
     const serialized = Buffer.from(data, 'hex');
     return packBufferWithWord16Length(serialized, true);
 }
-
-const makeSerializeList =
-    <T>(serialize: (input: T) => Uint8Array) =>
-    (input: T[]): Buffer => {
-        const n = encodeWord16(input.length, true);
-        return Buffer.concat([n, ...input.map(serialize)]);
-    };
 
 function serializeCIS2Transfer(transfer: CIS2.Transfer): Buffer {
     const id = serializeCIS2TokenId(transfer.tokenId);
@@ -517,9 +476,7 @@ function serializeCIS2UpdateOperator(update: CIS2.UpdateOperator): Buffer {
     }];
  * const bytes = serializeCIS2UpdateOperators(updates);
  */
-export const serializeCIS2UpdateOperators = makeSerializeList(
-    serializeCIS2UpdateOperator
-);
+export const serializeCIS2UpdateOperators = makeSerializeList(serializeCIS2UpdateOperator);
 
 /**
  * Serializes {@link CIS2BalanceOfQuery} data objects according to CIS-2 standard.
@@ -539,9 +496,7 @@ function serializeCIS2BalanceOfQuery(query: CIS2.BalanceOfQuery): Buffer {
  * const queries = [{tokenId: '', address: '3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi'}];
  * const bytes = serializeCIS2BalanceOfQueries(queries);
  */
-export const serializeCIS2BalanceOfQueries = makeSerializeList(
-    serializeCIS2BalanceOfQuery
-);
+export const serializeCIS2BalanceOfQueries = makeSerializeList(serializeCIS2BalanceOfQuery);
 
 /**
  * Deserializes response of CIS-2 balanceOf query according to CIS-2 standard.
@@ -550,24 +505,20 @@ export const serializeCIS2BalanceOfQueries = makeSerializeList(
  *
  * @returns {TokenAmount[]} A list of token balances.
  */
-export const deserializeCIS2BalanceOfResponse = makeDeserializeListResponse(
-    (cursor) => {
-        const end = cursor.remainingBytes.findIndex((b) => b < 2 ** 7) + 1; // Find the first byte with most significant bit not set, signaling the last byte in the leb128 slice.
-        if (end === 0) {
-            throw new Error('Could not find leb128 end');
-        }
-
-        const leb128Slice = cursor.read(end);
-        if (leb128Slice.length > TOKEN_AMOUNT_MAX_LENGTH) {
-            throw new Error(
-                `Found token amount with size exceeding the maximum allowed of ${TOKEN_AMOUNT_MAX_LENGTH}`
-            );
-        }
-
-        const value = uleb128Decode(Buffer.from(leb128Slice));
-        return value;
+export const deserializeCIS2BalanceOfResponse = makeDeserializeListResponse((cursor) => {
+    const end = cursor.remainingBytes.findIndex((b) => b < 2 ** 7) + 1; // Find the first byte with most significant bit not set, signaling the last byte in the leb128 slice.
+    if (end === 0) {
+        throw new Error('Could not find leb128 end');
     }
-);
+
+    const leb128Slice = cursor.read(end);
+    if (leb128Slice.length > TOKEN_AMOUNT_MAX_LENGTH) {
+        throw new Error(`Found token amount with size exceeding the maximum allowed of ${TOKEN_AMOUNT_MAX_LENGTH}`);
+    }
+
+    const value = uleb128Decode(Buffer.from(leb128Slice));
+    return value;
+});
 
 /**
  * Serializes a list of {@link HexString} token ID's according to the CIS-2 standard.
@@ -587,14 +538,9 @@ export const serializeCIS2TokenIds = makeSerializeList(serializeCIS2TokenId);
  *
  * @returns {Buffer} the metadata URL serialized to bytes
  */
-export function serializeCIS2MetadataUrl({
-    url,
-    hash,
-}: CIS2.MetadataUrl): Buffer {
+export function serializeCIS2MetadataUrl({ url, hash }: CIS2.MetadataUrl): Buffer {
     const bUrl = packBufferWithWord16Length(Buffer.from(url, 'utf8'), true);
-    const bHash = makeSerializeOptional<HexString>((h) =>
-        Buffer.from(h, 'hex')
-    )(hash);
+    const bHash = makeSerializeOptional<HexString>((h) => Buffer.from(h, 'hex'))(hash);
 
     return Buffer.concat([bUrl, bHash]);
 }
@@ -608,9 +554,7 @@ export function serializeCIS2MetadataUrl({
  *
  * @returns {CIS2.MetadataUrl} the metadata URL
  */
-export function deserializeCIS2MetadataUrl(
-    value: Cursor | HexString
-): CIS2.MetadataUrl {
+export function deserializeCIS2MetadataUrl(value: Cursor | HexString): CIS2.MetadataUrl {
     const cursor = typeof value === 'string' ? Cursor.fromHex(value) : value;
     const length = cursor.read(2).readUInt16LE(0);
 
@@ -625,9 +569,7 @@ export function deserializeCIS2MetadataUrl(
     } else if (hasChecksum === 0) {
         metadataUrl = { url };
     } else {
-        throw new Error(
-            'Deserialization failed: boolean value had an unexpected value'
-        );
+        throw new Error('Deserialization failed: boolean value had an unexpected value');
     }
 
     return metadataUrl;
@@ -665,9 +607,7 @@ export function tokenAddressFromBase58(str: Base58String): CIS2.TokenAddress {
     const tokenIdBytes = new Buffer(bytes.subarray(j));
 
     if (firstByte !== 2) {
-        throw Error(
-            'Invalid token address: The Base58Check version byte is expected to be 2'
-        );
+        throw Error('Invalid token address: The Base58Check version byte is expected to be 2');
     }
 
     const contract = ContractAddress.create(index, subindex);
@@ -686,19 +626,12 @@ export function tokenAddressFromBase58(str: Base58String): CIS2.TokenAddress {
  * @param tokenAddress A token address to convert into the base58-string format
  * @returns The base58-formatted string
  */
-export function tokenAddressToBase58(
-    tokenAddress: CIS2.TokenAddress
-): Base58String {
+export function tokenAddressToBase58(tokenAddress: CIS2.TokenAddress): Base58String {
     const firstByte = Buffer.from('02', 'hex');
     const indexBytes = uleb128Encode(tokenAddress.contract.index);
     const subindexBytes = uleb128Encode(tokenAddress.contract.subindex);
     const tokenBytes = Buffer.from(tokenAddress.id, 'hex');
-    const bytes = Buffer.concat([
-        firstByte,
-        indexBytes,
-        subindexBytes,
-        tokenBytes,
-    ]);
+    const bytes = Buffer.concat([firstByte, indexBytes, subindexBytes, tokenBytes]);
 
     return bs58check.encode(bytes);
 }
@@ -712,9 +645,7 @@ export function tokenAddressToBase58(
  * const queries = [{owner: "3nsRkrtQVMRtD2Wvm88gEDi6UtqdUVvRN3oGZ1RqNJ3eto8owi", address: {index: 123n, subindex: 0n}}];
  * const bytes = serializeCIS2OperatorOfQueries(tokenIds);
  */
-export const serializeCIS2OperatorOfQueries = makeSerializeList(
-    serializeCIS2OperatorOfQuery
-);
+export const serializeCIS2OperatorOfQueries = makeSerializeList(serializeCIS2OperatorOfQuery);
 
 /**
  * Deserializes response of CIS-2 operatorOf query according to CIS-2 standard.
@@ -723,19 +654,15 @@ export const serializeCIS2OperatorOfQueries = makeSerializeList(
  *
  * @returns {boolean[]} A list of boolean values.
  */
-export const deserializeCIS2OperatorOfResponse = makeDeserializeListResponse(
-    (cursor) => {
-        const value = Boolean(cursor.read(1).readUInt8(0));
-        return value;
-    }
-);
+export const deserializeCIS2OperatorOfResponse = makeDeserializeListResponse((cursor) => {
+    const value = Boolean(cursor.read(1).readUInt8(0));
+    return value;
+});
 
 /**
  * Format {@link CIS2.UpdateOperator} as JSON compatible with serialization wtih corresponding schema.
  */
-export function formatCIS2UpdateOperator(
-    input: CIS2.UpdateOperator
-): CIS2.UpdateOperatorParamJson {
+export function formatCIS2UpdateOperator(input: CIS2.UpdateOperator): CIS2.UpdateOperatorParamJson {
     return {
         update: input.type === 'add' ? { Add: {} } : { Remove: {} },
         operator: ContractAddress.instanceOf(input.address)
@@ -754,9 +681,7 @@ export function formatCIS2UpdateOperator(
 /**
  * Format {@link CIS2.Transfer} as JSON compatible with serialization wtih corresponding schema.
  */
-export function formatCIS2Transfer(
-    input: CIS2.Transfer
-): CIS2.TransferParamJson {
+export function formatCIS2Transfer(input: CIS2.Transfer): CIS2.TransferParamJson {
     const from: CIS2.AddressParamJson = ContractAddress.instanceOf(input.from)
         ? {
               Contract: [
@@ -920,9 +845,7 @@ export function deserializeCIS2Event(event: ContractEvent.Type): CIS2.Event {
  *
  * @returns {CIS2.NonCustomEvent[]} The deserialized events
  */
-export function deserializeCIS2EventsFromInvokationResult(
-    result: InvokeContractSuccessResult
-): CIS2.NonCustomEvent[] {
+export function deserializeCIS2EventsFromInvokationResult(result: InvokeContractSuccessResult): CIS2.NonCustomEvent[] {
     return deserializeCIS2ContractTraceEvents(result.events);
 }
 
@@ -933,9 +856,7 @@ export function deserializeCIS2EventsFromInvokationResult(
  *
  * @returns {CIS2.RejectionError} The parsed rejection error
  */
-export function parseCIS2RejectionError(
-    rejection: RejectedReceive
-): CIS2.RejectionError {
+export function parseCIS2RejectionError(rejection: RejectedReceive): CIS2.RejectionError {
     switch (rejection.rejectReason) {
         case -42000001:
             return {
@@ -967,9 +888,7 @@ export function parseCIS2RejectionError(
  *
  * @returns {CIS2.NonCustomEvent[]} The deserialized events
  */
-export function deserializeCIS2EventsFromSummary(
-    summary: BlockItemSummary
-): CIS2.NonCustomEvent[] {
+export function deserializeCIS2EventsFromSummary(summary: BlockItemSummary): CIS2.NonCustomEvent[] {
     if (summary.type !== TransactionSummaryType.AccountTransaction) {
         return [];
     }
@@ -980,9 +899,7 @@ export function deserializeCIS2EventsFromSummary(
         case TransactionKindString.InitContract:
             const deserializedEvents = [];
             for (const event of summary.contractInitialized.events) {
-                const deserializedEvent = deserializeCIS2Event(
-                    ContractEvent.fromHexString(event)
-                );
+                const deserializedEvent = deserializeCIS2Event(ContractEvent.fromHexString(event));
                 if (deserializedEvent.type !== CIS2.EventType.Custom) {
                     deserializedEvents.push(deserializedEvent);
                 }
@@ -1001,9 +918,7 @@ export function deserializeCIS2EventsFromSummary(
  *
  * @returns {CIS2.NonCustomEvent[]} The deserialized CIS-2 events
  */
-function deserializeCIS2ContractTraceEvents(
-    events: ContractTraceEvent[]
-): CIS2.NonCustomEvent[] {
+function deserializeCIS2ContractTraceEvents(events: ContractTraceEvent[]): CIS2.NonCustomEvent[] {
     const deserializedEvents = [];
     for (const traceEvent of events) {
         if (!('events' in traceEvent)) {

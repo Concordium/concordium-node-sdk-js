@@ -1,9 +1,5 @@
 import type * as Proto from '../grpc-api/v2/concordium/types.js';
-import {
-    TypedJson,
-    TypedJsonDiscriminator,
-    makeFromTypedJson,
-} from './util.js';
+import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
@@ -64,9 +60,7 @@ export function instanceOf(value: unknown): value is Energy {
  */
 export function create(value: bigint | number): Energy {
     if (value < 0) {
-        throw new Error(
-            'Invalid energy: The value cannot be a negative number.'
-        );
+        throw new Error('Invalid energy: The value cannot be a negative number.');
     }
     return new Energy(BigInt(value));
 }
@@ -129,7 +123,4 @@ export function toTypedJSON(value: Type): TypedJson<Serializable> {
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
-    JSON_DISCRIMINATOR,
-    fromSerializable
-);
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromSerializable);

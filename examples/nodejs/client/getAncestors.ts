@@ -1,9 +1,9 @@
-import { parseEndpoint } from '../shared/util.js';
 import { BlockHash } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
-
 import meow from 'meow';
+
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -41,11 +41,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 /**
  * Retrieves all ancestors that exists in the state at the end of a given block,
@@ -59,14 +55,8 @@ const client = new ConcordiumGRPCNodeClient(
 
 (async () => {
     // #region documentation-snippet
-    const blockHash =
-        cli.flags.block === undefined
-            ? undefined
-            : BlockHash.fromHexString(cli.flags.block);
-    const ancestors: AsyncIterable<BlockHash.Type> = client.getAncestors(
-        BigInt(cli.flags.maxAncestors),
-        blockHash
-    );
+    const blockHash = cli.flags.block === undefined ? undefined : BlockHash.fromHexString(cli.flags.block);
+    const ancestors: AsyncIterable<BlockHash.Type> = client.getAncestors(BigInt(cli.flags.maxAncestors), blockHash);
     // #endregion documentation-snippet
 
     console.log('Block hashes of ancestors of input block:');

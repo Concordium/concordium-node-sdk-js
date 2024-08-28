@@ -1,10 +1,7 @@
 import { CryptographicParameters } from '../types.js';
 import type * as ContractAddress from '../types/ContractAddress.js';
-import {
-    AttributeType,
-    StatementAttributeType,
-    TimestampAttribute,
-} from './web3IdProofTypes.js';
+import { bail } from '../util.js';
+import { AttributeType, StatementAttributeType, TimestampAttribute } from './types.js';
 
 export type VerifyWeb3IdCredentialSignatureInput = {
     globalContext: CryptographicParameters;
@@ -43,11 +40,7 @@ export function compareStringAttributes(a: string, b: string): number {
 /**
  * Given a string attribute value and a range [lower, upper[, return whether value is in the range, when converted into field elements.
  */
-export function isStringAttributeInRange(
-    value: string,
-    lower: string,
-    upper: string
-): boolean {
+export function isStringAttributeInRange(value: string, lower: string, upper: string): boolean {
     const lowCmp = compareStringAttributes(value, lower);
     if (lowCmp < 0) {
         return false;
@@ -84,11 +77,28 @@ export function dateToTimestampAttribute(value: Date): TimestampAttribute {
  * @param statementAttribute the statement attribute to map
  * @returns the mapped attribute type
  */
-export function statementAttributeTypeToAttributeType(
-    statementAttribute: StatementAttributeType
-): AttributeType {
+export function statementAttributeTypeToAttributeType(statementAttribute: StatementAttributeType): AttributeType {
     if (statementAttribute instanceof Date) {
         return dateToTimestampAttribute(statementAttribute);
     }
     return statementAttribute;
+}
+
+/**
+ * Parses a {@linkcode Date} from a string containing a year and month in the form "YYYYMM".
+ *
+ * @param yearMonth - The string to parse
+ * @returns the parsed {@linkcode Date}
+ * @throws if the date cannot be parsed
+ */
+export function parseYearMonth(yearMonth: string): Date {
+    const b = () => bail('Failed to parse date from year-month string');
+
+    const [, y, m] = yearMonth.match(/^(\d{4})(\d{2})$/) ?? b();
+
+    const year = Number(y);
+    const month = Number(m) - 1; // `Date` month starts from 0, we expect january to be defined as '01'
+    if (Number.isNaN(year) || Number.isNaN(month) || month > 11) b();
+
+    return new Date(year, month);
 }

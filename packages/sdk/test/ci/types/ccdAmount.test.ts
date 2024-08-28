@@ -1,4 +1,5 @@
 import Big from 'big.js';
+
 import { CcdAmount } from '../../../src/index.js';
 
 describe('To and from ccd as strings', () => {
@@ -43,9 +44,7 @@ describe('To and from ccd as strings', () => {
     });
 
     test('CcdAmount constructor correctly rejects multiple comma seperators', () => {
-        expect(() => CcdAmount.fromCcd('10,000,000')).toThrow(
-            Error('[big.js] Invalid number')
-        );
+        expect(() => CcdAmount.fromCcd('10,000,000')).toThrow(Error('[big.js] Invalid number'));
     });
 
     test('fromCcd is equal to ccdToMicroCcd', () => {

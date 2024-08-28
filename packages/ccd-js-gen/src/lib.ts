@@ -11,11 +11,7 @@ import sanitize from 'sanitize-filename';
  * - 'TypedJavaScript' Produce a JavaScript module and TypeScript declarations.
  * - 'Everything' Produce all of the above.
  */
-export type OutputOptions =
-    | 'TypeScript'
-    | 'JavaScript'
-    | 'TypedJavaScript'
-    | 'Everything';
+export type OutputOptions = 'TypeScript' | 'JavaScript' | 'TypedJavaScript' | 'Everything';
 
 /** Options for generating clients. */
 export type GenerateContractClientsOptions = {
@@ -55,7 +51,7 @@ export type Progress = {
 export async function generateContractClientsFromFile(
     modulePath: string,
     outDirPath: string,
-    options: GenerateContractClientsOptions = {}
+    options: GenerateContractClientsOptions = {},
 ): Promise<void> {
     const fileBytes = await fs.readFile(modulePath).catch((e) => {
         if ('code' in e && e.code === 'ENOENT') {
@@ -65,12 +61,7 @@ export async function generateContractClientsFromFile(
     });
     const outputName = path.basename(modulePath, '.wasm.v1');
     const moduleSource = SDK.versionedModuleSourceFromBuffer(fileBytes);
-    return generateContractClients(
-        moduleSource,
-        outputName,
-        outDirPath,
-        options
-    );
+    return generateContractClients(moduleSource, outputName, outDirPath, options);
 }
 
 /**
@@ -85,18 +76,14 @@ export async function generateContractClients(
     moduleSource: SDK.VersionedModuleSource,
     outName: string,
     outDirPath: string,
-    options: GenerateContractClientsOptions = {}
+    options: GenerateContractClientsOptions = {},
 ): Promise<void> {
     const notifier = new Notifier(options.onProgress);
     const outputOption = options.output ?? 'Everything';
-    const outputTypeScript =
-        outputOption === 'Everything' || outputOption === 'TypeScript';
+    const outputTypeScript = outputOption === 'Everything' || outputOption === 'TypeScript';
     const outputJavaScript =
-        outputOption === 'Everything' ||
-        outputOption === 'JavaScript' ||
-        outputOption === 'TypedJavaScript';
-    const outputDeclarations =
-        outputOption === 'Everything' || outputOption === 'TypedJavaScript';
+        outputOption === 'Everything' || outputOption === 'JavaScript' || outputOption === 'TypedJavaScript';
+    const outputDeclarations = outputOption === 'Everything' || outputOption === 'TypedJavaScript';
 
     if (outputTypeScript) {
         notifier.todo(1);
@@ -111,14 +98,7 @@ export async function generateContractClients(
     };
     const project = new tsm.Project({ compilerOptions });
 
-    await generateCode(
-        project,
-        outName,
-        outDirPath,
-        moduleSource,
-        options.tsNocheck ?? false,
-        notifier
-    );
+    await generateCode(project, outName, outDirPath, moduleSource, options.tsNocheck ?? false, notifier);
 
     if (outputTypeScript) {
         await project.save();
@@ -181,7 +161,7 @@ async function generateCode(
     outDirPath: string,
     moduleSource: SDK.VersionedModuleSource,
     tsNocheck: boolean,
-    notifier: Notifier
+    notifier: Notifier,
 ) {
     const [moduleInterface, moduleRef, rawModuleSchema] = await Promise.all([
         SDK.parseModuleInterface(moduleSource),
@@ -198,8 +178,7 @@ async function generateCode(
     }
     notifier.done('Parse smart contract module.');
 
-    const moduleSchema =
-        rawModuleSchema && SDK.parseRawModuleSchema(rawModuleSchema);
+    const moduleSchema = rawModuleSchema && SDK.parseRawModuleSchema(rawModuleSchema);
 
     const outputFilePath = path.format({
         dir: outDirPath,
@@ -215,19 +194,14 @@ async function generateCode(
     const internalModuleClientId = 'internalModuleClient';
 
     moduleSourceFile.addStatements(
-        generateModuleBaseStatements(
-            moduleRef,
-            moduleClientId,
-            moduleClientType,
-            internalModuleClientId,
-            tsNocheck
-        )
+        generateModuleBaseStatements(moduleRef, moduleClientId, moduleClientType, internalModuleClientId, tsNocheck),
     );
     notifier.done('Generate base statements in module.');
 
     for (const contract of moduleInterface.values()) {
-        const contractSchema: SDK.SchemaContractV3 | undefined =
-            moduleSchema?.module.contracts.get(contract.contractName);
+        const contractSchema: SDK.SchemaContractV3 | undefined = moduleSchema?.module.contracts.get(
+            contract.contractName,
+        );
 
         moduleSourceFile.addStatements(
             generateModuleContractStatements(
@@ -236,12 +210,10 @@ async function generateCode(
                 moduleClientType,
                 internalModuleClientId,
                 moduleRef,
-                contractSchema
-            )
+                contractSchema,
+            ),
         );
-        notifier.done(
-            `Generate initialize statements for '${contract.contractName}' in module.`
-        );
+        notifier.done(`Generate initialize statements for '${contract.contractName}' in module.`);
 
         const contractOutputFilePath = path.format({
             dir: outDirPath,
@@ -250,17 +222,11 @@ async function generateCode(
             })}`,
             ext: '.ts',
         });
-        const contractSourceFile = project.createSourceFile(
-            contractOutputFilePath,
-            '',
-            {
-                overwrite: true,
-            }
-        );
+        const contractSourceFile = project.createSourceFile(contractOutputFilePath, '', {
+            overwrite: true,
+        });
 
-        const contractClientType = `${toPascalCase(
-            contract.contractName
-        )}Contract`;
+        const contractClientType = `${toPascalCase(contract.contractName)}Contract`;
         const contractClientId = 'contractClient';
 
         contractSourceFile.addStatements(
@@ -270,28 +236,23 @@ async function generateCode(
                 contractClientType,
                 moduleRef,
                 tsNocheck,
-                contractSchema
-            )
+                contractSchema,
+            ),
         );
-        notifier.done(
-            `Generate base statements for '${contract.contractName}'.`
-        );
+        notifier.done(`Generate base statements for '${contract.contractName}'.`);
 
         for (const entrypointName of contract.entrypointNames) {
-            const entrypointSchema =
-                contractSchema?.receive.get(entrypointName);
+            const entrypointSchema = contractSchema?.receive.get(entrypointName);
             contractSourceFile.addStatements(
                 generateContractEntrypointStatements(
                     contract.contractName,
                     contractClientId,
                     contractClientType,
                     entrypointName,
-                    entrypointSchema
-                )
+                    entrypointSchema,
+                ),
             );
-            notifier.done(
-                `Generate statements for '${contract.contractName}.${entrypointName}'.`
-            );
+            notifier.done(`Generate statements for '${contract.contractName}.${entrypointName}'.`);
         }
     }
 }
@@ -309,7 +270,7 @@ function generateModuleBaseStatements(
     moduleClientId: string,
     moduleClientType: string,
     internalModuleClientId: string,
-    tsNocheck: boolean
+    tsNocheck: boolean,
 ): Array<tsm.StatementStructures | string> {
     const statements: Array<tsm.StatementStructures | string> = [];
     const moduleRefId = 'moduleReference';
@@ -327,9 +288,7 @@ function generateModuleBaseStatements(
         kind: tsm.StructureKind.VariableStatement,
         isExported: true,
         declarationKind: tsm.VariableDeclarationKind.Const,
-        docs: [
-            'The reference of the smart contract module supported by the provided client.',
-        ],
+        docs: ['The reference of the smart contract module supported by the provided client.'],
         declarations: [
             {
                 name: moduleRefId,
@@ -503,28 +462,18 @@ function generateModuleContractStatements(
     moduleClientType: string,
     internalModuleClientId: string,
     moduleRef: SDK.ModuleReference.Type,
-    contractSchema?: SDK.SchemaContractV3
+    contractSchema?: SDK.SchemaContractV3,
 ): tsm.StatementStructures[] {
     const statements: tsm.StatementStructures[] = [];
     const transactionMetadataId = 'transactionMetadata';
     const parameterId = 'parameter';
     const signerId = 'signer';
     const initParameterTypeId = `${toPascalCase(contractName)}Parameter`;
-    const base64InitParameterSchemaTypeId = `base64${toPascalCase(
-        contractName
-    )}ParameterSchema`;
-    const initParameterJsonTypeId = `${toPascalCase(
-        contractName
-    )}ParameterSchemaJson`;
-    const createInitParameterFnId = `create${toPascalCase(
-        contractName
-    )}Parameter`;
-    const createInitParameterJsonFnId = `create${toPascalCase(
-        contractName
-    )}ParameterSchemaJson`;
-    const createInitParameterFnWebWalletId = `create${toPascalCase(
-        contractName
-    )}ParameterWebWallet`;
+    const base64InitParameterSchemaTypeId = `base64${toPascalCase(contractName)}ParameterSchema`;
+    const initParameterJsonTypeId = `${toPascalCase(contractName)}ParameterSchemaJson`;
+    const createInitParameterFnId = `create${toPascalCase(contractName)}Parameter`;
+    const createInitParameterJsonFnId = `create${toPascalCase(contractName)}ParameterSchemaJson`;
+    const createInitParameterFnWebWalletId = `create${toPascalCase(contractName)}ParameterWebWallet`;
 
     const initParameterSchemaType = contractSchema?.init?.parameter;
 
@@ -538,9 +487,9 @@ function generateModuleContractStatements(
             declarations: [
                 {
                     name: base64InitParameterSchemaTypeId,
-                    initializer: `'${Buffer.from(
-                        SDK.serializeSchemaType(initParameterSchemaType)
-                    ).toString('base64')}'`,
+                    initializer: `'${Buffer.from(SDK.serializeSchemaType(initParameterSchemaType)).toString(
+                        'base64',
+                    )}'`,
                 },
             ],
         });
@@ -557,9 +506,7 @@ function generateModuleContractStatements(
         if (initParameterSchemaType.type !== 'Unit') {
             statements.push({
                 kind: tsm.StructureKind.TypeAlias,
-                docs: [
-                    `Parameter type transaction for instantiating a new '${contractName}' smart contract instance.`,
-                ],
+                docs: [`Parameter type transaction for instantiating a new '${contractName}' smart contract instance.`],
                 isExported: true,
                 name: initParameterTypeId,
                 type: typeAndMapper.nativeType,
@@ -583,10 +530,7 @@ function generateModuleContractStatements(
                     },
                 ],
                 returnType: initParameterJsonTypeId,
-                statements: [
-                    ...mappedParameter.code,
-                    `return ${mappedParameter.id};`,
-                ],
+                statements: [...mappedParameter.code, `return ${mappedParameter.id};`],
             });
             statements.push({
                 kind: tsm.StructureKind.Function,
@@ -642,9 +586,7 @@ function generateModuleContractStatements(
     } else {
         statements.push({
             kind: tsm.StructureKind.TypeAlias,
-            docs: [
-                `Parameter type transaction for instantiating a new '${contractName}' smart contract instance.`,
-            ],
+            docs: [`Parameter type transaction for instantiating a new '${contractName}' smart contract instance.`],
             isExported: true,
             name: initParameterTypeId,
             type: 'SDK.Parameter.Type',
@@ -703,8 +645,8 @@ function generateModuleContractStatements(
             ...(initParameterSchemaType === undefined
                 ? [`    ${parameterId},`]
                 : initParameterSchemaType.type === 'Unit'
-                ? []
-                : [`    ${createInitParameterFnId}(${parameterId}),`]),
+                  ? []
+                  : [`    ${createInitParameterFnId}(${parameterId}),`]),
             `    ${signerId}`,
             ');',
         ],
@@ -729,7 +671,7 @@ function generateContractBaseStatements(
     contractClientType: string,
     moduleRef: SDK.ModuleReference.Type,
     tsNocheck: boolean,
-    contractSchema?: SDK.SchemaContractV3
+    contractSchema?: SDK.SchemaContractV3,
 ): Array<tsm.StatementStructures | string> {
     const statements: Array<tsm.StatementStructures | string> = [];
     const moduleRefId = 'moduleReference';
@@ -750,9 +692,7 @@ function generateContractBaseStatements(
 
     statements.push({
         kind: tsm.StructureKind.VariableStatement,
-        docs: [
-            'The reference of the smart contract module supported by the provided client.',
-        ],
+        docs: ['The reference of the smart contract module supported by the provided client.'],
         isExported: true,
         declarationKind: tsm.VariableDeclarationKind.Const,
         declarations: [
@@ -825,11 +765,9 @@ function generateContractBaseStatements(
                     },
                     { name: genericContractId, type: 'SDK.Contract' },
                 ],
-                statements: [
-                    grpcClientId,
-                    contractAddressId,
-                    genericContractId,
-                ].map((name) => `this.${name} = ${name};`),
+                statements: [grpcClientId, contractAddressId, genericContractId].map(
+                    (name) => `this.${name} = ${name};`,
+                ),
             },
         ],
     });
@@ -976,9 +914,7 @@ function generateContractBaseStatements(
                 },
             ],
             returnType: eventParameterTypeId,
-            statements: [...eventParser.code, `return ${eventParser.id};`].join(
-                '\n'
-            ),
+            statements: [...eventParser.code, `return ${eventParser.id};`].join('\n'),
         });
     }
     return statements;
@@ -998,7 +934,7 @@ function generateContractEntrypointStatements(
     contractClientId: string,
     contractClientType: string,
     entrypointName: string,
-    entrypointSchema?: SDK.SchemaFunctionV2
+    entrypointSchema?: SDK.SchemaFunctionV2,
 ): tsm.StatementStructures[] {
     const statements: tsm.StatementStructures[] = [];
     const invokeMetadataId = 'invokeMetadata';
@@ -1008,21 +944,11 @@ function generateContractEntrypointStatements(
     const genericContractId = 'genericContract';
     const blockHashId = 'blockHash';
     const receiveParameterTypeId = `${toPascalCase(entrypointName)}Parameter`;
-    const base64ReceiveParameterSchemaTypeId = `base64${toPascalCase(
-        entrypointName
-    )}ParameterSchema`;
-    const receiveParameterJsonTypeId = `${toPascalCase(
-        entrypointName
-    )}ParameterSchemaJson`;
-    const createReceiveParameterFnId = `create${toPascalCase(
-        entrypointName
-    )}Parameter`;
-    const createReceiveParameterJsonFnId = `create${toPascalCase(
-        entrypointName
-    )}ParameterSchemaJson`;
-    const createReceiveParameterFnWebWalletId = `create${toPascalCase(
-        entrypointName
-    )}ParameterWebWallet`;
+    const base64ReceiveParameterSchemaTypeId = `base64${toPascalCase(entrypointName)}ParameterSchema`;
+    const receiveParameterJsonTypeId = `${toPascalCase(entrypointName)}ParameterSchemaJson`;
+    const createReceiveParameterFnId = `create${toPascalCase(entrypointName)}Parameter`;
+    const createReceiveParameterJsonFnId = `create${toPascalCase(entrypointName)}ParameterSchemaJson`;
+    const createReceiveParameterFnWebWalletId = `create${toPascalCase(entrypointName)}ParameterWebWallet`;
 
     const receiveParameterSchemaType = entrypointSchema?.parameter;
 
@@ -1036,9 +962,9 @@ function generateContractEntrypointStatements(
             declarations: [
                 {
                     name: base64ReceiveParameterSchemaTypeId,
-                    initializer: `'${Buffer.from(
-                        SDK.serializeSchemaType(receiveParameterSchemaType)
-                    ).toString('base64')}'`,
+                    initializer: `'${Buffer.from(SDK.serializeSchemaType(receiveParameterSchemaType)).toString(
+                        'base64',
+                    )}'`,
                 },
             ],
         });
@@ -1082,10 +1008,7 @@ function generateContractEntrypointStatements(
                     },
                 ],
                 returnType: receiveParameterJsonTypeId,
-                statements: [
-                    ...mappedParameter.code,
-                    `return ${mappedParameter.id};`,
-                ],
+                statements: [...mappedParameter.code, `return ${mappedParameter.id};`],
             });
             statements.push({
                 kind: tsm.StructureKind.Function,
@@ -1202,8 +1125,8 @@ function generateContractEntrypointStatements(
             ...(receiveParameterSchemaType === undefined
                 ? [`    ${parameterId},`]
                 : receiveParameterSchemaType.type === 'Unit'
-                ? []
-                : [`    ${createReceiveParameterFnId}(${parameterId}),`]),
+                  ? []
+                  : [`    ${createReceiveParameterFnId}(${parameterId}),`]),
             `    ${signerId}`,
             ');',
         ],
@@ -1261,18 +1184,15 @@ function generateContractEntrypointStatements(
             ...(receiveParameterSchemaType === undefined
                 ? [`    ${parameterId},`]
                 : receiveParameterSchemaType.type === 'Unit'
-                ? []
-                : [`    ${createReceiveParameterFnId}(${parameterId}),`]),
+                  ? []
+                  : [`    ${createReceiveParameterFnId}(${parameterId}),`]),
             `    ${blockHashId}`,
             ');',
         ],
     });
 
     const invokeResultId = 'invokeResult';
-    const returnValueTokens = parseReturnValueCode(
-        `${invokeResultId}.returnValue`,
-        entrypointSchema?.returnValue
-    );
+    const returnValueTokens = parseReturnValueCode(`${invokeResultId}.returnValue`, entrypointSchema?.returnValue);
     if (returnValueTokens !== undefined) {
         const returnValueTypeId = `ReturnValue${toPascalCase(entrypointName)}`;
 
@@ -1318,14 +1238,9 @@ function generateContractEntrypointStatements(
         });
     }
 
-    const errorMessageTokens = parseReturnValueCode(
-        `${invokeResultId}.returnValue`,
-        entrypointSchema?.error
-    );
+    const errorMessageTokens = parseReturnValueCode(`${invokeResultId}.returnValue`, entrypointSchema?.error);
     if (errorMessageTokens !== undefined) {
-        const errorMessageTypeId = `ErrorMessage${toPascalCase(
-            entrypointName
-        )}`;
+        const errorMessageTypeId = `ErrorMessage${toPascalCase(entrypointName)}`;
 
         statements.push({
             kind: tsm.StructureKind.TypeAlias,
@@ -1488,18 +1403,14 @@ function schemaAsNativeType(schemaType: SDK.SchemaType): SchemaNativeType {
                 nativeToJson(id) {
                     const resultId = idGenerator('amount');
                     return {
-                        code: [
-                            `const ${resultId} = SDK.CcdAmount.toSchemaValue(${id});`,
-                        ],
+                        code: [`const ${resultId} = SDK.CcdAmount.toSchemaValue(${id});`],
                         id: resultId,
                     };
                 },
                 jsonToNative(id) {
                     const resultId = idGenerator('amount');
                     return {
-                        code: [
-                            `const ${resultId} = SDK.CcdAmount.fromSchemaValue(${id});`,
-                        ],
+                        code: [`const ${resultId} = SDK.CcdAmount.fromSchemaValue(${id});`],
                         id: resultId,
                     };
                 },
@@ -1511,18 +1422,14 @@ function schemaAsNativeType(schemaType: SDK.SchemaType): SchemaNativeType {
                 nativeToJson(id) {
                     const resultId = idGenerator('accountAddress');
                     return {
-                        code: [
-                            `const ${resultId} = SDK.AccountAddress.toSchemaValue(${id});`,
-                        ],
+                        code: [`const ${resultId} = SDK.AccountAddress.toSchemaValue(${id});`],
                         id: resultId,
                     };
                 },
                 jsonToNative(id) {
                     const resultId = idGenerator('accountAddress');
                     return {
-                        code: [
-                            `const ${resultId} = SDK.AccountAddress.fromSchemaValue(${id});`,
-                        ],
+                        code: [`const ${resultId} = SDK.AccountAddress.fromSchemaValue(${id});`],
                         id: resultId,
                     };
                 },
@@ -1534,18 +1441,14 @@ function schemaAsNativeType(schemaType: SDK.SchemaType): SchemaNativeType {
                 nativeToJson(id) {
                     const resultId = idGenerator('contractAddress');
                     return {
-                        code: [
-                            `const ${resultId} = SDK.ContractAddress.toSchemaValue(${id});`,
-                        ],
+                        code: [`const ${resultId} = SDK.ContractAddress.toSchemaValue(${id});`],
                         id: resultId,
                     };
                 },
                 jsonToNative(id) {
                     const resultId = idGenerator('contractAddress');
                     return {
-                        code: [
-                            `const ${resultId} = SDK.ContractAddress.fromSchemaValue(${id});`,
-                        ],
+                        code: [`const ${resultId} = SDK.ContractAddress.fromSchemaValue(${id});`],
                         id: resultId,
                     };
                 },
@@ -1557,18 +1460,14 @@ function schemaAsNativeType(schemaType: SDK.SchemaType): SchemaNativeType {
                 nativeToJson(id) {
                     const resultId = idGenerator('timestamp');
                     return {
-                        code: [
-                            `const ${resultId} = SDK.Timestamp.toSchemaValue(${id});`,
-                        ],
+                        code: [`const ${resultId} = SDK.Timestamp.toSchemaValue(${id});`],
                         id: resultId,
                     };
                 },
                 jsonToNative(id) {
                     const resultId = idGenerator('timestamp');
                     return {
-                        code: [
-                            `const ${resultId} = SDK.Timestamp.fromSchemaValue(${id});`,
-                        ],
+                        code: [`const ${resultId} = SDK.Timestamp.fromSchemaValue(${id});`],
                         id: resultId,
                     };
                 },
@@ -1580,18 +1479,14 @@ function schemaAsNativeType(schemaType: SDK.SchemaType): SchemaNativeType {
                 nativeToJson(id) {
                     const resultId = idGenerator('duration');
                     return {
-                        code: [
-                            `const ${resultId} = SDK.Duration.toSchemaValue(${id});`,
-                        ],
+                        code: [`const ${resultId} = SDK.Duration.toSchemaValue(${id});`],
                         id: resultId,
                     };
                 },
                 jsonToNative(id) {
                     const resultId = idGenerator('duration');
                     return {
-                        code: [
-                            `const ${resultId} = SDK.Duration.fromSchemaValue(${id});`,
-                        ],
+                        code: [`const ${resultId} = SDK.Duration.fromSchemaValue(${id});`],
                         id: resultId,
                     };
                 },
@@ -1765,12 +1660,8 @@ function schemaAsNativeType(schemaType: SDK.SchemaType): SchemaNativeType {
         case 'Array': {
             const item = schemaAsNativeType(schemaType.item);
             return {
-                nativeType: `[${new Array(schemaType.size)
-                    .fill(item.nativeType)
-                    .join(', ')}]`,
-                jsonType: `[${new Array(schemaType.size)
-                    .fill(item.jsonType)
-                    .join(', ')}]`,
+                nativeType: `[${new Array(schemaType.size).fill(item.nativeType).join(', ')}]`,
+                jsonType: `[${new Array(schemaType.size).fill(item.jsonType).join(', ')}]`,
                 nativeToJson(id) {
                     const resultId = idGenerator('array');
                     const itemId = idGenerator('item');
@@ -1821,10 +1712,7 @@ function schemaAsNativeType(schemaType: SDK.SchemaType): SchemaNativeType {
 
         case 'Enum':
         case 'TaggedEnum': {
-            const variants =
-                schemaType.type === 'Enum'
-                    ? schemaType.variants
-                    : [...schemaType.variants.values()];
+            const variants = schemaType.type === 'Enum' ? schemaType.variants : [...schemaType.variants.values()];
 
             const variantFieldSchemas = variants.map((variant) => ({
                 name: variant.name,
@@ -1834,12 +1722,11 @@ function schemaAsNativeType(schemaType: SDK.SchemaType): SchemaNativeType {
             const variantTypes = variantFieldSchemas.map((variantSchema) =>
                 variantSchema.nativeType === '"no-fields"'
                     ? `{ type: '${variantSchema.name}'}`
-                    : `{ type: '${variantSchema.name}', content: ${variantSchema.nativeType} }`
+                    : `{ type: '${variantSchema.name}', content: ${variantSchema.nativeType} }`,
             );
 
             const variantJsonTypes = variantFieldSchemas.map(
-                (variantSchema) =>
-                    `{'${variantSchema.name}' : ${variantSchema.jsonType} }`
+                (variantSchema) => `{'${variantSchema.name}' : ${variantSchema.jsonType} }`,
             );
 
             return {
@@ -1848,29 +1735,17 @@ function schemaAsNativeType(schemaType: SDK.SchemaType): SchemaNativeType {
                 nativeToJson(id) {
                     const resultId = idGenerator('match');
 
-                    const variantCases = variantFieldSchemas.flatMap(
-                        (variantSchema) => {
-                            const tokens = variantSchema.nativeToJson(
-                                `${id}.content`
-                            );
-                            return [
-                                `    case '${variantSchema.name}':`,
-                                ...tokens.code,
-                                `        ${resultId} = { ${defineProp(
-                                    variantSchema.name,
-                                    tokens.id
-                                )} };`,
-                                '    break;',
-                            ];
-                        }
-                    );
+                    const variantCases = variantFieldSchemas.flatMap((variantSchema) => {
+                        const tokens = variantSchema.nativeToJson(`${id}.content`);
+                        return [
+                            `    case '${variantSchema.name}':`,
+                            ...tokens.code,
+                            `        ${resultId} = { ${defineProp(variantSchema.name, tokens.id)} };`,
+                            '    break;',
+                        ];
+                    });
                     return {
-                        code: [
-                            `let ${resultId}: ${this.jsonType};`,
-                            `switch (${id}.type) {`,
-                            ...variantCases,
-                            '}',
-                        ],
+                        code: [`let ${resultId}: ${this.jsonType};`, `switch (${id}.type) {`, ...variantCases, '}'],
                         id: resultId,
                     };
                 },
@@ -1878,34 +1753,24 @@ function schemaAsNativeType(schemaType: SDK.SchemaType): SchemaNativeType {
                     const resultId = idGenerator('match');
                     //const variantKeyId = idGenerator('variantKey');
 
-                    const variantIfStatements = variantFieldSchemas.map(
-                        (variantFieldSchema) => {
-                            const variantId = idGenerator('variant');
-                            const variantTokens =
-                                variantFieldSchema.jsonToNative(variantId);
-                            return [
-                                `if ('${variantFieldSchema.name}' in ${id}) {`,
-                                ...(variantTokens.id === '"no-fields"'
-                                    ? [
-                                          `   ${resultId} = {`,
-                                          `       type: '${variantFieldSchema.name}',`,
-                                          '   };',
-                                      ]
-                                    : [
-                                          `   const ${variantId} = ${accessProp(
-                                              id,
-                                              variantFieldSchema.name
-                                          )};`,
-                                          ...variantTokens.code,
-                                          `   ${resultId} = {`,
-                                          `       type: '${variantFieldSchema.name}',`,
-                                          `       content: ${variantTokens.id},`,
-                                          '   };',
-                                      ]),
-                                '}',
-                            ].join('\n');
-                        }
-                    );
+                    const variantIfStatements = variantFieldSchemas.map((variantFieldSchema) => {
+                        const variantId = idGenerator('variant');
+                        const variantTokens = variantFieldSchema.jsonToNative(variantId);
+                        return [
+                            `if ('${variantFieldSchema.name}' in ${id}) {`,
+                            ...(variantTokens.id === '"no-fields"'
+                                ? [`   ${resultId} = {`, `       type: '${variantFieldSchema.name}',`, '   };']
+                                : [
+                                      `   const ${variantId} = ${accessProp(id, variantFieldSchema.name)};`,
+                                      ...variantTokens.code,
+                                      `   ${resultId} = {`,
+                                      `       type: '${variantFieldSchema.name}',`,
+                                      `       content: ${variantTokens.id},`,
+                                      '   };',
+                                  ]),
+                            '}',
+                        ].join('\n');
+                    });
                     return {
                         code: [
                             `let ${resultId}: ${this.nativeType};`,
@@ -1940,18 +1805,14 @@ function schemaAsNativeType(schemaType: SDK.SchemaType): SchemaNativeType {
                 nativeToJson(id) {
                     const resultId = idGenerator('contractName');
                     return {
-                        code: [
-                            `const ${resultId} = SDK.ContractName.toSchemaValue(${id});`,
-                        ],
+                        code: [`const ${resultId} = SDK.ContractName.toSchemaValue(${id});`],
                         id: resultId,
                     };
                 },
                 jsonToNative(id) {
                     const resultId = idGenerator('contractName');
                     return {
-                        code: [
-                            `const ${resultId} = SDK.ContractName.fromSchemaValue(${id});`,
-                        ],
+                        code: [`const ${resultId} = SDK.ContractName.fromSchemaValue(${id});`],
                         id: resultId,
                     };
                 },
@@ -1963,18 +1824,14 @@ function schemaAsNativeType(schemaType: SDK.SchemaType): SchemaNativeType {
                 nativeToJson(id) {
                     const resultId = idGenerator('receiveName');
                     return {
-                        code: [
-                            `const ${resultId} = SDK.ReceiveName.toSchemaValue(${id});`,
-                        ],
+                        code: [`const ${resultId} = SDK.ReceiveName.toSchemaValue(${id});`],
                         id: resultId,
                     };
                 },
                 jsonToNative(id) {
                     const resultId = idGenerator('receiveName');
                     return {
-                        code: [
-                            `const ${resultId} = SDK.ReceiveName.fromSchemaValue(${id});`,
-                        ],
+                        code: [`const ${resultId} = SDK.ReceiveName.fromSchemaValue(${id});`],
                         id: resultId,
                     };
                 },
@@ -2024,12 +1881,8 @@ function fieldToTypeAndMapper(fields: SDK.SchemaFields): SchemaNativeType {
                 ...schemaAsNativeType(named.field),
             }));
 
-            const objectFieldTypes = schemas.map((s) =>
-                defineProp(s.name, s.nativeType)
-            );
-            const objectFieldJsonTypes = schemas.map((s) =>
-                defineProp(s.name, s.jsonType)
-            );
+            const objectFieldTypes = schemas.map((s) => defineProp(s.name, s.nativeType));
+            const objectFieldJsonTypes = schemas.map((s) => defineProp(s.name, s.jsonType));
 
             return {
                 nativeType: `{\n${objectFieldTypes.join('\n')}\n}`,
@@ -2041,24 +1894,17 @@ function fieldToTypeAndMapper(fields: SDK.SchemaFields): SchemaNativeType {
                         const field = s.nativeToJson(fieldId);
                         return {
                             name: s.name,
-                            constructTokens: [
-                                `const ${fieldId} = ${accessProp(id, s.name)};`,
-                                ...field.code,
-                            ],
+                            constructTokens: [`const ${fieldId} = ${accessProp(id, s.name)};`, ...field.code],
                             id: field.id,
                         };
                     });
-                    const constructTokens = fields.flatMap(
-                        (tokens) => tokens.constructTokens
-                    );
+                    const constructTokens = fields.flatMap((tokens) => tokens.constructTokens);
 
                     return {
                         code: [
                             ...constructTokens,
                             `const ${resultId} = {`,
-                            ...fields.map((tokens) =>
-                                defineProp(tokens.name, tokens.id)
-                            ),
+                            ...fields.map((tokens) => defineProp(tokens.name, tokens.id)),
                             '};',
                         ],
                         id: resultId,
@@ -2070,24 +1916,17 @@ function fieldToTypeAndMapper(fields: SDK.SchemaFields): SchemaNativeType {
                         const field = s.jsonToNative(fieldId);
                         return {
                             name: s.name,
-                            constructTokens: [
-                                `const ${fieldId} = ${accessProp(id, s.name)};`,
-                                ...field.code,
-                            ],
+                            constructTokens: [`const ${fieldId} = ${accessProp(id, s.name)};`, ...field.code],
                             id: field.id,
                         };
                     });
-                    const constructTokens = fields.flatMap(
-                        (tokens) => tokens.constructTokens
-                    );
+                    const constructTokens = fields.flatMap((tokens) => tokens.constructTokens);
                     const resultId = idGenerator('named');
                     return {
                         code: [
                             ...constructTokens,
                             `const ${resultId} = {`,
-                            ...fields.map((tokens) =>
-                                defineProp(tokens.name, tokens.id)
-                            ),
+                            ...fields.map((tokens) => defineProp(tokens.name, tokens.id)),
                             '};',
                         ],
                         id: resultId,
@@ -2115,43 +1954,28 @@ function fieldToTypeAndMapper(fields: SDK.SchemaFields): SchemaNativeType {
                 };
             } else {
                 return {
-                    nativeType: `[${schemas
-                        .map((s) => s.nativeType)
-                        .join(', ')}]`,
+                    nativeType: `[${schemas.map((s) => s.nativeType).join(', ')}]`,
                     jsonType: `[${schemas.map((s) => s.jsonType).join(', ')}]`,
                     nativeToJson(id) {
                         const resultId = idGenerator('unnamed');
-                        const mapped = schemas.map((schema, index) =>
-                            schema.nativeToJson(`${id}[${index}]`)
-                        );
-                        const constructFields = mapped.flatMap(
-                            (tokens) => tokens.code
-                        );
+                        const mapped = schemas.map((schema, index) => schema.nativeToJson(`${id}[${index}]`));
+                        const constructFields = mapped.flatMap((tokens) => tokens.code);
                         const fieldIds = mapped.map((s) => s.id);
                         return {
                             code: [
                                 ...constructFields,
-                                `const ${resultId}: ${
-                                    this.jsonType
-                                } = [${fieldIds.join(', ')}];`,
+                                `const ${resultId}: ${this.jsonType} = [${fieldIds.join(', ')}];`,
                             ],
                             id: resultId,
                         };
                     },
                     jsonToNative(id) {
                         const resultId = idGenerator('unnamed');
-                        const mapped = schemas.map((schema, index) =>
-                            schema.jsonToNative(`${id}[${index}]`)
-                        );
-                        const constructFields = mapped.flatMap(
-                            (tokens) => tokens.code
-                        );
+                        const mapped = schemas.map((schema, index) => schema.jsonToNative(`${id}[${index}]`));
+                        const constructFields = mapped.flatMap((tokens) => tokens.code);
                         const fieldIds = mapped.map((s) => s.id);
                         return {
-                            code: [
-                                ...constructFields,
-                                `const ${resultId} = [${fieldIds.join(', ')}];`,
-                            ],
+                            code: [...constructFields, `const ${resultId} = [${fieldIds.join(', ')}];`],
                             id: resultId,
                         };
                     },
@@ -2190,18 +2014,13 @@ type TypeConversionCode = {
  * @param {SDK.SchemaType} [schemaType] The schema to take into account when parsing.
  * @returns Undefined if no code should be produced.
  */
-function parseEventCode(
-    eventId: string,
-    schemaType?: SDK.SchemaType
-): TypeConversionCode | undefined {
+function parseEventCode(eventId: string, schemaType?: SDK.SchemaType): TypeConversionCode | undefined {
     // No schema type is present so generate any code.
     if (schemaType === undefined) {
         return undefined;
     }
     const typeAndMapper = schemaAsNativeType(schemaType);
-    const base64Schema = Buffer.from(
-        SDK.serializeSchemaType(schemaType)
-    ).toString('base64');
+    const base64Schema = Buffer.from(SDK.serializeSchemaType(schemaType)).toString('base64');
 
     const schemaJsonId = 'schemaJson';
     const tokens = typeAndMapper.jsonToNative(schemaJsonId);
@@ -2221,18 +2040,13 @@ function parseEventCode(
  * @param {SDK.SchemaType} [schemaType] The schema to take into account when parsing return type.
  * @returns Undefined if no code should be produced.
  */
-function parseReturnValueCode(
-    returnTypeId: string,
-    schemaType?: SDK.SchemaType
-): TypeConversionCode | undefined {
+function parseReturnValueCode(returnTypeId: string, schemaType?: SDK.SchemaType): TypeConversionCode | undefined {
     // No schema type is present so don't generate any code.
     if (schemaType === undefined) {
         return undefined;
     }
     const typeAndMapper = schemaAsNativeType(schemaType);
-    const base64Schema = Buffer.from(
-        SDK.serializeSchemaType(schemaType)
-    ).toString('base64');
+    const base64Schema = Buffer.from(SDK.serializeSchemaType(schemaType)).toString('base64');
 
     const schemaJsonId = 'schemaJson';
     const tokens = typeAndMapper.jsonToNative(schemaJsonId);
@@ -2265,9 +2079,7 @@ const idGenerator = (() => {
  * @returns {string} Tokens for accessing the prop.
  */
 function accessProp(objectId: string, propId: string): string {
-    return identifierRegex.test(propId)
-        ? `${objectId}.${propId}`
-        : `${objectId}['${propId}']`;
+    return identifierRegex.test(propId) ? `${objectId}.${propId}` : `${objectId}['${propId}']`;
 }
 
 /**
@@ -2277,9 +2089,7 @@ function accessProp(objectId: string, propId: string): string {
  * @returns {string} Tokens for defining a property initialized to the value.
  */
 function defineProp(propId: string, valueId: string): string {
-    return identifierRegex.test(propId)
-        ? `${propId}: ${valueId},`
-        : `'${propId}': ${valueId},`;
+    return identifierRegex.test(propId) ? `${propId}: ${valueId},` : `'${propId}': ${valueId},`;
 }
 
 /**

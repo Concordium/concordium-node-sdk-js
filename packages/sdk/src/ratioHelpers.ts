@@ -17,10 +17,7 @@ export function collapseRatio({ numerator, denominator }: Ratio): bigint {
  * @param factor a number which should be multiplied with the ratio. If given a string, it will attempt to parse it to a bigint.
  * @returns the product as a ratio.
  */
-export function multiplyRatio(
-    { numerator, denominator }: Ratio,
-    factor: bigint | string
-): Ratio {
+export function multiplyRatio({ numerator, denominator }: Ratio, factor: bigint | string): Ratio {
     return {
         numerator: numerator * BigInt(factor),
         denominator,

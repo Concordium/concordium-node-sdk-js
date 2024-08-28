@@ -1,25 +1,24 @@
 /**
  * @module Common GRPC-Client
  */
-
 import * as AccountAddress from './types/AccountAddress.js';
-import * as ContractAddress from './types/ContractAddress.js';
-import * as Duration from './types/Duration.js';
-import * as Timestamp from './types/Timestamp.js';
-import * as Energy from './types/Energy.js';
 import type * as BlockHash from './types/BlockHash.js';
-import * as CredentialRegistrationId from './types/CredentialRegistrationId.js';
-import * as Parameter from './types/Parameter.js';
-import type * as InitName from './types/InitName.js';
-import type * as ContractName from './types/ContractName.js';
-import type * as ReceiveName from './types/ReceiveName.js';
-import type * as SequenceNumber from './types/SequenceNumber.js';
-import type * as ReturnValue from './types/ReturnValue.js';
 import type * as CcdAmount from './types/CcdAmount.js';
-import type * as TransactionHash from './types/TransactionHash.js';
-import type * as TransactionExpiry from './types/TransactionExpiry.js';
+import * as ContractAddress from './types/ContractAddress.js';
+import type * as ContractName from './types/ContractName.js';
+import * as CredentialRegistrationId from './types/CredentialRegistrationId.js';
 import { DataBlob } from './types/DataBlob.js';
+import * as Duration from './types/Duration.js';
+import * as Energy from './types/Energy.js';
+import type * as InitName from './types/InitName.js';
 import type * as ModuleReference from './types/ModuleReference.js';
+import * as Parameter from './types/Parameter.js';
+import type * as ReceiveName from './types/ReceiveName.js';
+import type * as ReturnValue from './types/ReturnValue.js';
+import type * as SequenceNumber from './types/SequenceNumber.js';
+import * as Timestamp from './types/Timestamp.js';
+import type * as TransactionExpiry from './types/TransactionExpiry.js';
+import type * as TransactionHash from './types/TransactionHash.js';
 import { RejectReason } from './types/rejectReason.js';
 import { ContractTraceEvent } from './types/transactionEvent.js';
 
@@ -93,14 +92,10 @@ export type GenesisIndex = number;
  * @example
  * type PartiallyOptionalProps = MakeOptional<{test: string; another: number;}, 'another'>; // {test: string; another?: number;}
  */
-export type MakeOptional<T, K extends keyof T> = Compute<
-    Omit<T, K> & Partial<Pick<T, K>>
->;
+export type MakeOptional<T, K extends keyof T> = Compute<Omit<T, K> & Partial<Pick<T, K>>>;
 
 /** Makes keys of type required (i.e. non-optional) */
-export type MakeRequired<T, K extends keyof T> = Compute<
-    Required<Pick<T, K>> & Omit<T, K>
->;
+export type MakeRequired<T, K extends keyof T> = Compute<Required<Pick<T, K>> & Omit<T, K>>;
 /**
  * Returns a union of all keys of type T with values matching type V.
  */
@@ -128,6 +123,11 @@ export enum AttributesKeys {
     idDocExpiresAt,
     nationalIdNo,
     taxIdNo,
+    lei,
+    legalName,
+    legalCountry,
+    businessNumber,
+    registrationAuth,
 }
 
 export type Attributes = {
@@ -149,6 +149,11 @@ export enum AttributeKeyString {
     idDocExpiresAt = 'idDocExpiresAt',
     nationalIdNo = 'nationalIdNo',
     taxIdNo = 'taxIdNo',
+    lei = 'lei',
+    legalName = 'legalName',
+    legalCountry = 'legalCountry',
+    businessNumber = 'businessNumber',
+    registrationAuth = 'registrationAuth',
 }
 
 export enum Sex {
@@ -177,10 +182,7 @@ export interface AddressAccount {
     address: AccountAddress.Type;
 }
 
-export type AccountIdentifierInput =
-    | AccountAddress.Type
-    | CredentialRegistrationId.Type
-    | bigint;
+export type AccountIdentifierInput = AccountAddress.Type | CredentialRegistrationId.Type | bigint;
 
 export type Address =
     | {
@@ -200,13 +202,11 @@ interface BaseTransactionSummaryType {
     type: TransactionSummaryType;
 }
 
-export interface TransferWithMemoSummaryType
-    extends BaseTransactionSummaryType {
+export interface TransferWithMemoSummaryType extends BaseTransactionSummaryType {
     contents: 'transferWithMemo';
 }
 
-export interface GenericTransactionSummaryType
-    extends BaseTransactionSummaryType {
+export interface GenericTransactionSummaryType extends BaseTransactionSummaryType {
     contents: string;
 }
 
@@ -469,10 +469,7 @@ export type ChainParametersV2 = ChainParametersCommon &
     };
 
 /** Union of all chain parameters across all protocol versions */
-export type ChainParameters =
-    | ChainParametersV0
-    | ChainParametersV1
-    | ChainParametersV2;
+export type ChainParameters = ChainParametersV0 | ChainParametersV1 | ChainParametersV2;
 
 export interface Authorization {
     threshold: number;
@@ -630,9 +627,7 @@ export interface RelativeBlocksAtHeightRequest {
     restrict: boolean;
 }
 
-export type BlocksAtHeightRequest =
-    | AbsoluteBlocksAtHeightRequest
-    | RelativeBlocksAtHeightRequest;
+export type BlocksAtHeightRequest = AbsoluteBlocksAtHeightRequest | RelativeBlocksAtHeightRequest;
 
 /** Common properties for  consensus status types used across all protocol versions */
 export interface ConsensusStatusCommon {
@@ -801,16 +796,14 @@ interface SharedCredentialDeploymentValues {
     policy: Policy;
 }
 
-export interface CredentialDeploymentValues
-    extends SharedCredentialDeploymentValues {
+export interface CredentialDeploymentValues extends SharedCredentialDeploymentValues {
     credId: string;
     revocationThreshold: number;
     arData: Record<string, ChainArData>;
     commitments: CredentialDeploymentCommitments;
 }
 
-export interface InitialCredentialDeploymentValues
-    extends SharedCredentialDeploymentValues {
+export interface InitialCredentialDeploymentValues extends SharedCredentialDeploymentValues {
     regId: string;
 }
 
@@ -850,9 +843,7 @@ export interface RemovalPendingChange extends StakePendingChangeCommon {
     change: StakePendingChangeType.RemoveStake;
 }
 
-export type StakePendingChange =
-    | ReduceStakePendingChange
-    | RemovalPendingChange;
+export type StakePendingChange = ReduceStakePendingChange | RemovalPendingChange;
 
 export enum OpenStatus {
     OpenForAll = 0,
@@ -903,7 +894,7 @@ export enum BakerPoolPendingChangeType {
 
 type BakerPoolPendingChangeWrapper<
     T extends keyof typeof BakerPoolPendingChangeType,
-    S extends Record<string, any>
+    S extends Record<string, any>,
 > = S & {
     pendingChangeType: T;
 };
@@ -913,11 +904,10 @@ export interface BakerPoolPendingChangeReduceBakerCapitalDetails {
     effectiveTime: Date;
 }
 
-export type BakerPoolPendingChangeReduceBakerCapital =
-    BakerPoolPendingChangeWrapper<
-        BakerPoolPendingChangeType.ReduceBakerCapital,
-        BakerPoolPendingChangeReduceBakerCapitalDetails
-    >;
+export type BakerPoolPendingChangeReduceBakerCapital = BakerPoolPendingChangeWrapper<
+    BakerPoolPendingChangeType.ReduceBakerCapital,
+    BakerPoolPendingChangeReduceBakerCapitalDetails
+>;
 
 export interface BakerPoolPendingChangeRemovePoolDetails {
     effectiveTime: Date;
@@ -960,10 +950,7 @@ export interface BakerPoolStatusDetails {
     allPoolTotalCapital: CcdAmount.Type;
 }
 
-export type BakerPoolStatus = PoolStatusWrapper<
-    PoolStatusType.BakerPool,
-    BakerPoolStatusDetails
->;
+export type BakerPoolStatus = PoolStatusWrapper<PoolStatusType.BakerPool, BakerPoolStatusDetails>;
 
 export interface PassiveDelegationStatusDetails {
     delegatedCapital: CcdAmount.Type;
@@ -1000,9 +987,7 @@ export type EventDelegationTarget =
       }
     | DelegationTargetPassiveDelegation;
 
-export type DelegationTarget =
-    | DelegationTargetPassiveDelegation
-    | DelegationTargetBaker;
+export type DelegationTarget = DelegationTargetPassiveDelegation | DelegationTargetBaker;
 
 interface AccountBakerDetailsCommon {
     restakeEarnings: boolean;
@@ -1034,9 +1019,7 @@ export interface AccountDelegationDetails {
     pendingChange?: StakePendingChange;
 }
 
-export type AccountCredential = Versioned<
-    InitialAccountCredential | NormalAccountCredential
->;
+export type AccountCredential = Versioned<InitialAccountCredential | NormalAccountCredential>;
 
 export enum AccountInfoType {
     Simple = 'simple',
@@ -1071,10 +1054,7 @@ export interface AccountInfoDelegator extends AccountInfoCommon {
     accountDelegation: AccountDelegationDetails;
 }
 
-export type AccountInfo =
-    | AccountInfoSimple
-    | AccountInfoBaker
-    | AccountInfoDelegator;
+export type AccountInfo = AccountInfoSimple | AccountInfoBaker | AccountInfoDelegator;
 
 export interface Description {
     name: string;
@@ -1162,9 +1142,7 @@ export interface NextUpdateSequenceNumbers {
     finalizationCommiteeParameters: bigint;
 }
 
-export type BlockFinalizationSummary =
-    | BlockFinalizationSummary_None
-    | BlockFinalizationSummary_Record;
+export type BlockFinalizationSummary = BlockFinalizationSummary_None | BlockFinalizationSummary_Record;
 
 export interface BlockFinalizationSummary_None {
     tag: 'none';
@@ -1223,9 +1201,7 @@ export enum AccountTransactionType {
     ConfigureDelegation = 26,
 }
 
-export function isAccountTransactionType(
-    candidate: number
-): candidate is AccountTransactionType {
+export function isAccountTransactionType(candidate: number): candidate is AccountTransactionType {
     return candidate in AccountTransactionType;
 }
 
@@ -1356,9 +1332,7 @@ export interface BakerKeyProofs {
 
 export type BakerKeysWithProofs = PublicBakerKeys & BakerKeyProofs;
 
-export type GenerateBakerKeysOutput = PublicBakerKeys &
-    PrivateBakerKeys &
-    BakerKeyProofs;
+export type GenerateBakerKeysOutput = PublicBakerKeys & PrivateBakerKeys & BakerKeyProofs;
 
 export interface ConfigureBakerPayload {
     /* stake to bake. if set to 0, this removes the account as a baker */
@@ -1446,9 +1420,7 @@ export interface InstanceInfoSerializedV1 extends InstanceInfoSerializedCommon {
     version: 1;
 }
 
-export type InstanceInfoSerialized =
-    | InstanceInfoSerializedV0
-    | InstanceInfoSerializedV1;
+export type InstanceInfoSerialized = InstanceInfoSerializedV0 | InstanceInfoSerializedV1;
 
 export interface InstanceStateKVPair {
     key: HexString;
@@ -1483,9 +1455,7 @@ export interface InvokeContractFailedResult {
     returnValue?: ReturnValue.Type;
 }
 
-export type InvokeContractResult =
-    | InvokeContractSuccessResult
-    | InvokeContractFailedResult;
+export type InvokeContractResult = InvokeContractSuccessResult | InvokeContractFailedResult;
 
 export interface CredentialDeploymentDetails {
     expiry: TransactionExpiry.Type;
@@ -1502,8 +1472,7 @@ export interface IdOwnershipProofs {
     sig: string;
 }
 
-export interface UnsignedCredentialDeploymentInformation
-    extends CredentialDeploymentValues {
+export interface UnsignedCredentialDeploymentInformation extends CredentialDeploymentValues {
     proofs: IdOwnershipProofs;
 }
 
@@ -1522,8 +1491,7 @@ interface CdiRandomness {
 }
 
 // TODO Should we rename this, As it is not actually the transaction that is sent to the node. (Note that this would be a breaking change)
-export type CredentialDeploymentTransaction = CredentialDeploymentDetails &
-    CdiRandomness;
+export type CredentialDeploymentTransaction = CredentialDeploymentDetails & CdiRandomness;
 /** Internal type used when building credentials */
 export type UnsignedCdiWithRandomness = {
     unsignedCdi: UnsignedCredentialDeploymentInformation;

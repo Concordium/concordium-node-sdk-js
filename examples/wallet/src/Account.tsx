@@ -1,17 +1,9 @@
-import {
-    AccountAddress,
-    AccountInfo,
-    CcdAmount,
-    TransactionHash,
-} from '@concordium/web-sdk';
+import { AccountAddress, AccountInfo, CcdAmount, TransactionHash } from '@concordium/web-sdk';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+
+import { ccdscanBaseUrl, seedPhraseKey, selectedIdentityProviderKey } from './constants';
 import { getAccount, sendTransferTransaction } from './util';
-import {
-    ccdscanBaseUrl,
-    seedPhraseKey,
-    selectedIdentityProviderKey,
-} from './constants';
 
 function DisplayAccount({ accountInfo }: { accountInfo: AccountInfo }) {
     return (
@@ -19,10 +11,7 @@ function DisplayAccount({ accountInfo }: { accountInfo: AccountInfo }) {
             <h3>Your Concordium account</h3>
             <ul>
                 <li>Address: {accountInfo.accountAddress.address}</li>
-                <li>
-                    Amount:{' '}
-                    {accountInfo.accountAmount.microCcdAmount.toString()}
-                </li>
+                <li>Amount: {accountInfo.accountAmount.microCcdAmount.toString()}</li>
             </ul>
         </div>
     );
@@ -87,25 +76,15 @@ function TransferInput({
         <form onSubmit={handleSubmit}>
             <label>
                 Transfer
-                <input
-                    type="text"
-                    value={transferAmount}
-                    onChange={handleChange}
-                />
+                <input type="text" value={transferAmount} onChange={handleChange} />
                 Recipient
-                <input
-                    type="text"
-                    value={recipient}
-                    onChange={handleRecipientChange}
-                />
+                <input type="text" value={recipient} onChange={handleRecipientChange} />
             </label>
             <input type="submit" value="Send" />
             {transactionHash && (
                 <div>
                     Latest transaction hash:{' '}
-                    <a
-                        href={`${ccdscanBaseUrl}/transactions?dcount=1&dentity=transaction&dhash=${transactionHash}`}
-                    >
+                    <a href={`${ccdscanBaseUrl}/transactions?dcount=1&dentity=transaction&dhash=${transactionHash}`}>
                         {transactionHash}
                     </a>
                 </div>
@@ -120,15 +99,9 @@ export function Account() {
     const [accountInfo, setAccountInfo] = useState<AccountInfo>();
     const [error, setError] = useState<string>();
     const seedPhrase = useMemo(() => localStorage.getItem(seedPhraseKey), []);
-    const selectedIdentityProviderIdentity = useMemo(
-        () => localStorage.getItem(selectedIdentityProviderKey),
-        []
-    );
+    const selectedIdentityProviderIdentity = useMemo(() => localStorage.getItem(selectedIdentityProviderKey), []);
     const address = useMemo(
-        () =>
-            accountAddress
-                ? AccountAddress.fromBase58(accountAddress)
-                : undefined,
+        () => (accountAddress ? AccountAddress.fromBase58(accountAddress) : undefined),
         [accountAddress]
     );
 
@@ -165,9 +138,7 @@ export function Account() {
             <TransferInput
                 accountAddress={address}
                 seedPhrase={seedPhrase}
-                identityProviderIdentity={Number.parseInt(
-                    selectedIdentityProviderIdentity
-                )}
+                identityProviderIdentity={Number.parseInt(selectedIdentityProviderIdentity)}
             />
         </>
     );

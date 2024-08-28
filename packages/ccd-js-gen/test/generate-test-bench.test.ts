@@ -23,11 +23,9 @@ const outModuleFile = `${outDir}/test-bench`;
 const outContractFile = `${outDir}/test-bench_smart_contract_test_bench`;
 
 beforeAll(() => {
-    return Gen.generateContractClientsFromFile(
-        __dirname + '/resources/test-bench.wasm.v1',
-        outDir,
-        { output: 'Everything' }
-    );
+    return Gen.generateContractClientsFromFile(__dirname + '/resources/test-bench.wasm.v1', outDir, {
+        output: 'Everything',
+    });
 }, 60_000);
 
 describe('Generated module client file', () => {

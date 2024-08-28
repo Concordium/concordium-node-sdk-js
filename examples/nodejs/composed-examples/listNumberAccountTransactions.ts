@@ -1,12 +1,8 @@
-import {
-    AccountAddress,
-    isTransferLikeSummary,
-    unwrap,
-} from '@concordium/web-sdk';
+import { AccountAddress, isTransferLikeSummary, unwrap } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
+import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 
-import { credentials } from '@grpc/grpc-js';
 import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
@@ -43,11 +39,7 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 /**
  * List number of account transactions for each account in a given time span.
@@ -61,12 +53,8 @@ const client = new ConcordiumGRPCNodeClient(
     const to = cli.flags.to ? new Date(cli.flags.to) : lastFinal.blockSlotTime;
 
     // Unwrap throws error if findFirstFinalizedBlockNoLaterThan returns undefined
-    const fromHeight = unwrap(
-        await client.findFirstFinalizedBlockNoLaterThan(from)
-    ).blockHeight;
-    const toHeight = unwrap(
-        await client.findFirstFinalizedBlockNoLaterThan(to)
-    ).blockHeight;
+    const fromHeight = unwrap(await client.findFirstFinalizedBlockNoLaterThan(from)).blockHeight;
+    const toHeight = unwrap(await client.findFirstFinalizedBlockNoLaterThan(to)).blockHeight;
 
     const blockStream = client.getFinalizedBlocksFrom(fromHeight, toHeight);
 
@@ -80,8 +68,7 @@ const client = new ConcordiumGRPCNodeClient(
     // Iterate over all blocks
     console.log('processing blocks...');
     for await (const block of blockStream) {
-        progress =
-            ((block.height - fromHeight) * 100n) / (toHeight - fromHeight);
+        progress = ((block.height - fromHeight) * 100n) / (toHeight - fromHeight);
 
         // Get transactions for block
         const trxStream = client.getBlockTransactionEvents(block.hash);

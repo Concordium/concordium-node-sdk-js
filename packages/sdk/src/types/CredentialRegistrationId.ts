@@ -1,18 +1,14 @@
+import { Buffer } from 'buffer/index.js';
+
 import { HexString } from '../types.js';
 import { isHex } from '../util.js';
-import { Buffer } from 'buffer/index.js';
-import {
-    TypedJson,
-    TypedJsonDiscriminator,
-    makeFromTypedJson,
-} from './util.js';
+import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
  * The {@linkcode TypedJsonDiscriminator} discriminator associated with {@linkcode Type} type.
  * @deprecated
  */
-export const JSON_DISCRIMINATOR =
-    TypedJsonDiscriminator.CredentialRegistrationId;
+export const JSON_DISCRIMINATOR = TypedJsonDiscriminator.CredentialRegistrationId;
 /**
  * @deprecated
  */
@@ -85,26 +81,14 @@ export function instanceOf(value: unknown): value is CredentialRegistrationId {
  */
 export function fromHexString(credId: HexString): CredentialRegistrationId {
     if (credId.length !== 96) {
-        throw new Error(
-            'The provided credId ' +
-                credId +
-                ' is invalid as its length was not 96'
-        );
+        throw new Error('The provided credId ' + credId + ' is invalid as its length was not 96');
     }
     if (!isHex(credId)) {
-        throw new Error(
-            'The provided credId ' +
-                credId +
-                ' does not represent a hexidecimal value'
-        );
+        throw new Error('The provided credId ' + credId + ' does not represent a hexidecimal value');
     }
     // Check that the first bit is 1
     if ((parseInt(credId.substring(0, 2), 16) & 0b10000000) === 0) {
-        throw new Error(
-            'The provided credId ' +
-                credId +
-                'does not represent a compressed BLS12-381 point'
-        );
+        throw new Error('The provided credId ' + credId + 'does not represent a compressed BLS12-381 point');
     }
     return new CredentialRegistrationId(credId);
 }
@@ -133,9 +117,7 @@ export function toBuffer(cred: CredentialRegistrationId): Uint8Array {
  * @param {Type} value - The account address instance to transform.
  * @returns {TypedJson} The transformed object.
  */
-export function toTypedJSON(
-    value: CredentialRegistrationId
-): TypedJson<Serializable> {
+export function toTypedJSON(value: CredentialRegistrationId): TypedJson<Serializable> {
     return {
         ['@type']: JSON_DISCRIMINATOR,
         value: toHexString(value),
@@ -149,7 +131,4 @@ export function toTypedJSON(
  * @throws {TypedJsonParseError} - If unexpected JSON string is passed.
  * @returns {Type} The parsed instance.
  */
-export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(
-    JSON_DISCRIMINATOR,
-    fromHexString
-);
+export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromHexString);

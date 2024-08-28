@@ -1,9 +1,9 @@
-import { parseEndpoint } from '../shared/util.js';
 import { BlockHash, ElectionInfo } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
-
 import meow from 'meow';
+
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -33,11 +33,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 /**
  * Get information related to the baker election for a particular block.
@@ -46,16 +42,11 @@ const client = new ConcordiumGRPCNodeClient(
 
 (async () => {
     // #region documentation-snippet
-    const blockHash =
-        cli.flags.block === undefined
-            ? undefined
-            : BlockHash.fromHexString(cli.flags.block);
+    const blockHash = cli.flags.block === undefined ? undefined : BlockHash.fromHexString(cli.flags.block);
     const electionInfo: ElectionInfo = await client.getElectionInfo(blockHash);
 
     // Discard address, convert to tuple:
-    const bakers: [bigint, number][] = electionInfo.bakerElectionInfo.map(
-        (info) => [info.baker, info.lotteryPower]
-    );
+    const bakers: [bigint, number][] = electionInfo.bakerElectionInfo.map((info) => [info.baker, info.lotteryPower]);
     // Sort bakers by lottery power:
     const sortedBakers = bakers.sort((xs, ys) => ys[1] - xs[1]);
 

@@ -1,9 +1,9 @@
-import { parseEndpoint } from '../shared/util.js';
-import { BlockHash, AccountAddress } from '@concordium/web-sdk';
+import { AccountAddress, BlockHash } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { credentials } from '@grpc/grpc-js';
-
 import meow from 'meow';
+
+import { parseEndpoint } from '../shared/util.js';
 
 const cli = meow(
     `
@@ -33,11 +33,7 @@ const cli = meow(
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
 
-const client = new ConcordiumGRPCNodeClient(
-    address,
-    Number(port),
-    credentials.createInsecure()
-);
+const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
 
 /**
  * Retrieves the accounts that exists at the end of a given block as an async
@@ -49,12 +45,8 @@ const client = new ConcordiumGRPCNodeClient(
 
 (async () => {
     // #region documentation-snippet
-    const blockHash =
-        cli.flags.block === undefined
-            ? undefined
-            : BlockHash.fromHexString(cli.flags.block);
-    const accounts: AsyncIterable<AccountAddress.Type> =
-        client.getAccountList(blockHash);
+    const blockHash = cli.flags.block === undefined ? undefined : BlockHash.fromHexString(cli.flags.block);
+    const accounts: AsyncIterable<AccountAddress.Type> = client.getAccountList(blockHash);
     // #endregion documentation-snippet
 
     console.log('Accounts that exists at the end of the given block:');

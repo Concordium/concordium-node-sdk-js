@@ -1,16 +1,8 @@
-import { Buffer } from 'buffer/index.js';
 // self-referencing not allowed by eslint resolver
 // eslint-disable-next-line import/no-extraneous-dependencies
 import * as ed from '@concordium/web-sdk/shims/ed25519';
+import { Buffer } from 'buffer/index.js';
 
-import {
-    TransactionSummaryType,
-    type BlockItemSummary,
-    type ContractTraceEvent,
-    type HexString,
-    type InvokeContractSuccessResult,
-    TransactionKindString,
-} from '../types.js';
 import type { CIS2 } from '../cis2/util.js';
 import {
     deserializeCIS2MetadataUrl,
@@ -18,24 +10,29 @@ import {
     serializeContractAddress,
     serializeReceiveHookName,
 } from '../cis2/util.js';
-import {
-    Cursor,
-    makeDeserializeListResponse,
-} from '../deserializationHelpers.js';
+import { Cursor, makeDeserializeListResponse } from '../deserializationHelpers.js';
+import { OptionJson, toOptionJson } from '../schemaTypes.js';
 import {
     encodeBool,
     encodeWord16,
     encodeWord64,
     makeSerializeOptional,
-    packBufferWithWord16Length,
     packBufferWithWord8Length,
+    packBufferWithWord16Length,
 } from '../serializationHelpers.js';
-import { OptionJson, toOptionJson } from '../schemaTypes.js';
 import { getSignature } from '../signHelpers.js';
+import {
+    type BlockItemSummary,
+    type ContractTraceEvent,
+    type HexString,
+    type InvokeContractSuccessResult,
+    TransactionKindString,
+    TransactionSummaryType,
+} from '../types.js';
 import * as ContractAddress from '../types/ContractAddress.js';
+import * as ContractEvent from '../types/ContractEvent.js';
 import * as EntrypointName from '../types/EntrypointName.js';
 import * as Timestamp from '../types/Timestamp.js';
-import * as ContractEvent from '../types/ContractEvent.js';
 
 /** Holds all types related to CIS4 */
 // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -421,7 +418,10 @@ export class Web3IdSigner {
      * @param {HexString} privateKey - the ed25519 private key used for signing
      * @param {HexString} publicKey - the ed25519 public key used for verifcation of signature
      */
-    constructor(private privateKey: HexString, private publicKey: HexString) {}
+    constructor(
+        private privateKey: HexString,
+        private publicKey: HexString
+    ) {}
 
     /**
      * Builds a `Web3IdSigner` from ed25519 private key
@@ -431,9 +431,7 @@ export class Web3IdSigner {
      * @returns {Web3IdSigner} signer structure.
      */
     public static async from(privateKey: HexString): Promise<Web3IdSigner> {
-        const publicKey = Buffer.from(
-            await ed.getPublicKeyAsync(Buffer.from(privateKey, 'hex'))
-        ).toString('hex');
+        const publicKey = Buffer.from(await ed.getPublicKeyAsync(Buffer.from(privateKey, 'hex'))).toString('hex');
         return new Web3IdSigner(privateKey, publicKey);
     }
 
@@ -459,10 +457,7 @@ export class Web3IdSigner {
  */
 export const REVOKE_DOMAIN = Buffer.from('WEB3ID:REVOKE', 'utf8');
 
-const deserializeOptional = <T>(
-    cursor: Cursor,
-    fun: (c: Cursor) => T
-): T | undefined => {
+const deserializeOptional = <T>(cursor: Cursor, fun: (c: Cursor) => T): T | undefined => {
     const hasValue = cursor.read(1).readUInt8(0);
     if (!hasValue) {
         return undefined;
@@ -471,11 +466,11 @@ const deserializeOptional = <T>(
     return fun(cursor);
 };
 
-function serializeDate(date: Timestamp.Type): Buffer {
+export function serializeDate(date: Timestamp.Type): Buffer {
     return encodeWord64(BigInt(date.value), true);
 }
 
-function deserializeDate(cursor: Cursor): Timestamp.Type {
+export function deserializeDate(cursor: Cursor): Timestamp.Type {
     const value = cursor.read(8).readBigInt64LE(0);
     return Timestamp.fromMillis(Number(value));
 }
@@ -495,18 +490,10 @@ function serializeCIS4CredentialInfo(credInfo: CIS4.CredentialInfo): Buffer {
     const holderPubKey = Buffer.from(credInfo.holderPubKey, 'hex');
     const holderRevocable = encodeBool(credInfo.holderRevocable);
     const validFrom = serializeDate(credInfo.validFrom);
-    const validUntil = makeSerializeOptional(serializeDate)(
-        credInfo.validUntil
-    );
+    const validUntil = makeSerializeOptional(serializeDate)(credInfo.validUntil);
     const metadataUrl = serializeCIS2MetadataUrl(credInfo.metadataUrl);
 
-    return Buffer.concat([
-        holderPubKey,
-        holderRevocable,
-        validFrom,
-        validUntil,
-        metadataUrl,
-    ]);
+    return Buffer.concat([holderPubKey, holderRevocable, validFrom, validUntil, metadataUrl]);
 }
 
 function serializeAdditionalData(data: HexString): Buffer {
@@ -521,9 +508,7 @@ function serializeAdditionalData(data: HexString): Buffer {
  *
  * @returns {Buffer} the parameters serialized to bytes
  */
-export function serializeCIS4RegisterCredentialParam(
-    param: CIS4.RegisterCredentialParam
-): Buffer {
+export function serializeCIS4RegisterCredentialParam(param: CIS4.RegisterCredentialParam): Buffer {
     const credInfo = serializeCIS4CredentialInfo(param.credInfo);
     const additionalData = serializeAdditionalData(param.additionalData);
     return Buffer.concat([credInfo, additionalData]);
@@ -554,9 +539,7 @@ function deserializeCIS4CredentialInfo(cursor: Cursor): CIS4.CredentialInfo {
  *
  * @returns {CIS4.CredentialEntry} The credential entry
  */
-export function deserializeCIS4CredentialEntry(
-    value: HexString
-): CIS4.CredentialEntry {
+export function deserializeCIS4CredentialEntry(value: HexString): CIS4.CredentialEntry {
     const cursor = Cursor.fromHex(value);
 
     const credentialInfo = deserializeCIS4CredentialInfo(cursor);
@@ -579,16 +562,12 @@ export function deserializeCIS4CredentialEntry(
  *
  * @returns {CIS4.CredentialStatus} The credential status
  */
-export function deserializeCIS4CredentialStatus(
-    value: HexString
-): CIS4.CredentialStatus {
+export function deserializeCIS4CredentialStatus(value: HexString): CIS4.CredentialStatus {
     const b = Buffer.from(value, 'hex');
     return b.readUInt8(0);
 }
 
-function deserializeCIS4RevocationKey(
-    cursor: Cursor
-): CIS4.RevocationKeyWithNonce {
+function deserializeCIS4RevocationKey(cursor: Cursor): CIS4.RevocationKeyWithNonce {
     const key = deserializeEd25519PublicKey(cursor);
     const nonce = cursor.read(8).readBigInt64LE(0).valueOf();
 
@@ -607,9 +586,7 @@ function deserializeCIS4RevocationKey(
  *
  * @returns {CIS4.RevocationKeyWithNonce[]} The revocation keys
  */
-export const deserializeCIS4RevocationKeys = makeDeserializeListResponse(
-    deserializeCIS4RevocationKey
-);
+export const deserializeCIS4RevocationKeys = makeDeserializeListResponse(deserializeCIS4RevocationKey);
 
 function formatAdditionalData(data: HexString): number[] {
     return Buffer.from(data, 'hex').toJSON().data;
@@ -628,9 +605,7 @@ export function formatCIS4RegisterCredential({
             holder_revocable: credInfo.holderRevocable,
             valid_from: Timestamp.toSchemaValue(credInfo.validFrom),
             valid_until: toOptionJson(
-                credInfo.validUntil === undefined
-                    ? undefined
-                    : Timestamp.toSchemaValue(credInfo.validUntil)
+                credInfo.validUntil === undefined ? undefined : Timestamp.toSchemaValue(credInfo.validUntil)
             ),
             metadata_url: {
                 url: credInfo.metadataUrl.url,
@@ -654,9 +629,7 @@ function serializeReason(reason: string) {
  *
  * @returns {Buffer} the parameters serialized to bytes
  */
-export function serializeCIS4RevokeCredentialIssuerParam(
-    param: CIS4.RevokeCredentialIssuerParam
-): Buffer {
+export function serializeCIS4RevokeCredentialIssuerParam(param: CIS4.RevokeCredentialIssuerParam): Buffer {
     const credHolderPubKey = Buffer.from(param.credHolderPubKey, 'hex');
     const reason = makeSerializeOptional<string>(serializeReason)(param.reason);
     const additionalData = serializeAdditionalData(param.additionalData);
@@ -688,26 +661,15 @@ export function formatCIS4RevokeCredentialIssuer({
  *
  * @returns {Buffer} the data serialized to bytes
  */
-export function serializeCIS4RevocationDataHolder(
-    data: CIS4.RevocationDataHolder
-): Buffer {
+export function serializeCIS4RevocationDataHolder(data: CIS4.RevocationDataHolder): Buffer {
     const credentialPubKey = Buffer.from(data.credentialPubKey, 'hex');
-    const contractAddress = serializeContractAddress(
-        data.signingData.contractAddress
-    );
+    const contractAddress = serializeContractAddress(data.signingData.contractAddress);
     const entrypoint = serializeReceiveHookName(data.signingData.entrypoint);
     const nonce = encodeWord64(data.signingData.nonce, true);
     const timestamp = serializeDate(data.signingData.timestamp);
     const reason = makeSerializeOptional<string>(serializeReason)(data.reason);
 
-    return Buffer.concat([
-        credentialPubKey,
-        contractAddress,
-        entrypoint,
-        nonce,
-        timestamp,
-        reason,
-    ]);
+    return Buffer.concat([credentialPubKey, contractAddress, entrypoint, nonce, timestamp, reason]);
 }
 
 /**
@@ -727,9 +689,7 @@ export function formatCIS4RevokeCredentialHolder({
                     index: Number(data.signingData.contractAddress.index),
                     subindex: Number(data.signingData.contractAddress.subindex),
                 },
-                entry_point: EntrypointName.toString(
-                    data.signingData.entrypoint
-                ),
+                entry_point: EntrypointName.toString(data.signingData.entrypoint),
                 nonce: Number(data.signingData.nonce),
                 timestamp: Timestamp.toSchemaValue(data.signingData.timestamp),
             },
@@ -747,28 +707,16 @@ export function formatCIS4RevokeCredentialHolder({
  *
  * @returns {Buffer} the data serialized to bytes
  */
-export function serializeCIS4RevocationDataOther(
-    data: CIS4.RevocationDataOther
-): Buffer {
+export function serializeCIS4RevocationDataOther(data: CIS4.RevocationDataOther): Buffer {
     const credentialPubKey = Buffer.from(data.credentialPubKey, 'hex');
-    const contractAddress = serializeContractAddress(
-        data.signingData.contractAddress
-    );
+    const contractAddress = serializeContractAddress(data.signingData.contractAddress);
     const entrypoint = serializeReceiveHookName(data.signingData.entrypoint);
     const nonce = encodeWord64(data.signingData.nonce);
     const timestamp = serializeDate(data.signingData.timestamp);
     const revocationPubKey = Buffer.from(data.revocationPubKey, 'hex');
     const reason = makeSerializeOptional<string>(serializeReason)(data.reason);
 
-    return Buffer.concat([
-        credentialPubKey,
-        contractAddress,
-        entrypoint,
-        nonce,
-        timestamp,
-        revocationPubKey,
-        reason,
-    ]);
+    return Buffer.concat([credentialPubKey, contractAddress, entrypoint, nonce, timestamp, revocationPubKey, reason]);
 }
 
 /**
@@ -788,9 +736,7 @@ export function formatCIS4RevokeCredentialOther({
                     index: Number(data.signingData.contractAddress.index),
                     subindex: Number(data.signingData.contractAddress.subindex),
                 },
-                entry_point: EntrypointName.toString(
-                    data.signingData.entrypoint
-                ),
+                entry_point: EntrypointName.toString(data.signingData.entrypoint),
                 nonce: Number(data.signingData.nonce),
                 timestamp: Timestamp.toSchemaValue(data.signingData.timestamp),
             },
@@ -809,9 +755,7 @@ export function formatCIS4RevokeCredentialOther({
  *
  * @returns {Buffer} the parameters serialized to bytes
  */
-export function serializeCIS4UpdateRevocationKeysParam(
-    param: CIS4.UpdateRevocationKeysParam
-): Buffer {
+export function serializeCIS4UpdateRevocationKeysParam(param: CIS4.UpdateRevocationKeysParam): Buffer {
     const ks = param.keys.map((k) => Buffer.from(k, 'hex'));
     const numKeys = encodeWord16(ks.length, true);
     const additionalData = serializeAdditionalData(param.additionalData);
@@ -843,9 +787,7 @@ export function formatCIS4UpdateRevocationKeys({
  *
  * @returns {CIS4.MetadataResponse} The metadata
  */
-export function deserializeCIS4MetadataResponse(
-    value: HexString
-): CIS4.MetadataResponse {
+export function deserializeCIS4MetadataResponse(value: HexString): CIS4.MetadataResponse {
     const cursor = Cursor.fromHex(value);
     const issuerMetadata = deserializeCIS2MetadataUrl(cursor);
     const credentialType = deserializeCredentialType(cursor);
@@ -906,9 +848,7 @@ export function deserializeCIS4Event(event: ContractEvent.Type): CIS4.Event {
                 key,
             };
         } else {
-            throw new Error(
-                'Failed deserializing CIS-4 RevokeCredential event: Unknown revoker type'
-            );
+            throw new Error('Failed deserializing CIS-4 RevokeCredential event: Unknown revoker type');
         }
         const reason = deserializeReason(cursor);
         return {
@@ -948,9 +888,7 @@ export function deserializeCIS4Event(event: ContractEvent.Type): CIS4.Event {
         } else if (actionByte == 1) {
             action = CIS4.RevocationKeyAction.Remove;
         } else {
-            throw new Error(
-                'Failed deserializing CIS-4 RevocationKey event: Unknown revocation key action'
-            );
+            throw new Error('Failed deserializing CIS-4 RevocationKey event: Unknown revocation key action');
         }
         return {
             type: CIS4.EventType.RevocationKey,
@@ -973,9 +911,7 @@ export function deserializeCIS4Event(event: ContractEvent.Type): CIS4.Event {
  *
  * @returns {CIS4.NonCustomEvent[]} The deserialized events
  */
-export function deserializeCIS4EventsFromInvokationResult(
-    result: InvokeContractSuccessResult
-): CIS4.NonCustomEvent[] {
+export function deserializeCIS4EventsFromInvokationResult(result: InvokeContractSuccessResult): CIS4.NonCustomEvent[] {
     return deserializeCIS4ContractTraceEvents(result.events);
 }
 
@@ -986,9 +922,7 @@ export function deserializeCIS4EventsFromInvokationResult(
  *
  * @returns {CIS4.NonCustomEvent[]} The deserialized events
  */
-export function deserializeCIS4EventsFromSummary(
-    summary: BlockItemSummary
-): CIS4.NonCustomEvent[] {
+export function deserializeCIS4EventsFromSummary(summary: BlockItemSummary): CIS4.NonCustomEvent[] {
     if (summary.type !== TransactionSummaryType.AccountTransaction) {
         return [];
     }
@@ -999,9 +933,7 @@ export function deserializeCIS4EventsFromSummary(
         case TransactionKindString.InitContract:
             const deserializedEvents = [];
             for (const event of summary.contractInitialized.events) {
-                const deserializedEvent = deserializeCIS4Event(
-                    ContractEvent.fromHexString(event)
-                );
+                const deserializedEvent = deserializeCIS4Event(ContractEvent.fromHexString(event));
                 if (deserializedEvent.type !== CIS4.EventType.Custom) {
                     deserializedEvents.push(deserializedEvent);
                 }
@@ -1020,9 +952,7 @@ export function deserializeCIS4EventsFromSummary(
  *
  * @returns {CIS4.NonCustomEvent[]} The deserialized CIS-4 events
  */
-function deserializeCIS4ContractTraceEvents(
-    events: ContractTraceEvent[]
-): CIS4.NonCustomEvent[] {
+function deserializeCIS4ContractTraceEvents(events: ContractTraceEvent[]): CIS4.NonCustomEvent[] {
     const deserializedEvents = [];
     for (const traceEvent of events) {
         if (!('events' in traceEvent)) {

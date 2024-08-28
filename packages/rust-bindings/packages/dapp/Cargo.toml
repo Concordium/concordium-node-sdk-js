@@ -12,6 +12,7 @@ wasm-bindgen.workspace = true
 anyhow.workspace = true
 hex.workspace = true
 serde-wasm-bindgen.workspace = true
+getrandom.workspace = true
 concordium_base.workspace = true
 concordium_rust_bindings_common.workspace = true
 

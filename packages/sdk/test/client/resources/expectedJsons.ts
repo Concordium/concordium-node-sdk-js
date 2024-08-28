@@ -148,6 +148,9 @@ export const accountInfo = {
             },
         },
     },
+    availableBalance: {
+        value: '35495453082577742',
+    },
     threshold: {
         value: 1,
     },
@@ -1404,7 +1407,7 @@ export const bakerAccountInfo: AccountInfoBaker = {
         stakedAmount: CcdAmount.fromMicroCcd(7349646704751788n),
     },
     accountCooldowns: [],
-    accountAvailableBalance: CcdAmount.zero(), // FIXME: when this is available on testnet...
+    accountAvailableBalance: CcdAmount.fromMicroCcd(100000000000000n),
 };
 
 export const delegatorAccountInfo: AccountInfoDelegator = {
@@ -1511,7 +1514,7 @@ export const delegatorAccountInfo: AccountInfoDelegator = {
         stakedAmount: CcdAmount.fromMicroCcd(620942412516n),
     },
     accountCooldowns: [],
-    accountAvailableBalance: CcdAmount.zero(), // FIXME: when this is available on testnet...
+    accountAvailableBalance: CcdAmount.fromMicroCcd(6088626n),
 };
 
 export const credIdAccountInfo: AccountInfoSimple = {
@@ -1587,7 +1590,7 @@ export const credIdAccountInfo: AccountInfoSimple = {
     accountIndex: 11n,
     accountAddress: AccountAddress.fromBase58('3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'),
     accountCooldowns: [],
-    accountAvailableBalance: CcdAmount.zero(), // FIXME: when this is available on testnet...
+    accountAvailableBalance: CcdAmount.fromMicroCcd(35495453082577742n),
 };
 
 export const regularAccountInfo: AccountInfoSimple = {
@@ -1663,7 +1666,7 @@ export const regularAccountInfo: AccountInfoSimple = {
     accountIndex: 11n,
     accountAddress: AccountAddress.fromBase58('3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'),
     accountCooldowns: [],
-    accountAvailableBalance: CcdAmount.zero(), // FIXME: when this is available on testnet...
+    accountAvailableBalance: CcdAmount.fromMicroCcd(35495453082577742n),
 };
 
 const rootKeys = {

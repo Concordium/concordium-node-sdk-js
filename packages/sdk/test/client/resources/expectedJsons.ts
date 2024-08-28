@@ -1403,6 +1403,8 @@ export const bakerAccountInfo: AccountInfoBaker = {
         restakeEarnings: true,
         stakedAmount: CcdAmount.fromMicroCcd(7349646704751788n),
     },
+    accountCooldowns: [],
+    accountAvailableBalance: CcdAmount.zero(), // FIXME: when this is available on testnet...
 };
 
 export const delegatorAccountInfo: AccountInfoDelegator = {
@@ -1508,6 +1510,8 @@ export const delegatorAccountInfo: AccountInfoDelegator = {
         restakeEarnings: true,
         stakedAmount: CcdAmount.fromMicroCcd(620942412516n),
     },
+    accountCooldowns: [],
+    accountAvailableBalance: CcdAmount.zero(), // FIXME: when this is available on testnet...
 };
 
 export const credIdAccountInfo: AccountInfoSimple = {
@@ -1582,6 +1586,8 @@ export const credIdAccountInfo: AccountInfoSimple = {
         'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5aa730045bcd20bb5c24349db29d949f767e72f7cce459dc163c4b93c780a7d7f65801dda8ff7e4fc06fdf1a1b246276f',
     accountIndex: 11n,
     accountAddress: AccountAddress.fromBase58('3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'),
+    accountCooldowns: [],
+    accountAvailableBalance: CcdAmount.zero(), // FIXME: when this is available on testnet...
 };
 
 export const regularAccountInfo: AccountInfoSimple = {
@@ -1656,6 +1662,8 @@ export const regularAccountInfo: AccountInfoSimple = {
         'b14cbfe44a02c6b1f78711176d5f437295367aa4f2a8c2551ee10d25a03adc69d61a332a058971919dad7312e1fc94c5aa730045bcd20bb5c24349db29d949f767e72f7cce459dc163c4b93c780a7d7f65801dda8ff7e4fc06fdf1a1b246276f',
     accountIndex: 11n,
     accountAddress: AccountAddress.fromBase58('3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G'),
+    accountCooldowns: [],
+    accountAvailableBalance: CcdAmount.zero(), // FIXME: when this is available on testnet...
 };
 
 const rootKeys = {
@@ -2024,7 +2032,6 @@ export const bakerPoolStatusWithPendingChange: BakerPoolStatus = {
         pendingChangeType: BakerPoolPendingChangeType.RemovePool,
         effectiveTime: new Date('2022-12-08T07:54:00.000Z'),
     },
-    currentPaydayStatus: null,
     allPoolTotalCapital: CcdAmount.fromMicroCcd(46470271917743628n),
 };
 

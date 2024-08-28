@@ -1072,7 +1072,7 @@ interface AccountInfoCommon {
     /**
      * The stake on the account that is in cooldown.
      * There can be multiple amounts in cooldown that expire at different times.
-     * This was introduced in protocol version 7, and so is not present in
+     * This was introduced in protocol version 7, and will be empty in
      * earlier protocol versions.
      */
     accountCooldowns: Cooldown[];

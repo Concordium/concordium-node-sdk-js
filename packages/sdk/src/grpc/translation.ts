@@ -841,7 +841,13 @@ function trBakerEvent(bakerEvent: v2.BakerEvent, account: AccountAddress.Type): 
                 account,
             };
         }
-        default:
+        case 'delegationRemoved': {
+            return {
+                tag: v1.TransactionEventTag.BakerDelegationRemoved,
+                delegatorId: unwrap(event.delegationRemoved.delegatorId?.id?.value),
+            };
+        }
+        case undefined:
             throw Error('Unrecognized event type. This should be impossible.');
     }
 }
@@ -913,7 +919,12 @@ function trDelegationEvent(delegationEvent: v2.DelegationEvent, account: Account
                 delegatorId: unwrap(event.delegationRemoved.id?.value),
                 account,
             };
-        default:
+        case 'bakerRemoved':
+            return {
+                tag: v1.TransactionEventTag.DelegationBakerRemoved,
+                bakerId: unwrap(event.bakerRemoved.bakerId?.value),
+            };
+        case undefined:
             throw Error('Unrecognized event type. This should be impossible.');
     }
 }

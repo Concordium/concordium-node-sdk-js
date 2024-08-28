@@ -10,7 +10,7 @@
   (which was removed as it was just a less capable version of `getEmbeddedModuleSchema`).
   This means that it returns the complete `RawModuleSchema` instead of only the schema bytes.
   It also means that it returns `null` instead of an error when no embedded schema was found.
-
+- Update `AccountInfo` and `BakerPoolStatus` according to the changes introduced in the GRPC types introduced with node version 7
 
 ## 7.5.1
 

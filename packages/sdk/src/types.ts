@@ -960,7 +960,7 @@ export interface BakerPoolStatusDetails {
     /** Any pending change to the equity capital. This is not used from protocol version 7 onwards, as stake changes are immediate. */
     bakerStakePendingChange: BakerPoolPendingChange;
     /** Information of the pool in the current reward period. */
-    currentPaydayStatus?: CurrentPaydayBakerPoolStatus | null;
+    currentPaydayStatus?: CurrentPaydayBakerPoolStatus;
     /** Total capital staked across all pools, including passive delegation. */
     allPoolTotalCapital: CcdAmount.Type;
 }
@@ -1918,5 +1918,5 @@ export type Cooldown = {
     /** The amount that is in cooldown and set to be released at the end of the cooldown period */
     amount: CcdAmount.Type;
     /** The status of the cooldown */
-    cooldownStatus: CooldownStatus;
+    status: CooldownStatus;
 };

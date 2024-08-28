@@ -314,10 +314,7 @@ function transPoolInfo(info: v2.BakerPoolInfo): v1.BakerPoolInfo {
     };
 }
 
-function transPaydayStatus(status: v2.PoolCurrentPaydayInfo | undefined): v1.CurrentPaydayBakerPoolStatus | null {
-    if (!status) {
-        return null;
-    }
+function transPaydayStatus(status: v2.PoolCurrentPaydayInfo): v1.CurrentPaydayBakerPoolStatus {
     return {
         blocksBaked: status.blocksBaked,
         finalizationLive: status.finalizationLive,
@@ -327,6 +324,14 @@ function transPaydayStatus(status: v2.PoolCurrentPaydayInfo | undefined): v1.Cur
         bakerEquityCapital: CcdAmount.fromProto(unwrap(status.bakerEquityCapital)),
         delegatedCapital: CcdAmount.fromProto(unwrap(status.delegatedCapital)),
         commissionRates: trCommissionRates(status.commissionRates),
+    };
+}
+
+function transCooldown(cooldown: v2.Cooldown): v1.Cooldown {
+    return {
+        amount: CcdAmount.fromProto(unwrap(cooldown.amount)),
+        timestamp: Timestamp.fromProto(unwrap(cooldown.endTime)),
+        status: cooldown.status as number,
     };
 }
 
@@ -346,6 +351,8 @@ export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
         total: CcdAmount.fromProto(unwrap(acc.schedule?.total)),
         schedule: unwrap(acc.schedule?.schedules).map(trRelease),
     };
+    const cooldowns = acc.cooldowns.map(transCooldown);
+    const availableBalance = CcdAmount.fromProto(unwrap(acc.availableBalance));
     const accInfoCommon: v1.AccountInfoSimple = {
         type: v1.AccountInfoType.Simple,
         accountAddress: AccountAddress.fromProto(unwrap(acc.address)),
@@ -357,6 +364,8 @@ export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
         accountEncryptedAmount: encryptedAmount,
         accountReleaseSchedule: releaseSchedule,
         accountCredentials: mapRecord(acc.creds, trCred),
+        accountCooldowns: cooldowns,
+        accountAvailableBalance: availableBalance,
     };
 
     if (acc.stake?.stakingInfo.oneofKind === 'delegator') {
@@ -531,12 +540,14 @@ export function bakerPoolInfo(info: v2.PoolInfoResponse): v1.BakerPoolStatus {
         poolType: v1.PoolStatusType.BakerPool,
         bakerId: unwrap(info.baker?.value),
         bakerAddress: AccountAddress.fromProto(unwrap(info.address)),
-        bakerEquityCapital: CcdAmount.fromProto(unwrap(info.equityCapital)),
-        delegatedCapital: CcdAmount.fromProto(unwrap(info.delegatedCapital)),
-        delegatedCapitalCap: CcdAmount.fromProto(unwrap(info.delegatedCapitalCap)),
-        poolInfo: transPoolInfo(unwrap(info?.poolInfo)),
+        bakerEquityCapital: info.equityCapital !== undefined ? CcdAmount.fromProto(info.equityCapital) : undefined,
+        delegatedCapital: info.delegatedCapital !== undefined ? CcdAmount.fromProto(info.delegatedCapital) : undefined,
+        delegatedCapitalCap:
+            info.delegatedCapitalCap !== undefined ? CcdAmount.fromProto(info.delegatedCapitalCap) : undefined,
+        poolInfo: info.poolInfo !== undefined ? transPoolInfo(info.poolInfo) : undefined,
         bakerStakePendingChange: transPoolPendingChange(info.equityPendingChange),
-        currentPaydayStatus: transPaydayStatus(info.currentPaydayInfo),
+        currentPaydayStatus:
+            info.currentPaydayInfo !== undefined ? transPaydayStatus(info.currentPaydayInfo) : undefined,
         allPoolTotalCapital: CcdAmount.fromProto(unwrap(info.allPoolTotalCapital)),
     };
 }
@@ -830,8 +841,8 @@ function trBakerEvent(bakerEvent: v2.BakerEvent, account: AccountAddress.Type): 
                 account,
             };
         }
-        case undefined:
-            throw Error('Failed translating BakerEvent, encountered undefined');
+        default:
+            throw Error('Unrecognized event type. This should be impossible.');
     }
 }
 
@@ -847,7 +858,7 @@ function trDelegTarget(delegationTarget: v2.DelegationTarget | undefined): v1.Ev
             delegateType: v1.DelegationTargetType.PassiveDelegation,
         };
     } else {
-        throw 'Failed translating DelegationTarget, encountered undefined';
+        throw Error('Failed translating DelegationTarget, encountered undefined');
     }
 }
 

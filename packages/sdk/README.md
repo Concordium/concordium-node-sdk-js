@@ -4,6 +4,8 @@
 
 Wrappers for interacting with the Concordium node, for the web environment.
 
+**Minimum supported node version is 7.0**
+
 Please see the
 [documentation](https://developer.concordium.software/concordium-node-sdk-js/index.html)
 for more information

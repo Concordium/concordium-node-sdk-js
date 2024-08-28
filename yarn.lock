@@ -3578,7 +3578,7 @@ __metadata:
     ts-morph: ^19.0.0
     typescript: ^5.2.2
   peerDependencies:
-    "@concordium/web-sdk": 8.x
+    "@concordium/web-sdk": ">= 7"
   bin:
     ccd-js-gen: bin/ccd-js-gen.js
   languageName: unknown

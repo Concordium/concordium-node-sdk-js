@@ -59,7 +59,9 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     const schema = await client.getEmbeddedSchema(moduleRef);
     // #endregion documentation-snippet
 
-    fs.writeFileSync(cli.flags.outPath, schema);
+    if (schema) {
+        fs.writeFileSync(cli.flags.outPath, new Uint8Array(schema.buffer));
+    }
 
     console.log('Wrote schema to file: ', cli.flags.outPath);
 })();

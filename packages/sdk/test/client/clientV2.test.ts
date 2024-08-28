@@ -605,7 +605,7 @@ test.each(clients)('getEmbeddedSchema', async (client) => {
         const rawReturnValue = invoked.returnValue;
         const returnValue = v1.deserializeReceiveReturnValue(
             v1.ReturnValue.toBuffer(rawReturnValue),
-            schema,
+            schema!.buffer,
             v1.ContractName.fromStringUnchecked('weather'),
             v1.EntrypointName.fromStringUnchecked('get')
         );

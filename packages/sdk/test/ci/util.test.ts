@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 
-import { stringToInt, wasmToSchema } from '../../src/util.js';
+import { getEmbeddedModuleSchema } from '../../src/index.js';
+import { stringToInt } from '../../src/util.js';
 
 test('stringToInt transforms chosen field, but not others', () => {
     const keysToTransform = ['a'];
@@ -31,7 +32,10 @@ test('Embedded schema is the same as a seperate schema file', () => {
     const wasmModule = versionedWasmModule.subarray(8);
 
     const seperateSchema = readFileSync('test/ci/resources/icecream-schema.bin');
-    const embeddedSchema = wasmToSchema(wasmModule);
+    const embeddedSchema = getEmbeddedModuleSchema({
+        source: wasmModule,
+        version: 1,
+    });
 
-    expect(new Uint8Array(seperateSchema)).toEqual(embeddedSchema);
+    expect(new Uint8Array(seperateSchema)).toEqual(new Uint8Array(embeddedSchema!.buffer));
 });

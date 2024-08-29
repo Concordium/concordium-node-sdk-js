@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1]
+
+### Changed
+
+-   Update peer depedency for `@concordium/web-sdk` to support any version above `7`
+
 ## [0.6.0] - 2024-06-12
 
 ### Fixed

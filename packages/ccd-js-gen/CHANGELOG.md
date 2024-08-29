@@ -1,6 +1,10 @@
 # Changelog - ccd-js-gen
 
-## Unreleased
+## 1.2.1
+
+### Changed
+
+-   Update peer depedency for `@concordium/web-sdk` to support any version above `7`
 
 ## 1.2.0
 

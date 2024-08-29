@@ -3642,7 +3642,7 @@ __metadata:
     prettier: ^3.2.5
     typescript: ^5.2.2
   peerDependencies:
-    "@concordium/web-sdk": 7.x
+    "@concordium/web-sdk": ">= 7"
     react: ^18
   languageName: unknown
   linkType: soft

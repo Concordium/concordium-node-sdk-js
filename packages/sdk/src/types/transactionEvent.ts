@@ -43,12 +43,14 @@ export enum TransactionEventTag {
     BakerSetTransactionFeeCommission = 'BakerSetTransactionFeeCommission',
     BakerSetBakingRewardCommission = 'BakerSetBakingRewardCommission',
     BakerSetFinalizationRewardCommission = 'BakerSetFinalizationRewardCommission',
+    BakerDelegationRemoved = 'BakerDelegationRemoved',
     DelegationStakeIncreased = 'DelegationStakeIncreased',
     DelegationStakeDecreased = 'DelegationStakeDecreased',
     DelegationSetRestakeEarnings = 'DelegationSetRestakeEarnings',
     DelegationSetDelegationTarget = 'DelegationSetDelegationTarget',
     DelegationAdded = 'DelegationAdded',
     DelegationRemoved = 'DelegationRemoved',
+    DelegationBakerRemoved = 'DelegationBakerRemoved',
     TransferMemo = 'TransferMemo',
     Transferred = 'Transferred',
     Interrupted = 'Interrupted',
@@ -247,6 +249,11 @@ export interface DelegationStakeChangedEvent {
     newStake: CcdAmount.Type;
 }
 
+export interface DelegationBakerRemovedEvent {
+    tag: TransactionEventTag.DelegationBakerRemoved;
+    bakerId: BakerId;
+}
+
 // Baker Events
 
 export interface BakerAddedEvent {
@@ -324,6 +331,11 @@ export interface BakerSetTransactionFeeCommissionEvent {
     transactionFeeCommission: number;
 }
 
+export interface BakerDelegationRemovedEvent {
+    tag: TransactionEventTag.BakerDelegationRemoved;
+    delegatorId: DelegatorId;
+}
+
 export interface UpdateEnqueuedEvent {
     tag: TransactionEventTag.UpdateEnqueued;
     effectiveTime: number;
@@ -341,9 +353,11 @@ export type BakerEvent =
     | BakerStakeChangedEvent
     | BakerAddedEvent
     | BakerRemovedEvent
-    | BakerKeysUpdatedEvent;
+    | BakerKeysUpdatedEvent
+    | BakerDelegationRemovedEvent;
 export type DelegationEvent =
     | DelegatorEvent
     | DelegationSetDelegationTargetEvent
     | DelegationSetRestakeEarningsEvent
-    | DelegationStakeChangedEvent;
+    | DelegationStakeChangedEvent
+    | DelegationBakerRemovedEvent;

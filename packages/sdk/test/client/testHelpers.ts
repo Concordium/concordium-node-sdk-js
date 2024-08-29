@@ -24,10 +24,7 @@ export function getNodeClientV2(address = TESTNET_NODE, port = GRPCV2_PORT): Con
  * Creates a gRPC v2 client (for web) to communicate with a local concordium-node
  * used for automatic tests.
  */
-export function getNodeClientWeb(
-    address = 'http://node.testnet.concordium.com',
-    port = GRPCV2_PORT
-): ConcordiumGRPCClient {
+export function getNodeClientWeb(address = `http://${TESTNET_NODE}`, port = GRPCV2_PORT): ConcordiumGRPCClient {
     return new ConcordiumGRPCWebClient(address, port, { timeout: 15000 });
 }
 

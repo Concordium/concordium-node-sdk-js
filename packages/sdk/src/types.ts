@@ -939,27 +939,59 @@ type PoolStatusWrapper<T extends keyof typeof PoolStatusType, S> = S & {
 };
 
 export interface BakerPoolStatusDetails {
+    /** The pool owner */
     bakerId: BakerId;
+    /** The account address of the pool owner */
     bakerAddress: AccountAddress.Type;
-    bakerEquityCapital: CcdAmount.Type;
-    delegatedCapital: CcdAmount.Type;
-    delegatedCapitalCap: CcdAmount.Type;
-    poolInfo: BakerPoolInfo;
+    /** The equity capital provided by the pool owner. Absent if the pool is removed. */
+    bakerEquityCapital?: CcdAmount.Type;
+    /** The capital delegated to the pool by other accounts. Absent if the pool is removed. */
+    delegatedCapital?: CcdAmount.Type;
+    /**
+     * The maximum amount that may be delegated to the pool, accounting for leverage and stake limits.
+     * Absent if the pool is removed
+     */
+    delegatedCapitalCap?: CcdAmount.Type;
+    /**
+     * The pool info associated with the pool: open status, metadata URL and commission rates.
+     * Absent if the pool is removed
+     */
+    poolInfo?: BakerPoolInfo;
+    /** Any pending change to the equity capital. This is not used from protocol version 7 onwards, as stake changes are immediate. */
     bakerStakePendingChange: BakerPoolPendingChange;
-    currentPaydayStatus: CurrentPaydayBakerPoolStatus | null;
+    /** Information of the pool in the current reward period. */
+    currentPaydayStatus?: CurrentPaydayBakerPoolStatus;
+    /** Total capital staked across all pools, including passive delegation. */
     allPoolTotalCapital: CcdAmount.Type;
 }
 
+/**
+ * Contains information about a given pool at the end of a given block.
+ * From protocol version 7, pool removal has immediate effect, however, the
+ * pool may still be present for the current (and possibly next) reward period.
+ * In this case, the `current_payday_info` field will be set, but the
+ * `equity_capital`, `delegated_capital`, `delegated_capital_cap` and,
+ * `pool_info` fields will all be absent. The `equity_pending_change` field
+ * will also be absent, as stake changes are immediate.
+ */
 export type BakerPoolStatus = PoolStatusWrapper<PoolStatusType.BakerPool, BakerPoolStatusDetails>;
 
 export interface PassiveDelegationStatusDetails {
+    /** The total capital delegated passively. */
     delegatedCapital: CcdAmount.Type;
+    /** The passive delegation commission rates. */
     commissionRates: CommissionRates;
+    /** The transaction fees accruing to the passive delegators in the current reward period. */
     currentPaydayTransactionFeesEarned: CcdAmount.Type;
+    /** The effective delegated capital of passive delegators for the current reward period. */
     currentPaydayDelegatedCapital: CcdAmount.Type;
+    /** Total capital staked across all pools, including passive delegation. */
     allPoolTotalCapital: CcdAmount.Type;
 }
 
+/**
+ * Contains information about passive delegators at the end of a given block.
+ */
 export type PassiveDelegationStatus = PoolStatusWrapper<
     PoolStatusType.PassiveDelegation,
     PassiveDelegationStatusDetails
@@ -1037,6 +1069,21 @@ interface AccountInfoCommon {
     accountEncryptedAmount: AccountEncryptedAmount;
     accountReleaseSchedule: AccountReleaseSchedule;
     accountCredentials: Record<number, AccountCredential>;
+    /**
+     * The stake on the account that is in cooldown.
+     * There can be multiple amounts in cooldown that expire at different times.
+     * This was introduced in protocol version 7, and will be empty in
+     * earlier protocol versions.
+     */
+    accountCooldowns: Cooldown[];
+    /**
+     * The available (unencrypted) balance of the account (i.e. that can be transferred
+     * or used to pay for transactions). This is the balance minus the locked amount.
+     * The locked amount is the maximum of the amount in the release schedule and
+     * the total amount that is actively staked or in cooldown (inactive stake).
+     * This was introduced with node version 7.0
+     */
+    accountAvailableBalance: CcdAmount.Type;
 }
 
 export interface AccountInfoSimple extends AccountInfoCommon {
@@ -1832,3 +1879,44 @@ export type BlockItem =
               expiry: number;
           };
       };
+
+/**
+ * The status of a cooldown. When stake is removed from a baker or delegator
+ * (from protocol version 7) it first enters the pre-pre-cooldown state.
+ * The next time the stake snaphot is taken (at the epoch transition before
+ * a payday) it enters the pre-cooldown state. At the subsequent payday, it
+ * enters the cooldown state. At the payday after the end of the cooldown
+ * period, the stake is finally released.
+ */
+export enum CooldownStatus {
+    /**
+     * The amount is in cooldown and will expire at the specified time, becoming available
+     * at the subsequent pay day.
+     */
+    Cooldown,
+    /**
+     * The amount will enter cooldown at the next pay day. The specified end time is
+     * projected to be the end of the cooldown period, but the actual end time will be
+     * determined at the payday, and may be different if the global cooldown period
+     * changes.
+     */
+    PreCooldown,
+    /**
+     * The amount will enter pre-cooldown at the next snapshot epoch (i.e. the epoch
+     * transition before a pay day transition). As with pre-cooldown, the specified
+     * end time is projected, but the actual end time will be determined later.
+     */
+    PrePreCooldown,
+}
+
+/**
+ * Describes a cooldown associated with removal of stake from a baker/delegator account
+ */
+export type Cooldown = {
+    /** The time at which the cooldown will end  */
+    timestamp: Timestamp.Type;
+    /** The amount that is in cooldown and set to be released at the end of the cooldown period */
+    amount: CcdAmount.Type;
+    /** The status of the cooldown */
+    status: CooldownStatus;
+};

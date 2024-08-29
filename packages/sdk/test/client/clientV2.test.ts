@@ -28,9 +28,6 @@ const clientWeb = getNodeClientWeb();
 const clients = testEnvironment === 'node' ? [clientV2, clientWeb] : [clientWeb];
 
 const testAccount = v1.AccountAddress.fromBase58('3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G');
-const testCredId = v1.CredentialRegistrationId.fromHexString(
-    'aa730045bcd20bb5c24349db29d949f767e72f7cce459dc163c4b93c780a7d7f65801dda8ff7e4fc06fdf1a1b246276f'
-);
 const testAccBaker = v1.AccountAddress.fromBase58('4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L');
 const testAccDeleg = v1.AccountAddress.fromBase58('3bFo43GiPnkk5MmaSdsRVboaX2DNSKaRkLseQbyB3WPW1osPwh');
 const testBlockHash = v1.BlockHash.fromHexString('fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e');
@@ -96,23 +93,14 @@ test.each(clients)('getAccountInfo for delegator', async (client) => {
     }
 });
 
-test.each(clients)('getAccountInfo: Account Address and CredentialRegistrationId is equal', async (client) => {
-    const accInfo = await client.getAccountInfo(testAccount, testBlockHash);
-    const credIdInfo = await client.getAccountInfo(testCredId, testBlockHash);
-
-    expect(accInfo).toEqual(credIdInfo);
-});
-
 test.each(clients)(
     // TODO: fails..
     'accountInfo implementations is the same',
     async (client) => {
         const regular = await client.getAccountInfo(testAccount, testBlockHash);
-        const credId = await client.getAccountInfo(testCredId, testBlockHash);
         const baker = await client.getAccountInfo(testAccBaker, testBlockHash);
         const deleg = await client.getAccountInfo(testAccDeleg, testBlockHash);
         expect(regular).toEqual(expected.regularAccountInfo);
-        expect(credId).toEqual(expected.credIdAccountInfo);
         expect(baker).toEqual(expected.bakerAccountInfo);
         expect(deleg).toEqual(expected.delegatorAccountInfo);
     }

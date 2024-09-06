@@ -339,7 +339,7 @@ export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
     const aggAmount = acc.encryptedBalance?.aggregatedAmount?.value;
     const numAggregated = acc.encryptedBalance?.numAggregated;
 
-    const encryptedAmount: v1.AccountEncryptedAmount = {
+    const accountEncryptedAmount: v1.AccountEncryptedAmount = {
         selfAmount: unwrapValToHex(acc.encryptedBalance?.selfAmount),
         startIndex: unwrap(acc.encryptedBalance?.startIndex),
         incomingAmounts: unwrap(acc.encryptedBalance?.incomingAmounts).map(unwrapValToHex),
@@ -347,25 +347,54 @@ export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
         ...(numAggregated && { numAggregated: numAggregated }),
         ...(aggAmount && { aggregatedAmount: unwrapToHex(aggAmount) }),
     };
-    const releaseSchedule = {
+    const accountReleaseSchedule = {
         total: CcdAmount.fromProto(unwrap(acc.schedule?.total)),
         schedule: unwrap(acc.schedule?.schedules).map(trRelease),
     };
-    const cooldowns = acc.cooldowns.map(transCooldown);
-    const availableBalance = CcdAmount.fromProto(unwrap(acc.availableBalance));
+    const accountCooldowns = acc.cooldowns.map(transCooldown);
+    const accountAmount = CcdAmount.fromProto(unwrap(acc.amount));
+
+    let accountAvailableBalance: CcdAmount.Type;
+
+    // This is undefined for node version <7, so we add this check to be backwards compatible.
+    if (acc.availableBalance !== undefined) {
+        accountAvailableBalance = CcdAmount.fromProto(unwrap(acc.availableBalance));
+    } else {
+        // NOTE: implementation borrowed from concordium-browser-wallet.
+        let staked = 0n;
+        switch (acc.stake?.stakingInfo.oneofKind) {
+            case 'baker': {
+                staked = unwrap(acc.stake.stakingInfo.baker.stakedAmount?.value);
+                break;
+            }
+            case 'delegator': {
+                staked = unwrap(acc.stake.stakingInfo.delegator.stakedAmount?.value);
+                break;
+            }
+        }
+
+        const scheduled = accountReleaseSchedule ? BigInt(accountReleaseSchedule.total.microCcdAmount) : 0n;
+
+        const max = (first: bigint, second: bigint) => {
+            return first > second ? first : second;
+        };
+
+        const atDisposal = accountAmount.microCcdAmount - max(scheduled, staked);
+        accountAvailableBalance = CcdAmount.fromMicroCcd(atDisposal);
+    }
     const accInfoCommon: v1.AccountInfoSimple = {
         type: v1.AccountInfoType.Simple,
         accountAddress: AccountAddress.fromProto(unwrap(acc.address)),
         accountNonce: SequenceNumber.fromProto(unwrap(acc.sequenceNumber)),
-        accountAmount: CcdAmount.fromProto(unwrap(acc.amount)),
+        accountAmount,
         accountIndex: unwrap(acc.index?.value),
         accountThreshold: unwrap(acc.threshold?.value),
         accountEncryptionKey: unwrapValToHex(acc.encryptionKey),
-        accountEncryptedAmount: encryptedAmount,
-        accountReleaseSchedule: releaseSchedule,
+        accountEncryptedAmount,
+        accountReleaseSchedule,
         accountCredentials: mapRecord(acc.creds, trCred),
-        accountCooldowns: cooldowns,
-        accountAvailableBalance: availableBalance,
+        accountCooldowns,
+        accountAvailableBalance,
     };
 
     if (acc.stake?.stakingInfo.oneofKind === 'delegator') {

@@ -3565,7 +3565,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@concordium/ccd-js-gen@workspace:packages/ccd-js-gen"
   dependencies:
-    "@concordium/web-sdk": "workspace:^8.0.0"
+    "@concordium/web-sdk": "workspace:^"
     "@types/jest": ^26.0.23
     "@types/node": ^20.5.0
     buffer: ^6.0.3
@@ -3695,7 +3695,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@concordium/web-sdk@workspace:^, @concordium/web-sdk@workspace:^8.0.0, @concordium/web-sdk@workspace:packages/sdk":
+"@concordium/web-sdk@workspace:^, @concordium/web-sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
   resolution: "@concordium/web-sdk@workspace:packages/sdk"
   dependencies:

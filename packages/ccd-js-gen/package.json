@@ -43,7 +43,7 @@
         "@concordium/web-sdk": ">= 7"
     },
     "dependencies": {
-        "@concordium/web-sdk": "workspace:^8.0.0",
+        "@concordium/web-sdk": "workspace:^",
         "buffer": "^6.0.3",
         "commander": "^11.0.0",
         "sanitize-filename": "^1.6.3",

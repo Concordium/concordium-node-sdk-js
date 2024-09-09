@@ -1,10 +1,8 @@
 # Changelog
 
-## 8.0.0
+## 8.0.1
 
 ### Breaking changes
-
-- Minimum supported Concordium node version changes to 7.0 with the changes introduced.
 
 - `getEmbeddedModuleSchema` now uses the module version to determine in which custom wasm sections to look for the schema.
   It also no longer is `async` because there isn't any need for it to be so.

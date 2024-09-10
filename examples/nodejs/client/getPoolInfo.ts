@@ -53,11 +53,17 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     const blockHash = cli.flags.block === undefined ? undefined : BlockHash.fromHexString(cli.flags.block);
     const bakerPool: BakerPoolStatus = await client.getPoolInfo(BigInt(cli.flags.poolOwner), blockHash);
 
-    console.log('Open status:', bakerPool.poolInfo.openStatus);
+    console.log('Open status:', bakerPool.poolInfo?.openStatus);
     console.log('Baker address:', bakerPool.bakerAddress);
-    console.log('CCD provided by the baker to the pool:', CcdAmount.toCcd(bakerPool.bakerEquityCapital));
-    console.log('CCD provided by the delegators to the pool:', CcdAmount.toCcd(bakerPool.delegatedCapital));
+    console.log(
+        'CCD provided by the baker to the pool:',
+        bakerPool.bakerEquityCapital !== undefined ? CcdAmount.toCcd(bakerPool.bakerEquityCapital) : undefined
+    );
+    console.log(
+        'CCD provided by the delegators to the pool:',
+        bakerPool.delegatedCapital !== undefined ? CcdAmount.toCcd(bakerPool.delegatedCapital) : undefined
+    );
     console.log('Total capital in CCD of ALL pools:', CcdAmount.toCcd(bakerPool.allPoolTotalCapital));
-    console.log('Pool commision rates:', bakerPool.poolInfo.commissionRates);
+    console.log('Pool commision rates:', bakerPool.poolInfo?.commissionRates);
     // #endregion documentation-snippet
 })();

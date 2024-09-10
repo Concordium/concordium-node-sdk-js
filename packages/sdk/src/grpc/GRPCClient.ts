@@ -14,6 +14,7 @@ import { calculateEnergyCost } from '../energyCost.js';
 import { HealthClient } from '../grpc-api/v2/concordium/health.client.js';
 import { QueriesClient } from '../grpc-api/v2/concordium/service.client.js';
 import * as v2 from '../grpc-api/v2/concordium/types.js';
+import { RawModuleSchema } from '../schemaTypes.js';
 import { serializeAccountTransactionPayload } from '../serialization.js';
 import * as v1 from '../types.js';
 import { HexString, isRpcError } from '../types.js';
@@ -29,8 +30,9 @@ import * as SequenceNumber from '../types/SequenceNumber.js';
 import * as Timestamp from '../types/Timestamp.js';
 import * as TransactionExpiry from '../types/TransactionExpiry.js';
 import * as TransactionHash from '../types/TransactionHash.js';
+import { getEmbeddedModuleSchema } from '../types/VersionedModuleSource.js';
 import type { BlockItemStatus, BlockItemSummary } from '../types/blockItemSummary.js';
-import { countSignatures, isHex, isValidIp, mapRecord, mapStream, unwrap, wasmToSchema } from '../util.js';
+import { countSignatures, isHex, isValidIp, mapRecord, mapStream, unwrap } from '../util.js';
 import * as translate from './translation.js';
 
 /**
@@ -199,13 +201,16 @@ export class ConcordiumGRPCClient {
      * @param moduleRef the module's reference, represented by the ModuleReference class.
      * @param blockHash optional block hash to get the module embedded schema at, otherwise retrieves from last finalized block
      *
-     * @returns the module schema as a buffer.
-     * @throws An error of type `RpcError` if not found in the block.
-     * @throws If the module or schema cannot be parsed
+     * @returns the module schema as a {@link RawModuleSchema} or `null` if not found in the block.
+     * @throws An error of type `RpcError` if the module was not found in the block.
+     * @throws If the module source cannot be parsed or contains duplicate schema sections.
      */
-    async getEmbeddedSchema(moduleRef: ModuleReference.Type, blockHash?: BlockHash.Type): Promise<Uint8Array> {
-        const versionedSource = await this.getModuleSource(moduleRef, blockHash);
-        return wasmToSchema(versionedSource.source);
+    async getEmbeddedSchema(
+        moduleRef: ModuleReference.Type,
+        blockHash?: BlockHash.Type
+    ): Promise<RawModuleSchema | undefined> {
+        const source = await this.getModuleSource(moduleRef, blockHash);
+        return getEmbeddedModuleSchema(source);
     }
 
     /**

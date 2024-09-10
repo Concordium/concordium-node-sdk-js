@@ -1,5 +1,16 @@
 # Changelog
 
+## 8.0.1
+
+### Breaking changes
+
+- `getEmbeddedModuleSchema` now uses the module version to determine in which custom wasm sections to look for the schema.
+- `ConcordiumGRPCClient.getEmbeddedSchema` now delegates to `getEmbeddedModuleSchema` instead of `wasmToSchema`
+  (which was removed as it was just a less capable version of `getEmbeddedModuleSchema`).
+  This means that it returns the complete `RawModuleSchema` instead of only the schema bytes.
+  It also means that it returns `null` instead of an error when no embedded schema was found.
+- Update `AccountInfo` and `BakerPoolStatus` according to the changes introduced in the GRPC types introduced with node version 7
+
 ## 7.5.1
 
 ### Fixed

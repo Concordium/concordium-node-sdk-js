@@ -314,10 +314,7 @@ function transPoolInfo(info: v2.BakerPoolInfo): v1.BakerPoolInfo {
     };
 }
 
-function transPaydayStatus(status: v2.PoolCurrentPaydayInfo | undefined): v1.CurrentPaydayBakerPoolStatus | null {
-    if (!status) {
-        return null;
-    }
+function transPaydayStatus(status: v2.PoolCurrentPaydayInfo): v1.CurrentPaydayBakerPoolStatus {
     return {
         blocksBaked: status.blocksBaked,
         finalizationLive: status.finalizationLive,
@@ -330,11 +327,19 @@ function transPaydayStatus(status: v2.PoolCurrentPaydayInfo | undefined): v1.Cur
     };
 }
 
+function transCooldown(cooldown: v2.Cooldown): v1.Cooldown {
+    return {
+        amount: CcdAmount.fromProto(unwrap(cooldown.amount)),
+        timestamp: Timestamp.fromProto(unwrap(cooldown.endTime)),
+        status: cooldown.status as number,
+    };
+}
+
 export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
     const aggAmount = acc.encryptedBalance?.aggregatedAmount?.value;
     const numAggregated = acc.encryptedBalance?.numAggregated;
 
-    const encryptedAmount: v1.AccountEncryptedAmount = {
+    const accountEncryptedAmount: v1.AccountEncryptedAmount = {
         selfAmount: unwrapValToHex(acc.encryptedBalance?.selfAmount),
         startIndex: unwrap(acc.encryptedBalance?.startIndex),
         incomingAmounts: unwrap(acc.encryptedBalance?.incomingAmounts).map(unwrapValToHex),
@@ -342,21 +347,54 @@ export function accountInfo(acc: v2.AccountInfo): v1.AccountInfo {
         ...(numAggregated && { numAggregated: numAggregated }),
         ...(aggAmount && { aggregatedAmount: unwrapToHex(aggAmount) }),
     };
-    const releaseSchedule = {
+    const accountReleaseSchedule = {
         total: CcdAmount.fromProto(unwrap(acc.schedule?.total)),
         schedule: unwrap(acc.schedule?.schedules).map(trRelease),
     };
+    const accountCooldowns = acc.cooldowns.map(transCooldown);
+    const accountAmount = CcdAmount.fromProto(unwrap(acc.amount));
+
+    let accountAvailableBalance: CcdAmount.Type;
+
+    // This is undefined for node version <7, so we add this check to be backwards compatible.
+    if (acc.availableBalance !== undefined) {
+        accountAvailableBalance = CcdAmount.fromProto(unwrap(acc.availableBalance));
+    } else {
+        // NOTE: implementation borrowed from concordium-browser-wallet.
+        let staked = 0n;
+        switch (acc.stake?.stakingInfo.oneofKind) {
+            case 'baker': {
+                staked = unwrap(acc.stake.stakingInfo.baker.stakedAmount?.value);
+                break;
+            }
+            case 'delegator': {
+                staked = unwrap(acc.stake.stakingInfo.delegator.stakedAmount?.value);
+                break;
+            }
+        }
+
+        const scheduled = accountReleaseSchedule ? BigInt(accountReleaseSchedule.total.microCcdAmount) : 0n;
+
+        const max = (first: bigint, second: bigint) => {
+            return first > second ? first : second;
+        };
+
+        const atDisposal = accountAmount.microCcdAmount - max(scheduled, staked);
+        accountAvailableBalance = CcdAmount.fromMicroCcd(atDisposal);
+    }
     const accInfoCommon: v1.AccountInfoSimple = {
         type: v1.AccountInfoType.Simple,
         accountAddress: AccountAddress.fromProto(unwrap(acc.address)),
         accountNonce: SequenceNumber.fromProto(unwrap(acc.sequenceNumber)),
-        accountAmount: CcdAmount.fromProto(unwrap(acc.amount)),
+        accountAmount,
         accountIndex: unwrap(acc.index?.value),
         accountThreshold: unwrap(acc.threshold?.value),
         accountEncryptionKey: unwrapValToHex(acc.encryptionKey),
-        accountEncryptedAmount: encryptedAmount,
-        accountReleaseSchedule: releaseSchedule,
+        accountEncryptedAmount,
+        accountReleaseSchedule,
         accountCredentials: mapRecord(acc.creds, trCred),
+        accountCooldowns,
+        accountAvailableBalance,
     };
 
     if (acc.stake?.stakingInfo.oneofKind === 'delegator') {
@@ -531,12 +569,14 @@ export function bakerPoolInfo(info: v2.PoolInfoResponse): v1.BakerPoolStatus {
         poolType: v1.PoolStatusType.BakerPool,
         bakerId: unwrap(info.baker?.value),
         bakerAddress: AccountAddress.fromProto(unwrap(info.address)),
-        bakerEquityCapital: CcdAmount.fromProto(unwrap(info.equityCapital)),
-        delegatedCapital: CcdAmount.fromProto(unwrap(info.delegatedCapital)),
-        delegatedCapitalCap: CcdAmount.fromProto(unwrap(info.delegatedCapitalCap)),
-        poolInfo: transPoolInfo(unwrap(info?.poolInfo)),
+        bakerEquityCapital: info.equityCapital !== undefined ? CcdAmount.fromProto(info.equityCapital) : undefined,
+        delegatedCapital: info.delegatedCapital !== undefined ? CcdAmount.fromProto(info.delegatedCapital) : undefined,
+        delegatedCapitalCap:
+            info.delegatedCapitalCap !== undefined ? CcdAmount.fromProto(info.delegatedCapitalCap) : undefined,
+        poolInfo: info.poolInfo !== undefined ? transPoolInfo(info.poolInfo) : undefined,
         bakerStakePendingChange: transPoolPendingChange(info.equityPendingChange),
-        currentPaydayStatus: transPaydayStatus(info.currentPaydayInfo),
+        currentPaydayStatus:
+            info.currentPaydayInfo !== undefined ? transPaydayStatus(info.currentPaydayInfo) : undefined,
         allPoolTotalCapital: CcdAmount.fromProto(unwrap(info.allPoolTotalCapital)),
     };
 }
@@ -830,8 +870,14 @@ function trBakerEvent(bakerEvent: v2.BakerEvent, account: AccountAddress.Type): 
                 account,
             };
         }
+        case 'delegationRemoved': {
+            return {
+                tag: v1.TransactionEventTag.BakerDelegationRemoved,
+                delegatorId: unwrap(event.delegationRemoved.delegatorId?.id?.value),
+            };
+        }
         case undefined:
-            throw Error('Failed translating BakerEvent, encountered undefined');
+            throw Error('Unrecognized event type. This should be impossible.');
     }
 }
 
@@ -847,7 +893,7 @@ function trDelegTarget(delegationTarget: v2.DelegationTarget | undefined): v1.Ev
             delegateType: v1.DelegationTargetType.PassiveDelegation,
         };
     } else {
-        throw 'Failed translating DelegationTarget, encountered undefined';
+        throw Error('Failed translating DelegationTarget, encountered undefined');
     }
 }
 
@@ -902,7 +948,12 @@ function trDelegationEvent(delegationEvent: v2.DelegationEvent, account: Account
                 delegatorId: unwrap(event.delegationRemoved.id?.value),
                 account,
             };
-        default:
+        case 'bakerRemoved':
+            return {
+                tag: v1.TransactionEventTag.DelegationBakerRemoved,
+                bakerId: unwrap(event.bakerRemoved.bakerId?.value),
+            };
+        case undefined:
             throw Error('Unrecognized event type. This should be impossible.');
     }
 }

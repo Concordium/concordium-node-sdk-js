@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Buffer } from 'buffer/index.js';
 
 import { AccountTransactionSignature, HexString, IpAddressString } from './types.js';
@@ -58,44 +57,6 @@ export function countSignatures(accountSignatures: AccountTransactionSignature):
         totalSignatureCount += signatureCount;
     }
     return totalSignatureCount;
-}
-
-/**
- * Compiles a wasm module and extracts the smart contract schema.
- *
- * @param wasm the wasm module as a Buffer
- *
- * @throws If WASM module contains no schema
- * @throws If WASM module provided is invalid
- *
- * @returns the smart contract schema as a Buffer
- */
-export function wasmToSchema(wasm: ArrayBuffer): Uint8Array {
-    const wasmModule = new WebAssembly.Module(wasm);
-    const schemaBytes = schemaBytesFromWasmModule(wasmModule, 'concordium-schema');
-    if (schemaBytes === null) {
-        throw Error('WASM-Module contains no schema!');
-    }
-    return new Uint8Array(schemaBytes);
-}
-
-/**
- * Extracts custom-section containing the smart contract schema if present.
- * @param wasmModule the WebAssembly module.
- * @returns the smart contract schema as a Buffer or null if not present.
- */
-export function schemaBytesFromWasmModule(
-    wasmModule: WebAssembly.Module,
-    sectionName: 'concordium-schema' | 'concordium-schema-v1' | 'concordium-schema-v2'
-): ArrayBuffer | null {
-    const sections = WebAssembly.Module.customSections(wasmModule, sectionName);
-    if (sections.length === 1) {
-        return sections[0];
-    } else if (sections.length === 0) {
-        return null;
-    } else {
-        throw Error('Invalid WASM-Module retrieved!');
-    }
 }
 
 /**

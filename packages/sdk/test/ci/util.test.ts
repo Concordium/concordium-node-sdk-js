@@ -26,13 +26,13 @@ test('stringToInt will not change the string if no keys match', () => {
     expect(transformed).toEqual(input);
 });
 
-test('Embedded schema is the same as a seperate schema file', () => {
+test('Embedded schema is the same as a seperate schema file', async () => {
     const versionedWasmModule = readFileSync('test/ci/resources/icecream-with-schema.wasm');
     // Strip module version information
     const wasmModule = versionedWasmModule.subarray(8);
 
     const seperateSchema = readFileSync('test/ci/resources/icecream-schema.bin');
-    const embeddedSchema = getEmbeddedModuleSchema({
+    const embeddedSchema = await getEmbeddedModuleSchema({
         source: wasmModule,
         version: 1,
     });

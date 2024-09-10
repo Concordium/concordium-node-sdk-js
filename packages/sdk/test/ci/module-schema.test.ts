@@ -12,7 +12,7 @@ describe('VersionedModuleSource: getEmbeddedModuleSchema', () => {
             path.join(testFileDir, 'cis2-wccd-embedded-schema-v1-versioned.wasm.v1')
         );
         const moduleSource = versionedModuleSourceFromBuffer(contractModule);
-        const moduleSchema = getEmbeddedModuleSchema(moduleSource);
+        const moduleSchema = await getEmbeddedModuleSchema(moduleSource);
         if (moduleSchema === undefined) {
             fail('Failed to find module schame');
         }
@@ -24,7 +24,7 @@ describe('VersionedModuleSource: getEmbeddedModuleSchema', () => {
             path.join(testFileDir, 'cis1-wccd-embedded-schema-v0-versioned.wasm.v0')
         );
         const moduleSource = versionedModuleSourceFromBuffer(contractModule);
-        const moduleSchema = getEmbeddedModuleSchema(moduleSource);
+        const moduleSchema = await getEmbeddedModuleSchema(moduleSource);
         if (moduleSchema === undefined) {
             fail('Failed to find module schame');
         }
@@ -39,7 +39,7 @@ describe('VersionedModuleSource: getEmbeddedModuleSchema', () => {
             version: 0,
             source: Buffer.from(unversionedContractModule),
         } as const;
-        const moduleSchema = getEmbeddedModuleSchema(moduleSource);
+        const moduleSchema = await getEmbeddedModuleSchema(moduleSource);
         if (moduleSchema === undefined) {
             fail('Failed to find module schame');
         }
@@ -51,7 +51,7 @@ describe('VersionedModuleSource: getEmbeddedModuleSchema', () => {
             path.join(testFileDir, 'cis2-wccd-embedded-schema-v1-unversioned.wasm.v1')
         );
         const moduleSource = versionedModuleSourceFromBuffer(contractModule);
-        const moduleSchema = getEmbeddedModuleSchema(moduleSource);
+        const moduleSchema = await getEmbeddedModuleSchema(moduleSource);
         if (moduleSchema === undefined) {
             fail('Failed to find module schame');
         }

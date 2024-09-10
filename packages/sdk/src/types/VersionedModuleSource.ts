@@ -101,8 +101,11 @@ export async function parseModuleInterface(moduleSource: VersionedModuleSource):
  * @returns {RawModuleSchema | null} The raw module schema if found.
  * @throws If the module source cannot be parsed or contains duplicate schema sections.
  */
-export function getEmbeddedModuleSchema({ source, version }: VersionedModuleSource): RawModuleSchema | undefined {
-    const sections = findCustomSections(new WebAssembly.Module(source), version);
+export async function getEmbeddedModuleSchema({
+    source,
+    version,
+}: VersionedModuleSource): Promise<RawModuleSchema | undefined> {
+    const sections = findCustomSections(await WebAssembly.compile(source), version);
     if (sections === undefined) {
         return undefined;
     }

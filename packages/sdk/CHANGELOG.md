@@ -2,9 +2,9 @@
 
 ## Unreleased
 
-### Fixed
+### Added
 
-- Add `legalCountry` as allowed attribute for set/not-set memebership proofs.
+- Add `legalCountry` as an allowed attribute for set/not-set membership proofs.
 
 ## 8.0.1
 

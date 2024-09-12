@@ -127,6 +127,11 @@ function verifySetStatement(statement: MembershipStatement | NonMembershipStatem
                 throw new Error('idDocType values must be one from IdDocType enum');
             }
             break;
+        case AttributeKeyString.legalCountry:
+            if (!statement.set.every(isISO3166_1Alpha2)) {
+                throw new Error(statement.attributeTag + ' values must be ISO3166-1 Alpha 2 codes in upper case');
+            }
+            break;
         default:
             throw new Error(statement.attributeTag + ' is not allowed to be used in ' + typeName + ' statements');
     }

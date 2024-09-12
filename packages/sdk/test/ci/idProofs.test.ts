@@ -74,7 +74,7 @@ test('Upper bound must be greater than lower bound for attribute statement', () 
 test('Unknown attribute tags are rejected', () => {
     const builder = new IdStatementBuilder(true);
     expect(() => builder.addMembership(-1 as unknown as AttributesKeys, ['DK'])).toThrow();
-    expect(() => builder.addMembership(15 as unknown as AttributesKeys, ['DK'])).toThrow();
+    expect(() => builder.addMembership(16 as unknown as AttributesKeys, ['DK'])).toThrow();
     expect(() => builder.addMembership(1000 as unknown as AttributesKeys, ['DK'])).toThrow();
 });
 

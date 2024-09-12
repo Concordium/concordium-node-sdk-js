@@ -45,4 +45,10 @@ export const attributesWithRange: AttributeKey[] = ['dob', 'idDocIssuedAt', 'idD
 /**
  * The attributes that can be used for (non)membership statements
  */
-export const attributesWithSet: AttributeKey[] = ['countryOfResidence', 'nationality', 'idDocType', 'idDocIssuer'];
+export const attributesWithSet: AttributeKey[] = [
+    'countryOfResidence',
+    'nationality',
+    'idDocType',
+    'idDocIssuer',
+    'legalCountry',
+];

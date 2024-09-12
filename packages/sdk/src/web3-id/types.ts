@@ -87,7 +87,7 @@ type CredentialSchemaAttributes = {
     title?: string;
     description?: string;
     type: 'object';
-    properties: Record<AttributeKey, CredentialSchemaProperty | TimestampProperty>;
+    properties: Record<string, CredentialSchemaProperty | TimestampProperty>;
     required: string[];
 };
 
@@ -100,7 +100,22 @@ export type CredentialSchemaSubject = {
     required: string[];
 };
 
-export const IDENTITY_SUBJECT_SCHEMA: CredentialSchemaSubject = {
+type Override<Type, NewType> = Omit<Type, keyof NewType> & NewType;
+
+type IdCredentialSchemaSubject = Override<
+    CredentialSchemaSubject,
+    {
+        properties: {
+            id: IdDetails;
+            attributes: Override<
+                CredentialSchemaAttributes,
+                { properties: Record<AttributeKey, CredentialSchemaProperty | TimestampProperty> }
+            >;
+        };
+    }
+>;
+
+export const IDENTITY_SUBJECT_SCHEMA: IdCredentialSchemaSubject = {
     type: 'object',
     properties: {
         id: {
@@ -165,7 +180,7 @@ export const IDENTITY_SUBJECT_SCHEMA: CredentialSchemaSubject = {
                 },
                 lei: {
                     title: 'Legal Entity Identifier (LEI)',
-                    type: 'string'
+                    type: 'string',
                 },
                 legalName: {
                     title: 'Legal Name',
@@ -182,7 +197,7 @@ export const IDENTITY_SUBJECT_SCHEMA: CredentialSchemaSubject = {
                 registrationAuth: {
                     title: 'Registration Authority',
                     type: 'string',
-                }
+                },
             },
             required: [],
         },

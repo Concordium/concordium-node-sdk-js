@@ -87,7 +87,7 @@ type CredentialSchemaAttributes = {
     title?: string;
     description?: string;
     type: 'object';
-    properties: Record<string, CredentialSchemaProperty | TimestampProperty>;
+    properties: Record<AttributeKey, CredentialSchemaProperty | TimestampProperty>;
     required: string[];
 };
 
@@ -163,6 +163,26 @@ export const IDENTITY_SUBJECT_SCHEMA: CredentialSchemaSubject = {
                     title: 'Tax ID Number',
                     type: 'string',
                 },
+                lei: {
+                    title: 'Legal Entity Identifier (LEI)',
+                    type: 'string'
+                },
+                legalName: {
+                    title: 'Legal Name',
+                    type: 'string',
+                },
+                legalCountry: {
+                    title: 'Legal Country',
+                    type: 'string',
+                },
+                businessNumber: {
+                    title: 'Business Number',
+                    type: 'string',
+                },
+                registrationAuth: {
+                    title: 'Registration Authority',
+                    type: 'string',
+                }
             },
             required: [],
         },

@@ -100,22 +100,7 @@ export type CredentialSchemaSubject = {
     required: string[];
 };
 
-type Override<Type, NewType> = Omit<Type, keyof NewType> & NewType;
-
-type IdCredentialSchemaSubject = Override<
-    CredentialSchemaSubject,
-    {
-        properties: {
-            id: IdDetails;
-            attributes: Override<
-                CredentialSchemaAttributes,
-                { properties: Record<AttributeKey, CredentialSchemaProperty | TimestampProperty> }
-            >;
-        };
-    }
->;
-
-export const IDENTITY_SUBJECT_SCHEMA: IdCredentialSchemaSubject = {
+export const IDENTITY_SUBJECT_SCHEMA: CredentialSchemaSubject = {
     type: 'object',
     properties: {
         id: {

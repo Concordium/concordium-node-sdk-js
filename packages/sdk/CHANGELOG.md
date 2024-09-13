@@ -5,6 +5,7 @@
 ### Added
 
 - Add `legalCountry` as an allowed attribute for set/not-set membership proofs.
+- Add attributes `lei`, `legalName`, `legalCountry`, `businessNumber`, and `registrationAuth` to `IDENTITY_SUBJECT_SCHEMA`.
 
 ## 8.0.1
 

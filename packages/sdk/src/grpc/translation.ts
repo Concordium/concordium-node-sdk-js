@@ -215,6 +215,7 @@ function trOpenStatus(openStatus: v2.OpenStatus | undefined): v1.OpenStatusText 
 
 function trBaker(baker: v2.AccountStakingInfo_Baker): v1.AccountBakerDetails {
     const bakerInfo = baker.bakerInfo;
+    const isSuspended = baker.isSuspended;
 
     const v0: v1.AccountBakerDetails = {
         version: 0,
@@ -228,6 +229,7 @@ function trBaker(baker: v2.AccountStakingInfo_Baker): v1.AccountBakerDetails {
         ...(baker.pendingChange && {
             pendingChange: trPendingChange(baker.pendingChange),
         }),
+        isSuspended,
     };
 
     if (baker.poolInfo === undefined) {
@@ -499,7 +501,7 @@ function trChainParametersV1(params: v2.ChainParametersV1): v1.ChainParametersV1
     };
 }
 
-function trChainParametersV2(params: v2.ChainParametersV2): v1.ChainParametersV2 {
+function trChainParametersV2(params: v2.ChainParametersV2 | v2.ChainParametersV3): v1.ChainParametersV2 {
     const common = translateChainParametersCommon(params);
     const commonRewardParameters = translateRewardParametersCommon(params);
 
@@ -550,6 +552,17 @@ function trChainParametersV2(params: v2.ChainParametersV2): v1.ChainParametersV2
 
 export function blockChainParameters(params: v2.ChainParameters): v1.ChainParameters {
     switch (params.parameters.oneofKind) {
+        case 'v3': {
+            const { version, ...common } = trChainParametersV2(params.parameters.v3);
+            const cp: v1.ChainParametersV3 = {
+                ...common,
+                version: 3,
+                validatorScoreParameters: {
+                    maxMissedRounds: unwrap(params.parameters.v3.validatorScoreParameters?.maximumMissedRounds),
+                },
+            };
+            return cp;
+        }
         case 'v2': {
             return trChainParametersV2(params.parameters.v2);
         }
@@ -559,7 +572,7 @@ export function blockChainParameters(params: v2.ChainParameters): v1.ChainParame
         case 'v0': {
             return trChainParametersV0(params.parameters.v0);
         }
-        default:
+        case undefined:
             throw new Error('Missing chain parameters');
     }
 }
@@ -874,6 +887,18 @@ function trBakerEvent(bakerEvent: v2.BakerEvent, account: AccountAddress.Type): 
             return {
                 tag: v1.TransactionEventTag.BakerDelegationRemoved,
                 delegatorId: unwrap(event.delegationRemoved.delegatorId?.id?.value),
+            };
+        }
+        case 'bakerSuspended': {
+            return {
+                tag: v1.TransactionEventTag.BakerSuspended,
+                bakerId: unwrap(event.bakerSuspended.bakerId?.value),
+            };
+        }
+        case 'bakerResumed': {
+            return {
+                tag: v1.TransactionEventTag.BakerResumed,
+                bakerId: unwrap(event.bakerResumed.bakerId?.value),
             };
         }
         case undefined:
@@ -1436,10 +1461,15 @@ export function trPendingUpdateEffect(pendingUpdate: v2.PendingUpdate): v1.Pendi
                     updatePayload: trAuthorizationsV1(effect.level2KeysCpv1),
                 },
             };
+        case 'validatorScoreParameters':
+            return {
+                updateType: v1.UpdateType.ValidatorScoreParameters,
+                update: {
+                    maxMissedRounds: effect.validatorScoreParameters.maximumMissedRounds
+                }
+            }
         case undefined:
             throw Error('Unexpected missing pending update');
-        default:
-            throw Error(`Unsupported update: ${effect}`);
     }
 }
 
@@ -2406,6 +2436,20 @@ export function blockSpecialEvent(specialEvent: v2.BlockSpecialEvent): v1.BlockS
                 bakerReward: CcdAmount.fromProto(unwrap(event.paydayPoolReward.bakerReward)),
                 finalizationReward: CcdAmount.fromProto(unwrap(event.paydayPoolReward.finalizationReward)),
                 ...(poolOwner !== undefined && { poolOwner }),
+            };
+        }
+        case 'validatorSuspended': {
+            return {
+                tag: 'validatorSuspended',
+                account: AccountAddress.fromProto(unwrap(event.validatorSuspended.account)),
+                bakerId: unwrap(event.validatorSuspended.bakerId?.value),
+            };
+        }
+        case 'validatorPrimedForSuspension': {
+            return {
+                tag: 'validatorPrimedForSuspension',
+                account: AccountAddress.fromProto(unwrap(event.validatorPrimedForSuspension.account)),
+                bakerId: unwrap(event.validatorPrimedForSuspension.bakerId?.value),
             };
         }
         case undefined: {

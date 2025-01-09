@@ -478,7 +478,7 @@ export interface ValidatorScoreParameters {
 }
 
 /** Chain parameters used from protocol version 8 */
-export type ChainParametersV3 = ChainParametersV2 & {
+export type ChainParametersV3 = Omit<ChainParametersV2, 'version'> & {
     version: 3;
     /** The current validator score parameters */
     validatorScoreParameters: ValidatorScoreParameters;

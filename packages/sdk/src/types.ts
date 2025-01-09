@@ -453,7 +453,7 @@ export type ChainParametersV1 = ChainParametersCommon &
         level2Keys: AuthorizationsV1;
     };
 
-/** Chain parameters used from protocol version 6 */
+/** Chain parameters used in protocol version 6 and 7 */
 export type ChainParametersV2 = ChainParametersCommon &
     CooldownParametersV1 &
     TimeParametersV1 &
@@ -468,8 +468,24 @@ export type ChainParametersV2 = ChainParametersCommon &
         level2Keys: AuthorizationsV1;
     };
 
+/**
+ * Validator score parameters. These parameters control the threshold of
+ * maximal missed rounds before a validator gets suspended.
+ */
+export interface ValidatorScoreParameters {
+    /** Maximal number of missed rounds before a validator gets suspended. */
+    maxMissedRounds: bigint;
+}
+
+/** Chain parameters used from protocol version 8 */
+export type ChainParametersV3 = ChainParametersV2 & {
+    version: 3;
+    /** The current validator score parameters */
+    validatorScoreParameters: ValidatorScoreParameters;
+};
+
 /** Union of all chain parameters across all protocol versions */
-export type ChainParameters = ChainParametersV0 | ChainParametersV1 | ChainParametersV2;
+export type ChainParameters = ChainParametersV0 | ChainParametersV1 | ChainParametersV2 | ChainParametersV3;
 
 export interface Authorization {
     threshold: number;
@@ -1029,6 +1045,12 @@ interface AccountBakerDetailsCommon {
     bakerSignatureVerifyKey: string;
     stakedAmount: CcdAmount.Type;
     pendingChange?: StakePendingChange;
+    /**
+     * A flag indicating whether the validator is currently suspended or not.
+     * In protocol versions prior to protocol version 8, this will always be `false`.
+     * A suspended validator will not be included in the validator committee the next time it is calculated.
+     */
+    isSuspended: boolean;
 }
 
 /** Protocol version 1-3. */

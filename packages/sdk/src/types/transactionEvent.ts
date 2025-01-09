@@ -44,6 +44,8 @@ export enum TransactionEventTag {
     BakerSetBakingRewardCommission = 'BakerSetBakingRewardCommission',
     BakerSetFinalizationRewardCommission = 'BakerSetFinalizationRewardCommission',
     BakerDelegationRemoved = 'BakerDelegationRemoved',
+    BakerSuspended = 'BakerSuspended',
+    BakerResumed = 'BakerResumed',
     DelegationStakeIncreased = 'DelegationStakeIncreased',
     DelegationStakeDecreased = 'DelegationStakeDecreased',
     DelegationSetRestakeEarnings = 'DelegationSetRestakeEarnings',
@@ -336,6 +338,16 @@ export interface BakerDelegationRemovedEvent {
     delegatorId: DelegatorId;
 }
 
+export interface BakerSuspendedEvent {
+    tag: TransactionEventTag.BakerSuspended;
+    bakerId: BakerId;
+}
+
+export interface BakerResumedEvent {
+    tag: TransactionEventTag.BakerResumed;
+    bakerId: BakerId;
+}
+
 export interface UpdateEnqueuedEvent {
     tag: TransactionEventTag.UpdateEnqueued;
     effectiveTime: number;
@@ -354,7 +366,9 @@ export type BakerEvent =
     | BakerAddedEvent
     | BakerRemovedEvent
     | BakerKeysUpdatedEvent
-    | BakerDelegationRemovedEvent;
+    | BakerDelegationRemovedEvent
+    | BakerSuspendedEvent
+    | BakerResumedEvent;
 export type DelegationEvent =
     | DelegatorEvent
     | DelegationSetDelegationTargetEvent

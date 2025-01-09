@@ -14,6 +14,7 @@ import type {
     MintRate,
     TimeoutParameters,
     TransactionFeeDistribution,
+    ValidatorScoreParameters,
     VerifyKey,
 } from '../types.js';
 import type * as CcdAmount from './CcdAmount.js';
@@ -103,6 +104,9 @@ export type PendingHigherLevelKeyUpdate = ChainUpdate<UpdateType.HigherLevelKeyU
 /** A pending update to authorization keys */
 export type PendingAuthorizationKeysUpdate = ChainUpdate<UpdateType.AuthorizationKeysUpdate, AuthorizationKeysUpdate>;
 
+/** A pending update to validator score parameters */
+export type PendingValidatorScoreUpdate = ChainUpdate<UpdateType.ValidatorScoreParameters, ValidatorScoreParameters>;
+
 /** A union of chain updates, barring key updates */
 export type CommonUpdate =
     | MicroGtuPerEuroUpdate
@@ -123,7 +127,8 @@ export type CommonUpdate =
     | TimeoutParametersUpdate
     | MinBlockTimeUpdate
     | BlockEnergyLimitUpdate
-    | FinalizationCommitteeParametersUpdate;
+    | FinalizationCommitteeParametersUpdate
+    | PendingValidatorScoreUpdate;
 
 /** A union of chain updates */
 export type UpdateInstructionPayload = CommonUpdate | RootUpdate | Level1Update;
@@ -166,6 +171,7 @@ export enum UpdateType {
     MinBlockTime = 'minBlockTime',
     BlockEnergyLimit = 'blockEnergyLimit',
     FinalizationCommitteeParameters = 'finalizationCommitteeParameters',
+    ValidatorScoreParameters = 'validatorScoreParameters',
 }
 
 export type KeyUpdate = HigherLevelKeyUpdate | AuthorizationKeysUpdate;

@@ -2,6 +2,9 @@ import type { BakerId } from '../types.js';
 import * as AccountAddress from './AccountAddress.js';
 import * as CcdAmount from './CcdAmount.js';
 
+/**
+ * A union of all the different "special events" that can be part of a block.
+ */
 export type BlockSpecialEvent =
     | BlockSpecialEventBakingRewards
     | BlockSpecialEventMint
@@ -10,7 +13,9 @@ export type BlockSpecialEvent =
     | BlockSpecialEventPaydayFoundationReward
     | BlockSpecialEventPaydayAccountReward
     | BlockSpecialEventBlockAccrueReward
-    | BlockSpecialEventPaydayPoolReward;
+    | BlockSpecialEventPaydayPoolReward
+    | BlockSpecialEventValidatorSuspended
+    | BlockSpecialEventValidatorPrimedForSuspension;
 
 export interface BlockSpecialEventBakingRewards {
     tag: 'bakingRewards';
@@ -116,6 +121,29 @@ export interface BlockSpecialEventAccountAmount {
 }
 
 /**
+ * A validator was suspended due to too many missed rounds.
+ */
+export interface BlockSpecialEventValidatorSuspended {
+    tag: 'validatorSuspended';
+    /** The validator that was suspended. */
+    bakerId: BakerId;
+    /** The account address of the validator. */
+    account: AccountAddress.Type;
+}
+
+/**
+ * A validator was primed to be suspended at the next snapshot epoch due to
+ * too many missed rounds.
+ */
+export interface BlockSpecialEventValidatorPrimedForSuspension {
+    tag: 'validatorPrimedForSuspension';
+    /** The validator that was primed for suspension. */
+    bakerId: BakerId;
+    /** The account address of the validator. */
+    account: AccountAddress.Type;
+}
+
+/**
  * Gets a list of {@link AccountAddress.Type} account addresses affected the {@link BlockSpecialEvent}.
  *
  * @param {BlockSpecialEvent} event - The block special event to check.
@@ -146,6 +174,9 @@ export function specialEventAffectedAccounts(event: BlockSpecialEvent): AccountA
             }
             return [event.baker, event.foundationAccount];
         }
+        case 'validatorSuspended':
+        case 'validatorPrimedForSuspension':
+            return [event.account]
         default:
             return [];
     }

@@ -1465,9 +1465,9 @@ export function trPendingUpdateEffect(pendingUpdate: v2.PendingUpdate): v1.Pendi
             return {
                 updateType: v1.UpdateType.ValidatorScoreParameters,
                 update: {
-                    maxMissedRounds: effect.validatorScoreParameters.maximumMissedRounds
-                }
-            }
+                    maxMissedRounds: effect.validatorScoreParameters.maximumMissedRounds,
+                },
+            };
         case undefined:
             throw Error('Unexpected missing pending update');
     }

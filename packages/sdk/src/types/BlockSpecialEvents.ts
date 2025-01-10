@@ -176,7 +176,7 @@ export function specialEventAffectedAccounts(event: BlockSpecialEvent): AccountA
         }
         case 'validatorSuspended':
         case 'validatorPrimedForSuspension':
-            return [event.account]
+            return [event.account];
         default:
             return [];
     }

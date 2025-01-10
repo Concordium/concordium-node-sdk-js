@@ -1405,6 +1405,7 @@ export const bakerAccountInfo: AccountInfoBaker = {
         bakerSignatureVerifyKey: 'c385ccb5c8a0710a162f2c107123744650ff35f00040bfa262d974bfb3c3f8f1',
         restakeEarnings: true,
         stakedAmount: CcdAmount.fromMicroCcd(7349646704751788n),
+        isSuspended: false,
     },
     accountCooldowns: [],
     accountAvailableBalance: CcdAmount.fromMicroCcd(100000000000000n),

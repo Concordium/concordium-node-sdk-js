@@ -49,6 +49,8 @@ export interface AccountTransactionHandler<
 > {
     /**
      * Serializes the payload to a buffer.
+     * This does NOT include the serialized transaction type. To have this included, use {@linkcode serializeAccountTransactionPayload} instead.
+     *
      * @param payload - The payload to serialize.
      * @returns The serialized payload.
      */

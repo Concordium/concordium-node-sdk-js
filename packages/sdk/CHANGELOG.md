@@ -6,7 +6,8 @@
 
 ### Fixed
 
-- `getEnergyCost` returning energy amounts that were off by one compared to the amount calculated by the node.
+- `getEnergyCost` returning energy amounts that were off by one due to not including the transaction type in the
+  transaction payload serialization.
 
 ## 8.1.0
 

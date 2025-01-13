@@ -891,15 +891,28 @@ export interface CommissionRates {
     finalizationCommission: number;
 }
 
+/** Information about a baker pool in the current reward period. */
 export interface CurrentPaydayBakerPoolStatus {
+    /** The number of blocks baked in the current reward period. */
     blocksBaked: bigint;
+    /** The number of blocks baked in the current reward period. */
     finalizationLive: boolean;
+    /** The transaction fees accruing to the pool in the current reward period. */
     transactionFeesEarned: CcdAmount.Type;
+    /** The effective stake of the baker in the current reward period. */
     effectiveStake: CcdAmount.Type;
+    /** The lottery power of the baker in the current reward period. */
     lotteryPower: number;
+    /** The effective equity capital of the baker for the current reward period. */
     bakerEquityCapital: CcdAmount.Type;
+    /** The effective delegated capital to the pool for the current reward period. */
     delegatedCapital: CcdAmount.Type;
+    /** The commission rates that apply for the current reward period. */
     commissionRates: CommissionRates;
+    /** A flag indicating whether the pool owner is primed for suspension. Will always be `false` if the protocol version does not support validator suspension. */
+    isPrimedForSuspension: boolean;
+    /** The number of missed rounds in the current reward period. Will always be `0n` if the protocol version does not support validator suspension. */
+    missedRounds:bigint;
 }
 
 export enum BakerPoolPendingChangeType {
@@ -979,6 +992,11 @@ export interface BakerPoolStatusDetails {
     currentPaydayStatus?: CurrentPaydayBakerPoolStatus;
     /** Total capital staked across all pools, including passive delegation. */
     allPoolTotalCapital: CcdAmount.Type;
+    /**
+     * A flag indicating whether the pool owner is suspended.
+     * Will always be `false` if the protocol version does not support validator suspension.
+     */
+    isSuspended: boolean;
 }
 
 /**

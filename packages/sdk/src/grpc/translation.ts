@@ -326,6 +326,8 @@ function transPaydayStatus(status: v2.PoolCurrentPaydayInfo): v1.CurrentPaydayBa
         bakerEquityCapital: CcdAmount.fromProto(unwrap(status.bakerEquityCapital)),
         delegatedCapital: CcdAmount.fromProto(unwrap(status.delegatedCapital)),
         commissionRates: trCommissionRates(status.commissionRates),
+        isPrimedForSuspension: status.isPrimedForSuspension ?? false,
+        missedRounds: status.missedRounds ?? 0n,
     };
 }
 
@@ -594,6 +596,7 @@ export function bakerPoolInfo(info: v2.PoolInfoResponse): v1.BakerPoolStatus {
         currentPaydayStatus:
             info.currentPaydayInfo !== undefined ? transPaydayStatus(info.currentPaydayInfo) : undefined,
         allPoolTotalCapital: CcdAmount.fromProto(unwrap(info.allPoolTotalCapital)),
+        isSuspended: info.isSuspended ?? false,
     };
 }
 

@@ -7,7 +7,7 @@
 - Protocol version 8:
   - Add `isSuspended` field to `AccountBakerDetails`.
   - Add `BakerSuspendedEvent` and `BakerResumedEvent` to `BakerEvent` union type.
-  - Add `BlockSpecialEventValidatorSuspended` and `BakerSuspendedEvent` to `BlockSpecialEvent` union type.
+  - Add `BlockSpecialEventValidatorSuspended` and `BlockSpecialEventValidatorPrimedForSuspension` to `BlockSpecialEvent` union type.
   - Add `PendingValidatorScoreUpdate` to `UpdateInstructionPayload` union type.
   - Add `ChainParametersV3` to `ChainParameters` union type.
 

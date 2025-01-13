@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+## 8.1.1
+
+### Fixed
+
+- `getEnergyCost` returning energy amounts that were off by one due to not including the transaction type in the
+  transaction payload serialization.
+
 ## 8.1.0
 
 ### Added

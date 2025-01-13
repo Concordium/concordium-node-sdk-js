@@ -12,7 +12,10 @@ export const constantA = 100n;
 export const constantB = 1n;
 
 // Account address (32 bytes), nonce (8 bytes), energy (8 bytes), payload size (4 bytes), expiry (8 bytes);
-const accountTransactionHeaderSize = BigInt(32 + 8 + 8 + 4 + 8);
+const ACCOUNT_TRANSACTION_HEADER_SIZE = BigInt(32 + 8 + 8 + 4 + 8);
+
+/** Transaction type is defined by a UInt8, i.e 1 byte */
+const TRANSACTION_TYPE_SIZE = 1n;
 
 /**
  * The energy cost is assigned according to the formula:
@@ -30,7 +33,9 @@ export function calculateEnergyCost(
     transactionSpecificCost: bigint
 ): Energy.Type {
     return Energy.create(
-        constantA * signatureCount + constantB * (accountTransactionHeaderSize + payloadSize) + transactionSpecificCost
+        constantA * signatureCount +
+            constantB * (TRANSACTION_TYPE_SIZE + ACCOUNT_TRANSACTION_HEADER_SIZE + payloadSize) +
+            transactionSpecificCost
     );
 }
 
@@ -45,7 +50,7 @@ export function getEnergyCost(
     signatureCount = 1n
 ): Energy.Type {
     const handler = getAccountTransactionHandler(transactionType);
-    const size = handler.serialize(payload).length + 1;
+    const size = handler.serialize(payload).length;
     return calculateEnergyCost(signatureCount, BigInt(size), handler.getBaseEnergyCost(payload));
 }
 

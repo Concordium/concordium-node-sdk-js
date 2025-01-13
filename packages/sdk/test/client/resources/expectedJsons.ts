@@ -1923,8 +1923,11 @@ export const bakerPoolStatus: BakerPoolStatus = {
             finalizationCommission: 1,
             transactionCommission: 0.1,
         },
+        missedRounds: 0n,
+        isPrimedForSuspension: false,
     },
     allPoolTotalCapital: CcdAmount.fromMicroCcd(46071942529284135n),
+    isSuspended: false,
 };
 
 export const passiveDelegationStatus: PassiveDelegationStatus = {
@@ -1961,6 +1964,7 @@ export const bakerPoolStatusWithPendingChange: BakerPoolStatus = {
         effectiveTime: new Date('2022-12-08T07:54:00.000Z'),
     },
     allPoolTotalCapital: CcdAmount.fromMicroCcd(46470271917743628n),
+    isSuspended: false,
 };
 
 export const invokeContractResult: InvokeContractResult = {

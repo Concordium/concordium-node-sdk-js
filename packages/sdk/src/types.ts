@@ -912,7 +912,7 @@ export interface CurrentPaydayBakerPoolStatus {
     /** A flag indicating whether the pool owner is primed for suspension. Will always be `false` if the protocol version does not support validator suspension. */
     isPrimedForSuspension: boolean;
     /** The number of missed rounds in the current reward period. Will always be `0n` if the protocol version does not support validator suspension. */
-    missedRounds:bigint;
+    missedRounds: bigint;
 }
 
 export enum BakerPoolPendingChangeType {

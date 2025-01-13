@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+## 8.1.1
+
+### Fixed
+
+- `getEnergyCost` returning energy amounts that were off by one compared to the amount calculated by the node.
+
 ## 8.1.0
 
 ### Added

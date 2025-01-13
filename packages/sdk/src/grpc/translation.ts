@@ -550,18 +550,21 @@ function trChainParametersV2(params: v2.ChainParametersV2 | v2.ChainParametersV3
     };
 }
 
+function trChainParametersV3(params: v2.ChainParametersV3): v1.ChainParametersV3 {
+    const { version, ...common } = trChainParametersV2(params);
+    return {
+        ...common,
+        version: 3,
+        validatorScoreParameters: {
+            maxMissedRounds: unwrap(params.validatorScoreParameters?.maximumMissedRounds),
+        },
+    };
+}
+
 export function blockChainParameters(params: v2.ChainParameters): v1.ChainParameters {
     switch (params.parameters.oneofKind) {
         case 'v3': {
-            const { version, ...common } = trChainParametersV2(params.parameters.v3);
-            const cp: v1.ChainParametersV3 = {
-                ...common,
-                version: 3,
-                validatorScoreParameters: {
-                    maxMissedRounds: unwrap(params.parameters.v3.validatorScoreParameters?.maximumMissedRounds),
-                },
-            };
-            return cp;
+            return trChainParametersV3(params.parameters.v3);
         }
         case 'v2': {
             return trChainParametersV2(params.parameters.v2);

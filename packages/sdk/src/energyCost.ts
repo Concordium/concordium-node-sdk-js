@@ -1,6 +1,6 @@
 import { getAccountTransactionHandler } from './accountTransactions.js';
 import { collapseRatio, multiplyRatio } from './ratioHelpers.js';
-import { serializeAccountTransactionPayload } from './serialization.ts';
+import { serializeAccountTransactionPayload } from './serialization.js';
 import { AccountTransactionPayload, AccountTransactionType, ChainParameters, Ratio } from './types.js';
 import * as CcdAmount from './types/CcdAmount.js';
 import * as Energy from './types/Energy.js';

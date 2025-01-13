@@ -167,7 +167,7 @@ export function getAccountTransactionSignDigest(accountTransaction: AccountTrans
         energyCost
     );
 
-    return sha256([serializedHeader, serializeAccountTransactionType(accountTransaction.type), serializedPayload]);
+    return sha256([serializedHeader, serializedPayload]);
 }
 
 /**

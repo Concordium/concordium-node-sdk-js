@@ -453,7 +453,7 @@ export type ChainParametersV1 = ChainParametersCommon &
         level2Keys: AuthorizationsV1;
     };
 
-/** Chain parameters used from protocol version 6 */
+/** Chain parameters used in protocol version 6 and 7 */
 export type ChainParametersV2 = ChainParametersCommon &
     CooldownParametersV1 &
     TimeParametersV1 &
@@ -468,8 +468,24 @@ export type ChainParametersV2 = ChainParametersCommon &
         level2Keys: AuthorizationsV1;
     };
 
+/**
+ * Validator score parameters. These parameters control the threshold of
+ * maximal missed rounds before a validator gets suspended.
+ */
+export interface ValidatorScoreParameters {
+    /** Maximal number of missed rounds before a validator gets suspended. */
+    maxMissedRounds: bigint;
+}
+
+/** Chain parameters used from protocol version 8 */
+export type ChainParametersV3 = Omit<ChainParametersV2, 'version'> & {
+    version: 3;
+    /** The current validator score parameters */
+    validatorScoreParameters: ValidatorScoreParameters;
+};
+
 /** Union of all chain parameters across all protocol versions */
-export type ChainParameters = ChainParametersV0 | ChainParametersV1 | ChainParametersV2;
+export type ChainParameters = ChainParametersV0 | ChainParametersV1 | ChainParametersV2 | ChainParametersV3;
 
 export interface Authorization {
     threshold: number;
@@ -875,15 +891,28 @@ export interface CommissionRates {
     finalizationCommission: number;
 }
 
+/** Information about a baker pool in the current reward period. */
 export interface CurrentPaydayBakerPoolStatus {
+    /** The number of blocks baked in the current reward period. */
     blocksBaked: bigint;
+    /** The number of blocks baked in the current reward period. */
     finalizationLive: boolean;
+    /** The transaction fees accruing to the pool in the current reward period. */
     transactionFeesEarned: CcdAmount.Type;
+    /** The effective stake of the baker in the current reward period. */
     effectiveStake: CcdAmount.Type;
+    /** The lottery power of the baker in the current reward period. */
     lotteryPower: number;
+    /** The effective equity capital of the baker for the current reward period. */
     bakerEquityCapital: CcdAmount.Type;
+    /** The effective delegated capital to the pool for the current reward period. */
     delegatedCapital: CcdAmount.Type;
+    /** The commission rates that apply for the current reward period. */
     commissionRates: CommissionRates;
+    /** A flag indicating whether the pool owner is primed for suspension. Will always be `false` if the protocol version does not support validator suspension. */
+    isPrimedForSuspension: boolean;
+    /** The number of missed rounds in the current reward period. Will always be `0n` if the protocol version does not support validator suspension. */
+    missedRounds: bigint;
 }
 
 export enum BakerPoolPendingChangeType {
@@ -963,6 +992,11 @@ export interface BakerPoolStatusDetails {
     currentPaydayStatus?: CurrentPaydayBakerPoolStatus;
     /** Total capital staked across all pools, including passive delegation. */
     allPoolTotalCapital: CcdAmount.Type;
+    /**
+     * A flag indicating whether the pool owner is suspended.
+     * Will always be `false` if the protocol version does not support validator suspension.
+     */
+    isSuspended: boolean;
 }
 
 /**
@@ -1029,6 +1063,12 @@ interface AccountBakerDetailsCommon {
     bakerSignatureVerifyKey: string;
     stakedAmount: CcdAmount.Type;
     pendingChange?: StakePendingChange;
+    /**
+     * A flag indicating whether the validator is currently suspended or not.
+     * In protocol versions prior to protocol version 8, this will always be `false`.
+     * A suspended validator will not be included in the validator committee the next time it is calculated.
+     */
+    isSuspended: boolean;
 }
 
 /** Protocol version 1-3. */

@@ -7,14 +7,14 @@ JSON-RPC server](https://github.com/Concordium/concordium-json-rpc)
 Currently the client only supports the following entrypoints, with the same
 interface as the grpc v1 node client:
 
-- [sendTransaction](./grpc-v1.md#send-account-transaction)
-- [getTransactionStatus](./grpc-v1.md#gettransactionstatus)
-- [getInstanceInfo](./grpc-v1.md#getInstanceInfo)
-- [getConsensusStatus](./grpc-v1.md#getconsensusstatus)
-- [getAccountInfo](./grpc-v1.md#getAccountInfo)
-- [getCryptographicParameters](./grpc-v1.md#getcryptographicparameters)
-- [invokeContract](./grpc-v1.md#invokecontract)
-- [getModuleSource](./grpc-v1.md#getModuleSource)
+- [sendTransaction](#send-account-transaction)
+- [getTransactionStatus](#gettransactionstatus)
+- [getInstanceInfo](#getinstanceinfo)
+- [getConsensusStatus](#getconsensusstatus)
+- [getAccountInfo](#getaccountinfo)
+- [getCryptographicParameters](#getcryptographicparameters)
+- [invokeContract](#invokecontract)
+- [getModuleSource](#getmodulesource)
 
 **Table of Contents:**
 

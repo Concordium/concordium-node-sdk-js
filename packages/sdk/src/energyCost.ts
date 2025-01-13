@@ -1,5 +1,6 @@
 import { getAccountTransactionHandler } from './accountTransactions.js';
 import { collapseRatio, multiplyRatio } from './ratioHelpers.js';
+import { serializeAccountTransactionPayload } from './serialization.js';
 import { AccountTransactionPayload, AccountTransactionType, ChainParameters, Ratio } from './types.js';
 import * as CcdAmount from './types/CcdAmount.js';
 import * as Energy from './types/Energy.js';
@@ -12,7 +13,7 @@ export const constantA = 100n;
 export const constantB = 1n;
 
 // Account address (32 bytes), nonce (8 bytes), energy (8 bytes), payload size (4 bytes), expiry (8 bytes);
-const accountTransactionHeaderSize = BigInt(32 + 8 + 8 + 4 + 8);
+const ACCOUNT_TRANSACTION_HEADER_SIZE = BigInt(32 + 8 + 8 + 4 + 8);
 
 /**
  * The energy cost is assigned according to the formula:
@@ -30,7 +31,9 @@ export function calculateEnergyCost(
     transactionSpecificCost: bigint
 ): Energy.Type {
     return Energy.create(
-        constantA * signatureCount + constantB * (accountTransactionHeaderSize + payloadSize) + transactionSpecificCost
+        constantA * signatureCount +
+            constantB * (ACCOUNT_TRANSACTION_HEADER_SIZE + payloadSize) +
+            transactionSpecificCost
     );
 }
 
@@ -44,8 +47,8 @@ export function getEnergyCost(
     payload: AccountTransactionPayload,
     signatureCount = 1n
 ): Energy.Type {
+    const size = serializeAccountTransactionPayload({ payload, type: transactionType }).length;
     const handler = getAccountTransactionHandler(transactionType);
-    const size = handler.serialize(payload).length;
     return calculateEnergyCost(signatureCount, BigInt(size), handler.getBaseEnergyCost(payload));
 }
 

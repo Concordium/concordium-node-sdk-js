@@ -2,14 +2,24 @@
 
 ## Unreleased
 
+## 9.0.0
+
 ### Breaking changes
 
 - Protocol version 8:
-  - Add `isSuspended` field to `AccountBakerDetails`.
+  - Add `isSuspended` field to `AccountBakerDetails` and `BakerPoolStatusDetails`.
   - Add `BakerSuspendedEvent` and `BakerResumedEvent` to `BakerEvent` union type.
   - Add `BlockSpecialEventValidatorSuspended` and `BlockSpecialEventValidatorPrimedForSuspension` to `BlockSpecialEvent` union type.
   - Add `PendingValidatorScoreUpdate` to `UpdateInstructionPayload` union type.
   - Add `ChainParametersV3` to `ChainParameters` union type.
+  - Add `isPrimedForSuspension` and `missedRounds` fields to `CurrentPaydayBakerPoolStatus`.
+
+## 8.1.1
+
+### Fixed
+
+- `getEnergyCost` returning energy amounts that were off by one due to not including the transaction type in the
+  transaction payload serialization.
 
 ## 8.1.0
 

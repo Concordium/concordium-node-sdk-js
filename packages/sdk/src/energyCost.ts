@@ -45,7 +45,7 @@ export function getEnergyCost(
     signatureCount = 1n
 ): Energy.Type {
     const handler = getAccountTransactionHandler(transactionType);
-    const size = handler.serialize(payload).length;
+    const size = handler.serialize(payload).length + 1;
     return calculateEnergyCost(signatureCount, BigInt(size), handler.getBaseEnergyCost(payload));
 }
 

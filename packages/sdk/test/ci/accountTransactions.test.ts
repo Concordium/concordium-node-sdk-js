@@ -57,7 +57,7 @@ test('configureBaker is serialized correctly', async () => {
         sender: AccountAddress.fromBase58(senderAccountAddress),
     };
 
-    const payload: Required<ConfigureBakerPayload> = {
+    const payload: ConfigureBakerPayload = {
         stake: CcdAmount.fromMicroCcd(1000000000n),
         restakeEarnings: true,
         openForDelegation: OpenStatus.ClosedForAll,
@@ -281,13 +281,14 @@ test('ConfigureBakerPayload serializes to JSON correctly', async () => {
         transactionFeeCommission: 1,
         bakingRewardCommission: 1,
         finalizationRewardCommission: 1,
+        suspended: true,
     };
     const handler = new ConfigureBakerHandler();
     let json = handler.toJSON(payload);
 
     let actual = JSONBig.stringify(json);
     let expected =
-        '{"stake":"1000000000","restakeEarnings":true,"openForDelegation":2,"keys":{"signatureVerifyKey":"abcdef","electionVerifyKey":"abcdef","aggregationVerifyKey":"abcdef","proofAggregation":"abcdef","proofSig":"abcdef","proofElection":"abcdef"},"metadataUrl":"http://example.com","transactionFeeCommission":1,"bakingRewardCommission":1,"finalizationRewardCommission":1}';
+        '{"stake":"1000000000","restakeEarnings":true,"openForDelegation":2,"keys":{"signatureVerifyKey":"abcdef","electionVerifyKey":"abcdef","aggregationVerifyKey":"abcdef","proofAggregation":"abcdef","proofSig":"abcdef","proofElection":"abcdef"},"metadataUrl":"http://example.com","transactionFeeCommission":1,"bakingRewardCommission":1,"finalizationRewardCommission":1,"suspended":true}';
     expect(actual).toEqual(expected);
 
     // ID test

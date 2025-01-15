@@ -1422,9 +1422,9 @@ export type BakerKeysWithProofs = PublicBakerKeys & BakerKeyProofs;
 export type GenerateBakerKeysOutput = PublicBakerKeys & PrivateBakerKeys & BakerKeyProofs;
 
 export interface ConfigureBakerPayload {
-    /* stake to bake. if set to 0, this removes the account as a baker */
+    /** stake to bake. if set to 0, this removes the account as a baker */
     stake?: CcdAmount.Type;
-    /* should earnings from baking be added to staked amount  */
+    /** should earnings from baking be added to staked amount  */
     restakeEarnings?: boolean;
     openForDelegation?: OpenStatus;
     keys?: BakerKeysWithProofs;
@@ -1432,6 +1432,11 @@ export interface ConfigureBakerPayload {
     transactionFeeCommission?: number;
     bakingRewardCommission?: number;
     finalizationRewardCommission?: number;
+    /**
+     * Describes whether the validator should change its suspended status. This field is only from protocol version 8
+     * and later.
+     */
+    suspended?: boolean;
 }
 
 export interface ConfigureDelegationPayload {

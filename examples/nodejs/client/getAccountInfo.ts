@@ -64,5 +64,9 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     if (accountInfo.type === AccountInfoType.Delegator) {
         console.log('Delegated stake amount:', accountInfo.accountDelegation.stakedAmount);
     }
+
+    if (accountInfo.type === AccountInfoType.Baker) {
+        console.log('Validator pool info:', accountInfo.accountBaker);
+    }
     // #endregion documentation-snippet
 })();

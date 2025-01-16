@@ -65,5 +65,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     );
     console.log('Total capital in CCD of ALL pools:', CcdAmount.toCcd(bakerPool.allPoolTotalCapital));
     console.log('Pool commision rates:', bakerPool.poolInfo?.commissionRates);
+    console.log('Is suspended:', bakerPool.isSuspended);
+    console.log('Current payday status:', bakerPool.currentPaydayStatus);
     // #endregion documentation-snippet
 })();

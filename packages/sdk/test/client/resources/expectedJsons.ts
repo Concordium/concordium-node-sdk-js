@@ -543,6 +543,7 @@ export const seqNums: NextUpdateSequenceNumbers = {
     blockEnergyLimit: 1n,
     minBlockTime: 1n,
     finalizationCommiteeParameters: 1n,
+    validatorScoreParameters: 1n,
 };
 
 export const specialEventList: BlockSpecialEvent[] = [

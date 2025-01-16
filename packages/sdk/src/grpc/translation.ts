@@ -2226,6 +2226,7 @@ export function nextUpdateSequenceNumbers(nextNums: v2.NextUpdateSequenceNumbers
         minBlockTime: unwrap(nextNums.minBlockTime?.value),
         blockEnergyLimit: unwrap(nextNums.blockEnergyLimit?.value),
         finalizationCommiteeParameters: unwrap(nextNums.finalizationCommitteeParameters?.value),
+        validatorScoreParameters: nextNums.validatorScoreParameters?.value ?? 1n,
     };
 }
 

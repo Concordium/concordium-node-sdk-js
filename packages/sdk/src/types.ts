@@ -1227,6 +1227,7 @@ export interface NextUpdateSequenceNumbers {
     minBlockTime: bigint;
     blockEnergyLimit: bigint;
     finalizationCommiteeParameters: bigint;
+    validatorScoreParameters: bigint;
 }
 
 export type BlockFinalizationSummary = BlockFinalizationSummary_None | BlockFinalizationSummary_Record;

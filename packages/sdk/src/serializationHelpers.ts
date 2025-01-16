@@ -357,6 +357,7 @@ const configureBakerSerializationSpec: SerializationSpec<ConfigureBakerPayload> 
     transactionFeeCommission: orUndefined(encodeWord32),
     bakingRewardCommission: orUndefined(encodeWord32),
     finalizationRewardCommission: orUndefined(encodeWord32),
+    suspended: orUndefined(encodeBool),
 };
 
 const getSerializedConfigureBakerBitmap = (payload: ConfigureBakerPayload): Buffer =>

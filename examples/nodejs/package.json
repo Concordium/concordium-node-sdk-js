@@ -20,7 +20,7 @@
     "devDependencies": {
         "@types/node": "^20.12.13",
         "eslint": "8",
-        "ts-node": "10.9",
+        "tsx": "^4.19.2",
         "typescript": "^5.2.2"
     },
     "scripts": {
@@ -30,6 +30,6 @@
         "fmt": "yarn prettier --write",
         "fmt-check": "yarn prettier --check",
         "build": "tsc --noEmit",
-        "run-example": "ts-node"
+        "run-example": "tsx"
     }
 }

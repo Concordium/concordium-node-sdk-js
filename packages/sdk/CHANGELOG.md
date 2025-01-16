@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+## 9.0.0
+
+### Breaking changes
+
+- Protocol version 8:
+  - Add `isSuspended` field to `AccountBakerDetails` and `BakerPoolStatusDetails`.
+  - Add `BakerSuspendedEvent` and `BakerResumedEvent` to `BakerEvent` union type.
+  - Add `BlockSpecialEventValidatorSuspended` and `BlockSpecialEventValidatorPrimedForSuspension` to `BlockSpecialEvent` union type.
+  - Add `PendingValidatorScoreUpdate` to `UpdateInstructionPayload` union type.
+  - Add `ChainParametersV3` to `ChainParameters` union type.
+  - Add `isPrimedForSuspension` and `missedRounds` fields to `CurrentPaydayBakerPoolStatus`.
+  - Add suspended field to the `ConfigureBakerPayload`.
+  - Add `validatorScoreParameters` to `NextUpdateSequenceNumbers`.
+
 ## 8.1.1
 
 ### Fixed

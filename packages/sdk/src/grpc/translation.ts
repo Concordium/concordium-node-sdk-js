@@ -215,6 +215,7 @@ function trOpenStatus(openStatus: v2.OpenStatus | undefined): v1.OpenStatusText 
 
 function trBaker(baker: v2.AccountStakingInfo_Baker): v1.AccountBakerDetails {
     const bakerInfo = baker.bakerInfo;
+    const isSuspended = baker.isSuspended;
 
     const v0: v1.AccountBakerDetails = {
         version: 0,
@@ -228,6 +229,7 @@ function trBaker(baker: v2.AccountStakingInfo_Baker): v1.AccountBakerDetails {
         ...(baker.pendingChange && {
             pendingChange: trPendingChange(baker.pendingChange),
         }),
+        isSuspended,
     };
 
     if (baker.poolInfo === undefined) {
@@ -324,6 +326,8 @@ function transPaydayStatus(status: v2.PoolCurrentPaydayInfo): v1.CurrentPaydayBa
         bakerEquityCapital: CcdAmount.fromProto(unwrap(status.bakerEquityCapital)),
         delegatedCapital: CcdAmount.fromProto(unwrap(status.delegatedCapital)),
         commissionRates: trCommissionRates(status.commissionRates),
+        isPrimedForSuspension: status.isPrimedForSuspension ?? false,
+        missedRounds: status.missedRounds ?? 0n,
     };
 }
 
@@ -499,7 +503,7 @@ function trChainParametersV1(params: v2.ChainParametersV1): v1.ChainParametersV1
     };
 }
 
-function trChainParametersV2(params: v2.ChainParametersV2): v1.ChainParametersV2 {
+function trChainParametersV2(params: v2.ChainParametersV2 | v2.ChainParametersV3): v1.ChainParametersV2 {
     const common = translateChainParametersCommon(params);
     const commonRewardParameters = translateRewardParametersCommon(params);
 
@@ -548,8 +552,22 @@ function trChainParametersV2(params: v2.ChainParametersV2): v1.ChainParametersV2
     };
 }
 
+function trChainParametersV3(params: v2.ChainParametersV3): v1.ChainParametersV3 {
+    const { version, ...common } = trChainParametersV2(params);
+    return {
+        ...common,
+        version: 3,
+        validatorScoreParameters: {
+            maxMissedRounds: unwrap(params.validatorScoreParameters?.maximumMissedRounds),
+        },
+    };
+}
+
 export function blockChainParameters(params: v2.ChainParameters): v1.ChainParameters {
     switch (params.parameters.oneofKind) {
+        case 'v3': {
+            return trChainParametersV3(params.parameters.v3);
+        }
         case 'v2': {
             return trChainParametersV2(params.parameters.v2);
         }
@@ -559,7 +577,7 @@ export function blockChainParameters(params: v2.ChainParameters): v1.ChainParame
         case 'v0': {
             return trChainParametersV0(params.parameters.v0);
         }
-        default:
+        case undefined:
             throw new Error('Missing chain parameters');
     }
 }
@@ -578,6 +596,7 @@ export function bakerPoolInfo(info: v2.PoolInfoResponse): v1.BakerPoolStatus {
         currentPaydayStatus:
             info.currentPaydayInfo !== undefined ? transPaydayStatus(info.currentPaydayInfo) : undefined,
         allPoolTotalCapital: CcdAmount.fromProto(unwrap(info.allPoolTotalCapital)),
+        isSuspended: info.isSuspended ?? false,
     };
 }
 
@@ -874,6 +893,18 @@ function trBakerEvent(bakerEvent: v2.BakerEvent, account: AccountAddress.Type): 
             return {
                 tag: v1.TransactionEventTag.BakerDelegationRemoved,
                 delegatorId: unwrap(event.delegationRemoved.delegatorId?.id?.value),
+            };
+        }
+        case 'bakerSuspended': {
+            return {
+                tag: v1.TransactionEventTag.BakerSuspended,
+                bakerId: unwrap(event.bakerSuspended.bakerId?.value),
+            };
+        }
+        case 'bakerResumed': {
+            return {
+                tag: v1.TransactionEventTag.BakerResumed,
+                bakerId: unwrap(event.bakerResumed.bakerId?.value),
             };
         }
         case undefined:
@@ -1436,10 +1467,15 @@ export function trPendingUpdateEffect(pendingUpdate: v2.PendingUpdate): v1.Pendi
                     updatePayload: trAuthorizationsV1(effect.level2KeysCpv1),
                 },
             };
+        case 'validatorScoreParameters':
+            return {
+                updateType: v1.UpdateType.ValidatorScoreParameters,
+                update: {
+                    maxMissedRounds: effect.validatorScoreParameters.maximumMissedRounds,
+                },
+            };
         case undefined:
             throw Error('Unexpected missing pending update');
-        default:
-            throw Error(`Unsupported update: ${effect}`);
     }
 }
 
@@ -1502,10 +1538,16 @@ function trUpdatePayload(updatePayload: v2.UpdatePayload | undefined): v1.Update
                 update: keyUpdate,
             };
         }
+        case 'validatorScoreParametersUpdate': {
+            return {
+                updateType: v1.UpdateType.ValidatorScoreParameters,
+                update: {
+                    maxMissedRounds: payload.validatorScoreParametersUpdate.maximumMissedRounds,
+                },
+            };
+        }
         case undefined:
             throw new Error('Unexpected missing update payload');
-        default:
-            throw Error(`Unsupported update payload type: ${payload}`);
     }
 }
 
@@ -2190,6 +2232,8 @@ export function nextUpdateSequenceNumbers(nextNums: v2.NextUpdateSequenceNumbers
         minBlockTime: unwrap(nextNums.minBlockTime?.value),
         blockEnergyLimit: unwrap(nextNums.blockEnergyLimit?.value),
         finalizationCommiteeParameters: unwrap(nextNums.finalizationCommitteeParameters?.value),
+        // We fall back to be backwards compatible.
+        validatorScoreParameters: nextNums.validatorScoreParameters?.value ?? 1n,
     };
 }
 
@@ -2406,6 +2450,20 @@ export function blockSpecialEvent(specialEvent: v2.BlockSpecialEvent): v1.BlockS
                 bakerReward: CcdAmount.fromProto(unwrap(event.paydayPoolReward.bakerReward)),
                 finalizationReward: CcdAmount.fromProto(unwrap(event.paydayPoolReward.finalizationReward)),
                 ...(poolOwner !== undefined && { poolOwner }),
+            };
+        }
+        case 'validatorSuspended': {
+            return {
+                tag: 'validatorSuspended',
+                account: AccountAddress.fromProto(unwrap(event.validatorSuspended.account)),
+                bakerId: unwrap(event.validatorSuspended.bakerId?.value),
+            };
+        }
+        case 'validatorPrimedForSuspension': {
+            return {
+                tag: 'validatorPrimedForSuspension',
+                account: AccountAddress.fromProto(unwrap(event.validatorPrimedForSuspension.account)),
+                bakerId: unwrap(event.validatorPrimedForSuspension.bakerId?.value),
             };
         }
         case undefined: {

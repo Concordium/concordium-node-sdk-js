@@ -1538,10 +1538,16 @@ function trUpdatePayload(updatePayload: v2.UpdatePayload | undefined): v1.Update
                 update: keyUpdate,
             };
         }
+        case 'validatorScoreParametersUpdate': {
+            return {
+                updateType: v1.UpdateType.ValidatorScoreParameters,
+                update: {
+                    maxMissedRounds: payload.validatorScoreParametersUpdate.maximumMissedRounds,
+                },
+            };
+        }
         case undefined:
             throw new Error('Unexpected missing update payload');
-        default:
-            throw Error(`Unsupported update payload type: ${payload}`);
     }
 }
 
@@ -2226,6 +2232,7 @@ export function nextUpdateSequenceNumbers(nextNums: v2.NextUpdateSequenceNumbers
         minBlockTime: unwrap(nextNums.minBlockTime?.value),
         blockEnergyLimit: unwrap(nextNums.blockEnergyLimit?.value),
         finalizationCommiteeParameters: unwrap(nextNums.finalizationCommitteeParameters?.value),
+        // We fall back to be backwards compatible.
         validatorScoreParameters: nextNums.validatorScoreParameters?.value ?? 1n,
     };
 }

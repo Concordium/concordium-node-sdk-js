@@ -13,7 +13,8 @@
   - Add `PendingValidatorScoreUpdate` to `UpdateInstructionPayload` union type.
   - Add `ChainParametersV3` to `ChainParameters` union type.
   - Add `isPrimedForSuspension` and `missedRounds` fields to `CurrentPaydayBakerPoolStatus`.
-  - Add suspended field to the `ConfigureBakerPayload`
+  - Add suspended field to the `ConfigureBakerPayload`.
+  - Add `validatorScoreParameters` to `NextUpdateSequenceNumbers`.
 
 ## 8.1.1
 

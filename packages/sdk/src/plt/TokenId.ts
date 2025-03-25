@@ -7,25 +7,28 @@ export type JSON = string;
  * Protocol level token (PLT) ID.
  */
 class TokenId {
-  /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-  private readonly __type = 'PLT.Id';
-  constructor(public readonly value: string) {}
+    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
+    private readonly __type = 'PLT.Id';
+    constructor(public readonly value: string) {
+        // TODO: invariants check
+        // - 256 utf8 bytes max?
+    }
 
-  /**
-   * Get a string representation of the token ID.
-   * @returns {string} The string representation.
-   */
-  public toString(): string {
-    return this.value;
-  }
+    /**
+     * Get a string representation of the token ID.
+     * @returns {string} The string representation.
+     */
+    public toString(): string {
+        return this.value;
+    }
 
-  /**
-   * Get a JSON-serializable representation of the token ID. This is called implicitly when serialized with JSON.stringify.
-   * @returns {HexString} The JSON representation.
-   */
-  public toJSON(): JSON {
-    return this.value;
-  }
+    /**
+     * Get a JSON-serializable representation of the token ID. This is called implicitly when serialized with JSON.stringify.
+     * @returns {HexString} The JSON representation.
+     */
+    public toJSON(): JSON {
+        return this.value;
+    }
 }
 
 /**
@@ -39,8 +42,7 @@ export type Type = TokenId;
  * @returns {TokenId} A new token ID instance.
  */
 export function fromString(value: string): TokenId {
-  // TODO: invariants check
-  return new TokenId(value);
+    return new TokenId(value);
 }
 
 /**
@@ -50,7 +52,7 @@ export function fromString(value: string): TokenId {
  * @returns whether `value` is of type {@linkcode Type}
  */
 export function instanceOf(value: unknown): value is TokenId {
-  return value instanceof TokenId;
+    return value instanceof TokenId;
 }
 
 /**
@@ -59,5 +61,5 @@ export function instanceOf(value: unknown): value is TokenId {
  * @returns {CcdAmount} The CCD amount.
  */
 export function fromJSON(json: JSON): TokenId {
-  return fromString(json);
+    return fromString(json);
 }

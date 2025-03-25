@@ -1,6 +1,7 @@
 import { Buffer } from 'buffer/index.js';
 
-import type * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js'; // TODO: needs new proto files...
+import type * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
+// TODO: needs new proto files...
 import type { HexString } from '../types.js';
 
 /**
@@ -59,8 +60,8 @@ export function instanceOf(value: unknown): value is ModuleReference {
  * @returns {ModuleReference} A module reference.
  */
 export function fromBuffer(buffer: ArrayBuffer): ModuleReference {
-    const hex = Buffer.from(buffer).toString('hex');
     if (buffer.byteLength !== MODULE_REF_BYTE_LENGTH) {
+        const hex = Buffer.from(buffer).toString('hex');
         throw new Error(
             'The provided moduleRef ' + hex + ' is invalid as module reference as it does not contain 32 bytes'
         );

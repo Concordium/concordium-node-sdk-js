@@ -9,6 +9,8 @@ import type {
     OpenStatusText,
     ReleaseSchedule,
 } from '../types.js';
+import { TokenId } from '../plt/types.js';
+
 import type * as AccountAddress from './AccountAddress.js';
 import type * as CcdAmount from './CcdAmount.js';
 import type * as ContractAddress from './ContractAddress.js';
@@ -59,6 +61,8 @@ export enum TransactionEventTag {
     Resumed = 'Resumed',
     Updated = 'Updated',
     Upgraded = 'Upgraded',
+    TokenGovernanceUpdate = 'TokenGovernanceUpdate',
+    TokenHolderUpdate = 'TokenHolderUpdate',
 }
 
 export type TransactionEvent =
@@ -353,6 +357,32 @@ export interface UpdateEnqueuedEvent {
     effectiveTime: number;
     payload: UpdateInstructionPayload;
 }
+
+/**
+* Token (PLT) events originating from governance transactions.
+*/
+export type TokenGovernanceEvent = {
+    tag: TransactionEventTag.TokenGovernanceUpdate;
+    /** The ID of the token. */
+    id: TokenId.Type;
+    /** The type of the event. */
+    type: string;
+    /** The CBOR encoded details of the event. These should be decoded using the appropriate CDDL schema. */
+    details: HexString; // TODE: maybe create a newtype here to enforce invariants?
+};
+
+/**
+* Token (PLT) events originating from account transactions.
+*/
+export type TokenHolderEvent = {
+    tag: TransactionEventTag.TokenHolderUpdate;
+    /** The ID of the token. */
+    id: TokenId.Type;
+    /** The type of the event. */
+    type: string;
+    /** The CBOR encoded details of the event. These should be decoded using the appropriate CDDL schema. */
+    details: HexString; // TODE: maybe create a newtype here to enforce invariants?
+};
 
 export type ContractTraceEvent = ResumedEvent | InterruptedEvent | UpdatedEvent | UpgradedEvent | TransferredEvent;
 export type BakerEvent =

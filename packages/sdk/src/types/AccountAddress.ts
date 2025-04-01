@@ -1,7 +1,7 @@
 import bs58check from 'bs58check';
 import { Buffer } from 'buffer/index.js';
 
-import type * as Proto from '../grpc-api/v2/concordium/types.js';
+import type * as Proto from '../grpc-api/v2/concordium/kernel.js';
 import { Base58String } from '../types.js';
 import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 

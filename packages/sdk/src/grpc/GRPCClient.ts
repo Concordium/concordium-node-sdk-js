@@ -13,10 +13,11 @@ import { DEFAULT_INVOKE_ENERGY } from '../constants.js';
 import { calculateEnergyCost } from '../energyCost.js';
 import { HealthClient } from '../grpc-api/v2/concordium/health.client.js';
 import { QueriesClient } from '../grpc-api/v2/concordium/service.client.js';
-import * as v2 from '../grpc-api/v2/concordium/types.js';
+import * as GRPC from '../grpc-api/v2/concordium/types.js';
+import * as GRPCKernel from '../grpc-api/v2/concordium/kernel.js';
 import { RawModuleSchema } from '../schemaTypes.js';
 import { serializeAccountTransactionPayload } from '../serialization.js';
-import * as v1 from '../types.js';
+import * as SDK from '../types.js';
 import { HexString, isRpcError } from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';
 import * as BlockHash from '../types/BlockHash.js';
@@ -41,7 +42,7 @@ import * as translate from './translation.js';
 export type FindInstanceCreationReponse = {
     hash: BlockHash.Type;
     height: bigint;
-    instanceInfo: v1.InstanceInfo;
+    instanceInfo: SDK.InstanceInfo;
 };
 
 /**
@@ -72,8 +73,8 @@ export class ConcordiumGRPCClient {
      *
      * @returns the next account nonce, and a boolean indicating if the nonce is reliable.
      */
-    async getNextAccountNonce(accountAddress: AccountAddress.Type): Promise<v1.NextAccountNonce> {
-        const address: v2.AccountAddress = {
+    async getNextAccountNonce(accountAddress: AccountAddress.Type): Promise<SDK.NextAccountNonce> {
+        const address: GRPCKernel.AccountAddress = {
             value: AccountAddress.toBuffer(accountAddress),
         };
 
@@ -91,7 +92,7 @@ export class ConcordiumGRPCClient {
      * @param blockHash optional block hash to get the cryptographic parameters at, otherwise retrieves from last finalized block.
      * @returns the global cryptographic parameters at the given block, or undefined it the block does not exist.
      */
-    async getCryptographicParameters(blockHash?: BlockHash.Type): Promise<v1.CryptographicParameters> {
+    async getCryptographicParameters(blockHash?: BlockHash.Type): Promise<SDK.CryptographicParameters> {
         const blockHashInput = getBlockHashInput(blockHash);
 
         const response = await this.client.getCryptographicParameters(blockHashInput).response;
@@ -115,10 +116,10 @@ export class ConcordiumGRPCClient {
      * @throws An error of type `RpcError` if not found in the block.
      */
     async getAccountInfo(
-        accountIdentifier: v1.AccountIdentifierInput,
+        accountIdentifier: SDK.AccountIdentifierInput,
         blockHash?: BlockHash.Type
-    ): Promise<v1.AccountInfo> {
-        const accountInfoRequest: v2.AccountInfoRequest = {
+    ): Promise<SDK.AccountInfo> {
+        const accountInfoRequest: GRPC.AccountInfoRequest = {
             blockHash: getBlockHashInput(blockHash),
             accountIdentifier: getAccountIdentifierInput(accountIdentifier),
         };
@@ -137,7 +138,7 @@ export class ConcordiumGRPCClient {
      * @returns the status for the given transaction/block item, or undefined if it does not exist.
      */
     async getBlockItemStatus(transactionHash: TransactionHash.Type): Promise<BlockItemStatus> {
-        const transactionHashV2: v2.TransactionHash = {
+        const transactionHashV2: GRPC.TransactionHash = {
             value: TransactionHash.toBuffer(transactionHash),
         };
 
@@ -152,8 +153,8 @@ export class ConcordiumGRPCClient {
      *
      * {@codeblock ~~:nodejs/client/getConsensusStatus.ts#documentation-snippet}
      */
-    async getConsensusStatus(): Promise<v1.ConsensusStatus> {
-        const response = await this.client.getConsensusInfo(v2.Empty).response;
+    async getConsensusStatus(): Promise<SDK.ConsensusStatus> {
+        const response = await this.client.getConsensusInfo(GRPC.Empty).response;
         return translate.consensusInfo(response);
     }
 
@@ -171,8 +172,8 @@ export class ConcordiumGRPCClient {
     async getModuleSource(
         moduleRef: ModuleReference.Type,
         blockHash?: BlockHash.Type
-    ): Promise<v1.VersionedModuleSource> {
-        const moduleSourceRequest: v2.ModuleSourceRequest = {
+    ): Promise<SDK.VersionedModuleSource> {
+        const moduleSourceRequest: GRPC.ModuleSourceRequest = {
             blockHash: getBlockHashInput(blockHash),
             moduleRef: { value: moduleRef.decodedModuleRef },
         };
@@ -224,8 +225,8 @@ export class ConcordiumGRPCClient {
      * @returns An object with information about the contract instance.
      * @throws An error of type `RpcError` if not found in the block.
      */
-    async getInstanceInfo(contractAddress: ContractAddress.Type, blockHash?: BlockHash.Type): Promise<v1.InstanceInfo> {
-        const instanceInfoRequest: v2.InstanceInfoRequest = {
+    async getInstanceInfo(contractAddress: ContractAddress.Type, blockHash?: BlockHash.Type): Promise<SDK.InstanceInfo> {
+        const instanceInfoRequest: GRPC.InstanceInfoRequest = {
             blockHash: getBlockHashInput(blockHash),
             address: ContractAddress.toProto(contractAddress),
         };
@@ -255,10 +256,10 @@ export class ConcordiumGRPCClient {
      * If the tag is `failure`, then a `reason` field is present, and it contains the reason the update would have been rejected.
      * If either the block does not exist, or then node fails to parse of any of the inputs, then undefined is returned.
      */
-    async invokeContract(context: v1.ContractContext, blockHash?: BlockHash.Type): Promise<v1.InvokeContractResult> {
+    async invokeContract(context: SDK.ContractContext, blockHash?: BlockHash.Type): Promise<SDK.InvokeContractResult> {
         const blockHashInput = getBlockHashInput(blockHash);
 
-        const invokeInstanceRequest: v2.InvokeInstanceRequest = {
+        const invokeInstanceRequest: GRPC.InvokeInstanceRequest = {
             blockHash: blockHashInput,
             invoker: getInvokerInput(context.invoker),
             instance: context.contract,
@@ -286,8 +287,8 @@ export class ConcordiumGRPCClient {
      * @returns The transaction hash as a hex-encoded string
      */
     async sendAccountTransaction(
-        transaction: v1.AccountTransaction,
-        signature: v1.AccountTransactionSignature
+        transaction: SDK.AccountTransaction,
+        signature: SDK.AccountTransactionSignature
     ): Promise<TransactionHash.Type> {
         const accountTransactionHandler = getAccountTransactionHandler(transaction.type);
 
@@ -318,12 +319,12 @@ export class ConcordiumGRPCClient {
      * @returns The transaction hash as a byte array
      */
     async sendRawAccountTransaction(
-        header: v1.AccountTransactionHeader,
+        header: SDK.AccountTransactionHeader,
         energyAmount: Energy.Type,
         payload: Uint8Array,
-        signature: v1.AccountTransactionSignature
+        signature: SDK.AccountTransactionSignature
     ): Promise<TransactionHash.Type> {
-        const transactionSignature: v2.AccountTransactionSignature =
+        const transactionSignature: GRPC.AccountTransactionSignature =
             translate.accountTransactionSignatureToV2(signature);
 
         if (TransactionExpiry.toDate(header.expiry) < new Date()) {
@@ -333,20 +334,20 @@ export class ConcordiumGRPCClient {
         }
 
         // Put together sendBlockItemRequest
-        const convertedHeader: v2.AccountTransactionHeader = {
+        const convertedHeader: GRPC.AccountTransactionHeader = {
             sender: AccountAddress.toProto(header.sender),
             sequenceNumber: SequenceNumber.toProto(header.nonce),
             energyAmount: Energy.toProto(energyAmount),
             expiry: TransactionExpiry.toProto(header.expiry),
         };
-        const accountTransaction: v2.AccountTransaction = {
+        const accountTransaction: GRPC.AccountTransaction = {
             signature: transactionSignature,
             header: convertedHeader,
             payload: {
                 payload: { oneofKind: 'rawPayload', rawPayload: payload },
             },
         };
-        const sendBlockItemRequest: v2.SendBlockItemRequest = {
+        const sendBlockItemRequest: GRPC.SendBlockItemRequest = {
             blockItem: {
                 oneofKind: 'accountTransaction',
                 accountTransaction: accountTransaction,
@@ -366,7 +367,7 @@ export class ConcordiumGRPCClient {
      *
      * See [this](git:docs/account-creation.md) document for how this function can be used.
      *
-     * @param rawPayload the serialized payload, consisting of the {@link v1.CredentialDeploymentTransaction}
+     * @param rawPayload the serialized payload, consisting of the {@link SDK.CredentialDeploymentTransaction}
      * along with corresponding signatures. This can be serialized by utilizing the `serializeCredentialDeploymentPayload` function.
      * @param expiry the expiry of the transaction
      * @returns The transaction hash
@@ -375,14 +376,14 @@ export class ConcordiumGRPCClient {
         rawPayload: Uint8Array,
         expiry: TransactionExpiry.Type
     ): Promise<TransactionHash.Type> {
-        const credentialDeployment: v2.CredentialDeployment = {
+        const credentialDeployment: GRPC.CredentialDeployment = {
             messageExpiry: TransactionExpiry.toProto(expiry),
             payload: {
                 oneofKind: 'rawPayload',
                 rawPayload,
             },
         };
-        const sendBlockItemRequest: v2.SendBlockItemRequest = {
+        const sendBlockItemRequest: GRPC.SendBlockItemRequest = {
             blockItem: {
                 oneofKind: 'credentialDeployment',
                 credentialDeployment: credentialDeployment,
@@ -402,11 +403,11 @@ export class ConcordiumGRPCClient {
      * @returns The transaction hash
      */
     async sendUpdateInstruction(
-        updateInstructionTransaction: v1.UpdateInstruction,
+        updateInstructionTransaction: SDK.UpdateInstruction,
         signatures: Record<number, HexString>
     ): Promise<TransactionHash.Type> {
         const header = updateInstructionTransaction.header;
-        const updateInstruction: v2.UpdateInstruction = {
+        const updateInstruction: GRPC.UpdateInstruction = {
             header: {
                 sequenceNumber: {
                     value: header.sequenceNumber,
@@ -431,7 +432,7 @@ export class ConcordiumGRPCClient {
             },
         };
 
-        const sendBlockItemRequest: v2.SendBlockItemRequest = {
+        const sendBlockItemRequest: GRPC.SendBlockItemRequest = {
             blockItem: {
                 oneofKind: 'updateInstruction',
                 updateInstruction: updateInstruction,
@@ -450,7 +451,7 @@ export class ConcordiumGRPCClient {
      * @param blockHash the block hash of the block to get the information from.
      * @returns Info on all of the block chain parameters.
      */
-    async getBlockChainParameters(blockHash?: BlockHash.Type): Promise<v1.ChainParameters> {
+    async getBlockChainParameters(blockHash?: BlockHash.Type): Promise<SDK.ChainParameters> {
         const blockHashInput = getBlockHashInput(blockHash);
         const response = await this.client.getBlockChainParameters(blockHashInput).response;
         return translate.blockChainParameters(response);
@@ -465,8 +466,8 @@ export class ConcordiumGRPCClient {
      * @param bakerId the ID of the baker to get the status for.
      * @returns The status of the corresponding baker pool.
      */
-    async getPoolInfo(bakerId: v1.BakerId, blockHash?: BlockHash.Type): Promise<v1.BakerPoolStatus> {
-        const input: v2.PoolInfoRequest = {
+    async getPoolInfo(bakerId: SDK.BakerId, blockHash?: BlockHash.Type): Promise<SDK.BakerPoolStatus> {
+        const input: GRPC.PoolInfoRequest = {
             blockHash: getBlockHashInput(blockHash),
             baker: {
                 value: bakerId,
@@ -484,7 +485,7 @@ export class ConcordiumGRPCClient {
      * @param blockHash the block hash of the block to get the information from.
      * @returns The status of the passive delegators.
      */
-    async getPassiveDelegationInfo(blockHash?: BlockHash.Type): Promise<v1.PassiveDelegationStatus> {
+    async getPassiveDelegationInfo(blockHash?: BlockHash.Type): Promise<SDK.PassiveDelegationStatus> {
         const input = getBlockHashInput(blockHash);
         const response = await this.client.getPassiveDelegationInfo(input).response;
         return translate.passiveDelegationInfo(response);
@@ -498,7 +499,7 @@ export class ConcordiumGRPCClient {
      * @param blockHash optional block hash to get the reward status at, otherwise retrieves from last finalized block
      * @returns the reward status at the given block, or undefined it the block does not exist.
      */
-    async getTokenomicsInfo(blockHash?: BlockHash.Type): Promise<v1.TokenomicsInfo> {
+    async getTokenomicsInfo(blockHash?: BlockHash.Type): Promise<SDK.TokenomicsInfo> {
         const blockHashInput = getBlockHashInput(blockHash);
 
         const response = await this.client.getTokenomicsInfo(blockHashInput).response;
@@ -515,9 +516,9 @@ export class ConcordiumGRPCClient {
      * to provide this parameter.
      * @returns An AsyncIterator stream of finalized blocks.
      */
-    getFinalizedBlocks(abortSignal?: AbortSignal): AsyncIterable<v1.FinalizedBlockInfo> {
+    getFinalizedBlocks(abortSignal?: AbortSignal): AsyncIterable<SDK.FinalizedBlockInfo> {
         const opts = { abort: abortSignal };
-        const blocks = this.client.getFinalizedBlocks(v2.Empty, opts).responses;
+        const blocks = this.client.getFinalizedBlocks(GRPC.Empty, opts).responses;
         return mapStream(blocks, translate.commonBlockInfo);
     }
 
@@ -532,9 +533,9 @@ export class ConcordiumGRPCClient {
      * to provide this parameter.
      * @returns An AsyncIterator stream of blocks.
      */
-    getBlocks(abortSignal?: AbortSignal): AsyncIterable<v1.ArrivedBlockInfo> {
+    getBlocks(abortSignal?: AbortSignal): AsyncIterable<SDK.ArrivedBlockInfo> {
         const opts = { abort: abortSignal };
-        const blocks = this.client.getBlocks(v2.Empty, opts).responses;
+        const blocks = this.client.getBlocks(GRPC.Empty, opts).responses;
         return mapStream(blocks, translate.commonBlockInfo);
     }
 
@@ -550,7 +551,7 @@ export class ConcordiumGRPCClient {
     async waitForTransactionFinalization(
         transactionHash: TransactionHash.Type,
         timeoutTime?: number
-    ): Promise<v1.BlockItemSummaryInBlock> {
+    ): Promise<SDK.BlockItemSummaryInBlock> {
         return new Promise(async (resolve, reject) => {
             const abortController = new AbortController();
             if (timeoutTime) {
@@ -641,7 +642,7 @@ export class ConcordiumGRPCClient {
         abortSignal?: AbortSignal
     ): AsyncIterable<BlockHash.Type> {
         const opts = { abort: abortSignal };
-        const request: v2.AncestorsRequest = {
+        const request: GRPC.AncestorsRequest = {
             blockHash: getBlockHashInput(blockHash),
             amount: maxAmountOfAncestors,
         };
@@ -664,9 +665,9 @@ export class ConcordiumGRPCClient {
         contractAddress: ContractAddress.Type,
         blockHash?: BlockHash.Type,
         abortSignal?: AbortSignal
-    ): AsyncIterable<v1.InstanceStateKVPair> {
+    ): AsyncIterable<SDK.InstanceStateKVPair> {
         const opts = { abort: abortSignal };
-        const request: v2.InstanceInfoRequest = {
+        const request: GRPC.InstanceInfoRequest = {
             blockHash: getBlockHashInput(blockHash),
             address: ContractAddress.toProto(contractAddress),
         };
@@ -692,7 +693,7 @@ export class ConcordiumGRPCClient {
         blockHash?: BlockHash.Type
     ): Promise<HexString> {
         assertValidHex(key);
-        const request: v2.InstanceStateLookupRequest = {
+        const request: GRPC.InstanceStateLookupRequest = {
             address: ContractAddress.toProto(contractAddress),
             key: Buffer.from(key, 'hex'),
             blockHash: getBlockHashInput(blockHash),
@@ -712,7 +713,7 @@ export class ConcordiumGRPCClient {
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns an async iterable of identity provider info objects.
      */
-    getIdentityProviders(blockHash?: BlockHash.Type, abortSignal?: AbortSignal): AsyncIterable<v1.IpInfo> {
+    getIdentityProviders(blockHash?: BlockHash.Type, abortSignal?: AbortSignal): AsyncIterable<SDK.IpInfo> {
         const opts = { abort: abortSignal };
         const block = getBlockHashInput(blockHash);
         const ips = this.client.getIdentityProviders(block, opts).responses;
@@ -730,7 +731,7 @@ export class ConcordiumGRPCClient {
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns an async iterable of identity provider info objects.
      */
-    getAnonymityRevokers(blockHash?: BlockHash.Type, abortSignal?: AbortSignal): AsyncIterable<v1.ArInfo> {
+    getAnonymityRevokers(blockHash?: BlockHash.Type, abortSignal?: AbortSignal): AsyncIterable<SDK.ArInfo> {
         const opts = { abort: abortSignal };
         const block = getBlockHashInput(blockHash);
         const ars = this.client.getAnonymityRevokers(block, opts).responses;
@@ -745,7 +746,7 @@ export class ConcordiumGRPCClient {
      * @param blockHeightRequest Either an absolute block height request or a relative block height request
      * @returns A list of block hashes as hex strings
      */
-    async getBlocksAtHeight(blockHeightRequest: v1.BlocksAtHeightRequest): Promise<BlockHash.Type[]> {
+    async getBlocksAtHeight(blockHeightRequest: SDK.BlocksAtHeightRequest): Promise<BlockHash.Type[]> {
         const requestV2 = translate.BlocksAtHeightRequestToV2(blockHeightRequest);
         const blocks = await this.client.getBlocksAtHeight(requestV2).response;
         return blocks.blocks.map(BlockHash.fromProto);
@@ -759,7 +760,7 @@ export class ConcordiumGRPCClient {
      * @param blockHash an optional block hash to get the info from, otherwise retrieves from last finalized block.
      * @returns information on a block.
      */
-    async getBlockInfo(blockHash?: BlockHash.Type): Promise<v1.BlockInfo> {
+    async getBlockInfo(blockHash?: BlockHash.Type): Promise<SDK.BlockInfo> {
         const block = getBlockHashInput(blockHash);
         const blockInfo = await this.client.getBlockInfo(block).response;
         return translate.blockInfo(blockInfo);
@@ -774,7 +775,7 @@ export class ConcordiumGRPCClient {
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns an async iterable of BakerIds.
      */
-    getBakerList(blockHash?: BlockHash.Type, abortSignal?: AbortSignal): AsyncIterable<v1.BakerId> {
+    getBakerList(blockHash?: BlockHash.Type, abortSignal?: AbortSignal): AsyncIterable<SDK.BakerId> {
         const opts = { abort: abortSignal };
         const block = getBlockHashInput(blockHash);
         const bakers = this.client.getBakerList(block, opts).responses;
@@ -797,11 +798,11 @@ export class ConcordiumGRPCClient {
      * @returns a stream of DelegatorInfo
      */
     getPoolDelegators(
-        baker: v1.BakerId,
+        baker: SDK.BakerId,
         blockHash?: BlockHash.Type,
         abortSignal?: AbortSignal
-    ): AsyncIterable<v1.DelegatorInfo> {
-        const request: v2.GetPoolDelegatorsRequest = {
+    ): AsyncIterable<SDK.DelegatorInfo> {
+        const request: GRPC.GetPoolDelegatorsRequest = {
             blockHash: getBlockHashInput(blockHash),
             baker: { value: baker },
         };
@@ -826,11 +827,11 @@ export class ConcordiumGRPCClient {
      * @returns a stream of DelegatorRewardPeriodInfo
      */
     getPoolDelegatorsRewardPeriod(
-        baker: v1.BakerId,
+        baker: SDK.BakerId,
         blockHash?: BlockHash.Type,
         abortSignal?: AbortSignal
-    ): AsyncIterable<v1.DelegatorRewardPeriodInfo> {
-        const request: v2.GetPoolDelegatorsRequest = {
+    ): AsyncIterable<SDK.DelegatorRewardPeriodInfo> {
+        const request: GRPC.GetPoolDelegatorsRequest = {
             blockHash: getBlockHashInput(blockHash),
             baker: { value: baker },
         };
@@ -853,7 +854,7 @@ export class ConcordiumGRPCClient {
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns a stream of DelegatorInfo
      */
-    getPassiveDelegators(blockHash?: BlockHash.Type, abortSignal?: AbortSignal): AsyncIterable<v1.DelegatorInfo> {
+    getPassiveDelegators(blockHash?: BlockHash.Type, abortSignal?: AbortSignal): AsyncIterable<SDK.DelegatorInfo> {
         const delegatorInfo = this.client.getPassiveDelegators(getBlockHashInput(blockHash), {
             abort: abortSignal,
         }).responses;
@@ -877,7 +878,7 @@ export class ConcordiumGRPCClient {
     getPassiveDelegatorsRewardPeriod(
         blockHash?: BlockHash.Type,
         abortSignal?: AbortSignal
-    ): AsyncIterable<v1.DelegatorRewardPeriodInfo> {
+    ): AsyncIterable<SDK.DelegatorRewardPeriodInfo> {
         const delegatorInfo = this.client.getPassiveDelegatorsRewardPeriod(getBlockHashInput(blockHash), {
             abort: abortSignal,
         }).responses;
@@ -892,8 +893,8 @@ export class ConcordiumGRPCClient {
      *
      * @returns a branch with a block hash and a list of branch-children
      */
-    async getBranches(): Promise<v1.Branch> {
-        const branch = await this.client.getBranches(v2.Empty).response;
+    async getBranches(): Promise<SDK.Branch> {
+        const branch = await this.client.getBranches(GRPC.Empty).response;
         return translate.branch(branch);
     }
 
@@ -903,7 +904,7 @@ export class ConcordiumGRPCClient {
      * @param blockHash an optional block hash to get the election info at, otherwise retrieves from last finalized block.
      * @returns election info for the given block
      */
-    async getElectionInfo(blockHash?: BlockHash.Type): Promise<v1.ElectionInfo> {
+    async getElectionInfo(blockHash?: BlockHash.Type): Promise<SDK.ElectionInfo> {
         const blockHashInput = getBlockHashInput(blockHash);
         const electionInfo = await this.client.getElectionInfo(blockHashInput).response;
         return translate.electionInfo(electionInfo);
@@ -958,7 +959,7 @@ export class ConcordiumGRPCClient {
      * @param blockHash an optional block hash to get the sequence numbers at, otherwise retrieves from last finalized block.
      * @return a NextUpdateSequenceNumbers object
      */
-    async getNextUpdateSequenceNumbers(blockHash?: BlockHash.Type): Promise<v1.NextUpdateSequenceNumbers> {
+    async getNextUpdateSequenceNumbers(blockHash?: BlockHash.Type): Promise<SDK.NextUpdateSequenceNumbers> {
         const sequenceNumbers = await this.client.getNextUpdateSequenceNumbers(getBlockHashInput(blockHash)).response;
 
         return translate.nextUpdateSequenceNumbers(sequenceNumbers);
@@ -970,7 +971,7 @@ export class ConcordiumGRPCClient {
      * {@codeblock ~~:nodejs/client/shutdown.ts#documentation-snippet}
      */
     async shutdown(): Promise<void> {
-        await this.client.shutdown(v2.Empty);
+        await this.client.shutdown(GRPC.Empty);
     }
 
     /**
@@ -986,11 +987,11 @@ export class ConcordiumGRPCClient {
      * @param ip The ip address to connect to. Must be a valid ip address.
      * @param port The port to connect to. Must be between 0 and 65535.
      */
-    async peerConnect(ip: v1.IpAddressString, port: number): Promise<void> {
+    async peerConnect(ip: SDK.IpAddressString, port: number): Promise<void> {
         assertValidIp(ip);
         assertValidPort(port);
 
-        const request: v2.IpSocketAddress = {
+        const request: GRPC.IpSocketAddress = {
             ip: { value: ip },
             port: { value: port },
         };
@@ -1007,11 +1008,11 @@ export class ConcordiumGRPCClient {
      * @param ip The ip address to connect to. Must be a valid ip address.
      * @param port The port to connect to. Must be between 0 and 65535.
      */
-    async peerDisconnect(ip: v1.IpAddressString, port: number): Promise<void> {
+    async peerDisconnect(ip: SDK.IpAddressString, port: number): Promise<void> {
         assertValidIp(ip);
         assertValidPort(port);
 
-        const request: v2.IpSocketAddress = {
+        const request: GRPC.IpSocketAddress = {
             ip: { value: ip },
             port: { value: port },
         };
@@ -1025,8 +1026,8 @@ export class ConcordiumGRPCClient {
      *
      * @return A list of the ip's of banned peers.
      */
-    async getBannedPeers(): Promise<v1.IpAddressString[]> {
-        const bannedPeers = await this.client.getBannedPeers(v2.Empty).response;
+    async getBannedPeers(): Promise<SDK.IpAddressString[]> {
+        const bannedPeers = await this.client.getBannedPeers(GRPC.Empty).response;
         return bannedPeers.peers.map((x) => unwrap(x.ipAddress?.value));
     }
 
@@ -1038,10 +1039,10 @@ export class ConcordiumGRPCClient {
      *
      * @param ip The ip address of the peer to ban. Must be a valid ip address.
      */
-    async banPeer(ip: v1.IpAddressString): Promise<void> {
+    async banPeer(ip: SDK.IpAddressString): Promise<void> {
         assertValidIp(ip);
 
-        const request: v2.PeerToBan = {
+        const request: GRPC.PeerToBan = {
             ipAddress: { value: ip },
         };
         await this.client.banPeer(request);
@@ -1055,10 +1056,10 @@ export class ConcordiumGRPCClient {
      *
      * @param ip The ip address of the peer to unban. Must be a valid ip address.
      */
-    async unbanPeer(ip: v1.IpAddressString): Promise<void> {
+    async unbanPeer(ip: SDK.IpAddressString): Promise<void> {
         assertValidIp(ip);
 
-        const request: v2.BannedPeer = {
+        const request: GRPC.BannedPeer = {
             ipAddress: { value: ip },
         };
         await this.client.unbanPeer(request);
@@ -1075,7 +1076,7 @@ export class ConcordiumGRPCClient {
      * @param raw Whether the node should dump raw packages.
      */
     async dumpStart(filePath: string, raw: boolean): Promise<void> {
-        const request: v2.DumpRequest = {
+        const request: GRPC.DumpRequest = {
             file: filePath,
             raw: raw,
         };
@@ -1090,7 +1091,7 @@ export class ConcordiumGRPCClient {
      * {@codeblock ~~:nodejs/client/dumpStop.ts#documentation-snippet}
      */
     async dumpStop(): Promise<void> {
-        await this.client.dumpStop(v2.Empty);
+        await this.client.dumpStop(GRPC.Empty);
     }
 
     /**
@@ -1106,8 +1107,8 @@ export class ConcordiumGRPCClient {
      *
      * @returns Info about the node
      */
-    async getNodeInfo(): Promise<v1.NodeInfo> {
-        const nodeInfo = await this.client.getNodeInfo(v2.Empty).response;
+    async getNodeInfo(): Promise<SDK.NodeInfo> {
+        const nodeInfo = await this.client.getNodeInfo(GRPC.Empty).response;
         return translate.nodeInfo(nodeInfo);
     }
 
@@ -1119,8 +1120,8 @@ export class ConcordiumGRPCClient {
      *
      * @returns a list containing info on each peer of the node.
      */
-    async getPeersInfo(): Promise<v1.PeerInfo[]> {
-        const peersInfo = await this.client.getPeersInfo(v2.Empty).response;
+    async getPeersInfo(): Promise<SDK.PeerInfo[]> {
+        const peersInfo = await this.client.getPeersInfo(GRPC.Empty).response;
         return peersInfo.peers.map(translate.peerInfo);
     }
 
@@ -1136,7 +1137,7 @@ export class ConcordiumGRPCClient {
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns a stream of block item summaries
      */
-    getBlockSpecialEvents(blockHash?: BlockHash.Type, abortSignal?: AbortSignal): AsyncIterable<v1.BlockSpecialEvent> {
+    getBlockSpecialEvents(blockHash?: BlockHash.Type, abortSignal?: AbortSignal): AsyncIterable<SDK.BlockSpecialEvent> {
         const blockSpecialEvents = this.client.getBlockSpecialEvents(getBlockHashInput(blockHash), {
             abort: abortSignal,
         }).responses;
@@ -1154,7 +1155,7 @@ export class ConcordiumGRPCClient {
      * @param abortSignal an optional AbortSignal to close the stream.
      * @returns a stream of pending updates
      */
-    getBlockPendingUpdates(blockHash?: BlockHash.Type, abortSignal?: AbortSignal): AsyncIterable<v1.PendingUpdate> {
+    getBlockPendingUpdates(blockHash?: BlockHash.Type, abortSignal?: AbortSignal): AsyncIterable<SDK.PendingUpdate> {
         const pendingUpdates = this.client.getBlockPendingUpdates(getBlockHashInput(blockHash), {
             abort: abortSignal,
         }).responses;
@@ -1170,7 +1171,7 @@ export class ConcordiumGRPCClient {
      * @param blockHash an optional block hash to get the finalization summaries at, otherwise retrieves from last finalized block.
      * @returns a finalization summary
      */
-    async getBlockFinalizationSummary(blockHash?: BlockHash.Type): Promise<v1.BlockFinalizationSummary> {
+    async getBlockFinalizationSummary(blockHash?: BlockHash.Type): Promise<SDK.BlockFinalizationSummary> {
         const finalizationSummary = await this.client.getBlockFinalizationSummary(getBlockHashInput(blockHash))
             .response;
 
@@ -1182,27 +1183,27 @@ export class ConcordiumGRPCClient {
      *
      * @param {bigint} [startHeight=0n] - An optional height to start streaming blocks from. Defaults to 0n.
      * @param {AbortSignal} [abortSignal] - An optional abort signal, which will end the stream. If this is not specified, the stream continues indefinitely.
-     * @returns {AsyncIterable<v1.FinalizedBlockInfo>} A stream of {@link v1.FinalizedBlockInfo}.
+     * @returns {AsyncIterable<SDK.FinalizedBlockInfo>} A stream of {@link SDK.FinalizedBlockInfo}.
      */
     getFinalizedBlocksFrom(
-        startHeight: v1.AbsoluteBlocksAtHeightRequest,
+        startHeight: SDK.AbsoluteBlocksAtHeightRequest,
         abortSignal?: AbortSignal
-    ): AsyncIterable<v1.FinalizedBlockInfo>;
+    ): AsyncIterable<SDK.FinalizedBlockInfo>;
     /**
      * Gets a stream of finalized blocks from specified `startHeight`.
      *
      * @param {bigint} [startHeight=0n] - An optional height to start streaming blocks from. Defaults to 0n.
      * @param {bigint} [endHeight] - An optional height to stop streaming at. If this is not specified, the stream continues indefinitely.
-     * @returns {AsyncIterable<v1.FinalizedBlockInfo>} A stream of {@link v1.FinalizedBlockInfo}.
+     * @returns {AsyncIterable<SDK.FinalizedBlockInfo>} A stream of {@link SDK.FinalizedBlockInfo}.
      */
     getFinalizedBlocksFrom(
-        startHeight: v1.AbsoluteBlocksAtHeightRequest,
-        endHeight?: v1.AbsoluteBlocksAtHeightRequest
-    ): AsyncIterable<v1.FinalizedBlockInfo>;
+        startHeight: SDK.AbsoluteBlocksAtHeightRequest,
+        endHeight?: SDK.AbsoluteBlocksAtHeightRequest
+    ): AsyncIterable<SDK.FinalizedBlockInfo>;
     getFinalizedBlocksFrom(
-        startHeight: v1.AbsoluteBlocksAtHeightRequest = 0n,
-        end?: AbortSignal | v1.AbsoluteBlocksAtHeightRequest
-    ): AsyncIterable<v1.FinalizedBlockInfo> {
+        startHeight: SDK.AbsoluteBlocksAtHeightRequest = 0n,
+        end?: AbortSignal | SDK.AbsoluteBlocksAtHeightRequest
+    ): AsyncIterable<SDK.FinalizedBlockInfo> {
         let height = startHeight;
         let finHeight: bigint;
         const abortController = new AbortController();
@@ -1214,7 +1215,7 @@ export class ConcordiumGRPCClient {
         };
         let searchKnown = true;
 
-        const nextKnown = async (): Promise<v1.FinalizedBlockInfo | undefined> => {
+        const nextKnown = async (): Promise<SDK.FinalizedBlockInfo | undefined> => {
             // Refresh latest finalized height from consensus
             if (height > finHeight) {
                 finHeight = await this.getConsensusHeight();
@@ -1226,13 +1227,13 @@ export class ConcordiumGRPCClient {
             }
 
             const [hash] = (await this.getBlocksAtHeight(height)).reverse();
-            const bi: v1.FinalizedBlockInfo = { hash, height };
+            const bi: SDK.FinalizedBlockInfo = { hash, height };
             height += 1n;
 
             return bi;
         };
 
-        const nextNew = async (): Promise<v1.FinalizedBlockInfo | undefined> => {
+        const nextNew = async (): Promise<SDK.FinalizedBlockInfo | undefined> => {
             // At this point, we've found all blocks already finalized on chain. Start streaming new blocks.
             for await (const block of newBlocks) {
                 if (block.height < height) {
@@ -1244,7 +1245,7 @@ export class ConcordiumGRPCClient {
             }
         };
 
-        const next = async (): Promise<IteratorResult<v1.FinalizedBlockInfo>> => {
+        const next = async (): Promise<IteratorResult<SDK.FinalizedBlockInfo>> => {
             if (abortSignal.aborted) {
                 return endSignal;
             }
@@ -1253,7 +1254,7 @@ export class ConcordiumGRPCClient {
                 finHeight = await this.getConsensusHeight();
             }
 
-            let bi: v1.FinalizedBlockInfo | undefined;
+            let bi: SDK.FinalizedBlockInfo | undefined;
             if (searchKnown) {
                 bi = (await nextKnown()) ?? (await nextNew());
             } else {
@@ -1284,7 +1285,7 @@ export class ConcordiumGRPCClient {
      * Note that this function uses binary search and is only intended to work for monotone predicates.
      *
      * @template R
-     * @param {(bi: v1.FinalizedBlockInfo) => Promise<R | undefined>} predicate - A predicate function resolving with value of type {@link R} if the predicate holds, and undefined if not.
+     * @param {(bi: SDK.FinalizedBlockInfo) => Promise<R | undefined>} predicate - A predicate function resolving with value of type {@link R} if the predicate holds, and undefined if not.
      * The precondition for this method is that the function is monotone, i.e., if block at height `h` satisfies the test then also a block at height `h+1` does.
      * If this precondition does not hold then the return value from this method is unspecified.
      * @param {bigint} [from=0n] - An optional lower bound of the range of blocks to search. Defaults to 0n.
@@ -1293,9 +1294,9 @@ export class ConcordiumGRPCClient {
      * @returns {Promise<R | undefined>} The value returned from `predicate` at the lowest block (in terms of height) where the predicate holds.
      */
     async findEarliestFinalized<R>(
-        predicate: (bi: v1.FinalizedBlockInfo) => Promise<R | undefined>,
-        from: v1.AbsoluteBlocksAtHeightRequest = 0n,
-        to?: v1.AbsoluteBlocksAtHeightRequest
+        predicate: (bi: SDK.FinalizedBlockInfo) => Promise<R | undefined>,
+        from: SDK.AbsoluteBlocksAtHeightRequest = 0n,
+        to?: SDK.AbsoluteBlocksAtHeightRequest
     ): Promise<R | undefined> {
         let lower = from;
         let upper = to ?? (await this.getConsensusHeight());
@@ -1335,8 +1336,8 @@ export class ConcordiumGRPCClient {
      */
     async findInstanceCreation(
         address: ContractAddress.Type,
-        from?: v1.AbsoluteBlocksAtHeightRequest,
-        to?: v1.AbsoluteBlocksAtHeightRequest
+        from?: SDK.AbsoluteBlocksAtHeightRequest,
+        to?: SDK.AbsoluteBlocksAtHeightRequest
     ): Promise<FindInstanceCreationReponse | undefined> {
         return this.findEarliestFinalized(
             async ({ hash, height }) => {
@@ -1363,13 +1364,13 @@ export class ConcordiumGRPCClient {
      * @param {bigint} [from=0n] - An optional lower bound of the range of blocks to search. Defaults to 0n.
      * @param {bigint} [to] - An optional upper bound of the range of blocks to search. Defaults to latest finalized block.
      *
-     * @returns {v1.BlockInfo} Information about the block found, or undefined if no block was found.
+     * @returns {SDK.BlockInfo} Information about the block found, or undefined if no block was found.
      */
     async findFirstFinalizedBlockNoLaterThan(
         time: Date,
-        from?: v1.AbsoluteBlocksAtHeightRequest,
-        to?: v1.AbsoluteBlocksAtHeightRequest
-    ): Promise<v1.BlockInfo | undefined> {
+        from?: SDK.AbsoluteBlocksAtHeightRequest,
+        to?: SDK.AbsoluteBlocksAtHeightRequest
+    ): Promise<SDK.BlockInfo | undefined> {
         return this.findEarliestFinalized(
             async ({ hash }) => {
                 const bi = await this.getBlockInfo(hash);
@@ -1396,11 +1397,11 @@ export class ConcordiumGRPCClient {
      *
      * @throws an `UNAVAILABLE` RPC error if the current consensus version is 0 (prior to protocol version 6), as the endpoint is only supported from consensus version 1 (from protocol version 6).
      *
-     * @param {v1.BakerId} baker - The baker that should be queried for.
+     * @param {SDK.BakerId} baker - The baker that should be queried for.
      *
      * @returns {Timestamp.Type} The projected earliest time at which a particular baker will be required to bake a block, as a unix timestamp in milliseconds.
      */
-    async getBakerEarliestWinTime(baker: v1.BakerId): Promise<Timestamp.Type> {
+    async getBakerEarliestWinTime(baker: SDK.BakerId): Promise<Timestamp.Type> {
         const bakerId = {
             value: baker,
         };
@@ -1419,7 +1420,7 @@ export class ConcordiumGRPCClient {
      *
      * @returns the requested block certificates.
      */
-    async getBlockCertificates(blockHash?: BlockHash.Type): Promise<v1.BlockCertificates> {
+    async getBlockCertificates(blockHash?: BlockHash.Type): Promise<SDK.BlockCertificates> {
         const blockHashInput = getBlockHashInput(blockHash);
         const blockCertificates = await this.client.getBlockCertificates(blockHashInput).response;
         return translate.blockCertificates(blockCertificates);
@@ -1435,7 +1436,7 @@ export class ConcordiumGRPCClient {
      *
      * @returns All bakers in the reward period of a block
      */
-    getBakersRewardPeriod(blockHash?: BlockHash.Type): AsyncIterable<v1.BakerRewardPeriodInfo> {
+    getBakersRewardPeriod(blockHash?: BlockHash.Type): AsyncIterable<SDK.BakerRewardPeriodInfo> {
         const blockHashInput = getBlockHashInput(blockHash);
         const bakersRewardPeriod = this.client.getBakersRewardPeriod(blockHashInput).responses;
         return mapStream(bakersRewardPeriod, translate.bakerRewardPeriodInfo);
@@ -1456,11 +1457,11 @@ export class ConcordiumGRPCClient {
      * @throws an `INVALID_ARGUMENT` RPC error if the input `EpochRequest` is malformed.
      * @throws an `UNAVAILABLE` RPC error if the endpoint is disabled on the node.
      *
-     * @param {BlockHash.Type | v1.RelativeEpochRequest } epochRequest - Consists of either a block hash or a relative epoch request consisting of a genesis index and an epoch. If none is passed, it queries the last finalized block.
+     * @param {BlockHash.Type | SDK.RelativeEpochRequest } epochRequest - Consists of either a block hash or a relative epoch request consisting of a genesis index and an epoch. If none is passed, it queries the last finalized block.
      *
-     * @returns {v1.WinningBaker} A stream of winning bakers for a given epoch.
+     * @returns {SDK.WinningBaker} A stream of winning bakers for a given epoch.
      */
-    getWinningBakersEpoch(epochRequest?: BlockHash.Type | v1.RelativeEpochRequest): AsyncIterable<v1.WinningBaker> {
+    getWinningBakersEpoch(epochRequest?: BlockHash.Type | SDK.RelativeEpochRequest): AsyncIterable<SDK.WinningBaker> {
         const req = getEpochRequest(epochRequest);
         const winningBakers = this.client.getWinningBakersEpoch(req).responses;
 
@@ -1477,11 +1478,11 @@ export class ConcordiumGRPCClient {
      * @throws - an `INVALID_ARGUMENT` RPC error if the input `EpochRequest` is malformed.
      * @throws - an `UNAVAILABLE` RPC error if the endpoint is disabled on the node.
      *
-     * @param {BlockHash.Type | v1.RelativeEpochRequest } epochRequest - Consists of either a block hash or a relative epoch request consisting of a genesis index and an epoch. If none is passed, it queries the last finalized block.
+     * @param {BlockHash.Type | SDK.RelativeEpochRequest } epochRequest - Consists of either a block hash or a relative epoch request consisting of a genesis index and an epoch. If none is passed, it queries the last finalized block.
      *
      * @returns {HexString} The block hash as a hex encoded string.
      */
-    async getFirstBlockEpoch(epochRequest?: BlockHash.Type | v1.RelativeEpochRequest): Promise<BlockHash.Type> {
+    async getFirstBlockEpoch(epochRequest?: BlockHash.Type | SDK.RelativeEpochRequest): Promise<BlockHash.Type> {
         const req = getEpochRequest(epochRequest);
         const blockHash = await this.client.getFirstBlockEpoch(req).response;
 
@@ -1499,7 +1500,7 @@ export class ConcordiumGRPCClient {
      *
      * @returns a HealthCheck indicating whether the node is healthy or not and provides the message from the client, if not healthy.
      */
-    async healthCheck(): Promise<v1.HealthCheckResponse> {
+    async healthCheck(): Promise<SDK.HealthCheckResponse> {
         try {
             await this.healthClient.check({});
             return { isHealthy: true };
@@ -1512,7 +1513,7 @@ export class ConcordiumGRPCClient {
 /**
  * @hidden
  */
-export function getBlockHashInput(blockHash?: BlockHash.Type): v2.BlockHashInput {
+export function getBlockHashInput(blockHash?: BlockHash.Type): GRPC.BlockHashInput {
     if (blockHash) {
         return {
             blockHashInput: {
@@ -1524,7 +1525,7 @@ export function getBlockHashInput(blockHash?: BlockHash.Type): v2.BlockHashInput
         return {
             blockHashInput: {
                 oneofKind: 'lastFinal',
-                lastFinal: v2.Empty,
+                lastFinal: GRPC.Empty,
             },
         };
     }
@@ -1533,8 +1534,8 @@ export function getBlockHashInput(blockHash?: BlockHash.Type): v2.BlockHashInput
 /**
  * @hidden
  */
-export function getAccountIdentifierInput(accountIdentifier: v1.AccountIdentifierInput): v2.AccountIdentifierInput {
-    let returnIdentifier: v2.AccountIdentifierInput['accountIdentifierInput'];
+export function getAccountIdentifierInput(accountIdentifier: SDK.AccountIdentifierInput): GRPC.AccountIdentifierInput {
+    let returnIdentifier: GRPC.AccountIdentifierInput['accountIdentifierInput'];
 
     if (AccountAddress.instanceOf(accountIdentifier)) {
         returnIdentifier = {
@@ -1581,7 +1582,7 @@ export class ConcordiumGRPCWebClient extends ConcordiumGRPCClient {
 /**
  * @hidden
  */
-export function getInvokerInput(invoker?: AccountAddress.Type | ContractAddress.Type): v2.Address | undefined {
+export function getInvokerInput(invoker?: AccountAddress.Type | ContractAddress.Type): GRPC.Address | undefined {
     if (!invoker) {
         return undefined;
     } else if (AccountAddress.instanceOf(invoker)) {
@@ -1603,7 +1604,7 @@ export function getInvokerInput(invoker?: AccountAddress.Type | ContractAddress.
     }
 }
 
-function getEpochRequest(epochRequest?: BlockHash.Type | v1.RelativeEpochRequest): v2.EpochRequest {
+function getEpochRequest(epochRequest?: BlockHash.Type | SDK.RelativeEpochRequest): GRPC.EpochRequest {
     if (BlockHash.instanceOf(epochRequest) || typeof epochRequest === 'undefined') {
         return {
             epochRequestInput: {
@@ -1624,7 +1625,7 @@ function getEpochRequest(epochRequest?: BlockHash.Type | v1.RelativeEpochRequest
     }
 }
 
-function assertValidIp(ip: v1.IpAddressString): void {
+function assertValidIp(ip: SDK.IpAddressString): void {
     if (!isValidIp(ip)) {
         throw new Error('The input was not a valid ip: ' + ip);
     }

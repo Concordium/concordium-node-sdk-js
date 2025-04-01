@@ -1,4 +1,5 @@
 import { MAX_U32, MAX_U64 } from '../constants.js';
+import type * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
 
 /**
  * Protocol level token (PLT) amount JSON representation.
@@ -156,4 +157,26 @@ export function create(value: bigint, decimals: number): TokenAmount {
  */
 export function zero(decimals: number): TokenAmount {
     return new TokenAmount(BigInt(0), decimals);
+}
+
+/**
+ * Convert token amount from its protobuf encoding.
+ * @param {Proto.TokenAmount} amount
+ * @returns {Type} The token amount.
+ * @throws {Err} If the value/digits exceeds the maximum allowed or is negative.
+ */
+export function fromProto(amount: Proto.TokenAmount): Type {
+    return create(amount.digits, amount.nrOfDecimals);
+}
+
+/**
+ * Convert token amount into its protobuf encoding.
+ * @param {TokenAmount} amount
+ * @returns {Proto.TokenAmount} The protobuf encoding.
+ */
+export function toProto(amount: Type): Proto.TokenAmount {
+    return {
+        digits: amount.value,
+        nrOfDecimals: amount.decimals,
+    };
 }

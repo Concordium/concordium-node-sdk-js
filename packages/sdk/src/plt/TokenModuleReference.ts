@@ -1,7 +1,6 @@
 import { Buffer } from 'buffer/index.js';
 
 import type * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
-// TODO: needs new proto files...
 import type { HexString } from '../types.js';
 
 /**

@@ -1,3 +1,5 @@
+import type * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
+
 /**
  * Protocol level token (PLT) ID JSON representation.
  */
@@ -52,10 +54,10 @@ class TokenId {
      */
     constructor(
         /** The inner value */
-        public readonly value: string
+        public readonly symbol: string
     ) {
         // Check if the value exceeds 256 UTF-8 bytes
-        if (new TextEncoder().encode(value).length > MAX_LENGTH) {
+        if (new TextEncoder().encode(symbol).length > MAX_LENGTH) {
             throw Err.incorrectLength();
         }
     }
@@ -65,7 +67,7 @@ class TokenId {
      * @returns {string} The string representation.
      */
     public toString(): string {
-        return this.value;
+        return this.symbol;
     }
 
     /**
@@ -73,7 +75,7 @@ class TokenId {
      * @returns {HexString} The JSON representation.
      */
     public toJSON(): JSON {
-        return this.value;
+        return this.symbol;
     }
 }
 
@@ -112,4 +114,25 @@ export function instanceOf(value: unknown): value is TokenId {
  */
 export function fromJSON(json: JSON): TokenId {
     return fromString(json);
+}
+
+/**
+ * Convert token ID from its protobuf encoding.
+ * @param {Proto.TokenId} tokenId athe token ID
+ * @returns {TokenId} The token ID.
+ * @throws {Err} If the value is longer than 256 utf-8 encoded bytes.
+ */
+export function fromProto(tokenId: Proto.TokenId): TokenId {
+    return fromString(tokenId.symbol);
+}
+
+/**
+ * Convert token ID into its protobuf encoding.
+ * @param {TokenId} tokenId The token ID.
+ * @returns {Proto.TokenId} The protobuf encoding.
+ */
+export function toProto(tokenId: Type): Proto.TokenId {
+    return {
+        symbol: tokenId.symbol,
+    };
 }

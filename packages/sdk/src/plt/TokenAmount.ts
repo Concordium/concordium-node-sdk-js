@@ -1,3 +1,5 @@
+import { MAX_U32, MAX_U64 } from '../constants.js';
+
 /**
  * Protocol level token (PLT) amount JSON representation.
  *
@@ -12,18 +14,80 @@ export type JSON = {
 };
 
 /**
+ * Enum representing the types of errors that can occur with token amounts.
+ */
+export enum ErrorType {
+    /** Error type indicating the token amount exceeds the maximum allowed value. */
+    EXCEEDS_MAX_VALUE = 'EXCEEDS_MAX_VALUE',
+    /** Error type indicating the token amount is negative. */
+    NEGATIVE = 'NEGATIVE',
+    /** Error type indicating the token amount has more decimals than allowed. */
+    EXCEEDS_MAX_DECIMALS = 'EXCEEDS_MAX_DECIMALS',
+}
+
+/**
+ * Custom error to represent issues with token amounts.
+ */
+export class Err extends Error {
+    private constructor(
+        /** The {@linkcode ErrorType} of the error. Can be used as to distinguish different types of errors. */
+        public readonly type: ErrorType,
+        message: string
+    ) {
+        super(message);
+        this.name = `TokenAmount.Err.${type}`;
+    }
+
+    /**
+     * Creates a TokenAmount.Err indicating that the token amount exceeds the maximum allowed value.
+     */
+    public static exceedsMaxValue(): Err {
+        return new Err(ErrorType.EXCEEDS_MAX_VALUE, `Token amounts cannot be larger than ${MAX_U64}`);
+    }
+
+    /**
+     * Creates a TokenAmount.Err indicating that the token amount is negative.
+     */
+    public static negative(): Err {
+        return new Err(ErrorType.NEGATIVE, 'Token amounts cannot be negative');
+    }
+
+    /**
+     * Creates a TokenAmount.Err indicating that the token amount has more decimals than allowed.
+     */
+    public static exceedsMaxDecimals(): Err {
+        return new Err(ErrorType.EXCEEDS_MAX_DECIMALS, `Token amounts cannot have more than than ${MAX_U32}`);
+    }
+}
+
+/**
  * Protocol level token (PLT) amount representation.
  */
 class TokenAmount {
     /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
     private readonly __type = 'PLT.Amount';
+
+    /**
+     * Constructs a new TokenAmount instance.
+     * Validates that the value is within the allowed range and is non-negative.
+     *
+     * @throws {Err} If the value/digits exceeds the maximum allowed or is negative.
+     */
     constructor(
-        /** The integer representation of the token amount. */
+        /** The unsigned integer representation of the token amount. */
         public readonly value: bigint,
         /** The decimals of the token amount, defining the precision at which amounts of the token can be specified. */
         public readonly decimals: number
     ) {
-        // TODO: any invariants to check?
+        if (value > MAX_U64) {
+            throw Err.exceedsMaxValue();
+        }
+        if (value < 0n) {
+            throw Err.negative();
+        }
+        if (decimals > MAX_U32) {
+            throw Err.exceedsMaxDecimals();
+        }
     }
 
     /**
@@ -62,8 +126,10 @@ export function instanceOf(value: unknown): value is TokenAmount {
 
 /**
  * Converts {@linkcode JSON} to a token amount.
+ *
  * @param {string} json The JSON representation of the CCD amount.
  * @returns {CcdAmount} The CCD amount.
+ * @throws {Err} If the value/digits exceeds the maximum allowed or is negative.
  */
 export function fromJSON(json: JSON): TokenAmount {
     return new TokenAmount(BigInt(json.value), Number(json.decimals));
@@ -71,9 +137,11 @@ export function fromJSON(json: JSON): TokenAmount {
 
 /**
  * Creates a token amount from its integer representation and a number of decimals.
+ *
  * @param {bigint} value The integer representation of the token amount.
  * @param {number} decimals The decimals of the token amount, defining the precision at which amounts of the token can be specified.
  * @returns {TokenAmount} The token amount.
+ * @throws {Err} If the value/digits exceeds the maximum allowed or is negative.
  */
 export function create(value: bigint, decimals: number): TokenAmount {
     return new TokenAmount(value, decimals);
@@ -81,8 +149,10 @@ export function create(value: bigint, decimals: number): TokenAmount {
 
 /**
  * Creates a token amount with a value of zero.
+ *
  * @param {number} decimals The decimals of the token amount, defining the precision at which amounts of the token can be specified.
  * @returns {TokenAmount} The token amount.
+ * @throws {Err} If the digits exceeds the maximum allowed.
  */
 export function zero(decimals: number): TokenAmount {
     return new TokenAmount(BigInt(0), decimals);

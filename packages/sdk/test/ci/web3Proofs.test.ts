@@ -11,7 +11,6 @@ import {
     ConcordiumHdWallet,
     ContractAddress,
     MAX_DATE_TIMESTAMP,
-    MAX_U64,
     MIN_DATE_TIMESTAMP,
     RequestStatement,
     StatementTypes,
@@ -31,6 +30,8 @@ import {
     TimestampAttribute,
     Web3IdProofRequest,
 } from '../../src/web3-id/types.js';
+import { MAX_U64 } from '../../src/constants.js';
+
 import { TEST_SEED_1 } from './HdWallet.test.js';
 import {
     expectedAccountCredentialPresentation,

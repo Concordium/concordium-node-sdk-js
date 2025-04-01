@@ -11,15 +11,58 @@ const MODULE_REF_BYTE_LENGTH = 32;
 export type JSON = HexString;
 
 /**
+ * Enum representing the types of errors that can occur with token amounts.
+ */
+export enum ErrorType {
+    /** Error type indicating the length of module reference is incorrect. */
+    INCORRECT_LENGTH = 'INCORRECT_LENGTH',
+}
+
+/**
+ * Custom error to represent issues with token amounts.
+ */
+export class Err extends Error {
+    private constructor(
+        /** The {@linkcode ErrorType} of the error. Can be used as to distinguish different types of errors. */
+        public readonly type: ErrorType,
+        message: string
+    ) {
+        super(message);
+        this.name = `TokenModuleReference.Err.${type}`;
+    }
+
+    /**
+     * Creates a TokenModuleReference.Err indicating the length of module reference is incorrect.
+     */
+    public static incorrectLength(moduleRef: Type): Err {
+        return new Err(
+            ErrorType.INCORRECT_LENGTH,
+            `Token module reference ${moduleRef.toString()} is invalid, as it must contain ${MODULE_REF_BYTE_LENGTH} bytes`
+        );
+    }
+}
+
+/**
  * Reference to a protocol level token (PLT) module.
  */
 class ModuleReference {
     /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
     private readonly __type = 'PLT.ModuleReference';
+
+    /**
+     * Constructs a new ModuleReference instance.
+     * Validates that the value is exactly the accepted byte length.
+     *
+     * @throws {Err} If the value is not exactly 32 bytes.
+     */
     constructor(
         /** Internal field, buffer containing the 32 bytes for the module reference. */
         public readonly bytes: Uint8Array
-    ) {}
+    ) {
+        if (bytes.byteLength !== MODULE_REF_BYTE_LENGTH) {
+            throw Err.incorrectLength(this);
+        }
+    }
 
     /**
      * Get a string representation of the module reference.
@@ -58,14 +101,9 @@ export function instanceOf(value: unknown): value is ModuleReference {
  * @param {ArrayBuffer} buffer Buffer containing 32 bytes for the hash.
  * @throws If the provided buffer does not contain exactly 32 bytes.
  * @returns {ModuleReference} A module reference.
+ * @throws {Err} If the value is not exactly 32 bytes.
  */
 export function fromBuffer(buffer: ArrayBuffer): ModuleReference {
-    if (buffer.byteLength !== MODULE_REF_BYTE_LENGTH) {
-        const hex = Buffer.from(buffer).toString('hex');
-        throw new Error(
-            'The provided moduleRef ' + hex + ' is invalid as module reference as it does not contain 32 bytes'
-        );
-    }
     return new ModuleReference(new Uint8Array(buffer));
 }
 
@@ -74,11 +112,9 @@ export function fromBuffer(buffer: ArrayBuffer): ModuleReference {
  * @param {HexString} moduleRef Hex encoding of the module reference.
  * @throws If the provided hex encoding does not correspond to a buffer of exactly 32 bytes.
  * @returns {ModuleReference} A module reference.
+ * @throws {Err} If the value is not exactly 32 bytes.
  */
 export function fromHexString(moduleRef: HexString): ModuleReference {
-    if (moduleRef.length !== MODULE_REF_BYTE_LENGTH * 2) {
-        throw new Error('The provided moduleRef ' + moduleRef + ' is invalid as its length was not 64');
-    }
     return new ModuleReference(new Uint8Array(Buffer.from(moduleRef, 'hex')));
 }
 
@@ -95,6 +131,7 @@ export function toHexString(moduleReference: ModuleReference): HexString {
  * Converts a {@linkcode HexString} to a module reference.
  * @param {HexString} json The JSON representation of the module reference.
  * @returns {ModuleReference} The module reference.
+ * @throws {Err} If the value is not exactly 32 bytes.
  */
 export function fromJSON(json: JSON): ModuleReference {
     return fromHexString(json);
@@ -104,6 +141,7 @@ export function fromJSON(json: JSON): ModuleReference {
  * Convert module reference from its protobuf encoding.
  * @param {Proto.ModuleRef} moduleReference The module reference in protobuf.
  * @returns {ModuleReference} The module reference.
+ * @throws {Err} If the value is not exactly 32 bytes.
  */
 export function fromProto(moduleReference: Proto.ModuleRef): ModuleReference {
     return fromBuffer(moduleReference.value);

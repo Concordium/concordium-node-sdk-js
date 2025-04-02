@@ -41,7 +41,7 @@
         "test:all": "FORCE_COLOR=true yarn workspaces foreach --no-private run test --passWithNoTests",
         "eslint": "eslint . --cache --ext .ts,.tsx --max-warnings 0",
         "lint:all": "yarn eslint",
-        "lint-fix:all": "yar eslint --fix",
+        "lint-fix:all": "yarn eslint --fix",
         "prettier": "prettier ./.*.* ./*.* .github/**/* -u --cache",
         "fmt:all": "yarn prettier --write && yarn workspaces foreach --all -p run fmt",
         "fmt-check:all": "yarn prettier --check && yarn workspaces foreach --all -p run fmt-check",

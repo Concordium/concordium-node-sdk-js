@@ -172,6 +172,7 @@ export enum UpdateType {
     BlockEnergyLimit = 'blockEnergyLimit',
     FinalizationCommitteeParameters = 'finalizationCommitteeParameters',
     ValidatorScoreParameters = 'validatorScoreParameters',
+    CreatePLT = 'createPLT',
 }
 
 export type KeyUpdate = HigherLevelKeyUpdate | AuthorizationKeysUpdate;

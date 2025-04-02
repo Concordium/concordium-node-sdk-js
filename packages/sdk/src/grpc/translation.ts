@@ -1561,6 +1561,11 @@ function trUpdatePayload(updatePayload: GRPC.UpdatePayload | undefined): SDK.Upd
             };
         }
         // TODO: add update for creating PLT tokens
+        // case 'createPLT':
+        //     return {
+        //         updateType: SDK.UpdateType.CreatePLT,
+        //         ...
+        //     }
         case undefined:
             throw new Error('Unexpected missing update payload');
     }
@@ -1708,6 +1713,11 @@ function trTransactionType(type?: GRPC.TransactionType): SDK.TransactionKindStri
             return SDK.TransactionKindString.ConfigureBaker;
         case GRPC.TransactionType.CONFIGURE_DELEGATION:
             return SDK.TransactionKindString.ConfigureDelegation;
+        // TODO: Add translation of transaction type once declared in the protobuf files
+        // case GRPC.TransactionType.TOKEN_HOLDER:
+        //     return SDK.TransactionKindString.TokenHolder;
+        // case GRPC.TransactionType.TOKEN_GOVERNANCE:
+        //     return SDK.TransactionKindString.TokenGovernance;
         case undefined:
             return undefined;
     }

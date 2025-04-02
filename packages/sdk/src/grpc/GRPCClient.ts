@@ -18,6 +18,7 @@ import * as GRPCKernel from '../grpc-api/v2/concordium/kernel.js';
 import { RawModuleSchema } from '../schemaTypes.js';
 import { serializeAccountTransactionPayload } from '../serialization.js';
 import * as SDK from '../types.js';
+import * as PLT from '../plt/types.js';
 import { HexString, isRpcError } from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';
 import * as BlockHash from '../types/BlockHash.js';
@@ -1507,6 +1508,40 @@ export class ConcordiumGRPCClient {
         } catch (e) {
             return { isHealthy: false, message: (e as RpcError).message };
         }
+    }
+
+    // TODO: add example snippet
+    /**
+     * Get information about a protocol level token (PLT) at a certain block.
+     * This endpoint is only supported for protocol version 9 and onwards.
+     *
+     * @param tokenId the ID of the token to query information about
+     * @param blockHash an optional block hash to get the info from, otherwise retrieves from last finalized block.
+     * @returns {PLT.TokenInfo} information about the corresponding token.
+     */
+    async getTokenInfo(tokenId: PLT.TokenId.Type, blockHash?: BlockHash.Type): Promise<PLT.TokenInfo> {
+        const blockHashInput = getBlockHashInput(blockHash);
+        const req: GRPC.TokenInfoRequest = {
+            tokenId: PLT.TokenId.toProto(tokenId),
+            blockHash: blockHashInput,
+        }
+        const res = await this.client.getTokenInfo(req);
+        return translate.trTokenInfo(res.response);
+    }
+
+    // TODO: add example snippet
+    /**
+     * Get all token IDs currently registered at a block.
+     * This endpoint is only supported for protocol version 9 and onwards.
+     *
+     * @param blockHash optional block hash, otherwise retrieves from last finalized block.
+     *
+     * @returns All token IDs registered at a block
+     */
+    getTokenList(blockHash?: BlockHash.Type): AsyncIterable<PLT.TokenId.Type> {
+        const blockHashInput = getBlockHashInput(blockHash);
+        const tokenIds = this.client.getTokenList(blockHashInput).responses;
+        return mapStream(tokenIds, PLT.TokenId.fromProto);
     }
 }
 

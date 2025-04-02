@@ -138,20 +138,20 @@ export function fromJSON(json: JSON): ModuleReference {
 
 /**
  * Convert module reference from its protobuf encoding.
- * @param {Proto.ModuleRef} moduleReference The module reference in protobuf.
+ * @param {Proto.TokenModuleRef} moduleReference The module reference in protobuf.
  * @returns {ModuleReference} The module reference.
  * @throws {Err} If the value is not exactly 32 bytes.
  */
-export function fromProto(moduleReference: Proto.ModuleRef): ModuleReference {
+export function fromProto(moduleReference: Proto.TokenModuleRef): ModuleReference {
     return fromBuffer(moduleReference.value);
 }
 
 /**
  * Convert module reference into its protobuf encoding.
  * @param {ModuleReference} moduleReference The module reference.
- * @returns {Proto.ModuleRef} The protobuf encoding.
+ * @returns {Proto.TokenModuleRef} The protobuf encoding.
  */
-export function toProto(moduleReference: ModuleReference): Proto.ModuleRef {
+export function toProto(moduleReference: ModuleReference): Proto.TokenModuleRef {
     return {
         value: moduleReference.bytes,
     };

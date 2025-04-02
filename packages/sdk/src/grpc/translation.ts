@@ -1560,6 +1560,7 @@ function trUpdatePayload(updatePayload: GRPC.UpdatePayload | undefined): SDK.Upd
                 },
             };
         }
+        // TODO: add update for creating PLT tokens
         case undefined:
             throw new Error('Unexpected missing update payload');
     }
@@ -1989,10 +1990,19 @@ function trAccountTransactionSummary(
         case 'tokenHolderEvent':
             return {
                 ...base,
+                transactionType: SDK.TransactionKindString.TokenHolder,
+                updateType: unwrap(effect.tokenHolderEvent.type),
+                tokenId: PLT.TokenId.fromProto(unwrap(effect.tokenHolderEvent.tokenSymbol)),
+                details: PLT.TokenEvent.fromProto(unwrap(effect.tokenHolderEvent.details)),
+
             }
         case 'tokenGovernanceEvent':
             return {
                 ...base,
+                transactionType: SDK.TransactionKindString.TokenGovernance,
+                updateType: unwrap(effect.tokenGovernanceEvent.type),
+                tokenId: PLT.TokenId.fromProto(unwrap(effect.tokenGovernanceEvent.tokenSymbol)),
+                details: PLT.TokenEvent.fromProto(unwrap(effect.tokenGovernanceEvent.details)),
             }
         case undefined:
             throw Error('Failed translating AccountTransactionEffects, encountered undefined value');

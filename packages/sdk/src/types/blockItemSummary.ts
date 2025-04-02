@@ -1,4 +1,5 @@
 import { isEqualContractAddress } from '../contractHelpers.js';
+import * as PLT from '../plt/types.js';
 import { AccountTransactionType, TransactionStatusEnum, TransactionSummaryType } from '../types.js';
 import { isDefined } from '../util.js';
 import * as AccountAddress from './AccountAddress.js';
@@ -72,6 +73,8 @@ export enum TransactionKindString {
     ConfigureDelegation = 'configureDelegation',
     StakingReward = 'paydayAccountReward',
     Failed = 'failed',
+    TokenHolder = 'tokenHolder',
+    TokenGovernance = 'tokenGovernance',
 }
 
 /**
@@ -197,6 +200,37 @@ export interface FailedTransactionSummary {
     rejectReason: RejectReason;
 }
 
+/**
+ * The summary of a token holder transaction of any type.
+ */
+export type TokenHolderSummary = {
+    transactionType: TransactionKindString.TokenHolder,
+    /** The token ID of the token the event originates from */
+    tokenId: PLT.TokenId.Type,
+    /** The specific type of update made to the token instance */
+    updateType: string,
+    /** The CBOR encoded details of the update. The details might vary depending on the PLT module reference used to
+     * instantiate the token. */
+    details: PLT.TokenEvent.Type,
+};
+
+/**
+ * The summary of a token governance transaction of any type.
+ */
+export type TokenGovernanceSummary = {
+    transactionType: TransactionKindString.TokenGovernance,
+    /** The token ID of the token the event originates from */
+    tokenId: PLT.TokenId.Type,
+    /** The specific type of update made to the token instance */
+    updateType: string,
+    /** The CBOR encoded details of the update. The details might vary depending on the PLT module reference used to
+     * instantiate the token. */
+    details: PLT.TokenEvent.Type,
+};
+
+/**
+ * Tagged union type of all possible account transaction summaries, distinguishable by the `transactionType` tag.
+ */
 export type AccountTransactionSummary = BaseAccountTransactionSummary &
     (
         | TransferSummary
@@ -221,6 +255,8 @@ export type AccountTransactionSummary = BaseAccountTransactionSummary &
         | ConfigureDelegationSummary
         | UpdateCredentialKeysSummary
         | UpdateCredentialsSummary
+        | TokenHolderSummary
+        | TokenGovernanceSummary
     );
 
 export interface AccountCreationSummary extends BaseBlockItemSummary {

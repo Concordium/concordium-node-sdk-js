@@ -1,5 +1,5 @@
 import * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
-import { HexString } from "../types.js";
+import { HexString } from '../types.js';
 
 export type JSON = HexString;
 

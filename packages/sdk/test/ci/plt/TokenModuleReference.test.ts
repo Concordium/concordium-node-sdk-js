@@ -22,7 +22,7 @@ describe('PLT TokenModuleReference', () => {
         bytes = Buffer.from('0EA8121FDC427C9B23AE5E26CFEA3E8CBB544C84AA0C82DB26A85949CE1706E1706', 'hex');
         expect(() => TokenModuleReference.fromBuffer(bytes)).toThrow(TokenModuleReference.Err.incorrectLength(bytes));
 
-        const invalidHex = '0EA8121FDC427C9B23AE5E26CFEA3E8CBB544C84AA0C82DB26A85949CE1706E170'
+        const invalidHex = '0EA8121FDC427C9B23AE5E26CFEA3E8CBB544C84AA0C82DB26A85949CE1706E170';
         expect(() => TokenModuleReference.fromHexString(invalidHex)).toThrow();
     });
 });

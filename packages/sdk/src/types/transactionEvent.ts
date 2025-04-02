@@ -1,3 +1,4 @@
+import * as PLT from '../plt/types.js';
 import type {
     Address,
     BakerId,
@@ -9,8 +10,6 @@ import type {
     OpenStatusText,
     ReleaseSchedule,
 } from '../types.js';
-import * as PLT from '../plt/types.js';
-
 import type * as AccountAddress from './AccountAddress.js';
 import type * as CcdAmount from './CcdAmount.js';
 import type * as ContractAddress from './ContractAddress.js';
@@ -361,31 +360,31 @@ export interface UpdateEnqueuedEvent {
 }
 
 /**
-* Token (PLT) events originating from governance transactions.
-*/
+ * Token (PLT) events originating from governance transactions.
+ */
 export type TokenGovernanceEvent = {
     tag: TransactionEventTag.TokenGovernance;
     /** The token ID of the token the event originates from */
-    tokenId: PLT.TokenId.Type,
+    tokenId: PLT.TokenId.Type;
     /** The specific type of update made to the token instance */
-    updateType: string,
+    updateType: string;
     /** The CBOR encoded details of the update. The details might vary depending on the PLT module reference used to
      * instantiate the token. */
-    details: PLT.TokenEvent.Type,
+    details: PLT.TokenEvent.Type;
 };
 
 /**
-* Token (PLT) events originating from account transactions.
-*/
+ * Token (PLT) events originating from account transactions.
+ */
 export type TokenHolderEvent = {
     tag: TransactionEventTag.TokenHolder;
     /** The token ID of the token the event originates from */
-    tokenId: PLT.TokenId.Type,
+    tokenId: PLT.TokenId.Type;
     /** The specific type of update made to the token instance */
-    updateType: string,
+    updateType: string;
     /** The CBOR encoded details of the update. The details might vary depending on the PLT module reference used to
      * instantiate the token. */
-    details: PLT.TokenEvent.Type,
+    details: PLT.TokenEvent.Type;
 };
 
 export type ContractTraceEvent = ResumedEvent | InterruptedEvent | UpdatedEvent | UpgradedEvent | TransferredEvent;

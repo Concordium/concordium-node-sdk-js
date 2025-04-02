@@ -13,7 +13,7 @@ describe('PLT TokenId', () => {
         const json = str;
         expect(TokenId.fromJSON(json)).toEqual(expected);
 
-        expect(() => TokenId.fromString('T'.repeat(256))).not.toThrow()
+        expect(() => TokenId.fromString('T'.repeat(256))).not.toThrow();
     });
 
     test('JSON id test', () => {
@@ -22,6 +22,6 @@ describe('PLT TokenId', () => {
     });
 
     test('Throws errors on invalid values', () => {
-        expect(() => TokenId.fromString('T'.repeat(257))).toThrow(TokenId.Err.exceedsMaxLength())
-    })
+        expect(() => TokenId.fromString('T'.repeat(257))).toThrow(TokenId.Err.exceedsMaxLength());
+    });
 });

@@ -1,8 +1,8 @@
 import * as AccountAddress from '../types/AccountAddress.js';
 import * as TokenAmount from './TokenAmount.js';
+import * as TokenEvent from './TokenEvent.js';
 import * as TokenId from './TokenId.js';
 import * as TokenModuleReference from './TokenModuleReference.js';
-import * as TokenEvent from './TokenEvent.js';
 import * as TokenModuleState from './TokenModuleState.js';
 
 export {

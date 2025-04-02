@@ -5,6 +5,7 @@ import {
     GenericNonMembershipStatement,
     GenericRangeStatement,
 } from '../../src/commonProofTypes.js';
+import { MAX_U64 } from '../../src/constants.js';
 import {
     AttributeKeyString,
     CIS4,
@@ -30,8 +31,6 @@ import {
     TimestampAttribute,
     Web3IdProofRequest,
 } from '../../src/web3-id/types.js';
-import { MAX_U64 } from '../../src/constants.js';
-
 import { TEST_SEED_1 } from './HdWallet.test.js';
 import {
     expectedAccountCredentialPresentation,

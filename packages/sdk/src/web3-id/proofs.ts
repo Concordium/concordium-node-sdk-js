@@ -1,6 +1,7 @@
 import { Buffer } from 'buffer/index.js';
 
 import { EU_MEMBERS, MAX_DATE, MIN_DATE, StatementBuilder, StatementTypes } from '../commonProofTypes.js';
+import { MAX_U64 } from '../constants.js';
 import { getPastDate } from '../id/idProofs.js';
 import { AttributeKey, AttributeKeyString, AttributeList, AttributesKeys, HexString, Network } from '../types.js';
 import type * as ContractAddress from '../types/ContractAddress.js';
@@ -31,7 +32,6 @@ import {
     Web3IssuerCommitmentInput,
     isTimestampAttribute,
 } from './types.js';
-import { MAX_U64 } from '../constants.js';
 
 export const MAX_STRING_BYTE_LENGTH = 31;
 export const MIN_DATE_ISO = '-262144-01-01T00:00:00Z';

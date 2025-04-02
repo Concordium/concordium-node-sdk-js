@@ -1,5 +1,4 @@
 import { isEqualContractAddress } from '../contractHelpers.js';
-import * as PLT from '../plt/types.js';
 import { AccountTransactionType, TransactionStatusEnum, TransactionSummaryType } from '../types.js';
 import { isDefined } from '../util.js';
 import * as AccountAddress from './AccountAddress.js';

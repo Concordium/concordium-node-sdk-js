@@ -12,13 +12,13 @@ import { getAccountTransactionHandler } from '../accountTransactions.js';
 import { DEFAULT_INVOKE_ENERGY } from '../constants.js';
 import { calculateEnergyCost } from '../energyCost.js';
 import { HealthClient } from '../grpc-api/v2/concordium/health.client.js';
+import * as GRPCKernel from '../grpc-api/v2/concordium/kernel.js';
 import { QueriesClient } from '../grpc-api/v2/concordium/service.client.js';
 import * as GRPC from '../grpc-api/v2/concordium/types.js';
-import * as GRPCKernel from '../grpc-api/v2/concordium/kernel.js';
+import * as PLT from '../plt/types.js';
 import { RawModuleSchema } from '../schemaTypes.js';
 import { serializeAccountTransactionPayload } from '../serialization.js';
 import * as SDK from '../types.js';
-import * as PLT from '../plt/types.js';
 import { HexString, isRpcError } from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';
 import * as BlockHash from '../types/BlockHash.js';
@@ -226,7 +226,10 @@ export class ConcordiumGRPCClient {
      * @returns An object with information about the contract instance.
      * @throws An error of type `RpcError` if not found in the block.
      */
-    async getInstanceInfo(contractAddress: ContractAddress.Type, blockHash?: BlockHash.Type): Promise<SDK.InstanceInfo> {
+    async getInstanceInfo(
+        contractAddress: ContractAddress.Type,
+        blockHash?: BlockHash.Type
+    ): Promise<SDK.InstanceInfo> {
         const instanceInfoRequest: GRPC.InstanceInfoRequest = {
             blockHash: getBlockHashInput(blockHash),
             address: ContractAddress.toProto(contractAddress),
@@ -1510,10 +1513,11 @@ export class ConcordiumGRPCClient {
         }
     }
 
-    // TODO: add example snippet
     /**
      * Get information about a protocol level token (PLT) at a certain block.
      * This endpoint is only supported for protocol version 9 and onwards.
+     *
+     * {@codeblock ~~:nodejs/client/getTokenInfo.ts#documentation-snippet}
      *
      * @param tokenId the ID of the token to query information about
      * @param blockHash an optional block hash to get the info from, otherwise retrieves from last finalized block.
@@ -1524,23 +1528,25 @@ export class ConcordiumGRPCClient {
         const req: GRPC.TokenInfoRequest = {
             tokenId: PLT.TokenId.toProto(tokenId),
             blockHash: blockHashInput,
-        }
+        };
         const res = await this.client.getTokenInfo(req);
         return translate.trTokenInfo(res.response);
     }
 
-    // TODO: add example snippet
     /**
      * Get all token IDs currently registered at a block.
      * This endpoint is only supported for protocol version 9 and onwards.
      *
+     * {@codeblock ~~:nodejs/client/getTokenList.ts#documentation-snippet}
+     *
      * @param blockHash optional block hash, otherwise retrieves from last finalized block.
+     * @param abortSignal an optional AbortSignal to close the stream.
      *
      * @returns All token IDs registered at a block
      */
-    getTokenList(blockHash?: BlockHash.Type): AsyncIterable<PLT.TokenId.Type> {
+    getTokenList(blockHash?: BlockHash.Type, abortSignal?: AbortSignal): AsyncIterable<PLT.TokenId.Type> {
         const blockHashInput = getBlockHashInput(blockHash);
-        const tokenIds = this.client.getTokenList(blockHashInput).responses;
+        const tokenIds = this.client.getTokenList(blockHashInput, { abort: abortSignal }).responses;
         return mapStream(tokenIds, PLT.TokenId.fromProto);
     }
 }

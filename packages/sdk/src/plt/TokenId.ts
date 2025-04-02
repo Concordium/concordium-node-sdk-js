@@ -136,3 +136,25 @@ export function toProto(tokenId: Type): Proto.TokenId {
         symbol: tokenId.symbol,
     };
 }
+
+/**
+ * Encode a TokenId to UTF-8 bytes. This is the serialization format used for token IDs in transactions.
+ *
+ * @param {TokenId} tokenId - The TokenId to encode.
+ * @returns {Uint8Array} The UTF-8 byte representation of the TokenId.
+ */
+export function toBytes(tokenId: TokenId): Uint8Array {
+    return new TextEncoder().encode(tokenId.symbol);
+}
+
+/**
+ * Decode UTF-8 bytes to a TokenId. This can be used to deserialize token IDs in transactions.
+ *
+ * @param {Uint8Array} bytes - The UTF-8 byte array to decode.
+ * @returns {TokenId} The decoded TokenId.
+ * @throws {Err} If the decoded string is longer than 256 utf-8 encoded bytes.
+ */
+export function fromBytes(bytes: ArrayBuffer): TokenId {
+    const symbol = new TextDecoder().decode(bytes);
+    return fromString(symbol);
+}

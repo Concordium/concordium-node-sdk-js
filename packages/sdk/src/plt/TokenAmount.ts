@@ -1,3 +1,5 @@
+import Big, { BigSource } from 'big.js';
+
 import { MAX_U32, MAX_U64 } from '../constants.js';
 import type * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
 
@@ -24,6 +26,10 @@ export enum ErrorType {
     NEGATIVE = 'NEGATIVE',
     /** Error type indicating the token amount has more decimals than allowed. */
     EXCEEDS_MAX_DECIMALS = 'EXCEEDS_MAX_DECIMALS',
+    /** Error type indicating the token value is specified as a fractional value when multiplied by `10 ** decimals` */
+    FRACTIONAL_VALUE = 'FRACTIONAL_VALUE',
+    /** Error type indicating the token decimals were specified as a fractional number. */
+    FRACTIONAL_DECIMALS = 'FRACTIONAL_DECIMALS',
 }
 
 /**
@@ -47,10 +53,10 @@ export class Err extends Error {
     }
 
     /**
-     * Creates a TokenAmount.Err indicating that the token amount is negative.
+     * Creates a TokenAmount.Err indicating that the token amount/decimals is negative.
      */
     public static negative(): Err {
-        return new Err(ErrorType.NEGATIVE, 'Token amounts cannot be negative');
+        return new Err(ErrorType.NEGATIVE, 'Token amounts/decimals cannot be negative');
     }
 
     /**
@@ -58,6 +64,16 @@ export class Err extends Error {
      */
     public static exceedsMaxDecimals(): Err {
         return new Err(ErrorType.EXCEEDS_MAX_DECIMALS, `Token amounts cannot have more than than ${MAX_U32}`);
+    }
+
+    /** Creates a TokenAmount.Err indicating the token decimals were specified as a fractional number. */
+    public static fractionalDecimals(): Err {
+        return new Err(ErrorType.FRACTIONAL_DECIMALS, `Token decimals must be specified as whole numbers`);
+    }
+
+    /** Creates a TokenAmount.Err indicating the token decimals were specified as a fractional number. */
+    public static fractionalValue(): Err {
+        return new Err(ErrorType.FRACTIONAL_VALUE, `Can not create TokenAmount from a non-whole number`);
     }
 }
 
@@ -72,7 +88,7 @@ class TokenAmount {
      * Constructs a new TokenAmount instance.
      * Validates that the value is within the allowed range and is non-negative.
      *
-     * @throws {Err} If the value/digits exceeds the maximum allowed or is negative.
+     * @throws {Err} If the value/decimals exceeds the maximum allowed or is negative.
      */
     constructor(
         /** The unsigned integer representation of the token amount. */
@@ -88,6 +104,12 @@ class TokenAmount {
         }
         if (decimals > MAX_U32) {
             throw Err.exceedsMaxDecimals();
+        }
+        if (decimals < 0) {
+            throw Err.negative();
+        }
+        if (Math.floor(decimals) !== decimals) {
+            throw Err.fractionalDecimals();
         }
     }
 
@@ -126,11 +148,53 @@ export function instanceOf(value: unknown): value is TokenAmount {
 }
 
 /**
+ * Creates a TokenAmount from a number, string, {@linkcode Big}, or bigint.
+ *
+ * @param amount The amount of tokens as a number, string, big or bigint.
+ * @returns {TokenAmount} The token amount.
+ *
+ * @throws {Err} If the value/decimals exceeds the maximum allowed or is negative.
+ */
+export function fromDecimal(amount: BigSource | bigint, decimals: number): TokenAmount {
+    let parsed: BigSource;
+    if (typeof amount !== 'bigint') {
+        parsed = newBig(amount);
+    } else {
+        parsed = amount.toString();
+    }
+
+    const intAmount = newBig(parsed).mul(Big(10 ** decimals));
+    // Assert that the number is whole
+    if (!intAmount.mod(Big(1)).eq(Big(0))) {
+        throw Err.fractionalValue();
+    }
+
+    return new TokenAmount(BigInt(intAmount.toString()), decimals);
+}
+
+function newBig(bigSource: BigSource): Big {
+    if (typeof bigSource === 'string') {
+        return Big(bigSource.replace(',', '.'));
+    }
+    return Big(bigSource);
+}
+
+/**
+ * Convert a token amount into a decimal value represented as a {@linkcode Big}
+ *
+ * @param {TokenAmount} amount
+ * @returns {Big} The token amount as a {@linkcode Big}.
+ */
+export function toDecimal(amount: TokenAmount): Big {
+    return Big(amount.toString());
+}
+
+/**
  * Converts {@linkcode JSON} to a token amount.
  *
  * @param {string} json The JSON representation of the CCD amount.
- * @returns {CcdAmount} The CCD amount.
- * @throws {Err} If the value/digits exceeds the maximum allowed or is negative.
+ * @returns {TokenAmount} The CCD amount.
+ * @throws {Err} If the value/decimals exceeds the maximum allowed or is negative.
  */
 export function fromJSON(json: JSON): TokenAmount {
     return new TokenAmount(BigInt(json.value), Number(json.decimals));
@@ -142,7 +206,7 @@ export function fromJSON(json: JSON): TokenAmount {
  * @param {bigint} value The integer representation of the token amount.
  * @param {number} decimals The decimals of the token amount, defining the precision at which amounts of the token can be specified.
  * @returns {TokenAmount} The token amount.
- * @throws {Err} If the value/digits exceeds the maximum allowed or is negative.
+ * @throws {Err} If the value/decimals exceeds the maximum allowed or is negative.
  */
 export function create(value: bigint, decimals: number): TokenAmount {
     return new TokenAmount(value, decimals);
@@ -153,7 +217,7 @@ export function create(value: bigint, decimals: number): TokenAmount {
  *
  * @param {number} decimals The decimals of the token amount, defining the precision at which amounts of the token can be specified.
  * @returns {TokenAmount} The token amount.
- * @throws {Err} If the digits exceeds the maximum allowed.
+ * @throws {Err} If the decimals exceeds the maximum allowed.
  */
 export function zero(decimals: number): TokenAmount {
     return new TokenAmount(BigInt(0), decimals);
@@ -163,7 +227,7 @@ export function zero(decimals: number): TokenAmount {
  * Convert token amount from its protobuf encoding.
  * @param {Proto.TokenAmount} amount
  * @returns {Type} The token amount.
- * @throws {Err} If the value/digits exceeds the maximum allowed or is negative.
+ * @throws {Err} If the value/decimals exceeds the maximum allowed or is negative.
  */
 export function fromProto(amount: Proto.TokenAmount): Type {
     return create(amount.digits, amount.nrOfDecimals);

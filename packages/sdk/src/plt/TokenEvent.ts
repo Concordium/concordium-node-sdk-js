@@ -8,7 +8,7 @@ export type JSON = HexString;
  */
 class TokenEvent {
     /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __nominal = true;
+    private readonly __type = 'PLT.Event';
     constructor(
         /** The internal buffer of bytes representing the event. */
         public readonly buffer: Uint8Array
@@ -57,7 +57,7 @@ export function fromBuffer(buffer: ArrayBuffer): TokenEvent {
 /**
  * Get byte representation of a TokenEvent.
  * @param {TokenEvent} event The event.
- * @returns {ArrayBuffer} Hash represented as bytes.
+ * @returns {ArrayBuffer} Event represented as bytes.
  */
 export function toBuffer(event: TokenEvent): Uint8Array {
     return event.buffer;
@@ -92,7 +92,7 @@ export function fromProto(event: Proto.CBor): TokenEvent {
 
 /**
  * Convert a token event into its protobuf encoding.
- * @param {TokenEvent} event The block hash.
+ * @param {TokenEvent} event module event.
  * @returns {Proto.CBor} The protobuf encoding.
  */
 export function toProto(event: TokenEvent): Proto.CBor {

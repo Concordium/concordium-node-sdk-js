@@ -30,6 +30,8 @@ import {
     MemoEvent,
     ModuleDeployedEvent,
     NewEncryptedAmountEvent,
+    TokenGovernanceEvent,
+    TokenHolderEvent,
     TransactionEventTag,
     TransferredWithScheduleEvent,
 } from './transactionEvent.js';
@@ -204,28 +206,18 @@ export interface FailedTransactionSummary {
  * The summary of a token holder transaction of any type.
  */
 export type TokenHolderSummary = {
-    transactionType: TransactionKindString.TokenHolder,
-    /** The token ID of the token the event originates from */
-    tokenId: PLT.TokenId.Type,
-    /** The specific type of update made to the token instance */
-    updateType: string,
-    /** The CBOR encoded details of the update. The details might vary depending on the PLT module reference used to
-     * instantiate the token. */
-    details: PLT.TokenEvent.Type,
+    transactionType: TransactionKindString.TokenHolder;
+    /** The update details */
+    update: TokenHolderEvent;
 };
 
 /**
  * The summary of a token governance transaction of any type.
  */
 export type TokenGovernanceSummary = {
-    transactionType: TransactionKindString.TokenGovernance,
-    /** The token ID of the token the event originates from */
-    tokenId: PLT.TokenId.Type,
-    /** The specific type of update made to the token instance */
-    updateType: string,
-    /** The CBOR encoded details of the update. The details might vary depending on the PLT module reference used to
-     * instantiate the token. */
-    details: PLT.TokenEvent.Type,
+    transactionType: TransactionKindString.TokenGovernance;
+    /** The update details */
+    update: TokenGovernanceEvent;
 };
 
 /**

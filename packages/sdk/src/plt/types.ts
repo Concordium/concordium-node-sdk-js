@@ -3,6 +3,7 @@ import * as TokenAmount from './TokenAmount.js';
 import * as TokenId from './TokenId.js';
 import * as TokenModuleReference from './TokenModuleReference.js';
 import * as TokenEvent from './TokenEvent.js';
+import * as TokenModuleState from './TokenModuleState.js';
 
 export {
     /**
@@ -22,6 +23,11 @@ export {
      * instances.
      */
     TokenEvent,
+    /**
+     * Module containing funcionality for interacting with the state of a protocol level token (PLT) module
+     * instance.
+     */
+    TokenModuleState,
 };
 
 export type TokenDecimals = number;
@@ -42,26 +48,16 @@ export type TokenAccountState = {
  * The state associated with a specific token at a specific block
  */
 export type TokenState = {
-    /** The token name. This should be unique, but uniqueness is enforced only by the chain governance, not by the consensus protocol. */
-    name: string;
     /** The reference of the module implementing this token. */
     moduleRef: TokenModuleReference.Type;
     /** Account address of the issuer. The issuer is the holder of the nominated account which can perform token-governance operations. */
     issuer: AccountAddress.Type;
     /** The number of decimals used to represent token amounts. */
     decimals: TokenDecimals;
-    /** A URL pointing to additional meta information about the token. */
-    metadataUrl: string; // TODO: maybe this will change to include a checksum...
     /** The total available token supply. */
     totalSupply: TokenAmount.Type;
-    /** Whether the token supports an allow list. */
-    supportsAllowlist: boolean;
-    /** Whether the token supports a deny list. */
-    supportsDenylist: boolean;
-    /** Whether the token supports minting. */
-    supportsMinting: boolean;
-    /** Whether the token supports burning. */
-    supportsBurning: boolean;
+    /** Token module specific state (CBOR encoded), such as token name, feature flags, meta data. */
+    moduleState: TokenModuleState.Type;
 };
 
 /**

@@ -1,8 +1,9 @@
 import bs58check from 'bs58check';
 import { Buffer } from 'buffer/index.js';
 
-import * as GRPC from '../grpc-api/v2/concordium/types.js';
 import * as GRPCKernel from '../grpc-api/v2/concordium/kernel.js';
+import * as GRPC from '../grpc-api/v2/concordium/types.js';
+import * as PLT from '../plt/types.js';
 import * as SDK from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';
 import * as BlockHash from '../types/BlockHash.js';
@@ -20,7 +21,6 @@ import * as SequenceNumber from '../types/SequenceNumber.js';
 import * as Timestamp from '../types/Timestamp.js';
 import * as TransactionHash from '../types/TransactionHash.js';
 import { mapRecord, unwrap } from '../util.js';
-import * as PLT from '../plt/types.js';
 
 function unwrapToHex(bytes: Uint8Array | undefined): SDK.HexString {
     return Buffer.from(unwrap(bytes)).toString('hex');
@@ -257,7 +257,9 @@ function trHigherLevelKeysUpdate(update: GRPC.HigherLevelKeys): SDK.KeysWithThre
     };
 }
 
-function translateChainParametersCommon(params: GRPC.ChainParametersV1 | GRPC.ChainParametersV0): SDK.ChainParametersCommon {
+function translateChainParametersCommon(
+    params: GRPC.ChainParametersV1 | GRPC.ChainParametersV0
+): SDK.ChainParametersCommon {
     return {
         euroPerEnergy: unwrap(params.euroPerEnergy?.value),
         microGTUPerEuro: unwrap(params.microCcdPerEuro?.value),
@@ -347,9 +349,9 @@ function trTokenAccountInfo(token: GRPC.AccountInfo_Token): PLT.TokenAccountInfo
         state: {
             balance: PLT.TokenAmount.fromProto(unwrap(token.tokenAccountState?.balance)),
             memberAllowList: token.tokenAccountState?.memberAllowList,
-            memberDenyList: token.tokenAccountState?.memberDenyList
-        }
-    }
+            memberDenyList: token.tokenAccountState?.memberDenyList,
+        },
+    };
 }
 
 export function accountInfo(acc: GRPC.AccountInfo): SDK.AccountInfo {
@@ -2001,19 +2003,24 @@ function trAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: SDK.TransactionKindString.TokenHolder,
-                updateType: unwrap(effect.tokenHolderEvent.type),
-                tokenId: PLT.TokenId.fromProto(unwrap(effect.tokenHolderEvent.tokenSymbol)),
-                details: PLT.TokenEvent.fromProto(unwrap(effect.tokenHolderEvent.details)),
-
-            }
+                update: {
+                    tag: SDK.TransactionEventTag.TokenHolder,
+                    updateType: unwrap(effect.tokenHolderEvent.type),
+                    tokenId: PLT.TokenId.fromProto(unwrap(effect.tokenHolderEvent.tokenSymbol)),
+                    details: PLT.TokenEvent.fromProto(unwrap(effect.tokenHolderEvent.details)),
+                },
+            };
         case 'tokenGovernanceEvent':
             return {
                 ...base,
                 transactionType: SDK.TransactionKindString.TokenGovernance,
-                updateType: unwrap(effect.tokenGovernanceEvent.type),
-                tokenId: PLT.TokenId.fromProto(unwrap(effect.tokenGovernanceEvent.tokenSymbol)),
-                details: PLT.TokenEvent.fromProto(unwrap(effect.tokenGovernanceEvent.details)),
-            }
+                update: {
+                    tag: SDK.TransactionEventTag.TokenGovernance,
+                    updateType: unwrap(effect.tokenGovernanceEvent.type),
+                    tokenId: PLT.TokenId.fromProto(unwrap(effect.tokenGovernanceEvent.tokenSymbol)),
+                    details: PLT.TokenEvent.fromProto(unwrap(effect.tokenGovernanceEvent.details)),
+                },
+            };
         case undefined:
             throw Error('Failed translating AccountTransactionEffects, encountered undefined value');
     }
@@ -2102,7 +2109,9 @@ export function invokeInstanceResponse(invokeResponse: GRPC.InvokeInstanceRespon
     }
 }
 
-function trInstanceInfoCommon(info: GRPC.InstanceInfo_V0 | GRPC.InstanceInfo_V1): Omit<SDK.InstanceInfoCommon, 'version'> {
+function trInstanceInfoCommon(
+    info: GRPC.InstanceInfo_V0 | GRPC.InstanceInfo_V1
+): Omit<SDK.InstanceInfoCommon, 'version'> {
     return {
         amount: CcdAmount.fromProto(unwrap(info.amount)),
         sourceModule: ModuleReference.fromProto(unwrap(info.sourceModule)),
@@ -2411,7 +2420,9 @@ export function peerInfo(peerInfo: GRPC.PeersInfo_Peer): SDK.PeerInfo {
     };
 }
 
-function trAccountAmount(accountAmount: GRPC.BlockSpecialEvent_AccountAmounts_Entry): SDK.BlockSpecialEventAccountAmount {
+function trAccountAmount(
+    accountAmount: GRPC.BlockSpecialEvent_AccountAmounts_Entry
+): SDK.BlockSpecialEventAccountAmount {
     return {
         account: AccountAddress.fromProto(unwrap(accountAmount.account)),
         amount: CcdAmount.fromProto(unwrap(accountAmount.amount)),

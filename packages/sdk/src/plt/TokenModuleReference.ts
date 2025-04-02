@@ -10,7 +10,7 @@ const MODULE_REF_BYTE_LENGTH = 32;
 export type JSON = HexString;
 
 /**
- * Enum representing the types of errors that can occur with token amounts.
+ * Enum representing the types of errors that can occur with token module references.
  */
 export enum ErrorType {
     /** Error type indicating the length of module reference is incorrect. */
@@ -18,7 +18,7 @@ export enum ErrorType {
 }
 
 /**
- * Custom error to represent issues with token amounts.
+ * Custom error to represent issues with token module references.
  */
 export class Err extends Error {
     private constructor(
@@ -33,10 +33,11 @@ export class Err extends Error {
     /**
      * Creates a TokenModuleReference.Err indicating the length of module reference is incorrect.
      */
-    public static incorrectLength(moduleRef: Type): Err {
+    public static incorrectLength(bytes: Uint8Array): Err {
+        const hex = Buffer.from(bytes).toString('hex');
         return new Err(
             ErrorType.INCORRECT_LENGTH,
-            `Token module reference ${moduleRef.toString()} is invalid, as it must contain ${MODULE_REF_BYTE_LENGTH} bytes`
+            `Token module reference ${hex} is invalid, as it must contain ${MODULE_REF_BYTE_LENGTH} bytes`
         );
     }
 }
@@ -59,7 +60,7 @@ class ModuleReference {
         public readonly bytes: Uint8Array
     ) {
         if (bytes.byteLength !== MODULE_REF_BYTE_LENGTH) {
-            throw Err.incorrectLength(this);
+            throw Err.incorrectLength(bytes);
         }
     }
 
@@ -114,7 +115,7 @@ export function fromBuffer(buffer: ArrayBuffer): ModuleReference {
  * @throws {Err} If the value is not exactly 32 bytes.
  */
 export function fromHexString(moduleRef: HexString): ModuleReference {
-    return new ModuleReference(new Uint8Array(Buffer.from(moduleRef, 'hex')));
+    return fromBuffer(Buffer.from(moduleRef, 'hex'));
 }
 
 /**

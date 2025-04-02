@@ -8,15 +8,15 @@ export type JSON = string;
 const MAX_LENGTH = 256;
 
 /**
- * Enum representing the types of errors that can occur with token amounts.
+ * Enum representing the types of errors that can occur with token IDs.
  */
 export enum ErrorType {
-    /** Error type indicating the length of module reference is incorrect. */
+    /** Error type indicating the length length exceeds the max allowed. */
     EXCEEDS_MAX_LENGTH = 'EXCEEDS_MAX_LENGTH',
 }
 
 /**
- * Custom error to represent issues with token amounts.
+ * Custom error to represent issues with token IDs.
  */
 export class Err extends Error {
     private constructor(
@@ -29,9 +29,9 @@ export class Err extends Error {
     }
 
     /**
-     * Creates a TokenId.Err indicating the length of module reference is incorrect.
+     * Creates a TokenId.Err indicating the length exceeds the max allowed.
      */
-    public static incorrectLength(): Err {
+    public static exceedsMaxLength(): Err {
         return new Err(
             ErrorType.EXCEEDS_MAX_LENGTH,
             `Token ID's cannot be longer than ${MAX_LENGTH} utf-8 encoded bytes`
@@ -58,7 +58,7 @@ class TokenId {
     ) {
         // Check if the value exceeds 256 UTF-8 bytes
         if (new TextEncoder().encode(symbol).length > MAX_LENGTH) {
-            throw Err.incorrectLength();
+            throw Err.exceedsMaxLength();
         }
     }
 

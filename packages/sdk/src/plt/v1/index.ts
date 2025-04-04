@@ -1,8 +1,3 @@
-import { V1TokenClient } from './TokenClient.js';
-import { type V1TokenTransfer, V1_TOKEN_MODULE_REF } from './types.js';
-
-export namespace V1 {
-    export type Transfer = V1TokenTransfer;
-    export class TokenClient extends V1TokenClient {}
-    export const TOKEN_MODULE_REF = V1_TOKEN_MODULE_REF;
-}
+export * as Token from './Token.js';
+export * as Governance from './Governance.js';
+export { type V1TokenTransfer as TokenTransfer, V1_TOKEN_MODULE_REF as TOKEN_MODULE_REF } from './types.js';

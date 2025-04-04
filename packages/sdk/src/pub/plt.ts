@@ -1,1 +1,1 @@
-export * from '../plt/types.js';
+export * from '../plt/index.js';

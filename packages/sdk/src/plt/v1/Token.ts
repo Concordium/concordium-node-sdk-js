@@ -1,15 +1,18 @@
 import { ConcordiumGRPCClient } from '../../grpc/GRPCClient.js';
 import { AccountAddress, TransactionHash } from '../../types.js';
-import { Token, verify } from '../Client.js';
-import { TokenId, TokenInfo, TokenModuleReference } from '../types.js';
+import { Token, verify } from '../Token.js';
+import { TokenId, TokenInfo } from '../types.js';
 import { V1TokenTransfer, V1_TOKEN_MODULE_REF } from './types.js';
 
 /**
  * Enum representing the types of errors that can occur when interacting with PLT instances through the client.
  */
 export enum V1TokenErrorCode {
-    /** Error type indicating the token ID does not match the module version expected by the client. */
-    INCORRECT_MODULE_VERSION = 'INCORRECT_MODULE_VERSION',
+    /**
+     * Error representing an attempt transfer funds to an account which is either not on the token allow list, or is on
+     * the token deny list
+     */
+    NOT_ALLOWED = 'NOT_ALLOWED',
 }
 
 /**
@@ -28,20 +31,6 @@ export abstract class V1TokenError extends Error {
 
     public override get name() {
         return `${this._name}.${this.code}`;
-    }
-}
-
-/** Error type indicating the token ID does not match the module version expected by the client. */
-export class ModuleVersionMismatchError extends V1TokenError {
-    public readonly code = V1TokenErrorCode.INCORRECT_MODULE_VERSION;
-
-    constructor(
-        public readonly expectedRef: TokenModuleReference.Type,
-        foundRef: TokenModuleReference.Type
-    ) {
-        super(
-            `Token module version mismatch. Expected v1 token (module ref ${expectedRef}), found ${foundRef} during lookup.`
-        );
     }
 }
 
@@ -72,7 +61,7 @@ export function fromInfo(grpc: ConcordiumGRPCClient, tokenInfo: TokenInfo): V1To
 export async function transfer(
     token: V1Token,
     sender: AccountAddress.Type,
-    payload: V1TokenTransfer
+    payload: V1TokenTransfer | [V1TokenTransfer]
 ): Promise<TransactionHash.Type> {
     throw new Error('Not implemented...');
 }

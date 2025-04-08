@@ -33,7 +33,7 @@ describe('PLT TokenAmount', () => {
     });
 
     test('JSON conversion works both ways', () => {
-        const json = { value: 123n, decimals: 2 };
+        const json: TokenAmount.JSON = { value: '123', decimals: 2 };
         expect(TokenAmount.fromJSON(json).toJSON()).toEqual(json);
     });
 

@@ -102,12 +102,12 @@ If you're encountering error `Reached heap limit Allocation failed - JavaScript 
 You need to increase memory limit `NODE_OPTIONS=--max-old-space-size`
 
 Example of start script in `packaje.json`
+
 ```json
 {
     "start": "NODE_OPTIONS=--max-old-space-size=12288 react-native start"
 }
 ```
-
 
 ### Adding polyfill to app
 
@@ -135,4 +135,3 @@ AppRegistry.registerComponent(appName, () => App);
 ```
 
 This ensures the native modules required by the SDK are present.
-

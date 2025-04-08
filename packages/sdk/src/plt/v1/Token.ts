@@ -1,9 +1,9 @@
 import { ConcordiumGRPCClient } from '../../grpc/GRPCClient.js';
 import { AccountAddress, AccountInfo, TransactionHash } from '../../types.js';
-import { bail } from '../../util.ts';
+import { bail } from '../../util.js';
 import { Token as GenericToken, validateAmount, verify } from '../Token.js';
-import { TokenAmount, TokenId, TokenInfo } from '../types.js';
-import { V1TokenTransfer, V1_TOKEN_MODULE_REF } from './types.js';
+import { TokenAmount, TokenId, TokenInfo, TokenModuleReference } from '../types.js';
+import { TokenTransfer } from './types.js';
 
 /**
  * Enum representing the types of errors that can occur when interacting with PLT instances through the client.
@@ -79,6 +79,13 @@ export class InsufficientFundsError extends TokenError {
 }
 
 /**
+ * The module reference for the V1 token.
+ */
+const TOKEN_MODULE_REF = TokenModuleReference.fromHexString(
+    '0EA8121FDC427C9B23AE5E26CFEA3E8CBB544C84AA0C82DB26A85949CE1706C3' // TODO: get the correct module reference...
+);
+
+/**
  * Class representing a V1 token.
  */
 class Token extends GenericToken {
@@ -96,7 +103,7 @@ class Token extends GenericToken {
         public readonly info: TokenInfo
     ) {
         super(grpc, info);
-        verify(this, V1_TOKEN_MODULE_REF); // Throws error if it fails
+        verify(this, TOKEN_MODULE_REF); // Throws error if it fails
     }
 }
 
@@ -173,7 +180,7 @@ export function balanceOf(
  *
  * @param {Token} token - The token to transfer.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {V1TokenTransfer | [V1TokenTransfer]} payload - The transfer payload.
+ * @param {TokenTransfer | [TokenTransfer]} payload - The transfer payload.
  *
  * @returns {Promise<true>} A promise that resolves to true if the transfer is valid.
  * @throws {InvalidTokenAmountError} If any token amount is not compatible with the token.
@@ -183,7 +190,7 @@ export function balanceOf(
 export async function validateTransfer(
     token: Token,
     sender: AccountAddress.Type,
-    payload: V1TokenTransfer | [V1TokenTransfer]
+    payload: TokenTransfer | [TokenTransfer]
 ): Promise<true> {
     const payloads = Array.isArray(payload) ? payload : [payload];
 
@@ -220,7 +227,7 @@ export async function validateTransfer(
  *
  * @param {Token} token - The token to transfer.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {V1TokenTransfer | [V1TokenTransfer]} payload - The transfer payload.
+ * @param {TokenTransfer | [TokenTransfer]} payload - The transfer payload.
  *
  * @returns {Promise<TransactionHash.Type>} A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If any token amount is not compatible with the token.
@@ -230,7 +237,7 @@ export async function validateTransfer(
 export async function transfer(
     token: Token,
     sender: AccountAddress.Type,
-    payload: V1TokenTransfer | [V1TokenTransfer]
+    payload: TokenTransfer | [TokenTransfer]
 ): Promise<TransactionHash.Type> {
     await validateTransfer(token, sender, payload);
 

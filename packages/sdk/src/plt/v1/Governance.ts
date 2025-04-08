@@ -1,8 +1,8 @@
 import { AccountAddress, TransactionHash } from '../../types.js';
-import { validateAmount } from '../Token.ts';
+import { validateAmount } from '../Token.js';
 import { TokenAmount } from '../types.js';
 import { Type as Token } from './Token.js';
-import { V1TokenGovernanceOperation } from './types.js';
+import { TokenGovernanceOperation } from './types.js';
 
 /**
  * Mints a specified amount of tokens.
@@ -123,7 +123,7 @@ export async function removeDenyList(
 export async function batchOperations(
     token: Token,
     sender: AccountAddress.Type,
-    operations: V1TokenGovernanceOperation[],
+    operations: TokenGovernanceOperation[]
 ): Promise<TransactionHash.Type> {
     throw new Error('Not implemented...');
 }

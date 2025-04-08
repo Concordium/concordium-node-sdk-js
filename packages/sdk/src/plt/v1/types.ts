@@ -135,10 +135,3 @@ export type TokenGovernanceOperation =
     | TokenRemoveAllowListOperation
     | TokenAddDenyListOperation
     | TokenRemoveDenyListOperation;
-
-/**
- * The module reference for the V1 token.
- */
-export const TOKEN_MODULE_REF = TokenModuleReference.fromHexString(
-    '0EA8121FDC427C9B23AE5E26CFEA3E8CBB544C84AA0C82DB26A85949CE1706C3' // TODO: get the correct module reference...
-);

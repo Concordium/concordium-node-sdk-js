@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Removed build entrypoint split for react-native
+- Removed wasm dir as separate path in package
+
 ## 9.0.0
 
 ### Breaking changes

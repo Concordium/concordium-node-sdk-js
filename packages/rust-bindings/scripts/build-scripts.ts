@@ -17,17 +17,15 @@ const exec = util.promisify(_exec);
 const WASM_FILENAME = 'index_bg.wasm';
 const WASM_FILENAME_JS = `${WASM_FILENAME}.js`;
 
-const bundlerPath = path.join(__dirname, '../lib/dapp/bundler');
-const outPath = path.join(__dirname, '../lib/dapp/react-native');
-
 // Copy files to react native folder
-copyfiles(
-    [`${bundlerPath}/index*`, `${bundlerPath}/package.json`, outPath],
-    { up: bundlerPath.split('/').length, flat: true },
-    () => {} // no-op
-);
+export const copyToFolder = (bundlerPath: string, outPath: string) =>
+    copyfiles(
+        [`${bundlerPath}/index*`, `${bundlerPath}/package.json`, outPath],
+        { up: bundlerPath.split('/').length, flat: true },
+        () => {} // no-op
+    );
 
-(async () => {
+export const convertWasmToJs = async (outPath: string) => {
     // Convert files using `wasm2js`
     await exec(`wasm2js ${path.join(outPath, WASM_FILENAME)} -o ${path.join(outPath, WASM_FILENAME_JS)}`);
 
@@ -42,4 +40,4 @@ copyfiles(
             content = content.replace(WASM_FILENAME, WASM_FILENAME_JS);
             fs.writeFileSync(file, content, 'utf-8');
         });
-})();
+};

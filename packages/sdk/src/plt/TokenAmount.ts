@@ -10,8 +10,8 @@ import type * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js'
  * As such, extra steps must be taken to serialize and deserialize the token amount.
  */
 export type JSON = {
-    /** The integer representation of the token amount. */
-    value: bigint;
+    /** The integer representation of the token amount as a string. */
+    value: string;
     /** The decimals of the token amount, defining the precision at which amounts of the token can be specified. */
     decimals: number;
 };
@@ -128,7 +128,7 @@ class TokenAmount {
      * @returns {HexString} The JSON representation.
      */
     public toJSON(): JSON {
-        return { value: this.value, decimals: this.decimals };
+        return { value: this.value.toString(), decimals: this.decimals };
     }
 }
 
@@ -192,8 +192,8 @@ export function toDecimal(amount: TokenAmount): Big {
 /**
  * Converts {@linkcode JSON} to a token amount.
  *
- * @param {string} json The JSON representation of the CCD amount.
- * @returns {TokenAmount} The CCD amount.
+ * @param {JSON} json The JSON representation of the token amount.
+ * @returns {TokenAmount} The token amount.
  * @throws {Err} If the value/decimals exceeds the maximum allowed or is negative.
  */
 export function fromJSON(json: JSON): TokenAmount {

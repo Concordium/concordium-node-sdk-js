@@ -4,7 +4,7 @@ import type * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js'
 import type { HexString } from '../types.js';
 
 /**
- * The number of bytes used to represent a block hash.
+ * The number of bytes used to represent a token module reference.
  */
 const MODULE_REF_BYTE_LENGTH = 32;
 export type JSON = HexString;

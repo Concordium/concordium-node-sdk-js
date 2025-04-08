@@ -22,13 +22,18 @@ export abstract class TokenError extends Error {
     private _name: string = 'TokenClientError';
 
     /**
+     * Constructs a new TokenError.
      * @param {string} message - The error message.
      */
     constructor(message: string) {
         super(message);
     }
 
-    public override get name() {
+    /**
+     * Gets the name of the error, including its code.
+     * @returns {string} The name of the error.
+     */
+    public override get name(): string {
         return `${this._name}.${this.code}`;
     }
 }
@@ -37,9 +42,14 @@ export abstract class TokenError extends Error {
 export class ModuleVersionMismatchError extends TokenError {
     public readonly code = TokenErrorCode.INCORRECT_MODULE_VERSION;
 
+    /**
+     * Constructs a new ModuleVersionMismatchError.
+     * @param {TokenModuleReference.Type} expectedRef - The expected module reference.
+     * @param {TokenModuleReference.Type} foundRef - The found module reference.
+     */
     constructor(
         public readonly expectedRef: TokenModuleReference.Type,
-        foundRef: TokenModuleReference.Type
+        public readonly foundRef: TokenModuleReference.Type
     ) {
         super(
             `Token module version mismatch. Expected token with module ref ${expectedRef}, found ${foundRef} during lookup.`
@@ -51,6 +61,11 @@ export class ModuleVersionMismatchError extends TokenError {
 export class InvalidTokenAmountError extends TokenError {
     public readonly code = TokenErrorCode.INVALID_TOKEN_AMOUNT;
 
+    /**
+     * Constructs a new InvalidTokenAmountError.
+     * @param {number} tokenDecimals - The number of decimals the token supports.
+     * @param {TokenAmount.Type} amount - The token amount that is invalid.
+     */
     constructor(
         public readonly tokenDecimals: number,
         public readonly amount: TokenAmount.Type
@@ -65,12 +80,24 @@ export class InvalidTokenAmountError extends TokenError {
 export class UnauthorizedGovernanceOperationError extends TokenError {
     public readonly code = TokenErrorCode.UNAUTHORIZED_GOVERNANCE_OPERATION;
 
+    /**
+     * Constructs a new UnauthorizedGovernanceOperationError.
+     * @param {AccountAddress.Type} sender - The account address attempting the unauthorized operation.
+     */
     constructor(public readonly sender: AccountAddress.Type) {
         super(`Unauthorized governance operation attempted by account: ${sender}.`);
     }
 }
 
+/**
+ * Class representing a token.
+ */
 export class Token {
+    /**
+     * Constructs a new Token.
+     * @param {ConcordiumGRPCClient} grpc - The gRPC client for interacting with the Concordium network.
+     * @param {TokenInfo} info - Information about the token.
+     */
     public constructor(
         public readonly grpc: ConcordiumGRPCClient,
         public readonly info: TokenInfo
@@ -79,11 +106,23 @@ export class Token {
 
 export type Type = Token;
 
+/**
+ * Creates a Token instance from a token ID.
+ * @param {ConcordiumGRPCClient} grpc - The gRPC client for interacting with the Concordium network.
+ * @param {TokenId.Type} tokenId - The ID of the token.
+ * @returns {Promise<Token>} A promise that resolves to a Token instance.
+ */
 export async function fromId(grpc: ConcordiumGRPCClient, tokenId: TokenId.Type): Promise<Token> {
     const info = await grpc.getTokenInfo(tokenId);
     return new Token(grpc, info);
 }
 
+/**
+ * Creates a Token instance from token information.
+ * @param {ConcordiumGRPCClient} grpc - The gRPC client for interacting with the Concordium network.
+ * @param {TokenInfo} tokenInfo - Information about the token.
+ * @returns {Token} A Token instance.
+ */
 export function fromInfo(grpc: ConcordiumGRPCClient, tokenInfo: TokenInfo): Token {
     return new Token(grpc, tokenInfo);
 }
@@ -117,6 +156,14 @@ export function validateAmount(token: Token, amount: TokenAmount.Type): void {
     }
 }
 
+/**
+ * Initiates a holder transaction for a given token.
+ *
+ * @param {Token} token - The token for which the holder transaction is being performed.
+ * @param {AccountAddress.Type} sender - The account address initiating the transaction.
+ * @param {[Uint8Array]} operations - The operations to be performed in the transaction.
+ * @returns {Promise<TransactionHash.Type>} A promise that resolves to the transaction hash.
+ */
 export function holderTransaction(
     token: Token,
     sender: AccountAddress.Type,

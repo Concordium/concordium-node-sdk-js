@@ -5,8 +5,6 @@ import * as TokenId from './TokenId.js';
 import * as TokenModuleReference from './TokenModuleReference.js';
 import * as TokenModuleState from './TokenModuleState.js';
 
-export * as V1 from './v1/index.js';
-
 export {
     /**
      * Module containing funcionality for interacting with protocol level token (PLT) modules.
@@ -32,8 +30,6 @@ export {
     TokenModuleState,
 };
 
-export type TokenDecimals = number;
-
 /**
  * Represents a protocol level token state for an account.
  */
@@ -55,7 +51,7 @@ export type TokenState = {
     /** Account address of the issuer. The issuer is the holder of the nominated account which can perform token-governance operations. */
     issuer: AccountAddress.Type;
     /** The number of decimals used to represent token amounts. */
-    decimals: TokenDecimals;
+    decimals: number;
     /** The total available token supply. */
     totalSupply: TokenAmount.Type;
     /** Token module specific state (CBOR encoded), such as token name, feature flags, meta data. */

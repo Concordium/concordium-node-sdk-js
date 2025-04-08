@@ -4,7 +4,7 @@ import { TokenAmount, TokenModuleReference } from '../types.js';
 /**
  * Enum representing the types of token operations.
  */
-export enum V1TokenOperationType {
+export enum TokenOperationType {
     Transfer = 'transfer',
     Mint = 'mint',
     Burn = 'burn',
@@ -17,7 +17,7 @@ export enum V1TokenOperationType {
 /**
  * The structure of a PLT V1 token transfer.
  */
-export type V1TokenTransfer = {
+export type TokenTransfer = {
     /** The amount to transfer. */
     amount: TokenAmount.Type;
     /** The recipient of the transfer. */
@@ -29,28 +29,28 @@ export type V1TokenTransfer = {
 
 /**
  * Generic type for a token operation.
- * @template V1TokenOperationType - The type of the token operation.
+ * @template TokenOperationType - The type of the token operation.
  * @template T - The specific operation details.
  */
-type V1TokenOperation<V1TokenOperationType, T extends Object> = T & {
+type TokenOperation<TokenOperationType, T extends Object> = T & {
     /** The type of operation. */
-    type: V1TokenOperationType;
+    type: TokenOperationType;
 };
 
 /**
  * Represents a token transfer operation.
  */
-export type V1TokenTransferOperation = V1TokenOperation<V1TokenOperationType.Transfer, V1TokenTransfer>;
+export type TokenTransferOperation = TokenOperation<TokenOperationType.Transfer, TokenTransfer>;
 
 /**
  * Represents a holder operation, currently only supporting transfer operations.
  */
-export type V1TokenHolderOperation = V1TokenTransferOperation;
+export type TokenHolderOperation = TokenTransferOperation;
 
 /**
  * The structure of a PLT V1 token mint operation.
  */
-export type V1TokenMint = {
+export type TokenMint = {
     /** The amount to mint. */
     amount: TokenAmount.Type;
 };
@@ -58,12 +58,12 @@ export type V1TokenMint = {
 /**
  * Represents a token mint operation.
  */
-export type V1TokenMintOperation = V1TokenOperation<V1TokenOperationType.Mint, V1TokenMint>;
+export type TokenMintOperation = TokenOperation<TokenOperationType.Mint, TokenMint>;
 
 /**
  * The structure of a PLT V1 token burn operation.
  */
-export type V1TokenBurn = {
+export type TokenBurn = {
     /** The amount to burn. */
     amount: TokenAmount.Type;
 };
@@ -71,12 +71,12 @@ export type V1TokenBurn = {
 /**
  * Represents a token burn operation.
  */
-export type V1TokenBurnOperation = V1TokenOperation<V1TokenOperationType.Burn, V1TokenBurn>;
+export type TokenBurnOperation = TokenOperation<TokenOperationType.Burn, TokenBurn>;
 
 /**
  * The structure of a PLT V1 token add to allow list operation.
  */
-export type V1TokenAddAllowList = {
+export type TokenAddAllowList = {
     /** The account to be added to the allow list. */
     target: AccountAddress.Type;
 };
@@ -84,12 +84,12 @@ export type V1TokenAddAllowList = {
 /**
  * Represents an operation to add an account to the allow list.
  */
-export type V1TokenAddAllowListOperation = V1TokenOperation<V1TokenOperationType.AddAllowList, V1TokenAddAllowList>;
+export type TokenAddAllowListOperation = TokenOperation<TokenOperationType.AddAllowList, TokenAddAllowList>;
 
 /**
  * The structure of a PLT V1 token remove from allow list operation.
  */
-export type V1TokenRemoveAllowList = {
+export type TokenRemoveAllowList = {
     /** The account to be removed from the allow list. */
     target: AccountAddress.Type;
 };
@@ -97,12 +97,12 @@ export type V1TokenRemoveAllowList = {
 /**
  * Represents an operation to remove an account from the allow list.
  */
-export type V1TokenRemoveAllowListOperation = V1TokenOperation<V1TokenOperationType.RemoveAllowList, V1TokenRemoveAllowList>;
+export type TokenRemoveAllowListOperation = TokenOperation<TokenOperationType.RemoveAllowList, TokenRemoveAllowList>;
 
 /**
  * The structure of a PLT V1 token add to deny list operation.
  */
-export type V1TokenAddDenyList = {
+export type TokenAddDenyList = {
     /** The account to be added to the deny list. */
     target: AccountAddress.Type;
 };
@@ -110,12 +110,12 @@ export type V1TokenAddDenyList = {
 /**
  * Represents an operation to add an account to the deny list.
  */
-export type V1TokenAddDenyListOperation = V1TokenOperation<V1TokenOperationType.AddDenyList, V1TokenAddDenyList>;
+export type TokenAddDenyListOperation = TokenOperation<TokenOperationType.AddDenyList, TokenAddDenyList>;
 
 /**
  * The structure of a PLT V1 token remove from deny list operation.
  */
-export type V1TokenRemoveDenyList = {
+export type TokenRemoveDenyList = {
     /** The account to be removed from the deny list. */
     target: AccountAddress.Type;
 };
@@ -123,22 +123,22 @@ export type V1TokenRemoveDenyList = {
 /**
  * Represents an operation to remove an account from the deny list.
  */
-export type V1TokenRemoveDenyListOperation = V1TokenOperation<V1TokenOperationType.RemoveDenyList, V1TokenRemoveDenyList>;
+export type TokenRemoveDenyListOperation = TokenOperation<TokenOperationType.RemoveDenyList, TokenRemoveDenyList>;
 
 /**
  * Union type representing all possible governance operations for a token.
  */
-export type V1TokenGovernanceOperation =
-    | V1TokenMintOperation
-    | V1TokenBurnOperation
-    | V1TokenAddAllowListOperation
-    | V1TokenRemoveAllowListOperation
-    | V1TokenAddDenyListOperation
-    | V1TokenRemoveDenyListOperation;
+export type TokenGovernanceOperation =
+    | TokenMintOperation
+    | TokenBurnOperation
+    | TokenAddAllowListOperation
+    | TokenRemoveAllowListOperation
+    | TokenAddDenyListOperation
+    | TokenRemoveDenyListOperation;
 
 /**
  * The module reference for the V1 token.
  */
-export const V1_TOKEN_MODULE_REF = TokenModuleReference.fromHexString(
+export const TOKEN_MODULE_REF = TokenModuleReference.fromHexString(
     '0EA8121FDC427C9B23AE5E26CFEA3E8CBB544C84AA0C82DB26A85949CE1706C3' // TODO: get the correct module reference...
 );

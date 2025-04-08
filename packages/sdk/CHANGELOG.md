@@ -2,6 +2,26 @@
 
 ## Unreleased
 
+### Breaking changes
+
+- Add `TokenHolderSummary` and `TokenGovernanceSummary` to the possible transaction outcomes declared by
+`AccountTransactionSummary`, and correspondingly `TokenHolderEvent` and `TokenGovernanceEvent` to `TransactionEvent`.
+- Added new variants `TokenHolder` and `TokenGovernance` to `TransactionEventTag`, `AccountTransactionType` and correspondingly `TransactionKindString`.
+- Added new variant `CreatePLT` to `UpdateType`.
+- Updated `AccountInfo` to hold information about the PLTs held by an account.
+
+### Added
+- New types representing entities within the domain of protocol level tokens (PLTs)
+  - `TokenId`: A unique text identifier of a PLT
+  - `TokenAmount`: A representation of a PLT amount
+  - `TokenModuleReference`: The module reference of a PLT instance
+  - `TokenEvent`: Represents CBOR encoded events emitted by PLT instances
+  - `TokenModuleState`: Represents CBOR encoded state of a PLT instance
+  - `TokenAccountState`, `TokenState`, `TokenInfo`, and `TokenAccountInfo`, all representing PLT related data returned by the
+    GRPC API of a Concordium node. 
+- A new package export scoped to hold types and functionality for interacting wit PLTs, available at
+`@concordium/web-sdk/plt`.
+
 ## 9.0.0
 
 ### Breaking changes

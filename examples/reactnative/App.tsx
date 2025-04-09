@@ -37,13 +37,13 @@ function TestSDK() {
     const wallet = ConcordiumHdWallet.fromHex(WALLET_SEED, 'Testnet');
 
     const privateKey = wallet.getAccountSigningKey(0, 0, 0).toString('hex');
-    console.log('privateKey', privateKey);
+    console.log('WALLET privateKey', privateKey);
     const publicKey = wallet.getAccountPublicKey(0, 0, 0).toString('hex');
-    console.log('publicKey', publicKey);
+    console.log('WALLET publicKey', publicKey);
     const idCredSec = wallet.getIdCredSec(0, 0).toString('hex');
-    console.log('idCredSec', idCredSec);
+    console.log('WALLET idCredSec', idCredSec);
     const getPrfKey = wallet.getPrfKey(0, 0).toString('hex');
-    console.log('getPrfKey', getPrfKey);
+    console.log('WALLET getPrfKey', getPrfKey);
 
     // SCHEMA
     const schema = Buffer.from('FAACAAAABAAAAGtleXMQAR4gAAAADgAAAGF1eGlsaWFyeV9kYXRhEAEC', 'base64');

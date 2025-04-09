@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 9.1.0
 
 ### Added
 - The "wasm" entrypoint `@concordium/web-sdk/wasm` from now supports react-native. This means that the partial support for react-native is now extended to full support.

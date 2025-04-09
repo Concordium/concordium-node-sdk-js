@@ -95,6 +95,20 @@ yarn add @concordium/web-sdk react-native-polyfill-globals react-native-get-rand
 npx pod-install # if building for ios, adds native modules from dependencies to project.
 ```
 
+### Building App
+
+The initial app build may take a significant amount of RAM (up to 10Gb), due to converted wasm module to js code.
+If you encounter the error `Reached heap limit Allocation failed - JavaScript heap out of memory`
+You need to increase memory limit `NODE_OPTIONS=--max-old-space-size`
+
+Example of start script in `package.json`
+
+```json
+{
+    "start": "NODE_OPTIONS=--max-old-space-size=12288 react-native start"
+}
+```
+
 ### Adding polyfill to app
 
 ```js
@@ -121,9 +135,3 @@ AppRegistry.registerComponent(appName, () => App);
 ```
 
 This ensures the native modules required by the SDK are present.
-
-### Unsupported functionality
-
-Due to current lack of support for web assembly in react native, some aspects of the SDK are not supported on the platform.
-This is specifically scoped to the functionality exposed at the entrypoint `@concordium/web-sdk/wasm`. Everything else supported on web
-platforms should also be supported on react native.

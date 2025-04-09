@@ -32,12 +32,6 @@
             "browser": null,
             "default": "./lib/esm/pub/nodejs.js"
         },
-        "./wasm": {
-            "types": "./lib/esm/pub/wasm.d.ts",
-            "bun": "./src/pub/wasm.ts",
-            "react-native": null,
-            "default": "./lib/esm/pub/wasm.js"
-        },
         "./*": {
             "types": "./lib/esm/pub/*.d.ts",
             "bun": "./src/pub/*.ts",

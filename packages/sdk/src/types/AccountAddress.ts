@@ -1,5 +1,6 @@
 import bs58check from 'bs58check';
 import { Buffer } from 'buffer/index.js';
+import { Tag, TaggedValue, encode } from 'cbor2';
 
 import type * as Proto from '../grpc-api/v2/concordium/kernel.js';
 import { Base58String } from '../types.js';
@@ -242,3 +243,40 @@ export function toTypedJSON(value: AccountAddress): TypedJson<Serializable> {
  * @returns {Type} The parsed instance.
  */
 export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromBase58);
+
+/**
+ * Converts an AccountAddress to its CBOR (Concise Binary Object Representation) encoding.
+ * This encodes the account address as a CBOR tagged value with tag 40307, containing both
+ * the coin information (tagged as 40305) and the account's decoded address.
+ *
+ * This corresponds to a concordium-specific subtype of the `tagged-address` type from
+ * [BCR-2020-009]{@link https://github.com/BlockchainCommons/Research/blob/master/papers/bcr-2020-009-address.md},
+ * identified by `tagged-coininfo` corresponding to the Concordium network from
+ * [BCR-2020-007]{@link https://github.com/BlockchainCommons/Research/blob/master/papers/bcr-2020-007-hdkey.md}
+ *
+ * Example of CBOR diagnostic notation for an encoded account address:
+ * ```
+ * 40307({
+ *   1: 40305({1: 919}),
+ *   3: h'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789'
+ * })
+ * ```
+ * Where 919 is the Concordium network identifier and the hex string is the raw account address.
+ *
+ * @param {AccountAddress} value - The account address to convert to CBOR format.
+ * @throws {Error} - If an unsupported CBOR encoding is specified.
+ * @returns {Uint8Array} The CBOR encoded representation of the account address.
+ */
+export function toCBOR(value: AccountAddress): Uint8Array {
+    const taggedCoinInfo = new Tag(40305, new Map([[1, 919]])); // 919 is the Concordium network identifier
+    const taggedAddress = new Tag(
+        40307,
+        new Map<number, any>([
+            [1, taggedCoinInfo],
+            [3, value.decodedAddress],
+        ])
+    );
+
+    // Create a tagged value with coin info and account address
+    return new Uint8Array(encode(taggedAddress));
+}

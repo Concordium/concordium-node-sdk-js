@@ -97,11 +97,11 @@ npx pod-install # if building for ios, adds native modules from dependencies to 
 
 ### Building App
 
-Initial App build may take significant amount of RAM (up to 10Gb), due to converted wasm module to js code.
-If you're encountering error `Reached heap limit Allocation failed - JavaScript heap out of memory`
+The initial app build may take a significant amount of RAM (up to 10Gb), due to converted wasm module to js code.
+If you encounter the error `Reached heap limit Allocation failed - JavaScript heap out of memory`
 You need to increase memory limit `NODE_OPTIONS=--max-old-space-size`
 
-Example of start script in `packaje.json`
+Example of start script in `package.json`
 
 ```json
 {

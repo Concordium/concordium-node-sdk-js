@@ -2,8 +2,8 @@
 
 ## Unreleased
 
-- Added build script to convert `@concordium/rust-bindings/wallet` wasm code to js, for react-native platform.
-- Updated build scripts with `build-react-native-wallet`
+### Added
+- The `@concordium/rust-bindings/wallet` entrypoint now supports react-native.
 
 ## 3.2.1
 

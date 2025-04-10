@@ -120,6 +120,7 @@
         "uuid": "^8.3.2"
     },
     "peerDependencies": {
-        "@protobuf-ts/runtime-rpc": "^2.8.2"
+        "@protobuf-ts/runtime-rpc": "^2.8.2",
+        "cbor2": "^1.12.0"
     }
 }

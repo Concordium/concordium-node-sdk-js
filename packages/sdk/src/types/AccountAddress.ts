@@ -1,6 +1,7 @@
 import bs58check from 'bs58check';
 import { Buffer } from 'buffer/index.js';
-import { Tag, TaggedValue, encode } from 'cbor2';
+import { Tag, decode, encode } from 'cbor2';
+import { registerEncoder } from 'cbor2/encoder';
 
 import type * as Proto from '../grpc-api/v2/concordium/kernel.js';
 import { Base58String } from '../types.js';
@@ -155,10 +156,10 @@ export function fromSchemaValue(accountAddress: SchemaValue): AccountAddress {
     return fromBase58(accountAddress);
 }
 
-const addressByteLength = 32;
-const aliasBytesLength = 3;
-const commonBytesLength = addressByteLength - aliasBytesLength;
-const maxCount = 16777215; // 2^(8 * 3) - 1
+const ADDRESS_BYTES_LENGTH = 32;
+const ALIAS_BYTES_LENGTH = 3;
+const COMMON_BYTES_LENGTH = ADDRESS_BYTES_LENGTH - ALIAS_BYTES_LENGTH;
+const MAX_COUNT = 16777215; // 2^(8 * 3) - 1
 
 /**
  * Given two accountAddresses, return whether they are aliases.
@@ -169,7 +170,13 @@ const maxCount = 16777215; // 2^(8 * 3) - 1
 export function isAlias(address: AccountAddress, alias: AccountAddress): boolean {
     return (
         0 ===
-        Buffer.from(address.decodedAddress).compare(alias.decodedAddress, 0, commonBytesLength, 0, commonBytesLength)
+        Buffer.from(address.decodedAddress).compare(
+            alias.decodedAddress,
+            0,
+            COMMON_BYTES_LENGTH,
+            0,
+            COMMON_BYTES_LENGTH
+        )
     );
 }
 
@@ -181,14 +188,14 @@ export function isAlias(address: AccountAddress, alias: AccountAddress): boolean
  * @returns an AccountAddress, which is an alias to the given address
  */
 export function getAlias(address: AccountAddress, counter: number): AccountAddress {
-    if (counter < 0 || counter > maxCount) {
+    if (counter < 0 || counter > MAX_COUNT) {
         throw new Error(
             `An invalid counter value was given: ${counter}. The value has to satisfy that 0 <= counter < 2^24`
         );
     }
-    const commonBytes = address.decodedAddress.slice(0, commonBytesLength);
-    const aliasBytes = Buffer.alloc(aliasBytesLength);
-    aliasBytes.writeUIntBE(counter, 0, aliasBytesLength);
+    const commonBytes = address.decodedAddress.slice(0, COMMON_BYTES_LENGTH);
+    const aliasBytes = Buffer.alloc(ALIAS_BYTES_LENGTH);
+    aliasBytes.writeUIntBE(counter, 0, ALIAS_BYTES_LENGTH);
     return fromBuffer(Buffer.concat([commonBytes, aliasBytes]));
 }
 
@@ -244,6 +251,10 @@ export function toTypedJSON(value: AccountAddress): TypedJson<Serializable> {
  */
 export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromBase58);
 
+const TAGGED_COININFO = 40305;
+const TAGGED_ADDRESS = 40307;
+const CCD_NETWORK_ID = 919; // Concordium network identifier
+
 /**
  * Converts an AccountAddress to its CBOR (Concise Binary Object Representation) encoding.
  * This encodes the account address as a CBOR tagged value with tag 40307, containing both
@@ -268,9 +279,9 @@ export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR,
  * @returns {Uint8Array} The CBOR encoded representation of the account address.
  */
 export function toCBOR(value: AccountAddress): Uint8Array {
-    const taggedCoinInfo = new Tag(40305, new Map([[1, 919]])); // 919 is the Concordium network identifier
+    const taggedCoinInfo = new Tag(TAGGED_COININFO, new Map([[1, CCD_NETWORK_ID]])); // 919 is the Concordium network identifier
     const taggedAddress = new Tag(
-        40307,
+        TAGGED_ADDRESS,
         new Map<number, any>([
             [1, taggedCoinInfo],
             [3, value.decodedAddress],
@@ -279,4 +290,118 @@ export function toCBOR(value: AccountAddress): Uint8Array {
 
     // Create a tagged value with coin info and account address
     return new Uint8Array(encode(taggedAddress));
+}
+
+/**
+ * Registers a CBOR encoder for the AccountAddress type with the `cbo2` library.
+ * This allows AccountAddress instances to be automatically encoded when used with
+ * the `cbor2` library's encode function.
+ *
+ * @returns {void}
+ * @example
+ * // Register the encoder
+ * registerCBOREncoder();
+ * // Now AccountAddress instances can be encoded directly
+ * const encoded = encode(myAccountAddress);
+ */
+export function registerCBOREncorder(): void {
+    // We use `NaN` to not write a tag here, as the tag is already encoded with the value returned from `toCBOR`
+    registerEncoder(AccountAddress, (value) => [NaN, toCBOR(value)]);
+}
+
+function parseCBORValue(value: unknown): AccountAddress {
+    if (!(value instanceof Map)) {
+        throw new Error('Invalid CBOR encoded account address: expected a map');
+    }
+
+    // Extract the account address bytes (key 3)
+    const addressBytes = value.get(3);
+    if (!addressBytes || !(addressBytes instanceof Uint8Array) || addressBytes.byteLength !== ADDRESS_BYTES_LENGTH) {
+        throw new Error('Invalid CBOR encoded account address: missing or invalid address bytes');
+    }
+
+    // Optional validation for coin information if present (key 1)
+    const coinInfo = value.get(1);
+    if (coinInfo !== undefined) {
+        // Verify coin info has the correct tag if present
+        if (!(coinInfo instanceof Tag) || coinInfo.tag !== TAGGED_COININFO) {
+            throw new Error(
+                `Invalid CBOR encoded account address: coin info has incorrect tag (expected ${TAGGED_COININFO})`
+            );
+        }
+
+        // Verify coin info contains Concordium network identifier if present
+        const coinInfoMap = coinInfo.contents;
+        if (!(coinInfoMap instanceof Map) || coinInfoMap.get(1) !== CCD_NETWORK_ID) {
+            throw new Error(
+                `Invalid CBOR encoded account address: coin info does not contain Concordium network identifier ${CCD_NETWORK_ID}`
+            );
+        }
+    }
+
+    // Create the AccountAddress from the extracted bytes
+    return fromBuffer(addressBytes);
+}
+
+/**
+ * Decodes a CBOR-encoded account address into an AccountAddress instance.
+ * This function can handle both the full tagged format (with coin information)
+ * and a simplified format with just the address bytes.
+ *
+ * 1. With `tagged-coininfo` (40305):
+ * ```
+ * 40307({
+ *   1: 40305({1: 919}),  // Optional coin information
+ *   3: h'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789'
+ * })
+ * ```
+ *
+ * 2. Without `tagged-coininfo`:
+ * ```
+ * 40307({
+ *   3: h'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789'
+ * }) // The address is assumed to be a Concordium addres
+ * ```
+ *
+ * @param {Uint8Array} bytes - The CBOR encoded representation of an account address.
+ * @throws {Error} - If the input is not a valid CBOR encoding of an account address.
+ * @returns {AccountAddress} The decoded AccountAddress instance.
+ */
+export function fromCBOR(bytes: Uint8Array): AccountAddress {
+    const decoded = decode(bytes);
+
+    // Verify we have a tagged value with tag 40307 (tagged-address)
+    if (!(decoded instanceof Tag) || decoded.tag !== TAGGED_ADDRESS) {
+        throw new Error(`Invalid CBOR encoded account address: expected tag ${TAGGED_ADDRESS}`);
+    }
+
+    return parseCBORValue(decoded.contents);
+}
+
+/**
+ * Registers a CBOR decoder for the tagged-address (40307) format with the `cbor2` library.
+ * This enables automatic decoding of CBOR data containing Concordium account addresses
+ * when using the `cbor2` library's decode function.
+ *
+ * @returns {() => void} A cleanup function that, when called, will restore the previous
+ * decoder (if any) that was registered for the tagged-address format. This is useful
+ * when used in an existing `cbor2` use-case.
+ *
+ * @example
+ * // Register the decoder
+ * const cleanup = registerCBORDecoder();
+ * // Use the decoder
+ * const address = decode(cborBytes); // Returns AccountAddress if format matches
+ * // Later, unregister the decoder
+ * cleanup();
+ */
+export function registerCBORDecoder(): () => void {
+    const old = Tag.registerDecoder(TAGGED_ADDRESS, parseCBORValue);
+
+    // return cleanup function to restore the old decoder
+    return () => {
+        if (old) {
+            Tag.registerDecoder(TAGGED_ADDRESS, old);
+        }
+    }
 }

@@ -1,7 +1,7 @@
 import Big from 'big.js';
 
 import { MAX_U32, MAX_U64 } from '../../../src/constants.ts';
-import { TokenAmount } from '../../../src/plt/types.js';
+import { TokenAmount } from '../../../src/pub/plt.js';
 
 describe('PLT TokenAmount', () => {
     test('Parses decimals correctly', () => {

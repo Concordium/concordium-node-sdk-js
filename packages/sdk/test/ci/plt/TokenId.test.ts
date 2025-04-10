@@ -1,4 +1,4 @@
-import { TokenId } from '../../../src/plt/types.ts';
+import { TokenId } from '../../../src/pub/plt.js';
 
 describe('PLT TokenId', () => {
     test('Creates token IDs as expected', () => {

@@ -1,4 +1,4 @@
-import { AccountAddress } from '../../../src/index.js';
+import { AccountAddress } from '../../../src/pub/types.js';
 
 test('Base58 decode-encode results is the same', () => {
     const address = AccountAddress.fromBuffer(new Uint8Array(32));

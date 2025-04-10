@@ -1,4 +1,4 @@
-import * as PLT from '../plt/types.js';
+import * as PLT from '../plt/index.js';
 import type {
     Address,
     BakerId,

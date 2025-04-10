@@ -1,6 +1,7 @@
+import { Buffer } from 'buffer/index.js';
 import { decode, encode } from 'cbor2';
 
-import { TokenAmount } from '../../../src/plt/types.js';
+import { TokenAmount } from '../../../../src/plt/types.js';
 
 describe('PLT TokenAmount CBOR', () => {
     test('CBOR encoding works correctly', () => {
@@ -13,13 +14,17 @@ describe('PLT TokenAmount CBOR', () => {
         // 25 - Integer -6 (0x26 represents negative integer 6)
         // 1a - Integer follows (4 bytes)
         // 00 16 e3 60 - Integer 1500000
-        const expected = new Uint8Array([0xc4, 0x82, 0x25, 0x1a, 0x00, 0x16, 0xe3, 0x60]);
-
-        // Convert to Buffer for easier assertions
-        const buffer = Buffer.from(encoded);
+        const expected = Buffer.from(
+            `
+            c4 82
+              25
+              1a 00 16 e3 60
+            `.replace(/\s/g, ''),
+            'hex'
+        );
 
         // Check that the encoded value matches our expectation
-        expect(buffer.toString('hex')).toEqual(Buffer.from(expected).toString('hex'));
+        expect(Buffer.from(encoded).toString('hex')).toEqual(expected.toString('hex'));
 
         // Simple decoding verification
         const decoded = TokenAmount.fromCBOR(encoded);
@@ -55,27 +60,25 @@ describe('PLT TokenAmount CBOR', () => {
             // Encode directly with cbor2 library
             const encoded = encode(originalAmount);
 
-            // Expected: Tag 4 (decimal fraction) with array [-6, 1500000]
+            // Expected: Tag 4 (decimal fraction) with array [-3, 1234567]
             // c4 - Tag 4 (decimal fraction)
             // 82 - Array of size 2
-            // 22 - Integer -3 (0x22 represents negative integer 6)
+            // 22 - Integer -3 (0x22 represents negative integer 3)
             // 1a - Integer follows (4 bytes)
             // 00 12 d6 87 - Integer 1234567
-            const expected = new Uint8Array([
-                0xc4, // Tag 4 (decimal fraction)
-                0x82, // Array of 2 items
-                0x22, // -3 (negative integer)
-                0x1a,
-                0x00,
-                0x12,
-                0xd6,
-                0x87, // 1234567 (positive integer)
-            ]);
+            const expected = Buffer.from(
+                `
+                c4 82
+                  22
+                  1a 00 12 d6 87
+                `.replace(/\s/g, ''),
+                'hex'
+            );
 
             // Check that the encoded value matches our expectation
             // Note: In some CBOR implementations the exact byte representation might vary
             // while still being semantically equivalent, so this test might need adjustment
-            expect(Buffer.from(encoded).toString('hex')).toEqual(Buffer.from(expected).toString('hex'));
+            expect(Buffer.from(encoded).toString('hex')).toEqual(expected.toString('hex'));
 
             // Decode directly with cbor2 library (should use our registered decoder)
             const decoded: TokenAmount.Type = decode(encoded);

@@ -276,7 +276,6 @@ export function toCBOR(value: TokenAmount): Uint8Array {
  * @throws {Error} If the value is not in the expected `decfrac` format
  */
 function parseCBORValue(decoded: unknown): TokenAmount {
-    console.log('parseCBORValue', decoded);
     // Verify we have a tagged value with tag DECIMAL_FRACTION_TAG (decimal fraction)
     if (!(decoded instanceof Tag) || decoded.tag !== DECIMAL_FRACTION_TAG) {
         throw new Error('Invalid CBOR encoded token amount: expected tag DECIMAL_FRACTION_TAG (decimal fraction)');

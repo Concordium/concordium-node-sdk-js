@@ -61,6 +61,7 @@
         "/lib/min/**/*"
     ],
     "devDependencies": {
+        "@babel/plugin-transform-private-methods": "^7.25.9",
         "@protobuf-ts/plugin": "^2.9.1",
         "@size-limit/preset-big-lib": "^11.1.4",
         "@testing-library/react-native": "^12.3.1",

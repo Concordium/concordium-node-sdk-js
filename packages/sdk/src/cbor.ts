@@ -22,7 +22,7 @@ export type TaggedDecoder = {
     /** The CBOR tag number to register the decoder for */
     tag: number;
     /** Function to decode a tagged CBOR value into the appropriate type */
-    decoder: (value: unknown) => unknown
+    decoder: (value: unknown) => unknown;
 };
 
 /**
@@ -30,6 +30,7 @@ export type TaggedDecoder = {
  *
  * This function currently registers the following decoders:
  * - `AccountAddress` (tag 40307): For decoding Concordium account addresses
+ * - `TokenAmount` (tag 4): For decoding protocol-level token amounts as decimal fractions
  *
  * @returns {void}
  * @example
@@ -37,11 +38,13 @@ export type TaggedDecoder = {
  * registerDecoders();
  * // Now `cbor2.decode` will automatically handle known Concordium types
  * const address = decode(cborBytes);
+ * const tokenAmount = decode(tokenCborBytes);
  */
 // We do NOT want to register all decoders, as only one decoder for each CBOR tag can exist at a time.
 // As such, it should be up to the end user to decide if they want to register the decoders globally in their application.
 export function registerDecoders(): void {
     AccountAddress.registerCBORDecoder();
+    TokenAmount.registerCBORDecoder();
 }
 
 /**

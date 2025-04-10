@@ -256,6 +256,14 @@ const TAGGED_COININFO = 40305;
 const TAGGED_ADDRESS = 40307;
 const CCD_NETWORK_ID = 919; // Concordium network identifier
 
+function toCBORValue(value: AccountAddress): Map<number, any> {
+    const taggedCoinInfo = new Tag(TAGGED_COININFO, new Map([[1, CCD_NETWORK_ID]])); // 919 is the Concordium network identifier
+    return new Map<number, any>([
+        [1, taggedCoinInfo],
+        [3, value.decodedAddress],
+    ]);
+}
+
 /**
  * Converts an AccountAddress to its CBOR (Concise Binary Object Representation) encoding.
  * This encodes the account address as a CBOR tagged value with tag 40307, containing both
@@ -280,17 +288,7 @@ const CCD_NETWORK_ID = 919; // Concordium network identifier
  * @returns {Uint8Array} The CBOR encoded representation of the account address.
  */
 export function toCBOR(value: AccountAddress): Uint8Array {
-    const taggedCoinInfo = new Tag(TAGGED_COININFO, new Map([[1, CCD_NETWORK_ID]])); // 919 is the Concordium network identifier
-    const taggedAddress = new Tag(
-        TAGGED_ADDRESS,
-        new Map<number, any>([
-            [1, taggedCoinInfo],
-            [3, value.decodedAddress],
-        ])
-    );
-
-    // Create a tagged value with coin info and account address
-    return new Uint8Array(encode(taggedAddress));
+    return encode(new Tag(TAGGED_ADDRESS, toCBORValue(value)));
 }
 
 /**
@@ -306,11 +304,17 @@ export function toCBOR(value: AccountAddress): Uint8Array {
  * const encoded = encode(myAccountAddress);
  */
 export function registerCBOREncoder(): void {
-    // We use `NaN` to not write a tag here, as the tag is already encoded with the value returned from `toCBOR`
-    registerEncoder(AccountAddress, (value) => [NaN, toCBOR(value)]);
+    registerEncoder(AccountAddress, (value) => [TAGGED_ADDRESS, toCBORValue(value)]);
 }
 
-function parseCBORValue(value: unknown): AccountAddress {
+function parseCBORValue(decoded: unknown): AccountAddress {
+    // Verify we have a tagged value with tag 40307 (tagged-address)
+    if (!(decoded instanceof Tag) || decoded.tag !== TAGGED_ADDRESS) {
+        throw new Error(`Invalid CBOR encoded account address: expected tag ${TAGGED_ADDRESS}`);
+    }
+
+    const value = decoded.contents;
+
     if (!(value instanceof Map)) {
         throw new Error('Invalid CBOR encoded account address: expected a map');
     }
@@ -369,14 +373,7 @@ function parseCBORValue(value: unknown): AccountAddress {
  * @returns {AccountAddress} The decoded AccountAddress instance.
  */
 export function fromCBOR(bytes: Uint8Array): AccountAddress {
-    const decoded = decode(bytes);
-
-    // Verify we have a tagged value with tag 40307 (tagged-address)
-    if (!(decoded instanceof Tag) || decoded.tag !== TAGGED_ADDRESS) {
-        throw new Error(`Invalid CBOR encoded account address: expected tag ${TAGGED_ADDRESS}`);
-    }
-
-    return parseCBORValue(decoded.contents);
+    return parseCBORValue(decode(bytes));
 }
 
 /**

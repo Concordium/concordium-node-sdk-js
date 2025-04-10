@@ -1,5 +1,8 @@
 import Big, { BigSource } from 'big.js';
+import { Tag, decode, encode } from 'cbor2';
+import { registerEncoder } from 'cbor2/encoder';
 
+import { TaggedDecoder } from '../cbor.js';
 import { MAX_U32, MAX_U64 } from '../constants.js';
 import type * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
 
@@ -242,5 +245,129 @@ export function toProto(amount: Type): Proto.TokenAmount {
     return {
         digits: amount.value,
         nrOfDecimals: amount.decimals,
+    };
+}
+
+const DECIMAL_FRACTION_TAG = 4; // 4 is the CBOR tag for decimal fraction
+
+function toCBORDecFrac(value: TokenAmount): [number, bigint] {
+    return [
+        -value.decimals, // Exponent is negative of decimals
+        value.value, // Mantissa is the value
+    ];
+}
+
+/**
+ * Converts a TokenAmount to its CBOR (Concise Binary Object Representation) `decfrac` encoding.
+ *
+ * @param {TokenAmount} value - The token amount to convert to CBOR format.
+ * @returns {Uint8Array} The CBOR encoded representation of the token amount.
+ */
+export function toCBOR(value: TokenAmount): Uint8Array {
+    return encode(new Tag(DECIMAL_FRACTION_TAG, toCBORDecFrac(value)));
+}
+
+/**
+ * Function to parse a CBOR-decoded `decfrac` value into a TokenAmount instance.
+ * This handles the internal conversion from the CBOR representation to our TokenAmount type.
+ *
+ * @param {unknown} decoded - The decoded CBOR value
+ * @returns {TokenAmount} The parsed TokenAmount instance
+ * @throws {Error} If the value is not in the expected `decfrac` format
+ */
+function parseCBORValue(decoded: unknown): TokenAmount {
+    console.log('parseCBORValue', decoded);
+    // Verify we have a tagged value with tag DECIMAL_FRACTION_TAG (decimal fraction)
+    if (!(decoded instanceof Tag) || decoded.tag !== DECIMAL_FRACTION_TAG) {
+        throw new Error('Invalid CBOR encoded token amount: expected tag DECIMAL_FRACTION_TAG (decimal fraction)');
+    }
+
+    const value = decoded.contents;
+    // The value should be an array [exponent, mantissa]
+    if (!Array.isArray(value) || value.length !== 2) {
+        throw new Error('Invalid CBOR encoded token amount: expected an array with two elements [exponent, mantissa]');
+    }
+
+    const [exponent, mantissa] = value;
+
+    if (typeof exponent !== 'number') {
+        throw new Error('Invalid CBOR encoded token amount: exponent must be a number');
+    }
+
+    if (typeof mantissa !== 'number' && typeof mantissa !== 'bigint') {
+        throw new Error('Invalid CBOR encoded token amount: mantissa must be a number or bigint');
+    }
+
+    // Convert to TokenAmount (decimals is negative of exponent)
+    const decimals = -exponent;
+    if (decimals < 0) {
+        throw new Error('Invalid CBOR encoded token amount: decimals cannot be negative');
+    }
+
+    return create(typeof mantissa === 'bigint' ? mantissa : BigInt(mantissa), decimals);
+}
+
+/**
+ * Decodes a CBOR `decfrac` encoding into a TokenAmount instance.
+ *
+ * @param {Uint8Array} bytes - The CBOR `decfrac` encoding.
+ * @throws {Error} - If the input is not a valid CBOR encoding of a token amount.
+ * @returns {TokenAmount} The decoded TokenAmount instance.
+ */
+export function fromCBOR(bytes: Uint8Array): TokenAmount {
+    return parseCBORValue(decode(bytes));
+}
+
+/**
+ * A TaggedDecoder instance for TokenAmount, configured with:
+ * - Tag value `4` (decimal fraction)
+ * - The `parseCBORValue` function as the decoder implementation
+ *
+ * This can be used with the `cborDecode` function to decode CBOR-encoded token
+ * amounts without globally registering the decoder.
+ */
+export const taggedCBORDecoder: TaggedDecoder = { tag: DECIMAL_FRACTION_TAG, decoder: parseCBORValue };
+
+/**
+ * Registers a CBOR encoder for the TokenAmount type with the `cbor2` library.
+ * This allows TokenAmount instances to be automatically encoded when used with
+ * the `cbor2` library's encode function.
+ *
+ * @returns {void}
+ * @example
+ * // Register the encoder
+ * registerCBOREncoder();
+ * // Now TokenAmount instances can be encoded directly
+ * const encoded = encode(myTokenAmount);
+ */
+export function registerCBOREncoder(): void {
+    registerEncoder(TokenAmount, (value) => [DECIMAL_FRACTION_TAG, toCBORDecFrac(value)]);
+}
+
+/**
+ * Registers a CBOR decoder for the decimal fraction (tag 4) format with the `cbor2` library.
+ * This enables automatic decoding of CBOR data containing token amounts
+ * when using the `cbor2` library's decode function.
+ *
+ * @returns {() => void} A cleanup function that, when called, will restore the previous
+ * decoder (if any) that was registered for the decimal fraction format. This is useful
+ * when used in an existing `cbor2` use-case.
+ *
+ * @example
+ * // Register the decoder
+ * const cleanup = registerCBORDecoder();
+ * // Use the decoder
+ * const tokenAmount = decode(cborBytes); // Returns TokenAmount if format matches
+ * // Later, unregister the decoder
+ * cleanup();
+ */
+export function registerCBORDecoder(): () => void {
+    const old = Tag.registerDecoder(DECIMAL_FRACTION_TAG, parseCBORValue);
+
+    // Return cleanup function to restore the old decoder
+    return () => {
+        if (old) {
+            Tag.registerDecoder(DECIMAL_FRACTION_TAG, old);
+        }
     };
 }

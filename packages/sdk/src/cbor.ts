@@ -2,6 +2,7 @@ import { Tag, decode } from 'cbor2';
 
 import * as AccountAddress from './types/AccountAddress.js';
 import { isDefined } from './util.js';
+import { TokenAmount } from './plt/types.js';
 
 /**
  * Register CBOR encoders for all types at the top level so they are globally available in the application.
@@ -9,8 +10,10 @@ import { isDefined } from './util.js';
  *
  * Currently, this auto-registers the following encoders:
  * - `AccountAddress`: For encoding Concordium account addresses in CBOR format
+ * - `TokenAmount`: For encoding protocol-level token amounts in CBOR format
  */
 AccountAddress.registerCBOREncoder();
+TokenAmount.registerCBOREncoder();
 
 /**
  * Represents a CBOR tag decoder configuration.

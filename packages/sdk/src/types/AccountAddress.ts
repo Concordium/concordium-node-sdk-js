@@ -3,6 +3,7 @@ import { Buffer } from 'buffer/index.js';
 import { Tag, decode, encode } from 'cbor2';
 import { registerEncoder } from 'cbor2/encoder';
 
+import { TaggedDecoder } from '../cbor.js';
 import type * as Proto from '../grpc-api/v2/concordium/kernel.js';
 import { Base58String } from '../types.js';
 import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
@@ -304,7 +305,7 @@ export function toCBOR(value: AccountAddress): Uint8Array {
  * // Now AccountAddress instances can be encoded directly
  * const encoded = encode(myAccountAddress);
  */
-export function registerCBOREncorder(): void {
+export function registerCBOREncoder(): void {
     // We use `NaN` to not write a tag here, as the tag is already encoded with the value returned from `toCBOR`
     registerEncoder(AccountAddress, (value) => [NaN, toCBOR(value)]);
 }
@@ -379,6 +380,20 @@ export function fromCBOR(bytes: Uint8Array): AccountAddress {
 }
 
 /**
+ * A TaggedDecoder instance for Concordium account addresses, configured with:
+ * - Tag value `40307`
+ * - The `parseCBORValue` function as the decoder implementation
+ *
+ * This can be used with the `cborDecode` function to decode CBOR-encoded account
+ * addresses without globally registering the decoder.
+ *
+ * @example
+ * // Decode CBOR data with the account address decoder
+ * const decoded = cborDecode(cborBytes, [AccountAddress.taggedCBORDecoder]);
+ */
+export const taggedCBORDecoder: TaggedDecoder = { tag: TAGGED_ADDRESS, decoder: parseCBORValue };
+
+/**
  * Registers a CBOR decoder for the tagged-address (40307) format with the `cbor2` library.
  * This enables automatic decoding of CBOR data containing Concordium account addresses
  * when using the `cbor2` library's decode function.
@@ -403,5 +418,5 @@ export function registerCBORDecoder(): () => void {
         if (old) {
             Tag.registerDecoder(TAGGED_ADDRESS, old);
         }
-    }
+    };
 }

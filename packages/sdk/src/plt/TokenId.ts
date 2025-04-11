@@ -60,7 +60,7 @@ class TokenId {
      * Constructs a new TokenId instance.
      * Validates that the value is smaller than the allowed utf-8 byte length.
      *
-     * @throws {Err} If the value is longer than 256 utf-8 encoded bytes or contains invalid UTF-8.
+     * @throws {Err} If the value is longer than 255 utf-8 encoded bytes or contains invalid UTF-8.
      */
     constructor(
         /** The inner value */
@@ -70,7 +70,7 @@ class TokenId {
             throw Err.invalid();
         }
 
-        // Check if the value exceeds 256 UTF-8 bytes
+        // Check if the value exceeds 255 UTF-8 bytes
         if (new TextEncoder().encode(symbol).length > MAX_LENGTH) {
             throw Err.exceedsMaxLength();
         }
@@ -103,7 +103,7 @@ export type Type = TokenId;
  *
  * @param {string} value - The string to create the token ID from.
  * @returns {TokenId} A new token ID instance.
- * @throws {Err} If the value is longer than 256 utf-8 encoded bytes or contains invalid UTF-8.
+ * @throws {Err} If the value is longer than 255 utf-8 encoded bytes or contains invalid UTF-8.
  */
 export function fromString(value: string): TokenId {
     return new TokenId(value);
@@ -124,7 +124,7 @@ export function instanceOf(value: unknown): value is TokenId {
  *
  * @param {string} json The JSON representation of the CCD amount.
  * @returns {CcdAmount} The CCD amount.
- * @throws {Err} If the value is longer than 256 utf-8 encoded bytes.
+ * @throws {Err} If the value is longer than 255 utf-8 encoded bytes or contains invalid UTF-8.
  */
 export function fromJSON(json: JSON): TokenId {
     return fromString(json);
@@ -134,7 +134,7 @@ export function fromJSON(json: JSON): TokenId {
  * Convert token ID from its protobuf encoding.
  * @param {Proto.TokenId} tokenId athe token ID
  * @returns {TokenId} The token ID.
- * @throws {Err} If the value is longer than 256 utf-8 encoded bytes.
+ * @throws {Err} If the value is longer than 255 utf-8 encoded bytes or contains invalid UTF-8.
  */
 export function fromProto(tokenId: Proto.TokenId): TokenId {
     return fromString(tokenId.symbol);
@@ -166,7 +166,7 @@ export function toBytes(tokenId: TokenId): Uint8Array {
  *
  * @param {Uint8Array} bytes - The UTF-8 byte array to decode.
  * @returns {TokenId} The decoded TokenId.
- * @throws {Err} If the decoded string is longer than 256 utf-8 encoded bytes or contains invalid UTF-8.
+ * @throws {Err} If the decoded string is longer than 255 utf-8 encoded bytes or contains invalid UTF-8.
  */
 export function fromBytes(bytes: ArrayBuffer): TokenId {
     try {

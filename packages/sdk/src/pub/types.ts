@@ -1,3 +1,5 @@
+import * as ContractName from '../types/ContractName.js';
+import * as CredentialRegistrationId from '../types/CredentialRegistrationId.js';
 import * as EntrypointName from '../types/EntrypointName.js';
 import * as ModuleClient from '../types/ModuleClient.js';
 import * as AccountAddress from './types/AccountAddress.js';
@@ -5,8 +7,6 @@ import * as BlockHash from './types/BlockHash.js';
 import * as CcdAmount from './types/CcdAmount.js';
 import * as ContractAddress from './types/ContractAddress.js';
 import * as ContractEvent from './types/ContractEvent.js';
-import * as ContractName from '../types/ContractName.js';
-import * as CredentialRegistrationId from '../types/CredentialRegistrationId.js';
 import * as Duration from './types/Duration.js';
 import * as Energy from './types/Energy.js';
 import * as InitName from './types/InitName.js';

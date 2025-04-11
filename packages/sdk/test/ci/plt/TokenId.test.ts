@@ -13,7 +13,7 @@ describe('PLT TokenId', () => {
         const json = str;
         expect(TokenId.fromJSON(json)).toEqual(expected);
 
-        expect(() => TokenId.fromString('T'.repeat(256))).not.toThrow();
+        expect(() => TokenId.fromString('T'.repeat(255))).not.toThrow();
     });
 
     test('JSON id test', () => {
@@ -22,7 +22,7 @@ describe('PLT TokenId', () => {
     });
 
     test('Throws errors on invalid values', () => {
-        expect(() => TokenId.fromString('T'.repeat(257))).toThrow(TokenId.Err.exceedsMaxLength());
+        expect(() => TokenId.fromString('T'.repeat(256))).toThrow(TokenId.Err.exceedsMaxLength());
     });
 
     test('Equals correctly compares token IDs', () => {
@@ -47,12 +47,12 @@ describe('PLT TokenId', () => {
 
     test('Throws errors on invalid UTF-8 input', () => {
         // Test fromBytes with invalid UTF-8
-        const invalidUtf8 = new Uint8Array([0xFF, 0xFE, 0xFD]); // Invalid UTF-8 sequence
+        const invalidUtf8 = new Uint8Array([0xff, 0xfe, 0xfd]); // Invalid UTF-8 sequence
         expect(() => TokenId.fromBytes(invalidUtf8)).toThrow(TokenId.Err.invalid());
 
         // For fromString, we need to create a string with a lone surrogate which is invalid UTF-8 when encoded
         // This is a string with an unpaired surrogate
-        const invalidString = String.fromCharCode(0xD800); // Unpaired high surrogate
+        const invalidString = String.fromCharCode(0xd800); // Unpaired high surrogate
         expect(() => TokenId.fromString(invalidString)).toThrow(TokenId.Err.invalid());
     });
 });

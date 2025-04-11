@@ -1,4 +1,4 @@
-import { Duration } from '../../../src/index.js';
+import { Duration } from '../../../src/pub/types.js';
 
 describe('fromString', () => {
     test('Parsing simple valid string', () => {

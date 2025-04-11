@@ -34,7 +34,7 @@ export function isHex(str: string): boolean {
  * @param str the string to check
  */
 export function isValidUTF8(str: string) {
-  return !/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|[\uDC00-\uDFFF](?![\uD800-\uDBFF])/.test(str);
+    return !/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|[\uDC00-\uDFFF](?![\uD800-\uDBFF])/.test(str);
 }
 
 /**

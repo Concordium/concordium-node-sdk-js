@@ -1,4 +1,4 @@
-import * as AccountAddress from '../types/AccountAddress.js';
+import { AccountAddress } from '../types.js';
 import * as TokenAmount from './TokenAmount.js';
 import * as TokenEvent from './TokenEvent.js';
 import * as TokenId from './TokenId.js';
@@ -30,8 +30,6 @@ export {
     TokenModuleState,
 };
 
-export type TokenDecimals = number;
-
 /**
  * Represents a protocol level token state for an account.
  */
@@ -53,7 +51,7 @@ export type TokenState = {
     /** Account address of the issuer. The issuer is the holder of the nominated account which can perform token-governance operations. */
     issuer: AccountAddress.Type;
     /** The number of decimals used to represent token amounts. */
-    decimals: TokenDecimals;
+    decimals: number;
     /** The total available token supply. */
     totalSupply: TokenAmount.Type;
     /** Token module specific state (CBOR encoded), such as token name, feature flags, meta data. */

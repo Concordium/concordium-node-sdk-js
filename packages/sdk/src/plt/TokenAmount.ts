@@ -215,11 +215,11 @@ export function create(value: bigint, decimals: number): TokenAmount {
 /**
  * Creates a token amount with a value of zero.
  *
- * @param {number} decimals The decimals of the token amount, defining the precision at which amounts of the token can be specified.
+ * @param {number} [decimals] The decimals of the token amount, defining the precision at which amounts of the token can be specified. Defaults to `0`.
  * @returns {TokenAmount} The token amount.
  * @throws {Err} If the decimals exceeds the maximum allowed.
  */
-export function zero(decimals: number): TokenAmount {
+export function zero(decimals: number = 0): TokenAmount {
     return new TokenAmount(BigInt(0), decimals);
 }
 

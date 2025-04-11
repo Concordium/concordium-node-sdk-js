@@ -1,5 +1,5 @@
 import type * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
-import { isValidUTF8 } from '../util.ts';
+import { isValidUTF8 } from '../util.js';
 
 /**
  * Protocol level token (PLT) ID JSON representation.

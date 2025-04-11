@@ -9,6 +9,8 @@
 - Added new variants `TokenHolder` and `TokenGovernance` to `TransactionEventTag`, `AccountTransactionType` and correspondingly `TransactionKindString`.
 - Added new variant `CreatePLT` to `UpdateType`.
 - Updated `AccountInfo` to hold information about the PLTs held by an account.
+- Removed `toProto` and `fromProto` from the exposed API for all custom types in the SDK. This should have no impact, as
+  the parameter/return values are internal-only.
 
 ### Added
 - New types representing entities within the domain of protocol level tokens (PLTs)

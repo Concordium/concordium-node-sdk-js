@@ -6,7 +6,7 @@ import { Tag } from 'cbor2/tag';
 
 import type * as Proto from '../grpc-api/v2/concordium/kernel.js';
 import { Base58String } from '../types.js';
-import { bail } from '../util.ts';
+import { bail } from '../util.js';
 import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**

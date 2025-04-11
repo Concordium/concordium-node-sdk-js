@@ -1,1 +1,1 @@
-export * from '../cbor.js';
+import '../types/cbor/encode.js';

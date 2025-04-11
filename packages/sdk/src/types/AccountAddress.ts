@@ -1,7 +1,8 @@
 import bs58check from 'bs58check';
 import { Buffer } from 'buffer/index.js';
-import { Tag, decode, encode } from 'cbor2';
-import { registerEncoder } from 'cbor2/encoder';
+import { Tag } from 'cbor2/tag';
+import { decode } from 'cbor2/decoder';
+import { registerEncoder, encode } from 'cbor2/encoder';
 
 import type * as Proto from '../grpc-api/v2/concordium/kernel.js';
 import { Base58String } from '../types.js';
@@ -255,10 +256,10 @@ export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR,
 
 const TAGGED_COININFO = 40305;
 const TAGGED_ADDRESS = 40307;
-const CCD_NETWORK_ID = 919; // Concordium network identifier
+const CCD_NETWORK_ID = 919; // Concordium network identifier - Did you know 919 is a palindromic prime and a centred hexagonal number?
 
 function toCBORValue(value: AccountAddress): Map<number, any> {
-    const taggedCoinInfo = new Tag(TAGGED_COININFO, new Map([[1, CCD_NETWORK_ID]])); // 919 is the Concordium network identifier
+    const taggedCoinInfo = new Tag(TAGGED_COININFO, new Map([[1, CCD_NETWORK_ID]]));
     return new Map<number, any>([
         [1, taggedCoinInfo],
         [3, value.decodedAddress],

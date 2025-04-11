@@ -29,6 +29,15 @@ export function isHex(str: string): boolean {
 }
 
 /**
+ * Checks if the input string is a valid utf8 string. Specifically, it checks if the string
+ * contains any invalid surrogate pairs.
+ * @param str the string to check
+ */
+export function isValidUTF8(str: string) {
+  return !/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|[\uDC00-\uDFFF](?![\uD800-\uDBFF])/.test(str);
+}
+
+/**
  * Checks whether the input string looks to be a valid hash,
  * i.e. it has length 64 and consists of hexadecimal characters.
  * @param hash the string to check

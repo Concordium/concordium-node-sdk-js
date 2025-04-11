@@ -92,3 +92,5 @@ export {
     TransactionExpiry,
     ModuleReference,
 };
+
+export * from '../types/cbor/decode.js';

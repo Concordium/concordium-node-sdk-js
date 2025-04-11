@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+## 3.3.0
+
+### Added
+- The `@concordium/rust-bindings/wallet` entrypoint now supports react-native.
+
 ## 3.2.1
 
 ### Fixed

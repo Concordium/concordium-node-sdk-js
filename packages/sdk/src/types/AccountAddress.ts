@@ -1,10 +1,12 @@
 import bs58check from 'bs58check';
 import { Buffer } from 'buffer/index.js';
-import { Tag, decode, encode } from 'cbor2';
-import { registerEncoder } from 'cbor2/encoder';
+import { decode } from 'cbor2/decoder';
+import { encode, registerEncoder } from 'cbor2/encoder';
+import { Tag } from 'cbor2/tag';
 
 import type * as Proto from '../grpc-api/v2/concordium/kernel.js';
 import { Base58String } from '../types.js';
+import { bail } from '../util.js';
 import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
@@ -253,10 +255,10 @@ export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR,
 
 const TAGGED_COININFO = 40305;
 const TAGGED_ADDRESS = 40307;
-const CCD_NETWORK_ID = 919; // Concordium network identifier
+const CCD_NETWORK_ID = 919; // Concordium network identifier - Did you know 919 is a palindromic prime and a centred hexagonal number?
 
 function toCBORValue(value: AccountAddress): Map<number, any> {
-    const taggedCoinInfo = new Tag(TAGGED_COININFO, new Map([[1, CCD_NETWORK_ID]])); // 919 is the Concordium network identifier
+    const taggedCoinInfo = new Tag(TAGGED_COININFO, new Map([[1, CCD_NETWORK_ID]]));
     return new Map<number, any>([
         [1, taggedCoinInfo],
         [3, value.decodedAddress],
@@ -319,6 +321,12 @@ function parseCBORValue(decoded: unknown): AccountAddress {
         throw new Error('Invalid CBOR encoded account address: expected a map');
     }
 
+    // Verify the map corresponds to the BCR-2020-009 `address` format
+    const validKeys = [1, 2, 3]; // we allow 2 here, as it is in the spec for BCR-2020-009 `address`, but we don't use it
+    for (const key of value.keys()) {
+        validKeys.includes(key) || bail(`Invalid CBOR encoded account address: unexpected key ${key}`);
+    }
+
     // Extract the account address bytes (key 3)
     const addressBytes = value.get(3);
     if (!addressBytes || !(addressBytes instanceof Uint8Array) || addressBytes.byteLength !== ADDRESS_BYTES_LENGTH) {
@@ -341,6 +349,12 @@ function parseCBORValue(decoded: unknown): AccountAddress {
             throw new Error(
                 `Invalid CBOR encoded account address: coin info does not contain Concordium network identifier ${CCD_NETWORK_ID}`
             );
+        }
+
+        // Verify the map corresponds to the BCR-2020-007 `coininfo` format
+        const validKeys = [1, 2]; // we allow 2 here, as it is in the spec for BCR-2020-007 `coininfo`, but we don't use it
+        for (const key of coinInfoMap.keys()) {
+            validKeys.includes(key) || bail(`Invalid CBOR encoded coininfo: unexpected key ${key}`);
         }
     }
 
@@ -365,7 +379,7 @@ function parseCBORValue(decoded: unknown): AccountAddress {
  * ```
  * 40307({
  *   3: h'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789'
- * }) // The address is assumed to be a Concordium addres
+ * }) // The address is assumed to be a Concordium address
  * ```
  *
  * @param {Uint8Array} bytes - The CBOR encoded representation of an account address.

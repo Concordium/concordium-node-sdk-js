@@ -1,20 +1,7 @@
-import { decode } from 'cbor2';
+import { decode } from 'cbor2/decoder';
 
-import { TokenAmount } from './plt/index.js';
-import * as AccountAddress from './types/AccountAddress.js';
-
-/**
- * Register CBOR encoders for all types at the top level so they are globally available in the application.
- * This is safe to do as multiple encoders for the same CBOR tag is not a problem.
- *
- * Currently, this auto-registers the following encoders:
- * - `AccountAddress`: For encoding Concordium account addresses in CBOR format
- * - `TokenAmount`: For encoding protocol-level token amounts in CBOR format
- */
-AccountAddress.registerCBOREncoder();
-TokenAmount.registerCBOREncoder();
-
-export { encode as cborEncode } from 'cbor2';
+import { TokenAmount } from '../../plt/index.js';
+import * as AccountAddress from '../AccountAddress.js';
 
 /**
  * Registers all available CBOR decoders globally with the cbor2 library.

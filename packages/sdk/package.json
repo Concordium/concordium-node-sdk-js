@@ -11,7 +11,9 @@
         "directory": "packages/sdk"
     },
     "sideEffects": [
-        "lib/min/*"
+        "lib/min/*",
+        "lib/esm/types/cbor/encode.js",
+        "src/types/cbor/encode.ts"
     ],
     "type": "module",
     "main": "lib/min/concordium.node.min.js",

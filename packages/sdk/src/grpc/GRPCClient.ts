@@ -52,8 +52,8 @@ export type FindInstanceCreationReponse = {
  * `ConcordiumGRPCNodeClient` exist for web/nodejs use respectively.
  */
 export class ConcordiumGRPCClient {
-    client: QueriesClient;
-    healthClient: HealthClient;
+    private client: QueriesClient;
+    private healthClient: HealthClient;
 
     /**
      * Initialize a gRPC client for a specific concordium node.

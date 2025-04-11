@@ -342,7 +342,6 @@ export function fromCBOR(bytes: Uint8Array): TokenAmount {
  * This can be used with the `cborDecode` function to decode CBOR-encoded token
  * amounts without globally registering the decoder.
  */
-// TODO: figure out a way to exclude this from the public entrypoint
 export const taggedCBORDecoder: TaggedDecoder = { tag: DECIMAL_FRACTION_TAG, decoder: parseCBORValue };
 
 /**

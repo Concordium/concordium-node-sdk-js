@@ -29,11 +29,11 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
@@ -50,7 +50,7 @@ jobs:
 
       - name: Cache dependencies
         id: yarn-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ./node_modules
@@ -63,7 +63,7 @@ jobs:
 
       - name: Cache GRPC
         id: cache-grpc
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ./packages/sdk/src/grpc-api
@@ -121,7 +121,7 @@ jobs:
           path: packages/sdk
           name: build-release
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
@@ -150,7 +150,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Get typedoc
         uses: actions/download-artifact@v4

@@ -22,18 +22,18 @@ jobs:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
 
       - name: Cache dependencies
         id: yarn-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ./node_modules
@@ -52,18 +52,18 @@ jobs:
     runs-on: ubuntu-22.04
     needs: deps
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
 
       - name: Cache GRPC
         id: cache-grpc
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ./packages/sdk/src/grpc-api
@@ -71,7 +71,7 @@ jobs:
           restore-keys: ${{ runner.os }}-grpc
 
       - name: Cache WebPack
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ./packages/web/.webpack-cache
           # These two lines ensure that a fresh cache is generated after each run
@@ -79,7 +79,7 @@ jobs:
           restore-keys: ${{ runner.os }}-webpack
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: |
             ./node_modules
@@ -119,17 +119,17 @@ jobs:
     needs: build
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: 'recursive'
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: |
             ./node_modules
@@ -151,15 +151,15 @@ jobs:
     runs-on: ubuntu-22.04
     needs: build
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: |
             ./node_modules
@@ -182,15 +182,15 @@ jobs:
     needs: build
     if: github.event.pull_request.draft == false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: |
             ./node_modules
@@ -213,15 +213,15 @@ jobs:
     if: github.event.pull_request.draft == false
     needs: deps
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: |
             ./node_modules
@@ -238,15 +238,15 @@ jobs:
     needs: deps
     if: github.event.pull_request.draft == false
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: |
             ./node_modules
@@ -262,15 +262,15 @@ jobs:
     runs-on: ubuntu-22.04
     needs: build
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
 
       - name: Restore dependencies
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: |
             ./node_modules
@@ -296,7 +296,7 @@ jobs:
         working-directory: packages/rust-bindings
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: 'recursive'
 
@@ -317,7 +317,7 @@ jobs:
         working-directory: packages/rust-bindings
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: 'recursive'
 

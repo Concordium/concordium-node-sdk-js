@@ -2,6 +2,7 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import * as ed from '@concordium/web-sdk/shims/ed25519';
 
+import { QueriesClient } from '../../src/grpc-api/v2/concordium/service.client.ts';
 import * as v2 from '../../src/grpc-api/v2/concordium/types.js';
 import * as v1 from '../../src/index.js';
 import {
@@ -18,6 +19,9 @@ import {
     streamToList,
 } from '../../src/index.js';
 import { getModuleBuffer } from '../../src/nodejs/index.js';
+import * as AccountAddress from '../../src/types/AccountAddress.js';
+import * as Energy from '../../src/types/Energy.js';
+import * as SequenceNumber from '../../src/types/SequenceNumber.js';
 import { testEnvironment } from '../globals.ts';
 import { testnetBulletproofGenerators } from './resources/bulletproofgenerators.js';
 import * as expected from './resources/expectedJsons.js';
@@ -27,9 +31,9 @@ const clientV2 = getNodeClientV2();
 const clientWeb = getNodeClientWeb();
 const clients = testEnvironment === 'node' ? [clientV2, clientWeb] : [clientWeb];
 
-const testAccount = v1.AccountAddress.fromBase58('3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G');
-const testAccBaker = v1.AccountAddress.fromBase58('4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L');
-const testAccDeleg = v1.AccountAddress.fromBase58('3bFo43GiPnkk5MmaSdsRVboaX2DNSKaRkLseQbyB3WPW1osPwh');
+const testAccount = AccountAddress.fromBase58('3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G');
+const testAccBaker = AccountAddress.fromBase58('4EJJ1hVhbVZT2sR9xPzWUwFcJWK3fPX54z94zskTozFVk8Xd4L');
+const testAccDeleg = AccountAddress.fromBase58('3bFo43GiPnkk5MmaSdsRVboaX2DNSKaRkLseQbyB3WPW1osPwh');
 const testBlockHash = v1.BlockHash.fromHexString('fe88ff35454079c3df11d8ae13d5777babd61f28be58494efe51b6593e30716e');
 
 // Retrieves the account info for the given account in the GRPCv2 type format.
@@ -42,7 +46,8 @@ function getAccountInfoV2(
         accountIdentifier: v1.getAccountIdentifierInput(accountIdentifier),
     };
 
-    return client.client.getAccountInfo(accountInfoRequest).response;
+    const queries: QueriesClient = (client as any).client;
+    return queries.getAccountInfo(accountInfoRequest).response;
 }
 
 test.each(clients)('getCryptographicParameters', async (client) => {
@@ -172,7 +177,7 @@ test.each(clients)('Failed invoke contract', async (client) => {
             method: v1.ReceiveName.fromStringUnchecked('PiggyBank.smash'),
             amount: v1.CcdAmount.zero(),
             parameter: undefined,
-            energy: v1.Energy.create(30000),
+            energy: Energy.create(30000),
         },
         testBlockHash
     );
@@ -193,7 +198,7 @@ test.each(clients)('Invoke contract on v0 contract', async (client) => {
             method: v1.ReceiveName.fromStringUnchecked('PiggyBank.insert'),
             amount: v1.CcdAmount.fromMicroCcd(1n),
             parameter: undefined,
-            energy: v1.Energy.create(30000),
+            energy: Energy.create(30000),
         },
         testBlockHash
     );
@@ -208,7 +213,7 @@ test.each(clients)('Invoke contract same in v1 and v2 on v1 contract', async (cl
         method: v1.ReceiveName.fromStringUnchecked('PiggyBank.view'),
         amount: v1.CcdAmount.zero(),
         parameter: undefined,
-        energy: v1.Energy.create(30000),
+        energy: Energy.create(30000),
     };
     const result = await client.invokeContract(context, testBlockHash);
 
@@ -239,7 +244,7 @@ test.each(clients)('getConsensusStatus', async (client) => {
 });
 
 test.each(clients)('sendBlockItem', async (client) => {
-    const senderAccount = v1.AccountAddress.fromBase58('37TRfx9PqFX386rFcNThyA3zdoWsjF8Koy6Nh3i8VrPy4duEsA');
+    const senderAccount = AccountAddress.fromBase58('37TRfx9PqFX386rFcNThyA3zdoWsjF8Koy6Nh3i8VrPy4duEsA');
     const privateKey = '1f7d20585457b542b22b51f218f0636c8e05ead4b64074e6eafd1d418b04e4ac';
     const nextNonce = await client.getNextAccountNonce(senderAccount);
 
@@ -267,7 +272,7 @@ test.each(clients)('sendBlockItem', async (client) => {
 });
 
 test.each(clients)('transactionHash', async (client) => {
-    const senderAccount = v1.AccountAddress.fromBase58('37TRfx9PqFX386rFcNThyA3zdoWsjF8Koy6Nh3i8VrPy4duEsA');
+    const senderAccount = AccountAddress.fromBase58('37TRfx9PqFX386rFcNThyA3zdoWsjF8Koy6Nh3i8VrPy4duEsA');
     const privateKey = '1f7d20585457b542b22b51f218f0636c8e05ead4b64074e6eafd1d418b04e4ac';
     const nextNonce = await client.getNextAccountNonce(senderAccount);
 
@@ -300,9 +305,9 @@ test.each(clients)('transactionHash', async (client) => {
 
     // Put together sendBlockItemRequest
     const header: v2.AccountTransactionHeader = {
-        sender: v1.AccountAddress.toProto(transaction.header.sender),
-        sequenceNumber: v1.SequenceNumber.toProto(transaction.header.nonce),
-        energyAmount: v1.Energy.toProto(energyCost),
+        sender: AccountAddress.toProto(transaction.header.sender),
+        sequenceNumber: SequenceNumber.toProto(transaction.header.nonce),
+        energyAmount: Energy.toProto(energyCost),
         expiry: { value: transaction.header.expiry.expiryEpochSeconds },
     };
     const accountTransaction: v2.PreAccountTransaction = {
@@ -314,7 +319,9 @@ test.each(clients)('transactionHash', async (client) => {
 
     const serializedAccountTransaction = serializeAccountTransaction(transaction, signature).slice(71);
     const localHash = Buffer.from(sha256([serializedAccountTransaction])).toString('hex');
-    const nodeHash = await client.client.getAccountTransactionSignHash(accountTransaction).response;
+
+    const queries: QueriesClient = (client as any).client;
+    const nodeHash = await queries.getAccountTransactionSignHash(accountTransaction).response;
 
     expect(localHash).toEqual(Buffer.from(nodeHash.value).toString('hex'));
 });
@@ -461,7 +468,7 @@ test.each(clients)('getBlockInfo', async (client) => {
     expect(blockInfo.finalized).toEqual(true);
     expect(blockInfo.transactionCount).toEqual(0n);
     expect(blockInfo.transactionsSize).toEqual(0n);
-    expect(blockInfo.transactionEnergyCost).toEqual(v1.Energy.create(0));
+    expect(blockInfo.transactionEnergyCost).toEqual(Energy.create(0));
     expect(blockInfo.genesisIndex).toEqual(1);
     expect(blockInfo.eraBlockHeight).toEqual(1258806);
     expect(blockInfo.protocolVersion).toEqual(4n);
@@ -675,9 +682,7 @@ describe('findEarliestFinalized', () => {
                 const accounts = await streamToList(client.getAccountList(bi.hash));
 
                 if (accounts.length > genesisAccounts.length) {
-                    return accounts.filter(
-                        (a) => !genesisAccounts.some(v1.AccountAddress.equals.bind(undefined, a))
-                    )[0];
+                    return accounts.filter((a) => !genesisAccounts.some(AccountAddress.equals.bind(undefined, a)))[0];
                 }
             },
             0n,
@@ -688,9 +693,9 @@ describe('findEarliestFinalized', () => {
             throw new Error('Expected firstAccount to be defined');
         }
         expect(
-            v1.AccountAddress.equals(
+            AccountAddress.equals(
                 firstAccount,
-                v1.AccountAddress.fromBase58('3sPayiQEQHrJUpwYUAnYCLWUTkk3JvEW5x6Vn6mD4raBgPAuSp')
+                AccountAddress.fromBase58('3sPayiQEQHrJUpwYUAnYCLWUTkk3JvEW5x6Vn6mD4raBgPAuSp')
             )
         ).toBeTruthy();
     });

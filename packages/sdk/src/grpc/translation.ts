@@ -3,7 +3,7 @@ import { Buffer } from 'buffer/index.js';
 
 import * as GRPCKernel from '../grpc-api/v2/concordium/kernel.js';
 import * as GRPC from '../grpc-api/v2/concordium/types.js';
-import * as PLT from '../plt/types.js';
+import * as PLT from '../plt/index.js';
 import * as SDK from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';
 import * as BlockHash from '../types/BlockHash.js';

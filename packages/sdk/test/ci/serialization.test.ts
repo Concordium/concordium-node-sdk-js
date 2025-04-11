@@ -1,3 +1,4 @@
+import { AccountAddress, CcdAmount, SequenceNumber, TransactionExpiry } from '../../src/pub/types.js';
 import {
     serializeAccountTransactionForSubmission,
     serializeAccountTransactionSignature,
@@ -9,10 +10,6 @@ import {
     AccountTransactionType,
     SimpleTransferPayload,
 } from '../../src/types.js';
-import * as AccountAddress from '../../src/types/AccountAddress.js';
-import * as CcdAmount from '../../src/types/CcdAmount.js';
-import * as SequenceNumber from '../../src/types/SequenceNumber.js';
-import * as TransactionExpiry from '../../src/types/TransactionExpiry.js';
 
 test('fail account transaction serialization if no signatures', () => {
     const simpleTransferPayload: SimpleTransferPayload = {

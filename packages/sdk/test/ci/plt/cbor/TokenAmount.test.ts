@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer/index.js';
 import { decode, encode } from 'cbor2';
 
-import { TokenAmount } from '../../../../src/plt/types.js';
+import { TokenAmount } from '../../../../src/pub/plt.js';
 
 describe('PLT TokenAmount CBOR', () => {
     test('CBOR encoding works correctly', () => {

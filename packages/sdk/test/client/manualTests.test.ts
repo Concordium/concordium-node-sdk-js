@@ -1,9 +1,11 @@
+import { QueriesClient } from '../../src/grpc-api/v2/concordium/service.client.ts';
 import * as v2 from '../../src/grpc-api/v2/concordium/types.js';
 import * as v1 from '../../src/index.js';
 import { buildBasicAccountSigner, signTransaction } from '../../src/index.js';
 import { getNodeClientV2 as getNodeClient } from './testHelpers.js';
 
 const client = getNodeClient();
+const queries: QueriesClient = (client as any).client;
 
 const testAccount = v1.AccountAddress.fromBase58('3kBx2h5Y2veb4hZgAJWPrr8RyQESKm5TjzF3ti1QQ4VSYLwK1G');
 const senderAccount = v1.AccountAddress.fromBase58('39zbDo5ycLdugboskzUqjme8uNnDFfAYdyAYB9csegQJ2BqLoe');
@@ -55,17 +57,17 @@ describe.skip('Manual test suite', () => {
 
     // Requires a node that allows performing peerConnect/peerDisconnect/getPeersInfo
     test('Connecting/disconnecting peer is reflected in Peers info list', async () => {
-        const peer = (await client.client.getPeersInfo(v2.Empty).response).peers[0].socketAddress;
+        const peer = (await queries.getPeersInfo(v2.Empty).response).peers[0].socketAddress;
         if (!peer || !peer.ip || !peer.port) {
             throw new Error('missing peer');
         }
         await client.peerDisconnect(peer.ip.value, peer.port.value);
         await new Promise((r) => setTimeout(r, 10000));
-        let updatedPeers = (await client.client.getPeersInfo(v2.Empty).response).peers.map((x) => x.socketAddress);
+        let updatedPeers = (await queries.getPeersInfo(v2.Empty).response).peers.map((x) => x.socketAddress);
         expect(updatedPeers).not.toContainEqual(peer);
         await client.peerConnect(peer.ip.value, peer.port.value);
         await new Promise((r) => setTimeout(r, 10000));
-        updatedPeers = (await client.client.getPeersInfo(v2.Empty).response).peers.map((x) => x.socketAddress);
+        updatedPeers = (await queries.getPeersInfo(v2.Empty).response).peers.map((x) => x.socketAddress);
         expect(updatedPeers).toContainEqual(peer);
     }, 750000);
 });

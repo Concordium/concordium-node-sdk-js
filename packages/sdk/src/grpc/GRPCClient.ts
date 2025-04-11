@@ -15,7 +15,7 @@ import { HealthClient } from '../grpc-api/v2/concordium/health.client.js';
 import * as GRPCKernel from '../grpc-api/v2/concordium/kernel.js';
 import { QueriesClient } from '../grpc-api/v2/concordium/service.client.js';
 import * as GRPC from '../grpc-api/v2/concordium/types.js';
-import * as PLT from '../plt/types.js';
+import * as PLT from '../plt/index.js';
 import { RawModuleSchema } from '../schemaTypes.js';
 import { serializeAccountTransactionPayload } from '../serialization.js';
 import * as SDK from '../types.js';
@@ -52,8 +52,8 @@ export type FindInstanceCreationReponse = {
  * `ConcordiumGRPCNodeClient` exist for web/nodejs use respectively.
  */
 export class ConcordiumGRPCClient {
-    client: QueriesClient;
-    healthClient: HealthClient;
+    private client: QueriesClient;
+    private healthClient: HealthClient;
 
     /**
      * Initialize a gRPC client for a specific concordium node.

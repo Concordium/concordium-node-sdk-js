@@ -1,4 +1,4 @@
-import * as AccountAddress from '../../src/types/AccountAddress.js';
+import { AccountAddress } from '../../src/pub/types.js';
 
 test('isAlias is reflexive', () => {
     const address = AccountAddress.fromBuffer(

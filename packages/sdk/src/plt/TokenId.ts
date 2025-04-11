@@ -1,11 +1,12 @@
 import type * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
+import { isValidUTF8 } from '../util.js';
 
 /**
  * Protocol level token (PLT) ID JSON representation.
  */
 export type JSON = string;
 
-const MAX_LENGTH = 256;
+const MAX_LENGTH = 255;
 
 /**
  * Enum representing the types of errors that can occur with token IDs.
@@ -13,6 +14,8 @@ const MAX_LENGTH = 256;
 export enum ErrorType {
     /** Error type indicating the length length exceeds the max allowed. */
     EXCEEDS_MAX_LENGTH = 'EXCEEDS_MAX_LENGTH',
+    /** Error type indicating the token ID is invalid. */
+    INVALID = 'INVALID',
 }
 
 /**
@@ -37,6 +40,13 @@ export class Err extends Error {
             `Token ID's cannot be longer than ${MAX_LENGTH} utf-8 encoded bytes`
         );
     }
+
+    /**
+     * Creates a TokenId.Err indicating the token ID is invalid.
+     */
+    public static invalid(): Err {
+        return new Err(ErrorType.INVALID, 'Token ID can only contain utf8 characters');
+    }
 }
 
 /**
@@ -50,13 +60,17 @@ class TokenId {
      * Constructs a new TokenId instance.
      * Validates that the value is smaller than the allowed utf-8 byte length.
      *
-     * @throws {Err} If the value is longer than 256 utf-8 encoded bytes.
+     * @throws {Err} If the value is longer than 255 utf-8 encoded bytes or contains invalid UTF-8.
      */
     constructor(
         /** The inner value */
         public readonly symbol: string
     ) {
-        // Check if the value exceeds 256 UTF-8 bytes
+        if (!isValidUTF8(symbol)) {
+            throw Err.invalid();
+        }
+
+        // Check if the value exceeds 255 UTF-8 bytes
         if (new TextEncoder().encode(symbol).length > MAX_LENGTH) {
             throw Err.exceedsMaxLength();
         }
@@ -89,7 +103,7 @@ export type Type = TokenId;
  *
  * @param {string} value - The string to create the token ID from.
  * @returns {TokenId} A new token ID instance.
- * @throws {Err} If the value is longer than 256 utf-8 encoded bytes.
+ * @throws {Err} If the value is longer than 255 utf-8 encoded bytes or contains invalid UTF-8.
  */
 export function fromString(value: string): TokenId {
     return new TokenId(value);
@@ -110,7 +124,7 @@ export function instanceOf(value: unknown): value is TokenId {
  *
  * @param {string} json The JSON representation of the CCD amount.
  * @returns {CcdAmount} The CCD amount.
- * @throws {Err} If the value is longer than 256 utf-8 encoded bytes.
+ * @throws {Err} If the value is longer than 255 utf-8 encoded bytes or contains invalid UTF-8.
  */
 export function fromJSON(json: JSON): TokenId {
     return fromString(json);
@@ -120,7 +134,7 @@ export function fromJSON(json: JSON): TokenId {
  * Convert token ID from its protobuf encoding.
  * @param {Proto.TokenId} tokenId athe token ID
  * @returns {TokenId} The token ID.
- * @throws {Err} If the value is longer than 256 utf-8 encoded bytes.
+ * @throws {Err} If the value is longer than 255 utf-8 encoded bytes or contains invalid UTF-8.
  */
 export function fromProto(tokenId: Proto.TokenId): TokenId {
     return fromString(tokenId.symbol);
@@ -152,9 +166,24 @@ export function toBytes(tokenId: TokenId): Uint8Array {
  *
  * @param {Uint8Array} bytes - The UTF-8 byte array to decode.
  * @returns {TokenId} The decoded TokenId.
- * @throws {Err} If the decoded string is longer than 256 utf-8 encoded bytes.
+ * @throws {Err} If the decoded string is longer than 255 utf-8 encoded bytes or contains invalid UTF-8.
  */
 export function fromBytes(bytes: ArrayBuffer): TokenId {
-    const symbol = new TextDecoder().decode(bytes);
-    return fromString(symbol);
+    try {
+        // This will catch any surrogate pairs that cannot be properly encoded to UTF-8
+        let value = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+        return new TokenId(value);
+    } catch (error) {
+        throw Err.invalid();
+    }
+}
+
+/**
+ * Check if two token IDs are the same.
+ * @param {TokenId} left
+ * @param {TokenId} right
+ * @returns {boolean} True if they are equal.
+ */
+export function equals(left: TokenId, right: TokenId): boolean {
+    return left.symbol === right.symbol;
 }

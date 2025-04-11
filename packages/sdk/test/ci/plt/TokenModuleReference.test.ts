@@ -1,4 +1,4 @@
-import { TokenModuleReference } from '../../../src/plt/types.ts';
+import { TokenModuleReference } from '../../../src/pub/plt.js';
 
 describe('PLT TokenModuleReference', () => {
     test('Creates token module references as expected', () => {

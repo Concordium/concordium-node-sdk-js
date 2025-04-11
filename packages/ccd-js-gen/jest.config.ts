@@ -1,7 +1,7 @@
 import type { Config } from 'jest';
 import type {} from 'ts-jest';
 
-export const esModules = ['@noble/ed25519', '@concordium/web-sdk'];
+export const esModules = ['@noble/ed25519', '@concordium/web-sdk', 'cbor2'];
 
 const config: Config = {
     preset: 'ts-jest/presets/js-with-ts-esm',

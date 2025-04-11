@@ -1,8 +1,8 @@
 import { Tag, decode } from 'cbor2';
 
+import { TokenAmount } from './plt/index.js';
 import * as AccountAddress from './types/AccountAddress.js';
 import { isDefined } from './util.js';
-import { TokenAmount } from './plt/index.js';
 
 /**
  * Register CBOR encoders for all types at the top level so they are globally available in the application.

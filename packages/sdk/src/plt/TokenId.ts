@@ -158,3 +158,13 @@ export function fromBytes(bytes: ArrayBuffer): TokenId {
     const symbol = new TextDecoder().decode(bytes);
     return fromString(symbol);
 }
+
+/**
+ * Check if two token IDs are the same.
+ * @param {TokenId} left
+ * @param {TokenId} right
+ * @returns {boolean} True if they are equal.
+ */
+export function equals(left: TokenId, right: TokenId): boolean {
+    return left.symbol === right.symbol;
+}

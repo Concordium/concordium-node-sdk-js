@@ -248,6 +248,22 @@ export function toProto(amount: Type): Proto.TokenAmount {
     };
 }
 
+/**
+ * Check if two token amounts are the same. This tests for numeric equlity, not equality of object values.
+ *
+ * @example
+ * const a = TokenAmount.create(1, 2);
+ * const b = TokenAmount.create(100, 4);
+ * console.log(TokenAmount.equals(a, b)); // true
+ *
+ * @param {TokenAmount} left
+ * @param {TokenAmount} right
+ * @returns {boolean} True if they are equal.
+ */
+export function equals(left: TokenAmount, right: TokenAmount): boolean {
+    return toDecimal(left).eq(toDecimal(right));
+}
+
 const DECIMAL_FRACTION_TAG = 4; // 4 is the CBOR tag for decimal fraction
 
 function toCBORDecFrac(value: TokenAmount): [number, bigint] {

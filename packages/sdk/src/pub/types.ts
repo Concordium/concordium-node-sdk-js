@@ -1,4 +1,3 @@
-import * as AccountAddress from '../types/AccountAddress.js';
 import * as BlockHash from '../types/BlockHash.js';
 import * as CcdAmount from '../types/CcdAmount.js';
 import * as ContractAddress from '../types/ContractAddress.js';
@@ -10,7 +9,6 @@ import * as Energy from '../types/Energy.js';
 import * as EntrypointName from '../types/EntrypointName.js';
 import * as InitName from '../types/InitName.js';
 import * as ModuleClient from '../types/ModuleClient.js';
-import * as ModuleReference from '../types/ModuleReference.js';
 import * as Parameter from '../types/Parameter.js';
 import * as ReceiveName from '../types/ReceiveName.js';
 import * as ReturnValue from '../types/ReturnValue.js';
@@ -18,6 +16,8 @@ import * as SequenceNumber from '../types/SequenceNumber.js';
 import * as Timestamp from '../types/Timestamp.js';
 import * as TransactionExpiry from '../types/TransactionExpiry.js';
 import * as TransactionHash from '../types/TransactionHash.js';
+import * as AccountAddress from './types/AccountAddress.js';
+import * as ModuleReference from './types/ModuleReference.js';
 
 // Functionality revolving concordium domain types and utitlity for working with these types.
 export * from '../types.js';

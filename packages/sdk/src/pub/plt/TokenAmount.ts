@@ -9,6 +9,7 @@ export {
     registerCBORDecoder,
     zero,
     create,
+    equals,
     toDecimal,
     fromDecimal,
     instanceOf,

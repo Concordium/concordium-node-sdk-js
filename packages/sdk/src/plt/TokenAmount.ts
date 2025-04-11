@@ -2,7 +2,6 @@ import Big, { BigSource } from 'big.js';
 import { Tag, decode, encode } from 'cbor2';
 import { registerEncoder } from 'cbor2/encoder';
 
-import { TaggedDecoder } from '../cbor.js';
 import { MAX_U32, MAX_U64 } from '../constants.js';
 import type * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
 

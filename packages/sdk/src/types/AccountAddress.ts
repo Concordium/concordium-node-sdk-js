@@ -380,21 +380,6 @@ export function fromCBOR(bytes: Uint8Array): AccountAddress {
 }
 
 /**
- * A TaggedDecoder instance for Concordium account addresses, configured with:
- * - Tag value `40307`
- * - The `parseCBORValue` function as the decoder implementation
- *
- * This can be used with the `cborDecode` function to decode CBOR-encoded account
- * addresses without globally registering the decoder.
- *
- * @example
- * // Decode CBOR data with the account address decoder
- * const decoded = cborDecode(cborBytes, [AccountAddress.taggedCBORDecoder]);
- */
-// TODO: figure out a way to exclude this from the public entrypoint
-export const taggedCBORDecoder: TaggedDecoder = { tag: TAGGED_ADDRESS, decoder: parseCBORValue };
-
-/**
  * Registers a CBOR decoder for the tagged-address (40307) format with the `cbor2` library.
  * This enables automatic decoding of CBOR data containing Concordium account addresses
  * when using the `cbor2` library's decode function.
@@ -418,6 +403,8 @@ export function registerCBORDecoder(): () => void {
     return () => {
         if (old) {
             Tag.registerDecoder(TAGGED_ADDRESS, old);
+        } else {
+            Tag.clearDecoder(TAGGED_ADDRESS);
         }
     };
 }

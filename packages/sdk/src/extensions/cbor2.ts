@@ -1,1 +1,1 @@
-export { registerDecoders } from '../cbor.js';
+export * from '../cbor.js';

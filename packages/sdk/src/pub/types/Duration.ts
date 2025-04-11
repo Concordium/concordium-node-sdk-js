@@ -1,0 +1,17 @@
+export {
+    Type,
+    instanceOf,
+    fromMillis,
+    fromString,
+    toMillis,
+    JSON_DISCRIMINATOR,
+    Serializable,
+    toTypedJSON,
+    toUnwrappedJSON,
+    fromTypedJSON,
+    toSchemaValue,
+    fromSchemaValue,
+    SchemaValue,
+    toSerializable,
+    fromSerializable,
+} from '../../types/Duration.js';

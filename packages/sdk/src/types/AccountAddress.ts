@@ -367,7 +367,7 @@ function parseCBORValue(decoded: unknown): AccountAddress {
  * ```
  * 40307({
  *   3: h'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789'
- * }) // The address is assumed to be a Concordium addres
+ * }) // The address is assumed to be a Concordium address
  * ```
  *
  * @param {Uint8Array} bytes - The CBOR encoded representation of an account address.

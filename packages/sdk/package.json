@@ -1,6 +1,6 @@
 {
     "name": "@concordium/web-sdk",
-    "version": "9.0.0",
+    "version": "9.1.0",
     "license": "Apache-2.0",
     "engines": {
         "node": ">=16"
@@ -33,12 +33,6 @@
             "react-native": null,
             "browser": null,
             "default": "./lib/esm/pub/nodejs.js"
-        },
-        "./wasm": {
-            "types": "./lib/esm/pub/wasm.d.ts",
-            "bun": "./src/pub/wasm.ts",
-            "react-native": null,
-            "default": "./lib/esm/pub/wasm.js"
         },
         "./extensions/*": {
             "types": "./lib/esm/extensions/*.d.ts",

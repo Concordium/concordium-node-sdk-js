@@ -11,6 +11,7 @@
 - Updated `AccountInfo` to hold information about the PLTs held by an account.
 
 ### Added
+
 - New types representing entities within the domain of protocol level tokens (PLTs)
   - `TokenId`: A unique text identifier of a PLT
   - `TokenAmount`: A representation of a PLT amount
@@ -20,11 +21,17 @@
   - `TokenAccountState`, `TokenState`, `TokenInfo`, and `TokenAccountInfo`, all representing PLT related data returned by the
     GRPC API of a Concordium node. 
 - A new package export scoped to hold types and functionality for interacting wit PLTs, available at
-`@concordium/web-sdk/plt`.
+  `@concordium/web-sdk/plt`.
 - CBOR conversion functionality to `AccountAddress`.
 - An extension for `cbor2`, which registers CBOR encoders for all relevant concordium types and provides functionality
   for correspondingly decoding CBOR encodings into Concordium domain types. These are accessible at the
   `@concordium/web-sdk/extensions/cbor2` entrypoint.
+
+## 9.1.0
+
+### Added
+
+- The "wasm" entrypoint `@concordium/web-sdk/wasm` from now supports react-native. This means that the partial support for react-native is now extended to full support.
 
 ## 9.0.0
 

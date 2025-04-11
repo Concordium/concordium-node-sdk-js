@@ -5,7 +5,7 @@
 ### Breaking changes
 
 - Add `TokenHolderSummary` and `TokenGovernanceSummary` to the possible transaction outcomes declared by
-`AccountTransactionSummary`, and correspondingly `TokenHolderEvent` and `TokenGovernanceEvent` to `TransactionEvent`.
+  `AccountTransactionSummary`, and correspondingly `TokenHolderEvent` and `TokenGovernanceEvent` to `TransactionEvent`.
 - Added new variants `TokenHolder` and `TokenGovernance` to `TransactionEventTag`, `AccountTransactionType` and correspondingly `TransactionKindString`.
 - Added new variant `CreatePLT` to `UpdateType`.
 - Updated `AccountInfo` to hold information about the PLTs held by an account.
@@ -23,6 +23,10 @@
     GRPC API of a Concordium node. 
 - A new package export scoped to hold types and functionality for interacting wit PLTs, available at
 `@concordium/web-sdk/plt`.
+- CBOR conversion functionality to `AccountAddress`.
+- An extension for `cbor2`, which registers CBOR encoders for all relevant concordium types and provides functionality
+  for correspondingly decoding CBOR encodings into Concordium domain types. These are accessible at the
+  `@concordium/web-sdk/extensions/cbor2` entrypoint.
 
 ## 9.0.0
 

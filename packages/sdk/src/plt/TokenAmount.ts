@@ -335,16 +335,6 @@ export function fromCBOR(bytes: Uint8Array): TokenAmount {
 }
 
 /**
- * A TaggedDecoder instance for TokenAmount, configured with:
- * - Tag value `4` (decimal fraction)
- * - The `parseCBORValue` function as the decoder implementation
- *
- * This can be used with the `cborDecode` function to decode CBOR-encoded token
- * amounts without globally registering the decoder.
- */
-export const taggedCBORDecoder: TaggedDecoder = { tag: DECIMAL_FRACTION_TAG, decoder: parseCBORValue };
-
-/**
  * Registers a CBOR encoder for the TokenAmount type with the `cbor2` library.
  * This allows TokenAmount instances to be automatically encoded when used with
  * the `cbor2` library's encode function.
@@ -384,6 +374,8 @@ export function registerCBORDecoder(): () => void {
     return () => {
         if (old) {
             Tag.registerDecoder(DECIMAL_FRACTION_TAG, old);
+        } else {
+            Tag.clearDecoder(DECIMAL_FRACTION_TAG);
         }
     };
 }

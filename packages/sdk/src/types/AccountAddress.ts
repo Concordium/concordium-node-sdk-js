@@ -6,6 +6,7 @@ import { Tag } from 'cbor2/tag';
 
 import type * as Proto from '../grpc-api/v2/concordium/kernel.js';
 import { Base58String } from '../types.js';
+import { bail } from '../util.ts';
 import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';
 
 /**
@@ -322,6 +323,12 @@ function parseCBORValue(decoded: unknown): AccountAddress {
         throw new Error('Invalid CBOR encoded account address: expected a map');
     }
 
+    // Verify the map corresponds to the BCR-2020-009 `address` format
+    const validKeys = [1, 2, 3]; // we allow 2 here, as it is in the spec for BCR-2020-009 `address`, but we don't use it
+    for (const key of value.keys()) {
+        validKeys.includes(key) || bail(`Invalid CBOR encoded account address: unexpected key ${key}`);
+    }
+
     // Extract the account address bytes (key 3)
     const addressBytes = value.get(3);
     if (!addressBytes || !(addressBytes instanceof Uint8Array) || addressBytes.byteLength !== ADDRESS_BYTES_LENGTH) {
@@ -344,6 +351,12 @@ function parseCBORValue(decoded: unknown): AccountAddress {
             throw new Error(
                 `Invalid CBOR encoded account address: coin info does not contain Concordium network identifier ${CCD_NETWORK_ID}`
             );
+        }
+
+        // Verify the map corresponds to the BCR-2020-007 `coininfo` format
+        const validKeys = [1, 2]; // we allow 2 here, as it is in the spec for BCR-2020-007 `coininfo`, but we don't use it
+        for (const key of coinInfoMap.keys()) {
+            validKeys.includes(key) || bail(`Invalid CBOR encoded coininfo: unexpected key ${key}`);
         }
     }
 

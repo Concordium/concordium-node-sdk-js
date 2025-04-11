@@ -27,7 +27,8 @@
         "fmt": "yarn prettier --write",
         "fmt-check": "yarn prettier --check",
         "build": "tsc",
-        "test": "jest"
+        "test": "jest",
+        "test-ci": "yarn test"
     },
     "dependencies": {
         "@concordium/browser-wallet-api-helpers": "^3.0.0",

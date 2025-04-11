@@ -3,7 +3,6 @@ import { Buffer } from 'buffer/index.js';
 import { Tag, decode, encode } from 'cbor2';
 import { registerEncoder } from 'cbor2/encoder';
 
-import { TaggedDecoder } from '../cbor.js';
 import type * as Proto from '../grpc-api/v2/concordium/kernel.js';
 import { Base58String } from '../types.js';
 import { TypedJson, TypedJsonDiscriminator, makeFromTypedJson } from './util.js';

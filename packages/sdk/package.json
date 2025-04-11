@@ -78,7 +78,7 @@
         "rimraf": "^5.0.1",
         "size-limit": "^11.1.4",
         "ts-jest": "^29.1.1",
-        "ts-node": "^10.9.1",
+        "tsx": "^4.19.3",
         "typescript": "^5.2.2",
         "webpack": "^5.88.2",
         "webpack-cli": "^5.1.4"
@@ -97,7 +97,7 @@
         "test-ci": "yarn test ./test/ci && yarn test-rn ./test/ci && yarn test-web ./test/ci",
         "build": "yarn clean; mkdir -p src/grpc-api; yarn generate && yarn build-dev",
         "build-dev": "tsc -p tsconfig.build.json && yarn webpack",
-        "webpack": "node --loader ts-node/esm ../../node_modules/.bin/webpack --config webpack.config.ts",
+        "webpack": "tsx ../../node_modules/.bin/webpack --config webpack.config.ts",
         "clean": "rimraf -- lib src/grpc-api",
         "size": "yarn build && size-limit",
         "size:no-build": "size-limit"

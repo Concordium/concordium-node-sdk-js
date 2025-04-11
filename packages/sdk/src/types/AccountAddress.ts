@@ -1,8 +1,8 @@
 import bs58check from 'bs58check';
 import { Buffer } from 'buffer/index.js';
-import { Tag } from 'cbor2/tag';
 import { decode } from 'cbor2/decoder';
-import { registerEncoder, encode } from 'cbor2/encoder';
+import { encode, registerEncoder } from 'cbor2/encoder';
+import { Tag } from 'cbor2/tag';
 
 import type * as Proto from '../grpc-api/v2/concordium/kernel.js';
 import { Base58String } from '../types.js';

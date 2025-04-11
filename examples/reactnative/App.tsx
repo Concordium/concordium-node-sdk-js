@@ -4,7 +4,12 @@
  *
  * @format
  */
-import { ConcordiumGRPCWebClient, displayTypeSchemaTemplate, getSignature } from '@concordium/web-sdk';
+import {
+    ConcordiumGRPCWebClient,
+    ConcordiumHdWallet,
+    displayTypeSchemaTemplate,
+    getSignature,
+} from '@concordium/web-sdk';
 import * as ed from '@noble/ed25519';
 import { Buffer } from 'buffer/';
 import React from 'react';
@@ -24,8 +29,22 @@ type SectionProps = PropsWithChildren<{
 
 const ADDRESS = 'https://grpc.testnet.concordium.com';
 const PORT = 20000;
+const WALLET_SEED =
+    'c70040111e6f32891c142ce7ce35fb5e52d5c5a97e1afc5e5628f032c65c288e5fd737432910ed1870ba818025813e4bab0dff727b9b6709ae7ed1264dae3b46';
 
 function TestSDK() {
+    // WALLET
+    const wallet = ConcordiumHdWallet.fromHex(WALLET_SEED, 'Testnet');
+
+    const privateKey = wallet.getAccountSigningKey(0, 0, 0).toString('hex');
+    console.log('WALLET privateKey', privateKey);
+    const publicKey = wallet.getAccountPublicKey(0, 0, 0).toString('hex');
+    console.log('WALLET publicKey', publicKey);
+    const idCredSec = wallet.getIdCredSec(0, 0).toString('hex');
+    console.log('WALLET idCredSec', idCredSec);
+    const getPrfKey = wallet.getPrfKey(0, 0).toString('hex');
+    console.log('WALLET getPrfKey', getPrfKey);
+
     // SCHEMA
     const schema = Buffer.from('FAACAAAABAAAAGtleXMQAR4gAAAADgAAAGF1eGlsaWFyeV9kYXRhEAEC', 'base64');
     console.log(schema);

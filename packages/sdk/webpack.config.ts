@@ -8,10 +8,7 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 function configFor(target: 'web' | 'node' | 'react-native'): webpack.Configuration {
     const t = target === 'react-native' ? 'web' : target;
-    const entry =
-        target === 'react-native'
-            ? resolve(__dirname, './src/index.react-native.ts')
-            : resolve(__dirname, './src/index.ts');
+    const entry = resolve(__dirname, './src/index.ts');
 
     const config: webpack.Configuration = {
         mode: 'production',

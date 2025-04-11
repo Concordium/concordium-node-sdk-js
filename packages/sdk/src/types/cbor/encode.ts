@@ -1,3 +1,5 @@
+import { encode } from 'cbor2/encoder';
+
 import { TokenAmount } from '../../plt/types.js';
 import * as AccountAddress from '../AccountAddress.js';
 
@@ -15,4 +17,12 @@ import * as AccountAddress from '../AccountAddress.js';
 AccountAddress.registerCBOREncoder();
 TokenAmount.registerCBOREncoder();
 
-export { encode as cborEncode } from 'cbor2/encoder';
+/**
+ * Encodes a value into a dCBOR (Deterministic Concise Binary Object Representation) byte array.
+ *
+ * @param value - The value to encode into CBOR format.
+ * @returns A Uint8Array containing the CBOR-encoded data.
+ */
+export function cborEncode(value: unknown): Uint8Array {
+    return encode(value, { dcbor: true });
+}

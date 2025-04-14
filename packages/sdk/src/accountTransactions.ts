@@ -531,7 +531,6 @@ export class TokenHolderHandler implements AccountTransactionHandler<TokenHolder
     getBaseEnergyCost(_payload: Uint8Array): bigint {
         // TODO: placeholder value - should be updated when we know the real value
         return 300n;
-
     }
     toJSON(payload: Uint8Array): string {
         return Buffer.from(payload).toString('hex');
@@ -543,7 +542,9 @@ export class TokenHolderHandler implements AccountTransactionHandler<TokenHolder
 
 export type TokenGovernancePayloadJSON = HexString;
 
-export class TokenGovernanceHandler implements AccountTransactionHandler<TokenGovernancePayload, TokenGovernancePayloadJSON> {
+export class TokenGovernanceHandler
+    implements AccountTransactionHandler<TokenGovernancePayload, TokenGovernancePayloadJSON>
+{
     serialize(payload: Uint8Array): Buffer {
         return packBufferWithWord32Length(payload);
     }
@@ -556,7 +557,6 @@ export class TokenGovernanceHandler implements AccountTransactionHandler<TokenGo
     getBaseEnergyCost(_payload: Uint8Array): bigint {
         // TODO: placeholder value - should be updated when we know the real value
         return 300n;
-
     }
     toJSON(payload: Uint8Array): string {
         return Buffer.from(payload).toString('hex');

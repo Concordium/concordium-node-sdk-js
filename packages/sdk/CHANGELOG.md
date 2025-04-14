@@ -11,6 +11,7 @@
 - Updated `AccountInfo` to hold information about the PLTs held by an account.
 - Removed `toProto` and `fromProto` from the exposed API for all custom types in the SDK. This should have no impact, as
   the parameter/return values are internal-only.
+- Added `TokenHolderPayload` and `TokenGovernancePayload` to `AccountTransactionPayload` union type.
 
 ### Added
 
@@ -28,6 +29,8 @@
 - An extension for `cbor2`, which registers CBOR encoders for all relevant concordium types and provides functionality
   for correspondingly decoding CBOR encodings into Concordium domain types. These are accessible at the
   `@concordium/web-sdk/extensions/cbor2` entrypoint.
+- Added `TokenHolderHandler` and `TokenGovernanceHandler`, which are also accessible by passing the corresponding
+  `TransactionType` to `getAccountTransactionHandler`.
 
 ## 9.1.0
 

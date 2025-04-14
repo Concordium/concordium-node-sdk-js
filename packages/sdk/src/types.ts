@@ -1476,6 +1476,23 @@ export interface ConfigureDelegationPayload {
     delegationTarget?: DelegationTarget;
 }
 
+/**
+ * The payload for a token holder transaction. The contents of the byte array is a CBOR encoding of the update type and
+ * (e.g. "transfer") and the associated update details.
+ *
+ * @example
+ * const payload = cborEncode(['transfer', {amount, recepient, memo}]); // plt v1 transfer payload
+ */
+export type TokenHolderPayload = Uint8Array;
+/**
+ * The payload for a token governance transaction. The contents of the byte array is a CBOR encoding of the update type and
+ * (e.g. "mint") and the associated update details.
+ *
+ * @example
+ * const payload = cborEncode(['mint', {amount}]); // plt v1 mint payload
+ */
+export type TokenGovernancePayload = Uint8Array;
+
 export type AccountTransactionPayload =
     | SimpleTransferPayload
     | SimpleTransferWithMemoPayload
@@ -1485,7 +1502,9 @@ export type AccountTransactionPayload =
     | UpdateContractPayload
     | UpdateCredentialsPayload
     | ConfigureBakerPayload
-    | ConfigureDelegationPayload;
+    | ConfigureDelegationPayload
+    | TokenHolderPayload
+    | TokenGovernancePayload;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

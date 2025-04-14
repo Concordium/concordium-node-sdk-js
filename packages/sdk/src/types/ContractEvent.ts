@@ -115,7 +115,7 @@ export function toProto(event: ContractEvent): Proto.ContractEvent {
 
 /**
  * Parse a contract event using a schema type.
- * @param {ContractEvent} value The event.
+ * @param {ContractEvent} event The event.
  * @param {SchemaType} schemaType The schema type for the event.
  * @returns {SmartContractTypeValues}
  */
@@ -126,7 +126,7 @@ export function parseWithSchemaType(event: ContractEvent, schemaType: SchemaType
 
 /**
  * Parse a contract event using a schema type.
- * @param {ContractEvent} value The event.
+ * @param {ContractEvent} event The event.
  * @param {Base64String} schemaBase64 The schema type for the event encoded as Base64.
  * @returns {SmartContractTypeValues}
  */

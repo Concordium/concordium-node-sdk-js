@@ -1,0 +1,17 @@
+export {
+    Type,
+    instanceOf,
+    create,
+    toString,
+    equals,
+    JSON_DISCRIMINATOR,
+    Serializable,
+    toTypedJSON,
+    toUnwrappedJSON,
+    fromTypedJSON,
+    toSchemaValue,
+    fromSchemaValue,
+    fromSerializable,
+    toSerializable,
+    SchemaValue,
+} from '../../types/ContractAddress.js';

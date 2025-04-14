@@ -207,7 +207,7 @@ export interface FailedTransactionSummary {
 export type TokenHolderSummary = {
     transactionType: TransactionKindString.TokenHolder;
     /** The update details */
-    update: TokenHolderEvent;
+    events: TokenHolderEvent[];
 };
 
 /**
@@ -216,7 +216,7 @@ export type TokenHolderSummary = {
 export type TokenGovernanceSummary = {
     transactionType: TransactionKindString.TokenGovernance;
     /** The update details */
-    update: TokenGovernanceEvent;
+    events: TokenGovernanceEvent[];
 };
 
 /**

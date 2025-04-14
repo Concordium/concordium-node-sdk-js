@@ -1,6 +1,6 @@
 import type { Config } from 'jest';
 
-export const esModules = ['@noble/ed25519'];
+export const esModules = ['@noble/ed25519', 'cbor2'];
 
 const config: Config = {
     preset: 'ts-jest/presets/js-with-ts-esm',

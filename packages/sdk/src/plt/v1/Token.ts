@@ -1,8 +1,8 @@
 import { ConcordiumGRPCClient } from '../../grpc/GRPCClient.js';
-import { AccountAddress, AccountInfo, TransactionHash } from '../../types.js';
+import { AccountAddress, AccountInfo, TransactionHash } from '../../pub/types.js';
 import { bail } from '../../util.js';
 import { Token as GenericToken, validateAmount, verify } from '../Token.js';
-import { TokenAmount, TokenId, TokenInfo, TokenModuleReference } from '../types.js';
+import { TokenAmount, TokenId, TokenInfo, TokenModuleReference } from '../index.js';
 import { TokenTransfer } from './types.js';
 
 /**

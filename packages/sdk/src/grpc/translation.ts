@@ -3,7 +3,7 @@ import { Buffer } from 'buffer/index.js';
 
 import * as GRPCKernel from '../grpc-api/v2/concordium/kernel.js';
 import * as GRPC from '../grpc-api/v2/concordium/types.js';
-import * as PLT from '../plt/types.js';
+import * as PLT from '../plt/index.js';
 import * as SDK from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';
 import * as BlockHash from '../types/BlockHash.js';
@@ -1999,27 +1999,29 @@ function trAccountTransactionSummary(
                 transactionType: SDK.TransactionKindString.ConfigureDelegation,
                 events: effect.delegationConfigured.events.map((x) => trDelegationEvent(x, base.sender)),
             };
-        case 'tokenHolderEvent':
+        case 'tokenHolderEffect':
+            const holderEvents: SDK.TokenHolderEvent[] = effect.tokenHolderEffect.events.map((e) => ({
+                tag: SDK.TransactionEventTag.TokenHolder,
+                updateType: unwrap(e.type),
+                tokenId: PLT.TokenId.fromProto(unwrap(e.tokenSymbol)),
+                details: PLT.TokenEvent.fromProto(unwrap(e.details)),
+            }));
             return {
                 ...base,
                 transactionType: SDK.TransactionKindString.TokenHolder,
-                update: {
-                    tag: SDK.TransactionEventTag.TokenHolder,
-                    updateType: unwrap(effect.tokenHolderEvent.type),
-                    tokenId: PLT.TokenId.fromProto(unwrap(effect.tokenHolderEvent.tokenSymbol)),
-                    details: PLT.TokenEvent.fromProto(unwrap(effect.tokenHolderEvent.details)),
-                },
+                events: holderEvents,
             };
-        case 'tokenGovernanceEvent':
+        case 'tokenGovernanceEffect':
+            const govEvents: SDK.TokenGovernanceEvent[] = effect.tokenGovernanceEffect.events.map((e) => ({
+                tag: SDK.TransactionEventTag.TokenGovernance,
+                updateType: unwrap(e.type),
+                tokenId: PLT.TokenId.fromProto(unwrap(e.tokenSymbol)),
+                details: PLT.TokenEvent.fromProto(unwrap(e.details)),
+            }));
             return {
                 ...base,
                 transactionType: SDK.TransactionKindString.TokenGovernance,
-                update: {
-                    tag: SDK.TransactionEventTag.TokenGovernance,
-                    updateType: unwrap(effect.tokenGovernanceEvent.type),
-                    tokenId: PLT.TokenId.fromProto(unwrap(effect.tokenGovernanceEvent.tokenSymbol)),
-                    details: PLT.TokenEvent.fromProto(unwrap(effect.tokenGovernanceEvent.details)),
-                },
+                events: govEvents,
             };
         case undefined:
             throw Error('Failed translating AccountTransactionEffects, encountered undefined value');

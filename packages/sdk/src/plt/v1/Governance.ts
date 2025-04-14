@@ -1,6 +1,6 @@
-import { AccountAddress, TransactionHash } from '../../types.js';
+import { AccountAddress, TransactionHash } from '../../pub/types.js';
 import { validateAmount } from '../Token.js';
-import { TokenAmount } from '../types.js';
+import { TokenAmount } from '../index.js';
 import { Type as Token } from './Token.js';
 import { TokenGovernanceOperation } from './types.js';
 

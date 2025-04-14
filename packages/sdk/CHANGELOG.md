@@ -5,12 +5,16 @@
 ### Breaking changes
 
 - Add `TokenHolderSummary` and `TokenGovernanceSummary` to the possible transaction outcomes declared by
-`AccountTransactionSummary`, and correspondingly `TokenHolderEvent` and `TokenGovernanceEvent` to `TransactionEvent`.
+  `AccountTransactionSummary`, and correspondingly `TokenHolderEvent` and `TokenGovernanceEvent` to `TransactionEvent`.
 - Added new variants `TokenHolder` and `TokenGovernance` to `TransactionEventTag`, `AccountTransactionType` and correspondingly `TransactionKindString`.
 - Added new variant `CreatePLT` to `UpdateType`.
 - Updated `AccountInfo` to hold information about the PLTs held by an account.
+- Removed `toProto` and `fromProto` from the exposed API for all custom types in the SDK. This should have no impact, as
+  the parameter/return values are internal-only.
+- Added `TokenHolderPayload` and `TokenGovernancePayload` to `AccountTransactionPayload` union type.
 
 ### Added
+
 - New types representing entities within the domain of protocol level tokens (PLTs)
   - `TokenId`: A unique text identifier of a PLT
   - `TokenAmount`: A representation of a PLT amount
@@ -20,7 +24,19 @@
   - `TokenAccountState`, `TokenState`, `TokenInfo`, and `TokenAccountInfo`, all representing PLT related data returned by the
     GRPC API of a Concordium node. 
 - A new package export scoped to hold types and functionality for interacting wit PLTs, available at
-`@concordium/web-sdk/plt`.
+  `@concordium/web-sdk/plt`.
+- CBOR conversion functionality to `AccountAddress`.
+- An extension for `cbor2`, which registers CBOR encoders for all relevant concordium types and provides functionality
+  for correspondingly decoding CBOR encodings into Concordium domain types. These are accessible at the
+  `@concordium/web-sdk/extensions/cbor2` entrypoint.
+- Added `TokenHolderHandler` and `TokenGovernanceHandler`, which are also accessible by passing the corresponding
+  `TransactionType` to `getAccountTransactionHandler`.
+
+## 9.1.0
+
+### Added
+
+- The "wasm" entrypoint `@concordium/web-sdk/wasm` from now supports react-native. This means that the partial support for react-native is now extended to full support.
 
 ## 9.0.0
 

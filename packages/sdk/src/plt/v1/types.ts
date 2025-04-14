@@ -1,5 +1,5 @@
 import * as AccountAddress from '../../types/AccountAddress.js';
-import { TokenAmount, TokenModuleReference } from '../types.js';
+import { TokenAmount } from '../index.js';
 
 /**
  * Enum representing the types of token operations.

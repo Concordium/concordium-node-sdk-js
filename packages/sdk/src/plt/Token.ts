@@ -1,6 +1,6 @@
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
-import { AccountAddress, TransactionHash } from '../types.js';
-import { TokenAmount, TokenId, TokenInfo, TokenModuleReference } from './types.js';
+import { AccountAddress, TransactionHash } from '../pub/types.js';
+import { TokenAmount, TokenId, TokenInfo, TokenModuleReference } from './index.js';
 
 /**
  * Enum representing the types of errors that can occur when interacting with PLT instances through the client.

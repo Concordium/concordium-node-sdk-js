@@ -3,53 +3,25 @@
  */
 import { TokenAccountInfo } from './plt/types.js';
 import * as AccountAddress from './types/AccountAddress.js';
-import * as BlockHash from './types/BlockHash.js';
-import * as CcdAmount from './types/CcdAmount.js';
+import type * as BlockHash from './types/BlockHash.js';
+import type * as CcdAmount from './types/CcdAmount.js';
 import * as ContractAddress from './types/ContractAddress.js';
-import * as ContractEvent from './types/ContractEvent.js';
-import * as ContractName from './types/ContractName.js';
+import type * as ContractName from './types/ContractName.js';
 import * as CredentialRegistrationId from './types/CredentialRegistrationId.js';
 import { DataBlob } from './types/DataBlob.js';
 import * as Duration from './types/Duration.js';
 import * as Energy from './types/Energy.js';
-import * as EntrypointName from './types/EntrypointName.js';
-import * as InitName from './types/InitName.js';
-import * as ModuleClient from './types/ModuleClient.js';
-import * as ModuleReference from './types/ModuleReference.js';
+import type * as InitName from './types/InitName.js';
+import type * as ModuleReference from './types/ModuleReference.js';
 import * as Parameter from './types/Parameter.js';
-import * as ReceiveName from './types/ReceiveName.js';
-import * as ReturnValue from './types/ReturnValue.js';
-import * as SequenceNumber from './types/SequenceNumber.js';
+import type * as ReceiveName from './types/ReceiveName.js';
+import type * as ReturnValue from './types/ReturnValue.js';
+import type * as SequenceNumber from './types/SequenceNumber.js';
 import * as Timestamp from './types/Timestamp.js';
-import * as TransactionExpiry from './types/TransactionExpiry.js';
-import * as TransactionHash from './types/TransactionHash.js';
+import type * as TransactionExpiry from './types/TransactionExpiry.js';
+import type * as TransactionHash from './types/TransactionHash.js';
 import { RejectReason } from './types/rejectReason.js';
 import { ContractTraceEvent } from './types/transactionEvent.js';
-
-// These cannot be exported directly as modules because of a bug in an eslint plugin.
-// https://github.com/import-js/eslint-plugin-import/issues/2289.
-export {
-    ModuleClient,
-    Parameter,
-    ReturnValue,
-    SequenceNumber,
-    Energy,
-    TransactionHash,
-    BlockHash,
-    ContractName,
-    InitName,
-    ReceiveName,
-    CredentialRegistrationId,
-    AccountAddress,
-    ContractAddress,
-    EntrypointName,
-    Timestamp,
-    Duration,
-    ContractEvent,
-    CcdAmount,
-    TransactionExpiry,
-    ModuleReference,
-};
 
 export * from './types/NodeInfo.js';
 export * from './types/PeerInfo.js';
@@ -1504,6 +1476,23 @@ export interface ConfigureDelegationPayload {
     delegationTarget?: DelegationTarget;
 }
 
+/**
+ * The payload for a token holder transaction. The contents of the byte array is a CBOR encoding of the update type and
+ * (e.g. "transfer") and the associated update details.
+ *
+ * @example
+ * const payload = cborEncode(['transfer', {amount, recepient, memo}]); // plt v1 transfer payload
+ */
+export type TokenHolderPayload = Uint8Array;
+/**
+ * The payload for a token governance transaction. The contents of the byte array is a CBOR encoding of the update type and
+ * (e.g. "mint") and the associated update details.
+ *
+ * @example
+ * const payload = cborEncode(['mint', {amount}]); // plt v1 mint payload
+ */
+export type TokenGovernancePayload = Uint8Array;
+
 export type AccountTransactionPayload =
     | SimpleTransferPayload
     | SimpleTransferWithMemoPayload
@@ -1513,7 +1502,9 @@ export type AccountTransactionPayload =
     | UpdateContractPayload
     | UpdateCredentialsPayload
     | ConfigureBakerPayload
-    | ConfigureDelegationPayload;
+    | ConfigureDelegationPayload
+    | TokenHolderPayload
+    | TokenGovernancePayload;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

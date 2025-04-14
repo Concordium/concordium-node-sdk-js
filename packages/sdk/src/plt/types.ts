@@ -1,34 +1,5 @@
 import * as AccountAddress from '../types/AccountAddress.js';
-import * as TokenAmount from './TokenAmount.js';
-import * as TokenEvent from './TokenEvent.js';
-import * as TokenId from './TokenId.js';
-import * as TokenModuleReference from './TokenModuleReference.js';
-import * as TokenModuleState from './TokenModuleState.js';
-
-export {
-    /**
-     * Module containing funcionality for interacting with protocol level token (PLT) modules.
-     */
-    TokenModuleReference,
-    /**
-     * Module containing funcionality for interacting with protocol level token (PLT) amounts.
-     */
-    TokenAmount,
-    /**
-     * Module containing funcionality for interacting with protocol level token (PLT) IDs.
-     */
-    TokenId,
-    /**
-     * Module containing funcionality for interacting with events emitted by protocol level token (PLTs) module
-     * instances.
-     */
-    TokenEvent,
-    /**
-     * Module containing funcionality for interacting with the state of a protocol level token (PLT) module
-     * instance.
-     */
-    TokenModuleState,
-};
+import type { TokenAmount, TokenId, TokenModuleReference, TokenModuleState } from './index.js';
 
 export type TokenDecimals = number;
 

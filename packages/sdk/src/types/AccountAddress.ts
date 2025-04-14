@@ -206,7 +206,6 @@ export function getAlias(address: AccountAddress, counter: number): AccountAddre
  * @param {Proto.AccountAddress} accountAddress The account address in protobuf.
  * @returns {AccountAddress} The account address
  */
-// TODO: figure out a way to exclude this from the public entrypoint
 export function fromProto(accountAddress: Proto.AccountAddress): AccountAddress {
     return fromBuffer(accountAddress.value);
 }
@@ -216,7 +215,6 @@ export function fromProto(accountAddress: Proto.AccountAddress): AccountAddress 
  * @param {AccountAddress} accountAddress The account address.
  * @returns {Proto.AccountAddress} The protobuf encoding.
  */
-// TODO: figure out a way to exclude this from the public entrypoint
 export function toProto(accountAddress: AccountAddress): Proto.AccountAddress {
     return {
         value: accountAddress.decodedAddress,

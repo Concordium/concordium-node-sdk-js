@@ -1,7 +1,7 @@
 import Big from 'big.js';
 
 import { MAX_U8, MAX_U64 } from '../../../src/constants.ts';
-import { TokenAmount } from '../../../src/plt/types.js';
+import { TokenAmount } from '../../../src/pub/plt.js';
 
 describe('PLT TokenAmount', () => {
     test('Parses decimals correctly', () => {
@@ -54,5 +54,23 @@ describe('PLT TokenAmount', () => {
 
     test('TokenAmount constructor correctly rejects multiple comma seperators', () => {
         expect(() => TokenAmount.fromDecimal('10,000,000', 6)).toThrow(Error('[big.js] Invalid number'));
+    });
+
+    test('Equals checks for numeric equality, not object equality', () => {
+        let a = TokenAmount.create(1n, 2);
+        let b = TokenAmount.create(1n, 2);
+        expect(TokenAmount.equals(a, b)).toBe(true);
+
+        a = TokenAmount.create(1n, 2);
+        b = TokenAmount.create(100n, 4);
+        expect(TokenAmount.equals(a, b)).toBe(true);
+
+        a = TokenAmount.create(123n, 2);
+        b = TokenAmount.create(1230n, 3);
+        expect(TokenAmount.equals(a, b)).toBe(true);
+
+        a = TokenAmount.create(100n, 2);
+        b = TokenAmount.create(101n, 2);
+        expect(TokenAmount.equals(a, b)).toBe(false);
     });
 });

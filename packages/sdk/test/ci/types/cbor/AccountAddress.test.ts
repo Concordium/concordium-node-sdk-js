@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer/index.js';
 import { decode, encode } from 'cbor2';
 
-import { AccountAddress } from '../../../../src/index.js';
+import { AccountAddress } from '../../../../src/pub/types.js';
 
 describe('AccountAddress CBOR', () => {
     test('Account address cbor encoding', () => {

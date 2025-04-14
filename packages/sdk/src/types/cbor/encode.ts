@@ -1,6 +1,6 @@
 import { dcborEncodeOptions, encode } from 'cbor2/encoder';
 
-import { TokenAmount } from '../../plt/types.js';
+import { TokenAmount } from '../../plt/index.js';
 import * as AccountAddress from '../AccountAddress.js';
 
 /**

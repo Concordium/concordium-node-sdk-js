@@ -1,4 +1,4 @@
-import { encode } from 'cbor2/encoder';
+import { dcborEncodeOptions, encode } from 'cbor2/encoder';
 
 import { TokenAmount } from '../../plt/index.js';
 import * as AccountAddress from '../AccountAddress.js';
@@ -24,5 +24,5 @@ TokenAmount.registerCBOREncoder();
  * @returns A Uint8Array containing the CBOR-encoded data.
  */
 export function cborEncode(value: unknown): Uint8Array {
-    return encode(value, { dcbor: true });
+    return encode(value, dcborEncodeOptions);
 }

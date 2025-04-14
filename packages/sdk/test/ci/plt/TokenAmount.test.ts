@@ -1,6 +1,6 @@
 import Big from 'big.js';
 
-import { MAX_U64, MAX_U8 } from '../../../src/constants.ts';
+import { MAX_U8, MAX_U64 } from '../../../src/constants.ts';
 import { TokenAmount } from '../../../src/plt/types.js';
 
 describe('PLT TokenAmount', () => {

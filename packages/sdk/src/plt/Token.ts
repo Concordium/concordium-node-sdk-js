@@ -1,5 +1,15 @@
+import { encode } from 'bs58check';
+
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
-import { AccountAddress, TransactionHash } from '../pub/types.js';
+import {
+    AccountAddress,
+    AccountTransaction,
+    AccountTransactionHeader,
+    AccountTransactionType,
+    TransactionExpiry,
+    TransactionHash,
+} from '../pub/types.js';
+import { signTransaction } from '../signHelpers.js';
 import { TokenAmount, TokenId, TokenInfo, TokenModuleReference } from './index.js';
 
 /**
@@ -161,15 +171,28 @@ export function validateAmount(token: Token, amount: TokenAmount.Type): void {
  *
  * @param {Token} token - The token for which the holder transaction is being performed.
  * @param {AccountAddress.Type} sender - The account address initiating the transaction.
- * @param {[Uint8Array]} operations - The operations to be performed in the transaction.
+ * @param {[Uint8Array]} encodedOperations - The operations to be performed in the transaction.
  * @returns {Promise<TransactionHash.Type>} A promise that resolves to the transaction hash.
  */
-export function holderTransaction(
+export async function holderTransaction(
     token: Token,
     sender: AccountAddress.Type,
-    operations: [Uint8Array]
+    expiry = TransactionExpiry.futureMinutes(5),
+    encodedOperations: Uint8Array
 ): Promise<TransactionHash.Type> {
-    throw new Error('Not implemented...');
+    const { nonce } = await token.grpc.getNextAccountNonce(sender);
+    const header: AccountTransactionHeader = {
+        expiry,
+        nonce: nonce,
+        sender,
+    };
+    const transaction: AccountTransaction = {
+        type: AccountTransactionType.TokenHolder,
+        payload: encodedOperations,
+        header,
+    };
+    const signature = await signTransaction(transaction, signer);
+    return token.grpc.sendAccountTransaction(transaction, signature);
 }
 
 /**
@@ -193,4 +216,6 @@ export function governanceTransaction(
 
     // Implement the governance transaction logic here
     throw new Error('Not implemented...');
+
+    token.grpc.sendAccountTransaction();
 }

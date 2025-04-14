@@ -1,5 +1,5 @@
 import * as AccountAddress from '../types/AccountAddress.js';
-import type { TokenAmount, TokenId, TokenModuleReference, TokenModuleState } from './index.js';
+import type { Cbor, TokenAmount, TokenId, TokenModuleReference } from './index.js';
 
 /**
  * Represents a protocol level token state for an account.
@@ -26,7 +26,7 @@ export type TokenState = {
     /** The total available token supply. */
     totalSupply: TokenAmount.Type;
     /** Token module specific state (CBOR encoded), such as token name, feature flags, meta data. */
-    moduleState: TokenModuleState.Type;
+    moduleState: Cbor.Type;
 };
 
 /**

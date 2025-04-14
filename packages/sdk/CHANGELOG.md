@@ -16,11 +16,10 @@
 ### Added
 
 - New types representing entities within the domain of protocol level tokens (PLTs)
+  - `Cbor`: Represents CBOR encoded details for PLT module state, events, and operations
   - `TokenId`: A unique text identifier of a PLT
   - `TokenAmount`: A representation of a PLT amount
   - `TokenModuleReference`: The module reference of a PLT instance
-  - `TokenEvent`: Represents CBOR encoded events emitted by PLT instances
-  - `TokenModuleState`: Represents CBOR encoded state of a PLT instance
   - `TokenAccountState`, `TokenState`, `TokenInfo`, and `TokenAccountInfo`, all representing PLT related data returned by the
     GRPC API of a Concordium node. 
 - A new package export scoped to hold types and functionality for interacting wit PLTs, available at

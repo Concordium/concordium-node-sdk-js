@@ -2004,7 +2004,7 @@ function trAccountTransactionSummary(
                 tag: SDK.TransactionEventTag.TokenHolder,
                 updateType: unwrap(e.type),
                 tokenId: PLT.TokenId.fromProto(unwrap(e.tokenSymbol)),
-                details: PLT.TokenEvent.fromProto(unwrap(e.details)),
+                details: PLT.Cbor.fromProto(unwrap(e.details)),
             }));
             return {
                 ...base,
@@ -2016,7 +2016,7 @@ function trAccountTransactionSummary(
                 tag: SDK.TransactionEventTag.TokenGovernance,
                 updateType: unwrap(e.type),
                 tokenId: PLT.TokenId.fromProto(unwrap(e.tokenSymbol)),
-                details: PLT.TokenEvent.fromProto(unwrap(e.details)),
+                details: PLT.Cbor.fromProto(unwrap(e.details)),
             }));
             return {
                 ...base,
@@ -2645,7 +2645,7 @@ export function trTokenInfo(tokenInfo: GRPC.TokenInfo): PLT.TokenInfo {
         issuer: AccountAddress.fromProto(unwrap(tokenInfo.tokenState?.issuer)),
         moduleRef: PLT.TokenModuleReference.fromProto(unwrap(tokenInfo.tokenState?.tokenModuleRef)),
         totalSupply: PLT.TokenAmount.fromProto(unwrap(tokenInfo.tokenState?.totalSupply)),
-        moduleState: PLT.TokenModuleState.fromProto(unwrap(tokenInfo.tokenState?.moduleState)),
+        moduleState: PLT.Cbor.fromProto(unwrap(tokenInfo.tokenState?.moduleState)),
     };
     return {
         id: PLT.TokenId.fromProto(unwrap(tokenInfo.tokenId)),

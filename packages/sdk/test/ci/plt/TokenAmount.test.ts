@@ -1,6 +1,6 @@
 import Big from 'big.js';
 
-import { MAX_U32, MAX_U64 } from '../../../src/constants.ts';
+import { MAX_U64, MAX_U8 } from '../../../src/constants.ts';
 import { TokenAmount } from '../../../src/plt/types.js';
 
 describe('PLT TokenAmount', () => {
@@ -19,7 +19,7 @@ describe('PLT TokenAmount', () => {
     test('Token amounts with invalid decimals throws', () => {
         expect(() => TokenAmount.zero(-1)).toThrow(TokenAmount.Err.negative());
         expect(() => TokenAmount.zero(1.5)).toThrow(TokenAmount.Err.fractionalDecimals());
-        expect(() => TokenAmount.zero(MAX_U32 + 1)).toThrow(TokenAmount.Err.exceedsMaxDecimals());
+        expect(() => TokenAmount.zero(MAX_U8 + 1)).toThrow(TokenAmount.Err.exceedsMaxDecimals());
     });
 
     test('Token amounts with invalid values throws', () => {
@@ -30,6 +30,7 @@ describe('PLT TokenAmount', () => {
     test('Returns expected amount', () => {
         expect(TokenAmount.zero(0)).toEqual(TokenAmount.create(0n, 0));
         expect(TokenAmount.zero(4)).toEqual(TokenAmount.create(0n, 4));
+        expect(TokenAmount.zero(MAX_U8)).toEqual(TokenAmount.create(0n, MAX_U8));
     });
 
     test('JSON conversion works both ways', () => {

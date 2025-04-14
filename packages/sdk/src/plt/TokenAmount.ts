@@ -3,7 +3,7 @@ import { decode } from 'cbor2/decoder';
 import { encode, registerEncoder } from 'cbor2/encoder';
 import { Tag } from 'cbor2/tag';
 
-import { MAX_U32, MAX_U64 } from '../constants.js';
+import { MAX_U8, MAX_U64 } from '../constants.js';
 import type * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
 
 /**
@@ -66,7 +66,7 @@ export class Err extends Error {
      * Creates a TokenAmount.Err indicating that the token amount has more decimals than allowed.
      */
     public static exceedsMaxDecimals(): Err {
-        return new Err(ErrorType.EXCEEDS_MAX_DECIMALS, `Token amounts cannot have more than than ${MAX_U32}`);
+        return new Err(ErrorType.EXCEEDS_MAX_DECIMALS, `Token amounts cannot have more than than ${MAX_U8}`);
     }
 
     /** Creates a TokenAmount.Err indicating the token decimals were specified as a fractional number. */
@@ -105,7 +105,7 @@ class TokenAmount {
         if (value < 0n) {
             throw Err.negative();
         }
-        if (decimals > MAX_U32) {
+        if (decimals > MAX_U8) {
             throw Err.exceedsMaxDecimals();
         }
         if (decimals < 0) {
@@ -299,11 +299,14 @@ function parseCBORValue(decoded: unknown): TokenAmount {
     }
 
     // Convert to TokenAmount (decimals is negative of exponent)
-    const decimals = -exponent;
-    if (decimals < 0) {
-        throw new Error('Invalid CBOR encoded token amount: decimals cannot be negative');
+    if (exponent >= 0) {
+        throw new Error('Invalid CBOR encoded token amount: exponent cannot have a positive amount');
+    }
+    if (exponent <= -MAX_U8) {
+        throw new Error(`Invalid CBOR encoded token amount: exponent is too small (minimum value is -${MAX_U8})`);
     }
 
+    const decimals = -exponent;
     return create(typeof mantissa === 'bigint' ? mantissa : BigInt(mantissa), decimals);
 }
 

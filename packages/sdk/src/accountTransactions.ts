@@ -30,6 +30,8 @@ import {
     RegisterDataPayload,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
+    TokenGovernancePayload,
+    TokenHolderPayload,
     UpdateContractPayload,
     UpdateCredentialsPayload,
     UrlString,
@@ -514,6 +516,56 @@ export class ConfigureDelegationHandler
     }
 }
 
+export type TokenHolderPayloadJSON = HexString;
+
+export class TokenHolderHandler implements AccountTransactionHandler<TokenHolderPayload, TokenHolderPayloadJSON> {
+    serialize(payload: Uint8Array): Buffer {
+        return packBufferWithWord32Length(payload);
+    }
+    deserialize(serializedPayload: Cursor): Uint8Array {
+        const len = serializedPayload.read(4).readInt32BE(0);
+        const payload = serializedPayload.read(len);
+        return new Uint8Array(payload);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    getBaseEnergyCost(_payload: Uint8Array): bigint {
+        // TODO: placeholder value - should be updated when we know the real value
+        return 300n;
+
+    }
+    toJSON(payload: Uint8Array): string {
+        return Buffer.from(payload).toString('hex');
+    }
+    fromJSON(json: string): Uint8Array {
+        return new Uint8Array(Buffer.from(json, 'hex'));
+    }
+}
+
+export type TokenGovernancePayloadJSON = HexString;
+
+export class TokenGovernanceHandler implements AccountTransactionHandler<TokenGovernancePayload, TokenGovernancePayloadJSON> {
+    serialize(payload: Uint8Array): Buffer {
+        return packBufferWithWord32Length(payload);
+    }
+    deserialize(serializedPayload: Cursor): Uint8Array {
+        const len = serializedPayload.read(4).readInt32BE(0);
+        const payload = serializedPayload.read(len);
+        return new Uint8Array(payload);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    getBaseEnergyCost(_payload: Uint8Array): bigint {
+        // TODO: placeholder value - should be updated when we know the real value
+        return 300n;
+
+    }
+    toJSON(payload: Uint8Array): string {
+        return Buffer.from(payload).toString('hex');
+    }
+    fromJSON(json: string): Uint8Array {
+        return new Uint8Array(Buffer.from(json, 'hex'));
+    }
+}
+
 export type AccountTransactionPayloadJSON =
     | SimpleTransferPayloadJSON
     | SimpleTransferWithMemoPayloadJSON
@@ -523,7 +575,9 @@ export type AccountTransactionPayloadJSON =
     | UpdateCredentialsPayload
     | RegisterDataPayloadJSON
     | ConfigureDelegationPayloadJSON
-    | ConfigureBakerPayloadJSON;
+    | ConfigureBakerPayloadJSON
+    | TokenHolderPayloadJSON
+    | TokenGovernancePayloadJSON;
 
 export function getAccountTransactionHandler(type: AccountTransactionType.Transfer): SimpleTransferHandler;
 export function getAccountTransactionHandler(
@@ -538,6 +592,8 @@ export function getAccountTransactionHandler(
     type: AccountTransactionType.ConfigureDelegation
 ): ConfigureDelegationHandler;
 export function getAccountTransactionHandler(type: AccountTransactionType.ConfigureBaker): ConfigureBakerHandler;
+export function getAccountTransactionHandler(type: AccountTransactionType.TokenHolder): TokenHolderHandler;
+export function getAccountTransactionHandler(type: AccountTransactionType.TokenGovernance): TokenGovernanceHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
 ): AccountTransactionHandler<AccountTransactionPayload, AccountTransactionPayloadJSON>;
@@ -564,6 +620,10 @@ export function getAccountTransactionHandler(
             return new ConfigureDelegationHandler();
         case AccountTransactionType.ConfigureBaker:
             return new ConfigureBakerHandler();
+        case AccountTransactionType.TokenHolder:
+            return new TokenHolderHandler();
+        case AccountTransactionType.TokenGovernance:
+            return new TokenGovernanceHandler();
         default:
             throw new Error('The provided type does not have a handler: ' + type);
     }

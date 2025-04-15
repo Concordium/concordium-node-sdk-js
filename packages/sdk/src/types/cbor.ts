@@ -1,7 +1,33 @@
-import { decode } from 'cbor2/decoder';
+import { dcborEncodeOptions, encode, decode } from 'cbor2';
 
-import { TokenAmount, CborMemo } from '../../plt/index.js';
-import * as AccountAddress from '../AccountAddress.js';
+import { CborMemo, TokenAmount } from '../plt/index.js';
+import * as AccountAddress from './AccountAddress.js';
+
+/**
+ * Register CBOR encoders for all types.
+ * This is safe to do as multiple encoders for the same CBOR tag is not a problem.
+ *
+ * Currently, this auto-registers the following encoders:
+ * - `AccountAddress`: For encoding Concordium account addresses in CBOR format
+ * - `TokenAmount`: For encoding protocol-level token amounts in CBOR format
+ * - `CborMemo`: For encoding protocol-level token memos in CBOR format
+ */
+export function registerCBOREncoders(): void {
+    AccountAddress.registerCBOREncoder();
+    TokenAmount.registerCBOREncoder();
+    CborMemo.registerCBOREncoder();
+}
+
+/**
+ * Encodes a value into a dCBOR (Deterministic Concise Binary Object Representation) byte array.
+ *
+ * @param value - The value to encode into CBOR format.
+ * @returns A Uint8Array containing the CBOR-encoded data.
+ */
+export function cborEncode(value: unknown): Uint8Array {
+    registerCBOREncoders();
+    return encode(value, dcborEncodeOptions);
+}
 
 /**
  * Registers all available CBOR decoders globally with the cbor2 library.
@@ -9,6 +35,7 @@ import * as AccountAddress from '../AccountAddress.js';
  * This function currently registers the following decoders:
  * - `AccountAddress` (tag 40307): For decoding Concordium account addresses
  * - `TokenAmount` (tag 4): For decoding protocol-level token amounts as decimal fractions
+ * - `CborMemo` (tag 24): For decoding protocol-level token memos as cbor encoded data items
  *
  * @returns {(() => void)[]} An array of functions to clean up decoder registrations, i.e. restore the decoders
  * registered prior to registering the Concordium-specific ones.

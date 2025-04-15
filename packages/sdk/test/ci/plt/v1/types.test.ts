@@ -1,23 +1,10 @@
-import { encode } from 'cbor2';
-
-import { TokenOperationType } from '../../../../src/plt/v1/types.ts';
 import { Cbor, TokenAmount, V1 } from '../../../../src/pub/plt.js';
 import { AccountAddress } from '../../../../src/pub/types.js';
 
 describe('PLT v1 transactions', () => {
-    // FIXME: if I remove the first test, the 2nd fails??
-    it('serializes', () => {
-        const account = AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15));
-        const cbor = encode(account);
-
-        console.log(Buffer.from(cbor).toString('hex'));
-    });
-
     it('serializes transfers correctly', () => {
-        AccountAddress.registerCBOREncoder();
-
         const transfer: V1.TokenTransferOperation = {
-            [TokenOperationType.Transfer]: {
+            [V1.TokenOperationType.Transfer]: {
                 amount: TokenAmount.create(123n, 4),
                 recipient: AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15)),
             },

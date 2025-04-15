@@ -34,11 +34,6 @@
             "browser": null,
             "default": "./lib/esm/pub/nodejs.js"
         },
-        "./extensions/*": {
-            "types": "./lib/esm/extensions/*.d.ts",
-            "bun": "./src/extensions/*.ts",
-            "default": "./lib/esm/extensions/*.js"
-        },
         "./*": {
             "types": "./lib/esm/pub/*.d.ts",
             "bun": "./src/pub/*.ts",

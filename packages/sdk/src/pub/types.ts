@@ -92,4 +92,4 @@ export {
     ModuleReference,
 };
 
-export * from '../types/cbor/decode.js';
+export * from '../types/cbor.js';

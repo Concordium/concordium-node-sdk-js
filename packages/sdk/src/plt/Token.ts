@@ -1,5 +1,3 @@
-import { encode } from 'bs58check';
-
 import { ConcordiumGRPCClient } from '../grpc/GRPCClient.js';
 import {
     AccountAddress,
@@ -9,8 +7,8 @@ import {
     TransactionExpiry,
     TransactionHash,
 } from '../pub/types.js';
-import { signTransaction } from '../signHelpers.js';
-import { TokenAmount, TokenId, TokenInfo, TokenModuleReference } from './index.js';
+import { AccountSigner, signTransaction } from '../signHelpers.js';
+import { Cbor, TokenAmount, TokenId, TokenInfo, TokenModuleReference } from './index.js';
 
 /**
  * Enum representing the types of errors that can occur when interacting with PLT instances through the client.
@@ -169,16 +167,22 @@ export function validateAmount(token: Token, amount: TokenAmount.Type): void {
 /**
  * Initiates a holder transaction for a given token.
  *
+ * This function creates and sends a transaction of type `TokenHolder` for the specified token.
+ * It encodes the provided payload, signs the transaction, and submits it to the blockchain.
+ *
  * @param {Token} token - The token for which the holder transaction is being performed.
  * @param {AccountAddress.Type} sender - The account address initiating the transaction.
- * @param {[Uint8Array]} encodedOperations - The operations to be performed in the transaction.
+ * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {unknown} payload - The operations to be performed in the transaction.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @returns {Promise<TransactionHash.Type>} A promise that resolves to the transaction hash.
  */
 export async function holderTransaction(
     token: Token,
     sender: AccountAddress.Type,
-    expiry = TransactionExpiry.futureMinutes(5),
-    encodedOperations: Uint8Array
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
+    payload: unknown,
+    signer: AccountSigner,
 ): Promise<TransactionHash.Type> {
     const { nonce } = await token.grpc.getNextAccountNonce(sender);
     const header: AccountTransactionHeader = {
@@ -188,7 +192,7 @@ export async function holderTransaction(
     };
     const transaction: AccountTransaction = {
         type: AccountTransactionType.TokenHolder,
-        payload: encodedOperations,
+        payload: Cbor.encode(payload),
         header,
     };
     const signature = await signTransaction(transaction, signer);
@@ -198,24 +202,40 @@ export async function holderTransaction(
 /**
  * Initiates a governance transaction for a given token.
  *
+ * This function creates and sends a transaction of type `TokenGovernance` for the specified token.
+ * It verifies that the sender is the token issuer, encodes the provided payload, signs the transaction,
+ * and submits it to the blockchain.
+ *
  * @param {Token} token - The token for which the governance transaction is being performed.
  * @param {AccountAddress.Type} sender - The account address initiating the transaction.
- * @param {[Uint8Array]} operations - The operations to be performed in the transaction.
+ * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ * @param {unknown} payload - The operations to be performed in the transaction.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @returns {Promise<TransactionHash.Type>} A promise that resolves to the transaction hash.
  * @throws {UnauthorizedGovernanceOperationError} If the sender is not the token issuer.
  */
-export function governanceTransaction(
+export async function governanceTransaction(
     token: Token,
     sender: AccountAddress.Type,
-    operations: [Uint8Array]
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
+    payload: unknown,
+    signer: AccountSigner,
 ): Promise<TransactionHash.Type> {
     // Check if the sender is the token issuer
     if (sender !== token.info.state.issuer) {
         throw new UnauthorizedGovernanceOperationError(sender);
     }
-
-    // Implement the governance transaction logic here
-    throw new Error('Not implemented...');
-
-    token.grpc.sendAccountTransaction();
+    const { nonce } = await token.grpc.getNextAccountNonce(sender);
+    const header: AccountTransactionHeader = {
+        expiry,
+        nonce: nonce,
+        sender,
+    };
+    const transaction: AccountTransaction = {
+        type: AccountTransactionType.TokenGovernance,
+        payload: Cbor.encode(payload),
+        header,
+    };
+    const signature = await signTransaction(transaction, signer);
+    return token.grpc.sendAccountTransaction(transaction, signature);
 }

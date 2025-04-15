@@ -1,6 +1,7 @@
 /**
  * @module Common GRPC-Client
  */
+import { Cbor } from './plt/index.ts';
 import { TokenAccountInfo } from './plt/types.js';
 import * as AccountAddress from './types/AccountAddress.js';
 import type * as BlockHash from './types/BlockHash.js';
@@ -1481,17 +1482,17 @@ export interface ConfigureDelegationPayload {
  * (e.g. "transfer") and the associated update details.
  *
  * @example
- * const payload = cborEncode(['transfer', {amount, recepient, memo}]); // plt v1 transfer payload
+ * const payload = Cbor.encode(['transfer', {amount, recepient, memo}]); // plt v1 transfer payload
  */
-export type TokenHolderPayload = Uint8Array;
+export type TokenHolderPayload = Cbor.Type;
 /**
  * The payload for a token governance transaction. The contents of the byte array is a CBOR encoding of the update type and
  * (e.g. "mint") and the associated update details.
  *
  * @example
- * const payload = cborEncode(['mint', {amount}]); // plt v1 mint payload
+ * const payload = Cbor.encode(['mint', {amount}]); // plt v1 mint payload
  */
-export type TokenGovernancePayload = Uint8Array;
+export type TokenGovernancePayload = Cbor.Type;
 
 export type AccountTransactionPayload =
     | SimpleTransferPayload

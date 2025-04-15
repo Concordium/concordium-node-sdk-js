@@ -1,4 +1,4 @@
-import { cborEncode } from '../extensions/cbor2.ts';
+import { cborEncode } from '../extensions/cbor2.js';
 import * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
 import { cborDecode } from '../index.ts';
 import { HexString } from '../types.js';
@@ -117,5 +117,5 @@ export function decode(cbor: Cbor): unknown {
  * @returns {Cbor} The CBOR encoded data.
  */
 export function encode(value: unknown): Cbor {
-    return cborEncode(value);
+    return new Cbor(cborEncode(value));
 }

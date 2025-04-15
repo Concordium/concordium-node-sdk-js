@@ -1,5 +1,12 @@
 import * as AccountAddress from '../../types/AccountAddress.js';
-import { TokenAmount } from '../index.js';
+import { TokenAmount, TokenModuleReference } from '../index.js';
+
+/**
+ * The module reference for the V1 token.
+ */
+export const TOKEN_MODULE_REF = TokenModuleReference.fromHexString(
+    '0EA8121FDC427C9B23AE5E26CFEA3E8CBB544C84AA0C82DB26A85949CE1706C3' // TODO: get the correct module reference...
+);
 
 /**
  * Enum representing the types of token operations.

@@ -182,7 +182,7 @@ export async function holderTransaction(
     sender: AccountAddress.Type,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
     payload: unknown,
-    signer: AccountSigner,
+    signer: AccountSigner
 ): Promise<TransactionHash.Type> {
     const { nonce } = await token.grpc.getNextAccountNonce(sender);
     const header: AccountTransactionHeader = {
@@ -219,7 +219,7 @@ export async function governanceTransaction(
     sender: AccountAddress.Type,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
     payload: unknown,
-    signer: AccountSigner,
+    signer: AccountSigner
 ): Promise<TransactionHash.Type> {
     // Check if the sender is the token issuer
     if (sender !== token.info.state.issuer) {

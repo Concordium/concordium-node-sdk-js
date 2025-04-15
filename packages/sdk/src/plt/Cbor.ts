@@ -1,6 +1,6 @@
 import { cborEncode } from '../extensions/cbor2.js';
 import * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
-import { cborDecode } from '../index.ts';
+import { cborDecode } from '../index.js';
 import { HexString } from '../types.js';
 
 export type JSON = HexString;

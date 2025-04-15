@@ -84,8 +84,7 @@ export class Err extends Error {
  * Protocol level token (PLT) amount representation.
  */
 class TokenAmount {
-    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private readonly __type = 'PLT.Amount';
+    #nominal = true;
 
     /**
      * Constructs a new TokenAmount instance.

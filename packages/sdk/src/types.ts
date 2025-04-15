@@ -1,7 +1,7 @@
 /**
  * @module Common GRPC-Client
  */
-import { Cbor } from './plt/index.ts';
+import { Cbor } from './plt/index.js';
 import { TokenAccountInfo } from './plt/types.js';
 import * as AccountAddress from './types/AccountAddress.js';
 import type * as BlockHash from './types/BlockHash.js';

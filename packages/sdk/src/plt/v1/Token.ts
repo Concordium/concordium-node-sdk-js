@@ -2,8 +2,8 @@ import { ConcordiumGRPCClient } from '../../grpc/GRPCClient.js';
 import { AccountAddress, AccountInfo, TransactionHash } from '../../pub/types.js';
 import { bail } from '../../util.js';
 import { Token as GenericToken, validateAmount, verify } from '../Token.js';
-import { TokenAmount, TokenId, TokenInfo, TokenModuleReference } from '../index.js';
-import { TokenTransfer } from './types.js';
+import { TokenAmount, TokenId, TokenInfo } from '../index.js';
+import { TOKEN_MODULE_REF, TokenTransfer } from './types.js';
 
 /**
  * Enum representing the types of errors that can occur when interacting with PLT instances through the client.
@@ -79,18 +79,12 @@ export class InsufficientFundsError extends TokenError {
 }
 
 /**
- * The module reference for the V1 token.
- */
-const TOKEN_MODULE_REF = TokenModuleReference.fromHexString(
-    '0EA8121FDC427C9B23AE5E26CFEA3E8CBB544C84AA0C82DB26A85949CE1706C3' // TODO: get the correct module reference...
-);
-
-/**
  * Class representing a V1 token.
  */
 class Token extends GenericToken {
-    // To enable the type checker to distinguish tokens from different modules
-    private __type = 'V1.Token';
+    // We add a nominal type here to ensure that similar tokens from other module versions cannot be passed without
+    // extending.
+    #nominal = true;
 
     /**
      * Constructs a new V1Token.

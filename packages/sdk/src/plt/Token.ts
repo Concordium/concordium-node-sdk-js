@@ -4,6 +4,8 @@ import {
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionType,
+    TokenGovernancePayload,
+    TokenHolderPayload,
     TransactionExpiry,
     TransactionHash,
 } from '../pub/types.js';
@@ -172,7 +174,7 @@ export function validateAmount(token: Token, amount: TokenAmount.Type): void {
  *
  * @param {Token} token - The token for which the holder transaction is being performed.
  * @param {AccountAddress.Type} sender - The account address initiating the transaction.
- * @param {Cbor.Type} payload - The CBOR encoded operations to be performed in the transaction.
+ * @param {TokenHolderPayload} payload - The transaction payload.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
  *
@@ -181,7 +183,7 @@ export function validateAmount(token: Token, amount: TokenAmount.Type): void {
 export async function holderTransaction(
     token: Token,
     sender: AccountAddress.Type,
-    payload: Cbor.Type,
+    payload: TokenHolderPayload,
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
@@ -209,7 +211,7 @@ export async function holderTransaction(
  *
  * @param {Token} token - The token for which the governance transaction is being performed.
  * @param {AccountAddress.Type} sender - The account address initiating the transaction.
- * @param {Cbor.Type} payload - The CBOR encoded operations to be performed in the transaction.
+ * @param {TokenGovernancePayload} payload - The transaction payload.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
  *
@@ -219,7 +221,7 @@ export async function holderTransaction(
 export async function governanceTransaction(
     token: Token,
     sender: AccountAddress.Type,
-    payload: Cbor.Type,
+    payload: TokenGovernancePayload,
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {

@@ -1,7 +1,7 @@
 import { Buffer } from 'buffer/index.js';
 
 import { Cursor } from './deserializationHelpers.js';
-import { Cbor } from './plt/index.js';
+import { Cbor, TokenId } from './plt/index.js';
 import { ContractAddress, ContractName, Energy, ModuleReference } from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
 import {
@@ -9,6 +9,7 @@ import {
     encodeWord8,
     encodeWord32,
     encodeWord64,
+    packBufferWithWord8Length,
     packBufferWithWord16Length,
     packBufferWithWord32Length,
     serializeConfigureBakerPayload,
@@ -517,53 +518,81 @@ export class ConfigureDelegationHandler
     }
 }
 
-export type TokenHolderPayloadJSON = Cbor.JSON;
+export type TokenHolderPayloadJSON = {
+    tokenSymbol: TokenId.JSON;
+    operations: Cbor.JSON;
+};
 
 export class TokenHolderHandler implements AccountTransactionHandler<TokenHolderPayload, TokenHolderPayloadJSON> {
     serialize(payload: TokenHolderPayload): Buffer {
-        return packBufferWithWord32Length(payload.bytes);
+        const tokenSymbol = packBufferWithWord8Length(TokenId.toBytes(payload.tokenSymbol));
+        const ops = packBufferWithWord32Length(payload.operations.bytes);
+        return Buffer.concat([tokenSymbol, ops]);
     }
     deserialize(serializedPayload: Cursor): TokenHolderPayload {
-        const len = serializedPayload.read(4).readInt32BE(0);
-        const payload = serializedPayload.read(len);
-        return Cbor.fromBuffer(new Uint8Array(payload));
+        let len = serializedPayload.read(1).readUInt8(0);
+        const tokenSymbol = TokenId.fromBytes(serializedPayload.read(len));
+
+        len = serializedPayload.read(4).readUInt32BE(0);
+        const operations = Cbor.fromBuffer(serializedPayload.read(len));
+        return { tokenSymbol, operations };
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     getBaseEnergyCost(_payload: TokenHolderPayload): bigint {
         // TODO: placeholder value - should be updated when we know the real value
         return 300n;
     }
-    toJSON(payload: TokenHolderPayload): string {
-        return payload.toJSON();
+    toJSON(payload: TokenHolderPayload): TokenHolderPayloadJSON {
+        return {
+            tokenSymbol: payload.tokenSymbol.toJSON(),
+            operations: payload.operations.toJSON(),
+        };
     }
-    fromJSON(json: string): TokenHolderPayload {
-        return Cbor.fromJSON(json);
+    fromJSON(json: TokenHolderPayloadJSON): TokenHolderPayload {
+        return {
+            tokenSymbol: TokenId.fromJSON(json.tokenSymbol),
+            operations: Cbor.fromJSON(json.operations),
+        };
     }
 }
 
-export type TokenGovernancePayloadJSON = Cbor.JSON;
+export type TokenGovernancePayloadJSON = {
+    tokenSymbol: TokenId.JSON;
+    operations: Cbor.JSON;
+};
 
 export class TokenGovernanceHandler
     implements AccountTransactionHandler<TokenGovernancePayload, TokenGovernancePayloadJSON>
 {
     serialize(payload: TokenGovernancePayload): Buffer {
-        return packBufferWithWord32Length(payload.bytes);
+        const tokenSymbol = packBufferWithWord8Length(TokenId.toBytes(payload.tokenSymbol));
+        const ops = packBufferWithWord32Length(payload.operations.bytes);
+        return Buffer.concat([tokenSymbol, ops]);
     }
     deserialize(serializedPayload: Cursor): TokenGovernancePayload {
-        const len = serializedPayload.read(4).readInt32BE(0);
-        const payload = serializedPayload.read(len);
-        return Cbor.fromBuffer(new Uint8Array(payload));
+        let len = serializedPayload.read(1).readUInt8(0);
+        const tokenSymbol = TokenId.fromBytes(serializedPayload.read(len));
+
+        len = serializedPayload.read(4).readUInt32BE(0);
+        const operations = Cbor.fromBuffer(serializedPayload.read(len));
+        return { tokenSymbol, operations };
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     getBaseEnergyCost(_payload: TokenGovernancePayload): bigint {
         // TODO: placeholder value - should be updated when we know the real value
         return 300n;
     }
-    toJSON(payload: TokenGovernancePayload): string {
-        return payload.toJSON();
+    toJSON(payload: TokenGovernancePayload): TokenGovernancePayloadJSON {
+        return {
+            tokenSymbol: payload.tokenSymbol.toJSON(),
+            operations: payload.operations.toJSON(),
+        };
     }
-    fromJSON(json: string): TokenGovernancePayload {
-        return Cbor.fromJSON(json);
+    fromJSON(json: TokenGovernancePayloadJSON): TokenGovernancePayload {
+        return {
+            tokenSymbol: TokenId.fromJSON(json.tokenSymbol),
+            operations: Cbor.fromJSON(json.operations),
+        };
     }
 }
 

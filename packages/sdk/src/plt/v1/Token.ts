@@ -248,7 +248,7 @@ export async function transfer(
     await validateTransfer(token, sender, payload);
 
     const ops: TokenHolderOperation[] = [payload].flat().map((p) => ({ [TokenOperationType.Transfer]: p }));
-    const encoded = createTokenHolderPayload(ops);
+    const encoded = createTokenHolderPayload(token.info.id, ops);
 
     return holderTransaction(token, sender, encoded, signer, expiry);
 }

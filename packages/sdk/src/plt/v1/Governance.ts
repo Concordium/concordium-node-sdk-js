@@ -188,6 +188,6 @@ export async function batchOperations(
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
-    const payload = createTokenGovernancePayload(operations);
+    const payload = createTokenGovernancePayload(token.info.id, operations);
     return governanceTransaction(token, sender, payload, signer, expiry);
 }

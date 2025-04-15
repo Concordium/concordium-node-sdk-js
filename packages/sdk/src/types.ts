@@ -1,7 +1,7 @@
 /**
  * @module Common GRPC-Client
  */
-import { Cbor } from './plt/index.js';
+import { Cbor, TokenId } from './plt/index.js';
 import { TokenAccountInfo } from './plt/types.js';
 import * as AccountAddress from './types/AccountAddress.js';
 import type * as BlockHash from './types/BlockHash.js';
@@ -1478,13 +1478,19 @@ export interface ConfigureDelegationPayload {
 }
 
 /**
- * The payload for a token holder transaction. The contents of the byte array is a CBOR encoding of the update type and
- * (e.g. "transfer") and the associated update details.
- *
- * @example
- * const payload = Cbor.encode(['transfer', {amount, recepient, memo}]); // plt v1 transfer payload
+ * The payload for a token holder transaction.
  */
-export type TokenHolderPayload = Cbor.Type;
+export type TokenHolderPayload = {
+    /** The token symbol identifying the token to perform the list of operations on */
+    tokenSymbol: TokenId.Type;
+    /**
+     * The CBOR encoded operations
+     *
+     * @example
+     * const operations = Cbor.encode([{ transfer: { amount, recipient, memo } }]); // plt v1 transfer payload
+     */
+    operations: Cbor.Type;
+};
 /**
  * The payload for a token governance transaction. The contents of the byte array is a CBOR encoding of the update type and
  * (e.g. "mint") and the associated update details.
@@ -1492,7 +1498,20 @@ export type TokenHolderPayload = Cbor.Type;
  * @example
  * const payload = Cbor.encode(['mint', {amount}]); // plt v1 mint payload
  */
-export type TokenGovernancePayload = Cbor.Type;
+/**
+ * The payload for a token governance transaction.
+ */
+export type TokenGovernancePayload = {
+    /** The token symbol identifying the token to perform the list of operations on */
+    tokenSymbol: TokenId.Type;
+    /**
+     * The CBOR encoded operations
+     *
+     * @example
+     * const operations = Cbor.encode([{mint: { amount } }]); // plt v1 mint payload
+     */
+    operations: Cbor.Type;
+};
 
 export type AccountTransactionPayload =
     | SimpleTransferPayload

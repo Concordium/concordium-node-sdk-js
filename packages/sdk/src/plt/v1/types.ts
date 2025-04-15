@@ -1,6 +1,6 @@
 import { TokenGovernancePayload, TokenHolderPayload } from '../../index.js';
 import * as AccountAddress from '../../types/AccountAddress.js';
-import { Cbor, CborMemo, TokenAmount, TokenModuleReference } from '../index.js';
+import { Cbor, CborMemo, TokenAmount, TokenId, TokenModuleReference } from '../index.js';
 
 /**
  * The module reference for the V1 token.
@@ -60,14 +60,20 @@ export type TokenHolderOperation = TokenTransferOperation;
  * Creates a payload for token holder operations.
  * This function encodes the provided token holder operation(s) into a CBOR format.
  *
+ * @param tokenSymbol - The symbol of the token for which the governance operation is being performed.
  * @param operations - A single token holder operation or an array of token holder operations.
+ *
  * @returns The encoded token holder payload.
  */
 export function createTokenHolderPayload(
+    tokenSymbol: TokenId.Type,
     operations: TokenHolderOperation | TokenHolderOperation[]
 ): TokenHolderPayload {
     const ops = [operations].flat();
-    return Cbor.encode(ops);
+    return {
+        tokenSymbol,
+        operations: Cbor.encode(ops),
+    };
 }
 
 /**
@@ -163,12 +169,18 @@ export type TokenGovernanceOperation =
  * Creates a payload for token governance operations.
  * This function encodes the provided token governance operation(s) into a CBOR format.
  *
+ * @param tokenSymbol - The symbol of the token for which the governance operation is being performed.
  * @param operations - A single token governance operation or an array of token governance operations.
+ *
  * @returns The encoded token governance payload.
  */
 export function createTokenGovernancePayload(
+    tokenSymbol: TokenId.Type,
     operations: TokenGovernanceOperation | TokenGovernanceOperation[]
 ): TokenGovernancePayload {
     const ops = [operations].flat();
-    return Cbor.encode(ops);
+    return {
+        tokenSymbol,
+        operations: Cbor.encode(ops),
+    };
 }

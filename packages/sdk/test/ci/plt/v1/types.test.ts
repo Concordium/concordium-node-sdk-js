@@ -1,8 +1,13 @@
-import { Cbor, TokenAmount, V1 } from '../../../../src/pub/plt.js';
-import { AccountAddress } from '../../../../src/pub/types.js';
+import { Cbor, TokenAmount, TokenId, V1 } from '../../../../src/pub/plt.js';
+import {
+    AccountAddress,
+    AccountTransactionType,
+    serializeAccountTransactionPayload,
+} from '../../../../src/pub/types.js';
 
 describe('PLT v1 transactions', () => {
     it('serializes transfers correctly', () => {
+        const token = TokenId.fromString('DKK');
         const transfer: V1.TokenTransferOperation = {
             [V1.TokenOperationType.Transfer]: {
                 amount: TokenAmount.create(123n, 4),
@@ -10,7 +15,7 @@ describe('PLT v1 transactions', () => {
             },
         };
 
-        const cbor = V1.createTokenHolderPayload(transfer);
+        const payload = V1.createTokenHolderPayload(token, transfer);
 
         // This is a CBOR encoded byte sequence.
         // It represents a nested structure with the following breakdown:
@@ -33,7 +38,7 @@ describe('PLT v1 transactions', () => {
         //         - 03: Key 3.
         //         - 5820: A byte string of length 32, representing a 32-byte identifier.
         //         - 151515151515151515151515151515151515151515151515151515151515151: The account address
-        const expected = Buffer.from(
+        const expectedOperations = Buffer.from(
             `
             81
               a1
@@ -52,9 +57,13 @@ describe('PLT v1 transactions', () => {
             'hex'
         );
 
-        expect(cbor.toString()).toEqual(expected.toString('hex'));
+        expect(payload.operations.toString()).toEqual(expectedOperations.toString('hex'));
 
-        const decoded = Cbor.decode(cbor);
+        const decoded = Cbor.decode(payload.operations);
         expect(decoded).toEqual([transfer]);
+
+        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenHolder });
+        const expected = Buffer.concat([Buffer.from('1b03444b4b00000052', 'hex'), expectedOperations]);
+        expect(ser.toString('hex')).toEqual(expected.toString('hex'));
     });
 });

@@ -247,7 +247,7 @@ export async function transfer(
 ): Promise<TransactionHash.Type> {
     await validateTransfer(token, sender, payload);
 
-    const ops: TokenHolderOperation[] = [payload].flat().map((p) => ({ type: TokenOperationType.Transfer, ...p }));
+    const ops: TokenHolderOperation[] = [payload].flat().map((p) => ({ [TokenOperationType.Transfer]: p }));
     const encoded = createTokenHolderPayload(ops);
 
     return holderTransaction(token, sender, encoded, signer, expiry);

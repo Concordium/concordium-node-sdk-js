@@ -37,7 +37,7 @@ export async function mint(
     const amountsList = [amounts].flat();
     amountsList.forEach((amount) => validateAmount(token, amount));
 
-    const ops: TokenMintOperation[] = amountsList.map((amount) => ({ type: TokenOperationType.Mint, amount }));
+    const ops: TokenMintOperation[] = amountsList.map((amount) => ({ [TokenOperationType.Mint]: { amount } }));
     return batchOperations(token, sender, ops, signer, expiry);
 }
 
@@ -64,7 +64,7 @@ export async function burn(
     const amountsList = [amounts].flat();
     amountsList.forEach((amount) => validateAmount(token, amount));
 
-    const ops: TokenBurnOperation[] = amountsList.map((amount) => ({ type: TokenOperationType.Burn, amount }));
+    const ops: TokenBurnOperation[] = amountsList.map((amount) => ({ [TokenOperationType.Burn]: { amount } }));
     return batchOperations(token, sender, ops, signer, expiry);
 }
 
@@ -89,7 +89,7 @@ export async function addAllowList(
 ): Promise<TransactionHash.Type> {
     const ops: TokenAddAllowListOperation[] = [targets]
         .flat()
-        .map((target) => ({ type: TokenOperationType.AddAllowList, target }));
+        .map((target) => ({ [TokenOperationType.AddAllowList]: { target } }));
     return batchOperations(token, sender, ops, signer, expiry);
 }
 
@@ -114,7 +114,7 @@ export async function removeAllowList(
 ): Promise<TransactionHash.Type> {
     const ops: TokenRemoveAllowListOperation[] = [targets]
         .flat()
-        .map((target) => ({ type: TokenOperationType.RemoveAllowList, target }));
+        .map((target) => ({ [TokenOperationType.RemoveAllowList]: { target } }));
     return batchOperations(token, sender, ops, signer, expiry);
 }
 
@@ -139,7 +139,7 @@ export async function addDenyList(
 ): Promise<TransactionHash.Type> {
     const ops: TokenAddDenyListOperation[] = [targets]
         .flat()
-        .map((target) => ({ type: TokenOperationType.AddDenyList, target }));
+        .map((target) => ({ [TokenOperationType.AddDenyList]: { target } }));
     return batchOperations(token, sender, ops, signer, expiry);
 }
 
@@ -164,7 +164,7 @@ export async function removeDenyList(
 ): Promise<TransactionHash.Type> {
     const ops: TokenRemoveDenyListOperation[] = [targets]
         .flat()
-        .map((target) => ({ type: TokenOperationType.RemoveDenyList, target }));
+        .map((target) => ({ [TokenOperationType.RemoveDenyList]: { target } }));
     return batchOperations(token, sender, ops, signer, expiry);
 }
 

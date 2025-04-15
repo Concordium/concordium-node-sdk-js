@@ -1,7 +1,6 @@
 import { TokenGovernancePayload, TokenHolderPayload } from '../../index.js';
 import * as AccountAddress from '../../types/AccountAddress.js';
 import { Cbor, CborMemo, TokenAmount, TokenModuleReference } from '../index.js';
-import { tokenOperationCbor } from './util.js';
 
 /**
  * The module reference for the V1 token.
@@ -43,9 +42,8 @@ export type TokenTransfer = {
  * @template TokenOperationType - The type of the token operation.
  * @template T - The specific operation details.
  */
-type TokenOperation<TokenOperationType, T extends Object> = T & {
-    /** The type of operation. */
-    type: TokenOperationType;
+type TokenOperation<Type extends TokenOperationType, T extends Object> = {
+    [K in Type]: T;
 };
 
 /**
@@ -68,7 +66,7 @@ export type TokenHolderOperation = TokenTransferOperation;
 export function createTokenHolderPayload(
     operations: TokenHolderOperation | TokenHolderOperation[]
 ): TokenHolderPayload {
-    const ops = [operations].flat().map(tokenOperationCbor);
+    const ops = [operations].flat();
     return Cbor.encode(ops);
 }
 
@@ -171,6 +169,6 @@ export type TokenGovernanceOperation =
 export function createTokenGovernancePayload(
     operations: TokenGovernanceOperation | TokenGovernanceOperation[]
 ): TokenGovernancePayload {
-    const ops = [operations].flat().map(tokenOperationCbor);
+    const ops = [operations].flat();
     return Cbor.encode(ops);
 }

@@ -1,6 +1,6 @@
 import { decode } from 'cbor2/decoder';
 
-import { TokenAmount } from '../../plt/index.js';
+import { TokenAmount, CborMemo } from '../../plt/index.js';
 import * as AccountAddress from '../AccountAddress.js';
 
 /**
@@ -26,7 +26,7 @@ import * as AccountAddress from '../AccountAddress.js';
 // We do NOT want to register all decoders, as only one decoder for each CBOR tag can exist at a time.
 // As such, it should be up to the end user to decide if they want to register the decoders globally in their application.
 export function registerCBORDecoders(): (() => void)[] {
-    return [AccountAddress.registerCBORDecoder(), TokenAmount.registerCBORDecoder()];
+    return [AccountAddress.registerCBORDecoder(), TokenAmount.registerCBORDecoder(), CborMemo.registerCBORDecoder()];
 }
 
 /**

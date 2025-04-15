@@ -172,17 +172,18 @@ export function validateAmount(token: Token, amount: TokenAmount.Type): void {
  *
  * @param {Token} token - The token for which the holder transaction is being performed.
  * @param {AccountAddress.Type} sender - The account address initiating the transaction.
- * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
- * @param {unknown} payload - The operations to be performed in the transaction.
+ * @param {Cbor.Type} payload - The CBOR encoded operations to be performed in the transaction.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ *
  * @returns {Promise<TransactionHash.Type>} A promise that resolves to the transaction hash.
  */
 export async function holderTransaction(
     token: Token,
     sender: AccountAddress.Type,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    payload: unknown,
-    signer: AccountSigner
+    payload: Cbor.Type,
+    signer: AccountSigner,
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
     const { nonce } = await token.grpc.getNextAccountNonce(sender);
     const header: AccountTransactionHeader = {
@@ -192,7 +193,7 @@ export async function holderTransaction(
     };
     const transaction: AccountTransaction = {
         type: AccountTransactionType.TokenHolder,
-        payload: Cbor.encode(payload),
+        payload,
         header,
     };
     const signature = await signTransaction(transaction, signer);
@@ -208,18 +209,19 @@ export async function holderTransaction(
  *
  * @param {Token} token - The token for which the governance transaction is being performed.
  * @param {AccountAddress.Type} sender - The account address initiating the transaction.
- * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
- * @param {unknown} payload - The operations to be performed in the transaction.
+ * @param {Cbor.Type} payload - The CBOR encoded operations to be performed in the transaction.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
+ *
  * @returns {Promise<TransactionHash.Type>} A promise that resolves to the transaction hash.
  * @throws {UnauthorizedGovernanceOperationError} If the sender is not the token issuer.
  */
 export async function governanceTransaction(
     token: Token,
     sender: AccountAddress.Type,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    payload: unknown,
-    signer: AccountSigner
+    payload: Cbor.Type,
+    signer: AccountSigner,
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
     // Check if the sender is the token issuer
     if (sender !== token.info.state.issuer) {
@@ -233,7 +235,7 @@ export async function governanceTransaction(
     };
     const transaction: AccountTransaction = {
         type: AccountTransactionType.TokenGovernance,
-        payload: Cbor.encode(payload),
+        payload: payload,
         header,
     };
     const signature = await signTransaction(transaction, signer);

@@ -1,9 +1,17 @@
 import { ConcordiumGRPCClient } from '../../grpc/GRPCClient.js';
 import { AccountAddress, AccountInfo, TransactionHash } from '../../pub/types.js';
+import { AccountSigner } from '../../signHelpers.js';
+import { TransactionExpiry } from '../../types/index.js';
 import { bail } from '../../util.js';
-import { Token as GenericToken, validateAmount, verify } from '../Token.js';
+import { Token as GenericToken, holderTransaction, validateAmount, verify } from '../Token.js';
 import { TokenAmount, TokenId, TokenInfo } from '../index.js';
-import { TOKEN_MODULE_REF, TokenTransfer } from './types.js';
+import {
+    TOKEN_MODULE_REF,
+    TokenHolderOperation,
+    TokenOperationType,
+    TokenTransfer,
+    createTokenHolderPayload,
+} from './types.js';
 
 /**
  * Enum representing the types of errors that can occur when interacting with PLT instances through the client.
@@ -186,7 +194,7 @@ export async function validateTransfer(
     sender: AccountAddress.Type,
     payload: TokenTransfer | [TokenTransfer]
 ): Promise<true> {
-    const payloads = Array.isArray(payload) ? payload : [payload];
+    const payloads = [payload].flat();
 
     // Validate all amounts
     payloads.forEach((p) => validateAmount(token, p.amount));
@@ -222,6 +230,8 @@ export async function validateTransfer(
  * @param {Token} token - The token to transfer.
  * @param {AccountAddress.Type} sender - The account address of the sender.
  * @param {TokenTransfer | [TokenTransfer]} payload - The transfer payload.
+ * @param {AccountSigner} signer - The signer responsible for signing the transaction.
+ * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
  *
  * @returns {Promise<TransactionHash.Type>} A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If any token amount is not compatible with the token.
@@ -231,9 +241,14 @@ export async function validateTransfer(
 export async function transfer(
     token: Token,
     sender: AccountAddress.Type,
-    payload: TokenTransfer | [TokenTransfer]
+    payload: TokenTransfer | [TokenTransfer],
+    signer: AccountSigner,
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
     await validateTransfer(token, sender, payload);
 
-    throw new Error('Not implemented...');
+    const ops: TokenHolderOperation[] = [payload].flat().map((p) => ({ type: TokenOperationType.Transfer, ...p }));
+    const encoded = createTokenHolderPayload(ops);
+
+    return holderTransaction(token, sender, encoded, signer, expiry);
 }

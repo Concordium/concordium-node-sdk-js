@@ -1,5 +1,7 @@
+import { TokenGovernancePayload, TokenHolderPayload } from '../../index.js';
 import * as AccountAddress from '../../types/AccountAddress.js';
-import { TokenAmount, TokenModuleReference } from '../index.js';
+import { Cbor, CborMemo, TokenAmount, TokenModuleReference } from '../index.js';
+import { tokenOperationCbor } from './util.js';
 
 /**
  * The module reference for the V1 token.
@@ -21,6 +23,8 @@ export enum TokenOperationType {
     RemoveDenyList = 'remove-deny-list',
 }
 
+export type Memo = CborMemo.Type | Uint8Array;
+
 /**
  * The structure of a PLT V1 token transfer.
  */
@@ -31,7 +35,7 @@ export type TokenTransfer = {
     recipient: AccountAddress.Type;
     /** An optional memo for the transfer. A string will be CBOR encoded, while raw bytes are included in the
      * transaction as is. */
-    memo?: string | ArrayBuffer;
+    memo?: Memo;
 };
 
 /**
@@ -53,6 +57,20 @@ export type TokenTransferOperation = TokenOperation<TokenOperationType.Transfer,
  * Represents a holder operation, currently only supporting transfer operations.
  */
 export type TokenHolderOperation = TokenTransferOperation;
+
+/**
+ * Creates a payload for token holder operations.
+ * This function encodes the provided token holder operation(s) into a CBOR format.
+ *
+ * @param operations - A single token holder operation or an array of token holder operations.
+ * @returns The encoded token holder payload.
+ */
+export function createTokenHolderPayload(
+    operations: TokenHolderOperation | TokenHolderOperation[]
+): TokenHolderPayload {
+    const ops = [operations].flat().map(tokenOperationCbor);
+    return Cbor.encode(ops);
+}
 
 /**
  * The structure of a PLT V1 token mint operation.
@@ -142,3 +160,17 @@ export type TokenGovernanceOperation =
     | TokenRemoveAllowListOperation
     | TokenAddDenyListOperation
     | TokenRemoveDenyListOperation;
+
+/**
+ * Creates a payload for token governance operations.
+ * This function encodes the provided token governance operation(s) into a CBOR format.
+ *
+ * @param operations - A single token governance operation or an array of token governance operations.
+ * @returns The encoded token governance payload.
+ */
+export function createTokenGovernancePayload(
+    operations: TokenGovernanceOperation | TokenGovernanceOperation[]
+): TokenGovernancePayload {
+    const ops = [operations].flat().map(tokenOperationCbor);
+    return Cbor.encode(ops);
+}

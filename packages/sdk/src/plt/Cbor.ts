@@ -47,6 +47,16 @@ export function fromJSON(json: HexString): Cbor {
 export type Type = Cbor;
 
 /**
+ * Type predicate for {@linkcode Type}
+ *
+ * @param value value to check.
+ * @returns whether `value` is of type {@linkcode Type}
+ */
+export function instanceOf(value: unknown): value is Cbor {
+    return value instanceof Cbor;
+}
+
+/**
  * Create CBOR data type from a byte representation
  * @param buffer The byte representation
  * @returns {Cbor} The CBOR data

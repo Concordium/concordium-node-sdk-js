@@ -54,6 +54,7 @@ const cli = meow(
         },
     }
 );
+
 const { tokenSymbol, address, walletFile, endpoint } = cli.flags;
 
 const [addr, port] = parseEndpoint(endpoint);

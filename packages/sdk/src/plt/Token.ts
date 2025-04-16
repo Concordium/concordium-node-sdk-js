@@ -10,7 +10,7 @@ import {
     TransactionHash,
 } from '../pub/types.js';
 import { AccountSigner, signTransaction } from '../signHelpers.js';
-import { Cbor, TokenAmount, TokenId, TokenInfo, TokenModuleReference } from './index.js';
+import { TokenAmount, TokenId, TokenInfo, TokenModuleReference } from './index.js';
 
 /**
  * Enum representing the types of errors that can occur when interacting with PLT instances through the client.

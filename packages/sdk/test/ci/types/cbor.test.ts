@@ -98,7 +98,10 @@ it('should remove undefined fields from plain objects, but not classes', () => {
     expect(() => cborEncode(obj)).not.toThrow();
 
     class Test {
-        constructor(public a: number = 1, public b: undefined = undefined) {}
+        constructor(
+            public a: number = 1,
+            public b: undefined = undefined
+        ) {}
     }
     expect(() => cborEncode(new Test())).toThrow();
 });

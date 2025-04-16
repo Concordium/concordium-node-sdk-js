@@ -21,6 +21,7 @@ import * as TransactionHash from './types/TransactionHash.js';
 
 // Functionality revolving concordium domain types and utitlity for working with these types.
 export * from '../types.js';
+export { DataBlob } from '../types/DataBlob.js';
 export {
     getAccountTransactionHash,
     getAccountTransactionSignDigest,

@@ -89,3 +89,16 @@ it('should lexicographically sort object keys when encoding', () => {
 
     expect(sortedCbor).toEqual(unsortedCbor);
 });
+
+it('should remove undefined fields from plain objects, but not classes', () => {
+    const obj = {
+        a: 1,
+        b: undefined,
+    };
+    expect(() => cborEncode(obj)).not.toThrow();
+
+    class Test {
+        constructor(public a: number = 1, public b: undefined = undefined) {}
+    }
+    expect(() => cborEncode(new Test())).toThrow();
+});

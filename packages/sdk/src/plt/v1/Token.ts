@@ -206,7 +206,7 @@ export async function validateTransfer(
         TokenAmount.toDecimal(TokenAmount.zero())
     );
     if (TokenAmount.toDecimal(senderBalance).lt(payloadTotal)) {
-        throw new InsufficientFundsError(sender, TokenAmount.fromDecimal(payloadTotal, token.info.state.decimals));
+        throw new InsufficientFundsError(sender, TokenAmount.fromDecimal(payloadTotal));
     }
 
     // Check that all receivers are NOT on the deny list (if present), or that they are included in the allow list (if present).

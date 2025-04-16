@@ -19,14 +19,47 @@ export function registerCBOREncoders(): void {
 }
 
 /**
+ * Removes undefined fields from plain objects (not class instances).
+ * This function handles nested objects recursively.
+ *
+ * @param value - The value to process.
+ * @returns The processed value with undefined fields removed.
+ */
+function removeUndefined(value: unknown): unknown {
+    // Handle null early
+    if (value === null) {
+        return value;
+    }
+
+    // Handle arrays
+    if (Array.isArray(value)) {
+        return value.map(removeUndefined);
+    }
+
+    // Only process plain objects, not class instances
+    if (typeof value !== 'object' || Object.getPrototypeOf(value) !== Object.prototype) {
+        return value;
+    }
+
+    return Object.entries(value).reduce<Record<string, unknown>>((result, [key, val]) => {
+        if (val !== undefined) {
+            result[key] = removeUndefined(val);
+        }
+        return result;
+    }, {});
+}
+
+/**
  * Encodes a value into a dCBOR (Deterministic Concise Binary Object Representation) byte array.
+ * Undefined fields in plain objects are automatically removed before encoding.
  *
  * @param value - The value to encode into CBOR format.
  * @returns A Uint8Array containing the CBOR-encoded data.
  */
 export function cborEncode(value: unknown): Uint8Array {
     registerCBOREncoders();
-    return encode(value, { dcbor: true });
+    const processedValue = removeUndefined(value);
+    return encode(processedValue, { dcbor: true });
 }
 
 /**

@@ -46,7 +46,7 @@ export async function mint(
  *
  * @param {Token} token - The token to burn.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {TokenAmount.Type | TokenAmount.Type[]} amounts - The amount(s) of tokens to mint.
+ * @param {TokenAmount.Type | TokenAmount.Type[]} amounts - The amount(s) of tokens to burn.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
  *
@@ -173,7 +173,7 @@ export async function removeDenyList(
  *
  * @param {Token} token - The token on which to perform the operations.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {TokenGovernanceOperationp[]} operations - An array of governance operations to execute.
+ * @param {TokenGovernanceOperation[]} operations - An array of governance operations to execute.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
  *

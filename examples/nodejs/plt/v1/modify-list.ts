@@ -98,13 +98,25 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
             const token = await V1.Token.fromId(client, tokenId);
 
             // Only the token issuer can modify the allow list
-            console.log(`Attempting to add ${targetAddress.toString()} to the allow list for ${tokenId.toString()}...`);
+            console.log(
+                `Attempting to ${action} ${targetAddress.toString()} to the ${list} list for ${tokenId.toString()}...`
+            );
 
-            // Execute the add to allow list operation
-            const transaction = await V1.Governance.addAllowList(token, sender, targetAddress, signer);
+            // Execute the list operation
+            let modify: typeof V1.Governance.addDenyList;
+            if (list === 'deny' && action === 'add') {
+                modify = V1.Governance.addDenyList;
+            } else if (list === 'deny' && action === 'remove') {
+                modify = V1.Governance.removeDenyList;
+            } else if (list === 'allow' && action === 'add') {
+                modify = V1.Governance.addAllowList;
+            } else {
+                modify = V1.Governance.removeAllowList;
+            }
+            const transaction = await modify(token, sender, targetAddress, signer);
             console.log(`Transaction submitted with hash: ${transaction}`);
         } catch (error) {
-            console.error('Error during add to allow list operation:', error);
+            console.error('Error during list operation:', error);
         }
     } else {
         const operationType = `${action}-${list}-list` as V1.TokenOperationType;

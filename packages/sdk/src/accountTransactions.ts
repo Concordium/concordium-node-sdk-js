@@ -1,6 +1,7 @@
 import { Buffer } from 'buffer/index.js';
 
 import { Cursor } from './deserializationHelpers.js';
+import { Cbor, TokenId } from './plt/index.js';
 import { ContractAddress, ContractName, Energy, ModuleReference } from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
 import {
@@ -8,6 +9,7 @@ import {
     encodeWord8,
     encodeWord32,
     encodeWord64,
+    packBufferWithWord8Length,
     packBufferWithWord16Length,
     packBufferWithWord32Length,
     serializeConfigureBakerPayload,
@@ -516,53 +518,81 @@ export class ConfigureDelegationHandler
     }
 }
 
-export type TokenHolderPayloadJSON = HexString;
+export type TokenHolderPayloadJSON = {
+    tokenSymbol: TokenId.JSON;
+    operations: Cbor.JSON;
+};
 
 export class TokenHolderHandler implements AccountTransactionHandler<TokenHolderPayload, TokenHolderPayloadJSON> {
-    serialize(payload: Uint8Array): Buffer {
-        return packBufferWithWord32Length(payload);
+    serialize(payload: TokenHolderPayload): Buffer {
+        const tokenSymbol = packBufferWithWord8Length(TokenId.toBytes(payload.tokenSymbol));
+        const ops = packBufferWithWord32Length(payload.operations.bytes);
+        return Buffer.concat([tokenSymbol, ops]);
     }
-    deserialize(serializedPayload: Cursor): Uint8Array {
-        const len = serializedPayload.read(4).readInt32BE(0);
-        const payload = serializedPayload.read(len);
-        return new Uint8Array(payload);
+    deserialize(serializedPayload: Cursor): TokenHolderPayload {
+        let len = serializedPayload.read(1).readUInt8(0);
+        const tokenSymbol = TokenId.fromBytes(serializedPayload.read(len));
+
+        len = serializedPayload.read(4).readUInt32BE(0);
+        const operations = Cbor.fromBuffer(serializedPayload.read(len));
+        return { tokenSymbol, operations };
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    getBaseEnergyCost(_payload: Uint8Array): bigint {
+    getBaseEnergyCost(_payload: TokenHolderPayload): bigint {
         // TODO: placeholder value - should be updated when we know the real value
         return 300n;
     }
-    toJSON(payload: Uint8Array): string {
-        return Buffer.from(payload).toString('hex');
+    toJSON(payload: TokenHolderPayload): TokenHolderPayloadJSON {
+        return {
+            tokenSymbol: payload.tokenSymbol.toJSON(),
+            operations: payload.operations.toJSON(),
+        };
     }
-    fromJSON(json: string): Uint8Array {
-        return new Uint8Array(Buffer.from(json, 'hex'));
+    fromJSON(json: TokenHolderPayloadJSON): TokenHolderPayload {
+        return {
+            tokenSymbol: TokenId.fromJSON(json.tokenSymbol),
+            operations: Cbor.fromJSON(json.operations),
+        };
     }
 }
 
-export type TokenGovernancePayloadJSON = HexString;
+export type TokenGovernancePayloadJSON = {
+    tokenSymbol: TokenId.JSON;
+    operations: Cbor.JSON;
+};
 
 export class TokenGovernanceHandler
     implements AccountTransactionHandler<TokenGovernancePayload, TokenGovernancePayloadJSON>
 {
-    serialize(payload: Uint8Array): Buffer {
-        return packBufferWithWord32Length(payload);
+    serialize(payload: TokenGovernancePayload): Buffer {
+        const tokenSymbol = packBufferWithWord8Length(TokenId.toBytes(payload.tokenSymbol));
+        const ops = packBufferWithWord32Length(payload.operations.bytes);
+        return Buffer.concat([tokenSymbol, ops]);
     }
-    deserialize(serializedPayload: Cursor): Uint8Array {
-        const len = serializedPayload.read(4).readInt32BE(0);
-        const payload = serializedPayload.read(len);
-        return new Uint8Array(payload);
+    deserialize(serializedPayload: Cursor): TokenGovernancePayload {
+        let len = serializedPayload.read(1).readUInt8(0);
+        const tokenSymbol = TokenId.fromBytes(serializedPayload.read(len));
+
+        len = serializedPayload.read(4).readUInt32BE(0);
+        const operations = Cbor.fromBuffer(serializedPayload.read(len));
+        return { tokenSymbol, operations };
     }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    getBaseEnergyCost(_payload: Uint8Array): bigint {
+    getBaseEnergyCost(_payload: TokenGovernancePayload): bigint {
         // TODO: placeholder value - should be updated when we know the real value
         return 300n;
     }
-    toJSON(payload: Uint8Array): string {
-        return Buffer.from(payload).toString('hex');
+    toJSON(payload: TokenGovernancePayload): TokenGovernancePayloadJSON {
+        return {
+            tokenSymbol: payload.tokenSymbol.toJSON(),
+            operations: payload.operations.toJSON(),
+        };
     }
-    fromJSON(json: string): Uint8Array {
-        return new Uint8Array(Buffer.from(json, 'hex'));
+    fromJSON(json: TokenGovernancePayloadJSON): TokenGovernancePayload {
+        return {
+            tokenSymbol: TokenId.fromJSON(json.tokenSymbol),
+            operations: Cbor.fromJSON(json.operations),
+        };
     }
 }
 

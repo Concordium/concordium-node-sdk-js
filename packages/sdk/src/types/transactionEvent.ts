@@ -370,7 +370,7 @@ export type TokenGovernanceEvent = {
     updateType: string;
     /** The CBOR encoded details of the update. The details might vary depending on the PLT module reference used to
      * instantiate the token. */
-    details: PLT.TokenEvent.Type;
+    details: PLT.Cbor.Type;
 };
 
 /**
@@ -384,7 +384,7 @@ export type TokenHolderEvent = {
     updateType: string;
     /** The CBOR encoded details of the update. The details might vary depending on the PLT module reference used to
      * instantiate the token. */
-    details: PLT.TokenEvent.Type;
+    details: PLT.Cbor.Type;
 };
 
 export type ContractTraceEvent = ResumedEvent | InterruptedEvent | UpdatedEvent | UpgradedEvent | TransferredEvent;

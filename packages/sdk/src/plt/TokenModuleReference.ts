@@ -46,8 +46,7 @@ export class Err extends Error {
  * Reference to a protocol level token (PLT) module.
  */
 class ModuleReference {
-    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private readonly __type = 'PLT.ModuleReference';
+    #nominal = true;
 
     /**
      * Constructs a new ModuleReference instance.

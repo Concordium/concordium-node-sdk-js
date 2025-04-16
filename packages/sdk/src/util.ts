@@ -182,12 +182,12 @@ export function toBuffer(s: string, encoding?: string): Buffer {
 
 /**
  * Immediately returns an {@linkcode Error} with the message passed. This allows use of throwing errors as expressions.
- * @param message - The message to pass to the error
+ * @param error - The message to pass to the error
  * @throws an error immediately
  *
  * @example
  * const value = maybeValue ?? bail('Turns out there was not value anyway...');
  */
-export const bail = (message: string): never => {
-    throw new Error(message);
+export const bail = (error: string | Error): never => {
+    throw error instanceof Error ? error : new Error(error);
 };

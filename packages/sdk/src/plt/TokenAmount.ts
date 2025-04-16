@@ -29,8 +29,6 @@ export enum ErrorType {
     NEGATIVE = 'NEGATIVE',
     /** Error type indicating the token amount has more decimals than allowed. */
     EXCEEDS_MAX_DECIMALS = 'EXCEEDS_MAX_DECIMALS',
-    /** Error type indicating the token value is specified as a fractional value when multiplied by `10 ** decimals` */
-    FRACTIONAL_VALUE = 'FRACTIONAL_VALUE',
     /** Error type indicating the token decimals were specified as a fractional number. */
     FRACTIONAL_DECIMALS = 'FRACTIONAL_DECIMALS',
 }
@@ -73,19 +71,13 @@ export class Err extends Error {
     public static fractionalDecimals(): Err {
         return new Err(ErrorType.FRACTIONAL_DECIMALS, `Token decimals must be specified as whole numbers`);
     }
-
-    /** Creates a TokenAmount.Err indicating the token decimals were specified as a fractional number. */
-    public static fractionalValue(): Err {
-        return new Err(ErrorType.FRACTIONAL_VALUE, `Can not create TokenAmount from a non-whole number`);
-    }
 }
 
 /**
  * Protocol level token (PLT) amount representation.
  */
 class TokenAmount {
-    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private readonly __type = 'PLT.Amount';
+    #nominal = true;
 
     /**
      * Constructs a new TokenAmount instance.
@@ -122,6 +114,10 @@ class TokenAmount {
      */
     public toString(): string {
         const amountString = this.value.toString();
+        if (this.decimals === 0) {
+            return amountString;
+        }
+
         const padded = amountString.padStart(this.decimals + 1, '0');
         return `${padded.slice(0, -this.decimals)}.${padded.slice(-this.decimals)}`;
     }
@@ -156,9 +152,9 @@ export function instanceOf(value: unknown): value is TokenAmount {
  * @param amount The amount of tokens as a number, string, big or bigint.
  * @returns {TokenAmount} The token amount.
  *
- * @throws {Err} If the value/decimals exceeds the maximum allowed or is negative.
+ * @throws {Err} If the value exceeds the maximum allowed or is negative.
  */
-export function fromDecimal(amount: BigSource | bigint, decimals: number): TokenAmount {
+export function fromDecimal(amount: BigSource | bigint): TokenAmount {
     let parsed: BigSource;
     if (typeof amount !== 'bigint') {
         parsed = newBig(amount);
@@ -166,11 +162,9 @@ export function fromDecimal(amount: BigSource | bigint, decimals: number): Token
         parsed = amount.toString();
     }
 
-    const intAmount = newBig(parsed).mul(Big(10 ** decimals));
-    // Assert that the number is whole
-    if (!intAmount.mod(Big(1)).eq(Big(0))) {
-        throw Err.fractionalValue();
-    }
+    const bigAmount = newBig(parsed);
+    const decimals = bigAmount.toString().split('.')[1]?.length ?? 0;
+    const intAmount = bigAmount.mul(Big(10 ** decimals));
 
     return new TokenAmount(BigInt(intAmount.toString()), decimals);
 }
@@ -207,23 +201,22 @@ export function fromJSON(json: JSON): TokenAmount {
  * Creates a token amount from its integer representation and a number of decimals.
  *
  * @param {bigint} value The integer representation of the token amount.
- * @param {number} decimals The decimals of the token amount, defining the precision at which amounts of the token can be specified.
+ * @param {number} decimals The decimals of the token amount, defining the precision at which amounts of the token can be specified. Defaults to `0`.
+ *
  * @returns {TokenAmount} The token amount.
  * @throws {Err} If the value/decimals exceeds the maximum allowed or is negative.
  */
-export function create(value: bigint, decimals: number): TokenAmount {
+export function create(value: bigint, decimals: number = 0): TokenAmount {
     return new TokenAmount(value, decimals);
 }
 
 /**
  * Creates a token amount with a value of zero.
  *
- * @param {number} decimals The decimals of the token amount, defining the precision at which amounts of the token can be specified.
  * @returns {TokenAmount} The token amount.
- * @throws {Err} If the decimals exceeds the maximum allowed.
  */
-export function zero(decimals: number): TokenAmount {
-    return new TokenAmount(BigInt(0), decimals);
+export function zero(): TokenAmount {
+    return new TokenAmount(BigInt(0), 0);
 }
 
 /**

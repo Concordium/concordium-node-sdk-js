@@ -53,8 +53,7 @@ export class Err extends Error {
  * Protocol level token (PLT) ID.
  */
 class TokenId {
-    /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private readonly __type = 'PLT.Id';
+    #nominal = true;
 
     /**
      * Constructs a new TokenId instance.

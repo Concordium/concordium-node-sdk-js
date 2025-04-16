@@ -14,7 +14,7 @@ export type Serializable = string;
  */
 class TransactionExpiry {
     /** Having a private field prevents similar structured objects to be considered the same type (similar to nominal typing). */
-    private __type = JSON_DISCRIMINATOR;
+    #nominal = true;
     constructor(
         /** Internal representation of expiry. Seconds since unix epoch */
         public readonly expiryEpochSeconds: bigint

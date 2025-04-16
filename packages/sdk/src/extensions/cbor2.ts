@@ -1,2 +1,3 @@
-export * from '../types/cbor/encode.js';
-export * from '../types/cbor/decode.js';
+import { registerCBOREncoders } from '../types/cbor.js';
+
+registerCBOREncoders();

@@ -19,13 +19,13 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> [options]
 
   Required
-    --token-symbol, -t  The symbol of the token to mint
-    --amount,       -a  The amount of tokens to mint
+    --token-symbol, -t  The symbol of the token to burn
+    --amount,       -a  The amount of tokens to burn
 
   Options
     --help,         -h  Displays this message
     --endpoint,     -e  Specify endpoint of a grpc2 interface of a Concordium node in the format "address:port". Defaults to 'localhost:20000'
-    --wallet-file,  -w  A path to a wallet export file from a Concordium wallet. This is required for actually minting. Otherwise only the payload is created and serialized.
+    --wallet-file,  -w  A path to a wallet export file from a Concordium wallet. This is required for actually burning. Otherwise only the payload is created and serialized.
 `,
     {
         importMeta: import.meta,
@@ -78,11 +78,11 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
             // Only the token issuer can burn tokens
             console.log(`Attempting to burn ${tokenAmount.toString()} ${tokenId.toString()} tokens...`);
 
-            // Execute the mint operation
+            // Execute the burn operation
             const transaction = await V1.Governance.burn(token, sender, tokenAmount, signer);
             console.log(`Burn transaction submitted with hash: ${transaction}`);
         } catch (error) {
-            console.error('Error during minting operation:', error);
+            console.error('Error during burning operation:', error);
         }
     } else {
         // Or from a wallet perspective:

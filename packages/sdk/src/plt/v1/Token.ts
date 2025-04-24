@@ -62,7 +62,9 @@ export class NotAllowedError extends TokenError {
      * @param {AccountAddress.Type} address - The account address of the receiver.
      */
     constructor(public readonly receiver: AccountAddress.Type) {
-        super(`Transfering funds from or to the account specified is currently not allowed (${receiver}) because of the allow/deny list.`);
+        super(
+            `Transfering funds from or to the account specified is currently not allowed (${receiver}) because of the allow/deny list.`
+        );
     }
 }
 
@@ -209,10 +211,11 @@ export async function validateTransfer(
         throw new InsufficientFundsError(sender, TokenAmount.fromDecimal(payloadTotal));
     }
 
-    // Check that all receivers are NOT on the deny list (if present), or that they are included in the allow list (if present).
+    // Check that sender and all receivers are NOT on the deny list (if present), or that they are included in the allow list (if present).
+    const senderPromise = token.grpc.getAccountInfo(sender);
     const receiverPromises = payloads.map((p) => token.grpc.getAccountInfo(p.recipient));
-    const receivers = await Promise.all(receiverPromises);
-    receivers.forEach((r) => {
+    const accounts = await Promise.all([senderPromise, ...receiverPromises]);
+    accounts.forEach((r) => {
         const accToken =
             r.accountTokens.find((t) => t.id.symbol === token.info.id.symbol) ??
             bail(new NotAllowedError(r.accountAddress));

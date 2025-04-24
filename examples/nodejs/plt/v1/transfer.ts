@@ -44,11 +44,11 @@ const cli = meow(
             tokenSymbol: {
                 type: 'string',
                 alias: 't',
-                default: '',
+                isRequired: true,
             },
             amount: {
                 type: 'number',
-                alias: 't',
+                alias: 'a',
                 isRequired: true,
             },
             recipient: {
@@ -94,7 +94,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
         // create the token instance
         const token = await V1.Token.fromId(client, tokenSymbol);
         const transaction = await V1.Token.transfer(token, sender, transfer, signer);
-        console.log(transaction);
+        console.log(`Transaction submitted with hash: ${transaction}`);
     } else {
         // Or from a wallet perspective:
         // Create transfer payload

@@ -129,7 +129,7 @@ export function fromCBOR(bytes: Uint8Array): CborMemo {
 }
 
 /**
- * Registers a CBOR encoder for the Memo type with the `cbo2` library.
+ * Registers a CBOR encoder for the Memo type with the `cbor2` library.
  * This allows CborMemo instances to be automatically encoded when used with
  * the `cbor2` library's encode function.
  *
@@ -137,7 +137,7 @@ export function fromCBOR(bytes: Uint8Array): CborMemo {
  * @example
  * // Register the encoder
  * registerCBOREncoder();
- * // Now AccountAddress instances can be encoded directly
+ * // Now CborMemo instances can be encoded directly
  * const encoded = encode(memo);
  */
 export function registerCBOREncoder(): void {

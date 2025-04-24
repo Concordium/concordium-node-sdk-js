@@ -16,21 +16,29 @@
 ### Added
 
 - New types representing entities within the domain of protocol level tokens (PLTs)
+  - `Cbor`: Represents CBOR encoded details for PLT module state, events, and operations
+  - `CborMemo`: Represents CBOR encoded memos for PLT transactions
   - `TokenId`: A unique text identifier of a PLT
   - `TokenAmount`: A representation of a PLT amount
   - `TokenModuleReference`: The module reference of a PLT instance
-  - `TokenEvent`: Represents CBOR encoded events emitted by PLT instances
-  - `TokenModuleState`: Represents CBOR encoded state of a PLT instance
   - `TokenAccountState`, `TokenState`, `TokenInfo`, and `TokenAccountInfo`, all representing PLT related data returned by the
     GRPC API of a Concordium node. 
 - A new package export scoped to hold types and functionality for interacting wit PLTs, available at
   `@concordium/web-sdk/plt`.
 - CBOR conversion functionality to `AccountAddress`.
-- An extension for `cbor2`, which registers CBOR encoders for all relevant concordium types and provides functionality
-  for correspondingly decoding CBOR encodings into Concordium domain types. These are accessible at the
+- An extension for `cbor2`, which registers CBOR encoders for all relevant Concordium types. This is accessible at the
   `@concordium/web-sdk/extensions/cbor2` entrypoint.
-- Added `TokenHolderHandler` and `TokenGovernanceHandler`, which are also accessible by passing the corresponding
+- `cborEncode` and `cborDecode` functions for deterministic encoding/decoding of objects composed of Concordium domain
+  types.
+- `registerCborDecoders` and `registerCborEncoders` for registering Concordium domain type encoders/decoders globally
+  for `cbor2`
+  - **NOTE**: By registering decoders globally without using the returned cleanup function, the registration overrides
+  any previously registered decoder for the corresponding CBOR tag.
+- `TokenHolderHandler` and `TokenGovernanceHandler`, which are also accessible by passing the corresponding
   `TransactionType` to `getAccountTransactionHandler`.
+- `Token`, which is a client for interacting with PLTs from arbitrary token modules and for V1 PLTs:
+  - `V1.Token` which is a client for interacting with V1 PLTs as a token holder.
+  - `V1.Governance` which is a client for interacting with V1 PLTs from the perspective of token governance.
 
 ## 9.1.0
 

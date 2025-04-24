@@ -21,6 +21,7 @@ import * as TransactionHash from './types/TransactionHash.js';
 
 // Functionality revolving concordium domain types and utitlity for working with these types.
 export * from '../types.js';
+export { DataBlob } from '../types/DataBlob.js';
 export {
     getAccountTransactionHash,
     getAccountTransactionSignDigest,
@@ -33,7 +34,6 @@ export {
 export { encodeHexString } from '../serializationHelpers.js';
 export { sha256 } from '../hash.js';
 
-export { DataBlob } from '../types/DataBlob.js';
 export * from '../types/VersionedModuleSource.js';
 export {
     VerifiablePresentation,
@@ -93,4 +93,4 @@ export {
     ModuleReference,
 };
 
-export * from '../types/cbor/decode.js';
+export * from '../types/cbor.js';

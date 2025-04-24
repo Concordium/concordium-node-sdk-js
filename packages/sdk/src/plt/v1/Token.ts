@@ -52,17 +52,17 @@ export abstract class TokenError extends Error {
 }
 
 /**
- * Error type indicating an unauthorized governance operation was attempted.
+ * Error type indicating an attempt transfer funds to/from an account which is either not on the token allow list, or is on the token deny list
  */
 export class NotAllowedError extends TokenError {
     public readonly code = TokenErrorCode.NOT_ALLOWED;
 
     /**
      * Constructs a new NotAllowedError.
-     * @param {AccountAddress.Type} receiver - The account address of the receiver.
+     * @param {AccountAddress.Type} address - The account address of the receiver.
      */
     constructor(public readonly receiver: AccountAddress.Type) {
-        super(`Transfering funds to the receiver account specified is currently not allowed (${receiver}).`);
+        super(`Transfering funds from or to the account specified is currently not allowed (${receiver}) because of the allow/deny list.`);
     }
 }
 

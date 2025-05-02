@@ -1,17 +1,10 @@
-import {
-    AccountAddress,
-    AccountTransactionType,
-    buildAccountSigner,
-    parseWallet,
-    serializeAccountTransactionPayload,
-} from '@concordium/web-sdk';
+import { AccountTransactionType, serializeAccountTransactionPayload } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
 import { TokenAmount, TokenId, V1 } from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
-import { readFileSync } from 'node:fs';
 
-import { parseEndpoint } from '../../shared/util.js';
+import { parseEndpoint, parseKeysFile } from '../../shared/util.js';
 
 const cli = meow(
     `
@@ -67,9 +60,7 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
 
     if (walletFile !== undefined) {
         // Read wallet-file
-        const wallet = parseWallet(readFileSync(walletFile, 'utf8'));
-        const sender = AccountAddress.fromBase58(wallet.value.address);
-        const signer = buildAccountSigner(wallet);
+        const [sender, signer] = parseKeysFile(walletFile);
 
         try {
             // create the token instance

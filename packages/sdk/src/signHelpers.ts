@@ -38,15 +38,41 @@ export interface WithAccountKeys {
     accountKeys: AccountKeys;
 }
 
+export type SimpleWalletFormat = WithAccountKeys & {
+    address: Base58String;
+    credentials: Record<number, HexString>;
+};
+
+export type GenesisFormat = SimpleWalletFormat;
+
 export interface WalletExportFormat {
     type: string;
     v: number;
     environment: string;
-    value: {
-        accountKeys: AccountKeys;
-        address: Base58String;
-        credentials: Record<number, HexString>;
-    };
+    value: SimpleWalletFormat;
+}
+
+function validateSimpleWallet(wallet: SimpleWalletFormat): void {
+    if (typeof wallet.address !== 'string') {
+        throw Error('Expected field "address" to be of type "string" but was of type "' + typeof wallet.address + '"');
+    }
+    if (typeof wallet.credentials !== 'object') {
+        throw Error(
+            'Expected field "credentials" to be of type "object" but was of type "' + typeof wallet.credentials + '"'
+        );
+    }
+    if (wallet.accountKeys === undefined) {
+        throw Error('Expected field "accountKeys" to be defined, but was not');
+    }
+}
+
+/**
+ * Parses a wallet export file into a `SimpleWalletFormat`. This format is a subset of the `GenesisFormat`.
+ */
+export function parseSimpleWallet(walletString: JsonString): SimpleWalletFormat {
+    const wallet = JSON.parse(walletString);
+    validateSimpleWallet(wallet);
+    return wallet;
 }
 
 /**
@@ -66,19 +92,7 @@ export function parseWallet(walletString: JsonString): WalletExportFormat {
             'Expected field "environment" to be of type "string" but was of type "' + typeof wallet.environment + '"'
         );
     }
-    if (typeof wallet.value.address !== 'string') {
-        throw Error(
-            'Expected field "value.address" to be of type "string" but was of type "' +
-                typeof wallet.value.address +
-                '"'
-        );
-    }
-    if (wallet.value.accountKeys === undefined) {
-        throw Error('Expected field "value.accountKeys" to be defined, but was not');
-    }
-    if (wallet.value.credentials === undefined) {
-        throw Error('Expected field "value.credentials" to be defined, but was not');
-    }
+    validateSimpleWallet(wallet.value);
     return wallet;
 }
 

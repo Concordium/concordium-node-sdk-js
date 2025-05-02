@@ -39,6 +39,8 @@
 - `Token`, which is a client for interacting with PLTs from arbitrary token modules and for V1 PLTs:
   - `V1.Token` which is a client for interacting with V1 PLTs as a token holder.
   - `V1.Governance` which is a client for interacting with V1 PLTs from the perspective of token governance.
+- function `parseSimpleWallet` which parses a `SimpleWalletFormat` (also a subset of `GenesisFormat`), which can be used
+  with `buildAccountSigner`
 
 ## 9.1.0
 

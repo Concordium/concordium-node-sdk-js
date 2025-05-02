@@ -148,7 +148,7 @@ export function fromInfo(grpc: ConcordiumGRPCClient, tokenInfo: TokenInfo): Toke
  * the expected module reference.
  */
 export function verify(token: Token, expected: TokenModuleReference.Type): void {
-    if (token.info.state.moduleRef !== expected) {
+    if (!TokenModuleReference.equals(token.info.state.moduleRef, expected)) {
         throw new ModuleVersionMismatchError(expected, token.info.state.moduleRef);
     }
 }
@@ -226,7 +226,7 @@ export async function governanceTransaction(
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
     // Check if the sender is the token issuer
-    if (sender !== token.info.state.issuer) {
+    if (!AccountAddress.equals(sender, token.info.state.issuer)) {
         throw new UnauthorizedGovernanceOperationError(sender);
     }
     const { nonce } = await token.grpc.getNextAccountNonce(sender);

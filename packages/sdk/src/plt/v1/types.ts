@@ -6,7 +6,7 @@ import { Cbor, CborMemo, TokenAmount, TokenId, TokenModuleReference } from '../i
  * The module reference for the V1 token.
  */
 export const TOKEN_MODULE_REF = TokenModuleReference.fromHexString(
-    '0EA8121FDC427C9B23AE5E26CFEA3E8CBB544C84AA0C82DB26A85949CE1706C3' // TODO: get the correct module reference...
+    'af5684e70c1438e442066d017e4410af6da2b53bfa651a07d81efa2aa668db20'
 );
 
 /**

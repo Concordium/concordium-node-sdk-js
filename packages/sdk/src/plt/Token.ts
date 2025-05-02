@@ -226,7 +226,7 @@ export async function governanceTransaction(
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
     // Check if the sender is the token issuer
-    if (sender !== token.info.state.issuer) {
+    if (!AccountAddress.equals(sender, token.info.state.issuer)) {
         throw new UnauthorizedGovernanceOperationError(sender);
     }
     const { nonce } = await token.grpc.getNextAccountNonce(sender);

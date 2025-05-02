@@ -148,7 +148,7 @@ export function fromInfo(grpc: ConcordiumGRPCClient, tokenInfo: TokenInfo): Toke
  * the expected module reference.
  */
 export function verify(token: Token, expected: TokenModuleReference.Type): void {
-    if (token.info.state.moduleRef !== expected) {
+    if (!TokenModuleReference.equals(token.info.state.moduleRef, expected)) {
         throw new ModuleVersionMismatchError(expected, token.info.state.moduleRef);
     }
 }

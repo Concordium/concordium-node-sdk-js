@@ -106,6 +106,9 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
             }
             const transaction = await modify(token, sender, targetAddress, signer);
             console.log(`Transaction submitted with hash: ${transaction}`);
+
+            const result = await client.waitForTransactionFinalization(transaction);
+            console.log('Transaction finalized:', result);
         } catch (error) {
             console.error('Error during list operation:', error);
         }

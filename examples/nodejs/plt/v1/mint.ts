@@ -72,6 +72,9 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
             // Execute the mint operation
             const transaction = await V1.Governance.mint(token, sender, tokenAmount, signer);
             console.log(`Mint transaction submitted with hash: ${transaction}`);
+
+            const result = await client.waitForTransactionFinalization(transaction);
+            console.log('Transaction finalized:', result);
         } catch (error) {
             console.error('Error during minting operation:', error);
         }

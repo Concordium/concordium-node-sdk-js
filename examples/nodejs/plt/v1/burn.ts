@@ -72,6 +72,9 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
             // Execute the burn operation
             const transaction = await V1.Governance.burn(token, sender, tokenAmount, signer);
             console.log(`Burn transaction submitted with hash: ${transaction}`);
+
+            const result = await client.waitForTransactionFinalization(transaction);
+            console.log('Transaction finalized:', result);
         } catch (error) {
             console.error('Error during burning operation:', error);
         }

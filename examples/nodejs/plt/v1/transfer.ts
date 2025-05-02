@@ -85,6 +85,9 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
             const token = await V1.Token.fromId(client, tokenSymbol);
             const transaction = await V1.Token.transfer(token, sender, transfer, signer);
             console.log(`Transaction submitted with hash: ${transaction}`);
+
+            const result = await client.waitForTransactionFinalization(transaction);
+            console.log('Transaction finalized:', result);
         } catch (e) {
             console.error(e);
         }

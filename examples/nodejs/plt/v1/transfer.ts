@@ -1,6 +1,6 @@
 import { AccountAddress, AccountTransactionType, serializeAccountTransactionPayload } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
-import { CborMemo, TokenAmount, TokenId, TokenInfo, V1 } from '@concordium/web-sdk/plt';
+import { CborMemo, TokenAmount, TokenId, V1 } from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 

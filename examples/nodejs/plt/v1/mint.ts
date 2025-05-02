@@ -65,7 +65,6 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
         try {
             // create the token instance
             const token = await V1.Token.fromId(client, tokenId);
-            console.log(token.info.state.issuer)
 
             // Only the token issuer can mint tokens
             console.log(`Attempting to mint ${tokenAmount.toString()} ${tokenId.toString()} tokens...`);

@@ -102,6 +102,8 @@ jobs:
     permissions:
       contents: write
     environment: deploy
+    outputs:
+      npm_tag: ${{ steps.determine_npm_tag.outputs.npm_tag }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -124,7 +126,7 @@ jobs:
           else
             npm_tag="latest"
           fi
-          echo "NPM_TAG=$npm_tag" >> $GITHUB_ENV
+          echo "npm_tag=$npm_tag" >> $GITHUB_OUTPUT
 
       - name: Get build-output
         uses: actions/download-artifact@v4
@@ -140,7 +142,7 @@ jobs:
       - name: Publish to NPM
         run: |
           yarn config set npmAuthToken $NPM_AUTH_TOKEN
-          yarn workspace @concordium/web-sdk npm publish --tag ${{ env.NPM_TAG }}
+          yarn workspace @concordium/web-sdk npm publish --tag ${{ steps.determine_npm_tag.outputs.npm_tag }}
         env:
           NPM_AUTH_TOKEN: '${{secrets.NPM_PUBLISH_TOKEN}}'
 
@@ -154,6 +156,7 @@ jobs:
   deploy-typedoc:
     needs:
       - upload-release
+    if: needs.upload-release.outputs.npm_tag == 'latest'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

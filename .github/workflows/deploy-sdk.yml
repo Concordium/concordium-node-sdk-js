@@ -102,6 +102,8 @@ jobs:
     permissions:
       contents: write
     environment: deploy
+    outputs:
+      npm_tag: ${{ steps.determine_npm_tag.outputs.npm_tag }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -110,16 +112,26 @@ jobs:
 
       - name: Extract tag name
         id: get_tag
-        run: echo "::set-output name=tag::${GITHUB_REF#refs/tags/sdk/}"
+        run: echo "tag=${GITHUB_REF#refs/tags/sdk/}" >> $GITHUB_OUTPUT
 
       - name: Test that tag version matches package.json version
         run: test "${{ steps.get_tag.outputs.tag }}" = "$(jq -r ".version" packages/sdk/package.json)" || exit 1
+
+      - name: Determine npm tag
+        id: determine_npm_tag
+        run: |
+          version=$(jq -r ".version" packages/sdk/package.json)
+          if [[ "$version" == *-* ]]; then
+            npm_tag=$(echo "$version" | cut -d'-' -f2 | cut -d'.' -f1)
+          else
+            npm_tag="latest"
+          fi
+          echo "npm_tag=$npm_tag" >> $GITHUB_OUTPUT
 
       - name: Get build-output
         uses: actions/download-artifact@v4
         with:
           path: packages/sdk
-          name: build-release
 
       - uses: actions/setup-node@v4
         with:
@@ -130,7 +142,7 @@ jobs:
       - name: Publish to NPM
         run: |
           yarn config set npmAuthToken $NPM_AUTH_TOKEN
-          yarn workspace @concordium/web-sdk npm publish
+          yarn workspace @concordium/web-sdk npm publish --tag ${{ steps.determine_npm_tag.outputs.npm_tag }}
         env:
           NPM_AUTH_TOKEN: '${{secrets.NPM_PUBLISH_TOKEN}}'
 
@@ -144,6 +156,7 @@ jobs:
   deploy-typedoc:
     needs:
       - upload-release
+    if: needs.upload-release.outputs.npm_tag == 'latest'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

@@ -246,13 +246,9 @@ export async function transfer(
     sender: AccountAddress.Type,
     payload: TokenTransfer | [TokenTransfer],
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    skipValidation = true
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
-    // TODO: this should be removed when the validation function does not fail due to unimplemented grpc endpoints
-    if (!skipValidation) {
-        await validateTransfer(token, sender, payload);
-    }
+    await validateTransfer(token, sender, payload);
 
     const ops: TokenHolderOperation[] = [payload].flat().map((p) => ({ [TokenOperationType.Transfer]: p }));
     const encoded = createTokenHolderPayload(token.info.id, ops);

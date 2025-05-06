@@ -131,6 +131,7 @@ jobs:
       - name: Get build-output
         uses: actions/download-artifact@v4
         with:
+          name: build-release
           path: packages/sdk
 
       - uses: actions/setup-node@v4

@@ -48,3 +48,15 @@ export type TokenAccountInfo = {
     /** The associated account specific state of the token. */
     state: TokenAccountState;
 };
+
+/**
+ * Represents the reason for a token module operation rejection.
+ */
+export type TokenModuleRejectReason = {
+    /** The ID of the token for which the operation was rejected. */
+    tokenId: TokenId.Type;
+    /** The type of rejection. */
+    type: string;
+    /** Additional details about the rejection (CBOR encoded), which vary between implementations of token modules. */
+    details: Cbor.Type;
+}

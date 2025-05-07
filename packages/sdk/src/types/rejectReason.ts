@@ -1,3 +1,4 @@
+import { TokenId, TokenModuleRejectReason } from '../plt/index.ts';
 import { Address, BakerId, Base58String, HexString } from '../types.js';
 import type * as CcdAmount from './CcdAmount.js';
 import type * as ContractAddress from './ContractAddress.js';
@@ -70,6 +71,10 @@ export enum RejectReasonTag {
     StakeOverMaximumThresholdForPool = 'StakeOverMaximumThresholdForPool',
     PoolWouldBecomeOverDelegated = 'PoolWouldBecomeOverDelegated',
     PoolClosed = 'PoolClosed',
+    NonExistentTokenId = 'NonExistentTokenId',
+    TokenHolderTransactionFailed = 'TokenHolderTransactionFailed',
+    UnauthorizedTokenGovernance = 'UnauthorizedTokenGovernance',
+    TokenGovernanceTransactionFailed = 'TokenGovernanceTransactionFailed',
 }
 
 export interface RejectedReceive {
@@ -138,6 +143,12 @@ export type StringRejectReasonTag =
     | AccountAddressRejectReasonTag
     | RejectReasonTag.DuplicateAggregationKey;
 
+export type TokenRejectReasonTag =
+    | RejectReasonTag.NonExistentTokenId
+    | RejectReasonTag.TokenHolderTransactionFailed
+    | RejectReasonTag.TokenGovernanceTransactionFailed
+    | RejectReasonTag.UnauthorizedTokenGovernance;
+
 export interface StringRejectReason {
     tag: StringRejectReasonTag;
     contents: HexString | Base58String;
@@ -189,6 +200,36 @@ export interface CredIdsRejectReason {
     contents: string[];
 }
 
+export type NonExistingTokenIdRejectReason = {
+    tag: RejectReasonTag.NonExistentTokenId;
+    /** The non-existent token ID that caused the rejection */
+    contents: TokenId.Type;
+};
+
+export type TokenHolderTransactionFailedRejectReason = {
+    tag: RejectReasonTag.TokenHolderTransactionFailed;
+    /** The specific token module reject reason that caused the transaction to fail */
+    contents: TokenModuleRejectReason;
+};
+
+export type TokenGovernanceTransactionFailedRejectReason = {
+    tag: RejectReasonTag.TokenGovernanceTransactionFailed;
+    /** The specific token module reject reason that caused the governance transaction to fail */
+    contents: TokenModuleRejectReason;
+};
+
+export type UnauthorizedTokenGovernance = {
+    tag: RejectReasonTag.UnauthorizedTokenGovernance;
+    /** The token ID for which the caller was not authorized to perform governance actions */
+    contents: TokenId.Type;
+};
+
+export type TokenRejectReason =
+    | NonExistingTokenIdRejectReason
+    | TokenHolderTransactionFailedRejectReason
+    | TokenGovernanceTransactionFailedRejectReason
+    | UnauthorizedTokenGovernance;
+
 type RejectReasonCommon =
     | SimpleRejectReason
     | StringRejectReason
@@ -202,4 +243,5 @@ export type RejectReason =
     | BakerIdRejectReason
     | InvalidReceiveMethod
     | InvalidInitMethod
-    | AmountTooLarge;
+    | AmountTooLarge
+    | TokenRejectReason;

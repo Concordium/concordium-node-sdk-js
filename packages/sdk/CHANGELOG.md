@@ -12,6 +12,7 @@
 - Removed `toProto` and `fromProto` from the exposed API for all custom types in the SDK. This should have no impact, as
   the parameter/return values are internal-only.
 - Added `TokenHolderPayload` and `TokenGovernancePayload` to `AccountTransactionPayload` union type.
+- Added reject reasons related to PLT transactions to `RejectReason` union type.
 
 ### Added
 

@@ -1,4 +1,4 @@
-import { TokenId, TokenModuleRejectReason } from '../plt/index.ts';
+import { TokenId, TokenModuleRejectReason } from '../plt/index.js';
 import { Address, BakerId, Base58String, HexString } from '../types.js';
 import type * as CcdAmount from './CcdAmount.js';
 import type * as ContractAddress from './ContractAddress.js';

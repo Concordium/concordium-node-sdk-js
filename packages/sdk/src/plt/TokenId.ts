@@ -131,7 +131,7 @@ export function fromJSON(json: JSON): TokenId {
 
 /**
  * Convert token ID from its protobuf encoding.
- * @param {Proto.TokenId} tokenId athe token ID
+ * @param {Proto.TokenId} tokenId the token ID
  * @returns {TokenId} The token ID.
  * @throws {Err} If the value is longer than 255 utf-8 encoded bytes or contains invalid UTF-8.
  */

@@ -184,3 +184,23 @@ export function createTokenGovernancePayload(
         operations: Cbor.encode(ops),
     };
 }
+
+/**
+ * These parameters are passed to the token module to initialize the token.
+ * The token initialization update will also include the ticker symbol, initial account,
+ * number of decimals, and a reference to the token module implementation.
+ */
+export type TokenInitializationParameters = {
+    /** The name of the token. */
+    name: string;
+    /** A URL pointing to the metadata of the token. */
+    metadata: string;
+    /** Whether the token supports an allow list */
+    allowList?: boolean;
+    /** Whether the token supports an deny list */
+    denyList?: boolean;
+    /** Whether the token is mintable */
+    mintable?: boolean;
+    /** Whether the token is burnable */
+    burnable?: boolean;
+};

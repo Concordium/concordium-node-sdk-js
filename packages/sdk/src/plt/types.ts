@@ -60,3 +60,20 @@ export type TokenModuleRejectReason = {
     /** Additional details about the rejection (CBOR encoded), which vary between implementations of token modules. */
     details: Cbor.Type;
 }
+
+export type CreatePLTPayload = {
+    /** The token ID or symbol of the token to create. */
+    tokenId: TokenId.Type;
+    /** The module reference for the token. */
+    moduleRef: TokenModuleReference.Type;
+    /** The account to nominate for governance operations. */
+    governanceAccount: AccountAddress.Type;
+    /**
+     * The number of decimal places used in the representation of amounts of this token. This determines the smallest
+     * representable fraction of the token.
+     * This can be at most `255`.
+     */
+    decimals: number;
+    /** The module specific initialization parameters. */
+    initializationParameters: Cbor.Type;
+};

@@ -138,22 +138,6 @@ export function fromInfo(grpc: ConcordiumGRPCClient, tokenInfo: TokenInfo): Toke
 }
 
 /**
- * Verifies the token state by checking if the module reference of the token
- * matches the expected module reference of the client. If there is a mismatch,
- * a ModuleVersionMismatchError is thrown.
- *
- * @param {Token} token - The token to verify.
- * @param {TokenModuleReference.Type} expected - The expected module reference to compare against.
- * @throws {ModuleVersionMismatchError} If the module reference of the token does not match
- * the expected module reference.
- */
-export function verify(token: Token, expected: TokenModuleReference.Type): void {
-    if (!TokenModuleReference.equals(token.info.state.moduleRef, expected)) {
-        throw new ModuleVersionMismatchError(expected, token.info.state.moduleRef);
-    }
-}
-
-/**
  * Validates if the given token amount is compatible with the token.
  *
  * @param {Token} token - The token to validate against.

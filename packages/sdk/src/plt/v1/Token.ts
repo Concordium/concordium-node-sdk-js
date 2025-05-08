@@ -3,10 +3,9 @@ import { AccountAddress, AccountInfo, TransactionHash } from '../../pub/types.js
 import { AccountSigner } from '../../signHelpers.js';
 import { TransactionExpiry } from '../../types/index.js';
 import { bail } from '../../util.js';
-import { Token as GenericToken, holderTransaction, validateAmount, verify } from '../Token.js';
+import { Token as GenericToken, holderTransaction, validateAmount } from '../Token.js';
 import { Cbor, TokenAmount, TokenId, TokenInfo } from '../index.js';
 import {
-    TOKEN_MODULE_REF,
     TokenHolderOperation,
     TokenModuleState,
     TokenOperationType,
@@ -108,7 +107,7 @@ class Token extends GenericToken {
         public readonly info: TokenInfo
     ) {
         super(grpc, info);
-        verify(this, TOKEN_MODULE_REF); // Throws error if it fails
+        // TODO: add verification which checks if the token is a v1 plt implementation.
     }
 }
 

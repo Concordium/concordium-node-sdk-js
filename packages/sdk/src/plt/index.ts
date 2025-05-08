@@ -5,7 +5,6 @@ export * as TokenModuleReference from './TokenModuleReference.js';
 export * as TokenAmount from './TokenAmount.js';
 export {
     fromId,
-    verify,
     fromInfo,
     validateAmount,
     holderTransaction,

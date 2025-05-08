@@ -1,13 +1,6 @@
 import { TokenGovernancePayload, TokenHolderPayload } from '../../index.js';
 import * as AccountAddress from '../../types/AccountAddress.js';
-import { Cbor, CborMemo, TokenAmount, TokenId, TokenModuleReference } from '../index.js';
-
-/**
- * The module reference for the V1 token.
- */
-export const TOKEN_MODULE_REF = TokenModuleReference.fromHexString(
-    'af5684e70c1438e442066d017e4410af6da2b53bfa651a07d81efa2aa668db20'
-);
+import { Cbor, CborMemo, TokenAmount, TokenId } from '../index.js';
 
 /**
  * Enum representing the types of token operations.

@@ -59,7 +59,7 @@ export type TokenModuleRejectReason = {
     type: string;
     /** Additional details about the rejection (CBOR encoded), which vary between implementations of token modules. */
     details: Cbor.Type;
-}
+};
 
 export type CreatePLTPayload = {
     /** The token ID or symbol of the token to create. */

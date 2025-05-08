@@ -4,10 +4,11 @@ import { AccountSigner } from '../../signHelpers.js';
 import { TransactionExpiry } from '../../types/index.js';
 import { bail } from '../../util.js';
 import { Token as GenericToken, holderTransaction, validateAmount, verify } from '../Token.js';
-import { TokenAmount, TokenId, TokenInfo } from '../index.js';
+import { Cbor, TokenAmount, TokenId, TokenInfo } from '../index.js';
 import {
     TOKEN_MODULE_REF,
     TokenHolderOperation,
+    TokenModuleState,
     TokenOperationType,
     TokenTransfer,
     createTokenHolderPayload,
@@ -209,6 +210,12 @@ export async function validateTransfer(
     );
     if (TokenAmount.toDecimal(senderBalance).lt(payloadTotal)) {
         throw new InsufficientFundsError(sender, TokenAmount.fromDecimal(payloadTotal));
+    }
+
+    const moduleState = Cbor.decode(token.info.state.moduleState) as TokenModuleState;
+    if (!moduleState.allowList && !moduleState.denyList) {
+        // If the token neither has a deny list nor allow list, we can skip the check.
+        return true;
     }
 
     // Check that sender and all receivers are NOT on the deny list (if present), or that they are included in the allow list (if present).

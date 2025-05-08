@@ -1,6 +1,6 @@
 import { BlockHash } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
-import { TokenId, TokenInfo } from '@concordium/web-sdk/plt';
+import { Cbor, TokenId, TokenInfo } from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 
@@ -56,5 +56,6 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     console.log('Total token supply:', tokenInfo.state.totalSupply);
     console.log('Token issuer:', tokenInfo.state.issuer);
+    console.log('Token module state:', Cbor.decode(tokenInfo.state.moduleState));
     // #endregion documentation-snippet
 })();

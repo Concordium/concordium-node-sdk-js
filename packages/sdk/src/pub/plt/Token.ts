@@ -1,6 +1,5 @@
 export {
     fromId,
-    verify,
     fromInfo,
     validateAmount,
     holderTransaction,

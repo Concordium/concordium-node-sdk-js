@@ -1189,6 +1189,35 @@ function trRejectReason(rejectReason: GRPC.RejectReason | undefined): SDK.Reject
                 tag: Tag.DelegationTargetNotABaker,
                 contents: unwrap(reason.delegationTargetNotABaker.value),
             };
+        case 'nonExistentTokenId':
+            return {
+                tag: Tag.NonExistentTokenId,
+                contents: PLT.TokenId.fromProto(reason.nonExistentTokenId),
+            };
+        case 'tokenHolderTransactionFailed':
+            return {
+                tag: Tag.TokenHolderTransactionFailed,
+                contents: {
+                    type: reason.tokenHolderTransactionFailed.type,
+                    tokenId: PLT.TokenId.fromProto(unwrap(reason.tokenHolderTransactionFailed.tokenSymbol)),
+                    details: PLT.Cbor.fromProto(unwrap(reason.tokenHolderTransactionFailed.details)),
+                },
+            };
+
+        case 'unauthorizedTokenGovernance':
+            return {
+                tag: Tag.UnauthorizedTokenGovernance,
+                contents: PLT.TokenId.fromProto(reason.unauthorizedTokenGovernance),
+            };
+        case 'tokenGovernanceTransactionFailed':
+            return {
+                tag: Tag.TokenGovernanceTransactionFailed,
+                contents: {
+                    type: reason.tokenGovernanceTransactionFailed.type,
+                    tokenId: PLT.TokenId.fromProto(unwrap(reason.tokenGovernanceTransactionFailed.tokenSymbol)),
+                    details: PLT.Cbor.fromProto(unwrap(reason.tokenGovernanceTransactionFailed.details)),
+                },
+            };
         case undefined:
             throw Error('Failed translating RejectReason, encountered undefined value');
     }
@@ -1562,12 +1591,19 @@ function trUpdatePayload(updatePayload: GRPC.UpdatePayload | undefined): SDK.Upd
                 },
             };
         }
-        // TODO: add update for creating PLT tokens
-        // case 'createPLT':
-        //     return {
-        //         updateType: SDK.UpdateType.CreatePLT,
-        //         ...
-        //     }
+        case 'createPltUpdate':
+            return {
+                updateType: SDK.UpdateType.CreatePLT,
+                update: {
+                    tokenId: PLT.TokenId.fromProto(unwrap(payload.createPltUpdate.tokenSymbol)),
+                    moduleRef: PLT.TokenModuleReference.fromProto(unwrap(payload.createPltUpdate.tokenModule)),
+                    decimals: payload.createPltUpdate.decimals,
+                    governanceAccount: AccountAddress.fromProto(unwrap(payload.createPltUpdate.governanceAccount)),
+                    initializationParameters: PLT.Cbor.fromProto(
+                        unwrap(payload.createPltUpdate.initializationParameters)
+                    ),
+                },
+            };
         case undefined:
             throw new Error('Unexpected missing update payload');
     }

@@ -79,23 +79,10 @@ export type TransactionEvent =
     | CredentialDeployedEvent
     | CredentialKeysUpdatedEvent
     | CredentialsUpdatedEvent
-    | DelegatorEvent
-    | DelegationSetDelegationTargetEvent
-    | DelegationSetRestakeEarningsEvent
-    | DelegationStakeChangedEvent
-    | BakerAddedEvent
-    | BakerRemovedEvent
-    | BakerStakeChangedEvent
-    | BakerSetRestakeEarningsEvent
-    | BakerKeysUpdatedEvent
-    | BakerSetOpenStatusEvent
-    | BakerSetMetadataURLEvent
-    | BakerSetFinalizationRewardCommissionEvent
-    | BakerSetBakingRewardCommissionEvent
-    | BakerSetTransactionFeeCommissionEvent
     | UpdateEnqueuedEvent
-    | TokenHolderEvent
-    | TokenGovernanceEvent;
+    | DelegationEvent
+    | BakerEvent
+    | TokenEvent;
 
 // Contract Events
 
@@ -135,6 +122,8 @@ export interface UpgradedEvent {
     from: ModuleRef;
     to: ModuleRef;
 }
+
+// Transaction Events
 
 export interface DataRegisteredEvent {
     tag: TransactionEventTag.DataRegistered;
@@ -363,30 +352,27 @@ export interface UpdateEnqueuedEvent {
  * Token (PLT) events originating from governance transactions.
  */
 export type TokenGovernanceEvent = {
+    /** The type of the event */
     tag: TransactionEventTag.TokenGovernance;
     /** The token ID of the token the event originates from */
     tokenId: PLT.TokenId.Type;
-    /** The specific type of update made to the token instance */
-    updateType: string;
-    /** The CBOR encoded details of the update. The details might vary depending on the PLT module reference used to
-     * instantiate the token. */
-    details: PLT.Cbor.Type;
+    /** The event details */
+    event: PLT.TokenGovernanceEvent;
 };
 
 /**
  * Token (PLT) events originating from account transactions.
  */
 export type TokenHolderEvent = {
+    /** The type of the event */
     tag: TransactionEventTag.TokenHolder;
     /** The token ID of the token the event originates from */
     tokenId: PLT.TokenId.Type;
-    /** The specific type of update made to the token instance */
-    updateType: string;
-    /** The CBOR encoded details of the update. The details might vary depending on the PLT module reference used to
-     * instantiate the token. */
-    details: PLT.Cbor.Type;
+    /** The event details */
+    event: PLT.TokenHolderEvent;
 };
 
+export type TokenEvent = TokenGovernanceEvent | TokenHolderEvent;
 export type ContractTraceEvent = ResumedEvent | InterruptedEvent | UpdatedEvent | UpgradedEvent | TransferredEvent;
 export type BakerEvent =
     | BakerSetTransactionFeeCommissionEvent

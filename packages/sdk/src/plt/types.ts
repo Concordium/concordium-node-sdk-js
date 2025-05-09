@@ -1,5 +1,5 @@
 import * as AccountAddress from '../types/AccountAddress.js';
-import type { Cbor, TokenAmount, TokenId, TokenModuleReference } from './index.js';
+import type { Cbor, CborMemo, TokenAmount, TokenId, TokenModuleReference } from './index.js';
 
 /**
  * Represents a protocol level token state for an account.
@@ -136,7 +136,7 @@ export type TokenTransferEvent = {
     /** The amount of tokens transferred. */
     amount: TokenAmount.Type;
     /** An optional memo associated with the transfer. */
-    memo?: string;
+    memo?: CborMemo.Type;
 };
 
 /**

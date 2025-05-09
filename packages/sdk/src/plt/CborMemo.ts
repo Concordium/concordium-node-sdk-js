@@ -2,6 +2,7 @@ import { decode } from 'cbor2/decoder';
 import { encode, registerEncoder } from 'cbor2/encoder';
 import { Tag } from 'cbor2/tag';
 
+import * as Proto from '../grpc-api/v2/concordium/kernel.js';
 import { HexString, cborDecode } from '../index.js';
 
 const TAGGED_MEMO = 24;
@@ -76,6 +77,26 @@ export function fromString(value: string): CborMemo {
  */
 export function fromAny(value: unknown): CborMemo {
     return new CborMemo(encode(value));
+}
+
+/**
+ * Convert CBOR memo from its protobuf encoding.
+ * @param {Proto.Memo} memo The protobuf encoding.
+ * @returns {CborMemo}
+ */
+export function fromProto(memo: Proto.Memo): CborMemo {
+    return new CborMemo(memo.value);
+}
+
+/**
+ * Convert CBOR memo into its protobuf encoding.
+ * @param {CborMemo} memo module event.
+ * @returns {Proto.Memo}
+ */
+export function toProto(memo: CborMemo): Proto.Memo {
+    return {
+        value: memo.content,
+    };
 }
 
 /**

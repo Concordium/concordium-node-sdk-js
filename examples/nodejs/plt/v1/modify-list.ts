@@ -116,11 +116,7 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
         const operationType = `${action}-${list}-list` as V1.TokenOperationType;
         // Or from a wallet perspective:
         // Create list payload. The payload is the same for both add and remove operations on all lists.
-        const listPayload:
-            | V1.TokenAddAllowList
-            | V1.TokenRemoveAllowList
-            | V1.TokenAddDenyList
-            | V1.TokenRemoveDenyList = { target: targetAddress };
+        const listPayload: V1.TokenListUpdate = { target: targetAddress };
         const listOperation = {
             [operationType]: listPayload,
         } as V1.TokenGovernanceOperation; // Normally the cast is not necessary unless done in the same dynamic way as here.

@@ -80,7 +80,7 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
         }
     } else {
         // Or from a wallet perspective:
-        const burn: V1.TokenBurn = { amount: tokenAmount };
+        const burn: V1.TokenSupplyUpdate = { amount: tokenAmount };
         const operation: V1.TokenBurnOperation = {
             burn,
         };

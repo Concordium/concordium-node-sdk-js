@@ -1,7 +1,8 @@
 import bs58check from 'bs58check';
 import { Buffer } from 'buffer/index.js';
 
-import * as GRPCKernel from '../grpc-api/v2/concordium/kernel.js';
+import * as GRPC_Kernel from '../grpc-api/v2/concordium/kernel.js';
+import * as GRPC_PLT from '../grpc-api/v2/concordium/protocol-level-tokens.js';
 import * as GRPC from '../grpc-api/v2/concordium/types.js';
 import * as PLT from '../plt/index.js';
 import * as SDK from '../types.js';
@@ -30,7 +31,7 @@ export function unwrapValToHex(x: { value: Uint8Array } | undefined): string {
     return unwrapToHex(unwrap(x).value);
 }
 
-export function unwrapToBase58(address: GRPCKernel.AccountAddress | undefined): SDK.Base58String {
+export function unwrapToBase58(address: GRPC_Kernel.AccountAddress | undefined): SDK.Base58String {
     return bs58check.encode(Buffer.concat([Buffer.of(1), unwrap(address?.value)]));
 }
 
@@ -1258,7 +1259,7 @@ function trMicroCcdPerEuroUpdate(exchangeRate: GRPC.ExchangeRate): SDK.MicroGtuP
         update: unwrap(exchangeRate.value),
     };
 }
-function trFoundationAccountUpdate(account: GRPCKernel.AccountAddress): SDK.FoundationAccountUpdate {
+function trFoundationAccountUpdate(account: GRPC_Kernel.AccountAddress): SDK.FoundationAccountUpdate {
     return {
         updateType: SDK.UpdateType.FoundationAccount,
         update: {
@@ -1700,7 +1701,7 @@ function trAuthorizationsV1(auths: GRPC.AuthorizationsV1): SDK.AuthorizationsV1 
     };
 }
 
-function trMemoEvent(memo: GRPCKernel.Memo): SDK.MemoEvent {
+function trMemoEvent(memo: GRPC_Kernel.Memo): SDK.MemoEvent {
     return {
         tag: SDK.TransactionEventTag.TransferMemo,
         memo: unwrapValToHex(memo),
@@ -2038,9 +2039,8 @@ function trAccountTransactionSummary(
         case 'tokenHolderEffect':
             const holderEvents: SDK.TokenHolderEvent[] = effect.tokenHolderEffect.events.map((e) => ({
                 tag: SDK.TransactionEventTag.TokenHolder,
-                updateType: unwrap(e.type),
                 tokenId: PLT.TokenId.fromProto(unwrap(e.tokenSymbol)),
-                details: PLT.Cbor.fromProto(unwrap(e.details)),
+                event: tokenHolderEvent(e),
             }));
             return {
                 ...base,
@@ -2050,9 +2050,8 @@ function trAccountTransactionSummary(
         case 'tokenGovernanceEffect':
             const govEvents: SDK.TokenGovernanceEvent[] = effect.tokenGovernanceEffect.events.map((e) => ({
                 tag: SDK.TransactionEventTag.TokenGovernance,
-                updateType: unwrap(e.type),
                 tokenId: PLT.TokenId.fromProto(unwrap(e.tokenSymbol)),
-                details: PLT.Cbor.fromProto(unwrap(e.details)),
+                event: tokenGovernanceEvent(e),
             }));
             return {
                 ...base,
@@ -2061,6 +2060,76 @@ function trAccountTransactionSummary(
             };
         case undefined:
             throw Error('Failed translating AccountTransactionEffects, encountered undefined value');
+    }
+}
+
+function tokenHolderEvent(event: GRPC_PLT.TokenHolderEvent): PLT.TokenHolderEvent {
+    switch (event.event.oneofKind) {
+        case 'transferEvent':
+            return {
+                tag: PLT.TokenEventType.Transfer,
+                from: tokenHolder(unwrap(event.event.transferEvent.from)),
+                to: tokenHolder(unwrap(event.event.transferEvent.to)),
+                amount: PLT.TokenAmount.fromProto(unwrap(event.event.transferEvent.amount)),
+                memo: event.event.transferEvent.memo
+                    ? PLT.CborMemo.fromProto(unwrap(event.event.transferEvent.memo))
+                    : undefined,
+            };
+        case 'moduleEvent':
+            return {
+                tag: PLT.TokenEventType.Module,
+                type: event.event.moduleEvent.type,
+                details: PLT.Cbor.fromProto(unwrap(event.event.moduleEvent.details)),
+            };
+        case undefined:
+            throw Error('Failed translating "TokenHolderEvent", encountered undefined value');
+    }
+}
+
+function tokenGovernanceEvent(event: GRPC_PLT.TokenGovernanceEvent): PLT.TokenGovernanceEvent {
+    switch (event.event.oneofKind) {
+        case 'transferEvent':
+            return {
+                tag: PLT.TokenEventType.Transfer,
+                from: tokenHolder(unwrap(event.event.transferEvent.from)),
+                to: tokenHolder(unwrap(event.event.transferEvent.to)),
+                amount: PLT.TokenAmount.fromProto(unwrap(event.event.transferEvent.amount)),
+                memo: event.event.transferEvent.memo
+                    ? PLT.CborMemo.fromProto(unwrap(event.event.transferEvent.memo))
+                    : undefined,
+            };
+        case 'moduleEvent':
+            return {
+                tag: PLT.TokenEventType.Module,
+                type: event.event.moduleEvent.type,
+                details: PLT.Cbor.fromProto(unwrap(event.event.moduleEvent.details)),
+            };
+        case 'mintEvent':
+            return {
+                tag: PLT.TokenEventType.Mint,
+                amount: PLT.TokenAmount.fromProto(unwrap(event.event.mintEvent.amount)),
+                target: tokenHolder(unwrap(event.event.mintEvent.target)),
+            };
+        case 'burnEvent':
+            return {
+                tag: PLT.TokenEventType.Burn,
+                amount: PLT.TokenAmount.fromProto(unwrap(event.event.burnEvent.amount)),
+                target: tokenHolder(unwrap(event.event.burnEvent.target)),
+            };
+        case undefined:
+            throw Error('Failed translating "TokenGovernanceEvent", encountered undefined value');
+    }
+}
+
+function tokenHolder(holder: GRPC_PLT.TokenHolder): PLT.TokenHolder {
+    switch (holder.address.oneofKind) {
+        case 'account':
+            return {
+                tag: 'account',
+                address: AccountAddress.fromProto(unwrap(holder.address.account)),
+            };
+        case undefined:
+            throw Error('Failed translating TokenHolder, encountered undefined value');
     }
 }
 

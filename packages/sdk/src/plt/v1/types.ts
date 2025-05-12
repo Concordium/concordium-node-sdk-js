@@ -270,10 +270,10 @@ export function parseModuleEvent(event: EncodedModuleEvent): TokenModuleEvent {
 
     const decoded = Cbor.decode(event.details);
     if (typeof decoded !== 'object' || decoded === null) {
-        throw new Error(`Invalid event details: ${decoded}. Expected an object.`);
+        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
     }
     if (!('target' in decoded) || !AccountAddress.instanceOf(decoded.target)) {
-        throw new Error(`Invalid event details: ${decoded}. Expected 'target' to be an AccountAddress`);
+        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected 'target' to be an AccountAddress`);
     }
 
     const details: TokenListUpdateEventDetails = { target: { tag: 'account', address: decoded.target } };

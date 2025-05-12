@@ -1752,11 +1752,10 @@ function trTransactionType(type?: GRPC.TransactionType): SDK.TransactionKindStri
             return SDK.TransactionKindString.ConfigureBaker;
         case GRPC.TransactionType.CONFIGURE_DELEGATION:
             return SDK.TransactionKindString.ConfigureDelegation;
-        // TODO: Add translation of transaction type once declared in the protobuf files
-        // case GRPC.TransactionType.TOKEN_HOLDER:
-        //     return SDK.TransactionKindString.TokenHolder;
-        // case GRPC.TransactionType.TOKEN_GOVERNANCE:
-        //     return SDK.TransactionKindString.TokenGovernance;
+        case GRPC.TransactionType.TOKEN_HOLDER:
+            return SDK.TransactionKindString.TokenHolder;
+        case GRPC.TransactionType.TOKEN_GOVERNANCE:
+            return SDK.TransactionKindString.TokenGovernance;
         case undefined:
             return undefined;
     }

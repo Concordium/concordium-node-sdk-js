@@ -2082,7 +2082,7 @@ function tokenHolderEvent(event: GRPC_PLT.TokenHolderEvent): PLT.TokenHolderEven
                 details: PLT.Cbor.fromProto(unwrap(event.event.moduleEvent.details)),
             };
         case undefined:
-            throw Error('Failed translating TokenHolderEffect, encountered undefined value');
+            throw Error('Failed translating "TokenHolderEvent", encountered undefined value');
     }
 }
 
@@ -2117,7 +2117,7 @@ function tokenGovernanceEvent(event: GRPC_PLT.TokenGovernanceEvent): PLT.TokenGo
                 target: tokenHolder(unwrap(event.event.burnEvent.target)),
             };
         case undefined:
-            throw Error('Failed translating TokenHolderEffect, encountered undefined value');
+            throw Error('Failed translating "TokenGovernanceEvent", encountered undefined value');
     }
 }
 

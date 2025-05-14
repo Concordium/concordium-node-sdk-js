@@ -59,6 +59,7 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
     console.log('Account balance:', accountInfo.accountAmount);
     console.log('Account address:', accountInfo.accountAddress);
+    console.log('PLT balances:', JSON.stringify(accountInfo.accountTokens, null, 2));
 
     // If the account is a delegator print delegator information
     if (accountInfo.type === AccountInfoType.Delegator) {

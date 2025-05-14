@@ -1,6 +1,11 @@
-import { AccountAddress, AccountTransactionType, serializeAccountTransactionPayload } from '@concordium/web-sdk';
+import {
+    AccountAddress,
+    AccountTransactionType,
+    TransactionSummaryType,
+    serializeAccountTransactionPayload,
+} from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
-import { CborMemo, TokenAmount, TokenId, V1 } from '@concordium/web-sdk/plt';
+import { Cbor, CborMemo, TokenAmount, TokenId, V1 } from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 
@@ -88,6 +93,15 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
 
             const result = await client.waitForTransactionFinalization(transaction);
             console.log('Transaction finalized:', result);
+
+            if (
+                result.summary.type === TransactionSummaryType.AccountTransaction &&
+                result.summary.transactionType === 'failed' &&
+                result.summary.rejectReason.tag === 'TokenHolderTransactionFailed'
+            ) {
+                const details = Cbor.decode(result.summary.rejectReason.contents.details);
+                console.log(result.summary.rejectReason.contents, details);
+            }
         } catch (e) {
             console.error(e);
         }

@@ -2,7 +2,6 @@ import { ConcordiumGRPCClient } from '../../grpc/GRPCClient.js';
 import { AccountAddress, AccountInfo, TransactionHash } from '../../pub/types.js';
 import { AccountSigner } from '../../signHelpers.js';
 import { TransactionExpiry } from '../../types/index.js';
-import { bail } from '../../util.js';
 import { Token as GenericToken, holderTransaction, validateAmount } from '../Token.js';
 import { Cbor, TokenAmount, TokenId, TokenInfo } from '../index.js';
 import {
@@ -222,10 +221,8 @@ export async function validateTransfer(
     const receiverPromises = payloads.map((p) => token.grpc.getAccountInfo(p.recipient));
     const accounts = await Promise.all([senderPromise, ...receiverPromises]);
     accounts.forEach((r) => {
-        const accToken =
-            r.accountTokens.find((t) => t.id.symbol === token.info.id.symbol) ??
-            bail(new NotAllowedError(r.accountAddress));
-        if (accToken.state.memberDenyList || accToken.state.memberAllowList === false) {
+        const accToken = r.accountTokens.find((t) => t.id.symbol === token.info.id.symbol)?.state;
+        if (accToken?.memberDenyList || accToken?.memberAllowList === false) {
             throw new NotAllowedError(r.accountAddress);
         }
     });

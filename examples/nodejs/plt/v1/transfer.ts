@@ -24,6 +24,7 @@ const cli = meow(
   Options
     --help,         -h  Displays this message
     --endpoint,     -e  Specify endpoint of a grpc2 interface of a Concordium node in the format "address:port". Defaults to 'localhost:20000'
+    --secure,       -s  Whether to use tls or not. Defaults to false.
     --wallet-file,  -w  A path to a wallet export file from a Concordium wallet. If not supplied, only transaction payload is created and serialized.
     --memo,         -m  A memo for the transfer
 `,
@@ -34,6 +35,11 @@ const cli = meow(
                 type: 'string',
                 alias: 'e',
                 default: 'localhost:20000',
+            },
+            secure: {
+                type: 'boolean',
+                alias: 's',
+                default: false,
             },
             walletFile: {
                 type: 'string',
@@ -63,7 +69,11 @@ const cli = meow(
 );
 
 const [address, port] = parseEndpoint(cli.flags.endpoint);
-const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.createInsecure());
+const client = new ConcordiumGRPCNodeClient(
+    address,
+    Number(port),
+    cli.flags.secure ? credentials.createSsl() : credentials.createInsecure()
+);
 
 (async () => {
     // #region documentation-snippet

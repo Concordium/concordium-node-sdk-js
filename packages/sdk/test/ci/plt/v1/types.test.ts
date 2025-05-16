@@ -1,7 +1,6 @@
 import { Cursor } from '../../../../src/deserializationHelpers.js';
 import { parseModuleEvent } from '../../../../src/plt/v1/types.js';
 import { Cbor, TokenAmount, TokenId, V1 } from '../../../../src/pub/plt.js';
-// Removed duplicate import
 import {
     AccountAddress,
     AccountTransactionType,
@@ -56,7 +55,6 @@ describe('PLT v1 transactions', () => {
     //   - a1: A map with 1 key-value pair
     //     - 01: Key 1.
     //     - 190397: Uint16(919).
-    // Removed duplicate import
     //   - 03: Key 3.
     //   - 5820: A byte string of length 32, representing a 32-byte identifier.
     //   - 151515151515151515151515151515151515151515151515151515151515151: The account address

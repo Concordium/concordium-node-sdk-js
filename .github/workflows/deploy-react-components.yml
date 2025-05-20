@@ -128,6 +128,6 @@ jobs:
       - name: Create a GitHub release
         uses: ncipollo/release-action@v1
         with:
-          tag: react-components/v${{ steps.get_tag.outputs.tag_name }}
-          name: react-components Release v${{ steps.get_tag.outputs.tag_name }}
+          tag: react-components/${{ steps.get_tag.outputs.tag }}
+          name: react-components Release v${{ steps.get_tag.outputs.tag }}
           draft: true

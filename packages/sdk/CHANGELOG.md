@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 9.1.1
+
+### Changes
+
+- Update transitive dependency `base-x` for the compiled library distribution
+
 ## 9.1.0
 
 ### Added

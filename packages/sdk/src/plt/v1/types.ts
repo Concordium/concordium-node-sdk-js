@@ -1,6 +1,6 @@
 import { TokenGovernancePayload, TokenHolderPayload } from '../../index.js';
 import * as AccountAddress from '../../types/AccountAddress.js';
-import { Cbor, CborMemo, TokenAmount, TokenId } from '../index.js';
+import { Cbor, CborMemo, TokenModuleEvent as EncodedModuleEvent, TokenAmount, TokenHolder, TokenId } from '../index.js';
 
 /**
  * Enum representing the types of token operations.
@@ -70,82 +70,50 @@ export function createTokenHolderPayload(
 }
 
 /**
- * The structure of a PLT V1 token mint operation.
+ * The structure of a PLT V1 token mint/burn operation.
  */
-export type TokenMint = {
-    /** The amount to mint. */
+export type TokenSupplyUpdate = {
+    /** The amount to mint/burn. */
     amount: TokenAmount.Type;
 };
 
 /**
  * Represents a token mint operation.
  */
-export type TokenMintOperation = TokenOperation<TokenOperationType.Mint, TokenMint>;
-
-/**
- * The structure of a PLT V1 token burn operation.
- */
-export type TokenBurn = {
-    /** The amount to burn. */
-    amount: TokenAmount.Type;
-};
+export type TokenMintOperation = TokenOperation<TokenOperationType.Mint, TokenSupplyUpdate>;
 
 /**
  * Represents a token burn operation.
  */
-export type TokenBurnOperation = TokenOperation<TokenOperationType.Burn, TokenBurn>;
+export type TokenBurnOperation = TokenOperation<TokenOperationType.Burn, TokenSupplyUpdate>;
 
 /**
- * The structure of a PLT V1 token add to allow list operation.
+ * The structure of any list update operation for a PLT V1 token .
  */
-export type TokenAddAllowList = {
-    /** The account to be added to the allow list. */
+export type TokenListUpdate = {
+    /** The target of the list update. */
     target: AccountAddress.Type;
 };
 
 /**
  * Represents an operation to add an account to the allow list.
  */
-export type TokenAddAllowListOperation = TokenOperation<TokenOperationType.AddAllowList, TokenAddAllowList>;
-
-/**
- * The structure of a PLT V1 token remove from allow list operation.
- */
-export type TokenRemoveAllowList = {
-    /** The account to be removed from the allow list. */
-    target: AccountAddress.Type;
-};
+export type TokenAddAllowListOperation = TokenOperation<TokenOperationType.AddAllowList, TokenListUpdate>;
 
 /**
  * Represents an operation to remove an account from the allow list.
  */
-export type TokenRemoveAllowListOperation = TokenOperation<TokenOperationType.RemoveAllowList, TokenRemoveAllowList>;
-
-/**
- * The structure of a PLT V1 token add to deny list operation.
- */
-export type TokenAddDenyList = {
-    /** The account to be added to the deny list. */
-    target: AccountAddress.Type;
-};
+export type TokenRemoveAllowListOperation = TokenOperation<TokenOperationType.RemoveAllowList, TokenListUpdate>;
 
 /**
  * Represents an operation to add an account to the deny list.
  */
-export type TokenAddDenyListOperation = TokenOperation<TokenOperationType.AddDenyList, TokenAddDenyList>;
-
-/**
- * The structure of a PLT V1 token remove from deny list operation.
- */
-export type TokenRemoveDenyList = {
-    /** The account to be removed from the deny list. */
-    target: AccountAddress.Type;
-};
+export type TokenAddDenyListOperation = TokenOperation<TokenOperationType.AddDenyList, TokenListUpdate>;
 
 /**
  * Represents an operation to remove an account from the deny list.
  */
-export type TokenRemoveDenyListOperation = TokenOperation<TokenOperationType.RemoveDenyList, TokenRemoveDenyList>;
+export type TokenRemoveDenyListOperation = TokenOperation<TokenOperationType.RemoveDenyList, TokenListUpdate>;
 
 /**
  * Union type representing all possible governance operations for a token.
@@ -227,3 +195,90 @@ export type TokenInitializationParameters = {
     /** Whether the token is burnable */
     burnable?: boolean;
 };
+
+type GenericTokenModuleEvent<E extends TokenOperationType, T extends Object> = {
+    /** The type of the event. */
+    type: E;
+    /** The details of the event. */
+    details: T;
+};
+
+/**
+ * The structure of any list update event for a PLT V1 token.
+ */
+export type TokenListUpdateEventDetails = {
+    /** The target of the list update. */
+    target: TokenHolder;
+};
+
+/**
+ * An event occuring as the result of an "add-allow-list" operation.
+ */
+export type TokenAddAllowListEvent = GenericTokenModuleEvent<
+    TokenOperationType.AddAllowList,
+    TokenListUpdateEventDetails
+>;
+/**
+ * An event occuring as the result of an "add-deny-list" operation.
+ */
+export type TokenAddDenyListEvent = GenericTokenModuleEvent<
+    TokenOperationType.AddDenyList,
+    TokenListUpdateEventDetails
+>;
+/**
+ * An event occuring as the result of an "remove-allow-list" operation.
+ */
+export type TokenRemoveAllowListEvent = GenericTokenModuleEvent<
+    TokenOperationType.RemoveAllowList,
+    TokenListUpdateEventDetails
+>;
+/**
+ * An event occuring as the result of an "remove-deny-list" operation.
+ */
+export type TokenRemoveDenyListEvent = GenericTokenModuleEvent<
+    TokenOperationType.RemoveDenyList,
+    TokenListUpdateEventDetails
+>;
+
+/**
+ * A union of all V1 token module events.
+ */
+export type TokenModuleEvent =
+    | TokenAddAllowListEvent
+    | TokenAddDenyListEvent
+    | TokenRemoveAllowListEvent
+    | TokenRemoveDenyListEvent;
+
+const EVENT_TYPES = [
+    TokenOperationType.AddAllowList,
+    TokenOperationType.RemoveAllowList,
+    TokenOperationType.AddDenyList,
+    TokenOperationType.RemoveDenyList,
+];
+
+/**
+ * Parses a token module event, decoding the details from CBOR format.
+ *
+ * @param event - The token module event to parse.
+ * @returns The parsed token module event with decoded details.
+ * @throws {Error} If the event cannot be parsed as a V1 token module event.
+ */
+export function parseModuleEvent(event: EncodedModuleEvent): TokenModuleEvent {
+    if (!EVENT_TYPES.includes(event.type as TokenOperationType)) {
+        throw new Error(`Cannot parse event as V1 token module event: ${event.type}`);
+    }
+
+    const decoded = Cbor.decode(event.details);
+    if (typeof decoded !== 'object' || decoded === null) {
+        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
+    }
+    if (!('target' in decoded) || !AccountAddress.instanceOf(decoded.target)) {
+        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected 'target' to be an AccountAddress`);
+    }
+
+    const details: TokenListUpdateEventDetails = { target: { tag: 'account', address: decoded.target } };
+    return {
+        ...event,
+        details,
+    } as TokenModuleEvent;
+}

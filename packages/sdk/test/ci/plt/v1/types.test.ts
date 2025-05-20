@@ -1,4 +1,5 @@
-import { Cursor } from '../../../../src/deserializationHelpers.ts';
+import { Cursor } from '../../../../src/deserializationHelpers.js';
+import { parseModuleEvent } from '../../../../src/plt/v1/types.js';
 import { Cbor, TokenAmount, TokenId, V1 } from '../../../../src/pub/plt.js';
 import {
     AccountAddress,
@@ -7,6 +8,42 @@ import {
     TokenHolderHandler,
     serializeAccountTransactionPayload,
 } from '../../../../src/pub/types.js';
+
+describe('PLT V1 parseModuleEvent', () => {
+    const testEventParsing = (type: string, targetValue: number) => {
+        it(`parses ${type} events correctly`, () => {
+            const validEvent = {
+                type,
+                details: Cbor.encode({ target: AccountAddress.fromBuffer(new Uint8Array(32).fill(targetValue)) }),
+            };
+
+            const parsedEvent = parseModuleEvent(validEvent);
+            expect(parsedEvent.type).toEqual(type);
+            expect(parsedEvent.details.target.tag).toEqual('account');
+            expect(parsedEvent.details.target.address.decodedAddress).toEqual(new Uint8Array(32).fill(targetValue));
+        });
+    };
+
+    testEventParsing('add-allow-list', 0x15);
+    testEventParsing('add-deny-list', 0x16);
+    testEventParsing('remove-allow-list', 0x17);
+    testEventParsing('remove-deny-list', 0x18);
+
+    it('throws an error for invalid event type', () => {
+        const invalidEvent = { type: 'invalidType', details: Cbor.encode({}) };
+        expect(() => parseModuleEvent(invalidEvent)).toThrowError(/invalidType/);
+    });
+
+    it('throws an error for invalid event details', () => {
+        const invalidDetailsEvent = { type: 'add-allow-list', details: Cbor.encode(null) };
+        expect(() => parseModuleEvent(invalidDetailsEvent)).toThrowError(/null/);
+    });
+
+    it("throws an error if 'target' is missing or invalid", () => {
+        const missingTargetEvent = { type: 'add-allow-list', details: Cbor.encode({}) };
+        expect(() => parseModuleEvent(missingTargetEvent)).toThrowError(/{}/);
+    });
+});
 
 describe('PLT v1 transactions', () => {
     const token = TokenId.fromString('DKK');

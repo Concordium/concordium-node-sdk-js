@@ -2036,10 +2036,10 @@ function trAccountTransactionSummary(
                 events: effect.delegationConfigured.events.map((x) => trDelegationEvent(x, base.sender)),
             };
         case 'tokenHolderEffect':
-            const holderEvents: SDK.TokenHolderEvent[] = effect.tokenHolderEffect.events.map((e) => ({
-                tag: SDK.TransactionEventTag.TokenHolder,
+            const holderEvents: SDK.TokenEvent[] = effect.tokenHolderEffect.events.map((e) => ({
+                tag: SDK.TransactionEventTag.TokenOperation,
                 tokenId: PLT.TokenId.fromProto(unwrap(e.tokenSymbol)),
-                event: tokenHolderEvent(e),
+                event: tokenEvent(e),
             }));
             return {
                 ...base,
@@ -2047,10 +2047,10 @@ function trAccountTransactionSummary(
                 events: holderEvents,
             };
         case 'tokenGovernanceEffect':
-            const govEvents: SDK.TokenGovernanceEvent[] = effect.tokenGovernanceEffect.events.map((e) => ({
-                tag: SDK.TransactionEventTag.TokenGovernance,
+            const govEvents: SDK.TokenEvent[] = effect.tokenGovernanceEffect.events.map((e) => ({
+                tag: SDK.TransactionEventTag.TokenOperation,
                 tokenId: PLT.TokenId.fromProto(unwrap(e.tokenSymbol)),
-                event: tokenGovernanceEvent(e),
+                event: tokenEvent(e),
             }));
             return {
                 ...base,
@@ -2062,30 +2062,7 @@ function trAccountTransactionSummary(
     }
 }
 
-function tokenHolderEvent(event: GRPC_PLT.TokenHolderEvent): PLT.TokenHolderEvent {
-    switch (event.event.oneofKind) {
-        case 'transferEvent':
-            return {
-                tag: PLT.TokenEventType.Transfer,
-                from: tokenHolder(unwrap(event.event.transferEvent.from)),
-                to: tokenHolder(unwrap(event.event.transferEvent.to)),
-                amount: PLT.TokenAmount.fromProto(unwrap(event.event.transferEvent.amount)),
-                memo: event.event.transferEvent.memo
-                    ? PLT.CborMemo.fromProto(unwrap(event.event.transferEvent.memo))
-                    : undefined,
-            };
-        case 'moduleEvent':
-            return {
-                tag: PLT.TokenEventType.Module,
-                type: event.event.moduleEvent.type,
-                details: PLT.Cbor.fromProto(unwrap(event.event.moduleEvent.details)),
-            };
-        case undefined:
-            throw Error('Failed translating "TokenHolderEvent", encountered undefined value');
-    }
-}
-
-function tokenGovernanceEvent(event: GRPC_PLT.TokenGovernanceEvent): PLT.TokenGovernanceEvent {
+function tokenEvent(event: GRPC_PLT.TokenEvent): PLT.TokenEvent {
     switch (event.event.oneofKind) {
         case 'transferEvent':
             return {

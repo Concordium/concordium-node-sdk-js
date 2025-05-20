@@ -60,8 +60,7 @@ export enum TransactionEventTag {
     Resumed = 'Resumed',
     Updated = 'Updated',
     Upgraded = 'Upgraded',
-    TokenGovernance = 'TokenGovernance',
-    TokenHolder = 'TokenHolder',
+    TokenOperation = 'TokenOperation',
 }
 
 export type TransactionEvent =
@@ -349,30 +348,17 @@ export interface UpdateEnqueuedEvent {
 }
 
 /**
- * Token (PLT) events originating from governance transactions.
- */
-export type TokenGovernanceEvent = {
-    /** The type of the event */
-    tag: TransactionEventTag.TokenGovernance;
-    /** The token ID of the token the event originates from */
-    tokenId: PLT.TokenId.Type;
-    /** The event details */
-    event: PLT.TokenGovernanceEvent;
-};
-
-/**
  * Token (PLT) events originating from account transactions.
  */
-export type TokenHolderEvent = {
+export type TokenEvent = {
     /** The type of the event */
-    tag: TransactionEventTag.TokenHolder;
+    tag: TransactionEventTag.TokenOperation;
     /** The token ID of the token the event originates from */
     tokenId: PLT.TokenId.Type;
     /** The event details */
-    event: PLT.TokenHolderEvent;
+    event: PLT.TokenEvent;
 };
 
-export type TokenEvent = TokenGovernanceEvent | TokenHolderEvent;
 export type ContractTraceEvent = ResumedEvent | InterruptedEvent | UpdatedEvent | UpgradedEvent | TransferredEvent;
 export type BakerEvent =
     | BakerSetTransactionFeeCommissionEvent

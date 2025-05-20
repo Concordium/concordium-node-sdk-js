@@ -268,6 +268,8 @@ const EVENT_TYPES = [
  * try {
  *   const parsedEvent = parseModuleEvent(encodedEvent);
  *   switch (parsedEvent.type) {
+ *     // typed details are now available, e.g.:
+ *     case TokenOperationType.AddAllowList: console.log(parsedEvent.details.target);
  *     ...
  *   }
  * } catch (error) {

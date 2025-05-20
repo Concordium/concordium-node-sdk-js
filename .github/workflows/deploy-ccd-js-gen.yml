@@ -129,6 +129,6 @@ jobs:
       - name: Create a GitHub release
         uses: ncipollo/release-action@v1
         with:
-          tag: ccd-js-gen/v${{ steps.get_tag.outputs.tag_name }}
-          name: CCD-JS-Gen Release v${{ steps.get_tag.outputs.tag_name }}
+          tag: ccd-js-gen/${{ steps.get_tag.outputs.tag }}
+          name: CCD-JS-Gen Release v${{ steps.get_tag.outputs.tag }}
           draft: true

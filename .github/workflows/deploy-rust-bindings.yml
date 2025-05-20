@@ -114,8 +114,8 @@ jobs:
       - name: Create a GitHub release
         uses: ncipollo/release-action@v1
         with:
-          tag: rust-bindings/v${{ steps.get_tag.outputs.tag_name }}
-          name: Rust-Bindings Release v${{ steps.get_tag.outputs.tag_name }}
+          tag: rust-bindings/${{ steps.get_tag.outputs.tag }}
+          name: Rust-Bindings Release v${{ steps.get_tag.outputs.tag }}
           draft: true
 
       - uses: actions/setup-node@v4

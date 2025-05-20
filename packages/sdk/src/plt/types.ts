@@ -84,18 +84,10 @@ type TokenEventGeneric<T extends TokenEventType, E extends object> = E & {
 };
 
 /**
- * Represents a token event emitted as the result of a token holder transaction.
- * The event type is determined by the `tag` field.
- */
-export type TokenHolderEvent =
-    | TokenEventGeneric<TokenEventType.Transfer, TokenTransferEvent>
-    | TokenEventGeneric<TokenEventType.Module, TokenModuleEvent>;
-
-/**
  * Represents a token event emitted as the result of a token governance transaction.
  * The event type is determined by the `tag` field.
  */
-export type TokenGovernanceEvent =
+export type TokenEvent =
     | TokenEventGeneric<TokenEventType.Transfer, TokenTransferEvent>
     | TokenEventGeneric<TokenEventType.Mint, TokenSupplyUpdateEvent>
     | TokenEventGeneric<TokenEventType.Burn, TokenSupplyUpdateEvent>

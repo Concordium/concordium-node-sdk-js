@@ -257,11 +257,28 @@ const EVENT_TYPES = [
 ];
 
 /**
- * Parses a token module event, decoding the details from CBOR format.
+ * Parses a token module event, decoding the details from CBOR format. If the desired outcome is to be able to handle
+ * arbitrary token events, it's recommended to use {@link Cbor.decode} instead.
  *
  * @param event - The token module event to parse.
  * @returns The parsed token module event with decoded details.
  * @throws {Error} If the event cannot be parsed as a V1 token module event.
+ *
+ * @example
+ * try {
+ *   const parsedEvent = parseModuleEvent(encodedEvent);
+ *   switch (parsedEvent.type) {
+ *     // typed details are now available, e.g.:
+ *     case TokenOperationType.AddAllowList: console.log(parsedEvent.details.target);
+ *     ...
+ *   }
+ * } catch (error) {
+ *   // Fall back to using Cbor.decode
+ *   const decodedDetails = Cbor.decode(encodedEvent.details);
+ *   switch (encodedEvent.type) {
+ *     // do something with the decoded details
+ *   }
+ * }
  */
 export function parseModuleEvent(event: EncodedModuleEvent): TokenModuleEvent {
     if (!EVENT_TYPES.includes(event.type as TokenOperationType)) {

@@ -43,6 +43,12 @@
 - function `parseSimpleWallet` which parses a `SimpleWalletFormat` (also a subset of `GenesisFormat`), which can be used
   with `buildAccountSigner`
 
+## 9.1.1
+
+### Changes
+
+- Update transitive dependency `base-x` for the compiled library distribution
+
 ## 9.1.0
 
 ### Added

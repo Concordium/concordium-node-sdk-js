@@ -128,6 +128,6 @@ jobs:
       - name: Create a GitHub release
         uses: ncipollo/release-action@v1
         with:
-          tag: wallet-connectors/v${{ steps.get_tag.outputs.tag_name }}
-          name: wallet-connectors Release v${{ steps.get_tag.outputs.tag_name }}
+          tag: wallet-connectors/${{ steps.get_tag.outputs.tag }}
+          name: wallet-connectors Release v${{ steps.get_tag.outputs.tag }}
           draft: true

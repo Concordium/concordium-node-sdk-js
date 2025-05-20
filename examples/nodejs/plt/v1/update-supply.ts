@@ -13,16 +13,17 @@ import { parseEndpoint, parseKeysFile } from '../../shared/util.js';
 const cli = meow(
     `
   Usage
-    $ yarn run-example <path-to-this-file> [options]
+    $ yarn run-example <path-to-this-file> <action> [options]
 
   Required
-    --token-symbol, -t  The symbol of the token to mint
-    --amount,       -a  The amount of tokens to mint
+    --token-symbol, -t  The symbol of the token to mint/burn
+    --amount,       -a  The amount of tokens to mint/burn
 
   Options
     --help,         -h  Displays this message
     --endpoint,     -e  Specify endpoint of a grpc2 interface of a Concordium node in the format "address:port". Defaults to 'localhost:20000'
-    --wallet-file,  -w  A path to a wallet export file from a Concordium wallet. This is required for actually minting. Otherwise only the payload is created and serialized.
+    --secure,       -s  Whether to use tls or not. Defaults to false.
+    --wallet-file,  -w  A path to a wallet export file from a Concordium wallet. This is required for actually minting/burning. Otherwise only the payload is created and serialized.
 `,
     {
         importMeta: import.meta,
@@ -31,6 +32,11 @@ const cli = meow(
                 type: 'string',
                 alias: 'e',
                 default: 'localhost:20000',
+            },
+            secure: {
+                type: 'boolean',
+                alias: 's',
+                default: false,
             },
             walletFile: {
                 type: 'string',
@@ -57,6 +63,18 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
 
 (async () => {
     // #region documentation-snippet
+    // parse input
+    const action = cli.input[0] as V1.TokenOperationType;
+    if (!action) {
+        console.error('Missing required arguments: <action>');
+        return;
+    }
+
+    // Validate action
+    if (action !== V1.TokenOperationType.Mint && action !== V1.TokenOperationType.Burn) {
+        console.error('Invalid action. Use "mint" or "burn".');
+        return;
+    }
 
     // parse the arguments
     const tokenId = TokenId.fromString(tokenSymbol);
@@ -70,12 +88,12 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
             // create the token instance
             const token = await V1.Token.fromId(client, tokenId);
 
-            // Only the token issuer can mint tokens
-            console.log(`Attempting to mint ${tokenAmount.toString()} ${tokenId.toString()} tokens...`);
+            console.log(`Attempting to ${action} ${tokenAmount.toString()} ${tokenId.toString()} tokens...`);
 
-            // Execute the mint operation
-            const transaction = await V1.Governance.mint(token, sender, tokenAmount, signer);
-            console.log(`Mint transaction submitted with hash: ${transaction}`);
+            // Execute the mint/burn operation
+            const operation = action === V1.TokenOperationType.Mint ? V1.Governance.mint : V1.Governance.burn;
+            const transaction = await operation(token, sender, tokenAmount, signer);
+            console.log(`Transaction submitted with hash: ${transaction}`);
 
             const result = await client.waitForTransactionFinalization(transaction);
             console.log('Transaction finalized:', result);
@@ -89,15 +107,15 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
                 console.log(result.summary.rejectReason.contents, details);
             }
         } catch (error) {
-            console.error('Error during minting operation:', error);
+            console.error('Error during token supply update operation:', error);
         }
     } else {
         // Or from a wallet perspective:
-        const mint: V1.TokenSupplyUpdate = { amount: tokenAmount };
-        const operation: V1.TokenMintOperation = {
-            mint,
-        };
-        console.log('Specified mint action:', JSON.stringify(operation, null, 2));
+        const update: V1.TokenSupplyUpdate = { amount: tokenAmount };
+        const operation = {
+            [action]: update,
+        } as V1.TokenGovernanceOperation;
+        console.log(`Specified ${action} action:`, JSON.stringify(operation, null, 2));
 
         const payload = V1.createTokenGovernancePayload(tokenId, operation);
         console.log('Created payload:', payload);

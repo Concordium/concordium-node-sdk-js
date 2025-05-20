@@ -150,8 +150,8 @@ jobs:
       - name: Create a GitHub release
         uses: ncipollo/release-action@v1
         with:
-          tag: sdk/v${{ steps.get_tag.outputs.tag_name }}
-          name: SDK Release v${{ steps.get_tag.outputs.tag_name }}
+          tag: ${{ steps.get_tag.outputs.tag }}
+          name: SDK Release v${{ steps.get_tag.outputs.tag }}
           draft: true
 
   deploy-typedoc:

@@ -151,6 +151,27 @@ export function validateAmount(token: Token, amount: TokenAmount.Type): void {
 }
 
 /**
+ * Scales a token amount to the token's decimal representation.
+ *
+ * @param {Token} token - The token to scale the amount for.
+ * @param {TokenAmount.Type} amount - The amount to scale.
+ * @returns {TokenAmount.Type} The scaled token amount.
+ * @throws {InvalidTokenAmountError} If the token amount is not compatible with the token.
+ */
+export function scaleAmount(token: Token, amount: TokenAmount.Type): TokenAmount.Type {
+    validateAmount(token, amount);
+
+    if (amount.decimals === token.info.state.decimals) {
+        return amount;
+    }
+
+    return TokenAmount.create(
+        amount.value * 10n ** BigInt(token.info.state.decimals - amount.decimals),
+        token.info.state.decimals
+    );
+}
+
+/**
  * Initiates a holder transaction for a given token.
  *
  * This function creates and sends a transaction of type `TokenHolder` for the specified token.

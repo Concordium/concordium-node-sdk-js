@@ -345,6 +345,7 @@ jobs:
 
       - name: Run clippy
         run: cargo clippy --color=always --tests --benches -- -Dclippy::all
+  # The point of this job is to make it easy to add protection rules that require all status checks to pass.
   results:
     if: ${{ always() }}
     runs-on: ubuntu-latest

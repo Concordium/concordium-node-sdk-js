@@ -151,7 +151,7 @@ export function validateAmount(token: Token, amount: TokenAmount.Type): void {
 }
 
 /**
- * Scales a token amount to the token's decimal representation.
+ * Scales a token amount with fewer decimals to the token's decimal representation.
  *
  * @param {Token} token - The token to scale the amount for.
  * @param {TokenAmount.Type} amount - The amount to scale.

@@ -10,4 +10,5 @@ export {
     ModuleVersionMismatchError,
     UnauthorizedGovernanceOperationError,
     TokenErrorCode,
+    scaleAmount,
 } from '../../plt/Token.js';

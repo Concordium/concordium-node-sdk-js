@@ -2,7 +2,7 @@ import { ConcordiumGRPCClient } from '../../grpc/GRPCClient.js';
 import { AccountAddress, AccountInfo, TransactionHash } from '../../pub/types.js';
 import { AccountSigner } from '../../signHelpers.js';
 import { TransactionExpiry } from '../../types/index.js';
-import { Token as GenericToken, holderTransaction, validateAmount } from '../Token.js';
+import { Token as GenericToken, holderTransaction, scaleAmount, validateAmount } from '../Token.js';
 import { Cbor, TokenAmount, TokenId, TokenInfo } from '../index.js';
 import {
     TokenHolderOperation,
@@ -253,7 +253,9 @@ export async function transfer(
 ): Promise<TransactionHash.Type> {
     await validateTransfer(token, sender, payload);
 
-    const ops: TokenHolderOperation[] = [payload].flat().map((p) => ({ [TokenOperationType.Transfer]: p }));
+    const ops: TokenHolderOperation[] = [payload]
+        .flat()
+        .map((p) => ({ [TokenOperationType.Transfer]: { ...p, amount: scaleAmount(token, p.amount) } }));
     const encoded = createTokenHolderPayload(token.info.id, ops);
 
     return holderTransaction(token, sender, encoded, signer, expiry);

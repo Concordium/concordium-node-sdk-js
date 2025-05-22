@@ -1,5 +1,5 @@
 import { AccountAddress, AccountSigner, TransactionExpiry, TransactionHash } from '../../pub/types.js';
-import { governanceTransaction, validateAmount } from '../Token.js';
+import { governanceTransaction, scaleAmount, validateAmount } from '../Token.js';
 import { TokenAmount } from '../index.js';
 import { Type as Token } from './Token.js';
 import {
@@ -37,7 +37,9 @@ export async function mint(
     const amountsList = [amounts].flat();
     amountsList.forEach((amount) => validateAmount(token, amount));
 
-    const ops: TokenMintOperation[] = amountsList.map((amount) => ({ [TokenOperationType.Mint]: { amount } }));
+    const ops: TokenMintOperation[] = amountsList.map((amount) => ({
+        [TokenOperationType.Mint]: { amount: scaleAmount(token, amount) },
+    }));
     return batchOperations(token, sender, ops, signer, expiry);
 }
 
@@ -64,7 +66,9 @@ export async function burn(
     const amountsList = [amounts].flat();
     amountsList.forEach((amount) => validateAmount(token, amount));
 
-    const ops: TokenBurnOperation[] = amountsList.map((amount) => ({ [TokenOperationType.Burn]: { amount } }));
+    const ops: TokenBurnOperation[] = amountsList.map((amount) => ({
+        [TokenOperationType.Burn]: { amount: scaleAmount(token, amount) },
+    }));
     return batchOperations(token, sender, ops, signer, expiry);
 }
 

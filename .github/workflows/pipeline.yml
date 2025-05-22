@@ -19,6 +19,7 @@ env:
 
 jobs:
   deps:
+    name: Dependencies
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-22.04
     steps:
@@ -48,6 +49,7 @@ jobs:
         run: yarn install --immutable
 
   build:
+    name: Build
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-22.04
     needs: deps
@@ -115,6 +117,7 @@ jobs:
             packages/react-components/dist
 
   tests:
+    name: Tests
     runs-on: ubuntu-22.04
     needs: build
     steps:
@@ -148,6 +151,7 @@ jobs:
         run: yarn test-ci
 
   typedoc:
+    name: Build docs
     runs-on: ubuntu-22.04
     needs: build
     steps:
@@ -178,6 +182,7 @@ jobs:
         run: yarn build:docs
 
   lint:
+    name: JS lint
     runs-on: ubuntu-22.04
     needs: build
     if: github.event.pull_request.draft == false
@@ -209,6 +214,7 @@ jobs:
         run: yarn lint:all && yarn fmt-check:all
 
   markdown-lint:
+    name: Markdown lint
     runs-on: ubuntu-22.04
     if: github.event.pull_request.draft == false
     needs: deps
@@ -234,6 +240,7 @@ jobs:
         run: yarn markdown:lint
 
   markdown-linkcheck:
+    name: Markdown links
     runs-on: ubuntu-22.04
     needs: deps
     if: github.event.pull_request.draft == false
@@ -259,6 +266,7 @@ jobs:
         run: yarn markdown:linkcheck
 
   size:
+    name: Package size
     runs-on: ubuntu-22.04
     needs: build
     steps:
@@ -289,6 +297,7 @@ jobs:
         run: yarn size:no-build
 
   rust_lint_fmt:
+    name: Rust fmt
     runs-on: ubuntu-22.04
     if: github.event.pull_request.draft == false
     defaults:
@@ -309,6 +318,7 @@ jobs:
         run: cargo fmt -- --color=always --check
 
   rust_lint_clippy:
+    name: Rust clippy
     runs-on: ubuntu-22.04
     needs: rust_lint_fmt
     if: github.event.pull_request.draft == false
@@ -338,7 +348,7 @@ jobs:
   results:
     if: ${{ always() }}
     runs-on: ubuntu-latest
-    name: Final Results
+    name: Workflow result
     needs: [tests, typedoc, lint, markdown-lint, markdown-linkcheck, rust_lint_fmt, rust_lint_clippy]
     steps:
       - run: exit 1

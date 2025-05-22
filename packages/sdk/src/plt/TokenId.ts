@@ -63,14 +63,14 @@ class TokenId {
      */
     constructor(
         /** The inner value */
-        public readonly symbol: string
+        public readonly value: string
     ) {
-        if (!isValidUTF8(symbol)) {
+        if (!isValidUTF8(value)) {
             throw Err.invalid();
         }
 
         // Check if the value exceeds 255 UTF-8 bytes
-        if (new TextEncoder().encode(symbol).length > MAX_LENGTH) {
+        if (new TextEncoder().encode(value).length > MAX_LENGTH) {
             throw Err.exceedsMaxLength();
         }
     }
@@ -80,7 +80,7 @@ class TokenId {
      * @returns {string} The string representation.
      */
     public toString(): string {
-        return this.symbol;
+        return this.value;
     }
 
     /**
@@ -88,7 +88,7 @@ class TokenId {
      * @returns {HexString} The JSON representation.
      */
     public toJSON(): JSON {
-        return this.symbol;
+        return this.value;
     }
 }
 
@@ -136,7 +136,7 @@ export function fromJSON(json: JSON): TokenId {
  * @throws {Err} If the value is longer than 255 utf-8 encoded bytes or contains invalid UTF-8.
  */
 export function fromProto(tokenId: Proto.TokenId): TokenId {
-    return fromString(tokenId.symbol);
+    return fromString(tokenId.value);
 }
 
 /**
@@ -146,7 +146,7 @@ export function fromProto(tokenId: Proto.TokenId): TokenId {
  */
 export function toProto(tokenId: Type): Proto.TokenId {
     return {
-        symbol: tokenId.symbol,
+        value: tokenId.value,
     };
 }
 
@@ -157,7 +157,7 @@ export function toProto(tokenId: Type): Proto.TokenId {
  * @returns {Uint8Array} The UTF-8 byte representation of the TokenId.
  */
 export function toBytes(tokenId: TokenId): Uint8Array {
-    return new TextEncoder().encode(tokenId.symbol);
+    return new TextEncoder().encode(tokenId.value);
 }
 
 /**
@@ -184,5 +184,5 @@ export function fromBytes(bytes: ArrayBuffer): TokenId {
  * @returns {boolean} True if they are equal.
  */
 export function equals(left: TokenId, right: TokenId): boolean {
-    return left.symbol === right.symbol;
+    return left.value === right.value;
 }

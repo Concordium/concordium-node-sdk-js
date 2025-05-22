@@ -170,11 +170,11 @@ export function balanceOf(
     account: AccountInfo | AccountAddress.Type
 ): Promise<BalanceOfResponse> | BalanceOfResponse {
     if (!AccountAddress.instanceOf(account)) {
-        return account.accountTokens.find((t) => t.id.symbol === token.info.id.symbol)?.state.balance;
+        return account.accountTokens.find((t) => t.id.value === token.info.id.value)?.state.balance;
     }
 
     return token.grpc.getAccountInfo(account).then((accInfo) => {
-        return accInfo.accountTokens.find((t) => t.id.symbol === token.info.id.symbol)?.state.balance;
+        return accInfo.accountTokens.find((t) => t.id.value === token.info.id.value)?.state.balance;
     });
 }
 
@@ -221,7 +221,7 @@ export async function validateTransfer(
     const receiverPromises = payloads.map((p) => token.grpc.getAccountInfo(p.recipient));
     const accounts = await Promise.all([senderPromise, ...receiverPromises]);
     accounts.forEach((r) => {
-        const accToken = r.accountTokens.find((t) => t.id.symbol === token.info.id.symbol)?.state;
+        const accToken = r.accountTokens.find((t) => t.id.value === token.info.id.value)?.state;
         if (accToken?.memberDenyList || accToken?.memberAllowList === false) {
             throw new NotAllowedError(r.accountAddress);
         }

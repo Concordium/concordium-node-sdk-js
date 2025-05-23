@@ -1200,7 +1200,7 @@ function trRejectReason(rejectReason: GRPC.RejectReason | undefined): SDK.Reject
                 tag: Tag.TokenHolderTransactionFailed,
                 contents: {
                     type: reason.tokenHolderTransactionFailed.type,
-                    tokenId: PLT.TokenId.fromProto(unwrap(reason.tokenHolderTransactionFailed.tokenSymbol)),
+                    tokenId: PLT.TokenId.fromProto(unwrap(reason.tokenHolderTransactionFailed.tokenId)),
                     details: PLT.Cbor.fromProto(unwrap(reason.tokenHolderTransactionFailed.details)),
                 },
             };
@@ -1215,7 +1215,7 @@ function trRejectReason(rejectReason: GRPC.RejectReason | undefined): SDK.Reject
                 tag: Tag.TokenGovernanceTransactionFailed,
                 contents: {
                     type: reason.tokenGovernanceTransactionFailed.type,
-                    tokenId: PLT.TokenId.fromProto(unwrap(reason.tokenGovernanceTransactionFailed.tokenSymbol)),
+                    tokenId: PLT.TokenId.fromProto(unwrap(reason.tokenGovernanceTransactionFailed.tokenId)),
                     details: PLT.Cbor.fromProto(unwrap(reason.tokenGovernanceTransactionFailed.details)),
                 },
             };
@@ -1596,7 +1596,7 @@ function trUpdatePayload(updatePayload: GRPC.UpdatePayload | undefined): SDK.Upd
             return {
                 updateType: SDK.UpdateType.CreatePLT,
                 update: {
-                    tokenId: PLT.TokenId.fromProto(unwrap(payload.createPltUpdate.tokenSymbol)),
+                    tokenId: PLT.TokenId.fromProto(unwrap(payload.createPltUpdate.tokenId)),
                     moduleRef: PLT.TokenModuleReference.fromProto(unwrap(payload.createPltUpdate.tokenModule)),
                     decimals: payload.createPltUpdate.decimals,
                     governanceAccount: AccountAddress.fromProto(unwrap(payload.createPltUpdate.governanceAccount)),
@@ -2038,7 +2038,7 @@ function trAccountTransactionSummary(
         case 'tokenHolderEffect':
             const holderEvents: SDK.TokenEvent[] = effect.tokenHolderEffect.events.map((e) => ({
                 tag: SDK.TransactionEventTag.TokenOperation,
-                tokenId: PLT.TokenId.fromProto(unwrap(e.tokenSymbol)),
+                tokenId: PLT.TokenId.fromProto(unwrap(e.tokenId)),
                 event: tokenEvent(e),
             }));
             return {
@@ -2049,7 +2049,7 @@ function trAccountTransactionSummary(
         case 'tokenGovernanceEffect':
             const govEvents: SDK.TokenEvent[] = effect.tokenGovernanceEffect.events.map((e) => ({
                 tag: SDK.TransactionEventTag.TokenOperation,
-                tokenId: PLT.TokenId.fromProto(unwrap(e.tokenSymbol)),
+                tokenId: PLT.TokenId.fromProto(unwrap(e.tokenId)),
                 event: tokenEvent(e),
             }));
             return {

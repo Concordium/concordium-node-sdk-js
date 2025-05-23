@@ -5,7 +5,7 @@ describe('PLT TokenId', () => {
         const str = 'DKK';
         const expected = TokenId.fromString(str);
 
-        expect(TokenId.fromString(str).symbol).toEqual(str);
+        expect(TokenId.fromString(str).value).toEqual(str);
 
         const bytes = new TextEncoder().encode(str);
         expect(TokenId.fromBytes(bytes)).toEqual(expected);

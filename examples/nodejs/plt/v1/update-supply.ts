@@ -1,5 +1,7 @@
 import {
     AccountTransactionType,
+    RejectReasonTag,
+    TransactionKindString,
     TransactionSummaryType,
     serializeAccountTransactionPayload,
 } from '@concordium/web-sdk';
@@ -98,13 +100,23 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
             const result = await client.waitForTransactionFinalization(transaction);
             console.log('Transaction finalized:', result);
 
-            if (
-                result.summary.type === TransactionSummaryType.AccountTransaction &&
-                result.summary.transactionType === 'failed' &&
-                result.summary.rejectReason.tag === 'TokenGovernanceTransactionFailed'
-            ) {
-                const details = Cbor.decode(result.summary.rejectReason.contents.details);
-                console.log(result.summary.rejectReason.contents, details);
+            if (result.summary.type !== TransactionSummaryType.AccountTransaction) {
+                throw new Error('Unexpected transaction type: ' + result.summary.type);
+            }
+
+            switch (result.summary.transactionType) {
+                case TransactionKindString.TokenGovernance:
+                    result.summary.events.forEach((e) => console.log(e.event));
+                    break;
+                case TransactionKindString.Failed:
+                    if (result.summary.rejectReason.tag !== RejectReasonTag.TokenGovernanceTransactionFailed) {
+                        throw new Error('Unexpected reject reason tag: ' + result.summary.rejectReason.tag);
+                    }
+                    const details = Cbor.decode(result.summary.rejectReason.contents.details);
+                    console.error(result.summary.rejectReason.contents, details);
+                    break;
+                default:
+                    throw new Error('Unexpected transaction kind: ' + result.summary.transactionType);
             }
         } catch (error) {
             console.error('Error during token supply update operation:', error);

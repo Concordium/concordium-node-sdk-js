@@ -1,11 +1,13 @@
 import {
     AccountAddress,
     AccountTransactionType,
+    RejectReasonTag,
+    TransactionKindString,
     TransactionSummaryType,
     serializeAccountTransactionPayload,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
-import { Cbor, TokenId, V1 } from '@concordium/web-sdk/plt';
+import { Cbor, TokenEventType, TokenId, V1 } from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 
@@ -124,6 +126,30 @@ const client = new ConcordiumGRPCNodeClient(
 
             const result = await client.waitForTransactionFinalization(transaction);
             console.log('Transaction finalized:', result);
+
+            if (result.summary.type !== TransactionSummaryType.AccountTransaction) {
+                throw new Error('Unexpected transaction type: ' + result.summary.type);
+            }
+
+            switch (result.summary.transactionType) {
+                case TransactionKindString.TokenGovernance:
+                    result.summary.events.forEach((e) => {
+                        if (e.event.tag !== TokenEventType.Module) {
+                            throw new Error('Unexpected event type: ' + e.event.tag);
+                        }
+                        console.log('Token module event:', e.event, Cbor.decode(e.event.details));
+                    });
+                    break;
+                case TransactionKindString.Failed:
+                    if (result.summary.rejectReason.tag !== RejectReasonTag.TokenGovernanceTransactionFailed) {
+                        throw new Error('Unexpected reject reason tag: ' + result.summary.rejectReason.tag);
+                    }
+                    const details = Cbor.decode(result.summary.rejectReason.contents.details);
+                    console.error(result.summary.rejectReason.contents, details);
+                    break;
+                default:
+                    throw new Error('Unexpected transaction kind: ' + result.summary.transactionType);
+            }
 
             if (
                 result.summary.type === TransactionSummaryType.AccountTransaction &&

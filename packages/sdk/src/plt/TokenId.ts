@@ -121,8 +121,8 @@ export function instanceOf(value: unknown): value is TokenId {
 /**
  * Converts {@linkcode JSON} to a token amount.
  *
- * @param {string} json The JSON representation of the CCD amount.
- * @returns {CcdAmount} The CCD amount.
+ * @param {string} json The JSON representation of the token ID.
+ * @returns {TokenId} The token ID.
  * @throws {Err} If the value is longer than 255 utf-8 encoded bytes or contains invalid UTF-8.
  */
 export function fromJSON(json: JSON): TokenId {

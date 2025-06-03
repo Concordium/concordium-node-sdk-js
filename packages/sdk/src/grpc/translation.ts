@@ -2095,7 +2095,7 @@ function tokenEvent(event: GRPC_PLT.TokenEvent): PLT.TokenEvent {
                 target: tokenHolder(unwrap(event.event.burnEvent.target)),
             };
         case undefined:
-            throw Error('Failed translating "TokenGovernanceEvent", encountered undefined value');
+            throw Error('Failed translating "TokenEvent", encountered undefined value');
     }
 }
 

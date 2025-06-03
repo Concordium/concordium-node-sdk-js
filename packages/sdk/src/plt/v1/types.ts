@@ -1,6 +1,7 @@
 import { TokenGovernancePayload, TokenHolderPayload } from '../../index.js';
 import * as AccountAddress from '../../types/AccountAddress.js';
 import { Cbor, CborMemo, TokenModuleEvent as EncodedModuleEvent, TokenAmount, TokenHolder, TokenId } from '../index.js';
+import * as TokenMetadataUrl from './TokenMetadataUrl.js';
 
 /**
  * Enum representing the types of token operations.
@@ -163,7 +164,7 @@ export type TokenModuleState = {
     /** The name of the token. */
     name: string;
     /** A URL pointing to the metadata of the token. */
-    metadata: string; // TODO: will change to url object containing url and checksum
+    metadata: TokenMetadataUrl.Type;
     /** Whether the token supports an allow list */
     allowList?: boolean;
     /** Whether the token supports an deny list */

@@ -2065,15 +2065,17 @@ function trAccountTransactionSummary(
 function tokenEvent(event: GRPC_PLT.TokenEvent): PLT.TokenEvent {
     switch (event.event.oneofKind) {
         case 'transferEvent':
-            return {
+            const transferEvent: PLT.TokenEvent = {
                 tag: PLT.TokenEventType.Transfer,
                 from: tokenHolder(unwrap(event.event.transferEvent.from)),
                 to: tokenHolder(unwrap(event.event.transferEvent.to)),
                 amount: PLT.TokenAmount.fromProto(unwrap(event.event.transferEvent.amount)),
-                memo: event.event.transferEvent.memo
-                    ? PLT.CborMemo.fromProto(unwrap(event.event.transferEvent.memo))
-                    : undefined,
             };
+            if (event.event.transferEvent.memo) {
+                transferEvent.memo = PLT.CborMemo.fromProto(unwrap(event.event.transferEvent.memo));
+            }
+
+            return transferEvent;
         case 'moduleEvent':
             return {
                 tag: PLT.TokenEventType.Module,
@@ -2093,7 +2095,7 @@ function tokenEvent(event: GRPC_PLT.TokenEvent): PLT.TokenEvent {
                 target: tokenHolder(unwrap(event.event.burnEvent.target)),
             };
         case undefined:
-            throw Error('Failed translating "TokenGovernanceEvent", encountered undefined value');
+            throw Error('Failed translating "TokenEvent", encountered undefined value');
     }
 }
 

@@ -1,7 +1,28 @@
-import { HexString } from '../../index.js';
+import { HexString, cborDecode, cborEncode } from '../../index.js';
 import { Cbor } from '../index.js';
 
-export type JSON = { url: string; checksumSha256?: string; [key: string]: HexString | undefined };
+/** The JSON representation of a {@linkcode Type} */
+export type JSON = {
+    /** The inner url */
+    url: string;
+    /** The checksum SHA-256 of the URL */
+    checksumSha256?: HexString;
+    /** Any additional values. These are hex representations of CBOR encoded values. */
+    [key: string]: HexString | undefined;
+};
+
+/** The intermediary CBOR representation of a {@linkcode Type} */
+export type CBOR = {
+    /** The inner url */
+    url: string;
+    /** The checksum SHA-256 of the URL */
+    checksumSha256?: Uint8Array;
+    /**
+     * Any additional values. These are CBOR intermediary representations of values and might include custom tags if
+     * not handled by adding decoders for these.
+     */
+    [key: string]: unknown
+};
 
 /**
  * Protocol level token (PLT) metadata URL.
@@ -16,7 +37,7 @@ class TokenMetadataUrl {
         /** The inner url */
         public readonly url: string,
         /** The checksum SHA-256 of the URL */
-        public readonly checksumSha256?: HexString,
+        public readonly checksumSha256?: Uint8Array,
         /**
          * Additional metadata url fields. Any keys in this object must not collide with the explicit fields for the
          * type.
@@ -45,7 +66,8 @@ class TokenMetadataUrl {
         return {
             ...additional,
             url: this.url,
-            checksumSha256: this.checksumSha256,
+            checksumSha256:
+                this.checksumSha256 !== undefined ? Buffer.from(this.checksumSha256).toString('hex') : undefined,
         };
     }
 }
@@ -59,13 +81,13 @@ export type Type = TokenMetadataUrl;
  * Create a protocol level token metadata URL.
  *
  * @param {string} url - The URL of the token metadata.
- * @param {HexString} [checksumSha256] - The SHA-256 checksum of the URL.
+ * @param {Uint8Array} [checksumSha256] - The SHA-256 checksum of the URL.
  * @param {Record<string, unknown>} [additional] - Additional metadata fields.
  * @returns {TokenMetadataUrl} A new token metadata URL instance.
  */
 export function create(
     url: string,
-    checksumSha256?: HexString,
+    checksumSha256?: Uint8Array,
     additional?: Record<string, unknown>
 ): TokenMetadataUrl {
     return new TokenMetadataUrl(url, checksumSha256, additional);
@@ -106,5 +128,73 @@ export function fromJSON({ url, checksumSha256, ...other }: JSON): TokenMetadata
         }
     });
 
+    const checksumSha256Parsed = checksumSha256 !== undefined ? Buffer.from(checksumSha256, 'hex') : undefined;
+    return create(url, checksumSha256Parsed, additional);
+}
+
+/**
+ * Converts a TokenMetadataUrl object to it's intermediary {@linkcode CBOR} representation.
+ *
+ * @param tokenMetadataUrl - The TokenMetadataUrl object to convert.
+ * @returns A CBOR-compatible value representation of the TokenMetadataUrl.
+ */
+export function toCBORValue(tokenMetadataUrl: TokenMetadataUrl): CBOR {
+    return {
+        ...tokenMetadataUrl.additional,
+        url: tokenMetadataUrl.url,
+        checksumSha256: tokenMetadataUrl.checksumSha256,
+    };
+}
+
+/**
+ * Encodes a TokenMetadataUrl object into a CBOR-formatted Uint8Array.
+ *
+ * @param tokenMetadataUrl - The TokenMetadataUrl object to encode.
+ * @returns A Uint8Array containing the CBOR encoding of the TokenMetadataUrl.
+ */
+export function toCBOR(tokenMetadataUrl: TokenMetadataUrl): Uint8Array {
+    return cborEncode(toCBORValue(tokenMetadataUrl));
+}
+
+/**
+ * Constructs a TokenMetadataUrl object from it's {@linkcode CBOR}.
+ *
+ * @param value - The CBOR-compatible value to decode. The expected format is {@linkcode CBOR}.
+ * @returns The decoded TokenMetadataUrl object.
+ * @throws Will throw an error if the value is not a valid CBOR representation of TokenMetadataUrl.
+ */
+export function fromCBORValue(value: unknown): TokenMetadataUrl {
+    if (typeof value !== 'object' || value === null) {
+        throw new Error('Invalid CBOR value for TokenMetadataUrl');
+    }
+    if (!('url' in value) || typeof value.url !== 'string') {
+        throw new Error('Missing or invalid "url" field in TokenMetadataUrl');
+    }
+    let checksumSha256: Uint8Array | undefined;
+    if ('checksumSha256' in value) {
+        if (!(value.checksumSha256 instanceof Uint8Array) || value.checksumSha256.length !== 32) {
+            throw new Error('Invalid "checksumSha256" field in TokenMetadataUrl');
+        }
+        checksumSha256 = value.checksumSha256;
+    }
+    const { url, ...other } = value;
+    let additional: Record<string, unknown> | undefined;
+    if (Object.keys(other).some((key) => typeof key !== 'string')) {
+        throw new Error('Invalid additional fields in TokenMetadataUrl. Can only contain string keys.');
+    }
+    if (Object.keys(other).length > 0) {
+        additional = other;
+    }
     return create(url, checksumSha256, additional);
+}
+
+/**
+ * Decodes a CBOR-encoded Uint8Array into a TokenMetadataUrl object.
+ *
+ * @param cbor - The CBOR-encoded Uint8Array to decode.
+ * @returns The decoded TokenMetadataUrl object.
+ * @throws Will throw an error if the CBOR data is not a valid representation of TokenMetadataUrl.
+ */
+export function fromCBOR(cbor: Uint8Array): TokenMetadataUrl {
+    return fromCBORValue(cborDecode(cbor));
 }

@@ -2,7 +2,7 @@ import { Buffer } from 'buffer/index.js';
 
 import { Cursor } from './deserializationHelpers.js';
 import { Cbor, TokenId } from './plt/index.js';
-import { TokenGovernanceOperation, TokenHolderOperation, TokenOperationType } from './plt/v1/types.ts';
+import { TokenGovernanceOperation, TokenHolderOperation, TokenOperationType } from './plt/v1/types.js';
 import { ContractAddress, ContractName, Energy, ModuleReference } from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
 import {

@@ -2,6 +2,7 @@ import { Buffer } from 'buffer/index.js';
 
 import { Cursor } from './deserializationHelpers.js';
 import { Cbor, TokenId } from './plt/index.js';
+import { TokenGovernanceOperation, TokenHolderOperation, TokenOperationType } from './plt/v1/types.ts';
 import { ContractAddress, ContractName, Energy, ModuleReference } from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
 import {
@@ -537,10 +538,18 @@ export class TokenHolderHandler implements AccountTransactionHandler<TokenHolder
         const operations = Cbor.fromBuffer(serializedPayload.read(len));
         return { tokenSymbol, operations };
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    getBaseEnergyCost(_payload: TokenHolderPayload): bigint {
-        // TODO: placeholder value - should be updated when we know the real value
-        return 300n;
+    getBaseEnergyCost(payload: TokenHolderPayload): bigint {
+        // TODO: update costs when finalized costs are determined.
+        const operations = Cbor.decode(payload.operations) as TokenHolderOperation[];
+        // The base cost for a token holder transaction.
+        var energyCost = 300n;
+        for (const operation of operations) {
+            if (TokenOperationType.Transfer in operation) {
+                // The per-operation cost for a transfer operation.
+                energyCost += 100n;
+            }
+        }
+        return energyCost;
     }
     toJSON(payload: TokenHolderPayload): TokenHolderPayloadJSON {
         return {
@@ -577,10 +586,33 @@ export class TokenGovernanceHandler
         const operations = Cbor.fromBuffer(serializedPayload.read(len));
         return { tokenSymbol, operations };
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    getBaseEnergyCost(_payload: TokenGovernancePayload): bigint {
-        // TODO: placeholder value - should be updated when we know the real value
-        return 300n;
+    getBaseEnergyCost(payload: TokenGovernancePayload): bigint {
+        // TODO: update costs when finalized costs are determined.
+        const operations = Cbor.decode(payload.operations) as TokenGovernanceOperation[];
+        // The base cost for a token governance transaction.
+        var energyCost = 300n;
+        for (const operation of operations) {
+            if (TokenOperationType.Mint in operation) {
+                // The per-operation cost for a mint operation.
+                energyCost += 100n;
+            } else if (TokenOperationType.Burn in operation) {
+                // The per-operation cost for a burn operation.
+                energyCost += 100n;
+            } else if (TokenOperationType.AddAllowList in operation) {
+                // The per-operation cost for an add allow list operation.
+                energyCost += 50n;
+            } else if (TokenOperationType.RemoveAllowList in operation) {
+                // The per-operation cost for a remove allow list operation.
+                energyCost += 50n;
+            } else if (TokenOperationType.AddDenyList in operation) {
+                // The per-operation cost for an add deny list operation.
+                energyCost += 50n;
+            } else if (TokenOperationType.RemoveDenyList in operation) {
+                // The per-operation cost for a remove deny list operation.
+                energyCost += 50n;
+            }
+        }
+        return energyCost;
     }
     toJSON(payload: TokenGovernancePayload): TokenGovernancePayloadJSON {
         return {

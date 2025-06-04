@@ -2724,7 +2724,7 @@ export function winningBaker(winningBaker: GRPC.WinningBaker): SDK.WinningBaker 
 
 export function trTokenInfo(tokenInfo: GRPC.TokenInfo): PLT.TokenInfo {
     const state: PLT.TokenState = {
-        decimals: unwrap(tokenInfo.tokenState?.nrOfDecimals),
+        decimals: unwrap(tokenInfo.tokenState?.decimals),
         issuer: AccountAddress.fromProto(unwrap(tokenInfo.tokenState?.issuer)),
         moduleRef: PLT.TokenModuleReference.fromProto(unwrap(tokenInfo.tokenState?.tokenModuleRef)),
         totalSupply: PLT.TokenAmount.fromProto(unwrap(tokenInfo.tokenState?.totalSupply)),

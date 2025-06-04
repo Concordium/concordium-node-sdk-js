@@ -16,7 +16,7 @@
 
 ### Added
 
-- A new package export scoped to hold types and functionality for interacting wit PLTs, available at
+- A new package export scoped to hold types and functionality for interacting with PLTs, available at
   `@concordium/web-sdk/plt`.
 - New types representing entities within the domain of protocol level tokens (PLTs)
   - `Cbor`: Represents CBOR encoded details for PLT module state, events, and operations

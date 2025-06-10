@@ -9,10 +9,10 @@ export enum TokenOperationType {
     Transfer = 'transfer',
     Mint = 'mint',
     Burn = 'burn',
-    AddAllowList = 'add-allow-list',
-    RemoveAllowList = 'remove-allow-list',
-    AddDenyList = 'add-deny-list',
-    RemoveDenyList = 'remove-deny-list',
+    AddAllowList = 'addAllowList',
+    RemoveAllowList = 'removeAllowList',
+    AddDenyList = 'addDenyList',
+    RemoveDenyList = 'removeDenyList',
 }
 
 export type Memo = CborMemo.Type | Uint8Array;

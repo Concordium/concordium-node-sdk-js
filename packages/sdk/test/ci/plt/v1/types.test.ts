@@ -24,10 +24,10 @@ describe('PLT V1 parseModuleEvent', () => {
         });
     };
 
-    testEventParsing('add-allow-list', 0x15);
-    testEventParsing('add-deny-list', 0x16);
-    testEventParsing('remove-allow-list', 0x17);
-    testEventParsing('remove-deny-list', 0x18);
+    testEventParsing('addAllowList', 0x15);
+    testEventParsing('addDenyList', 0x16);
+    testEventParsing('removeAllowList', 0x17);
+    testEventParsing('removeDenyList', 0x18);
 
     it('throws an error for invalid event type', () => {
         const invalidEvent = { type: 'invalidType', details: Cbor.encode({}) };
@@ -35,12 +35,12 @@ describe('PLT V1 parseModuleEvent', () => {
     });
 
     it('throws an error for invalid event details', () => {
-        const invalidDetailsEvent = { type: 'add-allow-list', details: Cbor.encode(null) };
+        const invalidDetailsEvent = { type: 'addAllowList', details: Cbor.encode(null) };
         expect(() => parseModuleEvent(invalidDetailsEvent)).toThrowError(/null/);
     });
 
     it("throws an error if 'target' is missing or invalid", () => {
-        const missingTargetEvent = { type: 'add-allow-list', details: Cbor.encode({}) };
+        const missingTargetEvent = { type: 'addAllowList', details: Cbor.encode({}) };
         expect(() => parseModuleEvent(missingTargetEvent)).toThrowError(/{}/);
     });
 });
@@ -201,7 +201,7 @@ describe('PLT v1 transactions', () => {
         expect(des).toEqual(payload);
     });
 
-    it('(de)serializes add-allow-list operations correctly', () => {
+    it('(de)serializes addAllowList operations correctly', () => {
         const addAllowList: V1.TokenAddAllowListOperation = {
             [V1.TokenOperationType.AddAllowList]: {
                 target: testAccountAddress,
@@ -210,10 +210,10 @@ describe('PLT v1 transactions', () => {
 
         const payload = V1.createTokenGovernancePayload(token, addAllowList);
 
-        // This is a CBOR encoded byte sequence representing the add-allow-list operation:
+        // This is a CBOR encoded byte sequence representing the addAllowList operation:
         // - 81: An array of 1 item
         // - a1: A map with 1 key-value pair
-        //   - 6e6164642d616c6c6f772d6c697374: Key "add-allow-list" (in UTF-8)
+        //   - 6c616464416c6c6f774c697374: Key "addAllowList" (in UTF-8)
         //   - a1: A map with 1 key-value pair
         //     - 667461726765744: Key "target" (in UTF-8)
         //       - The account address cbor
@@ -221,7 +221,7 @@ describe('PLT v1 transactions', () => {
             `
             81
               a1
-                6e6164642d616c6c6f772d6c697374 a1
+                6c616464416c6c6f774c697374 a1
                   66746172676574 ${testAccountAddressCbor}
             `.replace(/\s/g, ''),
             'hex'
@@ -250,7 +250,7 @@ describe('PLT v1 transactions', () => {
         // This is a CBOR encoded byte sequence representing the remove-allow-list operation:
         // - 81: An array of 1 item
         // - a1: A map with 1 key-value pair
-        //   - 7172656d6f76652d616c6c6f772d6c697374: Key "remove-allow-list" (in UTF-8)
+        //   - 6f72656d6f7665416c6c6f774c697374: Key "removeAllowList" (in UTF-8)
         //   - a1: A map with 1 key-value pair
         //     - 667461726765744: Key "target" (in UTF-8)
         //       - The account address cbor
@@ -258,7 +258,7 @@ describe('PLT v1 transactions', () => {
             `
             81
               a1
-                7172656d6f76652d616c6c6f772d6c697374 a1
+                6f72656d6f7665416c6c6f774c697374 a1
                   66746172676574 ${testAccountAddressCbor}
             `.replace(/\s/g, ''),
             'hex'
@@ -287,7 +287,7 @@ describe('PLT v1 transactions', () => {
         // This is a CBOR encoded byte sequence representing the add-deny-list operation:
         // - 81: An array of 1 item
         // - a1: A map with 1 key-value pair
-        //   - 6d6164642d64656e792d6c697374: Key "add-deny-list" (in UTF-8)
+        //   - 6b61646444656e794c697374 : Key "addDenyList" (in UTF-8)
         //   - a1: A map with 1 key-value pair
         //     - 667461726765744: Key "target" (in UTF-8)
         //       - The account address cbor
@@ -295,7 +295,7 @@ describe('PLT v1 transactions', () => {
             `
             81
               a1
-                6d6164642d64656e792d6c697374 a1
+                6b61646444656e794c697374 a1
                   66746172676574 ${testAccountAddressCbor}
             `.replace(/\s/g, ''),
             'hex'
@@ -324,7 +324,7 @@ describe('PLT v1 transactions', () => {
         // This is a CBOR encoded byte sequence representing the remove-deny-list operation:
         // - 81: An array of 1 item
         // - a1: A map with 1 key-value pair
-        //   - 7072656d6f76652d64656e792d6c697374: Key "remove-deny-list" (in UTF-8)
+        //   - 6e72656d6f766544656e794c697374: Key "removeDenyList" (in UTF-8)
         //   - a1: A map with 1 key-value pair
         //     - 667461726765744: Key "target" (in UTF-8)
         //       - The account address cbor
@@ -332,7 +332,7 @@ describe('PLT v1 transactions', () => {
             `
             81
               a1
-                7072656d6f76652d64656e792d6c697374 a1
+                6e72656d6f766544656e794c697374 a1
                   66746172676574 ${testAccountAddressCbor}
             `.replace(/\s/g, ''),
             'hex'
@@ -377,9 +377,9 @@ describe('PLT v1 transactions', () => {
         //         - 82: An array of 2 items
         //           - 21: Integer(-2)
         //           - 1901f4: Uint16(500)
-        // - Second item (add-deny-list operation):
+        // - Second item (addDenyList operation):
         //   - a1: A map with 1 key-value pair
-        //     - 6d6164642d64656e792d6c697374: Key "add-deny-list" (in UTF-8)
+        //     - 6b61646444656e794c697374: Key "addDenyList" (in UTF-8)
         //     - a1: A map with 1 key-value pair
         //       - 667461726765744: Key "target" (in UTF-8)
         //       - The account address cbor
@@ -393,7 +393,7 @@ describe('PLT v1 transactions', () => {
                       21
                       1901f4
               a1
-                6d6164642d64656e792d6c697374 a1
+                6b61646444656e794c697374 a1
                   66746172676574 ${testAccountAddressCbor}
             `.replace(/\s/g, ''),
             'hex'

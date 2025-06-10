@@ -591,25 +591,23 @@ export class TokenGovernanceHandler
         const operations = Cbor.decode(payload.operations) as TokenGovernanceOperation[];
         // The base cost for a token governance transaction.
         var energyCost = 300n;
+        // Additional cost of specific PLT operations
+        const PLT_MINT_COST = 100n;
+        const PLT_BURN_COST = 100n;
+        const PLT_LIST_UPDATE_COST = 50n;
+
         for (const operation of operations) {
             if (TokenOperationType.Mint in operation) {
-                // The per-operation cost for a mint operation.
-                energyCost += 100n;
+                energyCost += PLT_MINT_COST;
             } else if (TokenOperationType.Burn in operation) {
-                // The per-operation cost for a burn operation.
-                energyCost += 100n;
-            } else if (TokenOperationType.AddAllowList in operation) {
-                // The per-operation cost for an add allow list operation.
-                energyCost += 50n;
-            } else if (TokenOperationType.RemoveAllowList in operation) {
-                // The per-operation cost for a remove allow list operation.
-                energyCost += 50n;
-            } else if (TokenOperationType.AddDenyList in operation) {
-                // The per-operation cost for an add deny list operation.
-                energyCost += 50n;
-            } else if (TokenOperationType.RemoveDenyList in operation) {
-                // The per-operation cost for a remove deny list operation.
-                energyCost += 50n;
+                energyCost += PLT_BURN_COST;
+            } else if (
+                TokenOperationType.AddAllowList in operation ||
+                TokenOperationType.RemoveAllowList in operation ||
+                TokenOperationType.AddDenyList in operation ||
+                TokenOperationType.RemoveDenyList in operation
+            ) {
+                energyCost += PLT_LIST_UPDATE_COST;
             }
         }
         return energyCost;

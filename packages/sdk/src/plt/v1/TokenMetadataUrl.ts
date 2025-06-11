@@ -8,7 +8,7 @@ export type JSON = {
     /** The checksum SHA-256 of the URL */
     checksumSha256?: HexString;
     /** Any additional values. These are hex representations of CBOR encoded values. */
-    [key: string]: HexString | undefined;
+    _additional?: Record<string, HexString>;
 };
 
 /** The intermediary CBOR representation of a {@linkcode Type} */
@@ -21,7 +21,7 @@ export type CBOR = {
      * Any additional values. These are CBOR intermediary representations of values and might include custom tags if
      * not handled by adding decoders for these.
      */
-    [key: string]: unknown
+    [key: string]: unknown;
 };
 
 /**
@@ -58,16 +58,17 @@ class TokenMetadataUrl {
      * @returns {JSON} The JSON representation.
      */
     public toJSON(): JSON {
-        const additional: Record<string, HexString> = {};
-        Object.entries(this.additional ?? {}).forEach(([key, value]) => {
-            additional[key] = Cbor.encode(value).toJSON();
-        });
+        let _additional: Record<string, HexString> | undefined;
+        if (this.additional !== undefined) {
+            const pairs = Object.entries(this.additional).map(([key, value]) => [key, Cbor.encode(value).toJSON()]);
+            _additional = Object.fromEntries(pairs);
+        }
 
         return {
-            ...additional,
             url: this.url,
             checksumSha256:
                 this.checksumSha256 !== undefined ? Buffer.from(this.checksumSha256).toString('hex') : undefined,
+            _additional,
         };
     }
 }

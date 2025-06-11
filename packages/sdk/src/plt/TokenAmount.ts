@@ -226,7 +226,7 @@ export function zero(): TokenAmount {
  * @throws {Err} If the value/decimals exceeds the maximum allowed or is negative.
  */
 export function fromProto(amount: Proto.TokenAmount): Type {
-    return create(amount.digits, amount.nrOfDecimals);
+    return create(amount.value, amount.decimals);
 }
 
 /**
@@ -236,8 +236,8 @@ export function fromProto(amount: Proto.TokenAmount): Type {
  */
 export function toProto(amount: Type): Proto.TokenAmount {
     return {
-        digits: amount.value,
-        nrOfDecimals: amount.decimals,
+        value: amount.value,
+        decimals: amount.decimals,
     };
 }
 

@@ -542,11 +542,12 @@ export class TokenHolderHandler implements AccountTransactionHandler<TokenHolder
         // TODO: update costs when finalized costs are determined.
         const operations = Cbor.decode(payload.operations) as TokenHolderOperation[];
         // The base cost for a token holder transaction.
-        var energyCost = 300n;
+        let energyCost = 300n;
+        const PLT_TRANSFER_COST = 100n;
         for (const operation of operations) {
             if (TokenOperationType.Transfer in operation) {
                 // The per-operation cost for a transfer operation.
-                energyCost += 100n;
+                energyCost += PLT_TRANSFER_COST;
             }
         }
         return energyCost;
@@ -590,26 +591,33 @@ export class TokenGovernanceHandler
         // TODO: update costs when finalized costs are determined.
         const operations = Cbor.decode(payload.operations) as TokenGovernanceOperation[];
         // The base cost for a token governance transaction.
-        var energyCost = 300n;
+        let energyCost = 300n;
         // Additional cost of specific PLT operations
+        const PLT_TRANSFER_COST = 100n;
         const PLT_MINT_COST = 100n;
         const PLT_BURN_COST = 100n;
         const PLT_LIST_UPDATE_COST = 50n;
 
         for (const operation of operations) {
-            if (TokenOperationType.Mint in operation) {
-                energyCost += PLT_MINT_COST;
-            } else if (TokenOperationType.Burn in operation) {
-                energyCost += PLT_BURN_COST;
-            } else if (
-                TokenOperationType.AddAllowList in operation ||
-                TokenOperationType.RemoveAllowList in operation ||
-                TokenOperationType.AddDenyList in operation ||
-                TokenOperationType.RemoveDenyList in operation
-            ) {
-                energyCost += PLT_LIST_UPDATE_COST;
+            switch (true) {
+                case TokenOperationType.Transfer in operation:
+                    energyCost += PLT_TRANSFER_COST;
+                    break;
+                case TokenOperationType.Mint in operation:
+                    energyCost += PLT_MINT_COST;
+                    break;
+                case TokenOperationType.Burn in operation:
+                    energyCost += PLT_BURN_COST;
+                    break;
+                case TokenOperationType.AddAllowList in operation:
+                case TokenOperationType.RemoveAllowList in operation:
+                case TokenOperationType.AddDenyList in operation:
+                case TokenOperationType.RemoveDenyList in operation:
+                    energyCost += PLT_LIST_UPDATE_COST;
+                    break;
             }
         }
+
         return energyCost;
     }
     toJSON(payload: TokenGovernancePayload): TokenGovernancePayloadJSON {

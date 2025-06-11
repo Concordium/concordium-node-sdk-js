@@ -1,5 +1,5 @@
-import { HexString, cborDecode, cborEncode } from '../../index.js';
-import { Cbor } from '../index.js';
+import { HexString, cborDecode, cborEncode } from '../index.js';
+import { Cbor } from './index.js';
 
 /** The JSON representation of a {@linkcode Type} */
 export type JSON = {
@@ -27,7 +27,7 @@ export type CBOR = {
 /**
  * Protocol level token (PLT) metadata URL.
  */
-class TokenMetadataUrl {
+export class TokenMetadataUrl {
     #nominal = true;
 
     /**
@@ -121,15 +121,15 @@ export function instanceOf(value: unknown): value is TokenMetadataUrl {
  * @param {string} json The JSON representation of token metadata URL.
  * @returns {TokenMetadataUrl} The token metadata URL.
  */
-export function fromJSON({ url, checksumSha256, ...other }: JSON): TokenMetadataUrl {
-    const additional: Record<string, unknown> = {};
-    Object.entries(other).forEach(([key, value]) => {
-        if (value !== undefined) {
-            additional[key] = Cbor.decode(Cbor.fromJSON(value));
-        }
-    });
+export function fromJSON({ url, checksumSha256, _additional }: JSON): TokenMetadataUrl {
+    let additional: Record<string, unknown> | undefined;
+    if (_additional !== undefined) {
+        const pairs = Object.entries(_additional).map(([key, value]) => [key, Cbor.decode(Cbor.fromJSON(value))]);
+        additional = Object.fromEntries(pairs);
+    }
 
-    const checksumSha256Parsed = checksumSha256 !== undefined ? Buffer.from(checksumSha256, 'hex') : undefined;
+    const checksumSha256Parsed =
+        checksumSha256 !== undefined ? Uint8Array.from(Buffer.from(checksumSha256, 'hex')) : undefined;
     return create(url, checksumSha256Parsed, additional);
 }
 
@@ -171,14 +171,15 @@ export function fromCBORValue(value: unknown): TokenMetadataUrl {
     if (!('url' in value) || typeof value.url !== 'string') {
         throw new Error('Missing or invalid "url" field in TokenMetadataUrl');
     }
-    let checksumSha256: Uint8Array | undefined;
-    if ('checksumSha256' in value) {
-        if (!(value.checksumSha256 instanceof Uint8Array) || value.checksumSha256.length !== 32) {
-            throw new Error('Invalid "checksumSha256" field in TokenMetadataUrl');
-        }
-        checksumSha256 = value.checksumSha256;
+    // check that checksumSha256 is either undefined or a Uint8Array of length 32
+    if (
+        'checksumSha256' in value &&
+        (!(value.checksumSha256 instanceof Uint8Array) || value.checksumSha256.length !== 32)
+    ) {
+        throw new Error('Invalid "checksumSha256" field in TokenMetadataUrl');
     }
-    const { url, ...other } = value;
+
+    const { url, checksumSha256, ...other } = value as CBOR;
     let additional: Record<string, unknown> | undefined;
     if (Object.keys(other).some((key) => typeof key !== 'string')) {
         throw new Error('Invalid additional fields in TokenMetadataUrl. Can only contain string keys.');

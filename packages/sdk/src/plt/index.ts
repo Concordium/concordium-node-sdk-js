@@ -2,6 +2,7 @@ export * from './types.js';
 
 export * as TokenId from './TokenId.js';
 export * as TokenModuleReference from './TokenModuleReference.js';
+export * as TokenMetadataUrl from './TokenMetadataUrl.js';
 export * as TokenAmount from './TokenAmount.js';
 export {
     fromId,

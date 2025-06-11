@@ -1,5 +1,6 @@
 export * from '../plt/types.js';
 
+export * as TokenMetadataUrl from '../plt/TokenMetadataUrl.js';
 export * as V1 from '../plt/v1/index.js';
 
 export * as Token from './plt/Token.js';

@@ -1,7 +1,7 @@
 import { TokenGovernancePayload, TokenHolderPayload } from '../../index.js';
 import * as AccountAddress from '../../types/AccountAddress.js';
 import { Cbor, CborMemo, TokenModuleEvent as EncodedModuleEvent, TokenAmount, TokenHolder, TokenId } from '../index.js';
-import * as TokenMetadataUrl from './TokenMetadataUrl.js';
+import * as TokenMetadataUrl from '../TokenMetadataUrl.js';
 
 /**
  * Enum representing the types of token operations.

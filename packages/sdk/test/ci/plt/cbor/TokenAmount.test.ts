@@ -33,19 +33,21 @@ describe('PLT TokenAmount CBOR', () => {
     });
 
     test('CBOR decoding works correctly', () => {
-        // Create a test amount with known values
-        const originalAmount = TokenAmount.create(7500000n, 4);
+        let originalAmount = TokenAmount.create(7500000n, 4);
+        let encoded = TokenAmount.toCBOR(originalAmount);
+        let decoded = TokenAmount.fromCBOR(encoded);
 
-        // Encode to CBOR
-        const encoded = TokenAmount.toCBOR(originalAmount);
-
-        // Decode from CBOR
-        const decoded = TokenAmount.fromCBOR(encoded);
-
-        // Verify the decoded amount matches the original
         expect(decoded.value).toBe(originalAmount.value);
         expect(decoded.decimals).toBe(originalAmount.decimals);
         expect(TokenAmount.toDecimal(decoded).toString()).toBe('750'); // 7500000 / 10^4 = 750
+
+        originalAmount = TokenAmount.create(75n, 0);
+        encoded = TokenAmount.toCBOR(originalAmount);
+        decoded = TokenAmount.fromCBOR(encoded);
+
+        expect(decoded.value).toBe(originalAmount.value);
+        expect(decoded.decimals).toBe(originalAmount.decimals);
+        expect(TokenAmount.toDecimal(decoded).toString()).toBe('75'); // 75 / 10^0 = 75
     });
 
     test('CBOR decoding with decoder registration', () => {

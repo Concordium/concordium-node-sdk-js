@@ -308,7 +308,7 @@ function parseCBORValue(decoded: unknown): TokenAmount {
     }
 
     // Convert to TokenAmount (decimals is negative of exponent)
-    if (exponent >= 0) {
+    if (exponent > 0) {
         throw new Error('Invalid CBOR encoded token amount: exponent cannot have a positive amount');
     }
     if (exponent <= -MAX_U8) {

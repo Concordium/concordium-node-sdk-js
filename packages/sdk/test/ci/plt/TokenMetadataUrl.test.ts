@@ -61,12 +61,65 @@ describe('TokenMetadataUrl', () => {
         const url = 'https://example.com';
         const checksum = new Uint8Array(32);
         checksum.fill(1);
-        const additional = { key: 'value' };
+        const additional = { key: 'value', another: 40 };
 
-        const tokenMetadataUrl = TokenMetadataUrl.create(url, checksum, additional);
-        const cbor = TokenMetadataUrl.toCBOR(tokenMetadataUrl);
-        const deserialized = TokenMetadataUrl.fromCBOR(cbor);
+        let tokenMetadataUrl = TokenMetadataUrl.create(url, checksum, additional);
+        let cbor = TokenMetadataUrl.toCBOR(tokenMetadataUrl);
 
+        // a4 - Map of size 4
+        // 63 6b6579 65 76616c7565 - key 'key', value 'value'
+        // 63 75726c 73 68747470733a2f2f6578616d706c652e636f6d - key 'url', value 'https://example.com'
+        // 67 616e6f74686572 18 28 - key 'another', value 40 (0x28)
+        // 6e 636865636b73756d536861323536 5820 0101010101010101010101010101010101010101010101010101010101010101 - key 'checksumSha256', value 32-byte checksum
+        let expectedCbor = Buffer.from(
+            `
+            a4
+              63 6b6579 65 76616c7565
+              63 75726c 73 68747470733a2f2f6578616d706c652e636f6d
+              67 616e6f74686572 18 28
+              6e 636865636b73756d536861323536 5820 0101010101010101010101010101010101010101010101010101010101010101
+            `.replace(/\s/g, ''),
+            'hex'
+        );
+        expect(Buffer.from(cbor).toString('hex')).toEqual(expectedCbor.toString('hex'));
+
+        let deserialized = TokenMetadataUrl.fromCBOR(cbor);
+        expect(deserialized).toEqual(tokenMetadataUrl);
+
+        tokenMetadataUrl = TokenMetadataUrl.create(url, checksum);
+        cbor = TokenMetadataUrl.toCBOR(tokenMetadataUrl);
+
+        // a2 - Map of size 2
+        // 63 75726c 73 68747470733a2f2f6578616d706c652e636f6d - key 'url', value 'https://example.com'
+        // 6e 636865636b73756d536861323536 5820 0101010101010101010101010101010101010101010101010101010101010101 - key 'checksumSha256', value 32-byte checksum
+        expectedCbor = Buffer.from(
+            `
+            a2
+              63 75726c 73 68747470733a2f2f6578616d706c652e636f6d
+              6e 636865636b73756d536861323536 5820 0101010101010101010101010101010101010101010101010101010101010101
+            `.replace(/\s/g, ''),
+            'hex'
+        );
+        expect(Buffer.from(cbor).toString('hex')).toEqual(expectedCbor.toString('hex'));
+
+        deserialized = TokenMetadataUrl.fromCBOR(cbor);
+        expect(deserialized).toEqual(tokenMetadataUrl);
+
+        tokenMetadataUrl = TokenMetadataUrl.create(url);
+        cbor = TokenMetadataUrl.toCBOR(tokenMetadataUrl);
+
+        // a1 - Map of size 2
+        // 63 75726c 73 68747470733a2f2f6578616d706c652e636f6d - key 'url', value 'https://example.com'
+        expectedCbor = Buffer.from(
+            `
+            a1
+              63 75726c 73 68747470733a2f2f6578616d706c652e636f6d
+            `.replace(/\s/g, ''),
+            'hex'
+        );
+        expect(Buffer.from(cbor).toString('hex')).toEqual(expectedCbor.toString('hex'));
+
+        deserialized = TokenMetadataUrl.fromCBOR(cbor);
         expect(deserialized).toEqual(tokenMetadataUrl);
     });
 

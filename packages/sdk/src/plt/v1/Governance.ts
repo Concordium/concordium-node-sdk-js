@@ -14,7 +14,7 @@ import {
     createTokenGovernancePayload,
 } from './types.js';
 
-type SupplyUpdateOtions = {
+type SupplyUpdateOptions = {
     /** Whether to automatically scale a token amount to the correct number of decimals as the token */
     autoScale?: boolean;
     /** Whether to validate the payload executing it */
@@ -29,7 +29,7 @@ type SupplyUpdateOtions = {
  * @param {TokenAmount.Type | TokenAmount.Type[]} amounts - The amount(s) of tokens to mint.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
- * @param {SupplyUpdateOtions} [opts={ autoScale: true, validate: true }] - Options for supply update operations.
+ * @param {SupplyUpdateOptions} [opts={ autoScale: true, validate: true }] - Options for supply update operations.
  *
  * @returns A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If the token amount is not compatible with the token.
@@ -41,7 +41,7 @@ export async function mint(
     amounts: TokenAmount.Type | TokenAmount.Type[],
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    opts: SupplyUpdateOtions = { autoScale: true, validate: true }
+    opts: SupplyUpdateOptions = { autoScale: true, validate: true }
 ): Promise<TransactionHash.Type> {
     const amountsList = [amounts].flat();
     const ops: TokenMintOperation[] = amountsList.map((amount) => {
@@ -61,7 +61,7 @@ export async function mint(
  * @param {TokenAmount.Type | TokenAmount.Type[]} amounts - The amount(s) of tokens to burn.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
- * @param {SupplyUpdateOtions} [opts={ autoScale: true, validate: true }] - Options for supply update operations.
+ * @param {SupplyUpdateOptions} [opts={ autoScale: true, validate: true }] - Options for supply update operations.
  *
  * @returns A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If the token amount is not compatible with the token.
@@ -73,7 +73,7 @@ export async function burn(
     amounts: TokenAmount.Type | TokenAmount.Type[],
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    opts: SupplyUpdateOtions = { autoScale: true, validate: true }
+    opts: SupplyUpdateOptions = { autoScale: true, validate: true }
 ): Promise<TransactionHash.Type> {
     const amountsList = [amounts].flat();
     const ops: TokenBurnOperation[] = amountsList.map((amount) => {

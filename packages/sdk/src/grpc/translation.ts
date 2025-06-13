@@ -1630,6 +1630,17 @@ function trAccessStructure(auths: GRPC.AccessStructure | undefined): SDK.Authori
     };
 }
 
+function trOptionalAccessStructure(auths: GRPC.AccessStructure | undefined): SDK.Authorization | undefined {
+    if (auths === undefined) {
+        return undefined;
+    }
+
+    return {
+        authorizedKeys: auths.accessPublicKeys.map((key) => key.value),
+        threshold: unwrap(auths.accessThreshold?.value),
+    };
+}
+
 function trKeyUpdate(keyUpdate: GRPC.RootUpdate | GRPC.Level1Update): SDK.KeyUpdate {
     switch (keyUpdate.updateType.oneofKind) {
         case 'rootKeysUpdate': {
@@ -1698,6 +1709,7 @@ function trAuthorizationsV1(auths: GRPC.AuthorizationsV1): SDK.AuthorizationsV1 
         version: 1,
         cooldownParameters: trAccessStructure(auths.parameterCooldown),
         timeParameters: trAccessStructure(auths.parameterTime),
+        createPlt: trOptionalAccessStructure(auths.createPlt),
     };
 }
 

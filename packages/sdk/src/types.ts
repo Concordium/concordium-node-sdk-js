@@ -530,6 +530,8 @@ export interface AuthorizationsV1 extends AuthorizationsCommon {
     version: 1;
     cooldownParameters: Authorization;
     timeParameters: Authorization;
+    /** Available from protocol 9 */
+    createPlt?: Authorization;
 }
 
 export type Authorizations = AuthorizationsV0 | AuthorizationsV1;

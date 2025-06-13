@@ -7,10 +7,11 @@ import type { Cbor, CborMemo, TokenAmount, TokenId, TokenModuleReference } from 
 export type TokenAccountState = {
     /** The amount of tokens held by the account. */
     balance: TokenAmount.Type;
-    /** Indicates whether the account is on the allow list. `undefined` if the list type is not supported by the token. */
-    memberAllowList?: boolean;
-    /** Indicates whether the account is on the deny list. `undefined` if the list type is not supported by the token. */
-    memberDenyList?: boolean;
+    /**
+     * Token module specific state (CBOR encoded), such as membership of allow/deny lists.
+     * This should be a CBOR-encoded `TokenModuleAccountState` object.
+     */
+    moduleState?: Cbor.Type;
 };
 
 /**

@@ -349,8 +349,7 @@ function trTokenAccountInfo(token: GRPC.AccountInfo_Token): PLT.TokenAccountInfo
         id: PLT.TokenId.fromProto(unwrap(token.tokenId)),
         state: {
             balance: PLT.TokenAmount.fromProto(unwrap(token.tokenAccountState?.balance)),
-            memberAllowList: token.tokenAccountState?.memberAllowList,
-            memberDenyList: token.tokenAccountState?.memberDenyList,
+            moduleState: PLT.Cbor.fromProto(unwrap(token.tokenAccountState?.moduleState)),
         },
     };
 }

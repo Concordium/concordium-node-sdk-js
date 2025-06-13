@@ -154,26 +154,23 @@ export function instanceOf(value: unknown): value is TokenAmount {
  *
  * @throws {Err} If the value exceeds the maximum allowed or is negative.
  */
-export function fromDecimal(amount: BigSource | bigint): TokenAmount {
+export function fromDecimal(amount: BigSource | bigint, decimals: number): TokenAmount {
     let parsed: BigSource;
     if (typeof amount !== 'bigint') {
-        parsed = newBig(amount);
+        parsed = Big(amount);
     } else {
         parsed = amount.toString();
     }
 
-    const bigAmount = newBig(parsed);
-    const decimals = bigAmount.toString().split('.')[1]?.length ?? 0;
-    const intAmount = bigAmount.mul(Big(10 ** decimals));
+    const bigAmount = Big(parsed);
+    const parsedDecimals = bigAmount.toString().split('.')[1]?.length ?? 0;
 
-    return new TokenAmount(BigInt(intAmount.toString()), decimals);
-}
-
-function newBig(bigSource: BigSource): Big {
-    if (typeof bigSource === 'string') {
-        return Big(bigSource.replace(',', '.'));
+    if (parsedDecimals > decimals) {
+        throw new Error('The amount has more decimal places than the specified decimals.');
     }
-    return Big(bigSource);
+
+    const intAmount = bigAmount.mul(Big((10n ** BigInt(decimals)).toString()));
+    return new TokenAmount(BigInt(intAmount.toString()), decimals);
 }
 
 /**
@@ -201,22 +198,23 @@ export function fromJSON(json: JSON): TokenAmount {
  * Creates a token amount from its integer representation and a number of decimals.
  *
  * @param {bigint} value The integer representation of the token amount.
- * @param {number} decimals The decimals of the token amount, defining the precision at which amounts of the token can be specified. Defaults to `0`.
+ * @param {number} decimals The decimals of the token amount, defining the precision at which amounts of the token can be specified.
  *
  * @returns {TokenAmount} The token amount.
  * @throws {Err} If the value/decimals exceeds the maximum allowed or is negative.
  */
-export function create(value: bigint, decimals: number = 0): TokenAmount {
+export function create(value: bigint, decimals: number): TokenAmount {
     return new TokenAmount(value, decimals);
 }
 
 /**
  * Creates a token amount with a value of zero.
  *
+ * @param {number} decimals The decimals of the token amount, defining the precision at which amounts of the token can be specified.
  * @returns {TokenAmount} The token amount.
  */
-export function zero(): TokenAmount {
-    return new TokenAmount(BigInt(0), 0);
+export function zero(decimals: number): TokenAmount {
+    return new TokenAmount(BigInt(0), decimals);
 }
 
 /**

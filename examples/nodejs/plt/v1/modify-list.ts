@@ -19,7 +19,7 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> <list-name> <action> [options]
 
   Required
-    --token-symbol, -t  The symbol of the token to manage
+    --token-id,     -t  The unique id of the token to transfer
     --address,      -a  The account address to add to the allow list (in base58 format)
 
   Options
@@ -31,7 +31,7 @@ const cli = meow(
     {
         importMeta: import.meta,
         flags: {
-            tokenSymbol: {
+            tokenId: {
                 type: 'string',
                 alias: 't',
                 isRequired: true,
@@ -61,7 +61,7 @@ const cli = meow(
     }
 );
 
-const { tokenSymbol, address, walletFile, endpoint } = cli.flags;
+const { tokenId: id, address, walletFile, endpoint } = cli.flags;
 
 const [addr, port] = parseEndpoint(endpoint);
 const client = new ConcordiumGRPCNodeClient(
@@ -94,7 +94,7 @@ const client = new ConcordiumGRPCNodeClient(
     }
 
     // parse the arguments
-    const tokenId = TokenId.fromString(tokenSymbol);
+    const tokenId = TokenId.fromString(id);
     const targetAddress = AccountAddress.fromBase58(address);
 
     if (walletFile !== undefined) {

@@ -199,15 +199,16 @@ export async function validateTransfer(
 
     // Validate all amounts
     payloads.forEach((p) => validateAmount(token, p.amount));
+    const { decimals } = token.info.state;
 
     // Check the sender balance.
-    const senderBalance = (await balanceOf(token, sender)) ?? TokenAmount.zero(); // We fall back to zero, as the `token` has already been validated at this point.
+    const senderBalance = (await balanceOf(token, sender)) ?? TokenAmount.zero(decimals); // We fall back to zero, as the `token` has already been validated at this point.
     const payloadTotal = payloads.reduce(
         (acc, { amount }) => acc.add(TokenAmount.toDecimal(amount)),
-        TokenAmount.toDecimal(TokenAmount.zero())
+        TokenAmount.toDecimal(TokenAmount.zero(decimals))
     );
     if (TokenAmount.toDecimal(senderBalance).lt(payloadTotal)) {
-        throw new InsufficientFundsError(sender, TokenAmount.fromDecimal(payloadTotal));
+        throw new InsufficientFundsError(sender, TokenAmount.fromDecimal(payloadTotal, decimals));
     }
 
     const moduleState = Cbor.decode(token.info.state.moduleState) as TokenModuleState;

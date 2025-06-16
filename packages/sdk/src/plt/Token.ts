@@ -219,7 +219,6 @@ export async function holderTransaction(
  * @param {TokenGovernancePayload} payload - The transaction payload.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
- * @param {boolean} [validate=true] - Whether to validate the sender's authorization.
  *
  * @returns {Promise<TransactionHash.Type>} A promise that resolves to the transaction hash.
  * @throws {UnauthorizedGovernanceOperationError} If the sender is not the token issuer.
@@ -229,14 +228,12 @@ export async function governanceTransaction(
     sender: AccountAddress.Type,
     payload: TokenGovernancePayload,
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    validate: boolean = true
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
     // Check if the sender is the token issuer
-    if (validate && !AccountAddress.equals(sender, token.info.state.issuer)) {
+    if (!AccountAddress.equals(sender, token.info.state.issuer)) {
         throw new UnauthorizedGovernanceOperationError(sender);
     }
-
     const { nonce } = await token.grpc.getNextAccountNonce(sender);
     const header: AccountTransactionHeader = {
         expiry,

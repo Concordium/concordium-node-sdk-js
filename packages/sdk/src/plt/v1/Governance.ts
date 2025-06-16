@@ -1,5 +1,5 @@
 import { AccountAddress, AccountSigner, TransactionExpiry, TransactionHash } from '../../pub/types.js';
-import { governanceTransaction, scaleAmount } from '../Token.js';
+import { governanceTransaction, scaleAmount, validateAmount } from '../Token.js';
 import { TokenAmount } from '../index.js';
 import { Type as Token } from './Token.js';
 import {
@@ -14,13 +14,6 @@ import {
     createTokenGovernancePayload,
 } from './types.js';
 
-type SupplyUpdateOptions = {
-    /** Whether to automatically scale a token amount to the correct number of decimals as the token */
-    autoScale?: boolean;
-    /** Whether to validate the payload executing it */
-    validate?: boolean;
-};
-
 /**
  * Mints a specified amount of tokens.
  *
@@ -29,7 +22,6 @@ type SupplyUpdateOptions = {
  * @param {TokenAmount.Type | TokenAmount.Type[]} amounts - The amount(s) of tokens to mint.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
- * @param {SupplyUpdateOptions} [opts={ autoScale: true, validate: true }] - Options for supply update operations.
  *
  * @returns A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If the token amount is not compatible with the token.
@@ -40,17 +32,15 @@ export async function mint(
     sender: AccountAddress.Type,
     amounts: TokenAmount.Type | TokenAmount.Type[],
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    opts: SupplyUpdateOptions = { autoScale: true, validate: true }
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
     const amountsList = [amounts].flat();
-    const ops: TokenMintOperation[] = amountsList.map((amount) => {
-        const scaled = opts.autoScale ? scaleAmount(token, amount) : amount;
-        return {
-            [TokenOperationType.Mint]: { amount: scaled },
-        };
-    });
-    return batchOperations(token, sender, ops, signer, expiry, opts.validate);
+    amountsList.forEach((amount) => validateAmount(token, amount));
+
+    const ops: TokenMintOperation[] = amountsList.map((amount) => ({
+        [TokenOperationType.Mint]: { amount: scaleAmount(token, amount) },
+    }));
+    return batchOperations(token, sender, ops, signer, expiry);
 }
 
 /**
@@ -61,7 +51,6 @@ export async function mint(
  * @param {TokenAmount.Type | TokenAmount.Type[]} amounts - The amount(s) of tokens to burn.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
- * @param {SupplyUpdateOptions} [opts={ autoScale: true, validate: true }] - Options for supply update operations.
  *
  * @returns A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If the token amount is not compatible with the token.
@@ -72,23 +61,16 @@ export async function burn(
     sender: AccountAddress.Type,
     amounts: TokenAmount.Type | TokenAmount.Type[],
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    opts: SupplyUpdateOptions = { autoScale: true, validate: true }
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
     const amountsList = [amounts].flat();
-    const ops: TokenBurnOperation[] = amountsList.map((amount) => {
-        const scaled = opts.autoScale ? scaleAmount(token, amount) : amount;
-        return {
-            [TokenOperationType.Burn]: { amount: scaled },
-        };
-    });
-    return batchOperations(token, sender, ops, signer, expiry, opts.validate);
-}
+    amountsList.forEach((amount) => validateAmount(token, amount));
 
-type UpdateListOptions = {
-    /** Whether to validate the payload executing it */
-    validate?: boolean;
-};
+    const ops: TokenBurnOperation[] = amountsList.map((amount) => ({
+        [TokenOperationType.Burn]: { amount: scaleAmount(token, amount) },
+    }));
+    return batchOperations(token, sender, ops, signer, expiry);
+}
 
 /**
  * Adds an account to the allow list of a token.
@@ -98,7 +80,6 @@ type UpdateListOptions = {
  * @param {AccountAddress.Type | AccountAddress.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
- * @param {UpdateListOptions} [opts={ validate: true }] - Options for updating the allow/deny list.
  *
  * @returns A promise that resolves to the transaction hash.
  * @throws {UnauthorizedGovernanceOperationError} If the sender is not the token issuer.
@@ -108,13 +89,12 @@ export async function addAllowList(
     sender: AccountAddress.Type,
     targets: AccountAddress.Type | AccountAddress.Type[],
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    { validate }: UpdateListOptions = { validate: true }
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
     const ops: TokenAddAllowListOperation[] = [targets]
         .flat()
         .map((target) => ({ [TokenOperationType.AddAllowList]: { target } }));
-    return batchOperations(token, sender, ops, signer, expiry, validate);
+    return batchOperations(token, sender, ops, signer, expiry);
 }
 
 /**
@@ -125,7 +105,6 @@ export async function addAllowList(
  * @param {AccountAddress.Type | AccountAddress.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
- * @param {UpdateListOptions} [opts={ validate: true }] - Options for updating the allow/deny list.
  *
  * @returns A promise that resolves to the transaction hash.
  * @throws {UnauthorizedGovernanceOperationError} If the sender is not the token issuer.
@@ -135,13 +114,12 @@ export async function removeAllowList(
     sender: AccountAddress.Type,
     targets: AccountAddress.Type | AccountAddress.Type[],
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    { validate }: UpdateListOptions = { validate: true }
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
     const ops: TokenRemoveAllowListOperation[] = [targets]
         .flat()
         .map((target) => ({ [TokenOperationType.RemoveAllowList]: { target } }));
-    return batchOperations(token, sender, ops, signer, expiry, validate);
+    return batchOperations(token, sender, ops, signer, expiry);
 }
 
 /**
@@ -152,7 +130,6 @@ export async function removeAllowList(
  * @param {AccountAddress.Type | AccountAddress.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
- * @param {UpdateListOptions} [opts={ validate: true }] - Options for updating the allow/deny list.
  *
  * @returns A promise that resolves to the transaction hash.
  * @throws {UnauthorizedGovernanceOperationError} If the sender is not the token issuer.
@@ -162,13 +139,12 @@ export async function addDenyList(
     sender: AccountAddress.Type,
     targets: AccountAddress.Type | AccountAddress.Type[],
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    { validate }: UpdateListOptions = { validate: true }
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
     const ops: TokenAddDenyListOperation[] = [targets]
         .flat()
         .map((target) => ({ [TokenOperationType.AddDenyList]: { target } }));
-    return batchOperations(token, sender, ops, signer, expiry, validate);
+    return batchOperations(token, sender, ops, signer, expiry);
 }
 
 /**
@@ -179,7 +155,6 @@ export async function addDenyList(
  * @param {AccountAddress.Type | AccountAddress.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
- * @param {UpdateListOptions} [opts={ validate: true }] - Options for updating the allow/deny list.
  *
  * @returns A promise that resolves to the transaction hash.
  * @throws {UnauthorizedGovernanceOperationError} If the sender is not the token issuer.
@@ -189,13 +164,12 @@ export async function removeDenyList(
     sender: AccountAddress.Type,
     targets: AccountAddress.Type | AccountAddress.Type[],
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    { validate }: UpdateListOptions = { validate: true }
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
     const ops: TokenRemoveDenyListOperation[] = [targets]
         .flat()
         .map((target) => ({ [TokenOperationType.RemoveDenyList]: { target } }));
-    return batchOperations(token, sender, ops, signer, expiry, validate);
+    return batchOperations(token, sender, ops, signer, expiry);
 }
 
 /**
@@ -206,7 +180,6 @@ export async function removeDenyList(
  * @param {TokenGovernanceOperation[]} operations - An array of governance operations to execute.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
- * @param {boolean} [validate=true] - Whether to validate the operations before executing.
  *
  * @returns A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If a token amount is not compatible with the token.
@@ -217,9 +190,8 @@ export async function batchOperations(
     sender: AccountAddress.Type,
     operations: TokenGovernanceOperation[],
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    validate: boolean = true
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
     const payload = createTokenGovernancePayload(token.info.id, operations);
-    return governanceTransaction(token, sender, payload, signer, expiry, validate);
+    return governanceTransaction(token, sender, payload, signer, expiry);
 }

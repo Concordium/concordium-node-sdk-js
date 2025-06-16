@@ -199,16 +199,15 @@ export async function validateTransfer(
 
     // Validate all amounts
     payloads.forEach((p) => validateAmount(token, p.amount));
-    const { decimals } = token.info.state;
 
     // Check the sender balance.
-    const senderBalance = (await balanceOf(token, sender)) ?? TokenAmount.zero(decimals); // We fall back to zero, as the `token` has already been validated at this point.
+    const senderBalance = (await balanceOf(token, sender)) ?? TokenAmount.zero(); // We fall back to zero, as the `token` has already been validated at this point.
     const payloadTotal = payloads.reduce(
         (acc, { amount }) => acc.add(TokenAmount.toDecimal(amount)),
-        TokenAmount.toDecimal(TokenAmount.zero(decimals))
+        TokenAmount.toDecimal(TokenAmount.zero())
     );
     if (TokenAmount.toDecimal(senderBalance).lt(payloadTotal)) {
-        throw new InsufficientFundsError(sender, TokenAmount.fromDecimal(payloadTotal, decimals));
+        throw new InsufficientFundsError(sender, TokenAmount.fromDecimal(payloadTotal));
     }
 
     const moduleState = Cbor.decode(token.info.state.moduleState) as TokenModuleState;
@@ -231,13 +230,6 @@ export async function validateTransfer(
     return true;
 }
 
-type TransferOtions = {
-    /** Whether to automatically scale a token amount to the correct number of decimals as the token */
-    autoScale?: boolean;
-    /** Whether to validate the payload executing it */
-    validate?: boolean;
-};
-
 /**
  * Transfers tokens from the sender to the specified recipients.
  *
@@ -246,7 +238,6 @@ type TransferOtions = {
  * @param {TokenTransfer | [TokenTransfer]} payload - The transfer payload.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
- * @param {TransferOtions} [opts={ autoScale: true, validate: true }] - Options for the transfer.
  *
  * @returns {Promise<TransactionHash.Type>} A promise that resolves to the transaction hash.
  * @throws {InvalidTokenAmountError} If any token amount is not compatible with the token.
@@ -258,19 +249,13 @@ export async function transfer(
     sender: AccountAddress.Type,
     payload: TokenTransfer | [TokenTransfer],
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
-    opts: TransferOtions = { autoScale: true, validate: true }
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
-    if (opts.validate) {
-        await validateTransfer(token, sender, payload);
-    }
+    await validateTransfer(token, sender, payload);
 
-    const ops: TokenHolderOperation[] = [payload].flat().map((p) => {
-        const amount = opts.autoScale ? scaleAmount(token, p.amount) : p.amount;
-        return {
-            [TokenOperationType.Transfer]: { ...p, amount },
-        };
-    });
+    const ops: TokenHolderOperation[] = [payload]
+        .flat()
+        .map((p) => ({ [TokenOperationType.Transfer]: { ...p, amount: scaleAmount(token, p.amount) } }));
     const encoded = createTokenHolderPayload(token.info.id, ops);
 
     return holderTransaction(token, sender, encoded, signer, expiry);

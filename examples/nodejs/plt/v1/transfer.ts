@@ -19,7 +19,7 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> [options]
 
   Required
-    --token-symbol, -t  The symbol of the token to transfer
+    --token-id,     -t  The unique id of the token to transfer
     --amount,       -a  The amount of tokens to transfer
     --recipient,    -r  The recipient address in base58 format
 
@@ -47,7 +47,7 @@ const cli = meow(
                 type: 'string',
                 alias: 'w',
             },
-            tokenSymbol: {
+            tokenId: {
                 type: 'string',
                 alias: 't',
                 isRequired: true,
@@ -81,8 +81,9 @@ const client = new ConcordiumGRPCNodeClient(
     // #region documentation-snippet
 
     // parse the other arguments
-    const tokenSymbol = TokenId.fromString(cli.flags.tokenSymbol);
-    const amount = TokenAmount.fromDecimal(cli.flags.amount);
+    const tokenId = TokenId.fromString(cli.flags.tokenId);
+    const token = await V1.Token.fromId(client, tokenId);
+    const amount = TokenAmount.fromDecimal(cli.flags.amount, token.info.state.decimals);
     const recipient = AccountAddress.fromBase58(cli.flags.recipient);
     const memo = cli.flags.memo ? CborMemo.fromString(cli.flags.memo) : undefined;
 
@@ -99,7 +100,6 @@ const client = new ConcordiumGRPCNodeClient(
         // From a service perspective:
         // create the token instance
         try {
-            const token = await V1.Token.fromId(client, tokenSymbol);
             const transaction = await V1.Token.transfer(token, sender, transfer, signer);
             console.log(`Transaction submitted with hash: ${transaction}`);
 
@@ -133,7 +133,7 @@ const client = new ConcordiumGRPCNodeClient(
         const transferOperation: V1.TokenTransferOperation = {
             transfer,
         };
-        const payload = V1.createTokenHolderPayload(tokenSymbol, transferOperation);
+        const payload = V1.createTokenHolderPayload(tokenId, transferOperation);
         console.log('Created payload:', payload);
 
         // Serialize payload for signing/submission

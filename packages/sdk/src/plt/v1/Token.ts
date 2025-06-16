@@ -223,11 +223,12 @@ export async function validateTransfer(
     const accounts = await Promise.all([senderPromise, ...receiverPromises]);
     accounts.forEach((r) => {
         const accToken = r.accountTokens.find((t) => t.id.value === token.info.id.value)?.state;
-        if (accToken?.moduleState !== undefined) {
-            const moduleState = Cbor.decode(accToken.moduleState) as TokenModuleAccountState;
-            if (moduleState.memberDenyList || moduleState.memberAllowList === false) {
-                throw new NotAllowedError(r.accountAddress);
-            }
+        if (accToken?.moduleState === undefined) {
+            return;
+        }
+        const moduleState = Cbor.decode(accToken.moduleState) as TokenModuleAccountState;
+        if (moduleState.memberDenyList || moduleState.memberAllowList === false) {
+            throw new NotAllowedError(r.accountAddress);
         }
     });
 

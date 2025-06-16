@@ -42,8 +42,9 @@
   any previously registered decoder for the corresponding CBOR tag.
 - `TokenHolderHandler` and `TokenGovernanceHandler`, which are also accessible by passing the corresponding
   `TransactionType` to `getAccountTransactionHandler`.
-- function `parseSimpleWallet` which parses a `SimpleWalletFormat` (also a subset of `GenesisFormat`), which can be used
+- Function `parseSimpleWallet` which parses a `SimpleWalletFormat` (also a subset of `GenesisFormat`), which can be used
   with `buildAccountSigner`
+- A new optional field `createPlt` to `AuthorizationsV1` which exposes the access structure for PLT creation.
 
 ## 9.1.1
 

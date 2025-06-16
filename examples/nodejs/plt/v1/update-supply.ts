@@ -18,7 +18,7 @@ const cli = meow(
     $ yarn run-example <path-to-this-file> <action> [options]
 
   Required
-    --token-id,     -t  The unique id of the token to transfer
+    --token-symbol, -t  The symbol of the token to mint/burn
     --amount,       -a  The amount of tokens to mint/burn
 
   Options
@@ -44,7 +44,7 @@ const cli = meow(
                 type: 'string',
                 alias: 'w',
             },
-            tokenId: {
+            tokenSymbol: {
                 type: 'string',
                 alias: 't',
                 isRequired: true,
@@ -58,7 +58,7 @@ const cli = meow(
     }
 );
 
-const { tokenId: id, walletFile, endpoint, amount } = cli.flags;
+const { tokenSymbol, walletFile, endpoint, amount } = cli.flags;
 
 const [addr, port] = parseEndpoint(endpoint);
 const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.createInsecure());
@@ -79,9 +79,8 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
     }
 
     // parse the arguments
-    const tokenId = TokenId.fromString(id);
-    const token = await V1.Token.fromId(client, tokenId);
-    const tokenAmount = TokenAmount.fromDecimal(amount, token.info.state.decimals);
+    const tokenId = TokenId.fromString(tokenSymbol);
+    const tokenAmount = TokenAmount.fromDecimal(amount);
 
     if (walletFile !== undefined) {
         // Read wallet-file

@@ -74,6 +74,7 @@ export function instanceOf(value: unknown): value is CcdAmount {
 
 /**
  * Constructs a CcdAmount and checks that it is valid. It accepts a number, string, big, or bigint as parameter.
+ * It can accept a string as parameter with either a comma or a dot as the decimal separator.
  *
  * @param microCcdAmount The amount of micro CCD as a number, string, big, or bigint.
  * @throws If an invalid micro CCD amount is passed, i.e. any value which is not an unsigned 64-bit integer
@@ -81,7 +82,7 @@ export function instanceOf(value: unknown): value is CcdAmount {
 export function fromMicroCcd(microCcdAmount: BigSource | bigint): CcdAmount {
     // If the input is a "BigSource" assert that the number is whole
     if (typeof microCcdAmount !== 'bigint') {
-        microCcdAmount = Big(microCcdAmount);
+        microCcdAmount = newBig(microCcdAmount);
 
         if (!microCcdAmount.mod(Big(1)).eq(Big(0))) {
             throw Error('Can not create CcdAmount from a non-whole number!');
@@ -123,8 +124,15 @@ export function fromCcd(ccd: BigSource | bigint): CcdAmount {
         ccd = ccd.toString();
     }
 
-    const microCcd = Big(ccd).mul(Big(MICRO_CCD_PER_CCD));
+    const microCcd = newBig(ccd).mul(Big(MICRO_CCD_PER_CCD));
     return fromMicroCcd(microCcd);
+}
+
+function newBig(bigSource: BigSource): Big {
+    if (typeof bigSource === 'string') {
+        return Big(bigSource.replace(',', '.'));
+    }
+    return Big(bigSource);
 }
 
 /**

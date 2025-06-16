@@ -39,8 +39,12 @@ describe('To and from ccd as strings', () => {
         expect(CcdAmount.toCcd(ccd)).toEqual(Big('123.456789'));
     });
 
-    test('CcdAmount constructor correctly rejects multiple seperators', () => {
-        expect(() => CcdAmount.fromCcd('10.000.000')).toThrow(Error('[big.js] Invalid number'));
+    test('FromCcd correctly takes comma as a decimal seperator', () => {
+        expect(CcdAmount.toCcd(CcdAmount.fromCcd('10,000'))).toEqual(Big('10'));
+    });
+
+    test('CcdAmount constructor correctly rejects multiple comma seperators', () => {
+        expect(() => CcdAmount.fromCcd('10,000,000')).toThrow(Error('[big.js] Invalid number'));
     });
 
     test('fromCcd is equal to ccdToMicroCcd', () => {

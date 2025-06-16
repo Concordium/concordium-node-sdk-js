@@ -13,6 +13,8 @@
   the parameter/return values are internal-only.
 - Added `TokenHolderPayload` and `TokenGovernancePayload` to `AccountTransactionPayload` union type.
 - Added reject reasons related to PLT transactions to `RejectReason` union type.
+- `CcdAmount.fromDecimal` no longer supports creation from a string with comma used as the decimal separator, e.g.
+  "10,123".
 
 ### Added
 

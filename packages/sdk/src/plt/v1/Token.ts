@@ -6,6 +6,7 @@ import { Token as GenericToken, holderTransaction, scaleAmount, validateAmount }
 import { Cbor, TokenAmount, TokenId, TokenInfo } from '../index.js';
 import {
     TokenHolderOperation,
+    TokenModuleAccountState,
     TokenModuleState,
     TokenOperationType,
     TokenTransfer,
@@ -223,7 +224,11 @@ export async function validateTransfer(
     const accounts = await Promise.all([senderPromise, ...receiverPromises]);
     accounts.forEach((r) => {
         const accToken = r.accountTokens.find((t) => t.id.value === token.info.id.value)?.state;
-        if (accToken?.memberDenyList || accToken?.memberAllowList === false) {
+        if (accToken?.moduleState === undefined) {
+            return;
+        }
+        const moduleState = Cbor.decode(accToken.moduleState) as TokenModuleAccountState;
+        if (moduleState.memberDenyList || moduleState.memberAllowList === false) {
             throw new NotAllowedError(r.accountAddress);
         }
     });

@@ -1,7 +1,7 @@
-import { TokenGovernancePayload, TokenHolderPayload } from '../../index.js';
-import * as AccountAddress from '../../types/AccountAddress.js';
-import * as TokenMetadataUrl from '../TokenMetadataUrl.js';
-import { Cbor, CborMemo, TokenModuleEvent as EncodedModuleEvent, TokenAmount, TokenHolder, TokenId } from '../index.js';
+import { TokenPayload } from '../types.js';
+import * as AccountAddress from '../types/AccountAddress.js';
+import * as TokenMetadataUrl from './TokenMetadataUrl.js';
+import { Cbor, CborMemo, EncodedTokenModuleEvent, TokenAmount, TokenHolder, TokenId } from './index.js';
 
 /**
  * Enum representing the types of token operations.
@@ -19,7 +19,7 @@ export enum TokenOperationType {
 export type Memo = CborMemo.Type | Uint8Array;
 
 /**
- * The structure of a PLT V1 token transfer.
+ * The structure of a PLT transfer.
  */
 export type TokenTransfer = {
     /** The amount to transfer. */
@@ -36,42 +36,17 @@ export type TokenTransfer = {
  * @template TokenOperationType - The type of the token operation.
  * @template T - The specific operation details.
  */
-type TokenOperation<Type extends TokenOperationType, T extends Object> = {
+type TokenOperationGen<Type extends TokenOperationType, T extends Object> = {
     [K in Type]: T;
 };
 
 /**
  * Represents a token transfer operation.
  */
-export type TokenTransferOperation = TokenOperation<TokenOperationType.Transfer, TokenTransfer>;
+export type TokenTransferOperation = TokenOperationGen<TokenOperationType.Transfer, TokenTransfer>;
 
 /**
- * Represents a holder operation, currently only supporting transfer operations.
- */
-export type TokenHolderOperation = TokenTransferOperation;
-
-/**
- * Creates a payload for token holder operations.
- * This function encodes the provided token holder operation(s) into a CBOR format.
- *
- * @param tokenSymbol - The symbol of the token for which the governance operation is being performed.
- * @param operations - A single token holder operation or an array of token holder operations.
- *
- * @returns The encoded token holder payload.
- */
-export function createTokenHolderPayload(
-    tokenSymbol: TokenId.Type,
-    operations: TokenHolderOperation | TokenHolderOperation[]
-): TokenHolderPayload {
-    const ops = [operations].flat();
-    return {
-        tokenSymbol,
-        operations: Cbor.encode(ops),
-    };
-}
-
-/**
- * The structure of a PLT V1 token mint/burn operation.
+ * The structure of a PLT mint/burn operation.
  */
 export type TokenSupplyUpdate = {
     /** The amount to mint/burn. */
@@ -81,15 +56,15 @@ export type TokenSupplyUpdate = {
 /**
  * Represents a token mint operation.
  */
-export type TokenMintOperation = TokenOperation<TokenOperationType.Mint, TokenSupplyUpdate>;
+export type TokenMintOperation = TokenOperationGen<TokenOperationType.Mint, TokenSupplyUpdate>;
 
 /**
  * Represents a token burn operation.
  */
-export type TokenBurnOperation = TokenOperation<TokenOperationType.Burn, TokenSupplyUpdate>;
+export type TokenBurnOperation = TokenOperationGen<TokenOperationType.Burn, TokenSupplyUpdate>;
 
 /**
- * The structure of any list update operation for a PLT V1 token .
+ * The structure of any list update operation for a PLT.
  */
 export type TokenListUpdate = {
     /** The target of the list update. */
@@ -99,27 +74,28 @@ export type TokenListUpdate = {
 /**
  * Represents an operation to add an account to the allow list.
  */
-export type TokenAddAllowListOperation = TokenOperation<TokenOperationType.AddAllowList, TokenListUpdate>;
+export type TokenAddAllowListOperation = TokenOperationGen<TokenOperationType.AddAllowList, TokenListUpdate>;
 
 /**
  * Represents an operation to remove an account from the allow list.
  */
-export type TokenRemoveAllowListOperation = TokenOperation<TokenOperationType.RemoveAllowList, TokenListUpdate>;
+export type TokenRemoveAllowListOperation = TokenOperationGen<TokenOperationType.RemoveAllowList, TokenListUpdate>;
 
 /**
  * Represents an operation to add an account to the deny list.
  */
-export type TokenAddDenyListOperation = TokenOperation<TokenOperationType.AddDenyList, TokenListUpdate>;
+export type TokenAddDenyListOperation = TokenOperationGen<TokenOperationType.AddDenyList, TokenListUpdate>;
 
 /**
  * Represents an operation to remove an account from the deny list.
  */
-export type TokenRemoveDenyListOperation = TokenOperation<TokenOperationType.RemoveDenyList, TokenListUpdate>;
+export type TokenRemoveDenyListOperation = TokenOperationGen<TokenOperationType.RemoveDenyList, TokenListUpdate>;
 
 /**
- * Union type representing all possible governance operations for a token.
+ * Union type representing all possible operations for a token.
  */
-export type TokenGovernanceOperation =
+export type TokenOperation =
+    | TokenTransferOperation
     | TokenMintOperation
     | TokenBurnOperation
     | TokenAddAllowListOperation
@@ -128,21 +104,18 @@ export type TokenGovernanceOperation =
     | TokenRemoveDenyListOperation;
 
 /**
- * Creates a payload for token governance operations.
- * This function encodes the provided token governance operation(s) into a CBOR format.
+ * Creates a payload for token operations.
+ * This function encodes the provided token operation(s) into a CBOR format.
  *
- * @param tokenSymbol - The symbol of the token for which the governance operation is being performed.
- * @param operations - A single token governance operation or an array of token governance operations.
+ * @param tokenId - The unique identifier of the token for which the operation(s) is being performed.
+ * @param operations - A single token operation or an array of token operations.
  *
  * @returns The encoded token governance payload.
  */
-export function createTokenGovernancePayload(
-    tokenSymbol: TokenId.Type,
-    operations: TokenGovernanceOperation | TokenGovernanceOperation[]
-): TokenGovernancePayload {
+export function createTokenPayload(tokenId: TokenId.Type, operations: TokenOperation | TokenOperation[]): TokenPayload {
     const ops = [operations].flat();
     return {
-        tokenSymbol,
+        tokenId: tokenId,
         operations: Cbor.encode(ops),
     };
 }
@@ -205,7 +178,7 @@ type GenericTokenModuleEvent<E extends TokenOperationType, T extends Object> = {
 };
 
 /**
- * The structure of any list update event for a PLT V1 token.
+ * The structure of any list update event for a PLT.
  */
 export type TokenListUpdateEventDetails = {
     /** The target of the list update. */
@@ -242,7 +215,7 @@ export type TokenRemoveDenyListEvent = GenericTokenModuleEvent<
 >;
 
 /**
- * A union of all V1 token module events.
+ * A union of all token module events.
  */
 export type TokenModuleEvent =
     | TokenAddAllowListEvent
@@ -263,7 +236,7 @@ const EVENT_TYPES = [
  *
  * @param event - The token module event to parse.
  * @returns The parsed token module event with decoded details.
- * @throws {Error} If the event cannot be parsed as a V1 token module event.
+ * @throws {Error} If the event cannot be parsed as a token module event.
  *
  * @example
  * try {
@@ -281,9 +254,9 @@ const EVENT_TYPES = [
  *   }
  * }
  */
-export function parseModuleEvent(event: EncodedModuleEvent): TokenModuleEvent {
+export function parseModuleEvent(event: EncodedTokenModuleEvent): TokenModuleEvent {
     if (!EVENT_TYPES.includes(event.type as TokenOperationType)) {
-        throw new Error(`Cannot parse event as V1 token module event: ${event.type}`);
+        throw new Error(`Cannot parse event as token module event: ${event.type}`);
     }
 
     const decoded = Cbor.decode(event.details);

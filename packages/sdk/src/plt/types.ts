@@ -91,7 +91,7 @@ export type TokenEvent =
     | TokenEventGeneric<TokenEventType.Transfer, TokenTransferEvent>
     | TokenEventGeneric<TokenEventType.Mint, TokenSupplyUpdateEvent>
     | TokenEventGeneric<TokenEventType.Burn, TokenSupplyUpdateEvent>
-    | TokenEventGeneric<TokenEventType.Module, TokenModuleEvent>;
+    | TokenEventGeneric<TokenEventType.Module, EncodedTokenModuleEvent>;
 
 /**
  * The type of events emitted by the token module.
@@ -110,7 +110,7 @@ export enum TokenEventType {
 /**
  * Event emitted by the token module.
  */
-export type TokenModuleEvent = {
+export type EncodedTokenModuleEvent = {
     /** The type of the event emitted by the token module. */
     type: string;
     /** Additional details about the event (CBOR encoded). */

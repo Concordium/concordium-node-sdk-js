@@ -1480,37 +1480,23 @@ export interface ConfigureDelegationPayload {
 }
 
 /**
- * The payload for a token holder transaction.
- */
-export type TokenHolderPayload = {
-    /** The token symbol identifying the token to perform the list of operations on */
-    tokenSymbol: TokenId.Type;
-    /**
-     * The CBOR encoded operations
-     *
-     * @example
-     * const operations = Cbor.encode([{ transfer: { amount, recipient, memo } }]); // plt v1 transfer payload
-     */
-    operations: Cbor.Type;
-};
-/**
- * The payload for a token governance transaction. The contents of the byte array is a CBOR encoding of the update type and
+ * The payload for a token transaction. The contents of the byte array is a CBOR encoding of the update type and
  * (e.g. "mint") and the associated update details.
  *
  * @example
  * const payload = Cbor.encode(['mint', {amount}]); // plt v1 mint payload
  */
 /**
- * The payload for a token governance transaction.
+ * The payload for a token transaction.
  */
-export type TokenGovernancePayload = {
-    /** The token symbol identifying the token to perform the list of operations on */
-    tokenSymbol: TokenId.Type;
+export type TokenPayload = {
+    /** The token id identifying the token to perform the list of operations on */
+    tokenId: TokenId.Type;
     /**
      * The CBOR encoded operations
      *
      * @example
-     * const operations = Cbor.encode([{mint: { amount } }]); // plt v1 mint payload
+     * const operations = Cbor.encode([{mint: { amount } }]); // plt mint payload
      */
     operations: Cbor.Type;
 };
@@ -1525,8 +1511,7 @@ export type AccountTransactionPayload =
     | UpdateCredentialsPayload
     | ConfigureBakerPayload
     | ConfigureDelegationPayload
-    | TokenHolderPayload
-    | TokenGovernancePayload;
+    | TokenPayload;
 
 export interface AccountTransaction {
     type: AccountTransactionType;

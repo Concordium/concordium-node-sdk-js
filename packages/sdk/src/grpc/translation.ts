@@ -1197,7 +1197,7 @@ function trRejectReason(rejectReason: GRPC.RejectReason | undefined): SDK.Reject
             };
         case 'tokenHolderTransactionFailed':
             return {
-                tag: Tag.TokenHolderTransactionFailed,
+                tag: Tag.TokenTransactionFailed,
                 contents: {
                     type: reason.tokenHolderTransactionFailed.type,
                     tokenId: PLT.TokenId.fromProto(unwrap(reason.tokenHolderTransactionFailed.tokenId)),

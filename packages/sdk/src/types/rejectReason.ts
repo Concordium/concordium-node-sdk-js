@@ -72,9 +72,7 @@ export enum RejectReasonTag {
     PoolWouldBecomeOverDelegated = 'PoolWouldBecomeOverDelegated',
     PoolClosed = 'PoolClosed',
     NonExistentTokenId = 'NonExistentTokenId',
-    TokenHolderTransactionFailed = 'TokenHolderTransactionFailed',
-    UnauthorizedTokenGovernance = 'UnauthorizedTokenGovernance',
-    TokenGovernanceTransactionFailed = 'TokenGovernanceTransactionFailed',
+    TokenTransactionFailed = 'TokenTransactionFailed',
 }
 
 export interface RejectedReceive {
@@ -145,9 +143,7 @@ export type StringRejectReasonTag =
 
 export type TokenRejectReasonTag =
     | RejectReasonTag.NonExistentTokenId
-    | RejectReasonTag.TokenHolderTransactionFailed
-    | RejectReasonTag.TokenGovernanceTransactionFailed
-    | RejectReasonTag.UnauthorizedTokenGovernance;
+    | RejectReasonTag.TokenTransactionFailed;
 
 export interface StringRejectReason {
     tag: StringRejectReasonTag;
@@ -206,29 +202,15 @@ export type NonExistingTokenIdRejectReason = {
     contents: TokenId.Type;
 };
 
-export type TokenHolderTransactionFailedRejectReason = {
-    tag: RejectReasonTag.TokenHolderTransactionFailed;
+export type TokenTransactionFailedRejectReason = {
+    tag: RejectReasonTag.TokenTransactionFailed;
     /** The specific token module reject reason that caused the transaction to fail */
     contents: TokenModuleRejectReason;
 };
 
-export type TokenGovernanceTransactionFailedRejectReason = {
-    tag: RejectReasonTag.TokenGovernanceTransactionFailed;
-    /** The specific token module reject reason that caused the governance transaction to fail */
-    contents: TokenModuleRejectReason;
-};
-
-export type UnauthorizedTokenGovernance = {
-    tag: RejectReasonTag.UnauthorizedTokenGovernance;
-    /** The token ID for which the caller was not authorized to perform governance actions */
-    contents: TokenId.Type;
-};
-
 export type TokenRejectReason =
     | NonExistingTokenIdRejectReason
-    | TokenHolderTransactionFailedRejectReason
-    | TokenGovernanceTransactionFailedRejectReason
-    | UnauthorizedTokenGovernance;
+    | TokenTransactionFailedRejectReason;
 
 type RejectReasonCommon =
     | SimpleRejectReason

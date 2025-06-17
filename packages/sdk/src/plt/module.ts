@@ -1,4 +1,4 @@
-import { TokenPayload } from '../types.js';
+import { TokenUpdatePayload } from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';
 import * as TokenMetadataUrl from './TokenMetadataUrl.js';
 import { Cbor, CborMemo, EncodedTokenModuleEvent, TokenAmount, TokenHolder, TokenId } from './index.js';
@@ -112,7 +112,7 @@ export type TokenOperation =
  *
  * @returns The encoded token governance payload.
  */
-export function createTokenPayload(tokenId: TokenId.Type, operations: TokenOperation | TokenOperation[]): TokenPayload {
+export function createTokenPayload(tokenId: TokenId.Type, operations: TokenOperation | TokenOperation[]): TokenUpdatePayload {
     const ops = [operations].flat();
     return {
         tokenId: tokenId,
@@ -138,6 +138,8 @@ export type TokenModuleState = {
     name: string;
     /** A URL pointing to the metadata of the token. */
     metadata: TokenMetadataUrl.Type;
+    /** The governance account for the token. */
+    governanceAccount: AccountAddress.Type;
     /** Whether the token supports an allow list */
     allowList?: boolean;
     /** Whether the token supports an deny list */
@@ -159,7 +161,9 @@ export type TokenInitializationParameters = {
     /** The name of the token. */
     name: string;
     /** A URL pointing to the metadata of the token. */
-    metadata: string; // TODO: will change to url object containing url and checksum
+    metadata: TokenMetadataUrl.Type;
+    /** The governance account for the token. */
+    governanceAccount: AccountAddress.Type;
     /** Whether the token supports an allow list */
     allowList?: boolean;
     /** Whether the token supports an deny list */

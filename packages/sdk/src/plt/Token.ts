@@ -5,7 +5,7 @@ import {
     AccountTransaction,
     AccountTransactionHeader,
     AccountTransactionType,
-    TokenPayload,
+    TokenUpdatePayload,
     TransactionExpiry,
     TransactionHash,
 } from '../pub/types.js';
@@ -239,7 +239,7 @@ export function scaleAmount(token: Token, amount: TokenAmount.Type): TokenAmount
  *
  * @param {Token} token - The token for which the governance transaction is being performed.
  * @param {AccountAddress.Type} sender - The account address initiating the transaction.
- * @param {TokenPayload} payload - The transaction payload.
+ * @param {TokenUpdatePayload} payload - The transaction payload.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
  *
@@ -249,7 +249,7 @@ export function scaleAmount(token: Token, amount: TokenAmount.Type): TokenAmount
 export async function sendRaw(
     token: Token,
     sender: AccountAddress.Type,
-    payload: TokenPayload,
+    payload: TokenUpdatePayload,
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
 ): Promise<TransactionHash.Type> {
@@ -260,7 +260,7 @@ export async function sendRaw(
         sender,
     };
     const transaction: AccountTransaction = {
-        type: AccountTransactionType.Token,
+        type: AccountTransactionType.TokenUpdate,
         payload: payload,
         header,
     };

@@ -33,7 +33,7 @@ import {
     RegisterDataPayload,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
-    TokenPayload,
+    TokenUpdatePayload,
     UpdateContractPayload,
     UpdateCredentialsPayload,
     UrlString,
@@ -518,20 +518,18 @@ export class ConfigureDelegationHandler
     }
 }
 
-export type TokenPayloadJSON = {
+export type TokenUpdatePayloadJSON = {
     tokenSymbol: TokenId.JSON;
     operations: Cbor.JSON;
 };
 
-export class TokenHandler
-    implements AccountTransactionHandler<TokenPayload, TokenPayloadJSON>
-{
-    serialize(payload: TokenPayload): Buffer {
+export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdatePayload, TokenUpdatePayloadJSON> {
+    serialize(payload: TokenUpdatePayload): Buffer {
         const tokenId = packBufferWithWord8Length(TokenId.toBytes(payload.tokenId));
         const ops = packBufferWithWord32Length(payload.operations.bytes);
         return Buffer.concat([tokenId, ops]);
     }
-    deserialize(serializedPayload: Cursor): TokenPayload {
+    deserialize(serializedPayload: Cursor): TokenUpdatePayload {
         let len = serializedPayload.read(1).readUInt8(0);
         const tokenId = TokenId.fromBytes(serializedPayload.read(len));
 
@@ -539,7 +537,7 @@ export class TokenHandler
         const operations = Cbor.fromBuffer(serializedPayload.read(len));
         return { tokenId, operations };
     }
-    getBaseEnergyCost(payload: TokenPayload): bigint {
+    getBaseEnergyCost(payload: TokenUpdatePayload): bigint {
         // TODO: update costs when finalized costs are determined.
         const operations = Cbor.decode(payload.operations) as TokenOperation[];
         // The base cost for a token transaction.
@@ -572,13 +570,13 @@ export class TokenHandler
 
         return energyCost;
     }
-    toJSON(payload: TokenPayload): TokenPayloadJSON {
+    toJSON(payload: TokenUpdatePayload): TokenUpdatePayloadJSON {
         return {
             tokenSymbol: payload.tokenId.toJSON(),
             operations: payload.operations.toJSON(),
         };
     }
-    fromJSON(json: TokenPayloadJSON): TokenPayload {
+    fromJSON(json: TokenUpdatePayloadJSON): TokenUpdatePayload {
         return {
             tokenId: TokenId.fromJSON(json.tokenSymbol),
             operations: Cbor.fromJSON(json.operations),
@@ -596,7 +594,7 @@ export type AccountTransactionPayloadJSON =
     | RegisterDataPayloadJSON
     | ConfigureDelegationPayloadJSON
     | ConfigureBakerPayloadJSON
-    | TokenPayloadJSON;
+    | TokenUpdatePayloadJSON;
 
 export function getAccountTransactionHandler(type: AccountTransactionType.Transfer): SimpleTransferHandler;
 export function getAccountTransactionHandler(
@@ -611,7 +609,7 @@ export function getAccountTransactionHandler(
     type: AccountTransactionType.ConfigureDelegation
 ): ConfigureDelegationHandler;
 export function getAccountTransactionHandler(type: AccountTransactionType.ConfigureBaker): ConfigureBakerHandler;
-export function getAccountTransactionHandler(type: AccountTransactionType.Token): TokenHandler;
+export function getAccountTransactionHandler(type: AccountTransactionType.TokenUpdate): TokenUpdateHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
 ): AccountTransactionHandler<AccountTransactionPayload, AccountTransactionPayloadJSON>;
@@ -638,8 +636,8 @@ export function getAccountTransactionHandler(
             return new ConfigureDelegationHandler();
         case AccountTransactionType.ConfigureBaker:
             return new ConfigureBakerHandler();
-        case AccountTransactionType.Token:
-            return new TokenHandler();
+        case AccountTransactionType.TokenUpdate:
+            return new TokenUpdateHandler();
         default:
             throw new Error('The provided type does not have a handler: ' + type);
     }

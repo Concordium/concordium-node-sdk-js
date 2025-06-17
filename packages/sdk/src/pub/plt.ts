@@ -1,9 +1,9 @@
 export * from '../plt/types.js';
 
 export * as TokenMetadataUrl from '../plt/TokenMetadataUrl.js';
-export * as V1 from '../plt/v1/index.js';
+export * as Token from '../plt/Token.js';
 
-export * as Token from './plt/Token.js';
+// To limit the exports meant only for internal use, we re-create the module exports.
 export * as TokenAmount from './plt/TokenAmount.js';
 export * as Cbor from './plt/Cbor.js';
 export * as CborMemo from './plt/CborMemo.js';

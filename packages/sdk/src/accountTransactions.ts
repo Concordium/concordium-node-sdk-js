@@ -2,7 +2,7 @@ import { Buffer } from 'buffer/index.js';
 
 import { Cursor } from './deserializationHelpers.js';
 import { Cbor, TokenId } from './plt/index.js';
-import { TokenGovernanceOperation, TokenHolderOperation, TokenOperationType } from './plt/v1/types.js';
+import { TokenOperation, TokenOperationType } from './plt/module.js';
 import { ContractAddress, ContractName, Energy, ModuleReference } from './pub/types.js';
 import { serializeCredentialDeploymentInfo } from './serialization.js';
 import {
@@ -33,8 +33,7 @@ import {
     RegisterDataPayload,
     SimpleTransferPayload,
     SimpleTransferWithMemoPayload,
-    TokenGovernancePayload,
-    TokenHolderPayload,
+    TokenPayload,
     UpdateContractPayload,
     UpdateCredentialsPayload,
     UrlString,
@@ -519,78 +518,31 @@ export class ConfigureDelegationHandler
     }
 }
 
-export type TokenHolderPayloadJSON = {
+export type TokenPayloadJSON = {
     tokenSymbol: TokenId.JSON;
     operations: Cbor.JSON;
 };
 
-export class TokenHolderHandler implements AccountTransactionHandler<TokenHolderPayload, TokenHolderPayloadJSON> {
-    serialize(payload: TokenHolderPayload): Buffer {
-        const tokenSymbol = packBufferWithWord8Length(TokenId.toBytes(payload.tokenSymbol));
-        const ops = packBufferWithWord32Length(payload.operations.bytes);
-        return Buffer.concat([tokenSymbol, ops]);
-    }
-    deserialize(serializedPayload: Cursor): TokenHolderPayload {
-        let len = serializedPayload.read(1).readUInt8(0);
-        const tokenSymbol = TokenId.fromBytes(serializedPayload.read(len));
-
-        len = serializedPayload.read(4).readUInt32BE(0);
-        const operations = Cbor.fromBuffer(serializedPayload.read(len));
-        return { tokenSymbol, operations };
-    }
-    getBaseEnergyCost(payload: TokenHolderPayload): bigint {
-        // TODO: update costs when finalized costs are determined.
-        const operations = Cbor.decode(payload.operations) as TokenHolderOperation[];
-        // The base cost for a token holder transaction.
-        let energyCost = 300n;
-        const PLT_TRANSFER_COST = 100n;
-        for (const operation of operations) {
-            if (TokenOperationType.Transfer in operation) {
-                // The per-operation cost for a transfer operation.
-                energyCost += PLT_TRANSFER_COST;
-            }
-        }
-        return energyCost;
-    }
-    toJSON(payload: TokenHolderPayload): TokenHolderPayloadJSON {
-        return {
-            tokenSymbol: payload.tokenSymbol.toJSON(),
-            operations: payload.operations.toJSON(),
-        };
-    }
-    fromJSON(json: TokenHolderPayloadJSON): TokenHolderPayload {
-        return {
-            tokenSymbol: TokenId.fromJSON(json.tokenSymbol),
-            operations: Cbor.fromJSON(json.operations),
-        };
-    }
-}
-
-export type TokenGovernancePayloadJSON = {
-    tokenSymbol: TokenId.JSON;
-    operations: Cbor.JSON;
-};
-
-export class TokenGovernanceHandler
-    implements AccountTransactionHandler<TokenGovernancePayload, TokenGovernancePayloadJSON>
+export class TokenHandler
+    implements AccountTransactionHandler<TokenPayload, TokenPayloadJSON>
 {
-    serialize(payload: TokenGovernancePayload): Buffer {
-        const tokenSymbol = packBufferWithWord8Length(TokenId.toBytes(payload.tokenSymbol));
+    serialize(payload: TokenPayload): Buffer {
+        const tokenId = packBufferWithWord8Length(TokenId.toBytes(payload.tokenId));
         const ops = packBufferWithWord32Length(payload.operations.bytes);
-        return Buffer.concat([tokenSymbol, ops]);
+        return Buffer.concat([tokenId, ops]);
     }
-    deserialize(serializedPayload: Cursor): TokenGovernancePayload {
+    deserialize(serializedPayload: Cursor): TokenPayload {
         let len = serializedPayload.read(1).readUInt8(0);
-        const tokenSymbol = TokenId.fromBytes(serializedPayload.read(len));
+        const tokenId = TokenId.fromBytes(serializedPayload.read(len));
 
         len = serializedPayload.read(4).readUInt32BE(0);
         const operations = Cbor.fromBuffer(serializedPayload.read(len));
-        return { tokenSymbol, operations };
+        return { tokenId, operations };
     }
-    getBaseEnergyCost(payload: TokenGovernancePayload): bigint {
+    getBaseEnergyCost(payload: TokenPayload): bigint {
         // TODO: update costs when finalized costs are determined.
-        const operations = Cbor.decode(payload.operations) as TokenGovernanceOperation[];
-        // The base cost for a token governance transaction.
+        const operations = Cbor.decode(payload.operations) as TokenOperation[];
+        // The base cost for a token transaction.
         let energyCost = 300n;
         // Additional cost of specific PLT operations
         const PLT_TRANSFER_COST = 100n;
@@ -620,15 +572,15 @@ export class TokenGovernanceHandler
 
         return energyCost;
     }
-    toJSON(payload: TokenGovernancePayload): TokenGovernancePayloadJSON {
+    toJSON(payload: TokenPayload): TokenPayloadJSON {
         return {
-            tokenSymbol: payload.tokenSymbol.toJSON(),
+            tokenSymbol: payload.tokenId.toJSON(),
             operations: payload.operations.toJSON(),
         };
     }
-    fromJSON(json: TokenGovernancePayloadJSON): TokenGovernancePayload {
+    fromJSON(json: TokenPayloadJSON): TokenPayload {
         return {
-            tokenSymbol: TokenId.fromJSON(json.tokenSymbol),
+            tokenId: TokenId.fromJSON(json.tokenSymbol),
             operations: Cbor.fromJSON(json.operations),
         };
     }
@@ -644,8 +596,7 @@ export type AccountTransactionPayloadJSON =
     | RegisterDataPayloadJSON
     | ConfigureDelegationPayloadJSON
     | ConfigureBakerPayloadJSON
-    | TokenHolderPayloadJSON
-    | TokenGovernancePayloadJSON;
+    | TokenPayloadJSON;
 
 export function getAccountTransactionHandler(type: AccountTransactionType.Transfer): SimpleTransferHandler;
 export function getAccountTransactionHandler(
@@ -660,8 +611,7 @@ export function getAccountTransactionHandler(
     type: AccountTransactionType.ConfigureDelegation
 ): ConfigureDelegationHandler;
 export function getAccountTransactionHandler(type: AccountTransactionType.ConfigureBaker): ConfigureBakerHandler;
-export function getAccountTransactionHandler(type: AccountTransactionType.TokenHolder): TokenHolderHandler;
-export function getAccountTransactionHandler(type: AccountTransactionType.TokenGovernance): TokenGovernanceHandler;
+export function getAccountTransactionHandler(type: AccountTransactionType.Token): TokenHandler;
 export function getAccountTransactionHandler(
     type: AccountTransactionType
 ): AccountTransactionHandler<AccountTransactionPayload, AccountTransactionPayloadJSON>;
@@ -688,10 +638,8 @@ export function getAccountTransactionHandler(
             return new ConfigureDelegationHandler();
         case AccountTransactionType.ConfigureBaker:
             return new ConfigureBakerHandler();
-        case AccountTransactionType.TokenHolder:
-            return new TokenHolderHandler();
-        case AccountTransactionType.TokenGovernance:
-            return new TokenGovernanceHandler();
+        case AccountTransactionType.Token:
+            return new TokenHandler();
         default:
             throw new Error('The provided type does not have a handler: ' + type);
     }

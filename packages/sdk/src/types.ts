@@ -1315,8 +1315,7 @@ export enum AccountTransactionType {
     TransferWithScheduleAndMemo = 24,
     ConfigureBaker = 25,
     ConfigureDelegation = 26,
-    TokenHolder = 27,
-    TokenGovernance = 28,
+    Token = 27,
 }
 
 export function isAccountTransactionType(candidate: number): candidate is AccountTransactionType {

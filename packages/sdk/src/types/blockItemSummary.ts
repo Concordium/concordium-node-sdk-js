@@ -73,8 +73,7 @@ export enum TransactionKindString {
     ConfigureDelegation = 'configureDelegation',
     StakingReward = 'paydayAccountReward',
     Failed = 'failed',
-    TokenHolder = 'tokenHolder',
-    TokenGovernance = 'tokenGovernance',
+    Token = 'token',
 }
 
 /**
@@ -201,19 +200,10 @@ export interface FailedTransactionSummary {
 }
 
 /**
- * The summary of a token holder transaction of any type.
+ * The summary of a token transaction of any type.
  */
-export type TokenHolderSummary = {
-    transactionType: TransactionKindString.TokenHolder;
-    /** The update details */
-    events: TokenEvent[];
-};
-
-/**
- * The summary of a token governance transaction of any type.
- */
-export type TokenGovernanceSummary = {
-    transactionType: TransactionKindString.TokenGovernance;
+export type TokenSummary = {
+    transactionType: TransactionKindString.Token;
     /** The update details */
     events: TokenEvent[];
 };
@@ -245,8 +235,7 @@ export type AccountTransactionSummary = BaseAccountTransactionSummary &
         | ConfigureDelegationSummary
         | UpdateCredentialKeysSummary
         | UpdateCredentialsSummary
-        | TokenHolderSummary
-        | TokenGovernanceSummary
+        | TokenSummary
     );
 
 export interface AccountCreationSummary extends BaseBlockItemSummary {

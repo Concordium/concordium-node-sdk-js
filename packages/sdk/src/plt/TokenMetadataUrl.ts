@@ -116,7 +116,7 @@ export function instanceOf(value: unknown): value is TokenMetadataUrl {
 }
 
 /**
- * Converts {@linkcode JSON} to a token metadata URL.
+ * Converts {@linkcode JSON} to a token amount.
  *
  * @param {string} json The JSON representation of token metadata URL.
  * @returns {TokenMetadataUrl} The token metadata URL.

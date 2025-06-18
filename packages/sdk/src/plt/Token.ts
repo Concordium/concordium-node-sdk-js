@@ -252,7 +252,7 @@ export async function sendRaw(
     sender: AccountAddress.Type,
     payload: TokenUpdatePayload,
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
     const { nonce } = await token.grpc.getNextAccountNonce(sender);
     const header: AccountTransactionHeader = {
@@ -417,6 +417,24 @@ export async function transfer(
     return sendRaw(token, sender, encoded, signer, expiry);
 }
 
+/**
+ * Validates that the sender is authorized to perform governance operations on the token.
+ *
+ * @param {Token} token - The token to validate governance operations for.
+ * @param {AccountAddress.Type} sender - The account address of the sender.
+ *
+ * @returns {true} If the sender is authorized.
+ * @throws {UnauthorizedGovernanceOperationError} If the sender is not the governance account of the token.
+ */
+export function validateGovernanceOperation(token: Token, sender: AccountAddress.Type): true {
+    const { governanceAccount } = Cbor.decode(token.info.state.moduleState) as TokenModuleState;
+    if (!AccountAddress.equals(sender, governanceAccount)) {
+        throw new UnauthorizedGovernanceOperationError(sender);
+    }
+
+    return true;
+}
+
 type SupplyUpdateOptions = {
     /** Whether to automatically scale a token amount to the correct number of decimals as the token */
     autoScale?: boolean;
@@ -447,14 +465,10 @@ export async function mint(
     opts: SupplyUpdateOptions = { autoScale: true, validate: true }
 ): Promise<TransactionHash.Type> {
     const amountsList = [amounts].flat();
-    if (opts.validate) {
-        amountsList.forEach((amount) => validateAmount(token, amount));
 
-        // Check if the sender is the token issuer
-        if (!AccountAddress.equals(sender, token.info.state.issuer)) {
-            throw new UnauthorizedGovernanceOperationError(sender);
-        }
-    }
+    if (opts.validate) {
+        validateGovernanceOperation(token, sender);
+        amountsList.forEach((amount) => validateAmount(token, amount))    }
 
     const ops: TokenMintOperation[] = amountsList.map((amount) => {
         const scaled = opts.autoScale ? scaleAmount(token, amount) : amount;
@@ -488,13 +502,10 @@ export async function burn(
     opts: SupplyUpdateOptions = { autoScale: true, validate: true }
 ): Promise<TransactionHash.Type> {
     const amountsList = [amounts].flat();
-    if (opts.validate) {
-        amountsList.forEach((amount) => validateAmount(token, amount));
 
-        // Check if the sender is the token issuer
-        if (!AccountAddress.equals(sender, token.info.state.issuer)) {
-            throw new UnauthorizedGovernanceOperationError(sender);
-        }
+    if (opts.validate) {
+        validateGovernanceOperation(token, sender);
+        amountsList.forEach((amount) => validateAmount(token, amount));
     }
 
     const ops: TokenBurnOperation[] = amountsList.map((amount) => {
@@ -532,9 +543,8 @@ export async function addAllowList(
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
     { validate }: UpdateListOptions = { validate: true }
 ): Promise<TransactionHash.Type> {
-    // Check if the sender is the token issuer
-    if (validate && !AccountAddress.equals(sender, token.info.state.issuer)) {
-        throw new UnauthorizedGovernanceOperationError(sender);
+    if (validate) {
+        validateGovernanceOperation(token, sender);
     }
 
     const ops: TokenAddAllowListOperation[] = [targets]
@@ -564,9 +574,8 @@ export async function removeAllowList(
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
     { validate }: UpdateListOptions = { validate: true }
 ): Promise<TransactionHash.Type> {
-    // Check if the sender is the token issuer
-    if (validate && !AccountAddress.equals(sender, token.info.state.issuer)) {
-        throw new UnauthorizedGovernanceOperationError(sender);
+    if (validate) {
+        validateGovernanceOperation(token, sender);
     }
 
     const ops: TokenRemoveAllowListOperation[] = [targets]
@@ -596,9 +605,8 @@ export async function addDenyList(
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
     { validate }: UpdateListOptions = { validate: true }
 ): Promise<TransactionHash.Type> {
-    // Check if the sender is the token issuer
-    if (validate && !AccountAddress.equals(sender, token.info.state.issuer)) {
-        throw new UnauthorizedGovernanceOperationError(sender);
+    if (validate) {
+        validateGovernanceOperation(token, sender);
     }
 
     const ops: TokenAddDenyListOperation[] = [targets]
@@ -628,9 +636,8 @@ export async function removeDenyList(
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
     { validate }: UpdateListOptions = { validate: true }
 ): Promise<TransactionHash.Type> {
-    // Check if the sender is the token issuer
-    if (validate && !AccountAddress.equals(sender, token.info.state.issuer)) {
-        throw new UnauthorizedGovernanceOperationError(sender);
+    if (validate) {
+        validateGovernanceOperation(token, sender);
     }
 
     const ops: TokenRemoveDenyListOperation[] = [targets]
@@ -655,7 +662,7 @@ export async function sendOperations(
     sender: AccountAddress.Type,
     operations: TokenOperation[],
     signer: AccountSigner,
-    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
+    expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
     const payload = createTokenPayload(token.info.id, operations);
     return sendRaw(token, sender, payload, signer, expiry);

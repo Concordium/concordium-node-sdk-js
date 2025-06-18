@@ -29,7 +29,7 @@ import {
     MemoEvent,
     ModuleDeployedEvent,
     NewEncryptedAmountEvent,
-    TokenEvent,
+    TokenUpdateEvent,
     TransactionEventTag,
     TransferredWithScheduleEvent,
 } from './transactionEvent.js';
@@ -205,7 +205,7 @@ export interface FailedTransactionSummary {
 export type TokenUpdateSummary = {
     transactionType: TransactionKindString.TokenUpdate;
     /** The update details */
-    events: TokenEvent[];
+    events: TokenUpdateEvent[];
 };
 
 /**

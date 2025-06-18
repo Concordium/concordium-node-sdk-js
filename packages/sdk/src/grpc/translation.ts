@@ -2029,8 +2029,8 @@ function trAccountTransactionSummary(
                 events: effect.delegationConfigured.events.map((x) => trDelegationEvent(x, base.sender)),
             };
         case 'tokenEffect':
-            const events: SDK.TokenEvent[] = effect.tokenEffect.events.map((e) => ({
-                tag: SDK.TransactionEventTag.TokenOperation,
+            const events: SDK.TokenUpdateEvent[] = effect.tokenEffect.events.map((e) => ({
+                tag: SDK.TransactionEventTag.TokenUpdate,
                 tokenId: PLT.TokenId.fromProto(unwrap(e.tokenId)),
                 event: tokenEvent(e),
             }));

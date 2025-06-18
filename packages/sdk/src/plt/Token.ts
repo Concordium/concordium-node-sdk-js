@@ -24,7 +24,7 @@ import {
     TokenRemoveDenyListOperation,
     TokenTransfer,
     TokenTransferOperation,
-    createTokenPayload,
+    createTokenUpdatePayload,
 } from './module.js';
 
 /**
@@ -412,7 +412,7 @@ export async function transfer(
             [TokenOperationType.Transfer]: { ...p, amount },
         };
     });
-    const encoded = createTokenPayload(token.info.id, ops);
+    const encoded = createTokenUpdatePayload(token.info.id, ops);
 
     return sendRaw(token, sender, encoded, signer, expiry);
 }
@@ -664,6 +664,6 @@ export async function sendOperations(
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5)
 ): Promise<TransactionHash.Type> {
-    const payload = createTokenPayload(token.info.id, operations);
+    const payload = createTokenUpdatePayload(token.info.id, operations);
     return sendRaw(token, sender, payload, signer, expiry);
 }

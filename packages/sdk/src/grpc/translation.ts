@@ -2028,8 +2028,8 @@ function trAccountTransactionSummary(
                 transactionType: SDK.TransactionKindString.ConfigureDelegation,
                 events: effect.delegationConfigured.events.map((x) => trDelegationEvent(x, base.sender)),
             };
-        case 'tokenUpdateEffect':
-            const holderEvents: SDK.TokenEvent[] = effect.tokenUpdateEffect.events.map((e) => ({
+        case 'tokenEffect':
+            const events: SDK.TokenEvent[] = effect.tokenEffect.events.map((e) => ({
                 tag: SDK.TransactionEventTag.TokenOperation,
                 tokenId: PLT.TokenId.fromProto(unwrap(e.tokenId)),
                 event: tokenEvent(e),
@@ -2037,7 +2037,7 @@ function trAccountTransactionSummary(
             return {
                 ...base,
                 transactionType: SDK.TransactionKindString.TokenUpdate,
-                events: holderEvents,
+                events,
             };
         case undefined:
             throw Error('Failed translating AccountTransactionEffects, encountered undefined value');

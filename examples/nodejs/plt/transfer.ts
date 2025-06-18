@@ -1,4 +1,5 @@
 import {
+    AccountAddress,
     AccountTransactionType,
     RejectReasonTag,
     TransactionKindString,
@@ -6,26 +7,37 @@ import {
     serializeAccountTransactionPayload,
 } from '@concordium/web-sdk';
 import { ConcordiumGRPCNodeClient } from '@concordium/web-sdk/nodejs';
-import { Cbor, TokenAmount, TokenId, V1 } from '@concordium/web-sdk/plt';
+import {
+    Cbor,
+    CborMemo,
+    Token,
+    TokenAmount,
+    TokenId,
+    TokenTransfer,
+    TokenTransferOperation,
+    createTokenUpdatePayload,
+} from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
 import meow from 'meow';
 
-import { parseEndpoint, parseKeysFile } from '../../shared/util.js';
+import { parseEndpoint, parseKeysFile } from '../shared/util.js';
 
 const cli = meow(
     `
   Usage
-    $ yarn run-example <path-to-this-file> <action> [options]
+    $ yarn run-example <path-to-this-file> [options]
 
   Required
     --token-id,     -t  The unique id of the token to transfer
-    --amount,       -a  The amount of tokens to mint/burn
+    --amount,       -a  The amount of tokens to transfer
+    --recipient,    -r  The recipient address in base58 format
 
   Options
     --help,         -h  Displays this message
     --endpoint,     -e  Specify endpoint of a grpc2 interface of a Concordium node in the format "address:port". Defaults to 'localhost:20000'
     --secure,       -s  Whether to use tls or not. Defaults to false.
-    --wallet-file,  -w  A path to a wallet export file from a Concordium wallet. This is required for actually minting/burning. Otherwise only the payload is created and serialized.
+    --wallet-file,  -w  A path to a wallet export file from a Concordium wallet. If not supplied, only transaction payload is created and serialized.
+    --memo,         -m  A memo for the transfer
 `,
     {
         importMeta: import.meta,
@@ -54,48 +66,50 @@ const cli = meow(
                 alias: 'a',
                 isRequired: true,
             },
+            recipient: {
+                type: 'string',
+                alias: 'r',
+                isRequired: true,
+            },
+            memo: {
+                type: 'string',
+                alias: 'm',
+            },
         },
     }
 );
 
-const { tokenId: id, walletFile, endpoint, amount } = cli.flags;
-
-const [addr, port] = parseEndpoint(endpoint);
-const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.createInsecure());
+const [address, port] = parseEndpoint(cli.flags.endpoint);
+const client = new ConcordiumGRPCNodeClient(
+    address,
+    Number(port),
+    cli.flags.secure ? credentials.createSsl() : credentials.createInsecure()
+);
 
 (async () => {
     // #region documentation-snippet
-    // parse input
-    const action = cli.input[0] as V1.TokenOperationType;
-    if (!action) {
-        console.error('Missing required arguments: <action>');
-        return;
-    }
 
-    // Validate action
-    if (action !== V1.TokenOperationType.Mint && action !== V1.TokenOperationType.Burn) {
-        console.error('Invalid action. Use "mint" or "burn".');
-        return;
-    }
+    // parse the other arguments
+    const tokenId = TokenId.fromString(cli.flags.tokenId);
+    const token = await Token.fromId(client, tokenId);
+    const amount = TokenAmount.fromDecimal(cli.flags.amount, token.info.state.decimals);
+    const recipient = AccountAddress.fromBase58(cli.flags.recipient);
+    const memo = cli.flags.memo ? CborMemo.fromString(cli.flags.memo) : undefined;
 
-    // parse the arguments
-    const tokenId = TokenId.fromString(id);
-    const token = await V1.Token.fromId(client, tokenId);
-    const tokenAmount = TokenAmount.fromDecimal(amount, token.info.state.decimals);
+    const transfer: TokenTransfer = {
+        recipient,
+        amount,
+        memo,
+    };
+    console.log('Specified transfer:', JSON.stringify(transfer, null, 2));
 
-    if (walletFile !== undefined) {
-        // Read wallet-file
-        const [sender, signer] = parseKeysFile(walletFile);
+    if (cli.flags.walletFile !== undefined) {
+        const [sender, signer] = parseKeysFile(cli.flags.walletFile);
 
+        // From a service perspective:
+        // create the token instance
         try {
-            // create the token instance
-            const token = await V1.Token.fromId(client, tokenId);
-
-            console.log(`Attempting to ${action} ${tokenAmount.toString()} ${tokenId.toString()} tokens...`);
-
-            // Execute the mint/burn operation
-            const operation = action === V1.TokenOperationType.Mint ? V1.Governance.mint : V1.Governance.burn;
-            const transaction = await operation(token, sender, tokenAmount, signer);
+            const transaction = await Token.transfer(token, sender, transfer, signer);
             console.log(`Transaction submitted with hash: ${transaction}`);
 
             const result = await client.waitForTransactionFinalization(transaction);
@@ -106,11 +120,11 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
             }
 
             switch (result.summary.transactionType) {
-                case TransactionKindString.TokenGovernance:
+                case TransactionKindString.TokenUpdate:
                     result.summary.events.forEach((e) => console.log(e.event));
                     break;
                 case TransactionKindString.Failed:
-                    if (result.summary.rejectReason.tag !== RejectReasonTag.TokenGovernanceTransactionFailed) {
+                    if (result.summary.rejectReason.tag !== RejectReasonTag.TokenTransactionFailed) {
                         throw new Error('Unexpected reject reason tag: ' + result.summary.rejectReason.tag);
                     }
                     const details = Cbor.decode(result.summary.rejectReason.contents.details);
@@ -119,25 +133,20 @@ const client = new ConcordiumGRPCNodeClient(addr, Number(port), credentials.crea
                 default:
                     throw new Error('Unexpected transaction kind: ' + result.summary.transactionType);
             }
-        } catch (error) {
-            console.error('Error during token supply update operation:', error);
+        } catch (e) {
+            console.error(e);
         }
     } else {
         // Or from a wallet perspective:
-        const update: V1.TokenSupplyUpdate = { amount: tokenAmount };
-        const operation = {
-            [action]: update,
-        } as V1.TokenGovernanceOperation;
-        console.log(`Specified ${action} action:`, JSON.stringify(operation, null, 2));
-
-        const payload = V1.createTokenGovernancePayload(tokenId, operation);
+        // Create transfer payload
+        const transferOperation: TokenTransferOperation = {
+            transfer,
+        };
+        const payload = createTokenUpdatePayload(tokenId, transferOperation);
         console.log('Created payload:', payload);
 
         // Serialize payload for signing/submission
-        const serialized = serializeAccountTransactionPayload({
-            payload,
-            type: AccountTransactionType.TokenGovernance,
-        });
+        const serialized = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenHolder });
         console.log('Serialized payload for sign & send:', serialized.toString('hex'));
     }
     // #endregion documentation-snippet

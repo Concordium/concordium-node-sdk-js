@@ -141,9 +141,7 @@ export type StringRejectReasonTag =
     | AccountAddressRejectReasonTag
     | RejectReasonTag.DuplicateAggregationKey;
 
-export type TokenRejectReasonTag =
-    | RejectReasonTag.NonExistentTokenId
-    | RejectReasonTag.TokenTransactionFailed;
+export type TokenRejectReasonTag = RejectReasonTag.NonExistentTokenId | RejectReasonTag.TokenTransactionFailed;
 
 export interface StringRejectReason {
     tag: StringRejectReasonTag;
@@ -208,9 +206,7 @@ export type TokenTransactionFailedRejectReason = {
     contents: TokenModuleRejectReason;
 };
 
-export type TokenRejectReason =
-    | NonExistingTokenIdRejectReason
-    | TokenTransactionFailedRejectReason;
+export type TokenRejectReason = NonExistingTokenIdRejectReason | TokenTransactionFailedRejectReason;
 
 type RejectReasonCommon =
     | SimpleRejectReason

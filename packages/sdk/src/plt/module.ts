@@ -112,7 +112,10 @@ export type TokenOperation =
  *
  * @returns The encoded token governance payload.
  */
-export function createTokenUpdatePayload(tokenId: TokenId.Type, operations: TokenOperation | TokenOperation[]): TokenUpdatePayload {
+export function createTokenUpdatePayload(
+    tokenId: TokenId.Type,
+    operations: TokenOperation | TokenOperation[]
+): TokenUpdatePayload {
     const ops = [operations].flat();
     return {
         tokenId: tokenId,

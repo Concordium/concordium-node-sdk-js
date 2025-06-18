@@ -468,7 +468,8 @@ export async function mint(
 
     if (opts.validate) {
         validateGovernanceOperation(token, sender);
-        amountsList.forEach((amount) => validateAmount(token, amount))    }
+        amountsList.forEach((amount) => validateAmount(token, amount));
+    }
 
     const ops: TokenMintOperation[] = amountsList.map((amount) => {
         const scaled = opts.autoScale ? scaleAmount(token, amount) : amount;

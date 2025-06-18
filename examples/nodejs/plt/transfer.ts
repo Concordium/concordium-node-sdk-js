@@ -146,7 +146,7 @@ const client = new ConcordiumGRPCNodeClient(
         console.log('Created payload:', payload);
 
         // Serialize payload for signing/submission
-        const serialized = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenHolder });
+        const serialized = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
         console.log('Serialized payload for sign & send:', serialized.toString('hex'));
     }
     // #endregion documentation-snippet

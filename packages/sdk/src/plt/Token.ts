@@ -10,7 +10,7 @@ import {
     TransactionHash,
 } from '../pub/types.js';
 import { AccountSigner, signTransaction } from '../signHelpers.js';
-import { Cbor, TokenAmount, TokenId, TokenInfo, TokenModuleReference } from './index.js';
+import { Cbor, TokenAmount, TokenHolder, TokenId, TokenInfo, TokenModuleReference } from './index.js';
 import {
     TokenAddAllowListOperation,
     TokenAddDenyListOperation,
@@ -130,9 +130,9 @@ export class NotAllowedError extends TokenError {
 
     /**
      * Constructs a new NotAllowedError.
-     * @param {AccountAddress.Type} receiver - The account address of the receiver.
+     * @param {TokenHolder.Type} receiver - The account address of the receiver.
      */
-    constructor(public readonly receiver: AccountAddress.Type) {
+    constructor(public readonly receiver: TokenHolder.Type) {
         super(
             `Transfering funds from or to the account specified is currently not allowed (${receiver}) because of the allow/deny list.`
         );
@@ -355,7 +355,7 @@ export async function validateTransfer(
 
     // Check that sender and all receivers are NOT on the deny list (if present), or that they are included in the allow list (if present).
     const senderPromise = token.grpc.getAccountInfo(sender);
-    const receiverPromises = payloads.map((p) => token.grpc.getAccountInfo(p.recipient));
+    const receiverPromises = payloads.map((p) => token.grpc.getAccountInfo(p.recipient.address));
     const accounts = await Promise.all([senderPromise, ...receiverPromises]);
     accounts.forEach((r) => {
         const accToken = r.accountTokens.find((t) => t.id.value === token.info.id.value)?.state;
@@ -365,7 +365,7 @@ export async function validateTransfer(
 
         const moduleState = Cbor.decode(accToken.moduleState) as TokenModuleAccountState;
         if (moduleState.memberDenyList || moduleState.memberAllowList === false) {
-            throw new NotAllowedError(r.accountAddress);
+            throw new NotAllowedError(TokenHolder.fromAccountAddress(r.accountAddress));
         }
     });
 
@@ -528,7 +528,7 @@ type UpdateListOptions = {
  *
  * @param {Token} token - The token for which to add the list entry.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {AccountAddress.Type | AccountAddress.Type[]} targets - The account address(es) to be added to the list.
+ * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
  * @param {UpdateListOptions} [opts={ validate: true }] - Options for updating the allow/deny list.
@@ -539,7 +539,7 @@ type UpdateListOptions = {
 export async function addAllowList(
     token: Token,
     sender: AccountAddress.Type,
-    targets: AccountAddress.Type | AccountAddress.Type[],
+    targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
     { validate }: UpdateListOptions = { validate: true }
@@ -559,7 +559,7 @@ export async function addAllowList(
  *
  * @param {Token} token - The token for which to add the list entry.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {AccountAddress.Type | AccountAddress.Type[]} targets - The account address(es) to be added to the list.
+ * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
  * @param {UpdateListOptions} [opts={ validate: true }] - Options for updating the allow/deny list.
@@ -570,7 +570,7 @@ export async function addAllowList(
 export async function removeAllowList(
     token: Token,
     sender: AccountAddress.Type,
-    targets: AccountAddress.Type | AccountAddress.Type[],
+    targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
     { validate }: UpdateListOptions = { validate: true }
@@ -590,7 +590,7 @@ export async function removeAllowList(
  *
  * @param {Token} token - The token for which to add the list entry.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {AccountAddress.Type | AccountAddress.Type[]} targets - The account address(es) to be added to the list.
+ * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
  * @param {UpdateListOptions} [opts={ validate: true }] - Options for updating the allow/deny list.
@@ -601,7 +601,7 @@ export async function removeAllowList(
 export async function addDenyList(
     token: Token,
     sender: AccountAddress.Type,
-    targets: AccountAddress.Type | AccountAddress.Type[],
+    targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
     { validate }: UpdateListOptions = { validate: true }
@@ -621,7 +621,7 @@ export async function addDenyList(
  *
  * @param {Token} token - The token for which to add the list entry.
  * @param {AccountAddress.Type} sender - The account address of the sender.
- * @param {AccountAddress.Type | AccountAddress.Type[]} targets - The account address(es) to be added to the list.
+ * @param {TokenHolder.Type | TokenHolder.Type[]} targets - The account address(es) to be added to the list.
  * @param {AccountSigner} signer - The signer responsible for signing the transaction.
  * @param {TransactionExpiry.Type} [expiry=TransactionExpiry.futureMinutes(5)] - The expiry time for the transaction.
  * @param {UpdateListOptions} [opts={ validate: true }] - Options for updating the allow/deny list.
@@ -632,7 +632,7 @@ export async function addDenyList(
 export async function removeDenyList(
     token: Token,
     sender: AccountAddress.Type,
-    targets: AccountAddress.Type | AccountAddress.Type[],
+    targets: TokenHolder.Type | TokenHolder.Type[],
     signer: AccountSigner,
     expiry: TransactionExpiry.Type = TransactionExpiry.futureMinutes(5),
     { validate }: UpdateListOptions = { validate: true }

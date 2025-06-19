@@ -1,5 +1,4 @@
-import * as AccountAddress from '../types/AccountAddress.js';
-import type { Cbor, CborMemo, TokenAmount, TokenId, TokenModuleReference } from './index.js';
+import type { Cbor, CborMemo, TokenAmount, TokenId, TokenModuleReference, TokenHolder } from './index.js';
 
 /**
  * Represents a protocol level token state for an account.
@@ -119,9 +118,9 @@ export type EncodedTokenModuleEvent = {
  */
 export type TokenTransferEvent = {
     /** The token holder sending the tokens. */
-    from: TokenHolder;
+    from: TokenHolder.Type;
     /** The token holder receiving the tokens. */
-    to: TokenHolder;
+    to: TokenHolder.Type;
     /** The amount of tokens transferred. */
     amount: TokenAmount.Type;
     /** An optional memo associated with the transfer. */
@@ -133,22 +132,7 @@ export type TokenTransferEvent = {
  */
 export type TokenSupplyUpdateEvent = {
     /** The token holder whose supply is updated. */
-    target: TokenHolder;
+    target: TokenHolder.Type;
     /** The amount by which the token supply is updated. */
     amount: TokenAmount.Type;
-};
-
-/**
- * A token holder is an entity that can hold tokens.
- */
-export type TokenHolder = TokenHolderGeneric<'account', AccountAddress.Type>;
-
-/**
- * A generic token holder type that can be extended to support other types of holders in the future.
- */
-type TokenHolderGeneric<T extends 'account', A> = {
-    /** The type of the token holder. Can be used to discriminate different types of token holders. */
-    tag: T;
-    /** The address of the token holder. */
-    address: A;
 };

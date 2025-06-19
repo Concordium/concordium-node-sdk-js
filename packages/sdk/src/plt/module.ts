@@ -1,7 +1,6 @@
 import { TokenUpdatePayload } from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';
-import * as TokenMetadataUrl from './TokenMetadataUrl.js';
-import { Cbor, CborMemo, EncodedTokenModuleEvent, TokenAmount, TokenHolder, TokenId } from './index.js';
+import { Cbor, CborMemo, EncodedTokenModuleEvent, TokenAmount, TokenHolder, TokenId, TokenMetadataUrl } from './index.js';
 
 /**
  * Enum representing the types of token operations.
@@ -25,7 +24,7 @@ export type TokenTransfer = {
     /** The amount to transfer. */
     amount: TokenAmount.Type;
     /** The recipient of the transfer. */
-    recipient: AccountAddress.Type;
+    recipient: TokenHolder.Type;
     /** An optional memo for the transfer. A string will be CBOR encoded, while raw bytes are included in the
      * transaction as is. */
     memo?: Memo;
@@ -68,7 +67,7 @@ export type TokenBurnOperation = TokenOperationGen<TokenOperationType.Burn, Toke
  */
 export type TokenListUpdate = {
     /** The target of the list update. */
-    target: AccountAddress.Type;
+    target: TokenHolder.Type;
 };
 
 /**
@@ -209,7 +208,7 @@ type GenericTokenModuleEvent<E extends TokenOperationType, T extends Object> = {
  */
 export type TokenListUpdateEventDetails = {
     /** The target of the list update. */
-    target: TokenHolder;
+    target: TokenHolder.Type;
 };
 
 /**
@@ -290,11 +289,11 @@ export function parseModuleEvent(event: EncodedTokenModuleEvent): TokenModuleEve
     if (typeof decoded !== 'object' || decoded === null) {
         throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
     }
-    if (!('target' in decoded) || !AccountAddress.instanceOf(decoded.target)) {
-        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected 'target' to be an AccountAddress`);
+    if (!('target' in decoded) || !TokenHolder.instanceOf(decoded.target)) {
+        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected 'target' to be a TokenHolder`);
     }
 
-    const details: TokenListUpdateEventDetails = { target: { tag: 'account', address: decoded.target } };
+    const details: TokenListUpdateEventDetails = { target: decoded.target };
     return {
         ...event,
         details,

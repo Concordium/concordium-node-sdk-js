@@ -2,6 +2,7 @@ export * from '../plt/types.js';
 export * from '../plt/module.js';
 
 export * as TokenMetadataUrl from '../plt/TokenMetadataUrl.js';
+export * as TokenHoer from '../plt/TokenHolder.js';
 export * as Token from '../plt/Token.js';
 
 // To limit the exports meant only for internal use, we re-create the module exports.

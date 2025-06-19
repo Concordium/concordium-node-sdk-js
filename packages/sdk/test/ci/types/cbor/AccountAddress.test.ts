@@ -70,7 +70,7 @@ describe('AccountAddress CBOR', () => {
     test('CBOR encoding/decoding with cbor2 library registration', () => {
         // Register the AccountAddress encoder and decoder
         AccountAddress.registerCBOREncoder();
-        const cleanup = AccountAddress.registerCBORDecoder();
+        // const cleanup = AccountAddress.registerCBORDecoder(); // TODO: re-enable when moved to token account type
 
         try {
             // Create a test address
@@ -111,7 +111,7 @@ describe('AccountAddress CBOR', () => {
             expect(AccountAddress.equals(roundtrip, originalAddress)).toBeTruthy();
         } finally {
             // Clean up the registered decoder
-            cleanup();
+            // cleanup();
         }
     });
 });

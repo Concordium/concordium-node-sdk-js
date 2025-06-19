@@ -2081,13 +2081,10 @@ function tokenEvent(event: GRPC_PLT.TokenEvent): PLT.TokenEvent {
     }
 }
 
-function tokenHolder(holder: GRPC_PLT.TokenHolder): PLT.TokenHolder {
+function tokenHolder(holder: GRPC_PLT.TokenHolder): PLT.TokenHolder.Type {
     switch (holder.address.oneofKind) {
         case 'account':
-            return {
-                tag: 'account',
-                address: AccountAddress.fromProto(unwrap(holder.address.account)),
-            };
+            return PLT.TokenHolder.fromAccountAddress(AccountAddress.fromProto(unwrap(holder.address.account)));
         case undefined:
             throw Error('Failed translating TokenHolder, encountered undefined value');
     }

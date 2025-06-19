@@ -1,7 +1,14 @@
 import { TokenUpdatePayload } from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';
-import * as TokenMetadataUrl from './TokenMetadataUrl.js';
-import { Cbor, CborMemo, EncodedTokenModuleEvent, TokenAmount, TokenHolder, TokenId } from './index.js';
+import {
+    Cbor,
+    CborMemo,
+    EncodedTokenModuleEvent,
+    TokenAmount,
+    TokenHolder,
+    TokenId,
+    TokenMetadataUrl,
+} from './index.js';
 
 /**
  * Enum representing the types of token operations.
@@ -25,7 +32,7 @@ export type TokenTransfer = {
     /** The amount to transfer. */
     amount: TokenAmount.Type;
     /** The recipient of the transfer. */
-    recipient: AccountAddress.Type;
+    recipient: TokenHolder.Type;
     /** An optional memo for the transfer. A string will be CBOR encoded, while raw bytes are included in the
      * transaction as is. */
     memo?: Memo;
@@ -68,7 +75,7 @@ export type TokenBurnOperation = TokenOperationGen<TokenOperationType.Burn, Toke
  */
 export type TokenListUpdate = {
     /** The target of the list update. */
-    target: AccountAddress.Type;
+    target: TokenHolder.Type;
 };
 
 /**
@@ -209,8 +216,10 @@ type GenericTokenModuleEvent<E extends TokenOperationType, T extends Object> = {
  */
 export type TokenListUpdateEventDetails = {
     /** The target of the list update. */
-    target: TokenHolder;
+    target: TokenHolder.Type;
 };
+
+export type TokenEventDetails = TokenListUpdateEventDetails;
 
 /**
  * An event occuring as the result of an "add-allow-list" operation.
@@ -286,15 +295,7 @@ export function parseModuleEvent(event: EncodedTokenModuleEvent): TokenModuleEve
         throw new Error(`Cannot parse event as token module event: ${event.type}`);
     }
 
-    const decoded = Cbor.decode(event.details);
-    if (typeof decoded !== 'object' || decoded === null) {
-        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
-    }
-    if (!('target' in decoded) || !AccountAddress.instanceOf(decoded.target)) {
-        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected 'target' to be an AccountAddress`);
-    }
-
-    const details: TokenListUpdateEventDetails = { target: { tag: 'account', address: decoded.target } };
+    const details = Cbor.decode(event.details, 'TokenEventDetails');
     return {
         ...event,
         details,

@@ -257,12 +257,18 @@ const TAGGED_COININFO = 40305;
 const TAGGED_ADDRESS = 40307;
 const CCD_NETWORK_ID = 919; // Concordium network identifier - Did you know 919 is a palindromic prime and a centred hexagonal number?
 
-function toCBORValue(value: AccountAddress): Map<number, any> {
+/**
+ * Converts an AccountAddress to a CBOR tagged value.
+ * This encodes the account address as a CBOR tagged value with tag 40307, containing both
+ * the coin information (tagged as 40305) and the account's decoded address.
+ */
+export function toCBORValue(value: AccountAddress): Tag {
     const taggedCoinInfo = new Tag(TAGGED_COININFO, new Map([[1, CCD_NETWORK_ID]]));
-    return new Map<number, any>([
+    const map = new Map<number, any>([
         [1, taggedCoinInfo],
         [3, value.decodedAddress],
     ]);
+    return new Tag(TAGGED_ADDRESS, map);
 }
 
 /**
@@ -289,8 +295,7 @@ function toCBORValue(value: AccountAddress): Map<number, any> {
  * @returns {Uint8Array} The CBOR encoded representation of the account address.
  */
 export function toCBOR(value: AccountAddress): Uint8Array {
-    const tagged = new Tag(TAGGED_ADDRESS, toCBORValue(value));
-    return new Uint8Array(encode(tagged));
+    return new Uint8Array(encode(toCBORValue(value)));
 }
 
 /**
@@ -306,10 +311,13 @@ export function toCBOR(value: AccountAddress): Uint8Array {
  * const encoded = encode(myAccountAddress);
  */
 export function registerCBOREncoder(): void {
-    registerEncoder(AccountAddress, (value) => [TAGGED_ADDRESS, toCBORValue(value)]);
+    registerEncoder(AccountAddress, (value) => [TAGGED_ADDRESS, toCBORValue(value).contents]);
 }
 
-function parseCBORValue(decoded: unknown): AccountAddress {
+/**
+ * Decodes a CBOR-encoded account address into an AccountAddress instance.
+ */
+export function fromCBORValue(decoded: unknown): AccountAddress {
     // Verify we have a tagged value with tag 40307 (tagged-address)
     if (!(decoded instanceof Tag) || decoded.tag !== TAGGED_ADDRESS) {
         throw new Error(`Invalid CBOR encoded account address: expected tag ${TAGGED_ADDRESS}`);
@@ -387,35 +395,5 @@ function parseCBORValue(decoded: unknown): AccountAddress {
  * @returns {AccountAddress} The decoded AccountAddress instance.
  */
 export function fromCBOR(bytes: Uint8Array): AccountAddress {
-    return parseCBORValue(decode(bytes));
-}
-
-/**
- * Registers a CBOR decoder for the tagged-address (40307) format with the `cbor2` library.
- * This enables automatic decoding of CBOR data containing Concordium account addresses
- * when using the `cbor2` library's decode function.
- *
- * @returns {() => void} A cleanup function that, when called, will restore the previous
- * decoder (if any) that was registered for the tagged-address format. This is useful
- * when used in an existing `cbor2` use-case.
- *
- * @example
- * // Register the decoder
- * const cleanup = registerCBORDecoder();
- * // Use the decoder
- * const address = decode(cborBytes); // Returns AccountAddress if format matches
- * // Later, unregister the decoder
- * cleanup();
- */
-export function registerCBORDecoder(): () => void {
-    const old = Tag.registerDecoder(TAGGED_ADDRESS, parseCBORValue);
-
-    // return cleanup function to restore the old decoder
-    return () => {
-        if (old) {
-            Tag.registerDecoder(TAGGED_ADDRESS, old);
-        } else {
-            Tag.clearDecoder(TAGGED_ADDRESS);
-        }
-    };
+    return fromCBORValue(decode(bytes));
 }

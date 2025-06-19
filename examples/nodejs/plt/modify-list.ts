@@ -11,6 +11,7 @@ import {
     Cbor,
     Token,
     TokenEventType,
+    TokenHolder,
     TokenId,
     TokenListUpdate,
     TokenOperation,
@@ -104,7 +105,7 @@ const client = new ConcordiumGRPCNodeClient(
 
     // parse the arguments
     const tokenId = TokenId.fromString(id);
-    const targetAddress = AccountAddress.fromBase58(address);
+    const targetAddress = TokenHolder.fromAccountAddress(AccountAddress.fromBase58(address));
 
     if (walletFile !== undefined) {
         // Read wallet-file

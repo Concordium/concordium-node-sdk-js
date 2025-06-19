@@ -12,10 +12,10 @@ import {
     CborMemo,
     Token,
     TokenAmount,
+    TokenHolder,
     TokenId,
     TokenTransfer,
     TokenTransferOperation,
-    TokenHolder,
     createTokenUpdatePayload,
 } from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';

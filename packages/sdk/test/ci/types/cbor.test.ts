@@ -4,10 +4,16 @@ import { AccountAddress, cborEncode } from '../../../src/pub/types.ts';
 it('should encode types and type compositions correctly', () => {
     const account = AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15));
     const accountCbor = cborEncode(account);
-
     // CBOR byte sequence is as follows:
-    //  5820 ...: A byte string of length 32, representing a 32-byte identifier followed by the account address
-    const accountCborHex = `5820 1515151515151515151515151515151515151515151515151515151515151515`.replace(/\s/g, '');
+    // - d99d73 a2: A tagged (40307) item containing a map with 2 key-value pairs
+    //  - 01 d99d71 a1: Key 1 => d99d71: A tagged (40305) item containing a map with 1 key-value pair:
+    //    - 01 190397: Key 1 => 190397: Uint16(919)
+    //  - 03 5820 ...: Key 3 => A byte string of length 32, representing a 32-byte identifier followed by the account address
+    const accountCborHex = `
+      d99d73 a2
+        01 d99d71 a1
+          01 190397
+        03 5820 1515151515151515151515151515151515151515151515151515151515151515`.replace(/\s/g, '');
     expect(Buffer.from(accountCbor).toString('hex')).toEqual(accountCborHex);
 
     const memo = CborMemo.fromString('Hello world');
@@ -37,10 +43,16 @@ it('should encode types and type compositions correctly', () => {
 
 it('should lexicographically sort object keys when encoding', () => {
     const account = AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15));
-
     // CBOR byte sequence is as follows:
-    //  5820 ...: A byte string of length 32, representing a 32-byte identifier followed by the account address
-    const accountCborHex = `5820 1515151515151515151515151515151515151515151515151515151515151515`.replace(/\s/g, '');
+    // - d99d73 a2: A tagged (40307) item containing a map with 2 key-value pairs
+    //  - 01 d99d71 a1: Key 1 => d99d71: A tagged (40305) item containing a map with 1 key-value pair:
+    //    - 01 190397: Key 1 => 190397: Uint16(919)
+    //  - 03 5820 ...: Key 3 => A byte string of length 32, representing a 32-byte identifier followed by the account address
+    const accountCborHex = `
+      d99d73 a2
+        01 d99d71 a1
+          01 190397
+        03 5820 1515151515151515151515151515151515151515151515151515151515151515`.replace(/\s/g, '');
 
     const memo = CborMemo.fromString('Hello world');
     // - d818: Tag 24 (d8 = "next 1 byte is tag", 18 = 24 decimal)

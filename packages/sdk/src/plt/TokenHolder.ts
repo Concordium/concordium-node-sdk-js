@@ -1,9 +1,8 @@
 import { Tag, decode } from 'cbor2';
-import { encode, registerEncoder } from 'cbor2/encoder';
+import { registerEncoder } from 'cbor2/encoder';
 
 import { Base58String } from '../index.js';
 import { AccountAddress } from '../types/index.js';
-import { bail } from '../util.js';
 
 interface TokenHolder<T extends string> {
     readonly type: T;
@@ -54,29 +53,7 @@ export function instanceOf(value: unknown): value is Type {
 }
 
 // CBOR
-
-type AccountCBOR = Map<number, any>;
-
-type CBOR = AccountCBOR;
-
-const TAGGED_COININFO = 40305;
 const TAGGED_ADDRESS = 40307;
-const CCD_NETWORK_ID = 919; // Concordium network identifier - Did you know 919 is a palindromic prime and a centred hexagonal number?
-
-function toCBORValue(value: Type): CBOR {
-    switch (value.type) {
-        case 'account':
-            return toCBORValueAccount(value as TokenHolderAccount);
-    }
-}
-
-function toCBORValueAccount(value: TokenHolderAccount): AccountCBOR {
-    const taggedCoinInfo = new Tag(TAGGED_COININFO, new Map([[1, CCD_NETWORK_ID]]));
-    return new Map<number, any>([
-        [1, taggedCoinInfo],
-        [3, value.address.decodedAddress],
-    ]);
-}
 
 /**
  * Converts an TokenHolder to its CBOR (Concise Binary Object Representation) encoding.
@@ -104,13 +81,8 @@ function toCBORValueAccount(value: TokenHolderAccount): AccountCBOR {
 export function toCBOR(value: Type): Uint8Array {
     switch (value.type) {
         case 'account':
-            return toCBORAccount(value as TokenHolderAccount);
+            return AccountAddress.toCBOR(value.address);
     }
-}
-
-function toCBORAccount(value: TokenHolderAccount): Uint8Array {
-    const tagged = new Tag(TAGGED_ADDRESS, toCBORValue(value));
-    return new Uint8Array(encode(tagged));
 }
 
 /**
@@ -126,66 +98,18 @@ function toCBORAccount(value: TokenHolderAccount): Uint8Array {
  * const encoded = encode(myTokenHolder);
  */
 export function registerCBOREncoder(): void {
-    registerEncoder(TokenHolderAccount, (value) => [TAGGED_ADDRESS, toCBORValue(value)]);
+    registerEncoder(TokenHolderAccount, (value) => [
+        TAGGED_ADDRESS,
+        AccountAddress.toCBORValue(value.address).contents,
+    ]);
 }
 
 export function fromCBORValue(value: unknown): Type {
     if (value instanceof Tag && value.tag === TAGGED_ADDRESS) {
-        return fromCBORValueAccount(value.contents);
+        return fromAccountAddress(AccountAddress.fromCBORValue(value));
     }
 
     throw new Error(`Faid to decode 'TokenHolder.Type' from CBOR value: ${value}`);
-}
-
-function fromCBORValueAccount(value: unknown): TokenHolderAccount {
-    if (!(value instanceof Map)) {
-        throw new Error('Invalid CBOR encoded account address: expected a map');
-    }
-
-    // Verify the map corresponds to the BCR-2020-009 `address` format
-    const validKeys = [1, 2, 3]; // we allow 2 here, as it is in the spec for BCR-2020-009 `address`, but we don't use it
-    for (const key of value.keys()) {
-        validKeys.includes(key) || bail(`Invalid CBOR encoded account address: unexpected key ${key}`);
-    }
-
-    // Extract the account address bytes (key 3)
-    const addressBytes = value.get(3);
-    if (
-        !addressBytes ||
-        !(addressBytes instanceof Uint8Array) ||
-        addressBytes.byteLength !== AccountAddress.BYTES_LENGTH
-    ) {
-        throw new Error('Invalid CBOR encoded account address: missing or invalid address bytes');
-    }
-
-    // Optional validation for coin information if present (key 1)
-    const coinInfo = value.get(1);
-    if (coinInfo !== undefined) {
-        // Verify coin info has the correct tag if present
-        if (!(coinInfo instanceof Tag) || coinInfo.tag !== TAGGED_COININFO) {
-            throw new Error(
-                `Invalid CBOR encoded account address: coin info has incorrect tag (expected ${TAGGED_COININFO})`
-            );
-        }
-
-        // Verify coin info contains Concordium network identifier if present
-        const coinInfoMap = coinInfo.contents;
-        if (!(coinInfoMap instanceof Map) || coinInfoMap.get(1) !== CCD_NETWORK_ID) {
-            throw new Error(
-                `Invalid CBOR encoded account address: coin info does not contain Concordium network identifier ${CCD_NETWORK_ID}`
-            );
-        }
-
-        // Verify the map corresponds to the BCR-2020-007 `coininfo` format
-        const validKeys = [1, 2]; // we allow 2 here, as it is in the spec for BCR-2020-007 `coininfo`, but we don't use it
-        for (const key of coinInfoMap.keys()) {
-            validKeys.includes(key) || bail(`Invalid CBOR encoded coininfo: unexpected key ${key}`);
-        }
-    }
-
-    // Create the AccountAddress from the extracted bytes
-    const account = AccountAddress.fromBuffer(addressBytes);
-    return fromAccountAddress(account);
 }
 
 /**

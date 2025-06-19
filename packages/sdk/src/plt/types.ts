@@ -20,8 +20,6 @@ export type TokenAccountState = {
 export type TokenState = {
     /** The reference of the module implementing this token. */
     moduleRef: TokenModuleReference.Type;
-    /** Account address of the issuer. The issuer is the holder of the nominated account which can perform token-governance operations. */
-    issuer: AccountAddress.Type;
     /** The number of decimals used to represent token amounts. */
     decimals: number;
     /** The total available token supply. */
@@ -67,8 +65,6 @@ export type CreatePLTPayload = {
     tokenId: TokenId.Type;
     /** The module reference for the token. */
     moduleRef: TokenModuleReference.Type;
-    /** The account to nominate for governance operations. */
-    governanceAccount: AccountAddress.Type;
     /**
      * The number of decimal places used in the representation of amounts of this token. This determines the smallest
      * representable fraction of the token.
@@ -92,7 +88,7 @@ export type TokenEvent =
     | TokenEventGeneric<TokenEventType.Transfer, TokenTransferEvent>
     | TokenEventGeneric<TokenEventType.Mint, TokenSupplyUpdateEvent>
     | TokenEventGeneric<TokenEventType.Burn, TokenSupplyUpdateEvent>
-    | TokenEventGeneric<TokenEventType.Module, TokenModuleEvent>;
+    | TokenEventGeneric<TokenEventType.Module, EncodedTokenModuleEvent>;
 
 /**
  * The type of events emitted by the token module.
@@ -111,7 +107,7 @@ export enum TokenEventType {
 /**
  * Event emitted by the token module.
  */
-export type TokenModuleEvent = {
+export type EncodedTokenModuleEvent = {
     /** The type of the event emitted by the token module. */
     type: string;
     /** Additional details about the event (CBOR encoded). */

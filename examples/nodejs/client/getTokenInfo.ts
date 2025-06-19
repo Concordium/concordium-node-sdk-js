@@ -55,7 +55,8 @@ const client = new ConcordiumGRPCNodeClient(address, Number(port), credentials.c
     const tokenInfo: TokenInfo = await client.getTokenInfo(tokenId, blockHash);
 
     console.log('Total token supply:', tokenInfo.state.totalSupply);
-    console.log('Token issuer:', tokenInfo.state.issuer);
-    console.log('Token module state:', Cbor.decode(tokenInfo.state.moduleState));
+    console.log('Module reference:', tokenInfo.state.moduleRef.toString());
+    console.log('Decimals:', tokenInfo.state.decimals);
+    console.log('Module state:', Cbor.decode(tokenInfo.state.moduleState));
     // #endregion documentation-snippet
 })();

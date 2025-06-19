@@ -1,13 +1,23 @@
-import { Cursor } from '../../../../src/deserializationHelpers.js';
-import { parseModuleEvent } from '../../../../src/plt/v1/types.js';
-import { Cbor, TokenAmount, TokenId, V1 } from '../../../../src/pub/plt.js';
+import { Cursor } from '../../../src/deserializationHelpers.js';
+import {
+    TokenAddAllowListOperation,
+    TokenAddDenyListOperation,
+    TokenBurnOperation,
+    TokenMintOperation,
+    TokenOperationType,
+    TokenRemoveAllowListOperation,
+    TokenRemoveDenyListOperation,
+    TokenTransferOperation,
+    createTokenUpdatePayload,
+    parseModuleEvent,
+} from '../../../src/plt/module.js';
+import { Cbor, TokenAmount, TokenId } from '../../../src/pub/plt.js';
 import {
     AccountAddress,
     AccountTransactionType,
-    TokenGovernanceHandler,
-    TokenHolderHandler,
+    TokenUpdateHandler,
     serializeAccountTransactionPayload,
-} from '../../../../src/pub/types.js';
+} from '../../../src/pub/types.js';
 
 describe('PLT V1 parseModuleEvent', () => {
     const testEventParsing = (type: string, targetValue: number) => {
@@ -66,14 +76,14 @@ describe('PLT v1 transactions', () => {
     `.replace(/\s/g, '');
 
     it('(de)serializes transfers correctly', () => {
-        const transfer: V1.TokenTransferOperation = {
-            [V1.TokenOperationType.Transfer]: {
+        const transfer: TokenTransferOperation = {
+            [TokenOperationType.Transfer]: {
                 amount: TokenAmount.create(123n, 4),
                 recipient: testAccountAddress,
             },
         };
 
-        const payload = V1.createTokenHolderPayload(token, transfer);
+        const payload = createTokenUpdatePayload(token, transfer);
 
         // This is a CBOR encoded byte sequence.
         // It represents a nested structure with the following breakdown:
@@ -106,23 +116,23 @@ describe('PLT v1 transactions', () => {
         const decoded = Cbor.decode(payload.operations);
         expect(decoded).toEqual([transfer]);
 
-        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenHolder });
+        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
         const expected = Buffer.concat([Buffer.from('1b03444b4b00000052', 'hex'), expectedOperations]);
         expect(ser.toString('hex')).toEqual(expected.toString('hex'));
 
         const serPayload = ser.slice(1);
-        const des = new TokenHolderHandler().deserialize(Cursor.fromBuffer(serPayload));
+        const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
         expect(des).toEqual(payload);
     });
 
     it('(de)serializes mint operations correctly', () => {
-        const mint: V1.TokenMintOperation = {
-            [V1.TokenOperationType.Mint]: {
+        const mint: TokenMintOperation = {
+            [TokenOperationType.Mint]: {
                 amount: TokenAmount.create(500n, 2),
             },
         };
 
-        const payload = V1.createTokenGovernancePayload(token, mint);
+        const payload = createTokenUpdatePayload(token, mint);
 
         // This is a CBOR encoded byte sequence representing the mint operation:
         // - 81: An array of 1 item
@@ -152,20 +162,20 @@ describe('PLT v1 transactions', () => {
         const decoded = Cbor.decode(payload.operations);
         expect(decoded).toEqual([mint]);
 
-        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenGovernance });
+        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
         const serPayload = ser.slice(1);
-        const des = new TokenGovernanceHandler().deserialize(Cursor.fromBuffer(serPayload));
+        const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
         expect(des).toEqual(payload);
     });
 
     it('(de)serializes burn operations correctly', () => {
-        const burn: V1.TokenBurnOperation = {
-            [V1.TokenOperationType.Burn]: {
+        const burn: TokenBurnOperation = {
+            [TokenOperationType.Burn]: {
                 amount: TokenAmount.create(200n, 3),
             },
         };
 
-        const payload = V1.createTokenGovernancePayload(token, burn);
+        const payload = createTokenUpdatePayload(token, burn);
 
         // This is a CBOR encoded byte sequence representing the burn operation:
         // - 81: An array of 1 item
@@ -195,20 +205,20 @@ describe('PLT v1 transactions', () => {
         const decoded = Cbor.decode(payload.operations);
         expect(decoded).toEqual([burn]);
 
-        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenGovernance });
+        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
         const serPayload = ser.slice(1);
-        const des = new TokenGovernanceHandler().deserialize(Cursor.fromBuffer(serPayload));
+        const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
         expect(des).toEqual(payload);
     });
 
     it('(de)serializes addAllowList operations correctly', () => {
-        const addAllowList: V1.TokenAddAllowListOperation = {
-            [V1.TokenOperationType.AddAllowList]: {
+        const addAllowList: TokenAddAllowListOperation = {
+            [TokenOperationType.AddAllowList]: {
                 target: testAccountAddress,
             },
         };
 
-        const payload = V1.createTokenGovernancePayload(token, addAllowList);
+        const payload = createTokenUpdatePayload(token, addAllowList);
 
         // This is a CBOR encoded byte sequence representing the addAllowList operation:
         // - 81: An array of 1 item
@@ -232,20 +242,20 @@ describe('PLT v1 transactions', () => {
         const decoded = Cbor.decode(payload.operations);
         expect(decoded).toEqual([addAllowList]);
 
-        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenGovernance });
+        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
         const serPayload = ser.slice(1);
-        const des = new TokenGovernanceHandler().deserialize(Cursor.fromBuffer(serPayload));
+        const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
         expect(des).toEqual(payload);
     });
 
     it('(de)serializes remove-allow-list operations correctly', () => {
-        const removeAllowList: V1.TokenRemoveAllowListOperation = {
-            [V1.TokenOperationType.RemoveAllowList]: {
+        const removeAllowList: TokenRemoveAllowListOperation = {
+            [TokenOperationType.RemoveAllowList]: {
                 target: testAccountAddress,
             },
         };
 
-        const payload = V1.createTokenGovernancePayload(token, removeAllowList);
+        const payload = createTokenUpdatePayload(token, removeAllowList);
 
         // This is a CBOR encoded byte sequence representing the remove-allow-list operation:
         // - 81: An array of 1 item
@@ -269,20 +279,20 @@ describe('PLT v1 transactions', () => {
         const decoded = Cbor.decode(payload.operations);
         expect(decoded).toEqual([removeAllowList]);
 
-        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenGovernance });
+        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
         const serPayload = ser.slice(1);
-        const des = new TokenGovernanceHandler().deserialize(Cursor.fromBuffer(serPayload));
+        const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
         expect(des).toEqual(payload);
     });
 
     it('(de)serializes add-deny-list operations correctly', () => {
-        const addDenyList: V1.TokenAddDenyListOperation = {
-            [V1.TokenOperationType.AddDenyList]: {
+        const addDenyList: TokenAddDenyListOperation = {
+            [TokenOperationType.AddDenyList]: {
                 target: testAccountAddress,
             },
         };
 
-        const payload = V1.createTokenGovernancePayload(token, addDenyList);
+        const payload = createTokenUpdatePayload(token, addDenyList);
 
         // This is a CBOR encoded byte sequence representing the add-deny-list operation:
         // - 81: An array of 1 item
@@ -306,20 +316,20 @@ describe('PLT v1 transactions', () => {
         const decoded = Cbor.decode(payload.operations);
         expect(decoded).toEqual([addDenyList]);
 
-        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenGovernance });
+        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
         const serPayload = ser.slice(1);
-        const des = new TokenGovernanceHandler().deserialize(Cursor.fromBuffer(serPayload));
+        const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
         expect(des).toEqual(payload);
     });
 
     it('(de)serializes remove-deny-list operations correctly', () => {
-        const removeDenyList: V1.TokenRemoveDenyListOperation = {
-            [V1.TokenOperationType.RemoveDenyList]: {
+        const removeDenyList: TokenRemoveDenyListOperation = {
+            [TokenOperationType.RemoveDenyList]: {
                 target: testAccountAddress,
             },
         };
 
-        const payload = V1.createTokenGovernancePayload(token, removeDenyList);
+        const payload = createTokenUpdatePayload(token, removeDenyList);
 
         // This is a CBOR encoded byte sequence representing the remove-deny-list operation:
         // - 81: An array of 1 item
@@ -343,28 +353,28 @@ describe('PLT v1 transactions', () => {
         const decoded = Cbor.decode(payload.operations);
         expect(decoded).toEqual([removeDenyList]);
 
-        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenGovernance });
+        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
         const serPayload = ser.slice(1);
-        const des = new TokenGovernanceHandler().deserialize(Cursor.fromBuffer(serPayload));
+        const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
         expect(des).toEqual(payload);
     });
 
     it('(de)serializes multiple governance operations correctly', () => {
-        const mint: V1.TokenMintOperation = {
-            [V1.TokenOperationType.Mint]: {
+        const mint: TokenMintOperation = {
+            [TokenOperationType.Mint]: {
                 amount: TokenAmount.create(500n, 2),
             },
         };
 
-        const addDenyList: V1.TokenAddDenyListOperation = {
-            [V1.TokenOperationType.AddDenyList]: {
+        const addDenyList: TokenAddDenyListOperation = {
+            [TokenOperationType.AddDenyList]: {
                 target: testAccountAddress,
             },
         };
 
         const operations = [mint, addDenyList];
 
-        const payload = V1.createTokenGovernancePayload(token, operations);
+        const payload = createTokenUpdatePayload(token, operations);
 
         // This is a CBOR encoded byte sequence representing two operations:
         // - 82: An array of 2 items
@@ -404,9 +414,9 @@ describe('PLT v1 transactions', () => {
         const decoded = Cbor.decode(payload.operations);
         expect(decoded).toEqual(operations);
 
-        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenGovernance });
+        const ser = serializeAccountTransactionPayload({ payload, type: AccountTransactionType.TokenUpdate });
         const serPayload = ser.slice(1);
-        const des = new TokenGovernanceHandler().deserialize(Cursor.fromBuffer(serPayload));
+        const des = new TokenUpdateHandler().deserialize(Cursor.fromBuffer(serPayload));
         expect(des).toEqual(payload);
     });
 });

@@ -1,6 +1,14 @@
 import { TokenUpdatePayload } from '../types.js';
 import * as AccountAddress from '../types/AccountAddress.js';
-import { Cbor, CborMemo, EncodedTokenModuleEvent, TokenAmount, TokenHolder, TokenId, TokenMetadataUrl } from './index.js';
+import {
+    Cbor,
+    CborMemo,
+    EncodedTokenModuleEvent,
+    TokenAmount,
+    TokenHolder,
+    TokenId,
+    TokenMetadataUrl,
+} from './index.js';
 
 /**
  * Enum representing the types of token operations.
@@ -211,6 +219,8 @@ export type TokenListUpdateEventDetails = {
     target: TokenHolder.Type;
 };
 
+export type TokenEventDetails = TokenListUpdateEventDetails;
+
 /**
  * An event occuring as the result of an "add-allow-list" operation.
  */
@@ -285,15 +295,7 @@ export function parseModuleEvent(event: EncodedTokenModuleEvent): TokenModuleEve
         throw new Error(`Cannot parse event as token module event: ${event.type}`);
     }
 
-    const decoded = Cbor.decode(event.details);
-    if (typeof decoded !== 'object' || decoded === null) {
-        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected an object.`);
-    }
-    if (!('target' in decoded) || !TokenHolder.instanceOf(decoded.target)) {
-        throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected 'target' to be a TokenHolder`);
-    }
-
-    const details: TokenListUpdateEventDetails = { target: decoded.target };
+    const details = Cbor.decode(event.details, 'TokenEventDetails');
     return {
         ...event,
         details,

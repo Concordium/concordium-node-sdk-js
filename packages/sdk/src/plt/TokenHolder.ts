@@ -79,7 +79,7 @@ function toCBORValueAccount(value: TokenHolderAccount): AccountCBOR {
 }
 
 /**
- * Converts an AccountAddress to its CBOR (Concise Binary Object Representation) encoding.
+ * Converts an TokenHolder to its CBOR (Concise Binary Object Representation) encoding.
  * This encodes the account address as a CBOR tagged value with tag 40307, containing both
  * the coin information (tagged as 40305) and the account's decoded address.
  *
@@ -97,9 +97,9 @@ function toCBORValueAccount(value: TokenHolderAccount): AccountCBOR {
  * ```
  * Where 919 is the Concordium network identifier and the hex string is the raw account address.
  *
- * @param {AccountAddress} value - The account address to convert to CBOR format.
+ * @param {Type} value - The token holder to convert to CBOR format.
  * @throws {Error} - If an unsupported CBOR encoding is specified.
- * @returns {Uint8Array} The CBOR encoded representation of the account address.
+ * @returns {Uint8Array} The CBOR encoded representation of the token holder.
  */
 export function toCBOR(value: Type): Uint8Array {
     switch (value.type) {
@@ -114,30 +114,30 @@ function toCBORAccount(value: TokenHolderAccount): Uint8Array {
 }
 
 /**
- * Registers a CBOR encoder for the AccountAddress type with the `cbo2` library.
- * This allows AccountAddress instances to be automatically encoded when used with
+ * Registers a CBOR encoder for the TokenHolder type with the `cbor2` library.
+ * This allows TokenHolder instances to be automatically encoded when used with
  * the `cbor2` library's encode function.
  *
  * @returns {void}
  * @example
  * // Register the encoder
  * registerCBOREncoder();
- * // Now AccountAddress instances can be encoded directly
- * const encoded = encode(myAccountAddress);
+ * // Now TokenHolder instances can be encoded directly
+ * const encoded = encode(myTokenHolder);
  */
 export function registerCBOREncoder(): void {
     registerEncoder(TokenHolderAccount, (value) => [TAGGED_ADDRESS, toCBORValue(value)]);
 }
 
-function parseCBORValue(value: unknown): Type {
+export function fromCBORValue(value: unknown): Type {
     if (value instanceof Tag && value.tag === TAGGED_ADDRESS) {
-        return parseCBORValueAccount(value.contents);
+        return fromCBORValueAccount(value.contents);
     }
 
     throw new Error(`Faid to decode 'TokenHolder.Type' from CBOR value: ${value}`);
 }
 
-function parseCBORValueAccount(value: unknown): TokenHolderAccount {
+function fromCBORValueAccount(value: unknown): TokenHolderAccount {
     if (!(value instanceof Map)) {
         throw new Error('Invalid CBOR encoded account address: expected a map');
     }
@@ -189,7 +189,7 @@ function parseCBORValueAccount(value: unknown): TokenHolderAccount {
 }
 
 /**
- * Decodes a CBOR-encoded account address into an AccountAddress instance.
+ * Decodes a CBOR-encoded account address into an TokenHolder instance.
  * This function can handle both the full tagged format (with coin information)
  * and a simplified format with just the address bytes.
  *
@@ -210,10 +210,10 @@ function parseCBORValueAccount(value: unknown): TokenHolderAccount {
  *
  * @param {Uint8Array} bytes - The CBOR encoded representation of an account address.
  * @throws {Error} - If the input is not a valid CBOR encoding of an account address.
- * @returns {AccountAddress} The decoded AccountAddress instance.
+ * @returns {Type} The decoded TokenHolder instance.
  */
 export function fromCBOR(bytes: Uint8Array): Type {
-    return parseCBORValue(decode(bytes));
+    return fromCBORValue(decode(bytes));
 }
 
 /**
@@ -229,12 +229,12 @@ export function fromCBOR(bytes: Uint8Array): Type {
  * // Register the decoder
  * const cleanup = registerCBORDecoder();
  * // Use the decoder
- * const address = decode(cborBytes); // Returns AccountAddress if format matches
+ * const tokenHolder = decode(cborBytes); // Returns TokenHolder if format matches
  * // Later, unregister the decoder
  * cleanup();
  */
 export function registerCBORDecoder(): () => void {
-    const old = [Tag.registerDecoder(TAGGED_ADDRESS, parseCBORValue)];
+    const old = [Tag.registerDecoder(TAGGED_ADDRESS, fromCBORValue)];
 
     // return cleanup function to restore the old decoder
     return () => {

@@ -1,3 +1,5 @@
+import { registerEncoder } from 'cbor2/encoder';
+
 import { HexString, cborDecode, cborEncode } from '../index.js';
 import { Cbor } from './index.js';
 
@@ -27,7 +29,7 @@ export type CBOR = {
 /**
  * Protocol level token (PLT) metadata URL.
  */
-export class TokenMetadataUrl {
+class TokenMetadataUrl {
     #nominal = true;
 
     /**
@@ -199,4 +201,20 @@ export function fromCBORValue(value: unknown): TokenMetadataUrl {
  */
 export function fromCBOR(cbor: Uint8Array): TokenMetadataUrl {
     return fromCBORValue(cborDecode(cbor));
+}
+
+/**
+ * Registers a CBOR encoder for the TokenMetadataUrl type with the `cbor2` library.
+ * This allows TokenMetadataUrl instances to be automatically encoded when used with
+ * the `cbor2` library's encode function.
+ *
+ * @returns {void}
+ * @example
+ * // Register the encoder
+ * registerCBOREncoder();
+ * // Now TokenMetadataUrl instances can be encoded directly
+ * const encoded = encode(myTokenMetadataUrl);
+ */
+export function registerCBOREncoder(): void {
+    registerEncoder(TokenMetadataUrl, (value) => [NaN, toCBORValue(value)]);
 }

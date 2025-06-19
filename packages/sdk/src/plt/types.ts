@@ -1,4 +1,4 @@
-import type { Cbor, CborMemo, TokenAmount, TokenId, TokenModuleReference, TokenHolder } from './index.js';
+import type { Cbor, CborMemo, TokenAmount, TokenHolder, TokenId, TokenModuleReference } from './index.js';
 
 /**
  * Represents a protocol level token state for an account.

@@ -1,4 +1,5 @@
 import { Cursor } from '../../../src/deserializationHelpers.js';
+import { TokenHolder } from '../../../src/plt/index.ts';
 import {
     TokenAddAllowListOperation,
     TokenAddDenyListOperation,
@@ -22,14 +23,17 @@ import {
 describe('PLT V1 parseModuleEvent', () => {
     const testEventParsing = (type: string, targetValue: number) => {
         it(`parses ${type} events correctly`, () => {
+            const target = TokenHolder.fromAccountAddress(
+                AccountAddress.fromBuffer(new Uint8Array(32).fill(targetValue))
+            );
             const validEvent = {
                 type,
-                details: Cbor.encode({ target: AccountAddress.fromBuffer(new Uint8Array(32).fill(targetValue)) }),
+                details: Cbor.encode({ target }),
             };
 
             const parsedEvent = parseModuleEvent(validEvent);
             expect(parsedEvent.type).toEqual(type);
-            expect(parsedEvent.details.target.tag).toEqual('account');
+            expect(parsedEvent.details.target.type).toEqual('account');
             expect(parsedEvent.details.target.address.decodedAddress).toEqual(new Uint8Array(32).fill(targetValue));
         });
     };
@@ -57,7 +61,7 @@ describe('PLT V1 parseModuleEvent', () => {
 
 describe('PLT v1 transactions', () => {
     const token = TokenId.fromString('DKK');
-    const testAccountAddress = AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15));
+    const testAccountAddress = TokenHolder.fromAccountAddress(AccountAddress.fromBuffer(new Uint8Array(32).fill(0x15)));
     // - d99d73: A tagged (40307) item with a map (a2) containing:
     // - a2: A map with 2 key-value pairs
     //   - 01: Key 1.
@@ -72,7 +76,7 @@ describe('PLT v1 transactions', () => {
       d99d73 a2
         01 d99d71 a1
           01 190397
-        03 5820 ${Buffer.from(testAccountAddress.decodedAddress).toString('hex')}
+        03 5820 ${Buffer.from(testAccountAddress.address.decodedAddress).toString('hex')}
     `.replace(/\s/g, '');
 
     it('(de)serializes transfers correctly', () => {
@@ -248,7 +252,7 @@ describe('PLT v1 transactions', () => {
         expect(des).toEqual(payload);
     });
 
-    it('(de)serializes remove-allow-list operations correctly', () => {
+    it('(de)serializes removeAllowList operations correctly', () => {
         const removeAllowList: TokenRemoveAllowListOperation = {
             [TokenOperationType.RemoveAllowList]: {
                 target: testAccountAddress,
@@ -257,7 +261,7 @@ describe('PLT v1 transactions', () => {
 
         const payload = createTokenUpdatePayload(token, removeAllowList);
 
-        // This is a CBOR encoded byte sequence representing the remove-allow-list operation:
+        // This is a CBOR encoded byte sequence representing the removeAllowList operation:
         // - 81: An array of 1 item
         // - a1: A map with 1 key-value pair
         //   - 6f72656d6f7665416c6c6f774c697374: Key "removeAllowList" (in UTF-8)
@@ -285,7 +289,7 @@ describe('PLT v1 transactions', () => {
         expect(des).toEqual(payload);
     });
 
-    it('(de)serializes add-deny-list operations correctly', () => {
+    it('(de)serializes addDenyList operations correctly', () => {
         const addDenyList: TokenAddDenyListOperation = {
             [TokenOperationType.AddDenyList]: {
                 target: testAccountAddress,
@@ -294,7 +298,7 @@ describe('PLT v1 transactions', () => {
 
         const payload = createTokenUpdatePayload(token, addDenyList);
 
-        // This is a CBOR encoded byte sequence representing the add-deny-list operation:
+        // This is a CBOR encoded byte sequence representing the addDenyList operation:
         // - 81: An array of 1 item
         // - a1: A map with 1 key-value pair
         //   - 6b61646444656e794c697374 : Key "addDenyList" (in UTF-8)
@@ -322,7 +326,7 @@ describe('PLT v1 transactions', () => {
         expect(des).toEqual(payload);
     });
 
-    it('(de)serializes remove-deny-list operations correctly', () => {
+    it('(de)serializes removeDenyList operations correctly', () => {
         const removeDenyList: TokenRemoveDenyListOperation = {
             [TokenOperationType.RemoveDenyList]: {
                 target: testAccountAddress,
@@ -331,7 +335,7 @@ describe('PLT v1 transactions', () => {
 
         const payload = createTokenUpdatePayload(token, removeDenyList);
 
-        // This is a CBOR encoded byte sequence representing the remove-deny-list operation:
+        // This is a CBOR encoded byte sequence representing the removeDenyList operation:
         // - 81: An array of 1 item
         // - a1: A map with 1 key-value pair
         //   - 6e72656d6f766544656e794c697374: Key "removeDenyList" (in UTF-8)

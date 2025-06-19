@@ -18,7 +18,6 @@ export {
     toCBOR,
     fromCBOR,
     registerCBOREncoder,
-    registerCBORDecoder,
     instanceOf,
     fromJSON,
 } from '../../types/AccountAddress.js';

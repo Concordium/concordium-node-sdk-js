@@ -1,5 +1,7 @@
 import bs58check from 'bs58check';
 import { Buffer } from 'buffer/index.js';
+import { decode } from 'cbor2/decoder';
+import { encode, registerEncoder } from 'cbor2/encoder';
 
 import type * as Proto from '../grpc-api/v2/concordium/kernel.js';
 import { Base58String } from '../types.js';
@@ -248,3 +250,53 @@ export function toTypedJSON(value: AccountAddress): TypedJson<Serializable> {
  * @returns {Type} The parsed instance.
  */
 export const fromTypedJSON = /*#__PURE__*/ makeFromTypedJson(JSON_DISCRIMINATOR, fromBase58);
+
+function toCBORValue(value: AccountAddress): Uint8Array {
+    return value.decodedAddress;
+}
+
+/**
+ * Converts an AccountAddress to its CBOR (Concise Binary Object Representation) encoding.
+ * This encodes the account address as a CBOR encoding of 32 bytes.
+ *
+ * @param {AccountAddress} value - The account address to convert to CBOR format.
+ * @returns {Uint8Array} The CBOR encoded representation of the account address.
+ */
+export function toCBOR(value: AccountAddress): Uint8Array {
+    return new Uint8Array(encode(toCBORValue(value)));
+}
+
+/**
+ * Registers a CBOR encoder for the AccountAddress type with the `cbor2` library.
+ * This allows AccountAddress instances to be automatically encoded when used with
+ * the `cbor2` library's encode function.
+ *
+ * @returns {void}
+ * @example
+ * // Register the encoder
+ * registerCBOREncoder();
+ * // Now AccountAddress instances can be encoded directly
+ * const encoded = encode(myAccountAddress);
+ */
+export function registerCBOREncoder(): void {
+    registerEncoder(AccountAddress, (value) => [NaN, toCBORValue(value)]);
+}
+
+function parseCBORValue(decoded: unknown): AccountAddress {
+    if (!decoded || !(decoded instanceof Uint8Array) || decoded.byteLength !== BYTES_LENGTH) {
+        throw new Error('Invalid CBOR encoded account address: missing or invalid address bytes');
+    }
+
+    return fromBuffer(decoded);
+}
+
+/**
+ * Decodes a CBOR-encoded account address (CBOR encoding of 32 bytes) into an AccountAddress instance.
+ *
+ * @param {Uint8Array} bytes - The CBOR encoded representation of an account address.
+ * @throws {Error} - If the input is not a valid CBOR encoding of an account address.
+ * @returns {AccountAddress} The decoded AccountAddress instance.
+ */
+export function fromCBOR(bytes: Uint8Array): AccountAddress {
+    return parseCBORValue(decode(bytes));
+}

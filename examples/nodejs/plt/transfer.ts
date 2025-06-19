@@ -15,6 +15,7 @@ import {
     TokenId,
     TokenTransfer,
     TokenTransferOperation,
+    TokenHolder,
     createTokenUpdatePayload,
 } from '@concordium/web-sdk/plt';
 import { credentials } from '@grpc/grpc-js';
@@ -93,7 +94,7 @@ const client = new ConcordiumGRPCNodeClient(
     const tokenId = TokenId.fromString(cli.flags.tokenId);
     const token = await Token.fromId(client, tokenId);
     const amount = TokenAmount.fromDecimal(cli.flags.amount, token.info.state.decimals);
-    const recipient = AccountAddress.fromBase58(cli.flags.recipient);
+    const recipient = TokenHolder.fromAccountAddress(AccountAddress.fromBase58(cli.flags.recipient));
     const memo = cli.flags.memo ? CborMemo.fromString(cli.flags.memo) : undefined;
 
     const transfer: TokenTransfer = {

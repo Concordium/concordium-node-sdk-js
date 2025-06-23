@@ -428,7 +428,7 @@ export async function transfer(
  */
 export function validateGovernanceOperation(token: Token, sender: AccountAddress.Type): true {
     const { governanceAccount } = Cbor.decode(token.info.state.moduleState) as TokenModuleState;
-    if (!AccountAddress.equals(sender, governanceAccount)) {
+    if (!AccountAddress.equals(sender, governanceAccount.address)) {
         throw new UnauthorizedGovernanceOperationError(sender);
     }
 

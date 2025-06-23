@@ -1,7 +1,6 @@
 import { decode, encode } from 'cbor2';
 
 import { CborMemo, TokenAmount, TokenHolder, TokenMetadataUrl } from '../plt/index.js';
-import { AccountAddress } from '../types/index.js';
 
 /**
  * Register CBOR encoders for all types.
@@ -13,7 +12,6 @@ import { AccountAddress } from '../types/index.js';
  * - `CborMemo`: For encoding protocol-level token memos in CBOR format
  */
 export function registerCBOREncoders(): void {
-    AccountAddress.registerCBOREncoder();
     TokenHolder.registerCBOREncoder();
     TokenAmount.registerCBOREncoder();
     CborMemo.registerCBOREncoder();

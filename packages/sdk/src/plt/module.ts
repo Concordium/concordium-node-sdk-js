@@ -1,5 +1,4 @@
 import { TokenUpdatePayload } from '../types.js';
-import * as AccountAddress from '../types/AccountAddress.js';
 import {
     Cbor,
     CborMemo,
@@ -149,7 +148,7 @@ export type TokenModuleState = {
     /** A URL pointing to the metadata of the token. */
     metadata: TokenMetadataUrl.Type;
     /** The governance account for the token. */
-    governanceAccount: AccountAddress.Type;
+    governanceAccount: TokenHolder.Account;
     /** Whether the token supports an allow list */
     allowList?: boolean;
     /** Whether the token supports an deny list */
@@ -193,7 +192,7 @@ export type TokenInitializationParameters = {
     /** A URL pointing to the metadata of the token. */
     metadata: TokenMetadataUrl.Type;
     /** The governance account for the token. */
-    governanceAccount: AccountAddress.Type;
+    governanceAccount: TokenHolder.Account;
     /** Whether the token supports an allow list */
     allowList?: boolean;
     /** Whether the token supports an deny list */

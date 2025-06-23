@@ -1,26 +1,33 @@
 import { Tag, decode } from 'cbor2';
-import { registerEncoder } from 'cbor2/encoder';
+import { encode, registerEncoder } from 'cbor2/encoder';
 
 import { Base58String } from '../index.js';
 import { AccountAddress } from '../types/index.js';
+import { bail } from '../util.ts';
 
 interface TokenHolder<T extends string> {
     readonly type: T;
 }
 
+const CCD_NETWORK_ID = 919; // Concordium network identifier - Did you know 919 is a palindromic prime and a centred hexagonal number?
+
 type TokenHolderAccountJSON = {
     type: 'account';
     address: Base58String;
+    coinInfo?: typeof CCD_NETWORK_ID;
 };
 
 class TokenHolderAccount implements TokenHolder<'account'> {
-    #nominal = true;
+    readonly #coinInfo: typeof CCD_NETWORK_ID | undefined;
     public readonly type = 'account';
 
     constructor(
         /** The address of the account holding the token. */
-        public readonly address: AccountAddress.Type
-    ) {}
+        public readonly address: AccountAddress.Type,
+        coinInfo: typeof CCD_NETWORK_ID | undefined = CCD_NETWORK_ID
+    ) {
+        this.#coinInfo = coinInfo;
+    }
 
     public toString(): string {
         return this.address.toString();
@@ -30,30 +37,53 @@ class TokenHolderAccount implements TokenHolder<'account'> {
         return {
             type: this.type,
             address: this.address.toJSON(),
+            coinInfo: this.#coinInfo,
         };
     }
 }
 
-export type Type = TokenHolderAccount;
-export type JSON = TokenHolderAccountJSON;
+export type Account = TokenHolderAccount;
+export type AccountJSON = TokenHolderAccountJSON;
+
+export type Type = Account; // Can be extended to include other token holder types in the future
+export type JSON = AccountJSON; // Can be extended to include other token holder types in the future
 
 export function fromAccountAddress(address: AccountAddress.Type): TokenHolderAccount {
     return new TokenHolderAccount(address);
 }
 
+export function fromJSON(json: AccountJSON): Account;
+export function fromJSON(json: JSON): Type;
 export function fromJSON(json: JSON): Type {
     switch (json.type) {
         case 'account':
-            return fromAccountAddress(AccountAddress.fromJSON(json.address));
+            return new TokenHolderAccount(AccountAddress.fromJSON(json.address), json.coinInfo);
     }
 }
 
-export function instanceOf(value: unknown): value is Type {
+export function instanceOf(value: unknown): value is Account {
     return value instanceof TokenHolderAccount;
 }
 
 // CBOR
 const TAGGED_ADDRESS = 40307;
+const TAGGED_COININFO = 40305;
+
+/**
+ * Converts an {@linkcode Account} to a CBOR tagged value.
+ * This encodes the account address as a CBOR tagged value with tag 40307, containing both
+ * the coin information (tagged as 40305) and the account's decoded address.
+ */
+export function toCBORValue(value: Account): Tag;
+export function toCBORValue(value: Type): unknown;
+export function toCBORValue(value: Type): unknown {
+    const taggedCoinInfo = new Tag(TAGGED_COININFO, new Map([[1, CCD_NETWORK_ID]]));
+    const map = new Map<number, any>([
+        [1, taggedCoinInfo],
+        [3, value.address.decodedAddress],
+    ]);
+    return new Tag(TAGGED_ADDRESS, map);
+}
 
 /**
  * Converts an TokenHolder to its CBOR (Concise Binary Object Representation) encoding.
@@ -79,10 +109,7 @@ const TAGGED_ADDRESS = 40307;
  * @returns {Uint8Array} The CBOR encoded representation of the token holder.
  */
 export function toCBOR(value: Type): Uint8Array {
-    switch (value.type) {
-        case 'account':
-            return AccountAddress.toCBOR(value.address);
-    }
+    return new Uint8Array(encode(toCBORValue(value)));
 }
 
 /**
@@ -98,18 +125,86 @@ export function toCBOR(value: Type): Uint8Array {
  * const encoded = encode(myTokenHolder);
  */
 export function registerCBOREncoder(): void {
-    registerEncoder(TokenHolderAccount, (value) => [
-        TAGGED_ADDRESS,
-        AccountAddress.toCBORValue(value.address).contents,
-    ]);
+    registerEncoder(TokenHolderAccount, (value) => [TAGGED_ADDRESS, toCBORValue(value).contents]);
 }
 
-export function fromCBORValue(value: unknown): Type {
-    if (value instanceof Tag && value.tag === TAGGED_ADDRESS) {
-        return fromAccountAddress(AccountAddress.fromCBORValue(value));
+/**
+ * Decodes a CBOR-encoded token holder account into an {@linkcode Account} instance.
+ * @param {unknown} decoded - The CBOR decoded value, expected to be a tagged value with tag 40307.
+ * @throws {Error} - If the decoded value is not a valid CBOR encoded token holder account.
+ * @returns {Account} The decoded account address as a TokenHolderAccount instance.
+ */
+export function fromCBORValueAccount(decoded: unknown): TokenHolderAccount {
+    // Verify we have a tagged value with tag 40307 (tagged-address)
+    if (!(decoded instanceof Tag) || decoded.tag !== TAGGED_ADDRESS) {
+        throw new Error(`Invalid CBOR encoded token holder account: expected tag ${TAGGED_ADDRESS}`);
     }
 
-    throw new Error(`Faid to decode 'TokenHolder.Type' from CBOR value: ${value}`);
+    const value = decoded.contents;
+
+    if (!(value instanceof Map)) {
+        throw new Error('Invalid CBOR encoded token holder account: expected a map');
+    }
+
+    // Verify the map corresponds to the BCR-2020-009 `address` format
+    const validKeys = [1, 2, 3]; // we allow 2 here, as it is in the spec for BCR-2020-009 `address`, but we don't use it
+    for (const key of value.keys()) {
+        validKeys.includes(key) || bail(`Invalid CBOR encoded token holder account: unexpected key ${key}`);
+    }
+
+    // Extract the token holder account bytes (key 3)
+    const addressBytes = value.get(3);
+    if (
+        !addressBytes ||
+        !(addressBytes instanceof Uint8Array) ||
+        addressBytes.byteLength !== AccountAddress.BYTES_LENGTH
+    ) {
+        throw new Error('Invalid CBOR encoded token holder account: missing or invalid address bytes');
+    }
+
+    // Optional validation for coin information if present (key 1)
+    const coinInfo = value.get(1);
+    if (coinInfo !== undefined) {
+        // Verify coin info has the correct tag if present
+        if (!(coinInfo instanceof Tag) || coinInfo.tag !== TAGGED_COININFO) {
+            throw new Error(
+                `Invalid CBOR encoded token holder account: coin info has incorrect tag (expected ${TAGGED_COININFO})`
+            );
+        }
+
+        // Verify coin info contains Concordium network identifier if present
+        const coinInfoMap = coinInfo.contents;
+        if (!(coinInfoMap instanceof Map) || coinInfoMap.get(1) !== CCD_NETWORK_ID) {
+            throw new Error(
+                `Invalid CBOR token holder account: coin info does not contain Concordium network identifier ${CCD_NETWORK_ID}`
+            );
+        }
+
+        // Verify the map corresponds to the BCR-2020-007 `coininfo` format
+        const validKeys = [1, 2]; // we allow 2 here, as it is in the spec for BCR-2020-007 `coininfo`, but we don't use it
+        for (const key of coinInfoMap.keys()) {
+            validKeys.includes(key) || bail(`Invalid CBOR encoded coininfo: unexpected key ${key}`);
+        }
+    }
+
+    // Create the AccountAddress from the extracted bytes
+    return fromAccountAddress(AccountAddress.fromBuffer(addressBytes));
+}
+
+/**
+ * Decodes a CBOR value into a TokenHolder instance.
+ * This function checks if the value is a tagged address (40307) and decodes it accordingly.
+ *
+ * @param {unknown} value - The CBOR decoded value, expected to be a tagged address.
+ * @throws {Error} - If the value is not a valid CBOR encoded token holder account.
+ * @returns {Type} The decoded TokenHolder instance.
+ */
+export function fromCBORValue(value: unknown): Type {
+    if (value instanceof Tag && value.tag === TAGGED_ADDRESS) {
+        return fromCBORValueAccount(value);
+    }
+
+    throw new Error(`Failed to decode 'TokenHolder.Type' from CBOR value: ${value}`);
 }
 
 /**

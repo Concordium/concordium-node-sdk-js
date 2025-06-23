@@ -69,7 +69,7 @@ describe('TokenHolder CBOR', () => {
     test('CBOR encoding/decoding with cbor2 library registration', () => {
         // Register the TokenHolder encoder and decoder
         TokenHolder.registerCBOREncoder();
-        const cleanup = TokenHolder.registerCBORDecoder(); // TODO: re-enable when moved to token account type
+        const cleanup = TokenHolder.registerCBORDecoder();
 
         try {
             // Create a test address

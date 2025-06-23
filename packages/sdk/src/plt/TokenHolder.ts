@@ -89,7 +89,7 @@ export function fromProto(tokenHolder: Proto.TokenHolder): Type {
 
 /**
  * Convert token holder into its protobuf encoding.
- * @param {TokenId} tokenHolder The token holder.
+ * @param {Type} tokenHolder The token holder.
  * @returns {Proto.TokenHolder} The protobuf encoding.
  */
 export function toProto(tokenHolder: Type): Proto.TokenHolder {

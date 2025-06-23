@@ -125,7 +125,7 @@ const client = new ConcordiumGRPCNodeClient(
                     result.summary.events.forEach((e) => console.log(e.event));
                     break;
                 case TransactionKindString.Failed:
-                    if (result.summary.rejectReason.tag !== RejectReasonTag.TokenTransactionFailed) {
+                    if (result.summary.rejectReason.tag !== RejectReasonTag.TokenUpdateTransactionFailed) {
                         throw new Error('Unexpected reject reason tag: ' + result.summary.rejectReason.tag);
                     }
                     const details = Cbor.decode(result.summary.rejectReason.contents.details);

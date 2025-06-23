@@ -1194,13 +1194,13 @@ function trRejectReason(rejectReason: GRPC.RejectReason | undefined): SDK.Reject
                 tag: Tag.NonExistentTokenId,
                 contents: PLT.TokenId.fromProto(reason.nonExistentTokenId),
             };
-        case 'tokenTransactionFailed':
+        case 'tokenUpdateTransactionFailed':
             return {
-                tag: Tag.TokenTransactionFailed,
+                tag: Tag.TokenUpdateTransactionFailed,
                 contents: {
-                    type: reason.tokenTransactionFailed.type,
-                    tokenId: PLT.TokenId.fromProto(unwrap(reason.tokenTransactionFailed.tokenId)),
-                    details: PLT.Cbor.fromProto(unwrap(reason.tokenTransactionFailed.details)),
+                    type: reason.tokenUpdateTransactionFailed.type,
+                    tokenId: PLT.TokenId.fromProto(unwrap(reason.tokenUpdateTransactionFailed.tokenId)),
+                    details: PLT.Cbor.fromProto(unwrap(reason.tokenUpdateTransactionFailed.details)),
                 },
             };
         case undefined:
@@ -2028,8 +2028,8 @@ function trAccountTransactionSummary(
                 transactionType: SDK.TransactionKindString.ConfigureDelegation,
                 events: effect.delegationConfigured.events.map((x) => trDelegationEvent(x, base.sender)),
             };
-        case 'tokenEffect':
-            const events: SDK.TokenUpdateEvent[] = effect.tokenEffect.events.map((e) => ({
+        case 'tokenUpdateEffect':
+            const events: SDK.TokenUpdateEvent[] = effect.tokenUpdateEffect.events.map((e) => ({
                 tag: SDK.TransactionEventTag.TokenUpdate,
                 tokenId: PLT.TokenId.fromProto(unwrap(e.tokenId)),
                 event: tokenEvent(e),

@@ -519,7 +519,7 @@ export class ConfigureDelegationHandler
 }
 
 export type TokenUpdatePayloadJSON = {
-    tokenSymbol: TokenId.JSON;
+    tokenId: TokenId.JSON;
     operations: Cbor.JSON;
 };
 
@@ -572,13 +572,13 @@ export class TokenUpdateHandler implements AccountTransactionHandler<TokenUpdate
     }
     toJSON(payload: TokenUpdatePayload): TokenUpdatePayloadJSON {
         return {
-            tokenSymbol: payload.tokenId.toJSON(),
+            tokenId: payload.tokenId.toJSON(),
             operations: payload.operations.toJSON(),
         };
     }
     fromJSON(json: TokenUpdatePayloadJSON): TokenUpdatePayload {
         return {
-            tokenId: TokenId.fromJSON(json.tokenSymbol),
+            tokenId: TokenId.fromJSON(json.tokenId),
             operations: Cbor.fromJSON(json.operations),
         };
     }

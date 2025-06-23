@@ -4,7 +4,7 @@ import { encode, registerEncoder } from 'cbor2/encoder';
 import type * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
 import { Base58String } from '../index.js';
 import { AccountAddress } from '../types/index.js';
-import { bail } from '../util.ts';
+import { bail } from '../util.js';
 
 interface TokenHolder<T extends string> {
     readonly type: T;

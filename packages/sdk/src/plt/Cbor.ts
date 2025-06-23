@@ -1,7 +1,6 @@
 import * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
 import { HexString } from '../types.js';
 import { cborDecode, cborEncode } from '../types/cbor.js';
-import { AccountAddress } from '../types/index.js';
 import { TokenHolder, TokenMetadataUrl } from './index.js';
 import { TokenEventDetails, TokenModuleAccountState, TokenModuleState } from './module.js';
 
@@ -121,7 +120,7 @@ function decodeTokenModuleState(value: Cbor): TokenModuleState {
     }
 
     // Validate required fields
-    if (!('governanceAccount' in decoded && decoded.governanceAccount instanceof Uint8Array)) {
+    if (!('governanceAccount' in decoded && TokenHolder.instanceOf(decoded.governanceAccount))) {
         throw new Error('Invalid TokenModuleState: missing or invalid governanceAccount');
     }
     if (!('metadata' in decoded && TokenMetadataUrl.instanceOf(decoded.metadata))) {
@@ -145,11 +144,7 @@ function decodeTokenModuleState(value: Cbor): TokenModuleState {
         throw new Error('Invalid TokenModuleState: burnable must be a boolean');
     }
 
-    const { governanceAccount, ...rest } = decoded;
-    return {
-        governanceAccount: AccountAddress.fromBuffer(governanceAccount),
-        ...rest,
-    } as TokenModuleState;
+    return decoded as TokenModuleState;
 }
 
 function decodeTokenModuleAccountState(value: Cbor): TokenModuleAccountState {
@@ -178,8 +173,7 @@ function decodeTokenEventDetails(value: Cbor): TokenEventDetails {
         throw new Error(`Invalid event details: ${JSON.stringify(decoded)}. Expected 'target' to be a TokenHolder`);
     }
 
-    const details: TokenEventDetails = { target: decoded.target };
-    return details;
+    return decoded as TokenEventDetails;
 }
 
 type DecodeTypeMap = {

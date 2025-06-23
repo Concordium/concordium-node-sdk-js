@@ -148,7 +148,7 @@ export type TokenModuleState = {
     /** A URL pointing to the metadata of the token. */
     metadata: TokenMetadataUrl.Type;
     /** The governance account for the token. */
-    governanceAccount: TokenHolder.Account;
+    governanceAccount: TokenHolder.Type;
     /** Whether the token supports an allow list */
     allowList?: boolean;
     /** Whether the token supports an deny list */
@@ -192,7 +192,7 @@ export type TokenInitializationParameters = {
     /** A URL pointing to the metadata of the token. */
     metadata: TokenMetadataUrl.Type;
     /** The governance account for the token. */
-    governanceAccount: TokenHolder.Account;
+    governanceAccount: TokenHolder.Type;
     /** Whether the token supports an allow list */
     allowList?: boolean;
     /** Whether the token supports an deny list */

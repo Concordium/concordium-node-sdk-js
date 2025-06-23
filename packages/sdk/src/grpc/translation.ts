@@ -2049,8 +2049,8 @@ function tokenEvent(event: GRPC_PLT.TokenEvent): PLT.TokenEvent {
         case 'transferEvent':
             const transferEvent: PLT.TokenEvent = {
                 tag: PLT.TokenEventType.Transfer,
-                from: tokenHolder(unwrap(event.event.transferEvent.from)),
-                to: tokenHolder(unwrap(event.event.transferEvent.to)),
+                from: PLT.TokenHolder.fromProto(unwrap(event.event.transferEvent.from)),
+                to: PLT.TokenHolder.fromProto(unwrap(event.event.transferEvent.to)),
                 amount: PLT.TokenAmount.fromProto(unwrap(event.event.transferEvent.amount)),
             };
             if (event.event.transferEvent.memo) {
@@ -2068,25 +2068,16 @@ function tokenEvent(event: GRPC_PLT.TokenEvent): PLT.TokenEvent {
             return {
                 tag: PLT.TokenEventType.Mint,
                 amount: PLT.TokenAmount.fromProto(unwrap(event.event.mintEvent.amount)),
-                target: tokenHolder(unwrap(event.event.mintEvent.target)),
+                target: PLT.TokenHolder.fromProto(unwrap(event.event.mintEvent.target)),
             };
         case 'burnEvent':
             return {
                 tag: PLT.TokenEventType.Burn,
                 amount: PLT.TokenAmount.fromProto(unwrap(event.event.burnEvent.amount)),
-                target: tokenHolder(unwrap(event.event.burnEvent.target)),
+                target: PLT.TokenHolder.fromProto(unwrap(event.event.burnEvent.target)),
             };
         case undefined:
             throw Error('Failed translating "TokenEvent", encountered undefined value');
-    }
-}
-
-function tokenHolder(holder: GRPC_PLT.TokenHolder): PLT.TokenHolder.Type {
-    switch (holder.address.oneofKind) {
-        case 'account':
-            return PLT.TokenHolder.fromAccountAddress(AccountAddress.fromProto(unwrap(holder.address.account)));
-        case undefined:
-            throw Error('Failed translating TokenHolder, encountered undefined value');
     }
 }
 

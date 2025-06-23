@@ -1,6 +1,7 @@
 import { Tag, decode } from 'cbor2';
 import { encode, registerEncoder } from 'cbor2/encoder';
 
+import type * as Proto from '../grpc-api/v2/concordium/protocol-level-tokens.js';
 import { Base58String } from '../index.js';
 import { AccountAddress } from '../types/index.js';
 import { bail } from '../util.ts';
@@ -63,6 +64,36 @@ export function fromJSON(json: JSON): Type {
 
 export function instanceOf(value: unknown): value is Account {
     return value instanceof TokenHolderAccount;
+}
+
+/**
+ * Convert token holder from its protobuf encoding.
+ * @param {Proto.TokenHolder} tokenHolder the token holder
+ * @returns {Type} The token holder.
+ * @throws {Error} If the token holder type is unsupported.
+ */
+export function fromProto(tokenHolder: Proto.TokenHolder): Type {
+    switch (tokenHolder.address.oneofKind) {
+        case 'account':
+            return fromAccountAddress(AccountAddress.fromProto(tokenHolder.address.account));
+        // Add other token holder types here as needed
+        case undefined:
+            throw new Error(`Encountered unsupported token holder type`);
+    }
+}
+
+/**
+ * Convert token holder into its protobuf encoding.
+ * @param {TokenId} tokenHolder The token holder.
+ * @returns {Proto.TokenHolder} The protobuf encoding.
+ */
+export function toProto(tokenHolder: Type): Proto.TokenHolder {
+    return {
+        address: {
+            oneofKind: 'account',
+            account: AccountAddress.toProto(tokenHolder.address),
+        },
+    };
 }
 
 // CBOR

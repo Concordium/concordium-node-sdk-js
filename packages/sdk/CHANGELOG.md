@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- Method (`getContractUpdateEnergyCost`) for estimating energy usage of contract update.
+
 ## 9.1.1
 
 ### Changes

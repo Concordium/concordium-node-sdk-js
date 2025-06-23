@@ -58,6 +58,11 @@ export function fromJSON(json: JSON): Type;
 export function fromJSON(json: JSON): Type {
     switch (json.type) {
         case 'account':
+            if (json.coinInfo !== undefined && json.coinInfo !== CCD_NETWORK_ID) {
+                throw new Error(
+                    `Unsupported coin info for token holder account: ${json.coinInfo}. Expected ${CCD_NETWORK_ID}.`
+                );
+            }
             return new TokenHolderAccount(AccountAddress.fromJSON(json.address), json.coinInfo);
     }
 }
@@ -105,9 +110,9 @@ const TAGGED_COININFO = 40305;
  * This encodes the account address as a CBOR tagged value with tag 40307, containing both
  * the coin information (tagged as 40305) and the account's decoded address.
  */
-export function toCBORValue(value: Account): Tag;
-export function toCBORValue(value: Type): unknown;
-export function toCBORValue(value: Type): unknown {
+function toCBORValue(value: Account): Tag;
+function toCBORValue(value: Type): unknown;
+function toCBORValue(value: Type): unknown {
     const taggedCoinInfo = new Tag(TAGGED_COININFO, new Map([[1, CCD_NETWORK_ID]]));
     const map = new Map<number, any>([
         [1, taggedCoinInfo],
@@ -165,7 +170,7 @@ export function registerCBOREncoder(): void {
  * @throws {Error} - If the decoded value is not a valid CBOR encoded token holder account.
  * @returns {Account} The decoded account address as a TokenHolderAccount instance.
  */
-export function fromCBORValueAccount(decoded: unknown): TokenHolderAccount {
+function fromCBORValueAccount(decoded: unknown): TokenHolderAccount {
     // Verify we have a tagged value with tag 40307 (tagged-address)
     if (!(decoded instanceof Tag) || decoded.tag !== TAGGED_ADDRESS) {
         throw new Error(`Invalid CBOR encoded token holder account: expected tag ${TAGGED_ADDRESS}`);

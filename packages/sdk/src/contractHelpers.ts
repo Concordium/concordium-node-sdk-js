@@ -92,11 +92,6 @@ export function getNamesFromReceive(receiveName: string): {
  * Get contract update payload size by adding reserved offsets to parameter size and receive name size
  * Amount (8 bytes), Contract address (16 bytes), Receive name size (2 bytes), Parameter size (2 bytes)
  */
-export function getUpdatePayloadSize(
-    parameterSize: number,
-    receiveNameLength: number
-): bigint {
-    return (
-        8n + 16n + 2n + BigInt(parameterSize) + 2n + BigInt(receiveNameLength)
-    );
+export function getUpdatePayloadSize(parameterSize: number, receiveNameLength: number): bigint {
+    return 8n + 16n + 2n + BigInt(parameterSize) + 2n + BigInt(receiveNameLength);
 }
